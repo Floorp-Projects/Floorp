@@ -22,13 +22,14 @@
 
  */
 
-#include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFContentSink.h"
+#include "nsIRDFDocument.h"
 #include "nsIRDFService.h"
+#include "nsISupports.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsRDFBuiltInDataSources.h"
-#include "nsRDFDocument.h"
 #include "nsRDFCID.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -36,12 +37,13 @@ static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFDataBaseCID,           NS_RDFDATABASE_CID);
-static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFDocumentCID,           NS_RDFDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFHTMLBuilderCID,        NS_RDFHTMLBUILDER_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFSimpleContentSinkCID,  NS_RDFSIMPLECONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFStreamDataSourceCID,   NS_RDFSTREAMDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFTreeBuilderCID,        NS_RDFTREEBUILDER_CID);
 
 class RDFFactoryImpl : public nsIFactory
 {
@@ -141,12 +143,16 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
         if (NS_FAILED(rv = NS_NewRDFDataBase((nsIRDFDataBase**) &inst)))
             return rv;
     }
-    else if (mClassID.Equals(kRDFHTMLDocumentCID)) {
-        if (NS_FAILED(rv = NS_NewRDFHTMLDocument((nsIRDFDocument**) &inst)))
+    else if (mClassID.Equals(kRDFDocumentCID)) {
+        if (NS_FAILED(rv = NS_NewRDFDocument((nsIRDFDocument**) &inst)))
             return rv;
     }
-    else if (mClassID.Equals(kRDFTreeDocumentCID)) {
-        if (NS_FAILED(rv = NS_NewRDFTreeDocument((nsIRDFDocument**) &inst)))
+    else if (mClassID.Equals(kRDFHTMLBuilderCID)) {
+        if (NS_FAILED(rv = NS_NewRDFHTMLBuilder((nsIRDFContentModelBuilder**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kRDFTreeBuilderCID)) {
+        if (NS_FAILED(rv = NS_NewRDFTreeBuilder((nsIRDFContentModelBuilder**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFSimpleContentSinkCID)) {

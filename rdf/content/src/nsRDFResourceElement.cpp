@@ -52,21 +52,27 @@
 #include "nsGenericAttribute.h"
 #include "nsHashtable.h"
 #include "nsIAtom.h"
+#include "nsIContent.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
+#include "nsIJSScriptObject.h"
 #include "nsINameSpaceManager.h"
+#include "nsIRDFContent.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFDataBase.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
+#include "nsIScriptObjectOwner.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsRDFCID.h"
-#include "nsRDFResourceElement.h"
+#include "nsRDFContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -138,6 +144,8 @@ public:
     NS_IMETHOD IsSynthetic(PRBool& aResult);
     NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpeceID) const;
     NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+    NS_IMETHOD ParseAttributeString(const nsString& aStr, nsIAtom*& aName, PRInt32& aNameSpaceID);
+    NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix);
     NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue, PRBool aNotify);
     NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
     NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
@@ -159,6 +167,8 @@ public:
     NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
 
     // nsIXMLContent (from nsIRDFContent)
+    //NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
+    //NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
     //NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
     //NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
     //NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceID);
@@ -360,8 +370,6 @@ RDFResourceElementImpl::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 RDFResourceElementImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-    // XXX put me in a header file somewhere
-    extern nsresult NS_NewRDFDOMNodeList(nsIDOMNodeList** aChildNodes, nsIContent* aElement);
     return NS_NewRDFDOMNodeList(aChildNodes, this);
 }
 
@@ -481,8 +489,29 @@ RDFResourceElementImpl::GetTagName(nsString& aTagName)
 }
 
 
+NS_IMETHODIMP 
+RDFResourceElementImpl::ParseAttributeString(const nsString& aStr, 
+                                             nsIAtom*& aName, 
+                                             PRInt32& aNameSpaceID)
+{
+    // XXX Need to implement
+    aName = nsnull;
+    aNameSpaceID = kNameSpaceID_None;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
-RDFResourceElementImpl::GetDOMAttribute(const nsString& aName, nsString& aReturn)
+RDFResourceElementImpl::GetNameSpacePrefix(PRInt32 aNameSpaceID, 
+                                           nsIAtom*& aPrefix)
+{
+    // XXX Need to implement
+    aPrefix = nsnull;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFResourceElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -490,7 +519,7 @@ RDFResourceElementImpl::GetDOMAttribute(const nsString& aName, nsString& aReturn
 
 
 NS_IMETHODIMP
-RDFResourceElementImpl::SetDOMAttribute(const nsString& aName, const nsString& aValue)
+RDFResourceElementImpl::SetAttribute(const nsString& aName, const nsString& aValue)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -1,0 +1,52 @@
+DOCUMENT, BODY {
+  display: block;
+}
+
+FOLDER, CHILD {
+  display: block;
+  color: #FFFFFF;
+  background-color: #AAAAEE;
+  margin-left: 8px;
+}
+
+NAME {
+  font-weight: bold;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px;
+}
+
+SUBJECT {
+  display: none;
+}
+
+FOLDER FOLDER CHILD SUBJECT {
+  display: block;
+  float: left;
+  width: 300px;
+  font-family: Verdana, Sans-Serif;
+  font-size: 10pt;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+FOLDER CHILD NAME {
+  text-decoration: none;
+  font-family: Verdana, Sans-Serif;
+  font-size: 10pt;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+DATE {
+  margin-left: 12px;
+  font-family: Verdana, Sans-Serif;
+  font-size: 10pt;
+}
+
+LASTVISITDATE, BOOKMARKADDDATE, LASTMODIFIEDDATE {
+  font-family: monospace;
+  display: block;
+  float: right;
+  width: 100px;
+}

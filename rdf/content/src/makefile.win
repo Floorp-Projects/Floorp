@@ -21,12 +21,15 @@ LIBRARY_NAME=rdfcontent_s
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsRDFContentSink.obj          \
+        .\$(OBJDIR)\nsRDFContentUtils.obj         \
+        .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsRDFDocument.obj             \
         .\$(OBJDIR)\nsRDFDocumentContentSink.obj  \
-        .\$(OBJDIR)\nsRDFElement.obj              \
-        .\$(OBJDIR)\nsRDFHTMLDocument.obj         \
+        .\$(OBJDIR)\nsRDFGenericElement.obj       \
+        .\$(OBJDIR)\nsRDFHTMLBuilder.obj          \
+        .\$(OBJDIR)\nsRDFResourceElement.obj      \
         .\$(OBJDIR)\nsRDFSimpleContentSink.obj    \
-        .\$(OBJDIR)\nsRDFTreeDocument.obj         \
+        .\$(OBJDIR)\nsRDFTreeBuilder.obj          \
 	$(NULL)
 
 LINCS=  -I$(PUBLIC)\rdf          \

@@ -28,9 +28,13 @@
 #ifndef nsIRDFDocument_h___
 #define nsIRDFDocument_h___
 
+class nsIContent; // XXX nsIXMLDocument.h is bad and doesn't declare this class...
+
 #include "nsIXMLDocument.h"
 
+class nsIAtom;
 class nsIRDFContent;
+class nsIRDFContentModelBuilder;
 class nsIRDFDataBase;
 class nsISupportsArray;
 class nsIRDFResource;
@@ -42,13 +46,14 @@ class nsIRDFResource;
 /**
  * RDF document extensions to nsIDocument
  */
-class nsIRDFDocument : public nsIXMLDocument {
+class nsIRDFDocument : public nsIXMLDocument
+{
 public:
   /**
    * Initialize the document object. This will force the document to create
    * its internal RDF database.
    */
-  NS_IMETHOD Init(void) = 0;
+  NS_IMETHOD Init(nsIRDFContentModelBuilder* aBuilder) = 0;
 
   /**
    * Set the document's "root" resource.
@@ -86,10 +91,18 @@ public:
    * RDF graph.
    */
   NS_IMETHOD RemoveTreeProperty(nsIRDFResource* resource) = 0;
+
+  /**
+   * Determine whether the specified property is a "tree" property.
+   */
+  NS_IMETHOD IsTreeProperty(nsIRDFResource* aProperty, PRBool* aResult) const = 0;
+
+  NS_IMETHOD MapResource(nsIRDFResource* aResource, nsIRDFContent* aContent) = 0;
+  NS_IMETHOD UnMapResource(nsIRDFResource* aResource, nsIRDFContent* aContent) = 0;
+  NS_IMETHOD SplitProperty(nsIRDFResource* aResource, PRInt32* aNameSpaceID, nsIAtom** aTag) = 0;
 };
 
 // factory functions
-nsresult NS_NewRDFHTMLDocument(nsIRDFDocument** result);
-nsresult NS_NewRDFTreeDocument(nsIRDFDocument** result);
+nsresult NS_NewRDFDocument(nsIRDFDocument** result);
 
 #endif // nsIRDFDocument_h___

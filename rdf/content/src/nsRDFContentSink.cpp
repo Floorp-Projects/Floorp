@@ -57,6 +57,7 @@
 #include "nsVoidArray.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
+#include "nsRDFContentUtils.h"
 #include "prlog.h"
 #include "prmem.h"
 #include "rdfutil.h"
@@ -681,8 +682,7 @@ nsRDFContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 
                 nsIRDFLiteral* literal;
                 if (NS_SUCCEEDED(rv = mRDFService->GetLiteral(value, &literal))) {
-                    rv = rdf_ContainerAddElement(mRDFService,
-                                                 mDataSource,
+                    rv = rdf_ContainerAddElement(mDataSource,
                                                  GetContextElement(1),
                                                  literal);
                     NS_RELEASE(literal);
@@ -694,8 +694,7 @@ nsRDFContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
                 value.Append(mText, mTextLength);
                 value.Trim(" \t\n\r");
 
-                rv = rdf_Assert(mRDFService,
-                                mDataSource,
+                rv = rdf_Assert(mDataSource,
                                 GetContextElement(1),
                                 GetContextElement(0),
                                 value);
@@ -856,7 +855,7 @@ nsRDFContentSink::AddProperties(const nsIParserNode& aNode,
         k.Append(attr);
 
         // Add the attribute to RDF
-        rdf_Assert(mRDFService, mDataSource, aSubject, k, v);
+        rdf_Assert(mDataSource, aSubject, k, v);
     }
     return NS_OK;
 }
@@ -918,7 +917,7 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
     // member/property.
     switch (mState) {
     case eRDFContentSinkState_InMemberElement: {
-        rdf_ContainerAddElement(mRDFService, mDataSource, GetContextElement(1), rdfResource);
+        rdf_ContainerAddElement(mDataSource, GetContextElement(1), rdfResource);
     } break;
 
     case eRDFContentSinkState_InPropertyElement: {
@@ -946,17 +945,17 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
         }
         else if (tag.Equals(kTagRDF_Bag)) {
             // it's a bag container
-            rdf_MakeBag(mRDFService, mDataSource, rdfResource);
+            rdf_MakeBag(mDataSource, rdfResource);
             mState = eRDFContentSinkState_InContainerElement;
         }
         else if (tag.Equals(kTagRDF_Seq)) {
             // it's a seq container
-            rdf_MakeSeq(mRDFService, mDataSource, rdfResource);
+            rdf_MakeSeq(mDataSource, rdfResource);
             mState = eRDFContentSinkState_InContainerElement;
         }
         else if (tag.Equals(kTagRDF_Alt)) {
             // it's an alt container
-            rdf_MakeAlt(mRDFService, mDataSource, rdfResource);
+            rdf_MakeAlt(mDataSource, rdfResource);
             mState = eRDFContentSinkState_InContainerElement;
         }
         else {
@@ -971,7 +970,7 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
         nsAutoString nameSpace;
         GetNameSpaceURI(nameSpaceID, nameSpace);  // XXX append ':' too?
         nameSpace.Append(tag);
-        rdf_Assert(mRDFService, mDataSource, rdfResource, kURIRDF_type, nameSpace);
+        rdf_Assert(mDataSource, rdfResource, kURIRDF_type, nameSpace);
 
         mState = eRDFContentSinkState_InDescriptionElement;
     }
@@ -1018,8 +1017,7 @@ nsRDFContentSink::OpenProperty(const nsIParserNode& aNode)
         nsIRDFResource* rdfResource;
         if (NS_SUCCEEDED(rv = mRDFService->GetUnicodeResource(resourceURI, &rdfResource))) {
             if (NS_SUCCEEDED(rv = AddProperties(aNode, rdfResource))) {
-                rv = rdf_Assert(mRDFService,
-                                mDataSource,
+                rv = rdf_Assert(mDataSource,
                                 GetContextElement(0),
                                 rdfProperty,
                                 rdfResource);
@@ -1074,7 +1072,7 @@ nsRDFContentSink::OpenMember(const nsIParserNode& aNode)
 
         nsIRDFResource* resource;
         if (NS_SUCCEEDED(rv = mRDFService->GetUnicodeResource(resourceURI, &resource))) {
-            rv = rdf_ContainerAddElement(mRDFService, mDataSource, container, resource);
+            rv = rdf_ContainerAddElement(mDataSource, container, resource);
         }
 
         // XXX Technically, we should _not_ fall through here and push

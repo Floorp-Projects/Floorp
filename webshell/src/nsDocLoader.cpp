@@ -48,6 +48,9 @@
 #include "nsICSSParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsLayoutCID.h"
+
+#include "nsIRDFContentModelBuilder.h"
+#include "nsIRDFDocument.h"
 #include "nsRDFCID.h"
 
 /* Forward declarations.... */
@@ -87,7 +90,8 @@ NS_DEFINE_IID(kINetServiceIID,            NS_INETSERVICE_IID);
 /* Define CIDs... */
 NS_DEFINE_IID(kCHTMLDocumentCID,          NS_HTMLDOCUMENT_CID);
 NS_DEFINE_IID(kCXMLDocumentCID,           NS_XMLDOCUMENT_CID);
-NS_DEFINE_IID(kCRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
+NS_DEFINE_IID(kCRDFHTMLBuilderCID,        NS_RDFHTMLBUILDER_CID);
+NS_DEFINE_IID(kCRDFDocumentCID,           NS_RDFDOCUMENT_CID);
 NS_DEFINE_IID(kCImageDocumentCID,         NS_IMAGEDOCUMENT_CID);
 NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
 
@@ -449,9 +453,14 @@ nsDocFactoryImpl::CreateRDFDocument(nsIURL* aURL,
                                     nsIStreamListener** aDocListener,
                                     nsIContentViewer** aDocViewer)
 {
+    static NS_DEFINE_IID(kIRDFDocumentIID, NS_IRDFDOCUMENT_IID);
+    static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
+
     nsresult rv = NS_ERROR_FAILURE;
     nsIDocument* doc = nsnull;
+    nsIRDFDocument* rdfDoc = nsnull;
     nsIDocumentViewer* docv = nsnull;
+    nsIRDFContentModelBuilder* builder = nsnull;
 
     // Load the UA style sheet if we haven't already done that
     if (nsnull == gUAStyleSheet) {
@@ -461,21 +470,30 @@ nsDocFactoryImpl::CreateRDFDocument(nsIURL* aURL,
     /*
      * Create the image document...
      */
-    rv = nsRepository::CreateInstance(kCRDFHTMLDocumentCID,
-                                      nsnull,
-                                      kIDocumentIID,
-                                      (void **)&doc);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kCRDFDocumentCID,
+                                                    nsnull,
+                                                    kIRDFDocumentIID,
+                                                    (void **)&rdfDoc)))
         goto done;
-    }
+
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kCRDFHTMLBuilderCID,
+                                                    nsnull,
+                                                    kIRDFContentModelBuilderIID,
+                                                    (void**) &builder)))
+        goto done;
+
+    if (NS_FAILED(rv = rdfDoc->Init(builder)))
+        goto done;
+
+    if (NS_FAILED(rv = rdfDoc->QueryInterface(kIDocumentIID, (void**) &doc)))
+        goto done;
 
     /*
      * Create the image content viewer...
      */
-    rv = NS_NewDocumentViewer(docv);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv = NS_NewDocumentViewer(docv)))
         goto done;
-    }
+
     docv->SetUAStyleSheet(gUAStyleSheet);
 
     /* 
@@ -484,9 +502,8 @@ nsDocFactoryImpl::CreateRDFDocument(nsIURL* aURL,
      * An nsIStreamListener connected to the parser is returned in
      * aDocListener.
      */
-    rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener, aCommand);
-    if (NS_OK != rv) {
-        NS_IF_RELEASE(docv);
+    if (NS_FAILED(rv = doc->StartDocumentLoad(aURL, aContainer, aDocListener, aCommand))) {
+        NS_RELEASE(docv);
         goto done;
     }
 
@@ -498,6 +515,8 @@ nsDocFactoryImpl::CreateRDFDocument(nsIURL* aURL,
 
 done:
     NS_IF_RELEASE(doc);
+    NS_IF_RELEASE(builder);
+    NS_IF_RELEASE(rdfDoc);
     return rv;
 }
 

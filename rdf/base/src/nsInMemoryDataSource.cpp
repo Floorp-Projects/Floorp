@@ -213,6 +213,13 @@ public:
 
     NS_IMETHOD Flush();
 
+    NS_IMETHOD IsCommandEnabled(const char* aCommand,
+                                nsIRDFResource* aCommandTarget,
+                                PRBool* aResult);
+
+    NS_IMETHOD DoCommand(const char* aCommand,
+                         nsIRDFResource* aCommandTarget);
+
     // nsIRDFXMLSource methods
     NS_IMETHOD Serialize(nsIOutputStream* aStream);
 
@@ -504,6 +511,7 @@ InMemoryArcsCursor::InMemoryArcsCursor(InMemoryDataSource* ds,
       mCurrent(nsnull),
       mDirection(direction)
 {
+    NS_INIT_REFCNT();
     NS_ADDREF(mDataSource);
 
     // Hopefully this won't suck too much because most arcs will have
@@ -996,7 +1004,7 @@ InMemoryDataSource::Assert(nsIRDFResource* source,
 
     // notify observers
     if (mObservers) {
-        for (PRInt32 i = mObservers->Count(); i >= 0; --i) {
+        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
             obs->OnAssert(source, property, target);
             // XXX ignore return value?
@@ -1067,7 +1075,7 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
 
     // Notify the world
     if (mObservers) {
-        for (PRInt32 i = mObservers->Count(); i >= 0; --i) {
+        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
             obs->OnUnassert(source, property, target);
             // XXX ignore return value?
@@ -1081,6 +1089,10 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
 NS_IMETHODIMP
 InMemoryDataSource::AddObserver(nsIRDFObserver* observer)
 {
+    NS_ASSERTION(observer != nsnull, "null ptr");
+    if (! observer)
+        return NS_ERROR_NULL_POINTER;
+
     if (! mObservers) {
         if ((mObservers = new nsVoidArray()) == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -1093,6 +1105,10 @@ InMemoryDataSource::AddObserver(nsIRDFObserver* observer)
 NS_IMETHODIMP
 InMemoryDataSource::RemoveObserver(nsIRDFObserver* observer)
 {
+    NS_ASSERTION(observer != nsnull, "null ptr");
+    if (! observer)
+        return NS_ERROR_NULL_POINTER;
+
     if (! mObservers)
         return NS_OK;
 
@@ -1143,6 +1159,20 @@ InMemoryDataSource::Flush()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+InMemoryDataSource::IsCommandEnabled(const char* aCommand,
+                                     nsIRDFResource* aCommandTarget,
+                                     PRBool* aResult)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InMemoryDataSource::DoCommand(const char* aCommand,
+                              nsIRDFResource* aCommandTarget)
+{
+    return NS_OK;
+}
 
 // XXX This is a total kludge that takes a property resource (like
 // "http://www.w3.org/TR/WD-rdf-syntax#Description") and converts it

@@ -26,26 +26,31 @@
  */
 
 #include "nsIArena.h"
+#include "nsICollection.h"
 #include "nsIContent.h"
 #include "nsIDTD.h"
+#include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIHTMLStyleSheet.h"
+#include "nsINameSpaceManager.h"
 #include "nsIParser.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
 #include "nsIRDFContent.h"
+#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFDataBase.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
+#include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
-#include "nsIPresShell.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIServiceManager.h"
-#include "nsINameSpaceManager.h"
-#include "nsISupportsArray.h"
-#include "nsICollection.h"
 #include "nsIStreamListener.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
+#include "nsISupportsArray.h"
 #include "nsIURL.h"
 #include "nsIURLGroup.h"
 #include "nsIWebShell.h"
@@ -53,10 +58,8 @@
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
 #include "nsRDFContentSink.h"
-#include "nsRDFDocument.h"
-#include "nsITextContent.h"
-#include "nsIDTD.h"
-#include "nsLayoutCID.h"
+#include "nsVoidArray.h"
+#include "plhash.h"
 #include "rdfutil.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -77,7 +80,6 @@ static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,     NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kITextContentIID,        NS_ITEXT_CONTENT_IID); // XXX grr...
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID,        NS_IXMLDOCUMENT_IID);
 
@@ -89,12 +91,230 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFDataBaseCID,           NS_RDFDATABASE_CID);
 static NS_DEFINE_CID(kRangeListCID,             NS_RANGELIST_CID);
-static NS_DEFINE_CID(kTextNodeCID,              NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
-nsRDFDocument::nsRDFDocument()
+static PLHashNumber
+rdf_HashPointer(const void* key)
+{
+    return (PLHashNumber) key;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+
+class RDFDocumentImpl : public nsIDocument,
+                        public nsIRDFDocument,
+                        public nsIRDFObserver
+{
+public:
+    RDFDocumentImpl();
+    virtual ~RDFDocumentImpl();
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsIDocument interface
+    virtual nsIArena* GetArena();
+
+    NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+                                 nsIContentViewerContainer* aContainer,
+                                 nsIStreamListener **aDocListener,
+                                 const char* aCommand);
+
+    virtual const nsString* GetDocumentTitle() const;
+
+    virtual nsIURL* GetDocumentURL() const;
+
+    virtual nsIURLGroup* GetDocumentURLGroup() const;
+
+    virtual nsCharSetID GetDocumentCharacterSet() const;
+
+    virtual void SetDocumentCharacterSet(nsCharSetID aCharSetID);
+
+    virtual nsresult CreateShell(nsIPresContext* aContext,
+                                 nsIViewManager* aViewManager,
+                                 nsIStyleSet* aStyleSet,
+                                 nsIPresShell** aInstancePtrResult);
+
+    virtual PRBool DeleteShell(nsIPresShell* aShell);
+
+    virtual PRInt32 GetNumberOfShells();
+
+    virtual nsIPresShell* GetShellAt(PRInt32 aIndex);
+
+    virtual nsIDocument* GetParentDocument();
+
+    virtual void SetParentDocument(nsIDocument* aParent);
+
+    virtual void AddSubDocument(nsIDocument* aSubDoc);
+
+    virtual PRInt32 GetNumberOfSubDocuments();
+
+    virtual nsIDocument* GetSubDocumentAt(PRInt32 aIndex);
+
+    virtual nsIContent* GetRootContent();
+
+    virtual void SetRootContent(nsIContent* aRoot);
+
+    virtual PRInt32 GetNumberOfStyleSheets();
+
+    virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex);
+
+    virtual void AddStyleSheet(nsIStyleSheet* aSheet);
+
+    virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
+                                            PRBool mDisabled);
+
+    virtual nsIScriptContextOwner *GetScriptContextOwner();
+
+    virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner);
+
+    NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager);
+
+    virtual void AddObserver(nsIDocumentObserver* aObserver);
+
+    virtual PRBool RemoveObserver(nsIDocumentObserver* aObserver);
+
+    NS_IMETHOD BeginLoad();
+
+    NS_IMETHOD EndLoad();
+
+    NS_IMETHOD ContentChanged(nsIContent* aContent,
+                              nsISupports* aSubContent);
+
+    NS_IMETHOD AttributeChanged(nsIContent* aChild,
+                                nsIAtom* aAttribute,
+                                PRInt32 aHint); // See nsStyleConsts fot hint values
+
+    NS_IMETHOD ContentAppended(nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer);
+
+    NS_IMETHOD ContentInserted(nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer);
+
+    NS_IMETHOD ContentReplaced(nsIContent* aContainer,
+                               nsIContent* aOldChild,
+                               nsIContent* aNewChild,
+                               PRInt32 aIndexInContainer);
+
+    NS_IMETHOD ContentRemoved(nsIContent* aContainer,
+                              nsIContent* aChild,
+                              PRInt32 aIndexInContainer);
+
+    NS_IMETHOD StyleRuleChanged(nsIStyleSheet* aStyleSheet,
+                                nsIStyleRule* aStyleRule,
+                                PRInt32 aHint); // See nsStyleConsts fot hint values
+
+    NS_IMETHOD StyleRuleAdded(nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule);
+
+    NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
+                                nsIStyleRule* aStyleRule);
+
+    NS_IMETHOD GetSelection(nsICollection** aSelection);
+
+    NS_IMETHOD SelectAll();
+
+    NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+
+    virtual void CreateXIF(nsString & aBuffer, PRBool aUseSelection);
+
+    virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+
+    virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+
+    virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+
+    virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+
+    virtual PRBool IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const;
+
+    virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const;
+
+    virtual PRBool IsInSelection(const nsIContent *aContent) const;
+
+    virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
+
+    virtual nsIContent* GetNextContent(const nsIContent *aContent) const;
+
+    virtual void SetDisplaySelection(PRBool aToggle);
+
+    virtual PRBool GetDisplaySelection() const;
+
+    NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
+                              nsEvent* aEvent, 
+                              nsIDOMEvent** aDOMEvent,
+                              PRUint32 aFlags,
+                              nsEventStatus& aEventStatus);
+
+
+    // nsIXMLDocument interface
+    NS_IMETHOD PrologElementAt(PRInt32 aOffset, nsIContent** aContent);
+    NS_IMETHOD PrologCount(PRInt32* aCount);
+    NS_IMETHOD AppendToProlog(nsIContent* aContent);
+
+    NS_IMETHOD EpilogElementAt(PRInt32 aOffset, nsIContent** aContent);
+    NS_IMETHOD EpilogCount(PRInt32* aCount);
+    NS_IMETHOD AppendToEpilog(nsIContent* aContent);
+
+    // nsIRDFDocument interface
+    NS_IMETHOD Init(nsIRDFContentModelBuilder* aBuilder);
+    NS_IMETHOD SetRootResource(nsIRDFResource* resource);
+    NS_IMETHOD GetDataBase(nsIRDFDataBase*& result);
+    NS_IMETHOD CreateChildren(nsIRDFContent* element);
+    NS_IMETHOD AddTreeProperty(nsIRDFResource* resource);
+    NS_IMETHOD RemoveTreeProperty(nsIRDFResource* resource);
+    NS_IMETHOD IsTreeProperty(nsIRDFResource* aProperty, PRBool* aResult) const;
+    NS_IMETHOD MapResource(nsIRDFResource* aResource, nsIRDFContent* aContent);
+    NS_IMETHOD UnMapResource(nsIRDFResource* aResource, nsIRDFContent* aContent);
+    NS_IMETHOD SplitProperty(nsIRDFResource* aResource, PRInt32* aNameSpaceID, nsIAtom** aTag);
+
+    // nsIRDFObserver interface
+    NS_IMETHOD OnAssert(nsIRDFResource* subject,
+                        nsIRDFResource* predicate,
+                        nsIRDFNode* object);
+
+    NS_IMETHOD OnUnassert(nsIRDFResource* subject,
+                          nsIRDFResource* predicate,
+                          nsIRDFNode* object);
+
+protected:
+    nsIContent*
+    FindContent(const nsIContent* aStartNode,
+                const nsIContent* aTest1,
+                const nsIContent* aTest2) const;
+
+    nsIArena*              mArena;
+    nsVoidArray            mObservers;
+    nsAutoString           mDocumentTitle;
+    nsIURL*                mDocumentURL;
+    nsIURLGroup*           mDocumentURLGroup;
+    nsIContent*            mRootContent;
+    nsIDocument*           mParentDocument;
+    nsIScriptContextOwner* mScriptContextOwner;
+    nsCharSetID            mCharSetID;
+    nsVoidArray            mStyleSheets;
+    nsICollection*         mSelection;
+    PRBool                 mDisplaySelection;
+    nsVoidArray            mPresShells;
+    nsINameSpaceManager*   mNameSpaceManager;
+    nsIStyleSheet*         mAttrStyleSheet;
+    nsIParser*             mParser;
+    nsIRDFDataBase*        mDB;
+    nsIRDFService*         mRDFService;
+    nsISupportsArray*      mTreeProperties;
+    nsIRDFContentModelBuilder* mBuilder;
+    PLHashTable*           mResources;
+};
+
+
+////////////////////////////////////////////////////////////////////////
+// ctors & dtors
+
+RDFDocumentImpl::RDFDocumentImpl(void)
     : mArena(nsnull),
       mDocumentURL(nsnull),
       mDocumentURLGroup(nsnull),
@@ -108,7 +328,9 @@ nsRDFDocument::nsRDFDocument()
       mParser(nsnull),
       mDB(nsnull),
       mRDFService(nsnull),
-      mTreeProperties(nsnull)
+      mTreeProperties(nsnull),
+      mBuilder(nsnull),
+      mResources(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -124,8 +346,11 @@ nsRDFDocument::nsRDFDocument()
     
 }
 
-nsRDFDocument::~nsRDFDocument()
+RDFDocumentImpl::~RDFDocumentImpl()
 {
+    if (mResources)
+        PL_HashTableDestroy(mResources);
+
     NS_IF_RELEASE(mParser);
 
     if (mRDFService) {
@@ -134,20 +359,27 @@ nsRDFDocument::~nsRDFDocument()
     }
 
     // mParentDocument is never refcounted
+    NS_IF_RELEASE(mBuilder);
     NS_IF_RELEASE(mSelection);
     NS_IF_RELEASE(mScriptContextOwner);
     NS_IF_RELEASE(mAttrStyleSheet);
     NS_IF_RELEASE(mTreeProperties);
     NS_IF_RELEASE(mRootContent);
-    NS_IF_RELEASE(mDB);
+    if (mDB) {
+        mDB->RemoveObserver(this);
+        NS_RELEASE(mDB);
+    }
     NS_IF_RELEASE(mDocumentURLGroup);
     NS_IF_RELEASE(mDocumentURL);
     NS_IF_RELEASE(mArena);
     NS_IF_RELEASE(mNameSpaceManager);
 }
 
+////////////////////////////////////////////////////////////////////////
+// nsISupports interface
+
 NS_IMETHODIMP 
-nsRDFDocument::QueryInterface(REFNSIID iid, void** result)
+RDFDocumentImpl::QueryInterface(REFNSIID iid, void** result)
 {
     if (! result)
         return NS_ERROR_NULL_POINTER;
@@ -156,36 +388,36 @@ nsRDFDocument::QueryInterface(REFNSIID iid, void** result)
     if (iid.Equals(kIDocumentIID) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIDocument*, this);
-        AddRef();
+        NS_ADDREF(this);
         return NS_OK;
     }
     else if (iid.Equals(kIRDFDocumentIID) ||
              iid.Equals(kIXMLDocumentIID)) {
         *result = NS_STATIC_CAST(nsIRDFDocument*, this);
-        AddRef();
+        NS_ADDREF(this);
         return NS_OK;
     }
     return NS_NOINTERFACE;
 }
 
-NS_IMPL_ADDREF(nsRDFDocument);
-NS_IMPL_RELEASE(nsRDFDocument);
+NS_IMPL_ADDREF(RDFDocumentImpl);
+NS_IMPL_RELEASE(RDFDocumentImpl);
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDocument interface
 
 nsIArena*
-nsRDFDocument::GetArena()
+RDFDocumentImpl::GetArena()
 {
     NS_IF_ADDREF(mArena);
     return mArena;
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::StartDocumentLoad(nsIURL *aURL, 
-                                 nsIContentViewerContainer* aContainer,
-                                 nsIStreamListener **aDocListener,
-                                 const char* aCommand)
+RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL, 
+                                   nsIContentViewerContainer* aContainer,
+                                   nsIStreamListener **aDocListener,
+                                   const char* aCommand)
 {
     nsresult rv;
 
@@ -215,16 +447,11 @@ nsRDFDocument::StartDocumentLoad(nsIURL *aURL,
     if (NS_FAILED(rv))
         return rv;
 
-    nsIWebShell* webShell = nsnull;
-    nsIRDFContentSink* sink = nsnull;
-    nsIRDFDataSource* ds = nsnull;
-    nsIHTMLStyleSheet* sheet = nsnull;
+    nsIWebShell* webShell              = nsnull;
+    nsIRDFContentSink* sink            = nsnull;
+    nsIRDFDataSource* ds               = nsnull;
+    nsIHTMLStyleSheet* sheet           = nsnull;
     nsIDTD* dtd = nsnull;
-
-    if (NS_FAILED(rv = Init())) {
-        PR_ASSERT(0);
-        goto done;
-    }
 
     if (NS_FAILED(rv = aContainer->QueryInterface(kIWebShellIID, (void**)&webShell))) {
         PR_ASSERT(0);
@@ -308,39 +535,39 @@ done:
 }
 
 const nsString*
-nsRDFDocument::GetDocumentTitle() const
+RDFDocumentImpl::GetDocumentTitle() const
 {
     return &mDocumentTitle;
 }
 
 nsIURL* 
-nsRDFDocument::GetDocumentURL() const
+RDFDocumentImpl::GetDocumentURL() const
 {
     NS_IF_ADDREF(mDocumentURL);
     return mDocumentURL;
 }
 
 nsIURLGroup* 
-nsRDFDocument::GetDocumentURLGroup() const
+RDFDocumentImpl::GetDocumentURLGroup() const
 {
     NS_IF_ADDREF(mDocumentURLGroup);
     return mDocumentURLGroup;
 }
 
 nsCharSetID 
-nsRDFDocument::GetDocumentCharacterSet() const
+RDFDocumentImpl::GetDocumentCharacterSet() const
 {
     return mCharSetID;
 }
 
 void 
-nsRDFDocument::SetDocumentCharacterSet(nsCharSetID aCharSetID)
+RDFDocumentImpl::SetDocumentCharacterSet(nsCharSetID aCharSetID)
 {
     mCharSetID = aCharSetID;
 }
 
 nsresult 
-nsRDFDocument::CreateShell(nsIPresContext* aContext,
+RDFDocumentImpl::CreateShell(nsIPresContext* aContext,
                            nsIViewManager* aViewManager,
                            nsIStyleSet* aStyleSet,
                            nsIPresShell** aInstancePtrResult)
@@ -370,19 +597,19 @@ nsRDFDocument::CreateShell(nsIPresContext* aContext,
 }
 
 PRBool 
-nsRDFDocument::DeleteShell(nsIPresShell* aShell)
+RDFDocumentImpl::DeleteShell(nsIPresShell* aShell)
 {
     return mPresShells.RemoveElement(aShell);
 }
 
 PRInt32 
-nsRDFDocument::GetNumberOfShells()
+RDFDocumentImpl::GetNumberOfShells()
 {
     return mPresShells.Count();
 }
 
 nsIPresShell* 
-nsRDFDocument::GetShellAt(PRInt32 aIndex)
+RDFDocumentImpl::GetShellAt(PRInt32 aIndex)
 {
     nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[aIndex]);
     NS_IF_ADDREF(shell);
@@ -390,14 +617,14 @@ nsRDFDocument::GetShellAt(PRInt32 aIndex)
 }
 
 nsIDocument* 
-nsRDFDocument::GetParentDocument()
+RDFDocumentImpl::GetParentDocument()
 {
     NS_IF_ADDREF(mParentDocument);
     return mParentDocument;
 }
 
 void 
-nsRDFDocument::SetParentDocument(nsIDocument* aParent)
+RDFDocumentImpl::SetParentDocument(nsIDocument* aParent)
 {
     // Note that we do *not* AddRef our parent because that would
     // create a circular reference.
@@ -405,20 +632,20 @@ nsRDFDocument::SetParentDocument(nsIDocument* aParent)
 }
 
 void 
-nsRDFDocument::AddSubDocument(nsIDocument* aSubDoc)
+RDFDocumentImpl::AddSubDocument(nsIDocument* aSubDoc)
 {
     // we don't do subdocs.
     PR_ASSERT(0);
 }
 
 PRInt32 
-nsRDFDocument::GetNumberOfSubDocuments()
+RDFDocumentImpl::GetNumberOfSubDocuments()
 {
     return 0;
 }
 
 nsIDocument* 
-nsRDFDocument::GetSubDocumentAt(PRInt32 aIndex)
+RDFDocumentImpl::GetSubDocumentAt(PRInt32 aIndex)
 {
     // we don't do subdocs.
     PR_ASSERT(0);
@@ -426,28 +653,34 @@ nsRDFDocument::GetSubDocumentAt(PRInt32 aIndex)
 }
 
 nsIContent* 
-nsRDFDocument::GetRootContent()
+RDFDocumentImpl::GetRootContent()
 {
     NS_IF_ADDREF(mRootContent);
     return mRootContent;
 }
 
 void 
-nsRDFDocument::SetRootContent(nsIContent* aRoot)
+RDFDocumentImpl::SetRootContent(nsIContent* aRoot)
 {
-    NS_IF_RELEASE(mRootContent);
+    if (mRootContent) {
+        mRootContent->SetDocument(nsnull, PR_TRUE);
+        NS_RELEASE(mRootContent);
+    }
     mRootContent = aRoot;
-    NS_IF_ADDREF(mRootContent);
+    if (mRootContent) {
+        mRootContent->SetDocument(this, PR_TRUE);
+        NS_ADDREF(mRootContent);
+    }
 }
 
 PRInt32 
-nsRDFDocument::GetNumberOfStyleSheets()
+RDFDocumentImpl::GetNumberOfStyleSheets()
 {
     return mStyleSheets.Count();
 }
 
 nsIStyleSheet* 
-nsRDFDocument::GetStyleSheetAt(PRInt32 aIndex)
+RDFDocumentImpl::GetStyleSheetAt(PRInt32 aIndex)
 {
     nsIStyleSheet* sheet = NS_STATIC_CAST(nsIStyleSheet*, mStyleSheets[aIndex]);
     NS_IF_ADDREF(sheet);
@@ -455,7 +688,7 @@ nsRDFDocument::GetStyleSheetAt(PRInt32 aIndex)
 }
 
 void 
-nsRDFDocument::AddStyleSheet(nsIStyleSheet* aSheet)
+RDFDocumentImpl::AddStyleSheet(nsIStyleSheet* aSheet)
 {
     NS_PRECONDITION(aSheet, "null arg");
     if (!aSheet)
@@ -492,7 +725,7 @@ nsRDFDocument::AddStyleSheet(nsIStyleSheet* aSheet)
 }
 
 void 
-nsRDFDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
+RDFDocumentImpl::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                           PRBool aDisabled)
 {
     NS_PRECONDITION(nsnull != aSheet, "null arg");
@@ -525,14 +758,14 @@ nsRDFDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
 }
 
 nsIScriptContextOwner *
-nsRDFDocument::GetScriptContextOwner()
+RDFDocumentImpl::GetScriptContextOwner()
 {
     NS_IF_ADDREF(mScriptContextOwner);
     return mScriptContextOwner;
 }
 
 void 
-nsRDFDocument::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner)
+RDFDocumentImpl::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner)
 {
     // XXX HACK ALERT! If the script context owner is null, the document
     // will soon be going away. So tell our content that to lose its
@@ -548,7 +781,7 @@ nsRDFDocument::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner)
 }
 
 NS_IMETHODIMP
-nsRDFDocument::GetNameSpaceManager(nsINameSpaceManager*& aManager)
+RDFDocumentImpl::GetNameSpaceManager(nsINameSpaceManager*& aManager)
 {
   aManager = mNameSpaceManager;
   NS_IF_ADDREF(aManager);
@@ -559,7 +792,7 @@ nsRDFDocument::GetNameSpaceManager(nsINameSpaceManager*& aManager)
 // Note: We don't hold a reference to the document observer; we assume
 // that it has a live reference to the document.
 void 
-nsRDFDocument::AddObserver(nsIDocumentObserver* aObserver)
+RDFDocumentImpl::AddObserver(nsIDocumentObserver* aObserver)
 {
     // XXX Make sure the observer isn't already in the list
     if (mObservers.IndexOf(aObserver) == -1) {
@@ -568,13 +801,13 @@ nsRDFDocument::AddObserver(nsIDocumentObserver* aObserver)
 }
 
 PRBool 
-nsRDFDocument::RemoveObserver(nsIDocumentObserver* aObserver)
+RDFDocumentImpl::RemoveObserver(nsIDocumentObserver* aObserver)
 {
     return mObservers.RemoveElement(aObserver);
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::BeginLoad()
+RDFDocumentImpl::BeginLoad()
 {
     PRInt32 i, count = mObservers.Count();
     for (i = 0; i < count; i++) {
@@ -585,20 +818,21 @@ nsRDFDocument::BeginLoad()
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::EndLoad()
+RDFDocumentImpl::EndLoad()
 {
     PRInt32 i, count = mObservers.Count();
     for (i = 0; i < count; i++) {
         nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
         observer->EndLoad(this);
     }
+
     NS_IF_RELEASE(mParser);
     return NS_OK;
 }
 
 
 NS_IMETHODIMP 
-nsRDFDocument::ContentChanged(nsIContent* aContent,
+RDFDocumentImpl::ContentChanged(nsIContent* aContent,
                               nsISupports* aSubContent)
 {
     PRInt32 count = mObservers.Count();
@@ -610,7 +844,7 @@ nsRDFDocument::ContentChanged(nsIContent* aContent,
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::AttributeChanged(nsIContent* aChild,
+RDFDocumentImpl::AttributeChanged(nsIContent* aChild,
                                 nsIAtom* aAttribute,
                                 PRInt32 aHint)
 {
@@ -623,7 +857,7 @@ nsRDFDocument::AttributeChanged(nsIContent* aChild,
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::ContentAppended(nsIContent* aContainer,
+RDFDocumentImpl::ContentAppended(nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer)
 {
     PRInt32 count = mObservers.Count();
@@ -635,10 +869,11 @@ nsRDFDocument::ContentAppended(nsIContent* aContainer,
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::ContentInserted(nsIContent* aContainer,
+RDFDocumentImpl::ContentInserted(nsIContent* aContainer,
                                nsIContent* aChild,
                                PRInt32 aIndexInContainer)
 {
+    
     PRInt32 count = mObservers.Count();
     for (PRInt32 i = 0; i < count; i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
@@ -648,7 +883,7 @@ nsRDFDocument::ContentInserted(nsIContent* aContainer,
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::ContentReplaced(nsIContent* aContainer,
+RDFDocumentImpl::ContentReplaced(nsIContent* aContainer,
                                nsIContent* aOldChild,
                                nsIContent* aNewChild,
                                PRInt32 aIndexInContainer)
@@ -663,7 +898,7 @@ nsRDFDocument::ContentReplaced(nsIContent* aContainer,
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::ContentRemoved(nsIContent* aContainer,
+RDFDocumentImpl::ContentRemoved(nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer)
 {
@@ -677,7 +912,7 @@ nsRDFDocument::ContentRemoved(nsIContent* aContainer,
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
+RDFDocumentImpl::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
                               PRInt32 aHint)
 {
@@ -690,7 +925,7 @@ nsRDFDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet,
+RDFDocumentImpl::StyleRuleAdded(nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule)
 {
     PRInt32 count = mObservers.Count();
@@ -702,7 +937,7 @@ nsRDFDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet,
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
+RDFDocumentImpl::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule)
 {
     PRInt32 count = mObservers.Count();
@@ -714,7 +949,7 @@ nsRDFDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::GetSelection(nsICollection** aSelection)
+RDFDocumentImpl::GetSelection(nsICollection** aSelection)
 {
     if (!mSelection) {
         PR_ASSERT(0);
@@ -727,7 +962,7 @@ nsRDFDocument::GetSelection(nsICollection** aSelection)
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::SelectAll()
+RDFDocumentImpl::SelectAll()
 {
 
     nsIContent * start = nsnull;
@@ -798,44 +1033,44 @@ nsRDFDocument::SelectAll()
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
+RDFDocumentImpl::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
 {
     aIsFound = PR_FALSE;
     return NS_ERROR_FAILURE;
 }
 
 void 
-nsRDFDocument::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
+RDFDocumentImpl::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
 {
     PR_ASSERT(0);
 }
 
 void 
-nsRDFDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+RDFDocumentImpl::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
     PR_ASSERT(0);
 }
 
 void 
-nsRDFDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+RDFDocumentImpl::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
     PR_ASSERT(0);
 }
 
 void 
-nsRDFDocument::ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+RDFDocumentImpl::ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
     PR_ASSERT(0);
 }
 
 void 
-nsRDFDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+RDFDocumentImpl::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
     PR_ASSERT(0);
 }
 
 PRBool 
-nsRDFDocument::IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const
+RDFDocumentImpl::IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const
 {
     PRBool  result;
 
@@ -854,7 +1089,7 @@ nsRDFDocument::IsInRange(const nsIContent *aStartContent, const nsIContent* aEnd
 }
 
 PRBool 
-nsRDFDocument::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const
+RDFDocumentImpl::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const
 {
     PRBool result = PR_FALSE;
 
@@ -869,7 +1104,7 @@ nsRDFDocument::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurren
 }
 
 PRBool 
-nsRDFDocument::IsInSelection(const nsIContent *aContent) const
+RDFDocumentImpl::IsInSelection(const nsIContent *aContent) const
 {
     PRBool  result = PR_FALSE;
 
@@ -892,7 +1127,7 @@ nsRDFDocument::IsInSelection(const nsIContent *aContent) const
 }
 
 nsIContent* 
-nsRDFDocument::GetPrevContent(const nsIContent *aContent) const
+RDFDocumentImpl::GetPrevContent(const nsIContent *aContent) const
 {
     nsIContent* result = nsnull;
  
@@ -916,7 +1151,7 @@ nsRDFDocument::GetPrevContent(const nsIContent *aContent) const
 }
 
 nsIContent* 
-nsRDFDocument::GetNextContent(const nsIContent *aContent) const
+RDFDocumentImpl::GetNextContent(const nsIContent *aContent) const
 {
     nsIContent* result = nsnull;
    
@@ -955,19 +1190,19 @@ nsRDFDocument::GetNextContent(const nsIContent *aContent) const
 }
 
 void 
-nsRDFDocument::SetDisplaySelection(PRBool aToggle)
+RDFDocumentImpl::SetDisplaySelection(PRBool aToggle)
 {
     mDisplaySelection = aToggle;
 }
 
 PRBool 
-nsRDFDocument::GetDisplaySelection() const
+RDFDocumentImpl::GetDisplaySelection() const
 {
     return mDisplaySelection;
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::HandleDOMEvent(nsIPresContext& aPresContext, 
+RDFDocumentImpl::HandleDOMEvent(nsIPresContext& aPresContext, 
                             nsEvent* aEvent, 
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
@@ -982,21 +1217,21 @@ nsRDFDocument::HandleDOMEvent(nsIPresContext& aPresContext,
 // nsIXMLDocument interface
 
 NS_IMETHODIMP
-nsRDFDocument::PrologElementAt(PRInt32 aOffset, nsIContent** aContent)
+RDFDocumentImpl::PrologElementAt(PRInt32 aOffset, nsIContent** aContent)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsRDFDocument::PrologCount(PRInt32* aCount)
+RDFDocumentImpl::PrologCount(PRInt32* aCount)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsRDFDocument::AppendToProlog(nsIContent* aContent)
+RDFDocumentImpl::AppendToProlog(nsIContent* aContent)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1004,21 +1239,21 @@ nsRDFDocument::AppendToProlog(nsIContent* aContent)
 
 
 NS_IMETHODIMP
-nsRDFDocument::EpilogElementAt(PRInt32 aOffset, nsIContent** aContent)
+RDFDocumentImpl::EpilogElementAt(PRInt32 aOffset, nsIContent** aContent)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsRDFDocument::EpilogCount(PRInt32* aCount)
+RDFDocumentImpl::EpilogCount(PRInt32* aCount)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsRDFDocument::AppendToEpilog(nsIContent* aContent)
+RDFDocumentImpl::AppendToEpilog(nsIContent* aContent)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1028,18 +1263,35 @@ nsRDFDocument::AppendToEpilog(nsIContent* aContent)
 // nsIRDFDocument interface
 
 NS_IMETHODIMP
-nsRDFDocument::Init(void)
+RDFDocumentImpl::Init(nsIRDFContentModelBuilder* aBuilder)
 {
+    NS_PRECONDITION(aBuilder != nsnull, "null ptr");
+    if (! aBuilder)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
+
+    NS_ADDREF(aBuilder);
+    mBuilder = aBuilder;
+
     if (NS_FAILED(rv = NS_NewHeapArena(&mArena, nsnull)))
         return rv;
 
-    rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
-                                      nsnull,
-                                      kINameSpaceManagerIID,
-                                      (void**) &mNameSpaceManager);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+                                                    nsnull,
+                                                    kINameSpaceManagerIID,
+                                                    (void**) &mNameSpaceManager)))
         return rv;
+
+    static PRInt32 kInitialResourceTableSize = 1023;
+
+    if ((mResources = PL_NewHashTable(kInitialResourceTableSize,
+                                      rdf_HashPointer,
+                                      PL_CompareValues,
+                                      PL_CompareValues,
+                                      nsnull,
+                                      nsnull)) == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFDataBaseCID,
                                                     nsnull,
@@ -1047,35 +1299,36 @@ nsRDFDocument::Init(void)
                                                     (void**) &mDB)))
         return rv;
 
+    if (NS_FAILED(rv = mDB->AddObserver(this)))
+        return rv;
+
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
                                                     kIRDFServiceIID,
                                                     (nsISupports**) &mRDFService)))
         return rv;
 
+    // The builder may try to ask us for our DB, so do this last...
+    if (NS_FAILED(rv = mBuilder->SetDocument(this)))
+        return rv;
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRDFDocument::SetRootResource(nsIRDFResource* aResource)
+RDFDocumentImpl::SetRootResource(nsIRDFResource* aResource)
 {
-    nsresult rv;
+    NS_ASSERTION(mBuilder != nsnull, "not initialized");
+    if (! mBuilder)
+        return NS_ERROR_NOT_INITIALIZED;
 
-    nsIRDFContent* root;
-    if (NS_FAILED(rv = NS_NewRDFElement(&root)))
-        return rv;
-
-    if (NS_FAILED(rv = root->Init(this, "ROOT", aResource, PR_TRUE)))
-        return rv;
-
-    SetRootContent(NS_STATIC_CAST(nsIContent*, root));
-
-    NS_RELEASE(root); // release our local reference
-    return NS_OK;
+    nsresult rv = mBuilder->CreateRoot(aResource);
+    return rv;
 }
 
 NS_IMETHODIMP
-nsRDFDocument::GetDataBase(nsIRDFDataBase*& result)
+RDFDocumentImpl::GetDataBase(nsIRDFDataBase*& result)
 {
+    NS_PRECONDITION(mDB != nsnull, "not initialized");
     if (! mDB)
         return NS_ERROR_NOT_INITIALIZED;
 
@@ -1086,8 +1339,12 @@ nsRDFDocument::GetDataBase(nsIRDFDataBase*& result)
 }
 
 
+// XXX It may make sense to factor the implementation of this method
+// into the content model builder: maybe the content model builder can
+// do a more efficient implementation?
+
 NS_IMETHODIMP
-nsRDFDocument::CreateChildren(nsIRDFContent* element)
+RDFDocumentImpl::CreateChildren(nsIRDFContent* element)
 {
     nsresult rv;
 
@@ -1107,6 +1364,10 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element)
         goto done;
 
     // Create a cursor that'll enumerate all of the outbound arcs
+    //
+    // XXX This is really horrendous and could use a good does of
+    // special casing. For example, we should treat RDF containers
+    // specially and _not_ enumerate each of the arcs.
     if (NS_FAILED(rv = mDB->ArcLabelsOut(resource, &properties)))
         goto done;
 
@@ -1116,13 +1377,12 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element)
         if (NS_FAILED(rv = properties->GetValue((nsIRDFNode**)&property)))
             break;
 
-        const char* s;
-        if (NS_FAILED(rv = property->GetValue(&s))) {
-            NS_RELEASE(property);
-            break;
+#ifdef DEBUG
+        {
+            const char* s;
+            property->GetValue(&s);
         }
-
-        nsAutoString uri(s);
+#endif
 
         // Create a second cursor that'll enumerate all of the values
         // for all of the arcs.
@@ -1135,10 +1395,10 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element)
         while (NS_SUCCEEDED(rv = assertions->Advance())) {
             nsIRDFNode* value;
             if (NS_SUCCEEDED(rv = assertions->GetValue((nsIRDFNode**)&value))) {
-                // At this point, the specific nsRDFDocument
+                // At this point, the specific RDFDocumentImpl
                 // implementations will create an appropriate child
                 // element (or elements).
-                rv = AddChild(element, property, value);
+                rv = mBuilder->OnAssert(element, property, value);
                 NS_RELEASE(value);
             }
 
@@ -1162,7 +1422,7 @@ done:
 }
 
 NS_IMETHODIMP
-nsRDFDocument::AddTreeProperty(nsIRDFResource* resource)
+RDFDocumentImpl::AddTreeProperty(nsIRDFResource* resource)
 {
     nsresult rv;
     if (! mTreeProperties) {
@@ -1182,7 +1442,7 @@ nsRDFDocument::AddTreeProperty(nsIRDFResource* resource)
 
 
 NS_IMETHODIMP
-nsRDFDocument::RemoveTreeProperty(nsIRDFResource* resource)
+RDFDocumentImpl::RemoveTreeProperty(nsIRDFResource* resource)
 {
     if (! mTreeProperties) {
         // XXX no properties have ever been inserted!
@@ -1199,11 +1459,157 @@ nsRDFDocument::RemoveTreeProperty(nsIRDFResource* resource)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+RDFDocumentImpl::IsTreeProperty(nsIRDFResource* aProperty, PRBool* aResult) const
+{
+#define TREE_PROPERTY_HACK
+#if defined(TREE_PROPERTY_HACK)
+    const char* p;
+    aProperty->GetValue(&p);
+    nsAutoString s(p);
+    if (s.Equals("http://home.netscape.com/NC-rdf#child") ||
+        s.Equals("http://home.netscape.com/NC-rdf#Folder")) {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+#endif // defined(TREE_PROPERTY_HACK)
+    if (rdf_IsOrdinalProperty(aProperty)) {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+    if (! mTreeProperties) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+    if (mTreeProperties->IndexOf(aProperty) == -1) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+    // XXX return "true" by default???
+    *aResult = PR_TRUE;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFDocumentImpl::MapResource(nsIRDFResource* aResource, nsIRDFContent* aContent)
+{
+    // XXX busted: a resource might be located in multiple content
+    // elements in the tree. This needs to map to a set, not a single
+    // instance.
+    PL_HashTableAdd(mResources, aResource, aContent);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFDocumentImpl::UnMapResource(nsIRDFResource* aResource, nsIRDFContent* aContent)
+{
+    // XXX busted: a resource might be located in multiple content
+    // elements in the tree. This needs to map to a set, not a single
+    // instance.
+    PL_HashTableRemove(mResources, aResource);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
+                               PRInt32* aNameSpaceID,
+                               nsIAtom** aTag)
+{
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    // XXX okay, this is a total hack. for this to work right, we need
+    // to remember what the namespace and the tag were when the
+    // property was created, which we don't do...
+
+    const char* p;
+    aProperty->GetValue(&p);
+    nsAutoString uri(p);
+
+    PRInt32 index;
+
+    if ((index = uri.RFind('#')) < 0) {
+        if ((index = uri.RFind('/')) < 0) {
+            NS_ASSERTION(PR_FALSE, "make this smarter!");
+        }
+    }
+
+    nsAutoString tag;
+    PRInt32 count = uri.Length() - (index + 1);
+    uri.Right(tag, count);
+    uri.Cut(index + 1, count);
+ 
+    tag.ToUpperCase();
+    *aTag = NS_NewAtom(tag);
+
+    nsresult rv = mNameSpaceManager->GetNameSpaceID(uri, *aNameSpaceID);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && *aNameSpaceID != kNameSpaceID_Unknown, "unknown namespace");
+
+    return rv;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// nsIRDFObserver methods
+
+NS_IMETHODIMP
+RDFDocumentImpl::OnAssert(nsIRDFResource* subject,
+                        nsIRDFResource* predicate,
+                        nsIRDFNode* object)
+{
+    NS_PRECONDITION(mResources != nsnull, "not initialized");
+    if (! mResources)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsIRDFContent* element = (nsIRDFContent*) PL_HashTableLookup(mResources, subject);
+
+    if (! element)
+        // it's not in the tree: we're done!
+        return NS_OK;
+
+    PRBool hasLiveKids;
+    if (NS_SUCCEEDED(element->ChildrenHaveBeenGenerated(hasLiveKids)) && hasLiveKids) {
+        // that is, if the children have _already_ been generated,
+        // manually add this new one. Otherwise, just ignore it: it'll
+        // get generated when someone asks the content model for it.
+        mBuilder->OnAssert(element, predicate, object);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFDocumentImpl::OnUnassert(nsIRDFResource* subject,
+                          nsIRDFResource* predicate,
+                          nsIRDFNode* object)
+{
+    NS_PRECONDITION(mResources != nsnull, "not initialized");
+    if (! mResources)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsIRDFContent* element = (nsIRDFContent*) PL_HashTableLookup(mResources, subject);
+    if (! element)
+        // it's not in the tree: we're done!
+        return NS_OK;
+
+    PRBool hasLiveKids;
+    if (NS_SUCCEEDED(element->ChildrenHaveBeenGenerated(hasLiveKids)) && hasLiveKids) {
+        // that is, if the children have _already_ been generated,
+        // manually remove this one. Otherwise, just ignore it: it'll
+        // never get generated anyway...
+        mBuilder->OnUnassert(element, predicate, object);
+    }
+    return NS_OK;
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
 nsIContent*
-nsRDFDocument::FindContent(const nsIContent* aStartNode,
+RDFDocumentImpl::FindContent(const nsIContent* aStartNode,
                            const nsIContent* aTest1, 
                            const nsIContent* aTest2) const
 {
@@ -1230,113 +1636,21 @@ nsRDFDocument::FindContent(const nsIContent* aStartNode,
 }
 
 
-PRBool
-nsRDFDocument::IsTreeProperty(const nsIRDFResource* property) const
-{
-#define TREE_PROPERTY_HACK
-#if defined(TREE_PROPERTY_HACK)
-    const char* p;
-    property->GetValue(&p);
-    nsAutoString s(p);
-    if (s.Equals("http://home.netscape.com/NC-rdf#child") ||
-        s.Equals("http://home.netscape.com/NC-rdf#Folder")) {
-        return PR_TRUE;
-    }
-#endif // defined(TREE_PROPERTY_HACK)
-    if (rdf_IsOrdinalProperty(property)) {
-        return PR_TRUE;
-    }
-    if (! mTreeProperties) {
-        return PR_FALSE;
-    }
-    if (mTreeProperties->IndexOf(property) == -1) {
-        return PR_FALSE;
-    }
-    return PR_TRUE;
-}
+////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsRDFDocument::NewChild(const nsString& tag,
-                        nsIRDFResource* resource,
-                        nsIRDFContent*& result,
-                        PRBool childrenMustBeGenerated)
+NS_NewRDFDocument(nsIRDFDocument** result)
 {
-    nsresult rv;
+    NS_PRECONDITION(result != nsnull, "null ptr");
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
 
-    nsIRDFContent* child;
-    if (NS_FAILED(rv = NS_NewRDFElement(&child)))
-        return rv;
+    RDFDocumentImpl* doc = new RDFDocumentImpl();
+    if (! doc)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    if (NS_FAILED(rv = child->Init(this, tag, resource, childrenMustBeGenerated))) {
-        NS_RELEASE(child);
-        return rv;
-    }
-
-    result = child;
+    NS_ADDREF(doc);
+    *result = doc;
     return NS_OK;
-}
-
-
-nsresult
-nsRDFDocument::AttachTextNode(nsIContent* parent,
-                              nsIRDFNode* value)
-{
-    nsresult rv;
-    nsAutoString s;
-    nsIContent* node = nsnull;
-    nsITextContent* text = nsnull;
-    nsIDocument* doc = nsnull;
-    nsIRDFResource* resource = nsnull;
-    nsIRDFLiteral* literal = nsnull;
-    
-    if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
-        const char* p;
-        if (NS_FAILED(rv = resource->GetValue(&p)))
-            goto error;
-
-        s = p;
-    }
-    else if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
-        const PRUnichar* p;
-        if (NS_FAILED(rv = literal->GetValue(&p)))
-            goto error;
-
-        s = p;
-    }
-    else {
-        PR_ASSERT(0);
-        goto error;
-    }
-
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kTextNodeCID,
-                                                    nsnull,
-                                                    kIContentIID,
-                                                    (void**) &node)))
-        goto error;
-
-    if (NS_FAILED(rv = QueryInterface(kIDocumentIID, (void**) &doc)))
-        goto error;
-
-    if (NS_FAILED(rv = node->SetDocument(doc, PR_FALSE)))
-        goto error;
-
-    if (NS_FAILED(rv = node->QueryInterface(kITextContentIID, (void**) &text)))
-        goto error;
-
-    if (NS_FAILED(rv = text->SetText(s.GetUnicode(), s.Length(), PR_FALSE)))
-        goto error;
-
-    // hook it up to the child
-    if (NS_FAILED(rv = node->SetParent(parent)))
-        goto error;
-
-    if (NS_FAILED(rv = parent->AppendChildTo(NS_STATIC_CAST(nsIContent*, node), PR_TRUE)))
-        goto error;
-
-error:
-    NS_IF_RELEASE(node);
-    NS_IF_RELEASE(text);
-    NS_IF_RELEASE(doc);
-    return rv;
 }
 
