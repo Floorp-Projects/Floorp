@@ -40,7 +40,7 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   testRealError();
   test1();
   test2();
@@ -55,8 +55,8 @@ function testRealError()
 {
     /* throw a real error, and see what it looks like */
     enterFunc ("testRealError");
-    
-    try 
+
+    try
     {
         blabla;
     }
@@ -68,9 +68,9 @@ function testRealError()
         reportCompare (61, e.lineNumber,
                        "lineNumber property returned unexpected value.");
     }
-    
+
     exitFunc ("testRealError");
-}    
+}
 
 
 function test1()
@@ -86,7 +86,7 @@ function test1()
                    "fileName property returned unexpected value.");
     reportCompare (2, e.lineNumber,
                    "lineNumber property returned unexpected value.");
-    
+
     exitFunc ("test1");
 }
 
@@ -104,7 +104,7 @@ function test2()
                    "fileName property returned unexpected value.");
     reportCompare (0, e.lineNumber,
                    "lineNumber property returned unexpected value.");
-    
+
     exitFunc ("test2");
 }
 
@@ -123,7 +123,7 @@ function test3()
                    "fileName property returned unexpected value.");
     reportCompare (10, e.lineNumber,
                    "lineNumber property returned unexpected value.");
-    
+
     exitFunc ("test3");
 }
 
@@ -141,6 +141,6 @@ function test4()
                    "fileName property returned unexpected value.");
     reportCompare (0, e.lineNumber,
                    "lineNumber property returned unexpected value.");
-    
+
     exitFunc ("test4");
 }

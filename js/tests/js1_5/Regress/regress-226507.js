@@ -84,7 +84,7 @@ var expectedvalues = [];
  * With stack limit 100K on Linux debug build even N=30 already can cause
  * stack overflow; use 35 to trigger it for sure.
  */
-var N = 35;
+var N = 350;
 
 var counter = 0;
 function f()
@@ -111,6 +111,8 @@ var source = "".concat(
 	"1);\n",
 	repeat_str("}", N));
 
+// Repeat it for additional stress testing
+source += source;
 
 /*
  * In Rhino, eval() always uses interpreted mode.
@@ -122,7 +124,7 @@ script();
 
 status = inSection(1);
 actual = counter;
-expect = N + 1;
+expect = (N + 1) * 2;
 addThis();
 
 
