@@ -2608,12 +2608,11 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
           mutation.mRelatedNode = relNode;
 
           nsEventStatus status = nsEventStatus_eIgnore;
-          nsCOMPtr<nsIDOMEvent> domEvent;
-          aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+          aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
 
         if (aNotify && mDocument) {
-                mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
+          mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
         }
     }
     return NS_OK;
@@ -2691,8 +2690,7 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDeepSetDoc
           mutation.mRelatedNode = relNode;
 
           nsEventStatus status = nsEventStatus_eIgnore;
-          nsCOMPtr<nsIDOMEvent> domEvent;
-          aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+          aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
 
         if (aNotify && mDocument) {
@@ -2724,8 +2722,7 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
       mutation.mRelatedNode = relNode;
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsCOMPtr<nsIDOMEvent> domEvent;
-      oldKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+      oldKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
 
     // On the removal of a <treeitem>, <treechildren>, or <treecell> element,
@@ -3084,8 +3081,7 @@ nsXULElement::SetAttribute(nsINodeInfo* aNodeInfo,
         mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION : 
                                                nsIDOMMutationEvent::ADDITION;
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsCOMPtr<nsIDOMEvent> domEvent;
-        HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+        HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
       }
 
       if (aNotify) {
@@ -3279,8 +3275,7 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID,
                     mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(oldValue));
                   mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
                   nsEventStatus status = nsEventStatus_eIgnore;
-                  nsCOMPtr<nsIDOMEvent> domEvent;
-                  HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+                  HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
                 }
 
                 Attributes()->RemoveElementAt(i);

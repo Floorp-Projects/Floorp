@@ -1405,8 +1405,7 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
       mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION :
                                              nsIDOMMutationEvent::ADDITION;
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsCOMPtr<nsIDOMEvent> domEvent;
-      HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+      HandleDOMEvent(nsnull, &mutation, nsnull,
                      NS_EVENT_FLAG_INIT, &status);
     }
 
@@ -1527,8 +1526,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
         mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(value));
       mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsCOMPtr<nsIDOMEvent> domEvent;
-      HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+      HandleDOMEvent(nsnull, &mutation, nsnull,
                      NS_EVENT_FLAG_INIT, &status);
     }
 
@@ -1613,8 +1611,7 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
       mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsCOMPtr<nsIDOMEvent> domEvent;
-      HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+      HandleDOMEvent(nsnull, &mutation, nsnull,
                      NS_EVENT_FLAG_INIT, &status);
     }
 
@@ -3448,8 +3445,7 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
         mutation.mRelatedNode = relNode;
 
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsCOMPtr<nsIDOMEvent> domEvent;
-        aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+        aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
       }
     }
   }
@@ -3523,8 +3519,7 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
         mutation.mRelatedNode = relNode;
 
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsCOMPtr<nsIDOMEvent> domEvent;
-        aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+        aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
       }
     }
   }
@@ -3555,8 +3550,7 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
       mutation.mRelatedNode = relNode;
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsCOMPtr<nsIDOMEvent> domEvent;
-      oldKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+      oldKid->HandleDOMEvent(nsnull, &mutation, nsnull,
                              NS_EVENT_FLAG_INIT, &status);
     }
 
