@@ -231,7 +231,7 @@ client.onInputNick = function cli_inick (e)
         return false;
     
     if (e.server) 
-        e.server.sendData ('NICK ' + e.inputData + '\\n');
+        e.server.sendData ('NICK ' + e.inputData + '\n');
     else
         CIRCNetwork.prototype.INITIAL_NICK = e.inputData;
     
