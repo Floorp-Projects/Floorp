@@ -1,3 +1,4 @@
 nsITextToSubURI.idl
 nsICurrentCharsetListener.idl
 nsICharsetConverterManager2.idl
+nsIScriptableUConv.idl
