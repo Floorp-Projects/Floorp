@@ -379,7 +379,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
     PR_ASSERT( fh != NULL );
 
     /* Open the file for exclusive random read/write */
-    (*fh) = PR_Open(path, PR_RDWR|PR_CREATE_FILE, 00644);
+    (*fh) = XP_FileOpen(path, PR_RDWR|PR_CREATE_FILE, 00644);
     if ( !VALID_FILEHANDLE(*fh) )
     {
         switch (PR_GetError())
@@ -392,7 +392,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
         case PR_ILLEGAL_ACCESS_ERROR:
         case PR_NO_ACCESS_RIGHTS_ERROR:
             /* DVNOTE: should we try read only? */
-            (*fh) = PR_Open(path, PR_RDONLY, 00644);
+            (*fh) = XP_FileOpen(path, PR_RDONLY, 00644);
             if ( VALID_FILEHANDLE(*fh) )
                 return REGERR_READONLY;
             else

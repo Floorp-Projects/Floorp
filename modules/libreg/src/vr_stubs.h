@@ -152,6 +152,27 @@ typedef FILE          * XP_File;
     #define SEEK_CUR PR_SEEK_CUR
     #define SEEK_END PR_SEEK_END
 #endif
+
+#if defined(XP_UNIX)
+#define USE_MMAP_REGISTRY_IO 1
+#else
+#define USE_MMAP_REGISTRY_IO 0
+#endif
+
+#if USE_MMAP_REGISTRY_IO
+
+#include "mmapio.h"
+#define XP_FileSeek(file,offset,whence) mmio_FileSeek((file),(offset),(whence))
+#define XP_FileRead(dest,count,file)    mmio_FileRead((file), (dest), (count))
+#define XP_FileWrite(src,count,file)    mmio_FileWrite((file), (src), (count))
+#define XP_FileTell(file)               mmio_FileTell(file)
+#define XP_FileClose(file)              mmio_FileClose(file)
+#define XP_FileOpen(path, flags, mode)  mmio_FileOpen((path), (flags), (mode))
+#define XP_FileFlush(file)              ((void)1)
+
+typedef MmioFile* XP_File;
+
+#else /*USE_MMAP_REGISTRY_IO*/
 /*
 ** Note that PR_Seek returns the offset (if successful) and -1 otherwise.  So
 ** to make this code work
@@ -163,11 +184,17 @@ typedef FILE          * XP_File;
 #define XP_FileWrite(src,count,file)    PR_Write((file), (src), (count))
 #define XP_FileTell(file)               PR_Seek(file, 0, PR_SEEK_CUR)
 #define XP_FileClose(file)              PR_Close(file)
+#define XP_FileOpen(path, flags, mode)  PR_Open((path), (flags), (mode))
 #ifdef XP_MAC
 #define XP_FileFlush(file)              PR_Sync(file)
 #else
 #define XP_FileFlush(file)              ((void)1)
 #endif
+
+typedef PRFileDesc* XP_File;
+
+#endif /*USE_MMAP_REGISTRY_IO*/
+
 #define XP_ASSERT(x)        PR_ASSERT((x))
 
 #define XP_STRCAT(a,b)      PL_strcat((a),(b))
@@ -187,7 +214,6 @@ typedef FILE          * XP_File;
 #define XP_STRCASECMP(x,y)  PL_strcasecmp((x),(y))
 #define XP_STRNCASECMP(x,y,n) PL_strncasecmp((x),(y),(n))
 
-typedef PRFileDesc* XP_File;
 
 #endif /*STANDALONE_REGISTRY*/
 
