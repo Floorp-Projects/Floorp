@@ -66,18 +66,22 @@ public:
     NS_IMETHOD           Show(PRBool aShow);
     NS_IMETHOD           ShowMenuBar(PRBool aShow);
     NS_IMETHOD           Move(PRUint32 aX, PRUint32 aY);
+    NS_IMETHOD           IsMenuBarVisible(PRBool *aVisible);
+
     NS_IMETHOD           Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint);
     NS_IMETHOD           Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
                                 PRUint32 aHeight, PRBool aRepaint);
-    NS_IMETHOD           IsMenuBarVisible(PRBool *aVisible);
+
+    NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
+    NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
 
     NS_IMETHOD           SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
     NS_IMETHOD           UpdateTooltips(nsRect* aNewTips[]);
     NS_IMETHOD           RemoveTooltips();
 
-    NS_IMETHOD            BeginResizingChildren(void);
-    NS_IMETHOD            EndResizingChildren(void);
-    NS_IMETHOD            Destroy(void);
+    NS_IMETHOD           BeginResizingChildren(void);
+    NS_IMETHOD           EndResizingChildren(void);
+    NS_IMETHOD           Destroy(void);
 
 
     virtual PRBool IsChild() const;
