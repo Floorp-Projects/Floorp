@@ -57,8 +57,7 @@ public:
     static NS_EXPORT nsIMemory* GetGlobalMemoryService();       // AddRefs
 };
 
-// ContractID/CID for the global memory service:
-#define NS_MEMORY_CONTRACTID        "@mozilla.org/xpcom/memory-service;1"
+// CID for the global memory service:
 #define NS_MEMORY_CLASSNAME     "Global Memory Service"
 #define NS_MEMORY_CID                                \
 { /* 30a04e40-38e7-11d4-8cf5-0060b0fc14a3 */         \
