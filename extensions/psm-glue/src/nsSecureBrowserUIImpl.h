@@ -74,6 +74,7 @@ protected:
 
 	nsCOMPtr<nsIDOMWindow>              mWindow;
     nsCOMPtr<nsIDOMElement>             mSecurityButton;
+    nsCOMPtr<nsIDOMElement>             mCertificateAuthorityDisplay;
 	nsCOMPtr<nsIDocumentLoaderObserver> mOldWebShellObserver;
     nsCOMPtr<nsIPref>                   mPref;
     nsCOMPtr<nsIStringBundle>           mStringBundle;
