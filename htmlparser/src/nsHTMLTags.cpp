@@ -23,18 +23,18 @@
 
 static char* tagTable[] = {
   "A", "ABBR", "ACRONYM", "ADDRESS", "APPLET", "AREA", "B", "BASE", 
-  "BASEFONT", "BDO", "BIG", "BLINK", "BLOCKQUOTE", "BODY", "BR", "BUTTON", 
-  "CAPTION", "CENTER", "CITE", "CODE", "COL", "COLGROUP", "DD", "DEL", "DFN", 
-  "DIR", "DIV", "DL", "DT", "EM", "EMBED", "FIELDSET", "FONT", "FORM", 
-  "FRAME", "FRAMESET", "H1", "H2", "H3", "H4", "H5", "H6", "HEAD", "HR", 
-  "HTML", "I", "IFRAME", "ILAYER", "IMG", "INPUT", "INS", "ISINDEX", "KBD", 
-  "KEYGEN", "LABEL", "LAYER", "LEGEND", "LI", "LINK", "LISTING", "MAP", 
-  "MENU", "META", "MULTICOL", "NOBR", "NOEMBED", "NOFRAMES", "NOLAYER", 
-  "NOSCRIPT", "OBJECT", "OL", "OPTGROUP", "OPTION", "P", "PARAM", 
+  "BASEFONT", "BDO", "BGSOUND", "BIG", "BLINK", "BLOCKQUOTE", "BODY", "BR", 
+  "BUTTON", "CAPTION", "CENTER", "CITE", "CODE", "COL", "COLGROUP", "DD", 
+  "DEL", "DFN", "DIR", "DIV", "DL", "DT", "EM", "EMBED", "FIELDSET", "FONT", 
+  "FORM", "FRAME", "FRAMESET", "H1", "H2", "H3", "H4", "H5", "H6", "HEAD", 
+  "HR", "HTML", "I", "IFRAME", "ILAYER", "IMG", "INPUT", "INS", "ISINDEX", 
+  "KBD", "KEYGEN", "LABEL", "LAYER", "LEGEND", "LI", "LINK", "LISTING", 
+  "MAP", "MENU", "META", "MULTICOL", "NEXTID", "NOBR", "NOEMBED", "NOFRAMES", 
+  "NOLAYER", "NOSCRIPT", "OBJECT", "OL", "OPTGROUP", "OPTION", "P", "PARAM", 
   "PLAINTEXT", "PRE", "Q", "S", "SAMP", "SCRIPT", "SELECT", "SERVER", 
-  "SMALL", "SPACER", "SPAN", "STRIKE", "STRONG", "STYLE", "SUB", "SUP", 
-  "TABLE", "TBODY", "TD", "TEXTAREA", "TFOOT", "TH", "THEAD", "TITLE", "TR", 
-  "TT", "U", "UL", "VAR", "WBR", "XMP"
+  "SMALL", "SOUND", "SPACER", "SPAN", "STRIKE", "STRONG", "STYLE", "SUB", 
+  "SUP", "TABLE", "TBODY", "TD", "TEXTAREA", "TFOOT", "TH", "THEAD", "TITLE", 
+  "TR", "TT", "U", "UL", "VAR", "WBR", "XMP"
 };
 
 nsHTMLTag NS_TagToEnum(const char* aTagName) {
