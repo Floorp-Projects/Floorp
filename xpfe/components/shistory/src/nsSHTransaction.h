@@ -47,7 +47,6 @@ protected:
 
 	nsISHTransaction * mPrev; // Weak Reference
 	nsCOMPtr<nsISHTransaction> mNext;
-	nsCOMPtr<nsISHTransaction> mLRVList;
 	nsCOMPtr<nsISHEntry>  mSHEntry;
 };
 
