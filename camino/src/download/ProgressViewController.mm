@@ -162,8 +162,8 @@ enum {
   // forget it ever met us and necko will clean it up on its own.
   if (mDownloader) {
     mDownloader->DetachDownloadDisplay();
+    NS_RELEASE(mDownloader);
   }
-  NS_IF_RELEASE(mDownloader);
   
   [mStartTime release];
   [mSourceURL release];
@@ -184,8 +184,8 @@ enum {
   // forget it ever met us and necko will clean it up on its own.
   if (mDownloader) {
     mDownloader->DetachDownloadDisplay();
+    NS_RELEASE(mDownloader);
   }
-  NS_IF_RELEASE(mDownloader);
 }
 
 -(void)viewDidLoad
