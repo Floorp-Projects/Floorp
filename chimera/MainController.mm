@@ -94,7 +94,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
         NSString* url = [defaults stringForKey:USER_DEFAULTS_URL_KEY];
         mStartURL = url ? [url retain] : nil;
-        mSplashScreen = [[CHSplashScreenWindow alloc] splashImage:nil withFade:YES withStatusRect:NSMakeRect(0,0,0,0)];
+        mSplashScreen = [[CHSplashScreenWindow alloc] splashImage:nil withFade:NO withStatusRect:NSMakeRect(0,0,0,0)];
         mFindDialog = nil;
         mMenuBookmarks = nil;
         
