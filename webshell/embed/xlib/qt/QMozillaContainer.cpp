@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  * 
  * Contributor(s): 
+ *   Milind Changire <changire@yahoo.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
