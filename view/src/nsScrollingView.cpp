@@ -785,8 +785,8 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     // of 0.0f (completely transparent)
     // XXX The clip widget should be created on demand only...
     rv = mClipView->Init(mViewManager, mBounds, this);
-    mViewManager->InsertChild(this, mClipView, 1);
-    mViewManager->SetViewOpacity(mClipView, 0.0f);
+    rv = mViewManager->InsertChild(this, mClipView, mZindex);
+    rv = mViewManager->SetViewOpacity(mClipView, 0.0f);
     rv = mClipView->CreateWidget(kWidgetCID, &initData,
                                  mWindow ? nsnull : aNative);
   }
@@ -807,7 +807,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
 
     rv = mCornerView->Init(mViewManager, trect, this,
                            nsnull, nsViewVisibility_kHide);
-    mViewManager->InsertChild(this, mCornerView, 3);
+    mViewManager->InsertChild(this, mCornerView, mZindex);
     mCornerView->CreateWidget(kWidgetCID, &initData,
                               mWindow ? nsnull : aNative);
   }
@@ -828,9 +828,10 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
     rv = mVScrollBarView->Init(mViewManager, trect, this);
-    mViewManager->InsertChild(this, mVScrollBarView, 3);
+    rv = mViewManager->InsertChild(this, mVScrollBarView, mZindex);
     rv = mVScrollBarView->CreateWidget(kCScrollbarIID, &initData,
                                        mWindow ? nsnull : aNative);
+
     nsIView *scrolledView;
     GetScrolledView(scrolledView);
 
@@ -887,7 +888,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
 
     rv = mHScrollBarView->Init(mViewManager, trect, this);
-    mViewManager->InsertChild(this, mHScrollBarView, 3);
+    rv = mViewManager->InsertChild(this, mHScrollBarView, mZindex);
     rv = mHScrollBarView->CreateWidget(kCHScrollbarIID, &initData,
                                        mWindow ? nsnull : aNative);
   }
@@ -904,6 +905,19 @@ NS_IMETHODIMP nsScrollingView::SetWidget(nsIWidget *aWidget)
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollingView::SetZIndex(PRInt32 aZIndex)
+{
+	nsView::SetZIndex(aZIndex);
+	
+	// inform all views that the z-index has changed.
+	if (mClipView) mViewManager->SetViewZIndex(mClipView, aZIndex);
+	if (mCornerView) mViewManager->SetViewZIndex(mCornerView, aZIndex);
+	if (mVScrollBarView) mViewManager->SetViewZIndex(mVScrollBarView, aZIndex);
+	if (mHScrollBarView) mViewManager->SetViewZIndex(mHScrollBarView, aZIndex);
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
