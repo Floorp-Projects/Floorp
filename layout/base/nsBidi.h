@@ -957,11 +957,11 @@ public:
   nsresult WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PRUnichar *aDest, PRUint16 aOptions, PRInt32 *aDestSize);
 
   /**
-   * Give a Unichar
-   * return PR_TRUE if the Unichar is a Bidi control character (LRE, RLE, PDF, LRO, RLO, LRM, RLM)
+   * Give a UTF-32 codepoint
+   * return PR_TRUE if the codepoint is a Bidi control character (LRE, RLE, PDF, LRO, RLO, LRM, RLM)
    * return PR_FALSE, otherwise
    */
-  PRBool IsBidiControl(PRUnichar aChar);
+  PRBool IsBidiControl(PRUint32 aChar);
 
 protected:
   /** length of the current text */
@@ -1031,21 +1031,21 @@ private:
 
   PRBool PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
   /**
-   * Give a Unichar, return an eBidiCategory
+   * Give a UTF-32 codepoint, return an eBidiCategory
    */
-  eBidiCategory GetBidiCategory(PRUnichar aChar);
+  eBidiCategory GetBidiCategory(PRUint32 aChar);
 
   /**
-   * Give a Unichar, and a eBidiCategory, 
-   * return PR_TRUE if the Unichar is in that category, 
+   * Give a UTF-32 codepoint and an eBidiCategory, 
+   * return PR_TRUE if the codepoint is in that category, 
    * return PR_FALSE, otherwise
    */
-  PRBool IsBidiCategory(PRUnichar aChar, eBidiCategory aBidiCategory);
+  PRBool IsBidiCategory(PRUint32 aChar, eBidiCategory aBidiCategory);
 
   /**
-   * Give a Unichar, return a nsCharType (compatible with ICU)
+   * Give a UTF-32 codepoint, return a nsCharType (compatible with ICU)
    */
-  nsCharType GetCharType(PRUnichar aChar);
+  nsCharType GetCharType(PRUint32 aChar);
 
   /**
    * Give a Unicode character, return the symmetric equivalent

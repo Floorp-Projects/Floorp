@@ -518,7 +518,7 @@ void nsBidi::GetDirProps(const PRUnichar *aText)
       uchar=aText[i];
       if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
         /* not a surrogate pair */
-        flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetCharType(uchar));
+        flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetCharType((PRUint32)uchar));
       } else {
         /* a surrogate pair */
         dirProps[i++]=BN;   /* first surrogate in the pair gets the BN type */
@@ -548,7 +548,7 @@ void nsBidi::GetDirProps(const PRUnichar *aText)
     uchar=aText[i];
     if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
       /* not a surrogate pair */
-      flags|=DIRPROP_FLAG(dirProps[i]=GetCharType(uchar));
+      flags|=DIRPROP_FLAG(dirProps[i]=GetCharType((PRUint32)uchar));
     } else {
       /* a surrogate pair */
       dirProps[i++]=BN;   /* second surrogate in the pair gets the BN type */
@@ -2236,7 +2236,7 @@ PRInt32 nsBidi::doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
         i=0;
         do {
           ch=*src++;
-          if (!IsBidiControl(ch)) {
+          if (!IsBidiControl((PRUint32)ch)) {
             ++i;
           }
         } while(--length>0);
@@ -2304,7 +2304,7 @@ nsresult nsBidi::WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PRUnich
   return NS_OK;
 }
 
-eBidiCategory nsBidi::GetBidiCategory(PRUnichar aChar)
+eBidiCategory nsBidi::GetBidiCategory(PRUint32 aChar)
 {
   eBidiCategory oResult = GetBidiCat(aChar);
   if (eBidiCat_CC == oResult)
@@ -2312,21 +2312,21 @@ eBidiCategory nsBidi::GetBidiCategory(PRUnichar aChar)
   return oResult;
 }
 
-PRBool nsBidi::IsBidiCategory(PRUnichar aChar, eBidiCategory aBidiCategory)
+PRBool nsBidi::IsBidiCategory(PRUint32 aChar, eBidiCategory aBidiCategory)
 {
   return (GetBidiCategory(aChar) == aBidiCategory);
 }
 
 #define ZWNJ 0x200c
-PRBool nsBidi::IsBidiControl(PRUnichar aChar)
+PRBool nsBidi::IsBidiControl(PRUint32 aChar)
 {
   // This method is used when stripping Bidi control characters for
   // display, so it will return TRUE for LRM, RLM, ZWJ and ZWNJ as
   // well as the characters with category eBidiCat_CC
-  return (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffc)==ZWNJ);
+  return (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffffc)==ZWNJ);
 }
 
-nsCharType nsBidi::GetCharType(PRUnichar aChar)
+nsCharType nsBidi::GetCharType(PRUint32 aChar)
 {
   nsCharType oResult;
   eBidiCategory bCat = GetBidiCat(aChar);

@@ -507,7 +507,12 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
 #ifdef IBMBIDI
         PRInt32 length = mTitle.Length();
         for (PRInt32 i = 0; i < length; i++) {
-          if (CHAR_IS_BIDI(mTitle.CharAt(i) ) ) {
+          if ((CHAR_IS_BIDI(mTitle.CharAt(i)) ) ||
+              ((IS_HIGH_SURROGATE(mTitle.CharAt(i))) &&
+               (++i < length) &&
+               (IS_LOW_SURROGATE(mTitle.CharAt(i))) &&
+               (CHAR_IS_BIDI(SURROGATE_TO_UCS4(mTitle.CharAt(i-1),
+                                               mTitle.CharAt(i)))))) {
             mState |= NS_FRAME_IS_BIDI;
             break;
           }
@@ -538,6 +543,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
 
     aWidth -= ellipsisWidth;
 
+    // XXX: This whole block should probably take surrogates into account
     // ok crop things
     switch (mCropType)
     {
