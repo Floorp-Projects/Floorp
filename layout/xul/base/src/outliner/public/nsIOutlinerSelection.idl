@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *                  Håkan Waara (hwaara@chello.se)
  */
 
 interface nsIOutlinerBoxObject;
@@ -33,6 +34,11 @@ interface nsIOutlinerSelection : nsISecurityCheckedComponent
    * The outliner widget for this selection.
    */
   attribute nsIOutlinerBoxObject outliner;
+
+  /**
+   * The number of rows currently selected in this outliner.
+   */
+  readonly attribute long count;
 
   /**
    * Indicates whether or not the row at the specified index is
