@@ -49,6 +49,18 @@ inline void setStaticField(const char *name, const char *className, JavaObject &
   field->set(0, val);
 }
 
+
+/*
+ * Class : java/lang/System
+ * Method : registerNatives
+ * Signature : ()V
+ */
+NS_EXPORT NS_NATIVECALL(void)
+Netscape_Java_java_lang_System_registerNatives()
+{
+    // Not implemented.
+}
+
 /*
  * Class : java/lang/System
  * Method : setIn0

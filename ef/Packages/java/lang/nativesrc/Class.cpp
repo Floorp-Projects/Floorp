@@ -87,7 +87,6 @@ static inline JavaObject &toObject(Java_java_lang_Object &inObject)
     return *(Class *)(&inObject); 
 }
 
-
 /*
  * Class : java/lang/Class
  * Method : forName
@@ -121,6 +120,22 @@ Netscape_Java_java_lang_Class_forName(Java_java_lang_String *nameString)
 
     return (Java_java_lang_Class *) clz;
 }
+
+
+/*
+ * Class : java/lang/Class
+ * Method : forName0
+ * Signature : (Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;
+ */
+NS_EXPORT NS_NATIVECALL(Java_java_lang_Class *)
+Netscape_Java_java_lang_Class_forName0(Java_java_lang_String *nameString,
+                                       uint32 /* bool */,
+                                       Java_java_lang_ClassLoader *)
+{
+    // IMPLEMENT
+    return Netscape_Java_java_lang_Class_forName(nameString);
+}
+
 
 
 /*
