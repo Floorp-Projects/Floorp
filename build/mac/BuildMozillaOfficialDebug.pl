@@ -44,5 +44,9 @@ SetBuildNumber();
 
 SetTimeBomb(0, 30);
 
+# Delay()
+
+Delay(10);
+
 # Now build the projects
 BuildMozilla();

@@ -32,7 +32,7 @@ package			Moz;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest SetBuildNumber SetAgentString SetTimeBomb);
+@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest SetBuildNumber SetAgentString SetTimeBomb Delay);
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib QUIET);
 
 	use Cwd;
@@ -415,6 +415,22 @@ sub SetTimeBomb($$)
   system("perl :mozilla:config:mac-set-timebomb.pl $warn_days $bomb_days");
 	
 }
+
+sub Delay($)
+		
+{
+  my ($delay_seconds) = @_;
+
+  $now = time;
+  
+  $exit_time = $now + $delay_seconds;
+
+  while ($exit_time > $now) {
+     $now = time;
+  }
+	
+}
+
 
 1;
 
