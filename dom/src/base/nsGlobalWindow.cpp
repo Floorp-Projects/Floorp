@@ -1135,11 +1135,12 @@ NS_IMETHODIMP GlobalWindowImpl::SetStatus(const nsAReadableString& aStatus)
 {
   mStatus = aStatus;
 
-   nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-   GetWebBrowserChrome(getter_AddRefs(browserChrome));
-   if(browserChrome)
-      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT,
-                               PromiseFlatString(aStatus).get());
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+  GetWebBrowserChrome(getter_AddRefs(browserChrome));
+  if(browserChrome) {
+    browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT,
+                             PromiseFlatString(aStatus).get());
+  }
 
   return NS_OK;
 }
