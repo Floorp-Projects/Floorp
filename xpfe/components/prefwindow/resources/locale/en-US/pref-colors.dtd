@@ -1,12 +1,12 @@
 <!-- extracted from content/pref-colors.xul -->
 
-<!--LOCALIZATION NOTE : FILE Color management prefs -->
+<!-- LOCALIZATION NOTE : FILE Color management prefs -->
 <!ENTITY  window.title "Colors">
 <!ENTITY  lHeader "Colors">
 <!ENTITY  rHeader "Change the colors in your display">
 <!ENTITY  color "Colors">
 <!ENTITY  text "Text:">
-<!--LOCALIZATION NOTE (colorPick): DONT_TRANSLATE -->
+<!-- LOCALIZATION NOTE (colorPick): DONT_TRANSLATE -->
 <!ENTITY  colorPick "Color Picker">
 <!ENTITY  background "Background:">
 <!ENTITY  useWinColorsCheck.label "Use Windows colors">
@@ -14,6 +14,9 @@
 <!ENTITY  links "Links">
 <!ENTITY  unvisit "Unvisited Links:">
 <!ENTITY  visit "Visited Links:">
+<!-- LOCALIZATION NOTE (someProvColors): This is the start of a sentence and will be followed by the following radio buttons. -->
 <!ENTITY  someProvColors "When a webpage provides its own colors and background:">
+<!-- LOCALIZATION NOTE (alwaysUseDocColors.label): This is option one, and it appends to 'someProvColors' above. -->
 <!ENTITY  alwaysUseDocColors.label "use the colors and background supplied by the webpage">
+<!-- LOCALIZATION NOTE (ignoreDocColors.label): This is option two, and it appends to 'someProvColors' above.  -->
 <!ENTITY  ignoreDocColors.label "use my chosen colors, ignoring the colors provided">

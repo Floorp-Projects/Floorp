@@ -1,3 +1,5 @@
+<!-- LOCALIZATION NOTE : FILE Proxy management prefs -->
+
 <!ENTITY window.title "View Manual Proxy Configuration">
 <!ENTITY intro.label "You may configure a proxy and port number for each of the internet protocols that Netscape supports.">
 <!ENTITY ftp.label "FTP Proxy:">

@@ -40,8 +40,11 @@ Rights Reserved.
 <!ENTITY use8Bits.label "Send messages that use 8-bit characters">
 <!ENTITY cleanupMsg.label "When it's time to clean up messages:">
 <!ENTITY asIs.label "As is (does not work well with some mail servers)">
+<!-- LOCALIZATION NOTE (useMIMEpart1.label): Concatenates with useMIMEpart2.label -->
 <!ENTITY useMIMEpart1.label "Using the 'quoted printable' MIME encoding">
+<!-- LOCALIZATION NOTE (useMIMEpart2.label): Concatenates with useMIMEpart1.label -->
 <!ENTITY useMIMEpart2.label "(does not work well with some mail or newsgroups readers)">
+<!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
 <!ENTITY emoticonsAndStructs.label "Emoticons And Structs">
 <!ENTITY convertEmoticons.label "When viewing a text message, convert emoticons to glyphs.">
 <!ENTITY convertStructs.label "When viewing a text message, convert structs to styles.">
