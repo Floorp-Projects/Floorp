@@ -843,9 +843,9 @@ void
 sortNodes(HT_View view, HT_Resource parent, HT_Resource *children, uint32 numChildren)
 {
 	RDF_BT			containerType;
-	PRBool			descendingFlag, sortChanged = false;
-	void			*sortToken;
-	uint32			sortTokenType;
+	PRBool			descendingFlag = false, sortChanged = false;
+	void			*sortToken = NULL;
+	uint32			sortTokenType = 0;
 	uint32			startIndex, loop;
 
 	XP_ASSERT(view != NULL);
@@ -1224,7 +1224,7 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
                char** param_names, char** param_values)
 {
 	HT_Pane			pane = NULL;
-	RDF			db;
+	RDF			db = NULL;
 	RDF_Resource		r;
 	char			*dbstr[2];
         char*                   dburl = getBaseURL(url);

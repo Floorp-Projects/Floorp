@@ -349,9 +349,9 @@ PRBool				implicitDomainURL (char* url);
 PRBool				domainMatches (char *dom, char *url);
 void				nextDomain (char* dom, size_t *n);
 PRBool				relatedLinksEnabledURL (char* url);
-
-HT_Pane newTemplatePane(char* templateName);
-void PaneDeleteSBPCleanup (HT_Pane htPane);
+void				cleanupInt (HT_Pane htPane, HT_URLSiteMapAssoc *nsmp, RDF_Resource parent);
+HT_Pane				newTemplatePane(char* templateName);
+void				PaneDeleteSBPCleanup (HT_Pane htPane);
 
 XP_END_PROTOS
 
