@@ -50,10 +50,7 @@
         buttons="accept"
         onload="onLoad();"
         title="&aboutDialog.title;"
-        windowtype="navigator:browser"
-        width="300" height="335"
-        screenX="4" screenY="4"
-        persist="screenX screenY width height sizemode"> 
+        width="300" height="335"> 
     
     <script type="application/x-javascript">
       <![CDATA[
