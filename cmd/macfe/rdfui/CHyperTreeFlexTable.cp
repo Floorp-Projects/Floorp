@@ -465,19 +465,34 @@ CHyperTreeFlexTable::OpenView( HT_View inHTView )
 		mNameEditor->UpdateEdit(nil, nil, nil);
 	}
 
+	// save existing column information for the next time the user comes back to this
+	// view. Note we do not reflect any of this into HT, so it will be lost when the user
+	// quits or opens a new window (I think). We currently save which columns are visible,
+	// their widths, and sort state.
+	CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
+	Assert_(header != NULL);
+	TableIndexT visColumns = header->CountVisibleColumns();
+	if ( visColumns ) {
+		//еее implement this. Recall that currently the FE data is used to store the
+		//еее SelectorData stuff. We'll have to create a new structure that wraps both
+		//еее this info and that.
+	}
+	
 	mHTView = mViewBeforeDrag = inHTView;
 	CHyperTreeSelector* sel = dynamic_cast<CHyperTreeSelector*>(GetTableSelector());
 	Assert_( sel != NULL);
 	sel->TreeView ( inHTView );
 
-	CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
-	Assert_(header != NULL);
+	// Rebuild the column headers based on the new view contents and which columns the
+	// user had visible last time.
 	HT_Cursor columnCursor = HT_NewColumnCursor(inHTView);
 	header->SetUpColumns(columnCursor);
 	HT_DeleteColumnCursor(columnCursor);
 	SynchronizeColumnsWithHeader();	
-	if ( header->GetHeaderWidth() )		// don't do this if shelf collapsed, we'll do it again later
+	if ( header->GetHeaderWidth() )	{	// don't do this if shelf collapsed, we'll do it again later
+		//еее implement this too
 		SetRightmostVisibleColumn(1);	//еее HACK UNTIL WE GET THE COLUMN STUFF FIGURED OUT....
+	}
 	
 	Uint32 count = HT_GetItemListCount(inHTView);
 	if (mRows != count)
