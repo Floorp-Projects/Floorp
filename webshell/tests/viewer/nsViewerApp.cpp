@@ -225,7 +225,6 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
   for (i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
       if (PL_strncmp(argv[i], "-p", 2) == 0) {
-        mDoPurify = PR_TRUE;
         char *optionalSampleStopIndex = &(argv[i][2]);
         if ('\0' != *optionalSampleStopIndex)
         {
@@ -235,6 +234,8 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
             exit(-1);
           }
         }
+        mDoPurify = PR_TRUE;
+        mCrawler->SetExitOnDone(PR_TRUE);
         mCrawl = PR_TRUE;
       }
       else if (PL_strcmp(argv[i], "-q") == 0) {
