@@ -1517,6 +1517,7 @@ nsHTTPChannel::Open(PRBool bIgnoreCache)
 
         if (NS_FAILED (rv)) 
         {
+            mConnected = PR_TRUE;
             ResponseCompleted (mResponseDataListener, rv, nsnull);
             return rv;
         }
