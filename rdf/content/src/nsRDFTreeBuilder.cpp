@@ -782,7 +782,7 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
         	        for (loop=0; loop<numElements; loop++)
 				flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
         		rdf_qsort((void *)flatArray, numElements/2, 2 * sizeof(void *), rdfSortCallback, (void *)&sortInfo);
-        		for (loop=0; loop<numElements; loop++)
+        		for (loop=0; loop<numElements; loop+=2)
         		{
 				if (NS_FAILED(rv = AddTreeRow(aElement,
 							(nsIRDFResource *)flatArray[loop+1],
