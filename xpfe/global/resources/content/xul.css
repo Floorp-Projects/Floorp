@@ -83,6 +83,18 @@ browser, editor, iframe {
   display: inline;
 }
 
+browser {
+  behavior: url(chrome://global/content/xulBindings.xml#browser);
+}
+
+editor {
+  behavior: url(chrome://global/content/xulBindings.xml#editor);
+}
+
+iframe {
+  behavior: url(chrome://global/content/xulBindings.xml#iframe);
+}
+
 /******** Box *******/
 
 
