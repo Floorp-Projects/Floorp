@@ -43,6 +43,8 @@ class nsIAtom;
 class nsIController;
 class nsIXBLPrototypeHandler;
 
+// XXX This should be broken up into subclasses for each listener IID type, so we
+// can cut down on the bloat of the handlers.
 class nsXBLEventHandler : public nsIDOMKeyListener, 
                           public nsIDOMMouseListener,
                           public nsIDOMMenuListener,
@@ -51,7 +53,7 @@ class nsXBLEventHandler : public nsIDOMKeyListener,
                           public nsIDOMFormListener
 {
 public:
-  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, const nsString& aEventName);
+  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, nsIAtom* aEventName);
   virtual ~nsXBLEventHandler();
   
   NS_IMETHOD BindingAttached();
@@ -109,7 +111,7 @@ public:
 
 protected:
   NS_IMETHOD GetController(nsIController** aResult);
-  NS_IMETHOD ExecuteHandler(const nsAReadableString & aEventName, nsIDOMEvent* aEvent);
+  NS_IMETHOD ExecuteHandler(nsIAtom* aEventName, nsIDOMEvent* aEvent);
 
   static PRUint32 gRefCnt;
   static nsIAtom* kKeyAtom;
@@ -123,20 +125,50 @@ protected:
   static nsIAtom* kBindingDetachedAtom;
   static nsIAtom* kModifiersAtom;
 
+  static nsIAtom* kKeyUpAtom;
+  static nsIAtom* kKeyDownAtom;
+  static nsIAtom* kKeyPressAtom;
+
+  static nsIAtom* kMouseDownAtom;
+  static nsIAtom* kMouseUpAtom;
+  static nsIAtom* kMouseClickAtom;
+  static nsIAtom* kMouseDblClickAtom;
+  static nsIAtom* kMouseOverAtom;
+  static nsIAtom* kMouseOutAtom;
+
+  static nsIAtom* kFocusAtom;
+  static nsIAtom* kBlurAtom;
+
+  static nsIAtom* kCreateAtom;
+  static nsIAtom* kCloseAtom;
+  static nsIAtom* kDestroyAtom;
+  static nsIAtom* kCommandUpdateAtom;
+  static nsIAtom* kBroadcastAtom;
+  
+  static nsIAtom* kOverflowAtom;
+  static nsIAtom* kUnderflowAtom;
+  static nsIAtom* kOverflowChangedAtom;
+
+  static nsIAtom* kSubmitAtom;
+  static nsIAtom* kResetAtom;
+  static nsIAtom* kChangeAtom;
+  static nsIAtom* kSelectAtom;
+  static nsIAtom* kInputAtom;
+
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
 
 protected:
   nsIDOMEventReceiver* mEventReceiver; // Both of these refs are weak.
   nsCOMPtr<nsIXBLPrototypeHandler> mProtoHandler;
 
-  nsAutoString mEventName;
-
+  nsCOMPtr<nsIAtom> mEventName;
+ 
   nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
 };
 
 extern nsresult
 NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      const nsString& aEventName,
+                      nsIAtom* aEventName,
                       nsXBLEventHandler** aResult);
 
 

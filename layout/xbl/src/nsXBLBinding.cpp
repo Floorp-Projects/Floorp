@@ -669,32 +669,15 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
             receiver = do_QueryInterface(otherElement);
           }
 
-          // Add an event listener for mouse and key events only.
-          PRBool mouse, key, focus, xul, scroll, form;
-          mouse = key = focus = xul = scroll = form = PR_FALSE;
+          PRBool supported = PR_FALSE;
+          if (!special)
+            supported = PR_TRUE;
+          else supported = IsSupportedHandler(&iid);
 
-          if (!special) {
-            key = IsKeyHandler(type);
-            if (!key) {
-              mouse = IsMouseHandler(type);
-              if (!mouse) {
-                focus = IsFocusHandler(type);
-                if (!focus) {
-                  xul = IsXULHandler(type);
-                  if (!xul) {
-                    scroll = IsScrollHandler(type);
-                    if (!scroll) 
-                      form = IsFormHandler(type);
-                  }
-                }
-              }
-            }
-          }
-
-          if (mouse || key || focus || xul || scroll || form || special) {
+          if (supported) {
             // Create a new nsXBLEventHandler.
             nsXBLEventHandler* handler;
-            NS_NewXBLEventHandler(receiver, curr, type, &handler);
+            NS_NewXBLEventHandler(receiver, curr, eventAtom, &handler);
 
             // We chain all our event handlers together for easy
             // removal later (if/when the binding dies).
@@ -713,33 +696,33 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
               useCapture = PR_TRUE;
 
             // Add the event listener.
-            if (mouse)
+            if (iid.Equals(NS_GET_IID(nsIDOMMouseListener)))
               receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
-            else if(key)
+            else if(iid.Equals(NS_GET_IID(nsIDOMKeyListener)))
               receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
-            else if(focus)
+            else if(iid.Equals(NS_GET_IID(nsIDOMFocusListener)))
               receiver->AddEventListener(type, (nsIDOMFocusListener*)handler, useCapture);
-            else if (xul)
+            else if (iid.Equals(NS_GET_IID(nsIDOMMenuListener)))
               receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
-            else if (scroll)
+            else if (iid.Equals(NS_GET_IID(nsIDOMScrollListener)))
               receiver->AddEventListener(type, (nsIDOMScrollListener*)handler, useCapture);
-            else if (form)
+            else if (iid.Equals(NS_GET_IID(nsIDOMFormListener)))
               receiver->AddEventListener(type, (nsIDOMFormListener*)handler, useCapture);
-
+            
             if (!special) // Let the listener manager hold on to the handler.
               NS_RELEASE(handler);
           }
-          else {
-            // Call AddScriptEventListener for other IID types
-            // XXX Want this to all go away!
-            NS_WARNING("***** Non-compliant XBL event listener attached! *****");
-            nsAutoString value;
-            child->GetAttribute(kNameSpaceID_None, kActionAtom, value);
-            if (value.IsEmpty())
-                GetTextData(child, value);
+        }
+        else {
+          // Call AddScriptEventListener for other IID types
+          // XXX Want this to all go away!
+          NS_WARNING("***** Non-compliant XBL event listener attached! *****");
+          nsAutoString value;
+          child->GetAttribute(kNameSpaceID_None, kActionAtom, value);
+          if (value.IsEmpty())
+              GetTextData(child, value);
 
-            AddScriptEventListener(mBoundElement, eventAtom, value, iid);
-          }
+          AddScriptEventListener(mBoundElement, eventAtom, value, iid);
         }
       }
 
@@ -1675,49 +1658,16 @@ nsXBLBinding::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
 }
 
 PRBool
-nsXBLBinding::IsMouseHandler(const nsString& aName)
+nsXBLBinding::IsSupportedHandler(const nsIID* aIID)
 {
-  return ((aName == NS_LITERAL_STRING("click")) || (aName == NS_LITERAL_STRING("dblclick")) || (aName == NS_LITERAL_STRING("mousedown")) ||
-          (aName == NS_LITERAL_STRING("mouseover")) || (aName == NS_LITERAL_STRING("mouseout")) || (aName == NS_LITERAL_STRING("mouseup")));
+  return (aIID->Equals(NS_GET_IID(nsIDOMMouseListener)) ||
+    aIID->Equals(NS_GET_IID(nsIDOMKeyListener)) ||
+    aIID->Equals(NS_GET_IID(nsIDOMFocusListener)) ||
+    aIID->Equals(NS_GET_IID(nsIDOMMenuListener)) ||
+    aIID->Equals(NS_GET_IID(nsIDOMScrollListener)) ||
+    aIID->Equals(NS_GET_IID(nsIDOMFormListener)));
 }
-
-PRBool
-nsXBLBinding::IsKeyHandler(const nsString& aName)
-{
-  return ((aName == NS_LITERAL_STRING("keypress")) || (aName == NS_LITERAL_STRING("keydown")) || (aName == NS_LITERAL_STRING("keyup")));
-}
-
-PRBool
-nsXBLBinding::IsFocusHandler(const nsString& aName)
-{
-  return ((aName == NS_LITERAL_STRING("focus")) || (aName == NS_LITERAL_STRING("blur")));
-}
-
-PRBool
-nsXBLBinding::IsXULHandler(const nsString& aName)
-{
-  return ((aName == NS_LITERAL_STRING("create")) || (aName == NS_LITERAL_STRING("destroy")) || (aName == NS_LITERAL_STRING("broadcast")) ||
-          (aName == NS_LITERAL_STRING("command")) || (aName == NS_LITERAL_STRING("commandupdate")) || (aName == NS_LITERAL_STRING("close")));
-}
-
-PRBool
-nsXBLBinding::IsScrollHandler(const nsString& aName)
-{
-  return (aName == NS_LITERAL_STRING("overflow") ||
-          aName == NS_LITERAL_STRING("underflow") ||
-          aName == NS_LITERAL_STRING("overflowchanged"));
-}
-
-PRBool
-nsXBLBinding::IsFormHandler(const nsString& aName)
-{
-  return (aName == NS_LITERAL_STRING("submit") ||
-          aName == NS_LITERAL_STRING("reset") ||
-          aName == NS_LITERAL_STRING("change") ||
-          aName == NS_LITERAL_STRING("input") ||
-          aName == NS_LITERAL_STRING("select"));
-}
-
+          
 NS_IMETHODIMP
 nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID)
 {
