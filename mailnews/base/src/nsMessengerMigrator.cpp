@@ -175,6 +175,9 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define PREF_4X_NEWS_NOTIFY_ON "news.notify.on"
 #define PREF_4X_NEWS_MARK_OLD_READ "news.mark_old_read"
 
+#define PREF_4X_AUTOCOMPLETE_ON_LOCAL_AB "ldap_2.autoComplete.useAddressBooks"
+#define PREF_MOZILLA_AUTOCOMPLETE_ON_LOCAL_AB "mail.enable_autocomplete"
+
 #define DEFAULT_FCC_FOLDER_PREF_NAME "mail.identity.default.fcc_folder"
 #define DEFAULT_DRAFT_FOLDER_PREF_NAME  "mail.identity.default.draft_folder"
 #define DEFAULT_STATIONERY_FOLDER_PREF_NAME "mail.identity.default.stationery_folder"
@@ -697,6 +700,9 @@ nsMessengerMigrator::UpgradePrefs()
 
     rv = MigrateNewsAccounts(identity);
     if (NS_FAILED(rv)) return rv;
+
+    rv = MigrateAddressBookPrefs();
+    NS_ENSURE_SUCCESS(rv,rv);
 
     rv = MigrateAddressBooks();
     if (NS_FAILED(rv)) return rv;
@@ -1988,6 +1994,21 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   if (NS_FAILED(rv)) return;
   
   return;
+}
+
+nsresult 
+nsMessengerMigrator::MigrateAddressBookPrefs()
+{
+  nsresult rv;
+  PRBool autoCompleteAgainstLocalAddressbooks;
+
+  rv = m_prefs->GetBoolPref(PREF_4X_AUTOCOMPLETE_ON_LOCAL_AB, &autoCompleteAgainstLocalAddressbooks);
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = m_prefs->SetBoolPref(PREF_MOZILLA_AUTOCOMPLETE_ON_LOCAL_AB, autoCompleteAgainstLocalAddressbooks);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return NS_OK;
 }
 
 nsresult

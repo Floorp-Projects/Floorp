@@ -128,6 +128,7 @@ private:
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir, PRBool isSecure);
   nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostAndPort, nsFileSpec &newsrcfile);
 
+  nsresult MigrateAddressBookPrefs();
   nsresult MigrateAddressBooks();
   static void migrateAddressBookPrefEnum(const char *aPref, void *aClosure);
         
