@@ -1544,7 +1544,7 @@ $::template ||= Template->new(
     PRE_CHOMP => 1 ,
     TRIM => 1 , 
 
-    COMPILE_DIR => 'data',
+    COMPILE_DIR => 'data/',
 
     # Functions for processing text within templates in various ways.
     FILTERS =>
