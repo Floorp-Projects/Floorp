@@ -36,6 +36,10 @@ class nsIDOMNSDocument : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSDOCUMENT_IID; return iid; }
 
+  NS_IMETHOD    GetWidth(PRInt32* aWidth)=0;
+
+  NS_IMETHOD    GetHeight(PRInt32* aHeight)=0;
+
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)=0;
 
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn)=0;
@@ -45,6 +49,8 @@ public:
 
 
 #define NS_DECL_IDOMNSDOCUMENT   \
+  NS_IMETHOD    GetWidth(PRInt32* aWidth);  \
+  NS_IMETHOD    GetHeight(PRInt32* aHeight);  \
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);  \
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn);  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);  \
@@ -52,6 +58,8 @@ public:
 
 
 #define NS_FORWARD_IDOMNSDOCUMENT(_to)  \
+  NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    GetHeight(PRInt32* aHeight) { return _to GetHeight(aHeight); } \
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets) { return _to GetStyleSheets(aStyleSheets); } \
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn) { return _to CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn) { return _to CreateRange(aReturn); }  \
