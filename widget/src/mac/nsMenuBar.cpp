@@ -368,8 +368,8 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
       if (tag == nsWidgetAtoms::menu) {
         nsAutoString menuName;
         nsAutoString menuAccessKey(NS_LITERAL_STRING(" "));
-        menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
-        menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::accesskey, menuAccessKey);
+        menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
+        menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::accesskey, menuAccessKey);
 			  
         // Don't create the whole menu yet, just add in the top level names
               
@@ -384,7 +384,7 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
           AddMenu(pnsMenu); 
                   
           nsAutoString menuIDstring;
-          menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::id, menuIDstring);
+          menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, menuIDstring);
           if ( menuIDstring == NS_LITERAL_STRING("menu_Help") ) {
             nsMenuEvent event;
             MenuHandle handle = nsnull;
@@ -496,7 +496,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
     nsCOMPtr<nsIContent> menu;
     aMenu->GetMenuContent(getter_AddRefs(menu));
     nsAutoString menuHidden;
-    menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
+    menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
     if( menuHidden != NS_LITERAL_STRING("true"))
       ::InsertMenu(menuHandle, 0);
   }
