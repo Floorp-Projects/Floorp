@@ -39,12 +39,13 @@ function BuildTreePopup( treeColGroup, treeHeadRow, popup, skipCell )
 		  v.setAttribute("value", display);
 		}
 		v.setAttribute("colid", currColNode.id);
-		v.setAttribute("oncommand", "ToggleColumnState(this, document)");
 		var hidden = currColNode.getAttribute("hidden");
 		if (hidden != "true")
 		  v.setAttribute("checked", "true");
 
 		popup.appendChild(v);
+
+    v.setAttribute("oncommand", "ToggleColumnState(this, document)");
 	}
 
 	currTreeCol = currTreeCol.nextSibling;
