@@ -977,6 +977,11 @@ extern PRInt32 _PR_MD_CLOSE_DIR(_MDDir *md);
 extern void _PR_MD_INIT_FILEDESC(PRFileDesc *fd);
 #define    _PR_MD_INIT_FILEDESC _MD_INIT_FILEDESC
 
+#ifdef XP_MAC
+extern void _PR_MD_FREE_FILEDESC(PRFileDesc *fd);
+#define    _PR_MD_FREE_FILEDESC _MD_FREE_FILEDESC
+#endif
+
 extern void _PR_MD_MAKE_NONBLOCK(PRFileDesc *fd);
 #define    _PR_MD_MAKE_NONBLOCK _MD_MAKE_NONBLOCK
 
