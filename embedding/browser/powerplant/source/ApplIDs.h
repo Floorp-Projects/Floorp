@@ -36,6 +36,7 @@
 
 // Windows
 const PP_PowerPlant::ResIDT	wind_BrowserWindow = 129;
+const PP_PowerPlant::ResIDT	wind_PlainBrowserWindow = 130;
 
 // Dialogs
 const PP_PowerPlant::ResIDT	dlog_FindDialog = 1281;
