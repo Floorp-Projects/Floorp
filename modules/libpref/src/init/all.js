@@ -44,6 +44,9 @@ pref("general.title_tips",                  true);
 pref("general.help_source.site",            1); // 0 = Netscape, 1 = installed, 2 = custom
 pref("general.help_source.url",             "");
 
+pref("general.fullcircle_enable",           true);
+pref("general.fullcircle_collect_ns_data",  false);
+
 pref("browser.enable_style_sheets",         true);
 pref("browser.startup.page",                1);     // 0 = blank, 1 = home, 2 = last
 pref("browser.startup.homepage",            "http://home.netscape.com/");
