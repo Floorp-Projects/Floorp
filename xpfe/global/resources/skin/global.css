@@ -519,6 +519,10 @@ splitter[state="dragging"]
    background-color: gray;
 }
 
+box > *[collapsed="true"] {
+  visibility: collapse;
+}
+
 grippy{
 	margin: 0px;
 	border: 2px solid #003366;
