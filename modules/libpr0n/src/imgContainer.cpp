@@ -168,7 +168,6 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
 
       if (NS_SUCCEEDED(firstFrame->GetBackgroundColor(&backgroundColor))) {
         mCompositingFrame->SetBackgroundColor(backgroundColor);
-        BlackenFrame(mCompositingFrame);
       }
 
       PRInt32 x;
@@ -180,6 +179,7 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
       firstFrame->GetWidth(&width);
       firstFrame->GetHeight(&height);
 
+      BlackenFrame(mCompositingFrame);
       firstFrame->DrawTo(mCompositingFrame, x, y, width, height);
       ZeroMask(mCompositingFrame);
       BuildCompositeMask(mCompositingFrame, firstFrame);   
