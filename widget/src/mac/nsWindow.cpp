@@ -1124,27 +1124,28 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 		return nsnull;
 
 	nsWindow* widgetHit = this;
-	nsIEnumerator* children = GetChildren();
+
+	nsIBidirectionalEnumerator* children = static_cast<nsIBidirectionalEnumerator*>(GetChildren());
 	if (children)
 	{
 		// traverse through all the nsWindows to find out who got hit, lowest level of course
-		children->First();
+		children->Last();
 		do
 		{
 			nsISupports* child;
       if (NS_SUCCEEDED(children->CurrentItem(&child)))
       {
       	nsWindow* childWindow = static_cast<nsWindow*>(child);
+			  NS_RELEASE(child);
 			  nsWindow* deeperHit = childWindow->FindWidgetHit(aThePoint);
 			  if (deeperHit)
 			  {
 				  widgetHit = deeperHit;
 				  break;
 			  }
-			  NS_RELEASE(child);
       }
 		}
-    while (NS_SUCCEEDED(children->Next()));
+    while (NS_SUCCEEDED(children->Prev()));
 		NS_RELEASE(children);
 	}
 
