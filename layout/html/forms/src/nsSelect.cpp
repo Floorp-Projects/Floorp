@@ -286,7 +286,7 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // here it is determined whether we are a combo box
   PRInt32 sizeAttr = select->GetSize();
-  if (!select->GetMultiple() && ((1 == sizeAttr) || ((ATTR_NOTSET == sizeAttr) && (1 >= numRows)))) {
+  if (!select->GetMultiple() && ((1 >= sizeAttr) || ((ATTR_NOTSET == sizeAttr) && (1 >= numRows)))) {
     select->mIsComboBox = PR_TRUE;
   }
 
