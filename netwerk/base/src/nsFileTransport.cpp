@@ -832,15 +832,17 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
         NS_IF_RELEASE(mSourceWrapper);
         mSourceWrapper = nsnull;
 
-        if (saveListener) {
-            saveListener->OnStopRequest(this, saveContext, mStatus);
-            saveListener = 0;
-        }
         if (progressSink) {
             progressSink->OnStatus(this, saveContext, 
                                     NS_NET_STATUS_READ_FROM, 
                                     NS_ConvertASCIItoUCS2(mStreamName).get());
         }
+
+        if (saveListener) {
+            saveListener->OnStopRequest(this, saveContext, mStatus);
+            saveListener = 0;
+        }
+        saveContext = 0;
 
         break;
       }
