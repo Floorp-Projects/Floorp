@@ -562,27 +562,27 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
 
 NS_IMETHODIMP nsDeviceContextGTK::BeginDocument(PRUnichar * aTitle)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::EndDocument(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::AbortDocument(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::BeginPage(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::EndPage(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDepth(PRUint32& aDepth)
