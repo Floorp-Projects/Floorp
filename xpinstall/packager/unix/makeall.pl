@@ -71,7 +71,6 @@ MakeXpiFile("chatzilla");
 MakeXpiFile("talkback");
 MakeXpiFile("deflenus");
 MakeXpiFile("langenus");
-MakeXpiFile("langende");
 
 # Make the config.ini file
 MakeConfigFile();

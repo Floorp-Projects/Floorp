@@ -8,12 +8,6 @@
 ; ; file comment
 ;
 
-[langende]
-;
-; en-DE 
-bin/defaults/profile/en-DE/*
-bin/chrome/locales/en-DE/*
-
 [langenus]
 ;
 ; en-US
