@@ -1260,7 +1260,8 @@ nsHTMLInputElement::Click()
        mType == NS_FORM_INPUT_CHECKBOX ||
        mType == NS_FORM_INPUT_RADIO    ||
        mType == NS_FORM_INPUT_RESET    ||
-       mType == NS_FORM_INPUT_SUBMIT)) {
+       mType == NS_FORM_INPUT_SUBMIT   ||
+       mType == NS_FORM_INPUT_IMAGE)) {
 
     nsCOMPtr<nsIDocument> doc = mDocument; // Strong in case the event kills it
     nsCOMPtr<nsIPresContext> context;
