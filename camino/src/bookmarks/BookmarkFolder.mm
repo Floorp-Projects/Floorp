@@ -154,7 +154,7 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   NSEnumerator *enumerator = [[self childArray] objectEnumerator];
   id anItem;
   while ((anItem = [enumerator nextObject])) {
-    if ([anItem isKindOfClass:[Bookmark class]])
+    if ([anItem isKindOfClass:[Bookmark class]] && ![(Bookmark *)anItem isSeparator])
       [urlArray addObject:[(Bookmark *)anItem url]];
   }
   return urlArray;
