@@ -122,71 +122,56 @@ MyGetFileAttributesEx(const char* file, WIN32_FILE_ATTRIBUTE_DATA* data)
 	if (!data || !file)
 		return NS_ERROR_FAILURE;
 
-    HINSTANCE hInst = LoadLibrary("KERNEL32.DLL");
-    NS_ASSERTION(hInst != NULL, "COULD NOT LOAD KERNEL32.DLL");
-    if (hInst != NULL)
-    {
-        if (GetProcAddress(hInst, "GetFileAttributesEx"))
+	okay = PR_FALSE;
+	
+	memset(data, 0, sizeof(WIN32_FILE_ATTRIBUTE_DATA));
+	data->dwFileAttributes =  GetFileAttributes(file);
+
+	if(data->dwFileAttributes != 0xFFFFFFFF)
+	{
+		if(! (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
-			okay =  GetFileAttributesEx(file,GetFileExInfoStandard,data);
+			HANDLE hFile = CreateFile(file,
+									  GENERIC_READ, 
+									  FILE_SHARE_READ, 
+									  NULL, 
+									  OPEN_EXISTING, 
+									  FILE_ATTRIBUTE_NORMAL, 
+									  NULL); 
+
+			if (hFile != INVALID_HANDLE_VALUE)
+			{
+				okay = GetFileTime(hFile,
+								   &data->ftCreationTime,
+								   &data->ftLastAccessTime,
+								   &data->ftLastWriteTime);
+				if (okay)
+				{
+				   // Try to obtain hFile's huge size. 
+				   data->nFileSizeLow = GetFileSize (hFile, 
+													 &data->nFileSizeHigh);
+
+				   if (data->nFileSizeLow == 0xFFFFFFFF && 
+					   GetLastError() != NO_ERROR )
+				   { 
+					   //error in getting filesize
+					   okay = PR_FALSE;      
+				   } 
+				   else
+				   {
+					   okay = PR_TRUE;
+				   }
+				}
+
+				CloseHandle(hFile);
+			}
 		}
 		else
 		{
-			okay = PR_FALSE;
-			
-			memset(data, 0, sizeof(WIN32_FILE_ATTRIBUTE_DATA));
-			data->dwFileAttributes =  GetFileAttributes(file);
-
-			if(data->dwFileAttributes != 0xFFFFFFFF)
-			{
-   
-				if(! (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-				{
-					HANDLE hFile = CreateFile(file,
-											  GENERIC_READ, 
-											  FILE_SHARE_READ, 
-											  NULL, 
-											  OPEN_EXISTING, 
-											  FILE_ATTRIBUTE_NORMAL, 
-											  NULL); 
-
-					if (hFile != INVALID_HANDLE_VALUE)
-					{
-						okay = GetFileTime(hFile,
-										   &data->ftCreationTime,
-										   &data->ftLastAccessTime,
-										   &data->ftLastWriteTime);
-						if (okay)
-						{
-						   // Try to obtain hFile's huge size. 
-						   data->nFileSizeLow = GetFileSize (hFile, 
-															 &data->nFileSizeHigh);
-
-						   if (data->nFileSizeLow == 0xFFFFFFFF && 
-							   GetLastError() != NO_ERROR )
-						   { 
-							   //error in getting filesize
-							   okay = PR_FALSE;      
-						   } 
-						   else
-						   {
-							   okay = PR_TRUE;
-						   }
-						}
-						CloseHandle(hFile);
-					}
-				}
-				else
-				{
-					// it is a directory, 
-					okay = PR_TRUE;
-				}
-			}
+			// it is a directory, I dont think that there is a wy to get the time or size.
+			okay = PR_TRUE;
 		}
-
-		FreeLibrary(hInst);
 	}
-
 
     if (!okay)
        return ConvertWinError(GetLastError());
@@ -224,7 +209,9 @@ class nsDirEnumerator : public nsISimpleEnumerator
             mDir = PR_OpenDir(filepath);
             if (mDir == nsnull)    // not a directory?
                 return NS_ERROR_FAILURE;
-        
+			
+			nsAllocator::Free(filepath);
+
             mParent          = parent;    
             return NS_OK;
         }
