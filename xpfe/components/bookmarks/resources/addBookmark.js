@@ -113,8 +113,8 @@ function Startup()
       document.getElementById("folderbox").setAttribute("hidden", "true");
       windowNode = document.getElementById("newBookmarkWindow");
       windowNode.removeAttribute("persist");
-      windowNode.setAttribute("height", "0");
-      windowNode.setAttribute("width", "0");
+      windowNode.removeAttribute("height");
+      windowNode.removeAttribute("width");
       windowNode.setAttribute("style", windowNode.getAttribute("style"));
       sizeToContent();
       break;

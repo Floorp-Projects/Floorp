@@ -76,7 +76,19 @@ BookmarksPanelTree.prototype = {
   manageBookmarks: function ()
   {
     openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", "", "chrome,dialog=no,resizable=yes");
-  }
+  },
   
+  /////////////////////////////////////////////////////////////////////////////
+  // This function only exists because we call onCommandUpdate manually in it,
+  // because for some reason, the commandupdate handler on the commandupdater
+  // is never being called. This is true of the bookmarks sidebar panel and the
+  // personal toolbar.
+  hlClick: function (aEvent)
+  {
+    // Command updater isn't working for us. Force a command update, beyotch. 
+    this.controller.onCommandUpdate();
+    this.treeClicked(aEvent);
+  }
+
 };
 
