@@ -28,8 +28,5 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 
-EXPORTS		= nsIHTMLElementFactory.h
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 include $(topsrcdir)/config/rules.mk
 
