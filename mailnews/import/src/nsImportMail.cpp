@@ -794,7 +794,7 @@ ImportMailThread( void *stuff)
 				rv = curProxy->GetChildNamed( lastName.get(), getter_AddRefs( subFolder));
 				if (NS_FAILED( rv)) {
           IMPORT_LOG1("*** ImportMailThread: Failed to get the interface for child folder '%s'.", NS_ConvertUCS2toUTF8(lastName).get());
-					nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &success);
+					nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &error);
 					pData->fatalError = PR_TRUE;
 					break;
 				}
@@ -818,7 +818,7 @@ ImportMailThread( void *stuff)
 					rv = curProxy->GetParent( getter_AddRefs( parFolder));
           if (NS_FAILED( rv)) {
             IMPORT_LOG1("*** ImportMailThread: Failed to get the interface for parent folder '%s'.", lastName.get());
-					  nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &success);
+					  nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &error);
 					  pData->fatalError = PR_TRUE;
 					  break;
 				  }
@@ -875,7 +875,7 @@ ImportMailThread( void *stuff)
         IMPORT_LOG1("*** ImportMailThread: Failed to create subfolder '%s'.", lastName.get());
 				
 			if (NS_FAILED( rv)) {
-				nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.get(), &success);
+				nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.get(), &error);
 			}
 
 			if (size && import && newFolder && outBox && NS_SUCCEEDED( rv)) {
