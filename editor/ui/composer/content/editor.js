@@ -1393,6 +1393,26 @@ function EditorSetDefaultPrefs()
   var nodelist = domdoc.getElementsByTagName("meta");
   if ( nodelist )
   {
+    // we should do charset first since we need to have charset before
+    // hitting other 8-bit char in other meta tags
+    // grab charset pref and make it the default charset
+    var prefCharsetString = 0;
+    try
+    {
+      prefCharsetString = gPrefs.getLocalizedUnicharPref("intl.charset.default");
+    }
+    catch (ex) {}
+    if ( prefCharsetString && prefCharsetString != 0)
+    {
+        var element = domdoc.createElement("meta");
+        if ( element )
+        {
+          AddAttrToElem(domdoc, "http-equiv", "content-type", element);
+          AddAttrToElem(domdoc, "content", "text/html; charset=" + prefCharsetString, element);
+          headelement.appendChild( element );
+        }
+    }
+
     var node = 0;
     var listlength = nodelist.length;
 
@@ -1432,24 +1452,6 @@ function EditorSetDefaultPrefs()
       }
     }
     
-    // grab charset pref and make it the default charset
-    var prefCharsetString = 0;
-    try
-    {
-      prefCharsetString = gPrefs.getLocalizedUnicharPref("intl.charset.default");
-    }
-    catch (ex) {}
-    if ( prefCharsetString && prefCharsetString != 0)
-    {
-        var element = domdoc.createElement("meta");
-        if ( element )
-        {
-          AddAttrToElem(domdoc, "http-equiv", "content-type", element);
-          AddAttrToElem(domdoc, "content", "text/html; charset=" + prefCharsetString, element);
-          headelement.appendChild( element );
-        }
-    }
-
   }
 
   // color prefs
