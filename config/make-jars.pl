@@ -4,9 +4,11 @@
 
 sub JarIt
 {
-    my ($jarfile, $args) = @_;
+    my ($jarfile, $args, $objDir) = @_;
     print "+++ jaring $jarfile\n";
     flush;
+	chdir $objDir;
+	$jarfile = "../$jarfile";
     system "zip -u $jarfile $args\n";
 }
 
@@ -45,16 +47,22 @@ sub CopyFile
 
 sub EnsureFileInDir
 {
-    my ($path) = @_;
-    if (!-e $path) {
-        $path =~ /(.*)[\\\/]([\w\d.\-]+)/;
+    my ($destPath, $srcPath, $objDir) = @_;
+
+    if (!-e $destPath) {
+        $destPath =~ /(.*)[\\\/]([\w\d.\-]+)/;
         my $dir = $1;
         my $file = $2;
-        if (!-e $file) {
-            die "error: file '$file' doesn't exist";
+
+        if ($srcPath) {
+            $file = $srcPath;
         }
-        MkDirs($dir);
-        CopyFile($file, $path);
+
+        if (!-e $file) {
+            die "error: file '$file' doesn't exist\n";
+        }
+        MkDirs("$objDir/$dir");
+        CopyFile($file, "$objDir/$destPath");
         return 1;
     }
     return 0;
@@ -62,33 +70,47 @@ sub EnsureFileInDir
 
 use Getopt::Std;
 
-getopt("d:");
+getopt("d:o:");
 
 my $destPath = ".";
 if (defined($opt_d)) {
     $destPath = $opt_d;
 }
 
+my $objDir;
+if (defined($opt_o)) {
+    $objDir = $opt_o;
+}
+else {
+    die "Need to supply the -o <objdir> option.";
+}
+
 while (<>) {
     chomp;
   start: 
     if (/^([\w\d.\-\\\/]+)\:\s*$/) {
-        my $jarfile = "$destPath/$1";
+        my $jarfile = "$destPath/$1"; 
+
         my $args = "";
         while (<>) {
-            if (/^\s+([\w\d.\-\\\/]+)\s*$/) {
-                my $arg = $1;
-                my $removeDir = EnsureFileInDir($arg);
-                $args = "$args$arg ";
+            if (/^\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
+				my $dest = $1;
+                my $srcPath = $2;
+
+                if ( $srcPath ) {  
+                    $srcPath = substr($srcPath,1,-1);
+                }
+
+                EnsureFileInDir($dest, $srcPath, $objDir);
+                $args = "$args$dest ";
             } elsif (/^\s*$/) {
                 # end with blank line
                 last;
             } else {
-                JarIt($jarfile, $args);
                 goto start;
             }
         }
-        JarIt($jarfile, $args);
+        JarIt($jarfile, $args, $objDir);
 
     } elsif (/^\s*\#.*$/) {
         # skip comments
