@@ -3072,9 +3072,11 @@
   (preprocess-grammar-or-lexer preprocessor-state :grammar kind2 name start-symbol))
 
 
-(defun generate-no-line-break-constraint (terminal)
+(defun generate-line-break-constraints (terminal)
   (assert-type terminal user-terminal)
-  (list (list (make-lf-terminal terminal) :no-line-break)))
+  (list 
+   (list terminal :line-break)
+   (list (make-lf-terminal terminal) :no-line-break)))
 
 
 ; (line-grammar <name> <kind> <start-symbol>)
@@ -3087,8 +3089,8 @@
 (defun preprocess-line-grammar (preprocessor-state command name kind2 start-symbol)
   (declare (ignore command))
   (preprocess-grammar-or-lexer preprocessor-state :grammar kind2 name start-symbol
-                               :variant-constraint-names '(:no-line-break)
-                               :variant-generator #'generate-no-line-break-constraint))
+                               :variant-constraint-names '(:line-break :no-line-break)
+                               :variant-generator #'generate-line-break-constraints))
 
 
 ; (lexer <name> <kind> <start-symbol> <charclasses-source> <lexer-actions-source>)

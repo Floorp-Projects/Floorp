@@ -1225,7 +1225,7 @@
 ;
 ; A variant-generator is either nil or a function that takes a terminal and outputs a list of its variants.
 ; Each variant is specified as a cons of:
-;   A variant terminal
+;   A variant terminal (may be eql to the original terminal; this lets one add constraints that exclude the original terminal)
 ;   A list of names of variant constraints which exclude this variant terminal
 ;
 ; The rhs can also contain lookahead constraints of the form
@@ -1317,8 +1317,9 @@
       (dolist (terminal (hash-table-keys terminals-hash))
         (dolist (variant-and-constraints (funcall variant-generator terminal))
           (let ((variant (first variant-and-constraints)))
-            (push variant (gethash terminal terminal-variants))
-            (setf (gethash variant terminals-hash) t)
+            (unless (grammar-symbol-= terminal variant)
+              (push variant (gethash terminal terminal-variants))
+              (setf (gethash variant terminals-hash) t))
             (dolist (constraint (rest variant-and-constraints))
               (push variant (cdr (assoc constraint variant-constraint-forbid-lists))))))))
     
