@@ -103,7 +103,7 @@ extern jclass stringArrayClass;
 
 extern jclass nsISupportsClass;
 
-extern jclass exceptionClass;
+extern jclass xpcomExceptionClass;
 
 PRBool InitializeJavaGlobals(JNIEnv *env);
 void FreeJavaGlobals(JNIEnv* env);
