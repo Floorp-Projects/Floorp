@@ -7,7 +7,6 @@
 <!ENTITY autoLoadImgCheck.label       "Automatically load images"> 
 <!ENTITY autoLoadImgCheck.accesskey   "i">
 
-<!--LOCALIZATION NOTE (enbJavaCheck.label): 'Java' should never be translated -->
 <!ENTITY enbJavaCheck.label           "Enable Java">
 <!ENTITY enbJavaCheck.accesskey       "j">
 
@@ -22,3 +21,8 @@
 <!ENTITY imageBlocking.accesskey      "b">
 
 <!ENTITY description.label            "Checked items are automatically enabled when you visit web pages that use them. If you uncheck an item, pages may load faster but some functionality will be limited.">
+
+<!ENTITY perfTitle.label              "Enable features that affect performance">
+<!ENTITY enableTurbo.label            "Enable Quick Launch (reboot required)">
+<!ENTITY enableTurboCheck.accesskey   "t">
+
