@@ -89,7 +89,7 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
    //                 Both combobox and (atm) nsBrowserWindow depend on this.
    lHtEntryfield = 26;
 
-   hptrSelect = hptrFrameIcon = 0;
+   hptrFrameIcon = 0;
    idSelect = 0;
 
    // Work out if the system is DBCS
@@ -113,6 +113,10 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
 #if 0
    mWindows = nsnull;
 #endif
+
+   for (int i=0;i<=16;i++ ) {
+     hptrArray[i] = ::WinLoadPointer(HWND_DESKTOP, gModuleHandle, IDC_BASE+i);
+   }
 }
 
 nsWidgetModuleData::~nsWidgetModuleData()
@@ -127,8 +131,10 @@ nsWidgetModuleData::~nsWidgetModuleData()
    for( PRInt32 i = 0; i < cAtoms; i++)
       WinDeleteAtom( systbl, (ATOM) atoms.ElementAt(i));
 
-   if( hptrSelect)
-      WinDestroyPointer( hptrSelect);
+   for (i=0;i<=16;i++ ) {
+     WinDestroyPointer(hptrArray[i]);
+   }
+
    if( hptrFrameIcon)
       WinDestroyPointer( hptrFrameIcon);
 #if 0
@@ -142,64 +148,11 @@ nsWidgetModuleData::~nsWidgetModuleData()
      NS_IF_RELEASE(appshell);
 }
 
-HPOINTER nsWidgetModuleData::GetPointer( nsCursor aCursor)
-{
-   ULONG idPtr = 0;
-
-   switch( aCursor)
-   {
-      case eCursor_hyperlink:           idPtr = ID_PTR_SELECTURL  ; break;
-      case eCursor_arrow_north:         idPtr = ID_PTR_ARROWNORTH ; break;
-      case eCursor_arrow_north_plus:    idPtr = ID_PTR_ARROWNORTHP; break;
-      case eCursor_arrow_south:         idPtr = ID_PTR_ARROWSOUTH ; break;
-      case eCursor_arrow_south_plus:    idPtr = ID_PTR_ARROWSOUTHP; break;
-      case eCursor_arrow_west:          idPtr = ID_PTR_ARROWWEST  ; break;
-      case eCursor_arrow_west_plus:     idPtr = ID_PTR_ARROWWESTP ; break;
-      case eCursor_arrow_east:          idPtr = ID_PTR_ARROWEAST  ; break;
-      case eCursor_arrow_east_plus:     idPtr = ID_PTR_ARROWEASTP ; break;
-      case eCursor_copy:                idPtr = ID_PTR_COPY       ; break;
-      case eCursor_alias:               idPtr = ID_PTR_ALIAS      ; break;
-      case eCursor_cell:                idPtr = ID_PTR_CELL       ; break;
-      case eCursor_grab:                idPtr = ID_PTR_GRAB       ; break;
-      case eCursor_grabbing:            idPtr = ID_PTR_GRABBING   ; break;
-      case eCursor_spinning:            idPtr = ID_PTR_ARROWWAIT  ; break;
-
-      case eCursor_crosshair:
-      case eCursor_help:
-      case eCursor_context_menu:
-      case eCursor_count_up:
-      case eCursor_count_down:
-      case eCursor_count_up_down:
-         break;
-
-      default:
-         NS_ASSERTION( 0, "Unknown cursor type");
-         break;
-   }
-
-   if( idPtr == 0)
-   {
-      idPtr = ID_PTR_SELECTURL; // default to hyperlink cursor?
-#ifdef DEBUG
-      printf( "\n*** Need to implement cursor type %d (see widget/src/os2/nsModule.cpp)\n\n", (int) aCursor);
-#endif
-   }
-
-   // Use an array and indices here since we have all the pointers in place?
-   if( idSelect != idPtr)
-   {
-      idSelect = idPtr;
-      hptrSelect = WinLoadPointer( HWND_DESKTOP, hModResources, idSelect);
-   }
-
-   return hptrSelect;
-}
-
 HPOINTER nsWidgetModuleData::GetFrameIcon()
 {
    if( !hptrFrameIcon)
       hptrFrameIcon = WinLoadPointer( HWND_DESKTOP,
-                                      hModResources, ID_ICO_FRAME);
+                                      gModuleHandle, ID_ICO_FRAME);
    return hptrFrameIcon;
 }
 
