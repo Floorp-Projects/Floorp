@@ -270,13 +270,15 @@ PRInt8 nsJISx4051LineBreaker::GetClass(PRUnichar u)
    else if( 0x3000 == h)
    {
      c = GETCLASSFROMTABLE(gLBClass30, l);
-   } else if (( ( 0x3200 <= h) && ( h <= 0x9fff) ) || // Unicode 3.0
+   } 
+   else if (  ( ( 0x3200 <= u) && ( u <= 0xA4CF) ) || // CJK and Yi 
               ( ( 0xAC00 <= h) && ( h <= 0xD7FF) ) || // Hangul
-              ( ( 0xf900 <= h) && ( h <= 0xfaff) ) 
+              ( ( 0xf900 <= h) && ( h <= 0xfaff) )
              )
    { 
      c = 5; // CJK charcter, Han, and Han Compatability
-   } else if( 0xff00 == h)
+   } 
+   else if( 0xff00 == h)
    {
      if( l < 0x0060) // Fullwidth ASCII variant 
      {
@@ -311,7 +313,23 @@ PRInt8 nsJISx4051LineBreaker::GetClass(PRUnichar u)
      } else {
        c = 8;
      }
-   } else {
+   }
+   else if( 0x3100 == h) { 
+     if ( l <= 0xbf) {  // Hangul Compatibility Jamo, Bopomofo, Kanbun
+                        // XXX: This is per UAX #14, but UAX #14 may change
+                        // the line breaking rules about Kanbun and Bopomofo.
+       c = 5;
+     }
+     else if ( l >= 0xf0)
+     {            // Katakana small letters for Ainu 
+       c = 1;
+     }
+     else   // unassigned
+     {
+       c = 8;
+     }
+   } 
+   else {
      c = 8; // others 
    }
    return c;
