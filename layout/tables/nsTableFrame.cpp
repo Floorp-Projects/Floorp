@@ -321,30 +321,6 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent) const
   }
 }
 
-
-/**
- * Find the CellLayoutData assocated with the TableCell
-**/
-nsCellLayoutData* nsTableFrame::FindCellLayoutData(nsTableCell* aCell) 
-{
-  if (aCell != nsnull)
-  {
-    if (nsnull!=mColumnLayoutData)
-    {
-      PRInt32 numCols = mColumnLayoutData->Count();
-      for (PRInt32 i = 0; i<numCols; i++)
-      {
-        nsColLayoutData *colLayoutData = (nsColLayoutData *)(mColumnLayoutData->ElementAt(i));
-        PRInt32 index = colLayoutData->IndexOf(aCell);
-        if (index != -1)
-          return colLayoutData->ElementAt(index);
-      }
-    }
-  }
-  return nsnull;
-}
-
-
 /**
  * For the TableCell in CellData, find the CellLayoutData assocated
  * and add it to the list
@@ -354,7 +330,7 @@ void nsTableFrame::AppendLayoutData(nsVoidArray* aList, nsTableCell* aTableCell)
 
   if (aTableCell != nsnull)
   {
-    nsCellLayoutData* layoutData = FindCellLayoutData(aTableCell);
+    nsCellLayoutData* layoutData = GetCellLayoutData(aTableCell);
     if (layoutData != nsnull)
       aList->AppendElement((void*)layoutData);
   }
@@ -530,7 +506,7 @@ void nsTableFrame::RecalcLayoutData()
           r++;
         }
         
-        nsCellLayoutData* cellLayoutData = FindCellLayoutData(cell); 
+        nsCellLayoutData* cellLayoutData = GetCellLayoutData(cell); 
         if (cellLayoutData != nsnull)
           cellLayoutData->RecalcLayoutData(this,boundaryCells);
       }
