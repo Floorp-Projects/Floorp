@@ -38,7 +38,7 @@ REQUIRES	= xpcom \
 		  msgdb \
 		  mime \
 		  profile \
-		  unicharutil \
+		  lwbrk \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -47,6 +47,10 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsBayesianFilter.h \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
