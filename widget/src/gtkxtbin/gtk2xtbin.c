@@ -46,7 +46,7 @@
 
 /* uncomment this if you want debugging information about widget
    creation and destruction */
-#define DEBUG_XTBIN
+#undef DEBUG_XTBIN
 
 #define XTBIN_MAX_EVENTS 30
 
@@ -660,11 +660,15 @@ xt_client_handle_xembed_message(Widget w, XtPointer client_data, XEvent *event)
       memset(&xevent, 0, sizeof(xevent));
 
       if(event->xclient.data.l[1] == XEMBED_FOCUS_IN) {
+#ifdef DEBUG_XTBIN
         printf("XTEMBED got focus in\n");
+#endif
         xevent.xfocus.type = FocusIn;
       }
       else {
+#ifdef DEBUG_XTBIN
         printf("XTEMBED got focus out\n");
+#endif
         xevent.xfocus.type = FocusOut;
       }
 
