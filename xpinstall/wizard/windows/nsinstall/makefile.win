@@ -21,6 +21,7 @@
 #   Sean Su <ssu@netscape.com>
 
 DEPTH=..\..\..\..
+REQUIRES=zlib
 
 MAKE_OBJ_TYPE   = EXE
 USE_NON_MT_LIBS = 1
