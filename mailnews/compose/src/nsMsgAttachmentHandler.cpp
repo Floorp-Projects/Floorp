@@ -17,7 +17,6 @@
  */
 #include "nsMsgCopy.h"
 #include "nsIPref.h"
-#include "nsMsgCompPrefs.h"
 #include "nsMsgAttachmentHandler.h"
 #include "nsMsgSend.h"
 #include "nsMsgCompUtils.h"

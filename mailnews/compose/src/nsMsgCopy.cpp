@@ -17,7 +17,6 @@
  */
 #include "nsMsgCopy.h"
 #include "nsIPref.h"
-#include "nsMsgCompPrefs.h"
 #include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgMailSession.h"

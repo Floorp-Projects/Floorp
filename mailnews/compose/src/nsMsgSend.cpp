@@ -27,7 +27,6 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsISmtpService.h"  // for actually sending the message...
 #include "nsINntpService.h"  // for actually posting the message...
-#include "nsMsgCompPrefs.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 #include "nsMsgSend.h"

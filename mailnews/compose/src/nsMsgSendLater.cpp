@@ -18,7 +18,6 @@
 #include "nsCOMPtr.h"
 #include "nsMsgCopy.h"
 #include "nsIPref.h"
-#include "nsMsgCompPrefs.h"
 #include "nsMsgSendLater.h"
 #include "nsIEnumerator.h"
 #include "nsIFileSpec.h"

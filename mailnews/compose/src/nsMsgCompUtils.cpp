@@ -24,7 +24,6 @@
 #include "nsIIOService.h"
 #include "nsMailHeaders.h"
 #include "nsMsgI18N.h"
-#include "nsMsgCompPrefs.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIMimeURLUtils.h"
 #include "nsINntpService.h"
@@ -1655,7 +1654,6 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *from,
   *new_post_url_return = 0;
 
  /*JFD
- 	nsMsgCompPrefs pCompPrefs;
 	fields = MSG_CreateCompositionFields(from, 0, to, cc, 0, 0, 0, 0,
 									   (char *)pCompPrefs.GetOrganization(), 0, 0,
 									   extra_headers, 0, 0, 0,

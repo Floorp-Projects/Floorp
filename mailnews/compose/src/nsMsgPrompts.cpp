@@ -17,7 +17,6 @@
  */
 #include "nsMsgCopy.h"
 #include "nsIPref.h"
-#include "nsMsgCompPrefs.h"
 #include "nsMsgPrompts.h"
 #include "nsINetSupportDialogService.h"
 #include "nsMsgComposeStringBundle.h"

@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include "nsMsgCompose.h"
-#include "nsMsgCompPrefs.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -565,10 +564,11 @@ nsresult nsMsgCompose::GetComposeHTML(PRBool *aComposeHTML)
 
 nsresult nsMsgCompose::GetWrapLength(PRInt32 *aWrapLength)
 {
-	nsMsgCompPrefs prefs;
-
-	*aWrapLength = prefs.GetWrapColumn();
-	return NS_OK;
+  nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  return prefs->GetIntPref("mail.wraplength", aWrapLength);
 }
 
 nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format,

@@ -26,7 +26,6 @@ include <$(DEPTH)\config\config.mak>
 EXPORTS=    nsSmtpUrl.h             \
             nsSmtpProtocol.h        \
             nsSmtpService.h                 \
-            nsMsgCompPrefs.h                \
             nsMsgZapIt.h \
             nsMsgCreate.h \
             nsMsgSendLater.h \
@@ -52,7 +51,6 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj             \
                         .\$(OBJDIR)\nsSmtpService.obj           \
                         .\$(OBJDIR)\nsMsgComposeService.obj     \
                         .\$(OBJDIR)\nsMsgCompose.obj            \
-                        .\$(OBJDIR)\nsMsgCompPrefs.obj          \
             .\$(OBJDIR)\nsMsgZapIt.obj \
                         .\$(OBJDIR)\nsMsgCreate.obj \
                 .\$(OBJDIR)\nsMsgCopy.obj \

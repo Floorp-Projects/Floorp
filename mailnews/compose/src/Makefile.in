@@ -28,7 +28,6 @@ EXPORTS = \
 	nsSmtpUrl.h	\
 	nsSmtpProtocol.h \
 	nsSmtpService.h \
-	nsMsgCompPrefs.h \
 	nsMsgZapIt.h \
 	nsMsgCreate.h \
 	nsMsgCopy.h \
@@ -56,7 +55,6 @@ CPPSRCS = \
 	nsMsgSend.cpp \
 	nsMsgSendPart.cpp \
 	nsSmtpService.cpp \
-	nsMsgCompPrefs.cpp \
 	nsMsgZapIt.cpp	\
 	nsMsgCreate.cpp	\
 	nsMsgCopy.cpp \
