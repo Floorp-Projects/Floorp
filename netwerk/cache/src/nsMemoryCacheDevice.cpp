@@ -20,6 +20,7 @@
  * Contributor(s): 
  *    Gordon Sheridan, <gordon@netscape.com>
  *    Patrick C. Beard <beard@netscape.com>
+ *    Brian Ryner <bryner@netscape.com>
  */
 
 #include "nsMemoryCacheDevice.h"
@@ -29,21 +30,29 @@
 #include "nsICacheVisitor.h"
 #include "nsCRT.h"
 
+// The memory cache implements the "LRU-SP" caching algorithm described in
+// "LRU-SP: A Size-Adjusted and Popularity-Aware LRU Replacement Algorithm
+// for Web Caching" by Kai Cheng and Yahiko Kambayashi.
+
+// We keep ceil(log2(mHardLimit+1)) LRU queues.  The queues hold exponentially
+// increasing ranges of floor(log2((size/nref))) values for entries.
 
 const char *gMemoryDeviceID      = "memory";
 
 
 nsMemoryCacheDevice::nsMemoryCacheDevice()
     : mInitialized(PR_FALSE),
+      mEvictionList(nsnull),
       mEvictionThreshold(40 * 1024),
       mHardLimit(4 * 1024 * 1024),  // set default memory limit, in case prefs aren't available
       mTotalSize(0),
       mInactiveSize(0),
       mEntryCount(0),
-      mMaxEntryCount(0)
+      mMaxEntryCount(0),
+      mQueueCount(0)
 {
-    PR_INIT_CLIST(&mEvictionList[mostLikelyToEvict]);
-    PR_INIT_CLIST(&mEvictionList[leastLikelyToEvict]);
+    // mEvictionList is created lazily to avoid re-creating it if the
+    // capacity is set immediately.
 }
 
 
@@ -79,7 +88,7 @@ nsMemoryCacheDevice::Shutdown()
     // evict all entries
     nsCacheEntry * entry, * next;
 
-    for (int i=mostLikelyToEvict; i <= leastLikelyToEvict; ++i) {
+    for (int i = mQueueCount - 1; i >= 0; --i) {
         entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList[i]);
         while (entry != &mEvictionList[i]) {
             NS_ASSERTION(entry->IsInUse() == PR_FALSE, "### shutting down with active entries.\n");
@@ -105,6 +114,10 @@ nsMemoryCacheDevice::Shutdown()
     NS_ASSERTION(mEntryCount == 0, "### mem cache leaking entries?\n");
     
     mInitialized = PR_FALSE;
+
+    delete[] mEvictionList;
+    mEvictionList = nsnull;
+
     return NS_OK;
 }
 
@@ -124,6 +137,7 @@ nsMemoryCacheDevice::FindEntry(nsCString * key)
 
     // move entry to the tail of an eviction list
     PR_REMOVE_AND_INIT_LINK(entry);
+    EnsureEvictionLists();
     PR_APPEND_LINK(entry, &mEvictionList[EvictionList(entry, 0)]);
     
     mInactiveSize -= entry->Size();
@@ -167,6 +181,7 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
  	    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry),"entry is already on a list!");
 	
 		// append entry to the eviction list
+        EnsureEvictionLists();
         PR_APPEND_LINK(entry, &mEvictionList[EvictionList(entry, 0)]);
 
         // add entry to hashtable of mem cache entries
@@ -289,6 +304,7 @@ nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
     if (!entry->IsDoomed()) {
         // move entry to the tail of the appropriate eviction list
         PR_REMOVE_AND_INIT_LINK(entry);
+        EnsureEvictionLists();
         PR_APPEND_LINK(entry, &mEvictionList[EvictionList(entry, deltaSize)]);
     }
 
@@ -303,7 +319,26 @@ nsMemoryCacheDevice::AdjustMemoryLimits(PRInt32  softLimit, PRInt32  hardLimit)
 {
     mSoftLimit = softLimit;
     mHardLimit = hardLimit;
+
+    // First, evict entries that won't fit into the new cache size.
     EvictEntriesIfNecessary();
+
+    // Create the eviction list array at the new size and then insert
+    // all of the entries into it.
+    PRInt32 oldQueueCount = mQueueCount;
+    PRCList* oldEvictionList = mEvictionList;
+    CreateEvictionLists();
+    
+    for (PRInt32 i = PR_MIN(oldQueueCount, mQueueCount) - 1; i >= 0; --i) {
+        nsCacheEntry* entry = (nsCacheEntry*) PR_LIST_HEAD(&oldEvictionList[i]);
+        while (entry != &oldEvictionList[i]) {
+            nsCacheEntry* next = (nsCacheEntry*) PR_NEXT_LINK(entry);
+            PR_APPEND_LINK(entry, &mEvictionList[i]);
+            entry = next;
+        }
+    }
+
+    delete[] oldEvictionList;
 }
 
 
@@ -334,7 +369,7 @@ nsMemoryCacheDevice::EvictEntriesIfNecessary(void)
     if ((mTotalSize < mHardLimit) && (mInactiveSize < mSoftLimit))
         return;
 
-    for (int i=mostLikelyToEvict; i<=leastLikelyToEvict; ++i) {
+    for (int i = mQueueCount - 1; i >= 0; --i) {
         entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList[i]);
         while (entry != &mEvictionList[i]) {
             if (entry->IsInUse()) {
@@ -357,10 +392,14 @@ int
 nsMemoryCacheDevice::EvictionList(nsCacheEntry * entry, PRInt32  deltaSize)
 {
     PRInt32  size = deltaSize + (PRInt32)entry->Size();
-    if ((size > mEvictionThreshold) || (entry->ExpirationTime() != NO_EXPIRATION_TIME))
-        return mostLikelyToEvict;
-    
-    return leastLikelyToEvict;
+
+    // favor items which never expire by putting them in the lowest-index queue
+    if (entry->ExpirationTime() == NO_EXPIRATION_TIME)
+        return 0;
+
+    // compute which eviction queue this entry should go into, based on
+    // floor(log2(size/nref))
+    return PR_FloorLog2(size / (entry->FetchCount() + 1));
 }
 
 
@@ -381,7 +420,7 @@ nsMemoryCacheDevice::Visit(nsICacheVisitor * visitor)
     nsCacheEntry *              entry;
     nsCOMPtr<nsICacheEntryInfo> entryRef;
 
-    for (int i=mostLikelyToEvict; i <= leastLikelyToEvict; ++i) {
+    for (int i = mQueueCount - 1; i >= 0; --i) {
         entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList[i]);
         while (entry != &mEvictionList[i]) {
             nsCacheEntryInfo * entryInfo = new nsCacheEntryInfo(entry);
@@ -406,7 +445,7 @@ nsMemoryCacheDevice::EvictEntries(const char * clientID)
     nsCacheEntry * entry;
     PRUint32 prefixLength = (clientID ? strlen(clientID) : 0);
 
-    for (int i=mostLikelyToEvict; i<=leastLikelyToEvict; ++i) {
+    for (int i = mQueueCount - 1; i >= 0; --i) {
         PRCList * elem = PR_LIST_HEAD(&mEvictionList[i]);
         while (elem != &mEvictionList[i]) {
             entry = (nsCacheEntry *)elem;
@@ -436,6 +475,23 @@ nsMemoryCacheDevice::SetCapacity(PRInt32  capacity)
     AdjustMemoryLimits(softLimit, hardLimit);
 }
 
+inline void
+nsMemoryCacheDevice::EnsureEvictionLists()
+{
+    if (!mEvictionList)
+        CreateEvictionLists();
+}
+
+void
+nsMemoryCacheDevice::CreateEvictionLists()
+{
+    // Create log2 (mHardLimit + 1) LRU queues
+
+    mQueueCount = PR_CeilingLog2(mHardLimit + 1);
+    mEvictionList = new PRCList[mQueueCount];
+    for (int i = 0; i < mQueueCount; ++i)
+        PR_INIT_CLIST(&mEvictionList[i]);
+}
 
 /******************************************************************************
  * nsMemoryCacheDeviceInfo - for implementing about:cache
