@@ -2060,6 +2060,41 @@ nsLocalFile::Exists(PRBool *_retval)
 }
 
 NS_IMETHODIMP  
+nsLocalFile::IsPackage(PRBool *outIsPackage)
+{
+    NS_ENSURE_ARG(outIsPackage);
+    *outIsPackage = PR_FALSE;
+
+    // Note: IsDirectory() calls ResolveAndStat() & UpdateCachedCatInfo
+    PRBool isDir;
+    nsresult rv = IsDirectory(&isDir);
+    if (NS_FAILED(rv)) return rv;
+
+    *outIsPackage = ((mCachedCatInfo.dirInfo.ioFlAttrib & kioFlAttribDirMask) &&
+                     (mCachedCatInfo.dirInfo.ioDrUsrWds.frFlags & kHasBundle));
+
+    if ((!*outIsPackage) && isDir)
+    {
+        // Believe it or not, folders ending with ".app" are also considered
+        // to be packages, even if the top-level folder doesn't have bundle set
+        nsXPIDLCString name;
+        if (NS_SUCCEEDED(rv = GetLeafName(getter_Copies(name))))
+        {
+            const char *extPtr = strrchr(name, '.');
+            if (extPtr)
+            {
+                if (!nsCRT::strcasecmp(extPtr, ".app"))
+                {
+                    *outIsPackage = PR_TRUE;
+                }
+            }
+        }
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP  
 nsLocalFile::IsWritable(PRBool *outIsWritable)
 {
     NS_ENSURE_ARG(outIsWritable);
