@@ -23,6 +23,7 @@
  *   Simon Fraser   <sfraser@netscape.com>
  *   Michael Judge  <mjudge@netscape.com>
  *   Charles Manske <cmanske@netscape.com>
+ *   Kathleen Brade <brade@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -53,6 +54,7 @@
 #include "nsIChannel.h"
 #include "nsIWebProgress.h"
 #include "nsIWebNavigation.h"
+#include "nsIRefreshURI.h"
 
 #include "nsIControllers.h"
 #include "nsIController.h"
@@ -480,10 +482,21 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
 {
   nsresult rv;
 
+  nsCOMPtr<nsIEditorDocShell> editorDocShell;
+  rv = GetEditorDocShellFromWindow(aWindow, getter_AddRefs(editorDocShell));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIEditor> editor;
+  rv = editorDocShell->GetEditor(getter_AddRefs(editor));
+  if (NS_FAILED(rv)) return rv;
+
+  // null out the editor on the docShell to trigger PreDestroy which
+  // needs to happen before document state listeners are removed below
+  rv = editorDocShell->SetEditor(nsnull);
+  if (NS_FAILED(rv)) return rv;
+
   if (mStateMaintainer)
   {
-    nsCOMPtr<nsIEditor> editor;
-    rv = GetEditorForWindow(aWindow, getter_AddRefs(editor));
     if (editor)
     {
       // If we had an editor -- we are loading a new URL into existing window
@@ -492,12 +505,13 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
       nsCOMPtr<nsISelection>	selection;
       editor->GetSelection(getter_AddRefs(selection));	
       nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
-      if (!selPriv) return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsISelectionListener> listener = 
+      if (selPriv)
+      {
+        nsCOMPtr<nsISelectionListener> listener = 
                                         do_QueryInterface(mStateMaintainer);
-      rv = selPriv->RemoveSelectionListener(listener);
-      if (NS_FAILED(rv)) return rv;
+        rv = selPriv->RemoveSelectionListener(listener);
+        if (NS_FAILED(rv)) return rv;
+      }
 
       nsCOMPtr<nsIDocumentStateListener> docListener =
                                             do_QueryInterface(mStateMaintainer);
@@ -527,12 +541,8 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
       mHTMLCommandControllerId = 0;
     }
   }
-  nsCOMPtr<nsIEditorDocShell> editorDocShell;
-  rv = GetEditorDocShellFromWindow(aWindow, getter_AddRefs(editorDocShell));
-  if (NS_FAILED(rv)) return rv;  
-  
-  // null out the editor on the docShell
-  return editorDocShell->SetEditor(nsnull);
+
+  return rv;
 }
 
 /*---------------------------------------------------------------------------
@@ -879,6 +889,11 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
   nsresult rv = GetDocShellFromWindow(domWindow, getter_AddRefs(docShell));
   if (NS_FAILED(rv)) return rv;       // better error handling?
   
+  // cancel refresh from meta tags
+  nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(docShell);
+  if (refreshURI)
+    refreshURI->CancelRefreshURITimers();
+
   nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell);
 
   // did someone set the flag to make this shell editable?
@@ -957,6 +972,17 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
   // and load empty doc later
   if (aStatus == NS_ERROR_FILE_NOT_FOUND)
     mEditorStatus = eEditorErrorFileNotFound;
+
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsresult rv = aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+  
+  nsCOMPtr<nsIDocShell> docShell;
+  rv = GetDocShellFromWindow(domWindow, getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(docShell);
+  if (refreshURI)
+    refreshURI->CancelRefreshURITimers();
 
   return NS_OK;
 }
