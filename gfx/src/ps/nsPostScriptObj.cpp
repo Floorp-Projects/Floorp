@@ -243,6 +243,11 @@ nsPostScriptObj::~nsPostScriptObj()
     gLangGroups = nsnull;
   }
 
+  if (mDocProlog)
+    mDocProlog->Remove(PR_FALSE);
+  if (mDocScript)
+    mDocScript->Remove(PR_FALSE);
+
   PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("nsPostScriptObj::~nsPostScriptObj(): printing done."));
 }
 
@@ -283,6 +288,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
   int         landscape;
   float       fwidth, fheight;
   const char *printername;
+  nsresult    rv;
 
   PrintInfo* pi = new PrintInfo(); 
   mPrintSetup = new PrintSetup();
@@ -312,6 +318,12 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 
       if (!mPrintSetup->paper_size)
         return NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
+
+      // Clean up tempfile remnants of any previous print job
+      if (mDocProlog)
+        mDocProlog->Remove(PR_FALSE);
+      if (mDocScript)
+        mDocScript->Remove(PR_FALSE);
                
       aSpec->GetToPrinter( isAPrinter );
       if (isAPrinter) {
@@ -366,21 +378,39 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
             PR_smprintf_free(old_printer_string);
         }
 
-        
         aSpec->GetCommand(&mPrintSetup->print_cmd);
-        mPrintSetup->out = tmpfile();
-        mPrintSetup->filename = nsnull;  
+        // Create a temporary file for the document prolog
+        rv = mTempfileFactory.CreateTempFile(getter_AddRefs(mDocProlog),
+            &mPrintSetup->out, "w+");
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_GFX_PRINTER_FILE_IO_ERROR);
+        NS_POSTCONDITION(nsnull != mPrintSetup->out,
+          "CreateTempFile succeeded but no file handle");
+
       } else {
         const char *path;
         aSpec->GetPath(&path);
-        mPrintSetup->filename = path;          
-        mPrintSetup->out = fopen(mPrintSetup->filename, "w"); 
-        if (!mPrintSetup->out)
+        rv = NS_NewNativeLocalFile(nsDependentCString(path),
+          PR_FALSE, getter_AddRefs(mDocProlog));
+        rv = mDocProlog->OpenANSIFileDesc("w", &mPrintSetup->out);
+        if (NS_FAILED(rv))
           return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
+        NS_POSTCONDITION(nsnull != mPrintSetup->out,
+          "OpenANSIFileDesc succeeded but no file handle");
+        mPrintSetup->print_cmd = NULL;	// Indicate print-to-file
       }
-      mPrintSetup->tmpBody = tmpfile();
-      NS_ENSURE_TRUE(mPrintSetup->tmpBody, NS_ERROR_FAILURE);
-      mPrintSetup->tmpBody_filename = nsnull;
+
+      // Open the temporary file for the document script (printable content)
+      rv = mTempfileFactory.CreateTempFile(getter_AddRefs(mDocScript),
+          &mPrintSetup->tmpBody, "w+");
+      if (NS_FAILED(rv)) {
+        fclose(mPrintSetup->out);
+        mPrintSetup->out = nsnull;
+        mDocProlog->Remove(PR_FALSE);
+        mDocProlog = nsnull;
+        return NS_ERROR_GFX_PRINTER_FILE_IO_ERROR;
+      }
+      NS_POSTCONDITION(nsnull != mPrintSetup->tmpBody,
+        "CreateTempFile succeeded but no file handle");
     } else 
         return NS_ERROR_FAILURE;
 
@@ -2031,6 +2061,7 @@ nsPostScriptObj::end_page()
 nsresult 
 nsPostScriptObj::end_document()
 {
+  nsresult rv;
   PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("nsPostScriptObj::end_document()\n"));
 
   // insurance against breakage
@@ -2049,83 +2080,90 @@ nsPostScriptObj::end_document()
   /* Reset file pointer to the beginning of the temp tmpBody file... */
   fseek(mPrintContext->prSetup->tmpBody, 0, SEEK_SET);
 
+  /* Copy the document script (body) to the end of the prolog (header) */
   while ((length = fread(buffer, 1, sizeof(buffer),
           mPrintContext->prSetup->tmpBody)) > 0)  {
     fwrite(buffer, 1, length, f);
   }
 
+  /* Close the script file handle and dispose of the temporary file */
   if (mPrintSetup->tmpBody) {
     fclose(mPrintSetup->tmpBody);
     mPrintSetup->tmpBody = nsnull;
   }
-  if (mPrintSetup->tmpBody_filename)
-    free((void *)mPrintSetup->tmpBody_filename);
+  mDocScript->Remove(PR_FALSE);
+  mDocScript = nsnull;
   
+  // Finish up the document.
   // n_pages is zero so use mPageNumber
   fprintf(f, "%%%%Trailer\n");
   fprintf(f, "%%%%Pages: %d\n", (int) mPageNumber - 1);
   fprintf(f, "%%%%EOF\n");
 
-  if (mPrintSetup->filename) {
+  if (!mPrintSetup->print_cmd) {
     PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("print to file completed.\n"));
+    fclose(mPrintSetup->out);
+    rv = NS_OK;
   }  
   else {
     PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("piping job to '%s'\n", mPrintSetup->print_cmd));
-
-    FILE  *pipe;
-    char   buf[256];
-    size_t len;
         
 #ifdef VMS
-    /* We can't print from a pipe, so we need to create a temporary file */
-    int VMSstatus;
-    char VMSPrintCommand[1024];
-    mPrintSetup->filename = tempnam("SYS$SCRATCH:","MOZ_P");
-    pipe = fopen(mPrintSetup->filename, "w");
-#else
-    pipe = popen(mPrintSetup->print_cmd, "w");
-#endif /* VMS */
-    /* XXX: We should look at |errno| in this case and return something
-     * more specific here... */
-    if (!pipe)
-      return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
-    
-    size_t job_size = 0;
-    
-    /* Reset file pointer to the beginning of the temp file... */
-    fseek(mPrintSetup->out, 0, SEEK_SET);
+    // VMS can't print to a pipe, so issue a print command for the
+    // mDocProlog file.
 
-    do {
-      len = fread(buf, 1, sizeof(buf), mPrintSetup->out);
-      fwrite(buf, 1, len, pipe);
-      
-      job_size += len;
-    } while(len == sizeof(buf));
+    fclose(mPrintSetup->out);
 
-#ifdef VMS
-    fclose(pipe);
-    /* Now we can print the temporary file */
-    PR_snprintf(VMSPrintCommand, sizeof(VMSPrintCommand), "%s %s.",
-      mPrintSetup->print_cmd, mPrintSetup->filename);
-    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("VMS print command '%s'\n", 
-      VMSPrintCommand));
-    VMSstatus = system(VMSPrintCommand);
-    free((void *)mPrintSetup->filename);
-    mPrintSetup->filename = NULL;
-    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("VMS print status = %d\n",
-      VMSstatus));
-    if (!WIFEXITED(VMSstatus))
-      return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
-#else
-    pclose(pipe);
-#endif /* VMS */
-    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("piping done, copied %ld bytes.\n", job_size));
-    if (errno != 0) {
-      return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+    nsCAutoString prologFile;
+    rv = mDocProlog->GetNativePath(prologFile);
+    if (NS_SUCCEEDED(rv)) {
+      char *VMSPrintCommand =
+        PR_smprintf("%s %s.", mPrintSetup->print_cmd, prologFile.get());
+      if (!VMSPrintCommand)
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      else {
+        PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("VMS print command '%s'\n", 
+          VMSPrintCommand));
+        int VMSstatus = system(VMSPrintCommand);
+        PR_smprintf_free(VMSPrintCommand);
+        PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("VMS print status = %d\n",
+          VMSstatus));
+        rv = WIFEXITED(VMSstatus) ? NS_OK : NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+      }
     }
+#else
+    // On *nix, popen() the print command and pipe the contents of
+    // mDocProlog into it.
+
+    FILE  *pipe;
+
+    pipe = popen(mPrintSetup->print_cmd, "w");
+    if (!pipe)
+      rv = NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+    else {
+      unsigned long job_size = 0;
+    
+      /* Reset file pointer to the beginning of the temp file... */
+      fseek(mPrintSetup->out, 0, SEEK_SET);
+
+      while ((length = fread(buffer, 1, sizeof(buffer), mPrintSetup->out)) > 0)
+      {
+        fwrite(buffer, 1, length, pipe);
+        job_size += length;
+      }
+      fclose(mPrintSetup->out);
+      PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG,
+          ("piping done, copied %ld bytes.\n", job_size));
+      int exitStatus = pclose(pipe);
+      rv = WIFEXITED(exitStatus) ? NS_OK : NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+    }
+#endif
+    mDocProlog->Remove(PR_FALSE);
   }
+  mPrintSetup->out = nsnull;
+  mDocProlog = nsnull;
   
-  return NS_OK;
+  return rv;
 }
 
 /** ---------------------------------------------------
