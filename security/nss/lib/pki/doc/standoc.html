@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-        <!-- 
+         <!-- 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
    - except in compliance with the License. You may obtain a copy of
@@ -34,404 +34,438 @@
    - GPL.
   -->
                                                                         
-                          
+                              
   <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
   <title>Stan Design - Work In Progress</title>
-   
 </head>
   <body>
-<br>
-              This is a working document for progress on Stan design/development.<br>
-<br>
-       Current <a href="#build">build</a>
-      and <a href="#test">test</a>
-       instructions.<br>
-<br>
-                     The current set of Stan libraries.<br>
-<a href="#asn1">asn1</a>
-<br>
-<a href="#base">base</a>
-<br>
-<a href="#ckfw">ckfw</a>
-<br>
-<a href="#dev">dev</a>
-<br>
-<a href="#pki">pki</a>
-<br>
-<a href="#pki1">pki1</a>
-<br>
-<a href="#pkix">pkix</a>
-<br>
-<br>
-                    "Public" types below (those available to consumers of 
-NSS)   begin    with   "NSS".  &nbsp;"Protected" types (those only available 
-within   NSS)   begin   with  "nss".<br>
-<br>
-       Open issues appears as numbered indents.<br>
-<br>
-<br>
+ <br>
+               This is a working document for progress on Stan design/development.<br>
+ <br>
+        Current <a href="#build">build</a>
+       and <a href="#test">test</a>
+        instructions.<br>
+ <br>
+                      The current set of Stan libraries.<br>
+ <a href="#asn1">asn1</a>
+ <br>
+ <a href="#base">base</a>
+ <br>
+ <a href="#ckfw">ckfw</a>
+ <br>
+ <a href="#dev">dev</a>
+ <br>
+ <a href="#pki">pki</a>
+ <br>
+ <a href="#pki1">pki1</a>
+ <br>
+ <a href="#pkix">pkix</a>
+ <br>
+ <br>
+                     "Public" types below (those available to consumers of
+ NSS)   begin    with   "NSS".  &nbsp;"Protected" types (those only available
+ within   NSS)   begin   with  "nss".<br>
+ <br>
+        Open issues appears as numbered indents.<br>
+ <br>
+ <br>
+ 
 <hr width="100%" size="2" align="Left"><br>
+ 
 <h3><a name="asn1"></a>
-<a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/asn1/"> 
-          ASN.1</a>
-</h3>
-                         ASN.1 encoder/decoder wrapping around the current
+ <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/asn1/">
+           ASN.1</a>
+ </h3>
+                          ASN.1 encoder/decoder wrapping around the current 
  ASN.1    implementation.<br>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSASN1EncodingType">  NSSASN1EncodingType</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1Item">nssASN1Item</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1Template">nssASN1Template</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1ChooseTemplateFunction">
-                    nssASN1ChooseTemplateFunction</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1Encoder">nssASN1Encoder</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1Decoder">nssASN1Decoder</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1EncodingPart">  nssASN1EncodingPart</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1NotifyFunction"> 
-      nssASN1NotifyFunction</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1EncoderWriteFunction">
-                    nssASN1EncoderWriteFunction</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1DecoderFilterFunction">
-                    nssASN1DecoderFilterFunction</a>
-<br>
-<br>
-<hr width="100%" size="2" align="Left">
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSASN1EncodingType">  NSSASN1EncodingType</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1Item">nssASN1Item</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1Template">nssASN1Template</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1ChooseTemplateFunction">
+                     nssASN1ChooseTemplateFunction</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1Encoder">nssASN1Encoder</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1Decoder">nssASN1Decoder</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1EncodingPart">  nssASN1EncodingPart</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1NotifyFunction">
+       nssASN1NotifyFunction</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1EncoderWriteFunction">
+                     nssASN1EncoderWriteFunction</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssASN1DecoderFilterFunction">
+                     nssASN1DecoderFilterFunction</a>
+ <br>
+ <br>
+ 
+<hr width="100%" size="2" align="Left"> 
 <h3><a name="base"></a>
-<a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/base/"> 
-      Base</a>
-</h3>
-                         Set of base utilities for Stan implementation. &nbsp;These 
-     are   all   fairly straightforward, except for nssPointerTracker.<br>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSError">NSSError</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSArena">NSSArena</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSItem">NSSItem</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSBER">NSSBER</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSDER">NSSDER</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSBitString">NSSBitString</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSUTF8">NSSUTF8</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSASCII7">NSSASCII7</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssArenaMark">nssArenaMark</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssPointerTracker">nssPointerTracker</a>
-<br>
-         This is intended for debug builds only.<br>
+ <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/base/">
+       Base</a>
+ </h3>
+                          Set of base utilities for Stan implementation.
+&nbsp;These       are   all   fairly straightforward, except for nssPointerTracker.<br>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSError">NSSError</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSArena">NSSArena</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSItem">NSSItem</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSBER">NSSBER</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSDER">NSSDER</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSBitString">NSSBitString</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSUTF8">NSSUTF8</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSASCII7">NSSASCII7</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssArenaMark">nssArenaMark</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssPointerTracker">nssPointerTracker</a>
+ <br>
+          This is intended for debug builds only.<br>
+ 
 <ol>
-  <li>Ignored for now.<br>
-  </li>
+   <li>Ignored for now.<br>
+   </li>
+ 
 </ol>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssStringType">nssStringType</a>
-<br>
-<br>
-         Suggested additions:<br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssStringType">nssStringType</a>
+ <br>
+ <br>
+          Suggested additions:<br>
+ 
 <ol>
-  <li>nssList - A list that optionally uses a lock. &nbsp;This list  would
+   <li>nssList - A list that optionally uses a lock. &nbsp;This list  would 
    manage the currently loaded modules in a trust domain, etc.</li>
+   
   <ul>
-    <li>SECMODListLock kept track of the number of waiting threads.  &nbsp;Will
+     <li>SECMODListLock kept track of the number of waiting threads.  &nbsp;Will 
   this be needed in the trust domain?</li>
+   
   </ul>
+ 
 </ol>
-<br>
-<hr width="100%" size="2" align="Left">
+ <br>
+ 
+<hr width="100%" size="2" align="Left"> 
 <h3><a name="ckfw"></a>
-<a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/ckfw/"> 
- CKFW</a>
-</h3>
-                    The cryptoki framework, used for building cryptoki tokens.
-   &nbsp;This      needs  to be described in a separate document showing
-how    to set up a  token    using  CKFW. &nbsp;This code only relates to
-tokens,    so it is not  relevant    here.<br>
-<br>
-<br>
-<hr width="100%" size="2" align="Left">
+ <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/ckfw/">
+  CKFW</a>
+ </h3>
+                     The cryptoki framework, used for building cryptoki tokens. 
+   &nbsp;This      needs  to be described in a separate document showing how
+   to set up a  token    using  CKFW. &nbsp;This code only relates to tokens,
+   so it is not  relevant    here.<br>
+ <br>
+ <br>
+ 
+<hr width="100%" size="2" align="Left"> 
 <h3><a name="dev"></a>
-<a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/dev/">  
-Device</a>
-</h3>
-                         Defines cryptoki devices used in NSS. &nbsp;This 
-is  not   part  of the exposed API. &nbsp;It is a low-level API allowing NSS
-to manage   cryptoki  devices.<br>
-<br>
-        The relationship is like this:<br>
-<br>
-        libpki --&gt; libdev --&gt; cryptoki<br>
-<br>
-        As an example,<br>
-<br>
-        NSSTrustDomain_FindCertificate --&gt; NSSToken_FindCertificate --&gt; 
-  C_FindObjects<br>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSModule">NSSModule</a>
-<br>
-                    Replaces the SECMOD API. &nbsp;The module manages a PRLibrary 
-     that   holds  a cryptoki implementation via a number of slots. &nbsp;The
-     API should   provide  the ability  to Load and Unload a module, Login
- and    Logout to the   module (through its slots), and to locate a particular
-  slot/token.<br>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSSlot">NSSSlot</a>
-<br>
-                    This and NSSToken combine to replace the PK11 API parts 
- that   relate    to  slot  and token management. &nbsp;The slot API should 
- provide   the ability   to Login/Logout   to a slot, check the login status, 
- determine    basic configuration    information   about the slot, and modify 
- the password    settings.<br>
+ <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/dev/"> 
+ Device</a>
+ </h3>
+                          Defines cryptoki devices used in NSS. &nbsp;This
+ is  not   part  of the exposed API. &nbsp;It is a low-level API allowing
+NSS to manage   cryptoki  devices.<br>
+ <br>
+         The relationship is like this:<br>
+ <br>
+         libpki --&gt; libdev --&gt; cryptoki<br>
+ <br>
+         As an example,<br>
+ <br>
+         NSSTrustDomain_FindCertificate --&gt; NSSToken_FindCertificate --&gt;
+   C_FindObjects<br>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSModule">NSSModule</a>
+ <br>
+                     Replaces the SECMOD API. &nbsp;The module manages a
+PRLibrary       that   holds  a cryptoki implementation via a number of slots.
+&nbsp;The      API should   provide  the ability  to Load and Unload a module,
+Login  and    Logout to the   module (through its slots), and to locate a
+particular   slot/token.<br>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSSlot">NSSSlot</a>
+ <br>
+                     This and NSSToken combine to replace the PK11 API parts
+  that   relate    to  slot  and token management. &nbsp;The slot API should
+  provide   the ability   to Login/Logout   to a slot, check the login status,
+  determine    basic configuration    information   about the slot, and modify
+  the password    settings.<br>
+ 
 <ol>
-  <li>Should slots also maintain a default session? &nbsp;This session would
- be used for slot management calls (sections 9.5 and9.6 of PKCS#11). &nbsp;Or
- is the token session sufficient (this would not work if C_GetTokenInfo and
+   <li>Should slots also maintain a default session? &nbsp;This session would 
+ be used for slot management calls (sections 9.5 and9.6 of PKCS#11). &nbsp;Or 
+ is the token session sufficient (this would not work if C_GetTokenInfo and 
  C_InitToken need to be wrapped in a threadsafe session).<br>
-  </li>
+   </li>
+ 
 </ol>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSToken">NSSToken</a>
-<br>
-                    Fills in the gaps left by NSSSlot. &nbsp;Much of the
-cryptoki     API   is  directed   towards slots.  &nbsp;However,   some 
-functionality    clearly belongs with a token type. &nbsp;For  example, 
- a certificate  lives  on a token, not a slot, so one would expect  a function
-  NSSToken_FindCertificate.     &nbsp;Thus functions that deal with  importing/exporting
-  an object and    performing  actual cryptographic operations  belong here.<br>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSToken">NSSToken</a>
+ <br>
+                     Fills in the gaps left by NSSSlot. &nbsp;Much of the 
+cryptoki     API   is  directed   towards slots.  &nbsp;However,   some  functionality
+   clearly belongs with a token type. &nbsp;For  example,   a certificate
+ lives  on a token, not a slot, so one would expect  a function   NSSToken_FindCertificate.
+    &nbsp;Thus functions that deal with  importing/exporting   an object
+and    performing  actual cryptographic operations  belong here.<br>
+ 
 <ol>
-  <li>The   distinction  between a slot and a token is not clear. &nbsp;Most
-   functions take  a slotID   as an argument,  even though it is obvious
-that      the event   is intended to occur on a token. &nbsp;That leaves
-various    possibilities:</li>
+   <li>The   distinction  between a slot and a token is not clear. &nbsp;Most 
+   functions take  a slotID   as an argument,  even though it is obvious that
+     the event   is intended to occur on a token. &nbsp;That leaves various
+   possibilities:</li>
+   
   <ol>
-    <li>Implement the API entirely as NSSToken. &nbsp;If the token  is not
+     <li>Implement the API entirely as NSSToken. &nbsp;If the token  is not 
   present, some calls will simply fail.</li>
-    <li>Divide the API between NSSToken and NSSSlot, as described  above.
-&nbsp;NSSSlot  would handle cryptoki calls specified as "slot management", 
- while NSSToken  handles actual token operations.</li>
-    <li>Others?</li>
+     <li>Divide the API between NSSToken and NSSSlot, as described  above. 
+&nbsp;NSSSlot  would handle cryptoki calls specified as "slot management",
+  while NSSToken  handles actual token operations.</li>
+     <li>Others?</li>
+   
   </ol>
-  <li>Session management. &nbsp;Tokens needs a threadsafe session handle
- to perform operations. &nbsp;CryptoContexts are meant to provide such sessions,
- but other objects will need access to token functions as well (examples:
-the TrustDomain_Find functions, _Login, _Logout, and others that do not exist
- such as NSSToken_ChangePassword). &nbsp;For those functions, the token could
- maintain a default session. &nbsp;Thus all NSSToken API functions would
-take  sessionOpt as an argument. &nbsp;If the caller is going to provide
-a session,  it sends an NSSSession there, otherwise it sends NULL and the
-default session  is utilized.<br>
-  </li>
+   <li>Session management. &nbsp;Tokens needs a threadsafe session handle 
+ to perform operations. &nbsp;CryptoContexts are meant to provide such sessions, 
+ but other objects will need access to token functions as well (examples: 
+the TrustDomain_Find functions, _Login, _Logout, and others that do not exist 
+ such as NSSToken_ChangePassword). &nbsp;For those functions, the token could 
+ maintain a default session. &nbsp;Thus all NSSToken API functions would take
+ sessionOpt as an argument. &nbsp;If the caller is going to provide a session,
+ it sends an NSSSession there, otherwise it sends NULL and the default session
+ is utilized.<br>
+   </li>
+ 
 </ol>
-     Proposed:<br>
-   NSSSession<br>
-   Wraps a Cryptoki session. &nbsp;Created from a slot. &nbsp;Used to manage 
- sessions for crypto contexts. &nbsp;Has a lock field, which locks the session 
- if the slot is not threadsafe.<br>
-<br>
+      Proposed:<br>
+    NSSSession<br>
+    Wraps a Cryptoki session. &nbsp;Created from a slot. &nbsp;Used to manage
+  sessions for crypto contexts. &nbsp;Has a lock field, which locks the session
+  if the slot is not threadsafe.<br>
+ <br>
+ 
 <hr width="100%" size="2" align="Left"><br>
+ 
 <h3><a name="pki"></a>
-<a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/pki/">  
-  PKI</a>
-</h3>
-                         The NSS PKI library.<br>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSCertificate">NSS</a>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSCertificate">Certificate</a>
-<br>
+ <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/pki/"> 
+   PKI</a>
+ </h3>
+                          The NSS PKI library.<br>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSCertificate">NSS</a>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSCertificate">Certificate</a>
+ <br>
+ 
 <ol>
-  <li>The API leaves open the possibility of NSSCertificate meaning  various
- certificate types, not just X.509. &nbsp;The way to keep open this  possibility
- is to keep only generally useful information in the NSSCertificate  type.
-&nbsp;Examples would be the certificate encoding, label, trust (obtained 
-from cryptoki calls), an email address, etc. &nbsp;Some type of generic reference
- should be kept to the decoded certificate, which would then be accessed
-by  a type-specific API (e.g., NSSX509_GetSubjectName).</li>
+   <li>The API leaves open the possibility of NSSCertificate meaning  various 
+ certificate types, not just X.509. &nbsp;The way to keep open this  possibility 
+ is to keep only generally useful information in the NSSCertificate  type. 
+&nbsp;Examples would be the certificate encoding, label, trust (obtained
+ from cryptoki calls), an email address, etc. &nbsp;Some type of generic
+reference  should be kept to the decoded certificate, which would then be
+accessed by  a type-specific API (e.g., NSSX509_GetSubjectName).</li>
+ 
 </ol>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSUserCertificate">NSSUserCertificate</a>
-<br>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSUserCertificate">NSSUserCertificate</a>
+ <br>
+ 
 <ol>
-  <li>Should this be a typedef of NSSCertificate?&nbsp; This implies  that
- any function that requires an   NSSUserCertificate   would fail when  called
+   <li>Should this be a typedef of NSSCertificate?&nbsp; This implies  that 
+ any function that requires an   NSSUserCertificate   would fail when  called 
  with a certificate lacking a private key. </li>
+ 
 </ol>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSPrivateKey">NSSPrivateKey</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSPublicKey">NSSPublicKey</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSSymmetricKey">NSSSymmetricKey</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSTrustDomain">NSSTrustDomain</a>
-<br>
-                   A trust domain is "the field in which certificates may 
-be  validated."       &nbsp;It  is a collection of modules capable of performing
-  cryptographic      operations  and storing certs and keys. &nbsp;This collection
-  is managed     by NSS in a manner opaque to the consumer. &nbsp;The slots
-  will have various      orderings determining which has preference for a
-given  operation. &nbsp;For      example, the trust domain may order the
-storage  of user certificates one    way, and the storage of email certificates
-in  another way [is that a good    example?].<br>
-<br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSPrivateKey">NSSPrivateKey</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSPublicKey">NSSPublicKey</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSSymmetricKey">NSSSymmetricKey</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSTrustDomain">NSSTrustDomain</a>
+ <br>
+                    A trust domain is "the field in which certificates may
+ be  validated."       &nbsp;It  is a collection of modules capable of performing 
+  cryptographic      operations  and storing certs and keys. &nbsp;This collection 
+  is managed     by NSS in a manner opaque to the consumer. &nbsp;The slots 
+  will have various      orderings determining which has preference for a 
+given  operation. &nbsp;For      example, the trust domain may order the storage
+ of user certificates one    way, and the storage of email certificates in
+ another way [is that a good    example?].<br>
+ <br>
+ 
 <ol>
-  <li>           How will ordering work? &nbsp;We already have the  suggestion
-      that  there be two kinds of ordering: storage and search.  &nbsp;How
-will     they be  constructed/managed? &nbsp;Do we want to expose  access
-to a token     that overrides  this ordering (i.e., the download of  updated
+   <li>           How will ordering work? &nbsp;We already have the  suggestion 
+      that  there be two kinds of ordering: storage and search.  &nbsp;How 
+will     they be  constructed/managed? &nbsp;Do we want to expose  access 
+to a token     that overrides  this ordering (i.e., the download of  updated 
 root certs   may  need to override  storage order)</li>
-  <li>How are certs cached? &nbsp;Nelson wonders what it means   to   Stan
-    when a cert does not live on a token yet. &nbsp;Bob, Terry, and    I
-discussed     this. &nbsp;My conclusion is that there should be a type, 
-separate  from   NSSCertificate,  that holds the decoded cert parts (e.g., 
- NSSX509Certificate,     or to avoid confusion, NSSX509DecodedParts). &nbsp;NSSCertificate 
- would   keep  a handle to this type, so that it only needs to decode the 
-cert once.   &nbsp;The  NSSTrustDomain would keep a hash table of cached certs,
-some of  which may  not live on a token yet (i.e., they are only NSSX509DecodedParts).
-     &nbsp;This  cache could be accessed in the same way the temp db was,
-and    when the cert  is ready to be moved onto a token a call to NSSTrustDomain_ImportCertificate
+   <li>How are certs cached? &nbsp;Nelson wonders what it means   to   Stan 
+    when a cert does not live on a token yet. &nbsp;Bob, Terry, and    I discussed
+    this. &nbsp;My conclusion is that there should be a type,  separate 
+from   NSSCertificate,  that holds the decoded cert parts (e.g.,   NSSX509Certificate,
+    or to avoid confusion, NSSX509DecodedParts). &nbsp;NSSCertificate   would
+  keep  a handle to this type, so that it only needs to decode the  cert
+once.   &nbsp;The  NSSTrustDomain would keep a hash table of cached certs, 
+some of  which may  not live on a token yet (i.e., they are only NSSX509DecodedParts). 
+     &nbsp;This  cache could be accessed in the same way the temp db was, 
+and    when the cert  is ready to be moved onto a token a call to NSSTrustDomain_ImportCertificate 
        is made. &nbsp;Note    that this is essentially the same as CERT_TempCertToPerm.</li>
+   
   <ul>
-    <li>The hashtable in lib/base (copied from ckfw/hash.c) uses the identity
-hash. &nbsp;Therefore, in a hash of certificates, the key is the certificate
-pointer itself. &nbsp;One possibility is to store the decoded cert (NSSX509DecodedParts
-above) as the value in the {key, value} pair. &nbsp;When a cert is decoded,
-the cert pointer and decoding pointer are added to the hash. &nbsp;Subsequent
-lookups have access to one or both of these pointers. &nbsp;This keeps NSSCertificate
+     <li>The hashtable in lib/base (copied from ckfw/hash.c) uses the identity 
+hash. &nbsp;Therefore, in a hash of certificates, the key is the certificate 
+pointer itself. &nbsp;One possibility is to store the decoded cert (NSSX509DecodedParts 
+above) as the value in the {key, value} pair. &nbsp;When a cert is decoded, 
+the cert pointer and decoding pointer are added to the hash. &nbsp;Subsequent 
+lookups have access to one or both of these pointers. &nbsp;This keeps NSSCertificate 
 separate from its decoding, while providing a way to locate it.</li>
+   
   </ul>
-  <li>The API is designed to keep token details hidden from the user.  &nbsp;However,
- it has already been realized that PSM and CMS may need special  access to
-tokens. &nbsp;Is this part of the TrustDomain API, or should PSM  and CMS
+   <li>The API is designed to keep token details hidden from the user.  &nbsp;However, 
+ it has already been realized that PSM and CMS may need special  access to 
+tokens. &nbsp;Is this part of the TrustDomain API, or should PSM  and CMS 
 be allowed to use "friend" headers from the Token API?</li>
-  <li>Do we want to allow traversal via NSSTrustDomain_TraverseXXXX?<br>
-  </li>
+   <li>Do we want to allow traversal via NSSTrustDomain_TraverseXXXX?<br>
+   </li>
+ 
 </ol>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSCryptoContext"><br>
-                  NSSCryptoContext</a>
-<br>
-   Analgous to a Cryptoki session.<br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSCryptoContext"><br>
+                   NSSCryptoContext</a>
+ <br>
+    Analgous to a Cryptoki session. &nbsp;Manages session objects only.<br>
+  <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSTime">NSSTime</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSUsage">NSSUsage</a>
+ <br>
+ 
 <ol>
-  <li>Why do the TrustDomain and CryptoContext API's have the same calls 
-related to importing/finding certificates and other objects? &nbsp;If a CryptoContext
- manages a session, shouldn't it be sufficient for the handling of token
-objects?  &nbsp;Where does the TrustDomain obtain the session needed to fulfill
-its  Import and Find calls?<br>
-  </li>
+   <li>       See Fred's <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/pki/nsspkit.h#187">
+               comments</a>
+              .</li>
+ 
 </ol>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSTime">NSSTime</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSUsage">NSSUsage</a>
-<br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSPolicies">NSSPolicies</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSAlgorithmAndParameters">
+                      NSSAlgorithmAndParameters</a>
+ <br>
+ 
 <ol>
-  <li>       See Fred's <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/pki/nsspkit.h#187">
-              comments</a>
-             .</li>
+   <li>       Again, Fred's <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/pki/nsspkit.h#215">
+               comments</a>
+              . &nbsp;The old NSS code had various types related to  algorithms 
+    running around in it. &nbsp;We had SECOidTag, SECAlgorithmID,   SECItem's
+     for parameters, CK_MECHANISM for cryptoki, etc. &nbsp;This type   should
+    be  able to encapsulate all of those.</li>
+ 
 </ol>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSPolicies">NSSPolicies</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSAlgorithmAndParameters">
-                     NSSAlgorithmAndParameters</a>
-<br>
-<ol>
-  <li>       Again, Fred's <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/pki/nsspkit.h#215">
-              comments</a>
-             . &nbsp;The old NSS code had various types related to  algorithms
-    running around in it. &nbsp;We had SECOidTag, SECAlgorithmID,   SECItem's 
-    for parameters, CK_MECHANISM for cryptoki, etc. &nbsp;This type   should 
-   be  able to encapsulate all of those.</li>
-</ol>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSCallback">NSSCallback</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSOperations">NSSOperations</a>
-<br>
-<br>
-<br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSCallback">NSSCallback</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSOperations">NSSOperations</a>
+ <br>
+ <br>
+ <br>
+ 
 <hr width="100%" size="2"><br>
-<br>
-A diagram to suggest a possible TrustDomain architecture.<br>
-<br>
-<img src="./standiag.png" alt="Trust Domain Diagram" width="748" height="367">
-<br>
+ <br>
+ A diagram to suggest a possible TrustDomain architecture.<br>
+ <br>
+ <img src="./standiag.png" alt="Trust Domain Diagram" width="748" height="367">
+ <br>
+ 
 <hr width="100%" size="2" align="Left"><br>
+ 
 <h3><a name="pki1"></a>
-<a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/pki1/"> 
-   PKI1</a>
-</h3>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSOID">NSSOID</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSATAV">NSSATAV</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSRDN">NSSRDN</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSRDNSeq">NSSRDNSeq</a>
-<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=NSSName">NSSName</a>
-<br>
-           NSSNameChoice<br>
-           NSSGeneralName<br>
-           NSSGeneralNameChoice<br>
-           NSSOtherName<br>
-           NSSRFC822Name<br>
-           NSSDNSName<br>
-           NSSX400Address<br>
-           NSSEdiParityAddress<br>
-           NSSURI<br>
-           NSSIPAddress<br>
-           NSSRegisteredID<br>
-           NSSGeneralNameSeq<br>
-<a href="http://lxr.mozilla.org/mozilla/ident?i=nssAttributeTypeAliasTable">
-           nssAttributeTypeAliasTable</a>
-<br>
-<br>
-<br>
+ <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/pki1/">
+    PKI1</a>
+ </h3>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSOID">NSSOID</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSATAV">NSSATAV</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSRDN">NSSRDN</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSRDNSeq">NSSRDNSeq</a>
+ <br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=NSSName">NSSName</a>
+ <br>
+            NSSNameChoice<br>
+            NSSGeneralName<br>
+            NSSGeneralNameChoice<br>
+            NSSOtherName<br>
+            NSSRFC822Name<br>
+            NSSDNSName<br>
+            NSSX400Address<br>
+            NSSEdiParityAddress<br>
+            NSSURI<br>
+            NSSIPAddress<br>
+            NSSRegisteredID<br>
+            NSSGeneralNameSeq<br>
+ <a href="http://lxr.mozilla.org/mozilla/ident?i=nssAttributeTypeAliasTable">
+            nssAttributeTypeAliasTable</a>
+ <br>
+ <br>
+ <br>
+ 
 <hr width="100%" size="2" align="Left"><br>
+ 
 <h3><a name="pkix"></a>
-<a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/pkix/"> 
-      PKIX&nbsp;</a>
-</h3>
-          There is a plethora of PKIX related types here.<br>
-<br>
+ <a href="http://lxr.mozilla.org/mozilla/source/security/nss/lib/pkix/">
+       PKIX&nbsp;</a>
+ </h3>
+           There is a plethora of PKIX related types here.<br>
+ <br>
+ 
 <hr width="100%" size="2" align="Left"><br>
+ 
 <h3><a name="build"></a>
-       Building Stan</h3>
-<br>
-      From nss/lib, run "make BUILD_STAN=1"<br>
-<br>
+        Building Stan</h3>
+ <br>
+       From nss/lib, run "make BUILD_STAN=1"<br>
+ <br>
+ 
 <hr width="100%" size="2" align="Left"><br>
+ 
 <h3><a name="test"></a>
-      Testing Stan</h3>
-      A&nbsp;new command line tool, pkiutil, has been created to use only 
-the   Stan API. &nbsp;It depends on a new library, cmdlib, meant to replace 
-the   old secutil library. &nbsp;The old library had code used by products 
-that   needed to be integrated into the main library codebase somehow. &nbsp;The 
-  goal of the new cmdlib is to have functionality needed strictly for NSS 
-tools.<br>
-<br>
-      How to build:<br>
+       Testing Stan</h3>
+       A&nbsp;new command line tool, pkiutil, has been created to use only
+ the   Stan API. &nbsp;It depends on a new library, cmdlib, meant to replace
+ the   old secutil library. &nbsp;The old library had code used by products
+ that   needed to be integrated into the main library codebase somehow. &nbsp;The
+   goal of the new cmdlib is to have functionality needed strictly for NSS
+ tools.<br>
+ <br>
+       How to build:<br>
+ 
 <ol>
-  <li>cd nss/cmd/cmdlib; make</li>
-  <li>cd ../pkiutil; make</li>
+   <li>cd nss/cmd/cmdlib; make</li>
+   <li>cd ../pkiutil; make</li>
+ 
 </ol>
-      pkiutil will give detailed help with either "pkiutil -?" or "pkiutil
+       pkiutil will give detailed help with either "pkiutil -?" or "pkiutil 
  --help".<br>
-<br>
-     So far, the only available test is to list certs on the builtins token.
-  &nbsp;Copy "libnssckbi.so" (or whatever it is) to cmd/pkiutil. &nbsp;Then
-  run "pkiutil -L" or "pkiutil --list". &nbsp;The list of certificate nicknames
+ <br>
+      So far, the only available test is to list certs on the builtins token. 
+  &nbsp;Copy "libnssckbi.so" (or whatever it is) to cmd/pkiutil. &nbsp;Then 
+  run "pkiutil -L" or "pkiutil --list". &nbsp;The list of certificate nicknames 
   should be displayed.<br>
-<br>
-<br>
+ <br>
+ <br>
+ 
 </body>
 </html>
