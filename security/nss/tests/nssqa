@@ -156,7 +156,7 @@ map_os32()
             fi
             ;;
     esac
-    OSDIR=${D2}/*${MAPPED_OS}*
+    set_osdir
 }
 map_os64()
 {
@@ -167,7 +167,7 @@ map_os64()
           MAPPED_OS=Solaris*8
           IS_64=`(isainfo -v | grep 64)>/dev/null 2>/dev/null && echo 64 bit`
           if [ "$O_TBX" = "OFF" ] ; then
-              OSDIR=${D2}/*${MAPPED_OS}
+              set_osdir
               if [ -n "$IS_64" ] 
               then #Wait for the 64 bit build to finish...
                   Debug Testing build for $MAPPED_OS in $OSDIR
@@ -192,14 +192,15 @@ nssqa_main()
 {
   Debug "In function nssqa_main"
 
-  if [ $O_WIN = "OFF" -a "$O_TBX" = "OFF" ] ; then
+  if [ $O_WIN = "OFF" -a "$O_TBX" = "OFF" -a $O_LOCAL = "OFF" ] ; then
       if [ ! -h ${NTDIST}/WINNT5.0_DBG.OBJ -o \
               ! -h ${UXDIST}/SunOS5.8_OPT.OBJ -o \
               ! -h ${UXDIST}/OSF1V5.0_DBG.OBJ ] ; then
           # determine if all needed symbolic links are present, in case
           # we build on one platform and QA on another
           # create the symbolic links
-          mksymlinks $* ||
+          #mksymlinks $* ||
+          mksymlinks  $NSSVER $BUILDDATE ||
               glob_usage "Can't make the neccessary symbolic links"
       fi
   fi

@@ -1,6 +1,6 @@
 #! /bin/sh
 
-O_OPTIONS=ON
+O_OPTIONS=OFF
 
 . `dirname $0`/header
 
@@ -11,11 +11,11 @@ then
         Debug "TESTSCRIPTDIR $TESTSCRIPTDIR"
 fi
 
-if [ -d "$D1" ]
+if [ -d "$NSS_VER_DIR" ]
 then
-    cd $D1
+    cd $NSS_VER_DIR
 else
-    glob_usage "cant cd to $D1 Exiting"
+    glob_usage "cant cd to $NSS_VER_DIR Exiting"
 fi
 
 if [ -d "$NTDIST" ]
