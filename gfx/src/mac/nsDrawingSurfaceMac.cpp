@@ -126,9 +126,6 @@ PixMapHandle	thePixMap;
 
 
 	if((mIsLocked == PR_FALSE) && mIsOffscreen && mPort){
-		// lock down the pixels while we use this
-		::LockPixels(::GetGWorldPixMap(offscreenGWorld));
-
 		// get the offscreen gworld for our use
   	offscreenGWorld = (GWorldPtr)mPort;
 		// calculate the pixel data size
