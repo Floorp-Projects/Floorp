@@ -2028,7 +2028,10 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
       
       rv = QueryInterface(NS_GET_IID(nsIMsgFolder),
         getter_AddRefs(srcFolder));
-      rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, listener,PR_FALSE, allowUndo);
+      
+      nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = copyService->CopyMessages(srcFolder, messages, trashFolder, PR_TRUE, listener, msgWindow, allowUndo);
     }
   }
   return rv;
@@ -3328,7 +3331,8 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
       PRBool canFileMessages = PR_TRUE;
       nsCOMPtr<nsIFolder> parentFolder;
       destIFolder->GetParent(getter_AddRefs(parentFolder));
-      destIFolder->GetCanFileMessages(&canFileMessages);
+      if (parentFolder)
+        destIFolder->GetCanFileMessages(&canFileMessages);
       if (!parentFolder || !canFileMessages)
       {
         filter->SetEnabled(PR_FALSE);
@@ -6165,6 +6169,7 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
 
   if (NS_SUCCEEDED(rv) && isMove)
     srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+
   return rv;
 }
 
