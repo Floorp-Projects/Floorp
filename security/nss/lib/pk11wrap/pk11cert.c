@@ -1383,7 +1383,9 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	*delimit = '\0';
 	/* find token by name */
 	token = NSSTrustDomain_FindTokenByName(defaultTD, (NSSUTF8 *)tokenName);
-	slot = PK11_ReferenceSlot(token->pk11slot);
+	if (token) {
+		slot = PK11_ReferenceSlot(token->pk11slot);
+	}
 	*delimit = ':';
     } else {
 	slot = PK11_GetInternalKeySlot();
