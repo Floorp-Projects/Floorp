@@ -127,9 +127,17 @@ nsresult ConvertToUnicode(const nsString aCharset,
     nsIUnicodeDecoder* decoder = nsnull;
     PRUnichar *unichars;
     PRInt32 unicharLength;
+    nsString convCharset;
 
+    // map to converter charset
+    if (aCharset.EqualsIgnoreCase("us-ascii")) {
+      convCharset.SetString("iso-8859-1");
+    }
+    else {
+      convCharset = aCharset; 
+    }
     // get an unicode converter
-    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    res = ccm->GetUnicodeDecoder(&convCharset, &decoder);
     if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
       PRInt32 srcLen = PL_strlen(inCString);
       res = decoder->Length(inCString, 0, srcLen, &unicharLength);

@@ -85,6 +85,9 @@ extern char * INTL_GetDefaultMailCharset(void);
 extern nsresult ConvertFromUnicode(const nsString aCharset, 
                                    const nsString inString,
                                    char** outCString);
+extern nsresult ConvertToUnicode(const nsString aCharset, 
+                                 const char *inCString, 
+                                 nsString &outString);
 extern const char *msgCompHeaderInternalCharset(void);
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -226,17 +229,36 @@ nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
  
  	if (mMsgCompFields && domDoc)
  	{
-         char *aString;
-         mMsgCompFields->GetTo(&aString);
-         nsString to = aString;
-         mMsgCompFields->GetCc(&aString);
-         nsString cc = aString;
-         mMsgCompFields->GetBcc(&aString);
-         nsString bcc = aString;
-         mMsgCompFields->GetSubject(&aString);
-         nsString subject = aString;
-         mMsgCompFields->GetBody(&aString);
-         nsString body = aString;
+ 		nsString aCharset(msgCompHeaderInternalCharset());
+    char *aString;
+    nsString to, cc, bcc, subject, body;
+    nsresult res;
+    
+    mMsgCompFields->GetTo(&aString);
+    if (NS_FAILED(res = ConvertToUnicode(aCharset, aString, to))) {
+      to = aString;
+    }
+    mMsgCompFields->GetCc(&aString);
+    if (NS_FAILED(res = ConvertToUnicode(aCharset, aString, cc))) {
+      cc = aString;
+    }
+    mMsgCompFields->GetBcc(&aString);
+    if (NS_FAILED(res = ConvertToUnicode(aCharset, aString, bcc))) {
+      bcc = aString;
+    }
+    mMsgCompFields->GetSubject(&aString);
+    if (NS_FAILED(res = ConvertToUnicode(aCharset, aString, subject))) {
+      to = subject;
+    }
+
+    // mail charset is used for the body instead of utf-8
+    char *mail_charset;
+    mMsgCompFields->GetCharacterSet(&mail_charset);
+    aCharset.SetString(mail_charset);
+    mMsgCompFields->GetBody(&aString);
+    if (NS_FAILED(res = ConvertToUnicode(aCharset, aString, body))) {
+      body = subject;
+    }
  		
  		SetWindowFields(domDoc, to, cc, bcc, subject, body);
  	}
