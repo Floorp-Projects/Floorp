@@ -108,4 +108,5 @@ interface nsIXPCTestNoisy : nsISupports {
 interface nsIXPCTestString : nsISupports {
     string GetStringA();
     void GetStringB(out string s);
+    void GetStringC([shared,retval] out string s);
 };
