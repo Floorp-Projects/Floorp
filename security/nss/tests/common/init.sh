@@ -4,36 +4,37 @@
 #
 #
 
-
 mozilla_root=`(cd ../../../..; pwd)`
-common=`(cd ../common; pwd)`
 MOZILLA_ROOT=${MOZILLA_ROOT-$mozilla_root}
+
+common=`(cd ../common; pwd)`
 COMMON=${TEST_COMMON-$common}
+
+qascript_dir=`(cd ..; pwd)`
+QASCRIPT_DIR=${QASCRIPT_DIR-$qascript_dir}
+export QASCRIPT_DIR
+
 DIST=${DIST-${MOZILLA_ROOT}/dist}
 SECURITY_ROOT=${SECURITY_ROOT-${MOZILLA_ROOT}/security/nss}
 TESTDIR=${TESTDIR-${MOZILLA_ROOT}/tests_results/security}
 OBJDIR=`cd ../common; gmake objdir_name` 
 OS_ARCH=`cd ../common; gmake os_arch`
-if [ -z "$PATH_CONTAINS_BIN" -o "$PATH_CONTAINS_BIN" != TRUE ]
-then
-	if [ ${OS_ARCH} = "WINNT" ]; then
-		PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$ALL_SH_BASEPATH
-	else
-		PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$ALL_SH_BASEPATH
-	fi
+
+if [ ${OS_ARCH} = "WINNT" ]; then
+	PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
+	PATH=`perl $QASCRIPT_DIR/path_uniq -d ';' "$PATH"`
 else
-	if [ ${OS_ARCH} = "WINNT" ]; then
-		PATH=${DIST}/${OBJDIR}/lib\;$ALL_SH_BASEPATH
-	else
-		PATH=${DIST}/${OBJDIR}/lib:$ALL_SH_BASEPATH
-	fi
+	PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
+	PATH=`$QASCRIPT_DIR/path_uniq -d ';' "$PATH"`
 fi
 export PATH
+
 LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
 SHLIB_PATH=${DIST}/${OBJDIR}/lib
 LIBPATH=${DIST}/${OBJDIR}/lib
 export LD_LIBRARY_PATH SHLIB_PATH LIBPATH
 echo "LD_LIBRARY_PATH SHLIB_PATH LIBPATH=$LD_LIBRARY_PATH"
+
 echo "Creating ${TESTDIR}"
 if [ ! -d ${TESTDIR} ]; then
    mkdir -p ${TESTDIR}
@@ -49,7 +50,7 @@ fi
 if [ ! -s "${HOSTDIR}" ]; then
     version=1
     if [ -f ${TESTDIR}/${HOST} ]; then
-	version=`cat ${TESTDIR}/${HOST}`
+		version=`cat ${TESTDIR}/${HOST}`
     fi
     expr $version + 1 > ${TESTDIR}/${HOST}
 
@@ -82,4 +83,5 @@ fi
 
 export  KILL
 
+INIT_SOURCED=TRUE
 
