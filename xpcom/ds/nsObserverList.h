@@ -62,7 +62,7 @@ class nsObserverList
 {
 public:
   nsObserverList();
-  virtual    ~nsObserverList();
+  ~nsObserverList();
 
   nsresult AddObserver(nsIObserver* anObserver, PRBool ownsWeak);
   nsresult RemoveObserver(nsIObserver* anObserver);
