@@ -404,11 +404,13 @@ JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, size_t size)
 
     /*
      * At this point, a is doomed, so ensure that pool->current doesn't point
-     * at it.  What's more, force future allocations to scavenge all arenas on
-     * pool, in case some have free space.
+     * at it.  We must preserve LIFO order of mark/release cursors, so we use
+     * the oversized-allocation arena's back pointer (or if not oversized, we
+     * use the result of searching the entire pool) to compute the address of
+     * the arena that precedes a.
      */
     if (pool->current == a)
-        pool->current = &pool->first;
+        pool->current = (JSArena *) ((char *)ap - offsetof(JSArena, next));
 
     /*
      * This is a non-LIFO deallocation, so take care to fix up a->next's back
