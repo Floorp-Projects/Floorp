@@ -104,7 +104,7 @@ class nsHistoryDataSource : public nsIRDFHistoryDataSource {
 protected:
     nsIRDFDataSource*  mInner;
     nsVoidArray        mFiles;
-    char*              mCurrentFilePath;
+    const char*        mCurrentFilePath;
     nsVoidArray        mPendingWrites; 
     PLHashTable*       mLastVisitDateHash; 
     PRExplodedTime     mSessionTime;
@@ -117,7 +117,7 @@ protected:
     nsIRDFResource*    mResourceHistoryBySite;
 
     nsresult ReadHistory(void);
-    nsresult ReadOneHistoryFile(nsInputFileStream& aStream, char *fileURL);
+    nsresult ReadOneHistoryFile(nsInputFileStream& aStream, const char *fileURL);
     nsresult AddPageToGraph(char* url, char* title, char* referer,  PRTime date);
     nsresult AddToDateHierarchy (PRTime date, nsIRDFResource* resource) ;
     nsresult getSiteOfURL(char* url, nsIRDFResource** resource) ;
@@ -344,7 +344,7 @@ nsHistoryDataSource::Init(const char* uri)
 	historyFile.SetLeafName(filename);
 
 	nsFilePath	filePath(historyFile);
-	mCurrentFilePath = filePath;
+	mCurrentFilePath = PL_strdup((const char*)filePath);
     }
     return NS_OK;
 }
@@ -458,7 +458,7 @@ nsHistoryDataSource::ReadHistory(void)
 
 
 nsresult
-nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, char *fileURL)
+nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, const char *fileURL)
 {
 	nsresult	rv = NS_ERROR_FAILURE;
 	nsAutoString	buffer;
@@ -494,7 +494,11 @@ nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, char *fileUR
 					PRExplodedTime etime;
 					fileTime = time;
 					PR_ExplodeTime(time, PR_LocalTimeParameters, &etime);
-					if (etime.tm_yday == mSessionTime.tm_yday) mCurrentFilePath = fileURL;
+					if (etime.tm_yday == mSessionTime.tm_yday)
+					{
+					    PR_FREEIF((char*)mCurrentFilePath);
+					    mCurrentFilePath = PL_strdup(fileURL);
+					}
 				}
 				AddPageToGraph(url, title, referer,  time);
 				delete [] aLine;
