@@ -5620,6 +5620,7 @@ nsCSSDeclaration::ToString(nsAWritableString& aString)
         case eCSSProperty_background_attachment: bgAttachment      = index+1; break;
         case eCSSProperty_background_x_position: bgPositionX       = index+1; break;
         case eCSSProperty_background_y_position: bgPositionY       = index+1; break;
+        default:                                 ;
       }
     }
 
