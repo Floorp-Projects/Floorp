@@ -1490,10 +1490,14 @@ nsComputedDOMStyle::GetListStyleImage(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_List, (const nsStyleStruct*&)list, aFrame);
 
   if(list) {
-    val->SetString(list->mListStyleImage);
+    if (list->mListStyleImage.IsEmpty()) {
+      val->SetString(NS_LITERAL_STRING("none"));
+    } else {
+      val->SetString(list->mListStyleImage);
+    }
   }
   else {
-    val->SetString(NS_LITERAL_STRING(""));
+    val->SetString(NS_LITERAL_STRING("none"));
   }
     
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
