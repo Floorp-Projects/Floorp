@@ -3,6 +3,9 @@
 // Used by uninstall.rc
 //
 
+#ifndef WINVER
+#define WINVER 0x0400
+#endif
 #include "winresrc.h"
 
 #define IDS_ERROR_DLL_LOAD              1
