@@ -619,7 +619,7 @@ wallet_GetWalletNotificationPref(void) {
 /* The following routines are used for accessing strings to be localized */
 /*************************************************************************/
 
-#define TEST_URL "resource:/res/wallet.properties"
+#define PROPERTIES_URL "chrome://wallet/locale/wallet.properties"
 
 PUBLIC char*
 Wallet_Localize(char* genericString) {
@@ -644,13 +644,13 @@ Wallet_Localize(char* genericString) {
   nsIURI *url = nsnull;
 
 #ifndef NECKO
-  ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
+  ret = pNetService->CreateURL(&url, nsString(PROPERTIES_URL), nsnull, nsnull,
     nsnull);
   nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
 
 #else
   nsIURI *uri = nsnull;
-  ret = pNetService->NewURI(TEST_URL, nsnull, &uri);
+  ret = pNetService->NewURI(PROPERTIES_URL, nsnull, &uri);
   if (NS_FAILED(ret)) {
     printf("cannot create URI\n");
     nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
@@ -731,7 +731,6 @@ Wallet_Localize(char* genericString) {
 PUBLIC PRBool
 Wallet_Confirm(char * szMessage)
 {
-#ifdef NECKO
   PRBool retval = PR_TRUE; /* default value */
 
   nsresult res;  
@@ -743,33 +742,12 @@ Wallet_Confirm(char * szMessage)
   const nsString message = szMessage;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
   res = dialog->Confirm(message.GetUnicode(), &retval);
-  if (NS_FAILED(res)) {
-    return retval;
-  }
-
   return retval;
-#else
-  PRBool retval = PR_TRUE; /* default value */
-  nsINetSupportDialogService* dialog = NULL;
-  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
-  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
-  if (NS_FAILED(res)) {
-    return retval;
-  }
-  if (dialog) {
-    const nsString message = szMessage;
-    retval = PR_FALSE; /* in case user exits dialog by clicking X */
-    dialog->Confirm(message, &retval);
-  }
-  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
-  return retval;
-#endif
 }
 
 PUBLIC PRBool
 Wallet_ConfirmYN(char * szMessage)
 {
-#ifdef NECKO
   PRBool retval = PR_TRUE; /* default value */
 
   nsresult res;  
@@ -785,26 +763,39 @@ Wallet_ConfirmYN(char * szMessage)
 #else
   res = dialog->Confirm(message.GetUnicode(), &retval);
 #endif
+  return retval;
+}
+
+PUBLIC PRInt32
+Wallet_3ButtonConfirm(char * szMessage)
+{
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
-    return retval;
+    return 1; /* default value is yes */
   }
 
+  const nsString message = szMessage;
+#ifdef YesNoNeverDialogExists
+  PRInt32 retval = 0; /* in case user exits dialog by clicking X */
+  res = dialog->3ButtonConfirm(message.GetUnicode(), &retval);
   return retval;
 #else
   PRBool retval = PR_TRUE; /* default value */
-  nsINetSupportDialogService* dialog = NULL;
-  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
-  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
-  if (NS_FAILED(res)) {
-    return retval;
+#ifdef YN_DIALOGS_FIXED
+  res = dialog->ConfirmYN(message.GetUnicode(), &retval);
+#else
+  res = dialog->Confirm(message.GetUnicode(), &retval);
+#endif
+  if (retval) {
+    return 1; /* user said yes */
+  } 
+  const nsString message2 = "Remember this decision for this site?";
+  res = dialog->Confirm(message2.GetUnicode(), &retval);
+  if (retval) {
+    return -1; /* user said never */
   }
-  if (dialog) {
-    const nsString message = szMessage;
-    retval = PR_FALSE; /* in case user exits dialog by clicking X */
-    dialog->ConfirmYN(message, &retval);
-  }
-  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
-  return retval;
+  return 0; /* user said no */  
 #endif
 }
 
