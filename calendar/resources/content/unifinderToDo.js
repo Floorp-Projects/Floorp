@@ -131,7 +131,11 @@ function finishCalendarToDoUnifinder( )
 
 function formatUnifinderToDoDateTime( datetime )
 {
-  return gCalendarWindow.dateFormater.formatDateTime( datetime, true );
+  // datetime is from todo object, it is not a javascript date
+  if (datetime != null && datetime.getTime() != kNODATE)
+    return gCalendarWindow.dateFormater.formatDateTime( new Date(datetime.getTime()), true );
+  else 
+    return "";
 }
 
 /**
@@ -246,18 +250,6 @@ function checkboxClick( ThisToDo, completed )
    gICalLib.modifyTodo( ThisToDo );
 }
 
-/**
-*   Helper function to display todo datetimes in the unifinder
-*/
-
-function formatUnifinderToDoDateTime( datetime )
-{
-  // datetime is from todo object, it is not a javascript date
-  if (datetime != null && datetime.getTime() != kNODATE)
-    return gCalendarWindow.dateFormater.formatDateTime( new Date(datetime.getTime()), true );
-  else 
-    return "";
-}
 
 /*
 This function return the progress state of a ToDo task :
