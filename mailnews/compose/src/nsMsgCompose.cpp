@@ -50,6 +50,7 @@
 #include "nsIHTMLEditor.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMNode.h"
+#include "nsEscape.h"
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"
@@ -1886,3 +1887,42 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
 
   return rv;
 }
+
+nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _retval)
+{
+	nsCAutoString unescapeULR = url;
+	nsUnescape(unescapeULR);
+	if (unescapeULR.IsEmpty())
+	{
+		*_retval = nsCRT::strdup(url);
+		return NS_OK;
+	}
+	
+	if (PL_strncasestr(unescapeULR, "file:", 5))
+	{
+		nsFileURL fileUrl(url);
+		nsFileSpec fileSpec(fileUrl);
+		char * leafName = fileSpec.GetLeafName();
+		if (leafName && *leafName)
+		{
+    		nsAutoString tempStr;
+    		nsresult rv = ConvertToUnicode(msgCompFileSystemCharset(), leafName, tempStr);
+    		if (NS_FAILED(rv))
+    			tempStr = leafName;
+			*_retval = tempStr.ToNewUnicode();
+			nsCRT::free(leafName);
+			return NS_OK;
+		}
+	}
+
+	if (PL_strncasestr(unescapeULR, "http:", 5))
+	{
+		nsAutoString tempStr = &unescapeULR.mBuffer[7];
+		*_retval = tempStr.ToNewUnicode();
+		return NS_OK;
+	}
+
+	*_retval = nsCRT::strdup(url);
+	return NS_OK;
+}
+

@@ -116,6 +116,13 @@ interface nsIMsgCompose : nsISupports {
 	/* ... */
     void CloseWindow();
     
+    /*
+    	AttachmentPrettyName will return only the leafName if the it's a file URL.
+    	It will also convert the filename to the right character set.
+    	This UI utility function should probably go into it's own class
+    */
+    wstring AttachmentPrettyName(in wstring url);
+    
 	/* ... */
 	attribute nsIEditorShell editor;
 
