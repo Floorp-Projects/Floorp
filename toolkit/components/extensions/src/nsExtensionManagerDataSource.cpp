@@ -59,6 +59,7 @@ static nsIRDFResource* gNameArc = nsnull;
 static nsIRDFResource* gDescriptionArc = nsnull;
 static nsIRDFResource* gCreatorArc = nsnull;
 static nsIRDFResource* gContributorArc = nsnull;
+static nsIRDFResource* gDisabledArc = nsnull;
 static nsIRDFResource* gHomepageURLArc = nsnull;
 static nsIRDFResource* gUpdateURLArc = nsnull;
 static nsIRDFResource* gVersionArc = nsnull;
@@ -88,7 +89,19 @@ nsExtensionManagerDataSource::nsExtensionManagerDataSource()
   if (!gRDFService)
     CallGetService("@mozilla.org/rdf/rdf-service;1", &gRDFService);
 
+  gRDFService->GetResource(NS_LITERAL_CSTRING(EM_RDF_URI "name"), &gNameArc);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(EM_RDF_URI "version"), &gVersionArc);
   gRDFService->GetResource(NS_LITERAL_CSTRING(EM_RDF_URI "iconURL"), &gIconURLArc);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(EM_RDF_URI "toBeEnabled"), &gToBeEnabledArc);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(EM_RDF_URI "toBeDisabled"), &gToBeDisabledArc);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(EM_RDF_URI "toBeUninstalled"), &gToBeUninstalledArc);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(EM_RDF_URI "disabled"), &gDisabledArc);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(EM_RDF_URI "installLocation"), &gInstallLocationArc);
+
+  gRDFService->GetLiteral(NS_LITERAL_STRING("profile").get(), &gInstallProfile);
+  gRDFService->GetLiteral(NS_LITERAL_STRING("global").get(), &gInstallGlobal);
+  gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), &gTrueValue);
+  gRDFService->GetLiteral(NS_LITERAL_STRING("false").get(), &gFalseValue);
 }
 
 nsExtensionManagerDataSource::~nsExtensionManagerDataSource()
@@ -99,6 +112,7 @@ nsExtensionManagerDataSource::~nsExtensionManagerDataSource()
   NS_IF_RELEASE(gDescriptionArc);
   NS_IF_RELEASE(gCreatorArc);
   NS_IF_RELEASE(gContributorArc);
+  NS_IF_RELEASE(gDisabledArc);
   NS_IF_RELEASE(gHomepageURLArc);
   NS_IF_RELEASE(gUpdateURLArc);
   NS_IF_RELEASE(gVersionArc);
@@ -269,15 +283,17 @@ nsExtensionManagerDataSource::InstallExtension(nsIRDFDataSource* aSourceDataSour
 }
 
 nsresult
-nsExtensionManagerDataSource::SetExtensionProperty(const PRUnichar* aExtensionID, 
+nsExtensionManagerDataSource::SetExtensionProperty(const char* aExtensionID, 
                                                    nsIRDFResource* aPropertyArc, 
                                                    nsIRDFNode* aPropertyValue)
 {
   nsresult rv = NS_OK;
 
+  nsCString resourceURI = NS_LITERAL_CSTRING("urn:mozilla:extension:");
+  resourceURI += aExtensionID;
+
   nsCOMPtr<nsIRDFResource> extension;
-  gRDFService->GetUnicodeResource(nsDependentString(aExtensionID), 
-                                  getter_AddRefs(extension));
+  gRDFService->GetResource(resourceURI, getter_AddRefs(extension));
 
   nsCOMPtr<nsIRDFNode> installLocation;
   rv |= GetTarget(extension, gInstallLocationArc, PR_TRUE, 
@@ -288,7 +304,11 @@ nsExtensionManagerDataSource::SetExtensionProperty(const PRUnichar* aExtensionID
   nsCOMPtr<nsIRDFDataSource> ds = isProfile ? mProfileExtensions : mAppExtensions;
 
   nsCOMPtr<nsIRDFNode> oldNode;
-  SET_PROPERTY(ds, extension, aPropertyArc, aPropertyValue)
+  rv |= ds->GetTarget(extension, aPropertyArc, PR_FALSE, getter_AddRefs(oldNode));
+  if (oldNode)
+    rv |= ds->Change(extension, aPropertyArc, oldNode, aPropertyValue);
+  else
+    rv |= ds->Assert(extension, aPropertyArc, aPropertyValue, PR_FALSE);
 
   // Write out the extensions datasource
   nsCOMPtr<nsIRDFRemoteDataSource> rds(do_QueryInterface(ds));
@@ -299,19 +319,23 @@ nsExtensionManagerDataSource::SetExtensionProperty(const PRUnichar* aExtensionID
 }
 
 nsresult
-nsExtensionManagerDataSource::SetToBeEnabled(const PRUnichar* aExtensionID)
+nsExtensionManagerDataSource::EnableExtension(const char* aExtensionID)
 {
-  return SetExtensionProperty(aExtensionID, gToBeEnabledArc, gTrueValue);
+  nsresult rv = SetExtensionProperty(aExtensionID, gToBeEnabledArc, gTrueValue);
+  rv |= SetExtensionProperty(aExtensionID, gDisabledArc, gFalseValue);
+  return rv;
 }
 
 nsresult
-nsExtensionManagerDataSource::SetToBeDisabled(const PRUnichar* aExtensionID)
+nsExtensionManagerDataSource::DisableExtension(const char* aExtensionID)
 {
-  return SetExtensionProperty(aExtensionID, gToBeDisabledArc, gTrueValue);
+  nsresult rv = SetExtensionProperty(aExtensionID, gToBeDisabledArc, gTrueValue);
+  rv |= SetExtensionProperty(aExtensionID, gDisabledArc, gTrueValue);
+  return rv;
 }
 
 nsresult
-nsExtensionManagerDataSource::SetToBeUninstalled(const PRUnichar* aExtensionID)
+nsExtensionManagerDataSource::UninstallExtension(const char* aExtensionID)
 {
   return SetExtensionProperty(aExtensionID, gToBeUninstalledArc, gTrueValue);
 }
@@ -353,8 +377,7 @@ nsExtensionManagerDataSource::GetTarget(nsIRDFResource* aSource,
                                         PRBool aTruthValue, 
                                         nsIRDFNode** aResult)
 {
-  nsresult rv;
-  nsCOMPtr<nsIRDFNode> result;
+  nsresult rv = NS_OK;
 
   if (aProperty == gIconURLArc) {
     PRBool hasIconURLArc;
@@ -367,15 +390,22 @@ nsExtensionManagerDataSource::GetTarget(nsIRDFResource* aSource,
       nsCOMPtr<nsIRDFResource> res;
       gRDFService->GetResource(NS_LITERAL_CSTRING("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png"),
                                getter_AddRefs(res));
-      result = do_QueryInterface(res);
 
-      *aResult = result;
+      *aResult = res;
       NS_IF_ADDREF(*aResult);
     }
   }
+  else if (aProperty == gInstallLocationArc) {
+    PRBool hasNameArc, hasVersionArc;
+    rv |= mProfileExtensions->HasArcOut(aSource, gNameArc, &hasNameArc);
+    rv |= mProfileExtensions->HasArcOut(aSource, gVersionArc, &hasVersionArc);
 
-  if (!result)
-    rv = mComposite->GetTarget(aSource, aProperty, aTruthValue, aResult);
+    *aResult = (hasNameArc && hasVersionArc) ? gInstallProfile : gInstallGlobal;
+    NS_IF_ADDREF(*aResult);
+  }
+
+  if (!*aResult)
+    rv |= mComposite->GetTarget(aSource, aProperty, aTruthValue, aResult);
 
   return rv;
 }

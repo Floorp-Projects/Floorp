@@ -45,14 +45,14 @@ interface nsIRDFDataSource;
 interface nsIExtensionManager : nsISupports
 {
   void installExtensionFromStream(in nsIInputStream aStream, in boolean aUseProfile);
-  void uninstallExtension(in wstring aExtensionID);
-  void enableExtension(in wstring aExtensionID);
-  void disableExtension(in wstring aExtensionID);
+  void uninstallExtension(in string aExtensionID);
+  void enableExtension(in string aExtensionID);
+  void disableExtension(in string aExtensionID);
 
-  void installTheme(in wstring aThemeID);
-  void uninstallTheme(in wstring aThemeID);
-  void enableTheme(in wstring aThemeID);
-  void disableTheme(in wstring aThemeID);
+  void installTheme(in string aThemeID);
+  void uninstallTheme(in string aThemeID);
+  void enableTheme(in string aThemeID);
+  void disableTheme(in string aThemeID);
 
   readonly attribute nsIRDFDataSource datasource;
 };

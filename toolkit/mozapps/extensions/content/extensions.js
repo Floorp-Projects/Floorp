@@ -1,40 +1,3 @@
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-# 
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-# 
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-# 
-# The Original Code is The Extension Manager.
-# 
-# The Initial Developer of the Original Code is Ben Goodger.
-# Portions created by the Initial Developer are Copyright (C) 2004
-# the Initial Developer. All Rights Reserved.
-# 
-# Contributor(s):
-#   Ben Goodger <ben@bengoodger.com>
-# 
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-# 
-# ***** END LICENSE BLOCK *****
-
- 
 ///////////////////////////////////////////////////////////////////////////////
 // Globals
 
@@ -44,6 +7,11 @@ var gExtensionManager = null;
 var gDownloadListener = null;
 var gExtensionssView  = null;
 var gWindowState      = "";
+
+function stripPrefix(aResourceURI)
+{
+  return aResourceURI.substr("urn:mozilla:extension:".length, aResourceURI.length);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions 
@@ -203,7 +171,44 @@ function onExtensionUpdate(aEvent)
 
 function onExtensionEnableDisable(aEvent)
 {
-
+  var titleKey = null;
+  var disabling;
+  if (aEvent.target.getAttribute("disabled") == "true") {
+    disabling = false;
+    if (gWindowState == "extensions") {
+      gExtensionManager.enableExtension(stripPrefix(aEvent.target.id));
+      titleKey = "restartBeforeEnableExtensionTitle";
+    }
+    else if (gWindowState == "themes") {
+      gExtensionManager.enableTheme(stripPrefix(aEvent.target.id));
+      titleKey = "restartBeforeEnableThemeTitle";
+    }
+  }
+  else {
+    disabling = true;
+    if (gWindowState == "extensions") {
+      gExtensionManager.disableExtension(stripPrefix(aEvent.target.id));
+      titleKey = "restartBeforeDisableExtensionTitle";
+    }
+    else if (gWindowState == "themes") {
+      gExtensionManager.disableTheme(stripPrefix(aEvent.target.id));
+      titleKey = "restartBeforeDisableThemeTitle";
+    }
+  }
+  
+  if (titleKey) {
+    var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                              .getService(Components.interfaces.nsIPromptService);
+                              
+    var extensionsStrings = document.getElementById("extensionsStrings");
+    
+    var messageKey = disabling ? "restartBeforeDisableMessage" : "restartBeforeEnableMessage";
+    var brandStrings = document.getElementById("brandStrings");
+    var message = extensionsStrings.getFormattedString(messageKey, 
+                                                       [aEvent.target.getAttribute("name"),
+                                                       brandStrings.getString("brandShortName")]);
+    promptSvc.alert(window, extensionsStrings.getString(titleKey), message);
+  }
 }
 
 function onExtensionUninstall(aEvent)
@@ -331,29 +336,103 @@ var gExtensionsDNDObserver =
 var gExtensionsViewController = {
   supportsCommand: function (aCommand)
   {
-    return aCommand == "cmd_cleanUp";
+    var commandNode = document.getElementById(aCommand);
+    return commandNode && (commandNode.parentNode == document.getElementById("extensionsCommands"));
   },
   
   isCommandEnabled: function (aCommand)
   {
-    if (aCommand == "cmd_cleanUp") 
-      return gDownloadManager.canCleanUp;
+    var selectedItem = gExtensionsView.selected;
+    var i;
+    switch (aCommand) {
+    case "cmd_close":
+      return true;
+    case "cmd_options":
+      dump("*** ice = " + selectedItem.disabled + "\n");
+      return !selectedItem.disabled;
+    case "cmd_about":
+      return !selectedItem || selectedItem.disabled ? selectedItem.getAttribute("aboutURL") == "" : true;
+    case "cmd_homepage":
+      return (selectedItem && selectedItem.getAttribute("homepageURL") != "");
+    case "cmd_uninstall":
+      return selectedItem.getAttribute("blockUninstall") != "true";
+    case "cmd_update":
+      return true;
+    case "cmd_disable":
+      return !selectedItem.disabled;
+    case "cmd_movetop":
+      return (gExtensionsView.children[0] != selectedItem);
+    case "cmd_moveup":
+      return (gExtensionsView.children[0] != selectedItem);
+    case "cmd_movedn":
+      var children = gExtensionsView.children;
+      return (children[children.length-1] != selectedItem);
+    }
     return false;
   },
-  
+
   doCommand: function (aCommand)
   {
-    if (aCommand == "cmd_cleanUp" && this.isCommandEnabled(aCommand)) {
-      gDownloadManager.cleanUp();
-      this.onCommandUpdate();
+    dump("*** doCommand = " + aCommand + "\n");
+    switch (aCommand) {
+    case "cmd_close":
+    case "cmd_options":
+    case "cmd_about":
+    case "cmd_homepage":
+    case "cmd_uninstall":
+    case "cmd_update":
+    case "cmd_disable":
+    case "cmd_movetop":
+    case "cmd_moveup":
+    case "cmd_movedn":
     }
   },  
   
   onCommandUpdate: function ()
   {
-    var command = "cmd_cleanUp";
-    var enabled = this.isCommandEnabled(command);
-    goSetCommandEnabled(command, enabled);
+    var extensionsCommands = document.getElementById("extensionsCommands");
+    for (var i = 0; i < extensionsCommands.childNodes.length; ++i) {
+      var command = extensionsCommands.childNodes[i];
+      if (this.isCommandEnabled(command.id))
+        command.removeAttribute("disabled");
+      else
+        command.setAttribute("disabled", "true");
+    }
   }
 };
 
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is The Extension Manager.
+# 
+# The Initial Developer of the Original Code is Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Ben Goodger <ben@bengoodger.com>
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****

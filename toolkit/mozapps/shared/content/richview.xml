@@ -49,17 +49,33 @@
         <body>
         <![CDATA[
           var e = document.createEvent("Events");
-          e.initEvent("extension-" + aEventType, false, true);
+          e.initEvent(this.eventPrefix + aEventType, false, true);
           
           this.dispatchEvent(e);
         ]]>
         </body>
       </method>
+      
+      <property name="disabled" onget="return this.getAttribute('disabled') == 'true'"
+                                onset="this.setAttribute('disabled', val); return val;"/>
     </implementation>  
   </binding>
 
   <binding id="richview">
     <implementation>
+      <method name="fireEvent">
+        <parameter name="aEventType"/>
+        <body>
+        <![CDATA[
+          var e = document.createEvent("Events");
+          var eventType = "richview-" + aEventType;
+          e.initEvent(eventType, false, true);
+          this.dispatchEvent(e);
+          document.commandDispatcher.updateCommands(eventType);
+        ]]>
+        </body>
+      </method>
+
       <field name="_selected">null</field>
       <property name="selected">
         <setter>
@@ -69,6 +85,8 @@
           this._selected = val;
           if (this._selected)
             this._selected.setAttribute("selected", "true");
+          
+          this.fireEvent("select");
         ]]>
         </setter>
         <getter>
@@ -78,17 +96,43 @@
         </getter>
       </property>
       
+      <method name="selectForwardInternal">
+        <parameter name="aElement"/>
+        <body>
+        <![CDATA[
+          for (var temp = aElement; temp; temp = temp.nextSibling) {
+            if ("fireEvent" in temp) {
+              this.selected = temp;
+              break;
+            }
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <method name="selectBackwardInternal">
+        <parameter name="aElement"/>
+        <body>
+        <![CDATA[
+          for (var temp = aElement; temp; temp = temp.previousSibling) {
+            if ("fireEvent" in temp) {
+              this.selected = temp;
+              break;
+            }
+          }
+        ]]>
+        </body>
+      </method>
+      
       <method name="selectionForward">
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          if (this.selected) {
-            if (this.selected.nextSibling)
-              this.selected = this.selected.nextSibling;
-          }
+          if (this.selected)
+            this.selectForwardInternal(this.selected.nextSibling);
           else {
             if (this.hasChildNodes())
-              this.selected = this.firstChild.nextSibling;
+              this.selectForwardInternal(this.firstChild);
           }
         ]]>
         </body>
@@ -98,17 +142,28 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          if (this.selected) {
-            if (this.selected.previousSibling)
-              this.selected = this.selected.previousSibling;
-          }
+          if (this.selected)
+            this.selectBackwardInternal(this.selected.previousSibling);
           else {
             if (this.hasChildNodes())
-              this.selected = this.lastChild;
+              this.selectBackwardInternal(this.lastChild);
           }
         ]]>
         </body>
       </method>
+      
+      <property name="children">
+        <getter>
+        <![CDATA[
+          var childNodes = [];
+          for (var i = 0; i < this.childNodes.length; ++i) {
+            if ("fireEvent" in this.childNodes[i])
+              childNodes.push(this.childNodes[i]);
+          }
+          return childNodes;
+        ]]>
+        </getter>
+      </property>
     </implementation>
     <handlers>
       <handler event="click">

@@ -57,14 +57,14 @@ public:
   nsresult InstallExtension(nsIRDFDataSource* aSourceDataSource,
                             PRBool aProfile);
 
-  nsresult SetToBeEnabled(const PRUnichar* aExtensionID);
-  nsresult SetToBeDisabled(const PRUnichar* aExtensionID);
-  nsresult SetToBeUninstalled(const PRUnichar* aExtensionID);
+  nsresult EnableExtension(const char* aExtensionID);
+  nsresult DisableExtension(const char* aExtensionID);
+  nsresult UninstallExtension(const char* aExtensionID);
 
   nsresult LoadExtensions(PRBool aProfile);
 
 protected:
-  nsresult SetExtensionProperty(const PRUnichar* aExtensionID, 
+  nsresult SetExtensionProperty(const char* aExtensionID, 
                                 nsIRDFResource* aPropertyArc, 
                                 nsIRDFNode* aPropertyValue);
   void      InitLexicalResources();

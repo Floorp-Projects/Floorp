@@ -47,7 +47,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
   
-  <binding id="extension">
+  <binding id="extension" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
     <resources>
       <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
     </resources>
@@ -79,17 +79,7 @@
       </xul:hbox>
     </content>  
     <implementation>
-      <method name="fireEvent">
-        <parameter name="aEventType"/>
-        <body>
-        <![CDATA[
-          var e = document.createEvent("Events");
-          e.initEvent("extension-" + aEventType, false, true);
-          
-          this.dispatchEvent(e);
-        ]]>
-        </body>
-      </method>
+      <field name="eventPrefix">"extension-"</field>
     </implementation>
   </binding>
   

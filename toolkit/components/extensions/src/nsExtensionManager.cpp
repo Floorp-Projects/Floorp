@@ -86,43 +86,43 @@ nsExtensionManager::InstallExtensionFromStream(nsIInputStream* aStream,
 }
 
 NS_IMETHODIMP
-nsExtensionManager::UninstallExtension(const PRUnichar* aExtensionID)
+nsExtensionManager::UninstallExtension(const char* aExtensionID)
 {
-  return mDataSource->SetToBeUninstalled(aExtensionID);
+  return mDataSource->UninstallExtension(aExtensionID);
 }
 
 NS_IMETHODIMP
-nsExtensionManager::EnableExtension(const PRUnichar* aExtensionID)
+nsExtensionManager::EnableExtension(const char* aExtensionID)
 {
-  return mDataSource->SetToBeEnabled(aExtensionID);
+  return mDataSource->EnableExtension(aExtensionID);
 }
 
 NS_IMETHODIMP
-nsExtensionManager::DisableExtension(const PRUnichar* aExtensionID)
+nsExtensionManager::DisableExtension(const char* aExtensionID)
 {
-  return mDataSource->SetToBeDisabled(aExtensionID);
+  return mDataSource->DisableExtension(aExtensionID);
 }
 
 NS_IMETHODIMP
-nsExtensionManager::InstallTheme(const PRUnichar* aThemeID)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExtensionManager::UninstallTheme(const PRUnichar* aThemeID)
+nsExtensionManager::InstallTheme(const char* aThemeID)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsExtensionManager::EnableTheme(const PRUnichar* aThemeID)
+nsExtensionManager::UninstallTheme(const char* aThemeID)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsExtensionManager::DisableTheme(const PRUnichar* aThemeID)
+nsExtensionManager::EnableTheme(const char* aThemeID)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsExtensionManager::DisableTheme(const char* aThemeID)
 {
   return NS_OK;
 }
