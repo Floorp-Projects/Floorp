@@ -4958,7 +4958,13 @@ static void LocateAnonymousFrame(nsIPresContext* aPresContext,
   nsCOMPtr<nsIContent> content;
   aParentFrame->GetContent(getter_AddRefs(content));
   if (content.get() == aTargetContent) {
-    *aResult = aParentFrame;
+    // We must take into account if the parent is a scrollframe. If it is, we
+    // need to bypass the scrolling mechanics and get at the true frame.
+    nsCOMPtr<nsIScrollableFrame> scrollFrame ( do_QueryInterface(aParentFrame) );
+    if ( scrollFrame )
+      scrollFrame->GetScrolledFrame ( aPresContext, *aResult );
+    else
+      *aResult = aParentFrame;
     return;
   }
 
