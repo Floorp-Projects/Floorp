@@ -94,6 +94,10 @@ ifdef MOZ_DEBUG
 endif
 endif # WINNT
 
+merge_xpt::
+	$(XPIDL_LINK) $(DIST)/Embed/components/xpt_tmp $(DIST)/Embed/components/*.xpt
+	$(RM) $(DIST)/Embed/components/*.xpt
+	mv $(DIST)/Embed/components/xpt_tmp $(DIST)/Embed/components/all.xpt
 libs::
 	$(MAKE) embed_chrome
 	$(MAKE) embed_copy
