@@ -77,29 +77,25 @@ nsMathMLmsubsupFrame::Init(nsIPresContext*  aPresContext,
   nsresult rv = nsMathMLContainerFrame::Init
     (aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mSubScriptShiftFactor = 0.0f;
-  mSupScriptShiftFactor = 0.0f;
+  mSubScriptShift = 0;
+  mSupScriptShift = 0;
   mScriptSpace = 0;
 
-  // check for subscriptshift and superscriptshift attribute in ex units
+  // check if the subscriptshift attribute is there
   nsAutoString value;
-  mSubUserSetFlag = mSupUserSetFlag = PR_FALSE;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute
-      (kNameSpaceID_None, nsMathMLAtoms::subscriptshift_, value)) {
-    PRInt32 aErrorCode;
-    float aUserValue = value.ToFloat(&aErrorCode);
-    if (NS_SUCCEEDED(aErrorCode)) {
-      mSubUserSetFlag = PR_TRUE;
-      mSubScriptShiftFactor = aUserValue;
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::subscriptshift_, value)) {
+    nsCSSValue cssValue;
+    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+      mSubScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute
-      (kNameSpaceID_None, nsMathMLAtoms::superscriptshift_, value)) {
-    PRInt32 aErrorCode;
-    float aUserValue = value.ToFloat(&aErrorCode);
-    if (NS_SUCCEEDED(aErrorCode)) {
-      mSupUserSetFlag = PR_TRUE;
-      mSupScriptShiftFactor = aUserValue;
+  // check if the superscriptshift attribute is there
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::superscriptshift_, value)) {
+    nsCSSValue cssValue;
+    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+      mSupScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
 
@@ -201,10 +197,11 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
   
   // Get aSubScriptShift{1,2} default from font
   GetSubScriptShifts (fm, aSubScriptShift1, aSubScriptShift2);
-  if (mSubUserSetFlag) {
+
+  if (0 < mSubScriptShift) {
     // the user has set the subscriptshift attribute
     float aFactor = ((float) aSubScriptShift2) / aSubScriptShift1;
-    aSubScriptShift1 = NSToCoordRound(mSubScriptShiftFactor * xHeight);
+    aSubScriptShift1 = PR_MAX(aSubScriptShift1, mSubScriptShift);
     aSubScriptShift2 = NSToCoordRound(aFactor * aSubScriptShift1);
   }
  
@@ -233,11 +230,11 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
   nscoord aSupScriptShift1, aSupScriptShift2, aSupScriptShift3;
   // Set aSupScriptShift{1,2,3} default from font
   GetSupScriptShifts (fm, aSupScriptShift1, aSupScriptShift2, aSupScriptShift3);
-  if (mSupUserSetFlag) {
+  if (0 < mSupScriptShift) {
     // the user has set the superscriptshift attribute
     float aFactor2 = ((float) aSupScriptShift2) / aSupScriptShift1;
     float aFactor3 = ((float) aSupScriptShift3) / aSupScriptShift1;
-    aSupScriptShift1 = NSToCoordRound(mSupScriptShiftFactor * xHeight);
+    aSupScriptShift1 = PR_MAX(aSupScriptShift1, mSupScriptShift);
     aSupScriptShift2 = NSToCoordRound(aFactor2 * aSupScriptShift1);
     aSupScriptShift3 = NSToCoordRound(aFactor3 * aSupScriptShift1);
   }
@@ -272,7 +269,7 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
   // Rule 18e, App. G, TeXbook
   //////////////////////////////////////////////////
 
-  nscoord aRuleSize, dummy;
+  nscoord aRuleSize;
   // XXX need to do update this ...
   GetRuleThickness (fm, aRuleSize);
 //   aRuleSize /= 2;

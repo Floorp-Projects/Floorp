@@ -50,7 +50,7 @@ The linethickness attribute indicates the thickness of the horizontal
 "fraction bar", or "rule", typically used to render fractions. A fraction
 with linethickness="0" renders without the bar, and might be used within
 binomial coefficients. A linethickness greater than one might be used with
-nested fractions. These cases are shown below: 
+nested fractions. 
 
 In general, the value of linethickness can be a number, as a multiplier
 of the default thickness of the fraction bar (the default thickness is
@@ -63,26 +63,9 @@ The <mfrac> element sets displaystyle to "false", or if it was already
 false increments scriptlevel by 1, within numerator and denominator.
 These attributes are inherited by every element from its rendering 
 environment, but can be set explicitly only on the <mstyle> 
-element. (See Section 3.3.4.) 
+element. 
 */
 
-/*
-TODO:
-Units...
-- CalcLength(..) in nsCSSStyleRule.cpp is where CSS units are implemented. 
-How to use that for linethickness and, in general, how to factor the use
-of units in the MathML world?
-ID  Description
-em  ems (font-relative unit traditionally used for horizontal lengths)
-ex  exs (font-relative unit traditionally used for vertical lengths)
-px  pixels, or pixel size of a "typical computer display"
-in  inches (1 inch = 2.54 centimeters)
-cm  centimeters
-mm  millimeters
-pt  points (1 point = 1/72 inch)
-pc  picas (1 pica = 12 points)
-%   percentage of default value
-*/
 
 // default fraction line thickness in pixels
 #define DEFAULT_FRACTION_LINE_THICKNESS 1
@@ -90,9 +73,6 @@ pc  picas (1 pica = 12 points)
 #define THIN_FRACTION_LINE_THICKNESS    1
 #define MEDIUM_FRACTION_LINE_THICKNESS  2
 #define THICK_FRACTION_LINE_THICKNESS   4
-
-// use an upper bound just in case someone set a too high value? why bother?
-// #define MAX_FRACTION_LINE_THICKNESS 5 
 
 class nsMathMLmfracFrame : public nsMathMLContainerFrame {
 public:

@@ -3,19 +3,19 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla MathML Project.
- * 
- * The Initial Developer of the Original Code is The University Of 
+ *
+ * The Initial Developer of the Original Code is The University Of
  * Queensland.  Portions created by The University Of Queensland are
  * Copyright (C) 1999 The University Of Queensland.  All Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  */
@@ -80,39 +80,51 @@ nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
     return rv;
   }
 
-  nscoord aLineThickness = DEFAULT_FRACTION_LINE_THICKNESS;
   nsAutoString value;
-  
-  // see if the linethickness attribute is there  
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+  nscoord defaultThickness = onePixel * DEFAULT_FRACTION_LINE_THICKNESS;
+
+  mLineThickness = defaultThickness;
+
+  // see if the linethickness attribute is there
+  if (NS_CONTENT_ATTR_HAS_VALUE == 
+      GetAttribute(mContent, mPresentationData.mstyle, 
                    nsMathMLAtoms::linethickness_, value))
   {
     if (value == "thin")
-      aLineThickness = THIN_FRACTION_LINE_THICKNESS;
+      mLineThickness = onePixel * THIN_FRACTION_LINE_THICKNESS;
     else if (value == "medium")
-      aLineThickness = MEDIUM_FRACTION_LINE_THICKNESS;
+      mLineThickness = onePixel * MEDIUM_FRACTION_LINE_THICKNESS;
     else if (value == "thick")
-      aLineThickness = THICK_FRACTION_LINE_THICKNESS;
-    else {
-      PRInt32 aErrorCode;
-      PRInt32 aMultiplier = value.ToInteger(&aErrorCode);
-      if (NS_SUCCEEDED(aErrorCode))
-        aLineThickness = aMultiplier * DEFAULT_FRACTION_LINE_THICKNESS;  	
-      else {
-        // XXX TODO: try to see if it is a h/v-unit like 1ex, 2px, 1em
-        // see also nsUnitConversion.h
+      mLineThickness = onePixel * THICK_FRACTION_LINE_THICKNESS;
+    else { // see if it is a plain number, or a percentage, or a h/v-unit like 1ex, 2px, 1em
+      nsCSSValue cssValue;
+      if (ParseNumericValue(value, cssValue)) {
+        nsCSSUnit unit = cssValue.GetUnit();
+        if (eCSSUnit_Number == unit)
+          mLineThickness = nscoord(float(defaultThickness) * cssValue.GetFloatValue());
+        else if (eCSSUnit_Percent == unit)
+          mLineThickness = nscoord(float(defaultThickness) * cssValue.GetPercentValue());
+        else if (eCSSUnit_Null != unit)
+          mLineThickness = CalcLength(aPresContext, mStyleContext, cssValue);
       }
+#ifdef NS_DEBUG
+      else {
+        char str[50];
+        value.ToCString(str, 50);
+        printf("Invalid attribute linethickness=%s\n", str);
+      }
+#endif
     }
   }
 
-//  mLineThickness = (aLineThickness > MAX_FRACTION_LINE_THICKNESS) ? 
-//                   MAX_FRACTION_LINE_THICKNESS : aLineThickness;
-
-  mLineThickness = aLineThickness;
   mLineOrigin.x = 0;
-  mLineOrigin.y = 0;  
+  mLineOrigin.y = 0;
 
-  // TODO: other attributes...
   return rv;
 }
 
@@ -123,10 +135,10 @@ nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
                           nsFramePaintLayer    aWhichLayer)
 {
   nsresult rv = NS_OK;
-  
+
   /////////////
   // paint the numerator and denominator
-  rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
+  rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext,
                                      aDirtyRect, aWhichLayer);
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
@@ -136,24 +148,22 @@ nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
   ////////////
   // paint the fraction line
   if (NS_SUCCEEDED(rv) && 0 < mLineThickness) {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    nscoord thickness = NSIntPixelsToTwips(mLineThickness, p2t); 
+
 /*
 //  line looking like <hr noshade>
     const nsStyleColor* color;
-    nscolor colors[2]; 
-    color = nsStyleUtil::FindNonTransparentBackground(mStyleContext); 
-    NS_Get3DColors(colors, color->mBackgroundColor); 
-    aRenderingContext.SetColor(colors[0]); 
+    nscolor colors[2];
+    color = nsStyleUtil::FindNonTransparentBackground(mStyleContext);
+    NS_Get3DColors(colors, color->mBackgroundColor);
+    aRenderingContext.SetColor(colors[0]);
 */
 //  solid line with the current text color
     const nsStyleColor* color =
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     aRenderingContext.SetColor(color->mColor);
 
-//  draw the line  
-    aRenderingContext.FillRect(mLineOrigin.x, mLineOrigin.y, mRect.width, thickness);
+//  draw the line
+    aRenderingContext.FillRect(mLineOrigin.x, mLineOrigin.y, mRect.width, mLineThickness);
   }
 
   return rv;
@@ -167,19 +177,19 @@ nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
 {
   nsresult rv = NS_OK;
   nsReflowStatus childStatus;
-  // ask our children to compute their bounding metrics 
+  // ask our children to compute their bounding metrics
   nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize,
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
 
   //////////////////
   // Reflow Children
-   
+
   nscoord count = 0;
   nsRect rect[2];
   nsIFrame* child[2];
-  nsIFrame* childFrame = mFrames.FirstChild(); 
-  while (nsnull != childFrame) 
+  nsIFrame* childFrame = mFrames.FirstChild();
+  while (nsnull != childFrame)
   {
     //////////////
     // WHITESPACE: don't forget that whitespace doesn't count in MathML!
@@ -195,10 +205,10 @@ nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
         return rv;
       }
 
-      child[count] = childFrame;     
+      child[count] = childFrame;
       rect[count].width = childDesiredSize.width;
       rect[count].height = childDesiredSize.height;
-      count++;  
+      count++;
     }
 //  else { invalid markup... }
 
@@ -207,9 +217,9 @@ nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   //////////////////
-  // Place Children 
-  
-  // Get the <strike> line and center the fraction bar with the <strike> line. 
+  // Place Children
+
+  // Get the <strike> line and center the fraction bar with the <strike> line.
   nscoord strikeOffset, strikeThickness;
   nsCOMPtr<nsIFontMetrics> fm;
   const nsStyleFont* aFont =
@@ -219,16 +229,12 @@ nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Take care of mLineThickness
   float p2t;
-  nscoord Thickspace, halfThickspace;
+  nscoord halfThickspace;
   aPresContext->GetScaledPixelsToTwips(&p2t);
-  if (mLineThickness <= 1) {
-    Thickspace = 0; 		
-    halfThickspace = 0;  	
-  }
-  else {
-    Thickspace = NSIntPixelsToTwips(mLineThickness-1, p2t); 		
-    halfThickspace = Thickspace/2;  // distance from the middle of the axis
-  }
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+  // distance from the middle of the axis
+  halfThickspace = (mLineThickness > onePixel)? mLineThickness/2 : 0;
 
   aDesiredSize.width = PR_MAX(rect[0].width, rect[1].width);
   aDesiredSize.ascent = rect[0].height + strikeOffset + halfThickspace;
@@ -248,7 +254,7 @@ nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
     childSize.height = rect[i].height;
     FinishReflowChild(child[i], aPresContext, childSize, rect[i].x, rect[i].y, 0);
   }
-  SetLineOrigin(nsPoint(0,rect[0].height)); // position the fraction bar  
+  SetLineOrigin(nsPoint(0,rect[0].height)); // position the fraction bar
 
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;

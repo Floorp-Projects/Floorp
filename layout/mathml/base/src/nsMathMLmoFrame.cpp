@@ -156,6 +156,8 @@ nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
   mFlags = 0;
   mLeftSpace = 0.0f; // .27777f;
   mRightSpace = 0.0f; // .27777f;
+  mMinSize = float(NS_UNCONSTRAINEDSIZE);
+  mMaxSize = float(NS_UNCONSTRAINEDSIZE);
 
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
   return rv;
@@ -222,7 +224,7 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
       PRBool movablelimitsAttribute = PR_FALSE;
 
       // see if the accent attribute is there
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+      if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle, 
                        nsMathMLAtoms::accent_, value))
       {
         accentAttribute = PR_TRUE;
@@ -233,7 +235,7 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
       }
 
       // see if the movablelimits attribute is there
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+      if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle, 
                        nsMathMLAtoms::movablelimits_, value))
       {
         movablelimitsAttribute = PR_TRUE;
@@ -278,7 +280,7 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 void
-nsMathMLmoFrame::InitData()
+nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
 {
   nsresult rv = NS_OK;
   mFlags = 0;
@@ -289,7 +291,7 @@ nsMathMLmoFrame::InitData()
   nsIMathMLFrame* aMathMLFrame = nsnull;
   nsIFrame* embellishAncestor = nsnull;
   PRBool hasEmbellishAncestor = PR_FALSE;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None,
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::form_, value)) {
     if (value == "prefix")
       aForm = NS_MATHML_OPERATOR_FORM_PREFIX;
@@ -392,8 +394,6 @@ nsMathMLmoFrame::InitData()
     mRightSpace /= 2.0f;
   }
 
-// XXX Factor all this in nsMathMLAttributes.cpp
-
   // Now see if there are user-defined attributes that override the dictionary.
   // XXX If an attribute can be forced to be true when it is false in the
   // dictionary, then the following code has to change...
@@ -403,49 +403,106 @@ nsMathMLmoFrame::InitData()
 
   nsAutoString kfalse("false"), ktrue("true");
   if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None,
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::stretchy_, value) && value == kfalse)
       mFlags &= ~NS_MATHML_OPERATOR_STRETCHY;
   }
   if (NS_MATHML_OPERATOR_IS_FENCE(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None,
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::fence_, value) && value == kfalse)
       mFlags &= ~NS_MATHML_OPERATOR_FENCE;
   }
   if (NS_MATHML_OPERATOR_IS_ACCENT(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None,
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::accent_, value) && value == kfalse)
       mFlags &= ~NS_MATHML_OPERATOR_ACCENT;
   }
   if (NS_MATHML_OPERATOR_IS_LARGEOP(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None,
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::largeop_, value) && value == kfalse)
       mFlags &= ~NS_MATHML_OPERATOR_LARGEOP;
   }
   if (NS_MATHML_OPERATOR_IS_SEPARATOR(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None,
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::separator_, value) && value == kfalse)
       mFlags &= ~NS_MATHML_OPERATOR_SEPARATOR;
   }
   if (NS_MATHML_OPERATOR_IS_MOVABLELIMITS(mFlags)) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None,
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::movablelimits_, value) && value == kfalse)
       mFlags &= ~NS_MATHML_OPERATOR_MOVABLELIMITS;
   }
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None,
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::symmetric_, value)) { 
    if (value == ktrue) mFlags |= NS_MATHML_OPERATOR_SYMMETRIC;                     
    if (value == kfalse) mFlags &= ~NS_MATHML_OPERATOR_SYMMETRIC;
   }
 
-  // TODO: add also lspace and rspace, minsize, maxsize, later ...
-
   // If we are an accent without explicit lspace="." or rspace=".", 
   // ignore our default left/right space
-  if (NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
+
+  // Get the value of 'em'
+  nsStyleFont font;
+  mStyleContext->GetStyle(eStyleStruct_Font, font);
+  float em = float(font.mFont.size);
+
+  // lspace = number h-unit
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::lspace_, value)) {
+    nsCSSValue cssValue;
+    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+      mLeftSpace = float(CalcLength(aPresContext, mStyleContext, cssValue)) / em;
+    }
+  }
+  else if (NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
     mLeftSpace = 0.0f;
+  }
+
+  // rspace = number h-unit
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::rspace_, value)) {
+    nsCSSValue cssValue;
+    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+      mRightSpace = float(CalcLength(aPresContext, mStyleContext, cssValue)) / em;
+    }
+  }
+  else if (NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
     mRightSpace = 0.0f;
+  }
+
+  // minsize = number [ v-unit | h-unit ]
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::minsize_, value)) {
+    nsCSSValue cssValue;
+    if (ParseNumericValue(value, cssValue)) {
+      nsCSSUnit unit = cssValue.GetUnit();
+      if (eCSSUnit_Number == unit)
+        mMinSize = cssValue.GetFloatValue();
+      else if (eCSSUnit_Percent == unit)
+        mMinSize = cssValue.GetPercentValue();
+      else if (eCSSUnit_Null != unit) {
+        mMinSize = float(CalcLength(aPresContext, mStyleContext, cssValue));
+        mFlags |= NS_MATHML_OPERATOR_MINSIZE_EXPLICIT;
+      }
+    }
+  }
+
+  // maxsize = number [ v-unit | h-unit ] | infinity
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::maxsize_, value)) {
+    nsCSSValue cssValue;
+    if (ParseNumericValue(value, cssValue)) {
+      nsCSSUnit unit = cssValue.GetUnit();
+      if (eCSSUnit_Number == unit)
+        mMaxSize = cssValue.GetFloatValue();
+      else if (eCSSUnit_Percent == unit)
+        mMaxSize = cssValue.GetPercentValue();
+      else if (eCSSUnit_Null != unit) {
+        mMaxSize = float(CalcLength(aPresContext, mStyleContext, cssValue));
+        mFlags |= NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT;
+      }
+    }
   }
 
   // If the stretchy attribute has been disabled, the operator is not mutable
@@ -471,7 +528,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   mEmbellishData.flags |= NS_MATHML_STRETCH_DONE;
 
 //  if (0 == mFlags) { // first time...
-    InitData();
+    InitData(aPresContext);
 //  }
 
 
@@ -479,10 +536,12 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   // See if it is okay to stretch
 
   if (NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) {
+
+    nsStretchMetrics initialSize(aDesiredStretchSize);
     nsStretchMetrics container(aContainerSize);
+
     // little adjustments if the operator is symmetric
-    // XXX Also use maxsize and minsize to find what size we should
-    //     really suggest to our MathMLChar.
+
     if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags) && 
          ((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) ||
           (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT && 
@@ -490,15 +549,72 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     {
       container.ascent = PR_MAX(container.ascent, container.descent);
       container.descent = container.ascent;
-      container.height = container.ascent + container.descent; 
+      container.height = container.ascent + container.descent;
+
+      // get ready in case we encounter user-desired min-max 
+      initialSize.ascent = PR_MAX(initialSize.ascent, initialSize.descent);
+      initialSize.descent = initialSize.ascent;
+      initialSize.height = initialSize.ascent + initialSize.descent;
     }
 
+    // check for user-desired min-max size
+
+    if (mMaxSize != float(NS_UNCONSTRAINEDSIZE) && mMaxSize > 0.0f) { 
+      // if we are here, there is a user defined maxsize ...
+      if (NS_MATHML_OPERATOR_MAXSIZE_IS_EXPLICIT(mFlags)) {
+      	// there is an explicit value like maxsize="20pt"
+        // try to maintain the aspect ratio of the char
+        float aspect = mMaxSize / float(initialSize.ascent + initialSize.descent);
+        container.ascent = 
+          PR_MIN(container.ascent, nscoord(initialSize.ascent * aspect));
+        container.descent = 
+          PR_MIN(container.descent, nscoord(initialSize.descent * aspect));
+        // below we use a type cast instead of a conversion to avoid a VC++ bug
+        // see http://support.microsoft.com/support/kb/articles/Q115/7/05.ASP
+        container.width = 
+          PR_MIN(container.width, (nscoord)mMaxSize);
+      }
+      else { // multiplicative value
+        container.ascent = 
+          PR_MIN(container.ascent, nscoord(initialSize.ascent * mMaxSize));
+        container.descent = 
+          PR_MIN(container.descent, nscoord(initialSize.descent * mMaxSize));
+        container.width = 
+          PR_MIN(container.width, nscoord(initialSize.width * mMaxSize));
+      }
+    }
+
+    if (mMinSize != float(NS_UNCONSTRAINEDSIZE) && mMinSize > 0.0f) { 
+      // if we are here, there is a user defined minsize ...
+      if (NS_MATHML_OPERATOR_MINSIZE_IS_EXPLICIT(mFlags)) {
+      	// there is an explicit value like minsize="20pt"
+        // try to maintain the aspect ratio of the char
+        float aspect = mMinSize / float(initialSize.ascent + initialSize.descent);
+        container.ascent = 
+          PR_MAX(container.ascent, nscoord(initialSize.ascent * aspect));
+        container.descent = 
+          PR_MAX(container.descent, nscoord(initialSize.descent * aspect));
+        container.width = 
+          PR_MAX(container.width, (nscoord)mMinSize);
+      }
+      else { // multiplicative value
+        container.ascent = 
+          PR_MAX(container.ascent, nscoord(initialSize.ascent * mMinSize));
+        container.descent = 
+          PR_MAX(container.descent, nscoord(initialSize.descent * mMinSize));
+        container.width = 
+          PR_MAX(container.width, nscoord(initialSize.width * mMinSize));
+      }
+    }
+
+    // things may have changed
+    container.height = container.ascent + container.descent; 
+
     // let the MathMLChar stretch itself...
-    nsStretchMetrics old(aDesiredStretchSize);
     mMathMLChar.Stretch(aPresContext, aRenderingContext,
                         mStyleContext, aStretchDirection,
                         container, aDesiredStretchSize);
-    if (old == aDesiredStretchSize) { // hasn't changed !
+    if (initialSize == aDesiredStretchSize) { // hasn't changed !
       mFlags &= ~NS_MATHML_OPERATOR_MUTABLE;
     }
   }

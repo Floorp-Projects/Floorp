@@ -122,6 +122,164 @@ nsMathMLContainerFrame::IsOnlyWhitespace(nsIFrame* aFrame)
   return rv;
 }
 
+// helper to get an attribute from the content or the surrounding <mstyle>
+nsresult
+nsMathMLContainerFrame::GetAttribute(nsIContent* aContent,
+                                     nsIFrame*   aMathMLmstyleFrame,          
+                                     nsIAtom*    aAttributeAtom,
+                                     nsString&   aValue)
+{
+  // see if we can get the attribute from the content
+  if (aContent) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == 
+        aContent->GetAttribute(kNameSpaceID_None, aAttributeAtom, aValue))
+          return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  
+  // see if we can get the attribute from the mstyle frame
+  if (aMathMLmstyleFrame) {
+    nsCOMPtr<nsIContent> mstyleContent;
+    aMathMLmstyleFrame->GetContent(getter_AddRefs(mstyleContent));
+    if (NS_CONTENT_ATTR_HAS_VALUE == 
+        mstyleContent->GetAttribute(kNameSpaceID_None, aAttributeAtom, aValue))
+          return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  return NS_CONTENT_ATTR_NOT_THERE;
+}
+
+// ================
+// Utilities for parsing and retrieving numeric values
+// All returned values are in twips.
+
+/* 
+The REC says:
+  An explicit plus sign ('+') is not allowed as part of a numeric value
+  except when it is specifically listed in the syntax (as a quoted '+'  or "+"), 
+
+  Units allowed
+  ID  Description
+  em  ems (font-relative unit traditionally used for horizontal lengths)
+  ex  exs (font-relative unit traditionally used for vertical lengths)
+  px  pixels, or pixel size of a "typical computer display"
+  in  inches (1 inch = 2.54 centimeters)
+  cm  centimeters
+  mm  millimeters
+  pt  points (1 point = 1/72 inch)
+  pc  picas (1 pica = 12 points)
+  %   percentage of default value
+
+Implementation here:
+  The numeric value is valid only if it is of the form nnn.nnn [h/v-unit]
+*/
+
+// Adapted from nsCSSScanner.cpp & CSSParser.cpp
+PRBool
+nsMathMLContainerFrame::ParseNumericValue(const nsString& aString,
+                                          nsCSSValue&     aCSSValue)
+{
+  PRInt32 stringLength = aString.Length();
+
+  if (!stringLength) return PR_FALSE;
+
+  nsAutoString number = aString;
+  number.SetLength(0);
+
+  nsAutoString unit = aString;
+  unit.SetLength(0);
+
+  // Gather up characters that make up the number
+  PRBool gotDot = PR_FALSE;
+  PRUnichar c;
+  for (PRInt32 i = 0; i < stringLength; i++) {
+    c = aString[i];
+    if (gotDot && c == '.')
+      return PR_FALSE;  // two dots encountered
+    else if (c == '.')
+      gotDot = PR_TRUE;
+    else if (!nsString::IsDigit(c)) {
+      aString.Right(unit, stringLength - i);
+      break;
+    }
+    number.Append(PRUnichar(c));
+  }
+
+#if 0
+char s1[50], s2[50], s3[50];
+aString.ToCString(s1, 50);
+number.ToCString(s2, 50);
+unit.ToCString(s3, 50);
+printf("String:%s,  Number:%s,  Unit:%s\n", s1, s2, s3);
+#endif
+
+  // Convert number to floating point
+  PRInt32 errorCode;
+  float floatValue = number.ToFloat(&errorCode);
+  if (NS_FAILED(errorCode)) return PR_FALSE;
+
+  nsCSSUnit cssUnit;
+  if (0 == unit.Length()) {
+    cssUnit = eCSSUnit_Number; // no explicit unit, this is a number that will act as a multiplier
+  } 
+  else if (unit == "%") {
+    floatValue = floatValue / 100.0f;
+    aCSSValue.SetPercentValue(floatValue);
+    return PR_TRUE;
+  } 
+  else if (unit == "em") cssUnit = eCSSUnit_EM;        
+  else if (unit == "ex") cssUnit = eCSSUnit_XHeight;   
+  else if (unit == "px") cssUnit = eCSSUnit_Pixel;     
+  else if (unit == "in") cssUnit = eCSSUnit_Inch;      
+  else if (unit == "cm") cssUnit = eCSSUnit_Centimeter;
+  else if (unit == "mm") cssUnit = eCSSUnit_Millimeter;
+  else if (unit == "pt") cssUnit = eCSSUnit_Point;     
+  else if (unit == "pc") cssUnit = eCSSUnit_Pica;      
+  else // unexpected unit
+    return PR_FALSE;
+        
+  aCSSValue.SetFloatValue(floatValue, cssUnit);
+  return PR_TRUE;
+}
+
+// Adapted from nsCSSStyleRule.cpp
+nscoord 
+nsMathMLContainerFrame::CalcLength(nsIPresContext*   aPresContext,
+                                   nsIStyleContext*  aStyleContext,
+                                   const nsCSSValue& aValue)
+{
+  NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
+
+  if (aValue.IsFixedLengthUnit()) {
+    return aValue.GetLengthTwips();
+  }
+
+  nsCSSUnit unit = aValue.GetUnit();
+
+  if (eCSSUnit_Pixel == unit) {
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+    return NSFloatPixelsToTwips(aValue.GetFloatValue(), p2t);
+  }
+  else if (eCSSUnit_EM == unit) {
+    nsStyleFont font;
+    aStyleContext->GetStyle(eStyleStruct_Font, font);
+    return NSToCoordRound(aValue.GetFloatValue() * (float)font.mFont.size);
+  }
+  else if (eCSSUnit_XHeight == unit) {
+    nscoord xHeight;
+    nsStyleFont font;
+    aStyleContext->GetStyle(eStyleStruct_Font, font);
+    nsCOMPtr<nsIFontMetrics> fm;
+    aPresContext->GetMetricsFor(font.mFont, getter_AddRefs(fm));
+    fm->GetXHeight(xHeight);
+    return NSToCoordRound(aValue.GetFloatValue() * (float)xHeight);
+  }
+
+  return 0;
+}
+
+// -------------------------
+
 void
 nsMathMLContainerFrame::ReflowEmptyChild(nsIPresContext* aPresContext,
                                          nsIFrame*       aFrame)
@@ -610,26 +768,29 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
           // smaller-font-size algorithm of the style system
           PRInt32 scriptminsize = NSIntPointsToTwips(8);
 
-          // see if the scriptminsize attribute is on <mstyle> that wraps us
+          // see if there is a scriptminsize attribute on a <mstyle> that wraps us
           nsAutoString value;
-          nsIFrame* mstyleFrame = mPresentationData.mstyle;
-          if (mstyleFrame) {
-            nsCOMPtr<nsIContent> mstyleContent;
-            mstyleFrame->GetContent(getter_AddRefs(mstyleContent));
-            if (NS_CONTENT_ATTR_HAS_VALUE == mstyleContent->GetAttribute(kNameSpaceID_None, 
-                             nsMathMLAtoms::scriptminsize_, value))
-            {
-              PRInt32 errorCode;
-              PRInt32 userValue = value.ToInteger(&errorCode);
-              if (NS_SUCCEEDED(errorCode)) {
-                // assume unit is point 
-                // XXX need consistent, default unit throughout the code
-                scriptminsize = NSIntPointsToTwips(userValue);
-              }
-              else {
-                // XXX TODO: try to see if it is a h/v-unit like 1ex, 2px, 1em
-              }
+          if (NS_CONTENT_ATTR_HAS_VALUE == 
+              GetAttribute(nsnull, mPresentationData.mstyle, 
+                           nsMathMLAtoms::scriptminsize_, value))
+          {
+            nsCSSValue cssValue;
+            if (ParseNumericValue(value, cssValue)) {
+              nsCSSUnit unit = cssValue.GetUnit();
+              if (eCSSUnit_Number == unit)
+                scriptminsize = nscoord(float(scriptminsize) * cssValue.GetFloatValue());
+              else if (eCSSUnit_Percent == unit)
+                scriptminsize = nscoord(float(scriptminsize) * cssValue.GetPercentValue());
+              else if (eCSSUnit_Null != unit)
+                scriptminsize = CalcLength(aPresContext, mStyleContext, cssValue);
             }
+#ifdef NS_DEBUG
+            else {
+              char str[50];
+              value.ToCString(str, 50);
+              printf("Invalid attribute scriptminsize=%s\n", str);
+            }
+#endif
           }
 
           // get Nav's magic font scaler

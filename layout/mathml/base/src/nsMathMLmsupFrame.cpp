@@ -76,19 +76,16 @@ nsMathMLmsupFrame::Init(nsIPresContext*  aPresContext,
   nsresult rv = nsMathMLContainerFrame::Init
     (aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mSupScriptShiftFactor = 0.0f;
+  mSupScriptShift = 0;
   mScriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
 
-  // check for superscriptshift attribute in ex units
+  // check if the superscriptshift attribute is there
   nsAutoString value;
-  mUserSetFlag = PR_FALSE;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute
-      (kNameSpaceID_None, nsMathMLAtoms::superscriptshift_, value)) {
-    PRInt32 aErrorCode;
-    float aUserValue = value.ToFloat(&aErrorCode);
-    if (NS_SUCCEEDED(aErrorCode)) {
-      mUserSetFlag = PR_TRUE;
-      mSupScriptShiftFactor = aUserValue;
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::superscriptshift_, value)) {
+    nsCSSValue cssValue;
+    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+      mSupScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
 
@@ -175,14 +172,12 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
   // Set aSupScriptShift{1,2,3} default from font
   GetSupScriptShifts (fm, aSupScriptShift1, aSupScriptShift2, aSupScriptShift3);
 
-  if (mUserSetFlag) {
-    // the user has set the supscriptshift attribute
+  if (0 < mSupScriptShift) {
+    // the user has set the superscriptshift attribute
     float aFactor2 = ((float) aSupScriptShift2) / aSupScriptShift1;
     float aFactor3 = ((float) aSupScriptShift3) / aSupScriptShift1;
-    aSupScriptShift1 = NSToCoordRound(mSupScriptShiftFactor * xHeight);
-//XXX shouldn't this be 
-//    aSupScriptShift1 = 
-//      PR_MAX(aSupScriptShift1, NSToCoordRound(mSupScriptShiftFactor * xHeight));
+    aSupScriptShift1 = 
+      PR_MAX(aSupScriptShift1, mSupScriptShift);
     aSupScriptShift2 = NSToCoordRound(aFactor2 * aSupScriptShift1);
     aSupScriptShift3 = NSToCoordRound(aFactor3 * aSupScriptShift1);
   }
