@@ -71,7 +71,7 @@ function DOMNodeViewer()  // implements inIViewer
 
   // prepare and attach the DOM DataSource
   this.mDOMView = XPCU.createInstance(kDOMViewCID, "inIDOMView");
-  this.mDOMView.addFilterByType(2, true);
+  this.mDOMView.whatToShow = NodeFilter.SHOW_ATTRIBUTE;
   this.mAttrTree.treeBoxObject.view = this.mDOMView;
 }
 

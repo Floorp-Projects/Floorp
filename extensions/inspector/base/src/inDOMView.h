@@ -88,7 +88,7 @@ protected:
   PRPackedBool mShowAnonymous;
   PRPackedBool mShowSubDocuments;
   PRPackedBool mShowWhitespaceNodes;
-  PRUint32 mFilters;
+  PRUint32 mWhatToShow;
 
   nsCOMPtr<nsIDOMNode> mRootNode;
   nsCOMPtr<nsIDOMDocument> mRootDocument;
@@ -116,12 +116,6 @@ protected:
   void InsertLinkBefore(inDOMViewNode* aNode, inDOMViewNode* aInsertBefore);
   void RemoveLink(inDOMViewNode* aNode);
   void ReplaceLink(inDOMViewNode* aNewNode, inDOMViewNode* aOldNode);
-
-  inline PRUint16 GetNodeTypeKey(PRUint16 aType)
-  {
-    NS_ASSERTION(aType < 16, "You doofus");
-    return 1 << aType;
-  };
 
   nsresult GetChildNodesFor(nsIDOMNode* aNode, nsISupportsArray **aResult);
   nsresult AppendKidsToArray(nsIDOMNodeList* aKids, nsISupportsArray* aArray);

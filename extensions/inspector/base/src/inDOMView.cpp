@@ -45,6 +45,7 @@
 #include "nsReadableUtils.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMAttr.h"
@@ -116,7 +117,7 @@ inDOMView::inDOMView() :
   mShowAnonymous(PR_FALSE),
   mShowSubDocuments(PR_FALSE),
   mShowWhitespaceNodes(PR_TRUE),
-  mFilters(PR_UINT16_MAX) // show all node types by default
+  mWhatToShow(nsIDOMNodeFilter::SHOW_ALL)
 {
   kAnonymousAtom = NS_NewAtom("anonymous");
   kElementNodeAtom = NS_NewAtom("ELEMENT_NODE");
@@ -172,11 +173,9 @@ inDOMView::SetRootNode(nsIDOMNode* aNode)
   mRootNode = aNode;
 
   if (aNode) {
-    PRBool filtered;
     // If we are able to show element nodes, then start with the root node
     // as the first node in the buffer
-    IsFiltered(nsIDOMNode::ELEMENT_NODE, &filtered);
-    if (filtered) {
+    if (mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT) {
       // allocate new node array
       AppendNode(CreateNode(aNode, nsnull));
     } else {
@@ -264,33 +263,16 @@ inDOMView::SetShowWhitespaceNodes(PRBool aShowWhitespaceNodes)
 }
 
 NS_IMETHODIMP
-inDOMView::AddFilterByType(PRUint16 aType, PRBool aExclusive)
+inDOMView::GetWhatToShow(PRUint32 *aWhatToShow)
 {
-  PRUint16 key = GetNodeTypeKey(aType);
-
-  if (aExclusive) {
-    mFilters = key;
-  } else {
-    mFilters |= key;
-  }
-
+  *aWhatToShow = mWhatToShow;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::RemoveFilterByType(PRUint16 aType)
+inDOMView::SetWhatToShow(PRUint32 aWhatToShow)
 {
-  mFilters &= ~(GetNodeTypeKey(aType));
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-inDOMView::IsFiltered(PRUint16 aType, PRBool* _retval)
-{
-  PRUint16 key = GetNodeTypeKey(aType);
-  *_retval = mFilters & key;
-
+  mWhatToShow = aWhatToShow;
   return NS_OK;
 }
 
@@ -652,13 +634,13 @@ NS_IMETHODIMP
 inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt32 aNameSpaceID,
                             nsIAtom* aAttribute, PRInt32 aModType, nsChangeHint aHint)
 {
-  if (!mTree)
+  if (!mTree) {
     return NS_ERROR_FAILURE;
+  }
 
-  PRBool filtered;
-  IsFiltered(nsIDOMNode::ATTRIBUTE_NODE, &filtered);
-  if (!filtered)
+  if (!(mWhatToShow & nsIDOMNodeFilter::SHOW_ATTRIBUTE)) {
     return NS_OK;
+  }
 
   // get the dom attribute node, if there is any
   nsCOMPtr<nsIDOMNode> content(do_QueryInterface(aContent));
@@ -1172,9 +1154,7 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsISupportsArray **aResult)
   nsCOMPtr<nsIDOMAttr> attr = do_QueryInterface(aNode, &rv);
   if (NS_FAILED(rv)) {
     // attribute nodes
-    PRBool filtered = PR_FALSE;
-    IsFiltered(nsIDOMNode::ATTRIBUTE_NODE, &filtered);
-    if (filtered) {
+    if (mWhatToShow & nsIDOMNodeFilter::SHOW_ATTRIBUTE) {
       nsCOMPtr<nsIDOMNamedNodeMap> attrs;
       rv = aNode->GetAttributes(getter_AddRefs(attrs));
       if (attrs)
@@ -1191,9 +1171,7 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsISupportsArray **aResult)
       }
     }
 
-    
-    IsFiltered(nsIDOMNode::ELEMENT_NODE, &filtered);
-    if (filtered) {
+    if (mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT) {
       // try to get the anonymous content
       nsCOMPtr<nsIDOMNodeList> kids;
       if (mShowAnonymous) {
@@ -1270,7 +1248,6 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids, nsISupportsArray* aArray)
   aKids->GetLength(&l);
   nsCOMPtr<nsIDOMNode> kid;
   PRUint16 nodeType = 0;
-  PRBool filtered = PR_FALSE;
 
   // Try and get DOM Utils in case we don't have one yet.
   if (mShowWhitespaceNodes && !mDOMUtils) {
@@ -1280,8 +1257,18 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids, nsISupportsArray* aArray)
   for (PRUint32 i = 0; i < l; ++i) {
     aKids->Item(i, getter_AddRefs(kid));
     kid->GetNodeType(&nodeType);
-    IsFiltered(nodeType, &filtered);
-    if (filtered) {
+
+    NS_ASSERTION(nodeType && nodeType <= nsIDOMNode::NOTATION_NODE,
+                 "Unknown node type. "
+                 "Were new types added to the spec?");
+    // As of DOM Level 2 Core and Traversal, each NodeFilter constant
+    // is defined as the lower nth bit in the NodeFilter bitmask,
+    // where n is the numeric constant of the nodeType it represents.
+    // If this invariant ever changes, we will need to update the
+    // following line.
+    PRUint32 filterForNodeType = 1 << (nodeType - 1);
+
+    if (mWhatToShow & filterForNodeType) {
       if ((nodeType == nsIDOMNode::TEXT_NODE ||
            nodeType == nsIDOMNode::COMMENT_NODE) &&
           !mShowWhitespaceNodes && mDOMUtils) {

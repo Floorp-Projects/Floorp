@@ -74,7 +74,7 @@ function DOMViewer() // implements inIViewer
   // prepare and attach the DOM DataSource
   this.mDOMView = XPCU.createInstance(kDOMViewCID, "inIDOMView");
   this.mDOMView.showSubDocuments = true;
-  this.mDOMView.removeFilterByType(Node.ATTRIBUTE_NODE); // hide attribute nodes
+  this.mDOMView.whatToShow &= ~(NodeFilter.SHOW_ATTRIBUTE); // hide attribute nodes
   this.mDOMTree.treeBoxObject.view = this.mDOMView;
 
   PrefUtils.addObserver("inspector", PrefChangeObserver);
