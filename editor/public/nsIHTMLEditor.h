@@ -39,9 +39,6 @@ class nsStringArray;
 class nsIAtom;
 class nsIDOMNode;
 class nsIDOMElement;
-class nsIDOMKeyEvent;
-class nsIDOMEvent;
-
 
 class nsIHTMLEditor : public nsISupports
 {
@@ -95,14 +92,6 @@ public:
     eJustify
   } EAlignment;
   
-  /* ------------ Document info methods -------------- */
-
-  /** get the length of the document in characters */
-  NS_IMETHOD GetDocumentLength(PRInt32 *aCount)=0;
-
-  NS_IMETHOD SetMaxTextLength(PRInt32 aMaxTextLength)=0;
-  NS_IMETHOD GetMaxTextLength(PRInt32& aMaxTextLength)=0;
-
   /* ------------ Inline property methods -------------- */
 
 
@@ -180,54 +169,27 @@ public:
    */
   NS_IMETHOD DecreaseFontSize()=0;
 
-
-  /* ------------ HTML content methods -------------- */
-
-  /** 
-   * EditorKeyPress consumes a keyevent.
-   * @param aKeyEvent    key event to consume
-   */
-  NS_IMETHOD EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)=0;
+  /* ------------ Drag/Drop methods -------------- */
 
   /** 
-   * TypedText responds to user typing.  Provides a logging bottleneck for typing.
-   * @param aString    string to type
-   * @param aAction    action to take: insert text, insert BR, insert break
-   */
-  NS_IMETHOD TypedText(const nsString& aString, PRInt32 aAction)=0;
-
-  /** 
-   * CanDrag decides if a drag should be started (for example, based on the current selection and mousepoint).
+   * CanDrag decides if a drag should be started
+   * (for example, based on the current selection and mousepoint).
    */
   NS_IMETHOD CanDrag(nsIDOMEvent *aEvent, PRBool &aCanDrag)=0;
 
   /** 
-   * DoDrag transfers the relevant data (as appropriate) to a transferable so it can later be dropped.
+   * DoDrag transfers the relevant data (as appropriate)
+   * to a transferable so it can later be dropped.
    */
   NS_IMETHOD DoDrag(nsIDOMEvent *aEvent)=0;
 
   /** 
-   * InsertFromDrop looks for a dragsession and inserts the relevant data in response to a drop.
+   * InsertFromDrop looks for a dragsession and inserts the
+   * relevant data in response to a drop.
    */
   NS_IMETHOD InsertFromDrop(nsIDOMEvent *aEvent)=0;
 
-  /**
-   * Insert a break into the content model.<br>
-   * The interpretation of a break is up to the rule system:
-   * it may enter a character, split a node in the tree, etc.
-   */
-  NS_IMETHOD InsertBreak()=0;
-
-  /**
-   * InsertText() Inserts a string at the current location, given by the selection.
-   * If the selection is not collapsed, the selection is deleted and the insertion
-   * takes place at the resulting collapsed selection.
-   *
-   * NOTE: what happens if the string contains a CR?
-   *
-   * @param aString   the string to be inserted
-   */
-  NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
+  /* ------------ HTML content methods -------------- */
 
   /**
    * Insert some HTML source at the current location
@@ -299,11 +261,6 @@ public:
     * @param aElement  An element in the document
     */
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement)=0;
-
-  /**
-    * Set selection to start of document
-    */
-  NS_IMETHOD SetCaretToDocumentStart()=0;
 
   /**
    * SetParagraphFormat       Insert a block paragraph tag around selection

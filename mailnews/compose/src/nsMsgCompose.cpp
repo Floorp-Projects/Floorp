@@ -54,7 +54,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsTextFormatter.h"
 #include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
+#include "nsIPlaintextEditor.h"
 #include "nsEscape.h"
 #include "plstr.h"
 #include "nsIDocShell.h"
@@ -312,8 +312,8 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
         // This should set the cursor after the body but before the sig
 		    case 0	:
 		    {
-		      nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
-          if (!htmlEditor)
+		      nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(editor);
+          if (!textEditor)
           {
             editor->BeginningOfDocument();
             break;
@@ -344,7 +344,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
           selection->Collapse(parent, offset+1);
 
           // insert a break at current selection
-          htmlEditor->InsertBreak();
+          textEditor->InsertLineBreak();
 
           // i'm not sure if you need to move the selection back to before the
           // break. expirement.

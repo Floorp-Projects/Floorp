@@ -32,6 +32,7 @@
 #include "nsIServiceManager.h"
 #include "nsIFrameSelection.h"
 #include "nsIHTMLEditor.h"
+#include "nsIPlaintextEditor.h"
 #include "nsEditorCID.h"
 #include "nsLayoutCID.h"
 #include "nsFormControlHelper.h"
@@ -56,7 +57,6 @@
 #include "nsIDeviceContext.h" // to measure fonts
 #include "nsIPresState.h" //for saving state
 #include "nsLinebreakConverter.h" //to strip out carriage returns
-#include "nsIEditorMailSupport.h"
 
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -1841,8 +1841,8 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
       rv = NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIEditorMailSupport> mailEditor(do_QueryInterface(mEditor));
-  if (mailEditor)
+  nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryInterface(mEditor));
+  if (textEditor)
   {
     nsHTMLValue colAttr;
     nsresult    colStatus;
@@ -1876,21 +1876,16 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
         col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
         col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
       }
-      mailEditor->SetBodyWrapWidth(col);
+      textEditor->SetBodyWrapWidth(col);
       delete spec;
     }
-  }
 
-  // Set max text field length
-
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-  {
+    // Set max text field length
     PRInt32 maxLength;
     rv = GetMaxLength(&maxLength);
     if (NS_CONTENT_ATTR_NOT_THERE != rv)
     { 
-      htmlEditor->SetMaxTextLength(maxLength);
+      textEditor->SetMaxTextLength(maxLength);
     }
   }
     
@@ -2657,16 +2652,16 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
     PRInt32 maxLength;
     nsresult rv = GetMaxLength(&maxLength);
     
-    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-    if (htmlEditor)
+    nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(mEditor);
+    if (textEditor)
     {
       if (NS_CONTENT_ATTR_NOT_THERE != rv) 
       {  // set the maxLength attribute
-          htmlEditor->SetMaxTextLength(maxLength);
+          textEditor->SetMaxTextLength(maxLength);
         // if maxLength>docLength, we need to truncate the doc content
       }
       else { // unset the maxLength attribute
-          htmlEditor->SetMaxTextLength(-1);
+          textEditor->SetMaxTextLength(-1);
       }
     }
   } 
@@ -3019,8 +3014,11 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
 			mEditor->SetFlags(flags);
       if (currentValue.Length() < 1)
         mEditor->DeleteSelection(nsIEditor::eNone);
-      else
-        htmlEditor->InsertText(currentValue);
+      else {
+        nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          textEditor->InsertText(currentValue.GetUnicode());
+      }
       mEditor->SetFlags(savedFlags);
       if (selPriv)
         selPriv->EndBatchChanges();

@@ -39,19 +39,6 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEDITORMAILSUPPORT_IID; return iid; }
 
 
-  /** Get and set the body wrap width
-    * @param aWrapColumn - the column to wrap at. This is set as a COLS attribute
-    * on a PRE block.
-    * 
-    * Special values:
-    *    0  = wrap to window width
-    *    -1 = no wrap at all
-    * 
-    */
-  NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn)=0;
-  NS_IMETHOD SetBodyWrapWidth(PRInt32 aWrapColumn)=0;
-
-
   /** paste the text in the OS clipboard at the cursor position
     * as a quotation (whose representation is dependant on the editor type),
     * replacing the selected text (if any)

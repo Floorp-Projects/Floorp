@@ -20,6 +20,7 @@
 # This is a list of local files which get copied to the mozilla:dist:editor directory
 #
 
+nsIPlaintextEditor.idl
 nsIEditorShell.idl
 nsIEditorSpellCheck.idl
 nsIDocumentStateListener.idl

@@ -58,9 +58,8 @@ public:
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat);
   NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute);
   NS_IMETHOD DeleteSelection(nsIEditor::EDirection aAction);
-  NS_IMETHOD TypedText(const nsString& aString, PRInt32 aAction);
-  NS_IMETHOD InsertText(const nsString& aStringToInsert);
-  NS_IMETHOD InsertBreak();
+  NS_IMETHOD InsertText(const PRUnichar* aStringToInsert);
+  NS_IMETHOD InsertLineBreak();
   NS_IMETHOD Undo(PRUint32 aCount);
   NS_IMETHOD Redo(PRUint32 aCount);
   NS_IMETHOD BeginTransaction();

@@ -1308,7 +1308,7 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
     // If (resultingDocLength) + (length of input) > max, 
     //    set aOutString to subset of inString so length = max
     PRInt32 docLength;
-    res = mEditor->GetDocumentLength(&docLength);
+    res = mEditor->GetTextLength(&docLength);
     if (NS_FAILED(res)) { return res; }
     PRInt32 start, end;
     res = mEditor->GetTextSelectionOffsets(aSelection, start, end);

@@ -21,6 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsEditorEventListeners.h"
+#include "nsIPlaintextEditor.h"
 #include "nsEditor.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -183,8 +184,9 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   }
   else
     return NS_ERROR_FAILURE;  // Editor unable to handle this.
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-  if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
+
+  nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
+  if (!textEditor) return NS_ERROR_NO_INTERFACE;
 
   // if there is no charCode, then it's a key that doesn't map to a character,
   // so look for special keys using keyCode
@@ -242,7 +244,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
           return NS_OK; // let it be used for focus switching
 
         // else we insert the tab straight through
-        htmlEditor->EditorKeyPress(keyEvent);
+        textEditor->HandleKeyPress(keyEvent);
         ScrollSelectionIntoView(mEditor);
         aKeyEvent->PreventDefault(); // consumed
         return NS_OK; 
@@ -252,7 +254,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
         {
           //htmlEditor->InsertBreak();
-          htmlEditor->EditorKeyPress(keyEvent);
+          textEditor->HandleKeyPress(keyEvent);
           ScrollSelectionIntoView(mEditor);
           aKeyEvent->PreventDefault(); // consumed
         }
@@ -260,7 +262,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     }
   }
 
-  if (NS_SUCCEEDED(htmlEditor->EditorKeyPress(keyEvent)))
+  if (NS_SUCCEEDED(textEditor->HandleKeyPress(keyEvent)))
     ScrollSelectionIntoView(mEditor);
 
   return NS_OK; // we don't PreventDefault() here or keybindings like control-x won't work 
@@ -708,9 +710,8 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     if (NS_FAILED(rv) || !selection) 
       return rv?rv:NS_ERROR_FAILURE;
     
-    nsCOMPtr<nsIEditor> editor = do_QueryInterface(htmlEditor);
     nsCOMPtr<nsIDOMDocument> domdoc;
-    rv = editor->GetDocument(getter_AddRefs(domdoc));
+    rv = mEditor->GetDocument(getter_AddRefs(domdoc));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDOMDocument> sourceDoc;

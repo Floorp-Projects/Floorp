@@ -1664,7 +1664,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       PRUint32 len;
       nodeAsText = do_QueryInterface(startNode);
       nodeAsText->GetLength(&len);
-      if (len>startOffset)
+      if (len > (PRUint32)startOffset)
       {
         res = mEditor->DeleteText(nodeAsText,startOffset,len-startOffset);
         if (NS_FAILED(res)) return res;
@@ -5228,7 +5228,7 @@ nsHTMLEditRules::DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aS
       runStart = -1; // reset our run     
     }
     j++; // next char please!
-  } while (j<tempString.Length());
+  } while ((PRUint32)j < tempString.Length());
 
   return res;
 }
