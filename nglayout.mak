@@ -59,16 +59,14 @@ CVSCO = cvs -q co -P
 
 IMGLIB_BRANCH =
 PLUGIN_BRANCH =
-LIBPREF_BRANCH = XPCOM_BRANCH
 XPCOM_BRANCH =
 
 !if defined(MOZ_DATE)
 # CVS commands to pull the appropriate branch versions
-CVSCO_LIBPREF = $(CVSCO) -r $(LIBPREF_BRANCH)
 CVSCO_PLUGIN = $(CVSCO)
 !else
 # CVS commands to pull the appropriate branch versions
-CVSCO_LIBPREF = $(CVSCO) -r $(LIBPREF_BRANCH)
+CVSCO_LIBPREF = $(CVSCO)
 CVSCO_PLUGIN = $(CVSCO) -A
 !endif
 
@@ -179,7 +177,7 @@ pull_lizard:
 	$(CVSCO_LIZARD) $(MOZ_TOP)/lib/liblayer
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/zlib
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/libutil
-	$(CVSCO_LIZARD) $(MOZ_TOP)/nsprpub
+	$(CVSCO_LIZARD) -rNSPRPUB_RELEASE_3_0 $(MOZ_TOP)/nsprpub
 	$(CVSCO_LIZARD) $(MOZ_TOP)/sun-java
 	$(CVSCO_LIZARD) $(MOZ_TOP)/nav-java
 	$(CVSCO_LIZARD) $(MOZ_TOP)/js
