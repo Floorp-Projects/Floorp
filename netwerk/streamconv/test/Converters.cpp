@@ -26,6 +26,19 @@ TestConverter::Convert(nsIInputStream *aFromStream,
     nsresult rv = aFromStream->Read(buf, 1024, &read);
     if (NS_FAILED(rv) || read == 0) return rv;
 
+    // verify that the data we're converting matches the from type
+    // if it doesn't then we're being handed the wrong data.
+    nsString from(aFromType);
+    char *fromMIME = from.ToNewCString();
+    char fromChar = *fromMIME;
+    nsMemory::Free(fromMIME);
+
+    if (fromChar != buf[0]) {
+        printf("We're receiving %c, but are supposed to have %c.\n", buf[0], fromChar);
+        return NS_ERROR_FAILURE;
+    }
+
+
     // Get the first character 
     nsString to(aToType);
     char *toMIME = to.ToNewCString();
