@@ -43,6 +43,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 #ifdef XP_WIN
+#include <varargs.h>
 #include <winbase.h>
 #include <winreg.h>
 #endif
