@@ -269,12 +269,14 @@ function showIncompatibleError(aDS)
   var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                       .getService(Components.interfaces.nsIStringBundleService);
   var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
-  var title = extensionStrings.GetStringFromName("incompatibleTitle");
+  var params = [extensionStrings.GetStringFromName("extension")];
+  var title = extensionStrings.formatStringFromName("incompatibleTitle", 
+                                                    params, params.length);
   
   var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
   var brandShortName = brandStrings.GetStringFromName("brandShortName");
 
-  var params, message;
+  var message;
   var metadata = {};
   getItemMetadata(aDS, metadata);
   
@@ -329,6 +331,72 @@ function showInvalidVersionError(aItemName, aVersion)
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                      .getService(Components.interfaces.nsIPromptService);
   ps.alert(null, title, message);
+}
+
+function showOldThemeError(aDS)
+{
+  var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                      .getService(Components.interfaces.nsIStringBundleService);
+  var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
+  var params = [extensionStrings.GetStringFromName("theme")];
+  var title = extensionStrings.formatStringFromName("incompatibleTitle", 
+                                                    params, params.length);
+
+  var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+  var brandShortName = brandStrings.GetStringFromName("brandShortName");
+  var appVersion = extensionStrings.GetStringFromName("incompatibleOlder");
+  
+  try {  
+    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                        .getService(Components.interfaces.nsIRDFService);
+    
+    var rdfc = Components.classes["@mozilla.org/rdf/container;1"]
+                         .createInstance(Components.interfaces.nsIRDFContainer);
+    rdfc.Init(aDS, rdf.GetResource("urn:mozilla:skin:root"));
+    
+    var elts = rdfc.GetElements();
+    var nameArc = rdf.GetResource(CHROME_NS("displayName"));
+    while (elts.hasMoreElements()) {
+      var elt = elts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      themeName = stringData(aDS.GetTarget(elt, nameArc, true));
+      if (themeName) 
+        break;
+    }
+  }
+  catch (e) {
+    themeName = extensionStrings.GetStringFromName("incompatibleThemeName");
+  }
+  
+  params = [themeName, "", brandShortName, themeName, "", brandShortName, appVersion];
+  var message = extensionStrings.formatStringFromName("incompatibleMessageSingleAppVersion",
+                                                      params, params.length);
+  var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                     .getService(Components.interfaces.nsIPromptService);
+  ps.alert(null, title, message);
+}
+
+function showMissingFileError(aSourceFile, aMissingFileName)
+{
+  var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                      .getService(Components.interfaces.nsIStringBundleService);
+  var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
+  var title = extensionStrings.GetStringFromName("missingFileTitle");
+
+  var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+  var brandShortName = brandStrings.GetStringFromName("brandShortName");
+  var params = [brandShortName, aMissingFileName];
+  var message = extensionStrings.formatStringFromName("missingFileMessage", params, params.length);
+  
+  var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                     .getService(Components.interfaces.nsIPromptService);
+  ps.alert(null, title, message);
+
+  var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+                                 .getService(Components.interfaces.nsIConsoleService);
+  params = [aSourceFile, aMissingFileName];
+  var consoleMessage = extensionStrings.formatStringFromName("missingFileConsoleMessage",
+                                                             params, params.length);
+  consoleService.logStringMessage(consoleMessage);
 }
 
 function getItemMetadata(aDS, aResult)
@@ -1092,6 +1160,34 @@ nsThemeInstaller.prototype = {
                               .createInstance(Components.interfaces.nsIZipReader);
     zipReader.init(aJARFile);
     zipReader.open();
+    
+    try {
+      zipReader.test(FILE_INSTALL_MANIFEST);
+    }
+    catch (e) {
+      // If the zip reader returned an error code here it means that the install.rdf
+      // file was not found in the theme jar file - i.e. it was an old style theme. 
+      // There's no reason for people to be installing or maintaining such themes 
+      // anymore as there is no practical use for them, so we should throw an error
+      // here and bail. 
+      try {
+        zipReader.test(FILE_CHROME_MANIFEST);
+
+        // Load the contents.rdf file from the .jar file if present and show a detailed
+        // error.         
+        var tempChromeManifest = getFile(extDirKey,
+                                         [DIR_EXTENSIONS, DIR_TEMP, FILE_CHROME_MANIFEST]);
+        zipReader.extract(FILE_CHROME_MANIFEST, tempChromeManifest);
+        var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                             .getService(Components.interfaces.nsIRDFService);
+        dumpFile(zipReader.file);
+        showOldThemeError(rdfs.GetDataSourceBlocking(getURLSpecFromFile(tempChromeManifest)));
+        tempChromeManifest.remove(false);
+      }
+      catch(e) {
+        showMissingFileError(aJARFile, FILE_CHROME_MANIFEST);
+      }
+    }
     
     var themeManifest = getFile(extDirKey,
                                 [DIR_EXTENSIONS, DIR_TEMP, getRandomFileName("install", "rdf")]);
