@@ -197,6 +197,7 @@ private:
     PRUint32        mMaxSize;
 
     nsSegment      *mSegments;
+    nsSegment      *mSegmentsLast; 
 
     nsSegment      *mWriteSegment;
     PRUint32        mWriteCursor;

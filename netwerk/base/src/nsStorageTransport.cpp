@@ -86,6 +86,7 @@ nsStorageTransport::nsStorageTransport()
     , mSegmentSize(DEFAULT_SEGMENT_SIZE)
     , mMaxSize(DEFAULT_BUFFER_SIZE)
     , mSegments(nsnull)
+    , mSegmentsLast(nsnull)
     , mWriteSegment(nsnull)
     , mWriteCursor(0)
 {
@@ -226,11 +227,9 @@ nsStorageTransport::AppendSegment(nsSegment *aSegment)
 {
     if (!mSegments)
         mSegments = aSegment;
-    else {
-        nsSegment *s = mSegments;
-        for (; s && s->next; s = s->next);
-        s->next = aSegment;
-    }
+    else
+        mSegmentsLast->next = aSegment;
+    mSegmentsLast = aSegment;
 }
 
 void
@@ -249,7 +248,7 @@ nsStorageTransport::TruncateTo(PRUint32 aOffset)
     if (aOffset < mWriteCursor) {
         if (aOffset == 0) {
             DeleteSegments(mSegments);
-            mSegments = nsnull;
+            mSegments = mSegmentsLast = nsnull;
             mWriteSegment = nsnull;
         }
         else {
@@ -265,6 +264,7 @@ nsStorageTransport::TruncateTo(PRUint32 aOffset)
                 DeleteSegments(s->next);
                 s->next = nsnull;
             }
+            mSegmentsLast = s; 
             mWriteSegment = s;
         }
     }
