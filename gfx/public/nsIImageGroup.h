@@ -53,7 +53,7 @@ class nsIURLGroup;
 class nsIImageGroup : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IIMAGEGROUP_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEGROUP_IID)
 
   /**
    * Initialize an image group with a device context. All images

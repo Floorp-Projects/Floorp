@@ -39,7 +39,7 @@ class nsIImage;
  */
 class nsIImageRequest : public nsISupports {
 public:  
-  static const nsIID& GetIID() { static nsIID iid = NS_IIMAGEREQUEST_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEREQUEST_IID)
 
   /// @return the image object associated with the request.
   virtual nsIImage* GetImage() = 0;
