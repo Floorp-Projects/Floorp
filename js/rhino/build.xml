@@ -16,6 +16,8 @@ Requires Ant version 1.2
   
     <property name="src.dir" value="."/>
     <property name="src.examples" value="${src.dir}/examples"/>
+    <property name="src.debugger" 
+              value="${src.dir}/org/mozilla/javascript/tools/debugger"/>
   
     <property name="build.dir" value="./build"/>
     <property name="build.dest" value="${build.dir}/classes"/>
@@ -35,6 +37,8 @@ Requires Ant version 1.2
     <property name="dist.docsrc.dir" value="${src.dir}/docs"/>
     <available file="${cvs.javasrc.dir}/org" property="in-cvs-tree"/>
     <available classname="com.ibm.bsf.BSFEngine" property="bsf.present"/>
+    <available file="${src.debugger}/AbstractCellEditor.java"
+               property="swing-ex-available"/>
   </target>
 
   <target name="init" depends="properties">
@@ -50,7 +54,55 @@ Requires Ant version 1.2
     <mkdir dir="${dist.apidocs}"/>
   </target>
 
-  <target name="compile-from-cvs" if="in-cvs-tree" depends="prepare">
+  <target name="get-swing-ex" unless="swing-ex-available">
+    <!-- Download source from Sun's site, unzip it, remove
+         the files we don't need, and change the package
+    -->
+    <get src="http://java.sun.com/products/jfc/tsc/articles/treetable2/downloads/src.zip" dest="${build.dir}/swingExSrc.zip"/>
+    <unzip src="${build.dir}/swingExSrc.zip" dest="${src.debugger}"/>
+    <delete file="${src.debugger}/FileSystemModel2.java" />
+    <delete file="${src.debugger}/MergeSort.java" />
+    <delete file="${src.debugger}/TreeTableExample2.java" />
+    <replace file="${src.debugger}/AbstractCellEditor.java">
+       <replacetoken>import java.awt.Component;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger;
+         import java.awt.Component;
+       </replacevalue>
+    </replace>
+    <replace file="${src.debugger}/AbstractTreeTableModel.java">
+       <replacetoken>import javax.swing.tree.*;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger;
+         import javax.swing.tree.*;
+       </replacevalue>
+    </replace>
+    <replace file="${src.debugger}/JTreeTable.java">
+       <replacetoken>import javax.swing.*;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger;
+         import javax.swing.*;
+       </replacevalue>
+    </replace>
+    <replace file="${src.debugger}/TreeTableModel.java">
+       <replacetoken>import javax.swing.tree.TreeModel;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger;
+         import javax.swing.tree.TreeModel;
+       </replacevalue>
+    </replace>
+    <replace file="${src.debugger}/TreeTableModelAdapter.java">
+       <replacetoken>import javax.swing.JTree;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger;
+         import javax.swing.JTree;
+       </replacevalue>
+    </replace>
+  </target>
+
+  <target name="compile-from-cvs" 
+          if="in-cvs-tree" 
+          depends="prepare,get-swing-ex">
     <javac srcdir="${cvs.javasrc.dir}" 
            destdir="${build.dest}" 
            includes="org/**/*.java"
