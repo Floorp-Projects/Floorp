@@ -147,6 +147,8 @@ protected:
   
   NS_IMETHOD ReParentContentOfRange(nsIDOMRange *aRange, nsString &aParentTag);
 
+  NS_IMETHOD CanContainBlock(nsString &aBlockChild, nsString &aBlockParent, PRBool &aCanContain);
+
 // EVENT LISTENERS AND COMMAND ROUTING NEEDS WORK
 // For now, the listners are tied to the nsTextEditor class
 //
