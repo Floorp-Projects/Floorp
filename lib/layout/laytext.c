@@ -4825,7 +4825,7 @@ void lo_RelayoutTextElements ( MWContext * context,
 	block->endTextElement = NULL;
 	
 	if ( fromElement == NULL )
-      fromElement = lo_tv_GetNextLayoutElement ( state, (LO_Element*)block, FALSE );
+      fromElement = (LO_TextStruct *)lo_tv_GetNextLayoutElement ( state, (LO_Element*)block, FALSE );
 
     if ( fromElement == NULL)
       fromElement = (LO_TextStruct *) startElement;
