@@ -112,7 +112,6 @@ struct nsStyleSpacing: public nsStyleStruct {
 
 protected:
   nsStyleSpacing(void);
-  ~nsStyleSpacing(void);
 };
 
 struct nsStyleBorder: public nsStyleStruct {
@@ -123,7 +122,6 @@ struct nsStyleBorder: public nsStyleStruct {
 
 protected:
   nsStyleBorder(void);
-  ~nsStyleBorder(void);
 };
 
 struct nsStyleList : public nsStyleStruct {
@@ -156,7 +154,6 @@ struct nsStylePosition : public nsStyleStruct {
 
 protected:
   nsStylePosition();
-  ~nsStylePosition();
 };
 
 // XXX missing: length, inherit and percentage support
@@ -174,7 +171,6 @@ struct nsStyleText : public nsStyleStruct {
 
 protected:
   nsStyleText();
-  ~nsStyleText();
 };
 
 struct nsStyleDisplay : public nsStyleStruct {
@@ -187,7 +183,6 @@ struct nsStyleDisplay : public nsStyleStruct {
 
 protected:
   nsStyleDisplay();
-  ~nsStyleDisplay();
 };
 
 //----------------------------------------------------------------------
