@@ -86,7 +86,7 @@ private:
 
     static PRBool mFSCharsetIsUTF8;
 
-    void MakeDirty();
+    void MakeDirty() { mDirty = PR_TRUE; }
     nsresult ResolveAndStat(PRBool resolveTerminal);
     nsresult ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath);
     
