@@ -29,7 +29,7 @@ classic.jar:
         skin/classic/browser/Close-tab.png            (skin/Close-tab.png)
         skin/classic/browser/Go.png                   (skin/Go.png)
         skin/classic/browser/Info.png                 (skin/Info.png)
-        skin/classic/browser/Search-bar.png           (skin/Search-bar.png)
+        skin/classic/browser/Search-bar.png           (skin/search-bar.png)
         skin/classic/browser/Secure.png               (skin/Secure.png)
         skin/classic/browser/Security-broken.png      (skin/Security-broken.png)
         skin/classic/browser/Throbber-small.png       (skin/Throbber-small.png)
