@@ -154,7 +154,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-xterm-updates  Update XTERM titles with current command."
 ac_help="$ac_help
-  --enable-mathml         Enable MathML (BROKEN) "
+  --enable-mathml         Enable MathML "
 ac_help="$ac_help
   --disable-verbose-config-defs
                           Do not output the contents of config-defs.h"
