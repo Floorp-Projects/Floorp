@@ -115,15 +115,8 @@ public:
   NS_IMETHOD           SetFocus(PRBool aRaise);
   NS_IMETHOD           GetAttention(void);
   NS_IMETHOD           Destroy();
-  nsWindow*            FindTopLevelWindow(); // returns nsnull if WE are top level
-  void                 ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
-#ifdef INCLUDE_XUL
-  NS_IMETHOD           SetWindowTranslucency(PRBool aTransparent);
-  NS_IMETHOD           GetWindowTranslucency(PRBool& aTransparent);
-  NS_IMETHOD           UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas);
   NS_IMETHOD           HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD           MakeFullScreen(PRBool aFullScreen);
-#endif
   NS_IMETHOD           SetIcon(const nsAString& aIcon);
   GdkCursor           *GtkCreateCursor(nsCursor aCursorType);
   virtual void         LoseFocus(void);
@@ -345,14 +338,14 @@ protected:
 
 #ifdef USE_XIM
 protected:
+  PRBool              mIMEEnable;
   static GdkFont      *gPreeditFontset;
   static GdkFont      *gStatusFontset;
   static GdkIMStyle   gInputStyle;
   static PLDHashTable gXICLookupTable;
-  PRPackedBool        mIMEEnable;
-  PRPackedBool        mIMECallComposeStart;
-  PRPackedBool        mIMECallComposeEnd;
-  PRPackedBool        mIMEIsBeingActivate;
+  PRBool	      mIMECallComposeStart;
+  PRBool	      mIMECallComposeEnd;
+  PRBool	      mIMEIsBeingActivate;
   nsWindow*           mIMEShellWindow;
   void                SetXICSpotLocation(nsIMEGtkIC* aXIC, nsPoint aPoint);
   void                SetXICBaseFontSize(nsIMEGtkIC* aXIC, int height);
@@ -364,18 +357,18 @@ protected:
   int                 mXICFontSize;
 
 public:
-  nsIMEGtkIC*        IMEGetInputContext(PRBool aCreate);
+  nsIMEGtkIC*	      IMEGetInputContext(PRBool aCreate);
 
-  void        ime_preedit_start();
-  void        ime_preedit_draw(nsIMEGtkIC* aXIC);
-  void        ime_preedit_done();
-  void        ime_status_draw();
+  void		    ime_preedit_start();
+  void 		    ime_preedit_draw(nsIMEGtkIC* aXIC);
+  void		    ime_preedit_done();
+  void		    ime_status_draw();
 
-  void         IMEUnsetFocusWindow();
-  void         IMESetFocusWindow();
-  void         IMEGetShellWindow();
-  void         IMEDestroyIC();
-  void         IMEBeingActivate(PRBool aActive);
+  void 		    IMEUnsetFocusWindow();
+  void 		    IMESetFocusWindow();
+  void 		    IMEGetShellWindow();
+  void 		    IMEDestroyIC();
+  void 		    IMEBeingActivate(PRBool aActive);
 #endif // USE_XIM 
 
 protected:
@@ -397,24 +390,17 @@ private:
                            GdkBitmap *window_mask);
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);
-
+  PRBool       mLastGrabFailed;
   void         NativeGrab(PRBool aGrab);
 
-  PRPackedBool mLastGrabFailed;
-  PRPackedBool mIsUpdating;
-  PRPackedBool mLeavePending;
-  PRPackedBool mRestoreFocus;
-
-  PRPackedBool mIsTranslucent;
-  // This bitmap tracks which pixels are transparent. We don't support
-  // full translucency at this time; each pixel is either fully opaque
-  // or fully transparent.
-  gchar*       mTransparencyBitmap;
+  PRBool       mIsUpdating;
 
   void DestroyNativeChildren(void);
 
   GtkWindow *mTransientParent;
 
+  PRBool       mLeavePending;
+  PRBool       mRestoreFocus;
 };
 
 //

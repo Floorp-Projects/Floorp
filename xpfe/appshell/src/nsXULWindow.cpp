@@ -874,7 +874,6 @@ void nsXULWindow::OnChromeLoaded()
     LoadSizeStateFromXUL();
 
     //LoadContentAreas();
-    LoadChromeHidingFromXUL();
 
     if (mCenterAfterLoad && !positionSet)
       Center(parentWindow, parentWindow ? PR_FALSE : PR_TRUE, PR_FALSE);
@@ -882,25 +881,6 @@ void nsXULWindow::OnChromeLoaded()
     if(mShowAfterLoad)
       SetVisibility(PR_TRUE);
   }
-}
-
-nsresult nsXULWindow::LoadChromeHidingFromXUL()
-{
-  NS_ENSURE_STATE(mWindow);
-
-  // Get <window> element.
-  nsCOMPtr<nsIDOMElement> windowElement;
-  GetWindowDOMElement(getter_AddRefs(windowElement));
-  NS_ENSURE_TRUE(windowElement, NS_ERROR_FAILURE);
-
-  nsAutoString attr;
-  nsresult rv = windowElement->GetAttribute(NS_LITERAL_STRING("hidechrome"), attr);
-
-  if (NS_SUCCEEDED(rv) && attr.EqualsIgnoreCase("true")) {
-    mWindow->HideWindowChrome(PR_TRUE);
-  }
-
-  return NS_OK;
 }
 
 PRBool nsXULWindow::LoadPositionFromXUL()
