@@ -122,30 +122,89 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
     GenerateDragDropEnterExit(aPresContext, aEvent);
     break;
   case NS_GOTFOCUS:
-#if 0
-    nsIViewManager* viewMgr;
-    if (NS_SUCCEEDED(aView->GetViewManager(viewMgr)) && viewMgr) {
-      nsIView* rootView;
-      viewMgr->GetRootView(rootView);
-      if (rootView == aView) {
-        printf("send focus\n");
+    {
+      nsIContent* newFocus;
+      mCurrentTarget->GetContent(&newFocus);
+      if (newFocus) {
+        nsIFocusableContent *focusChange;
+        if (NS_SUCCEEDED(newFocus->QueryInterface(kIFocusableContentIID,
+                                                  (void **)&focusChange))) {
+          NS_RELEASE(focusChange);
+          NS_RELEASE(newFocus);
+          break;
+        }
+        NS_RELEASE(newFocus);
       }
-      else {
-        printf("don't send focus\n");
+
+      //fire focus
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_FOCUS_CONTENT;
+
+      if (!mDocument) {
+        nsCOMPtr<nsIPresShell> presShell;
+        aPresContext.GetShell(getter_AddRefs(presShell));
+        if (presShell) {
+          presShell->GetDocument(&mDocument);
+        }
       }
-      NS_RELEASE(viewMgr);
+
+      if (mDocument) {
+        mCurrentTarget = nsnull;
+        mDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
     }
-#endif
-    //XXX Do we need window related focus change stuff here?
     break;
   case NS_LOSTFOCUS:
-    //XXX Do we need window related focus change stuff here?
+    {
+      nsIContent* oldFocus;
+      mCurrentTarget->GetContent(&oldFocus);
+      if (oldFocus) {
+        nsIFocusableContent *focusChange;
+        if (NS_SUCCEEDED(oldFocus->QueryInterface(kIFocusableContentIID,
+                                                  (void **)&focusChange))) {
+          NS_RELEASE(focusChange);
+          NS_RELEASE(oldFocus);
+          break;
+        }
+        NS_RELEASE(oldFocus);
+      }
+
+      //fire blur
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_BLUR_CONTENT;
+
+      if (!mDocument) {
+        nsCOMPtr<nsIPresShell> presShell;
+        aPresContext.GetShell(getter_AddRefs(presShell));
+        if (presShell) {
+          presShell->GetDocument(&mDocument);
+        }
+      }
+
+      if (mDocument) {
+        mCurrentTarget = nsnull;
+        mDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
+    }
     break;
   case NS_KEY_PRESS:
+  case NS_KEY_DOWN:
+  case NS_KEY_UP:
     {
-      nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-      if (keyEvent->isControl) {
-        keyEvent->charCode += 64;
+      if (mCurrentFocus) {
+        mCurrentTargetContent = mCurrentFocus;
+        NS_ADDREF(mCurrentTargetContent);
+      }
+
+      if (aEvent->message == NS_KEY_PRESS) {
+        nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+        if (keyEvent->isControl) {
+          keyEvent->charCode += 64;
+        }
       }
     }
     break;
@@ -995,7 +1054,24 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
   }
 
   *aFrame = mCurrentTarget;
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsEventStateManager::GetEventTargetContent(nsIContent** aContent)
+{
+  if (mCurrentTargetContent) {
+    *aContent = mCurrentTargetContent;
+    NS_IF_ADDREF(*aContent);
+    return NS_OK;      
+  }
+  
+  if (mCurrentTarget) {
+    mCurrentTarget->GetContent(aContent);
+    return NS_OK;
+  }
+
+  *aContent = nsnull;
   return NS_OK;
 }
 
