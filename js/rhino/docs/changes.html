@@ -1,24 +1,41 @@
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
-<html>
-<head>
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en"><html><head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="Author" content="Norris Boyd">
    <meta name="GENERATOR" content="Mozilla/4.75 [en] (Windows NT 5.0; U) [Netscape]">
-   <meta name="KeyWords" content="Rhino, JavaScript, Java">
-   <title>Change Log</title>
-</head>
-<body bgcolor="#FFFFFF">
+   <meta name="KeyWords" content="Rhino, JavaScript, Java"><title>Change Log</title></head>
+
+<body bgcolor="#ffffff">
 
 <center>
 <h1>
 Change Log for Significant Rhino Changes</h1></center>
 This is a log of significant changes since the release of Rhino 1.5 Release
-3.
-<p><i>None yet!</i>
+3.<br>
+<br>
+<h3>Rhino debug API changes</h3>
+
+<div class="moz-text-plain" wrap="true" graphical-quote="true" style="font-family: -moz-fixed; font-size: 13px;" lang="x-unicode">A new, incompatible Rhino debug API gives an option to monitor <br>
+entering/leaving of script functions while decreasing the amount of code to <br>
+implement the API in the Rhino core.<br>
+<br>
+The main difference between the old and new API is that the application needs <br>
+to implement both org.mozilla.javascript.debugger.Debugger and <br>
+org.mozilla.javascript.debugger.DebugFrame interfaces to receive debug <br>
+information during script execution. See the API documentation for these <br>
+classes for details:<br>
+<pre wrap=""><a class="moz-txt-link-freetext" href="http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/debug/DebugFrame.java">http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/debug/DebugFrame.java</a><br><a class="moz-txt-link-freetext" href="http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/debug/Debugger.java">http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/debug/Debugger.java</a><br><br>In addition the org.mozilla.javascript.debugger.DebuggableEngine interface <br>and the getDebuggableEngine method in org.mozilla.javascript.Context are <br>replaced by 3 Context methods: setDebugger, getDebugger and <br>getDebuggerContextData to set/get debugger and its Context data in the <br>current thread Context:<br><a class="moz-txt-link-freetext" href="http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/Context.java">http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/Context.java</a><br><br>The following gives few examples how to update your current application to <br>the new API.<br><br>1. Setting and querying a Debugger implementation:<br><br>Old API:<br>cx.getDebuggableEngine.setDebugger(debugger);<br>cx.getDebuggableEngine.getDebugger();<br><br>New API:<br>cx.setDebugger(debugger);<br>cx.getDebugger();<br><br>2. Monitoring execution of each line in the script:<br><br>Old implementation:<br><br>public MyDebugger implement Debugger {<br><br>    public void handleCompilationDone(Context cx, DebuggableScript fnOrScript,<br>                                      StringBuffer source)<br>    {<br>    }<br><br>    void handleBreakpointHit(Context cx) {<br>        DebugFrame frame = cx.getDebuggableEngine().getFrame(0);<br>        System.out.println("New line:" + frame.getLineNumber());<br>    }<br><br>    void handleExceptionThrown(Context cx, Object exception)<br>    {<br>    }<br>}<br>...<br>cx.getDebuggableEngine.setDebugger(new MyDebugger());<br>cx.getDebuggableEngine.setBreakNextLine(true);<br><br>New implementation:<br><br>public MyDebugger implement Debugger {<br><br>    public void handleCompilationDone(Context cx, DebuggableScript fnOrScript,<br>                                      StringBuffer source)<br>    {<br>    }<br><br>    public DebugFrame enterFrame(Context cx, Scriptable scope,<br>                                 Scriptable thisObj, Object[] args,<br>                                 DebuggableScript fnOrScript)<br>    {<br>        return new MyFrame();<br>    }<br><br>    private class MyFrame implements DebugFrame {<br>        public void onLineChange(Context cx, int lineNumber, boolean breakpoint)<br>        {<br>            System.out.println("New line:" + lineNumber);<br>        }<br><br>        public void onExceptionThrown(Context cx, Throwable ex)<br>        {<br>        }<br><br>        public void onExit(Context cx, boolean byThrow, Object resultOrException)<br>        {<br>        }<br>    }<br><br>    void handleBreakpointHit(Context cx) {<br>        DebugFrame frame = cx.getDebuggableEngine().getFrame(0);<br>        System.out.println("New line:" + frame.getLineNumber());<br>    }<br><br>    void handleExceptionThrown(Context cx, Object exception) {<br>    }<br>}<br><br>cx.setDebugger(new MyDebugger());<br><br>Note the in the new implementation the application can monitor function <br>enter/exit by customizing enterFrame and onExit in the above code.<br><br>3. Breakpoint handling<br><br>Old implementation:<br><br>public MyDebugger implement Debugger {<br><br>    public void handleCompilationDone(Context cx, DebuggableScript fnOrScript,<br>                                      StringBuffer source)<br>    {<br>        int breakpointLine = ...;<br>        fnOrScript.placeBreakpoint(breakpointLine);<br>    }<br><br>    void handleBreakpointHit(Context cx) {<br>        DebugFrame frame = cx.getDebuggableEngine().getFrame(0);<br>        System.out.println("Breakpoint hit: "+frame.getSourceName()+":"+frame.getLineNumber());<br>    }<br><br>    void handleExceptionThrown(Context cx, Object exception)<br>    {<br>    }<br>}<br>...<br>cx.getDebuggableEngine.setDebugger(new MyDebugger());<br><br>New implementation:<br><br>public MyDebugger implement Debugger {<br><br>    public void handleCompilationDone(Context cx, DebuggableScript fnOrScript,<br>                                      StringBuffer source)<br>    {<br>        int breakpointLine = ...;<br>        fnOrScript.placeBreakpoint(breakpointLine);<br>    }<br><br>    public DebugFrame enterFrame(Context cx, Scriptable scope,<br>                                 Scriptable thisObj, Object[] args,<br>                                 DebuggableScript fnOrScript)<br>    {<br>        return new MyFrame(fnOrScript);<br>    }<br><br>    private class MyFrame implements DebugFrame {<br><br>        DebuggableScript script;<br><br>        MyFrame(DebuggableScript script)<br>        {<br>            this.script = script;<br>        }<br><br>        public void onLineChange(Context cx, int lineNumber, boolean breakpoint)<br>        {<br>            if (breakpoint) {<br>                System.out.println("Breakpoint hit: "+script.getSourceName()+":"+lineNumber);<br>            }<br>        }<br><br>        public void onExceptionThrown(Context cx, Throwable ex)<br>        {<br>        }<br><br>        public void onExit(Context cx, boolean byThrow, Object resultOrException)<br>        {<br>        }<br>    }<br><br>    void handleBreakpointHit(Context cx) {<br>        DebugFrame frame = cx.getDebuggableEngine().getFrame(0);<br>        System.out.println("New line:" + frame.getLineNumber());<br>    }<br><br>    void handleExceptionThrown(Context cx, Object exception) <br>    {<br>    }<br>}<br><br>cx.setDebugger(new MyDebugger());<br><br>Here the application stores fnOrScript in the MyFrame to access it in <br>onLineChange where it check the passed breakpoint flag to see if the new line <br>has a breakpoint placed on it.<br><br>See also Rhino Debugger that fully explore the new API:<br><a class="moz-txt-link-freetext" href="http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/debugger/Main.java">http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/debugger/Main.java</a><br><br><br></pre>
+</div>
+<h3>WrapFactory introduced, WrapHandler deprecated</h3>
+A design flaw in the WrapHandler interface (a call to a Java contructor from
+JavaScript would result in a call to wrap the result, which would then be
+cast to a Scriptable) inspired the deprecation of that interface and the
+introduction of a new class, WrapFactory, that contains a new method called
+on the result of a constructor call. <br>
+<br>
 <h3>
 
-<hr WIDTH="100%"><br>
+<hr width="100%"><br>
 <a href="index.html">back to top</a></h3>
 
-</body>
-</html>
+<br>
+</body></html>
