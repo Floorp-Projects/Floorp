@@ -159,7 +159,6 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   virtual nsFontOS2* LoadGenericFont(HPS aPS, PRUnichar aChar, char** aName);
   virtual nsFontOS2* LoadFont(HPS aPS, nsString* aName);
 
-  static PLHashTable* gFontMaps;
   static nsGlobalFont* gGlobalFonts;
   static int gGlobalFontsCount;
 
@@ -207,7 +206,6 @@ public:
 protected:
   static PLHashTable* InitializeFamilyNames(void);
   static PLHashTable* gFamilyNames;
-  static PLHashTable* gFontWeights;
 };
 
 class nsFontEnumeratorOS2 : public nsIFontEnumerator
@@ -216,6 +214,10 @@ public:
   nsFontEnumeratorOS2();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFONTENUMERATOR
+
+protected:
+  static PLHashTable* InitializeFontHashes(void);
+  static PLHashTable* gFontTypes;
 };
 
 #endif
