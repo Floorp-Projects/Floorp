@@ -1851,23 +1851,27 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     uint32 nslots, i;
     jsval *newslots;
 
-    /* Allocate an object from the GC heap and zero it. */
-    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
-    if (!obj)
-        return NULL;
-
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (!proto) {
         if (!GetClassPrototype(cx, parent, clasp->name, &proto))
-            goto bad;
+            return NULL;
         if (!proto && !GetClassPrototype(cx, parent, js_Object_str, &proto))
-            goto bad;
+            return NULL;
     }
 
     /* Always call the class's getObjectOps hook if it has one. */
     ops = clasp->getObjectOps
           ? clasp->getObjectOps(cx, clasp)
           : &js_ObjectOps;
+
+    /*
+     * Allocate a zeroed object from the GC heap.  Do this *after* any other
+     * GC-thing allocations under GetClassPrototype or clasp->getObjectOps,
+     * to avoid displacing the newborn root for obj.
+     */
+    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    if (!obj)
+        return NULL;
 
     /*
      * Share proto's map only if it has the same JSObjectOps, and only if
