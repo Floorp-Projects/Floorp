@@ -140,7 +140,6 @@ table {
 /* must never set padding in td, th */
 td, th {
   vertical-align: inherit;
-  background-color: inherit;
   text-align: left;
 /* border-style: inset; */
   border-color: #c0c0c0;
@@ -157,22 +156,18 @@ caption {
 tr {
   display: table-row;
   vertical-align: inherit;
-  background-color: inherit;
 }
 tbody {
   display: table-row-group;
   vertical-align: middle;
-  background-color: inherit;
 }
 thead {
   display: table-header-group;
   vertical-align: middle;
-  background-color: inherit;
 }
 tfoot {
   display: table-footer-group;
   vertical-align: middle;
-  background-color: inherit;
 }
 col {
   display: table-column;
