@@ -666,7 +666,7 @@ treechildren {
  font: inherit; 
 } 
 
-treerow[selectedrow="true"] { 
+treeitem[selected="true"] > treerow { 
  color: white;
  background-color: #666699;
  font: inherit; 
