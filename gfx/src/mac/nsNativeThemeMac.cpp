@@ -98,6 +98,7 @@ nsNativeThemeMac::nsNativeThemeMac()
     sTextfieldBorderSize.right = sTextfieldBorderSize.bottom = 2;
     sTextfieldBGTransparent = PR_FALSE;
     sListboxBGTransparent = PR_TRUE;
+    sTextfieldDisabledBGColorID = nsILookAndFeel::eColor__moz_field;
   }
 }
 
