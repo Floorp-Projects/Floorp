@@ -264,11 +264,6 @@ public:
    */
 	NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType) = 0;
 
-	/**
-	 * Get the type of the webshell. Indicates whether the webshell is content or chrome.
-	 */
-	NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType) = 0;
-
   /*
    * Get Chrome Event Handler 
    */
