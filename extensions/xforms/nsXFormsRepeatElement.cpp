@@ -423,8 +423,9 @@ nsXFormsRepeatElement::Refresh()
           rv = riElement->AppendChild(childClone, getter_AddRefs(newNode));
           NS_ENSURE_SUCCESS(rv, rv);
         
-          rv = child->GetNextSibling(getter_AddRefs(child));
+          rv = child->GetNextSibling(getter_AddRefs(newNode));
           NS_ENSURE_SUCCESS(rv, rv);
+          child = newNode;
         }
 
         // Append node
