@@ -129,3 +129,46 @@ sub SqlQuote {
     s/\\/\\\\/g;
     return $_;
 }
+
+
+# Returns true if the given directory or filename is one of the hidden ones
+# that we don't want to show users.
+
+sub IsHidden {
+    my ($name) = (@_);
+    $name =~ s:///*:/:g;        # Remove any multiple slashes.
+    if (!defined @hidelist) {
+        if (open(HIDE, "<data/hidelist")) {
+            while (<HIDE>) {
+                chop;
+                s/^\s*//g;      # Strip leading whitespace
+                s/\s*$//g;      # Strip trailing whitespace
+                if ( /^#/ || /^$/) {
+                    next;
+                }
+                
+                push(@hidelist, $_);
+            }
+            close HIDE;
+        } else {
+            @hidelist = ();
+        }
+    }
+    foreach my $item (@hidelist) {
+        if ($name =~ m/$item/) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+sub CheckHidden {
+    my ($name) = (@_);
+    if (IsHidden($name)) {
+        $| = 1;
+        print "";
+        die "Security violation; not allowed to access $name.";
+    }
+}
+    
+        

@@ -58,6 +58,8 @@ if( $rev ne "" ){
 print "
 <head><title>Repository Directory $CVS_ROOT/$dir $s</title></head>";
 
+CheckHidden("$CVS_ROOT/$dir");
+
 $output = "<DIV ALIGN=LEFT>";
 
 ($dir_head, $dir_tail) = $dir =~ m@(.*/)?(.+)@;

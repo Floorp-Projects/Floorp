@@ -177,13 +177,19 @@ sub query_checkins {
 # print "</pre>";
 
 
+        $key = "$ci->[$CI_DIR]/$ci->[$CI_FILE]";
+        if (IsHidden("$ci->[$CI_REPOSITORY]/$key")) {
+            next;
+        }
+
+
+
         if( $have_mod_map &&
            !&in_module( $mod_map, $ci->[$CI_DIR], $ci->[$CI_FILE] ) ){
             next;
         }
 
         if( $begin_tag) {
-            $key = "$ci->[$CI_DIR]/$ci->[$CI_FILE]";
             $rev = $begin_tag->{$key};
             print "<BR>$key begintag is $rev<BR>\n";
             if ($rev == "" || rev_is_after($ci->[$CI_REV], $rev)) {
@@ -192,7 +198,6 @@ sub query_checkins {
         }
 
         if( $end_tag) {
-            $key = "$ci->[$CI_DIR]/$ci->[$CI_FILE]";
             $rev = $end_tag->{$key};
             print "<BR>$key endtag is $rev<BR>\n";
             if ($rev == "" || rev_is_after($rev, $ci->[$CI_REV])) {

@@ -28,8 +28,6 @@
 #
 ##############################################################################
 
-# $Id: cvsblame.pl,v 1.1 1998/06/16 21:42:56 terry Exp $
-
 require 'timelocal.pl';         # timestamps
 require 'ctime.pl';             # human-readable dates
 
@@ -133,6 +131,10 @@ sub get_token {
     # Undo escape-coding of @ characters.
     $token =~ s/@@/@/og;
         
+    # Digest any extra blank lines.
+    while (($line_buffer =~ /^$/) && !eof(RCSFILE)) {
+	$line_buffer = <RCSFILE>;
+    }
     return $token;
 }
 
@@ -492,6 +494,8 @@ sub parse_cvs_file {
     #           (%revision_deltatext)
 
     @revision_map = ();
+    CheckHidden($rcs_pathname);
+
     die "$progname: error: This file appeared to be under CVS control, " . 
         "but the RCS file is inaccessible.\n(Couldn't open '$rcs_pathname')\n"
             if !open (RCSFILE, "< $rcs_pathname");
@@ -653,6 +657,8 @@ sub read_cvs_entries
 
     $cvsdir = $directory . '/CVS';
 
+    CheckHidden($cvsdir);
+
     return if (! -d $cvsdir);
 
     return if !open(ENTRIES, "< $cvsdir/Entries");
@@ -677,6 +683,8 @@ sub read_cvs_entries
 
 # Given path to file in CVS working directory, compute path to RCS
 # repository file.  Cache that info for future use.
+
+
 sub rcs_pathname {
     ($pathname) = @_;
 
@@ -689,7 +697,7 @@ sub rcs_pathname {
     if (!defined($repository{$directory})) {
         &read_cvs_entries($directory);
     }
-        
+       
     if (!defined($cvs_revision{$pathname})) {
         die "$progname: error: File '$pathname' does not appear to be under" .
             " CVS control.\n"

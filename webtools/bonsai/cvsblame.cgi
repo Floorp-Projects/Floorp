@@ -128,7 +128,11 @@ print "</BODY></HTML>\n";
 exit;
 
 found_file:
+
     ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
+
+CheckHidden($rcs_filename);
+
 
 # Parse the rcs file ($opt_rev is passed as a global)
 #
@@ -209,7 +213,11 @@ print $font_tag;
 #
 $start_of_mark = 0;
 $end_of_mark = 0;
-$line_num_width = int(log($#revision_map)/log(10)) + 1;
+$count = $#revision_map;
+if ($count == 0) {
+    $count = 1;
+}
+$line_num_width = int(log($count)/log(10)) + 1;
 $revision_width = 3;
 $author_width = 5;
 $line = 0;

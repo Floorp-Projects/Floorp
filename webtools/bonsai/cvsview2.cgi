@@ -381,6 +381,7 @@ if ($opt_command eq 'DIFF'          ||
     &die("command $opt_command: file not defined in URL\n") if $opt_file eq '';
     &die("command $opt_command: rev1 not defined in URL\n") if $opt_rev1 eq '';
     &die("command $opt_command: rev2 not defined in URL\n") if $opt_rev2 eq '';
+
 }
 
 # Propagate diff options to created links
@@ -442,10 +443,6 @@ sub do_diff_frameset {
 # Create links to document created by DIFF command.
 sub do_diff_links {
 
-    chdir($dir);
-
-    open(RCSDIFF, "$rcsdiff -r$opt_rev1 -r$opt_rev2 $opt_file 2>/dev/null |");
-
     print "<HEAD>\n";
     print "<SCRIPT LANGUAGE='JavaScript'>\n";
     print "var anchor = -1;\n\n";
@@ -458,11 +455,17 @@ sub do_diff_links {
           "        parent.frames[0].location.hash = --anchor;\n",
           "}\n";
     print "</SCRIPT>\n";
+    print "<TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
     print "</HEAD>";
     print "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"";
     print " LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">\n";
 
-    print "<TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
+    CheckHidden("$dir/$opt_file");
+
+    chdir($dir);
+
+    open(RCSDIFF, "$rcsdiff -r$opt_rev1 -r$opt_rev2 $opt_file 2>/dev/null |");
+
 
     print '<FORM><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0><TR VALIGN=TOP>';
 
@@ -578,6 +581,8 @@ sub do_diff {
     print "<BODY BGCOLOR=\"$diff_bg_color\" TEXT=\"#000000\"";
     print " LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">";
 
+    CheckHidden("$dir/$opt_file");
+
     chdir($dir);
 
     local ($rcsfile) = "$opt_file,v";
@@ -591,11 +596,13 @@ sub do_diff {
 
 # Show specified CVS log entry.
 sub do_log {
+    print "<TITLE>$opt_file: $opt_rev CVS log entry</TITLE>\n";
+    print '<PRE>';
+
+    CheckHidden("$dir/$opt_file");
 
     chdir($dir);
 
-    print "<TITLE>$opt_file: $opt_rev CVS log entry</TITLE>\n";
-    print '<PRE>';
     open(RCSLOG, "rlog -r$opt_rev $opt_file |");
 
     while (<RCSLOG>) {
@@ -639,12 +646,15 @@ sub do_directory {
 
     EmitHtmlHeader("CVS Differences", $output);
 
+    CheckHidden($dir);
     chdir($dir);
 
     print "<TABLE BORDER CELLPADDING=2>\n";
 
     foreach $file (split(/\+/, $opt_files)) {
         local ($path) = "$dir/$file,v";
+
+        CheckHidden($path);
         $path = "$dir/Attic/$file,v" if (! -r $path);
         &parse_rcs_file($path);
 
@@ -950,7 +960,6 @@ __BOTTOM__
 
 
 sub do_cmd {
-
     if ($opt_command eq 'DIFF_FRAMESET') { do_diff_frameset; }
     elsif ($opt_command eq 'DIFF_LINKS') { do_diff_links; }
     elsif ($opt_command eq 'DIFF') { do_diff; }
