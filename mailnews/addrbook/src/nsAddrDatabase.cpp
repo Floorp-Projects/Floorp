@@ -64,6 +64,9 @@
 #include "nsProxiedService.h"
 #include "prprf.h"
 
+#include "nsIPromptService.h"
+#include "nsIStringBundle.h"
+
 #include "nsAddressBook.h" // for the map
 
 #define ID_PAB_TABLE            1
@@ -542,41 +545,118 @@ NS_IMETHODIMP nsAddrDatabase::SetDbPath(nsFileSpec * aDbPath)
 }
 
 NS_IMETHODIMP nsAddrDatabase::Open
-(nsFileSpec* pabName, PRBool create, nsIAddrDatabase** pAddrDB, PRBool upgrading)
+(nsFileSpec *aMabFile, PRBool aCreate, nsIAddrDatabase** pAddrDB, PRBool upgrading /* unused */)
+{ 
+  *pAddrDB = nsnull;
+  
+  nsAddrDatabase *pAddressBookDB = (nsAddrDatabase *) FindInCache(aMabFile);
+  if (pAddressBookDB) {
+    *pAddrDB = pAddressBookDB;
+    return NS_OK;
+  }
+  
+  nsresult rv = OpenInternal(aMabFile, aCreate, pAddrDB);
+  if (NS_SUCCEEDED(rv))
+    return NS_OK;
+  
+  // try one more time
+  // but first rename corrupt mab file
+  // and prompt the user
+  if (aCreate) 
+  {
+    nsFileSpec *newMabFile = new nsFileSpec(*aMabFile);
+    
+    // save off the name of the corrupt mab file, example abook.mab
+    nsXPIDLCString originalMabFileName;
+    originalMabFileName.Adopt(aMabFile->GetLeafName());
+
+    // the suggest new name for the backup will be abook.mab.bak
+    nsCAutoString backupMabFileName(originalMabFileName);
+    backupMabFileName += ".bak";
+
+    // get a unique file name, using the suggested name
+    // if abook.mab.bak exists, abook.mab-1.bak will come back
+    // store that name
+    newMabFile->MakeUnique(backupMabFileName.get());
+    backupMabFileName.Adopt(newMabFile->GetLeafName());
+
+    // rename abook.mab to abook.mab.bak
+    rv = aMabFile->Rename(backupMabFileName.get());
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to rename corrupt mab file");
+ 
+    if (NS_SUCCEEDED(rv)) {
+      // the new mab file should be name of the old one: abook.mab
+      newMabFile->SetLeafName(originalMabFileName);
+
+      rv = OpenInternal(newMabFile, aCreate, pAddrDB);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create .mab file, after rename");
+
+      if (NS_SUCCEEDED(rv)) {
+        // if this fails, we don't care
+        (void)AlertAboutCorruptMabFile(NS_ConvertASCIItoUCS2(originalMabFileName).get(), 
+          NS_ConvertASCIItoUCS2(backupMabFileName).get());
+      }
+    }
+    delete newMabFile;
+  }
+  return rv;
+}
+
+nsresult nsAddrDatabase::AlertAboutCorruptMabFile(const PRUnichar *aOldFileName, const PRUnichar *aNewFileName)
 {
-    nsAddrDatabase            *pAddressBookDB;
-    nsresult                err = NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  const PRUnichar *formatStrings[] = { aOldFileName, aOldFileName, aNewFileName };
+  
+  nsXPIDLString alertMessage;
+  rv = bundle->FormatStringFromName(NS_LITERAL_STRING("corruptMabFileAlert").get(),
+    formatStrings, 3,
+    getter_Copies(alertMessage));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLString alertTitle;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("corruptMabFileTitle").get(), getter_Copies(alertTitle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPromptService> prompter = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = prompter->Alert(nsnull /* we don't know the parent window */, alertTitle.get(), alertMessage.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+nsresult
+nsAddrDatabase::OpenInternal(nsFileSpec *aMabFile, PRBool aCreate, nsIAddrDatabase** pAddrDB)
+{    
+  nsAddrDatabase *pAddressBookDB = new nsAddrDatabase();
+  if (!pAddressBookDB) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  NS_ADDREF(pAddressBookDB);
+  
+  nsresult rv = pAddressBookDB->OpenMDB(aMabFile, aCreate);
+  if (NS_SUCCEEDED(rv)) 
+  {
+    pAddressBookDB->SetDbPath(aMabFile);
+    GetDBCache()->AppendElement(pAddressBookDB);
+    *pAddrDB = pAddressBookDB;
+  }
+  else 
+  {
     *pAddrDB = nsnull;
-
-    pAddressBookDB = (nsAddrDatabase *) FindInCache(pabName);
-    if (pAddressBookDB) {
-        *pAddrDB = pAddressBookDB;
-        return(NS_OK);
-    }
-
-    pAddressBookDB = new nsAddrDatabase();
-    if (!pAddressBookDB) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    NS_ADDREF(pAddressBookDB);
-
-    err = pAddressBookDB->OpenMDB(pabName, create);
-    if (NS_SUCCEEDED(err)) 
-    {
-        pAddressBookDB->SetDbPath(pabName);
-        GetDBCache()->AppendElement(pAddressBookDB);
-        *pAddrDB = pAddressBookDB;
-    }
-    else 
-    {
-        *pAddrDB = nsnull;
-        NS_IF_RELEASE(pAddressBookDB);
-        pAddressBookDB = nsnull;
-    }
-
-    return err;
+    pAddressBookDB->ForceClosed();
+    NS_IF_RELEASE(pAddressBookDB);
+    pAddressBookDB = nsnull;
+  }
+  return rv;
 }
 
 // Open the MDB database synchronously. If successful, this routine
@@ -3459,16 +3539,12 @@ nsresult nsAddrDatabase::GetRowFromAttribute(const char *aName, const char *aUTF
   mdb_token token;
   GetStore()->StringToToken(GetEnv(), aName, &token);
   
-  nsresult rv;
-  if (aCaseInsensitive)
-  {
     NS_ConvertUTF8toUCS2 newUnicodeString(aUTF8Value);
+
+  if (aCaseInsensitive)
     ToLowerCase(newUnicodeString);
-    rv = GetRowForCharColumn(NS_ConvertUCS2toUTF8(newUnicodeString).get(), token, PR_TRUE, aCardRow);
-  }
-  else
-    rv = GetRowForCharColumn(aUTF8Value, token, PR_TRUE, aCardRow);
-  return rv;
+  
+  return GetRowForCharColumn(newUnicodeString.get(), token, PR_TRUE, aCardRow);
 }
 
 NS_IMETHODIMP nsAddrDatabase::GetCardFromAttribute(nsIAbDirectory *aDirectory, const char *aName, const char *aUTF8Value, PRBool aCaseInsensitive, nsIAbCard **aCardResult)
@@ -3561,11 +3637,8 @@ NS_IMETHODIMP nsAddrDatabase::FindMailListbyUnicodeName(const PRUnichar *listNam
   ToLowerCase(unicodeString);
   
   nsCOMPtr <nsIMdbRow> listRow;
-  nsresult rv = GetRowForCharColumn(NS_ConvertUCS2toUTF8(unicodeString).get(), m_LowerListNameColumnToken, PR_FALSE, getter_AddRefs(listRow));
-  if (NS_SUCCEEDED(rv) && listRow)
-    *exist = PR_TRUE;
-  else
-    *exist = PR_FALSE;
+  nsresult rv = GetRowForCharColumn(unicodeString.get(), m_LowerListNameColumnToken, PR_FALSE, getter_AddRefs(listRow));
+  *exist = (NS_SUCCEEDED(rv) && listRow);
   return rv;
 }
 
@@ -3580,73 +3653,117 @@ NS_IMETHODIMP nsAddrDatabase::GetCardCount(PRUint32 *count)
     return rv;
 }
 
-// aUTF8String should be a UTF8 string
-nsresult nsAddrDatabase::GetRowForCharColumn
-(const char *aUTF8String, mdb_column findColumn, PRBool aIsCard, nsIMdbRow **aFindRow)
+PRBool 
+nsAddrDatabase::HasRowButDeletedForCharColumn(const PRUnichar *unicodeStr, mdb_column findColumn, PRBool aIsCard, nsIMdbRow **aFindRow)
 {
-  NS_ENSURE_ARG_POINTER(aUTF8String);
- 
   mdbYarn    sourceYarn;
   
-  sourceYarn.mYarn_Buf = (void *) aUTF8String;
-  sourceYarn.mYarn_Fill = strlen(aUTF8String);
+  NS_ConvertUCS2toUTF8 UTF8String(unicodeStr);
+  sourceYarn.mYarn_Buf = (void *) UTF8String.get();
+  sourceYarn.mYarn_Fill = UTF8String.Length();
   sourceYarn.mYarn_Form = 0;
   sourceYarn.mYarn_Size = sourceYarn.mYarn_Fill;
   
   mdbOid        outRowId;
   nsIMdbStore* store = GetStore();
   nsIMdbEnv* env = GetEnv();
+  nsresult rv;
   
   if (aIsCard)
   {
-    nsCOMPtr <nsIMdbRow> mdbRow;
-    store->FindRow(env, m_CardRowScopeToken,
-    findColumn, &sourceYarn,  &outRowId, getter_AddRefs(mdbRow));
+    rv = store->FindRow(env, m_CardRowScopeToken,
+      findColumn, &sourceYarn,  &outRowId, aFindRow);
+    
+    // no such card, so bail out early
+    if (NS_SUCCEEDED(rv) && !*aFindRow)
+      return PR_FALSE;
+    
+    // we might not have loaded the "delete cards" table yet
+    // so do that (but don't create it, if we don't have one), 
+    // so we can see if the row is really a delete card.
+    if (!m_mdbDeletedCardsTable)
+      rv = InitDeletedCardsTable(PR_FALSE);
+    
+    // if still no deleted cards table, there are no deleted cards
+    if (!m_mdbDeletedCardsTable)
+      return PR_TRUE;
+    
+    mdb_bool hasRow = PR_FALSE;
+    rv = m_mdbDeletedCardsTable->HasRow(env, *aFindRow, &hasRow);
+    return (NS_SUCCEEDED(rv) && hasRow);
+  }
+  
+  rv = store->FindRow(env, m_ListRowScopeToken,
+    findColumn, &sourceYarn,  &outRowId, aFindRow);
+  return (NS_SUCCEEDED(rv) && *aFindRow);
+}
 
-    // fix for bug #198303
-    // here's the problem:
-    // for palm and absync, we keep track of deleted cards in the mab
-    // when we do autocomplete, or mail views, or whitelisting, we ask the PAB:
-    // "do you have a row for email == xyz@foo.com?"
-    // rows are not bound to a table, and a mab can have multiple tables (say "cards"
-    // and "deleted cards"), and a row can be in both.
-    // the fix is to make sure the card is not in the deleted table, 
-    // if it is, act like we didn't find it.
-    if (mdbRow)
+nsresult 
+nsAddrDatabase::GetRowForCharColumn(const PRUnichar *unicodeStr, mdb_column findColumn, PRBool aIsCard, nsIMdbRow **aFindRow)
+{
+  NS_ENSURE_ARG_POINTER(unicodeStr);
+  NS_ENSURE_ARG_POINTER(aFindRow);
+  *aFindRow = nsnull;
+
+  // see bug #198303
+  // the addition of the m_mdbDeletedCardsTable table has complicated life in the addressbook
+  // (it was added for palm sync).  until we fix the underlying problem, we have to jump through hoops
+  // in order to know if we have a row (think card) for a given column value (think email=foo@bar.com)
+  // there are 4 scenarios:
+  //   1) no cards with a match
+  //   2) at least one deleted card with a match, but no non-deleted cards
+  //   3) at least one non-deleted card with a match, but no deleted cards
+  //   4) at least one deleted card, and one non-deleted card with a match.
+  // 
+  // if we have no cards that match (FindRow() returns nothing), we can bail early
+  // but if FindRow() returns something, we have to check if it is in the deleted table
+  // if not in the deleted table we can return the row (we found a non-deleted card)
+  // but if so, we have to search through the table of non-deleted cards
+  // for a match.  If we find one, we return it.  but if not, we report that there are no
+  // non-deleted cards.  This is the expensive part.  The worse case scenario is to have
+  // deleted lots of cards, and then have a lot of non-deleted cards.
+  // we'd have to call FindRow(), HasRow(), and then search the list of non-deleted cards
+  // each time we call GetRowForCharColumn().
+  if (!HasRowButDeletedForCharColumn(unicodeStr, findColumn, aIsCard, aFindRow))
+  {
+    // if we have a row, it's the row for the non-delete card, so return NS_OK.
+    // otherwise, there is no such card (deleted or not), so return NS_ERROR_FAILURE
+    return *aFindRow ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  // check if there is a non-deleted card
+  nsCOMPtr<nsIMdbTableRowCursor> rowCursor;
+  mdb_pos rowPos;
+  PRBool done = PR_FALSE;
+  nsCOMPtr<nsIMdbRow> currentRow;
+  nsAutoString columnValue;
+  
+  mdb_scope targetScope = aIsCard ? m_CardRowScopeToken : m_ListRowScopeToken;
+  
+  m_mdbPabTable->GetTableRowCursor(GetEnv(), -1, getter_AddRefs(rowCursor));
+  if (!rowCursor)
+    return NS_ERROR_FAILURE;
+  
+  while (!done)
+  {
+    nsresult rv = rowCursor->NextRow(GetEnv(), getter_AddRefs(currentRow), &rowPos);
+    if (currentRow && NS_SUCCEEDED(rv))
     {
-      nsresult rv;
-      // we might not have loaded the "delete cards" table yet
-      // so do that (but don't create it, if we don't have one), 
-      // so we can see if the row is really a delete card.
-      if (!m_mdbDeletedCardsTable)
-        rv = InitDeletedCardsTable(PR_FALSE);
-      // if still no deleted cards table, there are no deleted cards
-      if (!m_mdbDeletedCardsTable)
-        NS_IF_ADDREF(*aFindRow = mdbRow);
-      else 
+      mdbOid rowOid;
+      if ((currentRow->GetOid(GetEnv(), &rowOid) == NS_OK) && (rowOid.mOid_Scope == targetScope))
       {
-        mdb_bool hasRow = PR_FALSE;
-        rv = m_mdbDeletedCardsTable->HasRow(env, mdbRow, &hasRow);
-        if (NS_SUCCEEDED(rv) && hasRow)
-          *aFindRow = nsnull;
-        else
-          NS_IF_ADDREF(*aFindRow = mdbRow);
+        rv = GetStringColumn(currentRow, findColumn, columnValue);
+        if (NS_SUCCEEDED(rv) && columnValue.Equals(unicodeStr))
+        {
+          NS_IF_ADDREF(*aFindRow = currentRow);
+          return NS_OK;
       }
     }
   }
   else
-    store->FindRow(env, m_ListRowScopeToken,
-    findColumn, &sourceYarn,  &outRowId, aFindRow);
-  
-  return (*aFindRow ? NS_OK : NS_ERROR_FAILURE);
+      done = PR_TRUE;
 }
-
-nsresult nsAddrDatabase::GetRowForCharColumn
-(const PRUnichar *unicodeStr, mdb_column findColumn, PRBool bIsCard, nsIMdbRow **findRow)
-{
-  nsAutoString unicodeString(unicodeStr);
-  ToLowerCase(unicodeString);
-  return GetRowForCharColumn(NS_ConvertUCS2toUTF8(unicodeString).get(), findColumn, bIsCard, findRow);
+  return NS_ERROR_FAILURE;
 }
 
 nsresult nsAddrDatabase::DeleteRow(nsIMdbTable* dbTable, nsIMdbRow* dbRow)

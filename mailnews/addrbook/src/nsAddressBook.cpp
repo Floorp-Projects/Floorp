@@ -104,6 +104,7 @@
 //
 nsAddressBook::nsAddressBook()
 {
+  mDocShell = nsnull;
 }
 
 nsAddressBook::~nsAddressBook()
@@ -256,11 +257,10 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *aURI, nsIAddrDatab
     do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = addrDBFactory->Open(dbPath, PR_TRUE, aDB, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv,rv);
-
+  rv = addrDBFactory->Open(dbPath, PR_TRUE /* create */, aDB, PR_TRUE);
   delete dbPath;
-    
+  NS_ENSURE_SUCCESS(rv,rv);
+  
   return NS_OK;
 }
 
@@ -298,51 +298,39 @@ nsresult nsAddressBook::GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **d
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAddressBook::MailListNameExistsInDB(const PRUnichar *name, const char *URI, PRBool *exist)
-{
-    *exist = PR_FALSE;
-
-    nsCOMPtr<nsIAddrDatabase> database;
-    nsresult rv = GetAbDatabaseFromURI(URI, getter_AddRefs(database));                
-    if (NS_SUCCEEDED(rv) && database)
-        database->FindMailListbyUnicodeName(name, exist);
-    return NS_OK;
-}
-
-//check for all address book
 NS_IMETHODIMP nsAddressBook::MailListNameExists(const PRUnichar *name, PRBool *exist)
 {
-    *exist = PR_FALSE;
-    nsVoidArray* pDirectories = DIR_GetDirectories();
-    if (pDirectories)
+  *exist = PR_FALSE;
+  nsVoidArray* pDirectories = DIR_GetDirectories();
+  if (pDirectories)
+  {
+    PRInt32 count = pDirectories->Count();
+    /* check: only show personal address book for now */
+    /* not showing 4.x address book unitl we have the converting done */
+    PRInt32 i;
+    for (i = 0; i < count; i++)
     {
-        PRInt32 count = pDirectories->Count();
-        /* check: only show personal address book for now */
-        /* not showing 4.x address book unitl we have the converting done */
-        PRInt32 i;
-        for (i = 0; i < count; i++)
+      DIR_Server *server = (DIR_Server *)pDirectories->ElementAt(i);
+      if (server->dirType == PABDirectory)
+      {
+        /* check: this is a 4.x file, remove when conversion is done */
+        PRUint32 fileNameLen = strlen(server->fileName);
+        if ((fileNameLen > kABFileName_PreviousSuffixLen) && 
+          strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0)
+          continue;
+        
+        nsCOMPtr<nsIAddrDatabase> database;
+        nsresult rv = GetAbDatabaseFromFile(server->fileName, getter_AddRefs(database));                
+        if (NS_SUCCEEDED(rv) && database)
         {
-            DIR_Server *server = (DIR_Server *)pDirectories->ElementAt(i);
-            if (server->dirType == PABDirectory)
-            {
-                /* check: this is a 4.x file, remove when conversion is done */
-                PRUint32 fileNameLen = strlen(server->fileName);
-                if ((fileNameLen > kABFileName_PreviousSuffixLen) && 
-                     strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0)
-                    continue;
-
-                nsCOMPtr<nsIAddrDatabase> database;
-                nsresult rv = GetAbDatabaseFromFile(server->fileName, getter_AddRefs(database));                
-                if (NS_SUCCEEDED(rv) && database)
-                {
-                    database->FindMailListbyUnicodeName(name, exist);
-                    if (*exist == PR_TRUE)
-                        return NS_OK;
-                }
-            }
+          database->FindMailListbyUnicodeName(name, exist);
+          if (*exist)
+            return NS_OK;
         }
+      }
     }
-    return NS_OK;
+  }
+  return NS_OK;
 }
 
 class AddressBookParser 

@@ -45,6 +45,7 @@ var gOkCallback = null;
 var oldListName = "";
 var gAddressBookBundle;
 var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+var gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 
 var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
@@ -61,8 +62,9 @@ function mailingListExists(listname)
   var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
   if (addressbook.mailListNameExists(listname))
   {
-    var alertText = gAddressBookBundle.getString("mailListNameExists");
-    alert(alertText);
+    gPromptService.alert(window, 
+      gAddressBookBundle.getString("mailListNameExistsTitle"),
+      gAddressBookBundle.getString("mailListNameExistsMessage"));
     return true;
   }
   return false;
