@@ -864,6 +864,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     mLineBreakDue = PR_TRUE;
   }
   else if (type == eHTMLTag_ul) {
+    FlushLine();
     mIndent -= kIndentSizeList;
     if (--mULCount + mOLStackIndex == 0) {
       mFloatingLines = 1;
