@@ -475,8 +475,8 @@ if (!LocalVarExists('interdiffbin')) {
     if ($interdiff_executable =~ /no interdiff/ || $interdiff_executable eq '') {
         if (!$silent) {
             print "\nOPTIONAL NOTE: If you want to ";
-            print "be able to use the\n 'difference between two patches";
-            print "feature of Bugzilla (requires\n the PatchReader Perl module";
+            print "be able to use the\n 'difference between two patches' ";
+            print "feature of Bugzilla (requires\n the PatchReader Perl module ";
             print "as well), you should install\n patchutils from ";
             print "http://cyberelk.net/tim/patchutils/\n\n";
         }
