@@ -65,10 +65,10 @@ INCLUDES	+= \
 		-I$(srcdir)/../../dom \
 		$(NULL)
 
-GARBAGE		+= $(DIST)/bin/res/ua.css $(DIST)/bin/res/html.css $(DIST)/bin/res/quirk.css $(DIST)/bin/res/arrow.gif
+GARBAGE		+= $(DIST)/bin/res/ua.css $(DIST)/bin/res/html.css $(DIST)/bin/res/forms.css $(DIST)/bin/res/quirk.css $(DIST)/bin/res/arrow.gif
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/html.css $(srcdir)/quirk.css $(srcdir)/arrow.gif $(DIST)/bin/res
+	$(INSTALL) $(srcdir)/html.css $(srcdir)/forms.css $(srcdir)/quirk.css $(srcdir)/arrow.gif $(DIST)/bin/res
 	rm -f $(DIST)/bin/res/ua.css
 	cp $(srcdir)/ua.css $(DIST)/bin/res
 
