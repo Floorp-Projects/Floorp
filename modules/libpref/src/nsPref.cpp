@@ -468,17 +468,13 @@ NS_IMETHODIMP nsPref::CopyDefaultBinaryPref(const char *pref,
 
 NS_IMETHODIMP nsPref::CopyPathPref(const char *pref, char ** return_buf)
 {
-#ifndef XP_MAC
   return _convertRes(PREF_CopyPathPref(pref, return_buf));
-#endif
 }
 
 NS_IMETHODIMP nsPref::SetPathPref(const char *pref, 
 				  const char *path, PRBool set_default)
 {
-#ifndef XP_MAC
   return _convertRes(PREF_SetPathPref(pref, path, set_default));
-#endif
 }
 
 /*
