@@ -119,7 +119,7 @@ SetupRegistry(void)
 class ConsoleOutputStreamImpl : public nsIOutputStream
 {
 public:
-    ConsoleOutputStreamImpl(void) {}
+    ConsoleOutputStreamImpl(void) { NS_INIT_REFCNT(); }
     virtual ~ConsoleOutputStreamImpl(void) {}
 
     // nsISupports interface
