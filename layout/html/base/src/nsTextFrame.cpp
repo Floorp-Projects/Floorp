@@ -1625,7 +1625,14 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
     fm->GetHeight(aMetrics.maxElementSize->height);
   }
   NS_RELEASE(fm);
-  return (cp == end) ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
+
+  if (cp == end) {
+    return NS_FRAME_COMPLETE;
+  }
+  else if (cp == cpStart) {
+    return NS_INLINE_LINE_BREAK_BEFORE();
+  }
+  return NS_FRAME_NOT_COMPLETE;
 }
 
 nscoord
