@@ -72,7 +72,6 @@
 
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
-#include "nsGfxCIID.h"
 #include "nsIDeviceContext.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIDeviceContextSpecFactory.h"
@@ -127,6 +126,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsISupportsPrimitives.h"
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 
 // Printing Events
 #include "nsIEventQueue.h"
@@ -6869,6 +6869,35 @@ DocumentViewerImpl::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
     rv = printService->CreatePrintSettings(aNewPrintSettings);
   }
   return rv;
+}
+
+/* readonly attribute wstring defaultPrinterName; */
+NS_IMETHODIMP 
+DocumentViewerImpl::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
+
+  nsresult rv;
+  nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID, &rv);
+  if (prtEnum) {
+    prtEnum->GetDefaultPrinterName(aDefaultPrinterName);
+  }
+  return rv;
+}
+
+/* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
+NS_IMETHODIMP 
+DocumentViewerImpl::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
+{
+  NS_ENSURE_ARG_POINTER(aPrinterName);
+  NS_ENSURE_ARG_POINTER(aPrintSettings);
+
+  nsresult rv;
+  nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID, &rv);
+  if (prtEnum) {
+    prtEnum->InitPrintSettingsFromPrinter(aPrinterName, aPrintSettings);
+  }
+  return NS_OK;
 }
 
 /* readonly attribute nsIPrintSettings globalPrintSettings; */

@@ -67,6 +67,21 @@ interface nsIWebBrowserPrint : nsISupports
    */
   readonly attribute boolean doingPrintPreview;
 
+
+  /**
+   * The name of the default printer 
+   */
+  readonly attribute wstring defaultPrinterName;
+
+  /**
+   * Initializes certain settings from the native printer into the PrintSettings
+   * These settings include, but are not limited to:
+   *   Page Orientation
+   *   Page Size
+   *   Number of Copies
+   */
+  void initPrintSettingsFromPrinter(in wstring aPrinterName, in nsIPrintSettings aPrintSettings);
+
   /**
    * Use this to Set and Get the current values of the last print invocation
    * of "print" or "printpreview". The print engine always sets the PrintSettings

@@ -54,6 +54,7 @@ public:
   PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
   PRInt32   GetNumPrinters()             { return mGlobalNumPrinters; }
   nsString* GetStringAt(PRInt32 aInx)    { return mGlobalPrinterList->StringAt(aInx); }
+  void      GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName);
 
 protected:
   GlobalPrinters() {}
@@ -397,6 +398,19 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnic
   return NS_OK;
 }
 
+NS_IMETHODIMP nsPrinterEnumeratorOS2::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
+  GlobalPrinters::GetInstance()->GetDefaultPrinterName(*aDefaultPrinterName);
+  return NS_OK;
+}
+
+/* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
+NS_IMETHODIMP nsPrinterEnumeratorOS2::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsPrinterEnumeratorOS2::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings *aPrintSettings)
 {
   nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
@@ -440,6 +454,18 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
        mGlobalPrinterList->AppendString(nsString(NS_ConvertASCIItoUCS2(printer)));
   } 
   return NS_OK;
+}
+
+void GlobalPrinters::GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName)
+{
+  aDefaultPrinterName = nsnull;
+
+  int defaultPrinter = nsDeviceContextSpecOS2::PrnDlg.GetDefaultPrinter();
+  char *printer = nsDeviceContextSpecOS2::PrnDlg.GetPrinter(defaultPrinter);
+
+  nsAutoString defaultName;
+  defaultName.AppendWithConversion(printer);
+  aDefaultPrinterName = ToNewUnicode(defaultName);
 }
 
 void GlobalPrinters::FreeGlobalPrinters()
