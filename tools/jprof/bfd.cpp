@@ -1,3 +1,4 @@
+// vim:ts=8:sw=2:et:
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License
@@ -21,8 +22,32 @@ extern "C" {
   char *cplus_demangle (const char *mangled, int options);
 }
 
+#define NEXT_SYMBOL \
+  sp++; \
+  if (sp >= lastSymbol) { \
+    long n = numExternalSymbols + 10000; \
+    externalSymbols = (Symbol*) \
+      realloc(externalSymbols, (size_t) (sizeof(Symbol) * n)); \
+    lastSymbol = externalSymbols + n; \
+    sp = externalSymbols + numExternalSymbols; \
+    numExternalSymbols = n; \
+  }
+
 void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
 {
+  int initialSymbols = usefulSymbols;
+  if (NULL == externalSymbols) {
+    externalSymbols = (Symbol*) malloc(sizeof(Symbol) * 10000);
+    numExternalSymbols = 10000;
+  }
+  Symbol* sp = externalSymbols + usefulSymbols;
+  Symbol* lastSymbol = externalSymbols + numExternalSymbols;
+
+  // Create a dummy symbol for the library so, if it doesn't have any
+  // symbols, we show it by library.
+  sp->Init(aFileName, aBaseAddress);
+  NEXT_SYMBOL
+
   static bfd_boolean kDynamic = (bfd_boolean) false;
 
   static int firstTime = 1;
@@ -49,14 +74,6 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
   unsigned int size;
   long symcount = bfd_read_minisymbols(lib, kDynamic, &minisyms, &size);
 
-  int initialSymbols = usefulSymbols;
-  if (NULL == externalSymbols) {
-    externalSymbols = (Symbol*) malloc(sizeof(Symbol) * 10000);
-    numExternalSymbols = 10000;
-  }
-  Symbol* sp = externalSymbols + usefulSymbols;
-  Symbol* lastSymbol = externalSymbols + numExternalSymbols;
-
   // Scan symbols
   bfd_byte* from = (bfd_byte *) minisyms;
   bfd_byte* fromend = from + symcount * size;
@@ -75,15 +92,7 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
 	  dnm = cplus_demangle(nm, 1);
 	}
 	sp->Init(dnm ? dnm : nm, syminfo.value + aBaseAddress);
-	sp++;
-	if (sp >= lastSymbol) {
-	  long n = numExternalSymbols + 10000;
-	  externalSymbols = (Symbol*)
-	    realloc(externalSymbols, (size_t) (sizeof(Symbol) * n));
-	  lastSymbol = externalSymbols + n;
-	  sp = externalSymbols + numExternalSymbols;
-	  numExternalSymbols = n;
-	}
+        NEXT_SYMBOL
       }
 //    }
   }
