@@ -57,6 +57,7 @@
 
 #include "nsNetUtil.h"
 #include "nsCWebBrowser.h"
+#include "nsIAtom.h"
 #include "nsILocalFile.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIClipboardCommands.h"
