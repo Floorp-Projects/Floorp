@@ -551,6 +551,9 @@ extern "C" JSBool pref_InitInitialObjects()
 
   static const char* specialFiles[] = {
         "initpref.js"
+#ifdef NS_DEBUG
+      , "debug-developer.js"
+#endif
 #ifdef XP_MAC
       , "macprefs.js"
 #elif defined(XP_WIN)

@@ -51,6 +51,9 @@ PREF_JS_EXPORTS	= \
 		$(srcdir)/init/config.js \
 		$(NULL)
 
+ifdef MOZ_DEBUG
+PREF_JS_EXPORTS	+= $(srcdir)/debug-developer.js \
+endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 PREF_JS_EXPORTS	+= $(srcdir)/os2/os2pref.js
 else
@@ -76,6 +79,7 @@ include $(topsrcdir)/config/rules.mk
 DEFINES		+= -DB_ONE_M
 
 GARBAGE		+= $(addprefix $(DIST)/bin/components/, \
+                        debug-developer.js \
 			initpref.js all.js mailnews.js editor.js config.js \
 			beos.js unix.js winpref.js os2prefs.js openvms.js)
 
