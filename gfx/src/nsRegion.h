@@ -34,7 +34,7 @@
 // Most important functions could be made inline and be sure that passed rectangles
 // will always be non-empty. 
 
-struct nsRectFast : public nsRect
+struct NS_GFX nsRectFast : public nsRect
 {
   nsRectFast () {}      // No need to call parent constructor to set default values
   nsRectFast (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) : nsRect (aX, aY, aWidth, aHeight) {}
@@ -82,12 +82,12 @@ struct nsRectFast : public nsRect
 
 
 
-class nsRegion
+class NS_GFX nsRegion
 {
   friend class nsRegionRectIterator;
   friend class RgnRectMemoryAllocator;
 
-  struct RgnRect : public nsRectFast
+  struct NS_GFX RgnRect : public nsRectFast
   {
     RgnRect* prev;
     RgnRect* next;
@@ -240,7 +240,7 @@ private:
 
 // Allow read-only access to region rectangles by iterating the list
 
-class nsRegionRectIterator
+class NS_GFX nsRegionRectIterator
 {
   const nsRegion*  mRegion;
   const nsRegion::RgnRect* mCurPtr;
