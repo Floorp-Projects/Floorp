@@ -40,6 +40,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIXULChildDocument.h"
 #include "nsIRDFResource.h"
 #include "nsIXULDocumentInfo.h"
+#include "nsIXULContentSink.h"
 #include "nsIStreamLoadableDocument.h"
 #include "nsIDocStreamLoaderFactory.h"
 
@@ -440,18 +441,19 @@ nsLayoutDLF::CreateRDFDocument(nsISupports* aExtraInfo,
       break;
     (*docv)->SetUAStyleSheet(gUAStyleSheet);
 
-    // We are capable of being a XUL child document. If we have extra
+    // We are capable of being a XUL overlay. If we have extra
     // info that supports the XUL document info interface, then we'll
     // know for sure.
     if (xulDocumentInfo) {
-      // We are a XUL fragment. Retrieve the parent document and the
-      // fragment's root position within the parent document.
-      nsCOMPtr<nsIDocument> parentDocument;
-      nsCOMPtr<nsIRDFResource> fragmentRoot;
-      rv = xulDocumentInfo->GetDocument(getter_AddRefs(parentDocument));
+      // We are a XUL overlay. Retrieve the parent content sink.
+      nsCOMPtr<nsIXULContentSink> parentSink;
+      rv = xulDocumentInfo->GetContentSink(getter_AddRefs(parentSink));
       if (NS_FAILED(rv))
         break;
-      rv = xulDocumentInfo->GetResource(getter_AddRefs(fragmentRoot));
+      
+	  // Retrieve the parent document.
+	  nsCOMPtr<nsIDocument> parentDocument;
+      rv = xulDocumentInfo->GetDocument(getter_AddRefs(parentDocument));
       if (NS_FAILED(rv))
         break;
 
@@ -459,12 +461,12 @@ nsLayoutDLF::CreateRDFDocument(nsISupports* aExtraInfo,
       parentDocument->AddSubDocument(*doc);
       (*doc)->SetParentDocument(parentDocument);
 
-      // We need to set our fragment root as well.  The
+      // We need to set our content sink as well.  The
       // XUL child document interface is required to do this.
       nsCOMPtr<nsIXULChildDocument> xulChildDoc;
       xulChildDoc = do_QueryInterface(*doc);
       if (xulChildDoc) {
-        xulChildDoc->SetFragmentRoot(fragmentRoot);
+        xulChildDoc->SetContentSink(parentSink);
       }
     }
   } while (PR_FALSE);
