@@ -47,6 +47,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
+#include "nsISupportsPrimitives.h"
 #include "prio.h"
 #include "prlog.h"
 #include "rdf.h"
@@ -154,7 +155,8 @@ static const char kURINC_NewSearchFolder[]        = "NC:NewSearchFolder"; // XXX
 static const char kDefaultPersonalToolbarFolder[] = "Personal Toolbar Folder";
 static const char kBookmarkCommand[]              = "http://home.netscape.com/NC-rdf#command?";
 
-#define bookmark_properties "chrome://communicator/locale/bookmarks/bookmark.properties"
+#define bookmark_properties  "chrome://communicator/locale/bookmarks/bookmark.properties"
+#define NAVIGATOR_CHROME_URL "chrome://navigator/content/"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -2390,7 +2392,16 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 					if (wwatch)
 					{
 						nsCOMPtr<nsIDOMWindow> newWindow;
-						wwatch->OpenWindow(0, uri, "_blank", 0, 0, getter_AddRefs(newWindow));
+            nsCOMPtr<nsISupportsArray> suppArray;
+            rv = NS_NewISupportsArray(getter_AddRefs(suppArray));
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsISupportsString> suppString(do_CreateInstance("@mozilla.org/supports-string;1", &rv));
+            if (!suppString) return rv;
+            rv = suppString->SetData(uri);
+            if (NS_FAILED(rv)) return rv;
+            suppArray->AppendElement(suppString);
+            wwatch->OpenWindow(0, NAVIGATOR_CHROME_URL, "_blank", "chrome,dialog=no,all", 
+                               suppArray, getter_AddRefs(newWindow));
 					}
 				}
 			}
