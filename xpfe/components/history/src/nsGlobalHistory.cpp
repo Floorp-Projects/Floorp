@@ -3688,12 +3688,20 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       if (err != 0 || !yarn.mYarn_Buf) return PR_FALSE;
 
       const char* startPtr;
-      PRInt32 yarnLength = yarn.mYarn_Fill;
-      // account for null strings
-      if (yarn.mYarn_Buf)
-        startPtr = (const char *)yarn.mYarn_Buf;
-      else 
-        startPtr = "";
+      PRInt32 yarnLength = yarn.mYarn_Fill;;
+      nsCAutoString titleStr;
+      if (property_column == kToken_NameColumn) {
+        titleStr =  NS_ConvertUCS2toUTF8((const PRUnichar*)yarn.mYarn_Buf, yarnLength);
+        startPtr = titleStr.get();
+        yarnLength = titleStr.Length();
+      }
+      else {
+        // account for null strings
+        if (yarn.mYarn_Buf)
+          startPtr = (const char *)yarn.mYarn_Buf;
+        else 
+          startPtr = "";
+      }
       
       const nsASingleFragmentCString& rowVal =
           Substring(startPtr, startPtr + yarnLength);
