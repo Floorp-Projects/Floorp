@@ -37,13 +37,6 @@ form {
 
 /* miscellaneous form elements */
 
-label {
-  /* our <label> support is badly broken. (b=47149) */
-  vertical-align: text-bottom;
-  padding-left: 3px;
-  padding-right: 3px;
-}
-
 legend {
   padding-left: 2px;
   padding-right: 2px;
@@ -78,7 +71,7 @@ textarea {
   border: 2px inset ThreeDFace;
   color: -moz-FieldText;
   cursor: text;
-  font: -moz-fixed;
+  font: medium -moz-fixed;
   margin: 1px 0 1px 0;
   text-align: start;
   vertical-align: text-bottom;
