@@ -29,6 +29,7 @@ extern WIDGET GlobalWidgetArray[1000];
 extern int GlobalArrayIndex;
 extern char currDirPath[MAX_SIZE];
 extern char customizationPath[MAX_SIZE];
+extern BOOL IsSameCache;
 extern CString CacheFile;
 extern CString CachePath;
 extern char asePath[MAX_SIZE];
@@ -345,14 +346,17 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 							"Information", MB_OK);
 						exit(-30);
 					}
-
+					
+					
 					// Write out the current cache
-					theApp.CreateNewCache();
+					if (!IsSameCache)
+						theApp.CreateNewCache();
 
 					// Reload sets the CachePath and reloads the cache from the new file
 					CString newDir = replaceVars(parms, NULL);
-					CachePath = Path + newDir + "\\" + CacheFile;
+					CachePath = newDir + "\\" + CacheFile;
 					theApp.FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
+					IsSameCache = FALSE;
 				}
 				else if (strcmp(pcmd, "VerifyVal") == 0)
 				{

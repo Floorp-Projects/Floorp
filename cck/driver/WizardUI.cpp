@@ -65,6 +65,8 @@ extern int GlobalArrayIndex;
 extern char currDirPath[MAX_SIZE];
 extern char customizationPath[MAX_SIZE];
 
+extern BOOL IsNewValue;
+
 extern _declspec (dllimport) WIDGET ptr_ga[1000];
 CCriticalSection nextSyncCodeSegment;
 CCriticalSection prevSyncCodeSegment;
@@ -1177,6 +1179,7 @@ void CWizardUI::UpdateGlobals()
 		curWidget = CurrentNode->pageWidgets[i];
 		curWidget->value = GetScreenValue(curWidget);
 	}
+	IsNewValue = TRUE;
 }
 
 void CWizardUI::LoadGlobals()

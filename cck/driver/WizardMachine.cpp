@@ -90,6 +90,9 @@ char asePath[MAX_SIZE];
 char nciPath[MAX_SIZE];
 char tmpPath[MAX_SIZE];
 
+BOOL IsNewValue = FALSE;
+BOOL IsSameCache = TRUE;
+
 CString CacheFile;
 CString CachePath;
 BOOL UseCache = FALSE;
@@ -791,6 +794,9 @@ BOOL CWizardMachineApp::GoToNextNode()
 			return TRUE;
 
 	//----------------------------------------------------------------------------------------------
+	
+	NODE* tempNode;
+
 	NODE* tmpParentNode;
 
 	tmpParentNode = CurrentNode->parent;
@@ -808,17 +814,21 @@ BOOL CWizardMachineApp::GoToNextNode()
 
 			if (siblingNode)
 			{
-				CurrentNode = siblingNode;
+				tempNode = siblingNode;
 			}
 			else
 			{
-				CurrentNode = CreateNode(tmpParentNode, 
+				tempNode = CreateNode(tmpParentNode, 
 				  tmpParentNode->subPages->pages.GetAt(tmpParentNode->currNodeIndex) + ".ini");
 			}
 			
-			if (!CurrentNode)
+			if (!tempNode)
 				0; /* ??? */
-
+			
+			if (!theInterpreter->interpret(tempNode->navControls->onEnter, NULL))
+				return FALSE;
+			
+			CurrentNode = tempNode;
 
 			BOOL isAContainerNode;	
 			BOOL haveChildNodes = TRUE;
@@ -863,8 +873,8 @@ BOOL CWizardMachineApp::GoToNextNode()
 		exit(10);
 	}
 
-	if (!theInterpreter->interpret(CurrentNode->navControls->onEnter, NULL))
-		return FALSE;
+	if (IsNewValue)
+		CreateNewCache();
 
 	return TRUE;
 }
@@ -877,6 +887,7 @@ BOOL CWizardMachineApp::GoToPrevNode()
 		//for now check existence of display information
 		//go to last child and so on
 
+	NODE* tempNode;
 
 	NODE* tmpParentNode;
 
@@ -895,19 +906,20 @@ BOOL CWizardMachineApp::GoToPrevNode()
 
 			if (siblingNode)
 			{
-				CurrentNode = siblingNode;
+				tempNode = siblingNode;
 			}
 			else
 			{
-				CurrentNode = CreateNode(tmpParentNode, 
+				tempNode = CreateNode(tmpParentNode, 
 				   tmpParentNode->subPages->pages.GetAt(tmpParentNode->currNodeIndex) + ".ini");
 			}
 			
-			if (!CurrentNode)
+			if (!tempNode)
 				0;/*then what*/
 
-			if (!theInterpreter->interpret(CurrentNode->navControls->onEnter, NULL))
+			if (!theInterpreter->interpret(tempNode->navControls->onEnter, NULL))
 				return FALSE;
+			CurrentNode = tempNode;
 			
 			BOOL isAContainerNode;	
 			BOOL haveChildNodes = TRUE;
@@ -953,6 +965,10 @@ BOOL CWizardMachineApp::GoToPrevNode()
 		fprintf(out, "------------** TERMINATED - Can't go back from first page **----------------\n");
 		exit(9);
 	}
+
+	if (IsNewValue)
+		CreateNewCache();
+
 	return TRUE;
 
 }
