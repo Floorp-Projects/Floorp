@@ -55,6 +55,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
+#include "nsIPageSequenceFrame.h"
 #include "nsICaret.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXMLDocument.h"
@@ -96,46 +97,22 @@
 #include "prlong.h"
 
 
+// Class ID's
+static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
+static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
-static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_CID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 
 #undef NOISY
 
 // comment out to hide caret
 #define SHOW_CARET
-
-//----------------------------------------------------------------------
-
-// Class IID's
-static NS_DEFINE_IID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
-static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-
-// IID's
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIPresShellIID, NS_IPRESSHELL_IID);
-static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
-static NS_DEFINE_IID(kIViewObserverIID, NS_IVIEWOBSERVER_IID);
-static NS_DEFINE_IID(kIFrameSelectionIID, NS_IFRAMESELECTION_IID);
-static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIFocusTrackerIID, NS_IFOCUSTRACKER_IID);
-static NS_DEFINE_IID(kISelectionControllerIID, NS_ISELECTIONCONTROLLER_IID);
-static NS_DEFINE_IID(kICaretIID, NS_ICARET_IID);
-static NS_DEFINE_IID(kICaretID,  NS_ICARET_IID);
-static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
-
 
 // The upper bound on the amount of time to spend reflowing.  When this bound is exceeded
 // and reflow commands are still queued up, a reflow event is posted.  The idea is for reflow
@@ -613,7 +590,8 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIPresShellIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIPresShell),
+                            (void **) aInstancePtrResult);
 }
 
 PresShell::PresShell()
@@ -638,50 +616,41 @@ NS_IMPL_RELEASE(PresShell)
 nsresult
 PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (aIID.Equals(kIPresShellIID)) {
+  if (!aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsIPresShell))) {
     nsIPresShell* tmp = this;
     *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDocumentObserverIID)) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDocumentObserver))) {
     nsIDocumentObserver* tmp = this;
     *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIViewObserverIID)) {
+  } else if (aIID.Equals(NS_GET_IID(nsIViewObserver))) {
     nsIViewObserver* tmp = this;
     *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIFocusTrackerIID)) {
+  } else if (aIID.Equals(NS_GET_IID(nsIFocusTracker))) {
     nsIFocusTracker* tmp = this;
     *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISelectionControllerIID)) {
+  } else if (aIID.Equals(NS_GET_IID(nsISelectionController))) {
     nsISelectionController* tmp = this;
     *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupportsWeakReference>::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
     nsISupportsWeakReference* tmp = this;
     *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
+  } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
     nsIPresShell* tmp = this;
     nsISupports* tmp2 = tmp;
     *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
+  } else {
+    *aInstancePtr = nsnull;
+
+    return NS_NOINTERFACE;
   }
-  return NS_NOINTERFACE;
+
+  NS_ADDREF_THIS();
+
+  return NS_OK;
 }
 
 PresShell::~PresShell()
@@ -759,7 +728,7 @@ PresShell::Init(nsIDocument* aDocument,
   mHistoryState = nsnull;
 
   nsresult result = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
-                                                 nsIFrameSelection::GetIID(),
+                                                 NS_GET_IID(nsIFrameSelection),
                                                  getter_AddRefs(mSelection));
   if (!NS_SUCCEEDED(result))
     return result;
@@ -1138,7 +1107,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
 
-      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                (void**)&frameDebug))) {
         frameDebug->VerifyTree();
       }
     }
@@ -1177,7 +1147,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
 
-      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
         frameDebug->VerifyTree();
       }
     }
@@ -1234,7 +1205,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
 
-      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
         frameDebug->VerifyTree();
       }
     }
@@ -1271,7 +1243,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
 
-      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
         frameDebug->VerifyTree();
       }
     }
@@ -1327,7 +1300,7 @@ NS_IMETHODIMP PresShell::GetCaret(nsICaret **outCaret)
 {
   if (!outCaret || !mCaret)
     return NS_ERROR_NULL_POINTER;
-  return mCaret->QueryInterface(kICaretIID,(void **)outCaret);
+  return mCaret->QueryInterface(NS_GET_IID(nsICaret), (void **)outCaret);
 }
 
 NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
@@ -1520,7 +1493,8 @@ PresShell::StyleChangeReflow()
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
 
-      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
         frameDebug->VerifyTree();
       }
     }
@@ -1556,7 +1530,8 @@ PresShell::StyleChangeReflow()
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
 
-      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
         frameDebug->VerifyTree();
       }
     }
@@ -1597,14 +1572,16 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
 
       // but the child could be wrapped in a scrollframe so lets check
       nsIScrollableFrame* scrollable = nsnull;
-      nsresult rv = child->QueryInterface(kIScrollableFrameIID, (void **)&scrollable);
+      nsresult rv = child->QueryInterface(NS_GET_IID(nsIScrollableFrame),
+                                          (void **)&scrollable);
       if (NS_SUCCEEDED(rv) && (nsnull != scrollable)) {
           // if it is then get the scrolled frame
           scrollable->GetScrolledFrame(nsnull, child);
       }
 
       // make sure the child is a pageSequence
-      rv = child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence);
+      rv = child->QueryInterface(NS_GET_IID(nsIPageSequenceFrame),
+                                 (void**)&pageSequence);
       NS_ASSERTION(NS_SUCCEEDED(rv),"Error: Could not find pageSequence!");
 
       *aResult = pageSequence;
@@ -1963,7 +1940,8 @@ PresShell::ProcessReflowCommands()
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
 
-      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
         frameDebug->VerifyTree();
       }
     }
@@ -2089,7 +2067,7 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
   nsresult                     rv = NS_OK;
   nsCOMPtr<nsIContent>  content;
 
-  if (NS_SUCCEEDED(mDocument->QueryInterface(kIDOMHTMLDocumentIID,
+  if (NS_SUCCEEDED(mDocument->QueryInterface(NS_GET_IID(nsIDOMHTMLDocument),
                                              getter_AddRefs(htmlDoc)))) {    
     nsCOMPtr<nsIDOMElement> element;
 
@@ -2098,10 +2076,11 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
     if (NS_SUCCEEDED(rv) && element) {
       // Get the nsIContent interface, because that's what we need to
       // get the primary frame
-      rv = element->QueryInterface(kIContentIID, getter_AddRefs(content));
+      rv = element->QueryInterface(NS_GET_IID(nsIContent),
+                                   getter_AddRefs(content));
     }
   }
-  else if (NS_SUCCEEDED(mDocument->QueryInterface(kIXMLDocumentIID,
+  else if (NS_SUCCEEDED(mDocument->QueryInterface(NS_GET_IID(nsIXMLDocument),
                                                   getter_AddRefs(xmlDoc)))) {
     rv = xmlDoc->GetContentById(aAnchorName,  getter_AddRefs(content));
   }
@@ -2252,15 +2231,16 @@ PresShell::DoCopy()
       // Create a transferable for putting data on the Clipboard
       nsCOMPtr<nsITransferable> trans;
       rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                              nsITransferable::GetIID(), 
-                                              (void**) getter_AddRefs(trans));
+                                              NS_GET_IID(nsITransferable), 
+                                              getter_AddRefs(trans));
       if ( trans ) {
         // The data on the clipboard will be in "XIF" format
         // so give the clipboard transferable a "XIFConverter" for 
         // converting from XIF to other formats
         nsCOMPtr<nsIFormatConverter> xifConverter;
         rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
-                                                 NS_GET_IID(nsIFormatConverter), getter_AddRefs(xifConverter));
+                                                NS_GET_IID(nsIFormatConverter),
+                                                getter_AddRefs(xifConverter));
         if ( xifConverter ) {
           // Add the XIF DataFlavor to the transferable
           // this tells the transferable that it can handle receiving the XIF format
@@ -2273,8 +2253,10 @@ PresShell::DoCopy()
           // the transferable wants the number bytes for the data and since it is double byte
           // we multiply by 2. 
           nsCOMPtr<nsISupportsWString> dataWrapper;
-          rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
-                                                   NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper));
+          rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID,
+                                                  nsnull, 
+                                                  NS_GET_IID(nsISupportsWString),
+                                                  getter_AddRefs(dataWrapper));
           if ( dataWrapper ) {
             dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,buffer.GetUnicode()) );
             // QI the data object an |nsISupports| so that when the transferable holds
@@ -2581,7 +2563,8 @@ PresShell::GetLayoutObjectFor(nsIContent*   aContent,
     result = GetPrimaryFrameFor(aContent, &primaryFrame);
     if ((NS_SUCCEEDED(result)) && (nsnull!=primaryFrame))
     {
-      result = primaryFrame->QueryInterface(kISupportsIID, (void**)aResult);
+      result = primaryFrame->QueryInterface(NS_GET_IID(nsISupports),
+                                            (void**)aResult);
     }
   }
   return result;
@@ -2806,13 +2789,9 @@ PresShell::ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight)
 #include "nsIURL.h"
 #include "nsILinkHandler.h"
 
-static NS_DEFINE_IID(kViewManagerCID, NS_VIEW_MANAGER_CID);
-static NS_DEFINE_IID(kIViewManagerIID, NS_IVIEWMANAGER_IID);
-static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
+static NS_DEFINE_CID(kViewManagerCID, NS_VIEW_MANAGER_CID);
+static NS_DEFINE_CID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
+static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
 static void
 LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
@@ -2822,7 +2801,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   if (nsnull != k1) {
     nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(k1->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(k1->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                        (void**)&frameDebug))) {
      frameDebug->GetFrameName(name);
     }
   }
@@ -2836,7 +2816,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   if (nsnull != k2) {
     nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(k2->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(k2->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                        (void**)&frameDebug))) {
       frameDebug->GetFrameName(name);
     }
   }
@@ -2856,7 +2837,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
   nsAutoString name;
   nsIFrameDebug*  frameDebug;
 
-  if (NS_SUCCEEDED(k1->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+  if (NS_SUCCEEDED(k1->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                      (void**)&frameDebug))) {
     frameDebug->GetFrameName(name);
     fputs(name, stdout);
   }
@@ -2864,7 +2846,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
 
   printf(" != ");
 
-  if (NS_SUCCEEDED(k2->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+  if (NS_SUCCEEDED(k2->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                      (void**)&frameDebug))) {
     frameDebug->GetFrameName(name);
     fputs(name, stdout);
   }
@@ -3111,7 +3094,7 @@ PresShell::VerifyIncrementalReflow()
       (nsnull != container)) {
     cx->SetContainer(container);
     nsILinkHandler* lh;
-    if (NS_SUCCEEDED(container->QueryInterface(kILinkHandlerIID,
+    if (NS_SUCCEEDED(container->QueryInterface(NS_GET_IID(nsILinkHandler),
                                                (void**)&lh))) {
       cx->SetLinkHandler(lh);
       NS_RELEASE(lh);
@@ -3131,7 +3114,8 @@ PresShell::VerifyIncrementalReflow()
   nsIView* rootView;
   mViewManager->GetRootView(rootView);
   nsIScrollableView* scrollView;
-  rv = rootView->QueryInterface(kScrollViewIID, (void**)&scrollView);
+  rv = rootView->QueryInterface(NS_GET_IID(nsIScrollableView),
+                                (void**)&scrollView);
   if (NS_OK == rv) {
     scrollView->GetScrollPreference(scrolling);
   }
@@ -3141,7 +3125,8 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a new view manager.
   rv = nsComponentManager::CreateInstance(kViewManagerCID, nsnull,
-                                          kIViewManagerIID, (void**) &vm);
+                                          NS_GET_IID(nsIViewManager),
+                                          (void**) &vm);
   if (NS_FAILED(rv)) {
     NS_ASSERTION(NS_OK == rv, "failed to create view manager");
   }
@@ -3156,7 +3141,8 @@ PresShell::VerifyIncrementalReflow()
   mPresContext->GetVisibleArea(tbounds);
   nsIView* view;
   rv = nsComponentManager::CreateInstance(kViewCID, nsnull,
-                                          kIViewIID, (void **) &view);
+                                          NS_GET_IID(nsIView),
+                                          (void **) &view);
   if (NS_FAILED(rv)) {
     NS_ASSERTION(NS_OK == rv, "failed to create scroll view");
   }
@@ -3205,11 +3191,13 @@ PresShell::VerifyIncrementalReflow()
     printf("Verify reflow failed, primary tree:\n");
     nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(root1->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(root1->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                           (void**)&frameDebug))) {
       frameDebug->List(mPresContext, stdout, 0);
     }
     printf("Verification tree:\n");
-    if (NS_SUCCEEDED(root2->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(root2->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                           (void**)&frameDebug))) {
       frameDebug->List(mPresContext, stdout, 0);
     }
   }

@@ -67,6 +67,8 @@ enum nsPrintError {
  */
 class nsIPrintStatusCallback : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRINTSTATUSCALLBACK_IID)
+
   /**
    * Indicates the current progress of the print operation.
    *
@@ -117,6 +119,7 @@ struct nsPrintOptions {
  */
 class nsIPageSequenceFrame : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPAGESEQUENCEFRAME_IID)
 
   /**
    * Print the set of pages.
