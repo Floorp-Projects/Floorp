@@ -44,11 +44,14 @@
             CLASS = MainController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
+                mAddBookmarkMenuItem = NSMenuItem; 
                 mApplication = NSApplication; 
                 mBookmarksMenu = NSMenu; 
                 mBookmarksToolbarMenuItem = NSMenuItem; 
                 mCloseTabMenuItem = NSMenuItem; 
                 mCloseWindowMenuItem = NSMenuItem; 
+                mCreateBookmarksFolderMenuItem = NSMenuItem; 
+                mCreateBookmarksSeparatorMenuItem = NSMenuItem; 
                 mFilterList = NSPopUpButton; 
                 mFilterView = NSView; 
                 mOfflineMenuItem = NSMenuItem; 

@@ -60,6 +60,9 @@ class BookmarksService;
     IBOutlet NSMenu* 				mBookmarksMenu;
 
     IBOutlet NSMenuItem* 		mBookmarksToolbarMenuItem;
+    IBOutlet NSMenuItem*    mAddBookmarkMenuItem;
+    IBOutlet NSMenuItem*		mCreateBookmarksFolderMenuItem;
+    IBOutlet NSMenuItem*		mCreateBookmarksSeparatorMenuItem;
     
     BOOL 										mOffline;
 
@@ -127,6 +130,8 @@ class BookmarksService;
 - (void)adjustCloseWindowMenuItemKeyEquivalent:(BOOL)inHaveTabs;
 - (void)adjustCloseTabMenuItemKeyEquivalent:(BOOL)inHaveTabs;
 - (void)fixCloseMenuItemKeyEquivalents;
+
+- (void)adjustBookmarksMenuItemsEnabling:(BOOL)inBrowserWindowFrontmost;
 
 -(NSWindow*)getFrontmostBrowserWindow;
 

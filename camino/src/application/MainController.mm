@@ -327,6 +327,13 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [[[mApplication mainWindow] windowController] home: aSender];
 }
 
+- (void)adjustBookmarksMenuItemsEnabling:(BOOL)inBrowserWindowFrontmost;
+{
+  [mAddBookmarkMenuItem 							setEnabled:inBrowserWindowFrontmost];
+  [mCreateBookmarksFolderMenuItem 		setEnabled:inBrowserWindowFrontmost];
+  [mCreateBookmarksSeparatorMenuItem 	setEnabled:NO];		// separators are not implemented yet
+}
+
 -(NSWindow*)getFrontmostBrowserWindow
 {
   // for some reason, [NSApp mainWindow] doesn't always work, so we have to
@@ -458,6 +465,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction) addSeparator:(id)aSender
 {
+  NSLog(@"Separators not implemented yet");
 }
 
 -(IBAction) openMenuBookmark:(id)aSender
@@ -582,10 +590,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
 {
-  //NSLog(@"validateMenuItem for %@ called on the MainController", [aMenuItem title]);
-
   // disable items that aren't relevant if there's no main browser window open
   SEL action = [aMenuItem action];
+
+  //NSLog(@"MainController validateMenuItem for %@ (%s)", [aMenuItem title], action);
+
   if (action == @selector(newTab:) ||
         /* ... many more items go here ... */
         action == @selector(printPage:) ||
@@ -595,7 +604,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         action == @selector(smallerTextSize:) ||
         action == @selector(viewSource:) ||
         action == @selector(goHome:) ||
-        action == @selector(addBookmark:) ||			// doesn't work, not sure why
         action == @selector(savePage:)) {
     if ([self isMainWindowABrowserWindow])
       return YES;
