@@ -866,10 +866,17 @@ toolkit/Makefile
 toolkit/components/autocomplete/Makefile
 toolkit/components/autocomplete/public/Makefile
 toolkit/components/autocomplete/src/Makefile
+toolkit/components/Makefile
 toolkit/components/build/Makefile
+toolkit/components/console/Makefile
+toolkit/components/filepicker/Makefile
+toolkit/components/history/Makefile
+toolkit/components/history/public/Makefile
+toolkit/components/history/src/Makefile
 toolkit/components/satchel/Makefile
 toolkit/components/satchel/public/Makefile
 toolkit/components/satchel/src/Makefile
+toolkit/components/viewsource/Makefile
 toolkit/content/mac/Makefile
 toolkit/skin/mac/Makefile
 toolkit/skin/unix/Makefile
