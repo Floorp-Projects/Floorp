@@ -22,7 +22,7 @@
 #define nsIXPConnect_h___
 
 #include "nsISupports.h"
-#include "jsapi.h"
+#include "jspubtd.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptinfo.h"

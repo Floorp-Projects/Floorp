@@ -44,6 +44,8 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_OK;
     }
 
+    // else...
+
     return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
 }
 

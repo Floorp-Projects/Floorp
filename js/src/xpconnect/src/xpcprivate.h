@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
@@ -53,6 +54,7 @@
 
 extern const char* XPC_VAL_STR;        // 'value' property name for out params
 extern const char* XPC_COMPONENTS_STR; // 'Components' property name
+extern const char* XPC_ARG_FORMATTER_FORMAT_STR;
 
 /***************************************************************************/
 
@@ -369,6 +371,7 @@ public:
     void DebugDump(int depth);
 
     void XPCContextBeingDestroyed();
+    nsXPCWrappedJS* Find(REFNSIID aIID);
 
     virtual ~nsXPCWrappedJS();
 private:
@@ -376,8 +379,6 @@ private:
     nsXPCWrappedJS(JSObject* aJSObj,
                    nsXPCWrappedJSClass* aClass,
                    nsXPCWrappedJS* root);
-
-    nsXPCWrappedJS* Find(REFNSIID aIID);
 
 private:
     JSObject* mJSObj;
@@ -669,6 +670,10 @@ public:
 private:
     XPCConvert(); // not implemented
 };
+
+extern JSBool JS_DLL_CALLBACK
+XPC_JSArgumentFormatter(JSContext *cx, const char *format,
+                        JSBool fromJS, jsval **vpp, va_list *app);
 
 /***************************************************************************/
 // nsJSIID

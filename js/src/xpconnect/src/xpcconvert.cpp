@@ -659,3 +659,40 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
     return JS_TRUE;
 }
 
+const char* XPC_ARG_FORMATTER_FORMAT_STR = "%ip";
+
+JSBool JS_DLL_CALLBACK
+XPC_JSArgumentFormatter(JSContext *cx, const char *format,
+                        JSBool fromJS, jsval **vpp, va_list *app)
+{
+    jsval *vp;
+    va_list ap;
+
+    vp = *vpp;
+    ap = *app;
+
+    nsXPTType type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));
+    nsISupports* iface;
+
+    if(fromJS)
+    {
+        if(!XPCConvert::JSData2Native(cx, &iface, vp[0], type, JS_FALSE,
+                                      &(NS_GET_IID(nsISupports)), nsnull))
+            return JS_FALSE;
+        *va_arg(ap, nsISupports **) = iface;
+    } 
+    else
+    {
+        const nsIID* iid;
+
+        iid  = va_arg(ap, const nsIID*);
+        iface = va_arg(ap, nsISupports *);
+
+        if(!XPCConvert::NativeData2JS(cx, &vp[0], &iface, type, iid, nsnull))
+            return JS_FALSE;
+    }
+    *vpp = vp + 1;
+    *app = ap;
+    return JS_TRUE;
+}
+

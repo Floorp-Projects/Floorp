@@ -145,6 +145,7 @@ XPCContext::~XPCContext()
         mWrappedJSClassMap->Enumerate(WrappedJSClassDestroyCB, NULL);
         delete mWrappedJSClassMap;
     }
+    JS_RemoveArgumentFormatter(mJSContext, XPC_ARG_FORMATTER_FORMAT_STR);
     if(mXPConnect)
         NS_RELEASE(mXPConnect);
 }
@@ -154,9 +155,10 @@ XPCContext::Init(JSObject* aGlobalObj /*= NULL*/)
 {
     if(aGlobalObj)
         mGlobalObj = aGlobalObj;
-    return /* xpc_InitIDClass(this)            && */
-           nsXPCWrappedJSClass::InitForContext(this) &&
-           nsXPCWrappedNativeClass::InitForContext(this);
+    return nsXPCWrappedJSClass::InitForContext(this) &&
+           nsXPCWrappedNativeClass::InitForContext(this) &&
+           JS_AddArgumentFormatter(mJSContext, XPC_ARG_FORMATTER_FORMAT_STR, 
+                                   XPC_JSArgumentFormatter);
 }
 
 #ifdef DEBUG
