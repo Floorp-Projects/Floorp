@@ -42,11 +42,13 @@ nsXPCWrappedNativeScope* nsXPCWrappedNativeScope::gScopes = nsnull;
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedNativeScope, nsIXPCWrappedNativeScope)
 
 nsXPCWrappedNativeScope::nsXPCWrappedNativeScope(XPCContext* xpcc,
-                                                 nsXPCComponents* comp)
+                                                 nsXPCComponents* comp,
+                                                 JSObject* aGlobal)
     :   mRuntime(xpcc->GetRuntime()),
         mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
         mComponents(comp),
-        mNext(nsnull)
+        mNext(nsnull),
+        mDefaultJSObjectPrototype(nsnull)
 {
     NS_INIT_ISUPPORTS();
     NS_IF_ADDREF(mComponents);
@@ -55,6 +57,34 @@ nsXPCWrappedNativeScope::nsXPCWrappedNativeScope(XPCContext* xpcc,
         nsAutoLock lock(mRuntime->GetMapLock());  
         mNext = gScopes;
         gScopes = this;
+    }
+    
+    JSContext* cx = xpcc->GetJSContext();
+
+
+    // Lookup 'globalObject.Object.prototype' for our wrapper's proto
+    {
+      AutoJSErrorAndExceptionEater eater(cx); // scoped error eater
+
+      jsval val;
+      jsid idObj = mRuntime->GetStringID(XPCJSRuntime::IDX_OBJECT);
+      jsid idProto = mRuntime->GetStringID(XPCJSRuntime::IDX_PROTOTYPE);
+
+      if(OBJ_GET_PROPERTY(cx, aGlobal, idObj, &val) &&
+         !JSVAL_IS_PRIMITIVE(val) &&
+         OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(val), idProto, &val) &&
+         !JSVAL_IS_PRIMITIVE(val))
+      {
+        mDefaultJSObjectPrototype = JSVAL_TO_OBJECT(val);
+        JS_AddNamedRoot(cx, &mDefaultJSObjectPrototype,
+                        "nsXPCWrappedNativeScope::mDefaultJSObjectPrototype");
+      }
+      else
+      {
+#ifdef DEBUG_jband
+        NS_WARNING("Can't get globalObject.Object.prototype");
+#endif
+      }
     }
 }        
 
@@ -86,6 +116,13 @@ nsXPCWrappedNativeScope::~nsXPCWrappedNativeScope()
         }
     }
     NS_IF_RELEASE(mComponents);
+
+    if(mDefaultJSObjectPrototype && mRuntime)
+    {
+        JSRuntime* rt = mRuntime->GetJSRuntime();
+        if(rt)
+            JS_RemoveRootRT(rt, &mDefaultJSObjectPrototype);
+    }
 }        
 
 
@@ -181,6 +218,14 @@ nsXPCWrappedNativeScope::SystemIsBeingShutDown()
         cur->mWrappedNativeMap->
                 Enumerate(WrappedNativeShutdownEnumerator,  &liveWrapperCount);
         ++count;
+
+        if(cur->mDefaultJSObjectPrototype && cur->mRuntime)
+        {
+            JSRuntime* rt = cur->mRuntime->GetJSRuntime();
+            if(rt)
+                JS_RemoveRootRT(rt, &cur->mDefaultJSObjectPrototype);
+            cur->mDefaultJSObjectPrototype = nsnull;
+        }
     }
 
 #ifdef XPC_DUMP_AT_SHUTDOWN

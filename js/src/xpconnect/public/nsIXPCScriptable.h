@@ -390,7 +390,7 @@ public:
                              nsIXPConnectWrappedNative* wrapper,            \
                              nsIXPCScriptable* arbitrary,                   \
                              JSBool* retval)                                \
-    {*retval = JS_FALSE; return NS_OK;}
+    {*attrsp = 0; *retval = JS_TRUE; return NS_OK;}
 
 #define XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(_class) \
     NS_IMETHODIMP _class::SetAttributes(JSContext *cx, JSObject *obj,       \

@@ -2035,7 +2035,7 @@ nsXPCComponents::AttachNewComponentsObject(XPCContext* xpcc,
     else
         goto done;        
     
-    scope = new nsXPCWrappedNativeScope(xpcc, components);
+    scope = new nsXPCWrappedNativeScope(xpcc, components, aGlobal);
     if(scope)
         NS_ADDREF(scope);
     else
@@ -2058,8 +2058,7 @@ nsXPCComponents::AttachNewComponentsObject(XPCContext* xpcc,
                                       aGlobal, id, OBJECT_TO_JSVAL(obj),
                                       nsnull, nsnull,
                                       JSPROP_PERMANENT |
-                                      JSPROP_READONLY |
-                                      JSPROP_ENUMERATE,
+                                      JSPROP_READONLY,
                                       nsnull);
     }            
 done:

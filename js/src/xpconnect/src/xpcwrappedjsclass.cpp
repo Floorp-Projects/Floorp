@@ -350,7 +350,43 @@ xpcWrappedJSErrorReporter(JSContext *cx, const char *message,
         // If it is an exception report, then we can just deal with the 
         // exception later (if not caught in the JS code).
         if(JSREPORT_IS_EXCEPTION(report->flags))
+        {
+            // XXX We have a problem with error reports from uncaught exceptions.
+            //
+            // http://bugzilla.mozilla.org/show_bug.cgi?id=66453
+            //
+            // The issue is...
+            //
+            // We can't assume that the exception will *stay* uncaught. So, if
+            // we build an nsIXPCException here and the underlying exception
+            // really is caught before our script is done running then we blow
+            // it by returning failure to our caller when the script didn't 
+            // really fail. However, This report contains error location info
+            // that is no longer available after the script is done. So, if the
+            // exception really is not caught (and is a non-engine exception)
+            // then we've lost the oportunity to capture the script location
+            // info that we *could* have captured here.
+            //
+            // This is expecially an issue with nested evaluations.
+            //
+            // Perhaps we could capture an expception here and store it as
+            // 'provisional' and then later if there is a pending exception
+            // when the script is done then we could maybe compare that in some
+            // way with the 'provisional' one in which we captured location info.
+            // We would not want to assume that the one discovered here is the 
+            // same one that is later detected. This could cause us to lie.
+            //
+            // The thing is. we do not currently store the right stuff to compare
+            // these two nsIXPCExceptions (triggered by the same exception jsval
+            // in the engine). Maybe we should store the jsval and compare that?
+            // Maybe without even rooting it since we will not dereference it.
+            // This is inexact, but maybe the right thing to do?
+            //
+            // if(report->errorNumber == JSMSG_UNCAUGHT_EXCEPTION)) ...
+            //
+            
             return;
+        }
             
         if(JSREPORT_IS_WARNING(report->flags))
         {

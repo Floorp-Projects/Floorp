@@ -229,12 +229,15 @@ public:
     enum {
         IDX_CONSTRUCTOR             = 0 ,
         IDX_TO_STRING               ,
+        IDX_TO_SOURCE               ,
         IDX_LAST_RESULT             ,
         IDX_RETURN_CODE             ,
         IDX_VALUE                   ,
         IDX_QUERY_INTERFACE         ,
         IDX_COMPONENTS              ,
         IDX_WRAPPED_JSOBJECT        ,
+        IDX_OBJECT                  ,
+        IDX_PROTOTYPE               ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
@@ -587,6 +590,9 @@ public:
     nsXPCComponents*
     GetComponents() const {return mComponents;}
 
+    JSObject*                 
+    GetDefaultJSObjectPrototype() const {return mDefaultJSObjectPrototype;}
+
     static nsXPCWrappedNativeScope* 
     FindInJSObjectScope(XPCContext* xpcc, JSObject* obj);
 
@@ -598,7 +604,8 @@ public:
 
     JSBool IsValid() const {return mRuntime != nsnull;}
 
-    nsXPCWrappedNativeScope(XPCContext* xpcc, nsXPCComponents* comp);
+    nsXPCWrappedNativeScope(XPCContext* xpcc, nsXPCComponents* comp,
+                            JSObject* aGlobal);
     virtual ~nsXPCWrappedNativeScope();
 private:
     nsXPCWrappedNativeScope(); // not implemented
@@ -610,6 +617,7 @@ private:
     Native2WrappedNativeMap*  mWrappedNativeMap;
     nsXPCComponents*          mComponents;
     nsXPCWrappedNativeScope*  mNext;
+    JSObject*                 mDefaultJSObjectPrototype;
 };
 
 /***************************************************************************/
@@ -824,9 +832,9 @@ private:
 
 public:
     jsid            id;     /* hashed name for quick JS property lookup */
-    uintN           index;  /* in InterfaceInfo for const, method, and get */
-    uintN           index2; /* in InterfaceInfo for set */
-    intN            argc;
+    uint16          index;  /* in InterfaceInfo for const, method, and get */
+    uint16          index2; /* in InterfaceInfo for set */
+    int16           argc;
 private:
     uint16          flags;
 public:
@@ -881,6 +889,7 @@ public:
         {return mRuntime->GetXPConnect()->GetArbitraryScriptable();}
 
     JSObject* NewInstanceJSObject(XPCContext* xpcc,
+                                  nsXPCWrappedNativeScope* aScope,
                                   JSObject* aGlobalObject,
                                   nsXPCWrappedNative* self);
     static nsXPCWrappedNative* GetWrappedNativeOfJSObject(JSContext* cx,
@@ -946,6 +955,10 @@ public:
     JSObject* NewFunObj(JSContext *cx, JSObject *obj,
                         const XPCNativeMemberDescriptor* desc);
 
+    JSBool AllowedToGetStaticProperty(XPCContext* xpcc,
+                                      nsXPCWrappedNative* wrapper, 
+                                      const XPCNativeMemberDescriptor* desc);
+
     JSBool DynamicEnumerate(nsXPCWrappedNative* wrapper,
                             nsIXPCScriptable* ds,
                             nsIXPCScriptable* as,
@@ -954,6 +967,7 @@ public:
                             jsval *statep, jsid *idp);
 
     JSBool StaticEnumerate(nsXPCWrappedNative* wrapper,
+                           JSContext *cx,
                            JSIterateOp enum_op,
                            jsval *statep, jsid *idp);
 
@@ -1041,7 +1055,7 @@ public:
     static nsXPCWrappedNative* 
     GetNewOrUsedWrapper(XPCContext* xpcc,
                         nsXPCWrappedNativeScope* aScope,
-                        JSObject* aGlobalObject,
+                        JSObject* aScopingJSObject,
                         nsISupports* aObj,
                         REFNSIID aIID,
                         nsresult* pErr);
@@ -1071,7 +1085,7 @@ private:
     nsXPCWrappedNative(XPCContext* xpcc,
                        nsISupports* aObj,
                        nsXPCWrappedNativeScope* aScope,
-                       JSObject* aGlobalObject,
+                       JSObject* aScopingJSObject,
                        nsXPCWrappedNativeClass* aClass,
                        nsXPCWrappedNative* root);
 
@@ -1558,6 +1572,25 @@ public:
 private:
     JSContext* mCX;    
 };
+
+/***************************************************************************/
+class AutoJSErrorAndExceptionEater
+{
+public:
+    AutoJSErrorAndExceptionEater(JSContext* aCX) 
+        : mCX(aCX), 
+          mOldErrorReporter(JS_SetErrorReporter(mCX, nsnull)), 
+          mOldExceptionState(JS_SaveExceptionState(mCX)) {}
+    ~AutoJSErrorAndExceptionEater()
+    {
+        JS_SetErrorReporter(mCX, mOldErrorReporter);
+        JS_RestoreExceptionState(mCX, mOldExceptionState);
+    }
+private:
+    JSContext*        mCX;  
+    JSErrorReporter   mOldErrorReporter;
+    JSExceptionState* mOldExceptionState;
+ };
 
 /***************************************************************************/
 // the include of declarations of the maps comes last because they have

@@ -115,6 +115,35 @@ GetDoubleWrappedJSObject(JSContext* cx, nsXPCWrappedNative* wrapper, jsid id)
 
 /***************************************************************************/
 
+static JSBool
+ToStringGuts(JSContext *cx, nsXPCWrappedNative* wrapper, jsval *vp)
+{
+#ifdef DEBUG
+    char* sz = JS_smprintf("[xpconnect wrapped %s @ 0x%p]",
+                           wrapper->GetClass()->GetInterfaceName(), wrapper);
+#else
+    char* sz = JS_smprintf("[xpconnect wrapped %s]",
+                           wrapper->GetClass()->GetInterfaceName());
+#endif
+
+    if(!sz)
+    {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+
+    JSString* str = JS_NewString(cx, sz, strlen(sz));
+    if(!str)
+    {
+        JS_smprintf_free(sz);
+        // JS_ReportOutOfMemory already reported by failed JS_NewString
+        return JS_FALSE;
+    }
+    
+    *vp = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
@@ -168,15 +197,8 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         }
 
         // else...
-        char* sz = JS_smprintf("[xpconnect wrapped %s]",
-                               wrapper->GetClass()->GetInterfaceName());
-        if(sz)
-        {
-            *vp = STRING_TO_JSVAL(JS_NewString(cx, sz, strlen(sz)));
-            return JS_TRUE;
-        }
-        JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
+
+        return ToStringGuts(cx, wrapper, vp);
     }
 
     case JSTYPE_NUMBER:
@@ -227,6 +249,30 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
                                     nsXPCWrappedNativeClass::CALL_METHOD,
                                     argc, argv, vp);
 }
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+WrappedNative_ToString(JSContext *cx, JSObject *obj,
+                       uintN argc, jsval *argv, jsval *vp)
+{
+    AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
+    nsXPCWrappedNative* wrapper = GET_WRAPPER(cx,obj);
+    if(wrapper && wrapper->IsValid())
+        return ToStringGuts(cx, wrapper, vp);
+    return JS_FALSE;
+}       
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+WrappedNative_ToSource(JSContext *cx, JSObject *obj,
+                       uintN argc, jsval *argv, jsval *vp)
+{
+    AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
+    
+    static const char empty[] = "{}";
+    *vp = STRING_TO_JSVAL(JS_NewStringCopyN(cx, empty, sizeof(empty)-1));
+    return JS_TRUE;
+}       
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
@@ -317,6 +363,46 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
     else
     {
+        HANDLE_POSSIBLE_NAME_CASE_ERROR(cx, clazz, id);
+
+        // deal with possible lookup of toString or toSource
+        XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+        if(rt)
+        {
+            JSNative call;
+            const char* name;
+
+            if(id == rt->GetStringID(XPCJSRuntime::IDX_TO_STRING))
+            {
+                call = WrappedNative_ToString;
+                name = rt->GetStringName(XPCJSRuntime::IDX_TO_STRING);    
+            }
+            else if(id == rt->GetStringID(XPCJSRuntime::IDX_TO_SOURCE))
+            {
+                call = WrappedNative_ToSource;
+                name = rt->GetStringName(XPCJSRuntime::IDX_TO_SOURCE);    
+            }
+            else
+                call = nsnull;
+
+            if(call)
+            {
+                JSFunction* fun = JS_NewFunction(cx, call, 0, 
+                                                 JSFUN_BOUND_METHOD, 
+                                                 obj, name);
+                if(fun)
+                {
+                    *vp = OBJECT_TO_JSVAL(JS_GetFunctionObject(fun));
+                    return JS_TRUE;
+                }
+                else
+                {
+                    JS_ReportOutOfMemory(cx);
+                    return JS_FALSE;
+                }
+            }
+        }
+
         nsIXPCScriptable* ds;
         nsIXPCScriptable* as;
         if(nsnull != (ds = wrapper->GetDynamicScriptable()) &&
@@ -326,10 +412,6 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             if(NS_SUCCEEDED(ds->GetProperty(cx, obj, id, vp,
                                             wrapper, as, &retval)))
                 return retval;
-        }
-        else
-        {
-            HANDLE_POSSIBLE_NAME_CASE_ERROR(cx, clazz, id);
         }
 
         // Check up the prototype chain to match JavaScript lookup behavior
@@ -424,19 +506,22 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx, obj);
-    if(wrapper && wrapper->IsValid())
+    XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+
+    if(rt && wrapper && wrapper->IsValid())
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
-        if(clazz->LookupMemberByID(id))
+        if(clazz->LookupMemberByID(id) ||
+           id == rt->GetStringID(XPCJSRuntime::IDX_TO_STRING) ||
+           id == rt->GetStringID(XPCJSRuntime::IDX_TO_SOURCE))
         {
             *objp = obj;
             *propp = XPC_BUILT_IN_PROPERTY;
             return JS_TRUE;
         }
         else if(wrapper->GetNative() &&
-                id == clazz->GetRuntime()->
-                                GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT))
+                id == rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT))
         {
             JSObject* realObject = GetDoubleWrappedJSObject(cx, wrapper, id);
             if(realObject)
@@ -445,6 +530,13 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
                 *propp = XPC_BUILT_IN_PROPERTY;
                 return JS_TRUE;
             }
+        }
+        else if(id == rt->GetStringID(XPCJSRuntime::IDX_TO_STRING) ||
+                id == rt->GetStringID(XPCJSRuntime::IDX_TO_SOURCE))
+        {
+            *objp = obj;
+            *propp = XPC_BUILT_IN_PROPERTY;
+            return JS_TRUE;
         }
         else if(nsnull != (ds = wrapper->GetDynamicScriptable()) &&
                 nsnull != (as = wrapper->GetArbitraryScriptable()))
@@ -505,24 +597,43 @@ WrappedNative_GetAttributes(JSContext *cx, JSObject *obj, jsid id,
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx, obj);
-    if(wrapper &&
-       wrapper->IsValid() &&
-       nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+    if(!wrapper || !wrapper->IsValid())
+    {
+        *attrsp = 0;
+        return JS_TRUE;
+    }
+
+    nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
+    NS_ASSERTION(clazz,"wrapper without class");
+
+    const XPCNativeMemberDescriptor* desc = clazz->LookupMemberByID(id);
+
+    if(desc)
+    {
+        XPCContext* xpcc = nsXPConnect::GetContext(cx);
+        if(!xpcc)
+            return JS_FALSE;
+        
+        if(clazz->AllowedToGetStaticProperty(xpcc, wrapper, desc))
+            *attrsp = JSPROP_PERMANENT | JSPROP_ENUMERATE;
+        else
+            *attrsp = JSPROP_PERMANENT;
+
+        return JS_TRUE;
+    }
+
+    if(nsnull != (ds = wrapper->GetDynamicScriptable()) &&
        nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
-        nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
-        NS_ASSERTION(clazz,"wrapper without class");
-        if(!clazz->LookupMemberByID(id))
-        {
-            JSBool retval;
-            if(NS_SUCCEEDED(ds->GetAttributes(cx, obj, id, prop, attrsp,
-                                              wrapper, as, &retval)))
-                return retval;
-        }
+        JSBool retval;
+        if(NS_SUCCEEDED(ds->GetAttributes(cx, obj, id, prop, attrsp,
+                                          wrapper, as, &retval)))
+            return retval;
     }
+
     // else fall through
-    *attrsp = JSPROP_PERMANENT|JSPROP_ENUMERATE;
-    return JS_FALSE;
+    *attrsp = 0;
+    return JS_TRUE;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -629,7 +740,7 @@ WrappedNative_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         return clazz->DynamicEnumerate(wrapper, ds, as, cx, obj, enum_op,
                                        statep, idp);
     else
-        return clazz->StaticEnumerate(wrapper, enum_op, statep, idp);
+        return clazz->StaticEnumerate(wrapper, cx, enum_op, statep, idp);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
