@@ -406,7 +406,7 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 		m_bHasSubject = TRUE;
 	else if (left5.Equals(NS_LITERAL_CSTRING("From:"), nsCaseInsensitiveCStringComparator()))
 		m_bHasFrom = TRUE;
-	else if (left5.Equals(NS_LITERAL_CSTRING("Date: "), nsCaseInsensitiveCStringComparator()))
+	else if (left5.Equals(NS_LITERAL_CSTRING("Date:"), nsCaseInsensitiveCStringComparator()))
 		m_bHasDate = TRUE;
 }
 
@@ -419,6 +419,7 @@ void CMapiMessage::ProcessHeaders( void)
 	PC_S8		pChar = (PC_S8) m_headers.get();
 	int			start = 0;
 	int			len = 0;
+  int     hdrLen = strlen(pChar);
 	nsCString	line;
 	nsCString	mid;
 	while (*pChar) {
@@ -437,6 +438,13 @@ void CMapiMessage::ProcessHeaders( void)
 		pChar++;
 		len++;
 	}
+
+  // See if we still have data to be processed.
+  if (start < hdrLen)
+  {
+    line.Assign(m_headers.get()+start);
+    ProcessHeaderLine(line);
+  }
 
 	if (!m_mimeContentType.IsEmpty() || !m_mimeBoundary.IsEmpty() || !m_mimeCharset.IsEmpty()) {
 		MAPI_TRACE1( "\tDecoded mime content type: %s\r\n", (PC_S8)m_mimeContentType);

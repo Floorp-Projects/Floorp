@@ -106,7 +106,7 @@ public:
 	nsOutlookCompose();
 	~nsOutlookCompose();
 
-	nsresult	SendTheMessage( nsIFileSpec *pMsg);
+	nsresult	SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode mode);
 
 	void		SetBody( const char *pBody, PRInt32 len) { m_pBody = pBody; m_bodyLen = len;}
 	void		SetHeaders( const char *pHeaders, PRInt32 len) { m_pHeaders = pHeaders; m_headerLen = len;}

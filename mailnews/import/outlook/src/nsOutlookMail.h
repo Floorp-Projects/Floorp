@@ -65,7 +65,6 @@ private:
 	BOOL	WriteData( nsIFileSpec *pDest, const char *pData, PRInt32 len);
 	BOOL	WriteMessage( nsIFileSpec *pDest, CMapiMessage *pMsg, int& attachCount, BOOL *pTerminate);
 	BOOL	WriteStr( nsIFileSpec *pDest, const char *pStr);
-	BOOL	WriteWithoutFrom( nsIFileSpec *pDest, const char * pData, int len, BOOL checkStart);
 	BOOL	WriteMimeMsgHeader( nsIFileSpec *pDest, CMapiMessage *pMsg);
 	BOOL	WriteMimeBoundary( nsIFileSpec *pDest, CMapiMessage *pMsg, BOOL terminate);
 

@@ -567,7 +567,7 @@ nsMsgAttachedFile * nsEudoraCompose::GetLocalAttachments( void)
 		}
 
 		a[i].type = nsCRT::strdup( pAttach->mimeType);
-		a[i].description = nsCRT::strdup( pAttach->description);
+		a[i].real_name = nsCRT::strdup( pAttach->description);
 		a[i].encoding = nsCRT::strdup( ENCODING_BINARY);
 	}
 
@@ -682,6 +682,19 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	}
 	uniBody.Truncate();
 
+
+  // See if it's a draft msg (ie, no From: or no To: AND no Cc: AND no Bcc:).
+  // Eudora saves sent and draft msgs in Out folder (ie, mixed) and it does
+  // store Bcc: header in the msg itself.
+  nsMsgDeliverMode mode = nsIMsgSend::nsMsgDeliverNow;
+  PRUnichar *from, *to, *cc, *bcc;
+  rv = m_pMsgFields->GetFrom(&from);
+  rv = m_pMsgFields->GetTo(&to);
+  rv = m_pMsgFields->GetCc(&cc);
+  rv = m_pMsgFields->GetBcc(&bcc);
+  if ( (!from || !*from) || ((!to || !*to) && (!cc || !*cc) && (!bcc || !*bcc)) )
+    mode = nsIMsgSend::nsMsgSaveAsDraft;
+
 	if (NS_FAILED( rv)) {
 
 		rv = m_pSendProxy->CreateAndSendMessage(
@@ -690,7 +703,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 										m_pMsgFields,	                // message fields
 										PR_FALSE,		                  // digest = NO
 										PR_TRUE,		                  // dont_deliver = YES, make a file
-										nsIMsgSend::nsMsgDeliverNow,  // mode
+										mode,                         // mode
 										nsnull,			                  // no message to replace
 										pMimeType,		                // body type
 										m_pBody,		                  // body pointer
@@ -711,7 +724,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 										m_pMsgFields,	                // message fields
 										PR_FALSE,		                  // digest = NO
 										PR_TRUE,		                  // dont_deliver = YES, make a file
-										nsIMsgSend::nsMsgDeliverNow,  // mode
+										mode,                         // mode
 										nsnull,			                  // no message to replace
 										pMimeType,		                // body type
 										body.get(),		                      // body pointer
@@ -1065,7 +1078,7 @@ nsresult nsEudoraCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopi
 	nsCString	val;
 	nsCString	replaceVal;
 	PRInt32		written;
-	nsresult	rv = NS_ERROR_FAILURE;
+	nsresult	rv = NS_OK; // it's ok if we don't have the first header on the predefined lists.
 	PRInt32		specialHeader;
 	PRBool		specials[kMaxSpecialHeaders];
 	int			i;

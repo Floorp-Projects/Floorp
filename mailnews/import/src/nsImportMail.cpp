@@ -856,6 +856,9 @@ ImportMailThread( void *stuff)
 
 	IMPORT_LOG1( "Total number of mailboxes: %d\n", (int) count);
 
+  // Note that the front-end js script only displays one import result string so 
+  // we combine both good and bad import status into one string (in var 'success').
+
 	for (i = 0; (i < count) && !(pData->abort); i++) {
 		pSupports = pData->boxes->ElementAt( i);
 		if (pSupports) {
@@ -871,11 +874,13 @@ ImportMailThread( void *stuff)
 					rv = box->GetSize( &size);
 				rv = box->GetDepth( &newDepth);
 				if (newDepth > depth) {
+          // OK, we are going to add a subfolder under the last/previous folder we processed, so
+          // find this folder (stored in 'lastName') who is going to be the new parent folder.
 					ConvertFromUnicode(lastName.get(), strName);
 					IMPORT_LOG1( "* Finding folder for child named: %s\n", strName.get());
 					rv = curProxy->GetChildNamed( strName.get(), getter_AddRefs( subFolder));
 					if (NS_FAILED( rv)) {
-						nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &error);
+						nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &success);
 						pData->fatalError = PR_TRUE;
 						break;
 					}
@@ -887,6 +892,10 @@ ImportMailThread( void *stuff)
 						pData->fatalError = PR_TRUE;
 						break;
 					}
+
+          // Make sure this new parent folder obj has the correct subfolder list so far.
+          nsCOMPtr<nsIEnumerator> enumerator;
+          rv = curProxy->GetSubFolders(getter_AddRefs(enumerator));
 
 					IMPORT_LOG1( "Created proxy for new subFolder: 0x%lx\n", (long) rv);
 				}
@@ -951,7 +960,7 @@ ImportMailThread( void *stuff)
 				}
 				
 				if (NS_FAILED( rv)) {
-					nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.get(), &error);
+					nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.get(), &success);
 				}
 
 				if (size && import && newFolder && outBox && NS_SUCCEEDED( rv)) {

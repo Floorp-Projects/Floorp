@@ -565,7 +565,7 @@ nsMsgAttachedFile * nsOutlookCompose::GetLocalAttachments( void)
 		}
 
 		a[i].type = nsCRT::strdup( pAttach->mimeType);
-		a[i].description = nsCRT::strdup( pAttach->description);
+		a[i].real_name = nsCRT::strdup( pAttach->description);
 		a[i].encoding = nsCRT::strdup( ENCODING_BINARY);
 	}
 
@@ -574,7 +574,7 @@ nsMsgAttachedFile * nsOutlookCompose::GetLocalAttachments( void)
 
 
 // Test a message send????
-nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg)
+nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode mode)
 {
 	nsresult	rv = CreateComponents();
 	if (NS_SUCCEEDED( rv))
@@ -633,7 +633,7 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg)
 										m_pMsgFields,	                // message fields
 										PR_FALSE,		                  // digest = NO
 										PR_TRUE,		                  // dont_deliver = YES, make a file
-										nsIMsgSend::nsMsgDeliverNow,	// mode
+										mode,	                        // mode
 										nsnull,			                  // no message to replace
 										pMimeType,		                // body type
 										m_pBody,		                  // body pointer
@@ -646,7 +646,7 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg)
 										m_pListener,		              // listener
                     nsnull);                      // password
 
-	
+
 	// IMPORT_LOG0( "Returned from CreateAndSendMessage\n");
 
 	if (pAttach)

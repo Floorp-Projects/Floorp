@@ -56,6 +56,8 @@
 #include "nsIAddrDatabase.h"
 #include "OutlookDebugLog.h"
 #include "nsOutlookMail.h"
+#include "nsUnicharUtils.h"
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kImportMimeEncodeCID,	NS_IMPORTMIMEENCODE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
@@ -399,8 +401,6 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
 	PRBool		lostAttach = PR_FALSE;
 
 	while (!done) {
-		(*pMsgCount)++;
-
 		if (!contents.GetNext( &cbEid, &lpEid, &oType, &done)) {
 			IMPORT_LOG1( "*** Error iterating mailbox: %S\n", pName);
 			return( NS_ERROR_FAILURE);
@@ -443,17 +443,20 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
 			compose.SetHeaders( msg.GetHeaders(), msg.GetHeaderLen());
 			compose.SetAttachments( &m_attachments);
 
-			/*
-			if ((*pMsgCount) == 163)
-				NS_PRECONDITION( FALSE, "Manual breakpoint");
-			*/
+      // See if it's a drafts folder. Outlook doesn't allow drafts
+      // folder to be configured so it's ok to hard code it here.
+      nsAutoString folderName(pName);
+      nsMsgDeliverMode mode = nsIMsgSend::nsMsgDeliverNow;
+      mode = nsIMsgSend::nsMsgSaveAsDraft;
+      if ( folderName.Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()) )
+        mode = nsIMsgSend::nsMsgSaveAsDraft;
 			
 			/*
 				If I can't get no headers,
 				I can't get no satisfaction
 			*/
 			if (msg.GetHeaderLen()) {
-				rv = compose.SendTheMessage( compositionFile);
+				rv = compose.SendTheMessage( compositionFile, mode);
 				if (NS_SUCCEEDED( rv)) {
 					rv = compose.CopyComposedMessage( fromLine, compositionFile, pDest, copy);
 					DeleteFile( compositionFile);
@@ -461,11 +464,18 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
 						IMPORT_LOG0( "*** Error copying composed message to destination mailbox\n");
 						return( rv);
 					}
+          (*pMsgCount)++;
 				}
 			}
 			else
 				rv = NS_OK;
 
+      // The following code to write msg to folder when compose.SendTheMessage() fails is commented
+      // out for now because the code doesn't handle attachments and users will complain anyway so
+      // until we fix the code to handle all kinds of msgs correctly we should not even make users
+      // think that all msgs are imported ok. This will also help users to identify which msgs are
+      // not imported and help to debug the problem.
+#if 0
 			if (NS_FAILED( rv)) {
 				
 				/* NS_PRECONDITION( FALSE, "Manual breakpoint"); */
@@ -502,12 +512,12 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
 					}
 				}
 			}
+#endif
 
 			// Just for YUCKS, let's try an extra endline
 			WriteData( pDest, "\x0D\x0A", 2);
 		}
 	}
-
 
 	return( NS_OK);
 }
@@ -529,7 +539,10 @@ BOOL nsOutlookMail::WriteMessage( nsIFileSpec *pDest, CMapiMessage *pMsg, int& a
 
 	pData = pMsg->GetHeaders( len);
 	if (pData && len) {
-		bResult = WriteWithoutFrom( pDest, pData, len, checkStart);
+    if (checkStart)
+      bResult = (EscapeFromSpaceLine(pDest, (char *)pData, pData+len) == NS_OK);
+    else
+      bResult = (EscapeFromSpaceLine(pDest, (char *)(pData+1), pData+len-1) == NS_OK);
 	}
 
 	// Do we need to add any mime headers???
@@ -581,7 +594,7 @@ BOOL nsOutlookMail::WriteMessage( nsIFileSpec *pDest, CMapiMessage *pMsg, int& a
 	pData = pMsg->GetBody( len);
 	if (pData && len) {
 		if (bResult)
-			bResult = WriteWithoutFrom( pDest, pData, len, TRUE);
+			bResult = (EscapeFromSpaceLine(pDest, (char *)pData, pData+len) == NS_OK);
 		if ((len < 2) || (pData[len - 1] != 0x0A) || (pData[len - 2] != 0x0D))
 			bResult = WriteStr( pDest, "\x0D\x0A");
 	}
@@ -609,55 +622,6 @@ BOOL nsOutlookMail::WriteStr( nsIFileSpec *pDest, const char *pStr)
 	nsresult rv = pDest->Write( pStr, len, &written);
 	if (NS_FAILED( rv) || (written != len))
 		return( FALSE);
-	return( TRUE);
-}
-
-BOOL nsOutlookMail::WriteWithoutFrom( nsIFileSpec *pDest, const char *pData, int len, BOOL checkStart)
-{
-	int				wLen = 0;
-	const char *	pChar = pData;
-	const char *	pStart = pData;
-
-	if (!len)
-		return( TRUE);
-	if (!checkStart) {
-		pChar++;
-		wLen++;
-		len--;
-	}
-	else {
-		if ((len >= 5) && !nsCRT::strncmp( pChar, "From ", 5)) {
-			if (!WriteStr( pDest, ">"))
-				return( FALSE);
-		}
-	}
-
-	while (len) {
-		if ((len >= 7) && !nsCRT::strncmp( pChar, ("\x0D\x0A" "From "), 7)) {
-			wLen += 2;
-			len -= 2;
-			pChar += 2;
-			if (!WriteData( pDest, pStart, wLen))
-				return( FALSE);
-			if (!WriteStr( pDest, ">"))
-				return( FALSE);
-			wLen = 5;
-			pStart = pChar;
-			pChar += 5;
-			len -= 5;
-		}
-		else {
-			wLen++;
-			pChar++;
-			len--;
-		}
-	}
-
-	if (wLen) {
-		if (!WriteData( pDest, pStart, wLen))
-			return( FALSE);	
-	}
-
 	return( TRUE);
 }
 
