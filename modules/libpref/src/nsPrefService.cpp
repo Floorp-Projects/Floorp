@@ -480,10 +480,7 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
 
   // execute a "safe" save by saving through a tempfile
   rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(outStreamSink),
-                                       aFile,
-                                       PR_WRONLY,
-                                       /*octal*/ 0600,
-                                       0);
+                                       aFile);
   if (NS_FAILED(rv)) 
       return rv;
   rv = NS_NewBufferedOutputStream(getter_AddRefs(outStream), outStreamSink, 4096);
