@@ -668,7 +668,7 @@ XPIDL_MODULE = $(MODULE)
 
 TYPELIB = $(XPIDL_GEN_DIR)\$(XPIDL_MODULE).xpt
 
-$(TYPELIB): $(XPIDL_TYPELIBS)
+$(TYPELIB): $(XPIDL_TYPELIBS) $(XPTLINK_PROG)
         @echo +++ make: Creating typelib: $(TYPELIB)
 	@echo.
         $(XPTLINK_PROG) $(TYPELIB) $(XPIDL_TYPELIBS)
@@ -679,9 +679,10 @@ $(XPIDL_GEN_DIR):
 	echo.
 	-mkdir $(XPIDL_GEN_DIR)
 
+$(XPIDL_HEADERS): $(XPIDL_PROG)
+
 .idl{$(XPIDL_GEN_DIR)}.h:
         $(XPIDL_PROG) -m header -w $(XPIDL_INCLUDES) -o $* $<
-
 
 $(DIST)\include:
 	@echo +++ make: Creating directory: $(DIST)\include

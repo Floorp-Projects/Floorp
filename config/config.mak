@@ -484,8 +484,8 @@ JAVA_BOOT_CLASSPATH = $(JAVA_BOOT_CLASSPATH:/=\)
 CURDIR=$(MAKEDIR)^\
 !endif
 
-XPIDL_PROG=$(DIST)\bin\xpidl
-XPTLINK_PROG=$(DIST)\bin\xpt_link
+XPIDL_PROG=$(DIST)\bin\xpidl.exe
+XPTLINK_PROG=$(DIST)\bin\xpt_link.exe
 
 # XXX If you change this name, be _sure_ to update rules.mak;
 # specifically, the rules that compute XPIDL_HEADERS and
