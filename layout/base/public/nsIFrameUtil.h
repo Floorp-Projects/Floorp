@@ -32,16 +32,21 @@ class nsIURL;
 class nsIFrameUtil : public nsISupports {
 public:
   /**
-   * Load frame regression data from the given URL synchronously.
-   * Once the data is loaded and translated into a content tree,
-   * return in aResult a pointer to the root of the tree.
+   * Compare two regression data dumps. The return status will be NS_OK
+   * if the trees compare favoribly, otherwise the return will indicate
+   * NS_ERROR_FAILURE. Other return status's will indicate some other
+   * type of failure. The files, aFile1 and aFile2 are closed before
+   * returning.
    */
-  NS_IMETHOD LoadFrameRegressionData(nsIURL* aURL,
-                                     nsIXMLContent** aResult) = 0;
+  NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2) = 0;
 
-  // XXX temporary until sync i/o works again
-  NS_IMETHOD ReadFrameRegressionData(FILE* aInput,
-                                     nsIXMLContent** aResult) = 0;
+  /**
+   * Display the regression dump data stored in aInputFile1 to
+   * aOutputFile . The file is closed before returning. If the
+   * regression data is in error somehow then NS_ERROR_FAILURE will be
+   * returned.
+   */
+  NS_IMETHOD DumpRegressionData(FILE* aInputFile, FILE* aOutputFile) = 0;
 };
 
 #endif /* nsIFrameUtil_h___ */
