@@ -69,6 +69,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) BrowserInitPage.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) sidebar.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) xul.css $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) navigator.xul $(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll

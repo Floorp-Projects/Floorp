@@ -48,3 +48,12 @@ button.throbber {
 throbber[busy] {
 	background-image:url("resource:/res/throbber/anims07.gif");
 }
+
+broadcaster {
+	display: none;
+}
+
+observes {
+	display: none;
+}
+
