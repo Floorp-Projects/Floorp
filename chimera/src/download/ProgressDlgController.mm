@@ -69,7 +69,7 @@ public:
         if (!mURL)
             mDocument = do_QueryInterface(aSource);
         nsCAutoString dstStr = [aDestination cString];
-        NS_NewLocalFile(dstStr.get(), PR_FALSE, getter_AddRefs(mDestination));
+        NS_NewLocalFile(dstStr, PR_FALSE, getter_AddRefs(mDestination));
         mContentType = aContentType;
         mPostData = aPostData;
         mBypassCache = aBypassCache;
@@ -170,18 +170,18 @@ nsDownloadListener::BeginDownload()
                 // Create a local directory in the same dir as our file.  It
                 // will hold our associated files.
                 filesFolder = do_CreateInstance("@mozilla.org/file/local;1");
-                nsXPIDLString unicodePath;
-                mDestination->GetUnicodePath(getter_Copies(unicodePath));
-                filesFolder->InitWithUnicodePath(unicodePath.get());
+                nsCAutoString unicodePath;
+                mDestination->GetPath(unicodePath);
+                filesFolder->InitWithPath(unicodePath);
                 
-                nsXPIDLCString leafName;
-                filesFolder->GetLeafName(getter_Copies(leafName));
-                nsCAutoString nameMinusExt(leafName.get());
+                nsCAutoString leafName;
+                filesFolder->GetLeafName(leafName);
+                nsCAutoString nameMinusExt(leafName);
                 PRInt32 index = nameMinusExt.RFind(".");
                 if (index >= 0)
                     nameMinusExt.Left(nameMinusExt, index);
                 nameMinusExt += " Files"; // XXXdwh needs to be localizable!
-                filesFolder->SetLeafName(nameMinusExt.get());
+                filesFolder->SetLeafName(nameMinusExt);
                 PRBool exists = PR_FALSE;
                 filesFolder->Exists(&exists);
                 if (!exists)
@@ -219,10 +219,9 @@ nsDownloadListener::InitDialog()
             [mController setSourceURL: spec2.get()];
         }
     }
-    
-    nsXPIDLString path;
-    mDestination->GetUnicodePath(getter_Copies(path));
-    nsCAutoString pathStr; pathStr.AssignWithConversion(path.get());
+
+    nsCAutoString pathStr;
+    mDestination->GetPath(pathStr);
     [mController setDestination: pathStr.get()];
     
     
