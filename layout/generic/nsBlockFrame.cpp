@@ -3237,34 +3237,6 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
     }
     PRBool isBlock = nsLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
 
-#if XXX
-    // See if we need to move the frame outside of the flow, and insert a
-    // placeholder frame in its place
-    nsIFrame* placeholder;
-    if (MoveFrameOutOfFlow(aPresContext, frame, kidDisplay, kidPosition,
-                           placeholder)) {
-      // Reset the previous frame's next sibling pointer
-      if (nsnull != prevFrame) {
-        prevFrame->SetNextSibling(placeholder);
-      }
-
-      // The placeholder frame is always inline
-      frame = placeholder;
-      isBlock = PR_FALSE;
-    }
-    else
-    {
-      // Wrap the frame in a view if necessary
-      nsIStyleContext* kidSC;
-      frame->GetStyleContext(&kidSC);
-      rv = CreateViewForFrame(aPresContext, frame, kidSC, PR_FALSE);
-      NS_RELEASE(kidSC);
-      if (NS_OK != rv) {
-        return rv;
-      }
-    }
-#endif
-
     // If the child is an inline then add it to the lastLine (if it's
     // an inline line, otherwise make a new line). If the child is a
     // block then make a new line and put the child in that line.
@@ -3409,29 +3381,6 @@ nsBlockFrame::InsertNewFrames(nsIPresContext& aPresContext,
       nsLineLayout::TreatFrameAsBlock(display, position)
       ? LINE_IS_BLOCK
       : 0;
-
-#if XXX
-    // See if we need to move the frame outside of the flow, and insert a
-    // placeholder frame in its place
-    nsIFrame* placeholder;
-    if (MoveFrameOutOfFlow(aPresContext, newFrame, display, position,
-                           placeholder)) {
-      // Add the placeholder frame to the flow
-      newFrame = placeholder;
-      newFrameIsBlock = PR_FALSE;  // placeholder frame is always inline
-    }
-    else
-    {
-      // Wrap the frame in a view if necessary
-      nsIStyleContext* kidSC;
-      newFrame->GetStyleContext(&kidSC);
-      nsresult rv = CreateViewForFrame(aPresContext, newFrame, kidSC, PR_FALSE);    
-      NS_RELEASE(kidSC);
-      if (NS_OK != rv) {
-        return rv;
-      }
-    }
-#endif
 
     // Insert/append the frame into flows line list at the right spot
     nsLineBox* newLine;
@@ -3674,31 +3623,6 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
       nsIFrame* parent;
       aDeletedFrame->GetParent(&parent);
       NS_ASSERTION(flow == parent, "messed up delete code");
-#endif
-
-#if XXX
-      // See if the frame is a floater (actually, the floaters
-      // placeholder). If it is, then destroy the floated frame too.
-      const nsStyleDisplay* display;
-      nsresult rv = aDeletedFrame->GetStyleData(eStyleStruct_Display,
-                                                (const nsStyleStruct*&)display);
-      if (NS_SUCCEEDED(rv) && (nsnull != display)) {
-        // XXX Sanitize "IsFloating" question *everywhere* (add a
-        // static method on nsFrame?)
-        if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-          nsPlaceholderFrame* ph = (nsPlaceholderFrame*) aDeletedFrame;
-          nsIFrame* floater = ph->GetAnchoredItem();
-          if (nsnull != floater) {
-            floater->DeleteFrame(aPresContext);
-            if (nsnull != line->mFloaters) {
-              // Wipe out the floater array for this line. It will get
-              // recomputed during reflow anyway.
-              delete line->mFloaters;
-              line->mFloaters = nsnull;
-            }
-          }
-        }
-      }
 #endif
 
       // Get the deleted frames next sibling
