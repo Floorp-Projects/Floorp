@@ -20,6 +20,7 @@
  *   Ramiro Estrugo <ramiro@eazel.com>
  */
 
+#include <stdio.h>
 
 #include "gtkmozembed.h"
 #include "gtkmozembedprivate.h"
