@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.15 $ $Date: 2002/04/25 00:25:58 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.16 $ $Date: 2002/05/21 21:24:35 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -284,7 +284,7 @@ nssTrustDomain_RemoveTokenCertsFromCache
 );
 
 NSS_IMPLEMENT PRStatus
-nssToken_NofifyCertsNotVisible
+nssToken_NotifyCertsNotVisible
 (
   NSSToken *tok
 )
