@@ -1646,7 +1646,7 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, jsval id, PRBool *aIsNumber)
     return -1;
   }
 
-  jsint i;
+  jsint i = -1;
 
   if (!JSDOUBLE_IS_INT(array_index, i)) {
     return -1;
