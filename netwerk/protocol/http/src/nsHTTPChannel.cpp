@@ -25,6 +25,7 @@
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
+#include "nsIIOService.h"
 
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
@@ -354,6 +355,8 @@ nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPChannel methods:
@@ -369,11 +372,23 @@ nsHTTPChannel::Init()
         Set up a request object - later set to a clone of a default 
         request from the handler
     */
+    nsresult rv;
     m_pRequest = new nsHTTPRequest(m_URI);
     if (m_pRequest == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(m_pRequest);
     m_pRequest->SetConnection(this);
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    PRUnichar * ua = nsnull;
+    rv = service->GetUserAgent(&ua);
+    if (NS_FAILED(rv)) return rv;
+    nsString2 uaString(ua);
+    nsCRT::free(ua);
+    char * uaCString = uaString.ToNewCString();
+    if (!uaCString) return NS_ERROR_OUT_OF_MEMORY;
+    m_pRequest->SetUserAgent(uaCString);
+    nsCRT::free(uaCString);
     return NS_OK;
 }
 
