@@ -66,7 +66,7 @@ struct nsReadableFragment
         // nothing else to do here
       }
 
-    void*
+    const void*
     GetID() const
       {
         return mFragmentIdentifier;
@@ -81,7 +81,7 @@ struct nsReadableFragment
       }
 
     void
-    SetID( void* id )
+    SetID( const void* id )
       {
         mFragmentIdentifier = id;
       }
