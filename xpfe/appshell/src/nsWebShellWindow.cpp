@@ -870,7 +870,7 @@ void nsWebShellWindow::ExecuteJavaScriptString(nsString& aJavaScript)
 
 
 /**
- * Execute window onConstruction handler
+ * Execute window onLoad handler
  */
 void nsWebShellWindow::ExecuteStartupCode()
 {
@@ -883,9 +883,9 @@ void nsWebShellWindow::ExecuteStartupCode()
   if (mCallbacks)
     mCallbacks->ConstructBeforeJavaScript(mWebShell);
 
-  // Execute the string in the onConstruction attribute of the webshellElement.
+  // Execute the string in the onLoad attribute of the webshellElement.
   nsString startupCode;
-  if (webshellElement && NS_SUCCEEDED(webshellElement->GetAttribute("onConstruction", startupCode))) 
+  if (webshellElement && NS_SUCCEEDED(webshellElement->GetAttribute("onload", startupCode))) 
     ExecuteJavaScriptString(startupCode);
 
   if (mCallbacks)
