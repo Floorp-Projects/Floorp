@@ -133,15 +133,7 @@ void CnsICmdParams::GetStringValueTest(char *stringVal, const char *stateType)
 	if (cmdParamObj) {
 		FormatAndPrintOutput("The input string = ", stringVal, 2);
 		FormatAndPrintOutput("The input state type = ", stateType, 2);
-/*
-		cmdMgrObj = CnsICommandMgr::GetCommandMgrObject(qaWebBrowser);
-		if (!cmdMgrObj) {
-			QAOutput("We didn't get nsICommandMgr object. Test fails.", 2);
-			return;
-		}
-		else
-			cmdMgrObj->GetCommandState(aCommand, cmdParamObj);
-*/
+
 		rv = cmdParamObj->SetStringValue(stateType, NS_ConvertASCIItoUCS2(stringVal));		
 		rv = cmdParamObj->GetStringValue(stateType, retval);
 		RvTestResult(rv, "GetStringValue test", 2);
