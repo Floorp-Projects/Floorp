@@ -61,7 +61,6 @@ bin/components/bookmarks.xpt
 bin/components/browsercompsbase.xpt
 bin/components/caps.xpt
 bin/components/chardet.xpt
-bin/components/chrome.xpt
 bin/components/commandhandler.xpt
 bin/components/commandlines.xpt
 bin/components/composer.xpt
@@ -135,6 +134,7 @@ bin/components/passwordmgr.xpt
 bin/components/plugin.xpt
 bin/components/prefetch.xpt
 bin/components/pref.xpt
+bin/components/profile.xpt
 bin/components/progressDlg.xpt
 bin/components/proxyObjInst.xpt
 bin/components/rdf.xpt

@@ -50,12 +50,6 @@
 
 #include "nscore.h"
 
-// This directory service key is a lot like "ProfD", except that it will be
-// available even when the profile hasn't been "started", or after is has been
-// shut down. If we're in "no-profile" mode, such as showing the profile manager UI,
-// this key will not be available.
-#define NS_APP_PROFILE_DIR_STARTUP "ProfDS"
-
 class nsACString;
 struct nsXREAppData;
 

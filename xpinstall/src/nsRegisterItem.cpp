@@ -274,38 +274,11 @@ PRInt32 nsRegisterItem::Complete()
 {
     nsresult rv = NS_OK;
     PRInt32 result = nsInstall::SUCCESS;
-    CHROMEREG_IFACE* reg = mInstall->GetChromeRegistry();
-#ifndef MOZ_XUL_APP
     PRBool  isProfile = mChromeType & CHROME_PROFILE;
-#endif
+    nsIXULChromeRegistry* reg = mInstall->GetChromeRegistry();
 
     if ( reg && !(mChromeType & CHROME_DELAYED) )
     {
-#ifdef MOZ_XUL_APP
-        nsCOMPtr<nsIURI> baseuri;
-        rv = NS_NewURI(getter_AddRefs(baseuri), mURL);
-        if (NS_FAILED(rv)) {
-            LogError(NS_LITERAL_STRING("NS_NewURI failed."), rv);
-        }
-        else {
-            nsCOMPtr<nsIURI> manifesturi;
-            rv = NS_NewURI(getter_AddRefs(manifesturi),
-                           NS_LITERAL_CSTRING("resource:///chrome/xpinstall.manifest"));
-            if (NS_FAILED(rv)) {
-                LogError(NS_LITERAL_STRING("NS_NewURI failed."), rv);
-            }
-            else {
-                PRBool skinOnly = (mChromeType & CHROME_ALL) == CHROME_SKIN;
-                rv = reg->ProcessContentsManifest(baseuri, manifesturi,
-                                                  PR_TRUE,
-                                                  skinOnly);
-                if (NS_FAILED(rv)) {
-                    LogError(NS_LITERAL_STRING("ProcessContentsManifest failed."), rv);
-                }
-                reg->CheckForNewChrome();
-            }
-        }
-#else
         // We can register right away
         if (mChromeType & CHROME_SKIN)
             rv = reg->InstallSkin(mURL.get(), isProfile, PR_TRUE);
@@ -324,7 +297,6 @@ PRInt32 nsRegisterItem::Complete()
         if (NS_FAILED(rv)) {
             LogError(NS_LITERAL_STRING("InstallPackage() failed."), rv);
         }
-#endif
     }
     else
     {
@@ -468,13 +440,6 @@ PRInt32 nsRegisterItem::Complete()
                 }
             }
             PR_Close(fd);
-
-#ifdef MOZ_XUL_APP
-            // app-chrome.manifest is not regenerated if it exists
-            rv = startupFile->SetNativeLeafName(NS_LITERAL_CSTRING("app-chrome.manifest"));
-            if (NS_SUCCEEDED(rv))
-                startupFile->Remove(PR_FALSE);
-#endif
         }
         else
         {

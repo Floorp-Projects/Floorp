@@ -40,7 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-
 interface nsIURI;
 
 [scriptable, uuid(68389281-f6d0-4533-841d-344a2018140c)]
@@ -51,8 +50,9 @@ interface nsIChromeRegistry : nsISupports
   const PRInt32 FULL = 2;
 
   /**
-   * Resolve a chrome URL to an loadable URI using the information in the
-   * registry. Does not modify aChromeURL.
+   * Convert a chrome URL into a canonical representation; specifically,
+   *
+   *   chrome://package/provider/file
    *
    * Chrome URLs are allowed to be specified in "shorthand", leaving the
    * "file" portion off. In that case, the URL is expanded to:
@@ -65,9 +65,17 @@ interface nsIChromeRegistry : nsISupports
    *   "css" for a "skin" package, and
    *   "dtd" for a "locale" package.
    *
+   * @param aChromeURL the URL that is to be canonified.
+   */
+  void canonify(in nsIURI aChromeURL);
+
+  /**
+   * Convert a chrome URL to a "real" using the information in the registry.
+   * Does not modify aChromeURL.
+   *
    * @param aChromeURL the URL that is to be converted.
    */
-  nsIURI convertChromeURL(in nsIURI aChromeURL);
+  AUTF8String convertChromeURL(in nsIURI aChromeURL);
 
   /**
    * refresh the chrome list at runtime, looking for new packages/etc
@@ -75,7 +83,7 @@ interface nsIChromeRegistry : nsISupports
   void checkForNewChrome();
 };
 
-[scriptable, uuid(3e51f40b-b4b0-4e60-ac45-6c63477ebe41)]
+[scriptable, uuid(a1208469-47cf-4776-9062-f8b431afb6fa)]
 interface nsIXULChromeRegistry : nsIChromeRegistry
 {
   /* Should be called when locales change to reload all chrome (including XUL). */
@@ -87,6 +95,24 @@ interface nsIXULChromeRegistry : nsIChromeRegistry
   void refreshSkins();
 
   boolean allowScriptsForSkin(in nsIURI url);
+
+  /* Whether or not an addon package can dynamically overlay another package. 
+     You can use these APIs to effectively disable a chrome add-on without
+     uninstalling it. */
+  void setAllowOverlaysForPackage(in wstring packageName, in boolean allowOverlays);
+
+  /* Installation APIs */
+  void installSkin(in string baseURL,
+                   in boolean useProfile,
+                   in boolean allowScripts);
+  
+  void uninstallSkin(in ACString skinName, in boolean useProfile);
+
+  void installLocale(in string baseURL, in boolean useProfile);
+  void uninstallLocale(in ACString localeName, in boolean useProfile);
+
+  void installPackage(in string baseURL, in boolean useProfile);
+  void uninstallPackage(in ACString packageName, in boolean useProfile);
 };
 
 %{ C++

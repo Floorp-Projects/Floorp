@@ -42,7 +42,6 @@
 */
 
 #include "nsChromeProtocolHandler.h"
-#include "nsChromeRegistry.h"
 #include "nsCOMPtr.h"
 #include "nsContentCID.h"
 #include "nsCRT.h"
@@ -69,7 +68,6 @@
 #include "nsIXULPrototypeDocument.h"
 #endif
 #include "nsNetCID.h"
-#include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "prlog.h"
@@ -596,7 +594,21 @@ nsChromeProtocolHandler::NewURI(const nsACString &aSpec,
     // Canonify the "chrome:" URL; e.g., so that we collapse
     // "chrome://navigator/content/" and "chrome://navigator/content"
     // and "chrome://navigator/content/navigator.xul".
-    rv = nsChromeRegistry::Canonify(uri);
+
+    // Try the global cache first.
+    nsCOMPtr<nsIChromeRegistry> reg = gChromeRegistry;
+
+    // If that fails, the service has not been instantiated yet; let's
+    // do that now.
+    if (!reg) {
+        reg = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    NS_ASSERTION(reg, "Must have a chrome registry by now");
+    
+    rv = reg->Canonify(uri);
     if (NS_FAILED(rv))
         return rv;
 
@@ -620,7 +632,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         nsCOMPtr<nsIURI> debugClone;
         debug_rv = aURI->Clone(getter_AddRefs(debugClone));
         if (NS_SUCCEEDED(debug_rv)) {
-            debug_rv = nsChromeRegistry::Canonify(debugClone);
+            debug_rv = debugReg->Canonify(debugClone);
             if (NS_SUCCEEDED(debug_rv)) {
                 PRBool same;
                 debug_rv = aURI->Equals(debugClone, &same);
@@ -683,12 +695,16 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
             if (NS_FAILED(rv)) return rv;
         }
 
-        nsCOMPtr<nsIURI> chromeURI;
-        rv = reg->ConvertChromeURL(aURI, getter_AddRefs(chromeURI));
+        nsCAutoString spec;
+        rv = reg->ConvertChromeURL(aURI, spec);
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIIOService> ioServ (do_GetIOService());
-        if (!ioServ) return NS_ERROR_FAILURE;
+        nsCOMPtr<nsIIOService> ioServ(do_GetService(kIOServiceCID, &rv));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIURI> chromeURI;
+        rv = ioServ->NewURI(spec, nsnull, nsnull, getter_AddRefs(chromeURI));
+        if (NS_FAILED(rv)) return rv;
 
         rv = ioServ->NewChannelFromURI(chromeURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;

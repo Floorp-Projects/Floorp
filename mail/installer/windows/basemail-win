@@ -215,7 +215,6 @@ bin\components\toolkitprofile.xpt
 ; toolkit
 bin\components\appstartup.xpt
 bin\components\commandlines.xpt
-bin\components\chrome.xpt
 
 ; rdf
 bin\components\rdf.xpt
