@@ -56,9 +56,9 @@ public:
     virtual PRBool    AutoErase();
 
 protected:
-
-    PRBool  mIsPassword;
-    PRBool  mIsReadOnly;
+    nsString mText;
+    PRBool   mIsPassword;
+    PRBool   mIsReadOnly;
    
     virtual DWORD           WindowExStyle();
 

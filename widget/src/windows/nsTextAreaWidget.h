@@ -47,6 +47,8 @@ public:
     virtual PRBool          OnPaint();
     virtual PRBool          OnResize(nsRect &aWindowRect);
     NS_IMETHOD              GetBounds(nsRect &aRect);
+    NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext,
+                                  const nsRect& aDirtyRect);
 
 
     virtual void            SetUpForPaint(HDC aHDC);

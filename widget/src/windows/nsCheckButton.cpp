@@ -24,6 +24,11 @@
 #include "nsStringUtil.h"
 #include <windows.h>
 
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
+#include "nsRepository.h"
+
+#include "nsIDeviceContext.h"
 
 NS_IMPL_ADDREF(nsCheckButton)
 NS_IMPL_RELEASE(nsCheckButton)
@@ -33,7 +38,8 @@ NS_IMPL_RELEASE(nsCheckButton)
 // nsCheckButton constructor
 //
 //-------------------------------------------------------------------------
-nsCheckButton::nsCheckButton() : nsWindow() , nsICheckButton()
+nsCheckButton::nsCheckButton() : nsWindow() , nsICheckButton(),
+  mState(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -80,12 +86,15 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
-  BOOL state;
-  if (aState) 
-      state = BST_CHECKED;
-  else
-      state = BST_UNCHECKED;
-  ::SendMessage(mWnd, BM_SETCHECK, (WPARAM)state, (LPARAM)0);
+  mState = aState;
+  if (mWnd) {
+    BOOL state;
+    if (aState) 
+        state = BST_CHECKED;
+    else
+        state = BST_UNCHECKED;
+    ::SendMessage(mWnd, BM_SETCHECK, (WPARAM)state, (LPARAM)0);
+  }
   return NS_OK;
 }
 
@@ -188,4 +197,57 @@ DWORD nsCheckButton::WindowExStyle()
 
 
 
+/**
+ * Renders the CheckButton for Printing
+ *
+ **/
+NS_METHOD nsCheckButton::Paint(nsIRenderingContext& aRenderingContext,
+                               const nsRect&        aDirtyRect)
+{
+  nsRect rect;
+  float  appUnits;
+  float  scale;
+  nsIDeviceContext * context;
+  aRenderingContext.GetDeviceContext(context);
+
+  context->GetCanonicalPixelScale(scale);
+  context->GetDevUnitsToAppUnits(appUnits);
+
+  GetBoundsAppUnits(rect, appUnits);
+
+  nscoord one   = nscoord(PRFloat64(rect.height) * 1.0/20.0);
+  nscoord three = nscoord(PRFloat64(rect.width)  * 3.0/20.0);
+  nscoord five  = nscoord(PRFloat64(rect.width)  * 5.0/20.0);
+  nscoord six   = nscoord(PRFloat64(rect.height) * 5.0/20.0);
+  nscoord eight = nscoord(PRFloat64(rect.height) * 7.0/20.0);
+  nscoord nine  = nscoord(PRFloat64(rect.width)  * 9.0/20.0);
+  nscoord ten   = nscoord(PRFloat64(rect.height) * 9.0/20.0);
+
+  rect.x      += three;
+  rect.y      += nscoord(PRFloat64(rect.height) * 3.5 /20.0);
+  rect.width  = nscoord(PRFloat64(rect.width) * 12.0/20.0);
+  rect.height = nscoord(PRFloat64(rect.height) * 12.0/20.0);
+
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+  nscoord onePixel  = nscoord((appUnits+0.6F));
+  DrawScaledRect(aRenderingContext, rect, scale, appUnits);
+  nscoord x = rect.x;
+  nscoord y = rect.y;
+
+  if (mState) {
+    nscoord inc   = nscoord(PRFloat64(rect.height) *   0.75/20.0);
+    nscoord yy = 0;
+    for (nscoord i=0;i<4;i++) {
+      DrawScaledLine(aRenderingContext, x+three, y+eight+yy,  x+five, y+ten+yy, scale, appUnits, PR_FALSE); // top
+      DrawScaledLine(aRenderingContext, x+five,  y+ten+yy,    x+nine, y+six+yy, scale, appUnits, PR_FALSE); // top
+      //aRenderingContext.DrawLine(x+three, y+eight+yy,  x+five, y+ten+yy);
+      //aRenderingContext.DrawLine(x+five,  y+ten+yy,    x+nine, y+six+yy);
+      yy += nscoord(scale);
+    }
+  }
+
+  NS_RELEASE(context);
+  return NS_OK;
+}
 

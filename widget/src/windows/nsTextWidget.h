@@ -47,6 +47,9 @@ public:
     virtual PRBool  OnResize(nsRect &aWindowRect);
     NS_IMETHOD      GetBounds(nsRect &aRect);
 
+    NS_IMETHOD      Paint(nsIRenderingContext& aRenderingContext,
+                          const nsRect& aDirtyRect);
+
     virtual void SubclassWindow(BOOL bState);
 
 

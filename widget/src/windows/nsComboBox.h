@@ -61,6 +61,9 @@ public:
     NS_IMETHOD      SelectItem(PRInt32 aPosition);
     NS_IMETHOD      Deselect() ;
 
+    NS_IMETHOD Paint(nsIRenderingContext& aRenderingContext,
+                     const nsRect& aDirtyRect);
+
     NS_IMETHOD      PreCreateWidget(nsWidgetInitData *aInitData);
 
 protected:

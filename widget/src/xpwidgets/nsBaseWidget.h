@@ -18,6 +18,7 @@
 #ifndef nsBaseWidget_h__
 #define nsBaseWidget_h__
 
+#include "nsRect.h"
 #include "nsIWidget.h"
 #include "nsIEnumerator.h"
 #include "nsIMouseListener.h"
@@ -77,12 +78,19 @@ public:
     NS_IMETHOD              UpdateTooltips(nsRect* aNewTips[]);
     NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
     NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
-    NS_IMETHOD              GetBounds(nsRect &aRect) = 0;
+    NS_IMETHOD              SetBounds(const nsRect &aRect);
+    NS_IMETHOD              GetBounds(nsRect &aRect);
+    NS_IMETHOD              GetBoundsAppUnits(nsRect &aRect, float aAppUnits);
     NS_IMETHOD              GetClientBounds(nsRect &aRect);
     NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
+    NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
     virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 protected:
 
+    virtual void            DrawScaledRect(nsIRenderingContext& aRenderingContext, const nsRect & aRect, float aScale, float aAppUnits);
+    virtual void            DrawScaledLine(nsIRenderingContext& aRenderingContext, 
+                                           nscoord aSX, nscoord aSY, nscoord aEX, nscoord aEY, 
+                                           float   aScale, float aAppUnits, PRBool aIsHorz);
     virtual void            OnDestroy();
     virtual void            BaseCreate(nsIWidget *aParent,
                             const nsRect &aRect,
@@ -109,8 +117,9 @@ protected:
     PRBool            mIsAltDown;
     PRBool            mIsDestroying;
     PRBool            mOnDestroyCalled;
-    PRInt32           mWidth;
-    PRInt32           mHeight;
+    //PRInt32           mWidth;
+    //PRInt32           mHeight;
+    nsRect            mBounds;
 
     // keep the list of children
     class Enumerator : public nsIEnumerator {

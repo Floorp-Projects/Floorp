@@ -24,6 +24,15 @@
 #include "nsStringUtil.h"
 #include <windows.h>
 
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
+#include "nsRepository.h"
+
+#include "nsIDeviceContext.h"
+#include "nsIFontMetrics.h"
+
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 NS_IMPL_ADDREF(nsComboBox)
 NS_IMPL_RELEASE(nsComboBox)
 
@@ -278,5 +287,73 @@ NS_METHOD nsComboBox::GetBounds(nsRect &aRect)
   nsWindow::GetNonClientBounds(aRect);
   return NS_OK;
 }
+
+/**
+ * Renders the TextWidget for Printing
+ *
+ **/
+NS_METHOD nsComboBox::Paint(nsIRenderingContext& aRenderingContext,
+                              const nsRect& aDirtyRect)
+{
+  nsBaseWidget::Paint(aRenderingContext, aDirtyRect);
+  /*nsRect rect;
+  GetBoundsAppUnits(rect, aTwipsConversion);
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+  nscolor bgColor  = NS_RGB(255,255,255);
+  nscolor fgColor  = NS_RGB(0,0,0);
+  nscolor hltColor = NS_RGB(240,240,240);
+  nscolor sdwColor = NS_RGB(128,128,128);
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  bgColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetForeground,  fgColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DShadow,    sdwColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DHighlight, hltColor);
+  }
+
+  nsIDeviceContext * context;
+  //nsDrawingSurface surface;
+  aRenderingContext.GetDeviceContext(context);
+  //context->GetDrawingSurface(aRenderingContext, surface);
+
+  //HDC the_hdc = ((nsDrawingSurfaceWin *)&surface)->mDC;
+
+  //::SendMessage(mWnd, WM_PAINT, (WPARAM)the_hdc, NULL);
+  
+
+  // shrink by one pixel
+  
+  nscoord onePixel  = nscoord((aTwipsConversion+0.6F));
+  nscoord twoPixels = onePixel*2;
+
+  nsString text("(ComboBox)");
+  //GetSelectedItem(text);
+
+
+  aRenderingContext.SetColor(bgColor);
+  aRenderingContext.FillRect(rect);
+
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+  aRenderingContext.DrawRect(rect);
+
+
+  aRenderingContext.SetFont(*mFont);
+
+  nscoord textWidth;
+  nscoord textHeight;
+  aRenderingContext.GetWidth(text, textWidth);
+
+  nsIFontMetrics* metrics;
+  context->GetMetricsFor(*mFont, metrics);
+  metrics->GetMaxAscent(textHeight);
+
+  nscoord x = (twoPixels * 2)  + rect.x;
+  nscoord y = ((rect.height - textHeight) / 2) + rect.y;
+  //aRenderingContext.DrawString(text, x, y, 0);
+  */
+  return NS_OK;
+}
+
 
 

@@ -597,6 +597,12 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) = 0;
 
 
+    /**
+     * For printing and lightweight widgets
+     *
+     */
+    NS_IMETHOD Paint(nsIRenderingContext& aRenderingContext,
+                     const nsRect& aDirtyRect) = 0;
    
     virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) = 0;
 };

@@ -24,6 +24,16 @@
 #include "nsStringUtil.h"
 #include <windows.h>
 
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
+#include "nsRepository.h"
+
+#include "nsIDeviceContext.h"
+#include "nsIFontMetrics.h"
+
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+
 
 NS_IMPL_ADDREF(nsButton)
 NS_IMPL_RELEASE(nsButton)
@@ -79,6 +89,8 @@ nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsButton::SetLabel(const nsString& aText)
 {
+
+  mLabel = aText;
   if (NULL == mWnd) {
     return NS_ERROR_FAILURE;
   }
@@ -95,12 +107,15 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsButton::GetLabel(nsString& aBuffer)
 {
-  int actualSize = ::GetWindowTextLength(mWnd)+1;
+  aBuffer = mLabel;
+
+  /*int actualSize = ::GetWindowTextLength(mWnd)+1;
   NS_ALLOC_CHAR_BUF(label, 256, actualSize);
   ::GetWindowText(mWnd, label, actualSize);
   aBuffer.SetLength(0);
   aBuffer.Append(label);
   NS_FREE_CHAR_BUF(label);
+  */
   return NS_OK;
 }
 
@@ -153,6 +168,99 @@ DWORD nsButton::WindowStyle()
 DWORD nsButton::WindowExStyle()
 {
   return 0;
+}
+
+/**
+ * Renders the Button for Printing
+ *
+ **/
+NS_METHOD nsButton::Paint(nsIRenderingContext& aRenderingContext,
+                          const nsRect& aDirtyRect)
+{
+  float appUnits;
+  float devUnits;
+  float scale;
+  nsIDeviceContext * context;
+  aRenderingContext.GetDeviceContext(context);
+
+  context->GetCanonicalPixelScale(scale);
+  context->GetAppUnitsToDevUnits(devUnits);
+  context->GetDevUnitsToAppUnits(appUnits);
+
+  nsRect rect;
+  GetBoundsAppUnits(rect, appUnits);
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+  nscolor bgColor  = NS_RGB(255,255,255);
+  nscolor fgColor  = NS_RGB(0,0,0);
+  nscolor hltColor = NS_RGB(240,240,240);
+  nscolor sdwColor = NS_RGB(128,128,128);
+
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  bgColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetForeground,  fgColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DShadow,    sdwColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DHighlight, hltColor);
+  }
+
+  aRenderingContext.SetColor(bgColor);
+  aRenderingContext.FillRect(rect);
+
+  /*aRenderingContext.SetColor(bgColor);
+  for (int i=0;i<int(scale);i++) {
+    aRenderingContext.DrawRect(rect);
+    rect.x      += 3; 
+    rect.y      += 3;
+    rect.width  -= 6; 
+    rect.height -= 6;
+  }*/
+
+  nscoord onePixel  = nscoord(scale);
+  nscoord twoPixels = nscoord(scale*2);
+
+  rect.x      += onePixel; 
+  rect.y      += onePixel;
+  rect.width  -= twoPixels; 
+  rect.height -= twoPixels;
+
+  nscoord right     = rect.x+rect.width;
+  nscoord bottom    = rect.y+rect.height;
+
+
+  // Draw Left & Top
+  aRenderingContext.SetColor(NS_RGB(225,225,225));
+  DrawScaledLine(aRenderingContext, rect.x, rect.y, right, rect.y, scale, appUnits, PR_TRUE); // top
+  DrawScaledLine(aRenderingContext, rect.x, rect.y, rect.x, bottom, scale, appUnits, PR_FALSE); // left
+
+  //DrawScaledLine(aRenderingContext, rect.x+onePixel, rect.y+onePixel, right-onePixel, rect.y+onePixel, scale, appUnits, PR_TRUE); // top + 1
+  //DrawScaledLine(aRenderingContext, rect.x+onePixel, rect.y+onePixel, rect.x+onePixel, bottom-onePixel, scale, appUnits, PR_FALSE); // left + 1
+
+  // Draw Right & Bottom
+  aRenderingContext.SetColor(NS_RGB(128,128,128));
+  DrawScaledLine(aRenderingContext, right, rect.y+onePixel, right, bottom, scale, appUnits, PR_FALSE); // right 
+  DrawScaledLine(aRenderingContext, rect.x+onePixel, bottom, right, bottom, scale, appUnits, PR_TRUE); // bottom
+
+  //DrawScaledLine(aRenderingContext, right-onePixel, rect.y+twoPixels, right-onePixel, bottom, scale, appUnits, PR_FALSE); // right + 1
+  //DrawScaledLine(aRenderingContext, rect.x+twoPixels, bottom-onePixel, right, bottom-onePixel, scale, appUnits, PR_TRUE); // bottom + 1
+
+  aRenderingContext.SetFont(*mFont);
+
+  nscoord textWidth;
+  nscoord textHeight;
+  aRenderingContext.GetWidth(mLabel, textWidth);
+
+  nsIFontMetrics* metrics;
+  context->GetMetricsFor(*mFont, metrics);
+  metrics->GetMaxAscent(textHeight);
+
+  nscoord x = ((rect.width  - textWidth) / 2)  + rect.x;
+  nscoord y = ((rect.height - textHeight) / 2) + rect.y;
+  aRenderingContext.DrawString(mLabel, x, y, 0);
+
+
+  NS_RELEASE(context);
+  return NS_OK;
 }
 
 
