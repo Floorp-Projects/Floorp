@@ -65,7 +65,6 @@ static NS_DEFINE_IID(kITokenizerIID,      NS_ITOKENIZER_IID);
 static NS_DEFINE_IID(kHTMLTokenizerIID,   NS_HTMLTOKENIZER_IID);
 static NS_DEFINE_IID(kClassIID,           NS_EXPATTOKENIZER_IID);
 
-static const char* kDocTypeDeclPrefix = "<!DOCTYPE";
 static const char* kChromeProtocol = "chrome";
 static const char* kDTDDirectory = "dtd/";
 static const char kHTMLNameSpaceURI[] = "http://www.w3.org/1999/xhtml";
@@ -904,7 +903,7 @@ void nsExpatTokenizer::HandleStartDoctypeDecl(void *userData,
 {  
   XMLParserState* state = (XMLParserState*) userData;
   state->indoctype = PR_TRUE;
-  state->doctypeText.Assign((PRUnichar*)kDocTypeDeclPrefix);
+  state->doctypeText.Assign(NS_LITERAL_STRING("<!DOCTYPE "));
 }
 
 void nsExpatTokenizer::HandleEndDoctypeDecl(void *userData)

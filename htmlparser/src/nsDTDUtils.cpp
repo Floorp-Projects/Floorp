@@ -1246,7 +1246,7 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
     case eToken_instruction:      result=new(mArenaPool) CInstructionToken(aString); break;
     case eToken_cdatasection:     result=new(mArenaPool) CCDATASectionToken(aString); break;
     case eToken_error:            result=new(mArenaPool) CErrorToken(); break;
-    case eToken_doctypeDecl:      result=new(mArenaPool) CDoctypeDeclToken(); break;
+    case eToken_doctypeDecl:      result=new(mArenaPool) CDoctypeDeclToken(aString); break;
       default:
         NS_ASSERTION(PR_FALSE, "nsDTDUtils::CreateTokenOfType: illegal token type"); 
         break;

@@ -452,6 +452,7 @@ protected:
 class CDoctypeDeclToken: public CHTMLToken {
 public:
                         CDoctypeDeclToken(eHTMLTags aTag=eHTMLTag_unknown);
+                        CDoctypeDeclToken(const nsAReadableString& aString,eHTMLTags aTag=eHTMLTag_unknown);
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
