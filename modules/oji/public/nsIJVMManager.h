@@ -71,18 +71,22 @@ public:
      * calling this method multiple times from the same thread will return
      * the same proxy JNI.
      */
-	   NS_IMETHOD
-	   CreateProxyJNI(nsISecureEnv* inSecureEnv, JNIEnv** outProxyEnv) = 0;
+	NS_IMETHOD
+	CreateProxyJNI(nsISecureEnv* inSecureEnv, JNIEnv** outProxyEnv) = 0;
 	   
-	   /**
-	    * Returns the proxy JNI associated with the current thread, or NULL if no
-	    * such association exists.
-	    */
-	   NS_IMETHOD
-	   GetProxyJNI(JNIEnv** outProxyEnv) = 0;
+	/**
+	 * Returns the proxy JNI associated with the current thread, or NULL if no
+	 * such association exists.
+	 */
+	NS_IMETHOD
+	GetProxyJNI(JNIEnv** outProxyEnv) = 0;
 
+	/**
+	 * Returns whether or not Java is enabled.
+	 */
+	NS_IMETHOD
+	IsJavaEnabled(PRBool* outEnabled) = 0;
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -65,6 +65,12 @@ public:
 	 */
 	NS_IMETHOD
 	GetProxyJNI(JNIEnv** outProxyEnv);
+
+	/**
+	 * Returns whether or not Java is enabled.
+	 */
+	NS_IMETHOD
+	IsJavaEnabled(PRBool* outEnabled);
     
     /* from nsIThreadManager: */
     
