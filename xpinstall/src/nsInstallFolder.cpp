@@ -284,13 +284,19 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                 break;
 
             case 106: ///////////////////////////////////////////////////////////  Current User
-                //nsIFileXXX: User profile dir not implemented in nsDirectoryService
-                //SetAppShellDirectory(nsSpecialFileSpec::App_UserProfileDirectory50 );
+                {
+                    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+                    if (!directoryService) return;
+                    directoryService->Get("app.profile.user.directory.5", NS_GET_IID(nsIFile), getter_AddRefs(mFileSpec));
+                }   
                 break;
-
+                
             case 107: ///////////////////////////////////////////////////////////  Preferences
-                //nsIFileXXX: User profile dir not implemented in nsDirectoryService
-                //SetAppShellDirectory(nsSpecialFileSpec::App_PrefsDirectory50 );
+                {
+                    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+                    if (!directoryService) return;
+                    directoryService->Get("app.prefs.directory.5", NS_GET_IID(nsIFile), getter_AddRefs(mFileSpec));
+                }
                 break;
 
             case 108: ///////////////////////////////////////////////////////////  OS Drive
