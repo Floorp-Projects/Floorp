@@ -155,6 +155,7 @@ protected:
   nsIContentViewer* mContentViewer;
   nsIDeviceContext* mDeviceContext;
   nsIWidget* mWindow;
+  nsISupports* mInnerWindow;
   nsIDocumentLoader* mDocLoader;
 
   nsIWebShell* mParent;
@@ -206,6 +207,8 @@ nsWebShell::nsWebShell()
 
 nsWebShell::~nsWebShell()
 {
+  NS_IF_RELEASE(mInnerWindow);
+
   NS_IF_RELEASE(mContentViewer);
   NS_IF_RELEASE(mContainer);
 
@@ -261,6 +264,9 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsISupports*)(nsIWebShell*)this;
     AddRef();
     return NS_OK;
+  }
+  if (nsnull != mInnerWindow) {
+    return mInnerWindow->QueryInterface(aIID, aInstancePtr);
   }
   return NS_NOINTERFACE;
 }
@@ -324,7 +330,8 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
 
-  nsresult rv = NSRepository::CreateInstance(kDocumentLoaderCID, nsnull,
+  nsresult rv = NSRepository::CreateInstance(kDocumentLoaderCID,
+                                             nsnull,
                                              kIDocumentLoaderIID,
                                              (void**)&mDocLoader);
 
@@ -347,13 +354,23 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   mDeviceContext->SetGamma(1.7f);
 
   // Create a Native window for the shell container...
-  rv = NSRepository::CreateInstance(kChildCID, nsnull, kIWidgetIID,
-                                    (void**)&mWindow);
+  rv = NSRepository::CreateInstance(kChildCID,
+                                    (nsISupports*)((nsIWebShell*)this),
+                                    kISupportsIID,
+                                    (void**)&mInnerWindow);
   if (NS_OK != rv) {
     goto done;
   }
-  mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
-                  mDeviceContext, nsnull);
+  mInnerWindow->QueryInterface(kIWidgetIID, (void**) &mWindow);
+  if (NS_OK != rv) {
+    NS_RELEASE(mInnerWindow);
+  }
+  else {
+    // Get rid of extra reference count
+    mWindow->Release();
+    mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
+                    mDeviceContext, nsnull);
+  }
 
 done:
   return rv;

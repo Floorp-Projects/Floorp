@@ -35,7 +35,7 @@
 static NS_DEFINE_IID(kChildCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 
-static NS_DEFINE_IID(kIChildWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -46,9 +46,12 @@ static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
 
 static nsVoidArray gThrobbers;
 
+#define INNER_OUTER \
+  ((nsThrobber*)((char*)this - offsetof(nsThrobber, mInner)))
+
 class nsThrobber : public nsIThrobber {
 public:
-  nsThrobber();
+  nsThrobber(nsISupports* aOuter);
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];
@@ -78,11 +81,65 @@ public:
   PRInt32 mWidth;
   PRInt32 mHeight;
   nsIWidget* mWidget;
+  nsISupports* mInnerWidget;
   nsVoidArray* mImages;
   PRInt32 mIndex;
   nsIImageGroup* mImageGroup;
   nsITimer* mTimer;
   PRBool mRunning;
+
+  nsISupports *mOuter;
+
+  nsrefcnt AddRefObject() {
+    return ++mRefCnt;
+  }
+
+  nsrefcnt ReleaseObject() {
+    NS_PRECONDITION(0 != mRefCnt, "dup release");
+    if (--mRefCnt == 0) {
+      delete this;
+      return 0;
+    }
+    return mRefCnt;
+  }
+
+  nsresult QueryObject(const nsIID& aIID, void** aInstancePtr) {
+    if (NULL == aInstancePtr) {
+      return NS_ERROR_NULL_POINTER;
+    }
+    if (aIID.Equals(kIThrobberIID)) {
+      *aInstancePtr = (void*)(nsIThrobber*)this;
+      AddRef();
+      return NS_OK;
+    }
+    if (aIID.Equals(kISupportsIID)) {
+      *aInstancePtr = (void*)(nsISupports*)this;
+      AddRef();
+      return NS_OK;
+    }
+    if (nsnull != mInnerWidget) {
+      return mInnerWidget->QueryInterface(aIID, aInstancePtr);
+    }
+    return NS_NOINTERFACE;
+  }
+
+  // This is used when we are not aggregated in
+  class InnerSupport : public nsISupports {
+  public:
+    InnerSupport() {}
+
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr) {
+      return INNER_OUTER->QueryObject(aIID, aInstancePtr);
+    }
+
+    NS_IMETHOD_(nsrefcnt) AddRef() {
+      return INNER_OUTER->AddRefObject();
+    }
+
+    NS_IMETHOD_(nsrefcnt) Release() {
+      return INNER_OUTER->ReleaseObject();
+    }
+  } mInner;
 };
 
 class ThrobObserver : public nsIImageRequestObserver {
@@ -212,17 +269,40 @@ HandleThrobberEvent(nsGUIEvent *aEvent)
 //----------------------------------------------------------------------
 
 // Note: operator new zeros our memory
-nsThrobber::nsThrobber()
+nsThrobber::nsThrobber(nsISupports* aOuter)
 {
+  // assign outer
+  if (aOuter) 
+    mOuter = aOuter;
+  else 
+    mOuter = &mInner;
+
   AddThrobber(this);
 }
 
 nsThrobber::~nsThrobber()
 {
+  NS_IF_RELEASE(mInnerWidget);
   RemoveThrobber(this);
 }
 
-NS_IMPL_ISUPPORTS(nsThrobber, kIThrobberIID);
+nsrefcnt
+nsThrobber::AddRef()
+{
+  return mOuter->AddRef();
+}
+
+nsrefcnt
+nsThrobber::Release()
+{
+  return mOuter->Release();
+}
+
+nsresult
+nsThrobber::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  return mOuter->QueryInterface(aIID, aInstancePtr);
+}
 
 NS_IMETHODIMP
 nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds)
@@ -231,14 +311,22 @@ nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds)
   mHeight = aBounds.height;
 
   // Create widget
-  nsresult rv = NSRepository::CreateInstance(kChildCID, nsnull,
-                                             kIChildWidgetIID,
-                                             (void**)&mWidget);
+  nsresult rv = NSRepository::CreateInstance(kChildCID,
+                                             this,
+                                             kISupportsIID,
+                                             (void**)&mInnerWidget);
   if (NS_OK != rv) {
     return rv;
   }
-
-  mWidget->Create(aParent, aBounds, HandleThrobberEvent, NULL);
+  mInnerWidget->QueryInterface(kIWidgetIID, (void**) &mWidget);
+  if (NS_OK != rv) {
+    NS_RELEASE(mInnerWidget);
+  }
+  else {
+    // Get rid of extra reference count
+    mWidget->Release();
+    mWidget->Create(aParent, aBounds, HandleThrobberEvent, NULL);
+  }
 
   return LoadThrobberImages();
 }
@@ -492,12 +580,8 @@ nsThrobberFactory::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = NULL;
-  if (nsnull != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    goto done;
-  }
 
-  inst = new nsThrobber();
+  inst = new nsThrobber(aOuter);
   if (inst == NULL) {
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto done;
