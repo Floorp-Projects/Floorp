@@ -51,7 +51,7 @@ if ($status==0) {$statusresult="Success!";
 } else if ($status==4) {$statusresult="Error: No File Was Uploaded";
 }
 $manifest_exists = "FALSE";
-$destination = "$websitepath/files/temp/$filename";
+$destination = "$repositorypath/temp/$filename";
 if (move_uploaded_file($uploadedfile, $destination)) {
 $uploadedfile = $destination;
 $chmod_result = chmod("$uploadedfile", 0644); //Make the file world readable. prevent nasty permissions issues.
@@ -61,7 +61,7 @@ $chmod_result = chmod("$uploadedfile", 0644); //Make the file world readable. pr
 if ($_POST["legacy"]=="TRUE") {
 $filename = escape_string($_POST["filename"]);
 $filesize = escape_string($_POST["filesize"]);
-$uploadedfile="$websitepath/files/temp/$filename";
+$uploadedfile="$repositorypath/temp/$filename";
 }
 $zip = @zip_open("$uploadedfile");
 if ($zip) {
