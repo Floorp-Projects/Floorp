@@ -40,9 +40,6 @@
 #include "morkSearchRowCursor.h"
 #endif
 
-#ifndef _MORKUNIQROWCURSOR_
-#include "morkUniqRowCursor.h"
-#endif
 
 #ifndef _ORKINTABLEROWCURSOR_
 #include "orkinTableRowCursor.h"
@@ -150,11 +147,11 @@ morkSearchRowCursor::AcquireUniqueRowCursorHandle(morkEnv* ev)
 {
   orkinTableRowCursor* outCursor = 0;
   
-  morkUniqRowCursor* uniqCursor = this->MakeUniqCursor(ev);
-  if ( uniqCursor )
+//  morkUniqRowCursor* uniqCursor = this->MakeUniqCursor(ev);
+//  if ( uniqCursor )
   {
-    outCursor = uniqCursor->AcquireTableRowCursorHandle(ev);
-    uniqCursor->CutStrongRef(ev);
+//    outCursor = uniqCursor->AcquireTableRowCursorHandle(ev);
+    //uniqCursor->CutStrongRef(ev);
   }
   return outCursor;
 }
