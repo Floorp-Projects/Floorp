@@ -186,8 +186,6 @@
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
     <key id="focusURLBar"      key="&openCmd.commandkey;" command="Browser:OpenLocation"
          modifiers="accel"/>
-    <key id="focusURLBar2"      key="&openCmd2.commandkey;" command="Browser:OpenLocation"
-         modifiers="alt"/>
     <key id="focusSearchBar"     key="&searchFocus.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
@@ -868,7 +866,7 @@
       <toolbaritem id="urlbar-container" align="center" flex="1000"
                    title="&locationItem.title;" class="chromeclass-location">
         <textbox id="urlbar" flex="1"
-                 type="autocomplete"
+                 type="autocomplete" accesskey="&urlbar.accesskey;"
                  autocompletesearch="history" 
                  autocompletepopup="PopupAutoComplete"
                  tabscrolling="true"
