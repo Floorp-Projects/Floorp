@@ -1525,7 +1525,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetLength(PRUint32* aLength)
 
 NS_IMETHODIMP GlobalWindowImpl::Dump(const nsAReadableString& aStr)
 {
-#ifndef NS_DEBUG
+#if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
   {
     // In optimized builds we check a pref that controls if we should
     // enable output from dump() or not, in debug builds it's always
