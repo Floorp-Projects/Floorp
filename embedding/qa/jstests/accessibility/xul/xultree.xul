@@ -92,6 +92,7 @@
      var state = getState();
      var value = getValue();
      var newvalue = value.toString();
+     var keyboardShortcut = getAccKeyboardShortcut();
 
     var expectedName          = "";
     var expectedRole          = "35";
@@ -99,6 +100,7 @@
     var expectedValue         = "";
     var expectednodeFocus     = "Focused";
     var expectedaccFocused    = "Focused";
+    var expectedkeyboardShortcut = "Alt+t";
 
     var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
     var row1 = new Array("Name->", expectedName, name);
@@ -107,8 +109,9 @@
     var row4 = new Array("Value->", expectedValue, value);
     var row5 = new Array("accTakeFocus()->", expectednodeFocus, nodeFocus);
     var row6 = new Array("accFocused->", expectedaccFocused, varaccFocused);
+    var row7 = new Array("accKeyboardShortcut->", expectedkeyboardShortcut, keyboardShortcut);
 
-    row = new Array(row0, row1, row2, row3, row4, row5, row6);
+    row = new Array(row0, row1, row2, row3, row4, row5, row6, row7);
 
     if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
     if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
@@ -116,6 +119,8 @@
     if (newvalue == expectedValue)            row4[3] = "PASS"; else row4[3] = "FAIL";
     if (nodeFocus == expectednodeFocus)       row5[3] = "PASS"; else row5[3] = "FAIL";
     if (varaccFocused == expectedaccFocused)  row6[3] = "PASS"; else row6[3] = "FAIL";
+    if (keyboardShortcut == expectedkeyboardShortcut)
+                                              row7[3] = "PASS"; else row7[3] = "FAIL";
 
     appendTableRes();
     WriteResults(res);    
@@ -136,7 +141,7 @@
     <html:b> Testing XUL Tree for Accessibility.. </html:b>
   </description>
   
-  <tree seltype="single" flex="1">
+  <tree seltype="single" flex="1" accesskey="t">
     <treecols>
       <treecol id="sender" label="Sender" flex="1"/>
       <treecol id="subject" label="Subject" flex="2"/>

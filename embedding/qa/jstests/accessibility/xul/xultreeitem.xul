@@ -106,6 +106,7 @@
     var state = getState();
     var value = getValue();
     var newvalue = value.toString();
+    var keyboardShortcut = getAccKeyboardShortcut();
 
     var expectedName          = "joe@somewhere.com";
     var expectedRole          = "36";
@@ -113,6 +114,7 @@
     var expectedValue         = 0;
     var expectednodeFocus     = "Focused";
     var expectedaccFocused    = "Focused";
+    var expectedkeyboardShortcut = "Alt+i";
 
     var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
     var row1 = new Array("Name->", expectedName, name);
@@ -121,8 +123,9 @@
     var row4 = new Array("Value->", expectedValue, value);
     var row5 = new Array("accTakeFocus()->", expectednodeFocus, nodeFocus);
     var row6 = new Array("accFocused->", expectedaccFocused, varaccFocused);
+    var row7 = new Array("accKeyboardShortcut->", expectedkeyboardShortcut, keyboardShortcut);
 
-    row = new Array(row0, row1, row2, row3, row4, row5, row6);
+    row = new Array(row0, row1, row2, row3, row4, row5, row6, row7);
 
     if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
     if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
@@ -130,6 +133,8 @@
     if (newvalue == expectedValue)            row4[3] = "PASS"; else row4[3] = "FAIL";
     if (nodeFocus == expectednodeFocus)       row5[3] = "PASS"; else row5[3] = "FAIL";
     if (varaccFocused == expectedaccFocused)  row6[3] = "PASS"; else row6[3] = "FAIL";
+    if (keyboardShortcut == expectedkeyboardShortcut)
+                                              row7[3] = "PASS"; else row7[3] = "FAIL";
 
     appendTableRes();
     WriteResults(res);    
@@ -153,7 +158,7 @@
     </treecols>
     
     <treechildren>
-      <treeitem>
+      <treeitem accesskey="i">
         <treerow>
           <treecell label="joe@somewhere.com"/>
           <treecell label="Top secret plans"/>

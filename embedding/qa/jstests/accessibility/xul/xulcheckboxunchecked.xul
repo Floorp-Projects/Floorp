@@ -100,6 +100,7 @@
     var numActions = getNumActions();
     var actionName = getActionName();
     var action = doAction();
+    var keyboardShortcut = getAccKeyboardShortcut();
 
     var expectedName          = "Checkbox Label";
     var expectedRole          = "44";
@@ -110,6 +111,7 @@
     var expectednumActions    = "1";
     var expectedactionName    = "check";
     var expectednodeCheck     = "Check Box Checked";
+    var expectedkeyboardShortcut = "Alt+b";
 
     var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
     var row1 = new Array("Name->", expectedName, name);
@@ -121,8 +123,9 @@
     var row7 = new Array("accNumActions->", expectednumActions, numActions);
     var row8 = new Array("getAccActionName()->", expectedactionName, actionName);
     var row9 = new Array("accDoAction()->", expectednodeCheck, nodeCheck);
+    var row10 = new Array("accKeyboardShortcut->", expectedkeyboardShortcut, keyboardShortcut);
 
-    row = new Array(row0, row1, row2, row3, row4, row5, row6, row7, row8, row9);
+    row = new Array(row0, row1, row2, row3, row4, row5, row6, row7, row8, row9, row10);
 
     if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
     if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
@@ -133,6 +136,8 @@
     if (numActions == expectednumActions)     row7[3] = "PASS"; else row7[3] = "FAIL";
     if (actionName == expectedactionName)     row8[3] = "PASS"; else row8[3] = "FAIL";
     if (nodeCheck == expectednodeCheck)       row9[3] = "PASS"; else row9[3] = "FAIL";
+    if (keyboardShortcut == expectedkeyboardShortcut)
+                                              row10[3] = "PASS"; else row10[3] = "FAIL";
 
     appendTableRes();
     WriteResults(res);
@@ -151,7 +156,7 @@
     </description>
     <box orient="horizontal">
       <!-- Checkbox Unchecked -->
-      <checkbox id="case-sensitive" label="Checkbox Label"/>
+      <checkbox id="case-sensitive" label="Checkbox Label" accesskey="b"/>
       <spacer flex="1"/>
     </box>
   </box>
