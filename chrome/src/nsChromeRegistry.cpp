@@ -379,22 +379,23 @@ SplitURL(nsIURI* aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
       PRBool sawSlash = PR_TRUE;  // .. at the beginning is suspect as well as /..
       for (const char* p=aFile; *p; p++) {
         if (sawSlash) {
-          if (p[0] == '.') {                
-            if (p[1] == '.') {
-                depth--;    // we have /.., decrement depth. 
-            } else if (p[1] == '/') {
-                           // we have /./, leave depth alone
-            }
-          } else if (p[0] != '/') {
-              depth++;        // we have /x for some x that is not /
+          if (p[0] == '.' && p[1] == '.'){
+            depth--;    // we have /.., decrement depth.
+          } else {
+            static const char escape[] = "%2E%2E";
+            if(PL_strncasecmp(p, escape, sizeof(escape)-1) == 0)
+                depth--;   // we have /%2E%2E, the HTML escape form of /.., decrement depth.
           }
-        }
+        }else if (p[0] != '/') {
+          depth++;        // we have /x for some x that is not /      
+        }       
         sawSlash = (p[0] == '/');
-        if (depth < 0)
-            return NS_ERROR_FAILURE;
+        
+        if (depth < 0) {
+          return NS_ERROR_FAILURE;        
+        }
       }
   }
-
   return NS_OK;
 }
 
