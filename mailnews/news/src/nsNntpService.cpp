@@ -1198,20 +1198,10 @@ NS_METHOD nsNntpService::RegisterProc(nsIComponentManager *aCompMgr,
     nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCID cid = NS_NNTPSERVICE_CID;
-    char *cidString = cid.ToString();
-
-#ifdef DEBUG_sspitzer
-    printf("XXX: registering %s with %s\n",cidString,COMMAND_LINE_ARGUMENT_HANDLERS);
-#endif /* DEBUG_sspitzer */
-
     nsXPIDLCString prevEntry;
-    rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, cidString, "News Cmd Line Handler", PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
+    rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, NS_NNTPSERVICE_PROGID, "News Cmd Line Handler", PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
 
-    nsAllocator::Free(cidString);
-
-    return NS_OK;
-
+	return NS_OK;
 }
 
 NS_METHOD nsNntpService::UnregisterProc(nsIComponentManager *aCompMgr,
@@ -1224,17 +1214,9 @@ NS_METHOD nsNntpService::UnregisterProc(nsIComponentManager *aCompMgr,
     nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCID cid = NS_NNTPSERVICE_CID;
-    char *cidString = cid.ToString();
-
-#ifdef DEBUG_sspitzer
-    printf("XXX: unregistering %s with %s\n",cidString,COMMAND_LINE_ARGUMENT_HANDLERS);
-#endif /* DEBUG_sspitzer */
 
     nsXPIDLCString prevEntry;
-    rv = catman->DeleteCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, cidString, PR_TRUE, getter_Copies(prevEntry));
-
-    nsAllocator::Free(cidString);
+    rv = catman->DeleteCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, NS_NNTPSERVICE_PROGID, PR_TRUE, getter_Copies(prevEntry));
 
     // Return value is not used from this function.
     return NS_OK;
