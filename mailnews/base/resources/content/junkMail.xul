@@ -62,6 +62,9 @@
 
   <vbox align="start">
     <checkbox id="useWhiteList" oncommand="conditionallyEnableUI('useWhiteList')" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
+    
+    <hbox>
+    <spacer width="20px"/>
     <menulist id="whiteListAbURI">
      <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
         datasources="rdf:addressdirectory">
@@ -75,6 +78,7 @@
         </template>
       </menupopup>
     </menulist>
+    </hbox>
   </vbox>
 
   <separator/>
@@ -100,14 +104,16 @@
 	           value="1" label="&otherFolder.label;"/>
   	        <menulist id="actionTargetFolder"/>
           </row>
-          <row align="center" autostretch="never">
-            <checkbox id="purge" oncommand="conditionallyEnableUI('purge')" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
-            <textbox size="3" id="purgeInterval" />
-            <label id="purgeLabel" value="&purge2.label;"/>
-          </row>
         </rows>
       </grid>
     </radiogroup>
+    
+    <hbox autostretch="never">
+      <spacer width="20px"/>
+      <checkbox id="purge" oncommand="conditionallyEnableUI('purge')" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
+      <textbox size="3" id="purgeInterval" />
+      <label id="purgeLabel" value="&purge2.label;"/>
+    </hbox>
   </vbox>
 
 </vbox>

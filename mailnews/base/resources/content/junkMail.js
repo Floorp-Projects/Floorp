@@ -147,8 +147,6 @@ function conditionallyEnableUI(id)
   var enabled;
   if (!id || id == "moveOnSpam") {
     enabled = document.getElementById("moveOnSpam").checked;
-    document.getElementById("moveTargetMode").disabled = !enabled;
-
     var choice = document.getElementById("moveTargetMode").selectedItem.getAttribute("value");
  
     document.getElementById("actionTargetAccount").disabled = !enabled || (choice == 1);
