@@ -306,16 +306,6 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
 nsresult
 nsToolbarDragListener::DragOver(nsIDOMEvent* aDragEvent)
 {
-
-#if 0
-nsCOMPtr<nsIContent> c;
-mToolbar->GetContent ( getter_AddRefs(c) );
-nsCOMPtr<nsIDOMNode> d ( do_QueryInterface(c) );
-nsCOMPtr<nsIDOMNode> t;
-aDragEvent->GetTarget ( getter_AddRefs(t) );
-printf ( "DRAGOVER:: toolbar content is %ld, as DOMNode %ld, target is %ld\n", c, d, t );
-#endif
-
   // Check to see if the mouse is over an item and which one it is.
   nscoord xLoc = 0;
   PRBool onChild;
@@ -333,10 +323,10 @@ printf ( "DRAGOVER:: toolbar content is %ld, as DOMNode %ld, target is %ld\n", c
 
       	// need the cast, because on some platforms, PR[U]int32 != long, but we're using "%ld"
       sprintf(buffer, "%ld", NS_STATIC_CAST(long, xLoc));
-      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::tbDropLocationCoord, buffer, PR_TRUE );
+      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, buffer, PR_TRUE );
       sprintf(buffer, "%ld", NS_STATIC_CAST(long, beforeIndex));
-      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::tbDropLocation, "1", PR_FALSE );
-      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::tbDropOn, onChild ? "true" : "false", PR_FALSE );
+      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, buffer, PR_FALSE );
+      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropOn, onChild ? "true" : "false", PR_FALSE );
     }
     
     // cache the current drop location
@@ -349,48 +339,84 @@ printf ( "DRAGOVER:: toolbar content is %ld, as DOMNode %ld, target is %ld\n", c
 }
 
 
-////////////////////////////////////////////////////////////////////////
+//
+// DragExit
+// 
+// Handle when the mouse leaves the toolbar. We have to do some extra checking of both
+// the target and the relatedNode to see if they are our children, but the gist is if
+// the mouse leaves the toolbar for some other destination, reset the drop feedback
+// attributes and trigger a repaint.
+//
 nsresult
 nsToolbarDragListener::DragExit(nsIDOMEvent* aDragEvent)
 {
-// there are some bugs that cause us to not be able to correctly track dragExit events
-// so until then we just get on our knees and pray we don't get fooled again.
-#if 0
-nsCOMPtr<nsIContent> c;
-mToolbar->GetContent ( getter_AddRefs(c) );
-nsCOMPtr<nsIDOMNode> d ( do_QueryInterface(c) );
-nsCOMPtr<nsIDOMNode> t;
-aDragEvent->GetTarget ( getter_AddRefs(t) );
-printf ( "DRAGEXIT:: toolbar DOMNode %ld, target is %ld\n", d, t );
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aDragEvent) );
+  if ( !mouseEvent )
+    return NS_OK;
+ 
+  nsCOMPtr<nsIDOMNode> relatedNode;
+  mouseEvent->GetRelatedNode ( getter_AddRefs(relatedNode) );
+  nsCOMPtr<nsIDOMNode> target;
+  aDragEvent->GetTarget ( getter_AddRefs(target) );
 
-  nsCOMPtr<nsIContent> content;
-  mToolbar->GetContent ( getter_AddRefs(content) );
-
-  // we will get a drag exit event on sub items because we catch the event on the way down. If
-  // the target is not our toolbar, then ignore it.
-  nsCOMPtr<nsIDOMNode> toolbarDOMNode ( do_QueryInterface(content) );
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  aDragEvent->GetTarget ( getter_AddRefs(eventTarget) );
-  if ( eventTarget != toolbarDOMNode )
+  // we only care about the case where the toolbar or one of its children
+  // is the target of this dragExit event. Recall we get all exit events because
+  // they will bubble up to us.
+  if ( !IsNodeAChild(target) )
     return NS_OK;
 
-printf("***REAL EXIT EVENT\n");
+  if ( ! IsNodeAChild(relatedNode) ) {
+    nsCOMPtr<nsIContent> myContent;
+    mToolbar->GetContent ( getter_AddRefs(myContent) );
 
-  // tell the toolbar to not do any more drop feedback. Note that the toolbar code doesn't
-  // care at all about "tb-droplocation", only the coordinate so there is no need to send the
-  // AttributeChanged() about that attribute.
-  char buffer[10];
-  sprintf(buffer, "%ld", -1);
-  content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::tbDropLocationCoord, buffer, PR_TRUE );
-  content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::tbDropLocation, buffer, PR_FALSE );
+    // tell the toolbar to not do any more drop feedback. Note that the toolbar code doesn't
+    // care at all about "tb-droplocation", only the coordinate so there is no need to send the
+    // AttributeChanged() about that attribute.
+    char buffer[10];
+    sprintf(buffer, "%ld", -1);
+    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, buffer, PR_TRUE );
+    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, buffer, PR_FALSE );
+    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaint, "1", PR_TRUE );
     
-  // cache the current drop location
-  mCurrentDropLoc = -1;
-#endif
+    // reset the current drop location
+    mCurrentDropLoc = -1;
+  }
 
   return NS_OK; // don't consume event
 }
 
+
+//
+// IsNodeAChild
+//
+// Returns TRUE if the given dom node is a child (or equals) this toolbar
+//
+PRBool
+nsToolbarDragListener :: IsNodeAChild ( nsIDOMNode* inNode )
+{
+  PRBool foundAsChild = PR_FALSE;
+  
+  nsCOMPtr<nsIContent> myContent;
+  mToolbar->GetContent ( getter_AddRefs(myContent) );
+  nsCOMPtr<nsIDOMNode> myContentAsNode ( do_QueryInterface(myContent) );
+
+  NS_ASSERTION ( myContent && myContentAsNode, "No content nodes" );
+  
+  nsCOMPtr<nsIDOMNode> currNode ( inNode );
+  while ( currNode ) {
+    // did we hit the toolbar?
+    if ( currNode == myContentAsNode ) {
+      foundAsChild = PR_TRUE;
+      break;
+    }    
+    // if not, keep going
+    nsCOMPtr<nsIDOMNode> temp ( currNode );
+    temp->GetParentNode(getter_AddRefs(currNode));
+  } // while we're going up the parent chain
+
+  return foundAsChild;
+
+} // IsNodeAChild
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -420,7 +446,7 @@ nsToolbarDragListener :: LocateDropAreaFrame ( )
   nsCOMPtr<nsIContent> toolbarContent;
   mToolbar->GetContent ( getter_AddRefs(toolbarContent) );
   if ( toolbarContent ) {
-    if ( toolbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::tbDragDropArea, dropAreaID) == NS_CONTENT_ATTR_HAS_VALUE )
+    if ( toolbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::ddDragDropArea, dropAreaID) == NS_CONTENT_ATTR_HAS_VALUE )
       dropAreaIsSubframe = PR_TRUE;
   }
 

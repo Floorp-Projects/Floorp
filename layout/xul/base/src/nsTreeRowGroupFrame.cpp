@@ -42,6 +42,10 @@
 #include "nsISupportsArray.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIDOMDragListener.h"
+#include "nsTreeItemDragCapturer.h"
+
 
 //
 // NS_NewTreeFrame
@@ -71,12 +75,20 @@ nsTreeRowGroupFrame::nsTreeRowGroupFrame()
   mLinkupFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE),
   mScrollbar(nsnull), mShouldHaveScrollbar(PR_FALSE),
   mContentChain(nsnull), mFrameConstructor(nsnull),
-  mRowGroupHeight(0), mCurrentIndex(0), mRowCount(0)
+  mRowGroupHeight(0), mCurrentIndex(0), mRowCount(0),
+  mYDropLoc(-1), mDropOnContainer(PR_FALSE)
 { }
 
 // Destructor
 nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
 {
+  nsCOMPtr<nsIContent> content;
+  GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
+
+  // NOTE: the Remove will delete the drag capturer
+  reciever->RemoveEventListenerByIID((nsIDOMDragListener *)mDragCapturer, nsIDOMDragListener::GetIID());
+
   NS_IF_RELEASE(mContentChain);
 }
 
@@ -110,6 +122,38 @@ nsTreeRowGroupFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   return nsTableRowGroupFrame::QueryInterface(aIID, aInstancePtr);   
 }
+
+
+//
+// Init
+//
+// Setup event capturers for drag and drop. Our frame's lifetime is bounded by the
+// lifetime of the content model, so we're guaranteed that the content node won't go away on us. As
+// a result, our drag capturer can't go away before the frame is deleted. Since the content
+// node holds owning references to our drag capturer, which we tear down in the dtor, there is no 
+// need to hold an owning ref to it ourselves.
+//
+NS_IMETHODIMP
+nsTreeRowGroupFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
+                             nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow)
+{
+  nsresult rv = nsTableRowGroupFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  nsCOMPtr<nsIContent> content;
+  GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+
+  // register our drag over and exit capturers. These annotate the content object
+  // with enough info to determine where the drop would happen so that JS down the 
+  // line can do the right thing.
+  mDragCapturer = new nsTreeItemDragCapturer(this, &aPresContext);
+  receiver->AddEventListener("dragover", mDragCapturer, PR_TRUE);
+  receiver->AddEventListener("dragexit", mDragCapturer, PR_TRUE);
+
+  return NS_OK;
+
+} // Init
+
 
 void nsTreeRowGroupFrame::DestroyRows(nsTableFrame* aTableFrame, nsIPresContext& aPresContext, PRInt32& rowsToLose) 
 {
@@ -780,7 +824,7 @@ void nsTreeRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
                                          const nsRect&        aDirtyRect,
                                          nsFramePaintLayer    aWhichLayer)
 {
-  nsTableRowGroupFrame::PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  nsHTMLContainerFrame::PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
   if (mScrollbar) {
     nsIView *pView;
@@ -1591,3 +1635,130 @@ nsTreeRowGroupFrame::MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* 
     }
   }
 }
+
+//
+// pinkerton
+// code copied from the toolbar to bootstrap tree d&d. I hope to god
+// it goes away and i don't forget about it.
+//
+// We really _want_ to use CSS to do the drawing/etc, but changing the
+// borders of the cells would cause reflows and that could really suck.
+// As a first stab, let's try just to paint ourselves.
+//
+
+#include "nsIView.h"
+#include "nsIViewManager.h"
+
+
+//XXX NOTE: try to consolodate with the version in the toolbar code.
+static void ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame);
+static void ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame)
+{
+  if (aFrame == nsnull) {
+    return;
+  }
+  nsRect    rect;
+  nsIView * view;
+  nsPoint   pnt;
+  aFrame->GetOffsetFromView(aPresContext, pnt, &view);
+  aFrame->GetRect(rect);
+  rect.x = pnt.x;
+  rect.y = pnt.y;
+  if (view) {
+    nsCOMPtr<nsIViewManager> viewMgr;
+    view->GetViewManager(*getter_AddRefs(viewMgr));
+    if (viewMgr)
+      viewMgr->UpdateView(view, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_IMMEDIATE);
+  }
+
+}
+
+
+//
+// AttributeChanged
+//
+// Track several attributes set by the d&d drop feedback tracking mechanism. The first
+// is the "dd-triggerrepaint" attribute so JS can trigger a repaint when it
+// needs up update the drop feedback. The second is the x (or y, if bar is vertical) 
+// coordinate of where the drop feedback bar should be drawn.
+//
+NS_IMETHODIMP
+nsTreeRowGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* aChild,
+                                           PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint)
+{
+  nsresult rv = NS_OK;
+  
+  if ( aAttribute == nsXULAtoms::ddTriggerRepaint )
+    ForceDrawFrame ( aPresContext, this );
+  else if ( aAttribute == nsXULAtoms::ddDropLocationCoord ) {
+    nsAutoString attribute;
+    aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );
+    char* iHateNSString = attribute.ToNewCString();
+    mYDropLoc = atoi( iHateNSString );
+    nsAllocator::Free ( iHateNSString );
+  }
+  else if ( aAttribute == nsXULAtoms::ddDropOn ) {
+    nsAutoString attribute;
+    aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );
+    attribute.ToLowerCase();
+    mDropOnContainer = attribute.Equals("true");
+  }
+  else
+    rv = nsTableRowGroupFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aHint );
+
+  return rv;
+  
+} // AttributeChanged
+
+
+
+//
+// Paint
+//
+// Used to draw the drop feedback based on attributes set by the drag event capturer
+//
+NS_IMETHODIMP
+nsTreeRowGroupFrame :: Paint ( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext,
+                                const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer)
+{
+  nsresult res = nsTableRowGroupFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
+  
+  if ( mYDropLoc != -1 || mDropOnContainer ) {
+    // go looking for the psuedo-style that describes the drop feedback marker. If we don't
+    // have it yet, go looking for it.
+    if (!mMarkerStyle) {
+      nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
+      aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
+                                                PR_FALSE, getter_AddRefs(mMarkerStyle));
+    }
+
+    nscolor color;
+    if ( mMarkerStyle ) {
+      const nsStyleColor* styleColor = 
+                 NS_STATIC_CAST(const nsStyleColor*, mMarkerStyle->GetStyleData(eStyleStruct_Color));
+      color = styleColor->mColor;
+    }
+    else
+      color = NS_RGB(0,0,0);
+
+    // draw different drop feedback depending on if we are dropping on the 
+    // container or above/below it
+    if ( !mDropOnContainer ) {
+      
+      //XXX compute horiz indentation, fix up constants.
+      
+      aRenderingContext.SetColor(color);
+      nsRect dividingLine ( 0, mYDropLoc, 20*50, 30 );
+      aRenderingContext.FillRect(dividingLine);
+    }
+    else {
+      aRenderingContext.SetColor(NS_RGB(0x7F,0x7F,0x7F));
+      nsRect treeItemBounds ( 0, 0, mRect.width, mRect.height );
+      aRenderingContext.DrawRect ( treeItemBounds );
+    }
+  }
+
+  return res;
+  
+} // Paint
+
