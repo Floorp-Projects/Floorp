@@ -127,7 +127,18 @@ nsMimeConverter::DecodeMimePartIIStr(const char *header,
                                            char **decodedString,
                                      PRBool eatContinuations)
 {
-  char *retString = MIME_DecodeMimePartIIStr(header, charset, eatContinuations); 
+  char *retString;
+  if (charset)
+  {
+    retString = MIME_DecodeMimePartIIStr(header, charset, eatContinuations);
+  }
+  else
+  {
+    // the callder does not care about the charset, pass the local buffer
+    char charsetCstr[kMAX_CSNAME+1];
+    *charsetCstr = '\0';
+    retString = MIME_DecodeMimePartIIStr(header, charsetCstr, eatContinuations);
+  }
   if (retString == NULL)
     return NS_ERROR_FAILURE;
   else

@@ -2649,8 +2649,33 @@ nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_to
 			nsAutoString charset;
 			nsAutoString decodedStr;
       PRBool usedDefault;
+      PRBool characterSetOverride;
 			m_dbFolderInfo->GetCharacterSet(&charset, &usedDefault);
-			err = m_mimeConverter->DecodeMimePartIIStr(nakedString, charset, resultStr);
+			m_dbFolderInfo->GetCharacterSetOverride(&characterSetOverride);
+      if (!characterSetOverride)
+      {
+        err = m_mimeConverter->DecodeMimePartIIStr(nakedString, charset, resultStr);
+      }
+      else
+      {
+        // if folder charset override is 'ON' then ignore the MIME header and 
+        // always use the folder charset
+        char *encodedString, *decodedString;
+        encodedString = nakedString.ToNewCString();
+        if (encodedString)
+        {
+          // do MIME decoding only, ignore charset, no charset conversion
+          err = m_mimeConverter->DecodeMimePartIIStr(encodedString, nsnull, &decodedString);
+          if (NS_SUCCEEDED(err))
+          {
+            nakedString.AssignWithConversion(decodedString);
+            // call again only for charset conversion with the folder charset
+            err = m_mimeConverter->DecodeMimePartIIStr(nakedString, charset, resultStr);
+          }
+          PR_FREEIF(decodedString);
+          PR_FREEIF(encodedString);
+        }
+      }
 		}
 	}
 	return err;
