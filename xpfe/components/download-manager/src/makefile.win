@@ -19,10 +19,32 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..
+DEPTH=..\..\..\..
+MODULE=downloadmanager
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  uriloader \
+		  necko \
+		  webBrowser_core \
+		  $(NULL)
 
-DIRS=public src resources\content resources\locale resources\locale\win
+CPP_OBJS=                               \
+ .\$(OBJDIR)\nsDownloadManager.obj     \
+ $(NULL)
+
+LIBRARY_NAME=downloadmanager_s
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 

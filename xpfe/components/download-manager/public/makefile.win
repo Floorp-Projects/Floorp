@@ -19,10 +19,13 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..
+DEPTH=..\..\..\..
 
-DIRS=public src resources\content resources\locale resources\locale\win
+MODULE=downloadmanager
+
+XPIDLSRCS =                   \
+    .\nsIDownloadManager.idl \
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
 
