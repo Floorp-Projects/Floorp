@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -89,9 +90,14 @@ static NS_DEFINE_CID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
 static NS_DEFINE_CID(knsRegistryCID, NS_REGISTRY_CID);
 
-
 nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
 nsIFileSpec*      nsSoftwareUpdate::mProgramDir = nsnull;
+
+#if NOTIFICATION_ENABLE
+#include "nsUpdateNotification.h"
+static NS_DEFINE_CID(kUpdateNotificationCID, NS_XPI_UPDATE_NOTIFIER_CID);
+nsIUpdateNotification*      nsSoftwareUpdate::mUpdateNotifier= nsnull;
+#endif
 
 
 nsSoftwareUpdate *
@@ -226,13 +232,33 @@ nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService 
 
     nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
     RegisterNotifier(logger);
+    
+#if NOTIFICATION_ENABLE
+    /***************************************/
+    /* Create a Update notification object */
+    /***************************************/
+    NS_IF_RELEASE(mUpdateNotifier);
 
+    nsComponentManager::CreateInstance(kUpdateNotificationCID,
+                                       nsnull,
+                                       NS_GET_IID(nsIUpdateNotification),
+                                       (void**)&mUpdateNotifier);
+
+#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSoftwareUpdate::Shutdown()
 {
+#if NOTIFICATION_ENABLED
+    if (mUpdateNotifier)
+    {
+        mUpdateNotifier->DisplayUpdateDialog();
+        NS_RELEASE(mUpdateNotifier);
+    }
+#endif
+
     // nothing to do here. Should we UnregisterService?
     return NS_OK;
 }
@@ -612,6 +638,15 @@ static nsModuleComponentInfo components[] =
        NS_INSTALLVERSIONCOMPONENT_PROGID,
        nsInstallVersionConstructor 
     },
+
+#if NOTIFICATION_ENABLED 
+    { "XPInstall Update Notifier", 
+      NS_XPI_UPDATE_NOTIFIER_CID,
+      NS_XPI_UPDATE_NOTIFIER_PROGID, 
+      nsXPINotifierImpl::New
+    },
+#endif
+
 };
 
 
