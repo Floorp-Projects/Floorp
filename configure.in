@@ -613,7 +613,7 @@ fi
 
 res=`echo :$MOZ_TOOLKIT | grep -c "gtk"`
 if [ test $res != 0 ]; then
-    AM_PATH_GTK(1.1.3,,
+    AM_PATH_GTK(1.1.2,,
       AC_MSG_ERROR(Test for GTK failed.))
 
     AC_ARG_WITH(static-gtk,
