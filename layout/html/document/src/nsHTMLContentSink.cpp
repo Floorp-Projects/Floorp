@@ -351,8 +351,6 @@ public:
 
   nsString*           mRef;
   nsScrollPreference  mOriginalScrollPreference;
-  PRBool              mNotAtRef;
-  nsIHTMLContent*     mRefContent;
 
   nsString            mBaseHREF;
   nsString            mBaseTarget;
@@ -2154,7 +2152,6 @@ HTMLContentSink::HTMLContentSink() {
     gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");
   }
 #endif
-  mNotAtRef        = PR_TRUE;  
   mInScript = 0;
   mInNotification = 0;
   mInMonolithicContainer = 0;
@@ -2182,7 +2179,6 @@ HTMLContentSink::~HTMLContentSink()
 
   NS_IF_RELEASE(mCurrentForm);
   NS_IF_RELEASE(mCurrentMap);
-  NS_IF_RELEASE(mRefContent);
 
   NS_IF_RELEASE(mNodeInfoManager);
 
@@ -3559,8 +3555,8 @@ HTMLContentSink::ScrollToRef()
     for (i = 0; i < ns; i++) {
       nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
       if (shell) {
-        shell->FlushPendingNotifications();
         // Scroll to the anchor
+        shell->FlushPendingNotifications();
         shell->GoToAnchor(*mRef);
       }
     }
