@@ -662,7 +662,7 @@ sub file_url {
   my ($file, $linenum) = @_;
 
   return "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi"
-        ."?file=mozilla/$file&mark=$linenum#".($linenum-10);
+        ."?file=$file&mark=$linenum#".($linenum-10);
 
 }
 
