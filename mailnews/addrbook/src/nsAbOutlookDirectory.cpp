@@ -50,10 +50,8 @@
 #include "nsAbQueryStringToExpression.h"
 #include "nsAbUtils.h"
 
-#include "prprf.h"
-#include "prthread.h"
-
 #include "prlog.h"
+#include "prthread.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gAbOutlookDirectoryLog

@@ -337,9 +337,7 @@ NS_IMETHODIMP nsAbView::GetRowProperties(PRInt32 index, nsISupportsArray *proper
 
 NS_IMETHODIMP nsAbView::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArray *properties)
 {
-  // XXX todo remove once #116341 is fixed
-  if (!colID[0])
-    return NS_OK;
+  NS_ENSURE_TRUE(row >= 0, NS_ERROR_UNEXPECTED);
 
   if (mCards.Count() <= row)
     return NS_OK;
@@ -453,9 +451,7 @@ nsresult nsAbView::GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnich
 
 NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
 {
-  // XXX todo remove once #116341 is fixed
-  if (!colID[0])
-    return NS_OK;
+  NS_ENSURE_TRUE(row >= 0, NS_ERROR_UNEXPECTED);
 
   nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
   // XXX fix me by converting GetCardValue to take an nsAString&
@@ -534,9 +530,11 @@ NS_IMETHODIMP nsAbView::PerformActionOnCell(const PRUnichar *action, PRInt32 row
 NS_IMETHODIMP nsAbView::GetCardFromRow(PRInt32 row, nsIAbCard **aCard)
 {
   *aCard = nsnull;  
-  if ((mCards.Count() <= row)  || (row < 0)) {
+  if (mCards.Count() <= row) {
     return NS_OK;
   }
+
+  NS_ENSURE_TRUE(row >= 0, NS_ERROR_UNEXPECTED);
 
   AbCard *a = ((AbCard *)(mCards.ElementAt(row)));
   if (!a)

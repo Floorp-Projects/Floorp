@@ -52,9 +52,6 @@
 #include "nsIAbMDBDirectory.h"
 #include "nsIAddrBookSession.h"
 
-#include "prmem.h"
-#include "prprf.h"
-
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 
@@ -65,6 +62,7 @@
 #include "nsIRDFService.h"
 #include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
+#include "prprf.h"
 
 #define ID_PAB_TABLE            1
 
@@ -141,7 +139,7 @@ nsAddrDatabase::nsAddrDatabase()
       m_LastRecordKey(0),
       m_dbDirectory(nsnull)
 {
-    NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
 }
 
 nsAddrDatabase::~nsAddrDatabase()
@@ -2651,7 +2649,7 @@ protected:
 nsAddrDBEnumerator::nsAddrDBEnumerator(nsAddrDatabase* db)
     : mDB(db), mRowCursor(nsnull), mCurrentRow(nsnull), mDone(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mDbTable = mDB->GetPabTable();
     mCurrentRowIsList = PR_FALSE;
 }
@@ -2775,7 +2773,7 @@ protected:
 nsListAddressEnumerator::nsListAddressEnumerator(nsAddrDatabase* db, mdb_id rowID)
     : mDB(db), mCurrentRow(nsnull), mListRowID(rowID), mDone(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mDbTable = mDB->GetPabTable();
     mDB->GetListRowByRowID(mListRowID, &mListRow);
     mAddressTotal = mDB->GetListAddressTotal(mListRow);

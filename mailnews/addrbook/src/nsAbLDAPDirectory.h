@@ -14,13 +14,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is Paul Sandoz <paul.sandoz@sun.com> 
  * Sun Microsystems, Inc.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Created by: Paul Sandoz   <paul.sandoz@sun.com> 
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -67,6 +67,7 @@ public:
      NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
     NS_IMETHOD GetSupportsMailingLists(PRBool *aSupportsMailingsLists);
     NS_IMETHOD GetIsRemote(PRBool *aIsRemote);
+    NS_IMETHOD GetSearchDuringLocalAutocomplete(PRBool *aSearchDuringLocalAutocomplete);
 
     // nsAbLDAPDirectoryQuery methods
     nsresult GetLDAPConnection (nsILDAPConnection** connection);
@@ -85,9 +86,9 @@ protected:
     nsresult InitiateConnection ();
 
 protected:
-    PRBool mInitialized;
-    PRBool mInitializedConnection;
-    PRBool mPerformingQuery;
+    PRPackedBool mInitialized;
+    PRPackedBool mInitializedConnection;
+    PRPackedBool mPerformingQuery;
     PRInt32 mContext;
     PRInt32 mMaxHits;
 

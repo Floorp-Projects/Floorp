@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -58,15 +59,6 @@
 #define LDAP_PORT 389
 #define LDAPS_PORT 636
 #define PREF_NOERROR 0
-
-/* This format suffix is being defined here because it is needed by the FEs in their 
-   file operation routines */
-#define ABFileName_kPreviousSuffix ".na2" /* final v2 address book format */
-
-const char *kMainLdapAddressBook = "ldap.mab"; /* v3 main ldap address book file */
-
-#define ABFileName_kCurrentSuffix ".mab" /* v3 address book extension */
-#define ABPabFileName_kCurrent "abook" /* v3 address book name */
 
 #if !defined(MOZADDRSTANDALONE)
 
@@ -348,9 +340,10 @@ static nsresult dir_ConvertToMabFileName()
 			// do other address book when convert from 4.5 to mork is done
 			if (server && server->position == 1 && server->fileName)
 			{
-				nsString name; name.AssignWithConversion(server->fileName);
-				PRInt32 pos = name.Find(ABFileName_kPreviousSuffix);
-				if (pos > 0)
+        // determine if server->fileName ends with ".na2"
+        PRUint32 fileNameLen = strlen(server->fileName);
+        if ((fileNameLen > kABFileName_PreviousSuffixLen) && 
+            strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0)
 				{
 					//Move old abook.na2 to end of the list and change the description
 					DIR_Server * newServer = nsnull;
@@ -370,22 +363,6 @@ static nsresult dir_ConvertToMabFileName()
 					DIR_SavePrefsForOneServer(server);
 				}
 			}
-
-#ifdef CONVERT_TO_MORK_DONE
-			if (server && server->fileName)
-			{
-				nsString name(server->fileName);
-				PRInt32 pos = name.Find(ABFileName_kPreviousSuffix);
-				if (pos)
-				{
-					name.Cut(pos, PL_strlen(ABFileName_kPreviousSuffix));
-					name.Append(ABFileName_kCurrentSuffix);
-					PR_FREEIF (server->fileName);
-					server->fileName = ToNewCString(name);
-				}
-				DIR_SavePrefsForOneServer(server);
-			}
-#endif /* CONVERT_TO_MORK_DONE */
 		}
 	}
 	return NS_OK;
@@ -1962,6 +1939,13 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 	
 	if (dbPath)
 	{
+    // close the database, as long as it isn't the special ones 
+    // (personal addressbook and collected addressbook)
+    // which can never be deleted.  There was a bug where we would slap in
+    // "abook.mab" as the file name for LDAP directories, which would cause a crash
+    // on delete of LDAP directories.  this is just extra protection.
+    if (strcmp(server->fileName, kPersonalAddressbook) && 
+        strcmp(server->fileName, kCollectedAddressbook)) {
 		nsCOMPtr<nsIAddrDatabase> database;
 
 		(*dbPath) += server->fileName;
@@ -1979,6 +1963,7 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 		}
 
     delete dbPath;
+    }
 
 		nsVoidArray *dirList = DIR_GetDirectories();
 		DIR_SetServerPosition(dirList, server, DIR_POS_DELETE);
@@ -1988,10 +1973,12 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 		nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
 		if (NS_FAILED(rv) || !pPref) 
 			return NS_ERROR_FAILURE;
+
 		pPref->SavePrefFile(nsnull);
 
 		return NS_OK;
 	}
+
 	return NS_ERROR_NULL_POINTER;
 }
 
@@ -2853,7 +2840,7 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 			server->prefName = DIR_CreateServerPrefName (server, nsnull);
 
 		/* set default personal address book file name*/
-		if (server->position == 1)
+		if ((server->position == 1) && (server->dirType == PABDirectory))
             server->fileName = nsCRT::strdup(kPersonalAddressbook);
 		else
 		{
@@ -2869,7 +2856,7 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 
 				if (tempName)
 				{
-					server->fileName = PR_smprintf("%s%s", tempName, ABFileName_kCurrentSuffix);
+					server->fileName = PR_smprintf("%s%s", tempName, kABFileName_CurrentSuffix);
 					PR_Free(tempName);
 				}
 			}
@@ -3225,7 +3212,8 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
         if (   server->description && server->description[0]
           && (   (server->dirType == PABDirectory || 
           server->dirType == MAPIDirectory ||
-          server->dirType == FixedQueryLDAPDirectory)  
+          server->dirType == FixedQueryLDAPDirectory ||  // this one might go away
+          server->dirType == LDAPDirectory)  
           
           || (server->serverName  && server->serverName[0])))
         {
@@ -3433,16 +3421,10 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 		nsresult rv;
 		nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
   		if (NS_FAILED(rv) || !abUpgrader) {
-#ifdef DEBUG_sspitzer_
-			printf("move the pab aside, since we don't have the ab upgrader\n");
-#endif
+      // if we can upgrade, don't touch the 4.x pab.
+      // if we can't, move the 4.x pab aside
 			dir_ConvertToMabFileName();
 		}
-#ifdef DEBUG_sspitzer_
-		else {
-			printf("don't touch the 4.x pab.  we will migrate it\n");
-		}
-#endif
 	}
 	/* Write the merged list so we get it next time we ask */
 	if (savePrefs)
@@ -3450,7 +3432,6 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 
 	return err;
 }
-
 
 void DIR_ClearPrefBranch(const char *branch)
 {
@@ -3461,7 +3442,6 @@ void DIR_ClearPrefBranch(const char *branch)
 
 	pPref->DeleteBranch (branch);
 }
-
 
 static void DIR_ClearIntPref (const char *pref)
 {

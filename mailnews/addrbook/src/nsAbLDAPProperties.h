@@ -39,9 +39,6 @@
 #ifndef nsAbLDAPProperties_h__
 #define nsAbLDAPProperties_h__
 
-#include "prio.h"
-#include "nsMemory.h"
-
 #include "nsILDAPMessage.h"
 #include "nsIAbCard.h"
 #include "nsHashtable.h"

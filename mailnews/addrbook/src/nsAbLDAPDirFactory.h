@@ -52,5 +52,4 @@ public:
   virtual ~nsAbLDAPDirFactory();
 };
 
-
 #endif

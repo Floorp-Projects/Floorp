@@ -158,6 +158,17 @@
 }
 
 //
+// nsAbDirectoryProperties
+//
+#define NS_ABDIRECTORYPROPERTIES_CONTRACTID \
+  "@mozilla.org/addressbook/properties;1"
+#define NS_ABDIRECTORYPROPERTIES_CID						\
+{ /* 8b00a972-1dd2-11b2-9d9c-9c377a9c3dba */		\
+    0x8b00a972, 0x1dd2, 0x11b2, \
+    {0x9d, 0x9c, 0x9c, 0x37, 0x7a, 0x9c, 0x3d, 0xba} \
+}
+
+//
 // nsAbAutoCompleteSession
 //
 #define NS_ABAUTOCOMPLETESESSION_CONTRACTID \
@@ -348,6 +359,14 @@
         0x8e3701af, 0x8828, 0x426c,                             \
         {0x84, 0xac, 0x12, 0x48, 0x25, 0xc7, 0x78, 0xf8}        \
 }
+
+//
+// LDAP autcomplete directory factory
+//
+#define NS_ABLDAPACDIRFACTORY_CONTRACTID \
+  NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX "ldap"
+#define NS_ABLDAPSACDIRFACTORY_CONTRACTID \
+  NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX "ldaps"
 
 // nsAbLDAPAutoCompFormatter
 

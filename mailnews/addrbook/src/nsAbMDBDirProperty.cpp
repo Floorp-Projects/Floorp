@@ -53,9 +53,6 @@
 #include "nsIAbMDBCard.h"
 
 #include "mdb.h"
-#include "prlog.h"
-#include "prprf.h"
-#include "prmem.h"
 
 nsAbMDBDirProperty::nsAbMDBDirProperty(void)
 {

@@ -58,9 +58,6 @@
 #include "nsXPIDLString.h"
 #include "nsAutoLock.h"
 
-#include "prprf.h"	 
-#include "prlog.h"	 
-
 // this is used for notification of observers using nsVoidArray
 typedef struct _nsAbRDFNotification {
   nsIRDFDataSource *datasource;
@@ -297,8 +294,7 @@ nsAbRDFDataSource::nsAbRDFDataSource():
   mRDFService(nsnull),
   mLock(nsnull)
 {
-	NS_INIT_REFCNT();
-
+  NS_INIT_ISUPPORTS();
 	mLock = PR_NewLock ();
 }
 

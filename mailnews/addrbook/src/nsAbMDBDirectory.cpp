@@ -59,9 +59,7 @@
 #include "nsAbMDBCardProperty.h"
 
 #include "mdb.h"
-#include "prlog.h"
 #include "prprf.h"
-#include "prmem.h"
 
 // XXX todo
 // fix this -1,0,1 crap, use an enum or #define
@@ -276,13 +274,11 @@ NS_IMETHODIMP nsAbMDBDirectory::Init(const char* aURI)
   rv = url->GetPath (getter_Copies(path));
   mPath = path;
 
-  PRUint32 queryStringLength;
-  if (queryString.get () && (queryStringLength = nsCRT::strlen (queryString)))
+  if (!queryString.IsEmpty())
   {
-    int pathLength = nsCRT::strlen (path) - queryStringLength - 1;
-    mPath.Truncate (pathLength);
+    mPath.Truncate(path.Length() - queryString.Length() - 1);
 
-    mURINoQuery.Truncate (mURINoQuery.Length () - queryStringLength - 1);
+    mURINoQuery.Truncate(mURINoQuery.Length() - queryString.Length() - 1);
 
     mQueryString = queryString;
 
@@ -426,9 +422,13 @@ NS_IMETHODIMP nsAbMDBDirectory::GetChildCards(nsIEnumerator* *result)
 
   if (mURI && mIsMailingList == -1)
   {
-    NS_ConvertUTF8toUCS2 file(&(mURI[strlen(kMDBDirectoryRoot)]));
-    PRInt32 pos = file.Find("/");
-    if (pos != kNotFound)
+    /* directory URIs are of the form
+     * moz-abmdbdirectory://foo
+     * mailing list URIs are of the form
+     * moz-abmdbdirectory://foo/bar
+     */
+    NS_ENSURE_TRUE(strlen(mURI) > kMDBDirectoryRootLen, NS_ERROR_UNEXPECTED);
+    if (strchr(mURI + kMDBDirectoryRootLen, '/'))
       mIsMailingList = 1;
     else
       mIsMailingList = 0;
@@ -644,11 +644,8 @@ NS_IMETHODIMP nsAbMDBDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir
   return rv;
 }
 
-NS_IMETHODIMP nsAbMDBDirectory::CreateNewDirectory(PRUint32 prefCount, const char **prefName, const PRUnichar **prefValue)
+NS_IMETHODIMP nsAbMDBDirectory::CreateNewDirectory(nsIAbDirectoryProperties *aProperties)
 {
-  if (!*prefName || !*prefValue)
-    return NS_ERROR_NULL_POINTER;
-
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -760,9 +757,13 @@ NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* aCard, PRBool needToCopyCard
 
   if (mURI && mIsMailingList == -1)
   {
-    NS_ConvertUTF8toUCS2 file(&(mURI[strlen(kMDBDirectoryRoot)]));
-    PRInt32 pos = file.Find("/");
-    if (pos != kNotFound)
+    /* directory URIs are of the form
+     * moz-abmdbdirectory://foo
+     * mailing list URIs are of the form
+     * moz-abmdbdirectory://foo/bar
+     */
+    NS_ENSURE_TRUE(strlen(mURI) > kMDBDirectoryRootLen, NS_ERROR_UNEXPECTED);
+    if (strchr(mURI + kMDBDirectoryRootLen, '/'))
       mIsMailingList = 1;
     else
       mIsMailingList = 0;
@@ -905,7 +906,7 @@ NS_IMETHODIMP nsAbMDBDirectory::OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instiga
 
 NS_IMETHODIMP nsAbMDBDirectory::StartSearch()
 {
-  if (mIsQueryURI == PR_FALSE)
+  if (!mIsQueryURI)
     return NS_ERROR_FAILURE;
 
   nsresult rv;
@@ -967,7 +968,7 @@ NS_IMETHODIMP nsAbMDBDirectory::StartSearch()
 
 NS_IMETHODIMP nsAbMDBDirectory::StopSearch()
 {
-  if (mIsQueryURI == PR_FALSE)
+  if (!mIsQueryURI)
     return NS_ERROR_FAILURE;
 
   return NS_OK;

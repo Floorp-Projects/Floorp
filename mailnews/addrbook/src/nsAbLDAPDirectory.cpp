@@ -14,13 +14,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is Paul Sandoz <paul.sandoz@sun.com>
  * Sun Microsystems, Inc.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Created by: Paul Sandoz   <paul.sandoz@sun.com> 
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -44,12 +44,12 @@
 
 #include "nsAbBaseCID.h"
 #include "nsIAddrBookSession.h"
-
 #include "nsIRDFService.h"
+
+#include "nsIPref.h"
 
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "prprf.h"
 #include "nsAutoLock.h"
 
 
@@ -71,14 +71,12 @@ nsAbLDAPDirectory::~nsAbLDAPDirectory()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsAbLDAPDirectory, nsAbDirectoryRDFResource, nsIAbDirectory, nsIAbDirectoryQuery, nsIAbDirectorySearch)
-
-
 nsresult nsAbLDAPDirectory::Initiate ()
 {
-    if (mIsQueryURI == PR_FALSE)
+    if (!mIsQueryURI)
         return NS_ERROR_FAILURE;
 
-    if (mInitialized == PR_TRUE)
+    if (mInitialized)
         return NS_OK;
 
     nsresult rv;
@@ -101,7 +99,7 @@ nsresult nsAbLDAPDirectory::Initiate ()
 
 nsresult nsAbLDAPDirectory::InitiateConnection ()
 {
-    if (mInitializedConnection == PR_TRUE)
+    if (mInitializedConnection)
         return NS_OK;
 
     nsresult rv;
@@ -109,10 +107,20 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
     mURL = do_CreateInstance(NS_LDAPURL_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString uriString (mURINoQuery);
-    uriString.ReplaceSubstring ("moz-abldapdirectory:", "ldap:");
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mURL->SetSpec(uriString.get ());
+    // turn mURINoQuery into a pref name;
+    // moz-abldapdirectory://ldap_2.servers.nscpphonebook into -> "ldap_2.servers.nscpphonebook.uri"
+
+    nsCAutoString prefName;
+    prefName = nsDependentCString(mURINoQuery.get() + kLDAPDirectoryRootLen) + NS_LITERAL_CSTRING(".uri");
+
+    nsXPIDLCString ldapURL;
+    rv = pref->CopyCharPref(prefName.get(), getter_Copies(ldapURL));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mURL->SetSpec(ldapURL.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
     mConnection = do_CreateInstance(NS_LDAPCONNECTION_CONTRACTID, &rv);
@@ -174,7 +182,7 @@ NS_IMETHODIMP nsAbLDAPDirectory::HasCard(nsIAbCard* card, PRBool* hasCard)
     nsAutoLock lock (mLock);
 
     *hasCard = mCache.Exists (&key);
-    if (*hasCard == PR_FALSE && mPerformingQuery == PR_TRUE)
+    if (!*hasCard && mPerformingQuery)
             return NS_ERROR_NOT_AVAILABLE;
 
     return NS_OK;
@@ -229,10 +237,8 @@ NS_IMETHODIMP nsAbLDAPDirectory::StartSearch ()
 {
     nsresult rv;
     
-    if (mIsQueryURI == PR_FALSE ||
-        mQueryString.Length () == 0)
+    if (!mIsQueryURI || mQueryString.IsEmpty())
         return NS_OK;
-
 
     rv = Initiate ();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -295,7 +301,7 @@ NS_IMETHODIMP nsAbLDAPDirectory::StopSearch ()
     // Enter lock
     {
         nsAutoLock lockGuard (mLock);
-        if (mPerformingQuery == PR_FALSE)
+        if (!mPerformingQuery)
             return NS_OK;
         mPerformingQuery = PR_FALSE;
     }
@@ -360,3 +366,15 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetIsRemote(PRBool *aIsRemote)
   *aIsRemote = PR_TRUE;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsAbLDAPDirectory::GetSearchDuringLocalAutocomplete(PRBool *aSearchDuringLocalAutocomplete)
+{
+  NS_ENSURE_ARG_POINTER(aSearchDuringLocalAutocomplete);
+
+  // always skip LDAP directories when doing local autocomplete.
+  // we do the LDAP autocompleting
+  // in nsLDAPAutoCompleteSession
+  *aSearchDuringLocalAutocomplete = PR_FALSE;
+  return NS_OK;
+}
+

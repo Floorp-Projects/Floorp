@@ -49,6 +49,7 @@
 #include "nsXPIDLString.h"
 #include "nsAutoLock.h"
 #include "nsIProxyObjectManager.h"
+#include "prprf.h"
 
 class nsAbQueryLDAPMessageListener : public nsILDAPMessageListener
 {

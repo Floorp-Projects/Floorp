@@ -43,8 +43,6 @@
 #include "nsMemory.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
-#include "prprf.h"
-
 
 /*
  * Wrapper class to automatically free an array of
@@ -233,44 +231,4 @@ public:
         const PRUnichar** array);
 };
 
-
-/*
- * Helper class to convert a pair of char*
- * array of keys and corresponding PRUnichar*
- * array of values to a nsHashtable
- *
- * Does not copy array values. The nsHashtable
- * refers directly to the array elements thus
- * the contents may only be valid for the scope
- * of the arrays
- */
-class PropertyPtrArraysToHashtable
-{
-public:
-    static nsresult Convert (
-        nsHashtable& propertySet,
-        PRUint32 propertiesSize,
-        const char** propertyNameArray,
-        const PRUnichar** propertyValueArray);
-};
-
-/*
- * Helper class to convert a nsHashtable to
- * corresponding char* key arrays and PRUnichar*
- * arrays
- *
- * Does not copy nsHashtable keys and values
- * thus the elements of the arrays may only be
- * valid for the scope of the hashtable
- */
-class HashtableToPropertyPtrArrays
-{
-public:
-    static nsresult Convert (
-        nsHashtable& propertySet,
-        PRUint32* propertiesSize,
-        char*** propertyNameArray,
-        PRUnichar*** propertyValueArray);
-};
-
-#endif
+#endif  /* nsAbUtils_h__ */

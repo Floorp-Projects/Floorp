@@ -45,7 +45,6 @@
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "prthread.h"
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQuerySimpleBooleanExpression, nsIAbBooleanExpression)

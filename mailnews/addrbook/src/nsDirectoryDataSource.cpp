@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -52,9 +53,6 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-
-#include "prprf.h"	 
-#include "prlog.h"	 
 
 // this is used for notification of observers using nsVoidArray
 typedef struct _nsAbRDFNotification {
@@ -702,38 +700,21 @@ nsresult nsAbDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsIS
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsISupports> elem = getter_AddRefs(arguments->ElementAt(0));
 	nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(elem, &rv);
-	if(NS_SUCCEEDED(rv))
-	{
-		PRUnichar *name;
-		literal->GetValue(&name);
 
-		PRUint32 prefCount = 1;
-		char **prefNames = (char **) nsMemory::Alloc(prefCount * (sizeof (char *)));
-		PRUnichar ** prefValues = (PRUnichar **) nsMemory::Alloc(prefCount * (sizeof(PRUnichar *)));
+  if(NS_SUCCEEDED(rv)) {
+    nsXPIDLString description;
+    rv = literal->GetValue(getter_Copies(description));
+    NS_ENSURE_SUCCESS(rv,rv);
 
-		if (prefNames && prefValues)
-		{
-	
-			prefNames[0] = PR_smprintf("description");
-			prefValues[0] = name;
-	
-			rv = directory->CreateNewDirectory((unsigned int) prefCount, (const char**)prefNames, (const PRUnichar**)prefValues);
+    nsCOMPtr <nsIAbDirectoryProperties> properties;
+    properties = do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-			if (prefNames[0])
-				PR_smprintf_free(prefNames[0]);
-			if (prefValues[0])
-				nsMemory::Free(prefValues[0]);
-		}
-		else
-		{
-			rv = NS_ERROR_NULL_POINTER;
-		}
-
-		if (prefNames)
-			nsMemory::Free(prefNames);
-		if (prefValues)
-			nsMemory::Free(prefValues);
+    rv = properties->SetDescription(description);
+    NS_ENSURE_SUCCESS(rv,rv);
 		
+    rv = directory->CreateNewDirectory(properties);
+    NS_ENSURE_SUCCESS(rv,rv);   
 	}
 	return rv;
 }

@@ -163,7 +163,7 @@ static ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[] = {
 //
 nsAddressBook::nsAddressBook()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsAddressBook::~nsAddressBook()
@@ -179,13 +179,12 @@ NS_IMPL_QUERY_INTERFACE2(nsAddressBook, nsIAddressBook, nsICmdLineHandler);
 // nsIAddressBook
 //
 
-NS_IMETHODIMP nsAddressBook::NewAddressBook
-(nsIRDFCompositeDataSource* db, PRUint32 prefCount, const char **prefName, const PRUnichar **prefValue)
+NS_IMETHODIMP nsAddressBook::NewAddressBook(nsIAbDirectoryProperties *aProperties)
 {
-    if(!db || !*prefName || !*prefValue)
-        return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aProperties);
 
-    nsresult rv = NS_OK;
+  nsresult rv;
+
     nsCOMPtr<nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -196,7 +195,7 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook
     nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
         
-    rv = parentDir->CreateNewDirectory (prefCount, prefName, prefValue);
+  rv = parentDir->CreateNewDirectory(aProperties);
     return rv;
 }
 
@@ -357,9 +356,10 @@ NS_IMETHODIMP nsAddressBook::MailListNameExists(const PRUnichar *name, PRBool *e
             DIR_Server *server = (DIR_Server *)pDirectories->ElementAt(i);
             if (server->dirType == PABDirectory)
             {
-                nsAutoString dbfile; dbfile.AssignWithConversion(server->fileName);
-                PRInt32 pos = dbfile.Find("na2");
-                if (pos >= 0) /* check: this is a 4.x file, remove when conversion is done */
+                /* check: this is a 4.x file, remove when conversion is done */
+                PRUint32 fileNameLen = strlen(server->fileName);
+                if ((fileNameLen > kABFileName_PreviousSuffixLen) && 
+                     strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0)
                     continue;
 
                 nsCOMPtr<nsIAddrDatabase> database;
@@ -1394,7 +1394,7 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
   for (i = 0; i < EXPORT_ATTRIBUTES_TABLE_COUNT; i++) {
     if (EXPORT_ATTRIBUTES_TABLE[i].includeForPlainText) {
       // XXX localize this?
-      length = PL_strlen(EXPORT_ATTRIBUTES_TABLE[i].abColName);
+      length = strlen(EXPORT_ATTRIBUTES_TABLE[i].abColName);
       rv = outputStream->Write(EXPORT_ATTRIBUTES_TABLE_COUNT[i].abColName, length, &writeCount);
       NS_ENSURE_SUCCESS(rv,rv);
       if (length != writeCount)

@@ -19,9 +19,13 @@
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- * Created by: Paul Sandoz   <paul.sandoz@sun.com> 
- * Contributor(s): Csaba Borbola <csaba.borbola@sun.com>
+ *
+ * Original Author: 
+ *   Paul Sandoz   <paul.sandoz@sun.com> 
+ *
+ * Contributors: 
+ *   Csaba Borbola <csaba.borbola@sun.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -50,15 +54,7 @@
 #include "nsIAddressBook.h"
 
 #include "nsEnumeratorUtils.h"
-
 #include "nsAbBaseCID.h"
-
-
-
-
-extern const char* kDescriptionPropertyName;
-extern const char* kURIPropertyName;
-
 
 NS_IMPL_ISUPPORTS1(nsAbLDAPDirFactory, nsIAbDirFactory);
 
@@ -71,57 +67,67 @@ nsAbLDAPDirFactory::~nsAbLDAPDirFactory()
 {
 }
 
-/* nsISimpleEnumerator createDirectory (in unsigned long propertiesSize, [array, size_is (propertiesSize)] in string propertyNamesArray, [array, size_is (propertiesSize)] in wstring propertyValuesArray); */
-NS_IMETHODIMP nsAbLDAPDirFactory::CreateDirectory(
-    PRUint32 propertiesSize,
-    const char **propertyNamesArray,
-    const PRUnichar **propertyValuesArray,
-    nsISimpleEnumerator **_retval)
+NS_IMETHODIMP nsAbLDAPDirFactory::CreateDirectory(nsIAbDirectoryProperties *aProperties,
+    nsISimpleEnumerator **aDirectories)
 {
-    
-    if (!*propertyNamesArray || !*propertyValuesArray)
-        return NS_ERROR_NULL_POINTER;
-    
-    if (propertiesSize == 0)
-        return NS_ERROR_FAILURE;
+    NS_ENSURE_ARG_POINTER(aProperties);
+    NS_ENSURE_ARG_POINTER(aDirectories);
 
     nsresult rv;
 
-    // Create hash table from property arrays
-    nsHashtable propertySet;
-    rv = PropertyPtrArraysToHashtable::Convert (
-            propertySet,
-            propertiesSize,
-            propertyNamesArray,
-            propertyValuesArray);
-    NS_ENSURE_SUCCESS (rv, rv);
-
-    // Get description property
-    nsCStringKey descriptionKey (kDescriptionPropertyName, -1, nsCStringKey::NEVER_OWN);
-    const PRUnichar* description = NS_REINTERPRET_CAST(PRUnichar* ,propertySet.Get (&descriptionKey));
-
-    // Get uri property
-    nsCStringKey URIKey (kURIPropertyName, -1, nsCStringKey::NEVER_OWN);
-    const PRUnichar* URIUCS2 = NS_REINTERPRET_CAST(PRUnichar* ,propertySet.Get (&URIKey));
-    if (!URIUCS2)
-        return NS_ERROR_FAILURE;
-    NS_ConvertUCS2toUTF8 URIUTF8(URIUCS2);
+    nsXPIDLCString uri;
+    nsAutoString description;
     
+    rv = aProperties->GetDescription(description);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aProperties->GetURI(getter_Copies(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
     
     nsCOMPtr<nsIRDFService> rdf = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIRDFResource> resource;
-    rv = rdf->GetResource(URIUTF8.get (), getter_AddRefs(resource));
+
+    if ((strncmp(uri.get(), "ldap:", 5) == 0) ||
+        (strncmp(uri.get(), "ldaps:", 6) == 0)) {
+      nsXPIDLCString prefName;
+      rv = aProperties->GetPrefName(getter_Copies(prefName));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      /*
+       * if the URI starts with ldap: or ldaps:
+       * then this directory is an LDAP directory.
+       *
+       * we don't want to use the ldap:// or ldaps:// URI 
+       * as the RDF resource URI because the ldap:// or ldaps:// URI 
+       * will contain the hostname, basedn, port, etc.
+       * so if those attributes changed, we'll run into the
+       * the same problem that we hit with changing username / hostname
+       * for mail servers.  to solve this problem, we add an extra
+       * level of indirection.  the RDF resource URI that we generate
+       * (the bridge URI) will be moz-abldapdirectory://<prefName>
+       * and when we need the hostname, basedn, port, etc,
+       * we'll use the <prefName> to get the necessary prefs.
+       * note, <prefName> does not change.
+       */
+      nsCAutoString bridgeURI;
+      bridgeURI = NS_LITERAL_CSTRING(kLDAPDirectoryRoot) + prefName;
+      rv = rdf->GetResource(bridgeURI.get(), getter_AddRefs(resource));
+    }
+    else {
+      rv = rdf->GetResource(uri.get(), getter_AddRefs(resource));
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    directory->SetDirName(description);
+    rv = directory->SetDirName(description.get());
+    NS_ENSURE_SUCCESS(rv,rv);
 
-    NS_IF_ADDREF(*_retval = new nsSingletonEnumerator(directory));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    NS_IF_ADDREF(*aDirectories = new nsSingletonEnumerator(directory));
+    return *aDirectories ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* void deleteDirectory (in nsIAbDirectory directory); */

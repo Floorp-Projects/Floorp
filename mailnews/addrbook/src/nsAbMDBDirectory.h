@@ -91,7 +91,7 @@ public:
  	NS_IMETHOD DeleteCards(nsISupportsArray *cards);
  	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir);
-	NS_IMETHOD CreateNewDirectory(PRUint32 prefCount, const char **prefName, const PRUnichar **prefValue);
+	NS_IMETHOD CreateNewDirectory(nsIAbDirectoryProperties *aProperties);
 	NS_IMETHOD CreateDirectoryByURI(const PRUnichar *dirName, const char *uri, PRBool migrating);
 	NS_IMETHOD AddMailList(nsIAbDirectory *list);
 	NS_IMETHOD AddCard(nsIAbCard *card, nsIAbCard **addedCard);
@@ -115,8 +115,6 @@ protected:
 	nsresult RemoveCardFromAddressList(nsIAbCard* card);
 
 	nsresult AddMailList(const char *uriName);
-
-	nsVoidArray* GetDirList(){ return DIR_GetDirectories(); }
 
 	nsresult GetAbDatabase();
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  

@@ -250,11 +250,9 @@ function AbNewAddressBook()
 
 function AbCreateNewAddressBook(name)
 {
-  var prefsAttr = new Array;
-  var prefsValue = new Array;
-  prefsAttr[0]  = "description";
-  prefsValue[0]  = name;  
-  top.addressbook.newAddressBook(dirTree.database, 1, prefsAttr, prefsValue);
+  var properties = Components.classes["@mozilla.org/addressbook/properties;1"].createInstance(Components.interfaces.nsIAbDirectoryProperties);
+  properties.description = name;
+  top.addressbook.newAddressBook(properties);
 }
 
 function AbPrintCard()

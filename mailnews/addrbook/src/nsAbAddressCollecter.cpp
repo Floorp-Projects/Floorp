@@ -60,7 +60,7 @@ NS_IMPL_ISUPPORTS1(nsAbAddressCollecter, nsIAbAddressCollecter)
 
 nsAbAddressCollecter::nsAbAddressCollecter()
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	m_maxCABsize = -1;
 	m_sizeLimitEnabled = PR_FALSE;

@@ -107,7 +107,7 @@ protected:
   PRBool CheckEntry(nsAbAutoCompleteSearchString* searchStr, const PRUnichar* nickName,const PRUnichar* displayName, 
 	    const PRUnichar* firstName, const PRUnichar* lastName, const PRUnichar* emailAddress, MatchType* matchType);
 	  nsresult SearchCards(nsIAbDirectory* directory, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results);
-    nsresult SearchDirectory(const char *fileName, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory = PR_FALSE);
+    nsresult SearchDirectory(const char *aURI, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory = PR_FALSE);
     nsresult SearchPreviousResults(nsAbAutoCompleteSearchString *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results);
 
     nsCOMPtr<nsIMsgHeaderParser> mParser;

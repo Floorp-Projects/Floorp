@@ -35,7 +35,6 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsILDAPMessage.h"
 #include "nsLDAP.h"
-#include "prlog.h"
 #include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"

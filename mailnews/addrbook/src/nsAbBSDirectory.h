@@ -55,29 +55,19 @@ public:
 	
 	// nsIAbDirectory methods
 	NS_IMETHOD GetChildNodes(nsIEnumerator* *result);
-	NS_IMETHOD CreateNewDirectory(PRUint32 prefCount, const char **prefName, const PRUnichar **prefValue);
+	NS_IMETHOD CreateNewDirectory(nsIAbDirectoryProperties *aProperties);
 	NS_IMETHOD CreateDirectoryByURI(const PRUnichar *dirName, const char *uri, PRBool migrating);
   NS_IMETHOD DeleteDirectory(nsIAbDirectory *directory);
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir);
 
-
 protected:
 	nsresult AddDirectory(const char *uriName, nsIAbDirectory **childDir);
-	nsVoidArray* GetDirList(){ return DIR_GetDirectories(); }
 
 	nsresult NotifyItemAdded(nsISupports *item);
 	nsresult NotifyItemDeleted(nsISupports *item);
 	nsresult CreateDirectoriesFromFactory(
-		const char* URI,
-		DIR_Server* server,
-		PRUint32 propertiesSize,
-		const char** propertyNameArray,
-		const PRUnichar** propertyValueArray,
-		PRBool notify = PR_TRUE);
-
-	nsresult CreateNewDirectory(nsHashtable &propertySet, 
-		const char *uri,
-        DIR_Server* server);
+		nsIAbDirectoryProperties *aProperties,
+		DIR_Server* aServer, PRBool aNotify);
 
 protected:
 	PRBool mInitialized;

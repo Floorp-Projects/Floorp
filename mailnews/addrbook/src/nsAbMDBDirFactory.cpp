@@ -20,8 +20,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Contributor(s): Paul Sandoz   <paul.sandoz@sun.com> 
+ *   Paul Sandoz <paul.sandoz@sun.com> 
  *                   Csaba Borbola <csaba.borbola@sun.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -55,13 +56,6 @@
 
 #include "nsAbBaseCID.h"
 
-
-
-
-
-extern const char* kDescriptionPropertyName;
-extern const char* kURIPropertyName;
-
 NS_IMPL_ISUPPORTS1(nsAbMDBDirFactory, nsIAbDirFactory);
 
 nsAbMDBDirFactory::nsAbMDBDirFactory()
@@ -72,7 +66,6 @@ nsAbMDBDirFactory::nsAbMDBDirFactory()
 nsAbMDBDirFactory::~nsAbMDBDirFactory()
 {
 }
-
 
 static nsresult RemoveMailListDBListeners (nsIAddrDatabase* database, nsIAbDirectory* directory)
 {
@@ -106,53 +99,35 @@ static nsresult RemoveMailListDBListeners (nsIAddrDatabase* database, nsIAbDirec
     return NS_OK;
 }
 
-/* nsISimpleEnumerator createDirectory (in unsigned long propertiesSize, [array, size_is (propertiesSize)] in string propertyNamesArray, [array, size_is (propertiesSize)] in wstring propertyValuesArray); */
-NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(
-    PRUint32 propertiesSize,
-    const char **propertyNamesArray,
-    const PRUnichar **propertyValuesArray,
+NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(nsIAbDirectoryProperties *aProperties,
     nsISimpleEnumerator **_retval)
 {
-    if (!*propertyNamesArray || !*propertyValuesArray)
-        return NS_ERROR_NULL_POINTER;
-    
-    if (propertiesSize == 0)
-        return NS_ERROR_FAILURE;
+    NS_ENSURE_ARG_POINTER(aProperties);
+    NS_ENSURE_ARG_POINTER(_retval);
 
     nsresult rv;
 
-    // Create hash table from property arrays
-    nsHashtable propertySet;
-    rv = PropertyPtrArraysToHashtable::Convert (
-            propertySet,
-            propertiesSize,
-            propertyNamesArray,
-            propertyValuesArray);
-    NS_ENSURE_SUCCESS (rv, rv);
+    nsXPIDLCString uri;
+    nsAutoString description;
 
-    // Get description property
-    nsCStringKey descriptionKey (kDescriptionPropertyName, -1, nsCStringKey::NEVER_OWN);
-    const PRUnichar* description = NS_REINTERPRET_CAST(PRUnichar*, propertySet.Get (&descriptionKey));
+    rv = aProperties->GetDescription(description);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // Get uri property
-    nsCStringKey URIKey (kURIPropertyName, -1, nsCStringKey::NEVER_OWN);
-    const PRUnichar* URIUCS2 = NS_REINTERPRET_CAST(PRUnichar*, propertySet.Get (&URIKey));
-    if (!URIUCS2)
-        return NS_ERROR_FAILURE;
-    NS_ConvertUCS2toUTF8 URIUTF8(URIUCS2);
+    rv = aProperties->GetURI(getter_Copies(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
     
 	nsCOMPtr<nsIRDFService> rdf = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIRDFResource> resource;
-    rv = rdf->GetResource(URIUTF8.get (), getter_AddRefs(resource));
+    rv = rdf->GetResource(uri.get(), getter_AddRefs(resource));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    directory->SetDirName(description);
-
+    rv = directory->SetDirName(description.get());
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -163,12 +138,13 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(
     nsCOMPtr<nsIAddrDatabase>  listDatabase;  
     if (dbPath)
     {
-      const char* fileName = nsnull;
-      const char* uri = URIUTF8.get ();
-      if (PL_strstr(uri, kMDBDirectoryRoot)) // for moz-abmdbdirectory://
-          fileName = &(uri[PL_strlen(kMDBDirectoryRoot)]);
+      nsCAutoString fileName;
+      nsDependentCString uriStr(uri);
+      
+      if (Substring(uriStr, 0, kMDBDirectoryRootLen).Equals(kMDBDirectoryRoot))
+        uriStr.Right(fileName, uriStr.Length() - kMDBDirectoryRootLen);
 
-      (*dbPath) += fileName;
+      (*dbPath) += fileName.get();
 
       nsCOMPtr<nsIAddrDatabase>  addrDBFactory = do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);

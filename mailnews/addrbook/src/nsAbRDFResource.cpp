@@ -53,8 +53,7 @@ static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
 nsAbRDFResource::nsAbRDFResource(void)
 {
-	NS_INIT_REFCNT();
-
+        NS_INIT_ISUPPORTS();
 	mDatabase = nsnull;
 }
 
@@ -106,7 +105,7 @@ nsresult nsAbRDFResource::GetAbDatabase()
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		NS_ConvertUTF8toUCS2 file(&(mURI[strlen(kMDBDirectoryRoot)]));
+		NS_ConvertUTF8toUCS2 file(&(mURI[kMDBDirectoryRootLen]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			file.Truncate(pos);

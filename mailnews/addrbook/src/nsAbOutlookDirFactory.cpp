@@ -46,8 +46,6 @@
 
 #include "nsAbBaseCID.h"
 
-#include "prprf.h"
-
 #include "prlog.h"
 
 #ifdef PR_LOGGING
@@ -79,42 +77,35 @@ nsAbOutlookDirFactory::~nsAbOutlookDirFactory(void)
 }
 
 extern const char *kOutlookDirectoryScheme ;
-extern const char *kURIPropertyName ;
 
-
-
-static void parseProperties(PRUint32 aNbProperties, const char **aPropertyNames,
-                            const PRUnichar **aPropertyValues, nsAbWinType& aWinType)
+static nsresult parseProperties(nsIAbDirectoryProperties *aProperties, nsAbWinType& aWinType)
 {
     aWinType = nsAbWinType_Unknown ;
-    PRUint32 i = 0 ;
 
-    for (i = 0 ; i < aNbProperties ; ++ i) {
-        if (nsCRT::strcmp(aPropertyNames [i], kURIPropertyName) == 0) {
-            nsCAutoString uri ;
+    nsXPIDLCString uri;
+    nsresult rv = aProperties->GetURI(getter_Copies(uri));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
             nsCString stub ;
             nsCString entry ;
 
-            uri.AssignWithConversion(aPropertyValues [i]) ;
             aWinType = getAbWinType(kOutlookDirectoryScheme, uri.get(), stub, entry) ;
-            break ;
-        }
-    }
+    return NS_OK;
 }
 
-NS_IMETHODIMP nsAbOutlookDirFactory::CreateDirectory(PRUint32 aNbProperties, 
-                                                     const char **aPropertyNames, 
-                                                     const PRUnichar **aPropertyValues, 
+NS_IMETHODIMP nsAbOutlookDirFactory::CreateDirectory(nsIAbDirectoryProperties *aProperties, 
                                                      nsISimpleEnumerator **aDirectories)
 {
-    if (!aPropertyNames || !aPropertyValues || !aDirectories) { 
-        return NS_ERROR_NULL_POINTER ; 
-    }
+    NS_ENSURE_ARG_POINTER(aProperties);
+    NS_ENSURE_ARG_POINTER(aDirectories);
+
     *aDirectories = nsnull ;
     nsresult retCode = NS_OK ;
     nsAbWinType abType = nsAbWinType_Unknown ;
 
-    parseProperties(aNbProperties, aPropertyNames, aPropertyValues, abType) ;
+    retCode = parseProperties(aProperties, abType) ;
+    NS_ENSURE_SUCCESS(retCode, retCode);
+
     if (abType == nsAbWinType_Unknown) {
         return NS_ERROR_FAILURE ;
     }

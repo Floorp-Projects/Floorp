@@ -44,9 +44,6 @@
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAbBaseCID.h"
-#include "prmem.h"	 
-#include "prlog.h"	 
-#include "prprf.h"	 
 
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"

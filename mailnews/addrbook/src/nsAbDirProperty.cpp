@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -50,14 +51,11 @@
 #include "rdf.h"
 
 #include "mdb.h"
-#include "prlog.h"
-#include "prprf.h"
-#include "prmem.h"
 
 nsAbDirProperty::nsAbDirProperty(void)
   : m_LastModifiedDate(0)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	m_IsMailList = PR_FALSE;
 }
@@ -68,15 +66,11 @@ nsAbDirProperty::~nsAbDirProperty(void)
 
 NS_IMPL_ISUPPORTS1(nsAbDirProperty,nsIAbDirectory)
 
-/* readonly attribute long operations; */
 NS_IMETHODIMP nsAbDirProperty::GetOperations(PRInt32 *aOperations)
 {
-	/*
-	 * Default is to support all operations.
-	 * Inheriting implementations may override
-	 * to reduce supported operations
-	 *
-	 */
+  // Default is to support all operations.
+  // Inheriting implementations may override
+  // to reduce supported operations
 	*aOperations = nsIAbDirectory::opRead |
 		nsIAbDirectory::opWrite |
 		nsIAbDirectory::opSearch;
@@ -252,7 +246,7 @@ nsAbDirProperty::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-nsAbDirProperty::CreateNewDirectory(PRUint32 prefCount, const char **prefName, const PRUnichar **prefValue)
+nsAbDirProperty::CreateNewDirectory(nsIAbDirectoryProperties *aProperties)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP nsAbDirProperty::CreateDirectoryByURI(const PRUnichar *dirName, const char *uri, PRBool migrating)
@@ -290,4 +284,81 @@ NS_IMETHODIMP nsAbDirProperty::GetIsRemote(PRBool *aIsRemote)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAbDirProperty::GetSearchDuringLocalAutocomplete(PRBool *aSearchDuringLocalAutocomplete)
+{
+  NS_ENSURE_ARG_POINTER(aSearchDuringLocalAutocomplete);
+  *aSearchDuringLocalAutocomplete = PR_TRUE;
+  return NS_OK;
+}
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+nsAbDirectoryProperties::nsAbDirectoryProperties(void)
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsAbDirectoryProperties::~nsAbDirectoryProperties(void)
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsAbDirectoryProperties,nsIAbDirectoryProperties)
+
+NS_IMETHODIMP 
+nsAbDirectoryProperties::SetDescription(const nsAString &aDescription)
+{
+  mDescription = aDescription;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAbDirectoryProperties::GetDescription(nsAString &aDescription)
+{
+  aDescription = mDescription;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAbDirectoryProperties::SetURI(const char *aURI)
+{
+  mURI = aURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAbDirectoryProperties::GetURI(char **aURI)
+{
+  NS_ENSURE_ARG_POINTER(aURI);
+  *aURI = ToNewCString(mURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAbDirectoryProperties::SetFileName(const char *aFileName)
+{
+  mFileName = aFileName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAbDirectoryProperties::GetFileName(char **aFileName)
+{
+  NS_ENSURE_ARG_POINTER(aFileName);
+  *aFileName = ToNewCString(mFileName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAbDirectoryProperties::SetPrefName(const char *aPrefName)
+{
+  mPrefName = aPrefName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAbDirectoryProperties::GetPrefName(char **aPrefName)
+{
+  NS_ENSURE_ARG_POINTER(aPrefName);
+  *aPrefName = ToNewCString(mPrefName);
+  return NS_OK;
+}

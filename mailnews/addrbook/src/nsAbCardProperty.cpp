@@ -41,9 +41,6 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsAbBaseCID.h"
-#include "prmem.h"	 
-#include "prlog.h"	 
-#include "prprf.h"	 
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -105,7 +102,7 @@ static const char *CARD_ATTRS_ARRAY[] = {
 
 nsAbCardProperty::nsAbCardProperty(void)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	m_LastModDate = 0;
 

@@ -53,11 +53,20 @@ class nsIPref;
 
 #define kMDBDirectoryRoot          "moz-abmdbdirectory://"
 #define kMDBDirectoryRootLen       21
+
+#define kLDAPDirectoryRoot         "moz-abldapdirectory://"
+#define kLDAPDirectoryRootLen      22
+
 #define kPersonalAddressbook       "abook.mab"
 #define kPersonalAddressbookUri    "moz-abmdbdirectory://abook.mab"
 #define kCollectedAddressbook      "history.mab"
 #define kCollectedAddressbookUri   "moz-abmdbdirectory://history.mab"
 
+
+#define kABFileName_PreviousSuffix ".na2" /* final v2 address book format */
+#define kABFileName_PreviousSuffixLen 4
+#define kABFileName_CurrentSuffix ".mab"  /* v3 address book extension */
+#define kMainLdapAddressBook "ldap.mab"   /* v3 main ldap address book file */
 
 /* DIR_Server.dirType */
 typedef enum

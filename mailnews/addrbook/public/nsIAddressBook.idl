@@ -47,7 +47,7 @@ interface nsIAbDirectory;
 [scriptable, uuid(D60B84F1-2A8C-11d3-9E07-00A0C92B5F0D)]
 interface nsIAddressBook : nsISupports 
 {
-  void newAddressBook(in nsIRDFCompositeDataSource db, in unsigned long prefCount,[array, size_is(prefCount)] in string prefName, [array, size_is(prefCount)] in wstring prefValue);
+  void newAddressBook(in nsIAbDirectoryProperties aProperties);
   void deleteAddressBooks(in nsIRDFCompositeDataSource db, in nsISupportsArray parentDir, in nsISupportsArray aResourceArray);
   void setDocShellWindow(in nsIDOMWindowInternal win);
   void exportAddressBook(in nsIAbDirectory aDirectory);

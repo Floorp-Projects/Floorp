@@ -15,13 +15,14 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
+ * Paul Sandoz   <paul.sandoz@sun.com> 
  * Sun Microsystems, Inc.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Created by: Paul Sandoz   <paul.sandoz@sun.com> 
- * Contributor(s): Csaba Borbola <csaba.borbola@sun.com>
+ *   Csaba Borbola <csaba.borbola@sun.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -41,34 +42,26 @@
 #include "nsISimpleEnumerator.idl"
 
 interface nsIAbDirectory;
+interface nsIAbDirectoryProperties;
 
 [scriptable, uuid(C2308606-1DD1-11B2-87D4-85FCA9B1DC08)]
 interface nsIAbDirFactory : nsISupports
 {
     /**
      * Instantiate new top level address book
-     * directories given an array of property names
-     * and values. More than one directory may be
+     * directories given some properties. 
+     * More than one directory may be
      * returned depending on the implementation
      * and integration with the associated address book
      * sources
      *
-     * @param propertiesSize
-     *        The number of properties
-     * @param propertyNamesArray
-     *        The array of property names
-     * @param propertyValuesArray
-     *        The array of property values
+     * @param aProperties
+     *        nsIAbDirectoryProperties with the properties
      * @return
      *        Enumeration of nsIAbDirectory
      *        interfaces
      */
-    nsISimpleEnumerator createDirectory (
-        in unsigned long propertiesSize,
-        [array, size_is(propertiesSize)]
-        in string propertyNamesArray,
-        [array, size_is(propertiesSize)]
-        in wstring propertyValuesArray);
+    nsISimpleEnumerator createDirectory(in nsIAbDirectoryProperties aProperties);
 
     /**
      * Delete a top level address book directory

@@ -56,7 +56,7 @@ NS_IMPL_ISUPPORTS2(nsAbAutoCompleteSession, nsIAbAutoCompleteSession, nsIAutoCom
 
 nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 {
-	NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 }
 
@@ -492,21 +492,32 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
 }
 
 
-nsresult nsAbAutoCompleteSession::SearchDirectory(const char *fileName, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory)
+nsresult nsAbAutoCompleteSession::SearchDirectory(const char *aURI, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory)
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIRDFService> rdfService(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr <nsIRDFResource> resource;
-    rv = rdfService->GetResource(fileName, getter_AddRefs(resource));
+    rv = rdfService->GetResource(aURI, getter_AddRefs(resource));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // query interface 
     nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    if (nsCRT::strcmp(kAllDirectoryRoot, fileName))
+    // when autocompleteing against directories, 
+    // we only want to match against certain directories
+    // we ask the directory if it wants to be used
+    // for local autocompleting.
+    PRBool searchDuringLocalAutocomplete;
+    rv = directory->GetSearchDuringLocalAutocomplete(&searchDuringLocalAutocomplete);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    if (!searchDuringLocalAutocomplete)
+      return NS_OK;
+
+    if (nsCRT::strcmp(kAllDirectoryRoot, aURI))
         rv = SearchCards(directory, searchStr, results);
     
     if (!searchSubDirectory)

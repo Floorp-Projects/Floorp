@@ -83,4 +83,19 @@ protected:
 
 };
 
+class nsAbDirectoryProperties: public nsIAbDirectoryProperties
+{
+public: 
+  nsAbDirectoryProperties(void);
+  virtual ~nsAbDirectoryProperties(void);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIABDIRECTORYPROPERTIES
+
+private:
+  nsString  mDescription;
+  nsCString mURI;
+  nsCString mFileName;
+  nsCString mPrefName;
+};
 #endif

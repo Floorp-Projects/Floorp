@@ -42,9 +42,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsAbBaseCID.h"
-#include "prmem.h"	 
-#include "prlog.h"	 
-#include "prprf.h"	 
 #include "rdf.h"
 #include "nsCOMPtr.h"
 
@@ -254,7 +251,7 @@ nsresult nsAbMDBCardProperty::GetCardDatabase(const char *uri)
 		abSession->GetUserProfileDirectory(&dbPath);
 
 		const char* file = nsnull;
-		file = &(uri[PL_strlen(kMDBDirectoryRoot)]);
+		file = &(uri[kMDBDirectoryRootLen]);
 		(*dbPath) += file;
 		
 		if (dbPath->Exists())
