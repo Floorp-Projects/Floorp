@@ -448,7 +448,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   NS_INTERFACE_MAP_END
 
 #define NS_IMPL_QUERY_INTERFACE11(_class, _i1, _i2, _i3, _i4, _i5, _i6,       \
-                                  _i7, _i8, _i9, _i10)                        \
+                                  _i7, _i8, _i9, _i10, _i11)                  \
   NS_INTERFACE_MAP_BEGIN(_class)                                              \
     NS_INTERFACE_MAP_ENTRY(_i1)                                               \
     NS_INTERFACE_MAP_ENTRY(_i2)                                               \
