@@ -27,8 +27,6 @@
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 
-// XXXX #include "DDCOMM.h"
-
 // interface definitions
 static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 
@@ -45,9 +43,13 @@ NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 //-------------------------------------------------------------------------
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
+  printf("nsClipboard::nsClipboard()\n");
+
   //NS_INIT_REFCNT();
   mIgnoreEmptyNotification = PR_FALSE;
   mWindow         = nsnull;
+  mClipboardOwner = nsnull;
+  mTransferable   = nsnull;
 
   // Create a Native window for the shell container...
   //nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID, (void**)&mWindow);
@@ -62,6 +64,8 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 //-------------------------------------------------------------------------
 nsClipboard::~nsClipboard()
 {
+  printf("nsClipboard::~nsClipboard()\n");  
+
   NS_IF_RELEASE(mWindow);
 }
 
@@ -73,6 +77,7 @@ nsClipboard::~nsClipboard()
 */ 
 nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
+  printf("nsClipboard::QueryInterface()\n");
 
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -97,12 +102,18 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   */
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 {
+  printf("nsClipboard::SetNativeClipboardData()\n");
+  
   mIgnoreEmptyNotification = PR_TRUE;
 
   // make sure we have a good transferable
   if (nsnull == mTransferable) {
     return NS_ERROR_FAILURE;
   }
+
+  
+
+
 
   return NS_OK;
 }
@@ -114,27 +125,71 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   */
 NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 {
+  printf("nsClipboard::GetNativeClipboardData()");
+
   // make sure we have a good transferable
   if (nsnull == aTransferable) {
     return NS_ERROR_FAILURE;
   }
+  
+  // aTransferable->GetTransferData(flavor, data, length);
+  // copy data to nsString.
 
   return NS_OK;
 }
 
 
 /**
-  * 
+  * No-op.
   *
   */
 NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 {
+  printf("nsClipboard::ForceDataToClipboard()\n");
+
   // make sure we have a good transferable
   if (nsnull == mTransferable) {
     return NS_ERROR_FAILURE;
   }
 
-
   return NS_OK;
 }
 
+
+
+void nsClipboard::SetTopLevelWidget(GtkWidget* w)
+{
+  // Don't set up any more event handlers if we're being called twice
+  // for the same toplevel widget
+  if (mWidget == w)
+    return;
+
+  mWidget = w;
+
+#if 0
+  // Respond to requests for the selection:
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "selection_get",
+                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionRequestCB),
+                     theSelectionMgr);
+
+  // When someone else takes the selection away:
+  gtk_signal_connect(GTK_OBJECT(mWidget), "selection_clear_event",
+                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionClearCB),
+                     theSelectionMgr);
+
+  // Set up the paste handler:
+  gtk_signal_connect(GTK_OBJECT(mWidget), "selection_received",
+                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionReceivedCB),
+                     theSelectionMgr);
+
+  // Hmm, sometimes we need this, sometimes not.  I'm not clear why:
+  // Register all the target types we handle:
+  gtk_selection_add_target(mWidget, GDK_SELECTION_PRIMARY,
+                           GDK_SELECTION_TYPE_STRING,
+			   GDK_SELECTION_TYPE_STRING);
+  // Need to add entries for whatever it is that emacs uses
+  // Need to add entries for XIF and HTML
+
+#endif
+}
