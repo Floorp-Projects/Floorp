@@ -813,7 +813,7 @@ nsXPInstallManager::LoadParams(PRUint32 aCount, const PRUnichar** aPackageList, 
             paramBlock->SetString( i, aPackageList[i] );
     }
 
-    *aParams = paramBlock;
+    NS_IF_ADDREF(*aParams = paramBlock);
     return rv;
 }
 
