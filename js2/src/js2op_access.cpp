@@ -113,7 +113,10 @@
             a = top();
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env->lexicalWrite(meta, mn, a, true, phase);
+            // XXX The value of 'createIfMissing' should come from the reference's copy
+            // of the !environment.strict at the time the reference was constructed.
+            // Have eLexicalWriteCreate ?
+            meta->env->lexicalWrite(meta, mn, a, true);
         }
         break;
 

@@ -59,7 +59,7 @@ typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *
 typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
 typedef bool (Read)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, js2val rval);
+typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
@@ -259,6 +259,7 @@ class Multiname : public JS2Object {
 public:    
     Multiname(const String *name) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { }
     Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { addNamespace(ns); }
+    Multiname(QualifiedName& q) : JS2Object(MultinameKind), name(q.name), nsList(q.nameSpace)    { }
 
     Multiname(const Multiname& m) : JS2Object(MultinameKind), name(m.name), nsList(m.nsList)    { }
 
@@ -268,6 +269,8 @@ public:
 
     bool matches(QualifiedName &q)                  { return (*name == *q.id) && listContains(q.nameSpace); }
     bool listContains(Namespace *nameSpace);
+
+    QualifiedName selectPrimaryName(JS2Metadata *meta);
 
     const String *name;
     NamespaceList *nsList;
@@ -345,6 +348,7 @@ public:
 class DynamicVariable : public LocalMember {
 public:
     DynamicVariable() : LocalMember(Member::DynamicVariableKind), value(JS2VAL_UNDEFINED), sealed(false) { }
+    DynamicVariable(js2val value) : LocalMember(Member::DynamicVariableKind), value(value), sealed(false) { }
 
     js2val value;                   // This variable's current value
                                     // XXX may be an uninstantiated function at compile time
@@ -577,7 +581,7 @@ public:
 
     js2val findThis(bool allowPrototypeThis);
     void lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval);
-    void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
+    void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing);
     void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
     bool lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase);
 
@@ -635,8 +639,9 @@ public:
 
 class Package : public NonWithFrame {
 public:
-    Package(Namespace *internal) : NonWithFrame(PackageKind), super(JS2VAL_VOID), internalNamespace(internal) { }
+    Package(Namespace *internal) : NonWithFrame(PackageKind), super(JS2VAL_VOID), sealed(false), internalNamespace(internal) { }
     js2val super;
+    bool sealed;
     Namespace *internalNamespace;               // This Package's internal namespace
     virtual void markChildren();
     virtual ~Package()            { }

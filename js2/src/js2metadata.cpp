@@ -2457,7 +2457,7 @@ doUnary:
 
     // Attempt the write in the top frame in the current environment - if the property
     // exists, then fine. Otherwise create the property there.
-    void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase)
+    void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing)
     {
         LookupKind lookup(true, findThis(false));
         FrameListIterator fi = getBegin();
@@ -2468,16 +2468,18 @@ doUnary:
             case PackageKind:
                 {
                     JS2Class *limit = objectType(OBJECT_TO_JS2VAL(*fi));
-                    result = limit->write(*fi, limit, multiname, lookup, rval);
+                    result = limit->write(*fi, limit, multiname, lookup, false, newValue);
                 }
                 break;
             case SystemKind:
             case ParameterKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = findLocalMember(*fi, multiname, ReadAccess);
-                    if (m)
-                        result = readLocalMember(m, Phase, rval);
+                    LocalMember *m = findLocalMember(*fi, multiname, WriteAccess);
+                    if (m) {
+                        writeLocalMember(m, newValue);
+                        result = true;
+                    }
                 }
                 break;
             case WithFrameKind:
@@ -2485,13 +2487,20 @@ doUnary:
                     WithFrame *wf = checked_cast<WithFrame *>(*fi);
                     // XXX uninitialized 'with' object?
                     JS2Class *limit = objectType(OBJECT_TO_JS2VAL(wf->obj));
-                    result = limit->write(wf, limit, multiname, lookup, phase, rval);
+                    result = limit->write(wf, limit, multiname, lookup, false, newValue);
                 }
                 break;
             }
             if (result)
                 return;
             fi++;
+        }
+        if (createIfMissing) {
+            Package *pkg = getPackageFrame();
+            JS2Class *limit = objectType(OBJECT_TO_JS2VAL(*fi));
+            result = limit->write(*fi, limit, multiname, lookup, true, newValue);
+            if (result)
+                return;
         }
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
     }
@@ -2599,6 +2608,20 @@ doUnary:
         for (NamespaceListIterator nli = ns->begin(), end = ns->end();
                 (nli != end); nli++)
             nsList->push_back(*nli);
+    }
+
+    QualifiedName Multiname::selectPrimaryName(JS2Metadata *meta)
+    {
+        if (nsList->size() == 1)
+            return QualifiedName(name, nsList->top());
+        else {
+            if (listContains(meta->publicNamespace))
+                return QualifiedName(name, meta->publicNamespace);
+            else {
+                meta->reportError(Exception::propertyAccessError, "No good primary name {0}", engine->errorPos(), multiname->name);
+                return QualifiedName();
+            }
+        }
     }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
@@ -2940,15 +2963,13 @@ rescan:
                 reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
             else {
                 if ((bindingResult->accesses != ReadWriteAccess)
-                    || (bindingResult->content->kind != LocalMember::DynamicVariableKind)
-                    || !bindingResult->content->sealed)
-                // XXX
-
+                        || (bindingResult->content->kind != LocalMember::DynamicVariableKind)
+                        || !checked_cast<DynamicVariable *>(bindingResult->content)->sealed)
+                    reportError(Exception::definitionError, "Illegal redefinition of {0}", p->pos, id);
             }
+            // At this point a hoisted binding of the same var already exists, so there is no need to create another one
         }
 
-        //... A hoisted binding of the same var already exists, so there is no need to create another one
-        //    The initial value of function variables will be set by the caller to the 'most recent' value.
         return result;
     }
 
@@ -3561,6 +3582,91 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return false;
     }
 
+    bool JS2Metadata::writeInstanceMember(js2val base, JS2Class *c, InstanceMember *mBase, js2val newValue, Namespace *found_ns)
+    {
+        InstanceMember *m = getDerivedInstanceMember(c, mBase, WriteAccess, found_ns);
+        switch (m->kind) {
+        case Member::InstanceVariableKind:
+            {
+                InstanceVariable *mv = checked_cast<InstanceVariable *>(m);
+                Slot *s = findSlot(containerVal, mv);
+                if (mv->immutable && !JS2VAL_IS_UNINITIALIZED(s->value))
+                    reportError(Exception::compileExpressionError, "Reinitialization of constant", engine->errorPos());
+                s->value = mv->type->implicitCoerce(newValue);
+                return true;
+            }
+        default:
+            ASSERT(false);
+        }
+        return false;
+    }
+
+    bool JS2Metadata::readLocalMember(LocalMember *m, Phase phase, js2val *rval)
+    {
+        switch (m->kind) {
+        case LocalMember::Forbidden:
+            reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
+            break;
+        case LocalMember::Variable:
+            {
+                Variable *v = checked_cast<Variable *>(m); 
+                if ((phase == CompilePhase) && !v->immutable)
+                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+                *rval = v->value;
+                return true;
+            }
+        case LocalMember::DynamicVariableKind:
+            if (phase == CompilePhase) 
+                reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+            *rval = (checked_cast<DynamicVariable *>(m))->value;
+            return true;
+        case LocalMember::ConstructorMethod:
+            {
+                if (phase == CompilePhase)
+                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+                *rval = (checked_cast<ConstructorMethod *>(m))->value;
+                return true;
+            }
+        case LocalMember::Getter:
+        case LocalMember::Setter:
+            break;
+        }
+        NOT_REACHED("Bad member kind");
+        return false;
+    }
+
+    // Write a value to the local member
+    bool JS2Metadata::writeLocalMember(LocalMember *m, js2val newValue, bool initFlag) // phase not used?
+    {
+        switch (m->kind) {
+        case LocalMember::Forbidden:
+        case LocalMember::ConstructorMethod:
+            reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
+            break;
+        case LocalMember::Variable:
+            {
+                Variable *v = checked_cast<Variable *>(m);
+                if (!initFlag
+                        && (JS2VAL_IS_INACCESSIBLE(v->value) 
+                                || (v->immutable && !JS2VAL_IS_UNINITIALIZED(v->value))))
+                    if (flags == JS2)
+                        reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
+                    else    // quietly ignore the write for JS1 compatibility
+                        return true;
+                v->value = v->type->implicitCoerce(this, newValue);
+            }
+            return true;
+        case LocalMember::DynamicVariableKind:
+            (checked_cast<DynamicVariable *>(m))->value = newValue;
+            return true;
+        case LocalMember::Getter:
+        case LocalMember::Setter:
+            break;
+        }
+        NOT_REACHED("Bad member kind");
+        return false;
+    }
+
     bool defaultReadProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
         Namespace *found_ns;
@@ -3596,12 +3702,72 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
         if (JS2VAL_IS_UNINITIALIZED(lookupKind->thisObject))
             meta->reportError(Exception::compileExpressionError, "Inappropriate compile time expression", meta->engine->errorPos());
-        return meta->readInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, phase, rval);
+        return meta->readInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, phase, rval, );
     }
 
+    bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue)
+    {
+        Namespace *found_ns;
+        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, ReadAccess, &found_ns);
+        if (mBase) {
+            meta->writeInstanceMember(base, limit, mBase, newValue, found_ns);
+            return true;
+        }
+        if (limit != objectType(base))
+            return false;
 
+        Member *m = meta->findCommonMember(base, multiname, WriteAccess, true);
+        if (m == NULL) {
+            if (createIfMissing 
+                    && JS2VAL_IS_OBJECT(base) 
+                    && ( (JS2VAL_TO_OBJECT(base)->kind == SimpleInstanceKind) && !checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(base))->sealed)
+                        || ( (JS2VAL_TO_OBJECT(base)->kind == PackageKind) && !checked_cast<Package *>(JS2VAL_TO_OBJECT(base))->sealed) ) {
+                QualifiedName qName = multiname->selectPrimaryName(meta);
+                Multiname mn(qName);
+                if ( (meta->findBaseInstanceMember(limit, &mn, ReadAccess, NULL) == NULL)
+                        && (meta->findCommonMember(base, &mn, ReadAccess, true) == NULL) ) {
+                    meta->addDynamicVariable(JS2VAL_TO_OBJECT(base), &qName, newValue, ReadWriteAccess);
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (m->kind == Member::LocalMemberKind)
+            return meta->writeLocalMember(m, newValue);
+        ASSERT(m->kind == Member::InstanceMemberKind);
+        if ( (JS2VAL_IS_OBJECT(base) && (JS2VAL_TO_OBJECT(base)->kind != ClassKind))
+                || (lookupKind->isPropertyLookup())
+            meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
+        if (JS2VAL_IS_VOID(lookupKind->thisObject))
+            meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
+        meta->writeInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, newValue);
+        return true;
+    }
 
+    // Caller ensured that there is no such variable already
+    void JS2Metadata::addDynamicVariable(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access)
+    {
+        DynamicVariable *dv = new DynamicVariable(initVal);
+        LocalBinding *new_b = new LocalBinding(access, dv);
+        LocalBindingMap *lMap;
+        if (obj->kind == SimpleInstanceKind)
+            lMap = &checked_cast<SimpleInstance *>(obj)->localBindings;
+        else
+            if (obj->kind == PackageKind)
+                lMap = &checked_cast<Package *>(obj)->localBindings;
+            else
+                ASSERT(false);
 
+        LocalBindingEntry **lbeP = (*lMap)[*qName->id];
+        LocalBindingEntry *lbe;
+        if (lbeP == NULL) {
+            lbe = new LocalBindingEntry(*qName->id);
+            lMap->insert(*qName->id, lbe);
+        }
+        else
+            lbe = *lbeP;
+        lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(qName->nameSpace, new_b));
+    }
 
     // Use the slotIndex from the instanceVariable to access the slot
     Slot *JS2Metadata::findSlot(js2val thisObjVal, InstanceVariable *id)
@@ -3932,7 +4098,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     SimpleInstance::SimpleInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) 
         : JS2Object(SimpleInstanceKind),
             sealed(false),
-            super(parent),
+            super(OBJECT_TO_JS2VAL(parent)),
             type(type), 
             slots(new Slot[type->slotCount]),
             fWrap(NULL)
