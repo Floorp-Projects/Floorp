@@ -250,11 +250,11 @@ Rights Reserved.
   <!-- The main address book three pane -->
   <hbox  flex="1" style="min-width:150px">
     <!-- sidebar with dir tree -->
-    <hbox id="sidebar-box">
+    <vbox id="sidebar-box">
         <sidebarheader type="box" class="sidebarheader-main" label="&addressbook-sidebar-header.label;"/>
       
       <tree id="dirTree" flex="1000"/>
-    </hbox>
+    </vbox>
     <splitter id="sidebar-splitter" collapse="before" persist="state"/>
     
     <vbox flex="100%" style="min-width:100px">
