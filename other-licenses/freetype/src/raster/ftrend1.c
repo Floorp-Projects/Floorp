@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer interface (body).                      */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -86,7 +86,7 @@
                        FT_GlyphSlot  slot,
                        FT_BBox*      cbox )
   {
-    MEM_Set( cbox, 0, sizeof ( *cbox ) );
+    FT_MEM_SET( cbox, 0, sizeof ( *cbox ) );
 
     if ( slot->format == render->glyph_format )
       FT_Outline_Get_CBox( &slot->outline, cbox );
@@ -151,10 +151,10 @@
     memory = render->root.memory;
 
     /* release old bitmap buffer */
-    if ( slot->flags & ft_glyph_own_bitmap )
+    if ( slot->flags & FT_GLYPH_OWN_BITMAP )
     {
-      FREE( bitmap->buffer );
-      slot->flags &= ~ft_glyph_own_bitmap;
+      FT_FREE( bitmap->buffer );
+      slot->flags &= ~FT_GLYPH_OWN_BITMAP;
     }
 
     /* allocate new one, depends on pixel format */
@@ -175,10 +175,10 @@
     bitmap->rows  = height;
     bitmap->pitch = pitch;
 
-    if ( ALLOC( bitmap->buffer, (FT_ULong)pitch * height ) )
+    if ( FT_ALLOC( bitmap->buffer, (FT_ULong)pitch * height ) )
       goto Exit;
 
-    slot->flags |= ft_glyph_own_bitmap;
+    slot->flags |= FT_GLYPH_OWN_BITMAP;
 
     /* translate outline to render it into the bitmap */
     FT_Outline_Translate( outline, -cbox.xMin, -cbox.yMin );

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript hinter global hinting management.                         */
 /*                                                                         */
-/*  Copyright 2001 by                                                      */
+/*  Copyright 2001, 2002 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,7 +21,6 @@
 
 
 #include FT_FREETYPE_H
-#include FT_INTERNAL_POSTSCRIPT_GLOBALS_H
 #include FT_INTERNAL_POSTSCRIPT_HINTS_H
 
 
@@ -82,7 +81,7 @@ FT_BEGIN_HEADER
 
   typedef struct  PSH_DimensionRec_
   {
-    PSH_WidthsRec  std;
+    PSH_WidthsRec  stdw;
     FT_Fixed       scale_mult;
     FT_Fixed       scale_delta;
 
@@ -141,35 +140,32 @@ FT_BEGIN_HEADER
   } PSH_GlobalsRec;
 
 
-  typedef enum
-  {
-    PSH_BLUE_ALIGN_TOP = 1,
-    PSH_BLUE_ALIGN_BOT = 2
-
-  } PSH_Blue_Align;
+#define PSH_BLUE_ALIGN_NONE  0
+#define PSH_BLUE_ALIGN_TOP   1
+#define PSH_BLUE_ALIGN_BOT   2
 
 
   typedef struct  PSH_AlignmentRec_
   {
-    PSH_Blue_Align  align;
-    FT_Pos          align_top;
-    FT_Pos          align_bot;
+    int     align;
+    FT_Pos  align_top;
+    FT_Pos  align_bot;
 
   } PSH_AlignmentRec, *PSH_Alignment;
 
 
-  FT_LOCAL void
+  FT_LOCAL( void )
   psh_globals_funcs_init( PSH_Globals_FuncsRec*  funcs );
 
 
   /* snap a stem width to fitter coordinates.  `org_width' is in font */
   /* units.  The result is in device pixels (26.6 format).            */
-  FT_LOCAL FT_Pos
+  FT_LOCAL( FT_Pos )
   psh_dimension_snap_width( PSH_Dimension  dimension,
                             FT_Int         org_width );
 
   /* snap a stem to one or two blue zones */
-  FT_LOCAL void
+  FT_LOCAL( void )
   psh_blues_snap_stem( PSH_Blues      blues,
                        FT_Int         stem_top,
                        FT_Int         stem_bot,

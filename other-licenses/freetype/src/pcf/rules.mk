@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 2000 by
+# Copyright (C) 2000, 2001 by
 # Francesco Zappa Nardelli
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy

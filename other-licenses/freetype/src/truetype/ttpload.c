@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType glyph data/program tables loader (body).                    */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -54,7 +54,7 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Load_Locations( TT_Face    face,
                      FT_Stream  stream )
   {
@@ -80,12 +80,10 @@
 
       FT_TRACE2(( "(32bit offsets): %12d ", face->num_locations ));
 
-      if ( ALLOC_ARRAY( face->glyph_locations,
-                        face->num_locations,
-                        FT_Long ) )
+      if ( FT_NEW_ARRAY( face->glyph_locations, face->num_locations ) )
         goto Exit;
 
-      if ( ACCESS_Frame( face->num_locations * 4L ) )
+      if ( FT_FRAME_ENTER( face->num_locations * 4L ) )
         goto Exit;
 
       {
@@ -94,10 +92,10 @@
 
 
         for ( ; loc < limit; loc++ )
-          *loc = GET_Long();
+          *loc = FT_GET_LONG();
       }
 
-      FORGET_Frame();
+      FT_FRAME_EXIT();
     }
     else
     {
@@ -105,12 +103,10 @@
 
       FT_TRACE2(( "(16bit offsets): %12d ", face->num_locations ));
 
-      if ( ALLOC_ARRAY( face->glyph_locations,
-                        face->num_locations,
-                        FT_Long ) )
+      if ( FT_NEW_ARRAY( face->glyph_locations, face->num_locations ) )
         goto Exit;
 
-      if ( ACCESS_Frame( face->num_locations * 2L ) )
+      if ( FT_FRAME_ENTER( face->num_locations * 2L ) )
         goto Exit;
       {
         FT_Long*  loc   = face->glyph_locations;
@@ -118,9 +114,9 @@
 
 
         for ( ; loc < limit; loc++ )
-          *loc = (FT_Long)( (FT_ULong)GET_UShort() * 2 );
+          *loc = (FT_Long)( (FT_ULong)FT_GET_USHORT() * 2 );
       }
-      FORGET_Frame();
+      FT_FRAME_EXIT();
     }
 
     FT_TRACE2(( "loaded\n" ));
@@ -147,7 +143,7 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Load_CVT( TT_Face    face,
                FT_Stream  stream )
   {
@@ -172,12 +168,10 @@
 
     face->cvt_size = table_len / 2;
 
-    if ( ALLOC_ARRAY( face->cvt,
-                      face->cvt_size,
-                      FT_Short ) )
+    if ( FT_NEW_ARRAY( face->cvt, face->cvt_size ) )
       goto Exit;
 
-    if ( ACCESS_Frame( face->cvt_size * 2L ) )
+    if ( FT_FRAME_ENTER( face->cvt_size * 2L ) )
       goto Exit;
 
     {
@@ -186,10 +180,10 @@
 
 
       for ( ; cur <  limit; cur++ )
-        *cur = GET_Short();
+        *cur = FT_GET_SHORT();
     }
 
-    FORGET_Frame();
+    FT_FRAME_EXIT();
     FT_TRACE2(( "loaded\n" ));
 
   Exit:
@@ -214,7 +208,7 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Load_Programs( TT_Face    face,
                     FT_Stream  stream )
   {
@@ -236,7 +230,7 @@
     else
     {
       face->font_program_size = table_len;
-      if ( EXTRACT_Frame( table_len, face->font_program ) )
+      if ( FT_FRAME_EXTRACT( table_len, face->font_program ) )
         goto Exit;
 
       FT_TRACE2(( "loaded, %12d bytes\n", face->font_program_size ));
@@ -256,7 +250,7 @@
     else
     {
       face->cvt_program_size = table_len;
-      if ( EXTRACT_Frame( table_len, face->cvt_program ) )
+      if ( FT_FRAME_EXTRACT( table_len, face->cvt_program ) )
         goto Exit;
 
       FT_TRACE2(( "loaded, %12d bytes\n", face->cvt_program_size ));

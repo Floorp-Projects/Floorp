@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Mac FOND support.  Written by just@letterror.com.                    */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -69,7 +69,6 @@
 #include <Files.h>
 #include <TextUtils.h>
 
-#include <ctype.h>  /* for isupper() and isalnum() */
 
 #include FT_MAC_H
 
@@ -90,7 +89,7 @@
     static char  cstr[256];
 
 
-    strncpy( cstr, (char*)pstr + 1, pstr[0] );
+    ft_strncpy( cstr, (char*)pstr + 1, pstr[0] );
     cstr[pstr[0]] = '\0';
     return cstr;
   }
@@ -106,11 +105,11 @@
 
 
     /* convert path to a pascal string */
-    path_len = strlen( pathname );
+    path_len = ft_strlen( pathname );
     if ( path_len > 255 )
       return -1;
     p_path[0] = (unsigned char)path_len;
-    strncpy( (char*)p_path + 1, pathname, path_len );
+    ft_strncpy( (char*)p_path + 1, pathname, path_len );
 
     if ( FSMakeFSSpec( 0, 0, p_path, spec ) != noErr )
       return -1;
@@ -172,7 +171,7 @@
           max = 3;
         count = 0;
       }
-      if ( count < max && ( isalnum( *q ) || *q == '_' ) )
+      if ( count < max && ( ft_isalnum( *q ) || *q == '_' ) )
       {
         *++p = *q;
         lwfn_file_name[0]++;
@@ -299,7 +298,7 @@
         p += names[i][0];
         p++;
       }
-      strcpy( ps_name, p2c_str( names[0] ) );  /* Family name */
+      ft_strcpy( ps_name, p2c_str( names[0] ) );  /* Family name */
 
       if ( style->indexes[0] > 1 )
       {
@@ -364,7 +363,7 @@
       last_code = code;
     }
 
-    if ( ALLOC( buffer, (FT_Long)total_size ) )
+    if ( FT_ALLOC( buffer, (FT_Long)total_size ) )
       goto Error;
 
     /* Second pass: append all POST data to the buffer, add PFB fields.
@@ -410,7 +409,7 @@
         }
       }
 
-      memcpy( p, *post_data + 2, post_size );
+      ft_memcpy( p, *post_data + 2, post_size );
       pfb_chunk_size += post_size;
       p += post_size;
       last_code = code;
@@ -433,7 +432,7 @@
     FT_Memory  memory = stream->memory;
 
 
-    FREE( stream->base );
+    FT_FREE( stream->base );
 
     stream->size  = 0;
     stream->base  = 0;
@@ -462,10 +461,10 @@
 
       *astream = 0;
       memory = library->memory;
-      if ( ALLOC( stream, sizeof ( *stream ) ) )
+      if ( FT_NEW( stream ) )
         goto Exit;
 
-      FT_New_Memory_Stream( library,
+      FT_Stream_OpenMemory( library,
                             base,
                             size,
                             stream );
@@ -501,7 +500,7 @@
                                &stream );
     if ( error )
     {
-      FREE( base );
+      FT_FREE( base );
       return error;
     }
 
@@ -518,8 +517,8 @@
       (*aface)->face_flags &= ~FT_FACE_FLAG_EXTERNAL_STREAM;
     else
     {
-      FT_Done_Stream( stream );
-      FREE( stream );
+      FT_Stream_Close( stream );
+      FT_FREE( stream );
     }
     return error;
   }
@@ -588,14 +587,14 @@
       return FT_Err_Invalid_Handle;
 
     sfnt_size = (FT_ULong)GetHandleSize( sfnt );
-    if ( ALLOC( sfnt_data, (FT_Long)sfnt_size ) )
+    if ( FT_ALLOC( sfnt_data, (FT_Long)sfnt_size ) )
     {
       ReleaseResource( sfnt );
       return error;
     }
 
     HLock( sfnt );
-    memcpy( sfnt_data, *sfnt, sfnt_size );
+    ft_memcpy( sfnt_data, *sfnt, sfnt_size );
     HUnlock( sfnt );
     ReleaseResource( sfnt );
 
@@ -797,14 +796,14 @@
 
 
             /* build up a complete face name */
-            strcpy( fullName, famName );
+            ft_strcpy( fullName, famName );
             if ( style & bold )
               strcat( fullName, " Bold" );
             if ( style & italic )
               strcat( fullName, " Italic" );
 
             /* compare with the name we are looking for */
-            if ( strcmp( fullName, fontName ) == 0 )
+            if ( ft_strcmp( fullName, fontName ) == 0 )
             {
               /* found it! */
               the_font = font;

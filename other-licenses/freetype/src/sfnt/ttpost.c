@@ -5,7 +5,7 @@
 /*    Postcript name table processing for TrueType and OpenType fonts      */
 /*    (body).                                                              */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -33,6 +33,7 @@
 
 #include "sferrors.h"
 
+
   /*************************************************************************/
   /*                                                                       */
   /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
@@ -49,7 +50,7 @@
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
 
 
-#include <freetype/internal/psnames.h>
+#include FT_INTERNAL_POSTSCRIPT_NAMES_H
 
 #define MAC_NAME( x )  ( (FT_String*)psnames->macintosh_name( x ) )
 
@@ -155,17 +156,17 @@
   Load_Format_20( TT_Face    face,
                   FT_Stream  stream )
   {
-    FT_Memory  memory = stream->memory;
-    FT_Error   error;
+    FT_Memory   memory = stream->memory;
+    FT_Error    error;
 
-    FT_Int     num_glyphs;
-    FT_UShort  num_names;
+    FT_Int      num_glyphs;
+    FT_UShort   num_names;
 
-    FT_UShort* glyph_indices = 0;
-    FT_Char**  name_strings  = 0;
+    FT_UShort*  glyph_indices = 0;
+    FT_Char**   name_strings  = 0;
 
 
-    if ( READ_UShort( num_glyphs ) )
+    if ( FT_READ_USHORT( num_glyphs ) )
       goto Exit;
 
     /* UNDOCUMENTED!  The number of glyphs in this table can be smaller */
@@ -185,14 +186,14 @@
       FT_Int  n;
 
 
-      if ( ALLOC_ARRAY ( glyph_indices, num_glyphs, FT_UShort ) ||
-           ACCESS_Frame( num_glyphs * 2L )                      )
+      if ( FT_NEW_ARRAY ( glyph_indices, num_glyphs ) ||
+           FT_FRAME_ENTER( num_glyphs * 2L )          )
         goto Fail;
 
       for ( n = 0; n < num_glyphs; n++ )
-        glyph_indices[n] = GET_UShort();
+        glyph_indices[n] = FT_GET_USHORT();
 
-      FORGET_Frame();
+      FT_FRAME_EXIT();
     }
 
     /* compute number of names stored in table */
@@ -204,15 +205,15 @@
 
       for ( n = 0; n < num_glyphs; n++ )
       {
-        FT_Int  index;
+        FT_Int  idx;
 
 
-        index = glyph_indices[n];
-        if ( index >= 258 )
+        idx = glyph_indices[n];
+        if ( idx >= 258 )
         {
-          index -= 257;
-          if ( index > num_names )
-            num_names = (FT_UShort)index;
+          idx -= 257;
+          if ( idx > num_names )
+            num_names = (FT_UShort)idx;
         }
       }
     }
@@ -222,7 +223,7 @@
       FT_UShort  n;
 
 
-      if ( ALLOC_ARRAY( name_strings, num_names, FT_Char* ) )
+      if ( FT_NEW_ARRAY( name_strings, num_names ) )
         goto Fail;
 
       for ( n = 0; n < num_names; n++ )
@@ -230,9 +231,9 @@
         FT_UInt  len;
 
 
-        if ( READ_Byte  ( len )                               ||
-             ALLOC_ARRAY( name_strings[n], len + 1, FT_Char ) ||
-             FILE_Read  ( name_strings[n], len )              )
+        if ( FT_READ_BYTE  ( len )                    ||
+             FT_NEW_ARRAY( name_strings[n], len + 1 ) ||
+             FT_STREAM_READ  ( name_strings[n], len ) )
           goto Fail1;
 
         name_strings[n][len] = '\0';
@@ -241,7 +242,7 @@
 
     /* all right, set table fields and exit successfuly */
     {
-      TT_Post_20*  table = &face->postscript_names.names.format_20;
+      TT_Post_20  table = &face->postscript_names.names.format_20;
 
 
       table->num_glyphs    = (FT_UShort)num_glyphs;
@@ -251,19 +252,18 @@
     }
     return SFNT_Err_Ok;
 
-
   Fail1:
     {
       FT_UShort  n;
 
 
       for ( n = 0; n < num_names; n++ )
-        FREE( name_strings[n] );
+        FT_FREE( name_strings[n] );
     }
 
   Fail:
-    FREE( name_strings );
-    FREE( glyph_indices );
+    FT_FREE( name_strings );
+    FT_FREE( glyph_indices );
 
   Exit:
     return error;
@@ -282,7 +282,7 @@
 
 
     /* UNDOCUMENTED!  This value appears only in the Apple TT specs. */
-    if ( READ_UShort( num_glyphs ) )
+    if ( FT_READ_USHORT( num_glyphs ) )
       goto Exit;
 
     /* check the number of glyphs */
@@ -292,8 +292,8 @@
       goto Exit;
     }
 
-    if ( ALLOC    ( offset_table, num_glyphs ) ||
-         FILE_Read( offset_table, num_glyphs ) )
+    if ( FT_ALLOC( offset_table, num_glyphs )       ||
+         FT_STREAM_READ( offset_table, num_glyphs ) )
       goto Fail;
 
     /* now check the offset table */
@@ -303,10 +303,10 @@
 
       for ( n = 0; n < num_glyphs; n++ )
       {
-        FT_Long  index = (FT_Long)n + offset_table[n];
+        FT_Long  idx = (FT_Long)n + offset_table[n];
 
 
-        if ( index < 0 || index > num_glyphs )
+        if ( idx < 0 || idx > num_glyphs )
         {
           error = SFNT_Err_Invalid_File_Format;
           goto Fail;
@@ -316,7 +316,7 @@
 
     /* OK, set table fields and exit successfuly */
     {
-      TT_Post_25*  table = &face->postscript_names.names.format_25;
+      TT_Post_25  table = &face->postscript_names.names.format_25;
 
 
       table->num_glyphs = (FT_UShort)num_glyphs;
@@ -326,7 +326,7 @@
     return SFNT_Err_Ok;
 
   Fail:
-    FREE( offset_table );
+    FT_FREE( offset_table );
 
   Exit:
     return error;
@@ -352,7 +352,7 @@
     format = face->postscript.FormatType;
 
     /* go to beginning of subtable */
-    if ( FILE_Skip( 32 ) )
+    if ( FT_STREAM_SKIP( 32 ) )
       goto Exit;
 
     /* now read postscript table */
@@ -377,11 +377,11 @@
   }
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   TT_Free_Post_Names( TT_Face  face )
   {
-    FT_Memory       memory = face->root.memory;
-    TT_Post_Names*  names  = &face->postscript_names;
+    FT_Memory      memory = face->root.memory;
+    TT_Post_Names  names  = &face->postscript_names;
 
 
     if ( names->loaded )
@@ -390,27 +390,27 @@
       {
       case 0x00020000L:
         {
-          TT_Post_20*  table = &names->names.format_20;
-          FT_UShort    n;
+          TT_Post_20  table = &names->names.format_20;
+          FT_UShort   n;
 
 
-          FREE( table->glyph_indices );
+          FT_FREE( table->glyph_indices );
           table->num_glyphs = 0;
 
           for ( n = 0; n < table->num_names; n++ )
-            FREE( table->glyph_names[n] );
+            FT_FREE( table->glyph_names[n] );
 
-          FREE( table->glyph_names );
+          FT_FREE( table->glyph_names );
           table->num_names = 0;
         }
         break;
 
       case 0x00028000L:
         {
-          TT_Post_25*  table = &names->names.format_25;
+          TT_Post_25  table = &names->names.format_25;
 
 
-          FREE( table->offsets );
+          FT_FREE( table->offsets );
           table->num_glyphs = 0;
         }
         break;
@@ -431,7 +431,7 @@
   /* <Input>                                                               */
   /*    face   :: A handle to the parent face.                             */
   /*                                                                       */
-  /*    index  :: The glyph index.                                         */
+  /*    idx    :: The glyph index.                                         */
   /*                                                                       */
   /*    PSname :: The address of a string pointer.  Will be NULL in case   */
   /*              of error, otherwise it is a pointer to the glyph name.   */
@@ -441,27 +441,27 @@
   /* <Output>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Get_PS_Name( TT_Face      face,
-                  FT_UInt      index,
+                  FT_UInt      idx,
                   FT_String**  PSname )
   {
-    FT_Error            error;
-    TT_Post_Names*      names;
+    FT_Error         error;
+    TT_Post_Names    names;
 
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
-    PSNames_Interface*  psnames;
+    PSNames_Service  psnames;
 #endif
 
 
     if ( !face )
       return SFNT_Err_Invalid_Face_Handle;
 
-    if ( index >= (FT_UInt)face->root.num_glyphs )
+    if ( idx >= (FT_UInt)face->root.num_glyphs )
       return SFNT_Err_Invalid_Glyph_Index;
 
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
-    psnames = (PSNames_Interface*)face->psnames;
+    psnames = (PSNames_Service)face->psnames;
     if ( !psnames )
       return SFNT_Err_Unimplemented_Feature;
 #endif
@@ -474,13 +474,13 @@
     switch ( face->postscript.FormatType )
     {
     case 0x00010000L:
-      if ( index < 258 )                    /* paranoid checking */
-        *PSname = MAC_NAME( index );
+      if ( idx < 258 )                    /* paranoid checking */
+        *PSname = MAC_NAME( idx );
       break;
 
     case 0x00020000L:
       {
-        TT_Post_20*  table = &names->names.format_20;
+        TT_Post_20  table = &names->names.format_20;
 
 
         if ( !names->loaded )
@@ -490,9 +490,9 @@
             break;
         }
 
-        if ( index < (FT_UInt)table->num_glyphs )
+        if ( idx < (FT_UInt)table->num_glyphs )
         {
-          FT_UShort  name_index = table->glyph_indices[index];
+          FT_UShort  name_index = table->glyph_indices[idx];
 
 
           if ( name_index < 258 )
@@ -505,7 +505,7 @@
 
     case 0x00028000L:
       {
-        TT_Post_25*  table = &names->names.format_25;
+        TT_Post_25  table = &names->names.format_25;
 
 
         if ( !names->loaded )
@@ -515,10 +515,10 @@
             break;
         }
 
-        if ( index < (FT_UInt)table->num_glyphs )    /* paranoid checking */
+        if ( idx < (FT_UInt)table->num_glyphs )    /* paranoid checking */
         {
-          index  += table->offsets[index];
-          *PSname = MAC_NAME( index );
+          idx    += table->offsets[idx];
+          *PSname = MAC_NAME( idx );
         }
       }
       break;

@@ -89,7 +89,7 @@ AC_CONFIG_FILES([unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config])
 
 dnl re-generate the Jamfile to use libtool now
 dnl
-AC_CONFIG_FILE([../../Jamfile:../../Jamfile.in])
+dnl AC_CONFIG_FILES([../../Jamfile:../../Jamfile.in])
 
 AC_OUTPUT
 

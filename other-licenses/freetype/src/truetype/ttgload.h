@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType Glyph Loader (specification).                               */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -31,16 +31,16 @@
 FT_BEGIN_HEADER
 
 
-  FT_LOCAL void
+  FT_LOCAL( void )
   TT_Get_Metrics( TT_HoriHeader*  header,
                   FT_UInt         index,
                   FT_Short*       bearing,
                   FT_UShort*      advance );
 
-  FT_LOCAL void
+  FT_LOCAL( void )
   TT_Init_Glyph_Loading( TT_Face  face );
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   TT_Load_Glyph( TT_Size       size,
                  TT_GlyphSlot  glyph,
                  FT_UShort     glyph_index,

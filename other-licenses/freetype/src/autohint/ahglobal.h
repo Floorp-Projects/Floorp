@@ -5,7 +5,7 @@
 /*    Routines used to compute global metrics automatically                */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2000-2001 Catharon Productions Inc.                          */
+/*  Copyright 2000-2001, 2002 Catharon Productions Inc.                    */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -37,8 +37,8 @@ FT_BEGIN_HEADER
 
 
   /* compute global metrics automatically */
-  FT_LOCAL
-  FT_Error  ah_hinter_compute_globals( AH_Hinter*  hinter );
+  FT_LOCAL( FT_Error )
+  ah_hinter_compute_globals( AH_Hinter*  hinter );
 
 
 FT_END_HEADER

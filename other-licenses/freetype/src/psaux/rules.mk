@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2002 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -28,6 +28,7 @@ PSAUX_COMPILE := $(FT_COMPILE) $I$(PSAUX_DIR)
 #
 PSAUX_DRV_SRC := $(PSAUX_DIR_)psobjs.c   \
                  $(PSAUX_DIR_)t1decode.c \
+                 $(PSAUX_DIR_)t1cmap.c   \
                  $(PSAUX_DIR_)psauxmod.c
 
 # PSAUX driver headers

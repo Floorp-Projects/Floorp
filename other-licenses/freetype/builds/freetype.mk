@@ -139,7 +139,10 @@ INCLUDE_FLAGS = $(INCLUDES:%=$I%)
 # least the paths for the `base' and `builds/<system>' directories;
 # debug/optimization/warning flags + ansi compliance if needed.
 #
-FT_CFLAGS  = $(CFLAGS) $(INCLUDE_FLAGS)
+# $(INCLUDE_FLAGS) should come before $(CFLAGS) to avoid problems with
+# old FreeType versions.
+#
+FT_CFLAGS  = $(INCLUDE_FLAGS) $(CFLAGS)
 FT_CC      = $(CC) $(FT_CFLAGS)
 FT_COMPILE = $(CC) $(ANSIFLAGS) $(FT_CFLAGS)
 

@@ -8,4 +8,15 @@
 #   Jamfile
 #   install
 #
-CFG="$@" make setup unix
+
+if [ "x$GNUMAKE" = x ]; then
+  GNUMAKE=make
+fi
+
+if [ `$GNUMAKE -v 2>/dev/null|grep -ic gnu` -eq 0 ]; then
+  echo "Sorry, GNU make is required to build FreeType2." >&2
+  echo "Please try \`GNUMAKE=<GNU make command name> $0'." >&2
+  exit 1
+fi
+
+CFG="$@" $GNUMAKE setup unix

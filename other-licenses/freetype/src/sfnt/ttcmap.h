@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType character mapping table (cmap) support (specification).     */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,14 +27,14 @@
 FT_BEGIN_HEADER
 
 
-  FT_LOCAL FT_Error
-  TT_CharMap_Load( TT_Face        face,
-                   TT_CMapTable*  cmap,
-                   FT_Stream      input );
+  FT_LOCAL( FT_Error )
+  TT_CharMap_Load( TT_Face       face,
+                   TT_CMapTable  cmap,
+                   FT_Stream     input );
 
-  FT_LOCAL FT_Error
-  TT_CharMap_Free( TT_Face        face,
-                   TT_CMapTable*  cmap );
+  FT_LOCAL( FT_Error )
+  TT_CharMap_Free( TT_Face       face,
+                   TT_CMapTable  cmap );
 
 
 FT_END_HEADER

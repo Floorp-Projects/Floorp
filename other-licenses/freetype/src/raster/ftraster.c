@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -186,8 +186,8 @@
 #endif /* _STANDALONE_ */
 
 
-#ifndef MEM_Set
-#define MEM_Set( d, s, c )  memset( d, s, c )
+#ifndef FT_MEM_SET
+#define FT_MEM_SET( d, s, c )  ft_memset( d, s, c )
 #endif
 
 
@@ -2965,7 +2965,7 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   Render_Glyph( RAS_ARG )
   {
     FT_Error  error;
@@ -3028,7 +3028,7 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   Render_Gray_Glyph( RAS_ARG )
   {
     Long      pixel_width;
@@ -3086,17 +3086,17 @@
     return Raster_Err_Ok;
   }
 
-#else /* FT_RASTER_OPTION_ANTI_ALIASING */
+#else /* !FT_RASTER_OPTION_ANTI_ALIASING */
 
-  FT_LOCAL_DEF
-  FT_Error  Render_Gray_Glyph( RAS_ARG )
+  FT_LOCAL_DEF( FT_Error )
+  Render_Gray_Glyph( RAS_ARG )
   {
     FT_UNUSED_RASTER;
 
     return Raster_Err_Cannot_Render_Glyph;
   }
 
-#endif /* FT_RASTER_OPTION_ANTI_ALIASING */
+#endif /* !FT_RASTER_OPTION_ANTI_ALIASING */
 
 
   static void
@@ -3146,7 +3146,7 @@
 
 
      *araster = &the_raster;
-     MEM_Set( &the_raster, sizeof ( the_raster ), 0 );
+     FT_MEM_SET( &the_raster, sizeof ( the_raster ), 0 );
      ft_black_init( &the_raster );
 
      return 0;
@@ -3173,7 +3173,7 @@
 
 
     *araster = 0;
-    if ( !ALLOC( raster, sizeof ( *raster ) ) )
+    if ( !FT_NEW( raster ) )
     {
       raster->memory = memory;
       ft_black_init( raster );
@@ -3189,7 +3189,7 @@
   ft_black_done( TRaster_Instance*  raster )
   {
     FT_Memory  memory = (FT_Memory)raster->memory;
-    FREE( raster );
+    FT_FREE( raster );
   }
 
 
@@ -3211,9 +3211,9 @@
 
 
   static void
-  ft_black_set_mode( TRaster_Instance* raster,
-                     unsigned long     mode,
-                     const char*       palette )
+  ft_black_set_mode( TRaster_Instance*  raster,
+                     unsigned long      mode,
+                     const char*        palette )
   {
 #ifdef FT_RASTER_OPTION_ANTI_ALIASING
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 parser (body).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -42,8 +42,6 @@
 #include "t1parse.h"
 
 #include "t1errors.h"
-
-#include <string.h>     /* for strncmp() */
 
 
   /*************************************************************************/
@@ -106,9 +104,9 @@
 
     *tag  = 0;
     *size = 0;
-    if ( !READ_Fields( pfb_tag_fields, &head ) )
+    if ( !FT_STREAM_READ_FIELDS( pfb_tag_fields, &head ) )
     {
-      if ( head.tag == 0x8001 || head.tag == 0x8002 )
+      if ( head.tag == 0x8001U || head.tag == 0x8002U )
       {
         *tag  = head.tag;
         *size = head.size;
@@ -118,18 +116,18 @@
   }
 
 
-  FT_LOCAL_DEF FT_Error
-  T1_New_Parser( T1_ParserRec*     parser,
-                 FT_Stream         stream,
-                 FT_Memory         memory,
-                 PSAux_Interface*  psaux )
+  FT_LOCAL_DEF( FT_Error )
+  T1_New_Parser( T1_Parser      parser,
+                 FT_Stream      stream,
+                 FT_Memory      memory,
+                 PSAux_Service  psaux )
   {
     FT_Error   error;
     FT_UShort  tag;
     FT_Long    size;
 
 
-    psaux->t1_parser_funcs->init( &parser->root,0, 0, memory );
+    psaux->ps_parser_funcs->init( &parser->root,0, 0, memory );
 
     parser->stream       = stream;
     parser->base_len     = 0;
@@ -158,18 +156,18 @@
 
     /* try to compute the size of the base dictionary;   */
     /* look for a Postscript binary file tag, i.e 0x8001 */
-    if ( FILE_Seek( 0L ) )
+    if ( FT_STREAM_SEEK( 0L ) )
       goto Exit;
 
     error = read_pfb_tag( stream, &tag, &size );
     if ( error )
       goto Exit;
 
-    if ( tag != 0x8001 )
+    if ( tag != 0x8001U )
     {
       /* assume that this is a PFA file for now; an error will */
       /* be produced later when more things are checked        */
-      if ( FILE_Seek( 0L ) )
+      if ( FT_STREAM_SEEK( 0L ) )
         goto Exit;
       size = stream->size;
     }
@@ -187,14 +185,14 @@
       parser->in_memory = 1;
 
       /* check that the `size' field is valid */
-      if ( FILE_Skip( size ) )
+      if ( FT_STREAM_SKIP( size ) )
         goto Exit;
     }
     else
     {
       /* read segment in memory */
-      if ( ALLOC( parser->base_dict, size )     ||
-           FILE_Read( parser->base_dict, size ) )
+      if ( FT_ALLOC( parser->base_dict, size )     ||
+           FT_STREAM_READ( parser->base_dict, size ) )
         goto Exit;
       parser->base_len = size;
     }
@@ -202,11 +200,11 @@
     /* Now check font format; we must see `%!PS-AdobeFont-1' */
     /* or `%!FontType'                                       */
     {
-      if ( size <= 16                                    ||
-           ( strncmp( (const char*)parser->base_dict,
-                      "%!PS-AdobeFont-1", 16 )        &&
-             strncmp( (const char*)parser->base_dict,
-                      "%!FontType", 10 )              )  )
+      if ( size <= 16                                       ||
+           ( ft_strncmp( (const char*)parser->base_dict,
+                         "%!PS-AdobeFont-1", 16 )        &&
+             ft_strncmp( (const char*)parser->base_dict,
+                         "%!FontType", 10 )              )  )
       {
         FT_TRACE2(( "[not a Type1 font]\n" ));
         error = T1_Err_Unknown_File_Format;
@@ -221,24 +219,24 @@
 
   Exit:
     if ( error && !parser->in_memory )
-      FREE( parser->base_dict );
+      FT_FREE( parser->base_dict );
 
     return error;
   }
 
 
-  FT_LOCAL_DEF void
-  T1_Finalize_Parser( T1_ParserRec*  parser )
+  FT_LOCAL_DEF( void )
+  T1_Finalize_Parser( T1_Parser  parser )
   {
-    FT_Memory   memory = parser->root.memory;
+    FT_Memory  memory = parser->root.memory;
 
 
     /* always free the private dictionary */
-    FREE( parser->private_dict );
+    FT_FREE( parser->private_dict );
 
     /* free the base dictionary only when we have a disk stream */
     if ( !parser->in_memory )
-      FREE( parser->base_dict );
+      FT_FREE( parser->base_dict );
 
     parser->root.funcs.done( &parser->root );
   }
@@ -267,9 +265,9 @@
   }
 
 
-  FT_LOCAL_DEF FT_Error
-  T1_Get_Private_Dict( T1_ParserRec*     parser,
-                       PSAux_Interface*  psaux )
+  FT_LOCAL_DEF( FT_Error )
+  T1_Get_Private_Dict( T1_Parser      parser,
+                       PSAux_Service  psaux )
   {
     FT_Stream  stream = parser->stream;
     FT_Memory  memory = parser->root.memory;
@@ -283,7 +281,7 @@
       /* made of several segments.  We thus first read the number of   */
       /* segments to compute the total size of the private dictionary  */
       /* then re-read them into memory.                                */
-      FT_Long    start_pos = FILE_Pos();
+      FT_Long    start_pos = FT_STREAM_POS();
       FT_UShort  tag;
 
 
@@ -294,12 +292,12 @@
         if ( error )
           goto Fail;
 
-        if ( tag != 0x8002 )
+        if ( tag != 0x8002U )
           break;
 
         parser->private_len += size;
 
-        if ( FILE_Skip( size ) )
+        if ( FT_STREAM_SKIP( size ) )
           goto Fail;
       }
 
@@ -313,21 +311,21 @@
         goto Fail;
       }
 
-      if ( FILE_Seek( start_pos )                             ||
-           ALLOC( parser->private_dict, parser->private_len ) )
+      if ( FT_STREAM_SEEK( start_pos )                             ||
+           FT_ALLOC( parser->private_dict, parser->private_len ) )
         goto Fail;
 
       parser->private_len = 0;
       for (;;)
       {
         error = read_pfb_tag( stream, &tag, &size );
-        if ( error || tag != 0x8002 )
+        if ( error || tag != 0x8002U )
         {
           error = T1_Err_Ok;
           break;
         }
 
-        if ( FILE_Read( parser->private_dict + parser->private_len, size ) )
+        if ( FT_STREAM_READ( parser->private_dict + parser->private_len, size ) )
           goto Fail;
 
         parser->private_len += size;
@@ -384,7 +382,7 @@
       if ( parser->in_memory )
       {
         /* note that we allocate one more byte to put a terminating `0' */
-        if ( ALLOC( parser->private_dict, size + 1 ) )
+        if ( FT_ALLOC( parser->private_dict, size + 1 ) )
           goto Fail;
         parser->private_len = size;
       }
@@ -408,7 +406,7 @@
              hexa_value( cur[2] ) | hexa_value( cur[3] ) ) < 0 )
 
         /* binary encoding -- `simply' copy the private dict */
-        MEM_Copy( parser->private_dict, cur, size );
+        FT_MEM_COPY( parser->private_dict, cur, size );
 
       else
       {
@@ -449,7 +447,7 @@
 
     /* we now decrypt the encoded binary private dictionary */
     psaux->t1_decrypt( parser->private_dict, parser->private_len, 55665U );
-    parser->root.base = parser->private_dict;
+    parser->root.base   = parser->private_dict;
     parser->root.cursor = parser->private_dict;
     parser->root.limit  = parser->root.cursor + parser->private_len;
 

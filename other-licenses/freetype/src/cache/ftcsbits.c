@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType sbits manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2001 by                                                 */
+/*  Copyright 2000-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,8 +25,6 @@
 #include FT_ERRORS_H
 
 #include "ftcerror.h"
-
-#include <string.h>         /* memcmp() */
 
 
 #define FTC_SBIT_ITEMS_PER_NODE  16
@@ -95,8 +93,8 @@
 
     size = (FT_ULong)( pitch * bitmap->rows );
 
-    if ( !ALLOC( sbit->buffer, size ) )
-      MEM_Copy( sbit->buffer, bitmap->buffer, size );
+    if ( !FT_ALLOC( sbit->buffer, size ) )
+      FT_MEM_COPY( sbit->buffer, bitmap->buffer, size );
 
     return error;
   }
@@ -112,7 +110,7 @@
 
 
     for ( ; count > 0; sbit++, count-- )
-      FREE( sbit->buffer );
+      FT_FREE( sbit->buffer );
 
     ftc_glyph_node_done( FTC_GLYPH_NODE( snode ), cache );
   }
@@ -225,9 +223,9 @@
           sbit->format   = (FT_Byte)bitmap->pixel_mode;
 
           /* grab the bitmap when possible - this is a hack !! */
-          if ( slot->flags & ft_glyph_own_bitmap )
+          if ( slot->flags & FT_GLYPH_OWN_BITMAP )
           {
-            slot->flags &= ~ft_glyph_own_bitmap;
+            slot->flags &= ~FT_GLYPH_OWN_BITMAP;
             sbit->buffer = bitmap->buffer;
           }
           else

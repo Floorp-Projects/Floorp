@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 objects manager (specification).                              */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -105,13 +105,13 @@ FT_BEGIN_HEADER
   } T1_SizeRec;
 
 
-  FT_LOCAL void
+  FT_LOCAL( void )
   T1_Size_Done( T1_Size  size );
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   T1_Size_Reset( T1_Size  size );
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   T1_Size_Init( T1_Size  size );
 
 
@@ -139,26 +139,26 @@ FT_BEGIN_HEADER
   } T1_GlyphSlotRec;
 
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   T1_Face_Init( FT_Stream      stream,
                 T1_Face        face,
                 FT_Int         face_index,
                 FT_Int         num_params,
                 FT_Parameter*  params );
 
-  FT_LOCAL void
+  FT_LOCAL( void )
   T1_Face_Done( T1_Face  face );
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   T1_GlyphSlot_Init( T1_GlyphSlot  slot );
   
-  FT_LOCAL void
+  FT_LOCAL( void )
   T1_GlyphSlot_Done( T1_GlyphSlot  slot );
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   T1_Driver_Init( T1_Driver  driver );
 
-  FT_LOCAL void
+  FT_LOCAL( void )
   T1_Driver_Done( T1_Driver  driver );
 
 

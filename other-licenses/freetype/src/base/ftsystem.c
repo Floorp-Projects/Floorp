@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    ANSI-specific FreeType low-level system interface (body).            */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,7 +34,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 
   /*************************************************************************/
@@ -158,7 +157,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    ft_close_stream                                                    */
+  /*    ft_ansi_stream_close                                               */
   /*                                                                       */
   /* <Description>                                                         */
   /*    The function to close a stream.                                    */
@@ -167,7 +166,7 @@
   /*    stream :: A pointer to the stream object.                          */
   /*                                                                       */
   FT_CALLBACK_DEF( void )
-  ft_close_stream( FT_Stream  stream )
+  ft_ansi_stream_close( FT_Stream  stream )
   {
     fclose( STREAM_FILE( stream ) );
 
@@ -180,7 +179,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    ft_io_stream                                                       */
+  /*    ft_ansi_stream_io                                                  */
   /*                                                                       */
   /* <Description>                                                         */
   /*    The function to open a stream.                                     */
@@ -198,10 +197,10 @@
   /*    The number of bytes actually read.                                 */
   /*                                                                       */
   FT_CALLBACK_DEF( unsigned long )
-  ft_io_stream( FT_Stream       stream,
-                unsigned long   offset,
-                unsigned char*  buffer,
-                unsigned long   count )
+  ft_ansi_stream_io( FT_Stream       stream,
+                     unsigned long   offset,
+                     unsigned char*  buffer,
+                     unsigned long   count )
   {
     FILE*  file;
 
@@ -217,55 +216,54 @@
   /* documentation is in ftobjs.h */
 
   FT_EXPORT_DEF( FT_Error )
-  FT_New_Stream( const char*  filepathname,
-                 FT_Stream    astream )
+  FT_Stream_Open( FT_Stream    stream,
+                  const char*  filepathname )
   {
     FILE*  file;
 
 
-    if ( !astream )
+    if ( !stream )
       return FT_Err_Invalid_Stream_Handle;
 
     file = fopen( filepathname, "rb" );
     if ( !file )
     {
-      FT_ERROR(( "FT_New_Stream:" ));
+      FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " could not open `%s'\n", filepathname ));
 
       return FT_Err_Cannot_Open_Resource;
     }
 
     fseek( file, 0, SEEK_END );
-    astream->size = ftell( file );
+    stream->size = ftell( file );
     fseek( file, 0, SEEK_SET );
 
-    astream->descriptor.pointer = file;
-    astream->pathname.pointer   = (char*)filepathname;
-    astream->pos                = 0;
+    stream->descriptor.pointer = file;
+    stream->pathname.pointer   = (char*)filepathname;
+    stream->pos                = 0;
 
-    astream->read  = ft_io_stream;
-    astream->close = ft_close_stream;
+    stream->read  = ft_ansi_stream_io;
+    stream->close = ft_ansi_stream_close;
 
-    FT_TRACE1(( "FT_New_Stream:" ));
+    FT_TRACE1(( "FT_Stream_Open:" ));
     FT_TRACE1(( " opened `%s' (%d bytes) successfully\n",
-                filepathname, astream->size ));
+                filepathname, stream->size ));
 
     return FT_Err_Ok;
   }
-
 
 
 #ifdef FT_DEBUG_MEMORY
 
   extern FT_Int
   ft_mem_debug_init( FT_Memory  memory );
-  
+
   extern void
   ft_mem_debug_done( FT_Memory  memory );
-  
-#endif  
-      
-      
+
+#endif
+
+
   /* documentation is in ftobjs.h */
 
   FT_EXPORT_DEF( FT_Memory )
@@ -283,7 +281,7 @@
       memory->free    = ft_free;
 #ifdef FT_DEBUG_MEMORY
       ft_mem_debug_init( memory );
-#endif    
+#endif
     }
 
     return memory;
@@ -297,7 +295,7 @@
   {
 #ifdef FT_DEBUG_MEMORY
     ft_mem_debug_done( memory );
-#endif  
+#endif
     memory->free( memory, memory );
   }
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType auto hinting outline optimization (body).                   */
 /*                                                                         */
-/*  Copyright 2000-2001 Catharon Productions Inc.                          */
+/*  Copyright 2000-2001, 2002 Catharon Productions Inc.                    */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -32,11 +32,11 @@
 
 
 #include <ft2build.h>
-#include FT_INTERNAL_OBJECTS_H        /* for ALLOC_ARRAY() and FREE() */
+#include FT_INTERNAL_OBJECTS_H       /* for FT_ALLOC_ARRAY() and FT_FREE() */
 #include "ahoptim.h"
 
 
-  /* define this macro to use brute force optimisation -- this is slow,  */
+  /* define this macro to use brute force optimization -- this is slow,  */
   /* but a good way to perfect the distortion function `by hand' through */
   /* tweaking                                                            */
 #define AH_BRUTE_FORCE
@@ -61,9 +61,9 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define FLOAT( x )  ( (float)( (x) / 64.0 ) )
+
 
   static void
   optim_log( const char*  fmt, ... )
@@ -220,7 +220,7 @@
         AH_Stem*  stem;
 
 
-        if ( ALLOC_ARRAY( stems, num_stems, AH_Stem ) )
+        if ( FT_NEW_ARRAY( stems, num_stems ) )
           goto Exit;
 
         stem = stems;
@@ -409,7 +409,7 @@
 
 
         /* allocate table of springs */
-        if ( ALLOC_ARRAY( springs, num_springs, AH_Spring ) )
+        if ( FT_NEW_ARRAY( springs, num_springs ) )
           goto Exit;
 
         /* fill the springs table */
@@ -796,11 +796,11 @@
       FT_Memory  memory = optimizer->memory;
 
 
-      FREE( optimizer->horz_stems );
-      FREE( optimizer->vert_stems );
-      FREE( optimizer->horz_springs );
-      FREE( optimizer->vert_springs );
-      FREE( optimizer->positions );
+      FT_FREE( optimizer->horz_stems );
+      FT_FREE( optimizer->vert_stems );
+      FT_FREE( optimizer->horz_springs );
+      FT_FREE( optimizer->vert_springs );
+      FT_FREE( optimizer->positions );
     }
   }
 
@@ -814,7 +814,7 @@
     FT_Error  error;
 
 
-    MEM_Set( optimizer, 0, sizeof ( *optimizer ) );
+    FT_MEM_SET( optimizer, 0, sizeof ( *optimizer ) );
     optimizer->outline = outline;
     optimizer->memory  = memory;
 
@@ -834,8 +834,7 @@
       if ( max_stems < optimizer->num_vstems )
         max_stems = optimizer->num_vstems;
 
-      if ( ALLOC_ARRAY( optimizer->positions,
-                        max_stems * AH_MAX_CONFIGS, FT_Pos ) )
+      if ( FT_NEW_ARRAY( optimizer->positions, max_stems * AH_MAX_CONFIGS ) )
         goto Fail;
 
       optimizer->num_configs = 0;

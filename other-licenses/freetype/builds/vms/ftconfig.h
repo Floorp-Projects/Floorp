@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    VMS-specific configuration file (specification only).                */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,6 +41,7 @@
   /* Include the header file containing all developer build options */
 #include <ft2build.h>
 #include FT_CONFIG_OPTIONS_H
+#include FT_CONFIG_STANDARD_LIBRARY_H
 
 FT_BEGIN_HEADER
 
@@ -62,17 +63,16 @@ FT_BEGIN_HEADER
 #define SIZEOF_INT   4
 #define SIZEOF_LONG  4
 
-
-#define FT_SIZEOF_INT  4
-#define FT_SIZEOF_LONG 4
+#define FT_SIZEOF_INT   4
+#define FT_SIZEOF_LONG  4
 
 
   /* Preferred alignment of data */
 #define FT_ALIGNMENT  8
 
 
-  /* UNUSED is a macro used to indicate that a given parameter is not used */
-  /* -- this is only used to get rid of unpleasant compiler warnings       */
+  /* FT_UNUSED is a macro used to indicate that a given parameter is not  */
+  /* used -- this is only used to get rid of unpleasant compiler warnings */
 #ifndef FT_UNUSED
 #define FT_UNUSED( arg )  ( (arg) = (arg) )
 #endif
@@ -120,7 +120,6 @@ FT_BEGIN_HEADER
 
 #else
 
-
   /*************************************************************************/
   /*                                                                       */
   /* Many compilers provide the non-ANSI `long long' 64-bit type.  You can */
@@ -137,22 +136,23 @@ FT_BEGIN_HEADER
 #define FT_INT64   long long
 
 #endif /* FTCALC_USE_LONG_LONG */
+
 #endif /* FT_SIZEOF_LONG == 8 */
 
 
 #ifdef FT_MAKE_OPTION_SINGLE_OBJECT
 
-#define LOCAL_DEF   static
-#define LOCAL_FUNC  static
+#define FT_LOCAL( x )      static  x
+#define FT_LOCAL_DEF( x )  static  x
 
 #else
 
 #ifdef __cplusplus
-#define LOCAL_DEF   extern "C"
-#define LOCAL_FUNC  extern "C"
+#define FT_LOCAL( x )      extern "C"  x
+#define FT_LOCAL_DEF( x )  extern "C"  x
 #else
-#define LOCAL_DEF   extern
-#define LOCAL_FUNC  extern
+#define FT_LOCAL( x )      extern  x
+#define FT_LOCAL_DEF( x )  x
 #endif
 
 #endif /* FT_MAKE_OPTION_SINGLE_OBJECT */
@@ -218,13 +218,13 @@ FT_BEGIN_HEADER
   /*                                                                 */
 #ifdef __cplusplus
 
-#define FT_CALLBACK_DEF( x )        extern "C" x
+#define FT_CALLBACK_DEF( x )        extern "C"  x
 #define FT_CALLBACK_TABLE           extern "C"
 #define FT_CALLBACK_TABLE_DEF       extern "C"
 
 #else
 
-#define FT_CALLBACK_DEF( x )        static x
+#define FT_CALLBACK_DEF( x )        static  x
 #define FT_CALLBACK_TABLE           extern
 #define FT_CALLBACK_TABLE_DEF
 

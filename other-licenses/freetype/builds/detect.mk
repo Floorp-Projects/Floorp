@@ -127,7 +127,7 @@ std_setup:
 	@echo "If this does not correspond to your system or settings please remove the file"
 	@echo "\`$(CONFIG_MK)' from this directory then read the INSTALL file for help."
 	@echo ""
-	@echo "Otherwise, simply type \`make' again to build the library."
+	@echo "Otherwise, simply type \`$(MAKE)' again to build the library."
 	@echo ""
 	@$(COPY) $(CONFIG_RULES) $(CONFIG_MK)
 

@@ -58,7 +58,6 @@ extern void __stdargs KVPrintF( const char *formatString, const void *values );
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <string.h>
 
 
   FT_EXPORT_DEF( void )

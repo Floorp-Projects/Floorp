@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript hinting algorithm 1 (body).                               */
 /*                                                                         */
-/*  Copyright 2001 by                                                      */
+/*  Copyright 2001, 2002 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -53,12 +53,12 @@
   psh1_hint_table_done( PSH1_Hint_Table  table,
                         FT_Memory        memory )
   {
-    FREE( table->zones );
+    FT_FREE( table->zones );
     table->num_zones = 0;
     table->zone      = 0;
 
-    FREE( table->sort );
-    FREE( table->hints );
+    FT_FREE( table->sort );
+    FT_FREE( table->hints );
     table->num_hints   = 0;
     table->max_hints   = 0;
     table->sort_global = 0;
@@ -84,14 +84,14 @@
   /* internal function used to record a new hint */
   static void
   psh1_hint_table_record( PSH1_Hint_Table  table,
-                          FT_UInt          index )
+                          FT_UInt          idx )
   {
-    PSH1_Hint  hint = table->hints + index;
+    PSH1_Hint  hint = table->hints + idx;
 
 
-    if ( index >= table->max_hints )
+    if ( idx >= table->max_hints )
     {
-      FT_ERROR(( "%s.activate: invalid hint index %d\n", index ));
+      FT_ERROR(( "%s.activate: invalid hint index %d\n", idx ));
       return;
     }
 
@@ -136,7 +136,7 @@
   {
     FT_Int    mask = 0, val = 0;
     FT_Byte*  cursor = hint_mask->bytes;
-    FT_UInt   index, limit;
+    FT_UInt   idx, limit;
 
 
     limit = hint_mask->num_bits;
@@ -145,7 +145,7 @@
       FT_ERROR(( "%s.activate_mask: invalid bit count (%d instead of %d)\n",
                  "ps.fitter", hint_mask->num_bits, table->max_hints ));
 
-    for ( index = 0; index < limit; index++ )
+    for ( idx = 0; idx < limit; idx++ )
     {
       if ( mask == 0 )
       {
@@ -154,7 +154,7 @@
       }
 
       if ( val & mask )
-        psh1_hint_table_record( table, index );
+        psh1_hint_table_record( table, idx );
 
       mask >>= 1;
     }
@@ -176,9 +176,9 @@
 
 
     /* allocate our tables */
-    if ( ALLOC_ARRAY( table->sort,  2 * count,     PSH1_Hint    ) ||
-         ALLOC_ARRAY( table->hints,     count,     PSH1_HintRec ) ||
-         ALLOC_ARRAY( table->zones, 2 * count + 1, PSH1_ZoneRec ) )
+    if ( FT_NEW_ARRAY( table->sort,  2 * count     ) ||
+         FT_NEW_ARRAY( table->hints,     count     ) ||
+         FT_NEW_ARRAY( table->zones, 2 * count + 1 ) )
       goto Exit;
 
     table->max_hints   = count;
@@ -238,7 +238,7 @@
   {
     FT_Int    mask = 0, val = 0;
     FT_Byte*  cursor = hint_mask->bytes;
-    FT_UInt   index, limit, count;
+    FT_UInt   idx, limit, count;
 
 
     limit = hint_mask->num_bits;
@@ -246,7 +246,7 @@
 
     psh1_hint_table_deactivate( table );
 
-    for ( index = 0; index < limit; index++ )
+    for ( idx = 0; idx < limit; idx++ )
     {
       if ( mask == 0 )
       {
@@ -256,7 +256,7 @@
 
       if ( val & mask )
       {
-        PSH1_Hint  hint = &table->hints[index];
+        PSH1_Hint  hint = &table->hints[idx];
 
 
         if ( !psh1_hint_is_active( hint ) )
@@ -356,7 +356,7 @@
 #endif
 
 
-  FT_LOCAL_DEF  FT_Error
+  FT_LOCAL_DEF( FT_Error )
   psh1_hint_table_optimize( PSH1_Hint_Table  table,
                             PSH_Globals      globals,
                             FT_Outline*      outline,
@@ -415,7 +415,7 @@
           hint->cur_len = fit_len;
 
           /* check blue zones for horizontal stems */
-          align.align     = 0;
+          align.align     = PSH_BLUE_ALIGN_NONE;
           align.align_bot = align.align_top = 0;
           if ( !vertical )
           {
@@ -498,7 +498,7 @@
 #include <stdio.h>
 
   static void
-  print_zone( PSH1_Zone  zone )
+  psh1_print_zone( PSH1_Zone  zone )
   {
     printf( "zone [scale,delta,min,max] = [%.3f,%.3f,%d,%d]\n",
              zone->scale / 65536.0,
@@ -508,7 +508,7 @@
   }
 
 #else
-#define print_zone( x )  do { } while ( 0 )
+#define psh1_print_zone( x )  do { } while ( 0 )
 #endif
 
   /* setup interpolation zones once the hints have been grid-fitted */
@@ -549,7 +549,7 @@
     zone->min   = PSH1_ZONE_MIN;
     zone->max   = hint->org_pos;
 
-    print_zone( zone );
+    psh1_print_zone( zone );
 
     zone++;
 
@@ -570,7 +570,7 @@
         zone->max   = hint->org_pos + hint->org_len;
         zone->delta = hint->cur_pos - FT_MulFix( zone->min, scale2 );
 
-        print_zone( zone );
+        psh1_print_zone( zone );
 
         zone++;
       }
@@ -593,7 +593,7 @@
       zone->delta = hint->cur_pos + hint->cur_len -
                     FT_MulFix( zone->min, scale2 );
 
-      print_zone( zone );
+      psh1_print_zone( zone );
 
       zone++;
 
@@ -607,7 +607,7 @@
     zone->delta = hint->cur_pos + hint->cur_len -
                   FT_MulFix( zone->min, scale );
 
-    print_zone( zone );
+    psh1_print_zone( zone );
 
     zone++;
 
@@ -757,7 +757,7 @@
 
 
       /* initialize hints table */
-      memset( &hints, 0, sizeof ( hints ) );
+      ft_memset( &hints, 0, sizeof ( hints ) );
       error = psh1_hint_table_init( &hints,
                                     &dim->hints,
                                     &dim->masks,

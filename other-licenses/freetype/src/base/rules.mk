@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2002 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -34,11 +34,12 @@ BASE_COMPILE := $(FT_COMPILE) $I$(SRC_)base
 #
 BASE_SRC := $(BASE_)ftcalc.c   \
             $(BASE_)fttrigon.c \
-            $(BASE_)ftextend.c \
-            $(BASE_)ftlist.c   \
-            $(BASE_)ftobjs.c   \
+            $(BASE_)ftutil.c   \
             $(BASE_)ftstream.c \
+            $(BASE_)ftgloadr.c \
             $(BASE_)ftoutln.c  \
+            $(BASE_)ftobjs.c   \
+            $(BASE_)ftapi.c    \
             $(BASE_)ftnames.c  \
             $(BASE_)ftdbgmem.c
 

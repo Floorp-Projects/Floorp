@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 parser (specification).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,7 +34,7 @@ FT_BEGIN_HEADER
   /*    T1_ParserRec                                                       */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A T1_ParserRec is an object used to parse a Type 1 fonts very      */
+  /*    A PS_ParserRec is an object used to parse a Type 1 fonts very      */
   /*    quickly.                                                           */
   /*                                                                       */
   /* <Fields>                                                              */
@@ -60,20 +60,20 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  T1_ParserRec_
   {
-    T1_Parser  root;
-    FT_Stream  stream;
+    PS_ParserRec  root;
+    FT_Stream     stream;
 
-    FT_Byte*   base_dict;
-    FT_Int     base_len;
+    FT_Byte*      base_dict;
+    FT_Int        base_len;
 
-    FT_Byte*   private_dict;
-    FT_Int     private_len;
+    FT_Byte*      private_dict;
+    FT_Int        private_len;
 
-    FT_Byte    in_pfb;
-    FT_Byte    in_memory;
-    FT_Byte    single_block;
+    FT_Byte       in_pfb;
+    FT_Byte       in_memory;
+    FT_Byte       single_block;
 
-  } T1_ParserRec;
+  } T1_ParserRec, *T1_Parser;
 
 
 #define T1_Add_Table( p, i, o, l )  (p)->funcs.add( (p), i, o, l )
@@ -97,33 +97,34 @@ FT_BEGIN_HEADER
 #define T1_ToInt( p )       (p)->root.funcs.to_int( &(p)->root )
 #define T1_ToFixed( p, t )  (p)->root.funcs.to_fixed( &(p)->root, t )
 
-#define T1_ToCoordArray( p, m, c )    \
+#define T1_ToCoordArray( p, m, c )                           \
           (p)->root.funcs.to_coord_array( &(p)->root, m, c )
-#define T1_ToFixedArray( p, m, f, t ) \
+#define T1_ToFixedArray( p, m, f, t )                           \
           (p)->root.funcs.to_fixed_array( &(p)->root, m, f, t )
-#define T1_ToToken( p, t )            \
+#define T1_ToToken( p, t )                          \
           (p)->root.funcs.to_token( &(p)->root, t )
-#define T1_ToTokenArray( p, t, m, c ) \
+#define T1_ToTokenArray( p, t, m, c )                           \
           (p)->root.funcs.to_token_array( &(p)->root, t, m, c )
 
-#define T1_Load_Field( p, f, o, m, pf )       \
+#define T1_Load_Field( p, f, o, m, pf )                         \
           (p)->root.funcs.load_field( &(p)->root, f, o, m, pf )
-#define T1_Load_Field_Table( p, f, o, m, pf ) \
+
+#define T1_Load_Field_Table( p, f, o, m, pf )                         \
           (p)->root.funcs.load_field_table( &(p)->root, f, o, m, pf )
 
 
-  FT_LOCAL FT_Error
-  T1_New_Parser( T1_ParserRec*     parser,
-                 FT_Stream         stream,
-                 FT_Memory         memory,
-                 PSAux_Interface*  psaux );
+  FT_LOCAL( FT_Error )
+  T1_New_Parser( T1_Parser      parser,
+                 FT_Stream      stream,
+                 FT_Memory      memory,
+                 PSAux_Service  psaux );
 
-  FT_LOCAL FT_Error
-  T1_Get_Private_Dict( T1_ParserRec*     parser,
-                       PSAux_Interface*  psaux );
+  FT_LOCAL( FT_Error )
+  T1_Get_Private_Dict( T1_Parser      parser,
+                       PSAux_Service  psaux );
 
-  FT_LOCAL void
-  T1_Finalize_Parser( T1_ParserRec*  parser );
+  FT_LOCAL( void )
+  T1_Finalize_Parser( T1_Parser  parser );
 
 
 FT_END_HEADER

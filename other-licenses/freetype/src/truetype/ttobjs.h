@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (specification).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -107,14 +107,14 @@ FT_BEGIN_HEADER
 
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
 
-  FT_LOCAL void
-  TT_Done_GlyphZone( TT_GlyphZone*  zone );
+  FT_LOCAL( void )
+  TT_Done_GlyphZone( TT_GlyphZone  zone );
 
-  FT_LOCAL FT_Error
-  TT_New_GlyphZone( FT_Memory      memory,
-                    FT_UShort      maxPoints,
-                    FT_Short       maxContours,
-                    TT_GlyphZone*  zone );
+  FT_LOCAL( FT_Error )
+  TT_New_GlyphZone( FT_Memory     memory,
+                    FT_UShort     maxPoints,
+                    FT_Short      maxContours,
+                    TT_GlyphZone  zone );
 
 #endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
 
@@ -192,27 +192,27 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  TT_SubglyphRec_
   {
-    FT_Long       index;        /* subglyph index; initialized with -1 */
-    FT_Bool       is_scaled;    /* is the subglyph scaled?             */
-    FT_Bool       is_hinted;    /* should it be hinted?                */
-    FT_Bool       preserve_pps; /* preserve phantom points?            */
+    FT_Long          index;        /* subglyph index; initialized with -1 */
+    FT_Bool          is_scaled;    /* is the subglyph scaled?             */
+    FT_Bool          is_hinted;    /* should it be hinted?                */
+    FT_Bool          preserve_pps; /* preserve phantom points?            */
 
-    FT_Long       file_offset;
+    FT_Long          file_offset;
 
-    FT_BBox       bbox;
-    FT_Pos        left_bearing;
-    FT_Pos        advance;
+    FT_BBox          bbox;
+    FT_Pos           left_bearing;
+    FT_Pos           advance;
 
-    TT_GlyphZone  zone;
+    TT_GlyphZoneRec  zone;
 
-    FT_Long       arg1;         /* first argument                      */
-    FT_Long       arg2;         /* second argument                     */
+    FT_Long          arg1;         /* first argument                      */
+    FT_Long          arg2;         /* second argument                     */
 
-    FT_UShort     element_flag; /* current load element flag           */
+    FT_UShort        element_flag; /* current load element flag           */
 
-    TT_Transform  transform;    /* transformation matrix               */
+    TT_Transform     transform;    /* transformation matrix               */
 
-    FT_Vector     pp1, pp2;     /* phantom points                      */
+    FT_Vector        pp1, pp2;     /* phantom points                      */
 
   } TT_SubGlyphRec, *TT_SubGlyph_Stack;
 
@@ -343,7 +343,7 @@ FT_BEGIN_HEADER
     FT_UShort          storage_size; /* The storage area is now part of */
     FT_Long*           storage;      /* the instance                    */
 
-    TT_GlyphZone       twilight;     /* The instance's twilight zone    */
+    TT_GlyphZoneRec    twilight;     /* The instance's twilight zone    */
 
     /* debugging variables */
 
@@ -365,11 +365,11 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  TT_DriverRec_
   {
-    FT_DriverRec    root;
-    TT_ExecContext  context;  /* execution context        */
-    TT_GlyphZone    zone;     /* glyph loader points zone */
+    FT_DriverRec     root;
+    TT_ExecContext   context;  /* execution context        */
+    TT_GlyphZoneRec  zone;     /* glyph loader points zone */
 
-    void*           extension_component;
+    void*            extension_component;
 
   } TT_DriverRec;
 
@@ -378,40 +378,40 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* Face functions                                                        */
   /*                                                                       */
-  FT_LOCAL FT_Error
-  TT_Init_Face( FT_Stream      stream,
+  FT_LOCAL( FT_Error )
+  TT_Face_Init( FT_Stream      stream,
                 TT_Face        face,
                 FT_Int         face_index,
                 FT_Int         num_params,
                 FT_Parameter*  params );
 
-  FT_LOCAL void
-  TT_Done_Face( TT_Face  face );
+  FT_LOCAL( void )
+  TT_Face_Done( TT_Face  face );
 
 
   /*************************************************************************/
   /*                                                                       */
   /* Size functions                                                        */
   /*                                                                       */
-  FT_LOCAL FT_Error
-  TT_Init_Size( TT_Size  size );
+  FT_LOCAL( FT_Error )
+  TT_Size_Init( TT_Size  size );
 
-  FT_LOCAL void
-  TT_Done_Size( TT_Size  size );
+  FT_LOCAL( void )
+  TT_Size_Done( TT_Size  size );
 
-  FT_LOCAL FT_Error
-  TT_Reset_Size( TT_Size  size );
+  FT_LOCAL( FT_Error )
+  TT_Size_Reset( TT_Size  size );
 
 
   /*************************************************************************/
   /*                                                                       */
   /* Driver functions                                                      */
   /*                                                                       */
-  FT_LOCAL FT_Error
-  TT_Init_Driver( TT_Driver  driver );
+  FT_LOCAL( FT_Error )
+  TT_Driver_Init( TT_Driver  driver );
 
-  FT_LOCAL void
-  TT_Done_Driver( TT_Driver  driver );
+  FT_LOCAL( void )
+  TT_Driver_Done( TT_Driver  driver );
 
 
 FT_END_HEADER

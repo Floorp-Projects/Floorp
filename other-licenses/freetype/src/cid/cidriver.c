@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID driver interface (body).                                         */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,8 +25,6 @@
 
 #include "ciderrs.h"
 
-#include <string.h>         /* for strcmp() */
-
 
   /*************************************************************************/
   /*                                                                       */
@@ -38,11 +36,16 @@
 #define FT_COMPONENT  trace_ciddriver
 
 
-
   static const char*
   cid_get_postscript_name( CID_Face  face )
   {
-    return (const char*)face->cid.cid_font_name;
+    const char*  result = face->cid.cid_font_name;
+    
+
+    if ( result && result[0] == '/' )
+      result++;
+      
+    return result;
   }
 
 
@@ -53,7 +56,7 @@
     FT_UNUSED( driver );
     FT_UNUSED( interface );
 
-    if ( strcmp( (const char*)interface, "postscript_name" ) == 0 )
+    if ( ft_strcmp( (const char*)interface, "postscript_name" ) == 0 )
       return (FT_Module_Interface)cid_get_postscript_name;
 
     return 0;
@@ -81,7 +84,6 @@
     return CID_Err_Ok;
   }
 
-
 #endif /* 0 */
 
 
@@ -105,13 +107,13 @@
   CID_Get_Char_Index( FT_CharMap  charmap,
                       FT_Long     charcode )
   {
-    T1_Face             face;
-    FT_UInt             result = 0;
-    PSNames_Interface*  psnames;
+    T1_Face          face;
+    FT_UInt          result = 0;
+    PSNames_Service  psnames;
 
 
     face = (T1_Face)charmap->face;
-    psnames = (PSNames_Interface*)face->psnames;
+    psnames = (PSNames_Service)face->psnames;
     if ( psnames )
       switch ( charmap->encoding )
       {
@@ -136,7 +138,7 @@
         /*                                                                 */
       case ft_encoding_adobe_custom:
         {
-          T1_Encoding*  encoding = &face->type1.encoding;
+          T1_Encoding  encoding = &face->type1.encoding;
 
 
           if ( charcode >= encoding->code_first &&
@@ -171,7 +173,7 @@
 
 
             if ( gname && gname[0] == glyph_name[0] &&
-                 strcmp( gname, glyph_name ) == 0   )
+                 ft_strcmp( gname, glyph_name ) == 0   )
             {
               result = n;
               break;
@@ -205,12 +207,12 @@
   CID_Get_Next_Char( FT_CharMap  charmap,
                      FT_Long     charcode )
   {
-    T1_Face             face;
-    PSNames_Interface*  psnames;
+    T1_Face          face;
+    PSNames_Service  psnames;
 
 
     face    = (T1_Face)charmap->face;
-    psnames = (PSNames_Interface*)face->psnames;
+    psnames = (PSNames_Service)face->psnames;
 
     if ( psnames )
       switch ( charmap->encoding )
@@ -230,7 +232,7 @@
         /*                                                                 */
       case ft_encoding_adobe_custom:
         {
-          T1_Encoding*  encoding = &face->type1.encoding;
+          T1_Encoding  encoding = &face->type1.encoding;
 
 
           charcode++;
@@ -271,7 +273,7 @@
 
 
             if ( gname && gname[0] == glyph_name[0] &&
-                 strcmp( gname, glyph_name ) == 0   )
+                 ft_strcmp( gname, glyph_name ) == 0   )
             {
               return charcode;
             }
@@ -284,7 +286,7 @@
 
 
   FT_CALLBACK_TABLE_DEF
-  const FT_Driver_Class  t1cid_driver_class =
+  const FT_Driver_ClassRec  t1cid_driver_class =
   {
     /* first of all, the FT_Module_Class fields */
     {
@@ -309,26 +311,26 @@
     sizeof( CID_SizeRec ),
     sizeof( CID_GlyphSlotRec ),
 
-    (FTDriver_initFace)     CID_Face_Init,
-    (FTDriver_doneFace)     CID_Face_Done,
+    (FT_Face_InitFunc)        CID_Face_Init,
+    (FT_Face_DoneFunc)        CID_Face_Done,
 
-    (FTDriver_initSize)     CID_Size_Init,
-    (FTDriver_doneSize)     CID_Size_Done,
-    (FTDriver_initGlyphSlot)CID_GlyphSlot_Init,
-    (FTDriver_doneGlyphSlot)CID_GlyphSlot_Done,
+    (FT_Size_InitFunc)        CID_Size_Init,
+    (FT_Size_DoneFunc)        CID_Size_Done,
+    (FT_Slot_InitFunc)        CID_GlyphSlot_Init,
+    (FT_Slot_DoneFunc)        CID_GlyphSlot_Done,
 
-    (FTDriver_setCharSizes) CID_Size_Reset,
-    (FTDriver_setPixelSizes)CID_Size_Reset,
+    (FT_Size_ResetPointsFunc) CID_Size_Reset,
+    (FT_Size_ResetPixelsFunc) CID_Size_Reset,
 
-    (FTDriver_loadGlyph)    CID_Load_Glyph,
-    (FTDriver_getCharIndex) CID_Get_Char_Index,
+    (FT_Slot_LoadFunc)        CID_Load_Glyph,
+    (FT_CharMap_CharIndexFunc)CID_Get_Char_Index,
 
-    (FTDriver_getKerning)   0,
-    (FTDriver_attachFile)   0,
+    (FT_Face_GetKerningFunc)  0,
+    (FT_Face_AttachFunc)      0,
 
-    (FTDriver_getAdvances)  0,
+    (FT_Face_GetAdvancesFunc) 0,
     
-    (FTDriver_getNextChar)  CID_Get_Next_Char
+    (FT_CharMap_CharNextFunc) CID_Get_Next_Char
   };
 
 
@@ -354,7 +356,7 @@
   /*    format-specific interface can then be retrieved through the method */
   /*    interface->get_format_interface.                                   */
   /*                                                                       */
-  FT_EXPORT_DEF( const FT_Driver_Class* )
+  FT_EXPORT_DEF( const FT_Driver_Class )
   getDriverClass( void )
   {
     return &t1cid_driver_class;

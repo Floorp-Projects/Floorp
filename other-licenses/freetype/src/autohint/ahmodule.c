@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-hinting module implementation (declaration).                    */
 /*                                                                         */
-/*  Copyright 2000-2001 Catharon Productions Inc.                          */
+/*  Copyright 2000-2001, 2002 Catharon Productions Inc.                    */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -25,7 +25,7 @@
 
 
 #ifdef  DEBUG_HINTER
-   extern AH_Hinter*  ah_debug_hinter = NULL;
+   extern AH_Hinter*  ah_debug_hinter       = NULL;
    extern FT_Bool     ah_debug_disable_horz = 0;
    extern FT_Bool     ah_debug_disable_vert = 0;
 #endif
@@ -42,6 +42,7 @@
   ft_autohinter_init( FT_AutoHinter  module )
   {
     FT_Error  error;
+
 
     error = ah_hinter_new( module->root.library, &module->hinter );
 #ifdef DEBUG_HINTER
@@ -64,11 +65,11 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  ft_autohinter_load( FT_AutoHinter  module,
-                      FT_GlyphSlot   slot,
-                      FT_Size        size,
-                      FT_UInt        glyph_index,
-                      FT_ULong       load_flags )
+  ft_autohinter_load_glyph( FT_AutoHinter  module,
+                            FT_GlyphSlot   slot,
+                            FT_Size        size,
+                            FT_UInt        glyph_index,
+                            FT_ULong       load_flags )
   {
     return ah_hinter_load_glyph( module->hinter,
                                  slot, size, glyph_index, load_flags );
@@ -76,10 +77,10 @@
 
 
   FT_CALLBACK_DEF( void )
-  ft_autohinter_reset( FT_AutoHinter  module,
-                       FT_Face        face )
+  ft_autohinter_reset_globals( FT_AutoHinter  module,
+                               FT_Face        face )
   {
-    UNUSED( module );
+    FT_UNUSED( module );
 
     if ( face->autohint.data )
       ah_hinter_done_face_globals( (AH_Face_Globals*)(face->autohint.data) );
@@ -106,12 +107,12 @@
 
 
   FT_CALLBACK_TABLE_DEF
-  const FT_AutoHinter_Interface  autohinter_interface =
+  const FT_AutoHinter_ServiceRec  ft_autohinter_service =
   {
-    ft_autohinter_reset,
-    ft_autohinter_load,
+    ft_autohinter_reset_globals,
     ft_autohinter_get_globals,
-    ft_autohinter_done_globals
+    ft_autohinter_done_globals,
+    ft_autohinter_load_glyph
   };
 
 
@@ -125,7 +126,7 @@
     0x10000L,   /* version 1.0 of the autohinter  */
     0x20000L,   /* requires FreeType 2.0 or above */
 
-    (const void*)&autohinter_interface,
+    (const void*) &ft_autohinter_service,
 
     (FT_Module_Constructor)ft_autohinter_init,
     (FT_Module_Destructor) ft_autohinter_done,

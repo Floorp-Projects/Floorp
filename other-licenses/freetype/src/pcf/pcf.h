@@ -2,7 +2,7 @@
 
   FreeType font driver for pcf fonts
 
-  Copyright (C) 2000-2001 by
+  Copyright (C) 2000-2001, 2002 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -54,7 +54,7 @@ FT_BEGIN_HEADER
   } PCF_TocRec, *PCF_Toc;
 
 
-  typedef struct  PCF_ParseProperty_
+  typedef struct  PCF_ParsePropertyRec_
   {
     FT_Long  name;
     FT_Byte  isString;
@@ -63,7 +63,7 @@ FT_BEGIN_HEADER
   } PCF_ParsePropertyRec, *PCF_ParseProperty;
 
 
-  typedef struct  PCF_Property_
+  typedef struct  PCF_PropertyRec_
   {
     FT_String*  name;
     FT_Byte     isString;
@@ -79,7 +79,7 @@ FT_BEGIN_HEADER
   } PCF_PropertyRec, *PCF_Property;
 
 
-  typedef struct  PCF_Compressed_Metric_
+  typedef struct  PCF_Compressed_MetricRec_
   {
     FT_Byte  leftSideBearing;
     FT_Byte  rightSideBearing;
@@ -90,7 +90,7 @@ FT_BEGIN_HEADER
   } PCF_Compressed_MetricRec, *PCF_Compressed_Metric;
 
 
-  typedef struct  PCF_Metric_
+  typedef struct  PCF_MetricRec_
   {
     FT_Short  leftSideBearing;
     FT_Short  rightSideBearing;
@@ -123,7 +123,7 @@ FT_BEGIN_HEADER
   } PCF_AccelRec, *PCF_Accel;
 
 
-  typedef struct  PCD_Encoding_
+  typedef struct  PCD_EncodingRec_
   {
     FT_Long   enc;
     FT_Short  glyph;
@@ -221,7 +221,7 @@ FT_BEGIN_HEADER
 
 #define GLYPHPADOPTIONS  4 /* I'm not sure about this */
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   pcf_load_font( FT_Stream,
                  PCF_Face );
 
