@@ -1550,7 +1550,12 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity)
   // "none" is the type we use for migrate Local Mail
   server->SetType("none");
   server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
-    
+
+  // we don't want "nobody at Local Mail" to show up in the
+  // folder pane, so we set the pretty name to "Local Mail"
+  nsString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
+  server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
+  
   // create the directory structure for old 4.x "Local Mail"
   // under <profile dir>/Mail/Local Mail or
   // <"mail.directory" pref>/Local Mail

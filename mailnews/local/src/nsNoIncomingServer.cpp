@@ -41,7 +41,6 @@ public:
     virtual ~nsNoIncomingServer();
     
     NS_IMETHOD GetServerURI(char * *uri);
-    NS_IMETHOD GetPrettyName(PRUnichar **retval);
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNoIncomingServer,
@@ -76,22 +75,6 @@ nsNoIncomingServer::GetServerURI(char **uri)
                        (const char *)username,
                        (const char *)hostname);
     return rv;
-}
-
-// we don't want to see "nobody at Local Mail" so we need to over ride this
-NS_IMETHODIMP
-nsNoIncomingServer::GetPrettyName(PRUnichar **retval) 
-{
-  nsresult rv;
-  nsXPIDLCString hostname;
-  rv = GetHostName(getter_Copies(hostname));
-  if (NS_FAILED(rv)) return rv;
-
-  nsString prettyName = (const char *)hostname;
-
-  *retval = prettyName.ToNewUnicode();
-
-  return NS_OK;
 }
 
 nsresult NS_NewNoIncomingServer(const nsIID& iid,
