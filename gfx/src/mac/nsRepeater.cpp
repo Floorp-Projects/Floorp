@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#pragma export on
 #include "nsRepeater.h"
 
 Repeater* Repeater::sRepeaters = 0;
@@ -142,6 +143,8 @@ void Repeater::DoIdlers(const EventRecord &aMacEvent)
   }
 }
 
+
+#pragma export off
 
 
     
