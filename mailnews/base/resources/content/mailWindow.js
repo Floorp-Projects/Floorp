@@ -44,7 +44,7 @@ var mailSession;
 var Bundle;
 var BrandBundle;
 
-var datasourceContractIDPrefix = "@mozilla.org/rdf/datasource;1?name=?name=";
+var datasourceContractIDPrefix = "@mozilla.org/rdf/datasource;1?name=";
 var accountManagerDSContractID = datasourceContractIDPrefix + "msgaccountmanager";
 var folderDSContractID         = datasourceContractIDPrefix + "mailnewsfolders";
 var messageDSContractID        = datasourceContractIDPrefix + "mailnewsmessages";

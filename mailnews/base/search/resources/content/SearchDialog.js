@@ -18,7 +18,7 @@
  * Rights Reserved.
  */
 
-var rdfDatasourcePrefix = "@mozilla.org/rdf/datasource;1?name=?name=";
+var rdfDatasourcePrefix = "@mozilla.org/rdf/datasource;1?name=";
 var rdfServiceContractID    = "@mozilla.org/rdf/rdf-service;1";
 var searchSessionContractID = "@mozilla.org/messenger/searchSession;1";
 var folderDSContractID         = rdfDatasourcePrefix + "mailnewsfolders";

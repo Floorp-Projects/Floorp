@@ -66,7 +66,7 @@ ArrayEnumerator.prototype = {
 // the datasource object itself
 //
 const NS_LDAPDATASOURCE_CONTRACTID = 
-    '@mozilla.org/rdf/datasource;1?name=?name=ldap';
+    '@mozilla.org/rdf/datasource;1?name=ldap';
 const NS_LDAPDATASOURCE_CID =
     Components.ID('{8da18684-6486-4a7e-b261-35331f3e7163}');
 
