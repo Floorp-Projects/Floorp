@@ -1297,18 +1297,18 @@ public class Interpreter extends LabelTable {
             local = new Object[theData.itsMaxLocals];        
             
         Object[] vars = null;
-        
+        final Scriptable undefined = Undefined.instance;
         int i = theData.itsVariableTable.size();
         if (i > 0) {
             vars = new Object[i];
             for (i = 0; i < theData.itsVariableTable.getParameterCount(); i++) {
                 if (i >= theData.itsInArgs.length)
-                    vars[i] = Undefined.instance;
+                    vars[i] = undefined;
                 else                
                     vars[i] = theData.itsInArgs[i];    
             }
             for ( ; i < vars.length; i++)
-                vars[i] = Undefined.instance;
+                vars[i] = undefined;
         }
         
         Context cx = theData.itsCX;
@@ -1351,7 +1351,7 @@ public class Interpreter extends LabelTable {
          */
         Object savedSecurityDomain = cx.interpreterSecurityDomain;
         cx.interpreterSecurityDomain = theData.securityDomain;
-        Object result = Undefined.instance;
+        Object result = undefined;
         
         while (pc < iCodeLength) {
             try {
@@ -1641,30 +1641,33 @@ public class Interpreter extends LabelTable {
                         pc += 6;
                         break;
                     case TokenStream.CALL :
-                        name = getString(theData.itsStringTable, iCode, pc + 1);
                         count = (iCode[pc + 3] << 8) | (iCode[pc + 4] & 0xFF);
                         outArgs = new Object[count];
                         for (i = count - 1; i >= 0; i--)
                             outArgs[i] = stack[stackTop--];
                         rhs = stack[stackTop--];
                         lhs = stack[stackTop];
-                        if (lhs == cx.getUndefinedValue())
-                            lhs = name;
+                        if (lhs == undefined) {
+                            lhs = getString(theData.itsStringTable, iCode, 
+                                            pc + 1);
+                        }
                         stack[stackTop] = ScriptRuntime.call(cx, lhs, 
                                                              rhs, outArgs);
                         pc += 4;                                                            
                         break;
                     case TokenStream.NEW :
-                        name = getString(theData.itsStringTable, iCode, pc + 1);
                         count = (iCode[pc + 3] << 8) | (iCode[pc + 4] & 0xFF);
                         outArgs = new Object[count];
                         for (i = count - 1; i >= 0; i--)
                             outArgs[i] = stack[stackTop--];
                         lhs = stack[stackTop];
-                        if (lhs == cx.getUndefinedValue())
-                            lhs = name;
+                        if (lhs == undefined) {
+                            lhs = getString(theData.itsStringTable, iCode, 
+                                            pc + 1);
+                        }
                         stack[stackTop] = ScriptRuntime.newObject(cx, lhs, 
-                                                                  outArgs, scope);
+                                                                  outArgs, 
+                                                                  scope);
                         pc += 4;                                                            
                         break;
                     case TokenStream.TYPEOF :
@@ -1910,4 +1913,3 @@ public class Interpreter extends LabelTable {
     
     private int version;
 }
-
