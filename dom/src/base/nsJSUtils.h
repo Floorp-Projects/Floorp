@@ -138,9 +138,9 @@ public:
   static NS_EXPORT nsresult nsGetDynamicScriptContext(JSContext *aContext,
                                     nsIScriptContext** aScriptContext);
 
-  static NS_EXPORT JSBool nsCheckAccess(JSContext *cx, JSObject *obj, 
-                                        jsid id, JSAccessMode mode,
-	                                    jsval *vp);
+  static NS_EXPORT JSBool PR_CALLBACK nsCheckAccess(JSContext *cx,
+                                    JSObject *obj, jsid id, JSAccessMode mode,
+	                            jsval *vp);
 
   static NS_EXPORT nsIScriptSecurityManager *
                     nsGetSecurityManager(JSContext *cx, JSObject *obj);
