@@ -81,24 +81,30 @@ public:
             *contentType = nsCRT::strdup("application/http-index-format");
         }
         else {
-            const char* fileName = mSpec.GetLeafName();
-            PRInt32 len = nsCRT::strlen(fileName);
-            const char* ext = nsnull;
-            for (PRInt32 i = len; i >= 0; i--) {
-                if (fileName[i] == '.') {
-                    ext = &fileName[i + 1];
-                    break;
-                }
-            }
+            char* fileName = mSpec.GetLeafName();
+            if (fileName != nsnull) {
+	            PRInt32 len = nsCRT::strlen(fileName);
+	            const char* ext = nsnull;
+	            for (PRInt32 i = len; i >= 0; i--) {
+	                if (fileName[i] == '.') {
+	                    ext = &fileName[i + 1];
+	                    break;
+	                }
+	            }
 
-            if (ext) {
-                NS_WITH_SERVICE(nsIMIMEService, mimeServ, kMIMEServiceCID, &rv);
-                if (NS_SUCCEEDED(rv)) {
-                    rv = mimeServ->GetTypeFromExtension(ext, contentType);
-                }
-            }
-            else 
-                rv = NS_ERROR_FAILURE;
+	            if (ext) {
+	                NS_WITH_SERVICE(nsIMIMEService, mimeServ, kMIMEServiceCID, &rv);
+	                if (NS_SUCCEEDED(rv)) {
+	                    rv = mimeServ->GetTypeFromExtension(ext, contentType);
+	                }
+	            }
+	            else 
+	                rv = NS_ERROR_FAILURE;
+
+				nsCRT::free(fileName);
+			} else {
+				rv = NS_ERROR_FAILURE;
+			}
 
             if (NS_FAILED(rv)) {
                 // if all else fails treat it as text/html?
