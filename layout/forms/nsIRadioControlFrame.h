@@ -48,6 +48,7 @@ public:
    */
 
    NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext) = 0;
+
   /**
    * When a user clicks on a radiobutton the value needs to be set after the onmouseup
    * and before the onclick event is processed via script. The EVM always lets script
@@ -58,15 +59,15 @@ public:
    * to process the onclick and then if script cancels the event it needs to be set back.
    * In Nav and IE there is a flash of it being set and then unset
    * 
-   * We have added this extra method to the radiobutton to tell it to temporarily return the
-   * opposite value while processing the click event. This way script gets the correct "future"
-   * value of the radiobutton, but there is no visual updating until after script is done processing.
-   * That way if the event is cancelled then the radiobutton will not flash.
+   * We have added this extra method to the radiobutton so nsHTMLInputElement can get
+   * the content of the currently selected radiobutton for that radio group
    *
-   * So get the Frame for the radiobutton and tell it we are processing an onclick event
-   * (see also: nsHTMLInputElement.cpp)
+   * That way if it is cancelled then the original radiobutton can be set back
    */
-   NS_IMETHOD SetIsInClickEvent(PRBool aVal) = 0;
+
+   NS_IMETHOD GetRadioGroupSelectedContent(nsIContent ** aRadioBtn) = 0;
+
+
 };
 
 #endif

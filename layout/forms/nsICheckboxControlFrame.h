@@ -46,27 +46,6 @@ public:
    *
    */
    NS_IMETHOD SetCheckboxFaceStyleContext(nsIStyleContext *aCheckboxFaceStyleContext) = 0;
-
-  /**
-   * When a user clicks on a checkbox the value needs to be set after the onmouseup
-   * and before the onclick event is processed via script. The EVM always lets script
-   * get first crack at the processing, and script can cancel further processing of 
-   * the event by return null.
-   *
-   * This means the checkbox needs to have it's new value set before it goes to script 
-   * to process the onclick and then if script cancels the event it needs to be set back.
-   * In Nav and IE there is a flash of it being set and then unset
-   * 
-   * We have added this extra method to the checkbox to tell it to temporarily return the
-   * opposite value while processing the click event. This way script gets the correct "future"
-   * value of the checkbox, but there is no visual updating until after script is done processing.
-   * That way if the event is cancelled then the checkbox will not flash.
-   *
-   * So get the Frame for the checkbox and tell it we are processing an onclick event
-   * (see also: nsHTMLInputElement.cpp)
-   */
-   NS_IMETHOD SetIsInClickEvent(PRBool aVal) = 0;
-
   
 };
 
