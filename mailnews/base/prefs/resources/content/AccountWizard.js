@@ -242,7 +242,7 @@ function createAccount(hash) {
     
     /* new nntp identities should use plain text by default
      * we wan't that GNKSA (The Good Net-Keeping Seal of Approval) */
-    if (type == "nntp") {
+    if (serverType == "nntp") {
 			identity.composeHtml = false;
     }
 
