@@ -1089,6 +1089,17 @@ public:
     static
     JSBool Invoke(XPCCallContext & ccx, CallMode mode);
     /**
+     * Performs the various security checks, caps, hosting flags, etc.
+     * Instantiates the object and will return that object if createdObject 
+     * result is not null
+     * @param ccx an XPConnect call context
+     * @param aCID the class ID to be tested
+     * @param createdObject is the optional object to be returned
+     */
+    static
+    HRESULT SecurityCheck(XPCCallContext & ccx, const CLSID & aCID,
+                          IDispatch ** createdObject = nsnull);
+    /**
      * Instantiates a COM object given a class ID or a prog ID
      * @param ccx an XPConnect call context
      * @param className a prog ID or a class ID in the form of 

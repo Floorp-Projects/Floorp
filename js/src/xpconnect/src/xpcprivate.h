@@ -554,6 +554,7 @@ public:
 #ifdef XPC_IDISPATCH_SUPPORT
         IDX_ACTIVEX_OBJECT          ,
         IDX_COM_OBJECT              ,
+        IDX_ACTIVEX_SUPPORTS        ,
 #endif
         IDX_TOTAL_COUNT // just a count of the above
     };
