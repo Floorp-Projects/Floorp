@@ -311,6 +311,7 @@ protected:
   nsVoidArray mRefreshments;
 
   void ReleaseChildren();
+  void DestroyChildren();
 
   static nsIPluginHost    *mPluginHost;
   static nsIPluginManager *mPluginManager;
@@ -442,8 +443,12 @@ nsWebShell::~nsWebShell()
   }
   NS_IF_RELEASE(mScriptContext);
 
+  // XXX Because we hold references to the children and they hold references
+  // to us we never get destroyed. See Destroy() instead...
+#if 0
   // Release references on our children
   ReleaseChildren();
+#endif
 
   // Free up history memory
   PRInt32 i, n = mHistory.Count();
@@ -465,6 +470,19 @@ nsWebShell::ReleaseChildren()
 
     //Break circular reference of webshell to contentviewer
     shell->SetContentViewer(nsnull);
+    NS_RELEASE(shell);
+  }
+  mChildren.Clear();
+}
+
+void
+nsWebShell::DestroyChildren()
+{
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    nsIWebShell* shell = (nsIWebShell*) mChildren.ElementAt(i);
+    shell->SetParent(nsnull);
+    shell->Destroy();
     NS_RELEASE(shell);
   }
   mChildren.Clear();
@@ -704,6 +722,8 @@ nsWebShell::Destroy()
 
   NS_IF_RELEASE(mContentViewer);
 
+  // Destroy our child web shells and release references to them
+  DestroyChildren();
   return rv;
 }
 
