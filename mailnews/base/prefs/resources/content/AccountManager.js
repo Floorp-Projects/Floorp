@@ -26,6 +26,7 @@ var lastPageId;
 // services used
 var RDF;
 var accountManager;
+var smtpService;
 
 // called when the whole document loads
 // perform initialization here
@@ -38,6 +39,8 @@ function onLoad() {
 
   accountManager = mailsession.accountManager;
 
+  smtpService =
+    Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
   var tree = document.getElementById("accounttree");
   var items = tree.getElementsByTagName("treeitem");
   
@@ -70,8 +73,7 @@ function onSave() {
     var account = getAccountFromServerId(accountid);
     var accountValues = accountArray[accountid];
 
-    if (account)
-      saveAccount(accountValues, account);
+    saveAccount(accountValues, account);
   }
 }
 
@@ -98,8 +100,13 @@ function refreshAccounts()
 
 function saveAccount(accountValues, account)
 {
-  var identity = account.defaultIdentity;
-  var server = account.incomingServer;
+  var identity;
+  var server;
+  
+  if (account) {
+    identity = account.defaultIdentity;
+    server = account.incomingServer;
+  }
   
   for (var type in accountValues) {
     var typeArray = accountValues[type];
@@ -123,6 +130,9 @@ function saveAccount(accountValues, account)
       
       else if (type == "nntp")
         dest = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
+      else if (type == "smtp")
+        dest = smtpService.defaultServer;
+      
       } catch (ex) {
         // don't do anything, just means we don't support that
       }
@@ -255,7 +265,9 @@ function getAccountValue(account, accountValues, type, slot) {
   // fill in the slot from the account if necessary
   if (accountValues[type][slot]== undefined) {
     // dump("Array->Form: lazily reading in the " + slot + " from the " + type + "\n");
-    var server= account.incomingServer;
+    var server;
+    if (account)
+      server= account.incomingServer;
     var source = null;
     try {
     if (type == "identity")
@@ -276,7 +288,11 @@ function getAccountValue(account, accountValues, type, slot) {
     else if (type == "nntp")
       source = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
 
+    else if (type == "smtp")
+        dump("getAccountValue: doing default server thing " + smtpService.defaultServer + "\n");
+    
     } catch (ex) {
+      dump("error getting account value: " + ex + "\n");
     }
     
     if (source) {
@@ -304,10 +320,8 @@ function restorePage(serverId, pageId) {
         var slot = vals[1];
 
         var account = getAccountFromServerId(serverId);
-        if (account) {
-          var value = getAccountValue(account, accountValues, type, slot);
-          setFormElementValue(pageElements[i], value);
-        }
+        var value = getAccountValue(account, accountValues, type, slot);
+        setFormElementValue(pageElements[i], value);
       }
   }
 
@@ -425,6 +439,8 @@ function getPageFormElements(pageId) {
 // get the value array for the given serverId
 //
 function getValueArrayFor(serverId) {
+  if (serverId == undefined) serverId="global";
+  
   if (accountArray[serverId] == null) {
     accountArray[serverId] = new Array;
   }
