@@ -4731,10 +4731,16 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
       rv = rootBranch->GetComplexValue("browser.search.selectedEngine", 
                                        NS_GET_IID(nsIPrefLocalizedString),
                                        getter_AddRefs(selectedEngineName));
-      if (selectedEngineName)
+      if (selectedEngineName) {
         selectedEngineName->GetData(getter_Copies(selectedEngineNameStr));
-
-      engineIsNotDefault = !defaultEngineNameStr.Equals(selectedEngineNameStr);
+        engineIsNotDefault = !defaultEngineNameStr.Equals(selectedEngineNameStr);
+      }
+      else {
+        engineIsNotDefault = PR_FALSE; // The selected engine *is* the default
+                                       // since the user has not changed the
+                                       // selected item in the list causing
+                                       // the selectedEngine pref to be set.
+      }
     }
 
     PRInt32 i = 0;
