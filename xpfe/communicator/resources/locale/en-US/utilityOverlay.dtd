@@ -8,8 +8,8 @@
 <!ENTITY fileMenu.accesskey				"f">
 <!ENTITY newMenu.label						"New">
 <!ENTITY newMenu.accesskey					"N">
-<!ENTITY newBlankPageCmd.label "Blank Page to Edit">
-<!ENTITY newBlankPageCmd.accesskey "E" >
+<!ENTITY newBlankPageCmd.label "Composer Page">
+<!ENTITY newBlankPageCmd.accesskey "P" >
 <!ENTITY newBlankPageCmd.key "n" >
 <!ENTITY newPageFromTemplateCmd.label "Page Using Template">
 <!ENTITY newPageFromTemplateCmd.accesskey "t">
