@@ -417,6 +417,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
     	PR_ASSERT((_PR_IS_NATIVE_THREAD(me)) || (me->cpu->id == 0));
 #endif
 
+        _PR_CleanupDtoa();
         _PR_CleanupCallOnce();
 		_PR_ShutdownLinker();
         /* Release the primordial thread's private data, etc. */
