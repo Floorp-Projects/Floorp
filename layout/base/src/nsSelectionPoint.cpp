@@ -25,19 +25,42 @@ nsSelectionPoint::nsSelectionPoint(nsIContent * aContent,
   fOffset         = aOffset;
   fIsAnchor       = aIsAnchor; 
   fEntireContent  = PR_FALSE;
+
+  if (fContent != nsnull) 
+    NS_ADDREF(fContent);
 }
 
 nsSelectionPoint::~nsSelectionPoint() 
 {
+  NS_IF_RELEASE(fContent);
+}
+
+
+nsIContent * nsSelectionPoint::GetContent() 
+{ 
+  if (fContent != nsnull) 
+    NS_ADDREF(fContent); 
+  return fContent; 
+}
+
+void nsSelectionPoint::SetContent(nsIContent * aValue) 
+{ 
+  NS_IF_RELEASE(fContent);
+  fContent  = aValue; 
+  if (fContent != nsnull) 
+    NS_ADDREF(fContent);
 }
 
 void nsSelectionPoint::SetPoint(nsIContent * aContent,
                                 PRInt32      aOffset,
                                 PRBool       aIsAnchor) 
 {
+  NS_IF_RELEASE(fContent);
   fContent  = aContent;
   fOffset   = aOffset;
   fIsAnchor = aIsAnchor;
+  if (fContent != nsnull) 
+    NS_ADDREF(fContent);
 }
 
 /**
