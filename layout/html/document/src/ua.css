@@ -1023,6 +1023,13 @@ option {
   font-size: small;
 }
 
+/* we need to address the part where there is a label */
+/* and content. The CSS3 content property would be handy for this */
+option[label]:before { 
+  content:attr(label);
+}
+
+
 select[disabled] option {
   color:rgb(153, 153, 153);
   background-color:white; 
