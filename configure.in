@@ -545,15 +545,15 @@ dnl ========================================================
 if test "$no_x" != "yes"; then
 _SAVE_LDFLAGS="$LDFLAGS"
 LDFLAGS="$XLDFLAGS $LDFLAGS"
-AC_CHECK_LIB(X11, XDrawLines, [XLIBS="-lX11 $XLIBS"],
+AC_CHECK_LIB(X11, XDrawLines, [X11_LIBS="-lX11"],
 	[MISSING_X="$MISSING_X -lX11"], $XLIBS)
-AC_CHECK_LIB(Xext, XextAddDisplay, [XLIBS="-lXext $XLIBS"],
+AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
 	[MISSING_X="$MISSING_X -lXext"], $XLIBS)
-AC_CHECK_LIB(ICE, IceFlush, [XLIBS="-lICE $XLIBS"],, $XLIBS)
-AC_CHECK_LIB(SM, SmcCloseConnection, [XLIBS="-lSM $XLIBS"],, $XLIBS)
-AC_CHECK_LIB(Xt, XtFree, [XLIBS="-lXt $XLIBS"],
+AC_CHECK_LIB(ICE, IceFlush, [XICE_LIBS="-lICE"],, $XLIBS)
+AC_CHECK_LIB(SM, SmcCloseConnection, [XSM_LIBS="-lSM"],, $XLIBS)
+AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"],
 	[MISSING_X="$MISSING_X -lXt"], $XLIBS)
-AC_CHECK_LIB(Xmu, XmuLookupString, [XLIBS="-lXmu $XLIBS"],
+AC_CHECK_LIB(Xmu, XmuLookupString, [XMU_LIBS="-lXmu"],
 	[MISSING_X="$MISSING_X -lXmu"], $XLIBS)
 LDFLAGS="$_SAVE_LDFLAGS"
 
@@ -614,18 +614,21 @@ fi
     if test "$MOTIF_REQUIRES_XPM" = "True" -o "$MOTIF_VERSION" = "2.1"; then
         _SAVE_LDFLAGS="$LDFLAGS"
     	LDFLAGS="$XLDFLAGS $LDFLAGS"
-	if test "$MOTIF_REQUIRES_XPM" = "True"; then
-	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
-		TK_LIBS="-lXpm $TK_LIBS", 
-		[MISSING_MOTIF="$MISSING_MOTIF -lXpm"], $XLIBS)
-	fi
-	if test "$MOTIF_VERSION" = "2.1"; then
-	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
-		TK_LIBS="-lXp $TK_LIBS",
-		[MISSING_MOTIF="$MISSING_MOTIF -lXp"], $XLIBS)
-	fi
-	TK_LIBS="$XLDFLAGS $TK_LIBS"
-	LDFLAGS="$_SAVE_LDFLAGS"
+
+		if test "$MOTIF_REQUIRES_XPM" = "True"; then
+	    	AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
+			XPM_LIBS="-lXpm", 
+			[MISSING_MOTIF="$MISSING_MOTIF -lXpm"], $XLIBS)
+		fi
+
+		if test "$MOTIF_VERSION" = "2.1"; then
+	    	AC_CHECK_LIB(Xp, XpGetPrinterList, 
+			MOTIF_XP_LIBS="-lXp",
+			[MISSING_MOTIF="$MISSING_MOTIF -lXp"], $XLIBS)
+		fi
+
+		TK_LIBS="$XLDFLAGS $TK_LIBS"
+		LDFLAGS="$_SAVE_LDFLAGS"
     fi
 
     if test "$MOTIF_STATIC_LIB" = "unknown" \
@@ -649,6 +652,8 @@ fi
     if test "$MOTIF_INCLUDE_DIR" = "unknown"; then
 	MOTIF_INCLUDE_DIR=
     fi
+
+	TK_LIBS="$MOTIF_XP_LIBS $XT_LIBS $XMU_LIBS $XPM_LIBS $X11_LIBS $XEXT_LIBS $XSM_LIBS $XICE_LIBS"
 
     AC_ARG_WITH(static-motif,
     [  --with-static-motif     link Motif statically if possible],
