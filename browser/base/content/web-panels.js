@@ -45,22 +45,26 @@ var panelProgressListener = {
     }
 };
 
+var gLoadCachedSrc = true;
 function loadWebPanel(aURI) {
     var panelBrowser = document.getElementById('web-panels-browser');
     panelBrowser.removeAttribute("src");
     panelBrowser.setAttribute("src", aURI);
-    panelBrowser.setAttribute("cachedsrc", aURI);
+    panelBrowser.setAttribute("cachedurl", aURI);
+    gLoadCachedSrc = false;
 }
 
 function load()
 {
   var panelBrowser = document.getElementById('web-panels-browser');
   panelBrowser.webProgress.addProgressListener(panelProgressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-  if (panelBrowser.getAttribute("cachedsrc"))
-    panelBrowser.setAttribute("src", panelBrowser.getAttribute("cachedsrc"));
+  if (gLoadCachedSrc && panelBrowser.getAttribute("cachedurl")) {
+    panelBrowser.setAttribute("src", panelBrowser.getAttribute("cachedurl"));
+  }
 }
 
 function unload()
 {
-  document.getElementById('web-panels-browser').webProgress.removeProgressListener(panelProgressListener);
+  var panelBrowser = document.getElementById('web-panels-browser');
+  panelBrowser.webProgress.removeProgressListener(panelProgressListener);
 }

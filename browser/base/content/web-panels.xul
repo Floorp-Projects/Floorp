@@ -10,6 +10,6 @@
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
-  <browser id="web-panels-browser" persist="cachedsrc" type="content" flex="1"
+  <browser id="web-panels-browser" persist="cachedurl" type="content" flex="1"
            onclick="return window.parent.contentAreaClick(event, true);"/>
 </page>
