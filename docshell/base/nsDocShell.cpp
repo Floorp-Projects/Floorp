@@ -563,20 +563,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
                 // Make some decisions on the child frame's loadType based on the 
                 // parent's loadType. 
                 if (mCurrentURI == nsnull) {
-                    // This is a newly created frame.
-                    if (parentLoadType == LOAD_BYPASS_HISTORY) {
-                        // The parent url bypassed history. The child should also
-                        // bypass history to avoid confusion.
-                        loadType = parentLoadType;
-                    }
-                    else if (shEntry && (parentLoadType & LOAD_CMD_HISTORY) || (parentLoadType & LOAD_CMD_RELOAD)) {
-                        // The parent was loaded through a history mechanism. Pass on 
-                        // the parent's loadType to the new child frame too, so that the 
-                        // the whole hierarchy has the appropriate loadtype. Initiate a
-                        // session history based load.     
-                        loadType = parentLoadType;
-                    }
-                    else if (shEntry && (parentLoadType == LOAD_NORMAL || parentLoadType == LOAD_LINK)) {
+                    // This is a newly created frame. Check for exception cases first. 
+                    // By default the subframe will inherit the parent's loadType.
+                    if (shEntry && (parentLoadType == LOAD_NORMAL || parentLoadType == LOAD_LINK)) {
                         // The parent was loaded normally. In this case, this *brand new* child really shouldn't
                         // have a SHEntry. If it does, it could be because the parent is replacing an
                         // existing frame with a new frame, probably in the onLoadHandler. We don't want this
@@ -591,6 +580,12 @@ nsDocShell::LoadURI(nsIURI * aURI,
                             shEntry = nsnull;
                         }
                     }   
+                    else {
+                        // The child frame inherits the parent's loadType for 
+                        // LOAD_BYPASS_HISTORY, LOAD_REFRESH, all types of reloads 
+                        // and history loads.
+                        loadType = parentLoadType;
+                    }
                 }
                 else {
                     // This is a pre-existing subframe. If the load was not originally initiated
@@ -2153,7 +2148,8 @@ nsDocShell::GetChildSHEntry(PRInt32 aChildOffset, nsISHEntry ** aResult)
         // we don't want to load the subframes from history.         
         if (loadType == nsIDocShellLoadInfo::loadReloadBypassCache ||
             loadType == nsIDocShellLoadInfo::loadReloadBypassProxy ||
-            loadType == nsIDocShellLoadInfo::loadReloadBypassProxyAndCache)
+            loadType == nsIDocShellLoadInfo::loadReloadBypassProxyAndCache ||
+            loadType == nsIDocShellLoadInfo::loadRefresh)
             return rv;
         
         /* If the user pressed reload and the parent frame has expired
@@ -5412,8 +5408,12 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     // Determine if this type of load should update history.    
     if (aLoadType == LOAD_BYPASS_HISTORY ||
          aLoadType & LOAD_CMD_HISTORY ||
-         aLoadType & LOAD_CMD_RELOAD)         
+         aLoadType == LOAD_RELOAD_NORMAL)         
         updateHistory = PR_FALSE;
+
+    // Check if the url to be loaded is the same as the one already loaded. 
+    if (mCurrentURI)
+        aURI->Equals(mCurrentURI, &equalUri);
 
 
     /* If the url to be loaded is the same as the one already there,
@@ -5428,15 +5428,19 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
      * Hopefully I don't have to do that. 
      */
     if ((mLoadType == LOAD_NORMAL ||
-         mLoadType == LOAD_LINK ||
-         mLoadType == LOAD_REFRESH) &&
+         mLoadType == LOAD_LINK) &&
         !inputStream && 
-        mCurrentURI &&
-        NS_SUCCEEDED(aURI->Equals(mCurrentURI, &equalUri)) &&
         equalUri)
     {
         mLoadType = LOAD_NORMAL_REPLACE;
     }
+
+    // If this is a refresh to the currently loaded url, we don't
+    // have to update session or global history.
+    if (mLoadType == LOAD_REFRESH && !inputStream && equalUri) {
+        mLSHE = mOSHE;
+    }
+
 
     /* If the user pressed shift-reload, cache will create a new cache key
      * for the page. Save the new cacheKey in Session History. 
@@ -5455,7 +5459,6 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
           mLSHE->SetCacheKey(cacheKey);
     }
 
-    
     if (updateHistory && shAvailable) { 
         // Update session history if necessary...
         if (!mLSHE && (mItemType == typeContent) && mURIResultedInDocument) {
@@ -5652,31 +5655,30 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
         entry->SetExpirationStatus(PR_TRUE);
 
 
-    // If no Session History component is available in the parent DocShell
-    // hierarchy, then AddChildSHEntry(...) will fail and the new entry
-    // will be deleted when it loses scope...
-    //
-    if (mLoadType != LOAD_NORMAL_REPLACE) {
-        if (mSessionHistory) {
-            nsCOMPtr<nsISHistoryInternal>
-                shPrivate(do_QueryInterface(mSessionHistory));
-            NS_ENSURE_TRUE(shPrivate, NS_ERROR_FAILURE);
-            rv = shPrivate->AddEntry(entry, shouldPersist);
-        }
-        else
-            rv = AddChildSHEntry(nsnull, entry, mChildOffset);
-    }
-    else {        
-        if (root.get() == NS_STATIC_CAST(nsIDocShellTreeItem *, this) && mSessionHistory) {
-            // It is a LOAD_NORMAL_REPLACE on the root docshell
+    if (root.get() == NS_STATIC_CAST(nsIDocShellTreeItem *, this) && mSessionHistory) {
+        // This is the root docshell
+        if (mLoadType == LOAD_NORMAL_REPLACE) {            
+            // Replace current entry in session history.
             PRInt32  index = 0;   
             nsCOMPtr<nsIHistoryEntry> hEntry;
             mSessionHistory->GetIndex(&index);
             nsCOMPtr<nsISHistoryInternal>   shPrivate(do_QueryInterface(mSessionHistory));
             // Replace the current entry with the new entry
             if (shPrivate)
-                rv = shPrivate->ReplaceEntry(index, entry);
+                rv = shPrivate->ReplaceEntry(index, entry);          
         }
+        else {
+            // Add to session history
+            nsCOMPtr<nsISHistoryInternal>
+                shPrivate(do_QueryInterface(mSessionHistory));
+            NS_ENSURE_TRUE(shPrivate, NS_ERROR_FAILURE);
+            rv = shPrivate->AddEntry(entry, shouldPersist);
+        }
+    }
+    else {  
+        // This is a subframe.
+        if (mLoadType != LOAD_NORMAL_REPLACE)
+            rv = AddChildSHEntry(nsnull, entry, mChildOffset);
     }
 
     // Return the new SH entry...
