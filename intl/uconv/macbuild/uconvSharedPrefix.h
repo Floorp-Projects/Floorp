@@ -20,6 +20,5 @@
  * Contributor(s): 
  */
 
-#define _IMPL_NS_UCONV 1
 #define __STDC__
 #include "MacSharedPrefix.h"
