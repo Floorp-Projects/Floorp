@@ -36,17 +36,9 @@
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 
-#include "nsAppShellCIDs.h" // TODO remove later
-#include "nsIAppShellService.h" // TODO remove later
-#include "nsIXULWindow.h" // TODO remove later
-#include "nsINetPrompt.h"
-
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID,               NS_MIMESERVICE_CID);
-
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -81,7 +73,7 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
 	mPasv = 0;
 	mLastModified = LL_ZERO;
 	mAsyncReadEvent = 0;
-	mWriteCount = -1;
+	mWriteCount = 0;
 	mBufferSegmentSize = 0;
 	mBufferMaxSize = 0;
 }
@@ -788,20 +780,16 @@ nsFtpConnectionThread::S_user() {
         usernameStr.Append("anonymous");
     } else {
         if (!mUsername.Length()) {
+            if (!mPrompter) return NS_ERROR_NOT_INITIALIZED;
 
-            nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
-            NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
-
-            nsCOMPtr<nsIXULWindow> xulWindow;
-            appShellService->GetHiddenWindow(getter_AddRefs( xulWindow ) );
-            nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( xulWindow ) );
-
-            NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+            NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
+                            kProxyObjectManagerCID, &rv);
             if (NS_FAILED(rv)) return rv;
 
-            nsCOMPtr<nsINetPrompt> proxyprompter;
+
+            nsCOMPtr<nsIPrompt> proxyprompter;
             rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
-                        NS_GET_IID(nsINetPrompt), prompter, 
+                        NS_GET_IID(nsIPrompt), mPrompter, 
                         PROXY_SYNC, getter_AddRefs(proxyprompter));
             PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
@@ -814,7 +802,9 @@ nsFtpConnectionThread::S_user() {
                 message += host;
             }
 
-            rv = proxyprompter->PromptUsernameAndPassword(host, PR_TRUE, NULL, message.GetUnicode(), &user, &passwd, &retval);
+            rv = proxyprompter->PromptUsernameAndPassword(message.GetUnicode(),
+                    &user, &passwd, &retval);
+
             // if the user canceled or didn't supply a username we want to fail
             if (!retval || (user && !*user) )
                 return NS_ERROR_FAILURE;
@@ -867,34 +857,21 @@ nsFtpConnectionThread::S_pass() {
         passwordStr.Append("mozilla@");
     } else {
         if (!mPassword.Length() || mRetryPass) {
-            // ignore any password we have, it's not working
-            nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
-            NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
+            if (!mPrompter) return NS_ERROR_NOT_INITIALIZED;
 
-            nsCOMPtr<nsIXULWindow> xulWindow;
-            appShellService->GetHiddenWindow(getter_AddRefs( xulWindow ) );
-            nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( xulWindow ) );
-
-            NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+            NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
+                            kProxyObjectManagerCID, &rv);
             if (NS_FAILED(rv)) return rv;
-            
-            nsCOMPtr<nsINetPrompt> proxyprompter;
+
+            nsCOMPtr<nsIPrompt> proxyprompter;
             rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
-                        NS_GET_IID(nsINetPrompt), prompter,
+                        NS_GET_IID(nsIPrompt), mPrompter,
                         PROXY_SYNC, getter_AddRefs(proxyprompter));
             PRUnichar *passwd = nsnull;
             PRBool retval;
             static nsAutoString message;
-            nsXPIDLCString host2;
-            rv = mURL->GetHost(getter_Copies(host2));
-            if (NS_FAILED(rv)) {
-              return rv;
-            }
-            nsAutoString userAtHost;
-            userAtHost = mUsername;
-            userAtHost += "@";
-            userAtHost += host2;
-            char * userAtHostC = userAtHost.ToNewCString();
+            nsAutoString title("Password");
+            
             if (message.Length() < 1) {
                 nsXPIDLCString host;
                 rv = mURL->GetHost(getter_Copies(host));
@@ -904,8 +881,9 @@ nsFtpConnectionThread::S_pass() {
                 message += " on ";
                 message += host;
             }
-            rv = proxyprompter->PromptPassword(userAtHostC, PR_TRUE, NULL, message.GetUnicode(), &passwd, &retval);
-            nsCRT::free(userAtHostC);
+            rv = proxyprompter->PromptPassword(message.GetUnicode(),
+                        title.GetUnicode(),
+                        &passwd, &retval);
 
             // we want to fail if the user canceled or didn't enter a password.
             if (!retval || (passwd && !*passwd) )
@@ -1581,11 +1559,14 @@ nsFtpConnectionThread::Resume(void)
 nsresult
 nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
                             nsIChannel* aChannel,
+                            nsIPrompt*  aPrompter,
                             PRUint32 bufferSegmentSize,
                             PRUint32 bufferMaxSize) {
     nsresult rv = NS_OK;
 
     if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
+
+    mPrompter = aPrompter;
 
     mBufferSegmentSize = bufferSegmentSize;
     mBufferMaxSize = bufferMaxSize;

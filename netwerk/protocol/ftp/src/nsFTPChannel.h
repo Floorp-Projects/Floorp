@@ -38,6 +38,7 @@
 #include "nsXPIDLString.h"
 #include "nsIStreamListener.h"
 #include "nsAutoLock.h"
+#include "nsIPrompt.h"
 
 class nsFTPChannel : public nsIChannel,
                      public nsIInterfaceRequestor,
@@ -73,6 +74,7 @@ protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsIURI>                mURL;
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
+    nsCOMPtr<nsIPrompt>             mPrompter;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
     PRBool                          mConnected;

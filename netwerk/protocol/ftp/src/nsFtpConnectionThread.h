@@ -41,6 +41,7 @@
 #include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
 #include "nsIEventQueueService.h"
+#include "nsIPrompt.h"
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -95,6 +96,7 @@ public:
 
     nsresult Init(nsIProtocolHandler    *aHandler,
                   nsIChannel            *aChannel,
+                  nsIPrompt             *aPrompter,
                   PRUint32              bufferSegmentSize,
                   PRUint32              bufferMaxSize);
 
@@ -211,6 +213,7 @@ private:
     PRBool                 mFireCallbacks; // Fire the listener callbacks.
 
     nsCOMPtr<nsIEventQueue> mEventQueue;
+    nsCOMPtr<nsIPrompt>     mPrompter;
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)
