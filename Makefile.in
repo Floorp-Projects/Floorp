@@ -84,6 +84,7 @@ DIRS		+= \
 		rdf \
 		docshell \
 		webshell \
+		embedding \
 		editor \
 		sun-java \
 		profile \
