@@ -482,9 +482,7 @@ rt_RDF_GetReceiptResource(RDF_Resource host,
 
 RDF_Resource
 rt_RDF_GetFormResource(RDF_Resource receipt, 
-#ifdef MOCHA
                        char *name,
-#endif
                        char *action,
                        int32 ele_cnt)
 {
@@ -492,9 +490,7 @@ rt_RDF_GetFormResource(RDF_Resource receipt,
   char *form_url;
   RDF_Resource formResource;
 
-#ifdef MOCHA
   form_name = name;
-#endif
 
   if (form_name == NULL) form_name = "";
 
@@ -633,9 +629,7 @@ rt_saveFormElements(MWContext *context,
   elements = (LO_Element **)form->form_elements;
   if (elements == NULL) return;
   form_unit = rt_RDF_GetFormResource(receipt_unit,
-#ifdef MOCHA
                                      (char *)form->name,
-#endif /* MOCHA */
                                      (char *)form->action,
                                      form->form_ele_cnt);
 
@@ -664,9 +658,7 @@ rt_saveFormList (MWContext *context,
   while(form != NULL)
     {
       D(printf("iterating over form %d\n",form->id));
-#ifdef MOCHA
       D(printf(" -- it is named %s\n",(char *)form->name));
-#endif
       D(printf(" -- it has %d elements\n",form->form_ele_cnt));
       rt_saveFormElements(context,form,receipt_unit);
       form = form->next;
