@@ -108,6 +108,9 @@ sub ProcessOneBug {
     foreach my $i (@::log_columns) {
         $values{$i} = shift(@row);
     }
+    $values{product} = get_product_name($values{product_id});
+    $values{component} = get_component_name($values{component_id});
+
     my ($start, $end) = (@row);
     # $start and $end are considered safe because users can't touch them
     trick_taint($start);
