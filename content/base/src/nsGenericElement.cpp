@@ -1441,7 +1441,7 @@ nsGenericElement::GetAttributeNS(const nsAString& aNamespaceURI,
   nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, &nsid);
 
   if (nsid == kNameSpaceID_Unknown) {
-    // Unkonwn namespace means no attr...
+    // Unknown namespace means no attr...
 
     aReturn.Truncate();
 
@@ -1480,7 +1480,7 @@ nsGenericElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
   nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, &nsid);
 
   if (nsid == kNameSpaceID_Unknown) {
-    // Unkonwn namespace means no attr...
+    // Unknown namespace means no attr...
 
     return NS_OK;
   }
@@ -1593,7 +1593,7 @@ nsGenericElement::HasAttributeNS(const nsAString& aNamespaceURI,
   nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, &nsid);
 
   if (nsid == kNameSpaceID_Unknown) {
-    // Unkonwn namespace means no attr...
+    // Unknown namespace means no attr...
 
     *aReturn = PR_FALSE;
 
