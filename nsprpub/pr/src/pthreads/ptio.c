@@ -1386,6 +1386,9 @@ static PRInt32 pt_Send(
 {
     PRInt32 syserrno, bytes = -1;
     PRBool fNeedContinue = PR_FALSE;
+#if defined(SOLARIS)
+	PRInt32 tmp_amount = amount;
+#endif
 
     /*
      * Under HP-UX DCE threads, pthread.h includes dce/cma_ux.h,
@@ -1408,8 +1411,9 @@ static PRInt32 pt_Send(
      * write() are fairly equivalent in performance.
      */
 #if defined(SOLARIS)
+retry:
     PR_ASSERT(0 == flags);
-    bytes = write(fd->secret->md.osfd, PT_SENDBUF_CAST buf, amount);
+    bytes = write(fd->secret->md.osfd, PT_SENDBUF_CAST buf, tmp_amount);
 #else
     bytes = send(fd->secret->md.osfd, PT_SENDBUF_CAST buf, amount, flags);
 #endif
@@ -1439,6 +1443,18 @@ static PRInt32 pt_Send(
             fNeedContinue = PR_TRUE;
         }
     }
+#if defined(SOLARIS)
+	/*
+	 * The write system call has been reported to return the ERANGE error
+	 * on occasion. Try to write in smaller chunks to workaround this bug.
+	 */
+    if ((bytes == -1) && (syserrno == ERANGE)) {
+		if (tmp_amount > 1) {
+			tmp_amount = tmp_amount/2;	/* half the bytes */
+			goto retry;
+		}
+	}
+#endif
 
     if (fNeedContinue == PR_TRUE)
     {
