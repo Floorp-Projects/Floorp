@@ -49,6 +49,8 @@
  * <li>handles structural modifications to the frame model. If the frame model
  * lock can be acquired, then the changes are processed immediately; otherwise,
  * they're queued and processed later.
+ *
+ * Do not add virtual methods to this class, or bryner will punish you.
  */
 
 class nsFrameManager : public nsFrameManagerBase
@@ -63,8 +65,6 @@ public:
                  "Superclass/subclass mismatch");
     return aHost->FrameManager();
   }
-
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   // Initialization
   NS_HIDDEN_(nsresult) Init(nsIPresShell* aPresShell, nsStyleSet* aStyleSet);
