@@ -2093,6 +2093,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
           if (m_attachments[newLoc].mDeleteFile)
             m_attachments[newLoc].mFileSpec->Delete(PR_FALSE);
           delete (m_attachments[newLoc].mFileSpec);
+          m_attachments[newLoc].mFileSpec =nsnull;
         }
         m_attachments[newLoc].mFileSpec = new nsFileSpec( nsFileURL(url.get()) );
         m_attachments[newLoc].mDeleteFile = PR_FALSE;
@@ -2399,6 +2400,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
         if (m_attachments[i].mDeleteFile)
           m_attachments[i].mFileSpec->Delete(PR_FALSE);
         delete (m_attachments[i].mFileSpec);
+        m_attachments[i].mFileSpec=nsnull;
       }
       m_attachments[i].mFileSpec = new nsFileSpec(*(preloaded_attachments[i].file_spec));
 

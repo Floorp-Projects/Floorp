@@ -149,6 +149,9 @@ nsMsgAttachmentHandler::~nsMsgAttachmentHandler()
   if (mFileSpec && mDeleteFile)
     mFileSpec->Delete(PR_FALSE);
 
+  delete mFileSpec;
+  mFileSpec=nsnull;
+
   PR_FREEIF(m_charset);
   PR_FREEIF(m_type);
   PR_FREEIF(m_content_id);
