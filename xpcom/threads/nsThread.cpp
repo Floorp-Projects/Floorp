@@ -97,11 +97,11 @@ nsThread::~nsThread()
 
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p destroyed\n", this));
-#if defined(PR_LOGGING)
-    if (this == gMainThread) {
-        PR_DELETE( nsIThreadLog );  // changed from delete, since it is malloc'ed
-    }
-#endif
+
+    // This code used to free the nsIThreadLog loginfo stuff
+    // Don't do that; loginfo structures are owned by nspr
+    // and would be freed if we ever called PR_Cleanup()
+    // see bug 142072
 }
 
 void
