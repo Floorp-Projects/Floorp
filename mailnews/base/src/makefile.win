@@ -26,33 +26,38 @@ REQUIRES=xpcom js nspr
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=    nsMsgRFC822Parser.cpp  \
-			nsUInt32Array.cpp\
-			nsMsgKeyArray.cpp\
-			nsMsgFolder.cpp \
-			nsMsgGroupRecord.cpp	\
-			nsMsgRDFFolder.cpp \
-			nsNewsSet.cpp \
-			nsMsg.cpp	\
-			$(NULL)
+CPPSRCS=                         \
+        nsMsgRFC822Parser.cpp    \
+	nsUInt32Array.cpp        \
+	nsMsgKeyArray.cpp        \
+	nsMsgFolder.cpp          \
+	nsMsgLocalMailFolder.cpp \
+	nsMsgGroupRecord.cpp     \
+	nsMsgRDFFolder.cpp       \
+	nsNewsSet.cpp            \
+	nsMsg.cpp                \
+	$(NULL)
 
-CPP_OBJS=   .\$(OBJDIR)\nsMsgRFC822Parser.obj  \
-			.\$(OBJDIR)\nsUInt32Array.obj\
-			.\$(OBJDIR)\nsMsgKeyArray.obj\
-			.\$(OBJDIR)\nsMsgFolder.obj \
-			.\$(OBJDIR)\nsMsgGroupRecord.obj	\
-			.\$(OBJDIR)\nsMsgRDFFolder.obj \
-			.\$(OBJDIR)\nsNewsSet.obj \
-			.\$(OBJDIR)\nsMsg.obj	\
-			$(NULL)
+CPP_OBJS=                                    \
+        .\$(OBJDIR)\nsMsgRFC822Parser.obj    \
+	.\$(OBJDIR)\nsUInt32Array.obj        \
+	.\$(OBJDIR)\nsMsgKeyArray.obj        \
+	.\$(OBJDIR)\nsMsgFolder.obj          \
+	.\$(OBJDIR)\nsMsgLocalMailFolder.obj \
+	.\$(OBJDIR)\nsMsgGroupRecord.obj     \
+	.\$(OBJDIR)\nsMsgRDFFolder.obj       \
+	.\$(OBJDIR)\nsNewsSet.obj            \
+	.\$(OBJDIR)\nsMsg.obj                \
+	$(NULL)
 
 
-EXPORTS=	nsMsgRFC822Parser.h \
-			nsUInt32Array.h	\
-			nsMsgKeyArray.h	\
-			nsNewsSet.h	\
-			nsMsgGroupRecord.h  \
-			$(NULL)
+EXPORTS=                    \
+        nsMsgRFC822Parser.h \
+	nsUInt32Array.h     \
+	nsMsgKeyArray.h     \
+	nsNewsSet.h         \
+	nsMsgGroupRecord.h  \
+	$(NULL)
 
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\rdf

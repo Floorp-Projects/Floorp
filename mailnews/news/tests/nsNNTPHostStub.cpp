@@ -29,7 +29,7 @@
 #include "nsINNTPNewsgroup.h"
 
 #include "nsMsgGroupRecord.h"
-#include "nsMsgPtrArray.h"
+#include "nsIMsgFolder.h"
 #include "nsNNTPNewsgroupList.h"
 #include "nsNNTPNewsgroup.h"
 

@@ -33,14 +33,14 @@
   * MsgFolder
   */ 
 
- class nsMsgFolder: public nsRDFResource, public nsIMsgFolder
- {
+class nsMsgFolder: public nsRDFResource, public nsIMsgFolder
+{
 public: 
-	nsMsgFolder(const char* uri);
-	virtual ~nsMsgFolder();
+  nsMsgFolder(const char* uri);
+  virtual ~nsMsgFolder();
 
-	/* this macro defines QueryInterface, AddRef and Release for this class */
-	NS_DECL_ISUPPORTS
+  /* this macro defines QueryInterface, AddRef and Release for this class */
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetType(FolderType *type);
 
@@ -93,27 +93,27 @@ public:
                           PRBool addMozillaStatus = TRUE);
 #endif
 
-	NS_IMETHOD GetPrettyName(char * *aPrettyName);
-	NS_IMETHOD GetName(char **name);
-	NS_IMETHOD SetName(const char *name);
+  NS_IMETHOD GetPrettyName(char * *aPrettyName);
+  NS_IMETHOD GetName(char **name);
+  NS_IMETHOD SetName(const char *name);
   NS_IMETHOD GetPrettiestName(char **name);
 
   NS_IMETHOD BuildFolderURL(char ** url);
 
   NS_IMETHOD GetNameFromPathName(const char *pathName, char ** name);
 
-	NS_IMETHOD HasSubFolders(PRBool *hasSubFolders);
+  NS_IMETHOD HasSubFolders(PRBool *hasSubFolders);
   NS_IMETHOD GetNumSubFolders(PRUint32 *numSubFolders);
   NS_IMETHOD GetNumSubFoldersToDisplay(PRUint32 *numSubFolders);
   NS_IMETHOD GetSubFolder(PRUint32 which, nsIMsgFolder **aFolder);
   NS_IMETHOD GetSubFolders (nsISupportsArray ** subFolders);
-	NS_IMETHOD AddSubFolder(const nsIMsgFolder *folder);
+  NS_IMETHOD AddSubFolder(const nsIMsgFolder *folder);
   NS_IMETHOD AddSubfolderIfUnique(const nsIMsgFolder *newSubfolder);
   NS_IMETHOD ReplaceSubfolder(const nsIMsgFolder *oldFolder, const nsIMsgFolder *newFolder);
 
   NS_IMETHOD RemoveSubFolder (const nsIMsgFolder *which);
 #ifdef HAVE_PANE
-	NS_IMETHOD GetVisibleSubFolders (nsISupportsArray ** visibleSubFolders);
+  NS_IMETHOD GetVisibleSubFolders (nsISupportsArray ** visibleSubFolders);
 #endif
 
   NS_IMETHOD HasMessages(PRBool *_retval);
@@ -125,18 +125,18 @@ public:
   NS_IMETHOD RemoveMessage(const nsIMsg *msg);
 
 #ifdef HAVE_ADMINURL
-	NS_IMETHOD GetAdminUrl(MWContext *context, MSG_AdminURLType type);
-	NS_IMETHOD HaveAdminUrl(MSG_AdminURLType type, PRBool *hadAdminUrl);
+  NS_IMETHOD GetAdminUrl(MWContext *context, MSG_AdminURLType type);
+  NS_IMETHOD HaveAdminUrl(MSG_AdminURLType type, PRBool *hadAdminUrl);
 #endif
 
-	NS_IMETHOD GetDeleteIsMoveToTrash(PRBool *aIsDeleteIsMoveToTrash);
-	NS_IMETHOD GetShowDeletedMessages(PRBool *aIsShowDeletedMessages);
+  NS_IMETHOD GetDeleteIsMoveToTrash(PRBool *aIsDeleteIsMoveToTrash);
+  NS_IMETHOD GetShowDeletedMessages(PRBool *aIsShowDeletedMessages);
     
-	NS_IMETHOD OnCloseFolder ();
+  NS_IMETHOD OnCloseFolder ();
   NS_IMETHOD Delete ();
 
   NS_IMETHOD PropagateDelete (nsIMsgFolder **folder, PRBool deleteStorage);
-	NS_IMETHOD RecursiveDelete (PRBool deleteStorage);  // called by PropagateDelete
+  NS_IMETHOD RecursiveDelete (PRBool deleteStorage);  // called by PropagateDelete
 
   NS_IMETHOD CreateSubfolder (const char *leafNameFromuser, nsIMsgFolder** outFolder, PRUint32* outPos);
 
@@ -148,7 +148,7 @@ public:
   NS_IMETHOD FindParentOf (const nsIMsgFolder * aFolder, nsIMsgFolder ** aParent);
   NS_IMETHOD IsParentOf (const nsIMsgFolder *, PRBool deep, PRBool *isParent);
 
-	NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, const nsIMsgFolder *otherFolder,
+  NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, const nsIMsgFolder *otherFolder,
                                          char **name);
 
   NS_IMETHOD   GetDepth(PRUint32 *depth);
@@ -162,11 +162,11 @@ public:
   NS_IMETHOD GetTotalMessages(PRBool deep, PRUint32 *totalMessages);   // Total number of messages in this folder.
 
 #ifdef HAVE_DB
-	NS_IMETHOD GetTotalMessagesInDB(PRUint32 *totalMessages) const;					// How many messages in database.
+  NS_IMETHOD GetTotalMessagesInDB(PRUint32 *totalMessages) const;					// How many messages in database.
 #endif
 	
 #ifdef HAVE_PANE
-	NS_IMETHOD	MarkAllRead(MSG_Pane *pane, PRBool deep);
+  NS_IMETHOD	MarkAllRead(MSG_Pane *pane, PRBool deep);
 #endif
 
 #ifdef HAVE_DB	
@@ -178,18 +178,18 @@ public:
 	int32			GetNumPendingUnread(PRBool deep = FALSE);
 	int32			GetNumPendingTotalMessages(PRBool deep = FALSE);
 	
-	void			ChangeNumPendingUnread(int32 delta);
-	void			ChangeNumPendingTotalMessages(int32 delta);
+  void			ChangeNumPendingUnread(int32 delta);
+  void			ChangeNumPendingTotalMessages(int32 delta);
 
 
   NS_IMETHOD SetFolderPrefFlags(PRUint32 flags);
   NS_IMETHOD GetFolderPrefFlags(PRUint32 *flags);
-	NS_IMETHOD SetFolderCSID(PRInt16 csid);
-	NS_IMETHOD GetFolderCSID(PRInt16 *csid);
+  NS_IMETHOD SetFolderCSID(PRInt16 csid);
+  NS_IMETHOD GetFolderCSID(PRInt16 *csid);
 
 
-	NS_IMETHOD	SetLastMessageLoaded(MessageKey lastMessageLoaded);
-	NS_IMETHOD GetLastMessageLoaded();
+  NS_IMETHOD	SetLastMessageLoaded(MessageKey lastMessageLoaded);
+  NS_IMETHOD GetLastMessageLoaded();
 #endif
 
   NS_IMETHOD SetFlag (PRUint32 which);
@@ -197,11 +197,11 @@ public:
   NS_IMETHOD GetFlag(PRUint32 flag, PRBool *_retval);
 
   NS_IMETHOD ToggleFlag (PRUint32 which);
-	NS_IMETHOD OnFlagChange (PRUint32 which);
+  NS_IMETHOD OnFlagChange (PRUint32 which);
   NS_IMETHOD GetFlags(PRUint32 *flags);
 
 #ifdef HAVE_PANE
-	NS_IMETHOD SetFlagInAllFolderPanes(PRUint32 which);
+  NS_IMETHOD SetFlagInAllFolderPanes(PRUint32 which);
 #endif
 
   NS_IMETHOD GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder** result,
@@ -213,21 +213,21 @@ public:
   NS_IMETHOD EscapeMessageId(const char *messageId, const char **escapeMessageID);
 #endif
 
-	NS_IMETHOD	GetExpungedBytesCount(PRUint32 *count);
+  NS_IMETHOD	GetExpungedBytesCount(PRUint32 *count);
 
   NS_IMETHOD GetDeletable (PRBool *deletable);
   NS_IMETHOD GetCanCreateChildren (PRBool *canCreateChildren);
   NS_IMETHOD GetCanBeRenamed (PRBool *canBeRenamed);
-	NS_IMETHOD GetRequiresCleanup(PRBool *requiredCleanup);
-	NS_IMETHOD	ClearRequiresCleanup() ;
+  NS_IMETHOD GetRequiresCleanup(PRBool *requiredCleanup);
+  NS_IMETHOD	ClearRequiresCleanup() ;
 #ifdef HAVE_PANE
 	virtual PRBool CanBeInFolderPane ();
 #endif
 
-	NS_IMETHOD GetKnowsSearchNntpExtension(PRBool *knowsExtension);
-	NS_IMETHOD GetAllowsPosting(PRBool *allowsPosting);
+  NS_IMETHOD GetKnowsSearchNntpExtension(PRBool *knowsExtension);
+  NS_IMETHOD GetAllowsPosting(PRBool *allowsPosting);
 
-	NS_IMETHOD DisplayRecipients(PRBool *displayRecipients);
+  NS_IMETHOD DisplayRecipients(PRBool *displayRecipients);
 
 #ifdef HAVE_SEMAPHORE
   MsgERR AcquireSemaphore (void *semHolder);
@@ -251,13 +251,13 @@ public:
 	void SkipCacheTokens (char **ppBuf, int numTokens);
 #endif
 
-	NS_IMETHOD GetRelativePathName (char **pathName);
+  NS_IMETHOD GetRelativePathName (char **pathName);
 
 
-	NS_IMETHOD GetSizeOnDisk(PRUint32 *size);
+  NS_IMETHOD GetSizeOnDisk(PRUint32 *size);
 
 #ifdef HAVE_NET
-	NS_IMETHOD	ShouldPerformOperationOffline(PRBool *performOffline);
+  NS_IMETHOD	ShouldPerformOperationOffline(PRBool *performOffline);
 #endif
 
 #ifdef DOES_FOLDEROPERATIONS
@@ -265,25 +265,25 @@ public:
 	void UpdateMoveCopyStatus(MWContext *context, PRBool isMove, int32 curMsgCount, int32 totMessages);
 #endif
 
-	NS_IMETHOD RememberPassword(const char *password);
-	NS_IMETHOD GetRememberedPassword(char ** password);
-	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *needsAuthenticate);
-	NS_IMETHOD GetUserName(char **userName);
-	NS_IMETHOD GetHostName(char **hostName);
+  NS_IMETHOD RememberPassword(const char *password);
+  NS_IMETHOD GetRememberedPassword(char ** password);
+  NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *needsAuthenticate);
+  NS_IMETHOD GetUserName(char **userName);
+  NS_IMETHOD GetHostName(char **hostName);
 
 protected:
-	char* mName;
+  char* mName;
   PRUint32 mFlags;
   PRUint32 mNumUnreadMessages;        /* count of unread messages   (-1 means
-                                        unknown; -2 means unknown but we already
-                                        tried to find out.) */
+                                         unknown; -2 means unknown but we already
+                                         tried to find out.) */
   PRUint32 mNumTotalMessages;         /* count of existing messages. */
   nsISupportsArray *mSubFolders;
 #ifdef HAVE_MASTER
   MSG_Master  *mMaster;
 #endif
 
-	PRInt16 mCsid;			// default csid for folder/newsgroup - maintained by fe.
+  PRInt16 mCsid;			// default csid for folder/newsgroup - maintained by fe.
   PRUint8 mDepth;
   PRUint32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
 #ifdef HAVE_SEMAPHORE
@@ -291,95 +291,18 @@ protected:
 #endif
 
 #ifdef HAVE_DB
-	MessageKey	m_lastMessageLoaded;
-	// These values are used for tricking the front end into thinking that we have more 
-	// messages than are really in the DB.  This is usually after and IMAP message copy where
-	// we don't want to do an expensive select until the user actually opens that folder
-	PRUint32 mNumPendingUnreadMessages;
-	PRUint32 mNumPendingTotalMessages;
+  MessageKey	m_lastMessageLoaded;
+  // These values are used for tricking the front end into thinking that we have more 
+  // messages than are really in the DB.  This is usually after and IMAP message copy where
+  // we don't want to do an expensive select until the user actually opens that folder
+  PRUint32 mNumPendingUnreadMessages;
+  PRUint32 mNumPendingTotalMessages;
 #endif
 
 #ifdef HAVE_CACHE
 	PRBool mIsCachable;
 #endif
 
- };
-
-class nsMsgMailFolder : public nsMsgFolder, public nsIMsgMailFolder
-{
-public:
-	nsMsgMailFolder(const char* uri);
-	~nsMsgMailFolder();
-
-	NS_IMETHOD QueryInterface(REFNSIID aIID,
-							void** aInstancePtr);
-	NS_IMETHOD_(nsrefcnt) AddRef(void);
-	NS_IMETHOD_(nsrefcnt) Release(void);
-
-	NS_IMETHOD GetType(FolderType *type);
-
-#ifdef HAVE_DB	
-	virtual MsgERR BeginCopyingMessages (MSG_FolderInfo *dstFolder, 
-																				nsMsgDatabase *sourceDB,
-																				nsMsgKeyArray *srcArray, 
-																				MSG_UrlQueue *urlQueue,
-																				int32 srcCount,
-																				MessageCopyInfo *copyInfo);
-
-
-	virtual int FinishCopyingMessages (MWContext *context,
-																			MSG_FolderInfo * srcFolder, 
-																			MSG_FolderInfo *dstFolder, 
-																			nsMsgDatabase *sourceDB,
-																			nsMsgKeyArray **ppSrcArray, 
-																			int32 srcCount,
-																			msg_move_state *state);
-#endif
-
-	NS_IMETHOD CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos);
-
-	NS_IMETHOD RemoveSubFolder (const nsIMsgFolder *which);
-	NS_IMETHOD Delete ();
-	NS_IMETHOD Rename (const char *newName);
-	NS_IMETHOD Adopt(const nsIMsgFolder *srcFolder, PRUint32 *outPos);
-
-		// this override pulls the value from the db
-	NS_IMETHOD GetName(char** name);   // Name of this folder (as presented to user).
-	NS_IMETHOD GetPrettyName(char ** prettyName);	// Override of the base, for top-level mail folder
-
-  NS_IMETHOD BuildFolderURL(char **url);
-
-	NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, const nsIMsgFolder *otherFolder, char** name);
-
-	NS_IMETHOD UpdateSummaryTotals() ;
-
-	NS_IMETHOD GetExpungedBytesCount(PRUint32 *count);
-	NS_IMETHOD GetDeletable (PRBool *deletable); 
-	NS_IMETHOD GetCanCreateChildren (PRBool *canCreateChildren) ;
-	NS_IMETHOD GetCanBeRenamed (PRBool *canBeRenamed);
-	NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
-
-
-	NS_IMETHOD GetRelativePathName (char **pathName);
-
-
-	NS_IMETHOD GetSizeOnDisk(PRUint32 size);
-
-	NS_IMETHOD GetUserName(char** userName);
-	NS_IMETHOD GetHostName(char** hostName);
-	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
-	NS_IMETHOD RememberPassword(const char *password);
-	NS_IMETHOD GetRememberedPassword(char ** password);
-
-	//nsIMsgMailFolder
-  NS_IMETHOD GetPathName(char * *aPathName);
-  NS_IMETHOD SetPathName(char * aPathName);
-
-protected:
-	char*			mPathName;
-	PRUint32  mExpungedBytes;
-	PRBool		mHaveReadNameFromDB;
-	PRBool		mGettingMail;
 };
 
 #endif

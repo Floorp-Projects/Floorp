@@ -237,15 +237,15 @@ class nsIMsgFolder : public nsISupports {
 /* starting interface nsIMsgMailFolder */
 
 /* {27D2DE40-BAF1-11d2-9578-00805F8AC615} */
-#define NS_IMSGMAILFOLDER_IID_STR "27D2DE40-BAF1-11d2-9578-00805F8AC615"
-#define NS_IMSGMAILFOLDER_IID \
+#define NS_IMSGLOCALMAILFOLDER_IID_STR "27D2DE40-BAF1-11d2-9578-00805F8AC615"
+#define NS_IMSGLOCALMAILFOLDER_IID \
   {0x27D2DE40, 0xBAF1, 0x11d2, \
     { 0x95, 0x78, 0x00, 0x80, 0x5F, 0x8A, 0xC6, 0x15 }}
 
-class nsIMsgMailFolder : public nsISupports {
+class nsIMsgLocalMailFolder : public nsISupports {
  public: 
   static const nsIID& IID() {
-    static nsIID iid = NS_IMSGMAILFOLDER_IID;
+    static nsIID iid = NS_IMSGLOCALMAILFOLDER_IID;
     return iid;
   }
 

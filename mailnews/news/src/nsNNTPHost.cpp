@@ -30,7 +30,6 @@
 #include "nsNNTPArticleSet.h"
 
 #include "nsMsgGroupRecord.h"
-#include "nsMsgPtrArray.h"
 
 #include "nsINNTPNewsgroup.h"
 #include "nsNNTPNewsgroup.h"

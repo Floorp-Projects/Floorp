@@ -64,7 +64,7 @@ nsMsgDatabase::CleanupCache()
 {
 	if (m_dbCache) // clean up memory leak
 	{
-		for (int i = 0; i < GetDBCache()->GetSize(); i++)
+		for (int i = 0; i < GetDBCache()->Count(); i++)
 		{
 			nsMsgDatabase* pMessageDB = GetDBCache()->GetAt(i);
 			if (pMessageDB)
@@ -89,7 +89,7 @@ nsMsgDatabase::CleanupCache()
 //----------------------------------------------------------------------
 nsMsgDatabase* nsMsgDatabase::FindInCache(nsFilePath &dbName)
 {
-	for (int i = 0; i < GetDBCache()->GetSize(); i++)
+	for (int i = 0; i < GetDBCache()->Count(); i++)
 	{
 		nsMsgDatabase* pMessageDB = GetDBCache()->GetAt(i);
 		if (pMessageDB->MatchDbName(dbName))
@@ -105,7 +105,7 @@ nsMsgDatabase* nsMsgDatabase::FindInCache(nsFilePath &dbName)
 //----------------------------------------------------------------------
 int nsMsgDatabase::FindInCache(nsMsgDatabase* pMessageDB)
 {
-	for (int i = 0; i < GetDBCache()->GetSize(); i++)
+	for (int i = 0; i < GetDBCache()->Count(); i++)
 	{
 		if (GetDBCache()->GetAt(i) == pMessageDB)
 		{
@@ -129,7 +129,7 @@ void nsMsgDatabase::RemoveFromCache(nsMsgDatabase* pMessageDB)
 	int i = FindInCache(pMessageDB);
 	if (i != -1)
 	{
-		GetDBCache()->RemoveAt(i);
+		GetDBCache()->RemoveElementAt(i);
 	}
 }
 
@@ -137,7 +137,7 @@ void nsMsgDatabase::RemoveFromCache(nsMsgDatabase* pMessageDB)
 #ifdef DEBUG
 void nsMsgDatabase::DumpCache()
 {
-	for (int i = 0; i < GetDBCache()->GetSize(); i++)
+	for (int i = 0; i < GetDBCache()->Count(); i++)
 	{
 #ifdef DEBUG_bienvenu
 		nsMsgDatabase* pMessageDB = 

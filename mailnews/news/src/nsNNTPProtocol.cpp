@@ -24,6 +24,8 @@
 #include "nsIInputStream.h"
 
 #include "nntpCore.h"
+#include "nsCRT.h"
+#include "xp.h"     // XXX remove!
 
 #include "rosetta.h"
 #include HG40855
@@ -34,7 +36,6 @@
 #include "prerror.h"
 #include "nsEscape.h"
 
-#include "xp_str.h"
 #include "fe_proto.h"
 #include "prprf.h"
 #include "merrors.h"
@@ -338,7 +339,7 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	const char * hostName = NULL;
 	aURL->GetHost(&hostName);
 	if (hostName)
-		m_hostName = PL_strdup(hostName);
+		m_hostName = nsCRT::strdup(hostName);
 	else
 		m_hostName = NULL;
 
@@ -382,6 +383,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
   PRBool cancel = FALSE;
   char* colon;
   nsINNTPNewsgroupPost *message=NULL;
+  char *message_id = 0;
 
   nsresult rv = NS_OK;
 
@@ -511,22 +513,22 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
 		if (PL_strstr(commandSpecificData, "?list-pretty"))
 		{
 			m_typeWanted = PRETTY_NAMES_WANTED;
-			m_commandSpecificData = PL_strdup(commandSpecificData);
+			m_commandSpecificData = nsCRT::strdup(commandSpecificData);
 		}
 		else if (PL_strstr(commandSpecificData, "?profile"))
 		{
 			m_typeWanted = PROFILE_WANTED;
-			m_commandSpecificData = PL_strdup(commandSpecificData);
+			m_commandSpecificData = nsCRT::strdup(commandSpecificData);
 		}
 		else if (PL_strstr(commandSpecificData, "?list-ids"))
 		{
 			m_typeWanted= IDS_WANTED;
-			m_commandSpecificData = PL_strdup(commandSpecificData);
+			m_commandSpecificData = nsCRT::strdup(commandSpecificData);
 		}
 		else
 		{
 			m_typeWanted = SEARCH_WANTED;
-			m_commandSpecificData = PL_strdup(commandSpecificData);
+			m_commandSpecificData = nsCRT::strdup(commandSpecificData);
 			m_searchData = m_commandSpecificData;
 		}
 	  }
@@ -569,8 +571,8 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
 		if( (colon = PL_strchr(unamePwd, ':')) != NULL ) 
 		{
 			*colon = '\0';
-			userName = PL_strdup(unamePwd);
-			password = PL_strdup(colon+1);
+			userName = nsCRT::strdup(unamePwd);
+			password = nsCRT::strdup(colon+1);
 			*colon = ':';
 			PR_Free(unamePwd);
 		}
@@ -730,7 +732,7 @@ PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * b
 	
 	aURL->GetHost(&host);
 	if (host)
-		hostAndPort = PL_strdup(host);
+		hostAndPort = nsCRT::strdup(host);
 
 	// mscott: I took out default code to generate host and port
     // if the url didn't have any...add this later...
@@ -771,7 +773,7 @@ PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * b
 	if (!path_part)
 		path_part = "";
 
-	group = PL_strdup (path_part);
+	group = nsCRT::strdup (path_part);
 	if (!group)
 	{
 	  status = MK_OUT_OF_MEMORY;
@@ -828,7 +830,7 @@ PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * b
 	  
 	  if (*s)
 	  {
-		  command_specific_data = PL_strdup (s);
+		  command_specific_data = nsCRT::strdup (s);
 		  *s = 0;
 		  if (!command_specific_data)
 			{
@@ -1517,7 +1519,7 @@ PRInt32 nsNNTPProtocol::GetPropertiesResponse(nsIInputStream * inputStream, PRUi
 
 	if ('.' != line[0])
 	{
-		char *propertyName = PL_strdup(line);
+		char *propertyName = nsCRT::strdup(line);
 		if (propertyName)
 		{
 			char *space = PL_strchr(propertyName, ' ');
@@ -1961,7 +1963,7 @@ PRInt32 nsNNTPProtocol::BeginArticle()
    */ 
   PL_strfree (m_currentGroup);
 #ifdef UNREADY_CODE
-  ce->URL_s->content_type = PL_strdup (MESSAGE_RFC822);
+  ce->URL_s->content_type = nsCRT::strdup (MESSAGE_RFC822);
 #endif
 
 #ifdef NO_ARTICLE_CACHEING
@@ -2072,7 +2074,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		/* Don't send content-type to mime parser if we're doing a cancel
 		  because it confuses mime parser into not parsing.
 		  */
-		if (m_typeWanted != CANCEL_WANTED || XP_STRNCMP(outputBuffer, "Content-Type:", 13))
+		if (m_typeWanted != CANCEL_WANTED || nsCRT::strncmp(outputBuffer, "Content-Type:", 13))
 		{
 			// for test purposes...we'd want to write this line out to an rfc-822 stream converter...
 			// we don't have one now so print the data out so we can verify that we got it....
@@ -3452,7 +3454,7 @@ PRInt32 nsNNTPProtocol::Cancel()
 	if (!ok)
 	{
 		status = MK_NNTP_CANCEL_DISALLOWED;
-		m_runningURL->SetErrorMessage(PL_strdup (XP_GetString(status)));
+		m_runningURL->SetErrorMessage(nsCRT::strdup(XP_GetString(status)));
 		m_nextState = NEWS_ERROR; /* even though it worked */
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 		goto FAIL;

@@ -42,7 +42,7 @@ static NS_DEFINE_IID(kIRDFResourceFactoryIID,			NS_IRDFRESOURCEFACTORY_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,		NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_IID(kIMsgFolderIID,							NS_IMSGFOLDER_IID);
-static NS_DEFINE_IID(kIMsgMailFolderIID,					NS_IMSGMAILFOLDER_IID);
+static NS_DEFINE_IID(kIMsgLocalMailFolderIID,					NS_IMSGLOCALMAILFOLDER_IID);
 static NS_DEFINE_IID(kIRDFArcsOutCursorIID,				NS_IRDFARCSOUTCURSOR_IID);
 static NS_DEFINE_IID(kIRDFAssertionCursorIID,			NS_IRDFASSERTIONCURSOR_IID);
 static NS_DEFINE_IID(kIRDFCursorIID,							NS_IRDFCURSOR_IID);
@@ -468,8 +468,8 @@ nsMSGFolderDataSource::InitLocalFolders(nsIMsgFolder* aParentFolder, nsNativeFil
 				folder->GetNameFromPathName(pathStr, &folderName);
 				folder->SetName(folderName);
 
-				nsIMsgMailFolder *mailFolder;
-				if(NS_SUCCEEDED(folder->QueryInterface(kIMsgMailFolderIID, (void**)&mailFolder)))
+				nsIMsgLocalMailFolder *mailFolder;
+				if(NS_SUCCEEDED(folder->QueryInterface(kIMsgLocalMailFolderIID, (void**)&mailFolder)))
 				{
 					mailFolder->SetPathName(pathStr);
 					NS_IF_RELEASE(mailFolder);
@@ -506,8 +506,8 @@ nsMSGFolderDataSource::InitLocalFolders(nsIMsgFolder* aParentFolder, nsNativeFil
 			folder->GetNameFromPathName(pathStr, &folderName);
 			folder->SetName(folderName);
 
-			nsIMsgMailFolder *mailFolder;
-			if(NS_SUCCEEDED(folder->QueryInterface(kIMsgMailFolderIID, (void**)&mailFolder)))
+			nsIMsgLocalMailFolder *mailFolder;
+			if(NS_SUCCEEDED(folder->QueryInterface(kIMsgLocalMailFolderIID, (void**)&mailFolder)))
 			{
 				mailFolder->SetPathName(pathStr);
 				NS_IF_RELEASE(mailFolder);

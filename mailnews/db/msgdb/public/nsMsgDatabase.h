@@ -20,7 +20,7 @@
 
 
 #include "nsMsgHdr.h"
-#include "nsMsgPtrArray.h"	// for XPPtrArray
+#include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsFileSpec.h"
 #include "nsIDBChangeListener.h"
@@ -31,7 +31,7 @@ class nsDBFolderInfo;
 class nsMsgKeyArray;
 class nsNewsSet;
 
-class nsDBChangeAnnouncer : public XPPtrArray  // array of ChangeListeners
+class nsDBChangeAnnouncer : public nsVoidArray  // array of ChangeListeners
 {
 public:
 	nsDBChangeAnnouncer();
@@ -47,14 +47,14 @@ public:
 
 
 // used to cache open db's.
-class nsMsgDatabaseArray : public XPPtrArray
+class nsMsgDatabaseArray : public nsVoidArray
 {
 public:
 	nsMsgDatabaseArray();
 	
 	// overrides with proper types to avoid casting
-	nsMsgDatabase* GetAt(int nIndex) const {return((nsMsgDatabase*)XPPtrArray::GetAt(nIndex));}
-	void* operator[](int nIndex) const {return((nsMsgDatabase*)XPPtrArray::operator[](nIndex));}
+	nsMsgDatabase* GetAt(int nIndex) const {return((nsMsgDatabase*)nsVoidArray::ElementAt(nIndex));}
+	void* operator[](int nIndex) const {return((nsMsgDatabase*)nsVoidArray::operator[](nIndex));}
 };
 
 // This is to be used as an interchange object, to make creating nsMsgHeaders easier.
@@ -142,7 +142,7 @@ public:
 
 	static void		CleanupCache();
 #ifdef DEBUG
-	static int		GetNumInCache(void) {return(GetDBCache()->GetSize());}
+	static int		GetNumInCache(void) {return(GetDBCache()->Count());}
 	static void		DumpCache();
 #endif
 protected:
@@ -157,7 +157,7 @@ protected:
 	nsrefcnt		mRefCnt;
 
 	static void		AddToCache(nsMsgDatabase* pMessageDB) 
-						{GetDBCache()->Add(pMessageDB);}
+						{GetDBCache()->AppendElement(pMessageDB);}
 	static void		RemoveFromCache(nsMsgDatabase* pMessageDB);
 	static int		FindInCache(nsMsgDatabase* pMessageDB);
 			PRBool	MatchDbName(nsFilePath &dbName);	// returns TRUE if they match

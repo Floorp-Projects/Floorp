@@ -118,7 +118,7 @@ nsMailDatabase::~nsMailDatabase()
 	if (err == NS_OK || err == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
 	{
 		*pMessageDB = mailDB;
-		GetDBCache()->Add(mailDB);
+		GetDBCache()->AppendElement(mailDB);
 //		if (err == NS_OK)
 //			mailDB->HandleLatered();
 
