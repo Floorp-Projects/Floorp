@@ -578,18 +578,61 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 		return NS_OK;
   }
 
+  //~~~
+  //This could be an image
+  nsIFrame * child = mFrames.FirstChild();
+  if(child != nsnull)
+  {
+    nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    nsHTMLReflowMetrics kidDesiredSize(nsnull);
+
+    nsReflowReason reflowReason;
+    nsFrameState frameState;
+    child->GetFrameState(&frameState);
+    if (frameState & NS_FRAME_FIRST_REFLOW)
+      reflowReason = eReflowReason_Initial;
+    else
+      reflowReason = eReflowReason_Resize;
+
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, child,
+                                     availSize, reflowReason);
+
+    nsReflowStatus status;
+
+    if(PR_TRUE)//reflowReason == eReflowReason_Initial)
+    {
+      kidDesiredSize.width = NS_UNCONSTRAINEDSIZE;
+      kidDesiredSize.height = NS_UNCONSTRAINEDSIZE;
+    }
+
+    ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, status);
+
+    nsRect rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
+    child->SetRect(rect);
+
+    aMetrics.width = kidDesiredSize.width;
+    aMetrics.height = kidDesiredSize.height;
+    aMetrics.ascent = kidDesiredSize.height;
+    aMetrics.descent = 0;
+
+    aStatus = NS_FRAME_COMPLETE;
+    return NS_OK;
+  }
+
   // XXX deal with border and padding the usual way...wrap it up!
+
+  nsresult rv = NS_OK;
 
   nsIAtom* atom;
   mContent->GetTag(atom);
-  if ((nsnull != atom) && (nsnull == mInstanceOwner)) {
+  if ((nsnull != atom) && (nsnull == mInstanceOwner)) 
+  {
     static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
     static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 
     nsISupports               *container;
     nsIPluginHost             *pm;
     nsIContentViewerContainer *cv;
-    nsresult rv = NS_OK;
 
     mInstanceOwner = new nsPluginInstanceOwner();
 
@@ -733,51 +776,10 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
       }
     }
     NS_RELEASE(atom);
-
-    if(rv == NS_OK)//~~~
-    {
-      aStatus = NS_FRAME_COMPLETE;
-      return NS_OK;
-    }
   }
 
-  //~~~
-  //This could be an image
-  nsIFrame * child = mFrames.FirstChild();
-  if(child != nsnull)
+  if(rv == NS_OK)//~~~
   {
-    nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowMetrics kidDesiredSize(nsnull);
-
-    nsReflowReason reflowReason;
-    nsFrameState frameState;
-    child->GetFrameState(&frameState);
-    if (frameState & NS_FRAME_FIRST_REFLOW)
-      reflowReason = eReflowReason_Initial;
-    else
-      reflowReason = eReflowReason_Resize;
-
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, child,
-                                     availSize, reflowReason);
-
-    nsReflowStatus status;
-
-    if(PR_TRUE)//reflowReason == eReflowReason_Initial)
-    {
-      kidDesiredSize.width = NS_UNCONSTRAINEDSIZE;
-      kidDesiredSize.height = NS_UNCONSTRAINEDSIZE;
-    }
-
-    ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, status);
-
-    nsRect rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
-    child->SetRect(rect);
-
-    aMetrics.width = kidDesiredSize.width;
-    aMetrics.height = kidDesiredSize.height;
-    aMetrics.ascent = kidDesiredSize.height;
-    aMetrics.descent = 0;
-
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
@@ -810,21 +812,6 @@ nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
     }
   }
   return rv;
-/*
-  nsIReflowCommand* cmd;
-  nsresult          result;
-                                                
-  result = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
-  if (NS_OK == result) {
-    nsIPresShell* shell;
-    aPresContext->GetShell(&shell);
-    shell->AppendReflowCommand(cmd);
-    NS_RELEASE(shell);
-    NS_RELEASE(cmd);
-  }
-
-  return result;
-*/
 }
 
 NS_IMETHODIMP
