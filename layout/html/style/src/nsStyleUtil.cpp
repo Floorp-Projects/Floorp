@@ -21,6 +21,8 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 
+#include <math.h>
+
 #define POSITIVE_SCALE_FACTOR 1.10 /* 10% */
 #define NEGATIVE_SCALE_FACTOR .90  /* 10% */
 
@@ -60,15 +62,15 @@ nscoord nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize
   double dFontSize;
 
 	switch(aHTMLSize)	{
-	case 0:
-		dFontSize = aBasePointSize / 2;
-		break;
 	case 1:
 		dFontSize = 7 * aBasePointSize / 10;
 		break;
 	case 2:
 		dFontSize = 85 * aBasePointSize / 100;
 		break;
+	case 3:
+		dFontSize = aBasePointSize;
+    break;
 	case 4:
 		dFontSize = 12 * aBasePointSize / 10;
 		break;
@@ -81,26 +83,48 @@ nscoord nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize
 	case 7:
 		dFontSize = 3 * aBasePointSize;
 		break;
-	case 8:
-		dFontSize = 4 * aBasePointSize;
-		break;
-	case 3:
 	default:
-		dFontSize = aBasePointSize;
+    if (aHTMLSize < 1) {
+      dFontSize = (7 * aBasePointSize / 10) / pow(1.1, 1 - aHTMLSize);
+    }
+    else {  // 7 < aHTMLSize
+      dFontSize = (3 * aBasePointSize) * pow(1.2, aHTMLSize - 7);
+    }
 	}
 
   dFontSize *= aScalingFactor;
 
-  return (nscoord)dFontSize;
+  if (1.0 < dFontSize) {
+    return (nscoord)dFontSize;
+  }
+  return (nscoord)1;
 }
 
 PRInt32 nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
                                              float aScalingFactor)
 {
   PRInt32 index;
-  for (index = 7; index > 1; index--)
-    if (aFontSize > nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor))
-      break;
+
+  if (CalcFontPointSize(1, aBasePointSize, aScalingFactor) < aFontSize) {
+    if (aFontSize <= CalcFontPointSize(7, aBasePointSize, aScalingFactor)) { // in HTML table
+      for (index = 7; index > 1; index--)
+        if (aFontSize > nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor))
+          break;
+    }
+    else {  // larger than HTML table
+      for (index = 8; ; index++)
+        if (aFontSize < nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor)) {
+          index--;
+          break;
+        }
+    }
+  }
+  else { // smaller than HTML table
+    for (index = 0; ; index--)
+      if (aFontSize > nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor)) {
+        break;
+      }
+  }
   return index;
 }
 
@@ -108,9 +132,25 @@ PRInt32 nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
                                             float aScalingFactor)
 {
   PRInt32 index;
-  for (index = 1; index < 7; index++)
-    if (aFontSize < nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor))
-      break;
+  if (CalcFontPointSize(1, aBasePointSize, aScalingFactor) <= aFontSize) {
+    if (aFontSize < CalcFontPointSize(7, aBasePointSize, aScalingFactor)) { // in HTML table
+      for (index = 1; index < 7; index++)
+        if (aFontSize < nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor))
+          break;
+    }
+    else {  // larger than HTML table
+      for (index = 8; ; index++)
+        if (aFontSize < nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor))
+          break;
+    }
+  }
+  else {  // smaller than HTML table
+    for (index = 0; ; index--)
+      if (aFontSize > nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor)) {
+        index++;
+        break;
+      }
+  }
   return index;
 }
 
