@@ -4986,7 +4986,8 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
         else if (backup != mark && aTextCallback) {
             // Okay, we've found a variable, and there's some vanilla
             // text that's been buffered up. Flush it.
-            (*aTextCallback)(this, Substring(aAttributeValue, mark, backup - mark), aClosure);
+            (*aTextCallback)(this, Substring(aAttributeValue, NS_STATIC_CAST(PRUint32, mark),
+                             NS_STATIC_CAST(PRUint32, backup - mark)), aClosure);
         }
 
         // Construct a substring that is the symbol we need to look up
@@ -5012,13 +5013,15 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
         if (c != PRUnichar('^'))
             --i;
 
-        (*aVariableCallback)(this, Substring(aAttributeValue, first, last - first), aClosure);
+        (*aVariableCallback)(this, Substring(aAttributeValue, NS_STATIC_CAST(PRUint32, first),
+                             NS_STATIC_CAST(PRUint32, last - first)), aClosure);
         mark = i + 1;
     }
 
     if (backup != mark && aTextCallback) {
         // If there's any text left over, then fire the text callback
-        (*aTextCallback)(this, Substring(aAttributeValue, mark, backup - mark), aClosure);
+        (*aTextCallback)(this, Substring(aAttributeValue, NS_STATIC_CAST(PRUint32, mark),
+                         NS_STATIC_CAST(PRUint32, backup - mark)), aClosure);
     }
 }
 
@@ -7475,7 +7478,8 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
 {
     // We should *only* be recieving "rdf:"-style variables. Make
     // sure...
-    if (Substring(aVariable, 0, 4) != NS_LITERAL_STRING("rdf:"))
+    if (Substring(aVariable, NS_STATIC_CAST(PRUint32, 0),
+                  NS_STATIC_CAST(PRUint32, 4)) != NS_LITERAL_STRING("rdf:"))
         return;
 
     Rule* rule = NS_STATIC_CAST(Rule*, aClosure);
@@ -7488,7 +7492,8 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
 
     // Strip it down to the raw RDF property by clobbering the "rdf:"
     // prefix
-    const nsAReadableString& propertyStr = Substring(aVariable, 4, aVariable.Length() - 4);
+    const nsAReadableString& propertyStr = Substring(aVariable, NS_STATIC_CAST(PRUint32, 4),
+                                                     aVariable.Length() - 4);
 
     nsCOMPtr<nsIRDFResource> property;
     gRDFService->GetUnicodeResource(nsPromiseFlatString(propertyStr), getter_AddRefs(property));
