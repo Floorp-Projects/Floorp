@@ -2180,7 +2180,7 @@ if ($dbh->bz_get_field_def('bugs_activity', 'field')) {
 #   http://bugzilla.mozilla.org/show_bugs.cgi?id=71552
 
 if (!$dbh->bz_get_field_def('bugs', 'lastdiffed')) {
-    $dbh->bz_add_field('bugs', 'lastdiffed', 'datetime not null');
+    $dbh->bz_add_field('bugs', 'lastdiffed', 'datetime');
     $dbh->do('UPDATE bugs SET lastdiffed = now(), delta_ts = delta_ts');
 }
 
@@ -3846,7 +3846,10 @@ $dbh->bz_change_field_type('bugs', 'votes', 'mediumint not null default 0');
 # 2005-03-03 travis@sedsystems.ca -- Bug 41972
 add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
 
+$dbh->bz_change_field_type('bugs', 'lastdiffed', 'datetime');
+
 } # END LEGACY CHECKS
+
 
 
 

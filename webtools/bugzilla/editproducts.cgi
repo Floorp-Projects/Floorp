@@ -1187,7 +1187,7 @@ if ($action eq 'updategroupcontrols') {
             LogActivityEntry($bugid, "bug_group", $removed, "",
                              $::userid, $timestamp);
             my $diffed = "";
-            if ($mailiscurrent != 0) {
+            if ($mailiscurrent) {
                 $diffed = ", lastdiffed = " . SqlQuote($timestamp);
             }
             SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) .
@@ -1221,7 +1221,7 @@ if ($action eq 'updategroupcontrols') {
             LogActivityEntry($bugid, "bug_group", "", $added,
                              $::userid, $timestamp);
             my $diffed = "";
-            if ($mailiscurrent != 0) {
+            if ($mailiscurrent) {
                 $diffed = ", lastdiffed = " . SqlQuote($timestamp);
             }
             SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) .

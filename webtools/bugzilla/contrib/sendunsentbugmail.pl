@@ -30,8 +30,10 @@ use Bugzilla::Constants;
 use Bugzilla::BugMail;
 
 my $dbh = Bugzilla->dbh;
-SendSQL("SELECT bug_id FROM bugs WHERE lastdiffed < delta_ts AND 
-         delta_ts < NOW() - " . $dbh->sql_interval('30 minute') .
+SendSQL("SELECT bug_id FROM bugs 
+          WHERE lastdiffed IS NULL
+                OR lastdiffed < delta_ts AND  delta_ts < NOW() - " 
+                 . $dbh->sql_interval('30 minute') .
         " ORDER BY bug_id");
 my @list;
 while (MoreSQLData()) {

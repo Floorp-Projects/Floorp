@@ -154,7 +154,7 @@ use constant ABSTRACT_SCHEMA => {
             # comes from the keywords table
             keywords            => {TYPE => 'MEDIUMTEXT', NOTNULL => 1,
                                     DEFAULT => "''"},
-            lastdiffed          => {TYPE => 'DATETIME', NOTNULL => 1},
+            lastdiffed          => {TYPE => 'DATETIME'},
             everconfirmed       => {TYPE => 'BOOLEAN', NOTNULL => 1},
             reporter_accessible => {TYPE => 'BOOLEAN',
                                     NOTNULL => 1, DEFAULT => 'TRUE'},

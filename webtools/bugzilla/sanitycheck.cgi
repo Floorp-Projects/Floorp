@@ -178,7 +178,8 @@ if (defined $cgi->param('rescanallBugMail')) {
     require Bugzilla::BugMail;
 
     Status("OK, now attempting to send unsent mail");
-    SendSQL("SELECT bug_id FROM bugs WHERE lastdiffed < delta_ts AND 
+    SendSQL("SELECT bug_id FROM bugs 
+              WHERE (lastdiffed IS NULL OR lastdiffed < delta_ts) AND
              delta_ts < now() - " . $dbh->sql_interval('30 minute') .
             " ORDER BY bug_id");
     my @list;
@@ -737,7 +738,7 @@ Status("Checking for unsent mail");
 @badbugs = ();
 
 SendSQL("SELECT bug_id " .
-        "FROM bugs WHERE lastdiffed < delta_ts AND ".
+        "FROM bugs WHERE (lastdiffed IS NULL OR lastdiffed < delta_ts) AND " .
         "delta_ts < now() - " . $dbh->sql_interval('30 minute') .
         " ORDER BY bug_id");
 

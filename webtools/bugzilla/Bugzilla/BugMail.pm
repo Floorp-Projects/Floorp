@@ -172,9 +172,6 @@ sub ProcessOneBug($) {
     $values{component} = get_component_name($values{component_id});
 
     my ($start, $end) = (@row);
-    # $start and $end are considered safe because users can't touch them
-    trick_taint($start);
-    trick_taint($end);
 
     my $cc_ref = Bugzilla->dbh->selectcol_arrayref(
         q{SELECT profiles.login_name FROM cc, profiles
@@ -220,15 +217,16 @@ sub ProcessOneBug($) {
 
     my @diffs;
 
-
+    # If lastdiffed is NULL, then we don't limit the search on time.
+    my $when_restriction = $start ? 
+        " AND bug_when > '$start' AND bug_when <= '$end'" : '';
     SendSQL("SELECT profiles.login_name, fielddefs.description, " .
             "       bug_when, removed, added, attach_id, fielddefs.name " .
             "FROM bugs_activity, fielddefs, profiles " .
             "WHERE bug_id = $id " .
             "  AND fielddefs.fieldid = bugs_activity.fieldid " .
             "  AND profiles.userid = who " .
-            "  AND bug_when > '$start' " .
-            "  AND bug_when <= '$end' " .
+            $when_restriction .
             "ORDER BY bug_when"
             );
 
@@ -280,8 +278,7 @@ sub ProcessOneBug($) {
             "  AND fielddefs.fieldid = bugs_activity.fieldid" .
             "  AND (fielddefs.name = 'bug_status' " .
             "    OR fielddefs.name = 'resolution') " .
-            "  AND bug_when > '$start' " .
-            "  AND bug_when <= '$end' " .
+            $when_restriction .
             "ORDER BY bug_when, bug_id");
     
     my $thisdiff = "";
@@ -829,7 +826,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
         }
     }
 
-    my $isnew = ($start !~ m/[1-9]/);
+    my $isnew = !$start;
     
     my %substs;
 

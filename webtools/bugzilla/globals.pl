@@ -924,15 +924,16 @@ sub GetLongDescriptionAsText {
                    "WHERE  profiles.userid = longdescs.who " .
                    "AND    longdescs.bug_id = $id ");
 
-    if ($start && $start =~ /[1-9]/) {
-        # If $start is not all zeros, obtain the count-index
+    # $start will be undef for New bugs, and defined for pre-existing bugs.
+    if ($start) {
+        # If $start is not NULL, obtain the count-index
         # of this comment for the leading "Comment #xxx" line.)
-        $query .= "AND longdescs.bug_when > '$start'";
-        SendSQL("SELECT count(*) FROM longdescs WHERE bug_id = $id AND bug_when <= '$start'");
+        SendSQL("SELECT count(*) FROM longdescs " .
+                " WHERE bug_id = $id AND bug_when <= '$start'");
         ($count) = (FetchSQLData());
-    }
-    if ($end) {
-        $query .= "AND longdescs.bug_when <= '$end'";
+         
+        $query .= " AND longdescs.bug_when > '$start'"
+                . " AND longdescs.bug_when <= '$end' ";
     }
 
     $query .= "ORDER BY longdescs.bug_when";
