@@ -1222,14 +1222,14 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
   childFrame->GetContent(getter_AddRefs(content));
 
   // set its preferred size.
-  char ch[50];
-  sprintf(ch,"%d",pref/aOnePixel);
+  nsAutoString prefValue;
+  prefValue.AppendInt(pref/aOnePixel);
   nsAutoString oldValue;
   content->GetAttr(kNameSpaceID_None, attribute, oldValue);
-  if (oldValue.EqualsWithConversion(ch))
+  if (oldValue.Equals(prefValue))
      return;
 
-  content->SetAttr(kNameSpaceID_None, attribute, NS_ConvertASCIItoUCS2(ch), PR_TRUE);
+  content->SetAttr(kNameSpaceID_None, attribute, prefValue, PR_TRUE);
   aChildBox->MarkDirty(aState);
 }
 

@@ -203,13 +203,11 @@ nsScrollbarButtonFrame::MouseClicked()
     }
 
     // set the current position of the slider.
-    char v[100];
-    sprintf(v, "%d", curpos);
+    nsAutoString curposStr;
+    curposStr.AppendInt(curpos);
 
-    content->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(v), PR_TRUE);
-   
+    content->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curposStr, PR_TRUE);
    }
-
 
 }
 
