@@ -422,7 +422,7 @@ this box.  It is <B>strongly</B> suggested that you review the bugs in this
 group before checking the box.<P>
 ";
     }
-    SendSQL("SELECT product FROM products WHERE product=" . SqlQuote($name));
+    SendSQL("SELECT name FROM products WHERE name=" . SqlQuote($name));
     if (MoreSQLData()) {
        $cantdelete = 1;
        print "
@@ -489,7 +489,7 @@ if ($action eq 'delete') {
         $cantdelete = 1;
       }
     }
-    SendSQL("SELECT product FROM products WHERE product=" . SqlQuote($name));
+    SendSQL("SELECT name FROM products WHERE name=" . SqlQuote($name));
     if (FetchOneColumn()) {
       if (!defined $::FORM{'unbind'}) {
         $cantdelete = 1;

@@ -252,7 +252,7 @@ sub validateStatuses
            FROM    attachments, bugs, attachstatusdefs
            WHERE   attachments.attach_id = $::FORM{'id'}
            AND     attachments.bug_id = bugs.bug_id
-           AND     attachstatusdefs.product = bugs.product");
+           AND     attachstatusdefs.product_id = bugs.product_id");
   my @statusdefs;
   push(@statusdefs, FetchSQLData()) while MoreSQLData();
   PopGlobalSQLState();
@@ -573,7 +573,7 @@ sub edit
   SendSQL("SELECT   id, name 
            FROM     attachstatusdefs, bugs 
            WHERE    bug_id = $bugid 
-           AND      attachstatusdefs.product = bugs.product 
+           AND      attachstatusdefs.product_id = bugs.product_id
            ORDER BY sortkey");
   while ( MoreSQLData() )
   {

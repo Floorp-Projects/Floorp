@@ -62,6 +62,15 @@ my $product = formvalue("product");
 my $sortvisible = formvalue("sortvisible");
 my @buglist = (split(/[:,]/, formvalue("bug_id")));
 
+my $product_id;
+if ($product) {
+    $product_id = get_product_id($product);
+    if (!$product_id) {
+        ThrowUserError("The product <tt>" . html_quote($product) . 
+                       "</tt> does not exist");
+    }
+}
+
 # Small backwards-compatibility hack, dated 2002-04-10.
 $sortby = "count" if $sortby eq "dup_count";
 
@@ -143,16 +152,17 @@ if (scalar(%count)) {
     # WONTFIX. We want to see VERIFIED INVALID and WONTFIX because common 
     # "bugs" which aren't bugs end up in this state.
     my $query = "
-      SELECT bugs.bug_id, component, bug_severity, op_sys, target_milestone,
-             short_desc, bug_status, resolution
-      FROM bugs 
-      WHERE (bug_status != 'CLOSED') 
-      AND   ((bug_status = 'VERIFIED' AND resolution IN ('INVALID', 'WONTFIX')) 
+      SELECT bugs.bug_id, components.name, bug_severity, op_sys,
+             target_milestone, short_desc, bug_status, resolution
+      FROM bugs, components
+      WHERE (bugs.component_id = components.id)
+      AND   (bug_status != 'CLOSED') 
+      AND   ((bug_status = 'VERIFIED' AND resolution IN ('INVALID', 'WONTFIX'))
              OR (bug_status != 'VERIFIED'))
       AND bugs.bug_id IN (" . join(", ", keys %count) . ")";
 
-    # Limit to a single product if requested             
-    $query .= (" AND product = " . SqlQuote($product)) if $product;
+    # Limit to a single product if requested
+    $query .= (" AND bugs.product_id = " . $product_id) if $product_id;
 
     SendSQL(SelectVisible($query, 
                           $userid, 

@@ -579,9 +579,10 @@ if ($action eq 'del') {
     # Check if the user is an initialowner
     my $nodelete = '';
 
-    SendSQL("SELECT program, value
-             FROM components
-             WHERE initialowner=" . DBname_to_id($user));
+    SendSQL("SELECT products.name, components.name " .
+            "FROM products, components " .
+            "WHERE products.id = components.product_id " .
+            " AND initialowner=" . DBname_to_id($user));
     $found = 0;
     while (MoreSQLData()) {
         if ($found) {
@@ -603,9 +604,10 @@ if ($action eq 'del') {
 
     # Check if the user is an initialqacontact
 
-    SendSQL("SELECT program, value
-             FROM components
-             WHERE initialqacontact=" . DBname_to_id($user));
+    SendSQL("SELECT products.name, components.name " .
+            "FROM products, components " .
+            "WHERE products.id = components.id " .
+            " AND initialqacontact=" . DBname_to_id($user));
     $found = 0;
     while (MoreSQLData()) {
         if ($found) {

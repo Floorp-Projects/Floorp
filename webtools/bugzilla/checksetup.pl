@@ -23,6 +23,8 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Zach Lipton  <zach@zachlipton.com>
+#                 Jacob Steenhagen <jake@acutex.net>
+#                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #
 #
 # Direct any questions on this source code to
@@ -1324,7 +1326,7 @@ $table{attachstatusdefs} =
      name         VARCHAR(50)  NOT NULL , 
      description  MEDIUMTEXT   NULL , 
      sortkey      SMALLINT     NOT NULL  DEFAULT 0 , 
-     product      VARCHAR(64)  NOT NULL 
+     product_id   SMALLINT    NOT NULL 
    ';
 
 #
@@ -1343,11 +1345,11 @@ $table{bugs} =
     short_desc mediumtext,
     op_sys enum($my_opsys) not null,
     priority enum($my_priorities) not null,
-    product varchar(64) not null,
+    product_id smallint not null,
     rep_platform enum($my_platforms),
     reporter mediumint not null,
     version varchar(64) not null,
-    component varchar(50) not null,
+    component_id smallint not null,
     resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME", "MOVED") not null,
     target_milestone varchar(20) not null default "---",
     qa_contact mediumint not null,
@@ -1369,10 +1371,10 @@ $table{bugs} =
     index (bug_status),
     index (op_sys),
     index (priority),
-    index (product),
+    index (product_id),
     index (reporter),
     index (version),
-    index (component),
+    index (component_id),
     index (resolution),
     index (target_milestone),
     index (qa_contact),
@@ -1408,11 +1410,15 @@ $table{longdescs} =
 
 
 $table{components} =
-   'value tinytext,
-    program varchar(64),
+   'id smallint not null auto_increment primary key,
+    name varchar(64) not null,
+    product_id smallint not null,
     initialowner mediumint not null,
     initialqacontact mediumint not null,
-    description mediumtext not null';
+    description mediumtext not null,
+
+    unique(product_id,name),
+    index(name)';
 
 
 $table{dependencies} =
@@ -1462,15 +1468,17 @@ $table{logincookies} =
 
 
 $table{products} =
-   'product varchar(64),
+   'id smallint not null auto_increment primary key,
+    name varchar(64) not null,
     description mediumtext,
     milestoneurl tinytext not null,
     disallownew tinyint not null,
     votesperuser smallint not null,
     maxvotesperbug smallint not null default 10000,
     votestoconfirm smallint not null,
-    defaultmilestone varchar(20) not null default "---"
-';
+    defaultmilestone varchar(20) not null default "---",
+
+    unique(name)';
 
 
 $table{profiles} =
@@ -1521,7 +1529,7 @@ $table{fielddefs} =
 
 $table{versions} =
    'value tinytext,
-    program varchar(64) not null';
+    product_id smallint not null';
 
 
 $table{votes} =
@@ -1548,10 +1556,10 @@ $table{keyworddefs} =
 
 
 $table{milestones} =
-    'value varchar(20) not null,
-     product varchar(64) not null,
+    'product_id smallint not null,
+     value varchar(20) not null,
      sortkey smallint not null,
-     unique (product, value)';
+     unique (product_id, value)';
 
 $table{shadowlog} =
     'id int not null auto_increment primary key,
@@ -2077,22 +2085,27 @@ _End_Of_SQL_
 $sth->execute;
 my ($adminuid) = $sth->fetchrow_array;
 if (!$adminuid) { die "No administator!" } # should never get here
-$sth = $dbh->prepare("SELECT product FROM products");
+$sth = $dbh->prepare("SELECT description FROM products");
 $sth->execute;
 unless ($sth->rows) {
     print "Creating initial dummy product 'TestProduct' ...\n";
-    $dbh->do('INSERT INTO products(product, description, milestoneurl, disallownew, votesperuser, votestoconfirm) VALUES ("TestProduct",
+    $dbh->do('INSERT INTO products(name, description, milestoneurl, disallownew, votesperuser, votestoconfirm) VALUES ("TestProduct",
               "This is a test product.  This ought to be blown away and ' .
              'replaced with real stuff in a finished installation of ' .
              'bugzilla.", "", 0, 0, 0)');
-    $dbh->do('INSERT INTO versions (value, program) VALUES ("other", "TestProduct")');
-    $dbh->do("INSERT INTO components (value, program, description, initialowner, initialqacontact)
+    # We could probably just assume that this is "1", but better
+    # safe than sorry...
+    $sth = $dbh->prepare("SELECT LAST_INSERT_ID()");
+    $sth->execute;
+    my ($product_id) = $sth->fetchrow_array;
+    $dbh->do(qq{INSERT INTO versions (value, product_id) VALUES ("other", $product_id)});
+    $dbh->do("INSERT INTO components (name, product_id, description, initialowner, initialqacontact)
              VALUES (" .
-             "'TestComponent', 'TestProduct', " .
+             "'TestComponent', $product_id, " .
              "'This is a test component in the test product database.  " .
              "This ought to be blown away and replaced with real stuff in " .
              "a finished installation of bugzilla.', $adminuid, 0)");
-    $dbh->do('INSERT INTO milestones (product, value) VALUES ("TestProduct","---")');
+    $dbh->do(qq{INSERT INTO milestones (product_id, value) VALUES ($product_id,"---")});
 }
 
 
@@ -2206,8 +2219,6 @@ AddField('products', 'disallownew', 'tinyint not null');
 AddField('products', 'milestoneurl', 'tinytext not null');
 AddField('components', 'initialqacontact', 'tinytext not null');
 AddField('components', 'description', 'mediumtext not null');
-ChangeFieldType('components', 'program', 'varchar(64)');
-
 
 # 1999-06-22 Added an entry to the attachments table to record who the
 # submitter was.  Nothing uses this yet, but it still should be recorded.
@@ -2258,10 +2269,14 @@ AddField('products', 'votesperuser', 'mediumint not null');
 # tinytext is equivalent to varchar(255), which is quite huge, so I change
 # them all to varchar(64).
 
-ChangeFieldType ('bugs',       'product', 'varchar(64) not null');
-ChangeFieldType ('components', 'program', 'varchar(64)');
-ChangeFieldType ('products',   'product', 'varchar(64)');
-ChangeFieldType ('versions',   'program', 'varchar(64) not null');
+# Only do this if these fields still exist - they're removed below, in
+# a later change
+if (GetFieldDef('products', 'product')) {
+    ChangeFieldType ('bugs',       'product', 'varchar(64) not null');
+    ChangeFieldType ('components', 'program', 'varchar(64)');
+    ChangeFieldType ('products',   'product', 'varchar(64)');
+    ChangeFieldType ('versions',   'program', 'varchar(64) not null');
+}
 
 # 2000-01-16 Added a "keywords" field to the bugs table, which
 # contains a string copy of the entries of the keywords table for this
@@ -3044,6 +3059,92 @@ if (-e 'data/comments.bak' && !$renamed_comments_file) {
 # Remove unused column
 if (GetFieldDef("namedqueries", "watchfordiffs")) {
     DropField("namedqueries", "watchfordiffs");
+}
+
+# 2002-08-?? jake@acutex.net/bbaetz@student.usyd.edu.au - bug 43600
+# Use integer IDs for products and components.
+if (GetFieldDef("products", "product")) {
+    print "Updating database to use product IDs.\n";
+
+    # First, we need to remove possible NULL entries
+    # NULLs may exist, but won't have been used, since all the uses of them
+    # are in NOT NULL fields in other tables
+    $dbh->do("DELETE FROM products WHERE product IS NULL");
+    $dbh->do("DELETE FROM components WHERE value IS NULL");
+
+    AddField("products", "id", "smallint not null auto_increment primary key");
+    AddField("components", "product_id", "smallint not null");
+    AddField("versions", "product_id", "smallint not null");
+    AddField("milestones", "product_id", "smallint not null");
+    AddField("bugs", "product_id", "smallint not null");
+    AddField("attachstatusdefs", "product_id", "smallint not null");
+    my %products;
+    my $sth = $dbh->prepare("SELECT id, product FROM products");
+    $sth->execute;
+    while (my ($product_id, $product) = $sth->fetchrow_array()) {
+        if (exists $products{$product}) {
+            print "Ignoring duplicate product $product\n";
+            $dbh->do("DELETE FROM products WHERE id = $product_id");
+            next;
+        }
+        $products{$product} = 1;
+        $dbh->do("UPDATE components SET product_id = $product_id " .
+                 "WHERE program = " . $dbh->quote($product));
+        $dbh->do("UPDATE versions SET product_id = $product_id " .
+                 "WHERE program = " . $dbh->quote($product));
+        $dbh->do("UPDATE milestones SET product_id = $product_id " .
+                 "WHERE product = " . $dbh->quote($product));
+        $dbh->do("UPDATE bugs SET product_id = $product_id, delta_ts=delta_ts " .
+                 "WHERE product = " . $dbh->quote($product));
+        $dbh->do("UPDATE attachstatusdefs SET product_id = $product_id " .
+                 "WHERE product = " . $dbh->quote($product));
+    }
+
+    print "Updating the database to use component IDs.\n";
+    AddField("components", "id", "smallint not null auto_increment primary key");
+    AddField("bugs", "component_id", "smallint not null");
+    my %components;
+    $sth = $dbh->prepare("SELECT id, value, product_id FROM components");
+    $sth->execute;
+    while (my ($component_id, $component, $product_id) = $sth->fetchrow_array()) {
+        if (exists $components{$component}) {
+            if (exists $components{$component}{$product_id}) {
+                print "Ignoring duplicate component $component for product $product_id\n";
+                $dbh->do("DELETE FROM components WHERE id = $component_id");
+                next;
+            }
+        } else {
+            $components{$component} = {};
+        }
+        $components{$component}{$product_id} = 1;
+        $dbh->do("UPDATE bugs SET component_id = $component_id, delta_ts=delta_ts " .
+                 "WHERE component = " . $dbh->quote($component) .
+                 " AND product_id = $product_id");
+    }
+    print "Fixing Indexes and Uniqueness.\n";
+    $dbh->do("ALTER TABLE milestones DROP INDEX product");
+    $dbh->do("ALTER TABLE milestones ADD UNIQUE (product_id, value)");
+    $dbh->do("ALTER TABLE bugs DROP INDEX product");
+    $dbh->do("ALTER TABLE bugs ADD INDEX (product_id)");
+    $dbh->do("ALTER TABLE bugs DROP INDEX component");
+    $dbh->do("ALTER TABLE bugs ADD INDEX (component_id)");
+
+    print "Removing, renaming, and retyping old product and component fields.\n";
+    DropField("components", "program");
+    DropField("versions", "program");
+    DropField("milestones", "product");
+    DropField("bugs", "product");
+    DropField("bugs", "component");
+    DropField("attachstatusdefs", "product");
+    RenameField("products", "product", "name");
+    ChangeFieldType("products", "name", "varchar(64) not null");
+    RenameField("components", "value", "name");
+    ChangeFieldType("components", "name", "varchar(64) not null");
+
+    print "Adding indexes for products and components tables.\n";
+    $dbh->do("ALTER TABLE products ADD UNIQUE (name)");
+    $dbh->do("ALTER TABLE components ADD UNIQUE (product_id, name)");
+    $dbh->do("ALTER TABLE components ADD INDEX (name)");
 }
         
 # If you had to change the --TABLE-- definition in any way, then add your

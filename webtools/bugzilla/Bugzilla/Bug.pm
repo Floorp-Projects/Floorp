@@ -111,13 +111,16 @@ sub initBug  {
 
   my $query = "
     select
-      bugs.bug_id, alias, product, version, rep_platform, op_sys, bug_status,
-      resolution, priority, bug_severity, component, assigned_to, reporter,
+      bugs.bug_id, alias, products.name, version, rep_platform, op_sys, bug_status,
+      resolution, priority, bug_severity, components.name, assigned_to, reporter,
       bug_file_loc, short_desc, target_milestone, qa_contact,
       status_whiteboard, date_format(creation_ts,'%Y-%m-%d %H:%i'),
       groupset, delta_ts, sum(votes.count)
-    from bugs left join votes using(bug_id)
+    from bugs left join votes using(bug_id),
+      products, components
     where bugs.bug_id = $bug_id
+      AND products.id = bugs.product_id
+      AND components.id = bugs.component_id
     group by bugs.bug_id";
 
   &::SendSQL(&::SelectVisible($query, $user_id, $usergroupset));

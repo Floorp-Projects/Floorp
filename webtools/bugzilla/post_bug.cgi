@@ -70,6 +70,11 @@ $template->process("$template_name.txt.tmpl", $vars, \$comment)
 ValidateComment($comment);
 
 my $product = $::FORM{'product'};
+my $product_id = get_product_id($product);
+if (!$product_id) {
+    ThrowUserError("Sorry, the product <tt>" . html_quote($product) .
+                   "</tt> does not exist");
+}
 
 # Set cookies
 my $cookiepath = Param("cookiepath");
@@ -100,10 +105,11 @@ if(Param("usebuggroupsentry") && GroupExists($product)) {
     }
 }
 
-if (!$::FORM{'component'}) {
+my $component_id = get_component_id($product_id, $::FORM{component});
+if (!$component_id) {
     DisplayError("You must choose a component that corresponds to this bug.
                   If necessary, just guess.");
-    exit;                  
+    exit;
 }
 
 if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
@@ -121,20 +127,20 @@ my $sql_component = SqlQuote($::FORM{'component'});
 # Default assignee is the component owner.
 if ($::FORM{'assigned_to'} eq "") {
     SendSQL("SELECT initialowner FROM components " .
-            "WHERE program=$sql_product AND value=$sql_component");
+            "WHERE id = $component_id");
     $::FORM{'assigned_to'} = FetchOneColumn();
 } else {
     $::FORM{'assigned_to'} = DBNameToIdAndCheck(trim($::FORM{'assigned_to'}));
 }
 
-my @bug_fields = ("product", "version", "rep_platform",
+my @bug_fields = ("version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
-                  "bug_status", "bug_file_loc", "short_desc", "component",
+                  "bug_status", "bug_file_loc", "short_desc",
                   "target_milestone");
 
 if (Param("useqacontact")) {
     SendSQL("SELECT initialqacontact FROM components " .
-            "WHERE program=$sql_product AND value=$sql_component");
+            "WHERE id = $component_id");
     my $qa_contact = FetchOneColumn();
     if (defined $qa_contact && $qa_contact != 0) {
         $::FORM{'qa_contact'} = $qa_contact;
@@ -155,14 +161,14 @@ if (exists $::FORM{'bug_status'}) {
 
 if (!exists $::FORM{'bug_status'}) {
     $::FORM{'bug_status'} = $::unconfirmedstate;
-    SendSQL("SELECT votestoconfirm FROM products WHERE product=$sql_product");
+    SendSQL("SELECT votestoconfirm FROM products WHERE id = $product_id");
     if (!FetchOneColumn()) {
         $::FORM{'bug_status'} = "NEW";
     }
 }
 
 if (!exists $::FORM{'target_milestone'}) {
-    SendSQL("SELECT defaultmilestone FROM products WHERE product=$sql_product");
+    SendSQL("SELECT defaultmilestone FROM products WHERE name=$sql_product");
     $::FORM{'target_milestone'} = FetchOneColumn();
 }
 
@@ -199,6 +205,11 @@ if (exists $::FORM{'bug_status'}
     push(@used_fields, "everconfirmed");
     $::FORM{'everconfirmed'} = 1;
 }
+
+$::FORM{'product_id'} = $product_id;
+push(@used_fields, "product_id");
+$::FORM{component_id} = $component_id;
+push(@used_fields, "component_id");
 
 my %ccids;
 my @cc;

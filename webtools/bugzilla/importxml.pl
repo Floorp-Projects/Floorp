@@ -570,9 +570,10 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
       push (@values, SqlQuote($qa_contact));
       push (@query, "qa_contact");
     } else {
-      SendSQL("select initialqacontact from components where program=" .
-              SqlQuote($product[0]) .
-              " and value=" . SqlQuote($component[0]) );
+      SendSQL("SELECT initialqacontact FROM components, products "
+              "WHERE components.product_id = products.id" .
+              " AND products.name = " . SqlQuote($product[0]) .
+              " AND components.name = " . SqlQuote($component[0]) );
       $qa_contact = FetchOneColumn();
       push (@values, SqlQuote(DBname_to_id($qa_contact)) );
       push (@query, "qa_contact");

@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.10 2002/07/25 01:47:19 justdave%syndicomm.com Exp $
+# $Id: bug_email.pl,v 1.11 2002/08/12 05:43:05 bbaetz%student.usyd.edu.au Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -196,7 +196,7 @@ sub CheckPermissions {
 sub CheckProduct {
     my $Product = shift;
     
-    SendSQL("select product from products where product='$Product'");
+    SendSQL("select name from products where name = " . SqlQuote($Product));
     my $Result = FetchOneColumn();
     if (lc($Result) eq lc($Product)) {
 	return $Result;
@@ -211,7 +211,7 @@ sub CheckComponent {
     my $Product = shift;
     my $Component = shift;
     
-    SendSQL("select value from components where program=" . SqlQuote($Product) . " and value=" . SqlQuote($Component) . "");
+    SendSQL("select components.name from components, products where components.product_id = products.id AND products.name=" . SqlQuote($Product) . " and components.name=" . SqlQuote($Component));
     my $Result = FetchOneColumn();
     if (lc($Result) eq lc($Component)) {
 	return $Result;
@@ -226,7 +226,7 @@ sub CheckVersion {
     my $Product = shift;
     my $Version = shift;
     
-    SendSQL("select value from versions where program=" . SqlQuote($Product) . " and value=" . SqlQuote($Version) . "");
+    SendSQL("select value from versions, products where versions.product_id = products.id AND products.name=" . SqlQuote($Product) . " and value=" . SqlQuote($Version));
     my $Result = FetchOneColumn();
     if (lc($Result) eq lc($Version)) {
 	return $Result;
@@ -840,9 +840,9 @@ if (! CheckPermissions("CreateBugs", $SenderShort ) ) {
 
 # Set QA
 if (Param("useqacontact")) {
-    SendSQL("select initialqacontact from components where program=" .
+    SendSQL("select initialqacontact from components, products where components.product_id = products.id AND products.name=" .
             SqlQuote($Control{'product'}) .
-            " and value=" . SqlQuote($Control{'component'}));
+            " and components.name=" . SqlQuote($Control{'component'}));
     $Control{'qacontact'} = FetchOneColumn();
 }
 
@@ -863,7 +863,7 @@ if ( $Product eq "" ) {
 
     $Text .= "Valid products are:\n\t";
 
-    SendSQL("select product from products");
+    SendSQL("select name from products ORDER BY name");
     @all_products = FetchAllSQLData();
     $Text .= join( "\n\t", @all_products ) . "\n\n";
     $Text .= horLine();
@@ -903,7 +903,7 @@ if ( $Component eq "" ) {
     foreach my $prod ( @all_products ) {
 	$Text .= "\nValid components for product `$prod' are: \n\t";
 
-	SendSQL("select value from components where program=" . SqlQuote( $prod ) . "");
+	SendSQL("SELECT components.name FROM components, products WHERE components.product_id=products.id AND products.name = " . SqlQuote($prod));
 	@val_components = FetchAllSQLData();
 
 	$Text .= join( "\n\t", @val_components ) . "\n";
@@ -936,9 +936,10 @@ if ( defined($Control{'assigned_to'})
      && $Control{'assigned_to'} !~ /^\s*$/ ) {
     $Control{'assigned_to'} = DBname_to_id($Control{'assigned_to'});
 } else {
-    SendSQL("select initialowner from components where program=" .
+    SendSQL("select initialowner from components, products where " .
+            "  components.product_id=products.id AND products.name=" .
             SqlQuote($Control{'product'}) .
-            " and value=" . SqlQuote($Control{'component'}));
+            " and components.name=" . SqlQuote($Control{'component'}));
     $Control{'assigned_to'} = FetchOneColumn();
 }
 
@@ -982,7 +983,7 @@ if ( $Version eq "" ) {
     foreach my $prod ( @all_products ) {
 	$Text .= "Valid versions for product " . SqlQuote( $prod ) . " are: \n\t";
 
-	SendSQL("select value from versions where program=" . SqlQuote( $prod ) . "");
+	SendSQL("select value from versions, products where versions.product_id=products.id AND products.name=" . SqlQuote( $prod ));
 	@all_versions = FetchAllSQLData();
 	$anz_versions = @all_versions;
 	$Text .= join( "\n\t", @all_versions ) . "\n" ; 
@@ -1176,11 +1177,20 @@ END
     my $query = "insert into bugs (\n" . join(",\n", @used_fields ) . 
 	", bug_status, creation_ts, everconfirmed) values ( ";
     
+    # 'Yuck'. Then again, this whole file should be rewritten anyway...
+    $query =~ s/product/product_id/;
+    $query =~ s/component/component_id/;
+
     my $tmp_reply = "These values were stored by bugzilla:\n";
     my $val;
     foreach my $field (@used_fields) {
       if( $field eq "groupset" ) {
 	$query .= $Control{$field} . ",\n";
+      } elsif ( $field eq 'product' ) {
+          $query .= get_product_id($Control{$field}) . ",\n";
+      } elsif ( $field eq 'component' ) {
+          $query .= get_component_id(get_product_id($Control{'product'}),
+                                     $Control{$field}) . ",\n";
       } else {
 	$query .= SqlQuote($Control{$field}) . ",\n";
       }
@@ -1210,8 +1220,8 @@ END
     my $ever_confirmed = 0;
     my $state = SqlQuote("UNCONFIRMED");
 
-    SendSQL("SELECT votestoconfirm FROM products WHERE product = " .
-            SqlQuote($Control{'product'}) . ";");
+    SendSQL("SELECT votestoconfirm FROM products WHERE name = " .
+            SqlQuote($Control{'product'}));
     if (!FetchOneColumn()) {
       $ever_confirmed = 1;
       $state = SqlQuote("NEW");

@@ -41,7 +41,7 @@ GetVersionTable();
 my $generic_query = "
   SELECT 
     bugs.bug_id, 
-    bugs.product, 
+    products.name, 
     bugs.version, 
     bugs.rep_platform,
     bugs.op_sys, 
@@ -49,7 +49,7 @@ my $generic_query = "
     bugs.resolution, 
     bugs.priority,
     bugs.bug_severity, 
-    bugs.component, 
+    components.name, 
     assign.login_name, 
     report.login_name,
     bugs.bug_file_loc, 
@@ -58,8 +58,9 @@ my $generic_query = "
     bugs.qa_contact, 
     bugs.status_whiteboard, 
     bugs.keywords
-  FROM bugs,profiles assign,profiles report
-  WHERE assign.userid = bugs.assigned_to AND report.userid = bugs.reporter";
+  FROM bugs,profiles assign,profiles report, products, components
+  WHERE assign.userid = bugs.assigned_to AND report.userid = bugs.reporter
+    AND bugs.product_id=products.id AND bugs.component_id=components.id";
 
 my $buglist = $::FORM{'buglist'} || 
               $::FORM{'bug_id'}  || 

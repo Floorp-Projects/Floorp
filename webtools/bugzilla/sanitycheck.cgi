@@ -203,15 +203,15 @@ CrossCheck("profiles", "userid",
            ["watch", "watcher"],
            ["watch", "watched"],
            ["tokens", "userid"],
-           ["components", "initialowner", "value"],
-           ["components", "initialqacontact", "value", ["0"]]);
+           ["components", "initialowner", "name"],
+           ["components", "initialqacontact", "name", ["0"]]);
 
-CrossCheck("products", "product",
-           ["bugs", "product", "bug_id"],
-           ["components", "program", "value"],
-           ["milestones", "product", "value"],
-           ["versions", "program", "value"],
-           ["attachstatusdefs", "product", "name"]);
+CrossCheck("products", "id",
+           ["bugs", "product_id", "bug_id"],
+           ["components", "product_id", "name"],
+           ["milestones", "product_id", "value"],
+           ["versions", "product_id", "value"],
+           ["attachstatusdefs", "product_id", "name"]);
 
 ###########################################################################
 # Perform group checks
@@ -239,17 +239,17 @@ while (@row = FetchSQLData()) {
 
 Status("Checking version/products");
 
-SendSQL("select distinct product, version from bugs");
+SendSQL("select distinct product_id, version from bugs");
 while (@row = FetchSQLData()) {
     my @copy = @row;
     push(@checklist, \@copy);
 }
 
 foreach my $ref (@checklist) {
-    my ($product, $version) = (@$ref);
-    SendSQL("select count(*) from versions where program = " . SqlQuote($product) . " and value = " . SqlQuote($version));
+    my ($product_id, $version) = (@$ref);
+    SendSQL("select count(*) from versions where product_id = $product_id and value = " . SqlQuote($version));
     if (FetchOneColumn() != 1) {
-        Alert("Bug(s) found with invalid product/version: $product/$version");
+        Alert("Bug(s) found with invalid product ID/version: $product_id/$version");
     }
 }
 
@@ -257,17 +257,17 @@ foreach my $ref (@checklist) {
 Status("Checking milestone/products");
 
 @checklist = ();
-SendSQL("select distinct product, target_milestone from bugs");
+SendSQL("select distinct product_id, target_milestone from bugs");
 while (@row = FetchSQLData()) {
     my @copy = @row;
     push(@checklist, \@copy);
 }
 
 foreach my $ref (@checklist) {
-    my ($product, $milestone) = (@$ref);
-    SendSQL("SELECT count(*) FROM milestones WHERE product = " . SqlQuote($product) . " AND value = " . SqlQuote($milestone));
+    my ($product_id, $milestone) = (@$ref);
+    SendSQL("SELECT count(*) FROM milestones WHERE product_id = $product_id AND value = " . SqlQuote($milestone));
     if(FetchOneColumn() != 1) {
-        Alert("Bug(s) found with invalid product/milestone: $product/$milestone");
+        Alert("Bug(s) found with invalid product ID/milestone: $product_id/$milestone");
     }
 }
 
@@ -275,17 +275,17 @@ foreach my $ref (@checklist) {
 Status("Checking default milestone/products");
 
 @checklist = ();
-SendSQL("select product, defaultmilestone from products");
+SendSQL("select id, defaultmilestone from products");
 while (@row = FetchSQLData()) {
     my @copy = @row;
     push(@checklist, \@copy);
 }
 
 foreach my $ref (@checklist) {
-    my ($product, $milestone) = (@$ref);
-    SendSQL("SELECT count(*) FROM milestones WHERE product = " . SqlQuote($product) . " AND value = " . SqlQuote($milestone));
+    my ($product_id, $milestone) = (@$ref);
+    SendSQL("SELECT count(*) FROM milestones WHERE product_id = $product_id AND value = " . SqlQuote($milestone));
     if(FetchOneColumn() != 1) {
-        Alert("Product(s) found with invalid default milestone: $product/$milestone");
+        Alert("Product(s) found with invalid default milestone: $product_id/$milestone");
     }
 }
 
@@ -293,19 +293,17 @@ foreach my $ref (@checklist) {
 Status("Checking components/products");
 
 @checklist = ();
-SendSQL("select distinct product, component from bugs");
+SendSQL("select distinct product_id, component_id from bugs");
 while (@row = FetchSQLData()) {
     my @copy = @row;
     push(@checklist, \@copy);
 }
 
 foreach my $ref (@checklist) {
-    my ($product, $component) = (@$ref);
-    SendSQL("select count(*) from components where program = " . SqlQuote($product) . " and value = " . SqlQuote($component));
+    my ($product_id, $component_id) = (@$ref);
+    SendSQL("select count(*) from components where product_id = $product_id and id = $component_id");
     if (FetchOneColumn() != 1) {
-        my $link = "buglist.cgi?product=" . url_quote($product) .
-            "&component=" . url_quote($component);
-        Alert(qq{Bug(s) found with invalid product/component: $product/$component (<a href="$link">bug list</a>)});
+        Alert(qq{Bug(s) found with invalid product/component ID: $product_id/$component_id});
     }
 }
 
@@ -601,7 +599,7 @@ Status("Checking votes/everconfirmed");
 @badbugs = ();
 
 SendSQL("SELECT   bug_id FROM bugs, products " .
-        "WHERE    bugs.product = products.product " .
+        "WHERE    bugs.product_id = products.id " .
         "AND      bug_status = " . SqlQuote($::unconfirmedstate) . ' ' .
         "AND      votestoconfirm <= votes " .
         "ORDER BY bug_id");

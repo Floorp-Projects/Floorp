@@ -153,7 +153,7 @@ sub show_user {
     # we can do it all in one query.
     my %maxvotesperbug;
     if($canedit) {
-        SendSQL("SELECT products.product, products.maxvotesperbug 
+        SendSQL("SELECT products.name, products.maxvotesperbug 
                  FROM products");
         while (MoreSQLData()) {
             my ($prod, $max) = FetchSQLData();
@@ -173,10 +173,11 @@ sub show_user {
         
         SendSQL("SELECT votes.bug_id, votes.count, bugs.short_desc,
                         bugs.bug_status 
-                  FROM  votes, bugs 
+                  FROM  votes, bugs, products
                   WHERE votes.who = $who 
                     AND votes.bug_id = bugs.bug_id 
-                    AND bugs.product = " . SqlQuote($product) . 
+                    AND bugs.product_id = products.id 
+                    AND products.name = " . SqlQuote($product) . 
                  "ORDER BY votes.bug_id");        
         
         while (MoreSQLData()) {
@@ -270,9 +271,9 @@ sub record_votes {
     # If the user is voting for bugs, make sure they aren't overstuffing
     # the ballot box.
     if (scalar(@buglist)) {
-        SendSQL("SELECT bugs.bug_id, bugs.product, products.maxvotesperbug
+        SendSQL("SELECT bugs.bug_id, products.name, products.maxvotesperbug
                  FROM bugs, products
-                 WHERE products.product = bugs.product
+                 WHERE products.id = bugs.product_id
                    AND bugs.bug_id IN (" . join(", ", @buglist) . ")");
 
         my %prodcount;

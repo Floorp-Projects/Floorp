@@ -51,9 +51,9 @@ sub TestProduct ($)
     my $prod = shift;
 
     # does the product exist?
-    SendSQL("SELECT product
+    SendSQL("SELECT name
              FROM products
-             WHERE product=" . SqlQuote($prod));
+             WHERE name=" . SqlQuote($prod));
     return FetchOneColumn();
 }
 
@@ -206,12 +206,11 @@ my $localtrailer = "<A HREF=\"editproducts.cgi\">edit</A> more products";
 unless ($action) {
     PutHeader("Select product");
 
-    SendSQL("SELECT products.product,description,disallownew,
+    SendSQL("SELECT products.name,description,disallownew,
                     votesperuser,maxvotesperbug,votestoconfirm,COUNT(bug_id)
-             FROM products LEFT JOIN bugs
-               ON products.product=bugs.product
-             GROUP BY products.product
-             ORDER BY products.product");
+             FROM products LEFT JOIN bugs ON products.id = bugs.product_id
+             GROUP BY products.name
+             ORDER BY products.name");
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit product ...</TH>\n";
     print "  <TH ALIGN=\"left\">Description</TH>\n";
@@ -330,7 +329,7 @@ if ($action eq 'new') {
 
     # Add the new product.
     SendSQL("INSERT INTO products ( " .
-            "product, description, milestoneurl, disallownew, votesperuser, " .
+            "name, description, milestoneurl, disallownew, votesperuser, " .
             "maxvotesperbug, votestoconfirm, defaultmilestone" .
             " ) VALUES ( " .
             SqlQuote($product) . "," .
@@ -339,14 +338,16 @@ if ($action eq 'new') {
             $disallownew . "," .
             "$votesperuser, $maxvotesperbug, $votestoconfirm, " .
             SqlQuote($defaultmilestone) . ")");
+    SendSQL("SELECT LAST_INSERT_ID()");
+    my $product_id = FetchOneColumn();
     SendSQL("INSERT INTO versions ( " .
-          "value, program" .
+          "value, product_id" .
           " ) VALUES ( " .
           SqlQuote($version) . "," .
-          SqlQuote($product) . ")" );
+          $product_id . ")" );
 
-    SendSQL("INSERT INTO milestones (product, value) VALUES (" .
-            SqlQuote($product) . ", " . SqlQuote($defaultmilestone) . ")");
+    SendSQL("INSERT INTO milestones (product_id, value) VALUES (" .
+            $product_id . ", " . SqlQuote($defaultmilestone) . ")");
 
     # If we're using bug groups, then we need to create a group for this
     # product as well.  -JMR, 2/16/00
@@ -416,10 +417,10 @@ if ($action eq 'del') {
     CheckProduct($product);
 
     # display some data about the product
-    SendSQL("SELECT description, milestoneurl, disallownew
+    SendSQL("SELECT product_id, description, milestoneurl, disallownew
              FROM products
-             WHERE product=" . SqlQuote($product));
-    my ($description, $milestoneurl, $disallownew) = FetchSQLData();
+             WHERE name=" . SqlQuote($product));
+    my ($product_id, $description, $milestoneurl, $disallownew) = FetchSQLData();
     my $milestonelink = $milestoneurl ? "<a href=\"$milestoneurl\">$milestoneurl</a>"
                                       : "<font color=\"red\">missing</font>";
     $description ||= "<FONT COLOR=\"red\">description missing</FONT>";
@@ -468,9 +469,9 @@ if ($action eq 'del') {
     print "</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Components:</TD>\n";
     print "  <TD VALIGN=\"top\">";
-    SendSQL("SELECT value,description
+    SendSQL("SELECT name,description
              FROM components
-             WHERE program=" . SqlQuote($product));
+             WHERE product_id=$product_id");
     if (MoreSQLData()) {
         print "<table>";
         while ( MoreSQLData() ) {
@@ -489,7 +490,7 @@ if ($action eq 'del') {
     print "  <TD VALIGN=\"top\">";
     SendSQL("SELECT value
              FROM versions
-             WHERE program=" . SqlQuote($product) . "
+             WHERE product_id=$product_id
              ORDER BY value");
     if (MoreSQLData()) {
         my $br = 0;
@@ -512,7 +513,7 @@ if ($action eq 'del') {
         print "  <TD>";
         SendSQL("SELECT value
                  FROM milestones
-                 WHERE product=" . SqlQuote($product) . "
+                 WHERE product_id=$product_id
                  ORDER BY sortkey,value");
         if(MoreSQLData()) {
             my $br = 0;
@@ -530,10 +531,10 @@ if ($action eq 'del') {
     print "</TD>\n</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Bugs:</TD>\n";
     print "  <TD VALIGN=\"top\">";
-    SendSQL("SELECT count(bug_id),product
+    SendSQL("SELECT count(bug_id),product_id
              FROM bugs
-             GROUP BY product
-             HAVING product=" . SqlQuote($product));
+             GROUP BY product_id
+             HAVING product_id=$product_id");
     my $bugs = FetchOneColumn();
     print $bugs || 'none';
 
@@ -578,6 +579,7 @@ one.";
 if ($action eq 'delete') {
     PutHeader("Deleting product");
     CheckProduct($product);
+    my $product_id = get_product_id($product);
 
     # lock the tables before we start to change everything:
 
@@ -599,7 +601,7 @@ if ($action eq 'delete') {
     if (Param("allowbugdeletion")) {
         SendSQL("SELECT bug_id
              FROM bugs
-             WHERE product=" . SqlQuote($product));
+             WHERE product_id=$product_id");
         while (MoreSQLData()) {
             my $bugid = FetchOneColumn();
 
@@ -615,25 +617,25 @@ if ($action eq 'delete') {
         # Deleting the rest is easier:
 
         SendSQL("DELETE FROM bugs
-             WHERE product=" . SqlQuote($product));
+             WHERE product_id=$product_id");
         print "Bugs deleted.<BR>\n";
     }
 
     SendSQL("DELETE FROM components
-             WHERE program=" . SqlQuote($product));
+             WHERE product_id=$product_id");
     print "Components deleted.<BR>\n";
 
     SendSQL("DELETE FROM versions
-             WHERE program=" . SqlQuote($product));
+             WHERE product_id=$product_id");
     print "Versions deleted.<P>\n";
 
     # deleting associated target milestones - matthew@zeroknowledge.com
     SendSQL("DELETE FROM milestones
-             WHERE product=" . SqlQuote($product));
+             WHERE product_id=$product_id");
     print "Milestones deleted.<BR>\n";
 
     SendSQL("DELETE FROM products
-             WHERE product=" . SqlQuote($product));
+             WHERE product_id=$product_id");
     print "Product '$product' deleted.<BR>\n";
 
     # Added -JMR, 2/16/00
@@ -681,11 +683,11 @@ if ($action eq 'edit') {
     CheckProduct($product);
 
     # get data of product
-    SendSQL("SELECT description,milestoneurl,disallownew,
+    SendSQL("SELECT id,description,milestoneurl,disallownew,
                     votesperuser,maxvotesperbug,votestoconfirm,defaultmilestone
              FROM products
-             WHERE product=" . SqlQuote($product));
-    my ($description, $milestoneurl, $disallownew,
+             WHERE name=" . SqlQuote($product));
+    my ($product_id,$description, $milestoneurl, $disallownew,
         $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone) =
         FetchSQLData();
 
@@ -707,9 +709,9 @@ if ($action eq 'edit') {
     print "</TR><TR VALIGN=top>\n";
     print "  <TH ALIGN=\"right\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "\">Edit components:</A></TH>\n";
     print "  <TD>";
-    SendSQL("SELECT value,description
+    SendSQL("SELECT name,description
              FROM components
-             WHERE program=" . SqlQuote($product));
+             WHERE product_id=$product_id");
     if (MoreSQLData()) {
         print "<table>";
         while ( MoreSQLData() ) {
@@ -729,7 +731,7 @@ if ($action eq 'edit') {
     print "  <TD>";
     SendSQL("SELECT value
              FROM versions
-             WHERE program=" . SqlQuote($product) . "
+             WHERE product_id=$product_id
              ORDER BY value");
     if (MoreSQLData()) {
         my $br = 0;
@@ -752,7 +754,7 @@ if ($action eq 'edit') {
         print "  <TD>";
         SendSQL("SELECT value
                  FROM milestones
-                 WHERE product=" . SqlQuote($product) . "
+                 WHERE product_id=$product_id
                  ORDER BY sortkey,value");
         if(MoreSQLData()) {
             my $br = 0;
@@ -770,10 +772,10 @@ if ($action eq 'edit') {
     print "</TD>\n</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Bugs:</TH>\n";
     print "  <TD>";
-    SendSQL("SELECT count(bug_id),product
+    SendSQL("SELECT count(bug_id),product_id
              FROM bugs
-             GROUP BY product
-             HAVING product=" . SqlQuote($product));
+             GROUP BY product_id
+             HAVING product_id=$product_id");
     my $bugs = '';
     $bugs = FetchOneColumn() if MoreSQLData();
     print $bugs || 'none';
@@ -837,6 +839,7 @@ if ($action eq 'update') {
     my $checkvotes = 0;
 
     CheckProduct($productold);
+    my $product_id = get_product_id($productold);
 
     if ($maxvotesperbug !~ /^\d+$/ || $maxvotesperbug <= 0) {
         print "Sorry, the max votes per bug must be a positive integer.";
@@ -844,22 +847,20 @@ if ($action eq 'update') {
         exit;
     }
 
-    # Note that the order of this tests is important. If you change
-    # them, be sure to test for WHERE='$product' or WHERE='$productold'
+    # Note that we got the $product_id using $productold above so it will
+    # remain static even after we rename the product in the database.
 
-    SendSQL("LOCK TABLES bugs WRITE,
-                         components WRITE,
-                         products WRITE,
-                         versions WRITE,
+    SendSQL("LOCK TABLES products WRITE,
+                         versions READ,
                          groups WRITE,
                          profiles WRITE,
-                         milestones WRITE");
+                         milestones READ");
 
     if ($disallownew ne $disallownewold) {
         $disallownew ||= 0;
         SendSQL("UPDATE products
                  SET disallownew=$disallownew
-                 WHERE product=" . SqlQuote($productold));
+                 WHERE id=$product_id");
         print "Updated bug submit status.<BR>\n";
     }
 
@@ -872,14 +873,14 @@ if ($action eq 'update') {
         }
         SendSQL("UPDATE products
                  SET description=" . SqlQuote($description) . "
-                 WHERE product=" . SqlQuote($productold));
+                 WHERE id=$product_id");
         print "Updated description.<BR>\n";
     }
 
     if (Param('usetargetmilestone') && $milestoneurl ne $milestoneurlold) {
         SendSQL("UPDATE products
                  SET milestoneurl=" . SqlQuote($milestoneurl) . "
-                 WHERE product=" . SqlQuote($productold));
+                 WHERE id=$product_id");
         print "Updated mile stone URL.<BR>\n";
     }
 
@@ -949,7 +950,7 @@ if ($action eq 'update') {
     if ($votesperuser ne $votesperuserold) {
         SendSQL("UPDATE products
                  SET votesperuser=$votesperuser
-                 WHERE product=" . SqlQuote($productold));
+                 WHERE id=$product_id");
         print "Updated votes per user.<BR>\n";
         $checkvotes = 1;
     }
@@ -958,7 +959,7 @@ if ($action eq 'update') {
     if ($maxvotesperbug ne $maxvotesperbugold) {
         SendSQL("UPDATE products
                  SET maxvotesperbug=$maxvotesperbug
-                 WHERE product=" . SqlQuote($productold));
+                 WHERE id=$product_id");
         print "Updated max votes per bug.<BR>\n";
         $checkvotes = 1;
     }
@@ -967,7 +968,7 @@ if ($action eq 'update') {
     if ($votestoconfirm ne $votestoconfirmold) {
         SendSQL("UPDATE products
                  SET votestoconfirm=$votestoconfirm
-                 WHERE product=" . SqlQuote($productold));
+                 WHERE id=$product_id");
         print "Updated votes to confirm.<BR>\n";
         $checkvotes = 1;
     }
@@ -976,7 +977,7 @@ if ($action eq 'update') {
     if ($defaultmilestone ne $defaultmilestoneold) {
         SendSQL("SELECT value FROM milestones " .
                 "WHERE value = " . SqlQuote($defaultmilestone) .
-                "  AND product = " . SqlQuote($productold));
+                "  AND product_id = $product_id");
         if (!FetchOneColumn()) {
             print "Sorry, the milestone $defaultmilestone must be defined first.";
             SendSQL("UNLOCK TABLES");
@@ -985,7 +986,7 @@ if ($action eq 'update') {
         }
         SendSQL("UPDATE products " .
                 "SET defaultmilestone = " . SqlQuote($defaultmilestone) .
-                "WHERE product=" . SqlQuote($productold));
+                "WHERE id=$product_id");
         print "Updated default milestone.<BR>\n";
     }
 
@@ -1006,11 +1007,7 @@ if ($action eq 'update') {
             exit;
         }
 
-        SendSQL("UPDATE bugs SET product=$qp, delta_ts=delta_ts WHERE product=$qpold");
-        SendSQL("UPDATE components SET program=$qp WHERE program=$qpold");
-        SendSQL("UPDATE products SET product=$qp WHERE product=$qpold");
-        SendSQL("UPDATE versions SET program=$qp WHERE program=$qpold");
-        SendSQL("UPDATE milestones SET product=$qp WHERE product=$qpold");
+        SendSQL("UPDATE products SET name=$qp WHERE id=$product_id");
         # Need to do an update to groups as well.  If there is a corresponding
         # bug group, whether usebuggroups is currently set or not, we want to
         # update it so it will match in the future.  If there is no group, this
@@ -1031,7 +1028,7 @@ if ($action eq 'update') {
             SendSQL("SELECT votes.who, votes.bug_id " .
                     "FROM votes, bugs " .
                     "WHERE bugs.bug_id = votes.bug_id " .
-                    " AND bugs.product = $qp " .
+                    " AND bugs.product_id = $product_id " .
                     " AND votes.count > $maxvotesperbug");
             my @list;
             while (MoreSQLData()) {
@@ -1047,7 +1044,7 @@ if ($action eq 'update') {
         }
         SendSQL("SELECT votes.who, votes.count FROM votes, bugs " .
                 "WHERE bugs.bug_id = votes.bug_id " .
-                " AND bugs.product = $qp");
+                " AND bugs.product_id = $product_id");
         my %counts;
         while (MoreSQLData()) {
             my ($who, $count) = (FetchSQLData());
@@ -1061,7 +1058,7 @@ if ($action eq 'update') {
             if ($counts{$who} > $votesperuser) {
                 SendSQL("SELECT votes.bug_id FROM votes, bugs " .
                         "WHERE bugs.bug_id = votes.bug_id " .
-                        " AND bugs.product = $qp " .
+                        " AND bugs.product_id = $product_id " .
                         " AND votes.who = $who");
                 while (MoreSQLData()) {
                     my $id = FetchSQLData();
@@ -1073,7 +1070,7 @@ if ($action eq 'update') {
             }
         }
         SendSQL("SELECT bug_id FROM bugs " .
-                "WHERE product = $qp " .
+                "WHERE product_id = $product_id " .
                 "  AND bug_status = '$::unconfirmedstate' " .
                 "  AND votes >= $votestoconfirm");
         my @list;

@@ -434,7 +434,10 @@ sub GenerateArrayCode {
 
 
 sub GenerateVersionTable {
-    SendSQL("select value, program from versions order by value");
+    SendSQL("SELECT versions.value, products.name " .
+            "FROM versions, products " .
+            "WHERE products.id = versions.product_id " .
+            "ORDER BY versions.value");
     my @line;
     my %varray;
     my %carray;
@@ -446,7 +449,10 @@ sub GenerateVersionTable {
         push @{$::versions{$p1}}, $v;
         $varray{$v} = 1;
     }
-    SendSQL("select value, program from components order by value");
+    SendSQL("SELECT components.name, products.name " .
+            "FROM components, products " .
+            "WHERE products.id = components.product_id " .
+            "ORDER BY components.name");
     while (@line = FetchSQLData()) {
         my ($c,$p) = (@line);
         if (!defined $::components{$p}) {
@@ -464,7 +470,7 @@ sub GenerateVersionTable {
                                 # about them anyway.
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
-    SendSQL("select product, description, votesperuser, disallownew$mpart from products ORDER BY product");
+    SendSQL("select name, description, votesperuser, disallownew$mpart from products ORDER BY name");
     while (@line = FetchSQLData()) {
         my ($p, $d, $votesperuser, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
@@ -546,7 +552,10 @@ sub GenerateVersionTable {
 
     if ($dotargetmilestone) {
         # reading target milestones in from the database - matthew@zeroknowledge.com
-        SendSQL("SELECT value, product FROM milestones ORDER BY sortkey, value");
+        SendSQL("SELECT milestones.value, products.name " .
+                "FROM milestones, products " .
+                "WHERE products.id = milestones.product_id " .
+                "ORDER BY milestones.sortkey, milestones.value");
         my @line;
         my %tmarray;
         @::legal_target_milestone = ();
@@ -943,6 +952,49 @@ sub DBNameToIdAndCheck {
                     registered for a Bugzilla account.");
 }
 
+sub get_product_id {
+    my ($prod) = @_;
+    PushGlobalSQLState();
+    SendSQL("SELECT id FROM products WHERE name = " . SqlQuote($prod));
+    my ($prod_id) = FetchSQLData();
+    PopGlobalSQLState();
+    return $prod_id;
+}
+
+sub get_product_name {
+    my ($prod_id) = @_;
+    die "non-numeric prod_id '$prod_id' passed to get_product_name"
+      unless ($prod_id =~ /^\d+$/);
+    PushGlobalSQLState();
+    SendSQL("SELECT name FROM products WHERE id = $prod_id");
+    my ($prod) = FetchSQLData();
+    PopGlobalSQLState();
+    return $prod;
+}
+
+sub get_component_id {
+    my ($prod_id, $comp) = @_;
+    die "non-numeric prod_id '$prod_id' passed to get_component_id"
+      unless ($prod_id =~ /^\d+$/);
+    PushGlobalSQLState();
+    SendSQL("SELECT id FROM components " .
+            "WHERE product_id = $prod_id AND name = " . SqlQuote($comp));
+    my ($comp_id) = FetchSQLData();
+    PopGlobalSQLState();
+    return $comp_id;
+}
+
+sub get_component_name {
+    my ($comp_id) = @_;
+    die "non-numeric comp_id '$comp_id' passed to get_component_name"
+      unless ($comp_id =~ /^\d+$/);
+    PushGlobalSQLState();
+    SendSQL("SELECT name FROM components WHERE id = $comp_id");
+    my ($comp) = FetchSQLData();
+    PopGlobalSQLState();
+    return $comp;
+}
+
 # Use trick_taint() when you know that there is no way that the data
 # in a scalar can be tainted, but taint mode still bails on it.
 # WARNING!! Using this routine on data that really could be tainted
@@ -1330,7 +1382,7 @@ sub RemoveVotes {
             "FROM profiles " . 
             "LEFT JOIN votes ON profiles.userid = votes.who " .
             "LEFT JOIN bugs USING(bug_id) " .
-            "LEFT JOIN products USING(product)" .
+            "LEFT JOIN products ON products.id = bugs.product_id " .
             "WHERE votes.bug_id = $id " .
             $whopart);
     my @list;

@@ -155,7 +155,7 @@ sub validateSortKey
 sub validateProduct
 {
   # Retrieve a list of products.
-  SendSQL("SELECT product FROM products");
+  SendSQL("SELECT name FROM products");
   my @products;
   push(@products, FetchSQLData()) while MoreSQLData();
 
@@ -180,11 +180,13 @@ sub list
 
   # Retrieve a list of attachment status flags and create an array of hashes
   # in which each hash contains the data for one flag.
-  SendSQL("SELECT id, name, description, sortkey, product, count(statusid)
-           FROM attachstatusdefs LEFT JOIN attachstatuses 
-                ON attachstatusdefs.id=attachstatuses.statusid
-           GROUP BY id
-           ORDER BY sortkey");
+  SendSQL("SELECT attachstatusdefs.id, attachstatusdefs.name, " .
+          "attachstatusdefs.description, attachstatusdefs.sortkey, products.name, " .
+          "count(attachstatusdefs.id) " .
+          "FROM attachstatusdefs, products " .
+          "WHERE products.id = attachstatusdefs.product_id " .
+          "GROUP BY id " .
+          "ORDER BY attachstatusdefs.sortkey");
   my @statusdefs;
   while ( MoreSQLData() )
   {
@@ -212,7 +214,7 @@ sub create
   # Display a form for creating a new attachment status flag.
 
   # Retrieve a list of products to which the attachment status may apply.
-  SendSQL("SELECT product FROM products");
+  SendSQL("SELECT name FROM products");
   my @products;
   push(@products, FetchSQLData()) while MoreSQLData();
 
@@ -236,14 +238,13 @@ sub insert
   # in a SQL statement.
   my $name = SqlQuote($::FORM{'name'});
   my $desc = SqlQuote($::FORM{'desc'});
-  my $product = SqlQuote($::FORM{'product'});
+  my $product_id = get_product_id($::FORM{'product'});
 
   SendSQL("LOCK TABLES attachstatusdefs WRITE");
   SendSQL("SELECT MAX(id) FROM attachstatusdefs");
-  my $id = FetchSQLData() || 0;
-  $id++;
-  SendSQL("INSERT INTO attachstatusdefs (id, name, description, sortkey, product)
-           VALUES ($id, $name, $desc, $::FORM{'sortkey'}, $product)");
+  my $id = FetchSQLData() + 1;
+  SendSQL("INSERT INTO attachstatusdefs (id, name, description, sortkey, product_id)
+           VALUES ($id, $name, $desc, $::FORM{'sortkey'}, $product_id)");
   SendSQL("UNLOCK TABLES");
 
   # Display the "administer attachment status flags" page
@@ -257,8 +258,11 @@ sub edit
   # Display a form for editing an existing attachment status flag.
 
   # Retrieve the definition from the database.
-  SendSQL("SELECT name, description, sortkey, product 
-           FROM attachstatusdefs WHERE id = $::FORM{'id'}");
+  SendSQL("SELECT attachstatusdefs.name, attachstatusdefs.description, " .
+          " attachstatusdefs.sortkey, products.name " .
+          "FROM attachstatusdefs, products " . 
+          "WHERE attachstatusdefs.product_id = products.id " .
+          " AND attachstatusdefs.id = $::FORM{'id'}");
   my ($name, $desc, $sortkey, $product) = FetchSQLData();
 
   # Define the variables and functions that will be passed to the UI template.

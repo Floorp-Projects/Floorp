@@ -239,7 +239,9 @@ if (lsearch(\@::enterable_products, $product) == -1) {
     DisplayError("'" . html_quote($product) . "' is not a valid product.");
     exit;
 }
-    
+
+my $product_id = get_product_id($product);
+
 if (0 == @{$::components{$product}}) {
     my $error = "Sorry; there needs to be at least one component for this " .
                 "product in order to create a new bug. ";
@@ -261,8 +263,8 @@ elsif (1 == @{$::components{$product}}) {
 }
 
 my @components;
-SendSQL("SELECT value, description FROM components " . 
-        "WHERE program = " . SqlQuote($product) . " ORDER BY value");
+SendSQL("SELECT name, description FROM components " . 
+        "WHERE product_id = $product_id ORDER BY name");
 while (MoreSQLData()) {
     my ($name, $description) = FetchSQLData();
 
@@ -315,7 +317,7 @@ if (exists $::COOKIE{"VERSION-$product"} &&
 my @status = "NEW";
 
 if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
-    SendSQL("SELECT votestoconfirm FROM products WHERE product = " . 
+    SendSQL("SELECT votestoconfirm FROM products WHERE name = " .
             SqlQuote($product));
     push(@status, $unconfirmedstate) if (FetchOneColumn());
 }

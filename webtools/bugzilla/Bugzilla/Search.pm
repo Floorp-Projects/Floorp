@@ -66,13 +66,29 @@ sub init {
     my @andlist;
 
     # First, deal with all the old hard-coded non-chart-based poop.
-    unshift(@supptables,
-            ("profiles map_assigned_to",
-             "profiles map_reporter",
-             "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid"));
-    unshift(@wherepart,
-            ("bugs.assigned_to = map_assigned_to.userid",
-             "bugs.reporter = map_reporter.userid"));
+    if (&::lsearch($fieldsref, 'map_assigned_to.login_name') >= 0) {
+        push @supptables, "profiles AS map_assigned_to";
+        push @wherepart, "bugs.assigned_to = map_assigned_to.userid";
+    }
+
+    if (&::lsearch($fieldsref, 'map_reporter.login_name') >= 0) {
+        push @supptables, "profiles AS map_reporter";
+        push @wherepart, "bugs.assigned_to = map_reporter.userid";
+    }
+
+    if (&::lsearch($fieldsref, 'map_qa_contact.login_name') >= 0) {
+        push @supptables, "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid";
+    }
+
+    if (&::lsearch($fieldsref, 'map_products.name') >= 0) {
+        push @supptables, "products AS map_products";
+        push @wherepart, "bugs.product_id = map_products.id";
+    }
+
+    if (&::lsearch($fieldsref, 'map_components.name') >= 0) {
+        push @supptables, "components AS map_components";
+        push @wherepart, "bugs.component_id = map_components.id";
+    }
 
     my $minvotes;
     if (defined $F{'votes'}) {
@@ -106,6 +122,18 @@ sub init {
             push(@specialchart, [$field, "anyexact",
                                  join(',', @{$M{$field}})]);
         }
+    }
+
+    if ($F{'product'}) {
+        push(@supptables, "products products_");
+        push(@wherepart, "products_.id = bugs.product_id");
+        push(@specialchart, ["products_.name", "anyexact", $F{'product'}]);
+    }
+
+    if ($F{'component'}) {
+        push(@supptables, "components components_");
+        push(@wherepart, "components_.id = bugs.component_id");
+        push(@specialchart, ["components_.name", "anyexact", $F{'component'}]);
     }
 
     if ($F{'keywords'}) {
@@ -248,7 +276,7 @@ sub init {
     my @funcdefs =
         (
          "^(assigned_to|reporter)," => sub {
-             push(@supptables, "profiles map_$f");
+             push(@supptables, "profiles AS map_$f");
              push(@wherepart, "bugs.$f = map_$f.userid");
              $f = "map_$f.login_name";
          },
@@ -389,6 +417,20 @@ sub init {
          },
          "^changedin," => sub {
              $f = "(to_days(now()) - to_days(bugs.delta_ts))";
+         },
+
+         "^component,(?!changed)" => sub {
+             my $table = "components_$chartid";
+             push(@supptables, "components $table");
+             push(@wherepart, "bugs.component_id = $table.id");
+             $f = $ff = "$table.name";
+         },
+
+         "^product,(?!changed)" => sub {
+             my $table = "products_$chartid";
+             push(@supptables, "products $table");
+             push(@wherepart, "bugs.product_id = $table.id");
+             $f = $ff = "$table.name";
          },
 
          "^keywords," => sub {

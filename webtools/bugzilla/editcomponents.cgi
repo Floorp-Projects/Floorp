@@ -55,9 +55,9 @@ sub TestProduct ($)
     my $prod = shift;
 
     # does the product exist?
-    SendSQL("SELECT product
+    SendSQL("SELECT name
              FROM products
-             WHERE product=" . SqlQuote($prod));
+             WHERE name=" . SqlQuote($prod));
     return FetchOneColumn();
 }
 
@@ -84,9 +84,10 @@ sub TestComponent ($$)
     my ($prod,$comp) = @_;
 
     # does the product exist?
-    SendSQL("SELECT program,value
-             FROM components
-             WHERE program=" . SqlQuote($prod) . " and value=" . SqlQuote($comp));
+    SendSQL("SELECT components.name
+             FROM components, products
+             WHERE products.id = components.product_id
+              AND products.name=" . SqlQuote($prod) . " AND components.name=" . SqlQuote($comp));
     return FetchOneColumn();
 }
 
@@ -225,15 +226,14 @@ unless ($product) {
     PutHeader("Select product");
 
     if ($dobugcounts){
-        SendSQL("SELECT products.product,products.description,COUNT(bug_id)
-             FROM products LEFT JOIN bugs
-               ON products.product=bugs.product
-             GROUP BY products.product
-             ORDER BY products.product");
+        SendSQL("SELECT products.name,products.description,COUNT(bug_id)
+             FROM products LEFT JOIN bugs ON products.id = bugs.product_id
+             GROUP BY products.name
+             ORDER BY products.name");
     } else {
-        SendSQL("SELECT products.product,products.description
+        SendSQL("SELECT products.name,products.description
              FROM products 
-             ORDER BY products.product");
+             ORDER BY products.name");
     }
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit components of ...</TH>\n";
@@ -270,18 +270,18 @@ unless ($product) {
 unless ($action) {
     PutHeader("Select component of $product");
     CheckProduct($product);
+    my $product_id = get_product_id($product);
 
     if ($dobugcounts) {
-        SendSQL("SELECT value,description,initialowner,initialqacontact,COUNT(bug_id)
-             FROM components LEFT JOIN bugs
-               ON components.program=bugs.product AND components.value=bugs.component
-             WHERE program=" . SqlQuote($product) . "
-             GROUP BY value");
+        SendSQL("SELECT name,description,initialowner,initialqacontact,COUNT(bug_id)
+             FROM components LEFT JOIN bugs ON components.id = bugs.component_id
+             WHERE components.product_id=$product_id
+             GROUP BY name");
     } else {
-        SendSQL("SELECT value,description,initialowner,initialqacontact
+        SendSQL("SELECT name,description,initialowner,initialqacontact
              FROM components 
-             WHERE program=" . SqlQuote($product) . "
-             GROUP BY value");
+             WHERE product_id=$product_id
+             GROUP BY name");
     }        
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit component ...</TH>\n";
@@ -370,6 +370,7 @@ if ($action eq 'add') {
 if ($action eq 'new') {
     PutHeader("Adding new component of $product");
     CheckProduct($product);
+    my $product_id = get_product_id($product);
 
     # Cleanups and valididy checks
 
@@ -426,9 +427,9 @@ if ($action eq 'new') {
 
     # Add the new component
     SendSQL("INSERT INTO components ( " .
-          "program, value, description, initialowner, initialqacontact " .
+          "product_id, name, description, initialowner, initialqacontact " .
           " ) VALUES ( " .
-          SqlQuote($product) . "," .
+          $product_id . "," .
           SqlQuote($component) . "," .
           SqlQuote($description) . "," .
           SqlQuote($initialownerid) . "," .
@@ -457,20 +458,20 @@ if ($action eq 'new') {
 if ($action eq 'del') {
     PutHeader("Delete component of $product");
     CheckComponent($product, $component);
+    my $component_id = get_component_id(get_product_id($product), $component);
 
     # display some data about the component
-    SendSQL("SELECT products.product,products.description,
+    SendSQL("SELECT products.name,products.description,
                 products.milestoneurl,products.disallownew,
-                components.program,components.value,components.initialowner,
+                components.name,components.initialowner,
                 components.initialqacontact,components.description
              FROM products
-             LEFT JOIN components on product=program
-             WHERE product=" . SqlQuote($product) . "
-               AND   value=" . SqlQuote($component) );
+             LEFT JOIN components ON products.id = components.product_id
+             WHERE components.id = $component_id");
 
 
     my ($product,$pdesc,$milestoneurl,$disallownew,
-        $dummy,$component,$initialownerid,$initialqacontactid,$cdesc) = FetchSQLData();
+        $component,$initialownerid,$initialqacontactid,$cdesc) = FetchSQLData();
 
     my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : "<FONT COLOR=\"red\">missing</FONT>";
     my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : "<FONT COLOR=\"red\">missing</FONT>";
@@ -503,8 +504,7 @@ if ($action eq 'del') {
     }
     SendSQL("SELECT count(bug_id)
              FROM bugs
-             WHERE product=" . SqlQuote($product) . "
-                AND component=" . SqlQuote($component));
+             WHERE component_id = $component_id");
 
     print "</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Component of product:</TD>\n";
@@ -574,6 +574,7 @@ one.";
 if ($action eq 'delete') {
     PutHeader("Deleting component of $product");
     CheckComponent($product,$component);
+    my $component_id = get_component_id(get_product_id($product),$component);
 
     # lock the tables before we start to change everything:
 
@@ -590,8 +591,7 @@ if ($action eq 'delete') {
     if (Param("allowbugdeletion")) {
         SendSQL("SELECT bug_id
              FROM bugs
-             WHERE product=" . SqlQuote($product) . "
-               AND component=" . SqlQuote($component));
+             WHERE component_id=$component_id");
         while (MoreSQLData()) {
             my $bugid = FetchOneColumn();
 
@@ -607,14 +607,12 @@ if ($action eq 'delete') {
         # Deleting the rest is easier:
 
         SendSQL("DELETE FROM bugs
-             WHERE product=" . SqlQuote($product) . "
-               AND component=" . SqlQuote($component));
+                 WHERE component_id=$component_id");
         print "Bugs deleted.<BR>\n";
     }
 
     SendSQL("DELETE FROM components
-             WHERE program=" . SqlQuote($product) . "
-               AND value=" . SqlQuote($component));
+             WHERE id=$component_id");
     print "Components deleted.<P>\n";
     SendSQL("UNLOCK TABLES");
 
@@ -634,19 +632,18 @@ if ($action eq 'delete') {
 if ($action eq 'edit') {
     PutHeader("Edit component of $product");
     CheckComponent($product,$component);
+    my $component_id = get_component_id(get_product_id($product),$component);
 
     # get data of component
-    SendSQL("SELECT products.product,products.description,
+    SendSQL("SELECT products.name,products.description,
                 products.milestoneurl,products.disallownew,
-                components.program,components.value,components.initialowner,
+                components.name,components.initialowner,
                 components.initialqacontact,components.description
-             FROM products
-             LEFT JOIN components on product=program
-             WHERE product=" . SqlQuote($product) . "
-               AND   value=" . SqlQuote($component) );
+             FROM products LEFT JOIN components ON products.id = components.product_id
+             WHERE components.id = $component_id");
 
     my ($product,$pdesc,$milestoneurl,$disallownew,
-        $dummy,$component,$initialownerid,$initialqacontactid,$cdesc) = FetchSQLData();
+        $component,$initialownerid,$initialqacontactid,$cdesc) = FetchSQLData();
 
     my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : '';
     my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : '';
@@ -663,8 +660,7 @@ if ($action eq 'edit') {
     print "  <TD>";
     SendSQL("SELECT count(*)
              FROM bugs
-             WHERE product=" . SqlQuote($product) .
-            " and component=" . SqlQuote($component));
+             WHERE component_id=$component_id");
     my $bugs = '';
     $bugs = FetchOneColumn() if MoreSQLData();
     print $bugs || 'none';
@@ -707,13 +703,13 @@ if ($action eq 'update') {
     my $initialqacontact    = trim($::FORM{initialqacontact}    || '');
     my $initialqacontactold = trim($::FORM{initialqacontactold} || '');
 
-    CheckComponent($product,$componentold);
-
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$component' or WHERE='$componentold'
 
-    SendSQL("LOCK TABLES bugs WRITE,
-                         components WRITE, profiles READ");
+    SendSQL("LOCK TABLES components WRITE, products READ, profiles READ");
+    CheckComponent($product,$componentold);
+    my $component_id = get_component_id(get_product_id($product),
+                                        $componentold);
 
     if ($description ne $descriptionold) {
         unless ($description) {
@@ -724,8 +720,7 @@ if ($action eq 'update') {
         }
         SendSQL("UPDATE components
                  SET description=" . SqlQuote($description) . "
-                 WHERE program=" . SqlQuote($product) . "
-                   AND value=" . SqlQuote($componentold));
+                 WHERE id=$component_id");
         print "Updated description.<BR>\n";
     }
 
@@ -748,8 +743,7 @@ if ($action eq 'update') {
 
         SendSQL("UPDATE components
                  SET initialowner=" . SqlQuote($initialownerid) . "
-                 WHERE program=" . SqlQuote($product) . "
-                   AND value=" . SqlQuote($componentold));
+                 WHERE id = $component_id");
         print "Updated initial owner.<BR>\n";
     }
 
@@ -764,8 +758,7 @@ if ($action eq 'update') {
 
         SendSQL("UPDATE components
                  SET initialqacontact=" . SqlQuote($initialqacontactid) . "
-                 WHERE program=" . SqlQuote($product) . "
-                   AND value=" . SqlQuote($componentold));
+                 WHERE id = $component_id");
         print "Updated initial QA contact.<BR>\n";
     }
 
@@ -784,15 +777,8 @@ if ($action eq 'update') {
             exit;
         }
 
-        SendSQL("UPDATE bugs
-                 SET component=" . SqlQuote($component) . ",
-                 delta_ts = delta_ts
-                 WHERE component=" . SqlQuote($componentold) . "
-                   AND product=" . SqlQuote($product));
-        SendSQL("UPDATE components
-                 SET value=" . SqlQuote($component) . "
-                 WHERE value=" . SqlQuote($componentold) . "
-                   AND program=" . SqlQuote($product));
+        SendSQL("UPDATE components SET name=" . SqlQuote($component) . 
+                 "WHERE id=$component_id");
 
         unlink "data/versioncache";
         print "Updated component name.<BR>\n";

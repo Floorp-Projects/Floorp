@@ -263,6 +263,7 @@ $when<p>
 FIN
 
 # Build up $query string
+    my $prod_table = ($FORM{'product'} ne "-All-") ? ", products" : "";
     my $query;
     $query = <<FIN;
 select 
@@ -272,12 +273,13 @@ select
     unix_timestamp(date_format(bugs.creation_ts, '%Y-%m-%d %h:%m:%s'))
 
 from   bugs,
-       profiles assign
+       profiles assign $prod_table
 where  bugs.assigned_to = assign.userid
 FIN
 
     if ($FORM{'product'} ne "-All-" ) {
-        $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+        $query .= "and    products.id = bugs.product_id\n";
+        $query .= "and    products.name=".SqlQuote($FORM{'product'});
     }
 
     $query .= "AND bugs.bug_status IN ('NEW', 'ASSIGNED', 'REOPENED')";
@@ -641,11 +643,11 @@ sub bybugs {
 sub most_doomed_for_milestone {
     my $when = localtime (time);
     my $ms = "M" . Param("curmilestone");
+    my $product_id = get_product_id($FORM{'product'}) unless $FORM{'product'} eq '-All-';
 
     print "<center>\n<h1>";
     if( $FORM{'product'} ne "-All-" ) {
-        SendSQL("SELECT defaultmilestone FROM products WHERE product = " .
-                SqlQuote($FORM{'product'}));
+        SendSQL("SELECT defaultmilestone FROM products WHERE id = $product_id");
         $ms = FetchOneColumn();
         print "Most Doomed for $ms ($FORM{'product'})";
     } else {
@@ -661,7 +663,7 @@ sub most_doomed_for_milestone {
     my $query;
     $query = "select distinct assigned_to from bugs where target_milestone=\"$ms\"";
     if ($FORM{'product'} ne "-All-" ) {
-        $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+        $query .= "and    bugs.product_id=$product_id ";
     }
     $query .= <<FIN;
 and      
@@ -687,7 +689,7 @@ FIN
     foreach $person (@people) {
         my $query = "select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\"";
         if( $FORM{'product'} ne "-All-" ) {
-            $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+            $query .= "and    bugs.product_id=$product_id ";
         }
         $query .= <<FIN;
 and      

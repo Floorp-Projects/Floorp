@@ -397,8 +397,8 @@ DefineColumn("resolution"        , "bugs.resolution"            , "Result"      
 DefineColumn("summary"           , "bugs.short_desc"            , "Summary"          );
 DefineColumn("summaryfull"       , "bugs.short_desc"            , "Summary"          );
 DefineColumn("status_whiteboard" , "bugs.status_whiteboard"     , "Status Summary"   );
-DefineColumn("component"         , "bugs.component"             , "Component"        );
-DefineColumn("product"           , "bugs.product"               , "Product"          );
+DefineColumn("component"         , "map_components.name"        , "Component"        );
+DefineColumn("product"           , "map_products.name"          , "Product"          );
 DefineColumn("version"           , "bugs.version"               , "Version"          );
 DefineColumn("os"                , "bugs.op_sys"                , "OS"               );
 DefineColumn("target_milestone"  , "bugs.target_milestone"      , "Target Milestone" );
@@ -561,7 +561,7 @@ if ($order) {
     # change it to order by the sortkey of the target_milestone first.
     if ($db_order =~ /bugs.target_milestone/) {
         $db_order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
-        $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product = bugs.product WHERE /;
+        $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id WHERE /;
     }
 
     # If we are sorting by votes, sort in descending order if no explicit

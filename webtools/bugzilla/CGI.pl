@@ -947,7 +947,7 @@ sub CheckIfVotedConfirmed {
     SendSQL("SELECT bugs.votes, bugs.bug_status, products.votestoconfirm, " .
             "       bugs.everconfirmed " .
             "FROM bugs, products " .
-            "WHERE bugs.bug_id = $id AND products.product = bugs.product");
+            "WHERE bugs.bug_id = $id AND products.product_id = bugs.product_id");
     my ($votes, $status, $votestoconfirm, $everconfirmed) = (FetchSQLData());
     if ($votes >= $votestoconfirm && $status eq $::unconfirmedstate) {
         SendSQL("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1 " .

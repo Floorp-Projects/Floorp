@@ -660,7 +660,7 @@ print qq{
 };
 
 
-SendSQL("SELECT product,description FROM products ORDER BY product");
+SendSQL("SELECT name, description FROM products ORDER BY name");
         while (MoreSQLData()) {
 
         my ($product, $productdesc) = FetchSQLData();
@@ -725,7 +725,11 @@ components and their associated products:
 foreach $product (@products)
 {
 
-        SendSQL("SELECT value,description FROM components WHERE program=" . SqlQuote($product) . " ORDER BY value");
+    SendSQL("SELECT components.name, components.description " .
+            "FROM components, products " .
+            "WHERE components.product_id = products.id" .
+            " AND products.name = " . SqlQuote($product) .
+            "ORDER BY name");
 
         while (MoreSQLData()) {
 
