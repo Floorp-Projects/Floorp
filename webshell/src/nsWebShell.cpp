@@ -767,10 +767,8 @@ nsWebShell::SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
     mWindow->GetBorderSize(borderWidth, borderHeight);
     // Don't have the widget repaint. Layout will generate repaint requests
     // during reflow
-//    mWindow->Resize(x, y, w, h,
-//                    PR_FALSE);
     mWindow->Resize(x, y, w, h,
-                    PR_TRUE);
+                    PR_FALSE);
   }
 
   // Set the size of the content area, which is the size of the window minus the borders
