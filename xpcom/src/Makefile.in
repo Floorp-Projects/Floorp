@@ -27,19 +27,21 @@ LIBRARY_NAME	= xpcom
 CSRCS		= plvector.c \
 		  $(NULL)
 
-CPPSRCS		= nsDebug.cpp \
-		  nsHashtable.cpp \
-		  nsID.cpp \
-		  nsServiceManager.cpp \
-		  nsSupportsArray.cpp \
-		  nsRepository.cpp \
-		  nsTraceRefcnt.cpp \
-		  nsProxyEvent.cpp \
-		  nsXPComFactory.cpp \
-		  nsEventQueueService.cpp \
-		  xcDll.cpp \
-		  xcDllStore.cpp \
-		  $(NULL)
+CPPSRCS		= \
+	nsCOMPtr.cpp \
+	nsDebug.cpp \
+	nsHashtable.cpp \
+	nsID.cpp \
+	nsServiceManager.cpp \
+	nsSupportsArray.cpp \
+	nsRepository.cpp \
+	nsTraceRefcnt.cpp \
+	nsProxyEvent.cpp \
+	nsXPComFactory.cpp \
+	nsEventQueueService.cpp \
+	xcDll.cpp \
+	xcDllStore.cpp \
+	$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
