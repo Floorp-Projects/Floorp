@@ -156,8 +156,6 @@ tier_9_dirs += 			\
   $(NULL)
 endif
 
-tier_9_dirs	+= js/src/xpconnect
-
 ifdef MOZ_OJI
 tier_9_dirs	+= js/src/liveconnect
 endif
