@@ -573,11 +573,6 @@ static nsresult main1(int argc, char* argv[])
   NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
   // quiet the compiler
   (void)cookieService;
-#ifndef XP_MAC
-  // Until the cookie manager actually exists on the Mac we don't want to bail here
-  if (NS_FAILED(rv))
-    return rv;
-#endif // XP_MAC
   
 	// Enumerate AppShellComponenets
 	appShell->EnumerateAndInitializeComponents();
