@@ -51,7 +51,7 @@ EXPORTS=nsJSUtils.h
 
 MODULE=raptor 
 
-REQUIRES=xpcom raptor js netlib
+REQUIRES=xpcom raptor js netlib caps oji
 
 CPP_OBJS= \
 	.\$(OBJDIR)\nsBarProps.obj		\
@@ -80,7 +80,8 @@ CPP_OBJS= \
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
  -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib -I$(PUBLIC)\plugin -I$(PUBLIC)\oji \
- -I$(PUBLIC)\java -I$(PUBLIC)\xpconnect -I$(PUBLIC)\pref
+ -I$(PUBLIC)\java -I$(PUBLIC)\xpconnect -I$(PUBLIC)\pref -I$(PUBLIC)\caps -I$(PUBLIC)\ojiimpl
+
 
 LCFLAGS = \
         $(LCFLAGS) \

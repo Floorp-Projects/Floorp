@@ -20,7 +20,7 @@ DEPTH=..\..\..
 DEFINES=-D_IMPL_NS_DOM
 
 MODULE=raptor 
-REQUIRES=xpcom raptor dom
+REQUIRES=xpcom raptor dom caps oji
 
 CPPSRCS = nsDOMFactory.cpp      	\
 	  nsHTMLTagsEnums.cpp		\
@@ -33,7 +33,7 @@ CPP_OBJS = .\$(OBJDIR)\nsDOMFactory.obj			\
 	   .\$(OBJDIR)\nsScriptNameSpaceManager.obj 
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-	-I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\base -I$(PUBLIC)\jsurl
+	-I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\base -I$(PUBLIC)\jsurl 
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = jsdom
@@ -62,6 +62,9 @@ LLIBS=							\
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
 	$(DIST)\lib\xpcom.lib				\
 	$(DIST)\lib\plds3.lib			\
+	$(DIST)\lib\plc3.lib			\
+	$(DIST)\lib\caps.lib				\
+	$(DIST)\lib\oji.lib				\
 	$(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>

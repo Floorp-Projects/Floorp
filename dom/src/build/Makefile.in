@@ -29,7 +29,7 @@ LIBRARY_NAME = jsdom
 
 MODULE=dom
 
-REQUIRES=xpcom raptor
+REQUIRES=xpcom raptor caps oji
 
 CPPSRCS=nsDOMFactory.cpp \
 	nsHTMLTagsEnums.cpp \
@@ -59,6 +59,7 @@ EXTRA_DSO_LDOPTS =	       \
 	$(MKSHLIB_FORCE_ALL)   \
 	$(SHARED_LIBRARY_LIBS) \
 	$(MKSHLIB_UNFORCE_ALL) \
+
 	$(NULL)
 endif
 
