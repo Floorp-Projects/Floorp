@@ -2112,7 +2112,7 @@ nsGenericHTMLElement::ParseValueOrPercent(const nsString& aString,
   PRInt32 ec, val = tmp.ToInteger(&ec);
   if (NS_OK == ec) {
     if (val < 0) val = 0; 
-    if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
+    if (tmp.Length() && tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
       if (val > 100) val = 100;
       aResult.SetPercentValue(float(val)/100.0f);
     } else {
@@ -2144,10 +2144,10 @@ nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsString& aString,
   PRInt32 ec, val = tmp.ToInteger(&ec);
   if (NS_OK == ec) {
     if (val < 0) val = 0;
-    if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
+    if (tmp.Length() && tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
       if (val > 100) val = 100;
       aResult.SetPercentValue(float(val)/100.0f);
-	  } else if (tmp.Last() == '*') {
+    } else if (tmp.Length() && tmp.Last() == '*') {
       aResult.SetIntValue(val, eHTMLUnit_Proportional); // proportional values are integers
     } else {
       if (eHTMLUnit_Pixel == aValueUnit) {
