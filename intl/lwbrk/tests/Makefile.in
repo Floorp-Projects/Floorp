@@ -30,7 +30,6 @@ INCLUDES	+= -I$(srcdir)/../public -I$(DIST)/include
 
 LIBS	= \
 	-lxpcom \
-	-lreg \
 	$(NSPR_LIBS) \
 	$(NULL)
 
