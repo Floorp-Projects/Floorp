@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include "nsVoidArray.h"
+#include "nsIWebWidget.h"
 #include "nsString.h"
 
-extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList);
+extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIWebWidget * ww);
 
 int main(int argc, char **argv)
 {
@@ -11,6 +12,6 @@ int main(int argc, char **argv)
   for (i = 1; i < argc; i++) {
     gWorkList->AppendElement(new nsString(argv[i]));
   }
-  return DebugRobot(gWorkList);
+  return DebugRobot(gWorkList, nsnull);
 }
 

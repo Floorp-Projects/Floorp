@@ -18,6 +18,7 @@
 #include "nsIRobotSink.h"
 #include "nsIRobotSinkObserver.h"
 #include "nsIParser.h"
+#include "nsIWebWidget.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIURL.h"
@@ -93,7 +94,7 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
 
 //----------------------------------------------------------------------
 
-extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList)
+extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIWebWidget * ww)
 {
   if (nsnull==workList)
      return -1;
@@ -141,6 +142,8 @@ extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList)
 
     parser->SetContentSink(sink);
     parser->Parse(url);
+    if (ww)
+       ww->LoadURL(url->GetSpec());
     NS_RELEASE(sink);
     NS_RELEASE(parser);
     NS_RELEASE(url);
