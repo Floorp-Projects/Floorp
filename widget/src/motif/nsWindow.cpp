@@ -624,16 +624,21 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 // Hide or show this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Show(PRBool bState)
+NS_METHOD nsWindow::Show(PRBool aState)
 {
-  mShown = bState;
-  if (bState) {
+  mShown = aState;
+  if (aState) {
     XtManageChild(mWidget);
   }
   else
     XtUnmanageChild(mWidget);
 
   return NS_OK;
+}
+
+NS_METHOD nsWindow::SetModal(void)
+{
+  //XXX:Implement this
 }
 
 //-------------------------------------------------------------------------

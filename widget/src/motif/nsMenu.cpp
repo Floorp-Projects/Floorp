@@ -17,6 +17,9 @@
  */
 
 #include "nsMenu.h"
+#include "nsIComponentManager.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMNode.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIMenuItem.h"
@@ -25,14 +28,18 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
+#include "nsCOMPtr.h"
+#include "nsWidgetsCID.h"
+
 #include <Xm/CascadeBG.h>
 #include <Xm/SeparatoG.h>
 #include <Xm/RowColumn.h>
 #include <Xm/PushB.h>
 
+static NS_DEFINE_CID(kMenuCID,             NS_MENU_CID);
+static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
+   
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
-//NS_IMPL_ISUPPORTS(nsMenu, kMenuIID)
 
 nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
@@ -42,7 +49,7 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                          
   *aInstancePtr = NULL;                                                  
                                                                                         
-  if (aIID.Equals(kIMenuIID)) {                                         
+  if (aIID.Equals(nsIMenu::GetIID())) {                                         
     *aInstancePtr = (void*)(nsIMenu*) this;                                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
@@ -201,21 +208,36 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
-
   // XXX add aMenu to internal data structor list
   return NS_OK;
-
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddSeparator() 
 {
+  // Create nsMenuItem
+  nsIMenuItem * pnsMenuItem = nsnull;
+  nsresult rv = nsComponentManager::CreateInstance(
+    kMenuItemCID, nsnull, nsIMenuItem::GetIID(), (void**)&pnsMenuItem);
+  if (NS_OK == rv) {
+    nsString tmp = "separator";
+    nsISupports * supports = nsnull;
+    QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenuItem->Create(supports, tmp, PR_TRUE);
+    NS_RELEASE(supports);
 
-  Widget widget = XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass,
-                                          mMenu,
-                                          NULL);
+    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
+    AddItem(supports); // Parent should now own menu item
+    NS_RELEASE(supports);
 
+    NS_RELEASE(pnsMenuItem);
+  }
   return NS_OK;
+
+//XXX:Delete this.
+//  Widget widget = XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass,
+//                                          mMenu,
+//                                          NULL);
 }
 
 //-------------------------------------------------------------------------
@@ -262,31 +284,31 @@ NS_METHOD nsMenu::GetNativeData(void ** aData)
 
 NS_METHOD nsMenu::AddMenuListener(nsIMenuListener * aMenuListener)
 {
-  //FIXME: Need to implement.  --ZuperDee
+  //XXX:Implement this.
   return NS_OK;
 }
 
 NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
 {
-  //FIXME: Need to implement.  --ZuperDee
+  //XXX:Implement this.
   return NS_OK;
 }
 
 NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * aMenuNode)
 {
-  //FIXME: Need to implement.  --ZuperDee
+  //XXX:Implement this.
   return NS_OK;
 }
 
 NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * aMenuElement)
 { 
-  //FIXME: Need to implement.  --ZuperDee
+  //XXX:Implement this.
   return NS_OK;
 }
 
 NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 {
-  //FIXME: Need to implement.  --ZuperDee
+  //XXX:Implement this.
   return NS_OK;
 }
 
@@ -300,20 +322,20 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
-// FIXME: Need to implement.  --ZuperDee
 nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
+  //XXX:Implement this.
   return nsEventStatus_eIgnore;
 }
 
-// FIXME: Need to implement.  --ZuperDee
 nsEventStatus nsMenu::MenuConstruct(const struct nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, void * menubarNode, void * aWebShell)
 {
+  //XXX:Implement this.
   return nsEventStatus_eIgnore;
 }
 
-// FIXME: Need to implement.  --ZuperDee
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
+  //XXX:Implement this.
   return nsEventStatus_eIgnore;
 }
