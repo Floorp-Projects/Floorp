@@ -478,7 +478,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 
     char *folderName = nsnull;
     rv = GetName(&folderName);
-	// if (folderName && !PL_strcasecmp(folderName, "INBOX"))
+	if (folderName && !PL_strcasecmp(folderName, "INBOX"))
 		selectFolder = PR_TRUE;
 
     delete [] folderName;
