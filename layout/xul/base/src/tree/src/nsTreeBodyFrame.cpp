@@ -2727,7 +2727,7 @@ nsOutlinerBodyFrame::ScrollInternal(PRInt32 aRow)
     Invalidate();
   else if (mOutlinerWidget) {
     mOutlinerWidget->Scroll(0, -delta*rowHeightAsPixels, nsnull);
-#ifdef XP_MAC || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     // mac can't process the event loop during a drag, so if we're dragging,
     // update outliner widget synchronously.
     if (mDragSession)
