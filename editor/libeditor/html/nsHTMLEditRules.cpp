@@ -1714,9 +1714,8 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   if (!startNode) return NS_ERROR_FAILURE;
     
   // get the root element  
-  nsCOMPtr<nsIDOMNode> bodyNode; 
+  nsCOMPtr<nsIDOMElement> bodyNode; 
   {
-    nsCOMPtr<nsIDOMElement> bodyNode;   
     res = mHTMLEditor->GetRootElement(getter_AddRefs(bodyNode));
     if (NS_FAILED(res)) return res;
     if (!bodyNode) return NS_ERROR_UNEXPECTED;
