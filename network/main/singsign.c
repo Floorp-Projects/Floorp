@@ -1163,9 +1163,11 @@ SI_LoadSignonData(char * filename) {
 		if ((unmungedValue=SECNAV_UnMungeString(buffer+1)) == NULL) {
 		    /* this is the free source and there is no obscuring of passwords */
 		    unmungedValue = buffer+1;
+		    StrAllocCopy(value_array[submit.value_cnt++], buffer+1);
+		} else {
+		    StrAllocCopy(value_array[submit.value_cnt++], unmungedValue);
+		    XP_FREE(unmungedValue);
 		}
-		StrAllocCopy(value_array[submit.value_cnt++], unmungedValue);
-		XP_FREE(unmungedValue);
 	    } else {
 		StrAllocCopy(value_array[submit.value_cnt++], buffer+1);
 	    }
