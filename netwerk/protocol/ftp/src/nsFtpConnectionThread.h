@@ -190,7 +190,6 @@ private:
     FTP_ACTION          mAction;        // the higher level action (GET/PUT)
     PRBool              mUsePasv;       // use a passive data connection.
     PRBool              mBin;           // transfer mode (ascii or binary)
-    PRBool              mResetMode;     // have we reset the mode to ascii
     PRBool              mAnonymous;     // try connecting anonymous (default)
     PRBool              mRetryPass;     // retrying the password
     nsresult            mInternalError; // represents internal state errors
