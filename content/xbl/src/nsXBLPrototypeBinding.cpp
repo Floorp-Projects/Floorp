@@ -426,7 +426,7 @@ nsXBLPrototypeBinding::BindingDetached(nsIDOMEventReceiver* aReceiver)
 already_AddRefed<nsIXBLDocumentInfo>
 nsXBLPrototypeBinding::GetXBLDocumentInfo(nsIContent* aBoundElement)
 {
-  nsIXBLDocumentInfo* result;
+  nsIXBLDocumentInfo* result = nsnull;
   CallQueryReferent(mXBLDocInfoWeak.get(), &result);  // addrefs
   return result;
 }
