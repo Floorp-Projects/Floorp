@@ -118,6 +118,11 @@ GC_register_fragment
 GC_stderr
 GC_stdout
 GC_unregister_fragment
+GC_stdout
+GC_stderr
+GC_address_to_source
+GC_malloc_atomic
+MWUnmangle
 # GetCatInfoNoName
 # GetDInfo
 # GetDirItems
