@@ -528,6 +528,7 @@ if ($action eq 'del') {
     if (!$candelete) {
         print "Sorry, deleting users isn't allowed.";
         PutTrailer();
+        exit;
     }
     if (!$editall) {
         print "Sorry, you don't have permissions to delete users.";
@@ -657,6 +658,7 @@ if ($action eq 'delete') {
     if (!$candelete) {
         print "Sorry, deleting users isn't allowed.";
         PutTrailer();
+        exit;
     }
     if (!$editall) {
         print "Sorry, you don't have permissions to delete users.";
