@@ -268,7 +268,7 @@ void nsDeviceContextUnix :: InstallColormap()
     // No surface so we have to create a window just to get a drawable so we
     // can install the colormap.
      Window w;
-     Display * d = XtDisplay(mWidget);
+     Display * d = XtDisplay((Widget)mWidget);
      w = ::XCreateSimpleWindow(d, 
                                RootWindow(d, DefaultScreen(d)),
                                0, 0, 1, 1, 0,
