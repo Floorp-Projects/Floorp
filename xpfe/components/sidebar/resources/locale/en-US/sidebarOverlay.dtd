@@ -27,7 +27,8 @@
 <!ENTITY sidebarCmd.label            "My Sidebar">
 <!ENTITY sidebarCmd.accesskey        "m">
 <!ENTITY sidebar.loading.label       "Loading...">
+<!ENTITY sidebar.loading.stop.label  "Stop">
 
 <!ENTITY sidebar.no-panels.state     "My Sidebar is currently empty.">
-<!ENTITY sidebar.no-panels.add       'You may add panels by clicking on the "Tabs" button above, and then clicking on "Customize..."'>
-<!ENTITY sidebar.no-panels.hide      'If you would like to completely hide My Sidebar, click on the "View" menu above and select "Sidebar."'>
+<!ENTITY sidebar.no-panels.add       'You may add tabs by clicking on the "Tabs" button above.'>
+<!ENTITY sidebar.no-panels.hide      'If you would like to completely hide My Sidebar, click on the "View" menu above and select "My Sidebar."'>
