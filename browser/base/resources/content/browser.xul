@@ -172,6 +172,28 @@ Contributor(s): ______________________________________. -->
     <toolbar id="LocationToolbar" class="chromeclass-toolbar" persist="collapsed"
              tbalign="stretch" fullscreentoolbar="true">
       <hbox id="nav-bar-inner" flex="1">
+        <toolbarbutton type="menu" id="bookmarks-button" class="bookmark-item"
+                       persist="hidden" label="&bookmarksButton.label;"
+                       datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
+                       ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
+                       oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 
+                       ondragover="nsDragAndDrop.dragOver(event, folderObserver);"
+                       template="bookmarksMenuTemplate">
+          <menupopup onpopuphiding="gDidOpen = false;"
+                     onpopupshowing="checkBookmarksMenuTemplateBuilder();"
+                     ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                     ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                     ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+            <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"
+                      ondragover="event.preventBubble(); return false;"/>
+            <menuitem accesskey="&addCurPageAsCmd.accesskey;" key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"
+                      ondragover="event.preventBubble(); return false;"/>
+            <menuseparator ondragover="event.preventBubble(); return false;"/>
+            <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"
+                      ondragover="event.preventBubble(); return false;"/>
+            <menuseparator id="lastStaticSeparator"/>
+          </menupopup>
+        </toolbarbutton>
         <textbox id="urlbar" class="chromeclass-location" flex="1"
                  type="autocomplete" searchSessions="history" 
                  timeout="50" maxrows="6" alwaysopenpopup="true"
@@ -240,30 +262,6 @@ Contributor(s): ______________________________________. -->
   
       <toolbarseparator id="home-bm-separator" persist="hidden"/>
  
-      <!-- "Bookmarks" button on personal toolbar -->                           
-      <toolbarbutton type="menu" id="bookmarks-button" class="bookmark-item"
-                     persist="hidden" label="&bookmarksButton.label;"
-                     datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
-                     ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
-                     oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 
-                     ondragover="nsDragAndDrop.dragOver(event, folderObserver);"
-                     template="bookmarksMenuTemplate">
-        <menupopup onpopuphiding="gDidOpen = false;"
-                   onpopupshowing="checkBookmarksMenuTemplateBuilder();"
-                   ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                   ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                   ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
-          <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"
-                    ondragover="event.preventBubble(); return false;"/>
-          <menuitem accesskey="&addCurPageAsCmd.accesskey;" key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"
-                    ondragover="event.preventBubble(); return false;"/>
-          <menuseparator ondragover="event.preventBubble(); return false;"/>
-          <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"
-                    ondragover="event.preventBubble(); return false;"/>
-          <menuseparator id="lastStaticSeparator"/>
-        </menupopup>
-      </toolbarbutton>
-
       <!-- Personal toolbar items -->
       <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="bmContext" 
            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
