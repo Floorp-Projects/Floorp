@@ -51,7 +51,8 @@
 #include "nsIStyleContext.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxLayoutState.h"
-#include "nsIBindableContent.h"
+#include "nsIXBLService.h"
+#include "nsIServiceManager.h"
 
 #define REAL_TIME_DRAG
 
@@ -779,12 +780,12 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     nsCOMPtr<nsIContent> content;
     childFrame->GetContent(getter_AddRefs(content));
     nsCOMPtr<nsIAtom> atom;
-    nsCOMPtr<nsIBindableContent> bindable(do_QueryInterface(content));
-    if (bindable) {
-      bindable->GetBaseTag(getter_AddRefs(atom));
-    }
-    
-    if (!atom)
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+
+    if (NS_SUCCEEDED(rv) && xblService) 
+      xblService->ResolveTag(content, getter_AddRefs(atom));
+    else
       content->GetTag(*getter_AddRefs(atom));
 
     // skip over any splitters
@@ -830,7 +831,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         } 
     }
     
-    nsresult rv = childBox->GetNextBox(&childBox);
+    rv = childBox->GetNextBox(&childBox);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
     count++;
   }

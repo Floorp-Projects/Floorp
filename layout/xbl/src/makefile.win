@@ -30,12 +30,15 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=					\
   nsXBLBinding.cpp \
   nsXBLService.cpp \
+  nsXBLEventHandler.cpp \
+  nsBindingManager.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLBinding.obj \
   .\$(OBJDIR)\nsXBLEventHandler.obj \
   .\$(OBJDIR)\nsXBLService.obj \
+  .\$(OBJDIR)\nsBindingManager.obj \
 	$(NULL)
 
 EXPORTS =					\

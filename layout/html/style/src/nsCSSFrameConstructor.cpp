@@ -5358,9 +5358,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         xblService->LoadBindings(aContent, ui->mBehavior);
 
         nsCOMPtr<nsIAtom> baseTag;
-        xblService->GetBaseTag(aContent, getter_AddRefs(baseTag));
+        xblService->ResolveTag(aContent, getter_AddRefs(baseTag));
    
-        if (baseTag) {
+        if (baseTag.get() != aTag) {
           // Construct the frame using the XBL base tag.
           return ConstructXULFrame( aPresShell, 
                                     aPresContext,
@@ -6309,6 +6309,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
     ProcessChildren(aPresShell, aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
                     childItems, PR_TRUE);
 
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, newFrame,
+                            childItems);
+
       // Set the scrolled frame's initial child lists
     scrolledFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (isPositionedContainingBlock && aState.mAbsoluteItems.childList) {
@@ -6369,6 +6374,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
     ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame, PR_TRUE,
                     childItems, PR_TRUE);
 
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, newFrame,
+                          childItems);
+
     // Set the frame's initial child list(s)
     newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (aState.mAbsoluteItems.childList) {
@@ -6415,6 +6425,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
                                       haveFirstLineStyle);
     ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
                     PR_TRUE, childItems, PR_TRUE);
+
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, newFrame,
+                          childItems);
 
     // Set the frame's initial child list(s)
     newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
@@ -6469,6 +6484,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
     }
     ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame, PR_TRUE,
                     childItems, isBlockFrame);
+
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, newFrame,
+                          childItems);
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
@@ -6999,6 +7019,9 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
     if (processChildren) {
       rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame, PR_TRUE,
                            childItems, PR_FALSE);
+
+      CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
+                            childItems);
     }
 
     // Set the frame's initial child list
@@ -7108,6 +7131,9 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
     if (processChildren) {
       rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame, PR_TRUE,
                            childItems, PR_FALSE);
+
+      CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
+                            childItems);
     }
 
     // Set the frame's initial child list
@@ -11815,6 +11841,11 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell* aPresShell,
   nsresult rv = ProcessBlockChildren(aPresShell, aPresContext, aState, aContent, aNewFrame,
                                      PR_TRUE, childItems, PR_TRUE);
 
+  nsCOMPtr<nsIAtom> tag;
+  aContent->GetTag(*getter_AddRefs(tag));
+  CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, aNewFrame,
+                          childItems);
+
   // Set the frame's initial child list
   aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
 
@@ -11994,6 +12025,11 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell* aPresShell,
                                       aNewFrame, PR_TRUE, childItems, &kidsAllInline);
   if (kidsAllInline) {
     // Set the inline frame's initial child list
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, aNewFrame,
+                            childItems);
+
     aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     *aNewBlockFrame = nsnull;
     *aNextInlineFrame = nsnull;

@@ -42,8 +42,6 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIFormControlFrame.h"
-#include "nsIBindableContent.h"
-#include "nsIXBLBinding.h"
 #include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
 #include "nsLinebreakConverter.h"
@@ -58,8 +56,7 @@ class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
                               public nsIDOMNSHTMLTextAreaElement,
                               public nsIJSScriptObject,
                               public nsIHTMLContent,
-                              public nsIFormControl,
-                              public nsIBindableContent
+                              public nsIFormControl
 {
 public:
   nsHTMLTextAreaElement(nsIAtom* aTag);
@@ -119,16 +116,10 @@ public:
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Init() { return NS_OK; }
 
-  // nsIBindableContent
-  NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
-  NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
-  NS_IMETHOD GetBaseTag(nsIAtom** aResult);
-
 protected:
   nsGenericHTMLContainerFormElement mInner;
   nsIForm*   mForm;
   nsCOMPtr<nsIControllers> mControllers;
-  nsCOMPtr<nsIXBLBinding> mBinding;
 };
 
 nsresult
@@ -180,11 +171,6 @@ nsHTMLTextAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFormControlIID)) {
     *aInstancePtr = (void*)(nsIFormControl*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIBindableContent))) {
-    *aInstancePtr = (void*)(nsIBindableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -303,30 +289,6 @@ nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
   // XXX Should focus only this presContext
   Blur();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLTextAreaElement::SetBinding(nsIXBLBinding* aBinding)
-{
-  mBinding = aBinding; // COMPtr does addref
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLTextAreaElement::GetBinding(nsIXBLBinding** aResult)
-{
-  *aResult = mBinding;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLTextAreaElement::GetBaseTag(nsIAtom** aResult)
-{
-  if (mBinding)
-    return mBinding->GetBaseTag(aResult);
-  else
-    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -37,7 +37,6 @@
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
-#include "nsIBindableContent.h"
 #include "nsIDocument.h"
 #include "nsIXMLContentSink.h"
 #include "nsLayoutCID.h"
@@ -129,7 +128,7 @@ class nsXBLService: public nsIXBLService
   NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement);
 
   // Gets the object's base class type.  
-  NS_IMETHOD GetBaseTag(nsIContent* aContent, nsIAtom** aResult);
+  NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult);
 
 public:
   nsXBLService();
@@ -240,12 +239,13 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
 { 
   nsresult rv;
 
-  nsCOMPtr<nsIBindableContent> bindableContent(do_QueryInterface(aContent));
-  if (!bindableContent)
-    return NS_ERROR_FAILURE;
-
+  nsCOMPtr<nsIDocument> document;
+  aContent->GetDocument(*getter_AddRefs(document));
+  nsCOMPtr<nsIBindingManager> bindingManager;
+  document->GetBindingManager(getter_AddRefs(bindingManager));
+  
   nsCOMPtr<nsIXBLBinding> binding;
-  bindableContent->GetBinding(getter_AddRefs(binding));
+  bindingManager->GetBinding(aContent, getter_AddRefs(binding));
   if (binding) {
     nsAutoString bindingURI;
     binding->GetBindingURI(bindingURI);
@@ -269,7 +269,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
   }
 
   // Install the binding on the content node.
-  bindableContent->SetBinding(binding);
+  bindingManager->SetBinding(aContent, binding);
 
   // Tell the binding to build the anonymous content.
   binding->GenerateAnonymousContent(aContent);
@@ -292,12 +292,15 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, n
   // of anonymous items.
   *aResult = nsnull;
   *aParent = nsnull;
-  nsCOMPtr<nsIBindableContent> bindable = do_QueryInterface(aContent);
-  if (!bindable)
-    return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDocument> document;
+  aContent->GetDocument(*getter_AddRefs(document));
+  nsCOMPtr<nsIBindingManager> bindingManager;
+  document->GetBindingManager(getter_AddRefs(bindingManager));
+  
   nsCOMPtr<nsIXBLBinding> binding;
-  bindable->GetBinding(getter_AddRefs(binding));
+  bindingManager->GetBinding(aContent, getter_AddRefs(binding));
+    
   while (binding) {
     // Get the anonymous content.
     nsCOMPtr<nsIContent> content;
@@ -328,13 +331,14 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, n
 NS_IMETHODIMP
 nsXBLService::FlushBindings(nsIContent* aContent)
 {
-  nsCOMPtr<nsIBindableContent> bindable(do_QueryInterface(aContent));
-  if (!bindable)
-    return NS_ERROR_FAILURE;
-
-  // Get the original binding.
+  nsCOMPtr<nsIDocument> document;
+  aContent->GetDocument(*getter_AddRefs(document));
+  nsCOMPtr<nsIBindingManager> bindingManager;
+  document->GetBindingManager(getter_AddRefs(bindingManager));
+  
   nsCOMPtr<nsIXBLBinding> binding;
-  bindable->GetBinding(getter_AddRefs(binding));
+  bindingManager->GetBinding(aContent, getter_AddRefs(binding));
+  
   if (binding) {
     // Clear out the script references.
     nsCOMPtr<nsIDocument> document;
@@ -342,7 +346,8 @@ nsXBLService::FlushBindings(nsIContent* aContent)
     binding->ChangeDocument(document, nsnull);
   }
   
-  bindable->SetBinding(nsnull); // Flush old bindings
+  bindingManager->SetBinding(aContent, nsnull); // Flush old bindings
+  
   return NS_OK;
 }
 
@@ -355,14 +360,20 @@ nsXBLService::FlushBindingDocuments()
 }
 
 NS_IMETHODIMP
-nsXBLService::GetBaseTag(nsIContent* aContent, nsIAtom** aResult)
+nsXBLService::ResolveTag(nsIContent* aContent, nsIAtom** aResult)
 {
-  *aResult = nsnull;
-  nsCOMPtr<nsIBindableContent> bindable(do_QueryInterface(aContent));
-  if (!bindable)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDocument> document;
+  aContent->GetDocument(*getter_AddRefs(document));
+  if (document) {
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    document->GetBindingManager(getter_AddRefs(bindingManager));
+  
+    if (bindingManager)
+      return bindingManager->ResolveTag(aContent, aResult);
+  }
 
-  return bindable->GetBaseTag(aResult);
+  aContent->GetTag(*aResult); // Addref happens here.
+  return NS_OK;
 }
 
 // Internal helper methods ////////////////////////////////////////////////////////////////

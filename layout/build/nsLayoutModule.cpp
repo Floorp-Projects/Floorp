@@ -349,6 +349,8 @@ static Components gComponents[] = {
     NS_DOC_ENCODER_PROGID_BASE "text/xif", },
 
   { "XBL Service", NS_XBLSERVICE_CID, "component://netscape/xbl" },
+  { "XBL Binding Manager", NS_BINDINGMANAGER_CID, "component://netscape/xbl/binding-manager" },
+  
   { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "component://netscape/autocopy" },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))

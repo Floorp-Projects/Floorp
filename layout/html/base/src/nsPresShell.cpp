@@ -2156,6 +2156,7 @@ NS_IMETHODIMP
 PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 {
 #ifdef DEBUG
+  //printf("gShellCounter: %d\n", gShellCounter++);
   if (mInVerifyReflow) {
     return NS_OK;
   }  

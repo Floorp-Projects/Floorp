@@ -22,7 +22,7 @@
 DEPTH=..\..\.. 
 
 EXPORTS =				\
-    nsIBindableContent.h \
+    nsIBindingManager.h \
     nsIXBLBinding.h \
     nsIXBLService.h \
     $(NULL)

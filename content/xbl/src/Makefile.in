@@ -33,6 +33,7 @@ CPPSRCS		= \
     nsXBLBinding.cpp \
     nsXBLEventHandler.cpp \
 		nsXBLService.cpp \
+		nsBindingManager.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -28,8 +28,8 @@
 
 */
 
-#ifndef nsIBINDABLE_CONTENT_h__
-#define nsIBINDABLE_CONTENT_h__
+#ifndef nsIBinding_Manager_h__
+#define nsIBinding_Manager_h__
 
 #include "nsString.h"
 #include "nsISupports.h"
@@ -39,18 +39,18 @@ class nsIXBLBinding;
 class nsIAtom;
 
 // {55D70FE0-C8E5-11d3-97FB-00400553EEF0}
-#define NS_IBINDABLE_CONTENT_IID \
+#define NS_IBINDING_MANAGER_IID \
 { 0x55d70fe0, 0xc8e5, 0x11d3, { 0x97, 0xfb, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
 
-class nsIBindableContent : public nsISupports
+class nsIBindingManager : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IBINDABLE_CONTENT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IBINDING_MANAGER_IID; return iid; }
 
-  NS_IMETHOD SetBinding(nsIXBLBinding* aBinding) = 0;
-  NS_IMETHOD GetBinding(nsIXBLBinding** aResult) = 0;
+  NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult) = 0;
+  NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding) = 0;
 
-  NS_IMETHOD GetBaseTag(nsIAtom** aResult) = 0;
+  NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult) = 0;
 };
 
-#endif // nsIBINDABLE_CONTENT_h__
+#endif // nsIBinding_Manager_h__
