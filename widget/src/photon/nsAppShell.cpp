@@ -186,8 +186,7 @@ NS_METHOD nsAppShell::Spinup()
   }
 
   //Get the event queue for the thread.
-  //rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
-  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
+	rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
 
   // If we got an event queue, use it.
   if (mEventQueue)
@@ -201,8 +200,7 @@ NS_METHOD nsAppShell::Spinup()
   }
 
   // Ask again nicely for the event queue now that we have created one.
-  //rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
-  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
+	rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
 
   // XXX shouldn't this be automatic?
  done:

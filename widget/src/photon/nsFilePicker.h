@@ -82,9 +82,6 @@ protected:
 
 
   void GetFilterListArray(nsString& aFilterList);
-  static void GetFileSystemCharset(nsCString & fileSystemCharset);
-  char * ConvertToFileSystemCharset(const nsAString& inString);
-  PRUnichar * ConvertFromFileSystemCharset(const char *inString);
 
 	PtWidget_t						 *mParentWidget;
   nsString               mTitle;
