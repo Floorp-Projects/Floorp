@@ -24,6 +24,7 @@
 #define nsOutlinerSelection_h__
 
 #include "nsIOutlinerSelection.h"
+#include "nsITimer.h"
 
 class nsIOutlinerBoxObject;
 struct nsOutlinerRange;
@@ -42,6 +43,7 @@ public:
 
 protected:
   nsresult FireOnSelectHandler();
+  static void SelectCallback(nsITimer *aTimer, void *aClosure);
 
 protected:
   // Members
@@ -49,8 +51,11 @@ protected:
 
   PRBool mSuppressed; // Whether or not we should be firing onselect events.
   PRInt32 mCurrentIndex; // The item to draw the rect around. The last one clicked, etc.
+  PRInt32 mShiftSelectPivot; // Used when multiple SHIFT+selects are performed to pivot on.
 
   nsOutlinerRange* mFirstRange; // Our list of ranges.
+
+  nsCOMPtr<nsITimer> mSelectTimer;
 };
 
 extern nsresult

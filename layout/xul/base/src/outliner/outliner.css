@@ -8,6 +8,11 @@ outlinerbody {
 {
 }
 
+:-moz-outliner-row(current)
+{
+  border: 1px black dotted;
+}
+
 :-moz-outliner-row(selected)
 {
   background-color: blue;

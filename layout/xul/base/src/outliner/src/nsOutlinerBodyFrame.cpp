@@ -476,12 +476,20 @@ nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aC
   // And colID too, if it is non-empty.
   mScratchArray->Clear();
   
-  nsCOMPtr<nsIOutlinerSelection> selection;
-  mView->GetSelection(getter_AddRefs(selection));
-  PRBool isSelected;
-  selection->IsSelected(aRowIndex, &isSelected);
-  if (isSelected)
-    mScratchArray->AppendElement(nsHTMLAtoms::selected);
+  if (aRowIndex != -1) {
+    nsCOMPtr<nsIOutlinerSelection> selection;
+    mView->GetSelection(getter_AddRefs(selection));
+  
+    PRBool isSelected;
+    selection->IsSelected(aRowIndex, &isSelected);
+    if (isSelected)
+      mScratchArray->AppendElement(nsHTMLAtoms::selected);
+
+    PRInt32 currentIndex;
+    selection->GetCurrentIndex(&currentIndex);
+    if (aRowIndex == currentIndex)
+      mScratchArray->AppendElement(nsXULAtoms::current);
+  }
 }
 
 
