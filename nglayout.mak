@@ -137,11 +137,11 @@ depend:: depend_dist depend_nglayout
 
 clobber:: clobber_dist clobber_nglayout
 	cd $(MOZ_SRC)\$(MOZ_TOP)
-	-rd /s /q dist
+	-rm -r -f dist
 
 clobber_all:: clobber_all_dist clobber_all_nglayout
 	cd $(MOZ_SRC)\$(MOZ_TOP)
-	-rd /s /q dist
+	-rm -r -f dist
 
 ######################################################################
 
