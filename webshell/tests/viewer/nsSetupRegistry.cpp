@@ -42,6 +42,7 @@
 #endif
 #include "nsIPluginManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
 #include "nsUCvLatinCID.h"
 #include "nsUCVJACID.h"
@@ -332,6 +333,7 @@ NS_SetupRegistry()
   nsRepository::RegisterComponent(kFrameUtilCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterComponent(kCharsetConverterManagerCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kCharsetAliasCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kLatin1ToUnicodeCID,      NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kISO88597ToUnicodeCID,    NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kCP1253ToUnicodeCID,      NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
