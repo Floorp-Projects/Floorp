@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2001/08/13 19:56:41 $ 
+# $Revision: 1.10 $ 
+# $Date: 2001/11/14 21:59:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -234,9 +234,20 @@ sub escapeHTML {
 
     $toencode=~s/&/&amp;/g;
     $toencode=~s/\"/&quot;/g;
-    $toencode=~s/\'/&\#039;/g;
     $toencode=~s/>/&gt;/g;
     $toencode=~s/</&lt;/g;
+
+
+	# I need to escape the apostrophe because that character is 
+	# used as a java script terminator in my code.
+
+	# use an acute accent instead of an apostrophe because netscape 
+	# does not get the escape correct and will not render my 
+	# popups with the escaped apostrophe any other character seems
+	# to work though.  The escape for apostrope is #039. 
+
+    $toencode=~s/\'/&acute;/g;
+
     return $toencode;
 }
 
