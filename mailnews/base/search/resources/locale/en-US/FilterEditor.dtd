@@ -24,12 +24,12 @@
 <!ENTITY killThread.label "Ignore thread">
 <!ENTITY watchThread.label "Watch thread">
 <!ENTITY deleteFromServer.label "Delete from POP server">
-<!ENTITY setJunkScore.label "Set Junk Status">
+<!ENTITY setJunkScore.label "Set Junk Status to:">
 <!ENTITY filterName.label "Filter name:">
 <!ENTITY filterName.accesskey "i">
 
 <!ENTITY junk.label "Junk">
-<!ENTITY notJunk.label "NotJunk">
+<!ENTITY notJunk.label "Not Junk">
 
 <!ENTITY lowestPriorityCmd.label "Lowest">
 <!ENTITY lowPriorityCmd.label "Low">

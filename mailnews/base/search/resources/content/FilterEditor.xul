@@ -136,6 +136,21 @@ Contributor(s):
 
           <listitem allowevents="true">
             <listcell>
+              <checkbox id="setJunkScore" label="&setJunkScore.label;"/>
+            </listcell>
+            <listcell> 
+              <menulist id="actionValueJunkScore" flex="1">
+                <menupopup>
+                  <!-- see MailNewsTypes2.idl -->
+                  <menuitem value="100" label="&junk.label;"/>
+                  <menuitem value="0" label="&notJunk.label;"/>
+                </menupopup>
+              </menulist>
+            </listcell>
+          </listitem>
+
+          <listitem allowevents="true">
+            <listcell>
               <checkbox id="markRead" label="&markRead.label;"/>
             </listcell>
           </listitem>
@@ -155,21 +170,6 @@ Contributor(s):
           <listitem allowevents="true">
             <listcell>
               <checkbox id="deleteFromServer" enableforpop3="true" label="&deleteFromServer.label;"/>
-            </listcell>
-          </listitem>
-
-          <listitem allowevents="true">
-            <listcell>
-              <checkbox id="setJunkScore" label="&setJunkScore.label;"/>
-            </listcell>
-            <listcell> 
-              <menulist id="actionValueJunkScore" flex="1">
-                <menupopup>
-                  <!-- see MailNewsTypes2.idl -->
-                  <menuitem value="100" label="&junk.label;"/>
-                  <menuitem value="0" label="&notJunk.label;"/>
-                </menupopup>
-              </menulist>
             </listcell>
           </listitem>
 
