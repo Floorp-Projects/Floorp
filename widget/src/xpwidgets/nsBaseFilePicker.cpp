@@ -224,7 +224,7 @@ NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
   if (mDisplayDirectory)
     return mDisplayDirectory->InitWithFile(aDirectory);
   if (!aDirectory)
-    return NS_OK;l
+    return NS_OK;
   nsCOMPtr<nsIFile> directory;
   nsresult rv = aDirectory->Clone(getter_AddRefs(directory));
   mDisplayDirectory = do_QueryInterface(directory, &rv);
