@@ -304,3 +304,7 @@ sub hash {
 # output Set-Cookie headers.) Eventually, output systems will have
 # out-of-band metadata too, such as Last-Modified dates and this
 # session data.
+
+sub username {}
+sub password {}
+sub address {}

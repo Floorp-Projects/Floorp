@@ -59,15 +59,15 @@ sub splitArguments {
       PATH_INFO PATH_TRANSLATED SCRIPT_NAME QUERY_STRING REMOTE_HOST
       REMOTE_ADDR AUTH_TYPE REMOTE_USER REMOTE_IDENT CONTENT_TYPE
       CONTENT_LENGTH)) {
-        $self->propertySet($property, $ENV{$property});
+        $self->{$property} = $ENV{$property};
     }
     foreach my $property (keys(%ENV)) {
         if ($property =~ /^HTTP_/o) {
-            $self->propertySet($property, $ENV{$property});
+            $self->{$property} = $ENV{$property};
         }
     }
     # hook in the metadata variables
-    $self->metaData({}); # empty the list of meta data first
+    $self->{metaData} = {}; # empty the list of meta data first
     $self->registerPropertyAsMetaData('UA', 'HTTP_USER_AGENT');
     $self->registerPropertyAsMetaData('referrer', 'HTTP_REFERER');
     $self->registerPropertyAsMetaData('host', 'REMOTE_HOST', 'REMOTE_ADDR');
@@ -77,7 +77,7 @@ sub splitArguments {
     $self->registerPropertyAsMetaData('acceptLanguage', 'HTTP_ACCEPT_LANGUAGE');
     # decode username and password data
     if (defined($ENV{'HTTP_AUTHORIZATION'})) {
-        if ($self->HTTP_AUTHORIZATION =~ /^Basic +(.*)$/os) {
+        if ($self->{HTTP_AUTHORIZATION} =~ /^Basic +(.*)$/os) {
             # HTTP Basic Authentication
             my($username, $password) = split(/:/, decode_base64($1), 2);
             $self->{username} = $username;
@@ -163,6 +163,16 @@ sub registerPropertyAsMetaData {
             last;
         }
     }
+}
+
+sub username {
+    my $self = shift;
+    return $self->{username};
+}
+
+sub password {
+    my $self = shift;
+    return $self->{password};
 }
 
 # cookies

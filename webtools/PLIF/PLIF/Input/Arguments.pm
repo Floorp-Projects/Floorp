@@ -166,32 +166,9 @@ sub createArgument {
 sub implyMethod {
     my $self = shift;
     my($name, @data) = @_;
-    if (@data > 1) {
-        return $self->SUPER::implyMethod(@_);
-    }
     if (@data) {
-        return $self->propertySet($name, @data);
+        return $self->SUPER::implyMethod(@_);
     } else {
-        return $self->propertyGet($name);
-    }
-}
-
-sub propertyGet {
-    my $self = shift;
-    if ($self->SUPER::propertyExists(@_)) {
-        return $self->SUPER::propertyGet(@_);
-    } else {
-        return $self->peekArgument(@_); # XXX assumes that return propagates wantarray context...
-        # if not: 
-        # my @result = $self->getArgument(@_);
-        # if (wantarray) {
-        #     return @result;
-        # } else {
-        #     if (@result) {
-        #         return $result[0];
-        #     } else {
-        #         return undef;
-        #     }
-        # }
+        return $self->peekArgument($name);
     }
 }
