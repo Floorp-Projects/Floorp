@@ -37,6 +37,7 @@
 #include "nsFileStream.h"
 #include "nsMsgDBCID.h"
 #include "nsNewsMessage.h"
+#include "nsMsgUtils.h"
 #include "nsNewsUtils.h"
 
 //not using nsMsgLineBuffer yet, but I need to soon...
@@ -395,7 +396,6 @@ nsMsgNewsFolder::Enumerate(nsIEnumerator **result)
 #ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::Enumerate()\n");
 #endif
-#if 0
   nsresult rv; 
 
   // for now, news folders contain both messages and folders
@@ -405,14 +405,13 @@ nsMsgNewsFolder::Enumerate(nsIEnumerator **result)
   // eventually the top level server will not be a folder
   // and news folders will only contain messages
   nsIEnumerator* folders;
-  //  nsIEnumerator* messages;
+  nsIEnumerator* messages;
   rv = GetSubFolders(&folders);
   if (NS_FAILED(rv)) return rv;
-  //  rv = GetMessages(&messages);
-  //  if (NS_FAILED(rv)) return rv;
+  rv = GetMessages(&messages);
+  if (NS_FAILED(rv)) return rv;
   return NS_NewConjoiningEnumerator(folders, messages, 
                                     (nsIBidirectionalEnumerator**)result);
-#endif
   return NS_OK;
 }
 
@@ -484,7 +483,6 @@ nsresult nsMsgNewsFolder::GetDatabase()
 #ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::GetDatabase()\n");
 #endif
-#if 0
 	if (mNewsDatabase == nsnull)
 	{
 		nsNativeFileSpec path;
@@ -498,17 +496,15 @@ nsresult nsMsgNewsFolder::GetDatabase()
 		if (NS_SUCCEEDED(rv) && newsDBFactory)
 		{
 			folderOpen = newsDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &mNewsDatabase, PR_FALSE);
-			if(!NS_SUCCEEDED(folderOpen) &&
-				folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
-			{
-				// if it's out of date then reopen with upgrade.
-				if(!NS_SUCCEEDED(rv = newsDBFactory->Open(path, PR_TRUE, &mNewsDatabase, PR_TRUE)))
-				{
-					NS_RELEASE(newsDBFactory);
-					return rv;
-				}
-			}
-	
+#ifdef DEBUG_sspitzer
+      if (NS_SUCCEEDED(folderOpen)) {
+        printf ("newsDBFactory->Open() succeeded\n");
+      }
+      else {
+        printf ("newsDBFactory->Open() failed\n");
+        return rv;
+      }
+#endif
 			NS_RELEASE(newsDBFactory);
 		}
 
@@ -517,22 +513,9 @@ nsresult nsMsgNewsFolder::GetDatabase()
 
 			mNewsDatabase->AddListener(this);
 
-			// if we have to regenerate the folder, run the parser url.
-			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
-			{
-				if(NS_FAILED(rv = ParseFolder(path)))
-					return rv;
-				else
-					return NS_ERROR_NOT_INITIALIZED;
-			}
-			else
-			{
-				//Otherwise we have a valid database so lets extract necessary info.
-				UpdateSummaryTotals();
-			}
+      UpdateSummaryTotals();
 		}
 	}
-#endif
 	return NS_OK;
 }
 
@@ -542,7 +525,6 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 #ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::GetMessages()\n");
 #endif
-#if 0
 	nsresult rv = GetDatabase();
 
 	if(NS_SUCCEEDED(rv))
@@ -557,8 +539,6 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 		NS_IF_RELEASE(msgHdrEnumerator);
 	}
 	return rv;
-#endif
-  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetThreads(nsIEnumerator** threadEnumerator)
@@ -566,15 +546,12 @@ NS_IMETHODIMP nsMsgNewsFolder::GetThreads(nsIEnumerator** threadEnumerator)
 #ifdef DEBUG_sspitzer_
   printf("nsMsgNewsFolder::GetThreads()\n");
 #endif
-#if 0
 	nsresult rv = GetDatabase();
 	
 	if(NS_SUCCEEDED(rv))
 		return mNewsDatabase->EnumerateThreads(threadEnumerator);
 	else
 		return rv;
-#endif
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -584,7 +561,7 @@ nsMsgNewsFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
 	if(NS_SUCCEEDED(rv))
 	{
 		nsIMsgDBHdr *msgDBHdr = nsnull;
-		//We know from our factory that mailbox message resources are going to be
+		//We know from our factory that news message resources are going to be
   	//nsNewsMessages.
 	  nsNewsMessage *newsMessage = NS_STATIC_CAST(nsNewsMessage*, message);
 		rv = newsMessage->GetMsgDBHdr(&msgDBHdr);
@@ -1037,6 +1014,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsFileSpec& aPathName)
 
 NS_IMETHODIMP nsMsgNewsFolder::DeleteMessage(nsIMessage *message)
 {
+#if 0
 	nsresult rv = GetDatabase();
 	if(NS_SUCCEEDED(rv))
 	{
@@ -1052,12 +1030,54 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessage(nsIMessage *message)
 			NS_IF_RELEASE(msgDBHdr);
 		}
 	}
-	return rv;}
+	return rv;
+#endif  
+  PR_ASSERT(0);
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message)
 {
+	
+  nsresult rv; 
+  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+  if (NS_FAILED(rv)) return rv;
 
-	return NS_ERROR_FAILURE;
+	char* msgURI = nsnull;
+	nsFileSpec path;
+	nsMsgKey key;
+  nsIRDFResource* res;
+
+	rv = msgDBHdr->GetMessageKey(&key);
+
+	if(NS_SUCCEEDED(rv))
+		rv = GetPath(path);
+  
+	if(NS_SUCCEEDED(rv))
+		rv = nsBuildNewsMessageURI(path, key, &msgURI);
+  
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = rdfService->GetResource(msgURI, &res);
+  }
+	if(msgURI)
+		PR_smprintf_free(msgURI);
+  
+	if(NS_SUCCEEDED(rv))
+    {
+      nsIMessage *messageResource;
+      rv = res->QueryInterface(nsIMessage::GetIID(), (void**)&messageResource);
+      if(NS_SUCCEEDED(rv))
+        {
+          //We know from our factory that news message resources are going to be
+          //nsNewsMessages.
+          nsNewsMessage *newsMessage = NS_STATIC_CAST(nsNewsMessage*, messageResource);
+          newsMessage->SetMsgDBHdr(msgDBHdr);
+          *message = messageResource;
+        }
+      NS_IF_RELEASE(res);
+    }
+	return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
@@ -1505,4 +1525,3 @@ nsMsgNewsFolder::RememberLine(char* line)
 	return 0;
 
 }
-
