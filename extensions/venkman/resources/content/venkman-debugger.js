@@ -89,16 +89,16 @@ function debugTrap (cx, state, type)
     switch (type)
     {
         case jsdIExecutionHook.TYPE_BREAKPOINT:
-            tn = MSG_VAL_BREAKPOINT;
+            tn = MSG_WORD_BREAKPOINT;
             break;
         case jsdIExecutionHook.TYPE_DEBUG_REQUESTED:
-            tn = MSG_VAL_DEBUG;
+            tn = MSG_WORD_DEBUG;
             break;
         case jsdIExecutionHook.TYPE_DEBUGGER_KEYWORD:
-            tn = MSG_VAL_DEBUGGER;
+            tn = MSG_WORD_DEBUGGER;
             break;
         case jsdIExecutionHook.TYPE_THROW:
-            tn = MSG_VAL_THROW;
+            tn = MSG_WORD_THROW;
             break;
         default:
             /* don't print stop/cont messages for other types */
