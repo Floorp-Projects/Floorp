@@ -249,10 +249,12 @@ nsSHistory::PrintHistory()
               
               uri->GetSpec(getter_Copies(url));
 
+              #if 0
               printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
               printf("\t\t URL = %s\n", url);
               printf("\t\t Title = %s\n", titleCStr);
               printf("\t\t layout History Data = %x\n", layoutHistoryState);
+              #endif
       
               Recycle(title);
               Recycle(titleCStr);
