@@ -1199,6 +1199,8 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (me->clickCount >1 )
   {
     rv = frameselection->SetMouseDownState( PR_TRUE );
+  
+    frameselection->SetMouseDoubleDown(PR_TRUE);
     return HandleMultiplePress(aPresContext, aEvent, aEventStatus);
   }
 
@@ -1358,7 +1360,8 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
                                      contentOffsetEnd,
                                      beginContent);
   if (NS_FAILED(rv)) return rv;
-
+  
+  
   return PeekBackwardAndForward(selectPara ? eSelectParagraph
                                            : eSelectBeginLine,
                                 selectPara ? eSelectParagraph
@@ -1462,6 +1465,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIFrameSelection> frameselection;
   nsCOMPtr<nsISelectionController> selCon;
+  
   result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
   if (NS_SUCCEEDED(result) && selCon)
   {
@@ -1493,11 +1497,13 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
       PRInt32 contentOffset;
       PRInt32 target;
       nsMouseEvent *me = (nsMouseEvent *)aEvent;
-      result = GetDataForTableSelection(frameselection, presShell, me, getter_AddRefs(parentContent), &contentOffset, &target);
+      result = GetDataForTableSelection(frameselection, presShell, me, getter_AddRefs(parentContent), &contentOffset, &target);      
+
       if (NS_SUCCEEDED(result) && parentContent)
         frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
       else
         frameselection->HandleDrag(aPresContext, this, aEvent->point);
+      
       frameselection->StartAutoScrollTimer(aPresContext, this, aEvent->point, 30);
     }
   }

@@ -108,6 +108,9 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsISelectionController.h"//for the enums
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
+
+
+
 //#define DEBUG_TABLE 1
 
 // Selection's use of generated content iterators has been turned off
@@ -383,6 +386,8 @@ public:
   NS_IMETHOD SetDelayedCaretData(nsMouseEvent *aMouseEvent);
   NS_IMETHOD GetDelayedCaretData(nsMouseEvent **aMouseEvent);
   NS_IMETHOD GetLimiter(nsIContent **aLimiterContent);
+  NS_IMETHOD SetMouseDoubleDown(PRBool aDoubleDown);
+  NS_IMETHOD GetMouseDoubleDown(PRBool *aDoubleDown);
 #ifdef IBMBIDI
   NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
                                    nsIContent *aNode,
@@ -502,27 +507,28 @@ private:
   nsCOMPtr<nsIContent> mEndSelectedCell;
   nsCOMPtr<nsIContent> mAppendStartSelectedCell;
   nsCOMPtr<nsIContent> mUnselectCellOnMouseUp;
-  PRBool   mDragSelectingCells;
   PRInt32  mSelectingTableCellMode;
   PRInt32  mSelectedCellIndex;
-  PRBool   mIsEditor;
 
   //batching
   PRInt32 mBatching;
-  PRBool mChangesDuringBatching;
-  PRBool mNotifyFrames;
     
   nsIContent *mLimiter;     //limit selection navigation to a child of this node.
   nsIFocusTracker *mTracker;
-  PRBool mMouseDownState;   //for drag purposes
   PRInt16 mDisplaySelection; //for visual display purposes.
   PRInt32 mDesiredX;
-  PRBool mDesiredXSet;
   nsIScrollableView *mScrollView;
 
   PRBool mDelayCaretOverExistingSelection;
   PRBool mDelayedMouseEventValid;
   nsMouseEvent mDelayedMouseEvent;
+  PRPackedBool mChangesDuringBatching;
+  PRPackedBool mNotifyFrames;
+  PRPackedBool mIsEditor;
+  PRPackedBool mDragSelectingCells;
+  PRPackedBool mMouseDownState;   //for drag purposes
+  PRPackedBool mMouseDoubleDownState; //has the doubleclick down happened
+  PRPackedBool mDesiredXSet;
   short mReason; //reason for notifications of selection changing
 public:
   static nsIAtom *sTableAtom;
@@ -975,6 +981,9 @@ nsSelection::nsSelection()
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
   mLimiter = nsnull; //no default limiter.
+  
+  mMouseDoubleDownState = PR_FALSE;
+  
   if (sInstanceCount <= 0)
   {
     sTableAtom = NS_NewAtom("table");
@@ -2636,6 +2645,7 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
   nsIFrame *newFrame = 0;
   nsPoint   newPoint;
 
+
   result = ConstrainFrameAndPointToAnchorSubtree(aPresContext, aFrame, aPoint, &newFrame, newPoint);
 
   if (NS_FAILED(result))
@@ -2660,8 +2670,61 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
                                                    getter_AddRefs(newContent), 
                                                    startPos, contentOffsetEnd, beginOfContent);
 
+  //Is the desired content and offset currently in selection?
+  //if the double click flag is set then dont continue selection if the desired content and offset 
+  //are currently inside a selection.
+  //this will stop double click then mouse-drag from undo-ing the desired selecting of a word.
+  if (mMouseDoubleDownState)
+  {
+    nsFrameState  frameState;
+    newFrame->GetFrameState(&frameState);
+    PRBool insideSelection(PR_FALSE);
+    if ((frameState & NS_FRAME_SELECTED_CONTENT))
+    {
+      PRBool isCollapsed;
+      PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+      mDomSelections[index]->GetIsCollapsed(&isCollapsed);
+      if (!isCollapsed)
+      {
+        PRInt32 rangeCount;
+        result = mDomSelections[index]->GetRangeCount(&rangeCount);
+        if (NS_FAILED(result)) return result;
+
+        nsCOMPtr<nsIDOMNode> domNode;
+        domNode = do_QueryInterface(newContent);
+        if (domNode)
+        {
+          for (PRInt32 i = 0; i < rangeCount; i++)
+          {
+            nsCOMPtr<nsIDOMRange> range;
+
+            result = mDomSelections[index]->GetRangeAt(i, getter_AddRefs(range));
+            if (NS_FAILED(result) || !range) 
+              continue;//dont bail yet, iterate through them all
+
+            nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
+            if (NS_FAILED(result) || !nsrange) 
+              continue;//dont bail yet, iterate through them all
+
+            nsrange->IsPointInRange(domNode, startPos, &insideSelection);
+
+            // Done when we find a range that we are in
+            if (insideSelection)
+              break;
+          }
+        }
+      }
+    }
+
+    if (!insideSelection)
+      mMouseDoubleDownState = PR_FALSE;
+    else
+      return NS_OK; //dragging in selection aborted
+  }
+
   // do we have CSS that changes selection behaviour?
   {
+    //add scope for nsCOMPtr
     PRBool    changeSelection;
     nsCOMPtr<nsIContent>  selectContent;
     PRInt32   newStart, newEnd;
@@ -3614,7 +3677,8 @@ printf("HandleTableSelection: Mouse UP event. mDragSelectingCells=%d, mStartSele
       // First check if we are extending a block selection
       PRInt32 rangeCount;
       result = mDomSelections[index]->GetRangeCount(&rangeCount);
-      if (NS_FAILED(result)) return result;
+      if (NS_FAILED(result)) 
+        return result;
 
       if (rangeCount > 0 && aMouseEvent->isShift && 
           mAppendStartSelectedCell && mAppendStartSelectedCell != childContent)
@@ -4599,6 +4663,20 @@ nsSelection::GetLimiter(nsIContent **aLimiterContent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSelection::SetMouseDoubleDown(PRBool aDoubleDown)
+{
+  mMouseDoubleDownState = aDoubleDown;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSelection::GetMouseDoubleDown(PRBool *aDoubleDown)
+{
+  *aDoubleDown = mMouseDoubleDownState;
+  return NS_OK;
+}
+ 
 //END nsISelection interface implementations
 
 #ifdef XP_MAC
