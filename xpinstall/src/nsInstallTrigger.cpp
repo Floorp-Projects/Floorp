@@ -30,6 +30,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
 
 #include "nsIPref.h"
 
@@ -106,10 +107,10 @@ nsInstallTrigger::SetScriptObject(void *aScriptObject)
 
 NS_IMETHODIMP 
 nsInstallTrigger::HandleContent(const char * aContentType, 
-                             const char * aCommand, 
-                             const char * aWindowTarget, 
-                             nsISupports* aWindowContext, 
-                             nsIChannel * aChannel)
+                                const char * aCommand, 
+                                const char * aWindowTarget, 
+                                nsISupports* aWindowContext, 
+                                nsIChannel * aChannel)
 {
     nsresult rv = NS_OK;
     if (!aChannel) return NS_ERROR_NULL_POINTER;
@@ -125,13 +126,22 @@ nsInstallTrigger::HandleContent(const char * aContentType,
             if (!spec)
                 return NS_ERROR_NULL_POINTER;
 
-            PRBool value;
-            rv = StartSoftwareUpdate(NS_ConvertASCIItoUCS2(spec), 0, &value);
+            nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner = do_QueryInterface(aWindowContext);
+            if (globalObjectOwner)
+            {
+                nsCOMPtr<nsIScriptGlobalObject> globalObject;
+                globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+                if (globalObject)
+                {
+                    PRBool value;
+                    rv = StartSoftwareUpdate(globalObject, NS_ConvertASCIItoUCS2(spec), 0, &value);
             
-                nsMemory::Free(spec);
+                    nsMemory::Free(spec);
 
-            if (NS_SUCCEEDED(rv) && value) 
-                return NS_OK;
+                    if (NS_SUCCEEDED(rv) && value) 
+                        return NS_OK;
+                }
+            }
         }
     }
 
@@ -168,7 +178,7 @@ nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
 }
 
 NS_IMETHODIMP
-nsInstallTrigger::Install(nsXPITriggerInfo* aTrigger, PRBool* aReturn)
+nsInstallTrigger::Install(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTrigger, PRBool* aReturn)
 {
     NS_ASSERTION(aReturn, "Invalid pointer arg");
     *aReturn = PR_FALSE;
@@ -185,7 +195,7 @@ nsInstallTrigger::Install(nsXPITriggerInfo* aTrigger, PRBool* aReturn)
     if (mgr)
     {
         // The Install manager will delete itself when done
-        rv = mgr->InitManager( aTrigger, 0 );
+        rv = mgr->InitManager( aGlobalObject, aTrigger, 0 );
         if (NS_SUCCEEDED(rv))
             *aReturn = PR_TRUE;
     }
@@ -201,7 +211,7 @@ nsInstallTrigger::Install(nsXPITriggerInfo* aTrigger, PRBool* aReturn)
 
 
 NS_IMETHODIMP
-nsInstallTrigger::InstallChrome(PRUint32 aType, nsXPITriggerItem *aItem, PRBool* aReturn)
+nsInstallTrigger::InstallChrome(nsIScriptGlobalObject* aGlobalObject, PRUint32 aType, nsXPITriggerItem *aItem, PRBool* aReturn)
 {
     NS_ENSURE_ARG_POINTER(aReturn);
     NS_ENSURE_ARG_POINTER(aItem);
@@ -226,7 +236,7 @@ nsInstallTrigger::InstallChrome(PRUint32 aType, nsXPITriggerItem *aItem, PRBool*
             trigger->Add( aItem );
 
             // The Install manager will delete itself when done
-            rv = mgr->InitManager( trigger, aType );
+            rv = mgr->InitManager( aGlobalObject, trigger, aType );
             *aReturn = PR_TRUE;
         }
         else
@@ -240,7 +250,7 @@ nsInstallTrigger::InstallChrome(PRUint32 aType, nsXPITriggerItem *aItem, PRBool*
 }
 
 NS_IMETHODIMP    
-nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRBool* aReturn)
+nsInstallTrigger::StartSoftwareUpdate(nsIScriptGlobalObject* aGlobalObject, const nsString& aURL, PRInt32 aFlags, PRBool* aReturn)
 {
     PRBool enabled;
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
@@ -263,7 +273,7 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRBo
             {
                 trigger->Add( item );
                 // The Install manager will delete itself when done
-                rv = mgr->InitManager( trigger, 0 );
+                rv = mgr->InitManager(aGlobalObject, trigger, 0 );
                 *aReturn = PR_TRUE;
             }
             else
@@ -283,105 +293,6 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRBo
     return rv;
 }
 
-NS_IMETHODIMP    
-nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn)
-{
-    nsInstallVersion inVersion;
-    inVersion.Init(aVersion);
-    return ConditionalSoftwareUpdate(aURL, aRegName, aDiffLevel, &inVersion, aMode, aReturn);
-}
-
-NS_IMETHODIMP    
-nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn)
-{
-    PRBool needJar = PR_FALSE;
-
-    PRBool enabled;
-
-    UpdateEnabled(&enabled);
-    if (!enabled)
-        return NS_OK;
-
-    if (aURL.IsEmpty() || aVersion == nsnull)
-    {
-        needJar = PR_TRUE;
-    }
-    else
-    {
-        char * regNameCString = aRegName.ToNewCString();
-
-        REGERR status = VR_ValidateComponent( regNameCString );
-        
-        if ( status == REGERR_NOFIND || status == REGERR_NOFILE )
-        {
-            // either component is not in the registry or it's a file
-            // node and the physical file is missing
-            needJar = PR_TRUE;
-        }
-        else
-        {
-            VERSION oldVersion;
-            PRInt32 diffValue;
-
-            status = VR_GetVersion( regNameCString, &oldVersion );
-            nsInstallVersion oldInstallVersion;
-
-            oldInstallVersion.Init(oldVersion.major, 
-                                oldVersion.minor, 
-                                oldVersion.release, 
-                                oldVersion.build);
-
-
-            if ( status != REGERR_OK )
-                needJar = PR_TRUE;
-            else if ( aDiffLevel < 0 )
-            {
-                aVersion->CompareTo(&oldInstallVersion, &diffValue); 
-                needJar = (diffValue <= aDiffLevel);
-            }
-            else
-            {
-                aVersion->CompareTo(&oldInstallVersion, &diffValue);
-                needJar = (diffValue >= aDiffLevel);
-            }
-        }
-    }
-
-    if (needJar)
-        return StartSoftwareUpdate(aURL, aMode, aReturn);
-    else
-        *aReturn = 0;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn)
-{
-    return ConditionalSoftwareUpdate(aURL, aRegName, BLD_DIFF, aVersion, aMode, aReturn);
-}
-
-NS_IMETHODIMP    
-nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn)
-{
-    nsInstallVersion inVersion;
-    inVersion.Init(aVersion);
-    return ConditionalSoftwareUpdate(aURL, aRegName, BLD_DIFF, &inVersion, aMode, aReturn);
-}
-
-NS_IMETHODIMP    
-nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)
-{
-    nsInstallVersion inVersion;
-    inVersion.Init(aVersion);;
-    return ConditionalSoftwareUpdate(aURL, aRegName, BLD_DIFF, &inVersion, 0, aReturn);
-}
-
-NS_IMETHODIMP    
-nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
-{
-    return ConditionalSoftwareUpdate(aURL, aRegName, BLD_DIFF, aVersion, 0, aReturn);
-}
 
 NS_IMETHODIMP    
 nsInstallTrigger::CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)
