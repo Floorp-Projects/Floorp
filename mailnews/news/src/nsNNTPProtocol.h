@@ -37,8 +37,16 @@
 
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
+
+#ifdef XP_UNIX
+#define ARTICLE_PATH "/usr/tmp/tempArticle.eml"
+#define ARTICLE_PATH_URL ARTICLE_PATH
+#endif
+
+#ifdef XP_PC
 #define ARTICLE_PATH  "c:\\temp\\tempArticle.eml"
 #define ARTICLE_PATH_URL "C|/temp/tempArticle.eml"
+#endif
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
