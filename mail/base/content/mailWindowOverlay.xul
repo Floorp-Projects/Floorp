@@ -1118,6 +1118,8 @@
 
           <menu label="&msgsMenu.label;" id="viewMessageViewMenu" accesskey="&msgsMenu.accesskey;">
             <menupopup id="viewMessageViewPopup" onpopupshowing="InitViewMessageViewMenu()">
+              <menuitem id="viewThreaded" type="checkbox" label="&viewThreaded.label;" accesskey="&viewThreaded.accesskey;" oncommand="MsgToggleThreaded();"/>
+              <menuseparator/>
               <menuitem id="viewAll" type="radio" name="viewmessages" label="&viewAll.label;" accesskey="&viewAll.accesskey;" oncommand="ViewMessagesBy('viewPickerAll');"/>
               <menuitem id="viewUnread" type="radio" name="viewmessages" label="&viewUnread.label;" accesskey="&viewUnread.accesskey;" oncommand="ViewMessagesBy('viewPickerUnread');"/>
               <menuseparator/>

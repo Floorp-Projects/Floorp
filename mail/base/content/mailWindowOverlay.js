@@ -256,6 +256,13 @@ function InitViewMessagesMenu()
 
 function InitViewMessageViewMenu()
 {
+  var viewFlags = gDBView.viewFlags;
+  var viewType = gDBView.viewType;
+
+  var threadedMenuItem = document.getElementById("viewThreaded");
+  if (threadedMenuItem)
+    threadedMenuItem.setAttribute("checked", (viewFlags & nsMsgViewFlagsType.kThreadedDisplay) != 0);
+
   var currentViewValue = document.getElementById("viewPicker").value;
 
   var allMenuItem = document.getElementById("viewAll");
