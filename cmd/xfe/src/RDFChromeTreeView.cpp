@@ -32,7 +32,10 @@
 #include <Xfe/ToolBar.h>
 #include <Xm/Label.h>
 
+
 #define TREE_NAME "RdfTree"
+#define MM_PER_INCH      (25.4)
+#define POINTS_PER_INCH  (72.0)
 
 extern "C" RDF_NCVocab  gNavCenter;
 
@@ -49,6 +52,19 @@ typedef struct _closeRdfViewCBStruct {
   XFE_RDFChromeTreeView *  rdfview;
   XFE_NavCenterView *  ncview;
  } closeRdfViewCBStruct;
+extern "C"
+{
+CL_Compositor *fe_create_compositor (MWContext *context);
+XFE_Frame * fe_getFrameFromContext(MWContext* context);
+void fe_url_exit (URL_Struct *url, int status, MWContext *context);
+void htmlPaneExposeEH(Widget, XtPointer, XEvent *, Boolean *);
+void kdebug_printWidgetTree(Widget w, int column);
+void fe_set_scrolled_default_size(MWContext *);
+void fe_get_final_context_resources(MWContext *);
+void fe_find_scrollbar_sizes(MWContext *);
+
+MWContext * fe_CreateNewContext(MWContextType, Widget, fe_colormap * , XP_Bool);
+}
 
 //////////////////////////////////////////////////////////////////////////
 XFE_RDFChromeTreeView::XFE_RDFChromeTreeView(XFE_Component *	toplevel, 
@@ -153,7 +169,7 @@ XFE_RDFChromeTreeView::createDivisionForm()
 {
 	XP_ASSERT( XfeIsAlive(getBaseWidget()) );
 	XP_ASSERT( _divisionForm == NULL );
-	XP_ASSERT( XfeIsAlive(_viewLabel) );
+    //	XP_ASSERT( XfeIsAlive(_viewLabel) );
 
 	// Division form
 	_divisionForm = 
@@ -174,18 +190,36 @@ XFE_RDFChromeTreeView::createHtmlPane()
 	XP_ASSERT( XfeIsAlive(_divisionForm) );
 	XP_ASSERT( _htmlPaneForm == NULL );
 	XP_ASSERT( _htmlPane == NULL );
-	
+    MWContext *     context = NULL;
+    XFE_Frame *  frame = fe_getFrameFromContext(getContext());
+    char * url = getenv("HTMLPANEURL");
+
+
+
 	_htmlPaneForm = XtVaCreateWidget("htmlPaneForm",
 									 xmFormWidgetClass,
 									 _divisionForm,
 									 XmNshadowThickness,		0,
 									 XmNbackground,				0,
 									 NULL);
-#if 0
+
+    context = fe_CreateNewContext(MWContextPane, _htmlPaneForm, 
+                                  CONTEXT_DATA(getContext())->colormap,
+                                  TRUE);
+
+    ViewGlue_addMapping(frame, context);
+
+    /* For some reason these 2 functions are not called in the context 
+     * creation call above
+     */
+    fe_init_image_callbacks(context);
+    fe_InitColormap(context);
+
+
 	_htmlPane = new XFE_HTMLView(this,
 								 _htmlPaneForm,
-								 NULL,
-								 getContext());
+								 this,
+								 context);
 
 	addView(_htmlPane);
 
@@ -197,11 +231,14 @@ XFE_RDFChromeTreeView::createHtmlPane()
                   NULL);
 	
 	_htmlPane->show();
+    
 
-	// HACK HACK HACK
-	_htmlPane->getURL(NET_CreateURLStruct("http://dunk",NET_DONT_RELOAD));
-#endif
+    XtAddEventHandler((_htmlPane->getBaseWidget()), StructureNotifyMask, True, 
+                      (XtEventHandler) htmlPaneExposeEH, (XtPointer) _htmlPane);
+
+
 }
+
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
 XFE_RDFChromeTreeView::doAttachments()
@@ -289,6 +326,7 @@ XFE_RDFChromeTreeView::doAttachments()
 						  NULL);
 			
 			XtManageChild(_htmlPaneForm);
+            //            XtRealizeWidget(_htmlPaneForm);
 			XtManageChild(_tree);
 		}
 	}
@@ -353,6 +391,7 @@ XFE_RDFChromeTreeView::doAttachments()
 						  NULL);
 			
 			XtManageChild(_htmlPaneForm);
+            //            XtRealizeWidget(_htmlPaneForm);
 			XtManageChild(_tree);
 		}
 	}
@@ -431,7 +470,6 @@ XFE_RDFChromeTreeView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtP
 
 #endif /*MOZ_SELECTOR_BAR*/
 }
-//////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -559,3 +597,44 @@ XFE_RDFChromeTreeView::setHtmlPaneSizing(EHtmlPaneSizing sizing)
     doAttachments();
 }
 //////////////////////////////////////////////////////////////////////////
+extern "C"
+void 
+htmlPaneExposeEH(Widget w, XtPointer clientData, XEvent * event, Boolean* continue_to_dispatch)
+{
+
+    XFE_HTMLView *  htmlview = (XFE_HTMLView *)clientData;
+    MWContext *  context = htmlview->getContext();
+    char * url = getenv("HTMLPANEURL");
+    if (!url)
+      url = "http://people.netscape.com/radha/sony/images/tweetee.gif";
+
+    if (event && (event->type == MapNotify))
+	{
+		// We only need this event handler to be called once
+		XtRemoveEventHandler(w,StructureNotifyMask,True,
+							 htmlPaneExposeEH, clientData);
+
+        if (!XtIsRealized(w))
+           XtRealizeWidget(w);
+
+        // Create the compositor
+        context->compositor = fe_create_compositor(context);
+        XtVaSetValues (CONTEXT_DATA (context)->scrolled, XmNinitialFocus,
+                 CONTEXT_DATA (context)->drawing_area, 0);
+
+        // Do the required scroller voodoo
+        fe_set_scrolled_default_size(context);
+        fe_get_final_context_resources(context);
+        fe_find_scrollbar_sizes(context);
+        fe_InitScrolling(context); 
+        
+        // Load the URL
+        if (url)
+          NET_GetURL(NET_CreateURLStruct(url, NET_DONT_RELOAD),
+               FO_CACHE_AND_PRESENT, context,
+               fe_url_exit);
+
+    }
+
+}  /* htmlPaneExposeEH  */
+
