@@ -135,6 +135,34 @@ nsIFrame::SetVerifyTreeEnable(PRBool aEnabled)
   gFrameVerifyTreeEnable = aEnabled;
 }
 
+#ifdef NS_DEBUG
+static PRLogModuleInfo* gStyleVerifyTreeLogModuleInfo;
+#endif
+
+static PRBool gStyleVerifyTreeEnable = PRBool(0x55);
+
+NS_LAYOUT PRBool
+nsIFrame::GetVerifyStyleTreeEnable()
+{
+#ifdef NS_DEBUG
+  if (gStyleVerifyTreeEnable == PRBool(0x55)) {
+    if (nsnull == gStyleVerifyTreeLogModuleInfo) {
+      gStyleVerifyTreeLogModuleInfo = PR_NewLogModule("styleverifytree");
+      gStyleVerifyTreeEnable = 0 != gStyleVerifyTreeLogModuleInfo->level;
+      printf("Note: styleverifytree is %sabled\n",
+             gStyleVerifyTreeEnable ? "en" : "dis");
+    }
+  }
+#endif
+  return gStyleVerifyTreeEnable;
+}
+
+NS_LAYOUT void
+nsIFrame::SetVerifyStyleTreeEnable(PRBool aEnabled)
+{
+  gStyleVerifyTreeEnable = aEnabled;
+}
+
 NS_LAYOUT PRLogModuleInfo*
 nsIFrame::GetLogModuleInfo()
 {
@@ -391,7 +419,7 @@ nsFrame::GetAdditionalStyleContext(PRInt32 aIndex,
     return NS_ERROR_NULL_POINTER;
   }
   *aStyleContext = nsnull;
-  return ((aIndex < 0) ? NS_ERROR_INVALID_ARG : NS_OK);
+  return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
@@ -429,50 +457,6 @@ void nsFrame::CaptureStyleChangeFor(nsIFrame* aFrame,
       *aLocalChange = aParentChange;
     }
   }
-}
-
-NS_IMETHODIMP nsFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
-                                             nsIStyleContext* aParentContext,
-                                             PRInt32 aParentChange,
-                                             nsStyleChangeList* aChangeList,
-                                             PRInt32* aLocalChange)
-{
-// XXX TURN THIS ON  NS_PRECONDITION(0 == (mState & NS_FRAME_IN_REFLOW), "Shouldn't set style context during reflow");
-  NS_ASSERTION(nsnull != mStyleContext, "null style context");
-
-  nsresult result = NS_COMFALSE;
-
-  if (nsnull != mStyleContext) {
-    nsIAtom*  pseudoTag = nsnull;
-    mStyleContext->GetPseudoType(pseudoTag);
-    nsIStyleContext*  newContext;
-    if (nsnull != pseudoTag) {
-      result = aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoTag,
-                                                          aParentContext,
-                                                          PR_FALSE, &newContext);
-    }
-    else {
-      result = aPresContext->ResolveStyleContextFor(mContent, aParentContext,
-                                                    PR_FALSE, &newContext);
-    }
-
-    NS_ASSERTION(nsnull != newContext, "failed to get new style context");
-    if (nsnull != newContext) {
-      if (newContext != mStyleContext) {
-        nsIStyleContext* oldContext = mStyleContext;
-        mStyleContext = newContext;
-        result = DidSetStyleContext(aPresContext);
-        CaptureStyleChangeFor(this, oldContext, newContext, 
-                              aParentChange, aChangeList, aLocalChange);
-        NS_RELEASE(oldContext);
-      }
-      else {
-        NS_RELEASE(newContext);
-        result = NS_COMFALSE;
-      }
-    }
-  }
-  return result;
 }
 
 // Geometric parent member functions
