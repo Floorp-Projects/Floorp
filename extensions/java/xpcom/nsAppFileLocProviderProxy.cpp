@@ -90,16 +90,7 @@ nsAppFileLocProviderProxy::GetFile(const char* aProp, PRBool* aIsPersistant,
     return NS_ERROR_FAILURE;
 
   // Set boolean output value
-  jboolean isCopy = PR_FALSE;
-  jboolean* array = mJavaEnv->GetBooleanArrayElements(persistant, &isCopy);
-  if (!array) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  } else {
-    *aIsPersistant = array[0];
-    if (isCopy) {
-      mJavaEnv->ReleaseBooleanArrayElements(persistant, array, JNI_ABORT);
-    }
-  }
+  mJavaEnv->GetBooleanArrayRegion(persistant, 0, 1, (jboolean*) aIsPersistant);
 
   // Set nsIFile result value
   nsCOMPtr<nsILocalFile> localFile;

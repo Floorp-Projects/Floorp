@@ -206,7 +206,9 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
 
   // construct IID string
   char* iid_str = aIID.ToString();
-  jstring iid_jstr = mJavaEnv->NewStringUTF(iid_str);
+  if (iid_str) {
+    jstring iid_jstr = mJavaEnv->NewStringUTF(iid_str);
+  }
   if (!iid_str || !iid_jstr) {
     mJavaEnv->ExceptionClear();
     return NS_ERROR_OUT_OF_MEMORY;
@@ -476,11 +478,18 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
     }
   }
 
-  // Handle any inout params
+  // Handle any 'inout', 'out' and 'retval' params
   if (NS_SUCCEEDED(rv)) {
     for (PRUint8 i = 0; i < paramCount; i++)
     {
       const nsXPTParamInfo &paramInfo = aMethodInfo->GetParam(i);
+      if (paramInfo.IsIn() && !paramInfo.IsOut()) // 'in'
+        continue;
+
+      // If param is null, then caller is not expecting an output value.
+      if (aParams[i].val.p == nsnull)
+        continue;
+
       if (!paramInfo.IsRetval()) {
         rv = FinalizeJavaParams(paramInfo, aMethodInfo, aMethodIndex, aParams,
                                 aParams[i], java_params[i]);
@@ -499,6 +508,9 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
   return rv;
 }
 
+/**
+ * Handle 'in', 'inout', and 'out' params
+ */
 nsresult
 nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
                 const nsXPTMethodInfo* aMethodInfo,
@@ -509,23 +521,29 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 {
   nsresult rv = NS_OK;
   const nsXPTType &type = aParamInfo.GetType();
+
   PRUint8 tag = type.TagPart();
   switch (tag)
   {
     case nsXPTType::T_I8:
     case nsXPTType::T_U8:
     {
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.b = aVariant.val.u8;
         aMethodSig.Append('B');
-      } else {
-        jbyteArray array = mJavaEnv->NewByteArray(1);
-        if (!array) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          jbyteArray array = mJavaEnv->NewByteArray(1);
+          if (!array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+
+          mJavaEnv->SetByteArrayRegion(array, 0, 1, (jbyte*) aVariant.val.p);
+          aJValue.l = array;
+        } else {
+          aJValue.l = nsnull;
         }
-        mJavaEnv->SetByteArrayRegion(array, 0, 1, (jbyte*) &(aVariant.val.u8));
-        aJValue.l = array;
         aMethodSig.AppendLiteral("[B");
       }
     }
@@ -534,18 +552,22 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I16:
     case nsXPTType::T_U16:
     {
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.s = aVariant.val.u16;
         aMethodSig.Append('S');
-      } else {
-        jshortArray array = mJavaEnv->NewShortArray(1);
-        if (!array) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          jshortArray array = mJavaEnv->NewShortArray(1);
+          if (!array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+
+          mJavaEnv->SetShortArrayRegion(array, 0, 1, (jshort*) aVariant.val.p);
+          aJValue.l = array;
+        } else {
+          aJValue.l = nsnull;
         }
-        mJavaEnv->SetShortArrayRegion(array, 0, 1,
-                                      (jshort*) &(aVariant.val.u16));
-        aJValue.l = array;
         aMethodSig.AppendLiteral("[S");
       }
     }
@@ -554,17 +576,22 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I32:
     case nsXPTType::T_U32:
     {
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.i = aVariant.val.u32;
         aMethodSig.Append('I');
-      } else {
-        jintArray array = mJavaEnv->NewIntArray(1);
-        if (!array) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          jintArray array = mJavaEnv->NewIntArray(1);
+          if (!array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+
+          mJavaEnv->SetIntArrayRegion(array, 0, 1, (jint*) aVariant.val.p);
+          aJValue.l = array;
+        } else {
+          aJValue.l = nsnull;
         }
-        mJavaEnv->SetIntArrayRegion(array, 0, 1, (jint*) &(aVariant.val.u32));
-        aJValue.l = array;
         aMethodSig.AppendLiteral("[I");
       }
     }
@@ -573,17 +600,22 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I64:
     case nsXPTType::T_U64:
     {
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.j = aVariant.val.u64;
         aMethodSig.Append('J');
-      } else {
-        jlongArray array = mJavaEnv->NewLongArray(1);
-        if (!array) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          jlongArray array = mJavaEnv->NewLongArray(1);
+          if (!array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+
+          mJavaEnv->SetLongArrayRegion(array, 0, 1, (jlong*) aVariant.val.p);
+          aJValue.l = array;
+        } else {
+          aJValue.l = nsnull;
         }
-        mJavaEnv->SetLongArrayRegion(array, 0, 1, (jlong*) &(aVariant.val.u64));
-        aJValue.l = array;
         aMethodSig.AppendLiteral("[J");
       }
     }
@@ -591,17 +623,22 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_FLOAT:
     {
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.f = aVariant.val.f;
         aMethodSig.Append('F');
-      } else {
-        jfloatArray array = mJavaEnv->NewFloatArray(1);
-        if (!array) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          jfloatArray array = mJavaEnv->NewFloatArray(1);
+          if (!array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+
+          mJavaEnv->SetFloatArrayRegion(array, 0, 1, (jfloat*) aVariant.val.p);
+          aJValue.l = array;
+        } else {
+          aJValue.l = nsnull;
         }
-        mJavaEnv->SetFloatArrayRegion(array, 0, 1, (jfloat*) &(aVariant.val.f));
-        aJValue.l = array;
         aMethodSig.AppendLiteral("[F");
       }
     }
@@ -609,18 +646,23 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_DOUBLE:
     {
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.d = aVariant.val.d;
         aMethodSig.Append('D');
-      } else {
-        jdoubleArray array = mJavaEnv->NewDoubleArray(1);
-        if (!array) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          jdoubleArray array = mJavaEnv->NewDoubleArray(1);
+          if (!array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+
+          mJavaEnv->SetDoubleArrayRegion(array, 0, 1,
+                                         (jdouble*) aVariant.val.p);
+          aJValue.l = array;
+        } else {
+          aJValue.l = nsnull;
         }
-        mJavaEnv->SetDoubleArrayRegion(array, 0, 1,
-                                       (jdouble*) &(aVariant.val.d));
-        aJValue.l = array;
         aMethodSig.AppendLiteral("[D");
       }
     }
@@ -628,18 +670,23 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_BOOL:
     {
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.z = aVariant.val.b;
         aMethodSig.Append('Z');
-      } else {
-        jbooleanArray array = mJavaEnv->NewBooleanArray(1);
-        if (!array) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          jbooleanArray array = mJavaEnv->NewBooleanArray(1);
+          if (!array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+
+          mJavaEnv->SetBooleanArrayRegion(array, 0, 1,
+                                          (jboolean*) aVariant.val.p);
+          aJValue.l = array;
+        } else {
+          aJValue.l = nsnull;
         }
-        mJavaEnv->SetBooleanArrayRegion(array, 0, 1,
-                                        (jboolean*) &(aVariant.val.b));
-        aJValue.l = array;
         aMethodSig.AppendLiteral("[Z");
       }
     }
@@ -648,17 +695,25 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_CHAR:
     case nsXPTType::T_WCHAR:
     {
-      if (!aParamInfo.IsOut()) {
-        aJValue.c = aVariant.val.wc;
+      if (!aParamInfo.IsOut()) {  // 'in'
+        if (tag == nsXPTType::T_CHAR)
+          aJValue.c = aVariant.val.c;
+        else
+          aJValue.c = aVariant.val.wc;
         aMethodSig.Append('C');
-      } else {
-        jcharArray array = mJavaEnv->NewCharArray(1);
-        if (!array) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          jcharArray array = mJavaEnv->NewCharArray(1);
+          if (!array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+
+          mJavaEnv->SetCharArrayRegion(array, 0, 1, (jchar*) aVariant.val.p);
+          aJValue.l = array;
+        } else {
+          aJValue.l = nsnull;
         }
-        mJavaEnv->SetCharArrayRegion(array, 0, 1, (jchar*) &(aVariant.val.wc));
-        aJValue.l = array;
         aMethodSig.AppendLiteral("[C");
       }
     }
@@ -668,10 +723,10 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_WCHAR_STR:
     {
       void* ptr = nsnull;
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         ptr = aVariant.val.p;
-      } else if (aVariant.val.p) {
-        void** variant = NS_REINTERPRET_CAST(void**, aVariant.val.p);
+      } else if (aVariant.val.p) {  // 'inout' & 'out'
+        void** variant = NS_STATIC_CAST(void**, aVariant.val.p);
         ptr = *variant;
       }
 
@@ -683,22 +738,26 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
           const PRUnichar* buf = (const PRUnichar*) ptr;
           str = mJavaEnv->NewString(buf, nsCRT::strlen(buf));
         }
-      } else {
-        str = mJavaEnv->NewStringUTF((const char*)"");
-      }
-      if (!str) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        break;
-      }
-
-      if (!aParamInfo.IsOut()) {
-        aJValue.l = str;
-        aMethodSig.AppendLiteral("Ljava/lang/String;");
-      } else {
-        aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, str);
-        if (aJValue.l == nsnull) {
+        if (!str) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
+        }
+      } else {
+        str = nsnull;
+      }
+
+      if (!aParamInfo.IsOut()) {  // 'in'
+        aJValue.l = str;
+        aMethodSig.AppendLiteral("Ljava/lang/String;");
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, str);
+          if (aJValue.l == nsnull) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+        } else {
+          aJValue.l = nsnull;
         }
         aMethodSig.AppendLiteral("[Ljava/lang/String;");
       }
@@ -707,26 +766,41 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_IID:
     {
-      jstring str = nsnull;
-      nsID* iid = (nsID*) aVariant.val.p;
+      nsID* iid = nsnull;
+      if (!aParamInfo.IsOut()) {  // 'in'
+        iid = NS_STATIC_CAST(nsID*, aVariant.val.p);
+      } else if (aVariant.val.p) {  // 'inout' & 'out'
+        nsID** variant = NS_STATIC_CAST(nsID**, aVariant.val.p);
+        iid = *variant;
+      }
+
+      jobject str;
       if (iid) {
         char* iid_str = iid->ToString();
-        str = mJavaEnv->NewStringUTF(iid_str);
+        if (iid_str) {
+          str = mJavaEnv->NewStringUTF(iid_str);
+        }
         if (!iid_str || !str) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
         PR_Free(iid_str);
+      } else {
+        str = nsnull;
       }
 
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.l = str;
         aMethodSig.AppendLiteral("Ljava/lang/String;");
-      } else {
-        aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, str);
-        if (aJValue.l == nsnull) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, str);
+          if (aJValue.l == nsnull) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+        } else {
+          aJValue.l = nsnull;
         }
         aMethodSig.AppendLiteral("[Ljava/lang/String;");
       }
@@ -736,22 +810,29 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
+      void* xpcom_obj = nsnull;
+      if (!aParamInfo.IsOut()) {  // 'in'
+        xpcom_obj = aVariant.val.p;
+      } else if (aVariant.val.p) {  // 'inout' & 'out'
+        void** variant = NS_STATIC_CAST(void**, aVariant.val.p);
+        xpcom_obj = *variant;
+      }
+
       jobject java_stub = nsnull;
-      if (aVariant.val.p) {
-        java_stub = GetMatchingJavaObject(mJavaEnv, aVariant.val.p);
+      if (xpcom_obj) {
+        java_stub = GetMatchingJavaObject(mJavaEnv, xpcom_obj);
 
         if (java_stub == nsnull) {
           // wrap xpcom instance
           nsID iid;
-          JavaXPCOMInstance* inst;
           rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
                                     aMethodIndex, aDispatchParams,
                                     PR_FALSE, iid);
           if (NS_FAILED(rv))
             break;
 
-          rv = CreateJavaXPCOMInstance((nsISupports*) aVariant.val.p, &iid,
-                                       &inst);
+          JavaXPCOMInstance* inst;
+          rv = CreateJavaXPCOMInstance((nsISupports*) xpcom_obj, &iid, &inst);
           if (NS_FAILED(rv))
             break;
 
@@ -769,14 +850,18 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
         }
       }
 
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.l = java_stub;
         aMethodSig.AppendLiteral("Lorg/mozilla/xpcom/nsISupports;");
-      } else {
-        aJValue.l = mJavaEnv->NewObjectArray(1, nsISupportsClass, java_stub);
-        if (aJValue.l == nsnull) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          aJValue.l = mJavaEnv->NewObjectArray(1, nsISupportsClass, java_stub);
+          if (aJValue.l == nsnull) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+        } else {
+          aJValue.l = nsnull;
         }
         aMethodSig.AppendLiteral("[Lorg/mozilla/xpcom/nsISupports;");
       }
@@ -786,24 +871,37 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_ASTRING:
     case nsXPTType::T_DOMSTRING:
     {
-      jstring jstr = nsnull;
-      nsString* str = (nsString*) aVariant.val.p;
+      nsString* str = nsnull;
+      if (!aParamInfo.IsOut()) {  // 'in'
+        str = NS_STATIC_CAST(nsString*, aVariant.val.p);
+      } else if (aVariant.val.p) {  // 'inout' & 'out'
+        nsString** variant = NS_STATIC_CAST(nsString**, aVariant.val.p);
+        str = *variant;
+      }
+
+      jstring jstr;
       if (str) {
         jstr = mJavaEnv->NewString(str->get(), str->Length());
         if (!jstr) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
+      } else {
+        jstr = nsnull;
       }
 
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.l = jstr;
         aMethodSig.AppendLiteral("Ljava/lang/String;");
-      } else {
-        aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, jstr);
-        if (aJValue.l == nsnull) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, jstr);
+          if (aJValue.l == nsnull) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+        } else {
+          aJValue.l = nsnull;
         }
         aMethodSig.AppendLiteral("[Ljava/lang/String;");
       }
@@ -813,24 +911,37 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_UTF8STRING:
     case nsXPTType::T_CSTRING:
     {
-      jstring jstr = nsnull;
-      nsCString* str = (nsCString*) aVariant.val.p;
+      nsCString* str = nsnull;
+      if (!aParamInfo.IsOut()) {  // 'in'
+        str = NS_STATIC_CAST(nsCString*, aVariant.val.p);
+      } else if (aVariant.val.p) {  // 'inout' & 'out'
+        nsCString** variant = NS_STATIC_CAST(nsCString**, aVariant.val.p);
+        str = *variant;
+      }
+
+      jstring jstr;
       if (str) {
         jstr = mJavaEnv->NewStringUTF(str->get());
         if (!jstr) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
+      } else {
+        jstr = nsnull;
       }
 
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.l = jstr;
         aMethodSig.AppendLiteral("Ljava/lang/String;");
-      } else {
-        aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, jstr);
-        if (aJValue.l == nsnull) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, jstr);
+          if (aJValue.l == nsnull) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+        } else {
+          aJValue.l = nsnull;
         }
         aMethodSig.AppendLiteral("[Ljava/lang/String;");
       }
@@ -840,17 +951,22 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     // Pass the 'void*' address as an integer
     case nsXPTType::T_VOID:
     {
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.i = (jint) aVariant.val.p;
         aMethodSig.Append('I');
-      } else {
-        jintArray array = mJavaEnv->NewIntArray(1);
-        if (!array) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      } else {  // 'inout' & 'out'
+        if (aVariant.val.p) {
+          jintArray array = mJavaEnv->NewIntArray(1);
+          if (!array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+
+          mJavaEnv->SetIntArrayRegion(array, 0, 1, (jint*) aVariant.val.p);
+          aJValue.l = array;
+        } else {
+          aJValue.l = nsnull;
         }
-        mJavaEnv->SetIntArrayRegion(array, 0, 1, (jint*) &(aVariant.val.p));
-        aJValue.l = array;
         aMethodSig.AppendLiteral("[I");
       }
     }
@@ -950,6 +1066,9 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
   return NS_OK;
 }
 
+/**
+ * Handle 'inout', 'out', and 'retval' params
+ */
 nsresult
 nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
                                  const nsXPTMethodInfo* aMethodInfo,
@@ -960,29 +1079,18 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
   nsresult rv = NS_OK;
   const nsXPTType &type = aParamInfo.GetType();
 
-  switch (type.TagPart())
+  PRUint8 tag = type.TagPart();
+  switch (tag)
   {
     case nsXPTType::T_I8:
     case nsXPTType::T_U8:
     {
-      if (aParamInfo.IsOut()) {
-        if (aParamInfo.IsRetval()) {
-          *((PRUint8 *) aVariant.val.p) = aJValue.b;
-        } else {
-          if (aJValue.l) {
-            jboolean isCopy = PR_FALSE;
-            jbyte* array = mJavaEnv->GetByteArrayElements((jbyteArray) aJValue.l,
-                                                          &isCopy);
-            if (!array) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            *((PRUint8 *) aVariant.val.p) = array[0];
-            if (isCopy) {
-              mJavaEnv->ReleaseByteArrayElements((jbyteArray) aJValue.l, array,
-                                                 JNI_ABORT);
-            }
-          }
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        *((PRUint8 *) aVariant.val.p) = aJValue.b;
+      } else {  // 'inout' & 'out'
+        if (aJValue.l) {
+          mJavaEnv->GetByteArrayRegion((jbyteArray) aJValue.l, 0, 1,
+                                       (jbyte*) aVariant.val.p);
         }
       }
     }
@@ -991,25 +1099,12 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I16:
     case nsXPTType::T_U16:
     {
-      if (aParamInfo.IsOut()) {
-        if (aParamInfo.IsRetval()) {
-          *((PRUint16 *) aVariant.val.p) = aJValue.s;
-        } else {
-          if (aJValue.l) {
-            jboolean isCopy = PR_FALSE;
-            jshort* array =
-                        mJavaEnv->GetShortArrayElements((jshortArray) aJValue.l,
-                                                        &isCopy);
-            if (!array) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            *((PRUint16 *) aVariant.val.p) = array[0];
-            if (isCopy) {
-              mJavaEnv->ReleaseShortArrayElements((jshortArray) aJValue.l, array,
-                                                  JNI_ABORT);
-            }
-          }
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        *((PRUint16 *) aVariant.val.p) = aJValue.s;
+      } else {  // 'inout' & 'out'
+        if (aJValue.l) {
+          mJavaEnv->GetShortArrayRegion((jshortArray) aJValue.l, 0, 1,
+                                        (jshort*) aVariant.val.p);
         }
       }
     }
@@ -1018,24 +1113,12 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I32:
     case nsXPTType::T_U32:
     {
-      if (aParamInfo.IsOut()) {
-        if (aParamInfo.IsRetval()) {
-          *((PRUint32 *) aVariant.val.p) = aJValue.i;
-        } else {
-          if (aJValue.l) {
-            jboolean isCopy = PR_FALSE;
-            jint* array = mJavaEnv->GetIntArrayElements((jintArray) aJValue.l,
-                                                         &isCopy);
-            if (!array) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            *((PRUint32 *) aVariant.val.p) = array[0];
-            if (isCopy) {
-              mJavaEnv->ReleaseIntArrayElements((jintArray) aJValue.l, array,
-                                                JNI_ABORT);
-            }
-          }
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        *((PRUint32 *) aVariant.val.p) = aJValue.i;
+      } else {  // 'inout' & 'out'
+        if (aJValue.l) {
+          mJavaEnv->GetIntArrayRegion((jintArray) aJValue.l, 0, 1,
+                                      (jint*) aVariant.val.p);
         }
       }
     }
@@ -1044,24 +1127,12 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I64:
     case nsXPTType::T_U64:
     {
-      if (aParamInfo.IsOut()) {
-        if (aParamInfo.IsRetval()) {
-          *((PRUint64 *) aVariant.val.p) = aJValue.j;
-        } else {
-          if (aJValue.l) {
-            jboolean isCopy = PR_FALSE;
-            jlong* array = mJavaEnv->GetLongArrayElements((jlongArray) aJValue.l,
-                                                          &isCopy);
-            if (!array) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            *((PRUint64 *) aVariant.val.p) = array[0];
-            if (isCopy) {
-              mJavaEnv->ReleaseLongArrayElements((jlongArray) aJValue.l, array,
-                                                 JNI_ABORT);
-            }
-          }
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        *((PRUint64 *) aVariant.val.p) = aJValue.j;
+      } else {  // 'inout' & 'out'
+        if (aJValue.l) {
+          mJavaEnv->GetLongArrayRegion((jlongArray) aJValue.l, 0, 1,
+                                       (jlong*) aVariant.val.p);
         }
       }
     }
@@ -1069,25 +1140,12 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_FLOAT:
     {
-      if (aParamInfo.IsOut()) {
-        if (aParamInfo.IsRetval()) {
-          *((float *) aVariant.val.p) = aJValue.f;
-        } else {
-          if (aJValue.l) {
-            jboolean isCopy = PR_FALSE;
-            jfloat* array =
-                        mJavaEnv->GetFloatArrayElements((jfloatArray) aJValue.l,
-                                                        &isCopy);
-            if (!array) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            *((float *) aVariant.val.p) = array[0];
-            if (isCopy) {
-              mJavaEnv->ReleaseFloatArrayElements((jfloatArray) aJValue.l, array,
-                                                  JNI_ABORT);
-            }
-          }
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        *((float *) aVariant.val.p) = aJValue.f;
+      } else {  // 'inout' & 'out'
+        if (aJValue.l) {
+          mJavaEnv->GetFloatArrayRegion((jfloatArray) aJValue.l, 0, 1,
+                                        (jfloat*) aVariant.val.p);
         }
       }
     }
@@ -1095,25 +1153,12 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_DOUBLE:
     {
-      if (aParamInfo.IsOut()) {
-        if (aParamInfo.IsRetval()) {
-          *((double *) aVariant.val.p) = aJValue.d;
-        } else {
-          if (aJValue.l) {
-            jboolean isCopy = PR_FALSE;
-            jdouble* array =
-                      mJavaEnv->GetDoubleArrayElements((jdoubleArray) aJValue.l,
-                                                       &isCopy);
-            if (!array) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            *((double *) aVariant.val.p) = array[0];
-            if (isCopy) {
-              mJavaEnv->ReleaseDoubleArrayElements((jdoubleArray) aJValue.l,
-                                                   array, JNI_ABORT);
-            }
-          }
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        *((double *) aVariant.val.p) = aJValue.d;
+      } else {  // 'inout' & 'out'
+        if (aJValue.l) {
+          mJavaEnv->GetDoubleArrayRegion((jdoubleArray) aJValue.l, 0, 1,
+                                         (jdouble*) aVariant.val.p);
         }
       }
     }
@@ -1121,25 +1166,12 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_BOOL:
     {
-      if (aParamInfo.IsOut()) {
-        if (aParamInfo.IsRetval()) {
-          *((PRBool *) aVariant.val.p) = aJValue.z;
-        } else {
-          if (aJValue.l) {
-            jboolean isCopy = PR_FALSE;
-            jboolean* array =
-                    mJavaEnv->GetBooleanArrayElements((jbooleanArray) aJValue.l,
-                                                      &isCopy);
-            if (!array) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            *((PRBool *) aVariant.val.p) = array[0];
-            if (isCopy) {
-              mJavaEnv->ReleaseBooleanArrayElements((jbooleanArray) aJValue.l,
-                                                    array, JNI_ABORT);
-            }
-          }
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        *((PRBool *) aVariant.val.p) = aJValue.z;
+      } else {  // 'inout' & 'out'
+        if (aJValue.l) {
+          mJavaEnv->GetBooleanArrayRegion((jbooleanArray) aJValue.l, 0, 1,
+                                          (jboolean*) aVariant.val.p);
         }
       }
     }
@@ -1148,30 +1180,27 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_CHAR:
     case nsXPTType::T_WCHAR:
     {
-      if (aParamInfo.IsOut()) {
-        if (aParamInfo.IsRetval()) {
-          if (type.TagPart() == nsXPTType::T_CHAR)
-            *((char *) aVariant.val.p) = aJValue.c;
-          else
-            *((PRUnichar *) aVariant.val.p) = aJValue.c;
-        } else {
-          if (aJValue.l) {
-            jboolean isCopy = PR_FALSE;
-            jchar* array = mJavaEnv->GetCharArrayElements((jcharArray) aJValue.l,
-                                                          &isCopy);
-            if (!array) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            if (type.TagPart() == nsXPTType::T_CHAR)
-              *((char *) aVariant.val.p) = array[0];
-            else
-              *((PRUnichar *) aVariant.val.p) = array[0];
-            if (isCopy) {
-              mJavaEnv->ReleaseCharArrayElements((jcharArray) aJValue.l, array,
-                                                 JNI_ABORT);
-            }
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        if (type.TagPart() == nsXPTType::T_CHAR)
+          *((char *) aVariant.val.p) = aJValue.c;
+        else
+          *((PRUnichar *) aVariant.val.p) = aJValue.c;
+      } else {  // 'inout' & 'out'
+        if (aJValue.l) {
+          jchar* array = mJavaEnv->GetCharArrayElements((jcharArray) aJValue.l,
+                                                        nsnull);
+          if (!array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
           }
+
+          if (type.TagPart() == nsXPTType::T_CHAR)
+            *((char *) aVariant.val.p) = array[0];
+          else
+            *((PRUnichar *) aVariant.val.p) = array[0];
+
+          mJavaEnv->ReleaseCharArrayElements((jcharArray) aJValue.l, array,
+                                             JNI_ABORT);
         }
       }
     }
@@ -1179,110 +1208,147 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_CHAR_STR:
     {
-      if (aParamInfo.IsOut()) {
-        jstring str = nsnull;
-        if (aParamInfo.IsRetval()) {
-          str = (jstring) aJValue.l;
-        } else if (aParamInfo.IsOut()) {
-          str = (jstring)
-                   mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      jstring str = nsnull;
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        str = (jstring) aJValue.l;
+      } else {  // 'inout' & 'out'
+        str = (jstring)
+                 mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      }
+
+      char** variant = NS_STATIC_CAST(char**, aVariant.val.p);
+      if (str) {
+        // Get string buffer
+        const char* char_ptr = mJavaEnv->GetStringUTFChars(str, nsnull);
+        if (!char_ptr) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
         }
 
-        if (str) {
-          jboolean isCopy;
-          const char* char_ptr = mJavaEnv->GetStringUTFChars(str, &isCopy);
-          if (!char_ptr) {
+        // If new string is different from one passed in, free old string
+        // and replace with new string.
+        if (aParamInfo.IsRetval() ||
+            *variant == nsnull || strcmp(*variant, char_ptr) != 0)
+        {
+          if (!aParamInfo.IsRetval() && *variant)
+            PR_Free(*variant);
+
+          *variant = strdup(char_ptr);
+          if (*variant == nsnull) {
             rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
+            // don't 'break'; fall through to release chars
           }
-          *((char **) aVariant.val.p) = strdup(char_ptr);
-          if (isCopy) {
-            mJavaEnv->ReleaseStringUTFChars(str, char_ptr);
-          }
-        } else {
-          *((char **) aVariant.val.p) = nsnull;
         }
+
+        // Release string buffer
+        mJavaEnv->ReleaseStringUTFChars(str, char_ptr);
+      } else {
+        // If we were passed in a string, delete it now, and set to null.
+        // (Only for 'inout' & 'out' params)
+        if (*variant && !aParamInfo.IsRetval()) {
+          PR_Free(*variant);
+        }
+        *variant = nsnull;
       }
     }
     break;
 
     case nsXPTType::T_WCHAR_STR:
     {
-      if (aParamInfo.IsOut()) {
-        jstring str = nsnull;
-        if (aParamInfo.IsRetval()) {
-          str = (jstring) aJValue.l;
-        } else if (aParamInfo.IsOut()) {
-          str = (jstring)
-                    mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      jstring str = nsnull;
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        str = (jstring) aJValue.l;
+      } else {  // 'inout' & 'out'
+        str = (jstring)
+                 mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      }
+
+      PRUnichar** variant = NS_STATIC_CAST(PRUnichar**, aVariant.val.p);
+      if (str) {
+        // Get string buffer
+        const jchar* wchar_ptr = mJavaEnv->GetStringChars(str, nsnull);
+        if (!wchar_ptr) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
         }
 
-        if (str) {
-          jboolean isCopy;
-          const jchar* wchar_ptr = mJavaEnv->GetStringChars(str, &isCopy);
-          if (!wchar_ptr) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
+        // If new string is different from one passed in, free old string
+        // and replace with new string.  We 
+        if (aParamInfo.IsRetval() ||
+            *variant == nsnull || nsCRT::strcmp(*variant, wchar_ptr) != 0)
+        {
+          if (!aParamInfo.IsRetval() && *variant)
+            PR_Free(*variant);
 
           PRUint32 length = nsCRT::strlen(wchar_ptr);
-          PRUnichar* string = (PRUnichar*)
-                              nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
-          if (!string) {
+          *variant = (PRUnichar*) PR_Malloc((length + 1) * sizeof(PRUnichar));
+          if (*variant) {
+            memcpy(*variant, wchar_ptr, length * sizeof(PRUnichar));
+            (*variant)[length] = 0;
+          } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
+            // don't 'break'; fall through to release chars
           }
-          memcpy(string, wchar_ptr, length * sizeof(PRUnichar));
-          string[length] = 0;
-          *((PRUnichar **) aVariant.val.p) = string;
-
-          if (isCopy) {
-            mJavaEnv->ReleaseStringChars(str, wchar_ptr);
-          }
-        } else {
-          *((PRUnichar **) aVariant.val.p) = nsnull;
         }
+
+        // Release string buffer
+        mJavaEnv->ReleaseStringChars(str, wchar_ptr);
+      } else {
+        // If we were passed in a string, delete it now, and set to null.
+        // (Only for 'inout' & 'out' params)
+        if (*variant && !aParamInfo.IsRetval()) {
+          PR_Free(*variant);
+        }
+        *variant = nsnull;
       }
     }
     break;
 
     case nsXPTType::T_IID:
     {
-      if (aParamInfo.IsOut()) {
-        jstring str = nsnull;
-        if (aParamInfo.IsRetval()) {
-          str = (jstring) aJValue.l;
-        } else {
-          str = (jstring)
-                    mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      jstring str = nsnull;
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        str = (jstring) aJValue.l;
+      } else {  // 'inout' & 'out'
+        str = (jstring)
+                 mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      }
+
+      nsID** variant = NS_STATIC_CAST(nsID**, aVariant.val.p);
+      if (str) {
+        // Get string buffer
+        const char* char_ptr = mJavaEnv->GetStringUTFChars(str, nsnull);
+        if (!char_ptr) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
         }
 
-        if (str) {
-          jboolean isCopy;
-          const char* char_ptr = mJavaEnv->GetStringUTFChars(str, &isCopy);
-          if (!char_ptr) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
-
-          if (aVariant.val.p) {
-            // If not null, then we just put in the new value.
-            nsID* iid = *((nsID**) aVariant.val.p);
-            iid->Parse(char_ptr);
+        if (!aParamInfo.IsRetval() && *variant) {
+          // If we were given an nsID, set it to the new string
+          nsID* oldIID = *variant;
+          oldIID->Parse(char_ptr);
+        } else {
+          // If the argument that was passed in was null, then we need to
+          // create a new nsID.
+          nsID* newIID = new nsID;
+          if (newIID) {
+            newIID->Parse(char_ptr);
+            *variant = newIID;
           } else {
-            // If the argument that was passed in was null, then we need to
-            // create a new nsID.
-            nsID* iid = new nsID;
-            iid->Parse(char_ptr);
-            *((nsID **) aVariant.val.p) = iid;
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            // don't 'break'; fall through to release chars
           }
-
-          if (isCopy) {
-            mJavaEnv->ReleaseStringUTFChars(str, char_ptr);
-          }
-        } else {
-          *((nsID **) aVariant.val.p) = nsnull;
         }
+
+        // Release string buffer
+        mJavaEnv->ReleaseStringUTFChars(str, char_ptr);
+      } else {
+        // If we were passed in an nsID, delete it now, and set to null.
+        // (Free only 'inout' & 'out' params)
+        if (*variant && !aParamInfo.IsRetval()) {
+          delete *variant;
+        }
+        *variant = nsnull;
       }
     }
     break;
@@ -1290,69 +1356,79 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-      if (aParamInfo.IsOut()) {
-        jobject java_obj = nsnull;
-        if (aParamInfo.IsRetval()) {
-          java_obj = aJValue.l;
-        } else {
-          java_obj = mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
-        }
+      jobject java_obj = nsnull;
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        java_obj = aJValue.l;
+      } else if (aJValue.l) {  // 'inout' & 'out'
+        java_obj = mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      }
 
-        if (java_obj) {
-          // Check if we already have a corresponding XPCOM object
-          void* inst = GetMatchingXPCOMObject(mJavaEnv, java_obj);
+      nsISupports** variant = NS_STATIC_CAST(nsISupports**, aVariant.val.p);
+      if (java_obj) {
+        // Check if we already have a corresponding XPCOM object
+        void* inst = GetMatchingXPCOMObject(mJavaEnv, java_obj);
 
-          // Get IID for this param
-          nsID iid;
-          rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
-                                    aMethodIndex, aDispatchParams,
-                                    PR_FALSE, iid);
+        // Get IID for this param
+        nsID iid;
+        rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
+                                  aMethodIndex, aDispatchParams,
+                                  PR_FALSE, iid);
+        if (NS_FAILED(rv))
+          break;
+
+        PRBool isWeakRef = iid.Equals(NS_GET_IID(nsIWeakReference));
+
+        if (inst == nsnull && !isWeakRef) {
+          // Get interface info for class
+          nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+          nsCOMPtr<nsIInterfaceInfo> iinfo;
+          rv = iim->GetInfoForIID(&iid, getter_AddRefs(iinfo));
           if (NS_FAILED(rv))
             break;
 
-          PRBool isWeakRef = iid.Equals(NS_GET_IID(nsIWeakReference));
-
-          if (inst == nsnull && !isWeakRef) {
-            // Get interface info for class
-            nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
-            nsCOMPtr<nsIInterfaceInfo> iinfo;
-            rv = iim->GetInfoForIID(&iid, getter_AddRefs(iinfo));
-            if (NS_FAILED(rv))
-              break;
-
-            // Create XPCOM stub
-            nsJavaXPTCStub* xpcomStub;
-            xpcomStub = new nsJavaXPTCStub(mJavaEnv, java_obj, iinfo);
-            if (!xpcomStub) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            inst = SetAsXPTCStub(xpcomStub);
-            AddJavaXPCOMBinding(mJavaEnv, java_obj, inst);
+          // Create XPCOM stub
+          nsJavaXPTCStub* xpcomStub;
+          xpcomStub = new nsJavaXPTCStub(mJavaEnv, java_obj, iinfo);
+          if (!xpcomStub) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
           }
-
-          if (isWeakRef) {
-            // If the function expects an weak reference, then we need to
-            // create it here.
-            nsJavaXPTCStubWeakRef* weakref;
-            weakref = new nsJavaXPTCStubWeakRef(mJavaEnv, java_obj);
-            if (!weakref) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            NS_ADDREF(weakref);
-            *((void **) aVariant.val.p) = (void*) weakref;
-          } else if (IsXPTCStub(inst)) {
-            nsJavaXPTCStub* xpcomStub = GetXPTCStubAddr(inst);
-            NS_ADDREF(xpcomStub);
-            *((void **) aVariant.val.p) = (void*) xpcomStub;
-          } else {
-            JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
-            *((void **) aVariant.val.p) = (void*) xpcomInst->GetInstance();
-          }
-        } else {
-          *((void **) aVariant.val.p) = nsnull;
+          inst = SetAsXPTCStub(xpcomStub);
+          AddJavaXPCOMBinding(mJavaEnv, java_obj, inst);
         }
+
+        // Get appropriate XPCOM object
+        void* xpcom_obj;
+        if (isWeakRef) {
+          // If the function expects an weak reference, then we need to
+          // create it here.
+          nsJavaXPTCStubWeakRef* weakref;
+          weakref = new nsJavaXPTCStubWeakRef(mJavaEnv, java_obj);
+          if (!weakref) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+          NS_ADDREF(weakref);
+          xpcom_obj = weakref;
+        } else if (IsXPTCStub(inst)) {
+          nsJavaXPTCStub* xpcomStub = GetXPTCStubAddr(inst);
+          NS_ADDREF(xpcomStub);
+          xpcom_obj = xpcomStub;
+        } else {
+          JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
+          xpcom_obj = xpcomInst->GetInstance();
+        }
+
+        if (*variant && !aParamInfo.IsRetval()) {
+          NS_RELEASE(*variant);
+        }
+        *variant = (nsISupports*) xpcom_obj;
+      } else {
+        // If were passed in an object, release it now, and set to null.
+        if (*variant && !aParamInfo.IsRetval()) {
+          NS_RELEASE(*variant);
+        }
+        *variant = nsnull;
       }
     }
     break;
@@ -1360,38 +1436,48 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_ASTRING:
     case nsXPTType::T_DOMSTRING:
     {
-      if (aJValue.l && aParamInfo.IsOut()) {
-        jstring str = nsnull;
-        if (aParamInfo.IsRetval()) {
-          str = (jstring) aJValue.l;
+      jstring str = nsnull;
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        str = (jstring) aJValue.l;
+      } else {  // 'inout' & 'out'
+        str = (jstring)
+                 mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      }
+
+      nsString** variant = NS_STATIC_CAST(nsString**, aVariant.val.p);
+      if (str) {
+        // Get string buffer
+        const jchar* wchar_ptr = mJavaEnv->GetStringChars(str, nsnull);
+        if (!wchar_ptr) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
+        }
+
+        if (!aParamInfo.IsRetval() && *variant) {
+          // If we were given an nsString, set it to the new string
+          nsString* string = *variant;
+          string->Assign(wchar_ptr);
         } else {
-          str = (jstring)
-                    mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
-        }
-
-        if (str) {
-          jboolean isCopy;
-          const jchar* wchar_ptr = mJavaEnv->GetStringChars(str, &isCopy);
-          if (!wchar_ptr) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
-
-          if (aVariant.val.p) {
-            ((nsString*) aVariant.val.p)->Assign(wchar_ptr);
+          // If the argument that was passed in was null, then we need to
+          // create a new nsID.
+          nsString* embedStr = new nsString(wchar_ptr);
+          if (embedStr) {
+            *variant = embedStr;
           } else {
-            nsString* embedStr = new nsString(wchar_ptr);
-            if (!embedStr) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            aVariant.val.p = embedStr;
-          }
-
-          if (isCopy) {
-            mJavaEnv->ReleaseStringChars(str, wchar_ptr);
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            // don't 'break'; fall through to release chars
           }
         }
+
+        // release String buffer
+        mJavaEnv->ReleaseStringChars(str, wchar_ptr);
+      } else {
+        // If we were passed in a string, delete it now, and set to null.
+        // (Free only 'inout' & 'out' params)
+        if (*variant && !aParamInfo.IsRetval()) {
+          delete *variant;
+        }
+        *variant = nsnull;
       }
     }
     break;
@@ -1399,62 +1485,60 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_UTF8STRING:
     case nsXPTType::T_CSTRING:
     {
-      if (aJValue.l && aParamInfo.IsOut()) {
-        jstring str = nsnull;
-        if (aParamInfo.IsRetval()) {
-          str = (jstring) aJValue.l;
+      jstring str = nsnull;
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        str = (jstring) aJValue.l;
+      } else {  // 'inout' & 'out'
+        str = (jstring)
+                 mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      }
+
+      nsCString** variant = NS_STATIC_CAST(nsCString**, aVariant.val.p);
+      if (str) {
+        // Get string buffer
+        const char* char_ptr = mJavaEnv->GetStringUTFChars(str, nsnull);
+        if (!char_ptr) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
+        }
+
+        if (!aParamInfo.IsRetval() && *variant) {
+          // If we were given an nsString, set it to the new string
+          nsCString* string = *variant;
+          string->Assign(char_ptr);
         } else {
-          str = (jstring)
-                    mJavaEnv->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
-        }
-
-        if (str) {
-          jboolean isCopy;
-          const char* char_ptr = mJavaEnv->GetStringUTFChars(str, &isCopy);
-          if (!char_ptr) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
-
-          if (aVariant.val.p) {
-            ((nsCString*) aVariant.val.p)->Assign(char_ptr);
+          // If the argument that was passed in was null, then we need to
+          // create a new nsID.
+          nsCString* embedStr = new nsCString(char_ptr);
+          if (embedStr) {
+            *variant = embedStr;
           } else {
-            nsCString* embedStr = new nsCString(char_ptr);
-            if (!embedStr) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            aVariant.val.p = embedStr;
-          }
-
-          if (isCopy) {
-            mJavaEnv->ReleaseStringUTFChars(str, char_ptr);
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            // don't 'break'; fall through to release chars
           }
         }
+
+        // release String buffer
+        mJavaEnv->ReleaseStringUTFChars(str, char_ptr);
+      } else {
+        // If we were passed in a string, delete it now, and set to null.
+        // (Free only 'inout' & 'out' params)
+        if (*variant && !aParamInfo.IsRetval()) {
+          delete *variant;
+        }
+        *variant = nsnull;
       }
     }
     break;
 
     case nsXPTType::T_VOID:
     {
-      if (aParamInfo.IsOut()) {
-        if (aParamInfo.IsRetval()) {
-          *((PRUint32 *) aVariant.val.p) = aJValue.i;
-        } else {
-          if (aJValue.l) {
-            jboolean isCopy = PR_FALSE;
-            jint* array = mJavaEnv->GetIntArrayElements((jintArray) aJValue.l,
-                                                         &isCopy);
-            if (!array) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            *((PRUint32 *) aVariant.val.p) = array[0];
-            if (isCopy) {
-              mJavaEnv->ReleaseIntArrayElements((jintArray) aJValue.l, array,
-                                                JNI_ABORT);
-            }
-          }
+      if (aParamInfo.IsRetval()) {  // 'retval'
+        *((PRUint32 *) aVariant.val.p) = aJValue.i;
+      } else {  // 'inout' & 'out'
+        if (aJValue.l) {
+          mJavaEnv->GetIntArrayRegion((jintArray) aJValue.l, 0, 1,
+                                      (jint*) aVariant.val.p);
         }
       }
     }
