@@ -170,6 +170,30 @@ nsXULTreeElement::RemoveCellFromSelection(nsIDOMXULElement* aTreeCell)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULTreeElement::ToggleItemSelection(nsIDOMXULElement* aTreeItem)
+{
+  nsAutoString isSelected;
+  aTreeItem->GetAttribute("selected", isSelected);
+  if (isSelected == "true")
+    RemoveItemFromSelection(aTreeItem);
+  else AddItemToSelection(aTreeItem);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::ToggleCellSelection(nsIDOMXULElement* aTreeCell)
+{
+  nsAutoString isSelected;
+  aTreeCell->GetAttribute("selected", isSelected);
+  if (isSelected == "true")
+    RemoveItemFromSelection(aTreeCell);
+  else AddItemToSelection(aTreeCell);
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)

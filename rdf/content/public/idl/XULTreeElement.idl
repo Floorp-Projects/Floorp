@@ -15,6 +15,9 @@ interface XULTreeElement : XULElement {
   void addCellToSelection(in XULElement treeCell);
   void removeCellFromSelection(in XULElement treeCell);
 
+  void toggleItemSelection(in XULElement treeItem);
+  void toggleCellSelection(in XULElement treeCell);
+
   void selectItemRange(in XULElement startItem, in XULElement endItem);
   void selectCellRange(in XULElement startItem, in XULElement endItem);
 
