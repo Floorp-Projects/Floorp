@@ -16,16 +16,18 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-
+ 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
+<!ENTITY % regionDTD SYSTEM "chrome://global-region/locale/region.dtd" >
+%regionDTD;
 <!ENTITY % prefContentDTD SYSTEM "chrome://content-packs/locale/pref-contentpacks.dtd" >
 %prefContentDTD;
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://content-packs/content/pref-contentpacks.xul');"
+      onload="parent.initPanel('chrome://content-packs/content/pref-contentpacks.xul'); "
       headertitle="&lHeader;">
 
   <stringbundle id="bundle_contentPack"
@@ -36,24 +38,39 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["contentPackTree"];
+    var _elementIDs = ["contentPackTree", "languagePackTree"];
 
 
     function Startup()
     {
-      var tree = document.getElementById( "contentPackTree" );
-      var regionName = tree.getAttribute("prefvalue");
-      var elements = tree.getElementsByAttribute("value", regionName);
+      var contentTree = document.getElementById( "contentPackTree" );
+      var regionName = contentTree.getAttribute("prefvalue");
+      var regionElements = contentTree.getElementsByAttribute("value", regionName;
 
-      if (elements.length) {
-        tree.selectItem(elements[0].parentNode.parentNode);
+      if (regionElements.length) {
+        contentTree.selectItem(regionElements[0].parentNode.parentNode);
       } else {
-        tree.selectedIndex = 0;
+        contentTree.selectedIndex = 0;
       }
-      parent.hPrefWindow.registerOKCallbackFunc( SwitchContentPack );
+
+      var languageTree = document.getElementById( "languagePackTree" );
+      var languageName = languageTree.getAttribute("prefvalue");
+      var languageElements =languageTree.getElementsByAttribute("value", languageName);
+
+      if (languageElements.length) {
+        languageTree.selectItem(languageElements[0].parentNode.parentNode);
+      } else {
+        languageTree.selectedIndex = 0;
+      }
+      parent.hPrefWindow.registerOKCallbackFunc( SwitchPacks );
     }
 
-
+    function SwitchPacks()
+    {
+       SwitchContentPack();
+       SwitchLanguagePack();
+    }
+    
     function SwitchContentPack()
     {
       var oldContentPack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.contentlocale");
@@ -95,6 +112,37 @@
       return true;	
     }
 
+    function SwitchLanguagePack()
+    {
+      var oldLanguagePack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.locale");
+      var newLanguagePack;
+
+      try {
+        var languageTree = document.getElementById("languagePackTree");
+        if (languageTree) {
+         var selectedItem = languageTree.selectedItems.length ? languageTree.selectedItems[0] : null;
+          if (selectedItem) {
+             newLanguagePack = selectedItem.firstChild.firstChild.getAttribute("value");
+          }
+        } else {
+          newLanguagePack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "languagePackTree" ).prefvalue;
+        }
+      }
+      catch (e) {}
+      if (newLanguagePack && (newLanguagePack != oldLanguagePack))
+      {
+        try {
+          var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
+          chromeRegistry.selectLocale(newLanguagePack, true);
+          var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+          observerService.notifyObservers(null, "locale-selected", null);
+        }
+        catch(e) {
+          return false;
+        }
+      }
+      return true;	
+    }
 
     function SelectContentPack()
     {
@@ -102,8 +150,33 @@
       var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
 
       if (selectedItem) {
-        var regionName = selectedItem.firstChild.firstChild.getAttribute("value");
-        tree.setAttribute("prefvalue", regionName);
+        var classType = selectedItem.firstChild.firstChild.getAttribute("class");
+        if (classType == "outofdate") {
+           //Make it so that out of date content packs cannot be selected by the user
+           tree.removeItemFromSelection(selectedItem);
+        }
+        else {
+           var regionName = selectedItem.firstChild.firstChild.getAttribute("value");
+           tree.setAttribute("prefvalue", regionName);
+        }
+      }
+    }
+
+    function SelectLanguagePack()
+    {
+      var tree = document.getElementById("languagePackTree");
+      var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
+
+      if (selectedItem) {
+        var classType = selectedItem.firstChild.firstChild.getAttribute("class");
+        if (classType == "outofdate") {
+           //Make it so that out of date language packs cannot be selected by the user
+           tree.removeItemFromSelection(selectedItem);
+        }
+        else {
+           var languageName = selectedItem.firstChild.firstChild.getAttribute("value");
+           tree.setAttribute("prefvalue", languageName);
+        }
       }
     }
 
@@ -116,11 +189,11 @@
 
   <hbox class="box-smallheader" title="&lHeader;"/>
 
+  <!-- Content (aka region) pack tree -->
   <description>&contentIntro.label;</description>
   <separator class="thin"/>
   <description>&installedContentPacks.label;</description>
-  
-  <tree id="contentPackTree" flex="1" rows="5" 
+  <tree id="contentPackTree" flex="1" rows="2" 
         ref="urn:mozilla:locale:root" datasources="rdf:chrome"
         sortResource="http://www.mozilla.org/rdf/chrome#name"
         preftype="localizedstring" prefstring="general.useragent.contentlocale" 
@@ -131,12 +204,78 @@
       <treecol flex="1"/>
     </treecolgroup>
     <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
-      <rule chrome:localeType="region">
+      
+      <!-- This rule displays only up to date content packs based on the localeVersion -->
+      <rule chrome:localeType="region" chrome:localeVersion="&content.version;">
         <treechildren flex="1">
           <treeitem id="treechildren" uri="..." translation="true" nselected="false" >
             <treerow>
               <treecell label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                         value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+
+      <!-- This rule "falls through" to match obsolete content packs -->
+      <rule chrome:localeType="region">
+        <treechildren flex="1">
+          <treeitem id="treechildren" uri="..." translation="true" nselected="false" >
+            <treerow>
+              <treecell class="outofdate"
+                 label="rdf:http://www.mozilla.org/rdf/chrome#displayName &update.label;"
+                 value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+    
+    </template>
+  </tree>
+
+  <!-- Language pack tree -->
+  <description>&languageIntro.label;</description>
+  <separator class="thin"/>
+  <description>&installedLanguagePacks.label;</description>
+  <tree id="languagePackTree" flex="1" rows="3" 
+        ref="urn:mozilla:locale:root" 
+        datasources="rdf:chrome"
+        sortResource="http://www.mozilla.org/rdf/chrome#name"
+        preftype="localizedstring" 
+        prefstring="general.useragent.locale" 
+        prefattribute="prefvalue" 
+        wsm_attributes="value"
+        seltype="false" 
+        onselect="SelectLanguagePack();"
+        sortDirection="ascending">
+    <treecolgroup>
+      <treecol flex="1"/>
+    </treecolgroup>
+    <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+
+      <!-- This rule eliminates region packs from the language pack list -->
+      <rule chrome:localeType="region"/>
+
+      <!-- This rule displays only up to date language packs based on the localeVersion -->
+      <rule chrome:localeVersion="&lang.version;">
+        <treechildren flex="1">
+          <treeitem id="treechildren" uri="..." translation="true" nselected="false" >
+            <treerow>
+              <treecell label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                        value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+
+      <!-- This rule "falls through" to match obsolete language packs -->
+      <rule>
+        <treechildren flex="1">
+          <treeitem id="treechildren" uri="..." translation="true" nselected="false" >
+            <treerow>
+              <treecell class="outofdate"
+                 label="rdf:http://www.mozilla.org/rdf/chrome#displayName &update.label;"
+                 value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
             </treerow>
           </treeitem>
         </treechildren>
