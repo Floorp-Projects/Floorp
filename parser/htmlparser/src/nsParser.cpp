@@ -1211,7 +1211,6 @@ nsParser::WillBuildModel(nsString& aFilename)
       eDTDMode_autodetect == mParserContext->mDTDMode) {
     
     nsAutoString theBuffer;
-    // XXXVidur Make a copy and only check in the first 1k
     mParserContext->mScanner->Peek(theBuffer, 1024);    
     DetermineParseMode(theBuffer, mParserContext->mDTDMode,
                        mParserContext->mDocType, mParserContext->mMimeType);
