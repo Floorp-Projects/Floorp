@@ -34,6 +34,11 @@
   2) Implement a more terse output for "typed" nodes; that is, instead
      of "RDF:Description RDF:type='ns:foo'", just output "ns:foo".
 
+  3) There is a lot of code that calls rdf_PossiblyMakeRelative() and
+     then calls rdf_EscapeAmpersands(). Is this really just one operation?
+
+  4) Maybe keep the docURI around for writing.
+
  */
 
 #include "nsFileSpec.h"
@@ -1074,19 +1079,21 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
     nsIRDFLiteral* literal;
 
     if (NS_SUCCEEDED(aValue->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
-        const char* uri;
-        resource->GetValue(&uri);
-
-        nsAutoString escaped(uri);
-        rdf_EscapeAmpersands(escaped);
+        const char* s;
+        resource->GetValue(&s);
 
         const char* docURI;
         mInner->GetURI(&docURI);
-        rdf_PossiblyMakeRelative(docURI, escaped);
 
-        rdf_BlockingWrite(aStream, " RDF:resource=\"");
-        rdf_BlockingWrite(aStream, escaped);
-        rdf_BlockingWrite(aStream, "\"/>\n", 4);
+        nsAutoString uri(s);
+        rdf_PossiblyMakeRelative(docURI, uri);
+        rdf_EscapeAmpersands(uri);
+
+static const char kRDFResource1[] = " RDF:resource=\"";
+static const char kRDFResource2[] = "\"/>\n";
+        rdf_BlockingWrite(aStream, kRDFResource1, sizeof(kRDFResource1) - 1);
+        rdf_BlockingWrite(aStream, uri);
+        rdf_BlockingWrite(aStream, kRDFResource2, sizeof(kRDFResource2) - 1);
 
         NS_RELEASE(resource);
     }
@@ -1164,11 +1171,15 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     if (NS_FAILED(rv = aResource->GetValue(&s)))
         return rv;
 
-    nsAutoString escaped(s);
-    rdf_EscapeAmpersands(escaped);
+    const char* docURI;
+    mInner->GetURI(&docURI);
+
+    nsAutoString uri(s);
+    rdf_PossiblyMakeRelative(docURI, uri);
+    rdf_EscapeAmpersands(uri);
 
     rdf_BlockingWrite(aStream, kRDFDescription1, sizeof(kRDFDescription1) - 1);
-    rdf_BlockingWrite(aStream, escaped);
+    rdf_BlockingWrite(aStream, uri);
     rdf_BlockingWrite(aStream, kRDFDescription2, sizeof(kRDFDescription2) - 1);
 
     nsIRDFArcsOutCursor* arcs = nsnull;
@@ -1211,6 +1222,9 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
     if (NS_FAILED(rv = mInner->GetTargets(aContainer, aProperty, PR_TRUE, &cursor)))
         return rv;
 
+    const char* docURI;
+    mInner->GetURI(&docURI);
+
     while (NS_SUCCEEDED(rv = cursor->Advance())) {
         nsIRDFNode* node;
 
@@ -1226,20 +1240,29 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
         nsIRDFLiteral* literal = nsnull;
 
         if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
-            const char* uri;
-            if (NS_SUCCEEDED(rv = resource->GetValue(&uri))) {
-                rdf_BlockingWrite(aStream, "    <RDF:li RDF:resource=\"");
+            const char* s;
+            if (NS_SUCCEEDED(rv = resource->GetValue(&s))) {
+static const char kRDFLIResource1[] = "    <RDF:li RDF:resource=\"";
+static const char kRDFLIResource2[] = "\"/>\n";
+
+                nsAutoString uri(s);
+                rdf_PossiblyMakeRelative(docURI, uri);
+                rdf_EscapeAmpersands(uri);
+
+                rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
                 rdf_BlockingWrite(aStream, uri);
-                rdf_BlockingWrite(aStream, "\"/>\n");
+                rdf_BlockingWrite(aStream, kRDFLIResource2, sizeof(kRDFLIResource2) - 1);
             }
             NS_RELEASE(resource);
         }
         else if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
             const PRUnichar* value;
             if (NS_SUCCEEDED(rv = literal->GetValue(&value))) {
-                rdf_BlockingWrite(aStream, "    <RDF:li>");
+static const char kRDFLILiteral1[] = "    <RDF:li>";
+static const char kRDFLILiteral2[] = "</RDF:li>\n";
+                rdf_BlockingWrite(aStream, kRDFLILiteral1, sizeof(kRDFLILiteral1) - 1);
                 rdf_BlockingWrite(aStream, value);
-                rdf_BlockingWrite(aStream, "</RDF:li>\n");
+                rdf_BlockingWrite(aStream, kRDFLILiteral2, sizeof(kRDFLILiteral2) - 1);
             }
             NS_RELEASE(literal);
         }
@@ -1304,6 +1327,7 @@ static const char kRDFAlt[] = "RDF:Alt";
     if (NS_SUCCEEDED(aContainer->GetValue(&s))) {
         nsAutoString uri(s);
         rdf_PossiblyMakeRelative(docURI, uri);
+        rdf_EscapeAmpersands(uri);
         rdf_BlockingWrite(aStream, " RDF:ID=\"", 9);
         rdf_BlockingWrite(aStream, uri);
         rdf_BlockingWrite(aStream, "\"", 1);
@@ -1381,7 +1405,29 @@ static const char kXMLNS[]    = "\n     xmlns:";
 
     rdf_BlockingWrite(aStream, kXMLVersion, sizeof(kXMLVersion) - 1);
 
-    // XXX write out any style sheet and datasource includes here
+    PRInt32 i;
+
+    // Write out style sheet processing instructions
+    for (i = 0; i < mNumCSSStyleSheetURLs; ++i) {
+static const char kCSSStyleSheet1[] = "<?xml-stylesheet href=\"";
+static const char kCSSStyleSheet2[] = "\" type=\"text/css\"?>\n";
+
+        const char* url;
+        mCSSStyleSheetURLs[i]->GetSpec(&url);
+        rdf_BlockingWrite(aStream, kCSSStyleSheet1, sizeof(kCSSStyleSheet1) - 1);
+        rdf_BlockingWrite(aStream, url);
+        rdf_BlockingWrite(aStream, kCSSStyleSheet2, sizeof(kCSSStyleSheet2) - 1);
+    }
+
+    // Write out named data source processing instructions
+    for (i = 0; i < mNumNamedDataSourceURIs; ++i) {
+static const char kNamedDataSource1[] = "<?rdf-datasource href=\"";
+static const char kNamedDataSource2[] = "\"?>\n";
+
+        rdf_BlockingWrite(aStream, kNamedDataSource1, sizeof(kNamedDataSource1) - 1);
+        rdf_BlockingWrite(aStream, mNamedDataSourceURIs[i]);
+        rdf_BlockingWrite(aStream, kNamedDataSource2, sizeof(kNamedDataSource2) - 1);
+    }
 
     // global name space declarations
     rdf_BlockingWrite(aStream, kOpenRDF, sizeof(kOpenRDF) - 1);
