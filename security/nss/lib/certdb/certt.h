@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.16 2002/03/15 20:21:45 wtc%netscape.com Exp $
+ * $Id: certt.h,v 1.17 2002/04/10 23:27:50 nelsonb%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -177,7 +177,7 @@ struct CERTCertTrustStr {
 /*
  * defined the types of trust that exist
  */
-typedef enum {
+typedef enum SECTrustTypeEnum {
     trustSSL = 0,
     trustEmail = 1,
     trustObjectSigning = 2,
@@ -458,7 +458,7 @@ struct CERTDistNamesStr {
 			 NS_CERT_TYPE_EMAIL_CA | \
 			 NS_CERT_TYPE_OBJECT_SIGNING_CA | \
 			 EXT_KEY_USAGE_STATUS_RESPONDER )
-typedef enum {
+typedef enum SECCertUsageEnum {
     certUsageSSLClient = 0,
     certUsageSSLServer = 1,
     certUsageSSLServerWithStepUp = 2,
@@ -476,7 +476,7 @@ typedef enum {
 /*
  * Does the cert belong to the user, a peer, or a CA.
  */
-typedef enum {
+typedef enum CERTCertOwnerEnum {
     certOwnerUser = 0,
     certOwnerPeer = 1,
     certOwnerCA = 2
@@ -485,7 +485,7 @@ typedef enum {
 /*
  * This enum represents the state of validity times of a certificate
  */
-typedef enum {
+typedef enum SECCertTimeValidityEnum {
     secCertTimeValid = 0,
     secCertTimeExpired = 1,
     secCertTimeNotValidYet = 2
@@ -576,7 +576,7 @@ struct CERTBasicConstraintsStr {
 
 /* If we needed to extract the general name field, use this */
 /* General Name types */
-typedef enum {
+typedef enum CERTGeneralNameTypeEnum {
     certOtherName = 1,
     certRFC822Name = 2,
     certDNSName = 3,
@@ -652,7 +652,7 @@ struct CERTAuthKeyIDStr {
 /*
  * defined the types of CRL Distribution points
  */
-typedef enum {
+typedef enum DistributionPointTypesEnum {
     generalName = 1,			/* only support this for now */
     relativeDistinguishedName = 2
 } DistributionPointTypes;
@@ -734,7 +734,7 @@ typedef char * (*CERTDBNameFunc)(void *arg, int dbVersion);
 /*
  * types of cert packages that we can decode
  */
-typedef enum {
+typedef enum CERTPackageTypeEnum {
     certPackageNone = 0,
     certPackageCert = 1,
     certPackagePKCS7 = 2,
