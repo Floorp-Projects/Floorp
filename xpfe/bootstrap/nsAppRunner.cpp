@@ -1921,6 +1921,7 @@ int main(int argc, char* argv[])
 #else
     NS_ShutdownXPCOM(nsnull);
 #endif
+    return remoterv;
   }
 #endif
 
