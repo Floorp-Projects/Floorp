@@ -62,8 +62,8 @@ DIRS =				\
   network			\
   lib/liblayer/include		\
   htmlparser			\
-  dom				\
   gfx				\
+  dom				\
   view				\
   widget			\
   layout			\
