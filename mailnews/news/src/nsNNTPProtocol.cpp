@@ -1030,7 +1030,11 @@ NS_IMETHODIMP nsNNTPProtocol::OnStartBinding(nsIURL* aURL, const char *aContentT
 NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	// what can we do? we can close the stream?
-	m_urlInProgress = PR_FALSE;  // don't close the connection...we may be re-using it.
+	m_urlInProgress = PR_FALSE;  
+	//m_runningUrl->SetUrlState(PR_FALSE, aStatus);
+
+	
+	// don't close the connection...we may be re-using it.
 	// CloseConnection();
 
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 

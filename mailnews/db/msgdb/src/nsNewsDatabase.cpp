@@ -122,20 +122,19 @@ PRUint32 nsNewsDatabase::GetCurVersion()
 NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 								nsIDBChangeListener *instigator)
 {
-    nsresult		err = NS_OK;
+    nsresult rv = NS_OK;
 #if 0
 	nsMsgKey messageKey = msgHdr->GetMessageKey();
 
 	if (bRead)
-		err = m_set->Add(messageKey);
+		rv = m_set->Add(messageKey);
 	else
-		err = m_set->Remove(messageKey);
-#endif
+		rv = m_set->Remove(messageKey);
+#endif /* 0 */
 	// give parent class chance to update data structures
-	nsMsgDatabase::MarkHdrRead(msgHdr, bRead, instigator);
+	rv = nsMsgDatabase::MarkHdrRead(msgHdr, bRead, instigator);
 
-//	return (err >= 0) ? 0 : NS_ERROR_OUT_OF_MEMORY;
-	return err;
+	return rv;
 }
 
 NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
@@ -174,24 +173,24 @@ NS_IMETHODIMP		nsNewsDatabase::ListNextUnread(ListContext **pContext, nsMsgHdr *
 	return 0;
 }
 
-	// return highest article number we've seen.
-	nsMsgKey		nsNewsDatabase::GetHighwaterArticleNum()
-	{
-		return 0;
-	}
-	nsMsgKey		nsNewsDatabase::GetLowWaterArticleNum()
-	{
-		return 0;
-	}
+// return highest article number we've seen.
+nsMsgKey		nsNewsDatabase::GetHighwaterArticleNum()
+{
+	return 0;
+}
+nsMsgKey		nsNewsDatabase::GetLowWaterArticleNum()
+{
+	return 0;
+}
 
-	nsresult		nsNewsDatabase::ExpireUpTo(nsMsgKey expireKey)
-	{
-		return 0;
-	}
-	nsresult		nsNewsDatabase::ExpireRange(nsMsgKey startRange, nsMsgKey endRange)
-	{
-		return 0;
-	}
+nsresult		nsNewsDatabase::ExpireUpTo(nsMsgKey expireKey)
+{
+	return 0;
+}
+nsresult		nsNewsDatabase::ExpireRange(nsMsgKey startRange, nsMsgKey endRange)
+{
+	return 0;
+}
 
 nsNewsSet				*nsNewsDatabase::GetNewsArtSet() 
 {
