@@ -70,23 +70,25 @@ public:
   NS_IMETHOD OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow);
   NS_IMETHOD ChangeChrome(PRUint32 aNewChromeMask);
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
-  NS_IMETHOD LoadURL(const nsString& aURL);
-  NS_IMETHOD SetTitle(const nsString& aTitle);
-  NS_IMETHOD GetTitle(nsString& aResult);
-  NS_IMETHOD SetStatus(const nsString& aStatus);
-  NS_IMETHOD GetStatus(nsString& aResult);
+  NS_IMETHOD LoadURL(const PRUnichar* aURL);
+  NS_IMETHOD SetTitle(const PRUnichar* aTitle);
+  NS_IMETHOD GetTitle(PRUnichar** aResult);
+  NS_IMETHOD SetStatus(const PRUnichar* aStatus);
+  NS_IMETHOD GetStatus(PRUnichar** aResult);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
 
   // nsIStreamObserver
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD OnStatus(nsIURL* aURL, const nsString& aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString &aMsg);
 
   // nsIWebShellContainer
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL);
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const nsString& aURL);
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const nsString& aURL);
+  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
+  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
+  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
+  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
+  NS_IMETHOD OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec);
 
   // nsINetSupport
   NS_IMETHOD_(void) Alert(const nsString &aText);
@@ -108,7 +110,7 @@ public:
   void Destroy();
   void Back();
   void Forward();
-  void GoTo(const nsString& aURL);
+  void GoTo(const PRUnichar* aURL);
   void StartThrobber();
   void StopThrobber();
   void LoadThrobberImages();

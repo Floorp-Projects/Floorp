@@ -76,15 +76,15 @@ public:
 
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult) = 0;
 
-  NS_IMETHOD LoadURL(const nsString& aURL) = 0;
+  NS_IMETHOD LoadURL(const PRUnichar* aURL) = 0;
 
-  NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
+  NS_IMETHOD SetTitle(const PRUnichar* aTitle) = 0;
 
-  NS_IMETHOD GetTitle(nsString& aResult) = 0;
+  NS_IMETHOD GetTitle(PRUnichar** aResult) = 0;
 
-  NS_IMETHOD SetStatus(const nsString& aStatus) = 0;
+  NS_IMETHOD SetStatus(const PRUnichar* aStatus) = 0;
 
-  NS_IMETHOD GetStatus(nsString& aResult) = 0;
+  NS_IMETHOD GetStatus(PRUnichar** aResult) = 0;
 
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult) = 0;
 

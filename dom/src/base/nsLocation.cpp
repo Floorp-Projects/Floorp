@@ -281,8 +281,10 @@ LocationImpl::GetHref(nsString& aHref)
   nsresult result = NS_OK;
 
   if (nsnull != mWebShell) {
+    PRUnichar *href;
     mWebShell->GetHistoryIndex(index);
-    result = mWebShell->GetURL(index, aHref);
+    result = mWebShell->GetURL(index, &href);
+    aHref = href;
   }
 
   return result;
@@ -499,7 +501,7 @@ LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
   nsresult result = NS_OK;
 
   if (nsnull != mWebShell) {
-    result = mWebShell->Reload();
+    result = mWebShell->Reload(nsReload);
   }
 
   return result;

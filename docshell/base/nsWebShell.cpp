@@ -35,6 +35,7 @@
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "plevent.h"
+#include "prprf.h"
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
 #include "nsPluginsCID.h"
@@ -113,22 +114,22 @@ public:
 
   // nsIWebShell
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
-                  const nsRect& aBounds,
+                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto,
                   PRBool aAllowPlugins = PR_TRUE);
   NS_IMETHOD Destroy(void);
-  NS_IMETHOD GetBounds(nsRect& aResult);
-  NS_IMETHOD SetBounds(const nsRect& aBounds);
+  NS_IMETHOD GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h);
+  NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h);
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
+  NS_IMETHOD Repaint(PRBool aForce);
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
   NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
   NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult);
-  NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
   NS_IMETHOD SetPrefs(nsIPref* aPrefs);
   NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
@@ -137,41 +138,52 @@ public:
   NS_IMETHOD GetChildCount(PRInt32& aResult);
   NS_IMETHOD AddChild(nsIWebShell* aChild);
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD FindChildWithName(const nsString& aName,
+  NS_IMETHOD GetName(PRUnichar** aName);
+  NS_IMETHOD SetName(const PRUnichar* aName);
+  NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult);
-  NS_IMETHOD Back(void);
-  NS_IMETHOD Forward(void);
-  NS_IMETHOD Reload();
-  NS_IMETHOD LoadURL(const nsString& aURLSpec,
-                     nsIPostData* aPostData=nsnull,
-                     PRBool aModifyHistory=PR_TRUE);
-  NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
-  NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
-  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, nsString& aURLResult);
-  NS_IMETHOD SetTitle(const nsString& aTitle);
-  NS_IMETHOD GetTitle(nsString& aResult);
-
   NS_IMETHOD GetMarginWidth (PRInt32& aWidth);
   NS_IMETHOD SetMarginWidth (PRInt32  aWidth);
   NS_IMETHOD GetMarginHeight(PRInt32& aWidth);
   NS_IMETHOD SetMarginHeight(PRInt32  aHeight);
+  
+  // Document load api's
+  NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
+  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
+                     nsIPostData* aPostData=nsnull,
+                     PRBool aModifyHistory=PR_TRUE);
+  NS_IMETHOD Stop(void);
+  NS_IMETHOD Reload(nsReloadType aType);
+   
+  // History api's
+  NS_IMETHOD Back(void);
+  NS_IMETHOD CanBack(void);
+  NS_IMETHOD Forward(void);
+  NS_IMETHOD CanForward(void);
+  NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
+  NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
+  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, PRUnichar** aURLResult);
+
+  // Chrome api's
+  NS_IMETHOD SetTitle(const PRUnichar* aTitle);
+  NS_IMETHOD GetTitle(PRUnichar** aResult);
 
   // nsIWebShellContainer
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL);
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const nsString& aURL);
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const nsString& aURL);
+  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
+  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
+  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
+  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
+  NS_IMETHOD OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec);
 
   // nsILinkHandler
   NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
-                         const nsString& aURLSpec,
-                         const nsString& aTargetSpec,
+                         const PRUnichar* aURLSpec,
+                         const PRUnichar* aTargetSpec,
                          nsIPostData* aPostData = 0);
   NS_IMETHOD OnOverLink(nsIFrame* aFrame, 
-                        const nsString& aURLSpec,
-                        const nsString& aTargetSpec);
-  NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState);
+                        const PRUnichar* aURLSpec,
+                        const PRUnichar* aTargetSpec);
+  NS_IMETHOD GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState);
 
   // nsIScriptContextOwner
   NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
@@ -182,13 +194,13 @@ public:
   NS_IMETHOD OnConnectionsComplete();
 
   // nsWebShell
-  void HandleLinkClickEvent(const nsString& aURLSpec,
-                            const nsString& aTargetSpec,
+  void HandleLinkClickEvent(const PRUnichar* aURLSpec,
+                            const PRUnichar* aTargetSpec,
                             nsIPostData* aPostDat = 0);
 
   void ShowHistory();
 
-  nsIWebShell* GetTarget(const nsString& aName);
+  nsIWebShell* GetTarget(const PRUnichar* aName);
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
@@ -452,13 +464,14 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
 
 NS_IMETHODIMP
 nsWebShell::Init(nsNativeWidget aNativeParent,
-                 const nsRect& aBounds,
+                 PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                  nsScrollPreference aScrolling,
                  PRBool aAllowPlugins)
 {
   //XXX make sure plugins have started up. this really needs to
   //be associated with the nsIContentViewerContainer interfaces,
   //not the nsIWebShell interfaces. this is a hack. MMP
+  nsRect aBounds(x,y,w,h);
 
   if ((PR_TRUE == aAllowPlugins) && (PR_FALSE == mPluginInited))
     CreatePluginHost();
@@ -559,30 +572,36 @@ nsWebShell::Destroy()
 
 
 NS_IMETHODIMP
-nsWebShell::GetBounds(nsRect& aResult)
+nsWebShell::GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h)
 {
+  nsRect aResult;
   NS_PRECONDITION(nsnull != mWindow, "null window");
   aResult.SetRect(0, 0, 0, 0);
   if (nsnull != mWindow) {
     mWindow->GetBounds(aResult);
   }
+  x = aResult.x;
+  y = aResult.y;
+  w = aResult.width;
+  h = aResult.height;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::SetBounds(const nsRect& aBounds)
+nsWebShell::SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
-
+  
   if (nsnull != mWindow) {
     // Don't have the widget repaint. Layout will generate repaint requests
     // during reflow
-    mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height,
+    mWindow->Resize(x, y, w, h,
                     PR_FALSE);
   }
 
   if (nsnull != mContentViewer) {
-    nsRect rr(0, 0, aBounds.width, aBounds.height);
+    nsRect rr(0, 0, w, h);
     mContentViewer->SetBounds(rr);
   }
 
@@ -626,6 +645,18 @@ nsWebShell::Hide()
   }
   if (nsnull != mContentViewer) {
     mContentViewer->Hide();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::Repaint(PRBool aForce)
+{
+  NS_PRECONDITION(nsnull != mWindow, "null window");
+
+  if (nsnull != mWindow) {
+    mWindow->Invalidate(aForce);
   }
 
   return NS_OK;
@@ -689,14 +720,6 @@ nsWebShell::GetObserver(nsIStreamObserver*& aResult)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP 
-nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
-{
-  aResult = mDocLoader;
-  NS_IF_ADDREF(mDocLoader);
-  return (nsnull != mDocLoader) ? NS_OK : NS_ERROR_FAILURE;
-}
 
 NS_IMETHODIMP
 nsWebShell::SetPrefs(nsIPref* aPrefs)
@@ -784,32 +807,33 @@ nsWebShell::ChildAt(PRInt32 aIndex, nsIWebShell*& aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetName(nsString& aName)
+nsWebShell::GetName(PRUnichar** aName)
 {
-  aName = mName;
+  *aName = mName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::SetName(const nsString& aName)
+nsWebShell::SetName(const PRUnichar* aName)
 {
   mName = aName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::FindChildWithName(const nsString& aName,
+nsWebShell::FindChildWithName(const PRUnichar* aName1,
                               nsIWebShell*& aResult)
 {
   aResult = nsnull;
+  nsString aName(aName1);
 
-  nsAutoString childName;
+  PRUnichar *childName;
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
     nsIWebShell* child = (nsIWebShell*) mChildren.ElementAt(i);
     if (nsnull != child) {
-      child->GetName(childName);
-      if (childName.Equals(aName)) {
+      child->GetName(&childName);
+      if (aName.Equals(childName)) {
         aResult = child;
         NS_ADDREF(child);
         break;
@@ -856,31 +880,60 @@ nsWebShell::SetMarginHeight(PRInt32 aHeight)
   return NS_OK;
 }
 
-//----------------------------------------
-
-// History methods
-
-NS_IMETHODIMP
-nsWebShell::Back(void)
+/**
+ * Document Load methods
+ */
+NS_IMETHODIMP 
+nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
 {
-  return GoTo(mHistoryIndex - 1);
+  aResult = mDocLoader;
+  NS_IF_ADDREF(mDocLoader);
+  return (nsnull != mDocLoader) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+#define FILE_PROTOCOL "file:///"
+
+static void convertFileToURL(nsString &aIn, nsString &aOut)
+{
+#ifdef XP_PC
+  char szFile[1000];
+  aIn.ToCString(szFile, sizeof(szFile));
+  if (PL_strchr(szFile, '\\')) {
+    PRInt32 len = strlen(szFile);
+    PRInt32 sum = len + sizeof(FILE_PROTOCOL);
+    char* lpszFileURL = new char[sum];
+    
+    // Translate '\' to '/'
+    for (PRInt32 i = 0; i < len; i++) {
+      if (szFile[i] == '\\') {
+        szFile[i] = '/';
+      }
+      if (szFile[i] == ':') {
+        szFile[i] = '|';
+      }
+    }
+    
+    // Build the file URL
+    PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
+    aOut = lpszFileURL;
+  }
+  else
+#endif
+  {
+    aOut = aIn;
+  }
 }
 
 NS_IMETHODIMP
-nsWebShell::Forward(void)
-{
-  return GoTo(mHistoryIndex + 1);
-}
-
-NS_IMETHODIMP
-nsWebShell::LoadURL(const nsString& aURLSpec,
+nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsIPostData* aPostData,
                     PRBool aModifyHistory)
 {
   nsresult rv;
   PRInt32 colon, fSlash;
   PRUnichar port;
-  nsAutoString urlSpec(aURLSpec);
+  nsAutoString urlSpec;
+  convertFileToURL(nsString(aURLSpec), urlSpec);
 
   fSlash=urlSpec.Find('/');
 
@@ -894,9 +947,10 @@ nsWebShell::LoadURL(const nsString& aURLSpec,
     nsString httpDef("http://");
     urlSpec.Insert(httpDef, 0, 7);
   }
+
   // Give web-shell-container right of refusal
   if (nsnull != mContainer) {
-    rv = mContainer->WillLoadURL(this, urlSpec);
+    rv = mContainer->WillLoadURL(this, urlSpec, nsLoadURL);
     if (NS_OK != rv) {
       return rv;
     }
@@ -935,12 +989,7 @@ nsWebShell::LoadURL(const nsString& aURLSpec,
     }
   }
 
-  // Stop any documents that are currently being loaded...
-  mDocLoader->Stop();
-
-  // Cancel any timers that were set for this loader.
-  mDocLoader->CancelLoadURLTimer();
-
+  Stop();
 
   rv = mDocLoader->LoadURL(urlSpec,       // URL string
                            nsnull,         // Command
@@ -951,16 +1000,55 @@ nsWebShell::LoadURL(const nsString& aURLSpec,
   return rv;
 }
 
-NS_IMETHODIMP
-nsWebShell::Reload()
+NS_IMETHODIMP nsWebShell::Stop(void)
+{
+  if (mDocLoader) {
+    // Stop any documents that are currently being loaded...
+    mDocLoader->Stop();
+    
+    // Cancel any timers that were set for this loader.
+    mDocLoader->CancelLoadURLTimer();
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::Reload(nsReloadType aType)
 {
   nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
   if (nsnull != s) {
     // XXX What about the post data?
     return LoadURL(*s, nsnull, PR_FALSE);
   }
+  return NS_ERROR_FAILURE;
+}
 
-  return NS_OK;
+//----------------------------------------
+
+// History methods
+
+NS_IMETHODIMP
+nsWebShell::Back(void)
+{
+  return GoTo(mHistoryIndex - 1);
+}
+
+NS_IMETHODIMP
+nsWebShell::CanBack(void)
+{
+  return (mHistoryIndex > 0 ? NS_OK : NS_COMFALSE);
+}
+
+NS_IMETHODIMP
+nsWebShell::Forward(void)
+{
+  return GoTo(mHistoryIndex + 1);
+}
+
+NS_IMETHODIMP
+nsWebShell::CanForward(void)
+{
+  return (mHistoryIndex  < mHistory.Count() - 1 ? NS_OK : NS_COMFALSE);
 }
 
 NS_IMETHODIMP
@@ -968,13 +1056,13 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
 {
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
   if ((aHistoryIndex >= 0) &&
-      (aHistoryIndex <= mHistory.Count() - 1)) {
+      (aHistoryIndex < mHistory.Count())) {
     nsString* s = (nsString*) mHistory.ElementAt(aHistoryIndex);
 
     // Give web-shell-container right of refusal
     nsAutoString urlSpec(*s);
     if (nsnull != mContainer) {
-      rv = mContainer->WillLoadURL(this, urlSpec);
+      rv = mContainer->WillLoadURL(this, urlSpec, nsLoadHistory);
       if (NS_OK != rv) {
         return rv;
       }
@@ -1016,15 +1104,14 @@ nsWebShell::GetHistoryIndex(PRInt32& aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetURL(PRInt32 aHistoryIndex, nsString& aURLResult)
+nsWebShell::GetURL(PRInt32 aHistoryIndex, PRUnichar** aURLResult)
 {
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
   if ((aHistoryIndex >= 0) &&
       (aHistoryIndex <= mHistory.Count() - 1)) {
-    aURLResult.Truncate();
     nsString* s = (nsString*) mHistory.ElementAt(aHistoryIndex);
     if (nsnull != s) {
-      aURLResult = *s;
+      *aURLResult = *s;
     }
     rv = NS_OK;
   }
@@ -1057,7 +1144,7 @@ nsWebShell::ShowHistory()
 // Chrome API's
 
 NS_IMETHODIMP
-nsWebShell::SetTitle(const nsString& aTitle)
+nsWebShell::SetTitle(const PRUnichar* aTitle)
 {
   // Record local title
   mTitle = aTitle;
@@ -1073,9 +1160,9 @@ nsWebShell::SetTitle(const nsString& aTitle)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetTitle(nsString& aResult)
+nsWebShell::GetTitle(PRUnichar** aResult)
 {
-  aResult = mTitle;
+  *aResult = mTitle;
   return NS_OK;
 }
 
@@ -1084,16 +1171,16 @@ nsWebShell::GetTitle(nsString& aResult)
 // WebShell container implementation
 
 NS_IMETHODIMP
-nsWebShell::WillLoadURL(nsIWebShell* aShell, const nsString& aURL)
+nsWebShell::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
 {
   if (nsnull != mContainer) {
-    return mContainer->WillLoadURL(aShell, aURL);
+    return mContainer->WillLoadURL(aShell, aURL, aReason);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::BeginLoadURL(nsIWebShell* aShell, const nsString& aURL)
+nsWebShell::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
   if (nsnull != mContainer) {
     return mContainer->BeginLoadURL(aShell, aURL);
@@ -1102,21 +1189,43 @@ nsWebShell::BeginLoadURL(nsIWebShell* aShell, const nsString& aURL)
 }
 
 NS_IMETHODIMP
-nsWebShell::EndLoadURL(nsIWebShell* aShell, const nsString& aURL)
+nsWebShell::ProgressLoadURL(nsIWebShell* aShell, 
+                            const PRUnichar* aURL, 
+                            PRInt32 aProgress, 
+                            PRInt32 aProgressMax)
 {
   if (nsnull != mContainer) {
-    return mContainer->EndLoadURL(aShell, aURL);
+    return mContainer->ProgressLoadURL(aShell, aURL, aProgress, aProgressMax);
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
+{
+  if (nsnull != mContainer) {
+    return mContainer->EndLoadURL(aShell, aURL, aStatus);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec)
+{
+  if (nsnull != mContainer) {
+    return mContainer->OverLink(aShell, aURLSpec, aTargetSpec);
+  }
+  return NS_OK;
+}
+
 
 //----------------------------------------------------------------------
 
 // WebShell link handling
 
 struct OnLinkClickEvent : public PLEvent {
-  OnLinkClickEvent(nsWebShell* aHandler, const nsString& aURLSpec,
-                   const nsString& aTargetSpec, nsIPostData* aPostData = 0);
+  OnLinkClickEvent(nsWebShell* aHandler, const PRUnichar* aURLSpec,
+                   const PRUnichar* aTargetSpec, nsIPostData* aPostData = 0);
   ~OnLinkClickEvent();
 
   void HandleEvent() {
@@ -1140,8 +1249,8 @@ static void PR_CALLBACK DestroyPLEvent(OnLinkClickEvent* aEvent)
 }
 
 OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
-                                   const nsString& aURLSpec,
-                                   const nsString& aTargetSpec,
+                                   const PRUnichar* aURLSpec,
+                                   const PRUnichar* aTargetSpec,
                                    nsIPostData* aPostData)
 {
   mHandler = aHandler;
@@ -1182,8 +1291,8 @@ OnLinkClickEvent::~OnLinkClickEvent()
 
 NS_IMETHODIMP
 nsWebShell::OnLinkClick(nsIFrame* aFrame, 
-                        const nsString& aURLSpec,
-                        const nsString& aTargetSpec,
+                        const PRUnichar* aURLSpec,
+                        const PRUnichar* aTargetSpec,
                         nsIPostData* aPostData)
 {
   OnLinkClickEvent* ev;
@@ -1202,21 +1311,22 @@ nsWebShell::OnLinkClick(nsIFrame* aFrame,
 // XXX This doesn't yet know how to target other windows with their
 // own tree
 nsIWebShell*
-nsWebShell::GetTarget(const nsString& aName)
+nsWebShell::GetTarget(const PRUnichar* aName)
 {
+  nsString name(aName);
   nsIWebShell* target = nsnull;
 
-  if (aName.EqualsIgnoreCase("_blank")) {
+  if (name.EqualsIgnoreCase("_blank")) {
     // XXX Need api in nsIWebShellContainer
     NS_ASSERTION(0, "not implemented yet");
     target = this;
     NS_ADDREF(target);
   } 
-  else if (aName.EqualsIgnoreCase("_self")) {
+  else if (name.EqualsIgnoreCase("_self")) {
     target = this;
     NS_ADDREF(target);
   } 
-  else if (aName.EqualsIgnoreCase("_parent")) {
+  else if (name.EqualsIgnoreCase("_parent")) {
     if (nsnull == mParent) {
       target = this;
     }
@@ -1225,7 +1335,7 @@ nsWebShell::GetTarget(const nsString& aName)
     }
     NS_ADDREF(target);
   }
-  else if (aName.EqualsIgnoreCase("_top")) {
+  else if (name.EqualsIgnoreCase("_top")) {
     GetRootWebShell(target);
   }
   else {
@@ -1244,8 +1354,8 @@ nsWebShell::GetTarget(const nsString& aName)
 }
 
 void
-nsWebShell::HandleLinkClickEvent(const nsString& aURLSpec,
-                                 const nsString& aTargetSpec,
+nsWebShell::HandleLinkClickEvent(const PRUnichar* aURLSpec,
+                                 const PRUnichar* aTargetSpec,
                                  nsIPostData* aPostData)
 {
   nsIWebShell* shell = GetTarget(aTargetSpec);
@@ -1256,10 +1366,10 @@ nsWebShell::HandleLinkClickEvent(const nsString& aURLSpec,
 
 NS_IMETHODIMP
 nsWebShell::OnOverLink(nsIFrame* aFrame, 
-                       const nsString& aURLSpec,
-                       const nsString& aTargetSpec)
+                       const PRUnichar* aURLSpec,
+                       const PRUnichar* aTargetSpec)
 {
-  if (!aURLSpec.Equals(mOverURL) || !aTargetSpec.Equals(mOverTarget)) {
+  if (!mOverURL.Equals(aURLSpec) || !mOverTarget.Equals(aTargetSpec)) {
 fputs("Was '", stdout); fputs(mOverURL, stdout); fputs("' '", stdout); fputs(mOverTarget, stdout); fputs("'\n", stdout); 
     fputs("Over link '", stdout);
     fputs(aURLSpec, stdout);
@@ -1289,20 +1399,21 @@ fputs("Was '", stdout); fputs(mOverURL, stdout); fputs("' '", stdout); fputs(mOv
 }
 
 NS_IMETHODIMP
-nsWebShell:: GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
+nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
 {
+  nsString URLSpec(aURLSpec);
   aState = eLinkState_Unvisited;
 #ifdef NS_DEBUG
-  if (aURLSpec.Equals("http://visited/")) {
+  if (URLSpec.Equals("http://visited/")) {
     aState = eLinkState_Visited;
   }
-  else if (aURLSpec.Equals("http://out-of-date/")) {
+  else if (URLSpec.Equals("http://out-of-date/")) {
     aState = eLinkState_OutOfDate;
   }
-  else if (aURLSpec.Equals("http://active/")) {
+  else if (URLSpec.Equals("http://active/")) {
     aState = eLinkState_Active;
   }
-  else if (aURLSpec.Equals("http://hover/")) {
+  else if (URLSpec.Equals("http://hover/")) {
     aState = eLinkState_Hover;
   }
 #endif

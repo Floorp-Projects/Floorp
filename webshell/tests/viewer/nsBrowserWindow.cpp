@@ -325,7 +325,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       LoadURL(url);
     }
     break;
-  
   case JS_CONSOLE:
     DoJSConsole();
     break;
@@ -368,7 +367,7 @@ nsBrowserWindow::Forward()
 }
 
 void
-nsBrowserWindow::GoTo(const nsString& aURL)
+nsBrowserWindow::GoTo(const PRUnichar* aURL)
 {
   mWebShell->LoadURL(aURL, nsnull);
 }
@@ -429,7 +428,7 @@ nsBrowserWindow::DoFileOpen()
     PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
 
     // Ask the Web widget to load the file URL
-    LoadURL(lpszFileURL);
+    LoadURL(nsString(lpszFileURL));
     delete lpszFileURL;
   }
 }
@@ -550,7 +549,8 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     return rv;
   }
   r.x = r.y = 0;
-  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), r,
+  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
+                       r.x, r.y, r.width, r.height,
                        nsScrollPreference_kAuto, aAllowPlugins);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->SetObserver((nsIStreamObserver*)this);
@@ -727,7 +727,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   rr.y += WEBSHELL_TOP_INSET;
   rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;
   rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
-  mWebShell->SetBounds(rr);
+  mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
 }
 
 NS_IMETHODIMP
@@ -795,7 +795,7 @@ nsBrowserWindow::GetChrome(PRUint32& aChromeMaskResult)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::LoadURL(const nsString& aURL)
+nsBrowserWindow::LoadURL(const PRUnichar* aURL)
 {
   return mWebShell->LoadURL(aURL, nsnull);
 }
@@ -811,7 +811,7 @@ nsBrowserWindow::GetWebShell(nsIWebShell*& aResult)
 //----------------------------------------
 
 NS_IMETHODIMP
-nsBrowserWindow::SetTitle(const nsString& aTitle)
+nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   mTitle = aTitle;
@@ -820,14 +820,14 @@ nsBrowserWindow::SetTitle(const nsString& aTitle)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::GetTitle(nsString& aResult)
+nsBrowserWindow::GetTitle(PRUnichar** aResult)
 {
-  aResult = mTitle;
+  *aResult = mTitle;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::SetStatus(const nsString& aStatus)
+nsBrowserWindow::SetStatus(const PRUnichar* aStatus)
 {
   if (nsnull != mStatus) {
     mStatus->SetText(aStatus);
@@ -836,13 +836,13 @@ nsBrowserWindow::SetStatus(const nsString& aStatus)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::GetStatus(nsString& aResult)
+nsBrowserWindow::GetStatus(PRUnichar** aResult)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const nsString& aURL)
+nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
 {
   if (mStatus) {
     nsAutoString url("Connecting to ");
@@ -853,7 +853,7 @@ nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const nsString& aURL)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const nsString& aURL)
+nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
   if (mThrobber) {
     mThrobber->Start();
@@ -863,11 +863,23 @@ nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const nsString& aURL)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const nsString& aURL)
+nsBrowserWindow::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
 {
   if (mThrobber) {
     mThrobber->Stop();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec)
+{
   return NS_OK;
 }
 
@@ -1052,7 +1064,6 @@ nsBrowserWindow::GetPresShell()
   }
   return shell;
 }
-
 
 void
 nsBrowserWindow::DoCopy()
@@ -1277,16 +1288,18 @@ nsBrowserWindow::DumpViews(FILE* out)
 
 static void DumpAWebShell(nsIWebShell* aShell, FILE* out, PRInt32 aIndent)
 {
-  nsAutoString name;
+  PRUnichar *name;
+  nsAutoString str;
   nsIWebShell* parent;
   PRInt32 i, n;
 
   for (i = aIndent; --i >= 0; ) fprintf(out, "  ");
 
   fprintf(out, "%p '", aShell);
-  aShell->GetName(name);
+  aShell->GetName(&name);
   aShell->GetParent(parent);
-  fputs(name, out);
+  str = name;
+  fputs(str, out);
   fprintf(out, "' parent=%p <\n", parent);
   NS_IF_RELEASE(parent);
 
@@ -1485,8 +1498,8 @@ nsBrowserWindow::DoDebugSave()
   PRBool    doSave = PR_FALSE;
   nsString  path;
 
-  nsString urlString;
-  mWebShell->GetURL(0,urlString);
+  PRUnichar *urlString;
+  mWebShell->GetURL(0,&urlString);
   nsIURL* url;
   nsresult rv = NS_NewURL(&url, urlString);
   
