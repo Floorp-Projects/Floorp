@@ -497,7 +497,8 @@ xpctestEcho::ThrowArg(void)
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsISupports> callee;
-    if(NS_FAILED(cc->GetCallee(getter_AddRefs(callee))) || callee != this)
+    if(NS_FAILED(cc->GetCallee(getter_AddRefs(callee))) || 
+       callee != NS_STATIC_CAST(nsIEcho*, this))
         return NS_ERROR_FAILURE;
 
     PRUint32 argc;
