@@ -71,8 +71,8 @@ pref("font.name.monospace.he", "אריאל");
 pref("font.name.cursive.he", "XXX.cursive");
 pref("font.name.fantasy.he", "XXX.fantasy");
 
-pref("font.name.serif.ja", "平成明朝"); 
-pref("font.name.sans-serif.ja", "平成角ゴシック"); 
+pref("font.name.serif.ja", "ヒラギノ明朝 Pro W3"); 
+pref("font.name.sans-serif.ja", "ヒラギノ角ゴ Pro W3"); 
 pref("font.name.monospace.ja", "Osaka−等幅"); 
 pref("font.name.cursive.ja", "XXX.cursive");
 pref("font.name.fantasy.ja", "XXX.fantasy");
