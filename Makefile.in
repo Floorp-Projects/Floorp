@@ -175,8 +175,8 @@ tier_9_dirs	+= \
 		modules/libimg \
 		caps \
 		rdf \
-		expat \
-		htmlparser \
+		parser/expat \
+		parser/htmlparser \
 		gfx \
 		modules/libpr0n \
 		sun-java \
