@@ -106,15 +106,16 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount,
            break;
         case nsXPTType::T_FLOAT:
            if (i < N_ARG_REGS)
-              ((double*)regs)[i] = s->val.f;
+              // Place a float in least significant bytes.
+              *(float*)(((char*)&regs[i+1]) - sizeof(float)) = s->val.f;
            else
-              *((double*)d++) = s->val.f;
+              *(float*)d++ = s->val.f;
            break;
         case nsXPTType::T_DOUBLE:
            if (i < N_ARG_REGS)
-              ((double*)regs)[i] = s->val.d;
+              *(double*)&regs[i] = s->val.d;
            else
-              *((double*)d++) = s->val.d;
+              *(double*)d++ = s->val.d;
            break;
         case nsXPTType::T_BOOL:
            if (i < N_ARG_REGS)
