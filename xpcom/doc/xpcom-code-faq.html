@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.51 [en] (WinNT; U) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.71 [en] (X11; U; Linux 2.2.12-20 i686) [Netscape]">
    <meta name="Author" content="Suresh Duddi">
    <title>XPCOM Code FAQ</title>
 </head>
@@ -11,7 +11,7 @@
 <h2>
 XPCOM Code FAQ</h2>
 Suresh Duddi &lt;<a href="mailto:dp@netscape.com">dp@netscape.com</a>>
-<br>Last Modified: April 2 1999
+<br>Last Modified: May 25 2000
 <br>
 <hr WIDTH="100%">
 <br>I am documenting things randomly as I am replying to people's questions.
@@ -48,10 +48,14 @@ Vs ServiceManager</a></font></li>
 <a href="#ProgID Vs CLSID">ProgID Vs CLSID</a></li>
 
 <li>
-<a href="#How to debug components ?">How to debug components ?</a></li>
+<a href="#How to set break points in component code">How to set breakpoints
+in component code</a></li>
+
+<li>
+<a href="#Generating a log from xpcom:">Generating the XPCOM LOG</a>
+<hr WIDTH="100%"></li>
 </ol>
 
-<hr WIDTH="100%">
 <h4>
 <a NAME="What are the Global Objects that XPCOM maintains"></a>What are
 the Global Objects that XPCOM maintains</h4>
@@ -235,8 +239,7 @@ ProgIDs (not implemented yet).
 
 <br>ProgID is what Clients should use to CreateInstances. Clients should
 not even know about the CLSID unless they are hell bent on creating a particular
-implementation of a component.
-<br>&nbsp;</ul>
+implementation of a component.</ul>
 <b><i>Component</i></b>
 <ul>
 <li>
@@ -246,32 +249,69 @@ implementation of a component.
 </blockquote>
 
 <h4>
-<a NAME="How to debug components ?"></a>How to debug components ?</h4>
+<a NAME="How to set break points in component code"></a>How to set break
+points in component code</h4>
 
-<blockquote>XPCOM provides log output. To enable the logging:
-<blockquote><tt>setenv NSPR_LOG_MODULES nsComponentManager:5</tt>
-<br><tt>setenv NSPR_LOG_FILE xpcom.log</tt></blockquote>
-Start your application after setting the above environment variables. Debug
-log from xpcom would be in the file <tt>xpcom.log</tt>
-<p>Since components are dynamically loaded only on demand, debugging them
-could be a hard. Here are some tips to debugging components.
+<blockquote>
+<blockquote>Since components are dynamically loaded only on demand, debugging
+them could be a hard. Here are some tips to debugging components.
 <p><b><i>Windows: VC5.0 VC6.0</i></b>
-<ul>Include your component library in the Project->Settings, Additional
-Dll. drop down. After that breakpoints can be enabled.</ul>
+<blockquote>Include your component library in the Project->Settings, Additional
+Dll. drop down. After that breakpoints can be enabled.</blockquote>
 <b><i>Unix: gdb</i></b>
-<blockquote>Let the program run until you are sure that your component
-is loaded. Type Control-C. Now all symbols from your component will be
-available in gdb. Put your breakpoints and restart the app. Gdb will complain
-that it cannot set the breakpoint, and that it is temporarily disabling
-it, but when the *.so is loaded, the breakpoint is enabled automatically.
-- &lt;<a href="mailto:erik@netscape.com">Eric Van Der Poel</a>>
-<p>I think typing "dir components" (assuming you're in dist/bin) will also
+<blockquote>
+<ul>
+<li>
+Let the program run until you are sure that your component is loaded. Type
+Control-C. Now all symbols from your component will be available in gdb.
+Put your breakpoints and restart the app. Gdb will complain that it cannot
+set the breakpoint, and that it is temporarily disabling it, but when the
+*.so is loaded, the breakpoint is enabled automatically. - &lt;<a href="mailto:erik@netscape.com">Eric
+Van Der Poel</a>></li>
+</ul>
+
+<ul>
+<li>
+I think typing "dir components" (assuming you're in dist/bin) will also
 allow you to see the symbols in your stack the first time. - &lt;<a href="mailto:alecf@netscape.com">Alec
-Flett</a>></blockquote>
+Flett</a>></li>
+</ul>
+
+<ul>
+<li>
+Using XPCOM_BREAK_ON_LOAD environment variable:</li>
+
+<p><br><tt>gdb> set env XPCOM_BREAK_ON_LOAD "necko:rdf"</tt>
+<br><tt>gdb> r</tt>
+<p>This will cause xpcom to break in the debugger after loading any dll
+with substrings <tt>necko</tt> or <tt>rdf</tt> in them. At this point,
+you could instruct the debugger to load the dll symbols and set breakpoint.
+<p><tt>gdb> sha libnecko.so</tt>
+<br><tt>gdb> b nsFunctionInNecko</tt></ul>
+</blockquote>
 <b><i>Mac: Codewarrior</i></b>
 <blockquote>Just open the appropriate .xSYM file in the debugger; the debugger
 will target the library when the application is run. - &lt;<a href="mailto:sfraser@netscape.com">Simon
 Fraser</a>></blockquote>
+</blockquote>
+</blockquote>
+<a NAME="Generating a log from xpcom:"></a><b>Generating a log from xpcom:</b>
+<blockquote>XPCOM provides log output. To enable the logging:
+<blockquote><tt>[unix]</tt>
+<br><tt>setenv NSPR_LOG_MODULES nsComponentManager:5</tt>
+<br><tt>setenv NSPR_LOG_FILE xpcom.log</tt>
+<p><tt>[win]</tt>
+<br><tt>set NSPR_LOG_MODULES=nsComponentManager:5</tt>
+<br><tt>set NSPR_LOG_FILE=xpcom.log</tt></blockquote>
+Start your application after setting the above environment variables. Debug
+log from xpcom would be in the file <tt>xpcom.log</tt></blockquote>
+
+<p><br><a NAME="XPCOM Log analysis"></a><b>XPCOM Log analysis</b>
+<blockquote><a href="http://lxr.mozilla.org/seamonkey/source/xpcom/doc/xpcom-log-analyze.sh">xpcom/doc/xpcom-log-analyze.sh</a>
+is a script that does analysis of the xpcom log and prints out useful statistics
+in html format. Usage is:
+<blockquote><tt>xpcom-log-analyze.sh &lt; xpcom.log > xpcom-log.html</tt>
+<br><tt></tt>&nbsp;</blockquote>
 </blockquote>
 
 <hr WIDTH="100%">
