@@ -989,10 +989,12 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 		nsCOMPtr<nsISimpleEnumerator>	folderEnum;
 		if (NS_SUCCEEDED(rv = GetFolderList(source, getter_AddRefs(folderEnum))))
 		{
-			PRBool		hasMore;
+			PRBool		hasAny = PR_FALSE, hasMore;
 			while (NS_SUCCEEDED(folderEnum->HasMoreElements(&hasMore)) &&
 					(hasMore == PR_TRUE))
 			{
+				hasAny = PR_TRUE;
+
 				nsCOMPtr<nsISupports>		isupports;
 				if (NS_FAILED(rv = folderEnum->GetNext(getter_AddRefs(isupports))))
 					break;
@@ -1013,6 +1015,7 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 					break;
 				}
 			}
+			if (hasAny == PR_FALSE)	isValid = PR_TRUE;
 		}
 	}
 	return(isValid);
