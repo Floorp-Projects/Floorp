@@ -643,18 +643,17 @@ nsresult
 DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
 {
   // Create the style set...
-  nsAutoPtr<nsStyleSet> styleSet;
-  nsresult rv = CreateStyleSet(mDocument, getter_Transfers(styleSet));
+  nsStyleSet *styleSet;
+  nsresult rv = CreateStyleSet(mDocument, &styleSet);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now make the shell for the document
   rv = mDocument->CreateShell(mPresContext, mViewManager, styleSet,
                               getter_AddRefs(mPresShell));
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // The pres shell owns the style set now.
-  styleSet.forget();
+  if (NS_FAILED(rv)) {
+    delete styleSet;
+    return rv;
+  }
 
   if (aDoInitialReflow) {
     // Since InitialReflow() will create frames for *all* items
@@ -1208,17 +1207,18 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
   if (mPresContext) {
     // 3) Create a new style set for the document
 
-    nsAutoPtr<nsStyleSet> styleSet;
-    rv = CreateStyleSet(mDocument, getter_Transfers(styleSet));
-    if (NS_FAILED(rv))
-      return rv;
+    nsStyleSet *styleSet;
+    rv = CreateStyleSet(mDocument, &styleSet);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = newDoc->CreateShell(mPresContext, mViewManager, styleSet,
                              getter_AddRefs(mPresShell));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      delete styleSet;
+      return rv;
+    }
 
     // The pres shell owns the style set now.
-    styleSet.forget();
 
     mPresShell->BeginObservingDocument();
 
@@ -1614,7 +1614,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     NS_WARNING("unable to load UA style sheet");
   }
 
-  nsAutoPtr<nsStyleSet> styleSet(new nsStyleSet());
+  nsStyleSet *styleSet = new nsStyleSet();
   if (!styleSet) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1683,7 +1683,6 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 
   styleSet->EndUpdate();
   *aStyleSet = styleSet;
-  styleSet.forget();
   return NS_OK;
 }
 
