@@ -332,7 +332,7 @@ var DefaultController =
         if (!(loadedFolder && loadedFolder.server.canHaveFilters))
           return false;
       case "cmd_createFilterFromMenu":
-        var loadedFolder = GetLoadedMsgFolder();
+        loadedFolder = GetLoadedMsgFolder();
         if (!(loadedFolder && loadedFolder.server.canHaveFilters) || !(IsMessageDisplayedInMessagePane()))
           return false;
       case "cmd_reply":
