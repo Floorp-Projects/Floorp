@@ -31,8 +31,10 @@
 // view in the message header pane. 
 ////////////////////////////////////////////////////////////////////////////////////
 
-var msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
-var abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCollecter;1";
+const msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
+const abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCollecter;1";
+const kPersonalAddressbookUri        = "moz-abmdbdirectory://abook.mab";
+const kRDFServiceContractID          = "@mozilla.org/rdf/rdf-service;1";
 
 const kLargeIcon = 32;
 const kSmallIcon = 16;
@@ -62,7 +64,8 @@ var gSaveLabelAccesskey;
 var gMessengerBundle;
 var gProfileDirURL;
 var gIOService;
-var gFileHandler;
+var gFileHandler;  
+var gPersonalAddressBookDirectory; // used for determining if we want to show just the display name in email address nodes
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
@@ -721,7 +724,7 @@ function OutputNewsgroups(headerEntry, headerValue)
 
 // OutputEmailAddresses --> knows how to take a comma separated list of email addresses,
 // extracts them one by one, linkifying each email address into a mailto url. 
-// Then we add the link'ified email address to the parentDiv passed in.
+// Then we add the link-ified email address to the parentDiv passed in.
 // 
 // defaultParentDiv --> the div to add the link-ified email addresses into. 
 // emailAddresses --> comma separated list of the addresses for this header field
@@ -823,12 +826,49 @@ function updateEmailAddressNode(emailAddressNode, emailAddress, fullAddress, dis
     emailAddressNode.setAttribute("label", fullAddress);
     emailAddressNode.removeAttribute("tooltiptext");
   }
+
   emailAddressNode.setTextAttribute("emailAddress", emailAddress);
   emailAddressNode.setTextAttribute("fullAddress", fullAddress);  
   emailAddressNode.setTextAttribute("displayName", displayName);  
   
   if ("AddExtraAddressProcessing" in this)
     AddExtraAddressProcessing(emailAddress, emailAddressNode);
+}
+
+// thunderbird has smart logic for determining if we should show just the display name.
+// mozilla already has a generic method that gets called on each email address node called
+// AddExtraAddressProcessing which is undefined in seamonkey. Let's hijack this convient method to do what
+// we want.
+
+function AddExtraAddressProcessing(emailAddress, addressNode)
+{
+  var displayName = addressNode.getTextAttribute("displayName");  
+  var emailAddress = addressNode.getTextAttribute("emailAddress");
+
+  if (displayName && useDisplayNameForAddress(emailAddress))
+    addressNode.setAttribute('label', displayName); 
+} 
+
+// returns true if we should use the display name for this address
+// otherwise returns false
+function useDisplayNameForAddress(emailAddress)
+{
+  // For now, if the email address is in the personal address book, then consider this user a 'known' user
+  // and use the display name. I could eventually see our rules enlarged to include other local ABs, replicated
+  // LDAP directories, and maybe even domain matches (i.e. any email from someone in my company
+  // should use the friendly display name) 
+
+  if (!gPersonalAddressBookDirectory)
+  {
+    var RDFService = Components.classes[kRDFServiceContractID].getService(Components.interfaces.nsIRDFService); 
+    gPersonalAddressBookDirectory = RDFService.GetResource(kPersonalAddressbookUri).QueryInterface(Components.interfaces.nsIAbMDBDirectory);
+      
+    if (!gPersonalAddressBookDirectory)
+      return false;
+  }
+
+  // look up the email address in the database
+  return gPersonalAddressBookDirectory.hasCardForEmailAddress(emailAddress);
 }
 
 function AddNodeToAddressBook (emailAddressNode)
