@@ -64,6 +64,7 @@
 #define MAX_SETUP_TYPES 4
 #define MAX_URLS 32
 #define MAX_URL_LEN 1024
+#define MAX_DEPENDEE_KEY_LEN 16
 #define MAX_TMP_DIRS 1024
 
 
@@ -107,6 +108,7 @@
 #define URLd                "URL%d"
 #define SIZE                "Install Size"
 #define DEPENDENCYd         "Dependency%d"
+#define DEPENDEEd           "Dependee%d"
 #define ATTRIBUTES          "Attributes"
 #define SELECTED_ATTR       "SELECTED"
 #define INVISIBLE_ATTR      "INVISIBLE"
@@ -140,6 +142,13 @@ do {                                                    \
     if (_ptr)                                           \
         free(_ptr);                                     \
     _ptr = NULL;                                        \
+} while(0);
+
+#define XI_GTK_IF_FREE(_gtkWidgetPtr)                   \
+do {                                                    \
+    if (_gtkWidgetPtr && GTK_IS_WIDGET(_gtkWidgetPtr))  \
+        gtk_widget_destroy(_gtkWidgetPtr);              \
+    _gtkWidgetPtr = NULL;                               \
 } while(0);
 
 #define XI_ERR_BAIL(_function)                          \

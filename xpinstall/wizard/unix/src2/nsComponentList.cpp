@@ -243,3 +243,46 @@ nsComponentList::GetCompByArchive(char *aArchive)
 
     return NULL;
 }
+
+nsComponent *
+nsComponentList::GetCompByShortDesc(char *aShortDesc)
+{
+    nsComponent *comp = GetHead();
+    int i;
+
+    // param check
+    if (!comp || mLength == 0 || !aShortDesc) return NULL;
+
+    for (i=0; i<mLength; i++)
+    { 
+        if (0==strncmp(aShortDesc, comp->GetDescShort(), 
+                       strlen(aShortDesc)))
+            return comp;
+
+        comp = GetNext();
+        if (!comp) break;
+    }
+
+    return NULL;
+}
+
+nsComponent *
+nsComponentList::GetFirstVisible()
+{
+    int i;
+    nsComponent *comp = GetHead();
+
+    // param check
+    if (mLength == 0) return NULL;
+
+    for (i=0; i<mLength; i++)
+    { 
+        if (!comp->IsInvisible())
+            return comp;
+
+        comp = GetNext();
+        if (!comp) break;
+    }
+
+    return NULL;
+}

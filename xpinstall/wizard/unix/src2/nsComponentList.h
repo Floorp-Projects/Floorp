@@ -48,7 +48,7 @@ public:
     /**
      * GetNext
      * 
-     * Returns the next available item. GetFirst() has to have 
+     * Returns the next available item. GetHead() has to have 
      * been called prior calling this and after the last time
      * the entire list was iterated over.
      *
@@ -130,10 +130,31 @@ public:
      * Searches the list and returns the first component that matches
      * the archive name supplied.
      * 
-     * @param aArcive       the archive name of the component
+     * @param aArchive      the archive name of the component
      * @return comp         the component matching the archive
      */
     nsComponent     *GetCompByArchive(char *aArchive);
+
+    /**
+     * GetCompByShortDesc
+     *
+     * Searches the list and returns the first component that matches
+     * the short description supplied.
+     *
+     * @param aShortDesc    the short description of the component
+     * @return comp         the component matching the short description
+     */
+    nsComponent     *GetCompByShortDesc(char *aShortDesc);
+
+    /**
+     * GetFirstVisible
+     *
+     * Returns the first component that doesn't have the invisible
+     * attribute set.
+     *
+     * @return comp     the first visible component in this list
+     */
+    nsComponent     *GetFirstVisible();
 
 private:
     nsComponent     *mHead; 

@@ -93,7 +93,7 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
     int err = OK;
     char *showDlg = NULL;
     int bufsize = 0;
-    int i, j;
+    int i, j, compListLen = 0;
 
     char *currSec = (char *) malloc(strlen(COMPONENT) + 3);
     if (!currSec) return E_MEM;
@@ -103,8 +103,12 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
     char *currSizeStr = NULL;
     char *currAttrStr = NULL;
     char *currURL = NULL;
+    char *currDepName = NULL;
     char urlKey[MAX_URL_LEN];
+    char dependeeKey[MAX_DEPENDEE_KEY_LEN];
     nsComponent *currComp = NULL;
+    nsComponent *currDepComp = NULL;
+    nsComponent *currIdxComp = NULL; 
     XI_VERIFY(gCtx);
 
     /* optional keys */
@@ -167,7 +171,10 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
         currComp->SetArchive(currArchive);
         currComp->SetSize(atoi(currSizeStr));
         if (NULL != strstr(currAttrStr, SELECTED_ATTR))
+        { 
             currComp->SetSelected();
+            currComp->DepAddRef();
+        }
         else
             currComp->SetUnselected();
         if (NULL != strstr(currAttrStr, INVISIBLE_ATTR))
@@ -194,15 +201,51 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
         XI_ERR_BAIL(mCompList->AddComponent(currComp));
     }
 
-    if (0 == mCompList->GetLength())
+    compListLen = mCompList->GetLength();
+    if (0 == compListLen)
     {
         XI_IF_DELETE(mCompList);
         err = E_NO_COMPONENTS;
+        goto BAIL;
     }
 
-    return err;
+    // now parse dependee list for all components
+    for (i = 0; i < compListLen; i++)
+    {
+        memset(currSec, 0, strlen(COMPONENT) + 3);
+        sprintf(currSec, COMPONENTd, i);
+
+        currIdxComp = mCompList->GetCompByIndex(i);
+        if (!currIdxComp)
+            continue;
+
+        for (j = 0; j < MAX_COMPONENTS; j++)
+        {
+            currDepComp = NULL;
+            memset(dependeeKey, 0, MAX_DEPENDEE_KEY_LEN);
+            sprintf(dependeeKey, DEPENDEEd, j);
+
+            err = aParser->GetStringAlloc(currSec, dependeeKey, 
+                &currDepName, &bufsize);
+            if (bufsize == 0 || err != nsINIParser::OK || !currDepName) 
+            {
+                err = OK;
+                break; // no more dependees
+            }
+            
+            currDepComp = mCompList->GetCompByShortDesc(currDepName);
+            if (!currDepComp) // unexpected dependee name
+                continue;
+            currDepComp->SetSelected(); 
+            currDepComp->DepAddRef();
+
+            currIdxComp->AddDependee(currDepName);
+        }
+    }
 
 BAIL:
+    XI_IF_FREE(currSec);
+
     return err;
 }
 
@@ -319,7 +362,7 @@ nsComponentsDlg::Show(int aDirection)
         gtk_widget_show(frame);
 
         sDescLong = gtk_label_new(
-                    sCustomST->GetComponents()->GetHead()->GetDescLong());
+            sCustomST->GetComponents()->GetFirstVisible()->GetDescLong());
         hbox = gtk_hbox_new(FALSE, 0);
         gtk_box_pack_start(GTK_BOX(hbox), sDescLong, FALSE, FALSE, 20);
         gtk_widget_show(hbox);
@@ -429,29 +472,50 @@ nsComponentsDlg::RowSelected(GtkWidget *aWidget, gint aRow, gint aColumn,
     {
         if (!currComp->IsInvisible())
         {
-                if (aRow == currRow)
-                {
-                    // update long desc
-                    gtk_label_set_text(GTK_LABEL(sDescLong),
-                                        currComp->GetDescLong());
-                    gtk_widget_show(sDescLong);
+            if (aRow == currRow)
+            {
+                // update long desc
+                gtk_label_set_text(GTK_LABEL(sDescLong),
+                                   currComp->GetDescLong());
+                gtk_widget_show(sDescLong);
 
-                    if (currComp->IsSelected())
-                    {
-                        DUMP("Toggling off...");
-                        currComp->SetUnselected();
-                        gtk_clist_set_pixmap(GTK_CLIST(aWidget), currRow, 0, 
-                                             unchecked, un_mask);
-                    }
-                    else
-                    {
-                        DUMP("Toggling on...");
-                        currComp->SetSelected();
-                        gtk_clist_set_pixmap(GTK_CLIST(aWidget), currRow, 0, 
-                                             checked, ch_mask);
-                    }
+                if (currComp->IsSelected())
+                {
+                    DUMP("Toggling off...");
+                    currComp->SetUnselected();
                 }
-                currRow++;
+                else
+                {
+                    DUMP("Toggling on...");
+                    currComp->SetSelected();
+                }
+                currComp->ResolveDependees(currComp->IsSelected(),
+                                            sCustomST->GetComponents());
+                break;
+            }
+            currRow++;
+        }
+        currComp = currComp->GetNext();
+    }
+
+    // after resolving dependees redraw all checkboxes in one fell swoop
+    currRow = 0;
+    currComp = sCustomST->GetComponents()->GetHead();
+    while ((currRow < numRows) && currComp) // paranoia!
+    {
+        if (!currComp->IsInvisible())
+        {
+            if (currComp->IsSelected())
+            {
+                gtk_clist_set_pixmap(GTK_CLIST(aWidget), currRow, 0, 
+                                     checked, ch_mask);
+            }
+            else
+            {
+                gtk_clist_set_pixmap(GTK_CLIST(aWidget), currRow, 0, 
+                                     unchecked, un_mask);
+            }
+            currRow++;
         }
         currComp = currComp->GetNext();
     }

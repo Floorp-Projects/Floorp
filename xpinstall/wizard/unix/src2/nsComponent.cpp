@@ -29,16 +29,18 @@ nsComponent::nsComponent() :
     mDescLong(NULL),
     mArchive(NULL),
     mSize(0),
-    mDependencies(NULL),
     mAttributes(NO_ATTR),
     mNext(NULL),
     mIndex(-1),
-    mRefCount(0)
+    mRefCount(0),
+    mDepRefCount(0)
 {
     int i;
 
     for (i = 0; i < MAX_URLS; i++)
         mURL[i] = NULL;
+    for (i = 0; i < MAX_COMPONENTS; i++)
+        mDependees[i] = NULL;
 }
 
 nsComponent::~nsComponent()
@@ -48,9 +50,10 @@ nsComponent::~nsComponent()
     XI_IF_FREE(mDescShort);
     XI_IF_FREE(mDescLong);
     XI_IF_FREE(mArchive);
-    XI_IF_DELETE(mDependencies)
     for (i = 0; i < MAX_URLS; i++)
         XI_IF_FREE(mURL[i]);
+    for (i = 0; i < MAX_COMPONENTS; i++)
+        XI_IF_FREE(mDependees[i]);
 }
 
 nsComponent *
@@ -163,40 +166,45 @@ nsComponent::GetURL(int aIndex)
     return mURL[aIndex];
 }
 
-int 
-nsComponent::AddDependency(nsComponent *aDependent)
-{
-    if (!aDependent)
-        return E_PARAM;
-
-    if (!mDependencies)
-        mDependencies = new nsComponentList();
-
-    if (!mDependencies)
-        return E_MEM;
- 
-    return mDependencies->AddComponent(aDependent);
-}
-
 int
-nsComponent::RemoveDependency(nsComponent *aIndependent)
+nsComponent::AddDependee(char *aDependee)
 {
-    if (!aIndependent)
+    if (!aDependee)
         return E_PARAM;
 
-    if (!mDependencies)
-        return E_NO_MEMBER;
+    mDependees[mNextDependeeIdx] = aDependee;
+    mDependees[++mNextDependeeIdx] = NULL;
 
-    return mDependencies->RemoveComponent(aIndependent);
+    return OK;
 }
 
-nsComponentList *
-nsComponent::GetDependencies()
+int 
+nsComponent::ResolveDependees(int aBeingSelected, nsComponentList *aComps)
 {
-    if (mDependencies)
-        return mDependencies;
+    int i;
+    nsComponent *currComp = NULL;
+    
+    // param check
+    if (!aComps)
+        return E_PARAM;
 
-    return NULL;
+    // loop over all dependees
+    for (i = 0; i < mNextDependeeIdx; i++)
+    {
+        if (!mDependees[i])
+            break;
+
+        currComp = aComps->GetCompByShortDesc(mDependees[i]);
+        if (!currComp)
+            continue;
+        
+        if (aBeingSelected)
+            currComp->DepAddRef();
+        else    
+            currComp->DepRelease();
+    }
+
+    return OK;
 }
 
 int
@@ -212,6 +220,7 @@ nsComponent::SetUnselected()
 {
     if (IsSelected())
         mAttributes &= ~nsComponent::SELECTED;
+    mDepRefCount = 0;
 
     return OK;
 }
@@ -353,4 +362,35 @@ nsComponent::InitRefCount()
     mRefCount = 1;
 
     return OK;
+}
+
+int 
+nsComponent::DepAddRef()
+{
+    if (mDepRefCount == 0)
+        SetSelected();
+
+    mDepRefCount++;
+        
+    return OK;
+}
+
+int
+nsComponent::DepRelease()
+{
+    mDepRefCount--;
+
+    if (mDepRefCount < 0)
+        mDepRefCount = 0;
+
+    if (mDepRefCount == 0)
+        SetUnselected();
+ 
+    return OK;
+}
+
+int
+nsComponent::DepGetRefCount()
+{
+    return mDepRefCount;
 }
