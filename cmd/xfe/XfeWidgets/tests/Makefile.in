@@ -42,6 +42,7 @@ endif
 DIRS			= \
 				Xfe \
 				XfeBm \
+				XfeToolBar \
 				XmL \
 				$(UNUSED_DIRS)
 
