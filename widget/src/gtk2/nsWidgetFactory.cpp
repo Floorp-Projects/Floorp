@@ -49,6 +49,7 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsClipboard.h"
 #include "nsDragService.h"
+#include "nsSound.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
@@ -66,6 +67,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 
 static
 nsresult nsHorizScrollbarConstructor (nsISupports *aOuter,
@@ -151,6 +153,10 @@ static const nsModuleComponentInfo components[] =
       NS_VERTSCROLLBAR_CID,
       "@mozilla.org/widgets/vertscroll/gtk;1",
       nsVertScrollbarConstructor },
+    { "Gtk2 Sound",
+      NS_SOUND_CID,
+      "@mozilla.org/sound;1",
+      nsSoundConstructor },
   { NS_IXREMOTEWIDGETHELPER_CLASSNAME,
     NS_GTKXREMOTEWIDGETHELPER_CID,
     NS_IXREMOTEWIDGETHELPER_CONTRACTID,
