@@ -22,8 +22,7 @@ MODULE=prefmigr
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS=nsPrefMigrationCIDs.h
 
-XPIDLSRCS = 	.\nsIPrefMigrationProgress.idl        \
-		.\nsIPrefMigration.idl			\
+XPIDLSRCS =  .\nsIPrefMigration.idl			\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

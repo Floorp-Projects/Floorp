@@ -18,8 +18,24 @@
 
 #include "nsISupports.idl"
 
+interface nsIWebShellWindow;
+
+%{C++
+
+#define NS_PROFILEMIGRATION_PROGID "component://netscape/profile/migration"
+
+%}
+
 [scriptable, uuid(85c86e4c-6a6c-11d3-9a55-004005263078)]
 interface nsIPrefMigration: nsISupports
 {
-  void processPrefs(in string oldProfilePathStr, in string newProfilePathStr);
+  void AddProfilePaths(in string oldProfilePathStr, in string newProfilePathStr);
+  void ProcessPrefs();
+  void ProcessPrefsFromJS();
+
+  /**
+   * this should be in a seperate interface
+   **/
+
+  void WindowCloseCallback();  
 };
