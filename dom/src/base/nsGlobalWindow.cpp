@@ -2899,18 +2899,25 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
       return NS_OK;
     }
 
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
-    // If getting a window watcher fails, we'd fail downstream anyway when trying to
-    // open a new window so just bail here.
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Special case items that don't actually open new windows.
+    if (!name.EqualsIgnoreCase("_top") &&
+        !name.EqualsIgnoreCase("_self") &&
+        !name.EqualsIgnoreCase("_content")) {
 
-    nsCOMPtr<nsIDOMWindow> namedWindow;
-    wwatch->GetWindowByName(name.get(), this,
-                            getter_AddRefs(namedWindow));
+      nsCOMPtr<nsIWindowWatcher> wwatch =
+          do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+      // If getting a window watcher fails, we'd fail downstream anyway
+      // when trying to open a new window so just bail here.
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!namedWindow) {
-      FirePopupBlockedEvent(mDocument);
-      return NS_OK;
+      nsCOMPtr<nsIDOMWindow> namedWindow;
+      wwatch->GetWindowByName(name.get(), this,
+                              getter_AddRefs(namedWindow));
+
+      if (!namedWindow) {
+        FirePopupBlockedEvent(mDocument);
+        return NS_OK;
+      }
     }
   }
 
