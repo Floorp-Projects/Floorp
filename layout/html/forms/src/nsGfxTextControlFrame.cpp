@@ -1072,6 +1072,13 @@ nsGfxTextControlFrame::RedispatchMouseEventToSubDoc(nsIPresContext* aPresContext
 void
 nsGfxTextControlFrame::EnterPressed(nsIPresContext* aPresContext) 
 {
+  // Send out onChange event here to get http://maps working (bug 18501)
+  nsCOMPtr<nsIDOMFocusListener> fListener = do_QueryInterface(mEventListener);
+  if (fListener) {
+    fListener->Blur(nsnull);
+  }
+
+  // Submit the form
   if (mFormFrame && mFormFrame->CanSubmit(*this)) {
     nsIContent *formContent = nsnull;
 
@@ -4296,7 +4303,7 @@ nsEnderEventListener::MouseUp(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
   mouseEvent = do_QueryInterface(aEvent);
-  if (!mouseEvent) { //non-key event passed in.  bad things.
+  if (!mouseEvent) { //non-mouse event passed in.  bad things.
     return NS_OK;
   }
 
@@ -4332,7 +4339,7 @@ nsEnderEventListener::MouseClick(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
   mouseEvent = do_QueryInterface(aEvent);
-  if (!mouseEvent) { //non-key event passed in.  bad things.
+  if (!mouseEvent) { //non-mouse event passed in.  bad things.
     return NS_OK;
   }
 
@@ -4369,7 +4376,7 @@ nsEnderEventListener::MouseDblClick(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
   mouseEvent = do_QueryInterface(aEvent);
-  if (!mouseEvent) { //non-key event passed in.  bad things.
+  if (!mouseEvent) { //non-mouse event passed in.  bad things.
     return NS_OK;
   }
 
@@ -4408,7 +4415,7 @@ nsEnderEventListener::MouseOver(nsIDOMEvent* aEvent)
   /*
   nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
   mouseEvent = do_QueryInterface(aEvent);
-  if (!mouseEvent) { //non-key event passed in.  bad things.
+  if (!mouseEvent) { //non-mouse event passed in.  bad things.
     return NS_OK;
   }
 
@@ -4430,7 +4437,7 @@ nsEnderEventListener::MouseOut(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
   mouseEvent = do_QueryInterface(aEvent);
-  if (!mouseEvent) { //non-key event passed in.  bad things.
+  if (!mouseEvent) { //non-mouse event passed in.  bad things.
     return NS_OK;
   }
 
@@ -4528,11 +4535,15 @@ nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
 {
-
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aEvent);
-  if (!uiEvent) {
-    return NS_OK;
+  // XXX We don't use aEvent, shouldn't matter what it is.
+  // In addition, EnterPressed calls Blur and passes null (Bug 18501)
+  // So, if we get a null, skip the QI for the time being.
+  if (aEvent) {
+    nsCOMPtr<nsIDOMUIEvent>uiEvent;
+    uiEvent = do_QueryInterface(aEvent);
+    if (!uiEvent) {
+      return NS_OK;
+    }
   }
 
   nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
