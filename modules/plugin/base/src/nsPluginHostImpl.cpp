@@ -4253,7 +4253,10 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
       }
       else
       {
+       // Now lets try to get the entry point from a 4.x plugin
+       rv = NS_ERROR_FAILURE;
 #if defined(XP_MAC) && TARGET_CARBON
+        // on Carbon, first let's see if this is a Classic plugin
         // should we also look for a 'carb' resource?
         if (PR_FindSymbol(pluginTag->mLibrary, "mainRD") != NULL) 
         {
@@ -4264,9 +4267,11 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
                                        pluginTag->mFileName, 
                                        pluginTag->mLibrary, 
                                        &pluginTag->mEntryPoint);
+          if (!pluginTag->mEntryPoint)  // plugin wasn't found
+            rv = NS_ERROR_FAILURE;      // setup failure to try normal loading next
         } 
-        else
 #endif
+        if (NS_FAILED(rv))
           rv = ns4xPlugin::CreatePlugin(serviceManager,
                                         pluginTag->mFileName,
                                         pluginTag->mLibrary,
