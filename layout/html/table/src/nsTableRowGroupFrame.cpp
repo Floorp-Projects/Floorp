@@ -40,7 +40,11 @@
 #include "nsCSSRendering.h"
 #include "nsHTMLParts.h"
 
+#include "nsCellMap.h"//table cell navigation
+
 /* ----------- nsTableRowGroupFrame ---------- */
+NS_IMPL_ADDREF_INHERITED(nsTableRowGroupFrame, nsHTMLContainerFrame)
+NS_IMPL_RELEASE_INHERITED(nsTableRowGroupFrame, nsHTMLContainerFrame)
 
 nsresult
 nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -52,7 +56,13 @@ nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (aIID.Equals(kITableRowGroupIID)) {
     *aInstancePtr = (void*)this;
     return NS_OK;
-  } else {
+  }
+  else if (aIID.Equals(NS_GET_IID(nsILineIterator))) 
+  { // note there is no addref here, frames are not addref'd
+    *aInstancePtr = (void*)(nsILineIterator*)this;
+    return NS_OK;
+  }
+  else {
     return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
   }
 }
@@ -1641,3 +1651,178 @@ nsTableRowGroupFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) cons
   return NS_OK;
 }
 #endif
+
+//nsILineIterator methods for nsTableFrame
+NS_IMETHODIMP
+nsTableRowGroupFrame::GetNumLines(PRInt32* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  return GetRowCount(*aResult);
+}
+
+NS_IMETHODIMP
+nsTableRowGroupFrame::GetDirection(PRBool* aIsRightToLeft)
+{
+  NS_ENSURE_ARG_POINTER(aIsRightToLeft);
+  *aIsRightToLeft = PR_FALSE;
+  return NS_OK;
+}
+  
+NS_IMETHODIMP
+nsTableRowGroupFrame::GetLine(PRInt32 aLineNumber, nsIFrame** aFirstFrameOnLine, PRInt32* aNumFramesOnLine,
+                     nsRect& aLineBounds, PRUint32* aLineFlags)
+{
+  NS_ENSURE_ARG_POINTER(aFirstFrameOnLine);
+  NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
+  NS_ENSURE_ARG_POINTER(aLineFlags);
+
+  nsIFrame* tableFrame;
+  nsTableFrame* parentFrame;
+  nsresult result = GetParent(&tableFrame);
+  if(NS_FAILED(result) || !tableFrame)
+    return result?result:NS_ERROR_FAILURE;
+
+  parentFrame = (nsTableFrame*)tableFrame;
+  nsTableCellMap* cellMap = parentFrame->GetCellMap();
+  if(!cellMap)
+     return NS_ERROR_FAILURE;
+
+  if(aLineNumber >= cellMap->GetRowCount())
+    return NS_ERROR_INVALID_ARG;
+  
+  *aLineFlags = 0;/// should we fill these in later?
+  // not gonna touch aLineBounds right now
+
+  CellData* firstCellData = cellMap->GetCellAt(aLineNumber, 0);
+  *aFirstFrameOnLine = (nsIFrame*)firstCellData->GetCellFrame();
+  *aNumFramesOnLine = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
+  return NS_OK;
+}
+  
+NS_IMETHODIMP
+nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame, PRInt32* aLineNumberResult)
+{
+  NS_ENSURE_ARG_POINTER(aFrame);
+  NS_ENSURE_ARG_POINTER(aLineNumberResult);
+
+  nsTableRowFrame* rowFrame = (nsTableRowFrame*)aFrame;
+  *aLineNumberResult = rowFrame->GetRowIndex();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableRowGroupFrame::FindLineAt(nscoord aY, PRInt32* aLineNumberResult)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+  
+NS_IMETHODIMP
+nsTableRowGroupFrame::FindFrameAt(PRInt32 aLineNumber, nscoord aX, nsIFrame** aFrameFound,
+                         PRBool* aXIsBeforeFirstFrame, PRBool* aXIsAfterLastFrame)
+{
+  PRInt32 cellCount = 0;
+  CellData* cellData;
+  nsIFrame* tempFrame;
+  nsRect tempRect;
+  nsRect& tempRectRef = tempRect;
+  nsresult rv;
+
+  nsTableFrame* parentFrame;
+
+  rv = GetParent(&tempFrame);
+  if(NS_FAILED(rv) || !tempFrame)
+    return rv?rv:NS_ERROR_FAILURE;
+
+  parentFrame = (nsTableFrame*)tempFrame;
+  nsTableCellMap* cellMap = parentFrame->GetCellMap();
+  if(!cellMap)
+     return NS_ERROR_FAILURE;
+
+  cellCount = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
+
+  *aXIsBeforeFirstFrame = PR_FALSE;
+  *aXIsAfterLastFrame = PR_FALSE;
+
+  for(int i =0;i < cellCount; i++)
+  {
+    cellData = cellMap->GetCellAt(aLineNumber, i);
+    tempFrame = (nsIFrame*)cellData->GetCellFrame();
+    
+    tempFrame->GetRect(tempRectRef);//offsetting x to be in row coordinates
+    if(i==0)
+    {//only do this once
+      nsRect parentRect;
+      nsRect& parentRectRef = parentRect;
+      nsIFrame* parentFrame;
+
+      rv = tempFrame->GetParent(&parentFrame);
+    
+      if(NS_FAILED(rv) || !parentFrame)
+        return rv?rv:NS_ERROR_FAILURE;
+
+      parentFrame->GetRect(parentRectRef);
+      aX -= parentRect.x;
+    }
+
+    if(aX <= 0)//short circuit for negative x coords
+    {
+      *aXIsBeforeFirstFrame = PR_TRUE;
+      *aFrameFound = tempFrame;
+      return NS_OK;
+    }
+    if(aX < (tempRect.x + tempRect.width))
+    {
+      *aFrameFound = tempFrame;
+      return NS_OK;
+    }
+  }
+  //x coord not found in frame, return last frame
+  *aXIsAfterLastFrame = PR_TRUE;
+  *aFrameFound = tempFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableRowGroupFrame::GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber)
+{
+  NS_ENSURE_ARG_POINTER(aFrame);
+
+  nsITableCellLayout* cellFrame;
+  nsresult result = aFrame->QueryInterface(NS_GET_IID(nsITableCellLayout),(void**)&cellFrame);
+  
+  if(NS_FAILED(result) || !cellFrame)
+    return result?result:NS_ERROR_FAILURE;
+  
+  nsIFrame* tempFrame;
+  nsTableFrame* parentFrame;
+  nsresult rv = GetParent(&tempFrame);
+  if(NS_FAILED(rv) || !tempFrame)
+    return rv?rv:NS_ERROR_FAILURE;
+  parentFrame = (nsTableFrame*)tempFrame;
+  nsTableCellMap* cellMap = parentFrame->GetCellMap();
+  if(!cellMap)
+     return NS_ERROR_FAILURE;
+
+
+  PRInt32 colIndex;
+  PRInt32& colIndexRef = colIndex;
+  cellFrame->GetColIndex(colIndexRef);
+
+  CellData* cellData = cellMap->GetCellAt(aLineNumber, colIndex + 1);
+  
+  if(!cellData)// if this isnt a valid cell, drop down and check the next line
+  {
+    cellData = cellMap->GetCellAt(aLineNumber + 1, 0);
+    if(!cellData)
+    {
+      //*aFrame = nsnull;
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  aFrame = (nsIFrame*)cellData->GetCellFrame();
+  return NS_OK;
+}
+
+//end nsLineIterator methods

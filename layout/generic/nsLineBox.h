@@ -395,6 +395,8 @@ public:
                          PRBool* aXIsBeforeFirstFrame,
                          PRBool* aXIsAfterLastFrame);
 
+  NS_IMETHOD GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber);
+
   nsresult Init(nsLineBox* aLines, PRBool aRightToLeft);
 
 protected:

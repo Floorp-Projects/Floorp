@@ -108,6 +108,10 @@ public:
                          nsIFrame** aFrameFound,
                          PRBool* aXIsBeforeFirstFrame,
                          PRBool* aXIsAfterLastFrame) = 0;
+
+  // Give the line iterator implementor a chance todo something more complicated than
+  // nsIFrame::GetNextSibling()
+  NS_IMETHOD GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber) = 0;
 };
 
 #endif /* nsILineIterator_h___ */

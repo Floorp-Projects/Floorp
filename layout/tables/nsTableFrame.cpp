@@ -192,7 +192,8 @@ nsresult nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   { // note there is no addref here, frames are not addref'd
     *aInstancePtr = (void*)(nsITableLayout*)this;
     return NS_OK;
-  } else {
+  }
+  else {
     return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
   }
 }
@@ -4676,3 +4677,5 @@ nsTableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   return NS_OK;
 }
 #endif
+
+

@@ -2268,13 +2268,13 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
   if (aOutSideLimit > 0) //start at end
     searchingLine = countLines;
   else if (aOutSideLimit <0)//start at begining
-    searchingLine = -1;//"next" will be 0
+    searchingLine = -1;//"next" will be 0  
   else 
-  if ((aPos->mDirection == eDirPrevious && searchingLine == 0) || 
-      (aPos->mDirection == eDirNext && searchingLine >= (countLines -1) )){
+    if ((aPos->mDirection == eDirPrevious && searchingLine == 0) || 
+       (aPos->mDirection == eDirNext && searchingLine >= (countLines -1) )){
       //we need to jump to new block frame.
-    return NS_ERROR_FAILURE;
-  }
+           return NS_ERROR_FAILURE;
+    }
   PRInt32 lineFrameCount;
   nsIFrame *resultFrame = nsnull;
   nsIFrame *farStoppingFrame = nsnull; //we keep searching until we find a "this" frame then we go to next line
@@ -2293,7 +2293,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
     if ((aPos->mDirection == eDirPrevious && searchingLine < 0) || 
        (aPos->mDirection == eDirNext && searchingLine >= countLines ))
     {
-        //we need to jump to new block frame.
+      //we need to jump to new block frame.
       return NS_ERROR_FAILURE;
     }
     PRUint32 lineFlags;
@@ -2303,12 +2303,17 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       continue;
     if (NS_SUCCEEDED(result)){
       lastFrame = firstFrame;
+    if(!lastFrame)
+      return NS_ERROR_FAILURE;//XXX this is temporary, to avoid crashing
       for (;lineFrameCount > 1;lineFrameCount --){
-        result = lastFrame->GetNextSibling(&lastFrame);
+        //result = lastFrame->GetNextSibling(&lastFrame, searchingLine);
+        result = it->GetNextSibling(lastFrame, searchingLine);
         if (NS_FAILED(result)){
           NS_ASSERTION(0,"should not be reached nsFrame\n");
           continue;
         }
+        if(!lastFrame)
+          return NS_ERROR_FAILURE;
       }
       GetLastLeaf(aPresContext, &lastFrame);
 
@@ -2351,7 +2356,19 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
         result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
         nsPoint point;
         point.x = aPos->mDesiredX;
-        point.y = 0;
+        if(aPos->mDirection == eDirPrevious)
+        {
+          nsRect tempRect;
+          nsRect& tempRectRef = tempRect;
+          resultFrame->GetRect(tempRectRef);
+          nsPoint offset;
+          nsIView * view; //used for call of get offset from view
+          resultFrame->GetOffsetFromView(aPresContext, offset,&view);
+          point.y = tempRect.height + offset.y;
+        }
+        else
+          point.y = 0;
+
         result = NS_ERROR_FAILURE;
         nsIView*  view;//if frame has a view. then stop. no doubleclicking into views
         if (NS_FAILED(resultFrame->GetView(aPresContext, &view)) || !view)
