@@ -111,6 +111,7 @@ pref("mail.wfe.addr_book.show_value", 0);
 pref("mail.addr_book.lastnamefirst", false);
 pref("mail.addr_book.sortby", 2);
 pref("mail.addr_book.sort_ascending", true);
+pref("mail.addr_book.displayName.autoGeneration", true);
 localDefPref("mail.addr_book.name.width", 0);
 localDefPref("mail.addr_book.email.width", 0);
 localDefPref("mail.addr_book.nickname.width", 0);
