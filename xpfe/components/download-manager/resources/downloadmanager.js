@@ -83,7 +83,7 @@ function DLManagerStartup()
 
   gDownloadView = document.getElementById("downloadView");
   setSortVariables(gDownloadView);
-  
+
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
   gDownloadManager = Components.classes[dlmgrContractID].getService(dlmgrIID);
@@ -113,7 +113,7 @@ function DLManagerStartup()
 function onRebuild() {
   gDownloadView.controllers.appendController(downloadViewController);
   gDownloadView.focus();
-  
+
   // If the window was opened automatically because
   // a download started, select the new download
   if (window.arguments.length > 1 && window.arguments[1]) {
@@ -129,7 +129,7 @@ function onRebuild() {
 function onSelect(aEvent) {
   if (!gStatusBar)
     gStatusBar = document.getElementById("statusbar-text");
-  
+
   var selectionCount = gDownloadView.view.selection.count;
   if (selectionCount == 1)
     gStatusBar.label = createLocalFile(getSelectedItem().id).path;
@@ -138,8 +138,11 @@ function onSelect(aEvent) {
 
   window.updateCommands("tree-select");
 }
-  
-function onDoubleClick() {
+
+function onDoubleClick(aEvent) {
+  if (aEvent.button != 0)
+    return;
+
   if (downloadViewController.isCommandEnabled('cmd_properties'))
     goDoCommand('cmd_properties');
   else if (downloadViewController.isCommandEnabled('cmd_openfile'))
@@ -161,7 +164,7 @@ var downloadViewController = {
     }
     return false;
   },
-  
+
   isCommandEnabled: function dVC_isCommandEnabled (aCommand)
   {
     if (!gDownloadView.view.selection) return false;
@@ -196,7 +199,7 @@ var downloadViewController = {
       return false;
     }
   },
-  
+
   doCommand: function dVC_doCommand (aCommand)
   {
     var selectedItem, selectedItems;
@@ -251,7 +254,7 @@ var downloadViewController = {
       selectedItem = getSelectedItem();
       if (selectedItem) {
         file = createLocalFile(selectedItem.id);
-        
+
         // on unix, open a browser window rooted at the parent
         if ((navigator.platform.indexOf("Win") == -1) &&
             (navigator.platform.indexOf("Mac") == -1) &&
@@ -282,7 +285,7 @@ var downloadViewController = {
       // Figure out where to place the selection after deletion
       var newSelectionPos = gDownloadView.contentView.getIndexOfItem(selectedItems[0]);
       gDownloadManager.startBatchUpdate();
-      
+
       // Notify the datasource that we're about to begin a batch operation
       var ds = window.arguments[0]
                      .QueryInterface(Components.interfaces.nsIRDFDataSource);
@@ -314,7 +317,7 @@ var downloadViewController = {
     default:
     }
   },  
-  
+
   onEvent: function dVC_onEvent (aEvent)
   {
     switch (aEvent) {
