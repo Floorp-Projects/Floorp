@@ -1053,10 +1053,14 @@ SECU_FileToItem(SECItem *dst, PRFileDesc *src)
 	goto loser;
     }
 
+    /* XXX workaround for 3.1, function needs to take a "chop" arg
     while (buf[numBytes-1] == '\r' || 
            buf[numBytes-1] == '\n' ||
            buf[numBytes-1] == '\0') numBytes--;
+    */
 
+    /* XXX workaround for 3.1, not all utils zero dst before sending */
+    dst->data = 0;
     if (!SECITEM_AllocItem(NULL, dst, numBytes))
 	goto loser;
 
