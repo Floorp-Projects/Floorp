@@ -1395,7 +1395,9 @@ nsHTMLDocument::GetElementsByTagName(const nsAString& aTagname,
                                      nsIDOMNodeList** aReturn)
 {
   nsAutoString tmp(aTagname);
-  ToLowerCase(tmp); // HTML elements are lower case internally.
+  if (!IsXHTML()) {
+    ToLowerCase(tmp); // HTML elements are lower case internally.
+  }
   return nsDocument::GetElementsByTagName(tmp, aReturn);
 }
 
