@@ -26,6 +26,7 @@
  *
  * Contributor(s):
  *   Chak Nanga <chak@netscape.com> 
+ *   Rod Spears <rods@netscape.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -182,6 +183,7 @@ protected:
 	afx_msg void OnFilePrintPreview();
 	afx_msg void OnFilePrintSetup();
 	afx_msg void OnUpdateFilePrint(CCmdUI* pCmdUI);
+	afx_msg void OnUpdatePrintSetup(CCmdUI* pCmdUI);
 	afx_msg LRESULT OnFindMsg(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnViewFrameSource();
 	afx_msg void OnOpenFrameInNewWindow();

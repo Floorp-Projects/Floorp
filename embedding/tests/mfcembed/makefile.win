@@ -77,6 +77,10 @@ LLFLAGS=$(LLFLAGS) /HEAP:0x40000
 
 
 OBJS =                           \
+    .\$(OBJDIR)\CCustomPromptDialog.obj     \
+    .\$(OBJDIR)\CMarginHeaderFooter.obj     \
+    .\$(OBJDIR)\CFormatOptionTab.obj     \
+    .\$(OBJDIR)\CPageSetupPropSheet.obj     \
     .\$(OBJDIR)\MfcEmbed.obj     \
     .\$(OBJDIR)\BrowserFrm.obj   \
     .\$(OBJDIR)\EditorFrm.obj   \
@@ -90,9 +94,7 @@ OBJS =                           \
     .\$(OBJDIR)\ProfilesDlg.obj \
     .\$(OBJDIR)\winEmbedFileLocProvider.obj \
     .\$(OBJDIR)\MostRecentUrls.obj \
-    .\$(OBJDIR)\PrintProgressDialog.obj       \
     .\$(OBJDIR)\Preferences.obj \
-    .\$(OBJDIR)\PrintSetupDialog.obj       \
     .\$(OBJDIR)\StdAfx.obj       \
     $(NULL)
 
