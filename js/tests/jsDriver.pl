@@ -1226,7 +1226,8 @@ sub report_failure {
     $html .= "<a name='failure$failures_reported'></a>";
 
     if ($bug_number) {
-        $bug_line = "<a href='$opt_bug_url$bug_number' target='other_window'>".
+        my $bug_url = ($bug_number =~ /^\d+$/) ? "$opt_bug_url$bug_number" : $bug_number;
+        $bug_line = "<a href='$bug_url' target='other_window'>".
                     "Bug Number $bug_number</a>";
     }
 
