@@ -190,6 +190,11 @@ sidebarheader {
   cursor: pointer;
 }
 
+
+#cvHomeMapIt, #cvWorkMapIt {
+  margin-bottom: 0px;
+}
+
 html|a {
   padding-left: 0px;
   padding-right: 2px;

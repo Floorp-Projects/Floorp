@@ -94,8 +94,8 @@ function OnLoadCardView()
 	cvData.cvHomeAddress2	= doc.getElementById("cvHomeAddress2");
 	cvData.cvHomeCityStZip	= doc.getElementById("cvHomeCityStZip");
 	cvData.cvHomeCountry	= doc.getElementById("cvHomeCountry");
-        cvData.cvbHomeMapItBox  = doc.getElementById("cvbHomeMapItBox");
-        cvData.cvHomeMapIt      = doc.getElementById("cvHomeMapIt");
+  cvData.cvbHomeMapItBox  = doc.getElementById("cvbHomeMapItBox");
+  cvData.cvHomeMapIt = doc.getElementById("cvHomeMapIt");
 	cvData.cvHomeWebPageBox = doc.getElementById("cvHomeWebPageBox");
 	cvData.cvHomeWebPage	= doc.getElementById("cvHomeWebPage");
 	// Other section
@@ -132,8 +132,8 @@ function OnLoadCardView()
 	cvData.cvWorkAddress2	= doc.getElementById("cvWorkAddress2");
 	cvData.cvWorkCityStZip	= doc.getElementById("cvWorkCityStZip");
 	cvData.cvWorkCountry	= doc.getElementById("cvWorkCountry");
-        cvData.cvbWorkMapItBox  = doc.getElementById("cvbWorkMapItBox");
-        cvData.cvWorkMapIt      = doc.getElementById("cvWorkMapIt");
+  cvData.cvbWorkMapItBox  = doc.getElementById("cvbWorkMapItBox");
+  cvData.cvWorkMapIt = doc.getElementById("cvWorkMapIt");
 	cvData.cvWorkWebPageBox = doc.getElementById("cvWorkWebPageBox");
 	cvData.cvWorkWebPage	= doc.getElementById("cvWorkWebPage");
 }
@@ -152,7 +152,7 @@ function GetAddressesFromURI(uri)
     if (total > 0)
       addresses = addressList.GetElementAt(0).QueryInterface(Components.interfaces.nsIAbCard).primaryEmail;
     for (var i = 1;  i < total; i++ ) {
-      addresses += "," + addressList.GetElementAt(i).QueryInterface(Components.interfaces.nsIAbCard).primaryEmail;
+      addresses += ", " + addressList.GetElementAt(i).QueryInterface(Components.interfaces.nsIAbCard).primaryEmail;
     }
   }
   return addresses;
@@ -226,10 +226,9 @@ function DisplayCardViewPane(card)
   	cvSetVisible(data.cvbDescription, visible);
 
     // Addresses section
-    var addresses = GetAddressesFromURI(card.mailListURI);
-	  visible = cvSetNode(data.cvAddresses, addresses)
+	  visible = cvAddAddressNodes(data.cvAddresses, card.mailListURI);
   	cvSetVisible(data.cvbAddresses, visible);
-    
+ 
     // Other section, not shown for mailing lists.
     cvSetVisible(data.cvbOther, false);
   }
@@ -345,6 +344,46 @@ function cvSetNode(node, text)
 		cvSetVisible(node, visible);
 	}
 
+	return visible;
+}
+
+function cvAddAddressNodes(node, uri)
+{
+  var visible = false;
+	if ( node )
+	{
+    var displayName = ""; 
+    var address = "";
+
+    var editList = GetDirectoryFromURI(uri);
+    var addressList = editList.addressLists;
+      
+    if (addressList) {
+      var total = addressList.Count();
+      if (total > 0) {
+        for (var i = node.childNodes.length - 1; i >= 0; i--) {
+          node.removeChild(node.childNodes[i]);
+        }
+        for (var i = 0;  i < total; i++ ) {
+      		var descNode = document.createElement("description");   
+          address = addressList.GetElementAt(i).QueryInterface(Components.interfaces.nsIAbCard).primaryEmail;    
+          displayName = addressList.GetElementAt(i).QueryInterface(Components.interfaces.nsIAbCard).displayName;  
+          descNode.setAttribute("class", "CardViewLink");
+          node.appendChild(descNode);         
+          
+          var linkNode = document.createElementNS("http://www.w3.org/1999/xhtml", "a");
+          linkNode.setAttribute("id", "addr#" + i);
+          linkNode.setAttribute("href", "mailto:" + address);
+          descNode.appendChild(linkNode);
+          
+          var textNode = document.createTextNode(displayName + " <" + address + ">");
+          linkNode.appendChild(textNode);
+        }
+			  visible = true;
+      }
+		}    
+		cvSetVisible(node, visible);
+	}
 	return visible;
 }
 
