@@ -21,6 +21,7 @@
  *   Steve Clark <buster@netscape.com>
  *   Håkan Waara <hwaara@chello.se>
  *   Dan Rosen <dr@netscape.com>
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *   IBM Corporation
  *
@@ -5088,6 +5089,12 @@ PresShell::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
   }
   if (NS_FAILED(rv)) return rv;
 
+  if (aDisabled) {
+    // If the stylesheet is disabled, remove existing BodyFixupRule for
+    // bug 88681
+    rv = mStyleSet->RemoveBodyFixupRule(aDocument);
+    if (NS_FAILED(rv)) return rv;
+  }
   // rebuild the frame-world
   return ReconstructFrames();
 }

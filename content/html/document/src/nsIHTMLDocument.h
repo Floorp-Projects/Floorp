@@ -35,6 +35,7 @@ class nsIHTMLStyleSheet;
 class nsIStyleSheet;
 class nsICSSLoader;
 class nsIContent;
+class nsIDOMHTMLBodyElement;
 
 /* b2a848b0-d0a9-11d1-89b1-006008911b81 */
 #define NS_IHTMLDOCUMENT_IID \
@@ -74,6 +75,8 @@ public:
                          nsISupports **aResult) = 0;
 
   NS_IMETHOD GetFormControlElements(nsIDOMNodeList** aReturn) = 0;
+
+  NS_IMETHOD GetBodyElement(nsIDOMHTMLBodyElement** aBody) = 0; 
 
 };
 
