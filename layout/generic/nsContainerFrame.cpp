@@ -577,14 +577,15 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
         NS_RELEASE(widget);
       }
       else {
-        // If it's a scroll frame, then hide the view. This means that
+        // If it's a scroll frame or a list control frame which is derived from the scrollframe, 
+        // then hide the view. This means that
         // child elements can't override their parent's visibility, but
         // it's not practical to leave it visible in all cases because
         // the scrollbars will be showing
         nsIAtom*  frameType;
         aFrame->GetFrameType(&frameType);
 
-        if (frameType == nsLayoutAtoms::scrollFrame) {
+        if (frameType == nsLayoutAtoms::scrollFrame || frameType == nsLayoutAtoms::listControlFrame) {
           viewIsVisible = PR_FALSE;
 
         } else {
