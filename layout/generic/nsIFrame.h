@@ -360,9 +360,10 @@ public:
    * no cursor is wanted). In addition, if a cursor is desired
    * then *aFrame is set to the frame that wants the cursor.
    */
-  NS_IMETHOD  GetCursorAt(nsIPresContext& aPresContext,
+  NS_IMETHOD  GetCursorAndContentAt(nsIPresContext& aPresContext,
                           const nsPoint&  aPoint,
                           nsIFrame**      aFrame,
+                          nsIContent**    aContent,
                           PRInt32&        aCursor) = 0;
 
   /**

@@ -96,18 +96,22 @@ NS_METHOD nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
   return nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-NS_METHOD nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
+NS_METHOD nsHTMLContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                                             const nsPoint& aPoint,
                                             nsIFrame** aFrame,
+                                            nsIContent** aContent,
                                             PRInt32& aCursor)
 {
+  // Set content here, child will override if found.
+  *aContent = mContent;
+  
   // Get my cursor
   const nsStyleColor* styleColor = (const nsStyleColor*)
     mStyleContext->GetStyleData(eStyleStruct_Color);
   PRInt32 myCursor = styleColor->mCursor;
 
   // Get child's cursor, if any
-  nsContainerFrame::GetCursorAt(aPresContext, aPoint, aFrame, aCursor);
+  nsContainerFrame::GetCursorAndContentAt(aPresContext, aPoint, aFrame, aContent, aCursor);
   if (aCursor != NS_STYLE_CURSOR_INHERIT) {
     nsIAtom* tag = mContent->GetTag();
     if (nsHTMLAtoms::a == tag) {

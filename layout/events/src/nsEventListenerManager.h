@@ -41,7 +41,7 @@ public:
   * @param
   */
 
-  virtual nsresult GetEventListeners(nsVoidArray *aListeners, const nsIID& aIID);
+  virtual nsresult GetEventListeners(nsVoidArray **aListeners, const nsIID& aIID);
 
   /**
   * Sets events listeners of all types. 

@@ -43,6 +43,7 @@ EX_LIBS = \
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
+	$(DIST)/bin/libjs.so	\
 	$(NULL)
 
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))

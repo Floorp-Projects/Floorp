@@ -172,7 +172,7 @@ NS_METHOD RootFrame::HandleEvent(nsIPresContext& aPresContext,
         nsIFrame* target = this;
         PRInt32 cursor;
        
-        GetCursorAt(aPresContext, aEvent->point, &target, cursor);
+        GetCursorAndContentAt(aPresContext, aEvent->point, &target, &mContent, cursor);
         if (cursor == NS_STYLE_CURSOR_INHERIT) {
           cursor = NS_STYLE_CURSOR_DEFAULT;
         }
@@ -514,9 +514,10 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_ENTER:
       {
         nsIFrame* target = this;
+        nsIContent* mTargetContent = mContent;
         PRInt32 cursor;
        
-        GetCursorAt(aPresContext, aEvent->point, &target, cursor);
+        GetCursorAndContentAt(aPresContext, aEvent->point, &target, &mTargetContent, cursor);
         if (cursor == NS_STYLE_CURSOR_INHERIT) {
           cursor = NS_STYLE_CURSOR_DEFAULT;
         }
@@ -537,6 +538,39 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
         target->GetWindow(window);
         window->SetCursor(c);
         NS_RELEASE(window);
+
+        //If the content object under the cursor has changed, fire a mouseover/out
+        nsIEventStateManager *mStateManager;
+        nsIContent *mLastContent;
+        if (NS_OK == aPresContext.GetEventStateManager(&mStateManager)) {
+          mStateManager->GetLastMouseOverContent(&mLastContent);
+          if (mLastContent != mTargetContent) {
+            if (nsnull != mLastContent) {
+              //fire mouseout
+              /*mLastContent->HandleDOMEvent(*/
+            }
+            NS_IF_RELEASE(mLastContent);
+            //fire mouseover
+            /*mTargetContent->HandleDOMEvent(*/
+            mStateManager->SetLastMouseOverContent(mTargetContent);
+          }
+        }
+      }
+      break;
+    case NS_MOUSE_EXIT:
+      //Don't know if this is actually hooked up.
+      {
+        //Fire of mouseout to the last content object.
+        nsIEventStateManager *mStateManager;
+        nsIContent *mLastContent;
+        if (NS_OK == aPresContext.GetEventStateManager(&mStateManager)) {
+          mStateManager->GetLastMouseOverContent(&mLastContent);
+          if (nsnull != mLastContent) {
+            //fire mouseout
+            /*mLastContent->HandleDOMEvent(*/
+          }
+          NS_IF_RELEASE(mLastContent);
+        }
       }
       break;
     }

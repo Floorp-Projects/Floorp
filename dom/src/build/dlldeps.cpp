@@ -18,6 +18,7 @@
 #include "nsJSEnvironment.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMNavigator.h"
+#include "nsIScriptEventListener.h"
 
 // Force references to all of the symbols that we want exported from
 // the dll that are located in the .lib files we link with
@@ -27,4 +28,5 @@ void XXXDomNeverCalled()
   nsJSContext* jcx = new nsJSContext(0);
   NS_NewScriptGlobalObject(0);
   NS_NewScriptNavigator(0, 0, 0, 0);
+  NS_NewScriptEventListener(0, 0, 0);
 }

@@ -15,167 +15,231 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #ifndef nsIDOMEvent_h__
 #define nsIDOMEvent_h__
 
 #include "nsISupports.h"
-class nsIDOMNode;
-class nsString;
+#include "nsString.h"
+#include "nsIScriptContext.h"
 
-/*
- * Base DOM event class.
- */
+class nsIDOMNode;
+class nsIDOMEvent;
+class nsIDOMNSEvent;
+
 #define NS_IDOMEVENT_IID \
-{ /* 9af61790-df03-11d1-bd85-00805f8ae3f4 */ \
-0x9af61790, 0xdf03, 0x11d1, \
-{0xbd, 0x85, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
+{ 0x6f765329,  0xee43, 0x11d1, \
+ { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMEvent : public nsISupports {
-
 public:
-/*
- * Virtual key bindings for keyboard events
- * NOTE: These are repeated in nsGUIEvent.h and must be kept in sync
- */
-#define NS_VK_CANCEL         0x03
-#define NS_VK_BACK           0x08
-#define NS_VK_TAB            0x09
-#define NS_VK_CLEAR          0x0C
-#define NS_VK_RETURN         0x0D
-#define NS_VK_SHIFT          0x10
-#define NS_VK_CONTROL        0x11
-#define NS_VK_ALT            0x12
-#define NS_VK_PAUSE          0x13
-#define NS_VK_CAPS_LOCK      0x14
-#define NS_VK_ESCAPE         0x1B
-#define NS_VK_SPACE          0x20
-#define NS_VK_PAGE_UP        0x21
-#define NS_VK_PAGE_DOWN      0x22
-#define NS_VK_END            0x23
-#define NS_VK_HOME           0x24
-#define NS_VK_LEFT           0x25
-#define NS_VK_UP             0x26
-#define NS_VK_RIGHT          0x27
-#define NS_VK_DOWN           0x28
-#define NS_VK_PRINTSCREEN    0x2C
-#define NS_VK_INSERT         0x2D
-#define NS_VK_DELETE         0x2E
+  enum {
+    VK_CANCEL = 3,
+    VK_BACK = 8,
+    VK_TAB = 9,
+    VK_CLEAR = 12,
+    VK_RETURN = 13,
+    VK_SHIFT = 16,
+    VK_CONTROL = 17,
+    VK_ALT = 18,
+    VK_PAUSE = 19,
+    VK_CAPS_LOCK = 20,
+    VK_ESCAPE = 27,
+    VK_SPACE = 32,
+    VK_PAGE_UP = 33,
+    VK_PAGE_DOWN = 34,
+    VK_END = 35,
+    VK_HOME = 36,
+    VK_LEFT = 37,
+    VK_UP = 38,
+    VK_RIGHT = 39,
+    VK_DOWN = 40,
+    VK_PRINTSCREEN = 44,
+    VK_INSERT = 45,
+    VK_DELETE = 46,
+    VK_0 = 48,
+    VK_1 = 49,
+    VK_2 = 50,
+    VK_3 = 51,
+    VK_4 = 52,
+    VK_5 = 53,
+    VK_6 = 54,
+    VK_7 = 55,
+    VK_8 = 56,
+    VK_9 = 57,
+    VK_SEMICOLON = 59,
+    VK_EQUALS = 61,
+    VK_A = 65,
+    VK_B = 66,
+    VK_C = 67,
+    VK_D = 68,
+    VK_E = 69,
+    VK_F = 70,
+    VK_G = 71,
+    VK_H = 72,
+    VK_I = 73,
+    VK_J = 74,
+    VK_K = 75,
+    VK_L = 76,
+    VK_M = 77,
+    VK_N = 78,
+    VK_O = 79,
+    VK_P = 80,
+    VK_Q = 81,
+    VK_R = 82,
+    VK_S = 83,
+    VK_T = 84,
+    VK_U = 85,
+    VK_V = 86,
+    VK_W = 87,
+    VK_X = 88,
+    VK_Y = 89,
+    VK_Z = 90,
+    VK_NUMPAD0 = 96,
+    VK_NUMPAD1 = 97,
+    VK_NUMPAD2 = 98,
+    VK_NUMPAD3 = 99,
+    VK_NUMPAD4 = 100,
+    VK_NUMPAD5 = 101,
+    VK_NUMPAD6 = 102,
+    VK_NUMPAD7 = 103,
+    VK_NUMPAD8 = 104,
+    VK_NUMPAD9 = 105,
+    VK_MULTIPLY = 106,
+    VK_ADD = 107,
+    VK_SEPARATOR = 108,
+    VK_SUBTRACT = 109,
+    VK_DECIMAL = 110,
+    VK_DIVIDE = 111,
+    VK_F1 = 112,
+    VK_F2 = 113,
+    VK_F3 = 114,
+    VK_F4 = 115,
+    VK_F5 = 116,
+    VK_F6 = 117,
+    VK_F7 = 118,
+    VK_F8 = 119,
+    VK_F9 = 120,
+    VK_F10 = 121,
+    VK_F11 = 122,
+    VK_F12 = 123,
+    VK_F13 = 124,
+    VK_F14 = 125,
+    VK_F15 = 126,
+    VK_F16 = 127,
+    VK_F17 = 128,
+    VK_F18 = 129,
+    VK_F19 = 130,
+    VK_F20 = 131,
+    VK_F21 = 132,
+    VK_F22 = 133,
+    VK_F23 = 134,
+    VK_F24 = 135,
+    VK_NUM_LOCK = 144,
+    VK_SCROLL_LOCK = 145,
+    VK_COMMA = 188,
+    VK_PERIOD = 190,
+    VK_SLASH = 191,
+    VK_BACK_QUOTE = 192,
+    VK_OPEN_BRACKET = 219,
+    VK_BACK_SLASH = 220,
+    VK_CLOSE_BRACKET = 221,
+    VK_QUOTE = 222
+  };
 
-// NS_VK_0 - NS_VK_9 match their ascii values
-#define NS_VK_0              0x30
-#define NS_VK_1              0x31
-#define NS_VK_2              0x32
-#define NS_VK_3              0x33
-#define NS_VK_4              0x34
-#define NS_VK_5              0x35
-#define NS_VK_6              0x36
-#define NS_VK_7              0x37
-#define NS_VK_8              0x38
-#define NS_VK_9              0x39
+  NS_IMETHOD    GetType(nsString& aType)=0;
+  NS_IMETHOD    SetType(const nsString& aType)=0;
 
-#define NS_VK_SEMICOLON      0x3B
-#define NS_VK_EQUALS         0x3D
+  NS_IMETHOD    GetTarget(nsIDOMNode** aTarget)=0;
+  NS_IMETHOD    SetTarget(nsIDOMNode* aTarget)=0;
 
-// NS_VK_A - NS_VK_Z match their ascii values
-#define NS_VK_A              0x41
-#define NS_VK_B              0x42
-#define NS_VK_C              0x43
-#define NS_VK_D              0x44
-#define NS_VK_E              0x45
-#define NS_VK_F              0x46
-#define NS_VK_G              0x47
-#define NS_VK_H              0x48
-#define NS_VK_I              0x49
-#define NS_VK_J              0x4A
-#define NS_VK_K              0x4B
-#define NS_VK_L              0x4C
-#define NS_VK_M              0x4D
-#define NS_VK_N              0x4E
-#define NS_VK_O              0x4F
-#define NS_VK_P              0x50
-#define NS_VK_Q              0x51
-#define NS_VK_R              0x52
-#define NS_VK_S              0x53
-#define NS_VK_T              0x54
-#define NS_VK_U              0x55
-#define NS_VK_V              0x56
-#define NS_VK_W              0x57
-#define NS_VK_X              0x58
-#define NS_VK_Y              0x59
-#define NS_VK_Z              0x5A
+  NS_IMETHOD    GetScreenX(PRInt32* aScreenX)=0;
+  NS_IMETHOD    SetScreenX(PRInt32 aScreenX)=0;
 
-#define NS_VK_NUMPAD0        0x60
-#define NS_VK_NUMPAD1        0x61
-#define NS_VK_NUMPAD2        0x62
-#define NS_VK_NUMPAD3        0x63
-#define NS_VK_NUMPAD4        0x64
-#define NS_VK_NUMPAD5        0x65
-#define NS_VK_NUMPAD6        0x66
-#define NS_VK_NUMPAD7        0x67
-#define NS_VK_NUMPAD8        0x68
-#define NS_VK_NUMPAD9        0x69
-#define NS_VK_MULTIPLY       0x6A
-#define NS_VK_ADD            0x6B
-#define NS_VK_SEPARATOR      0x6C
-#define NS_VK_SUBTRACT       0x6D
-#define NS_VK_DECIMAL        0x6E
-#define NS_VK_DIVIDE         0x6F
-#define NS_VK_F1             0x70
-#define NS_VK_F2             0x71
-#define NS_VK_F3             0x72
-#define NS_VK_F4             0x73
-#define NS_VK_F5             0x74
-#define NS_VK_F6             0x75
-#define NS_VK_F7             0x76
-#define NS_VK_F8             0x77
-#define NS_VK_F9             0x78
-#define NS_VK_F10            0x79
-#define NS_VK_F11            0x7A
-#define NS_VK_F12            0x7B
-#define NS_VK_F13            0x7C
-#define NS_VK_F14            0x7D
-#define NS_VK_F15            0x7E
-#define NS_VK_F16            0x7F
-#define NS_VK_F17            0x80
-#define NS_VK_F18            0x81
-#define NS_VK_F19            0x82
-#define NS_VK_F20            0x83
-#define NS_VK_F21            0x84
-#define NS_VK_F22            0x85
-#define NS_VK_F23            0x86
-#define NS_VK_F24            0x87
+  NS_IMETHOD    GetScreenY(PRInt32* aScreenY)=0;
+  NS_IMETHOD    SetScreenY(PRInt32 aScreenY)=0;
 
-#define NS_VK_NUM_LOCK       0x90
-#define NS_VK_SCROLL_LOCK    0x91
+  NS_IMETHOD    GetClientX(PRInt32* aClientX)=0;
+  NS_IMETHOD    SetClientX(PRInt32 aClientX)=0;
 
-#define NS_VK_COMMA          0xBC
-#define NS_VK_PERIOD         0xBE
-#define NS_VK_SLASH          0xBF
-#define NS_VK_BACK_QUOTE     0xC0
-#define NS_VK_OPEN_BRACKET   0xDB
-#define NS_VK_BACK_SLASH     0xDC
-#define NS_VK_CLOSE_BRACKET  0xDD
-#define NS_VK_QUOTE          0xDE
+  NS_IMETHOD    GetClientY(PRInt32* aClientY)=0;
+  NS_IMETHOD    SetClientY(PRInt32 aClientY)=0;
 
-NS_IMETHOD GetType(nsString& aType) = 0;
+  NS_IMETHOD    GetAltKey(PRBool* aAltKey)=0;
+  NS_IMETHOD    SetAltKey(PRBool aAltKey)=0;
 
-NS_IMETHOD GetTarget(nsIDOMNode** aTarget) = 0;
+  NS_IMETHOD    GetCtrlKey(PRBool* aCtrlKey)=0;
+  NS_IMETHOD    SetCtrlKey(PRBool aCtrlKey)=0;
 
-NS_IMETHOD GetScreenX(PRInt32& aX) = 0;
-NS_IMETHOD GetScreenY(PRInt32& aY) = 0;
+  NS_IMETHOD    GetShiftKey(PRBool* aShiftKey)=0;
+  NS_IMETHOD    SetShiftKey(PRBool aShiftKey)=0;
 
-NS_IMETHOD GetClientX(PRInt32& aX) = 0;
-NS_IMETHOD GetClientY(PRInt32& aY) = 0;
+  NS_IMETHOD    GetMetaKey(PRBool* aMetaKey)=0;
+  NS_IMETHOD    SetMetaKey(PRBool aMetaKey)=0;
 
-NS_IMETHOD GetAltKey(PRBool& aIsDown) = 0;
-NS_IMETHOD GetCtrlKey(PRBool& aIsDown) = 0;
-NS_IMETHOD GetShiftKey(PRBool& aIsDown) = 0;
-NS_IMETHOD GetMetaKey(PRBool& aIsDown) = 0;
+  NS_IMETHOD    GetCharCode(PRUint32* aCharCode)=0;
+  NS_IMETHOD    SetCharCode(PRUint32 aCharCode)=0;
 
-NS_IMETHOD GetCharCode(PRUint32& aCharCode) = 0;
-NS_IMETHOD GetKeyCode(PRUint32& aKeyCode) = 0;
-NS_IMETHOD GetButton(PRUint32& aButton) = 0;
+  NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode)=0;
+  NS_IMETHOD    SetKeyCode(PRUint32 aKeyCode)=0;
 
+  NS_IMETHOD    GetButton(PRUint32* aButton)=0;
+  NS_IMETHOD    SetButton(PRUint32 aButton)=0;
 };
+
+#define NS_IDOMNSEVENT_IID \
+{ 0x6f76532a,  0xee43, 0x11d1, \
+ { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+
+class nsIDOMNSEvent : public nsISupports {
+public:
+  enum {
+    EVENT_MOUSEDOWN = 1,
+    EVENT_MOUSEUP = 2,
+    EVENT_MOUSEOVER = 4,
+    EVENT_MOUSEOUT = 8,
+    EVENT_MOUSEMOVE = 16,
+    EVENT_MOUSEDRAG = 32,
+    EVENT_CLICK = 64,
+    EVENT_DBLCLICK = 128,
+    EVENT_KEYDOWN = 256,
+    EVENT_KEYUP = 512,
+    EVENT_KEYPRESS = 1024,
+    EVENT_DRAGDROP = 2048,
+    EVENT_FOCUS = 4096,
+    EVENT_BLUR = 8192,
+    EVENT_SELECT = 16384,
+    EVENT_CHANGE = 32768,
+    EVENT_RESET = 65536,
+    EVENT_SUBMIT = 131072,
+    EVENT_SCROLL = 262144,
+    EVENT_LOAD = 524288,
+    EVENT_UNLOAD = 1048576,
+    EVENT_XFER_DONE = 2097152,
+    EVENT_ABORT = 4194304,
+    EVENT_ERROR = 8388608,
+    EVENT_LOCATE = 16777216,
+    EVENT_MOVE = 33554432,
+    EVENT_RESIZE = 67108864,
+    EVENT_FORWARD = 134217728,
+    EVENT_HELP = 268435456,
+    EVENT_BACK = 536870912,
+    EVENT_ALT_MASK = 1,
+    EVENT_CONTROL_MASK = 2,
+    EVENT_SHIFT_MASK = 4,
+    EVENT_META_MASK = 8
+  };
+
+  NS_IMETHOD    GetLayerX(PRInt32* aLayerX)=0;
+  NS_IMETHOD    SetLayerX(PRInt32 aLayerX)=0;
+
+  NS_IMETHOD    GetLayerY(PRInt32* aLayerY)=0;
+  NS_IMETHOD    SetLayerY(PRInt32 aLayerY)=0;
+};
+
+extern nsresult NS_InitEventClass(nsIScriptContext *aContext, void **aPrototype);
+
+extern "C" NS_DOM nsresult NS_NewScriptEvent(nsIScriptContext *aContext, nsIDOMEvent *aSupports, nsISupports *aParent, void **aReturn);
+
 #endif // nsIDOMEvent_h__

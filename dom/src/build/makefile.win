@@ -36,6 +36,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 MISCDEP =						\
 	$(DIST)\lib\jsdombase_s.lib			\
 	$(DIST)\lib\jsdomcore_s.lib			\
+	$(DIST)\lib\jsdomevents_s.lib			\
 	$(DIST)\lib\jsdomhtml_s.lib			\
 	$(DIST)\lib\raptorbase.lib			\
 	$(DIST)\lib\netlib.lib				\
@@ -54,6 +55,7 @@ LCFLAGS = \
 LLIBS=							\
 	$(DIST)\lib\jsdombase_s.lib			\
 	$(DIST)\lib\jsdomcore_s.lib			\
+	$(DIST)\lib\jsdomevents_s.lib			\
 	$(DIST)\lib\jsdomhtml_s.lib			\
 	$(DIST)\lib\raptorbase.lib			\
 	$(DIST)\lib\netlib.lib				\

@@ -56,6 +56,7 @@ EXTRA_DSO_LDOPTS = \
 	$(DIST)/bin/libraptorbase.so			\
 	$(DIST)/bin/libgmbaseunix.so			\
 	$(DIST)/bin/libjsdom.so				\
+	$(DIST)/bin/libjs.so				\
 	$(DIST)/bin/libnetlib.so			\
 	$(DIST)/bin/libxpcom.so				\
 	$(DIST)/bin/libnspr21.so			\

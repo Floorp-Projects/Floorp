@@ -39,12 +39,14 @@ public:
   NS_IMETHOD GetEventTarget(nsISupports **aResult);
   NS_IMETHOD SetEventTarget(nsISupports *aSupports);
 
+  NS_IMETHOD GetLastMouseOverContent(nsIContent **aContent);
+  NS_IMETHOD SetLastMouseOverContent(nsIContent *aContent);
 protected:
 
   PRUint32 mRefCnt : 31;
 
   nsISupports* mEventTarget;
-
+  nsIContent* mLastMouseOverContent;
 };
 
 extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);

@@ -138,9 +138,10 @@ public:
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus&  aEventStatus);
-  NS_IMETHOD  GetCursorAt(nsIPresContext& aPresContext,
+  NS_IMETHOD  GetCursorAndContentAt(nsIPresContext& aPresContext,
                           const nsPoint&  aPoint,
                           nsIFrame**      aFrame,
+                          nsIContent**    aContent,
                           PRInt32&        aCursor);
   NS_IMETHOD  GetFrameState(nsFrameState& aResult);
   NS_IMETHOD  SetFrameState(nsFrameState aNewState);

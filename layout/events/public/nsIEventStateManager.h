@@ -22,6 +22,7 @@
 #include "nsGUIEvent.h"
 #include "nsISupports.h"
 #include "nsVoidArray.h"
+#include "nsIContent.h"
 
 class nsIPresContext;
 class nsIDOMEventState;
@@ -52,6 +53,10 @@ public:
   */
 
   NS_IMETHOD SetEventTarget(nsISupports *aSupports) = 0;
+
+
+  NS_IMETHOD GetLastMouseOverContent(nsIContent **aContent) = 0;
+  NS_IMETHOD SetLastMouseOverContent(nsIContent *aContent) = 0;
 
 };
 
