@@ -635,8 +635,7 @@ class nsPromiseConcatenation
     protected:
       virtual const CharT* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
 
-      static const int kLeftString = 0;
-      static const int kRightString = 1;
+      enum { kLeftString, kRightString };
 
       int
       GetCurrentStringFromFragment( const ConstFragment& aFragment ) const
@@ -962,14 +961,15 @@ operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsLiteralString<
 
 
 
-
+#ifdef SCC_TESTS
 template <class CharT, class TraitsT>
-basic_ostream<CharT, class TraitsT>&
+std::basic_ostream<CharT, class TraitsT>&
 operator<<( basic_ostream<CharT, TraitsT>& os, const basic_nsAReadableString<CharT>& s )
   {
     std::copy(s.Begin(), s.End(), ostream_iterator<CharT, CharT, TraitsT>(os));
     return os;
   }
+#endif
 
 typedef basic_nsAReadableString<PRUnichar>  nsAReadableString;
 typedef basic_nsAReadableString<char>       nsAReadableCString;
