@@ -365,7 +365,7 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
   PRUnichar *formattedDatePR = formattedDate.ToNewUnicode();
   const PRUnichar *formatStrings[2] = { commonName, formattedDatePR }; 
   nsString keyString = NS_ConvertASCIItoUCS2(key);
-  mPIPStringBundle->FormatStringFromName(keyString.GetUnicode(), formatStrings, 
+  mPIPStringBundle->FormatStringFromName(keyString.get(), formatStrings, 
                                          2, getter_Copies(message1));
   
   Recycle(commonName);
