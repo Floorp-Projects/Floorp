@@ -20,6 +20,7 @@
 #define nsPop3URL_h__
 
 #include "nsIPop3URL.h"
+#include "nsIUrlListenerManager.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 
 class nsPop3URL : public nsIPop3URL, public nsINetlibURL
@@ -66,9 +67,15 @@ public:
     NS_IMETHOD SetPop3Sink(nsIPop3Sink* aPop3Sink);
     NS_IMETHOD GetPop3Sink(nsIPop3Sink** aPop3Sink) const;
 
+	// from nsIMsgMailNewsUrl:
+	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aExitCode);
+	NS_IMETHOD GetUrlState(PRBool * aRunningUrl);
+
 	NS_IMETHOD SetErrorMessage (char * errorMessage);
-	// caller must free using PR_FREE
-	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
+	NS_IMETHOD GetErrorMessage (char ** errorMessage) const; 	// caller must free using PR_FREE
+
+	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener);
+	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener);
 
     // nsPop3URL
 
@@ -95,6 +102,11 @@ protected:
     
 	PRInt32 m_port;
     nsISupports*    m_container;
+
+	PRBool		m_runningUrl;
+
+	// manager of all of current url listeners....
+	nsIUrlListenerManager * m_urlListeners;
 
 	/* Pop3 specific event sinks */
     nsIPop3Sink* m_pop3Sink;

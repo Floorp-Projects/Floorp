@@ -24,7 +24,7 @@
 
 #include "nsIURL.h"
 #include "nsPop3URL.h"
-
+#include "nsPop3Protocol.h"
 #include "nsINetService.h"  /* XXX: NS_FALSE */
 
 #include "nsString.h"
@@ -37,7 +37,7 @@
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
+static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
 nsPop3URL::nsPop3URL(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
@@ -45,7 +45,6 @@ nsPop3URL::nsPop3URL(nsISupports* aContainer, nsIURLGroup* aGroup)
 
 	// nsIPop3URL specific code...
     m_pop3Sink = nsnull;
-
 	m_errorMessage = nsnull;
 	
 	// nsINetLibUrl specific state
@@ -56,19 +55,23 @@ nsPop3URL::nsPop3URL(nsISupports* aContainer, nsIURLGroup* aGroup)
     m_host = nsnull;
     m_file = nsnull;
     m_ref = nsnull;
-    m_port = -1;
+    m_port = POP3_PORT;
     m_spec = nsnull;
     m_search = nsnull;
+
+	m_runningUrl = PR_FALSE;
+
+	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), 
+									   (void **) &m_urlListeners);
  
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
-    //  ParseURL(aSpec, aURL);      // XXX whh
 }
  
 nsPop3URL::~nsPop3URL()
 {
     NS_IF_RELEASE(m_container);
-
+	NS_IF_RELEASE(m_urlListeners);
 	PR_FREEIF(m_errorMessage);
 
     PR_FREEIF(m_spec);
@@ -178,10 +181,49 @@ nsresult nsPop3URL::GetErrorMessage (char ** errorMessage) const
     return NS_OK;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsIPop3URL specific support
 ////////////////////////////////////////////////////////////////////////////////////
+
+// url listener registration details...
+	
+nsresult nsPop3URL::RegisterListener (nsIUrlListener * aUrlListener)
+{
+	nsresult rv = NS_OK;
+	if (m_urlListeners)
+		rv = m_urlListeners->RegisterListener(aUrlListener);
+	return rv;
+}
+	
+nsresult nsPop3URL::UnRegisterListener (nsIUrlListener * aUrlListener)
+{
+	nsresult rv = NS_OK;
+	if (m_urlListeners)
+		rv = m_urlListeners->UnRegisterListener(aUrlListener);
+	return rv;
+}
+
+nsresult nsPop3URL::GetUrlState(PRBool * aRunningUrl)
+{
+	if (aRunningUrl)
+		*aRunningUrl = m_runningUrl;
+
+	return NS_OK;
+}
+
+nsresult nsPop3URL::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
+{
+	m_runningUrl = aRunningUrl;
+	if (m_urlListeners)
+	{
+		if (m_runningUrl)
+			m_urlListeners->OnStartRunningUrl(this);
+		else
+			m_urlListeners->OnStopRunningUrl(this, aExitCode);
+	}
+
+	return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsINetlibURL support
@@ -251,7 +293,7 @@ nsresult nsPop3URL::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     PR_FREEIF(m_file);
     PR_FREEIF(m_ref);
     PR_FREEIF(m_search);
-    m_port = -1;
+    m_port = POP3_PORT;
 
     if (nsnull == cSpec) {
         if (nsnull == aURL) {
