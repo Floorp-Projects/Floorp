@@ -35,6 +35,7 @@ print "Content-type: text/html
 
 <HTML>";
 
+&validateReferer('showcheckins.cgi');
 CheckPassword($::FORM{'password'});
 
 Lock();

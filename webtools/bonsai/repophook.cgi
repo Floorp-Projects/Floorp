@@ -24,10 +24,22 @@ require 'CGI.pl';
 
 use strict;
 
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::FORM{password};
+    $zz = $::LegalDirs;
+    $zz = $::TreeOpen;
+}
+
+
 print "Content-type: text/html
 
 <HTML>";
 
+&validateReferer('admin.cgi');
 CheckPassword($::FORM{'password'});
 
 my $startfrom = ParseTimeAndCheck(FormData('startfrom'));

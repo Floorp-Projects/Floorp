@@ -25,6 +25,8 @@ use strict;
 require 'CGI.pl';
 print "Content-type: text/html\n\n";
 
+&validateReferer(('editwhiteboard.cgi','doeditwhiteboard.cgi'));
+
 Lock();
 LoadWhiteboard();
 

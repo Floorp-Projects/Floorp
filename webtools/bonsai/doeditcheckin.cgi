@@ -28,6 +28,7 @@ print "Content-type: text/html
 
 <HTML>";
 
+&validateReferer('editcheckin.cgi');
 CheckPassword($::FORM{'password'});
 
 Lock();

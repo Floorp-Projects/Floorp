@@ -33,6 +33,7 @@ use vars %::param,
 
 print "Content-type: text/html\n\n";
 
+&validateReferer('editparams.cgi');
 CheckPassword(FormData('password'));
 
 PutsHeader("Saving new parameters");

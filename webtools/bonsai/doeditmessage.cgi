@@ -35,6 +35,7 @@ require 'CGI.pl';
 
 print "Content-type: text/html\n\n";
 
+&validateReferer('editmessage.cgi');
 CheckPassword(FormData('password'));
 my $Filename = FormData('msgname');
 my $RealFilename = DataDir() . "/$Filename";

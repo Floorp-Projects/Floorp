@@ -26,12 +26,15 @@
 #
 
 use strict;
+use CGI::Carp qw(fatalsToBrowser);
 
 require 'globals.pl';
 
 $|=1;
 
 my %form;
+
+&validateReferer('cvsquery.cgi','showcheckins.cgi');
 
 print "Content-type: text/html
 

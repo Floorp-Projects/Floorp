@@ -28,6 +28,7 @@ require 'adminfuncs.pl';
 
 print "Content-type: text/html\n\n";
 
+&validateReferer('admin.cgi');
 CheckPassword(FormData('password'));
 
 Lock();
