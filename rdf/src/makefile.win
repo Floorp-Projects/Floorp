@@ -35,13 +35,13 @@ C_OBJS=\
         $(NULL)
 
 CPP_OBJS=\
-        .\$(OBJDIR)\comwrap.obj            \
-        .\$(OBJDIR)\netglue.obj            \
-        .\$(OBJDIR)\nsRDFDataModel.obj     \
-        .\$(OBJDIR)\nsRDFDataModelItem.obj \
-        .\$(OBJDIR)\nsRDFTreeColumn.obj    \
-        .\$(OBJDIR)\nsRDFTreeDataModel.obj \
-        .\$(OBJDIR)\nsRDFTreeItem.obj      \
+        .\$(OBJDIR)\comwrap.obj                 \
+        .\$(OBJDIR)\netglue.obj                 \
+        .\$(OBJDIR)\nsRDFDataModel.obj          \
+        .\$(OBJDIR)\nsRDFDataModelItem.obj      \
+        .\$(OBJDIR)\nsRDFTreeColumn.obj         \
+        .\$(OBJDIR)\nsRDFTreeDataModel.obj      \
+        .\$(OBJDIR)\nsRDFTreeDataModelItem.obj  \
 	$(NULL)
 
 LLIBS=\
