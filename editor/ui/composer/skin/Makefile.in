@@ -57,6 +57,7 @@ EXPORT_RESOURCE_TOOLBAR = \
 		$(srcdir)/images/savefile.gif \
 		$(srcdir)/images/savemod.gif \
 		$(srcdir)/images/publish.gif \
+		$(srcdir)/images/preview.gif \
 		$(srcdir)/images/print.gif \
 		$(srcdir)/images/find.gif \
 		$(srcdir)/images/img-align-bottom.gif \

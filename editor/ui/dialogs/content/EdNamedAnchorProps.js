@@ -110,7 +110,7 @@ function ValidateData()
     // Replace spaces with "_" else it causes trouble in URL parsing
     name = PrepareStringForURL(name);
     if (AnchorNameExists(name)) {
-      ShowInputErrorMessage("\""+name+"\" "+GetString("DuplicateAnchorNameError"));            
+      ShowInputErrorMessage(GetString("DuplicateAnchorNameError").replace(/%name%/,name));            
       nameInput.focus();
       return false;
     }

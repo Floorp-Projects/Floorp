@@ -33,7 +33,7 @@ toolbox#EditorToolbox {
   min-width: 1px;
 }
 
-toolbar#FormatToolbar {
+toolbar#FormatToolbar, toolbar#TitleToolbar {
   border-bottom: 1px solid #003366;
 }
 
@@ -105,6 +105,10 @@ toolbar#FormatToolbar titledbutton#underlineButton {
   text-decoration: underline;
 }
 
+input#PageTitle, input#PageAuthor {
+  min-width: 5em;
+}
+
 div.toolbar-middle {
   /* trying to center vertically in the toolbar! */
   vertical-align: middle;
@@ -163,6 +167,11 @@ box#DisplayModeBar div.VerticalSeparator {
 	 margin: 1px 0px;
 }
 
+/* SHOULD BE IN GLOBAL.CSS */
+menuitem[hidden="true"] {
+  visibility: collapse;
+}
+
 spring.spacer3 {
       width:  3px;
       height: 3px;
@@ -173,6 +182,10 @@ spring.spacer5 {
       height: 5px;
 }
 
+spring.spacer-throbber {
+  /* this is throbber box width - 12 */
+	width: 56px;
+}
 /* Image URLs for all Editor toolbar buttons */
 
 titledbutton#newButton {
@@ -191,6 +204,9 @@ titledbutton#saveButton[dirty="true"] {
 
 titledbutton#publishButton {
 	list-style-image:url("chrome://editor/skin/images/publish.gif");
+}
+titledbutton#previewButton {
+	list-style-image:url("chrome://editor/skin/images/preview.gif");
 }
 titledbutton#printButton {
 	list-style-image:url("chrome://editor/skin/images/print.gif");

@@ -29,7 +29,7 @@
 <!ENTITY newBlankPage.accesskey "b" >
 <!ENTITY newMenu.label "New">
 <!ENTITY newMenu.accesskey "n">
-<!ENTITY openCmd.label "Open File...">
+<!ENTITY openFileCmd.label "Open File...">
 <!ENTITY fileopen.accesskey "o">
 <!ENTITY fileopen.keybinding "o">
 <!ENTITY openremoteCmd.label "Open Web Location...">
@@ -40,11 +40,14 @@
 <!ENTITY filesave.keybinding "s">
 <!ENTITY saveAsCmd.label "Save As...">
 <!ENTITY filesaveas.accesskey "a">
-<!ENTITY printSetupCmd.label ".Print Setup...">
+<!ENTITY previewCmd.label "Preview">
+<!ENTITY filepreview.accesskey "v">
+<!ENTITY printSetupCmd.label "Print Setup...">
 <!ENTITY fileprintsetup.accesskey "t">
 <!ENTITY printPreviewCmd.label "Print Preview">
 <!ENTITY fileprintpreview.accesskey "r">
 <!ENTITY printCmd.label "Print...">
+<!ENTITY printButtonCmd.label "Print...">
 <!ENTITY fileprint.accesskey "p">
 <!ENTITY fileprint.keybinding "p">
 <!ENTITY closeCmd.label "Close">
@@ -74,7 +77,7 @@
 <!ENTITY editpaste.keybinding "v"> <!-- also used for pasteAsQuotationCmd -->
 <!ENTITY pasteAsQuotationCmd.label "Paste As Quotation">
 <!ENTITY editpastequotation.accesskey "q">
-<!ENTITY clearCmd.label ".Clear">
+<!ENTITY clearCmd.label "Clear">
 <!ENTITY editclear.accesskey "l">
 <!ENTITY selectAllCmd.label "Select All">
 <!ENTITY editselectall.accesskey "a">
@@ -93,12 +96,12 @@
 <!ENTITY viewMenu.label "View">
 <!ENTITY viewToolbarsMenu.label "Toolbars"> 
 <!ENTITY viewToolbarsMenu.accesskey "t"> 
-<!ENTITY hideCompositionToolbarCmd.label ".Hide Composition Toolbar">
+<!ENTITY hideCompositionToolbarCmd.label "Hide Composition Toolbar">
 <!ENTITY viewcompositiontb.accesskey "c">
-<!ENTITY showCompositionToolbarCmd.label ".Show Composition Toolbar">
-<!ENTITY hideFormattingToolbarCmd.label ".Hide Format Toolbar">
+<!ENTITY showCompositionToolbarCmd.label "Show Composition Toolbar">
+<!ENTITY hideFormattingToolbarCmd.label "Hide Format Toolbar">
 <!ENTITY viewformattingtb.accesskey "f">
-<!ENTITY showFormattingToolbarCmd.label ".Show Format Toolbar">
+<!ENTITY showFormattingToolbarCmd.label "Show Format Toolbar">
 <!ENTITY showTaskbarCmd.label "Show Taskbar">  
 <!ENTITY showTaskbarCmd.accesskey "t"> 
 <!ENTITY viewPageSource.label "Page Source">
@@ -232,9 +235,9 @@
 <!ENTITY inserttable.accesskey "t">
 <!ENTITY insertHTMLSourceCmd.label "HTML Source...">
 <!ENTITY insertsource.accesskey "s">
-<!ENTITY insertLineBreakCmd.label ".Line Break">
+<!ENTITY insertLineBreakCmd.label "Line Break">
 <!ENTITY insertlinebreak.accesskey "n">
-<!ENTITY insertBreakBelowImagesCmd.label ".Break Below Image(s)">
+<!ENTITY insertBreakBelowImagesCmd.label "Break Below Image(s)">
 <!ENTITY insertbreak.accesskey "b">
 
 <!-- Format Menu -->
@@ -423,21 +426,23 @@
 <!ENTITY tabletable.accesskey "t">
 <!ENTITY tableRow.label "Row">
 <!ENTITY tablerow.accesskey "r">
-<!ENTITY tableRowAbove.label "Row above">
+<!ENTITY tableRowAbove.label "Row Above">
 <!-- uses tablerow.accesskey -->
-<!ENTITY tableRowBelow.label "Row below">
+<!ENTITY tableRowBelow.label "Row Below">
 <!ENTITY tablerowbelow.accesskey "b">
 <!ENTITY tableColumn.label "Column">
 <!ENTITY tablecolumn.accesskey "o">
-<!ENTITY tableColumnBefore.label "Column before">
+<!ENTITY tableColumnBefore.label "Column Before">
 <!-- uses tablecolumn.accesskey -->
-<!ENTITY tableColumnAfter.label "Column after">
+<!ENTITY tableColumnAfter.label "Column After">
 <!ENTITY tablecolumnafter.accesskey "a">
 <!ENTITY tableCell.label "Cell">
 <!ENTITY tablecell.accesskey "c">
-<!ENTITY tableCellBefore.label "Cell before">
+<!ENTITY tableAllCells.label "All Cells">
+<!ENTITY tableCellBefore.label "Cell Before">
+<!ENTITY tableallcells.accesskey "a">
 <!-- uses tablecell.accesskey -->
-<!ENTITY tableCellAfter.label "Cell after">
+<!ENTITY tableCellAfter.label "Cell After">
 <!ENTITY tablecellafter.accesskey "f">
 <!-- Delete SubMenu -->
 <!ENTITY tableDeleteMenu.label "Delete">
@@ -447,6 +452,7 @@
 <!ENTITY tablefixup.accesskey "f">
 <!ENTITY tableJoinCells.label "Join Cells">
 <!ENTITY tablejoin.accesskey "j">
+<!ENTITY tableProperties.label "Table Properties...">
 <!-- These may be shared in other menus -->
 <!ENTITY properties.label "Properties...">
 <!ENTITY properties.accesskey "o">
@@ -478,13 +484,8 @@
 <!ENTITY runLogCmd.label "Run Log">
 <!ENTITY setFocusCmd.label "Set Focus">
 
-<!-- toolbar items -->
-<!ENTITY newToolbarCmd.label "New">
+<!-- toolbar-only items -->
 <!ENTITY openToolbarCmd.label "Open">
-<!ENTITY saveToolbarCmd.label "Save">
-<!ENTITY publishToolbarCmd.label "Publish">
-<!ENTITY previewToolbarCmd.label "Preview">
-<!ENTITY editmodeToolbarCmd.label "Edit Mode">
 <!ENTITY printToolbarCmd.label "Print">
 <!ENTITY findToolbarCmd.label "Find">
 <!ENTITY linkToolbarCmd.label "Link">
@@ -493,7 +494,6 @@
 <!ENTITY hruleToolbarCmd.label "H.Line">
 <!ENTITY tableToolbarCmd.label "Table">
 <!ENTITY spellToolbarCmd.label "Spell">
-<!ENTITY toolspellcheck.accesskey "s">
 <!ENTITY textColorCaption.label "Text Color">
 
 <!-- editor toolbar -->

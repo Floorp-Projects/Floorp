@@ -53,6 +53,7 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\savefile.gif  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\savemod.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\publish.gif   $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\preview.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\print.gif     $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\find.gif      $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\img-align-bottom.gif $(DIST)\bin\chrome\editor\skin\default\images
@@ -98,6 +99,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\savefile.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\savemod.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\publish.gif 
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\preview.gif   
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\print.gif   
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\find.gif    
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\img-align-bottom.gif    

@@ -650,6 +650,19 @@ public:
   static nsresult GetStartNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
   static nsresult GetEndNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
 
+  // Helpers to add a node to the selection. 
+  // Used by table cell selection methods
+  nsresult CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset,
+                       nsIDOMNode *aEndParent, PRInt32 aEndOffset,
+                       nsIDOMRange **aRange);
+  // Gets the node at the StartOffset of StartParent in aRange
+  //  (this is a table cell in cell selection mode)
+  nsresult GetFirstNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aNode);
+  // Creates a range with just the supplied node and appends that to the selection
+  nsresult AppendNodeToSelectionAsRange(nsIDOMNode *aNode);
+  // When you are using AppendNodeToSelectionAsRange, call this first to start a new selection
+  nsresult ClearSelection();
+
   nsresult IsPreformatted(nsIDOMNode *aNode, PRBool *aResult);
   nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, 
                                 PRInt32 aOffset, 

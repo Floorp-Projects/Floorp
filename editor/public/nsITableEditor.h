@@ -77,6 +77,16 @@ public:
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber)=0;
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber)=0;
 
+  /** Table Selection methods
+    * Selecting a row or column actually
+    * selects all cells (not TR in the case of rows)
+    */
+  NS_IMETHOD SelectTableCell()=0;
+  NS_IMETHOD SelectTableRow()=0;
+  NS_IMETHOD SelectTableColumn()=0;
+  NS_IMETHOD SelectTable()=0;
+  NS_IMETHOD SelectAllTableCells()=0;
+
   /** Join the contents of the selected cells into one cell,
     *   expanding that cells ROWSPAN and COLSPAN to take up
     *   the same number of cellmap locations as before.
@@ -119,10 +129,8 @@ public:
     * @param aTable                   A table in the document
     * @param aRowIndex, aColIndex     The 0-based cellmap indexes
     *
-    * Note that this returns NS_TABLELAYOUT_CELL_NOT_FOUND 
-    *   when a cell is not found at the given indexes,
-    *   but this passes the NS_SUCCEEDED() test,
-    *   so you can scan for all cells in a row or column
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    *   You can scan for all cells in a row or column
     *   by iterating through the appropriate indexes
     *   until the returned aCell is null
     */
@@ -150,8 +158,7 @@ public:
     *  @param aIsSelected
     *  @param 
     *
-    * Note that this returns NS_TABLELAYOUT_CELL_NOT_FOUND
-    *   when a cell is not found at the given indexes  (see note for GetCellAt())
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if a cell is not found (passes NS_SUCCEEDED macro)
     */
   NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell,
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex,
@@ -167,6 +174,7 @@ public:
     * Returns:
     * @param aRow        The row at the requested index
     *                    Returns null if there are no rows in table
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
   NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)=0;
 
@@ -178,6 +186,7 @@ public:
     * @param aRow        The row to start search from
     *                    and the row returned from the search
     *                    Returns null if there isn't another row
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
   NS_IMETHOD GetNextRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)=0;
   
@@ -219,6 +228,7 @@ public:
     *                           Note that "td" will be returned if name is actually "th"
     * @param aIsSelected        Tells if element returned is a selected element 
     *                           (false if element is a parent cell of selection)
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
   NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRBool &aIsSelected)=0;
 

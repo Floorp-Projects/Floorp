@@ -30,6 +30,8 @@
 0x4805e683, 0x49b9, 0x11d3,                      \
 { 0x9c, 0xe4, 0xed, 0x60, 0xbd, 0x6c, 0xb5, 0xbc } }
 
+#define NS_EDITOR_ELEMENT_NOT_FOUND \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_EDITOR, 1)
 
 class nsString;
 class nsStringArray;
@@ -297,6 +299,7 @@ public:
     *
     * @param aNode    The node in the document to start the search
     *     If it is null, the anchor node of the current selection is used
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
   NS_IMETHOD GetElementOrParentByTagName(const nsString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)=0;
 
@@ -314,6 +317,7 @@ public:
     *      (an "A" tag with the "href" attribute set)
     *    Use "anchor" or "namedanchor" to get a named anchor node
     *      (an "A" tag with the "name" attribute set)
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)=0;
 

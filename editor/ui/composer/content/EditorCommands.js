@@ -27,7 +27,9 @@
 
 var editorShell;
 var documentModified;
+var prefAuthorString = "";
 var EditorDisplayMode = 0;  // Normal Editor mode
+var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
 
 // These must be kept in synch with the XUL <options> lists
 var gParagraphTagNames = new Array("","P","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","ADDRESS","PRE","DT","DD");
@@ -49,6 +51,14 @@ function EditorOnLoad() {
     }
     // Continue with normal startup.
     EditorStartup( 'html', document.getElementById("content-frame"));
+
+    // Active menu items that are initially hidden in XUL
+    //  because they are not needed by Messenger Composer
+    var styleMenu = document.getElementById("stylesheetMenu")
+    if (styleMenu)
+      styleMenu.removeAttribute("hidden");
+
+    WebCompose = true;
     window.tryToClose = EditorClose;
 }
   
@@ -67,9 +77,12 @@ function TextEditorOnLoad() {
 var DocumentStateListener =
 {
   NotifyDocumentCreated: function() 
-    {
-      EditorSetDefaultPrefs();
-    },
+  {
+    EditorSetDefaultPrefs();
+    // Call EditorSetDefaultPrefs first
+    //  so it gets the default author before initing toolbars
+    EditorInitToolbars();
+  },
   NotifyDocumentWillBeDestroyed: function() {},
   NotifyDocumentStateChanged:function( isNowDirty ) {}
 };
@@ -78,11 +91,6 @@ function EditorStartup(editorType, editorElement)
 {
   dump("Doing Editor Startup...\n");
   contentWindow = window.content;
-
-  // set up event listeners
-  window.addEventListener("load", EditorDocumentLoaded, true, false);  
-  
-  dump("Trying to make an Editor Shell through the component manager...\n");
 
   // store the editor shell in the window, so that child windows can get to it.
   var editorShell = window.editorShell = editorElement.editorShell;
@@ -278,8 +286,13 @@ function EditorOpen()
   filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);     
   
   /* doesn't handle *.shtml files */
-	filePicker.chooseInputFile(editorShell.GetString("OpenHTMLFile"), filePicker.eHTMLFiles+filePicker.eTextFiles+filePicker.eAllFiles, 0, 0);
-  /* need to handle cancel (uncaught exception at present) */
+  try {
+  	filePicker.chooseInputFile(editorShell.GetString("OpenHTMLFile"), filePicker.eHTMLFiles+filePicker.eTextFiles+filePicker.eAllFiles, 0, 0);
+    /* need to handle cancel (uncaught exception at present) */
+  }
+  catch (ex) {
+    dump("filePicker.chooseInputFile threw an exception\n");
+  }
     
   /* check for already open window and activate it... */
   var found = FindAndSelectEditorWindowWithURL(filePicker.URLString);
@@ -927,20 +940,46 @@ function EditorSetDisplayStyle(mode)
 {
   EditorDisplayMode = mode;
   editorShell.SetDisplayMode(mode);
-  editButton = document.getElementById("EditModeButton");
-  browserButton = document.getElementById("BrowserModeButton");
+  var editButton = document.getElementById("EditModeButton");
+  var browserButton = document.getElementById("BrowserModeButton");
+  var showMenu = document.getElementById("ShowExtraMarkup");
+  var hideMenu = document.getElementById("HideExtraMarkup");
+
   var editSelected = 0;
   var browserSelected = 0;
-  if (mode == 0) editSelected = 1;
-  if (mode == 1) browserSelected = 1;
-  dump(editButton+browserButton+" Display mode: EditSelected="+editSelected+" BrowserSelected="+browserSelected+"\n");
+  if (mode == 0) 
+  {
+    editSelected = 1;
+    showMenu.setAttribute("hidden","true");
+    hideMenu.removeAttribute("hidden");
+  }
+  if (mode == 1) 
+  {
+    browserSelected = 1;
+    showMenu.removeAttribute("hidden");
+    hideMenu.setAttribute("hidden","true");
+  }
   editButton.setAttribute("selected",Number(editSelected));
   browserButton.setAttribute("selected",Number(browserSelected));
+  contentWindow.focus();
+}
+
+function EditorPreview()
+{
+  contentWindow.focus();
+}
+
+function EditorPrintSetup()
+{
+  // Old code? Browser no longer is doing this
+  //window.openDialog("resource:/res/samples/printsetup.html", "_blank", "chrome,close,titlebar", "");
+  _EditorNotImplemented();
+  contentWindow.focus();
 }
 
 function EditorPrintPreview()
 {
-  window.openDialog("resource:/res/samples/printsetup.html", "_blank", "chrome,close,titlebar", "");
+  _EditorNotImplemented();
   contentWindow.focus();
 }
 
@@ -977,11 +1016,80 @@ function CheckSpelling()
   contentWindow.focus();
 }
 
-function OnCreateAlignmentPopup()
+function EditorInitEditMenu()
 {
-  dump("Creating Alignment popup window\n");
-}
   
+}
+
+function EditorInitFormatMenu()
+{
+  var propertiesMenu = document.getElementById("objectProperties");
+  if (propertiesMenu)
+  {
+    var element = editorShell.GetSelectedElement("");
+    dump("EditorObjectProperties: element="+element+"\n");
+    if (element)
+    {
+      dump("TagName="+element.nodeName+"\n");
+      if (element.nodeName)
+      {
+        propertiesMenu.removeAttribute("hidden");
+        var objStr;
+        var menuStr = editorShell.GetString("ObjectProperties");
+        switch (element.nodeName)
+        {
+          case 'IMG':
+            objStr = "Image";
+            break;
+          case 'HR':
+            objStr = "H.Line";
+            break;
+          case 'TABLE':
+            objStr = "Table";
+            break;
+          case 'A':
+            if(element.href)
+            {
+              objStr = "Link";
+              EditorInsertOrEditLink();  
+            } else if (element.name)
+            {
+              objStr = "Named Anchor";
+              EditorInsertOrEditNamedAnchor();  
+            }
+            break;
+        }
+        menuStr = menuStr.replace(/%obj%/,objStr);        
+        propertiesMenu.setAttribute("value", menuStr)
+      } else {
+        propertiesMenu.setAttribute("hidden","true");
+      }
+    }
+  }
+  dump("Calling EditorInitViewMenu()\n");
+}
+
+function EditorInitToolbars()
+{
+  // Set title edit field
+  var domdoc;
+  try { domdoc = window.editorShell.editorDocument; } catch (e) { dump( e + "\n"); }
+  if ( !domdoc )
+  {
+    dump("EditorInitToolbars: EDITOR DOCUMENT NOT FOUND\n");
+    return;
+  }
+  var title = domdoc.title;
+  var titleInput = document.getElementById("PageTitleInput");
+  if (!title) title = "";
+  titleInput.setAttribute("value", title);
+
+  var authorInput = document.getElementById("AuthorInput");
+  if (authorInput)
+  {
+  }
+}
+
 function EditorSetDefaultPrefs()
 {
   /* only set defaults for new documents */
@@ -992,7 +1100,10 @@ function EditorSetDefaultPrefs()
   var domdoc;
   try { domdoc = window.editorShell.editorDocument; } catch (e) { dump( e + "\n"); }
   if ( !domdoc )
+  {
+    dump("EditorSetDefaultPrefs: EDITOR DOCUMENT NOT FOUND\n");
     return;
+  }
 
   // try to get preferences service
   var prefs = null;
@@ -1011,7 +1122,7 @@ function EditorSetDefaultPrefs()
   // if not, create one and make it a child of the head tag 
   //   and set its content attribute to the value of the editor.author preference.
   
-  var prefAuthorString = prefs.CopyCharPref("editor.author");
+  prefAuthorString = prefs.CopyCharPref("editor.author");
   if ( prefAuthorString && prefAuthorString != 0)
   {
     var nodelist = domdoc.getElementsByTagName("meta");
@@ -1121,18 +1232,6 @@ function AddAttrToElem(dom, attr_name, attr_value, elem)
     a.value = attr_value;
     elem.setAttributeNode(a);
   }
-}
-
-
-function EditorDocumentLoaded()
-{
-  dump("The document was loaded in the content area\n");
-  
-  //window.addEventListener("keyup", EditorReflectDocState, true, false);	// post process, no capture
-  //window.addEventListener("dblclick", EditorDoDoubleClick, true, false);
-
-  documentModified = (window.editorShell.documentStatus != 0);
-  return true;
 }
 
 function UpdateSaveButton(modified)
@@ -1315,91 +1414,33 @@ function EditorInsertOrEditTable(insertAllowed)
   }
 }
 
-function GetChildOffset(parent,child)
-{
-  if (!parent || !child)
-    return null;
-  
-  var nodeList = parent.childNodes;
-  var i;
-  if (nodeList)
-  {
-    for ( i = 0; i<nodeList.length; i++)
-    {
-      if (nodeList.item(i) == child)
-        return i;
-    }
-  }
-  return null;
-}
-
-function AppendNodeToSelection(selection, node)
-{
-  if (selection && node)
-  {
-    var parent = node.parentNode;
-    var offset = GetChildOffset(parent,node);
-    if (offset)
-    {
-      var range = editorShell.editorDocument.createRange();
-      if (range)
-      {
-        range.setStart(parent,offset);
-        range.setEnd(parent,offset+1);
-        selection.addRange(range);
-      }
-    }
-  }
-}
-
 function EditorSelectTableCell()
 {
-  var selection = editorShell.editorSelection;
-  if (selection)
-  {
-    var cellNode = editorShell.GetElementOrParentByTagName("td",selection.anchorNode);
-    if (cellNode)
-    {
-      selection.clearSelection();
-      AppendNodeToSelection(selection, cellNode);
-    }  
-  }
+  editorShell.SelectTableCell();
+  contentWindow.focus();
+}
+
+function EditorSelectAllTableCells()
+{
+  editorShell.SelectAllTableCells();
   contentWindow.focus();
 }
 
 function EditorSelectTable()
 {
-  var selection = editorShell.editorSelection;
-  if (selection)
-  {
-    var tableNode = editorShell.GetElementOrParentByTagName("table",selection.anchorNode);
-    if (tableNode)
-    {
-      selection.clearSelection();
-      AppendNodeToSelection(selection, tableNode);
-    }  
-  }
+  editorShell.SelectTableCell();
   contentWindow.focus();
 }
 
 function EditorSelectTableRow()
 {
-  var tagNameObj = new Object();
-  var isSelectedObj = new Object();
-  var tagName;
-  var isSelected;
-  var tableElement = editorShell.GetSelectedOrParentTableElement(tagNameObj,isSelectedObj);
-  tagName = tagNameObj.value;
-  isSelected = isSelectedObj.value;
-dump("Table element="+tableElement+" Tagname="+tagName+" IsSelected="+isSelected+"\n");
-
-  //TODO: FINISH THIS!
+  editorShell.SelectTableRow();
   contentWindow.focus();
 }
 
 function EditorSelectTableColumn()
 {
-  //TODO: FINISH THIS!
+  editorShell.SelectTableColumn();
   contentWindow.focus();
 }
 
@@ -1474,3 +1515,4 @@ function EditorDeleteTableCellContents()
   editorShell.DeleteTableCellContents();
   contentWindow.focus();
 }
+

@@ -93,6 +93,18 @@ public:
   NS_IMETHOD Align(const nsString& aAlign);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
+  
+  /* Table Editing */
+  NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter);
+  NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter);
+  NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool aAfter);
+  NS_IMETHOD DeleteTable();
+  NS_IMETHOD DeleteTableCell(PRInt32 aNumber);
+  NS_IMETHOD DeleteTableCellContents();
+  NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
+  NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
+  NS_IMETHOD JoinTableCells();
+  NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
 
   NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
   NS_IMETHOD StopLogging();

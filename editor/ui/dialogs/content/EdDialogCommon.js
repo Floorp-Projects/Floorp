@@ -131,7 +131,9 @@ function ValidateNumberString(value, minValue, maxValue)
       return number + "";
     }
   }
-  message = editorShell.GetString("ValidateNumber1")+number+editorShell.GetString("ValidateNumber2")+" "+minValue+" "+editorShell.GetString("ValidateNumber3")+" "+maxValue;
+  message = editorShell.GetString("ValidateNumber");
+  // Replace variable placeholders in message with number values
+  message = ((message.replace(/%n%/,number)).replace(/%min%/,minValue)).replace(/%max%/,maxValue);
   ShowInputErrorMessage(message);
 
   // Return an empty string to indicate error

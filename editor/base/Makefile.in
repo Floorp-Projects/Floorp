@@ -45,7 +45,7 @@ CPPSRCS		= \
 		ChangeAttributeTxn.cpp \
 		EditTxn.cpp \
 		EditAggregateTxn.cpp \
-		EditTable.cpp \
+		nsTableEditor.cpp \
 		InsertTextTxn.cpp \
 		PlaceholderTxn.cpp \
 		DeleteTextTxn.cpp \

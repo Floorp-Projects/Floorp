@@ -171,6 +171,8 @@ nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
   PRInt32 cellOffset, startRowIndex, startColIndex;
   nsresult res = GetCellContext(selection, table, curCell, cellParent, cellOffset, startRowIndex, startColIndex);
   if (NS_FAILED(res)) return res;
+  // Don't fail if no cell found
+  if (!curCell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   // Get more data for current cell in row we are inserting at (we need COLSPAN)
   PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
@@ -337,6 +339,8 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
   PRInt32 cellOffset, startRowIndex, startColIndex;
   nsresult res = GetCellContext(selection, table, curCell, cellParent, cellOffset, startRowIndex, startColIndex);
   if (NS_FAILED(res)) return res;
+  // Don't fail if no cell found
+  if (!curCell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   // Get more data for current cell (we need ROWSPAN)
   PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
@@ -448,6 +452,8 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
   PRInt32 cellOffset, startRowIndex, startColIndex;
   nsresult res = GetCellContext(selection, table, curCell, cellParent, cellOffset, startRowIndex, startColIndex);
   if (NS_FAILED(res)) return res;
+  // Don't fail if no cell found
+  if (!curCell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   // Get more data for current cell in row we are inserting at (we need COLSPAN)
   PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
@@ -642,7 +648,8 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
   {
     res = GetCellContext(selection, table, cell, cellParent, cellOffset, startRowIndex, startColIndex);
     if (NS_FAILED(res)) return res;
-    if (!cell) return NS_ERROR_NULL_POINTER;
+    // Don't fail if no cell found
+    if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
     if (1 == GetNumberOfCellsInRow(table, startRowIndex))
     {
@@ -695,8 +702,8 @@ nsHTMLEditor::DeleteTableCellContents()
 
   res = GetCellContext(selection, table, cell, cellParent, cellOffset, startRowIndex, startColIndex);
   if (NS_FAILED(res)) return res;
-  if (!cell) return NS_ERROR_NULL_POINTER;
-
+  // Don't fail if no cell found
+  if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   // We clear the selection to avoid problems when nodes in the selection are deleted,
   selection->ClearSelection();
@@ -740,7 +747,8 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
 
   res = GetCellContext(selection, table, cell, cellParent, cellOffset, startRowIndex, startColIndex);
   if (NS_FAILED(res)) return res;
-  if(!cell) return NS_ERROR_NULL_POINTER;
+  // Don't fail if no cell found
+  if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   res = GetTableSize(table, rowCount, colCount);
   if (NS_FAILED(res)) return res;
@@ -856,7 +864,8 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
 
   res = GetCellContext(selection, table, cell, cellParent, cellOffset, startRowIndex, startColIndex);
   if (NS_FAILED(res)) return res;
-  if(!cell) return NS_ERROR_NULL_POINTER;
+  // Don't fail if no cell found
+  if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   res = GetTableSize(table, rowCount, colCount);
   if (NS_FAILED(res)) return res;
@@ -925,6 +934,69 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
     if(!cell)
       break;
   }
+  return res;
+}
+
+
+
+NS_IMETHODIMP 
+nsHTMLEditor::SelectTable()
+{
+  nsCOMPtr<nsIDOMElement> table;
+  nsresult res = NS_ERROR_FAILURE;
+  res = GetElementOrParentByTagName("table", nsnull, getter_AddRefs(table));
+  if (NS_FAILED(res)) return res;
+  // Don't fail if we didn't find a table
+  if (!table) return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> tableNode = do_QueryInterface(table);
+  if (tableNode)
+  {
+    res = ClearSelection();
+    if (NS_SUCCEEDED(res))
+      res = AppendNodeToSelectionAsRange(table);
+  }
+  return res;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::SelectTableCell()
+{
+  nsCOMPtr<nsIDOMElement> cell;
+  nsresult res = NS_ERROR_FAILURE;
+  res = GetElementOrParentByTagName("td", nsnull, getter_AddRefs(cell));
+  if (NS_FAILED(res)) return res;
+  // Don't fail if we didn't find a table
+  if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
+
+  nsCOMPtr<nsIDOMNode> cellNode = do_QueryInterface(cell);
+  if (cellNode)
+  {
+    res = ClearSelection();
+    if (NS_SUCCEEDED(res))
+      res = AppendNodeToSelectionAsRange(cellNode);
+  }
+  return res;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::SelectAllTableCells()
+{
+  nsresult res = NS_OK;
+  return res;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::SelectTableRow()
+{
+  nsresult res = NS_OK;
+  return res;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::SelectTableColumn()
+{
+  nsresult res = NS_OK;
   return res;
 }
 
@@ -1275,11 +1347,14 @@ nsHTMLEditor::GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aC
 
   // Note that this returns NS_TABLELAYOUT_CELL_NOT_FOUND when
   //  the index(es) are out of bounds
-  return tableLayoutObject->GetCellDataAt(aRowIndex, aColIndex, aCell, 
-                                          aStartRowIndex, aStartColIndex,
-                                          aRowSpan, aColSpan, 
-                                          aActualRowSpan, aActualColSpan, 
-                                          aIsSelected);
+  res = tableLayoutObject->GetCellDataAt(aRowIndex, aColIndex, aCell, 
+                                         aStartRowIndex, aStartColIndex,
+                                         aRowSpan, aColSpan, 
+                                         aActualRowSpan, aActualColSpan, 
+                                         aIsSelected);
+  // Convert to editor's generic "not found" return value
+  if (res == NS_TABLELAYOUT_CELL_NOT_FOUND) res = NS_EDITOR_ELEMENT_NOT_FOUND;
+  return res;
 }
 
 // When all you want is the cell
@@ -1304,7 +1379,7 @@ nsHTMLEditor::GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
   if (!aSelection) return NS_ERROR_FAILURE;
 
   // Find the first selected cell
-  res = GetFirstSelectedCell(aCell);
+  res = GetFirstSelectedCell(getter_AddRefs(aCell));
   if (!aCell)
   {
     //If a cell wasn't selected, then assume the selection is INSIDE 
@@ -1338,15 +1413,18 @@ nsHTMLEditor::GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFirstSelectedCell(nsCOMPtr<nsIDOMElement> &aCell)
+nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell)
 {
+  if (!aCell) return NS_ERROR_NULL_POINTER;
+  *aCell = nsnull;
+
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_FAILURE;
 
-  // The most straight forward way of finding a selected cell
-  //   is to use the selection iterator
+//TODO: Replace this with code below new "table cell mode" flag is implemented
+
   nsCOMPtr<nsIEnumerator> enumerator;
   res = selection->GetEnumerator(getter_AddRefs(enumerator));
   
@@ -1381,13 +1459,42 @@ nsHTMLEditor::GetFirstSelectedCell(nsCOMPtr<nsIDOMElement> &aCell)
           atom.get() == nsIEditProperty::th )
       {
         // We found a cell   
-        aCell = do_QueryInterface(content);
-        break;
+        nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(content);
+        if (cellElement) 
+        {
+          *aCell = cellElement.get();
+          NS_ADDREF(*aCell);
+        }
+        return NS_OK;
       }
       iter->Next();
     }
   }
-  return res;
+  return NS_EDITOR_ELEMENT_NOT_FOUND;
+
+#if 0
+//TODO: Do this only after checking the new "table cell mode" flag
+  // The first cell is the starting node in the first selection range
+  nsCOMPtr<nsIDOMRange> firstRange;
+  res = selection->GetRangeAt(0, getter_AddRefs(firstRange));
+  if (NS_FAILED(res)) return res;
+  if (!firstRange) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> cellNode;
+  res = GetFirstNodeInRange(firstRange, getter_AddRefs(cellNode));
+  if (NS_FAILED(res)) return res;
+  if (!cellNode) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(cellNode);
+  
+  if (cellElement) 
+  {
+    *aCell = cellElement.get();
+    NS_ADDREF(*aCell);
+  }
+  else res = NS_EDITOR_ELEMENT_NOT_FOUND;
+
+  return res;  
+#endif
 }
 
 NS_IMETHODIMP
@@ -1468,17 +1575,10 @@ nsHTMLEditor::SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt3
   {
     if(NS_SUCCEEDED(GetChildOffset(aTable, tableParent, tableOffset)))
       return selection->Collapse(tableParent, tableOffset);
-
-    // Still failing! Set selection to start of doc
-	  nsCOMPtr<nsIDOMElement> bodyElement;
-	  res = GetBodyElement(getter_AddRefs(bodyElement));  
-	  if (NS_SUCCEEDED(res))
-    {
-  	  if (!bodyElement) return NS_ERROR_NULL_POINTER;
-      res = selection->Collapse(bodyElement,0);
-    }
   }
-  return res;
+  // Last resort: Set selection to start of doc
+  // (it's very bad to not have a valid selection!)
+  return SetSelectionAtDocumentStart(selection);
 }
 
 NS_IMETHODIMP 
@@ -1504,7 +1604,7 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsS
   nsCOMPtr<nsIDOMElement> firstCell;  
  
   nsCOMPtr<nsIDOMElement> tableElement;
-  res = GetFirstSelectedCell(tableElement);
+  res = GetFirstSelectedCell(getter_AddRefs(tableElement));
   if(NS_FAILED(res)) return res;
   if (tableElement)
   {

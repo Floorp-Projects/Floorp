@@ -298,6 +298,15 @@ interface nsIEditorShell : nsISupports
   void DeleteTableRow(in PRInt32 number);
   void DeleteTableColumn(in PRInt32 number);
   void JoinTableCells();
+  /** Table selection methods
+    * Selecting a row or column actually
+    * selects all cells (not TR in the case of rows)
+    */
+  void SelectTableCell();
+  void SelectTableRow();
+  void SelectTableColumn();
+  void SelectTable();
+  void SelectAllTableCells();
 
   /** Scan through all rows and add cells as needed so 
     *   all locations in the cellmap are occupied.

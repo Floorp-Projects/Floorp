@@ -52,7 +52,7 @@ CPPSRCS =				\
       TransactionFactory.cpp \
       TypeInState.cpp        \
       nsHTMLEditor.cpp       \
-      EditTable.cpp          \
+      nsTableEditor.cpp      \
       nsInternetCiter.cpp    \
       nsAOLCiter.cpp         \
       nsInterfaceState.cpp   \
@@ -88,7 +88,7 @@ CPP_OBJS =					\
   .\$(OBJDIR)\TransactionFactory.obj  \
   .\$(OBJDIR)\TypeInState.obj         \
   .\$(OBJDIR)\nsHTMLEditor.obj        \
-  .\$(OBJDIR)\EditTable.obj           \
+  .\$(OBJDIR)\nsTableEditor.obj       \
   .\$(OBJDIR)\nsInternetCiter.obj     \
   .\$(OBJDIR)\nsAOLCiter.obj          \
   .\$(OBJDIR)\nsInterfaceState.obj    \
