@@ -55,8 +55,6 @@ public:
   virtual ~nsPermission();
   
 protected:
-  nsPermission(); // not to be implemented (required for nsDerivedSafe)
-
   nsCString mHost;
   PRUint32  mType;
   PRUint32  mCapability;

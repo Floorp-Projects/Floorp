@@ -102,8 +102,6 @@ class nsCookie : public nsICookie2
     inline void SetLastAccessed(nsInt64 aLastAccessed) { mLastAccessed = aLastAccessed; }
 
   protected:
-    nsCookie(); // not to be implemented (required for nsDerivedSafe)
-
     // member variables
     // we use char* ptrs to store the strings in a contiguous block,
     // so we save on the overhead of using nsCStrings. However, we
