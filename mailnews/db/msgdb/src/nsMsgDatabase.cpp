@@ -1024,9 +1024,11 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 	if (NS_SUCCEEDED(ret))
 		ret = thread->RemoveChildHdr(msgHdr);
 	else
+	{
 		NS_ASSERTION(PR_FALSE, "couldn't find thread containing deleted message");
+	}
 	// even if we couldn't find the thread,we should try to remove the header.
-	if (NS_SUCCEEDED(ret))
+//	if (NS_SUCCEEDED(ret))
 	{
 		nsIMdbRow* row = msgHdr->GetMDBRow();
 		ret = m_mdbAllMsgHeadersTable->CutRow(GetEnv(), msgHdr->GetMDBRow());
