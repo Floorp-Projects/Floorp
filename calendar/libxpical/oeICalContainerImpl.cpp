@@ -40,10 +40,10 @@
                              
 icaltimetype ConvertFromPrtime( PRTime indate );
 PRTime ConvertToPrtime ( icaltimetype indate );
-
+extern "C" {
 extern icalarray *builtin_timezones;
 extern char *gDefaultTzidPrefix;
-
+}
 //icaltimetype ConvertFromPrtime( PRTime indate );
 void icaltimezone_init_mozilla_zones (void)
 {
@@ -84,7 +84,8 @@ END:VTIMEZONE\n";
 
     //Components should be sorted by location
     //+00:00 to +12:00
-    for( int i=0; i<25; i++ ) {
+    int i;
+    for( i=0; i<25; i++ ) {
         char sign = '+';
         int hour = i/2;
         int minute = i%2==0 ? 00 : 30;
@@ -102,7 +103,7 @@ END:VTIMEZONE\n";
         icalcomponent_add_component( vcalendar, vtimezone );
     }
     //-00:30 to -12:00
-    for( int i=-1; i>-25; i-- ) {
+    for( i=-1; i>-25; i-- ) {
         char sign = '-';
         int hour = -1*i/2;
         int minute = i%2==0 ? 00 : 30;
