@@ -241,33 +241,17 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     	break;
 
     case NS_NATIVE_OFFSETX:
+//   	retVal = (void*)mMacPortRelativeX;
     	point.MoveTo(mBounds.x, mBounds.y);
     	LocalToWindowCoordinate(point);
     	retVal = (void*)point.x;
-    	
-    	// Can never do it this way because of the design
-    	//if ( point.x != (**mMacPortRelativeRegion).rgnBBox.left) 
-    	//	return (void*)(**mMacPortRelativeRegion).rgnBBox.left;
-    	break;
+     	break;
 
     case NS_NATIVE_OFFSETY:
+//   	retVal = (void*)mMacPortRelativeY;
     	point.MoveTo(mBounds.x, mBounds.y);
     	LocalToWindowCoordinate(point);
     	retVal = (void*)point.y;
-    	
-    	// Can never do it this way because of the design
-    	//if ( point.y != (**mMacPortRelativeRegion).rgnBBox.top) 
-    	//	return (void*)(**mMacPortRelativeRegion).rgnBBox.top;
-    	break;
-    	
-    case NS_NATIVE_OFFSETX_IN_PORT:
-    	//return (void*)(**mMacPortRelativeRegion).rgnBBox.left;
-    	retVal = (void*)mMacPortRelativeX;
-    	break;
-    	
-    case NS_NATIVE_OFFSETY_IN_PORT:
-    	//return (void*)(**mMacPortRelativeRegion).rgnBBox.top;
-    	retVal = (void*)mMacPortRelativeY;
     	break;
     	
     case NS_NATIVE_REGION_IN_PORT:
