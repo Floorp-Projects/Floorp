@@ -67,7 +67,7 @@ public:
   NS_IMETHOD Open3PaneWindow();
   NS_IMETHOD GetNewMail();
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
-  NS_IMETHOD OpenURL(nsAutoString& url);
+  NS_IMETHOD OpenURL(char * url);
 
 private:
   
@@ -282,7 +282,7 @@ nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
 }
 
 NS_IMETHODIMP
-nsMsgAppCore::OpenURL(nsAutoString& url)
+nsMsgAppCore::OpenURL(char * url)
 {
     // here's where we call mscott's LoadURL...
 	// mscott: right now, this only works for news urls!!!!

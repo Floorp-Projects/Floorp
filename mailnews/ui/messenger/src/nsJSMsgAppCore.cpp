@@ -259,9 +259,13 @@ MsgAppCoreOpenURL(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->OpenURL(b0)) {
+	char * url = b0.ToNewCString();
+
+    if (NS_OK != nativeThis->OpenURL(url)) {
       return JS_FALSE;
     }
+
+	delete [] url;
 
     *rval = JSVAL_VOID;
   }
