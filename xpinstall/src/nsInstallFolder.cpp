@@ -330,7 +330,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                 break;
 
             case 304: ///////////////////////////////////////////////////////////  Mac Shutdown
-                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_StartupDirectory ));
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_ShutdownDirectory ));
                 break;
 
             case 305: ///////////////////////////////////////////////////////////  Mac Apple Menu
