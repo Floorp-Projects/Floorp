@@ -103,55 +103,6 @@ public:
   virtual void         InstallFocusOutSignal(GtkWidget * aWidget);
   void                 HandleGDKEvent(GdkEvent *event);
 
-  void                 InstallToplevelDragBeginSignal (void);
-  void                 InstallToplevelDragMotionSignal(void);
-  void                 InstallToplevelDragDropSignal  (void);
-  void                 InstallToplevelDragDataReceivedSignal(void);
-
-  static gint          ToplevelDragBeginSignal  (GtkWidget *      aWidget,
-                                                 GdkDragContext   *aDragContext,
-                                                 gint             x,
-                                                 gint             y,
-                                                 guint            aTime,
-                                                 void             *aData);
-  static gint          ToplevelDragDropSignal   (GtkWidget *      aWidget,
-                                                 GdkDragContext   *aDragContext,
-                                                 gint             x,
-                                                 gint             y,
-                                                 guint            aTime,
-                                                 void             *aData);
-  static gint          ToplevelDragLeaveSignal  (GtkWidget *      aWidget,
-                                                 GdkDragContext   *aDragContext,
-                                                 guint            aTime,
-                                                 void             *aData);
-  static gint          ToplevelDragMotionSignal (GtkWidget *      aWidget,
-                                                 GdkDragContext   *aDragContext,
-                                                 gint             x,
-                                                 gint             y,
-                                                 guint            aTime,
-                                                 void             *aData);
-
-  static void          ToplevelDragDataReceivedSignal(GtkWidget         *aWidget,
-                                                      GdkDragContext    *aDragContext,
-                                                      gint               x,
-                                                      gint               y,
-                                                      GtkSelectionData  *aSelectionData,
-                                                      guint              aInfo,
-                                                      guint32            aTime,
-                                                      gpointer           aData);
-
-  void                 OnToplevelDragMotion     (GtkWidget      *aWidget,
-                                                 GdkDragContext *aGdkDragContext,
-                                                 gint            x,
-                                                 gint            y,
-                                                 guint           aTime);
-
-  void                 OnToplevelDragDrop       (GtkWidget      *aWidget,
-                                                 GdkDragContext *aDragContext,
-                                                 gint            x,
-                                                 gint            y,
-                                                 guint           aTime);
-
   gint                 ConvertBorderStyles(nsBorderStyle bs);
 
   // Add an XATOM property to this window.
@@ -258,9 +209,90 @@ protected:
                                        int depth);
   // given an X window this will find the nsWindow * for it.
   static nsWindow  *GetnsWindowFromXWindow(Window aWindow);
+
+  // all of our DND stuff
+
   // this is the last window that had a drag event happen on it.
   static nsWindow  *mLastDragMotionWindow;
   static nsWindow  *mLastLeaveWindow;
+
+  // DragBegin not needed ?
+  // always returns TRUE
+  static gint DragMotionSignal (GtkWidget *      aWidget,
+                                GdkDragContext   *aDragContext,
+                                gint             aX,
+                                gint             aY,
+                                guint            aTime,
+                                void             *aData);
+  gint OnDragMotionSignal      (GtkWidget *      aWidget,
+                                GdkDragContext   *aDragContext,
+                                gint             aX,
+                                gint             aY,
+                                guint            aTime,
+                                void             *aData);
+
+  static void DragLeaveSignal  (GtkWidget *      aWidget,
+                                GdkDragContext   *aDragContext,
+                                guint            aTime,
+                                gpointer         aData);
+  void OnDragLeaveSignal       (GtkWidget *      aWidget,
+                                GdkDragContext   *aDragContext,
+                                guint            aTime,
+                                gpointer         aData);
+
+  // always returns TRUE
+  static gint DragDropSignal   (GtkWidget        *aWidget,
+                                GdkDragContext   *aDragContext,
+                                gint             aX,
+                                gint             aY,
+                                guint            aTime,
+                                void             *aData);
+  gint OnDragDropSignal        (GtkWidget        *aWidget,
+                                GdkDragContext   *aDragContext,
+                                gint             aX,
+                                gint             aY,
+                                guint            aTime,
+                                void             *aData);
+  // when the data has been received
+  static void DragDataReceived (GtkWidget         *aWidget,
+                                GdkDragContext    *aDragContext,
+                                gint               aX,
+                                gint               aY,
+                                GtkSelectionData  *aSelectionData,
+                                guint              aInfo,
+                                guint32            aTime,
+                                gpointer           aData);
+  void OnDragDataReceived      (GtkWidget         *aWidget,
+                                GdkDragContext    *aDragContext,
+                                gint               aX,
+                                gint               aY,
+                                GtkSelectionData  *aSelectionData,
+                                guint              aInfo,
+                                guint32            aTime,
+                                gpointer           aData);
+
+  // these are drag and drop events that aren't generated by widget
+  // events but we do synthesize
+
+  void OnDragLeave(void);
+  void OnDragEnter(nscoord aX, nscoord aY);
+
+  // this is everything we need to be able to fire motion events
+  // repeatedly
+  GtkWidget         *mDragMotionWidget;
+  GdkDragContext    *mDragMotionContext;
+  gint               mDragMotionX;
+  gint               mDragMotionY;
+  guint              mDragMotionTime;
+  nsCOMPtr<nsITimer> mDragMotionTimer;
+
+  void        ResetDragMotionTimer    (GtkWidget      *aWidget,
+                                       GdkDragContext *aDragContext,
+                                       gint           aX,
+                                       gint           aY,
+                                       guint          aTime);
+  void        FireDragMotionTimer     (void);
+  static void DragMotionTimerCallback (nsITimer *aTimer, void *aClosure);
 
 #ifdef NS_DEBUG
   void        DumpWindowTree(void);

@@ -208,10 +208,6 @@ public:
   static void GetLastEventTime(guint32 *aTime);
 protected:
 
-  virtual void UpdateDragContext(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime);
-  virtual void StartDragMotion(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime);
-  virtual void EndDragMotion(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime);
-
   virtual void InitCallbacks(char * aName = nsnull);
 
   NS_IMETHOD CreateNative(GtkObject *parentWindow) { return NS_OK; }
@@ -254,8 +250,6 @@ public:
 
 protected:
   // 
-  PRBool mIsDragDest;
-
 
   //////////////////////////////////////////////////////////////////
   //
@@ -263,12 +257,6 @@ protected:
   //
   //////////////////////////////////////////////////////////////////
   void InstallMotionNotifySignal(GtkWidget * aWidget);
-
-  void InstallDragMotionSignal(GtkWidget * aWidget);
-  void InstallDragLeaveSignal(GtkWidget * aWidget);
-  void InstallDragBeginSignal(GtkWidget * aWidget);
-  void InstallDragDropSignal(GtkWidget * aWidget);
-  void InstallDragDataReceived(GtkWidget * aWidget);
 
   void InstallEnterNotifySignal(GtkWidget * aWidget);
 
@@ -295,30 +283,6 @@ protected:
   //
   //////////////////////////////////////////////////////////////////
   virtual void OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent);
-  virtual void OnDragMotionSignal(GdkDragContext *aGdkDragContext,
-                                  gint            x,
-                                  gint            y,
-                                  guint           time);
-/* OnDragEnterSignal is not a real signal.. it is only called from OnDragMotionSignal */
-  virtual void OnDragEnterSignal(GdkDragContext *aGdkDragContext,
-                                 gint            x,
-                                 gint            y,
-                                 guint           time);
-  virtual void OnDragLeaveSignal(GdkDragContext   *context,
-                                 guint             time);
-  virtual void OnDragBeginSignal(GdkDragContext *aGdkDragContext);
-  virtual void OnDragDropSignal(GtkWidget      *aWidget,
-                                GdkDragContext *aGdkDragContext,
-                                gint            x,
-                                gint            y,
-                                guint           time);
-  virtual void OnDragDataReceivedSignal(GtkWidget         *aWidget,
-                                        GdkDragContext    *context,
-                                        gint               x,
-                                        gint               y,
-                                        GtkSelectionData  *selection_data,
-                                        guint              info,
-                                        guint32            time);
   virtual void OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
   virtual void OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
   virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
@@ -402,41 +366,6 @@ protected:
   static gint MotionNotifySignal(GtkWidget *       aWidget,
                                  GdkEventMotion *  aGdkMotionEvent,
                                  gpointer          aData);
-
-  static gint DragMotionSignal(GtkWidget *       aWidget,
-                               GdkDragContext   *context,
-                               gint             x,
-                               gint             y,
-                               guint            time,
-                               void             *data);
-
-  static void DragLeaveSignal(GtkWidget *      aWidget,
-                              GdkDragContext   *aDragContext,
-                              guint            time,
-                              void             *aData);
-
-  static gint DragBeginSignal(GtkWidget *       aWidget,
-                              GdkDragContext   *context,
-                              gint             x,
-                              gint             y,
-                              guint            time,
-                              void             *data);
-
-  static gint DragDropSignal(GtkWidget *      aWidget,
-                             GdkDragContext   *context,
-                             gint             x,
-                             gint             y,
-                             guint            time,
-                             void             *data);
-
-  static void DragDataReceivedSignal(GtkWidget         *aWidget,
-                                     GdkDragContext    *context,
-                                     gint               x,
-                                     gint               y,
-                                     GtkSelectionData  *selection_data,
-                                     guint              info,
-                                     guint32            time,
-                                     gpointer           data);
 
   static gint EnterNotifySignal(GtkWidget *        aWidget, 
                                 GdkEventCrossing * aGdkCrossingEvent, 
@@ -524,7 +453,7 @@ private:
   static PRBool mGDKHandlerInstalled;
   // this will keep track of whether or not we've told the drag
   // service how to call back into us to get the last event time
-  static PRBool mTimeCBSet;
+  static PRBool sTimeCBSet;
 
   //
   // Keep track of the last widget being "dragged"
