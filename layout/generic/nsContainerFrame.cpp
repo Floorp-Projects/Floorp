@@ -833,20 +833,16 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
 
   // Make sure visibility is correct
   if (0 == (aFlags & NS_FRAME_NO_VISIBILITY)) {
-    const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
-
     // See if the view should be hidden or visible
     PRBool  viewIsVisible = PR_TRUE;
 
-    if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
-      viewIsVisible = PR_FALSE;
-    }
-    else if (NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible &&
-             !aFrame->SupportsVisibilityHidden()) {
+    if (!aStyleContext->GetStyleVisibility()->IsVisible() &&
+        !aFrame->SupportsVisibilityHidden()) {
       // If it's a scrollable frame that can't hide its scrollbars,
       // hide the view. This means that child elements can't override
       // their parent's visibility, but it's not practical to leave it
       // visible in all cases because the scrollbars will be showing
+      // XXXldb Does the view system really enforce this correctly?
       viewIsVisible = PR_FALSE;
     } else {
       // if the view is for a popup, don't show the view if the popup is closed
