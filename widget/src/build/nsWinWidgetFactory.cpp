@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsIFactory.h"
@@ -46,6 +47,7 @@
 
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
+#include "nsClipboardHelper.h"
 #include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
@@ -67,6 +69,7 @@ static NS_DEFINE_IID(kCTimerManager, NS_TIMERMANAGER_CID);
 // Drag & Drop, Clipboard
 static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
 static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
+static NS_DEFINE_IID(kCClipboardHelper,  NS_CLIPBOARDHELPER_CID);
 static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCHTMLFormatConverter,  NS_HTMLFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
@@ -201,6 +204,9 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     }
     else if (mClassID.Equals(kCClipboard)) {
         inst = (nsISupports*)(nsBaseClipboard *)new nsClipboard();
+    }
+    else if (mClassID.Equals(kCClipboardHelper)) {
+        inst = (nsISupports*)new nsClipboardHelper();
     }
     else if (mClassID.Equals(kCDragService)) {
         inst = (nsISupports*)(nsIDragService *)new nsDragService();

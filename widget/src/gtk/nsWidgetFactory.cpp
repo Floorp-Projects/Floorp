@@ -19,6 +19,7 @@
  * Contributor(s): 
  *   Christopher Blizzzard <blizzard@mozilla.org>
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsIGenericFactory.h"
@@ -37,6 +38,7 @@
 #include "nsLabel.h"
 #include "nsTransferable.h"
 #include "nsClipboard.h"
+#include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsFontRetrieverService.h"
 #include "nsDragService.h"
@@ -61,6 +63,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
@@ -183,9 +186,9 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/widget/sound/gtk;1"
     "@mozilla.org/sound;1",
     nsSoundConstructor },
-  { "Transferrable",
+  { "Transferable",
     NS_TRANSFERABLE_CID,
-    //    "@mozilla.org/widget/transferrable/gtk;1",
+    //    "@mozilla.org/widget/transferable/gtk;1",
     "@mozilla.org/widget/transferable;1",
     nsTransferableConstructor },
   { "Gtk Clipboard",
@@ -193,6 +196,10 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/widget/clipboard/gtk;1",
     "@mozilla.org/widget/clipboard;1",
     nsClipboardConstructor },
+  { "Clipboard Helper",
+    NS_CLIPBOARDHELPER_CID,
+    "@mozilla.org/widget/clipboardhelper;1",
+    nsClipboardHelperConstructor },
   { "HTML Format Converter",
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter/gtk;1",

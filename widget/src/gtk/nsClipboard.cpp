@@ -19,7 +19,8 @@
  * 
  * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
- *   Mike Pinkerton   <pinkerton@netscape.com>
+ *   Mike Pinkerton <pinkerton@netscape.com>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsClipboard.h"
@@ -271,7 +272,9 @@ NS_IMETHODIMP nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 
 NS_IMETHODIMP nsClipboard::SupportsSelectionClipboard(PRBool *_retval)
 {
-  *_retval = PR_TRUE;   // we don't suport the selection clipboard by default.
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = PR_TRUE; // we support the selection clipboard on unix.
   return NS_OK;
 }
 

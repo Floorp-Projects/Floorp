@@ -23,7 +23,6 @@ inspector.jar:
   content/inspector/extensions/wsm-colorpicker.js       (extensions/wsm-colorpicker.js)
   content/inspector/jsutil/rdf/RDFU.js                  (jsutil/rdf/RDFU.js)
   content/inspector/jsutil/rdf/RDFArray.js              (jsutil/rdf/RDFArray.js)
-  content/inspector/jsutil/system/ClipboardUtils.js     (jsutil/system/ClipboardUtils.js)
   content/inspector/jsutil/system/PrefUtils.js          (jsutil/system/PrefUtils.js)
   content/inspector/jsutil/system/FilePickerUtils.js    (jsutil/system/FilePickerUtils.js)
   content/inspector/jsutil/system/DiskSearch.js         (jsutil/system/DiskSearch.js)

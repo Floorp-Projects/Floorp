@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsIFactory.h"
@@ -55,6 +56,7 @@
 #include "nsFileWidget.h"
 
 #include "nsClipboard.h"
+#include "nsClipboardHelper.h"
 #include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
@@ -108,6 +110,7 @@ static NS_DEFINE_CID(kCPopUpMenu,     NS_POPUPMENU_CID);
 // Drag and Drop/Clipboard
 static NS_DEFINE_CID(kCDataFlavor,    NS_DATAFLAVOR_CID);
 static NS_DEFINE_CID(kCClipboard,     NS_CLIPBOARD_CID);
+static NS_DEFINE_CID(kCClipboardHelper,  NS_CLIPBOARDHELPER_CID);
 static NS_DEFINE_CID(kCTransferable,  NS_TRANSFERABLE_CID);
 static NS_DEFINE_CID(kCHTMLFormatConverter,  NS_HTMLFORMATCONVERTER_CID);
 static NS_DEFINE_CID(kCDragService,   NS_DRAGSERVICE_CID);
@@ -269,6 +272,8 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)new nsHTMLFormatConverter();
     else if (mClassID.Equals(kCClipboard))
         inst = (nsISupports*)new nsClipboard();
+    else if (mClassID.Equals(kCClipboardHelper))
+        inst = (nsISupports*)new nsClipboardHelper();
     else if (mClassID.Equals(kCDragService))
         inst = (nsISupports*)NS_STATIC_CAST(nsIDragService*, new nsDragService());
 #ifdef IBMBIDI

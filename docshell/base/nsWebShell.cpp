@@ -20,7 +20,7 @@
  *
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com> 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #ifdef XP_OS2_VACPP
@@ -1195,34 +1195,39 @@ nsWebShell::DoCommand ( const nsAReadableString & inCommand )
 NS_IMETHODIMP
 nsWebShell::CanCutSelection(PRBool* aResult)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
-
-  if ( aResult )
-    rv = IsCommandEnabled ( NS_LITERAL_STRING("cmd_cut"), aResult );
-
-  return rv;
+  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_cut"), aResult );
 }
 
 NS_IMETHODIMP
 nsWebShell::CanCopySelection(PRBool* aResult)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
+  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_copy"), aResult );
+}
 
-  if ( aResult )
-    rv = IsCommandEnabled ( NS_LITERAL_STRING("cmd_copy"), aResult );
+NS_IMETHODIMP
+nsWebShell::CanCopyLinkLocation(PRBool* aResult)
+{
+  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_copyLink"), aResult );
+}
 
-  return rv;
+NS_IMETHODIMP
+nsWebShell::CanCopyImageLocation(PRBool* aResult)
+{
+  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_copyImageLocation"),
+                            aResult );
+}
+
+NS_IMETHODIMP
+nsWebShell::CanCopyImageContents(PRBool* aResult)
+{
+  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_copyImageContents"),
+                            aResult );
 }
 
 NS_IMETHODIMP
 nsWebShell::CanPaste(PRBool* aResult)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
-
-  if ( aResult )
-    rv = IsCommandEnabled ( NS_LITERAL_STRING("cmd_paste"), aResult );
-
-  return rv;
+  return IsCommandEnabled ( NS_LITERAL_STRING("cmd_paste"), aResult );
 }
 
 NS_IMETHODIMP
@@ -1240,7 +1245,19 @@ nsWebShell::CopySelection(void)
 NS_IMETHODIMP
 nsWebShell::CopyLinkLocation(void)
 {
-  return DoCommand ( NS_LITERAL_STRING("cmd_copy_link") );
+  return DoCommand ( NS_LITERAL_STRING("cmd_copyLink") );
+}
+
+NS_IMETHODIMP
+nsWebShell::CopyImageLocation(void)
+{
+  return DoCommand ( NS_LITERAL_STRING("cmd_copyImageLocation") );
+}
+
+NS_IMETHODIMP
+nsWebShell::CopyImageContents(void)
+{
+  return DoCommand ( NS_LITERAL_STRING("cmd_copyImageContents") );
 }
 
 NS_IMETHODIMP
