@@ -427,6 +427,14 @@ pref("capability.policy.mailnews.SchemaLoader.loadAsync", "noAccess");
 pref("capability.policy.mailnews.SchemaLoader.processSchemaElement", "noAccess");
 pref("capability.policy.mailnews.SchemaLoader.onLoad", "noAccess");
 pref("capability.policy.mailnews.SchemaLoader.onError", "noAccess");
+pref("capability.policy.mailnews.WSDLLoader.load", "noAccess");
+pref("capability.policy.mailnews.WSDLLoader.loadAsync", "noAccess");
+pref("capability.policy.mailnews.WSDLLoader.onLoad", "noAccess");
+pref("capability.policy.mailnews.WSDLLoader.onError", "noAccess");
+pref("capability.policy.mailnews.WebServiceProxyFactory.createProxy", "noAccess");
+pref("capability.policy.mailnews.WebServiceProxyFactory.createProxyAsync", "noAccess");
+pref("capability.policy.mailnews.WebServiceProxyFactory.onLoad", "noAccess");
+pref("capability.policy.mailnews.WebServiceProxyFactory.onError", "noAccess");
 
 // XMLExtras
 pref("capability.policy.default.XMLHttpRequest.channel", "noAccess");
