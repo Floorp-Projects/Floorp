@@ -351,7 +351,8 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   parWithView->GetView(aPresContext, &parView);
   nsRect boundBox(0, 0, 0, 0); 
   result = view->Init(viewMan, boundBox, parView);
-  viewMan->InsertChild(parView, view, 0);
+  // XXX Put it last in document order until we can do better
+  viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
   SetView(aPresContext, view);
 
   nsCOMPtr<nsIPresShell> shell;
@@ -1600,16 +1601,15 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext*            aPresContext,
   nsIView* view;
   GetView(aPresContext, &view);
   if (view) {
-    nsIViewManager* viewMan;
-    view->GetViewManager(viewMan);
+    nsCOMPtr<nsIViewManager> viewMan;
+    view->GetViewManager(*getter_AddRefs(viewMan));
     if (viewMan) {
       PRBool ignore;
       viewMan->GrabMouseEvents(view, ignore);
-      NS_RELEASE(viewMan);
       mDragger = aBorder;
 
       //XXX This should go away!  Border should have own view instead
-      view->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
+      viewMan->SetViewCheckChildEvents(view, PR_FALSE);
 
       // The point isn't in frameset coords, but we're using it to compute
       // moves relative to the start position.
@@ -1686,7 +1686,7 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext* aPresContext,
       nsIView* root;
       vm->GetRootView(root);
       if (root) {
-        vm->UpdateView(root, NS_VMREFRESH_IMMEDIATE | NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+        vm->UpdateView(root, NS_VMREFRESH_IMMEDIATE);
       }
     }
   }
@@ -1698,15 +1698,14 @@ nsHTMLFramesetFrame::EndMouseDrag(nsIPresContext* aPresContext)
   nsIView* view;
   GetView(aPresContext, &view);
   if (view) {
-    nsIViewManager* viewMan;
-    view->GetViewManager(viewMan);
+    nsCOMPtr<nsIViewManager> viewMan;
+    view->GetViewManager(*getter_AddRefs(viewMan));
     if (viewMan) {
       mDragger = nsnull;
       PRBool ignore;
       viewMan->GrabMouseEvents(nsnull, ignore);
-      NS_RELEASE(viewMan);
       //XXX This should go away!  Border should have own view instead
-      view->ClearViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
+      viewMan->SetViewCheckChildEvents(view, PR_TRUE);
     }
   }
   gDragInProgress = PR_FALSE;

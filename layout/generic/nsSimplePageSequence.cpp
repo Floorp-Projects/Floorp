@@ -51,6 +51,7 @@
 #include "nsIPrintOptions.h"
 #include "nsPageFrame.h"
 #include "nsIPrintPreviewContext.h"
+#include "nsIRegion.h"
 
 #include "nsIPref.h" // for header/footer gap & ExtraMargin for Print Preview
 
@@ -78,6 +79,7 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 //
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
 #define DEBUG_PRINTING
@@ -578,6 +580,20 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
 
 }
 
+static nsIRegion* CreateRegion()
+{
+  nsIRegion* region;
+  nsresult rv = nsComponentManager::CreateInstance(kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void**)&region);
+  if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(region->Init())) {
+      return region;
+    } else {
+      NS_RELEASE(region);
+    }
+  }
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
                                       nsIPrintOptions* aPrintOptions)
@@ -662,29 +678,39 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
 
     PRInt32 pageNum = 1;
     nscoord y = 0;//mMargin.top;
+
+    nsCOMPtr<nsIRegion> emptyRegion = getter_AddRefs(CreateRegion());
     for (nsIFrame* page = mFrames.FirstChild(); nsnull != page; page->GetNextSibling(&page)) {
-      nsIView*  view;
+      nsIView*  view = nsnull;
       page->GetView(aPresContext, &view);
       NS_ASSERTION(nsnull != view, "no page view");
+
+      nsCOMPtr<nsIViewManager> vm;
+      view->GetViewManager(*getter_AddRefs(vm));
+      NS_ASSERTION(nsnull != vm, "no view manager");
+
       if (pageNum < mFromPageNum || pageNum > mToPageNum) {
         // Hide the pages that won't be printed to the Viewmanager
         // doesn't put them in the display list. Also, makde
         // sure the child views don't get asked to print
         // but my guess is that there won't be any
-        view->SetVisibility(nsViewVisibility_kHide);
-        view->SetChildClip(0,0,0,0);
-        view->SetViewFlags(NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN);
+        vm->SetViewVisibility(view, nsViewVisibility_kHide);
+        vm->SetViewChildClipRegion(view, emptyRegion);
       } else {
         nsRect rect;
         page->GetRect(rect);
         rect.y = y;
         rect.height = height;
         page->SetRect(aPresContext, rect);
+
         nsRect viewRect;
         view->GetBounds(viewRect);
         viewRect.y = y;
         viewRect.height = height;
-        view->SetBounds(viewRect);
+        vm->MoveViewTo(view, viewRect.x, viewRect.y);
+        viewRect.x = 0;
+        viewRect.y = 0;
+        vm->ResizeView(view, viewRect);
         y += rect.height + mMargin.top + mMargin.bottom;
       }
       pageNum++;
@@ -836,7 +862,10 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext,
       containerView->GetBounds(containerRect);
       containerRect.y -= mYSelOffset;
       containerRect.height = height-mYSelOffset;
-      containerView->SetBounds(containerRect, PR_FALSE);
+      
+      vm->MoveViewTo(containerView, containerRect.x, containerRect.y);
+      nsRect r(0, 0, containerRect.width, containerRect.height);
+      vm->ResizeView(containerView, r, PR_FALSE);
       clipRect.SetRect(mMargin.left, mMargin.right, width, height);
 
       nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, childFrame);
@@ -862,7 +891,7 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext,
       PRINT_DEBUG_MSG4("SeqFr::Paint -> %p PageNo: %d  View: %p", pf, mPageNum, view);
       PRINT_DEBUG_MSG3(" At: %d,%d\n", mMargin.left+mOffsetX, mMargin.top+mOffsetY);
 
-      view->SetContentTransparency(PR_FALSE);
+      vm->SetViewContentTransparency(view, PR_FALSE);
 
       vm->Display(view, mOffsetX, mOffsetY, clipRect);
 
@@ -889,8 +918,9 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext,
         pf->SetPageNumInfo(mPrintedPageNum, mTotalPages);
         containerRect.y -= height;
         containerRect.height += height;
-        containerView->SetBounds(containerRect, PR_FALSE);
-
+        vm->MoveViewTo(containerView, containerRect.x, containerRect.y);
+        nsRect r(0, 0, containerRect.width, containerRect.height);
+        vm->ResizeView(containerView, r, PR_FALSE);
       } else {
         continuePrinting = PR_FALSE;
       }

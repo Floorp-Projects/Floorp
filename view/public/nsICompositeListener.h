@@ -30,6 +30,7 @@ class nsIView;
 class nsIViewManager;
 class nsIRenderingContext;
 class nsIRegion;
+struct nsRect;
 
 // IID for the nsICompositeListener interface
 // {5661ce55-7c42-11d3-009d-1d060b0f8baff}
