@@ -461,7 +461,6 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       if(NS_SUCCEEDED(result))
         if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
         nsAutoString endTag(NS_EnumToTag(theTag));
-        CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
         CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);
         endTag.Insert("</",0,2);
         endTag.Append(">");        
