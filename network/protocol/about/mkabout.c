@@ -111,7 +111,7 @@ PRIVATE PRBool net_about_enabled(const char *which)
 {
   char *which2;
   char buf[256];
-  XP_Bool res = FALSE;
+  PRBool res = FALSE;
   if (!which)
     return PR_FALSE;
     
@@ -126,7 +126,7 @@ PRIVATE PRBool net_about_enabled(const char *which)
     PREF_GetBoolPref(buf, &res);
     PR_Free(which2);
   }
-  return (PRBool) res;
+  return res;
 }
 
 PRIVATE void

@@ -412,7 +412,7 @@ NET_UpdateManualProxyInfo(const char * prefChanged) {
 
 	XP_Bool bSetupAll=FALSE;
 	char * proxy = NULL;
-	int32 iPort=0;
+	PRInt32 iPort=0;
 	char text[MAXHOSTNAMELEN + 8];
 
 	if (!prefChanged)
@@ -629,7 +629,7 @@ NET_SetupPrefs(const char * prefChanged)
 		bSetupAll = TRUE;
 
 	if (bSetupAll || !PL_strcmp(prefChanged, pref_dnsExpiration)) {
-		int32 n;
+		PRInt32 n;
         if ( (PREF_OK != PREF_GetIntPref(pref_dnsExpiration,&n)) ) {
             n = DEF_DNS_EXPIRATION;
         }
@@ -637,7 +637,7 @@ NET_SetupPrefs(const char * prefChanged)
 	}
 	
 	if (bSetupAll || !PL_strcmp(prefChanged, pref_browserPrefetch)) {
-		int32 n;
+		PRInt32 n;
         if ( (PREF_OK != PREF_GetIntPref(pref_browserPrefetch,&n)) ) {
             n = 0;
         }
@@ -645,7 +645,7 @@ NET_SetupPrefs(const char * prefChanged)
 	}
 		
 	if (bSetupAll || !PL_strcmp(prefChanged,pref_browserCacheMemSize)) {
-		int32 nMemCache;
+		PRInt32 nMemCache;
         if ( (PREF_OK != PREF_GetIntPref(pref_browserCacheMemSize,&nMemCache)) ) {
             nMemCache = DEF_MEM_CACHE_SIZE;
         }
@@ -653,7 +653,7 @@ NET_SetupPrefs(const char * prefChanged)
 	}
 
 	if (bSetupAll || !PL_strcmp(prefChanged,pref_browserCacheDiskSize)) {
-		int32 nDiskCache;
+		PRInt32 nDiskCache;
         if ( (PREF_OK != PREF_GetIntPref(pref_browserCacheDiskSize,&nDiskCache)) ) {
             nDiskCache = DEF_DISK_CACHE_SIZE;
         }
@@ -661,7 +661,7 @@ NET_SetupPrefs(const char * prefChanged)
 	}
 
 	if (bSetupAll || !PL_strcmp(prefChanged, pref_browserCacheDocFreq)) {
-		int32 nDocReqFreq;
+		PRInt32 nDocReqFreq;
         if ( (PREF_OK != PREF_GetIntPref(pref_browserCacheDocFreq,&nDocReqFreq)) ) {
             nDocReqFreq = DEF_CHECK_DOC_FREQ;
         }
@@ -693,7 +693,7 @@ NET_SetupPrefs(const char * prefChanged)
 	NET_UpdateManualProxyInfo(prefChanged);
 
 	if (bSetupAll || !PL_strcmp(prefChanged, pref_proxyType)) {
-		int32 iType;
+		PRInt32 iType;
         if ( (PREF_OK != PREF_GetIntPref(pref_proxyType,&iType)) ) {
             iType = DEF_PROXY_TYPE;
         }
@@ -931,9 +931,9 @@ NET_CheckForTimeBomb(MWContext *context)
 	/*
 	 * Check if any timebomb is enabled
 	 */
-	PREF_GetConfigInt("timebomb.expiration_time",(int32 *)&timebomb_time);
+	PREF_GetConfigInt("timebomb.expiration_time",(PRInt32 *)&timebomb_time);
 	PREF_GetConfigInt("timebomb.relative_timebomb_days",
-								(int32 *)&relative_timebomb_days);
+								(PRInt32 *)&relative_timebomb_days);
 
 	if (relative_timebomb_days >= 1)
 		have_relative_timebomb = TRUE;
@@ -976,7 +976,7 @@ NET_CheckForTimeBomb(MWContext *context)
 								PL_strdup("general.bproxy_cert_digest");
 		relative_timebomb_start_date = 0;
 		PREF_GetIntPref(relative_timebomb_prefs_name,
-								(int32 *)&relative_timebomb_start_date);
+								(PRInt32 *)&relative_timebomb_start_date);
 
 		if (relative_timebomb_start_date < 1)
 		{
@@ -1005,7 +1005,7 @@ NET_CheckForTimeBomb(MWContext *context)
 	/*
 	 * check the absolute timebomb warning
 	 */
-	PREF_GetConfigInt("timebomb.warning_time",(int32 *)&timebomb_warning_time);
+	PREF_GetConfigInt("timebomb.warning_time",(PRInt32 *)&timebomb_warning_time);
 	TRACEMSG(("Timebomb warning time is: %ld %s", timebomb_warning_time,
 								ctime(&timebomb_warning_time)));
 	if ((timebomb_warning_time >= 1) && (cur_time > timebomb_warning_time))
@@ -1027,7 +1027,7 @@ NET_CheckForTimeBomb(MWContext *context)
 	if (have_relative_timebomb) {
 		relative_timebomb_warning_days = 0;
 		PREF_GetConfigInt("timebomb.relative_timebomb_warning_days",
-								(int32 *)&relative_timebomb_warning_days);
+								(PRInt32 *)&relative_timebomb_warning_days);
 		TRACEMSG(("Relative timebomb warning days = %ld", 
 									relative_timebomb_warning_days));
 		if (relative_timebomb_warning_days >= 1)

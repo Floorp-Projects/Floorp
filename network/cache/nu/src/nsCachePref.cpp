@@ -79,7 +79,7 @@ nsCachePref::SetupPrefs(const char* i_Pref)
 {
     PRBool bSetupAll = PR_FALSE;
     
-    int32 nTemp;
+    PRInt32 nTemp;
     char* tempPref=0;
 
     if (!i_Pref)

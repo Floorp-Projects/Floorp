@@ -831,7 +831,7 @@ nsNetlibService::SI_UnanonymizeSignons(){
 NS_IMETHODIMP
 nsNetlibService::GetProxyHTTP(nsString& aProxyHTTP) {
     char *proxy = nsnull;
-    int32 port;
+    PRInt32 port;
     char outBuf[MAXHOSTNAMELEN + 8];
     *outBuf = '\0';
 

@@ -136,7 +136,7 @@ NS_IMPL_QUERY_INTERFACE(nsPresContext, kIPresContextIID);
 void
 nsPresContext::GetUserPreferences()
 {
-  int32 prefInt;
+  PRInt32 prefInt;
   char  prefChar[512];
   int   charSize = sizeof(prefChar);
 
@@ -200,14 +200,14 @@ nsPresContext::GetUserPreferences()
 
   PRBool usePrefColors = PR_TRUE;
 #ifdef _WIN32
-  XP_Bool boolPref;
+  PRBool boolPref;
   // XXX Is Windows the only platform that uses this?
   if (NS_OK == mPrefs->GetBoolPref("browser.wfe.use_windows_colors", &boolPref)) {
-    usePrefColors = !PRBool(boolPref);
+    usePrefColors = !boolPref;
   }
 #endif
   if (usePrefColors) {
-    uint32  colorPref;
+    PRUint32  colorPref;
     if (NS_OK == mPrefs->GetColorPrefDWord("browser.foreground_color", &colorPref)) {
       mDefaultColor = (nscolor)colorPref;
     }

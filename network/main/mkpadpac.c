@@ -86,7 +86,7 @@ net_PadPacURLPrefChanged(const char *pref, void *data) {
 /* Pref for allowing (or not) proxy autodiscovery. */
 MODULE_PRIVATE int PR_CALLBACK 
 net_EnablePadPrefChanged(const char *pref, void *data) {
-	XP_Bool x = FALSE;
+	PRBool x = FALSE;
     if ( (PREF_OK == PREF_GetBoolPref(pref_enablePad, &x)) ) {
 	    MK_PadEnabled=x;
     }
@@ -97,7 +97,7 @@ net_EnablePadPrefChanged(const char *pref, void *data) {
  * Initializes the pad variables and registers pad callbacks */
 PUBLIC void
 NET_RegisterPadPrefCallbacks(void) {
-	XP_Bool x = FALSE;
+	PRBool x = FALSE;
     char s[128];
     int len=sizeof(s);
 	memset(s, 0, len);

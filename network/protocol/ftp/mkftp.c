@@ -133,7 +133,7 @@ PRIVATE XP_List * connection_list=0;  /* a pointer to a list of open connections
 PRIVATE Bool   	net_use_pasv=TRUE;
 PRIVATE char *	ftp_last_password=0;
 PRIVATE char *	ftp_last_password_host=0;
-PRIVATE XP_Bool	net_send_email_address_as_password=FALSE;
+PRIVATE PRBool	net_send_email_address_as_password=FALSE;
 
 #define PC_FTP_PASSWORD_KEY "pass"
 #define PC_FTP_MODULE_KEY   "ftp"
