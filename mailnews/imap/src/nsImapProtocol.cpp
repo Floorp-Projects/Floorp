@@ -817,7 +817,7 @@ void nsImapProtocol::ProcessCurrentURL()
 {
 	PRBool	logonFailed = FALSE;
 
-	if (!TestFlag(IMAP_CONNECTION_IS_OPEN))
+	if (!TestFlag(IMAP_CONNECTION_IS_OPEN) && m_channel)
 	{
 		nsCOMPtr<nsISupports> sprts = do_QueryInterface (m_runningUrl);
 		m_channel->AsyncRead(0, -1, sprts,this /* stream observer */);
