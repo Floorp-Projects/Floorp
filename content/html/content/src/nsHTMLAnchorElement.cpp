@@ -245,8 +245,9 @@ nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aC
 NS_IMETHODIMP
 nsHTMLAnchorElement::Blur()
 {
-  // XXX write me
-  return NS_OK;
+  nsCOMPtr<nsIPresContext> presContext;
+  nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+  return RemoveFocus(presContext);
 }
 
 NS_IMETHODIMP
@@ -314,8 +315,24 @@ nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  // If we are disabled, we probably shouldn't have focus in the
+  // first place, so allow it to be removed.
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
+
+    nsCOMPtr<nsIDocument> doc;
+    GetDocument(*getter_AddRefs(doc));
+    if (!doc)
+      return NS_ERROR_NULL_POINTER;
+
+    nsCOMPtr<nsIContent> rootContent;
+    rootContent = getter_AddRefs(doc->GetRootContent());
+    rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -40,6 +40,7 @@
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsISizeOfHandler.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kIDOMHTMLButtonElementIID, NS_IDOMHTMLBUTTONELEMENT_IID);
 
@@ -317,46 +318,37 @@ NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
 NS_IMETHODIMP
 nsHTMLButtonElement::Blur()
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-  if (NS_SUCCEEDED(rv)) {
-     // Ask the frame to Deselect focus (i.e Blur).
-    formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
-    return NS_OK;
-  }
-  return rv;
+  nsCOMPtr<nsIPresContext> presContext;
+  nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+  return RemoveFocus(presContext);
 }
 
 NS_IMETHODIMP
 nsHTMLButtonElement::Focus()
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-  if (NS_SUCCEEDED(rv)) {
-    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-    return NS_OK;
-  }
-  return rv;
+  nsCOMPtr<nsIPresContext> presContext;
+  nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+  return SetFocus(presContext);
 }
 
 NS_IMETHODIMP
 nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
 {
-    // first see if we are disabled or not. If disabled then do nothing.
+  // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled))
-      return NS_OK;
-
-  nsIEventStateManager* esm;
-  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
-    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-    NS_RELEASE(esm);
+  if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled)) {
+    return NS_OK;
   }
 
-  Focus();
+  nsCOMPtr<nsIEventStateManager> esm;
+  if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
+    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+  }
+
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
+    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
   }
   return rv;
@@ -365,8 +357,30 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
 {
-  Blur();
-  return NS_OK;
+  // If we are disabled, we probably shouldn't have focus in the
+  // first place, so allow it to be removed.
+  nsresult rv = NS_OK;
+
+  nsIFormControlFrame* formControlFrame = nsnull;
+  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+    formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
+  }
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
+
+    nsCOMPtr<nsIDocument> doc;
+    GetDocument(*getter_AddRefs(doc));
+    if (!doc)
+      return NS_ERROR_NULL_POINTER;
+
+    nsCOMPtr<nsIContent> rootContent;
+    rootContent = getter_AddRefs(doc->GetRootContent());
+    rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
+  }
+
+  return rv;
 }
 
 static nsGenericHTMLElement::EnumTable kButtonTypeTable[] = {
