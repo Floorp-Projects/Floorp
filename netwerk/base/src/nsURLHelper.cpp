@@ -24,7 +24,8 @@
 #include "nsIIOService.h"
 #include "nsIURI.h"
 
-#ifdef XP_PC
+
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h> // ::IsDBCSLeadByte need
 #endif
 
@@ -266,7 +267,8 @@ CoaleseDirs(char* io_Path)
             (*fwdPtr != '?') && 
             (*fwdPtr != '#'); ++fwdPtr)
     {
-#ifdef XP_PC
+
+#if defined(XP_PC) && !defined(XP_OS2)
         // At first, If this is DBCS charactor, it skips next charactor.
         if (::IsDBCSLeadByte(*fwdPtr) && *(fwdPtr+1) != '\0') {
             *urlPtr++ = *fwdPtr++;
