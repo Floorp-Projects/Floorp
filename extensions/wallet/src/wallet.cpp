@@ -962,6 +962,10 @@ char * wallet_GetDoubleString(char * szMessage, char * szMessage2, PRBool& match
   if (NS_FAILED(res)) {
     return NULL;
   }
+  if (retval == NULL) {
+    delete[] pwd;
+    return NULL; /* user pressed cancel */
+  }
   res = dialog->PromptPassword(message2.GetUnicode(), &pwd2, &retval);
 #endif
   if (NS_FAILED(res)) {
@@ -973,7 +977,7 @@ char * wallet_GetDoubleString(char * szMessage, char * szMessage2, PRBool& match
   delete[] pwd2;
   matched = (password == password2);
 
-  if (retval) {
+  if (retval != NULL) {
     return password.ToNewCString();
   } else {
     return NULL; /* user pressed cancel */
@@ -1328,14 +1332,15 @@ Wallet_SetKey(PRBool isNewkey) {
     PRBool matched;
     for (;;) {
       newkey = wallet_GetDoubleString(message, message2, matched);
-      if (matched) {
+      if ((newkey != NULL) && matched) {
         break; /* break out of loop if both passwords matched */
       }
       /* password confirmation failed, ask user if he wants to try again */
-      if (!Wallet_Confirm(mismatch)) {
+      if ((newkey == NULL) || (!Wallet_Confirm(mismatch))) {
         PR_FREEIF(mismatch);
         PR_FREEIF(message);
         PR_FREEIF(message2);
+        keyCancel = PR_TRUE;
         return FALSE; /* user does not want to try again */
       }    
     }
@@ -1354,20 +1359,21 @@ Wallet_SetKey(PRBool isNewkey) {
       newkey = PL_strdup("~");
     } else { /* ask the user for his key */
       newkey = wallet_GetString(message);
+      if (newkey == NULL) {
+        PR_FREEIF(message);
+        keyCancel = PR_TRUE;
+        return PR_FALSE; /* user pressed cancel -- does not want to enter a new key */
+      }
     }
     PR_FREEIF(message);
   }
 
-  keyCancel = PR_FALSE;
-  if (newkey == NULL) { /* user hit cancel button */
-    useDefaultKey = PR_TRUE;
-    if (Wallet_KeySize() < 0) { /* no key file existed before */
+  if (PL_strlen(newkey) == 0) { /* user entered a zero-length key */
+    if ((Wallet_KeySize() < 0) || isNewkey ){
+      /* no key file existed before or using is changing the key */
+      useDefaultKey = PR_TRUE;
+      PR_FREEIF(newkey);
       newkey  = PL_strdup("~"); /* use zero-length key */
-    } else if (isNewkey) { /* user is changing the key */
-      newkey  = PL_strdup("~"); /* use zero-length key */
-    } else {
-      keyCancel = PR_TRUE;
-      return PR_FALSE; /* user could not supply the correct key */
     }
   }
   for (; (keyPosition < PL_strlen(newkey) && keyPosition < maxKeySize); keyPosition++) {
@@ -1388,11 +1394,13 @@ Wallet_SetKey(PRBool isNewkey) {
     nsFileSpec dirSpec;
     nsresult rval = Wallet_ProfileDirectory(dirSpec);
     if (NS_FAILED(rval)) {
+      keyCancel = PR_TRUE;
       return PR_FALSE;
     }
     nsOutputFileStream strm2(dirSpec + keyFileName);
     if (!strm2.is_open()) {
       *key = '\0';
+      keyCancel = PR_TRUE;
       return PR_FALSE;
     }
 
@@ -1434,6 +1442,7 @@ Wallet_SetKey(PRBool isNewkey) {
     nsFileSpec dirSpec;
     nsresult rval = Wallet_ProfileDirectory(dirSpec);
     if (NS_FAILED(rval)) {
+      keyCancel = PR_TRUE;
       return PR_FALSE;
     }
     nsInputFileStream strm(dirSpec + keyFileName);
@@ -1443,12 +1452,14 @@ Wallet_SetKey(PRBool isNewkey) {
       if (strm.get() != (*(p++)^Wallet_GetKey()) || strm.eof()) {
         strm.close();
         *key = '\0';
+        keyCancel = PR_FALSE;
         return PR_FALSE;
       }
     }
     if (strm.get() != ((*key)^Wallet_GetKey()) || strm.eof()) {
       strm.close();
       *key = '\0';
+      keyCancel = PR_FALSE;
       return PR_FALSE;
     }
     strm.get(); /* to get past the end of the file so eof() will get set */
@@ -1461,6 +1472,7 @@ Wallet_SetKey(PRBool isNewkey) {
       return PR_TRUE;
     } else {
       *key = '\0';
+      keyCancel = PR_TRUE;
       return PR_FALSE;
     }
   }
