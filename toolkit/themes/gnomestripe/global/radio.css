@@ -1,0 +1,130 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ===== radio.css ===================================================
+  == Styles used by the XUL radio element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: radio ::::: */
+
+radio {
+  -moz-appearance: radio-container;
+  margin: 2px 4px;
+  border-left: 2px transparent;
+  border-right: 2px transparent;
+}
+
+/* With native theming on, the spacer-box paints the radio mark and includes
+   the spacing to the right, so that oversized radio images can slop over
+   into the space.
+
+   If we need to disable radio button theming, the spacer box no longer paints
+   the radio mark, but its fallback CSS border supplies the padding between
+   the mark and the label.  The xul:image then takes over painting the radio
+   mark. */
+
+.radio-spacer-box {
+  -moz-appearance: radio;
+  -moz-box-align: center;
+  border-right: 4px solid transparent;
+  border-top: 1px;
+  border-bottom: 1px;
+}
+
+.radio-label-center-box {
+  -moz-box-align: center;
+}
+
+.radio-label-box {
+  border: 1px solid transparent;
+  -moz-appearance: radio-label;
+}
+
+.radio-icon[src] {
+  margin-right: 2px;
+}
+
+.radio-label {
+  margin: 0 !important;
+}
+
+/* ..... focused state ..... */
+
+radio[focused="true"] > .radio-label-center-box > .radio-label-box {
+  border: 1px dotted ThreeDDarkShadow;
+}
+
+/* ..... disabled state ..... */
+
+radio[disabled="true"] > .radio-spacer-box > .radio-check-box1 {
+  background-color: -moz-Dialog;
+}
+
+radio[disabled="true"] {
+  color: GrayText !important;
+}
+
+/* ::::: checkmark image ::::: */
+
+.radio-check-box1 {
+  border-top: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDHighlight;
+  border-left: 1px solid ThreeDShadow;
+  -moz-border-radius: 50%;
+  min-width: 12px;
+  min-height: 12px;
+  background-color: -moz-Field;
+}
+
+.radio-check-box2 {
+  border-top: 1px solid ThreeDDarkShadow;
+  border-right: 1px solid ThreeDLightShadow;
+  border-bottom: 1px solid ThreeDLightShadow;
+  border-left: 1px solid ThreeDDarkShadow;
+  -moz-border-radius: 50%;
+  padding: 2px;
+  width: 4px;
+  height: 4px;
+  list-style-image: none;
+}
+
+radio:hover {
+  color: -moz-gtk2-hovertext;
+}
+
+radio:hover:active > .radio-spacer-box > .radio-check-box1 {
+  background-color: -moz-Dialog;
+}
+
+/* ..... selected state ..... */
+
+radio[selected="true"] > .radio-spacer-box > .radio-check-box1 > .radio-check-box2 {
+  list-style-image: url("chrome://global/skin/radio/radio-check.gif");
+}
+
+radio[selected="true"][disabled="true"] > .radio-spacer-box > .radio-check-box1 > .radio-check-box2 {
+  list-style-image: url("chrome://global/skin/radio/radio-check-dis.gif") !important
+}

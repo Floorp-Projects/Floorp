@@ -185,6 +185,11 @@
 #define NS_THEME_CHECKBOX_CONTAINER                        150
 #define NS_THEME_RADIO_CONTAINER                           151
 
+// The label part of a checkbox or radio button, used for painting
+// a focus outline.
+#define NS_THEME_CHECKBOX_LABEL                            152
+#define NS_THEME_RADIO_LABEL                               153
+
 // Window and dialog backgrounds
 #define NS_THEME_WINDOW                                    200
 #define NS_THEME_DIALOG                                    201

@@ -501,6 +501,8 @@ CSS_KEY(sliderthumbend, sliderthumbend)
 CSS_KEY(sliderthumbtick, sliderthumbtick)
 CSS_KEY(checkbox-container, checkboxcontainer)
 CSS_KEY(radio-container, radiocontainer)
+CSS_KEY(checkbox-label, checkboxlabel)
+CSS_KEY(radio-label, radiolabel)
 
 #ifdef MOZ_SVG
 //CSS_KEY(all, all)
