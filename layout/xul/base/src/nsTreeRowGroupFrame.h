@@ -150,6 +150,7 @@ protected:
 
   void PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPresContext);
 
+  void GetFirstRow(nsTableRowFrame **aRowFrame);
 
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this
