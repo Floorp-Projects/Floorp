@@ -1,4 +1,4 @@
-var appCore;
+var editorShell;
 var anchorElement = null;
 var insertNew = true;
 var needLinkText = false;
@@ -11,14 +11,15 @@ var tagName = "HREF";
 var dialog;
 
 // dialog initialization code
-function Startup() {
+function Startup()
+{
   dump("Doing Startup...\n");
 
-  // NEVER create an appcore here - we must find parent editor's
-  var editorName = window.arguments[0];
-  dump("Got editorAppCore called " + editorName + "\n");
-  appCore = XPAppCoresManager.Find(editorName);  
-  if(!appCore) {
+  // get the editor shell from the parent window
+  editorShell = window.opener.editorShell;
+  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+
+  if(!editorShell) {
     dump("EditorAppCore not found!!!\n");
     window.close();
     return;  
@@ -46,8 +47,10 @@ function Startup() {
   // Set initial focus
 
   if (insertNew) {
+    dump("Setting focus to linkTextInput\n");
     dialog.linkTextInput.focus();
   } else {
+    dump("Setting focus to linkTextInput\n");
     dialog.hrefInput.focus();
 
     // We will not insert a new link at caret, so remove link text input field
@@ -60,11 +63,12 @@ function Startup() {
   }
 }
 
-function initDialog() {
+function initDialog()
+{
   // Get a single selected anchor element
-  anchorElement = appCore.getSelectedElement(tagName);
+  anchorElement = editorShell.GetSelectedElement(tagName);
 
-  selection = appCore.editorSelection;
+  selection = editorShell.editorSelection;
   if (selection) {
     dump("There is a selection: collapsed = "+selection.isCollapsed+"\n");
   } else {
@@ -72,18 +76,20 @@ function initDialog() {
   }
 
   if (anchorElement) {
+    dump("found anchor element\n");
     // We found an element and don't need to insert one
     insertNew = false;
   } else {
     // We don't have an element selected, 
     //  so create one with default attributes
     dump("Element not selected - calling createElementWithDefaults\n");
-    anchorElement = appCore.createElementWithDefaults(tagName);
+    anchorElement = editorShell.CreateElementWithDefaults(tagName);
 
     // We will insert a new link at caret location if there's no selection
     // TODO: This isn't entirely correct. If selection doesn't have any text
     //   or an image, then shouldn't we clear the selection and insert new text?
     insertNew = selection.isCollapsed;
+    dump("insertNew is " + insertNew + "\n");
   }
   if(!anchorElement)
   {
@@ -115,7 +121,7 @@ function initDialog() {
 function chooseFile()
 {
   // Get a local file, converted into URL format
-  fileName = appCore.getLocalFileURL(window, "html");
+  fileName = editorShell.GetLocalFileURL(window, "html");
   if (fileName != "") {
     dialog.hrefInput.value = fileName;
   }
@@ -128,29 +134,32 @@ function onOK()
   // TODO: VALIDATE FIELDS BEFORE COMMITING CHANGES
 
   // Coalesce into one undo transaction
-  appCore.beginBatchChanges();
+  editorShell.BeginBatchChanges();
 
   // Set the HREF directly on the editor document's anchor node
   //  or on the newly-created node if insertNew is true
+  dump(anchorElement + "\n");
   anchorElement.setAttribute("href",dialog.hrefInput.value);
 
   // Get text to use for a new link
   if (insertNew) {
     // Append the link text as the last child node 
     //   of the anchor node
-    textNode = appCore.editorDocument.createTextNode(dialog.linkTextInput.value);
+    dump("Creating text node\n");
+    textNode = editorShell.editorDocument.createTextNode(dialog.linkTextInput.value);
     if (textNode) {
       anchorElement.appendChild(textNode);
     }
-    newElement = appCore.insertElement(anchorElement, true);
-    if (newElement != anchorElement) {
-      dump("Returned element from insertElement is different from orginal element.\n");
-    }
+    dump("Inserting\n");
+    editorShell.InsertElement(anchorElement, true);
+    //if (newElement != anchorElement) {
+    //  dump("Returned element from insertElement is different from orginal element.\n");
+    //}
   } else if (insertLinkAroundSelection) {
     dump("Setting link around selected text\n");
-    appCore.insertLinkAroundSelection(anchorElement);
+    editorShell.InsertLinkAroundSelection(anchorElement);
   }
-  appCore.endBatchChanges();
+  editorShell.EndBatchChanges();
 
   window.close();
 }

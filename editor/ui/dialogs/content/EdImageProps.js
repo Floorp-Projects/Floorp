@@ -1,4 +1,4 @@
-var appCore;
+var editorShell;
 var insertNew = true;
 var imageWasInserted = false;
 var imageElement;
@@ -10,19 +10,15 @@ function Startup()
 {
   dump("Doing Startup...\n");
   
-  // New method: parameters passed via window.openDialog, which puts
-  //  arguments in the array "arguments"
-  var editorName = window.arguments[0];
-  dump("Got editorAppCore called " + editorName + "\n");
-  
-  // NEVER create an appcore here - we must find parent editor's
-  appCore = XPAppCoresManager.Find(editorName);  
-  if(!appCore) {
-    dump("EditorAppCore not found!!!\n");
+  // get the editor shell from the parent window
+  editorShell = window.opener.editorShell;
+  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+  if(!editorShell) {
+    dump("EditoreditorShell not found!!!\n");
     window.close();
     return;
   }
-  dump("EditorAppCore found for Image Properties dialog\n");
+  dump("EditoreditorShell found for Image Properties dialog\n");
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -55,7 +51,7 @@ function Startup()
 
 function initDialog() {
   // Get a single selected anchor element
-  imageElement = appCore.getSelectedElement(tagName);
+  imageElement = editorShell.GetSelectedElement(tagName);
 
   if (imageElement) {
     dump("Found existing image\n");
@@ -70,7 +66,7 @@ function initDialog() {
     // We don't have an element selected, 
     //  so create one with default attributes
     dump("Element not selected - calling createElementWithDefaults\n");
-    imageElement = appCore.createElementWithDefaults(tagName);
+    imageElement = editorShell.CreateElementWithDefaults(tagName);
   }
 
   if(!imageElement) {
@@ -82,7 +78,7 @@ function initDialog() {
 function chooseFile()
 {
   // Get a local file, converted into URL format
-  fileName = appCore.getLocalFileURL(window, "img");
+  fileName = editorShell.GetLocalFileURL(window, "img");
   if (fileName != "") {
     dialog.srcInput.value = fileName;
   }
@@ -129,9 +125,9 @@ function onOK()
   imageElement.setAttribute("alt",dialog.altTextInput.value);  
   if (insertNew) {
     dump("Src="+imageElement.getAttribute("src")+" Alt="+imageElement.getAttribute("alt")+"\n");
-    appCore.insertElement(imageElement, true);
+    editorShell.InsertElement(imageElement, true);
     // Select the newly-inserted image
-    appCore.selectElement(imageElement);
+    editorShell.SelectElement(imageElement);
     // Mark that we inserted so we can collapse the selection
     //  when dialog closes
     imageWasInserted = true;
@@ -139,7 +135,7 @@ function onOK()
   if (imageWasInserted) {
     // We selected the object, undo it by
     //  setting caret to just after the inserted element
-    appCore.setCaretAfterElement(imageElement);
+    editorShell.SetSelectionAfterElement(imageElement);
   }
   window.close();
 }
