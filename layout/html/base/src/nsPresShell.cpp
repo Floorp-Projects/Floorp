@@ -64,6 +64,7 @@
 #include "nsViewsCID.h"
 #include "nsLayoutAtoms.h"
 #include "nsPlaceholderFrame.h"
+#include "nsDST.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -427,7 +428,7 @@ protected:
   nsCOMPtr<nsICaret>            mCaret;
   PRBool                        mDisplayNonTextSelection;
   PRBool                        mScrollingEnabled; //used to disable programmable scrolling from outside
-  FrameHashTable*               mPrimaryFrameMap;
+  nsDST*                        mPrimaryFrameMap;
   FrameHashTable*               mPlaceholderMap;
 private:
   //helper funcs for disabing autoscrolling
@@ -594,6 +595,11 @@ PresShell::~PresShell()
   if (mDocument)
     mDocument->DeleteShell(this);
   mRefCnt = 0;
+#ifdef DEBUG_troy
+  if (mPrimaryFrameMap) {
+    mPrimaryFrameMap->Dump(stdout);
+  }
+#endif
   delete mPrimaryFrameMap;
   delete mPlaceholderMap;
 }
@@ -1829,7 +1835,7 @@ PresShell::GetPrimaryFrameFor(nsIContent* aContent,
   if (nsnull == mPrimaryFrameMap) {
     *aResult = nsnull;
   } else {
-    *aResult = (nsIFrame*)mPrimaryFrameMap->Get(aContent);
+    *aResult = (nsIFrame*)mPrimaryFrameMap->Search(aContent);
     if (!*aResult) {
       // Give the frame construction code the opportunity to return the
       // frame that maps the content object
@@ -1844,21 +1850,26 @@ NS_IMETHODIMP
 PresShell::SetPrimaryFrameFor(nsIContent* aContent,
                               nsIFrame*   aPrimaryFrame)
 {
-  NS_PRECONDITION(nsnull != aContent, "no content object");
+  NS_PRECONDITION(aContent, "no content object");
 
-  if (nsnull == mPrimaryFrameMap) {
-    mPrimaryFrameMap = new FrameHashTable(128);
-    if (nsnull == mPrimaryFrameMap) {
-      return NS_ERROR_OUT_OF_MEMORY;
+  // If aPrimaryFrame is NULL, then remove the mapping
+  if (!aPrimaryFrame) {
+    if (mPrimaryFrameMap) {
+      mPrimaryFrameMap->Remove(aContent);
     }
-  }
-
-  if (nsnull == aPrimaryFrame) {
-    mPrimaryFrameMap->Remove(aContent);
   } else {
+    // Create a new DST if necessary
+    if (!mPrimaryFrameMap) {
+      mPrimaryFrameMap = new nsDST;
+      if (!mPrimaryFrameMap) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+
+    // Add a mapping to the hash table
     nsIFrame* oldPrimaryFrame;
      
-    oldPrimaryFrame = (nsIFrame*)mPrimaryFrameMap->Put(aContent, (void*)aPrimaryFrame);
+    oldPrimaryFrame = (nsIFrame*)mPrimaryFrameMap->Insert(aContent, (void*)aPrimaryFrame);
 #ifdef NS_DEBUG
     if (oldPrimaryFrame && (oldPrimaryFrame != aPrimaryFrame)) {
       NS_WARNING("overwriting current primary frame");
@@ -1929,7 +1940,7 @@ NS_IMETHODIMP
 PresShell::SetPlaceholderFrameFor(nsIFrame* aFrame,
                                   nsIFrame* aPlaceholderFrame)
 {
-  NS_PRECONDITION(nsnull != aFrame, "no frame");
+  NS_PRECONDITION(aFrame, "no frame");
 #ifdef NS_DEBUG
   // Verify that the placeholder frame is of the correct type
   if (aPlaceholderFrame) {
@@ -1941,16 +1952,21 @@ PresShell::SetPlaceholderFrameFor(nsIFrame* aFrame,
   }
 #endif
 
-  if (nsnull == mPlaceholderMap) {
-    mPlaceholderMap = new FrameHashTable;
-    if (nsnull == mPlaceholderMap) {
-      return NS_ERROR_OUT_OF_MEMORY;
+  // If aPlaceholderFrame is NULL, then remove the mapping
+  if (!aPlaceholderFrame) {
+    if (mPlaceholderMap) {
+      mPlaceholderMap->Remove(aFrame);
     }
-  }
-
-  if (nsnull == aPlaceholderFrame) {
-    mPlaceholderMap->Remove(aFrame);
   } else {
+    // Create a new hash table if necessary
+    if (!mPlaceholderMap) {
+      mPlaceholderMap = new FrameHashTable;
+      if (!mPlaceholderMap) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+    
+    // Add a mapping to the hash table
     mPlaceholderMap->Put(aFrame, (void*)aPlaceholderFrame);
   }
   return NS_OK;
