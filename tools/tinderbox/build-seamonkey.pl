@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.58 $ ';
+$Version = '$Revision: 1.59 $ ';
 
 
 sub PrintUsage {
@@ -281,7 +281,7 @@ sub BuildIt {
 		  $BuildStatus = 
 			&RunFileBasedTest("MailNewsTest", 
 							  "mozilla-bin http://www.mozilla.org/quality/mailnews/APITest.html", 
-							  90, "removeAccount:	Passed", 1);  # Hack: testing some partial success string for now.
+							  90, "MAILNEWS TEST: Passed", 1);  # Hack: testing some partial success string for now.
 		}
 
         # Run Editor test.
