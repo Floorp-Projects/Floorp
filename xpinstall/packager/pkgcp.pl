@@ -70,7 +70,7 @@ $return = GetOptions(
 			"help|h",               \$help,
 			"debug=i",              \$debug,
 			"verbose|v",            \$verbose,
-		        "flat|l",               \$flat,
+			"flat|l",               \$flat,
 			"<>",                   \&do_badargument
 			);
 
@@ -211,11 +211,7 @@ sub do_delete
 	my ($targetpath) = $_[0];
 	my ($targetcomp) = $_[1];
 	my ($targetfile) = $_[2];
-	if ($flat) {
-	  my ($target)     = "$targetpath$PD$targetfile";
-	} else {
-	  my ($target)     = "$targetpath$PD$targetcomp$PD$targetfile";
- 	}
+	my ($target)     = "$targetpath$PD$targetcomp$PD$targetfile";
 
 	($debug >= 2) && print "do_delete():\n";
 	($debug >= 1) && print "-$targetfile\n";
