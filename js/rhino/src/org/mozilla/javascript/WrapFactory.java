@@ -91,8 +91,7 @@ public class WrapFactory
             {
                 return obj;
             } else if (obj instanceof Character) {
-                char[] a = { ((Character)obj).charValue() };
-                return new String(a);
+                return String.valueOf(((Character)obj).charValue());
             }
         }
         Class cls = obj.getClass();
