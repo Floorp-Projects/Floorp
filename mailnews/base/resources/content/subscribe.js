@@ -374,15 +374,19 @@ function selectNodeByName( aMatchString )
   else {
 	// if we can, use the cached tree children
 	if (nodeValue != lastTreeChildrenValue) {
-    	node = gSubscribeTree.getElementsByAttribute("name",nodeValue)[0];
-
+	try {
+    node = gSubscribeTree.getElementsByAttribute("name",nodeValue)[0];
+	}
+	catch (ex) {
+		// this can happen if you do "spoon.foo" and there is no "spoon"
+		return;
+	}
 		// expand the node, if we need to
-    	if( node.getAttribute("container") == "true" && 
+    if( node.getAttribute("container") == "true" && 
         	node.getAttribute("open") != "true" ) {
       		node.setAttribute("open","true");
 		}
-    	node = getTreechildren(node);
-    	//dump("*** node = " + node.localName + "\n");
+    node = getTreechildren(node);
 
 		lastTreeChildren = node;
 		lastTreeChildrenValue = nodeValue;
