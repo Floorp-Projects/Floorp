@@ -425,9 +425,7 @@ NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepain
 {
 nsSizeEvent 	event;
 
-
-	if( (mBounds.width != aWidth) && (mBounds.width != aWidth) )
-		{
+	if( (mBounds.width != aWidth) || (mBounds.width != aWidth) ){
 	  mBounds.width  = aWidth;
 	  mBounds.height = aHeight;
 	  
@@ -436,11 +434,10 @@ nsSizeEvent 	event;
 		mWindowRegion = NewRgn();
 		SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);		 
 	 
-	  if (aRepaint)
-	  	{
+	  if (aRepaint){
 	  	UpdateVisibilityFlag();
 	  	UpdateDisplay();
-	  	}
+	  }
 	  
 	  event.message = NS_SIZE;
 	  event.point.x = 0;
@@ -449,9 +446,8 @@ nsSizeEvent 	event;
 	  event.eventStructType = NS_SIZE_EVENT;
 	  event.widget = this;
 	  
-	  // why is this breaking things
 	 	return ( this->DispatchWindowEvent(&event) ? NS_OK : NS_ERROR_FAILURE );
-		}
+	}
 	return(NS_OK);
 }
 
@@ -465,28 +461,31 @@ NS_IMETHODIMP nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint
 {
 nsSizeEvent 	event;
 
-  mBounds.x      = aX;
-  mBounds.y      = aY;
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  if(nsnull!=mWindowRegion)
-  	::DisposeRgn(mWindowRegion);
-	mWindowRegion = NewRgn();
-	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
+	if( (mBounds.width != aWidth) || (mBounds.height != aHeight) || 
+				(mBounds.x != aX) || (mBounds.x != aY)){
+	  mBounds.x      = aX;
+	  mBounds.y      = aY;
+	  mBounds.width  = aWidth;
+	  mBounds.height = aHeight;
+	  if(nsnull!=mWindowRegion)
+	  	::DisposeRgn(mWindowRegion);
+		mWindowRegion = NewRgn();
+		SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
 
-  if (aRepaint)
-  	{
-  	UpdateVisibilityFlag();
-  	UpdateDisplay();
-  	}
-  
-  event.message = NS_SIZE;
-  event.point.x = 0;
-  event.point.y = 0;
-  event.windowSize = &mBounds;
-  event.widget = this;
-  event.eventStructType = NS_SIZE_EVENT;
- 	return ( this->DispatchWindowEvent(&event) ? NS_OK : NS_ERROR_FAILURE );
+	  if (aRepaint){
+	  	UpdateVisibilityFlag();
+	  	UpdateDisplay();
+	  }
+	  
+	  event.message = NS_SIZE;
+	  event.point.x = 0;
+	  event.point.y = 0;
+	  event.windowSize = &mBounds;
+	  event.widget = this;
+	  event.eventStructType = NS_SIZE_EVENT;
+	 	return ( this->DispatchWindowEvent(&event) ? NS_OK : NS_ERROR_FAILURE );
+	}
+	return(NS_OK);
 }
 
     
@@ -528,8 +527,8 @@ Rect								macrect;
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetBounds(const nsRect &aRect)
 {
- mBounds = aRect;
- return NS_OK;
+	mBounds = aRect;
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -539,9 +538,8 @@ NS_IMETHODIMP nsWindow::SetBounds(const nsRect &aRect)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::GetBounds(nsRect &aRect)
 {
-
-  aRect = mBounds;
-  return NS_OK;
+	aRect = mBounds;
+	return NS_OK;
 }
 
     
