@@ -61,9 +61,9 @@ _addNewFrame(JSDContext*        jsdc,
         return NULL;
 
     jsdframe->jsdthreadstate = jsdthreadstate;
-    jsdframe->jsdscript      = jsdscript     ;
-    jsdframe->pc             = pc            ;
-    jsdframe->fp             = fp            ;
+    jsdframe->jsdscript      = jsdscript;
+    jsdframe->pc             = pc;
+    jsdframe->fp             = fp;
 
     JS_APPEND_LINK(&jsdframe->links, &jsdthreadstate->stack);
     jsdthreadstate->stackDepth++;
