@@ -77,6 +77,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
 
 	mState = 0;			// cached expected number of bytes per UTF8 character sequence
 	mUcs4  = 0;			// cached Unicode character
+  mBytes = 1;
 	return NS_OK;
 
 }
@@ -108,52 +109,51 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
          if( 0 == (0x80 & (*in))) {
              // ASCII
              *out++ = (PRUnichar)*in;
+        mBytes =1;
          } else if( 0xC0 == (0xE0 & (*in))) {
              // 2 bytes UTF8
              mUcs4 = (PRUint32)(*in);
              mUcs4 = (mUcs4 << 6) & 0x000007C0L;
              mState=1;
+        mBytes =2;
          } else if( 0xE0 == (0xF0 & (*in))) {
 			 // 3 bytes UTF8
              mUcs4 = (PRUint32)(*in);
              mUcs4 = (mUcs4 << 12) & 0x0000F000L;
              mState=2;
+        mBytes =3;
          } else if( 0xF0 == (0xF8 & (*in))) {
 			 // 4 bytes UTF8
              mUcs4 = (PRUint32)(*in);
              mUcs4 = (mUcs4 << 18) & 0x001F0000L;
              mState=3;
+        mBytes =4;
          } else if( 0xF8 == (0xFC & (*in))) {
 			 // 5 bytes UTF8
              mUcs4 = (PRUint32)(*in);
              mUcs4 = (mUcs4 << 24) & 0x03000000L;
              mState=4;
+        mBytes =5;
          } else if( 0xFC == (0xFE & (*in))) {
 			 // 6 bytes UTF8
              mUcs4 = (PRUint32)(*in);
              mUcs4 = (mUcs4 << 30) & 0x40000000L;
              mState=5;
+        mBytes =6;
          } else {
-			 
 			 //NS_ASSERTION(0, "The input string is not in utf8");
-
 	  		 //unexpected octet, put in a replacement char, 
 			 //flush and refill the buffer, reset state
 			 res = NS_ERROR_UNEXPECTED;
 			 break;
-
          }
-
 	 } else {
-
-		 if(0x80 == (0xC0 & (*in)))
-         {
+      if(0x80 == (0xC0 & (*in))) {
              PRUint32 tmp = (*in);
-             int shift = (mState-1) * 6;
+        PRUint32 shift = (mState-1) * 6;
              tmp = (tmp << shift ) & ( 0x0000003FL << shift);
              mUcs4 |= tmp;
-			 if(0 == --mState)
-             {
+        if(0 == --mState) {
                  if(mUcs4 >= 0x00010000) {
                     if(mUcs4 >= 0x00110000) {
                       *out++ = 0xFFFD;
@@ -163,24 +163,32 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
                       *out++ = 0xDC00 | (0x000003FF & mUcs4);
                     }
                  } else {
+            // from Unicode 3.1, non-shortest form is illegal 
+            if(((2==mBytes) && (mUcs4 < 0x0080)) ||
+               ((3==mBytes) && (mUcs4 < 0x0800)) ||
+               ((4==mBytes) && (mUcs4 < 0x1000)) ||
+                (5==mBytes) ||
+                (6==mBytes)) 
+            {
+              res = NS_ERROR_UNEXPECTED;
+              break;
+            } 
+
                     if( 0xfeff != mUcs4 ) // ignore BOM
+            {  
                       *out++ = mUcs4;
                  }
-                 
+          }
 				 //initialize UTF8 cache
 				 Reset();
              }
-
          } else {
-
 			 //NS_ASSERTION(0, "The input string is not in utf8");
-	
 	  		 //unexpected octet, put in a replacement char, 
 			 //flush and refill the buffer, reset state
                          in--;
 			 res = NS_ERROR_UNEXPECTED;
 			 break;
-
          }
      }
    }
