@@ -84,6 +84,13 @@ interface nsIMIMEInfo : nsISupports {
     */
     void AppendExtension(in string aExtension);
 
+    /* Returns a clone of this MIMEInfo.
+     *
+     * @return A clone of the MIMEInfo
+     */
+
+    nsIMIMEInfo clone();
+    
 	/* The MIME type of this MIMEInfo.
      * 
      * @return String representing the MIME type.

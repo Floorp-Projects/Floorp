@@ -127,6 +127,35 @@ NS_IMETHODIMP nsMIMEInfoImpl::AppendExtension(const char *aExtension)
 }
 
 NS_IMETHODIMP
+nsMIMEInfoImpl::Clone(nsIMIMEInfo** aClone) {
+  NS_ENSURE_ARG_POINTER(aClone);
+
+  nsMIMEInfoImpl* clone = new nsMIMEInfoImpl(mMIMEType.get());
+  if (!clone) {
+    *aClone = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  clone->mExtensions = mExtensions;
+  clone->mDescription = mDescription;
+  nsresult result = NS_OK;
+  if (mURI) {
+    result = mURI->Clone(getter_AddRefs(clone->mURI));
+    NS_ASSERTION(NS_SUCCEEDED(result), "Failed to clone URI");
+  }
+  clone->mMacType = mMacType;
+  clone->mMacCreator = mMacCreator;
+  if (mPreferredApplication) {
+    result = mPreferredApplication->Clone(getter_AddRefs(clone->mPreferredApplication));
+    NS_ASSERTION(NS_SUCCEEDED(result), "Failed to clone preferred handler application");
+  }
+  clone->mPreferredAction = mPreferredAction;
+  clone->mPreferredAppDescription = mPreferredAppDescription;
+
+  return CallQueryInterface(clone, aClone);
+}
+
+NS_IMETHODIMP
 nsMIMEInfoImpl::GetMIMEType(char * *aMIMEType) {
     if (!aMIMEType) return NS_ERROR_NULL_POINTER;
 
