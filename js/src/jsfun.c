@@ -1709,19 +1709,30 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
     fun = JS_malloc(cx, sizeof *fun);
     if (!fun)
 	return NULL;
-    fun->nrefs = 0;
-    fun->object = NULL;
 
     /* If funobj is null, allocate an object for it. */
-    if (!funobj) {
+    if (funobj) {
+	OBJ_SET_PARENT(cx, funobj, parent);
+    } else {
 	funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent);
 	if (!funobj) {
 	    JS_free(cx, fun);
 	    return NULL;
 	}
-    } else {
-	OBJ_SET_PARENT(cx, funobj, parent);
     }
+
+    /* Initialize all function members. */
+    fun->nrefs = 0;
+    fun->object = NULL;
+    fun->call = call;
+    fun->nargs = nargs;
+    fun->extra = 0;
+    fun->nvars = 0;
+    fun->flags = flags & JSFUN_FLAGS_MASK;
+    fun->spare = 0;
+    fun->atom = atom;
+    fun->script = NULL;
+    fun->clasp = NULL;
 
     /* Link fun to funobj and vice versa. */
     if (!js_LinkFunctionObject(cx, fun, funobj)) {
@@ -1729,17 +1740,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
 	JS_free(cx, fun);
 	return NULL;
     }
-
-    /* Initialize remaining function members. */
-    fun->call = call;
-    fun->nargs = nargs;
-    fun->flags = flags & JSFUN_FLAGS_MASK;
-    fun->extra = 0;
-    fun->nvars = 0;
-    fun->spare = 0;
-    fun->atom = atom;
-    fun->script = NULL;
-    fun->clasp = NULL;
     return fun;
 }
 
