@@ -1044,9 +1044,12 @@ NS_IMETHODIMP GlobalWindowImpl::SetPageYOffset(PRInt32 aPageYOffset)
 
 NS_IMETHODIMP GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
 {
-   nsresult result;
+   NS_ENSURE_ARG_POINTER(aScrollX);
+   nsresult result = NS_OK;
    nsCOMPtr<nsIScrollableView> view;
    float p2t, t2p;
+
+   *aScrollX = 0;
 
    FlushPendingNotifications();
 
@@ -1063,9 +1066,12 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
 
 NS_IMETHODIMP GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
 {
-   nsresult result;
+   NS_ENSURE_ARG_POINTER(aScrollY);
+   nsresult result = NS_OK;
    nsCOMPtr<nsIScrollableView> view;
    float p2t, t2p;
+
+   *aScrollY = 0;
 
    FlushPendingNotifications();
 
@@ -1619,7 +1625,7 @@ GlobalWindowImpl::UpdateCommands(const nsString& anAction)
 
 NS_IMETHODIMP GlobalWindowImpl::Escape(const nsString& aStr, nsString& aReturn)
 {
-   nsresult result;
+   nsresult result = NS_OK;
    nsCOMPtr<nsIUnicodeEncoder> encoder;
    nsAutoString charset;
 
@@ -1687,7 +1693,7 @@ NS_IMETHODIMP GlobalWindowImpl::Escape(const nsString& aStr, nsString& aReturn)
 
 NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn)
 {
-   nsresult result;
+   nsresult result = NS_OK;
    nsCOMPtr<nsIUnicodeDecoder> decoder;
    nsAutoString charset;
 
