@@ -46,15 +46,23 @@
 #define PR_Seek           fseek
 #define PR_Delete         remove
 
+#ifdef __cplusplus
 #define PR_BEGIN_EXTERN_C       extern "C" {
 #define PR_END_EXTERN_C         }
+#else
+#define PR_BEGIN_EXTERN_C   
+#define PR_END_EXTERN_C  
+#endif
 
-#ifdef XP_MAC
+#if defined(XP_MAC)
 #define PR_EXTERN(__type)       extern __declspec(export) __type
 #define PR_PUBLIC_API(__type)   __declspec(export) __type
-#else
+#elif defined(XP_PC)
 #define PR_EXTERN(__type)       extern _declspec(dllexport) __type
 #define PR_PUBLIC_API(__type)   _declspec(dllexport) __type
+#else /* XP_UNIX */
+#define PR_EXTERN(__type)       extern __type
+#define PR_PUBLIC_API(__type)   __type 
 #endif
 
 #define NS_STATIC_CAST(__type, __ptr)      ((__type)(__ptr))
