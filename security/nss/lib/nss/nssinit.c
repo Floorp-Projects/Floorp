@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.26 2001/11/08 00:15:03 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.27 2001/11/16 02:30:35 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -240,9 +240,12 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 	}
     }
 
-    STAN_LoadDefaultNSS3TrustDomain();
-    CERT_SetDefaultCertDB((CERTCertDBHandle *)
+    if (rv == SECSuccess) {
+	/* can this function fail?? */
+	STAN_LoadDefaultNSS3TrustDomain();
+	CERT_SetDefaultCertDB((CERTCertDBHandle *)
 				STAN_GetDefaultTrustDomain());
+    }
     return rv;
 }
 
