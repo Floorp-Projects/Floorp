@@ -450,7 +450,6 @@ httpparse_parse_params(HTTPRequest *req)
     if (!req->paramValues)
         goto loser;
 
-    httpparse_unescape_param(req->params);
     /* Put the params in their place. */
     for(i=0, c = start = req->params; i < numParams; i++)
     {
@@ -491,6 +490,8 @@ httpparse_parse_params(HTTPRequest *req)
             *c++ = '\0';
             start = c; /* get ready to mark off next parameter */
         }
+        httpparse_unescape_param(req->paramNames[i]);
+        httpparse_unescape_param(req->paramValues[i]);
         SSM_DEBUG("Param Name: %s, Param Value: %s\n", req->paramNames[i],
                                                        req->paramValues[i]);
     }
