@@ -65,6 +65,8 @@
 #include "nsIWebShell.h"
 #include "nsINameSpaceManager.h"
 #include "nsIEventListener.h"
+#include "nsIScrollableView.h"
+#include "nsIScrollPositionListener.h"
 #include "nsIStringStream.h" // for NS_NewCharInputStream
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
@@ -166,7 +168,8 @@ class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIDOMMouseListener,
                               public nsIDOMMouseMotionListener,
                               public nsIDOMKeyListener,
-                              public nsIDOMFocusListener
+                              public nsIDOMFocusListener,
+                              public nsIScrollPositionListener
 
 {
 public:
@@ -290,6 +293,10 @@ public:
   
   void CancelTimer();
   
+  // nsIScrollPositionListener interface
+  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
+  NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
+
   //locals
 
   NS_IMETHOD Init(nsIPresContext *aPresContext, nsObjectFrame *aFrame);
@@ -2128,17 +2135,27 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   mContext = nsnull;
 }
 
-NS_IMPL_ISUPPORTS10(nsPluginInstanceOwner,
-                    nsIPluginInstanceOwner,
-                    nsIPluginTagInfo,
-                    nsIPluginTagInfo2,
-                    nsIJVMPluginTagInfo,
-                    nsIEventListener,
-                    nsITimerCallback,
-                    nsIDOMMouseListener,
-                    nsIDOMMouseMotionListener,
-                    nsIDOMKeyListener,
-                    nsIDOMFocusListener)
+/*
+ * nsISupports Implementation
+ */
+
+NS_IMPL_ADDREF(nsPluginInstanceOwner)
+NS_IMPL_RELEASE(nsPluginInstanceOwner)
+
+NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
+  NS_INTERFACE_MAP_ENTRY(nsIPluginInstanceOwner)
+  NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo)
+  NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo2)
+  NS_INTERFACE_MAP_ENTRY(nsIJVMPluginTagInfo)
+  NS_INTERFACE_MAP_ENTRY(nsIEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPluginInstanceOwner)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
 {
@@ -3079,6 +3096,46 @@ void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord
 
 #endif
 
+nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+{
+#ifdef XP_MAC
+    if (mInstance != NULL) {
+        EventRecord scrollEvent;
+        ::OSEventAvail(0, &scrollEvent);
+        scrollEvent.what = nsPluginEventType_ScrollingBeginsEvent;
+        
+        nsPluginPort* pluginPort = GetPluginPort();
+        nsPluginEvent pluginEvent = { &scrollEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+        
+        PRBool eventHandled = PR_FALSE;
+        mInstance->HandleEvent(&pluginEvent, &eventHandled);
+    }
+#endif
+    return NS_OK;
+}
+
+nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+{
+#ifdef XP_MAC
+    if (mInstance != NULL) {
+        EventRecord scrollEvent;
+        ::OSEventAvail(0, &scrollEvent);
+        scrollEvent.what = nsPluginEventType_ScrollingEndsEvent;
+
+        nsPluginPort* pluginPort = GetPluginPort();
+        nsPluginEvent pluginEvent = { &scrollEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+
+        PRBool eventHandled = PR_FALSE;
+        mInstance->HandleEvent(&pluginEvent, &eventHandled);
+        if (!eventHandled) {
+            nsRect bogus(0,0,0,0);
+            Paint(bogus, 0);     // send an update event to the plugin
+        }
+    }
+#endif
+    return NS_OK;
+}
+
 /*=============== nsIFocusListener ======================*/
 nsresult nsPluginInstanceOwner::Focus(nsIDOMEvent * aFocusEvent)
 {
@@ -3414,6 +3471,23 @@ nsPluginInstanceOwner::Destroy()
   }
   else NS_ASSERTION(PR_FALSE, "plugin had no content");
 
+  // Unregister scroll position listener
+  if (mContext) {
+    nsCOMPtr<nsIPresShell> presShell;
+    mContext->GetShell(getter_AddRefs(presShell));
+    if (presShell) {
+      nsCOMPtr<nsIViewManager> vm;
+      presShell->GetViewManager(getter_AddRefs(vm));
+      if (vm) {
+        nsIScrollableView* scrollingView = nsnull;
+        vm->GetRootScrollableView(&scrollingView);
+        if (scrollingView) {
+          scrollingView->RemoveScrollPositionListener((nsIScrollPositionListener *)this);
+        }
+      }
+    }
+  }
+
   mOwner = nsnull; // break relationship between frame and plugin instance owner
 
   return NS_OK;
@@ -3593,13 +3667,28 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
         receiver->AddEventListener(NS_LITERAL_STRING("keypress"), keyListener, PR_TRUE);
         receiver->AddEventListener(NS_LITERAL_STRING("keydown"), keyListener, PR_TRUE);
         receiver->AddEventListener(NS_LITERAL_STRING("keyup"), keyListener, PR_TRUE);
-        return NS_OK;
       }
     }
   }
   
-  NS_ASSERTION(PR_FALSE, "plugin could not be added as a mouse listener");
-  return NS_ERROR_NO_INTERFACE; 
+  // Register scroll position listener
+  if (mContext) {
+    nsCOMPtr<nsIPresShell> presShell;
+    mContext->GetShell(getter_AddRefs(presShell));
+    if (presShell) {
+      nsCOMPtr<nsIViewManager> vm;
+      presShell->GetViewManager(getter_AddRefs(vm));
+      if (vm) {
+        nsIScrollableView* scrollingView = nsnull;
+        vm->GetRootScrollableView(&scrollingView);
+        if (scrollingView) {
+          scrollingView->AddScrollPositionListener((nsIScrollPositionListener *)this);
+        }
+      }
+    }
+  }
+
+  return NS_OK; 
 }
 
 nsPluginPort* nsPluginInstanceOwner::GetPluginPort()

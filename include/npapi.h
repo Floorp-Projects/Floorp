@@ -38,7 +38,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.19 $
+ *  npapi.h $Revision: 3.20 $
  *  Netscape client plug-in API spec
  */
 
@@ -432,10 +432,22 @@ typedef struct NP_Port
 /*
  *  Non-standard event types that can be passed to HandleEvent
  */
+
+enum NPEventType {
+  NPEventType_GetFocusEvent = (osEvt + 16),
+  NPEventType_LoseFocusEvent,
+  NPEventType_AdjustCursorEvent,
+  NPEventType_MenuCommandEvent,
+  NPEventType_ClippingChangedEvent,
+  NPEventType_ScrollingBeginsEvent = 1000,
+  NPEventType_ScrollingEndsEvent
+};
+
+#ifdef OBSOLETE
 #define getFocusEvent     (osEvt + 16)
 #define loseFocusEvent    (osEvt + 17)
 #define adjustCursorEvent (osEvt + 18)
-
+#endif
 #endif /* XP_MAC */
 
 /*

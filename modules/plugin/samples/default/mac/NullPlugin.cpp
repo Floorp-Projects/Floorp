@@ -656,7 +656,7 @@ Boolean CPlugin::HandleEvent(EventRecord* ev)
 			eventHandled = true;
 			break;
 			
-		case adjustCursorEvent:
+		case NPEventType_AdjustCursorEvent:
 			if (CPlugin::sHandCursor != NULL)
 				SetCursor(*CPlugin::sHandCursor);
 			if (fUserInstalledPlugin) {
