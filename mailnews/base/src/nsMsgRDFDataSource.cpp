@@ -363,6 +363,9 @@ nsresult nsMsgRDFDataSource::NotifyObservers(nsIRDFResource *subject,
                                                 nsIRDFNode *object,
                                                 PRBool assert, PRBool change)
 {
+    NS_ASSERTION(!(change && assert),
+                 "Can't change and assert at the same time!\n");
+    
 	if(mObservers)
 	{
 		nsMsgRDFNotification note = { subject, property, object };

@@ -138,7 +138,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #include "nsICharsetConverterManager.h"
 #include "nsIDocumentEncoder.h"
 
-nsresult
+static nsresult
 ConvertBufToPlainText(nsString &aConBuf)
 {
   nsresult    rv;
@@ -1565,7 +1565,7 @@ nsSaveAsListener::OnStopCopy(nsresult aStatus)
 NS_IMETHODIMP
 nsSaveAsListener::OnStartRequest(nsIChannel* aChannel, nsISupports* aSupport)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     if (m_fileSpec)
         rv = m_fileSpec->GetOutputStream(getter_AddRefs(m_outputStream));
     if (NS_FAILED(rv) && m_messenger)

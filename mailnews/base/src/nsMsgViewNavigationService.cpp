@@ -287,7 +287,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindPreviousMessage(PRInt32 type, nsID
 {
 	nsresult rv = NS_OK;
 
-	PRBool checkStartMessage;
+	PRBool checkStartMessage=PR_FALSE;
 	nsCOMPtr<nsIDOMNode> originalMessageNode;
 
 	if(originalMessage)

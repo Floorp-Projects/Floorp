@@ -444,7 +444,8 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   // waiting on root folders
   nsCOMPtr<nsIFolder> rootFolder;
   rv = server->GetRootFolder(getter_AddRefs(rootFolder));
-  mFolderListeners->EnumerateForwards(addListenerToFolder, (void *)rootFolder);
+  mFolderListeners->EnumerateForwards(addListenerToFolder,
+                                      (void *)(nsIFolder*)rootFolder);
 
   *aServer = server;
   NS_ADDREF(*aServer);
@@ -1561,7 +1562,7 @@ nsresult
 nsMsgAccountManager::AddRootFolderListener(nsIFolderListener *aListener)
 {
   nsresult rv;
-  
+  NS_ENSURE_TRUE(aListener, NS_OK);
   // first add listener to the list
   rv = mFolderListeners->AppendElement(aListener);
   
@@ -1575,7 +1576,7 @@ nsresult
 nsMsgAccountManager::RemoveRootFolderListener(nsIFolderListener *aListener)
 {
   nsresult rv;
-  
+  NS_ENSURE_TRUE(aListener, NS_OK);
   // remove the listener from the notification list
   rv = mFolderListeners->RemoveElement(aListener);
   
