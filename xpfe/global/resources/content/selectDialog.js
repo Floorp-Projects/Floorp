@@ -56,19 +56,10 @@ function selectDialogOnLoad() {
         done = true;
         messageFragment = messageText;
       }
-      messageNode = document.createTextNode(messageFragment);
-      if (messageNode) {
-        messageParent.appendChild(messageNode);
-      }
-
-      // This is needed when the default namespace of the document is XUL
-      breakNode = document.createElementWithNameSpace("BR", "http://www.w3.org/1999/xhtml");
-      if (breakNode) {
-        messageParent.appendChild(breakNode);
-      }
+      messageParent.setAttribute("value", messageFragment);
     }
   }
-	
+
   var windowTitle = param.GetString( 0 );
   dump("title: "+ windowTitle +"\n");
   window.title = windowTitle;
