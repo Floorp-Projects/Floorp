@@ -298,7 +298,7 @@ Contributor(s): ______________________________________. -->
              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
              grippytooltip="aTooltip" grippytooltiptext="&personalBar.tooltip;"
-             last-toolbar="true" persist="collapsed">
+             last-toolbar="true">
 
       <!-- Personal toolbar items -->
       <box id="innermostBox" flex="1" style="min-width: 1px;" context="contextual"
