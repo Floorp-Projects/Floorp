@@ -36,7 +36,7 @@ JS_EXPORT_API(JSInt64) JSLL_MaxInt(void) { return ll_maxint; }
 JS_EXPORT_API(JSInt64) JSLL_MinInt(void) { return ll_minint; }
 #endif
 
-#ifndef HAVE_LONG_LONG
+#ifndef JS_HAVE_LONG_LONG
 /*
 ** Divide 64-bit a by 32-bit b, which must be normalized so its high bit is 1.
 */
@@ -257,4 +257,4 @@ JS_EXPORT_API(void) jsll_udivmod(JSUint64 *qp, JSUint64 *rp, JSUint64 a, JSUint6
 	qp->hi = q1;
     }
 }
-#endif /* !HAVE_LONG_LONG */
+#endif /* !JS_HAVE_LONG_LONG */

@@ -56,7 +56,7 @@ JS_EXTERN_API(JSInt64) JSLL_Zero(void);
 #define JSLL_MININT   JSLL_MinInt()
 #define JSLL_ZERO     JSLL_Zero()
 
-#ifdef HAVE_LONG_LONG
+#ifdef JS_HAVE_LONG_LONG
 
 #if JS_BYTES_PER_LONG == 8
 #define JSLL_INIT(hi, lo)  ((hi ## L << 32) + lo ## L)
@@ -175,7 +175,7 @@ JS_EXTERN_API(JSInt64) JSLL_Zero(void);
     (*(qp) = ((JSUint64)(a) / (b)), \
      *(rp) = ((JSUint64)(a) % (b)))
 
-#else  /* !HAVE_LONG_LONG */
+#else  /* !JS_HAVE_LONG_LONG */
 
 #ifdef IS_LITTLE_ENDIAN
 #define JSLL_INIT(hi, lo) {JS_INT32(lo), JS_INT32(hi)}
@@ -402,7 +402,7 @@ JS_EXTERN_API(void) jsll_udivmod(JSUint64 *qp, JSUint64 *rp, JSUint64 a, JSUint6
     JSLL_NEG(l, l); \
 }
 
-#endif /* !HAVE_LONG_LONG */
+#endif /* !JS_HAVE_LONG_LONG */
 
 JS_END_EXTERN_C
 
