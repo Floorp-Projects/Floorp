@@ -71,8 +71,8 @@ class basic_nsAWritableString
           public:
             typedef ptrdiff_t                   difference_type;
             typedef CharT                       value_type;
-            typedef const CharT*                pointer;
-            typedef const CharT&                reference;
+            typedef CharT*                      pointer;
+            typedef CharT&                      reference;
             typedef bidirectional_iterator_tag  iterator_category;
 
           private:
@@ -113,10 +113,16 @@ class basic_nsAWritableString
             // Iterator& operator=( const Iterator& ); ...use default copy-assignment operator
 
             
-            CharT&
-            operator*()
+            reference
+            operator*() const
               {
                 return *mPosition;
+              }
+
+            pointer
+            operator->() const
+              {
+                return mPosition;
               }
 
             Iterator&
@@ -153,14 +159,66 @@ class basic_nsAWritableString
                 return result;
               }
 
+            const Fragment&
+            fragment() const
+              {
+                return mFragment;
+              }
+
+            difference_type
+            size_forward() const
+              {
+                return mFragment.mEnd - mPosition;
+              }
+
+            difference_type
+            size_backward() const
+              {
+                return mPosition - mFragment.mStart;
+              }
+
+            Iterator&
+            operator+=( difference_type n )
+              {
+                if ( n < 0 )
+                  return operator-=(-n);
+
+                while ( n )
+                  {
+                    difference_type one_hop = std::min(n, size_forward());
+                    mPosition += one_hop;
+                    normalize_forward();
+                    n -= one_hop;
+                  }
+
+                return *this;
+              }
+
+            Iterator&
+            operator-=( difference_type n )
+              {
+                if ( n < 0 )
+                  return operator+=(-n);
+
+                while ( n )
+                  {
+                    difference_type one_hop = std::min(n, size_backward());
+                    mPosition -= one_hop;
+                    normalize_backward();
+                    n -= one_hop;
+                  }
+
+                return *this;
+              }
+
             PRBool
-            operator==( const Iterator& rhs )
+            operator==( const Iterator& rhs ) const
               {
                 return mPosition == rhs.mPosition;
               }
 
             PRBool
-            operator!=( const Iterator& rhs )
+            operator!=( const Iterator& rhs ) const
               {
                 return mPosition != rhs.mPosition;
               }
@@ -207,11 +265,13 @@ class basic_nsAWritableString
       virtual void SetLength( PRUint32 ) = 0;
 
 
-        // ...a synonym for |SetLength()|
       void
       Truncate( PRUint32 aNewLength=0 )
         {
-          SetLength(aNewLength);
+          NS_ASSERTION(aNewLength<=Length(), "Can't use |Truncate()| to make a string longer.");
+
+          if ( aNewLength < Length() )
+            SetLength(aNewLength);
         }
 
 
@@ -229,7 +289,7 @@ class basic_nsAWritableString
       // void ReplaceSubstring( ... );
       // void Trim( ... );
       // void CompressSet( ... );
-      // void CompareWhitespace( ... );
+      // void CompressWhitespace( ... );
 
 
 
@@ -279,11 +339,58 @@ class basic_nsAWritableString
 NS_DEF_STRING_COMPARISONS(basic_nsAWritableString<CharT>)
 
 template <class CharT>
+typename basic_nsAWritableString<CharT>::Iterator
+copy_chunky( typename basic_nsAReadableString<CharT>::ConstIterator first,
+             typename basic_nsAReadableString<CharT>::ConstIterator last,
+             typename basic_nsAWritableString<CharT>::Iterator      result )
+  {
+    while ( first != last )
+      {
+        basic_nsAReadableString<CharT>::ConstIterator::difference_type lengthToCopy = std::min(first.size_forward(), result.size_forward());
+        if ( first.fragment().mStart == last.fragment().mStart )
+          lengthToCopy = std::min(lengthToCopy, last.operator->() - first.operator->());
+
+        // assert(lengthToCopy > 0);
+
+        std::char_traits<CharT>::copy(result.operator->(), first.operator->(), lengthToCopy);
+
+        first += lengthToCopy;
+        result += lengthToCopy;
+      }
+
+    return result;
+  }
+
+template <class CharT>
+typename basic_nsAWritableString<CharT>::Iterator
+copy_backward_chunky( typename basic_nsAReadableString<CharT>::ConstIterator first,
+             typename basic_nsAReadableString<CharT>::ConstIterator last,
+             typename basic_nsAWritableString<CharT>::Iterator      result )
+  {
+    while ( first != last )
+      {
+        typename basic_nsAReadableString<CharT>::ConstIterator::difference_type lengthToCopy = std::min(first.size_backward(), result.size_backward());
+        if ( first.fragment().mStart == last.fragment().mStart )
+          lengthToCopy = std::min(lengthToCopy, first.operator->() - last.operator->());
+
+        std::char_traits<CharT>::move(result.operator->(), first.operator->(), lengthToCopy);
+
+        first -= lengthToCopy;
+        result -= lengthToCopy;
+      }
+
+    return result;
+  }
+
+
+
+
+template <class CharT>
 void
 basic_nsAWritableString<CharT>::Assign( const basic_nsAReadableString<CharT>& rhs )
   {
     SetLength(rhs.Length());
-    std::copy(rhs.Begin(), rhs.End(), Begin());
+    copy_chunky<CharT>(rhs.Begin(), rhs.End(), Begin());
   }
 
 template <class CharT>
@@ -292,7 +399,7 @@ basic_nsAWritableString<CharT>::Append( const basic_nsAReadableString<CharT>& rh
   {
     PRUint32 oldLength = Length();
     SetLength(oldLength + rhs.Length());
-    std::copy(rhs.Begin(), rhs.End(), Begin(oldLength));
+    copy_chunky<CharT>(rhs.Begin(), rhs.End(), Begin(oldLength));
   }
 
 template <class CharT>
@@ -307,20 +414,24 @@ template <class CharT>
 void
 basic_nsAWritableString<CharT>::Insert( const basic_nsAReadableString<CharT>& aReadable, PRUint32 aPosition )
   {
+    typedef typename basic_nsAReadableString<CharT> readable_t;
+
     PRUint32 oldLength = Length();
     SetLength(oldLength + aReadable.Length());
     if ( aPosition < oldLength )
-      std::copy_backward(Begin(aPosition), Begin(oldLength), End());
+      copy_backward_chunky<CharT>(readable_t::Begin(aPosition), readable_t::Begin(oldLength), End());
     else
       aPosition = oldLength;
-    std::copy(aReadable.Begin(), aReadable.End(), Begin(aPosition));
+    copy_chunky<CharT>(aReadable.Begin(), aReadable.End(), Begin(aPosition));
   }
 
 template <class CharT>
 void
 basic_nsAWritableString<CharT>::Cut( PRUint32 cutStart, PRUint32 cutLength )
   {
-    std::copy(Begin(cutStart+cutLength), End(), Begin(cutStart));
+    typedef typename basic_nsAReadableString<CharT> readable_t;
+
+    copy_chunky<CharT>(readable_t::Begin(cutStart+cutLength), readable_t::End(), Begin(cutStart));
     SetLength(Length()-cutLength);
   }
 
@@ -339,13 +450,15 @@ basic_nsAWritableString<CharT>::Replace( PRUint32 cutStart, PRUint32 cutLength, 
 
     PRUint32 newLength = oldLength - cutLength + replacementLength;
 
+    typedef typename basic_nsAReadableString<CharT> readable_t;
+
     if ( cutLength > replacementLength )
-      std::copy(Begin(cutEnd), End(), Begin(replacementEnd));
+      copy_chunky<CharT>(readable_t::Begin(cutEnd), readable_t::End(), Begin(replacementEnd));
     SetLength(newLength);
     if ( cutLength < replacementLength )
-      std::copy_backward(Begin(cutEnd), Begin(oldLength), Begin(replacementEnd));
+      copy_backward_chunky<CharT>(readable_t::Begin(cutEnd), readable_t::Begin(oldLength), Begin(replacementEnd));
 
-    std::copy(aReplacement.Begin(), aReplacement.End(), Begin(cutStart));
+    copy_chunky<CharT>(aReplacement.Begin(), aReplacement.End(), Begin(cutStart));
   }
 
 // operator>>

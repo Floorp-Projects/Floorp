@@ -90,11 +90,13 @@ class basic_nsAReadableString
             }
         };
 
+
     public:
+      virtual const void* Implementation() const;
+
       enum FragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment, kFragmentAt };
 
-        // Damn!  Had to make |GetConstFragment| and |Implementation| public because the compilers suck.  Should be protected.
-      virtual const char* Implementation() const;
+        // Damn!  Had to make |GetConstFragment| public because the compilers suck.  Should be protected.
       virtual const CharT* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 = 0 ) const = 0;
 
       friend class ConstIterator;
@@ -147,9 +149,15 @@ class basic_nsAReadableString
 
             
             CharT
-            operator*()
+            operator*() const
               {
                 return *mPosition;
+              }
+
+            pointer
+            operator->() const
+              {
+                return mPosition;
               }
 
             ConstIterator&
@@ -186,17 +194,69 @@ class basic_nsAReadableString
                 return result;
               }
 
+            const ConstFragment&
+            fragment() const
+              {
+                return mFragment;
+              }
+
+            difference_type
+            size_forward() const
+              {
+                return mFragment.mEnd - mPosition;
+              }
+
+            difference_type
+            size_backward() const
+              {
+                return mPosition - mFragment.mStart;
+              }
+
+            ConstIterator&
+            operator+=( difference_type n )
+              {
+                if ( n < 0 )
+                  return operator-=(-n);
+
+                while ( n )
+                  {
+                    difference_type one_hop = std::min(n, size_forward());
+                    mPosition += one_hop;
+                    normalize_forward();
+                    n -= one_hop;
+                  }
+
+                return *this;
+              }
+
+            ConstIterator&
+            operator-=( difference_type n )
+              {
+                if ( n < 0 )
+                  return operator+=(-n);
+
+                while ( n )
+                  {
+                    difference_type one_hop = std::min(n, size_backward());
+                    mPosition -= one_hop;
+                    normalize_backward();
+                    n -= one_hop;
+                  }
+
+                return *this;
+              }
+
 
               // Damn again!  Problems with templates made me implement comparisons as members.
 
             PRBool
-            operator==( const ConstIterator& rhs )
+            operator==( const ConstIterator& rhs ) const
               {
                 return mPosition == rhs.mPosition;
               }
 
             PRBool
-            operator!=( const ConstIterator& rhs )
+            operator!=( const ConstIterator& rhs ) const
               {
                 return mPosition != rhs.mPosition;
               }
@@ -339,7 +399,6 @@ class basic_nsAReadableString
   };
 
 #define NS_DEF_1_STRING_COMPARISON_OPERATOR(comp, T1, T2) \
-  template <class CharT>                        \
   inline                                        \
   PRBool                                        \
   operator comp( T1 lhs, T2 rhs )               \
@@ -348,6 +407,14 @@ class basic_nsAReadableString
     }
 
 #define NS_DEF_STRING_COMPARISON_OPERATORS(T1, T2) \
+  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(!=, T1, T2) \
+  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(< , T1, T2) \
+  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(<=, T1, T2) \
+  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(==, T1, T2) \
+  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(>=, T1, T2) \
+  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(> , T1, T2)
+
+#define NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(T1, T2) \
   NS_DEF_1_STRING_COMPARISON_OPERATOR(!=, T1, T2) \
   NS_DEF_1_STRING_COMPARISON_OPERATOR(< , T1, T2) \
   NS_DEF_1_STRING_COMPARISON_OPERATOR(<=, T1, T2) \
@@ -395,7 +462,7 @@ basic_nsAReadableString<PRUnichar>::GetUnicode() const
   }
 
 template <class CharT>
-const char*
+const void*
 basic_nsAReadableString<CharT>::Implementation() const
   {
     return 0;
@@ -453,7 +520,22 @@ template <class CharT>
 PRUint32
 basic_nsAReadableString<CharT>::CountChar( CharT c ) const
   {
+#if 1
     return PRUint32(count(Begin(), End(), c));
+#else
+    PRUint32 result = 0;
+    PRUint32 lengthToExamine = Length();
+
+    ConstIterator iter( Begin() );
+    for (;;)
+      {
+        PRUint32 lengthToExamineInThisFragment = iter.size_forward();
+        result += PRUint32(count(iter.operator->(), iter.operator->()+lengthToExamineInThisFragment, c));
+        if ( !(lengthToExamine -= lengthToExamineInThisFragment) )
+          return result;
+        iter += lengthToExamineInThisFragment;
+      }
+#endif
   }
 
 
@@ -485,7 +567,7 @@ PRUint32
 basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
   {
     PRUint32 myLength = Length();
-    aLengthToCopy = min(myLength, aLengthToCopy);
+    aLengthToCopy = std::min(myLength, aLengthToCopy);
     aResult = Substring(*this, myLength-aLengthToCopy, aLengthToCopy);
     return aResult.Length();
   }
@@ -792,8 +874,8 @@ class nsPromiseSubstring
     public:
       nsPromiseSubstring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aLength )
           : mString(aString),
-            mStartPos( min(aStartPos, aString.Length()) ),
-            mLength( min(aLength, aString.Length()-mStartPos) )
+            mStartPos( std::min(aStartPos, aString.Length()) ),
+            mLength( std::min(aLength, aString.Length()-mStartPos) )
         {
           // nothing else to do here
         }
@@ -854,35 +936,36 @@ Substring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PR
     return nsPromiseSubstring<CharT>(aString, aStartPos, aSubstringLength);
   }
 
-
 template <class CharT>
 int
 Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
-      /*
-        If this turns out to be too slow (after measurement), there are two important modifications
-          1) chunky iterators
-          2) and then possibly use |char_traits<T>::compare|
-      */
+    if ( &lhs == &rhs )
+      return 0;
 
     PRUint32 lLength = lhs.Length();
     PRUint32 rLength = rhs.Length();
-    PRUint32 lengthToCompare = min(lLength, rLength);
+    PRUint32 lengthToCompare = std::min(lLength, rLength);
 
-    typedef typename basic_nsAReadableString<CharT>::ConstIterator ConstIterator;
-    ConstIterator lPos = lhs.Begin();
-    ConstIterator lEnd = lhs.Begin(lengthToCompare);
-    ConstIterator rPos = rhs.Begin();
+    basic_nsAReadableString<CharT>::ConstIterator leftIter( lhs.Begin() );
+    basic_nsAReadableString<CharT>::ConstIterator rightIter( rhs.Begin() );
 
-    while ( lPos != lEnd )
+    for (;;)
       {
-        if ( *lPos < *rPos )
-          return -1;
-        if ( *rPos < *lPos )
-          return 1;
+        basic_nsAReadableString<CharT>::ConstIterator::difference_type lengthAvailable = std::min(leftIter.size_forward(), rightIter.size_forward());
+        // assert( lengthAvailable >= 0 );
 
-        ++lPos;
-        ++rPos;
+        if ( lengthAvailable > lengthToCompare )
+          lengthAvailable = lengthToCompare;
+        
+        if ( int result = std::char_traits<CharT>::compare(leftIter.operator->(), rightIter.operator->(), lengthAvailable) )
+          return result;
+
+        if ( !(lengthToCompare -= lengthAvailable) )
+          break;
+
+        leftIter += lengthAvailable;
+        rightIter += lengthAvailable;
       }
 
     if ( lLength < rLength )
