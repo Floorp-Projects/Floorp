@@ -38,6 +38,7 @@ class nsMenuBarFrame : public nsToolbarFrame, public nsIMenuParent
 {
 public:
   nsMenuBarFrame();
+  ~nsMenuBarFrame();
 
   NS_DECL_ISUPPORTS
 
@@ -62,6 +63,8 @@ public:
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
 // Non-interface helpers
 
@@ -88,6 +91,9 @@ protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
   PRBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
   nsIFrame* mCurrentMenu; // The current menu that is active.
+
+  nsIDOMEventReceiver* mTarget;
+
 }; // class nsMenuBarFrame
 
 #endif
