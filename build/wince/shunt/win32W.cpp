@@ -53,6 +53,8 @@ extern "C" {
 
 MOZCE_SHUNT_API UINT mozce_GetWindowsDirectoryW(LPWSTR inBuffer, UINT inSize)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_GetWindowsDirectoryW called\n");
 #endif
@@ -75,6 +77,8 @@ MOZCE_SHUNT_API UINT mozce_GetWindowsDirectoryW(LPWSTR inBuffer, UINT inSize)
 
 MOZCE_SHUNT_API UINT mozce_GetSystemDirectoryW(LPWSTR inBuffer, UINT inSize)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_GetSystemDirectoryW called\n");
 #endif
@@ -97,6 +101,8 @@ MOZCE_SHUNT_API UINT mozce_GetSystemDirectoryW(LPWSTR inBuffer, UINT inSize)
 
 MOZCE_SHUNT_API HANDLE mozce_OpenSemaphoreW(DWORD inDesiredAccess, BOOL inInheritHandle, LPCWSTR inName)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_OpenSemaphoreW called\n");
 #endif
@@ -125,6 +131,8 @@ MOZCE_SHUNT_API HANDLE mozce_OpenSemaphoreW(DWORD inDesiredAccess, BOOL inInheri
 
 MOZCE_SHUNT_API DWORD mozce_GetGlyphOutlineW(HDC inDC, WCHAR inChar, UINT inFormat, void* inGM, DWORD inBufferSize, LPVOID outBuffer, CONST mozce_MAT2* inMAT2)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_GetGlyphOutlineW called\n");
 #endif
@@ -139,6 +147,8 @@ MOZCE_SHUNT_API DWORD mozce_GetGlyphOutlineW(HDC inDC, WCHAR inChar, UINT inForm
 
 MOZCE_SHUNT_API DWORD mozce_GetCurrentDirectoryW(DWORD inBufferLength, LPTSTR outBuffer)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_GetCurrentDirectoryW called\n");
 #endif
@@ -158,6 +168,8 @@ MOZCE_SHUNT_API DWORD mozce_GetCurrentDirectoryW(DWORD inBufferLength, LPTSTR ou
 
 MOZCE_SHUNT_API BOOL mozce_SetCurrentDirectoryW(LPCTSTR inPathName)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_SetCurrentDirectoryW called\n");
 #endif

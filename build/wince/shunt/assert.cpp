@@ -47,6 +47,8 @@ extern "C" {
 
 MOZCE_SHUNT_API void mozce_assert(int inExpression)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_assert called\n");
 #endif

@@ -163,4 +163,19 @@ extern "C" {
 void nclog (const char *fmt, ...);
 void nclograw(const char* data, long length);
 
+//#define MOZCE_PRECHECK                                                     \
+//{                                                                          \
+//    MEMORYSTATUS memStats;                                                 \
+//    memStats.dwLength = sizeof( memStats);                                 \
+//                                                                           \
+//    GlobalMemoryStatus( (LPMEMORYSTATUS)&memStats );                       \
+//                                                                           \
+//    char buffer[100];                                                      \
+//    sprintf(buffer, ">> dwAvailPhys (%d)\n", memStats.dwAvailPhys / 1024); \
+//                                                                           \
+//    nclograw(buffer, strlen(buffer));                                      \
+//}                                                                          \
+
+#define MOZCE_PRECHECK
+
 #endif /* __mozce_internal_h */

@@ -55,6 +55,8 @@ extern "C" {
 
 MOZCE_SHUNT_API unsigned char* mozce_mbsinc(const unsigned char* inCurrent)
 {
+    MOZCE_PRECHECK
+
 #ifdef LOG_CALLS
 #ifdef DEBUG
     mozce_printf("mozce_mbsinc called\n");
@@ -67,6 +69,8 @@ MOZCE_SHUNT_API unsigned char* mozce_mbsinc(const unsigned char* inCurrent)
 
 MOZCE_SHUNT_API unsigned char* mozce_mbspbrk(const unsigned char* inString, const unsigned char* inStrCharSet)
 {
+    MOZCE_PRECHECK
+
 #ifdef LOG_CALLS
 #ifdef DEBUG
     mozce_printf("mozce_mbspbrk called\n");
@@ -84,6 +88,8 @@ MOZCE_SHUNT_API unsigned char* mozce_mbspbrk(const unsigned char* inString, cons
 
 MOZCE_SHUNT_API unsigned char* mozce_mbsrchr(const unsigned char* inString, unsigned int inC)
 {
+    MOZCE_PRECHECK
+
 #ifdef LOG_CALLS
 #ifdef DEBUG
     mozce_printf("mozce_mbsrchr called\n");
@@ -96,6 +102,8 @@ MOZCE_SHUNT_API unsigned char* mozce_mbsrchr(const unsigned char* inString, unsi
 
 MOZCE_SHUNT_API unsigned char* mozce_mbschr(const unsigned char* inString, unsigned int inC)
 {
+    MOZCE_PRECHECK
+
 #ifdef LOG_CALLS
 #ifdef DEBUG
     mozce_printf("mozce_mbschr called\n");
