@@ -463,6 +463,10 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
     
+    nsCOMPtr<nsISocketProviderService> spService(do_GetService(kSocketProviderService));
+    if (!spService)
+      rv = NS_ERROR_FAILURE;
+
     if (NS_SUCCEEDED(rv) && aSocketTypeCount) {
         mSocketTypes = (char**) nsMemory::Alloc(aSocketTypeCount * sizeof(char*));
         if (!mSocketTypes)
@@ -476,6 +480,15 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
 #ifdef DEBUG
                 LOG(("nsSocketTransport: pushing io layer: %s\n", socketType));
 #endif
+
+                // Before doing anything else, make sure we can get a
+                // provider for this type of socket.
+
+                nsCOMPtr<nsISocketProvider> sProvider;
+                rv = spService->GetSocketProvider(socketType, getter_AddRefs(sProvider));
+                if (NS_FAILED(rv))
+                  break;
+
                 mSocketTypes[mSocketTypeCount] = nsCRT::strdup(socketType);
                 if (!mSocketTypes[mSocketTypeCount]) {
                     rv = NS_ERROR_OUT_OF_MEMORY;
