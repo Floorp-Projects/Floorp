@@ -34,7 +34,8 @@ Contributor(s):
         onload="onLoad()"
         title="&dialog.title;"
         class = "dialog"
-        align = "vertical"
+        orient = "vertical"
+        style = "max-width: 40em;" 
 > 
 
     <script src="chrome://communicator/content/xpinstall/institems.js"></script>
@@ -51,6 +52,9 @@ Contributor(s):
         <separator align="center" class="groove" flex="100%"/>            
         <spring id="verticalSmallSpacer"/>
 
+        <html>&warningText.label;</html>
+        <html>&warningText2.label;</html>
+        <separator/>
         <text class="label" id="componentList" value="&componentList.label;"/>
         <spring id="verticalSmallSpacer"/>
         <spring id="verticalSmallSpacer"/>            
