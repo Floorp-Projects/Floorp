@@ -25,6 +25,7 @@
 #include "nsAppShellCIDs.h"
 #include "nsVoidArray.h"
 #include "nsIWebShell.h"
+#include "nsIWebNavigation.h"
 #include "prmem.h"
 #include "nsString.h"
 #include "nsIFactory.h"
@@ -1138,12 +1139,12 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
 NS_IMETHODIMP
 nsSessionHistory::Reload(nsIWebShell * aPrev, nsLoadFlags aReloadFlags)
 {
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aPrev));
+   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
-  // Call goto with the Reload flag set to true
-  //Error check on aPrev done in Goto()
-  Goto(mHistoryCurrentIndex, aPrev, PR_TRUE);
-
-  return NS_OK;
+   NS_ENSURE_SUCCESS(webNav->Reload(nsIWebNavigation::reloadNormal), 
+      NS_ERROR_FAILURE);
+   return NS_OK;
 }
 
 NS_IMETHODIMP
