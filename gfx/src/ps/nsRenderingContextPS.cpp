@@ -1233,6 +1233,33 @@ nsRect	tr;
   return NS_OK;
 }
 
+#ifdef MOZ_MATHML
+  /**
+   * Returns metrics (in app units) of an 8-bit character string
+   */
+NS_IMETHODIMP 
+nsRenderingContextPS::GetBoundingMetrics(const char*        aString,
+                                         PRUint32           aLength,
+                                         nsBoundingMetrics& aBoundingMetrics)
+{
+  // Fill me up 
+  return NS_OK;
+}
+
+  /**
+   * Returns metrics (in app units) of a Unicode character string
+   */
+NS_IMETHODIMP 
+nsRenderingContextPS::GetBoundingMetrics(const PRUnichar*   aString,
+                                         PRUint32           aLength,
+                                         nsBoundingMetrics& aBoundingMetrics,
+                                         PRInt32*           aFontID = nsnull)
+{
+  // Fill me up 
+  return NS_OK;
+}
+#endif /* MOZ_MATHML */
+
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 12/21/98 dwc
