@@ -336,6 +336,11 @@
   <key id="key_saveAsFile" key="&saveAsFileCmd.key;"                 oncommand="goDoCommand('cmd_saveAsFile')" modifiers="accel"/>
   <key id="key_viewPageSource" key="&pageSourceCmd.key;"             oncommand="goDoCommand('cmd_viewPageSource')" modifiers="accel"/>
   <key id="key_getNewMessages" key="&getNewMsgCmd.key;"              oncommand="goDoCommand('cmd_getNewMessages')" modifiers="accel"/>
+#ifdef XP_WIN
+  <key id="key_getNewMessages2" keycode="VK_F5" oncommand="goDoCommand('cmd_getNewMessages')"/>
+#elifdef XP_UNIX
+  <key id="key_getNewMessages2" keycode="VK_F9" oncommand="goDoCommand('cmd_getNewMessages')"/>
+#endif
   <key id="key_getAllNewMessages" 
        key="&getAllNewMsgCmd.key;"  
        oncommand="goDoCommand('cmd_getMsgsForAuthAccounts');"
@@ -375,7 +380,11 @@
   <key id="key_label5" charcode="&labelCmd5.key;"  oncommand="goDoCommand('cmd_label5')"/>
 
   <!-- Tools Keys -->
+#ifdef MOZ_WIDGET_GTK2
+  <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="MsgSearchMessages();" modifiers="shift"/>
+#else
   <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="MsgSearchMessages();" modifiers="accel, shift"/>
+#endif
   <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
   <key id="key_addressbook"  key="&addressBookCmd.commandkey;" oncommand="toAddressBook();" modifiers="accel"/>
 #ifdef XP_MACOSX
