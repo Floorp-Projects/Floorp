@@ -45,17 +45,17 @@ class nsSVGGenericStringValue : public nsSVGValue
 {
 protected:
   friend nsresult
-  NS_CreateSVGGenericStringValue(const nsAReadableString& aValue, nsISVGValue** aResult);
+  NS_CreateSVGGenericStringValue(const nsAString& aValue, nsISVGValue** aResult);
   
-  nsSVGGenericStringValue(const nsAReadableString& aValue);
+  nsSVGGenericStringValue(const nsAString& aValue);
   virtual ~nsSVGGenericStringValue();
   
 public:
   NS_DECL_ISUPPORTS
 
   // nsISVGValue interface: 
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
 
 protected:
   nsString mValue;
@@ -63,7 +63,7 @@ protected:
 
 
 nsresult
-NS_CreateSVGGenericStringValue(const nsAReadableString& aValue,
+NS_CreateSVGGenericStringValue(const nsAString& aValue,
                                nsISVGValue** aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
@@ -76,7 +76,7 @@ NS_CreateSVGGenericStringValue(const nsAReadableString& aValue,
   return NS_OK;
 }
 
-nsSVGGenericStringValue::nsSVGGenericStringValue(const nsAReadableString& aValue)
+nsSVGGenericStringValue::nsSVGGenericStringValue(const nsAString& aValue)
 {
   NS_INIT_ISUPPORTS();
   mValue = aValue;
@@ -95,7 +95,7 @@ NS_IMPL_ISUPPORTS1(nsSVGGenericStringValue, nsISVGValue);
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGGenericStringValue::SetValueString(const nsAReadableString& aValue)
+nsSVGGenericStringValue::SetValueString(const nsAString& aValue)
 {
   WillModify();
   mValue = aValue;
@@ -104,7 +104,7 @@ nsSVGGenericStringValue::SetValueString(const nsAReadableString& aValue)
 }
 
 NS_IMETHODIMP
-nsSVGGenericStringValue::GetValueString(nsAWritableString& aValue)
+nsSVGGenericStringValue::GetValueString(nsAString& aValue)
 {
   aValue = mValue;
   return NS_OK;

@@ -65,8 +65,8 @@ public:
   NS_DECL_NSIDOMSVGANIMATEDLENGTH
 
   // remainder of nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
@@ -128,14 +128,14 @@ NS_INTERFACE_MAP_END
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGAnimatedLength::SetValueString(const nsAReadableString& aValue)
+nsSVGAnimatedLength::SetValueString(const nsAString& aValue)
 {
   nsCOMPtr<nsISVGValue> value = do_QueryInterface(mBaseVal);
   return value->SetValueString(aValue);
 }
 
 NS_IMETHODIMP
-nsSVGAnimatedLength::GetValueString(nsAWritableString& aValue)
+nsSVGAnimatedLength::GetValueString(nsAString& aValue)
 {
   nsCOMPtr<nsISVGValue> value = do_QueryInterface(mBaseVal);
   return value->GetValueString(aValue);

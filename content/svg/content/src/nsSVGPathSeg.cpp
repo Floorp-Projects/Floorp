@@ -53,7 +53,7 @@ cname::GetPathSegType(PRUint16 *aPathSegType)                           \
 }                                                                       \
                                                                         \
 NS_IMETHODIMP                                                           \
-cname::GetPathSegTypeAsLetter(nsAWritableString & aPathSegTypeAsLetter) \
+cname::GetPathSegTypeAsLetter(nsAString & aPathSegTypeAsLetter)         \
 {                                                                       \
   aPathSegTypeAsLetter.Truncate();                                      \
   aPathSegTypeAsLetter.Append(NS_LITERAL_STRING(letter));               \
@@ -91,8 +91,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEGCLOSEPATH
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
 };
 
 //----------------------------------------------------------------------
@@ -121,14 +121,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegClosePath)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegClosePath::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegClosePath::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegClosePath::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegClosePath::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
   aValue.Append(NS_LITERAL_STRING("z"));
@@ -159,8 +159,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -195,14 +195,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegMovetoAbs)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegMovetoAbs::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegMovetoAbs::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegMovetoAbs::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegMovetoAbs::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -268,8 +268,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -304,14 +304,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegMovetoRel)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegMovetoRel::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegMovetoRel::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegMovetoRel::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegMovetoRel::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -376,8 +376,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -412,14 +412,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegLinetoAbs)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegLinetoAbs::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegLinetoAbs::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegLinetoAbs::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegLinetoAbs::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -485,8 +485,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -521,14 +521,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegLinetoRel)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegLinetoRel::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegLinetoRel::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegLinetoRel::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegLinetoRel::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -596,8 +596,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -636,14 +636,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegCurvetoCubicAbs)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegCurvetoCubicAbs::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegCurvetoCubicAbs::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegCurvetoCubicAbs::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegCurvetoCubicAbs::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -768,8 +768,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -808,14 +808,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegCurvetoCubicRel)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegCurvetoCubicRel::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegCurvetoCubicRel::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegCurvetoCubicRel::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegCurvetoCubicRel::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -938,8 +938,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -976,14 +976,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegCurvetoQuadraticAbs)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegCurvetoQuadraticAbs::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegCurvetoQuadraticAbs::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegCurvetoQuadraticAbs::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegCurvetoQuadraticAbs::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -1079,8 +1079,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -1117,14 +1117,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegCurvetoQuadraticRel)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegCurvetoQuadraticRel::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegCurvetoQuadraticRel::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegCurvetoQuadraticRel::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegCurvetoQuadraticRel::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -1221,8 +1221,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -1264,14 +1264,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegArcAbs)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegArcAbs::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegArcAbs::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegArcAbs::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegArcAbs::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -1411,8 +1411,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -1454,14 +1454,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegArcRel)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegArcRel::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegArcRel::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegArcRel::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegArcRel::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -1598,8 +1598,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -1633,14 +1633,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegLinetoHorizontalAbs)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegLinetoHorizontalAbs::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegLinetoHorizontalAbs::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegLinetoHorizontalAbs::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegLinetoHorizontalAbs::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -1691,8 +1691,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -1726,14 +1726,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegLinetoHorizontalRel)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegLinetoHorizontalRel::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegLinetoHorizontalRel::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegLinetoHorizontalRel::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegLinetoHorizontalRel::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -1784,8 +1784,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -1819,14 +1819,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegLinetoVerticalAbs)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegLinetoVerticalAbs::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegLinetoVerticalAbs::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegLinetoVerticalAbs::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegLinetoVerticalAbs::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -1877,8 +1877,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -1912,14 +1912,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegLinetoVerticalRel)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegLinetoVerticalRel::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegLinetoVerticalRel::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegLinetoVerticalRel::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegLinetoVerticalRel::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -1971,8 +1971,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -2009,14 +2009,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegCurvetoCubicSmoothAbs)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegCurvetoCubicSmoothAbs::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegCurvetoCubicSmoothAbs::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegCurvetoCubicSmoothAbs::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegCurvetoCubicSmoothAbs::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -2111,8 +2111,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -2149,14 +2149,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegCurvetoCubicSmoothRel)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegCurvetoCubicSmoothRel::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegCurvetoCubicSmoothRel::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegCurvetoCubicSmoothRel::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegCurvetoCubicSmoothRel::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -2250,8 +2250,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -2286,14 +2286,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegCurvetoQuadraticSmoothAbs)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegCurvetoQuadraticSmoothAbs::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegCurvetoQuadraticSmoothAbs::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegCurvetoQuadraticSmoothAbs::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegCurvetoQuadraticSmoothAbs::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -2358,8 +2358,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
   
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -2394,14 +2394,14 @@ NS_IMPL_NSISUPPORTS_SVGPATHSEG(SVGPathSegCurvetoQuadraticSmoothRel)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPathSegCurvetoQuadraticSmoothRel::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegCurvetoQuadraticSmoothRel::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGPathSegCurvetoQuadraticSmoothRel::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegCurvetoQuadraticSmoothRel::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 

@@ -51,7 +51,7 @@ class nsSVGTransformList : public nsSVGValue,
                            public nsSupportsWeakReference
 {
 public:
-  static nsresult Create(const nsAReadableString& aValue, nsISVGValue** aResult);
+  static nsresult Create(const nsAString& aValue, nsISVGValue** aResult);
   static nsresult Create(nsIDOMSVGTransformList** aResult);
   
 protected:
@@ -66,8 +66,8 @@ public:
   NS_DECL_NSIDOMSVGTRANSFORMLIST
   
   // remainder of nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);

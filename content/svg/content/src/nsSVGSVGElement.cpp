@@ -328,13 +328,13 @@ nsSVGSVGElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 
 /* attribute DOMString contentScriptType; */
 NS_IMETHODIMP
-nsSVGSVGElement::GetContentScriptType(nsAWritableString & aContentScriptType)
+nsSVGSVGElement::GetContentScriptType(nsAString & aContentScriptType)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 NS_IMETHODIMP
-nsSVGSVGElement::SetContentScriptType(const nsAReadableString & aContentScriptType)
+nsSVGSVGElement::SetContentScriptType(const nsAString & aContentScriptType)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -342,13 +342,13 @@ nsSVGSVGElement::SetContentScriptType(const nsAReadableString & aContentScriptTy
 
 /* attribute DOMString contentStyleType; */
 NS_IMETHODIMP
-nsSVGSVGElement::GetContentStyleType(nsAWritableString & aContentStyleType)
+nsSVGSVGElement::GetContentStyleType(nsAString & aContentStyleType)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 NS_IMETHODIMP
-nsSVGSVGElement::SetContentStyleType(const nsAReadableString & aContentStyleType)
+nsSVGSVGElement::SetContentStyleType(const nsAString & aContentStyleType)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -720,14 +720,14 @@ nsSVGSVGElement::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix, nsIDOMSVG
 
 /* DOMString createSVGString (); */
 NS_IMETHODIMP
-nsSVGSVGElement::CreateSVGString(nsAWritableString & _retval)
+nsSVGSVGElement::CreateSVGString(nsAString & _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMElement getElementById (in DOMString elementId); */
 NS_IMETHODIMP
-nsSVGSVGElement::GetElementById(const nsAReadableString & elementId, nsIDOMElement **_retval)
+nsSVGSVGElement::GetElementById(const nsAString & elementId, nsIDOMElement **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

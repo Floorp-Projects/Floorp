@@ -120,14 +120,14 @@ NS_IMETHODIMP nsSVGPoint::MatrixTransform(nsIDOMSVGMatrix *matrix, nsIDOMSVGPoin
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGPoint::SetValueString(const nsAReadableString& aValue)
+nsSVGPoint::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsSVGPoint::GetValueString(nsAWritableString& aValue)
+nsSVGPoint::GetValueString(nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;

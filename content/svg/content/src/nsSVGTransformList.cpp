@@ -45,7 +45,7 @@
 #include "nsReadableUtils.h"
 
 nsresult
-nsSVGTransformList::Create(const nsAReadableString& aValue,
+nsSVGTransformList::Create(const nsAString& aValue,
                        nsISVGValue** aResult)
 {
   *aResult = (nsISVGValue*) new nsSVGTransformList();
@@ -162,7 +162,7 @@ NS_INTERFACE_MAP_END
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGTransformList::SetValueString(const nsAReadableString& aValue)
+nsSVGTransformList::SetValueString(const nsAString& aValue)
 {
   // XXX: we don't implement the _exact_ BNF given in the
   // specs. 
@@ -273,7 +273,7 @@ nsSVGTransformList::SetValueString(const nsAReadableString& aValue)
 }
 
 NS_IMETHODIMP
-nsSVGTransformList::GetValueString(nsAWritableString& aValue)
+nsSVGTransformList::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 

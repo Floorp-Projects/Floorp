@@ -44,7 +44,7 @@
 #include "nsTextFormatter.h"
 
 nsresult
-nsSVGPointList::Create(const nsAReadableString& aValue,
+nsSVGPointList::Create(const nsAString& aValue,
                        nsISVGValue** aResult)
 {
   *aResult = (nsISVGValue*) new nsSVGPointList();
@@ -156,7 +156,7 @@ NS_INTERFACE_MAP_END
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGPointList::SetValueString(const nsAReadableString& aValue)
+nsSVGPointList::SetValueString(const nsAString& aValue)
 {
   WillModify();
   
@@ -209,7 +209,7 @@ nsSVGPointList::SetValueString(const nsAReadableString& aValue)
 }
 
 NS_IMETHODIMP
-nsSVGPointList::GetValueString(nsAWritableString& aValue)
+nsSVGPointList::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 

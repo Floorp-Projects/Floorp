@@ -94,19 +94,19 @@ public:
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
-  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,
+  NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
                                  nsINodeInfo*& aNodeInfo);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                           PRBool aNotify);
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify);
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsAWritableString& aResult) const;
+                     nsAString& aResult) const;
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                      nsIAtom*& aPrefix,
-                     nsAWritableString& aResult) const;
+                     nsAString& aResult) const;
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                        PRBool aNotify);
