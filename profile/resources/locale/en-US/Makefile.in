@@ -36,6 +36,7 @@ FILES		= \
 		profileManagerMigrateAll.dtd	\
 		createProfileWizard.properties	\
 		newProfile1_2.properties	\
+		migration.properties		\
 		profileSelection.dtd		\
 		confirmMigration.dtd		\
 		$(NULL)
