@@ -63,6 +63,14 @@ while ($_ = $ARGV[0], defined($_) && /^-./) {
         }
     } elsif (/^-d$/os) { 
         $stack->{'dependencies'} = 1;
+    } elsif (/^--line-endings=crlf$/os) { 
+        $stack->{'lineEndings'} = "\x0D\x0A";
+    } elsif (/^--line-endings=cr$/os) { 
+        $stack->{'lineEndings'} = "\x0D";
+    } elsif (/^--line-endings=lf$/os) { 
+        $stack->{'lineEndings'} = "\x0A";
+    } elsif (/^--line-endings=(.+)$/os) { 
+        die "$0: unrecognised line ending: $1\n";
     } else {
         die "$0: invalid argument: $_\n";
     }
@@ -106,7 +114,7 @@ sub include {
             process($stack, $1);
         } elsif (/^\#([a-z]+)\s(.*?)\n?$/os) { # processing instruction with arguments
             process($stack, $1, $2);
-        } elsif (/^\#\n?/os) { # comment
+        } elsif (/^\#/os) { # comment
             # ignore it
         } elsif ($stack->enabled) {
             # print it, including any newlines
@@ -173,6 +181,7 @@ sub new {
         'lastPrinting' => [], # whether we were printing at the n-1th level
         'printing' => 1, # whether we are currently printing at the Nth level
         'dependencies' => 0, # whether we are showing dependencies
+        'lineEndings' => "\n", # default to platform conventions
     };
 }
 
@@ -256,7 +265,13 @@ sub expand {
 sub print {
     my $self = shift;
     return if $self->{'dependencies'};
-    CORE::print(@_);
+    foreach my $line (@_) {
+        if (chomp $line) {
+            CORE::print("$line$self->{'lineEndings'}");
+        } else {
+            CORE::print($line);
+        }
+    }
 }
 
 sub visit {
