@@ -193,8 +193,7 @@ NS_IMETHODIMP nsHTMLEditor::SetColSpan(nsIDOMElement *aCell, PRInt32 aColSpan)
   if (!aCell) return NS_ERROR_NULL_POINTER;
   nsAutoString newSpan;
   newSpan.AppendInt(aColSpan, 10);
-  nsAutoString colSpan(NS_LITERAL_STRING("colspan"));
-  return SetAttribute(aCell, colSpan, newSpan);
+  return SetAttribute(aCell, NS_LITERAL_STRING("colspan"), newSpan);
 }
 
 NS_IMETHODIMP nsHTMLEditor::SetRowSpan(nsIDOMElement *aCell, PRInt32 aRowSpan)
@@ -202,8 +201,7 @@ NS_IMETHODIMP nsHTMLEditor::SetRowSpan(nsIDOMElement *aCell, PRInt32 aRowSpan)
   if (!aCell) return NS_ERROR_NULL_POINTER;
   nsAutoString newSpan;
   newSpan.AppendInt(aRowSpan, 10);
-  nsAutoString rowSpan(NS_LITERAL_STRING("rowspan"));
-  return SetAttribute(aCell, rowSpan, newSpan);
+  return SetAttribute(aCell, NS_LITERAL_STRING("rowspan"), newSpan);
 }
 
 /****************************************************************/
@@ -753,10 +751,11 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
     nsCOMPtr<nsIDOMNode> parentOfRow;
     PRInt32 newRowOffset;
 
+    NS_NAMED_LITERAL_STRING(trStr, "tr");
     if (cellForRowParent)
     {
       nsCOMPtr<nsIDOMElement> parentRow;
-      res = GetElementOrParentByTagName(NS_LITERAL_STRING("tr"), cellForRowParent, getter_AddRefs(parentRow));
+      res = GetElementOrParentByTagName(trStr, cellForRowParent, getter_AddRefs(parentRow));
       if (NS_FAILED(res)) return res;
       if (!parentRow) return NS_ERROR_NULL_POINTER;
 
@@ -773,11 +772,12 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
     else
       return NS_ERROR_FAILURE;
 
+    NS_NAMED_LITERAL_STRING(tdStr, "td");
     for (PRInt32 row = 0; row < aNumber; row++)
     {
       // Create a new row
       nsCOMPtr<nsIDOMElement> newRow;
-      res = CreateElementWithDefaults(NS_LITERAL_STRING("tr"), getter_AddRefs(newRow));
+      res = CreateElementWithDefaults(trStr, getter_AddRefs(newRow));
       if (NS_SUCCEEDED(res))
       {
         if (!newRow) return NS_ERROR_FAILURE;
@@ -785,7 +785,7 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
         for (PRInt32 i = 0; i < cellsInRow; i++)
         {
           nsCOMPtr<nsIDOMElement> newCell;
-          res = CreateElementWithDefaults(NS_LITERAL_STRING("td"), getter_AddRefs(newCell));
+          res = CreateElementWithDefaults(tdStr, getter_AddRefs(newCell));
           if (NS_FAILED(res)) return res;
           if (!newCell) return NS_ERROR_FAILURE;
 
@@ -1551,13 +1551,14 @@ nsHTMLEditor::SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndC
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_FAILURE;
 
+  NS_NAMED_LITERAL_STRING(tableStr, "table");
   nsCOMPtr<nsIDOMElement> table;
-  res = GetElementOrParentByTagName(NS_LITERAL_STRING("table"), aStartCell, getter_AddRefs(table));
+  res = GetElementOrParentByTagName(tableStr, aStartCell, getter_AddRefs(table));
   if (NS_FAILED(res)) return res;
   if (!table) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMElement> endTable;
-  res = GetElementOrParentByTagName(NS_LITERAL_STRING("table"), aEndCell, getter_AddRefs(endTable));
+  res = GetElementOrParentByTagName(tableStr, aEndCell, getter_AddRefs(endTable));
   if (NS_FAILED(res)) return res;
   if (!endTable) return NS_ERROR_FAILURE;
   
@@ -1904,7 +1905,7 @@ nsHTMLEditor::CopyCellBackgroundColor(nsIDOMElement *destCell, nsIDOMElement *so
   if (!destCell || !sourceCell) return NS_ERROR_NULL_POINTER;
 
   // Copy backgournd color to new cell
-  nsAutoString bgcolor(NS_LITERAL_STRING("bgcolor"));
+  NS_NAMED_LITERAL_STRING(bgcolor, "bgcolor");
   nsAutoString color;
   PRBool isSet;
   nsresult res = GetAttributeValue(sourceCell, bgcolor, color, &isSet);
@@ -3308,7 +3309,7 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsS
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_FAILURE;
 
-  nsAutoString tdName(NS_LITERAL_STRING("td"));
+  NS_NAMED_LITERAL_STRING(tdName, "td");
 
   // Try to get the first selected cell
   nsCOMPtr<nsIDOMElement> tableOrCellElement;
@@ -3325,9 +3326,6 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsS
   }
   else
   {
-    nsAutoString tableName(NS_LITERAL_STRING("table"));
-    nsAutoString trName(NS_LITERAL_STRING("tr"));
-
     nsCOMPtr<nsIDOMNode> anchorNode;
     res = selection->GetAnchorNode(getter_AddRefs(anchorNode));
     if(NS_FAILED(res)) return res;
@@ -3353,6 +3351,9 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsS
       } else {
         nsAutoString tag;
         GetTagString(selectedNode,tag);
+
+        NS_NAMED_LITERAL_STRING(tableName, "table");
+        NS_NAMED_LITERAL_STRING(trName, "tr");
 
         if (tag == tdName)
         {

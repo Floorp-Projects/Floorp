@@ -1409,8 +1409,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAReadableString & aCit
   if (!handled)
   {
     nsCOMPtr<nsIDOMNode> newNode;
-    nsAutoString tag(NS_LITERAL_STRING("blockquote"));
-    res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+    res = DeleteSelectionAndCreateNode(NS_LITERAL_STRING("blockquote"), getter_AddRefs(newNode));
     if (NS_FAILED(res)) return res;
     if (!newNode) return NS_ERROR_NULL_POINTER;
 
@@ -1418,9 +1417,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAReadableString & aCit
     nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
     if (newElement)
     {
-      nsAutoString type(NS_LITERAL_STRING("type"));
-      nsAutoString cite(NS_LITERAL_STRING("cite"));
-      newElement->SetAttribute(type, cite);
+      newElement->SetAttribute(NS_LITERAL_STRING("type"), NS_LITERAL_STRING("cite"));
     }
 
     // Set the selection to the underneath the node we just inserted:
@@ -1639,8 +1636,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAReadableString & aQuotedText,
     if (cancel) return NS_OK; // rules canceled the operation
     if (!handled)
     {
-      nsAutoString tag(NS_LITERAL_STRING("blockquote"));
-      res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+      res = DeleteSelectionAndCreateNode(NS_LITERAL_STRING("blockquote"), getter_AddRefs(newNode));
       if (NS_FAILED(res)) return res;
       if (!newNode) return NS_ERROR_NULL_POINTER;
 
@@ -1648,12 +1644,11 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAReadableString & aQuotedText,
       nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
       if (newElement)
       {
-        nsAutoString type(NS_LITERAL_STRING("type"));
-        nsAutoString cite(NS_LITERAL_STRING("cite"));
-        newElement->SetAttribute(type, cite);
+        NS_NAMED_LITERAL_STRING(citestr, "cite");
+        newElement->SetAttribute(NS_LITERAL_STRING("type"), citestr);
 
         if (aCitation.Length() > 0)
-          newElement->SetAttribute(cite, aCitation);
+          newElement->SetAttribute(citestr, aCitation);
 
         // Set the selection inside the blockquote so aQuotedText will go there:
         selection->Collapse(newNode, 0);
