@@ -61,22 +61,22 @@ var gCoreJSEvents =
 // Alse accept: sRGB: #RRGGBB //
 var gHTMLColors =
 [
+	"Aqua"
 	"Black",
-	"Green",
-	"Silver",
-	"Lime",
+	"Blue",
+	"Fuchsia",
 	"Gray",
-	"Olive",
-	"White",
-	"Yellow",
+	"Green",
+	"Lime",
 	"Maroon",
 	"Navy",
-	"Red",
-	"Blue",
+	"Olive",
 	"Purple",
+	"Red",
+	"Silver",
 	"Teal",
-	"Fuchsia",
-	"Aqua"
+	"White",
+	"Yellow",
 ];
 
 var gHAlign =
