@@ -62,7 +62,7 @@
  * (e.g. by going back in the window history) after previously being stopped
  * by the Stop method. 
  */
-struct nsIPlugin : public nsIFactory {
+class nsIPlugin : public nsIFactory {
 public:
 	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGIN_IID)
 
