@@ -426,9 +426,6 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             else if (value instanceof NativeJavaArray) {
                 return JSTYPE_JAVA_ARRAY;
             }
-            else if (value instanceof NativeString) {
-                return JSTYPE_STRING;
-            }
             else if (value instanceof NativeJavaObject) {
                 return JSTYPE_JAVA_OBJECT;
             }
@@ -465,78 +462,191 @@ public class NativeJavaObject implements Scriptable, Wrapper {
      * Conforms to LC3 specification
      */
     public static Object coerceType(Class type, Object value) {
-        // Don't coerce null to a string (or other object)
-        if (value == null) {
+        if (value != null && value.getClass() == type) {
+            return value;
+        }
+
+        switch (NativeJavaObject.getJSTypeCode(value)) {
+
+        case JSTYPE_NULL:
             // raise error if type.isPrimitive()
             if (type.isPrimitive()) {
                 reportConversionError(value, type);
             }
             return null;
-        }
-        else if (value == Undefined.instance) {
+
+        case JSTYPE_UNDEFINED:
             if (type == ScriptRuntime.StringClass || 
                 type == ScriptRuntime.ObjectClass) {
                 return "undefined";
             }
             else {
-                // report conversion error
                 reportConversionError("undefined", type);
             }
-        }
+            break;
 
-        // Special case: converting JS numbers to Objects
-        // Done before we unwrap, to distinguish from a 
-        // wrapped java.lang.Number.
-        if (type == ScriptRuntime.ObjectClass && value instanceof Number) {
-            return new Double(((Number)value).doubleValue());
-        }
-
-        // Unwrap at this point; callers do not need to unwrap
-        if (value instanceof Wrapper) {
-            value = ((Wrapper)value).unwrap();
-        }
-
-        // For final classes we can compare valueClass to a Class object
-        // rather than using instanceof
-        Class valueClass = value.getClass();
-        
-        // Is value already of the correct type?
-        if (valueClass == type)
-            return value;
-
-        // String
-        if (type == ScriptRuntime.StringClass)
-            return ScriptRuntime.toString(value);
-        
-        // Boolean
-        if (type == Boolean.TYPE || type == ScriptRuntime.BooleanClass) {
+        case JSTYPE_BOOLEAN:
             // Under LC3, only JS Booleans can be coerced into a Boolean value
-            if (valueClass == ScriptRuntime.BooleanClass) {
+            if (type == Boolean.TYPE || 
+                type == ScriptRuntime.BooleanClass || 
+                type == ScriptRuntime.ObjectClass) {
+                return value;
+            }
+            else if (type == ScriptRuntime.StringClass) {
+                return value.toString();
+            }
+            else {
+                reportConversionError(value, type);
+            }
+            break;
+
+        case JSTYPE_NUMBER:
+            if (type == ScriptRuntime.StringClass) {
+                return ScriptRuntime.toString(value);
+            }
+            else if (type == ScriptRuntime.ObjectClass) {
+                return coerceToNumber(Double.TYPE, value);
+            }
+            else if ((type.isPrimitive() && type != Boolean.TYPE) || 
+                     ScriptRuntime.NumberClass.isAssignableFrom(type)) {
+                return coerceToNumber(type, value);
+            }
+            else {
+                reportConversionError(value, type);
+            }
+            break;
+
+        case JSTYPE_STRING:
+            if (type == ScriptRuntime.StringClass ||
+                type == ScriptRuntime.ObjectClass) {
+                return value;
+            }
+            else if (type == Character.TYPE || 
+                     type == ScriptRuntime.CharacterClass) {
+                // Special case for converting a single char string to a 
+                // character
+                // Placed here because it applies *only* to JS strings, 
+                // not other JS objects converted to strings
+                if (((String)value).length() == 1) {
+                    return new Character(((String)value).charAt(0));
+                }
+                else {
+                    return coerceToNumber(type, value);
+                }
+            }
+            else if ((type.isPrimitive() && type != Boolean.TYPE) || 
+                     ScriptRuntime.NumberClass.isAssignableFrom(type)) {
+                return coerceToNumber(type, value);
+            }
+            else {
+                reportConversionError(value, type);
+            }
+            break;
+
+        case JSTYPE_JAVA_CLASS:
+            if (Context.useJSObject && jsObjectClass != null && 
+                (type == ScriptRuntime.ObjectClass || 
+                 jsObjectClass.isAssignableFrom(type))) {
+                return coerceToJSObject(type, (Scriptable)value);
+            }
+            else {
+                if (value instanceof Wrapper) {
+                    value = ((Wrapper)value).unwrap();
+                }
+
+                if (type == ScriptRuntime.ClassClass ||
+                    type == ScriptRuntime.ObjectClass) {
+                    return value;
+                }
+                else if (type == ScriptRuntime.StringClass) {
+                    return value.toString();
+                }
+                else {
+                    reportConversionError(value, type);
+                }
+            }
+            break;
+
+        case JSTYPE_JAVA_OBJECT:
+        case JSTYPE_JAVA_ARRAY:
+            if (type.isPrimitive()) {
+                if (type == Boolean.TYPE) {
+                    reportConversionError(value, type);
+                }
+                return coerceToNumber(type, value);
+            }
+            else {
+                if (value instanceof Wrapper) {
+                    value = ((Wrapper)value).unwrap();
+                }
+                if (type == ScriptRuntime.StringClass) {
+                    return value.toString();
+                }
+                else {
+                    if (type.isInstance(value)) {
+                        return value;
+                    }
+                    else {
+                        reportConversionError(value, type);
+                    }
+                }
+            }
+            break;
+
+        case JSTYPE_OBJECT:
+            if (Context.useJSObject && jsObjectClass != null && 
+                (type == ScriptRuntime.ObjectClass || 
+                 jsObjectClass.isAssignableFrom(type))) {
+                return coerceToJSObject(type, (Scriptable)value);
+            }
+            else if (type == ScriptRuntime.StringClass) {
+                return ScriptRuntime.toString(value);
+            }
+            else if (type.isPrimitive()) {
+                if (type == Boolean.TYPE) {
+                    reportConversionError(value, type);
+                }
+                return coerceToNumber(type, value);
+            }
+            else if (type.isInstance(value)) {
                 return value;
             }
             else {
                 reportConversionError(value, type);
             }
+            break;
         }
+
+        return value;
+    }
+
+    static Object coerceToJSObject(Class type, Scriptable value) {
+        // If JSObject compatibility is enabled, and the method wants it,
+        // wrap the Scriptable value in a JSObject.
+
+        if (ScriptRuntime.ScriptableClass.isAssignableFrom(type))
+            return value;
+
+        try {
+            Object ctorArgs[] = { value };
+            return jsObjectCtor.newInstance(ctorArgs);
+        } catch (InstantiationException instEx) {
+            throw new EvaluatorException("error generating JSObject wrapper for " +
+                                         value);
+        } catch (IllegalArgumentException argEx) {
+            throw new EvaluatorException("JSObject constructor doesn't want [Scriptable]!");
+        } catch (InvocationTargetException e) {
+            throw WrappedException.wrapException(e);
+        } catch (IllegalAccessException accessEx) {
+            throw new EvaluatorException("JSObject constructor is protected/private!");
+        }
+    }
+
+    static Object coerceToNumber(Class type, Object value) {
+        Class valueClass = value.getClass();
 
         // Character
         if (type == Character.TYPE || type == ScriptRuntime.CharacterClass) {
-            // Special case for converting a single char string to a character
-            if (valueClass == ScriptRuntime.StringClass && ((String) value).length() == 1)
-                return new Character(((String) value).charAt(0));
-            /*
-            if (valueClass == ScriptRuntime.StringClass) {
-                String string = (String)value;
-                if (string.length() == 1) {
-                    char ch = string.charAt(0);
-                    // XXX: Next test not in LC3 spec, but is backwardly 
-                    // compatible and satisfies regression tests
-                    if (!Character.isDigit(ch)) {
-                        return new Character(ch);
-                    }
-                }
-            }
-            */
             if (valueClass == ScriptRuntime.CharacterClass) {
                 return value;
             }
@@ -547,10 +657,11 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         }
 
         // Double, Float
-        if (type == ScriptRuntime.DoubleClass || type == Double.TYPE) {
+        if (type == ScriptRuntime.ObjectClass || 
+            type == ScriptRuntime.DoubleClass || type == Double.TYPE) {
             return valueClass == ScriptRuntime.DoubleClass
                 ? value
-                : new Double(ScriptRuntime.toNumber(value));
+                : new Double(toDouble(value));
         }
 
         if (type == ScriptRuntime.FloatClass || type == Float.TYPE) {
@@ -558,7 +669,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                 return value;
             }
             else {
-                double number = ScriptRuntime.toNumber(value);
+                double number = toDouble(value);
                 if (Double.isInfinite(number) || Double.isNaN(number)
                     || number == 0.0) {
                     return new Float((float)number);
@@ -629,51 +740,61 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             }
         }
 
-        // If JSObject compatibility is enabled, and the method wants it,
-        // wrap the Scriptable value in a JSObject.
-        if (Context.useJSObject && jsObjectClass != null && 
-            value instanceof Scriptable)
-            {
-                if (ScriptRuntime.ScriptableClass.isAssignableFrom(type))
-                    return value;
+        return new Double(toDouble(value));
+    }
+
+
+    static double toDouble(Object value) {
+        if (value instanceof Number) {
+            return ((Number)value).doubleValue();
+        }
+        else if (value instanceof String) {
+            return ScriptRuntime.toNumber((String)value);
+        }
+        else if (value instanceof Scriptable) {
+            if (value instanceof Wrapper) {
+                // XXX: optimize tail-recursion?
+                return toDouble(((Wrapper)value).unwrap());
+            }
+            else {
+                return ScriptRuntime.toNumber(value);
+            }
+        }
+        else {
+            double result = Double.NaN;
+            Method meth;
+            try {
+                meth = value.getClass().getMethod("doubleValue", null);
+            }
+            catch (NoSuchMethodException e) {
+                meth = null;
+            }
+            catch (SecurityException e) {
+                meth = null;
+            }
+            if (meth != null) {
                 try {
-                    Object ctorArgs[] = { value };
-                    return jsObjectCtor.newInstance(ctorArgs);
-                } catch (InstantiationException instEx) {
-                    throw new EvaluatorException("error generating JSObject wrapper for " +
-                                                 value);
-                } catch (IllegalArgumentException argEx) {
-                    throw new EvaluatorException("JSObject constructor doesn't want [Scriptable]!");
-                } catch (InvocationTargetException e) {
-                    throw WrappedException.wrapException(e);
-                } catch (IllegalAccessException accessEx) {
-                    throw new EvaluatorException("JSObject constructor is protected/private!");
+                    return ((Number)meth.invoke(value, null)).doubleValue();
+                }
+                catch (IllegalAccessException e) {
+                    // XXX: ignore, or error message?
+                    reportConversionError(value, Double.TYPE);
+                }
+                catch (InvocationTargetException e) {
+                    // XXX: ignore, or error message?
+                    reportConversionError(value, Double.TYPE);
                 }
             }
-        
-        return value;
+            return ScriptRuntime.toNumber(value.toString());
+        }
     }
 
     static long toInteger(Object value, Class type, long min, long max) {
-        double d;
-
-        if (value instanceof Number) {
-            d = ((Number)value).doubleValue();
-        }
-        else if (value instanceof String) {
-            d = ScriptRuntime.toNumber((String)value);
-        }
-        else if (value instanceof Scriptable) {
-            d = ScriptRuntime.toNumber(value);
-        }
-        else {
-            // XXX: is this correct?
-            d = ScriptRuntime.toNumber(value.toString());
-        }
+        double d = toDouble(value);
 
         if (Double.isInfinite(d) || Double.isNaN(d)) {
             // Convert to string first, for more readable message
-            reportConversionError(value.toString(), type);
+            reportConversionError(ScriptRuntime.toString(value), type);
         }
 
         if (d > 0.0) {
@@ -685,7 +806,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
 
         if (d < (double)min || d > (double)max) {
             // Convert to string first, for more readable message
-            reportConversionError(value.toString(), type);
+            reportConversionError(ScriptRuntime.toString(value), type);
         }
         return (long)d;
     }
