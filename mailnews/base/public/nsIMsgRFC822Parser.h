@@ -49,46 +49,51 @@ public:
        consecutive null-terminated strings.  It is up to the caller to free them.
        Note that some of the strings may be zero-length.
 
+       The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
+
        Either of the provided pointers may be NULL if the caller is not interested
        in those components.
     */
-	NS_IMETHOD ParseRFC822Addresses (const char *line, char **names, char **addresses, PRUint32& numAddresses) = 0;
-	NS_IMETHOD ParseRFC822Addresses_Intl (PRInt16 csid, const char *line, char **names, char **addresses,  PRUint32& numAddresses) = 0;
+	NS_IMETHOD ParseRFC822Addresses (const char *charset, const char *line, char **names, char **addresses, PRUint32& numAddresses) = 0;
 
 	/* Given a string which contains a list of RFC822 addresses, returns a
 	   comma-seperated list of just the `mailbox' portions.
 
+     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
+
 	   Caller must call PL_strfree on returnValue (which is allocated by the function)
     */
-	NS_IMETHOD ExtractRFC822AddressMailboxes (const char *line, char ** mailboxes) = 0;
-    NS_IMETHOD ExtractRFC822AddressMailboxes_Intl (PRInt16 csid, const char *line, char ** mailboxes) = 0;
+	NS_IMETHOD ExtractRFC822AddressMailboxes (const char *charset, const char *line, char ** mailboxes) = 0;
 
 
 	/* Given a string which contains a list of RFC822 addresses, returns a
 	   comma-seperated list of just the `user name' portions.  If any of
 	   the addresses doesn't have a name, then the mailbox is used instead.
 
+     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
+
 	   Caller must PL_strfree usernames.
 	 */
-	NS_IMETHOD ExtractRFC822AddressNames (const char *line, char ** userNames) = 0;
-	NS_IMETHOD ExtractRFC822AddressNames_Intl (PRInt16 csid, const char *line, char ** userNames)= 0;
+	NS_IMETHOD ExtractRFC822AddressNames (const char *charset, const char *line, char ** userNames) = 0;
 
 	/* Like MSG_ExtractRFC822AddressNames(), but only returns the first name
 	   in the list, if there is more than one. 
 	   
+     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
+
 	   Caller must call PL_strfree on name
 	 */
-	NS_IMETHOD ExtractRFC822AddressName (const char *line, char ** name) = 0;
-	NS_IMETHOD ExtractRFC822AddressName_Intl (PRInt16 csid, const char *line, char ** name) = 0;
+	NS_IMETHOD ExtractRFC822AddressName (const char *charset, const char *line, char ** name) = 0;
 
 	/* Given a string which contains a list of RFC822 addresses, returns a new
 	   string with the same data, but inserts missing commas, parses and reformats
 	   it, and wraps long lines with newline-tab.
 
+     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
+
        Caller must call PL_strfree on reformattedAddress
 	 */
-	NS_IMETHOD ReformatRFC822Addresses (const char *line, char ** reformattedAddress) = 0;
-	NS_IMETHOD ReformatRFC822Addresses_Intl (PRInt16 csid, const char *line, char ** reformattedAddress) = 0;
+	NS_IMETHOD ReformatRFC822Addresses (const char *charset, const char *line, char ** reformattedAddress) = 0;
 
 	/* Returns a copy of ADDRS which may have had some addresses removed.
 	   Addresses are removed if they are already in either ADDRS or OTHER_ADDRS.
@@ -103,27 +108,28 @@ public:
 	   contains regular expressions which also mean 'me' for the purpose of
 	   stripping the user's email address(es) out of addrs
 
+     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
+
        Caller must call PL_strfree on newAddress which is the return value.
 	 */
-	NS_IMETHOD RemoveDuplicateAddresses (const char *addrs, const char *other_addrs, PRBool removeAliasesToMe, char ** newAddress) = 0;
-	NS_IMETHOD RemoveDuplicateAddresses_Intl (PRInt16 csid, const char *addrs, const char *other_addrs, PRBool removeAliasesToMe, char ** newAddress) = 0;
+	NS_IMETHOD RemoveDuplicateAddresses (const char *charset, const char *addrs, const char *other_addrs, PRBool removeAliasesToMe, char ** newAddress) = 0;
 
 
 	/* Given an e-mail address and a person's name, cons them together into a
 	   single string of the form "name <address>", doing all the necessary quoting.
 	   A new string is returned, which you must free when you're done with it.
 
+     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
+
        Caller must call PL_strfree on fullAddress
 	 */
-	NS_IMETHOD MakeFullAddress (const char* name, const char* addr, char ** fullAddress) = 0;
-	NS_IMETHOD MakeFullAddress_Intl (PRInt16 csid, const char* name, const char* addr, char ** fullAddress) = 0;
+	NS_IMETHOD MakeFullAddress (const char *charset, const char* name, const char* addr, char ** fullAddress) = 0;
 
 	/* MSG_ParseRFC822Addresses returns quoted parsable addresses
 	   This function removes the quoting if you want to show the
 	   names to users. e.g. summary file, address book
 	 */
-	NS_IMETHOD UnquotePhraseOrAddr (const char *line, char** lineout) = 0;
-	NS_IMETHOD UnquotePhraseOrAddr_Intl (PRInt16 csid, const char *line, char** lineout) = 0;
+	NS_IMETHOD UnquotePhraseOrAddr (const char *charset, const char *line, char** lineout) = 0;
 
 }; 
 

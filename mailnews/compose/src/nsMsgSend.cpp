@@ -1645,7 +1645,7 @@ static char * mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_
                                                (void **) &pRfc822);
 		if (NS_SUCCEEDED(rv)) {
 			char *n;
-			pRfc822->ReformatRFC822Addresses(string, &n);
+			pRfc822->ReformatRFC822Addresses(nsnull, string, &n);
 			pRfc822->Release();
 			if (n)
 				return n;

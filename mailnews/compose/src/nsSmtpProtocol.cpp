@@ -624,7 +624,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 		 char * s = nsnull;
 		 if (parser)
 		 {
-			 parser->MakeFullAddress(nsnull, userAddress, &s);
+			 parser->MakeFullAddress(nsnull, nsnull, userAddress, &s);
 			 NS_RELEASE(parser);
 		 }
 
@@ -1325,7 +1325,7 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 
 				if (parser)
 				{
-					parser->RemoveDuplicateAddresses(addresses, nsnull, PR_FALSE, &addrs1);
+					parser->RemoveDuplicateAddresses(nsnull, addresses, nsnull, PR_FALSE, &addrs1);
 
 					/* Extract just the mailboxes from the full RFC822 address list.
 					   This means that people can post to mailto: URLs which contain
@@ -1334,7 +1334,7 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 					*/
 					if (addrs1 && *addrs1)
 					{
-						rv = parser->ParseRFC822Addresses(addrs1, nsnull, &addrs2, m_addressesLeft);
+						rv = parser->ParseRFC822Addresses(nsnull, addrs1, nsnull, &addrs2, m_addressesLeft);
 						PR_FREEIF (addrs1);
 					}
 

@@ -52,16 +52,14 @@
        Either of the provided pointers may be NULL if the caller is not interested
        in those components.
     */
-	NS_IMETHOD ParseRFC822Addresses (const char *line, char **names, char **addresses, PRUint32& numAddresses);
-	NS_IMETHOD ParseRFC822Addresses_Intl (PRInt16 csid, const char *line, char **names, char **addresses, PRUint32& numAddresses);
+	NS_IMETHOD ParseRFC822Addresses (const char *charset, const char *line, char **names, char **addresses, PRUint32& numAddresses);
 
 	/* Given a string which contains a list of RFC822 addresses, returns a
 	   comma-seperated list of just the `mailbox' portions.
 
        Caller must call PL_Free on mailboxes string returned by these calls.
     */
-	NS_IMETHOD ExtractRFC822AddressMailboxes (const char *line, char ** mailboxes);
-    NS_IMETHOD ExtractRFC822AddressMailboxes_Intl (PRInt16 csid, const char *line, char ** mailboxes);
+	NS_IMETHOD ExtractRFC822AddressMailboxes (const char *charset, const char *line, char ** mailboxes);
 
 
 	/* Given a string which contains a list of RFC822 addresses, returns a
@@ -70,16 +68,14 @@
 
        Caller must call PL_Free on userNames
 	 */
-	NS_IMETHOD ExtractRFC822AddressNames (const char *line, char ** userNames);
-	NS_IMETHOD ExtractRFC822AddressNames_Intl (PRInt16 csid, const char *line, char ** userNames);
+	NS_IMETHOD ExtractRFC822AddressNames (const char *charset, const char *line, char ** userNames);
 
 	/* Like MSG_ExtractRFC822AddressNames(), but only returns the first name
 	   in the list, if there is more than one. 
 
 	   Caller must call PL_Free on the returned firstName string.
 	 */
-	NS_IMETHOD ExtractRFC822AddressName (const char *line, char ** firstName);
-	NS_IMETHOD ExtractRFC822AddressName_Intl (PRInt16 csid, const char *line, char ** firstName);
+	NS_IMETHOD ExtractRFC822AddressName (const char *charset, const char *line, char ** firstName);
 
 	/* Given a string which contains a list of RFC822 addresses, returns a new
 	   string with the same data, but inserts missing commas, parses and reformats
@@ -87,8 +83,7 @@
 
        Caller must call PL_Free on the returned string
 	 */
-	NS_IMETHOD ReformatRFC822Addresses (const char *line, char ** reformattedAddress);
-	NS_IMETHOD ReformatRFC822Addresses_Intl (PRInt16 csid, const char *line, char ** reformattedAddress);
+	NS_IMETHOD ReformatRFC822Addresses (const char *charset, const char *line, char ** reformattedAddress);
 
 	/* Returns a copy of ADDRS which may have had some addresses removed.
 	   Addresses are removed if they are already in either ADDRS or OTHER_ADDRS.
@@ -105,8 +100,7 @@
 
        Caller must call PL_Free on outString.
 	 */
-	NS_IMETHOD RemoveDuplicateAddresses (const char *addrs, const char *other_addrs, PRBool removeAliasesToMe, char ** outString);
-	NS_IMETHOD RemoveDuplicateAddresses_Intl (PRInt16 csid, const char *addrs, const char *other_addrs, PRBool removeAliasesToMe, char ** outString);
+	NS_IMETHOD RemoveDuplicateAddresses (const char *charset, const char *addrs, const char *other_addrs, PRBool removeAliasesToMe, char ** outString);
 
 
 	/* Given an e-mail address and a person's name, cons them together into a
@@ -115,15 +109,13 @@
 
        Caller must call PL_Free on fullAddress
 	 */
-	NS_IMETHOD MakeFullAddress (const char* name, const char* addr, char ** fullAddress);
-	NS_IMETHOD MakeFullAddress_Intl (PRInt16 csid, const char* name, const char* addr, char ** fullAddress);
+	NS_IMETHOD MakeFullAddress (const char *charset, const char* name, const char* addr, char ** fullAddress);
 
 	/* MSG_ParseRFC822Addresses returns quoted parsable addresses
 	   This function removes the quoting if you want to show the
 	   names to users. e.g. summary file, address book
 	 */
-	NS_IMETHOD UnquotePhraseOrAddr (const char *line, char** lineout);
-	NS_IMETHOD UnquotePhraseOrAddr_Intl (PRInt16 csid, const char *line, char** lineout);
+	NS_IMETHOD UnquotePhraseOrAddr (const char *charset, const char *line, char** lineout);
 
 	private:
  }; 

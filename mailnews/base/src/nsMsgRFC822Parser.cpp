@@ -96,19 +96,13 @@ NS_IMPL_ADDREF(nsMsgRFC822Parser)
 NS_IMPL_RELEASE(nsMsgRFC822Parser)
 NS_IMPL_QUERY_INTERFACE(nsMsgRFC822Parser, nsIMsgRFC822Parser::GetIID()); /* we need to pass in the interface ID of this interface */
 
-nsresult nsMsgRFC822Parser::ParseRFC822Addresses (const char *line, char **names, char **addresses, PRUint32& numAddresses)
+nsresult nsMsgRFC822Parser::ParseRFC822Addresses (const char *charset, const char *line, char **names, char **addresses, PRUint32& numAddresses)
 {
 	numAddresses = msg_parse_rfc822_addresses(CS_APP_DEFAULT, line, names, addresses);
 	return NS_OK;
 }
 
-nsresult nsMsgRFC822Parser::ParseRFC822Addresses_Intl (PRInt16 csid, const char *line, char **names, char **addresses, PRUint32& numAddresses)
-{
-	numAddresses = msg_parse_rfc822_addresses(csid, line, names, addresses);
-	return NS_OK;
-}
-
-nsresult nsMsgRFC822Parser::ExtractRFC822AddressMailboxes (const char *line, char ** mailboxes)
+nsresult nsMsgRFC822Parser::ExtractRFC822AddressMailboxes (const char *charset, const char *line, char ** mailboxes)
 {
 	if (mailboxes)
 	{
@@ -119,18 +113,7 @@ nsresult nsMsgRFC822Parser::ExtractRFC822AddressMailboxes (const char *line, cha
 		return NS_ERROR_NULL_POINTER;
 }
 
-nsresult nsMsgRFC822Parser::ExtractRFC822AddressMailboxes_Intl (PRInt16 csid, const char *line, char ** mailboxes)
-{
-	if (mailboxes)
-	{
-		*mailboxes = msg_extract_rfc822_address_mailboxes(csid, line);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-nsresult nsMsgRFC822Parser::ExtractRFC822AddressNames (const char *line, char ** names)
+nsresult nsMsgRFC822Parser::ExtractRFC822AddressNames (const char *charset, const char *line, char ** names)
 {
 	if (names)
 	{
@@ -141,18 +124,8 @@ nsresult nsMsgRFC822Parser::ExtractRFC822AddressNames (const char *line, char **
 		return NS_ERROR_NULL_POINTER;
 }
 
-nsresult nsMsgRFC822Parser::ExtractRFC822AddressNames_Intl (PRInt16 csid, const char *line, char ** names)
-{
-	if (names)
-	{
-		*names = msg_extract_rfc822_address_names(csid, line);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
 
-nsresult nsMsgRFC822Parser::ExtractRFC822AddressName (const char *line, char ** name)
+nsresult nsMsgRFC822Parser::ExtractRFC822AddressName (const char *charset, const char *line, char ** name)
 {
 	if (name)
 	{
@@ -163,18 +136,7 @@ nsresult nsMsgRFC822Parser::ExtractRFC822AddressName (const char *line, char ** 
 		return NS_ERROR_NULL_POINTER;
 }
 
-nsresult nsMsgRFC822Parser::ExtractRFC822AddressName_Intl (PRInt16 csid, const char *line, char ** name)
-{
-	if (name)
-	{
-		*name = msg_extract_rfc822_address_name(csid, line);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-nsresult nsMsgRFC822Parser::ReformatRFC822Addresses (const char *line, char ** reformattedAddress)
+nsresult nsMsgRFC822Parser::ReformatRFC822Addresses (const char *charset, const char *line, char ** reformattedAddress)
 {
 	if (reformattedAddress)
 	{
@@ -185,18 +147,7 @@ nsresult nsMsgRFC822Parser::ReformatRFC822Addresses (const char *line, char ** r
 		return NS_ERROR_NULL_POINTER;
 }
 
-nsresult nsMsgRFC822Parser::ReformatRFC822Addresses_Intl (PRInt16 csid, const char *line, char ** reformattedAddress)
-{
-	if (reformattedAddress)
-	{
-		*reformattedAddress = msg_reformat_rfc822_addresses(csid, line);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-nsresult nsMsgRFC822Parser::RemoveDuplicateAddresses (const char *addrs, const char *other_addrs, PRBool removeAliasesToMe, char ** newOutput)
+nsresult nsMsgRFC822Parser::RemoveDuplicateAddresses (const char *charset, const char *addrs, const char *other_addrs, PRBool removeAliasesToMe, char ** newOutput)
 {
 	if (newOutput)
 	{
@@ -207,18 +158,7 @@ nsresult nsMsgRFC822Parser::RemoveDuplicateAddresses (const char *addrs, const c
 		return NS_ERROR_NULL_POINTER;
 }
 
-nsresult nsMsgRFC822Parser::RemoveDuplicateAddresses_Intl (PRInt16 csid, const char *addrs, const char *other_addrs, PRBool removeAliasesToMe, char ** newOutput)
-{
-	if (newOutput)
-	{
-		*newOutput = msg_remove_duplicate_addresses(csid, addrs, other_addrs, removeAliasesToMe);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-nsresult nsMsgRFC822Parser::MakeFullAddress (const char* name, const char* addr, char ** fullAddress)
+nsresult nsMsgRFC822Parser::MakeFullAddress (const char *charset, const char* name, const char* addr, char ** fullAddress)
 {
 	if (fullAddress)
 	{
@@ -229,26 +169,9 @@ nsresult nsMsgRFC822Parser::MakeFullAddress (const char* name, const char* addr,
 		return NS_ERROR_NULL_POINTER;
 }
 
-nsresult nsMsgRFC822Parser::MakeFullAddress_Intl (PRInt16 csid, const char* name, const char* addr, char ** fullAddress)
-{
-	if (fullAddress)
-	{
-		*fullAddress = msg_make_full_address(csid, name, addr);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-nsresult nsMsgRFC822Parser::UnquotePhraseOrAddr (const char *line, char** lineout)
+nsresult nsMsgRFC822Parser::UnquotePhraseOrAddr (const char *charset, const char *line, char** lineout)
 {
 	msg_unquote_phrase_or_addr(CS_APP_DEFAULT, line, lineout);
-	return NS_OK;
-}
-
-nsresult nsMsgRFC822Parser::UnquotePhraseOrAddr_Intl (PRInt16 csid, const char *line, char** lineout)
-{
-	msg_unquote_phrase_or_addr(csid, line, lineout);
 	return NS_OK;
 }
 

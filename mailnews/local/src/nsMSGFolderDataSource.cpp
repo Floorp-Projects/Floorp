@@ -403,7 +403,7 @@ nsresult nsMSGFolderDataSource::GetSenderName(nsAutoString& sender, nsAutoString
 	{
 		char *name;
 		char *senderStr = sender.ToNewCString();
-		if(NS_SUCCEEDED(rv = gRFC822Parser->ExtractRFC822AddressName (senderStr, &name)))
+		if(NS_SUCCEEDED(rv = gRFC822Parser->ExtractRFC822AddressName (nsnull, senderStr, &name)))
 		{
 			*senderUserName = name;
 		}

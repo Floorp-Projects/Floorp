@@ -3458,8 +3458,8 @@ PRInt32 nsNNTPProtocol::Cancel()
     if (NS_SUCCEEDED(rv)) 
 	{
 		char *us, *them;
-		nsresult rv1 = parser->ExtractRFC822AddressMailboxes(from, &us);
-		nsresult rv2 = parser->ExtractRFC822AddressMailboxes(old_from, &them);
+		nsresult rv1 = parser->ExtractRFC822AddressMailboxes(nsnull, from, &us);
+		nsresult rv2 = parser->ExtractRFC822AddressMailboxes(nsnull, old_from, &them);
 		ok = (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2) && !PL_strcasecmp(us, them));
 
 		if (NS_SUCCEEDED(rv1)) PR_Free(us);
