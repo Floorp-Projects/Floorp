@@ -35,7 +35,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.29 2001/12/10 18:14:23 ian.mcgreer%sun.com Exp $
+ * $Id: rsa.c,v 1.30 2002/02/07 01:00:31 wtc%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -663,7 +663,7 @@ rsa_PrivateKeyOp(RSAPrivateKey *key,
 {
     unsigned int modLen;
     unsigned int offset;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     mp_err err;
     mp_int n, c, m;
     mp_int f, g;
