@@ -53,7 +53,7 @@
 #include "nsIURI.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsILocalFile.h"
-#include "nsHashtable.h"
+#include "nsRefPtrHashtable.h"
 #include "nsIRequest.h"
 #include "nsIObserver.h"
 #include "nsIStringBundle.h"
@@ -61,6 +61,8 @@
 #include "nsIMIMEInfo.h"
  
 enum DownloadState { NOTSTARTED = -1, DOWNLOADING, FINISHED, FAILED, CANCELED };
+
+class nsDownload;
 
 class nsDownloadManager : public nsIDownloadManager,
                           public nsIDOMEventListener,
@@ -96,7 +98,7 @@ private:
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsCOMPtr<nsIStringBundle> mBundle;
   PRInt32 mBatches;
-  nsHashtable mCurrDownloads;
+  nsRefPtrHashtable<nsCStringHashKey, nsDownload> mCurrDownloads;
 
   friend class nsDownload;
 };
@@ -145,7 +147,7 @@ private:
   PRInt32 mPercentComplete;
   PRInt32 mCurrBytes;
   PRInt32 mMaxBytes;
-  PRInt64 mStartTime;
+  PRTime mStartTime;
   PRTime mLastUpdate;
 
   friend class nsDownloadManager;
