@@ -966,11 +966,9 @@ nsContinuingTextFrame::Destroy(nsIPresContext* aPresContext)
 nsIFrame*
 nsContinuingTextFrame::GetFirstInFlow() const
 {
-  nsContinuingTextFrame* firstInFlow;
-  nsContinuingTextFrame* prevInFlow = (nsContinuingTextFrame*)this;
-  while (prevInFlow)  {
-    firstInFlow = prevInFlow;
-    prevInFlow = (nsContinuingTextFrame*)firstInFlow->mPrevInFlow;
+  nsContinuingTextFrame* firstInFlow = (nsContinuingTextFrame*)this;
+  while (firstInFlow->mPrevInFlow)  {
+    firstInFlow = (nsContinuingTextFrame*)firstInFlow->mPrevInFlow;
   }
   NS_POSTCONDITION(firstInFlow, "illegal state in flow chain.");
   return firstInFlow;
@@ -1445,11 +1443,9 @@ nsTextFrame::GetCursor(nsIPresContext* aPresContext,
 nsIFrame*
 nsTextFrame::GetLastInFlow() const
 {
-  nsTextFrame* lastInFlow;
-  nsTextFrame* nextInFlow = (nsTextFrame*)this;
-  while (nextInFlow)  {
-    lastInFlow = nextInFlow;
-    nextInFlow = (nsTextFrame*)lastInFlow->mNextInFlow;
+  nsTextFrame* lastInFlow = (nsTextFrame*)this;
+  while (lastInFlow->mNextInFlow)  {
+    lastInFlow = (nsTextFrame*)lastInFlow->mNextInFlow;
   }
   NS_POSTCONDITION(lastInFlow, "illegal state in flow chain.");
   return lastInFlow;
