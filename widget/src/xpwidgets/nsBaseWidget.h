@@ -133,7 +133,7 @@ protected:
       NS_DECL_ISUPPORTS
 
       Enumerator();
-      ~Enumerator();
+      virtual ~Enumerator();
 
       NS_IMETHOD First();
       NS_IMETHOD Last();
