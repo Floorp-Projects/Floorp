@@ -1357,17 +1357,14 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 				inplaceSortCallback, (void *)sortInfo);
 		}
 
-		numChildren = 0;
-		for (loop=currentElement; loop < currentElement + numElements; loop++)
-		{
-			container->InsertChildAt((nsIContent *)flatArray[loop], numChildren++, PR_FALSE);
-		}
-
 		nsCOMPtr<nsIContent>	parentNode;
 		nsAutoString		value;
+		PRInt32			childPos = 0;
 		// recurse on grandchildren
 		for (loop=currentElement; loop < currentElement + numElements; loop++)
 		{
+			container->InsertChildAt((nsIContent *)flatArray[loop], childPos++, PR_FALSE);
+
 			// Bug 6665, part deux. The Big Hack.
 			nsIRDFResource	*resource;
 			gXULUtils->GetElementResource(flatArray[loop], &resource);
