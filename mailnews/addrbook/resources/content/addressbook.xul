@@ -44,7 +44,12 @@ Rights Reserved.
 <!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 
 <commands id="commands">
-	<commandset id="CommandUpdate_AddressBook" commandupdater="true" onchange="CommandUpdate_AddressBook()"/>
+	<commandset id="CommandUpdate_AddressBook"
+				commandupdater="true"
+				events="focus,blur,select"
+				onchange="CommandUpdate_AddressBook()"/>
+	
+	<commandset id="globalEditMenuItems"/>
 </commands>
 
 <broadcasterset id="broadcasterset">
@@ -174,7 +179,7 @@ Rights Reserved.
 			<titledbutton src="&newlistButton.img;" align="top" value="&newlistButton.label;" onclick="AbNewList()"/>
 			<titledbutton src="&editButton.img;" align="top" value="&editButton.label;" onclick="AbEditCard()"/>
 			<titledbutton src="&newmsgButton.img;" align="top" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
-			<titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="AbDelete()"/>
+			<titledbutton id="button_delete" disabled="true" src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="AbDelete()"/>
 
 			<html:div class="separator" align="vertical"/>
 			

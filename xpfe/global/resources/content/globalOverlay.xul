@@ -32,6 +32,10 @@
 	<key id="key_delete" command="true" key="&deleteCmd.key;" observes="cmd_delete"/>
 	<key id="key_selectAll" command="true" key="&selectAllCmd.key;" observes="cmd_selectAll"/>
 
+	<commandset id="globalEditMenuItems"
+					commandupdater="true"
+					onchange="goUpdateGlobalEditMenuItems()"/>
+					
 	<broadcaster id="cmd_undo" 
 				 oncommand="goDoCommand('cmd_undo')"
 				 onchange="goUpdateCommand('cmd_undo')"
@@ -52,16 +56,14 @@
 				 oncommand="goDoCommand('cmd_paste')"
 				 onchange="goUpdateCommand('cmd_paste')"
 				 disabled="true"/>
-	<broadcaster id="cmd_delete" commandupdater="true"
+	<broadcaster id="cmd_delete"
 				 oncommand="goDoCommand('cmd_delete')"
-				 onchange="goUpdateCommand('cmd_delete')"
 				 valueDefault="&deleteCmd.label;"
 				 disabled="true"/>
-	<broadcaster id="cmd_selectAll" commandupdater="true"
+	<broadcaster id="cmd_selectAll"
 				 oncommand="goDoCommand('cmd_selectAll')"
-				 onchange="goUpdateCommand('cmd_selectAll')"
 				 disabled="true"/>
-
+	
 	<menuitem id="menu_preferences" value="&preferencesCmd.label;"/>
 		  
 	<!-- View Menu -->

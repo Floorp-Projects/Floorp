@@ -51,6 +51,10 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
 <html:script src="chrome://navigator/content/contentframe.js" />
 
+<commands id="commands">
+	<commandset id="globalEditMenuItems"/>
+</commands>
+
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
 	<broadcaster id="cmd_close" oncommand="CloseMessenger()"/>

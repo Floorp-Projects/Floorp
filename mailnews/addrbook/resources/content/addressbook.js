@@ -40,49 +40,64 @@ function CommandUpdate_AddressBook()
 	dump("oneAddressBookSelected = " + oneAddressBookSelected + "\n");
 		
 	// get selection info from results pane
-	var selectedAddresses = GetSelectedAddresses();
-	var oneOrMoreAddressesSelected = false;
-	if ( selectedAddresses )
-		oneOrMoreAddressesSelected = true;
+	var selectedCards = GetSelectedAddresses();
+	var oneOrMoreCardsSelected = false;
+	if ( selectedCards )
+		oneOrMoreCardsSelected = true;
 	
 	// set commands to enabled / disabled
-	goSetCommandEnabled('cmd_PrintCard', oneOrMoreAddressesSelected);
+	goSetCommandEnabled('cmd_PrintCard', oneOrMoreCardsSelected);
 	goSetCommandEnabled('cmd_SortByName', oneAddressBookSelected);
 	goSetCommandEnabled('cmd_SortByEmail', oneAddressBookSelected);
 	goSetCommandEnabled('cmd_SortByPhone', oneAddressBookSelected);
+	
+	AbUpdateCommandDelete();
 }
 
 
-/*function UpdateCommand_Delete()
+// This function updates the text of the delete menu item and sets the state of the delete button
+function AbUpdateCommandDelete()
 {
 	var command = "cmd_delete";
-	
-	// set enabled/disabled
-	goUpdateCommand(command);
-	
 	var focusedElement = document.commandDispatcher.focusedElement;
-	var id = focusedElement.getAttribute('id');
-	var commandNode = document.getElementById(command);
 
-	dump("focusedElement = " + focusedElement + "\n");
-	dump("id = " + id + "\n");
-	dump("commandNode = " + commandNode + "\n");
-	if ( focusedElement && id && commandNode )
+	var id = 0;
+	if ( focusedElement )
+		id = focusedElement.getAttribute('id');
+
+	dump("focusedOn = " + id + "\n");
+
+	switch ( id )
 	{
-		switch ( id )
-		{
-			case "dirTree":
-				commandNode.setAttribute('value', 'Delete Address Book');
-				break;
-			case "resultsTree":
-				commandNode.setAttribute('value', 'Delete Card');
-				break;
-			default:
-				commandNode.setAttribute('value', 'Delete');
-				break;
-		}
+		case "dirTree":
+			// menu text
+			goSetMenuValue(command, 'valueAddressBook');
+			// delete button
+			var dirTree = document.getElementById('dirTree');
+			var numSelected = 0;
+			if ( dirTree && dirTree.selectedItems )
+				numSelected = dirTree.selectedItems.length;
+			goSetCommandEnabled('button_delete', (numSelected>0));
+			break;
+		case "resultsTree":
+			// menu text
+			var resultsTree = document.getElementById('resultsTree');
+			var numSelected = 0;
+			if ( resultsTree && resultsTree.selectedItems )
+				numSelected = resultsTree.selectedItems.length;
+			if ( numSelected < 2 )
+				goSetMenuValue(command, 'valueCard');
+			else
+				goSetMenuValue(command, 'valueCards');
+			// delete button
+			goSetCommandEnabled('button_delete', (numSelected>0));
+			break;
+		default:
+			goSetMenuValue(command, 'valueDefault');
+			goSetCommandEnabled('button_delete', false);
+			break;
 	}
-}*/
+}
 
 
 /*

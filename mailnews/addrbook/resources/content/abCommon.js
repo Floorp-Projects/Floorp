@@ -5,7 +5,7 @@ var ResultsPaneController =
 {
 	IsCommandEnabled: function(command)
 	{
-                dump('ResultsPaneController::IsCommandEnabled(' + command + ')\n');
+		dump('ResultsPaneController::IsCommandEnabled(' + command + ')\n');
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -13,14 +13,10 @@ var ResultsPaneController =
 			
 			case "cmd_delete":
 				var resultsTree = document.getElementById('resultsTree');
-				var numSelected = 0;
 				if ( resultsTree && resultsTree.selectedItems )
-					numSelected = resultsTree.selectedItems.length;
-				if ( numSelected < 2 )
-					goSetMenuValue(command, 'valueCard');
+					return true;
 				else
-					goSetMenuValue(command, 'valueCards');
-				return (numSelected > 0);
+					return false;
 			
 			default:
 				return false;
@@ -58,18 +54,18 @@ var DirPaneController =
 {
 	IsCommandEnabled: function(command)
 	{
-                dump('DirPaneController::IsCommandEnabled(' + command + ')\n');
+		dump('DirPaneController::IsCommandEnabled(' + command + ')\n');
 		switch ( command )
 		{
 			case "cmd_selectAll":
 				return true;
 			case "cmd_delete":
 				var dirTree = document.getElementById('dirTree');
-				var numSelected = 0;
 				if ( dirTree && dirTree.selectedItems )
-					numSelected = dirTree.selectedItems.length;
-				goSetMenuValue(command, 'valueAddressBook');
-				return (numSelected > 0);
+					return true;
+				else
+					return false;
+
 			default:
 				return false;
 		}
