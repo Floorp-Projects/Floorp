@@ -34,7 +34,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
-
+#include "nsCRT.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
