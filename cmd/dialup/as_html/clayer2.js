@@ -114,8 +114,8 @@ function preLoadImages()
 		}
 }
 
-
-
+// Generating Controls for navigation
+// showConnectRegServer is introduced to display differebt text on 1 step path
 function generateControls()
 {
 	var	editMode				=	false;
@@ -127,6 +127,7 @@ function generateControls()
 	var	showBack				=	true;
 	var	showNext				=	true;
 	var	showConnectServer		=	false;
+	var	showConnectRegServer		=	false;
 	var	showConnectISP			=	false;
 	var	showConnectNow			=	false;
 	var showDownload			=	false;
@@ -232,7 +233,7 @@ function generateControls()
 		else if ( formName == "connect1.htm" )
 		{
 			showNext = false;
-			showConnectServer = true;
+			showConnectRegServer = true;
 			if ( editMode == true )
 				showScreenOptions = true;
 		}
@@ -412,6 +413,7 @@ function generateControls()
 			document.layers[ "controls" ].layers[ "connectnow" ].visibility = ( ( showConnectNow == true ) ? "show" : "hide" );
 			document.layers[ "controls" ].layers[ "download" ].visibility = ( ( showDownload == true ) ? "show" : "hide" ); 
 			document.layers[ "controls" ].layers[ "connectserver" ].visibility = ( ( showConnectServer == true ) ? "show" : "hide" );			
+			document.layers[ "controls" ].layers[ "connectregserver" ].visibility = ( ( showConnectRegServer == true ) ? "show" : "hide" );			
 			document.layers[ "controls" ].layers[ "connectisp" ].visibility = ( ( showConnectISP == true ) ? "show" : "hide" );
 			document.layers[ "controls" ].layers[ "connectagain" ].visibility = ( ( showAgain == true ) ? "show" : "hide" );			
 			document.layers[ "controls" ].layers[ "done" ].visibility = ( ( showDone == true) ? "show" : "hide" );			
