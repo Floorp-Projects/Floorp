@@ -3620,7 +3620,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
 
           // Might be using -moz-user-focus and imitating a control
           // Check to see if linked
-          for (nsIContent *findAnchorAncestor = child; findAnchorAncestor; 
+          nsIContent* findAnchorAncestor;
+          for (findAnchorAncestor = child; findAnchorAncestor; 
                findAnchorAncestor = findAnchorAncestor->GetParent()) {
             nsCOMPtr<nsIDOMHTMLAnchorElement> anchor  = 
               do_QueryInterface(findAnchorAncestor);
