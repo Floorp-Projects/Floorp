@@ -41,22 +41,22 @@
  
   <binding id="tabbrowser">
     <resources>
-      <stylesheet src="chrome://global/content/bindings/browser.css"/>
+      <stylesheet src="chrome://global/skin/browser.css"/>
     </resources>
 
     <content>
       <xul:tabbox onselect="this.parentNode.updateCurrentBrowser();">
         <xul:stack collapsed="true" tooltip="_child">
-          <xul:tabs>
-            <xul:tab flex="1" maxwidth="150" label="Blank" crop="center"/>
+          <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.label) { this.childNodes[0].value = document.tooltipNode.label; return true; } return false;">
+            <xul:label style="margin:0px; padding:0px;" value="Dummy"/>
+          </xul:tooltip>
+          <xul:tabs flex="1">
+            <xul:tab flex="1" maxwidth="150" class="tabbrowser-tab" label="Blank" crop="center"/>
           </xul:tabs>
           <xul:hbox mousethrough="always">
             <spacer flex="1"/>
             <xul:button label="Close Tab" onclick="this.parentNode.parentNode.parentNode.parentNode.removeCurrentTab();"/>
           </xul:hbox>
-          <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.label) { this.childNodes[0].value = document.tooltipNode.label; return true; } return false;">
-            <xul:label style="margin:0px; padding:0px;" value="Dummy"/>
-          </xul:tooltip>
         </xul:stack>
         <xul:tabpanels flex="1" style="margin:0px; padding:0px; border:0px;">
           <xul:browser type="content-primary" inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu"/>
@@ -72,16 +72,16 @@
         this.mTabBox.firstChild
       </field>
       <field name="mTabContainer">
-        this.mStrip.firstChild
+        this.mStrip.childNodes[1]
       </field>
       <field name="mPanelContainer">
         this.mTabBox.childNodes[1]
       </field>
       <field name="mCurrentTab">
-        this.mTabContainer.firstChild;
+        null
       </field>
       <field name="mCurrentBrowser">
-        this.mPanelContainer.firstChild
+        null
       </field>
       <field name="mProgressListeners">
         null
@@ -90,6 +90,9 @@
         new Array()
       </field>
       <field name="mTabbedMode">
+        false
+      </field>
+      <field name="mIsBusy">
         false
       </field>
 
@@ -129,11 +132,20 @@
               const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
               const nsIChannel = Components.interfaces.nsIChannel;
               if (aStateFlags & nsIWebProgressListener.STATE_START && 
-                  aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
+                  aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 this.mTab.setAttribute("busy", "true"); 
+                this.mTab.label = "Loading...";
+                if (this.mTabBrowser.mCurrentTab == this.mTab)
+                  this.mTabBrowser.mIsBusy = true;
+              }
               else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
-                       aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
+                       aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 this.mTab.removeAttribute("busy");
+                if (this.mTab.label == "Loading...")
+                  this.mTab.label = "Done";
+                if (this.mTabBrowser.mCurrentTab == this.mTab)
+                  this.mTabBrowser.mIsBusy = false;
+              }
 
               if (this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
@@ -211,6 +223,31 @@
               var p = this.mProgressListeners[i];
               if (p)
                 p.onLocationChange(webProgress, null, loc);
+            }
+
+            // If the new tab is busy, and our current state is not busy, then
+            // we need to fire a start to all progress listeners.
+            const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+            if (this.mCurrentTab.getAttribute("busy") == "true" && !this.mIsBusy) {
+              this.mIsBusy = true;
+              var webProgress = this.mCurrentBrowser.webProgress;
+              for (var i = 0; i < this.mProgressListeners.length; i++) {
+                var p = this.mProgressListeners[i];
+                if (p)
+                  p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_START | nsIWebProgressListener.STATE_IS_NETWORK, 0);
+              }
+            }
+
+            // If the new tab is not busy, and our current state is busy, then
+            // we need to fire a stop to all progress listeners.
+            if (this.mCurrentTab.getAttribute("busy") != "true" && this.mIsBusy) {
+              this.mIsBusy = false;
+              var webProgress = this.mCurrentBrowser.webProgress;
+              for (var i = 0; i < this.mProgressListeners.length; i++) {
+                var p = this.mProgressListeners[i];
+                if (p)
+                  p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_STOP | nsIWebProgressListener.STATE_IS_NETWORK, 0);
+              }
             }
           ]]>
         </body>
@@ -314,6 +351,16 @@
               this.mStrip.collapsed = true; // Go ahead and collapse, since we're going back to 1 tab.
 
             var index = this.mPanelContainer.index;
+
+            // Remove our progress listener.
+            this.webProgress.removeProgressListener(this.mTabListeners[index]);
+            this.mTabListeners.splice(index, 1);
+
+            // Remove our title change listener
+            this.mCurrentBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
+
+            // We are no longer the primary content area.
+            this.mCurrentBrowser.setAttribute("type", "content");
 
             // Now select the new tab before nuking the old one.
             var newIndex = (index > 0) ? index-1 : index;
@@ -527,10 +574,30 @@
       <property name="contentDocument"
                 onget="return this.mCurrentBrowser.contentDocument;"
                 readonly="true"/>
+
+      <constructor>
+        this.mCurrentBrowser = this.mPanelContainer.firstChild;
+        this.mCurrentTab = this.mTabContainer.firstChild;
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          if (this.mTabListeners) {
+            for (var i = 0; i < this.mTabListeners.length; i++) {
+              this.mPanelContainer.childNodes[i].webProgress.removeProgressListener(this.mTabListeners[i]);
+              this.mTabListeners[i] = null;
+              this.mPanelContainer.childNodes[i].removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            }
+          }
+        ]]>
+      </destructor>
     </implementation>
   </binding>
 
   <binding id="browser" extends="xul:browser">
+    <resources>
+      <stylesheet src="chrome://global/content/bindings/browser.css"/>
+    </resources>
 
     <implementation type="application/x-javascript">
 
@@ -716,6 +783,11 @@
         // XXXdwh On a dynamic skin switch, we should be checking our box object to obtain
         // the session history.
         this.webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
+      
+        // wire up global history.  the same applies here.
+        var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIGlobalHistory);
+        
+        this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;      
       </constructor>
     </implementation>
 

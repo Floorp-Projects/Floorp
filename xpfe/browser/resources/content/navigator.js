@@ -404,9 +404,7 @@ function Shutdown()
   browser.boxObject.removeProperty("listenerkungfu");
 
   try {
-    var interfaceRequestor = browser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
-    webProgress.removeProgressListener(window.XULBrowserWindow);
+    getBrowser().removeProgressListener(window.XULBrowserWindow);
   } catch (ex) {
   }
 

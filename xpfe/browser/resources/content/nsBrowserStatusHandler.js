@@ -147,10 +147,7 @@ nsBrowserStatusHandler.prototype =
   },
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
-  {
-    if (!aRequest)
-      return;
-      
+  {  
     //ignore local/resource:/chrome: files
     if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
       return;
@@ -164,7 +161,7 @@ nsBrowserStatusHandler.prototype =
         this.startTime = (new Date()).getTime();
 
         domWindow = aWebProgress.DOMWindow;
-        if (domWindow == _content)
+        if (aRequest && domWindow == _content)
           this.startDocumentLoad(aRequest);
 
         // Turn progress meter on.
@@ -194,19 +191,21 @@ nsBrowserStatusHandler.prototype =
       }
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
         domWindow = aWebProgress.DOMWindow;
-        if (domWindow == domWindow.top)
-          this.endDocumentLoad(aRequest, aStatus);
+        if (aRequest) {
+          if (domWindow == domWindow.top)
+            this.endDocumentLoad(aRequest, aStatus);
 
-        var location = aRequest.QueryInterface(nsIChannel).URI.spec;
-        var msg = "";
-        if (location != "about:blank") {
-          // Record page loading time.
-          var elapsed = ((new Date()).getTime() - this.startTime) / 1000;
-          msg = gNavigatorBundle.getString("nv_done");
-          msg = msg.replace(/%elapsed%/, elapsed);
+          var location = aRequest.QueryInterface(nsIChannel).URI.spec;
+          var msg = "";
+          if (location != "about:blank") {
+            // Record page loading time.
+            var elapsed = ((new Date()).getTime() - this.startTime) / 1000;
+            msg = gNavigatorBundle.getString("nv_done");
+            msg = msg.replace(/%elapsed%/, elapsed);
+          }
+          this.status = "";
+          this.setDefaultStatus(msg);
         }
-        this.status = "";
-        this.setDefaultStatus(msg);
 
         // Turn progress meter off.
         this.statusMeter.mode = "normal";
