@@ -136,12 +136,10 @@ mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStri
     if(aSuggestions){
       PRUint32 count,i;
       PRUnichar **words;
-      nsAutoString temp;
       
       mSpellCheckingEngine->Suggest(PromiseFlatString(aWord).get(), &words, &count);
       for(i=0;i<count;i++){
-        temp.Assign(words[i]);
-        aSuggestions->AppendString(temp);
+        aSuggestions->AppendString(nsDependentString(words[i]));
       }
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
     }
@@ -297,10 +295,8 @@ NS_IMETHODIMP
 mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
 {
   nsXPIDLString dictname;
-  nsresult res;
-  res=mSpellCheckingEngine->GetDictionary(getter_Copies(dictname));
-  if(NS_SUCCEEDED(res))
-    aDictionary = dictname;
+  mSpellCheckingEngine->GetDictionary(getter_Copies(dictname));
+  aDictionary = dictname;
   return NS_OK;
 }
 
