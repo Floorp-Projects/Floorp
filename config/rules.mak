@@ -485,98 +485,6 @@ include <$(DEPTH)/config/java.inc>
 
 #//------------------------------------------------------------------------
 #//
-#// JMC
-#//
-#// JSRCS   .java files to be compiled (.java extension included)
-#//
-#//------------------------------------------------------------------------
-!if defined(JAVA_OR_NSJVM)
-!if defined(JSRCS)
-
-JSRCS_DEPS = $(JAVA_DESTPATH) $(JAVA_DESTPATH)\$(PACKAGE) $(TMPDIR)
-
-# Can't get moz cafe to compile a single file
-!if defined(NO_CAFE)
-
-export:: $(JSRCS_DEPS)
-    @echo +++ make: building package: $(PACKAGE)
-	$(PERL) $(DEPTH)\config\outofdate.pl \
-	-d $(JAVA_DESTPATH)\$(PACKAGE) $(JSRCS) >> $(TMPDIR)\javac.cfg
-	-$(JAVAC_PROG) -argfile $(TMPDIR)\javac.cfg
-	@$(RM) $(TMPDIR)\javac.cfg
-!else
-
-# compile using symantec cafe's super-speedy compiler!
-export:: $(JSRC_DEPS)
-    @echo +++ make: building package: $(PACKAGE)	
-	@echo -d $(JAVA_DESTPATH) $(JAVAC_OPTIMIZER) \
-	   -classpath $(JAVA_DESTPATH);$(JAVA_SOURCEPATH) > $(TMPDIR)\javac.cfg
-	@$(PERL) $(DEPTH)\config\sj.pl \
-	 $(JAVA_DESTPATH)\$(PACKAGE)\ $(TMPDIR)\javac.cfg <<
-	$(JSRCS)
-<<
-
-!endif #NO_CAFE
-
-clobber::
-    -for %g in ($(JSRCS:.java=.class)) do $(RM) $(XPDIST:/=\)/classes/$(PACKAGE:/=\)/%g
-
-!endif # JSRCS
-
-#//------------------------------------------------------------------------
-#//
-#// JMC
-#//
-#// JMC_EXPORT  .class files to be copied from XPDIST/classes/PACKAGE to
-#//                 XPDIST/jmc (without the .class extension)
-#//
-#//------------------------------------------------------------------------
-!if defined(JMC_EXPORT)
-export:: $(JMCSRCDIR)
-    for %g in ($(JMC_EXPORT)) do $(MAKE_INSTALL:/=\) $(JAVA_DESTPATH)\$(PACKAGE:/=\)\%g.class $(JMCSRCDIR)
-
-clobber::
-    -for %f in ($(JMC_EXPORT)) do $(RM) $(JMCSRCDIR:/=\)\%f.class
-!endif # JMC_EXPORT
-!endif # JAVA_OR_NSJVM
-
-#//------------------------------------------------------------------------
-#//
-#// JMC
-#//
-#// JMC_GEN Names of classes to be run through JMC
-#//         Generated .h and .c files go to JMC_GEN_DIR
-#//
-#//------------------------------------------------------------------------
-!if defined(JAVA_OR_NSJVM)
-
-!if defined(JMC_GEN)
-export:: $(JMC_HEADERS)
-
-# Don't delete them if they don't compile (makes it hard to debug)
-.PRECIOUS: $(JMC_HEADERS) $(JMC_STUBS)
-
-
-# They may want to generate/compile the stubs
-!if defined(CCJMC)
-{$(JMC_GEN_DIR)\}.c{$(OBJDIR)\}.obj:
-    @$(CC) @<<$(CFGFILE)
-	-c $(CFLAGS)
-	-I. -I$(JMC_GEN_DIR)
-	-Fd$(PDBFILE)
-	-Fo.\$(OBJDIR)\
-	$(JMC_GEN_DIR)\$(*B).c
-<<KEEP
-
-export:: $(JMC_STUBS) $(OBJDIR) $(JMC_OBJS) 
-
-!endif # CCJMC
-!endif # JMC_GEN
-!endif # JAVA_OR_NSJVM
-
-
-#//------------------------------------------------------------------------
-#//
 #// EXPORTS
 #//
 #// Names of headers to be copied to common include directory
@@ -723,6 +631,29 @@ clobber_all::
 !endif
 
 ################################################################################
+## CHROME PACKAGING
+
+JAR_MANIFEST = jar.mn
+
+chrome::
+
+install:: chrome
+
+!ifdef JAR_PACKAGING
+
+!if exist($(JAR_MANIFEST))
+chrome:: 
+        $(PERL) $(DEPTH)\config\make-jars.pl -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
+!endif
+
+!if "$(CHROME_TYPE)" != "$(NULL)"
+chrome::
+    -for %t in ($(CHROME_TYPE)) do echo %t,install,url,jar:resource:/chrome/$(CHROME_DIR:\=/).jar!/ >>$(DIST)\bin\chrome\installed-chrome.txt
+!endif
+
+!else # !JAR_PACKAGING
+
+################################################################################
 # Generate chrome building rules.
 #
 # You need to set these in your makefile.win to utilize this support:
@@ -745,8 +676,6 @@ clobber_all::
 #                  Top-level makefiles (the same one copying the rdf manifests
 #                  and generating the jar file) should define this macro.
 #                  This will notify the chrome registry of a new installation.
-
-chrome::
 
 !if "$(CHROME_DIR)" != "$(NULL)"
 
@@ -858,40 +787,18 @@ $(CHROME_MISC:.\=CLOBBER\.\):
 !endif # miscellaneous chrome
 
 !if "$(CHROME_TYPE)" != "$(NULL)"
-!ifdef JAR_PACKAGING
-chrome::
-    -for %t in ($(CHROME_TYPE)) do echo %t,install,url,jar:resource:/chrome/$(CHROME_DIR:\=/).jar!/ >>$(DIST)\bin\chrome\installed-chrome.txt
-!else # !JAR_PACKAGING
 chrome::
     -for %t in ($(CHROME_TYPE)) do echo %t,install,url,resource:/chrome/$(CHROME_DIR:\=/)/ >>$(DIST)\bin\chrome\installed-chrome.txt
-!endif # !JAR_PACKAGING
 !endif
-
-!endif # chrome
-################################################################################
-## JAR Manifests
-
-JAR_MANIFEST = jar.mn
-
-!if exist($(JAR_MANIFEST))
-
-!ifdef JAR_PACKAGING
-
-chrome:: 
-        $(PERL) $(DEPTH)\config\make-jars.pl -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
-
-!else # !JAR_PACKAGING
 
 chrome::
         @echo.
         @echo ****************** IF YOU ADD OR REMOVE CHROME FILES, PLEASE UPDATE $(MAKEDIR)\$(JAR_MANIFEST) (or tell warren@netscape.com) **********************
         @echo.
 
+!endif # chrome
+
 !endif # !JAR_PACKAGING
-
-!endif
-
-install:: chrome
 
 ################################################################################
 
