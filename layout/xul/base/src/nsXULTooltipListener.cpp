@@ -63,7 +63,7 @@ nsXULTooltipListener::nsXULTooltipListener()
   : mSourceNode(nsnull), mTargetNode(nsnull),
     mCurrentTooltip(nsnull),
     mMouseClientX(0), mMouseClientY(0),
-    mIsTargetOutliner(PR_FALSE), mNeedTitletip(PR_FALSE),
+    mIsSourceOutliner(PR_FALSE), mNeedTitletip(PR_FALSE),
     mLastOutlinerRow(-1)
 {
 	 NS_INIT_REFCNT();
@@ -142,7 +142,7 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
       HideTooltip();
 
       // reset special outliner tracking
-      if (mIsTargetOutliner) {
+      if (mIsSourceOutliner) {
         mLastOutlinerRow = -1;
         mLastOutlinerCol.Truncate();
       }
@@ -174,7 +174,7 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   mMouseClientX = newMouseX;
   mMouseClientY = newMouseY;
 
-  if (mIsTargetOutliner)
+  if (mIsSourceOutliner)
     CheckOutlinerBodyMove(mouseEvent);
 
   // as the mouse moves, we want to make sure we reset the timer to show it, 
@@ -255,7 +255,7 @@ nsXULTooltipListener::Init(nsIContent* aSourceNode, nsIRootBox* aRootBox)
   // case handling to do
   nsCOMPtr<nsIAtom> tag;
   mSourceNode->GetTag(*getter_AddRefs(tag));
-  mIsTargetOutliner = tag == nsXULAtoms::outlinerchildren;
+  mIsSourceOutliner = tag == nsXULAtoms::outlinerchildren;
 
   static PRBool prefChangeRegistered = PR_FALSE;
 
@@ -307,7 +307,7 @@ void
 nsXULTooltipListener::CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent)
 {
   nsCOMPtr<nsIOutlinerBoxObject> obx;
-  GetTargetOutlinerBoxObject(getter_AddRefs(obx));
+  GetSourceOutlinerBoxObject(getter_AddRefs(obx));
   if (obx) {
     PRInt32 x, y;
     aMouseEvent->GetClientX(&x);
@@ -358,7 +358,7 @@ nsXULTooltipListener::ShowTooltip()
     nsCOMPtr<nsIDocument> targetDoc;
     mSourceNode->GetDocument(*getter_AddRefs(targetDoc));
     if (targetDoc) {
-      if (!mIsTargetOutliner) {
+      if (!mIsSourceOutliner) {
         mLastOutlinerRow = -1;
         mLastOutlinerCol.Truncate();
       }
@@ -456,7 +456,7 @@ nsXULTooltipListener::LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY)
     PRInt32 y = aY;
     if (mNeedTitletip) {
       nsCOMPtr<nsIOutlinerBoxObject> obx;
-      GetTargetOutlinerBoxObject(getter_AddRefs(obx));
+      GetSourceOutlinerBoxObject(getter_AddRefs(obx));
       GetOutlinerCellCoords(obx, mSourceNode,
                             mLastOutlinerRow, mLastOutlinerCol, &x, &y);
 
@@ -580,7 +580,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
         }
 
         // titletips should just use the default tooltip
-        if (mIsTargetOutliner && mNeedTitletip) {
+        if (mIsSourceOutliner && mNeedTitletip) {
           mRootBox->GetDefaultTooltip(aTooltip);
           NS_IF_ADDREF(*aTooltip);
           return NS_OK;
@@ -683,10 +683,14 @@ nsXULTooltipListener::sTooltipPrefChanged(const char* aPref, void* aData)
 }
 
 nsresult
-nsXULTooltipListener::GetTargetOutlinerBoxObject(nsIOutlinerBoxObject** aBoxObject)
+nsXULTooltipListener::GetSourceOutlinerBoxObject(nsIOutlinerBoxObject** aBoxObject)
 {
-  if (mTargetNode) {
-    nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(mTargetNode));
+  *aBoxObject = nsnull;
+
+  if (mIsSourceOutliner && mSourceNode) {
+    nsCOMPtr<nsIContent> outlinerParent;
+    mSourceNode->GetParent(*getter_AddRefs(outlinerParent));
+    nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(outlinerParent));
     if (xulEl) {
       nsCOMPtr<nsIBoxObject> bx;
       xulEl->GetBoxObject(getter_AddRefs(bx));
