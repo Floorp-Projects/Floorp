@@ -25,9 +25,11 @@
 			}
 		}
 		parent.frames[0].commit();
-		parent.frames[0].location.replace( pages[count] );
+		//parent.frames[0].location.replace( pages[count] );
+		parent.frames[0].location.href = pages[count];
 		parent.count = count;
-		parent.frames[1].location.replace("resource:/res/profile/navigationStart.xul");
+		//parent.frames[1].location.replace("resource:/res/profile/navigationStart.xul");
+		parent.frames[1].location.href = "resource:/res/profile/navigationStart.xul";
 	}
 
 

@@ -8,7 +8,8 @@ function CreateProfile()
 	// var win = window.openDialog('resource://res/profile/cpwManager.xul', 'Creator', 'chrome');
 	dump("\ngot here\n");
 	//this.location.replace(this.location);
-	this.location.replace("resource:/res/profile/cpwManager.xul");
+	//this.location.replace("resource:/res/profile/cpwManager.xul");
+	this.location.href = "resource:/res/profile/cpwManager.xul";
 	//this.location = "resource:/res/profile/cpwManager.xul";
 }
 
@@ -34,7 +35,8 @@ function MigrateProfile(override)
 	}
 
 	profileCore.MigrateProfile(name);
-	this.location.replace(this.location);
+	//this.location.replace(this.location);
+	this.location.href = this.location;
 }
 
 function MigrateAllProfiles()
@@ -73,7 +75,8 @@ function RenameProfile(w)
 
 	//dump("RenameProfile : " + oldName + " to " + newName + "\n");
 	profileCore.RenameProfile(oldName, newName);
-	this.location.replace(this.location);
+	//this.location.replace(this.location);
+	this.location.href = this.location;
 }
 
 function DeleteProfile()
@@ -89,7 +92,8 @@ function DeleteProfile()
 	var name = selected.getAttribute("rowName");
 	//dump("Delete '" + name + "'\n");
 	profileCore.DeleteProfile(name);
-	this.location.replace(this.location);
+	//this.location.replace(this.location);
+	this.location.href = this.location;
 }
 
 function StartCommunicator()

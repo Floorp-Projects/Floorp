@@ -40,7 +40,8 @@ function CreateProfile()
 	//dump("************Inside del prof\n");
 
 	// Need to call CreateNewProfile xuls
-	this.location.replace("resource:/res/profile/cpwManager.xul");
+	//this.location.replace("resource:/res/profile/cpwManager.xul");
+	this.location.href = "resource:/res/profile/cpwManager.xul";
 }
 
 function RenameProfile()
@@ -56,20 +57,22 @@ function RenameProfile()
 
 		if (curProfileName.indexOf("- migrate") >= 0)
 		{
-				this.location.replace("resource:/res/profile/errorDialog.html");
-		}
+				//this.location.replace("resource:/res/profile/errorDialog.html");
+		}		this.location.href = "resource:/res/profile/errorDialog.html";
 		else
 		{
 			//dump("********************calling SetProfileName\n");
 			parent.SetProfileName(curProfileName);
 
 			// Open a dialog and get new name
-			this.location.replace("resource:/res/profile/renameProfile.html");
+			//this.location.replace("resource:/res/profile/renameProfile.html");
+			this.location.href = "resource:/res/profile/renameProfile.html";
 		}
 	}
 	else 
 	{
-		this.location.replace("resource:/res/profile/errorDialog.html");
+		//this.location.replace("resource:/res/profile/errorDialog.html");
+		this.location.href = "resource:/res/profile/errorDialog.html";
 		//errorMessage = "Please select a profile first";
 		//var element = document.getElementById("ErrorMessage");
 		//element.value = errorMessage;
@@ -90,7 +93,8 @@ function DeleteProfile()
 		if (curProfileName.indexOf("- migrate") >= 0)
 		{
 			//dump("Need to be migrated before deleting the profile..\n");
-			this.location.replace("resource:/res/profile/errorDialog.html");
+			//this.location.replace("resource:/res/profile/errorDialog.html");
+			this.location.href = "resource:/res/profile/errorDialog.html";
 			//dump("Loaded error dialog..\n");
 		}
 		else
@@ -98,12 +102,14 @@ function DeleteProfile()
 			profileCore.DeleteProfile(curProfileName);
 	
 			// Load this xul to see the updated profile list
-			this.location.replace("resource:/res/profile/profileManager.html");
+			//this.location.replace("resource:/res/profile/profileManager.html");
+			this.location.href = "resource:/res/profile/profileManager.html";
 		}
 	}
 	else 
 	{
-		this.location.replace("resource:/res/profile/errorDialog.html");
+		//this.location.replace("resource:/res/profile/errorDialog.html");
+		this.location.href = "resource:/res/profile/errorDialog.html";
 		//errorMessage = "Please select a profile first";
 		//var element = document.getElementById("ErrorMessage");
 		//element.value = errorMessage;
@@ -130,17 +136,19 @@ function MigrateProfile()
 			profileCore.MigrateProfile(curProfileName);
 	
 			// Load this xul to see the updated profile list
-			this.location.replace("resource:/res/profile/profileManager.html");
+			//this.location.replace("resource:/res/profile/profileManager.html");
+			this.location.href = "resource:/res/profile/profileManager.html";
 		}
 		else
 		{
-			this.location.replace("resource:/res/profile/errorDialog.html");
-
+			//this.location.replace("resource:/res/profile/errorDialog.html");
+			this.location.href = "resource:/res/profile/errorDialog.html";
 		}
 	}
 	else 
 	{
-		this.location.replace("resource:/res/profile/errorDialog.html");
+		//this.location.replace("resource:/res/profile/errorDialog.html");
+		this.location.href = "resource:/res/profile/errorDialog.html";
 		//errorMessage = "Please select a profile first";
 		//var element = document.getElementById("ErrorMessage");
 		//element.value = errorMessage;
@@ -160,7 +168,8 @@ function StartCommunicator()
 
 		if (curProfileName.indexOf("- migrate") >= 0)
 		{
-				this.location.replace("resource:/res/profile/errorDialog.html");
+				//this.location.replace("resource:/res/profile/errorDialog.html");
+				this.location.href = "resource:/res/profile/errorDialog.html";
 		}
 		else
 		{
@@ -170,7 +179,8 @@ function StartCommunicator()
 	}
 	else 
 	{
-		this.location.replace("resource:/res/profile/errorDialog.html");
+		//this.location.replace("resource:/res/profile/errorDialog.html");
+		this.location.href = "resource:/res/profile/errorDialog.html";
 		//errorMessage = "Please select a profile first";
 		//var element = document.getElementById("ErrorMessage");
 		//element.value = errorMessage;
