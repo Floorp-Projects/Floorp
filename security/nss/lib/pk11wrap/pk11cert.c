@@ -2544,7 +2544,7 @@ loser:
 }
 
 struct listCertsStr {
-    enum PK11CertListType type;
+    PK11CertListType type;
     CERTCertList *certList;
 };
 
@@ -2567,7 +2567,7 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
 {
     struct listCertsStr *listCertP = (struct listCertsStr *)arg;
     CERTCertificate *newCert = NULL;
-    enum PK11CertListType type = listCertP->type;
+    PK11CertListType type = listCertP->type;
     CERTCertList *certList = listCertP->certList;
     CERTCertTrust *trust;
 
@@ -2609,7 +2609,7 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
 
 
 CERTCertList *
-PK11_ListCerts(enum PK11CertListType type, void *pwarg)
+PK11_ListCerts(PK11CertListType type, void *pwarg)
 {
     CERTCertList *certList = NULL;
     struct listCertsStr listCerts;
