@@ -35,10 +35,7 @@
  */
 
 package org.mozilla.javascript.tools.debugger;
-import java.io.File;
-import java.util.Date;
 import org.mozilla.javascript.*;
-import org.mozilla.javascript.tools.shell.Global;
 import javax.swing.event.TableModelEvent;
 import java.util.Hashtable;
 import java.util.Enumeration;
@@ -53,6 +50,7 @@ public class VariableModel extends AbstractTreeTableModel
     // Types of the columns.
     //static protected Class[]  cTypes = {TreeTableModel.class, String.class, String.class};
     static protected Class[]  cTypes = {TreeTableModel.class, String.class};
+
 
     public VariableModel(Scriptable scope) { 
 	super(scope == null ? null : new VariableNode(scope, "this")); 
@@ -94,45 +92,11 @@ public class VariableModel extends AbstractTreeTableModel
 	if(children != null && children.length > 0) {
 	    return false;
 	}
-	//Object value = getObject(node);
-	//if(value != null && value instanceof Scriptable) {
-	//if(value == Undefined.instance ||
-	//value == ScriptableObject.NOT_FOUND) {
-	//return true;
-	//}
-	//Scriptable scrip = (Scriptable)value;
-	//Scriptable proto = scrip.getPrototype();
-	//if(proto != null && 
-	//proto != ScriptableObject.getObjectPrototype(scrip)) {
-	//return false;
-	//}
-	//}
-	//	if(value == null) return true;
-	//	if (value == Undefined.instance)
-	//	    return true;
-	//	if (value == null)
-	//	    return true;
-	//	if (value instanceof String)
-	//	    return true;
-	//	if (value instanceof Number)
-	//	    return true;
-	//	if (value instanceof Boolean)
-	//	    return true;
-	//	if(value instanceof Scriptable) {
-	//	    //Scriptable scrip = (Scriptable)value;
-	    //if(scrip.has(0, scrip)) {
-	    //return false;
-	    //}
-	    //if(ScriptableObject.getPropertyIds(scrip).length > 0) {
-	    //return false;
-	    //}
-	    //return true;
-	//}
 	return true;
     }
 
     public boolean isCellEditable(Object node, int column) {
-	return column == 0 || column == 2;
+	return column == 0; 
     }
 
     //
@@ -153,6 +117,7 @@ public class VariableModel extends AbstractTreeTableModel
  
     public Object getValueAt(Object node, int column) {
 	Object value = getObject(node); 
+        Context cx = Context.enter();
 	try {
 	    switch(column) {
 	    case 0: // Name
@@ -162,64 +127,43 @@ public class VariableModel extends AbstractTreeTableModel
 		    return name + varNode.name;
 		}
 		return name + "[" + varNode.index + "]";
-	    case -1: // Type
-		if(value == Undefined.instance || value == ScriptableObject.NOT_FOUND) {
-		    return "undefined";
-		}
-		if (value == null)
-		    return "object";
-		if (value instanceof Scriptable)
-		    return (value instanceof Function) ? "function" : "object";
-		if (value instanceof String)
-		    return "string";
-		if (value instanceof Number)
-		    return "number";
-		if (value instanceof Boolean)
-		    return "boolean";
-		return value.getClass().getName();
 	    case 1: // value
-		if(value == Undefined.instance || value == ScriptableObject.NOT_FOUND) {
+		if(value == Undefined.instance || 
+                   value == ScriptableObject.NOT_FOUND) {
 		    return "undefined";
 		}
-		if(value instanceof Scriptable) {
-		    try {
-			Context cx = Context.enter();
-			String result;
-			try {
-			    result = ScriptRuntime.toString(value);
-			} catch(Exception exc) {
-			    result = value.toString();
-			} finally {
-			    cx.exit();
-			}
-			StringBuffer buf = new StringBuffer();
-			int len = result.length();
-			for(int i = 0; i < len; i++) {
-			    char ch = result.charAt(i);
-			    if(Character.isISOControl(ch)) {
-				ch = ' ';
-			    } 
-			    buf.append(ch);
-			}
-			return buf.toString();
-		    } catch(Exception exc) {
-			exc.printStackTrace();
-		    }
-		}
-		if(value == null) {
-		    return "null";
-		}
-		return value.toString();
-	    }
-	}
-	catch  (Exception exc) { 
+                if(value == null) {
+                    return "null";
+                }
+                if(value instanceof NativeCall) {
+                    value = ((NativeCall)value).getFunctionObject();
+                }
+                String result;
+                try {
+                    result = Context.toString(value);
+                } catch(Exception exc) {
+                    result = value.toString();
+                }
+                StringBuffer buf = new StringBuffer();
+                int len = result.length();
+                for(int i = 0; i < len; i++) {
+                    char ch = result.charAt(i);
+                    if(Character.isISOControl(ch)) {
+                        ch = ' ';
+                    } 
+                    buf.append(ch);
+                }
+                return buf.toString();
+            }
+        } catch(Exception exc) { 
 	    //exc.printStackTrace();
-	}
+	} finally {
+            cx.exit();
+        }
 	return null; 
     }
 
     public void setScope(Scriptable scope) {
-	//System.out.println("setScope: " + scope);
 	VariableNode rootVar = (VariableNode)root;
 	rootVar.scope = scope;
 	fireTreeNodesChanged(this,
@@ -292,6 +236,7 @@ class VariableNode {
     static Scriptable builtin[];
     protected Object[] getChildren() {
 	if(children != null) return children;
+        Context cx = Context.enter();
 	try {
 	    Object value = getObject();
 	    if(value == null) return children = empty;
@@ -303,11 +248,11 @@ class VariableNode {
 		Scriptable scrip = (Scriptable)value;
 		Scriptable proto = scrip.getPrototype();
 		Scriptable parent = scrip.getParentScope();
-		if(scrip instanceof NativeCall) {
-		    parent = proto = null;
-		} else if(parent instanceof NativeCall) {
-		    parent = null;
-		}
+                if(value instanceof NativeCall) {
+                    if(!(parent instanceof NativeCall)) {
+                        parent = null;
+                    }
+                }
 		if(proto != null) {
 		    if(builtin == null) {
 			builtin = new Scriptable[6];
@@ -403,7 +348,6 @@ class VariableNode {
 		    children = new VariableNode[len]; 
 		    for(int i = 0; i < len; i++) {
 			Object id = ids[i];
-				////System.out.println("id is " + id);
 			children[i] = 
 			    new VariableNode(scrip, id.toString());
 		    }
@@ -411,7 +355,9 @@ class VariableNode {
 	    }
 	} catch (Exception exc) {
 	    exc.printStackTrace();
-	}
+	} finally {
+            cx.exit();
+        }
 	return children; 
     }
 }
