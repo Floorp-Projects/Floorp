@@ -39,6 +39,11 @@
 
 /* nsPluginHostImpl.cpp - bulk of code for managing plugins */
 
+/* XdpX Really really force prlogging*/
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#define PR_LOGGING 1
+#include "prlog.h"
+
 #include "nscore.h"
 #include "nsPluginHostImpl.h"
 #include "nsPluginProxyImpl.h"
@@ -169,6 +174,13 @@
 
 #define REL_PLUGIN_DLL "rel:" PLUGIN_DLL
 
+// this is the name of the directory which will be created
+// to cache temporary files.
+static const char *kPluginTmpDirName = "plugtmp";
+
+// Version of cached plugin info
+static const char *kPluginInfoVersion = "0.01";
+
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
@@ -191,6 +203,19 @@ static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 // for the dialog
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+
+////////////////////////////////////////////////////////////////////////
+// Registry keys for caching plugin info
+static const char kPluginsRootKey[] = "software/plugins";
+static const char kPluginsNameKey[] = "name";
+static const char kPluginsDescKey[] = "description";
+static const char kPluginsFilenameKey[] = "filename";
+static const char kPluginsFullpathKey[] = "fullpath";
+static const char kPluginsModTimeKey[] = "lastModTimeStamp";
+static const char kPluginsVersionKey[] = "version";
+static const char kPluginsMimeTypeKey[] = "mimetype";
+static const char kPluginsMimeDescKey[] = "description";
+static const char kPluginsMimeExtKey[] = "extension";
 
 #ifdef PLUGIN_LOGGING
 PRLogModuleInfo* nsPluginLogging::gNPNLog = nsnull;
@@ -866,10 +891,12 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
 nsPluginTag::nsPluginTag(const char* aName,
                          const char* aDescription,
                          const char* aFileName,
+                         const char* aFullPath,
                          const char* const* aMimeTypes,
                          const char* const* aMimeDescriptions,
                          const char* const* aExtensions,
-                         PRInt32 aVariants)
+                         PRInt32 aVariants,
+                         PRInt64 aLastModifiedTime)
   : mNext(nsnull),
     mVariants(aVariants),
     mMimeTypeArray(nsnull),
@@ -879,13 +906,13 @@ nsPluginTag::nsPluginTag(const char* aName,
     mCanUnloadLibrary(PR_TRUE),
     mEntryPoint(nsnull),
     mFlags(0),
-    mXPConnected(PR_FALSE)
-
+    mXPConnected(PR_FALSE),
+    mLastModifiedTime(aLastModifiedTime)
 {
   mName            = new_str(aName);
   mDescription     = new_str(aDescription);
   mFileName        = new_str(aFileName);
-  mFullPath        = new_str(aFileName);
+  mFullPath        = new_str(aFullPath);
 
   if (mVariants) {
     mMimeTypeArray        = new char*[mVariants];
@@ -2363,9 +2390,6 @@ nsresult nsPluginStreamListenerPeer::SetLocalFile(const char* aFilename)
 nsPluginHostImpl::nsPluginHostImpl()
 {
   NS_INIT_REFCNT();
-#ifdef NS_DEBUG
-  printf("nsPluginHostImpl ctor\n");
-#endif
   mPluginsLoaded = PR_FALSE;
   mDontShowBadPluginMessage = PR_FALSE;
   mIsDestroyed = PR_FALSE;
@@ -2387,8 +2411,11 @@ nsPluginHostImpl::nsPluginHostImpl()
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_ALWAYS,("General Plugin Logging Active! (nsPluginHostImpl::ctor)\n"));
   PR_LOG(nsPluginLogging::gNPPLog, PLUGIN_LOG_ALWAYS,("NPP Logging Active!\n"));
   
+  PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("nsPluginHostImpl::ctor\n"));
   PR_LogFlush();
 #endif
+  mCachedPlugins = nsnull;
+  mSyncCachedPlugins = PR_FALSE;
 }
 
 
@@ -2801,11 +2828,11 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
   rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString path("software/plugins/");
+  nsCAutoString path(kPluginsRootKey);
   char* cid = aCID.ToString();
   if (! cid)
     return NS_ERROR_OUT_OF_MEMORY;
-
+  path += '/';
   path += cid;
   nsMemory::Free(cid);
 
@@ -2813,8 +2840,8 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
   rv = registry->AddSubtree(nsIRegistry::Common, path.get(), &pluginKey);
   if (NS_FAILED(rv)) return rv;
 
-  registry->SetStringUTF8(pluginKey, "name", aPluginName);
-  registry->SetStringUTF8(pluginKey, "description", aDescription);
+  registry->SetStringUTF8(pluginKey, kPluginsNameKey, aPluginName);
+  registry->SetStringUTF8(pluginKey, kPluginsDescKey, aDescription);
 
   for (PRInt32 i = 0; i < aCount; ++i) {
     nsCAutoString mimepath;
@@ -2823,9 +2850,9 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
     nsRegistryKey key;
     registry->AddSubtree(pluginKey, mimepath.get(), &key);
 
-    registry->SetStringUTF8(key, "mimetype",    aMimeTypes[i]);
-    registry->SetStringUTF8(key, "description", aMimeDescriptions[i]);
-    registry->SetStringUTF8(key, "extension",   aFileExtensions[i]);
+    registry->SetStringUTF8(key, kPluginsMimeTypeKey,    aMimeTypes[i]);
+    registry->SetStringUTF8(key, kPluginsMimeDescKey, aMimeDescriptions[i]);
+    registry->SetStringUTF8(key, kPluginsMimeExtKey,   aFileExtensions[i]);
   }
 
   return NS_OK;
@@ -3070,6 +3097,14 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 
     delete mPlugins;
     mPlugins = temp;
+  }
+
+  // Delete any remaining cached plugins list
+  while (mCachedPlugins)
+  {
+    nsPluginTag *next = mCachedPlugins->mNext;
+    delete mCachedPlugins;
+    mCachedPlugins = next;
   }
 
   CleanUnusedLibraries();
@@ -4287,24 +4322,6 @@ static PRBool areTheSameFileNames(char * aPath1, char * aPath2)
   return (nsnull == PL_strncasecmp(filename1.get(), filename2.get(), PL_strlen(filename1.get())));
 }
 
-
-////////////////////////////////////////////////////////////////////////
-static PRBool isJavaPlugin(nsPluginTag * tag)
-{
-  if(tag->mFileName == nsnull)
-    return PR_FALSE;
-
-  char * filename = PL_strrchr(tag->mFileName, '\\');
-
-  if(filename != nsnull)
-    filename++;
-  else
-    filename = tag->mFileName;
-
-  return (nsnull == PL_strncasecmp(filename, "npjava", 6));
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 // currently 'unwanted' plugins are Java, and all other plugins except
 // RealPlayer, Acrobat, Flash
@@ -4347,45 +4364,91 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir,
 
   for (nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) 
   {
-    const nsFileSpec& file = iter;
+    nsFileSpec file = iter;
     if (pluginsDir.IsPluginFile(file)) 
     {
-      nsPluginFile pluginFile(file);
-      PRLibrary* pluginLibrary = nsnull;
+      // Look for it in our cache
+      nsPluginTag *pluginTag = RemoveCachedPluginsInfo(file.GetCString());
 
-      // load the plugin's library so we can ask it some questions, but not for Windows
-#ifndef XP_WIN
-      if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == nsnull)
-        continue;
-#endif
+      // Get file mod time
+      // XXX if we use nsIFile we will get a 64 bit timestamp.
+      // XXX filespec does only 32 bit. Grrr...
+      PRUint32 shortFileModTime = 0;
+      file.GetModDate(shortFileModTime);
+      PRInt64 fileModTime;
+      LL_UI2L(fileModTime, shortFileModTime);
 
-      // create a tag describing this plugin.
-      nsPluginInfo info = { sizeof(info) };
-      nsresult res = pluginFile.GetPluginInfo(info);
-      if(NS_FAILED(res))
-        continue;
-
-      // if we don't have mime type -- don't proceed, this is not a plugin
-      if(!info.fMimeTypeArray) {
-        pluginFile.FreePluginInfo(info);
-        continue;
+      if (pluginTag) {
+        PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
+               ("ScanPluginsDirectory : Found plugin in cache : %s\n", pluginTag->mFileName));
+        // If plugin changed, delete cachedPluginTag and dont use cache
+        if (LL_NE(fileModTime, pluginTag->mLastModifiedTime)) {
+          // Plugins has changed. Dont use cached plugin info.
+          PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
+                 ("ScanPluginsDirectory : timestamp check failed. Reloading plugin : %s\n", pluginTag->mFileName));
+          delete pluginTag;
+          pluginTag = nsnull;
+        }
+      }
+      else {
+        PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
+               ("ScanPluginsDirectory : Plugin NOT found in cache : %s\n", file.GetCString()));
       }
 
-      nsPluginTag* pluginTag = new nsPluginTag(&info);
-      pluginFile.FreePluginInfo(info);
 
-      if(pluginTag == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      pluginTag->mLibrary = pluginLibrary;
-
+      if (!pluginTag) {
+        nsPluginFile pluginFile(file);
+        PRLibrary* pluginLibrary = nsnull;
+        
+        // load the plugin's library so we can ask it some questions, but not for Windows
+#ifndef XP_WIN
+        if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == nsnull)
+          continue;
+#endif
+        
+        // create a tag describing this plugin.
+        nsPluginInfo info = { sizeof(info) };
+        nsresult res = pluginFile.GetPluginInfo(info);
+        if(NS_FAILED(res))
+          continue;
+        // if we don't have mime type -- don't proceed, this is not a plugin
+        if(!info.fMimeTypeArray) {
+          pluginFile.FreePluginInfo(info);
+          continue;
+        }
+        
+        pluginTag = new nsPluginTag(&info);
+        pluginFile.FreePluginInfo(info);
+        
+        if(pluginTag == nsnull)
+          return NS_ERROR_OUT_OF_MEMORY;
+        
+        pluginTag->mLibrary = pluginLibrary;
+        pluginTag->mLastModifiedTime = fileModTime;
+      }
+      
       PRBool bAddIt = PR_TRUE;
-
+      
       // check if there are specific plugins we don't want
       if(checkForUnwantedPlugins)
       {
-        if(isUnwantedPlugin(pluginTag))
+        if(isUnwantedPlugin(pluginTag)) {
           bAddIt = PR_FALSE;
+          pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
+              
+          // Add it to our cached plugins so we can cache the unwantedness of
+          // this plugin when we sync cached plugins to registry
+          pluginTag->mNext = mCachedPlugins;
+          mCachedPlugins = pluginTag;
+          
+          // If this plugin wasn't from our cache, we need to sync plugin info
+          // to registry
+          if (!(pluginTag->mFlags & NS_PLUGIN_FLAG_FROMCACHE))
+            mSyncCachedPlugins = PR_TRUE;
+          
+          // Clear plugintag so it wont get deleted
+          pluginTag = nsnull;
+        }
       }
 
       // check if we already have this plugin in the list which
@@ -4410,9 +4473,16 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir,
 
         if(layoutPath)
           RegisterPluginMimeTypesWithLayout(pluginTag, compManager, layoutPath);
+
+        // Finally see if this was a plugin that was not in cache. If so,
+        // we need to sync our cache
+        if (!(pluginTag->mFlags & NS_PLUGIN_FLAG_FROMCACHE)) {
+          mSyncCachedPlugins = PR_TRUE;
+        }
       }
-      else
+      else {
         delete pluginTag;
+      }
     }
   }
   return NS_OK;
@@ -4420,6 +4490,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir,
 
 
 ////////////////////////////////////////////////////////////////////////
+#include "nsITimelineService.h"
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
   // do not do anything if it is already done
@@ -4427,15 +4498,31 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   if(mPluginsLoaded)
     return NS_OK;
 
+  NS_TIMELINE_START_TIMER("LoadPlugins");
+
 #ifdef CALL_SAFETY_ON
   // check preferences on whether or not we want to try safe calls to plugins
   NS_INIT_PLUGIN_SAFE_CALLS;
 #endif
 
+  // If the create instance failed, then it automatically disables all
+  // our caching functions and we will just end up loading the plugins
+  // on startup.
+  nsCOMPtr<nsIRegistry> registry = do_CreateInstance(kRegistryCID);
+  nsresult rv;
+  if (registry) {
+    rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationRegistry);
+    if (NS_FAILED(rv)) {
+      registry = nsnull;
+    }
+  }
+
+  // Load cached plugins info
+  LoadCachedPluginsInfo(registry);
+
   // retrieve a path for layout module. Needed for plugin mime types registration
   nsCOMPtr<nsIFile> path;
   PRBool isLayoutPath = PR_FALSE;
-  nsresult rv;
   nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
   if (NS_SUCCEEDED(rv) && compManager) 
   {
@@ -4568,88 +4655,84 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
         ScanPluginsDirectory(pluginsDirJavaJRE, compManager, lpath);
       }
     }
-  }
   
   
-  // Check the windows registry for extra paths to scan for plugins
-  //
-  // We are going to get this registry key location from the pref:
-  //    browser.plugins.registry_plugins_folder_key_location
-  // The key name is "Plugins Folders"
-  //
-  // So, for example, in winprefs.js put in this line:
-  // pref ("browser.plugins.registry_plugins_folder_key_location","Software\\Mozilla\\Common");
-  // Then, in HKEY_LOCAL_MACHINE\Software\Mozilla\Common
-  // Make a string key "Plugins Folder" who's value is a list of paths sperated by semi-colons
+    // Check the windows registry for extra paths to scan for plugins
+    //
+    // We are going to get this registry key location from the pref:
+    //    browser.plugins.registry_plugins_folder_key_location
+    // The key name is "Plugins Folders"
+    //
+    // So, for example, in winprefs.js put in this line:
+    // pref ("browser.plugins.registry_plugins_folder_key_location","Software\\Mozilla\\Common");
+    // Then, in HKEY_LOCAL_MACHINE\Software\Mozilla\Common
+    // Make a string key "Plugins Folder" who's value is a list of paths sperated by semi-colons
+    
+    char * regkey;
+    rv = theprefs->CopyCharPref(_NS_PREF_COMMON_PLUGIN_REG_KEY_,&regkey);
+    if (NS_SUCCEEDED(rv) && regkey) {
+      unsigned char valbuf[_MAXKEYVALUE_];
+      char* pluginPath;
+      HKEY  newkey;
+      LONG  result;
+      DWORD type   = REG_SZ;
+      DWORD length = _MAXKEYVALUE_;
+      
+      // set up layout path (if not done above)
+      nsCOMPtr<nsIFile> lpath = nsnull;
+      if(isLayoutPath)
+        lpath = path;
 
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (!prefs) return NS_OK;     // if we can't get to the prefs, bail
-  
-  char * regkey;
-  rv = prefs->CopyCharPref(_NS_PREF_COMMON_PLUGIN_REG_KEY_,&regkey);
-  if (!NS_SUCCEEDED(rv) || regkey == nsnull) return NS_OK; //if pref isn't set, bail
-  
-  unsigned char valbuf[_MAXKEYVALUE_];
-  char* pluginPath;
-  HKEY  newkey;
-  LONG  result;
-  DWORD type   = REG_SZ;
-  DWORD length = _MAXKEYVALUE_;
- 
-  // set up layout path (if not done above)
-  nsCOMPtr<nsIFile> lpath = nsnull;
-  if(isLayoutPath)
-    lpath = path;
-
-  result = RegOpenKeyEx( HKEY_LOCAL_MACHINE, regkey, NULL, KEY_QUERY_VALUE, &newkey );
-  
-  if ( ERROR_SUCCESS == result ) {
-      result = RegQueryValueEx( newkey, _NS_COMMON_PLUGIN_KEY_NAME_, nsnull, &type, valbuf, &length );
-      RegCloseKey( newkey );
+      result = RegOpenKeyEx( HKEY_LOCAL_MACHINE, regkey, NULL, KEY_QUERY_VALUE, &newkey );
+      
       if ( ERROR_SUCCESS == result ) {
+        result = RegQueryValueEx( newkey, _NS_COMMON_PLUGIN_KEY_NAME_, nsnull, &type, valbuf, &length );
+        RegCloseKey( newkey );
+        if ( ERROR_SUCCESS == result ) {
           // tokenize reg key value by semi-colons
-        for ( pluginPath = strtok((char *)&valbuf, ";"); pluginPath; pluginPath = strtok(NULL, ";") ) {
-          nsFileSpec winRegPluginPath (pluginPath);
-          if (winRegPluginPath.Exists()) {     // check for validity of path first
+          for ( pluginPath = strtok((char *)&valbuf, ";"); pluginPath; pluginPath = strtok(NULL, ";") ) {
+            nsFileSpec winRegPluginPath (pluginPath);
+            if (winRegPluginPath.Exists()) {     // check for validity of path first
 #ifdef DEBUG
-printf("found some more plugins at: %s\n", pluginPath);
+              printf("found some more plugins at: %s\n", pluginPath);
 #endif
-              ScanPluginsDirectory( (nsPluginsDir)winRegPluginPath,
-                                                  compManager,
-                                                  lpath,
-                                                  PR_FALSE);  // check for even unwanted plugins                                                  
-            } 
-         }  
-      }      
+              ScanPluginsDirectory( (nsPluginsDir)winRegPluginPath, compManager, lpath, PR_FALSE);  // check for even unwanted plugins                                                  
+            }
+          }  
+        }      
+      }
+      free (regkey);  // clean up
+    }
   }
-  free (regkey);  // clean up
-
 #endif // !XP_WIN
+
+  // Update the plugins info cache
+  if (mSyncCachedPlugins) {
+    mSyncCachedPlugins = PR_FALSE;
+    CachePluginsInfo(registry);
+  }
+
+  // No more need for cached plugins. Clear it up.
+  while (mCachedPlugins) {
+    nsPluginTag *next = mCachedPlugins->mNext;
+    delete mCachedPlugins;
+    mCachedPlugins = next;
+  }
+
+  NS_TIMELINE_STOP_TIMER("LoadPlugins");
+  NS_TIMELINE_MARK_TIMER("LoadPlugins");
 
   return NS_OK;
 }
 
 
 ////////////////////////////////////////////////////////////////////////
+
 static nsresult
-LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
-                nsIRegistry* aRegistry,
-                const char* aCID,
-                nsRegistryKey aPluginKey,
-                nsPluginTag** aResult)
+cidToDllname(nsIComponentManager* aComponentManager, nsIRegistry* aRegistry,
+             const char *aCID, char **dllName)
 {
-  nsresult rv;
-
-  // The name, description, MIME types, MIME descriptions, and
-  // supported file extensions will all hang off of the plugin's key
-  // in the registry. Pull these out now.
-  nsXPIDLCString name;
-  aRegistry->GetStringUTF8(aPluginKey, "name", getter_Copies(name));
-
-  nsXPIDLCString description;
-  aRegistry->GetStringUTF8(aPluginKey, "description", getter_Copies(description));
-
-  nsXPIDLCString filename;
+  NS_ENSURE_ARG_POINTER(dllName);
 
   // To figure out the filename of the plugin, we'll need to get the
   // plugin's CID, and then navigate through the XPCOM registry to
@@ -4657,7 +4740,7 @@ LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
   nsAutoString path(NS_LITERAL_STRING("software/mozilla/XPCOM/classID/") + NS_ConvertASCIItoUCS2(aCID));
 
   nsRegistryKey cidKey;
-  rv = aRegistry->GetKey(nsIRegistry::Common, path.get(), &cidKey);
+  nsresult rv = aRegistry->GetKey(nsIRegistry::Common, path.get(), &cidKey);
 
   if (NS_SUCCEEDED(rv)) {
     PRUint8* library;
@@ -4670,12 +4753,45 @@ LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
                                                       getter_AddRefs(file));
 
       if (NS_SUCCEEDED(rv)) {
-        file->GetPath(getter_Copies(filename));
+        file->GetPath(dllName);
       }
 
       nsCRT::free(NS_REINTERPRET_CAST(char*, library));
     }
   }
+
+  return rv;
+}
+
+
+static nsresult
+LoadXPCOMPlugin(nsIRegistry* aRegistry,
+                const char* aFilename,
+                nsRegistryKey aPluginKey,
+                nsPluginTag** aResult)
+{
+  nsresult rv;
+
+  // The name, description, MIME types, MIME descriptions, and
+  // supported file extensions will all hang off of the plugin's key
+  // in the registry. Pull these out now.
+  nsXPIDLCString name;
+  aRegistry->GetStringUTF8(aPluginKey, kPluginsNameKey, getter_Copies(name));
+
+  nsXPIDLCString description;
+  aRegistry->GetStringUTF8(aPluginKey, kPluginsDescKey, getter_Copies(description));
+
+  nsXPIDLCString filename;
+  nsXPIDLCString fullpath;
+  if (!aFilename) {
+    // Look for a filename key
+    aRegistry->GetStringUTF8(aPluginKey, kPluginsFilenameKey, getter_Copies(filename));
+    aRegistry->GetStringUTF8(aPluginKey, kPluginsFullpathKey, getter_Copies(fullpath));
+  }
+
+  PRInt64 lastmod = LL_ZERO;
+  aRegistry->GetLongLong(aPluginKey, kPluginsModTimeKey, &lastmod);
+
 
   nsCOMPtr<nsIEnumerator> enumerator;
   rv = aRegistry->EnumerateAllSubtrees(aPluginKey, getter_AddRefs(enumerator));
@@ -4738,9 +4854,9 @@ LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
       extensions       = newextensions;
     }
 
-    aRegistry->GetStringUTF8(key, "mimetype",    &mimetypes[count]);
-    aRegistry->GetStringUTF8(key, "description", &mimedescriptions[count]);
-    aRegistry->GetStringUTF8(key, "extension",   &extensions[count]);
+    aRegistry->GetStringUTF8(key, kPluginsMimeTypeKey,    &mimetypes[count]);
+    aRegistry->GetStringUTF8(key, kPluginsMimeDescKey, &mimedescriptions[count]);
+    aRegistry->GetStringUTF8(key, kPluginsMimeExtKey,   &extensions[count]);
     ++count;
   }
 
@@ -4749,11 +4865,12 @@ LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
     nsPluginTag* tag
       = new nsPluginTag(name.get(),
                         description.get(),
-                        filename.get(),
+                        aFilename ? aFilename : filename.get(),
+                        fullpath.get(),
                         (const char* const*)mimetypes,
                         (const char* const*)mimedescriptions,
                         (const char* const*)extensions,
-                        count);
+                        count, lastmod);
 
     if (! tag)
       rv = NS_ERROR_OUT_OF_MEMORY;
@@ -4772,6 +4889,42 @@ LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
   delete[] extensions;
 
   return rv;
+}
+
+
+static nsresult
+AddPluginInfoToRegistry(nsIRegistry* registry, nsRegistryKey top,
+                        nsPluginTag *tag, const char *keyname)
+{
+    nsRegistryKey pluginKey;
+    nsresult rv = registry->AddSubtree(top, keyname, &pluginKey);
+    if (NS_FAILED(rv)) return rv;
+
+    // Add filename, name and description
+    registry->SetStringUTF8(pluginKey, kPluginsFilenameKey, tag->mFileName);
+    if (tag->mFullPath) {
+      registry->SetStringUTF8(pluginKey, kPluginsFullpathKey, tag->mFullPath);
+    }
+    registry->SetStringUTF8(pluginKey, kPluginsNameKey, tag->mName);
+    registry->SetStringUTF8(pluginKey, kPluginsDescKey, tag->mDescription);
+    registry->SetLongLong(pluginKey, kPluginsModTimeKey, &(tag->mLastModifiedTime));
+
+    // Add in each mimetype this plugin supports
+    for (int i=0; i<tag->mVariants; i++) {
+      char mimetypeKeyName[16];
+      nsRegistryKey mimetypeKey;
+      PR_snprintf(mimetypeKeyName, sizeof (mimetypeKeyName), "mimetype-%d", i);
+      rv = registry->AddSubtree(pluginKey, mimetypeKeyName, &mimetypeKey);
+      if (NS_FAILED(rv))
+        break;
+      registry->SetStringUTF8(mimetypeKey, kPluginsMimeTypeKey, tag->mMimeTypeArray[i]);
+      registry->SetStringUTF8(mimetypeKey, kPluginsMimeDescKey, tag->mMimeDescriptionArray[i]);
+      registry->SetStringUTF8(mimetypeKey, kPluginsMimeExtKey, tag->mExtensionsArray[i]);
+    }
+    if (NS_FAILED(rv)) {
+      rv = registry->RemoveSubtree(top, keyname);
+    }
+    return rv;
 }
 
 
@@ -4795,7 +4948,7 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFi
   if (NS_FAILED(rv)) return rv;
   
   nsRegistryKey pluginsKey;
-  rv = registry->GetSubtree(nsIRegistry::Common, "software/plugins", &pluginsKey);
+  rv = registry->GetSubtree(nsIRegistry::Common, kPluginsRootKey, &pluginsKey);
   if (NS_FAILED(rv)) return rv;
 
   // XXX get rid nsIEnumerator someday!
@@ -4829,8 +4982,13 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFi
     nsRegistryKey key;
     node->GetKey(&key);
 
+    nsXPIDLCString filename;
+    rv = cidToDllname(aComponentManager, registry, cid, getter_Copies(filename));
+    if (NS_FAILED(rv))
+      continue;
+
     nsPluginTag* tag = nsnull;
-    rv = LoadXPCOMPlugin(aComponentManager, registry, cid, key, &tag);
+    rv = LoadXPCOMPlugin(registry, filename, key, &tag);
     if (NS_FAILED(rv))
       continue;
 
@@ -4863,6 +5021,148 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFi
   return NS_OK;
 }
 
+
+nsresult
+nsPluginHostImpl::LoadCachedPluginsInfo(nsIRegistry* registry)
+{
+  // Loads cached plugin info from registry
+  //
+  // Enumerate through that list now, creating an nsPluginTag for
+  // each.
+  if (! registry)
+    return NS_ERROR_FAILURE;
+
+  nsRegistryKey pluginsKey;
+  nsresult rv = registry->GetSubtree(nsIRegistry::Common, kPluginsRootKey, &pluginsKey);
+  if (NS_FAILED(rv)) return rv;
+
+  // Make sure we are dealing with the same version number of the plugin info
+  nsXPIDLCString version;
+  rv = registry->GetStringUTF8(pluginsKey, kPluginsVersionKey, getter_Copies(version));
+  if (NS_FAILED(rv) || PL_strcmp(version.get(), kPluginInfoVersion)) {
+    // Version mismatch
+    // Nuke the subtree
+    registry->RemoveSubtree(nsIRegistry::Common, kPluginsRootKey);
+    PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
+           ("LoadCachedPluginsInfo : Version %s mismatch - Expected %s. Nuking cached info.\n",
+            version.get(), kPluginInfoVersion));
+    return NS_ERROR_FAILURE;
+  }
+
+  // XXX get rid nsIEnumerator someday!
+  nsCOMPtr<nsIEnumerator> enumerator;
+  rv = registry->EnumerateSubtrees(pluginsKey, getter_AddRefs(enumerator));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISimpleEnumerator> plugins;
+  rv = NS_NewAdapterEnumerator(getter_AddRefs(plugins), enumerator);
+  if (NS_FAILED(rv)) return rv;
+
+  for (;;) {
+    PRBool hasMore;
+    plugins->HasMoreElements(&hasMore);
+    if (! hasMore)
+      break;
+
+    nsCOMPtr<nsISupports> isupports;
+    plugins->GetNext(getter_AddRefs(isupports));
+
+    nsCOMPtr<nsIRegistryNode> node = do_QueryInterface(isupports);
+    NS_ASSERTION(node != nsnull, "not an nsIRegistryNode");
+    if (! node)
+      continue;
+
+    // Pull out the information for an individual plugin, and link it
+    // in to the mCachedPlugins list.
+    nsRegistryKey key;
+    node->GetKey(&key);
+
+    nsPluginTag* tag = nsnull;
+    rv = LoadXPCOMPlugin(registry, nsnull, key, &tag);
+    if (NS_FAILED(rv))
+      continue;
+
+    // Mark plugin as loaded from cache
+    tag->Mark(NS_PLUGIN_FLAG_FROMCACHE);
+    PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
+           ("LoadCachedPluginsInfo : Loading Cached plugininfo for %s\n", tag->mFileName));
+    tag->mNext = mCachedPlugins;
+    mCachedPlugins = tag;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsPluginHostImpl::CachePluginsInfo(nsIRegistry* registry)
+{
+  // Save plugin info from registry
+
+  if (! registry)
+    return NS_ERROR_FAILURE;
+
+  // We dont want any old plugins that dont exist anymore hanging around
+  // So remove and re-add the root of the plugins info
+  nsresult rv = registry->RemoveSubtree(nsIRegistry::Common, kPluginsRootKey);
+  
+  nsRegistryKey pluginsSubtreeKey;
+  rv = registry->AddSubtree(nsIRegistry::Common, kPluginsRootKey, &pluginsSubtreeKey);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = registry->SetStringUTF8(pluginsSubtreeKey, kPluginsVersionKey, kPluginInfoVersion);
+  if (NS_FAILED(rv)) return rv;
+
+  int count = 0;
+
+  // Store all plugins in the mPlugins list - all plugins currently in use.
+  char pluginKeyName[64];
+  nsPluginTag *tag;
+  for(tag=mPlugins; tag; tag=tag->mNext) {
+    // store each plugin info into the registry
+    PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
+           ("CachePluginsInfo : Caching plugininfo in registry for %s\n", tag->mFileName));
+    PR_snprintf(pluginKeyName, sizeof(pluginKeyName), "plugin-%d", ++count);
+    AddPluginInfoToRegistry(registry, pluginsSubtreeKey, tag, pluginKeyName);
+  }
+
+  // Store any unwanted plugins info so that we wont have to load
+  // them again the next time around
+  tag = mCachedPlugins;
+  for(tag=mCachedPlugins; tag; tag=tag->mNext) {
+    // Look for unwanted plugins
+    if (!(tag->mFlags & NS_PLUGIN_FLAG_UNWANTED))
+      continue;
+
+    // store each plugin info into the registry
+    PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
+           ("CachePluginsInfo : Caching unwanted plugininfo in registry for %s\n", tag->mFileName));
+    PR_snprintf(pluginKeyName, sizeof(pluginKeyName), "plugin-%d", ++count);
+    AddPluginInfoToRegistry(registry, pluginsSubtreeKey, tag, pluginKeyName);
+  }
+
+  return NS_OK;
+}
+
+nsPluginTag *
+nsPluginHostImpl::RemoveCachedPluginsInfo(const char *filename)
+{
+  nsPluginTag **link = &mCachedPlugins;
+  for (nsPluginTag *tag = *link; tag; link = &tag->mNext, tag = *link)
+  {
+    // compare filename or else the mFullPath if it exists. Mac seems to use
+    // mFullPath for fullpath and mFileName for just the leafname of fullpath.
+    // On win and unix, mFullPath is never used and mFileName is contains the
+    // full pathname. All this should move to using nsIFile.
+    if (!PL_strcmp(tag->mFileName, filename) ||
+        (tag->mFullPath && !PL_strcmp(tag->mFullPath, filename)))
+    {
+      // Found it. Remove it from our list
+      *link = tag->mNext;
+      return tag;
+    }
+  }
+  return nsnull;
+}
 
 ////////////////////////////////////////////////////////////////////////
 /* Called by GetURL and PostURL */
