@@ -22,4 +22,6 @@
 #undef txtnDebug
 
 /* Read the common configuration file */
+#ifndef MacConfigInclude_h_
 #include "MacConfigInclude.h"
+#endif

@@ -25,18 +25,22 @@
 	Order below does matter.
 */
 
+#ifndef MacConfigInclude_h_
+#define MacConfigInclude_h_
+
 /* Read compiler options */
+#ifndef IDE_Options_h_
 #include "IDE_Options.h"
+#endif
 
 /* Read file of defines global to the Mac build */
+#ifndef DefinesMac_h_
 #include "DefinesMac.h"
-
-/* Read the configuration options (which build we are doing) */
-#include "MacConfig.h"
-
-/* Read component defines */
-#include "ComponentConfig.h"
+#endif
 
 /* Read build-wide defines (e.g. MOZILLA_CLIENT) */
+#ifndef DefinesMozilla_h_
 #include "DefinesMozilla.h"
+#endif
 
+#endif /* MacConfigInclude_h_ */

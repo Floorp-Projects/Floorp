@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#pragma once
+
 /* 
 	This is included as a prefix file in all Mac projects. It ensures that
 	the correct #defines are set up for this build.
@@ -30,12 +32,6 @@
 
 /* Read file of defines global to the Mac build */
 #include "DefinesMac.h"
-
-/* Read the configuration options (which build we are doing) */
-#include "MacConfig.h"
-
-/* Read component defines */
-/* #include "ComponentConfig.h" */
 
 /* Read build-wide defines (e.g. MOZILLA_CLIENT) */
 #include "DefinesMozilla.h"
