@@ -62,4 +62,4 @@ endif
 # beginning of lines in the packages file.
 
 firefox.manifest: packages-static
-	grep "^bin/" $^ | sed "s?^bin/??" > $@
+	grep "^bin\\" $^ | sed "s?^bin\\??" > $@
