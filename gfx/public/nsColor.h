@@ -38,8 +38,7 @@
 #ifndef nsColor_h___
 #define nsColor_h___
 
-#include "nscore.h"
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 
 class nsString;
 class nsAString;

@@ -65,7 +65,6 @@
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsICategoryManager.h"
-#include "nsComObsolete.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell
 #include "nsIScriptGlobalObject.h"
@@ -292,7 +291,7 @@ nsWalletlibService::UnregisterProc(nsIComponentManager *aCompMgr,
 PRBool expireMasterPassword = PR_FALSE;
 #define expireMasterPasswordPref "signon.expireMasterPassword"
 
-MODULE_PRIVATE int PR_CALLBACK
+int PR_CALLBACK
 ExpireMasterPasswordPrefChanged(const char * newpref, void * data) {
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));

@@ -71,7 +71,6 @@
 #include "nsIObserverService.h"
 
 #include "nsIWalletService.h"
-#include "nsComObsolete.h"
 
 #include <time.h>
 
@@ -97,9 +96,9 @@ static const char *pref_captureForms = "wallet.captureForms";
 static const char *pref_enabled = "wallet.enabled";
 static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
 
-PRIVATE PRBool wallet_captureForms = PR_FALSE;
+static PRBool wallet_captureForms = PR_FALSE;
 
-PRIVATE void
+static void
 wallet_SetFormsCapturingPref(PRBool x)
 {
     /* do nothing if new value of pref is same as current value */
@@ -111,7 +110,7 @@ wallet_SetFormsCapturingPref(PRBool x)
     wallet_captureForms = x;
 }
 
-MODULE_PRIVATE int PR_CALLBACK
+int PR_CALLBACK
 wallet_FormsCapturingPrefChanged(const char * newpref, void * data)
 {
     PRBool x;
@@ -135,14 +134,14 @@ wallet_RegisterCapturePrefCallbacks(void)
     }
 }
 
-PRIVATE PRBool
+static PRBool
 wallet_GetFormsCapturingPref(void)
 {
     wallet_RegisterCapturePrefCallbacks();
     return wallet_captureForms;
 }
 
-PRIVATE PRBool
+static PRBool
 wallet_GetEnabledPref(void)
 {
   /* This pref is not in the prefs panel.  It's purpose is to remove wallet from all UI */
@@ -248,15 +247,15 @@ public:
 };
 wallet_HelpMac * helpMac;
 
-PRIVATE nsVoidArray * wallet_FieldToSchema_list = 0;
-PRIVATE nsVoidArray * wallet_VcardToSchema_list = 0;
-PRIVATE nsVoidArray * wallet_SchemaToValue_list = 0;
-PRIVATE nsVoidArray * wallet_SchemaConcat_list = 0;
-PRIVATE nsVoidArray * wallet_SchemaStrings_list = 0;
-PRIVATE nsVoidArray * wallet_PositionalSchema_list = 0;
-PRIVATE nsVoidArray * wallet_StateSchema_list = 0;
-PRIVATE nsVoidArray * wallet_URL_list = 0;
-PRIVATE nsVoidArray * wallet_DistinguishedSchema_list = 0;
+static nsVoidArray * wallet_FieldToSchema_list = 0;
+static nsVoidArray * wallet_VcardToSchema_list = 0;
+static nsVoidArray * wallet_SchemaToValue_list = 0;
+static nsVoidArray * wallet_SchemaConcat_list = 0;
+static nsVoidArray * wallet_SchemaStrings_list = 0;
+static nsVoidArray * wallet_PositionalSchema_list = 0;
+static nsVoidArray * wallet_StateSchema_list = 0;
+static nsVoidArray * wallet_URL_list = 0;
+static nsVoidArray * wallet_DistinguishedSchema_list = 0;
 
 #define NO_CAPTURE(x) x[0]
 #define NO_PREVIEW(x) x[1]
@@ -428,7 +427,7 @@ wallet_DumpStopwatch() {
 
 #define PROPERTIES_URL "chrome://communicator/locale/wallet/wallet.properties"
 
-PUBLIC PRUnichar *
+PRUnichar *
 Wallet_Localize(const char* genericString) {
   nsresult ret;
   nsAutoString v;
@@ -480,7 +479,7 @@ Wallet_Localize(const char* genericString) {
 /* Modal dialog boxes */
 /**********************/
 
-PUBLIC PRBool
+PRBool
 Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
 {
   PRBool retval = PR_TRUE; /* default value */
@@ -498,7 +497,7 @@ Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
   return retval;
 }
 
-PUBLIC PRBool
+PRBool
 Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
   nsresult res;
   nsCOMPtr<nsIPrompt> dialog;
@@ -519,7 +518,7 @@ Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
   return (buttonPressed == 0);
 }
 
-PUBLIC PRInt32
+PRInt32
 Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
 {
   nsresult res;
@@ -545,7 +544,7 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
   return buttonPressed;
 }
 
-PRIVATE void
+static void
 wallet_Alert(PRUnichar * szMessage, nsIDOMWindowInternal* window)
 {
   nsresult res;
@@ -562,7 +561,7 @@ wallet_Alert(PRUnichar * szMessage, nsIDOMWindowInternal* window)
   return;     // XXX should return the error
 }
 
-PRIVATE void
+static void
 wallet_Alert(PRUnichar * szMessage, nsIPrompt* dialog)
 {
   nsresult res;
@@ -573,7 +572,7 @@ wallet_Alert(PRUnichar * szMessage, nsIPrompt* dialog)
   return;     // XXX should return the error
 }
 
-PUBLIC PRBool
+PRBool
 Wallet_CheckConfirmYN
     (PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue,
      nsIDOMWindowInternal* window) {
@@ -613,7 +612,7 @@ nsISecretDecoderRing* gSecretDecoderRing;
 PRBool gEncryptionFailure = PR_FALSE;
 PRInt32 gReencryptionLevel = 0;
 
-PRIVATE nsresult
+static nsresult
 wallet_CryptSetup() {
   if (!gSecretDecoderRing)
   {
@@ -633,7 +632,7 @@ wallet_CryptSetup() {
 #define PREFIX "~"
 #include "plbase64.h"
 
-PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
+static nsresult EncryptString (const char * text, char *& crypt) {
 
   /* use SecretDecoderRing if encryption pref is set */
   nsresult rv;
@@ -669,7 +668,7 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
   return NS_OK;
 }
 
-PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
+static nsresult DecryptString (const char * crypt, char *& text) {
 
   /* treat zero-length crypt string as a special case */
   if (crypt[0] == '\0') {
@@ -720,7 +719,7 @@ PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
   return NS_OK;
 }
 
-PUBLIC void
+void
 WLLT_ExpirePassword(PRBool* status) {
   nsresult rv = wallet_CryptSetup();
   if (NS_SUCCEEDED(rv)) {
@@ -729,7 +728,7 @@ WLLT_ExpirePassword(PRBool* status) {
   *status = NS_SUCCEEDED(rv);
 }
 
-PUBLIC void
+void
 WLLT_ExpirePasswordOnly(PRBool* status) {
   nsresult rv = wallet_CryptSetup();
   if (NS_SUCCEEDED(rv)) {
@@ -740,7 +739,7 @@ WLLT_ExpirePasswordOnly(PRBool* status) {
 
 PRBool changingPassword = PR_FALSE;
 
-PUBLIC void
+void
 WLLT_ChangePassword(PRBool* status) {
   nsresult rv = wallet_CryptSetup();
   if (NS_SUCCEEDED(rv)) {
@@ -780,7 +779,7 @@ wallet_Decrypt(const nsCString& crypt, nsCString& text) {
   return NS_OK;
 }
 
-PUBLIC nsresult
+nsresult
 Wallet_Encrypt (const nsString& textUCS2, nsString& cryptUCS2) {
   nsCAutoString cryptUTF8;
   nsresult rv = wallet_Encrypt(NS_ConvertUCS2toUTF8(textUCS2), cryptUTF8);
@@ -788,7 +787,7 @@ Wallet_Encrypt (const nsString& textUCS2, nsString& cryptUCS2) {
   return rv;
 }
 
-PUBLIC nsresult
+nsresult
 Wallet_Decrypt(const nsString& cryptUCS2, nsString& textUCS2) {
   nsCAutoString textUTF8;
   nsresult rv = wallet_Decrypt(NS_ConvertUCS2toUTF8(cryptUCS2), textUTF8);
@@ -796,13 +795,13 @@ Wallet_Decrypt(const nsString& cryptUCS2, nsString& textUCS2) {
   return rv;
 }
 
-PUBLIC nsresult
+nsresult
 Wallet_Encrypt2(const nsString& text, nsString& crypt)
 {
   return Wallet_Encrypt (text, crypt);
 }
 
-PUBLIC nsresult
+nsresult
 Wallet_Decrypt2 (const nsString& crypt, nsString& text)
 {
   return Wallet_Decrypt (crypt, text);
@@ -837,7 +836,7 @@ wallet_Clear(nsVoidArray ** list) {
  * element at a time was very inefficient on the mac
  */
 
-PRIVATE nsVoidArray * wallet_MapElementAllocations_list = 0;
+static nsVoidArray * wallet_MapElementAllocations_list = 0;
 const PRInt32 kAllocBlockElems = 500;
 static PRInt32 wallet_NextAllocSlot = kAllocBlockElems;
 
@@ -1121,7 +1120,7 @@ wallet_ReadFromList(
  *
  */
 
-PUBLIC void
+void
 Wallet_UTF8Put(nsOutputFileStream& strm, PRUnichar c) {
   if (c <= 0x7F) {
     strm.put((char)c);
@@ -1152,7 +1151,7 @@ wallet_Get(nsInputFileStream& strm) {
   return (buf[next++]);
 }
 
-PUBLIC PRUnichar
+PRUnichar
 Wallet_UTF8Get(nsInputFileStream& strm) {
   PRUnichar c = wallet_Get(strm);
   if ((c & 0x80) == 0x00) {
@@ -1189,7 +1188,7 @@ Wallet_UTF8Get(nsInputFileStream& strm) {
  *
  */
 
-PUBLIC void
+void
 Wallet_SimplePut(nsOutputFileStream& strm, PRUnichar c) {
   if (c < 0xFF) {
     strm.put((char)c);
@@ -1200,7 +1199,7 @@ Wallet_SimplePut(nsOutputFileStream& strm, PRUnichar c) {
   }
 }
 
-PUBLIC PRUnichar
+PRUnichar
 Wallet_SimpleGet(nsInputFileStream& strm) {
   PRUnichar c = (strm.get() & 0xFF);
   if (c != 0xFF) {
@@ -1232,7 +1231,7 @@ const char distinguishedSchemaFileName[] = "DistinguishedSchema.tbl";
 /* The following routines are for accessing the files */
 /******************************************************/
 
-PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
+nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
   /* return the profile */
   
   nsresult res;
@@ -1254,7 +1253,7 @@ PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
   return res;
 }
 
-PUBLIC nsresult Wallet_DefaultsDirectory(nsFileSpec& dirSpec) {
+nsresult Wallet_DefaultsDirectory(nsFileSpec& dirSpec) {
 
   nsresult res;
   nsCOMPtr<nsIFile> aFile;
@@ -1277,7 +1276,7 @@ PUBLIC nsresult Wallet_DefaultsDirectory(nsFileSpec& dirSpec) {
   return res;
 }
 
-PUBLIC char *
+char *
 Wallet_RandomName(char* suffix)
 {
   /* pick the current time as the random number */
@@ -1558,7 +1557,7 @@ wallet_ReadFromFile
 /* The following are utility routines for the main wallet processing */
 /*********************************************************************/
 
-PUBLIC void
+void
 Wallet_GiveCaveat(nsIDOMWindowInternal* window, nsIPrompt* dialog) {
   /* test for first capturing of data ever and give caveat if so */
   if (!SI_GetBoolPref(pref_Caveat, PR_FALSE)) {
@@ -2459,7 +2458,7 @@ wallet_GetPrefills(
 /*
  * termination for wallet session
  */
-PUBLIC void
+void
 Wallet_ReleaseAllLists() {
     wallet_Clear(&wallet_FieldToSchema_list); /* otherwise we will duplicate the list */
     wallet_Clear(&wallet_VcardToSchema_list); /* otherwise we will duplicate the list */
@@ -2680,7 +2679,7 @@ wallet_ReleasePrefillElementList(nsVoidArray * wallet_PrefillElement_list) {
 nsVoidArray * wallet_list;
 nsAutoString wallet_url;
 
-PUBLIC void
+void
 WLLT_GetPrefillListForViewer(nsString& aPrefillList)
 {
   wallet_Initialize(PR_FALSE); /* to initialize helpMac */
@@ -2702,7 +2701,7 @@ WLLT_GetPrefillListForViewer(nsString& aPrefillList)
   aPrefillList = buffer;
 }
 
-PRIVATE void
+static void
 wallet_FreeURL(wallet_MapElement *url) {
 
     if(!url) {
@@ -2717,7 +2716,7 @@ const char* permission_NoCapture_Preview = "yn";
 const char* permission_Capture_NoPreview = "ny";
 const char* permission_Capture_Preview = "nn";
 
-PUBLIC void
+void
 Wallet_SignonViewerReturn(const nsString& results)
 {
     wallet_MapElement *url;
@@ -2776,7 +2775,7 @@ Wallet_SignonViewerReturn(const nsString& results)
 /*
  * see if user wants to capture data on current page
  */
-PRIVATE PRBool
+static PRBool
 wallet_OKToCapture(const nsAFlatCString& url, nsIDOMWindowInternal* window) {
 
   /* exit if pref is not set */
@@ -2822,7 +2821,7 @@ wallet_OKToCapture(const nsAFlatCString& url, nsIDOMWindowInternal* window) {
 /*
  * capture the value of a form element
  */
-PRIVATE PRBool
+static PRBool
 wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, nsACString& schema)
 {
   /* do nothing if there is no value */
@@ -2946,7 +2945,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
 /* The following are the interface routines seen by other dlls */
 /***************************************************************/
 
-PUBLIC void
+void
 WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
 {
   wallet_Initialize(PR_FALSE); /* to initialize helpMac */
@@ -2965,7 +2964,7 @@ WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
   aNopreviewList = buffer;
 }
 
-PUBLIC void
+void
 WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
 {
   nsAutoString buffer;
@@ -2983,7 +2982,7 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
   aNocaptureList = buffer;
 }
 
-PUBLIC void
+void
 WLLT_PostEdit(const nsString& walletList)
 {
   nsFileSpec dirSpec;
@@ -3037,7 +3036,7 @@ WLLT_PostEdit(const nsString& walletList)
   wallet_ReadFromFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE);
 }
 
-PUBLIC void
+void
 WLLT_PreEdit(nsString& walletList)
 {
   wallet_Initialize();
@@ -3065,7 +3064,7 @@ WLLT_PreEdit(nsString& walletList)
   }
 }
 
-PUBLIC void
+void
 WLLT_DeleteAll() {
   wallet_Initialize();
   wallet_Clear(&wallet_SchemaToValue_list);
@@ -3073,14 +3072,14 @@ WLLT_DeleteAll() {
   SI_DeleteAll();
 }
 
-PUBLIC void
+void
 WLLT_ClearUserData() {
   wallet_ValuesReadIn = PR_FALSE;
   namesInitialized = PR_FALSE;
   wallet_URLListInitialized = PR_FALSE;
 }
 
-PUBLIC void
+void
 WLLT_DeletePersistentUserData() {
 
   if (schemaValueFileName && schemaValueFileName[0]) {
@@ -3094,7 +3093,7 @@ WLLT_DeletePersistentUserData() {
   }
 }
 
-MODULE_PRIVATE int PR_CALLBACK
+int PR_CALLBACK
 wallet_ReencryptAll(const char * newpref, void* window) {
   PRUnichar * message;
 
@@ -3181,7 +3180,7 @@ fail:
   return 1;
 }
 
-PUBLIC void
+void
 WLLT_InitReencryptCallback(nsIDOMWindowInternal* window) {
   static PRBool registered = PR_FALSE;
   static nsIDOMWindowInternal* lastWindow;
@@ -3193,7 +3192,7 @@ WLLT_InitReencryptCallback(nsIDOMWindowInternal* window) {
   registered = PR_TRUE;
 }
 
-PRIVATE void
+static void
 wallet_DecodeVerticalBars(nsString& s) {
   s.ReplaceSubstring(NS_LITERAL_STRING("^2").get(), NS_LITERAL_STRING("|").get());
   s.ReplaceSubstring(NS_LITERAL_STRING("^1").get(), NS_LITERAL_STRING("^").get());
@@ -3202,7 +3201,7 @@ wallet_DecodeVerticalBars(nsString& s) {
 /*
  * return after previewing a set of prefills
  */
-PUBLIC void
+void
 WLLT_PrefillReturn(const nsString& results)
 {
   nsAutoString fillins;
@@ -3344,7 +3343,7 @@ WLLT_PrefillReturn(const nsString& results)
 /*
  * get the form elements on the current page and prefill them if possible
  */
-PRIVATE void
+static void
 wallet_TraversalForPrefill
     (nsIDOMWindow* win, nsVoidArray* wallet_PrefillElement_list, nsString& urlName) {
 
@@ -3450,7 +3449,7 @@ wallet_TraversalForPrefill
   }
 }
 
-PUBLIC nsresult
+nsresult
 WLLT_PrefillOneElement
   (nsIDOMWindowInternal* win, nsIDOMNode* elementNode, nsString& compositeValue)
 {
@@ -3487,7 +3486,7 @@ WLLT_PrefillOneElement
   return NS_OK;
 }
 
-PUBLIC nsresult
+nsresult
 WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
 {
   /* do not prefill if preview window is open in some other browser window */
@@ -3565,7 +3564,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
   }
 }
 
-PRIVATE PRBool
+static PRBool
 wallet_CaptureInputElement(nsIDOMNode* elementNode, nsIDocument* doc) {
   nsresult result;
   PRBool captured = PR_FALSE;
@@ -3611,7 +3610,7 @@ wallet_CaptureInputElement(nsIDOMNode* elementNode, nsIDocument* doc) {
   return captured;
 }
 
-PRIVATE PRBool
+static PRBool
 wallet_CaptureSelectElement(nsIDOMNode* elementNode, nsIDocument* doc) {
   nsresult result;
   PRBool captured = PR_FALSE;
@@ -3683,7 +3682,7 @@ wallet_CaptureSelectElement(nsIDOMNode* elementNode, nsIDocument* doc) {
   return captured;
 }
 
-PRIVATE void
+static void
 wallet_TraversalForRequestToCapture(nsIDOMWindow* win, PRInt32& captureCount) {
 
   nsresult result;
@@ -3754,7 +3753,7 @@ wallet_TraversalForRequestToCapture(nsIDOMWindow* win, PRInt32& captureCount) {
   }
 }
 
-PUBLIC void
+void
 WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* status) {
 
   PRInt32 captureCount = 0;
@@ -3796,7 +3795,7 @@ public:
   PRBool isPassword;
 };
 
-PRIVATE PRBool
+static PRBool
 wallet_IsNewValue(nsIDOMNode* elementNode, nsString valueOnForm) {
   if (valueOnForm.Equals(EmptyString())) {
     return PR_FALSE;
@@ -3816,7 +3815,7 @@ wallet_IsNewValue(nsIDOMNode* elementNode, nsString valueOnForm) {
   return PR_TRUE;
 }
 
-PUBLIC void
+void
 WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 
   nsCOMPtr<nsIDOMHTMLFormElement> currentFormNode(do_QueryInterface(currentForm));

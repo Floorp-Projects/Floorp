@@ -39,14 +39,13 @@
 #define _nsImapStringBundle_H__
 
 #include "nsIStringBundle.h"
-#include "nsComObsolete.h"
 
-NS_BEGIN_EXTERN_C
+PR_BEGIN_EXTERN_C
 
 nsresult      IMAPGetStringByID(PRInt32 stringID, PRUnichar **aString);
 nsresult      IMAPGetStringBundle(nsIStringBundle **aBundle);
 
-NS_END_EXTERN_C
+PR_END_EXTERN_C
 
 
 

@@ -44,7 +44,6 @@
 #include "nsIMsgFolder.h"
 #include "nsIMsgHdr.h"
 #include "nsIMsgWindow.h"
-#include "nsComObsolete.h"
 
 typedef enum _nsCopyRequestType
 {

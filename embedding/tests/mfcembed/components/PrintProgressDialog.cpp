@@ -9,6 +9,8 @@
 #include "nsIWebBrowserPrint.h"
 #include "nsIInterfaceRequestorUtils.h"
 
+#include "nsMemory.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE

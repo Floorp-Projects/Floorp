@@ -38,8 +38,7 @@
 #ifndef nsFont_h___
 #define nsFont_h___
 
-#include "nscore.h"
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 #include "nsCoord.h"
 #include "nsString.h"
 

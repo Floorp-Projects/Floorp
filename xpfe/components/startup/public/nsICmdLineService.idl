@@ -40,8 +40,6 @@
 #include "nsICmdLineHandler.idl"
 
 %{C++
-#include "nsComObsolete.h" //for NS_APPSHELL
-
 // e34783f5-ac08-11d2-8d19-00805fc2500c
 #define NS_COMMANDLINE_SERVICE_CID \
 {  0xe34783f5, 0xac08, 0x11d2, \

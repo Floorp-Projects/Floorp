@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,8 +15,8 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Marco Pesenti Gritti <marco@gnome.org>
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,33 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef widgetCore_h__
+#define widgetCore_h__
 
-/* We need this because Solaris' version of qsort is broken and
- * causes array bounds reads.
- */
+#include "nscore.h"
 
-#ifndef nsQuickSort_h___
-#define nsQuickSort_h___
+#ifdef _IMPL_NS_WIDGET
+#define NS_WIDGET NS_EXPORT
+#else
+#define NS_WIDGET NS_IMPORT
+#endif
 
-#include "prtypes.h"
-PR_BEGIN_EXTERN_C
-
-/**
- * Parameters:
- *  1. the array to sort
- *  2. the number of elements in the array
- *  3. the size of each array element
- *  4. comparison function taking two elements and parameter #5 and
- *     returning an integer:
- *      + less than zero if the first element should be before the second
- *      + 0 if the order of the elements does not matter
- *      + greater than zero if the second element should be before the first
- *  5. extra data to pass to comparison function
- */
-PR_EXTERN(void) NS_QuickSort(void *, unsigned int, unsigned int,
-                             int (*)(const void *, const void *, void *), 
-                             void *);
-
-PR_END_EXTERN_C
-
-#endif /* nsQuickSort_h___ */
+#endif

@@ -44,7 +44,6 @@
 #include "nsMsgCompFields.h"
 #include "nsIMsgSend.h"
 #include "nsIMsgCompUtils.h"
-#include "nsComObsolete.h"
 
 class nsIPrompt; 
 
@@ -66,7 +65,7 @@ public:
   virtual ~nsMsgCompUtils();
 };
 
-NS_BEGIN_EXTERN_C
+PR_BEGIN_EXTERN_C
 
 //
 // Create a file spec or file name using the name passed
@@ -171,7 +170,7 @@ nsresult ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed = PR_FALSE
 PRBool UseFormatFlowed(const char *charset);
 
 
-NS_END_EXTERN_C
+PR_END_EXTERN_C
 
 
 #endif /* _nsMsgCompUtils_H_ */

@@ -39,7 +39,7 @@
 #define nsColorNames_h___
 
 #include "nsColor.h"
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 #include "nsStringFwd.h"
 
 /*

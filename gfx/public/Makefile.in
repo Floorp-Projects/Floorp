@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= gfx
 
 EXPORTS		= \
+		gfxCore.h \
 		nsColor.h \
 		nsColorNames.h \
 		nsColorNameList.h \

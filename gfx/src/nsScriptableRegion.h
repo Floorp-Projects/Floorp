@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIScriptableRegion.h"
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 
 class nsIRegion;
 

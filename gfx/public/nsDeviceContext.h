@@ -47,7 +47,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 
 class nsIImageRequest;
 class nsHashtable;
