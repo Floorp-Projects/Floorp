@@ -60,7 +60,7 @@ const nsIWindowWatcher       = Components.interfaces.nsIWindowWatcher;
 const NS_BINDING_ABORTED = 0x80020006;
 
 function needHomepageOverride(prefb) {
-  var savedsstone;
+  var savedmstone;
   try {
     savedmstone = prefb.getCharPref("browser.startup.homepage_override.mstone");
   }
