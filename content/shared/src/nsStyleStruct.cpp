@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Hyatt (hyatt@netscape.com
+ *   David Hyatt (hyatt@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -270,12 +270,17 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
   return NS_STYLE_HINT_REFLOW;
 }
 
+static nscoord nsMargin::* const gMarginSides[4] = {
+  &nsMargin::top, &nsMargin::right, &nsMargin::bottom, &nsMargin::left
+};
+
 static PRBool IsFixedData(const nsStyleSides& aSides, PRBool aEnumOK)
 {
-  return PRBool(IsFixedUnit(aSides.GetLeftUnit(), aEnumOK) &&
-                IsFixedUnit(aSides.GetTopUnit(), aEnumOK) &&
-                IsFixedUnit(aSides.GetRightUnit(), aEnumOK) &&
-                IsFixedUnit(aSides.GetBottomUnit(), aEnumOK));
+  NS_FOR_CSS_SIDES(side) {
+    if (!IsFixedUnit(aSides.GetUnit(side), aEnumOK))
+      return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 static nscoord CalcCoord(const nsStyleCoord& aCoord, 
@@ -331,12 +336,11 @@ nsStyleMargin::Destroy(nsIPresContext* aContext) {
 void nsStyleMargin::RecalcData()
 {
   if (IsFixedData(mMargin, PR_FALSE)) {
-    nsStyleCoord  coord;
-    mCachedMargin.left = CalcCoord(mMargin.GetLeft(coord), nsnull, 0);
-    mCachedMargin.top = CalcCoord(mMargin.GetTop(coord), nsnull, 0);
-    mCachedMargin.right = CalcCoord(mMargin.GetRight(coord), nsnull, 0);
-    mCachedMargin.bottom = CalcCoord(mMargin.GetBottom(coord), nsnull, 0);
-
+    nsStyleCoord coord;
+    NS_FOR_CSS_SIDES(side) {
+      mCachedMargin.*(gMarginSides[side]) =
+        CalcCoord(mMargin.Get(side, coord), nsnull, 0);
+    }
     mHasCachedMargin = PR_TRUE;
   }
   else
@@ -389,12 +393,11 @@ nsStylePadding::Destroy(nsIPresContext* aContext) {
 void nsStylePadding::RecalcData()
 {
   if (IsFixedData(mPadding, PR_FALSE)) {
-    nsStyleCoord  coord;
-    mCachedPadding.left = CalcCoord(mPadding.GetLeft(coord), nsnull, 0);
-    mCachedPadding.top = CalcCoord(mPadding.GetTop(coord), nsnull, 0);
-    mCachedPadding.right = CalcCoord(mPadding.GetRight(coord), nsnull, 0);
-    mCachedPadding.bottom = CalcCoord(mPadding.GetBottom(coord), nsnull, 0);
-
+    nsStyleCoord coord;
+    NS_FOR_CSS_SIDES(side) {
+      mCachedPadding.*(gMarginSides[side]) =
+        CalcCoord(mPadding.Get(side, coord), nsnull, 0);
+    }
     mHasCachedPadding = PR_TRUE;
   }
   else
@@ -496,38 +499,20 @@ PRBool nsStyleBorder::IsBorderSideVisible(PRUint8 aSide) const
 
 void nsStyleBorder::RecalcData()
 {
-  if (((!IsBorderSideVisible(NS_SIDE_LEFT))|| 
-       IsFixedUnit(mBorder.GetLeftUnit(), PR_TRUE)) &&
-      ((!IsBorderSideVisible(NS_SIDE_TOP)) || 
-       IsFixedUnit(mBorder.GetTopUnit(), PR_TRUE)) &&
-      ((!IsBorderSideVisible(NS_SIDE_RIGHT)) || 
-       IsFixedUnit(mBorder.GetRightUnit(), PR_TRUE)) &&
-      ((!IsBorderSideVisible(NS_SIDE_BOTTOM)) || 
-       IsFixedUnit(mBorder.GetBottomUnit(), PR_TRUE))) {
-    nsStyleCoord  coord;
-    if (!IsBorderSideVisible(NS_SIDE_LEFT)) {
-      mCachedBorder.left = 0;
+  PRBool allFixed = PR_TRUE;
+  {NS_FOR_CSS_SIDES(side) {
+    if (IsBorderSideVisible(side) &&
+        !IsFixedUnit(mBorder.GetUnit(side), PR_TRUE)) {
+      allFixed = PR_FALSE;
+      break;
     }
-    else {
-      mCachedBorder.left = CalcCoord(mBorder.GetLeft(coord), mBorderWidths, 3);
-    }
-    if (!IsBorderSideVisible(NS_SIDE_TOP)) {
-      mCachedBorder.top = 0;
-    }
-    else {
-      mCachedBorder.top = CalcCoord(mBorder.GetTop(coord), mBorderWidths, 3);
-    }
-    if (!IsBorderSideVisible(NS_SIDE_RIGHT)) {
-      mCachedBorder.right = 0;
-    }
-    else {
-      mCachedBorder.right = CalcCoord(mBorder.GetRight(coord), mBorderWidths, 3);
-    }
-    if (!IsBorderSideVisible(NS_SIDE_BOTTOM)) {
-      mCachedBorder.bottom = 0;
-    }
-    else {
-      mCachedBorder.bottom = CalcCoord(mBorder.GetBottom(coord), mBorderWidths, 3);
+  }}
+  if (allFixed) {
+    nsStyleCoord coord;
+    NS_FOR_CSS_SIDES(side) {
+      mCachedBorder.*(gMarginSides[side]) = IsBorderSideVisible(side)
+        ? CalcCoord(mBorder.Get(side, coord), mBorderWidths, 3)
+        : 0;
     }
     mHasCachedBorder = PR_TRUE;
   }
@@ -535,25 +520,12 @@ void nsStyleBorder::RecalcData()
     mHasCachedBorder = PR_FALSE;
   }
 
-  if ((mBorderStyle[NS_SIDE_TOP] & BORDER_COLOR_DEFINED) == 0) {
-    NS_ASSERTION(!(mBorderStyle[NS_SIDE_TOP] & BORDER_COLOR_SPECIAL),
-                 "Clearing special border because BORDER_COLOR_DEFINED is not set");
-    SetBorderToForeground(NS_SIDE_TOP);
-  }
-  if ((mBorderStyle[NS_SIDE_BOTTOM] & BORDER_COLOR_DEFINED) == 0) {
-    NS_ASSERTION(!(mBorderStyle[NS_SIDE_BOTTOM] & BORDER_COLOR_SPECIAL),
-                 "Clearing special border because BORDER_COLOR_DEFINED is not set");
-    SetBorderToForeground(NS_SIDE_BOTTOM);
-  }
-  if ((mBorderStyle[NS_SIDE_LEFT] & BORDER_COLOR_DEFINED) == 0) {
-    NS_ASSERTION(!(mBorderStyle[NS_SIDE_LEFT] & BORDER_COLOR_SPECIAL),
-                 "Clearing special border because BORDER_COLOR_DEFINED is not set");
-    SetBorderToForeground(NS_SIDE_LEFT);
-  }
-  if ((mBorderStyle[NS_SIDE_RIGHT] & BORDER_COLOR_DEFINED) == 0) {
-    NS_ASSERTION(!(mBorderStyle[NS_SIDE_RIGHT] & BORDER_COLOR_SPECIAL),
-                 "Clearing special border because BORDER_COLOR_DEFINED is not set");
-    SetBorderToForeground(NS_SIDE_RIGHT);
+  NS_FOR_CSS_SIDES(side) {
+    if ((mBorderStyle[side] & BORDER_COLOR_DEFINED) == 0) {
+      NS_ASSERTION(!(mBorderStyle[side] & BORDER_COLOR_SPECIAL),
+                   "Clearing special border because BORDER_COLOR_DEFINED is not set");
+      SetBorderToForeground(side);
+    }
   }
 }
 
@@ -561,8 +533,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 {
   if ((mBorder == aOther.mBorder) && 
       (mFloatEdge == aOther.mFloatEdge)) {
-    PRInt32 ix;
-    for (ix = 0; ix < 4; ix++) {
+    NS_FOR_CSS_SIDES(ix) {
       if ((mBorderStyle[ix] != aOther.mBorderStyle[ix]) || 
           (mBorderColor[ix] != aOther.mBorderColor[ix])) {
         if ((mBorderStyle[ix] != aOther.mBorderStyle[ix]) &&
@@ -584,7 +555,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
     }
 
     if (mBorderColors && aOther.mBorderColors) {
-      for (ix = 0; ix < 4; ix++) {
+      NS_FOR_CSS_SIDES(ix) {
         if (mBorderColors[ix] && !aOther.mBorderColors[ix] ||
             !mBorderColors[ix] && aOther.mBorderColors[ix]) {
           return NS_STYLE_HINT_VISUAL;

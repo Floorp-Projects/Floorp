@@ -47,6 +47,8 @@
 #define NS_SIDE_BOTTOM  2
 #define NS_SIDE_LEFT    3
 
+#define NS_FOR_CSS_SIDES(var_) for (PRInt32 var_ = 0; var_ < 4; ++var_)
+
 // {margin,padding}-{left,right}-{ltr,rtl}-source
 #define NS_BOXPROP_SOURCE_PHYSICAL 0
 #define NS_BOXPROP_SOURCE_LOGICAL  1

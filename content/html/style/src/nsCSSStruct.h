@@ -150,8 +150,6 @@ struct nsCSSText : public nsCSSStruct  {
 struct nsRuleDataText : public nsCSSText {
 };
 
-#define FOR_CSS_SIDES(var_) for (PRInt32 var_ = 0; var_ < 4; ++var_)
-                             
 struct nsCSSRect {
   nsCSSRect(void);
   nsCSSRect(const nsCSSRect& aCopy);
