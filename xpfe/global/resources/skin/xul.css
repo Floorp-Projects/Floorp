@@ -622,6 +622,16 @@ xpmenuchildren > xpmenuitem[menuactive="true"] {
   color: white;
 }
 
+xpmenuchildren > xpmenu > titledbutton {
+  list-style-image: url(chrome://global/skin/menuArrow.gif);
+}
+
+xpmenuchildren > xpmenu[menuactive="true"] > titledbutton {
+  list-style-image: url(chrome://global/skin/menuArrow_mo.gif);
+}
+
+
+
 /* tree related stuff */
 
 tree {
