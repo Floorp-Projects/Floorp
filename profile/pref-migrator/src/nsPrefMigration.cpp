@@ -638,7 +638,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (NS_FAILED(rv)) return rv;
 
   //Create a unique directory in the system temp dir based on the name of the 4.x prefs file
-  rv = systemTempIFileDir->CreateUnique(nsnull, nsIFile::DIRECTORY_TYPE, 0700); 
+  rv = systemTempIFileDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0700); 
   if (NS_FAILED(rv)) return rv;
 
   rv = PrefsFile4xAsIFile->CopyTo(systemTempIFileDir, PREF_FILE_NAME_IN_4x);

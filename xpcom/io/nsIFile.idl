@@ -256,7 +256,7 @@ interface nsIFile : nsISupports
      *       be ignored on systems that do not need to do
      *       permissions.
      */
-    void createUnique(in string suggestedName, in unsigned long type, in unsigned long permissions);
+    void createUnique(in unsigned long type, in unsigned long permissions);
     
 
     /**

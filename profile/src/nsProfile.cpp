@@ -1504,9 +1504,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
     // Make profile directory unique only when the user 
     // decides to not use an already existing profile directory
     if (!useExistingDir) {
-        nsXPIDLCString  suggestedName;
-        profileDir->GetLeafName(getter_Copies(suggestedName));
-        rv = profileDir->CreateUnique(suggestedName, nsIFile::DIRECTORY_TYPE, 0775);
+        rv = profileDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0775);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2060,10 +2058,7 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     if (NS_FAILED(rv)) return rv;
     
     // This is unfortunate: There is no CreateUniqueUnicode
-    nsXPIDLCString suggestedName;
-    rv = newProfDir->GetLeafName(getter_Copies(suggestedName));
-    if (NS_FAILED(rv)) return rv;
-    rv = newProfDir->CreateUnique(suggestedName, nsIFile::DIRECTORY_TYPE, 0775);
+    rv = newProfDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0775);
     if (NS_FAILED(rv)) return rv;
     
     // always create level indirection when migrating
@@ -2260,8 +2255,7 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
         destDir->AppendRelativeUnicodePath(newProfile);
 
         // Find a unique name in the dest dir
-        nsCAutoString suggestedName; suggestedName.AssignWithConversion(newProfile);
-        rv = destDir->CreateUnique(suggestedName.get(), nsIFile::DIRECTORY_TYPE, 0775);
+        rv = destDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0775);
         if (NS_FAILED(rv)) return rv;
         
         rv = RecursiveCopy(currProfileDir, destDir);

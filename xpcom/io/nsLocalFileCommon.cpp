@@ -73,7 +73,7 @@ void NS_ShutdownLocalFile()
 #define kMaxFilenameLength 31  
 
 NS_IMETHODIMP
-nsLocalFile::CreateUnique(const char* suggestedName, PRUint32 type, PRUint32 attributes)
+nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
 {
     nsresult rv = Create(type, attributes);
     

@@ -1832,7 +1832,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
     if (NS_FAILED(rv)) return rv;
     
     // Yes, make it unique.
-    rv = pluginTmp->CreateUnique(nsnull,nsIFile::NORMAL_FILE_TYPE, 0777); 
+    rv = pluginTmp->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0777); 
     if (NS_FAILED(rv)) return rv;
 
     // save the file path off.

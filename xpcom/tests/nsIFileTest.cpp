@@ -209,7 +209,7 @@ void CreateUniqueTest(const char* creationPath, const char* appendPath,
         printf("no.\n");
 
 
-    rv = file->CreateUnique(appendPath, whatToCreate, perm);  
+    rv = file->CreateUnique(whatToCreate, perm);  
     VerifyResult(rv);
 
     rv = file->Exists(&exists);

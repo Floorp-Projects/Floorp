@@ -915,7 +915,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   saltedTempLeafName.Append(mTempFileExtension);
 
   mTempFile->Append(saltedTempLeafName.get()); // make this file unique!!!
-  mTempFile->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0644);
+  mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
 
   NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
   nsCOMPtr<nsIFileTransportService> fts = 
