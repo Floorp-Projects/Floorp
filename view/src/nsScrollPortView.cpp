@@ -130,13 +130,11 @@ nsresult nsScrollPortView::QueryInterface(const nsIID& aIID, void** aInstancePtr
 
 nsrefcnt nsScrollPortView::AddRef()
 {
-  NS_WARNING("not supported for views");
   return 1;
 }
 
 nsrefcnt nsScrollPortView::Release()
 {
-  NS_WARNING("not supported for views");
   return 1;
 }
 
@@ -360,17 +358,6 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aDestinationX, nscoord aDestina
                     mSmoothScroll->mDestinationY, mSmoothScroll->mVelocities + 1,
                     t2p, p2t);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScrollPortView::SetControlInsets(const nsMargin &aInsets)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScrollPortView::GetControlInsets(nsMargin &aInsets) const
-{
-  aInsets.left = aInsets.right = aInsets.top = aInsets.bottom = 0;
   return NS_OK;
 }
 
