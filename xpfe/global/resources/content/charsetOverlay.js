@@ -25,7 +25,7 @@ function MailMultiplexHandler(event)
     var name = node.getAttribute('name');
 
     if (name == 'detectorGroup') {
-        SelectDetector(event, false);
+        SelectDetector(event, true);
     } else if (name == 'charsetGroup') {
         var charset = node.getAttribute('id');
         charset = charset.substring('charset.'.length, charset.length)
