@@ -26,10 +26,22 @@
 
 #include "nsISupports.h"
 
+// {d20c8081-cbcb-11d2-a5a0-e884aed9c9fc}
+#define NS_ILIVECONNECTMANAGER_IID \
+{ 0xd20c8081, 0xcbcb, 0x11d2, { 0xa5, 0xa0, 0xe8, 0x84, 0xae, 0xd9, 0xc9, 0xfc } }
+
+// {d20c8083-cbcb-11d2-a5a0-e884aed9c9fc}
+#define NS_LIVECONNECTMANAGER_CID \
+{ 0xd20c8083, 0xcbcb, 0x11d2, { 0xa5, 0xa0, 0xe8, 0x84, 0xae, 0xd9, 0xc9, 0xfc } }
+
 struct JSRuntime;
+struct JSContext;
+struct JSObject;
 
 class nsILiveConnectManager : public nsISupports {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILIVECONNECTMANAGER_IID)
+	
 	/**
 	 * Attempts to start LiveConnect using the specified JSRuntime.
 	 */
@@ -47,15 +59,13 @@ public:
 	 */
 	NS_IMETHOD
     IsLiveConnectEnabled(PRBool& outEnabled) = 0;
+    
+    /**
+     * Initializes a JSContext with the proper LiveConnect support classes.
+     */
+	NS_IMETHOD
+    InitLiveConnectClasses(JSContext* context, JSObject* globalObject) = 0;
 };
-
-// {d20c8081-cbcb-11d2-a5a0-e884aed9c9fc}
-#define NS_ILIVECONNECTMANAGER_IID \
-{ 0xd20c8081, 0xcbcb, 0x11d2, { 0xa5, 0xa0, 0xe8, 0x84, 0xae, 0xd9, 0xc9, 0xfc } }
-
-// {d20c8083-cbcb-11d2-a5a0-e884aed9c9fc}
-#define NS_LIVECONNECTMANAGER_CID \
-{ 0xd20c8083, 0xcbcb, 0x11d2, { 0xa5, 0xa0, 0xe8, 0x84, 0xae, 0xd9, 0xc9, 0xfc } }
 
 ////////////////////////////////////////////////////////////////////////////////
 

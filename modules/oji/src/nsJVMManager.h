@@ -152,6 +152,12 @@ public:
     	return NS_OK;
     }
 
+    /**
+     * Initializes a JSContext with the proper LiveConnect support classes.
+     */
+	NS_IMETHOD
+    InitLiveConnectClasses(JSContext* context, JSObject* globalObject);
+
     /* JVMMgr specific methods: */
 
     /* ====> From here on are things only called by the browser, not the plugin... */
