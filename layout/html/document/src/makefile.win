@@ -28,7 +28,6 @@ CPPSRCS=					\
 	nsHTMLDocument.cpp			\
 	nsHTMLFrame.cpp				\
 	nsHTMLFrameset.cpp			\
-	nsHTMLParts.cpp				\
 	nsImageDocument.cpp			\
 	nsMarkupDocument.cpp			\
 	$(NULL)
@@ -38,7 +37,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLDocument.obj		\
 	.\$(OBJDIR)\nsHTMLFrame.obj		\
 	.\$(OBJDIR)\nsHTMLFrameset.obj		\
-	.\$(OBJDIR)\nsHTMLParts.obj		\
 	.\$(OBJDIR)\nsImageDocument.obj		\
 	.\$(OBJDIR)\nsMarkupDocument.obj	\
 	$(NULL)
