@@ -486,6 +486,26 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
         rv = localMailServer->SetFlagsOnDefaultMailboxes();
         if (NS_FAILED(rv)) return rv;
       }
+      /*we need to create all the folders at start-up because if a folder having subfolders is
+      closed then the datasource will not ask for subfolders. For IMAP logging onto the 
+      server will create imap folders and for news we don't have any 2nd level newsgroup */
+
+      PRUint32 cnt;
+      rv = mSubFolders->Count(&cnt);
+      if (NS_SUCCEEDED(rv))
+      {
+        nsCOMPtr<nsIEnumerator> enumerator;
+        for (PRUint32 i=0; i< cnt;i++)
+        {
+          nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+          nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+          if (folder && NS_SUCCEEDED(rv))
+          {
+            rv = folder->GetSubFolders(getter_AddRefs(enumerator));
+            NS_ASSERTION(NS_SUCCEEDED(rv),"GetSubFolders failed");
+          }
+        }
+      }
     }
     UpdateSummaryTotals(PR_FALSE);
   }
