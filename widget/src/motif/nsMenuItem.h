@@ -54,6 +54,9 @@ public:
   // nsIMenuBar Methods
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetLabel(nsString &aText);
+  NS_IMETHOD SetShortcutChar(const nsString &aText);
+  NS_IMETHOD GetShortcutChar(nsString &aText);
+
   NS_IMETHOD GetCommand(PRUint32 & aCommand);
   NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);
@@ -85,6 +88,8 @@ public:
   NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
   NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+  NS_IMETHOD SetModifiers(PRUint8 aModifiers);
+  NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
 
 protected:
   void Create(nsIWidget * aMBParent, Widget aParent,
