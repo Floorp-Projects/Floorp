@@ -1285,7 +1285,6 @@ Actions:
         $html .= "</TD><TD>&nbsp;</TD><TD VALIGN=middle><NOBR>Edit <a href='userprefs.cgi'>prefs</a></NOBR>";
         if (UserInGroup("tweakparams")) {
             $html .= ", <a href=editparams.cgi>parameters</a>";
-            $html .= ", <a href=sanitycheck.cgi><NOBR>sanity check</NOBR></a>";
         }
         if (UserInGroup("editusers") || $blessgroupset) {
             $html .= ", <a href=editusers.cgi>users</a>";
@@ -1301,6 +1300,10 @@ Actions:
         if (UserInGroup("editkeywords")) {
             $html .= ", <a href=editkeywords.cgi>keywords</a>";
         }
+        if (UserInGroup("tweakparams")) {
+            $html .= " | <a href=sanitycheck.cgi><NOBR>Sanity check</NOBR></a>";
+        }
+
         $html .= " | <NOBR><a href=relogin.cgi>Log out</a> $::COOKIE{'Bugzilla_login'}</NOBR>";
         $html .= "</TD></TR>";
         
