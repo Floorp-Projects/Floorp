@@ -22,7 +22,6 @@
  * Contributor(s):
  *   Robert John Churchill    <rjc@netscape.com>
  *   Chris Waterson           <waterson@netscape.com>
- *   Pierre Phaneuf           <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -123,15 +122,15 @@ nsIRDFResource		*kRDF_nextVal;
 nsIRDFResource		*kWEB_LastModifiedDate;
 nsIRDFResource		*kWEB_LastVisitDate;
 nsIRDFResource		*kWEB_Schedule;
+nsIRDFResource		*kWEB_ScheduleActive;
 nsIRDFResource		*kWEB_Status;
 nsIRDFResource		*kWEB_LastPingDate;
 nsIRDFResource		*kWEB_LastPingETag;
 nsIRDFResource		*kWEB_LastPingModDate;
 nsIRDFResource		*kWEB_LastCharset;
 nsIRDFResource		*kWEB_LastPingContentLen;
-
+nsIRDFLiteral     *kTrueLiteral;
 nsIRDFResource		*kNC_Parent;
-
 nsIRDFResource		*kNC_BookmarkCommand_NewBookmark;
 nsIRDFResource		*kNC_BookmarkCommand_NewFolder;
 nsIRDFResource		*kNC_BookmarkCommand_NewSeparator;
@@ -234,6 +233,7 @@ bm_AddRefGlobals()
     gRDF->GetResource(WEB_NAMESPACE_URI "LastCharset",        &kWEB_LastCharset);
 
 		gRDF->GetResource(WEB_NAMESPACE_URI "Schedule",           &kWEB_Schedule);
+		gRDF->GetResource(WEB_NAMESPACE_URI "ScheduleFlag",       &kWEB_ScheduleActive);
 		gRDF->GetResource(WEB_NAMESPACE_URI "status",             &kWEB_Status);
 		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingDate",       &kWEB_LastPingDate);
 		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingETag",       &kWEB_LastPingETag);
@@ -241,6 +241,8 @@ bm_AddRefGlobals()
 		gRDF->GetResource(WEB_NAMESPACE_URI "LastPingContentLen", &kWEB_LastPingContentLen);
 
 		gRDF->GetResource(NC_NAMESPACE_URI "parent",              &kNC_Parent);
+
+    gRDF->GetLiteral(NS_LITERAL_STRING("true").get(),         &kTrueLiteral);
 
 		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=newbookmark",             &kNC_BookmarkCommand_NewBookmark);
 		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=newfolder",               &kNC_BookmarkCommand_NewFolder);
@@ -304,8 +306,9 @@ bm_ReleaseGlobals()
 		NS_IF_RELEASE(kWEB_LastModifiedDate);
 		NS_IF_RELEASE(kWEB_LastVisitDate);
     NS_IF_RELEASE(kNC_Parent);
-
+    NS_IF_RELEASE(kTrueLiteral);
 		NS_IF_RELEASE(kWEB_Schedule);
+		NS_IF_RELEASE(kWEB_ScheduleActive);
 		NS_IF_RELEASE(kWEB_Status);
 		NS_IF_RELEASE(kWEB_LastPingDate);
 		NS_IF_RELEASE(kWEB_LastPingETag);
@@ -1212,17 +1215,12 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
         {
             mDataSource->Assert(bookmark, kRDF_type, kNC_IEFavoriteFolder, PR_TRUE);
         }
-        else if (nodeType)
-        {
-            if (isBookmarkFlag == PR_TRUE)
+        else if (nodeType == kNC_IEFavorite ||
+                 nodeType == kNC_IEFavoriteFolder ||
+                 nodeType == kNC_BookmarkSeparator)
             {
                 rv = mDataSource->Assert(bookmark, kRDF_type, nodeType, PR_TRUE);
             }
-            else
-            {
-                rv = mDataSource->Assert(bookmark, kRDF_type, kNC_Folder, PR_TRUE);
-            }
-        }
 
         // process data
         for (BookmarkField *field = fields; field->mName; ++field)
@@ -1444,6 +1442,12 @@ BookmarkParser::updateAtom(nsIRDFDataSource *db, nsIRDFResource *src,
 	else
 	{
 		rv = db->Assert(src, prop, newValue, PR_TRUE);
+
+		if (prop == kWEB_Schedule)
+		{
+		  // internally mark nodes with schedules so that we can find them quickly
+		  updateAtom(db, src, kWEB_ScheduleActive, kTrueLiteral, dirtyFlag);
+		}
 	}
 	return(rv);
 }
@@ -1500,7 +1504,9 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 	{
 		rv = mDataSource->Assert(bookmark, kRDF_type, kNC_IEFavoriteFolder, PR_TRUE);
 	}
-	else
+	else if (aNodeType == kNC_BookmarkSeparator ||
+	         aNodeType == kNC_IEFavorite ||
+	         aNodeType == kNC_IEFavoriteFolder)
 	{
 		rv = mDataSource->Assert(bookmark, kRDF_type, aNodeType, PR_TRUE);
 	}
@@ -2006,7 +2012,7 @@ nsBookmarksService::GetBookmarkToPing(nsIRDFResource **theBookmark)
 	*theBookmark = nsnull;
 
 	nsCOMPtr<nsISimpleEnumerator>	srcList;
-	if (NS_FAILED(rv = GetSources(kRDF_type, kNC_Bookmark, PR_TRUE, getter_AddRefs(srcList))))
+  if (NS_FAILED(rv = GetSources(kWEB_ScheduleActive, kTrueLiteral, PR_TRUE, getter_AddRefs(srcList))))
 		return(rv);
 
 	nsCOMPtr<nsISupportsArray>	bookmarkList;
@@ -2727,8 +2733,10 @@ nsBookmarksService::GetLastCharset(const char *aURI,  PRUnichar **aLastCharset)
 
 		// Note: always use mInner!! Otherwise, could get into an infinite loop
 		// due to Assert/Change calling UpdateBookmarkLastModifiedDate()
-		if (NS_SUCCEEDED(rv = mInner->HasAssertion(bookmark, kRDF_type, kNC_Bookmark,
-			PR_TRUE, &isBookmark)) && (isBookmark == PR_TRUE))
+
+    nsCOMPtr<nsIRDFNode> nodeType;
+    GetSynthesizedType(bookmark, getter_AddRefs(nodeType));
+    if (nodeType == kNC_Bookmark)
 		{
       nsCOMPtr<nsIRDFNode>	lastCharactersetNode;
 
@@ -2815,8 +2823,9 @@ nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL, const PRUnic
 		// Note: always use mInner!! Otherwise, could get into an infinite loop
 		// due to Assert/Change calling UpdateBookmarkLastModifiedDate()
 
-		if (NS_SUCCEEDED(rv = mInner->HasAssertion(bookmark, kRDF_type, kNC_Bookmark,
-			PR_TRUE, &isBookmark)) && (isBookmark == PR_TRUE))
+    nsCOMPtr<nsIRDFNode> nodeType;
+    GetSynthesizedType(bookmark, getter_AddRefs(nodeType));
+    if (nodeType == kNC_Bookmark)
 		{
 			nsCOMPtr<nsIRDFDate>	now;
 
@@ -2875,6 +2884,26 @@ nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL, const PRUnic
 		}
 	}
 	return(rv);
+}
+
+
+
+nsresult
+nsBookmarksService::GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType)
+{
+  *aType = nsnull;
+  nsresult rv = mInner->GetTarget(aNode, kRDF_type, PR_TRUE, aType);
+  if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))
+  {
+    // if we didn't match anything in the graph, synthesize its type
+    // (which is either a bookmark or a bookmark folder, since everything
+    // else is annotated)
+    PRBool isContainer = PR_FALSE;
+    (void)gRDFC->IsContainer(mInner, aNode, &isContainer);
+    *aType = (isContainer) ? kNC_Folder : kNC_Bookmark;
+    NS_ADDREF(*aType);
+  }
+  return(NS_OK);
 }
 
 
@@ -2997,19 +3026,19 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 			      PRBool aTruthValue,
 			      nsIRDFNode** aTarget)
 {
+  *aTarget = nsnull;
+
 	nsresult	rv;
 
 	// If they want the URL...
 	if (aTruthValue && aProperty == kNC_URL)
 	{
-		// ...and it is in fact a bookmark...
-		PRBool hasAssertion;
-		if ((NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_Bookmark, PR_TRUE, &hasAssertion))
-		    && hasAssertion) ||
-		    (NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_IEFavorite, PR_TRUE, &hasAssertion))
-		    && hasAssertion) ||
-		    (NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_Folder, PR_TRUE, &hasAssertion))
-		    && hasAssertion))
+		// ... and it is in fact a bookmark for which we want to show a URL ...
+
+    nsCOMPtr<nsIRDFNode> nodeType;
+		GetSynthesizedType(aSource, getter_AddRefs(nodeType));
+    if ((nodeType == kNC_Bookmark) || (nodeType == kNC_Folder) ||
+        (nodeType == kNC_IEFavorite && aSource != kNC_IEFavoritesRoot))
 		{
 			const char	*uri;
 			if (NS_FAILED(rv = aSource->GetValueConst( &uri )))
@@ -3034,6 +3063,12 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 			*aTarget = NS_REINTERPRET_CAST(nsIRDFNode*, literal);    // it was AddReffed by GetLiteral()
 			return NS_OK;
 		}
+		return NS_RDF_NO_VALUE;
+	}
+	else if (aTruthValue && (aProperty == kRDF_type))
+	{
+		rv = GetSynthesizedType(aSource, aTarget);
+		return(rv);
 	}
 	else if (aTruthValue && isBookmarkCommand(aSource) && (aProperty == kNC_Name))
 	{
@@ -3096,13 +3131,10 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
     }
 
 	// if it is in fact a bookmark or favorite (but NOT a folder, or a separator, etc)...
-	PRBool hasAssertion;
-	mInner->HasAssertion(aSource, kRDF_type, kNC_Bookmark, PR_TRUE, &hasAssertion);
-	if (!hasAssertion)
-	{
-	    mInner->HasAssertion(aSource, kRDF_type, kNC_IEFavorite, PR_TRUE, &hasAssertion);
-    }
-    if (!hasAssertion)
+
+  nsCOMPtr<nsIRDFNode> nodeType;
+  GetSynthesizedType(aSource, getter_AddRefs(nodeType));
+  if ((nodeType != kNC_Bookmark) && (nodeType != kNC_IEFavorite))
     {
         return(NS_RDF_NO_VALUE);
     }
@@ -3212,6 +3244,26 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
 
 
 
+void
+nsBookmarksService::AnnotateBookmarkSchedule(nsIRDFResource* aSource, PRBool scheduleFlag)
+{
+  if (scheduleFlag)
+  {
+    PRBool exists = PR_FALSE;
+    if (NS_SUCCEEDED(mInner->HasAssertion(aSource, kWEB_ScheduleActive,
+      kTrueLiteral, PR_TRUE, &exists)) && (!exists))
+    {
+      (void)mInner->Assert(aSource, kWEB_ScheduleActive, kTrueLiteral, PR_TRUE);
+    }
+  }
+  else
+  {
+    (void)mInner->Unassert(aSource, kWEB_ScheduleActive, kTrueLiteral);
+  }
+}
+
+
+
 NS_IMETHODIMP
 nsBookmarksService::Assert(nsIRDFResource* aSource,
 			   nsIRDFResource* aProperty,
@@ -3233,6 +3285,11 @@ nsBookmarksService::Assert(nsIRDFResource* aSource,
 		else if (NS_SUCCEEDED(rv = mInner->Assert(aSource, aProperty, aTarget, aTruthValue)))
 		{
 			UpdateBookmarkLastModifiedDate(aSource);
+			
+			if (aProperty == kWEB_Schedule)
+			{
+			  AnnotateBookmarkSchedule(aSource, PR_TRUE);
+			}
 		}
 	}
 	return(rv);
@@ -3255,6 +3312,11 @@ nsBookmarksService::Unassert(nsIRDFResource* aSource,
 		if (NS_SUCCEEDED(rv = mInner->Unassert(aSource, aProperty, aTarget)))
 		{
 			UpdateBookmarkLastModifiedDate(aSource);
+
+			if (aProperty == kWEB_Schedule)
+			{
+			  AnnotateBookmarkSchedule(aSource, PR_FALSE);
+			}
 		}
 	}
 	return(rv);
@@ -3457,6 +3519,11 @@ nsBookmarksService::Change(nsIRDFResource* aSource,
 		else if (NS_SUCCEEDED(rv = mInner->Change(aSource, aProperty, aOldTarget, aNewTarget)))
 		{
 			UpdateBookmarkLastModifiedDate(aSource);
+
+			if (aProperty == kWEB_Schedule)
+			{
+			  AnnotateBookmarkSchedule(aSource, PR_TRUE);
+			}
 		}
 	}
 	return(rv);
@@ -3613,10 +3680,13 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
 	if (NS_FAILED(rv))	return(rv);
 
 	// determine type
-	PRBool	isBookmark = PR_FALSE, isBookmarkFolder = PR_FALSE, isBookmarkSeparator = PR_FALSE;
-	mInner->HasAssertion(source, kRDF_type, kNC_Bookmark, PR_TRUE, &isBookmark);
-	mInner->HasAssertion(source, kRDF_type, kNC_Folder, PR_TRUE, &isBookmarkFolder);
-	mInner->HasAssertion(source, kRDF_type, kNC_BookmarkSeparator, PR_TRUE, &isBookmarkSeparator);
+	nsCOMPtr<nsIRDFNode> nodeType;
+  GetSynthesizedType(source, getter_AddRefs(nodeType));
+
+	PRBool	isBookmark, isBookmarkFolder, isBookmarkSeparator;
+	isBookmark = (nodeType == kNC_Bookmark) ? PR_TRUE : PR_FALSE;
+	isBookmarkFolder = (nodeType == kNC_Folder) ? PR_TRUE : PR_FALSE;
+	isBookmarkSeparator = (nodeType == kNC_BookmarkSeparator) ? PR_TRUE : PR_FALSE;
 
 	if (isBookmark || isBookmarkFolder || isBookmarkSeparator)
 	{
