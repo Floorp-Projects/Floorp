@@ -2859,6 +2859,16 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
         }
       }
     }
+
+    // Any child views not associated with frames might not get their visibility
+    // updated, so propagate our visibility to them. This is important because
+    // hidden views should have all hidden children.
+    for (nsView* childView = view->GetFirstChild(); childView;
+         childView = childView->GetNextSibling()) {
+      if (!childView->GetClientData()) {
+        childView->SetVisibility(aVisible);
+      }
+    }
   }
   return NS_OK;
 }
