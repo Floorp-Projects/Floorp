@@ -5,7 +5,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorNavigatorOverlay.dtd" >
 
-<overlay id="editorNavigatorOverlay"
+<overlay id="editorMailOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="editorApplicationOverlay.js"/>
@@ -24,17 +24,12 @@
     <!-- XXX insert File Menu add-ins here -->
   </menupopup>
 
-  <popup id="contentAreaContextMenu">
-    <menuitem id="context-editpage"
-              label="&editPageCmd.label;"
-              accesskey="&editPageCmd.accesskey;"
-              oncommand="overlay_editPage(gContextMenu.target.ownerDocument);"
-              insertafter="context-sep-save"/>
+  <popup id="messagePaneContext">
     <menuitem id="context-editlink"
               label="&editLinkCmd.label;"
               accesskey="&editLinkCmd.accesskey;"
               oncommand="editLink(gContextMenu.linkURL());"
-              insertafter="context-sep-save"/>
+              insertafter="context-bookmarklink"/>  <!-- "context-sep-save" is the insertion hook in Navigator-->
   </popup> 
   
 </overlay>
