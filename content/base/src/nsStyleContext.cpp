@@ -1127,7 +1127,7 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
   }
   else {
 #ifdef IBMBIDI
-    nsBidiOptions mBidioptions;
+    PRUint32 mBidioptions;
     aPresContext->GetBidi(&mBidioptions);
     if (GET_BIDI_OPTION_DIRECTION(mBidioptions) == IBMBIDI_TEXTDIRECTION_RTL)
       mDirection = NS_STYLE_DIRECTION_RTL;
