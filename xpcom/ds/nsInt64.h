@@ -37,7 +37,7 @@
 
 class nsInt64
 {
-private:
+public: //XXX should be private
     PRInt64 mValue;
 
 public:
@@ -134,11 +134,6 @@ public:
     }
 
     // Arithmetic operators
-    friend const nsInt64 operator +(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend const nsInt64 operator -(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend const nsInt64 operator *(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend const nsInt64 operator /(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend const nsInt64 operator %(const nsInt64& aObject1, const nsInt64& aObject2);
 
     /**
      * Increment a 64-bit integer by a 64-bit integer amount.
@@ -181,17 +176,14 @@ public:
     }
 
     // Comparison operators
-    friend PRBool operator ==(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend PRBool operator !=(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend PRBool operator >(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend PRBool operator >=(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend PRBool operator <(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend PRBool operator <=(const nsInt64& aObject1, const nsInt64& aObject2);
+    friend inline PRBool operator ==(const nsInt64& aObject1, const nsInt64& aObject2);
+    friend inline PRBool operator !=(const nsInt64& aObject1, const nsInt64& aObject2);
+    friend inline PRBool operator >(const nsInt64& aObject1, const nsInt64& aObject2);
+    friend inline PRBool operator >=(const nsInt64& aObject1, const nsInt64& aObject2);
+    friend inline PRBool operator <(const nsInt64& aObject1, const nsInt64& aObject2);
+    friend inline PRBool operator <=(const nsInt64& aObject1, const nsInt64& aObject2);
 
     // Bitwise operators
-    friend const nsInt64 operator &(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend const nsInt64 operator |(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend const nsInt64 operator ^(const nsInt64& aObject1, const nsInt64& aObject2);
 
     /**
      * Compute the bitwise NOT of a 64-bit integer

@@ -38,7 +38,7 @@
 
 class nsTime
 {
-private:
+public: //XXX should be private
     nsInt64 mValue;
     
 public:
@@ -95,6 +95,8 @@ public:
         return mValue;
     }
 
+    // Arithmetic operators
+
     /**
      * Subtract a 64-bit interval from a time.
      */
@@ -110,11 +112,6 @@ public:
         mValue += aInterval;
         return *this;
     }
-
-    // Arithmetic operators
-    friend const nsTime operator +(const nsTime& aTime, const nsInt64& aInterval);
-    friend const nsTime operator -(const nsTime& aTime, const nsInt64& aInterval);
-    friend const nsInt64 operator -(const nsTime& aTime1, const nsTime& aTime2);
 
     // Comparison operators
     friend const PRBool operator ==(const nsTime& aTime1, const nsTime& aTime2);
