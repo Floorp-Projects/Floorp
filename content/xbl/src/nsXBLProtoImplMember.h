@@ -54,7 +54,7 @@ class nsIScriptContext;
 class nsXBLProtoImplMember
 {
 public:
-  nsXBLProtoImplMember(const nsAReadableString* aName) :mNext(nsnull) { mName = ToNewUnicode(*aName); };
+  nsXBLProtoImplMember(const PRUnichar* aName) :mNext(nsnull) { mName = ToNewUnicode(nsDependentString(aName)); };
   virtual ~nsXBLProtoImplMember() { nsMemory::Free(mName); delete mNext; };
   virtual void Destroy(PRBool aIsCompiled)=0;
 

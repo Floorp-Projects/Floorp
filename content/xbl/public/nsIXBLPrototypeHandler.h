@@ -86,11 +86,11 @@ public:
 };
 
 extern nsresult
-NS_NewXBLPrototypeHandler(nsAReadableString* aEvent, nsAReadableString* aPhase,
-                          nsAReadableString* aAction, nsAReadableString* aCommand,
-                          nsAReadableString* aKeyCode, nsAReadableString* aCharCode,
-                          nsAReadableString* aModifiers, nsAReadableString* aButton,
-                          nsAReadableString* aClickCount,
+NS_NewXBLPrototypeHandler(const PRUnichar* aEvent, const PRUnichar* aPhase,
+                          const PRUnichar* aAction, const PRUnichar* aCommand,
+                          const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
+                          const PRUnichar* aModifiers, const PRUnichar* aButton,
+                          const PRUnichar* aClickCount,
                           nsIXBLPrototypeHandler** aResult);
 
 extern nsresult

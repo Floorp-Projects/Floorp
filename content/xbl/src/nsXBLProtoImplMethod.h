@@ -118,7 +118,7 @@ struct nsXBLUncompiledMethod {
 class nsXBLProtoImplMethod: public nsXBLProtoImplMember
 {
 public:
-  nsXBLProtoImplMethod(const nsAReadableString& aName);
+  nsXBLProtoImplMethod(const PRUnichar* aName);
   virtual ~nsXBLProtoImplMethod();
   virtual void Destroy(PRBool aIsCompiled);
 

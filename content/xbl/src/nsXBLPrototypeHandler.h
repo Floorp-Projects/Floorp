@@ -63,11 +63,11 @@ class nsXBLPrototypeHandler : public nsIXBLPrototypeHandler
 {
 public:
   // This constructor is used by XBL handlers (both the JS and command shorthand variety)
-  nsXBLPrototypeHandler(nsAReadableString* aEvent, nsAReadableString* aPhase,
-                        nsAReadableString* aAction, nsAReadableString* aCommand,
-                        nsAReadableString* aKeyCode, nsAReadableString* aCharCode,
-                        nsAReadableString* aModifiers, nsAReadableString* aButton,
-                        nsAReadableString* aClickCount); 
+  nsXBLPrototypeHandler(const PRUnichar* aEvent, const PRUnichar* aPhase,
+                        const PRUnichar* aAction, const PRUnichar* aCommand,
+                        const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
+                        const PRUnichar* aModifiers, const PRUnichar* aButton,
+                        const PRUnichar* aClickCount); 
 
   // This constructor is used only by XUL key handlers (e.g., <key>)
   nsXBLPrototypeHandler(nsIContent* aKeyElement);
@@ -106,11 +106,11 @@ protected:
   
   inline PRInt32 GetMatchingKeyCode(const nsAReadableString& aKeyName);
   void ConstructPrototype(nsIContent* aKeyElement, 
-                          nsAReadableString* aEvent=nsnull, nsAReadableString* aPhase=nsnull,
-                          nsAReadableString* aAction=nsnull, nsAReadableString* aCommand=nsnull,
-                          nsAReadableString* aKeyCode=nsnull, nsAReadableString* aCharCode=nsnull,
-                          nsAReadableString* aModifiers=nsnull, nsAReadableString* aButton=nsnull,
-                          nsAReadableString* aClickCount=nsnull);
+                          const PRUnichar* aEvent=nsnull, const PRUnichar* aPhase=nsnull,
+                          const PRUnichar* aAction=nsnull, const PRUnichar* aCommand=nsnull,
+                          const PRUnichar* aKeyCode=nsnull, const PRUnichar* aCharCode=nsnull,
+                          const PRUnichar* aModifiers=nsnull, const PRUnichar* aButton=nsnull,
+                          const PRUnichar* aClickCount=nsnull);
 
   void GetEventType(nsAWritableString& type);
   PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
@@ -159,11 +159,11 @@ protected:
 };
 
 extern nsresult
-NS_NewXBLPrototypeHandler(nsAReadableString* aEvent, nsAReadableString* aPhase,
-                          nsAReadableString* aAction, nsAReadableString* aCommand,
-                          nsAReadableString* aKeyCode, nsAReadableString* aCharCode,
-                          nsAReadableString* aModifiers, nsAReadableString* aButton,
-                          nsAReadableString* aClickCount, nsIXBLPrototypeHandler** aResult);
+NS_NewXBLPrototypeHandler(const PRUnichar* aEvent, const PRUnichar* aPhase,
+                          const PRUnichar* aAction, const PRUnichar* aCommand,
+                          const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
+                          const PRUnichar* aModifiers, const PRUnichar* aButton,
+                          const PRUnichar* aClickCount, nsIXBLPrototypeHandler** aResult);
 
 extern nsresult
 NS_NewXULKeyHandler(nsIContent* aHandlerElement, nsIXBLPrototypeHandler** aResult);

@@ -93,11 +93,11 @@ const PRInt32 nsXBLPrototypeHandler::cAlt = (1<<2);
 const PRInt32 nsXBLPrototypeHandler::cControl = (1<<3);
 const PRInt32 nsXBLPrototypeHandler::cMeta = (1<<4);
 
-nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsAReadableString* aEvent, nsAReadableString* aPhase,
-                                             nsAReadableString* aAction, nsAReadableString* aCommand,
-                                             nsAReadableString* aKeyCode, nsAReadableString* aCharCode,
-                                             nsAReadableString* aModifiers, nsAReadableString* aButton,
-                                             nsAReadableString* aClickCount)
+nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent, const PRUnichar* aPhase,
+                                             const PRUnichar* aAction, const PRUnichar* aCommand,
+                                             const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
+                                             const PRUnichar* aModifiers, const PRUnichar* aButton,
+                                             const PRUnichar* aClickCount)
 {
   NS_INIT_REFCNT();
   gRefCnt++;
@@ -935,11 +935,11 @@ nsXBLPrototypeHandler::GetEventType(nsAWritableString& aEvent)
 
 void
 nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement, 
-                                          nsAReadableString* aEvent, nsAReadableString* aPhase,
-                                          nsAReadableString* aAction, nsAReadableString* aCommand,
-                                          nsAReadableString* aKeyCode, nsAReadableString* aCharCode,
-                                          nsAReadableString* aModifiers, nsAReadableString* aButton,
-                                          nsAReadableString* aClickCount)
+                                          const PRUnichar* aEvent, const PRUnichar* aPhase,
+                                          const PRUnichar* aAction, const PRUnichar* aCommand,
+                                          const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
+                                          const PRUnichar* aModifiers, const PRUnichar* aButton,
+                                          const PRUnichar* aClickCount)
 {
   if (aKeyElement) {
     mType = NS_HANDLER_TYPE_XUL;
@@ -956,46 +956,45 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   mPhase = NS_PHASE_BUBBLING;
 
   if (aAction)
-    mHandlerText = ToNewUnicode(*aAction);
+    mHandlerText = ToNewUnicode(nsDependentString(aAction));
   else if (aCommand)
-    mHandlerText = ToNewUnicode(*aCommand);
+    mHandlerText = ToNewUnicode(nsDependentString(aCommand));
 
-  nsAutoString event;
-  if (!aEvent) {
+  nsAutoString event(aEvent);
+  if (event.IsEmpty()) {
     if (mType == NS_HANDLER_TYPE_XUL)
       GetEventType(event);
     if (event.IsEmpty())
       return;
-    aEvent = &event;
   }
 
-  if ((*aEvent).IsEmpty())
+  if (event.IsEmpty())
     return;
-  mEventName = getter_AddRefs(NS_NewAtom(*aEvent));
+  mEventName = getter_AddRefs(NS_NewAtom(event));
 
   if (aPhase) {
-    if ((*aPhase).Equals(NS_LITERAL_STRING("capturing")))
+    if (Compare(nsDependentString(aPhase), NS_LITERAL_STRING("capturing")) == 0)
       mPhase = NS_PHASE_CAPTURING;
-    else if ((*aPhase).Equals(NS_LITERAL_STRING("target")))
+    else if (Compare(nsDependentString(aPhase), NS_LITERAL_STRING("target")) == 0)
       mPhase = NS_PHASE_TARGET;
   }
 
   // Button and clickcount apply only to XBL handlers and don't apply to XUL key
   // handlers.  
-  if (aButton && !(*aButton).IsEmpty())
-    mDetail = (*aButton).First() - '0';
-  if (aClickCount && !(*aClickCount).IsEmpty())
-    mMisc = (*aClickCount).First() - '0';
+  nsAutoString button(aButton);
+  nsAutoString clickcount(aClickCount);
+  if (!button.IsEmpty())
+    mDetail = button.First() - '0';
+  if (!clickcount.IsEmpty())
+    mMisc = clickcount.First() - '0';
 
   // Modifiers are supported by both types of handlers (XUL and XBL).  
-  nsAutoString modifiers;
-  if (!aModifiers)
-    aModifiers = &modifiers;
+  nsAutoString modifiers(aModifiers);
   if (mType == NS_HANDLER_TYPE_XUL)
     mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::modifiers, modifiers);
   
-  if (!(*aModifiers).IsEmpty()) {
-    char* str = ToNewCString(*aModifiers);
+  if (!modifiers.IsEmpty()) {
+    char* str = ToNewCString(modifiers);
     char* newStr;
     char* token = nsCRT::strtok( str, ", ", &newStr );
     while( token != NULL ) {
@@ -1018,9 +1017,8 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     nsMemory::Free(str);
   }
 
-  nsAutoString key;
-  if (!aCharCode) {
-    aCharCode = &key;
+  nsAutoString key(aCharCode);
+  if (key.IsEmpty()) {
     if (mType == NS_HANDLER_TYPE_XUL) {
       mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::key, key);
       if (key.IsEmpty()) 
@@ -1028,8 +1026,8 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     }
   }
 
-  if (!(*aCharCode).IsEmpty()) {
-    nsAutoString charCode(*aCharCode);
+  if (!key.IsEmpty()) {
+    nsAutoString charCode(aCharCode);
     if ((mKeyMask & cShift) != 0)
       ToUpperCase(charCode);
     else
@@ -1040,13 +1038,12 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     mDetail = charCode[0];
   }
   else {
-    if (!aKeyCode)
-      aKeyCode = &key;
+    key.Assign(aKeyCode);
     if (mType == NS_HANDLER_TYPE_XUL)
       mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::keycode, key);
     
-    if (!(*aKeyCode).IsEmpty())
-      mDetail = GetMatchingKeyCode(*aKeyCode);
+    if (!key.IsEmpty())
+      mDetail = GetMatchingKeyCode(key);
   }
 
 }
@@ -1103,11 +1100,11 @@ nsXBLPrototypeHandler::GetTextData(nsIContent *aParent, nsString& aResult)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLPrototypeHandler(nsAReadableString* aEvent, nsAReadableString* aPhase,
-                          nsAReadableString* aAction, nsAReadableString* aCommand,
-                          nsAReadableString* aKeyCode, nsAReadableString* aCharCode,
-                          nsAReadableString* aModifiers, nsAReadableString* aButton,
-                          nsAReadableString* aClickCount, 
+NS_NewXBLPrototypeHandler(const PRUnichar* aEvent, const PRUnichar* aPhase,
+                          const PRUnichar* aAction, const PRUnichar* aCommand,
+                          const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
+                          const PRUnichar* aModifiers, const PRUnichar* aButton,
+                          const PRUnichar* aClickCount, 
                           nsIXBLPrototypeHandler** aResult)
 {
   *aResult = new nsXBLPrototypeHandler(aEvent, aPhase, aAction, aCommand, aKeyCode,
