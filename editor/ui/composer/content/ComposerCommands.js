@@ -2000,7 +2000,7 @@ var nsQuitCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     return true;    // we can always do this
-  },
+  }
 
   /* The doCommand is not used, since cmd_quit's oncommand="goQuitApplication()" in platformCommunicatorOverlay.xul
   doCommand: function(aCommand)
@@ -2392,7 +2392,13 @@ var nsLinkCommand =
   },
   doCommand: function(aCommand)
   {
-    window.openDialog("chrome://editor/content/EdLinkProps.xul","_blank", "chrome,close,titlebar,modal");
+    // If selected element is an image, launch that dialog instead 
+    // since last tab panel handles link around an image
+    var element = GetObjectForProperties();
+    if (element && element.nodeName.toLowerCase() == "img")
+      window.openDialog("chrome://editor/content/EdImageProps.xul","_blank", "chrome,close,titlebar,modal", null, true);
+    else
+      window.openDialog("chrome://editor/content/EdLinkProps.xul","_blank", "chrome,close,titlebar,modal");
     window._content.focus();
   }
 };
