@@ -844,6 +844,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #define LOCAL_ASSERT(expr)	JS_ASSERT(expr); if (!(expr)) return JS_FALSE
 
 /*
+ * Callers know that ATOM_IS_STRING(atom), and we leave it to the optimizer to
+ * common ATOM_TO_STRING(atom) here and near the call sites.
+ */
+#define ATOM_IS_IDENTIFIER(atom)                                              \
+    (!ATOM_KEYWORD(atom) && js_IsIdentifier(ATOM_TO_STRING(atom)))
+
+/*
  * Get atom from script's atom map, quote/escape its string appropriately into
  * rval, and select fmt from the quoted and unquoted alternatives.
  */
@@ -851,7 +858,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JS_BEGIN_MACRO                                                            \
         jschar quote_;                                                        \
         atom = GET_ATOM(cx, jp->script, pc);                                  \
-        if (ATOM_KEYWORD(atom)) {                                             \
+        if (!ATOM_IS_IDENTIFIER(atom)) {                                      \
             quote_ = '\'';                                                    \
             fmt = qfmt;                                                       \
         } else {                                                              \
@@ -1443,7 +1450,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_FORPROP:
                 xval = NULL;
                 atom = GET_ATOM(cx, jp->script, pc);
-                if (ATOM_KEYWORD(atom)) {
+                if (!ATOM_IS_IDENTIFIER(atom)) {
                     xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
                                        (jschar)'\'');
                     if (!xval)
@@ -2185,7 +2192,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_INITCATCHVAR:
                 atom = GET_ATOM(cx, jp->script, pc);
                 xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                   ATOM_KEYWORD(atom) ? '\'' : 0);
+                                   ATOM_IS_IDENTIFIER(atom) ? 0 : '\'');
                 if (!xval)
                     return JS_FALSE;
                 rval = POP_STR();
@@ -2278,6 +2285,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #undef DECOMPILE_CODE
 #undef POP_STR
 #undef LOCAL_ASSERT
+#undef ATOM_IS_IDENTIFIER
 #undef GET_ATOM_QUOTE_AND_FMT
 
     return JS_TRUE;
