@@ -18,13 +18,13 @@
 
 
 
-#include "Types.r"
+//#include "MacTypes.r"
 
 /* When editing this file, make sure to match your changes on macpref.cp */
 
-read 'TEXT' ( 3000, "initprefs", purgeable ) "initpref.js";
+read 'TEXT' ( 3000, "initpref.js", purgeable ) "initpref.js";
 
-read 'TEXT' ( 3010, "allprefs", purgeable ) "all.js";
+read 'TEXT' ( 3010, "all.js", purgeable ) "all.js";
 
 read 'TEXT' ( 3016, "mailnews.js", purgeable ) "mailnews.js";
 
@@ -32,16 +32,6 @@ read 'TEXT' ( 3017, "editor.js", purgeable ) "editor.js";
 
 read 'TEXT' ( 3018, "security.js", purgeable ) "security.js";
 
-#if defined(MOZ_MAIL_NEWS) || defined (EDITOR)
+read 'TEXT' ( 3011, "config.js", purgeable ) "config.js";
 
-read 'TEXT' ( 3011, "config", purgeable ) "config.js";
-
-read 'TEXT' ( 3015, "macprefs", purgeable ) "macprefs.js";
-
-#else
-
-read 'TEXT' ( 3011, "config", purgeable ) "configr.js";
-
-read 'TEXT' ( 3015, "macprefs", purgeable ) "macprefsNav.js";
-
-#endif // MOZ_MAIL_NEWS || EDITOR
+read 'TEXT' ( 3015, "macprefs.js", purgeable ) "macprefs.js";
