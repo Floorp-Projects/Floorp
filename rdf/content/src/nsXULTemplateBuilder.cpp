@@ -5074,6 +5074,10 @@ nsXULTemplateBuilder::IsAttrImpactedByVars(Match& aMatch,
     // could get at rule compilation time, rather than grovelling over
     // the attribute string.
 
+    // XXX I suck, and should spend some time trying to figure out how
+    // not to duplicate all this code between IsAttrImpactedByVars()
+    // and SubstituteText().
+
     // XXX wish we could use iterators, but we can't right now.
     PRInt32 len = aAttributeValue.Length();
     for (PRInt32 i = 0; i < len; ++i) {
@@ -5105,16 +5109,28 @@ nsXULTemplateBuilder::IsAttrImpactedByVars(Match& aMatch,
 
         // Construct a substring that is the symbol we need to look up
         // in the rule's symbol table. The symbol is terminated by a
-        // space character, or the end of the string, whichever comes
-        // first. (The space character is consumed.)
+        // space character, a caret, or the end of the string,
+        // whichever comes first.
         PRInt32 first = backup;
 
-        while (i < len && aAttributeValue[i] != PRUnichar(' '))
+        PRUnichar c;
+        while (i < len) {
+            c = aAttributeValue[i];
+            if ((c == PRUnichar(' ')) || (c == PRUnichar('^')))
+                break;
+
             ++i;
+        }
 
         PRInt32 last = i;
 
-        nsPromiseSubstring<PRUnichar> symbol(aAttributeValue, first, last);
+        // Back up so we don't consume the terminating character
+        // *unless* the terminating character was a caret: the caret
+        // means "concatenate with no space in between".
+        if (c != PRUnichar('^'))
+            --i;
+
+        nsPromiseSubstring<PRUnichar> symbol(aAttributeValue, first, last - first);
 
         PRInt32 var;
         var = aMatch.mRule->LookupSymbol(symbol);
