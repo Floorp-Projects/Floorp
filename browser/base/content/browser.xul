@@ -703,7 +703,7 @@ Contributor(s):
     </menubar>
   
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar"
-             fullscreentoolbar="true" 
+             fullscreentoolbar="true"
              defaultset="back-button,forward-button,reload-button,stop-button,urlbar-container,throbber-box"
              context="toolbar-context-menu">
         <toolbarpalette>
