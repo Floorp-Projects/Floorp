@@ -159,8 +159,6 @@
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
     
-    <command id="Tools:Search" oncommand="focusSearchBar();"/>
-    
 #ifdef XP_MACOSX
     <command id="minimizeWindow" label="&minimizeWindow.label;" disabled="true"/>
 #endif
@@ -194,7 +192,7 @@
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
     <key id="focusURLBar"      key="&openCmd.commandkey;" command="Browser:OpenLocation"
          modifiers="accel"/>
-    <key id="focusSearchBar"     key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
+    <key id="focusSearchBar"     key="&searchFocus.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
     <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
@@ -282,10 +280,9 @@
 
     <popup id="SearchBarPopup" position="after_start"
            datasources="rdf:internetsearch" ref="NC:SearchEngineRoot" 
-           oncommand="return SearchBarPopupCommand(event);"
-           onpopupshowing="return SearchBarPopupShowing(event);">
-      <menuitem id="miSearchModeFind" type="checkbox"
-                label="&findOnSearchBarCmd.label;" accesskey="&findOnCmd.accesskey;"/>
+           oncommand="return SearchBarPopupCommand(event);">
+      <menuitem id="miSearchModeFind" class="menuitem-iconic"
+                label="&findOnSearchBarCmd.label;"/>
       <menuseparator/>
 
       <template>

@@ -587,6 +587,10 @@ statusbarpanel#statusbar-display {
   list-style-image: url("chrome://browser/skin/Search-bar.png");
 }
 
+#miSearchModeFind {
+  list-style-image: url("chrome://browser/skin/Search-bar.png");
+}
+
 /* ::::: autocomplete ::::: */
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {

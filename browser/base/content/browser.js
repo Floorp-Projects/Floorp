@@ -1385,28 +1385,12 @@ function PageProxyDragGesture(aEvent)
   return false;
 }
 
-function SearchBarPopupShowing(aEvent)
-{
-  var searchBar = document.getElementById("search-bar");
-  var searchMode = searchBar.searchMode;
-
-  var popup = document.getElementById("SearchBarPopup");
-  var node = popup.firstChild;
-  while (node) {
-    node.setAttribute("checked", node.id == searchMode);
-    node = node.nextSibling;
-  }
-
-  var findItem = document.getElementById("miSearchModeFind");
-  findItem.setAttribute("checked", !searchMode);
-}
-
 function SearchBarPopupCommand(aEvent)
 {
   var searchBar = document.getElementById("search-bar");
 
   if (aEvent.target.id == "miSearchModeFind") {
-    searchBar.removeAttribute("searchmode");
+    searchBar.setAttribute("searchmode", "__PhoenixFindInPage");
     searchBar.setAttribute("autocompletesearchparam", "__PhoenixFindInPage");
     gPrefService.setCharPref("browser.search.defaultengine", "");
 
@@ -1434,7 +1418,7 @@ function handleSearchBarCommand(aEvent)
     gFormHistory.addEntry(searchBar.getAttribute("autocompletesearchparam"), searchBar.value);
   }
 
-  if (searchBar.hasAttribute("searchmode")) {
+  if (searchBar.getAttribute("searchmode") != "__PhoenixFindInPage") {
     gURLBar.value = searchBar.searchValue;
     BrowserLoadURL(aEvent);
   } else {
