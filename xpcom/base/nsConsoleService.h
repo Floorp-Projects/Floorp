@@ -42,8 +42,8 @@
 #ifndef __nsconsoleservice_h__
 #define __nsconsoleservice_h__
 
-#include "nsSupportsArray.h"
 #include "nsCOMPtr.h"
+#include "nsHashtable.h"
 #include "nsAutoLock.h"
 
 #include "nsIConsoleService.h"
@@ -75,7 +75,7 @@ private:
     PRBool mFull;
 
     // Listeners to notify whenever a new message is logged.
-    nsCOMPtr<nsSupportsArray> mListeners;
+    nsSupportsHashtable mListeners;
 
     // Current listener being notified of a logged error - to prevent
     // stack overflows.
