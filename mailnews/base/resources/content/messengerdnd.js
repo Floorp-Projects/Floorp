@@ -144,6 +144,10 @@ function CanDropOnFolderTree(index, orientation)
               debugDump(sourceFolder.parent.URI + "\n");     
               return false;
           }
+          
+          // don't allow dragging of virtual folders across accounts
+          if ((sourceFolder.flags & MSG_FOLDER_FLAG_VIRTUAL) && sourceServer != targetServer)
+            return false;
 
           var isAncestor = sourceFolder.isAncestorOf(targetFolder);
           // don't allow parent to be dropped on its ancestors
@@ -177,6 +181,7 @@ function CanDropOnFolderTree(index, orientation)
             debugDump("***canCreateSubfolders == false \n");
             return false;
         }
+
         var serverType = GetFolderAttribute(folderTree, targetResource, "ServerType");
 
         // if we've got a folder that can't be renamed
