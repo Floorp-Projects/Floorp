@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): Jeff Galyan <talisman@anamorphic.com>
- *               Edwin Woudt <edwin@woudt.nl>
+ *                 Edwin Woudt <edwin@woudt.nl>
+ *                 Brian Duff <Brian.Duff@oracle.com>
  */
 
 package grendel.composition;
@@ -26,35 +27,50 @@ package grendel.composition;
 import java.awt.*;
 import javax.swing.*;
 
-public class AddressBar extends NSTabbedPane {
+/**
+ * The address bar is displayed at the top of the message composition panel.
+ * It consists of a split pane, on the left of which is the From: field 
+ * (identity), address list and subject field, and on the right of which
+ * is the attachements list.
+ */
+public class AddressBar extends JPanel {
     AddressList mAddressList;
     AttachmentsList mAttachmentsList;
     OptionsPanel mOptionsPanel;
+    
 
     public AddressBar(CompositionPanel cp) {
-      // address panel
-        ImageIcon addressIcon = new ImageIcon(getClass().getResource("images/small_address.gif"));
-        mAddressList = new AddressList ();
-
-          // attachments panel
-        ImageIcon attachmentsIcon = new ImageIcon(getClass().getResource("images/small_attachments.gif"));
-        mAttachmentsList = new AttachmentsList();
-
-          // options panel
-        ImageIcon optionsIcon = new ImageIcon(getClass().getResource("images/small_otpions.gif"));
+        super();
+        
+        setLayout(new BorderLayout());
+    
+        JSplitPane splitPane = new JSplitPane();
+    
+        // options panel
         mOptionsPanel = new OptionsPanel(cp);
+            
+        // address panel
+        mAddressList = new AddressList ();
+        
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BorderLayout(3, 3));
+        leftPanel.add(mOptionsPanel, BorderLayout.NORTH);
+        leftPanel.add(mAddressList, BorderLayout.CENTER);
+        
+        splitPane.setLeftComponent(leftPanel);
 
-        // tabbed panel holds address, attachments and otpions.
-        addTab("", addressIcon,        mAddressList);
-        addTab("", attachmentsIcon,    mAttachmentsList);
-        addTab("", optionsIcon,        mOptionsPanel);
-        setSelectedIndex(0);
-
-        setBackgroundAt(0, Color.lightGray);
-        setBackgroundAt(1, Color.lightGray);
-        setBackgroundAt(2, Color.lightGray);
-
-        setTabPlacement(LEFT);
+        // attachments panel
+        mAttachmentsList = new AttachmentsList();
+        
+        JPanel rightPanel = new JPanel();
+        JLabel attachLabel = new JLabel("Attachments:");
+        rightPanel.setLayout(new BorderLayout(3,3));
+        rightPanel.add(attachLabel, BorderLayout.NORTH);
+        rightPanel.add(mAttachmentsList, BorderLayout.CENTER);
+        
+        splitPane.setRightComponent(rightPanel);
+        
+        add(splitPane, BorderLayout.CENTER);
        
     }
 

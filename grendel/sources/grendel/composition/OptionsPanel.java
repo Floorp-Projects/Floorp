@@ -18,8 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): Jeff Galyan <talisman@anamorphic.com>
- *               Giao Nguyen <grail@cafebabe.org>
- *               Edwin Woudt <edwin@woudt.nl>
+ *                 Giao Nguyen <grail@cafebabe.org>
+ *                 Edwin Woudt <edwin@woudt.nl>
+ *                 Brian Duff <Brian.Duff@oracle.com>
  */
 
 package grendel.composition;
@@ -31,10 +32,70 @@ import javax.swing.*;
 import javax.swing.border.*;
 
 import grendel.prefs.base.IdentityArray;
+import grendel.prefs.base.IdentityStructure;
 import grendel.ui.ActionFactory;
 
+/**
+ * The "OptionsPanel" is just a simple panel with a label and combobox
+ * containing all identities defined by the user. This serves as the
+ * "From:" field in the composer
+ */
 public class OptionsPanel extends JPanel implements Serializable  {
-  // private final int BOX_WIDTH = 300;
+
+    protected CompositionPanel mCompositionPanel;
+    protected JComboBox mIdentityCombo;
+    
+    
+    public OptionsPanel(CompositionPanel cp) {
+        super();
+        
+        mCompositionPanel = cp;
+        setLayout(new BorderLayout(3,3));
+        
+        add(new JLabel("From:"), BorderLayout.WEST);
+        mIdentityCombo = createIdentityCombo();
+        add(mIdentityCombo, BorderLayout.CENTER);
+        
+    }
+    
+    private JComboBox createIdentityCombo() {
+        JComboBox ident = new JComboBox();
+
+        // Read all the different identities from the preferences file
+        IdentityArray ia  = IdentityArray.GetMaster();
+        for (int i=0; i<ia.size(); i++) {
+            IdentityStructure s = ia.get(i);
+            ident.addItem(s.getName() +" <"+s.getEMail()+">");
+        }
+        // Select the default identity
+        ident.setSelectedIndex(ActionFactory.getIdent());
+        ident.addItemListener(new IdentityChangeListener());
+        
+        return ident;
+    }
+    
+    public int getSelectedIdentity() {
+    	return mIdentityCombo.getSelectedIndex();
+    }    
+    
+    class IdentityChangeListener implements ItemListener {
+    
+        private boolean first = true;
+        
+        public void itemStateChanged(ItemEvent e) {
+          if (e.getStateChange() == e.SELECTED) {
+          	if (first) {
+          	  first = false;
+          	} else {
+        	  mCompositionPanel.AddSignature();
+        	}
+          }
+        }
+        
+    }    
+    
+/*
+    // private final int BOX_WIDTH = 300;
     private final int BOX_WIDTH = 160;
     private final int BOX_HEIGHT = 30;
 
@@ -194,5 +255,5 @@ public class OptionsPanel extends JPanel implements Serializable  {
             
         }
     }
-    
+    */
 }

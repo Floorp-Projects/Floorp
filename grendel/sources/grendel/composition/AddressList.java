@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): Jeff Galyan <talisman@anamorphic.com>
- *               Edwin Woudt <edwin@woudt.nl>
+ *                 Edwin Woudt <edwin@woudt.nl>
+ *                 Brian Duff <Brian.Duff@oracle.com>
  */
 
 package grendel.composition;
@@ -37,11 +38,10 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.JTable;
 
-//import netscape.orion.misc.*;
-
 public class AddressList extends JScrollPane implements Serializable {
     protected AddressPanel mAddressPanel;
-
+		public static final Color LINE_COLOR = new Color(200, 200, 255);
+		
     public AddressList() {
         super();
 
@@ -56,7 +56,9 @@ public class AddressList extends JScrollPane implements Serializable {
         spViewPort.add(mAddressPanel);
         spViewPort.setView(mAddressPanel);
         setViewport(spViewPort);
-        setBackground (Color.white);
+        // Use the textfield background color for the grid. This is
+        // consistent with Mozilla and looks neat on all LAFs
+        setBackground (UIManager.getColor("TextField.background"));
     }
 
     int mProp1 = 0;
@@ -136,6 +138,8 @@ public class AddressList extends JScrollPane implements Serializable {
         protected Vector    mAddressees;    //Addresses
         private Dimension   mAddLineSize;   //The size of one AddressLine. For layout.
         private Dimension   mPerfSize;      //The preferred size of this panel = 4 * mAddLineSize.
+        
+        
 
         public AddressPanel () {
             super();
@@ -143,6 +147,9 @@ public class AddressList extends JScrollPane implements Serializable {
 
             //vector for holding addressee list.
             mAddressees = new Vector();
+            
+            setBackground(UIManager.getColor("TextField.background"));
+            setOpaque(true);
 
             //create the first addressee to start them off.
             repack();
@@ -404,7 +411,7 @@ public class AddressList extends JScrollPane implements Serializable {
 
             Dimension size = getSize();
 
-            g.setColor (Color.blue);
+            g.setColor (AddressList.LINE_COLOR);
 
             //draw horizonttal lines BELOW the AddressLine gadgets.
             for (int i = mAddressees.size() * mAddLineSize.height; i < size.height; i += mAddLineSize.height) {
@@ -445,6 +452,10 @@ public class AddressList extends JScrollPane implements Serializable {
             //right side text field ("john_doe@company.com")
             mAddressTextField = new AddressTextField (aAddressee.getText(), mDeliveryButton);
             add (mAddressTextField);
+            
+            // Set the background to be the same as the text field. This
+            // makes the overall grid look a little less messy
+            setBackground(mAddressTextField.getBackground());
         }
 
         protected   void    atfRemoveKeyListener(KeyListener kl){ mAddressTextField.removeKeyListener (kl); }
@@ -503,7 +514,7 @@ public class AddressList extends JScrollPane implements Serializable {
             FontMetrics fm = g.getFontMetrics();
             int buttonWidth = getButtonWidth();
 
-            g.setColor (Color.blue);
+            g.setColor (AddressList.LINE_COLOR);
             g.drawLine (buttonWidth, 0, size.width, 0);   //top
             g.drawLine (buttonWidth, size.height, size.width, size.height);   //bottom
         }
@@ -698,58 +709,79 @@ public class AddressList extends JScrollPane implements Serializable {
             return tokenArray;
         }
     }
-
-    //*************************
+    
+    
     /**
      * DeliveryButton displays "To:", "Cc:", etc and has a popup menu to change values.
-     */
-    public class DeliveryButton extends JPanel implements
-                                            MouseListener,  //show popup menu on mouse click
-                                            FocusListener,  //display focus when tabbed to.
-                                            ActionListener, //get popup menu selection.
-                                            KeyListener {   //show popup menu when focus and spacebar pressed.
-
-        private int         mDeliveryMode;
-      //       private Dimension   mPerfSize = null;
-        private Dimension   mPerfSize = new Dimension(50, 20);
-        private Insets      mInsets = new Insets (4, 4, 4, 8);
-        private PopupMenu   mPopup;
-
-        public DeliveryButton (int aDeliveryMode) {
-            //get your own mouse events for popup menu.
-            addMouseListener (this);
-
-            //get your own focus events for button highlight.
-            addFocusListener (this);
-
-            //display popup menu when in focus and spacebar pressed.
-            addKeyListener (this);
-
+     */    
+    public class DeliveryButton extends JButton implements ActionListener {
+        private int mDeliveryMode;
+        private JPopupMenu   mPopup;        
+        private Dimension mPrefSize;
+        private int stringWidth = 0;
+        
+        public DeliveryButton(int aDeliveryMode) {
             //create the popup menu..
-            mPopup = createPopup ();
+            mPopup = createPopup();
 
-            //add popup to me.
-            add (mPopup);
+            setDeliveryMode (aDeliveryMode);     
+            
+            setDefaultCapable(false);            
+                                    
+            addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    Point buttonLoc = DeliveryButton.this.getLocation();
+                    int buttonHeight = DeliveryButton.this.getHeight();
+                    mPopup.show(DeliveryButton.this, 
+                        buttonLoc.x, buttonLoc.y + buttonHeight); 
+                }
+            });   
+            
 
-            setDeliveryMode (aDeliveryMode);
+            
+            Font fnt = getFont();
+            setMargin(new Insets(0, 0, 0, 0));
+            if (null != fnt) {
+                FontMetrics fm = getToolkit().getFontMetrics(fnt);
+                if (null != fm) {
+                    String longestString = Addressee.getLongestString();
+
+                    mPrefSize = new Dimension(
+                        fm.stringWidth(longestString) + 20, // Fudge factor.
+                        super.getPreferredSize().height // whatever the default is
+                    );
+                }
+            }
+            setIcon(new DownArrowIcon());
+            
         }
-
+        
+        /**
+         * The preferred size of the button is whatever the default preferred
+         * height is and the preferred width of the popup menu.
+         */
+        public Dimension getPreferredSize()
+        {
+            return mPrefSize;
+        }
+        
+        
         /**
          * Creates the popup menu.
          */
-        private PopupMenu createPopup () {
-            PopupMenu pm = new PopupMenu (Addressee.getDeliveryTitle());
+        private JPopupMenu createPopup () {
+            JPopupMenu pm = new JPopupMenu (Addressee.getDeliveryTitle());
 
             //added text commands to popup
             for (int i = 0; i < Addressee.mDeliveryStr.length; i++) {
-                MenuItem mi = new MenuItem (Addressee.mDeliveryStr[i]);
+                JMenuItem mi = new JMenuItem (Addressee.mDeliveryStr[i]);
                 pm.add (mi);
                 mi.addActionListener (this);
             }
 
             return pm;
-        }
-
+        }        
+        
         /*
          * Set the button delivery mode.
          * @param aDeliveryMode a value like Addressee.TO or Addressee.BCC
@@ -757,6 +789,9 @@ public class AddressList extends JScrollPane implements Serializable {
         */
         protected void setDeliveryMode (int aDeliveryMode) {
             mDeliveryMode = aDeliveryMode;
+            setText(Addressee.deliveryToString(mDeliveryMode));
+            stringWidth = getToolkit().getFontMetrics(getFont()).stringWidth(getText());
+            
             repaint();
         }
 
@@ -765,166 +800,42 @@ public class AddressList extends JScrollPane implements Serializable {
          * @return a delivery mode a value like Addressee.TO or Addressee.BCC
          * @see setDeliveryMode
         */
-        protected int getDeliveryMode () { return mDeliveryMode; }
-
-            public Dimension getMaximumSize() {
-                return getPreferredSize();
-        }
-
-            public Dimension getMinimumSize() {
-                return getPreferredSize();
-        }
-
-        /**
-         * addNotify creates the preferred size dimension because only
-         * after the peer has been created can we get the font metrics.
-         */
-/*        public void addNotify () {
-            super.addNotify ();
-
-            if (null == mPerfSize) {
-                Font fnt = getFont();
-                if (null != fnt) {
-                    FontMetrics fm = getToolkit().getFontMetrics(fnt);
-                    if (null != fm) {
-                        String longestString = Addressee.getLongestString();
-
-                        mPerfSize = new Dimension(fm.stringWidth(longestString) + mInsets.left + mInsets.right,
-                                                 fm.getMaxAscent() + fm.getMaxDescent() + mInsets.top + mInsets.bottom);
-                    }
-                }
-            }
-        }
-				*/
-
-        /**
-         * Return PerfSize created in addNotify.
-         */
-            public Dimension getPreferredSize() {
-            if (null != mPerfSize) {
-                return mPerfSize;
-            }
-            return new Dimension(50, 20);
-            }
-
-        public boolean isFocusTraversable() {
-            return true;
-        }
-
-            /**
-             * Display button highlight.
-         */
-        public void focusGained(FocusEvent evt) {
-            repaint();
-        }
-
-            /**
-             * Remove button highlight.
-         */
-        public void focusLost(FocusEvent evt) {
-            repaint();
-        }
-
-            /**
-         * Paint the button's bevels and arrow and text string (i.e. "To:")
-         */
-        public void paint(Graphics g) {
-            Dimension size = getSize();
-
-            //gray background
-            g.setColor (Color.lightGray);
-            g.fillRect (0, 0, size.width - 1, size.height - 1);
-
-            //draw bezel borders
-            g.setColor (Color.white);
-            g.drawLine (0, 0, 0, size.height - 1); //top
-            g.drawLine (0, 0, size.width - 1, 0); //left
-            g.setColor (Color.black);
-            g.drawLine (size.width - 1, 0, size.width - 1, size.height - 1); //right
-            g.drawLine (0, size.height - 1, size.width - 1, size.height - 1); //bottom
-
-            //down arrow
-            g.setColor (Color.gray);
-
-            int xPoints[]  = {0, 10, 5};
-            int yPoints[]  = {0, 0, 10};
-            Polygon arrow = new Polygon (xPoints, yPoints, 3);
-            Rectangle arrowRect = arrow.getBounds();
-
-            int deltaX = mInsets.left;
-            int deltaY = (size.height - arrowRect.height)/2;
-
-            arrow.translate (deltaX, deltaY);
-
-            g.fillPolygon(arrow);
-
-            g.setColor (Color.white);
-            g.drawLine (xPoints[1] + deltaX,
-                        yPoints[1] + deltaY,
-                        xPoints[2] + deltaX,
-                        yPoints[2] + deltaY); //right edge
-
-            //Delivery mode text (ie. "To:")
-            g.setColor (Color.black);
-            FontMetrics fm = g.getFontMetrics();
-
-            //Font height is wacky.
-            //g.drawString (mLabel, arrowRect.width + mInsets.left + 4, (fm.getHeight() + size.height)/2);
-            g.drawString (Addressee.deliveryToString(mDeliveryMode), arrowRect.width + mInsets.left + 4, fm.getHeight());
-
-            //draw focus rectangle (AWT 1.1 doesn't have support for line styles)
-            if (true == hasFocus()) {
-                final int offset = 3;   //insets of focus rectangle.
-
-                //top and bottom
-                int bottomOffset = size.height - offset - 1;
-                for (int x = offset; x < size.width - offset; x += 2) {
-                    g.drawLine (x, offset, x, offset);   //top
-                    g.drawLine (x, bottomOffset, x, bottomOffset); //bottom
-                }
-
-                //left and right
-                int rightOffset = size.width - offset - 1;
-                for (int y = offset; y < size.height - offset; y += 2) {
-                    g.drawLine (offset, y, offset, y);   //left
-                    g.drawLine (rightOffset, y, rightOffset, y);  //right
-                }
-            }
-        }
-
-        //implements KeyListener...
-        public void keyReleased (KeyEvent e) {}
-        public void keyTyped (KeyEvent e) {}
-
-        /*
-         * Display popup menu when spacebar pressed.
-        */
-        public void keyPressed (KeyEvent e) {
-            if ((KeyEvent.KEY_PRESSED == e.getID()) &&
-                (KeyEvent.VK_SPACE == e.getKeyCode())) {
-                mPopup.show (e.getComponent (), 0, 0);
-            }
-        }
-
+        protected int getDeliveryMode () { return mDeliveryMode; }        
+        
         /**
          * Called when popup menu item is selected.
          */
         public void actionPerformed (ActionEvent e) {
             String menuCommand = e.getActionCommand();
             setDeliveryMode (Addressee.deliveryToInt (menuCommand));
-        }
-
-        public void mouseEntered (MouseEvent e) {}
-        public void mouseExited  (MouseEvent e) {}
-        public void mouseReleased(MouseEvent e) {}
-        public void mouseClicked (MouseEvent e) {}
-
+        }        
+        
         /**
-         * On any mouse click show the popup menu.
-         * Windows has bug for getX(), getY(). (UNIX OK)
+         * A downwards pointing arrow icon
          */
-        public void mousePressed (MouseEvent e) {
-            mPopup.show (e.getComponent (), e.getX(), e.getY());
+        private class DownArrowIcon implements Icon
+        {
+            // Must be odd. 7 is the same as Mozilla uses.
+            private final int WIDTH=7;
+            private final int HEIGHT = (WIDTH +1) / 2;
+            
+            public int getIconHeight() {
+                return HEIGHT;
+            }
+            
+            public int getIconWidth() {
+                return WIDTH + mPrefSize.width - 20 - stringWidth;
+            }
+
+            public void paintIcon(Component c, Graphics g, int x, int y) {
+                g.setColor(UIManager.getColor("Button.foreground"));
+
+                for (int i=0; i < HEIGHT; i++)
+                {
+                    g.drawLine(x + i, y + i, x + WIDTH - i, y + i);
+                }
+            }  
+
         }
     }
 }

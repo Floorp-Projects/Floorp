@@ -25,6 +25,7 @@
  *               Giao Nguyen <grail@cafebabe.org>
  *               Edwin Woudt <edwin@woudt.nl>
  *               Thomas Down <thomas.down@tri.ox.ac.uk>
+ *               Brian Duff <Brian.Duff@oracle.com>
  */
 
 package grendel.composition;
@@ -315,6 +316,8 @@ public class CompositionPanel extends GeneralPanel {
   public static final String viewAttachmentsTag       ="viewAttachments";
   public static final String viewOptionsTag           ="viewOptions";
   public static final String wrapLongLinesTag         ="wrapLongLines";
+  
+
 
   // --- action implementations -----------------------------------
   private UIAction[] defaultActions = {
@@ -357,9 +360,6 @@ public class CompositionPanel extends GeneralPanel {
     //"View" actions
 //        new HideMessageToolbar(),
 //        new HideAddressingArea(),
-    new ViewAddress(),
-    new ViewAttachments(),
-    new ViewOptions(),
 //        new WrapLongLines()
   };
 
@@ -851,7 +851,7 @@ public class CompositionPanel extends GeneralPanel {
 
     //display the AttachmentsList and have the file dialog "popup" on them.
     public void actionPerformed(ActionEvent e) {
-      mAddressBar.setSelectedIndex(1);
+      //mAddressBar.setSelectedIndex(1);
       mAttachmentsList.showDialog();
     }
   }
@@ -918,39 +918,6 @@ public class CompositionPanel extends GeneralPanel {
   //-----------------------
   //"View" actions
   //-----------------------
-
-  class ViewAddress extends UIAction {
-    ViewAddress() {
-      super(viewAddressTag);
-      this.setEnabled(true);
-    }
-
-    public void actionPerformed(ActionEvent e) {
-      mAddressBar.setSelectedIndex(0);
-    }
-  }
-
-  class ViewAttachments extends UIAction {
-    ViewAttachments() {
-      super(viewAttachmentsTag);
-      this.setEnabled(true);
-    }
-
-    public void actionPerformed(ActionEvent e) {
-      mAddressBar.setSelectedIndex(1);
-    }
-  }
-
-  class ViewOptions extends UIAction {
-    ViewOptions() {
-      super(viewOptionsTag);
-      this.setEnabled(true);
-    }
-
-    public void actionPerformed(ActionEvent e) {
-      mAddressBar.setSelectedIndex(2);
-    }
-  }
 
   /**
    * Create a Toolbar

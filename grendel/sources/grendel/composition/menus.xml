@@ -50,17 +50,39 @@
      label="$appPrefsLabel" accel="$appPrefsAccel"
      description=""/>
   </menu>
-  <menu id="ViewMenu" category="view"
-   label="$viewLabel" accel="$viewAccel">
-    <menuitem id="address" category="view" action="viewAddress"
-     label="$addressLabel" accel="$addressAccel"
-     description=""/>
-    <menuitem id="attachments" category="view" action="viewAttachments"
-     label="$attachmentsLabel" accel="$attachmentsAccel"
-     description=""/>
-    <menuitem id="options" category="view" action="viewOptions"
-     label="$optionsLabel" accel="$optionsAccel"
-     description=""/>
+  <menu id="OptionsMenu" category="options"
+   label="$optionsLabel" accel="$optionsAccel">
+    <menu id="format" category="options" label="$formatLabel"
+     accel="$formatAccel" >
+      <menuitem id="fmtAskMe" category="options" label="$fmtAskMeLabel"
+       accel="$fmtAskMeAccel" type="radio" group="format" />
+      <menuitem id="fmtPlainText" category="options" label="$fmtPlainTextLabel"
+       accel="$fmtPlainTextAccel" type="radio" group="format" />
+      <menuitem id="fmtHTML" category="options" label="$fmtHTMLLabel"
+       accel="$fmtHTMLAccel" type="radio" group="format" />
+      <menuitem id="fmtPlainAndHTML" category="options" 
+       label="$fmtPlainAndHTMLLabel" accel="$fmtPlainAndHTMLAccel" 
+       type="radio" group="format"/>
+    </menu>
+    <menu id="priority" category="options" label="$priorityLabel"
+     accel="$priorityAccel" >
+      <menuitem id="priLowest" category="options" label="$priLowestLabel"
+       accel="$priLowestAccel" type="radio" group="priority" />
+      <menuitem id="priLow" category="options" label="$priLowLabel"
+       accel="$priLowAccel" type="radio" group="priority"  />
+      <menuitem id="priNormal" category="options" label="$priNormalLabel"
+       accel="$priNormalAccel" type="radio" group="priority"  />
+      <menuitem id="priHigh" category="options" label="$priHighLabel"
+       accel="$priHighAccel" type="radio" group="priority"  />
+      <menuitem id="priHighest" category="options" label="$priHighestLabel"
+       accel="$priHighestAccel" type="radio" group="priority"  />
+    </menu> 
+    <menuitem id="returnReceipt" category="options"
+     label="$returnReceiptLabel" accel="$returnReceiptAccel" type="checkbox" />
+    <menuitem id="signed" category="options" label="$signedLabel"
+     accel="$signedAccel" type="checkbox" />
+    <menuitem id="uuencode" category="options" label="$uuencodeLabel"
+     accel="$uuencodeAccel" type="checkbox" />
   </menu>
   </menubar>
 </body>
