@@ -389,7 +389,8 @@
               this.updatePageReport(); 
             }
 
-            this.pageReport.push(evt.target.location);
+            // The "" is a hack to force a convert to string to defeat the "liveness" of the .location property.
+            this.pageReport.push(evt.target.location + "");
           ]]> 
         </body>
       </method>
