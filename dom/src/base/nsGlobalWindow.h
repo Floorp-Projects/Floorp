@@ -237,6 +237,7 @@ public:
 
   static void CloseWindow(nsISupports* aWindow);
 
+	
 protected:
   PRBool        RunTimeout(nsTimeoutImpl *aTimeout);
   nsresult      ClearTimeoutOrInterval(PRInt32 aTimerID);
@@ -430,5 +431,21 @@ protected:
   nsIWebShell *mWebShell;
   void *mScriptObject;
 };
+
+#define DOM_CONTROLLER
+#ifdef DOM_CONTROLLER
+class nsIContentViewerEdit;
+#include "nsWeakReference.h"
+class nsDOMWindowController : public nsIController, public nsSupportsWeakReference 
+{
+public:
+	nsDOMWindowController( nsIDOMWindow* aWindow );
+  	NS_DECL_NSICONTROLLER
+  	NS_DECL_ISUPPORTS
+private:
+	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);	
+	nsCOMPtr<nsIWeakReference> mWindow;
+};
+#endif // DOM_CONTROLLER
 
 #endif /* nsGlobalWindow_h___ */

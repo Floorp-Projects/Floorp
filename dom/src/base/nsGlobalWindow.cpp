@@ -65,6 +65,7 @@
 #include "nsIPrompt.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerFile.h"
+#include "nsIContentViewerEdit.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"
 #include "nsIScrollableView.h"
@@ -229,6 +230,7 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
+ 
   return NS_NOINTERFACE;
 }
 
@@ -390,6 +392,7 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
     if(chromeEventHandler)
       mChromeEventHandler = chromeEventHandler.get(); // Weak ref
   }
+   
   return NS_OK;
 }
 
@@ -3459,6 +3462,15 @@ GlobalWindowImpl::GetControllers(nsIControllers** aResult)
                                             getter_AddRefs(mControllers));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a controllers");
     if (NS_FAILED(rv)) return rv;
+    #ifdef DOM_CONTROLLER
+    // Add in the default controller
+    	nsDOMWindowController* domController = new nsDOMWindowController( this );
+    	if ( domController )
+    	{
+			nsCOMPtr<nsIController> controller =  domController ;
+			mControllers->AppendController( controller );
+		}
+	#endif // DOM_CONTROLLER
   }
   *aResult = mControllers;
   NS_IF_ADDREF(*aResult);
@@ -3500,3 +3512,141 @@ GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow** aParent)
    return NS_OK;
 }
 
+#ifdef DOM_CONTROLLER
+// nsDOMWindowController
+const   char* sCopyString = "cmd_copy";
+const   char* sCutString = "cmd_cut";
+const   char* sPasteString = "cmd_paste";
+const   char* sSelectAllString = "cmd_selectAll";
+
+NS_IMPL_ADDREF( nsDOMWindowController )
+NS_IMPL_RELEASE( nsDOMWindowController )
+
+
+NS_INTERFACE_MAP_BEGIN(nsDOMWindowController)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+   NS_INTERFACE_MAP_ENTRY(nsIController)
+NS_INTERFACE_MAP_END
+
+nsDOMWindowController::nsDOMWindowController( nsIDOMWindow* aWindow)
+{
+	NS_INIT_REFCNT();
+	mWindow = do_QueryInterface( aWindow );
+}
+
+nsresult nsDOMWindowController::GetEditInterface( nsIContentViewerEdit** aEditInterface)
+{	 
+	nsresult result = NS_ERROR_FAILURE;
+	nsCOMPtr<nsPIDOMWindow> PIWindow = do_QueryReferent(mWindow );
+	if ( PIWindow.get() == NULL ) 
+		return result;
+	nsCOMPtr<nsIWebShell> webshell;
+	PIWindow->GetWebShell( getter_AddRefs( webshell ) );
+	if (nsnull != webshell)
+  	{
+    	nsCOMPtr<nsIContentViewer> viewer;    
+    	webshell->GetContentViewer(getter_AddRefs(viewer));    
+    	if (nsnull != viewer)
+    	{
+    		nsCOMPtr<nsIContentViewerEdit> edit = do_QueryInterface( viewer );
+    		if ( edit.get() != NULL )
+			{
+				*aEditInterface = edit;
+				return NS_OK;
+			}
+    	}
+    }
+   
+  return result;
+}
+
+NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand, PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aCommand);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = PR_TRUE;
+  return NS_OK;
+  #if 0
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  nsCOMPtr< nsIContentViewerEdit> editInterface;
+  rv = GetEditInterface( getter_AddRefs( editInterface) );
+  if ( NS_FAILED (rv ) )
+  	return rv;
+  	
+  if (PR_TRUE== nsAutoString(sCopyString).Equals(aCommand))
+  { 
+    rv = editInterface->GetCopyable( aResult );
+  }
+  else if (PR_TRUE==nsAutoString(sCutString).Equals(aCommand))    
+  { 
+    rv =  editInterface->GetCutable( aResult);
+  }
+  else if (PR_TRUE==nsAutoString(sPasteString).Equals(aCommand))    
+  { 
+    rv = editInterface->GetPasteable( aResult );
+  }
+  else if (PR_TRUE==nsAutoString(sSelectAllString).Equals(aCommand))    
+  { 
+    *aResult = PR_TRUE;
+    rv = NS_OK;
+  }
+
+  return rv;
+  #endif 
+}
+
+NS_IMETHODIMP nsDOMWindowController::SupportsCommand(const PRUnichar *aCommand, PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aCommand);
+  NS_ENSURE_ARG_POINTER(aResult);
+  
+  *aResult = PR_FALSE;
+  if (
+  	(PR_TRUE== nsAutoString(sCopyString).Equals(aCommand))
+  	|| (PR_TRUE== nsAutoString(sSelectAllString).Equals(aCommand))
+  	|| (PR_TRUE== nsAutoString(sCutString).Equals(aCommand))
+  	|| (PR_TRUE== nsAutoString(sPasteString).Equals(aCommand))
+)
+  {
+    *aResult = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
+{
+  NS_ENSURE_ARG_POINTER(aCommand);
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr< nsIContentViewerEdit> editInterface;
+  rv = GetEditInterface( getter_AddRefs( editInterface ) );
+  if ( NS_FAILED ( rv ) )
+  	return rv;
+  	
+  if (PR_TRUE== nsAutoString(sCopyString).Equals(aCommand))
+  { 
+    rv = editInterface->CopySelection();
+  }
+  else if (PR_TRUE== nsAutoString(sSelectAllString).Equals(aCommand))    
+  { 
+    rv = editInterface->CutSelection();
+  }
+  else if (PR_TRUE== nsAutoString( sSelectAllString ).Equals(aCommand))    
+  { 
+    rv = editInterface->Paste();
+  }
+  else if (PR_TRUE== nsAutoString( sSelectAllString ).Equals(aCommand))    
+  { 
+    rv = editInterface->SelectAll();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDOMWindowController::OnEvent(const PRUnichar *aEventName)
+{
+  return NS_OK;
+}
+#endif
