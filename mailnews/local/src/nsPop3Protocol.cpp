@@ -849,6 +849,17 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
       m_commandResponse = line + 5;
     else
       m_commandResponse  = line;
+
+    // search for the response codes (RFC 2449, chapter 8)
+    if(m_commandResponse.Find("[LOGIN-DELAY", PR_TRUE) >= 0 ||
+       m_commandResponse.Find("[IN-USE", PR_TRUE) >= 0)
+    {
+      SetFlag(POP3_STOPLOGIN);
+      // remove the codes from the response string presented to the user
+      PRInt32 i = m_commandResponse.FindChar(']');
+      if(i >= 0)
+        m_commandResponse.Cut(0, i + 2);
+    }
   }
   
   m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
@@ -1043,6 +1054,11 @@ PRInt32 nsPop3Protocol::AuthFallback()
         m_pop3ConData->next_state = POP3_SEND_PASSWORD;
     else
     {
+        // response code received, login failed
+        // not because of wrong username
+        if(TestFlag(POP3_STOPLOGIN))
+            return(Error(POP3_USERNAME_FAILURE));
+
         // If one authentication failed, we're going to
         // fall back on a less secure login method.
         if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
@@ -1053,7 +1069,7 @@ PRInt32 nsPop3Protocol::AuthFallback()
             // if LOGIN or USER enabled,
             // it was the username which was wrong
             // no fallback but return error
-        return(Error(POP3_USERNAME_FAILURE));
+            return(Error(POP3_USERNAME_FAILURE));
 
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
 
@@ -1226,6 +1242,11 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
     /* check password response */
     if(!m_pop3ConData->command_succeeded)
     {
+        // response code received, login failed
+        // not because of wrong password
+        if(TestFlag(POP3_STOPLOGIN))
+            return(Error(POP3_PASSWORD_FAILURE));
+
         /* The password failed.
            
            Sever the connection and go back to the `read password' state,

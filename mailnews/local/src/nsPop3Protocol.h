@@ -154,7 +154,8 @@ enum Pop3StatesEnum {
 
     POP3_GURL_RESPONSE,                         // 38
     POP3_QUIT_RESPONSE,
-    POP3_INTERRUPTED
+    POP3_INTERRUPTED,
+    POP3_STOPLOGIN
 };
 
 
