@@ -162,6 +162,7 @@ sub pickos {
             /\(.*IRIX.*\)/ && do {return "IRIX";};
             /\(.*OSF.*\)/ && do {return "OSF/1";};
             /\(.*Linux.*\)/ && do {return "Linux";};
+            /\(.*Solaris.*\)/ && do {return "Solaris";};
             /\(.*SunOS 5.*\)/ && do {return "Solaris";};
             /\(.*SunOS.*sun4u.*\)/ && do {return "Solaris";};
             /\(.*SunOS.*\)/ && do {return "SunOS";};
