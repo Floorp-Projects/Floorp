@@ -216,6 +216,6 @@ xptcstubs_asm_openvms_alpha.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_as
 	} \
 	' \
 	$(PUBLIC)/xptcstubsdef.inc > $$HOME/xptcstubsdef_asm.vms
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) xptcstubs_asm_openvms_alpha.s 
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(srcdir)/xptcstubs_asm_openvms_alpha.s
 	@rm -f $$HOME/xptcstubsdef_asm.vms
 endif
