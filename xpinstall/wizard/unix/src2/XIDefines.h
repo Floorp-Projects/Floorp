@@ -42,6 +42,7 @@
 #define SELECT_DIR "Select a directory"
 #define DESCRIPTION "Description"
 #define DOWNLOADING "Downloading..."
+#define PREPARING "Preparing installer modules..."
 #define EXTRACTING "Extracting installer files..."
 #define INSTALLING "Installing"
 
@@ -105,8 +106,9 @@
 /*--------------------------------------------------------------------*
  *   Macros
  *--------------------------------------------------------------------*/
-#define TMP_DIR_TEMPLATE "./.tmp.xi.%d"
+#define TMP_DIR_TEMPLATE "%s/.tmp.xi.%d" // <cwd>/.tmp.xi.<N>
 #define TMP_EXTRACT_SUBDIR "bin"
+#define XPI_DIR "./xpi"
 
 #define XPISTUB "libxpistub.so"
 #define FN_INIT     "XPI_Init"

@@ -45,7 +45,7 @@ nsXIEngine::~nsXIEngine()
 int     
 nsXIEngine::Download(int aCustom, nsComponentList *aComps)
 {
-    // DUMP("Download");
+    DUMP("Download");
 
     if (!aComps)
         return E_PARAM;
@@ -61,6 +61,10 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
     err = MakeUniqueTmpDir();
     if (!mTmp || err != OK)
         return E_DIR_CREATE;
+
+    // if all .xpis exist in the ./xpi dir (blob/CD) we don't need to download
+    if (ExistAllXPIs(aCustom, aComps))
+        return CopyToTmp(aCustom, aComps);
 
     while (currComp)
     {
@@ -91,7 +95,7 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
 int     
 nsXIEngine::Extract(nsComponent *aXPIEngine)
 {
-    // DUMP("Extract");
+    DUMP("Extract");
    
     char path[1024];
     char bindir[512];
@@ -109,7 +113,7 @@ nsXIEngine::Extract(nsComponent *aXPIEngine)
 
     for (i = 0; i < CORE_LIB_COUNT*2; i++)
     {
-        sprintf(unzipcmd, "unzip %s -d %s %s%s", 
+        sprintf(unzipcmd, "unzip %s -d %s %s%s > /dev/null", 
                 path, mTmp, sCoreLibs[i], sCoreLibs[i+1]);
         i++;
         system(unzipcmd);
@@ -119,25 +123,19 @@ nsXIEngine::Extract(nsComponent *aXPIEngine)
     if (-1 == stat(bindir, &dummy))
         return E_EXTRACTION;
 
-    //  XXX remove this code when done
-#if 0
-    // move files to cwd
-    memset(mvcmd, 0, 512);
-    sprintf(mvcmd, "mv %s/* .", bindir);
-    system(mvcmd);
-#endif
-
     return OK;
 }
 
 int     
 nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
 {
-    // DUMP("Install");
+    DUMP("Install");
 
     int err = OK;
     xpistub_t stub;
     char cmd[1024];
+    char *old_LD_LIBRARY_PATH = NULL;
+    char new_LD_LIBRARY_PATH[256];
     int i;
     int compNum = 1;
     int totalComps;
@@ -146,6 +144,13 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
     if (!aComps || !aDestination)
         return E_PARAM;
 
+    // handle LD_LIBRARY_PATH settings
+    memset(new_LD_LIBRARY_PATH, 0, 256);
+    sprintf(new_LD_LIBRARY_PATH, "%s/bin:.", mTmp);
+    DUMP(new_LD_LIBRARY_PATH);
+    old_LD_LIBRARY_PATH = getenv("LD_LIBRARY_PATH");
+    setenv("LD_LIBRARY_PATH", new_LD_LIBRARY_PATH, 1);
+ 
     if (aCustom)
         totalComps = aComps->GetLengthSelected();
     else
@@ -177,15 +182,8 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
 
     UnloadXPIStub(&stub);
 
-    //                                      --> now in {ROOT}/.tmp.xi.N/bin
-#if 0
-    // rm libs and components dir           --> now in {ROOT}/.tmp.xi.N/
-    chdir(".."); 
-	for (i=1; i<CORE_LIB_COUNT*2; i+=2)
-	{
-		unlink(sCoreLibs[i]);
-    }
-#endif
+    // restore LD_LIBRARY_PATH settings
+    setenv("LD_LIBRARY_PATH", old_LD_LIBRARY_PATH, 1);
 
     // rm tmp dir                           --> now in {ROOT}/
     chdir("../..");
@@ -205,14 +203,20 @@ nsXIEngine::MakeUniqueTmpDir()
 {
     int err = OK;
     int i;
-    char buf[2048];
-    char cmd[2054];
+    char buf[1024];
+    char cwd[1024];
+    char cmd[1030];
     struct stat dummy;
     mTmp = NULL;
 
+    memset(cwd, 0, 1024);
+    if (!getcwd(cwd, 1024))
+        return E_MEM;
+
     for (i = 0; i < MAX_TMP_DIRS; i++)
     {
-        sprintf(buf, TMP_DIR_TEMPLATE, i);
+        memset(buf, 0, 1024);
+        sprintf(buf, TMP_DIR_TEMPLATE, cwd, i);
         if (-1 == stat(buf, &dummy))
             break; 
     }
@@ -327,7 +331,11 @@ nsXIEngine::LoadXPIStub(xpistub_t *aStub, char *aDestination)
     memset(libpath, 0, 1024);
     getcwd(libpath, 1024);
     sprintf(libpath, "%s/%s", libpath, XPISTUB);
+
+#ifdef DEBUG
 printf("DEBUG: libpath = >>%s<<\n", libpath);
+#endif
+
 	aStub->handle = NULL;
 	aStub->handle = dlopen(libpath, RTLD_LAZY);
 	if (!aStub->handle)
@@ -352,7 +360,11 @@ printf("DEBUG: libpath = >>%s<<\n", libpath);
     DUMP("xpistub symbols loaded");
 
     rv = aStub->fn_init(aDestination, ProgressCallback);
+
+#ifdef DEBUG
 printf("DEBUG: XPI_Init returned 0x%.8X\n", rv);
+#endif
+
     DUMP("XPI_Init called");
 	if (NS_FAILED(rv))
 	{
@@ -383,7 +395,11 @@ nsXIEngine::InstallXPI(nsComponent *aXPI, xpistub_t *aStub)
 #define XPI_NO_NEW_THREAD 0x1000
 
     rv = aStub->fn_install(xpipath, "", XPI_NO_NEW_THREAD);
+
+#ifdef DEBUG
 printf("DEBUG: XPI_Install %s returned %d\n", aXPI->GetArchive(), rv);
+#endif
+
     if (!NS_SUCCEEDED(rv))
         err = E_INSTALL;
 
@@ -423,10 +439,65 @@ BAIL:
 }
 
 void
-nsXIEngine::ProgressCallback(const char* aMsg, PRInt32 aMax, PRInt32 aVal)
+nsXIEngine::ProgressCallback(const char* aMsg, PRInt32 aVal, PRInt32 aMax)
 {
     // DUMP("ProgressCallback");
     
-    nsInstallDlg::XPIProgressCB(aMsg, (int)aMax, (int)aVal);
-    usleep(10);
+    pthread_mutex_lock(&gCtx->prog_mutex);
+
+    nsInstallDlg::XPIProgressCB(aMsg, (int)aVal, (int)aMax);
+
+    gCtx->threadTurn = nsXIContext::UI_THREAD;
+
+    pthread_cond_signal(&gCtx->prog_cv);
+    pthread_mutex_unlock(&gCtx->prog_mutex);
+}
+
+int 
+nsXIEngine::ExistAllXPIs(int aCustom, nsComponentList *aComps)
+{
+    int bAllExist = TRUE;
+    nsComponent *currComp = aComps->GetHead();
+    char currArchivePath[256];
+    struct stat dummy;
+
+    while (currComp)
+    {
+        if ( (aCustom == TRUE && currComp->IsSelected()) || (aCustom == FALSE) )
+        {
+            memset(currArchivePath, 0, 256);
+            sprintf(currArchivePath, "%s/%s", XPI_DIR, currComp->GetArchive());
+            DUMP(currArchivePath);
+            
+            if (0 != stat(currArchivePath, &dummy))
+                return FALSE;
+        }
+        
+        currComp = currComp->GetNext();
+    }
+    
+    return bAllExist;
+}
+
+int 
+nsXIEngine::CopyToTmp(int aCustom, nsComponentList *aComps)
+{
+    int err = OK;
+    nsComponent *currComp = aComps->GetHead();
+    char cmd[256];
+
+    while (currComp)
+    {
+        if ( (aCustom == TRUE && currComp->IsSelected()) || (aCustom == FALSE) )
+        {
+            memset(cmd, 0, 256);
+            sprintf(cmd, "cp %s/%s %s", XPI_DIR, currComp->GetArchive(), mTmp); 
+            DUMP(cmd);
+            system(cmd);
+        }
+        
+        currComp = currComp->GetNext();
+    }
+    
+    return err;
 }

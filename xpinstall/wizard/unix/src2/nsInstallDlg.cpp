@@ -69,6 +69,8 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Next");
     int err = OK;
+    int bCus;
+    nsComponentList *comps = NULL;
     pthread_t ength;
     pthread_t *me = (pthread_t *) malloc(sizeof(pthread_t));
 
@@ -79,16 +81,25 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
         return;
     }
 
+    bCus = (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
+    comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents();
+
     // initialize progress bar cleanly
-    gtk_label_set_text(GTK_LABEL(sMajorLabel), DOWNLOADING);
-    gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE);
+    if (nsXIEngine::ExistAllXPIs(bCus, comps))
+        gtk_label_set_text(GTK_LABEL(sMajorLabel), PREPARING);
+    else
+        gtk_label_set_text(GTK_LABEL(sMajorLabel), DOWNLOADING);
+    gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), TRUE);
     gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), 1);
     gtk_widget_show(sMajorLabel);
     gtk_widget_show(sMajorProgBar);
 
     gtk_widget_hide(gCtx->back);
     gtk_widget_hide(gCtx->next);
-    // XXX hide msg0?
+    gtk_widget_hide(sMsg0Label);
+
+    pthread_mutex_init(&gCtx->prog_mutex, NULL);
+    pthread_cond_init(&gCtx->prog_cv, NULL);
 
     *me = pthread_self();
     pthread_create(&ength, NULL, WorkDammitWork, (void*) me);
@@ -147,7 +158,6 @@ int
 nsInstallDlg::Show(int aDirection)
 {
     int err = OK;
-    GtkWidget *msg0 = NULL;
     GtkWidget *hbox = NULL;
     GtkWidget *vbox = NULL;
 
@@ -163,13 +173,13 @@ nsInstallDlg::Show(int aDirection)
         gtk_widget_show(mTable);
 
         // insert a static text widget in the first row
-        msg0 = gtk_label_new(mMsg0);
+        sMsg0Label = gtk_label_new(mMsg0);
         hbox = gtk_hbox_new(FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox), msg0, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox), sMsg0Label, FALSE, FALSE, 0);
         gtk_widget_show(hbox);
         gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 1, 2,
                         GTK_FILL | GTK_EXPAND, GTK_FILL, 20, 20);
-        gtk_widget_show(msg0);
+        gtk_widget_show(sMsg0Label);
 
         // vbox with two widgets packed in: label0 / progmeter0 (major)
         vbox = gtk_vbox_new(FALSE, 0);
@@ -322,11 +332,17 @@ static int bInstallStarted = FALSE;
 gint
 nsInstallDlg::ProgressUpdater(gpointer aData)
 {
+    int status = 0;
+
+    while (gtk_events_pending())
+        gtk_main_iteration();
+
     switch (sActivity)
     {
         case nsInstallDlg::ACT_DOWNLOAD: 
             // DUMP("Downloading...");
-            return 1;
+            status = 1;
+            break;
 
         case nsInstallDlg::ACT_EXTRACT:
             // DUMP("Extracting...");
@@ -337,7 +353,8 @@ nsInstallDlg::ProgressUpdater(gpointer aData)
 
                 bExtractStarted = TRUE;
             }
-            return 1;
+            status = 1;
+            break;
 
         case nsInstallDlg::ACT_INSTALL:
             // DUMP("Installing...");
@@ -348,13 +365,27 @@ nsInstallDlg::ProgressUpdater(gpointer aData)
 
                 bInstallStarted = TRUE;
             }
-            return 1;
+
+            pthread_mutex_lock(&gCtx->prog_mutex);
+            while (gCtx->threadTurn != nsXIContext::UI_THREAD)
+                pthread_cond_wait(&gCtx->prog_cv, &gCtx->prog_mutex);
+
+            gtk_widget_show(sMinorLabel);
+            gtk_widget_show(sMinorProgBar);
+            gtk_widget_draw(sMinorLabel, NULL);
+            gtk_widget_draw(sMinorProgBar, NULL);
+
+            gCtx->threadTurn = nsXIContext::ENGINE_THREAD;
+            pthread_mutex_unlock(&gCtx->prog_mutex);
+
+            status = 1;
+            break;
 
         default:
             break;
     }
 
-    return 0;
+    return status;
 }
 
 void
@@ -362,21 +393,34 @@ nsInstallDlg::XPIProgressCB(const char *aMsg, int aVal, int aMax)
 {
     // DUMP("XPIProgressCB");
 
-    gtk_label_set_text(GTK_LABEL(sMinorLabel), aMsg);
-    gtk_widget_show(sMinorLabel);
+    char msg[32];
 
     if (aMax != 0)
     {
         gfloat percent = aVal/aMax;
+#ifdef DEBUG
+    printf("progress percent: %f\n", percent);
+#endif
+        gtk_progress_set_activity_mode(GTK_PROGRESS(sMinorProgBar), FALSE);
         gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), percent);
         gtk_widget_show(sMinorProgBar);
+
+        sprintf(msg, "Processing file %d of %d", aVal, aMax);
+        gtk_label_set_text(GTK_LABEL(sMinorLabel), msg);
     }
     else
     {
-        gtk_progress_set_activity_mode(GTK_PROGRESS(sMinorProgBar), FALSE);
-        // gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), 1);
+        gtk_progress_set_activity_mode(GTK_PROGRESS(sMinorProgBar), TRUE);
+        gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), 1);
         gtk_widget_show(sMinorProgBar);
+
+        gtk_label_set_text(GTK_LABEL(sMinorLabel), aMsg);
     }
+
+    gtk_widget_show(sMinorLabel);
+
+    while (gtk_events_pending())
+        gtk_main_iteration();
 }
 
 void

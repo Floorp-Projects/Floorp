@@ -53,7 +53,8 @@
         E_LIB_OPEN      = -418,     /* couldn't open stub lib */
         E_LIB_SYM       = -419,     /* couldn't get symbol in lib */
         E_XPI_FAIL      = -420,     /* a xpistub call failed */
-        E_INSTALL       = -421      /* a .xpi failed to install */
+        E_INSTALL       = -421,     /* a .xpi failed to install */
+        E_CP_FAIL       = -622      /* copy of a xpi failed */
     };
 
 #define FATAL_ERR_THRESHOLD -500    /* errs below this cause app quit */

@@ -70,6 +70,7 @@ private:
 };
 
 static char         *sXPInstallEngine;
+static GtkWidget    *sMsg0Label;
 static GtkWidget    *sMajorLabel;
 static GtkWidget    *sMinorLabel;
 static GtkWidget    *sMajorProgBar;
