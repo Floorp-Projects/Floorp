@@ -90,8 +90,7 @@ nsDOMCSSDeclaration::GetCssText(nsAWritableString& aCssText)
 NS_IMETHODIMP
 nsDOMCSSDeclaration::SetCssText(const nsAReadableString& aCssText)
 {
-  // XXX TBI
-  return NS_OK;
+  return ParseDeclaration(aCssText, PR_FALSE, PR_TRUE);
 }
 
 NS_IMETHODIMP
