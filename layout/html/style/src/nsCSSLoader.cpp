@@ -52,6 +52,11 @@
 #include "nsCOMPtr.h"
 #include "nsIScriptSecurityManager.h"
 
+#ifdef INCLUDE_XUL
+#include "nsIXULContentUtils.h"
+#include "nsIXULPrototypeCache.h"
+#endif
+
 #include <iostream.h>
 
 static NS_DEFINE_IID(kICSSLoaderIID, NS_ICSS_LOADER_IID);
@@ -766,14 +771,47 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
   NS_RELEASE(aLoadData); // delete data last, it may have last ref on loader...
 }
 
+#ifdef INCLUDE_XUL
+static PRBool IsChromeURI(nsIURI* aURI)
+{
+  nsresult rv;
+  nsXPIDLCString protocol;
+  rv = aURI->GetScheme(getter_Copies(protocol));
+  if (NS_SUCCEEDED(rv)) {
+    if (PL_strcmp(protocol, "chrome") == 0) {
+        return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+#endif
+
 nsresult
 CSSLoaderImpl::SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData)
 {
+#ifdef INCLUDE_XUL
+  if (IsChromeURI(aLoadData->mURL)) {
+    nsCOMPtr<nsIXULContentUtils> utils(do_GetService("component://netscape/rdf/xul-content-utils"));
+    if (utils && utils->UseXULCache()) {
+      nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("component://netscape/rdf/xul-prototype-cache"));
+      if (cache) {
+        nsCOMPtr<nsICSSStyleSheet> sheet;
+        cache->GetStyleSheet(aLoadData->mURL, getter_AddRefs(sheet));
+        if (!sheet) {
+          cache->PutStyleSheet(aSheet);
+          aSheet->SetModified(PR_FALSE); // We're clean.
+        }
+      }
+    }
+  }
+#endif
+
   nsresult result = NS_OK;
 
   URLKey  key(aLoadData->mURL);
 
-  if (! aLoadData->mIsInline) { // don't remember inline sheets
+  if (! aLoadData->mIsInline) { // don't remember inline sheets 
     NS_ADDREF(aSheet);  // add ref for table
     nsICSSStyleSheet* oldSheet = (nsICSSStyleSheet*)mLoadedSheets.Put(&key, aSheet);
     NS_IF_RELEASE(oldSheet);  // relase predecessor (was dirty)
@@ -1303,6 +1341,21 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
     PRBool  sheetModified = PR_FALSE;
 
     nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
+#ifdef INCLUDE_XUL
+    if (!sheet && IsChromeURI(aURL)) {
+      nsCOMPtr<nsIXULContentUtils> utils(do_GetService("component://netscape/rdf/xul-content-utils"));
+      if (utils && utils->UseXULCache()) {
+        nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("component://netscape/rdf/xul-prototype-cache"));
+        if (cache) {
+          nsCOMPtr<nsICSSStyleSheet> cachedSheet;
+          cache->GetStyleSheet(aURL, getter_AddRefs(cachedSheet));
+          if (cachedSheet)
+            sheet = cachedSheet;
+        }
+      }
+    }
+#endif
+
     if (sheet && (NS_OK == sheet->IsModified(&sheetModified)) && sheetModified) {  // if dirty, forget it
       sheet = nsnull;
     }
@@ -1364,6 +1417,21 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
     PRBool  sheetModified = PR_FALSE;
 
     nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
+#ifdef INCLUDE_XUL
+    if (!sheet && IsChromeURI(aURL)) {
+      nsCOMPtr<nsIXULContentUtils> utils(do_GetService("component://netscape/rdf/xul-content-utils"));
+      if (utils && utils->UseXULCache()) {
+        nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("component://netscape/rdf/xul-prototype-cache"));
+        if (cache) {
+          nsCOMPtr<nsICSSStyleSheet> cachedSheet;
+          cache->GetStyleSheet(aURL, getter_AddRefs(cachedSheet));
+          if (cachedSheet)
+            sheet = cachedSheet;
+        }
+      }
+    }
+#endif
+
     if (sheet && (NS_OK == sheet->IsModified(&sheetModified)) && sheetModified) {  // if dirty, forget it
       sheet = nsnull;
     }
