@@ -92,7 +92,12 @@
 
     <separator class="groove"/>
 
-    <box id="okCancelButtonsRight"/>
+    <box>
+      <button class="dialog" id="default.set" label="&default.set.label;" accesskey="&default.set.accesskey;"
+        oncommand="dialog.setDefault()"/>
+      <spring flex="1"/>
+      <box id="okCancelButtonsRight"/>
+    </box>
            
     <!-- Localizable strings (from .dtd) -->
     <strings style="display:none;">
