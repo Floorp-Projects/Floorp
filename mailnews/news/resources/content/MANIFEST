@@ -16,11 +16,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-#
-# This is a list of local files which get copied to the res\mailnews\messenger directory
-#
+#	sspitzer@netscape.com
 
-news-test.js
-news-test.xul
 downloadheaders.js
 downloadheaders.xul

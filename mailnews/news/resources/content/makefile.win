@@ -24,14 +24,10 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) news-test.xul $(DIST)\bin\chrome\messenger\content\default 
-	$(MAKE_INSTALL) news-test.js $(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) downloadheaders.js $(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) downloadheaders.xul $(DIST)\bin\chrome\messenger\content\default
 
 clobber::
-	rm -f $(DIST)\bin\chrome\messenger\content\default\news-test.xul
-	rm -f $(DIST)\bin\chrome\messenger\content\default\news-test.js
 	rm -f $(DIST)\bin\chrome\messenger\content\default\downloadheaders.js
 	rm -f $(DIST)\bin\chrome\messenger\content\default\downloadheaders.xul
 

@@ -26,19 +26,17 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/content/default
+CHROME_DIR	= $(DIST)/bin/chrome/messenger/content/default
 
-EXPORT_RESOURCE_SAMPLES = \
-		news-test.xul \
-		news-test.js \
+EXPORT_RESOURCES = \
 		downloadheaders.xul \
 		downloadheaders.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+GARBAGE		+= $(addprefix $(CHROME_DIR)/, $(EXPORT_RESOURCES))
 
 install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCES)) $(CHROME_DIR)
 

@@ -30,17 +30,14 @@ Rights Reserved.
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
         class="dialog"
-	onload="OnLoad()"
-	title="&window.title;"
-        style="padding:10px"> 
+	onload="OnLoad()">
 
+<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/downloadheaders.js"/> 
 
-	<keyset id="keyset"/>
-
-	<box align="vertical" style="width:36em; min-height:12em">
+	<box align="vertical">
 		<spring flex="100%"/>
-		<html:div style="margin-bottom:.3em">&info.label;</html:div>
+		<html:div id="info"/>
 		<box align="horizontal" flex="100%">
 			<html:input type="radio" id="all" name="download" check="true"/>
 			<html:label for="all">&all.label;</html:label>

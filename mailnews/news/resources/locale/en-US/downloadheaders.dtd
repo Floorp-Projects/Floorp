@@ -18,8 +18,6 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY window.title	"Download header for: YYY">
-<!ENTITY info.label	"There are XXX new message headers to download for this newsgroup.">
 <!ENTITY all.label	"Download all headers">
 <!ENTITY download.label "Download">
 <!ENTITY headers.label 	"headers">
