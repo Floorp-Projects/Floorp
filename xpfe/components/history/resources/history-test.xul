@@ -13,6 +13,9 @@
 <html:b>history test</html:b>
 <html:hr/>
 
-<html:button onclick="ShowLastPageVisted()">Dump Last Page Visted to Console</html:button>
-
+<box align="horizontal" flex="100%">
+<html:input id="result" type="text" style="min-width: 400px; min-height: 27px" flex="100%"/>
+</box>
+<html:hr/>
+<html:button onclick="ShowLastPageVisted()">Show Last Page Visted</html:button>  
 </window>
