@@ -1303,9 +1303,9 @@ void nsWindow::OnDestroy()
 {
     // release references to children, device context, toolkit, and app shell
   // NS_IF_RELEASE(mChildren);
-    NS_IF_RELEASE(mContext);
+  //  NS_IF_RELEASE(mContext);
  //   NS_IF_RELEASE(mToolkit);
-    NS_IF_RELEASE(mAppShell);
+ //   NS_IF_RELEASE(mAppShell);
 }
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
