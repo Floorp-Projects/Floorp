@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.275 $ ';
+$::UtilsVersion = '$Revision: 1.276 $ ';
 
 package TinderUtils;
 
@@ -87,6 +87,7 @@ Options:
   --nofinalreport        Do not report final status, only start status.
   --notest               Do not run smoke tests.
   --testonly             Only run the smoke tests (do not pull or build).
+  --skip-mozilla         Only do post processing (do not pull or build).
   --notimestamp          Do not pull by date.
    -tag TREETAG          Pull by tag (-r TREETAG).
    -t TREENAME           The name of the tree
@@ -891,6 +892,9 @@ sub BuildIt {
 
         my $external_build = "$Settings::BaseDir/post-mozilla.pl";
 
+        if (-e $external_build and $Settings::ReleaseBuild and not $Settings::SkipMozilla and not $Settings::TestOnly) {
+            PostMozilla::PreBuild();
+        }
         # Allow skipping of mozilla phase.
         unless ($Settings::SkipMozilla) {
           
@@ -910,9 +914,6 @@ sub BuildIt {
           
           # Build it
           unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
-            if (-e $external_build) {
-                PostMozilla::PreBuild();
-            }
             if ($Settings::OS =~ /^WIN/) {
               DeleteBinaryDir($binary_dir);
             } else {
