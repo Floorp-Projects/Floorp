@@ -368,41 +368,6 @@ extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIURL* aURL,
                                       nsIWebShell* aWebShell);
 
-/** Create a new table content object <TABLE> */
-extern nsresult
-NS_NewTablePart(nsIHTMLContent** aInstancePtrResult,
-               nsIAtom* aTag);
-
-/** Create a new table row group object <THEAD> <TBODY> <TFOOT> */
-extern nsresult
-NS_NewTableRowGroupPart(nsIHTMLContent** aInstancePtrResult,
-                        nsIAtom* aTag);
-
-/** Create a new table row content object <TR> */
-extern nsresult
-NS_NewTableRowPart(nsIHTMLContent** aInstancePtrResult,
-               nsIAtom* aTag);
-
-/** Create a new table column group content object <COLGROUP> */
-extern nsresult
-NS_NewTableColGroupPart(nsIHTMLContent** aInstancePtrResult,
-                        nsIAtom* aTag);
-
-/** Create a new table column content object <COL> */
-extern nsresult
-NS_NewTableColPart(nsIHTMLContent** aInstancePtrResult,
-                   nsIAtom* aTag); 
-
-/** Create a new table cell content object <TD> */
-extern nsresult
-NS_NewTableCellPart(nsIHTMLContent** aInstancePtrResult,
-                    nsIAtom* aTag);
-
-/** Create a new table caption content object <CAPTION> */
-extern nsresult
-NS_NewTableCaptionPart(nsIHTMLContent** aInstancePtrResult,
-                       nsIAtom* aTag);
-
 extern nsresult
 NS_NewHTMLEmbed(nsIHTMLContent** aInstancePtrResult,
                 nsIAtom* aTag);
