@@ -317,7 +317,7 @@ doc_raptor:
 
 # Build tarball
 
-DATE_CMD=d:\usr\local\bin\date
+DATE_CMD=unix_date
 !if [$(DATE_CMD) +%Y%m%d > today.inc]
 !endif
 DATE=\
