@@ -62,6 +62,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext)
     
     buffer.AppendWithConversion("<html>\n<head><title> Index of "); //FIX i18n.
     buffer.AppendWithConversion(mCurrentPath);
+    buffer.StripChar('/', buffer.Length() - 1);
     buffer.AppendWithConversion("</title></head>\n<body>\n");
 
     buffer.AppendWithConversion("<H1> Index of "); //FIX i18n.
@@ -76,6 +77,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext)
     {
         buffer.AppendWithConversion("<tr>\n <td><a HREF=\"");
         buffer.AppendWithConversion(mCurrentPath);
+        buffer.StripChar('/', buffer.Length() - 1);
         buffer.AppendWithConversion("/../\"> ..</a></td>\n");
     }
 
@@ -150,9 +152,11 @@ nsIndexedToHTML::Handle201(char* buffer, nsString &pushBuffer)
     
     const char * path = mCurrentPath.get();
     
-    if (path && *path && path[1] != '\0') 
+    if (path && *path && path[1] != '\0') { 
         pushBuffer.AppendWithConversion(mCurrentPath);
-    
+        pushBuffer.StripChar('/', pushBuffer.Length() - 1);
+    }
+
     pushBuffer.AppendWithConversion("/");
     pushBuffer.AppendWithConversion(filename);
     pushBuffer.AppendWithConversion("\"> ");
