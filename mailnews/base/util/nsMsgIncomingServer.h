@@ -68,9 +68,9 @@ class nsMsgIncomingServer : public nsIMsgIncomingServer {
 
 protected:
   char *getPrefName(const char *serverKey, const char *pref);
-  char *getCharPref(nsIPref *pref, const char *serverKey, const char *pref);
-  PRBool getBoolPref(nsIPref *pref, const char *serverKey, const char *pref);
-  PRInt32 getIntPref(nsIPref *pref, const char *serverKey, const char *pref);
+  char *getCharPref(nsIPref *prefs, const char *serverKey, const char *pref);
+  PRBool getBoolPref(nsIPref *prefs, const char *serverKey, const char *pref);
+  PRInt32 getIntPref(nsIPref *prefs, const char *serverKey, const char *pref);
   
 
   
