@@ -267,6 +267,76 @@ NS_IMPL_ISUPPORTS(nsEventSinkGetter, nsIEventSinkGetter::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+nsresult StartLoadingURL(const char* aUrlString)
+{
+    nsresult rv;
+
+    NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &rv);
+    if (pService) {
+        nsCOMPtr<nsIURI> pURL;
+
+        rv = pService->NewURI(aUrlString, nsnull, getter_AddRefs(pURL));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("NewURI failed!");
+            return rv;
+        }
+        nsCOMPtr<nsIChannel> pChannel;
+        nsEventSinkGetter* pMySink;
+
+        pMySink = new nsEventSinkGetter();
+        NS_IF_ADDREF(pMySink);
+        if (!pMySink) {
+            NS_ERROR("Failed to create a new consumer!");
+            return NS_ERROR_OUT_OF_MEMORY;;
+        }
+
+        // Async reading thru the calls of the event sink interface
+        rv = pService->NewChannelFromURI("load", pURL, pMySink, 
+                                         getter_AddRefs(pChannel));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("NewChannelFromURI failed!");
+            return rv;
+        }
+        NS_RELEASE(pMySink);
+
+        /* 
+           You may optionally add/set other headers on this
+           request object. This is done by QI for the specific
+           protocolConnection.
+        */
+        nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(pChannel));
+
+        if (pHTTPCon) {
+            // Setting a sample user agent string.
+            rv = pHTTPCon->SetRequestHeader("User-Agent", "Mozilla/5.0 [en] (Win98; U)");
+            if (NS_FAILED(rv)) return rv;
+        }
+            
+        InputTestConsumer* listener;
+
+        listener = new InputTestConsumer;
+        NS_IF_ADDREF(listener);
+        if (!listener) {
+            NS_ERROR("Failed to create a new stream listener!");
+            return NS_ERROR_OUT_OF_MEMORY;;
+        }
+
+
+        rv = pChannel->AsyncRead(0,         // staring position
+                                 -1,        // number of bytes to read
+                                 nsnull,    // ISupports context
+                                 gEventQ,   // nsIEventQ for marshalling
+                                 listener); // IStreamListener consumer
+
+        NS_RELEASE(listener);
+    }
+
+    return rv;
+}
+
+
+
 int
 main(int argc, char* argv[])
 {
@@ -296,88 +366,22 @@ main(int argc, char* argv[])
 
     eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
 
-    //Create the nsINetService...
-    NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &rv);
-
-    if (NS_FAILED(rv)) return rv;
-
-    // The story of how to retrieve a document. 
-  	// Now available in 2 different flavours.
-
-    if (pService)
-    {
-
-        nsCOMPtr<nsIURI> pURL;
-
-        if (NS_OK == pService->NewURI(argv[1], nsnull, getter_AddRefs(pURL)))
-        {
-            if (pURL)
-            {
-                nsCOMPtr<nsIChannel> pChannel;
-                /* Flavour Two */
-                nsEventSinkGetter* pMyConsumer = new nsEventSinkGetter();
-                if (!pMyConsumer)
-                {
-                    NS_ERROR("Failed to create a new consumer!");
-                    return -1;
-                }
-				NS_ADDREF(pMyConsumer);
-                // Async reading thru the calls of the event sink interface
-                if (NS_OK == pService->NewChannelFromURI("load", pURL, pMyConsumer, 
-                                                         getter_AddRefs(pChannel)))
-                {
-                    if (pChannel)
-                    {
-                        /* 
-                            You may optionally add/set other headers on this
-                            request object. This is done by QI for the specific
-                            protocolConnection.
-                        */
-                        nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(pChannel));
-
-                        if (pHTTPCon)
-                        {
-                            // Setting a sample user agent string.
-                            rv = pHTTPCon->SetRequestHeader("User-Agent", "Mozilla/5.0 [en] (Win98; U)");
-                            if (NS_FAILED(rv)) return rv;
-                        }
-                    
-                        // But calling the open is required!
-///                        pChannel->Open();
-
-                        InputTestConsumer* listener;
-                        listener = new InputTestConsumer;
-                        NS_IF_ADDREF(listener);
-
-                        rv = pChannel->AsyncRead(0,   // staring position
-                                         -1,          // number of bytes to read
-                                         nsnull,      // ISupports context
-                                         gEventQ,     // nsIEventQ for marshalling
-                                         listener);   // IStreamListener consumer
-
-                        NS_IF_RELEASE(listener);
-                    }
-                } else {
-                    printf("NewChannelFromURI failed!\n");
-                    return -1;
-                }
-            }
-        } else {
-            printf("NewURI failed!\n");
-            return -1;
-        }
+    int i;
+    for (i=1; i<argc; i++) {
+        rv = StartLoadingURL(argv[i]);
+        if (NS_FAILED(rv)) return rv;
     }
 
   // Enter the message pump to allow the URL load to proceed.
-  while ( gKeepRunning ) {
+    while ( gKeepRunning ) {
 #ifdef WIN32
-    MSG msg;
+        MSG msg;
 
-    if (GetMessage(&msg, NULL, 0, 0)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    } else {
-      gKeepRunning = FALSE;
+        if (GetMessage(&msg, NULL, 0, 0)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        } else {
+            gKeepRunning = FALSE;
     }
 #else
 #ifdef XP_MAC
@@ -388,7 +392,7 @@ main(int argc, char* argv[])
     rv = gEventQ->HandleEvent(gEvent);
 #endif /* XP_UNIX */
 #endif /* !WIN32 */
-  }
+    }
 
     return rv;
 }
