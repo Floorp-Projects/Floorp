@@ -44,6 +44,7 @@
 #include "nsCocoaBrowserService.h"
 #include "nsIPrefBranch.h"
 #include "nsEmbedAPI.h"
+#include "nsIChromeRegistry.h"
 #import	"CHAboutBox.h"
 #include <Foundation/NSUserDefaults.h>
 
@@ -70,8 +71,16 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
             NSGetStaticModuleInfo = app_getModuleInfo;
 #endif
 
-            if (NS_SUCCEEDED(NS_InitEmbedding(nsnull, nsnull)))
-              NS_TermEmbedding();
+            if (NS_SUCCEEDED(NS_InitEmbedding(nsnull, nsnull))) {
+                // Register new chrome
+                nsCOMPtr<nsIChromeRegistry> chromeReg =
+                  do_GetService("@mozilla.org/chrome/chrome-registry;1");
+                if (chromeReg) {
+                  chromeReg->CheckForNewChrome();
+                  chromeReg = 0;
+                }
+                NS_TermEmbedding();
+            }
 
             [NSApp terminate:self];
             return self;
