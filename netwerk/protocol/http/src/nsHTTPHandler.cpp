@@ -504,6 +504,13 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
            ("nsHTTPHandler::ReleaseTransport."
             "\tReleasing socket transport %x.\n",
             i_pTrans));
+    //
+    // Clear the EventSinkGetter for the transport...  This breaks the
+    // circular reference between the HTTPChannel which holds a reference
+    // to the transport and the transport which references the HTTPChannel
+    // through the event sink...
+    //
+    rv = i_pTrans->SetNotificationCallbacks(nsnull);
 
     rv = mTransportList->RemoveElement(i_pTrans);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Transport not in table...");
