@@ -81,10 +81,10 @@ all: gdf.png
 # gtkEmbed
 #
 
-.INTERMEDIATE: linux.gnuplot vms.dat vmd.dat vml.dat rss.dat
+.INTERMEDIATE: linux.gnuplot vms.dat vmd.dat vmx.dat rss.dat
 
 # Create a PNG image using the generated ``linux.gnuplot'' script
-gdf.png: vms.dat vmd.dat vml.dat rss.dat linux.gnuplot
+gdf.png: vms.dat vmd.dat vmx.dat rss.dat linux.gnuplot
 	gnuplot linux.gnuplot
 
 # Generate a ``gnuplot'' script from ``linux.gnuplot.in'', making
@@ -93,7 +93,7 @@ linux.gnuplot: linux.gnuplot.in vms.dat
 	sed -e "s/@PROGRAM@/$(PROGRAM)/" \
             -e "s/@VMS-LINE@/`$(LINEAR_REGRESSION) vms.dat`/" \
 	    -e "s/@GROWTH-RATE@/`$(LINEAR_REGRESSION) vms.dat | awk '{ printf \"%0.1lf\\n\", $$1; }'`/" \
-	    -e "s/@BASE-SIZE@/`$(LINEAR_REGRESSION) vms.dat | awk '{ print $$5; }'`/" \
+	    -e "s/@BASE-SIZE@/`$(LINEAR_REGRESSION) vms.dat | awk '{ print $$5 + 2000; }'`/" \
 		linux.gnuplot.in > linux.gnuplot
 
 # Break the raw data file into temporary files that can be processed
@@ -104,8 +104,8 @@ vms.dat: $(OUTFILE)
 vmd.dat: $(OUTFILE)
 	awk -f create_dat.awk TYPE=vmd $? > $@
 
-vml.dat: $(OUTFILE)
-	awk -f create_dat.awk TYPE=vml $? > $@
+vmx.dat: $(OUTFILE)
+	awk -f create_dat.awk TYPE=vmx $? > $@
 
 rss.dat: $(OUTFILE)
 	awk -f create_dat.awk TYPE=rss $? > $@
