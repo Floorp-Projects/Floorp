@@ -30,6 +30,7 @@ CPPSRCS = \
 	nsNNTPArticleSet.cpp \
 	nsNNTPNewsgroupList.cpp \
 	nsNNTPProtocol.cpp \
+	nsNntpUrl.cpp	\
 	nsNNTPHost.cpp \
 	$(NULL)
 
