@@ -23,8 +23,10 @@
 //
 
 #include <algorithm>
-//#include <stdlib.h>
+
 #include "world.h"
+#include "interpreter.h"
+
 namespace JS = JavaScript;
 using namespace JavaScript;
 
@@ -407,11 +409,59 @@ static void testICG(World &world)
         icg.saveVariable(0, icg.loadImmediate(99));
     icg.endForStatement();
 
-
-
     InstructionStream *iCode = icg.complete();
 
     std::cout << icg;
+}
+
+static void testInterpreter(float64 n)
+{
+    //
+    // testing ICG 
+    //
+    uint32 position = 0;
+    ICodeGenerator icg;
+
+	// generate code for factorial, and interpret it.
+	// fact(n) {
+	// n is bound to var #0.
+	// var result = 1;
+	// result is bound to var #1.
+	icg.beginStatement(position);
+	icg.saveVariable(1, icg.loadImmediate(1.0));
+
+	// while (n > 1) {
+	//   result = result * n;
+	//   n = n - 1;
+	// }
+	{
+	    icg.beginWhileStatement(position);
+		Register r0 = icg.loadVariable(0);
+		Register r1 = icg.loadImmediate(1.0);
+		Register r2 = icg.op(COMPARE, r0, r1);
+	    icg.endWhileExpression(r2, BRANCH_GT);
+	    r0 = icg.loadVariable(0);
+	    r1 = icg.loadVariable(1);
+	    r2 = icg.op(MULTIPLY, r1, r0);
+	    icg.saveVariable(1, r2);
+	    icg.beginStatement(position);
+	    r0 = icg.loadVariable(0);
+	    r1 = icg.loadImmediate(1.0); 
+	    r2 = icg.op(SUBTRACT, r0, r1);
+	    icg.saveVariable(0, r2);
+	    icg.endWhileStatement();
+	}
+	
+	// return result;
+    icg.beginStatement(position);
+    InstructionStream *iCode = icg.complete(icg.loadVariable(1));
+    // std::cout << icg;
+
+    // test the iCode interpreter.
+    JSValues args(32);
+    args[0] = JSValue(n);
+    JSValue result = interpret(*iCode, args);
+    std::cout << "fact(" << n << ") = " << result.f64 << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -421,6 +471,7 @@ int main(int argc, char **argv)
   #endif
 	World world;
   #if 0
+    testInterpreter(5);
     testICG(world);
   #endif
 	readEvalPrint(std::cin, world);
