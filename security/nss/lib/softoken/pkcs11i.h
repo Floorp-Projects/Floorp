@@ -94,7 +94,7 @@
  * the effective size of the various object hash tables */
 #ifdef MOZ_CLIENT
 /* clients care more about memory usage than lookup performance on
- * cyrptographic objects. Clients also have less objects around to play with */
+ * cyrptographic objects. Clients also have less objects around to play with 
  *
  * we eventually should make this configurable at runtime! Especially now that
  * NSS is a shared library.
