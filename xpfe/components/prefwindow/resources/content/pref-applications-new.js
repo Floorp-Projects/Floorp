@@ -45,7 +45,8 @@ function Startup()
       gDescriptionField.value = info.Description;
       gExtensionField.value   = info.primaryExtension;
       gMIMEField.value        = info.MIMEType;
-      var app = info.preferredApplicationHandler;
+      // an app may have been selected in the opening dialog but not in the mimeinfo
+      var app = info.preferredApplicationHandler || window.arguments[0].chosenApp;
       if ( app ) {
           gAppPath.value      = app.unicodePath;
       }
@@ -169,6 +170,9 @@ function onOK()
       info.Description = gDescriptionField.value;
       info.preferredApplicationHandler = file;
       info.applicationDescription = handlerInfo.appDisplayName;
+
+      // Tell the nsIHelperAppLauncherDialog to update to the changes
+      window.arguments[0].updateSelf = true;
   }
 
   window.opener.gNewTypeRV = gMIMEField.value;
