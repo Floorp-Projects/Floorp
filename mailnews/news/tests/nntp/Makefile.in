@@ -47,6 +47,7 @@ LIBS = \
 	-lnetlib \
 	-lnetutil \
 	-lnntp	\
+	-lnntpTest \
 	-lrdf \
 	-lmailnewsbase \
 	-lreg	\
