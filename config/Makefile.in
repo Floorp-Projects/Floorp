@@ -89,7 +89,7 @@ export:: $(TARGETS) $(HEADERS)
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(HEADERS)
 	-rm -f $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
 	-rm -f $(DIST)/bin/chrome/chromelist.txt
-	$(NSINSTALL) -t $(IFLAGS1) $(DEPTH)/mozilla-config.h $(DIST)/sdk/
+	$(NSINSTALL) -t $(IFLAGS1) $(HEADERS) $(DIST)/sdk/
 
 
 # Create mini-SDK directory for NSPR
