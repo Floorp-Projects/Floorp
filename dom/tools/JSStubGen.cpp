@@ -573,7 +573,7 @@ static const char *kObjectGetCaseStr =
 "          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);\n";
 
 static const char *kXPIDLObjectGetCaseStr =
-"          // get the js object\n"
+"          // get the js object; n.b., this will do a release on 'prop'\n"
 "          nsJSUtils::nsConvertXPCObjectToJSVal(prop, %s::GetIID(), cx, vp);\n";
 
 static const char *kStringGetCaseStr = 
@@ -706,6 +706,8 @@ static const char *kXPIDLObjectSetCaseStr =
 
 static const char *kObjectSetCaseEndStr = "NS_IF_RELEASE(prop);";
 
+static const char* kXPIDLObjectSetCaseEndStr = kObjectSetCaseEndStr;
+
 static const char *kStringSetCaseStr = 
 "        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);\n";
 
@@ -773,7 +775,11 @@ JSStubGen::GeneratePropSetter(ofstream *file,
       break;
   }
 
-  end_str = aAttribute.GetType() == TYPE_OBJECT ? kObjectSetCaseEndStr : "";
+  switch (aAttribute.GetType()) {
+  case TYPE_OBJECT:        end_str = kObjectSetCaseEndStr;      break;
+  case TYPE_XPIDL_OBJECT:  end_str = kXPIDLObjectSetCaseEndStr; break;
+  default:                 end_str = "";                        break;
+  }
   if (aIsPrimary) {
     sprintf(buf, kSetCaseStr, attr_type, case_buf, attr_name, end_str);
   }
@@ -1007,6 +1013,7 @@ static const char *kMethodObjectRetStr =
 "    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);\n";
 
 static const char *kMethodXPIDLObjectRetStr =
+"    // n.b., this will release nativeRet\n"
 "    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, %s::GetIID(), cx, rval);\n";
 
 static const char *kMethodStringRetStr = 

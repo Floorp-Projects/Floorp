@@ -66,7 +66,7 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsIRDFCompositeDataSource* prop;
         if (NS_OK == a->GetDatabase(&prop)) {
-          // get the js object
+          // get the js object; n.b., this will do a release on 'prop'
           nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIRDFCompositeDataSource::GetIID(), cx, vp);
         }
         else {
@@ -110,7 +110,7 @@ SetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
       
         a->SetDatabase(prop);
-        
+        NS_IF_RELEASE(prop);
         break;
       }
       default:
