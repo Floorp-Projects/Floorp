@@ -692,6 +692,19 @@ struct lo_FormElementTextareaData_struct {
 };
 
 
+#ifdef MOZ_ENDER_MIME
+/*
+  just like a text area, but it is an html area data
+  we basically leave it as a text element until we need to cast it.
+*/
+struct lo_FormElementHtmlareaData_struct {
+    lo_FormElementTextareaData textarea;
+    char *mime_bits;    
+};
+#endif /*MOZ_ENDER_MIME*/
+
+
+
 /*
  * This is the element_data structure for elements whose
  * element_type = FORM_TYPE_HIDDEN, FORM_TYPE_SUBMIT, FORM_TYPE_RESET,
@@ -750,13 +763,16 @@ struct lo_FormElementKeygenData_struct {
 
 union LO_FormElementData_struct {
     int32 type;
-    lo_FormElementTextData ele_text;
+    lo_FormElementTextData     ele_text;
     lo_FormElementTextareaData ele_textarea;
-    lo_FormElementMinimalData ele_minimal;
-    lo_FormElementToggleData ele_toggle;
-    lo_FormElementObjectData ele_object;
-    lo_FormElementSelectData ele_select;
-    lo_FormElementKeygenData ele_keygen;
+    lo_FormElementMinimalData  ele_minimal;
+    lo_FormElementToggleData   ele_toggle;
+    lo_FormElementObjectData   ele_object;
+    lo_FormElementSelectData   ele_select;
+    lo_FormElementKeygenData   ele_keygen;
+#ifdef MOZ_ENDER_MIME
+    lo_FormElementHtmlareaData ele_mimearea;
+#endif /*MOZ_ENDER_MIME*/
 };
 
 

@@ -71,7 +71,7 @@ FE_DEFINE(GetEmbedSize,void, (MWContext * context, LO_EmbedStruct *embed_struct,
 FE_DEFINE(GetJavaAppSize,void, (MWContext * context, LO_JavaAppStruct *java_struct, NET_ReloadMethod force_reload))
 #ifndef MOZ_NGLAYOUT
 FE_DEFINE(GetFormElementInfo,void, (MWContext * context, LO_FormElementStruct * form_element))
-FE_DEFINE(GetFormElementValue,void, (MWContext * context, LO_FormElementStruct * form_element, XP_Bool hide))
+FE_DEFINE(GetFormElementValue,void, (MWContext * context, LO_FormElementStruct * form_element, XP_Bool hide, XP_Bool submit))
 FE_DEFINE(ResetFormElement,void, (MWContext * context, LO_FormElementStruct * form_element))
 FE_DEFINE(SetFormElementToggle,void, (MWContext * context, LO_FormElementStruct * form_element, XP_Bool toggle))
 FE_DEFINE(FreeEmbedElement,void, (MWContext *context, LO_EmbedStruct *))

@@ -539,8 +539,8 @@ BOOL   FE_FileType(char * path,
 #ifndef MOZ_NGLAYOUT
 #define FE_GetFormElementInfo(context, form_element) \
 			(*context->funcs->GetFormElementInfo)(context, form_element)
-#define FE_GetFormElementValue(context, form_element,hide) \
-			(*context->funcs->GetFormElementValue)(context, form_element,hide)
+#define FE_GetFormElementValue(context, form_element,hide,submit) \
+			(*context->funcs->GetFormElementValue)(context, form_element,hide,submit)
 #define FE_ResetFormElement(context, form_element) \
 			(*context->funcs->ResetFormElement)(context, form_element)
 #define FE_SetFormElementToggle(context, form_element,toggle) \
@@ -739,7 +739,7 @@ void            FE_GetEmbedSize(MWContext * context, LO_EmbedStruct *embed_struc
 #endif
 void            FE_GetJavaAppSize(MWContext * context, LO_JavaAppStruct *java_struct, NET_ReloadMethod force_reload);
 void            FE_GetFormElementInfo(MWContext * context, LO_FormElementStruct * form_element);
-void            FE_GetFormElementValue(MWContext * context, LO_FormElementStruct * form_element, Bool hide);
+void            FE_GetFormElementValue(MWContext * context, LO_FormElementStruct * form_element, Bool hide, Bool submit);
 void            FE_ResetFormElement(MWContext * context, LO_FormElementStruct * form_element);
 void            FE_SetFormElementToggle(MWContext * context, LO_FormElementStruct * form_element, Bool toggle);
 #ifndef MOZ_NGLAYOUT
