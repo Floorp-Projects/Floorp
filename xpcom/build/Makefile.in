@@ -64,6 +64,10 @@ ifdef MOZ_DEMANGLE_SYMBOLS
 EXTRA_DSO_LDOPTS += -liberty
 endif
 
+ifdef GC_LEAK_DETECTOR
+EXTRA_DSO_LDOPTS += -lboehm
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_COM -D_IMPL_NS_BASE
