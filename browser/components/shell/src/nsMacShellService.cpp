@@ -107,7 +107,7 @@ nsMacShellService::GetDesktopBackgroundColor(PRUint32 *aColor)
 }
 
 NS_IMETHODIMP
-nsMacShellService::SetDesktopBackgroundColor(PRUint32 *aColor)
+nsMacShellService::SetDesktopBackgroundColor(PRUint32 aColor)
 {
   return NS_OK;
 }
