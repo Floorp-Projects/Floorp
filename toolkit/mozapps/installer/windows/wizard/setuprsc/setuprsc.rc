@@ -381,8 +381,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SETUP               ICON    DISCARDABLE     "setup.ico"
-IDI_BROWSER             ICON    DISCARDABLE     "browser.ico"
-IDI_MAIL                ICON    DISCARDABLE     "mail.ico"
+IDI_APP            	ICON    DISCARDABLE     APP_ICO
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -395,8 +394,8 @@ IDB_BITMAP_WELCOME      BITMAP  DISCARDABLE     "bitmap1.bmp"
 IDB_BOX_CHECKED_DISABLED BITMAP  FIXED IMPURE    "box_ch_d.bmp"
 IDB_BITMAP_BANNER       BITMAP  DISCARDABLE     "downloadLogo.bmp"
 IDB_QUICK_LAUNCH        BITMAP  DISCARDABLE     "turbo-systray.bmp"
-IDB_HEADER              BITMAP  DISCARDABLE     "Header.bmp"
-IDB_WATERMARK           BITMAP  DISCARDABLE     "Watermrk.bmp"
+IDB_HEADER              BITMAP  DISCARDABLE     HEADER_BMP
+IDB_WATERMARK           BITMAP  DISCARDABLE     WATERMRK_BMP
 
 /////////////////////////////////////////////////////////////////////////////
 //

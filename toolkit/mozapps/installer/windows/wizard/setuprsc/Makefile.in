@@ -46,6 +46,8 @@ FORCE_SHARED_LIB=1
 LOCAL_INCLUDES	= -I$(srcdir)
 
 include $(topsrcdir)/config/rules.mk
+DEFINES += -DAPP_ICO=\"$(DIST)/branding/app.ico\" -DWATERMRK_BMP=\"$(DIST)/branding/Watermrk.bmp\" -DHEADER_BMP=\"$(DIST)/branding/Header.bmp\"
+
 
 # Hack to get around the default rules insisting that .lib should exist
 $(IMPORT_LIBRARY):
