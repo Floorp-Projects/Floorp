@@ -267,6 +267,10 @@ bin/components/nsCloseAllWindows.js
 bin/components/websrvcs.dll
 bin/components/websrvcs.xpt
 
+; Roaming
+bin/components/sroaming.dll
+bin/chrome/sroaming.jar
+
 ; LDAP components need to be in the browser for AutoConfig
 bin/components/mozldap.dll
 bin/components/mozldap.xpt

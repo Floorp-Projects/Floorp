@@ -209,6 +209,9 @@ bin\components\nsCloseAllWindows.js
 bin\components\websrvcs.dll
 bin\components\websrvcs.xpt
 
+; Roaming
+bin\chrome\sroaming.jar
+
 ; p3p
 bin\components\p3p.dll
 bin\components\p3p.xpt

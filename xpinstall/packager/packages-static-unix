@@ -204,6 +204,9 @@ bin/chrome/chromelist.txt
 bin/components/libwebsrvcs.so
 bin/components/websrvcs.xpt
 
+; Roaming
+bin/chrome/sroaming.jar
+
 ;-bin/chrome/comm/content/editor/EditorInitPage.html
 ;-bin/chrome/comm/content/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
