@@ -270,16 +270,35 @@ void nsFontMetricsGTK::RealizeFont()
   mHeight = nscoord((fontInfo->ascent + fontInfo->descent) * f);
   mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
 
-  unsigned long pr;
+  unsigned long pr = 0;
 //  XGetFontProperty(fontInfo, , mStrikeoutOffset);
 //  XGetFontProperty(fontInfo, , mStrikeoutSize);
-  ::XGetFontProperty(fontInfo, XA_X_HEIGHT, &pr);
-  mXHeight = nscoord(pr * f);
+  if (::XGetFontProperty(fontInfo, XA_X_HEIGHT, &pr))
+  {
+    mXHeight = nscoord(pr * f);
+  }
+  if (::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr))
+  {
+    g_print("XA_UNDERLINE_POSITION = %i\nIf you see the above message, please
+    email pavlov@pavlov.net with the URL that you were on when you got it.", pr);
+    mUnderlineOffset = nscoord(pr * f);
+  }
+  else
+  {
+    // TODO do some gdk magic and get a '_' and figure it out...
+  }
+  if (::XGetFontProperty(fontInfo, XA_UNDERLINE_THICKNESS, &pr))
+  {
+    g_print("XA_UNDERLINE_THICKNESS = %i\nIf you see the above message, please
+    email pavlov@pavlov.net with the URL that you were on when you got it.", pr);
+    mUnderlineSize = nscoord(pr * f);
+  }
+  else
+  {
+    // TODO do some gdk magic and get a '_' and figure it out...
+  }
 
-  ::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr);
-  mUnderlineOffset = nscoord(pr * f);
-  ::XGetFontProperty(fontInfo, XA_UNDERLINE_THICKNESS, &pr);
-  mUnderlineSize = nscoord(pr * f);
+
 
   PRUint32 i;
 
