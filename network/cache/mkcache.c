@@ -124,7 +124,7 @@ PRIVATE void net_RemoveAllDiskCacheObjects(void);
  * of SSL documents
  */
 PUBLIC void
-NET_DontDiskCacheSSL(XP_Bool set)
+NET_DontDiskCacheSSL(PRBool set)
 {
 	net_dont_disk_cache_ssl = set;
 }
@@ -227,7 +227,7 @@ PRIVATE int
 net_OpenCacheFatDB(void)
 {
 	char* filename;
-	static XP_Bool have_tried_open=FALSE;
+	static PRBool have_tried_open=FALSE;
 
     if(!cache_database)
       {
@@ -459,10 +459,10 @@ net_StoreDiskCacheSize(void)
 /* returns TRUE if the object gets stored
  * FALSE if not
  */
-PRIVATE XP_Bool
+PRIVATE PRBool
 net_CacheStore(net_CacheObject * obj,  
 			   URL_Struct      * URL_s, 
-			   XP_Bool		         accept_partial_files,
+			   PRBool		         accept_partial_files,
 			   store_type_enum 	 store_type)
 {
 	DBT *data, *key;
@@ -471,7 +471,7 @@ net_CacheStore(net_CacheObject * obj,
     XP_StatStruct stat_entry;
 
 	/* larubbio */
-	XP_Bool		SARCache = FALSE;
+	PRBool		SARCache = FALSE;
 	XP_FileType fileType;
 	DB			*local_cache_database = NULL;
 
@@ -1530,13 +1530,13 @@ NET_CacheConverter (FO_Present_Types format_out,
     NET_StreamClass * stream=0;
     char *filename=0, *new_filename=0;
 	char *org_content_type = 0;
-	XP_Bool do_disk_cache=FALSE;
-	XP_Bool want_to_cache=FALSE;
+	PRBool do_disk_cache=FALSE;
+	PRBool want_to_cache=FALSE;
     XP_File fp=0;
 	NET_StreamClass * next_stream=0;
 
 	/* XXX brendan will #define this hack after 3.0 ships! */
-	XP_Bool dont_hold_URL_s = (converter_obj != NULL);
+	PRBool dont_hold_URL_s = (converter_obj != NULL);
     
     TRACEMSG(("Setting up cache stream. Have URL: %s\n", URL_s->address));
 
@@ -1966,8 +1966,8 @@ NET_CacheConverter (FO_Present_Types format_out,
  * cache lock is only good for a single
  * session
  */
-PUBLIC XP_Bool
-NET_ChangeCacheFileLock(URL_Struct *URL_s, XP_Bool set)
+PUBLIC PRBool
+NET_ChangeCacheFileLock(URL_Struct *URL_s, PRBool set)
 {
 	int   status;
 	DBT   data;
@@ -2142,7 +2142,7 @@ MODULE_PRIVATE void NET_RefreshCacheFileExpiration(URL_Struct * URL_s)
 
 /* returns TRUE if the url is in the disk cache
  */
-PUBLIC XP_Bool
+PUBLIC PRBool
 NET_IsURLInDiskCache(URL_Struct *URL_s)
 {
 	DBT *key;
@@ -2180,7 +2180,7 @@ NET_RemoveURLFromCache(URL_Struct *URL_s)
 	DBT *key;
 
 	/* larubbio */
-	XP_Bool		SARCache = FALSE;
+	PRBool		SARCache = FALSE;
 	XP_FileType fileType;
 	DB			*local_cache_database = NULL;
 
@@ -2631,7 +2631,7 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
 /* read the Cache File allocation table.
  */
 PUBLIC void
-NET_ReadCacheFAT(char * cachefatfile, XP_Bool stat_files)
+NET_ReadCacheFAT(char * cachefatfile, PRBool stat_files)
 {
     if(net_MaxDiskCacheSize > 0)
     	net_OpenCacheFatDB();
@@ -2655,7 +2655,7 @@ NET_CacheInit(void)
  * shutdown.
  */
 PUBLIC void
-NET_WriteCacheFAT(char *filename, XP_Bool final_call)
+NET_WriteCacheFAT(char *filename, PRBool final_call)
 {
 	net_StoreDiskCacheSize();
 
@@ -2730,7 +2730,7 @@ net_cache_recursive_file_finder(XP_HashList *hash_table,
 	int prefix_len, d_len, status;
 	char *dir_prefix=0;
 	char *d_name;
-	XP_Bool add_dir_prefix=TRUE;
+	PRBool add_dir_prefix=TRUE;
 
 	/* compute the difference between base_dir and
 	 * cur_dir.  The difference should be prepended
@@ -3058,7 +3058,7 @@ NET_DisplayCacheInfoAsHTML(ActiveEntry * cur_entry)
    	NET_StreamClass * stream;
 	net_CacheObject * cache_obj;
 	DBT key, data;
-	XP_Bool long_form = FALSE;
+	PRBool long_form = FALSE;
 	int i;
 
 	if(!buffer)
