@@ -5,8 +5,8 @@
 <!ENTITY receiptArrive.label          "When a receipt arrives:">
 <!ENTITY leaveIt.label                "Leave it in my Inbox">
 <!ENTITY leaveIt.accesskey            "i">
-<!-- LOCALIZATION NOTE moveToSent.label Translate: 'Sent Mail' according to Netscape glossary -->
-<!ENTITY moveToSent.label             "Move it to my Sent Mail folder">
+<!-- LOCALIZATION NOTE moveToSent.label Translate: 'Sent' according to Netscape glossary -->
+<!ENTITY moveToSent.label             "Move it to my &quot;Sent&quot; folder">
 <!ENTITY moveToSent.accesskey         "m">
 <!ENTITY requestMDN.label             "When I receive a request for a return receipt:">
 <!ENTITY returnSome.label             "Allow return receipts for some messages">
