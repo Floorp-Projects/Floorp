@@ -45,6 +45,7 @@ my($ide_loc_file) = "";
 # 0 == don't switch CWIE to front app in do_event(), 1 == do switch
 # note: activate() still switches when called
 $Mac::AppleEvents::Simple::SWITCH = 0;
+# $Mac::AppleEvents::Simple::WARN = 1;
 
 # supply your own path to the source here
 #_test('PowerPudgeIV:mozilla:mozilla:');
@@ -417,6 +418,15 @@ sub _open_file ($) {
 		q"seld:TEXT(@), from:'null'()}";
 
 	do_event(qw/aevt odoc/, $app, $prm, $_[0]);
+}
+
+sub import_project ($$) {
+	my($xml_file, $project_path) = @_;
+	
+	my($prm) = "kocl:type(PRJD), rtyp:TEXT(@), data:TEXT(@), &subj:'null'()";
+	
+	my($evt) = do_event(qw/core crel/, $app, $prm, $project_path, $xml_file);    
+	return $evt->{ERROR};
 }
 
 sub _doc_named ($) {
