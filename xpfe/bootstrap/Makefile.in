@@ -269,9 +269,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS += nsNativeAppSupportForCocoa.mm
-LDFLAGS += \
-        -framework Cocoa \
-        $(NULL)   
+LIBS += -framework Cocoa $(TK_LIBS)
 endif
 
 ifeq ($(OS_ARCH),OS2)
