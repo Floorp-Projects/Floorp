@@ -1243,7 +1243,7 @@ nsJSContext::InitClasses()
 
   // Initialize the options object and set default options in mContext
   if (NS_SUCCEEDED(rv)) {
-    JSObject *optionsObj = ::JS_DefineObject(mContext, globalObj, "options",
+    JSObject *optionsObj = ::JS_DefineObject(mContext, globalObj, "_options",
                                              &OptionsClass, nsnull, 0);
     if (optionsObj &&
         ::JS_DefineProperties(mContext, optionsObj, OptionsProperties)) {
