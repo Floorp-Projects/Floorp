@@ -1437,6 +1437,23 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
                             PRInt32* numUnConverted)
 {
+  if (!autoDetection && from_charset && to_charset &&
+      (!strcasecmp(from_charset,to_charset) ||
+       (!strcasecmp(from_charset,"us-ascii") && !strcasecmp(to_charset,"UTF-8")) ||
+       (!strcasecmp(from_charset,"UTF-8")    && !strcasecmp(to_charset,"us-ascii")))) {
+    if (NULL != numUnConverted) 
+      *numUnConverted = 0;
+
+    *outBuffer = (char *) PR_Malloc(inLength+1);
+    if (NULL != *outBuffer) {
+      nsCRT::memcpy(*outBuffer, inBuffer, inLength);
+      *outLength = inLength;
+      (*outBuffer)[inLength] = '\0';
+      return 0;
+    }
+    return -1;
+  } 
+  
   MimeCharsetConverterClass aMimeCharsetConverterClass;
   PRInt32 res;
 
