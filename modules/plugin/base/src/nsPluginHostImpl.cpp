@@ -4527,7 +4527,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       dirEntry->GetLastModifiedTime(&fileModTime);
 
       item->mModTime = fileModTime;
-      item->mFilename.AssignWithConversion(filePath);
+      item->mFilename.AssignWithConversion(file.GetCString());
       pluginFilesArray.AppendElement(item);
     }
   } // end round of up of plugin files
