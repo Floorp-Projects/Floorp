@@ -190,7 +190,8 @@
 // 0.03 changed name, description and mime desc from string to bytes, bug 108246
 // 0.04 added new mime entry point on Mac, bug 113464
 // 0.05 added new entry point check for the default plugin, bug 132430
-static const char *kPluginInfoVersion = "0.05";
+// 0.06 strip off suffixes in mime description strings, bug 53895
+static const char *kPluginInfoVersion = "0.06";
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
@@ -933,8 +934,31 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
   if(aPluginInfo->fMimeDescriptionArray != nsnull) 
   {
     mMimeDescriptionArray = new char*[mVariants];
-    for (int i = 0; i < mVariants; i++)
+    for (int i = 0; i < mVariants; i++) {
+      // we should cut off the list of suffixes which the mime 
+      // description string may have, see bug 53895
+      // it is usually in form "some description (*.sf1, *.sf2)" 
+      // so we can search for the opening round bracket
+      char cur = '\0';
+      char pre = '\0';
+      char * p = PL_strrchr(aPluginInfo->fMimeDescriptionArray[i], '(');
+      if (p && (p != aPluginInfo->fMimeDescriptionArray[i])) {
+        if ((p - 1) && *(p - 1) == ' ') {
+          pre = *(p - 1);
+          *(p - 1) = '\0';
+        } else {
+          cur = *p;
+          *p = '\0';
+        }
+          
+      }
       mMimeDescriptionArray[i] = new_str(aPluginInfo->fMimeDescriptionArray[i]);
+      // restore the original string
+      if (cur != '\0')
+        *p = cur;
+      if (pre != '\0')
+        *(p - 1) = pre;
+    }
   }
 
   if(aPluginInfo->fExtensionArray != nsnull) 
