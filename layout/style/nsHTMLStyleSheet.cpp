@@ -1239,6 +1239,10 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   else if (nsHTMLAtoms::spacer == aTag) {
     rv = NS_NewSpacerFrame(aContent, aParentFrame, aNewFrame);
   }
+  else if (nsHTMLAtoms::button == aTag) {
+    rv = NS_NewHTMLButtonControlFrame(aContent, aParentFrame, aNewFrame);
+    processChildren = PR_TRUE;
+  }
 
   // If we succeeded in creating a frame then set its style context,
   // process its children (if requested), and initialize the frame

@@ -44,6 +44,7 @@ nsIAtom* nsHTMLAtoms::bordercolor;
 nsIAtom* nsHTMLAtoms::bottompadding;
 nsIAtom* nsHTMLAtoms::br;
 nsIAtom* nsHTMLAtoms::bulletPseudo;
+nsIAtom* nsHTMLAtoms::button;
 nsIAtom* nsHTMLAtoms::caption;
 nsIAtom* nsHTMLAtoms::cellpadding;
 nsIAtom* nsHTMLAtoms::cellspacing;
@@ -259,6 +260,7 @@ void nsHTMLAtoms::AddrefAtoms()
     bottompadding = NS_NewAtom("BOTTOMPADDING");
     br = NS_NewAtom("BR");
     bulletPseudo = NS_NewAtom(":BULLET");
+    button = NS_NewAtom("BUTTON");
     caption = NS_NewAtom("CAPTION");
     cellpadding = NS_NewAtom("CELLPADDING");
     cellspacing = NS_NewAtom("CELLSPACING");
@@ -471,6 +473,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(bottompadding);
     NS_RELEASE(br);
     NS_RELEASE(bulletPseudo);
+    NS_RELEASE(button);
     NS_RELEASE(caption);
     NS_RELEASE(cellpadding);
     NS_RELEASE(cellspacing);

@@ -19,6 +19,7 @@
 // YY need to pass isMultiple before create called
 
 #include "nsFormControlFrame.h"
+#include "nsFormFrame.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
@@ -353,6 +354,7 @@ nsSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
     return;
   }
 
+  mWidget->Enable(!nsFormFrame::GetDisabled(this));
   nsFont font(aPresContext->GetDefaultFixedFont()); 
   GetFont(aPresContext, font);
   mWidget->SetFont(font);

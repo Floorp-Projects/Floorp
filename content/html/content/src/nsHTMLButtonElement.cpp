@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMHTMLButtonElement.h"
+#include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -26,6 +27,8 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIFormControl.h"
+#include "nsIForm.h"
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
@@ -35,7 +38,8 @@ static NS_DEFINE_IID(kIDOMHTMLButtonElementIID, NS_IDOMHTMLBUTTONELEMENT_IID);
 class nsHTMLButtonElement : public nsIDOMHTMLButtonElement,
                             public nsIScriptObjectOwner,
                             public nsIDOMEventReceiver,
-                            public nsIHTMLContent
+                            public nsIHTMLContent,
+                            public nsIFormControl
 {
 public:
   nsHTMLButtonElement(nsIAtom* aTag);
@@ -81,9 +85,22 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIFormControl
+  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD SetWidget(nsIWidget* aWidget) { return NS_OK; };
+  NS_IMETHOD Init() { return NS_OK; }
+
 protected:
   nsGenericHTMLContainerElement mInner;
+  nsIForm*                      mForm;
+  PRInt32                       mType;
 };
+
+static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+
+// Construction, destruction
 
 nsresult
 NS_NewHTMLButtonElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
@@ -103,28 +120,63 @@ nsHTMLButtonElement::nsHTMLButtonElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mForm = nsnull;
+  mType = NS_FORM_BUTTON_BUTTON; // default
 }
 
 nsHTMLButtonElement::~nsHTMLButtonElement()
 {
+  if (nsnull != mForm) {
+    // prevent mForm from decrementing its ref count on us
+    mForm->RemoveElement(this, PR_FALSE); 
+    NS_RELEASE(mForm);
+  }
 }
 
-NS_IMPL_ADDREF(nsHTMLButtonElement)
+// nsISupports
 
-NS_IMPL_RELEASE(nsHTMLButtonElement)
+NS_IMETHODIMP_(nsrefcnt) 
+nsHTMLButtonElement::AddRef(void)
+{
+  PRInt32 refCnt = mRefCnt;  // debugging 
+  return ++mRefCnt; 
+}
 
 nsresult
 nsHTMLButtonElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLButtonElementIID)) {
-    nsIDOMHTMLButtonElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
+    *aInstancePtr = (void*)(nsIDOMHTMLButtonElement*)this;
     mRefCnt++;
+    return NS_OK;
+  }
+  else if (aIID.Equals(kIFormControlIID)) {
+    *aInstancePtr = (void*)(nsIFormControl*) this;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
 }
+
+NS_IMETHODIMP_(nsrefcnt)
+nsHTMLButtonElement::Release()
+{
+  --mRefCnt;
+	if (mRefCnt <= 0) {
+    delete this;                                       
+    return 0;                                          
+  } else if ((1 == mRefCnt) && mForm) { 
+    mRefCnt = 0;
+    delete this;
+    return 0;
+  } else {
+    return mRefCnt;
+  }
+}
+
+
+// nsIDOMHTMLButtonElement
 
 nsresult
 nsHTMLButtonElement::CloneNode(nsIDOMNode** aReturn)
@@ -137,17 +189,43 @@ nsHTMLButtonElement::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  *aForm = nsnull;/* XXX */
-  return NS_OK;
-}
-
+// An important assumption is that if aForm is null, the previous mForm will not be released
+// This allows nsHTMLFormElement to deal with circular references.
 NS_IMETHODIMP
 nsHTMLButtonElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
-  return NS_OK;
+  nsresult result = NS_OK;
+	if (nsnull == aForm) {
+    mForm = nsnull;
+    return NS_OK;
+  } else {
+    NS_IF_RELEASE(mForm);
+    nsIFormControl* formControl = nsnull;
+    result = QueryInterface(kIFormControlIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
+      if ((NS_OK == result) && mForm) {
+        mForm->AddElement(formControl);
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
+{
+  nsresult result = NS_OK;
+  *aForm = nsnull;
+  if (nsnull != mForm) {
+    nsIDOMHTMLFormElement* formElem = nsnull;
+    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    if (NS_OK == result) {
+      *aForm = formElem;
+    }
+  }
+  return result;
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey, eSetAttrNotify_None)
@@ -156,6 +234,13 @@ NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name, eSetAttrNotify_Restart)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Type, type, eSetAttrNotify_Restart)
 NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value, eSetAttrNotify_Render)
+
+static nsGenericHTMLElement::EnumTable kButtonTypeTable[] = {
+  { "button", NS_FORM_BUTTON_BUTTON },
+  { "reset", NS_FORM_BUTTON_RESET },
+  { "submit", NS_FORM_BUTTON_SUBMIT },
+  { 0 }
+};
 
 NS_IMETHODIMP
 nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
@@ -167,6 +252,21 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
                                      eHTMLUnit_Integer);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
+  if (aAttribute == nsHTMLAtoms::type) {
+    nsGenericHTMLElement::EnumTable *table = kButtonTypeTable;
+    while (nsnull != table->tag) { 
+      if (aValue.EqualsIgnoreCase(table->tag)) {
+        aResult.SetIntValue(table->value, eHTMLUnit_Enumerated);
+        mType = table->value;  
+        return NS_CONTENT_ATTR_HAS_VALUE;
+      }
+      table++;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::disabled) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -175,6 +275,12 @@ nsHTMLButtonElement::AttributeToString(nsIAtom* aAttribute,
                                        nsHTMLValue& aValue,
                                        nsString& aResult) const
 {
+  if (aAttribute == nsHTMLAtoms::type) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      nsGenericHTMLElement::EnumValueToString(aValue, kButtonTypeTable, aResult);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -281,4 +387,15 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
     }
   }
   return ret;
+}
+
+NS_IMETHODIMP
+nsHTMLButtonElement::GetType(PRInt32* aType)
+{
+  if (aType) {
+    *aType = mType;
+    return NS_OK;
+  } else {
+    return NS_FORM_NOTOK;
+  }
 }

@@ -64,6 +64,7 @@ public:
   static nsIAtom* bottompadding;
   static nsIAtom* br;
   static nsIAtom* bulletPseudo;
+  static nsIAtom* button;
 
   static nsIAtom* caption;
   static nsIAtom* cellpadding;

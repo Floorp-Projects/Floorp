@@ -317,6 +317,10 @@ NS_NewButtonControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                          nsIFrame*& aResult);
 
 extern nsresult
+NS_NewHTMLButtonControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                             nsIFrame*& aResult);
+
+extern nsresult
 NS_NewCheckboxControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                            nsIFrame*& aResult);
 

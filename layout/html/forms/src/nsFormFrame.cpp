@@ -1016,3 +1016,31 @@ char* nsFormFrame::Temp_GenerateTempFileName(PRInt32 aMaxSize, char* file_buf)
   
 }
 
+
+// static helper functions for nsIFormControls
+
+PRBool
+nsFormFrame::GetDisabled(nsIFrame* aChildFrame, nsIContent* aContent) 
+{
+  PRBool result = PR_FALSE;
+
+  nsIContent* content = aContent;
+  if (nsnull == content) {
+    aChildFrame->GetContent(content);
+  }
+  if (nsnull != content) {
+    nsIHTMLContent* htmlContent = nsnull;
+    content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+    if (nsnull != htmlContent) {
+      nsHTMLValue value;
+      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetAttribute(nsHTMLAtoms::disabled, value)) {
+        result = PR_TRUE;
+      }
+      NS_RELEASE(htmlContent);
+    }
+    if (nsnull == aContent) {
+      NS_RELEASE(content);
+    }
+  }
+  return result;
+}

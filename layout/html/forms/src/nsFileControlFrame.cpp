@@ -17,6 +17,7 @@
  */
 
 #include "nsFileControlFrame.h"
+#include "nsFormFrame.h"
 #include "nsButtonControlFrame.h"
 #include "nsTextControlFrame.h"
 #include "nsIContent.h"
@@ -194,10 +195,14 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
   if (0 == numChildren) {
     // XXX This code should move to Init(), someday when the frame construction
     // changes are all done and Init() is always getting called...
+    PRBool disabled = nsFormFrame::GetDisabled(this);
     nsIHTMLContent* text = nsnull;
     nsIAtom* tag = NS_NewAtom("text");
     NS_NewHTMLInputElement(&text, tag);
     text->SetAttribute("type", "text", PR_FALSE);
+    if (disabled) {
+      text->SetAttribute("disabled", "1", PR_FALSE);
+    }
     NS_NewTextControlFrame(text, this, childFrame);
     childFrame->SetStyleContext(&aPresContext, mStyleContext);
     mTextFrame = (nsTextControlFrame*)childFrame;
@@ -207,6 +212,9 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     tag = NS_NewAtom("browse");
     NS_NewHTMLInputElement(&browse, tag);
     browse->SetAttribute("type", "browse", PR_FALSE);
+    if (disabled) {
+      browse->SetAttribute("disabled", "1", PR_FALSE);
+    }
     NS_NewButtonControlFrame(browse, this, childFrame);
     ((nsButtonControlFrame*)childFrame)->SetFileControlFrame(this);
     mBrowseFrame = (nsButtonControlFrame*)childFrame;

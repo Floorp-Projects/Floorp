@@ -112,6 +112,7 @@ nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
 	    mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
 	  }
 	  NS_RELEASE(radio);
+    mWidget->Enable(!nsFormFrame::GetDisabled(this));
   }
 }
 
