@@ -40,7 +40,6 @@
 
 var cvPrefs = 0;
 var addressbook = 0;
-var gAddressBookBundle;
 var gSearchTimer = null;
 var gStatusText = null;
 var gQueryURIFormat = null;
@@ -135,7 +134,6 @@ function RemovePrefObservers()
 
 function OnLoadAddressBook()
 {
-  gAddressBookBundle = document.getElementById("bundle_addressBook");
   gSearchInput = document.getElementById("searchInput");
 
   verifyAccounts(null); 	// this will do migration, if we need to.

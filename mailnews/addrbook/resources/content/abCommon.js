@@ -43,6 +43,7 @@ var abList = 0;
 var gAbResultsTree = null;
 var gAbView = null;
 var gCurDirectory;
+var gAddressBookBundle;
 
 var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
@@ -276,6 +277,7 @@ function InitCommonJS()
   dirTree = document.getElementById("dirTree");
   abList = document.getElementById("addressbookList");
   gAbResultsTree = document.getElementById("abResultsTree");
+  gAddressBookBundle = document.getElementById("bundle_addressBook");
 }
 
 // builds prior to 12-08-2001 did not use an tree for

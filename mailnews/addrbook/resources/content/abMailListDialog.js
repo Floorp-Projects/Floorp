@@ -43,7 +43,6 @@ var gListCard;
 var gEditList;
 var gOkCallback = null;
 var oldListName = "";
-var gAddressBookBundle;
 var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 var gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 var gHeaderParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
@@ -196,9 +195,9 @@ function MailListOKButton()
 
 function OnLoadNewMailList()
 {
-  //XXX: gAddressBookBundle is set in 2 places because of different callers
-  gAddressBookBundle = document.getElementById("bundle_addressBook");
   var selectedAB = null;
+
+  InitCommonJS();
 
   if (window.arguments && window.arguments[0])
   {
@@ -266,8 +265,7 @@ function EditListOKButton()
 
 function OnLoadEditList()
 {
-  //XXX: gAddressBookBundle is set in 2 places because of different callers
-  gAddressBookBundle = document.getElementById("bundle_addressBook");
+  InitCommonJS();
 
   gParentURI  = window.arguments[0].abURI;
   gListCard = window.arguments[0].abCard;

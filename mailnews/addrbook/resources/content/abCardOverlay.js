@@ -39,7 +39,6 @@
 var gEditCard;
 var gOnSaveListeners = new Array;
 var gOkCallback = null;
-var gAddressBookBundle;
 var gHideABPicker = false;
 
 function OnLoadNewCard()
@@ -296,7 +295,7 @@ function InitEditCard()
 {
   InitPhoneticFields();
 
-  gAddressBookBundle = document.getElementById("bundle_addressBook");
+  InitCommonJS();
   // Create gEditCard object that contains global variables for the current js
   //   file.
   gEditCard = new Object;

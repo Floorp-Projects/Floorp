@@ -44,7 +44,6 @@ var composeWindow = 0;
 var msgCompFields = 0;
 var editCardCallback = 0;
 
-var gAddressBookBundle;
 var gPromptService = GetPromptService();
 
 var gSearchInput;
@@ -81,12 +80,11 @@ function GetAbViewListener()
 
 function OnLoadSelectAddress()
 {
-  gAddressBookBundle = document.getElementById("bundle_addressBook");
+  InitCommonJS();
+
   prefixTo = gAddressBookBundle.getString("prefixTo") + ": ";
   prefixCc = gAddressBookBundle.getString("prefixCc") + ": ";
   prefixBcc = gAddressBookBundle.getString("prefixBcc") + ": ";
-
-  InitCommonJS();
 
   UpgradeAddressBookResultsPaneUI("mailnews.ui.select_addresses_results.version");
 
