@@ -2479,7 +2479,7 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIContent> content;
         rv = stateManager->GetFocusedContent(getter_AddRefs(content));
-        if (NS_SUCCEEDED(rv) && content && content.get() == mContent) {
+        if (NS_SUCCEEDED(rv) && !nsFormFrame::GetDisabled(this) && content && content.get() == mContent) {
           aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
           aRenderingContext.SetColor(0);
           //aRenderingContext.DrawRect(clipRect);
