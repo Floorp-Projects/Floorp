@@ -22,7 +22,8 @@
     Joe Hewitt (hewitt@netscape.com)
 */
 
-window {
+window,
+dialog {
   border: 1px solid ThreeDDarkShadow;
   padding: 6px;
 }
