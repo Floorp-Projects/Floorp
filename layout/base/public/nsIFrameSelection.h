@@ -37,6 +37,9 @@
 #include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
+#include "nsIStyleContext.h"
+
+
 // IID for the nsIFrameSelection interface
 #define NS_IFRAMESELECTION_IID      \
 { 0xf46e4171, 0xdeaa, 0x11d1, \
@@ -217,6 +220,16 @@ public:
    * @param aState will hold the state of mousedown
    */
   NS_IMETHOD GetMouseDownState(PRBool *aState)=0;
+
+  /**
+    if we are in table cell selection mode. aka ctrl click in table cell
+   */
+  NS_IMETHOD GetTableCellSelection(PRBool *aState)=0;
+
+  /** GetTableCellSelectionStyleColor
+   *  this holds the color of the selection for table cells when they are selected.
+   */
+  NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor)=0;
 
   /** GetSelection
    * no query interface for selection. must use this method now.

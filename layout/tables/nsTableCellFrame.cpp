@@ -47,6 +47,9 @@
 #include "nsIHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 
+//TABLECELL SELECTION
+#include "nsIFrameSelection.h"
+
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
 
@@ -248,6 +251,38 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
     if (disp->IsVisibleOrCollapsed()) {
       const nsStyleColor* myColor =
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+
+
+      //TABLECELL SELECTION
+      PRBool displaySelection;
+      displaySelection = DisplaySelection(aPresContext);
+      if (displaySelection)
+      {
+        nsFrameState  frameState;
+        PRBool        isSelected;
+        GetFrameState(&frameState);
+        isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+        if (isSelected)
+        {
+          nsCOMPtr<nsIPresShell> shell;
+          nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
+          if (NS_FAILED(result))
+            return result;
+          nsCOMPtr<nsIFrameSelection> frameSelection;
+          result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+          if (NS_SUCCEEDED(result))
+          {
+            PRBool tableCellSelectionMode;
+            result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
+            if (NS_SUCCEEDED(result) && tableCellSelectionMode)
+            {
+              frameSelection->GetTableCellSelectionStyleColor(&myColor); 
+            }
+          }
+        }
+      }
+//END SELECTION
+
       const nsStyleSpacing* mySpacing =
         (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
       NS_ASSERTION(nsnull!=myColor, "bad style color");
