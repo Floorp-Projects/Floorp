@@ -747,9 +747,10 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
   char *onlineDir = nsnull;
 	nsCOMPtr<nsIMsgIncomingServer> server;
 
-  NS_WITH_SERVICE(nsIImapHostSessionList, hostSessionList,
-                  kCImapHostSessionListCID, &rv);    
-  *allocatedPath = nsnull;
+    NS_WITH_SERVICE(nsIImapHostSessionList, hostSessionList,
+                    kCImapHostSessionListCID, &rv);    
+
+    *allocatedPath = nsnull;
 
 	if (onlineDelimiter == kOnlineHierarchySeparatorUnknown ||
 		onlineDelimiter == 0)
@@ -974,9 +975,15 @@ nsImapUrl::GetURI(char** aURI)
     fullFolderPath += '/';
     fullFolderPath += theFile;
 
-		PR_FREEIF(hostName);
+	PR_FREEIF(hostName);
+	char * baseMessageURI;
+	nsCreateImapBaseMessageURI(fullFolderPath, &baseMessageURI);
+	nsCAutoString uriStr;
+	rv = nsBuildImapMessageURI(baseMessageURI, key, uriStr);
+	nsCRT::free(baseMessageURI);
+	*aURI = uriStr.ToNewCString();
+	return rv;
 
-    return nsBuildImapMessageURI(fullFolderPath, key, aURI);
   }
   
   return rv;

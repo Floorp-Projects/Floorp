@@ -207,18 +207,39 @@ nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *
 
 }
 
-nsresult nsBuildImapMessageURI(const char *baseURI, PRUint32 key, char** uri)
+nsresult nsBuildImapMessageURI(const char *baseURI, PRUint32 key, nsCString& uri)
 {
 	
-	if(!uri)
+	uri.Append(baseURI);
+	uri.Append('#');
+	char *keyStr = PR_smprintf("%u", key);
+	if(!keyStr)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	uri.Append(keyStr);
+
+	PR_smprintf_free(keyStr);
+	return NS_OK;
+
+}
+
+nsresult nsCreateImapBaseMessageURI(const char *baseURI, char **baseMessageURI)
+{
+	if(!baseMessageURI)
 		return NS_ERROR_NULL_POINTER;
 
 	nsCAutoString tailURI(baseURI);
 
+	// chop off mailbox:/
 	if (tailURI.Find(kImapRootURI) == 0)
 		tailURI.Cut(0, PL_strlen(kImapRootURI));
+	
+	nsCAutoString baseURIStr(kImapMessageRootURI);
+	baseURIStr += tailURI;
 
-	*uri = PR_smprintf("%s%s#%d", kImapMessageRootURI, (const char *) tailURI, key);
+	*baseMessageURI = baseURIStr.ToNewCString();
+	if(!*baseMessageURI)
+		return NS_ERROR_OUT_OF_MEMORY;
 
 	return NS_OK;
 }
@@ -500,6 +521,7 @@ CreateUtf7ConvertedStringFromUnicode(const PRUnichar * aSourceString)
     PR_FREEIF(dstPtr);
     return convertedString;
 }
+
 
 nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUnicodeStr)
 {

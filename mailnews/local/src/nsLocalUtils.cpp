@@ -257,19 +257,40 @@ nsresult nsParseLocalMessageURI(const char* uri,
 
 }
 
-nsresult nsBuildLocalMessageURI(const char *baseURI, PRUint32 key, char** uri)
+nsresult nsBuildLocalMessageURI(const char *baseURI, PRUint32 key, nsCString& uri)
 {
 	
-	if(!uri)
-		return NS_ERROR_NULL_POINTER;
 	// need to convert mailbox://hostname/.. to mailbox_message://hostname/..
+
+	uri.Append(baseURI);
+	uri.Append('#');
+	char *keyStr = PR_smprintf("%u", key);
+	if(!keyStr)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	uri.Append(keyStr);
+
+	PR_smprintf_free(keyStr);
+	return NS_OK;
+}
+
+nsresult nsCreateLocalBaseMessageURI(const char *baseURI, char **baseMessageURI)
+{
+	if(!baseMessageURI)
+		return NS_ERROR_NULL_POINTER;
 
 	nsCAutoString tailURI(baseURI);
 
 	// chop off mailbox:/
 	if (tailURI.Find(kMailboxRootURI) == 0)
 		tailURI.Cut(0, PL_strlen(kMailboxRootURI));
+	
+	nsCAutoString baseURIStr(kMailboxMessageRootURI);
+	baseURIStr += tailURI;
 
-	*uri = PR_smprintf("%s%s#%u", kMailboxMessageRootURI, tailURI.GetBuffer(), key);
+	*baseMessageURI = baseURIStr.ToNewCString();
+	if(!*baseMessageURI)
+		return NS_ERROR_OUT_OF_MEMORY;
+
 	return NS_OK;
 }

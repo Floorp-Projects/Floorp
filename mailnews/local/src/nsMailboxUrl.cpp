@@ -252,10 +252,15 @@ NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
 		if (filePath)
 		{
             char * baseuri = nsMailboxGetURI(m_file);
+			char * baseMessageURI;
+			nsCreateLocalBaseMessageURI(baseuri, &baseMessageURI);
 			char * uri = nsnull;
+			nsCAutoString uriStr;
 			nsFileSpec folder = *filePath;
-			nsBuildLocalMessageURI(baseuri, m_messageKey, &uri);
+			nsBuildLocalMessageURI(baseMessageURI, m_messageKey, uriStr);
             PL_strfree(baseuri);
+			nsCRT::free(baseMessageURI);
+			uri = uriStr.ToNewCString();
 			*aURI = uri;
 		}
 		else

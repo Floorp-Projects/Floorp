@@ -40,8 +40,10 @@ extern nsresult
 nsParseNewsMessageURI(const char* uri, nsCString& messageUriWithoutKey, PRUint32 *key);
 
 extern nsresult 
-nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, char** uri);
+nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);
 
+extern nsresult
+nsCreateNewsBaseMessageURI(const char *baseURI, char **baseMessageURI);
 
 #endif //NS_NEWSUTILS_H
 

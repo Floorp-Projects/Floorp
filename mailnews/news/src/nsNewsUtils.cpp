@@ -192,25 +192,38 @@ nsParseNewsMessageURI(const char* uri, nsCString& messageUriWithoutKey, PRUint32
 
 }
 
-nsresult nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, char** uri)
+nsresult nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, nsCString& uri)
 {
-	if(!uri)
+	uri.Append(baseURI);
+	uri.Append('#');
+
+	char *keyStr = PR_smprintf("%u", key);
+	if(!keyStr)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	uri.Append(keyStr);
+
+	PR_smprintf_free(keyStr);
+	return NS_OK;
+}
+
+nsresult nsCreateNewsBaseMessageURI(const char *baseURI, char **baseMessageURI)
+{
+	if(!baseMessageURI)
 		return NS_ERROR_NULL_POINTER;
-  // need to convert news://hostname/.. to news_message://hostname/..
 
-  nsCString tailURI(baseURI);
+	nsCAutoString tailURI(baseURI);
 
-  // chop off news:/
-#if 0
-  if (tailURI.Find(kNewsRootURI) == 0)
-    tailURI.Cut(0, kNewsRootURILen);
-#else
-  PRInt32 strOffset = tailURI.Find(":/");
-  if (strOffset != -1)
-    tailURI.Cut(0, strOffset+2);
-#endif
-  
-	*uri = PR_smprintf("%s%s#%d", kNewsMessageRootURI, tailURI.GetBuffer(), key);
-  
+	// chop off mailbox:/
+	if (tailURI.Find(kNewsRootURI) == 0)
+		tailURI.Cut(0, PL_strlen(kNewsRootURI));
+	
+	nsCAutoString baseURIStr(kNewsMessageRootURI);
+	baseURIStr += tailURI;
+
+	*baseMessageURI = baseURIStr.ToNewCString();
+	if(!*baseMessageURI)
+		return NS_ERROR_OUT_OF_MEMORY;
+
 	return NS_OK;
 }

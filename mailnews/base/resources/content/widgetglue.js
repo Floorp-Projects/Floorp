@@ -405,7 +405,7 @@ function MsgDeleteMessage(fromToolbar)
 	//get the current folder
 
 	messenger.DeleteMessages(tree.database, srcFolder.resource, messageList);
-	SelectNextMessage(nextMessage);
+	gNextMessageAfterDelete = nextMessage.getAttribute('id');
   }
 }
 
@@ -535,10 +535,10 @@ function MsgMoveMessage(destFolder)
         }
         else
         {
+			gNextMessageAfterDelete = nextMessage.getAttribute('id');
             messenger.CopyMessages(tree.database,
                                    srcFolder.resource,
                                    destFolder.resource, messageList, true);
-            SelectNextMessage(nextMessage);
         }
 	}	
 }

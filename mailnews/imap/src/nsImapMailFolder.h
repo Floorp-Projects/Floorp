@@ -155,7 +155,7 @@ public:
                                           nsIMsgDatabase **db);
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages,
                               nsIMsgWindow *msgWindow, PRBool
-                              deleteStorage);
+                              deleteStorage, PRBool isMove);
     NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, 
                             nsISupportsArray* messages,
                             PRBool isMove, nsIMsgWindow *msgWindow,
@@ -301,6 +301,9 @@ protected:
     nsresult SetTransactionManager(nsITransactionManager* txnMgr);
     nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                  nsCString& msgIds, nsMsgKeyArray& keyArray);
+
+	virtual nsresult CreateBaseMessageURI(const char *aURI);
+
 
     PRBool m_initialized;
     PRBool m_haveDiscoveredAllFolders;

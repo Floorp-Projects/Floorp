@@ -259,6 +259,24 @@ NS_IMETHODIMP  nsMsgMailSession::NotifyFolderLoaded(nsIFolder *folder)
 
 }
 
+NS_IMETHODIMP  nsMsgMailSession::NotifyDeleteOrMoveMessagesCompleted(nsIFolder *folder)
+{
+
+	nsresult rv;
+	PRUint32 count;
+	rv = mListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
+		listener->OnDeleteOrMoveMessagesCompleted(folder);
+	}
+	return NS_OK;
+
+
+}
 
 NS_IMETHODIMP nsMsgMailSession::AddMsgWindow(nsIMsgWindow *msgWindow)
 {

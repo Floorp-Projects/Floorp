@@ -492,8 +492,11 @@ nsresult nsMailboxTestDriver::OnDisplayMessage(PRBool copyMessage)
 
 		// mscott - hacky....sprintf up a mailbox URI to represent the message.
 		char * uri = nsnull;
-		char * testString = PR_smprintf("%s%s", "mscott@dredd.mcom.com/", mailboxName);
-		rv = nsBuildLocalMessageURI(/* (const char *) filePath */ testString, msgKey, &uri);
+		nsCString uriStr;
+		char * testString = PR_smprintf("%s%s", "mailbox_message://mscott@dredd.mcom.com/", mailboxName);
+		rv = nsBuildLocalMessageURI(/* (const char *) filePath */ testString, msgKey, uriStr);
+		uri = uriStr.ToNewCString();
+
 		if (NS_SUCCEEDED(rv))
 		{
 			nsIMsgMessageService * messageService = nsnull;

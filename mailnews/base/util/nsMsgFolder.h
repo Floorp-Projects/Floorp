@@ -230,11 +230,16 @@ protected:
 	nsresult NotifyItemDeleted(nsISupports *parentItem, nsISupports *item, const char* viewString);
 
 	nsresult NotifyFolderLoaded();
+	nsresult NotifyDeleteOrMoveMessagesCompleted(nsIFolder *folder);
+
 	// this is a little helper function that is not part of the public interface. 
 	// we use it to get the IID of the incoming server for the derived folder.
 	// w/out a function like this we would have to implement GetServer in each
 	// derived folder class.
 	virtual const char* GetIncomingServerType() = 0;
+
+	virtual nsresult CreateBaseMessageURI(const char *aURI);
+
 
   // helper routine to parse the URI and update member variables
   nsresult parseURI(PRBool needServer=PR_FALSE);
@@ -278,6 +283,7 @@ protected:
   PRBool mIsServer;
   nsString mName;
   nsCOMPtr<nsIFileSpec> mPath;
+  char * mBaseMessageURI; //The uri with the message scheme
 
   // static stuff for cross-instance objects like atoms
   static PRInt32 gInstanceCount;

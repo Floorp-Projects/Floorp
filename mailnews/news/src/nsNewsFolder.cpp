@@ -791,7 +791,8 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
 
 /* this is news, so remember that DeleteMessage is really CANCEL */
 NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
-                                              nsIMsgWindow *aMsgWindow, PRBool deleteStorage)
+                                              nsIMsgWindow *aMsgWindow, PRBool deleteStorage,
+											  PRBool isMove)
 {
   nsresult rv = NS_OK;
   
@@ -863,7 +864,6 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
   NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
-	char* msgURI = nsnull;
 	nsFileSpec path;
 	nsMsgKey key;
 	nsCOMPtr <nsIRDFResource> res;
@@ -871,13 +871,13 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
 	rv = msgDBHdr->GetMessageKey(&key);
   if (NS_FAILED(rv)) return rv;
   
-  rv = nsBuildNewsMessageURI(mURI, key, &msgURI);
+  nsCAutoString msgURI;
+
+  rv = nsBuildNewsMessageURI(mBaseMessageURI, key, msgURI);
   if (NS_FAILED(rv)) return rv;
   
-  rv = rdfService->GetResource(msgURI, getter_AddRefs(res));
+  rv = rdfService->GetResource(msgURI.GetBuffer(), getter_AddRefs(res));
   
-  PR_FREEIF(msgURI);
-  msgURI = nsnull;
   
   if (NS_FAILED(rv)) return rv;
   
@@ -1344,6 +1344,13 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
     return rv;
 }
 
+nsresult nsMsgNewsFolder::CreateBaseMessageURI(const char *aURI)
+{
+	nsresult rv;
+
+	rv = nsCreateNewsBaseMessageURI(aURI, &mBaseMessageURI);
+	return rv;
+}
 
 NS_IMETHODIMP
 nsMsgNewsFolder::GetNewsrcLine(char **newsrcLine)
@@ -1441,3 +1448,4 @@ nsMsgNewsFolder::OnReadChanged(nsIDBChangeListener * aInstigator)
 {
     return SetNewsrcHasChanged(PR_TRUE);
 }
+

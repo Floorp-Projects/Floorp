@@ -249,9 +249,14 @@ NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 		nsXPIDLCString spec;
 		GetSpec(getter_Copies(spec));
 		char * uri = nsnull;
-		rv = nsBuildNewsMessageURI(spec, m_messageKey, &uri);
+		char * baseMessageURI;
+		nsCreateNewsBaseMessageURI(spec, &baseMessageURI);
+		nsCAutoString uriStr;
+
+		rv = nsBuildNewsMessageURI(baseMessageURI, m_messageKey, uriStr);
+		nsCRT::free(baseMessageURI);
 		if (NS_FAILED(rv)) return rv;
-		*aURI = uri;
+		*aURI = uriStr.ToNewCString();
 		return NS_OK;
 	}
 	else {

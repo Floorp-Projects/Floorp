@@ -336,7 +336,9 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 				if (NS_SUCCEEDED(rv) && (const char *) onlineFullUtf7Name && nsCRT::strlen((const char *) onlineFullUtf7Name))
 				{
 					if (imapServer)
+
 						imapServer->CreatePRUnicharStringFromUTF7(onlineFullUtf7Name, getter_Copies(unicodeName));
+
 
 					// take the full unicode folder name and find the unicode leaf name.
 					currentFolderNameStr = unicodeName;
@@ -1340,7 +1342,7 @@ nsImapMailFolder::AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCStri
 
 NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                                                nsIMsgWindow *msgWindow,
-                                               PRBool deleteStorage)
+                                               PRBool deleteStorage, PRBool isMove)
 {
     nsresult rv = NS_ERROR_FAILURE;
     // *** jt - assuming delete is move to the trash folder for now
@@ -1361,7 +1363,14 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
 		if (NS_SUCCEEDED(rv))
 		{
             if (mDatabase) 
+			{
                 mDatabase->DeleteMessages(&srcKeyArray,NULL);
+				if(!isMove)
+				{
+					NotifyDeleteOrMoveMessagesCompleted(this);
+				}
+			}
+
 			return rv;
 		}
     }
@@ -1864,22 +1873,20 @@ NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
     if (NS_FAILED(rv)) return rv;
 
-	char* msgURI = nsnull;
 	nsFileSpec path;
 	nsMsgKey key;
     nsCOMPtr<nsIRDFResource> res;
 
 	rv = msgDBHdr->GetMessageKey(&key);
 
-	if(NS_SUCCEEDED(rv))
-		rv = nsBuildImapMessageURI(mURI, key, &msgURI);
-
+	nsCAutoString msgURI;
 
 	if(NS_SUCCEEDED(rv))
-		rv = rdfService->GetResource(msgURI, getter_AddRefs(res));
+		rv = nsBuildImapMessageURI(mBaseMessageURI, key, msgURI);
 
-	if(msgURI)
-		PR_smprintf_free(msgURI);
+
+	if(NS_SUCCEEDED(rv))
+		rv = rdfService->GetResource(msgURI.GetBuffer(), getter_AddRefs(res));
 
 	if(NS_SUCCEEDED(rv))
 	{
@@ -2033,6 +2040,10 @@ NS_IMETHODIMP nsImapMailFolder::EndCopy(PRBool copySucceeded)
 	return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::EndMove()
+{
+	return NS_OK;
+}
 // this is the beginning of the next message copied
 NS_IMETHODIMP nsImapMailFolder::StartMessage()
 {
@@ -2987,6 +2998,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                                 if (msgTxn)
                                     msgTxn->GetSrcKeyArray(srcKeyArray);
                                 srcDB->DeleteMessages(&srcKeyArray, nsnull);
+								NotifyDeleteOrMoveMessagesCompleted(srcFolder);
                             }
                         }
                         if (m_transactionManager)
@@ -3408,7 +3420,7 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
         if (NS_SUCCEEDED(rv) && srcFolder)
         {
             srcFolder->DeleteMessages(mailCopyState->m_messages, nsnull,
-                                      PR_FALSE);
+                                      PR_FALSE, PR_TRUE);
         }
     }
     return rv;
@@ -3846,6 +3858,14 @@ NS_IMETHODIMP nsImapMailFolder::MatchName(nsString *name, PRBool *matches)
 	return NS_OK;
 }
 
+nsresult nsImapMailFolder::CreateBaseMessageURI(const char *aURI)
+{
+	nsresult rv;
+
+	rv = nsCreateImapBaseMessageURI(aURI, &mBaseMessageURI);
+	return rv;
+}
+
 NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsSubscribing(PRBool *bVal)
 {
     if (!bVal)
@@ -3891,3 +3911,4 @@ NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsAdded(PRBool bVal)
     m_folderNeedsAdded = bVal;
     return NS_OK;
 }
+

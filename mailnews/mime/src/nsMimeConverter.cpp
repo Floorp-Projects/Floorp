@@ -55,7 +55,6 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
                                      PRBool eatContinuations)
 {
   char charsetCstr[kMAX_CSNAME+1];
-  char *encodedCstr = nsnull;
   char *decodedCstr = nsnull;
   nsresult res = NS_OK;
 

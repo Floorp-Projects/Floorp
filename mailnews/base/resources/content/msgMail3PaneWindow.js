@@ -68,6 +68,7 @@ var gCurrentLoadingFolderIsThreaded = false;
 var gCurrentLoadingFolderSortID ="";
 
 var gCurrentDisplayedMessage = null;
+var gNextMessageAfterDelete = null;
 
 // the folderListener object
 var folderListener = {
@@ -155,7 +156,49 @@ var folderListener = {
 			}
 
 		}
+	},
+	OnDeleteOrMoveMessagesCompleted :function(folder)
+	{
+		dump("In OnDeleteOrMoveMessagesCompleted\n");
+		if(IsCurrentLoadedFolder(folder))
+		{
+			msgNavigationService.EnsureDocumentIsLoaded(document);
+
+			dump("next message uri is " + gNextMessageAfterDelete + "\n");
+			var nextMessage = document.getElementById(gNextMessageAfterDelete);
+			if(!nextMessage)
+				dump("No next message after delete\n");
+			SelectNextMessage(nextMessage);
+			var threadTree = GetThreadTree();
+			if(threadTree)
+				threadTree.ensureElementIsVisible(nextMessage);
+			else
+				dump("No thread tree\n");
+			gNextMessageAfterDelete = null;
+		}
 	}
+}
+
+function IsCurrentLoadedFolder(folder)
+{
+	msgfolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+	if(msgfolder)
+	{
+		dump("IsCurrentLoadedFolder: has msgFolder\n");
+		var folderResource = msgfolder.QueryInterface(Components.interfaces.nsIRDFResource);
+		if(folderResource)
+		{
+			dump("IsCurrentLoadedFolder: has folderResource\n");
+			var folderURI = folderResource.Value;
+			var currentLoadedFolder = GetThreadTreeFolder();
+			var currentURI = currentLoadedFolder.getAttribute('ref');
+			dump("IsCurrentLoadedFolder: folderURI = " + folderURI + "\n");
+			dump("IsCurrentLoadedFolder: currentURI = " + currentURI + "\n");
+			return(currentURI == folderURI);
+		}
+	}
+
+	return false;
 }
 
 /* Functions related to startup */
@@ -179,7 +222,7 @@ function OnLoadMessenger()
   //need to add to session before trying to load start folder otherwise listeners aren't
   //set up correctly.
   dump('Before load start folder\n');
-  loadStartFolder();
+  setTimeout("loadStartFolder();", 0);
 
   // FIX ME - later we will be able to use onload from the overlay
   OnLoadMsgHeaderPane();

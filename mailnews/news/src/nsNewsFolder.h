@@ -84,7 +84,7 @@ public:
   virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
-                            nsIMsgWindow *msgWindow, PRBool deleteStorage);
+                            nsIMsgWindow *msgWindow, PRBool deleteStorage, PRBool isMove);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
   NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
@@ -108,7 +108,8 @@ protected:
 
   PRInt32 HandleLine(char *line, PRUint32 line_size);
   virtual const char *GetIncomingServerType() {return "nntp";}
-  
+  virtual nsresult CreateBaseMessageURI(const char *aURI);
+
   nsByteArray		m_inputStream;
 
 protected:

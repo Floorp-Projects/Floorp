@@ -37,6 +37,9 @@ nsresult
 nsParseLocalMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key);
 
 nsresult 
-nsBuildLocalMessageURI(const char* baseURI, PRUint32 key, char** uri);
+nsBuildLocalMessageURI(const char* baseURI, PRUint32 key, nsCString& uri);
+
+nsresult
+nsCreateLocalBaseMessageURI(const char *baseURI, char **baseMessageURI);
 
 #endif //NS_LOCALUTILS_H

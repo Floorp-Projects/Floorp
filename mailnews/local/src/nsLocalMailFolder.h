@@ -125,7 +125,7 @@ public:
 
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
                             nsIMsgWindow *msgWindow, PRBool
-                            deleteStorage);
+                            deleteStorage, PRBool isMove);
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray* messages,
                           PRBool isMove, nsIMsgWindow *msgWindow,
                           nsIMsgCopyServiceListener* listener);
@@ -167,6 +167,7 @@ protected:
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
                          PRBool isMove, nsIMsgCopyServiceListener* listener);
   void ClearCopyState();
+	virtual nsresult CreateBaseMessageURI(const char *aURI);
 
 protected:
 	PRUint32  mExpungedBytes;

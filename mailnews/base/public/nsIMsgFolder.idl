@@ -250,7 +250,7 @@ interface nsIMsgFolder : nsIFolder {
 
 	void deleteMessages(in nsISupportsArray message,
                       in nsIMsgWindow msgWindow,
-                      in boolean deleteStorage);
+                      in boolean deleteStorage, in boolean isMove);
 
   void copyMessages(in nsIMsgFolder srcFolder, in nsISupportsArray messages,
                     in boolean isMove, in nsIMsgWindow msgWindow,

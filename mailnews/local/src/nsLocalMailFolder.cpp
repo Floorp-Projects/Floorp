@@ -68,6 +68,9 @@
 #include "nsMsgTxn.h"
 #include "nsIFileSpec.h"
 #include "nsIMessenger.h"
+#include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
+
 
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
@@ -76,6 +79,8 @@ static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+
 
 //////////////////////////////////////////////////////////////////////////////
 // nsLocal
@@ -1096,7 +1101,7 @@ nsMsgLocalMailFolder::GetTrashFolder(nsIMsgFolder** result)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
                                      nsIMsgWindow *msgWindow, 
-                                     PRBool deleteStorage)
+                                     PRBool deleteStorage, PRBool isMove)
 {
   nsresult rv = NS_ERROR_FAILURE;
   PRBool isTrashFolder = mFlags & MSG_FOLDER_FLAG_TRASH;
@@ -1143,6 +1148,8 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
                   DeleteMessage(message, msgWindow, PR_TRUE);
               }
           }
+		  if(!isMove)
+			  NotifyDeleteOrMoveMessagesCompleted(this);
       }
   }
   return rv;
@@ -1442,21 +1449,19 @@ nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
     if (NS_FAILED(rv)) return rv;
 
-	char* msgURI = nsnull;
+	nsCAutoString msgURI;
 	nsMsgKey key;
     nsCOMPtr<nsIRDFResource> resource;
 
 	rv = msgDBHdr->GetMessageKey(&key);
   
 	if(NS_SUCCEEDED(rv))
-		rv = nsBuildLocalMessageURI(mURI, key, &msgURI);
+		rv = nsBuildLocalMessageURI(mBaseMessageURI, key, msgURI);
   
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = rdfService->GetResource(msgURI, getter_AddRefs(resource));
+		rv = rdfService->GetResource(msgURI.GetBuffer(), getter_AddRefs(resource));
     }
-	if(msgURI)
-		PR_smprintf_free(msgURI);
 
 	if(NS_SUCCEEDED(rv))
 	{
@@ -1778,19 +1783,60 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   { // both CopyMessages() & CopyFileMessage() go here if they have
     // done copying operation; notify completion to copy service
     nsresult result;
-    NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
-                    kMsgCopyServiceCID, &result); 
+	if(!mCopyState->m_isMove)
+	{
+		NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
+						kMsgCopyServiceCID, &result); 
 
-    if (NS_SUCCEEDED(result))
-      copyService->NotifyCompletion(mCopyState->m_srcSupport, this, rv);
+		if (NS_SUCCEEDED(result))
+		  copyService->NotifyCompletion(mCopyState->m_srcSupport, this, rv);
 
-    if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
-      mTxnMgr->Do(mCopyState->m_undoMsgTxn);
+		if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
+		  mTxnMgr->Do(mCopyState->m_undoMsgTxn);
     
-    ClearCopyState();
+		ClearCopyState();
+	}
   }
 
 	return rv;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
+{
+
+	nsresult result;
+
+	if (mCopyState->m_curCopyIndex == mCopyState->m_totalMsgCount)
+	{
+
+		NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
+						kMsgCopyServiceCID, &result); 
+
+		if (NS_SUCCEEDED(result))
+		{
+			//Notify that a completion finished.
+			nsCOMPtr<nsIFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
+			if(srcFolder)
+			{
+				nsresult rv;
+				NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+				if(NS_SUCCEEDED(rv))
+					mailSession->NotifyDeleteOrMoveMessagesCompleted(srcFolder);
+			}
+
+			//passing in NS_OK because we only get in here if copy portion succeeded
+			copyService->NotifyCompletion(mCopyState->m_srcSupport, this, NS_OK);
+
+			if (mTxnMgr  && mCopyState->m_undoMsgTxn)
+				mTxnMgr->Do(mCopyState->m_undoMsgTxn);
+
+			ClearCopyState();
+		}
+
+	}
+
+	return NS_OK;
+
 }
 
 // this is the beginning of the next message copied
@@ -2042,3 +2088,13 @@ nsMsgLocalMailFolder::GetIncomingServerType()
 
   return "";
 }
+
+nsresult nsMsgLocalMailFolder::CreateBaseMessageURI(const char *aURI)
+{
+	nsresult rv;
+
+	rv = nsCreateLocalBaseMessageURI(aURI, &mBaseMessageURI);
+	return rv;
+
+}
+

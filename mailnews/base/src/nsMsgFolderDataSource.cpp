@@ -858,6 +858,11 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnFolderLoaded(nsIFolder *folder)
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgFolderDataSource::OnDeleteOrMoveMessagesCompleted(nsIFolder *folder)
+{
+	nsresult rv = NS_OK;
+	return rv;
+}
 
 nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
                                                  nsIRDFResource* property,
@@ -1491,7 +1496,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 	rv = messageArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;
 	if (cnt > 0)
-		rv = folder->DeleteMessages(messageArray, msgWindow, PR_FALSE);
+		rv = folder->DeleteMessages(messageArray, msgWindow, PR_FALSE, PR_FALSE);
 
 	rv = folderArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;

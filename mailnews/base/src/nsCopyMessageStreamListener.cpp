@@ -105,7 +105,7 @@ static nsresult DeleteMessage(nsIURI *aURL, nsIMsgFolder *srcFolder)
 		nsCOMPtr<nsISupports> messageSupports(do_QueryInterface(message));
 		if(messageSupports)
 			messageArray->AppendElement(messageSupports);
-		rv = srcFolder->DeleteMessages(messageArray, nsnull, PR_TRUE);
+		rv = srcFolder->DeleteMessages(messageArray, nsnull, PR_TRUE, PR_TRUE);
 	}
 	return rv;
 }
@@ -192,7 +192,11 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIChannel * aChannel, 
 			// don't do this if we're moving to an imap folder - that's handled elsewhere.
 			nsCOMPtr <nsIMsgImapMailFolder> destImap = do_QueryInterface(mDestination);
 			if (!destImap)
+			{
 				rv = DeleteMessage(uri, mSrcFolder);
+				if(NS_SUCCEEDED(rv))
+					rv = mDestination->EndMove();
+			}
 		}
 	}
 	//Even if the above actions failed we probably still want to return NS_OK.  There should probably

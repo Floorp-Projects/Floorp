@@ -26,9 +26,6 @@
 #include "nsMsgKeyArray.h"
 #include "nspr.h"
 
-
-
-
 // ******************** nsCopySource ******************
 // 
 
@@ -446,7 +443,10 @@ nsMsgCopyService::NotifyCompletion(nsISupports* aSupport,
     rv = DoNextCopy();
     nsCopyRequest* copyRequest = FindRequest(aSupport, dstFolder);
     if (copyRequest && copyRequest->m_processed)
+	{
         ClearRequest(copyRequest, result);
+	}
+
     return rv;
 }
 

@@ -71,7 +71,8 @@ nsMsgFolder::nsMsgFolder(void)
     mNumNewBiffMessages(0),
     mHaveParsedURI(PR_FALSE),
     mIsServerIsValid(PR_FALSE),
-    mIsServer(PR_FALSE)
+    mIsServer(PR_FALSE),
+	mBaseMessageURI(nsnull)
 	{
 //  NS_INIT_REFCNT(); done by superclass
 
@@ -115,6 +116,9 @@ nsMsgFolder::~nsMsgFolder(void)
 	}
 
     delete mListeners;
+
+	if(mBaseMessageURI)
+		nsCRT::free(mBaseMessageURI);
 
     gInstanceCount--;
     if (gInstanceCount <= 0) {
@@ -160,8 +164,18 @@ nsMsgFolder::Init(const char* aURI)
   nsresult rv;
 
   rv = nsRDFResource::Init(aURI);
+  if(NS_FAILED(rv))
+	  return rv;
+
+  rv = CreateBaseMessageURI(aURI);
 
   return NS_OK;
+}
+
+nsresult nsMsgFolder::CreateBaseMessageURI(const char *aURI)
+{
+	//Each folder needs to implement this.
+	return NS_OK;	
 }
 
 NS_IMETHODIMP nsMsgFolder::Shutdown(PRBool shutdownChildren)
@@ -2118,6 +2132,24 @@ nsresult nsMsgFolder::NotifyFolderLoaded()
 	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		mailSession->NotifyFolderLoaded(this);
+
+	return NS_OK;
+}
+
+nsresult nsMsgFolder::NotifyDeleteOrMoveMessagesCompleted(nsIFolder *folder)
+{
+	PRInt32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		//Folderlistener's aren't refcounted.
+		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnDeleteOrMoveMessagesCompleted(this);
+	}
+	//Notify listeners who listen to every folder
+	nsresult rv;
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		mailSession->NotifyDeleteOrMoveMessagesCompleted(folder);
 
 	return NS_OK;
 }
