@@ -786,12 +786,19 @@ var BookmarksUtils = {
   getLocaleString: function (aStringKey)
   {
     if (!this._bundle) {
-      this._bundle         = document.getElementById("bundle_bookmarks");
-      this._brandShortName = document.getElementById("bundle_brand")
-                                     .getString("brandShortName");
+      var LOCALESVC = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                .getService(Components.interfaces.nsILocaleService);
+      var BUNDLESVC = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                .getService(Components.interfaces.nsIStringBundleService);
+      var bookmarksBundle  = "chrome://communicator/locale/bookmarks/bookmark.properties";
+      this._bundle         = BUNDLESVC.createBundle(bookmarksBundle, LOCALESVC.GetApplicationLocale());
+      var brandBundle      = "chrome://global/locale/brand.properties";
+      this._brandShortName = BUNDLESVC.createBundle(brandBundle,     LOCALESVC.GetApplicationLocale())
+                                      .GetStringFromName("brandShortName");
     }
-    bundle = this._bundle.getString(aStringKey)
-                 .replace(/%brandShortName%/, this._brandShortName);
+   
+    var bundle = this._bundle.GetStringFromName(aStringKey);
+    bundle = bundle.replace(/%brandShortName%/, this._brandShortName);
     return bundle;
   },
     

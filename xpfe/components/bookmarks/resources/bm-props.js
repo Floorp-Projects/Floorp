@@ -61,9 +61,8 @@ var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
 
 var gBookmarkURL = "";
 
-function Init()
+function showDescription()
 {
-  var x;
   gBookmarkURL = window.arguments[0];
   var resource = RDF.GetResource(gBookmarkURL);
 
@@ -94,6 +93,12 @@ function Init()
   var textNode = document.createTextNode(description);
   document.getElementById("bookmarkDescription").appendChild(textNode);
 
+}
+
+function Init()
+{
+  var x;
+  var resource = RDF.GetResource(gBookmarkURL);
   // Initialize the properties panel by copying the values from the
   // RDF graph into the fields on screen.
 
