@@ -21,6 +21,9 @@
 *
 * SUMMARY: A [DontEnum] prop, if overridden, should appear in for-in loops.
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=90596
+*
+* NOTE: some inefficiencies in the test are made for the sake of readability.
+* Sorting properties alphabetically is necessary for the test to work in Rhino.
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
@@ -38,8 +41,6 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 var obj = {};
-var s = '';
-
 
 status = inSection(1);
 obj = {toString:9};
@@ -67,6 +68,8 @@ addThis();
 
 
 // TRY THE SAME THING IN EVAL CODE
+var s = '';
+
 status = inSection(5);
 s = 'obj = {toString:9}';
 eval(s);
@@ -151,22 +154,15 @@ test();
 
 function enumerateThis(obj)
 {
-  var ret = '';
+  var arr = new Array();
 
   for (var prop in obj)
   {
-    ret += prop + cnCOLON + obj[prop] + cnCOMMA;
+    arr.push(prop + cnCOLON + obj[prop]);
   }
 
-  ret = stripLastComma(ret);
-  ret = addBraces(ret);
+  var ret = addBraces(String(arr));
   return ret;
-}
-
-
-function stripLastComma(text)
-{
-  return text.replace(/,$/, cnEMPTY);
 }
 
 
@@ -176,26 +172,65 @@ function addBraces(text)
 }
 
 
+/*
+ * Sort properties alphabetically so the test will work in Rhino
+ */
 function addThis()
 {
   statusitems[UBound] = status;
-  actualvalues[UBound] = stripSpaces(actual);
-  expectedvalues[UBound] = stripSpaces(expect);
+  actualvalues[UBound] = sortThis(actual);
+  expectedvalues[UBound] = sortThis(expect);
   UBound++;
 }
 
 
-function stripSpaces(text)
+/*
+ * Takes a string of the form '{"c", "b", "a", 2}' and returns '{2,a,b,c}'
+ */
+function sortThis(sList)
 {
+  sList = formatThis(sList);
+  var arr = sList.split(cnCOMMA);
+  arr = arr.sort();
+  var ret = String(arr);
+  return addBraces(ret);
+}
+
+
+/*
+ * Strips out braces at beginning/end of text, and any whitespace or quotes
+ */
+function formatThis(text)
+{
+  var charCode = 0;
   var ret = '';
+
+  text = stripBraces(text);
+
   for (var i=0; i<text.length; i++)
   {
-    if (!isWhiteSpace(text.charCodeAt(i)))
-    {
+    charCode = text.charCodeAt(i);
+
+    if (!isWhiteSpace(charCode) && !isQuote(charCode))
       ret += text.charAt(i);
-    }
   }
+
   return ret;
+}
+
+
+/*
+ * strips off braces at beginning and end of text -
+ */
+function stripBraces(text)
+{
+  // remember to escape the braces...
+  var arr = text.match(/^\{(.*)\}$/);
+
+  // defend against a null match...
+  if (arr && arr[1])
+    return arr[1];
+  return cnEMPTY;
 }
 
 
@@ -218,13 +253,28 @@ function isWhiteSpace(charCode)
 }
 
 
+function isQuote(charCode)
+{
+  switch (charCode)
+  {
+    case (0x0027): // single quote
+    case (0x0022): // double quote
+      return true;
+      break;
+
+    default:
+      return false;
+  }
+}
+
+
 function test()
 {
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
 
-  for (var i = 0; i < UBound; i++)
+  for (var i=0; i<UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);
   }
