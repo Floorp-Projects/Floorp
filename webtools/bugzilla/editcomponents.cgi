@@ -671,4 +671,4 @@ if ($action eq 'update') {
 #
 # No valid action found
 #
-ThrowUserError('component_no_action');
+ThrowUserError('no_valid_action', {'field' => "component"});

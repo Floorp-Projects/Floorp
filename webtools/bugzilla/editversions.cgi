@@ -446,4 +446,4 @@ if ($action eq 'update') {
 #
 # No valid action found
 #
-ThrowUserError('version_no_action');
+ThrowUserError('no_valid_action', {'field' => "version"});

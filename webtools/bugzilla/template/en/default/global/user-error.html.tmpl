@@ -258,10 +258,6 @@
     You must use an existing [% terms.Bugzilla %] account as initial QA contact for
     component '[% name FILTER html %]'.
      
-  [% ELSIF error == "component_no_action" %]
-    [% title = "No valid action specified" %]
-    No valid action was specified when trying to edit components.
-
   [% ELSIF error == "product_not_specified" %]
     [% title = "No Product Specified" %]
     No product specified when trying to edit components, milestones or
@@ -629,10 +625,6 @@
     The name of a milestone is limited to 20 characters. 
     '[% name FILTER html %]' is too long ([% name.length %] characters).
 
-  [% ELSIF error == "milestone_no_action" %]
-    [% title = "No valid action specified" %]
-    No valid action was specified when trying to edit milestones.
-
   [% ELSIF error == "milestone_not_specified" %]
     [% title = "No Milestone Specified" %]
     No milestone specified when trying to edit milestones.
@@ -795,6 +787,10 @@
     [% title = "No Products" %]
     Either no products have been defined to enter [% terms.bugs %] against or you have not
     been given access to any.
+
+  [% ELSIF error == "no_valid_action" %]
+    [% title = "No valid action specified" %]
+    Cannot edit [% field_descs.$field FILTER html %]: no valid action was specified.
 
   [% ELSIF error == "number_not_numeric" %]
     [% title = "Numeric Value Required" %]
@@ -984,10 +980,6 @@
     [% title = "Version Name Is Too Long" %]
     The name of a version is limited to 20 characters. 
     '[% name FILTER html %]' is too long ([% name.length %] characters).
-
-  [% ELSIF error == "version_no_action" %]
-    [% title = "No valid action specified" %]
-    No valid action was specified when trying to edit versions.
 
   [% ELSIF error == "version_not_specified" %]
     [% title = "No Version Specified" %]
