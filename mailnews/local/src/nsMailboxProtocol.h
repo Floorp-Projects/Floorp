@@ -149,7 +149,8 @@ private:
 
 	PRUint32	m_messageID;
 
-	PRFileDesc* m_tempMessageFile;
+	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
+	nsFileSpec m_tempMessageFile;
 	nsCOMPtr<nsIWebShell>	 m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 	
 

@@ -36,6 +36,7 @@
 #include "prlog.h"
 #include "prerror.h"
 #include "prprf.h"
+#include "nsFileStream.h"
 
 #define ENABLE_SMOKETEST  1
 
@@ -69,7 +70,7 @@ NS_IMPL_RELEASE(nsMailboxProtocol)
 NS_IMPL_QUERY_INTERFACE(nsMailboxProtocol, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
 
 
-nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL)
+nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL) : m_tempMessageFile(MESSAGE_PATH)
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
@@ -189,13 +190,9 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 	// this solution is not very good so we should look at something better, but don't remove this
 	// line before talking to me (mscott) and mailnews QA....
 #ifdef ENABLE_SMOKETEST
-	PRFileDesc * smokeTestFile = PR_Open("MailSmokeTest.txt", PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
-	if (smokeTestFile)
-	{
-		const char * smokeString = "Mailbox Done\n";
-		PR_Write(smokeTestFile,(void *) smokeString, PL_strlen(smokeString));
-		PR_Close(smokeTestFile);
-	}
+	nsFileSpec smokeFile("MailSmokeTest.txt");
+	nsOutputFileStream smokeTestFile(smokeFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE);
+	smokeTestFile << "Mailbox Done\n";
 #endif
 
 	// when on stop binding is called, we as the protocol are done...let's close down the connection
@@ -247,8 +244,8 @@ PRInt32 nsMailboxProtocol::SendData(const char * dataBuffer)
 PRInt32 nsMailboxProtocol::DoneReadingMessage()
 {
 	// and close the article file if it was open....
-	if (m_tempMessageFile)
-		PR_Close(m_tempMessageFile);
+	if (m_tempMessageStream)
+		m_tempMessageStream->Close();
 
 	// disply hack: run a file url on the temp file
 	if (m_displayConsumer)
@@ -325,8 +322,12 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 					// create a temp file to write the message into. We need to do this because
 					// we don't have pluggable converters yet. We want to let mkfile do the work of 
 					// converting the message from RFC-822 to HTML before displaying it...
-					PR_Delete(MESSAGE_PATH);
-					m_tempMessageFile = PR_Open(MESSAGE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);						
+
+					m_tempMessageFile.Delete(PR_FALSE);
+					nsISupports * supports;
+					NS_NewIOFileStream(&supports, m_tempMessageFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+					m_tempMessageStream = do_QueryInterface(supports);
+					NS_IF_RELEASE(supports);
 					SetupMessageExtraction();
 					m_nextState = MAILBOX_READ_MESSAGE;
 					break;
@@ -433,11 +434,12 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 					terminator as it is read.
 				*/
 
-				if (m_tempMessageFile)
+				if (m_tempMessageStream)
 				{
+					PRUint32 count = 0;
 					if (line)
-						PR_Write(m_tempMessageFile,(void *) line,PL_strlen(line));
-					PR_Write(m_tempMessageFile, (void *) MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+						m_tempMessageStream->Write(line, PL_strlen(line), &count);
+					m_tempMessageStream->Write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &count);
 				}
 			} 
 		}
