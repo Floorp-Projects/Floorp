@@ -1789,7 +1789,7 @@ public class Interpreter
 
     case Icode_CATCH: {
         // The following code should be executed inside try/catch inside main
-        // loop, not in the loop catch block itself to deal withnexceptions
+        // loop, not in the loop catch block itself to deal with exceptions
         // from observeInstructionCount. A special bytecode is used only to
         // simplify logic.
         if (javaException == null) Kit.codeBug();
@@ -1808,7 +1808,7 @@ public class Interpreter
             } else if (javaException instanceof EcmaError) {
                 // an offical ECMA error object,
                 exType = SCRIPT_CAN_CATCH;
-            } else if (javaException instanceof WrappedException) {
+            } else if (javaException instanceof EvaluatorException) {
                 exType = SCRIPT_CAN_CATCH;
             } else if (javaException instanceof RuntimeException) {
                 exType = ONLY_FINALLY;
@@ -2236,7 +2236,6 @@ public class Interpreter
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        // what about class cast exception here for lhs?
         Scriptable lhs = (Scriptable)stack[stackTop];
         stack[stackTop] = ScriptRuntime.setName(lhs, rhs, scope, name);
         pc += 2;

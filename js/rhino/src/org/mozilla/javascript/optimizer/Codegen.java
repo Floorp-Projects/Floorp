@@ -2558,7 +2558,7 @@ class BodyCodegen
              * catch WrappedExceptions, see if they are wrapped
              * JavaScriptExceptions. Otherwise, rethrow.
              */
-            generateCatchBlock(WRAPPED_EXCEPTION, savedVariableObject,
+            generateCatchBlock(EVALUATOR_EXCEPTION, savedVariableObject,
                                catchLabel, startLabel);
 
             /*
@@ -2598,9 +2598,9 @@ class BodyCodegen
         cfw.markLabel(realEnd);
     }
 
-    private final int JAVASCRIPT_EXCEPTION = 0;
-    private final int WRAPPED_EXCEPTION    = 2;
-    private final int ECMAERROR_EXCEPTION  = 3;
+    private final int JAVASCRIPT_EXCEPTION  = 0;
+    private final int EVALUATOR_EXCEPTION   = 1;
+    private final int ECMAERROR_EXCEPTION   = 2;
 
     private void generateCatchBlock(int exceptionType,
                                     short savedVariableObject,
@@ -2635,8 +2635,8 @@ class BodyCodegen
 
         if (exceptionType == JAVASCRIPT_EXCEPTION) {
             exceptionName = "org/mozilla/javascript/JavaScriptException";
-        } else if (exceptionType == WRAPPED_EXCEPTION) {
-            exceptionName = "org/mozilla/javascript/WrappedException";
+        } else if (exceptionType == EVALUATOR_EXCEPTION) {
+            exceptionName = "org/mozilla/javascript/EvaluatorException";
         } else {
             if (exceptionType != ECMAERROR_EXCEPTION) Kit.codeBug();
             exceptionName = "org/mozilla/javascript/EcmaError";
