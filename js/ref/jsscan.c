@@ -514,7 +514,8 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 
     va_start(ap, errorNumber);
     if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL,
-				errorNumber, &message, &report, ap))
+				errorNumber, &message, &report,
+                                JS_TRUE, ap))
 	return;
     va_end(ap);
 
@@ -574,8 +575,8 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     }
     if (lastc == '\n')
 	limit[-1] = lastc;
-    if (message) free(message);
-    if (report.messageArgs) free(report.messageArgs);
+    if (message) JS_free(cx, message);
+    if (report.messageArgs) JS_free(cx, (void *)report.messageArgs);
 }
 
 JSTokenType

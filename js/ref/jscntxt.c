@@ -197,7 +197,8 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 			void *userRef, const uintN errorNumber,
-			char **messagep, JSErrorReport *reportp, va_list ap)
+			char **messagep, JSErrorReport *reportp,
+                        JSBool charArgs, va_list ap)
 {
     const JSErrorFormatString *fmtData;
     int i;
@@ -207,18 +208,30 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
     if (callback) {
 	fmtData = (*callback)(userRef, "Mountain View", errorNumber);
 	if (fmtData != NULL) {
+            int totalArgsLength = 0;
+            int argLengths[10]; /* only {0} thru {9} supported */
 	    argCount = fmtData->argCount;
+            PR_ASSERT(argCount <= 10);
 	    if (argCount > 0) {
 		/*
-		 * Gather the arguments into a char * array, the
-		 * messageArgs field is supposed to be an array of
-		 * JSString's and we'll convert them later.
+                 * Gather the arguments into an array, and accumulate
+                 * their sizes.
 		 */
-		reportp->messageArgs = malloc(sizeof(char *) * argCount);
+		reportp->messageArgs
+                        = JS_malloc(cx, sizeof(jschar *) * argCount);
 		if (!reportp->messageArgs)
 		    return JS_FALSE;
-		for (i = 0; i < argCount; i++)
-		    reportp->messageArgs[i] = (JSString *) va_arg(ap, char *);
+                for (i = 0; i < argCount; i++) {
+                    if (charArgs) {
+                        char *charArg = va_arg(ap, char *);
+		        reportp->messageArgs[i] 
+                            = js_InflateString(cx, charArg, strlen(charArg));
+                    }
+                    else
+		        reportp->messageArgs[i] = va_arg(ap, jschar *);
+                    argLengths[i] = js_strlen(reportp->messageArgs[i]);
+                    totalArgsLength += argLengths[i];
+                }
 	    }
 	    /*
 	     * Parse the error format, substituting the argument X
@@ -226,21 +239,22 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 	     */
 	    if (argCount > 0) {
 		if (fmtData->format) {
-		    const char *fmt, *arg;
-		    char *out;
+		    const char *fmt;
+                    const jschar *arg;
+		    jschar *out;
 		    int expandedArgs = 0;
 		    int expandedLength
 			= strlen(fmtData->format)
-			  - (3 * argCount); /* exclude the {n} */
-
-		    for (i = 0; i < argCount; i++) {
-			expandedLength
-			    += strlen((char *)reportp->messageArgs[i]);
-		    }
-		    *messagep = out = malloc(expandedLength + 1);
+			  - (3 * argCount) /* exclude the {n} */
+                          + totalArgsLength;
+            /* Note - the above calculation assumes that each argument
+             *   is used once and only once in the expansion !!!
+             */
+		    reportp->ucmessage = out 
+                        = JS_malloc(cx, (expandedLength + 1) * sizeof(jschar));
 		    if (!out) {
 			if (reportp->messageArgs) {
-			    free(reportp->messageArgs);
+			    JS_free(cx, (void *)reportp->messageArgs);
 			    reportp->messageArgs = NULL;
 			}
 			return JS_FALSE;
@@ -251,33 +265,32 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 			    if (isdigit(fmt[1])) {
 				int d = JS7_UNDEC(fmt[1]);
 				PR_ASSERT(expandedArgs < argCount);
-				arg = (char *)reportp->messageArgs[d];
-				strcpy(out, arg);
-				out += strlen(arg);
+				arg = reportp->messageArgs[d];
+				js_strncpy(out, arg, argLengths[d]);
+				out += argLengths[d];
 				fmt += 3;
 				expandedArgs++;
 				continue;
 			    }
 			}
-			*out++ = *fmt++;
+                        /*
+                         * is this kosher?
+                         */
+			*out++ = (unsigned char)(*fmt++);
 		    }
 		    PR_ASSERT(expandedArgs == argCount);
-		    *out = '\0';
+		    *out = 0;
+                    *messagep = js_DeflateString(cx, reportp->ucmessage,
+                                                    out - reportp->ucmessage);
 		}
-		/*
-		 * Now convert all the arguments to JSStrings.
-		 */
-		for (i = 0; i < argCount; i++) {
-		    reportp->messageArgs[i] =
-			JS_NewStringCopyZ(cx, (char *)reportp->messageArgs[i]);
-		}
-	    } else {
-		*messagep = JS_strdup(cx, fmtData->format);
+            } else { /* 0 arguments, the format string
+                        (if it exists) is the entire message */
+                if (fmtData->format) {
+		    *messagep = JS_strdup(cx, fmtData->format);
+                    reportp->ucmessage 
+                        = js_InflateString(cx, *messagep, strlen(*messagep));
+                }
 	    }
-	    /*
-	     * And finally convert the message.
-	     */
-	    reportp->ucmessage = JS_NewStringCopyZ(cx, *messagep);
 	}
     }
     if (*messagep == NULL) {
@@ -285,7 +298,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 	const char *defaultErrorMessage
 	    = "No error message available for error number %d";
 	size_t nbytes = strlen(defaultErrorMessage) + 16;
-	*messagep = (char *)malloc(nbytes);
+	*messagep = (char *)JS_malloc(cx, nbytes);
 	PR_snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
     }
     return JS_TRUE;
@@ -293,7 +306,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 
 void
 js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
-			void *userRef, const uintN errorNumber, va_list ap)
+			void *userRef, const uintN errorNumber,
+                        JSBool charArgs, va_list ap)
 {
     JSStackFrame *fp;
     JSErrorReport report;
@@ -319,7 +333,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     report.errorNumber = errorNumber;
 
     if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
-				 &message, &report, ap))
+				 &message, &report, charArgs, ap))
 	return;
 
 #if JS_HAS_ERROR_EXCEPTIONS
@@ -335,9 +349,9 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     js_ReportErrorAgain(cx, message, &report);
 
     if (message)
-	free(message);
+	JS_free(cx, message);
     if (report.messageArgs)
-	free(report.messageArgs);
+	JS_free(cx, (void *)report.messageArgs);
 }
 
 JS_FRIEND_API(void)

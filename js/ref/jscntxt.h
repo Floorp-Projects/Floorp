@@ -199,13 +199,14 @@ extern void
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap);
 extern void
 js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
-		       void *userRef, const uintN errorNumber, va_list ap);
+		       void *userRef, const uintN errorNumber,
+                       JSBool charArgs, va_list ap);
 
 extern JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 			void *userRef, const uintN errorNumber,
 			char **message, JSErrorReport *reportp,
-			va_list ap);
+                        JSBool charArgs, va_list ap);
 #endif
 
 /*
