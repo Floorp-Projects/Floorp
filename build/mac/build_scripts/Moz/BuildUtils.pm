@@ -109,7 +109,7 @@ sub SetupBuildRootDir($)
 
     my($cur_dir) = cwd();
     $cur_dir =~ s/$rel_path_to_script$//;
-    chdir($cur_dir);
+    chdir($cur_dir) || die "Error: failed to set build root directory to '$cur_dir'.\nYou probably need to put 'mozilla' one level down (in a folder).\n";
     $main::MOZ_SRC = cwd();
 }
 
