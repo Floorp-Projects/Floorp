@@ -47,7 +47,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
-#define DEBUG_BenB
+//#define DEBUG_BenB
 
 #define MIME_SUPERCLASS mimeInlineTextHTMLClass
 MimeDefClass(MimeInlineTextHTMLSanitized, MimeInlineTextHTMLSanitizedClass,
