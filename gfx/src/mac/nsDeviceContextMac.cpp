@@ -77,20 +77,18 @@ NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarWidth(float &aWidth) const
+float nsDeviceContextMac :: GetScrollBarWidth() const
 {
   // XXX Should we push this to widget library
-  aWidth = 240.0;
-  return NS_OK;
+  return 240.0;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarHeight(float &aHeight) const
+float nsDeviceContextMac :: GetScrollBarHeight() const
 {
   // XXX Should we push this to widget library
-  aHeight = 240.0;
-  return NS_OK;
+ return 240.0;
 }
 
 //------------------------------------------------------------------------
