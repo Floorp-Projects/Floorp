@@ -3760,65 +3760,124 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
                 // By the time we are here, the following is true:
                 // header = "REFRESH"
-                // result = "5; URL=http://uri" // note the URL attribute is optional, if it
-                //   is absent, the currently loaded url is used.
-                const PRUnichar *uriCStr = nsnull;
-                nsAutoString uriAttribStr;
-
+                // result = "5; URL=http://uri" // note the URL attribute is
+                // optional, if it is absent, the currently loaded url is used.
+                // 
+                // We need to handle the following strings.
+                //  - X is a set of digits
+                //  - URI is either a relative or absolute URI
+                //  - FOO is any text
+                //
+                // "" 
+                //  empty string. use the currently loaded URI
+                //  and refresh immediately.
+                // "X"
+                //  Refresh the currently loaded URI in X milliseconds.
+                // "X; URI"
+                //  Refresh using URI as the destination in X milliseconds.
+                // "X; URI; Blah"
+                //  Refresh using URI as the destination in X milliseconds,
+                //  ignoring "Blah"
+                // "URI"
+                //  Refresh immediately using URI as the destination.
+                // "URI; Blah"
+                //  Refresh immediately using URI as the destination,
+                //  ignoring "Blah"
+                // 
+                // Note that we need to remove any tokens wrapping the URI.
+                // These tokens currently include spaces, double and single
+                // quotes.
+ 
                 // first get our baseURI
-                rv = mWebShell->GetURL(&uriCStr);
+                const PRUnichar *loadedURI = nsnull;
+                rv = mWebShell->GetURL(&loadedURI);
                 if (NS_FAILED(rv)) return rv;
 
                 nsCOMPtr<nsIURI> baseURI;
-                rv = NS_NewURI(getter_AddRefs(baseURI), uriCStr, nsnull);
+                rv = NS_NewURI(getter_AddRefs(baseURI), loadedURI, nsnull);
                 if (NS_FAILED(rv)) return rv;
 
-                // next get any uri provided as an attribute in the tag.
-                PRInt32 loc = result.Find("url", PR_TRUE);
-                PRInt32 urlLoc = loc;
-                if (loc > -1) {
-                    // there is a url attribute, let's use it.
-                    loc += 3; 
-                    // go past the '=' sign
-                    loc = result.Find("=", PR_TRUE, loc);
-                    if (loc > -1) {
-                        loc++;
-                        result.Mid(uriAttribStr, loc, result.Length() - loc);
-                        uriAttribStr.CompressWhitespace();
-                        // remove any single or double quotes from the ends of the string
-                        uriAttribStr.Trim("\"'");
-                        uriCStr = uriAttribStr.GetUnicode();
+                PRInt32 millis = -1;
+                PRUnichar *uriAttrib = nsnull;
+    
+                PRInt32 semiColon = result.FindChar(';');
+                nsAutoString token;
+                if (semiColon > -1)
+                    result.Left(token, semiColon);
+                else
+                    token = result;
+    
+                PRBool done = PR_FALSE;
+                while (!done && !token.IsEmpty()) {
+                    token.CompressWhitespace();
+                    if (millis == -1 && nsString::IsDigit(token.First())) {
+                        PRInt32 i = 0;
+                        PRUnichar value = nsnull;
+                        while ((value = token[i++])) {
+                            if (!nsString::IsDigit(value)) {
+                                i = -1;
+                                break;
+                            }
+                        }
+            
+                        if (i > -1) {
+                            PRInt32 err;
+                            millis = token.ToInteger(&err) * 1000;
+                        } else {
+                            done = PR_TRUE;
+                        }
+                    } else {
+                        done = PR_TRUE;
                     }
-                }
+                    if (done) {
+                        PRInt32 loc = token.FindChar('=');
+                        if (loc > -1)
+                            token.Cut(0, loc+1);
+                        token.Trim(" \"'");
+                        uriAttrib = token.ToNewUnicode();
+                    } else {
+                        // Increment to the next token.
+                        if (semiColon > -1) {
+                            semiColon++;
+                            PRInt32 semiColon2 = result.FindChar(';', PR_FALSE, semiColon);
+                            if (semiColon2 == -1) semiColon2 = result.Length();
+                            result.Mid(token, semiColon, semiColon2 - semiColon);
+                            semiColon = semiColon2;
+                        } else {
+                            done = PR_TRUE;
+                        }
+                    }
+                } // end while
 
                 nsCOMPtr<nsIURI> uri;
-                rv = NS_NewURI(getter_AddRefs(uri), uriCStr, baseURI);
-                if (loc > -1 && NS_SUCCEEDED(rv)) {
-                    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-                    if (NS_SUCCEEDED(rv))
-                        rv = securityManager->CheckLoadURI(baseURI, uri, 
-			                                   PR_TRUE);
-                }
-                if (NS_FAILED(rv)) return rv;
-
-                // the units of the numeric value contained in the result are seconds.
-                // we need them in milliseconds before handing off to the refresh interface.
-
-                PRInt32 millis;
-                if (urlLoc > 1) {
-                    nsString2 seconds;
-                    result.Left(seconds, urlLoc-1);
-                    millis = seconds.ToInteger(&loc) * 1000;
+                if (!uriAttrib) {
+                    uri = baseURI;
                 } else {
-                    millis = result.ToInteger(&loc) * 1000;
+                    rv = NS_NewURI(getter_AddRefs(uri), uriAttrib, baseURI);
+                    nsAllocator::Free(uriAttrib);
                 }
 
-                nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mWebShell, &rv);
-                if (NS_FAILED(rv)) return rv;
-
-                rv = reefer->RefreshURI(uri, millis, PR_FALSE);
-                if (NS_FAILED(rv)) return rv;
+                if (NS_SUCCEEDED(rv)) {
+                    NS_WITH_SERVICE(nsIScriptSecurityManager,
+                                    securityManager, 
+                                    NS_SCRIPTSECURITYMANAGER_PROGID,
+                                    &rv);
+                    if (NS_SUCCEEDED(rv)) {
+                        rv = securityManager->CheckLoadURI(baseURI,
+                                                           uri,
+                                                           PR_TRUE);
+                        if (NS_SUCCEEDED(rv)) {
+                            nsCOMPtr<nsIRefreshURI> reefer = 
+                                do_QueryInterface(mWebShell);
+                            if (reefer) {
+                                if (millis == -1) millis = 0;
+                                rv = reefer->RefreshURI(uri, millis, 
+                                                        PR_FALSE);
+                                if (NS_FAILED(rv)) return rv;
+                            }
+                        }
+                    }
+                }
             } // END refresh
             else if (!header.Compare("set-cookie", PR_TRUE)) {
                 nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
