@@ -293,5 +293,7 @@ inline NS_METHOD nsTableCellFrame::GetMargin(nsMargin& aMargin)
   return NS_ERROR_NOT_INITIALIZED;
 }
 
-
 #endif
+
+
+
