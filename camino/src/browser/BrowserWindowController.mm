@@ -2241,10 +2241,12 @@ enum BWCOpenDest {
 
 - (void)createNewTab:(ENewTabContents)contents;
 {
+    // ensureBrowserVisible needs to be called prior to createNewTabItem or the new view won't draw
+    // if the bookmarks manager was visible.
+    [self ensureBrowserVisible:self];
+    
     BrowserTabViewItem* newTab  = [self createNewTabItem];
     BrowserWrapper*     newView = [newTab view];
-    
-    [self ensureBrowserVisible:self];
     
     BOOL loadHomepage = NO;
     if (contents == eNewTabHomepage)
@@ -2478,9 +2480,12 @@ enum BWCOpenDest {
 //
 - (BrowserTabViewItem*)openNewTab:(BOOL)aLoadInBG;
 {
+  // ensureBrowserVisible needs to be called prior to createNewTabItem or the new view won't draw
+  // if the bookmarks manager was visible.
+  [self ensureBrowserVisible:self];
+
   BrowserTabViewItem* newTab  = [self createNewTabItem];
 
-  [self ensureBrowserVisible:self];
   
   // hyatt originally made new tabs open on the far right and tabs opened from a content
   // link open to the right of the current tab. The idea was to keep the new tab
