@@ -407,7 +407,7 @@ sub build_url {
   my $name = $br->{buildname};
   $name =~ s/ /%20/g;
 
-  return "../showlog.cgi?exerpt=$tree/$br->{logfile}:$linenum";
+  return "../showlog.cgi?log=$tree/$br->{logfile}:$linenum";
 }
 
 sub file_url {
