@@ -107,6 +107,11 @@ protected:
                    nsISpaceManager* aSpaceManager,
                    nsLineBox* aLine, nscoord aDY);
 
+  void SlideFloaters(nsIPresContext& aPresContext,
+                     nsISpaceManager* aSpaceManager,
+                     nsLineBox* aLine, nscoord aDY,
+                     PRBool aUpdateSpaceManager);
+
   PRBool DrainOverflowLines();
 
   PRBool RemoveChild(nsLineBox* aLines, nsIFrame* aChild);
@@ -143,7 +148,8 @@ protected:
   virtual nsresult ReflowDirtyLines(nsBlockReflowState& aState);
 
   nsresult RecoverStateFrom(nsBlockReflowState& aState,
-                            nsLineBox* aLine);
+                            nsLineBox* aLine,
+                            nscoord aDeltaY);
 
   //----------------------------------------
   // Methods for line reflow
