@@ -3819,6 +3819,11 @@ nsWindow::IMEDestroyIC()
     return;
   }
 
+  // reset parent window for status window
+  if (xic->mInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
+    xic->ResetStatusWindow(this);
+  }
+
   if (mIMEShellWindow == this) {
     // shell widget is being destroyed
     // remove XIC from hashtable by mIMEShellWindow key

@@ -322,7 +322,6 @@ protected:
 
 #ifdef USE_XIM
 protected:
-  nsIMEGtkIC*	      IMEGetInputContext(PRBool aCreate);
   PRBool              mIMEEnable;
   static GdkFont      *gPreeditFontset;
   static GdkFont      *gStatusFontset;
@@ -343,6 +342,8 @@ protected:
   int                 mXICFontSize;
 
 public:
+  nsIMEGtkIC*	      IMEGetInputContext(PRBool aCreate);
+
   void		    ime_preedit_start();
   void 		    ime_preedit_draw(nsIMEGtkIC* aXIC);
   void		    ime_preedit_done();

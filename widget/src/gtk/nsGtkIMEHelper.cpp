@@ -395,9 +395,15 @@ nsIMEStatus::~nsIMEStatus() {
 
 void
 nsIMEStatus::SetFont(GdkFont *aFontset) {
-  if (aFontset->type == GDK_FONT_FONTSET) {
-    mFontset = (XFontSet) GDK_FONT_XFONT(aFontset);
-    resize(mText);
+  if (!mAttachedWindow) {
+    return;
+  }
+  nsIMEGtkIC *xic = mAttachedWindow->IMEGetInputContext(PR_FALSE);
+  if (xic && xic->mStatusText) {
+    if (aFontset->type == GDK_FONT_FONTSET) {
+      mFontset = (XFontSet) GDK_FONT_XFONT(aFontset);
+      resize(xic->mStatusText);
+    }
   }
 }
 
@@ -493,24 +499,32 @@ nsIMEStatus::RegisterClientFilter(Window aWindow) {
                          (XPointer)this);
 }
 
+// when referred nsWindow is destroyed, reset to 0
 void
-nsIMEStatus::setParentWindow(GdkWindow *aWindow) {
-  Display *display = GDK_DISPLAY();
-  GdkWindow *newParent = gdk_window_get_toplevel(aWindow);
+nsIMEStatus::resetParentWindow(nsWindow *aWindow) {
+    if (mAttachedWindow == aWindow) {
+      mAttachedWindow = 0;
+    }
+}
 
-  if (newParent != mParent) {
-    setText("");
+void
+nsIMEStatus::setParentWindow(nsWindow *aWindow) {
+  GdkWindow *gdkWindow = (GdkWindow*)aWindow->GetNativeData(NS_NATIVE_WINDOW);
+  GdkWindow *newParentGdk = gdk_window_get_toplevel(gdkWindow);
+  if (newParentGdk != mParent) {
     hide();
     if (mParent) {
       UnregisterClientFilter(GDK_WINDOW_XWINDOW(mParent));
     }
-    mParent = newParent;
+    // keep focused Window as mAttachedWindow
+    mAttachedWindow = aWindow;
+    mParent = newParentGdk;
     if (mIMStatusWindow) {
+      Display *display = GDK_DISPLAY();
       XSetTransientForHint(display, mIMStatusWindow,
-                           GDK_WINDOW_XWINDOW(mParent));
-      RegisterClientFilter(GDK_WINDOW_XWINDOW(mParent));
+                           GDK_WINDOW_XWINDOW(newParentGdk));
+      RegisterClientFilter(GDK_WINDOW_XWINDOW(newParentGdk));
     }
-    if (mText) show();
   }
 }
 
@@ -524,6 +538,7 @@ nsIMEStatus::client_filter(Display *aDisplay, Window aWindow,
     } else if (DestroyNotify == aEvent->type) {
       thiswindow->UnregisterClientFilter(aWindow);
       thiswindow->hide();
+      thiswindow->mAttachedWindow = 0;
     }
   }
   return False;
@@ -532,9 +547,18 @@ nsIMEStatus::client_filter(Display *aDisplay, Window aWindow,
 Bool
 nsIMEStatus::repaint_filter(Display *aDisplay, Window aWindow,
                             XEvent *aEvent, XPointer aClientData) {
-  nsIMEStatus *thiswindow = (nsIMEStatus*)aClientData;
   if (aEvent->xexpose.count != 0) return True;
-  if (thiswindow) thiswindow->setText(thiswindow->mText);
+  nsIMEStatus *thiswindow = (nsIMEStatus*)aClientData;
+  if (thiswindow && thiswindow->mAttachedWindow) {
+    nsIMEGtkIC *xic = thiswindow->mAttachedWindow->IMEGetInputContext(PR_FALSE);
+    if (xic && xic->mStatusText) {
+      if(nsCRT::strlen(xic->mStatusText) == 0) {
+        thiswindow->hide();
+      } else {
+        thiswindow->setText(xic->mStatusText);
+      }
+    }
+  }
   return True;
 }
 
@@ -556,7 +580,7 @@ void
 nsIMEStatus::CreateNative() {
   mGC = 0;
   mParent = 0;
-  mText = 0;
+  mAttachedWindow = 0;
 
   Display *display = GDK_DISPLAY();
 
@@ -655,7 +679,13 @@ nsIMEStatus::resize(const char *aString) {
 // public
 void
 nsIMEStatus::show() {
-  if (!mText || !nsCRT::strlen(mText)) {
+  if (!mAttachedWindow) {
+    return;
+  }
+
+  nsIMEGtkIC *xic = mAttachedWindow->IMEGetInputContext(PR_FALSE);
+
+  if (!xic || !xic->mStatusText || !nsCRT::strlen(xic->mStatusText)) {
     // don't map if text is ""
     return;
   }
@@ -752,10 +782,6 @@ nsIMEStatus::setText(const char *aText) {
   int y = fse->max_logical_extent.height - bottom_margin;
   XmbDrawString(display, mIMStatusWindow, mFontset, mGC,
                 0, y, aText, len);
-
-  if (mText && !nsCRT::strcmp(aText, mText)) return;
-  delete [] mText;
-  mText = nsCRT::strdup(aText);
   return;
 }
 
@@ -850,13 +876,6 @@ nsIMEGtkIC::preedit_draw_cbproc(XIC xic, XPointer client_data,
 }
 
 int
-nsIMEGtkIC::preedit_caret_cbproc(XIC xic, XPointer client_data,
-                                 XPointer call_data_p)
-{
-  return 0;
-}
-
-int
 nsIMEGtkIC::preedit_done_cbproc(XIC xic, XPointer client_data,
                                 XPointer call_data_p)
 {
@@ -870,22 +889,6 @@ nsIMEGtkIC::preedit_done_cbproc(XIC xic, XPointer client_data,
 }
 
 int
-nsIMEGtkIC::status_start_cbproc(XIC xic, XPointer client_data,
-                                XPointer call_data_p)
-{
-  nsIMEGtkIC *thisXIC = (nsIMEGtkIC*)client_data;
-  if (!thisXIC) return 0;
-  nsWindow *fwin = thisXIC->mFocusWindow;
-  if (!fwin) return 0;
-  if (!gStatus) return 0;
-
-  // focus_window is changed
-  gStatus->setText("");
-  gStatus->hide();
-  return 0;
-}
-
-int
 nsIMEGtkIC::status_draw_cbproc(XIC xic, XPointer client_data,
                                XPointer call_data_p)
 {
@@ -893,8 +896,20 @@ nsIMEGtkIC::status_draw_cbproc(XIC xic, XPointer client_data,
   if (!thisXIC) return 0;
   nsWindow *fwin = thisXIC->mFocusWindow;
   if (!fwin) return 0;
-
   if (!gStatus) return 0;
+  nsWindow *win = gStatus->mAttachedWindow;
+  if (!win) return 0;
+  nsIMEGtkIC *ic = win->IMEGetInputContext(PR_FALSE);
+  PRBool update = PR_TRUE;
+
+  // sometimes the focused IC != this IC happens when focus
+  // is changed. To avoid this case, check current IC of
+  // gStatus and thisXIC
+  if (thisXIC != ic) {
+    // do not update status, just store status string
+    // for the correct IC
+    update = PR_FALSE;
+  }
 
   XIMStatusDrawCallbackStruct *call_data =
     (XIMStatusDrawCallbackStruct *) call_data_p;
@@ -903,8 +918,11 @@ nsIMEGtkIC::status_draw_cbproc(XIC xic, XPointer client_data,
     XIMText *text = (XIMText *) call_data->data.text;
     if (!text || !text->length) {
       // turn conversion off
-      gStatus->setText("");
-      gStatus->hide();
+      thisXIC->SetStatusText("");
+      if (update) {
+        gStatus->setText("");
+        gStatus->hide();
+      }
     } else {
       char *statusStr = 0;
       if (text->encoding_is_wchar) {
@@ -920,20 +938,16 @@ nsIMEGtkIC::status_draw_cbproc(XIC xic, XPointer client_data,
         statusStr = text->string.multi_byte;
       }
       // turn conversion on
-      gStatus->setText(statusStr);
-      gStatus->show();
+      thisXIC->SetStatusText(statusStr);
+      if (update) {
+        gStatus->setText(statusStr);
+        gStatus->show();
+      }
       if (statusStr && text->encoding_is_wchar) {
         delete [] statusStr;
       }
     }
   }
-  return 0;
-}
-
-int
-nsIMEGtkIC::status_done_cbproc(XIC xic, XPointer client_data,
-                               XPointer call_data_p)
-{
   return 0;
 }
 
@@ -969,6 +983,12 @@ nsIMEGtkIC::SetFocusWindow(nsWindow * aFocusWindow)
   GdkWindow *gdkWindow = (GdkWindow*)aFocusWindow->GetNativeData(NS_NATIVE_WINDOW);
   if (!gdkWindow) return;
 
+  if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
+    if (gStatus) {
+      gStatus->setParentWindow(aFocusWindow);
+    }
+  }
+
   gdk_im_begin((GdkIC *) mIC, gdkWindow);
 
   if (mInputStyle & GDK_IM_PREEDIT_POSITION) {
@@ -978,9 +998,18 @@ nsIMEGtkIC::SetFocusWindow(nsWindow * aFocusWindow)
   }
 
   if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
-    if (gStatus) {
-      gStatus->setParentWindow(gdkWindow);
+    if (gStatus && mStatusText) {
+      gStatus->setText(mStatusText);
+      gStatus->show();
     }
+  }
+}
+
+void
+nsIMEGtkIC::ResetStatusWindow(nsWindow *aWindow)
+{
+  if (gStatus) {
+    gStatus->resetParentWindow(aWindow);
   }
 }
 
@@ -1027,10 +1056,15 @@ nsIMEGtkIC::~nsIMEGtkIC()
     gdk_ic_destroy((GdkIC *) mIC_backup);
   }
 
+  if (mStatusText) {
+    delete [] mStatusText;
+  }
+
   mIC = 0;
   mIC_backup = 0;
   mPreedit = 0;
   mFocusWindow = 0;
+  mStatusText = 0;
 }
 
 // xim.input_style:
@@ -1300,6 +1334,20 @@ nsIMEGtkIC::SetPreeditFont(GdkFont *aFontset) {
 }
 
 void
+nsIMEGtkIC::SetStatusText(char *aText) {
+  if (!aText) {
+    return;
+  }
+  if (mStatusText) {
+    if (!nsCRT::strcmp(aText, mStatusText)) {
+      return;
+    }
+    delete [] mStatusText;
+  }
+  mStatusText = nsCRT::strdup(aText);
+}
+
+void
 nsIMEGtkIC::SetStatusFont(GdkFont *aFontset) {
   if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
     if (!gStatus) {
@@ -1356,6 +1404,7 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
   mIC = 0;
   mIC_backup = 0;
   mPreedit = 0;
+  mStatusText = 0;
 
   GdkWindow *gdkWindow = (GdkWindow *) aFocusWindow->GetNativeData(NS_NATIVE_WINDOW);
   if (!gdkWindow) {
@@ -1431,15 +1480,12 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
 
     XIMCallback1 preedit_start_cb;
     XIMCallback1 preedit_draw_cb;
-    XIMCallback1 preedit_caret_cb;
     XIMCallback1 preedit_done_cb;
 
     preedit_start_cb.client_data = (char *)this;
     preedit_start_cb.callback = preedit_start_cbproc;
     preedit_draw_cb.client_data = (char *)this;
     preedit_draw_cb.callback = preedit_draw_cbproc;
-    preedit_caret_cb.client_data = (char *)this;
-    preedit_caret_cb.callback = preedit_caret_cbproc;
     preedit_done_cb.client_data = (char *)this;
     preedit_done_cb.callback = preedit_done_cbproc;
 
@@ -1447,7 +1493,6 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
       XVaCreateNestedList(0,
                           XNPreeditStartCallback, &preedit_start_cb,
                           XNPreeditDrawCallback, &preedit_draw_cb,
-                          XNPreeditCaretCallback, &preedit_caret_cb,
                           XNPreeditDoneCallback, &preedit_done_cb,
                           0);
     XSetICValues(xic,
@@ -1457,24 +1502,16 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
   }
 
   if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
-    XIMCallback1 status_start_cb;
     XIMCallback1 status_draw_cb;
-    XIMCallback1 status_done_cb;
 
     XVaNestedList status_attr;
 
-    status_start_cb.client_data = (char *)this;
-    status_start_cb.callback = status_start_cbproc;
     status_draw_cb.client_data = (char *)this;
     status_draw_cb.callback = status_draw_cbproc;
-    status_done_cb.client_data = (char *)this;
-    status_done_cb.callback = status_done_cbproc;
 
     status_attr =
       XVaCreateNestedList(0,
-                          XNStatusStartCallback, &status_start_cb,
                           XNStatusDrawCallback, &status_draw_cb,
-                          XNStatusDoneCallback, &status_done_cb,
                           0);
     XSetICValues(xic,
                  XNStatusAttributes, status_attr,
@@ -1485,8 +1522,7 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
       if (!gStatus) {
         gStatus = new nsIMEStatus();
       }
-      gStatus->setText("");
-      gStatus->setParentWindow(gdkWindow);
+      SetStatusText("");
     }
   }
   return;

@@ -69,16 +69,16 @@ class nsIMEPreedit {
                              nsTextRangeArray*);
 };
 
+class nsWindow;
+
 class nsIMEStatus {
  private:
   Window mIMStatusWindow;
   Window mIMStatusLabel;  
   XFontSet mFontset;
-  GdkWindow *mParent;
   int mWidth;
   int mHeight;
   GC mGC;
-  char *mText;
   void resize(const char *);
   void remove_decoration();
   void getAtoms();
@@ -98,9 +98,13 @@ class nsIMEStatus {
   void UnregisterClientFilter(Window);
   void RegisterClientFilter(Window);
   void setText(const char*);
-  void setParentWindow(GdkWindow*);
+  void setParentWindow(nsWindow*);
+  void resetParentWindow(nsWindow*);
   void show();
   void hide();
+
+  nsWindow *mAttachedWindow;
+  GdkWindow *mParent;
 };
 
 /* for XIM callback */
@@ -110,17 +114,12 @@ typedef struct {
   XIMProc1 callback;
 } XIMCallback1;
 
-class nsWindow;
-
 class nsIMEGtkIC {
  private:
   static int preedit_start_cbproc(XIC, XPointer, XPointer);
   static int preedit_draw_cbproc(XIC, XPointer, XPointer);
-  static int preedit_caret_cbproc(XIC, XPointer, XPointer);
   static int preedit_done_cbproc(XIC, XPointer, XPointer);
-  static int status_start_cbproc(XIC, XPointer, XPointer);
   static int status_draw_cbproc(XIC, XPointer, XPointer);
-  static int status_done_cbproc(XIC, XPointer, XPointer);
   static nsIMEStatus *gStatus;
   nsWindow *mClientWindow;
   nsWindow *mFocusWindow;
@@ -142,10 +141,13 @@ class nsIMEGtkIC {
 
   GdkIMStyle mInputStyle;
   GdkFont *GetPreeditFont();
+  char *mStatusText;
+  void SetStatusText(char*);
   void SetPreeditFont(GdkFont*);
   void SetStatusFont(GdkFont*);
   void SetPreeditSpotLocation(unsigned long, unsigned long);
   void SetPreeditArea(int, int, int, int);
+  void ResetStatusWindow(nsWindow * aWindow);
   PRBool IsPreeditComposing();
   PRInt32 ResetIC(PRUnichar **aUnichar, PRInt32 *aUnisize);
 };
