@@ -655,10 +655,10 @@ function serv_onRawData(e)
 
     e.server = this;
 
-    var sep = l.indexOf(":");
+    var sep = l.indexOf(" :");
 
     if (sep != -1) /* <trailing> param, if there is one */
-        e.meat = l.substr (sep + 1, l.length);
+        e.meat = l.substr (sep + 2, l.length);
     else
         e.meat = "";
 
@@ -667,8 +667,6 @@ function serv_onRawData(e)
     else
         e.params = l.split(" ");
     e.code = e.params[0].toUpperCase();
-    if (e.params[e.params.length - 1] == "")
-        e.params.length--;
 
     e.type = "parseddata";
     e.destObject = this;
