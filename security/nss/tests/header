@@ -471,6 +471,7 @@ tbx_dirs()
         elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris8_64" ] ; then
             TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
         elif [ -d "${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00" ] ; then
+#/export/nss_tbx_hpux11.00/logs/tinderbox/HP-UX-11.00/qa.lu
             TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00"
         elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris2.6" ] ; then
             TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris2.6"
@@ -826,6 +827,11 @@ eval_opts()
             LOCAL_MOZROOT=$1
             test_mozroot l
             ;;
+        -p)
+            shift
+            PORT=$1
+            export PORT
+            ;;
         -*)
             glob_usage "Error: Can't handle option $1"
             ;;
@@ -850,6 +856,10 @@ eval_opts()
     shift
   done
 
+  if [ -z "$PORT" -a "$O_TBX" = "ON" ] ; then
+      PORT=8444
+      export PORT
+  fi
   if [ -z "$BUILDDATE" ]         
   then
       BUILDDATE=`date +%m%d`
