@@ -96,18 +96,16 @@ class nsXULPrototypeAttribute
 {
 public:
     nsXULPrototypeAttribute()
-        : mNameSpaceID(kNameSpaceID_Unknown),
-          mEventHandler(nsnull)
+        : mEventHandler(nsnull)
     {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumAttributes);
     }
 
     ~nsXULPrototypeAttribute();
 
-    PRInt32           mNameSpaceID;
-    nsCOMPtr<nsIAtom> mName;
-    nsString          mValue;
-    void*             mEventHandler;
+    nsCOMPtr<nsINodeInfo> mNodeInfo;
+    nsString              mValue;
+    void*                 mEventHandler;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
     /**
@@ -118,19 +116,19 @@ public:
       event-handler-only name-to-function-pointer mapping.
 
       Let
-        minAttrSize  = sizeof(mNameSpaceID) + sizeof(mName) + sizeof(mValue)
-        mappingSize  = sizeof(mName) + sizeof(mEventHandler)
+        minAttrSize  = sizeof(mNodeInof) + sizeof(mValue)
+        mappingSize  = sizeof(mNodeInfo) + sizeof(mEventHandler)
         elemOverhead = nElems * sizeof(MappingPtr)
 
       Then
         nAttrs * minAttrSize + nEventHandlers * mappingSize + elemOverhead
-        > nAttrs * (minAttrSize + mappingSize - sizeof(mName))
+        > nAttrs * (minAttrSize + mappingSize - sizeof(mNodeInfo))
       which simplifies to
         nEventHandlers * mappingSize + elemOverhead
-        > nAttrs * (mappingSize - sizeof(mName))
+        > nAttrs * (mappingSize - sizeof(mNodeInfo))
       or
         nEventHandlers + (nElems * sizeof(MappingPtr)) / mappingSize
-        > nAttrs * (1 - sizeof(mName) / mappingSize)
+        > nAttrs * (1 - sizeof(mNodeInfo) / mappingSize)
 
       If nsCOMPtr and all other pointers are the same size, this reduces to
         nEventHandlers + nElems / 2 > nAttrs / 2

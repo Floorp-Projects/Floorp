@@ -5448,8 +5448,7 @@ nsXULDocument::AddAttributes(nsXULPrototypeElement* aPrototype, nsIContent* aEle
     for (PRInt32 i = 0; i < aPrototype->mNumAttributes; ++i) {
         nsXULPrototypeAttribute* protoattr = &(aPrototype->mAttributes[i]);
 
-        rv = aElement->SetAttribute(protoattr->mNameSpaceID,
-                                    protoattr->mName,
+        rv = aElement->SetAttribute(protoattr->mNodeInfo,
                                     protoattr->mValue,
                                     PR_FALSE);
         if (NS_FAILED(rv)) return rv;
@@ -5794,7 +5793,18 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
             rv = aOverlayNode->GetAttribute(nameSpaceID, attr, value);
             if (NS_FAILED(rv)) return rv;
 
-            rv = aTargetNode->SetAttribute(nameSpaceID, attr, value, PR_FALSE);
+            nsCOMPtr<nsINodeInfo> ni;
+            aTargetNode->GetNodeInfo(*getter_AddRefs(ni));
+
+            if (ni) {
+                nsCOMPtr<nsINodeInfoManager> nimgr;
+                ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
+
+                nimgr->GetNodeInfo(attr, prefix, nameSpaceID,
+                                   *getter_AddRefs(ni));
+            }
+
+            rv = aTargetNode->SetAttribute(ni, value, PR_FALSE);
             if (NS_FAILED(rv)) return rv;
 
             if (/* ignore namespace && */ attr.get() == kDataSourcesAtom) {

@@ -1280,8 +1280,10 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
         nsAutoString id; id.AssignWithConversion("$");
         id.AppendInt(PRInt32(aElement), 16);
 
-        attrs->mNameSpaceID = kNameSpaceID_None;
-        attrs->mName        = kIdAtom;
+        mNodeInfoManager->GetNodeInfo(kIdAtom, nsnull, kNameSpaceID_None,
+                                      *getter_AddRefs(attrs->mNodeInfo));
+        NS_ENSURE_TRUE(attrs->mNodeInfo, NS_ERROR_FAILURE);
+
         attrs->mValue       = id;
 
         ++attrs;
@@ -1293,6 +1295,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
 
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> name;
+        // XXX Don't drop the prefix!!!
         rv = ParseAttributeString(qname, *getter_AddRefs(name), nameSpaceID);
 
         if (NS_FAILED(rv)) {
@@ -1309,8 +1312,11 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
             continue;
         }
 
-        attrs->mNameSpaceID = nameSpaceID;
-        attrs->mName        = name;
+        // XXX Include the prefix!!!
+        mNodeInfoManager->GetNodeInfo(name, nsnull, nameSpaceID,
+                                      *getter_AddRefs(attrs->mNodeInfo));
+        NS_ENSURE_TRUE(attrs->mNodeInfo, NS_ERROR_FAILURE);
+
         attrs->mValue       = aNode.GetValueAt(i);
 
         nsRDFParserUtils::StripAndConvert(attrs->mValue);
