@@ -21,6 +21,7 @@
  */
 
 #include "msgCore.h"
+#include "nsImapCore.h" // for imap flags
 #include "nsMailDatabase.h"
 #include "nsDBFolderInfo.h"
 #include "nsMsgLocalFolderHdrs.h"
@@ -478,6 +479,7 @@ nsresult nsMailDatabase::GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds)
 
 NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create, nsIMsgOfflineImapOperation **offlineOp)
 {
+  PRBool newOp = PR_FALSE;
 	mdb_bool	hasOid;
 	mdbOid		rowObjectId;
   mdb_err   err;
@@ -498,9 +500,37 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
 		nsIMdbRow *offlineOpRow;
 		err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &offlineOpRow);
 
+    if (!offlineOpRow && create)
+    {
+  		err  = m_mdbStore->NewRowWithOid(GetEnv(), &rowObjectId, &offlineOpRow);
+      m_mdbAllOfflineOpsTable->AddRow(GetEnv(), offlineOpRow);
+      newOp = PR_TRUE;
+    }
+
 		if (err == NS_OK && offlineOpRow)
 		{
       *offlineOp = new nsMsgOfflineImapOperation(this, offlineOpRow);
+      if (*offlineOp)
+        (*offlineOp)->SetMessageKey(msgKey);
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+
+			GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
+			if (msgHdr)
+			{
+				imapMessageFlagsType imapFlags = kNoImapMsgFlag;
+        PRUint32 msgHdrFlags;
+        msgHdr->GetFlags(&msgHdrFlags);
+				if (msgHdrFlags & MSG_FLAG_READ)
+					imapFlags |= kImapMsgSeenFlag;
+				if (msgHdrFlags & MSG_FLAG_REPLIED)
+					imapFlags |= kImapMsgAnsweredFlag;
+				if (msgHdrFlags & MSG_FLAG_MARKED)
+					imapFlags |= kImapMsgFlaggedFlag;
+				if (msgHdrFlags & MSG_FLAG_FORWARDED)
+					imapFlags |= kImapMsgForwardedFlag;
+				(*offlineOp)->SetNewFlags(imapFlags);
+      }
+      NS_IF_ADDREF(*offlineOp);
 		}
     if (!hasOid && m_dbFolderInfo)
     {
@@ -515,16 +545,38 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
 
 NS_IMETHODIMP nsMailDatabase::EnumerateOfflineOps(nsISimpleEnumerator **enumerator)
 {
-  NS_ASSERTION(PR_FALSE, "overridden by nsMailDatabase");
+  NS_ASSERTION(PR_FALSE, "not impl yet");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP nsMailDatabase::ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds)
 {
+  NS_ENSURE_ARG(offlineOpIds);
   nsresult rv = GetAllOfflineOpsTable();
   NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+	nsIMdbTableRowCursor *rowCursor;
+	if (m_mdbAllOfflineOpsTable)
+	{
+		nsresult err = m_mdbAllOfflineOpsTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+		while (err == NS_OK && rowCursor)
+		{
+			mdbOid outOid;
+			mdb_pos	outPos;
+
+			err = rowCursor->NextRowOid(GetEnv(), &outOid, &outPos);
+			// is this right? Mork is returning a 0 id, but that should valid.
+			if (outPos < 0 || outOid.mOid_Id == (mdb_id) -1)	
+				break;
+			if (err == NS_OK)
+				offlineOpIds->Add(outOid.mOid_Id);
+		}
+    rv = (err == NS_OK) ? NS_OK : NS_ERROR_FAILURE;
+		rowCursor->Release();
+	}
+
+	offlineOpIds->QuickSort();
+	return rv;
 }
 
 NS_IMETHODIMP nsMailDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes)

@@ -29,7 +29,6 @@ NS_IMPL_ISUPPORTS1(nsMsgOfflineImapOperation, nsIMsgOfflineImapOperation)
 // property names for offine imap operation fields.
 #define PROP_OPERATION "op"
 #define PROP_OPERATION_FLAGS "opFlags"
-#define PROP_INITIAL_FLAGS "initFlags"
 #define PROP_NEW_FLAGS "newFlags"
 #define PROP_MESSAGE_KEY "msgKey"
 #define PROP_SRC_MESSAGE_KEY "srcMsgKey"
@@ -53,7 +52,6 @@ nsMsgOfflineImapOperation::nsMsgOfflineImapOperation(nsMsgDatabase *db, nsIMdbRo
   NS_ADDREF(m_mdb);
   m_mdbRow = row;
   m_newFlags = 0;
-  m_initialFlags = 0;
 
 }
 
@@ -110,20 +108,6 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::SetMessageKey(nsMsgKey aMessageKey)
   return m_mdb->SetUint32Property(m_mdbRow, PROP_MESSAGE_KEY, m_messageKey);
 }
 
-/* attribute imapMessageFlagsType initialFlags; */
-NS_IMETHODIMP nsMsgOfflineImapOperation::GetInitialFlags(imapMessageFlagsType *aInitialFlags)
-{
-  NS_ENSURE_ARG(aInitialFlags);
-  nsresult rv = m_mdb->GetUint32Property(m_mdbRow, PROP_INITIAL_FLAGS, (PRUint32 *) &m_initialFlags, 0);
-  *aInitialFlags = m_initialFlags;
-  return rv;
-}
-NS_IMETHODIMP nsMsgOfflineImapOperation::SetInitialFlags(imapMessageFlagsType aInitialFlags)
-{
-  m_initialFlags = aInitialFlags;
-  return m_mdb->SetUint32Property(m_mdbRow, PROP_INITIAL_FLAGS, m_initialFlags);
-  return NS_OK;
-}
 
 /* attribute imapMessageFlagsType flagOperation; */
 NS_IMETHODIMP nsMsgOfflineImapOperation::GetFlagOperation(imapMessageFlagsType *aFlagOperation)
@@ -135,7 +119,10 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetFlagOperation(imapMessageFlagsType *
 }
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetFlagOperation(imapMessageFlagsType aFlagOperation)
 {
-  m_operationFlags = aFlagOperation;
+  SetOperation(kFlagsChanged);
+  nsresult rv = SetNewFlags(aFlagOperation);
+  NS_ENSURE_SUCCESS(rv, rv);
+  m_operationFlags |= aFlagOperation;
   return m_mdb->SetUint32Property(m_mdbRow, PROP_OPERATION_FLAGS, m_operationFlags);
 }
 
@@ -186,6 +173,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::SetSourceFolderURI(const char * aSource
 
 NS_IMETHODIMP nsMsgOfflineImapOperation::AddMessageCopyOperation(const char *destinationBox)
 {
+  SetOperation(kMsgCopy);
   nsCAutoString newDest(destinationBox);
   nsresult rv = GetCopiesFromDB();
   NS_ENSURE_SUCCESS(rv, rv);

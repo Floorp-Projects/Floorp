@@ -299,7 +299,7 @@ nsresult nsDBFolderInfo::LoadMemberVariables()
 	GetInt32PropertyWithToken(m_imapUidValidityColumnToken, m_ImapUidValidity);
 	GetInt32PropertyWithToken(m_expiredMarkColumnToken, (PRInt32 &) m_expiredMark);
 	GetInt32PropertyWithToken(m_expungedBytesColumnToken, (PRInt32 &) m_expungedBytes);
-
+  GetInt32PropertyWithToken(m_highWaterMessageKeyColumnToken, (PRInt32 &) m_highWaterMessageKey);
 	PRInt32 version;
 
 	GetInt32PropertyWithToken(m_versionColumnToken, version);

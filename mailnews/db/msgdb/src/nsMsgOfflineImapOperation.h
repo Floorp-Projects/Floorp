@@ -45,7 +45,6 @@ protected:
 	nsMsgKey          m_messageKey; 	
 	nsMsgKey          m_sourceMessageKey; 	
 	PRUint32          m_operationFlags;	// what to do on sync
-  imapMessageFlagsType  m_initialFlags;
 	imapMessageFlagsType	m_newFlags;			// used for kFlagsChanged
 	
   // these are URI's, and are escaped. Thus, we can use a delimter like ' '

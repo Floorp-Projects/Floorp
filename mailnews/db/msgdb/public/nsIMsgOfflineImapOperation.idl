@@ -47,7 +47,6 @@ interface nsIMsgOfflineImapOperation : nsISupports
   attribute nsOfflineImapOperationType operation;
   void clearOperation(in nsOfflineImapOperationType operation);
   attribute nsMsgKey messageKey;
-  attribute imapMessageFlagsType initialFlags;
   attribute imapMessageFlagsType flagOperation;
   attribute imapMessageFlagsType newFlags; // for kFlagsChanged
   attribute string destinationFolderURI; // for move or copy
