@@ -80,7 +80,8 @@ build_number: FORCE
 ifdef MOZILLA_OFFICIAL
 	$(PERL) $(srcdir)/bdate.pl > $@
 else
-	@if [ ! -e build_number ]; then \
+	@if [ ! -f build_number ]; then \
+		$(RM) -rf $@ ; \
 		echo 0000000000 > $@ ; \
 	else if [ `cat build_number` != "0000000000" ]; then \
 		echo 0000000000 > $@ ; \
