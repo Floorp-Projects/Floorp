@@ -3956,6 +3956,8 @@ nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index)
 
 nsresult nsMsgDBView::ExpandAll()
 {
+  if (mTree)
+    mTree->BeginUpdateBatch();
   for (PRInt32 i = GetSize() - 1; i >= 0; i--) 
   {
     PRUint32 numExpanded;
@@ -3963,6 +3965,8 @@ nsresult nsMsgDBView::ExpandAll()
     if (flags & MSG_FLAG_ELIDED)
       ExpandByIndex(i, &numExpanded);
   }
+  if (mTree)
+    mTree->EndUpdateBatch();
   return NS_OK;
 }
 
