@@ -34,13 +34,17 @@ include $(topsrcdir)/config/rules.mk
 ifeq ($(OS_ARCH), SunOS)
 # Install Solaris patch checker scripts
 libs:: moz_patch_checker.dtksh
+	chmod a+x $<
 	$(INSTALL) $(IFLAGS2) $< $(DIST)/bin
 install:: moz_patch_checker.dtksh
+	chmod a+x $<
 	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(bindir)
 
 libs:: S02solaris_patchchecker.sh
+	chmod a+x $<
 	$(INSTALL) $(IFLAGS2) $< $(DIST)/bin/init.d
 install:: S02solaris_patchchecker.sh
+	chmod a+x $<
 	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(bindir)/init.d
 endif
 
