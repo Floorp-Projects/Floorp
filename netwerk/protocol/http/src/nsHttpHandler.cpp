@@ -257,8 +257,11 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     if (NS_FAILED(rv)) return rv;
 
     // Add the "Accept-Language" header
-    rv = request->SetHeader(nsHttp::Accept_Language, mAcceptLanguages.get());
-    if (NS_FAILED(rv)) return rv;
+    if (!mAcceptLanguages.IsEmpty()) {
+        // Add the "Accept-Language" header
+        rv = request->SetHeader(nsHttp::Accept_Language, mAcceptLanguages.get());
+        if (NS_FAILED(rv)) return rv;
+    }
 
     // Add the "Accept-Encoding" header
     rv = request->SetHeader(nsHttp::Accept_Encoding, mAcceptEncodings.get());
