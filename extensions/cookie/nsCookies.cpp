@@ -620,7 +620,7 @@ PUBLIC char *
 COOKIE_GetCookieFromHttp(char * address, char * firstAddress) {
 
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
-      cookie_isForeign(address, firstAddress)) {
+      (!firstAddress || cookie_isForeign(address, firstAddress))) {
 
     /*
      * WARNING!!! This is a different behavior than 4.x.  In 4.x we used this pref to
