@@ -25,6 +25,7 @@
 class nsISpaceManager;
 class nsBlockFrame;
 class nsLineLayout;
+struct nsStyleSpacing;
 
 // IID for the nsIHTMLFrame interface 
 // a6cf9069-15b3-11d2-932e-00805f8add32
@@ -122,8 +123,15 @@ enum nsCSSFrameType {
 
 //----------------------------------------------------------------------
 
+// XXX I think these should be NS_UNCONSTRAINEDSIZE instead, but that causes
+// problems for tables
+#if 0
+#define NS_INTRINSICSIZE  NS_UNCONSTRAINEDSIZE
+#define NS_AUTOHEIGHT     NS_UNCONSTRAINEDSIZE
+#else
 #define NS_INTRINSICSIZE  0
 #define NS_AUTOHEIGHT     0
+#endif
 
 /**
  * HTML version of the reflow state.
@@ -320,12 +328,21 @@ protected:
 
   void InitConstraints(nsIPresContext& aPresContext);
 
+  void CalculateLeftRightMargin(const nsHTMLReflowState* aContainingBlockRS,
+                                const nsStyleSpacing*    aSpacing,
+                                nscoord                  aComputedWidth,
+                                const nsMargin&          aBorderPadding,
+                                nscoord&                 aComputedLeftMargin,
+                                nscoord&                 aComputedRightMargin);
+
   static void ComputeHorizontalValue(const nsHTMLReflowState& aReflowState,
-                                     nsStyleUnit aUnit, nsStyleCoord& aCoord,
+                                     nsStyleUnit aUnit,
+                                     const nsStyleCoord& aCoord,
                                      nscoord& aResult);
 
   static void ComputeVerticalValue(const nsHTMLReflowState& aReflowState,
-                                   nsStyleUnit aUnit, nsStyleCoord& aCoord,
+                                   nsStyleUnit aUnit,
+                                   const nsStyleCoord& aCoord,
                                    nscoord& aResult);
 };
 
