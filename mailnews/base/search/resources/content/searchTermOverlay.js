@@ -195,8 +195,7 @@ function initializeBooleanWidgets()
         booleanAnd = firstTerm.booleanAnd;
 
     // target radio items have value="and" or value="or"
-    var targetValue = "or";
-    if (booleanAnd) targetValue = "and";
+    var targetValue = booleanAnd ? "and" : "or";
 
     var targetElement = gSearchBooleanRadiogroup.getElementsByAttribute("value", targetValue)[0];
 
@@ -204,10 +203,7 @@ function initializeBooleanWidgets()
 
     for (var i=1; i<gSearchTerms.length; i++) 
     {
-      if (booleanAnd)
-        document.getElementById('boolOp' + i).setAttribute('value', gBooleanAndText);
-      else
-        document.getElementById('boolOp' + i).setAttribute('value', gBooleanOrText);
+      document.getElementById('boolOp' + i).setAttribute('value', booleanAnd ? gBooleanAndText : gBooleanOrText);
     }
 }
 

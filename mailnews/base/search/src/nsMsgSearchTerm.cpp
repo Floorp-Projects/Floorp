@@ -1248,8 +1248,12 @@ nsresult nsMsgSearchTerm::MatchJunkStatus(const char *aJunkScore, PRBool *pResul
           junkStatus = nsIJunkMailPlugin::GOOD;
       }
   }
-  else
-    junkStatus = nsIJunkMailPlugin::UNCLASSIFIED;
+  else {
+    // the in UI, we only show "junk" or "not junk"
+    // unknown, or nsIJunkMailPlugin::UNCLASSIFIED is shown as not junk
+    // so for the search to work as expected, treat unknown as not junk
+    junkStatus = nsIJunkMailPlugin::GOOD;
+  }
 
   nsresult rv = NS_OK;
 	PRBool matches = (junkStatus == m_value.u.junkStatus);

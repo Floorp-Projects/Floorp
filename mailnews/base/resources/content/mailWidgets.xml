@@ -703,8 +703,6 @@
       </xul:menulist>
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
-          <xul:menuitem value="0" stringTag="unknown" class="search-value-menuitem"/>
-          <xul:menuitem value="1" stringTag="notjunk" class="search-value-menuitem"/>
           <xul:menuitem value="2" stringTag="junk" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
@@ -994,6 +992,7 @@
 
         // initialize the junk status picker
         this.initialize(document.getAnonymousNodes(this)[6], bundle);
+
         // initialize the has attachment status picker
         this.initialize(document.getAnonymousNodes(this)[7], bundle);
       ]]>
