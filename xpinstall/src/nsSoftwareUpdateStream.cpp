@@ -157,7 +157,7 @@ nsSoftwareUpdateListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream
         
         if (err == NS_OK) 
         {
-            if( PR_Write(mOutFileDesc, buffer, len) == -1 )
+            if ( PR_Write(mOutFileDesc, buffer, len) == -1 )
             {
                 /* Error */ 
                 return -1;

@@ -125,10 +125,9 @@ int RunInstallJS(char* installJSFile)
                 NS_RELEASE(scriptContextOwner);
             }
         }
+        aWindow->Close();
+	    NS_RELEASE(aWindow);
     }
-
-    aWindow->Release();
-    
     return 0;
 }
 

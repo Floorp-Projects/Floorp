@@ -62,7 +62,7 @@ interface Install
 
 
 	long AddSubcomponent(  in wstring regName, 
-						   in InstallVersion version, 
+						   in wstring version, 
 						   in wstring jarSource,         
 						   in InstallFolder folder, 
 						   in wstring targetName, 
@@ -84,7 +84,7 @@ interface Install
 	InstallFolder GetComponentFolder( in wstring regName, 
 						              in wstring subdirectory);
 
-	InstallFolder GetFolder(in InstallFolder targetFolder, 
+	InstallFolder GetFolder(in wstring targetFolder, 
 				            in wstring subdirectory);
 
 	long GetLastError();
@@ -109,8 +109,5 @@ interface Install
 					   in long flags );
 
 	long Uninstall( in wstring packageName);
-
-	long ExtractFileFromJar(in wstring jarfile, in wstring finalFile, out wstring tempFile);
-
 
 };

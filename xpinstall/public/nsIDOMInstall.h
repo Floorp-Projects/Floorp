@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 
 class nsIDOMInstallFolder;
-class nsIDOMInstallVersion;
 
 #define NS_IDOMINSTALL_IID \
  { 0x18c2f988, 0xb09f, 0x11d2, \
@@ -80,7 +79,7 @@ public:
 
   NS_IMETHOD    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn)=0;
 
-  NS_IMETHOD    AddSubcomponent(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn)=0;
+  NS_IMETHOD    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn)=0;
 
   NS_IMETHOD    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn)=0;
 
@@ -96,7 +95,7 @@ public:
 
   NS_IMETHOD    GetComponentFolder(const nsString& aRegName, const nsString& aSubdirectory, nsIDOMInstallFolder** aReturn)=0;
 
-  NS_IMETHOD    GetFolder(nsIDOMInstallFolder* aTargetFolder, const nsString& aSubdirectory, nsIDOMInstallFolder** aReturn)=0;
+  NS_IMETHOD    GetFolder(const nsString& aTargetFolder, const nsString& aSubdirectory, nsIDOMInstallFolder** aReturn)=0;
 
   NS_IMETHOD    GetLastError(PRInt32* aReturn)=0;
 
@@ -113,8 +112,6 @@ public:
   NS_IMETHOD    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32 aFlags, PRInt32* aReturn)=0;
 
   NS_IMETHOD    Uninstall(const nsString& aPackageName, PRInt32* aReturn)=0;
-
-  NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* aReturn)=0;
 };
 
 
@@ -123,7 +120,7 @@ public:
   NS_IMETHOD    GetRegPackageName(nsString& aRegPackageName);  \
   NS_IMETHOD    AbortInstall();  \
   NS_IMETHOD    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);  \
-  NS_IMETHOD    AddSubcomponent(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);  \
+  NS_IMETHOD    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);  \
   NS_IMETHOD    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn);  \
   NS_IMETHOD    DeleteFile(nsIDOMInstallFolder* aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);  \
   NS_IMETHOD    DiskSpaceAvailable(nsIDOMInstallFolder* aFolder, PRInt32* aReturn);  \
@@ -131,7 +128,7 @@ public:
   NS_IMETHOD    FinalizeInstall(PRInt32* aReturn);  \
   NS_IMETHOD    Gestalt(const nsString& aSelector, PRInt32* aReturn);  \
   NS_IMETHOD    GetComponentFolder(const nsString& aRegName, const nsString& aSubdirectory, nsIDOMInstallFolder** aReturn);  \
-  NS_IMETHOD    GetFolder(nsIDOMInstallFolder* aTargetFolder, const nsString& aSubdirectory, nsIDOMInstallFolder** aReturn);  \
+  NS_IMETHOD    GetFolder(const nsString& aTargetFolder, const nsString& aSubdirectory, nsIDOMInstallFolder** aReturn);  \
   NS_IMETHOD    GetLastError(PRInt32* aReturn);  \
   NS_IMETHOD    GetWinProfile(nsIDOMInstallFolder* aFolder, const nsString& aFile, PRInt32* aReturn);  \
   NS_IMETHOD    GetWinRegistry(PRInt32* aReturn);  \
@@ -140,7 +137,6 @@ public:
   NS_IMETHOD    SetPackageFolder(nsIDOMInstallFolder* aFolder);  \
   NS_IMETHOD    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32 aFlags, PRInt32* aReturn);  \
   NS_IMETHOD    Uninstall(const nsString& aPackageName, PRInt32* aReturn);  \
-  NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* aReturn);  \
 
 
 
@@ -149,7 +145,7 @@ public:
   NS_IMETHOD    GetRegPackageName(nsString& aRegPackageName) { return _to##GetRegPackageName(aRegPackageName); } \
   NS_IMETHOD    AbortInstall() { return _to##AbortInstall(); }  \
   NS_IMETHOD    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn) { return _to##AddDirectory(aRegName, aVersion, aJarSource, aFolder, aSubdir, aForceMode, aReturn); }  \
-  NS_IMETHOD    AddSubcomponent(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn) { return _to##AddSubcomponent(aRegName, aVersion, aJarSource, aFolder, aTargetName, aForceMode, aReturn); }  \
+  NS_IMETHOD    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn) { return _to##AddSubcomponent(aRegName, aVersion, aJarSource, aFolder, aTargetName, aForceMode, aReturn); }  \
   NS_IMETHOD    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn) { return _to##DeleteComponent(aRegistryName, aReturn); }  \
   NS_IMETHOD    DeleteFile(nsIDOMInstallFolder* aFolder, const nsString& aRelativeFileName, PRInt32* aReturn) { return _to##DeleteFile(aFolder, aRelativeFileName, aReturn); }  \
   NS_IMETHOD    DiskSpaceAvailable(nsIDOMInstallFolder* aFolder, PRInt32* aReturn) { return _to##DiskSpaceAvailable(aFolder, aReturn); }  \
@@ -157,7 +153,7 @@ public:
   NS_IMETHOD    FinalizeInstall(PRInt32* aReturn) { return _to##FinalizeInstall(aReturn); }  \
   NS_IMETHOD    Gestalt(const nsString& aSelector, PRInt32* aReturn) { return _to##Gestalt(aSelector, aReturn); }  \
   NS_IMETHOD    GetComponentFolder(const nsString& aRegName, const nsString& aSubdirectory, nsIDOMInstallFolder** aReturn) { return _to##GetComponentFolder(aRegName, aSubdirectory, aReturn); }  \
-  NS_IMETHOD    GetFolder(nsIDOMInstallFolder* aTargetFolder, const nsString& aSubdirectory, nsIDOMInstallFolder** aReturn) { return _to##GetFolder(aTargetFolder, aSubdirectory, aReturn); }  \
+  NS_IMETHOD    GetFolder(const nsString& aTargetFolder, const nsString& aSubdirectory, nsIDOMInstallFolder** aReturn) { return _to##GetFolder(aTargetFolder, aSubdirectory, aReturn); }  \
   NS_IMETHOD    GetLastError(PRInt32* aReturn) { return _to##GetLastError(aReturn); }  \
   NS_IMETHOD    GetWinProfile(nsIDOMInstallFolder* aFolder, const nsString& aFile, PRInt32* aReturn) { return _to##GetWinProfile(aFolder, aFile, aReturn); }  \
   NS_IMETHOD    GetWinRegistry(PRInt32* aReturn) { return _to##GetWinRegistry(aReturn); }  \
@@ -166,7 +162,6 @@ public:
   NS_IMETHOD    SetPackageFolder(nsIDOMInstallFolder* aFolder) { return _to##SetPackageFolder(aFolder); }  \
   NS_IMETHOD    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32 aFlags, PRInt32* aReturn) { return _to##StartInstall(aUserPackageName, aPackageName, aVersion, aFlags, aReturn); }  \
   NS_IMETHOD    Uninstall(const nsString& aPackageName, PRInt32* aReturn) { return _to##Uninstall(aPackageName, aReturn); }  \
-  NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* aReturn) { return _to##ExtractFileFromJar(aJarfile, aFinalFile, aTempFile, aReturn); }  \
 
 
 extern nsresult NS_InitInstallClass(nsIScriptContext *aContext, void **aPrototype);

@@ -8,14 +8,16 @@
 #include "nsIScriptObjectOwner.h"
 
 #include "nsVector.h"
+#include "nsHashtable.h"
 
 #include "nsIDOMInstall.h"
-#include "nsInstallObject.h"
 
 #include "nsSoftwareUpdate.h"
 
 #include "nsInstallFolder.h"
 #include "nsInstallVersion.h"
+
+#include "nsInstallObject.h"
 
 class nsInstall: public nsIScriptObjectOwner, public nsIDOMInstall
 {
@@ -35,7 +37,7 @@ class nsInstall: public nsIScriptObjectOwner, public nsIDOMInstall
 
         NS_IMETHOD    AbortInstall();
         NS_IMETHOD    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
-        NS_IMETHOD    AddSubcomponent(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
+        NS_IMETHOD    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
         NS_IMETHOD    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn);
         NS_IMETHOD    DeleteFile(nsIDOMInstallFolder* aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);
         NS_IMETHOD    DiskSpaceAvailable(nsIDOMInstallFolder* aFolder, PRInt32* aReturn);
@@ -43,7 +45,7 @@ class nsInstall: public nsIScriptObjectOwner, public nsIDOMInstall
         NS_IMETHOD    FinalizeInstall(PRInt32* aReturn);
         NS_IMETHOD    Gestalt(const nsString& aSelector, PRInt32* aReturn);
         NS_IMETHOD    GetComponentFolder(const nsString& aRegName, const nsString& aSubdirectory, nsIDOMInstallFolder** aFolder);
-        NS_IMETHOD    GetFolder(nsIDOMInstallFolder* aTargetFolder, const nsString& aSubdirectory, nsIDOMInstallFolder** aFolder);
+        NS_IMETHOD    GetFolder(const nsString& aTargetFolder, const nsString& aSubdirectory, nsIDOMInstallFolder** aFolder);
         NS_IMETHOD    GetLastError(PRInt32* aReturn);
         NS_IMETHOD    GetWinProfile(nsIDOMInstallFolder* aFolder, const nsString& aFile, PRInt32* aReturn);
         NS_IMETHOD    GetWinRegistry(PRInt32* aReturn);
@@ -54,9 +56,10 @@ class nsInstall: public nsIScriptObjectOwner, public nsIDOMInstall
         NS_IMETHOD    Uninstall(const nsString& aPackageName, PRInt32* aReturn);
         
 
-/*needs to be noscript*/
-        NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* aError);
 
+        PRInt32    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* aError);
+        void       AddPatch(nsHashKey *aKey, nsString* fileName);
+        void       GetPatch(nsHashKey *aKey, nsString* fileName);
 
     private:
         void *mScriptObject;
@@ -72,7 +75,9 @@ class nsInstall: public nsIScriptObjectOwner, public nsIDOMInstall
 
         nsInstallVersion*   mVersionInfo;        /* Component version info */
         nsInstallFolder*    mPackageFolder;
+        
         nsVector*           mInstalledFiles;        
+        nsHashtable*        mPatchList;
 
         PRInt32             mLastError;
 
@@ -89,8 +94,10 @@ class nsInstall: public nsIScriptObjectOwner, public nsIDOMInstall
 
         PRInt32     OpenJARFile(void);
         void        CloseJARFile(void);
+        PRInt32     ExtractDirEntries(const nsString& directory, nsVector *paths);
 
-        PRInt32      ScheduleForInstall(nsInstallObject* ob);
+        PRInt32     ScheduleForInstall(nsInstallObject* ob);
+        
 
 };
 
