@@ -69,6 +69,7 @@ public:
   nsLineLayout*        lineLayout;
   PRBool               atBreakPoint;
   const nsReflowState& reflowState;
+  PRBool               mNoWrap;
 
   // Constructor
   nsInlineState(nsIPresContext*      aPresContext,
@@ -112,6 +113,7 @@ public:
     ascents = ascentBuf;
     maxAscent = 0;
     maxDescent = 0;
+    mNoWrap = PR_FALSE;
   }
 
   void SetNumAscents(PRIntn aNumAscents) {
@@ -160,6 +162,47 @@ nsInlineFrame::nsInlineFrame(nsIContent* aContent, nsIFrame* aParent)
 
 nsInlineFrame::~nsInlineFrame()
 {
+}
+
+nsReflowStatus
+nsInlineFrame::ReflowChild(nsInlineState&       aState,
+                           nsIFrame*            aKidFrame,
+                           nsIPresContext*      aPresContext,
+                           nsReflowMetrics&     aDesiredSize,
+                           const nsReflowState& aReflowState)
+{
+  nsReflowStatus status;
+                                                  
+  NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
+#ifdef NS_DEBUG
+  nsFrameState  kidFrameState;
+
+  aKidFrame->GetFrameState(kidFrameState);
+  NS_ASSERTION(kidFrameState & NS_FRAME_IN_REFLOW, "kid frame is not in reflow");
+#endif
+  nsIInlineFrame* iif;
+  if (NS_OK == aKidFrame->QueryInterface(kIInlineFrameIID, (void**)&iif)) {
+    iif->ReflowInline(*aState.lineLayout, aDesiredSize, aReflowState, status);
+  }
+  else {
+    aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowState, status);
+  }
+
+  if (NS_FRAME_IS_COMPLETE(status)) {
+    nsIFrame* kidNextInFlow;
+     
+    aKidFrame->GetNextInFlow(kidNextInFlow);
+    if (nsnull != kidNextInFlow) {
+      // Remove all of the childs next-in-flows. Make sure that we ask
+      // the right parent to do the removal (it's possible that the
+      // parent is not this because we are executing pullup code)
+      nsIFrame* parent;
+       
+      aKidFrame->GetGeometricParent(parent);
+      DeleteNextInFlowsFor((nsContainerFrame*)parent, aKidFrame);
+    }
+  }
+  return status;
 }
 
 void nsInlineFrame::PlaceChild(nsIFrame*              aChild,
@@ -318,7 +361,7 @@ nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
     PRBool room = CanFitChild(aPresContext, aState, kidFrame);
     if (room) {
       kidFrame->WillReflow(*aPresContext);
-      status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+      status = ReflowChild(aState, kidFrame, aPresContext, kidSize, kidReflowState);
     }
 
     // Did the child fit?
@@ -516,7 +559,7 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
     nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize,
                                  eReflowReason_Resize);
     kidFrame->WillReflow(*aPresContext);
-    status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+    status = ReflowChild(aState, kidFrame, aPresContext, kidSize, kidReflowState);
 
     // Did the child fit?
     if (!DidFitChild(aPresContext, aState, kidFrame, kidSize)) {
@@ -777,7 +820,7 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
     nsReflowState   kidReflowState(kidFrame, aState.reflowState, aState.availSize,
                                    eReflowReason_Resize);
     kidFrame->WillReflow(*aPresContext);
-    nsReflowStatus  status = ReflowChild(kidFrame, aPresContext, kidSize,
+    nsReflowStatus  status = ReflowChild(aState, kidFrame, aPresContext, kidSize,
                                          kidReflowState);
 
     // Did the child fit?
@@ -879,6 +922,8 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Font);
   const nsStyleSpacing* styleSpacing = (const nsStyleSpacing*)
     mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  const nsStyleText* styleText = (const nsStyleText*)
+    mStyleContext->GetStyleData(eStyleStruct_Text);
 
   // Check for an overflow list
   if (eReflowReason_Incremental != aReflowState.reason) {
@@ -893,6 +938,7 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
                       aReflowState, aDesiredSize.maxElementSize);
   InitializeState(aPresContext, aReflowState, state);
   state.SetNumAscents(mContent->ChildCount() - mFirstContentOffset);
+  state.mNoWrap = NS_STYLE_WHITESPACE_NORMAL != styleText->mWhiteSpace;
 
   if (eReflowReason_Incremental == aReflowState.reason) {
     NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
@@ -928,7 +974,7 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
   
       // Reflow the child into the available space
       kidFrame->WillReflow(*aPresContext);
-      aStatus = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+      aStatus = ReflowChild(state, kidFrame, aPresContext, kidSize, kidReflowState);
   
       // Did the child fit?
       if (!DidFitChild(aPresContext, state, kidFrame, kidSize)) {
@@ -1078,6 +1124,11 @@ nsInlineFrame::ComputeFinalSize(nsIPresContext* aPresContext,
   if (0 != (ss & NS_SIZE_HAS_HEIGHT)) {
     aDesiredSize.height = aState.borderPadding.top + aState.mStyleSize.height +
       aState.borderPadding.bottom;
+  }
+
+  if ((nsnull != aDesiredSize.maxElementSize) && aState.mNoWrap) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 }
 
