@@ -62,7 +62,6 @@
                   name="dom.disable_window_status_change"
                   type="bool" onchange="gContentPane.annoyancesPrefChanged();"/>
       <preference id="font.language.group"            name="font.language.group"            type="wstring"  onchange="gContentPane._rebuildFonts();"/>
-      <preference id="font.default"                   name="font.default"                   type="string"   onchange="gContentPane._rebuildFonts();"/>
       <preference id="pref.advanced.images.disable_button.view_image"
                   name="pref.advanced.images.disable_button.view_image"
                   type="bool"/>

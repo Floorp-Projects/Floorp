@@ -52,7 +52,6 @@
   
     <preferences id="fontPreferences">
       <preference id="font.language.group"  name="font.language.group"  type="wstring"/>
-      <preference id="font.default"         name="font.default"         type="string"/>
       <preference id="browser.display.screen_resolution"
                   name="browser.display.screen_resolution"
                   type="int"/>
@@ -113,8 +112,7 @@
             <hbox align="center" pack="end">
               <label accesskey="&proportional.accesskey;" control="proportionalFont">&proportional.label;</label>
             </hbox>
-            <menulist id="proportionalFont" flex="1" style="width: 0px;" 
-                      preference="font.default">
+            <menulist id="defaultFontType" flex="1" style="width: 0px;">
               <menupopup>
                 <menuitem value="serif" label="&useDefaultFontSerif.label;"/>
                 <menuitem value="sans-serif" label="&useDefaultFontSansSerif.label;"/>
