@@ -58,10 +58,9 @@ nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
 
 nsDrawingSurfaceGTK :: ~nsDrawingSurfaceGTK()
 {
-#ifdef NS_GTK_REF
   if (mPixmap)
     ::gdk_pixmap_unref(mPixmap);
-#endif
+
   if (mImage)
     ::gdk_image_destroy(mImage);
 }
@@ -219,7 +218,6 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
   mIsOffscreen = PR_TRUE;
 
   mPixmap = ::gdk_pixmap_new(nsnull, mWidth, mHeight, mDepth);
-  g_print("pixmap is not going to be freed\n");
 
   return NS_OK;
 }
