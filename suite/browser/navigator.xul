@@ -59,15 +59,23 @@ Contributor(s): ______________________________________. -->
  </popup>
 </popupset>
 
-<!-- Context menu -->
+<!-- Context menu
+
+     This script is inline here because it's really a part of the .xul;
+     navigator.js doesn't care about this detail.
+-->
+<html:script>
+var contextTarget = null; // Content element to which context menu applies.
+</html:script>
+
 <popupset>
     <!-- This is the skeleton context menu.  It is populated and emptied
          dynamically, from the template (see below) via the oncreate/ondestroy
          handlers.
     -->
     <popup id="context"
-           oncreate="BrowserCreateContextMenu(this,event)"
-           ondestroy="BrowserDestroyContextMenu(this)">
+           oncreate="contextTarget=event.target;BrowserCreateContextMenu(this,event)"
+           ondestroy="contextTarget=null;BrowserDestroyContextMenu(this)">
     </popup>
 
     <!-- This is the context menu template used to populate the actual
@@ -75,6 +83,21 @@ Contributor(s): ______________________________________. -->
          based on the specific content element that is "context menu-ed."
     -->
     <popup id="context-template">
+        <!-- Open ==================================== -->
+        <menuitem id="template-openlink"
+                  value="&openLinkCmd.label;"
+                  accesskey=""
+                  oncommand="BrowserOpenLink(contextTarget);"/>
+        <menuitem id="template-editlink"
+                  value="&editLinkCmd.label;"
+                  accesskey=""
+                  oncommand="BrowserEditLink(contextTarget);"/>
+        <menuitem id="template-openframe"
+                  value="&openFrameCmd.label;"
+                  accesskey=""
+                  oncommand="BrowserOpenFrame(contextTarget);"/>
+        <menuseparator/>
+        <!-- Navigation ============================== -->
         <menuitem id="template-back"
                   value="&goBackCmd.label;"
                   accesskey="&goBackCmd.accesskey;"
@@ -85,17 +108,86 @@ Contributor(s): ______________________________________. -->
                   oncommand="BrowserForward()"/>
         <menuitem id="template-reload"
                   value="&reloadCmd.label;"
+                  accesskey=""
                   oncommand="BrowserReallyReload(0);"/>
         <menuitem id="template-stop"
                   value="&stopCmd.label;"
+                  accesskey=""
                   oncommand="BrowserStop();"/>
         <menuseparator/>
+        <!-- View ==================================== -->
         <menuitem id="template-viewsource"
-                  value="&pageSourceCmd.label;"
+                  value="&viewPageSourceCmd.label;"
+                  accesskey=""
                   oncommand="BrowserViewSource();"/>
+        <menuitem id="template-viewframesource"
+                  value="&viewFrameSourceCmd.label;"
+                  accesskey=""
+                  oncommand="BrowserViewFrameSource(contextTarget);"/>
         <menuitem id="template-viewinfo"
-                  value="&pageInfoCmd.label;"
+                  value="&viewPageInfoCmd.label;"
+                  accesskey=""
                   oncommand="BrowserViewInfo();"/>
+        <menuitem id="template-viewframeinfo"
+                  value="&viewFrameInfoCmd.label;"
+                  accesskey=""
+                  oncommand="BrowserViewFrameInfo(contextTarget);"/>
+        <menuitem id="template-viewimage"
+                  value="&viewImageCmd.label;"
+                  accesskey=""
+                  oncommand="BrowserViewImage(contextTarget);"/>
+        <menuseparator/>
+        <!-- Misc ==================================== -->
+		<menuitem id="template-bookmarkpage"
+                  value="&bookmarkPageCmd.label;"
+                  accesskey="&bookmarkPageCmd.accesskey;"
+                  oncommand="BrowserAddBookmark( window.content.location.href,
+                                                 window.content.document.title )"/>
+        <menuitem id="template-sendpage"
+                  value="&sendPageCmd.label;"
+                  accesskey="&sendPageCmd.accesskey;"
+                  oncommand="BrowserSendPage();"/>
+        <menuseparator/>
+        <!-- Save ==================================== -->
+        <menuitem id="template-savepage"
+                  value="&savePageCmd.label;"
+                  accesskey="&savePageCmd.accesskey;"
+                  oncommand="BrowserSavePage();"/>
+        <menuitem id="template-saveframe"
+                  value="&saveFrameCmd.label;"
+                  accesskey="&saveFrameCmd.accesskey;"
+                  oncommand="BrowserSaveFrame(contextTarget);"/>
+        <menuitem id="template-savelink"
+                  value="&saveLinkCmd.label;"
+                  accesskey="&saveLinkCmd.accesskey;"
+                  oncommand="BrowserSaveLink(contextTarget);"/>
+        <menuitem id="template-saveimage"
+                  value="&saveImageCmd.label;"
+                  accesskey="&saveImageCmd.accesskey;"
+                  oncommand="BrowserSaveImage(contextTarget);"/>
+        <menuitem id="template-savebgimage"
+                  value="&saveBGImageCmd.label;"
+                  accesskey="&saveBGImageCmd.accesskey;"
+                  oncommand="BrowserSaveBGImage(contextTarget);"/>
+        <menuseparator/>
+        <!-- Clipboard =============================== -->
+        <menuitem id="template-selectall"
+                  value="&selectAllCmd.label;"
+                  accesskey="&selectAllCmd.accesskey;"
+                  oncommand="BrowserSelectAll();"/>
+        <menuitem id="template-copy"
+                  value="&copyCmd.label;"
+                  accesskey="&copyCmd.accesskey;"
+                  oncommand="BrowserCopy();"/>
+        <menuitem id="template-copylink"
+                  value="&copyLinkCmd.label;"
+                  accesskey="&copyLinkCmd.accesskey;"
+                  oncommand="BrowserCopyLink(contextTarget);"/>
+        <menuitem id="template-copyimage"
+                  value="&copyImageCmd.label;"
+                  accesskey="&copyImageCmd.accesskey;"
+                  oncommand="BrowserCopyImage(contextTarget);"/>
+        <menuseparator/>
     </popup>
 </popupset>
 
