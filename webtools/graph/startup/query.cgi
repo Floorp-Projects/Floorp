@@ -51,6 +51,7 @@ sub show_graph {
 	$gnuplot = "/usr/bin/gnuplot";
   } elsif(-f "/usr/local/bin/gnuplot") {
 	$gnuplot = "/usr/local/bin/gnuplot";
+	$ENV{LD_LIBRARY_PATH} .= "/usr/local/lib";
   } else {
 	die "Can't find gnuplot.";
   }
