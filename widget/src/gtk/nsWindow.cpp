@@ -3362,7 +3362,10 @@ nsWindow::OnDragDropSignal        (GtkWidget        *aWidget,
 
   // clear any drag leave timer that might be pending so that it
   // doesn't get processed when we actually go out to get data.
-  mDragLeaveTimer = 0;
+  if (mDragLeaveTimer) {
+    mDragLeaveTimer->Cancel();
+    mDragLeaveTimer = 0;
+  }
 
   // set the last window to this 
   mLastDragMotionWindow = innerMostWidget;
