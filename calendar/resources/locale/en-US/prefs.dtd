@@ -85,7 +85,6 @@
 <!ENTITY pref.numberofweeks.6      "6 Weeks" >
 <!ENTITY pref.numberofpreviousweeks.label     "Number of Previous Weeks:" >
 
-
 <!ENTITY pref.hour.help.description    "Overwritten if events are outside these times" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
@@ -113,15 +112,15 @@
 <!ENTITY pref.hour.23    "23:00" >
 
 <!ENTITY pref.calendar.view.allview.caption "General">
-<!ENTITY pref.calendar.view.dayview.caption "Day View"> 
+<!ENTITY pref.calendar.view.dayview.caption "Day View">
 <!ENTITY pref.calendar.view.weekview.caption "Week View">
 <!ENTITY pref.calendar.view.weekanddayview.caption "Week and Day Views">
 <!ENTITY pref.calendar.view.monthview.caption "Month View">
 <!ENTITY pref.calendar.view.multiweekview.caption "Multiweek View">
 
-<!ENTITY pref.calendar.view.restrict.label "Restrict Views to "> 
-<!ENTITY pref.calendar.view.starttime.label "Start time:"> 
-<!ENTITY pref.calendar.view.endtime.label   "End time:"> 
+<!ENTITY pref.calendar.view.restrict.label "Restrict Views to ">
+<!ENTITY pref.calendar.view.starttime.label "Start time:">
+<!ENTITY pref.calendar.view.endtime.label   "End time:">
 
 <!ENTITY pref.categories.label   "Categories" >
 
@@ -137,7 +136,6 @@
 <!ENTITY pref.minutes.label "Minutes">
 
 <!-- Calendar Timezone preferences information -->
-
 <!ENTITY pref.calendar.timezone.label "My Timezone">
 <!ENTITY pref.calendar.timezone.caption "Timezone">
 <!ENTITY pref.defaultzone.label     "Default Timezone:" >

@@ -102,7 +102,7 @@
 <!ENTITY newevent.repeatdate.tooltip    "Choose a date to end on" >
 <!ENTITY newevent.recurend.warning    "Your repeat time ends before your end time.">
 <!ENTITY newevent.endtime.tooltip    "Choose an end time for this event" >
-<!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >        
+<!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Your event's repeat time cannot be before the event end time. Please fix this, or disable repeating." >
 <!ENTITY newevent.newevent.tab.label "Event" >
 <!ENTITY newevent.recurrence.tab.label "Recurrence" >
@@ -117,21 +117,21 @@
 <!ENTITY newevent.status.tentative.label   "Tentative" >
 <!ENTITY newevent.status.confirmed.label   "Confirmed" >
 
-<!ENTITY newevent.advanced.repeat.dayofmonth.label "On the xth day of the month">          
-<!ENTITY newevent.advanced.repeat.dayofweek.label "4th Tuesday of the month">          
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "On the xth day of the month">
+<!ENTITY newevent.advanced.repeat.dayofweek.label "4th Tuesday of the month">
 <!ENTITY newevent.advanced.repeat.lastdayofweek.label "Last Tuesday of the month">
 <!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">
 
-<!ENTITY newevent.advanced.repeat.onthe.label "On the ">                   
-<!ENTITY newevent.advanced.repeat.last.label "Last ">          
-<!ENTITY newevent.advanced.repeat.first.label "First"> 
-<!ENTITY newevent.advanced.repeat.second.label "Second"> 
-<!ENTITY newevent.advanced.repeat.third.label "Third"> 
-<!ENTITY newevent.advanced.repeat.fourth.label "Fourth"> 
-<!ENTITY newevent.advanced.repeat.first.extension "st"> 
-<!ENTITY newevent.advanced.repeat.second.extension "nd"> 
-<!ENTITY newevent.advanced.repeat.third.extension "rd"> 
-<!ENTITY newevent.advanced.repeat.nth.extension "th"> 
+<!ENTITY newevent.advanced.repeat.onthe.label "On the ">
+<!ENTITY newevent.advanced.repeat.last.label "Last ">
+<!ENTITY newevent.advanced.repeat.first.label "First">
+<!ENTITY newevent.advanced.repeat.second.label "Second">
+<!ENTITY newevent.advanced.repeat.third.label "Third">
+<!ENTITY newevent.advanced.repeat.fourth.label "Fourth">
+<!ENTITY newevent.advanced.repeat.first.extension "st">
+<!ENTITY newevent.advanced.repeat.second.extension "nd">
+<!ENTITY newevent.advanced.repeat.third.extension "rd">
+<!ENTITY newevent.advanced.repeat.nth.extension "th">
 
 <!ENTITY newevent.choosefile.label "Choose File">
 <!ENTITY newevent.removeselectedfile.label "Remove Selected File">
@@ -152,7 +152,7 @@
 <!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
 <!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
 
-<!ENTITY calendar.confirm.deleteevent "Are you sure you want to delete this event titled: " >        
+<!ENTITY calendar.confirm.deleteevent "Are you sure you want to delete this event titled: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Are you sure you want to delete this untitled event?" >
 
 <!ENTITY event.alarm.checkbox.label "Remind me again in " >
@@ -238,10 +238,10 @@
 
 <!ENTITY calendar.nextday.button.tooltip        "Next Day" >
 <!ENTITY calendar.prevday.button.tooltip        "Previous Day" >
-<!ENTITY calendar.nextweek.button.tooltip        "Next Week" >
-<!ENTITY calendar.prevweek.button.tooltip        "Previous Week" >
-<!ENTITY calendar.nextmonth.button.tooltip        "Next Month" >
-<!ENTITY calendar.prevmonth.button.tooltip        "Previous Month" >
+<!ENTITY calendar.nextweek.button.tooltip       "Next Week" >
+<!ENTITY calendar.prevweek.button.tooltip       "Previous Week" >
+<!ENTITY calendar.nextmonth.button.tooltip      "Next Month" >
+<!ENTITY calendar.prevmonth.button.tooltip      "Previous Month" >
 
 <!ENTITY calendar.newtask.button.label          "New Task" >
 <!ENTITY calendar.newevent.button.label         "New Event" >
@@ -266,9 +266,9 @@
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Events" >
-<!ENTITY calendar.search.tab.label			        "Search">
+<!ENTITY calendar.search.tab.label      "Search">
 
-<!ENTITY calendar.search.options.searchfor			" contain">
+<!ENTITY calendar.search.options.searchfor " contain">
 
 <!ENTITY calendar.menu.numberofweeks.label     "Number of Weeks" >
 <!ENTITY calendar.menu.numberofweeks.1      "1 Week" >
@@ -373,13 +373,12 @@
 
 
 <!-- Calendar Alarm Dialog -->
-
 <!ENTITY calendar.alarm.acknowledge.label           "Acknowledge" >
 <!ENTITY calendar.alarm.editevent.label             "Edit Event" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Acknowledge All Alarms" >
 <!ENTITY calendar.alarm.snooze.label                "Snooze" >
 
-  
+
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Add New Calendar">
 <!ENTITY calendar.server.dialog.title.edit          "Edit Calendar">
@@ -424,7 +423,6 @@
 <!ENTITY calendar.importdupes.autodiscard.label "Automatically discard duplicates">
 <!ENTITY calendar.importdupes.adddupes.label "Add duplicates">
 <!ENTITY calendar.importdupes.prompt.label "Prompt for each">
-
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Print A Calendar">
