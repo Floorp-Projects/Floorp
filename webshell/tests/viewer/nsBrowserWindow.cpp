@@ -1293,7 +1293,6 @@ nsBrowserWindow::GetBounds(nsRect& aBounds)
 NS_IMETHODIMP
 nsBrowserWindow::GetWindowBounds(nsRect& aBounds)
 {
-  //XXX This needs to be non-client bounds when it exists.
   mWindow->GetBounds(aBounds);
   return NS_OK;
 }
