@@ -18,7 +18,12 @@
 
 /* Original Code: Syd Logan (syd@netscape.com) 3/12/99 */
 
+#ifndef nsPrintdGTK_h___
+#define nsPrintdGTK_h___
+
 #include <limits.h>
+
+PR_BEGIN_EXTERN_C
 
 /* stolen from nsPostScriptObj.h. needs to be put somewhere else that
    both ps and gtk can see easily */
@@ -44,3 +49,8 @@ typedef struct unixprdata {
 	float bottom;		    /* bottom margin */
 } UnixPrData;
 
+void UnixPrDialog(UnixPrData *prData);
+
+PR_END_EXTERN_C
+
+#endif /* nsPrintdGTK_h___ */
