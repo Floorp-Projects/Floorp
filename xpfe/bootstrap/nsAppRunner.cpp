@@ -893,14 +893,6 @@ int main(int argc, char* argv[])
 	}  
   }
 
-#ifdef DETECT_WEBSHELL_LEAKS
-  unsigned long count;
-  count = NS_TotalWebShellsInExistence();
-  if (count)  {
-    printf("XXX WARNING: Number of webshells being leaked: %d \n", (int)count);
-  }
-#endif
-
   // at this point, all that is on the clipboard is a proxy object, but that object
   // won't be valid once the app goes away. As a result, we need to force the data
   // out of that proxy and properly onto the clipboard. This can't be done in the
@@ -915,6 +907,15 @@ int main(int argc, char* argv[])
 
   rv = NS_ShutdownXPCOM( NULL );
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+
+#ifdef DETECT_WEBSHELL_LEAKS
+  unsigned long count;
+  count = NS_TotalWebShellsInExistence();
+  if (count)  {
+    printf("XXX WARNING: Number of webshells being leaked: %d \n", (int)count);
+  }
+#endif
+
   return TranslateReturnValue( result );
 }
 
