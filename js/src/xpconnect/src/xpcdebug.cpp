@@ -33,8 +33,8 @@
  * file under either the NPL or the GPL.
  */
 
-#ifdef DEBUG
 #include "xpcprivate.h"
+#if defined(DEBUG_xpc_hacker) || defined(DEBUG)
 
 #ifdef TAB
 #undef TAB
