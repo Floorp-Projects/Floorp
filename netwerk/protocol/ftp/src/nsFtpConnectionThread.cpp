@@ -2318,8 +2318,6 @@ void
 nsFtpState::KillControlConnection() {
     mControlReadCarryOverBuf.Truncate(0);
 
-    DataConnectionComplete();
-    
     NS_IF_RELEASE(mDRequestForwarder);
 
     mIPv6Checked = PR_FALSE;
