@@ -1390,7 +1390,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 				// FIXME - THIS SHOULD WORK.  FIX EVENTS FOR XP CODE!!!!! (pav)
 				//    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
 
-				menuItem->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
+				menuItem->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
 				if(menuListener)
 				{
 					menuListener->MenuSelected(mevent);

@@ -48,28 +48,28 @@ static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
 
 nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIMenuItemIID)) {                                         
-    *aInstancePtr = (void*)(nsIMenuItem*)this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kIMenuListenerIID)) {                                      
-    *aInstancePtr = (void*)(nsIMenuListener*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                     
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;                     
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
   }
-  return NS_NOINTERFACE;                                                 
+
+  *aInstancePtr = NULL;
+
+  if (aIID.Equals(NS_GET_IID(nsIMenuItem))) {
+    *aInstancePtr = (void*)(nsIMenuItem*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIMenuListener))) {
+    *aInstancePtr = (void*)(nsIMenuListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
 }
 
 NS_IMPL_ADDREF(nsMenuItem)

@@ -2435,7 +2435,14 @@ then
   CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
   CXXFLAGS="$CXXFLAGS $MOZ_DEBUG_FLAGS"
   AC_DEFINE(DEBUG)
-  AC_DEFINE_UNQUOTED(DEBUG_`$WHOAMI`)
+  case "${target_os}" in
+    beos*)
+        AC_DEFINE_UNQUOTED(DEBUG_${USER})
+        ;;
+    *) 
+        AC_DEFINE_UNQUOTED(DEBUG_`$WHOAMI`)
+        ;;
+  esac
   AC_DEFINE(TRACING)
 else
   AC_DEFINE(NDEBUG)

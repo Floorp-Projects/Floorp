@@ -204,9 +204,11 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
   fprintf(stderr, "\07");  fflush(stderr);
 #elif defined(XP_BEOS)
   {
+#ifdef UNIX_CRASH_ON_ASSERT
 	char buf[2000];
 	sprintf(buf, "Break: at file %s, line %d", aFile, aLine);
 	DEBUGGER(buf);
+#endif
   }
 #else
   Abort(aFile, aLine);
@@ -264,9 +266,11 @@ NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
   PR_Abort();
 #elif defined(XP_BEOS)
   {
+#ifndef DEBUG_cls
 	char buf[2000];
 	sprintf(buf, "Abort: at file %s, line %d", aFile, aLine);
 	DEBUGGER(buf);
+#endif
   } 
 #endif
 }
