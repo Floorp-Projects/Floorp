@@ -86,11 +86,16 @@ typedef struct {
 #define ABSYNC_PROTOCOL          3
 #define ABSYNC_VERSION           "Demo"
 
-#define ABSYNC_PAGER_PHONE_TYPE   "Pager:"
-#define ABSYNC_HOME_PHONE_TYPE    "Home:"
-#define ABSYNC_WORK_PHONE_TYPE    "Work:"
-#define ABSYNC_FAX_PHONE_TYPE     "Fax:"
-#define ABSYNC_CELL_PHONE_TYPE    "Cellular:"
+#define ABSYNC_HOME_PHONE_TYPE    "Home"
+#define ABSYNC_WORK_PHONE_TYPE    "Work"
+#define ABSYNC_FAX_PHONE_TYPE     "Fax"
+#define ABSYNC_PAGER_PHONE_TYPE   "Pager"
+#define ABSYNC_CELL_PHONE_TYPE    "Cellular"
+#define ABSYNC_HOME_PHONE_ID      1
+#define ABSYNC_WORK_PHONE_ID      2
+#define ABSYNC_FAX_PHONE_ID       3
+#define ABSYNC_PAGER_PHONE_ID     4
+#define ABSYNC_CELL_PHONE_ID      5
 
 #define SYNC_ESCAPE_ADDUSER             "op%3Dadd"
 #define SYNC_ESCAPE_MOD                 "op%3Dmod"
@@ -215,6 +220,8 @@ private:
   nsresult        ProcessNewRecords();
   nsresult        ProcessDeletedRecords();
   nsresult        ProcessLastChange();
+  nsresult        ProcessPhoneNumbersTheyAreSpecial(nsIAbCard *aCard);
+  PRInt32         GetTypeOfPhoneNumber(nsString tagName);
 
   nsString        mLocale;                                // Charset of returned data!
   nsStringArray   *mDeletedRecordTags;                    // The deleted record tags from the server...
@@ -222,6 +229,9 @@ private:
 
   nsStringArray   *mNewRecordTags;                        // The new record tags from the server...
   nsStringArray   *mNewRecordValues;                      // The new record values from the server...
+
+  nsStringArray   *mPhoneTypes;                           // Phone number types...
+  nsStringArray   *mPhoneValues;                          // Phone number values...
 };
 
 #endif /* __nsIAbSync_h__ */

@@ -90,6 +90,9 @@ nsAbSync::InternalInit()
   mDeletedRecordValues = nsnull;
   mNewRecordTags = nsnull;
   mNewRecordValues = nsnull;
+
+  mPhoneTypes = nsnull;
+  mPhoneValues = nsnull;
 }
 
 nsresult
@@ -140,6 +143,11 @@ nsAbSync::InternalCleanup()
     delete mNewRecordTags;
   if (mNewRecordValues)
     delete mNewRecordValues;
+
+  if (mPhoneTypes)
+    delete mPhoneTypes;
+  if (mPhoneValues)
+    delete mPhoneValues;
 
   return NS_OK;
 }
@@ -442,6 +450,10 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
     goto EarlyExit;
   }
 
+  // Get the string arrays setup for the phone numbers...
+  mPhoneTypes = new nsStringArray();
+  mPhoneValues = new nsStringArray();
+
 #ifdef DEBUG_rhp
   printf("ABSYNC: PerformAbSync: Server = %s\n", mAbSyncServer);
 #endif
@@ -564,6 +576,9 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
 {
   PRUnichar     *aName = nsnull;
   nsString      tProtLine;
+  PRInt32       phoneCount = 1;
+  PRBool        foundPhone = PR_FALSE;
+  char          *phoneType;
 
   protLine = NS_ConvertASCIItoUCS2("");
 
@@ -586,7 +601,58 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
   {
     if (NS_SUCCEEDED(aCard->GetCardValue(mSchemaMappingList[i].abField, &aName)) && (aName) && (*aName))
     {
-      if (nsCRT::strncasecmp(mSchemaMappingList[i].serverField, "OMIT:", 5))
+      // These are unknown tags we are omitting...
+      if (!nsCRT::strncasecmp(mSchemaMappingList[i].serverField, "OMIT:", 5))
+        continue;
+
+      // If this is a phone number, we have to special case this because
+      // phone #'s are handled differently than all other tags...sigh!
+      //
+      foundPhone = PR_FALSE;
+      if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kWorkPhoneColumn, nsCRT::strlen(kWorkPhoneColumn)))
+      {
+        foundPhone = PR_TRUE;
+        phoneType = ABSYNC_WORK_PHONE_TYPE;
+      }
+      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kHomePhoneColumn, nsCRT::strlen(kHomePhoneColumn)))
+      {
+        foundPhone = PR_TRUE;
+        phoneType = ABSYNC_HOME_PHONE_TYPE;
+      }
+      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kFaxColumn, nsCRT::strlen(kFaxColumn)))
+      {
+        foundPhone = PR_TRUE;
+        phoneType = ABSYNC_FAX_PHONE_TYPE;
+      }
+      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kPagerColumn, nsCRT::strlen(kPagerColumn)))
+      {
+        foundPhone = PR_TRUE;
+        phoneType = ABSYNC_PAGER_PHONE_TYPE;
+      }
+      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kCellularColumn, nsCRT::strlen(kCellularColumn)))
+      {
+        foundPhone = PR_TRUE;
+        phoneType = ABSYNC_CELL_PHONE_TYPE;
+      }
+
+      if (foundPhone)
+      {
+        char *pVal = PR_smprintf("phone%d", phoneCount);
+        if (pVal)
+        {
+          tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
+          tProtLine.Append(NS_ConvertASCIItoUCS2(pVal));
+          tProtLine.Append(NS_ConvertASCIItoUCS2("="));
+          tProtLine.Append(aName);
+          tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
+          tProtLine.Append(NS_ConvertASCIItoUCS2(pVal));
+          tProtLine.Append(NS_ConvertASCIItoUCS2("_type="));
+          tProtLine.Append(NS_ConvertASCIItoUCS2(phoneType));
+          PR_FREEIF(pVal);
+          phoneCount++;
+        }
+      }
+      else    // Good ole' normal tag...
       {
         tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
         tProtLine.Append(NS_ConvertASCIItoUCS2(mSchemaMappingList[i].serverField));
@@ -2004,40 +2070,109 @@ EarlyExit:
   return rv;
 }
 
+PRInt32 
+nsAbSync::GetTypeOfPhoneNumber(nsString tagName)
+{  
+  nsString compValue = tagName;
+  compValue.Append(NS_ConvertASCIItoUCS2("_type"));
+
+  for (PRInt32 i=0; i<mPhoneTypes->Count(); i++)
+  {
+    nsString *val = mPhoneTypes->StringAt(i);
+    if ( (!val) || val->IsEmpty() )
+      continue;
+
+    if (!compValue.CompareWithConversion(ABSYNC_HOME_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_HOME_PHONE_TYPE)))
+      return ABSYNC_HOME_PHONE_ID;
+    else if (!compValue.CompareWithConversion(ABSYNC_WORK_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_WORK_PHONE_TYPE)))
+      return ABSYNC_WORK_PHONE_ID;
+    else if (!compValue.CompareWithConversion(ABSYNC_FAX_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_FAX_PHONE_TYPE)))
+      return ABSYNC_FAX_PHONE_ID;
+    else if (!compValue.CompareWithConversion(ABSYNC_PAGER_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_PAGER_PHONE_TYPE)))
+      return ABSYNC_PAGER_PHONE_ID;
+    else if (!compValue.CompareWithConversion(ABSYNC_CELL_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_CELL_PHONE_TYPE)))
+      return ABSYNC_CELL_PHONE_ID;
+  }
+
+  // If we get here...drop back to the defaults...why, oh why is it this way?
+  //
+  if (!tagName.CompareWithConversion("phone1"))
+    return ABSYNC_HOME_PHONE_ID;
+  else if (!tagName.CompareWithConversion("phone2"))
+    return ABSYNC_WORK_PHONE_ID;
+  else if (!tagName.CompareWithConversion("phone3"))
+    return ABSYNC_FAX_PHONE_ID;
+  else if (!tagName.CompareWithConversion("phone4"))
+    return ABSYNC_PAGER_PHONE_ID;
+  else if (!tagName.CompareWithConversion("phone5"))
+    return ABSYNC_CELL_PHONE_ID;
+
+  return 0;
+}
+
+nsresult
+nsAbSync::ProcessPhoneNumbersTheyAreSpecial(nsIAbCard *aCard)
+{
+  PRInt32   i;
+  nsString  tagName;
+  nsString  phoneNumber;
+  PRInt32   loc;
+
+  for (i=0; i<mPhoneValues->Count(); i++)
+  {
+    nsString *val = mPhoneValues->StringAt(i);
+    if ( (!val) || val->IsEmpty() )
+      continue;
+
+    tagName.Assign(*val);
+    phoneNumber.Assign(*val);
+    loc = tagName.FindChar('=');
+    if (loc == -1)
+      continue;
+
+    tagName.Cut(loc, (tagName.Length() - loc));
+    phoneNumber.Cut(0, loc);
+
+    PRInt32 pType = GetTypeOfPhoneNumber(tagName);
+    if (pType == 0)
+      continue;
+    
+    if (pType == ABSYNC_PAGER_PHONE_ID)
+      aCard->SetPagerNumber(phoneNumber.GetUnicode());
+    else if (pType == ABSYNC_HOME_PHONE_ID)
+      aCard->SetHomePhone(phoneNumber.GetUnicode());
+    else if (pType == ABSYNC_WORK_PHONE_ID)
+      aCard->SetWorkPhone(phoneNumber.GetUnicode());
+    else if (pType == ABSYNC_FAX_PHONE_ID)
+      aCard->SetFaxNumber(phoneNumber.GetUnicode());
+    else if (pType == ABSYNC_CELL_PHONE_ID)
+      aCard->SetCellularNumber(phoneNumber.GetUnicode());
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTagValue)
 {
   nsresult  rv = NS_OK;
 
   // 
-  // RICHIE_TODO: First, we are going to special case the phone entries because they seem to
-  // 
-/**
-#define ABSYNC_PAGER_PHONE_TYPE   "Pager:"
-#define ABSYNC_HOME_PHONE_TYPE    "Home:"
-#define ABSYNC_WORK_PHONE_TYPE    "Work:"
-#define ABSYNC_FAX_PHONE_TYPE     "Fax:"
-#define ABSYNC_CELL_PHONE_TYPE    "Cellular:"
+  // First, we are going to special case the phone entries because they seem to
+  // be handled differently than all other tags. All other tags are unique with no specifiers
+  // as to their type...this is not the case with phone numbers.
+  //
+  PRUnichar aChar = '_';
 
-  if (!aTagName->CompareWithConversion(kServerWorkPhoneColumn))
-    aCard->SetWorkPhone(aTagValue->GetUnicode());
+  if (!aTagName->CompareWithConversion("phone", 5))
+  {
+    if (aTagName->FindChar(aChar) != -1)
+      mPhoneTypes->AppendString(NS_ConvertASCIItoUCS2(aTagValue->ToNewCString()));
+    else
+      mPhoneValues->AppendString(NS_ConvertASCIItoUCS2(aTagValue->ToNewCString()));
 
-  if (!aTagName->CompareWithConversion(kServerHomePhoneColumn))
-    aCard->SetHomePhone(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerFaxColumn))
-    aCard->SetFaxNumber(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerPagerColumn))
-    aCard->SetPagerNumber(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerCellularColumn))
-    aCard->SetCellularNumber(aTagValue->GetUnicode());
-
-
-******************************/
-
-
+    return NS_OK;
+  }
 
   // Ok, we need to figure out what the tag name from the server maps to and assign
   // this value the new nsIAbCard

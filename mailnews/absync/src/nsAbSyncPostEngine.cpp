@@ -299,58 +299,6 @@ nsAbSyncPostEngine::Initialize(nsOutputFileStream *fOut,
   return NS_OK;
 }
 
-nsresult
-nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, nsPostCompletionCallback  cb, 
-                                   void *tagData, const char *postData)
-{
-  nsresult rv;
-  nsCOMPtr<nsIInputStream> postStream;
-
-  if (!postData)
-    return NS_ERROR_INVALID_ARG;
-
-  nsCOMPtr<nsIChannel> channel;
-  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull), NS_ERROR_FAILURE);
-  
-/***
-  // RICHIE
-  // Tag the post stream onto the channel...but never seemed to work...so putting it
-  // directly on the URL spec
-  //
-
-  // Mark the channel as being a document URI...
-  nsLoadFlags loadAttribs = 0;
-  channel->GetLoadAttributes(&loadAttribs);
-  loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
-  channel->SetLoadAttributes(loadAttribs);
-
-  nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
-  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
-  if (!httpChannel)
-    return NS_ERROR_FAILURE;
-
-  httpChannel->SetRequestMethod(method);
-  if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postStream), PR_FALSE, postData, 0)))
-  {
-    httpChannel->SetUploadStream(postStream);
-  }
-
-*****/
-
-  // let's try uri dispatching...
-  nsCOMPtr<nsIURILoader> pURILoader (do_GetService(NS_URI_LOADER_PROGID));
-  NS_ENSURE_TRUE(pURILoader, NS_ERROR_FAILURE);
-  nsCOMPtr<nsISupports> openContext;
-  nsCOMPtr<nsISupports> cntListener (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, this)));
-  rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, nsnull, cntListener);
-
-  mURL = dont_QueryInterface(aURL);
-  mCallback = cb;
-  mTagData = tagData;
-  NS_ADDREF(this);
-  return NS_OK;
-}
-
 /* void AddSyncListener (in nsIAbSyncPostListener aListener); */
 NS_IMETHODIMP nsAbSyncPostEngine::AddPostListener(nsIAbSyncPostListener *aListener)
 {
@@ -505,7 +453,6 @@ NS_IMETHODIMP nsAbSyncPostEngine::GetCurrentState(PRInt32 *_retval)
 // This is the implementation of the actual post driver. 
 //
 ////////////////////////////////////////////////////////////////////////////////////////
-
 NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort, const char *aProtocolRequest, PRInt32 aTransactionID)
 {
   nsresult  rv;
@@ -519,26 +466,62 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
   mProtocolResponse = NS_ConvertASCIItoUCS2("");
   mTotalWritten = 0;
 
+  char    *postHeader = "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s";
   if (aProtocolRequest)
     mMessageSize = nsCRT::strlen(aProtocolRequest);
   else
     mMessageSize = 0;
-  char *tSpec = PR_smprintf("%s?%s", aSpec, aProtocolRequest);
-  if (!tSpec)
-    return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the string */
+
+  char *tCommand = PR_smprintf(postHeader, mMessageSize, aProtocolRequest);
+  if (!tCommand)
+    return NS_ERROR_OUT_OF_MEMORY; // we couldn't allocate the string 
 
   printf("POST: %s\n", aProtocolRequest);
 
-  rv = nsEngineNewURI(&workURI, tSpec, nsnull);
+  rv = nsEngineNewURI(&workURI, aSpec, nsnull);
   if (NS_FAILED(rv) || (!workURI))
     return NS_ERROR_FAILURE;
 
-  PR_FREEIF(tSpec);
   if (aPort > 0)
     workURI->SetPort(aPort);
 
-  rv = FireURLRequest(workURI, PostDoneCallback, this, aProtocolRequest);
+  rv = FireURLRequest(workURI, PostDoneCallback, this, tCommand);
 
+  PR_FREEIF(tCommand);
   mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncPostRunning;
   return rv;
+}
+
+nsresult
+nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, nsPostCompletionCallback  cb, 
+                                   void *tagData, const char *postData)
+{
+  nsresult rv;
+  nsCOMPtr<nsIInputStream> postStream;
+
+  if (!postData)
+    return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<nsIChannel> channel;
+  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull), NS_ERROR_FAILURE);
+
+  // Tag the post stream onto the channel...but never seemed to work...so putting it
+  // directly on the URL spec
+  //
+  nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
+  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
+  if (!httpChannel)
+    return NS_ERROR_FAILURE;
+
+  httpChannel->SetRequestMethod(method);
+  if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postStream), PR_FALSE, postData, 0)))
+    httpChannel->SetUploadStream(postStream);
+
+  httpChannel->AsyncRead(this, nsnull);
+
+  mURL = dont_QueryInterface(aURL);
+  mCallback = cb;
+  mTagData = tagData;
+  NS_ADDREF(this);
+  return NS_OK;
 }

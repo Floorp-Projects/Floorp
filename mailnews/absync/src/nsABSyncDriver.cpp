@@ -28,7 +28,7 @@
 #include "prmem.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
-// NS_IMPL_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
+//NS_IMPL_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
 
 static NS_DEFINE_CID(kAbSync, NS_ABSYNC_SERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
