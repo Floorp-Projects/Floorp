@@ -374,8 +374,7 @@ nsMenuPopupFrame::GetLayoutFlags(PRUint32& aFlags)
   aFlags = NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_VISIBILITY;
 }
 
-PRBool ParentIsScrollableView(nsIView* aStartView);
-PRBool ParentIsScrollableView(nsIView* aStartView)
+static PRBool ParentIsScrollableView(nsIView* aStartView)
 {
   nsIView* scrollportView = aStartView->GetParent();
   return scrollportView != nsnull && scrollportView->ToScrollableView() != nsnull;
@@ -822,7 +821,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   nsIView* containingView = nsnull;
   nsPoint offset;
   nsMargin margin;
-  aFrame->GetOffsetFromView(offset, &containingView);
+  containingView = aFrame->GetClosestView(&offset);
   if (!containingView)
     return NS_OK;
 
@@ -999,11 +998,14 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   // Use containingView instead of parentView, to account for the scrollarrows
   // that a parent menu might have.
 
-  nsIWidget* parentViewWidget = containingView->GetNearestWidget(nsnull);
+  nsPoint parentViewWidgetOffset;
+  nsIWidget* parentViewWidget = containingView->GetNearestWidget(&parentViewWidgetOffset);
   nsRect localParentWidgetRect(0,0,0,0), screenParentWidgetRect;
   parentViewWidget->WidgetToScreen ( localParentWidgetRect, screenParentWidgetRect );
-  PRInt32 screenViewLocX = NSIntPixelsToTwips(screenParentWidgetRect.x,p2t) + (xpos - parentPos.x);
-  PRInt32 screenViewLocY = NSIntPixelsToTwips(screenParentWidgetRect.y,p2t) + (ypos - parentPos.y);
+  PRInt32 screenViewLocX = NSIntPixelsToTwips(screenParentWidgetRect.x,p2t) +
+    (xpos - parentPos.x) + parentViewWidgetOffset.x;
+  PRInt32 screenViewLocY = NSIntPixelsToTwips(screenParentWidgetRect.y,p2t) +
+    (ypos - parentPos.y) + parentViewWidgetOffset.y;
 
   if ( anchoredToParent ) {
     
