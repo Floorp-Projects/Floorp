@@ -94,7 +94,7 @@ public class TestBrowser extends JPanel {
 	    BrowserControlFactory.setAppData(System.getProperty("BROWSER_BIN_DIR"));
         } catch (Exception e) {}
 
-        JFrame frame = new JFrame("JDIC API Demo - Browser");
+        JFrame frame = new JFrame("Webclient API Demo - Browser");
 
         Container contentPane = frame.getContentPane();
 
@@ -192,7 +192,7 @@ public class TestBrowser extends JPanel {
         jAddrToolBarPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 2, 0));
 
         statusBar.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
-        statusBar.lblDesc.setText("JDIC API Demo - Browser");
+        statusBar.lblDesc.setText("Webclient API Demo - Browser");
 	
         try {
             webBrowser = BrowserControlFactory.newBrowserControl();
