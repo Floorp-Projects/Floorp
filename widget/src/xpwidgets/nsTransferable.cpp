@@ -263,6 +263,8 @@ NS_IMETHODIMP nsTransferable::GetConverter(nsIFormatConverter ** aConverter)
   if ( mFormatConv ) {
     *aConverter = mFormatConv;
     NS_ADDREF(*aConverter);
+  } else {
+    *aConverter = nsnull;
   }
   return NS_OK;
 }
