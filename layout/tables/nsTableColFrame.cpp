@@ -25,12 +25,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsCSSRendering.h"
 
-#ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
-#else
-static const PRBool gsDebug = PR_FALSE;
-#endif
-
 nsTableColFrame::nsTableColFrame()
   : nsFrame(), mIsAnonymous(PR_FALSE), mProportion(WIDTH_NOT_SET)
 {
@@ -49,8 +43,6 @@ NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
                                  const nsRect& aDirtyRect,
                                  nsFramePaintLayer aWhichLayer)
 {
-  if (gsDebug==PR_TRUE) printf("nsTableColFrame::Paint\n");
-
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     nsCompatibility mode;
     aPresContext.GetCompatibilityMode(&mode);

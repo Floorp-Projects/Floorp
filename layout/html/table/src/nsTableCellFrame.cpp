@@ -42,15 +42,7 @@
 NS_DEF_PTR(nsIStyleContext);
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 
-#ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
-static PRBool gsDebugNT = PR_FALSE;
-//#define   NOISY_STYLE
-//#define NOISY_FLOW
-#else
-static const PRBool gsDebug = PR_FALSE;
-static const PRBool gsDebugNT = PR_FALSE;
-#endif
+static PRBool gsDebugReflow = PR_FALSE;
 
 NS_IMETHODIMP
 nsTableCellFrame::Init(nsIPresContext&  aPresContext,
@@ -161,7 +153,6 @@ nsresult nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
                             (void **)&cellContent);  // cellContent: REFCNT++
   if (cellContent && NS_SUCCEEDED(rv)) { // it's a table cell
     cellContent->SetColIndex(aColIndex);
-    if (gsDebug) printf("%p : set cell content %p to col index = %d\n", this, cellContent, aColIndex);
     NS_RELEASE(cellContent);
   }
   return rv;
@@ -506,9 +497,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
 {
-#ifdef NS_DEBUG
-  //PreReflowCheck();
-#endif
+  if (gsDebugReflow) nsTableFrame::DebugReflow("TC::Rfl", this, &aReflowState, nsnull);
 
   nsresult rv = NS_OK;
   // this should probably be cached somewhere
@@ -522,10 +511,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   aStatus = NS_FRAME_COMPLETE;
-  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
-    printf("%p nsTableCellFrame::Reflow: maxSize=%d,%d\n",
-           this, aReflowState.availableWidth, aReflowState.availableHeight);
-
   nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
   nsSize maxElementSize;
   nsSize *pMaxElementSize = aDesiredSize.maxElementSize;
@@ -576,7 +561,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
     {
       if (this==target)
       {
-        if (gsDebug) { printf("IR target is cell\n"); }
         nsIReflowCommand::ReflowType type;
         aReflowState.reflowCommand->GetType(type);
         if (nsIReflowCommand::StyleChanged==type)
@@ -589,7 +573,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
           NS_ASSERTION(PR_FALSE, "table cell target of illegal incremental reflow type");
         }
       }
-      else if (gsDebug) { printf("IR target is cell content\n"); }
     }
     // if any of these conditions are not true, we just pass the reflow command down
   }
@@ -599,9 +582,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   if (availSize.height < 0)
     availSize.height = 1;
 
-  if (gsDebug==PR_TRUE)
-    printf("  nsTableCellFrame::Reflow calling ReflowChild with availSize=%d,%d\n",
-           availSize.width, availSize.height);
   nsHTMLReflowMetrics kidSize(pMaxElementSize);
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.availableWidth);
@@ -641,9 +621,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
         kidSize.width = NSIntPixelsToTwips(pixWidth, p2t);
         if ((nsnull != aDesiredSize.maxElementSize) && (0 == pMaxElementSize->width))
           pMaxElementSize->width = kidSize.width;
-        if (eCompatibility_NavQuirks == compatMode) {
-          if (gsDebug) printf ("setting initial child width from 0 to %d for nav4 compatibility\n", kidSize.width);
-        } 
       }
     }
     else  // empty content has to be forced to the assigned width for resize or incremental reflow
@@ -661,23 +638,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
       kidSize.height = NSIntPixelsToTwips(pixHeight, p2t);
       if ((nsnull != aDesiredSize.maxElementSize) && (0 == pMaxElementSize->height))
         pMaxElementSize->height = kidSize.height;
-      if (eCompatibility_NavQuirks == compatMode) {
-        if (gsDebug) printf ("setting child height from 0 to %d for nav4 compatibility\n", kidSize.height);
-      }
     }
   }
   // end 0 dimensioned cells
-
-  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
-  {
-    if (nsnull!=pMaxElementSize)
-      printf("  %p cellFrame child returned desiredSize=%d,%d, and maxElementSize=%d,%d\n",
-             this, kidSize.width, kidSize.height,
-             pMaxElementSize->width, pMaxElementSize->height);
-    else
-      printf("  %p cellFrame child returned desiredSize=%d,%d, and maxElementSize=nsnull\n",
-             this, kidSize.width, kidSize.height);
-  }
 
   // Place the child
   //////////////////////////////// HACK //////////////////////////////
@@ -690,9 +653,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
 
   // first, compute the height which can be set w/o being restricted by aMaxSize.height
   nscoord cellHeight = kidSize.height + topInset + bottomInset;
-  if (PR_TRUE==gsDebugNT)
-    printf("  %p cellFrame height set to %d from kidSize=%d and insets %d,%d\n",
-             this, cellHeight, kidSize.height, topInset, bottomInset);
+
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
 
@@ -715,16 +676,24 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   // remember my desired size for this reflow
   SetDesiredSize(aDesiredSize);
 
-  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
-    printf("  %p cellFrame returning aDesiredSize=%d,%d\n",
-           this, aDesiredSize.width, aDesiredSize.height);
-
   aDesiredSize.ascent=aDesiredSize.height;
   aDesiredSize.descent=0;
 
-#ifdef NS_DEBUG
-  //PostReflowCheck(result);
-#endif
+  // if we got this far with an incremental reflow, the reflow was targeted
+  // at the cell's content.  We should only have to redo pass1 for this cell
+  // then rebalance columns. The pass1 is handled by the cell's parent row.
+  // So here all we have to do is tell the table to rebalance.
+  if (eReflowReason_Incremental == aReflowState.reason) 
+  {
+    nsTableFrame* tableFrame=nsnull;
+    rv = nsTableFrame::GetTableFrame(this, tableFrame);
+    if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
+    {
+      tableFrame->InvalidateColumnWidths();
+    }
+  }
+   
+  if (gsDebugReflow) nsTableFrame::DebugReflow("TC::Rfl ex", this, nsnull, &aDesiredSize);
 
   return NS_OK;
 }
@@ -734,7 +703,6 @@ NS_METHOD nsTableCellFrame::IR_StyleChanged(nsIPresContext&          aPresContex
                                             const nsHTMLReflowState& aReflowState,
                                             nsReflowStatus&          aStatus)
 {
-  if (PR_TRUE==gsDebug) printf("Cell IR: IR_StyleChanged for frame %p\n", this);
   nsresult rv = NS_OK;
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed
@@ -1146,40 +1114,6 @@ PRUint8 nsTableCellFrame::GetOpposingEdge(PRUint8 aEdge)
   return result;
 }
 
-
-
-
-/**
-  * Given a List of cell layout data, compare the edges to see which has the
-  * border with the highest precidence. 
-  *
-  **/
-nscoord nsTableCellFrame::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
-{
-  nscoord result = 0;
-  PRInt32 index = 0;
-  PRInt32 count = 0;
-
-
-  NS_ASSERTION(aList,"a List must be valid");
-  count = aList->Count();
-  if (count)
-  {
-    nsIFrame* frame;
-    
-    nscoord value = 0;
-    while (index < count)
-    {
-      frame = (nsIFrame*)(aList->ElementAt(index++));
-      value = GetMargin(frame, aEdge);
-      if (value > result)
-        result = value;
-    }
-  }
-  return result;
-}
-
-
 void nsTableCellFrame::GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFrame)
 {
   aBorder.left = aBorder.right = aBorder.top = aBorder.bottom = 0;
@@ -1196,45 +1130,16 @@ void nsTableCellFrame::GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFram
   }
 }
 
-void nsTableCellFrame::CalculateMargins(nsTableFrame*     aTableFrame,
-                                        nsVoidArray*      aBoundaryCells[4])
-{ 
-  // By default the margin is just the margin found in the 
-  // table cells style 
-  const nsStyleSpacing* spacing;
-  GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
-  spacing->CalcMarginFor(this, mMargin);
-
-  // Left and Top Margins are collapsed with their neightbors
-  // Right and Bottom Margins are simple left as they are
-  nscoord value;
-
-  // The left and top sides margins are the difference between
-  // their inherint value and the value of the margin of the 
-  // object to the left or right of them.
-
-  value = FindLargestMargin(aBoundaryCells[NS_SIDE_LEFT],NS_SIDE_RIGHT);
-  if (value > mMargin.left)
-    mMargin.left = 0;
-  else
-    mMargin.left -= value;
-
-  value = FindLargestMargin(aBoundaryCells[NS_SIDE_TOP],NS_SIDE_BOTTOM);
-  if (value > mMargin.top)
-    mMargin.top = 0;
-  else
-    mMargin.top -= value;
-}
-
-
-void nsTableCellFrame::RecalcLayoutData(nsTableFrame* aTableFrame,
-                                        nsVoidArray* aBoundaryCells[4])
-
+void nsTableCellFrame::RecalcLayoutData(nsMargin& aMargin)
 {
-  CalculateBorders(aTableFrame, aBoundaryCells);
-  CalculateMargins(aTableFrame, aBoundaryCells);
+  mMargin.left   = aMargin.left;
+  mMargin.top    = aMargin.top;
+  mMargin.right  = aMargin.right;
+  mMargin.bottom = aMargin.bottom;
+
   mCalculated = NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsTableCellFrame::GetFrameType(nsIAtom** aType) const

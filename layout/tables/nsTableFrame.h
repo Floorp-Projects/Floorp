@@ -263,9 +263,6 @@ public:
   /** helper to get the cell padding style value */
   virtual nscoord GetCellPadding();
           
-  /** Calculate Layout Information */
-  void    AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTableCell);
-
 // begin methods for collapsing borders
 
   /** notification that top and bottom borders have been computed */ 
@@ -398,8 +395,8 @@ public:
     * @return  the col span, correcting for col spans that extend beyond the edge
     *          of the table.
     */
-  virtual PRInt32  GetEffectiveColSpan(PRInt32 aColIndex, nsTableCellFrame *aCell);
-  virtual PRInt32  GetEffectiveColSpan(nsTableCellFrame *aCell);
+  virtual PRInt32  GetEffectiveColSpan(PRInt32 aColIndex, const nsTableCellFrame *aCell) const;
+  virtual PRInt32  GetEffectiveColSpan(const nsTableCellFrame *aCell) const;
 
   /** return the value of the COLS attribute, adjusted for the 
     * actual number of columns in the table
@@ -422,14 +419,21 @@ public:
 
   static PRBool IsFinalPass(const nsReflowState& aReflowState);
 
-  void GetCellInfoAt(PRInt32            aRowX, 
-                     PRInt32            aColX, 
-                     nsTableCellFrame*& aCellFrame, 
-                     PRBool&            aOriginates, 
-                     PRInt32&           aColSpan);
+  nsTableCellFrame* GetCellInfoAt(PRInt32            aRowX, 
+                                  PRInt32            aColX, 
+                                  PRBool*            aOriginates = nsnull, 
+                                  PRInt32*           aColSpan = nsnull);
   PRInt32 GetNumCellsOriginatingIn(PRInt32 aColIndex);
 
   NS_METHOD GetBorderPlusMarginPadding(nsMargin& aResult);
+
+  static void DebugReflow(char*                     aMessage,
+                         const nsIFrame*            aFrame,
+                         const nsHTMLReflowState*   aState, 
+                         const nsHTMLReflowMetrics* aMetrics);
+
+  static void DebugGetIndent(const nsIFrame* aFrame, 
+                             char*           aBuf);
 
 protected:
 
@@ -652,6 +656,52 @@ protected:
   void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
 
 public:
+  // Returns PR_TRUE if there are any cells above the row at
+  // aRowIndex and spanning into the row at aRowIndex     
+  PRBool nsTableFrame::RowIsSpannedInto(PRInt32 aRowIndex);
+
+  // Returns PR_TRUE if there is a cell originating in aRowIndex
+  // which spans into the next row
+  PRBool RowHasSpanningCells(PRInt32 aRowIndex);
+
+  // Returns PR_TRUE if there are any cells to the left of the column at
+  // aColIndex and spanning into the column at aColIndex     
+  PRBool ColIsSpannedInto(PRInt32 aColIndex);
+
+  // Returns PR_TRUE if there is a cell originating in aColIndex
+  // which spans into the next col
+  PRBool ColHasSpanningCells(PRInt32 aColIndex);
+
+  // Returns PR_TRUE if the style width change, aPrevStyleWidth, for aCellFrame 
+  // could require the columns to be rebalanced. This method can be used to 
+  // determine if an incremental reflow on aCellFrame is necessary as the result
+  // of the style width change. If aConsiderMinWidth is PR_TRUE, then potential
+  // changes to aCellFrame's min width is considered (however, if considered, 
+  // the function will always return PR_TRUE if the layout strategy is Basic).
+  PRBool ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
+                                   const nsTableCellFrame& aCellFrame,
+                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
+
+  // Returns PR_TRUE if potential width changes to aCellFrame could require the 
+  // columns to be rebalanced. This method can be used after an incremental reflow
+  // of aCellFrame to determine if a pass1 reflow on aCellFrame is necessary. If 
+  // aConsiderMinWidth is PR_TRUE, then potential changes to aCellFrame's min width 
+  // is considered (however, if considered, the function will always return PR_TRUE 
+  // if the layout strategy is Basic).
+  PRBool ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,
+                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
+
+  // Returns PR_TRUE if changes to aCellFrame's pass1 min and desired (max) sizes
+  // could require the columns to be rebalanced. This method can be used after a 
+  // pass1 reflow of aCellFrame to determine if the columns need rebalancing. 
+  // aPrevCellMin and aPrevCellDes are the values aCellFrame had before the last 
+  // pass1 reflow.
+  PRBool ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
+                            nscoord                 aPrevCellMin,
+                            nscoord                 aPrevCellDes) const;
+  
+  nscoord GetColumnConstraint(nscoord aColIndex) const;
+  
   virtual void InvalidateFirstPassCache();
 
   virtual void InvalidateColumnCache();

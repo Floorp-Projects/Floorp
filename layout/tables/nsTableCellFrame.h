@@ -135,7 +135,7 @@ public:
   NS_IMETHOD GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex);
 
   /** return the mapped cell's row index (starting at 0 for the first row) */
-  virtual nsresult GetRowIndex(PRInt32 &aRowIndex);
+  virtual nsresult GetRowIndex(PRInt32 &aRowIndex) const;
 
   /**
    * return the cell's specified col span. this is what was specified in the
@@ -146,7 +146,7 @@ public:
   virtual PRInt32 GetColSpan();
   
   /** return the cell's column index (starting at 0 for the first column) */
-  virtual nsresult GetColIndex(PRInt32 &aColIndex);
+  virtual nsresult GetColIndex(PRInt32 &aColIndex) const;
   virtual nsresult SetColIndex(PRInt32 aColIndex);
 
   /** return the available width given to this frame during its last reflow */
@@ -162,7 +162,7 @@ public:
   virtual void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
 
   /** return the desired size returned by this frame during its last reflow */
-  virtual nsSize GetPass1DesiredSize();
+  virtual nsSize GetPass1DesiredSize() const;
 
   /** set the desired size returned by this frame during its last reflow */
   virtual void SetPass1DesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
@@ -171,16 +171,14 @@ public:
     * not counting reflows where MaxElementSize is not requested.  
     * That is, the cell frame will always remember the last non-null MaxElementSize
     */
-  virtual nsSize GetPass1MaxElementSize();
+  virtual nsSize GetPass1MaxElementSize() const;
 
   /** set the MaxElement size returned by this frame during its last reflow.
     * should never be called with a null MaxElementSize
     */
   virtual void SetPass1MaxElementSize(const nsSize & aMaxElementSize);
 
-  void RecalcLayoutData(nsTableFrame* aTableFrame,
-                        nsVoidArray*  aBoundaryCells[4]);
-
+  void RecalcLayoutData(nsMargin& aMargin);
   
   NS_IMETHOD GetMargin(nsMargin& aMargin);
 
@@ -209,15 +207,6 @@ private:
   void GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFrame);
 
   PRUint8 GetOpposingEdge(PRUint8 aEdge);
-
-  void CalculateBorders(nsTableFrame* aTableFrame,
-                        nsVoidArray*  aBoundaryCells[4]);
-
-  nscoord FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge);
-
-
-  void CalculateMargins(nsTableFrame* aTableFrame,
-                        nsVoidArray*  aBoundaryCells[4]);
 
 protected:
 
@@ -271,7 +260,7 @@ public:
 
 };
 
-inline nsresult nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex)
+inline nsresult nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex) const
 {
   nsTableCellFrame* cell = (nsTableCellFrame*)GetFirstInFlow();
   nsresult result;
@@ -290,7 +279,7 @@ inline nsresult nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex)
   return result;
 }
 
-inline nsresult nsTableCellFrame::GetColIndex(PRInt32 &aColIndex)
+inline nsresult nsTableCellFrame::GetColIndex(PRInt32 &aColIndex) const
 {  
   aColIndex = mColIndex;
   return  NS_OK;
@@ -311,7 +300,7 @@ inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesire
   mDesiredSize.height = aDesiredSize.height;
 }
 
-inline nsSize nsTableCellFrame::GetPass1DesiredSize()
+inline nsSize nsTableCellFrame::GetPass1DesiredSize() const
 { return mPass1DesiredSize; }
 
 inline void nsTableCellFrame::SetPass1DesiredSize(const nsHTMLReflowMetrics & aDesiredSize)
@@ -320,19 +309,13 @@ inline void nsTableCellFrame::SetPass1DesiredSize(const nsHTMLReflowMetrics & aD
   mPass1DesiredSize.height = aDesiredSize.height;
 }
 
-inline nsSize nsTableCellFrame::GetPass1MaxElementSize()
+inline nsSize nsTableCellFrame::GetPass1MaxElementSize() const
 { return mPass1MaxElementSize; }
 
 inline void nsTableCellFrame::SetPass1MaxElementSize(const nsSize & aMaxElementSize)
 { 
   mPass1MaxElementSize.width = aMaxElementSize.width;
   mPass1MaxElementSize.height = aMaxElementSize.height;
-}
-
-inline void nsTableCellFrame::CalculateBorders(nsTableFrame* aTableFrame,
-                                               nsVoidArray*  aBoundaryCells[4])
-{ 
-
 }
 
 inline NS_METHOD nsTableCellFrame::GetMargin(nsMargin& aMargin)

@@ -37,14 +37,6 @@
 #include "nsCSSRendering.h"
 #include "nsHTMLParts.h"
 
-#ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
-static PRBool gsDebugIR = PR_FALSE;
-#else
-static const PRBool gsDebug = PR_FALSE;
-static const PRBool gsDebugIR = PR_FALSE;
-#endif
-
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
 
@@ -342,10 +334,6 @@ void nsTableRowGroupFrame::PlaceChild(nsIPresContext&      aPresContext,
 																			nsSize*              aMaxElementSize,
 																			nsSize&              aKidMaxElementSize)
 {
-  if (PR_TRUE==gsDebug)
-    printf ("rowgroup %p: placing row at %d, %d, %d, %d\n",
-            this, aKidRect.x, aKidRect.y, aKidRect.width, aKidRect.height);
-
   // Place and size the child
   aKidFrame->SetRect(aKidRect);
 
@@ -369,9 +357,6 @@ void nsTableRowGroupFrame::PlaceChild(nsIPresContext&      aPresContext,
   else if (nsnull != aMaxElementSize) {
       aMaxElementSize->width = PR_MAX(aMaxElementSize->width, aKidMaxElementSize.width);
   }
-  if (gsDebug && nsnull != aMaxElementSize)
-    printf ("rowgroup %p: placing row %p with width = %d and MES= %d\n",
-            this, aKidFrame, aKidRect.width, aMaxElementSize->width);
 }
 
 /**
@@ -391,7 +376,6 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
                                                      PRBool               aDoSiblings,
                                                      PRBool               aDirtyOnly)
 {
-  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: ReflowMappedChildren\n");
   nsSize    kidMaxElementSize;
   nsSize*   pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ? &kidMaxElementSize : nsnull;
   nsresult  rv = NS_OK;
@@ -461,12 +445,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
         }
       }
   
-      if ((PR_TRUE==gsDebug) || (PR_TRUE==gsDebugIR))
-        printf("%p RG reflowing child %p with avail width = %d, reason = %d\n",
-                          this, kidFrame, kidAvailSize.width, reason);
       rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
-      if (gsDebug) printf("%p RG child %p returned desired width = %d\n",
-                          this, kidFrame, desiredSize.width);
   
       // Place the child
       nsRect kidRect (0, aReflowState.y, desiredSize.width, desiredSize.height);
@@ -493,7 +472,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
           PRInt32 colIndex = 0;
           nsIFrame *cellFrame;
           for (colIndex = 0; colIndex < colCount; colIndex++) {
-            cellFrame = aReflowState.tableFrame->GetCellFrameAt(rowIndex, colIndex);
+            cellFrame = aReflowState.tableFrame->GetCellInfoAt(rowIndex, colIndex);
             if (cellFrame) {
               const nsStyleDisplay *cellDisplay;
               cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
@@ -588,7 +567,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
                                                nsHTMLReflowMetrics& aDesiredSize,
                                                const nsHTMLReflowState& aReflowState)
 {
-  if (gsDebug) printf("TRGF CalculateRowHeights begin\n");
   nsTableFrame *tableFrame=nsnull;
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if (NS_FAILED(rv) || nsnull==tableFrame)
@@ -630,10 +608,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
       nscoord maxCellBottomMargin = ((nsTableRowFrame*)rowFrame)->GetChildMaxBottomMargin();
       nscoord maxRowHeight = maxCellHeight + maxCellTopMargin + maxCellBottomMargin;
       // only the top row has a top margin. Other rows start at the bottom of the prev row's bottom margin.
-      if (gsDebug) printf("TRGF CalcRowH: for row %d(%p), maxCellH=%d, spacingY=%d, d\n",
-                            rowIndex + startRowIndex, rowFrame, maxCellHeight, cellSpacingY);
-      if (gsDebug) printf("  rowHeight=%d\n", maxRowHeight);
-
       // save the row height for pass 2 below
       rowHeights[rowIndex] = maxRowHeight;
       rowIndex++;
@@ -672,8 +646,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
       rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
       if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
       {
-        if (gsDebug) printf("TRGF CalcRowH: Step 2 for row %d (%p)...\n",
-                            rowIndex + startRowIndex, rowFrame);
         // check this row for a cell with rowspans
         nsIFrame *cellFrame;
         rowFrame->FirstChild(nsnull, &cellFrame);
@@ -683,13 +655,11 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
           cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellChildDisplay));
           if (NS_STYLE_DISPLAY_TABLE_CELL == cellChildDisplay->mDisplay)
           {
-            if (gsDebug) printf("TRGF CalcRowH:   for cell %p...\n", cellFrame);
             PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(rowIndex + startRowIndex,
                                                               (nsTableCellFrame*)cellFrame);
             if (rowSpan > 1)
             { // found a cell with rowspan > 1, determine the height of the rows it
               // spans
-              if (gsDebug) printf("TRGF CalcRowH:   cell %p has rowspan=%d\n", cellFrame, rowSpan);
               nscoord heightOfRowsSpanned = 0;
               PRInt32 i;
               for (i = 0; i < rowSpan; i++) {
@@ -697,7 +667,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
               }
               // reduce the height by top and bottom margins
               nscoord availHeightOfRowsSpanned = heightOfRowsSpanned - cellSpacingY - cellSpacingY;
-              if (gsDebug) printf("TRGF CalcRowH:   availHeightOfRowsSpanned=%d\n", availHeightOfRowsSpanned);
 
               // see if the cell's height fits within the rows it spans. If this is
               // pass 1 then use the cell's desired height and not the current height
@@ -713,8 +682,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
               {
                 // yes the cell's height fits with the available space of the rows it
                 // spans. Set the cell frame's height
-                if (gsDebug) printf("TRGF CalcRowH:   spanning cell fits in rows spanned, had h=%d, expanded to %d\n", 
-                                    cellFrameSize.height, availHeightOfRowsSpanned);
                 cellFrame->SizeTo(cellFrameSize.width, availHeightOfRowsSpanned);
                 // Realign cell content based on new height
                 ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild();
@@ -724,14 +691,12 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
                 // the cell's height is larger than the available space of the rows it
                 // spans so distribute the excess height to the rows affected
                 PRInt32 excessHeight = cellFrameSize.height - availHeightOfRowsSpanned;
-                if (gsDebug) printf("TRGF CalcRowH:   excessHeight=%d\n", excessHeight);
 
                 // for every row starting at the row with the spanning cell and down
                 // to the last row spanned by the cell
                 nsTableRowFrame *rowFrameToBeResized = (nsTableRowFrame *)rowFrame;
                 nscoord excessAllocated = 0;
                 for (i = rowIndex; i < (rowIndex + rowSpan); i++) {
-                  if (gsDebug) printf("TRGF CalcRowH:     for row index=%d\n", i);
                   // The amount of additional space each row gets is based on the
                   // percentage of space it occupies, i.e. they don't all get the
                   // same amount of available space
@@ -743,8 +708,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
                                          excessHeight - excessAllocated  :
                                          NSToCoordRound(((float)(excessHeight)) * percent);
                   excessAllocated += excessForRow;
-                  if (gsDebug) printf("TRGF CalcRowH:   for row %d, excessHeight=%d from percent %f\n", 
-                                      i, excessForRow, percent);
 
                   // update the row height
                   rowHeights[i] += excessForRow;
@@ -830,7 +793,6 @@ nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aPresContex
 {
   NS_PRECONDITION(NS_UNCONSTRAINEDSIZE == aReflowState.reflowState.availableHeight,
                   "we're not in galley mode");
-  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: AdjustSiblingsAfterReflow\n");
   nsIFrame* lastKidFrame = aKidFrame;
 
   if (aDeltaY != 0) {
@@ -955,7 +917,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
         nsTableCellFrame* prevCellFrame = nsnull;
 
         for (PRInt32 colIndex = 0; colIndex < colCount; colIndex++) {
-          nsTableCellFrame* cellFrame = aTableFrame->GetCellFrameAt(rowIndex, colIndex);
+          nsTableCellFrame* cellFrame = aTableFrame->GetCellInfoAt(rowIndex, colIndex);
           NS_ASSERTION(cellFrame, "no cell frame");
 
           // See if the cell frame is really in this row, or whether it's a
@@ -1026,9 +988,6 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
                              nsReflowStatus&          aStatus)
 {
   nsresult rv=NS_OK;
-  if (gsDebug==PR_TRUE)
-    printf("nsTableRowGroupFrame::Reflow - aMaxSize = %d, %d\n",
-            aReflowState.availableWidth, aReflowState.availableHeight);
 
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -1106,18 +1065,6 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-  if (gsDebug==PR_TRUE) 
-  {
-    if (nsnull!=aDesiredSize.maxElementSize)
-      printf("nsTableRowGroupFrame %p returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
-              this, NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
-              aDesiredSize.width, aDesiredSize.height,
-              aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
-    else
-      printf("nsTableRowGroupFrame %p returning: %s with aDesiredSize=%d,%d, aMES=NSNULL\n", 
-             this, NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
-             aDesiredSize.width, aDesiredSize.height);
-  }
   return rv;
 }
 
@@ -1127,7 +1074,6 @@ NS_METHOD nsTableRowGroupFrame::IncrementalReflow(nsIPresContext& aPresContext,
                                                   RowGroupReflowState& aReflowState,
                                                   nsReflowStatus& aStatus)
 {
-  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IncrementalReflow\n");
   nsresult  rv = NS_OK;
 
   // determine if this frame is the target or not
@@ -1329,7 +1275,6 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   const nsStyleDisplay *childDisplay=nsnull;
   if (nsnull!=objectFrame)
     objectFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-  if (PR_TRUE==gsDebugIR) printf("TRGF IR: TargetIsMe with type=%d\n", type);
   switch (type)
   {
   case nsIReflowCommand::ReflowDirty:
@@ -1359,7 +1304,6 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   default:
     NS_NOTYETIMPLEMENTED("unexpected reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
-    if (PR_TRUE==gsDebugIR) printf("TRGF IR: unexpected reflow command not implemented.\n");
     break;
   }
 
@@ -1372,7 +1316,6 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
 
 NS_METHOD nsTableRowGroupFrame::DidAppendRow(nsTableRowFrame *aRowFrame)
 {
-  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: DidAppendRow\n");
   nsresult rv=NS_OK;
   /* need to make space in the cell map.  Remeber that row spans can't cross row groups
      once the space is made, tell the row to initizalize its children.  
@@ -1416,7 +1359,6 @@ PRBool nsTableRowGroupFrame::NoRowsFollow()
     }
     nextSib->GetNextSibling(&nextSib);
   }
-  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: NoRowsFollow returning %d\n", result);
   return result;
 }
 
@@ -1498,7 +1440,6 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
 
 {
   nsresult rv;
-  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IR_TargetIsChild\n");
   // Recover the state as if aNextFrame is about to be reflowed
   RecoverState(aReflowState, aNextFrame);
 
@@ -1558,7 +1499,6 @@ NS_METHOD nsTableRowGroupFrame::IR_StyleChanged(nsIPresContext&      aPresContex
                                                 RowGroupReflowState& aReflowState,
                                                 nsReflowStatus&      aStatus)
 {
-  if (PR_TRUE==gsDebugIR) printf("TRGF: IR_StyleChanged for frame %p\n", this);
   nsresult rv = NS_OK;
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed

@@ -33,24 +33,15 @@ class CellData
 {
 public:
   CellData();
-  CellData(nsTableCellFrame* aOrigCell, CellData* aSpanData, CellData* aSpanData2)
-    : mOrigCell(aOrigCell), mSpanData(aSpanData), mSpanData2(aSpanData2)
+  CellData(nsTableCellFrame* aOrigCell, CellData* aRowSpanData, CellData* aColSpanData)
+    : mOrigCell(aOrigCell), mRowSpanData(aRowSpanData), mColSpanData(aColSpanData)
   {}
 
   ~CellData();
-  PRBool IsSpannedBy(nsTableCellFrame* aCellFrame)
-  { 
-    return (mSpanData  && mSpanData->mOrigCell  == aCellFrame) ||
-           (mSpanData2 && mSpanData2->mOrigCell == aCellFrame); 
-  }
-  PRBool IsOccupiedBy(nsTableCellFrame* aCellFrame)
-  {
-    return (mOrigCell == aCellFrame) || IsSpannedBy(aCellFrame);
-  }
 
-  nsTableCellFrame* mOrigCell;  // mCell
-  CellData*         mSpanData;  // mRealCell
-  CellData*         mSpanData2; // mOverlap
+  nsTableCellFrame* mOrigCell;  
+  CellData*         mRowSpanData;  
+  CellData*         mColSpanData; 
 
 };
 

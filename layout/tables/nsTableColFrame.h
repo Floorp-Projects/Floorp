@@ -23,6 +23,7 @@
 #include "nsTableFrame.h"
 
 class nsVoidArray;
+class nsTableCellFrame;
 
 // this is used to index arrays of widths in nsColFrame and to group important widths
 // for calculations. It is important that the order: min, desired, fixed be maintained
@@ -94,22 +95,19 @@ public:
   /** convenience method, calls into cellmap */
   nsVoidArray * GetCells();
 
-  // return the min width for this column after provisions for col spans have
-  // been included. The adj min width is >= the min width.
-  nscoord GetAdjustedMinColWidth();
-  void SetAdjustedMinColWidth(nscoord aMinColWidth);
-
   nscoord GetWidth(PRUint32 aWidthType);
-  void GetWidths(nscoord* aWidths);
-  void SetWidth(PRUint32 aWidthType,
-                nscoord  aWidth);
+  void    SetWidth(PRUint32 aWidthType,
+                   nscoord  aWidth);
   nscoord GetMinWidth();
   nscoord GetDesWidth();
   nscoord GetFixWidth();
   nscoord GetPctWidth();
 
-  void    SetConstraint(nsColConstraint aConstraint);
+  void            SetConstraint(nsColConstraint aConstraint);
   nsColConstraint GetConstraint() const;
+
+  void              SetConstrainingCell(nsTableCellFrame* aCellFrame);
+  nsTableCellFrame* GetConstrainingCell() const;
 
   /** convenience method, calls into cellmap */
   PRInt32 Count() const;
@@ -132,10 +130,11 @@ protected:
 
   PRBool  mIsAnonymous;
 
-  // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ
+  // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ, PCT, PCT_ADJ, MIN_PRO
   nscoord mWidths[NUM_WIDTHS];
   nscoord mProportion; // proportion for porportional width col
   nsColConstraint mConstraint;
+  nsTableCellFrame* mConstrainingCell;
 };
 
 
@@ -162,6 +161,12 @@ inline PRBool nsTableColFrame::IsAnonymous()
 
 inline void nsTableColFrame::SetIsAnonymous(PRBool aIsAnonymous)
 { mIsAnonymous = aIsAnonymous; }
+
+inline void nsTableColFrame::SetConstrainingCell(nsTableCellFrame* aCellFrame) 
+{ mConstrainingCell = aCellFrame; }
+
+inline nsTableCellFrame* nsTableColFrame::GetConstrainingCell() const 
+{ return mConstrainingCell; }
 
 #endif
 

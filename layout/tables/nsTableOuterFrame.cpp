@@ -32,102 +32,6 @@
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 
-#ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
-static PRBool gsTiming = PR_FALSE;
-static PRBool gsDebugIR = PR_FALSE;
-//#define NOISY
-//#define NOISY_FLOW
-#define NOISY_MARGINS
-#else
-static const PRBool gsDebug = PR_FALSE;
-static const PRBool gsTiming = PR_FALSE;
-static const PRBool gsDebugIR = PR_FALSE;
-#endif
-
-// these macros are defined to improve the readability of the main code
-// XXX they need to be put in an include file and shared 
-#define TDBG_S(typ,str) \
-  if (typ) { \
-    printf((str)); \
-  }
-
-#define TDBG_SP(typ,str,ptr) \
-  if (typ) { \
-    printf((str),(ptr)); \
-  }
-
-#define TDBG_SPD(typ,str,ptr,dec) \
-  if (typ) { \
-    printf((str),(ptr),(dec)); \
-  }
-
-#define TDBG_SPDD(typ,str,ptr,dec1,dec2) \
-  if (typ) { \
-    printf((str),(ptr),(dec1),(dec2)); \
-  }
-
-#define TDBG_SPDDDD(typ,str,ptr,dec1,dec2,dec3,dec4) \
-  if (typ) { \
-    printf((str),(ptr),(dec1),(dec2),(dec3),(dec4)); \
-  }
-
-#define TDBG_SFDD(typ,str,flt,dec1,dec2) \
-  if (typ) { \
-    printf((str),(flt),(dec1),(dec2)); \
-  }
-
-#define TDBG_SDF(typ,str,dec,flt) \
-  if (typ) { \
-    printf((str),(dec),(flt)); \
-  }
-
-#define TDBG_SDFDDD(typ,str,dec1,flt,dec2,dec3,dec4) \
-  if (typ) { \
-    printf((str),(dec1),(flt),(dec2),(dec3),(dec4)); \
-  }
-
-#define TDBG_SD(typ,str,dec) \
-  if (typ) { \
-    printf((str),(dec)); \
-  }
-
-#define TDBG_SDD(typ,str,dec1,dec2) \
-  if (typ) { \
-    printf((str),(dec1),(dec2)); \
-  }
-
-#define TDBG_SDDD(typ,str,dec1,dec2,dec3) \
-  if (typ) { \
-    printf((str),(dec1),(dec2),(dec3)); \
-  }
-
-#define TDBG_SDFD(typ,str,dec1,flt,dec2) \
-  if (typ) { \
-    printf((str),(dec1),(flt),(dec2)); \
-  }
-
-#define TDBG_SDDDD(typ,str,dec1,dec2,dec3,dec4) \
-  if (typ) { \
-    printf((str),(dec1),(dec2),(dec3),(dec4)); \
-  }
-
-#define TDBG_SDDDF(typ,str,dec1,dec2,dec3,flt) \
-  if (typ) { \
-    printf((str),(dec1),(dec2),(dec3),(flt)); \
-  }
-
-#define TDBG_SDDDDD(typ,str,dec1,dec2,dec3,dec4,dec5) \
-  if (typ) { \
-    printf((str),(dec1),(dec2),(dec3),(dec4),(dec5)); \
-  }
-
-#define TDBG_SDDDDDD(typ,str,dec1,dec2,dec3,dec4,dec5,dec6) \
-  if (typ) { \
-    printf((str),(dec1),(dec2),(dec3),(dec4),(dec5),(dec6)); \
-  }
-
-
 struct OuterTableReflowState {
 
   // The presentation context
@@ -401,7 +305,6 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext&        aPresContex
                                               OuterTableReflowState& aReflowState,
                                               nsReflowStatus&        aStatus)
 {
-  TDBG_S(gsDebugIR,"\nTOF IR: IncrementalReflow\n");
   nsresult  rv = NS_OK;
 
   // determine if this frame is the target or not
@@ -430,7 +333,6 @@ nsresult nsTableOuterFrame::IR_TargetIsChild(nsIPresContext&        aPresContext
                                              nsReflowStatus&        aStatus,
                                              nsIFrame*              aNextFrame)
 {
-  TDBG_S(gsDebugIR,"TOF IR: IR_TargetIsChild\n");
   nsresult rv;
   if (!aNextFrame)
     return NS_OK;
@@ -463,7 +365,6 @@ nsresult nsTableOuterFrame::IR_TargetIsInnerTableFrame(nsIPresContext&        aP
                                                        OuterTableReflowState& aReflowState,
                                                        nsReflowStatus&        aStatus)
 {
-  TDBG_S(gsDebugIR,"TOF IR: IR_TargetIsInnerTableFrame\n");
   nsresult rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   return rv;
 }
@@ -474,7 +375,6 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
                                                     nsReflowStatus&        aStatus)
 {
   nsresult rv;
-  TDBG_S(gsDebugIR,"TOF IR: IR_TargetIsCaptionFrame\n");
   PRBool innerTableNeedsReflow = PR_FALSE;
   // remember the old width and height
   nsRect priorCaptionRect;
@@ -486,11 +386,8 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
   if (nsIReflowCommand::StyleChanged == reflowCommandType) {
     mCaptionFrame->GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)priorCaptionTextStyle));
   }
-  TDBG_SDDD(gsDebugIR,"TOF IR: prior caption width=%d height=%d, minWidth=%d\n", 
-            priorCaptionRect.width, priorCaptionRect.height, mMinCaptionWidth);
 
   // pass along the reflow command to the caption
-  TDBG_S(gsDebugIR,"TOF IR: passing down incremental reflow command to caption.\n");
   nsSize captionMES(0,0);
   nsHTMLReflowMetrics captionSize(&captionMES);
   nsHTMLReflowState captionReflowState(aPresContext, aReflowState.reflowState, mCaptionFrame,
@@ -498,8 +395,6 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
                                        aReflowState.reflowState.reason);
   captionReflowState.reflowCommand = aReflowState.reflowState.reflowCommand;
   rv = ReflowChild(mCaptionFrame, aPresContext, captionSize, captionReflowState, aStatus);
-  TDBG_SDDDD(gsDebugIR,"TOF IR: caption reflow returned %d with width=%d height=%d, minCaptionWidth=%d\n", 
-             rv, captionSize.width, captionSize.height, captionMES.width);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -523,7 +418,6 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
   // if we've determined that the inner table needs to be reflowed, do it here
   nsSize innerTableSize;
   if (PR_TRUE == innerTableNeedsReflow) {
-    TDBG_S(gsDebugIR,"inner table needs resize reflow.\n");
     // Compute the width to use for the table. In the case of an auto sizing
     // table this represents the maximum available width
     nscoord tableWidth = ComputeAvailableTableWidth(aReflowState.reflowState);
@@ -551,7 +445,6 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
     }
   }
   else {
-    TDBG_S(gsDebugIR,"skipping inner table resize reflow.\n");
     nsRect innerTableRect;
     mInnerTableFrame->GetRect(innerTableRect);
     innerTableSize.SizeTo(innerTableRect.width, innerTableRect.height);
@@ -638,15 +531,12 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   aReflowState.reflowState.reflowCommand->GetType(type);
   nsIFrame* objectFrame;
   aReflowState.reflowState.reflowCommand->GetChildFrame(objectFrame); 
-  TDBG_SD(gsDebugIR,"TOF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
   switch (type) {
   case nsIReflowCommand::ReflowDirty:
-    TDBG_S(gsDebugIR,"TOF IR: reflowing dirty child frames.\n");
-    rv = IR_ReflowDirty(aPresContext, aDesiredSize, aReflowState, aStatus);
+     rv = IR_ReflowDirty(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
-  case nsIReflowCommand::StyleChanged :
-    TDBG_S(gsDebugIR,"TOF IR: calling inner table reflow.\n");
+  case nsIReflowCommand::StyleChanged :    
     rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
@@ -658,7 +548,6 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   default:
     NS_NOTYETIMPLEMENTED("unexpected reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
-    TDBG_S(gsDebugIR,"TOF IR: unexpected reflow command not implemented.\n");
     break;
   }
 
@@ -670,30 +559,24 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
                                                 OuterTableReflowState& aReflowState,
                                                 nsReflowStatus&        aStatus)
 {
-  TDBG_S(gsDebugIR,"TOF IR: IR_InnerTableReflow\n");
   nsresult rv = NS_OK;
   const nsStyleText* captionTextStyle=nsnull;
   nsMargin captionMargin;
   // remember the old width and height
   nsRect priorInnerTableRect;
   mInnerTableFrame->GetRect(priorInnerTableRect);
-  TDBG_SDD(gsDebugIR,"TOF IR: prior width=%d height=%d\n", priorInnerTableRect.width, priorInnerTableRect.height);
   // pass along the reflow command to the inner table
-  TDBG_S(gsDebugIR,"TOF IR: passing down incremental reflow command to inner table.\n");
   nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize);
   nscoord tableMaxWidth = PR_MAX(aReflowState.reflowState.availableWidth, mMinCaptionWidth);
-  TDBG_SDD(gsDebugIR,"TOF IR: mincaptionWidth=%d, tableMaxWidth=%d.\n", mMinCaptionWidth, tableMaxWidth);
   nsHTMLReflowState innerReflowState(aPresContext, aReflowState.reflowState, mInnerTableFrame,
                                      nsSize(tableMaxWidth, aReflowState.reflowState.availableHeight));
   rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
-  TDBG_SDDD(gsDebugIR,"TOF IR: inner table reflow returned %d with width=%d height=%d\n", rv, innerSize.width, innerSize.height);
   // if there is a caption and the width or height of the inner table changed from a successful reflow, 
   // then reflow or move the caption as needed
   if ((nsnull != mCaptionFrame) && (PR_TRUE==NS_SUCCEEDED(rv))) {
     // remember the old caption height
     nsRect oldCaptionRect;
     mCaptionFrame->GetRect(oldCaptionRect);
-    TDBG_SD(gsDebugIR,"TOF IR: prior caption height = %d\n", oldCaptionRect.height);
     nsHTMLReflowMetrics captionSize(nsnull);  // don't ask for MES, it hasn't changed
     PRBool captionDimChanged  = PR_FALSE;
     PRBool captionWasReflowed = PR_FALSE;
@@ -705,21 +588,15 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
       nsIHTMLReflow* htmlReflow;
       if (NS_OK == mCaptionFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) { 
         // reflow the caption
-        TDBG_S(gsDebugIR,"TOF IR: table width changed, resize-reflowing caption.\n");
         htmlReflow->WillReflow(aPresContext);
         rv = htmlReflow->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
         captionWasReflowed = PR_TRUE;
-        TDBG_SDDD(gsDebugIR,"TOF IR: caption reflow returned %d with width=%d height=%d\n", rv, captionSize.width, captionSize.height);
         if ((oldCaptionRect.height!=captionSize.height) || 
             (oldCaptionRect.width!=captionSize.width)) {
           captionDimChanged=PR_TRUE;
         }
       }
     }
-    else {
-      TDBG_S(gsDebugIR,"TOF IR: skipping caption reflow\n");
-    }
-    TDBG_SD(gsDebugIR,"TOF IR: captionDimChanged = %d\n", captionDimChanged);
     // XXX: should just call SizeAndPlaceChildren regardless
     // find where to place the caption
     const nsStyleSpacing* spacing;
@@ -743,7 +620,6 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
         captionRect.SizeTo(oldCaptionRect.width, oldCaptionRect.height);
       }
       mCaptionFrame->SetRect(captionRect);
-      TDBG_SDDDD(gsDebugIR,"    TOF IR: captionRect=%d %d %d %d\n", captionRect.x, captionRect.y, captionRect.width, captionRect.height);
     }
   }
 
@@ -779,7 +655,6 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
   }
   nsRect innerRect(0, innerY, innerSize.width, innerSize.height);
   mInnerTableFrame->SetRect(innerRect);
-  TDBG_SDDDD(gsDebugIR, "    TOF IR: innerRect=%d %d %d %d\n", innerRect.x, innerRect.y, innerRect.width, innerRect.height);
 
   aReflowState.innerTableMaxSize.width = innerSize.width;
   return rv;
@@ -795,13 +670,10 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
                                                nsHTMLReflowMetrics&   aDesiredSize,
                                                OuterTableReflowState& aReflowState,
                                                nsReflowStatus&        aStatus)
-{
-  TDBG_S(gsDebugIR,"TOF IR: CaptionInserted\n");
+{  
   nsresult rv = NS_OK;
 
   // reflow the caption frame, getting it's MES
-  TDBG_S(gsDebugIR,"TOF IR: initial-reflowing caption\n");
-
   nsSize              maxElementSize;
   nsHTMLReflowMetrics captionSize(&maxElementSize);
   nsHTMLReflowState   captionReflowState(aPresContext, aReflowState.reflowState, mCaptionFrame,
@@ -816,8 +688,6 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
     if (NS_FAILED(rv)) {
       return rv;
     }
-    TDBG_SDDDD(gsDebugIR, "TOF IR: caption reflow returned %d with width =%d, height = %d, minWidth=%d\n",
-               rv, captionSize.width, captionSize.height, maxElementSize.width);
     mMinCaptionWidth = maxElementSize.width;
     // get the caption's alignment
     const nsStyleText* captionTextStyle;
@@ -832,16 +702,12 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
       // if the caption's MES > table width, reflow the inner table
       nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
       if (mMinCaptionWidth > mRect.width) {
-        TDBG_S(gsDebugIR,"TOF IR: resize-reflowing inner table\n");
         nsHTMLReflowState innerReflowState(aPresContext, aReflowState.reflowState, mInnerTableFrame,
                                              nsSize(mMinCaptionWidth, aReflowState.reflowState.availableHeight),
                                              eReflowReason_Resize);
         rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
-        TDBG_SDDD(gsDebugIR,"TOF IR: inner table reflow returned %d with width =%d, height = %d\n",
-                  rv, innerSize.width, innerSize.height);
       }
       else { // set innerSize as if the inner table were reflowed
-        TDBG_S(gsDebugIR,"TOF IR: skipping reflow of inner table\n");
         innerSize.height = mRect.height;
         innerSize.width  = mRect.width;
       }
@@ -873,7 +739,6 @@ nsresult nsTableOuterFrame::SizeAndPlaceChildren(const nsSize&          aInnerSi
                                                  const nsSize&          aCaptionSize,
                                                  OuterTableReflowState& aReflowState)
 {
-  TDBG_S(gsDebugIR, "  TOF IR: SizeAndPlaceChildren\n");
   nsresult rv = NS_OK;
   // find where to place the caption
   nsMargin captionMargin;
@@ -892,8 +757,6 @@ nsresult nsTableOuterFrame::SizeAndPlaceChildren(const nsSize&          aInnerSi
   nsRect captionRect(captionMargin.left, captionY, 0, 0);
   captionRect.SizeTo(aCaptionSize.width, aCaptionSize.height);
   mCaptionFrame->SetRect(captionRect);
-  TDBG_SDDDD(gsDebugIR, "    TOF IR: captionRect=%d %d %d %d\n", captionRect.x, captionRect.y,
-             captionRect.width, captionRect.height);
 
   // Place the inner table
   nscoord innerY;
@@ -909,7 +772,6 @@ nsresult nsTableOuterFrame::SizeAndPlaceChildren(const nsSize&          aInnerSi
   }
   nsRect innerRect(0, innerY, aInnerSize.width, aInnerSize.height);
   mInnerTableFrame->SetRect(innerRect);
-  TDBG_SDDDD(gsDebugIR, "    TOF IR: innerRect=%d %d %d %d\n", innerRect.x, innerRect.y, innerRect.width, innerRect.height);
   aReflowState.innerTableMaxSize.width = aInnerSize.width;
   return rv;
 }
@@ -999,13 +861,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
                                     nsReflowStatus&          aStatus)
 {
   nsresult rv = NS_OK;
-  TDBG_SPDD(gsDebug,"%p: nsTableOuterFrame::Reflow : maxSize=%d,%d\n", 
-            this, aReflowState.availableWidth, aReflowState.availableHeight);
-
-  PRIntervalTime startTime;
-  if (gsTiming) {
-    startTime = PR_IntervalNow();
-  }
 
   // Initialize out parameters
   aDesiredSize.width  = 0;
@@ -1146,26 +1001,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  if ((PR_TRUE == gsDebug) || (PR_TRUE == gsDebugIR)) {
-    if (nsnull!=aDesiredSize.maxElementSize) {
-      printf("%p: Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
-              this, NS_FRAME_IS_COMPLETE(aStatus)? "Complete" : "Not Complete",
-              aDesiredSize.width, aDesiredSize.height, 
-              aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
-    }
-    else {
-      printf("%p: Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
-              this, NS_FRAME_IS_COMPLETE(aStatus)? "Complete" : "Not Complete",
-              aDesiredSize.width, aDesiredSize.height);
-    }
-  }
-
-  if (gsTiming) {
-    PRIntervalTime endTime = PR_IntervalNow();
-    printf("Table reflow took %d ticks for frame %p\n",
-           endTime-startTime, this);/* XXX need to use LL_* macros! */
-  }
-
   return rv;
 }
 
@@ -1178,8 +1013,6 @@ void nsTableOuterFrame::PlaceChild(OuterTableReflowState& aReflowState,
                                    nsSize*                aMaxElementSize,
                                    nsSize&                aKidMaxElementSize)
 {
-  TDBG_SPDDDD(gsDebug,"outer table place child: %p with aKidRect %d %d %d %d\n", 
-              aKidFrame, aKidRect.x, aKidRect.y, aKidRect.width, aKidRect.height);
   // Place and size the child
   aKidFrame->SetRect(aKidRect);
 

@@ -28,13 +28,6 @@
 
 NS_DEF_PTR(nsIStyleContext);
 
-
-#ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
-#else
-static const PRBool gsDebug = PR_FALSE;
-#endif
-
 FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aFrame)
   : BasicTableLayoutStrategy(aFrame)
 {
@@ -48,12 +41,6 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aT
                                                      const nsHTMLReflowState& aReflowState,
                                                      nscoord                  aMaxWidth)
 {
-  if (PR_TRUE==gsDebug)  {
-    printf("\n%p: BALANCE COLUMN WIDTHS\n", mTableFrame);
-    for (PRInt32 i=0; i<mNumCols; i++)
-      printf("  col %d assigned width %d\n", i, mTableFrame->GetColumnWidth(i));
-    printf("\n");
-  }
   return PR_TRUE;
 }
 
@@ -68,7 +55,6 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aT
 PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputedWidth)
 {
   // NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
-  if (gsDebug==PR_TRUE) printf ("** %p: AssignPreliminaryColumnWidths **\n", mTableFrame);
 
   const nsStylePosition* tablePosition;
   mTableFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)tablePosition);
@@ -137,7 +123,6 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
     if (colWidths[colX] >= 0) {
       totalColWidth += colWidths[colX];
       specifiedCols++;
-      if (PR_TRUE==gsDebug) printf ("col %d set to width %d\n", colX, colWidths[colX]);
     }
   }
  
@@ -151,14 +136,12 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
   if (tableIsFixedWidth && (0 < remainingWidth)) {
     if (mNumCols > specifiedCols) {
       // allocate the extra space to the columns which have no width specified
-      if (PR_TRUE == gsDebug) printf ("%p: remainingTW=%d\n", mTableFrame, remainingWidth);
       nscoord colAlloc = NSToCoordRound( ((float)remainingWidth) / (((float)mNumCols) - ((float)specifiedCols)));
       for (colX = 0; colX < mNumCols; colX++) {
         if (-1 == colWidths[colX]) {
           colWidths[colX] = colAlloc;
           totalColWidth += colAlloc; 
           lastColAllocated = colX;
-          if (PR_TRUE == gsDebug) printf ("auto col %d set to width %d\n", colX, colAlloc);
         }
       }
     }
@@ -170,7 +153,6 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
           colWidths[colX] += colAlloc;
           totalColWidth += colAlloc; 
           lastColAllocated = colX;
-          if (PR_TRUE == gsDebug) printf ("col %d set to width %d\n", colX, colWidths[colX]);
         }
       }
     }  
@@ -192,7 +174,6 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
 
   // min/max TW is min/max of (specified table width, sum of specified column(cell) widths)
   mMinTableContentWidth = mMaxTableContentWidth = totalColWidth;
-  if (PR_TRUE == gsDebug) printf ("%p: aMinTW=%d, aMaxTW=%d\n", mTableFrame, mMinTableContentWidth, mMaxTableContentWidth);
 
   // clean up
   if (nsnull != colWidths) {
@@ -202,6 +183,34 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
   return PR_TRUE;
 }
 
+PRBool FixedTableLayoutStrategy::ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
+                                                           const nsTableCellFrame& aCellFrame,
+                                                           PRBool                  aConsiderMinWidth) const
+{
+  return ColumnsCanBeInvalidatedBy(aCellFrame);
+}
+
+PRBool FixedTableLayoutStrategy::ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,
+                                                           PRBool                  aConsiderMinWidth) const
+
+{
+  nscoord rowIndex;
+  aCellFrame.GetRowIndex(rowIndex);
+  if (0 == rowIndex) {
+    // It is not worth the effort to determine if the col or cell determined the col
+    // width. Since rebalancing the columns is fairly trival in this strategy, just force it.
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+PRBool FixedTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
+                                                    nscoord                 aPrevCellMin,
+                                                    nscoord                 aPrevCellDes) const
+{
+  // take the easy way out, see comments above.
+  return ColumnsCanBeInvalidatedBy(aCellFrame);
+}
 
 
 
