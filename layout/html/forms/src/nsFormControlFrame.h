@@ -328,15 +328,15 @@ protected:
     */
 
   static void PaintArrow(nsArrowDirection aArrowDirection,
-					                    nsIRenderingContext& aRenderingContext,
-															nsIPresContext& aPresContext, 
-															const nsRect& aDirtyRect,
-                              nsRect& aRect, 
-															nscoord aOnePixel, 
-															const nsStyleColor& aColor,
-															const nsStyleSpacing& aSpacing,
-															nsIFrame* aForFrame,
-                              nsRect& aFrameRect);
+					    nsIRenderingContext& aRenderingContext,
+						nsIPresContext& aPresContext, 
+						const nsRect& aDirtyRect,
+                        nsRect& aRect, 
+						nscoord aOnePixel, 
+						nsIStyleContext* aArrowStyle,
+						const nsStyleSpacing& aSpacing,
+						nsIFrame* aForFrame,
+                        nsRect& aFrameRect);
    /**
     * Paint a scrollbar
 	  * 
