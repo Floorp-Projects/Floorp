@@ -2922,6 +2922,7 @@ function toggleSidebar(aCommandID, forceOpen) {
         sidebarTitle.setAttribute("value", "");
         sidebarBox.hidden = true;
         sidebarSplitter.hidden = true;
+        _content.focus();
     }
     return;
   }
