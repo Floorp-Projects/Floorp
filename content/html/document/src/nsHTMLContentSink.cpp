@@ -4344,8 +4344,11 @@ HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   // something else in the script processing caused the
   // notification to occur. Since this could result in frame
   // creation, make sure we've flushed everything before we
-  // continue
-  if (!mInNotification && mCurrentContext) {
+  // continue.
+  // Also increment mInNotification to make sure we don't flush again
+  // until the end of this update, even if nested updates or
+  // FlushPendingNotifications calls happen during it.
+  if (!mInNotification++ && mCurrentContext) {
     result = mCurrentContext->FlushTags(PR_TRUE);
   }
 
@@ -4359,8 +4362,9 @@ HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   // If we're in a script and we didn't do the notification,
   // something else in the script processing caused the
   // notification to occur. Update our notion of how much
-  // has been flushed to include any new content.
-  if (!mInNotification) {
+  // has been flushed to include any new content if ending
+  // this update leaves us not inside a notification.
+  if (!--mInNotification) {
     UpdateAllContexts();
   }
 
