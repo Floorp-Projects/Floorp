@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.36 2002/01/24 00:25:32 ian.mcgreer%sun.com Exp $
+ # $Id: nssinit.c,v 1.37 2002/01/24 02:46:07 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -375,6 +375,10 @@ loser:
     }
 
     if (rv == SECSuccess) {
+	/* can this function fail?? */
+	STAN_LoadDefaultNSS3TrustDomain();
+	CERT_SetDefaultCertDB((CERTCertDBHandle *)
+				STAN_GetDefaultTrustDomain());
 #ifndef XP_MAC
 	/* only servers need this. We currently do not have a mac server */
 	if ((!readOnly) && (!noModDB) && (!noCertDB) && (!noRootInit)) {
@@ -383,10 +387,6 @@ loser:
 	    }
 	}
 #endif
-	/* can this function fail?? */
-	STAN_LoadDefaultNSS3TrustDomain();
-	CERT_SetDefaultCertDB((CERTCertDBHandle *)
-				STAN_GetDefaultTrustDomain());
     }
     return rv;
 }
