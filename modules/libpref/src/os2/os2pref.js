@@ -184,3 +184,7 @@ pref("applications.telnet.host", "%host%");
 pref("applications.telnet.port", "-p %port%");
 
 pref("mail.compose.max_recycled_windows", 0);
+
+// Use IBM943 compatible map for JIS X 0208
+pref("intl.jis0208.map", "IBM943");
+

@@ -39,45 +39,41 @@
 
 #include "nsUCSupport.h"
 
-static const PRUint16 gJis0208map[] = {
-#include "jis0208.ump" 
-};
+#include "nsIPref.h"
 
-static const PRUint16 gJis0212map[] = {
-#include "jis0212.ump" 
-};
+#include "japanese.map"
 
 #include "nsICharsetConverterManager.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-static PRUint16 gSjisIBMNECmap[] = {
-#include "IBMNEC.map"
-};
+#define SJIS_INDEX mMapIndex[0]
+#define JIS0208_INDEX mMapIndex[1]
+#define JIS0212_INDEX gJIS0212Index
+
+void nsJapaneseToUnicode::setMapMode()
+{
+  nsresult res;
+
+  mMapIndex = gIndex;
+
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (!prefs) return;
+  nsXPIDLCString prefMap;
+  res = prefs->GetCharPref("intl.jis0208.map", getter_Copies(prefMap));
+  if (!NS_SUCCEEDED(res)) return;
+  nsCaseInsensitiveCStringComparator comparator;
+  if ( prefMap.Equals(NS_LITERAL_CSTRING("cp932"), comparator) ) {
+    mMapIndex = gCP932Index;
+  } else if ( prefMap.Equals(NS_LITERAL_CSTRING("ibm943"), comparator) ) {
+    mMapIndex = gIBM943Index;
+  }
+}
 
 NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    const char * aSrc, PRInt32 * aSrcLen,
      PRUnichar * aDest, PRInt32 * aDestLen)
 {
-   static const PRUint16 fbIdx[128] =
-   {
-     0xFFFD, 0,      188,    188*2,  188*3,  188*4,  188*5,  188*6,
-     188*7,  188*8,  188*9,  188*10, 188*11, 188*12, 188*13, 188*14,
-     188*15, 188*16, 188*17, 188*18, 188*19, 188*20, 188*21, 188*22,
-     188*23, 188*24, 188*25, 188*26, 188*27, 188*28, 188*29, 188*30,
-     0xFFFD, 0xFF61, 0xFF62, 0xFF63, 0xFF64, 0xFF65, 0xFF66, 0xFF67,
-     0xFF68, 0xFF69, 0xFF6A, 0xFF6B, 0xFF6C, 0xFF6D, 0xFF6E, 0xFF6F,
-     0xFF70, 0xFF71, 0xFF72, 0xFF73, 0xFF74, 0xFF75, 0xFF76, 0xFF77,
-     0xFF78, 0xFF79, 0xFF7A, 0xFF7B, 0xFF7C, 0xFF7D, 0xFF7E, 0xFF7F,
-     0xFF80, 0xFF81, 0xFF82, 0xFF83, 0xFF84, 0xFF85, 0xFF86, 0xFF87,
-     0xFF88, 0xFF89, 0xFF8A, 0xFF8B, 0xFF8C, 0xFF8D, 0xFF8E, 0xFF8F,
-     0xFF90, 0xFF91, 0xFF92, 0xFF93, 0xFF94, 0xFF95, 0xFF96, 0xFF97,
-     0xFF98, 0xFF99, 0xFF9A, 0xFF9B, 0xFF9C, 0xFF9D, 0xFF9E, 0xFF9F,
-     188*31, 188*32, 188*33, 188*34, 188*35, 188*36, 188*37, 188*38,
-     188*39, 188*40, 188*41, 188*42, 188*43, 188*44, 188*45, 188*46,
-     0xE000, 0xE000+188, 0xE000+188*2, 0xE000+188*3, 0xE000+188*4, 0xE000+188*5, 0xE000+188*6, 0xE000+188*7,
-     0xE000+188*8, 0xE000+188*9, 0xFFFA, 0xFFFB, 0xFFFC, 0xFFFD, 0xFFFD, 0xFFFD,
-   };
    static const PRUint8 sbIdx[256] =
    {
      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,  /* 0x00 */
@@ -118,43 +114,15 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    const unsigned char* src =(unsigned char*) aSrc;
    PRUnichar* destEnd = aDest + *aDestLen;
    PRUnichar* dest = aDest;
-   PRUint16 ibmnec = 0;
    while((src < srcEnd))
    {
        switch(mState)
        {
 
-          case 4: // IBM extention to NEC extention
-          {
-            ibmnec += *src;
-            if (ibmnec < 0xFA40 || ibmnec > 0xFCFF) {   // IBMNEC range check
-              ibmnec = 0;
-            } else {
-              ibmnec = gSjisIBMNECmap[ibmnec - 0xFA40]; // IBMNECmap offset is 0xFA40
-            }
-            if ( ibmnec == 0 ) {
-              *dest++ = 0x30FB;
-              mState=0;
-              if(dest >= destEnd)
-                goto error1;
-            } else {
-              PRUnichar ch = gJis0208map[fbIdx[(ibmnec >> 8) & 0x7F ] 
-                                   + sbIdx[ibmnec & 0x00FF]];
-              if(ch == 0xfffd)
-                ch = 0x30fb;
-              *dest++ = ch;
-              if(dest >= destEnd)
-                goto error1;
-              ibmnec = 0;
-              mState = 0;
-            }
-          } 
-          break;
-
           case 0:
           if(*src & 0x80 && *src != (unsigned char)0xa0)
           {
-            mData = fbIdx[*src & 0x7F];
+            mData = SJIS_INDEX[*src & 0x7F];
             if(mData < 0xE000 )
             {
                mState = 1; // two bytes 
@@ -170,22 +138,11 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
                                    (*src - (unsigned char)(0xfd));
                      if(dest >= destEnd)
                         goto error1;
-                   } else {
-                     if((0x80 != *src) && (0xa0 != *src))
-                       mState = 3;  // two byte undefined
                    }
                  } else {
-                   if((0xfa == *src) || (0xfb == *src) || (0xfc == *src)) {
-                     ibmnec=((*src) << 8) & 0xFF00;
-                     mState = 4; // IBM Extra
-                   } else {
-                     if(mData == 0xfffd)
-                       *dest++ = 0x30fb;
-                     else 
-                       *dest++ = mData; // JIS 0201
-                     if(dest >= destEnd)
-                       goto error1;
-                   }
+                   *dest++ = mData; // JIS 0201
+                   if(dest >= destEnd)
+                     goto error1;
                  }
                } else {
                  mState = 2; // EUDC
@@ -205,7 +162,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
             if(0xFF == off) {
                *dest++ = 0x30FB;
             } else {
-               PRUnichar ch = gJis0208map[mData+off];
+               PRUnichar ch = gJapaneseMap[mData+off];
                if(ch == 0xfffd) 
                  ch = 0x30fb;
                *dest++ = ch;
@@ -230,14 +187,6 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
           }
           break;
 
-          case 3: // two bytes undefined
-          {
-            *dest++ = 0x30fb;
-            if(dest >= destEnd)
-              goto error1;
-            mState = 0;
-          }
-          break;
        }
        src++;
    }
@@ -260,33 +209,6 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
    const char * aSrc, PRInt32 * aSrcLen,
      PRUnichar * aDest, PRInt32 * aDestLen)
 {
-   static const PRUint16 fbIdx[128] =
-   {
-/* 0x8X */
-     0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
-     0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
-/* 0x9X */
-     0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
-     0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
-/* 0xAX */
-     0xFFFD, 0,      94,     94* 2,  94* 3,  94* 4,  94* 5,  94* 6,  
-     94* 7,  94* 8 , 94* 9,  94*10,  94*11,  94*12,  94*13,  94*14,
-/* 0xBX */
-     94*15,  94*16,  94*17,  94*18,  94*19,  94*20,  94*21,  94*22,
-     94*23,  94*24,  94*25,  94*26,  94*27,  94*28,  94*29,  94*30,
-/* 0xCX */
-     94*31,  94*32,  94*33,  94*34,  94*35,  94*36,  94*37,  94*38,
-     94*39,  94*40,  94*41,  94*42,  94*43,  94*44,  94*45,  94*46,
-/* 0xDX */
-     94*47,  94*48,  94*49,  94*50,  94*51,  94*52,  94*53,  94*54,
-     94*55,  94*56,  94*57,  94*58,  94*59,  94*60,  94*61,  94*62,
-/* 0xEX */
-     94*63,  94*64,  94*65,  94*66,  94*67,  94*68,  94*69,  94*70,
-     94*71,  94*72,  94*73,  94*74,  94*75,  94*76,  94*77,  94*78,
-/* 0xFX */
-     94*79,  94*80,  94*81,  94*82,  94*83,  94*84,  94*85,  94*86,
-     94*87,  94*88,  94*89,  94*90,  94*91,  94*92,  94*93,  0xFFFD,
-   };
    static const PRUint8 sbIdx[256] =
    {
 /* 0x0X */
@@ -350,7 +272,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
           case 0:
           if(*src & 0x80  && *src != (unsigned char)0xa0)
           {
-            mData = fbIdx[*src & 0x7F];
+            mData = JIS0208_INDEX[*src & 0x7F];
             if(mData != 0xFFFD )
             {
                mState = 1; // two byte JIS0208
@@ -387,7 +309,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
                if ( ! (*src & 0xc0)  )
                  *dest++ = (PRUnichar) *src;;
             } else {
-               *dest++ = gJis0208map[mData+off];
+               *dest++ = gJapaneseMap[mData+off];
             }
             if(dest >= destEnd)
               goto error1;
@@ -404,7 +326,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
               // if 0x8e is not followed by a valid JIS X 0201 byte
               // but by a valid US-ASCII, save it instead of eating it up.
               if ( (PRUint8)*src < (PRUint8)0x7f )
-                 *dest++ = (PRUnichar) *src;;
+                 *dest++ = (PRUnichar) *src;
             }
             if(dest >= destEnd)
               goto error1;
@@ -416,7 +338,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
           {
             if(*src & 0x80)
             {
-              mData = fbIdx[*src & 0x7F];
+              mData = JIS0212_INDEX[*src & 0x7F];
               if(mData != 0xFFFD )
               {
                  mState = 4; 
@@ -428,13 +350,13 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
             }
           }
           break;
-          case 4: // two bytes undefined
+          case 4:
           {
             PRUint8 off = sbIdx[*src];
             if(0xFF == off) {
                *dest++ = 0xFFFD;
             } else {
-               *dest++ = gJis0212map[mData+off];
+               *dest++ = gJapaneseMap[mData+off];
             }
             if(dest >= destEnd)
               goto error1;
@@ -689,7 +611,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
               mLastLegalState = mState;
               mState = mState_ERROR;
             } else {
-              mData = fbIdx[*src & 0x7F];
+              mData = JIS0208_INDEX[*src & 0x7F];
               if(0xFFFD == mData)
                 goto error2;
               mState = mState_JISX0208_1978_2ndbyte;
@@ -719,7 +641,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
               mLastLegalState = mState;
               mState = mState_ERROR;
             } else {
-              mData = fbIdx[*src & 0x7F];
+              mData = JIS0208_INDEX[*src & 0x7F];
               if(0xFFFD == mData)
                 goto error2;
               mState = mState_JISX0208_1983_2ndbyte;
@@ -749,7 +671,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
               mLastLegalState = mState;
               mState = mState_ERROR;
             } else {
-              mData = fbIdx[*src & 0x7F];
+              mData = JIS0212_INDEX[*src & 0x7F];
               if(0xFFFD == mData)
                 goto error2;
               mState = mState_JISX0212_1990_2ndbyte;
@@ -764,7 +686,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else {
                // XXX We need to map from JIS X 0208 1983 to 1987 
                // in the next line before pass to *dest++
-               *dest++ = gJis0208map[mData+off];
+               *dest++ = gJapaneseMap[mData+off];
             }
             if(dest >= destEnd)
               goto error1;
@@ -818,7 +740,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             if(0xFF == off) {
                goto error2;
             } else {
-               *dest++ = gJis0208map[mData+off];
+               *dest++ = gJapaneseMap[mData+off];
             }
             if(dest >= destEnd)
               goto error1;
@@ -872,7 +794,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             if(0xFF == off) {
                goto error2;
             } else {
-               *dest++ = gJis0212map[mData+off];
+               *dest++ = gJapaneseMap[mData+off];
             }
             if(dest >= destEnd)
               goto error1;

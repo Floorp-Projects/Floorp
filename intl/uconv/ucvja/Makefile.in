@@ -35,6 +35,7 @@ MODULE_NAME	= nsUCvJAModule
 REQUIRES	= xpcom \
 		  string \
 		  uconv \
+		  pref \
 		  $(NULL)
 
 CPPSRCS		= \
