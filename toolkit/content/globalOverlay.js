@@ -68,6 +68,7 @@ function goDoCommand(command)
   }
   catch (e) {
     dump("An error occurred executing the "+command+" command\n");
+    dump(e+"\n")
   }
 }
 
