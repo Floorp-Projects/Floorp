@@ -63,19 +63,9 @@
 #define morseAssert(x,y) 0
 #endif 
 
-static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-
-static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #include "prlong.h"
 #include "prinrval.h"
@@ -467,7 +457,7 @@ Wallet_Localize(char* genericString) {
   nsAutoString v;
 
   /* create a bundle for the localization */
-  nsCOMPtr<nsIStringBundleService> pStringService = do_GetService(kStringBundleServiceCID, &ret);
+  nsCOMPtr<nsIStringBundleService> pStringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &ret);
   if (NS_FAILED(ret)) {
 #ifdef DEBUG
     printf("cannot get string service\n");
@@ -1879,17 +1869,16 @@ wallet_GetSelectIndex(
   nsresult result;
   PRUint32 length;
   selectElement->GetLength(&length);
-  nsIDOMNSHTMLOptionCollection * options;
-  result = selectElement->GetOptions(&options);
+  nsCOMPtr<nsIDOMNSHTMLOptionCollection> options;
+  result = selectElement->GetOptions(getter_AddRefs(options));
   if ((NS_SUCCEEDED(result)) && (nsnull != options)) {
     PRUint32 numOptions;
     options->GetLength(&numOptions);
     for (PRUint32 optionX = 0; optionX < numOptions; optionX++) {
-      nsIDOMNode* optionNode = nsnull;
-      options->Item(optionX, &optionNode);
-      if (nsnull != optionNode) {
-        nsIDOMHTMLOptionElement* optionElement = nsnull;
-        result = optionNode->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&optionElement);
+      nsCOMPtr<nsIDOMNode> optionNode;
+      options->Item(optionX, getter_AddRefs(optionNode));
+      if (optionNode) {
+        nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(do_QueryInterface(optionNode, &result));
         if ((NS_SUCCEEDED(result)) && (nsnull != optionElement)) {
           nsAutoString optionValue;
           nsAutoString optionText;
@@ -1904,12 +1893,9 @@ wallet_GetSelectIndex(
             index = optionX;
             return 0;
           }
-          NS_RELEASE(optionElement);
         }
-        NS_RELEASE(optionNode);
       }
     }
-    NS_RELEASE(options);
   }
   return -1;
 }
@@ -1958,8 +1944,7 @@ wallet_StepForwardOrBack
      *    visible <input> element.  That would include such things as type="button", type="submit" etc.  The
      *    only thing it would exclude is type="hidden".
      */
-    nsIDOMHTMLInputElement* inputElement;  
-    result = elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
+    nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode, &result));
     if ((NS_SUCCEEDED(result)) && (inputElement)) {
       nsAutoString type;
       result = inputElement->GetType(type);
@@ -1979,8 +1964,7 @@ wallet_StepForwardOrBack
         }
       }
     } else {
-      nsIDOMHTMLSelectElement* selectElement;
-      result = elementNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&selectElement);
+      nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(elementNode, &result));
       if ((NS_SUCCEEDED(result)) && (selectElement)) {
         atInputOrSelect = PR_TRUE;
         return;
@@ -2406,7 +2390,7 @@ wallet_GetPrefills(
   nsresult result;
 
   /* get prefills for input element */
-  result = elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
+  result = elementNode->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElement);
   if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
     nsAutoString type;
     result = inputElement->GetType(type);
@@ -2470,7 +2454,7 @@ if (schema.Length()) {
   }
 
   /* get prefills for dropdown list */
-  result = elementNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&selectElement);
+  result = elementNode->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement), (void**)&selectElement);
   if ((NS_SUCCEEDED(result)) && (nsnull != selectElement)) {
     nsAutoString field;
     result = selectElement->GetName(field);
@@ -2749,8 +2733,7 @@ Wallet_SignonViewerReturn(const nsString& results)
 
     /* step through all nopreviews and delete those that are in the sequence */
     {
-      nsAutoString temp1; temp1.AssignWithConversion("|goneP|");
-      SI_FindValueInArgs(results, temp1, gone);
+      SI_FindValueInArgs(results, NS_LITERAL_STRING("|goneP|"), gone);
     }
     PRInt32 count = LIST_COUNT(wallet_URL_list);
     while (count>0) {
@@ -2767,8 +2750,7 @@ Wallet_SignonViewerReturn(const nsString& results)
 
     /* step through all nocaptures and delete those that are in the sequence */
     {
-      nsAutoString temp2; temp2.AssignWithConversion("|goneC|");
-      SI_FindValueInArgs(results, temp2, gone);
+      SI_FindValueInArgs(results, NS_LITERAL_STRING("|goneC|"), gone);
     }
     PRInt32 count2 = LIST_COUNT(wallet_URL_list);
     while (count2>0) {
@@ -3205,8 +3187,8 @@ WLLT_InitReencryptCallback(nsIDOMWindowInternal* window) {
 
 PRIVATE void
 wallet_DecodeVerticalBars(nsString& s) {
-  s.ReplaceSubstring(NS_ConvertASCIItoUCS2("^2"), NS_ConvertASCIItoUCS2("|"));
-  s.ReplaceSubstring(NS_ConvertASCIItoUCS2("^1"), NS_ConvertASCIItoUCS2("^"));
+  s.ReplaceSubstring(NS_LITERAL_STRING("^2"), NS_LITERAL_STRING("|"));
+  s.ReplaceSubstring(NS_LITERAL_STRING("^1"), NS_LITERAL_STRING("^"));
 }
 
 /*
@@ -3222,10 +3204,10 @@ WLLT_PrefillReturn(const nsString& results)
   nsAutoString next;
 
   /* get values that are in environment variables */
-  SI_FindValueInArgs(results, NS_ConvertToString("|fillins|"), fillins);
-  SI_FindValueInArgs(results, NS_ConvertToString("|list|"), listAsAscii);
-  SI_FindValueInArgs(results, NS_ConvertToString("|skip|"), skip);
-  SI_FindValueInArgs(results, NS_ConvertToString("|url|"), urlName);
+  SI_FindValueInArgs(results, NS_LITERAL_STRING("|fillins|"), fillins);
+  SI_FindValueInArgs(results, NS_LITERAL_STRING("|list|"), listAsAscii);
+  SI_FindValueInArgs(results, NS_LITERAL_STRING("|skip|"), skip);
+  SI_FindValueInArgs(results, NS_LITERAL_STRING("|url|"), urlName);
   wallet_DecodeVerticalBars(fillins);
   wallet_DecodeVerticalBars(urlName);
 
@@ -3622,8 +3604,7 @@ wallet_CaptureSelectElement(nsIDOMNode* elementNode, nsIDocument* doc) {
           nsIDOMNode* optionNode = nsnull;
           options->Item(selectedIndex, &optionNode);
           if (nsnull != optionNode) {
-            nsIDOMHTMLOptionElement* optionElement = nsnull;
-            result = optionNode->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&optionElement);
+            nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(do_QueryInterface(optionNode, &result));
             if ((NS_SUCCEEDED(result)) && (nsnull != optionElement)) {
               nsAutoString optionValue;
               nsAutoString optionText;

@@ -111,7 +111,7 @@ extern PRBool
 SI_InSequence(const nsString& sequence, int number);
 
 extern void
-SI_FindValueInArgs(const nsString& results, const nsString& name, nsString& value);
+SI_FindValueInArgs(const nsAReadableString& results, const nsAReadableString& name, nsAWritableString& value);
 
 extern void
 SI_DeleteAll();

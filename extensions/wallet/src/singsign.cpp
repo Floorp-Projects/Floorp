@@ -50,11 +50,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 
-static NS_DEFINE_IID(kIPrefServiceIID, NS_IPREF_IID);
-static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
-
 // Currently the default is on, so we don't need the code to prompt the
 // user if the default is off.
 #undef WALLET_PASSWORDMANAGER_DEFAULT_IS_OFF
@@ -145,7 +140,7 @@ si_unlock_signon_list(void) {
 PUBLIC void
 SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data) {
   nsresult ret;
-  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->RegisterCallback(domain, callback, instance_data);
   }
@@ -154,7 +149,7 @@ SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance
 PUBLIC void
 SI_UnregisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data) {
   nsresult ret;
-  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->UnregisterCallback(domain, callback, instance_data);
   }
@@ -163,7 +158,7 @@ SI_UnregisterCallback(const char* domain, PrefChangedFunc callback, void* instan
 PUBLIC void
 SI_SetBoolPref(const char * prefname, PRBool prefvalue) {
   nsresult ret;
-  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->SetBoolPref(prefname, prefvalue);
     if (!NS_FAILED(ret)) {
@@ -176,7 +171,7 @@ PUBLIC PRBool
 SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
   nsresult ret;
   PRBool prefvalue = defaultvalue;
-  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->GetBoolPref(prefname, &prefvalue);
   }
@@ -189,7 +184,7 @@ SI_SetCharPref(const char * prefname, const char * prefvalue) {
     return; /* otherwise the SetCharPref routine called below will crash */
   }
   nsresult ret;
-  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->SetCharPref(prefname, prefvalue);
     if (!NS_FAILED(ret)) {
@@ -201,7 +196,7 @@ SI_SetCharPref(const char * prefname, const char * prefvalue) {
 PUBLIC void
 SI_GetCharPref(const char * prefname, char** aPrefvalue) {
   nsresult ret;
-  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->CopyCharPref(prefname, aPrefvalue);
     if (NS_FAILED(ret)) {
@@ -215,7 +210,7 @@ SI_GetCharPref(const char * prefname, char** aPrefvalue) {
 PUBLIC void
 SI_GetLocalizedUnicharPref(const char * prefname, PRUnichar** aPrefvalue) {
   nsresult ret;
-  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->GetLocalizedUnicharPref(prefname, aPrefvalue);
     if (NS_FAILED(ret)) {
@@ -608,7 +603,7 @@ si_Randomize(nsString& password) {
   PRIntervalTime randomNumber;
   int i;
   const char * hexDigits = "0123456789AbCdEf";
-  if (password == NS_ConvertToString("********")) {
+  if (password.Equals(NS_LITERAL_STRING("********"))) {
     randomNumber = PR_IntervalNow();
     for (i=0; i<8; i++) {
       password.SetCharAt(hexDigits[randomNumber%16], i);
@@ -1830,7 +1825,7 @@ si_SaveSignonDataLocked() {
 
   /* write out the format revision number */
 
-  si_WriteLine(strm, NS_ConvertToString(HEADER_VERSION));
+  si_WriteLine(strm, NS_ConvertASCIItoUCS2(HEADER_VERSION));
 
   /* format for next part of file shall be:
    * passwordRealm -- first url/username on reject list
@@ -1846,10 +1841,10 @@ si_SaveSignonDataLocked() {
     PRInt32 rejectCount = LIST_COUNT(si_reject_list);
     for (PRInt32 i=0; i<rejectCount; i++) {
       reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-      si_WriteLine(strm, NS_ConvertToString(reject->passwordRealm));
+      si_WriteLine(strm, NS_ConvertASCIItoUCS2(reject->passwordRealm));
     }
   }
-  si_WriteLine(strm, NS_ConvertToString("."));
+  si_WriteLine(strm, NS_ConvertASCIItoUCS2("."));
 
   /* format for cached logins shall be:
    * url LINEBREAK {name LINEBREAK value LINEBREAK}*  . LINEBREAK
@@ -1867,7 +1862,7 @@ si_SaveSignonDataLocked() {
       for (PRInt32 i3=0; i3<userCount; i3++) {
         user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list.ElementAt(i3));
         si_WriteLine
-          (strm, NS_ConvertToString(url->passwordRealm));
+          (strm, NS_ConvertASCIItoUCS2(url->passwordRealm));
 
         /* write out each data node of the user node */
         PRInt32 dataCount = user->signonData_list.Count();
@@ -1879,7 +1874,7 @@ si_SaveSignonDataLocked() {
           si_WriteLine(strm, nsAutoString(data->name));
           si_WriteLine(strm, nsAutoString(data->value));
         }
-        si_WriteLine(strm, NS_ConvertToString("."));
+        si_WriteLine(strm, NS_ConvertASCIItoUCS2("."));
       }
     }
   }
@@ -2243,10 +2238,10 @@ si_RestoreOldSignonDataFromBrowser
   /* get the data from previous time this URL was visited */
   si_lock_signon_list();
   if (username.Length() != 0) {
-    user = si_GetSpecificUser(passwordRealm, username, NS_ConvertToString(USERNAMEFIELD));
+    user = si_GetSpecificUser(passwordRealm, username, NS_ConvertASCIItoUCS2(USERNAMEFIELD));
   } else {
     si_UserHasBeenSelected = PR_FALSE;
-    user = si_GetUser(dialog, passwordRealm, pickFirstUser, NS_ConvertToString(USERNAMEFIELD));
+    user = si_GetUser(dialog, passwordRealm, pickFirstUser, NS_ConvertASCIItoUCS2(USERNAMEFIELD));
   }
   if (!user) {
     /* leave original username and password from caller unchanged */
@@ -2557,19 +2552,22 @@ SI_InSequence(const nsString& sequence, PRInt32 number)
 }
 
 PUBLIC void
-SI_FindValueInArgs(const nsString& results, const nsString& name, nsString& value)
+SI_FindValueInArgs(const nsAReadableString& results, const nsAReadableString& name, nsAWritableString& value)
 {
   /* note: name must start and end with a vertical bar */
-  PRInt32 start, length;
-  start = results.Find(name);
-  PR_ASSERT(start >= 0);
-  if (start < 0) {
+  nsReadingIterator<PRUnichar> start, end, barPos;
+  results.BeginReading(start);
+  results.EndReading(end);
+
+  FindInReadable(name, start, end);
+  PR_ASSERT(start != end);
+  if (start == end) {
     return;
   }
-  start += name.Length(); /* get passed the |name| part */
-  length = results.FindChar('|', PR_FALSE,start) - start;
-  results.Mid(value, start, length);
-  return;
+  start.advance(name.Length()); /* get past the |name| part */
+  barPos = start;
+  FindCharInReadable(PRUnichar('|'), barPos, end);
+  value = Substring(start, barPos);
 }
 
 PUBLIC void
@@ -2591,7 +2589,7 @@ SINGSIGN_SignonViewerReturn(const nsString& results) {
   /*
    * step backwards through all users and delete those that are in the sequence */
   nsAutoString gone;
-  SI_FindValueInArgs(results, NS_ConvertToString("|goneS|"), gone);
+  SI_FindValueInArgs(results, NS_LITERAL_STRING("|goneS|"), gone);
   PRInt32 urlCount = LIST_COUNT(si_signon_list);
   while (urlCount>0) {
     urlCount--;
@@ -2617,7 +2615,7 @@ SINGSIGN_SignonViewerReturn(const nsString& results) {
   si_SaveSignonDataLocked();
 
   /* step backwards through all rejects and delete those that are in the sequence */
-  SI_FindValueInArgs(results, NS_ConvertToString("|goneR|"), gone);
+  SI_FindValueInArgs(results, NS_LITERAL_STRING("|goneR|"), gone);
   si_lock_signon_list();
   PRInt32 rejectCount = LIST_COUNT(si_reject_list);
   while (rejectCount>0) {
