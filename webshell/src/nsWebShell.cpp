@@ -300,8 +300,6 @@ public:
                         const PRUnichar* aTargetSpec);
   NS_IMETHOD GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState);
 
-  NS_IMETHOD RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat);
-
   // nsIRefreshURL interface methods...
   NS_IMETHOD RefreshURI(nsIURI* aURI, PRInt32 aMillis, PRBool aRepeat);
   NS_IMETHOD CancelRefreshURITimers(void);
@@ -343,8 +341,6 @@ public:
                             nsIInputStream* aPostDataStream = 0);
 
   void ShowHistory();
-
-  static void RefreshURLCallback(nsITimer* aTimer, void* aClosure);
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
@@ -388,8 +384,6 @@ protected:
 
   PRPackedBool mIsInSHist;
   PRPackedBool mFailedToLoadHistoryService;
-
-  nsScrollPreference mScrollPref;
 
   nsVoidArray mRefreshments;
 
@@ -551,7 +545,6 @@ nsWebShell::nsWebShell() : nsDocShell()
 
   NS_INIT_REFCNT();
   mHistoryIndex = -1;
-  mScrollPref = nsScrollPreference_kAuto;
   mThreadEventQueue = nsnull;
   InitFrameData();
   mItemType = typeContent;
@@ -2702,8 +2695,8 @@ public:
   // nsITimerCallback interface
   NS_IMETHOD_(void) Notify(nsITimer *timer);
 
-  nsIWebShell* mShell;
-  nsString     mUrlSpec;
+  nsCOMPtr<nsIDocShell> mDocShell;
+  nsCOMPtr<nsIURI> mURI;
   PRBool       mRepeat;
   PRInt32      mDelay;
 
@@ -2714,13 +2707,10 @@ protected:
 refreshData::refreshData()
 {
   NS_INIT_REFCNT();
-
-  mShell   = nsnull;
 }
 
 refreshData::~refreshData()
 {
-  NS_IF_RELEASE(mShell);
 }
 
 
@@ -2728,10 +2718,10 @@ NS_IMPL_ISUPPORTS(refreshData, kITimerCallbackIID);
 
 NS_IMETHODIMP_(void) refreshData::Notify(nsITimer *aTimer)
 {
-  NS_PRECONDITION((nsnull != mShell), "Null pointer...");
-  if (nsnull != mShell) {
-    mShell->LoadURL(mUrlSpec.GetUnicode(), nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL);
-  }
+   NS_ASSERTION(mDocShell, "DocShell is somehow null");
+
+   if(mDocShell)
+      mDocShell->LoadURI(mURI, nsnull);
   /*
    * LoadURL(...) will cancel all refresh timers... This causes the Timer and
    * its refreshData instance to be released...
@@ -2739,68 +2729,31 @@ NS_IMETHODIMP_(void) refreshData::Notify(nsITimer *aTimer)
 }
 
 
-NS_IMETHODIMP
-nsWebShell::RefreshURI(nsIURI* aURI, PRInt32 millis, PRBool repeat)
+NS_IMETHODIMP nsWebShell::RefreshURI(nsIURI* aURI, PRInt32 aDelay, PRBool aRepeat)
 {
+   NS_ENSURE_ARG(aURI);
 
-  nsresult rv = NS_OK;
-  if (nsnull == aURI) {
-    NS_PRECONDITION((aURI != nsnull), "Null pointer");
-    rv = NS_ERROR_NULL_POINTER;
-    goto done;
-  }
+   refreshData* data = new refreshData();
+   NS_ENSURE_TRUE(data, NS_ERROR_OUT_OF_MEMORY);
 
-  char* spec;
-  aURI->GetSpec(&spec);
-  rv = RefreshURL(spec, millis, repeat);
-  nsCRT::free(spec);
+   nsCOMPtr<nsISupports> dataRef = data; // Get the ref count to 1
 
-done:
-  return rv;
-}
+   data->mDocShell = this;
+   data->mURI = aURI;
+   data->mDelay = aDelay;
+   data->mRepeat = aRepeat;
 
-NS_IMETHODIMP
-nsWebShell::RefreshURL(const char* aURI, PRInt32 millis, PRBool repeat)
-{
-  nsresult rv = NS_OK;
-  nsITimer *timer=nsnull;
-  refreshData *data;
+   nsITimer* timer = nsnull;
 
-  if (nsnull == aURI) {
-    NS_PRECONDITION((aURI != nsnull), "Null pointer");
-    rv = NS_ERROR_NULL_POINTER;
-    goto done;
-  }
+   NS_NewTimer(&timer);
+   NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);
 
-  NS_NEWXPCOM(data, refreshData);
-  if (nsnull == data) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
+   NS_LOCK_INSTANCE();  // XXX What is this for?
+   mRefreshments.AppendElement(timer);
+   timer->Init(data, aDelay);
+   NS_UNLOCK_INSTANCE();
 
-  // Set the reference count to one...
-  NS_ADDREF(data);
-
-  data->mShell = this;
-  NS_ADDREF(data->mShell);
-
-  data->mUrlSpec  = aURI;
-  data->mDelay    = millis;
-  data->mRepeat   = repeat;
-
-  /* Create the timer. */
-  if (NS_OK == NS_NewTimer(&timer)) {
-      /* Add the timer to our array. */
-      NS_LOCK_INSTANCE();
-      mRefreshments.AppendElement(timer);
-      timer->Init(data, millis);
-      NS_UNLOCK_INSTANCE();
-  }
-
-  NS_RELEASE(data);
-
-done:
-  return rv;
+   return NS_OK;
 }
 
 NS_IMETHODIMP
