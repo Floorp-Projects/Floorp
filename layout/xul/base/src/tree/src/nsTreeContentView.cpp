@@ -773,14 +773,64 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
                                        PRInt32      aModType, 
                                        PRInt32      aHint)
 {
-  // First, get the element on which the attribute has changed
-  // and then try to find content item in our array of rows.
-
-  if (!aContent->IsContentOfType(nsIContent::eXUL))
-    return NS_OK;
-
+  // Make sure this notification concerns us.
+  // First check the tag to see if it's one that we care about.
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
+
+  if (aContent->IsContentOfType(nsIContent::eXUL)) {
+    if (tag != nsXULAtoms::treecol &&
+        tag != nsXULAtoms::treeitem &&
+        tag != nsXULAtoms::treeseparator &&
+        tag != nsXULAtoms::treerow &&
+        tag != nsXULAtoms::treecell)
+      return NS_OK;
+  }
+  else
+    return NS_OK;
+
+  // If we have a legal tag, go up to the tree and make sure that it's ours.
+  nsCOMPtr<nsIContent> parent = aContent;
+  nsCOMPtr<nsIAtom> parentTag;
+  do {
+    nsCOMPtr<nsIContent> temp = parent;
+    temp->GetParent(*getter_AddRefs(parent));
+    if (parent)
+      parent->GetTag(*getter_AddRefs(parentTag));
+  } while (parent && parentTag != nsXULAtoms::tree);
+  if (parent != mRoot) {
+    // This is not for us, we can bail out.
+    return NS_OK;
+  }
+
+  // Handle changes of the hidden attribute.
+  if (aAttribute == nsHTMLAtoms::hidden &&
+     (tag == nsXULAtoms::treeitem || tag == nsXULAtoms::treeseparator)) {
+    nsAutoString hiddenString;
+    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hiddenString);
+    PRBool hidden = hiddenString.Equals(NS_LITERAL_STRING("true"));
+ 
+    PRInt32 index = FindContent(aContent);
+    if (hidden && index >= 0) {
+      // Hide this row along with its children.
+      PRInt32 count;
+      RemoveRow(index, &count);
+      mBoxObject->RowCountChanged(index, -count);
+    }
+    else if (!hidden && index < 0) {
+      // Show this row along with its children.
+      nsCOMPtr<nsIContent> container;
+      aContent->GetParent(*getter_AddRefs(container));
+      if (container) {
+        nsCOMPtr<nsIContent> parent;
+        container->GetParent(*getter_AddRefs(parent));
+        if (parent)
+          InsertRowFor(parent, container, aContent);
+      }
+    }
+
+    return NS_OK;
+  }
 
   if (tag == nsXULAtoms::treecol) {
     if (aAttribute == nsXULAtoms::properties) {
@@ -791,18 +841,16 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
   }
   else if (tag == nsXULAtoms::treeitem) {
     PRInt32 index = FindContent(aContent);
-    Row* row = (Row*)mRows[index];
-    if (aAttribute == nsXULAtoms::container) {
-      if (index >= 0) {
+    if (index >= 0) {
+      Row* row = (Row*)mRows[index];
+      if (aAttribute == nsXULAtoms::container) {
         nsAutoString container;
         aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
         PRBool isContainer = container.Equals(NS_LITERAL_STRING("true"));
         row->SetContainer(isContainer);
         mBoxObject->InvalidateRow(index);
-     }
-    }
-    else if (aAttribute == nsXULAtoms::open) {
-      if (index >= 0) {
+      }
+      else if (aAttribute == nsXULAtoms::open) {
         nsAutoString open;
         aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
         PRBool isOpen = open.Equals(NS_LITERAL_STRING("true"));
@@ -812,12 +860,19 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
         else if (isOpen && ! wasOpen)
           OpenContainer(index);
       }
+      else if (aAttribute == nsXULAtoms::empty) {
+        nsAutoString empty;
+        aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::empty, empty);
+        PRBool isEmpty = empty.Equals(NS_LITERAL_STRING("true"));
+        row->SetEmpty(isEmpty);
+        mBoxObject->InvalidateRow(index);
+      }
     }
   }
   else if (tag == nsXULAtoms::treeseparator) {
-    if (aAttribute == nsXULAtoms::properties) {
-      PRInt32 index = FindContent(aContent);
-      if (index >= 0) {
+    PRInt32 index = FindContent(aContent);
+    if (index >= 0) {
+      if (aAttribute == nsXULAtoms::properties) {
         Row* row = (Row*)mRows[index];
         row->SetProperty(nsnull);
         ParseProperties(aContent, &row->mProperty);
@@ -921,53 +976,13 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
 
   if (childTag == nsXULAtoms::treeitem ||
       childTag == nsXULAtoms::treeseparator) {
-    PRInt32 parentIndex = -1;
-    PRBool insertRow = PR_FALSE;
-
     nsCOMPtr<nsIContent> parent;
     aContainer->GetParent(*getter_AddRefs(parent));
-    nsCOMPtr<nsIAtom> parentTag;
-    parent->GetTag(*getter_AddRefs(parentTag));
-    if (parentTag == nsXULAtoms::tree) {
-      // Allow insertion to the outermost container.
-      insertRow = PR_TRUE;
-    }
-    else {
-      // Test insertion to an inner container.
-
-      // First try to find this parent in our array of rows, if we find one
-      // we can be sure that all other parents are open too.
-      parentIndex = FindContent(parent);
-      if (parentIndex >= 0) {
-        // Got it, now test if it is open.
-        if (((Row*)mRows[parentIndex])->IsOpen())
-          insertRow = PR_TRUE;
-      }
-    }
-
-    if (insertRow) {
-      PRInt32 index = 0;
-      GetIndexInSubtree(aContainer, aChild, &index);
-
-      PRInt32 count;
-      InsertRow(parentIndex, index, aChild, &count);
-      mBoxObject->RowCountChanged(parentIndex + index + 1, count);
-    }
+    if (parent)
+      InsertRowFor(parent, aContainer, aChild);
   }
   else if (childTag == nsHTMLAtoms::optgroup) {
-    PRInt32 parentIndex = -1;
-
-    nsCOMPtr<nsIAtom> containerTag;
-    aContainer->GetTag(*getter_AddRefs(containerTag));
-    if (containerTag != nsHTMLAtoms::select)
-      parentIndex = FindContent(aContainer);
-
-    PRInt32 index = 0;
-    GetIndexInSubtree(aContainer, aChild, &index);
-
-    PRInt32 count;
-    InsertRow(parentIndex, index, aChild, &count);
-    mBoxObject->RowCountChanged(parentIndex + index + 1, count);
+    InsertRowFor(aContainer, aContainer, aChild);
   }
   else if (childTag == nsHTMLAtoms::option) {
     PRInt32 count;
@@ -1199,6 +1214,11 @@ nsTreeContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRInt32
 void
 nsTreeContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
 {
+  nsAutoString hidden;
+  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
+  if (hidden.Equals(NS_LITERAL_STRING("true")))
+    return;
+
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
   aRows.AppendElement(row);
 
@@ -1238,6 +1258,11 @@ nsTreeContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRI
 void
 nsTreeContentView::SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
 {
+  nsAutoString hidden;
+  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
+  if (hidden.Equals(NS_LITERAL_STRING("true")))
+    return;
+
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
   row->SetSeparator(PR_TRUE);
   aRows.AppendElement(row);
@@ -1299,17 +1324,21 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aConten
     nsCOMPtr<nsIAtom> tag;
     content->GetTag(*getter_AddRefs(tag));
     if (tag == nsXULAtoms::treeitem) {
-      (*aIndex)++;
-      nsAutoString container;
-      content->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
-      if (container.Equals(NS_LITERAL_STRING("true"))) {
-        nsAutoString open;
-        content->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
-        if (open.Equals(NS_LITERAL_STRING("true"))) {
-          nsCOMPtr<nsIContent> child;
-          nsTreeUtils::GetImmediateChild(content, nsXULAtoms::treechildren, getter_AddRefs(child));
-          if (child)
-            GetIndexInSubtree(child, aContent, aIndex);
+      nsAutoString hidden;
+      content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
+      if (! hidden.Equals(NS_LITERAL_STRING("true"))) {
+        (*aIndex)++;
+        nsAutoString container;
+        content->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
+        if (container.Equals(NS_LITERAL_STRING("true"))) {
+          nsAutoString open;
+          content->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
+          if (open.Equals(NS_LITERAL_STRING("true"))) {
+            nsCOMPtr<nsIContent> child;
+            nsTreeUtils::GetImmediateChild(content, nsXULAtoms::treechildren, getter_AddRefs(child));
+            if (child)
+              GetIndexInSubtree(child, aContent, aIndex);
+          }
         }
       }
     }
@@ -1317,8 +1346,13 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aConten
       (*aIndex)++;
       GetIndexInSubtree(content, aContent, aIndex);
     }
-    else if (tag == nsXULAtoms::treeseparator ||
-             tag == nsHTMLAtoms::option)
+    else if (tag == nsXULAtoms::treeseparator) {
+      nsAutoString hidden;
+      content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
+      if (! hidden.Equals(NS_LITERAL_STRING("true")))
+        (*aIndex)++;
+    }
+    else if (tag == nsHTMLAtoms::option)
       (*aIndex)++;
   }
 }
@@ -1375,6 +1409,42 @@ nsTreeContentView::RemoveSubtree(PRInt32 aIndex, PRInt32* aCount)
   UpdateParentIndexes(aIndex, 0, -count);
 
   *aCount = count;
+}
+
+void
+nsTreeContentView::InsertRowFor(nsIContent* aParent, nsIContent* aContainer, nsIContent* aChild)
+{
+  PRInt32 parentIndex = -1;
+  PRBool insertRow = PR_FALSE;
+
+  nsCOMPtr<nsIAtom> parentTag;
+  aParent->GetTag(*getter_AddRefs(parentTag));
+  if ((aParent->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::tree) ||
+      (aParent->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select)) {
+    // Allow insertion to the outermost container.
+    insertRow = PR_TRUE;
+  }
+  else {
+    // Test insertion to an inner container.
+
+    // First try to find this parent in our array of rows, if we find one
+    // we can be sure that all other parents are open too.
+    parentIndex = FindContent(aParent);
+    if (parentIndex >= 0) {
+      // Got it, now test if it is open.
+      if (((Row*)mRows[parentIndex])->IsOpen())
+        insertRow = PR_TRUE;
+    }
+  }
+
+  if (insertRow) {
+    PRInt32 index = 0;
+    GetIndexInSubtree(aContainer, aChild, &index);
+
+    PRInt32 count;
+    InsertRow(parentIndex, index, aChild, &count);
+    mBoxObject->RowCountChanged(parentIndex + index + 1, count);
+  }
 }
 
 void
