@@ -249,6 +249,7 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
     uint32 prev_total_out;
     uint32 new_data_total_out;
     uint32 input_used_up, input_left_over;
+	char * tempPtr = NULL;
 	DataObject *obj=stream->data_object;	
     if(obj->is_done) 
     {
@@ -259,10 +260,12 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
 
     PR_ASSERT(stream && s && l);
 
-    if (!BlockAllocCat((char *)obj->incoming_buf, obj->incoming_buf_size, s, l))
-    {
+    tempPtr = (char *)obj->incoming_buf;
+    BlockAllocCat(tempPtr, obj->incoming_buf_size, s, l);
+    obj->incoming_buf = (unsigned char*)tempPtr;
+
+    if(!obj->incoming_buf)
         return MK_OUT_OF_MEMORY;
-    }
     obj->incoming_buf_size += l;
 
     /* parse and skip the header */
