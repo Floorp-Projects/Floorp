@@ -42,7 +42,6 @@ NETLIB_LIBS =	      \
 	-lnetcache    \
 	-lnetcnvts    \
 	-lnetlib      \
-	-lnetutil     \
 	-lnetwork     \
 	-lxp	      \
 	-ljsurl	      \
@@ -66,7 +65,6 @@ LIBS		= \
 	-lnetcache    \
 	-lnetcnvts    \
 	-lnetlib      \
-	-lnetutil     \
 	-lnetwork     \
 	-lraptorbase  \
 	-lxp	      \
