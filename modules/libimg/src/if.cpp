@@ -372,7 +372,7 @@ il_progress_notify(il_container *ic)
             return;
         int ret;
         /* Interlaced GIFs are weird */
-        if (ret= nsCRT::strncasecmp(ic->type, "image/gif", 9) == 0) {
+        if ((ret = nsCRT::strncasecmp(ic->type, "image/gif", 9)) == 0) {
             percent_done = il_compute_percentage_complete(row, ic);
         }
         else
