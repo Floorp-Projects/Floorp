@@ -46,6 +46,7 @@ EXPORTS = \
 	nsMsgNotificationManager.h \
 	nsCopyMessageStreamListener.h \
 	nsMsgCopyService.h \
+	nsMsgStatusFeedback.h \
 	$(NULL)
 
 CPPSRCS = \
