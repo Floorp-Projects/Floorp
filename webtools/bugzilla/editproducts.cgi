@@ -232,7 +232,7 @@ unless ($action) {
     }
     print "<TR>\n";
     print "  <TD VALIGN=\"top\" COLSPAN=7>Add a new product</TD>\n";
-    print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><FONT SIZE =-1><A HREF=\"editproducts.cgi?action=add\">Add</A></FONT></TD>\n";
+    print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><A HREF=\"editproducts.cgi?action=add\">Add</A></TD>\n";
     print "</TR></TABLE>\n";
 
     PutTrailer();

@@ -83,7 +83,7 @@
   <table id="flag_types" cellspacing="0" cellpadding="4" border="1">
 
     <tr>
-      <th>Name</th>
+      <th>Edit name ...</th>
       <th>Description</th>
       <th>Actions</th>
     </tr>
@@ -91,11 +91,10 @@
     [% FOREACH type = types %]
 
       <tr class="[% type.is_active ? "active" : "inactive" %]">
-        <td>[% type.name FILTER html %]</td>
+        <td><a href="editflagtypes.cgi?action=edit&id=[% type.id %]">[% type.name FILTER html %]</a></td>
         <td>[% type.description FILTER html %]</td>
         <td>
-          <a href="editflagtypes.cgi?action=edit&id=[% type.id %]">Edit</a>
-          | <a href="editflagtypes.cgi?action=copy&id=[% type.id %]">Copy</a>
+          <a href="editflagtypes.cgi?action=copy&id=[% type.id %]">Copy</a>
           | <a href="editflagtypes.cgi?action=confirmdelete&id=[% type.id %]" 
                onclick="return confirmDelete([% type.id %], '[% type.name FILTER js %]', 
                                              [% type.flag_count %]);">Delete</a>
