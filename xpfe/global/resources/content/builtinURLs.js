@@ -1,45 +1,42 @@
 // the rdf service
-var rdf_uri    = 'component://netscape/rdf/rdf-service';
-var RDF        = Components.classes[rdf_uri].getService();
-    RDF        = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-//var ds_uri     = "http://h-208-12-37-237/client-urls/en-us/builtinURLS.rdf";
-var ds_uri     = "chrome://global/locale/builtinURLs.rdf";
-var titleArc   = RDF.GetResource("http://home.netscape.com/NC-rdf#title");
-var contentArc = RDF.GetResource("http://home.netscape.com/NC-rdf#content");
-var url_ds     = null;
-var rdfXMLSink = null;
-var ds         = null;
-var state      = 0x0; // init.
-var loaded     = false;
+var RDF;
+var titleArc;
+var contentArc;
+var ds;
+var state;
+var loaded;
 
 var SinkObserver = 
 {
 	onBeginLoad: function( aSink) {
 		state = (state | 1); 
-		dump("\n-> SinkObserver:onBeginLoad: " + aSink + ", state=" + state + "\n");
+		//dump("\n-> SinkObserver:onBeginLoad: " + aSink + ", state=" + state + "\n");
 	},
 	
 	onInterrupt: function( aSink) {
 		state = (state | 2);
-		dump("\n-> SinkObserver:onInterrupt: " + aSink + ", state=" + state + "\n");
+		//dump("\n-> SinkObserver:onInterrupt: " + aSink + ", state=" + state + "\n");
 	},
 	
 	onResume: function( aSink) {
 		state = (state & ~2);
-		dump("\n-> SinkObserver:onResume: " + aSink + ", state=" + state + "\n");
+		//dump("\n-> SinkObserver:onResume: " + aSink + ", state=" + state + "\n");
 	},
 	
 	onEndLoad: function( aSink) {
 		state = (state | 4);
 		loaded = (state  == 5);
-		dump("\n-> onEndLoad: " + aSink + ", state=" + state + ", loaded=" + loaded + "\n");
+		//dump("\n-> onEndLoad: " + aSink + ", state=" + state + ", loaded=" + loaded + "\n");
 
 		if (!loaded) {
-			dump("\n->" + ds_uri + " not loaded!\n");
+			dump("\n-> builtin URLs not loaded!\n");
 			return;
 		}
 
 		ds = aSink.QueryInterface(Components.interfaces.nsIRDFDataSource);
+
+		titleArc   = RDF.GetResource("http://home.netscape.com/NC-rdf#title");
+		contentArc = RDF.GetResource("http://home.netscape.com/NC-rdf#content");
 	},
 
 	onError: function( aSink, aStatus, aErrMsg) {
@@ -51,36 +48,51 @@ var SinkObserver =
 
 function loadDS()
 {
+	//dump("\n-->loadDS() called <--\n");
+	if (ds && loaded) {
+		dump("\n-->loadDS(): ds=" + ds + ", loaded=" + loaded + ", returning! <--\n");
+		return;
+    }
+
+	// initialize
+	RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+
 	if (!RDF) {
-		dump("\n-->loadDS(): RDF is null!\n");
+		dump("\n-->loadDS(): RDF service is null!\n");
 		return;
 	}
 	
-	url_ds = RDF.GetDataSource(ds_uri); // return nsIRDFDataSource
+    var ds_uri = "chrome://global/locale/builtinURLs.rdf";
+    var url_ds = RDF.GetDataSource(ds_uri); // return nsIRDFDataSource
 	if (!url_ds) {
 		dump("\n >>Can't get " + ds_uri + "<-\n");
 		return;
 	} 	
-	rdfXMLSink = url_ds.QueryInterface( Components.interfaces.nsIRDFXMLSink );
+	var rdfXMLSink = url_ds.QueryInterface( Components.interfaces.nsIRDFXMLSink );
 	if (rdfXMLSink) {
+		ds         = null;
+		state      = 0x0; // init.
+		loaded     = false;
+
 		rdfXMLSink.addXMLSinkObserver(SinkObserver);
 	}
 }
 
 function xlateURL(key)
 {
+	//dump("\n>> xlateURL(" + key + "): ds=" + ds + ", loaded=" + loaded);
 	if (!ds || !loaded) {
-		dump("\n data source " + ds_uri + "is not loaded! Try again later! \n");
+		dump("\n xlateURL(): data source is not loaded! Try again later! \n");
 		return;
 	}
 	// get data
 	var srcNode = RDF.GetResource(key);
-
 	var titleTarget = ds.GetTarget(srcNode, titleArc, true);
 	if (titleTarget) {
 		titleTarget = 
 			titleTarget.QueryInterface(Components.interfaces.nsIRDFLiteral);
-		dump("\n-> " + key + "::title=" + titleTarget.Value + "\n");
+		dump("\n-> " + key + "::title=" + titleTarget.Value);
 	}
 	else {
 		dump("\n title target=" + titleTarget + "\n");
@@ -92,7 +104,6 @@ function xlateURL(key)
 			contentTarget.QueryInterface(Components.interfaces.nsIRDFLiteral);
 		dump("\n-> " + key + "::content=" + contentTarget.Value + "\n");
 		return contentTarget.Value;
-
 	}
 	else {
 		dump("\n content target=" + contentTarget + "\n");
