@@ -48,10 +48,11 @@ class CHyperTreeFlexTable :
 		public CTiledImageMixin
 {
 public:
-		enum {
-			class_ID = 'htFT',
-			nameColumn = 'NCnC'
-		};
+	enum {
+		class_ID = 'htFT',
+		nameColumn = 'NCnC'
+	};
+	friend class CTreeIcon;
 		
 	CHyperTreeFlexTable(LStream *inStream);
 	~CHyperTreeFlexTable();
@@ -72,6 +73,8 @@ public:
 	virtual void		SetTargetFrame ( const char* inFrame ) ;
 	virtual const char*	GetTargetFrame ( ) const ;
 
+	virtual void	RedrawRow ( HT_Resource ) ;
+	
 protected:
 		
 		// Background image tiling stuff
@@ -92,6 +95,8 @@ protected:
 	virtual void DrawCellContents( const STableCell &inCell, const Rect &inLocalRect);
 	virtual void EraseCellBackground( const STableCell& inCell, const Rect& inLocalRect);
 	virtual ResIDT GetIconID(TableIndexT inRow) const;		
+	virtual void DrawIconsSelf( const STableCell& inCell, IconTransformType inTransformType,
+										const Rect& inIconRect) const ;
 	virtual UInt16 GetNestedLevel(TableIndexT inRow) const;
 	virtual void SetCellExpansion( const STableCell& inCell, Boolean inExpand);
 	virtual Boolean	CellHasDropFlag(const STableCell& inCell, Boolean& outIsExpanded) const;
@@ -225,3 +230,29 @@ private:
 	void	OpenRow ( TableIndexT inRow ) ;
 
 }; // class CPopdownFlexTable
+
+
+#pragma mark -- class CTreeIcon --
+
+
+//
+// class CTreeIcon
+//
+// A very simple class that knows how to draw gifs as icons.
+//
+
+class CTreeIcon : public CImageIconMixin
+{
+public:
+	CTreeIcon ( const string & inURL, CHyperTreeFlexTable* inTree, HT_Resource inNode ) ;
+	~CTreeIcon ( ) ;
+	
+private:
+	void ImageIsReady ( ) ;
+	void DrawStandby ( const Point & inTopLeft, 
+								const IconTransformType inTransform ) const;
+	
+	CHyperTreeFlexTable*	mTree;
+	HT_Resource				mNode;
+	
+}; // class CTreeIcon

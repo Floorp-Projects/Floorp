@@ -376,6 +376,43 @@ CHyperTreeFlexTable :: EraseTableBackground ( ) const
 } // EraseTableBackground
 
 
+void
+CHyperTreeFlexTable :: DrawIconsSelf( const STableCell& inCell, IconTransformType inTransformType,
+										const Rect& inIconRect) const
+{
+	HT_Resource cellNode = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inCell.row) );
+
+	// draw the gif if specified, otherwise draw the normal way.
+	char* url = NULL;
+	PRBool success = HT_GetTemplateData ( cellNode, gNavCenter->RDF_smallIcon, HT_COLUMN_STRING, &url );
+	if ( success && url ) {
+		
+		// extract the image drawing class out of the HT node. If one is not there yet,
+		// create it.
+		CTreeIcon* icon = static_cast<CTreeIcon*>(HT_GetNodeFEData(cellNode));
+		if ( !icon ) {
+			icon = new CTreeIcon(url, const_cast<CHyperTreeFlexTable*>(this), cellNode);
+			if ( !icon )
+				return;
+			HT_SetNodeFEData(cellNode, icon);
+		}
+		
+		// setup where we should draw
+		Point topLeft;
+		topLeft.h = inIconRect.left; topLeft.v = inIconRect.top;
+		uint16 width = inIconRect.right - inIconRect.left;
+		uint16 height = inIconRect.bottom - inIconRect.top;
+		
+		// draw
+		icon->SetImageURL ( url );
+		icon->DrawImage ( topLeft, kTransformNone, width, height );
+	}
+	else
+		CStandardFlexTable::DrawIconsSelf(inCell, inTransformType, inIconRect);
+
+} // DrawIconsSelf
+
+
 //
 // DrawSelf
 //
@@ -405,6 +442,23 @@ CHyperTreeFlexTable :: DrawSelf ( )
 	}
 
 } // DrawSelf
+
+
+//
+// RedrawRow
+//
+// Redraw the row corresponding to the given HT node
+//
+void
+CHyperTreeFlexTable :: RedrawRow ( HT_Resource inNode )
+{
+	TableIndexT row = URDFUtilities::HTRowToPPRow(HT_GetNodeIndex(HT_GetView(inNode), inNode));
+	STableCell left ( row, 1 );
+	STableCell right ( row, LArray::index_Last );
+
+	RefreshCellRange( left, right );
+
+} // RedrawRow
 
 
 //
@@ -1589,3 +1643,40 @@ CPopdownFlexTable :: OpenSelection()
 		OpenRow(selectedRow);
 }
 #endif
+
+#pragma mark -
+
+CTreeIcon :: CTreeIcon ( const string & inURL, CHyperTreeFlexTable* inParent, HT_Resource inNode )
+	: CImageIconMixin(inURL), mTree(inParent), mNode(inNode)
+{
+}
+
+CTreeIcon :: ~CTreeIcon ( )
+{
+}
+	
+
+//
+// ImageIsReady
+//
+// Tell the tree view to redraw the cell representing this node
+//
+void
+CTreeIcon :: ImageIsReady ( )
+{
+	mTree->RedrawRow(mNode);
+}
+
+void
+CTreeIcon :: DrawStandby ( const Point & inTopLeft, 
+								const IconTransformType inTransform ) const
+{
+	Rect where;
+	where.top = inTopLeft.v; where.left = inTopLeft.h;
+	where.right = where.left + 16; where.bottom = where.top + 16;
+	
+	TableIndexT row = URDFUtilities::HTRowToPPRow(HT_GetNodeIndex(HT_GetView(mNode), mNode));
+	mTree->CStandardFlexTable::DrawIconsSelf(STableCell(row, mTree->FindTitleColumnID()),
+												inTransform, where);
+
+} // DrawStandby
