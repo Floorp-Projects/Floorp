@@ -445,3 +445,12 @@ nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
   return result;
 }
 
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetStyleHintForAttributeChange(
+    const nsIContent * aNode,
+    const nsIAtom* aAttribute,
+    PRInt32 *aHint) const
+{
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  return NS_OK;
+}

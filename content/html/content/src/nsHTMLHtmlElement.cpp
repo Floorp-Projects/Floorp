@@ -175,3 +175,13 @@ nsHTMLHtmlElement::HandleDOMEvent(nsIPresContext& aPresContext,
   aEventStatus = nsEventStatus_eIgnore;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLHtmlElement::GetStyleHintForAttributeChange(
+    const nsIContent * aNode,
+    const nsIAtom* aAttribute,
+    PRInt32 *aHint) const
+{
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  return NS_OK;
+}

@@ -519,6 +519,13 @@ struct nsGenericDOMDataNode {
     GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const { \
     aMapFunc = nsGenericDOMDataNode::MapNoAttributes;                  \
     return NS_OK;                                                      \
+  }                                                                    \
+  NS_IMETHOD GetStyleHintForAttributeChange(                           \
+    const nsIContent *aNode,                                           \
+    const nsIAtom* aAttribute,                                         \
+    PRInt32 *aHint) const                                              \
+  {                                                                    \
+    return NS_OK;                                                      \
   }
 
 /**

@@ -211,6 +211,10 @@ public:
                                        const nsHTMLValue& aValue,
                                        nsString& aResult);
 
+  static PRBool SetStyleHintForCommonAttributes(const nsIContent* aNode,
+                                                const nsIAtom* aAttribute,
+                                                PRInt32* aHint);
+
   nsIHTMLAttributes* mAttributes;
 };
 
@@ -439,8 +443,12 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
                                nsHTMLValue& aValue,                    \
                                nsString& aResult) const;               \
-  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
-
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;  \
+  NS_IMETHOD GetStyleHintForAttributeChange(                           \
+    const nsIContent *aNode,                                           \
+    const nsIAtom* aAttribute,                                         \
+    PRInt32 *aHint) const;                                             
+  
 #define NS_IMPL_IHTMLCONTENT_USING_GENERIC2(_g)                        \
   NS_IMETHOD Compact() {                                               \
     return _g.Compact();                                               \
@@ -487,7 +495,11 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
                                nsHTMLValue& aValue,                    \
                                nsString& aResult) const;               \
-  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;  \
+  NS_IMETHOD GetStyleHintForAttributeChange(                           \
+    const nsIContent *aNode,                                           \
+    const nsIAtom* aAttribute,                                         \
+    PRInt32 *aHint) const;
 
 /**
  * This macro implements the portion of query interface that is

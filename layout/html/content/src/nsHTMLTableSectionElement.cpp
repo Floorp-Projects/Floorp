@@ -296,3 +296,19 @@ nsHTMLTableSectionElement::HandleDOMEvent(nsIPresContext& aPresContext,
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
+
+NS_IMETHODIMP
+nsHTMLTableSectionElement::GetStyleHintForAttributeChange(
+    const nsIContent * aNode,
+    const nsIAtom* aAttribute,
+    PRInt32 *aHint) const
+{
+  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, 
+    aAttribute, aHint)) {
+    // Do nothing
+  }
+  else {
+    *aHint = NS_STYLE_HINT_REFLOW;
+  }
+  return NS_OK;
+}
