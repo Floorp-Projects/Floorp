@@ -125,12 +125,14 @@ sub DescDependencies {
             my @verbose;
             my $count = 0;
             foreach my $i (@list) {
-                SendSQL("select bug_status from bugs where bug_id = $i");
-                my ($bug_status) = (FetchSQLData());
-                my $desc = "[Closed]";
-                if ($bug_status eq "OPEN" || $bug_status eq "NEW" ||
+                SendSQL("select bug_status, resolution from bugs where bug_id = $i");
+                my ($bug_status, $resolution) = (FetchSQLData());
+                my $desc;
+                if ($bug_status eq "NEW" || $bug_status eq "ASSIGNED" ||
                     $bug_status eq "REOPENED") {
                     $desc = "";
+                } else {
+                    $desc = "[$resolution]";
                 }
                 push(@verbose, $i . "$desc");
                 $count++;
