@@ -70,10 +70,10 @@ class nsWinReg
 
     enum
     {
-      HKEY_CLASSES_ROOT             = 0x80000000,
-      HKEY_CURRENT_USER             = 0x80000001,
-      HKEY_LOCAL_MACHINE            = 0x80000002,
-      HKEY_USERS                    = 0x80000003
+      NS_HKEY_CLASSES_ROOT          = 0x80000000,
+      NS_HKEY_CURRENT_USER          = 0x80000001,
+      NS_HKEY_LOCAL_MACHINE         = 0x80000002,
+      NS_HKEY_USERS                 = 0x80000003
     };
 
     /* Public Fields */
