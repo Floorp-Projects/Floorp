@@ -1101,13 +1101,10 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
     // Adjust the size of the clip view to account for scrollbars that are
     // showing
     if (mHScrollBarView && ViewIsShowing(mHScrollBarView))
-    {
       controlRect.height -= hheight;
-    }
+
     if (mVScrollBarView && ViewIsShowing(mVScrollBarView))
-    {
       controlRect.width -= vwidth;
-    }
 
     mClipView->SetDimensions(controlRect.width, controlRect.height, PR_FALSE);
 
