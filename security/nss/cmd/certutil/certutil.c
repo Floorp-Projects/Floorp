@@ -106,7 +106,10 @@ GetGeneralName (PRArenaPool *arena)
 	puts ("\t4 - x400Address\n\t5 - directoryName\n\t6 - ediPartyName\n");
 	puts ("\t7 - uniformResourceidentifier\n\t8 - ipAddress\n\t9 - registerID\n");
 	puts ("\tOther - omit\n\t\tChoice:");
-	scanf ("%d", &intValue);
+	if (scanf ("%d", &intValue) == EOF) {
+	    PORT_SetError(SEC_ERROR_INPUT_LEN);
+            GEN_BREAK (SECFailure);
+        }
 	if (intValue >= certOtherName || intValue <= certRegisterID) {
 	    if (namesList == NULL) {
 		namesList = current = tail = (CERTGeneralName *) PORT_ArenaAlloc 
@@ -124,7 +127,10 @@ GetGeneralName (PRArenaPool *arena)
 	current->type = intValue;
 	puts ("\nEnter data:");
 	fflush (stdout);
-	gets (buffer);
+	if (gets (buffer) == NULL) {
+	    PORT_SetError(SEC_ERROR_INPUT_LEN);
+            GEN_BREAK (SECFailure);
+        }
 	switch (current->type) {
 	    case certURI:
 	    case certDNSName:
@@ -181,7 +187,6 @@ GetGeneralName (PRArenaPool *arena)
     }while (1);
 
     if (rv != SECSuccess) {
-	PORT_SetError (rv);
 	PORT_ArenaRelease (arena, mark);
 	namesList = NULL;
     }
@@ -1618,7 +1623,11 @@ AddExtKeyUsage (void *extHandle)
     fprintf(stdout, "%-25s 6 - Step-up\n", "");
     fprintf(stdout, "%-25s Other to finish\n", "");
 
-    gets(buffer);
+    if (gets(buffer) == NULL) {
+        PORT_SetError(SEC_ERROR_INPUT_LEN);
+        rv = SECFailure;
+        goto loser;
+    }
     value = atoi(buffer);
 
     switch( value ) {
@@ -1684,7 +1693,10 @@ AddNscpCertType (void *extHandle)
 	fprintf(stdout, "%-25s 6 - S/MIME CA\n", "");
 	fprintf(stdout, "%-25s 7 - Object Signing CA\n", "");
 	fprintf(stdout, "%-25s Other to finish\n", "");
-	gets (buffer);
+	if (gets (buffer) == NULL) {
+	    PORT_SetError(SEC_ERROR_INPUT_LEN);
+            return SECFailure;
+        }
 	value = atoi (buffer);
 	if (value < 0 || value > 7)
 	    break;
