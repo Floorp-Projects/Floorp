@@ -41,11 +41,26 @@
 #include "nsPluginHostCtrl.h"
 
 static NPError
-_OpenURL(NPP npp, const char *szURL, const char *szTarget, void *pNotifyData, const char *pPostData, uint32 len, NPBool isFile)
+_OpenURL(NPP npp, const char *szURL, const char *szTarget, void *pNotifyData, const char *pData, uint32 len, NPBool isFile)
 {
     if (!npp)
     {
         return NPERR_INVALID_INSTANCE_ERROR;
+    }
+
+    void *postData = NULL;
+    uint32 postDataLen = 0;
+    if (pData)
+    {
+        if (!isFile)
+        {
+            postData = (void *) pData;
+            postDataLen = len;
+        }
+        else
+        {
+            // TODO read the file specified in the postdata param into memory
+        }
     }
 
     nsPluginHostCtrl *pCtrl = (nsPluginHostCtrl *) npp->ndata;
@@ -114,23 +129,33 @@ _OpenURL(NPP npp, const char *szURL, const char *szTarget, void *pNotifyData, co
         CComVariant vPostData;
         CComVariant vHeaders;
 
+        // Initialise postdata
+        if (postData)
+        {
+            // According to the documentation.
+            // The post data specified by PostData is passed as a SAFEARRAY
+            // structure. The variant should be of type VT_ARRAY and point to
+            // a SAFEARRAY. The SAFEARRAY should be of element type VT_UI1,
+            // dimension one, and have an element count equal to the number of
+            // bytes of post data.
+
+            SAFEARRAYBOUND saBound[1];
+            saBound[0].lLbound = 0;
+            saBound[0].cElements = len;
+            vPostData.vt = VT_ARRAY | VT_UI1;
+            vPostData.parray = SafeArrayCreate(VT_UI1, 1, saBound);
+            SafeArrayLock(vPostData.parray);
+            memcpy(vPostData.parray->pvData, postData, postDataLen);
+            SafeArrayUnlock(vPostData.parray);
+        }
+
         cpBrowser->Navigate(url, &vFlags, &vTarget, &vPostData, &vHeaders);
         // TODO listen to navigation & send a URL notify to plugin when completed
         return NPERR_NO_ERROR;
     }
 
-    void *pData = NULL;
-    unsigned long nPostDataLen;
-    
-    // TODO handle file postdata
-    if (pPostData && !isFile)
-    {
-        pPostData = pPostData;
-        nPostDataLen = len;
-    }
-
     USES_CONVERSION;
-    HRESULT hr = pCtrl->OpenURLStream(A2CT(szURL), pNotifyData, pData, nPostDataLen);
+    HRESULT hr = pCtrl->OpenURLStream(A2CT(szURL), pNotifyData, postData, postDataLen);
     return SUCCEEDED(hr) ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
 }
 
