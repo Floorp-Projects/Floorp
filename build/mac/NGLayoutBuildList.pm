@@ -253,14 +253,15 @@ sub Checkout()
 	ActivateApplication('Mcvs');
 
 	my($nsprpub_tag) = "NSPRPUB_CLIENT_BRANCH";
+	my($security_tag) = "SECURITY_CLIENT_BRANCH";
 	
 	#//
 	#// Checkout commands
 	#//
 	if ($main::pull{moz})
 	{
-		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)				|| print "checkout of nsprpub failed\n";		
-		$session->checkout("mozilla/security",	"SeaMonkey_M14_BRANCH")		|| print "checkout of security failed\n";		
+		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)				|| print "checkout of nsprpub failed";		
+		$session->checkout("mozilla/security",	$security_tag)		                || print "checkout of security failed";		
 		$session->checkout("SeaMonkeyAll")									|| 
 			print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
 	}
