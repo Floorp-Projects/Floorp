@@ -2498,6 +2498,9 @@ nsDocShell::SetFocus()
        is not collapsed. */
     nsIFrame* rootFrame;
     presShell->GetRootFrame(&rootFrame);
+    if (!rootFrame)
+        return NS_ERROR_FAILURE;
+
     nsRect frameRect;
     rootFrame->GetRect(frameRect);
     if (frameRect.IsEmpty()) {
