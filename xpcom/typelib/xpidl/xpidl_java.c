@@ -451,6 +451,7 @@ method_declaration(TreeState *state)
     if (!verify_method_declaration(state->tree))
         return FALSE;
 
+    fputc('\n', state->file);
     xpidl_write_comment(state, 4);
 
     /*
@@ -621,7 +622,8 @@ constant_declaration(TreeState *state)
     }
 
     if (success) {
-	xpidl_write_comment(state, 4);
+        fputc('\n', state->file);
+        xpidl_write_comment(state, 4);
 
         fprintf(state->file, "    public static final %s %s = %d;\n",
 		(isshort ? "short" : "int"),
@@ -652,6 +654,7 @@ attribute_declaration(TreeState *state)
 
 
     /* Comment */
+    fputc('\n', state->file);
     xpidl_write_comment(state, 4);
 
     state->tree = ATTR_TYPE_DECL(state->tree);
