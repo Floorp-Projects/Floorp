@@ -131,10 +131,17 @@ void RunPump(void* arg)
 
     // Process messages
     MSG msg;
+#ifdef MOZ_UNICODE
+    while (GetMessageW(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+#else    
     while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -394,7 +401,12 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
             return lResult;
     }
 #endif
+
+#ifdef MOZ_UNICODE
+    return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+#else
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
+#endif
 }
 
 

@@ -407,8 +407,13 @@ protected:
      // Allow Derived classes to modify the height that is passed
      // when the window is created or resized.
     virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
+#ifdef MOZ_UNICODE
+    virtual LPCWSTR         WindowClassW();
+    virtual LPCWSTR         WindowPopupClassW();
+#else
     virtual LPCTSTR         WindowClass();
     virtual LPCTSTR         WindowPopupClass();
+#endif
     virtual DWORD           WindowStyle();
     virtual DWORD           WindowExStyle();
 

@@ -46,6 +46,10 @@ include <$(DEPTH)\config\config.mak>
 LIBRARY_NAME = raptorwidget_s
 DEFINES =-D_IMPL_NS_WIDGET -DMOZ_AIMM
 
+!ifdef MOZ_UNICODE
+DEFINES =$(DEFINES) -DMOZ_UNICODE 
+!endif
+
 EXPORTS = \
 	nsdefs.h \
 	$(NULL)
