@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS		= \
+		nsAppDirectoryServiceDefs.h \
 		nsAppFileLocationProvider.h \
 		nsAppFileLocProviderCID.h   \
 		$(NULL)
