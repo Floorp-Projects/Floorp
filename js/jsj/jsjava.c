@@ -61,11 +61,11 @@
 #include "jsfun.h"      /* for JSFUN_BOUND_METHOD */
 #include "jslock.h"     /* for JS_LOCK_RUNTIME/JS_UNLOCK_RUNTIME */
 
-#ifdef MACLINUX
+#ifdef MKLINUX
 #define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
 #else
 #define VARARGS_ASSIGN(foo, bar) (foo) = (bar)
-#endif /*MACLINUX*/
+#endif /*MKLINUX*/
 
 #ifndef NSPR20
 #define WAIT_FOREVER LL_MAXINT
