@@ -332,9 +332,6 @@
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_paste"/>
-<!-- use this after using "clear" for Windows is approved
-      <menuitem id="menu_clear"/>
--->
       <menuitem id="menu_delete"/>
       <menuseparator id="edEditMenuSep2" />
       <menuitem id="menu_selectAll"/>
