@@ -64,6 +64,9 @@
 #include "nsNewsUtils.h"
 #include "nsIPref.h"
 
+#include "nsIMsgMailSession.h"
+#include "nsIMsgIdentity.h"
+
 #define PREF_NEWS_MAX_ARTICLES "news.max_articles"
 #define PREF_NEWS_MARK_OLD_READ "news.mark_old_read"
 
@@ -89,6 +92,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
 static NS_DEFINE_CID(kNNTPHostCID, NS_NNTPHOST_CID);
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 // quiet compiler warnings by defining these function prototypes
 char *NET_ExplainErrorDetails (int code, ...);
@@ -450,10 +454,10 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL)
 	m_messageID = NULL;
 	m_articleNumber = 0;
 	m_originalContentLength = 0;
-	m_cancelID = NULL;
-	m_cancelFromHdr = NULL;
-	m_cancelNewsgroups = NULL;
-	m_cancelDistribution = NULL;
+	m_cancelID = nsnull;
+	m_cancelFromHdr = nsnull;
+	m_cancelNewsgroups = nsnull;
+	m_cancelDistribution = nsnull;
 	return NS_OK;
 }
 
@@ -1986,7 +1990,7 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   // mscott: short term mime hack.....until libmime plays "nice" with a new stream converter
   // interface, we have to interact with it like we did in the old networking world...however this
   // would be hard to do now...in addition the code and effort would be wasted as we'd have to through
-  // it away once libmime did use a new stream converter interface. So we are going to cheet and write
+  // it away once libmime did use a new stream converter interface. So we are going to cheat and write
   // the article to file. We'll then call a load file url on our "temp" file. Then mkfile does all the work
   // with talking to the RFC-822->HTML stream converter....clever huh =).....
 
@@ -2099,6 +2103,12 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 			// for test purposes...we'd want to write this line out to an rfc-822 stream converter...
 			// we don't have one now so print the data out so we can verify that we got it....
 			printf("%s", outputBuffer);
+
+            // if we are attempting to cancel, we want to snarf the headers and save the aside, which is what
+            // ParseHeaderForCancel() does.
+            if (m_typeWanted == CANCEL_WANTED) {
+                ParseHeaderForCancel(outputBuffer);
+            }
 			if (m_tempArticleStream)
 			{
 				PRUint32 count = 0;
@@ -2110,6 +2120,47 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	PR_FREEIF(line);
 
 	return 0;
+}
+
+void nsNNTPProtocol::ParseHeaderForCancel(char *buf)
+{
+    nsString header(buf, eOneByte);
+    PRInt32 colon = header.Find(':');
+    if (!colon)
+		return;
+
+    nsString value("", eOneByte);
+    header.Right(value, header.Length() - colon -1);
+    value.StripWhitespace();
+      
+    switch (header[0]) {
+    case 'F': case 'f':
+        if (header.Find("From") == 0) {
+            if (m_cancelFromHdr) PR_FREEIF(m_cancelFromHdr);
+			m_cancelFromHdr = PL_strdup(value.GetBuffer());
+        }
+        break;
+    case 'M': case 'm':
+        if (header.Find("Message-ID") == 0) {
+            if (m_cancelID) PR_FREEIF(m_cancelID);
+			m_cancelID = PL_strdup(value.GetBuffer());
+        }
+        break;
+    case 'N': case 'n':
+        if (header.Find("Newsgroups") == 0) {
+            if (m_cancelNewsgroups) PR_FREEIF(m_cancelNewsgroups);
+			m_cancelNewsgroups = PL_strdup(value.GetBuffer());
+        }
+        break;
+     case 'D': case 'd':
+        if (header.Find("Distributions") == 0) {
+            if (m_cancelDistribution) PR_FREEIF(m_cancelDistribution);
+			m_cancelDistribution = PL_strdup(value.GetBuffer());
+        }       
+        break;
+    }
+
+  return;
 }
 
 PRInt32 nsNNTPProtocol::BeginAuthorization()
@@ -3546,6 +3597,7 @@ PRInt32 nsNNTPProtocol::StartCancel()
 PRInt32 nsNNTPProtocol::Cancel()
 {
 	int status = 0;
+        nsresult rv = NS_OK;
 	char *id, *subject, *newsgroups, *distribution, *other_random_headers, *body;
 	char *from, *old_from;
 	int L;
@@ -3560,12 +3612,13 @@ PRInt32 nsNNTPProtocol::Cancel()
    */
   PR_ASSERT (m_responseCode == MK_NNTP_RESPONSE_POST_SEND_NOW);
 
+#if  ParseHeadersForCancelHack
   /* These shouldn't be set yet, since the headers haven't been "flushed" */
   PR_ASSERT (!m_cancelID &&
 			 !m_cancelFromHdr &&
 			 !m_cancelNewsgroups &&
 			 !m_cancelDistribution);
-
+#endif
   /* Write out a blank line.  This will tell mimehtml.c that the headers
 	 are done, and it will call news_generate_html_header_fn which will
 	 notice the fields we're interested in.
@@ -3581,27 +3634,40 @@ PRInt32 nsNNTPProtocol::Cancel()
 										 and not platform dependent  -km */
   status = SendData(m_runningURL, outputBuffer);
   if (status < 0) return status;
+  
   /* Now news_generate_html_header_fn should have been called, and these
 	 should have values. */
-  id = m_cancelID;
-  old_from = m_cancelFromHdr;
   newsgroups = m_cancelNewsgroups;
   distribution = m_cancelDistribution;
+  old_from = m_cancelFromHdr;
+  id = m_cancelID;
 
   PR_ASSERT (id && newsgroups);
   if (!id || !newsgroups) return -1; /* "unknown error"... */
 
-  m_cancelNewsgroups = 0;
-  m_cancelDistribution = 0;
-  m_cancelFromHdr = 0;
-  m_cancelID = 0;
+  m_cancelNewsgroups = nsnull;
+  m_cancelDistribution = nsnull;
+  m_cancelFromHdr = nsnull;
+  m_cancelID = nsnull;
 
   L = PL_strlen (id);
 #ifdef UNREADY_CODE
   from = MIME_MakeFromField ();
 #else
-  from = "testSender@nowhere.com";
+  // get the current identity from the news session....
+  NS_WITH_SERVICE(nsIMsgMailSession,newsSession,kCMsgMailSessionCID,&rv);
+  if (NS_SUCCEEDED(rv) && newsSession) {
+        nsCOMPtr<nsIMsgIdentity> identity; 
+	rv = newsSession->GetCurrentIdentity(getter_AddRefs(identity));
+        if (NS_SUCCEEDED(rv) && identity) {
+        	identity->GetEmail(&from);
+	}
+   }
+#ifdef DEBUG_NEWS
+   printf("post the cancel message as %s\n",from);
 #endif
+#endif
+
   subject = (char *) PR_Malloc (L + 20);
   other_random_headers = (char *) PR_Malloc (L + 20);
   body = (char *) PR_Malloc (PL_strlen (XP_AppCodeName) + 100);
@@ -3612,7 +3678,6 @@ PRInt32 nsNNTPProtocol::Cancel()
 	 which to cancel postings (like telnet.)
 	 Don't do this if server tells us it will validate user. DMB 3/19/97
    */
-  nsresult rv = NS_OK;
   PRBool cancelchk=PR_FALSE;
   rv = m_newsHost->QueryExtension("CANCELCHK",&cancelchk);
   if (NS_SUCCEEDED(rv) && cancelchk)
@@ -3725,7 +3790,7 @@ PRInt32 nsNNTPProtocol::Cancel()
   }
 
 
- FAIL:
+FAIL:
   PR_FREEIF (id);
   PR_FREEIF (from);
   PR_FREEIF (old_from);
@@ -4735,4 +4800,3 @@ nsresult nsNNTPProtocol::CloseSocket()
 
 	return nsMsgProtocol::CloseSocket();
 }
-

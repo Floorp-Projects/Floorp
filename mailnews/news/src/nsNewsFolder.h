@@ -98,7 +98,7 @@ protected:
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult GetDatabase();
-
+  
 	/* Finds the directory associated with this folder.  That is if the path is
 	c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
 	currently exist then it will create it
@@ -119,7 +119,7 @@ protected:
   nsresult MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileSpec &newsrcFile);
 #endif
   virtual const nsIID& GetIncomingServerType() {return nsINntpIncomingServer::GetIID();}
-
+  
 protected:
 	nsNativeFileSpec *mPath;
 	PRUint32  mExpungedBytes;
@@ -127,7 +127,8 @@ protected:
 	PRBool		mGettingNews;
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;
-  char      *m_optionLines;
+  char      *mOptionLines;
+  char      *mHostname;
 };
 
 #endif // nsMsgNewsFolder_h__

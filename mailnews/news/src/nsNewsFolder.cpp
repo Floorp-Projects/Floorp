@@ -68,11 +68,10 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsMsgNewsFolder::nsMsgNewsFolder(void)
-  :  mExpungedBytes(0), 
+  : mPath(nsnull), mExpungedBytes(0), 
     mHaveReadNameFromDB(PR_FALSE), mGettingNews(PR_FALSE),
-    mInitialized(PR_FALSE),  m_optionLines(nsnull)
+    mInitialized(PR_FALSE), mOptionLines(nsnull), mHostname(nsnull)
 {
-	mPath = nsnull;
 //  NS_INIT_REFCNT(); done by superclass
 }
 
@@ -81,7 +80,11 @@ nsMsgNewsFolder::~nsMsgNewsFolder(void)
 	if (mPath)
 		delete mPath;
 
-  PR_FREEIF(m_optionLines);
+  // mHostname allocated in nsGetNewsHostName() with new char[]
+  if (mHostname)
+    delete [] mHostname;
+
+  PR_FREEIF(mOptionLines);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgNewsFolder, nsMsgDBFolder)
@@ -326,39 +329,31 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 {
   nsresult rv = NS_OK;
 
+  char *hostname;
+  rv = GetHostName(&hostname);
+  if (NS_FAILED(rv)) return rv;
+      
   if (isNewsHost()) {  
-    char *newshostname = nsnull;
-
-    // since we know it is a host, mURI is of the form
-    // news://foobar
-    // all we want is foobar
-    // so skip over news:// (a.k.a. kNewsRootURI)
-    newshostname = PR_smprintf("%s", mURI + kNewsRootURILen + 1);
-    if (newshostname == nsnull) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
 #ifdef DEBUG_NEWS
     printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
     nsFileSpec newsrcFile("");
-    rv = GetNewsrcFile(newshostname, path, newsrcFile);
+    rv = GetNewsrcFile(hostname, path, newsrcFile);
     if (rv == NS_OK) {
 #ifdef DEBUG_NEWS
       printf("uri = %s newsrc file = %s\n", mURI, (const char *)newsrcFile);
 #endif
       rv = LoadNewsrcFileAndCreateNewsgroups(newsrcFile);
     }
-
-    PR_FREEIF(newshostname);
-    newshostname = nsnull;
   }
   else {
 #ifdef DEBUG_NEWS
-    printf("%s is not a host, so it has no newsgroups.\n", mURI);
+    printf("%s is not a host, so it has no newsgroups.  (what about categories??)\n", mURI);
 #endif
     rv = NS_OK;
   }
+  
+  PR_FREEIF(hostname);
 
   return rv;
 }
@@ -401,7 +396,8 @@ nsresult nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
 
 nsresult nsMsgNewsFolder::ParseFolder(nsFileSpec& path)
 {
-	return NS_OK;
+  PR_ASSERT(0);
+ 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -682,7 +678,8 @@ nsresult nsMsgNewsFolder::CreateDirectoryForFolder(nsFileSpec &path)
 
 	return rv;
 #else
-  return NS_OK;
+  PR_ASSERT(0);
+  return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
 
@@ -752,7 +749,8 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 	}
 	return rv;
 #endif
-  return NS_OK;
+  PR_ASSERT(0);  
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::RemoveSubFolder(nsIMsgFolder *which)
@@ -761,23 +759,26 @@ NS_IMETHODIMP nsMsgNewsFolder::RemoveSubFolder(nsIMsgFolder *which)
   // Let the base class do list management
   nsMsgFolder::RemoveSubFolder(which);
 #endif
-
-  return NS_OK;
+  PR_ASSERT(0);  
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::Delete()
 {
-  return NS_OK;
+  PR_ASSERT(0);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::Rename(const char *newName)
 {
-  return NS_OK;
+  PR_ASSERT(0);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos)
 {
-  return NS_OK;
+  PR_ASSERT(0);  
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
@@ -993,33 +994,41 @@ NS_IMETHODIMP nsMsgNewsFolder::GetCanBeRenamed(PRBool *canBeRenamed)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 {
-  return NS_OK;
+  PR_ASSERT(0);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
 {
-  return NS_OK;
+  PR_ASSERT(0);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetUsersName(char** userName)
 {
-  return NS_OK;
+  PR_ASSERT(0);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetHostName(char** hostName)
 {
-  nsresult rv;
-	char *host = nsnull;
-	rv = nsGetNewsHostName(kNewsRootURI, mURI, &host);
-	//I'm recopying it because otherwise we'll have a free mismatched memory.
-	//We should really be using allocators to do all of this.
-	if(NS_SUCCEEDED(rv) && host)
-	{
-    *hostName = PL_strdup(host);
-		delete[] host;
+  nsresult rv = NS_OK;
+  
+  if (!mHostname) {
+    // mHostname gets freed in the destructor
+    rv = nsGetNewsHostName(kNewsRootURI, mURI, &mHostname);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+	if (mHostname) {
+    *hostName = PL_strdup(mHostname);
 		if(!*hostName)
 			return NS_ERROR_OUT_OF_MEMORY;
 	}
+  else {
+    return NS_ERROR_FAILURE;
+  }
+  
 	return rv;
 }
 
@@ -1073,8 +1082,13 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
   }
 
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
+  
   if (NS_SUCCEEDED(rv) && nntpService) {
-    rv = nntpService->CancelMessages(messages, nsnull);
+    char *hostname;
+    rv = GetHostName(&hostname);
+    if (NS_FAILED(rv)) return rv;
+    rv = nntpService->CancelMessages(hostname, messages, nsnull, nsnull, nsnull);
+    PR_FREEIF(hostname);
   }
 
   // if we were able to CANCEL those messages, remove the from the database
@@ -1372,7 +1386,7 @@ nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile)
   int status = 0;
   PRInt32 numread = 0;
 
-  PR_FREEIF(m_optionLines);
+  PR_FREEIF(mOptionLines);
 
   if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1560,10 +1574,10 @@ PRInt32
 nsMsgNewsFolder::RememberLine(char* line)
 {
 	char* new_data;
-	if (m_optionLines) {
+	if (mOptionLines) {
 		new_data =
-			(char *) PR_Realloc(m_optionLines,
-								PL_strlen(m_optionLines)
+			(char *) PR_Realloc(mOptionLines,
+								PL_strlen(mOptionLines)
 								+ PL_strlen(line) + 4);
 	} else {
 		new_data = (char *) PR_Malloc(PL_strlen(line) + 3);
@@ -1572,7 +1586,7 @@ nsMsgNewsFolder::RememberLine(char* line)
 	PL_strcpy(new_data, line);
 	PL_strcat(new_data, LINEBREAK);
 
-	m_optionLines = new_data;
+	mOptionLines = new_data;
 
 	return 0;
 

@@ -40,7 +40,7 @@ public:
 
   NS_IMETHOD GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIURL **_retval);
 
-  NS_IMETHOD CancelMessages(nsISupportsArray *messages, nsIUrlListener * aUrlListener);
+  NS_IMETHOD CancelMessages(const char *hostname, nsISupportsArray *messages, nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
   ////////////////////////////////////////////////////////////////////////////////////////
   // we suppport the nsIMsgMessageService Interface 

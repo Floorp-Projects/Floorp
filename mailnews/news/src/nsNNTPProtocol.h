@@ -175,6 +175,8 @@ private:
 	// and then calls the base class to transmit the data
 	PRInt32 SendData(nsIURL * aURL, const char * dataBuffer);
 
+    void ParseHeaderForCancel(char *buf);
+    
 	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
 	// converter interface...
 	nsCOMPtr<nsIOutputStream> m_tempArticleStream;
