@@ -43,6 +43,7 @@
 #include "nsXPIDLString.h"
 #include "plstr.h"
 #include "prprf.h"
+#include "prtime.h"
 #include "rdfutil.h"
 
 #include "rdf.h"
@@ -117,10 +118,22 @@ static PRUint32 gCounter = 0;
     rv = rdf_EnsureRDFService();
     if (NS_FAILED(rv)) return rv;
 
+    if (! gCounter) {
+        // Start it at a semi-unique value, just to minimize the
+        // chance that we get into a situation where
+        //
+        // 1. An anonymous resource gets serialized out in a graph
+        // 2. Reboot
+        // 3. The same anonymous resource gets requested, and refers
+        //    to something completely different.
+        // 4. The serialization is read back in.
+        LL_L2UI(gCounter, PR_Now());
+    }
+
     do {
         nsAutoString s(aContextURI);
         s.Append("#$");
-        s.Append(++gCounter, 10);
+        s.Append(++gCounter, 16);
 
         nsIRDFResource* resource;
         if (NS_FAILED(rv = gRDFService->GetUnicodeResource(s.GetUnicode(), &resource)))
