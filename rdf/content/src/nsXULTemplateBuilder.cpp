@@ -73,6 +73,7 @@
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
