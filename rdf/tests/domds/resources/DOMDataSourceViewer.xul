@@ -6,20 +6,18 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  style="width: 100%; height: 100%" onload="onSrcLoaded();"
+  onload="onSrcLoaded();"
+  alignment="horizontal"
   title="DOM Viewer">
 
 <html:script language="JavaScript" src="DOMDataSourceViewer.js"/>
-<box align="horizontal" style="width: 100%; height: 100%">
 <box align="vertical" flex="30%">
-<box align="horizontal">
-  <html:input id="url" value="http://people.netscape.com/alecf/"/>
-  <titledbutton onclick="loadUrl();" value="Load"/>
-  <titledbutton onclick="refreshTree();" value="Refresh"/>
+  <box align="horizontal">
+    <titledbutton onclick="loadUrl();" value="Load"/>
+    <titledbutton onclick="refreshTree();" value="Refresh"/>
+  </box>
+  <html:iframe flex="100%" src="DOMTree.xul" name="treeframe"/>
 </box>
-<html:iframe flex="100%" src="DOMTree.xul" name="treeframe"/>
-</box>
-<html:iframe onload="onSrcLoaded();" flex="100%" name="srcdoc" src="about:blank" width="73%"/>
-</box>
+<html:iframe onload="onSrcLoaded();" name="srcdoc" src="http://www.mozillazine.org/" flex="73%"/>
 
 </window>
