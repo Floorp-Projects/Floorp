@@ -80,7 +80,7 @@ LCFLAGS = \
 # This code removes the console from release builds
 # (unless you've set MOZ_WINCONSOLE=1).
 !ifndef MOZ_WINCONSOLE
-!if $(MOZ_DEBUG)
+!ifdef MOZ_DEBUG
 MOZ_WINCONSOLE=1
 !else
 MOZ_WINCONSOLE=0
