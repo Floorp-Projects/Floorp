@@ -74,7 +74,7 @@ Description Short=Chatzilla
 ; *** LOCALIZE ME BABY ***
 Description Long=Chatzilla IRC client
 Archive=chatzilla.xpi
-Install Size=(#chatzilla_size)
+Install Size=<#chatzilla_size>
 Attributes=SELECTED
 
 [Component4]
@@ -82,7 +82,7 @@ Description Short=English US Language Pack
 ; *** LOCALIZE ME BABY ***
 Description Long=English US Language Pack
 Archive=deflenus.xpi
-Install Size=(#deflenus_size)
+Install Size=<#deflenus_size>
 Attributes=SELECTED|INVISIBLE
 
 [Component5]
@@ -90,7 +90,7 @@ Description Short=English US Language Pack
 ; *** LOCALIZE ME BABY ***
 Description Long=English US Language Pack
 Archive=langenus.xpi
-Install Size=(#langenus_size)
+Install Size=<#langenus_size>
 Attributes=SELECTED|INVISIBLE
 
 [Dialog Start Install]
