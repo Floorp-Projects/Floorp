@@ -152,9 +152,9 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
 	  else if (!strcasecomp(content_type+5,		"plain"))
 		class = (MimeObjectClass *)&mimeInlineTextPlainClass;
 #ifndef MOZILLA_30
-#ifdef MOZ_CALENDAR
 	  else if (!strcasecomp(content_type+5,		"x-vcard"))
 		class = (MimeObjectClass *)&mimeInlineTextVCardClass;
+#ifdef MOZ_CALENDAR
 	  else if (!strcasecomp(content_type+5,		"calendar"))
 		class = (MimeObjectClass *)&mimeInlineTextCalendarClass;
 #endif
