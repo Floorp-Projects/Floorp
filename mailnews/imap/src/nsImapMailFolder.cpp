@@ -73,10 +73,11 @@
 #include "nsMsgUtf7Utils.h"
 #include "nsICacheSession.h"
 #include "nsEscape.h"
-
+#include "nsIDomWindowInternal.h"
 #include "nsIMsgFilter.h"
 #include "nsImapMoveCoalescer.h"
 #include "nsIPrompt.h"
+#include "nsIPromptService.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -967,7 +968,7 @@ NS_IMETHODIMP nsImapMailFolder::RemoveSubFolder (nsIMsgFolder *which)
 
 NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListener)
 {
-  nsresult status = NS_OK;
+   nsresult status = NS_OK;
   nsCOMPtr <nsIMsgFolder> msgParent;
   GetParentMsgFolder(getter_AddRefs(msgParent));
 
@@ -1195,7 +1196,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateStatus(nsIUrlListener *aListener, nsIMsgWi
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
+NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
                                            nsIUrlListener *aListener)
 {
     nsCOMPtr<nsIMsgFolder> trashFolder;
@@ -1283,24 +1284,70 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
             rv = NS_NewISupportsArray(getter_AddRefs(aSupportsArray));
             if (NS_FAILED(rv)) return rv;
             rv = trashFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+            PRBool confirmDeletion;
+            nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+            if (NS_SUCCEEDED(rv))
+              prefBranch->GetBoolPref("mail.imap.confirm_emptyTrashFolderDeletion", &confirmDeletion);
+
+            nsXPIDLString confirmationStr;
+            nsCOMPtr<nsIStringBundle> bundle;
+            nsCOMPtr<nsIDOMWindowInternal> parentWindow;
+            nsCOMPtr<nsIPromptService> promptService;
+            if (confirmDeletion)
+            {
+              IMAPGetStringByID(IMAP_EMPTY_TRASH_CONFIRM, getter_Copies(confirmationStr));
+              promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+              nsCOMPtr<nsIDocShell> docShell;
+	      (void) aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
+   	      parentWindow = do_GetInterface(docShell);
+              rv = IMAPGetStringBundle(getter_AddRefs(bundle));
+              NS_ENSURE_SUCCESS(rv, rv);
+            }
             rv = aEnumerator->First();
             while(NS_SUCCEEDED(rv))
             {
+                PRBool confirmed = PR_TRUE;
+                PRInt32 dlgResult  = -1;
                 rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
-                if (NS_SUCCEEDED(rv))
+                if (confirmDeletion)
                 {
-                    aSupportsArray->AppendElement(aSupport);
-                    rv = aEnumerator->Next();
+                  nsXPIDLString statusString, confirmText;
+                  nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(aSupport);
+                  nsXPIDLString folderName;
+                  folder->GetName(getter_Copies(folderName));
+                  const PRUnichar *formatStrings[1] = { folderName.get() };
+
+                  rv = bundle->FormatStringFromID(IMAP_EMPTY_TRASH_CONFIRM,
+                                                    formatStrings, 1,
+                                                    getter_Copies(confirmText));
+                  // Got the text, now show dialog.
+                  rv = promptService->ConfirmEx(parentWindow, nsnull, confirmText,
+                                                (nsIPromptService::BUTTON_TITLE_YES * nsIPromptService::BUTTON_POS_0) +
+                                                (nsIPromptService::BUTTON_TITLE_NO * nsIPromptService::BUTTON_POS_1) +
+                                                (nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_2), 
+                                                nsnull, nsnull, nsnull, nsnull, nsnull, &dlgResult);
                 }
-            }
-            PRUint32 cnt = 0;
-            aSupportsArray->Count(&cnt);
-            for (PRInt32 i = cnt-1; i >= 0; i--)
-            {
-                aFolder = do_QueryElementAt(aSupportsArray, i);
-                aSupportsArray->RemoveElementAt(i);
-                if (aFolder)
-                    trashFolder->PropagateDelete(aFolder, PR_TRUE, msgWindow);
+              if ( NS_SUCCEEDED( rv ) ) 
+              {
+                  if (dlgResult == 1)
+                    confirmed = PR_FALSE;
+                  else if (dlgResult == 2)
+                    rv = NS_BINDING_ABORTED;
+                  if (NS_FAILED(rv))
+                    break;
+                  if (confirmed)
+                      aSupportsArray->AppendElement(aSupport);
+                  rv = aEnumerator->Next();
+              }
+              PRUint32 cnt = 0;
+              aSupportsArray->Count(&cnt);
+              for (PRInt32 i = cnt-1; i >= 0; i--)
+              {
+                  aFolder = do_QueryElementAt(aSupportsArray, i);
+                  aSupportsArray->RemoveElementAt(i);
+                  if (aFolder)
+                      trashFolder->PropagateDelete(aFolder, PR_TRUE, aMsgWindow);
+              }
             }
         }
 
@@ -2149,12 +2196,12 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
       NS_ENSURE_SUCCESS(rv, rv);
       if (!deleteNoTrash)
       {
-         rv = GetTrashFolder(getter_AddRefs(trashFolder));
+        rv = GetTrashFolder(getter_AddRefs(trashFolder));
 
-			   //If we can't find the trash folder and we are supposed to move it to the trash
-			   //return failure.
-			   if(NS_FAILED(rv) || !trashFolder)
-				   return NS_ERROR_FAILURE;
+        //If we can't find the trash folder and we are supposed to move it to the trash
+        //return failure.
+        if(NS_FAILED(rv) || !trashFolder)
+          return NS_ERROR_FAILURE;
 
          PRBool canHaveSubFoldersOfTrash = PR_TRUE;
          trashFolder->GetCanCreateSubfolders(&canHaveSubFoldersOfTrash);
