@@ -2233,7 +2233,7 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
     const nsStyleDisplay* displayData = (const nsStyleDisplay*)rowContext->GetStyleData(eStyleStruct_Display);
     if ( displayData->mAppearance ) {
       aPresContext->GetTheme(getter_AddRefs(theme));
-      if (theme && theme->ThemeSupportsWidget(aPresContext, displayData->mAppearance))
+      if (theme && theme->ThemeSupportsWidget(aPresContext, nsnull, displayData->mAppearance))
         useTheme = PR_TRUE;
     }
     PRBool isSelected = PR_FALSE;
@@ -2264,7 +2264,7 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
     const nsStyleDisplay* displayData = (const nsStyleDisplay*)separatorContext->GetStyleData(eStyleStruct_Display);
     if ( displayData->mAppearance ) {
       aPresContext->GetTheme(getter_AddRefs(theme));
-      if (theme && theme->ThemeSupportsWidget(aPresContext, displayData->mAppearance))
+      if (theme && theme->ThemeSupportsWidget(aPresContext, nsnull, displayData->mAppearance))
         useTheme = PR_TRUE;
     }
 
@@ -2534,7 +2534,7 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
   const nsStyleDisplay* twistyDisplayData = (const nsStyleDisplay*)twistyContext->GetStyleData(eStyleStruct_Display);
   if ( twistyDisplayData->mAppearance ) {
     aPresContext->GetTheme(getter_AddRefs(theme));
-    if (theme && theme->ThemeSupportsWidget(aPresContext, twistyDisplayData->mAppearance))
+    if (theme && theme->ThemeSupportsWidget(aPresContext, nsnull, twistyDisplayData->mAppearance))
       useTheme = PR_TRUE;
   }
   

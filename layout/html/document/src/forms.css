@@ -73,6 +73,7 @@ label {
 
 /* default inputs, text inputs, and selects */
 input {
+  -moz-appearance: textfield;
   padding: 1px 0 1px 0;
   border: 2px inset ThreeDFace;
   background-color: -moz-Field;
@@ -100,6 +101,7 @@ textarea {
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#textAreas");
+  -moz-appearance: textfield;
 }
 
 textarea > scrollbar {
@@ -126,7 +128,7 @@ select {
   -moz-box-sizing: border-box;
   -moz-user-select: none;
   -moz-user-focus: normal;
-
+  -moz-appearance: menulist;
   border-width: 2px !important;
   border-style: inset !important;
   -moz-border-radius: 0 !important;
@@ -135,8 +137,10 @@ select {
 select[size] {
   padding: 1px 0 1px 0;
 }
+
 select[size="1"] {
   padding: 0;
+  -moz-appearance: menulist;
 }
 
 select > input[type="button"] {
@@ -149,6 +153,7 @@ select > input[type="button"] {
   background-image: url("arrow.gif") !important;
   background-repeat: no-repeat !important;
   background-position: center !important;
+  -moz-appearance: menulist-button;
 }
 
 select > input[type="button"]:active {
@@ -157,6 +162,7 @@ select > input[type="button"]:active {
 
 select[size], :-moz-select-scrolled-content {
   overflow: -moz-scrollbars-vertical;
+  -moz-appearance: listbox;
 }
 
 select:-moz-dummy-option { 
@@ -231,7 +237,7 @@ select[disabled]:-moz-display-comboboxcontrol-frame {
 
 option[disabled],
 optgroup[disabled] {
-  background-color: -moz-field;
+  background-color: transparent;
 }
 
 /* hidden inputs */
@@ -267,6 +273,7 @@ input[type="image"]:focus {
 
 /* file selector */
 input[type="file"] {
+  -moz-appearance: none;
   white-space: nowrap;
   cursor: default;
   -moz-binding: none;
@@ -294,8 +301,9 @@ input[type="file"] > input[type="button"]:-moz-focus-inner
 
 /* radio buttons */
 input[type="radio"] {
-  width: 12px;
-  height: 12px;
+  -moz-appearance: radio;
+  width: 13px;
+  height: 13px;
   margin: 3px 3px 0px 5px;
   padding: 0;
   vertical-align: baseline;
@@ -307,6 +315,7 @@ input[type="radio"] {
 
 /* check boxes */
 input[type="checkbox"] {
+  -moz-appearance: checkbox;
   width: 13px;
   height: 13px;
   margin: 3px 3px 3px 4px;
@@ -366,6 +375,7 @@ button,
 input[type="reset"],
 input[type="button"],
 input[type="submit"] { 
+  -moz-appearance: button;
   padding: 2px 0 2px 0;
   border: 2px outset ButtonFace;
   background-color: ButtonFace;

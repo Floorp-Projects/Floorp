@@ -5217,7 +5217,18 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     }
   } else if (aHeader == nsHTMLAtoms::link) {
     rv = ProcessLinkHeader(aContent, aValue);
-  } else if (mParser) {
+  }
+  else if (aHeader == nsHTMLAtoms::msthemecompatible) {
+    // Disable theming for the presshell if the value is no.
+    nsAutoString value(aValue);
+    if (value.EqualsIgnoreCase("no")) {
+      nsCOMPtr<nsIPresShell> shell;
+      mDocument->GetShellAt(0, getter_AddRefs(shell));
+      if (shell)
+        shell->DisableThemeSupport();
+    }
+  }
+  else if (mParser) {
     // we also need to report back HTTP-EQUIV headers to the channel
     // so that it can process things like pragma: no-cache or other
     // cache-control headers. Ideally this should also be the way for

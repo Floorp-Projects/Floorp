@@ -605,6 +605,14 @@ textbox[multiline="true"] {
   -moz-binding: url("chrome://global/content/widgets/textbox.xml#textarea");
 }
 
+html|*.textbox-input {
+  -moz-appearance: none !important;
+}
+
+html|*.textbox-textarea {
+  -moz-appearance: none !important;
+}
+
 .textbox-input-box {
   -moz-binding: url("chrome://global/content/widgets/textbox.xml#input-box");
 }

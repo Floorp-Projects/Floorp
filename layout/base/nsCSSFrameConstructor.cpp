@@ -10687,7 +10687,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     if (disp && disp->mAppearance) {
       nsCOMPtr<nsITheme> theme;
       aPresContext->GetTheme(getter_AddRefs(theme));
-      if (theme && theme->ThemeSupportsWidget(aPresContext, disp->mAppearance)) {
+      if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame, disp->mAppearance)) {
         PRBool repaint = PR_FALSE;
         theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute, &repaint);
         if (repaint)

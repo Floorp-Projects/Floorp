@@ -577,8 +577,18 @@ nsNativeThemeGTK::ThemeChanged()
 
 NS_IMETHODIMP_(PRBool)
 nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
+                                      nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
+  // Check for specific widgets to see if HTML has overridden the style.
+  if (aFrame) {
+    // For now don't support HTML.
+    nsCOMPtr<nsIContent> content;
+    aFrame->GetContent(getter_AddRefs(content));
+    if (content->IsContentOfType(nsIContent::eHTML))
+      return PR_FALSE;
+  }
+
   switch (aWidgetType) {
   case NS_THEME_BUTTON:
   case NS_THEME_RADIO:

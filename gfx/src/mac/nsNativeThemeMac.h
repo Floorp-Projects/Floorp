@@ -70,7 +70,7 @@ public:
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                 nsIAtom* aAttribute, PRBool* aShouldRepaint);
   NS_IMETHOD ThemeChanged();
-  PRBool ThemeSupportsWidget(nsIPresContext* aPresContext, PRUint8 aWidgetType);
+  PRBool ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
   PRBool WidgetIsContainer(PRUint8 aWidgetType);
 
 protected:

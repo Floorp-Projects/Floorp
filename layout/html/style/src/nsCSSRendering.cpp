@@ -1569,13 +1569,13 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   aPresContext->GetCompatibilityMode(&compatMode);
 
   // Check to see if we have an appearance defined.  If so, we let the theme
-  // renderer draw the border.
-  const nsStyleDisplay* displayData;
-  aForFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct*&)displayData));
+  // renderer draw the border.  DO not get the data from aForFrame, since the passed in style context
+  // may be different!  Always use |aStyleContext|!
+  const nsStyleDisplay* displayData = (const nsStyleDisplay*)aStyleContext->GetStyleData(eStyleStruct_Display);
   if (displayData->mAppearance) {
     nsCOMPtr<nsITheme> theme;
     aPresContext->GetTheme(getter_AddRefs(theme));
-    if (theme && theme->ThemeSupportsWidget(aPresContext, displayData->mAppearance))
+    if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame, displayData->mAppearance))
       return; // Let the theme handle it.
   }
   // Get our style context's color struct.
@@ -2699,7 +2699,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   if (displayData->mAppearance) {
     nsCOMPtr<nsITheme> theme;
     aPresContext->GetTheme(getter_AddRefs(theme));
-    if (theme && theme->ThemeSupportsWidget(aPresContext, displayData->mAppearance)) {
+    if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame, displayData->mAppearance)) {
       theme->DrawWidgetBackground(&aRenderingContext, aForFrame, 
                                   displayData->mAppearance, aBorderArea, aDirtyRect); 
       return;

@@ -1132,6 +1132,9 @@ public:
   NS_IMETHOD IsPaintingSuppressed(PRBool* aResult);
   NS_IMETHOD UnsuppressPainting();
   
+  NS_IMETHOD DisableThemeSupport();
+  virtual PRBool IsThemeSupportEnabled();
+
   NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, PRUint32 aFlags, nsEventStatus* aStatus);
   NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame);
 
@@ -1379,6 +1382,8 @@ protected:
   nsCallbackEventRequest* mFirstCallbackEventRequest;
   nsCallbackEventRequest* mLastCallbackEventRequest;
 
+  PRPackedBool      mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
+
   PRPackedBool      mIsDocumentGone;      // We've been disconnected from the document.
   PRPackedBool      mPaintingSuppressed;  // For all documents we initially lock down painting.
                                           // We will refuse to paint the document until either
@@ -1567,6 +1572,7 @@ PresShell::PresShell():
     gLog = PR_NewLogModule("PresShell");
 #endif
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
+  mIsThemeSupportDisabled = PR_FALSE;
 }
 
 NS_IMPL_ADDREF(PresShell)
@@ -4913,6 +4919,20 @@ PresShell::UnsuppressPainting()
   else
     UnsuppressAndInvalidate();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::DisableThemeSupport()
+{
+  // Doesn't have to be dynamic.  Just set the bool.
+  mIsThemeSupportDisabled = PR_TRUE;
+  return NS_OK;
+}
+
+PRBool 
+PresShell::IsThemeSupportEnabled()
+{
+  return !mIsThemeSupportDisabled;
 }
 
 // Post a request to handle an arbitrary callback after reflow has finished.

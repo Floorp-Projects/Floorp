@@ -1651,7 +1651,7 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
   const nsStyleDisplay* display = 
       (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   if (!(display->mAppearance && nsBox::gTheme && 
-        gTheme->ThemeSupportsWidget(aPresContext, display->mAppearance) &&
+        gTheme->ThemeSupportsWidget(aPresContext, this, display->mAppearance) &&
         !gTheme->WidgetIsContainer(display->mAppearance)))
     PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
