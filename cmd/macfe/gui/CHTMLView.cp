@@ -7177,13 +7177,22 @@ void CHTMLView::RestructureGridView(
 	mContext->Repaginate();
 }
 
+#if defined(OJI)
+#define BUILTIN_ATTRIBUTE_COUNT(builtin) (builtin)->attributes.n
+#define BUILTIN_ATTRIBUTE_NAMES(builtin) (builtin)->attributes.names
+#define BUILTIN_ATTRIBUTE_VALUES(builtin) (builtin)->attributes.values
+#else
+#define BUILTIN_ATTRIBUTE_COUNT(builtin) (builtin)->attribute_cnt
+#define BUILTIN_ATTRIBUTE_NAMES(builtin) (builtin)->attribute_list
+#define BUILTIN_ATTRIBUTE_VALUES(builtin) (builtin)->value_list
+#endif
 
 const char*
 CHTMLView :: GetBuiltInAttribute ( LO_BuiltinStruct *inBuiltinStruct, const char* inAttribute )
 {
-	for ( uint16 n = 0; n < inBuiltinStruct->attribute_cnt; n++ ) {
-		const char* attName = inBuiltinStruct->attribute_list[n];
-		const char* attValue = inBuiltinStruct->value_list[n];
+	for ( uint16 n = 0; n < BUILTIN_ATTRIBUTE_COUNT(inBuiltinStruct); n++ ) {
+		const char* attName = BUILTIN_ATTRIBUTE_NAMES(inBuiltinStruct)[n];
+		const char* attValue = BUILTIN_ATTRIBUTE_VALUES(inBuiltinStruct)[n];
 		if ( attName && (XP_STRCASECMP(attName, inAttribute) == 0) )
 			return attValue;
 	}
@@ -7229,8 +7238,8 @@ CHTMLView :: DisplayBuiltin ( int /*inLocation*/, LO_BuiltinStruct* inBuiltinStr
 		tree->PlaceInSuperImageAt ( inBuiltinStruct->x, inBuiltinStruct->y, false );
 		
 		// set window target and url
-		tree->BuildHTPane ( url, inBuiltinStruct->attribute_cnt, inBuiltinStruct->attribute_list, 
-								inBuiltinStruct->value_list );
+		tree->BuildHTPane ( url, BUILTIN_ATTRIBUTE_COUNT(inBuiltinStruct), BUILTIN_ATTRIBUTE_NAMES(inBuiltinStruct), 
+								BUILTIN_ATTRIBUTE_VALUES(inBuiltinStruct) );
 		tree->SetTargetFrame ( target );
 		
 		tree->Refresh();
