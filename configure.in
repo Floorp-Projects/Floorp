@@ -136,11 +136,18 @@ dnl now the exceptions
 dnl ========================================================
 case "$target" in
 *-*-aix*)
-    DSO_CFLAGS=
-    if [ test "$GNU_CC" != 1 ]; then
-	DSO_LDOPTS='-brtl -bM:SRE -bnoentry -bexpall'
-    fi
-    ;;
+	DLL_SUFFIX="so"
+	MKSHLIB_FORCE_ALL=''
+	MKSHLIB_UNFORCE_ALL=''
+	if [ test "$GNU_CC" != 1 ]; then
+		AIX_DEFINES='-D_THREAD_SAFE -D_REENTRANT -DPIC'
+		AIX_CFLAGS='-brtl -O -qtune=604 -qlanglvl=extended -qflag=w:w'
+		DSO_LDOPTS='-ldl -bM:SRE -brtl -berok -bexpall -bnoentry -L$(DIST)/lib'
+		DSO_CFLAGS='$(AIX_DEFINES) $(AIX_CFLAGS)'
+	fi
+dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
+	MKSHLIB='/usr/ibmcxx/bin/makeC++SharedLib_r -p1 -brtl -berok --'
+	;;
 
 *-*-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
@@ -255,7 +262,15 @@ AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
 AC_CHECK_HEADERS(fcntl.h limits.h malloc.h paths.h strings.h unistd.h)
 AC_CHECK_HEADERS(sys/bittypes.h sys/file.h sys/ioctl.h sys/time.h)
-AC_CHECK_HEADERS(getopt.h ioctl.h sys/cdefs.h filio.h systeminfo.h)
+AC_CHECK_HEADERS(getopt.h ioctl.h filio.h systeminfo.h)
+
+case $target in
+*-aix4.3*)
+	;;
+*)
+	AC_CHECK_HEADERS(sys/cdefs.h)
+	;;
+esac
 
 dnl Checks for libraries.
 dnl ========================================================

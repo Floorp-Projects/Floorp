@@ -530,7 +530,11 @@ typedef void (*png_free_ptr) PNGARG((png_structp, png_structp));
 
 struct png_struct_def
 {
+#if defined(AIX)
+   jmp_buf __jmpbuf;            /* used in png_error */
+#else
    jmp_buf jmpbuf;            /* used in png_error */
+#endif
 
    png_error_ptr error_fn;    /* function for printing errors and aborting */
    png_error_ptr warning_fn;  /* function for printing warnings */
