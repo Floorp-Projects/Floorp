@@ -871,6 +871,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 
 		    aRenderingContext.SetColor(NS_RGB(255,0,0));
 		    aRenderingContext.DrawLine(textLen, 0, textLen, mRect.height);
+        NS_RELEASE(fm);
       }
       return;
     } 
@@ -1091,7 +1092,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
     const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     aRenderingContext.SetColor(color->mColor);
     */
-
+    NS_RELEASE(fm);
   } else {
     // Render the text
     const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
@@ -1105,7 +1106,6 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
   NS_RELEASE(shell);
   NS_RELEASE(doc);
   NS_RELEASE(selection);
-
 }
 
 NS_IMETHODIMP

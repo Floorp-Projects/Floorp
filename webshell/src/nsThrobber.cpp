@@ -239,6 +239,7 @@ HandleThrobberEvent(nsGUIEvent *aEvent)
         w = met->GetWidth(str[0]) + met->GetWidth(str[1]);
         h = met->GetHeight();
         cx->DrawString(str, 2, (bounds.width - w) >> 1, (bounds.height - h) >> 1, 0);
+        NS_RELEASE(met);
       }
       else
       {
