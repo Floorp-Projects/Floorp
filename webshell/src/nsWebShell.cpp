@@ -402,6 +402,7 @@ protected:
   static nsIPluginHost    *mPluginHost;
   static nsIPluginManager *mPluginManager;
   static PRUint32          mPluginInitCnt;
+  PRBool mProcessedEndDocumentLoad;
 };
 
 //----------------------------------------------------------------------
@@ -513,6 +514,7 @@ nsWebShell::nsWebShell()
 	mWebShellType = nsWebShellContent;
   // XXX we should get such mDefaultCharacterSet from pref laster...
   mDefaultCharacterSet = "ISO-8859-1";
+  mProcessedEndDocumentLoad = PR_FALSE;
 }
 
 nsWebShell::~nsWebShell()
@@ -1519,6 +1521,8 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
     }
   }
 
+  mProcessedEndDocumentLoad = PR_FALSE;
+
  /* WebShell was primarily passing the buck when it came to streamObserver.
   * So, pass on the observer which is already a streamObserver to DocLoder.
   *  - Radha
@@ -2245,6 +2249,12 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
                                 nsIURL* aURL, 
                                 const char* aCommand)
 {
+#if DEBUG_nisheeth
+  const char* spec;
+  aURL->GetSpec(&spec);
+  printf("nsWebShell::OnStartDocumentLoad:%p: loader=%p url=%s command=%s\n", this, loader, spec, aCommand);
+#endif
+
   nsIDocumentViewer* docViewer;
   nsresult rv = NS_ERROR_FAILURE;
   
@@ -2284,51 +2294,58 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
                               nsIURL* aURL, 
                               PRInt32 aStatus)
 {
-#if 0
+#if DEBUG_nisheeth
   const char* spec;
   aURL->GetSpec(&spec);
   printf("nsWebShell::OnEndDocumentLoad:%p: loader=%p url=%s status=%d\n", this, loader, spec, aStatus);
-#endif
-  nsIDocumentViewer* docViewer;
+#endif  
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (nsnull != mScriptGlobal) {
-    if (nsnull != mContentViewer && 
-        NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
-      nsIPresContext *presContext;
-      if (NS_OK == docViewer->GetPresContext(presContext)) {
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_PAGE_LOAD;
-        rv = mScriptGlobal->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  if (!mProcessedEndDocumentLoad) {
+    mProcessedEndDocumentLoad = PR_TRUE;    
 
-        NS_RELEASE(presContext);
+    if (nsnull != mScriptGlobal) {
+      nsIDocumentViewer* docViewer;
+      if (nsnull != mContentViewer && 
+          NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
+        nsIPresContext *presContext;
+        if (NS_OK == docViewer->GetPresContext(presContext)) {
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_EVENT;
+          event.message = NS_PAGE_LOAD;
+          rv = mScriptGlobal->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+
+          NS_RELEASE(presContext);
+        }
+        NS_RELEASE(docViewer);
       }
-      NS_RELEASE(docViewer);
+    }
+
+    // Fire the EndLoadURL of the web shell container
+    if (nsnull != aURL) {
+       nsAutoString urlString;
+       const char* spec;
+       rv = aURL->GetSpec(&spec);
+       if (NS_SUCCEEDED(rv)) {
+         urlString = spec;
+         if (nsnull != mContainer) {
+            rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), 0);
+         }  
+       }
+    }
+
+    /*
+     * Fire the OnEndDocumentLoad of the DocLoaderobserver
+     */
+    if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver) && (nsnull != aURL)){
+       mDocLoaderObserver->OnEndDocumentLoad(mDocLoader, aURL, aStatus);
     }
   }
-
-  // Fire the EndLoadURL of the web shell container
-  if (nsnull != aURL) {
-     nsAutoString urlString;
-     const char* spec;
-     rv = aURL->GetSpec(&spec);
-     if (NS_SUCCEEDED(rv)) {
-       urlString = spec;
-       if (nsnull != mContainer) {
-          rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), 0);
-       }  
-     }
+  else {
+    rv = NS_OK;
   }
 
-  /*
-   * Fire the OnEndDocumentLoad of the DocLoaderobserver
-   */
-  if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver) && (nsnull != aURL)){
-     mDocLoaderObserver->OnEndDocumentLoad(mDocLoader, aURL, aStatus);
-  }
-  
   return rv;
 }
 
