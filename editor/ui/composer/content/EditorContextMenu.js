@@ -100,10 +100,10 @@ function EditorFillContextMenu(event, contextMenuNode)
   }
 
   // Note: Item "menu_selectAll_cm" and 
-  // folowing separator are ALWAYS enabled,
+  // following separator are ALWAYS enabled,
   // so there will always be 1 separator here
 
-dump("haveStyle = "+haveStyle+", "+haveProps+", inCell"+inCell+"\n");
+//dump("haveStyle = "+haveStyle+", "+haveProps+", inCell"+inCell+"\n");
   ShowMenuItem("styles-separator", haveStyle && (haveProps || inCell));
 
   ShowMenuItem("property-separator", (haveProps && inCell) || !haveStyle);
@@ -132,8 +132,8 @@ function HideDisabledItem( item )
 {
   if (!item) return false;
 
-
   var enabled = (item.getAttribute('disabled') !="true");
+//dump("HideDisabledItem: "+item.getAttribute("id")+", enabled="+enabled+"\n");
   item.setAttribute("collapsed", enabled ? "" : "true");
   item.setAttribute('contexthidden', enabled ? "" : "true");
   return enabled;

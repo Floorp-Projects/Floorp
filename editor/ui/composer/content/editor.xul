@@ -226,8 +226,11 @@
       <stack>
         <editor type="content-primary" id="content-frame" src="about:blank" context="editorContentContext" flex="1"/>
       </stack>
-      <textfield class="source-editor plain" id="content-source" multiline="true" rows="1"
-                 flex="1" style="width:1em; height:1em;"/>
+      <box align="vertical">
+        <text class="label" id="doctype-text" style="width:1em" crop="right"/>
+        <textfield class="source-editor plain" id="content-source" multiline="true" rows="1"
+                   flex="1" style="width:1em; height:1em;"/>
+      </box>
     </deck>
 
     <box id="EditModeToolbar" hidden="true" autostretch="never" valign="middle" persist="hidden collapsed">

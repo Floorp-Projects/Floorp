@@ -133,7 +133,6 @@
     <command id="cmd_smiley"           state=""         oncommand="goDoCommand('cmd_smiley')"/>
     <command id="cmd_insertBreak"      oncommand="goDoCommand('cmd_insertBreak')"/>
     <command id="cmd_insertBreakAll"   oncommand="goDoCommand('cmd_insertBreakAll')"/>
-    
     <command id="cmd_NormalMode"       oncommand="goDoCommand('cmd_NormalMode')"     value="&NormalMode.label;"/>
     <command id="cmd_AllTagsMode"      oncommand="goDoCommand('cmd_AllTagsMode')"    value="&AllTagsMode.label;"/>
     <command id="cmd_HTMLSourceMode"   oncommand="goDoCommand('cmd_HTMLSourceMode')"/>
@@ -145,11 +144,12 @@
 					events="create, save"
 					oncommandupdate="goUpdateComposerMenuItems(this)"
   >
-    <command id="cmd_save"          value="&saveCmd.label;"          oncommand="goDoCommand('cmd_save')"/>
-    <command id="cmd_saveAs"        value="&saveAsCmd.label;"        oncommand="goDoCommand('cmd_saveAs')"/>
-    <command id="cmd_saveAsCharset" value="&saveAsCharsetCmd.label;" oncommand="goDoCommand('cmd_saveAsCharset')"/>
-    <command id="cmd_revert"        value="&fileRevert.label;"       oncommand="goDoCommand('cmd_revert')"/>
-    <command id="cmd_preview"                                        oncommand="goDoCommand('cmd_preview')"/>
+    <command id="cmd_save"           value="&saveCmd.label;"           oncommand="goDoCommand('cmd_save')"/>
+    <command id="cmd_saveAs"         value="&saveAsCmd.label;"         oncommand="goDoCommand('cmd_saveAs')"/>
+    <command id="cmd_exportToText"   value="&exportToTextCmd.label;"   oncommand="goDoCommand('cmd_exportToText')"/>
+    <command id="cmd_saveAsCharset"  value="&saveAsCharsetCmd.label;"  oncommand="goDoCommand('cmd_saveAsCharset')"/>
+    <command id="cmd_revert"         value="&fileRevert.label;"        oncommand="goDoCommand('cmd_revert')"/>
+    <command id="cmd_preview"                                          oncommand="goDoCommand('cmd_preview')"/>
     <command id="cmd_editSendPage"  value="&sendPageCmd.label;"   accesskey="&sendPage.accesskey;"   oncommand="goDoCommand('cmd_editSendPage')"/>
   </commandset>
 
@@ -294,20 +294,22 @@
       </menu>
       <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"       observes="cmd_open" value="&openFileCmd.label;"/>
-      <menu accesskey="&filerecentmenu.accesskey;" value="&fileRecentMenu.label;" oncreate="BuildRecentMenu(false)">
+      <menu id="menu_RecentFiles" accesskey="&filerecentmenu.accesskey;" value="&fileRecentMenu.label;" oncreate="BuildRecentMenu(false)">
         <menupopup id="menupopup_RecentFiles"/>
           <!-- menuitems appended at runtime -->
       </menu>
       <menuseparator/>
+
       <menuitem accesskey="&fileclose.accesskey;"      key="closekb"        observes="cmd_close"/>
       <menuitem accesskey="&filesave.accesskey;"       key="savekb"         observes="cmd_save"/>
       <menuitem accesskey="&filesaveas.accesskey;"                          observes="cmd_saveAs"/>
       <menuitem accesskey="&filesaveascharset.accesskey;"                   observes="cmd_saveAsCharset"/>
+      <menuitem accesskey="&fileexporttotext.accesskey;"                    observes="cmd_exportToText"/>
       <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
       <menuseparator/>
       <menuitem value="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
       <!-- menuitem id="menu_SendPage" is merged here from mailEditorOverlay.xul,
-           where "position" is assumed to be 13. Change that value if menu position changes.      -->
+           where "position" is assumed to be 14. Change that value if menu position changes.      -->
       <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
       <menuitem accesskey="&fileprint.accesskey;"      observes="cmd_print" value="&printCmd.label;"/>
       <menuseparator/>
@@ -697,7 +699,6 @@
     </menupopup>
   </menulist>
 
-  <!-- TODO: Use actual "face" value when combobox can display arbitrary HTML -->
   <!-- "data" are HTML tagnames, don't translate -->
   <menulist class="toolbar-focustarget" id="FontFaceSelect" tooltip="aTooltip" tooltiptext="&FontFaceSelect.tooltip;" crop="right">
     <observes element="cmd_fontFace" attribute="state" onbroadcast="onFontFaceChange(this.parentNode, 'cmd_fontFace')"/>
