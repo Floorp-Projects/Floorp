@@ -38,12 +38,11 @@
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 
-#include "prtime.h"
-#include "prmem.h"
-#include "pratom.h"
-#include "prefapi.h"
-#include "VerReg.h"
+#include "nsIPref.h"
 
+#include "prmem.h"
+
+#include "VerReg.h"
 #include "zipfile.h"
 
 #include "nsInstall.h"
@@ -1207,21 +1206,36 @@ nsInstall::GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName 
 }
 
 
+static NS_DEFINE_IID(kPrefsIID, NS_IPREF_IID);
+static NS_DEFINE_IID(kPrefsCID,  NS_PREF_CID);
 
 void
 nsInstall::CurrentUserNode(nsString& userRegNode)
 {    
     char *profname;
     int len = MAXREGNAMELEN;
-    int err;
+    nsIPref * prefs;
+    
+    nsresult rv = nsComponentManager::CreateInstance(kPrefsIID, 
+                                                     nsnull,
+                                                     kPrefsCID,
+                                                     (void**) &prefs);
 
-    profname = (char*) PR_Malloc(len);
 
-    err = PREF_GetCharPref( "profile.name", profname, &len );
-
-    if ( err != PREF_OK )
+    if ( NS_SUCCEEDED(rv) )
     {
-        PR_FREEIF(profname);
+        rv = prefs->CopyCharPref("profile.name", &profname);
+
+        if ( NS_FAILED(rv) )
+        {
+            PR_FREEIF(profname); // Allocated by PREF_CopyCharPref
+            profname = NULL;
+        }
+
+        NS_RELEASE(prefs);
+    }
+    else
+    {
         profname = NULL;
     }
     
