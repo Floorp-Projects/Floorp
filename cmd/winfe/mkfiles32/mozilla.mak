@@ -764,6 +764,9 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 !if defined(EDITOR)
 	/DENDER \
 !endif
+!if defined(MOZ_LIBTEST)
+	/DLAYPROBE_API \
+!endif
     /DMOZILLA_CLIENT
 
 
