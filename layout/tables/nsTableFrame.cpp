@@ -1194,7 +1194,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     kidFrame->GetRect(kidRect);
     kidFrame->SizeTo(desiredSize.width, desiredSize.height);
 
-#if 0
+#if 1
     // XXX For the time being just fall through and treat it like a
     // pass 2 reflow...
     mPass = kPASS_SECOND;
