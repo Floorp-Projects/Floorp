@@ -17,41 +17,39 @@
  */
 #include "stdafx.h"
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // NPP_Initialize
 //
 //	Initialize the plugin library. Your DLL global initialization
 //	should be here
 //
-NPError 
-NPP_Initialize(void)
+NPError NPP_Initialize(void)
 {
+	NG_TRACE_METHOD(NPP_Initialize);
 	_Module.Lock();
     return NPERR_NO_ERROR;
 }
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // NPP_Shutdown
 //
 //	shutdown the plugin library. Revert initializition
 //
-void 
-NPP_Shutdown(void)
+void NPP_Shutdown(void)
 {
+	NG_TRACE_METHOD(NPP_Shutdown);
 	_Module.Unlock();
 }
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // npp_GetJavaClass
 //
 //	Return the Java class representing this plugin
 //
-jref 
-NPP_GetJavaClass(void)
+jref NPP_GetJavaClass(void)
 {
+	NG_TRACE_METHOD(NPP_GetJavaClass);
+
 	//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
 	// get the Java environment. You need this information pretty much for
 	// any jri (Java Runtime Interface) call. 
@@ -73,15 +71,12 @@ NPP_GetJavaClass(void)
 }
 
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
 // NPP_New
 //
 //	create a new plugin instance 
 //	handle any instance specific code initialization here
 //
-NPError NP_LOADDS
-NPP_New(NPMIMEType pluginType,
+NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
                 NPP instance,
                 uint16 mode,
                 int16 argc,
@@ -89,6 +84,8 @@ NPP_New(NPMIMEType pluginType,
                 char* argv[],
                 NPSavedData* saved)
 {
+	NG_TRACE_METHOD(NPP_New);
+
 	// trap a NULL ptr 
 	if (instance == NULL)
 	{
@@ -108,9 +105,11 @@ NPP_New(NPMIMEType pluginType,
 		{
 			// Accept CLSIDs specified in various ways
 			// e.g:
+            //   "CLSID:C16DF970-D1BA-11d2-A252-000000000000"
             //   "C16DF970-D1BA-11d2-A252-000000000000"
 			//   "{C16DF970-D1BA-11d2-A252-000000000000}"
-            //   "CLSID:C16DF970-D1BA-11d2-A252-000000000000"
+			//
+			// The first example is the proper way
 
 			char szCLSID[256];
 			if (strnicmp(argv[i], "CLSID:", 6) == 0)
@@ -193,6 +192,7 @@ NPP_New(NPMIMEType pluginType,
 		}
 	}
 
+
 	// Create the control site
 	CControlSiteInstance *pSite = NULL;
 	CControlSiteInstance::CreateInstance(&pSite);
@@ -217,8 +217,7 @@ NPP_New(NPMIMEType pluginType,
 	return NPERR_NO_ERROR;
 }
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // NPP_Destroy
 //
 //	Deletes a plug-in instance and releases all of its resources.
@@ -226,6 +225,8 @@ NPP_New(NPMIMEType pluginType,
 NPError NP_LOADDS
 NPP_Destroy(NPP instance, NPSavedData** save)
 {
+	NG_TRACE_METHOD(NPP_Destroy);
+
 	// Destroy the site
 	CControlSiteInstance *pSite = (CControlSiteInstance *) instance->pdata;
 	if (pSite)
@@ -239,8 +240,7 @@ NPP_Destroy(NPP instance, NPSavedData** save)
 
 }
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // NPP_SetWindow
 //
 //	Associates a platform specific window handle with a plug-in instance.
@@ -259,7 +259,9 @@ NPP_Destroy(NPP instance, NPSavedData** save)
 //
 NPError NP_LOADDS
 NPP_SetWindow(NPP instance, NPWindow* window)
-{    
+{
+	NG_TRACE_METHOD(NPP_SetWindow);
+
 	// Reject silly parameters
 	if (!window)
 	{
@@ -295,8 +297,7 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 	return NPERR_NO_ERROR;
 }
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // NPP_NewStream
 //
 //	Notifies the plugin of a new data stream.
@@ -321,6 +322,8 @@ NPP_NewStream(NPP instance,
               NPBool seekable,
               uint16 *stype)
 {
+	NG_TRACE_METHOD(NPP_NewStream);
+
 	if(!instance)
 	{
 		return NPERR_INVALID_INSTANCE_ERROR;
@@ -332,8 +335,7 @@ NPP_NewStream(NPP instance,
 	return NPERR_NO_ERROR;
 }
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // NPP_StreamAsFile
 //
 //	The stream is done transferring and here is a pointer to the file in the cache
@@ -342,6 +344,8 @@ NPP_NewStream(NPP instance,
 void NP_LOADDS
 NPP_StreamAsFile(NPP instance, NPStream *stream, const char* fname)
 {
+	NG_TRACE_METHOD(NPP_StreamAsFile);
+
 	if(fname == NULL || fname[0] == NULL)
 	{
 		return;
@@ -371,8 +375,7 @@ NPP_StreamAsFile(NPP instance, NPStream *stream, const char* fname)
     } */
 }
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 //
 //		These next 2 functions are really only directly relevant 
 //		in a plug-in which handles the data in a streaming manner.  
@@ -388,8 +391,7 @@ int32 STREAMBUFSIZE = 0X0FFFFFFF;   // we are reading from a file in NPAsFile mo
                                     // so we can take any size stream in our write
                                     // call (since we ignore it)
                                 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // NPP_WriteReady
 //
 //	The number of bytes that a plug-in is willing to accept in a subsequent
@@ -401,8 +403,7 @@ NPP_WriteReady(NPP instance, NPStream *stream)
 	return STREAMBUFSIZE;  
 }
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // NPP_Write
 //
 //	Provides len bytes of data.
@@ -414,8 +415,7 @@ NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
 	return len;
 }
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // NPP_DestroyStream
 //
 //	Closes a stream object.  
@@ -432,8 +432,7 @@ NPP_DestroyStream(NPP instance, NPStream *stream, NPError reason)
 	return NPERR_NO_ERROR;
 }
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
+
 // NPP_Print
 //
 //	Printing the plugin (to be continued...)
