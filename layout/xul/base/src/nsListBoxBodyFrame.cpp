@@ -402,9 +402,6 @@ nsListBoxBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 NS_IMETHODIMP
 nsListBoxBodyFrame::VisibilityChanged(PRBool aVisible)
 {
-  if (!aVisible && mCurrentIndex > 0)
-    EnsureIndexIsVisible(0);
-
   return NS_OK;
 }
 
