@@ -23,6 +23,7 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
 
+AC_PREREQ(2.12)
 AC_INIT(config/config.mk)
 dnl AC_CONFIG_HEADER(include/config.h nsprpub/include/config.h)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
@@ -40,8 +41,8 @@ dnl unset d
 
 dnl Build optimized by default
 dnl ========================================================
-CFLAGS="${CFLAGS--O}"
-CXXFLAGS="${CXXFLAGS--O}"
+CFLAGS="${CFLAGS=-O}"
+CXXFLAGS="${CXXFLAGS=-O}"
 
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
