@@ -26,8 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= mkdepend
-PROGRAM		= mkdepend$(BIN_SUFFIX)
+# undefine (as best we can, thanks gmake!) so we don't need build_number
+MOZILLA_OFFICIAL =
+BUILD_OFFICIAL   =
+MODULE		 = mkdepend
+PROGRAM		 = mkdepend$(BIN_SUFFIX)
 ifdef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -O3
 else
