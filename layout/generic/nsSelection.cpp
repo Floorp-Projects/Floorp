@@ -1629,7 +1629,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
             // set the cursor Bidi level to the paragraph embedding level
             theFrame->GetBidiProperty(context, nsLayoutAtoms::baseLevel, (void**)&level,
                                       sizeof(level) );
-            shell->SetCursorBidiLevel(level);
+            shell->SetCaretBidiLevel(level);
             break;
 
           default:
@@ -1640,7 +1640,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
             {
               theFrame->GetBidiProperty(context, nsLayoutAtoms::embeddingLevel, (void**)&level,
                                         sizeof(level) );
-              shell->SetCursorBidiLevel(level);
+              shell->SetCaretBidiLevel(level);
             }
             else
               BidiLevelFromMove(context, shell, pos.mResultContent, pos.mContentOffset, aKeycode);
@@ -2460,7 +2460,7 @@ void nsSelection::BidiLevelFromMove(nsIPresContext* aContext,
   nsIFrame* firstFrame=nsnull;
   nsIFrame* secondFrame=nsnull;
 
-  aPresShell->GetCursorBidiLevel(&currentLevel);
+  aPresShell->GetCaretBidiLevel(&currentLevel);
 
   switch (aKeycode) {
 
@@ -2469,9 +2469,9 @@ void nsSelection::BidiLevelFromMove(nsIPresContext* aContext,
     case nsIDOMKeyEvent::DOM_VK_LEFT:
       GetPrevNextBidiLevels(aContext, aNode, aContentOffset, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
       if (HINTLEFT==mHint)
-        aPresShell->SetCursorBidiLevel(firstLevel);
+        aPresShell->SetCaretBidiLevel(firstLevel);
       else
-        aPresShell->SetCursorBidiLevel(secondLevel);
+        aPresShell->SetCaretBidiLevel(secondLevel);
       break;
 
       /*
@@ -2479,12 +2479,12 @@ void nsSelection::BidiLevelFromMove(nsIPresContext* aContext,
     case nsIDOMKeyEvent::DOM_VK_UP:
     case nsIDOMKeyEvent::DOM_VK_DOWN:
       GetPrevNextBidiLevels(aContext, aNode, aContentOffset, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
-      aPresShell->SetCursorBidiLevel(PR_MIN(firstLevel, secondLevel));
+      aPresShell->SetCaretBidiLevel(PR_MIN(firstLevel, secondLevel));
       break;
       */
 
     default:
-      aPresShell->UndefineCursorBidiLevel();
+      aPresShell->UndefineCaretBidiLevel();
   }
 }
 
@@ -2516,7 +2516,7 @@ void nsSelection::BidiLevelFromClick(nsIContent *aNode, PRUint32 aContentOffset)
 
   clickInFrame->GetBidiProperty(context, nsLayoutAtoms::embeddingLevel,
                                 (void**)&frameLevel, sizeof(frameLevel) );
-  shell->SetCursorBidiLevel(frameLevel);
+  shell->SetCaretBidiLevel(frameLevel);
 }
 #endif //IBMBIDI
 
@@ -7596,17 +7596,17 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
     if ((level != levelBefore) && (level != levelAfter))
       level = PR_MIN(levelBefore, levelAfter);
     if ((level & 1) == aLangRTL)
-      shell->SetCursorBidiLevel(level);
+      shell->SetCaretBidiLevel(level);
     else
-      shell->SetCursorBidiLevel(level + 1);
+      shell->SetCaretBidiLevel(level + 1);
   }
   else {
     // if cursor is between characters with opposite orientations, changing the keyboard language must change
     //  the cursor level to that of the adjacent character with the orientation corresponding to the new language.
     if ((levelBefore & 1) == aLangRTL)
-      shell->SetCursorBidiLevel(levelBefore);
+      shell->SetCaretBidiLevel(levelBefore);
     else
-      shell->SetCursorBidiLevel(levelAfter);
+      shell->SetCaretBidiLevel(levelAfter);
   }
 #endif // IBMBIDI
   return NS_OK;

@@ -233,7 +233,7 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
       nsCOMPtr<nsIPresShell> shell;
       mEditor->GetPresShell(getter_AddRefs(shell));
       if (shell) {
-        shell->UndefineCursorBidiLevel();
+        shell->UndefineCaretBidiLevel();
       }
     }
 #endif

@@ -939,9 +939,9 @@ public:
 
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
 #ifdef IBMBIDI
-  NS_IMETHOD SetCursorBidiLevel(PRUint8 aLevel);
-  NS_IMETHOD GetCursorBidiLevel(PRUint8 *aOutLevel);
-  NS_IMETHOD UndefineCursorBidiLevel();
+  NS_IMETHOD SetCaretBidiLevel(PRUint8 aLevel);
+  NS_IMETHOD GetCaretBidiLevel(PRUint8 *aOutLevel);
+  NS_IMETHOD UndefineCaretBidiLevel();
   NS_IMETHOD BidiStyleChangeReflow();
 #endif
 
@@ -5322,7 +5322,7 @@ PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
 }
 #ifdef IBMBIDI
 NS_IMETHODIMP
-PresShell::SetCursorBidiLevel(PRUint8 aLevel)
+PresShell::SetCaretBidiLevel(PRUint8 aLevel)
 {
   // If the current level is undefined, we have just inserted new text.
   // In this case, we don't want to reset the keyboard language
@@ -5337,7 +5337,7 @@ PresShell::SetCursorBidiLevel(PRUint8 aLevel)
 }
 
 NS_IMETHODIMP
-PresShell::GetCursorBidiLevel(PRUint8 *aOutLevel)
+PresShell::GetCaretBidiLevel(PRUint8 *aOutLevel)
 {
   if (!aOutLevel) { return NS_ERROR_INVALID_ARG; }
   *aOutLevel = mBidiLevel;
@@ -5345,7 +5345,7 @@ PresShell::GetCursorBidiLevel(PRUint8 *aOutLevel)
 }
 
 NS_IMETHODIMP
-PresShell::UndefineCursorBidiLevel()
+PresShell::UndefineCaretBidiLevel()
 {
   mBidiLevel |= BIDI_LEVEL_UNDEFINED;
   return NS_OK;
