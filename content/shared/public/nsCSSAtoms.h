@@ -32,8 +32,12 @@ public:
   static void AddrefAtoms();
   static void ReleaseAtoms();
 
-  // Alphabetical list of html attribute atoms
+  // Alphabetical list of css atoms
   static nsIAtom* activePseudo;
+
+  static nsIAtom* disabledPseudo;
+
+  static nsIAtom* enabledPseudo;
 
   static nsIAtom* firstChildPseudo;
   static nsIAtom* focusPseudo;
@@ -44,6 +48,9 @@ public:
   static nsIAtom* linkPseudo;
 
   static nsIAtom* outOfDatePseudo;  // Netscape extension
+
+  static nsIAtom* selectedPseudo;
+  static nsIAtom* selectionPseudo;
 
   static nsIAtom* universalSelector;
 
