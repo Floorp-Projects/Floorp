@@ -190,38 +190,16 @@ TimeWithinDay(jsdouble t)
 static jsint
 YearFromTime(jsdouble t)
 {
-    jsint lo = (jsint) floor((t / msPerDay) / 366) + 1970;
-    jsint hi = (jsint) floor((t / msPerDay) / 365) + 1970;
-    jsint mid;
+    jsint y = (jsint) floor(t /(msPerDay*365.2425)) + 1970;
+    jsdouble t2 = (jsdouble) TimeFromYear(y);
 
-    /* above doesn't work for negative dates... */
-    if (hi < lo) {
-	jsint temp = lo;
-	lo = hi;
-	hi = temp;
+    if (t2 > t) {
+        y--;
+    } else {
+        if (t2 + msPerDay * DaysInYear(y) <= t)
+            y++;
     }
-
-    /* Use a simple binary search algorithm to find the right
-       year.  This seems like brute force... but the computation
-       of hi and lo years above lands within one year of the
-       correct answer for years within a thousand years of
-       1970; the loop below only requires six iterations
-       for year 270000. */
-    while (hi > lo) {
-	mid = (hi + lo) / 2;
-	if (TimeFromYear(mid) > t) {
-	    hi = mid - 1;
-	} else {
-	    if (TimeFromYear(mid) <= t) {
-		jsint temp = mid + 1;
-		if (TimeFromYear(temp) > t) {
-		    return mid;
-		}
-		lo = mid + 1;
-	    }
-	}
-    }
-    return lo;
+    return y;
 }
 
 #define InLeapYear(t)   (JSBool) (DaysInYear(YearFromTime(t)) == 366)
