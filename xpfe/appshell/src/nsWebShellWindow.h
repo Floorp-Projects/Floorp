@@ -114,7 +114,7 @@ public:
   NS_IMETHOD Close();
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell);
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
-
+  NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
   // nsWebShellWindow methods...
   nsresult Initialize(nsIWebShellWindow * aParent, nsIAppShell* aShell, nsIURL* aUrl,
                       nsIStreamObserver* anObserver,
@@ -224,8 +224,6 @@ public:
 
 protected:
   void ExecuteJavaScriptString(nsString& aJavaScript);
-
-  NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
 
   PRInt32 GetDocHeight(nsIDocument * aDoc);
  
