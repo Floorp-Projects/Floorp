@@ -412,6 +412,15 @@ gtk_xtbin_resize (GtkWidget *widget,
   XtSetValues(xtbin->xtclient.top_widget, args, 2);
   xtbin->height = height;
   xtbin->width  = width;
+
+  /* we need to send a size allocate so the socket knows about the
+     size changes */
+  allocation.x = xtbin->x;
+  allocation.y = xtbin->y;
+  allocation.width = xtbin->width;
+  allocation.height = xtbin->height;
+
+  gtk_widget_size_allocate(widget, &allocation);
 }
 
 static void
@@ -580,17 +589,16 @@ xt_client_create ( XtClient* xtclient ,
   XSelectInput(xtclient->xtdisplay, 
                XtWindow(top_widget), 
                0x0FFFFF);
-  XSelectInput(xtclient->xtdisplay, 
-               XtWindow(child_widget), 
-               0x0FFFFF);
   xt_client_set_info (child_widget, 0);
 
   XtManageChild(child_widget);
   xtclient->child_widget = child_widget;
 
   /* set the event handler */
-  XtAddEventHandler(child_widget, 0x0FFFFF, TRUE, 
-      (XtEventHandler)xt_client_event_handler, xtclient);
+  XtAddEventHandler(child_widget,
+                    (0x0FFFFF ^ (ResizeRedirectMask | SubstructureRedirectMask)),
+                    TRUE, 
+                    (XtEventHandler)xt_client_event_handler, xtclient);
   XtAddEventHandler(child_widget, 
                     SubstructureNotifyMask | ButtonReleaseMask, 
                     TRUE, 
