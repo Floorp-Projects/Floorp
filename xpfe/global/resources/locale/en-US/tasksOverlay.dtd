@@ -38,5 +38,7 @@
 <!ENTITY walletSamplesCmd.label "Demonstration">
 <!ENTITY walletChangePasswordCmd.label "Change Master Password...">
 <!ENTITY walletExpirePasswordCmd.label "Log Out">
+<!ENTITY walletEncryptCmd.label "Encrypt Stored Data">
+<!ENTITY walletObscureCmd.label "Obscure Stored Data">
 <!ENTITY walletCookieManager.label "Cookie Manager">
 <!ENTITY walletImageManager.label "Image Manager">
