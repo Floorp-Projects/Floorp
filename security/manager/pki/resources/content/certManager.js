@@ -284,13 +284,13 @@ function editCerts()
     var others_tab = document.getElementById("others_tab");
     if (ca_tab.selected) {
       window.openDialog('chrome://pippki/content/editcacert.xul', certkey,
-                  'chrome,width=100,resizable=1,modal');
+                        'chrome,centerscreen,modal');
     } else if (others_tab.selected) {
       window.openDialog('chrome://pippki/content/editemailcert.xul', certkey,
-                  'chrome,width=100,resizable=1,modal');
+                        'chrome,centerscreen,modal');
     } else {
       window.openDialog('chrome://pippki/content/editsslcert.xul', certkey,
-                  'chrome,width=100,resizable=1,modal');
+                        'chrome,centerscreen,modal');
     }
   }
 }
@@ -367,7 +367,7 @@ function deleteCerts()
   // Certs which could not get deleted, will have their corrensponding
   // param string erased.
   window.openDialog('chrome://pippki/content/deletecert.xul', "",
-                'chrome,resizable=1,modal',params);
+                    'chrome,centerscreen,modal', params);
  
   if (params.GetInt(1) == 1) {
     // user closed dialog with OK

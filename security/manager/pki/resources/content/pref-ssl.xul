@@ -62,7 +62,7 @@
       <button label="&edit.sslciphers;"
               accesskey="&edit.sslciphers.accesskey;"
               oncommand="window.openDialog('chrome://pippki/content/pref-ciphers.xul', '',
-                             'modal=yes,resizable,chrome');"
+                                           'chrome,centerscreen,modal');"
               id="editSSLCiphersButton"
               prefstring="security.disable_button.editSSLCiphers"/>
     </vbox>
