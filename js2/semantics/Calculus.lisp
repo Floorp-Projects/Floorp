@@ -387,27 +387,34 @@
 ;   An exponent e, such that s*10^e is the absolute value of the original number.  e is nil if it would be zero.
 ; The number is expressed with e being nil if its absolute value is between 1e-6 inclusive and 1e21 exclusive.
 ; If always-show-point is true, then s always contains a decimal point with at least one digit after it.
+; The smallest denormalized numbers are special-cased not to show a decimal point.
 (defun float-to-string-components (x exponent-char always-show-point)
-  (multiple-value-bind (sign s n) (decompose-float x exponent-char)
-    (let ((k (length s))
-          (e nil))
-      (cond
-       ((<= k n 21)
-        (setq s (concatenate 'string s (make-string (- n k) :initial-element #\0)))
-        (when always-show-point
-          (setq s (concatenate 'string s ".0"))))
-       ((<= 1 n 21)
-        (setq s (concatenate 'string (subseq s 0 n) "." (subseq s n))))
-       ((<= -5 n 0)
-        (setq s (concatenate 'string "0." (make-string (- n) :initial-element #\0) s)))
-       ((= k 1)
-        (setq e (1- n))
-        (when always-show-point
-          (setq s (concatenate 'string s ".0"))))
-       (t
-        (setq e (1- n))
-        (setq s (concatenate 'string (subseq s 0 1) "." (subseq s 1)))))
-      (values sign s e))))
+  (cond
+   ((eql x 5e-324) (values nil "5" -324))
+   ((eql x -5e-324) (values "-" "5" -324))
+   ((eql x #+mcl 1s-45 #-mcl 1f-45) (values nil "1" -45))
+   ((eql x #+mcl -1s-45 #-mcl -1f-45) (values "-" "1" -45))
+   (t
+    (multiple-value-bind (sign s n) (decompose-float x exponent-char)
+      (let ((k (length s))
+            (e nil))
+        (cond
+         ((<= k n 21)
+          (setq s (concatenate 'string s (make-string (- n k) :initial-element #\0)))
+          (when always-show-point
+            (setq s (concatenate 'string s ".0"))))
+         ((<= 1 n 21)
+          (setq s (concatenate 'string (subseq s 0 n) "." (subseq s n))))
+         ((<= -5 n 0)
+          (setq s (concatenate 'string "0." (make-string (- n) :initial-element #\0) s)))
+         ((= k 1)
+          (setq e (1- n))
+          (when always-show-point
+            (setq s (concatenate 'string s ".0"))))
+         (t
+          (setq e (1- n))
+          (setq s (concatenate 'string (subseq s 0 1) "." (subseq s 1)))))
+        (values sign s e))))))
 
 
 ; Return x converted to a string using ECMAScript's ToString rules.
@@ -1462,7 +1469,8 @@
            :tag              ;tag            ;nil
            :denormalized-tag ;tag            ;nil
            :union            ;nil            ;(type ... type) sorted by ascending serial numbers
-           :writable-cell))  ;nil            ;(element-type)
+           :writable-cell    ;nil            ;(element-type)
+           :delay))          ;nil            ;(type)
 
 ;A denormalized-tag is a singleton tag type whose value carries no meaning.
 ;
@@ -1610,6 +1618,16 @@
   (car (type-parameters type)))
 
 
+(declaim (inline make-delay-type))
+(defun make-delay-type (world type)
+  (make-type world :delay nil (list type) nil nil))
+
+(declaim (inline delay-element-type))
+(defun delay-element-type (type)
+  (assert-true (eq (type-kind type) :delay))
+  (car (type-parameters type)))
+
+
 ; Return the type's tag if it has one.
 ; The types float32 and float64 are considered to have fake tags that have one field, named "value", at position -1.
 ; Return nil if the type is not one of the above.
@@ -1737,6 +1755,13 @@
                (unless (eq (widening-coercion-code world (->-result-type supertype) (->-result-type type) 'test 'test) 'test)
                  (error "Nontrivial type coercion of -> result is not supported yet")))
              code)
+            (:delay
+             (if (eq kind :delay)
+               (let ((code2 (widening-coercion-code world (delay-element-type supertype) (delay-element-type type) code expr)))
+                 (unless (equal code code2)
+                   (error "Nontrivial type coercion of delay result is not supported yet"))
+                 code2)
+               (widening-coercion-code world (delay-element-type supertype) type code expr)))
             (t (type-mismatch))))))))
 
 
@@ -2091,6 +2116,9 @@
       (:writable-cell (pprint-logical-block (stream nil :prefix "(" :suffix ")")
                         (format stream "writable-cell ~@_")
                         (print-type (writable-cell-element-type type) stream)))
+      (:delay (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+                (format stream "delay ~@_")
+                (print-type (delay-element-type type) stream)))
       (t (error "Bad typekind ~S" (type-kind type))))))
 
 
@@ -2207,6 +2235,12 @@
     integer-type))
 
 
+; (exclude-zero <type>)
+; ***** Currently the exclusion is not checked, so this type is equivalent to <type> except for display purposes.
+(defun scan-exclude-zero (world allow-forward-references type-expr)
+  (scan-type world type-expr allow-forward-references))
+
+
 ; (-> (<arg-type1> ... <arg-typen>) <result-type>)
 (defun scan--> (world allow-forward-references arg-type-exprs result-type-expr)
   (unless (listp arg-type-exprs)
@@ -2288,6 +2322,11 @@
 ; (writable-cell <element-type>)
 (defun scan-writable-cell (world allow-forward-references element-type)
   (make-writable-cell-type world (scan-type world element-type allow-forward-references)))
+
+
+; (delay <element-type>)
+(defun scan-delay (world allow-forward-references type)
+  (make-delay-type world (scan-type world type allow-forward-references)))
 
 
 ; Resolve all forward type references to refer to their target types.
@@ -2897,6 +2936,11 @@
 ;;;     serial-num is a unique integer present only on mutable tag instances.
 ;;;   A writable-cell (represented by a cons whose car is a flag that is true if the cell is initialized
 ;;;     and cdr is nil or the value)
+;;;   A delayed-value structure
+
+
+(defstruct (delayed-value (:constructor make-delayed-value (symbol)) (:predicate delayed-value?))
+  (symbol nil :type symbol :read-only t))  ;Global variable name
 
 
 ; Return the bit-set value as a list of tag keywords.
@@ -2962,6 +3006,7 @@
                          (if (car value)
                            (or shallow (value-has-type (cdr value) (writable-cell-element-type type)))
                            (null (cdr value)))))
+    (:delay (or (delayed-value? value) (value-has-type value (delay-element-type type))))
     (t (error "Bad typekind ~S" (type-kind type)))))
 
 
@@ -3036,6 +3081,9 @@
     (:writable-cell (if (car value)
                       (print-value (cdr value) (writable-cell-element-type type) stream)
                       (write-string "uninitialized" stream)))
+    (:delay (if (delayed-value? value)
+              (write value :stream stream)
+              (print-value value (delay-element-type type) stream)))
     (t (error "Bad typekind ~S" (type-kind type)))))
 
 
@@ -3246,10 +3294,6 @@
       ((consp value-expr) (scan-cons (first value-expr) (rest value-expr)))
       ((identifier? value-expr) (scan-identifier (world-intern world value-expr)))
       ((integerp value-expr) (scan-constant value-expr (world-integer-type world)))
-      ((typep value-expr *float32-type*)
-       (if (zerop value-expr)
-         (error "Use +zero32 or -zero32 instead of 0.0s0 or 0.0f0")
-         (scan-constant value-expr (world-finite32-type world))))
       ((typep value-expr *float64-type*)
        (if (zerop value-expr)
          (error "Use +zero64 or -zero64 instead of 0.0")
@@ -3479,6 +3523,21 @@
    (list 'expr-annotation:special-form special-form n length)))
 
 
+; (float32 <value>)
+; Alternative way of writing a finite, nonzero float32 constant.
+(defun scan-float32 (world type-env special-form value)
+  (declare (ignore type-env special-form))
+  (unless (typep value *float64-type*)
+    (error "Bad float32 constant ~S" value))
+  (let ((f32 (coerce value *float32-type*)))
+    (when (zerop f32)
+      (error "Use +zero32 or -zero32 instead of (float32 0.0)"))
+    (values
+     f32
+     (world-finite32-type world)
+     (list 'expr-annotation:constant f32))))
+
+
 ;;; Expressions
 
 
@@ -3510,8 +3569,6 @@
         (push arg-annotated-expr arg-annotated-exprs)))
     (let ((arg-values (nreverse arg-values))
           (arg-annotated-exprs (nreverse arg-annotated-exprs)))
-      (when (endp text)
-        (error "lisp-call needs a text comment"))
       (let ((text2 (scan-expressions-in-comment world type-env text)))
         (values
          (cons lisp-function arg-values)
@@ -3987,6 +4044,7 @@
    (list* 'expr-annotation:special-form special-form element-annotated-exprs)))
 
 ; (list-set <element-expr> ... <element-expr>)
+; (%list-set <element-expr> ... <element-expr>)
 ; Makes a set of one or more elements.
 (defun scan-list-set-expr (world type-env special-form element-expr &rest element-exprs)
   (multiple-value-bind (element-code element-type element-annotated-expr) (scan-value world type-env element-expr)
@@ -3997,6 +4055,7 @@
       (make-list-set-expr world special-form element-type (cons element-code rest-codes) (cons element-annotated-expr rest-annotated-exprs)))))
 
 ; (list-set-of <element-type> <element-expr> ... <element-expr>)
+; (%list-set-of <element-type> <element-expr> ... <element-expr>)
 ; Makes a set of zero or more elements of the given type.
 (defun scan-list-set-of (world type-env special-form element-type-expr &rest element-exprs)
   (let ((element-type (scan-type world element-type-expr)))
@@ -4397,17 +4456,8 @@
                                    (if (field-optional field)
                                      (values :%uninit% value-expr)
                                      (error "Can't leave non-optional field ~S uninitialized" (field-label field))))
-                                  ((and (consp value-expr) (eq (first value-expr) :delay))
-                                   (cond
-                                    ((not (field-optional field))
-                                     (error "Can't delay non-optional field ~S" (field-label field)))
-                                    ((or (not (consp (rest value-expr))) (cddr value-expr) (not (symbolp (second value-expr))))
-                                     (error "Bad :delay expression ~S" value-expr))
-                                    (t (multiple-value-bind (value-code value-annotated-expr)
-                                                            (scan-typed-value world type-env (second value-expr) (field-type field))
-                                         (unless (and (consp value-code) (eq (first value-code) 'fetch-value) (= (length value-code) 2) (symbolp (second value-code)))
-                                           (error ":delay expression ~S must refer to a global variable" value-expr))
-                                         (values (list 'make-delayed-value (list 'quote (second value-code))) value-annotated-expr)))))
+                                  ((field-optional field)
+                                   (scan-typed-value world type-env value-expr (make-delay-type world (field-type field))))
                                   (t (scan-typed-value world type-env value-expr (field-type field)))))
                              (fields value-exprs)
       (values
@@ -4417,10 +4467,6 @@
            (list* 'list (list 'quote name) value-codes)))
        type
        (list* 'expr-annotation:special-form special-form type type-name value-annotated-exprs)))))
-
-
-(defstruct (delayed-value (:constructor make-delayed-value (symbol)) (:predicate delayed-value?))
-  (symbol nil :type symbol :read-only t))  ;Global variable name
 
 
 (defun check-optional-value (value)
@@ -4433,7 +4479,6 @@
         (compute-variable-value s))))
    (t value)))
 
-; (& <label> <record-expr>)
 ; Return the tuple or record field's value.
 (defun scan-&-maybe-opt (world type-env special-form label record-expr opt)
   (multiple-value-bind (record-code record-type tags record-annotated-expr) (scan-union-tag-value world type-env record-expr)
@@ -4661,6 +4706,36 @@
      '(cons nil nil)
      (make-writable-cell-type world element-type)
      (list* 'expr-annotation:special-form special-form))))
+
+
+;;; Delayed Values
+
+(defun scan-delay-or-delay-of (world value-expr value-code element-type value-annotated-expr)
+  (unless (and (consp value-code) (eq (first value-code) 'fetch-value) (= (length value-code) 2) (symbolp (second value-code)))
+    (error "delay expression ~S must refer to a global variable" value-expr))
+  (values
+   (list 'make-delayed-value (list 'quote (second value-code)))
+   (make-delay-type world element-type)
+   value-annotated-expr))
+
+; (delay <global>)
+; Makes a delayed-global-read object for accessing the given global.  Such an object can be accessed only by assigning it to
+; an :opt-const or :opt-var record field and then reading it.
+(defun scan-delay-expr (world type-env special-form value-expr)
+  (declare (ignore special-form))
+  (multiple-value-bind (value-code element-type value-annotated-expr) (scan-value world type-env value-expr)
+    (scan-delay-or-delay-of world value-expr value-code element-type value-annotated-expr)))
+
+
+; (delay-of <element-type> <global>)
+; Makes a delayed-global-read object for accessing the given global.  Such an object can be accessed only by assigning it to
+; an :opt-const or :opt-var record field and then reading it.
+(defun scan-delay-of-expr (world type-env special-form element-type-expr value-expr)
+  (declare (ignore special-form))
+  (let ((element-type (scan-type world element-type-expr)))
+    (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr element-type)
+      (scan-delay-or-delay-of world value-expr value-code element-type value-annotated-expr))))
+
 
 
 
@@ -4952,6 +5027,21 @@
         (values (cons (list 'assert condition-code) rest-codes)
                 rest-live
                 (cons (list* special-form condition-annotated-expr text2) rest-annotated-stmts))))))
+
+
+; (quiet-assert <condition-expr>)
+; Used to declare conditions that are known to be true if the semantics function correctly.  Don't use this to
+; verify user input.
+; A quiet-assert does not appear in the depicted statements.
+(defun scan-quiet-assert (world type-env rest-statements last special-form condition-expr)
+  (declare (ignore special-form))
+  (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
+                       (scan-condition world type-env condition-expr)
+    (declare (ignore condition-annotated-expr false-type-env))
+    (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world true-type-env rest-statements last)
+      (values (cons (list 'assert condition-code) rest-codes)
+              rest-live
+              rest-annotated-stmts))))
 
 
 ; (exec <expr>)
@@ -5724,6 +5814,7 @@
      (*/ scan-*/ depict-*/)
      (bottom scan-bottom depict-bottom)
      (assert scan-assert depict-assert)
+     (quiet-assert scan-quiet-assert nil)
      (exec scan-exec depict-exec)
      (const scan-const depict-var)
      (var scan-var depict-var)
@@ -5750,6 +5841,7 @@
      (todo scan-todo depict-todo)
      (bottom scan-bottom-expr depict-bottom-expr)
      (hex scan-hex depict-hex)
+     (float32 scan-float32 nil)
      
      ;;Expressions
      (/*/ scan-/*/ depict-/*/)
@@ -5781,7 +5873,9 @@
      
      ;;Sets
      (list-set scan-list-set-expr depict-list-set-expr)
+     (%list-set scan-list-set-expr depict-%list-set-expr)
      (list-set-of scan-list-set-of depict-list-set-expr)
+     (%list-set-of scan-list-set-of depict-%list-set-expr)
      (range-set-of scan-range-set-of depict-range-set-of-ranges)
      (range-set-of-ranges scan-range-set-of-ranges depict-range-set-of-ranges)
      (set* scan-set* depict-set*)
@@ -5813,7 +5907,11 @@
      (assert-not-in scan-assert-not-in depict-assert-in)
      
      ;;Writable Cells
-     (writable-cell-of scan-writable-cell-of depict-writable-cell-of)) ;For internal use only
+     (writable-cell-of scan-writable-cell-of depict-writable-cell-of) ;For internal use only
+     
+     ;;Delayed Values
+     (delay scan-delay-expr nil)
+     (delay-of scan-delay-of-expr nil))
     
     (:condition
      (not scan-not-condition)
@@ -5826,6 +5924,7 @@
     (:type-constructor
      (integer-list scan-integer-list depict-integer-list)
      (integer-range scan-integer-range depict-integer-range)
+     (exclude-zero scan-exclude-zero depict-exclude-zero)
      (-> scan--> depict-->)
      (vector scan-vector depict-vector)
      (list-set scan-list-set depict-set)
@@ -5833,7 +5932,8 @@
      (tag scan-tag-type depict-tag-type)
      (union scan-union depict-union)
      (type-diff scan-type-diff depict-type-diff)
-     (writable-cell scan-writable-cell depict-writable-cell))))
+     (writable-cell scan-writable-cell depict-writable-cell)
+     (delay scan-delay depict-delay))))
 
 
 (defparameter *default-non-reserved* '(length))
