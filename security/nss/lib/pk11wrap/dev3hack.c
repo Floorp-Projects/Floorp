@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.13 $ $Date: 2002/04/19 16:14:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.14 $ $Date: 2002/04/19 23:06:41 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -49,6 +49,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.13 $ $D
 
 #include "pki3hack.h"
 #include "dev3hack.h"
+#include "pkim.h"
 
 #ifndef BASE_H
 #include "base.h"
@@ -230,8 +231,16 @@ nssSlot_Refresh
 )
 {
     PK11SlotInfo *nss3slot = slot->pk11slot;
+    PRBool doit = PR_FALSE;
+    if (slot->token->base.name[0] == 0) {
+	doit = PR_TRUE;
+    }
     if (PK11_InitToken(nss3slot, PR_FALSE) != SECSuccess) {
 	return PR_FAILURE;
+    }
+    if (doit) {
+	nssTrustDomain_UpdateCachedTokenCerts(slot->token->trustDomain, 
+	                                      slot->token);
     }
     return nssToken_Refresh(slot->token);
 }
@@ -268,25 +277,19 @@ nssToken_GetTrustDomain(NSSToken *token)
     return token->trustDomain;
 }
 
-typedef enum {
-    nssPK11Event_DefaultSessionRO = 0,
-    nssPK11Event_DefaultSessionRW = 1
-} nssPK11Event;
+NSS_EXTERN PRStatus
+nssTrustDomain_RemoveTokenCertsFromCache
+(
+  NSSTrustDomain *td,
+  NSSToken *token
+);
 
 NSS_IMPLEMENT PRStatus
-nssToken_Nofify
+nssToken_NofifyCertsNotVisible
 (
-  NSSToken *tok,
-  nssPK11Event event
+  NSSToken *tok
 )
-
 {
-#ifdef notdef
-    switch (event) {
-    default:
-	return PR_FAILURE;
-    }
-#endif
-    return PR_FAILURE;
+    return nssTrustDomain_RemoveTokenCertsFromCache(tok->trustDomain, tok);
 }
 
