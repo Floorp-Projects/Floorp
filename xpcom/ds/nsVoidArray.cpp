@@ -66,14 +66,18 @@ nsVoidArray::nsVoidArray()
 }
 
 nsVoidArray::nsVoidArray(PRInt32 aCount)
-  : mInfo(0)
+  : mArray(nsnull),
+    mInfo(0),
+    mCount(0)
 {
   MOZ_COUNT_CTOR(nsVoidArray);
-  NS_PRECONDITION(aCount > 0, "bad count");
-  SetArraySize(aCount);
-  mCount = aCount;
-  mArray = new void*[GetArraySize()];
-  nsCRT::memset(mArray, 0, mCount * sizeof(void*));
+  if ( aCount )
+    {
+      SetArraySize(aCount);
+      mCount = aCount;
+      mArray = new void*[GetArraySize()];
+      nsCRT::memset(mArray, 0, mCount * sizeof(void*));
+    }
   SetArrayOwner(PR_TRUE);
 }
 
