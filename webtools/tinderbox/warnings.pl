@@ -55,8 +55,7 @@ $tree = 'SeaMonkey';
 $form{tree} = $tree;
 require 'tbglobals.pl';
 
-$cvsroot = '/cvsroot/mozilla';
-$lxr_data_root = '/export2/lxr-data';
+$cvsroot = '/cvsroot';
 $source_root_pat = '^.*/mozilla/';
 
 @ignore = ( 
@@ -69,6 +68,7 @@ $source_root_pat = '^.*/mozilla/';
   'declaration of \`y0\' shadows global', # from mathcalls.h
   'declaration of \`y1\' shadows global', # from mathcalls.h
   'by \`nsHTML(?:Anchor|[^:]*Element)::(?:Set|Get)Attribute', # kipp says this is bogus
+  'is not (any longer) pertinent', # cvs warning we can safely ignore
 );
 @ignore_match = (
   { warning=>'statement with no effect', source=>'(?:JS_|PR_)?ASSERT'},
@@ -112,7 +112,7 @@ for $br (last_successful_builds($tree)) {
 
   # Make it live
   use File::Copy 'move';
-  move($warn_file, "$tree/warnings.html");
+  move($warn_file, "$tree/warnings-test.html");
 
   my $warn_summary = "$tree/warn$log_file";
   $warn_summary =~ s/.gz$/.pl/;
@@ -146,37 +146,70 @@ sub commify {
 sub build_file_hash {
   my ($cvsroot, $tree) = @_;
 
-  $lxr_data_root = "/export2/lxr-data/\L$tree";
+  read_cvs_modules_file();
+  @include_list = ();
+  @exclude_list = ();
+  expand_cvs_modules('SeaMonkeyAll', \@include_list, \@exclude_list);
 
-  $lxr_file_list = "\L$lxr_data_root/.glimpse_filenames";
-  open(LXR_FILENAMES, "<$lxr_file_list")
-    or die "Unable to open $lxr_file_list: $!\n";
+  local $exclude_pat = join '|', @exclude_list;
 
-  use File::Basename;
-  
-  my $file_count = 0;
-
-  while (<LXR_FILENAMES>) {
-    my ($base, $dir, $ext) = fileparse($_,'\.[^/]*');
-
-    next unless $ext =~ /^\.(cpp|h|C|s|c|mk|in)$/;
-
-    $base = "$base$ext";
-    $dir =~ s|$lxr_data_root/mozilla/||;
-    $dir =~ s|/$||;
-
-    $fullpath{"$dir/$base"}=1;
-
-    unless (exists $bases{$base}) {
-      $bases{$base} = $dir;
-    } else {
-      $bases{$base} = '[multiple]';
-    }
-    $file_count++;
+  use File::Find;
+  for my $include (@include_list) {
+    $include .= ",v" unless -d "$cvsroot/$include";
+    &find(\&find_cvs_files, "$cvsroot/$include"); 
   }
-  warn "debug> $file_count files indexed\n" if $debug;
-
   return \%bases, \%fullpath;
+}
+
+sub read_cvs_modules_file
+{
+  local $_;
+  open MODULES, "$cvsroot/CVSROOT/modules" 
+    or die "Unable to open modules file: $cvsroot/CVSROOT/modules\n";
+  while (<MODULES>) {
+    if (/ -a /) {
+      while (/\\$/) {
+        chomp;
+        chop;
+        $_ .= <MODULES>;
+      }
+      chomp;
+      my ($module_name, $list) = split /\s+-a\s+/, $_, 2;
+      $modules{$module_name} = [ split /\s+/, $list ];
+} } }
+
+sub expand_cvs_modules {
+  my ($module_name, $include_list, $exclude_list) = @_;
+  warn "no module named $module_name\n" unless defined $modules{$module_name};
+  for my $member (@{$modules{$module_name}}) {
+    next if $member eq '';
+    if (defined $modules{$member}) {
+      expand_cvs_modules($member, $include_list, $exclude_list);
+    } else {
+      if ($member =~ /^!/) {
+        push @$exclude_list, substr $member, 1;
+      } else {
+        push @$include_list, $member;
+} } } }
+
+sub find_cvs_files {
+  $File::Find::prune = 1 if /.OBJ$/ or /^CVS$/ or /^Attic$/;
+  if (-d $_) {
+    $File::Find::prune = 1 if /$exclude_pat/o or $seen{$File::Find::name};
+    $seen{$File::Find::name} = 1;
+    return;
+  }
+  my $dir = $File::Find::dir;
+  $dir =~ s|^$cvsroot/||o;
+  $dir =~ s|/$||;
+  my $file = substr $_, 0, -2;
+
+  if (defined $module_files{$file}) {
+    $bases{$file} = '[multiple]';
+  } else {
+    $bases{$file} = $dir;
+  }
+  $fullpath{"$dir/$file"} = 1;
 }
 
 sub last_successful_builds {
