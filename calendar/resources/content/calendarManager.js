@@ -211,6 +211,8 @@ calendarManager.prototype.getAllCalendars = function()
    
    var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", false );
    
+   dump( "\nYou have "+NumberOfCalendars+" and I'm supposed to refresh teh server? "+RefreshServers );
+   
    //don't count the default server, so this starts at 1
    for( var i = 1; i < NumberOfCalendars; i++ )
    {
@@ -224,9 +226,8 @@ calendarManager.prototype.getAllCalendars = function()
          thisCalendar.remote = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".remote", false );
          thisCalendar.remotePath = getCharPref(this.CalendarWindow.calendarPreferences.calendarPref, "server"+i+".remotePath", "" );
          
-         if( RefreshServers == true 
-            && thisCalendar.remote == true )
-            this.retrieveAndSaveRemoteCalendar( thisCalendar );
+         if( RefreshServers == true && thisCalendar.remote == true )
+            this.retrieveAndSaveRemoteCalendar( thisCalendar, onResponseAndRefresh );
          
          this.calendars[ this.calendars.length ] = thisCalendar;
       }
