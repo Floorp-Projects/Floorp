@@ -13,3 +13,9 @@
 #disabledDomains {
 	max-height: 13em;
 }
+
+  
+.smileface
+  {
+    list-style-image : url("chrome://messenger/skin/smile.gif");
+  }

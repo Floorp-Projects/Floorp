@@ -115,6 +115,12 @@
       <checkbox class="iconic" id="displayGlyph" value="&convertEmoticons.label;"
                 pref="true" preftype="bool" prefstring="mail.display_glyph"
                 prefattribute="checked" tooltip="aTooltip" tooltiptext="&convertEmoticons.tooltip;"/>		
+      <box orient="horizontal" autostretch="never" class="indent">
+           <text value="&example1.label;" class="label"/>
+           <image class="smileface"/>
+           <text value="&example2.label;"/>
+      </box>
+    
     </box>
   </titledbox>
 

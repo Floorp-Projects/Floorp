@@ -53,8 +53,10 @@ Rights Reserved.
 <!ENTITY wrapInMsg.label                  "Wrap text to fit window width">
 <!ENTITY wrapInMsg.accesskey              "w">
 <!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
-<!ENTITY convertEmoticons.label           "Display emoticons as graphics">
+<!ENTITY convertEmoticons.label           "Display emoticons as graphics.">
 <!ENTITY convertEmoticons.accesskey       "d">
+<!ENTITY example1.label                   "For example, display ' :-) ' as">
+<!ENTITY example2.label                   ".">
 
 <!-- Tooltips  -->  
 <!ENTITY convertEmoticons.tooltip "Convert Emoticons">  

@@ -10,3 +10,9 @@
 #skinsTabcontrol {
 	margin		: 5px 5px 0px 5px;
 }
+
+  
+.smileface
+  {
+    list-style-image : url("chrome://messenger/skin/smile.gif");
+  }
