@@ -74,10 +74,10 @@ function clearStatusInfo()
 }
 
 var feedDownloadCallback = {
-  downloaded: function(feed)
+  downloaded: function(feed, aSuccess)
   {
     // feed is null if our attempt to parse the feed failed
-    if (feed)
+    if (aSuccess)
     {
       updateStatusItem('progressMeter', 100);
 
@@ -107,10 +107,10 @@ var feedDownloadCallback = {
   { 
     updateStatusItem('statusText', 
       document.getElementById("bundle_newsblog").getFormattedString("subscribe-fetchingFeedItems", [aCurrentFeedItems, aMaxFeedItems]) );
-    this.onProgress(aCurrentFeedItems, aMaxFeedItems);
+    this.onProgress(feed, aCurrentFeedItems, aMaxFeedItems);
   },
 
-  onProgress: function(aProgress, aProgressMax)
+  onProgress: function(feed, aProgress, aProgressMax)
   {
     updateStatusItem('progressMeter', (aProgress * 100) / aProgressMax);
   },

@@ -50,19 +50,20 @@ var nsNewsBlogFeedDownloader =
     // we might just pull all these args out of the aFolder DB, instead of passing them in...
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
         .getService(Components.interfaces.nsIRDFService);
+
+    progressNotifier.init(aMsgWindow.statusFeedback);
     
     var index = 0; 
     for (url in feedUrlArray)
     {
       if (feedUrlArray[url])
-      {
+      {        
         id = rdf.GetResource(feedUrlArray[url]);
         feed = new Feed(id);
-        feed.urlListener = aUrlListener;
         feed.folder = aFolder;
         feed.server = aFolder.server;
-        feed.msgWindow = aMsgWindow;
-        feed.download();
+        gNumPendingFeedDownloads++; // bump our pending feed download count
+        feed.download(true, progressNotifier);
       }
     }
   },
@@ -211,4 +212,90 @@ function loadScripts()
   }
 
   gExternalScriptsLoaded = true;
+}
+
+// Progress glue code. Acts as a go between the RSS back end and the mail window front end
+// determined by the aMsgWindow parameter passed into nsINewsBlogFeedDownloader.
+// gNumPendingFeedDownloads: keeps track of the total number of feeds we have been asked to download
+//                           this number may not reflect the # of entries in our mFeeds array because not all
+//                           feeds may have reported in for the first time...
+var gNumPendingFeedDownloads = 0;
+
+var progressNotifier = {
+
+  mStatusFeedback: null,
+  mFeeds: new Array,
+
+  init: function(aStatusFeedback)
+  {
+    if (!gNumPendingFeedDownloads) // if we aren't already in the middle of downloading feed items...
+    {
+      this.mStatusFeedback = aStatusFeedback;
+      this.mStatusFeedback.startMeteors();
+      this.mStatusFeedback.showStatusString(GetString('newsblog-getNewMailCheck'));
+    }
+  },
+
+  downloaded: function(feed)
+  {
+    this.mStatusFeedback.stopMeteors();
+    gNumPendingFeedDownloads--;
+    if (!gNumPendingFeedDownloads)
+    {
+      this.mFeeds = new Array;
+
+      // no more pending actions...clear the status bar text...should we do this on a timer
+      // so the text sticks around for a little while? It doesnt look like we do it on a timer for 
+      // newsgroups so we'll follow that model.
+
+      this.mStatusFeedback.showStatusString("");
+    }
+  },
+
+  // this gets called after the RSS parser finishes storing a feed item to disk
+  // aCurrentFeedItems is an integer corresponding to how many feed items have been downloaded so far
+  // aMaxFeedItems is an integer corresponding to the total number of feed items to download
+  onFeedItemStored: function (feed, aCurrentFeedItems, aMaxFeedItems)
+  { 
+    // we currently don't do anything here. Eventually we may add
+    // status text about the number of new feed articles received.
+  },
+
+  onProgress: function(feed, aProgress, aProgressMax)
+  {
+    if (feed.url in this.mFeeds) // have we already seen this feed?
+      this.mFeeds[feed.url].currentProgress = aProgress;
+    else
+      this.mFeeds[feed.url] = {currentProgress: aProgress, maxProgress: aProgressMax};
+    
+    this.updateProgressBar();     
+  },
+
+  updateProgressBar: function()
+  {
+    var currentProgress = 0;
+    var maxProgress = 0;
+    for (index in this.mFeeds)
+    {
+      currentProgress += this.mFeeds[index].currentProgress;
+      maxProgress += this.mFeeds[index].maxProg;
+    }
+
+    // if we start seeing weird "jumping" behavior where the progress bar goes below a threshold then above it again,
+    // then we can factor a fudge factor here based on the number of feeds that have not reported yet and the avg
+    // progress we've already received for existing feeds. Fortunately the progressmeter is on a timer
+    // and only updates every so often. For the most part all of our request have initial progress
+    // before the UI actually picks up a progress value. 
+
+    var progress = (currentProgress * 100) / maxProgress;
+    this.mStatusFeedback.showProgress(progress);
+  }
+}
+
+function GetString(name)
+{
+  var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
+  strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+  var strBundle = strBundleService.createBundle("chrome://messenger-newsblog/locale/newsblog.properties"); 
+  return strBundle.GetStringFromName(name);
 }
