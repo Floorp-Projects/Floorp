@@ -59,8 +59,12 @@ proc DebugConnect {} {
 
 
 proc SendSQL { str } {
-    global mysqlhandle
-    mysqlsel $mysqlhandle $str
+# puts $str
+    global mysqlhandle errorInfo
+    if {[catch {mysqlsel $mysqlhandle $str} errmsg]} {
+        puts $str
+        error "$errmsg - $str" $errorInfo
+    }
     return 0
 }
 
