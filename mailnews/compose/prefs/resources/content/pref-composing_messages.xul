@@ -27,7 +27,7 @@
     {
       var quotebox = document.getElementById("thenBox");
       var quotecheck = document.getElementById("autoQuote");
-      if( quotecheck.checked ) {
+      if( quotecheck.checked && !quotecheck.disabled ) {
         quotebox.firstChild.removeAttribute("disabled");
         quotebox.lastChild.removeAttribute("disabled");
       }

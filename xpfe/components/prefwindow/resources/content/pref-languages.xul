@@ -66,17 +66,25 @@
       <box orient="vertical">
         <button oncommand="MoveUp();" id="up" class="up" disabled="true"
                 label="&languages.customize.moveUp.label;"
-                accesskey="&languages.customize.moveUp.accesskey;"/>
+                accesskey="&languages.customize.moveUp.accesskey;"
+                pref="true" preftype="bool"
+                prefstring="pref.browser.language.disable_button.up" prefattribute="disabled"/>
         <button oncommand="MoveDown();" id="down" class="down" disabled="true"
                 label="&languages.customize.moveDown.label;"
-                accesskey="&languages.customize.moveDown.accesskey;"/>
+                accesskey="&languages.customize.moveDown.accesskey;"
+                pref="true" preftype="bool"
+                prefstring="pref.browser.language.disable_button.down" prefattribute="disabled"/>
         <spring flex="1"/>
         <button class="dialog" id="add"
                 label="&languages.customize.addButton.label;"
-                oncommand="AddLanguage();"/>
+                oncommand="AddLanguage();"
+                pref="true" preftype="bool"
+                prefstring="pref.browser.language.disable_button.add" prefattribute="disabled"/>
         <button class="dialog" id="remove" disabled="true"
                 label="&languages.customize.deleteButton.label;"
-                oncommand="RemoveActiveLanguage();"/>
+                oncommand="RemoveActiveLanguage();"
+                pref="true" preftype="bool"
+                prefstring="pref.browser.language.disable_button.remove" prefattribute="disabled"/>
       </box>
     </box>
   </titledbox>

@@ -72,8 +72,12 @@
       </tree>
       <box orient="horizontal">
         <spring flex="1"/>
-        <button class="dialog" label="&AddButton.label;" oncommand="AddDomain(htmlobj);"/>
-        <button class="dialog" label="&DeleteButton.label;" oncommand="RemoveDomains(htmlobj);"/>
+        <button class="dialog" label="&AddButton.label;" oncommand="AddDomain(htmlobj);">
+          <observes element="mailhtmldomain" attribute="disabled"/>
+        </button>
+        <button class="dialog" label="&DeleteButton.label;" oncommand="RemoveDomains(htmlobj);">
+          <observes element="mailhtmldomain" attribute="disabled"/>
+        </button>
         <spring flex="1"/>
       </box>
     </titledbox>
@@ -89,8 +93,12 @@
       </tree>
       <box orient="horizontal">
         <spring flex="1"/>
-        <button class="dialog" label="&AddButton.label;" oncommand="AddDomain(plainobj);"/>
-        <button class="dialog" label="&DeleteButton.label;" oncommand="RemoveDomains(plainobj);"/>
+        <button class="dialog" label="&AddButton.label;" oncommand="AddDomain(plainobj);">
+          <observes element="mailplaintextdomain" attribute="disabled"/>
+        </button>
+        <button class="dialog" label="&DeleteButton.label;" oncommand="RemoveDomains(plainobj);">
+          <observes element="mailplaintextdomain" attribute="disabled"/>
+        </button>
         <spring flex="1"/>
       </box>
     </titledbox>

@@ -86,11 +86,15 @@
       <button class="dialog"
               label="&viewWallet.label;"
               accesskey="&viewWallet.accesskey;" 
-              oncommand="formShow();"/>
+              oncommand="formShow();"
+              id="viewFormButton" pref="true" preftype="bool"
+              prefstring="pref.advanced.form.disable_button.view_form" prefattribute="disabled"/>
       <button class="dialog"
               label="&viewWalletSites.label;"
               accesskey="&viewWalletSites.accesskey;" 
-              oncommand="viewWalletSites();"/>
+              oncommand="viewWalletSites();"
+              id="viewSiteButton" pref="true" preftype="bool"
+              prefstring="pref.advanced.form.disable_button.view_sites" prefattribute="disabled"/>
     </box>
   </titledbox>
 

@@ -141,11 +141,16 @@
   function doButtonEnabling()
   {
     var addDomain = document.getElementById("addDomain");
+    var addDomainButton = document.getElementById("addDomainButton");
     var prefstring = document.getElementById("browserRelatedDisabledForDomains").getAttribute("value");
     if( addDomain.value == "" || prefstring.indexOf( addDomain.value + "," ) != -1 )
-      document.getElementById("addDomainButton").setAttribute("disabled","true");
+      addDomainButton.disabled = true;
     else
-      document.getElementById("addDomainButton").removeAttribute("disabled");
+      addDomainButton.removeAttribute("disabled");
+    if (parent.hPrefWindow.getPrefIsLocked(addDomainButton.getAttribute("prefstring")))
+      addDomainButton.disabled = true;
+    if (parent.hPrefWindow.getPrefIsLocked(addDomain.getAttribute("prefstring")))
+      addDomain.disabled = true;
   }  
 
   function moreInfo()
@@ -199,16 +204,19 @@
           </tree>
           <box autostretch="never" valign="top">
             <button class="dialog" id="removeDomain" label="&removeDomain.label;" accesskey="&removeDomain.accesskey;"
-                    oncommand="removeDomain();"/>
+                    oncommand="removeDomain();" pref="true" preftype="bool"
+                    prefstring="pref.browser.smartbrowsing.disable_button.remove" prefattribute="disabled"/>
           </box>
         </row>
         <row>
           <box autostretch="never">
             <text class="label" id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" for="addDomain"/>
-            <textbox id="addDomain" flex="1" oninput="doButtonEnabling();"/>
+            <textbox id="addDomain" flex="1" oninput="doButtonEnabling();"
+                     prefstring="pref.browser.smartbrowsing.disable_textbox.add" prefattribute="disabled"/>
           </box>
           <button disabled="true" class="dialog" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
-                  oncommand="addDomain();"/>
+                  oncommand="addDomain();" pref="true" preftype="bool"
+                  prefstring="pref.browser.smartbrowsing.disable_button.add" prefattribute="disabled"/>
         </row>
       </rows>
     </grid>
@@ -228,7 +236,9 @@
                 pref="true" preftype="bool" prefstring="keyword.enabled"
                 prefattribute="checked"/>
       <spring flex="1"/>
-      <button class="dialog" label="&moreInformation.label;" accesskey="&moreInformation.accesskey;" oncommand="moreInfo();"/>
+      <button class="dialog" label="&moreInformation.label;" accesskey="&moreInformation.accesskey;" oncommand="moreInfo();"
+        id="moreInformationButton" pref="true" preftype="bool"
+        prefstring="pref.browser.smartbrowsing.disable_button.more_info" prefattribute="disabled"/>
     </box>
     
   </titledbox>

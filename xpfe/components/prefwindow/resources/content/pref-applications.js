@@ -8,6 +8,7 @@ var gPrefApplicationsBundle = null;
 var gExtensionField = null;
 var gMIMETypeField  = null;
 var gHandlerField   = null;
+var gNewTypeButton  = null;
 var gEditButton     = null;
 var gRemoveButton   = null;
 
@@ -56,12 +57,14 @@ function Startup()
   gExtensionField = document.getElementById("extension");        
   gMIMETypeField  = document.getElementById("mimeType");
   gHandlerField   = document.getElementById("handler");
+  gNewTypeButton  = document.getElementById("newTypeButton");
   gEditButton     = document.getElementById("editButton");
   gRemoveButton   = document.getElementById("removeButton");
 
   // Disable the Edit & Remove buttons until we click on something
   gEditButton.disabled=true;
   gRemoveButton.disabled=true;
+  updateLockedButtonState();
 
   const mimeTypes = "UMimTyp";
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService();
@@ -108,5 +111,15 @@ function selectApplication()
     }
 
     delete handlerOverride;
+    updateLockedButtonState();
   }
 } 
+
+// disable locked buttons
+function updateLockedButtonState()
+{
+  gNewTypeButton.disabled = parent.hPrefWindow.getPrefIsLocked(gNewTypeButton.getAttribute("prefstring") );
+  gEditButton.disabled = parent.hPrefWindow.getPrefIsLocked(gEditButton.getAttribute("prefstring"));
+  gRemoveButton.disabled = parent.hPrefWindow.getPrefIsLocked(gRemoveButton.getAttribute("prefstring"));
+}
+

@@ -46,7 +46,8 @@
     try {
       var urlBarHist = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
                                  .getService(Components.interfaces.nsIUrlbarHistory);
-      button.disabled = urlBarHist.count == 0;
+      var isBtnLocked = parent.hPrefWindow.getPrefIsLocked(button.getAttribute("prefstring"));
+      button.disabled = ( urlBarHist.count == 0 ) || isBtnLocked ;
     }
     catch(ex) {
     } 
@@ -112,7 +113,9 @@
       <text class="label" value="&days.label;"/>
       <spring flex="1"/>
       <button class="dialog" label="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
-        oncommand="prefClearGlobalHistory();"/>
+        oncommand="prefClearGlobalHistory();"
+        id="browserClearHistory" pref="true" preftype="bool"
+        prefstring="pref.browser.history.disable_button.clear_hist" prefattribute="disabled"/>
     </box>
   </titledbox>  
   
@@ -123,7 +126,9 @@
       <html flex="1">&clearLocationBar.label;</html>
       <box autostretch="never" halign="right">
         <button class="dialog" id="ClearUrlBarHistoryButton" label="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
-         oncommand="prefClearUrlbarHistory();"/>
+         oncommand="prefClearUrlbarHistory();"
+         pref="true" preftype="bool"
+         prefstring="pref.browser.history.disable_button.clear_urlbar" prefattribute="disabled"/>
       </box>
     </box>
   </titledbox>  

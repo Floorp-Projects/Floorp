@@ -50,7 +50,10 @@
 
   function setWarnAboutCookiesEnabled(aEnabled)
   {
-    document.getElementById("networkWarnAboutCookies").disabled = !aEnabled;
+    var warnCheckbox = document.getElementById("networkWarnAboutCookies");
+    warnCheckbox.disabled = !aEnabled;
+    if (parent.hPrefWindow.getPrefIsLocked(warnCheckbox.getAttribute("prefstring")) )
+      warnCheckbox.disabled = true;
   }
 
   ]]>
@@ -85,8 +88,12 @@
     <separator/>
 
     <box autostretch="never" halign="right">
-      <button class="dialog" label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"/>
-      <button class="dialog" label="&viewTutorial.label;" accesskey="&viewTutorial.accesskey;" oncommand="viewTutorial();"/>
+      <button class="dialog" label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"
+              id="viewCookieButton" pref="true" preftype="bool"
+              prefstring="pref.advanced.cookies.disable_button.view_cookies" prefattribute="disabled"/>
+      <button class="dialog" label="&viewTutorial.label;" accesskey="&viewTutorial.accesskey;" oncommand="viewTutorial();"
+              id="moreInformation" pref="true" preftype="bool"
+              prefstring="pref.advanced.cookies.disable_button.more_info" prefattribute="disabled"/>
     </box>
   </titledbox>
 

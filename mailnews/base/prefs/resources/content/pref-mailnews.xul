@@ -88,7 +88,10 @@ Contributor(s):
 
     <box autostretch="never" halign="right">
       <button class="dialog" label="&useDefault.label;" accesskey="&useDefault.accesskey;"
-              oncommand="setHomePageToDefaultPage('mailnewsStartPageUrl');" />
+              id="resetHomePageButton"
+              oncommand="setHomePageToDefaultPage('mailnewsStartPageUrl');">
+        <observes element="mailnewsStartPageUrl" attribute="disabled"/>
+      </button>
      </box>
 
   </titledbox>

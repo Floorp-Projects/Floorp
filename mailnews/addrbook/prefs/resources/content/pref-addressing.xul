@@ -16,7 +16,6 @@
                        "emailCollectionOutgoing", "emailCollectionNewsgroup",
                        "addressingAutocomplete", "enableCABsizeLimit",
                        "CABsizeLimit"];
-  ]]>
 
   function Startup(){
     doEnabling();
@@ -33,7 +32,7 @@
     var CABsizeLimit = document.getElementById("CABsizeLimit");
     var useCABSizelimitPart2 = document.getElementById("useCABSizelimitPart2");
     
-    if( emailCollection.checked ){
+    if( emailCollection.checked && !emailCollection.disabled ){
       emailCollectionIncoming.removeAttribute("disabled");
       emailCollectionOutgoing.removeAttribute("disabled");
       emailCollectionNewsgroup.removeAttribute("disabled");
@@ -52,6 +51,7 @@
     }
 
   }
+  ]]>
   </script>  
     
   <box class="box-smallheader" title="&pane.title;"/>

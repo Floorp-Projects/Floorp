@@ -138,7 +138,9 @@
         <textbox id="networkProxyAutoconfigURL" flex="1" 
                    pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"
                    prefattribute="value"/>
-        <button id="autoReload" class="dialog" label="&reload.label;" accesskey="&reload.accesskey;"/>
+        <button id="autoReload" class="dialog" label="&reload.label;" accesskey="&reload.accesskey;"
+                pref="true" preftype="bool"
+                prefstring="pref.advanced.proxies.disable_button.reload" prefattribute="disabled"/>
       </box>
     </radiogroup>
 
