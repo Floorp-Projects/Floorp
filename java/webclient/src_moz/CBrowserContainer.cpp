@@ -33,6 +33,7 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIPromptService.h"
 
 #include "prprf.h" // for PR_snprintf
 #include "nsReadableUtils.h" 
@@ -227,7 +228,165 @@ NS_IMETHODIMP CBrowserContainer::ConfirmEx(const PRUnichar *dialogTitle,
                                            PRBool *checkValue, 
                                            PRInt32 *buttonPressed)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    /** dialogTitle: Confirm
+        text: the site yahoo.com wants to set a cookie, blah blah
+        buttonFlags: 1027
+        button0Title: ""
+        button1Title: ""
+        button2Title: ""
+        checkMsg: Remember This Decision
+    */
+    nsresult rv = NS_ERROR_FAILURE;
+    printf("debug: edburns: CBrowserContainer::ConfirmEx()\n");
+    
+    // if the user hasn't given us a prompt, oh well
+    if	 (!mPrompt) {
+        return NS_OK;
+    }
+    
+    PRInt32 i;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    wsPromptUniversalDialogEvent *actionEvent = nsnull;
+    
+    // the offset, into the following strings array, of the first button;
+    const PRInt32 buttonOffset = 4; 
+    // the maximum number of buttons we expect
+    const PRInt32 maxButtons = 3;
+
+    wsStringStruct strings[10] = { 
+        {text, nsnull},
+        {dialogTitle, nsnull},
+        {nsnull, nsnull},
+        {checkMsg, nsnull},
+        {button0Title, nsnull},
+        {button1Title, nsnull},
+        {button2Title, nsnull},
+        {nsnull, nsnull},
+        {nsnull, nsnull},
+        {nsnull, nsnull} };
+
+    const PRUnichar* buttonStrings[] = { button0Title, button1Title, 
+                                         button2Title };
+
+    // This array contains the button strings that are dynamically
+    // allocated and need to be freed.
+    const PRUnichar *buttonStringsToFree[maxButtons];
+    nsCRT::memset(buttonStringsToFree, nsnull, 
+                  maxButtons * sizeof(PRUnichar *));
+    
+
+    PRInt32 numberButtons = 0;
+    // this code cribbed from nsPromptService.cpp::ConfirmEx
+
+    for (i = 0; i < maxButtons; i++) { 
+        
+        nsXPIDLString buttonTextStr;
+        nsString tempStr;
+        const PRUnichar* buttonText = 0;
+        switch (buttonFlags & 0xff) {
+        case BUTTON_TITLE_OK:
+            util_GetLocaleString("OK", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_CANCEL:
+            util_GetLocaleString("Cancel", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_YES:
+            util_GetLocaleString("Yes", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_NO:
+            util_GetLocaleString("No", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_SAVE:
+            util_GetLocaleString("Save", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_DONT_SAVE:
+            util_GetLocaleString("DontSave", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_REVERT:
+            util_GetLocaleString("Revert", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_IS_STRING:
+            buttonText = buttonStrings[i];
+            break;
+        }
+        if (!buttonText && buttonTextStr.get()) {
+            // This means the button text did not come from the argument
+            // list to this method.  Rather, it came from the
+            // localization bundle.  In this case, we must copy the
+            // string and free it.
+            tempStr = buttonTextStr.get();
+            strings[buttonOffset + i].uniStr = tempStr.ToNewUnicode();
+            buttonStringsToFree[i] = strings[buttonOffset + i].uniStr;
+        }
+        else {
+            // This means the button text DID come from the argument
+            // list, and we do not need to free it!
+            strings[buttonOffset + i].uniStr = buttonTextStr.get();
+        }
+        
+        if (strings[buttonOffset + i].uniStr) {
+            ++numberButtons;
+        }
+        buttonFlags >>= 8;
+    }
+    
+    rv = ::util_CreateJstringsFromUnichars(strings, 10);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: ConfirmEx: can't create jstrings from Unichars");
+        goto UD_CLEANUP;
+    }
+
+
+    // PENDING(edburns): uniformly apply checks for this throughout the
+    // code
+    PR_ASSERT(mInitContext);
+    PR_ASSERT(mInitContext->initComplete); 
+
+    // try to initialize the properties object for basic auth and cookies
+    if (!gPromptProperties) {
+        gPromptProperties = 
+            ::util_CreatePropertiesObject(env, (jobject)
+                                          &(mInitContext->shareContext));
+        if (!gPromptProperties) {
+            printf("Error: can't create properties object for ConfirmEx");
+            rv = NS_ERROR_NULL_POINTER;
+            goto UD_CLEANUP;
+        }
+    }
+    else {
+        ::util_ClearPropertiesObject(env, gPromptProperties, (jobject) 
+                                     &(mInitContext->shareContext));
+    }
+    
+    if (!(actionEvent = new wsPromptUniversalDialogEvent(mInitContext, 
+                                                         mPrompt, 
+                                                         strings, 
+                                                         nsnull,
+                                                         nsnull,
+                                                         checkValue,
+                                                         numberButtons, 
+                                                         0, 
+                                                         PR_FALSE,
+                                                         buttonPressed))) {
+        ::util_ThrowExceptionToJava(env, "Exception: ConfirmEx: can't create wsPromptUniversalDialogEvent");
+        rv = NS_ERROR_NULL_POINTER;
+        goto UD_CLEANUP;
+    }
+    // the out params to this method are set in wsPromptUsernameAndPasswordEvent::handleEvent()
+    ::util_PostSynchronousEvent(mInitContext, (PLEvent *) *actionEvent);
+    
+    rv = NS_OK;
+ UD_CLEANUP:
+    
+    ::util_DeleteJstringsFromUnichars(strings, 10);
+    // free any button strings copied from localized strings
+    for (i = 0; i < maxButtons; i++) { 
+        if (buttonStringsToFree[i]) {
+            nsMemory::Free((void *) buttonStringsToFree[i]);
+        }
+    }
+    
+    return rv;
 }
 
 

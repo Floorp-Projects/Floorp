@@ -30,6 +30,14 @@
 
 #include "ns_util.h"
 
+#include "nsIStringBundle.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+#define kCommonDialogsProperties "chrome://global/locale/commonDialogs.properties"
+
+
 /**
 
  * a null terminated array of listener interfaces we support.  This is
@@ -145,6 +153,25 @@ jint util_GetGTKWinPtrFromCanvas(JNIEnv *env, jobject browserControlCanvas)
     return result;
 }
 #endif
+
+nsresult util_GetLocaleString(const char *aKey, PRUnichar **aResult)
+{
+#ifdef BAL_INTERFACE
+#else
+  nsresult rv;
+
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+  nsCOMPtr<nsIStringBundle> stringBundle;
+ 
+  rv = stringService->CreateBundle(kCommonDialogsProperties, getter_AddRefs(stringBundle));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).GetUnicode(), aResult);
+
+  return rv;
+
+#endif
+}
 
 //
 // Implementations for functions defined in ../src_share/jni_util.h, but not

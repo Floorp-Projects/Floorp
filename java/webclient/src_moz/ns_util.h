@@ -182,4 +182,6 @@ nsresult util_DeleteJstringsFromUnichars(wsStringStruct *strings,
 jint util_GetGTKWinPtrFromCanvas(JNIEnv *env, jobject browserControlCanvas);
 #endif
 
+nsresult util_GetLocaleString(const char *aKey, PRUnichar **aResult);
+
 #endif // ns_util_h

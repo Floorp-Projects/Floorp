@@ -80,18 +80,22 @@ void *wsPromptUsernameAndPasswordEvent::handleEvent()
     user = (jstring) ::util_GetFromPropertiesObject(env, gPromptProperties,
                                                     USER_NAME_KEY, (jobject)
                                                     &(mInitContext->shareContext));
-    userJchar = ::util_GetStringChars(env, user);
-    autoUser = (PRUnichar *) userJchar;
-    *mOutUser = autoUser.ToNewUnicode();
-    ::util_ReleaseStringChars(env, user, userJchar);
+    if (user) {
+        userJchar = ::util_GetStringChars(env, user);
+        autoUser = (PRUnichar *) userJchar;
+        *mOutUser = autoUser.ToNewUnicode();
+        ::util_ReleaseStringChars(env, user, userJchar);
+    }
     
     password = (jstring) ::util_GetFromPropertiesObject(env, gPromptProperties,
                                                         PASSWORD_KEY, (jobject)
                                                         &(mInitContext->shareContext));
-    passwordJchar = ::util_GetStringChars(env, password);
-    autoPassword = (PRUnichar *) passwordJchar;
-    *mOutPwd = autoPassword.ToNewUnicode();
-    ::util_ReleaseStringChars(env, password, passwordJchar);
+    if (password) {
+        passwordJchar = ::util_GetStringChars(env, password);
+        autoPassword = (PRUnichar *) passwordJchar;
+        *mOutPwd = autoPassword.ToNewUnicode();
+        ::util_ReleaseStringChars(env, password, passwordJchar);
+    }
     
     *mRetVal = (result == JNI_TRUE) ? PR_TRUE : PR_FALSE;
     
