@@ -48,7 +48,6 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 
-nsNodeInfoManager* nsNodeInfoManager::gAnonymousNodeInfoManager;
 PRUint32 nsNodeInfoManager::gNodeManagerCount;
 
 
@@ -96,19 +95,7 @@ nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 
 nsNodeInfoManager::nsNodeInfoManager()
 {
-
-  if (gNodeManagerCount == 1 && gAnonymousNodeInfoManager) {
-    /*
-     * If we get here the global nodeinfo manager was the first one created,
-     * in that case we're not holding a strong reference to the global nodeinfo
-     * manager. Now we're creating one more nodeinfo manager so we'll grab
-     * a strong reference to the global nodeinfo manager so that it's
-     * lifetime will be longer than the lifetime of the other node managers.
-     */
-    NS_ADDREF(gAnonymousNodeInfoManager);
-  }
-
-  gNodeManagerCount++;
+  ++gNodeManagerCount;
 
   mNodeInfoHash = PL_NewHashTable(32, GetNodeInfoInnerHashValue,
                                   NodeInfoInnerKeyCompare,
@@ -122,17 +109,7 @@ nsNodeInfoManager::nsNodeInfoManager()
 
 nsNodeInfoManager::~nsNodeInfoManager()
 {
-  gNodeManagerCount--;
-
-  if (gNodeManagerCount == 1 && gAnonymousNodeInfoManager) {
-    NS_RELEASE(gAnonymousNodeInfoManager);
-  } else if (!gNodeManagerCount) {
-    /*
-     * Here we just make sure that we don't leave a dangling pointer to
-     * the global nodeinfo manager after it's deleted.
-     */
-    gAnonymousNodeInfoManager = nsnull;
-  }
+  --gNodeManagerCount;
 
   if (mNodeInfoHash)
     PL_HashTableDestroy(mNodeInfoHash);
@@ -165,7 +142,6 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
 
   return NS_OK;
 }
-
 
 void
 nsNodeInfoManager::DropDocumentReference()
@@ -360,31 +336,3 @@ nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
     NS_WARN_IF_FALSE(ret, "Can't find nsINodeInfo to remove!!!");
   }
 }
-
-
-nsresult
-nsNodeInfoManager::GetAnonymousManager(nsINodeInfoManager** aNodeInfoManager)
-{
-  if (!gAnonymousNodeInfoManager) {
-    gAnonymousNodeInfoManager = new nsNodeInfoManager;
-
-    if (!gAnonymousNodeInfoManager)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(gAnonymousNodeInfoManager);
-  }
-
-  *aNodeInfoManager = gAnonymousNodeInfoManager;
-
-  /*
-   * If the only nodeinfo manager is the global one we don't hold a ref
-   * since the global nodeinfo manager should be destroyed when it's released,
-   * even if it's the last one arround.
-   */
-  if (gNodeManagerCount > 1) {
-    NS_ADDREF(*aNodeInfoManager);
-  }
-
-  return NS_OK;
-}
-

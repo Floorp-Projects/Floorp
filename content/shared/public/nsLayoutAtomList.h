@@ -88,6 +88,7 @@ LAYOUT_ATOM(popupList, "Popup-list")
 LAYOUT_ATOM(commentTagName, "__moz_comment")
 LAYOUT_ATOM(textTagName, "__moz_text")
 LAYOUT_ATOM(processingInstructionTagName, "__moz_pi")
+LAYOUT_ATOM(documentFragmentNodeName, "#document-fragment")
 
   // Alphabetical list of frame types
 LAYOUT_ATOM(areaFrame, "AreaFrame")
