@@ -64,6 +64,7 @@ $nameProduct      = $ENV{WIZ_nameProduct};
 $nameProductInternal = $ENV{WIZ_nameProductInternal};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
+$greBuildID       = $ENV{WIZ_greBuildID};
 $greFileVersion   = $ENV{WIZ_greFileVersion};
 $greUniqueID      = $ENV{WIZ_greUniqueID};
 
@@ -93,6 +94,7 @@ while($line = <fpInIt>)
   $line =~ s/\$ProductNameInternal\$/$nameProductInternal/gi;
   $line =~ s/\$MainExeFile\$/$fileMainExe/gi;
   $line =~ s/\$UninstallFile\$/$fileUninstall/gi;
+  $line =~ s/\$GreBuildID\$/$greBuildID/gi;
   $line =~ s/\$GreFileVersion\$/$greFileVersion/gi;
   $line =~ s/\$GreUniqueID\$/$greUniqueID/gi;
   print fpOutIni $line;

@@ -69,6 +69,9 @@ $nameProduct      = $ENV{WIZ_nameProduct};
 $nameProductInternal = $ENV{WIZ_nameProductInternal};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
+$greBuildID       = $ENV{WIZ_greBuildID};
+$greFileVersion   = $ENV{WIZ_greFileVersion};
+$greUniqueID      = $ENV{WIZ_greUniqueID};
 
 # Get the name of the file replacing the .jst extension with a .js extension
 @inJstFileSplit   = split(/\./,$inJstFile);
@@ -121,6 +124,9 @@ while($line = <fpInTemplate>)
     $line =~ s/\$ProductNameInternal\$/$nameProductInternal/i;
     $line =~ s/\$MainExeFile\$/$fileMainExe/i;
     $line =~ s/\$UninstallFile\$/$fileUninstall/i;
+    $line =~ s/\$GreBuildID\$/$greBuildID/gi;
+    $line =~ s/\$GreFileVersion\$/$greFileVersion/gi;
+    $line =~ s/\$GreUniqueID\$/$greUniqueID/gi;
   }
 
   print fpOutJs $line;
