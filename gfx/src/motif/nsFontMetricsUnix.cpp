@@ -319,7 +319,7 @@ NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const PRUnichar *aString,
   PRUint32 i ;
   PRUint32 desiredSize = sizeof(XChar2b) * aLength;
 
-   // Make the temporary buffer larger if needed.
+  // Make the temporary buffer larger if needed.
   if (nsnull == mXstring) {
     mXstring = (XChar2b *) PR_Malloc(desiredSize);
     mXstringSize = desiredSize;
