@@ -1054,6 +1054,21 @@ static PRInt32 kClipKTable[] = {
   -1
 };
 
+static PRInt32 kCursorKTable[] = {
+  KEYWORD_INHERIT, NS_STYLE_CURSOR_INHERIT,
+  KEYWORD_IBEAM, NS_STYLE_CURSOR_IBEAM,
+  KEYWORD_ARROW, NS_STYLE_CURSOR_DEFAULT,
+  KEYWORD_HAND, NS_STYLE_CURSOR_HAND,
+  -1
+};
+
+static PRInt32 kDirectionKTable[] = {
+  KEYWORD_LTR,      NS_STYLE_DIRECTION_LTR,
+  KEYWORD_RTL,      NS_STYLE_DIRECTION_RTL,
+  KEYWORD_INHERIT,  NS_STYLE_DIRECTION_INHERIT,
+  -1
+};
+
 static PRInt32 kDisplayKTable[] = {
   KEYWORD_NONE,      NS_STYLE_DISPLAY_NONE,
   KEYWORD_BLOCK,     NS_STYLE_DISPLAY_BLOCK,
@@ -1522,6 +1537,10 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
     return ParseClip(aErrorCode, aDeclaration);
   case PROP_COLOR:
     return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_COLOR, nsnull);
+  case PROP_CURSOR:
+    return ParseEnum(aErrorCode, aDeclaration, aName, kCursorKTable);
+  case PROP_DIRECTION:
+    return ParseEnum(aErrorCode, aDeclaration, aName, kDirectionKTable);
   case PROP_DISPLAY:
     return ParseEnum(aErrorCode, aDeclaration, aName, kDisplayKTable);
   case PROP_FILTER:
