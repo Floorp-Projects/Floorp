@@ -64,9 +64,13 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsLayoutAtoms.h"
 #include "nsLayoutUtils.h"
+#ifdef MOZ_XUL
+// XXXbz the fact that this is ifdef MOZ_XUL is good indication that
+// it doesn't belong here...
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
+#endif
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
@@ -2098,6 +2102,7 @@ void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
       }
     }
 
+#ifdef MOZ_XUL
     // Tree view special case (tree items have no frames)
     // Get the focused row and add its coordinates, which are already in pixels
     // XXX Boris, should we create a new interface so that event listener manager doesn't
@@ -2145,6 +2150,7 @@ void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
         }
       }
     }
+#endif
 
     // Convert from twips to pixels
     float t2p = aPresContext->TwipsToPixels();
