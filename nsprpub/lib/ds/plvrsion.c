@@ -42,7 +42,7 @@
 #define _DEBUG_STRING ""
 #endif
 
-static PRVersionDescription prVersionDescription_libplds3 =
+PRVersionDescription prVersionDescription_libplds3 =
 {
     /* version          */  2,                  /* this is the only one supported */
     /* buildTime        */  _BUILD_TIME,        /* usecs since midnight 1/1/1970 GMT */
