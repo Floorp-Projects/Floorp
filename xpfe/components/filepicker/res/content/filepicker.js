@@ -195,6 +195,7 @@ function dirSort(e1, e2)
 function createTree(parentElement, dirArray)
 {
   var treeChildren = document.createElement("treechildren");
+  treeChildren.setAttribute("flex", "1");
 
   var len = dirArray.length;
   var file;
