@@ -351,10 +351,10 @@ CONFIG_STATUS_DEPS := \
 	$(TOPSRCDIR)/configure \
 	$(TOPSRCDIR)/allmakefiles.sh \
 	$(TOPSRCDIR)/.mozconfig.mk \
-	$(TOPSRCDIR)/directory/c-sdk/ldap/configure \
-	$(TOPSRCDIR)/nsprpub/configure \
-	$(TOPSRCDIR)/nsprpub/config/prdepend.h \
+	$(wildcard $(TOPSRCDIR)/nsprpub/configure) \
+	$(wildcard $(TOPSRCDIR)/directory/c-sdk/ldap/configure) \
 	$(wildcard $(TOPSRCDIR)/mailnews/makefiles) \
+	$(wildcard $(TOPSRCDIR)/themes/makefiles) \
 	$(NULL)
 
 # configure uses the program name to determine @srcdir@. Calling it without
