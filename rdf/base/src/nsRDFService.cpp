@@ -176,8 +176,8 @@ LiteralImpl::~LiteralImpl()
     NS_RELEASE2(gRDFService, refcnt);
 }
 
-NS_IMPL_ADDREF(LiteralImpl);
-NS_IMPL_RELEASE(LiteralImpl);
+NS_IMPL_THREADSAFE_ADDREF(LiteralImpl);
+NS_IMPL_THREADSAFE_RELEASE(LiteralImpl);
 
 nsresult
 LiteralImpl::QueryInterface(REFNSIID iid, void** result)

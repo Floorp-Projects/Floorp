@@ -556,7 +556,7 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 // nsISupports interface
 //
 
-NS_IMPL_ADDREF(CompositeDataSourceImpl);
+NS_IMPL_THREADSAFE_ADDREF(CompositeDataSourceImpl);
 
 NS_IMETHODIMP_(nsrefcnt)
 CompositeDataSourceImpl::Release()
