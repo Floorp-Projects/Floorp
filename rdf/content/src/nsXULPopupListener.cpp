@@ -811,15 +811,15 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
 // appropriate amount of time. Getting to this point means that we should show the
 // toolip.
 //
-// This relies on certain things being cached into the |aClosure| object passed to
-// us by the timer:
-//   -- the x/y coordinates of the mouse
-//   -- the dom node the user hovered over
+// This relies on certain things being cached into the |aPopupListener|
+// object passed to us by the timer:
+//   -- the x/y coordinates of the mouse      (mMouseClientY, mMouseClientX)
+//   -- the dom node the user hovered over    (mPossibleTooltipNode)
 //
 void
-XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aClosure)
+XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aPopupListener)
 {
-  XULPopupListenerImpl* self = NS_STATIC_CAST(XULPopupListenerImpl*, aClosure);
+  XULPopupListenerImpl* self = NS_STATIC_CAST(XULPopupListenerImpl*, aPopupListener);
   if ( self && self->mPossibleTooltipNode ) {
     // set the node in the document that triggered the tooltip and show it
     nsCOMPtr<nsIDOMXULDocument> doc;
