@@ -1079,7 +1079,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
 	    // if we didn't find the type, but we do have a src, we can determine the mimetype
 	    // based on the file extension
-      if(!mimeType && src)
+      if(!mimeType && src.GetUnicode())
 	    {
 		    char* extension;
 		    char* cString = src.ToNewCString();

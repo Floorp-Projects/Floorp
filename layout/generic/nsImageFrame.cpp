@@ -539,10 +539,10 @@ nsImageFrame::TriggerLink(nsIPresContext& aPresContext,
   aPresContext.GetLinkHandler(&handler);
   if (nsnull != handler) {
     if (aClick) {
-      handler->OnLinkClick(mContent, eLinkVerb_Replace, aURLSpec, aTargetSpec);
+      handler->OnLinkClick(mContent, eLinkVerb_Replace, aURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
     }
     else {
-      handler->OnOverLink(mContent, aURLSpec, aTargetSpec);
+      handler->OnOverLink(mContent, aURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
     }
     NS_RELEASE(handler);
   }
