@@ -36,9 +36,9 @@
  *   2) For document conversions
  *   3) For debug purposes (to cause output to go to cout or a file)
  *
- * If no stream is declared in the constructor then all output goes to cout. 
- * The file is pretty printed according to the pretty printing interface. subclasses 
- * may choose to override this behavior or set runtime flags for desired results.
+ * The output is formatted, or not, according to the flags passed in.
+ * Tags with the attribute "_moz_dirty" will be prettyprinted
+ * regardless of the flags (and this attribute will not be output).
  */
 
 #ifndef  NS_TXTCONTENTSINK_STREAM
@@ -75,7 +75,6 @@ class nsIHTMLContentSinkStream : public nsIHTMLContentSink {
 class nsHTMLContentSinkStream : public nsIHTMLContentSinkStream 
 {
   public:
-
 
   /**
    * Constructor with associated stream. If you use this, it means that you want
@@ -165,6 +164,8 @@ protected:
     PRBool HasLongLines(const nsString& text);
     void WriteWrapped(const nsString& text);
 
+    // Is this node "dirty", needing reformatting?
+    PRBool IsDirty(const nsIParserNode& aNode);
 
 protected:
     nsIOutputStream* mStream;
@@ -180,6 +181,7 @@ protected:
     PRBool    mLowerCaseTags;
     PRInt32   mHTMLStackPos;
     eHTMLTags mHTMLTagStack[1024];  // warning: hard-coded nesting level
+    PRBool    mDirtyStack[1024];    // warning: hard-coded nesting level
     PRInt32   mColPos;
     PRBool    mInBody;
 

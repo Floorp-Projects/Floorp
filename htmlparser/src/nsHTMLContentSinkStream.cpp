@@ -58,134 +58,8 @@ static char*          gHeaderComment = "<!-- This page was created by the Gecko 
 static char*          gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
 const  int            gTabSize=2;
 
- /** PRETTY PRINTING PROTOTYPES **/
+static const nsString gMozDirty ("_moz_dirty");
 
-class nsTagFormat
-{
-public:
-  void Init(PRBool aBefore, PRBool aStart, PRBool aEnd, PRBool aAfter);
-  void SetIndentGroup(PRUint8 aGroup);
-  void SetFormat(PRBool aOnOff);
-
-public:
-  PRBool    mBreakBefore;
-  PRBool    mBreakStart;
-  PRBool    mBreakEnd;
-  PRBool    mBreakAfter;
-  
-  PRUint8   mIndentGroup; // zero for none
-  PRBool    mFormat;      // format (on|off)
-};
-
-void nsTagFormat::Init(PRBool aBefore, PRBool aStart, PRBool aEnd, PRBool aAfter)
-{
-  mBreakBefore = aBefore;
-  mBreakStart = aStart;
-  mBreakEnd = aEnd;
-  mBreakAfter = aAfter;
-  mFormat = PR_TRUE;
-}
-
-void nsTagFormat::SetIndentGroup(PRUint8 aGroup)
-{
-  mIndentGroup = aGroup;
-}
-
-void nsTagFormat::SetFormat(PRBool aOnOff)
-{
-  mFormat = aOnOff; 
-}
-
-class nsPrettyPrinter
-{
-public:
-
-  void Init(PRBool aIndentEnable = PR_TRUE, PRUint8 aColSize = 2, PRUint8 aTabSize = 8, PRBool aUseTabs = PR_FALSE );    
-  
-  PRBool      mIndentEnable;
-  PRUint8     mIndentColSize;
-  PRUint8     mIndentTabSize;
-  PRBool      mIndentUseTabs;
-
-  PRBool      mAutowrapEnable;
-  PRUint32    mAutoWrapColWidth;
-
-  nsTagFormat mTagFormat[NS_HTML_TAG_MAX+1];
-};
-
-
-void nsPrettyPrinter::Init(PRBool aIndentEnable, PRUint8 aColSize, PRUint8 aTabSize, PRBool aUseTabs)
-{
-  mIndentEnable = aIndentEnable;
-  mIndentColSize = aColSize;
-  mIndentTabSize = aTabSize;
-  mIndentUseTabs = aUseTabs;
-
-  mAutowrapEnable = PR_TRUE;
-  mAutoWrapColWidth = 72;
-
-  for (PRUint32 i = 0; i < NS_HTML_TAG_MAX; i++)
-    mTagFormat[i].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_FALSE);
-
-  mTagFormat[eHTMLTag_a].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_abbr].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_FALSE);
-  mTagFormat[eHTMLTag_applet].Init(PR_FALSE,PR_TRUE,PR_TRUE,PR_FALSE);
-  mTagFormat[eHTMLTag_area].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_b].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_FALSE);
-  mTagFormat[eHTMLTag_base].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_blockquote].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_body].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_br].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_caption].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_center].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_dd].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_dir].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_div].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_dl].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_dt].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_embed].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_form].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_frame].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_frameset].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h1].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h2].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h3].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h4].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h5].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h6].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_head].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_hr].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_html].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_ilayer].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_input].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_isindex].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_layer].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_li].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_link].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_map].Init(PR_FALSE,PR_TRUE,PR_TRUE,PR_FALSE);
-  mTagFormat[eHTMLTag_menu].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_meta].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_object].Init(PR_FALSE,PR_TRUE,PR_TRUE,PR_FALSE);
-  mTagFormat[eHTMLTag_ol].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_option].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_p].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_param].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_pre].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_script].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_select].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_style].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_table].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_td].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_textarea].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_th].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_title].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_tr].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_ul].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-}
-
-
-
- 
 static PRBool IsInline(eHTMLTags aTag);
 static PRBool IsBlockLevel(eHTMLTags aTag);
 static PRInt32 BreakBeforeOpen(eHTMLTags aTag);
@@ -194,16 +68,6 @@ static PRInt32 BreakBeforeClose(eHTMLTags aTag);
 static PRInt32 BreakAfterClose(eHTMLTags aTag);
 static PRBool IndentChildren(eHTMLTags aTag);
 static PRBool PreformattedChildren(eHTMLTags aTag);
-static PRBool PermitWSBeforeOpen(eHTMLTags aTag);
-
-#ifdef OBSOLETE
-static PRBool EatOpen(eHTMLTags aTag);
-static PRBool EatClose(eHTMLTags aTag);
-static PRBool PermitWSAfterOpen(eHTMLTags aTag);
-static PRBool PermitWSBeforeClose(eHTMLTags aTag);
-static PRBool PermitWSAfterClose(eHTMLTags aTag);
-static PRBool IgnoreWS(eHTMLTags aTag);
-#endif // OBSOLETE
 
 
 /**
@@ -258,6 +122,7 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream()
   NS_INIT_REFCNT();
   mLowerCaseTags = PR_TRUE;  
   memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
+  memset(mDirtyStack,0,sizeof(mDirtyStack));
   mHTMLStackPos = 0;
   mColPos = 0;
   mIndent = 0;
@@ -520,6 +385,12 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
       //
       if ((eHTMLTags)aNode.GetNodeType() == eHTMLTag_br
           && key.Equals("type", PR_TRUE) && value.Equals("_moz"))
+        continue;
+
+      // 
+      // Filter out special case of _moz_dirty
+      //
+      if (key.Equals(gMozDirty))
         continue;
 
       if (mLowerCaseTags == PR_TRUE)
@@ -809,9 +680,32 @@ void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize) {
   }
 }
 
+//
+// Check whether a node has the attribute _moz_dirty.
+// If it does, we'll prettyprint it, otherwise we adhere to the
+// surrounding text/whitespace/newline nodes provide formatting.
+//
+PRBool nsHTMLContentSinkStream::IsDirty(const nsIParserNode& aNode)
+{
+  // Apparently there's no way to just ask for a particlar attribute
+  // without looping over the list.
+  int theCount = aNode.GetAttributeCount();
+  if (theCount)
+  {
+    for(int i=0; i < theCount; i++)
+    {
+      nsString& key = (nsString&)aNode.GetKeyAt(i);
+      if (key.Equals(gMozDirty))
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 {
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
+  PRBool            isDirty = IsDirty(aNode);
 
   if(tag==eHTMLTag_markupDecl) { 
     Write("<!"); // mdo => Markup Declaration Open.
@@ -824,22 +718,31 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   if (tag == eHTMLTag_body)
     mInBody = PR_TRUE;
 
-  mHTMLTagStack[mHTMLStackPos++] = tag;
+  mHTMLTagStack[mHTMLStackPos] = tag;
+  mDirtyStack[mHTMLStackPos++] = isDirty;
   tagName = name;
-
 
   if (mLowerCaseTags == PR_TRUE)
     tagName.ToLowerCase();
   else
     tagName.ToUpperCase();
 
-  if (mDoFormat && mColPos != 0 && BreakBeforeOpen(tag))
+#ifdef DEBUG_akkana
+  if (isDirty)
+    printf("AddStartTag(%s): BBO=%d, BAO=%d, BBC=%d, BAC=%d\n",
+           name.ToNewCString(),
+           BreakBeforeOpen(tag),
+           BreakAfterOpen(tag),
+           BreakBeforeClose(tag),
+           BreakAfterClose(tag));
+#endif
+
+  if ((mDoFormat || isDirty) && mColPos != 0 && BreakBeforeOpen(tag))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
   }
-
-  if (mDoFormat && PermitWSBeforeOpen(tag))
+  if ((mDoFormat || isDirty) && mColPos == 0)
     AddIndent();
 
   EnsureBufferSize(tagName.Length());
@@ -850,7 +753,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   mColPos += 1 + tagName.Length();
 
-  if (mDoFormat && tag == eHTMLTag_style)
+  if ((mDoFormat || isDirty) && tag == eHTMLTag_style)
   {
     Write(kGreaterThan);
     Write(NS_LINEBREAK);
@@ -870,7 +773,8 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
     mColPos += 1;
   }
 
-  if ((mDoFormat && BreakAfterOpen(tag)) || (tag == eHTMLTag_pre))
+  if (((mDoFormat || isDirty) && BreakAfterOpen(tag))
+      || (tag == eHTMLTag_pre))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
@@ -895,8 +799,18 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 {
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
-//  const nsString&   name = aNode.GetText();
   nsAutoString      tagName;
+  PRBool            isDirty = mDirtyStack[mHTMLStackPos-1];
+
+#ifdef DEBUG_akkana
+  if (isDirty)
+    printf("AddEndTag(%s): BBO=%d, BAO=%d, BBC=%d, BAC=%d\n",
+           aNode.GetText().ToNewCString(),
+           BreakBeforeOpen(tag),
+           BreakAfterOpen(tag),
+           BreakBeforeClose(tag),
+           BreakAfterClose(tag));
+#endif
 
   if (tag == eHTMLTag_unknown)
   {
@@ -919,25 +833,25 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   }
   if (mLowerCaseTags == PR_TRUE)
     tagName.ToLowerCase();
-  else
-    tagName.ToUpperCase();
+//  else
+//    tagName.ToUpperCase();
 
   if (IndentChildren(tag))
     mIndent--;
 
-  if (mDoFormat && BreakBeforeClose(tag))
+  if ((mDoFormat || isDirty) && BreakBeforeClose(tag))
   {
     if (mColPos != 0)
     {
       Write(NS_LINEBREAK);
       mColPos = 0;
     }
-    AddIndent();
   }
+  if ((mDoFormat || isDirty) && mColPos == 0)
+    AddIndent();
 
   EnsureBufferSize(tagName.Length());
   tagName.ToCString(mBuffer,mBufferSize);
-
 
   if (tag != eHTMLTag_comment)
   {
@@ -954,7 +868,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if (tag == eHTMLTag_body)
     mInBody = PR_FALSE;
 
-  if ((mDoFormat && BreakAfterClose(tag))
+  if (((mDoFormat || isDirty) && BreakAfterClose(tag))
       || tag == eHTMLTag_body || tag == eHTMLTag_html)
   {
     Write(NS_LINEBREAK);
@@ -1299,14 +1213,11 @@ nsHTMLContentSinkStream::NotifyError(const nsParserError* aError)
   return NS_OK;
 }
 
-/**
-  * **** Pretty Printing Methods ******
-  *
-  */
- 
+/////////////////////////////////////////////////////////////
+////  Useful static methods
+/////////////////////////////////////////////////////////////
 
-
-PRBool IsInline(eHTMLTags aTag)
+static PRBool IsInline(eHTMLTags aTag)
 {
   PRBool  result = PR_FALSE;
 
@@ -1336,7 +1247,6 @@ PRBool IsInline(eHTMLTags aTag)
     case  eHTMLTag_strong:
     case  eHTMLTag_sub:
     case  eHTMLTag_sup:
-    case  eHTMLTag_td:
     case  eHTMLTag_textarea:
     case  eHTMLTag_tt:
     case  eHTMLTag_var:
@@ -1352,16 +1262,21 @@ PRBool IsInline(eHTMLTags aTag)
   return result;
 }
 
-PRBool IsBlockLevel(eHTMLTags aTag) 
+static PRBool IsBlockLevel(eHTMLTags aTag) 
 {
   return !IsInline(aTag);
 }
 
+/**
+  * **** Pretty Printing Methods ******
+  *
+  */
 
 /**
   * Desired line break state before the open tag.
   */
-PRBool BreakBeforeOpen(eHTMLTags aTag)  {
+static PRBool BreakBeforeOpen(eHTMLTags aTag)
+{
  PRBool  result = PR_FALSE;
   switch (aTag)
   {
@@ -1378,7 +1293,8 @@ PRBool BreakBeforeOpen(eHTMLTags aTag)  {
 /**
   * Desired line break state after the open tag.
   */
-PRBool BreakAfterOpen(eHTMLTags aTag)  {
+static PRBool BreakAfterOpen(eHTMLTags aTag)
+{
   PRBool  result = PR_FALSE;
   switch (aTag)
   {
@@ -1389,6 +1305,7 @@ PRBool BreakAfterOpen(eHTMLTags aTag)  {
     case eHTMLTag_table:
     case eHTMLTag_tbody:
     case eHTMLTag_style:
+    case eHTMLTag_br:
       result = PR_TRUE;
       break;
 
@@ -1402,7 +1319,8 @@ PRBool BreakAfterOpen(eHTMLTags aTag)  {
 /**
   * Desired line break state before the close tag.
   */
-PRBool BreakBeforeClose(eHTMLTags aTag)  {
+static PRBool BreakBeforeClose(eHTMLTags aTag)
+{
   PRBool  result = PR_FALSE;
 
   switch (aTag)
@@ -1428,12 +1346,16 @@ PRBool BreakBeforeClose(eHTMLTags aTag)  {
 /**
   * Desired line break state after the close tag.
   */
-PRBool BreakAfterClose(eHTMLTags aTag)  {
+static PRBool BreakAfterClose(eHTMLTags aTag)
+{
   PRBool  result = PR_FALSE;
 
   switch (aTag)
   {
     case  eHTMLTag_html:
+    case  eHTMLTag_tr:
+    case  eHTMLTag_th:
+    case  eHTMLTag_td:
       result = PR_TRUE;
     break;
 
@@ -1448,8 +1370,8 @@ PRBool BreakAfterClose(eHTMLTags aTag)  {
   * This implies that BreakAfterOpen() and BreakBeforeClose()
   * are true no matter what those methods return.
   */
-PRBool IndentChildren(eHTMLTags aTag)  {
-  
+static PRBool IndentChildren(eHTMLTags aTag)
+{
   PRBool result = PR_FALSE;
 
   switch (aTag)
@@ -1474,7 +1396,8 @@ PRBool IndentChildren(eHTMLTags aTag)  {
   * All tags after this tag and before the closing tag will be output with no
   * formatting.
   */
-PRBool PreformattedChildren(eHTMLTags aTag)  {
+static PRBool PreformattedChildren(eHTMLTags aTag)
+{
   PRBool result = PR_FALSE;
   if (aTag == eHTMLTag_pre)
   {
@@ -1483,18 +1406,10 @@ PRBool PreformattedChildren(eHTMLTags aTag)  {
   return result;
 }
 
-/**
-  * Are we allowed to insert new white space before the open tag.
-  *
-  * Returning false does not prevent inserting WS
-  * before the tag if WS insertion is allowed for another reason,
-  * e.g. there is already WS there or we are after a tag that
-  * has PermitWSAfter*().
-  */
-PRBool PermitWSBeforeOpen(eHTMLTags aTag)  {
-  PRBool result = IsInline(aTag) == PR_FALSE;
-  return result;
-}
+///////////////////////////////////////////////////////////////////////////
+//////    OBSOLETE CODE FROM HERE TO END OF FILE.
+//////             All Ifdef'ed out.
+///////////////////////////////////////////////////////////////////////////
 
 #ifdef OBSOLETE
 /**
@@ -1518,6 +1433,20 @@ PRBool PermitWSAfterOpen(eHTMLTags aTag)  {
     return PR_FALSE;
   }
   return PR_TRUE;
+}
+
+/**
+  * Are we allowed to insert new white space before the open tag.
+  *
+  * Returning false does not prevent inserting WS
+  * before the tag if WS insertion is allowed for another reason,
+  * e.g. there is already WS there or we are after a tag that
+  * has PermitWSAfter*().
+  */
+static PRBool PermitWSBeforeOpen(eHTMLTags aTag)
+{
+  PRBool result = IsInline(aTag) == PR_FALSE;
+  return result;
 }
 
 /** @see PermitWSBeforeOpen */
@@ -1558,6 +1487,139 @@ PRBool IgnoreWS(eHTMLTags aTag)  {
   return result;
 }
 
-#endif /* OBSOLETE */
+ /** PRETTY PRINTING PROTOTYPES **/
+
+class nsTagFormat
+{
+public:
+  void Init(PRBool aBefore, PRBool aStart, PRBool aEnd, PRBool aAfter);
+  void SetIndentGroup(PRUint8 aGroup);
+  void SetFormat(PRBool aOnOff);
+
+public:
+  PRBool    mBreakBefore;
+  PRBool    mBreakStart;
+  PRBool    mBreakEnd;
+  PRBool    mBreakAfter;
+  
+  PRUint8   mIndentGroup; // zero for none
+  PRBool    mFormat;      // format (on|off)
+};
+
+void nsTagFormat::Init(PRBool aBefore, PRBool aStart, PRBool aEnd, PRBool aAfter)
+{
+  mBreakBefore = aBefore;
+  mBreakStart = aStart;
+  mBreakEnd = aEnd;
+  mBreakAfter = aAfter;
+  mFormat = PR_TRUE;
+}
+
+void nsTagFormat::SetIndentGroup(PRUint8 aGroup)
+{
+  mIndentGroup = aGroup;
+}
+
+void nsTagFormat::SetFormat(PRBool aOnOff)
+{
+  mFormat = aOnOff; 
+}
+
+class nsPrettyPrinter
+{
+public:
+
+  void Init(PRBool aIndentEnable = PR_TRUE, PRUint8 aColSize = 2, PRUint8 aTabSize = 8, PRBool aUseTabs = PR_FALSE );    
+  
+  PRBool      mIndentEnable;
+  PRUint8     mIndentColSize;
+  PRUint8     mIndentTabSize;
+  PRBool      mIndentUseTabs;
+
+  PRBool      mAutowrapEnable;
+  PRUint32    mAutoWrapColWidth;
+
+  nsTagFormat mTagFormat[NS_HTML_TAG_MAX+1];
+};
 
 
+void nsPrettyPrinter::Init(PRBool aIndentEnable, PRUint8 aColSize, PRUint8 aTabSize, PRBool aUseTabs)
+{
+  mIndentEnable = aIndentEnable;
+  mIndentColSize = aColSize;
+  mIndentTabSize = aTabSize;
+  mIndentUseTabs = aUseTabs;
+
+  mAutowrapEnable = PR_TRUE;
+  mAutoWrapColWidth = 72;
+
+  for (PRUint32 i = 0; i < NS_HTML_TAG_MAX; i++)
+    mTagFormat[i].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_FALSE);
+
+  mTagFormat[eHTMLTag_a].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_abbr].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_FALSE);
+  mTagFormat[eHTMLTag_applet].Init(PR_FALSE,PR_TRUE,PR_TRUE,PR_FALSE);
+  mTagFormat[eHTMLTag_area].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_b].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_FALSE);
+  mTagFormat[eHTMLTag_base].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_blockquote].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_body].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_br].Init(PR_FALSE,PR_TRUE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_caption].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_center].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_dd].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_dir].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_div].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_dl].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_dt].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_embed].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_form].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_frame].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_frameset].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_h1].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_h2].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_h3].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_h4].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_h5].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_h6].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_head].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_hr].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_html].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_ilayer].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_input].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_isindex].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_layer].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_li].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_link].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_map].Init(PR_FALSE,PR_TRUE,PR_TRUE,PR_FALSE);
+  mTagFormat[eHTMLTag_menu].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_meta].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_object].Init(PR_FALSE,PR_TRUE,PR_TRUE,PR_FALSE);
+  mTagFormat[eHTMLTag_ol].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_option].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_p].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_param].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_pre].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_script].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_select].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_style].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_table].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+  mTagFormat[eHTMLTag_td].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_textarea].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_th].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_title].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_tr].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
+  mTagFormat[eHTMLTag_ul].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+}
+
+static PRBool EatOpen(eHTMLTags aTag);
+static PRBool EatClose(eHTMLTags aTag);
+static PRBool PermitWSAfterOpen(eHTMLTags aTag);
+static PRBool PermitWSBeforeClose(eHTMLTags aTag);
+static PRBool PermitWSAfterClose(eHTMLTags aTag);
+static PRBool IgnoreWS(eHTMLTags aTag);
+
+#endif // OBSOLETE
+
+
+ 

@@ -2801,6 +2801,9 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   if (NS_FAILED(res) || !newElement)
     return NS_ERROR_FAILURE;
 
+  // Mark the new element dirty, so it will be formatted
+  newElement->SetAttribute("_moz_dirty", "");
+
   // Set default values for new elements
   if (TagName.Equals("hr"))
   {
@@ -3451,6 +3454,13 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 NS_IMETHODIMP
 nsHTMLEditor::InsertFormattingForNode(nsIDOMNode* aNode)
 {
+  // New formatting attempt: just mark the node dirty.
+  nsCOMPtr<nsIDOMElement> element (do_QueryInterface(aNode));
+  if (element)
+    element->SetAttribute("_moz_dirty", "");
+  return NS_OK;
+
+#ifdef FORMATTING_NODES_IN_DOM
   nsresult res;
 
   // Don't insert any formatting unless it's an element node
@@ -3556,6 +3566,7 @@ nsHTMLEditor::InsertFormattingForNode(nsIDOMNode* aNode)
 #endif /* DEBUG_formatting */
 
   return res;
+#endif // FORMATTING_NODES_IN_DOM
 }
 
 NS_IMETHODIMP 
@@ -4094,8 +4105,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
         newElement->SetAttribute(cite, aCitation);
 
       // Set the selection inside the blockquote so aQuotedText will go there:
-      if (NS_SUCCEEDED(res))
-        selection->Collapse(newNode, 0);
+      selection->Collapse(newNode, 0);
     }
 
     res = InsertHTMLWithCharset(aQuotedText, aCharset);
