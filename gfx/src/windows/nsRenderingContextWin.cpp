@@ -271,9 +271,15 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
   return CommonInit();
 }
 
+nsresult nsRenderingContextWin :: SetupDC(void)
+{
+  ::SetBkMode(mDC, TRANSPARENT);
+  ::SetPolyFillMode(mDC, WINDING);
+  return NS_OK;
+}
+
 nsresult nsRenderingContextWin :: CommonInit(void)
 {
-  ::SetPolyFillMode(mDC, WINDING);
 	mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
                      mContext->GetAppUnitsToDevUnits());
   mP2T = mContext->GetDevUnitsToAppUnits();
@@ -284,6 +290,7 @@ nsresult nsRenderingContextWin :: CommonInit(void)
 #endif
 
   mBlackBrush = ::CreateSolidBrush(RGB(0, 0, 0));
+  // XXX All this stuff should go in SetupDC()...
   mOrigSolidBrush = ::SelectObject(mDC, mBlackBrush);
 
   mDefFont = ::CreateFont(12, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
@@ -295,16 +302,14 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   mOrigSolidPen = ::SelectObject(mDC, mBlackPen);
 
   mGammaTable = mContext->GetGammaTable();
-
-  return NS_OK;
+  return SetupDC();
 }
 
 nsresult nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
   mMainDC = mDC;
   mDC = (HDC)aSurface;
-
-  return NS_OK;
+  return SetupDC();
 }
 
 void nsRenderingContextWin :: Reset()
@@ -863,21 +868,20 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     nscoord aWidth)
 {
-  int oldBkMode = ::SetBkMode(mDC, TRANSPARENT);
 	int	x,y;
 
   SetupFont();
 
   COLORREF oldColor = ::SetTextColor(mDC, mColor);
+  ::SetBkColor(mDC, RGB(255,128,255));
 	x = aX;
 	y = aY;
 	mTMatrix->TransformCoord(&x,&y);
-  ::TextOut(mDC,x,y,aString,aLength);
+  ::ExtTextOut(mDC,x,y,0,NULL,aString,aLength,NULL);
 
   if (mFontMetrics->GetFont().decorations & NS_FONT_DECORATION_OVERLINE)
     DrawLine(aX, aY, aX + aWidth, aY);
 
-  ::SetBkMode(mDC, oldBkMode);
   ::SetTextColor(mDC, oldColor);
 }
 
@@ -885,20 +889,19 @@ void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLen
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
 	int		x,y;
-  int oldBkMode = ::SetBkMode(mDC, TRANSPARENT);
 
   SetupFont();
 
 	COLORREF oldColor = ::SetTextColor(mDC, mColor);
+  ::SetBkColor(mDC, RGB(255,128,255));
 	x = aX;
 	y = aY;
 	mTMatrix->TransformCoord(&x,&y);
-  ::TextOutW(mDC,x,y,aString,aLength);
+  ::ExtTextOutW(mDC,x,y,0,NULL,aString,aLength,NULL);
 
   if (mFontMetrics->GetFont().decorations & NS_FONT_DECORATION_OVERLINE)
     DrawLine(aX, aY, aX + aWidth, aY);
 
-  ::SetBkMode(mDC, oldBkMode);
   ::SetTextColor(mDC, oldColor);
 }
 

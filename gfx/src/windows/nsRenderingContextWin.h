@@ -127,6 +127,7 @@ public:
 
 private:
   nsresult CommonInit(void);
+  nsresult SetupDC(void);
   HBRUSH SetupSolidBrush(void);
   HPEN SetupSolidPen(void);
   void SetupFont(void);
