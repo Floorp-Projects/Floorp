@@ -700,7 +700,6 @@ getNameCB(AtkObject *aAtkObj)
     NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
 
     if (!aAtkObj->name) {
-        gchar default_name[] = "no name";
         gint len;
         nsAutoString uniName;
 
@@ -715,9 +714,6 @@ getNameCB(AtkObject *aAtkObj)
             atk_object_set_name(aAtkObj,
                                 NS_ConvertUCS2toUTF8(uniName).get());
         }
-        else {
-            atk_object_set_name(aAtkObj, default_name);
-        }
     }
     return aAtkObj->name;
 }
@@ -728,7 +724,6 @@ getDescriptionCB(AtkObject *aAtkObj)
     NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
 
     if (!aAtkObj->description) {
-        gchar default_description[] = "no description";
         gint len;
         nsAutoString uniDesc;
 
@@ -742,9 +737,6 @@ getDescriptionCB(AtkObject *aAtkObj)
         if (len > 0) {
             atk_object_set_description(aAtkObj,
                                        NS_ConvertUCS2toUTF8(uniDesc).get());
-        }
-        else {
-            atk_object_set_description(aAtkObj, default_description);
         }
     }
     return aAtkObj->description;
