@@ -258,7 +258,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mObserver->OnStartDecode(nsnull, nsnull);
 
     /* we only support jpegs with 1 or 3 components currently. */
-    if (mInfo.output_components != 1 ||
+    if (mInfo.output_components != 1 &&
         mInfo.output_components != 3) {
       mState = JPEG_ERROR;
       return NS_ERROR_UNEXPECTED;
