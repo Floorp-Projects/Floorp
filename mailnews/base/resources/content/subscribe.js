@@ -7,6 +7,12 @@ var RDF = null;
 var SubscribeDS = null;
 var gCurrentServerURI = null;
 
+function Stop()
+{
+	dump("Stop()\n");
+	dump("we need to stop the news url that is running.\n");
+}
+
 function SetUpTree()
 {
 	var nntpService = Components.classes['component://netscape/messenger/nntpservice'].getService(Components.interfaces.nsINntpService);
@@ -62,7 +68,8 @@ function subscribeOK()
 
 function subscribeCancel()
 {
-	dump("in subscribeCancel()\n")
+	dump("in subscribeCancel()\n");
+	Stop();
 	return true;
 }
 
@@ -130,3 +137,4 @@ function RefreshList()
 {
 	dump("refresh list\n");
 }
+
