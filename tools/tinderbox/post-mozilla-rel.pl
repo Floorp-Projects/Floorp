@@ -52,6 +52,119 @@ sub shorthost {
   return $host;
 }
 
+sub print_locale_log {
+    my ($text) = @_;
+    print LOCLOG $text;
+    print $text;
+}
+
+sub run_locale_shell_command {
+    my ($shell_command) = @_;
+    local $_;
+
+    my $status = 0;
+    chomp($shell_command);
+    print_locale_log "$shell_command\n";
+    open CMD, "$shell_command $Settings::TieStderr |" or die "open: $!";
+    print_locale_log $_ while <CMD>;
+    close CMD or $status = 1;
+    return $status;
+}
+
+sub mail_locale_started_message {
+    my ($start_time, $locale) = @_;
+    my $msg_log = "build_start_msg.tmp";
+    open LOCLOG, ">$msg_log";
+
+    my $platform = $Settings::OS =~ /^WIN/ ? 'windows' : 'unix';
+
+    print_locale_log "\n";
+    print_locale_log "tinderbox: tree: $Settings::BuildTree-$locale\n";
+    print_locale_log "tinderbox: builddate: $start_time\n";
+    print_locale_log "tinderbox: status: building\n";
+    print_locale_log "tinderbox: build: $Settings::BuildName $locale\n";
+    print_locale_log "tinderbox: errorparser: $platform\n";
+    print_locale_log "tinderbox: buildfamily: $platform\n";
+    print_locale_log "tinderbox: version: $::Version\n";
+    print_locale_log "tinderbox: END\n";
+    print_locale_log "\n";
+
+    close LOCLOG;
+
+    if ($Settings::blat ne "" && $Settings::use_blat) {
+        system("$Settings::blat $msg_log -t $Settings::Tinderbox_server");
+    } else {
+        system "$Settings::mail $Settings::Tinderbox_server "
+            ." < $msg_log";
+    }
+    unlink "$msg_log";
+}
+
+sub mail_locale_finished_message {
+    my ($start_time, $build_status, $logfile, $locale) = @_;
+
+    # Rewrite LOG to OUTLOG, shortening lines.
+    open OUTLOG, ">$logfile.last" or die "Unable to open logfile, $logfile: $!";
+
+    my $platform = $Settings::OS =~ /^WIN/ ? 'windows' : 'unix';
+
+    # Put the status at the top of the log, so the server will not
+    # have to search through the entire log to find it.
+    print OUTLOG "\n";
+    print OUTLOG "tinderbox: tree: $Settings::BuildTree-$locale\n";
+    print OUTLOG "tinderbox: builddate: $start_time\n";
+    print OUTLOG "tinderbox: status: $build_status\n";
+    print OUTLOG "tinderbox: build: $Settings::BuildName $locale\n";
+    print OUTLOG "tinderbox: errorparser: $platform\n";
+    print OUTLOG "tinderbox: buildfamily: $platform\n";
+    print OUTLOG "tinderbox: version: $::Version\n";
+    print OUTLOG "tinderbox: utilsversion: $::UtilsVersion\n";
+    print OUTLOG "tinderbox: logcompression: $Settings::LogCompression\n";
+    print OUTLOG "tinderbox: logencoding: $Settings::LogEncoding\n";
+    print OUTLOG "tinderbox: END\n";
+
+    if ($Settings::LogCompression eq 'gzip') {
+        open GZIPLOG, "gzip -c $logfile |" or die "Couldn't open gzip'd logfile: $!\n";
+        TinderUtils::encode_log(\*GZIPLOG, \*OUTLOG);
+        close GZIPLOG;
+    }
+    elsif ($Settings::LogCompression eq 'bzip2') {
+        open BZ2LOG, "bzip2 -c $logfile |" or die "Couldn't open bzip2'd logfile: $!\n";
+        TinderUtils::encode_log(\*BZ2LOG, \*OUTLOG);
+        close BZ2LOG;
+    }
+    else {
+        open LOCLOG, "$logfile" or die "Couldn't open logfile, $logfile: $!";
+        TinderUtils::encode_log(\*LOCLOG, \*OUTLOG);
+        close LOCLOG;
+    }    
+    close OUTLOG;
+    unlink($logfile);
+
+    # If on Windows, make sure the log mail has unix lineendings, or
+    # we'll confuse the log scraper.
+    if ($platform eq 'windows') {
+        open(IN,"$logfile.last") || die ("$logfile.last: $!\n");
+        open(OUT,">$logfile.new") || die ("$logfile.new: $!\n");
+        while (<IN>) {
+            s/\r\n$/\n/;
+	    print OUT "$_";
+        } 
+        close(IN);
+        close(OUT);
+        File::Copy::move("$logfile.new", "$logfile.last") or die("move: $!\n");
+    }
+
+    if ($Settings::ReportStatus and $Settings::ReportFinalStatus) {
+        if ($Settings::blat ne "" && $Settings::use_blat) {
+            system("$Settings::blat $logfile.last -t $Settings::Tinderbox_server");
+        } else {
+            system "$Settings::mail $Settings::Tinderbox_server "
+                ." < $logfile.last";
+        }
+    }
+}
+
 sub stagesymbols {
   my $builddir = shift;
   TinderUtils::run_shell_command "make -C $builddir deliver";
@@ -174,7 +287,7 @@ sub packit {
         TinderUtils::run_shell_command "cp -r $xpi_loc/xpi $stagedir/linux-xpi";
       }
     }
-  }
+  } # do_installer
 
   if ($Settings::archive) {
     TinderUtils::run_shell_command "make -C $packaging_dir";
@@ -197,6 +310,134 @@ sub packit {
   # success
   return ($status)?0:1;
 }
+
+sub packit_l10n {
+  my ($srcdir, $objdir, $packaging_dir, $package_location, $url, $stagedir) = @_;
+  my $status;
+
+  TinderUtils::print_log "Starting l10n builds\n";
+
+  unless (open(ALL_LOCALES, "<$srcdir/browser/locales/all-locales")) {
+      TinderUtils::print_log "Error: Couldn't read $srcdir/browser/locales/all-locales.\n";
+      return (("testfailed"));
+  }
+
+  my @locales = <ALL_LOCALES>;
+  chomp @locales;
+  close ALL_LOCALES;
+
+  TinderUtils::print_log "Building following locales: @locales\n";
+
+  my $start_time = TinderUtils::adjust_start_time(time());
+  foreach my $locale (@locales) {
+      mail_locale_started_message($start_time, $locale);
+      TinderUtils::print_log "$locale...";
+
+      my $logfile = "$Settings::DirName-$locale.log";
+      my $tinderstatus = 'success';
+      open LOCLOG, ">$logfile";
+
+
+    if (do_installer()) {
+      if (is_windows()) {
+        $ENV{INSTALLER_URL} = "$url/windows-xpi";
+      } elsif (is_linux()) {
+        $ENV{INSTALLER_URL} = "$url/linux-xpi/";
+      } else {
+        die "Can't make installer for this platform.\n";
+      }
+  
+      mkdir($package_location, 0775);
+  
+      # the Windows installer scripts currently require Activestate Perl.
+      # Put it ahead of cygwin perl in the path.
+      my $save_path;
+      if (is_windows()) {
+        $save_path = $ENV{PATH};
+        $ENV{PATH} = $Settings::as_perl_path.":".$ENV{PATH};
+      }
+  
+      # the one operation we care about saving status of
+      if ($Settings::sea_installer || $Settings::stub_installer) {
+        $status = run_locale_shell_command "$Settings::Make -C $objdir/browser/locales installers-$locale";
+        if ($status != 0) {
+          $tinderstatus = 'busted';
+        }
+      } else {
+        $status = 0;
+      }
+  
+      if ($tinderstatus eq 'success') {
+        run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/";
+      }
+
+      if (is_windows()) {
+        $ENV{PATH} = $save_path;
+        #my $dos_stagedir = `cygpath -w $stagedir`;
+        #chomp ($dos_stagedir);
+      }
+      mkdir($stagedir, 0775);
+  
+      if (is_windows()) {
+        if ($Settings::stub_installer && $tinderstatus ne 'busted' ) {
+          run_locale_shell_command "cp $package_location/stub/*.exe $stagedir/";
+        }
+        if ($Settings::sea_installer && $tinderstatus ne 'busted' ) {
+          run_locale_shell_command "cp $package_location/sea/*.exe $stagedir/";
+        }
+      } elsif (is_linux()) {
+        if ($Settings::stub_installer && $tinderstatus ne 'busted' ) {
+          run_locale_shell_command "cp $package_location/stub/*.tar.gz $stagedir/";
+        }
+        if ($Settings::sea_installer && $tinderstatus ne 'busted' ) {
+          run_locale_shell_command "cp $package_location/sea/*.tar.gz $stagedir/";
+        }
+      }
+    } # do_installer
+  
+    if ($Settings::archive && $tinderstatus ne 'busted' ) {
+      if (is_windows()) {
+        run_locale_shell_command "cp $package_location/../*$locale*.zip $stagedir/";
+      } elsif (is_mac()) {
+        system("mkdir -p $package_location");
+        system("mkdir -p $stagedir");
+        run_locale_shell_command "cp $package_location/../*$locale*.dmg.gz $stagedir/";
+      } else {
+        my $archive_loc = "$package_location/..";
+        if ($Settings::package_creation_path eq "/xpinstall/packager") {
+          $archive_loc = "$archive_loc/dist";
+        }
+        run_locale_shell_command "cp $archive_loc/*$locale*.tar.gz $stagedir/";
+      }
+    }
+
+    $status = run_locale_shell_command "$^X $srcdir/toolkit/locales/compare-locales.pl $srcdir/toolkit/locales/en-US $srcdir/toolkit/locales/$locale";
+    if ($tinderstatus eq 'success' && $status != 0) {
+      $tinderstatus = 'testfailed';
+    }
+
+    $status = run_locale_shell_command "$^X $srcdir/toolkit/locales/compare-locales.pl $srcdir/browser/locales/en-US $srcdir/browser/locales/$locale";
+    if ($tinderstatus eq 'success' && $status != 0) {
+      $tinderstatus = 'testfailed';
+    }
+    if ($tinderstatus ne 'success') {
+      run_locale_shell_command "rm -f $stagedir/*$locale*";
+    }
+    close LOCLOG;
+
+    mail_locale_finished_message($start_time, $tinderstatus, $logfile, $locale);
+    TinderUtils::print_log "$tinderstatus.\n";
+
+  } # foreach
+
+  TinderUtils::print_log "locales completed.\n";
+
+    # need to reverse status, since it's a "unix" truth value, where 0 means 
+    # success
+  return ($status)?0:1;
+
+} # packit_l10n
+        
 
 sub pad_digit {
   my ($digit) = @_;
@@ -322,6 +563,7 @@ sub PreBuild {
       }
 }
 
+
 sub main {
   # Get build directory from caller.
   my ($mozilla_build_dir) = @_;
@@ -339,7 +581,8 @@ sub main {
     #}
   }
 
-  my $objdir = "$mozilla_build_dir/${Settings::Topsrcdir}";
+  my $srcdir = "$mozilla_build_dir/${Settings::Topsrcdir}";
+  my $objdir = $srcdir;
   if ($Settings::ObjDir ne '') {
     $objdir .= "/${Settings::ObjDir}";
   }
@@ -396,10 +639,15 @@ sub main {
     return returnStatus("Packaging failed", ("testfailed"));
   }
 
+  if ($Settings::BuildLocales) {
+    packit_l10n($srcdir,$objdir,$package_creation_path,$package_location,$url_path,$upload_directory);
+  }
+
   unless (pushit($Settings::ssh_server,
 		 $ftp_path,$upload_directory, $cachebuild)) {
     return returnStatus("Pushing package $upload_directory failed", ("testfailed"));
   }
+
 
   if ($cachebuild) { 
     unlink "last-built";

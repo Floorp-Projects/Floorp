@@ -16,6 +16,7 @@ $BuildOnce         = 0;      # Build once, don't send results to server
 $TestOnly          = 0;      # Only run tests, don't pull/build
 $BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 $SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
+$BuildLocales      = 0;      # Do l10n packaging?
 
 # Tests
 $CleanProfile             = 0;
