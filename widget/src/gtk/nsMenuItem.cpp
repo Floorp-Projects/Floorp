@@ -270,6 +270,7 @@ NS_METHOD nsMenuItem::SetLabel(nsString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetEnabled(PRBool aIsEnabled)
 {
+  gtk_widget_set_sensitive(GTK_WIDGET(mMenuItem), aIsEnabled);
   return NS_OK;
 }
 

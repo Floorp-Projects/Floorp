@@ -546,9 +546,6 @@ void nsMenu::LoadMenuItem(
   menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
   menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
- 
-  if(disabled == NS_STRING_TRUE ) {
-  }
       
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
@@ -560,7 +557,11 @@ void nsMenu::LoadMenuItem(
     pParentMenu->AddItem(supports); // Parent should now own menu item
 
     NS_RELEASE(supports);
-          
+            
+    if(disabled == NS_STRING_TRUE ) {
+      pnsMenuItem->SetEnabled(PR_FALSE);
+    }
+  
     // Create MenuDelegate - this is the intermediator inbetween 
     // the DOM node and the nsIMenuItem
     // The nsWebShellWindow wacthes for Document changes and then notifies the 
