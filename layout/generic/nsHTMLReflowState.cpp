@@ -171,7 +171,6 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
   mCompactMarginWidth = 0;
   mAlignCharOffset = 0;
   mUseAlignCharOffset = 0;
-  mIsAutoWidthPctBase = PR_FALSE;
 
   frame->GetStyleData(eStyleStruct_Position,
                       (const nsStyleStruct*&)mStylePosition);
@@ -1542,27 +1541,10 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     // Check for a percentage based width and an unconstrained containing
     // block width
     if (eStyleUnit_Percent == widthUnit) {
-      if ((NS_UNCONSTRAINEDSIZE == aContainingBlockWidth) ||
-          ((cbrs->mIsAutoWidthPctBase) && 
-           (nsLayoutAtoms::tableOuterFrame != frameType.get()) &&
-           (nsLayoutAtoms::tableFrame      != frameType.get()))) {
-        // Interpret the width like 'auto'
+      if (NS_UNCONSTRAINEDSIZE == aContainingBlockWidth) {
         widthUnit = eStyleUnit_Auto;
       }
     }
-    // if the cbrs is an auto width descendant (non table) from a table cell and
-    // our width may be determined using it, then propogate the flag.
-    if (cbrs->mIsAutoWidthPctBase) {
-      if ((eStyleUnit_Auto    == widthUnit) ||
-          (eStyleUnit_Percent == widthUnit) ||
-          (eStyleUnit_Inherit == widthUnit)) {
-        if ((nsLayoutAtoms::tableOuterFrame != frameType.get()) &&
-            (nsLayoutAtoms::tableFrame      != frameType.get())) {
-          mIsAutoWidthPctBase = PR_TRUE;
-        }
-      }
-    }
-
     // Check for a percentage based height and a containing block height
     // that depends on the content height
     if (eStyleUnit_Percent == heightUnit) {
@@ -1733,11 +1715,6 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
       if (eStyleUnit_Inherit == widthUnit) {
         mComputedWidth = aContainingBlockWidth;
       } else if (eStyleUnit_Auto == widthUnit) {
-        if (NS_STYLE_DISPLAY_TABLE_CELL == mStyleDisplay->mDisplay) {
-          // set the flag to ignore mComputedWidth for percent calculations 
-          // when the cell is a containing block.
-          mIsAutoWidthPctBase = PR_TRUE;
-        }
         mComputedWidth = availableWidth;
 
         if (mComputedWidth != NS_UNCONSTRAINEDSIZE) {
