@@ -1,25 +1,26 @@
 #!/usr/bin/perl -w
-#
-# The contents of this file are subject to the Netscape Public
+# 
+# The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/NPL/
-#
+# the License at http://www.mozilla.org/MPL/
+# 
 # Software distributed under the License is distributed on an "AS
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
-#
-# The Original Code is Mozilla Communicator client code.
-#
-# The Initial Developer of the Original Code is Netscape Communications
-# Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# 
+# The Original Code is Mozilla Leak-o-Matic.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corp.  Portions created by Netscape Communucations
+# Corp. are Copyright (C) 1999 Netscape Communications Corp.  All
 # Rights Reserved.
-#
-# Contributor(s): 
-#
-# $Id: leaks.cgi,v 1.2 1999/11/16 22:10:10 waterson%netscape.com Exp $
+# 
+# Contributor(s):
+# Chris Waterson <waterson@netscape.com>
+# 
+# $Id: leaks.cgi,v 1.3 1999/11/17 19:15:03 waterson%netscape.com Exp $
 #
 
 #
