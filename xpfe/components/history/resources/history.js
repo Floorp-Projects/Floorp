@@ -422,7 +422,7 @@ function updateItems()
     copyLocationItem.removeAttribute("hidden");
     sep1.removeAttribute("hidden");
     if (!gWindowManager) {
-      gWindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+      gWindowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
       gWindowManager = gWindowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
     }
     var topWindowOfType = gWindowManager.getMostRecentWindow("navigator:browser");

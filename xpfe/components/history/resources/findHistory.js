@@ -71,7 +71,7 @@ function find()
 var gCreatingNewWindow = false;
 function findMostRecentWindow(aType, aURI, aParam)
 {
-  var WM = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+  var WM = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   WM = WM.QueryInterface(Components.interfaces.nsIWindowMediator);
   var topWindow = WM.getMostRecentWindow(aType);
   if (!topWindow) gCreatingNewWindow = true;

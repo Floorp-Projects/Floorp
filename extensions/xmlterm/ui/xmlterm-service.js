@@ -50,7 +50,7 @@ const XMLTERMPROT_HANDLER_CID =
 
 /* components used in this file */
 const MEDIATOR_CONTRACTID =
-    "@mozilla.org/rdf/datasource;1?name=window-mediator"
+    "@mozilla.org/appshell/window-mediator;1"
 const SIMPLEURI_CONTRACTID = 
     "@mozilla.org/network/simple-uri;1";
 const ASS_CONTRACTID =

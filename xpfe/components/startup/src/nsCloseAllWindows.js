@@ -64,7 +64,7 @@ nsCloseAllWindows.prototype = {
     // closeAll: Close all open windows
     closeAll: function(aAskToSave)  {
     
-        var windowMediator = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].
+        var windowMediator = Components.classes['@mozilla.org/appshell/window-mediator;1'].
                                 getService(Components.interfaces.nsIWindowMediator);
         var enumerator = windowMediator.getEnumerator(null);
 

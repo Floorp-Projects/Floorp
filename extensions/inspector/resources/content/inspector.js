@@ -49,7 +49,7 @@ var inspector;
 
 const kSearchRegURL        = "resource:///res/inspector/search-registry.rdf";
 
-const kWindowMediatorCID   = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+const kWindowMediatorCID   = "@mozilla.org/appshell/window-mediator;1";
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
 const nsIWebNavigation     = Components.interfaces.nsIWebNavigation;
 

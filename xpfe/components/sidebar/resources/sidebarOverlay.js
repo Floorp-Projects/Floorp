@@ -1033,7 +1033,7 @@ function enable_customize() {
 // Bring up the Sidebar customize dialog.
 function SidebarCustomize() {
   // Use a single sidebar customize dialog
-  var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+  var cwindowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var iwindowManager = Components.interfaces.nsIWindowMediator;
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);
 

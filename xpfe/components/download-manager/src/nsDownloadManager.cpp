@@ -641,7 +641,7 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
   
   //check for an existing manager window and focus it
   nsresult rv;
-  nsCOMPtr<nsIWindowMediator> wm = do_GetService("@mozilla.org/rdf/datasource;1?name=window-mediator", &rv);
+  nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDOMWindowInternal> recentWindow;

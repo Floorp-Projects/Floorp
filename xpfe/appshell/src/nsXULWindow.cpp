@@ -1003,7 +1003,7 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
   PRBool   keepTrying;
 
   // look for any other windows of this type
-  nsCOMPtr<nsIWindowMediator> wm(do_GetService("@mozilla.org/rdf/datasource;1?name=window-mediator"));
+  nsCOMPtr<nsIWindowMediator> wm(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
   if (!wm)
     return;
 
