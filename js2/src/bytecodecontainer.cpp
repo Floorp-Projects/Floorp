@@ -42,6 +42,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <list>
 
 #include "world.h"
 #include "utilities.h"

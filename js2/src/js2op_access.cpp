@@ -104,22 +104,6 @@
 	}
         break;
 
-    case ePushFrame: 
-        {
-            Frame *f = bCon->mFrameList[BytecodeContainer::getShort(pc)];
-            pc += sizeof(short);
-            meta->env.addFrame(f);
-            f->instantiate(&meta->env);
-        }
-        break;
-
-    case ePopFrame: 
-        {
-            meta->env.removeTopFrame();
-        }
-        break;
-
-
     // Read an index property from a base object, push the value onto the stack
     case eBracketRead:
         {

@@ -50,6 +50,7 @@ class Context;
 class CompoundAttribute;
 class BytecodeContainer;
 class Pond;
+class FixedInstance;
 
 
 typedef void (Invokable)();
@@ -67,7 +68,8 @@ enum ObjectKind {
     PrototypeInstanceKind, 
     FixedInstanceKind, 
     DynamicInstanceKind,
-    MultinameKind
+    MultinameKind,
+    MethodClosureKind
 };
 
 class PondScum {
@@ -126,9 +128,12 @@ public:
     ObjectKind kind;
 
     static Pond pond;
-    static std::vector<PondScum **> rootList;
+    static std::list<PondScum **> rootList;
+    typedef std::list<PondScum **>::iterator RootIterator;
+
     static void gc(JS2Metadata *meta);
-    static void addRoot(void *t);   // pass the address of any JS2Object pointer
+    static RootIterator addRoot(void *t);   // pass the address of any JS2Object pointer
+    static void removeRoot(RootIterator ri);
 
     static void *alloc(size_t s, bool isJS2Object = false);
     static void unalloc(void *p);
@@ -243,9 +248,9 @@ public:
 
     MemberKind kind;
 
-#ifdef DEBUG
-    virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
-#endif
+    virtual bool isMarked()             { return true; }
+    virtual void mark()                 { }
+    virtual void markChildren()         { }
 };
 
 // A static member is either forbidden, a variable, a hoisted variable, a constructor method, or an accessor:
@@ -258,9 +263,6 @@ public:
                                 // bindings that refer to this member.)
 
     virtual StaticMember *clone()       { ASSERT(false); return NULL; }
-    virtual bool isMarked()             { return true; }
-    virtual void mark()                 { }
-    virtual void markChildren()         { }
 };
 
 #define FUTURE_TYPE ((JS2Class *)(-1))
@@ -347,9 +349,9 @@ public:
     JS2Class *type;             // Type of values that may be stored in this variable
     bool final;                 // true if this member may not be overridden in subclasses
 
-#ifdef DEBUG
-    virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
-#endif
+    virtual bool isMarked();
+    virtual void mark();
+    virtual void markChildren();
 };
 
 class InstanceVariable : public InstanceMember {
@@ -358,13 +360,22 @@ public:
     Invokable *evalInitialValue;    // A function that computes this variable's initial value
     bool immutable;                 // true if this variable's value may not be changed once set
     uint32 slotIndex;               // The index into an instance's slot array in which this variable is stored
+
+    virtual bool isMarked();
+    virtual void mark();
+    virtual void markChildren();
 };
 
 class InstanceMethod : public InstanceMember {
 public:
-    InstanceMethod() : InstanceMember(InstanceMethodKind, NULL, false) { }
+    InstanceMethod(FixedInstance *fInst) : InstanceMember(InstanceMethodKind, NULL, false), fInst(fInst) { }
     Signature type;         // This method's signature
     Invokable *code;        // This method itself (a callable object); null if this method is abstract
+    FixedInstance *fInst;
+
+    virtual bool isMarked();
+    virtual void mark();
+    virtual void markChildren();
 };
 
 class InstanceAccessor : public InstanceMember {
@@ -523,7 +534,15 @@ public:
     virtual void markChildren();
 };
 
+// A METHODCLOSURE tuple describes an instance method with a bound this value.
+class MethodClosure : public JS2Object {
+public:
+    MethodClosure(js2val thisObject, InstanceMethod *method) : JS2Object(MethodClosureKind), thisObject(thisObject), method(method) { }
+    js2val              thisObject;     // The bound this value
+    InstanceMethod      *method;        // The bound method
 
+    virtual void markChildren();
+};
 
 
 // Base class for all references (lvalues)
@@ -641,7 +660,7 @@ public:
 class ParameterFrame : public Frame {
 public:
     ParameterFrame(js2val thisObject, bool prototype) : Frame(ParameterKind), thisObject(thisObject), prototype(prototype) { }    
-    ParameterFrame(ParameterFrame *pluralFrame) : Frame(ParameterKind, pluralFrame) { }
+    ParameterFrame(ParameterFrame *pluralFrame) : Frame(ParameterKind, pluralFrame), thisObject(JS2VAL_UNDEFINED), prototype(pluralFrame->prototype) { }
 
     Plurality plurality;
     js2val thisObject;              // The value of this; none if this function doesn't define this;

@@ -103,6 +103,7 @@ enum JS2Op {
 int getStackEffect(JS2Op op);
 
 
+class Frame;
 class JS2Object;
 class JS2Metadata;
 class BytecodeContainer;
@@ -168,6 +169,7 @@ public:
     struct ActivationFrame {
         uint8 *pc;
         BytecodeContainer *bCon;
+        Frame *topFrame;
     };
     void jsr(BytecodeContainer *bCon);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }

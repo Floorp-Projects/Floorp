@@ -37,6 +37,7 @@
 
 #include <map>
 #include <algorithm>
+#include <list>
 
 #include "reader.h"
 #include "parser.h"

@@ -43,6 +43,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <list>
 
 #include "world.h"
 #include "utilities.h"
@@ -363,6 +364,7 @@ namespace MetaData {
         ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
         activationStackTop->bCon = bCon;
         activationStackTop->pc = pc;
+        activationStackTop->topFrame = meta->env.getTopFrame();
         activationStackTop++;
 
         bCon = new_bCon;
@@ -377,6 +379,9 @@ namespace MetaData {
 
         bCon = activationStackTop->bCon;
         pc = activationStackTop->pc;
+        while (meta->env.getTopFrame() != activationStackTop->topFrame)
+            meta->env.removeTopFrame();
+
     }
 
     void JS2Engine::mark()

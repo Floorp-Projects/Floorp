@@ -60,6 +60,7 @@
                                             that a variable has to have it's initializer run */
 #define JS2VAL_IS_FUTURE(v)      (v == JS2VAL_FUTUREVALUE)
 
+#define JS2VAL_IS_SPECIALREF(v)     ( (v & ~0xF0) == 0 )
 
 /* Type tag bitfield length and derived macros. */
 #define JS2VAL_TAGBITS           3
@@ -81,7 +82,7 @@
 #define JS2VAL_TRUE              BOOLEAN_TO_JS2VAL(true)
 
 /* Predicates for type testing. */
-#define JS2VAL_IS_OBJECT(v)      (JS2VAL_TAG(v) == JS2VAL_OBJECT)
+#define JS2VAL_IS_OBJECT(v)      ((JS2VAL_TAG(v) == JS2VAL_OBJECT) && !JS2VAL_IS_SPECIALREF(v))
 #define JS2VAL_IS_NUMBER(v)      (JS2VAL_IS_INT(v) || JS2VAL_IS_DOUBLE(v))
 #define JS2VAL_IS_INT(v)         (((v) & JS2VAL_INT) && (v) != JS2VAL_VOID)
 #define JS2VAL_IS_DOUBLE(v)      (JS2VAL_TAG(v) == JS2VAL_DOUBLE)

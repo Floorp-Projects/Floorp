@@ -97,16 +97,27 @@
                             runtimeThis = OBJECT_TO_JS2VAL(g);
                     }
                 }
-                Frame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                meta->env.addFrame(runtimeFrame);
+                ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                 runtimeFrame->instantiate(&meta->env);
+                runtimeFrame->thisObject = runtimeThis;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                
-                jsr(fWrap->bCon);
+                jsr(fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                meta->env.addFrame(runtimeFrame);
 
             }
             else
-                ASSERT(false);
+            if (fObj->kind == MethodClosureKind) {
+                MethodClosure *mc = checked_cast<MethodClosure *>(fObj);
+                FixedInstance *fInst = mc->method->fInst;
+                FunctionWrapper *fWrap = fInst->fWrap;
+                ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
+                runtimeFrame->instantiate(&meta->env);
+                runtimeFrame->thisObject = mc->thisObject;
+//                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
+                jsr(fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                meta->env.addFrame(meta->objectType(mc->thisObject));
+                meta->env.addFrame(runtimeFrame);
+            }
         }
         break;
 
@@ -118,9 +129,9 @@
 
     case eReturn: 
         {
-            retval = pop();
+//            retval = pop();
             if (activationStackEmpty()) 
-                return retval;
+                return pop();
             else
                 rts();
 	}
@@ -133,5 +144,20 @@
             else
                 rts();
 	}
+        break;
+
+    case ePushFrame: 
+        {
+            Frame *f = bCon->mFrameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            meta->env.addFrame(f);
+            f->instantiate(&meta->env);
+        }
+        break;
+
+    case ePopFrame: 
+        {
+            meta->env.removeTopFrame();
+        }
         break;
 

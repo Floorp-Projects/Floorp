@@ -49,6 +49,7 @@
 
 #include <map>
 #include <algorithm>
+#include <list>
 
 #include "reader.h"
 #include "parser.h"
@@ -89,7 +90,11 @@ namespace MetaData {
     /*
      * Validate an individual statement 'p', including it's children
      */
-    void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, StmtNode *p) {
+    void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, StmtNode *p) 
+    {
+        CompoundAttribute *a = NULL;
+        JS2Object::RootIterator ri = JS2Object::addRoot(&a);
+
         switch (p->getKind()) {
         case StmtNode::block:
         case StmtNode::group:
@@ -274,7 +279,7 @@ namespace MetaData {
                     ValidateAttributeExpression(cxt, env, f->attributes);
                     attr = EvalAttributeExpression(env, CompilePhase, f->attributes);
                 }
-                CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
+                a = Attribute::toCompoundAttribute(attr);
                 if (a->dynamic)
                     reportError(Exception::definitionError, "Illegal attribute", p->pos);
                 VariableBinding *vb = f->function.parameters;
@@ -323,15 +328,23 @@ namespace MetaData {
                     defineHoistedVar(env, *f->function.name, p);
                 }
                 else {
+                    FixedInstance *fInst = new FixedInstance(functionClass);
+                    fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+                    f->fWrap = fInst->fWrap;
                     switch (memberMod) {
                     case Attribute::NoModifier:
                     case Attribute::Static:
                         {
-                            FixedInstance *fInst = new FixedInstance(functionClass);
-                            fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
-                            f->fWrap = fInst->fWrap;
                             Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
                             defineStaticMember(env, *f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                        }
+                        break;
+                    case Attribute::Virtual:
+                    case Attribute::Final:
+                        {
+                            JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
+                            InstanceMember *m = new InstanceMethod(fInst);
+                            defineInstanceMember(c, cxt, *f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
                         }
                         break;
                     }
@@ -366,7 +379,7 @@ namespace MetaData {
                         defineHoistedVar(env, *name, p);
                     }
                     else {
-                        CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
+                        a = Attribute::toCompoundAttribute(attr);
                         if (a->dynamic || a->prototype)
                             reportError(Exception::definitionError, "Illegal attribute", p->pos);
                         Attribute::MemberModifier memberMod = a->memberMod;
@@ -418,7 +431,7 @@ namespace MetaData {
                     ValidateAttributeExpression(cxt, env, ns->attributes);
                     attr = EvalAttributeExpression(env, CompilePhase, ns->attributes);
                 }
-                CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
+                a = Attribute::toCompoundAttribute(attr);
                 if (a->dynamic || a->prototype)
                     reportError(Exception::definitionError, "Illegal attribute", p->pos);
                 if ( ! ((a->memberMod == Attribute::NoModifier) || ((a->memberMod == Attribute::Static) && (env->getTopFrame()->kind == ClassKind))) )
@@ -462,7 +475,7 @@ namespace MetaData {
                     ValidateAttributeExpression(cxt, env, classStmt->attributes);
                     attr = EvalAttributeExpression(env, CompilePhase, classStmt->attributes);
                 }
-                CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
+                a = Attribute::toCompoundAttribute(attr);
                 if (!superClass->complete || superClass->final)
                     reportError(Exception::definitionError, "Illegal inheritance", p->pos);
                 JS2Object *proto = NULL;
@@ -496,6 +509,8 @@ namespace MetaData {
                 c->complete = true;
             }
         }   // switch (p->getKind())
+
+        JS2Object::removeRoot(ri);
     }
 
 
@@ -678,7 +693,8 @@ namespace MetaData {
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                 if (e->expr) {
-                    EvalExprNode(env, phase, e->expr);
+                    Reference *r = EvalExprNode(env, phase, e->expr);
+                    if (r) r->emitReadBytecode(bCon, p->pos);
                     bCon->emitOp(eReturn, p->pos);
                 }
             }
@@ -1974,6 +1990,9 @@ doBinary:
         case PackageKind:
             return packageClass;
 
+        case MethodClosureKind:
+            return functionClass;
+
         case SystemKind:
         case ParameterKind: 
         case BlockKind: 
@@ -2146,6 +2165,7 @@ readClassProperty:
         case AttributeObjectKind:
         case MultinameKind:
         case FixedInstanceKind: 
+        case MethodClosureKind:
             goto readClassProperty;
         case DynamicInstanceKind:
             isDynamicInstance = true;
@@ -2156,35 +2176,8 @@ readClassProperty:
         case PackageKind:
         case ParameterKind: 
         case BlockKind: 
-            return readProperty(checked_cast<Frame *>(container), multiname, lookupKind, phase, rval);
-
         case ClassKind:
-            {
-                // this:
-                // JS2VAL_UNINITIALIZED --> generic
-                // JS2VAL_NULL --> none
-                // JS2VAL_VOID --> inaccessible
-                // 
-                js2val thisObject;
-                if (lookupKind->isPropertyLookup()) 
-                    thisObject = JS2VAL_UNINITIALIZED;
-                else
-                    thisObject = lookupKind->thisObject;
-                MemberDescriptor m2;
-                if (findStaticMember(checked_cast<JS2Class *>(container), multiname, ReadAccess, phase, &m2) && m2.staticMember)
-                    return readStaticMember(m2.staticMember, phase, rval);
-                else {
-                    if (JS2VAL_IS_NULL(thisObject))
-                        reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
-                    if (JS2VAL_IS_VOID(thisObject))
-                        reportError(Exception::compileExpressionError, "Undefined 'this' object", engine->errorPos());
-                    if (JS2VAL_IS_UNINITIALIZED(thisObject)) {
-                        // 'this' is {generic}
-                        // XXX is ??? in spec.
-                    }
-                    return readInstanceMember(thisObject, objectType(thisObject), m2.qname, phase, rval);
-                }
-            }
+            return readProperty(checked_cast<Frame *>(container), multiname, lookupKind, phase, rval);
 
         case PrototypeInstanceKind: 
             return readDynamicProperty(container, multiname, lookupKind, phase, rval);
@@ -2228,6 +2221,12 @@ readClassProperty:
             break;
 
         case InstanceMember::InstanceMethodKind:
+            {
+                *rval = OBJECT_TO_JS2VAL(new MethodClosure(containerVal, checked_cast<InstanceMethod *>(m)));
+                return true;
+            }
+            break;
+
         case InstanceMember::InstanceAccessorKind:
             break;
         }
@@ -2239,11 +2238,36 @@ readClassProperty:
     // the property or not. If it does, return it's value
     bool JS2Metadata::readProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
-        StaticMember *m = findFlatMember(container, multiname, ReadAccess, phase);
-        if (!m && (container->kind == GlobalObjectKind))
-            return readDynamicProperty(container, multiname, lookupKind, phase, rval);
-        else
-            return readStaticMember(m, phase, rval);
+        if (container->kind != ClassKind) {
+            // Must be System, Global, Package, Parameter or Block
+            StaticMember *m = findFlatMember(container, multiname, ReadAccess, phase);
+            if (!m && (container->kind == GlobalObjectKind))
+                return readDynamicProperty(container, multiname, lookupKind, phase, rval);
+            else
+                return readStaticMember(m, phase, rval);
+        }
+        else {
+            // XXX using JS2VAL_UNINITIALIZED to signal generic 'this'
+            js2val thisObject;
+            if (lookupKind->isPropertyLookup()) 
+                thisObject = JS2VAL_UNINITIALIZED;
+            else
+                thisObject = lookupKind->thisObject;
+            MemberDescriptor m2;
+            if (findStaticMember(checked_cast<JS2Class *>(container), multiname, ReadAccess, phase, &m2) && m2.staticMember)
+                return readStaticMember(m2.staticMember, phase, rval);
+            else {
+                if (JS2VAL_IS_NULL(thisObject))
+                    reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
+                if (JS2VAL_IS_INACCESSIBLE(thisObject))
+                    reportError(Exception::compileExpressionError, "Inaccesible 'this' object", engine->errorPos());
+                if (JS2VAL_IS_UNINITIALIZED(thisObject)) {
+                    // 'this' is {generic}
+                    // XXX is ??? in spec.
+                }
+                return readInstanceMember(thisObject, objectType(thisObject), m2.qname, phase, rval);
+            }
+        }
     }
 
     // Write the value of a property in the container. Return true/false if that container has
@@ -2257,6 +2281,7 @@ readClassProperty:
         switch (container->kind) {
         case AttributeObjectKind:
         case MultinameKind:
+        case MethodClosureKind:
             return false;
 
         case FixedInstanceKind:
@@ -2279,36 +2304,8 @@ readClassProperty:
         case PackageKind:
         case ParameterKind: 
         case BlockKind: 
-            return writeProperty(checked_cast<Frame *>(container), multiname, lookupKind, createIfMissing, newValue, phase);
-
         case ClassKind:
-            {
-                // this:
-                // JS2VAL_UNINITIALIZED --> generic
-                // JS2VAL_NULL --> none
-                // JS2VAL_VOID --> inaccessible
-                // 
-                js2val thisObject;
-                if (lookupKind->isPropertyLookup()) 
-                    thisObject = JS2VAL_UNINITIALIZED;
-                else
-                    thisObject = lookupKind->thisObject;
-                MemberDescriptor m2;
-                if (findStaticMember(checked_cast<JS2Class *>(container), multiname, WriteAccess, phase, &m2) && m2.staticMember)
-                    return writeStaticMember(m2.staticMember, newValue, phase);
-                else {
-                    if (JS2VAL_IS_NULL(thisObject))
-                        reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
-                    if (JS2VAL_IS_VOID(thisObject))
-                        reportError(Exception::compileExpressionError, "Undefined 'this' object", engine->errorPos());
-                    if (JS2VAL_IS_UNINITIALIZED(thisObject)) {
-                        // 'this' is {generic}
-                        // XXX is ??? in spec.
-                    }
-                    return writeInstanceMember(thisObject, objectType(thisObject), m2.qname, newValue, phase);
-                }
-            }
-            break;
+            return writeProperty(checked_cast<Frame *>(container), multiname, lookupKind, createIfMissing, newValue, phase);
 
         case PrototypeInstanceKind: 
             return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
@@ -2351,11 +2348,36 @@ readClassProperty:
     // the property or not.
     bool JS2Metadata::writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase)
     {
-        StaticMember *m = findFlatMember(container, multiname, WriteAccess, phase);
-        if (!m && (container->kind == GlobalObjectKind))
-            return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
-        else
-            return writeStaticMember(m, newValue, phase);
+        if (container->kind != ClassKind) {
+            // Must be System, Global, Package, Parameter or Block
+            StaticMember *m = findFlatMember(container, multiname, WriteAccess, phase);
+            if (!m && (container->kind == GlobalObjectKind))
+                return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
+            else
+                return writeStaticMember(m, newValue, phase);
+        }
+        else {
+            // XXX using JS2VAL_UNINITIALIZED to signal generic 'this'
+            js2val thisObject;
+            if (lookupKind->isPropertyLookup()) 
+                thisObject = JS2VAL_UNINITIALIZED;
+            else
+                thisObject = lookupKind->thisObject;
+            MemberDescriptor m2;
+            if (findStaticMember(checked_cast<JS2Class *>(container), multiname, WriteAccess, phase, &m2) && m2.staticMember)
+                return writeStaticMember(m2.staticMember, newValue, phase);
+            else {
+                if (JS2VAL_IS_NULL(thisObject))
+                    reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
+                if (JS2VAL_IS_VOID(thisObject))
+                    reportError(Exception::compileExpressionError, "Undefined 'this' object", engine->errorPos());
+                if (JS2VAL_IS_UNINITIALIZED(thisObject)) {
+                    // 'this' is {generic}
+                    // XXX is ??? in spec.
+                }
+                return writeInstanceMember(thisObject, objectType(thisObject), m2.qname, newValue, phase);
+            }
+        }
     }
 
     // Find a binding in the frame that matches the multiname and access
@@ -2441,7 +2463,7 @@ readClassProperty:
                     else
                         iFound = ib->second;
                 }
-                b++;
+                ib++;
             }
             if (iFound) {
                 result->staticMember = NULL;
@@ -2620,7 +2642,7 @@ readClassProperty:
         p->owner = (Pond *)freeHeader;
         uint8 *t = (uint8 *)(p + 1);
 #ifdef DEBUG
-        memset(t, 0xB7, p->getSize() - sizeof(PondScum));
+        memset(t, 0xB3, p->getSize() - sizeof(PondScum));
 #endif
         freeHeader = p;
     }
@@ -2683,6 +2705,13 @@ readClassProperty:
         GCMARKOBJECT(super)
         GCMARKOBJECT(prototype)
         GCMARKOBJECT(privateNamespace)
+        InstanceBindingIterator ib, iend;
+        for (ib = instanceReadBindings.begin(), iend = instanceReadBindings.end(); (ib != iend); ib++) {
+            GCMARKOBJECT(ib->second->content)
+        }        
+        for (ib = instanceWriteBindings.begin(), iend = instanceWriteBindings.end(); (ib != iend); ib++) {
+            GCMARKOBJECT(ib->second->content)
+        }        
     }
 
  /************************************************************************************
@@ -2738,6 +2767,7 @@ readClassProperty:
     FixedInstance::FixedInstance(JS2Class *type) 
         : JS2Object(FixedInstanceKind), 
             type(type), 
+            fWrap(NULL),
             call(NULL), 
             construct(NULL), 
             env(NULL), 
@@ -2752,6 +2782,10 @@ readClassProperty:
     void FixedInstance::markChildren()
     {
         GCMARKOBJECT(type)
+        if (fWrap) {
+            GCMARKOBJECT(fWrap->compileFrame);
+            fWrap->bCon->mark();
+        }
         if (slots) {
             ASSERT(type);
             for (uint32 i = 0; (i < type->slotCount); i++) {
@@ -2780,6 +2814,22 @@ readClassProperty:
                 GCMARKOBJECT(obj)
             }
         }        
+    }
+
+
+/************************************************************************************
+ *
+ *  Frame
+ *
+ ************************************************************************************/
+
+    void MethodClosure::markChildren()     
+    { 
+        if (JS2VAL_IS_OBJECT(thisObject))  {
+            JS2Object *obj = JS2VAL_TO_OBJECT(thisObject);
+            GCMARKOBJECT(obj)
+        }
+        GCMARKOBJECT(method->fInst)
     }
 
 /************************************************************************************
@@ -2855,6 +2905,77 @@ readClassProperty:
     }
 
 
+ /************************************************************************************
+ *
+ *  InstanceMember
+ *
+ ************************************************************************************/
+
+    bool InstanceMember::isMarked()
+    { 
+        return type->isMarked(); 
+    }
+
+    void InstanceMember::mark()                 
+    { 
+        type->mark(); 
+    }
+
+    void InstanceMember::markChildren()         
+    { 
+        type->markChildren(); 
+    }
+
+
+ /************************************************************************************
+ *
+ *  InstanceVariable
+ *
+ ************************************************************************************/
+
+    bool InstanceVariable::isMarked()
+    { 
+        if (type != FUTURE_TYPE)
+            return type->isMarked(); 
+        else
+            return false;
+    }
+
+    void InstanceVariable::mark()                 
+    { 
+        if (type != FUTURE_TYPE)
+            type->mark(); 
+    }
+
+    void InstanceVariable::markChildren()         
+    { 
+        if (type != FUTURE_TYPE)
+            type->markChildren(); 
+    }
+
+
+ /************************************************************************************
+ *
+ *  InstanceMethod
+ *
+ ************************************************************************************/
+
+    bool InstanceMethod::isMarked()
+    { 
+        return fInst->isMarked(); 
+    }
+
+    void InstanceMethod::mark()                 
+    { 
+        fInst->mark(); 
+    }
+
+    void InstanceMethod::markChildren()         
+    { 
+        fInst->markChildren(); 
+    }
+
+
 /************************************************************************************
  *
  *  JS2Object
@@ -2862,27 +2983,33 @@ readClassProperty:
  ************************************************************************************/
 
     Pond JS2Object::pond(POND_SIZE, NULL);
-    std::vector<PondScum **> JS2Object::rootList;
+    std::list<PondScum **> JS2Object::rootList;
 
-    void JS2Object::addRoot(void *t)
+    JS2Object::RootIterator JS2Object::addRoot(void *t)
     {
         PondScum **p = (PondScum **)t;
         ASSERT(p);
-        rootList.push_back(p);
+        return rootList.insert(rootList.end(), p);
+    }
+
+    void JS2Object::removeRoot(RootIterator ri)
+    {
+        rootList.erase(ri);
     }
 
     void JS2Object::gc(JS2Metadata *meta)
     {
         pond.resetMarks();
-        for (std::vector<PondScum **>::iterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
-            PondScum *p = **i;
-            if (p) {
+        for (std::list<PondScum **>::iterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
+            if (**i) {
+                PondScum *p = (**i) - 1;
                 ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
-                p->mark();
                 if (p->isJS2Object()) {
                     JS2Object *obj = (JS2Object *)(p + 1);
                     GCMARKOBJECT(obj)
                 }
+                else
+                    p->mark();
             }
         }
         meta->mark();
