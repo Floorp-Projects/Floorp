@@ -91,10 +91,15 @@ file:///s:/mozilla/layout/html/tests/block/bugs/36401-a.html
 file:///s:/mozilla/layout/html/tests/block/bugs/36401-b.html
 file:///s:/mozilla/layout/html/tests/block/bugs/36401-c.html
 file:///s:/mozilla/layout/html/tests/block/bugs/36401.html
+file:///s:/mozilla/layout/html/tests/block/bugs/37083-1.html
+file:///s:/mozilla/layout/html/tests/block/bugs/37083-2.html
+file:///s:/mozilla/layout/html/tests/block/bugs/37083-3.html
 file:///s:/mozilla/layout/html/tests/block/bugs/39211.html
 file:///s:/mozilla/layout/html/tests/block/bugs/39211-a.html
 file:///s:/mozilla/layout/html/tests/block/bugs/39211-b.html
 file:///s:/mozilla/layout/html/tests/block/bugs/39211-c.html
+file:///s:/mozilla/layout/html/tests/block/bugs/40038-1.xml
+file:///s:/mozilla/layout/html/tests/block/bugs/40038-2.html
 file:///s:/mozilla/layout/html/tests/block/bugs/41521.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-1.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-2.html
