@@ -111,207 +111,6 @@
 
 #include "nsIPref.h" // Used by the temp pref, should be removed!
 
-nsresult
-nsGenericHTMLElement::GetPluginInstance(nsIPluginInstance** aPluginInstance)
-{
-  NS_ENSURE_ARG_POINTER(aPluginInstance);
-  *aPluginInstance = nsnull;
-
-  nsresult result;
-  nsCOMPtr<nsIPresContext> context;
-  nsCOMPtr<nsIPresShell> shell;
-  
-  if (mDocument) {
-    // Make sure the presentation is up-to-date
-    result = mDocument->FlushPendingNotifications();
-    if (NS_FAILED(result)) {
-      return result;
-    }
-  }
-  
-  GetPresContext(this, getter_AddRefs(context));
-  if (!context) {
-    return NS_OK;
-  }
-
-  context->GetShell(getter_AddRefs(shell));
-  if (!shell) {
-    return NS_OK;
-  }
-  
-  nsIFrame* frame = nsnull;
-  shell->GetPrimaryFrameFor(this, &frame);
-  if (!frame) {
-    return NS_OK;
-  }
-  
-  nsCOMPtr<nsIAtom> type;
-
-  frame->GetFrameType(getter_AddRefs(type));
-
-  if (type.get() == nsLayoutAtoms::objectFrame) {
-    // XXX We could have created an interface for this, but Troy
-    // preferred the ugliness of a static cast to the weight of
-    // a new interface.
-
-    nsObjectFrame* objectFrame = NS_STATIC_CAST(nsObjectFrame*, frame);
-
-    return objectFrame->GetPluginInstance(*aPluginInstance);
-  }
-
-  return NS_OK;
-}
-
-/*
- * For plugins, we want to expose both attributes of the plugin tag
- * and any scriptable methods that the plugin itself exposes.  To do
- * this, we get the plugin object itself (the XPCOM object) and wrap
- * it as a scriptable object via xpconnect.  We then set the original
- * node element, which exposes the DOM node methods, as the javascript
- * prototype object of that object.  Then we get both sets of methods, and
- * plugin methods can potentially override DOM methods.
- */
-nsresult
-nsGenericHTMLElement::GetPluginScriptObject(nsIScriptContext* aContext,
-                                            void** aScriptObject)
-{
-  if (mDOMSlots && mDOMSlots->mScriptObject)
-    return nsGenericElement::GetScriptObject(aContext, aScriptObject);
-
-  nsresult rv;
-  *aScriptObject = nsnull;
-
-  // Get the JS object corresponding to this dom node.  This will become
-  // the javascript prototype object of the object we eventually reflect to the
-  // DOM.
-  JSObject* elementObject = nsnull;
-  rv = nsGenericElement::GetScriptObject(aContext, (void**)&elementObject);
-  if (NS_FAILED(rv) || !elementObject)
-    return rv;
-
-  nsCOMPtr<nsIPluginInstance> pi;
-  GetPluginInstance(getter_AddRefs(pi));
-
-  // If GetPluginInstance() returns nsnull it most likely means
-  // there's no frame for this element yet, in that case we return the
-  // script object for the element but we don't cache it so that the
-  // next call can get the correct script object if the plugin
-  // instance is available at the next call.
-  if (!pi) {
-    if (mDocument) {
-      // Since we're resetting the script object to null we'll remove the
-      // reference to it so that we won't add the same named reference
-      // again the next time someone requests the script object.
-      aContext->RemoveReference((void *)&mDOMSlots->mScriptObject,
-                                mDOMSlots->mScriptObject);
-    }
-
-    SetScriptObject(nsnull);
-
-    *aScriptObject = elementObject;
-
-    return NS_OK;
-  }
-
-  // Check if the plugin object has the nsIScriptablePlugin
-  // interface, describing how to expose it to JavaScript.  Given this
-  // interface, use it to get the scriptable peer object (possibly the
-  // plugin object itself) and the scriptable interface to expose it
-  // with
-  nsIID scriptableInterface;
-  nsCOMPtr<nsISupports> scriptablePeer;
-  if (NS_SUCCEEDED(rv) && pi) {
-    nsCOMPtr<nsIScriptablePlugin> spi(do_QueryInterface(pi, &rv));
-    if (NS_SUCCEEDED(rv) && spi) {
-      nsIID *scriptableInterfacePtr = nsnull;
-      rv = spi->GetScriptableInterface(&scriptableInterfacePtr);
-
-      if (NS_SUCCEEDED(rv) && scriptableInterfacePtr) {
-        rv = spi->GetScriptablePeer(getter_AddRefs(scriptablePeer));
-
-        scriptableInterface = *scriptableInterfacePtr;
-
-        nsMemory::Free(scriptableInterfacePtr);
-      }
-    }
-  }
-
-  if (NS_FAILED(rv) || !scriptablePeer) {
-    // Fall back to returning the element object.
-    *aScriptObject = elementObject;
-
-    return NS_OK;
-  }
-
-  // Wrap it.
-  JSObject* interfaceObject; // XPConnect-wrapped peer object, when we get it.
-  JSContext *cx = (JSContext *)aContext->GetNativeContext();
-  nsCOMPtr<nsIXPConnect> xpc =
-    do_GetService(nsIXPConnect::GetCID()); 
-  if (cx && xpc) {
-    JSObject* parentObject = JS_GetParent(cx, elementObject);
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    if (NS_SUCCEEDED(xpc->WrapNative(cx, parentObject,
-                                     scriptablePeer, scriptableInterface,
-                                     getter_AddRefs(holder))) && holder && 
-        NS_SUCCEEDED(holder->GetJSObject(&interfaceObject)) &&
-        interfaceObject) {
-      *aScriptObject = interfaceObject;
-    }
-  }
-
-  // If we got an xpconnect-wrapped plugin object, set its' prototype to the
-  // element object.
-  if (!*aScriptObject || !JS_SetPrototype(cx, interfaceObject,
-                                          elementObject)) {
-    *aScriptObject = elementObject; // fall back
-    return NS_OK;
-  }
-
-  // Cache it.
-  SetScriptObject(*aScriptObject);
-
-  return NS_OK;
-}
-
-// Allow access to arbitrary XPCOM interfaces supported by the plugin
-// via a pluginObject.nsISomeInterface notation.
-PRBool
-nsGenericHTMLElement::GetPluginProperty(JSContext *aContext, JSObject *aObj,
-                                        jsval aID, jsval *aVp)
-{
-  if (JSVAL_IS_STRING(aID)) {
-    PRBool retval = PR_FALSE;
-    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
-
-    nsCOMPtr<nsIInterfaceInfoManager> iim = 
-        dont_AddRef(XPTI_GetInterfaceInfoManager());
-    nsCOMPtr<nsIXPConnect> xpc =
-        do_GetService(nsIXPConnect::GetCID()); 
-
-    if (iim && xpc) {
-      nsIID* iid;
-      if (NS_SUCCEEDED(iim->GetIIDForName(cString, &iid)) && iid) {
-        nsCOMPtr<nsIPluginInstance> pi;
-        if (NS_SUCCEEDED(GetPluginInstance(getter_AddRefs(pi))) && pi) {
-          nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-          JSObject* ifaceObj;
-
-          if (NS_SUCCEEDED(xpc->WrapNative(aContext, aObj, pi, *iid, 
-                                           getter_AddRefs(holder))) &&
-              holder && NS_SUCCEEDED(holder->GetJSObject(&ifaceObj)) &&
-              ifaceObj) {
-              *aVp = OBJECT_TO_JSVAL(ifaceObj);
-              retval = PR_TRUE;
-          }
-        }
-        nsMemory::Free(iid);        
-        return retval;
-      }
-    }
-  }
-  return nsGenericElement::GetProperty(aContext, aObj, aID, aVp);
-}
 //----------------------------------------------------------------------
 
 class nsDOMCSSAttributeDeclaration : public nsDOMCSSDeclaration
@@ -4137,3 +3936,204 @@ nsGenericHTMLLeafFormElement::SetAttribute(PRInt32 aNameSpaceID,
                                             aNotify);
 }
 
+nsresult
+nsGenericHTMLElement::GetPluginInstance(nsIPluginInstance** aPluginInstance)
+{
+  NS_ENSURE_ARG_POINTER(aPluginInstance);
+  *aPluginInstance = nsnull;
+
+  nsresult result;
+  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsIPresShell> shell;
+  
+  if (mDocument) {
+    // Make sure the presentation is up-to-date
+    result = mDocument->FlushPendingNotifications();
+    if (NS_FAILED(result)) {
+      return result;
+    }
+  }
+  
+  GetPresContext(this, getter_AddRefs(context));
+  if (!context) {
+    return NS_OK;
+  }
+
+  context->GetShell(getter_AddRefs(shell));
+  if (!shell) {
+    return NS_OK;
+  }
+  
+  nsIFrame* frame = nsnull;
+  shell->GetPrimaryFrameFor(this, &frame);
+  if (!frame) {
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIAtom> type;
+
+  frame->GetFrameType(getter_AddRefs(type));
+
+  if (type.get() == nsLayoutAtoms::objectFrame) {
+    // XXX We could have created an interface for this, but Troy
+    // preferred the ugliness of a static cast to the weight of
+    // a new interface.
+
+    nsObjectFrame* objectFrame = NS_STATIC_CAST(nsObjectFrame*, frame);
+
+    return objectFrame->GetPluginInstance(*aPluginInstance);
+  }
+
+  return NS_OK;
+}
+
+/*
+ * For plugins, we want to expose both attributes of the plugin tag
+ * and any scriptable methods that the plugin itself exposes.  To do
+ * this, we get the plugin object itself (the XPCOM object) and wrap
+ * it as a scriptable object via xpconnect.  We then set the original
+ * node element, which exposes the DOM node methods, as the javascript
+ * prototype object of that object.  Then we get both sets of methods, and
+ * plugin methods can potentially override DOM methods.
+ */
+nsresult
+nsGenericHTMLElement::GetPluginScriptObject(nsIScriptContext* aContext,
+                                            void** aScriptObject)
+{
+  if (mDOMSlots && mDOMSlots->mScriptObject)
+    return nsGenericElement::GetScriptObject(aContext, aScriptObject);
+
+  nsresult rv;
+  *aScriptObject = nsnull;
+
+  // Get the JS object corresponding to this dom node.  This will become
+  // the javascript prototype object of the object we eventually reflect to the
+  // DOM.
+  JSObject* elementObject = nsnull;
+  rv = nsGenericElement::GetScriptObject(aContext, (void**)&elementObject);
+  if (NS_FAILED(rv) || !elementObject)
+    return rv;
+
+  nsCOMPtr<nsIPluginInstance> pi;
+  GetPluginInstance(getter_AddRefs(pi));
+
+  // If GetPluginInstance() returns nsnull it most likely means
+  // there's no frame for this element yet, in that case we return the
+  // script object for the element but we don't cache it so that the
+  // next call can get the correct script object if the plugin
+  // instance is available at the next call.
+  if (!pi) {
+    if (mDocument) {
+      // Since we're resetting the script object to null we'll remove the
+      // reference to it so that we won't add the same named reference
+      // again the next time someone requests the script object.
+      aContext->RemoveReference((void *)&mDOMSlots->mScriptObject,
+                                mDOMSlots->mScriptObject);
+    }
+
+    SetScriptObject(nsnull);
+
+    *aScriptObject = elementObject;
+
+    return NS_OK;
+  }
+
+  // Check if the plugin object has the nsIScriptablePlugin
+  // interface, describing how to expose it to JavaScript.  Given this
+  // interface, use it to get the scriptable peer object (possibly the
+  // plugin object itself) and the scriptable interface to expose it
+  // with
+  nsIID scriptableInterface;
+  nsCOMPtr<nsISupports> scriptablePeer;
+  if (NS_SUCCEEDED(rv) && pi) {
+    nsCOMPtr<nsIScriptablePlugin> spi(do_QueryInterface(pi, &rv));
+    if (NS_SUCCEEDED(rv) && spi) {
+      nsIID *scriptableInterfacePtr = nsnull;
+      rv = spi->GetScriptableInterface(&scriptableInterfacePtr);
+
+      if (NS_SUCCEEDED(rv) && scriptableInterfacePtr) {
+        rv = spi->GetScriptablePeer(getter_AddRefs(scriptablePeer));
+
+        scriptableInterface = *scriptableInterfacePtr;
+
+        nsMemory::Free(scriptableInterfacePtr);
+      }
+    }
+  }
+
+  if (NS_FAILED(rv) || !scriptablePeer) {
+    // Fall back to returning the element object.
+    *aScriptObject = elementObject;
+
+    return NS_OK;
+  }
+
+  // Wrap it.
+  JSObject* interfaceObject; // XPConnect-wrapped peer object, when we get it.
+  JSContext *cx = (JSContext *)aContext->GetNativeContext();
+  nsCOMPtr<nsIXPConnect> xpc =
+    do_GetService(nsIXPConnect::GetCID()); 
+  if (cx && xpc) {
+    JSObject* parentObject = JS_GetParent(cx, elementObject);
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    if (NS_SUCCEEDED(xpc->WrapNative(cx, parentObject,
+                                     scriptablePeer, scriptableInterface,
+                                     getter_AddRefs(holder))) && holder && 
+        NS_SUCCEEDED(holder->GetJSObject(&interfaceObject)) &&
+        interfaceObject) {
+      *aScriptObject = interfaceObject;
+    }
+  }
+
+  // If we got an xpconnect-wrapped plugin object, set its' prototype to the
+  // element object.
+  if (!*aScriptObject || !JS_SetPrototype(cx, interfaceObject,
+                                          elementObject)) {
+    *aScriptObject = elementObject; // fall back
+    return NS_OK;
+  }
+
+  // Cache it.
+  SetScriptObject(*aScriptObject);
+
+  return NS_OK;
+}
+
+// Allow access to arbitrary XPCOM interfaces supported by the plugin
+// via a pluginObject.nsISomeInterface notation.
+PRBool
+nsGenericHTMLElement::GetPluginProperty(JSContext *aContext, JSObject *aObj,
+                                        jsval aID, jsval *aVp)
+{
+  if (JSVAL_IS_STRING(aID)) {
+    PRBool retval = PR_FALSE;
+    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+
+    nsCOMPtr<nsIInterfaceInfoManager> iim = 
+        dont_AddRef(XPTI_GetInterfaceInfoManager());
+    nsCOMPtr<nsIXPConnect> xpc =
+        do_GetService(nsIXPConnect::GetCID()); 
+
+    if (iim && xpc) {
+      nsIID* iid;
+      if (NS_SUCCEEDED(iim->GetIIDForName(cString, &iid)) && iid) {
+        nsCOMPtr<nsIPluginInstance> pi;
+        if (NS_SUCCEEDED(GetPluginInstance(getter_AddRefs(pi))) && pi) {
+          nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+          JSObject* ifaceObj;
+
+          if (NS_SUCCEEDED(xpc->WrapNative(aContext, aObj, pi, *iid, 
+                                           getter_AddRefs(holder))) &&
+              holder && NS_SUCCEEDED(holder->GetJSObject(&ifaceObj)) &&
+              ifaceObj) {
+              *aVp = OBJECT_TO_JSVAL(ifaceObj);
+              retval = PR_TRUE;
+          }
+        }
+        nsMemory::Free(iid);        
+        return retval;
+      }
+    }
+  }
+  return nsGenericElement::GetProperty(aContext, aObj, aID, aVp);
+}
