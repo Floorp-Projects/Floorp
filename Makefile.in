@@ -316,11 +316,11 @@ endif
 endif # MOZ_COMPONENTLIB
 
 ifdef MOZ_PHOENIX
-tier_99_dirs	+= browser
+tier_99_dirs	+= browser xpfe/bootstrap/init.d
 endif
 
 ifdef MOZ_THUNDERBIRD
-tier_99_dirs	+= mail
+tier_99_dirs	+= mail xpfe/bootstrap/init.d
 endif
 
 ifdef MOZ_STANDALONE_COMPOSER

@@ -38,18 +38,28 @@ libs:: moz_patch_checker.dtksh
 	$(INSTALL) $(IFLAGS2) $< $(DIST)/bin
 install:: moz_patch_checker.dtksh
 	chmod a+x $<
-	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(bindir)
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)
 
 libs:: S02solaris_patchchecker.sh
 	chmod a+x $<
 	$(INSTALL) $(IFLAGS2) $< $(DIST)/bin/init.d
 install:: S02solaris_patchchecker.sh
 	chmod a+x $<
-	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(bindir)/init.d
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/init.d
 endif
+
+ifdef MOZ_CALENDAR
+libs:: S80calendar_fix_permissions_bug_230617
+	chmod a+x $<
+	$(INSTALL) $(IFLAGS2) $< $(DIST)/bin/init.d
+install:: S80calendar_fix_permissions_bug_230617
+	chmod a+x $<
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/init.d
+endif
+
 
 libs:: README
 	$(INSTALL) $< $(DIST)/bin/init.d
 install:: README
-	$(SYSINSTALL) $(IFLAGS1) $< $(DESTDIR)$(bindir)/init.d
+	$(SYSINSTALL) $(IFLAGS1) $< $(DESTDIR)$(mozappdir)/init.d
 
