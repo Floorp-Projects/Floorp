@@ -74,18 +74,8 @@ nsMenuBarListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseListener>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   if (aIID.Equals(nsCOMTypeInfo<nsIDOMKeyListener>::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMKeyListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseMotionListener>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMMouseMotionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -96,7 +86,7 @@ nsMenuBarListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   return NS_NOINTERFACE;
 }
-
+/*
 ////////////////////////////////////////////////////////////////////////
 // This is temporary until the bubbling of events for CSS actions work
 ////////////////////////////////////////////////////////////////////////
@@ -119,13 +109,6 @@ static void ForceDrawFrame(nsIFrame * aFrame)
       viewMgr->UpdateView(view, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
   }
 
-}
-
-////////////////////////////////////////////////////////////////////////
-nsresult
-nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
 }
 
 
@@ -219,6 +202,7 @@ nsMenuBarListener::MouseOut(nsIDOMEvent* aMouseEvent)
 
   return NS_OK;
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
@@ -236,7 +220,8 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
     mMenuBarFrame->ToggleMenuActiveState();
   }
   
-  if (mMenuBarFrame->IsActive())
+  PRBool active = mMenuBarFrame->IsActive();
+  if (active)
     return NS_ERROR_BASE; // I am consuming event
   return NS_OK; // means I am NOT consuming event
 }
@@ -245,6 +230,8 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
+  PRBool active = mMenuBarFrame->IsActive();
+
   nsCOMPtr<nsIDOMUIEvent> theEvent = do_QueryInterface(aKeyEvent);
   PRUint32 theChar;
 	theEvent->GetKeyCode(&theChar);
@@ -258,11 +245,11 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
            theChar == NS_VK_DOWN) {
     // The arrow keys were pressed. User is moving around within
     // the menus.
-    if (mMenuBarFrame->IsActive()) 
+    if (active) 
       mMenuBarFrame->KeyboardNavigation(theChar);
   }
 
-  if (mMenuBarFrame->IsActive())
+  if (active)
     return NS_ERROR_BASE; // I am consuming event
   return NS_OK; // means I am NOT consuming event
 }
@@ -279,7 +266,17 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 	PRBool isAlt = PR_FALSE;
 	theEvent->GetAltKey(&isAlt);
   
-  if (mMenuBarFrame->IsActive())
+  PRBool active = mMenuBarFrame->IsActive();
+  if (active)
     return NS_ERROR_BASE; // I am consuming event
   return NS_OK; // means I am NOT consuming event
 }
+
+  ////////////////////////////////////////////////////////////////////////
+nsresult
+nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+

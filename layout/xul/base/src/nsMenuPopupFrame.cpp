@@ -52,11 +52,41 @@ NS_NewMenuPopupFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsrefcnt) 
+nsMenuPopupFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsMenuPopupFrame::Release(void)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMenuPopupFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{           
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(nsIMenuParent::GetIID())) {                                         
+    *aInstancePtr = (void*)(nsIMenuParent*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }   
+
+  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
+}
+
 
 //
 // nsMenuPopupFrame cntr
 //
 nsMenuPopupFrame::nsMenuPopupFrame()
+:mCurrentMenu(nsnull)
 {
 
 } // cntr
@@ -181,4 +211,124 @@ nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
   nsresult rv = nsBoxFrame::DidReflow(aPresContext, aStatus);
   //SyncViewWithFrame();
   return rv;
+}
+
+NS_IMETHODIMP
+nsMenuPopupFrame::GetNextMenuItem(nsIContent* aStart, nsIContent** aResult)
+{
+  PRInt32 index = 0;
+  if (aStart) {
+    // Determine the index of start.
+    mContent->IndexOf(aStart, index);
+    index++;
+  }
+
+  PRInt32 count;
+  mContent->ChildCount(count);
+
+  // Begin the search from index.
+  PRInt32 i;
+  for (i = index; i < count; i++) {
+    nsCOMPtr<nsIContent> current;
+    mContent->ChildAt(i, *getter_AddRefs(current));
+    
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu) {
+      *aResult = current;
+      NS_IF_ADDREF(*aResult);
+      return NS_OK;
+    }
+  }
+
+  // Still don't have anything. Try cycling from the beginning.
+  for (i = 0; i <= index; i++) {
+    nsCOMPtr<nsIContent> current;
+    mContent->ChildAt(i, *getter_AddRefs(current));
+    
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu) {
+      *aResult = current;
+      NS_IF_ADDREF(*aResult);
+      return NS_OK;
+    }
+  }
+
+  // No luck. Just return our start value.
+  *aResult = aStart;
+  NS_IF_ADDREF(aStart);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuPopupFrame::GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult)
+{
+  PRInt32 count;
+  mContent->ChildCount(count);
+
+  PRInt32 index = count-1;
+  if (aStart) {
+    // Determine the index of start.
+    mContent->IndexOf(aStart, index);
+    index--;
+  }
+
+  
+  // Begin the search from index.
+  PRInt32 i;
+  for (i = index; i >= 0; i--) {
+    nsCOMPtr<nsIContent> current;
+    mContent->ChildAt(i, *getter_AddRefs(current));
+    
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu) {
+      *aResult = current;
+      NS_IF_ADDREF(*aResult);
+      return NS_OK;
+    }
+  }
+
+  // Still don't have anything. Try cycling from the beginning.
+  for (i = count-1; i >= index; i--) {
+    nsCOMPtr<nsIContent> current;
+    mContent->ChildAt(i, *getter_AddRefs(current));
+    
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu) {
+      *aResult = current;
+      NS_IF_ADDREF(*aResult);
+      return NS_OK;
+    }
+  }
+
+  // No luck. Just return our start value.
+  *aResult = aStart;
+  NS_IF_ADDREF(aStart);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIContent* aMenuItem)
+{
+  if (mCurrentMenu == aMenuItem)
+    return NS_OK;
+
+  // Unset the current child.
+  if (mCurrentMenu)
+    mCurrentMenu->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+  
+  // Set the new child.
+  if (aMenuItem)
+    aMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+  mCurrentMenu = aMenuItem;
+
+  return NS_OK;
 }

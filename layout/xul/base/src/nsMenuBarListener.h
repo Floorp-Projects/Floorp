@@ -29,8 +29,7 @@ class nsIPresContext;
 
 /** editor Implementation of the DragListener interface
  */
-class nsMenuBarListener : public nsIDOMKeyListener, public nsIDOMMouseListener, 
-                          public nsIDOMMouseMotionListener
+class nsMenuBarListener : public nsIDOMKeyListener
 {
 public:
   /** default constructor
@@ -41,14 +40,7 @@ public:
   virtual ~nsMenuBarListener();
    
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
-  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
+  
   virtual nsresult KeyUp(nsIDOMEvent* aMouseEvent);
   virtual nsresult KeyDown(nsIDOMEvent* aMouseEvent);
   virtual nsresult KeyPress(nsIDOMEvent* aMouseEvent);

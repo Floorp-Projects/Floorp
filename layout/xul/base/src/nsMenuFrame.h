@@ -29,14 +29,26 @@
 
 #include "nsBoxFrame.h"
 #include "nsFrameList.h"
+#include "nsIMenuParent.h"
 
 nsresult NS_NewMenuFrame(nsIFrame** aResult) ;
 
+class nsMenuBarFrame;
 
 class nsMenuFrame : public nsBoxFrame
 {
 public:
   nsMenuFrame();
+
+  NS_DECL_ISUPPORTS
+  
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD IsActive(PRBool& aResult) { aResult = PR_TRUE; return NS_OK; };
 
   // The following four methods are all overridden so that the menu children
   // can be stored in a separate list (so that they don't impact reflow of the
@@ -65,6 +77,8 @@ public:
                     nsReflowStatus&          aStatus);
 
   void ToggleMenuState();
+  void SelectMenu(PRBool aActivateFlag);
+  void OpenMenu(PRBool aActivateFlag);
 
 protected:
   void GetMenuChildrenElement(nsIContent** aResult);
@@ -72,8 +86,8 @@ protected:
 protected:
   nsFrameList mPopupFrames;
   PRBool mMenuOpen;
-  PRBool mOnMenuBar;
-
+  nsMenuBarFrame* mMenuBar;
+  nsIMenuParent* mMenuParent; // Our parent menu.
 }; // class nsMenuFrame
 
 #endif

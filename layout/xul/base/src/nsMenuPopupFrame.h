@@ -28,17 +28,26 @@
 #include "nsCOMPtr.h"
 
 #include "nsBoxFrame.h"
+#include "nsIMenuParent.h"
 
 nsresult NS_NewMenuPopupFrame(nsIFrame** aResult) ;
 
 class nsIViewManager;
 class nsIView;
 
-class nsMenuPopupFrame : public nsBoxFrame
+class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent
 {
 public:
   nsMenuPopupFrame();
 
+  NS_DECL_ISUPPORTS
+
+  // nsIMenuParentInterface
+  NS_IMETHOD SetCurrentMenuItem(nsIContent* aMenuItem);
+  NS_IMETHOD GetNextMenuItem(nsIContent* aStart, nsIContent** aResult);
+  NS_IMETHOD GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult);
+
+  // Overridden methods
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                        nsIContent*      aContent,
                        nsIFrame*        aParent,
@@ -52,7 +61,7 @@ public:
   nsresult SyncViewWithFrame(PRBool aOnMenuBar);
 
 protected:
-
+  nsIContent* mCurrentMenu; // The current menu that is active.
 }; // class nsMenuPopupFrame
 
 #endif

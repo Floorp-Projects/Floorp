@@ -28,15 +28,25 @@
 #include "nsCOMPtr.h"
 #include "nsToolbarFrame.h"
 #include "nsMenuBarListener.h"
+#include "nsIMenuParent.h"
 
 class nsIContent;
 
 nsresult NS_NewMenuBarFrame(nsIFrame** aResult) ;
 
-class nsMenuBarFrame : public nsToolbarFrame
+class nsMenuBarFrame : public nsToolbarFrame, public nsIMenuParent
 {
 public:
   nsMenuBarFrame();
+
+  NS_DECL_ISUPPORTS
+
+  // nsIMenuParentInterface
+  NS_IMETHOD SetCurrentMenuItem(nsIContent* aMenuItem);
+  NS_IMETHOD GetNextMenuItem(nsIContent* aStart, nsIContent** aResult);
+  NS_IMETHOD GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult);
+  
+  NS_IMETHOD IsActive() { return mIsActive; };
 
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
@@ -45,13 +55,8 @@ public:
                   nsIFrame*        aPrevInFlow);
 
 // Non-interface helpers
-  PRBool IsActive() { return mIsActive; };
   void ToggleMenuActiveState();
-  void GetNextMenuItem(nsIContent* aStart, nsIContent** aResult);
-  void GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult);
   void KeyboardNavigation(PRUint32 aDirection);
-
-  void SetCurrentMenuItem(nsIContent* aMenuItem);
 
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
