@@ -33,6 +33,7 @@
 #include "nsCOMPtr.h"
 #include "nsXULAtoms.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMXULElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIXULPopupListener.h"
@@ -40,7 +41,6 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsRDFCID.h"
 
-#include "nsIDOMXULPopupElement.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMXULDocument.h"
@@ -50,6 +50,10 @@
 #include "nsITimer.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMEventTarget.h"
+
+#include "nsIBoxObject.h"
+#include "nsIPopupSetBoxObject.h"
+#include "nsIMenuBoxObject.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -317,8 +321,15 @@ XULPopupListenerImpl::MouseOut(nsIDOMEvent* aMouseEvent)
   }
   
   if ( mPopupContent ) {
-    nsCOMPtr<nsIDOMXULPopupElement> popupElement = do_QueryInterface(mPopupContent);
-    popupElement->ClosePopup();
+    nsCOMPtr<nsIDOMNode> parent;
+    mPopupContent->GetParentNode(getter_AddRefs(parent));
+    nsCOMPtr<nsIDOMXULElement> popupSetElement(do_QueryInterface(parent));
+    nsCOMPtr<nsIBoxObject> boxObject;
+    if (popupSetElement)
+      popupSetElement->GetBoxObject(getter_AddRefs(boxObject));
+    nsCOMPtr<nsIPopupSetBoxObject> popupSetObject(do_QueryInterface(boxObject));
+    if (popupSetObject)
+      popupSetObject->DestroyPopup();
 
     mPopupContent = nsnull;  // release the popup
     
@@ -527,11 +538,20 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
         
         mPopupContent = popupContent.get();
 
-        nsCOMPtr<nsIDOMXULPopupElement> xulPopup = do_QueryInterface(popupContent);
-        if (xulPopup)
-          xulPopup->OpenPopup(mElement,
-                               xPos, yPos, 
-                               type, anchorAlignment, popupAlignment);
+        nsCOMPtr<nsIDOMNode> parent;
+        mPopupContent->GetParentNode(getter_AddRefs(parent));
+        nsCOMPtr<nsIDOMXULElement> popupSetElement(do_QueryInterface(parent));
+        nsCOMPtr<nsIBoxObject> boxObject;
+        if (popupSetElement)
+          popupSetElement->GetBoxObject(getter_AddRefs(boxObject));
+        nsCOMPtr<nsIPopupSetBoxObject> popupSetObject(do_QueryInterface(boxObject));
+        nsCOMPtr<nsIMenuBoxObject> menuObject(do_QueryInterface(boxObject));
+        if (popupSetObject)
+          popupSetObject->CreatePopup(mElement, mPopupContent, xPos, yPos, 
+                                     type.GetUnicode(), anchorAlignment.GetUnicode(), 
+                                     popupAlignment.GetUnicode());
+        else if (menuObject)
+          menuObject->OpenMenu(PR_TRUE);
       }
     }
   }

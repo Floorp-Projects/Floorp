@@ -30,11 +30,7 @@ EXPORTS	= \
 	nsIXULKeyListener.h             \
 	nsIXULPopupListener.h           \
         nsIDOMXULDocument.h             \
-        nsIDOMXULIFrameElement.h        \
-        nsIDOMXULBrowserElement.h        \
-        nsIDOMXULEditorElement.h        \
         nsIDOMXULElement.h              \
-		nsIDOMXULPopupElement.h         \
         nsIDOMXULTreeElement.h          \
         nsIXULContentSink.h             \
         nsIXULContentUtils.h            \

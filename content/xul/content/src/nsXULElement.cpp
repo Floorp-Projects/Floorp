@@ -106,11 +106,7 @@
 #include "nsXPIDLString.h"
 #include "nsXULAttributes.h"
 #include "nsXULControllers.h"
-#include "nsXULIFrameElement.h"
-#include "nsXULBrowserElement.h"
-#include "nsXULEditorElement.h"
 #include "nsXULTreeElement.h"
-#include "nsXULPopupElement.h"
 #include "nsXULMenuListElement.h"
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
@@ -314,14 +310,14 @@ nsIAtom*             nsXULElement::kTreeColAtom;
 nsIAtom*             nsXULElement::kTreeItemAtom;
 nsIAtom*             nsXULElement::kTreeRowAtom;
 nsIAtom*             nsXULElement::kValueAtom;
-nsIAtom*             nsXULElement::kIFrameAtom;
-nsIAtom*             nsXULElement::kBrowserAtom;
-nsIAtom*             nsXULElement::kEditorAtom;
 nsIAtom*             nsXULElement::kWidthAtom;
 nsIAtom*             nsXULElement::kWindowAtom;
 nsIAtom*             nsXULElement::kMenuListAtom;
 nsIAtom*             nsXULElement::kMenuAtom;
 nsIAtom*             nsXULElement::kPopupSetAtom;
+nsIAtom*             nsXULElement::kBrowserAtom;
+nsIAtom*             nsXULElement::kEditorAtom;
+nsIAtom*             nsXULElement::kIFrameAtom;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 PRUint32             nsXULPrototypeAttribute::gNumElements;
@@ -394,15 +390,15 @@ nsXULElement::Init()
         kTreeItemAtom       = NS_NewAtom("treeitem");
         kTreeRowAtom        = NS_NewAtom("treerow");
         kValueAtom          = NS_NewAtom("value");
-        kIFrameAtom         = NS_NewAtom("iframe");
-        kBrowserAtom        = NS_NewAtom("browser");
-        kEditorAtom         = NS_NewAtom("editor");
         kWidthAtom          = NS_NewAtom("width");
         kWindowAtom         = NS_NewAtom("window");
         kMenuListAtom       = NS_NewAtom("menulist");
         kMenuAtom           = NS_NewAtom("menu");
         kPopupSetAtom       = NS_NewAtom("popupset");
-        
+        kBrowserAtom        = NS_NewAtom("browser");
+        kIFrameAtom         = NS_NewAtom("iframe");
+        kEditorAtom         = NS_NewAtom("editor");
+
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
                                                 kINameSpaceManagerIID,
@@ -474,15 +470,15 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kTreeItemAtom);
         NS_IF_RELEASE(kTreeRowAtom);
         NS_IF_RELEASE(kValueAtom);
-        NS_IF_RELEASE(kIFrameAtom);
-        NS_IF_RELEASE(kBrowserAtom);
-        NS_IF_RELEASE(kEditorAtom);
         NS_IF_RELEASE(kWidthAtom);
         NS_IF_RELEASE(kWindowAtom);
         NS_IF_RELEASE(kMenuListAtom);
         NS_IF_RELEASE(kMenuAtom);
         NS_IF_RELEASE(kPopupSetAtom);
-        
+        NS_IF_RELEASE(kBrowserAtom);
+        NS_IF_RELEASE(kIFrameAtom);
+        NS_IF_RELEASE(kEditorAtom);
+
         NS_IF_RELEASE(gNameSpaceManager);
 
         if (gXULUtils) {
@@ -682,90 +678,6 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
             if (NS_FAILED(rv)) return rv;
 
             if ((mSlots->mInnerXULElement = new nsXULTreeElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
-    }
-    else if ((iid.Equals(NS_GET_IID(nsIDOMXULPopupElement))) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
-      nsCOMPtr<nsIAtom> tag;
-      PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if ((tag.get() == kPopupAtom) || (tag.get() == kMenuPopupAtom)) {
-        // We delegate XULPopupElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULPopupElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULIFrameElement)) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
-      nsCOMPtr<nsIAtom> tag;
-      PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag.get() == kIFrameAtom) {
-        // We delegate XULIFrameElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULIFrameElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULBrowserElement)) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
-      nsCOMPtr<nsIAtom> tag;
-      PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag.get() == kBrowserAtom) {
-        // We delegate XULBrowserElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULBrowserElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULEditorElement)) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
-      nsCOMPtr<nsIAtom> tag;
-      PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag.get() == kEditorAtom) {
-        // We delegate XULEditorElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULEditorElement(this)) == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -2103,25 +2015,9 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
             fn = NS_NewScriptXULTreeElement;
             rootname = "nsXULTreeElement::mScriptObject";
         }
-        else if (tag.get() == kIFrameAtom) {
-            fn = NS_NewScriptXULIFrameElement;
-            rootname = "nsXULIFrameElement::mScriptObject";
-        }
-        else if (tag.get() == kBrowserAtom) {
-            fn = NS_NewScriptXULBrowserElement;
-            rootname = "nsXULBrowserElement::mScriptObject";
-        }
         else if (tag.get() == kMenuListAtom) {
             fn = NS_NewScriptXULMenuListElement;
             rootname = "nsXULMenuListElement::mScriptObject";
-        }
-        else if (tag.get() == kEditorAtom) {
-            fn = NS_NewScriptXULEditorElement;
-            rootname = "nsXULEditorElement::mScriptObject";
-        }
-        else if ((tag.get() == kMenuPopupAtom) || (tag.get() == kPopupAtom)) {
-            fn = NS_NewScriptXULPopupElement;
-            rootname = "nsXULPopupElement::mScriptObject";
         }
         else {
             fn = NS_NewScriptXULElement;
@@ -4225,7 +4121,7 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
     progID += "-tree";
 
   mBoxObject = do_CreateInstance(progID);
-  if (mBoxObject)
+  if (!mBoxObject)
     return NS_OK;
 
   nsCOMPtr<nsPIBoxObject> privateBox(do_QueryInterface(mBoxObject));
