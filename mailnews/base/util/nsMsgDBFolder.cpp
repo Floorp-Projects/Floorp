@@ -516,13 +516,13 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 	const int charLimit = MAX_FILE_LENGTH_WITHOUT_EXTENSION;	// set on platform specific basis
 #endif
 #if defined(XP_MAC)
-	nsCAutoString illegalChars = ":";
+	nsCAutoString illegalChars(":");
 #elif defined(XP_OS2) 
-	nsCAutoString illegalChars = "\"/\\[]:;=,|?<>*$. ";
+	nsCAutoString illegalChars("\"/\\[]:;=,|?<>*$. ");
 #elif defined(XP_WIN32)
-	nsCAutoString illegalChars = "\"/\\[]:;=,|?<>*$";
+	nsCAutoString illegalChars("\"/\\[]:;=,|?<>*$");
 #else		// UNIX	(what about beos?)
-	nsCAutoString illegalChars = "";
+	nsCAutoString illegalChars;
 #endif
 
 	if (!resultName || !userLeafName)
@@ -537,7 +537,7 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 	// Otherwise we mangle it
 
 	// mangledPath is the entire path to the newly mangled leaf name
-	nsCAutoString mangledLeaf = userLeafName;
+	nsCAutoString mangledLeaf(userLeafName);
 
 	PRInt32 illegalCharacterIndex = mangledLeaf.FindCharInSet(illegalChars);
 
