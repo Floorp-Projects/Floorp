@@ -1793,9 +1793,9 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
       elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
       if (!sheets.IsEmpty() && baseURI) {
         char *str = ToNewCString(sheets);
-        char *newStr;
-        char *token = str;
-        while ( (token = nsCRT::strtok(token, ", ", &newStr)) ) {
+        char *newStr = str;
+        char *token;
+        while ( (token = nsCRT::strtok(newStr, ", ", &newStr)) ) {
           NS_NewURI(getter_AddRefs(uri), nsDependentCString(token), nsnull,
                     baseURI);
           if (!uri) continue;
