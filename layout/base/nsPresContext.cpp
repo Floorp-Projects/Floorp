@@ -33,7 +33,8 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK ***** */#include "nsCOMPtr.h"
+ * ***** END LICENSE BLOCK ***** */
+#include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIPref.h"
