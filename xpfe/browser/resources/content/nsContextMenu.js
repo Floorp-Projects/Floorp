@@ -137,6 +137,12 @@ nsContextMenu.prototype = {
         // whether the user pref is enabled.
         this.showItem( "context-blockimage", this.onImage && this.isBlockingImages() );
 
+        // Capture depends on whether a form is being displayed.
+        this.showItem( "context-capture", this.okToCapture() );
+
+        // Prefill depends on whether a form is being displayed.
+        this.showItem( "context-prefill", this.okToPrefill() );
+
         // Remove separator if all items are removed.
         this.showItem( "context-sep-view", !this.inDirList || this.inFrame || this.onImage );
     },
@@ -403,6 +409,64 @@ nsContextMenu.prototype = {
     copyImage : function () {
         this.copyToClipboard( this.imageURL );
     },
+
+    // Capture the values that are filled in on the form being displayed.
+    capture : function () {
+      if( appCore ) {
+        status = appCore.walletRequestToCapture(window._content);
+      }
+    },
+    // Prefill the form being displayed.
+    prefill : function () {
+      if( appCore ) {
+        appCore.walletPreview(window, window._content);
+      }
+    },
+
+    // Determine if "Save Form Data" is to appear in the menu.
+    okToCapture: function () {
+      var capture = document.getElementById("menu_capture");
+      if (!window._content.document) {
+        return false;
+      }
+      var formsArray = window._content.document.forms;
+      var form;
+      for (form=0; form<formsArray.length; form++) {
+        var elementsArray = formsArray[form].elements;
+        var element;
+        for (element=0; element<elementsArray.length; element++) {
+          var type = elementsArray[element].type;
+          var value = elementsArray[element].value;
+          if ((type=="" || type=="text") && value!="") {
+            return true;
+          } 
+        }
+      }
+      return false;
+    },
+
+    // Determine if "Prefill Form" is to appear in the menu.
+    okToPrefill: function () {
+      var prefill = document.getElementById("menu_prefill");
+      if (!window._content.document) {
+        return false;
+      }
+      var formsArray = window._content.document.forms;
+      var form;
+      for (form=0; form<formsArray.length; form++) {
+        var elementsArray = formsArray[form].elements;
+        var element;
+        for (element=0; element<elementsArray.length; element++) {
+          var type = elementsArray[element].type;
+          var value = elementsArray[element].value;
+          if (type=="" || type=="text" || type=="select-one") {
+            return true;
+          }
+        }
+      }
+      return false;
+    },
+
     // Determine if "Block Image" is to appear in the menu.
     // Return true if "imageBlocker.enabled" pref is set and image is not already blocked.
     isBlockingImages: function () {
