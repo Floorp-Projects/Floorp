@@ -21,7 +21,7 @@
 #else
 #define MOZ_NAME_PRODUCT    "Mozilla"
 #define MOZ_NAME_BRAND      "Mozilla"
-#define MOZ_NAME_FULL       "Mozilla Navigator"
+#define MOZ_NAME_FULL       "Mozilla"
 #define MOZ_NAME_COMPANY    "Netscape Communications Corp"
 #endif /* FEATURE_CUSTOM_BRAND */
 
@@ -546,12 +546,25 @@ this directory.\n\
 Check the permissions and try again.")
 
 /* #define MK_TIMEBOMB_WARNING_MESSAGE              -326 */
-ResDef(MK_TIMEBOMB_WARNING_MESSAGE, -326,
+
+/* original text for the message in this comment block.
+   at some point, revert to this text when there is a better
+   way of presenting dire alpha/beta software warning messages
+   to the user. this is a gross and ugly hack that should be
+   short lived. compaints go to cyeh@netscape.com 9/2/98
+   
 "This is a pre-release copy of "MOZ_NAME_FULL" that\n\
 will expire at %s.\n\
 To obtain a newer pre-release version or the latest full\n\
 release of "MOZ_NAME_FULL" (which will not expire) \n\
 choose Software from the Help menu.")
+*/
+ResDef(MK_TIMEBOMB_WARNING_MESSAGE, -326,
+"This is a pre-release copy of "MOZ_NAME_FULL" that\n\
+will expire at %s.\n\
+Using this software may cause data loss, computer crashes, \
+or bodily harm, including (but not limited to) accidental death \
+or dismemberment.\nYOU HAVE BEEN WARNED.\n")
 
 /* #define MK_UNABLE_TO_DELETE_FILE */
 ResDef(MK_UNABLE_TO_DELETE_FILE, -327,
