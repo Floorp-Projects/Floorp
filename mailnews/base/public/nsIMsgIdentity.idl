@@ -71,11 +71,6 @@ interface nsIMsgIdentity : nsISupports {
   /* the current vcard */
   attribute nsIMsgVCard vCard;
 
-  /* the current SMTP server and hostname */
-  /* eventually these will be removed from the identity */
-  attribute string smtpHostname;
-  attribute string smtpUsername;
-
   attribute boolean doFcc;
   attribute string fccFolder;
   

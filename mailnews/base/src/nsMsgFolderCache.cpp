@@ -205,7 +205,7 @@ nsresult nsMsgFolderCache::InitExistingDB()
 
 nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool create)
 {
-	nsresult ret;
+	nsresult ret=NS_OK;
 	nsIMdbFactory *myMDBFactory = GetMDBFactory();
 	if (myMDBFactory)
 	{
@@ -409,7 +409,7 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *uri, PRBool createIf
 
 NS_IMETHODIMP nsMsgFolderCache::Close()
 {
-	nsresult ret;
+	nsresult ret=NS_OK;
 
 	nsIMdbThumb	*commitThumb = NULL;
 	if (m_mdbStore)

@@ -21,35 +21,11 @@
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-NS_IMPL_ADDREF(nsMsgIdentity)
-NS_IMPL_RELEASE(nsMsgIdentity)
-
-nsresult
-nsMsgIdentity::QueryInterface(const nsIID& iid, void **result)
-{
-  nsresult rv = NS_NOINTERFACE;
-  if (!result)
-    return NS_ERROR_NULL_POINTER;
-
-  void *res = nsnull;
-  if (iid.Equals(nsCOMTypeInfo<nsIMsgIdentity>::GetIID()) ||
-      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-    res = NS_STATIC_CAST(nsIMsgIdentity*, this);
-  else if (iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
-    res = NS_STATIC_CAST(nsIShutdownListener*, this);
-
-  if (res) {
-    NS_ADDREF(this);
-    *result = res;
-    rv = NS_OK;
-  }
-
-  return rv;
-}
-
+NS_IMPL_ISUPPORTS2(nsMsgIdentity,
+                   nsIMsgIdentity,
+                   nsIShutdownListener)
 
 nsMsgIdentity::nsMsgIdentity():
   m_signature(0),
@@ -363,8 +339,6 @@ NS_IMPL_IDPREF_STR(Email, "useremail");
 NS_IMPL_IDPREF_STR(ReplyTo, "reply_to");
 NS_IMPL_IDPREF_STR(Organization, "organization");
 NS_IMPL_IDPREF_BOOL(ComposeHtml, "compose_html");
-NS_IMPL_IDPREF_STR(SmtpHostname, "smtp_server");
-NS_IMPL_IDPREF_STR(SmtpUsername, "smtp_name");
 NS_IMPL_IDPREF_BOOL(AttachVCard, "attach_vcard");
 NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature");
 

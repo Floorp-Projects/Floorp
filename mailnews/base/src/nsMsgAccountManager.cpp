@@ -1347,9 +1347,9 @@ nsMsgAccountManager::MigrateIdentity(nsIMsgIdentity *identity)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_REPLY_TO,identity,SetReplyTo)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_ORGANIZATION,identity,SetOrganization)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_COMPOSE_HTML,identity,SetComposeHtml)
-  MIGRATE_SIMPLE_STR_PREF(PREF_4X_NETWORK_HOSTS_SMTP_SERVER,identity,SetSmtpHostname)
+    /*  MIGRATE_SIMPLE_STR_PREF(PREF_4X_NETWORK_HOSTS_SMTP_SERVER,identity,SetSmtpHostname)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_SMTP_NAME,identity,SetSmtpUsername)
-    
+    */
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_DRAFTS,identity,SetDraftFolder)
   CONVERT_4X_URI(identity,GetDraftFolder,SetDraftFolder)
     
@@ -1810,8 +1810,6 @@ nsMsgAccountManager::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *d
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetReplyTo,SetReplyTo)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetFullName,SetFullName)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetOrganization,SetOrganization)
-        COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetSmtpHostname,SetSmtpHostname)
-        COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetSmtpUsername,SetSmtpUsername)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetDraftFolder,SetDraftFolder)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetStationaryFolder,SetStationaryFolder)
 
