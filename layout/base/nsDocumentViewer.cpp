@@ -7339,6 +7339,25 @@ DocumentViewerImpl::GetDoingPrintPreview(PRBool *aDoingPrintPreview)
   return NS_OK;
 }
 
+/* readonly attribute nsIPrintSettings currentPrintSettings; */
+NS_IMETHODIMP 
+DocumentViewerImpl::GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings)
+{
+  NS_ENSURE_ARG_POINTER(aCurrentPrintSettings);
+
+  if (mPrt) {
+    *aCurrentPrintSettings = mPrt->mPrintSettings;
+
+  } else if (mPrtPreview) {
+    *aCurrentPrintSettings = mPrtPreview->mPrintSettings;
+
+  } else {
+    *aCurrentPrintSettings = nsnull;
+  }
+  NS_IF_ADDREF(*aCurrentPrintSettings);
+  return NS_OK;
+}
+
 /* attribute nsIPrintSettings globalPrintSettingsValues; */
 NS_IMETHODIMP 
 DocumentViewerImpl::GetGlobalPrintSettingsValues(nsIPrintSettings * *aGlobalPrintSettingsValues)
