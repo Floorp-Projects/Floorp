@@ -1775,7 +1775,7 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPre
     aContent->GetTag(*getter_AddRefs(tagName));
     if (tagName && tagName.get() == nsXULAtoms::treecell) {
       CreateAnonymousTreeCellFrames(aPresContext, tagName, aState, aContent, aNewCellBodyFrame,
-                            childItems);
+                                    aNewCellFrame, childItems);
     }
 
     aNewCellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
@@ -3292,6 +3292,7 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresContext*  aPresConte
                                              nsFrameConstructorState& aState,
                                              nsIContent*              aParent,
                                              nsIFrame*                aNewFrame,
+                                             nsIFrame*                aNewCellFrame,
                                              nsFrameItems&            aChildItems)
 {
   // see if the frame implements anonymous content
@@ -3305,6 +3306,8 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresContext*  aPresConte
 
   PRInt32 childCount;
   aParent->ChildCount(childCount);
+  nsCOMPtr<nsIContent> buttonContent;
+
   if (childCount == 0) {
     // Have to do it right here, since the inner cell frame isn't mine, 
     // and i can't have it creating anonymous content.
@@ -3323,6 +3326,7 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresContext*  aPresConte
     parentNode->GetAttribute("indent", indent);
     
     nsCOMPtr<nsIDOMElement> boxElement;
+
     nsCOMPtr<nsIDOMNode> dummy;
     if (indent == "true") {
       // We have to make a box to hold everything.
@@ -3359,29 +3363,29 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresContext*  aPresConte
     nsString classDesc = "tree-button";
     
     nsdoc->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
-    content = do_QueryInterface(node);
-    content->SetAttribute(kNameSpaceID_None, classAtom, classDesc, PR_FALSE);
+    buttonContent = do_QueryInterface(node);
+    buttonContent->SetAttribute(kNameSpaceID_None, classAtom, classDesc, PR_FALSE);
     nsAutoString value;
 
     parentNode->GetAttribute("value", value);
     if (value != "")
-      content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_FALSE);
+      buttonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_FALSE);
   
     nsAutoString crop;
     parentNode->GetAttribute("crop", crop);
     if (crop == "") crop = "right";
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
+    buttonContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
 
     nsAutoString align;
     parentNode->GetAttribute("align", align);
     if (align == "") align = "left";
-    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align, PR_FALSE);
+    buttonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align, PR_FALSE);
 
     if (boxElement) {
-      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
+      buttonContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
       boxElement->AppendChild(node, getter_AddRefs(dummy));
     }
-    else anonymousItems->AppendElement(content);
+    else anonymousItems->AppendElement(buttonContent);
   }
 
   PRUint32 count = 0;
@@ -3399,6 +3403,11 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresContext*  aPresConte
 
     // create the frame and attach it to our frame
     ConstructFrame(aPresContext, aState, content, aNewFrame, PR_FALSE, aChildItems);
+  }
+  if (count > 0)
+  {
+    nsTreeCellFrame *cellFrame = (nsTreeCellFrame *) aNewCellFrame;
+    cellFrame->SetAnonymousContent(buttonContent);
   }
 
   return NS_OK;
