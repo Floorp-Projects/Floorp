@@ -38,19 +38,12 @@ REQUIRES    = xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-  nsSVGContainerFrame.cpp \
-  nsPolygonFrame.cpp \
-  nsPolylineFrame.cpp \
-  nsSVGPathFrame.cpp \
-	$(NULL)
-
 CPP_OBJS=					\
   .\$(OBJDIR)\nsSVGContainerFrame.obj    \
   .\$(OBJDIR)\nsPolygonFrame.obj    \
   .\$(OBJDIR)\nsPolylineFrame.obj    \
   .\$(OBJDIR)\nsSVGPathFrame.obj    \
-	$(NULL)
+  $(NULL)
 
 EXPORTS =					\
 	$(NULL)
