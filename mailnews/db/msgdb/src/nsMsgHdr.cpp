@@ -355,6 +355,17 @@ NS_IMETHODIMP nsMsgHdr::GetSubject(nsString &resultSubject)
 	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_subjectColumnToken, resultSubject);
 }
 
+NS_IMETHODIMP nsMsgHdr::GetRecipients(nsString &resultRecipients)
+{
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients);
+}
+
+NS_IMETHODIMP nsMsgHdr::GetCCList(nsString &resultCCList)
+{
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_ccListColumnToken, resultCCList);
+}
+
+
 nsresult nsMsgHdr::SetStringColumn(const char *str, mdb_token token)
 {
 	struct mdbYarn yarn;

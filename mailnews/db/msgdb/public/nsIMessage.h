@@ -50,9 +50,12 @@ public:
     NS_IMETHOD SetCCListArray(const char *names, const char *addresses, PRUint32 numAddresses) = 0;
     NS_IMETHOD SetAuthor(const char *author) = 0;
     NS_IMETHOD SetSubject(const char *subject) = 0;
+    NS_IMETHOD SetStatusOffset(PRUint32 statusOffset) = 0;
+
 	NS_IMETHOD GetAuthor(nsString &resultAuthor) = 0;
 	NS_IMETHOD GetSubject(nsString &resultSubject) = 0;
-    NS_IMETHOD SetStatusOffset(PRUint32 statusOffset) = 0;
+	NS_IMETHOD GetRecipients(nsString &resultRecipients) = 0;
+	NS_IMETHOD GetCCList(nsString &ccList) =0;
 
     // flag handling routines
     NS_IMETHOD GetFlags(PRUint32 *result) = 0;

@@ -57,7 +57,8 @@ public:
 
 	NS_IMETHOD GetAuthor(nsString &resultAuthor);
 	NS_IMETHOD GetSubject(nsString &resultSubject);
-
+	NS_IMETHOD GetRecipients(nsString &resultRecipients);
+	NS_IMETHOD GetCCList(nsString &ccList);
     // flag handling routines
     NS_IMETHOD GetFlags(PRUint32 *result);
     NS_IMETHOD SetFlags(PRUint32 flags);
