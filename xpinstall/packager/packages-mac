@@ -98,6 +98,8 @@ viewer:Components:prefm.shlb
 viewer:Components:prefm.xpt 
 viewer:Components:profile.shlb 
 viewer:Components:profileservices.xpt 
+viewer:Components:PSMGlue.shlb
+viewer:Components:psmglue.xpt
 viewer:Components:rdf.xpt 
 viewer:Components:RDFLibrary.shlb 
 viewer:Components:RegViewer.shlb 
