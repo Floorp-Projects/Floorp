@@ -112,10 +112,10 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
 		sgo->GetDocShell(getter_AddRefs(docShell));
 		if (docShell)
 		{
-			nsSecureBrowserObserver *sbo = new nsSecureBrowserObserver();
+			nsCOMPtr<nsSecureBrowserObserver> sbo = new nsSecureBrowserObserver();
 			if (sbo)
 			{
-				NS_ADDREF(sbo);
+				// sbo->Init has the docShell addref sbo
 				return sbo->Init(button, docShell); // does the window delete us when it close?
 			}
 		}
