@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Srilatha Moturi <srilatha@netscape.com>
+ *   Jungshik Shin <jshin@mailaps.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -50,6 +51,8 @@
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsNativeCharsetUtils.h"
+#include <mbstring.h>
 
 #define EXE_EXTENSION ".exe" 
 #define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
@@ -450,7 +453,8 @@ nsresult nsMapiRegistryUtils::setMailtoProtocolHandler()
 {
     // make sure mailto urls go through our application if we are the default
     // mail application...
-    nsCAutoString appName (NS_ConvertUCS2toUTF8(vendorName()).get());
+    nsCAutoString appName;
+    NS_CopyUnicodeToNative(vendorName(), appName);
 
     nsCAutoString mailAppPath(thisApplication());
     mailAppPath += " -compose %1";
@@ -467,7 +471,8 @@ nsresult nsMapiRegistryUtils::setNewsProtocolHandler()
 {
     // make sure news and snews urls go through our application if we are the default
     // mail application...
-    nsCAutoString appName (NS_ConvertUCS2toUTF8(vendorName()).get());
+    nsCAutoString appName;
+    NS_CopyUnicodeToNative(vendorName(), appName);
 
     nsCAutoString mailAppPath(thisApplication());
     mailAppPath += " -mail %1";
@@ -500,7 +505,8 @@ nsresult nsMapiRegistryUtils::setDefaultMailClient()
         NS_FAILED(rv)) return NS_ERROR_FAILURE;
     nsCAutoString keyName("Software\\Clients\\Mail\\");
 
-    nsCAutoString appName (NS_ConvertUCS2toUTF8(vendorName()).get());
+    nsCAutoString appName;
+    NS_CopyUnicodeToNative(vendorName(), appName);
     if (!appName.IsEmpty()) {
         keyName.Append(appName.get());
 
@@ -518,9 +524,11 @@ nsresult nsMapiRegistryUtils::setDefaultMailClient()
                                       getter_Copies(defaultMailTitle));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
+        nsCAutoString nativeTitle;
+        NS_CopyUnicodeToNative(defaultMailTitle, nativeTitle);
         rv = SetRegistryKey(HKEY_LOCAL_MACHINE, 
              keyName.get(), 
-             "", NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(defaultMailTitle).get()) ) ; 
+             "", NS_CONST_CAST(char *, nativeTitle.get()) ) ; 
     }
     else
         rv = NS_ERROR_FAILURE;
@@ -529,9 +537,9 @@ nsresult nsMapiRegistryUtils::setDefaultMailClient()
         if (NS_FAILED(rv)) return rv ;
 
         nsCAutoString dllPath (thisApp) ;
-        PRInt32 index = dllPath.RFind("\\");
-        if (index != kNotFound)
-            dllPath.Truncate(index + 1);
+        char* pathSep = (char *) _mbsrchr((const unsigned char *) thisApp.get(), '\\');
+        if (pathSep) 
+            dllPath.Truncate(pathSep - thisApp.get() + 1);
         dllPath += "mozMapi32.dll";
         rv = SetRegistryKey(HKEY_LOCAL_MACHINE, 
                             keyName.get(), "DLLPath", 
@@ -629,7 +637,8 @@ nsresult nsMapiRegistryUtils::unsetDefaultMailClient() {
                                       "HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail", name);
     // Use vendorName instead of brandname since brandName is product name
     // and has more than just the name of the application
-    nsCAutoString appName (NS_ConvertUCS2toUTF8(vendorName()).get());
+    nsCAutoString appName;
+    NS_CopyUnicodeToNative(vendorName(), appName);
 
     if (!name.IsEmpty() && !appName.IsEmpty() && name.Equals(appName)) {
         nsCAutoString keyName("HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\");
@@ -646,9 +655,10 @@ nsresult nsMapiRegistryUtils::unsetDefaultMailClient() {
                        keyName.get(), 
                        "", (char *)appPath.get());
             if (NS_SUCCEEDED(result)) {
-                PRInt32 index = appPath.RFind("\\");
-                if (index != kNotFound)
-                    appPath.Truncate(index + 1);
+                char* pathSep = (char *)
+                    _mbsrchr((const unsigned char *) appPath.get(), '\\');
+                if (pathSep) 
+                    appPath.Truncate(pathSep - appPath.get() + 1);
                 appPath += "mozMapi32.dll";
                 keyName.Assign("Software\\Clients\\Mail\\");
                 keyName.Append(appName.get());
