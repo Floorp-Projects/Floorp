@@ -344,6 +344,7 @@ sub BuildDist()
 
 	# XPAPPS
    InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",						"$distdirectory:xpfe:");
+   InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",						"$distdirectory:xpfe:");
 
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
 	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
