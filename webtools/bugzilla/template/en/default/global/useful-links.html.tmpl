@@ -106,9 +106,11 @@
         [% END %]
 
         [% FOREACH q = user.queries %]
-          [% " | " IF print_pipe %]
-          <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]"><nobr>[% q.name FILTER html %]</nobr></a>
-          [% print_pipe = 1 %]
+          [% IF q.linkinfooter %]
+            [% " | " IF print_pipe %]
+            <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]"><nobr>[% q.name FILTER html %]</nobr></a>
+            [% print_pipe = 1 %]
+          [% END %]
         [% END %]
       </td>
     </tr>

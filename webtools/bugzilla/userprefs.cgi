@@ -301,7 +301,21 @@ sub DoSavedSearches() {
     $vars->{'queries'} = Bugzilla->user->queries;
 }
 
-# No SaveSavedSearches() because this panel has no changeable fields (yet).
+sub SaveSavedSearches() {
+    my $cgi = Bugzilla->cgi;
+    my $dbh = Bugzilla->dbh;
+    my @queries = @{Bugzilla->user->queries};
+    my $sth = $dbh->prepare("UPDATE namedqueries SET linkinfooter = ?
+                          WHERE userid = ?
+                          AND name = ?");
+    foreach my $q (@queries) {
+        my $linkinfooter = 
+            defined($cgi->param("linkinfooter_$q->{'name'}")) ? 1 : 0;
+            $sth->execute($linkinfooter, $userid, $q->{'name'});
+    }
+
+    Bugzilla->user->flush_queries_cache;
+}
 
 
 ###############################################################################
@@ -340,6 +354,7 @@ SWITCH: for ($current_tab_name) {
         last SWITCH;
     };
     /^saved-searches$/ && do {
+        SaveSavedSearches() if $cgi->param('dosave');
         DoSavedSearches();
         last SWITCH;
     };

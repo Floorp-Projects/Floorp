@@ -22,13 +22,41 @@
 <p>Your saved searches are as follows:</p>
 
 <blockquote>
-  <table cellpadding="3">  
+  <table border="1" cellpadding="3">  
+    <tr>
+      <th>
+        Show in <br>
+        Footer
+      </th>
+      <th>
+        Search
+      </th>
+      <th>
+        Run
+      </th>
+      <th>
+        Edit
+      </th>
+      <th>
+        Forget
+      </th>
+    </tr>
     [% FOREACH q = queries %]
       <tr>
-        <td>[% q.name FILTER html %]:</td>
         <td>
-          <a href="buglist.cgi?[% q.query FILTER html %]">Run</a> |
-          <a href="query.cgi?[% q.query FILTER html %]">Edit</a> |
+          <input type="checkbox" 
+                 name="linkinfooter_[% q.name FILTER html %]"
+                 value="1"
+                 [% " checked" IF q.linkinfooter %]>
+        </td>
+        <td>[% q.name FILTER html %]</td>
+        <td>
+          <a href="buglist.cgi?[% q.query FILTER html %]">Run</a>
+        </td>
+        <td>
+          <a href="query.cgi?[% q.query FILTER html %]">Edit</a>
+        </td>
+        <td>
           <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
                    [% q.name FILTER html %]">Forget</a>
         </td>
