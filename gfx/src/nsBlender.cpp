@@ -403,6 +403,40 @@ NS_IMETHODIMP nsBlender::GetAlphas(const nsRect& aRect, nsDrawingSurface aBlack,
 }
 #endif // MOZ_XUL
 
+/**
+  This is a simple case for 8-bit blending. We treat the opacity as binary.
+*/
+static void Do8Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
+                     PRUint8 *aSImage, PRUint8 *aS2Image, PRUint8 *aDImage,
+                     PRInt32 aSLSpan, PRInt32 aDLSpan)
+{
+  if (aOpacity <= 0.0) {
+    return;
+  }
+
+  // OK, just do an opaque blend. Assume the rendered image had just
+  // 1-bit alpha.
+  PRIntn y;
+  if (!aS2Image) {
+    for (y = 0; y < aNumLines; y++) {
+      memcpy(aDImage, aSImage, aNumBytes);
+      aSImage += aSLSpan;
+      aDImage += aDLSpan;
+    }
+  } else {
+    for (y = 0; y < aNumLines; y++) {
+      for (int i = 0; i < aNumBytes; i++) {
+        if (aSImage[i] != aS2Image[i]) {
+          aDImage[i] = aSImage[i];
+        }
+      }
+      aSImage += aSLSpan;
+      aS2Image += aSLSpan;
+      aDImage += aDLSpan;
+    }
+  }
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsBlender.h
  *	@update 2/25/00 dwc
@@ -431,24 +465,14 @@ nsresult nsBlender::Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride,
         Do16Blend(aOpacity, aLines, aSrcBytes, aSrcBits, aDestBits,
                   aSecondSrcBits, aSrcStride, aDestStride, nsHighQual);
         break;
+
+    default:
+        Do8Blend(aOpacity, aLines, aSrcBytes, aSrcBits, aSecondSrcBits,
+               aDestBits, aSrcStride, aDestStride);
+        break;
   }
 
   return result;
-}
-
-/**
-  This is the simple case where the opacity == 1.0. We just copy the pixels.
-*/
-static void DoOpaqueBlend(PRInt32 aNumLines, PRInt32 aNumBytes,
-                          PRUint8 *aSImage, PRUint8 *aDImage,
-                          PRInt32 aSLSpan, PRInt32 aDLSpan)
-{
-  PRIntn y;
-  for (y = 0; y < aNumLines; y++) {
-    memcpy(aDImage, aSImage, aNumBytes);
-    aSImage += aSLSpan;
-    aDImage += aDLSpan;
-  }
 }
 
 /**
@@ -549,10 +573,8 @@ nsBlender::Do32Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
   // Handle simpler cases
   if (opacity256 <= 0) {
     return;
-  } else if (opacity256 >= 256) {
-    DoOpaqueBlend(aNumLines, aNumBytes, aSImage, aDImage, aSLSpan, aDLSpan);
-    return;
-  } else if (nsnull == aSecondSImage) {
+  }
+  if (nsnull == aSecondSImage) {
     DoSingleImageBlend(opacity256, aNumLines, aNumBytes, aSImage, aDImage, aSLSpan, aDLSpan);
     return;
   }
@@ -631,10 +653,8 @@ nsBlender::Do24Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
   // Handle simpler cases
   if (opacity256 <= 0) {
     return;
-  } else if (opacity256 >= 256) {
-    DoOpaqueBlend(aNumLines, aNumBytes, aSImage, aDImage, aSLSpan, aDLSpan);
-    return;
-  } else if (nsnull == aSecondSImage) {
+  }
+  if (nsnull == aSecondSImage) {
     DoSingleImageBlend(opacity256, aNumLines, aNumBytes, aSImage, aDImage, aSLSpan, aDLSpan);
     return;
   }
@@ -719,9 +739,6 @@ nsBlender::Do16Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
 
   // Handle simpler cases
   if (opacity256 <= 0) {
-    return;
-  } else if (opacity256 >= 256) {
-    DoOpaqueBlend(aNumLines, aNumBytes, aSImage, aDImage, aSLSpan, aDLSpan);
     return;
   }
 
