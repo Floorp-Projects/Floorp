@@ -15,19 +15,17 @@ err = addDirectory("Program",
 logComment("addDirectory() returned: " + err);
 
 // create the plugins folder next to mozilla 
-var pluginsParentFolder = getFolder(communicatorFolder, subFolder);
-var pluginsFolder = getFolder(pluginsParentFolder, "Plugins");
-var ignoreErr = dirCreate(pluginsFolder);
-logComment("dirCreate() returned: " + ignoreErr);
+// var pluginsParentFolder = getFolder(communicatorFolder, subFolder);
+// var pluginsFolder = getFolder(pluginsParentFolder, "Plugins");
+// ignoreErr = dirCreate(pluginsFolder);
+// logComment("dirCreate() returned: " + ignoreErr);
 
 // make an alias to the browser on the desktop 
 var desktopFolder = getFolder("Mac Desktop");
 var appFolder = getFolder("Communicator", subFolder);
-
-// XXX  temporarily commenting out fileMacAlias() till API is fixed
-// XXX  ignoreErr = fileMacAlias(appFolder,     "Mozilla",   // source
-// XXX                           desktopFolder, "Mozilla");  // target
-// XXX  logComment("fileMacAlias() returned: " + ignoreErr);
+var ignoreErr = fileMacAlias(appFolder,     "Mozilla",   // source
+                             desktopFolder, "Mozilla");  // target
+logComment("fileMacAlias() returned: " + ignoreErr);
 
 if (err==SUCCESS || err==REBOOT_NEEDED)
 {
