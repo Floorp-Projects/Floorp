@@ -524,7 +524,7 @@ NET_InitRDFCookieResources (void) ;
 
 PR_PUBLIC_API(void)
 RDF_AddCookieResource(char* name, char* path, char* host, char* expires) {
-  char* url = getMem(strlen(name) + strlen(host));
+  char* url = getMem(strlen(name) + strlen(host) + strlen(path));
   RDF_Resource ru;
   RDF_Resource hostUnit = RDF_GetResource(NULL, host, 0);
   if (!hostUnit) {
