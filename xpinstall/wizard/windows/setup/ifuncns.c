@@ -1913,19 +1913,23 @@ HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
   char    szBuf[MAX_BUF];
   char    szKey[MAX_BUF];
   char    szName[MAX_BUF];
+  char    szShortName[MAX_BUF];
   char    szValue[MAX_BUF];
   char    szDecrypt[MAX_BUF];
   char    szOverwriteKey[MAX_BUF];
   char    szOverwriteName[MAX_BUF];
   char    szSection[MAX_BUF];
   HKEY    hRootKey;
+  BOOL    bDone;
   BOOL    bDnu;
   BOOL    bOverwriteKey;
   BOOL    bOverwriteName;
   BOOL    bOSDetected;
   DWORD   dwIndex;
+  DWORD   dwNameIndex = 1;
   DWORD   dwType;
   DWORD   dwSize;
+  const DWORD   dwUpperLimit = 100;
   __int64 iiNum;
 
   dwIndex = 0;
@@ -1960,7 +1964,30 @@ HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
       else
         lstrcpy(szName, szBuf);
 
-      if(lstrcmpi(szOverwriteName, "FALSE") == 0)
+      if(lstrcmpi(szOverwriteName, "ENUMERATE") == 0)
+      {
+        bOverwriteName = FALSE;
+        lstrcpy(szShortName, szName);
+        wsprintf(szName, "%s%02d", szShortName, dwNameIndex++);
+
+        bDone = FALSE;
+        while(!bDone && (dwNameIndex < dwUpperLimit))
+        {
+          if(WinRegNameExists(hRootKey, szKey, szName))
+          {
+            GetWinReg(hRootKey, szKey, szName, szBuf, sizeof(szBuf));
+            if(lstrcmpi(szBuf, sgProduct.szAppPath) == 0)
+              bDone = TRUE;
+            else
+              wsprintf(szName, "%s%02d", szShortName, dwNameIndex++);
+          }
+          else
+            bDone = TRUE;
+        }
+        if(dwNameIndex >= dwUpperLimit)
+          return FO_ERROR_INCR_EXCEEDS_LIMIT;
+      }
+      else if(lstrcmpi(szOverwriteName, "FALSE") == 0)
         bOverwriteName = FALSE;
       else
         bOverwriteName = TRUE;
@@ -1985,6 +2012,7 @@ HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
                               szBuf,
                               sizeof(szBuf),
                               szFileIniConfig);
+
       if(lstrcmpi(szBuf, "TRUE") == 0)
         bDnu = TRUE;
       else
@@ -2002,8 +2030,7 @@ HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
        * If there are any, then compare against the global OS value to
        * make sure there's a match. */
       bOSDetected = TRUE;
-      if((*szBuf != '\0') &&
-        ((gSystemInfo.dwOSType & ParseOSType(szBuf)) == 0))
+      if( (*szBuf != '\0') && ((gSystemInfo.dwOSType & ParseOSType(szBuf)) == 0) )
         bOSDetected = FALSE;
 
       if(bOSDetected)
@@ -2015,17 +2042,18 @@ HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
                                 szBuf,
                                 sizeof(szBuf),
                                 szFileIniConfig);
-      if(ParseRegType(szBuf, &dwType))
-      {
-        /* create/set windows registry key here (string value)! */
-        SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName,
+
+        if(ParseRegType(szBuf, &dwType))
+        {
+          /* create/set windows registry key here (string value)! */
+          SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName,
                   dwType, (CONST LPBYTE)szValue, lstrlen(szValue), TRUE, bDnu);
-      }
-      else
-      {
-        iiNum = _atoi64(szValue);
-        /* create/set windows registry key here (binary/dword value)! */
-        SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName,
+        }
+        else
+        {
+          iiNum = _atoi64(szValue);
+          /* create/set windows registry key here (binary/dword value)! */
+          SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName,
                   dwType, (CONST LPBYTE)&iiNum, dwSize, TRUE, bDnu);
         }
       }
