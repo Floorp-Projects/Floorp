@@ -341,9 +341,6 @@ nsresult nsSocketTransportService::RemoveFromSelectList(nsSocketTransport* aTran
     }
   }
 
-#ifdef DEBUG_sspitzer
-  printf("mSelectFDSetCount = %d\n",mSelectFDSetCount);
-#endif
   return rv;
 }
 
