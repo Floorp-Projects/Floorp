@@ -1077,7 +1077,7 @@ nsJVMPluginTagInfo::GetCodeBase(const char* *result)
     const char* codebase;
     nsresult err = fPluginTagInfo->GetAttribute("codebase", &codebase);
     if (err == NS_OK && codebase != NULL) {
-        *result = fSimulatedCodebase;
+        *result = codebase;
         return NS_OK;
     }
 
