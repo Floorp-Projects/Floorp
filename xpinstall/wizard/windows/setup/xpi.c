@@ -37,10 +37,12 @@
 typedef HRESULT (_cdecl *XpiInit)(const char *, const char *aLogName, pfnXPIProgress);
 typedef HRESULT (_cdecl *XpiInstall)(const char *, const char *, long);
 typedef void    (_cdecl *XpiExit)(void);
+typedef BOOL    (WINAPI *SetDllPathProc)(const char*);
 
 static XpiInit          pfnXpiInit;
 static XpiInstall       pfnXpiInstall;
 static XpiExit          pfnXpiExit;
+static SetDllPathProc   pfnSetDllPath = NULL;
 
 static long             lFileCounter;
 static long             lBarberCounter;
@@ -70,6 +72,7 @@ HRESULT InitializeXPIStub()
   char szBuf[MAX_BUF];
   char szXPIStubFile[MAX_BUF];
   char szEGetProcAddress[MAX_BUF];
+  HANDLE hKernel;
 
   hXPIStubInst = NULL;
 
@@ -81,6 +84,15 @@ HRESULT InitializeXPIStub()
   AppendBackSlash(szBuf, sizeof(szBuf));
   lstrcat(szBuf, "bin");
   chdir(szBuf);
+
+  /* Windows XP SP1 changed DLL search path strategy, setting current dir */
+  /* is no longer sufficient. Use SetDLLDirectory() if available */
+  if ((hKernel = LoadLibrary("kernel32.dll")) != NULL)
+  {
+    pfnSetDllPath = (SetDllPathProc)GetProcAddress(hKernel, "SetDllDirectoryA");
+    if (pfnSetDllPath)
+      pfnSetDllPath(szBuf);
+  }
 
   /* build full path to xpistub.dll */
   lstrcpy(szXPIStubFile, szBuf);
@@ -129,6 +141,9 @@ HRESULT DeInitializeXPIStub()
     FreeLibrary(hXPIStubInst);
 
   chdir(szSetupDir);
+  if (pfnSetDllPath)
+    pfnSetDllPath(NULL);
+
   return(0);
 }
 
