@@ -558,3 +558,6 @@ Hook			The 'hook' is actually the oldest part of the Bonsai
 			successfully built the tree.  Those people are "on the
 			hook"; they are held responsible for any probs that
 			arise.
+
+			So, it works out to: the list of people who have
+			checked in since the tree was last closed.
