@@ -34,6 +34,7 @@ REQUIRES	= xpcom uconv unicharutil
 
 CPPSRCS		= \
 		nsEscape.cpp \
+		nsLinebreakConverter.cpp \
 		nsFileSpec.cpp \
 		nsFileSpecStreaming.cpp \
 		nsFileStream.cpp \
@@ -50,6 +51,7 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsEscape.h \
+		nsLinebreakConverter.h \
 		nsFileSpec.h \
 		nsFileSpecStreaming.h \
 		nsFileStream.h \
