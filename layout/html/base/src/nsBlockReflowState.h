@@ -212,6 +212,8 @@ public:
   void AddFloater(nsPlaceholderFrame* aPlaceholderFrame,
                   PRBool aInitialReflow);
 
+  PRBool CanPlaceFloater(const nsRect& aFloaterRect, PRUint8 aFloats);
+
   void PlaceFloater(nsPlaceholderFrame* aFloater, PRBool* aIsLeftFloater,
                     nsPoint* aNewOrigin);
 
@@ -2184,7 +2186,8 @@ nsBlockFrame::GetTopBlockChild()
     // can't skip over the line.
     const nsStyleText* styleText;
     GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) styleText);
-    if (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) {
+    if ((NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
+        (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace)) {
       // Whitespace is significant
       return nsnull;
     }
@@ -2241,37 +2244,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   WillReflowLine(aState, aLine);
 
   // Prepare the block reflow engine
-  nscoord compactMarginWidth = 0;
-  PRBool isCompactFrame = PR_FALSE;
   const nsStyleDisplay* display;
   frame->GetStyleData(eStyleStruct_Display,
                       (const nsStyleStruct*&) display);
-#if 0
-  nsBlockFrame* compactWithFrame;
-  switch (display->mDisplay) {
-  case NS_STYLE_DISPLAY_COMPACT:
-    compactWithFrame = FindFollowingBlockFrame(frame);
-    if (nsnull != compactWithFrame) {
-      const nsStyleSpacing* spacing;
-      nsMargin margin;
-      nsresult rv;
-      rv = compactWithFrame->GetStyleData(eStyleStruct_Spacing,
-                                          (const nsStyleStruct*&) spacing);
-      if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
-        nsHTMLReflowState::ComputeMarginFor(compactWithFrame,
-                                            &aState.mReflowState,
-                                            margin);
-        compactMarginWidth = margin.left;
-      }
-      isCompactFrame = PR_TRUE;
-    }
-    break;
-  }
-#endif
-
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
                            aState.mComputeMaxElementSize);
-  brc.SetCompactMarginWidth(compactMarginWidth);
   brc.SetNextRCFrame(aState.mNextRCFrame);
 
   // See if we should apply the top margin. If the block frame being
@@ -2404,21 +2381,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
       // Advance to new Y position
       nscoord newY = aLine->mBounds.YMost();
-      if (isCompactFrame) {
-        // For compact frames, we don't adjust the Y coordinate at all IF
-        // the compact frame ended up fitting in the margin space
-        // allocated for it.
-        nsRect r;
-        frame->GetRect(r);
-        if (r.width <= compactMarginWidth) {
-          // XXX margins will be wrong
-          // XXX ltr/rtl for horizontal placement within the margin area
-          // XXX vertical alignment with the compactWith frame's *first line*
-          newY = aState.mY;
-        }
-      }
       aState.mY = newY;
-//XXX      aLine->mCarriedOutTopMargin = brc.GetCarriedOutTopMargin();
       aLine->mCarriedOutBottomMargin = brc.GetCarriedOutBottomMargin();
 
       // Continue the block frame now if it didn't completely fit in
@@ -4063,7 +4026,8 @@ nsBlockFrame::MarkEmptyLines(nsIPresContext& aPresContext)
   // PRE-formatted content considers whitespace significant
   const nsStyleText* text;
   GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) text);
-  if (NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) {
+  if ((NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) ||
+      (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == text->mWhiteSpace)) {
     return;
   }
 
@@ -4291,6 +4255,99 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
   return PR_TRUE;
 }
 
+PRBool
+nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
+                                    PRUint8 aFloats)
+{
+  // If the current Y coordinate is not impacted by any floaters
+  // then by definition the floater fits.
+  PRBool result = PR_TRUE;
+  if (0 != mCurrentBand.GetFloaterCount()) {
+    if (mAvailSpaceRect.width < aFloaterRect.width) {
+      // The available width is too narrow (and its been impacted by a
+      // prior floater)
+      result = PR_FALSE;
+    }
+    else {
+      // At this point we know that there is enough horizontal space for
+      // the floater (somewhere). Lets see if there is enough vertical
+      // space.
+      if (mAvailSpaceRect.height < aFloaterRect.height) {
+        // The available height is too short. However, its possible that
+        // there is enough open space below which is not impacted by a
+        // floater.
+        //
+        // Compute the X coordinate for the floater based on its float
+        // type, assuming its placed on the current line. This is
+        // where the floater will be placed horizontally if it can go
+        // here.
+        nscoord x0;
+        if (NS_STYLE_FLOAT_LEFT == aFloats) {
+          x0 = mAvailSpaceRect.x;
+        }
+        else {
+          x0 = mAvailSpaceRect.XMost() - aFloaterRect.width;
+
+          // In case the floater is too big, don't go past the left edge
+          if (x0 < mAvailSpaceRect.x) {
+            x0 = mAvailSpaceRect.x;
+          }
+        }
+        nscoord x1 = x0 + aFloaterRect.width;
+
+        // Calculate the top and bottom y coordinates, again assuming
+        // that the floater is placed on the current line.
+        const nsMargin& borderPadding = BorderPadding();
+        nscoord y0 = mY - borderPadding.top;
+        if (y0 < 0) {
+          // CSS2 spec, 9.5.1 rule [4]: A floating box's outer top may not
+          // be higher than the top of its containing block.
+
+          // XXX It's not clear if it means the higher than the outer edge
+          // or the border edge or the inner edge?
+          y0 = 0;
+        }
+        nscoord y1 = y0 + aFloaterRect.height;
+
+        nscoord saveY = mY;
+        for (;;) {
+          // Get the available space at the new Y coordinate
+          mY += mAvailSpaceRect.height;
+          GetAvailableSpace();
+
+          if (0 == mCurrentBand.GetFloaterCount()) {
+            // Winner. This band has no floaters on it, therefore
+            // there can be no overlap.
+            break;
+          }
+
+          // Check and make sure the floater won't intersect any
+          // floaters on this band. The floaters starting and ending
+          // coordinates must be entirely in the available space.
+          if ((x0 < mAvailSpaceRect.x) || (x1 > mAvailSpaceRect.XMost())) {
+            // The floater can't go here.
+            result = PR_FALSE;
+            break;
+          }
+
+          // See if there is now enough height for the floater.
+          if (y1 < mY + mAvailSpaceRect.height) {
+            // Winner. The bottom Y coordinate of the floater is in
+            // this band.
+            break;
+          }
+        }
+
+        // Restore Y coordinate and available space information
+        // regardless of the outcome.
+        mY = saveY;
+        GetAvailableSpace();
+      }
+    }
+  }
+  return result;
+}
+
 void
 nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
                                  PRBool* aIsLeftFloater,
@@ -4324,9 +4381,13 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // Get the floaters bounding box and margin information
   nsRect region;
   floater->GetRect(region);
-  nsMargin floaterMargin;
+
   // XXX sometimes when we reflow the floater we already have this value...
-  nsHTMLReflowState::ComputeMarginFor(floater, &mReflowState, floaterMargin);
+  // XXX_performance fix this! It's slow!
+  nsSize kidAvailSize(mAvailSpaceRect.width, NS_UNCONSTRAINEDSIZE);
+  nsHTMLReflowState reflowState(mPresContext, mReflowState,
+                                floater, kidAvailSize);
+  const nsMargin& floaterMargin = reflowState.computedMargin;
 
   // Adjust the floater size by its margin. That's the area that will
   // impact the space manager.
@@ -4335,31 +4396,18 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
 
   // Find a place to place the floater. The CSS2 spec doesn't want
   // floaters overlapping each other or sticking out of the containing
-  // block (CSS2 spec section 9.5.1, see the rule list).
+  // block if possible (CSS2 spec section 9.5.1, see the rule list).
   NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
                (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
                "invalid float type");
 
-  // While there is not enough room for the floater, clear past
-  // other floaters until there is room (or the band is not impacted
-  // by a floater).
-  while ((mAvailSpaceRect.width < region.width) &&
-         (mAvailSpaceRect.width < mContentArea.width)) {
-    // The CSS2 spec says that floaters should be placed as high as
-    // possible. We accomodate this easily by noting that if the band
-    // is not the full width of the content area then it must have
-    // been impacted by a floater. And we know that the height of the
-    // band will be the height of the shortest floater, therefore we
-    // adjust mY by that distance and keep trying until we have enough
-    // space for this floater.
-#ifdef NOISY_FLOATER_CLEARING
-    mBlock->ListTag(stdout);
-    printf(": clearing floater during floater placement: ");
-    printf("availWidth=%d regionWidth=%d,%d(w/o margins) contentWidth=%d\n",
-           mAvailSpaceRect.width, region.width,
-           region.width - floaterMargin.left - floaterMargin.right,
-           mContentArea.width);
-#endif
+  // While there is not enough room for the floater, clear past other
+  // floaters until there is room (or the band is not impacted by a
+  // floater).
+  // 
+  // Note: The CSS2 spec says that floaters should be placed as high
+  // as possible.
+  while (!CanPlaceFloater(region, floaterDisplay->mFloats)) {
     mY += mAvailSpaceRect.height;
     GetAvailableSpace();
   }
