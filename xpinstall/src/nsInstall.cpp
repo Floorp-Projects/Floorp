@@ -1760,10 +1760,27 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
     PRInt32 result;
     nsFileSpec *extractHereSpec;
 
-    NS_ASSERTION(aSuggestedName != nsnull, "Can't extract to no name!");
-    if(aSuggestedName == nsnull)
+    if (aSuggestedName == nsnull)
     {
-      return nsInstall::INVALID_ARGUMENTS;
+        nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+        nsString tempFileName = "xpinstall";
+
+        // Get the extension of the file in the JAR
+        result = aJarfile.RFind(".");
+        if (result != -1)
+        {
+            // We found the extension; add it to the tempFileName string
+            nsString extension;
+            aJarfile.Right(extension, (aJarfile.Length() - result) );
+            tempFileName += extension;
+        }
+
+        tempFile += tempFileName;
+
+        // Create a temporary file to extract to
+        tempFile.MakeUnique();
+
+        extractHereSpec = new nsFileSpec(tempFile);
     }
     else
     {
