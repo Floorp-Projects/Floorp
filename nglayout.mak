@@ -205,7 +205,6 @@ pull_editor
 
 pull_seamonkey:
 	cd $(MOZ_SRC)\.
-#	$(CVSCO_TAG) -A NSPR
 	$(CVSCO_LIZARD) SeaMonkeyEditor
 
 pull_lizard:
@@ -216,7 +215,7 @@ pull_lizard:
 	$(CVSCO_LIZARD) $(MOZ_TOP)/dbm
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/zlib
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/libutil
-	$(CVSCO_TAG) -r NSPRPUB_RELEASE_3_0 $(MOZ_TOP)/nsprpub
+	$(CVSCO_LIZARD) $(MOZ_TOP)/nsprpub
 	$(CVSCO_LIZARD) $(MOZ_TOP)/sun-java
 	$(CVSCO_LIZARD) $(MOZ_TOP)/nav-java
 	$(CVSCO_LIZARD) $(MOZ_TOP)/js
