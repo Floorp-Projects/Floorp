@@ -56,7 +56,8 @@ class nsCommonWidget : public nsBaseWidget {
   void InitMouseEvent(nsMouseEvent &aEvent, PRUint32 aMsg);
   void InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
 		       GdkEventButton *aEvent);
-  void InitMouseScrollEvent(nsMouseScrollEvent &aEvent, PRUint32 aMsg);
+  void InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
+			    GdkEventScroll *aGdkEvent, PRUint32 aMsg);
   void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aEvent, PRUint32 aMsg);
 
   void DispatchGotFocusEvent(void);

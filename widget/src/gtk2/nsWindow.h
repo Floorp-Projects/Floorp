@@ -161,6 +161,8 @@ class nsWindow : public nsCommonWidget {
 				     GdkEventKey *aEvent);
   gboolean           OnKeyReleaseEvent(GtkWidget *aWidget,
 				       GdkEventKey *aEvent);
+  void               OnScrollEvent(GtkWidget *aWidget,
+				   GdkEventScroll *aEvent);
   void               SendResizeEvent(nsRect &aRect,
 				     nsEventStatus &aStatus);
 
