@@ -591,11 +591,11 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
 
   // Ok, add the header to this protocol string information...
   if (mPostString.IsEmpty())
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s", 
-                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&user=%s", 
+                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION, "RHPizzarro");
   else
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&", 
-                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&user=%s&", 
+                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION, "RHPizzarro");
   if (!prefixStr)
   {
     rv = NS_ERROR_OUT_OF_MEMORY;

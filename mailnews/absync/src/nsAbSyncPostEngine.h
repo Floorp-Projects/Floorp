@@ -31,6 +31,7 @@
 #include "nsCURILoader.h"
 #include "nsIURIContentListener.h"
 #include "nsIURI.h"
+#include "nsIAbSyncMojo.h"
 
 //
 // Callback declarations for URL completion
@@ -58,14 +59,9 @@ public:
   // 
   NS_IMETHOD StillRunning(PRBool *running);
 
-  NS_IMETHOD FireURLRequest(nsIURI *aURL,  nsPostCompletionCallback cb, 
-                            void *tagData, const char *postData);
+  NS_IMETHOD FireURLRequest(nsIURI *aURL, const char *postData);
 
   NS_IMETHOD KickTheSyncOperation();
-
-  NS_IMETHOD Initialize(nsOutputFileStream *fOut,
-						nsPostCompletionCallback cb,
-						void *tagData);
 
   static NS_METHOD    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
@@ -97,9 +93,10 @@ private:
 
   char                            *mContentType;  // The content type retrieved from the server
   char                            *mCharset;      // The charset retrieved from the server
-  void                            *mTagData;      // Tag data for callback...
-  nsPostCompletionCallback        mCallback;      // Callback to call once the file is saved...
+
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we post the url
+  char                            *mCookie;
+  char                            *mAuthSpec;
 
   PRInt32                         mMessageSize;   // Size of POST request...
 
@@ -108,9 +105,10 @@ private:
 
   // Since we need to do authentication a bit differently, do it here!
   PRBool                          mAuthenticationRunning;
-
+  nsCOMPtr<nsIAbSyncMojo>         mSyncMojo;
   char                            *mSyncSpec;
   PRInt32                         mSyncPort;
+
   char                            *mSyncProtocolRequest;
 }; 
 

@@ -1,0 +1,41 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+*/
+#include "nsISupports.idl"
+#include "nsIStreamListener.idl"
+
+%{C++
+#define NS_AB_SYNC_MOJO_CID \
+  { 0x842cc263, 0x5255, 0x1144,   \
+  { 0xcc, 0xb8, 0x44, 0x45, 0x53, 0xff, 0x0, 0x2 } }
+  
+#define NS_AB_SYNC_MOJO_PROGID			\
+  "component://netscape/absync/absyncmojo"
+%}  
+  
+[scriptable, uuid(74872D27-0A4E-11d4-8FD6-BEEF24A7D144)]
+interface nsIAbSyncMojo : nsISupports {
+	/*
+	 * This is the primary interface for performing AB Sync mojo operations
+	 */
+	void		StartAbSyncMojo(in nsIStreamListener aListener);
+	void		GetAbSyncMojoResults(out string aMojoString);
+};

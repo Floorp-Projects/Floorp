@@ -25,6 +25,7 @@ MODULE=absync
 
 XPIDLSRCS=\
 	      .\nsIAbSync.idl		\
+	      .\nsIAbSyncMojo.idl		\
 	      .\nsIAbSyncListener.idl		\
       	.\nsIAbSyncPostEngine.idl			\
       	.\nsIAbSyncPostListener.idl			\
