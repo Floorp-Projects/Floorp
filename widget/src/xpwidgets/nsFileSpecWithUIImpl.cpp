@@ -118,7 +118,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
     if (NS_FAILED(rv))
     	return rv;
     
-    fileWidget->SetDefaultString(suggestedLeafName);
+    fileWidget->SetDefaultString(NS_ConvertASCIItoUCS2(suggestedLeafName));
 
     SetFileWidgetFilterList(fileWidget, outMask, nsnull, nsnull);
 
@@ -127,7 +127,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
 
     nsFileSpec spec;
     
-    nsString winTitle(windowTitle);
+    nsString winTitle; winTitle.AssignWithConversion(windowTitle);
 
     nsFileDlgResults result = fileWidget->PutFile(parentWidget(mParentWindow), winTitle, spec);
     if (result != nsFileDlgResults_OK)
@@ -172,43 +172,43 @@ void nsFileSpecWithUIImpl::SetFileWidgetFilterList(
 	nextFilter = filters;
 	if (mask & eAllReadable)
 	{
-		*nextTitle++ = "All Readable Files";
-		*nextFilter++ = "*.eml; *.txt; *.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png";
+		(nextTitle++)->AssignWithConversion("All Readable Files");
+		(nextFilter++)->AssignWithConversion("*.eml; *.txt; *.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png");
 	}
   if (mask & eMailFiles)
   {
-    *nextTitle++ = "Mail Files (*.eml)";
-    *nextFilter++ = "*.eml";
+    (nextTitle++)->AssignWithConversion("Mail Files (*.eml)");
+    (nextFilter++)->AssignWithConversion("*.eml");
   }
 	if (mask & eHTMLFiles)
 	{
-		*nextTitle++ = "HTML Files (*.htm; *.html)";
-		*nextFilter++ = "*.htm; *.html";
+		(nextTitle++)->AssignWithConversion("HTML Files (*.htm; *.html)");
+		(nextFilter++)->AssignWithConversion("*.htm; *.html");
 	}
 	if (mask & eXMLFiles)
 	{
-		*nextTitle++ = "XML Files (*.xml)";
-		*nextFilter++ =  "*.xml";
+		(nextTitle++)->AssignWithConversion("XML Files (*.xml)");
+		(nextFilter++)->AssignWithConversion("*.xml");
 	}
 	if (mask & eImageFiles)
 	{
-		*nextTitle++ = "Image Files (*.gif; *.jpg; *.jpeg; *.png)";
-		*nextFilter++ = "*.gif; *.jpg; *.jpeg; *.png";
+		(nextTitle++)->AssignWithConversion("Image Files (*.gif; *.jpg; *.jpeg; *.png)");
+		(nextFilter++)->AssignWithConversion("*.gif; *.jpg; *.jpeg; *.png");
 	}
   if (mask & eTextFiles)
   {
-    *nextTitle++ = "Text Files (*.txt)";
-    *nextFilter++ = "*.txt";
+    (nextTitle++)->AssignWithConversion("Text Files (*.txt)");
+    (nextFilter++)->AssignWithConversion("*.txt");
   }
 	if (mask & eExtraFilter)
 	{
-		*nextTitle++ = inExtraFilterTitle;
-		*nextFilter++ = inExtraFilter;
+		(nextTitle++)->AssignWithConversion(inExtraFilterTitle);
+		(nextFilter++)->AssignWithConversion(inExtraFilter);
 	}
 	if (mask & eAllFiles)
 	{
-		*nextTitle++ = "All Files";
-		*nextFilter++ = "*.*";
+		(nextTitle++)->AssignWithConversion("All Files");
+		(nextFilter++)->AssignWithConversion("*.*");
 	}
 
 	fileWidget->SetFilterList(nextFilter - filters, titles, filters);
@@ -255,7 +255,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseInputFile(
   SetFileWidgetFilterList(fileWidget, inMask, 
                           inExtraFilterTitle, inExtraFilter);
   SetFileWidgetStartDir(fileWidget);
-  nsString winTitle(inTitle);
+  nsString winTitle; winTitle.AssignWithConversion(inTitle);
 	if (fileWidget->GetFile(parentWidget(mParentWindow), winTitle, spec) != nsFileDlgResults_OK)
 		rv = NS_FILE_FAILURE;
   else
@@ -280,7 +280,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseDirectory(const char *title, char **_r
 		return rv;
     SetFileWidgetStartDir(fileWidget);
     nsFileSpec spec;
-	if (fileWidget->GetFolder(nsnull, title, spec) != nsFileDlgResults_OK)
+	if (fileWidget->GetFolder(nsnull, NS_ConvertASCIItoUCS2(title), spec) != nsFileDlgResults_OK)
 		rv = NS_FILE_FAILURE;
 
   rv = mBaseFileSpec->SetFromFileSpec(spec);

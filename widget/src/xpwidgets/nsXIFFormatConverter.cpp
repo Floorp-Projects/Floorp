@@ -168,14 +168,16 @@ nsXIFFormatConverter::CanConvert(const char *aFromDataFlavor, const char *aToDat
 {
   if ( !_retval )
     return NS_ERROR_INVALID_ARG;
+
+    // STRING USE WARNING: reduce conversions here?
   
   *_retval = PR_FALSE;
-  nsAutoString fromFlavor ( aFromDataFlavor );
-  if ( fromFlavor.Equals(kXIFMime) ) {
-    nsAutoString toFlavor ( aToDataFlavor );
-    if ( toFlavor.Equals(kHTMLMime) )
+  nsAutoString fromFlavor; fromFlavor.AssignWithConversion( aFromDataFlavor );
+  if ( fromFlavor.EqualsWithConversion(kXIFMime) ) {
+    nsAutoString toFlavor; toFlavor.AssignWithConversion( aToDataFlavor );
+    if ( toFlavor.EqualsWithConversion(kHTMLMime) )
       *_retval = PR_TRUE;
-    else if ( toFlavor.Equals(kUnicodeMime) )
+    else if ( toFlavor.EqualsWithConversion(kUnicodeMime) )
       *_retval = PR_TRUE;
 #if NOT_NOW
 // pinkerton
@@ -346,7 +348,7 @@ NS_IMETHODIMP
 nsXIFFormatConverter::ConvertFromXIFToUnicode(const nsAutoString & aFromStr, nsAutoString & aToStr)
 {
   // create the parser to do the conversion.
-  aToStr = "";
+  aToStr.SetLength(0);
   nsCOMPtr<nsIParser> parser;
   nsresult rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, NS_GET_IID(nsIParser),
                                                      getter_AddRefs(parser));
@@ -365,7 +367,7 @@ nsXIFFormatConverter::ConvertFromXIFToUnicode(const nsAutoString & aFromStr, nsA
     rv = NS_NewXIFDTD(getter_AddRefs(dtd));
     if ( dtd ) {
       parser->RegisterDTD(dtd);
-      parser->Parse(aFromStr, 0, "text/xif",PR_FALSE,PR_TRUE);           
+      parser->Parse(aFromStr, 0, NS_ConvertASCIItoUCS2("text/xif"),PR_FALSE,PR_TRUE);           
     }
   }
   
@@ -380,7 +382,7 @@ nsXIFFormatConverter::ConvertFromXIFToUnicode(const nsAutoString & aFromStr, nsA
 NS_IMETHODIMP
 nsXIFFormatConverter::ConvertFromXIFToHTML(const nsAutoString & aFromStr, nsAutoString & aToStr)
 {
-  aToStr = "";
+  aToStr.SetLength(0);
   nsCOMPtr<nsIParser> parser;
   nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                              nsnull, 
@@ -400,7 +402,7 @@ nsXIFFormatConverter::ConvertFromXIFToHTML(const nsAutoString & aFromStr, nsAuto
     rv = NS_NewXIFDTD(getter_AddRefs(dtd));
     if ( dtd ) {
       parser->RegisterDTD(dtd);
-      parser->Parse(aFromStr, 0, "text/xif",PR_FALSE,PR_TRUE);           
+      parser->Parse(aFromStr, 0, NS_ConvertASCIItoUCS2("text/xif"),PR_FALSE,PR_TRUE);           
     }
   }
   return NS_OK;
@@ -415,9 +417,9 @@ nsXIFFormatConverter::ConvertFromXIFToAOLMail(const nsAutoString & aFromStr, nsA
 {
   nsAutoString html;
   if (NS_OK == ConvertFromXIFToHTML(aFromStr, html)) {
-    aToStr = "<HTML>";
+    aToStr.AssignWithConversion("<HTML>");
     aToStr.Append(html);
-    aToStr.Append("</HTML>");
+    aToStr.AppendWithConversion("</HTML>");
   }
   return NS_OK;
 }

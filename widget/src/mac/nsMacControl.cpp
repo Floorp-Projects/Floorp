@@ -64,7 +64,6 @@ nsMacControl::nsMacControl()
 	mControl		= nsnull;
 	mControlType	= pushButProc;
 
-	mLastLabel = "";
 	mLastBounds.SetRect(0,0,0,0);
 	mLastValue = 0;
 	mLastHilite = 0;
@@ -450,13 +449,13 @@ void nsMacControl::Str255ToString(const Str255& aStr255, nsString& aText)
 		PRInt32 outLength = 512;
 		rv = mUnicodeDecoder->Convert((char *) &aStr255[1], &inLength, buffer, &outLength);
 		if (NS_SUCCEEDED(rv)) {
-			aText.SetString(buffer, outLength);
+			aText.Assign(buffer, outLength);
 		}
 	}
 	
 	if (NS_FAILED(rv)) {
 //		NS_ASSERTION(0, "error: charset covnersion");
-		aText.SetString((char *) &aStr255[1], aStr255[0]);
+		aText.AssignWithConversion((char *) &aStr255[1], aStr255[0]);
 	}
 }
 
@@ -603,7 +602,7 @@ void nsMacControl::GetFileSystemCharset(nsString & fileSystemCharset)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.SetString("x-mac-roman");
+		  aCharset.AssignWithConversion("x-mac-roman");
   }
   fileSystemCharset = aCharset;
 }

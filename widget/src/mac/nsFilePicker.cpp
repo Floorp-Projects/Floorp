@@ -518,7 +518,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::SetDefaultString(const char *aString)
 {
-  mDefault = aString;
+  mDefault.AssignWithConversion(aString);
   return NS_OK;
 }
 

@@ -774,10 +774,10 @@ nsBaseWidget::debug_GuiEventToString(nsGUIEvent * aGuiEvent)
 {
   NS_ASSERTION(nsnull != aGuiEvent,"cmon, null gui event.");
 
-  nsAutoString eventName = "UNKNOWN";
+  nsAutoString eventName; eventName.AssignWithConversion("UNKNOWN");
 
 #define _ASSIGN_eventName(_value,_name)\
-case _value: eventName = _name ; break
+case _value: eventName.AssignWithConversion(_name) ; break
 
   switch(aGuiEvent->message)
   {
@@ -844,7 +844,7 @@ case _value: eventName = _name ; break
       
       sprintf(buf,"UNKNOWN: %d",aGuiEvent->message);
       
-      eventName = buf;
+      eventName.AssignWithConversion(buf);
     }
     break;
   }
@@ -898,7 +898,7 @@ static PRBool debug_GetCachedBoolPref(const char * aPrefName)
 
   for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
   {
-	  if (nsAutoString(debug_PrefValues[i].name).Equals(aPrefName))
+	  if (NS_ConvertASCIItoUCS2(debug_PrefValues[i].name).EqualsWithConversion(aPrefName))
 	  {
 		  return debug_PrefValues[i].value;
 	  }
@@ -913,7 +913,7 @@ static void debug_SetCachedBoolPref(const char * aPrefName,PRBool aValue)
 
   for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
   {
-	  if (nsAutoString(debug_PrefValues[i].name).Equals(aPrefName))
+	  if (NS_ConvertASCIItoUCS2(debug_PrefValues[i].name).EqualsWithConversion(aPrefName))
 	  {
 		  debug_PrefValues[i].value = aValue;
 
@@ -1031,11 +1031,13 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
 
   if (!debug_GetCachedBoolPref("nglayout.debug.event_dumping"))
     return;
+
+  nsCAutoString tempString; tempString.AssignWithConversion(debug_GuiEventToString(aGuiEvent).GetUnicode());
   
   fprintf(aFileOut,
           "%4d %-26s widget=%-8p name=%-12s id=%-8p pos=%d,%d\n",
           _GetPrintCount(),
-          (const char *) nsCAutoString(debug_GuiEventToString(aGuiEvent)),
+          (const char *) tempString,
           (void *) aWidget,
           (const char *) aWidgetName,
           (void *) (aWindowID ? aWindowID : 0x0),

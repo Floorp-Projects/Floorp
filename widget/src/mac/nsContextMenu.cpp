@@ -183,8 +183,8 @@ NS_METHOD nsContextMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  mMenuItemVoidArray.AppendElement(supports);
       
 	  nsString label;
-	  nsString labelHack = " ";
-	  nsString tmp = "-";
+	  nsString labelHack; labelHack.AssignWithConversion(" ");
+	  nsString tmp; tmp.AssignWithConversion("-");
 	  aMenuItem->GetLabel(label);
 	  PRUnichar slash = tmp.CharAt(0);
 	  char* menuLabel;
@@ -444,12 +444,12 @@ nsEventStatus nsContextMenu::MenuConstruct(
         nsString menuitemNodeType;
         nsString menuitemName;
         menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType.Equals("menuitem")) {
+        if (menuitemNodeType.EqualsWithConversion("menuitem")) {
           // LoadMenuItem
           LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
-        } else if (menuitemNodeType.Equals("menuseparator")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menuseparator")) {
           AddSeparator();
-        } else if (menuitemNodeType.Equals("menu")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menu")) {
           // Load a submenu
           LoadSubMenu(this, menuitemElement, menuitemNode);
         }
@@ -527,9 +527,9 @@ void nsContextMenu::LoadMenuItem(
   nsString menuitemName;
   nsString menuitemCmd;
 
-  menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
-  menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
-  menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), disabled);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuitemName);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, NS_GET_IID(nsIMenuItem), (void**)&pnsMenuItem);
@@ -550,7 +550,7 @@ void nsContextMenu::LoadMenuItem(
 		return;
     }
     
-    nsAutoString cmdAtom("oncommand");
+    nsAutoString cmdAtom; cmdAtom.AssignWithConversion("oncommand");
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
@@ -562,7 +562,7 @@ void nsContextMenu::LoadMenuItem(
     pnsMenuItem->SetDOMElement(domElement);
     pnsMenuItem->SetDOMNode(menuitemNode);
 
-	if(disabled.Equals(NS_STRING_TRUE) )
+	if(disabled.EqualsWithConversion(NS_STRING_TRUE) )
 		::DisableMenuItem(mMacMenuHandle, menuitemIndex + 1);
     else
     	::EnableMenuItem(mMacMenuHandle, menuitemIndex + 1);
@@ -579,7 +579,7 @@ void nsContextMenu::LoadSubMenu(
   nsIDOMNode    * menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(nsAutoString("value"), menuName);
+  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu

@@ -337,7 +337,7 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 
 										// paste text
 										nsString str;
-										str.SetString((char*)*scrapH, scrapLen);
+										str.AssignWithConversion((char*)*scrapH, scrapLen);
 										PRUint32 startSel, endSel;
 										GetSelection(&startSel, &endSel);
 										PRUint32 outSize;
@@ -535,7 +535,7 @@ NS_METHOD  nsTextWidget::GetText(nsString& aTextBuffer, PRUint32 /*aBufferSize*/
 	{
 		::GetControlData(mControl, kControlNoPart, textTag, textSize, (Ptr)str, &textSize);
 		aTextBuffer.SetLength(0);
-		aTextBuffer.Append(str, textSize);
+		aTextBuffer.AppendWithConversion(str, textSize);
 		aSize = textSize;
 		delete [] str;
 	}
@@ -606,7 +606,7 @@ NS_METHOD  nsTextWidget::InsertText(const nsString &aText, PRUint32 aStartPos, P
 		if (aEndPos < aStartPos)
 			aEndPos = aStartPos;
 		textStr.Cut(aStartPos, aEndPos - aStartPos);
-		textStr.Insert((nsString &)aText, aStartPos, aText.Length());
+		textStr.Insert(aText, aStartPos);
 	}
 
   aSize = textStr.Length();
