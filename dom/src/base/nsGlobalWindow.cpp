@@ -2983,6 +2983,34 @@ GlobalWindowImpl::Close()
     return NS_OK;
   }
 
+  // Fire a DOM event notifying listeners that this window is about to
+  // be closed. The tab UI code may choose to cancel the default
+  // action for this event, if so, we won't actually close the window
+  // (since the tab UI code will close the tab in stead). Sure, this
+  // could be abused by content code, but do we care? I don't think
+  // so...
+
+  nsCOMPtr<nsIDOMDocumentEvent> doc(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOMEvent> event;
+
+  if (doc) {
+    doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  }
+
+  if (event) {
+    event->InitEvent(NS_LITERAL_STRING("DOMWindowClose"), PR_TRUE, PR_TRUE);
+
+    PRBool executeDefault = PR_TRUE;
+    DispatchEvent(event, &executeDefault);
+
+    if (!executeDefault) {
+      // Someone chose to prevent the default action for this event,
+      // if so, let's not close this window after all...
+
+      return NS_OK;
+    }
+  }
+
   // Note: the basic security check, rejecting windows not opened through JS,
   // has been removed. This was approved long ago by ...you're going to call me
   // on this, aren't you... well it was. And anyway, a better means is coming.
