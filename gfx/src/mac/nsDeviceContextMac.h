@@ -79,7 +79,10 @@ protected:
 public:
   static bool GetMacFontNumber(const nsString& aFontName, short &fontNum);
 
-	static const PRUint32		kPixelsPerInch;
+private:
+	static PRUint32		mPixelsPerInch;
+public:
+	static PRUint32		GetScreenResolution();
 };
 
 #endif /* nsDeviceContextMac_h___ */
