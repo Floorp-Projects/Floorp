@@ -36,13 +36,14 @@
 
   <html>&pnl2.intro.text;</html> 
   <html>&pnl2.pname.label;</html> 
+  <!-- spank me -->
   <html:input type="text" id="ProfileName" value="&pnl2.defaultPName.label;" onblur="updateProfileName();"/>
   <html>&pnl2.pdir.label;</html> 
   <box id="dirbox" autostretch="never">
     <text id="ProfileDir" flex="1" crop="right"/>
     <box orient="vertical">
-      <titledbutton class="push" value="&button.choosefolder.label;" onclick="chooseProfileFolder(null,true);"/>
-      <titledbutton class="push" id="useDefault" value="&button.usedefault.label;" onclick="setDisplayToDefaultFolder();" style="display: none;"/>
+      <button value="&button.choosefolder.label;" oncommand="chooseProfileFolder(null,true);"/>
+      <button id="useDefault" value="&button.usedefault.label;" oncommand="setDisplayToDefaultFolder();" style="display: none;"/>
     </box>
   </box>
   <spring flex="1"/>

@@ -15,29 +15,11 @@
 
   <html:script language="javascript" src="chrome://profile/content/deleteProfile.js"/>
   
-<box align="horizontal" flex="100%">
-  <spring style="width: 7px;"/>
-  <box align="vertical" flex="100%">
-    <html:div class="label">&intro;</html:div> 
-    <html:div class="label">&question;</html:div> 
-    <spring style="height: 10px;"/>
-    <html:div class="separator" align="horizontal"/>
-
-    <box align="horizontal">
-      <spring flex="100%"/>
-      <box id="okCancelButtons" class="Button1"/>
-      <!-- old buttons
-      <titledbutton value="&delete.yes.label;" class="dialog padded push" onclick="opener.DeleteProfile(true);window.close();" />
-      <spring flex="20%"/>
-      <titledbutton value="&delete.no.label;" class="dialog padded push" onclick="opener.DeleteProfile(false);window.close();" />
-      <spring flex="20%"/>
-      <titledbutton value="&cancel.label;" class="dialog padded push" onclick="window.close();" />
-      -->
-      <spring flex="100%"/>
-    </box>
-    <spring style="height: 7px;"/>
+  <box orient="vertical" flex="1">
+    <html>&intro;</html> 
+    <html>&question;</html> 
+    <separator class="groove" />
+    <box id="okCancelButtons" class="Button1"/>
   </box>
-  <spring style="width: 7px;"/>
-</box>
 
 </window>

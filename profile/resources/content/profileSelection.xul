@@ -50,23 +50,22 @@
 
   <box type="largeheader" id="header" value="&windowtitle.label;"/>
   
-  <box id="contentarea" align="horizontal" flex="100%">
+  <box id="contentarea" flex="1">
     <separator class="thin" orient="vertical"/>
 
     <!-- instructions -->
     <deck id="prattle">
-      <box align="vertical" id="selection">
+      <box orient="vertical" id="selection">
         <html>&introgeneral.label;</html>
       </box>
-      <box align="vertical" id="manager">
+      <box orient="vertical" id="manager">
         <html class="label" style="width: 200px;">&pmTextA.label;</html>
-        <spring flex="30%"/>
+        <spring flex="1"/>
         <box orient="vertical" autostretch="never" id="managebuttons">
-          <titledbutton id="newbutton" class="dialog push padded" value="&newButton.label;" onclick="CreateProfileWizard();"/>
-          <titledbutton id="renbutton" class="dialog push padded" value="&renameButton.label;" onclick="RenameProfile();"/>
-          <titledbutton id="delbutton" class="dialog push padded" value="&deleteButton.label;" onclick="ConfirmDelete();"/>
+          <button id="newbutton" value="&newButton.label;" onclick="CreateProfileWizard();"/>
+          <button id="renbutton" value="&renameButton.label;" onclick="RenameProfile();"/>
+          <button id="delbutton" value="&deleteButton.label;" onclick="ConfirmDelete();"/>
         </box>
-        <html class="label" style="display: none;">&pmTextB.label;</html>
       </box>
     </deck>  
       
@@ -85,9 +84,10 @@
     </tree>    
     <separator class="thin" orient="vertical"/>
   </box>
-  <box class="selection" align="horizontal">
-    <separator class="thin"  orient="vertical"/>
-    <titledbutton class="dialog push padded" id="manage" value="&manage.label;" onclick="SwitchProfileManagerMode();"/>
+  
+  <box class="selection">
+    <separator class="thin" orient="vertical"/>
+    <button id="manage" value="&manage.label;" onclick="SwitchProfileManagerMode();"/>
     <spring flex="1"/>
     <box id="okCancelButtons"/>
     <separator class="thin" orient="vertical"/>
@@ -96,4 +96,5 @@
   <separator class="thin" />
   
   <box type="status" value="&profilemanager.label;" progress=""/>
+  
 </window>
