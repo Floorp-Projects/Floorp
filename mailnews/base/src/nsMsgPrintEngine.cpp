@@ -109,7 +109,7 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
 
       // Make sure this isn't just "about:blank" finishing....
       nsCOMPtr<nsIURI> originalURI = nsnull;
-      if (NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))))
+      if (NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))) && originalURI)
       {
         nsXPIDLCString spec;
 
