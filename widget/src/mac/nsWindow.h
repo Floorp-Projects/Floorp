@@ -187,7 +187,7 @@ protected:
 
 
 // MAC SPECIFIC MEMBERS
-protected:
+public:
 	RgnHandle			mWindowRegion;				// the region defining this window
 	// parent window -- this is only used for the main window widget
 	WindowRecord	*mWindowRecord;
