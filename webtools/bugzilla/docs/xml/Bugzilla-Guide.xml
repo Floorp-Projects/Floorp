@@ -25,16 +25,16 @@
      * bz-date to the release date
      * bz-devel to "IGNORE"
      - COMPILE DOCS AND CHECKIN -
-       Also, tag and tarball at before completing
+       Also, tag and tarball before completing
      * bz-ver to devel version
      * bz-devel to "INCLUDE"
  
      For a devel release, simple bump bz-ver and bz-date
 -->
 
-<!ENTITY bz-ver "2.17.3">
+<!ENTITY bz-ver "2.17.4">
 <!ENTITY bz-nextver "2.18">
-<!ENTITY bz-date "2003-01-02">
+<!ENTITY bz-date "2003-02-16">
 <!ENTITY % bz-devel "INCLUDE">
 
 <!ENTITY bz "http://www.bugzilla.org/">
