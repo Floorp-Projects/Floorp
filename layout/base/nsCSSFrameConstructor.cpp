@@ -2724,7 +2724,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     // We make a tree cell frame and process the children.
 	  // Find out what the attribute value for event allowance is.
 	  nsString attrValue;
-    nsresult result = aContent->GetAttribute(nsXULAtoms::nameSpaceID, nsXULAtoms::treeallowevents, attrValue);
+    nsresult result = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::treeallowevents, attrValue);
     attrValue.ToLowerCase();
     PRBool allowEvents =  (result == NS_CONTENT_ATTR_NO_VALUE ||
 					      (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
