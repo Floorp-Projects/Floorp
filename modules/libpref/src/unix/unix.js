@@ -94,6 +94,10 @@ pref("font.name.serif.ko", "mincho");
 pref("font.name.sans-serif.ko", "gothic");
 pref("font.name.monospace.ko", "gothic");
 
+pref("font.name.serif.x-central-euro", "times");
+pref("font.name.sans-serif.x-central-euro", "helvetica");
+pref("font.name.monospace.x-central-euro", "courier");
+
 pref("font.name.serif.x-western", "times");
 pref("font.name.sans-serif.x-western", "helvetica");
 pref("font.name.monospace.x-western", "courier");
