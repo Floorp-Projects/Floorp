@@ -1184,7 +1184,8 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     ok = OBJ_GET_ATTRIBUTES(cx, obj, id, prop, &attrs);
-    OBJ_DROP_PROPERTY(cx, obj2, prop);
+    if (prop)
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
     if (ok)
         *rval = BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0);
     return ok;
