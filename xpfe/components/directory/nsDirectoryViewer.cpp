@@ -967,6 +967,8 @@ nsHTTPIndex::~nsHTTPIndex()
 
 		if (gRDF)
 		{
+			// XXX robert, this is wrong
+			gRDF->UnregisterDataSource(this);
 			nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
 			gRDF = nsnull;
 		}
@@ -1005,6 +1007,7 @@ nsHTTPIndex::Init()
         if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(mConnectionList))))
         	return(rv);
 
+        // XXX robert: this is wrong.
 		// (do this last) register this as a named data source with the RDF service
 		rv = gRDF->RegisterDataSource(this, PR_FALSE);
 		if (NS_FAILED(rv)) return(rv);
