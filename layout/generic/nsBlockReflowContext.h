@@ -125,7 +125,6 @@ protected:
   nscoord mX, mY;
   nsHTMLReflowMetrics mMetrics;
   nsCollapsingMargin mTopMargin;
-  PRPackedBool mIsTable;
   PRPackedBool mComputeMaximumWidth;
 };
 
