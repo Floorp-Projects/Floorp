@@ -54,8 +54,8 @@ LIBS = \
 	-lmozjs	\
 	-ljsdom	\
 	-ljsurl	\
-	-lrdfbase_s \
-	-lrdfutil_s \
+	$(DIST)/lib/librdfbase_s.a \
+	$(DIST)/lib/librdfutil_s.a \
 	-lsecfree \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
