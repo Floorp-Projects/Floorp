@@ -405,7 +405,7 @@ void nsSilentDownloadManager::Notify(nsITimer * aTimer)
 NS_IMETHODIMP
 nsSilentDownloadManager::Startup()
 {
-    PRBool enabled;
+    PRBool enabled = PR_FALSE;
 
     GetSilentDownloadDefaults(&enabled, &gByteRange, &gInterval);
 
