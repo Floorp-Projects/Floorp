@@ -84,6 +84,8 @@ public:
 	NS_IMETHOD ProcessPRegCookie() = 0;
 	NS_IMETHOD IsPregCookieSet(char **pregSet) = 0;
 	NS_IMETHOD ProcessPREGInfo(char* data) = 0;
+
+	NS_IMETHOD Get4xProfileCount(int *numProfiles) = 0;
 };
 
 #endif /* nsIProfile_h__ */

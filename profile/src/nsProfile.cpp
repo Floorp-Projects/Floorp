@@ -184,6 +184,9 @@ public:
 	NS_IMETHOD ProcessPRegCookie();
 	NS_IMETHOD IsPregCookieSet(char **pregSet);
 	NS_IMETHOD ProcessPREGInfo(char* data);
+
+	// Get the count of 4x (unmigrated) profiles
+	NS_IMETHOD Get4xProfileCount(int *numProfiles);
 };
 
 nsProfile* nsProfile::mInstance = nsnull;
@@ -2302,6 +2305,126 @@ NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
 }
 
 
+// Gets the number of unmigrated 4x profiles
+// Location: Common/Profiles
+NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
+{
+
+    nsresult rv = NS_OK;
+
+#if defined(DEBUG_profile)
+    printf("ProfileManager : Get4xProfileCount\n");
+#endif
+
+    // Check result.
+    if ( m_reg != nsnull ) 
+	{
+        // Open the registry
+        rv = m_reg->Open();
+
+		if (NS_SUCCEEDED(rv))
+		{
+			// Enumerate all subkeys (immediately) under the given node.
+			nsIEnumerator *enumKeys;
+			nsIRegistry::Key key;
+
+			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
+
+			if (NS_SUCCEEDED(rv))
+			{
+		        rv = m_reg->EnumerateSubtrees( key, &enumKeys );
+
+				if (NS_SUCCEEDED(rv))
+				{
+			        int numKeys=0;
+					rv = enumKeys->First();
+
+			        while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
+					{
+						nsISupports *base;
+
+						rv = enumKeys->CurrentItem( &base );
+
+						if (NS_SUCCEEDED(rv)) 
+						{
+	                        // Get specific interface.
+		                    nsIRegistryNode *node;
+			                nsIID nodeIID = NS_IREGISTRYNODE_IID;
+
+							rv = base->QueryInterface( nodeIID, (void**)&node );
+					        
+						    // Test that result.
+							if (NS_SUCCEEDED(rv)) 
+							{
+								// Get node name.
+		                        char *profile = nsnull;
+								char *isMigrated = nsnull;
+
+			                    rv = node->GetName( &profile );
+
+								if (NS_SUCCEEDED(rv) && (profile))
+								{
+									nsIRegistry::Key profKey;								
+
+									rv = m_reg->GetSubtree(key, profile, &profKey);
+								
+									if (NS_SUCCEEDED(rv)) 
+									{
+										rv = m_reg->GetString(profKey, "migrated", &isMigrated);
+
+										if (NS_SUCCEEDED(rv) && (isMigrated))
+										{
+											if (PL_strcmp(isMigrated, "no") == 0)
+											{
+												numKeys++;
+											}
+										}
+									}
+								}
+								node->Release();
+					        }
+							base->Release();
+						}	
+						rv = enumKeys->Next();
+					}
+					*numProfiles = numKeys;
+					NS_RELEASE(enumKeys);
+				}
+				else
+				{
+					#if defined(DEBUG_profile)
+						printf("Profiles : Can't enumerate subtrees.\n" );
+					#endif
+				}
+			}
+			else
+			{
+				#if defined(DEBUG_profile)
+					printf("Registry : Couldn't get Profiles subtree.\n");
+				#endif
+			}
+			m_reg->Close();
+		}
+		else
+		{
+			#if defined(DEBUG_profile)
+				printf("Couldn't open registry.\n");
+			#endif
+		}
+		
+    }
+	else
+	{
+		#if defined(DEBUG_profile)
+			printf("Registry Object is NULL.\n");
+		#endif
+
+		return NS_ERROR_FAILURE;
+
+	}
+
+	return rv;
+}
 
 /***************************************************************************************/
 /***********                           PROFILE FACTORY                      ************/
