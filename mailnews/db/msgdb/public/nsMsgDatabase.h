@@ -263,7 +263,7 @@ virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
 	// these get added when msg hdrs get constructed, and removed when they get destroyed.
 	nsresult      GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result);
 	nsresult      AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key); 
-	nsresult      ClearUseHdrCache(PRBool dbGoingAway);
+	nsresult      ClearUseHdrCache();
 	nsresult      RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
 
         void          ClearCachedObjects(PRBool dbGoingAway);
