@@ -23,6 +23,9 @@
 #include "net.h"
 #include "xp_obs.h"
 #include "il_types.h"
+#ifdef EDITOR
+#include "edttypes.h"
+#endif /* EDITOR */
 #include "ctxtfunc.h"
 
 #include "prio.h"     /* for netlib function decls */
@@ -993,6 +996,11 @@ void FE_SetNewDocumentProperties(MWContext * pMWContext);
  * Formatting has changed.
  */
 PUBLIC void FE_EditFormattingUpdate( MWContext *pContext );
+
+/*
+ * Dialog to confirm change of document encoding.
+ */
+PUBLIC ED_CharsetEncode FE_EncodingDialog(MWContext* pContext); 
 
 /* 
  * Brings up a modal image load dialog and returns.  Calls

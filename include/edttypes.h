@@ -670,4 +670,12 @@ typedef unsigned char EDT_ImageEncoderStatus;
 
 typedef void (*EDT_ImageEncoderCallbackFn)(EDT_ImageEncoderStatus status, void* hook);
 
+/* Outcomes which can be returned by FE_EncodingDialog(): */
+typedef enum { 
+    ED_ENCODE_CANCEL,            /* User canceled - close the page */
+    ED_ENDCODE_CHANGE_CHARSET,   /* Convert current document's charset */
+    ED_ENCODE_CHANGE_METATAG     /* Just write charset to meta tag */
+                                 /*  (doesn't change content) */
+} ED_CharsetEncode;
+
 #endif
