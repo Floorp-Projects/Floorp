@@ -164,8 +164,10 @@ nsIFrame*
 nsBoxObject::GetFrame()
 {
   nsIFrame* frame = nsnull;
-  if (mPresShell)
+  if (mPresShell) {
+    mPresShell->FlushPendingNotifications(Flush_Frames);
     mPresShell->GetPrimaryFrameFor(mContent, &frame);
+  }
   return frame;
 }
 
