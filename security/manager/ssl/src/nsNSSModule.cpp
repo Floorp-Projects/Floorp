@@ -39,7 +39,9 @@
 #include "nsNSSCertificateDB.h"
 #include "nsNSSCertCache.h"
 #include "nsCMS.h"
+#ifdef MOZ_XUL
 #include "nsCertTree.h"
+#endif
 #include "nsCrypto.h"
 //For the NS_CRYPTO_CONTRACTID define
 #include "nsDOMCID.h"
@@ -151,7 +153,9 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsPKCS11ModuleDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PR_FALSE, PSMContentListener, init)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsNSSCertificateDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsNSSCertCache)
+#ifdef MOZ_XUL
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCertTree)
+#endif
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCrypto)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsPkcs11)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSSecureMessage)
@@ -284,14 +288,14 @@ static const nsModuleComponentInfo components[] =
     NS_FORMPROCESSOR_CONTRACTID,
     nsKeygenFormProcessor::Create
   },
-
+#ifdef MOZ_XUL
   {
     "Certificate Tree",
     NS_CERTTREE_CID,
     NS_CERTTREE_CONTRACTID,
     nsCertTreeConstructor
   },
-
+#endif
   {
     NS_PKCS11_CLASSNAME,
     NS_PKCS11_CID,

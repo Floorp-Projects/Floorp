@@ -55,7 +55,6 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIXMLContent.h"
-#include "nsIXULContent.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
 #include "nsXMLDocument.h"

@@ -56,15 +56,18 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  $(NULL)
 
-CPPSRCS		= \
+CPPSRCS		= nsXULControllers.cpp
+
+ifdef MOZ_XUL
+CPPSRCS		+= \
 		nsElementMap.cpp \
 		nsXULCommandDispatcher.cpp \
 		nsXULContentSink.cpp \
-		nsXULControllers.cpp \
 		nsXULDocument.cpp \
 		nsXULPrototypeCache.cpp \
 		nsXULPrototypeDocument.cpp \
 		$(NULL)
+endif
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

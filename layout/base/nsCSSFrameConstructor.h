@@ -607,7 +607,6 @@ protected:
                                 nsFrameItems&            aFrameItems);
 #endif
 
-#ifdef INCLUDE_XUL
   nsresult ConstructXULFrame(nsIPresShell*            aPresShell, 
                              nsIPresContext*          aPresContext,
                              nsFrameConstructorState& aState,
@@ -620,7 +619,6 @@ protected:
                              PRBool                   aXBLBaseTag,
                              PRBool&                  aHaltProcessing);
 
-#endif
 
 // SVG - rods
 #ifdef MOZ_SVG

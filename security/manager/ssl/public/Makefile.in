@@ -59,7 +59,6 @@ XPIDLSRCS = \
     nsITokenDialogs.idl \
     nsITokenPasswordDialogs.idl \
     nsISSLStatus.idl \
-    nsICertTree.idl \
     nsIKeygenThread.idl \
     nsICMSSecureMessage.idl \
     nsIUserCertPicker.idl \
@@ -82,5 +81,9 @@ XPIDLSRCS = \
     nsISMimeCert.idl \
     nsICipherInfo.idl \
     $(NULL)
+
+ifdef MOZ_XUL
+XPIDLSRCS += nsICertTree.idl
+endif
 
 include $(topsrcdir)/config/rules.mk

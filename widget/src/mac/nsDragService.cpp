@@ -75,7 +75,9 @@
 #include "nsIWidget.h"
 #include "nsCarbonHelpers.h"
 
+#ifdef MOZ_XUL
 #include "nsIXULContent.h"
+#endif
 #include "nsIDOMElement.h"
 #include "nsIImageMac.h"
 #include "nsIImage.h"
@@ -128,7 +130,7 @@ nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outSc
 // this isn't so much of an issue as long as we're just dragging around outlines,
 // but it is when we are showing the text being drawn. Comment it out for now
 // but leave it around when we turn this all back on (pinkerton).
-#if USE_TRANSLUCENT_DRAGGING
+#if USE_TRANSLUCENT_DRAGGING && defined(MOZ_XUL)
   // until bug 41237 is fixed, only do translucent dragging if the drag is in
   // the chrome or it's a link.
   nsCOMPtr<nsIXULContent> xulContent ( do_QueryInterface(aDOMNode) );

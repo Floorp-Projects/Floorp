@@ -48,7 +48,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManagerUtils.h"
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
 #endif
@@ -186,7 +186,7 @@ nsFocusController::GetControllers(nsIControllers** aResult)
   //     so this code would have no special knowledge of what object might have controllers.
   if (mCurrentElement) {
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
     nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(mCurrentElement));
     if (xulElement)
       return xulElement->GetControllers(aResult);

@@ -76,6 +76,7 @@
 #include "nsRootAccessible.h"
 #include "nsString.h"
 #include "nsTextFragment.h"
+#ifdef MOZ_XUL
 #include "nsXULColorPickerAccessible.h"
 #include "nsXULFormControlAccessible.h"
 #include "nsXULMenuAccessible.h"
@@ -83,6 +84,7 @@
 #include "nsXULTabAccessible.h"
 #include "nsXULTextAccessible.h"
 #include "nsXULTreeAccessible.h"
+#endif
 #include "nsRootAccessibleWrap.h"
 #include "nsCaretAccessible.h"
 #include "nsIAccessibleCaret.h"

@@ -170,16 +170,20 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_Selection_id,
 
   // XUL classes
+#ifdef MOZ_XUL
   eDOMClassInfo_XULDocument_id,
   eDOMClassInfo_XULElement_id,
   eDOMClassInfo_XULCommandDispatcher_id,
   eDOMClassInfo_XULNodeList_id,
   eDOMClassInfo_XULNamedNodeMap_id,
   eDOMClassInfo_XULAttr_id,
+#endif
   eDOMClassInfo_XULControllers_id,
+#ifdef MOZ_XUL
   eDOMClassInfo_BoxObject_id,
   eDOMClassInfo_TreeSelection_id,
   eDOMClassInfo_TreeContentView_id,
+#endif
 
   // Crypto classes
   eDOMClassInfo_Crypto_id,

@@ -328,6 +328,7 @@ nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 #endif
 
+#ifdef MOZ_XUL
 nsresult NS_NewBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewListBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
@@ -337,6 +338,9 @@ nsresult NS_NewPopupBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
+nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
+#endif
+
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor** aResult);
 nsresult NS_NewLayoutHistoryState(nsILayoutHistoryState** aResult);
@@ -367,10 +371,7 @@ nsresult NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
 nsresult NS_NewXPointerResult(nsIXPointerResult **aResult);
 
-#ifdef MOZ_XUL
-nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
 NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-#endif
 
 #ifdef MOZ_MATHML
 nsresult NS_NewMathMLElementFactory(nsIElementFactory** aResult);

@@ -821,7 +821,6 @@ const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
   -1,-1
 };
 
-#ifdef INCLUDE_XUL
 // Specific keyword tables for XUL.properties
 const PRInt32 nsCSSProps::kBoxAlignKTable[] = {
   eCSSKeyword_stretch,  NS_STYLE_BOX_ALIGN_STRETCH,
@@ -853,7 +852,6 @@ const PRInt32 nsCSSProps::kBoxPackKTable[] = {
   eCSSKeyword_justify, NS_STYLE_BOX_PACK_JUSTIFY, 
   -1,-1
 };
-#endif
 
 #ifdef MOZ_SVG
 // keyword tables for SVG properties
@@ -976,7 +974,6 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   case eCSSProperty_border_collapse:
     return SearchKeywordTable(aValue, kBorderCollapseKTable);
 
-#ifdef INCLUDE_XUL
   case eCSSProperty_box_align:
     return SearchKeywordTable(aValue, kBoxAlignKTable);
   case eCSSProperty_box_direction:
@@ -985,7 +982,6 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
     return SearchKeywordTable(aValue, kBoxOrientKTable);
   case eCSSProperty_box_pack:
     return SearchKeywordTable(aValue, kBoxPackKTable);
-#endif
 
 #ifdef MOZ_SVG
   case eCSSProperty_fill:

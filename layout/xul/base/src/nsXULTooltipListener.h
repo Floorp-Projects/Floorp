@@ -48,9 +48,11 @@
 #include "nsIDOMElement.h"
 #include "nsITimer.h"
 #include "nsIRootBox.h"
-#include "nsITreeBoxObject.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#ifdef MOZ_XUL
+#include "nsITreeBoxObject.h"
+#endif
 
 class nsXULTooltipListener : public nsIDOMMouseListener,
                              public nsIDOMMouseMotionListener,
@@ -113,8 +115,10 @@ protected:
   void KillTooltipTimer();
   void CreateAutoHideTimer();
 
+#ifdef MOZ_XUL
   void CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent);
   nsresult GetSourceTreeBoxObject(nsITreeBoxObject** aBoxObject);
+#endif
 
   nsresult ShowTooltip();
   nsresult LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY);
@@ -142,11 +146,13 @@ protected:
     kTooltipShowTime = 500             // 500ms = 0.5 seconds
   };
 
+#ifdef MOZ_XUL
   // special members for handling trees
   PRBool mIsSourceTree;
   PRBool mNeedTitletip;
   PRInt32 mLastTreeRow;
   nsAutoString mLastTreeCol;
+#endif
 };
 
 #endif // nsXULTooltipListener

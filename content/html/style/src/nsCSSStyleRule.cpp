@@ -88,9 +88,7 @@ static NS_DEFINE_IID(kCSSDisplaySID, NS_CSS_DISPLAY_SID);
 static NS_DEFINE_IID(kCSSTableSID, NS_CSS_TABLE_SID);
 static NS_DEFINE_IID(kCSSContentSID, NS_CSS_CONTENT_SID);
 static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
-#ifdef INCLUDE_XUL
 static NS_DEFINE_IID(kCSSXULSID, NS_CSS_XUL_SID);
-#endif
 #ifdef MOZ_SVG
 static NS_DEFINE_IID(kCSSSVGSID, NS_CSS_SVG_SID);
 #endif
@@ -775,9 +773,7 @@ static nsresult MapContentForDeclaration(nsCSSDeclaration* aDecl, const nsStyleS
 static nsresult MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataText& aContent);
 static nsresult MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataUserInterface& aContent);
 
-#ifdef INCLUDE_XUL
 static nsresult MapXULForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataXUL& aXUL);
-#endif
 
 #ifdef MOZ_SVG
 static nsresult MapSVGForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataSVG& aSVG);
@@ -856,10 +852,8 @@ CSSImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
     return MapTextForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mTextData);
   else if (aRuleData->mUIData)
     return MapUIForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mUIData);
-#ifdef INCLUDE_XUL
   else if (aRuleData->mXULData)
     return MapXULForDeclaration(mDeclaration, *aRuleData->mXULData);
-#endif
 #ifdef MOZ_SVG
   else if (aRuleData->mSVGData)
     return MapSVGForDeclaration(mDeclaration, *aRuleData->mSVGData);
@@ -1513,10 +1507,8 @@ CSSStyleRuleImpl::MapRuleInfoInto(nsRuleData* aRuleData)
     return MapTextForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mTextData);
   else if (aRuleData->mUIData)
     return MapUIForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mUIData);
-#ifdef INCLUDE_XUL
   else if (aRuleData->mXULData)
     return MapXULForDeclaration(mDeclaration, *aRuleData->mXULData);
-#endif
 #ifdef MOZ_SVG
   else if (aRuleData->mSVGData)
     return MapSVGForDeclaration(mDeclaration, *aRuleData->mSVGData);
@@ -1558,7 +1550,6 @@ MapFontForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataFont& aFont)
   return NS_OK;
 }
 
-#ifdef INCLUDE_XUL
 static nsresult 
 MapXULForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataXUL& aXUL)
 {
@@ -1595,7 +1586,6 @@ MapXULForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataXUL& aXUL)
 
   return NS_OK;
 }
-#endif
 
 #ifdef MOZ_SVG
 static nsresult 

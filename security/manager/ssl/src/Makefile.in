@@ -62,7 +62,6 @@ CPPSRCS = 				\
 	nsNSSCertificate.cpp		\
 	nsPKCS12Blob.cpp                \
 	nsNSSASN1Object.cpp		\
-	nsCertTree.cpp              \
 	nsKeygenHandler.cpp		\
 	nsCrypto.cpp			\
   nsPKCS11Slot.cpp                \
@@ -81,6 +80,10 @@ CPPSRCS = 				\
   nsCRLManager.cpp \
   nsNSSShutDown.cpp \
 	$(NULL)
+
+ifdef MOZ_XUL
+CPPSRCS += nsCertTree.cpp
+endif
 
 REQUIRES	= nspr \
 		  xpcom \

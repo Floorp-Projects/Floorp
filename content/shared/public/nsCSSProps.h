@@ -96,12 +96,10 @@ public:
   static const PRInt32 kBorderColorKTable[];
   static const PRInt32 kBorderStyleKTable[];
   static const PRInt32 kBorderWidthKTable[];
-#ifdef INCLUDE_XUL
   static const PRInt32 kBoxAlignKTable[];
   static const PRInt32 kBoxDirectionKTable[];
   static const PRInt32 kBoxOrientKTable[];
   static const PRInt32 kBoxPackKTable[];
-#endif
 #ifdef MOZ_SVG
   static const PRInt32 kFillRuleKTable[];
   static const PRInt32 kStrokeLinecapKTable[];

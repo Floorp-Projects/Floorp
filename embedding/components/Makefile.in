@@ -24,6 +24,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = windowwatcher appstartup find ui printingui jsconsole webbrowserpersist commandhandler build 
+# You'd think we could skip building ui and jsconsole if XUL is disabled,
+# but we need to export interface headers from those directories.
+
+DIRS = windowwatcher appstartup find webbrowserpersist commandhandler ui jsconsole
+
+ifdef MOZ_XUL
+DIRS += printingui
+endif
+
+DIRS += build
 
 include $(topsrcdir)/config/rules.mk

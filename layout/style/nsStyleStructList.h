@@ -74,9 +74,7 @@ STYLE_STRUCT_RESET(Margin, nsnull, ())
 STYLE_STRUCT_RESET(Padding, nsnull, ())
 STYLE_STRUCT_RESET(Border, nsnull, ())
 STYLE_STRUCT_RESET(Outline, nsnull, (SSARG_PRESCONTEXT))
-#ifdef INCLUDE_XUL
 STYLE_STRUCT_RESET(XUL, nsnull, ())
-#endif
 #ifdef MOZ_SVG
 STYLE_STRUCT_INHERITED(SVG, nsnull, ())
 #endif

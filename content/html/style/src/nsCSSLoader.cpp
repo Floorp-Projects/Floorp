@@ -55,7 +55,7 @@
 #include "nsIAtom.h"
 #include "nsCSSLoader.h"
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"
 #endif
 
@@ -807,7 +807,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   return mLoader->ParseSheet(aDataStream, this, completed);
 }
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 static PRBool IsChromeURI(nsIURI* aURI)
 {
   NS_ASSERTION(aURI, "Have to pass in a URI");
@@ -990,7 +990,7 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
     nsCOMPtr<nsICSSStyleSheet> sheet;
 
     // First, the XUL cache
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
     if (IsChromeURI(aURI)) {
       nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
       if (cache) {
@@ -1542,7 +1542,7 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
 
   // Now that it's marked complete, put the sheet in our cache
   if (aSucceeded && aLoadData->mURI) {
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
     if (IsChromeURI(aLoadData->mURI)) {
       nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
       if (cache) {
@@ -1562,7 +1562,7 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
 #endif
       URLKey key(aLoadData->mURI);
       mCompleteSheets.Put(&key, aLoadData->mSheet);
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
     }
 #endif
   }

@@ -112,11 +112,13 @@ protected:
     
     nsresult AddAttributes(const PRUnichar** aAtts, 
                            nsIContent* aContent);
-    
+
+#ifdef MOZ_XUL    
     nsresult AddAttributesToXULPrototype(const PRUnichar **aAtts, 
                                          PRUint32 aAttsCount, 
                                          nsXULPrototypeElement* aElement);
-      
+#endif
+
     // Our own helpers for constructing XBL prototype objects.
     void ConstructBinding();
     void ConstructHandler(const PRUnichar **aAtts);

@@ -262,7 +262,7 @@ endif
 ifdef MOZ_PHOENIX
 tier_99_dirs	+= browser
 else
-ifdef MOZ_XPFE_COMPONENTS
+ifneq (,$(MOZ_XPFE_COMPONENTS)$(MOZ_XUL))
 tier_99_dirs	+= xpfe/bootstrap
 endif
 endif

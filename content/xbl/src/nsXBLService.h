@@ -114,7 +114,9 @@ public:
 
 // MEMBER VARIABLES
 public:
+#ifdef MOZ_XUL
   static nsIXULPrototypeCache* gXULCache;
+#endif
     
   static PRUint32 gRefCnt;                   // A count of XBLservice instances.
 

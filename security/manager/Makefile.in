@@ -105,7 +105,9 @@ export::
 dependclean export::
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
+ifdef MOZ_XUL
 	$(MAKE) -C pki $@
+endif
 
 libs::
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
@@ -147,7 +149,9 @@ endif
 endif
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
+ifdef MOZ_XUL
 	$(MAKE) -C pki $@
+endif
 
 install::
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DESTDIR)$(mozappdir)
@@ -164,12 +168,16 @@ ifdef HAVE_FREEBL_MODULES
 endif
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
+ifdef MOZ_XUL
 	$(MAKE) -C pki $@
+endif
 
 clean clobber clobber_all realclean distclean depend::
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
+ifdef MOZ_XUL
 	$(MAKE) -C pki $@
+endif
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean

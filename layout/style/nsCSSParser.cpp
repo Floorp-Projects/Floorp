@@ -252,7 +252,7 @@ protected:
   PRBool ParseSingleValueProperty(PRInt32& aErrorCode, nsCSSValue& aValue, 
                                   nsCSSProperty aPropID);
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
   PRBool ParseTreePseudoElement(PRInt32& aErrorCode, nsCSSSelector& aSelector);
 #endif
 
@@ -1561,7 +1561,7 @@ static PRBool IsSinglePseudoClass(const nsCSSSelector& aSelector)
                 (aSelector.mPseudoClassList->mNext == nsnull));
 }
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 static PRBool IsTreePseudoElement(const nsString& aPseudo)
 {
   return Substring(aPseudo, 0, 10).Equals(NS_LITERAL_STRING("-moz-tree-"));
@@ -1619,7 +1619,7 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
         else {  // append new pseudo element selector
           selector.Reset();
           selector.mTag = pseudoClassList->mAtom; // steal ref count
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
           if (IsTreePseudoElement(selector.mTag)) {
             // Take the remaining "pseudoclasses" that we parsed
             // inside the tree pseudoelement's ()-list, and
@@ -2167,7 +2167,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
   if (eCSSToken_Ident != mToken.mType) {  // malformed selector
     if (eCSSToken_Function != mToken.mType ||
         !(
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
           // -moz-tree is a pseudo-element and therefore cannot be negated
           (!aIsNegated && IsTreePseudoElement(mToken.mIdent)) ||
 #endif
@@ -2217,7 +2217,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
       aDataMask |= SEL_MASK_PELEM;
       aSelector.AddPseudoClass(pseudo); // store it here, it gets pulled later
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
       if (eCSSToken_Function == mToken.mType && 
           IsTreePseudoElement(mToken.mIdent)) {
         // We have encountered a pseudoelement of the form
@@ -2784,7 +2784,7 @@ PRBool CSSParserImpl::ParseColorOpacity(PRInt32& aErrorCode, PRUint8& aOpacity)
   return PR_TRUE;
 }
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 PRBool CSSParserImpl::ParseTreePseudoElement(PRInt32& aErrorCode,
                                                  nsCSSSelector& aSelector)
 {
@@ -3916,7 +3916,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_left:
   case eCSSProperty_right:
 	  return ParseVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
-#ifdef INCLUDE_XUL
   case eCSSProperty_box_align:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBoxAlignKTable);
@@ -3933,7 +3932,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
                         nsCSSProps::kBoxPackKTable);
   case eCSSProperty_box_ordinal_group:
     return ParseVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);
-#endif
 #ifdef MOZ_SVG
   case eCSSProperty_fill:
     return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE,

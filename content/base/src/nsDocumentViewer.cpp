@@ -109,7 +109,9 @@
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLFrameSetElement.h"
+#ifdef MOZ_XUL
 #include "nsIXULDocument.h"  // Temporary code for Bug 136185
+#endif
 
 #include "nsIChromeRegistry.h"
 #include "nsIClipboardHelper.h"
@@ -1499,11 +1501,13 @@ DocumentViewerImpl::Hide(void)
     selPrivate->RemoveSelectionListener(mSelectionListener);
   }
 
+#ifdef MOZ_XUL
   nsCOMPtr<nsIXULDocument> xul_doc(do_QueryInterface(mDocument));
 
   if (xul_doc) {
     xul_doc->OnHide();
   }
+#endif
 
   mPresShell->Destroy();
 
@@ -1848,10 +1852,11 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   treeItem->GetItemType(&itemType);
   if (itemType == nsIDocShellTreeItem::typeContent ||
       itemType == nsIDocShellTreeItem::typeContentWrapper) {
+#ifdef MOZ_XUL
     nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-    if (!xulDoc) {
+    if (!xulDoc)
+#endif
       contentType = eContentTypeContent;
-    }
   }
 
   // pass in a native widget to be the parent widget ONLY if the view hierarchy will stand alone.

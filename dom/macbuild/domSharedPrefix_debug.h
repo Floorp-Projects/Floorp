@@ -21,6 +21,5 @@
  */
 
 #define MOZ_XUL 1
-#define INCLUDE_XUL 1
 
 #include "MacSharedPrefix_debug.h"
