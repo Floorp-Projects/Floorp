@@ -153,7 +153,13 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
   if (mIsActive) {
     InstallKeyboardNavigator();
   }
-  else RemoveKeyboardNavigator();
+  else if (mKeyboardNavigator) {
+    mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+    mTarget->RemoveEventListener("keydown", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+    mTarget->RemoveEventListener("keyup", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  
+    NS_IF_RELEASE(mKeyboardNavigator);
+  }
 
   return NS_OK;
 }
@@ -567,7 +573,7 @@ nsMenuBarFrame::InstallKeyboardNavigator()
 NS_IMETHODIMP
 nsMenuBarFrame::RemoveKeyboardNavigator()
 {
-  if (!mKeyboardNavigator)
+  if (!mKeyboardNavigator || mIsActive)
     return NS_OK;
 
   mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
