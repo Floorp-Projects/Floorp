@@ -276,7 +276,7 @@ void LocationStep::toString(String& str) {
             str.append("ancestor-or-self::");
             break;
         case ATTRIBUTE_AXIS:
-            str.append("attribute::");
+            str.append("@");
             break;
         case DESCENDANT_AXIS:
             str.append("descendant::");

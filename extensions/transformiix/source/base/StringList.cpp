@@ -269,7 +269,8 @@ String* StringListIterator::next() {
     else {
         currentItem = stringList->firstItem;
         allowRemove = MB_TRUE;
-        return currentItem->strptr;
+        if (currentItem)
+            return currentItem->strptr;
     }
     return 0;
 } //-- next

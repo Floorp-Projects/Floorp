@@ -33,19 +33,8 @@
  * @return the result of the evaluation
 **/
 ExprResult* TextExpr::evaluate(Node* context, ContextState* cs) {
-
-    NodeSet* nodeSet = new NodeSet();
-
-    if ( !context ) return nodeSet;
-
-    Node* node = context->getFirstChild();
-    while (node) {
-        if ( node->getNodeType() == Node::TEXT_NODE )
-            nodeSet->add(node);
-        node = node->getNextSibling();
-    }
-
-    return nodeSet;
+    NS_ASSERTION(0, "TextExpr::evaluate called");
+    return 0;
 } //-- evaluate
 
 /**
@@ -61,8 +50,9 @@ double TextExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs)
  * the given context
 **/
 MBool TextExpr::matches(Node* node, Node* context, ContextState* cs) {
-    if ( node ) {
-        if(node->getNodeType() == Node::TEXT_NODE)
+    if (node) {
+        if (node->getNodeType() == Node::TEXT_NODE ||
+            node->getNodeType() == Node::CDATA_SECTION_NODE)
             return !cs->isStripSpaceAllowed(node);
     }
     return MB_FALSE;

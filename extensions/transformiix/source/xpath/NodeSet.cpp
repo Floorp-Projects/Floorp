@@ -350,6 +350,7 @@ double NodeSet::numberValue() {
 **/
 void NodeSet::stringValue(String& str) {
     if ( size()>0) {
+        // XXX Sort by document order here
         XMLDOMUtils::getNodeValue(get(0), &str);
     }
 } //-- stringValue

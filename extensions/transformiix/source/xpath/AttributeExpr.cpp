@@ -114,6 +114,8 @@ double AttributeExpr::getDefaultPriority(Node* node, Node* context, ContextState
 **/
 MBool AttributeExpr::matches(Node* node, Node* context, ContextState* cs) {
 
+    //XXX need to filter out namespace-declaration attributes!
+
     if ( (!node) || (node->getNodeType() != Node::ATTRIBUTE_NODE) )
         return  MB_FALSE;
 
@@ -159,7 +161,6 @@ MBool AttributeExpr::matches(Node* node, Node* context, ContextState* cs) {
  * @return the String representation of this NodeExpr.
 **/
 void AttributeExpr::toString(String& dest) {
-    dest.append('@');
     if (isNameWild && isNamespaceWild) dest.append('*');
     else {
        dest.append(this->prefix);
