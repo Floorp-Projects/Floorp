@@ -148,20 +148,19 @@ class nsXIFDTD : public nsIDTD {
      * @param   
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
-    virtual eAutoDetectResult CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion);
+    virtual eAutoDetectResult CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion);
 
     /**
-     * 
-     * @update	gess 7/24/98
-     * @param 
-     * @return
-     */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,
-                              PRBool aNotifySink,
-                              nsString& aSourceType,
-                              eParseMode aParseMode,
-                              nsString& aCommand,
-                              nsIContentSink* aSink=0);
+      * The parser uses a code sandwich to wrap the parsing process. Before
+      * the process begins, WillBuildModel() is called. Afterwards the parser
+      * calls DidBuildModel(). 
+      * @update	rickg 03.20.2000
+      * @param	aParserContext
+      * @param	aSink
+      * @return	error code (almost always 0)
+      */
+    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink);
+
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
       * the process begins, WillBuildModel() is called. Afterwards the parser

@@ -95,7 +95,7 @@ class CValidDTD : public nsIDTD {
      * @param   
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
-    virtual eAutoDetectResult CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion);
+    virtual eAutoDetectResult CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion);
 
     /**
      * This method is called to determine if the given DTD can perform
@@ -111,16 +111,13 @@ class CValidDTD : public nsIDTD {
       * The parser uses a code sandwich to wrap the parsing process. Before
       * the process begins, WillBuildModel() is called. Afterwards the parser
       * calls DidBuildModel(). 
-      * @update	gess5/18/98
-      * @param	aFilename is the name of the file being parsed.
+      * @update	rickg 03.20.2000
+      * @param	aParserContext
+      * @param	aSink
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,
-                              PRBool aNotifySink,
-                              nsString& aSourceType,
-                              eParseMode aParseMode,
-                              nsString& aCommand,
-                              nsIContentSink* aSink=0);
+    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink);
+
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
       * the process begins, WillBuildModel() is called. Afterwards the parser

@@ -654,7 +654,7 @@ nsresult nsScanner::SkipPast(nsString& aValidSet){
  *  @param   aIgnore - If set ignores ':','-','_'
  *  @return  error code
  */
-nsresult nsScanner::GetIdentifier(nsSubsumeStr& aString) {
+nsresult nsScanner::GetIdentifier(nsSubsumeStr& aString,PRBool allowPunct) {
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
@@ -667,14 +667,21 @@ nsresult nsScanner::GetIdentifier(nsSubsumeStr& aString) {
     theChar=theBuf[mOffset++];
     if(theChar) {
       found=PR_FALSE;
-      if(('a'<=theChar) && (theChar<='z'))
-        found=PR_TRUE;
-      else if(('A'<=theChar) && (theChar<='Z'))
-        found=PR_TRUE;
-      else if(('0'<=theChar) && (theChar<='9'))
-        found=PR_TRUE;
-      else if('_'==theChar)
-        found=PR_TRUE;
+      switch(theChar) {
+        case ':':
+        case '_':
+        case '-':
+          found=allowPunct;
+          break;
+        default:
+          if(('a'<=theChar) && (theChar<='z'))
+            found=PR_TRUE;
+          else if(('A'<=theChar) && (theChar<='Z'))
+            found=PR_TRUE;
+          else if(('0'<=theChar) && (theChar<='9'))
+            found=PR_TRUE;
+          break;
+      }
 
       if(!found) {
         mOffset-=1;
@@ -695,10 +702,10 @@ nsresult nsScanner::GetIdentifier(nsSubsumeStr& aString) {
  *  
  *  @update  gess 3/25/98
  *  @param   aString - receives new data from stream
- *  @param   aIgnore - If set ignores ':','-','_'
+ *  @param   allowPunct - If set ignores ':','-','_'
  *  @return  error code
  */
-nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool aIgnore) {
+nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool allowPunct) {
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
@@ -715,8 +722,7 @@ nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool aIgnore) {
         case ':':
         case '_':
         case '-':
-          if(!aIgnore)
-            found=PR_TRUE;
+          found=allowPunct;
           break;
         default:
           if(('a'<=theChar) && (theChar<='z'))
@@ -775,6 +781,8 @@ nsresult nsScanner::ReadNumber(nsString& aString) {
         found=PR_TRUE;
       else if(('0'<=theChar) && (theChar<='9'))
         found=PR_TRUE;
+      else if('#'==theChar)
+        found=PR_TRUE;
       if(!found) {
         mOffset-=1;
         aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
@@ -819,6 +827,8 @@ nsresult nsScanner::ReadWhitespace(nsString& aString) {
         case ' ':
         case '\b':
         case '\t':
+        case kLF:
+        case kCR:
           found=PR_TRUE;
           break;
         default:

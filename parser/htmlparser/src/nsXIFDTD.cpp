@@ -300,15 +300,16 @@ nsresult nsXIFDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-eAutoDetectResult nsXIFDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
+eAutoDetectResult nsXIFDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
-  if(aContentType.Equals(kXIFTextContentType)){
+
+  if(aParserContext.mMimeType.Equals(kXIFTextContentType)){
     result=ePrimaryDetect;
   }
   else 
   {
     if(kNotFound!=aBuffer.Find(kXIFDocHeader)) {
-      aContentType= kXIFTextContentType;
+      aParserContext.SetMimeType(kXIFTextContentType);
       result=ePrimaryDetect;
     }
   }
@@ -350,14 +351,16 @@ eAutoDetectResult nsXIFDTD::CanParse(nsString& aContentType, nsString& aCommand,
 
 
 /**
- * 
- * @update	gess 7/24/98
- * @param 
- * @return
- */
-nsresult nsXIFDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,
-                                  nsString& aSourceType,eParseMode aParseMode,
-                                  nsString& aCommand,nsIContentSink* aSink){
+  * The parser uses a code sandwich to wrap the parsing process. Before
+  * the process begins, WillBuildModel() is called. Afterwards the parser
+  * calls DidBuildModel(). 
+  * @update	rickg 03.20.2000
+  * @param	aParserContext
+  * @param	aSink
+  * @return	error code (almost always 0)
+  */
+nsresult nsXIFDTD::WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink){
+
   nsresult result=NS_OK;
 
   if(aSink) {
@@ -1013,7 +1016,7 @@ void nsXIFDTD::PopAndDelete()
     mNodeStack.RemoveElement(node);
     mTokenStack.RemoveElement(token);
     
-    delete node;
+    delete (nsCParserNode*)node;
     delete token;
   }
 }

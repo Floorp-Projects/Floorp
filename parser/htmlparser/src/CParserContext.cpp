@@ -36,12 +36,12 @@ MOZ_DECL_CTOR_COUNTER(CParserContext);
  */
 CParserContext::CParserContext(nsScanner* aScanner, 
                                void *aKey, 
+                               eParserCommands aCommand,
                                nsIStreamObserver* aListener, 
                                nsIDTD *aDTD, 
                                eAutoDetectResult aStatus, 
                                PRBool aCopyUnused) : 
-  mSourceType() 
-  //,mTokenDeque(gTokenDeallocator) 
+  mMimeType("") 
 { 
   MOZ_COUNT_CTOR(CParserContext); 
 
@@ -61,6 +61,7 @@ CParserContext::CParserContext(nsScanner* aScanner,
   mMultipart=PR_TRUE; 
   mContextType=eCTNone; 
   mCopyUnused=aCopyUnused; 
+  mParserCommand=aCommand;
   mChannel=0;
 } 
 
@@ -72,10 +73,7 @@ CParserContext::CParserContext(nsScanner* aScanner,
  * @param   aKey
  * @param   aListener
  */
-CParserContext::CParserContext(const CParserContext &aContext) :
-  mSourceType(aContext.mSourceType)
-  //,mTokenDeque(gTokenDeallocator)
-{
+CParserContext::CParserContext(const CParserContext &aContext) : mMimeType() {
   MOZ_COUNT_CTOR(CParserContext);
 
   mScanner=aContext.mScanner;
@@ -97,6 +95,8 @@ CParserContext::CParserContext(const CParserContext &aContext) :
   mContextType=aContext.mContextType;
   mCopyUnused;
   mChannel=aContext.mChannel;
+  mParserCommand=aContext.mParserCommand;
+  SetMimeType(aContext.mMimeType);
 }
 
 
@@ -121,3 +121,25 @@ CParserContext::~CParserContext(){
 
 }
 
+
+/**
+ * Set's the mimetype for this context
+ * @update	rickg 03.18.2000
+ */
+void CParserContext::SetMimeType(const nsString& aMimeType){
+  mMimeType=aMimeType;
+
+  mDocType=ePlainText;
+
+  if(mMimeType.Equals(kHTMLTextContentType))
+    mDocType=eHTMLText;
+  else if(mMimeType.Equals(kXMLTextContentType))
+    mDocType=eXMLText;
+  else if(mMimeType.Equals(kXULTextContentType))
+    mDocType=eXMLText;
+  else if(mMimeType.Equals(kRDFTextContentType))
+    mDocType=eXMLText;
+  else if(mMimeType.Equals(kXIFTextContentType))
+    mDocType=eXMLText;
+
+}

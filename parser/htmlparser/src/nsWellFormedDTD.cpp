@@ -176,19 +176,19 @@ nsresult CWellFormedDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-eAutoDetectResult CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
+eAutoDetectResult CWellFormedDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
-  if(!aCommand.Equals(kViewSourceCommand)) {
-    if(aContentType.Equals(kXMLTextContentType) ||
-       aContentType.Equals(kRDFTextContentType) ||
-       aContentType.Equals(kXULTextContentType)) {
+  if(eViewSource!=aParserContext.mParserCommand) {
+    if(aParserContext.mMimeType.Equals(kXMLTextContentType) ||
+       aParserContext.mMimeType.Equals(kRDFTextContentType) ||
+       aParserContext.mMimeType.Equals(kXULTextContentType)) {
       result=ePrimaryDetect;
     }
     else {
       if(-1<aBuffer.Find("<?xml ")) {
-        if(0==aContentType.Length()) {
-          aContentType = kXMLTextContentType; //only reset it if it's empty
+        if(0==aParserContext.mMimeType.Length()) {
+          aParserContext.SetMimeType(kXMLTextContentType);
         }
         result=eValidDetect;
       }
@@ -199,19 +199,21 @@ eAutoDetectResult CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCo
 
 
 /**
- * 
- * @update	gess5/18/98
- * @param 
- * @return
- */
-NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,
-                                             nsString& aSourceType,eParseMode aParseMode,
-                                             nsString& aCommand,nsIContentSink* aSink){
+  * The parser uses a code sandwich to wrap the parsing process. Before
+  * the process begins, WillBuildModel() is called. Afterwards the parser
+  * calls DidBuildModel(). 
+  * @update	rickg 03.20.2000
+  * @param	aParserContext
+  * @param	aSink
+  * @return	error code (almost always 0)
+  */
+nsresult CWellFormedDTD::WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink){
+
   nsresult result=NS_OK;
-  mFilename=aFilename;
+  mFilename=aParserContext.mScanner->GetFilename();
 
   mSink=aSink;
-  if((aNotifySink) && (mSink)) {
+  if((!aParserContext.mPrevContext) && (mSink)) {
     mLineNumber=1;
     result = mSink->WillBuildModel();
 

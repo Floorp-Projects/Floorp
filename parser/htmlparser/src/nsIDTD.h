@@ -65,7 +65,7 @@ class nsIDTDDebug;
 class nsIURI;
 class nsString;
 class nsIContentSink;
-
+class CParserContext;
 
 class nsIDTD : public nsISupports {
   public:
@@ -97,7 +97,7 @@ class nsIDTD : public nsISupports {
      * @param   aContentType -- string representing type of doc to be converted (ie text/html)
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
-    virtual eAutoDetectResult CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion)=0;
+    virtual eAutoDetectResult CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion)=0;
 
     /**
      * Called by the parser just before the parsing process begins
@@ -105,12 +105,7 @@ class nsIDTD : public nsISupports {
      * @param	aFilename--string that contains name of file being parsed (if applicable)
      * @return  
      */
-    NS_IMETHOD WillBuildModel(  nsString&   aFilename,
-                                PRBool      aNotifySink,
-                                nsString&   aSourceType,
-                                eParseMode  aParseMode,
-                                nsString&   aCommand,
-                                nsIContentSink* aSink=0)=0;
+    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink=0)=0;
 
     /**
      * Called by the parser after the parsing process has concluded

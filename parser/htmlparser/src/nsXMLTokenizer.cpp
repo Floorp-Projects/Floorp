@@ -116,6 +116,7 @@ NS_IMPL_RELEASE(nsXMLTokenizer)
 nsXMLTokenizer::nsXMLTokenizer() : nsHTMLTokenizer() {
   NS_INIT_REFCNT();
   mDoXMLEmptyTags=PR_TRUE;
+  mDocType=eXMLText;
 }
 
 /**

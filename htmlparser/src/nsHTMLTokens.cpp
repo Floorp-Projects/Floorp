@@ -228,7 +228,7 @@ PRBool CStartToken::IsEmpty(void) {
  *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
- *  @param   aMode -- 0=HTML; 1=text;
+ *  @param   aMode -- 1=HTML; 0=text (or other ML)
  *  @return  error result
  */
 nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
@@ -241,7 +241,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode
   nsresult result=NS_OK;
   if(0==aMode) {
     nsSubsumeStr theSubstr;
-    result=aScanner.GetIdentifier(theSubstr);
+    result=aScanner.GetIdentifier(theSubstr,!aMode);
     mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
     if(eHTMLTag_userdefined==mTypeID) {
       mTextValue=theSubstr;
@@ -253,23 +253,6 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 
-   //Good. Now, let's skip whitespace after the identifier,
-   //and see if the next char is ">". If so, we have a complete
-   //tag without attributes.
-  if(NS_OK==result) { 
-    result=aScanner.SkipWhitespace();
-    mNewlineCount += aScanner.GetNewlinesSkipped();
-    if(NS_OK==result) {
-      result=aScanner.GetChar(aChar);
-      if(NS_OK==result) {
-        if(kGreaterThan!=aChar) { //look for '>' 
-         //push that char back, since we apparently have attributes...
-          result=aScanner.PutBack(aChar);
-          mAttributed=PR_TRUE;
-        } //if
-      } //if
-    }//if
-  }
   return result;
 }
 
@@ -1257,8 +1240,6 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
   PRUnichar ch=aString.Last();
   if(ch!=aChar)
     aString+=aChar;
-  //aString.ReplaceChar(PRUnichar('\n'),PRUnichar(' '));
-  aString.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
   return result;
 }
 
@@ -1293,88 +1274,81 @@ nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScann
   return result;
 }
 
-
 /*
  *  Consume the key and value portions of the attribute.
  *  
- *  @update  gess 3/25/98
+ *  @update  rickg 03.23.2000
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
+ *  @param   aRetainWhitespace -- 0=discard, 1=retain
  *  @return  error result
  */
-nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
+nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aRetainWhitespace) {
 
-  nsresult result=aScanner.SkipWhitespace();             //skip leading whitespace 
+  nsresult result;
+ 
+  //I changed a bit of this method to use aRetainWhitespace so that we do the right
+  //thing in viewsource. The ws/cr/lf sequences are now maintained, and viewsource looks good.
+
+  result=(aRetainWhitespace) ? aScanner.ReadWhitespace(mTextKey) : aScanner.SkipWhitespace();
+
   if(NS_OK==result) {
     result=aScanner.Peek(aChar);
     if(NS_OK==result) {
+      
       if(kQuote==aChar) {               //if you're here, handle quoted key...
-        result=aScanner.GetChar(aChar);        //skip the quote sign...
+        result=aScanner.GetChar(aChar); //skip the quote character...
         if(NS_OK==result) {
-          result=aScanner.Peek(aChar);  //peek ahead to make sure the next char is a legal attr-key
-          if(NS_OK==result) {
-            if(nsCRT::IsAsciiAlpha(aChar) || nsCRT::IsAsciiDigit(aChar)){
-              mTextKey=aChar;
-              result=ConsumeQuotedString(aChar,mTextKey,aScanner);
-            }
-            else {
-              return NS_ERROR_HTMLPARSER_BADATTRIBUTE;
-            }
-          } //if
+          mTextKey.Append(aChar);
+          result=ConsumeQuotedString(aChar,mTextKey,aScanner);
+          if(!aRetainWhitespace)
+            mTextKey.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
         }//if
       }
-      else if(kHashsign==aChar) {
-        result=aScanner.GetChar(aChar);        //skip the hash sign...
-        if(NS_OK==result) {
-          mTextKey=aChar;
-          result=aScanner.ReadNumber(mTextKey);
-        }
+      else if((kHashsign==aChar) || (nsCRT::IsAsciiDigit(aChar))){
+        result=aScanner.ReadNumber(mTextKey);
       }
       else {
           //If you're here, handle an unquoted key.
-          //Don't forget to reduce entities inline!
         static nsString theTerminals("\b\t\n\r \"<=>",9);
         result=aScanner.ReadUntil(mTextKey,theTerminals,PR_FALSE);
       }
 
         //now it's time to Consume the (optional) value...
       if(NS_OK==result) {
-        result=aScanner.SkipWhitespace();
+
+        result=(aRetainWhitespace) ? aScanner.ReadWhitespace(mTextKey) : aScanner.SkipWhitespace();
+
         if(NS_OK==result) { 
           result=aScanner.Peek(aChar);       //Skip ahead until you find an equal sign or a '>'...
           if(NS_OK==result) {  
             if(kEqual==aChar){
               result=aScanner.GetChar(aChar);  //skip the equal sign...
               if(NS_OK==result) {
-                result=aScanner.SkipWhitespace();     //now skip any intervening whitespace
+
+                result=(aRetainWhitespace) ? aScanner.ReadWhitespace(mTextValue) : aScanner.SkipWhitespace();
+
                 if(NS_OK==result) {
                   result=aScanner.GetChar(aChar);  //and grab the next char.    
                   if(NS_OK==result) {
                     if((kQuote==aChar) || (kApostrophe==aChar)) {
-                      mTextValue=aChar;
+                      mTextValue.Append(aChar);
                       result=ConsumeQuotedString(aChar,mTextValue,aScanner);
+                      if(!aRetainWhitespace)
+                        mTextValue.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
                     }
                     else if(kGreaterThan==aChar){      
                       mHasEqualWithoutValue=PR_TRUE;
                       result=aScanner.PutBack(aChar);
                     }
-#if 0
-                    else if(kAmpersand==aChar) {
-                      mTextValue=aChar;
-                      result=aScanner.GetChar(aChar);
-                      if(NS_OK==result) {
-                        mTextValue += aChar;
-                        result=CEntityToken::ConsumeEntity(aChar,mTextValue,aScanner);
-                      }
-                    }
-#endif
                     else {
-                      mTextValue=aChar;       //it's an alphanum attribute...
+                      mTextValue.Append(aChar);       //it's an alphanum attribute...
                       result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
                     } 
                   }//if
-                  if(NS_OK==result)
-                    result=aScanner.SkipWhitespace();     
+                  if(NS_OK==result) {
+                    result=(aRetainWhitespace) ? aScanner.ReadWhitespace(mTextValue) : aScanner.SkipWhitespace();
+                  }
                 }//if
               }//if
             }//if
@@ -1394,7 +1368,8 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
             }
           }//if
         } //if
-      }//if
+      }//if (consume optional value)
+
       if(NS_OK==result) {
         result=aScanner.Peek(aChar);
         mLastAttribute= PRBool((kGreaterThan==aChar) || (kEOF==result));
@@ -1480,7 +1455,7 @@ nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
   mTextValue=aChar;
   nsresult result=aScanner.ReadWhitespace(mTextValue);
   if(NS_OK==result) {
-    mTextValue.StripChars("\r");
+    mTextValue.StripChar(kCR);
   }
   return result;
 }

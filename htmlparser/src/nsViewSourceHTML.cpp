@@ -215,7 +215,7 @@ CViewSourceHTML::CViewSourceHTML() : nsIDTD(),
   mSink=0;
   mLineNumber=0;
   mTokenizer=0;
-  mIsText=PR_FALSE;
+  mDocType=eHTMLText;
 
 #ifdef rickgdebug
   gDumpFile = new fstream("c:/temp/viewsource.xml",ios::trunc);
@@ -269,19 +269,18 @@ nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-eAutoDetectResult CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
+eAutoDetectResult CViewSourceHTML::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
-  if(aContentType.Equals(kPlainTextContentType) ||
-     aContentType.Equals(kTextCSSContentType)) {
+  if(aParserContext.mMimeType.Equals(kPlainTextContentType) ||
+     aParserContext.mMimeType.Equals(kTextCSSContentType)) {
     result=eValidDetect;
   }
-  else if(aCommand.Equals(kViewSourceCommand)) {
-    if(aContentType.Equals(kXMLTextContentType) ||
-       aContentType.Equals(kRDFTextContentType) ||
-       aContentType.Equals(kHTMLTextContentType) ||
-       aContentType.Equals(kPlainTextContentType) ||
-       aContentType.Equals(kXULTextContentType)) {
+  else if(eViewSource==aParserContext.mParserCommand) {
+    if(aParserContext.mMimeType.Equals(kXMLTextContentType) ||
+       aParserContext.mMimeType.Equals(kRDFTextContentType) ||
+       aParserContext.mMimeType.Equals(kHTMLTextContentType) ||
+       aParserContext.mMimeType.Equals(kXULTextContentType)) {
       result=ePrimaryDetect;
     }
   }
@@ -290,14 +289,16 @@ eAutoDetectResult CViewSourceHTML::CanParse(nsString& aContentType, nsString& aC
 
 
 /**
- * 
- * @update	gess5/18/98
- * @param 
- * @return
- */
-NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink,
-                                              nsString& aSourceType,eParseMode aParseMode,
-                                              nsString& aCommand,nsIContentSink* aSink){
+  * The parser uses a code sandwich to wrap the parsing process. Before
+  * the process begins, WillBuildModel() is called. Afterwards the parser
+  * calls DidBuildModel(). 
+  * @update	rickg 03.20.2000
+  * @param	aParserContext
+  * @param	aSink
+  * @return	error code (almost always 0)
+  */
+nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink){
+
   nsresult result=NS_OK;
 
 #ifdef RAPTOR_PERF_METRICS
@@ -307,7 +308,13 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
 
   STOP_TIMER();
   mSink=(nsIXMLContentSink*)aSink;
-  if((aNotifySink) && (mSink)) {
+
+  if((!aParserContext.mPrevContext) && (mSink)) {
+
+    mDocType=aParserContext.mDocType;
+    mMimeType=aParserContext.mMimeType;
+    mParseMode=aParserContext.mParseMode;
+    mParserCommand=aParserContext.mParserCommand;
 
     static const char* theHeader="<?xml version=\"1.0\"?>";
     CToken ssToken(theHeader);
@@ -327,8 +334,11 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
     theNode.AddAttribute(&theAttr);
     mSink->OpenContainer(theNode);
   }
-  
-  mIsText=((!aCommand.Equals(kViewSourceCommand)) || (aSourceType.Equals(kPlainTextContentType)));
+
+
+  if(eViewSource!=aParserContext.mParserCommand)
+    mDocType=ePlainText;
+  else mDocType=aParserContext.mDocType;
 
   mLineNumber=0;
   result = mSink->WillBuildModel();
@@ -405,7 +415,7 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
   }
 #endif
 
-      if(!mIsText) {
+      if(ePlainText!=mDocType) {
         //now let's automatically close the root container...
         CToken theToken("viewsource");
         nsCParserNode theNode(&theToken,0);
@@ -468,7 +478,8 @@ nsresult  CViewSourceHTML::Terminate(void) {
 nsresult CViewSourceHTML::GetTokenizer(nsITokenizer*& aTokenizer) {
   nsresult result=NS_OK;
   if(!mTokenizer) {
-    result=NS_NewHTMLTokenizer(&mTokenizer,eParseMode_quirks,mIsText);
+
+    result=NS_NewHTMLTokenizer(&mTokenizer,eParseMode_quirks,mDocType,mParserCommand);
   }
   aTokenizer=mTokenizer;
   return result;
@@ -710,9 +721,14 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
           theContext.mTokenNode.AddAttribute(theToken);  //and add it to the node.
 
           CAttributeToken* theAttrToken=(CAttributeToken*)theToken;
-          CToken theKeyToken(theAttrToken->GetKey());
+          nsString& theKey=theAttrToken->GetKey();
+          theKey.StripChar(kCR);
+
+          CToken theKeyToken(theKey);
           result=WriteTag(mKey,&theKeyToken,0,PR_FALSE);
           nsString& theValue=theToken->GetStringValueXXX();
+          theValue.StripChar(kCR);
+
           if((0<theValue.Length()) || (theAttrToken->mHasEqualWithoutValue)){
             result=WriteTag(mValue,theToken,0,PR_FALSE);
           }
@@ -870,7 +886,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_start:
 
       result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
-      if((!mIsText) && mParser && (NS_OK==result)) {
+      if(((eHTMLText==mDocType) || (eXMLText==mDocType)) && mParser && (NS_OK==result)) {
         CObserverService* theService=mParser->GetObserverService();
         if(theService) {
           CParserContext*   pc=mParser->PeekContext(); 
@@ -901,7 +917,11 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       break;
 
     case eToken_doctypeDecl:
-      result=WriteTag(mDocTypeTag,aToken,0,PR_TRUE);
+      {
+        nsString& theString=aToken->GetStringValueXXX();
+        theString.StripChar(kCR);
+        result=WriteTag(mDocTypeTag,aToken,0,PR_TRUE);
+      }
       break;
 
     case eToken_newline:

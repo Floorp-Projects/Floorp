@@ -875,34 +875,6 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
   return crc_accum; 
 }
 
-/******************************************************************************
-  This class is used to store ref's to tag observers during the parse phase.
-  Note that for simplicity, this is a singleton that is constructed in the
-  CNavDTD and shared for the duration of the application session. Later on it
-  might be nice to use a more dynamic approach that would permit observers to
-  come and go on a document basis.
- ******************************************************************************/
-
-CObserverService::CObserverService() {
-
-  MOZ_COUNT_CTOR(CObserverService);
-
-  nsCRT::zero(mObservers,sizeof(mObservers));
-
-  nsAutoString theHTMLTopic("htmlparser");
-  RegisterObservers(theHTMLTopic);
-
-  nsAutoString theXMLTopic("xmlparser");
-  RegisterObservers(theXMLTopic);
-
-}
-
-CObserverService::~CObserverService() {
-
-  MOZ_COUNT_DTOR(CObserverService);
-
-  UnregisterObservers();
-}
 
 /**************************************************************
   Define the nsIElementObserver release class...
@@ -916,73 +888,48 @@ public:
   }
 };
 
-/**
- * Release observers and empty the observer array.
- * 
- * @update harishd 08/29/99
- * @param  
- * @return 
- */
+/**************************************************************
+  This defines the topic object used by the observer service.
+  The observerService uses a list of these, 1 per topic when
+  registering tags.
+ **************************************************************/
 
-void CObserverService::UnregisterObservers() {
-  int theIndex=0;
+nsObserverTopic::nsObserverTopic(const nsString& aTopic) : mTopic(aTopic){
+  nsCRT::zero(mObservers,sizeof(mObservers));
+}
+
+nsObserverTopic::~nsObserverTopic() {
   nsObserverReleaser theReleaser;
+
+  PRInt32 theIndex=0;
   for(theIndex=0;theIndex<=NS_HTML_TAG_MAX;theIndex++){
     if(mObservers[theIndex]){
       mObservers[theIndex]->ForEach(theReleaser);
       delete mObservers[theIndex];
+      mObservers[theIndex]=0;
     }
   }
 }
 
-/**
- * This method will maintain lists of observers registered for specific tags.
- * 
- * @update harishd 08/29/99
- * @param  aTopic  -  The topic under which observers register for.
- * @return if SUCCESS return NS_OK else return ERROR code.
- */
-
-void CObserverService::RegisterObservers(nsString& aTopic) {
-  nsresult result = NS_OK;
-  nsIObserverService* theObserverService = nsnull;
-  result = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, NS_GET_IID(nsIObserverService),
-                                      (nsISupports**) &theObserverService, nsnull);
-  if(result == NS_OK){
-    nsIEnumerator* theEnum = nsnull;
-    result = theObserverService->EnumerateObserverList(aTopic.GetUnicode(), &theEnum);
-    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, theObserverService);
-    if(result == NS_OK) {
-      nsIElementObserver *theElementObserver = nsnull;
-      nsISupports *inst = nsnull;
-      
-      for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
-        result = theEnum->CurrentItem(&inst);
-        if (NS_SUCCEEDED(result)) {
-          result = inst->QueryInterface(NS_GET_IID(nsIElementObserver), (void**)&theElementObserver);
-          NS_RELEASE(inst);
-        }
-        if (result == NS_OK) {
-          const char* theTagStr = nsnull;
-          PRUint32 theTagIndex = 0;
-          theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
-          while (theTagStr != nsnull) {
-            eHTMLTags theTag = nsHTMLTags::LookupTag(nsCAutoString(theTagStr));
-            if((eHTMLTag_userdefined!=theTag) && (theTag <= NS_HTML_TAG_MAX)){
-              if(mObservers[theTag] == nsnull) {
-                 mObservers[theTag] = new nsDeque(0);
-              }
-              mObservers[theTag]->Push(theElementObserver);
-            }
-            theTagIndex++;
-            theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
-          }
-        }
-      }
-    }
-    NS_IF_RELEASE(theEnum);
-  }
+PRBool nsObserverTopic::Matches(const nsString& aString) {
+  PRBool result=aString.Equals(mTopic);
+  return result;
 }
+
+nsDeque* nsObserverTopic::GetObserversForTag(eHTMLTags aTag) {
+  if(aTag <= NS_HTML_TAG_MAX) {
+    return mObservers[aTag];
+  }
+  return 0;
+}
+
+void nsObserverTopic::RegisterObserverForTag(nsIElementObserver *anObserver,eHTMLTags aTag) {
+  if(mObservers[aTag] == nsnull) {
+     mObservers[aTag] = new nsDeque(0);
+  }
+  mObservers[aTag]->Push(anObserver);
+}
+
 
 /**
  * This method will notify observers registered for specific tags.
@@ -996,9 +943,9 @@ void CObserverService::RegisterObservers(nsString& aTopic) {
  * @param  aCharsetSource  -
  * @return if SUCCESS return NS_OK else return ERROR code.
  */
-nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aUniqueID, const char* aCommand,
-                                  nsIParser* aParser) {
+nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aUniqueID,nsIParser* aParser) {
   nsresult  result=NS_OK;
+
   nsDeque*  theDeque=GetObserversForTag(aTag);
   if(theDeque){ 
 
@@ -1039,10 +986,10 @@ nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 a
 	  	  index++;
       }
       nsAutoString theDTDKey("X_COMMAND");
-      nsAutoString theDTDValue(aCommand);
+      // nsAutoString theDTDValue(aCommand);
       if(index < 50) {
         theKeys[index]=theDTDKey.GetUnicode();
-        theValues[index]=theDTDValue.GetUnicode();
+        theValues[index]=mTopic.GetUnicode();
         index++;
       }
       nsAutoString theTagStr(nsHTMLTags::GetStringValue(aTag));
@@ -1054,18 +1001,168 @@ nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 a
   return result;
 }
 
+
+/******************************************************************************
+  This class is used to store ref's to tag observers during the parse phase.
+  Note that for simplicity, this is a singleton that is constructed in the
+  CNavDTD and shared for the duration of the application session. Later on it
+  might be nice to use a more dynamic approach that would permit observers to
+  come and go on a document basis.
+
+  I changed the observerservice to store topics so that we can distinguish 
+  observers by topic. Up till now, they've all just be thrown into the same
+  observer list, which was wrong. This fixes bug #28825.
+ ******************************************************************************/
+
+CObserverService::CObserverService() : mTopics(0) {
+
+  MOZ_COUNT_CTOR(CObserverService);
+
+  nsAutoString theHTMLTopic(kHTMLTextContentType);
+  RegisterObservers(theHTMLTopic);
+
+  nsAutoString theXMLTopic(kXMLTextContentType);  //use the mimetype for the topic
+  RegisterObservers(theXMLTopic);
+
+}
+
+
+CObserverService::~CObserverService() {
+
+  MOZ_COUNT_DTOR(CObserverService);
+
+  nsObserverTopic *theTopic=(nsObserverTopic*)mTopics.Pop();
+  while(theTopic) {
+    delete theTopic;
+    theTopic=(nsObserverTopic*)mTopics.Pop();
+  }
+}
+
+nsObserverTopic* CObserverService::GetTopic(const nsString& aTopic) {
+  PRInt32 theSize=mTopics.GetSize();
+  PRInt32 theIndex=0;
+  nsObserverTopic *theTopic=(nsObserverTopic*)mTopics.ObjectAt(theIndex++);
+
+  while(theTopic) {
+    if(theTopic->Matches(aTopic))
+      return theTopic;
+    theTopic=(nsObserverTopic*)mTopics.ObjectAt(theIndex++);
+  }
+  return 0;
+}
+
+nsObserverTopic* CObserverService::CreateTopic(const nsString& aTopic) {
+  nsObserverTopic* theTopic=new nsObserverTopic(aTopic);
+  mTopics.Push(theTopic);
+  return theTopic;
+}
+
+/**
+ * This method will maintain lists of observers registered for specific tags.
+ * 
+ * @update rickg 03.23.2000
+ * @param  aTopic  -  The topic under which observers register for.
+ * @return if SUCCESS return NS_OK else return ERROR code.
+ */
+
+void CObserverService::RegisterObservers(const nsString& aTopic) {
+  nsresult result = NS_OK;
+  nsIObserverService* theObserverService = nsnull;
+  result = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, NS_GET_IID(nsIObserverService),
+                                      (nsISupports**) &theObserverService, nsnull);
+  if(result == NS_OK){
+    nsIEnumerator* theEnum = nsnull;
+    result = theObserverService->EnumerateObserverList(aTopic.GetUnicode(), &theEnum);
+    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, theObserverService);
+
+    if(result == NS_OK) {
+      nsIElementObserver *theElementObserver = nsnull;
+      nsISupports *inst = nsnull;
+
+      nsObserverTopic *theTopic=0;
+
+      for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
+        result = theEnum->CurrentItem(&inst);
+        if (NS_SUCCEEDED(result)) {
+          result = inst->QueryInterface(NS_GET_IID(nsIElementObserver), (void**)&theElementObserver);
+          NS_RELEASE(inst);
+        }
+        if (result == NS_OK) {
+          const char* theTagStr = nsnull;
+          PRUint32 theTagIndex = 0;
+          theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
+          while (theTagStr != nsnull) {
+            eHTMLTags theTag = nsHTMLTags::LookupTag(nsCAutoString(theTagStr));
+            if((eHTMLTag_userdefined!=theTag) && (theTag <= NS_HTML_TAG_MAX)){
+            
+              theTopic=GetTopic(aTopic);
+              if(!theTopic)
+                theTopic=CreateTopic(aTopic);
+              if(theTopic) {
+                theTopic->RegisterObserverForTag(theElementObserver,theTag);
+              }
+
+            }
+            theTagIndex++;
+            theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
+          }
+        }
+      }
+    }
+    NS_IF_RELEASE(theEnum);
+  }
+}
+
+/**
+ * This method will maintain lists of observers registered for specific tags.
+ * 
+ * @update rickg 03.23.2000
+ * @param  aTopic  -  The topic under which observers register for.
+ * @return if SUCCESS return NS_OK else return ERROR code.
+ */
+
+void CObserverService::UnregisterObservers(const nsString& aTopic) {
+}
+
+/**
+ * This method will notify observers registered for specific tags.
+ * 
+ * @update rickg 03.23.2000
+ * @param  aTag            -  The tag for which observers could be waiting for.
+ * @param  aNode           -  
+ * @param  aUniqueID       -  The document ID.
+ * @param  aDTD            -  The current DTD.
+ * @param  aCharsetValue   -
+ * @param  aCharsetSource  -
+ * @return if SUCCESS return NS_OK else return ERROR code.
+ */
+nsresult CObserverService::Notify(  eHTMLTags aTag,
+                                    nsIParserNode& aNode,
+                                    PRUint32 aUniqueID, 
+                                    const nsString& aTopic,
+                                    nsIParser* aParser) {
+  nsresult  result=NS_OK;
+  nsObserverTopic *theTopic=GetTopic(aTopic);
+  if(theTopic) {
+    result=theTopic->Notify(aTag,aNode,aUniqueID,aParser);
+  }
+  return result;
+}
+
 /**
  * This method will look for the list of observers registered for 
  * a specific tag.
  * 
- * @update harishd 08/29/99
+ * @update rickg 03.23.2000
  * @param aTag - The tag for which observers could be waiting for.
  * @return if FOUND return "observer list" else return nsnull;
  *
  */
 
-nsDeque* CObserverService::GetObserversForTag(eHTMLTags aTag) {
-  if(aTag <= NS_HTML_TAG_MAX)
-      return mObservers[aTag];
-  return nsnull;
+nsDeque* CObserverService::GetObserversForTagInTopic(eHTMLTags aTag,const nsString& aTopic) {
+  nsObserverTopic *theTopic=GetTopic(aTopic);
+  if(theTopic) {
+    return theTopic->GetObserversForTag(aTag);
+  }
+  return 0;
 }

@@ -53,10 +53,23 @@ class nsString;
 class nsIURI;
 
 
+enum eParserCommands {
+  eViewNormal,
+  eViewSource,
+  eViewErrors,
+};
+
 enum eCRCQuality {
   eCRCGood = 0,
   eCRCFair,
   eCRCPoor
+};
+
+
+enum eParserDocType {
+  ePlainText = 0,
+  eHTMLText,
+  eXMLText
 };
 
 
@@ -135,6 +148,7 @@ class nsIParser : public nsISupports {
      *  @return	 nada
      */
     virtual void SetCommand(const char* aCommand)=0;
+    virtual void SetCommand(eParserCommands aParserCommand)=0;
 
     /**
      *  Call this method once you've created a parser, and want to instruct it
@@ -174,9 +188,11 @@ class nsIParser : public nsISupports {
      ******************************************************************************************/
     virtual nsresult  EnableParser(PRBool aState) = 0;
     virtual PRBool    IsParserEnabled() = 0;
+    
     virtual nsresult  Parse(nsIURI* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,eParseMode aMode=eParseMode_autodetect) = 0;
-    virtual nsresult	Parse(nsIInputStream& aStream, PRBool aEnableVerify=PR_FALSE, void* aKey=0,eParseMode aMode=eParseMode_autodetect) = 0;
+    virtual nsresult	Parse(nsIInputStream& aStream, const nsString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,eParseMode aMode=eParseMode_autodetect) = 0;
     virtual nsresult  Parse(const nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall,eParseMode aMode=eParseMode_autodetect) = 0;
+    
     virtual nsresult  Terminate(void) = 0;
 
     virtual PRBool    IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode=eParseMode_autodetect)=0;
@@ -276,4 +292,6 @@ const PRUnichar kNullCh           = '\0';
 #define kViewSourceCommand    "view-source"
 #define kTextCSSContentType   "text/css"
 #define kRTFTextContentType   "text/rtf"
+
+
 #endif 

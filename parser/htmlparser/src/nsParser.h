@@ -134,6 +134,7 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
      *  @return	 ptr to previously set contentsink (usually null)  
      */
     virtual void SetCommand(const char* aCommand);
+    virtual void SetCommand(eParserCommands aParserCommand);
 
     /**
      *  Call this method once you've created a parser, and want to instruct it
@@ -188,7 +189,7 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIInputStream& aStream,PRBool aEnableVerify=PR_FALSE,void* aKey=0,eParseMode aMode=eParseMode_autodetect);
+    virtual nsresult Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBool aEnableVerify=PR_FALSE,void* aKey=0,eParseMode aMode=eParseMode_autodetect);
 
     /**
      * @update	gess5/11/98
@@ -374,7 +375,7 @@ protected:
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
     PRBool              mDTDVerification;
-    nsString            mCommand;
+    eParserCommands     mCommand;
     PRInt32             mStreamStatus;
     nsITokenObserver*   mTokenObserver;
     nsString            mUnusedInput;
