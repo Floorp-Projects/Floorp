@@ -33,8 +33,9 @@ var actual = '';
 var expect= '';
 var cnEmptyString = '';
 var str = 'abc';
-var strA = '';
+var strA = cnEmptyString;
 var strB = 'Z';
+var strC = 'ZaZbZc'; // the result we expect for 'abc'.replace('', 'Z');
 
 
 //-----------------------------------------------------------------------------
@@ -43,8 +44,12 @@ test();
 
 
 /*
- * In this test, it's important to reportCompare() each other case before the 
- * last case is attempted, instead of storing all results in an array as usual.
+ * In this test, it's important to reportCompare() each other case
+ * before the last two cases are attempted. Don't store all results
+ * in an array and reportCompare() them at the end, as we usually do.
+ *
+ * When this bug was filed, str.replace(strA, strB) would return no value
+ * whatsoever if strA == cnEmptyString, and no error, either -
  */
 function test()
 {
@@ -77,6 +82,12 @@ function test()
   reportCompare(expect, actual, status);
 
   status = 'Section E of test';
+  strA = cnEmptyString;
+  actual = str.replace(strA, strB);
+  expect = strC; // see above
+  reportCompare(expect, actual, status);
+
+  status = 'Section F of test';
   strA = cnEmptyString;
   actual = str.replace(strA, strB);
   expect = str.replace(new RegExp(strA), strB);
