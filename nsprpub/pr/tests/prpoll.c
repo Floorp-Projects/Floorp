@@ -295,7 +295,8 @@ int main(int argc, char **argv)
 				PRInt32 nBytes;
 
 				nEvents++;
-				if (PR_GetDescType(pds[j].fd) == PR_DESC_SOCKET_POLL) {
+				/* XXX: This call is a hack and should be fixed */
+				if (PR_GetDescType(pds[j].fd) == (PRDescType) 0) {
 					nBytes = recv(PR_FileDesc2NativeHandle(pds[j].fd), buf,
 										sizeof(buf), 0);
 					if (nBytes == -1) {
