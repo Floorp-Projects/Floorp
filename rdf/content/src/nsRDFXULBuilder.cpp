@@ -1508,6 +1508,9 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
     // the RDF graph to update. So, build an RDF resource from the
     // property name...
     nsCOMPtr<nsIRDFResource> property;
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    }
     if (NS_FAILED(rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property)))) {
         NS_ERROR("unable to construct resource");
         return rv;
@@ -1580,6 +1583,9 @@ RDFXULBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aN
         }
 
         nsCOMPtr<nsIRDFResource> property;
+        if (kNameSpaceID_Unknown == nameSpaceID) {
+          nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+        }
         if (NS_FAILED(rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property)))) {
             NS_ERROR("unable to construct resource");
             return rv;
