@@ -330,6 +330,9 @@ void nsComboBox::Create(nsIWidget *aParent,
     parentWidget = (Widget) aInitData ;
   }
 
+  InitToolkit(aToolkit, aParent);
+  InitDeviceContext(aContext, parentWidget);
+
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   /*mWidget = ::XtVaCreateManagedWidget("",
