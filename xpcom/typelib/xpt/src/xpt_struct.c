@@ -91,14 +91,17 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     uint32 ide_offset;
     int i;
 
-    if (mode == XPT_DECODE)
+    if (mode == XPT_DECODE) {
         header = PR_NEWZAP(XPTHeader);
-    else
+        if (!header)
+            return PR_FALSE;
+    } else {
         header = *headerp;
+    }
 
     if (mode == XPT_ENCODE) {
         /* IDEs appear after header, including annotations */
-        ide_offset = XPT_SizeOfHeader(*headerp);
+        ide_offset = XPT_SizeOfHeader(*headerp) + 1; /* one-based offset */
     }
 
     for (i = 0; i < 16; i++) {
