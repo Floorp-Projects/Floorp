@@ -3052,11 +3052,11 @@ MOZ_ARG_DISABLE_BOOL(tests,
 [  --disable-tests         Do not build tests libraries & programs],
   ENABLE_TESTS= )
 
-dnl bi-directional support off by default
-IBMBIDI=
-MOZ_ARG_ENABLE_BOOL(bidi,
-[  --enable-bidi           Enable bi-directional support],
-  IBMBIDI=1)
+dnl bi-directional support on by default
+IBMBIDI=1
+MOZ_ARG_DISABLE_BOOL(bidi,
+[  --disable-bidi           Disable bi-directional support],
+  IBMBIDI= )
 if test "$IBMBIDI"; then
   AC_DEFINE(IBMBIDI)
 fi
