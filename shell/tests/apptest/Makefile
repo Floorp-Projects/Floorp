@@ -37,7 +37,6 @@ EX_LIBS = \
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
 	$(DIST)/lib/libshell_s.a	\
-	$(DIST)/lib/libshellentry_s.a	\
 	$(NULL)
 
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
