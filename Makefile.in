@@ -266,14 +266,17 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    unallmakefiles \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out 
 
+ifeq ($(BUILD_MODULES),all)
 # Build psuedo-external modules first when export is explicitly called
 export::
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(BUILD_MODULES),all)
 # Clean up after psuedo-external modules
 clean clobber realclean clobber_all distclean::
 ifndef MOZ_NATIVE_NSPR
@@ -281,6 +284,7 @@ ifndef MOZ_NATIVE_NSPR
 endif
 ifdef MOZ_LDAP_XPCOM
 	$(MAKE) -C directory/c-sdk/ldap $@
+endif
 endif
 
 tier_%: 
