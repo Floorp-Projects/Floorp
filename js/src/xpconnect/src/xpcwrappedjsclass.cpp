@@ -485,10 +485,15 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     SET_CALLER_NATIVE(xpcc);
 
 #ifdef DEBUG_stats_jband
+    PRIntervalTime startTime = PR_IntervalNow();
+    PRIntervalTime endTime = 0;
+    static int totalTime = 0;
+    
+
     static int count = 0;
     static const int interval = 10;
     if(0 == (++count % interval))
-        printf("<<<<<<<< %d calls on nsXPCWrappedJSs made\n", count);
+        printf("<<<<<<<< %d calls on nsXPCWrappedJSs made.  (%d)\n", count, PR_IntervalToMilliseconds(totalTime));
 #endif
 
     // XXX ASSUMES that retval is last arg.
@@ -732,7 +737,9 @@ pre_call_clean_up:
             }
             oldsp = fp->sp;
             fp->sp = sp;
+    
             success = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
+          
             result = fp->sp[-1];
             fp->sp = oldsp;
             if(oldfp != fp)
@@ -1071,7 +1078,11 @@ done:
         JS_SetErrorReporter(cx, older);
 
     NS_IF_RELEASE(xpc);
-
+#ifdef DEBUG_stats_jband
+    endTime = PR_IntervalNow();
+    printf("%s::%s %d ( c->js ) \n", GetInterfaceName(), info->GetName(), PR_IntervalToMilliseconds(endTime-startTime));
+    totalTime += endTime-startTime;
+#endif
     return retval;
 }
 
