@@ -245,7 +245,9 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         break;
  
       case nsIDOMKeyEvent::DOM_VK_TAB:
-        if ((flags & nsIPlaintextEditor::eEditorSingleLineMask))
+        if ((flags & nsIPlaintextEditor::eEditorSingleLineMask) ||
+            (flags & nsIPlaintextEditor::eEditorPasswordMask)   ||
+            (flags & nsIPlaintextEditor::eEditorWidgetMask))
           return NS_OK; // let it be used for focus switching
 
         // else we insert the tab straight through
