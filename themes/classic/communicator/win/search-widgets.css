@@ -1,9 +1,0 @@
-/** 
- * styles for search widgets used by Mail Filter dialog and Search
- * and hopefully one day Bookmarks/History...
- **/
-
-.search-menulist, .search-value-menulist, .search-value-textbox
-  {
-    margin                : 0px;
-  }

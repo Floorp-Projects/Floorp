@@ -3,7 +3,6 @@ classic.jar:
     skin/classic/editor/contents.rdf                                     (editor/contents.rdf)
     skin/classic/messenger/contents.rdf                                  (messenger/contents.rdf)
     skin/classic/navigator/contents.rdf                                  (navigator/contents.rdf)
-    skin/classic/communicator/search-widgets.css                         (communicator/win/search-widgets.css)
     skin/classic/communicator/broken.gif                                 (communicator/broken.gif)
     skin/classic/communicator/lock.gif                                   (communicator/lock.gif)
     skin/classic/communicator/unlock.gif                                 (communicator/unlock.gif)

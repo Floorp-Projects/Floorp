@@ -397,6 +397,13 @@
       ]]>
       </constructor>
     </implementation>
+    <handlers>
+	<handler event="keypress"><![CDATA[
+	  if (event.keyCode == 13) {
+	    onSearch(); 
+          }
+        ]]></handler>
+    </handlers>
   </binding>
   <binding id="searchterm" name="searchTerm" extends="xul:box">
     <implementation>

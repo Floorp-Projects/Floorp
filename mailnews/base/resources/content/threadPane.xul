@@ -56,6 +56,7 @@ Rights Reserved.
   <outlinercol id="unreadCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width" flex="1" label="&unreadColumn.label;"/>
   <splitter class="tree-splitter"/>
   <outlinercol id="totalCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width" flex="1" label="&totalColumn.label;"/>
+  <outlinercol id="locationCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true" label="&locationColumn.label;"/>
   <outlinerbody flex="1" onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();"/>
 </outliner>
 

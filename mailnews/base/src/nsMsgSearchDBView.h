@@ -50,7 +50,7 @@ public:
   NS_IMETHOD GetFolderForViewIndex(nsMsgViewIndex index, nsIMsgFolder **folder);
   virtual nsresult GetFolders(nsISupportsArray **aFolders);
 protected:
-  nsresult FetchLocation(nsIMsgDBHdr * aHdr, PRUnichar ** aSizeString);
+  nsresult FetchLocation(PRInt32 aRow, PRUnichar ** aLocationString);
   virtual nsresult GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **db);
   virtual nsresult RemoveByIndex(nsMsgViewIndex index);
   virtual nsresult CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool isMove, nsIMsgFolder *destFolder);

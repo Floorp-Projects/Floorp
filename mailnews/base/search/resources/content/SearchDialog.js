@@ -191,10 +191,20 @@ function searchOnLoad()
   // hide the thread related columns.  you can't thread search results
   var threadCol = document.getElementById("threadCol");
   threadCol.setAttribute("hidden","true");
+  threadCol.setAttribute("ignoreincolumnpicker","true");
+
   var totalCol = document.getElementById("totalCol");
   totalCol.setAttribute("hidden","true");
+  totalCol.setAttribute("ignoreincolumnpicker","true");
+
   var unreadCol = document.getElementById("unreadCol");
   unreadCol.setAttribute("hidden","true");
+  unreadCol.setAttribute("ignoreincolumnpicker","true");
+
+  // we want to show this column for search
+  var locationCol = document.getElementById("locationCol");
+  locationCol.removeAttribute("hidden");
+  locationCol.removeAttribute("ignoreincolumnpicker");
 }
 
 function searchOnUnload()
@@ -288,8 +298,17 @@ function onChooseFolder(event) {
     }
 }
 
-function onSearch(event)
+function onSearch()
 {
+    // set the view.  do this on every search, to
+    // allow the outliner to reset itself
+    var outlinerView = gSearchView.QueryInterface(Components.interfaces.nsIOutlinerView);
+    if (outlinerView)
+    {
+      var outliner = GetThreadOutliner();
+      outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
+    }
+
     gSearchSession.clearScopes();
     // tell the search session what the new scope is
     if (!gCurrentFolder.isServer)
@@ -396,13 +415,6 @@ function setupDatasource() {
     gSearchView.init(messenger, msgWindow, cmdupdator);
     gSearchView.open(null, nsMsgViewSortType.byId, nsMsgViewSortOrder.ascending, nsMsgViewFlagsType.kNone, count);
 
-    var outlinerView = gSearchView.QueryInterface(Components.interfaces.nsIOutlinerView);
-    if (outlinerView)
-    {
-      var outliner = GetThreadOutliner();
-      outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
-    }
-
     // the thread pane needs to use the search datasource (to get the
     // actual list of messages) and the message datasource (to get any
     // attributes about each message)
@@ -480,9 +492,9 @@ function setMsgDatasourceWindow(ds, msgwindow)
 function onSearchButton(event)
 {
     if (event.target.label == gSearchBundle.getString("labelForSearchButton"))
-        onSearch(event);
+        onSearch();
     else
-        onSearchStop(event);
+        onSearchStop();
 }
 
 // threadPane.js will be needing this, too
@@ -565,8 +577,6 @@ function HandleDeleteOrMoveMessageCompleted(folder)
 
 function SetDatasources()
 {
-    dump("XXX SetDatasources\n");
-
     var button = document.getElementById("fileMessageButton");
     var datasourceContractIDPrefix = "@mozilla.org/rdf/datasource;1?name=";
     var accountManagerDSContractID = datasourceContractIDPrefix + "msgaccountmanager";

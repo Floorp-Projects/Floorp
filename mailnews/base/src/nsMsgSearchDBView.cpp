@@ -92,22 +92,23 @@ NS_IMETHODIMP nsMsgSearchDBView::Close()
 
 NS_IMETHODIMP nsMsgSearchDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, PRUnichar ** aValue)
 {
-  nsresult rv;
   if (aColID[0] == 'l') // location
   {
-    nsCOMPtr <nsIMsgDBHdr> msgHdr;
-    rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
-    NS_ENSURE_SUCCESS(rv, rv);
-    return FetchLocation(msgHdr, aValue);
+    return FetchLocation(aRow, aValue);
   }
   else
     return nsMsgDBView::GetCellText(aRow, aColID, aValue);
-
 }
 
-nsresult nsMsgSearchDBView::FetchLocation(nsIMsgDBHdr * aHdr, PRUnichar ** aSizeString)
+nsresult nsMsgSearchDBView::FetchLocation(PRInt32 aRow, PRUnichar ** aLocationString)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr <nsIMsgFolder> folder;
+  nsresult rv = GetFolderForViewIndex(aRow, getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = folder->GetPrettiestName(aLocationString);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
 }
 
 nsresult nsMsgSearchDBView::GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **msgHdr)

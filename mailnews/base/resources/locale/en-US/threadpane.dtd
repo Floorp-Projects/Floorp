@@ -31,6 +31,7 @@ Rights Reserved.
 <!ENTITY orderReceivedColumn.label "Order Received">
 <!ENTITY readColumn.label "Read">
 <!ENTITY flagColumn.label "Flag">
+<!ENTITY locationColumn.label "Location">
 
 <!--Tooltips-->
 <!ENTITY threadColumnHeader.tooltip "Click to display message threads"> 
