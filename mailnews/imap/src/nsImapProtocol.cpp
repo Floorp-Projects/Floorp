@@ -1731,17 +1731,78 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
 // In 4.5, this posted an event back to libmsg and blocked until it got a response.
 // We may still have to do this.It would be nice if we could preflight this value,
 // but we may not always know when we'll need it.
-PRUint32 nsImapProtocol::GetMessageSize(nsString2 &messageId, PRBool idsAreUids)
+PRUint32 nsImapProtocol::GetMessageSize(nsString2 &messageId, 
+                                        PRBool idsAreUids)
 {
-	NS_ASSERTION(FALSE, "not implemented yet");
-	return 0;
+	MessageSizeInfo *sizeInfo = 
+        (MessageSizeInfo *)PR_CALLOC(sizeof(MessageSizeInfo));
+	if (sizeInfo)
+	{
+		const char *folderFromParser =
+            GetServerStateParser().GetSelectedMailboxName(); 
+		if (folderFromParser)
+		{
+			sizeInfo->id = (char *)PR_CALLOC(messageId.Length() + 1);
+			PL_strcpy(sizeInfo->id, messageId.GetBuffer());
+			sizeInfo->idIsUid = idsAreUids;
+
+			nsIMAPNamespace *nsForMailbox = nsnull;
+            m_hostSessionList->GetNamespaceForMailboxForHost(
+                GetImapHostName(), GetImapUserName(), folderFromParser,
+                nsForMailbox);
+
+			char *nonUTF7ConvertedName = CreateUtf7ConvertedString(folderFromParser, FALSE);
+			if (nonUTF7ConvertedName)
+				folderFromParser = nonUTF7ConvertedName;
+
+			if (nsForMailbox)
+                m_runningUrl->AllocateCanonicalPath(
+                    folderFromParser, nsForMailbox->GetDelimiter(),
+                    &sizeInfo->folderName);
+			else
+                 m_runningUrl->AllocateCanonicalPath(
+                    folderFromParser,kOnlineHierarchySeparatorUnknown,
+                    &sizeInfo->folderName);
+			PR_FREEIF(nonUTF7ConvertedName);
+
+			if (sizeInfo->id && sizeInfo->folderName)
+			{
+                if (m_imapMessage)
+                {
+                    m_imapMessage->GetMessageSizeFromDB(this, sizeInfo);
+                    WaitForFEEventCompletion();
+                }
+
+			}
+            PR_FREEIF(sizeInfo->id);
+            PR_FREEIF(sizeInfo->folderName);
+
+			int32 rv = 0;
+			if (!DeathSignalReceived())
+				rv = sizeInfo->size;
+			PR_Free(sizeInfo);
+			return rv;
+		}
+    }
+	else
+	{
+		HandleMemoryFailure();
+	}
+    return 0;
 }
 
 
 PRBool	nsImapProtocol::GetShowAttachmentsInline()
 {
-	return PR_FALSE;	// need to check the preference "mail.inline_attachments"
-						// perhaps the pref code is thread safe? If not ??? ### DMB
+    PRBool *rv = (PRBool*) new PRBool(PR_FALSE);
+
+    if (m_imapMiscellaneous && rv)
+    {
+        m_imapMiscellaneous->GetShowAttachmentsInline(this, rv);
+        WaitForFEEventCompletion();
+        return *rv;
+    }
+    return PR_FALSE;
 }
 
 PRMonitor *nsImapProtocol::GetDataMemberMonitor()
@@ -1834,8 +1895,7 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
             m_hostSessionList->GetNamespaceForMailboxForHost(
                 GetImapHostName(), GetImapUserName(), mailboxName,
                 namespaceForFolder);
-		NS_ASSERTION (namespaceForFolder, 
-                      "Oops ... null namespace for folder");
+		
 		aclRightsInfo->hostName = PL_strdup(GetImapHostName());
 
 		char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, FALSE);
