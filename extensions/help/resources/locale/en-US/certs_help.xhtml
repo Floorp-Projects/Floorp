@@ -43,7 +43,7 @@
 <p>To perform these actions, select the certificates on which you want to act and click one of these buttons:
 <UL>
   <LI><b>View.</b> Display detailed information about the selected certificates.</LI>
-  <LI><b>Backup.</b> Initiate the process of backing up the selected certificates. A window appears that allows you to choose a password to protect the backup. You can then save the backup in a directory of your choice.</LI>
+  <LI><b>Backup.</b> Initiate the process of saving the selected certificates. A window appears that allows you to choose a password to protect the backup. You can then save the backup in a directory of your choice.</LI>
   <LI><b>Delete.</b> Delete the selected certificates.</LI>
 </UL>
 
@@ -52,7 +52,7 @@
 
   <LI><b>Restore.</b> Restore a file containing one or more certificates that were previously backed up. When you click Restore, Certificate Manager first asks you to locate the file that contains the backup. The names of certificate backup files typically end in <tt>.p12</tt>; for example, <tt>MyCert.p12</tt>. After you select the file to be restored, Certificate Manager asks you to enter the password that you set when you backed up the certificate.</LI>
 
-  <LI><b>Backup All.</b> Initiate the process of backing up all the certificates stored in the <a href="glossary.html#software_security_device">software security device</a>. 
+  <LI><b>Backup All.</b> Initiate the process of saving all the certificates stored in the <a href="glossary.html#software_security_device">software security device</a>. 
 
 		<p><b>Back up smart card certificates one at a time.</b> Certificates stored anywhere other than the software security device, such as on a smart card in a smart card reader attached to your computer, will not be backed up by the Backup All button. To back up such certificates, select them individually, then click Backup.</UL>
   
@@ -119,7 +119,7 @@
 <a NAME="Edit_Web_Site_Certificate_Settings"></a>
 <h3>Edit Web Site Certificate Settings</h3>
  
-<p>When you select a web site certificate and click Edit, you see a window titled Edit Certificate Trust. Here you specify whether you want to trust the selected certificate for identifying the web site and setting up an encrypted connection with it.
+<p>When you select a web site certificate and click Edit, you see a window entitled Edit Certificate Trust. Here you specify whether you want to trust the selected certificate for identifying the web site and setting up an encrypted connection with it.
 
 <p>The radio buttons have the following effects:
 
@@ -167,13 +167,13 @@
 <a NAME="Edit_CA_Certificate_Settings"></a>
 <h3>Edit CA Certificate Settings</h3>
 
-<p>When you select a CA certificate and click Edit, you see a window titled Edit Certificate Trust. Here you specify the kinds of certificates you trust this CA to certify. If you deselect all the checkboxes, Certificate Manager will not trust any certificates issued by this CA.
+<p>When you select a CA certificate and click Edit, you see a window entitled Edit Certificate Trust. Here you specify the kinds of certificates you trust this CA to certify. If you deselect all the checkboxes, Certificate Manager will not trust any certificates issued by this CA.
 
 <p>The settings have these effects:
 <ul>
-<li><b>This certificate can identify web sites.</b> Certificate Manager will trust certificates issued by this CA for purposes of identifying web sites and encrypting web site connections. If you deselect this checkbox, Certificate Manager will not trust web site certificates issued by this CA.
+<li><b>This certificate can identify web sites.</b> Certificate Manager will trust certificates issued by this CA for the purpose of identifying web sites and encrypting web site connections. If you deselect this checkbox, Certificate Manager will not trust web site certificates issued by this CA.
 
-<li><b>This certificate can identify mail users.</b> Certificate Manager will trust certificates issued by this CA for purposes of signing or encrypting email. If you deselect this checkbox, Certificate Manager will not trust email certificates issued by this CA.
+<li><b>This certificate can identify mail users.</b> Certificate Manager will trust certificates issued by this CA for the purpose of signing or encrypting email. If you deselect this checkbox, Certificate Manager will not trust email certificates issued by this CA.
 
 <li><b>This certificate can identify software makers.</b> Certificate Manager will trust certificates issued by this CA for the purpose of identifying software makers. If you deselect this checkbox, Certificate Manager will not trust such certificates issued by this CA.
 </ul>
@@ -221,8 +221,8 @@
 
 <p>To add a new module, click Load. Before adding a new module, you should first install the module software on your computer and if necessary connect any associated hardware device. Follow the instructions provided by the vendor.  
 
-<p>The Enable FIPS button on the right side of the Device Manager allows you to switch to FIPS
-mode and back again. For more information, see <a href="using_certs_help.html#using_certs_devices_fips">Enable FIPS Mode</a>.
+<p>The Enable FIPS button on the right side of the Device Manager allows you to turn the FIPS
+mode on and off. For more information, see <a href="using_certs_help.html#using_certs_devices_fips">Enable FIPS Mode</a>.
 
 <p>
 [&nbsp;<A HREF="#Security_Devices">Return to beginning of Device Manager section</A>&nbsp;]
@@ -230,7 +230,7 @@ mode and back again. For more information, see <a href="using_certs_help.html#us
   
 
 <hr>
-<p><i>7/5/2001</i></p>
+<p><i>7/9/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
