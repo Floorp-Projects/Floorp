@@ -31,52 +31,22 @@
 # GPL.
 #
 
-DEPTH	= ../..
-# MODULE	= seccmd
+CORE_DEPTH = ../../..
 
-REQUIRES = security nspr libdbm
+# MODULE public and private header  directories are implicitly REQUIRED.
+MODULE = security
 
-DIRS = lib  \
- zlib \
- atob  \
- btoa  \
- certcgi \
- certutil  \
- checkcert  \
- crlutil  \
- derdump  \
- digest  \
- makepqg  \
- ocspclnt  \
- oidcalc  \
- p7content  \
- p7env  \
- p7sign  \
- p7verify  \
- pp  \
- rngtest \
- sdrtest \
- selfserv  \
- ssltap  \
- strsclnt \
- swfort  \
- tstclnt  \
- smimetools  \
- $(NULL)
+CSRCS = \
+	sdrtest.c \
+	$(NULL)
 
-TEMPORARILY_DONT_BUILD = \
- SSLsample \
- modutil \
- $(NULL)
+# headers for the MODULE (defined above) are implicitly required.
+REQUIRES = dbm seccmd
 
-# rsaperf  \
-#
-#       needs to look at what needs to happen to make jar build in
-# the binary release environment.
-#
-# perror requires lib/strerror.c which requires the client code installed 
-# to build (requires allxpstr.h)
-#
-DONT_BULD = jar \
- perror \
-$(NULL)
+# WINNT uses EXTRA_LIBS as the list of libs to link in.
+# Unix uses     OS_LIBS for that purpose.
+# We can solve this via conditional makefile code, but 
+# can't do this in manifest.mn because OS_ARCH isn't defined there.
+# So, look in the local Makefile for the defines for the list of libs.
+
+PROGRAM = sdrtest
