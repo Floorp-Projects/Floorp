@@ -169,6 +169,8 @@ nsBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
     *aReadCount = 0;
     while (aCount > 0) {
         PRUint32 amt;
+        
+        amt = 0;
         rv = mBuffer->Read(aBuf, aCount, &amt);
         if (rv == NS_BASE_STREAM_EOF) {
             rv = (*aReadCount == 0) ? rv : NS_OK;
@@ -241,6 +243,7 @@ nsBufferInputStream::Fill(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCou
     *aWriteCount = 0;
     while (aCount > 0) {
         PRUint32 amt;
+        amt = 0;
         rv = mBuffer->Write(aBuf, aCount, &amt);
         if (rv == NS_BASE_STREAM_EOF)
             return *aWriteCount > 0 ? NS_OK : rv;
@@ -277,6 +280,7 @@ nsBufferInputStream::FillFrom(nsIInputStream *fromStream, PRUint32 aCount, PRUin
     *aWriteCount = 0;
     while (aCount > 0) {
         PRUint32 amt;
+        amt = 0;
         rv = mBuffer->WriteFrom(fromStream, aCount, &amt);
         if (rv == NS_BASE_STREAM_EOF)
             return *aWriteCount > 0 ? NS_OK : rv;
@@ -453,6 +457,7 @@ nsBufferOutputStream::WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
     *aWriteCount = 0;
     while (aCount > 0) {
         PRUint32 amt;
+        amt = 0;
         rv = mBuffer->WriteFrom(fromStream, aCount, &amt);
 //        if (rv == NS_BASE_STREAM_WOULD_BLOCK) break;
         // If a blocking write fails just drop into Flush(...)
