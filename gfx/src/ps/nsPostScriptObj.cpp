@@ -49,6 +49,7 @@
 
 #ifdef VMS
 #include <stdlib.h>
+#include "prprf.h"
 #endif
 
 extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
@@ -191,16 +192,16 @@ nsPostScriptObj::~nsPostScriptObj()
 #else
 	pclose( mPrintSetup->out );
 #endif
-#ifdef VMS
-      if ( mPrintSetup->print_cmd != (char *) NULL ) {
-        char VMSPrintCommand[1024];
-        sprintf (VMSPrintCommand, "%s /delete %s.",
-          mPrintSetup->print_cmd, mPrintSetup->filename);
-        system(VMSPrintCommand);
-        free(mPrintSetup->filename);
-      }
-#endif
     }
+#ifdef VMS
+    if ( mPrintSetup->print_cmd != (char *) NULL ) {
+      char VMSPrintCommand[1024];
+      PR_snprintf(VMSPrintCommand, sizeof(VMSPrintCommand), "%s /delete %s.",
+        mPrintSetup->print_cmd, mPrintSetup->filename);
+      system(VMSPrintCommand);
+      free(mPrintSetup->filename);
+    }
+#endif
   }
   // Cleanup things allocated along the way
   if (nsnull != mTitle){
