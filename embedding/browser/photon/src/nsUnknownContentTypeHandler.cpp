@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsUnknownContentTypeHandler.h"
-
+#include "nsIGenericFactory.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -190,15 +190,6 @@ NS_IMETHODIMP nsWebProgressListener::OnSecurityChange(nsIWebProgress *aWebProgre
 
 //#######################################################################################
 
-
-
-/* Define instance counter implementation stuff. */
-NS_DEFINE_MODULE_INSTANCE_COUNTER()
-
-/* Define component globals. */
-NS_DEFINE_COMPONENT_GLOBALS()
-
-
 #define className             nsUnknownContentTypeHandler
 #define interfaceName         nsIHelperAppLauncherDialog
 #define contractId            NS_IUNKNOWNCONTENTTYPEHANDLER_CONTRACTID
@@ -222,10 +213,6 @@ NS_IMETHODIMP className::QueryInterface( REFNSIID anIID, void **anInstancePtr ) 
 			*anInstancePtr = (void*) (nsIHelperAppLauncherDialog*)this; 
 			NS_ADDREF_THIS();
 			}
-		else if ( anIID.Equals( NS_GET_IID(nsIAppShellComponent) ) ) { 
-			*anInstancePtr = (void*) ( (nsIAppShellComponent*)this ); 
-			NS_ADDREF_THIS();
-			}
 		else if ( anIID.Equals( NS_GET_IID(nsISupports) ) ) { 
 			*anInstancePtr = (void*) ( (nsISupports*) (interfaceName*)this ); 
 			NS_ADDREF_THIS();
@@ -235,24 +222,7 @@ NS_IMETHODIMP className::QueryInterface( REFNSIID anIID, void **anInstancePtr ) 
 	return rv; 
 	}
 
-
- 
-/* Component's implementation of Initialize. */
-NS_IMETHODIMP className::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) {
-	return NS_OK;
-	}
- 
-/* Component's implementation of Shutdown. */
-NS_IMETHODIMP className::Shutdown() { 
-	return NS_OK;
-	} 
-
-NS_IMPL_IAPPSHELLCOMPONENTIMPL_CTORDTOR( className ) 
-
- 
 NS_GENERIC_FACTORY_CONSTRUCTOR( nsUnknownContentTypeHandler )
-
-
 
 // The list of components we register
 static nsModuleComponentInfo info[] = {

@@ -2,7 +2,6 @@
 #define NSUNKNOWNCONTENTTYPEHANDLER_EMB
 
 #include "nsIHelperAppLauncherDialog.h"
-#include "nsIAppShellComponentImpl.h"
 #include "nsIExternalHelperAppService.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserPersist.h"
@@ -13,8 +12,7 @@
 
 static NS_DEFINE_CID( kCID, NS_IHELPERAPPLAUNCHERDIALOG_IID );
 
-class nsUnknownContentTypeHandler : public nsIHelperAppLauncherDialog,
-																		public nsAppShellComponentImpl {
+class nsUnknownContentTypeHandler : public nsIHelperAppLauncherDialog {
 
 public:
 
@@ -25,9 +23,6 @@ public:
 
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
-
-    // This class implements the nsIAppShellComponent interface functions.
-    NS_DECL_NSIAPPSHELLCOMPONENT
 
     // This class implements the nsIHelperAppLauncherDialog interface functions.
     NS_DECL_NSIHELPERAPPLAUNCHERDIALOG
