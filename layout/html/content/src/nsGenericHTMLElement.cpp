@@ -28,6 +28,8 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSDeclaration.h"
 #include "nsIDocument.h"
+#include "nsIDocumentEncoder.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -83,6 +85,12 @@
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsILanguageAtomService.h"
+
+#include "nsIParser.h"
+#include "nsParserCIID.h"
+#include "nsIHTMLContentSink.h"
+#include "nsHTMLContentSinkStream.h"
+#include "nsXIFDTD.h"
 
 // XXX todo: add in missing out-of-memory checks
 NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
@@ -779,6 +787,79 @@ nsGenericHTMLElement::GetOffsetParent(nsIDOMElement** aOffsetParent)
     }
   }
   return res;
+}
+
+nsresult    
+nsGenericHTMLElement::GetInnerHTML(nsString& aInnerHTML)
+{
+  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(mContent));
+  nsresult rv = NS_OK;
+
+  // Frist we create XIF for the children of this node...
+  nsAutoString buf;
+  nsXIFConverter xifc(buf);
+
+  PRUint32 i, count = 0;
+  nsCOMPtr<nsIDOMNodeList> childNodes;
+  thisNode->GetChildNodes(getter_AddRefs(childNodes));
+  if (childNodes)
+    childNodes->GetLength(&count);
+
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsIDOMNode> child;
+    childNodes->Item(i, getter_AddRefs(child));
+    rv = mDocument->ToXIF(xifc, child);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // And then we use the parser and sinks to create the HTML.
+
+  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHTMLContentSink> sink;
+  rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink), &aInnerHTML,
+                                     nsIDocumentEncoder::OutputNoDoctype);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  parser->SetContentSink(sink);
+  nsCOMPtr<nsIDTD> dtd;
+
+  rv = NS_NewXIFDTD(getter_AddRefs(dtd));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  parser->RegisterDTD(dtd);
+  parser->Parse(buf, 0, NS_ConvertASCIItoUCS2("text/xif"), PR_FALSE, PR_TRUE);
+
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::SetInnerHTML(const nsString& aInnerHTML)
+{
+  nsresult rv = NS_OK;
+
+  nsRange *range = new nsRange;
+  NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(range);
+
+  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(mContent));
+  rv = range->SelectNodeContents(thisNode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = range->DeleteContents();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDocumentFragment> df;
+
+  rv = range->CreateContextualFragment(aInnerHTML, getter_AddRefs(df));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_RELEASE(range);
+
+  nsCOMPtr<nsIDOMNode> tmpNode;
+  return thisNode->AppendChild(df, getter_AddRefs(tmpNode));
 }
 
 static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)

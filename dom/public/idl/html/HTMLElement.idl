@@ -15,4 +15,5 @@
             readonly attribute int offsetWidth;
             readonly attribute int offsetHeight;
             readonly attribute Element offsetParent;
+                     attribute DOMString innerHTML;
  };
