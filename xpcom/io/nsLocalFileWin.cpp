@@ -654,10 +654,14 @@ nsLocalFile::Clone(nsIFile **file)
     *file = nsnull;
     
     // Just copy-construct ourselves
-    nsCOMPtr<nsILocalFile> localFile = new nsLocalFile(*this);
+    nsLocalFile *localFile = new nsLocalFile(*this);
     if (localFile == NULL)
-      return NS_ERROR_OUT_OF_MEMORY;
+        return NS_ERROR_OUT_OF_MEMORY;
 
+    // don't forget to re-initialize mRefCnt
+    // or the new object will have the old refcnt
+    localFile->mRefCnt = 0;
+    
     *file = localFile;
     NS_ADDREF(*file);
         
