@@ -1463,7 +1463,7 @@ nsWindow::GrabPointer(void)
   }
 
   gint retval;
-  retval = gdk_pointer_grab(mDrawingarea->inner_window, FALSE,
+  retval = gdk_pointer_grab(mDrawingarea->inner_window, TRUE,
 			    (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
 					   GDK_BUTTON_RELEASE_MASK |
 					   GDK_ENTER_NOTIFY_MASK |
