@@ -21,7 +21,7 @@
  *  Should only be include by files that work with the editor.
  *  Created: David Williams <djw@netscape.com>, Mar-12-1996
  *
- *  RCSID: "$Id: xeditor.h,v 3.1 1998/03/28 03:20:28 ltabb Exp $"
+ *  RCSID: "$Id: xeditor.h,v 3.2 1998/09/28 19:09:17 akkana%netscape.com Exp $"
  */
 
 
@@ -388,11 +388,8 @@ void          fe_EditorTableCellSetData(MWContext*, EDT_TableCellData*);
 void          fe_EditorDisplayTablesSet(MWContext* context, Boolean display);
 Boolean       fe_EditorDisplayTablesGet(MWContext* context);
 
-/*
- *    Tables dialogs.
- */
-void          fe_EditorTableCreateDialogDo(MWContext*);
-void          fe_EditorTablePropertiesDialogDo(MWContext*, fe_EditorPropertiesDialogType);
+void fe_EditorTablePropertiesDialogDo(MWContext*, fe_EditorPropertiesDialogType);
+void fe_EditorTableCreateDialogDo(MWContext*);
 
 Boolean       fe_EditorCheckUnsaved(MWContext* context);
 void          fe_EditorDisplaySource(MWContext* context);

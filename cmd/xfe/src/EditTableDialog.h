@@ -33,6 +33,15 @@
 class XFE_Frame;
 class EDT_AllTableData;
 
+typedef struct fe_bgGroupStruct
+{
+    Widget useColorToggle;
+    Widget useColorSwatch;
+    Widget useImageToggle;
+    Widget useImageText;
+    Widget leaveImageToggle;
+} fe_bgGroup;
+
 //
 // I don't think we really need to save all these variables.
 // 2DO: clean out the ones we don't need to save.
@@ -51,7 +60,7 @@ typedef struct fe_EditorTablesTableStruct
 	Widget height_toggle;
 	Widget height_text;
 	Widget height_units;
-	Widget bg_group;
+	fe_bgGroup bg_group;
 	Widget choose_color;
 	LO_Color color_value;
 	Widget caption_toggle;
@@ -83,7 +92,8 @@ typedef struct fe_EditorTablesCellStruct
 	Widget height_toggle;
 	Widget height_text;
 	Widget height_units;
-	Widget bg_group;
+	fe_bgGroup bg_group;
+    Widget use_color_toggle;
 	LO_Color color_value;
     Widget option_menu;
 } fe_EditorTablesCellStruct;
@@ -92,8 +102,7 @@ class XFE_EditTableDialog: public XFE_Dialog
 {
 public:
     XFE_EditTableDialog(Widget parent, char* name, MWContext* context,
-                        fe_EditorTablesTableStruct* tblData,
-                        int tab_number = 0);
+                        Boolean createIt, int tab_number = 0);
 
     virtual ~XFE_EditTableDialog();
 
@@ -103,8 +112,10 @@ private:
     MWContext* m_context;
     XP_Bool m_doneWithLoop;
 
-    fe_EditorTablesTableStruct* m_table;
+    fe_EditorTablesTableStruct m_table;
     fe_EditorTablesCellStruct m_cell;
+
+    Boolean m_newTable;
 
     void ok();
     void cancel();

@@ -178,6 +178,7 @@ private:
 	static PRLibrary* m_spellCheckerLib;
 	static XP_Bool   m_triedToLoad;
 
+	MWContext*       m_context;
 	XP_Bool          m_active;
 	xfe_spell_data   m_data;
 	xfe_spell_tag    m_tags[XSP_CACHE_SIZE];

@@ -225,9 +225,11 @@ xfe_spell_destroy_cb (Widget , XtPointer , XtPointer )
 /*static*/ PRLibrary* XFE_SpellHandler::m_spellCheckerLib = NULL;
 /*static*/ XP_Bool XFE_SpellHandler::m_triedToLoad = FALSE;
 
-XFE_SpellHandler::XFE_SpellHandler(MWContext* )
+XFE_SpellHandler::XFE_SpellHandler(MWContext* context)
 {
 	int i = 0;
+
+    m_context = context;
 
 	m_triedToLoad = FALSE;
 	m_active = FALSE;
@@ -337,6 +339,7 @@ XFE_SpellHandler::initSpellChecker()
 #ifdef DEBUG_akkana
             printf("Couldn't find library NSSpellChecker\n");
 #endif
+            FE_Alert(m_context, XP_GetString(NO_SPELL_SHLIB_FOUND));
             m_active = 0;
             return;
         }

@@ -145,7 +145,7 @@ MenuSpec XFE_EditorFrame::edit_menu_spec[] = {
   MENU_SEPARATOR,
   { xfeCmdFindInObject,	PUSHBUTTON },
   { xfeCmdFindAgain,	PUSHBUTTON },
-  { xfeCmdSearchAddress,	PUSHBUTTON },
+//  { xfeCmdSearchAddress,	PUSHBUTTON },
   MENU_SEPARATOR,
   { xfeCmdEditPageSource,PUSHBUTTON },
   MENU_SEPARATOR,
@@ -637,7 +637,7 @@ fe_EditorNewPopupMenu(XFE_Frame* frame, Widget parent, MWContext *context)
 	 */
 	if (EDT_GetHREF(context)) { 
 		popup->addMenuSpec(fe_editor_link_popups);
-	} else {
+	} else if (e_type != ED_ELEMENT_HRULE) {
 		popup->addMenuSpec(fe_editor_insert_link_popups);
 	}
 	
@@ -717,6 +717,10 @@ fe_editor_create_plugin_menu(MenuSpec* static_spec)
 		menu_spec[nstatics+category_index].submenu = category_spec;
 		category_index++;
 	}
+
+    // Add the "Stop Active Plugin" item:
+	menu_spec[nstatics+category_index].menuItemName = xfeCmdStopActivePlugin;
+	menu_spec[nstatics+category_index].tag = PUSHBUTTON;
 
     category_index++;
 	menu_spec[nstatics+category_index].menuItemName = NULL; // delimit paranoia
@@ -910,7 +914,32 @@ XFE_EditorFrame::isCommandSelected(CommandType cmd,
 	TRACE(("XFE_EditorFrame::isCommandSelected(%s,0x%x)\n",
 		   Command::getString(cmd), calldata));
 
-	return XFE_Frame::isCommandSelected(cmd, calldata, info);
+    if (cmd == xfeCmdSetAlignmentStyleLeft
+        || cmd == xfeCmdSetAlignmentStyleCenter
+        || cmd == xfeCmdSetAlignmentStyleRight)
+    {
+      EDT_TableData* td = EDT_GetTableData(getContext());
+      if (td == 0)
+        return FALSE;
+      switch (td->align)
+      {
+          case ED_ALIGN_LEFT:
+            return (cmd == xfeCmdSetAlignmentStyleLeft);
+          case ED_ALIGN_RIGHT:
+            return (cmd == xfeCmdSetAlignmentStyleRight);
+          case ED_ALIGN_ABSCENTER:
+          default:
+            return (cmd == xfeCmdSetAlignmentStyleCenter);
+      }
+    }
+
+    else if (cmd == xfeCmdSetAlignmentStyleCenter)
+    {
+      printf("Checking for center alignment\n");
+      return (EDT_GetParagraphAlign(getContext()) == ED_ALIGN_CENTER);
+    }
+
+    return XFE_Frame::isCommandSelected(cmd, calldata, info);
 }
 
 void

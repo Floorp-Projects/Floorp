@@ -6060,6 +6060,12 @@ fe_EditorTableCellSetData(MWContext* context, EDT_TableCellData* p_data)
     if (cell_data) {
 	COPY_SAVE_EXTRA(cell_data, p_data);
 	DUP_BGCOLOR(cell_data, p_data);
+#ifdef DEBUG_akkana
+        printf("EDT_SetTableCellData: %x %x %x\n",
+               cell_data->pColorBackground->red,
+               cell_data->pColorBackground->green,
+               cell_data->pColorBackground->blue);
+#endif
 	EDT_SetTableCellData(context, cell_data);
 	EDT_FreeTableCellData(cell_data);
 	fe_EditorUpdateToolbar(context, 0);

@@ -101,9 +101,9 @@ extern "C" void fe_EventLoop();
 extern "C" {
 
 /* some forward definitions: */
-static void fe_bg_group_set(Widget parent, LO_Color* color,
+static void fe_bg_group_set(fe_bgGroup* group, LO_Color* color,
                             char* bg_image, XP_Bool leave_image);
-static void fe_bg_group_get(Widget parent, LO_Color** color_r,
+static void fe_bg_group_get(fe_bgGroup* group, LO_Color** color_r,
                      char** bg_image_r, XP_Bool* leave_image_r);
 
 static Widget fe_CreateFolder(Widget parent, char* name,
@@ -111,8 +111,9 @@ static Widget fe_CreateFolder(Widget parent, char* name,
 static void fe_table_tbr_set(MWContext* context, Widget toggle,
                              Widget text, Widget radio, Boolean enabled,
                              unsigned numeric, Boolean second_one);
-static Widget fe_create_background_group(Widget parent, char* name,
-                                         Arg* p_args, Cardinal p_n);
+static void fe_create_background_group(Widget parent, char* name,
+                                         Arg* p_args, Cardinal p_n,
+                                         fe_bgGroup* group);
 /* End Forward Definitions */
 
 /* A routine that comes from Mail/News SearchRuleView.cpp, of all places: */
@@ -155,9 +156,45 @@ extern void fe_table_percent_label_set(Widget widget, Boolean nested);
 /* End editordialogs.c definitions */
 };  // end extern "C"
 
+#define TABLE_DIALOG_TAB_TABLE 0
+#define TABLE_DIALOG_TAB_CELL  1
+
+/*
+ * Extern routine called from EditorView.cpp
+ */
+void
+fe_EditorTableCreateDialogDo(MWContext* context)
+{
+    XFE_EditTableDialog* dialog
+        = new XFE_EditTableDialog(CONTEXT_WIDGET(context), "tableCreateDialog",
+                                  context, TRUE, TABLE_DIALOG_TAB_TABLE);
+    dialog->post();
+}
+
+/*
+ * Extern routine called from editordialogs.c and EditorView.cpp
+ */
+void
+fe_EditorTablePropertiesDialogDo(MWContext* context,
+                                 fe_EditorPropertiesDialogType type)
+{
+	unsigned tab_number;
+
+	if (type == XFE_EDITOR_PROPERTIES_TABLE_CELL)
+		tab_number = TABLE_DIALOG_TAB_CELL;
+	else
+		tab_number = TABLE_DIALOG_TAB_TABLE;
+
+    XFE_EditTableDialog* dialog = 
+        new XFE_EditTableDialog(CONTEXT_WIDGET(context),
+                                "tablePropertiesDialog",
+                                context, FALSE, tab_number);
+    dialog->post();
+}
+
 XFE_EditTableDialog::XFE_EditTableDialog(Widget parent, char *name,
                                          MWContext* context,
-                                         fe_EditorTablesTableStruct* table,
+                                         Boolean createIt,
                                          int tab_number)
     : XFE_Dialog(parent, 
                  name, 
@@ -175,7 +212,15 @@ XFE_EditTableDialog::XFE_EditTableDialog(Widget parent, char *name,
     Widget tab_form;
 
     m_context = context;
-    m_table = table;
+    /* If we're creating, insert a new minimal table */
+    if (m_newTable = createIt)
+    {
+        EDT_TableData* tableData = EDT_NewTableData();
+        tableData->iRows = tableData->iColumns = 1;
+        tableData->bBorderWidthDefined = True;
+        tableData->iBorderWidth = 1;
+        EDT_InsertTable(context, tableData);
+    }
 
 	n = 0;
 	folder = fe_CreateFolder(m_chrome, "folder", args, n);
@@ -239,33 +284,39 @@ XFE_EditTableDialog::cancel()
 {
     m_doneWithLoop = True;
 
+    // If the table is new, we need to delete the one that was created;
+    // if it was already there, then don't do anything.
+    if (m_newTable)
+    {
+        EDT_DeleteTable(m_context);
+    }
+
     hide();
 }
 
 void
-XFE_EditTableDialog::table_toggle_cb(Widget widget,
-                                     XtPointer, XtPointer closure)
+XFE_EditTableDialog::table_toggle_cb(Widget widget, XtPointer cd, XtPointer)
 {
-	fe_EditorTablesTableStruct* w_data = (fe_EditorTablesTableStruct*)closure;
+    XFE_EditTableDialog* edt = (XFE_EditTableDialog*)cd;
 	Boolean enabled = XmToggleButtonGetState(widget);
 	MWContext* context = fe_WidgetToMWContext(widget);
 	Widget  text = NULL; /* keep -O happy */
 	Widget  radio = NULL; /* keep -O happy */
 
-	if (widget == w_data->line_width_toggle) {
-		text = w_data->line_width_text;
+	if (widget == edt->m_table.line_width_toggle) {
+		text = edt->m_table.line_width_text;
 		radio = NULL;
-	} else if (widget == w_data->width_toggle) {
-		text = w_data->width_text;
-		radio = w_data->width_units;
-	} else if (widget == w_data->height_toggle) {
-		text = w_data->height_text;
-		radio = w_data->height_units;
-	} else if (widget == w_data->caption_toggle) {
-		fe_SimpleRadioGroupSetSensitive(w_data->caption_type, enabled);
+	} else if (widget == edt->m_table.width_toggle) {
+		text = edt->m_table.width_text;
+		radio = edt->m_table.width_units;
+	} else if (widget == edt->m_table.height_toggle) {
+		text = edt->m_table.height_text;
+		radio = edt->m_table.height_units;
+	} else if (widget == edt->m_table.caption_toggle) {
+		fe_SimpleRadioGroupSetSensitive(edt->m_table.caption_type, enabled);
 		return;
 	}
-
+    
 	if (text != NULL)
 		fe_TextFieldSetEditable(context, text, enabled);
 	if (radio != NULL)
@@ -356,50 +407,6 @@ XFE_EditTableDialog::cancel_cb(Widget, XtPointer clientData, XtPointer)
     XFE_EditTableDialog *obj = (XFE_EditTableDialog*)clientData;
 
     obj->cancel();
-}
-
-void
-fe_EditorTableCreateDialogDo(MWContext* context)
-{
-    /* create a new minimal table, insert it and select it */
-    EDT_TableData* tableData = EDT_NewTableData();
-    tableData->iRows = tableData->iColumns = 1;
-    tableData->bBorderWidthDefined = True;
-    tableData->iBorderWidth = 1;
-    EDT_InsertTable(context, tableData);
-
-	fe_EditorTablesTableStruct table;
-    XFE_EditTableDialog* dialog
-        = new XFE_EditTableDialog(CONTEXT_WIDGET(context), "tableCreateDialog",
-                                  context, &table);
-    dialog->post();
-
-    EDT_FreeTableData(tableData);
-}
-
-#define TABLE_DIALOG_TAB_TABLE 0
-#define TABLE_DIALOG_TAB_CELL  1
-
-/*
- * This is the extern routine that editordialogs.c calls.
- */
-void
-fe_EditorTablePropertiesDialogDo(MWContext* context,
-                                 fe_EditorPropertiesDialogType type)
-{
-	fe_EditorTablesTableStruct table;
-	unsigned tab_number;
-
-	if (type == XFE_EDITOR_PROPERTIES_TABLE_CELL)
-		tab_number = TABLE_DIALOG_TAB_CELL;
-	else
-		tab_number = TABLE_DIALOG_TAB_TABLE;
-
-    XFE_EditTableDialog* dialog = 
-        new XFE_EditTableDialog(CONTEXT_WIDGET(context),
-                                "tablePropertiesDialog",
-                                context, &table, tab_number);
-    dialog->post();
 }
 
 static ED_Alignment
@@ -510,7 +517,6 @@ XFE_EditTableDialog::cellPropertiesCreate(Widget parent)
 	Widget height_toggle;
 	Widget height_text;
 	Widget height_units;
-	Widget bg_group;
     Widget w;
     Widget prevnext_form;
 	Arg args[16];
@@ -727,8 +733,8 @@ XFE_EditTableDialog::cellPropertiesCreate(Widget parent)
 	XtSetArg(args[n], XmNtopWidget, height_text); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
-	bg_group = fe_create_background_group(form, "background", args, n);
-	XtManageChild(bg_group);
+	fe_create_background_group(form, "background", args, n,
+                               &(m_cell.bg_group));
 
 	m_cell.number_rows_text = rows_text;
 	m_cell.number_columns_text = columns_text;
@@ -742,7 +748,6 @@ XFE_EditTableDialog::cellPropertiesCreate(Widget parent)
 	m_cell.height_toggle = height_toggle;
 	m_cell.height_text = height_text;
 	m_cell.height_units = height_units;
-	m_cell.bg_group = bg_group;
     m_cell.option_menu = option_menu;
 
 	return form;
@@ -805,7 +810,7 @@ XFE_EditTableDialog::cellPropertiesInit()
 	/*
 	 *    Background stuff
 	 */
-	fe_bg_group_set(m_cell.bg_group,
+	fe_bg_group_set(&(m_cell.bg_group),
 					cell_data->pColorBackground,
 					cell_data->pBackgroundImage,
 					cell_data->bBackgroundNoSave);
@@ -908,11 +913,16 @@ XFE_EditTableDialog::cellPropertiesSet()
 	/*
 	 *    Background stuff
 	 */
-	fe_bg_group_get(m_cell.bg_group,
+	fe_bg_group_get(&(m_cell.bg_group),
 					&cell_data.pColorBackground,
 					&cell_data.pBackgroundImage,
 					&cell_data.bBackgroundNoSave);
 
+#ifdef DEBUG_akkana
+    printf("Setting color: %x %x %x\n", cell_data.pColorBackground->red,
+           cell_data.pColorBackground->green,
+           cell_data.pColorBackground->blue);
+#endif
     fe_EditorTableCellSetData(m_context, &cell_data);
 
 	if (cell_data.pColorBackground)
@@ -947,7 +957,6 @@ XFE_EditTableDialog::tablePropertiesCreate(Widget parent)
 	Widget caption_type;
 	Widget alignframe;
 	Widget alignBox;
-	Widget bg_group;
     Widget w;
 	Arg args[16];
 	Cardinal n;
@@ -979,8 +988,8 @@ XFE_EditTableDialog::tablePropertiesCreate(Widget parent)
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_WIDGET); n++;
 	XtSetArg(args[n], XmNleftWidget, w); n++;
 	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
-	m_table->number_rows_text = XmCreateTextField(form, "numRows", args, n);
-    XtManageChild(m_table->number_rows_text);
+	m_table.number_rows_text = XmCreateTextField(form, "numRows", args, n);
+    XtManageChild(m_table.number_rows_text);
 
 	n = 0;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_POSITION); n++;
@@ -994,9 +1003,9 @@ XFE_EditTableDialog::tablePropertiesCreate(Widget parent)
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_WIDGET); n++;
 	XtSetArg(args[n], XmNleftWidget, w); n++;
-    m_table->number_columns_text = XmCreateTextField(form, "numColumns",
+    m_table.number_columns_text = XmCreateTextField(form, "numColumns",
                                                     args, n);
-    XtManageChild(m_table->number_columns_text);
+    XtManageChild(m_table.number_columns_text);
 
 	/*
 	 *    Alignment frame.
@@ -1173,7 +1182,7 @@ XFE_EditTableDialog::tablePropertiesCreate(Widget parent)
 											   args, n);
 	XtManageChild(height_toggle);
     XtAddCallback(height_toggle, XmNvalueChangedCallback, 
-                  table_toggle_cb, (XtPointer)m_table);
+                  table_toggle_cb, (XtPointer)this);
 
 	n = 0;
 	XtSetArg(args[n], XmNcolumns, 4); n++;
@@ -1215,26 +1224,22 @@ XFE_EditTableDialog::tablePropertiesCreate(Widget parent)
 	XtSetArg(args[n], XmNtopWidget, frame); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
-	bg_group = fe_create_background_group(parent, "background", args, n);
-	XtManageChild(bg_group);
+	fe_create_background_group(parent, "background", args, n,
+                               &(m_table.bg_group));
 
-    if (m_table)
-    {
-        m_table->line_width_toggle = line_width_toggle;
-        m_table->line_width_text = line_width_text;
-        m_table->spacing_text = spacing_text;
-        m_table->padding_text = padding_text;
-        m_table->width_toggle = width_toggle;
-        m_table->width_text = width_text;
-        m_table->width_units = width_units;
-        m_table->height_toggle = height_toggle;
-        m_table->height_text = height_text;
-        m_table->height_units = height_units;
-        m_table->caption_toggle = caption_toggle;
-        m_table->caption_type = caption_type;
-        m_table->alignBox = alignBox;
-        m_table->bg_group = bg_group;
-    }
+    m_table.line_width_toggle = line_width_toggle;
+    m_table.line_width_text = line_width_text;
+    m_table.spacing_text = spacing_text;
+    m_table.padding_text = padding_text;
+    m_table.width_toggle = width_toggle;
+    m_table.width_text = width_text;
+    m_table.width_units = width_units;
+    m_table.height_toggle = height_toggle;
+    m_table.height_text = height_text;
+    m_table.height_units = height_units;
+    m_table.caption_toggle = caption_toggle;
+    m_table.caption_type = caption_type;
+    m_table.alignBox = alignBox;
 
 	return alignframe;
 }
@@ -1252,57 +1257,57 @@ XFE_EditTableDialog::tablePropertiesInit()
 		return;
 
     /* Set the number of rows and columns */
-    if (m_table->number_rows_text != 0)
+    if (m_table.number_rows_text != 0)
     {
-        fe_set_numeric_text_field(m_table->number_rows_text,
+        fe_set_numeric_text_field(m_table.number_rows_text,
                                   table_data.td.iRows);
-        if (m_table->number_rows_text != NULL) /* inserting */
+        if (m_table.number_rows_text != NULL) /* inserting */
             is_nested = EDT_IsInsertPointInTable(m_context);
         else
             is_nested = EDT_IsInsertPointInNestedTable(m_context);
     }
-    if (m_table->number_columns_text != 0)
-        fe_set_numeric_text_field(m_table->number_columns_text,
+    if (m_table.number_columns_text != 0)
+        fe_set_numeric_text_field(m_table.number_columns_text,
                                   table_data.td.iColumns);
 
 	/* set the border width parts */
-	fe_table_tbr_set(m_context, m_table->line_width_toggle,
-					 m_table->line_width_text, NULL,
+	fe_table_tbr_set(m_context, m_table.line_width_toggle,
+					 m_table.line_width_text, NULL,
 					 table_data.td.bBorderWidthDefined,
 					 table_data.td.iBorderWidth,
 					 0);
-	fe_set_numeric_text_field(m_table->spacing_text,
+	fe_set_numeric_text_field(m_table.spacing_text,
 							  table_data.td.iCellSpacing);
-	fe_set_numeric_text_field(m_table->padding_text,
+	fe_set_numeric_text_field(m_table.padding_text,
 							  table_data.td.iCellPadding);
 
-	fe_table_tbr_set(m_context, m_table->width_toggle,
-					 m_table->width_text, m_table->width_units,
+	fe_table_tbr_set(m_context, m_table.width_toggle,
+					 m_table.width_text, m_table.width_units,
 					 table_data.td.bWidthDefined,
 					 table_data.td.iWidth,
 					 (table_data.td.bWidthPercent));
 
-	widget = fe_SimpleRadioGroupGetChild(m_table->width_units, 1);
+	widget = fe_SimpleRadioGroupGetChild(m_table.width_units, 1);
 	fe_table_percent_label_set(widget, is_nested);
 	
-	fe_table_tbr_set(m_context, m_table->height_toggle,
-					 m_table->height_text, m_table->height_units,
+	fe_table_tbr_set(m_context, m_table.height_toggle,
+					 m_table.height_text, m_table.height_units,
 					 table_data.td.bHeightDefined,
 					 table_data.td.iHeight,
 					 (table_data.td.bHeightPercent));
-	widget = fe_SimpleRadioGroupGetChild(m_table->height_units, 1);
+	widget = fe_SimpleRadioGroupGetChild(m_table.height_units, 1);
 	fe_table_percent_label_set(widget, is_nested);
 
 	/*
 	 *    Background stuff
 	 */
-	fe_bg_group_set(m_table->bg_group,
+	fe_bg_group_set(&(m_table.bg_group),
 					table_data.td.pColorBackground,
 					table_data.td.pBackgroundImage,
 					table_data.td.bBackgroundNoSave);
 
-	fe_table_tbr_set(m_context, m_table->caption_toggle,
-					 NULL, m_table->caption_type,
+	fe_table_tbr_set(m_context, m_table.caption_toggle,
+					 NULL, m_table.caption_type,
 					 table_data.has_caption,
 					 0,
 					 (table_data.cd.align != ED_ALIGN_ABSTOP));
@@ -1310,7 +1315,7 @@ XFE_EditTableDialog::tablePropertiesInit()
 	/* we don't have default for alignment yet, so we need to subtract one
 	 * from index 
   	 */
-	fe_SimpleRadioGroupSetWhich(m_table->alignBox,
+	fe_SimpleRadioGroupSetWhich(m_table.alignBox,
 								fe_ED_Alignment_to_index(table_data.td.align)-1);
 }
 
@@ -1326,35 +1331,35 @@ XFE_EditTableDialog::tablePropertiesCommonSet(EDT_AllTableData* table_data)
 	table_data->td.malign = ED_ALIGN_DEFAULT;
 
     table_data->td.iRows = 
-		fe_get_numeric_text_field(m_table->number_rows_text);
+		fe_get_numeric_text_field(m_table.number_rows_text);
     table_data->td.iColumns = 
-		fe_get_numeric_text_field(m_table->number_columns_text);
+		fe_get_numeric_text_field(m_table.number_columns_text);
 
 	table_data->td.bBorderWidthDefined =
-		XmToggleButtonGetState(m_table->line_width_toggle);
+		XmToggleButtonGetState(m_table.line_width_toggle);
 	table_data->td.iBorderWidth = 
-		fe_get_numeric_text_field(m_table->line_width_text);
+		fe_get_numeric_text_field(m_table.line_width_text);
 
 	table_data->td.iCellSpacing = 
-		fe_get_numeric_text_field(m_table->spacing_text);
+		fe_get_numeric_text_field(m_table.spacing_text);
 	table_data->td.iCellPadding = 
-		fe_get_numeric_text_field(m_table->padding_text);
+		fe_get_numeric_text_field(m_table.padding_text);
 
 	table_data->td.bWidthDefined =
-		XmToggleButtonGetState(m_table->width_toggle);
+		XmToggleButtonGetState(m_table.width_toggle);
 	table_data->td.iWidth =
-		fe_get_numeric_text_field(m_table->width_text);
+		fe_get_numeric_text_field(m_table.width_text);
 	table_data->td.bWidthPercent =
-		(fe_SimpleRadioGroupGetWhich(m_table->width_units) == 1);
+		(fe_SimpleRadioGroupGetWhich(m_table.width_units) == 1);
 
 	table_data->td.bHeightDefined =
-		XmToggleButtonGetState(m_table->height_toggle);
+		XmToggleButtonGetState(m_table.height_toggle);
 	table_data->td.iHeight =
-		fe_get_numeric_text_field(m_table->height_text);
+		fe_get_numeric_text_field(m_table.height_text);
 	table_data->td.bHeightPercent =
-		(fe_SimpleRadioGroupGetWhich(m_table->height_units) == 1);
+		(fe_SimpleRadioGroupGetWhich(m_table.height_units) == 1);
 
-	alignment = fe_SimpleRadioGroupGetWhich(m_table->alignBox);
+	alignment = fe_SimpleRadioGroupGetWhich(m_table.alignBox);
 
 	switch(alignment) {
 		case 0:
@@ -1376,9 +1381,9 @@ XFE_EditTableDialog::tablePropertiesCommonSet(EDT_AllTableData* table_data)
 	 *    validated, and we don't want to bother when we validate.
 	 */
 
-	table_data->has_caption = XmToggleButtonGetState(m_table->caption_toggle);
+	table_data->has_caption = XmToggleButtonGetState(m_table.caption_toggle);
 
-	if (fe_SimpleRadioGroupGetWhich(m_table->caption_type) == 1)
+	if (fe_SimpleRadioGroupGetWhich(m_table.caption_type) == 1)
 		table_data->cd.align = ED_ALIGN_ABSBOTTOM;
 	else
 		table_data->cd.align = ED_ALIGN_ABSTOP;
@@ -1399,7 +1404,7 @@ XFE_EditTableDialog::tablePropertiesSet()
 	tablePropertiesCommonSet(&table_data);
 
 	/* Get the background stuff, because ..common_set() did not. */
-	fe_bg_group_get(m_table->bg_group,
+	fe_bg_group_get(&(m_table.bg_group),
 					&table_data.td.pColorBackground,
 					&table_data.td.pBackgroundImage,
 					&table_data.td.bBackgroundNoSave);
@@ -1428,10 +1433,10 @@ XFE_EditTableDialog::tablePropertiesValidate()
 
 	tablePropertiesCommonSet(&table_data);
 
-	if (m_table->number_rows_text != NULL) {
-		t->iRows = fe_get_numeric_text_field(m_table->number_rows_text);
+	if (m_table.number_rows_text != NULL) {
+		t->iRows = fe_get_numeric_text_field(m_table.number_rows_text);
 		t->iColumns = 
-			fe_get_numeric_text_field(m_table->number_columns_text);
+			fe_get_numeric_text_field(m_table.number_columns_text);
 	 
 		if (RANGE_CHECK(t->iRows, TABLE_MIN_ROWS, TABLE_MAX_ROWS))
 			errors[nerrors++] = XFE_INVALID_TABLE_NROWS;
@@ -1475,7 +1480,7 @@ XFE_EditTableDialog::tablePropertiesValidate()
 	EDT_FreeTableData(tmp);
 
 	if (nerrors > 0) {
-		fe_editor_range_error_dialog(m_context, m_table->spacing_text,
+		fe_editor_range_error_dialog(m_context, m_table.spacing_text,
 									 errors, nerrors);
 		return FALSE;
 	}
@@ -1483,24 +1488,14 @@ XFE_EditTableDialog::tablePropertiesValidate()
 	return TRUE;
 }
 
-#define BG_GROUP_USECOLOR_TOGGLE   "useColor"
-#define BG_GROUP_USECOLOR_SWATCH   "useColorSwatch"
-#define BG_GROUP_USEIMAGE_TOGGLE   "useImage"
-#define BG_GROUP_USEIMAGE_TEXT     "useImageText"
-#define BG_GROUP_LEAVEIMAGE_TOGGLE "leaveImage"
-
-static Widget
+static void
 fe_create_background_group(Widget parent, char* name,
-						   Arg* p_args, Cardinal p_n)
+						   Arg* p_args, Cardinal p_n,
+                           fe_bgGroup* bgGroup)
 {
 	Widget frame;
 	Widget form;
-	Widget use_color_toggle;
-	Widget use_color_swatch;
-	Widget use_image_toggle;
-	Widget use_image_text;
 	Widget use_image_chooser;
-	Widget leave_image_toggle;
 	Arg args[16];
 	Cardinal n;
 	Dimension height;
@@ -1514,90 +1509,78 @@ fe_create_background_group(Widget parent, char* name,
 	n = 0;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
-	use_color_toggle = XmCreateToggleButtonGadget(form,
-												  BG_GROUP_USECOLOR_TOGGLE,
-												  args, n);
-	XtManageChild(use_color_toggle);
+	bgGroup->useColorToggle = XmCreateToggleButtonGadget(form, "useColor",
+                                                         args, n);
+	XtManageChild(bgGroup->useColorToggle);
 
 	n = 0;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
-	XtSetArg(args[n], XmNtopWidget, use_color_toggle); n++;
+	XtSetArg(args[n], XmNtopWidget, bgGroup->useColorToggle); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
-	use_image_toggle = XmCreateToggleButtonGadget(form,
-												  BG_GROUP_USEIMAGE_TOGGLE,
-												  args, n);
-	XtManageChild(use_image_toggle);
+	bgGroup->useImageToggle = XmCreateToggleButtonGadget(form, "useImage",
+                                                         args, n);
+	XtManageChild(bgGroup->useImageToggle);
 
-	XtVaGetValues(use_color_toggle, XmNheight, &height, 0);
+	XtVaGetValues(bgGroup->useColorToggle, XmNheight, &height, 0);
 
 	n = 0;
 	XtSetArg(args[n], XmNheight, height); n++;
 	XtSetArg(args[n], XmNwidth, SWATCH_SIZE); n++;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_WIDGET); n++;
-	XtSetArg(args[n], XmNleftWidget, use_color_toggle); n++;
-	use_color_swatch = fe_CreateSwatchButton(form, BG_GROUP_USECOLOR_SWATCH,
-                                             args, n);
-	XtManageChild(use_color_swatch);
+	XtSetArg(args[n], XmNleftWidget, bgGroup->useColorToggle); n++;
+	bgGroup->useColorSwatch = fe_CreateSwatchButton(form, "useColorSwatch",
+                                                    args, n);
+	XtManageChild(bgGroup->useColorSwatch);
 
-	XtAddCallback(use_color_toggle, XmNvalueChangedCallback,
-				  fe_bg_group_use_color_cb, use_color_swatch);
-	XtAddCallback(use_color_swatch, XmNactivateCallback,
-				  fe_bg_group_swatch_cb, use_color_toggle);
+	XtAddCallback(bgGroup->useColorToggle, XmNvalueChangedCallback,
+				  fe_bg_group_use_color_cb, bgGroup->useColorSwatch);
+	XtAddCallback(bgGroup->useColorSwatch, XmNactivateCallback,
+				  fe_bg_group_swatch_cb, bgGroup->useColorToggle);
 
 	n = 0;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
-	XtSetArg(args[n], XmNtopWidget, use_color_toggle); n++;
+	XtSetArg(args[n], XmNtopWidget, bgGroup->useColorToggle); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_WIDGET); n++;
-	XtSetArg(args[n], XmNleftWidget, use_image_toggle); n++;
+	XtSetArg(args[n], XmNleftWidget, bgGroup->useImageToggle); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
-	use_image_text = fe_CreateTextField(form,
-										BG_GROUP_USEIMAGE_TEXT, args, n);
-	XtManageChild(use_image_text);
+	bgGroup->useImageText = fe_CreateTextField(form, "useImageText", args, n);
+	XtManageChild(bgGroup->useImageText);
 
 	n = 0;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
-	XtSetArg(args[n], XmNtopWidget, use_image_text); n++;
+	XtSetArg(args[n], XmNtopWidget, bgGroup->useImageText); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 	use_image_chooser = XmCreatePushButtonGadget(form, "chooseImage",
 												  args, n);
 	XtManageChild(use_image_chooser);
 
-	XtAddCallback(use_image_toggle, XmNvalueChangedCallback,
-				  fe_bg_use_image_cb, use_image_text);
+	XtAddCallback(bgGroup->useImageToggle, XmNvalueChangedCallback,
+				  fe_bg_use_image_cb, bgGroup->useImageText);
 	XtAddCallback(use_image_chooser, XmNactivateCallback,
-				  fe_bg_image_browse_cb, use_image_text);
+				  fe_bg_image_browse_cb, bgGroup->useImageText);
 	
 	n = 0;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
-	XtSetArg(args[n], XmNtopWidget, use_image_text); n++;
+	XtSetArg(args[n], XmNtopWidget, bgGroup->useImageText); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_WIDGET); n++;
 	XtSetArg(args[n], XmNrightWidget, use_image_chooser); n++;
-	leave_image_toggle = XmCreateToggleButtonGadget(form,
-													BG_GROUP_LEAVEIMAGE_TOGGLE,
-													args, n);
-	XtManageChild(leave_image_toggle);
-
-	return frame;
+	bgGroup->leaveImageToggle = XmCreateToggleButtonGadget(form, "leaveImage",
+                                                           args, n);
+	XtManageChild(bgGroup->leaveImageToggle);
 }
 
 static void
-fe_bg_group_set(Widget parent,
+fe_bg_group_set(fe_bgGroup* group,
 				LO_Color* color, char* bg_image, XP_Bool /*leave_image*/)
 {
-	Widget  use_color_toggle;
-	Widget  use_color_swatch;
-	Widget  use_image_toggle;
-	Widget  use_image_text;
-	Widget  leave_image_toggle;
+	Widget  use_color_toggle = group->useColorToggle;
+	Widget  use_color_swatch = group->useColorSwatch;
+	Widget  use_image_toggle = group->useImageToggle;
+	Widget  use_image_text = group->useImageText;
+	Widget  leave_image_toggle = group->leaveImageToggle;
 	
-	use_color_toggle = XtNameToWidget(parent, "*" BG_GROUP_USECOLOR_TOGGLE);
-	use_color_swatch = XtNameToWidget(parent, "*" BG_GROUP_USECOLOR_SWATCH);
-	use_image_toggle = XtNameToWidget(parent, "*" BG_GROUP_USEIMAGE_TOGGLE);
-	use_image_text = XtNameToWidget(parent, "*" BG_GROUP_USEIMAGE_TEXT);
-	leave_image_toggle = XtNameToWidget(parent,"*" BG_GROUP_LEAVEIMAGE_TOGGLE);
-
 	if (use_color_toggle != NULL)
 		XmToggleButtonGadgetSetState(use_color_toggle, (color != NULL), FALSE);
 
@@ -1621,23 +1604,22 @@ fe_bg_group_set(Widget parent,
 }
 
 static void
-fe_bg_group_get(Widget   parent,
+fe_bg_group_get(fe_bgGroup* group,
 				LO_Color** color_r, char** bg_image_r, XP_Bool* leave_image_r)
 {
 	XP_Bool use_color = FALSE;
 	XP_Bool use_image = FALSE;
 	XP_Bool leave_image = FALSE;
-	Widget  use_color_toggle;
-	Widget  use_color_swatch;
-	Widget  use_image_toggle;
-	Widget  use_image_text;
-	Widget  leave_image_toggle;
-	
-	use_color_toggle = XtNameToWidget(parent, "*" BG_GROUP_USECOLOR_TOGGLE);
-	use_color_swatch = XtNameToWidget(parent, "*" BG_GROUP_USECOLOR_SWATCH);
-	use_image_toggle = XtNameToWidget(parent, "*" BG_GROUP_USEIMAGE_TOGGLE);
-	use_image_text = XtNameToWidget(parent, "*" BG_GROUP_USEIMAGE_TEXT);
-	leave_image_toggle = XtNameToWidget(parent,"*" BG_GROUP_LEAVEIMAGE_TOGGLE);
+
+    XP_ASSERT(group);
+    if (group == 0)
+        return;
+
+	Widget  use_color_toggle = group->useColorToggle;
+	Widget  use_color_swatch = group->useColorSwatch;
+	Widget  use_image_toggle = group->useImageToggle;
+	Widget  use_image_text = group->useImageText;
+	Widget  leave_image_toggle = group->leaveImageToggle;
 	
 	if (use_color_toggle != NULL)
 		use_color = (XP_Bool)XmToggleButtonGadgetGetState(use_color_toggle);

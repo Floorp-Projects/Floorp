@@ -36,7 +36,12 @@
 #include "pk11func.h"
 #endif
 
-extern "C" int XFE_EDITOR_NEWTABLE_COLS;
+extern "C" {
+int XFE_EDITOR_NEWTABLE_COLS;
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
+void fe_mailto_cb(Widget , XtPointer, XtPointer);
+#endif
+}
 
 #define FE_SYNTAX_ERROR() doSyntaxErrorAlert(view, info)
 
@@ -258,19 +263,18 @@ public:
 	}; 
 };
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 class SendPageCommand : public AlwaysEnabledCommand
 {
 public:
 	SendPageCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdSendPage, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
-      void fe_mailto_cb(Widget , XtPointer, XtPointer);
       fe_mailto_cb(CONTEXT_WIDGET (view->getContext()), 
                    (XtPointer) view->getContext(), NULL);
 	}; 
 };
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 class DeleteTableCommand : public XFE_EditorViewCommand
 {
@@ -2882,15 +2886,16 @@ XFE_EditorView::XFE_EditorView(XFE_Component *toplevel_component,
 	registerCommand(m_commands, new SaveCommand(ev));
 	registerCommand(m_commands, new SaveAsCommand(ev));
 	registerCommand(m_commands, new PublishCommand(ev));
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 	registerCommand(m_commands, new SendPageCommand(ev));
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 	registerCommand(m_commands, new DeleteTableCommand(ev));
 	registerCommand(m_commands, new DeleteTableCellCommand(ev));
 	registerCommand(m_commands, new DeleteTableRowCommand(ev));
 	registerCommand(m_commands, new DeleteTableColumnCommand(ev));
 	registerCommand(m_commands, new SelectTableCommand(ev));
 	registerCommand(m_commands, new SelectTableCellCommand(ev));
+	registerCommand(m_commands, new SelectTableAllCellsCommand(ev));
 	registerCommand(m_commands, new SelectTableRowCommand(ev));
 	registerCommand(m_commands, new SelectTableColumnCommand(ev));
 	registerCommand(m_commands, new TableJoinCommand(ev));

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -528,22 +528,28 @@ fe_showCompose(Widget toplevel, Chrome *chromespec, MWContext *old_context,
 
 	XP_Bool useHtml;
 
-    if (editorType == MSG_HTML_EDITOR) {
-		useHtml = TRUE;
-	}
-	else {
-		if (editorType == MSG_PLAINTEXT_EDITOR) {
-			useHtml = FALSE;
-		}
-		else {
-			if (old_context && CONTEXT_DATA(old_context)->stealth_cmd) {
-				useHtml = !fe_globalPrefs.send_html_msg;
-			}
-			else {
-				useHtml = fe_globalPrefs.send_html_msg;
-			}
-		}
-	}
+        if (editorType == MSG_HTML_EDITOR) {
+            useHtml = TRUE;
+        }
+        else if (editorType == MSG_PLAINTEXT_EDITOR) {
+            useHtml = FALSE;
+        }
+#if FORCE_EDITOR_FROM_EDITOR
+        /* This would probably be a good idea for Publish/Send Page
+         * if we had Forward Inline, but unfortunately we don't.
+         */
+        else if (old_context && EDT_IS_EDITOR(old_context)) {
+            useHtml = TRUE;
+        }
+#endif
+        else {
+            if (old_context && CONTEXT_DATA(old_context)->stealth_cmd) {
+                useHtml = !fe_globalPrefs.send_html_msg;
+            }
+            else {
+                useHtml = fe_globalPrefs.send_html_msg;
+            }
+        }
 	
 	if (old_context)
 		CONTEXT_DATA(old_context)->stealth_cmd = False;

@@ -562,3 +562,5 @@ xfeCmdChangeRDFView                      changeRDFView
 # URL bar
 xfeCmdClearUrlBar                        clearUrlBar
 
+# Stop Active Plugins in the editor frame
+xfeCmdStopActivePlugin		stopActivePlugin

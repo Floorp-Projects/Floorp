@@ -1527,7 +1527,10 @@ ResDef(XFE_ABDIR_USE_PASSWD, XFE_ERR_OFFSET + 611,
 	   "Login with name and password")
 
 ResDef(NO_SPELL_SHLIB_FOUND, XFE_ERR_OFFSET + 612,
-       "No spellchk library found")
+       "No spellchk library found -- spell checking disabled.\n\
+To avoid seeing this dialog in the future, add the line\n\
+'user_pref(\"editor.disable_spell_checker\", true);'\n\
+to your $HOME/.netscape/preferences.js file.")
 
 ResDef(XFE_CHOOSE_FOLDER_INSTRUCT, XFE_ERR_OFFSET + 613,
        "Choose where you would like your %s messages to be stored:")
