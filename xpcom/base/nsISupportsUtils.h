@@ -217,6 +217,62 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)               \
 ///////////////////////////////////////////////////////////////////////////////
 
 /*
+ * Often you have to cast an implementation pointer, e.g., |this|, to an |nsISupports*|,
+ * but because you have multiple inheritance, a simple cast is ambiguous.  One could
+ * simply say, e.g., (given a base |nsIBase|), |NS_STATIC_CAST(nsIBase*, this)|; but that
+ * disguises the fact that what you are really doing is disambiguating the |nsISupports|.
+ * You could make that more obvious with a double cast, e.g.,
+ * |NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIBase*, this))|, but that is bulky and
+ * harder to read...
+ *
+ * The following macro is clean, short, and obvious.  In the example above, you would use it
+ * like this: |NS_ISUPPORTS_CAST(nsIBase*, this)|.
+ */
+
+#define NS_ISUPPORTS_CAST(__unambiguousBase, __expr)    NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(__unambiguousBase, __expr))
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef NS_DEBUG
+
+/*
+ * Adding this debug-only function as per bug #26803.  If you are debugging and
+ * this function returns wrong refcounts, fix the objects |AddRef()| and |Release()|
+ * to do the right thing.
+ *
+ * Of course, this function is only available for debug builds.
+ */
+
+inline
+nsrefcnt
+NS_DebugGetRefCount( nsISupports* obj )
+    // Warning: don't apply this to an object whose refcount is
+    //  |0| or not yet initialized ... it may be destroyed.
+  {
+    nsrefcnt ref_count = 0;
+
+    if ( obj )
+      {
+          // |AddRef()| and |Release()| are supposed to return
+          //  the new refcount of the object
+        obj->AddRef();
+        ref_count = obj->Release();
+          // Can't use |NS_[ADDREF|RELEASE]| since (a) they _don't_ return
+          //  the refcount, and (b) we don't want to log these guaranteed
+          //  balanced calls.
+
+        NS_ASSERTION(ref_count, "Oops! Calling |NS_DebugGetRefCount()| probably just destroyed this object.");
+      }
+
+     return ref_count;
+  }
+
+#endif
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+/*
  * Some convenience macros for implementing QueryInterface
  */
 
