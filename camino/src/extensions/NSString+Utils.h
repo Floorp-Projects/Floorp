@@ -63,6 +63,7 @@ typedef enum
 - (NSString *)stringByTrimmingWhitespace;
 -(NSString *)stringByRemovingAmpEscapes;
 -(NSString *)stringByAddingAmpEscapes;
+-(NSString *)stringByRemovingWindowsShortcutAmpersand;
 -(NSString *)stripWWW;
 
 // allocate a new unicode buffer with the contents of the current string. Caller

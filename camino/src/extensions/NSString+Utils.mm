@@ -153,15 +153,7 @@
 
 - (NSString *)stringByTrimmingWhitespace
 {
-  if ([self respondsToSelector:@selector(stringByTrimmingCharactersInSet:)])
-    // 10.2 and later
-    return [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-
-  // 10.1
-  NSMutableString *trimmedString = [[[NSMutableString alloc] initWithString:self] autorelease];
-  // roll over that toll-free bridge
-  ::CFStringTrimWhitespace((CFMutableStringRef)trimmedString);
-  return trimmedString;
+  return [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 }
 
 
@@ -177,79 +169,22 @@
 -(NSString *)stringByRemovingAmpEscapes
 {
   NSMutableString* dirtyStringMutant = [NSMutableString stringWithString:self];
-  //10.2 and later
-  if ([dirtyStringMutant respondsToSelector:@selector(replaceOccurrencesOfString:withString:options:range:)]){
-        [dirtyStringMutant replaceOccurrencesOfString:@"&amp;"withString:@"&" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
-        [dirtyStringMutant replaceOccurrencesOfString:@"&quot;"withString:@"\"" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
-        [dirtyStringMutant replaceOccurrencesOfString:@"&lt;"withString:@"<" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
-        [dirtyStringMutant replaceOccurrencesOfString:@"&gt;"withString:@">" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
-        [dirtyStringMutant replaceOccurrencesOfString:@"&mdash;"withString:@"-" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
-        return [dirtyStringMutant stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
-      }
-
-  // 10.1. 
-  NSRange ampRange = [dirtyStringMutant rangeOfString:@"&amp;" options:NSLiteralSearch];
-  while (ampRange.location != NSNotFound) {
-    [dirtyStringMutant replaceCharactersInRange:ampRange withString:@"&"];
-    ampRange = [dirtyStringMutant rangeOfString:@"&amp;" options:NSLiteralSearch range:NSMakeRange(ampRange.location,[dirtyStringMutant length]-ampRange.location)];
-  }
-  ampRange = [dirtyStringMutant rangeOfString:@"&quot;" options:NSLiteralSearch];
-  while (ampRange.location != NSNotFound) {
-    [dirtyStringMutant replaceCharactersInRange:ampRange withString:@"\""];
-    ampRange = [dirtyStringMutant rangeOfString:@"&quot;" options:NSLiteralSearch range:NSMakeRange(ampRange.location,[dirtyStringMutant length]-ampRange.location)];
-  }
-  ampRange = [dirtyStringMutant rangeOfString:@"&lt;" options:NSLiteralSearch];
-  while (ampRange.location != NSNotFound) {
-    [dirtyStringMutant replaceCharactersInRange:ampRange withString:@"<"];
-    ampRange = [dirtyStringMutant rangeOfString:@"&lt;" options:NSLiteralSearch range:NSMakeRange(ampRange.location,[dirtyStringMutant length]-ampRange.location)];
-  }
-  ampRange = [dirtyStringMutant rangeOfString:@"&gt;" options:NSLiteralSearch];
-  while (ampRange.location != NSNotFound) {
-    [dirtyStringMutant replaceCharactersInRange:ampRange withString:@">"];
-    ampRange = [dirtyStringMutant rangeOfString:@"&gt;" options:NSLiteralSearch range:NSMakeRange(ampRange.location,[dirtyStringMutant length]-ampRange.location)];
-  }
-  ampRange = [dirtyStringMutant rangeOfString:@"&mdash;" options:NSLiteralSearch];
-  while (ampRange.location != NSNotFound) {
-    [dirtyStringMutant replaceCharactersInRange:ampRange withString:@"-"];
-    ampRange = [dirtyStringMutant rangeOfString:@"&mdash;" options:NSLiteralSearch range:NSMakeRange(ampRange.location,[dirtyStringMutant length]-ampRange.location)];
-  }
-
+  [dirtyStringMutant replaceOccurrencesOfString:@"&amp;"withString:@"&" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
+  [dirtyStringMutant replaceOccurrencesOfString:@"&quot;"withString:@"\"" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
+  [dirtyStringMutant replaceOccurrencesOfString:@"&lt;"withString:@"<" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
+  [dirtyStringMutant replaceOccurrencesOfString:@"&gt;"withString:@">" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
+  [dirtyStringMutant replaceOccurrencesOfString:@"&mdash;"withString:@"-" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
   return [dirtyStringMutant stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
 }
 
 -(NSString *)stringByAddingAmpEscapes
 {
   NSMutableString* dirtyStringMutant = [NSMutableString stringWithString:self];
-  //10.2 & later
-  if ([dirtyStringMutant respondsToSelector:@selector(replaceOccurrencesOfString:withString:options:range:)]){
-        [dirtyStringMutant replaceOccurrencesOfString:@"&"withString:@"&amp;" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
-        [dirtyStringMutant replaceOccurrencesOfString:@"\""withString:@"&quot;" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
-        [dirtyStringMutant replaceOccurrencesOfString:@"<"withString:@"&lt;" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
-        [dirtyStringMutant replaceOccurrencesOfString:@">"withString:@"&gt;" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
-        return [NSString stringWithString:dirtyStringMutant];
-      }
-  // 10.1.  
-  NSRange ampRange = [dirtyStringMutant rangeOfString:@"&" options:NSLiteralSearch];
-  while (ampRange.location != NSNotFound) {
-    [dirtyStringMutant replaceCharactersInRange:ampRange withString:@"&amp;"];
-    ampRange = [dirtyStringMutant rangeOfString:@"&" options:NSLiteralSearch range:NSMakeRange(ampRange.location+1,[dirtyStringMutant length]-ampRange.location-1)];
-  }
-  ampRange = [dirtyStringMutant rangeOfString:@"\"" options:NSLiteralSearch];
-  while (ampRange.location != NSNotFound) {
-    [dirtyStringMutant replaceCharactersInRange:ampRange withString:@"&quot;"];
-    ampRange = [dirtyStringMutant rangeOfString:@"\"" options:NSLiteralSearch range:NSMakeRange(ampRange.location,[dirtyStringMutant length]-ampRange.location)];
-  }
-  ampRange = [dirtyStringMutant rangeOfString:@"<" options:NSLiteralSearch];
-  while (ampRange.location != NSNotFound) {
-    [dirtyStringMutant replaceCharactersInRange:ampRange withString:@"&lt;"];
-    ampRange = [dirtyStringMutant rangeOfString:@"<" options:NSLiteralSearch range:NSMakeRange(ampRange.location,[dirtyStringMutant length]-ampRange.location)];
-  }
-  ampRange = [dirtyStringMutant rangeOfString:@">" options:NSLiteralSearch];
-  while (ampRange.location != NSNotFound) {
-    [dirtyStringMutant replaceCharactersInRange:ampRange withString:@"&gt;"];
-    ampRange = [dirtyStringMutant rangeOfString:@">" options:NSLiteralSearch range:NSMakeRange(ampRange.location,[dirtyStringMutant length]-ampRange.location)];
-  }
-  return [NSString stringWithString:dirtyStringMutant];  
+  [dirtyStringMutant replaceOccurrencesOfString:@"&"withString:@"&amp;" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
+  [dirtyStringMutant replaceOccurrencesOfString:@"\""withString:@"&quot;" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
+  [dirtyStringMutant replaceOccurrencesOfString:@"<"withString:@"&lt;" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
+  [dirtyStringMutant replaceOccurrencesOfString:@">"withString:@"&gt;" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
+  return [NSString stringWithString:dirtyStringMutant];
 }
 
 -(NSString *)stripWWW
@@ -259,6 +194,26 @@
   return self;
 }
 
+// Windows buttons have shortcut keys specified by ampersands in the
+// title string. This function removes them from such strings.
+-(NSString*)stringByRemovingWindowsShortcutAmpersand
+{
+  NSMutableString* dirtyStringMutant = [NSMutableString stringWithString:self];
+  // we loop through removing all single ampersands and reducing double ampersands to singles
+  unsigned int searchLocation = 0;
+  while (searchLocation < [dirtyStringMutant length]) {
+    searchLocation = [dirtyStringMutant rangeOfString:@"&" options:nil
+                                                range:NSMakeRange(searchLocation, [dirtyStringMutant length] - searchLocation)].location;
+    if (searchLocation == NSNotFound) {
+      break;
+    } else {
+      [dirtyStringMutant deleteCharactersInRange:NSMakeRange(searchLocation, 1)];
+      // ampersand or not, we leave the next character alone
+      searchLocation++;
+    }
+  }
+  return [NSString stringWithString:dirtyStringMutant];
+}
 
 @end
 

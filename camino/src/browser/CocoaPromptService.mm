@@ -417,6 +417,8 @@ CocoaPromptService::GetCommonDialogLocaleString(const char *key)
   if (NS_FAILED(rv)) return returnValue;
 
   returnValue = [NSString stringWithPRUnichars:string];
+  // take care of the fact that it could have windows shortcut specified by ampersand
+  returnValue = [returnValue stringByRemovingWindowsShortcutAmpersand];
   return returnValue;
 }
 
