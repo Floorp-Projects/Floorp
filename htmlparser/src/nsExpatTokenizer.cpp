@@ -530,22 +530,30 @@ nsExpatTokenizer::OpenInputStream(const nsString& aURLStr,
       }          
     }    
   }
-#else // NECKO
-  nsIURI* uri;
-  nsIURI* baseURI;
-  
-  rv = NS_NewURI(&baseURI, aBaseURL);
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_NewURI(&uri, aURLStr, baseURI);
-    if (NS_SUCCEEDED(rv)) {
-      rv = NS_OpenURI(in, uri);
-      char* absURL = nsnull;
-      uri->GetSpec(&absURL);
-      aAbsURL->Append(absURL);
-      nsCRT::free(absURL);
-      NS_RELEASE(uri);
-    }
-    NS_RELEASE(baseURI);
+#else // NECKO  
+  nsCOMPtr<nsIURI> baseURI;  
+  rv = NS_NewURI(getter_AddRefs(baseURI), aBaseURL);
+  if (NS_SUCCEEDED(rv) && nsnull != baseURI) {
+    nsCOMPtr<nsIURI> uri = nsnull;
+    rv = NS_NewURI(getter_AddRefs(uri), aURLStr, baseURI);
+    if (NS_SUCCEEDED(rv) && nsnull != uri) {
+      char* scheme = nsnull;
+      rv = uri->GetScheme(&scheme);
+      if (NS_SUCCEEDED(rv) &&
+        nsnull != scheme &&
+        PL_strcmp(scheme, kChromeProtocol) == 0 ) 
+      {
+        rv = NS_OpenURI(in, uri);
+        char* absURL = nsnull;
+        uri->GetSpec(&absURL);
+        aAbsURL->Append(absURL);
+        nsCRT::free(absURL);
+      } 
+      else {
+        rv = NS_ERROR_NOT_IMPLEMENTED;
+      }
+      if (scheme) nsCRT::free(scheme);
+    }    
   }
 #endif // NECKO
   return rv;
