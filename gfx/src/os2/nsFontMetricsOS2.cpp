@@ -600,6 +600,9 @@ HDC   ps = NULL;
   } else {
     win = (HWND)mDeviceContext->mWidget;
     ps = ::WinGetPS(win);
+    if (!ps) {
+      ps = ::WinGetPS(HWND_DESKTOP);
+    } /* endif */
   }
 
   mFont->EnumerateFamilies(FontEnumCallback, this); 
@@ -954,7 +957,7 @@ NS_IMETHODIMP nsFontMetricsOS2::GetLangGroup(nsIAtom** aLangGroup)
 NS_IMETHODIMP
 nsFontMetricsOS2::GetNormalLineHeight(nscoord &aHeight)
 {
-  aHeight = mEmHeight + mLeading;
+  aHeight = mEmDescent + mEmAscent + mLeading;
   return NS_OK;
 }
 
