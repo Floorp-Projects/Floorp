@@ -38,25 +38,7 @@ static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 extern "C" void
 NS_SetupRegistry()
 {
-  // Autoregistration happens here. The rest of RegisterComponent() calls should happen
-  // only for dlls not in the components directory.
-
-  // Create exeDir/"components"
-  nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  sysdir += "components";
-  const char *componentsDir = sysdir.GetCString(); // native path
-  if (componentsDir != NULL)
-  {
-      printf("nsComponentManager: Using components dir: %s\n", componentsDir);
-
-#ifdef XP_MAC
-      nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
-#else
-      nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDir);
-#endif    /* XP_MAC */
-      // XXX Look for user specific components
-      // XXX UNIX: ~/.mozilla/components
-  }
+    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
 }
 
 
