@@ -1284,6 +1284,14 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIChannel* channel,
       nsCRT::free(urlString);
     }
 
+    // Set the content type to ensure we don't pass null to the plugin
+    char* aContentType = nsnull;
+    rv = channel->GetContentType(&aContentType);
+    if (NS_FAILED(rv)) return rv;
+
+    if (nsnull != aContentType)
+      mPluginStreamInfo->SetContentType(aContentType);
+
     if (mStartBinding)
     {
 	// On start binding has been called
@@ -1295,6 +1303,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIChannel* channel,
 	mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
 	mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
     }
+  if (aContentType)
+    nsCRT::free(aContentType);
   }
 
   return rv;
