@@ -72,6 +72,9 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsID.obj          \
         .\$(OBJDIR)\nsTraceRefcnt.obj \
         .\$(OBJDIR)\nsWeakReference.obj \
+!ifdef GC_LEAK_DETECTOR
+	.\$(OBJDIR)\nsGarbageCollector.obj \
+!endif
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
