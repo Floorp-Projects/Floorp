@@ -16,7 +16,7 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- *
+ * 
  * Contributor(s): 
  * Steve Clark (buster@netscape.com)
  *

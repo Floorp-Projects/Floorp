@@ -67,6 +67,18 @@ interface nsISelectionController : nsISupports
     short   getDisplaySelection();
 
    /**
+   * SetDisplayNonTextSelection used to set whether you want to see HRULES/IMAGES with border.
+   * also used to tell if the presshell is an editor right now. this should change
+   */
+    void setDisplayNonTextSelection(in boolean toggle);
+
+   /**
+   * GetDisplayNonTextSelection used to get whether you want to see HRULES/IMAGES with border.
+   * also used to tell if the presshell is an editor right now. this should change
+   */
+    boolean getDisplayNonTextSelection();
+
+   /**
    * GetSelection will return the selection that the presentation
    *  shell may implement.
    *
