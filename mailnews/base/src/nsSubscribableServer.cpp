@@ -41,7 +41,7 @@
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
-MOZ_DECL_CTOR_COUNTER(nsSubscribableServer);
+MOZ_DECL_CTOR_COUNTER(nsSubscribableServer)
 
 nsSubscribableServer::nsSubscribableServer(void)
 {

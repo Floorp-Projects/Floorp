@@ -66,7 +66,7 @@ static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
 #define PORT_NOT_SET -1
 
-MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer);
+MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer)
 
 nsMsgIncomingServer::nsMsgIncomingServer():
     m_prefs(0),

@@ -62,7 +62,7 @@ nsGtkIMEHelper* nsGtkIMEHelper::GetSingleton()
   }
 }
 //-----------------------------------------------------------------------
-MOZ_DECL_CTOR_COUNTER(nsGtkIMEHelper);
+MOZ_DECL_CTOR_COUNTER(nsGtkIMEHelper)
 
 nsGtkIMEHelper::nsGtkIMEHelper()
 {

@@ -24,7 +24,7 @@
 #include "plstr.h"
 #include "nsString.h"
 
-MOZ_DECL_CTOR_COUNTER(nsNewsSummarySpec);
+MOZ_DECL_CTOR_COUNTER(nsNewsSummarySpec)
 
 nsNewsSummarySpec::~nsNewsSummarySpec()
 {

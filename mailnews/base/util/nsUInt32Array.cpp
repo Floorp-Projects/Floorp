@@ -33,7 +33,7 @@
 #include "nsUInt32Array.h"
 #include "nsQuickSort.h"
 
-MOZ_DECL_CTOR_COUNTER(nsUInt32Array);
+MOZ_DECL_CTOR_COUNTER(nsUInt32Array)
 
 nsUInt32Array::nsUInt32Array()
 {

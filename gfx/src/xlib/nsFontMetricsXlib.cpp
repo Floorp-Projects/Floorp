@@ -1615,7 +1615,7 @@ GetMapFor10646Font(XFontStruct* aFont)
 
 // nsFontXlib Class Implementation
 
-MOZ_DECL_CTOR_COUNTER(nsFontXlib);
+MOZ_DECL_CTOR_COUNTER(nsFontXlib)
 
 nsFontXlib::nsFontXlib()
 {

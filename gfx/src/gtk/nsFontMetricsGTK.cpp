@@ -1691,7 +1691,7 @@ nsFontGTK::GetGDKFontIs10646(void)
   return ((PRBool) (mCharSetInfo == &ISO106461));
 }
 
-MOZ_DECL_CTOR_COUNTER(nsFontGTK);
+MOZ_DECL_CTOR_COUNTER(nsFontGTK)
 
 nsFontGTK::nsFontGTK()
 {

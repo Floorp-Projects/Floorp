@@ -24,7 +24,7 @@
 #include "plstr.h"
 #include "nsString.h"
 
-MOZ_DECL_CTOR_COUNTER(nsLocalFolderSummarySpec);
+MOZ_DECL_CTOR_COUNTER(nsLocalFolderSummarySpec)
 
 nsLocalFolderSummarySpec::~nsLocalFolderSummarySpec()
 {

@@ -71,7 +71,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
   return result;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsView);
+MOZ_DECL_CTOR_COUNTER(nsView)
 
 nsView :: nsView()
 {
