@@ -179,6 +179,12 @@ PRBool CScanner::Append(const char* aBuffer, PRInt32 aLen){
   return PR_TRUE;
 }
 
+PRBool CScanner::Append(const PRUnichar* aBuffer, PRInt32 aLen){
+  mBuffer.Append(aBuffer,aLen);
+  mTotalRead+=aLen;
+  return PR_TRUE;
+}
+
 /** 
  * Grab data from underlying stream.
  *

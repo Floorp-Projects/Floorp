@@ -232,6 +232,8 @@ class CScanner {
        */
       PRBool Append(const char* aBuffer, PRInt32 aLen);
 
+      PRBool Append(const PRUnichar* aBuffer, PRInt32 aLen);
+
       /**
        *  
        *  
