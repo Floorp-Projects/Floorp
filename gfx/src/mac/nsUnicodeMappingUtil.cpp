@@ -37,12 +37,13 @@ nsUnicodeMappingUtil *nsUnicodeMappingUtil::gSingleton = nsnull;
 static nsIPref* gPref = nsnull;
 static int gUnicodeMappingUtilCount = 0;
 
-int PrefChangedCallback( const char* aPrefName, void* instance_data)
+int PR_CALLBACK nsUnicodeMappingUtil::PrefChangedCallback( const char* aPrefName, void* instance_data)
 {
 	//printf("PrefChangeCallback \n");
 	nsUnicodeMappingUtil::GetSingleton()->Reset();
 	return 0;
 }
+
 nsUnicodeMappingUtil::nsUnicodeMappingUtil()
 {
 	Init();
@@ -84,7 +85,7 @@ nsUnicodeMappingUtil::~nsUnicodeMappingUtil()
 	CleanUp();
 
 	if(0 == --gUnicodeMappingUtilCount) {
-		gPref->UnregisterCallback("font.name.", PrefChangedCallback, (void*) nsnull);
+		gPref->UnregisterCallback("font.name.", nsUnicodeMappingUtil::PrefChangedCallback, (void*) nsnull);
 		NS_IF_RELEASE(gPref);
 	}
 }
@@ -268,8 +269,8 @@ ScriptCode nsUnicodeMappingUtil::MapLangGroupToScriptCode(const char* aLangGroup
 }
 
 #define FACESIZE 255 // font name is Str255 in Mac script code
-void
-PrefEnumCallback(const char* aName, void* aClosure)
+void PR_CALLBACK
+nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
 {
 	
 	nsUnicodeMappingUtil* Self = (nsUnicodeMappingUtil*)aClosure;
@@ -345,9 +346,9 @@ void nsUnicodeMappingUtil::InitFromPref()
     if (!gPref) {
       return;
     }
-    gPref->RegisterCallback("font.name.", PrefChangedCallback, (void*) nsnull);
+    gPref->RegisterCallback("font.name.", nsUnicodeMappingUtil::PrefChangedCallback, (void*) nsnull);
   }	  
-  gPref->EnumerateChildren("font.name.", PrefEnumCallback, this);
+  gPref->EnumerateChildren("font.name.", nsUnicodeMappingUtil::PrefEnumCallback, this);
   
 }
 //--------------------------------------------------------------------------

@@ -82,6 +82,9 @@ protected:
     void InitScriptFontMapping();
     void InitFromPref();
    
+  static int  PR_CALLBACK_DECL PrefChangedCallback( const char* aPrefName, void* instance_data);
+  static void PR_CALLBACK_DECL PrefEnumCallback(const char* aName, void* aClosure);
+    
 private:
 	PRUint32 mScriptEnabled;
 	short 	 mScriptFontMapping[smPseudoTotalScripts];
