@@ -147,15 +147,9 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kCRegion)) {
     inst = (nsISupports *)new nsRegionGTK();
   }
-  //
-  // Dont manufacture blender until issues are resovled with
-  // production line.
-  //
-#if 0
   else if (mClassID.Equals(kCBlender)) {
     inst = (nsISupports *)new nsBlender;
   }
-#endif
   else if (mClassID.Equals(kCDeviceContextSpec)) {
     nsDeviceContextSpecGTK* dcs;
     NS_NEWXPCOM(dcs, nsDeviceContextSpecGTK);
