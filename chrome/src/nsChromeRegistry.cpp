@@ -54,7 +54,7 @@ public:
 
     // nsIChromeRegistry methods:
     NS_IMETHOD Init();
-    NS_IMETHOD ConvertChromeURL(const nsString& chromeURL, nsString& answer);
+    NS_IMETHOD ConvertChromeURL(nsIURL* aChromeURL);
 
     // nsIRDFObserver methods:
     NS_IMETHOD OnAssert(nsIRDFResource* subject,
@@ -79,7 +79,7 @@ public:
     static nsIRDFResource* kCHROME_archive;
 
 protected:
-    
+    nsresult EnsureRegistryDataSource();
 };
 
 PRUint32 nsChromeRegistry::gRefCnt = 0;
@@ -112,10 +112,6 @@ nsChromeRegistry::Init()
                                         kIRDFServiceIID,
                                         (nsISupports**)&gRDFService);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetDataSource("resource:/chrome/registry.rdf", &gRegistryDB);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get chrome registry data source");
       if (NS_FAILED(rv)) return rv;
 
       // get all the properties we'll need:
@@ -210,8 +206,13 @@ nsChromeRegistry::QueryInterface(REFNSIID aIID, void** aResult)
 // nsIChromeRegistry methods:
 
 NS_IMETHODIMP
-nsChromeRegistry::ConvertChromeURL(const nsString& chromeURL, nsString& answer)
+nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
 {
+    nsresult rv = NS_OK;
+    if (NS_FAILED(rv = EnsureRegistryDataSource())) {
+        NS_ERROR("Unable to ensure the existence of a chrome registry.");
+        return rv;
+    }
     return NS_OK;
 }
 
@@ -249,6 +250,12 @@ nsChromeRegistry::OnUnassert(nsIRDFResource* subject,
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+nsresult
+nsChromeRegistry::EnsureRegistryDataSource()
+{
+    return gRDFService->GetDataSource("resource:/chrome/registry.rdf", &gRegistryDB);
+}
 
 nsresult
 NS_NewChromeRegistry(nsIChromeRegistry** aResult)
