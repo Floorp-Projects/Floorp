@@ -963,8 +963,6 @@ nsHttpHandler::InitUserAgentComponents()
         nsCString buf;  
         buf =  (char*)name.sysname;
         buf += ' ';
-        buf += (char*)name.release;
-        buf += ' ';
         buf += (char*)name.machine;
         mOscpu = buf;
     }
