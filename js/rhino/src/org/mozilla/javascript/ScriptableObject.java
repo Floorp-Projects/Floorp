@@ -272,6 +272,15 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     private void setBySetter(GetterSlot slot, Scriptable start, Object value) {
+        if (start != this) {
+            if (slot.delegateTo != null
+                || !slot.setter.getDeclaringClass().isInstance(start))
+            {
+                start.put(slot.stringKey, start, value);
+                return;
+            }
+        }
+
         Object setterThis;
         Object[] args;
         Object setterResult;
@@ -281,21 +290,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         Object actualArg
                 = FunctionObject.convertArg(cx, start, value, desired);
         if (slot.delegateTo == null) {
-            if (start != this) {
-                // Walk the prototype chain to find an appropriate
-                // object to invoke the setter on.
-                Class clazz = slot.setter.getDeclaringClass();
-                while (!clazz.isInstance(start)) {
-                    start = start.getPrototype();
-                    if (start == this) {
-                        break;
-                    }
-                    if (start == null) {
-                        start = this;
-                        break;
-                    }
-                }
-            }
             setterThis = start;
             args = new Object[] { actualArg };
         } else {
