@@ -616,6 +616,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
         // get the nsIPluginHost interface
         pluginHost = do_GetService(kCPluginManagerCID);
+        if (!pluginHost)
+          return NS_ERROR_MODULE_PLUGINS;
+
         mInstanceOwner->SetPluginHost(pluginHost);
         rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
       }
@@ -653,6 +656,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
           // get the nsIPluginHost interface
           pluginHost = do_GetService(kCPluginManagerCID);
+          if (!pluginHost)
+            return NS_ERROR_MODULE_PLUGINS;
+
           mInstanceOwner->SetPluginHost(pluginHost);
           if(pluginHost->IsPluginEnabledForType("application/x-oleobject") == NS_OK)
 	          rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/x-oleobject", fullURL);
@@ -692,6 +698,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
     // get the nsIPluginHost interface
     pluginHost = do_GetService(kCPluginManagerCID);
+    if (!pluginHost)
+      return NS_ERROR_MODULE_PLUGINS;
+
     mInstanceOwner->SetPluginHost(pluginHost);
 
     mContent->GetTag(atom);
@@ -2489,5 +2498,5 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
     NS_RELEASE(mPluginHost);
  
   mPluginHost = aHost;
-  NS_ADDREF(mPluginHost);
+  NS_IF_ADDREF(mPluginHost);
 }
