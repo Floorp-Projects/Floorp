@@ -114,6 +114,7 @@ void abnormal_exit_handler(int signum)
 
 #include <unistd.h>
 #include "nsISupportsUtils.h"
+#include "nsStackFrameUnix.h"
 
 void
 ah_crap_handler(int signum)
@@ -134,7 +135,7 @@ ah_crap_handler(int signum)
 #endif
   
   printf("Stack:\n");
-  nsTraceRefcnt::WalkTheStack(stdout);
+  DumpStackToFile(stdout);
 
   printf("Sleeping for 5 minutes.\n");
   printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
