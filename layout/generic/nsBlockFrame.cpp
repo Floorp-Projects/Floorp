@@ -2096,6 +2096,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     if (line->IsDirty()) {
       lastLineMovedUp = PR_TRUE;
 
+      PRBool maybeReflowingForFirstTime =
+        line->mBounds.x == 0 && line->mBounds.y == 0 &&
+        line->mBounds.width == 0 && line->mBounds.height == 0;
+
       // Compute the dirty lines "before" YMost, after factoring in
       // the running deltaY value - the running value is implicit in
       // aState.mY.
@@ -2135,7 +2139,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
           ((line->mBounds.height == 0 && previousMarginWasDirty) ||
            // Check if the current line might have just been reflowed
            // for the first time.
-           (oldY == 0 && deltaY != line->mBounds.y) ||
+           maybeReflowingForFirstTime ||
            // Check if the current line might have been tested in a
            // subsequent line's ShouldApplyTopMargin
            (oldY == 0 && line->mBounds.y == 0 &&
@@ -2148,6 +2152,13 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         line.next()->MarkPreviousMarginDirty();
         // since it's marked dirty, nobody will care about |deltaY|
       }
+
+      // If the line was just reflowed for the first time, then its
+      // old mBounds cannot be trusted so this deltaY computation is
+      // bogus. But that's OK because we just did
+      // MarkPreviousMarginDirty on the next line which will force it
+      // to be reflowed, so this computation of deltaY will not be
+      // used.
       deltaY = line->mBounds.YMost() - oldYMost;
     } else {
       lastLineMovedUp = deltaY < 0;
