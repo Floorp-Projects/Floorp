@@ -39,25 +39,16 @@
 #ifndef nsUnicodeToUserDefined_h___
 #define nsUnicodeToUserDefined_h___
 
-#include "nsUCSupport.h"
+#include "nsISupports.h"
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToUserDefined [declaration]
 /**
  * A character set converter from Unicode to UserDefined.
  *
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToUserDefined : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToUserDefined();
-
-};
+NS_METHOD
+nsUnicodeToUserDefinedConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                  void **aResult);
 
 #endif /* nsUnicodeToUserDefined_h___ */

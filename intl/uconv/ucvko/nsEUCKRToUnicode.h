@@ -39,11 +39,7 @@
 #ifndef nsEUCKRToUnicode_h___
 #define nsEUCKRToUnicode_h___
 
-#include "nsUCSupport.h"
 #include "nsCP949ToUnicode.h"
-
-//----------------------------------------------------------------------
-// Class nsEUCKRToUnicode [declaration]
 
 /**
  * A character set converter from EUCKR to Unicode.
@@ -52,14 +48,8 @@
  * @author  Catalin Rotaru [CATA]
  */
 // Just make it an alias to CP949 decoder. bug 131388
-class nsEUCKRToUnicode : public nsCP949ToUnicode
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsEUCKRToUnicode();
-};
+NS_METHOD
+nsEUCKRToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsEUCKRToUnicode_h___ */

@@ -36,22 +36,15 @@
 #ifndef nsCP864ToUnicode_h___
 #define nsCP864ToUnicode_h___
 
-#include "nsUCSupport.h"
+#include "nsISupports.h"
 
-//----------------------------------------------------------------------
-// Class nsCP864ToUnicode [declaration]
 
 /**
  * A character set converter from CP864 to Unicode.
  */
-class nsCP864ToUnicode : public nsOneByteDecoderSupport
-{
-public:
+NS_METHOD
+nsCP864ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
-  /**
-   * Class constructor.
-   */
-  nsCP864ToUnicode();
-};
 
 #endif /* nsCP864ToUnicode_h___ */

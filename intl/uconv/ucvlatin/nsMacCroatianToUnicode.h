@@ -39,10 +39,7 @@
 #ifndef nsMacCroatianToUnicode_h___
 #define nsMacCroatianToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsMacCroatianToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from MacCroatian to Unicode.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsMacCroatianToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsMacCroatianToUnicode();
-
-};
+NS_METHOD
+nsMacCroatianToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                  void **aResult);
 
 #endif /* nsMacCroatianToUnicode_h___ */

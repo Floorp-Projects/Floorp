@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToCP1253_h___
 #define nsUnicodeToCP1253_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToCP1253 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to CP1253.
@@ -50,15 +47,8 @@
  * @created         20/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToCP1253 : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToCP1253();
-
-};
+NS_METHOD
+nsUnicodeToCP1253Constructor(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult);
 
 #endif /* nsUnicodeToCP1253_h___ */

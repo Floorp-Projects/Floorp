@@ -38,6 +38,7 @@
 
 #include "nsUnicodeToEUCTW.h"
 #include "nsUCvTW2Dll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -103,11 +104,14 @@ static const PRUint16 *g_EUCTWMappingTableSet [] ={
 //----------------------------------------------------------------------
 // Class nsUnicodeToEUCTW [implementation]
 
-nsUnicodeToEUCTW::nsUnicodeToEUCTW() 
-: nsMultiTableEncoderSupport( 8,
-                              (uShiftTable**) &g_EUCTWShiftTableSet, 
-                              (uMappingTable**) &g_EUCTWMappingTableSet,
-                              4 /* max length = src * 4 */)
+NS_METHOD
+nsUnicodeToEUCTWConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
 {
+  return CreateMultiTableEncoder(8,
+                                 (uShiftTable**) &g_EUCTWShiftTableSet, 
+                                 (uMappingTable**) &g_EUCTWMappingTableSet,
+                                 4 /* max length = src * 4 */,
+                                 aOuter, aIID, aResult);
 }
 

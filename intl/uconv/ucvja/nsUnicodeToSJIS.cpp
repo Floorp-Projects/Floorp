@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToSJIS.h"
 
 //----------------------------------------------------------------------
@@ -53,13 +54,13 @@ static const PRInt16 g_SJISShiftTable[] =  {
   ShiftCell(u2BytesChar,  2, 0xE0, 0xFC, 0xE0, 0x40, 0xFC, 0xFC)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToSJIS [implementation]
-
-nsUnicodeToSJIS::nsUnicodeToSJIS() 
-: nsTableEncoderSupport((uShiftTable*) &g_SJISShiftTable, 
-                        (uMappingTable*) &g_SJISMappingTable,
-                        2 /* max length = src * 2 */)
+NS_METHOD
+nsUnicodeToSJISConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
 {
+  return CreateTableEncoder((uShiftTable*) &g_SJISShiftTable, 
+                            (uMappingTable*) &g_SJISMappingTable,
+                            2 /* max length = src * 2 */,
+                            aOuter, aIID, aResult);
 }
 

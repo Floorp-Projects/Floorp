@@ -39,23 +39,13 @@
 #ifndef nsUnicodeToMacGujarati_h___
 #define nsUnicodeToMacGujarati_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacGujarati [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to MacGujarati.
  */
-class nsUnicodeToMacGujarati : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToMacGujarati();
-
-};
+NS_METHOD
+nsUnicodeToMacGujaratiConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                  void **aResult);
 
 #endif /* nsUnicodeToMacGujarati_h___ */

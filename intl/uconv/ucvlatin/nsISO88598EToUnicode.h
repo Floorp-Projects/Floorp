@@ -39,10 +39,7 @@
 #ifndef nsISO88598EToUnicode_h___
 #define nsISO88598EToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsISO88598EToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from ISO88598 to Unicode.
@@ -50,15 +47,8 @@
  * @created         20/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsISO88598EToUnicode : public nsISO88598ToUnicode
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsISO88598EToUnicode();
-
-};
+NS_METHOD
+nsISO88598EToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult);
 
 #endif /* nsISO88598EToUnicode_h___ */

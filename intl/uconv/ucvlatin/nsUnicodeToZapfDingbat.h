@@ -39,24 +39,14 @@
 #ifndef nsUnicodeToZapfDingbat_h___
 #define nsUnicodeToZapfDingbat_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToZapfDingbat [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to ZapfDingbat.
  *
  */
-class nsUnicodeToZapfDingbat : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToZapfDingbat();
-
-};
+NS_METHOD
+nsUnicodeToZapfDingbatConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                  void **aResult);
 
 #endif /* nsUnicodeToZapfDingbat_h___ */

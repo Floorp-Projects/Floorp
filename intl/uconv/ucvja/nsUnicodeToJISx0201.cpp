@@ -38,6 +38,7 @@
 
 #include "nsUnicodeToJISx0201.h"
 #include "nsUCVJADll.h"
+#include "nsUCConstructors.h"
 
 // Shift Table
 static PRInt16 g0201ShiftTable[] =  {
@@ -45,12 +46,12 @@ static PRInt16 g0201ShiftTable[] =  {
         ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToJISx0201 [implementation]
-
-nsUnicodeToJISx0201::nsUnicodeToJISx0201() 
-: nsTableEncoderSupport((uShiftTable*)  g0201ShiftTable,
-                        (uMappingTable*) g_uf0201Mapping, 1)
+NS_METHOD
+nsUnicodeToJISx0201Constructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult)
 {
+  return CreateTableEncoder((uShiftTable*)  g0201ShiftTable,
+                            (uMappingTable*) g_uf0201Mapping, 1,
+                            aOuter, aIID, aResult);
 }
 

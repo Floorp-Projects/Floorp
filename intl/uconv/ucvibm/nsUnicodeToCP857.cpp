@@ -33,6 +33,7 @@
  *
  */
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToCP857.h"
 
 //----------------------------------------------------------------------
@@ -47,12 +48,12 @@ static const PRInt16 g_ufShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToCP857 [implementation]
-
-nsUnicodeToCP857::nsUnicodeToCP857() 
-: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
-                        (uMappingTable*) &g_ufMappingTable, 1)
+NS_METHOD
+nsUnicodeToCP857Constructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult) 
 {
+  return CreateTableEncoder((uShiftTable*) &g_ufShiftTable, 
+                            (uMappingTable*) &g_ufMappingTable, 1,
+                            aOuter, aIID, aResult);
 }
 

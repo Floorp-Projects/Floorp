@@ -36,17 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsISO88596ToUnicode.h"
 #include "nsISO88596EToUnicode.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-//----------------------------------------------------------------------
-// Class nsISO88596EToUnicode [implementation]
-
-nsISO88596EToUnicode::nsISO88596EToUnicode() 
-: nsISO88596ToUnicode()
+NS_METHOD
+nsISO88596EToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult) 
 {
+  return nsISO88596ToUnicodeConstructor(aOuter, aIID, aResult);
 }
 

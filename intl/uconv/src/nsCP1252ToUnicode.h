@@ -39,6 +39,8 @@
 #ifndef nsCP1252ToUnicode_h___
 #define nsCP1252ToUnicode_h___
 
+#include "nsISupports.h"
+
 // Class ID for our CP1252ToUnicode charset converter
 // {7C657D15-EC5E-11d2-8AAC-00600811A836}
 #define NS_CP1252TOUNICODE_CID \
@@ -46,24 +48,14 @@
 
 #define NS_CP1252TOUNICODE_CONTRACTID "@mozilla.org/intl/unicode/decoder;1?charset=windows-1252"
 
-//----------------------------------------------------------------------
-// Class nsCP1252ToUnicode [declaration]
-
 /**
  * A character set converter from CP1252 to Unicode.
  *
  * @created         20/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsCP1252ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsCP1252ToUnicode();
-
-};
+NS_METHOD
+nsCP1252ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult);
 
 #endif /* nsCP1252ToUnicode_h___ */

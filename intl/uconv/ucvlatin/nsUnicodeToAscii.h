@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToAscii_h___
 #define nsUnicodeToAscii_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToAscii [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to Ascii.
@@ -50,15 +47,8 @@
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToAscii : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToAscii();
-
-};
+NS_METHOD
+nsUnicodeToAsciiConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToAscii_h___ */

@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef __nsUCConstructors_h
+#define __nsUCConstructors_h
+
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncodeHelper.h"
@@ -43,7 +46,7 @@
 #include "nsICharRepresentable.h"
 
 // all the useful constructors
-nsresult
+NS_METHOD
 CreateMultiTableDecoder(PRInt32 aTableCount,
                         uRange * aRangeArray, 
                         uShiftTable ** aShiftTable,
@@ -54,7 +57,7 @@ CreateMultiTableDecoder(PRInt32 aTableCount,
                         REFNSIID aIID,
                         void** aResult);
 
-nsresult
+NS_METHOD
 CreateMultiTableEncoder(PRInt32 aTableCount,
                         uShiftTable ** aShiftTable, 
                         uMappingTable  ** aMappingTable,
@@ -64,7 +67,7 @@ CreateMultiTableEncoder(PRInt32 aTableCount,
                         REFNSIID aIID,
                         void** aResult);
 
-nsresult
+NS_METHOD
 CreateTableEncoder(uShiftTable * aShiftTable, 
                    uMappingTable  * aMappingTable,
                    PRUint32 aMaxLengthFactor,
@@ -72,3 +75,23 @@ CreateTableEncoder(uShiftTable * aShiftTable,
                    nsISupports* aOuter,
                    REFNSIID aIID,
                    void** aResult);
+
+NS_METHOD
+CreateTableDecoder(uShiftTable * aShiftTable, 
+                   uMappingTable * aMappingTable,
+                   PRUint32 aMaxLengthFactor,
+
+                   nsISupports* aOuter,
+                   REFNSIID aIID,
+                   void** aResult);
+
+NS_METHOD
+CreateOneByteDecoder(uShiftTable * aShiftTable, 
+                     uMappingTable * aMappingTable,
+                     
+                     nsISupports* aOuter,
+                     REFNSIID aIID,
+                     void** aResult);
+
+                   
+#endif

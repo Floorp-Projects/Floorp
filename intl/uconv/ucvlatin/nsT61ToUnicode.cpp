@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsT61ToUnicode.h"
 
 //----------------------------------------------------------------------
@@ -53,12 +54,12 @@ static const PRInt16 g_T61ShiftTable[] =  {
     ShiftCell(u2BytesChar,  2, 0xC0, 0xCF, 0xC0, 0x41, 0xCF, 0x7A)
 };
 
-//----------------------------------------------------------------------
-// Class nsT61ToUnicode [implementation]
-
-nsT61ToUnicode::nsT61ToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_T61ShiftTable, 
-                        (uMappingTable*) &g_T61MappingTable, 1)
+NS_METHOD
+nsT61ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                          void **aResult) 
 {
+  return CreateTableDecoder((uShiftTable*) &g_T61ShiftTable, 
+                            (uMappingTable*) &g_T61MappingTable, 1,
+                            aOuter, aIID, aResult);
 }
 

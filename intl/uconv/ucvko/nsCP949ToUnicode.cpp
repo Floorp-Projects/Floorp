@@ -38,6 +38,7 @@
 
 #include "nsCP949ToUnicode.h"
 #include "nsUCvKODll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -105,14 +106,14 @@ static const PRUint16 *g_CP949MappingTableSet [] ={
 };
 
 
-//----------------------------------------------------------------------
-// Class nsCP949ToUnicode [implementation]
-
-nsCP949ToUnicode::nsCP949ToUnicode() 
-: nsMultiTableDecoderSupport(sizeof(g_CP949Ranges) / sizeof(g_CP949Ranges[0]),
-                        (uRange*) &g_CP949Ranges,
-                        (uShiftTable**) &g_CP949ShiftTableSet, 
-                        (uMappingTable**) &g_CP949MappingTableSet, 1)
+NS_METHOD
+nsCP949ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
 {
+  return CreateMultiTableDecoder(sizeof(g_CP949Ranges) / sizeof(g_CP949Ranges[0]),
+                                 (uRange*) &g_CP949Ranges,
+                                 (uShiftTable**) &g_CP949ShiftTableSet, 
+                                 (uMappingTable**) &g_CP949MappingTableSet, 1,
+                                 aOuter, aIID, aResult);
 }
 

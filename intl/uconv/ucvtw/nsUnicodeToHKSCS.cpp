@@ -38,6 +38,7 @@
 
 #include "nsUnicodeToHKSCS.h"
 #include "nsUCvTWDll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -61,11 +62,14 @@ static const PRUint16 *g_Big5HKSCSShiftTable[] =  {
 //----------------------------------------------------------------------
 // Class nsUnicodeToHKSCS [implementation]
 
-nsUnicodeToHKSCS::nsUnicodeToHKSCS()
-: nsMultiTableEncoderSupport(1,
-                             (uShiftTable**) &g_Big5HKSCSShiftTable,
-                             (uMappingTable**) &g_Big5HKSCSMappingTable,
-                             2 /* max length = src * 2 */)
+NS_METHOD
+nsUnicodeToHKSCSConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult)
 {
+  return CreateMultiTableEncoder(1,
+                                 (uShiftTable**) &g_Big5HKSCSShiftTable,
+                                 (uMappingTable**) &g_Big5HKSCSMappingTable,
+                                 2 /* max length = src * 2 */,
+                                 aOuter, aIID, aResult);
 }
 

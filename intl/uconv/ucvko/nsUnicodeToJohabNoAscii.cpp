@@ -38,6 +38,7 @@
 
 #include "nsUnicodeToJohabNoAscii.h"
 #include "nsUCvKODll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -70,13 +71,13 @@ static const PRUint16 *g_JohabShiftTable[3] =  {
 };
 
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToJohabNoAscii [implementation]
-
-nsUnicodeToJohabNoAscii::nsUnicodeToJohabNoAscii() 
-: nsMultiTableEncoderSupport(sizeof(g_JohabShiftTable) / sizeof(g_JohabShiftTable[0]),
-                        (uShiftTable**) g_JohabShiftTable, 
-                        (uMappingTable**) g_JohabMappingTable,
-                             2 /* max length = src * 2 */)
+NS_METHOD
+nsUnicodeToJohabNoAsciiConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                   void **aResult)
 {
+  return CreateMultiTableEncoder(sizeof(g_JohabShiftTable) / sizeof(g_JohabShiftTable[0]),
+                                 (uShiftTable**) g_JohabShiftTable, 
+                                 (uMappingTable**) g_JohabMappingTable,
+                                 2 /* max length = src * 2 */,
+                                 aOuter, aIID, aResult);
 }

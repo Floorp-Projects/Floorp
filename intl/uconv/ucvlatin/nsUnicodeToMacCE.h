@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToMacCE_h___
 #define nsUnicodeToMacCE_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacCE [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to MacCE.
@@ -50,15 +47,8 @@
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToMacCE : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToMacCE();
-
-};
+NS_METHOD
+nsUnicodeToMacCEConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToMacCE_h___ */

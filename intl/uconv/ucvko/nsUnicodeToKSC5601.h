@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToKSC5601_h___
 #define nsUnicodeToKSC5601_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToKSC5601 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to KSC5601.
@@ -50,17 +47,7 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToKSC5601 : public nsMultiTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToKSC5601();
-
-protected:
-
-};
-
+NS_METHOD
+nsUnicodeToKSC5601Constructor(nsISupports *aOuter, REFNSIID aIID,
+                              void **aResult);
 #endif /* nsUnicodeToKSC5601_h___ */

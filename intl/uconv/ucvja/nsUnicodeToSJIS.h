@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToSJIS_h___
 #define nsUnicodeToSJIS_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToSJIS [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to SJIS.
@@ -50,17 +47,8 @@
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToSJIS : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToSJIS();
-
-protected:
-
-};
+NS_METHOD
+nsUnicodeToSJISConstructor(nsISupports *aOuter, REFNSIID aIID,
+                           void **aResult);
 
 #endif /* nsUnicodeToSJIS_h___ */

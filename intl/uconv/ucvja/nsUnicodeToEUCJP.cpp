@@ -38,6 +38,7 @@
 
 #include "nsUnicodeToEUCJP.h"
 #include "nsUCVJADll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -74,14 +75,14 @@ static const PRUint16 *gMappingTables[SIZE_OF_TABLES] = {
     g_uf0212Mapping
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToEUCJP [implementation]
-
-nsUnicodeToEUCJP::nsUnicodeToEUCJP() 
-: nsMultiTableEncoderSupport(SIZE_OF_TABLES,
-                             (uShiftTable**) gShiftTables, 
-                             (uMappingTable**) gMappingTables,
-                             3 /* max length = src * 3 */)
+NS_METHOD
+nsUnicodeToEUCJPConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
 {
+    return CreateMultiTableEncoder(SIZE_OF_TABLES,
+                                   (uShiftTable**) gShiftTables, 
+                                   (uMappingTable**) gMappingTables,
+                                   3 /* max length = src * 3 */,
+                                   aOuter, aIID, aResult);
 }
 

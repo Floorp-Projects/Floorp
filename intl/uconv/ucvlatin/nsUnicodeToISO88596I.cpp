@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToISO88596.h"
 #include "nsUnicodeToISO88596I.h"
 
@@ -43,11 +44,10 @@
 // Global functions and data [declaration]
 
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToISO88596I [implementation]
-
-nsUnicodeToISO88596I::nsUnicodeToISO88596I() 
-: nsUnicodeToISO88596()
+NS_METHOD
+nsUnicodeToISO88596IConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult) 
 {
+  return nsUnicodeToISO88596Constructor(aOuter, aIID, aResult);
 }
 

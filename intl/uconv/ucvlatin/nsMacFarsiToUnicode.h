@@ -39,23 +39,13 @@
 #ifndef nsMacFarsiToUnicode_h___
 #define nsMacFarsiToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsMacFarsiToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from MacFarsi to Unicode.
  */
-class nsMacFarsiToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsMacFarsiToUnicode();
-
-};
+NS_METHOD
+nsMacFarsiToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
 #endif /* nsMacFarsiToUnicode_h___ */

@@ -38,6 +38,7 @@
 
 #include "nsJohabToUnicode.h"
 #include "nsUCvKODll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -93,11 +94,14 @@ static const PRUint16 *g_JOHABMappingTableSet [] ={
 //----------------------------------------------------------------------
 // Class nsJohabToUnicode [implementation]
 
-nsJohabToUnicode::nsJohabToUnicode() 
-: nsMultiTableDecoderSupport(sizeof(g_JOHABRanges) / sizeof(g_JOHABRanges[0]),
-                        (uRange*) &g_JOHABRanges,
-                        (uShiftTable**) &g_JOHABShiftTableSet, 
-                        (uMappingTable**) &g_JOHABMappingTableSet, 1)
+NS_METHOD
+nsJohabToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
 {
+  return CreateMultiTableDecoder(sizeof(g_JOHABRanges) / sizeof(g_JOHABRanges[0]),
+                                 (uRange*) &g_JOHABRanges,
+                                 (uShiftTable**) &g_JOHABShiftTableSet, 
+                                 (uMappingTable**) &g_JOHABMappingTableSet, 1,
+                                 aOuter, aIID, aResult);
 }
 

@@ -38,6 +38,7 @@
 
 #include "nsUnicodeToBIG5.h"
 #include "nsUCvTWDll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -67,11 +68,15 @@ static const PRUint16 *g_Big5ShiftTable[2] =  {
 //----------------------------------------------------------------------
 // Class nsUnicodeToBIG5 [implementation]
 
-nsUnicodeToBIG5::nsUnicodeToBIG5() 
-: nsMultiTableEncoderSupport(2,
-                             (uShiftTable**) &g_Big5ShiftTable, 
-                             (uMappingTable**) &g_Big5MappingTable,
-                             2 /* max length = src * 2 */)
+NS_METHOD
+nsUnicodeToBIG5Constructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult)
 {
+
+  return CreateMultiTableEncoder(2,
+                                 (uShiftTable**) &g_Big5ShiftTable, 
+                                 (uMappingTable**) &g_Big5MappingTable,
+                                 2 /* max length = src * 2 */,
+                                 aOuter, aIID, aResult);
 }
 

@@ -39,10 +39,7 @@
 #ifndef nsTCVN5712ToUnicode_h___
 #define nsTCVN5712ToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsTCVN5712ToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from TCVN5712 to Unicode.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsTCVN5712ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsTCVN5712ToUnicode();
-
-};
+NS_METHOD
+nsTCVN5712ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
 #endif /* nsTCVN5712ToUnicode_h___ */

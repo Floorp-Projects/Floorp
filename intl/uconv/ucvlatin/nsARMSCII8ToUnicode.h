@@ -39,10 +39,7 @@
 #ifndef nsARMSCII8ToUnicode_h___
 #define nsARMSCII8ToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsARMSCII8ToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from ARMSCII8 to Unicode.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsARMSCII8ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsARMSCII8ToUnicode();
-
-};
+NS_METHOD
+nsARMSCII8ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
 #endif /* nsARMSCII8ToUnicode_h___ */

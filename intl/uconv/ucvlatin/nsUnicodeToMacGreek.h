@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToMacGreek_h___
 #define nsUnicodeToMacGreek_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacGreek [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to MacGreek.
@@ -50,15 +47,8 @@
  * @created         05/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToMacGreek : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToMacGreek();
-
-};
+NS_METHOD
+nsUnicodeToMacGreekConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
 #endif /* nsUnicodeToMacGreek_h___ */

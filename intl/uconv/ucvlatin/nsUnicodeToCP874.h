@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToCP874_h___
 #define nsUnicodeToCP874_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToCP874 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to CP874.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsUnicodeToCP874 : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToCP874();
-
-};
+NS_METHOD
+nsUnicodeToCP874Constructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToCP874_h___ */

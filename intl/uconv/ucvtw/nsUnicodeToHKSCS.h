@@ -39,25 +39,14 @@
 #ifndef nsUnicodeToHKSCS_h___
 #define nsUnicodeToHKSCS_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToHKSCS [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to HKSCS.
  *
  */
-class nsUnicodeToHKSCS : public nsMultiTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToHKSCS();
-
-protected:
-};
+NS_METHOD
+nsUnicodeToHKSCSConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToHKSCS_h___ */

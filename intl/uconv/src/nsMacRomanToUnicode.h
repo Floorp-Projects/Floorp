@@ -39,6 +39,8 @@
 #ifndef nsMacRomanToUnicode_h___
 #define nsMacRomanToUnicode_h___
 
+#include "nsISupports.h"
+
 // Class ID for our MacRomanToUnicode charset converter
 // {7B8556A1-EC79-11d2-8AAC-00600811A836}
 #define NS_MACROMANTOUNICODE_CID \
@@ -49,26 +51,14 @@
 //#define NS_ERROR_UCONV_NOMACROMANTOUNICODE   
 //  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x31)
 
-//----------------------------------------------------------------------
-// Class nsMacRomanToUnicode [declaration]
-
 /**
  * A character set converter from MacRoman to Unicode.
  *
  * @created         05/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsMacRomanToUnicode : public nsTableDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsMacRomanToUnicode();
-
-protected:
-
-};
+NS_METHOD
+nsMacRomanToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
 #endif /* nsMacRomanToUnicode_h___ */

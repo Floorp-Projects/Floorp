@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsUCSupport.h"
+#include "nsUCConstructors.h"
 #include "nsUnicodeToCP1252.h"
 
 //----------------------------------------------------------------------
@@ -51,12 +51,12 @@ static const PRInt16 g_ufShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToCP1252 [implementation]
-
-nsUnicodeToCP1252::nsUnicodeToCP1252() 
-: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
-                        (uMappingTable*) &g_ufMappingTable, 1)
+NS_METHOD
+nsUnicodeToCP1252Constructor(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult)
 {
+  return CreateTableEncoder((uShiftTable*) &g_ufShiftTable, 
+                            (uMappingTable*) &g_ufMappingTable, 1,
+                            aOuter, aIID, aResult);
 }
 

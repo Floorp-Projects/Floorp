@@ -39,6 +39,8 @@
 #ifndef nsUnicodeToISO88591_h___
 #define nsUnicodeToISO88591_h___
 
+#include "nsISupports.h"
+
 // {920307B0-C6E8-11d2-8AA8-00600811A836}
 #define NS_UNICODETOISO88591_CID \
   { 0x920307b0, 0xc6e8, 0x11d2, {0x8a, 0xa8, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
@@ -49,23 +51,14 @@
 //  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x31)
 
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToISO88591 [declaration]
-
 /**
  * A character set converter from Unicode to ISO88591.
  *
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToISO88591 : public nsTableEncoderSupport
-{
-public:
+NS_METHOD
+nsUnicodeToISO88591Constructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToISO88591();
-
-};
 #endif /* nsUnicodeToISO88591_h___ */

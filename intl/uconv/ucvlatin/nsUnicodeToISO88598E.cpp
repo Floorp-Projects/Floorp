@@ -36,17 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToISO88598.h"
 #include "nsUnicodeToISO88598E.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToISO88598E [implementation]
-
-nsUnicodeToISO88598E::nsUnicodeToISO88598E() 
-: nsUnicodeToISO88598()
+NS_METHOD
+nsUnicodeToISO88598EConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult) 
 {
+  return nsUnicodeToISO88598Constructor(aOuter, aIID, aResult);
 }
 

@@ -38,11 +38,11 @@
 
 #include "nsEUCKRToUnicode.h"
 #include "nsUCvKODll.h"
+#include "nsUCConstructors.h"
 
-//----------------------------------------------------------------------
-// Class nsEUCKRToUnicode [implementation]
-
-nsEUCKRToUnicode::nsEUCKRToUnicode() 
-: nsCP949ToUnicode()
+NS_METHOD
+nsEUCKRToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
 {
+  return nsCP949ToUnicodeConstructor(aOuter, aIID, aResult);
 }

@@ -38,6 +38,7 @@
 
 #include "nsUnicodeToCNS11643p7.h"
 #include "nsUCvTW2Dll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -47,13 +48,13 @@ static PRInt16 g_ShiftTable[] =  {
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToCNS11643p7 [implementation]
-
-nsUnicodeToCNS11643p7::nsUnicodeToCNS11643p7() 
-: nsTableEncoderSupport((uShiftTable*) &g_ShiftTable, 
-                        (uMappingTable*) &g_ufCNS7MappingTable,
-                        2 /* max length = src * 2 */)
+NS_METHOD
+nsUnicodeToCNS11643p7Constructor(nsISupports *aOuter, REFNSIID aIID,
+                                 void **aResult)
 {
+  return CreateTableEncoder((uShiftTable*) &g_ShiftTable, 
+                            (uMappingTable*) &g_ufCNS7MappingTable,
+                            2 /* max length = src * 2 */,
+                            aOuter, aIID, aResult);
 }
 

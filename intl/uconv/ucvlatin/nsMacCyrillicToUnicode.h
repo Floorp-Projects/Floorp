@@ -39,10 +39,7 @@
 #ifndef nsMacCyrillicToUnicode_h___
 #define nsMacCyrillicToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsMacCyrillicToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from MacCyrillic to Unicode.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsMacCyrillicToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsMacCyrillicToUnicode();
-
-};
+NS_METHOD
+nsMacCyrillicToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                  void **aResult);
 
 #endif /* nsMacCyrillicToUnicode_h___ */

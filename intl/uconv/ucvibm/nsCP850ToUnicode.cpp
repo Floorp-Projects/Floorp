@@ -33,6 +33,7 @@
  *
  */
 
+#include "nsUCConstructors.h"
 #include "nsCP850ToUnicode.h"
 
 //----------------------------------------------------------------------
@@ -50,8 +51,11 @@ static const PRInt16 g_utShiftTable[] =  {
 //----------------------------------------------------------------------
 // Class nsCP850ToUnicode [implementation]
 
-nsCP850ToUnicode::nsCP850ToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+NS_METHOD
+nsCP850ToUnicodeConstructor(nsISupports* aOuter, REFNSIID aIID,
+                            void **aResult) 
 {
+  return CreateOneByteDecoder((uShiftTable*) &g_utShiftTable, 
+                              (uMappingTable*) &g_utMappingTable,
+                              aOuter, aIID, aResult);
 }

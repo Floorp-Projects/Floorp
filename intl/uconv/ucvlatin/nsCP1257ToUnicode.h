@@ -39,7 +39,7 @@
 #ifndef nsCP1257ToUnicode_h___
 #define nsCP1257ToUnicode_h___
 
-#include "nsUCSupport.h"
+#include "nsISupports.h"
 
 //----------------------------------------------------------------------
 // Class nsCP1257ToUnicode [declaration]
@@ -50,15 +50,8 @@
  * @created         20/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsCP1257ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsCP1257ToUnicode();
-
-};
+NS_METHOD
+nsCP1257ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsCP1257ToUnicode_h___ */

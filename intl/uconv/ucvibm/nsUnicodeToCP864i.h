@@ -36,23 +36,13 @@
 #ifndef nsUnicodeToCP864i_h___
 #define nsUnicodeToCP864i_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToCP864i [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to CP864i.
  */
-class nsUnicodeToCP864i : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToCP864i();
-
-};
+NS_METHOD
+nsUnicodeToCP864iConstructor(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult);
 
 #endif /* nsUnicodeToCP864i_h___ */

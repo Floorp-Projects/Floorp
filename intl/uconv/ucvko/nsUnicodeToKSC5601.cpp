@@ -38,6 +38,7 @@
 
 #include "nsUnicodeToKSC5601.h"
 #include "nsUCvKODll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -62,13 +63,13 @@ static const PRUint16 *g_ShiftTable[3] =  {
   gDecomposedHangulShiftTable
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToKSC5601 [implementation]
-
-nsUnicodeToKSC5601::nsUnicodeToKSC5601() 
-: nsMultiTableEncoderSupport(2, (uShiftTable**) g_ShiftTable, 
-                        (uMappingTable**) g_MappingTable,
-                             8 /* max length = src * 8 */)
+NS_METHOD
+nsUnicodeToKSC5601Constructor(nsISupports *aOuter, REFNSIID aIID,
+                              void **aResult)
 {
+  return CreateMultiTableEncoder(2, (uShiftTable**) g_ShiftTable, 
+                                 (uMappingTable**) g_MappingTable,
+                                 8 /* max length = src * 8 */,
+                                 aOuter, aIID, aResult);
 }
 

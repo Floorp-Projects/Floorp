@@ -39,6 +39,7 @@
 #ifndef nsUnicodeToCP1252_h___
 #define nsUnicodeToCP1252_h___
 
+#include "nsISupports.h"
 // Class ID for our UnicodeToCP1252 charset converter
 // {7B8556AC-EC79-11d2-8AAC-00600811A836}
 #define NS_UNICODETOCP1252_CID \
@@ -49,24 +50,14 @@
 //#define NS_ERROR_UCONV_NOUNICODETOCP1252  
 //  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x31)
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToCP1252 [declaration]
-
 /**
  * A character set converter from Unicode to CP1252.
  *
  * @created         20/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToCP1252 : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToCP1252();
-
-};
+NS_METHOD
+nsUnicodeToCP1252Constructor(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult);
 
 #endif /* nsUnicodeToCP1252_h___ */

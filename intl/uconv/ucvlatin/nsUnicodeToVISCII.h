@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToVISCII_h___
 #define nsUnicodeToVISCII_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToVISCII [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to VISCII.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsUnicodeToVISCII : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToVISCII();
-
-};
+NS_METHOD
+nsUnicodeToVISCIIConstructor(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult);
 
 #endif /* nsUnicodeToVISCII_h___ */

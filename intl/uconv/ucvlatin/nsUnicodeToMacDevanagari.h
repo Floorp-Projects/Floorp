@@ -39,23 +39,13 @@
 #ifndef nsUnicodeToMacDevanagari_h___
 #define nsUnicodeToMacDevanagari_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacDevanagari [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to MacDevanagari.
  */
-class nsUnicodeToMacDevanagari : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToMacDevanagari();
-
-};
+NS_METHOD
+nsUnicodeToMacDevanagariConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                    void **aResult);
 
 #endif /* nsUnicodeToMacDevanagari_h___ */

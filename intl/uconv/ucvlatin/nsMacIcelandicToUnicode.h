@@ -39,10 +39,7 @@
 #ifndef nsMacIcelandicToUnicode_h___
 #define nsMacIcelandicToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsMacIcelandicToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from MacIcelandic to Unicode.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsMacIcelandicToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsMacIcelandicToUnicode();
-
-};
+NS_METHOD
+nsMacIcelandicToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                   void **aResult);
 
 #endif /* nsMacIcelandicToUnicode_h___ */
