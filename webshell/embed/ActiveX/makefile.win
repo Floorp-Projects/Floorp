@@ -47,7 +47,8 @@ LINCS=  \
   -I$(PUBLIC)\java \
   -I$(PUBLIC)\plugin \
   -I$(PUBLIC)\editor \
-  -I$(PUBLIC)\pref
+  -I$(PUBLIC)\pref \
+  -I$(PUBLIC)\rdf
 
 MYLIBS=                         \
  $(DIST)\lib\raptorbase.lib     \
