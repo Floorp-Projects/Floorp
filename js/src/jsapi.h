@@ -907,6 +907,14 @@ JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetConstructor(JSContext *cx, JSObject *proto);
 
+/*
+ * Get a unique identifier for obj, good for the lifetime of obj (even if it
+ * is moved by a copying GC).  Return false on failure (likely out of memory),
+ * and true with *idp containing the unique id on success.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
