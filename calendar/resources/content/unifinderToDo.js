@@ -25,6 +25,7 @@
  *                 ArentJan Banck <ajbanck@planet.nl>
  *                 Curtis Jewell <csjewell@mail.freeshell.org>
  *                 Eric Belhaire <eric.belhaire@ief.u-psud.fr>
+ *			          Mark Swaffer <swaff@fudo.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -256,7 +257,7 @@ function checkboxClick( ThisToDo, completed )
 
 /*
 This function return the progress state of a ToDo task :
-completed, overdue, duetoday, inprogress
+completed, overdue, duetoday, inprogress, future
  */
 function ToDoProgressAtom( calendarToDo )
 {
@@ -284,7 +285,12 @@ function ToDoProgressAtom( calendarToDo )
                   dueDate.getDate() == now.getDate() )
       {
 	    return("duetoday");
+      } else
+	if( tonightMidnight.getTime() < startDate.getTime() )
+	{
+	    return("future");
       }
+
       else
       {
 	    return("inprogress");
