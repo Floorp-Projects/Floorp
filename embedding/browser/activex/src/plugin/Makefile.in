@@ -52,6 +52,13 @@ REQUIRES = \
     necko \
     windowwatcher \
     $(NULL)
+
+ifdef XPC_IDISPATCH_SUPPORT
+REQUIRES += \
+	caps \
+	embedstring \
+	$(NULL)
+endif
 XPIFILE         = mozactivex.xpi
 
 FORCE_SHARED_LIB = 1
@@ -175,6 +182,12 @@ EXTRA_DSO_LDOPTS = \
     $(MOZ_COMPONENT_LIBS) \
     $(NSPR_LIBS) \
     $(NULL)
+
+ifdef XPC_IDISPATCH_SUPPORT
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_JS_LIBS) \
+	$(NULL)
+endif
 
 LIBS = \
     $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \

@@ -60,7 +60,14 @@
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 #include "nsIURI.h"
+#include "nsIJSContextStack.h"
+#include "jsapi.h"
+#include "jscntxt.h"
+#include "nsIScriptSecurityManager.h"
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -330,8 +337,146 @@ NewScript(const char *pluginType,
     return NPERR_GENERIC_ERROR;
 }
 
+#if defined(MOZ_ACTIVEX_PLUGIN_XPCONNECT) && defined(XPC_IDISPATCH_SUPPORT)
+
+static nsresult
+CreatePrincipal(nsIURI * origin,
+                nsIPrincipal ** outPrincipal)
+{
+    nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> secMan(
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    return secMan->GetCodebasePrincipal(origin, outPrincipal);
+}
+
+/***************************************************************************/
+// A class to put on the stack to manage JS contexts when we are entering JS.
+// This pushes and pops the given context
+// with the nsThreadJSContextStack service as this object goes into and out
+// of scope. It is optimized to not push/pop the cx if it is already on top
+// of the stack. We need to push the JSContext when we enter JS because the
+// JS security manager looks on the context stack for permissions information.
+
+class MozAxAutoPushJSContext
+{
+public:
+    MozAxAutoPushJSContext(JSContext *cx, nsIURI * aURI);
+
+    ~MozAxAutoPushJSContext();
+
+    nsresult ResultOfPush() { return mPushResult; };
+
+private:
+    nsCOMPtr<nsIJSContextStack> mContextStack;
+    JSContext*                  mContext;
+    JSStackFrame                mFrame;
+    nsresult                    mPushResult;
+};
+
+
+MozAxAutoPushJSContext::MozAxAutoPushJSContext(JSContext *cx,
+                                               nsIURI * aURI)
+                                     : mContext(cx), mPushResult(NS_OK)
+{
+    mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    if(mContextStack)
+    {
+        JSContext* currentCX;
+        if(NS_SUCCEEDED(mContextStack->Peek(&currentCX)))
+        {
+            // Is the current context already on the stack?
+            if(cx == currentCX)
+                mContextStack = nsnull;
+            else
+            {
+                mContextStack->Push(cx);
+                // Leave the reference to the mContextStack to
+                // indicate that we need to pop it in our dtor.                                               
+            }
+
+        }
+    }
+
+    memset(&mFrame, 0, sizeof(mFrame));
+
+    // See if there are any scripts on the stack.
+    // If not, we need to add a dummy frame with a principal.
+    PRBool hasScript = PR_FALSE;
+    JSStackFrame* tempFP = cx->fp;
+    while (tempFP)
+    {
+        if (tempFP->script)
+        {
+            hasScript = PR_TRUE;
+            break;
+        }
+        tempFP = tempFP->down;
+    };
+
+    if (!hasScript)
+    {
+        nsCOMPtr<nsIPrincipal> principal;
+        mPushResult = CreatePrincipal(aURI, getter_AddRefs(principal));
+
+        if (NS_SUCCEEDED(mPushResult))
+        {
+            JSPrincipals* jsprinc;
+            principal->GetJSPrincipals(&jsprinc);
+
+            mFrame.script = JS_CompileScriptForPrincipals(cx, JS_GetGlobalObject(cx),
+                                                          jsprinc, "", 0, "", 1);
+            JSPRINCIPALS_DROP(cx, jsprinc);
+
+            if (mFrame.script)
+            {
+                mFrame.down = cx->fp;
+                cx->fp = &mFrame;
+            }
+            else
+                mPushResult = NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+}
+
+MozAxAutoPushJSContext::~MozAxAutoPushJSContext()
+{
+    if (mContextStack)
+        mContextStack->Pop(nsnull);
+
+    if (mFrame.script)
+        mContext->fp = mFrame.down;
+
+}
+
+
+static JSContext*
+GetPluginsContext(PluginInstanceData *pData)
+{
+    nsCOMPtr<nsIDOMWindow> window;
+    NPN_GetValue(pData->pPluginInstance, NPNVDOMWindow, 
+                 NS_STATIC_CAST(nsIDOMWindow **, getter_AddRefs(window)));
+    if (!window)
+        return nsnull;
+
+    nsCOMPtr<nsIScriptGlobalObject> globalObject(do_QueryInterface(window));
+    if (!globalObject)
+        return nsnull;
+
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    if (NS_FAILED(globalObject->GetContext(getter_AddRefs(scriptContext))) ||
+        !scriptContext)
+        return nsnull;
+
+    return NS_REINTERPRET_CAST(JSContext*, scriptContext->GetNativeContext());
+}
+
+#endif
+
 static BOOL
-WillHandleCLSID(const CLSID &clsid)
+WillHandleCLSID(const CLSID &clsid, PluginInstanceData *pData)
 {
 #if defined(MOZ_ACTIVEX_PLUGIN_XPCONNECT) && defined(XPC_IDISPATCH_SUPPORT)
     // Ensure the control is safe for scripting
@@ -342,7 +487,14 @@ WillHandleCLSID(const CLSID &clsid)
     memcpy(&cid, &clsid, sizeof(nsCID));
     PRBool isSafe = PR_FALSE;
     PRBool classExists = PR_FALSE;
-    dispSupport->IsClassSafeToHost(cid, &classExists, &isSafe);
+    JSContext * cx = GetPluginsContext(pData);
+    if (cx)
+    {
+        nsCOMPtr<nsIURI> uri;
+        MozAxPlugin::GetCurrentLocation(pData->pPluginInstance, getter_AddRefs(uri));
+        MozAxAutoPushJSContext autoContext(cx, uri);
+        dispSupport->IsClassSafeToHost(cx, cid, PR_TRUE, &classExists, &isSafe);
+    }
     if (classExists && !isSafe)
         return FALSE;
     return TRUE;
@@ -443,7 +595,7 @@ static NPError
 CreateControl(const CLSID &clsid, PluginInstanceData *pData, PropertyList &pl, LPCOLESTR szCodebase)
 {
     // Make sure we got a CLSID we can handle
-    if (!WillHandleCLSID(clsid))
+    if (!WillHandleCLSID(clsid, pData))
     {
         return NPERR_GENERIC_ERROR;
     }
