@@ -31,6 +31,7 @@ install::
 	$(MAKE_INSTALL) browserBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) editorBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) inputBindings.xul $(DISTBROWSER)
+	$(MAKE_INSTALL) textAreaBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) hiddenWindow.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) globalOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) globalOverlay.js $(DISTBROWSER)

@@ -32,6 +32,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/browserBindings.xul \
 		$(srcdir)/editorBindings.xul \
 		$(srcdir)/inputBindings.xul \
+		$(srcdir)/textAreaBindings.xul \
 		$(srcdir)/hiddenWindow.xul \
 		$(srcdir)/globalOverlay.xul \
 		$(srcdir)/globalOverlay.js \
