@@ -171,17 +171,19 @@ fips_140_1()
   certutil -d ${P_R_FIPSDIR} -K -f ${R_FIPSPWFILE} 2>&1
   html_msg $? 0 "List the FIPS module keys (certutil -K)"
 
-  echo "$SCRIPTNAME: Detect mangled database --------------------------"
-  cp ${DIST}/${OBJDIR}/lib/libsoftokn3.so ${TMP}/libsoftokn3.sav
-  echo "mangling softokn3.so "
-  echo "mangle -i ${DIST}/${OBJDIR}lib/libsoftokn3.so -o 60000 -b 5"
-  mangle -i ${DIST}/${OBJDIR}/lib/libsoftokn3.so -o 60000 -b 5 2>&1
-  diff ${DIST}/${OBJDIR}/lib/libsoftokn3.so ${TMP}/libsoftokn3.sav 2>&1
-  echo "dbtest -r  -d ${P_R_FIPSDIR} "
-  dbtest -r  -d ${P_R_FIPSDIR}  2>&1
-  html_msg $? 46 "Init NSS with a corrupted library (dbtest -r)"
-  cp ${TMP}/libsoftokn3.sav ${DIST}/${OBJDIR}/lib/libsoftokn3.so 
-  rm ${TMP}/libsoftokn3.sav
+# NEED TO GET LIBPREFIX and LIBSUFFIX
+#  echo "$SCRIPTNAME: Detect mangled database --------------------------"
+#  SOFTOKEN=$(LIBPREFIX)softokn3.${LIBSUFFIX}
+#  cp ${DIST}/${OBJDIR}/lib/libsoftokn3.so ${TMP}/libsoftokn3.sav
+#  echo "mangling softokn3.so "
+#  echo "mangle -i ${DIST}/${OBJDIR}/lib/libsoftokn3.so -o 60000 -b 5"
+#  mangle -i ${DIST}/${OBJDIR}/lib/libsoftokn3.so -o 60000 -b 5 2>&1
+#  diff ${DIST}/${OBJDIR}/lib/libsoftokn3.so ${TMP}/libsoftokn3.sav 2>&1
+#  echo "dbtest -r  -d ${P_R_FIPSDIR} "
+#  dbtest -r  -d ${P_R_FIPSDIR}  2>&1
+#  html_msg $? 46 "Init NSS with a corrupted library (dbtest -r)"
+#  cp ${TMP}/libsoftokn3.sav ${DIST}/${OBJDIR}/lib/libsoftokn3.so 
+#  rm ${TMP}/libsoftokn3.sav
 }
 
 ############################## fips_cleanup ############################
