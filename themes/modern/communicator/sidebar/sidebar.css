@@ -65,6 +65,8 @@
   margin-right: 1px;
   margin-top: 1px;
   padding: 2px;
+  /** bugzilla 89144 - must be able to access tabs dropdown **/
+  -moz-user-focus:normal !important;
 }
 
 #sidebar-panel-picker:hover {
@@ -89,6 +91,8 @@
   padding: 0px 2px 0px 4px;
   list-style-image: url("chrome://global/skin/icons/closebox.gif");
 }
+
+
 
 /* ::::: loading info ::::: */
 
