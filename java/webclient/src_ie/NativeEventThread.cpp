@@ -55,9 +55,6 @@ CComModule _Module;
 
 #include <stdio.h>
 
-HWND localParent;  //these two are temporarily being used in order to test the
-HWND localChild;   //OnCommandStateChange functions, they may be eventually removed
-
 
 //
 // Local functions
@@ -70,7 +67,6 @@ int processEventLoop(WebShellInitContext *initContext);
 //
 // Local data
 //
-
 
 
 extern void util_ThrowExceptionToJava (JNIEnv * , const char * );
@@ -116,7 +112,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
 }
 
  /**
-
  * <P> This method takes the typedListener, which is a
  * WebclientEventListener java subclass, figures out what type of
  * subclass it is, using the gSupportedListenerInterfaces array, and
@@ -133,7 +128,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
  * RemoveGlobalRef.
 
  * See the comments for EventRegistration.h:addDocumentLoadListener
-
  */
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeAddListener
@@ -244,6 +238,17 @@ int processEventLoop(WebShellInitContext * initContext)
 		case WM_FORWARD:
 		    hr = (initContext->browserObject->m_pWB)->GoForward();
 		    break;
+		case WM_TRAVELTO:
+		    {
+			// printf("src_ie/NativeEventThread processEventLoop case WM_TRAVELTO %d\n", msg.lParam);
+		        ITravelLogEntry *pTLEntry = NULL;
+		        hr = (initContext->browserObject->m_pTLStg)->GetRelativeEntry(msg.lParam, &pTLEntry);
+		        if (SUCCEEDED(hr) && pTLEntry) {
+		            hr = (initContext->browserObject->m_pTLStg)->TravelTo(pTLEntry);
+			    pTLEntry->Release();
+		        }
+		    }
+		    break;
 		case WM_STOP:
 		    hr = (initContext->browserObject->m_pWB)->Stop();
 		    break;
@@ -260,8 +265,6 @@ int processEventLoop(WebShellInitContext * initContext)
 	}
     }
 
-    initContext->canForward = initContext->browserObject->GetForwardState();
-    initContext->canBack = initContext->browserObject->GetBackState();
     return 1;
 }
 
@@ -271,12 +274,10 @@ HRESULT InitIEStuff (WebShellInitContext * initContext)
     HWND m_hWndClient;
     RECT rect;
 
-    HWND localParent = initContext->parentHWnd;
-    HWND localChild = initContext->browserHost;
+    CMyDialog *bObj = initContext->browserObject;
 
     HRESULT hRes = CoInitializeEx(NULL,  COINIT_APARTMENTTHREADED);
     ATLASSERT(SUCCEEDED(hRes));
-
 
 /*if (_WIN32_IE >= 0x0300)
 	INITCOMMONCONTROLSEX iccx;
@@ -296,19 +297,18 @@ HRESULT InitIEStuff (WebShellInitContext * initContext)
     hRes = _Module.Init(NULL, newInst);
     ATLASSERT(SUCCEEDED(hRes));
 
-
     AtlAxWinInit();
 
-    m_hWndClient = initContext->browserObject->Create(
-				initContext->parentHWnd,
+    m_hWndClient = bObj->Create(initContext->parentHWnd,
 				rect,
 				_T("about:blank"),
-				WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-				WS_VSCROLL | WS_HSCROLL,
+				WS_CHILD | WS_VISIBLE |
+				   WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+				   WS_VSCROLL | WS_HSCROLL,
 				WS_EX_CLIENTEDGE,
 				ID_WEBBROWSER);
 
-    hr = initContext->browserObject->QueryControl(&(initContext->browserObject->m_pWB));
+    hr = bObj->QueryControl(&(initContext->browserObject->m_pWB));
 
     if FAILED(hr)
     {
@@ -321,16 +321,35 @@ HRESULT InitIEStuff (WebShellInitContext * initContext)
 	ATLTRACE(_T("Browser succesfully retrieved"));
     }
 
-    (initContext->browserHost) = m_hWndClient;
+    initContext->browserHost = m_hWndClient;
 
-    if (!initContext->browserObject->spUnk) {
-	hr = initContext->browserObject->QueryControl(&(initContext->browserObject->spUnk));
-	hr = initContext->browserObject->DispEventAdvise(initContext->browserObject->spUnk);
+    if (!bObj->spUnk) {
+	hr = bObj->QueryControl(&(bObj->spUnk));
+	hr = bObj->DispEventAdvise(bObj->spUnk);
     }
 
     if FAILED(hr)
     {
 	ATLTRACE(_T("Couldn't establish connection points"));
+	return -1;
+    }
+
+    hr = bObj->m_pWB->QueryInterface(IID_IServiceProvider,
+                                     (void**)&(bObj->m_pISP));
+
+    if (FAILED(hr) || (bObj->m_pISP == NULL))
+    {
+	ATLTRACE(_T("Couldn't obtain COM IServiceProvider"));
+	return -1;
+    }
+
+    hr = bObj->m_pISP->QueryService(SID_STravelLogCursor,
+                                    IID_ITravelLogStg,
+				    (void**)&(bObj->m_pTLStg));
+
+    if (FAILED(hr) || (bObj->m_pTLStg == NULL))
+    {
+	ATLTRACE(_T("Couldn't obtain ITravelLog interface"));
 	return -1;
     }
 

@@ -26,7 +26,7 @@
 
  * a null terminated array of listener interfaces we support.  This is
  * used in NativeEventThread.cpp nativeAddListener,
- * nativeRemoveListener, and in CBrowserContainer.cpp 
+ * nativeRemoveListener, and in CMyDialog.cpp 
 
  */
 
@@ -43,9 +43,7 @@ const char *gSupportedListenerInterfaces[] = {
 
 void util_LogMessage(int level, const char *fmt)
 {
-
     printf(fmt);
-
 }
 
 void util_Assert(void *test)

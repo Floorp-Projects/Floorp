@@ -20,20 +20,19 @@
  * Contributor(s): Glenn Barney <gbarney@uiuc.edu>
  */
 
-
 #ifndef ie_globals_h
 #define ie_globals_h
 
-
 #define ID_WEBBROWSER 1
 
-#define WM_REFRESH WM_USER + 1
+#define WM_REFRESH  WM_USER + 1
 #define WM_NAVIGATE WM_USER + 2
-#define WM_BACK WM_USER + 3
-#define WM_FORWARD WM_USER + 4
-#define WM_STOP WM_USER + 5
-#define WM_RESIZE WM_USER + 6
-#define WM_BIGTEST WM_USER +7
-
+#define WM_BACK     WM_USER + 3
+#define WM_FORWARD  WM_USER + 4
+#define WM_STOP     WM_USER + 5
+#define WM_RESIZE   WM_USER + 6
+#define WM_TRAVELTO WM_USER + 7
+#define WM_BIGTEST  WM_USER + 8
 
 #endif //ie_globals.h
+

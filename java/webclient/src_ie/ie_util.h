@@ -23,9 +23,7 @@
 
 
 /**
-
  * Util methods
-
  */
 
 #ifndef ie_util_h
@@ -72,8 +70,6 @@ struct WebShellInitContext
     int		y;
     int		w;
     int		h;
-    jboolean	canForward;
-    jboolean	canBack;
     CMyDialog   *browserObject;
 };
 
