@@ -123,6 +123,9 @@
 #include "prtime.h"
 #include "prlong.h"
 
+#include "nsIDragService.h"
+
+
 // SubShell map
 #include "nsDST.h"
 
@@ -766,6 +769,9 @@ protected:
   PRBool   AlreadyInQueue(nsIReflowCommand* aReflowCommand);
   friend struct ReflowEvent;
 
+    // utility to determine if we're in the middle of a drag
+  PRBool IsDragInProgress ( ) const ;
+
   PRBool	mCaretEnabled;
 #ifdef NS_DEBUG
   PRBool VerifyIncrementalReflow();
@@ -812,7 +818,8 @@ protected:
   PRInt32                       mAccumulatedReflowTime;  // Time spent in reflow command processing so far  
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.  
   nsCOMPtr<nsIObserverService>  mObserverService; // Observer service for reflow events
-
+  nsCOMPtr<nsIDragService>      mDragService;
+  
   // subshell map
   nsDST*            mSubShellMap;  // map of content/subshell pairs
   nsDST::NodeArena* mDSTNodeArena; // weak link. DST owns (mSubShellMap object)
@@ -1176,6 +1183,9 @@ PresShell::Init(nsIDocument* aDocument,
   if (NS_FAILED(result)) {
     return result;
   }
+
+  // cache the drag service so we can check it during reflows
+  mDragService = do_GetService("component://netscape/widget/dragservice");
 
   return NS_OK;
 }
@@ -2332,12 +2342,40 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 
   // Kick off a reflow event if we aren't batching reflows
   // and the document is not loading.
-  if (!mBatchReflows && !mDocumentLoading) {
-    PostReflowEvent();
+  //
+  // If we're in the middle of a drag, process it right away (needed for mac,
+  // might as well do it on all platforms just to keep the code paths the same).
+  if (!mBatchReflows && !mDocumentLoading) {    
+    if ( IsDragInProgress() )
+      FlushPendingNotifications();
+    else
+      PostReflowEvent();
   }
 
   return rv;
 }
+
+
+//
+// IsDragInProgress
+//
+// Ask the drag service if we're in the middle of a drag
+//
+PRBool
+PresShell :: IsDragInProgress ( ) const
+{
+  PRBool dragInProgress = PR_FALSE;
+  if ( mDragService ) {
+    nsCOMPtr<nsIDragSession> session;
+    mDragService->GetCurrentSession ( getter_AddRefs(session) );
+    if ( session )
+      dragInProgress = PR_TRUE;
+  }
+  
+  return dragInProgress;
+
+} // IsDragInProgress
+
 
 NS_IMETHODIMP
 PresShell::CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType)
