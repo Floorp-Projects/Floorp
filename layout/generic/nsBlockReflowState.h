@@ -5548,10 +5548,11 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
                                           );
       
       if (NS_SUCCEEDED(result) && pos.mResultFrame){
-        result = pos.mResultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+        result = pos.mResultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));//if this fails thats ok
+        resultFrame = pos.mResultFrame;
         mainframe = resultFrame;
       }
-      if (!resultFrame)
+      else
         break;//time to go nothing was found
     }
     //end while loop. if nssucceeded resutl then keep going that means
