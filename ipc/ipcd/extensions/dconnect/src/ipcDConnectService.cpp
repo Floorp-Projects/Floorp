@@ -1282,8 +1282,6 @@ DestroyDConnectInstance(const void *key,
 
 ipcDConnectService::~ipcDConnectService()
 {
-  IPC_Shutdown();
-
   // make sure we have released all instances
   mInstances.EnumerateRead(DestroyDConnectInstance, nsnull);
   mInstances.Clear();
