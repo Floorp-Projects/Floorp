@@ -1059,11 +1059,11 @@ sub GetCommandMenu {
     my $loggedin = quietly_check_login();
     my $html = "";
     $html .= <<"--endquote--";
-<TABLE><TR><TD width=5%>
 <FORM METHOD=GET ACTION="show_bug.cgi">
+<TABLE width="100%"><TR><TD>
 Actions:
-</TD><TD width=35%>
-<a href='enter_bug.cgi'>New</a> | <a href='query.cgi'>Query</a>
+</TD><TD VALIGN="middle" NOWRAP>
+<a href='enter_bug.cgi'>New</a> | <a href='query.cgi'>Query</a> |
 --endquote--
 
     if (-e "query2.cgi") {
@@ -1071,15 +1071,14 @@ Actions:
     }
     
     $html .=
-        qq{ <BR> <INPUT TYPE=SUBMIT VALUE="Find"> bug \# <INPUT NAME=id SIZE=6>};
+        qq{ <INPUT TYPE=SUBMIT VALUE="Find"> bug \# <INPUT NAME=id SIZE=6>};
 
     $html .= " | <a href='reports.cgi'>Reports</a>"; 
     if ($loggedin) {
         if ($::anyvotesallowed) {
             $html .= " | <A HREF=\"showvotes.cgi\">My votes</A>";
         }
-    } 
-    $html .= "</TD>\n";
+    }
     if ($loggedin) {
     	#a little mandatory SQL, used later on
         SendSQL("SELECT mybugslink, userid, blessgroupset FROM profiles " .
@@ -1087,7 +1086,7 @@ Actions:
         my ($mybugslink, $userid, $blessgroupset) = (FetchSQLData());
         
         #Begin settings
-        $html .= "<TD width=65%><NOBR>Edit <a href='userprefs.cgi'>prefs</a></NOBR>";
+        $html .= "</TD><TD>&nbsp;</TD><TD VALIGN=middle><NOBR>Edit <a href='userprefs.cgi'>prefs</a></NOBR>";
         if (UserInGroup("tweakparams")) {
             $html .= ", <a href=editparams.cgi>parameters</a>";
             $html .= ", <a href=sanitycheck.cgi><NOBR>sanity check</NOBR></a>";
@@ -1116,22 +1115,26 @@ Actions:
         }
         $html .= "</TR><TR>";
         $html .= "<TD>Preset Queries: </TD>";
-        $html .= "<TD colspan=2>\n";
+        $html .= "<TD colspan=3>\n";
         if ($mybugslink) {
             my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
             $html = $html . "<A HREF='$mybugsurl'><NOBR>My bugs</NOBR></A>";
         }
         SendSQL("SELECT name FROM namedqueries " .
                 "WHERE userid = $userid AND linkinfooter");
+        my $anynamedqueries = 0;
         while (MoreSQLData()) {
             my ($name) = (FetchSQLData());
-            $html .= " | <A HREF=\"buglist.cgi?&cmdtype=runnamed&namedcmd=" .
+            if ($anynamedqueries || $mybugslink) { $html .= " | " }
+            $anynamedqueries = 1;
+            $html .= "<A HREF=\"buglist.cgi?&cmdtype=runnamed&namedcmd=" .
                      url_quote($name) . "\"><NOBR>$name</NOBR></A>";
         }
         $html .= "</TR>\n<TR>";
     } else {
+    $html .= "</TD><TD>&nbsp;</TD><TD valign=middle align=right>\n";
         $html .=
-            " <BR> <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
+            " <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
         $html .=
             " | <NOBR><a href=query.cgi?GoAheadAndLogIn=1>Log in</a></NOBR>";
         $html .= "</TD></TR>";
