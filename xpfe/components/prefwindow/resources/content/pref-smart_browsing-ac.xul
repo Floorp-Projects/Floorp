@@ -78,7 +78,7 @@
      var img = document.getElementById("img"+aImg);
      var checked = document.getElementById("cbx"+aImg).checked;
       if (aImg == "AutoFill") {
-        img.setAttribute("src", "chrome://communicator/content/pref/autocomplete-autofill-"+(checked?"on":"off")+".gif");
+        img.setAttribute("src", "chrome://communicator/locale/pref/autocomplete-autofill-"+(checked?"on":"off")+".gif");
       } else if (aImg == "ShowPopup") {
         img.setAttribute("hidden", !checked);
         updateImage("ShowSearch");
@@ -118,8 +118,8 @@
   <dialogheader>
     <vbox height="159">
       <image id="imgAutoFill" style="min-width: 401px;"/>
-      <image id="imgShowPopup" src="chrome://communicator/content/pref/autocomplete-showpopup.gif"/>
-      <image id="imgShowSearch" src="chrome://communicator/content/pref/autocomplete-showsearch.gif"/>
+      <image id="imgShowPopup" src="chrome://communicator/locale/pref/autocomplete-showpopup.gif"/>
+      <image id="imgShowSearch" src="chrome://communicator/locale/pref/autocomplete-showsearch.gif"/>
     </vbox>
   </dialogheader>
 </dialog>
