@@ -143,9 +143,9 @@ nsTableRowGroup::CreateFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
+nsTableRowGroup::AppendChildTo (nsIContent *aContent, PRBool aNotify)
 {
-  NS_PRECONDITION(nsnull!=aContent, "bad arg to AppendChild");
+  NS_PRECONDITION(nsnull!=aContent, "bad arg to AppendChildTo");
   nsresult result = NS_OK;
 
   // is aContent a TableRow?
@@ -154,9 +154,9 @@ nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
   // if so, simply add it
   if (PR_TRUE==isRow)
   {
-    if (gsDebug==PR_TRUE) printf ("nsTableRowGroup::AppendChild -- inserting a row into this row group.\n");
+    if (gsDebug==PR_TRUE) printf ("nsTableRowGroup::AppendChildTo -- inserting a row into this row group.\n");
     // if it is, we'll add it here
-    result = nsTableContent::AppendChild (aContent, PR_FALSE);
+    result = nsTableContent::AppendChildTo (aContent, PR_FALSE);
     if (NS_OK==result)
     {
       ((nsTableRow *)aContent)->SetRowGroup (this);
@@ -184,15 +184,15 @@ nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
       row->IsSynthetic(rowIsImplicit);
     if ((nsnull == row) || (PR_FALSE==rowIsImplicit))
     {
-      printf ("nsTableRow::AppendChild -- creating an implicit row.\n");
+      printf ("nsTableRow::AppendChildTo -- creating an implicit row.\n");
       nsIAtom * trDefaultTag = NS_NewAtom(nsTablePart::kRowTagString);   // trDefaultTag: REFCNT++
       row = new nsTableRow (trDefaultTag, PR_TRUE);
       NS_RELEASE(trDefaultTag);                               // trDefaultTag: REFCNT--
-      result = AppendChild (row, PR_FALSE);
+      result = AppendChildTo (row, PR_FALSE);
       // SEC: check result
     }
     // group is guaranteed to be allocated at this point
-    result = row->AppendChild(aContent, PR_FALSE);
+    result = row->AppendChildTo(aContent, PR_FALSE);
   }
   // otherwise, punt and let the table try to insert it.  Or maybe just return a failure?
   else

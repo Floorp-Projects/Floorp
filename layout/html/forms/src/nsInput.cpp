@@ -36,10 +36,12 @@
 #include "nsHTMLForms.h"
 #include "nsStyleConsts.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsITextWidget.h"
 
 #define ALIGN_UNSET PRUint8(-1)
 
 static NS_DEFINE_IID(kSupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 
 // Note: we inherit a base class operator new that zeros our memory
 nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
@@ -733,22 +735,36 @@ nsInput::SetValue(const nsString& aValue)
 NS_IMETHODIMP    
 nsInput::Blur()
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (nsnull != mWidget) {
+    nsIWidget *mParentWidget = mWidget->GetParent();
+    if (nsnull != mParentWidget) {
+      mParentWidget->SetFocus();
+      NS_RELEASE(mParentWidget);
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsInput::Focus()
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (nsnull != mWidget) {
+    mWidget->SetFocus();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsInput::Select()
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (nsnull != mWidget) {
+    nsITextWidget *mTextWidget;
+    if (NS_OK == mWidget->QueryInterface(kITextWidgetIID, (void**)&mTextWidget)) {
+      mTextWidget->SelectAll();
+      NS_RELEASE(mTextWidget);
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP    

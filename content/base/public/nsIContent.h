@@ -79,7 +79,7 @@ public:
                             PRInt32 aIndex,
                             PRBool aNotify) = 0;
 
-  NS_IMETHOD AppendChild(nsIContent* aKid,
+  NS_IMETHOD AppendChildTo(nsIContent* aKid,
                          PRBool aNotify) = 0;
 
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex,

@@ -212,6 +212,12 @@ nsDOMAttribute::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP    
+nsDOMAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP    
 nsDOMAttribute::CloneNode(nsIDOMNode** aReturn)
 {
   nsDOMAttribute *newAttr = new nsDOMAttribute(*mName, *mValue);

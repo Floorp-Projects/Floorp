@@ -111,7 +111,7 @@ nsrefcnt nsTableRow::Release(void)
 
 
 NS_IMETHODIMP
-nsTableRow::AppendChild (nsIContent *aContent, PRBool aNotify)
+nsTableRow::AppendChildTo (nsIContent *aContent, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aContent, "null ptr");
   nsresult rv = NS_OK;
@@ -119,14 +119,14 @@ nsTableRow::AppendChild (nsIContent *aContent, PRBool aNotify)
   {
     if (!IsTableCell(aContent))
     {
-      if (gsDebug==PR_TRUE) printf ("nsTableRow::AppendChild -- didn't get a cell, giving up to parent.\n");
+      if (gsDebug==PR_TRUE) printf ("nsTableRow::AppendChildTo -- didn't get a cell, giving up to parent.\n");
       if (nsnull != mRowGroup)
-        return mRowGroup->AppendChild (aContent, aNotify); // let parent have it
+        return mRowGroup->AppendChildTo (aContent, aNotify); // let parent have it
       return PR_FALSE;
     }
     else
     {
-      rv = nsTableContent::AppendChild (aContent, aNotify);
+      rv = nsTableContent::AppendChildTo (aContent, aNotify);
       if (NS_OK == rv)
       {
         ((nsTableCell *)aContent)->SetRow (this);

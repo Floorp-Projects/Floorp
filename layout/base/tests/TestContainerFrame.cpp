@@ -66,7 +66,7 @@ public:
                             PRBool aNotify) { return NS_OK; }
   NS_IMETHOD   ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
                               PRBool aNotify){ return NS_OK; }
-  NS_IMETHOD   AppendChild(nsIContent* aKid, PRBool aNotify) {return NS_OK;}
+  NS_IMETHOD   AppendChildTo(nsIContent* aKid, PRBool aNotify) {return NS_OK;}
   NS_IMETHOD   RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {return NS_OK;}
 
   NS_IMETHOD IsSynthetic(PRBool& aResult) {

@@ -116,7 +116,7 @@ void nsTableColGroup::ResetColumns ()
 }
 
 NS_IMETHODIMP
-nsTableColGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
+nsTableColGroup::AppendChildTo (nsIContent *aContent, PRBool aNotify)
 {
   NS_ASSERTION(nsnull!=aContent, "bad arg");
 
@@ -157,7 +157,7 @@ nsTableColGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
     }
   }
   if (PR_FALSE==contentHandled)
-    result = nsTableContent::AppendChild (aContent, aNotify);
+    result = nsTableContent::AppendChildTo (aContent, aNotify);
   if (NS_OK==result)
   {
     ((nsTableCol *)aContent)->SetColGroup (this);

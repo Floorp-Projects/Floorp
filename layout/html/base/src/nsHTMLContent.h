@@ -70,7 +70,7 @@ public:
 
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
   NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
-  NS_IMETHOD AppendChild(nsIContent* aKid, PRBool aNotify);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
   NS_IMETHOD IsSynthetic(PRBool& aResult);
@@ -133,6 +133,7 @@ public:
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+  NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
 
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);

@@ -122,9 +122,9 @@ public:
 
   /** can only append objects that are columns (implement nsITableContent and are .
     * of type nsITableContent::kTableColType.)
-    * @see nsIContent::AppendChild
+    * @see nsIContent::AppendChildTo
     */
-  NS_IMETHOD AppendChild(nsIContent* aKid, PRBool aNotify);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
 
   /** can only insert objects that are columns (implement nsITableContent and are .
     * of type nsITableContent::kTableColType.)

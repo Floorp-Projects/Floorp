@@ -852,6 +852,12 @@ nsHTMLTagContent::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   return nsHTMLContent::RemoveChild(aOldChild, aReturn);
 }
 
+NS_IMETHODIMP    
+nsHTMLTagContent::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+{
+  return nsHTMLContent::AppendChild(aNewChild, aReturn);
+}
+
 
 //
 // Implementation of nsIDOMElement interface
