@@ -260,11 +260,11 @@ public class LDAPConnection
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(4.14f);
+    private final static Float SdkVersion = new Float(4.16f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(4.0f);
-    private final static Float MinorVersion = new Float(0.14f);
+    private final static Float MinorVersion = new Float(0.16f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
@@ -682,13 +682,22 @@ public class LDAPConnection
      * If not connected to an LDAP server, returns <CODE>false</CODE>.
      */
     public boolean isConnected() {
-        // This is the hack: If the user program calls isConnected() when
-        // the thread is about to shut down, the isConnected might get called
-        // before the deregisterConnection(). We add the yield() so that 
-        // the deregisterConnection() will get called first. 
-        // This problem only exists on Solaris.
-        Thread.yield();
-        return (m_thread != null);
+        synchronized (this) {
+            if (m_thread != null && m_thread.isRunning()) {
+                return true;
+            }
+        }
+        // Not connected; If m_thread != null then there was a network
+        // error and cleanup is currently in progress. Give it some 
+        // time to complete.
+        if (m_thread != null) {
+            try {
+                Thread.sleep(500);
+            }
+            catch (InterruptedException ignore) {}
+            Thread.yield();
+        }
+        return false;
     }
 
     /**
@@ -1088,7 +1097,7 @@ public class LDAPConnection
                     if (conn.equals(this)) {
                         connExists = true;
 
-                        if (!connThread.isAlive()) {
+                        if (!connThread.isRunning()) {
                             // need to move all the LDAPConnections from the dead thread
                             // to the new thread
                             try {
@@ -1883,10 +1892,9 @@ public class LDAPConnection
      * @see netscape.ldap.LDAPConnection#connect(java.lang.String, int, java.lang.String, java.lang.String)
      */
     public synchronized void disconnect() throws LDAPException {
-        if (!isConnected())
-            throw new LDAPException ( "unable to disconnect() without connecting",
-                                      LDAPException.OTHER );
-        
+        if (!isConnected()) {
+            return;
+        }
         // Clone the Connection Setup Manager if the connection is shared
         if (m_thread.isRunning() && m_thread.getClientCount() > 1) {
             m_connMgr = (LDAPConnSetupMgr) m_connMgr.clone();
@@ -1903,7 +1911,7 @@ public class LDAPConnection
             m_cache = null;
         }
 
-        deleteThreadConnEntry();
+        //deleteThreadConnEntry();
         deregisterConnection();
     }
 
@@ -1935,8 +1943,11 @@ public class LDAPConnection
      * Remove the association between this object and the connection thread
      */
     synchronized void deregisterConnection() {
-        if (m_thread != null && m_thread.isRunning()) {
-            m_thread.deregister(this);
+        if (m_thread != null) {
+            deleteThreadConnEntry();
+            if (m_thread.isRunning()) {
+                m_thread.deregister(this);
+            }
         }
         m_thread = null;
         m_bound = false;
@@ -4941,7 +4952,7 @@ public class LDAPConnection
             Enumeration e = m_attachedList.elements();
             while( e.hasMoreElements() ) {
                 LDAPConnThread aThread = (LDAPConnThread)e.nextElement();
-                if ( !aThread.isAlive() ) {
+                if ( !aThread.isRunning() ) {
                     m_responseControlTable.remove( aThread );
                     m_attachedList.removeElement( aThread );
                 }

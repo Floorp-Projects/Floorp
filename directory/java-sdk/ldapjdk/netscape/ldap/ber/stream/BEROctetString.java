@@ -126,7 +126,11 @@ public class BEROctetString extends BERElement {
             /* Definite length content octets string. */
             bytes_read[0] += contents_length;
             m_value = new byte[contents_length];
-            stream.read(m_value, 0, contents_length);
+            int cnt=0, idx=0;
+            while (idx < contents_length) {
+                cnt = stream.read(m_value, idx, contents_length-idx);
+                idx += cnt;
+            }
         }
     }
 
@@ -188,14 +192,17 @@ public class BEROctetString extends BERElement {
      * @return string representation of tag.
      */
     public String toString() {
-        if (m_value == null)
+        if (m_value == null) {
             return "OctetString (null)";
-        String octets = "";
-        for (int i = 0; i < m_value.length; i++) {
-            if (i != 0)
-                octets = octets + " ";
-            octets = octets + byteToHexString(m_value[i]);
         }
-        return "OctetString {" + octets + "}";
+        StringBuffer octets = new StringBuffer("OctetString {");
+        for (int i = 0; i < m_value.length; i++) {
+            if (i != 0) {
+                octets.append(' ');
+            }
+            octets.append(byteToHexString(m_value[i]));
+        }
+        octets.append('}');
+        return octets.toString();
     }
 }

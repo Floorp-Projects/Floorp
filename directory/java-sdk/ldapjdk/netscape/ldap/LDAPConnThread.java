@@ -362,9 +362,8 @@ class LDAPConnThread extends Thread {
                 }
             }
             m_registered.removeAllElements();
-            m_registered = null;
-            m_messages = null;
             m_requests.clear();
+            m_messages = null;            
             m_cache = null;
         }
     }
@@ -659,8 +658,8 @@ class LDAPConnThread extends Thread {
     LDAPMessageQueue changeListener (int id, LDAPMessageQueue toNotify) {
 
         if (!m_doRun) {
-            toNotify.setException(this, new LDAPException("Server down",
-                                                           LDAPException.OTHER));
+            toNotify.setException(this, new LDAPException("Server or network error",
+                                                           LDAPException.SERVER_DOWN));
             return null;
         }
         return (LDAPMessageQueue) m_requests.put (new Integer (id), toNotify);
@@ -685,8 +684,8 @@ class LDAPConnThread extends Thread {
             while (requests.hasMoreElements()) {
                 LDAPMessageQueue listener =
                     (LDAPMessageQueue)requests.nextElement();
-                listener.setException(this, new LDAPException("Server down",
-                                                        LDAPException.OTHER));
+                listener.setException(this, new LDAPException("Server or network error",
+                                                        LDAPException.SERVER_DOWN));
             }
 
         } catch (NullPointerException ee) {

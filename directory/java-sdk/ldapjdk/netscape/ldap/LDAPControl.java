@@ -480,6 +480,9 @@ public class LDAPControl implements Cloneable, java.io.Serializable {
      * @return a string representation of the control.
      */
     public String toString() {
+        if (getID().equals(MANAGEDSAIT)) {
+            return "{MANAGEDSITControl: isCritical=" + isCritical() + "}";
+        }
         String s = getID() + ' ' + isCritical();
         if ( m_value != null ) {
             s += ' ' + LDIF.toPrintableString( m_value );

@@ -18,6 +18,15 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *        Tony Dahbura (tony@dahbura.com)
+ *            Fixed pool close to reset auth to original if 
+ *                changed during use.
+ *            Setup LDAPConnection argument to immediately clone
+ *                the passed connection so if the caller did
+ *                something to it after pool creation then it
+ *                would not affect pool operations.
+ *
  */
 package netscape.ldap.util;
 
@@ -62,7 +71,7 @@ import netscape.ldap.*;
  * Connection pool, typically used by a server to avoid creating
  * a new connection for each client
  *
- * @version 1.0
+ * @version 1.2
  **/
 public class ConnectionPool {
  
@@ -114,9 +123,12 @@ public class ConnectionPool {
         this( 10, 20, host, port, "", "" );
     }
 
-    /* 
+    /** 
      * Constructor for using an existing connection to clone
      * from
+     * <P>
+     * The connection to clone must be already established and
+     * the user authenticated.
      * 
      * @param min initial number of connections
      * @param max maximum number of connections
@@ -127,7 +139,7 @@ public class ConnectionPool {
         throws LDAPException {
         this( min, max, ldc.getHost(), ldc.getPort(),
               ldc.getAuthenticationDN(), ldc.getAuthenticationPassword(),
-              ldc );
+              (LDAPConnection)ldc.clone() );
     } 
 
     /* 
@@ -289,6 +301,8 @@ public class ConnectionPool {
     /**
      * This is our soft close - all we do is mark
      * the connection as available for others to use.
+     * We also reset the auth credentials in case
+     * they were changed by the caller.
      *
      * @param ld a connection to return to the pool
      */
@@ -298,6 +312,29 @@ public class ConnectionPool {
         if ( index != -1 ) {
             LDAPConnectionObject co = 
                 (LDAPConnectionObject)pool.elementAt(index);
+
+            // Reset the auth if necessary
+            if (ldc == null || !ldc.getAuthenticationMethod().equals("sasl")) {
+
+                boolean reauth = false;
+                //if user bound anon then getAuthenticationDN is null
+                if ( ld.getAuthenticationDN() == null ) {
+                      reauth = (authdn != null); 
+                }
+                else if ( !ld.getAuthenticationDN().equalsIgnoreCase(authdn) ) {
+                    reauth = true;
+                }
+                if (reauth) {
+                    try {
+                        debug("user changed credentials-resetting");
+                        ld.bind(authdn,authpw);  //reauth as proper user
+                    } catch (LDAPException e) {
+                        debug("unable to reauth during close as "+authdn);
+                        debug(e.toString());
+                    }
+                }
+            }
+
             co.setInUse( false );  // Mark as available
             synchronized( pool ) {
                 pool.notifyAll();
@@ -391,9 +428,19 @@ public class ConnectionPool {
                     newConn.reconnect();
                 } else {
                     // Not using a template, so connect with
-                    // simple authentication
-                    newConn.connect( host, port,
-                                     authdn, authpw); 
+                    // simple authentication using ldap v3
+                    try { 
+                        newConn.connect( 3, host, port, authdn, authpw); 
+                    }
+                    catch (LDAPException connEx) {
+                        // fallback to ldap v2 if v3 is not supported
+                        if (connEx.getLDAPResultCode() == connEx.PROTOCOL_ERROR) {
+                            newConn.connect( 2, host, port, authdn, authpw); 
+                        }
+                        else {
+                            throw connEx;
+                        }
+                    }
                 }
             } catch ( LDAPException le ) {
                 debug("Creating pool:"+le.toString());
