@@ -750,23 +750,14 @@ clobber_all::
 #   CHROME_L10N - list of localization files, e.g., CHROME_L10N=./locale/en-US/foobar.dtd
 #
 # These macros are optional, if not specified, each defaults to ".".
-#   CHROME_CONTENT_DIR - specifies chrome subdirectory where content files will be
-#                  installed; this path is inserted between $(CHROME_DIR) and
-#                  the path you specify in each $(CHROME_CONTENT) entry; i.e.,
-#                  for CHROME_CONTENT=./content/default/foobar.xul, it will be
-#                  installed into:
-#                    $(DIST)\bin\chrome\$(CHROME_DIR)\$(CHROME_CONTENT_DIR)\content\default\foobar.xul.
-#                  e.g., CHROME_DIR=global
-#                        CHROME_CONTENT_DIR=content\default
-#                        CHROME_CONTENT=.\foobar.xul
-#                  will install foobar.xul into content/default (even though it
-#                  resides in content/foobar.xul (no default) in the source tree.
-#                  But note that such usage must be put in a makefile.win that
-#                  itself resides in the content directory (i.e., it can't reside
-#                  up a level, since then CHROME_CONTENT=./content/foobar.xul which
-#                  would install into ...global\content\default\content\foobar.xul.
+#   CHROME_CONTENT_DIR - Specifies a subdirectory within CHROME_DIR where
+#                  all CHROME_CONTENT files will be installed.
 #   CHROME_SKIN_DIR - Like above, but for skin files
 #   CHROME_L10N_DIR - Like above, but for localization files
+#   CHROME_TYPE - The type of chrome being generated (content, skin, locale).
+#                  Top-level makefiles (the same one copying the rdf manifests
+#                  and generating the jar file) should define this macro.
+#                  This will notify the chrome registry of a new installation.
 !if "$(CHROME_DIR)" != "$(NULL)"
 
 # Figure out root of chrome dist dir.
@@ -787,7 +778,7 @@ install:: $(CHROME_CONTENT:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install content files.
 $(CHROME_CONTENT:.\=INSTALL\.\):
-    $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_CONTENT_DIR)\$(@D:INSTALL\.=.)
+    $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_CONTENT_DIR)
 
 # Clobber content files.
 clobber_all:: $(CHROME_CONTENT:.\=CLOBBER\.\)
@@ -808,12 +799,12 @@ CHROME_SKIN=$(CHROME_SKIN:/=\)
 CHROME_SKIN_DIR=.
 !endif
 
-# Export content files by copying to dist.
+# Export skin files by copying to dist.
 install:: $(CHROME_SKIN:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install chrome files.
 $(CHROME_SKIN:.\=INSTALL\.\):
-    $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_SKIN_DIR)\$(@D:INSTALL\.=.)
+    $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_SKIN_DIR)
 
 # Clobber content files.
 clobber_all:: $(CHROME_SKIN:.\=CLOBBER\.\)
@@ -839,7 +830,7 @@ install:: $(CHROME_L10N:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install l10n files.
 $(CHROME_L10N:.\=INSTALL\.\):
-    $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_L10N_DIR)\$(@D:INSTALL\.=.)
+    $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_L10N_DIR)
 
 # Clobber l10n files.
 clobber_all:: $(CHROME_L10N:.\=CLOBBER\.\)
@@ -849,6 +840,13 @@ $(CHROME_L10N:.\=CLOBBER\.\):
     -@$(RM) $(CHROME_DIST)\$(CHROME_L10N_DIR)\$(@:CLOBBER\.=.)
 
 !endif # localization
+
+!ifdef CHROME_TYPE
+install:: $(CHROME_TYPE)
+
+$(CHROME_TYPE):
+    echo $@,0,$(MAKEDIR)\$(DIST)\bin\chrome\$(CHROME_DIR) >>$(DIST)\bin\chrome\installed-chrome.txt
+!endif
 
 !endif # chrome
 
