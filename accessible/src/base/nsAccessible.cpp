@@ -279,8 +279,8 @@ NS_IMETHODIMP nsAccessible::Shutdown()
     nsCOMPtr<nsIAccessible> current(mFirstChild), next;
     while (current) {
       nsCOMPtr<nsPIAccessible> privateAcc(do_QueryInterface(current));
-      privateAcc->SetParent(nsnull);
       current->GetNextSibling(getter_AddRefs(next));
+      privateAcc->SetParent(nsnull);
       current = next;
     }
   }
