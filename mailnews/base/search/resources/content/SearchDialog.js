@@ -66,7 +66,6 @@ var gDataSourceSearchListener;
 var gViewSearchListener;
 
 var gSearchStopButton;
-var gSearchSessionFolderListener;
 var gMailSession;
 
 // Controller object for search results thread pane
@@ -522,7 +521,6 @@ function setupDatasource() {
     gSearchSession = Components.classes[searchSessionContractID].createInstance(Components.interfaces.nsIMsgSearchSession);
 
     gMailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
-    gSearchSessionFolderListener = gMailSession.QueryInterface(Components.interfaces.nsIFolderListener);
     var nsIFolderListener = Components.interfaces.nsIFolderListener;
     var notifyFlags = nsIFolderListener.event;
     gMailSession.AddFolderListener(gFolderListener, notifyFlags);
