@@ -26,20 +26,17 @@ DEFINES=$(DEFINES) -DMOZ_XSL
 !endif
 
 CPPSRCS=			\
-	NodeStack.cpp		\
-	NodeSorter.cpp		\
+	DOMHelper.cpp		\
 	$(NULL)
 
 CPP_OBJS=				\
-	.\$(OBJDIR)\NodeStack.obj	\
-	.\$(OBJDIR)\NodeSorter.obj	\
+	.\$(OBJDIR)\DOMHelper.obj	\
 	$(NULL)
 
 EXPORTS =	\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\base -I..\..\xml\dom \
-      -I..\..\xpath -I..\..\xml -I..\ -I..\..\xml\util -I..\functions
+LINCS=-I..\..\base -I..\..\xml\dom
 
 LCFLAGS = \
         $(LCFLAGS) \

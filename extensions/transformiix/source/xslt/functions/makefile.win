@@ -21,22 +21,26 @@
 
 DEPTH=..\..\..\..\..
 
-LIBRARY_NAME=transformix_xslt_functions
-MODULE=transformix
+!if defined(MOZ_XSL)
+DEFINES=$(DEFINES) -DMOZ_XSL
+!endif
 
 CPPSRCS=					\
 	GenerateIDFunctionCall.cpp		\
+	DocumentFunctionCall.cpp		\
 	$(NULL)
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\GenerateIDFunctionCall.obj		\
+	.\$(OBJDIR)\DocumentFunctionCall.obj		\
 	$(NULL)
 
 EXPORTS =	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\base -I..\..\xml\dom \
-      -I..\..\xpath -I..\..\xml -I..\ -I..\..\xml\util
+	-I..\..\xpath -I..\..\xml -I..\ -I..\..\xml\util \
+	-I..\..\net -I..\..\xml\parser
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -45,8 +49,4 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+install:: $(CPP_OBJS)

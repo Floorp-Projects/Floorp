@@ -21,6 +21,6 @@
 
 DEPTH=..\..\..
 
-DIRS=base xml xpath xslt
+DIRS=base net xml xpath xslt
 
 include <$(DEPTH)\config\rules.mak>
