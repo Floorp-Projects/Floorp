@@ -4,6 +4,7 @@ nsIClassInfo.idl
 nsIComponentLoader.idl
 nsIComponentManager.idl
 nsIComponentManagerObsolete.idl
+nsIComponentRegistrar.idl
 nsIFactory.idl
 nsIRegistry.idl
 nsIServiceManager.idl
