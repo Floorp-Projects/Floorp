@@ -712,7 +712,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
       else
       {
         rv = connection->CanHandleUrl(aImapUrl, &canRunUrlImmediately, &canRunButBusy);
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
         nsXPIDLCString curSelectedFolderName;
         if (connection)    
           connection->GetSelectedMailboxName(getter_Copies(curSelectedFolderName));
@@ -734,8 +734,8 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
             }
           }
         }
-      }
 #endif // DEBUG_bienvenu
+      }
     }
     if (NS_FAILED(rv)) 
     {
