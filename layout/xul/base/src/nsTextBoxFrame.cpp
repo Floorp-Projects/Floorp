@@ -527,7 +527,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
 
            printf("i=%d, i2=%d, diff=%d, old='%s', new='%s', aWidth=%d\n", i, i2, i2-i, cht,chc, aWidth);
            */
-           mCroppedTitle = elipsisLeft + copy + mCroppedTitle;
+           mCroppedTitle.Insert(elipsisLeft + copy, 0);
            break;
     }
 
