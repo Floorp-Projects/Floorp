@@ -22,6 +22,7 @@
  * Contributor(s):
  *    Simon Fraser (sfraser@netscape.com)
  *    Ryan Cassin (rcassin@supernova.org)
+ *    Kathleen Brade (brade@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,7 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* Implementations of nsIControllerCommand for composer commands */
-
 
 //-----------------------------------------------------------------------------------
 function SetupHTMLEditorCommands()
@@ -293,7 +293,7 @@ var nsOpenCommand =
   doCommand: function(aCommand)
   {
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, window.editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
+    fp.init(window, GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
   
     // When loading into Composer, direct user to prefer HTML files and text files,
     //   so we call separately to control the order of the filter list
@@ -321,6 +321,257 @@ var nsOpenCommand =
 };
 
 //-----------------------------------------------------------------------------------
+function GetDocumentURI(aDOMDoc)
+{
+  // in C++ was returning nsIURI now returning url string
+  if (!aDOMDoc)
+    return "";
+
+  try {
+    var aDOMHTMLDoc = aDOMDoc.QueryInterface(Components.interfaces.nsIDOMHTMLDocument);
+    return aDOMHTMLDoc.URL;
+  }
+  catch (e) {}
+  return "";
+}
+
+// returns a fileExtension string
+function GetExtensionBasedOnMimeType(aMIMEType)
+{
+  try {
+    var mimeService = null;
+    mimeService = Components.classes["@mozilla.org/mime;1"].getService();
+    mimeService = mimeService.QueryInterface(Components.interfaces.nsIMIMEService);
+    if (!mimeService) return "";
+
+    var mimeInfo = mimeService.GetFromMIMEType(aMIMEType);
+    if (!mimeInfo) return "";
+
+    var fileExtension = mimeInfo.FirstExtension();
+
+    // the MIME service likes to give back ".htm" for text/html files,
+    // so do a special-case fix here.
+    if (fileExtension == "htm")
+      fileExtension = "html";
+
+    return fileExtension;
+  }
+  catch (e) {}
+  return "";
+}
+
+function GetSuggestedFileName(aDocumentURLString, aMIMEType, aHTMLDoc)
+{
+  var extension = GetExtensionBasedOnMimeType(aMIMEType);
+  if (extension)
+    extension = "." + extension;
+
+  // check for existing file name we can use
+  if (aDocumentURLString.length >= 0 && !IsUrlAboutBlank(aDocumentURLString))
+  {
+    var docURI = null;
+    try {
+      docURI = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+      docURI.spec = aDocumentURLString;
+      var docURL = docURI.QueryInterface(Components.interfaces.nsIURL);
+
+      // grab the file name
+      var url = docURL.fileBaseName;
+      if (url)
+        return url+extension;
+    } catch(e) {}
+  } 
+
+  // check if there is a title we can use
+  var title = aHTMLDoc.title;
+  if (title.length > 0) // we have a title; let's see if it's usable
+  {
+    // clean up the title to make it a usable filename
+    title = title.replace(/\"/g, "");  // Strip out quote character: "
+    title = TrimString(title); // trim whitespace from beginning and end
+    title = title.replace(/[ \.\\@\/:]/g, "_");  //Replace "bad" filename characters with "_"
+    if (title.length > 0)
+      return title + extension;
+  }
+
+  // if we still don't have a file name, let's just go with "untitled"
+  // shouldn't this come out of a string bundle? I'm shocked localizers haven't complained!
+  return "untitled" + extension;
+}
+
+// returns file picker result
+function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocument, aDocumentURLString)
+{
+  var dialogResult = new Object;
+  dialogResult.filepickerClick = nsIFilePicker.returnCancel;
+  dialogResult.resultingURI = "";
+  dialogResult.resultingLocalFile = null;
+
+  var fp = null;
+  try {
+    fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+  } catch (e) {}
+  if (!fp) return dialogResult;
+
+  // determine prompt string based on type of saving we'll do
+  var promptString;
+  if (aDoSaveAsText || aEditorType == "text")
+    promptString = GetString("ExportToText");
+  else
+    promptString = GetString("SaveDocumentAs")
+
+  fp.init(window, promptString, nsIFilePicker.modeSave);
+
+  // Set filters according to the type of output
+  if (aDoSaveAsText)
+    fp.appendFilters(nsIFilePicker.filterText);
+  else
+    fp.appendFilters(nsIFilePicker.filterHTML);
+  fp.appendFilters(nsIFilePicker.filterAll);
+
+  // now let's actually set the filepicker's suggested filename
+  var suggestedFileName = GetSuggestedFileName(aDocumentURLString, aMIMEType, ahtmlDocument);
+  if (suggestedFileName)
+    fp.defaultString = suggestedFileName;
+
+  // set the file picker's current directory
+  // assuming we have information needed (like prior saved location)
+  try {
+    var fileLocation = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
+    fileLocation.URL = aDocumentURLString;
+    var parentLocation = fileLocation.parent;
+    if (parentLocation)
+      fp.displayDirectory = parentLocation;
+  }
+  catch(e) {}
+
+  dialogResult.filepickerClick = fp.show();
+  if (dialogResult.filepickerClick != nsIFilePicker.returnCancel)
+  {
+    // reset urlstring to new save location
+    dialogResult.resultingURIString = fp.file.URL;
+    dialogResult.resultingLocalFile = fp.file;
+  }
+
+  return dialogResult;
+}
+
+// returns a boolean (whether to continue (true) or not (false) because user canceled)
+function PromptAndSetTitleIfNone(aHTMLDoc)
+{
+  if (!aHTMLDoc) throw NS_ERROR_NULL_POINTER;
+
+  var title = aHTMLDoc.title;
+  if (title.length > 0) // we have a title; no need to prompt!
+    return true;
+
+  var promptService = null;
+  try {
+    promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+  }
+  catch (e) {}
+  if (!promptService) return false;
+
+  var result = {value:null};
+  var captionStr = GetString("DocumentTitle");
+  var msgStr = GetString("NeedDocTitle") + '\n' + GetString("DocTitleHelp");
+  var confirmed = promptService.prompt(window, captionStr, msgStr, result, null, {value:0});
+  if (confirmed && result.value && result.value != "")
+    window.editorShell.SetDocumentTitle(result.value);
+
+  return confirmed;
+}
+
+// throws an error or returns true if user attempted save; false if user canceled save
+function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
+{
+  if (!aMimeType || aMimeType == "" || !window.editorShell)
+    throw NS_ERROR_NOT_INITIALIZED;
+
+  var editorDoc = window.editorShell.editorDocument;
+  if (!editorDoc)
+    throw NS_ERROR_NOT_INITIALIZED;
+
+  // if we don't have the right editor type bail (we handle text and html)
+  var editorType = window.editorShell.editorType;
+//  var isMailType = (editorType == "textmail" || editorType == "htmlmail")
+  if (editorType != "text" && editorType != "html" && editorType != "htmlmail")
+    throw NS_ERROR_NOT_IMPLEMENTED;
+
+  var saveAsTextFile = window.editorShell.isSupportedTextType(aMimeType);
+
+  // check if the file is to be saved in a format we don't understand; if so, bail
+  if (aMimeType != "text/html" && !saveAsTextFile)
+    throw NS_ERROR_NOT_IMPLEMENTED;
+
+  if (saveAsTextFile)
+    aMimeType = "text/plain";
+
+  var urlstring = GetDocumentURI(editorDoc);
+  var mustShowFileDialog = (aSaveAs || IsUrlAboutBlank(urlstring) || (urlstring == ""));
+  var replacing = !aSaveAs;
+  var titleChanged = false;
+  var doUpdateURL = false;
+  var tempLocalFile = null;
+
+  if (mustShowFileDialog)
+  {
+	  try {
+	    var domhtmldoc = editorDoc.QueryInterface(Components.interfaces.nsIDOMHTMLDocument);
+
+	    // Prompt for title if we are saving to HTML
+	    if (!saveAsTextFile && (editorType == "html"))
+	    {
+	      var userContinuing = PromptAndSetTitleIfNone(domhtmldoc); // not cancel
+	      if (!userContinuing)
+	        return false;
+	    }
+
+	    var dialogResult = PromptForSaveLocation(saveAsTextFile, editorType, aMimeType, domhtmldoc, urlstring);
+	    if (dialogResult.filepickerClick == nsIFilePicker.returnCancel)
+	      return false;
+
+	    replacing = (dialogResult.filepickerClick == nsIFilePicker.returnReplace);
+	    urlstring = dialogResult.resultingURIString;
+	    tempLocalFile = dialogResult.resultingLocalFile;
+ 
+      // update the new URL for the webshell unless we are saving a copy
+      if (!aSaveCopy)
+        doUpdateURL = true;
+   } catch (e) {  return false; }
+  } // mustShowFileDialog
+
+  var success = true;
+  try {
+    var docURI = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+    docURI.spec = urlstring;
+
+      window.editorShell.editor.SaveFile(docURI, replacing, aSaveCopy, aMimeType);
+    // drat! save flag doesn't get flipped and we can't save text files; comment this out for now
+//    var persistAPI = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Components.interfaces.nsIWebBrowserPersist);
+//    persistAPI.progressListener = window.editorShell; // nsIWebProgressListener
+//    if (!tempLocalFile)
+//    {
+//      tempLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+//      tempLocalFile.URL = urlstring;
+//    }
+
+      // we should supply a parent directory if/when we turn on functionality to save related documents
+//    persistAPI.saveDocument(editorDoc, tempLocalFile, null);
+  }
+  catch (e)
+  {
+    var saveDocStr = GetString("SaveDocument");
+    var failedStr = GetString("SaveFileFailed");
+    AlertWithTitle(saveDocStr, failedStr);
+    success = false;
+  }
+
+  window.editorShell.doAfterSave(doUpdateURL, urlstring);
+  return success;
+}
+
 var nsSaveCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
@@ -333,15 +584,21 @@ var nsSaveCommand =
   
   doCommand: function(aCommand)
   {
+    var result = false;
     if (window.editorShell)
     {
       FinishHTMLSource(); // In editor.js
       var doSaveAs = IsUrlAboutBlank(window.editorShell.editorDocument.location);
-      var result = window.editorShell.saveDocument(doSaveAs, false, editorShell.contentsMIMEType);
+//      var scheme = GetScheme(window.editorShell.editorDocument.location.href);
+      var isLocalFile = (0 == window.editorShell.editorDocument.location.href.indexOf("file", 0));
+      doSaveAs = doSaveAs || !isLocalFile;
+//      if (doSaveAs || (GetScheme(window.editorShell.editorDocument.location.href) == "file"))
+        result = SaveDocument(doSaveAs, false, editorShell.contentsMIMEType);
+ //     else
+ //       result = EditorPublish(window.editorShell.editorDocument.location.href, "", null, null);
       window._content.focus();
-      return result;
     }
-    return false;
+    return result;
   }
 }
 
@@ -357,7 +614,7 @@ var nsSaveAsCommand =
     if (window.editorShell)
     {
       FinishHTMLSource();
-      var result = window.editorShell.saveDocument(true, false, editorShell.contentsMIMEType);
+      var result = SaveDocument(true, false, editorShell.contentsMIMEType);
       window._content.focus();
       return result;
     }
@@ -377,7 +634,7 @@ var nsExportToTextCommand =
     if (window.editorShell)
     {
       FinishHTMLSource();
-      var result = window.editorShell.saveDocument(true, true, "text/plain");
+      var result = SaveDocument(true, true, "text/plain");
       window._content.focus();
       return result;
     }
@@ -409,11 +666,11 @@ var nsSaveAsCharsetCommand =
     {
       if (window.exportToText)
       {
-        window.ok = window.editorShell.saveDocument(true, true, "text/plain");
+        window.ok = SaveDocument(true, true, "text/plain");
       }
       else
       {
-        window.ok = window.editorShell.saveDocument(true, false, editorShell.contentsMIMEType);
+        window.ok = SaveDocument(true, false, editorShell.contentsMIMEType);
       }
     }
 
@@ -534,11 +791,11 @@ var nsRevertCommand =
       // Put the page title in the message string
       var title = window.editorShell.GetDocumentTitle();
       if (!title)
-        title = window.editorShell.GetString("untitled");
+        title = GetString("untitled");
 
-      var msg = window.editorShell.GetString("AbandonChanges").replace(/%title%/,title);
+      var msg = GetString("AbandonChanges").replace(/%title%/,title);
 
-      promptService.confirmEx(window, window.editorShell.GetString("RevertCaption"), msg,
+      promptService.confirmEx(window, GetString("RevertCaption"), msg,
   						      (promptService.BUTTON_TITLE_REVERT * promptService.BUTTON_POS_0) +
   						      (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
   						      null, null, null, null, {value:0}, result);
@@ -571,7 +828,7 @@ function CloseWindow()
 {
   // Check to make sure document is saved. "true" means allow "Don't Save" button,
   //   so user can choose to close without saving
-  if (CheckAndSaveDocument(window.editorShell.GetString("BeforeClosing"), true)) 
+  if (CheckAndSaveDocument(GetString("BeforeClosing"), true)) 
   {
     if (window.InsertCharWindow)
       SwitchInsertCharToAnotherEditorOrClose();
@@ -611,7 +868,7 @@ var nsPreviewCommand =
   {
 	  // Don't continue if user canceled during prompt for saving
     // DocumentHasBeenSaved will test if we have a URL and suppress "Don't Save" button if not
-    if (!CheckAndSaveDocument(window.editorShell.GetString("BeforePreview"), DocumentHasBeenSaved()))
+    if (!CheckAndSaveDocument(GetString("BeforePreview"), DocumentHasBeenSaved()))
 	    return;
 
     // Check if we saved again just in case?
@@ -632,7 +889,7 @@ var nsSendPageCommand =
   {
 	  // Don't continue if user canceled during prompt for saving
     // DocumentHasBeenSaved will test if we have a URL and suppress "Don't Save" button if not
-    if (!CheckAndSaveDocument(window.editorShell.GetString("SendPageReason"), DocumentHasBeenSaved()))
+    if (!CheckAndSaveDocument(GetString("SendPageReason"), DocumentHasBeenSaved()))
 	    return;
 
     // Check if we saved again just in case?
@@ -763,7 +1020,7 @@ var nsValidateCommand =
     // then just validate the current url.
     if (editorShell.documentModified || gHTMLSourceChanged)
     {
-      if (!CheckAndSaveDocument(window.editorShell.GetString("BeforeValidate"),
+      if (!CheckAndSaveDocument(GetString("BeforeValidate"),
                                 false))
         return;
 
@@ -789,10 +1046,10 @@ var nsValidateCommand =
     }
     else
     {
-      var vwin = window.open("http://validator.w3.org/",
+      var vwin2 = window.open("http://validator.w3.org/",
                              "EditorValidate");
       // Window loads asynchronously, so pass control to the load listener:
-      vwin.addEventListener("load", this.validateWebPageLoaded, false);
+      vwin2.addEventListener("load", this.validateWebPageLoaded, false);
     }
   },
   validateFilePageLoaded: function(event)
