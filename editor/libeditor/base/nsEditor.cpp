@@ -2795,8 +2795,11 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
         if (NS_SUCCEEDED(sourceAttribute->GetName(sourceAttrName)))
         {
           nsAutoString sourceAttrValue;
-          if (NS_SUCCEEDED(sourceAttribute->GetValue(sourceAttrValue)) &&
-              !sourceAttrValue.IsEmpty())
+          /*
+          Presence of an attribute in the named node map indicates that it was set on the 
+          element even if it has no value.
+          */
+          if (NS_SUCCEEDED(sourceAttribute->GetValue(sourceAttrValue)))
           {
             if (destInBody)
               SetAttribute(destElement, sourceAttrName, sourceAttrValue);
