@@ -1133,6 +1133,7 @@ nsStandardURL::Clone(nsIURI **result)
     clone->mQuery = mQuery;
     clone->mRef = mRef;
     clone->mParser = mParser;
+    clone->mFile = mFile;
 
     NS_ADDREF(*result = clone);
     return NS_OK;
@@ -1638,8 +1639,15 @@ nsStandardURL::SetFile(nsIFile *file)
     if (NS_FAILED(rv)) return rv;
 
     rv = SetSpec(url);
-    if (NS_SUCCEEDED(rv))
-        mFile = file;
+
+    // must clone |file| since its value is not guaranteed to remain constant
+    if (NS_SUCCEEDED(rv)) {
+        if (NS_FAILED(file->Clone(getter_AddRefs(mFile)))) {
+            NS_WARNING("nsIFile::Clone failed");
+            // failure to clone is not fatal (GetFile will generate mFile)
+            mFile = 0;
+        }
+    }
     return rv;
 }
 
