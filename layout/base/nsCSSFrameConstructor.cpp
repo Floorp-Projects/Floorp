@@ -6614,43 +6614,15 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
 
     // Create a frame to wrap up the absolute positioned item
     NS_NewAbsoluteItemWrapperFrame(aPresShell, &newFrame);
-    InitAndRestoreFrame(aPresContext, aState, aContent, 
-                        aState.GetGeometricParent(aDisplay, aParentFrame), 
-                        aStyleContext, nsnull, newFrame);
 
-    // Create a view
-    nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
-
-    rv = aState.AddChild(newFrame, aFrameItems, aDisplay, aContent,
-                         aStyleContext, aParentFrame);
+    rv = ConstructBlock(aPresShell, aPresContext, aState, aDisplay, aContent,
+                        aState.GetGeometricParent(aDisplay, aParentFrame), aParentFrame,
+                        aStyleContext, &newFrame, aFrameItems, PR_TRUE);
     if (NS_FAILED(rv)) {
       return rv;
     }
+
     addedToFrameList = PR_TRUE;
-
-    // Process the child content. The area frame becomes a container for child
-    // frames that are absolutely positioned
-    nsFrameConstructorSaveState absoluteSaveState;
-    nsFrameConstructorSaveState floatSaveState;
-    nsFrameItems                childItems;
-
-    PRBool haveFirstLetterStyle = PR_FALSE, haveFirstLineStyle = PR_FALSE;
-    if (aDisplay->IsBlockLevel()) {
-      HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
-                            &haveFirstLetterStyle, &haveFirstLineStyle);
-    }
-    aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
-    aState.PushFloatContainingBlock(newFrame, floatSaveState,
-                                    haveFirstLetterStyle,
-                                    haveFirstLineStyle);
-    ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame, PR_TRUE,
-                    childItems, PR_TRUE);
-
-    CreateAnonymousFrames(aPresShell, aPresContext, aContent->Tag(), aState,
-                          aContent, newFrame, PR_FALSE, childItems);
-
-    // Set the frame's initial child list(s)
-    newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
   }
   // See if the frame is floated and it's a block frame
   else if (aDisplay->IsFloating() &&
@@ -6662,10 +6634,14 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     // Create an area frame
     NS_NewFloatingItemWrapperFrame(aPresShell, &newFrame);
 
-    ConstructBlock(aPresShell, aPresContext, aState, aDisplay, aContent, 
-                   aState.mFloatedItems.containingBlock, aParentFrame,
-                   aStyleContext, &newFrame, aFrameItems,
-                   aDisplay->mPosition == NS_STYLE_POSITION_RELATIVE);
+    rv = ConstructBlock(aPresShell, aPresContext, aState, aDisplay, aContent, 
+                        aState.mFloatedItems.containingBlock, aParentFrame,
+                        aStyleContext, &newFrame, aFrameItems,
+                        aDisplay->mPosition == NS_STYLE_POSITION_RELATIVE);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
     addedToFrameList = PR_TRUE;
   }
   // See if it's relatively positioned
@@ -12935,7 +12911,7 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell*            aPresShell,
                                       nsStyleContext*          aStyleContext,
                                       nsIFrame**               aNewFrame,
                                       nsFrameItems&            aFrameItems,
-                                      PRBool                   aRelPos)
+                                      PRBool                   aAbsPosContainer)
 {
   // Create column wrapper if necessary
   nsIFrame* blockFrame = *aNewFrame;
@@ -12995,7 +12971,7 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell*            aPresShell,
   // relative to the container, not flowed into columns. I don't know if this
   // is right...
   nsFrameConstructorSaveState absoluteSaveState;
-  if (aRelPos || !aState.mAbsoluteItems.containingBlock) {
+  if (aAbsPosContainer || !aState.mAbsoluteItems.containingBlock) {
     //    NS_ASSERTION(aRelPos, "should have made area frame for this");
     aState.PushAbsoluteContainingBlock(*aNewFrame, absoluteSaveState);
   }
