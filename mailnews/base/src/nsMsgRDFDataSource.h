@@ -50,7 +50,9 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
   NS_DECL_NSIRDFDATASOURCE
   NS_DECL_NSIOBSERVER
 
-  virtual void Close();
+  // called to reset the datasource to an empty state
+  // if you need to release yourself as an observer/listener, do it here
+  virtual void Cleanup();
 
  protected:
 	nsIRDFService *getRDFService();
@@ -69,8 +71,8 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 
 	nsCOMPtr<nsIMsgWindow> mWindow;
 
-	nsCOMPtr<nsISupportsArray> kEmptyArray;
 	PRBool m_shuttingDown;
+    PRBool mInitialized;
     nsresult  GetIsThreaded(PRBool *threaded);
 	nsresult GetViewType(PRUint32 *viewType);
 	nsresult GetMessageView(nsIMessageView **messageView);

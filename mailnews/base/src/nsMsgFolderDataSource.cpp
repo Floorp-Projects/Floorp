@@ -98,21 +98,62 @@ nsIAtom * nsMsgFolderDataSource::kTotalMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kTotalUnreadMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kNameAtom = nsnull;
 
-nsMsgFolderDataSource::nsMsgFolderDataSource():
-  mInitialized(PR_FALSE)
+nsMsgFolderDataSource::nsMsgFolderDataSource()
 {
+  // one-time initialization here
+  nsIRDFService* rdf = getRDFService();
+  
+  if (gFolderResourceRefCnt++ == 0) {
+    rdf->GetResource(NC_RDF_CHILD,   &kNC_Child);
+    rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
+    rdf->GetResource(NC_RDF_FOLDER,  &kNC_Folder);
+    rdf->GetResource(NC_RDF_NAME,    &kNC_Name);
+    rdf->GetResource(NC_RDF_FOLDERTREENAME,    &kNC_FolderTreeName);
+    rdf->GetResource(NC_RDF_NAME_SORT,    &kNC_NameSort);
+    rdf->GetResource(NC_RDF_FOLDERTREENAME_SORT,    &kNC_FolderTreeNameSort);
+    rdf->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
+    rdf->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
+    rdf->GetResource(NC_RDF_ISSERVER, &kNC_IsServer);
+    rdf->GetResource(NC_RDF_ISSECURE, &kNC_IsSecure);
+    rdf->GetResource(NC_RDF_CANSUBSCRIBE, &kNC_CanSubscribe);
+    rdf->GetResource(NC_RDF_CANFILEMESSAGES, &kNC_CanFileMessages);
+    rdf->GetResource(NC_RDF_CANCREATESUBFOLDERS, &kNC_CanCreateSubfolders);
+    rdf->GetResource(NC_RDF_CANRENAME, &kNC_CanRename);
+    rdf->GetResource(NC_RDF_TOTALMESSAGES, &kNC_TotalMessages);
+    rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES, &kNC_TotalUnreadMessages);
+    rdf->GetResource(NC_RDF_CHARSET, &kNC_Charset);
+    rdf->GetResource(NC_RDF_BIFFSTATE, &kNC_BiffState);
+    rdf->GetResource(NC_RDF_HASUNREADMESSAGES, &kNC_HasUnreadMessages);
+    rdf->GetResource(NC_RDF_NEWMESSAGES, &kNC_NewMessages);
+    rdf->GetResource(NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES, &kNC_SubfoldersHaveUnreadMessages);
+    rdf->GetResource(NC_RDF_NOSELECT, &kNC_NoSelect);
+    
+    rdf->GetResource(NC_RDF_DELETE, &kNC_Delete);
+    rdf->GetResource(NC_RDF_REALLY_DELETE, &kNC_ReallyDelete);
+    rdf->GetResource(NC_RDF_NEWFOLDER, &kNC_NewFolder);
+    rdf->GetResource(NC_RDF_GETNEWMESSAGES, &kNC_GetNewMessages);
+    rdf->GetResource(NC_RDF_COPY, &kNC_Copy);
+    rdf->GetResource(NC_RDF_MOVE, &kNC_Move);
+    rdf->GetResource(NC_RDF_MARKALLMESSAGESREAD,
+                             &kNC_MarkAllMessagesRead);
+    rdf->GetResource(NC_RDF_COMPACT, &kNC_Compact);
+    rdf->GetResource(NC_RDF_RENAME, &kNC_Rename);
+    rdf->GetResource(NC_RDF_EMPTYTRASH, &kNC_EmptyTrash);
+
+    kTotalMessagesAtom           = NS_NewAtom("TotalMessages");
+    kTotalUnreadMessagesAtom     = NS_NewAtom("TotalUnreadMessages");
+    kBiffStateAtom               = NS_NewAtom("BiffState");
+    kNewMessagesAtom               = NS_NewAtom("NewMessages");
+    kNameAtom              = NS_NewAtom("Name");
+  }
+  
+	CreateLiterals(rdf);
+	CreateArcsOutEnumerator();
 }
 
 nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 {
-  nsresult rv;
 
-  if (!m_shuttingDown)
-  {
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
-	if(NS_SUCCEEDED(rv))
-		mailSession->RemoveFolderListener(this);
-  }
 	if (--gFolderResourceRefCnt == 0)
 	{
 		nsrefcnt refcnt;
@@ -154,99 +195,54 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE(kTotalMessagesAtom);
     NS_RELEASE(kTotalUnreadMessagesAtom);
     NS_RELEASE(kBiffStateAtom);
-	NS_RELEASE(kNewMessagesAtom);
+    NS_RELEASE(kNewMessagesAtom);
     NS_RELEASE(kNameAtom);
 	}
+
+}
+
+nsresult nsMsgFolderDataSource::CreateLiterals(nsIRDFService *rdf)
+{
+	createNode((const PRUnichar*)NS_LITERAL_STRING("true"),
+             getter_AddRefs(kTrueLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("false"),
+             getter_AddRefs(kFalseLiteral), rdf);
+  
+	return NS_OK;
 }
 
 nsresult nsMsgFolderDataSource::Init()
 {
-  if (mInitialized)
-      return NS_ERROR_ALREADY_INITIALIZED;
-
   nsresult rv;
+  
+	rv = nsMsgRDFDataSource::Init();
+  if (NS_FAILED(rv))
+    return rv;
 
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		mailSession->AddFolderListener(this);
 
-	nsIRDFService *rdf = getRDFService();
-	if(!rdf)
-		return NS_ERROR_FAILURE;
+  return NS_OK;
+}
 
-  if (gFolderResourceRefCnt++ == 0) {
-    rdf->GetResource(NC_RDF_CHILD,   &kNC_Child);
-    rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
-    rdf->GetResource(NC_RDF_FOLDER,  &kNC_Folder);
-    rdf->GetResource(NC_RDF_NAME,    &kNC_Name);
-    rdf->GetResource(NC_RDF_FOLDERTREENAME,    &kNC_FolderTreeName);
-    rdf->GetResource(NC_RDF_NAME_SORT,    &kNC_NameSort);
-    rdf->GetResource(NC_RDF_FOLDERTREENAME_SORT,    &kNC_FolderTreeNameSort);
-    rdf->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
-    rdf->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
-    rdf->GetResource(NC_RDF_ISSERVER, &kNC_IsServer);
-    rdf->GetResource(NC_RDF_ISSECURE, &kNC_IsSecure);
-    rdf->GetResource(NC_RDF_CANSUBSCRIBE, &kNC_CanSubscribe);
-    rdf->GetResource(NC_RDF_CANFILEMESSAGES, &kNC_CanFileMessages);
-    rdf->GetResource(NC_RDF_CANCREATESUBFOLDERS, &kNC_CanCreateSubfolders);
-    rdf->GetResource(NC_RDF_CANRENAME, &kNC_CanRename);
-    rdf->GetResource(NC_RDF_TOTALMESSAGES, &kNC_TotalMessages);
-    rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES, &kNC_TotalUnreadMessages);
-    rdf->GetResource(NC_RDF_CHARSET, &kNC_Charset);
-    rdf->GetResource(NC_RDF_BIFFSTATE, &kNC_BiffState);
-    rdf->GetResource(NC_RDF_HASUNREADMESSAGES, &kNC_HasUnreadMessages);
-	rdf->GetResource(NC_RDF_NEWMESSAGES, &kNC_NewMessages);
-    rdf->GetResource(NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES, &kNC_SubfoldersHaveUnreadMessages);
-    rdf->GetResource(NC_RDF_NOSELECT, &kNC_NoSelect);
+void nsMsgFolderDataSource::Cleanup()
+{
+  nsresult rv;
+  if (!m_shuttingDown)
+  {
+    nsCOMPtr<nsIMsgMailSession> mailSession =
+      do_GetService(kMsgMailSessionCID, &rv);
     
-	rdf->GetResource(NC_RDF_DELETE, &kNC_Delete);
-	rdf->GetResource(NC_RDF_REALLY_DELETE, &kNC_ReallyDelete);
-    rdf->GetResource(NC_RDF_NEWFOLDER, &kNC_NewFolder);
-    rdf->GetResource(NC_RDF_GETNEWMESSAGES, &kNC_GetNewMessages);
-    rdf->GetResource(NC_RDF_COPY, &kNC_Copy);
-    rdf->GetResource(NC_RDF_MOVE, &kNC_Move);
-    rdf->GetResource(NC_RDF_MARKALLMESSAGESREAD,
-                             &kNC_MarkAllMessagesRead);
-    rdf->GetResource(NC_RDF_COMPACT, &kNC_Compact);
-    rdf->GetResource(NC_RDF_RENAME, &kNC_Rename);
-    rdf->GetResource(NC_RDF_EMPTYTRASH, &kNC_EmptyTrash);
-
-    kTotalMessagesAtom           = NS_NewAtom("TotalMessages");
-    kTotalUnreadMessagesAtom     = NS_NewAtom("TotalUnreadMessages");
-    kBiffStateAtom               = NS_NewAtom("BiffState");
-    kNewMessagesAtom               = NS_NewAtom("NewMessages");
-    kNameAtom              = NS_NewAtom("Name");
+    if(NS_SUCCEEDED(rv))
+      mailSession->RemoveFolderListener(this);
   }
-	CreateLiterals(rdf);
-	rv = CreateArcsOutEnumerator();
-
-	if(NS_FAILED(rv)) return rv;
-
-	mInitialized = PR_TRUE;
-	return nsMsgRDFDataSource::Init();
-}
-
-nsresult nsMsgFolderDataSource::CreateLiterals(nsIRDFService *rdf)
-{
-
-	nsAutoString str; str.AssignWithConversion("true");
-	createNode(str, getter_AddRefs(kTrueLiteral), rdf);
-	str.AssignWithConversion("false");
-	createNode(str, getter_AddRefs(kFalseLiteral), rdf);
-	return NS_OK;
-
-}
-
-void nsMsgFolderDataSource::Close()
-{
-	kFolderArcsOutArray = null_nsCOMPtr();
-	nsMsgRDFDataSource::Close();
+  
+	nsMsgRDFDataSource::Cleanup();
 }
 
 nsresult nsMsgFolderDataSource::CreateArcsOutEnumerator()
 {
-	nsCOMPtr<nsISupportsArray> folderArcsOut;
-
 	nsresult rv;
 
 	rv = getFolderArcLabelsOut(getter_AddRefs(kFolderArcsOutArray));
@@ -503,14 +499,13 @@ NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
 	if (NS_SUCCEEDED(rv)) {
 		arcsArray = kFolderArcsOutArray;
 
+    rv = NS_NewArrayEnumerator(labels, arcsArray);
 	}
 	else {
-		arcsArray = kEmptyArray;
+    rv = NS_NewEmptyEnumerator(labels);
 	}
-	rv = NS_NewArrayEnumerator(labels, arcsArray);
-	if(NS_FAILED(rv)) return rv;
 
-	return NS_OK;
+	return rv;
 }
 
 nsresult

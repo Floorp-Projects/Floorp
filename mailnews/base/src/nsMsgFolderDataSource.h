@@ -34,10 +34,6 @@
 class nsMsgFolderDataSource : public nsMsgRDFDataSource,
                               public nsIFolderListener
 {
-private:
-	PRBool				mInitialized;
-
-
 public:
   
   NS_DECL_ISUPPORTS_INHERITED
@@ -46,7 +42,7 @@ public:
   nsMsgFolderDataSource(void);
   virtual ~nsMsgFolderDataSource (void);
   virtual nsresult Init();
-  virtual void Close();
+  virtual void Cleanup();
 
   // nsIRDFDataSource methods
   NS_IMETHOD GetURI(char* *uri);

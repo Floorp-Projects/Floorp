@@ -45,7 +45,7 @@ private:
 	PRBool				mInitialized;
 
 	// The cached service managers
-	nsIMsgHeaderParser *mHeaderParser;
+	nsCOMPtr<nsIMsgHeaderParser> mHeaderParser;
   
 public:
   
@@ -216,6 +216,8 @@ protected:
 	nsresult GetUnreadChildrenNode(nsIMsgThread *thread, nsIRDFNode **target);
 	nsresult GetTotalChildrenNode(nsIMsgThread *thread, nsIRDFNode **target);
 
+  virtual void Cleanup();
+  
 	static nsIRDFResource* kNC_Subject;
 	static nsIRDFResource* kNC_SubjectCollation;
 	static nsIRDFResource* kNC_Sender;

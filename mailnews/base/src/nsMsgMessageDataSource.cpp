@@ -90,25 +90,58 @@ nsIAtom * nsMsgMessageDataSource::kStatusAtom   = nsnull;
 
 
 
-nsMsgMessageDataSource::nsMsgMessageDataSource():
-  mInitialized(PR_FALSE),
-  mHeaderParser(nsnull)
+nsMsgMessageDataSource::nsMsgMessageDataSource()
 {
 	mStringBundle = nsnull;
 
+  mHeaderParser = do_CreateInstance(kMsgHeaderParserCID);
+	nsIRDFService *rdf = getRDFService();
+  
+	if (gMessageResourceRefCnt++ == 0) {
+    
+		rdf->GetResource(NC_RDF_SUBJECT, &kNC_Subject);
+		rdf->GetResource(NC_RDF_SUBJECT_COLLATION_SORT, &kNC_SubjectCollation);
+		rdf->GetResource(NC_RDF_SENDER, &kNC_Sender);
+		rdf->GetResource(NC_RDF_SENDER_COLLATION_SORT, &kNC_SenderCollation);
+		rdf->GetResource(NC_RDF_RECIPIENT, &kNC_Recipient);
+		rdf->GetResource(NC_RDF_RECIPIENT_COLLATION_SORT, &kNC_RecipientCollation);
+		rdf->GetResource(NC_RDF_DATE, &kNC_Date);
+		rdf->GetResource(NC_RDF_STATUS, &kNC_Status);
+		rdf->GetResource(NC_RDF_STATUS_STRING, &kNC_StatusString);
+		rdf->GetResource(NC_RDF_FLAGGED, &kNC_Flagged);
+		rdf->GetResource(NC_RDF_PRIORITY, &kNC_Priority);
+		rdf->GetResource(NC_RDF_PRIORITY_STRING, &kNC_PriorityString);
+		rdf->GetResource(NC_RDF_PRIORITY_SORT, &kNC_PrioritySort);
+		rdf->GetResource(NC_RDF_SIZE, &kNC_Size);
+		rdf->GetResource(NC_RDF_SIZE_SORT, &kNC_SizeSort);
+		rdf->GetResource(NC_RDF_TOTALMESSAGES,   &kNC_Total);
+		rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES,   &kNC_Unread);
+		rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
+		rdf->GetResource(NC_RDF_ISUNREAD, &kNC_IsUnread);
+		rdf->GetResource(NC_RDF_HASATTACHMENT, &kNC_HasAttachment);
+		rdf->GetResource(NC_RDF_ISIMAPDELETED, &kNC_IsImapDeleted);
+		rdf->GetResource(NC_RDF_MESSAGETYPE, &kNC_MessageType);
+		rdf->GetResource(NC_RDF_ORDERRECEIVED, &kNC_OrderReceived);
+		rdf->GetResource(NC_RDF_ORDERRECEIVED_SORT, &kNC_OrderReceivedSort);
+
+		rdf->GetResource(NC_RDF_MARKREAD, &kNC_MarkRead);
+		rdf->GetResource(NC_RDF_MARKUNREAD, &kNC_MarkUnread);
+		rdf->GetResource(NC_RDF_TOGGLEREAD, &kNC_ToggleRead);
+		rdf->GetResource(NC_RDF_MARKFLAGGED, &kNC_MarkFlagged);
+		rdf->GetResource(NC_RDF_MARKUNFLAGGED, &kNC_MarkUnflagged);
+    rdf->GetResource(NC_RDF_MARKTHREADREAD, &kNC_MarkThreadRead);
+
+    kStatusAtom = NS_NewAtom("Status");
+    kFlaggedAtom = NS_NewAtom("Flagged");
+	}
+
+	CreateLiterals(rdf);
+	CreateArcsOutEnumerators();
 }
 
 nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 {
-	nsresult rv;
 
-	if (!m_shuttingDown)
-	{
-		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
-
-		if(NS_SUCCEEDED(rv))
-			mailSession->RemoveFolderListener(this);
-	}
 	if (--gMessageResourceRefCnt == 0)
 	{
 		nsrefcnt refcnt;
@@ -149,77 +182,35 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
     NS_RELEASE(kFlaggedAtom);
 	}
 
-	NS_IF_RELEASE(mHeaderParser);
+}
+
+void nsMsgMessageDataSource::Cleanup()
+{
+  nsresult rv;
+  if (!m_shuttingDown) {
+    
+    nsCOMPtr<nsIMsgMailSession> mailSession =
+      do_GetService(kMsgMailSessionCID, &rv);
+    
+    if(NS_SUCCEEDED(rv))
+      mailSession->RemoveFolderListener(this);
+  }
+
+  nsMsgRDFDataSource::Cleanup();
 }
 
 nsresult nsMsgMessageDataSource::Init()
 {
-	if (mInitialized)
-		return NS_ERROR_ALREADY_INITIALIZED;
-
-
 	nsresult rv;
-	nsIRDFService *rdf = getRDFService();
-	if(!rdf)
-		return NS_ERROR_FAILURE;
+  
+  rv = nsMsgRDFDataSource::Init();
+  if (NS_FAILED(rv)) return rv;
 
-	rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                          NULL, 
-                                          NS_GET_IID(nsIMsgHeaderParser), 
-                                          (void **) &mHeaderParser);
-
-	if(NS_FAILED(rv))
-		return rv;
-
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
 	if(NS_SUCCEEDED(rv))
 		mailSession->AddFolderListener(this);
-	PR_ASSERT(NS_SUCCEEDED(rv));
-	if (gMessageResourceRefCnt++ == 0) {
-    
-		rdf->GetResource(NC_RDF_SUBJECT, &kNC_Subject);
-		rdf->GetResource(NC_RDF_SUBJECT_COLLATION_SORT, &kNC_SubjectCollation);
-		rdf->GetResource(NC_RDF_SENDER, &kNC_Sender);
-		rdf->GetResource(NC_RDF_SENDER_COLLATION_SORT, &kNC_SenderCollation);
-		rdf->GetResource(NC_RDF_RECIPIENT, &kNC_Recipient);
-		rdf->GetResource(NC_RDF_RECIPIENT_COLLATION_SORT, &kNC_RecipientCollation);
-		rdf->GetResource(NC_RDF_DATE, &kNC_Date);
-		rdf->GetResource(NC_RDF_STATUS, &kNC_Status);
-		rdf->GetResource(NC_RDF_STATUS_STRING, &kNC_StatusString);
-		rdf->GetResource(NC_RDF_FLAGGED, &kNC_Flagged);
-		rdf->GetResource(NC_RDF_PRIORITY, &kNC_Priority);
-		rdf->GetResource(NC_RDF_PRIORITY_STRING, &kNC_PriorityString);
-		rdf->GetResource(NC_RDF_PRIORITY_SORT, &kNC_PrioritySort);
-		rdf->GetResource(NC_RDF_SIZE, &kNC_Size);
-		rdf->GetResource(NC_RDF_SIZE_SORT, &kNC_SizeSort);
-		rdf->GetResource(NC_RDF_TOTALMESSAGES,   &kNC_Total);
-		rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES,   &kNC_Unread);
-		rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
-		rdf->GetResource(NC_RDF_ISUNREAD, &kNC_IsUnread);
-		rdf->GetResource(NC_RDF_HASATTACHMENT, &kNC_HasAttachment);
-		rdf->GetResource(NC_RDF_ISIMAPDELETED, &kNC_IsImapDeleted);
-		rdf->GetResource(NC_RDF_MESSAGETYPE, &kNC_MessageType);
-		rdf->GetResource(NC_RDF_ORDERRECEIVED, &kNC_OrderReceived);
-		rdf->GetResource(NC_RDF_ORDERRECEIVED_SORT, &kNC_OrderReceivedSort);
-
-		rdf->GetResource(NC_RDF_MARKREAD, &kNC_MarkRead);
-		rdf->GetResource(NC_RDF_MARKUNREAD, &kNC_MarkUnread);
-		rdf->GetResource(NC_RDF_TOGGLEREAD, &kNC_ToggleRead);
-		rdf->GetResource(NC_RDF_MARKFLAGGED, &kNC_MarkFlagged);
-		rdf->GetResource(NC_RDF_MARKUNFLAGGED, &kNC_MarkUnflagged);
-    rdf->GetResource(NC_RDF_MARKTHREADREAD, &kNC_MarkThreadRead);
-
-    kStatusAtom = NS_NewAtom("Status");
-    kFlaggedAtom = NS_NewAtom("Flagged");
-	}
-
-	CreateLiterals(rdf);
-	rv = CreateArcsOutEnumerators();
-
-	if(NS_FAILED(rv)) return rv;
-
-	mInitialized = PR_TRUE;
-	return nsMsgRDFDataSource::Init();
+  
+  return NS_OK;
 }
 
 nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
@@ -569,13 +560,13 @@ NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
 		{
 			arcsArray = kNoThreadsArcsOutArray;
 		}
+    rv = NS_NewArrayEnumerator(labels, arcsArray);
 	}
 	else 
 	{
-		arcsArray = kEmptyArray;
+    rv = NS_NewEmptyEnumerator(labels);
 	}
 
-	rv = NS_NewArrayEnumerator(labels, arcsArray);
   NS_ENSURE_SUCCESS(rv, rv);
   
 	return NS_OK;

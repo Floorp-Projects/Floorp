@@ -117,20 +117,39 @@ nsCOMPtr<nsISupportsArray> nsMsgAccountManagerDataSource::mAccountRootArcsOut;
 
 nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
 {
-
 #ifdef DEBUG_amds
   printf("nsMsgAccountManagerDataSource() being created\n");
 #endif
+  
+  // do per-class initialization here
+  if (gAccountManagerResourceRefCnt++ == 0) {
+      getRDFService()->GetResource(NC_RDF_CHILD, &kNC_Child);
+      getRDFService()->GetResource(NC_RDF_NAME, &kNC_Name);
+      getRDFService()->GetResource(NC_RDF_FOLDERTREENAME, &kNC_FolderTreeName);
+      getRDFService()->GetResource(NC_RDF_NAME_SORT, &kNC_NameSort);
+      getRDFService()->GetResource(NC_RDF_FOLDERTREENAME_SORT, &kNC_FolderTreeNameSort);
+      getRDFService()->GetResource(NC_RDF_PAGETAG, &kNC_PageTag);
+      getRDFService()->GetResource(NC_RDF_ISDEFAULTSERVER, &kNC_IsDefaultServer);
+      getRDFService()->GetResource(NC_RDF_ACCOUNT, &kNC_Account);
+      getRDFService()->GetResource(NC_RDF_SERVER, &kNC_Server);
+      getRDFService()->GetResource(NC_RDF_IDENTITY, &kNC_Identity);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_MAIN, &kNC_PageTitleMain);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_SERVER, &kNC_PageTitleServer);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_COPIES, &kNC_PageTitleCopies);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_ADVANCED, &kNC_PageTitleAdvanced);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_SMTP, &kNC_PageTitleSMTP);
+      
+      getRDFService()->GetResource(NC_RDF_ACCOUNTROOT, &kNC_AccountRoot);
 
-  // XXX This call should be moved to a NS_NewMsgFooDataSource()
-  // method that the factory calls, so that failure to construct
-  // will return an error code instead of returning a partially
-  // initialized object.
-  nsresult rv = Init();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "uh oh, initialization failed");
-  if (NS_FAILED(rv)) return /* rv */;
-
-  return /* NS_OK */;
+      getRDFService()->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),
+                                  &kTrueLiteral);
+      
+      // eventually these need to exist in some kind of array
+      // that's easily extensible
+      getRDFService()->GetResource(NC_RDF_SETTINGS, &kNC_Settings);
+      
+      kDefaultServerAtom = NS_NewAtom("DefaultServer");
+    }
 }
 
 nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
@@ -182,54 +201,32 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgRDFDataSource)
 nsresult
 nsMsgAccountManagerDataSource::Init()
 {
-    nsresult rv=NS_OK;
-    
-    if (!mAccountManager) {
-        nsCOMPtr<nsIMsgAccountManager> am =
-          do_GetService(NS_MSGACCOUNTMANAGER_PROGID, &rv);
+    nsresult rv;
 
-        mAccountManager = getter_AddRefs(NS_GetWeakReference(am));
-        if (NS_FAILED(rv)) return rv;
+    rv = nsMsgRDFDataSource::Init();
+    if (NS_FAILED(rv)) return rv;
     
+    nsCOMPtr<nsIMsgAccountManager> am;
+
+    // get a weak ref to the account manager
+    if (!mAccountManager) {
+        am = do_GetService(NS_MSGACCOUNTMANAGER_PROGID, &rv);
+        mAccountManager = getter_AddRefs(NS_GetWeakReference(am));
+    } else
+        am = do_QueryReferent(mAccountManager);
+
+    if (am) {
         am->AddIncomingServerListener(this);
         am->AddRootFolderListener(this);
     }
     
-	if (gAccountManagerResourceRefCnt++ == 0) {
-      getRDFService()->GetResource(NC_RDF_CHILD, &kNC_Child);
-      getRDFService()->GetResource(NC_RDF_NAME, &kNC_Name);
-      getRDFService()->GetResource(NC_RDF_FOLDERTREENAME, &kNC_FolderTreeName);
-      getRDFService()->GetResource(NC_RDF_NAME_SORT, &kNC_NameSort);
-      getRDFService()->GetResource(NC_RDF_FOLDERTREENAME_SORT, &kNC_FolderTreeNameSort);
-      getRDFService()->GetResource(NC_RDF_PAGETAG, &kNC_PageTag);
-      getRDFService()->GetResource(NC_RDF_ISDEFAULTSERVER, &kNC_IsDefaultServer);
-      getRDFService()->GetResource(NC_RDF_ACCOUNT, &kNC_Account);
-      getRDFService()->GetResource(NC_RDF_SERVER, &kNC_Server);
-      getRDFService()->GetResource(NC_RDF_IDENTITY, &kNC_Identity);
-      getRDFService()->GetResource(NC_RDF_PAGETITLE_MAIN, &kNC_PageTitleMain);
-      getRDFService()->GetResource(NC_RDF_PAGETITLE_SERVER, &kNC_PageTitleServer);
-      getRDFService()->GetResource(NC_RDF_PAGETITLE_COPIES, &kNC_PageTitleCopies);
-      getRDFService()->GetResource(NC_RDF_PAGETITLE_ADVANCED, &kNC_PageTitleAdvanced);
-      getRDFService()->GetResource(NC_RDF_PAGETITLE_SMTP, &kNC_PageTitleSMTP);
-      
-      getRDFService()->GetResource(NC_RDF_ACCOUNTROOT, &kNC_AccountRoot);
-
-      getRDFService()->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),
-                                  &kTrueLiteral);
-      
-      // eventually these need to exist in some kind of array
-      // that's easily extensible
-      getRDFService()->GetResource(NC_RDF_SETTINGS, &kNC_Settings);
-
-
-      kDefaultServerAtom = NS_NewAtom("DefaultServer");
-    }
 
     return NS_OK;
 }
 
-void nsMsgAccountManagerDataSource::Close()
+void nsMsgAccountManagerDataSource::Cleanup()
 {
+    printf("*** AccountManager Datasource cleanup\n");
     nsCOMPtr<nsIMsgAccountManager> am =
         do_QueryReferent(mAccountManager);
 
@@ -238,7 +235,7 @@ void nsMsgAccountManagerDataSource::Close()
         am->RemoveRootFolderListener(this);
     }
 
-	nsMsgRDFDataSource::Close();
+	nsMsgRDFDataSource::Cleanup();
 }
 
 /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */

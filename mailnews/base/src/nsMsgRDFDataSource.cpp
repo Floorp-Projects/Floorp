@@ -32,47 +32,68 @@
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsMsgRDFDataSource::nsMsgRDFDataSource():
+    mInitialized(PR_FALSE),
+    m_shuttingDown(PR_FALSE),
     mRDFService(nsnull)
 {
     NS_INIT_REFCNT();
-	m_shuttingDown = PR_FALSE;
+
+    // do one-time initialization here
+    
+    NS_NewISupportsArray(getter_AddRefs(mObservers));
 }
 
 nsMsgRDFDataSource::~nsMsgRDFDataSource()
 {
+    // final shutdown happens here
+    NS_ASSERTION(!mInitialized, "Object going away without cleanup, possibly dangerous!");
+    if (mInitialized) Cleanup();
 }
 
-/* void Init (); */
+/* initialization happens here - object is constructed,
+   but possibly partially shut down
+*/
 nsresult
 nsMsgRDFDataSource::Init()
 {
     nsresult rv=NS_OK;
 
+    if (mInitialized)
+        return NS_ERROR_ALREADY_INITIALIZED;
+    
     /* Add an observer to XPCOM shutdown */
     nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_PROGID,
                                                      &rv);
     if (NS_FAILED(rv)) return rv;
-    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    nsAutoString topic = NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), topic.GetUnicode());
     if (NS_FAILED(rv)) return rv;
 
     /* Get and keep the rdf service. Will be released by the observer */
     getRDFService();
     
-	//Create Empty Enumerator
-
-	rv = NS_NewISupportsArray(getter_AddRefs(kEmptyArray));
-	if(NS_FAILED(rv)) return rv;
-
-
+    mInitialized=PR_TRUE;
     return rv;
 }
 
-
-void nsMsgRDFDataSource::Close()
+// clean yourself up - undo anything you did in Init()
+void nsMsgRDFDataSource::Cleanup()
 {
-	mWindow = null_nsCOMPtr();
-	kEmptyArray = null_nsCOMPtr();
+    nsresult rv;
+    mRDFService = nsnull;
+    
+    // release ourselves from the observer service
+    nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_PROGID,
+                                                     &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = obs->RemoveObserver(NS_STATIC_CAST(nsIObserver*, this),
+                                 (const PRUnichar*)NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID));
+    }
+    
+    // release the window
+	mWindow = nsnull;
+
+    mInitialized = PR_FALSE;
 }
 
 NS_IMPL_ADDREF(nsMsgRDFDataSource)
@@ -176,15 +197,15 @@ nsMsgRDFDataSource::HasAssertion(nsIRDFResource *aSource, nsIRDFResource *aPrope
 NS_IMETHODIMP
 nsMsgRDFDataSource::AddObserver(nsIRDFObserver *aObserver)
 {
-  if (! mObservers) {
-    nsresult rv;
-    rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
-    if (NS_FAILED(rv)) return rv;
-  }
-  NS_ASSERTION(mObservers->IndexOf(aObserver) == -1, "better not already be observing this");
+    // make sure we're initialized
+    if (!mInitialized)
+        Init();
+    
+    NS_ASSERTION(mObservers->IndexOf(aObserver) == -1,
+                 "better not already be observing this");
 
-  mObservers->AppendElement(aObserver);
-  return NS_OK;
+    mObservers->AppendElement(aObserver);
+    return NS_OK;
 }
 
 
@@ -195,6 +216,14 @@ nsMsgRDFDataSource::RemoveObserver(nsIRDFObserver *aObserver)
   if (! mObservers)
     return NS_OK;
   mObservers->RemoveElement(aObserver);
+
+  // when we hit 0 observers, then it's probably time
+  // to go away - clean ourselves up now
+  PRUint32 count;
+  mObservers->Count(&count);
+  if (count == 0)
+      Cleanup();
+
   return NS_OK;
 }
 
@@ -280,9 +309,8 @@ nsMsgRDFDataSource::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 NS_IMETHODIMP
 nsMsgRDFDataSource::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData )
 {
-    mRDFService = nsnull;
 	m_shuttingDown = PR_TRUE;
-	Close();
+	Cleanup();
 	return NS_OK;
 }
 

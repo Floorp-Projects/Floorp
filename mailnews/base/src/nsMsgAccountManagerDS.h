@@ -50,7 +50,7 @@ public:
   virtual ~nsMsgAccountManagerDataSource();
   virtual nsresult Init();
 
-  virtual void Close();
+  virtual void Cleanup();
   // service manager shutdown method
 
     NS_DECL_ISUPPORTS_INHERITED
