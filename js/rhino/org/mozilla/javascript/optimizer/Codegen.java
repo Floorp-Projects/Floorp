@@ -3810,17 +3810,6 @@ if (true) {
                             "Lorg/mozilla/javascript/Scriptable;");
     }
 
-    private void getParentScope(Node node, Node child) {
-        while (child != null) {
-            generateCodeFromNode(child, node, -1, -1);
-            child = child.getNextSibling();
-        }
-        classFile.add(ByteCode.INVOKEINTERFACE,
-                            "org/mozilla/javascript/Scriptable",
-                            "getParentScope",
-                            "()", "Lorg/mozilla/javascript/Scriptable;");
-    }
-
     private short getLocalFromNode(Node node) {
         Integer localProp = (Integer) node.getProp(Node.LOCAL_PROP);
         if (localProp == null) {
