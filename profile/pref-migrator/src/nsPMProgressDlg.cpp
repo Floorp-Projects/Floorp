@@ -34,14 +34,18 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
+#ifndef NECKO
 #include "nsINetService.h"
+static NS_DEFINE_IID( kNetServiceCID,      NS_NETSERVICE_CID );
+#else
+#include "nsNeckoUtil.h"
+#endif // NECKO
 
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
-static NS_DEFINE_IID( kNetServiceCID,      NS_NETSERVICE_CID );
 
 // Utility to set element attribute.
 static nsresult setAttribute( nsIDOMXULDocument *doc,
@@ -165,7 +169,12 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
     {
         // Open "progress" dialog.
         nsIURI *url;
-        rv = NS_NewURL( &url, "resource:/res/profile/progress_undetermined.xul" );
+        const char *urlSpec = "resource:/res/profile/progress_undetermined.xul";
+#ifndef NECKO
+        rv = NS_NewURL( &url,  urlSpec);
+#else
+        rv = NS_NewURI(&url, urlSpec);
+#endif // NECKO
         if ( NS_SUCCEEDED(rv) ) 
         {
         

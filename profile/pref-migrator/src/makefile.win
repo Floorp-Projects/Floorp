@@ -31,7 +31,7 @@ LCFLAGS = \
         $(NULL)
 
 LINCS= \
-	  -I..\..\base                      \
+      -I..\..\base                      \
     -I$(XPDIST)\public\prefm       \
     -I$(XPDIST)\public\rdf         \
     -I$(XPDIST)\public\js          \
@@ -52,14 +52,18 @@ LLIBS =                      \
     $(DIST)\lib\xpcom.lib    \
     $(DIST)\lib\plc3.lib     \
     $(DIST)\lib\xppref32.lib \
-	$(DIST)\lib\netlib.lib  \
+!ifndef NECKO
+    $(DIST)\lib\netlib.lib  \
+!else
+    $(DIST)\lib\neckoutil_s.lib \
+!endif
     $(LIBNSPR)               \
     $(NULL)
 
 OBJS = \
     .\$(OBJDIR)\nsprefmigration.obj        \
     .\$(OBJDIR)\nsprefmigrationfactory.obj \
-	  .\$(OBJDIR)\nsPMProgressDlg.obj \
+      .\$(OBJDIR)\nsPMProgressDlg.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
