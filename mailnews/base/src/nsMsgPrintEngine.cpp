@@ -62,6 +62,7 @@ nsMsgPrintEngine::nsMsgPrintEngine() :
 {
   mCurrentlyPrintingURI = -1;
   mContentViewer = nsnull;
+  mViewerFile = nsnull;
 
   NS_INIT_REFCNT();
 }
@@ -128,18 +129,27 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChan
   mDocShell->GetContentViewer(getter_AddRefs(mContentViewer));  
   if (mContentViewer) 
   {
-    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(mContentViewer);
-    if (viewerFile) 
+    mViewerFile = do_QueryInterface(mContentViewer);
+    if (mViewerFile) 
     {
       if (mCurrentlyPrintingURI == 0)
-        rv = viewerFile->Print(PR_FALSE, nsnull, (nsIPrintListener *)this);
+        rv = mViewerFile->Print(PR_FALSE, nsnull, (nsIPrintListener *)this);
       else
-        rv = viewerFile->Print(PR_TRUE, nsnull, (nsIPrintListener *)this);
+        rv = mViewerFile->Print(PR_TRUE, nsnull, (nsIPrintListener *)this);
 
-      // Tell the user we started printing...
-      PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("PrintingMessage").GetUnicode());
-      SetStatusMessage( msg );
-      PR_FREEIF(msg);
+      if (NS_FAILED(rv))
+      {
+        mViewerFile = nsnull;
+        mContentViewer = nsnull;
+        OnEndPrinting(rv);
+      }
+      else
+      {
+        // Tell the user we started printing...
+        PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("PrintingMessage").GetUnicode());
+        SetStatusMessage( msg );
+        PR_FREEIF(msg);
+      }
     }
   }
 

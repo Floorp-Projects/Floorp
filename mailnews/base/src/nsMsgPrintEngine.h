@@ -35,6 +35,7 @@
 #include "nsIPrintListener.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIStringBundle.h"
+#include "nsIContentViewerFile.h"
 
 class nsMsgPrintEngine : public nsIMsgPrintEngine, public nsIPrintListener {
 
@@ -74,4 +75,5 @@ protected:
   nsCOMPtr<nsIContentViewer>  mContentViewer;
   nsCOMPtr<nsIStringBundle>   mStringBundle;    // String bundles...
   nsCOMPtr<nsIMsgStatusFeedback> mFeedback;     // Tell the user something why don't ya'
+  nsCOMPtr<nsIContentViewerFile> mViewerFile;
 };
