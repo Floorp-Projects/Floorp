@@ -207,8 +207,12 @@ nsMsgIdentity::setCharPref(const char *prefname,
   nsresult rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
   
+  rv = NS_OK;
   char *prefName = getPrefName(m_identityKey, prefname);
-  rv = m_prefs->SetCharPref(prefName, val);
+  if (val) 
+    rv = m_prefs->SetCharPref(prefName, val);
+  else
+    m_prefs->ClearUserPref(prefName);
   PR_Free(prefName);
   return rv;
 }
