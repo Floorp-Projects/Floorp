@@ -36,6 +36,8 @@ CPPSRCS=    nsMsgFilterService.cpp\
 			nsMsgBodyHandler.cpp\
 			nsMsgLocalSearch.cpp\
 			nsMsgSearchAdapter.cpp\
+			nsMsgFilterDataSource.cpp \
+			nsMsgFilterDelegateFactory.cpp \
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
@@ -45,10 +47,14 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgBodyHandler.obj\
 			.\$(OBJDIR)\nsMsgLocalSearch.obj\
 			.\$(OBJDIR)\nsMsgSearchAdapter.obj\
+			.\$(OBJDIR)\nsMsgFilterDataSource.obj \
+			.\$(OBJDIR)\nsMsgFilterDelegateFactory.obj \
 			$(NULL)
 
 
 EXPORTS=	nsMsgFilterService.h\
+		nsMsgFilterDataSource.h \
+		nsMsgFilterDelegateFactory.h \
 			$(NULL)
 
 
