@@ -33,7 +33,7 @@ class CTabControl;
 class CLargeEditField;
 class LGAEditField;
 class LGAPopup;
-
+class LGACaption;
 
 class CChameleonView: public LView
 {
@@ -580,7 +580,6 @@ protected:
 	char *				fLowSrcStr;
 	
 	CLargeEditField*	fImageFileName;	// was CEditBroadcaster
-	CLargeEditField*	fImageAltFileName;
 	CLargeEditField*	fImageAltTextEdit;
 	
 	LGAEditField*		fHeightTextEdit;
@@ -811,6 +810,9 @@ public:
 protected:
 	LGAEditField*		fRowSpanEditText;
 	LGAEditField*		fColSpanEditText;
+	LGACaption* 		spanCaption;
+	LGACaption*	 		rowCaption;
+	LGACaption* 		colCaption;
 
 	LGAPopup*			fHorizontalAlignment;
 	LGAPopup*			fVerticalAlignment;
