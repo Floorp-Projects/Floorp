@@ -46,29 +46,14 @@ MODULE       = browser
 PACKAGE_FILE = xpfe.pkg
 PACKAGE_VARS = USE_SHORT_LIBNAME
 
-# *Don't* build browser or communicator for Firefox - it's unnecessary cruft.
 ifdef MOZ_PHOENIX
 DIRS += \
         browser/public \
         browser/src \
-        components/directory \
-        components/filepicker \
-        components/find \
-        components/intl \
-        components/killAll \
-        components/resetPref \
-        components/search \
-        components/shistory \
-        components/windowds \
         $(NULL)
-
-ifdef MOZ_ENABLE_XREMOTE
-DIRS += components/xremote
-endif
-
-DIRS += components/build
 else
 DIRS += browser components/shistory communicator global
+endif
 
 # Because of our great use of encapsulation, there are
 # some header file in xpfe/components that are required
@@ -77,7 +62,6 @@ DIRS += browser components/shistory communicator global
 # stuff.
 ifdef MOZ_XPFE_COMPONENTS
 DIRS     += components
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk

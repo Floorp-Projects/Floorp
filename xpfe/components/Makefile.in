@@ -42,24 +42,27 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MOZ_HAVE_BROWSER=1
 ifdef MOZ_THUNDERBIRD
-MOZ_STANDALONE_NONBROWSER_XULAPP=1
+MOZ_HAVE_BROWSER=
 endif
 ifdef MOZ_STANDALONE_COMPOSER
-MOZ_STANDALONE_NONBROWSER_XULAPP=1
+MOZ_HAVE_BROWSER=
+endif
+ifdef MOZ_PHOENIX
+# Firefox uses this flag to stop the automatic processing of the jar.mn file
+# that lives parallel to this Makefile. The jar.mn is responsible for the 
+# packaging of a large number of chrome files Firefox does not need. 
+NO_DIST_INSTALL=1
 endif
 
-ifndef MOZ_STANDALONE_NONBROWSER_XULAPP
+ifdef MOZ_HAVE_BROWSER
 DIRS	= \
 			directory \
 			filepicker \
 			find \
 			search \
-			related \
-			prefwindow \
 			shistory \
-			console \
-			updates \
 			intl \
 			resetPref \
 			killAll \
@@ -68,6 +71,10 @@ DIRS	= \
 
 ifndef MOZ_PHOENIX
 DIRS += \
+		related \
+		prefwindow \
+		console \
+		updates \
 		autocomplete \
 		bookmarks \
 		download-manager \
@@ -78,18 +85,17 @@ DIRS += \
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-DIRS		+= urlwidget 
 ifndef MOZ_PHOENIX
-DIRS    += winhooks alerts
+DIRS    += urlwidget winhooks alerts
 endif
 endif
 
 else
-
+# !MOZ_HAVE_BROWSER
 DIRS    = \
           intl \
-	  find \
-	  filepicker \
+          find \
+          filepicker \
           download-manager \
           autocomplete \
           windowds \
@@ -111,7 +117,7 @@ ifdef MOZ_ENABLE_XREMOTE
 DIRS		+= xremote
 endif
 
-ifndef MOZ_STANDALONE_NONBROWSER_XULAPP
+ifdef MOZ_HAVE_BROWSER
 DIRS		+= build
 else
 DIRS		+= build2
