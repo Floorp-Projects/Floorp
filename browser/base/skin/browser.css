@@ -752,3 +752,38 @@ tab[busy] {
 .tabs-newbutton:hover:active {
   -moz-image-region: rect(0px 110px 20px 90px);
 }
+
+
+/* ::::: throbber ::::: */
+
+#throbber-box {
+}
+
+#navigator-throbber {
+  -moz-user-focus: ignore !important;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+
+  padding: 0px !important;
+  border: none !important;
+  margin: 5px !important;
+
+  background-color: transparent;
+
+  list-style-image: url("chrome://browser/skin/throbber-stopped.gif");
+}
+
+#navigator-throbber[toolbarmode="small"] {
+}
+
+#navigator-throbber:hover,
+#navigator-throbber:hover[toolbarmode="small"] {
+}
+
+#navigator-throbber:hover:active,
+#navigator-throbber:hover:active[toolbarmode="small"] {}
+
+#navigator-throbber[busy="true"],
+#navigator-throbber[toolbarmode="small"][busy="true"] {
+  list-style-image: url("chrome://browser/skin/throbber.gif");
+}
