@@ -724,20 +724,12 @@ function getDefaultFileName(aDefaultFileName, aDocumentURI, aDocument)
     var url = aDocumentURI.QueryInterface(Components.interfaces.nsIURL);
     if (url.fileName != "") {
       // 2) Use the actual file name, if present
-      return validateFileName(decodeURIComponent(url.fileName));
-    }
-  } catch (e) {
-    try {
-      // the file name might be non ASCII
-      // try unescape again with a characterSet
       var textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                    .getService(Components.interfaces.nsITextToSubURI);
-      var charset = getCharsetforSave(aDocument);
-      return validateFileName(textToSubURI.unEscapeURIForUI(charset, url.fileName));
-    } catch (e) {
-      // This is something like a wyciwyg:, data:, and so forth
-      // URI... no usable filename here.
+      return validateFileName(textToSubURI.unEscapeURIForUI(url.originCharset || "UTF-8", url.fileName));
     }
+  } catch (e) {
+    // This is something like a data: and so forth URI... no filename here.
   }
 
   if (aDocument) {
