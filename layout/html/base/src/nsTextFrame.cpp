@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  */
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
@@ -458,9 +459,10 @@ public:
     nscoord mAveCharWidth;
     PRBool mJustifying;
     PRBool mPreformatted;
-    PRIntn mNumSpaces;
+    PRInt32 mNumSpacesToRender;
+    PRInt32 mNumSpacesToMeasure;
     nscoord mExtraSpacePerSpace;
-    nscoord mRemainingExtraSpace;
+    PRInt32 mNumSpacesReceivingExtraJot;
 
     TextStyle(nsIPresContext* aPresContext,
               nsIRenderingContext& aRenderingContext,
@@ -521,20 +523,25 @@ public:
 
       // Get the word and letter spacing
       mWordSpacing = 0;
-      mLetterSpacing = 0;
       PRIntn unit = mText->mWordSpacing.GetUnit();
       if (eStyleUnit_Coord == unit) {
         mWordSpacing = mText->mWordSpacing.GetCoordValue();
       }
+
+      mLetterSpacing = 0;
       unit = mText->mLetterSpacing.GetUnit();
       if (eStyleUnit_Coord == unit) {
         mLetterSpacing = mText->mLetterSpacing.GetCoordValue();
       }
-      mNumSpaces = 0;
-      mRemainingExtraSpace = 0;
+      mNumSpacesToRender = 0;
+      mNumSpacesToMeasure = 0;
+      mNumSpacesReceivingExtraJot = 0;
       mExtraSpacePerSpace = 0;
       mPreformatted = (NS_STYLE_WHITESPACE_PRE == mText->mWhiteSpace) ||
         (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == mText->mWhiteSpace);
+
+      mJustifying = (NS_STYLE_TEXT_ALIGN_JUSTIFY == mText->mTextAlign) &&
+        !mPreformatted;
     }
 
     ~TextStyle() {
@@ -590,6 +597,9 @@ public:
                             nsAutoIndexBuffer* aIndexBuffer,
                             nsAutoTextBuffer* aTextBuffer,
                             PRInt32* aTextLen);
+  void ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingContext,
+                                        TextStyle& aTextStyle,
+                                        PRUnichar* aBuffer, PRInt32 aLength, PRInt32 aNumSpaces);
 
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                             nsIStyleContext* aStyleContext,
@@ -1192,7 +1202,8 @@ nsTextFrame::Paint(nsIPresContext* aPresContext,
     sc->GetStyleData(eStyleStruct_Display);
   if (disp->IsVisible()) {
     TextStyle ts(aPresContext, aRenderingContext, mStyleContext);
-    if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)) {
+    if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)
+      || ts.mJustifying) {
       PaintTextSlowly(aPresContext, aRenderingContext, sc, ts, 0, 0);
     }
     else {
@@ -1261,7 +1272,9 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     PRBool isWhitespace, wasTransformed;
     PRInt32 wordLen, contentLen;
     aTX.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
-    NS_ASSERTION(isWhitespace, "mState and content are out of sync");
+    // we trip this assertion in bug 31053, but I think it's unnecessary
+    //NS_ASSERTION(isWhitespace, "mState and content are out of sync");
+
     if (isWhitespace) {
       if (nsnull != indexp) {
         // Point mapping indicies at the same content index since
@@ -1301,7 +1314,6 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     }
     inWord = PR_FALSE;
     if (isWhitespace) {
-      numSpaces++;
       if ('\t' == bp[0]) {
         PRInt32 spaces = 8 - (7 & column);
         PRUnichar* tp = bp;
@@ -1339,20 +1351,30 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
           }
         }
       }
+      numSpaces += wordLen;
     }
     else {
+      PRInt32 i;
       if (nsnull != indexp) {
         // Point mapping indicies at each content index in the word
-        PRInt32 i = contentLen;
+        i = contentLen;
         while (--i >= 0) {
           *indexp++ = strInx++;
+        }
+      }
+      // Nonbreaking spaces count as spaces, not letters
+      PRUnichar* tp = bp;
+      i = wordLen;
+      while (--i >= 0) {
+        if (*tp++ == ' ') {
+          numSpaces++;
         }
       }
     }
 
     // Grow the buffer before we run out of room. The only time this
     // happens is because of tab expansion.
-    if (dstOffset + wordLen > aTextBuffer->mBufferLen) {
+    if (aTextBuffer != nsnull && dstOffset + wordLen > aTextBuffer->mBufferLen) {
       nsresult rv = aTextBuffer->GrowBy(wordLen);
       if (NS_FAILED(rv)) {
         break;
@@ -1362,8 +1384,10 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     column += wordLen;
     textLength += wordLen;
     n -= contentLen;
-    nsCRT::memcpy(aTextBuffer->mBuffer + dstOffset, bp,
-                  sizeof(PRUnichar)*wordLen);
+    if (aTextBuffer != nsnull) {
+      nsCRT::memcpy(aTextBuffer->mBuffer + dstOffset, bp,
+                    sizeof(PRUnichar)*wordLen);
+    }
     dstOffset += wordLen;
   }
 
@@ -1372,19 +1396,24 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     NS_ASSERTION(indexp <= aIndexBuffer->mBuffer + aIndexBuffer->mBufferLen,
                  "yikes - we just overwrote memory");
   }
-  NS_ASSERTION(dstOffset <= aTextBuffer->mBufferLen,
-               "yikes - we just overwrote memory");
+  if (aTextBuffer) {
+    NS_ASSERTION(dstOffset <= aTextBuffer->mBufferLen,
+                 "yikes - we just overwrote memory");
+  }
+
 #endif
 
   // Remove trailing whitespace if it was trimmed after reflow
   if (TEXT_TRIMMED_WS & mState) {
+    NS_ASSERTION(aTextBuffer != nsnull,
+      "Nonexistent text buffer should only occur during reflow, i.e. before whitespace is trimmed");
     if (--dstOffset >= 0) {
       PRUnichar ch = aTextBuffer->mBuffer[dstOffset];
       if (XP_IS_SPACE(ch)) {
         textLength--;
+        numSpaces--;
       }
     }
-    numSpaces--;
   }
 
   if (aIndexBuffer) {
@@ -1716,6 +1745,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull);
   PRInt32 textLength;
+  // no need to worry about justification, that's always on the slow path
   PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
                      &paintBuffer, &textLength);
 
@@ -1833,7 +1863,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   }
 
   TextStyle ts(aPresContext, *aRendContext, mStyleContext);
-  if (!ts.mSmallCaps && !ts.mWordSpacing && !ts.mLetterSpacing) {
+  if (!ts.mSmallCaps && !ts.mWordSpacing && !ts.mLetterSpacing && !ts.mJustifying) {
     return NS_ERROR_INVALID_ARG;
   }
   nsIView * view;
@@ -1861,12 +1891,16 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull);
   PRInt32 textLength;
-  PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
+  PRInt32 numSpaces;
+
+  numSpaces = PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
   if (textLength <= 0) {
     return NS_ERROR_FAILURE;
   }
 
-//IF STYLE SAYS TO SELCT TO END OF FRAME HERE...
+  ComputeExtraJustificationSpacing(*aRendContext, ts, paintBuffer.mBuffer, textLength, numSpaces);
+
+//IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
   nsCOMPtr<nsIPref>     prefs;
   PRInt32 prefInt = 0;
   rv = nsServiceManager::GetService(kPrefCID, 
@@ -1929,7 +1963,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   PRUnichar* bp = bp0;
 
   PRBool spacing = (0 != aTextStyle.mLetterSpacing) ||
-    (0 != aTextStyle.mWordSpacing);
+    (0 != aTextStyle.mWordSpacing) || aTextStyle.mJustifying;
   nscoord spacingMem[TEXT_BUF_SIZE];
   PRIntn* sp0 = spacingMem; 
   if (spacing && (aLength > TEXT_BUF_SIZE)) {
@@ -1977,12 +2011,12 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     else if (ch == ' ') {
       nextFont = aTextStyle.mNormalFont;
       nextY = aY;
-      glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing;
-      nscoord extra = aTextStyle.mExtraSpacePerSpace;
-      if (--aTextStyle.mNumSpaces == 0) {
-        extra += aTextStyle.mRemainingExtraSpace;
+      glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing
+        + aTextStyle.mExtraSpacePerSpace;
+      if ((PRUint32)--aTextStyle.mNumSpacesToRender <
+            (PRUint32)aTextStyle.mNumSpacesReceivingExtraJot) {
+        glyphWidth++;
       }
-      glyphWidth += extra;
     }
     else {
       if (lastFont != aTextStyle.mNormalFont) {
@@ -2096,12 +2130,12 @@ nsTextFrame::GetWidthOrLength(nsIRenderingContext& aRenderingContext,
       glyphWidth = charWidth + aStyle.mLetterSpacing;
     }
     else if (ch == ' ') {
-      glyphWidth = aStyle.mSpaceWidth + aStyle.mWordSpacing;
-      nscoord extra = aStyle.mExtraSpacePerSpace;
-      if (--aStyle.mNumSpaces == 0) {
-        extra += aStyle.mRemainingExtraSpace;
+      glyphWidth = aStyle.mSpaceWidth + aStyle.mWordSpacing
+        + aStyle.mExtraSpacePerSpace;
+      if ((PRUint32)--aStyle.mNumSpacesToMeasure
+            < (PRUint32)aStyle.mNumSpacesReceivingExtraJot) {
+        glyphWidth++;
       }
-      glyphWidth += extra;
     }
     else {
       if (lastFont != aStyle.mNormalFont) {
@@ -2147,6 +2181,45 @@ nsTextFrame::GetLengthSlowly(nsIRenderingContext& aRenderingContext,
   return GetWidthOrLength(aRenderingContext,aStyle,aBuffer,aLength,&aWidth,PR_FALSE);
 }
 
+void
+nsTextFrame::ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingContext,
+                                              TextStyle& aTextStyle,
+                                              PRUnichar* aBuffer, PRInt32 aLength,
+                                              PRInt32 aNumSpaces)
+{
+  if (aTextStyle.mJustifying) {
+    nscoord trueWidth;
+    
+    // OK, so this is a bit ugly. The problem is that to get the right margin
+    // nice and clean, we have to apply a little extra space to *some* of the
+    // spaces. It has to be the same ones every time or things will go haywire.
+    // This implies that the GetWidthOrLength and RenderString functions depend
+    // on a little bit of secret state: which part of the prepared text they are
+    // looking at. It turns out that they get called in a regular way: they look
+    // at the text from the beginning to the end. So we just count which spaces
+    // we're up to, for each context.
+    // This is not a great solution, but a perfect solution requires much more
+    // widespread changes, to explicitly annotate all the transformed text fragments
+    // that are passed around with their position in the transformed text
+    // for the entire frame.
+    aTextStyle.mNumSpacesToMeasure = 0;
+    aTextStyle.mExtraSpacePerSpace = 0;
+    aTextStyle.mNumSpacesReceivingExtraJot = 0;
+    
+    GetWidth(aRenderingContext, aTextStyle, aBuffer, aLength, &trueWidth);
+    
+    aTextStyle.mNumSpacesToMeasure = aNumSpaces;
+    aTextStyle.mNumSpacesToRender = aNumSpaces;
+    
+    nscoord extraSpace = mRect.width - trueWidth;
+    
+    if (extraSpace > 0 && aNumSpaces > 0) {
+      aTextStyle.mExtraSpacePerSpace = extraSpace/aNumSpaces;
+      aTextStyle.mNumSpacesReceivingExtraJot =
+        extraSpace - aTextStyle.mExtraSpacePerSpace*aNumSpaces;
+    }
+  }
+}
 
 void
 nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
@@ -2173,10 +2246,11 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull);
-  aTextStyle.mNumSpaces = PrepareUnicodeText(tx,
-                                             (displaySelection
-                                              ? &indexBuffer : nsnull),
-                                             &paintBuffer, &textLength);
+  PRInt32 numSpaces;
+  
+  numSpaces = PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
+                                 &paintBuffer, &textLength);
+
 
   PRInt32* ip = indexBuffer.mBuffer;
   PRUnichar* text = paintBuffer.mBuffer;
@@ -2185,6 +2259,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
   GetFrameState(&frameState);
   isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
   if (0 != textLength) {
+    ComputeExtraJustificationSpacing(aRenderingContext, aTextStyle, text, textLength, numSpaces);
     if (!displaySelection || !isSelected) { 
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
@@ -2550,8 +2625,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
     rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
     if (NS_SUCCEEDED(rv)) {
       TextStyle ts(aCX, *acx, mStyleContext);
-      if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing) {
-
+      if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing || ts.mJustifying) {
         nsresult result = GetPositionSlowly(aCX, acx, aPoint, aNewContent,
                                  aContentOffset);
         aContentOffsetEnd = aContentOffset;
@@ -2582,6 +2656,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
       doc->GetLineBreaker(getter_AddRefs(lb));
       nsTextTransformer tx(lb, nsnull);
       PRInt32 textLength;
+      // no need to worry about justification, that's always on the slow path
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
 
       if (textLength <=0) {
@@ -2593,7 +2668,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
       nsIView * view;
       GetOffsetFromView(aCX, origin, &view);
 
-//IF SYLE SAYS TO SELCT TO END OF FRAME HERE...
+//IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
       nsCOMPtr<nsIPref>     prefs;
       PRInt32 prefInt = 0;
       rv = nsServiceManager::GetService(kPrefCID, 
@@ -2880,7 +2955,12 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull);
   PRInt32 textLength;
-  PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
+  PRInt32 numSpaces;
+
+  numSpaces = PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
+
+  ComputeExtraJustificationSpacing(*inRendContext, ts, paintBuffer.mBuffer, textLength, numSpaces);
+
 
   PRInt32* ip = indexBuffer.mBuffer;
   if (inOffset > mContentLength){
@@ -2889,7 +2969,7 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
   }
 
   nscoord width = mRect.width;
-  if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)) 
+  if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing) || ts.mJustifying)
   {
     GetWidth(*inRendContext, ts,
              paintBuffer.mBuffer, ip[inOffset]-mContentOffset,
@@ -2907,7 +2987,8 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
     // to the total width, so the caret appears
     // in the proper place!
     //
-    width += ts.mSpaceWidth;
+    // NOTE: the trailing whitespace includes the word spacing!!
+    width += ts.mSpaceWidth + ts.mWordSpacing;
   }
 
   outPoint->x = width;
@@ -3502,6 +3583,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
 #ifdef _WIN32
   PRBool  measureTextRuns = !aTextData.mComputeMaxWordWidth && !aTs.mPreformatted &&
                             !aTs.mSmallCaps && !aTs.mWordSpacing && !aTs.mLetterSpacing;
+  // Don't measure text runs with letter spacing active, it doesn't work
 #else
   PRBool  measureTextRuns = PR_FALSE;
 #endif
@@ -3579,10 +3661,17 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
         mState |= TEXT_SKIP_LEADING_WS;
         continue;
       }
+
+      // NOTE: Even if the textRun absorbs the whitespace below, we still
+      // want to remember that we're breakable.
+      aTextData.mIsBreakable = PR_TRUE;
+      aTextData.mFirstLetterOK = PR_FALSE;
+ 
       if ('\t' == firstChar) {
         // Expand tabs to the proper width
         wordLen = 8 - (7 & column);
-        width = aTs.mSpaceWidth * wordLen;
+        // Apply word spacing to every space derived from a tab
+        width = (aTs.mSpaceWidth + aTs.mWordSpacing)*wordLen;
 
         // Because we have to expand the tab when rendering consider that
         // a transformation of the text
@@ -3594,10 +3683,9 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
         continue;
       }
       else {
-        width = (wordLen * aTs.mSpaceWidth) + aTs.mWordSpacing;// XXX simplistic
+        // Apply word spacing to every space, if there's more than one
+        width = wordLen*(aTs.mWordSpacing + aTs.mSpaceWidth);// XXX simplistic
       }
-      aTextData.mIsBreakable = PR_TRUE;
-      aTextData.mFirstLetterOK = PR_FALSE;
 
       if (aTextData.mMeasureText) {
         // See if there is room for the text
@@ -3612,7 +3700,6 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       endsInWhitespace = PR_TRUE;
       prevOffset = aTextData.mOffset;
       aTextData.mOffset += contentLen;
-
     } else {
       // See if the first thing in the section of text is a
       // non-breaking space (html nbsp entity). If it is then make
@@ -3704,6 +3791,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   MeasureTextRun:
 #ifdef _WIN32
     PRInt32 numCharsFit;
+    // These calls can return numCharsFit not positioned at a break in the textRun. Beware.
     if (aTx.TransformedTextIsAscii()) {
       aReflowState.rendContext->GetWidth((char*)aTx.GetWordBuffer(), textRun.mTotalNumChars,
                                          maxWidth - aTextData.mX,
@@ -3722,22 +3810,43 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     }
 
     // Find the index of the last segment that fit
-    PRInt32 lastSegment = textRun.mNumSegments - 1;
-    if (numCharsFit != textRun.mTotalNumChars) {
+    PRInt32 lastSegment;
+    if (numCharsFit == textRun.mTotalNumChars) { // fast path, normal case
+      lastSegment = textRun.mNumSegments - 1;
+    } else {
       for (lastSegment = 0; textRun.mBreaks[lastSegment] < numCharsFit; lastSegment++) ;
       NS_ASSERTION(lastSegment < textRun.mNumSegments, "failed to find segment");
+      // now we have textRun.mBreaks[lastSegment] >= numCharsFit
+      /* O'Callahan XXX: This snippet together with the snippet below prevents mail from loading
+         Justification seems to work just fine without these changes.
+         We get into trouble in a case where lastSegment gets set to -1
+
+      if (textRun.mBreaks[lastSegment] > numCharsFit) {
+        // NOTE: this segment did not actually fit!
+        lastSegment--;
+      }
+      */
     }
 
+    /* O'Callahan XXX: This snippet together with the snippet above prevents mail from loading
+
+    if (lastSegment < 0) {        
+      // no segments fit
+      break;
+    } else */
     if (lastSegment == 0) {
       // Only one segment fit
       prevColumn = column;
       prevOffset = aTextData.mOffset;
-
     } else {
       // The previous state is for the next to last word
       prevColumn = textRun.mBreaks[lastSegment - 1];
       prevOffset = textRun.mSegments[lastSegment - 1].ContentLen();
+      // NOTE: The textRun data are relative to the last updated column and offset!
+      prevColumn = column + textRun.mBreaks[lastSegment - 1];
+      prevOffset = aTextData.mOffset + textRun.mSegments[lastSegment - 1].ContentLen();
     }
+
     aTextData.mX += width;
     column += numCharsFit;
     aTextData.mOffset += textRun.mSegments[lastSegment].ContentLen();
@@ -3775,7 +3884,8 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     aTextData.mX = mRect.width;
     if (mState & TEXT_TRIMMED_WS) {
       // Add back in the width of a space since it was trimmed away last time
-      aTextData.mX += aTs.mSpaceWidth;
+      // NOTE: Trailing whitespace includes word spacing!
+      aTextData.mX += aTs.mSpaceWidth + aTs.mWordSpacing;
     }
   }
   
@@ -4056,19 +4166,22 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   //   current frame width -or-
   //   we're not wrapping text and we're at the same column as before (this is
   //   an issue for preformatted tabbed text only)
+  // - AND we aren't justified (in which case the frame width has already been tweaked and can't be used)
   if ((eReflowReason_Resize == aReflowState.reason) &&
       (0 == (mState & NS_FRAME_IS_DIRTY))) {
 
     nscoord realWidth = mRect.width;
     if (mState & TEXT_TRIMMED_WS) {
-      realWidth += ts.mSpaceWidth;
+      // NOTE: Trailing whitespace includes word spacing!
+      realWidth += ts.mSpaceWidth + ts.mWordSpacing;    
     }
     if (!mNextInFlow &&
         (mState & TEXT_OPTIMIZE_RESIZE) &&
         !aMetrics.maxElementSize &&
         (lastTimeWeSkippedLeadingWS == skipWhitespace) &&
         ((wrapping && (maxWidth >= realWidth)) ||
-         (!wrapping && (prevColumn == column)))) {
+         (!wrapping && (prevColumn == column))) &&
+        !ts.mJustifying) {
       // We can skip measuring of text and use the value from our
       // previous reflow
       measureText = PR_FALSE;
@@ -4119,6 +4232,23 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   // Set content offset and length
   mContentOffset = startingOffset;
   mContentLength = textData.mOffset - startingOffset;
+
+  // Compute space and letter counts for justification, if required
+  if (ts.mJustifying) {
+    PRInt32 numSpaces;
+    PRInt32 textLength;
+
+    // This will include a space for trailing whitespace, if any is present.
+    // This is corrected for in nsLineLayout::TrimWhiteSpaceIn.
+
+    // This work could be done in MeasureText, but it's complex to do accurately
+    // there because of the need to repair counts when wrapped words are backed out.
+    // So I do it via PrepareUnicodeText ... a little slower perhaps, but a lot saner,
+    // and it localizes the counting logic to one place.
+    numSpaces = PrepareUnicodeText(tx, nsnull, nsnull, &textLength);
+    lineLayout.SetTextJustificationWeights(numSpaces, textLength - numSpaces);
+  }
+
 
 #ifdef MOZ_MATHML
   // Simple minded code to also return the bounding metrics if the caller wants it...
@@ -4226,6 +4356,11 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
             mStyleContext->GetStyleData(eStyleStruct_Font);
           aRC.SetFont(fontStyle->mFont);
           aRC.GetWidth(' ', dw);
+          // NOTE: Trailing whitespace includes word spacing!
+          PRIntn unit = textStyle->mWordSpacing.GetUnit();
+          if (eStyleUnit_Coord == unit) {
+            dw += textStyle->mWordSpacing.GetCoordValue();
+          }
         }
       }
     }
@@ -4406,6 +4541,8 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
     }
     else {
       rc.GetWidth(bp, wordLen, width);
+      // NOTE: Don't forget to add letter spacing for the word fragment!
+      width += wordLen*ts.mLetterSpacing;
     }
     rc.SetFont(oldfm);
 

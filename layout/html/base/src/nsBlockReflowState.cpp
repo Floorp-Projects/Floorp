@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Steve Clark <buster@netscape.com>
+ *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
@@ -60,6 +62,8 @@
 // clear floaters - we need to ignore the clear behavior.
 
 #ifdef DEBUG
+
+//#define NOISY_BLOCK_INVALIDATE      // DO NOT CHECK THIS IN TURNED ON!
 
 static PRBool gLamePaintMetrics;
 static PRBool gLameReflowMetrics;
@@ -451,27 +455,12 @@ public:
 
   nscoord mBottomEdge;
 
-  PRPackedBool mUnconstrainedWidth;
-  PRPackedBool mUnconstrainedHeight;
-  PRPackedBool mShrinkWrapWidth;
-  PRPackedBool mNeedResizeReflow;
-  PRPackedBool mIsInlineIncrReflow;
-
   // The content area to reflow child frames within. The x/y
   // coordinates are known to be mBorderPadding.left and
   // mBorderPadding.top. The width/height may be NS_UNCONSTRAINEDSIZE
   // if the container reflowing this frame has given the frame an
   // unconstrained area.
   nsSize mContentArea;
-
-  // Our wrapping behavior
-  PRPackedBool mNoWrap;
-
-  // Is this frame a root for top/bottom margin collapsing?
-  PRPackedBool mIsTopMarginRoot, mIsBottomMarginRoot;
-
-  // See ShouldApplyTopMargin
-  PRPackedBool mApplyTopMargin;
 
   //----------------------------------------
 
@@ -541,15 +530,48 @@ public:
   // being N^2.
   nsFloaterCacheFreeList mBelowCurrentLineFloaters;
 
-  PRPackedBool mComputeMaxElementSize;
-  PRPackedBool mComputeMaximumWidth;
-
   nsSize mMaxElementSize;
   nscoord mMaximumWidth;
 
   nscoord mMinLineHeight;
 
   PRInt32 mLineNumber;
+
+  // block reflow state flags
+#define BRS_UNCONSTRAINEDWIDTH    0x00000001
+#define BRS_UNCONSTRAINEDHEIGHT   0x00000002
+#define BRS_SHRINKWRAPWIDTH       0x00000004
+#define BRS_NEEDRESIZEREFLOW      0x00000008
+#define BRS_ISINLINEINCRREFLOW    0x00000010
+#define BRS_NOWRAP                0x00000020
+#define BRS_ISTOPMARGINROOT       0x00000040  // Is this frame a root for top/bottom margin collapsing?
+#define BRS_ISBOTTOMMARGINROOT    0x00000080
+#define BRS_APPLYTOPMARGIN        0x00000100  // See ShouldApplyTopMargin
+#define BRS_COMPUTEMAXELEMENTSIZE 0x00000200
+#define BRS_COMPUTEMAXWIDTH       0x00000400
+#define BRS_LASTFLAG              BRS_COMPUTEMAXWIDTH
+
+  PRInt16 mFlags;
+
+  void SetFlag(PRUint32 aFlag, PRBool aValue)
+  {
+    NS_ASSERTION(aFlag<=BRS_LASTFLAG, "bad flag");
+    NS_ASSERTION(aValue==PR_FALSE || aValue==PR_TRUE, "bad value");
+    if (aValue) { // set flag
+      mFlags |= aFlag;
+    }
+    else {        // unset flag
+      mFlags &= ~aFlag;
+    }
+  }
+
+  PRBool GetFlag(PRUint32 aFlag) const
+  {
+    NS_ASSERTION(aFlag<=BRS_LASTFLAG, "bad flag");
+    PRBool result = (mFlags & aFlag);
+    if (result) return PR_TRUE;
+    return PR_FALSE;
+  }
 };
 
 // XXX This is vile. Make it go away
@@ -574,29 +596,25 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
-    mNeedResizeReflow(PR_FALSE),
-    mIsInlineIncrReflow(PR_FALSE),
-    mIsTopMarginRoot(PR_FALSE),
-    mIsBottomMarginRoot(PR_FALSE),
-    mApplyTopMargin(PR_FALSE),
     mNextRCFrame(nsnull),
     mPrevBottomMargin(0),
-    mLineNumber(0)
+    mLineNumber(0),
+    mFlags(0)
 {
   const nsMargin& borderPadding = BorderPadding();
 
   if (aBlockMarginRoot) {
-    mIsTopMarginRoot = PR_TRUE;
-    mIsBottomMarginRoot = PR_TRUE;
+    SetFlag(BRS_ISTOPMARGINROOT, PR_TRUE);
+    SetFlag(BRS_ISBOTTOMMARGINROOT, PR_TRUE);
   }
   if (0 != aReflowState.mComputedBorderPadding.top) {
-    mIsTopMarginRoot = PR_TRUE;
+    SetFlag(BRS_ISTOPMARGINROOT, PR_TRUE);
   }
   if (0 != aReflowState.mComputedBorderPadding.bottom) {
-    mIsBottomMarginRoot = PR_TRUE;
+    SetFlag(BRS_ISBOTTOMMARGINROOT, PR_TRUE);
   }
-  if (mIsTopMarginRoot) {
-    mApplyTopMargin = PR_TRUE;
+  if (GetFlag(BRS_ISTOPMARGINROOT)) {
+    SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
   }
   
   mSpaceManager = aReflowState.mSpaceManager;
@@ -617,21 +635,19 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 
   // Compute content area width (the content area is inside the border
   // and padding)
-  mUnconstrainedWidth = PR_FALSE;
-  mShrinkWrapWidth = PR_FALSE;
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
     mContentArea.width = aReflowState.mComputedWidth;
   }
   else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
       mContentArea.width = NS_UNCONSTRAINEDSIZE;
-      mUnconstrainedWidth = PR_TRUE;
+      SetFlag(BRS_UNCONSTRAINEDWIDTH, PR_TRUE);
     }
     else if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxWidth) {
       // Choose a width based on the content (shrink wrap width) up
       // to the maximum width
       mContentArea.width = aReflowState.mComputedMaxWidth;
-      mShrinkWrapWidth = PR_TRUE;
+      SetFlag(BRS_SHRINKWRAPWIDTH, PR_TRUE);
     }
     else {
       nscoord lr = borderPadding.left + borderPadding.right;
@@ -646,7 +662,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   // specified style height then we may end up limiting our height if
   // the availableHeight is constrained (this situation occurs when we
   // are paginated).
-  mUnconstrainedHeight = PR_FALSE;
   if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) {
     // We are in a paginated situation. The bottom edge is just inside
     // the bottom border and padding. The content area height doesn't
@@ -657,7 +672,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   else {
     // When we are not in a paginated situation then we always use
     // an constrained height.
-    mUnconstrainedHeight = PR_TRUE;
+    SetFlag(BRS_UNCONSTRAINEDHEIGHT, PR_TRUE);
     mContentArea.height = mBottomEdge = NS_UNCONSTRAINEDSIZE;
   }
 
@@ -674,16 +689,17 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   switch (styleText->mWhiteSpace) {
   case NS_STYLE_WHITESPACE_PRE:
   case NS_STYLE_WHITESPACE_NOWRAP:
-    mNoWrap = PR_TRUE;
+    SetFlag(BRS_NOWRAP, PR_TRUE);
     break;
   default:
-    mNoWrap = PR_FALSE;
+    SetFlag(BRS_NOWRAP, PR_FALSE);
     break;
   }
 
-  mComputeMaxElementSize = nsnull != aMetrics.maxElementSize;
+  SetFlag(BRS_COMPUTEMAXELEMENTSIZE, (nsnull != aMetrics.maxElementSize));
   mMaxElementSize.SizeTo(0, 0);
-  mComputeMaximumWidth = NS_REFLOW_CALC_MAX_WIDTH == (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH);
+  SetFlag(BRS_COMPUTEMAXWIDTH, 
+          (NS_REFLOW_CALC_MAX_WIDTH == (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH)));
   mMaximumWidth = 0;
 
   mMinLineHeight = nsHTMLReflowState::CalcLineHeight(mPresContext,
@@ -729,8 +745,12 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
                                            const nsStyleDisplay* aDisplay,
                                            nsRect& aResult)
 {
+#ifdef REALLY_NOISY_REFLOW
+  printf("CBAS frame=%p has floater count %d\n", aFrame, mBand.GetFloaterCount());
+  mBand.List();
+#endif
   aResult.y = mY;
-  aResult.height = mUnconstrainedHeight
+  aResult.height = GetFlag(BRS_UNCONSTRAINEDHEIGHT)
     ? NS_UNCONSTRAINEDSIZE
     : mBottomEdge - mY;
 
@@ -749,7 +769,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
           // The child block will flow around the floater. Therefore
           // give it all of the available space.
           aResult.x = borderPadding.left;
-          aResult.width = mUnconstrainedWidth
+          aResult.width = GetFlag(BRS_UNCONSTRAINEDWIDTH)
             ? NS_UNCONSTRAINEDSIZE
             : mContentArea.width;
            break;
@@ -776,7 +796,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
             }
 
             // determine width
-            if (mUnconstrainedWidth) {
+            if (GetFlag(BRS_UNCONSTRAINEDWIDTH)) {
               aResult.width = NS_UNCONSTRAINEDSIZE;
             }
             else {
@@ -810,7 +830,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
       // doesn't matter therefore give the block element all of the
       // available space since it will flow around the floater itself.
       aResult.x = borderPadding.left;
-      aResult.width = mUnconstrainedWidth
+      aResult.width = GetFlag(BRS_UNCONSTRAINEDWIDTH)
         ? NS_UNCONSTRAINEDSIZE
         : mContentArea.width;
     }
@@ -957,12 +977,12 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
 #endif
     mKidXMost = xmost;
   }
-  if (mComputeMaxElementSize) {
+  if (GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
     UpdateMaxElementSize(nsSize(aLine->mMaxElementWidth, aLine->mBounds.height));
   }
 
   // If computing the maximum width, then update mMaximumWidth
-  if (mComputeMaximumWidth) {
+  if (GetFlag(BRS_COMPUTEMAXWIDTH)) {
     UpdateMaximumWidth(aLine->mMaximumWidth);
   }
 
@@ -1454,6 +1474,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics,
                            NS_BLOCK_MARGIN_ROOT & mState);
+  PRInt32 sizeofBRS = sizeof nsBlockReflowState;
 
   if (eReflowReason_Resize != aReflowState.reason) {
     RenumberLists(aPresContext);
@@ -1462,7 +1483,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsresult rv = NS_OK;
   PRBool isStyleChange = PR_FALSE;
-  state.mIsInlineIncrReflow = PR_FALSE;
+  state.SetFlag(BRS_ISINLINEINCRREFLOW, PR_FALSE);
   nsIFrame* target;
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
@@ -1535,7 +1556,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
           // reflow the line containing the target of the incr. reflow
           // first mark the line dirty and set up the state object
           rv = PrepareChildIncrementalReflow(state);
-          state.mIsInlineIncrReflow = PR_TRUE;
+          state.SetFlag(BRS_ISINLINEINCRREFLOW, PR_TRUE);
           state.mPrevLine = prevLine;
           state.mCurrentLine = line;
           state.mNextRCFrame = state.mNextRCFrame;
@@ -1681,6 +1702,10 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     if (isStyleChange) {
       // Lots of things could have changed so damage our entire
       // bounds
+#ifdef NOISY_BLOCK_INVALIDATE
+      printf("%p invalidate 1 (%d, %d, %d, %d)\n",
+             this, 0, 0, mRect.width, mRect.height);
+#endif
       Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
 
     } else {
@@ -1707,6 +1732,10 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
           damageRect.y = 0;
           damageRect.height = mRect.height;
         }
+#ifdef NOISY_BLOCK_INVALIDATE
+        printf("%p invalidate 2 (%d, %d, %d, %d)\n",
+               this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
+#endif
         Invalidate(aPresContext, damageRect);
       }
   
@@ -1730,6 +1759,10 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
           damageRect.y = mRect.height - border.bottom;
           damageRect.height = border.bottom;
         }
+#ifdef NOISY_BLOCK_INVALIDATE
+        printf("%p invalidate 3 (%d, %d, %d, %d)\n",
+               this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
+#endif
         Invalidate(aPresContext, damageRect);
       }
     }
@@ -1868,7 +1901,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
   printf(": mY=%d mIsBottomMarginRoot=%s mPrevBottomMargin=%d bp=%d,%d\n",
-         aState.mY, aState.mIsBottomMarginRoot ? "yes" : "no",
+         aState.mY, aState.GetFlag(BRS_ISBOTTOMMARGINROOT) ? "yes" : "no",
          aState.mPrevBottomMargin,
          borderPadding.top, borderPadding.bottom);
 #endif
@@ -1946,7 +1979,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // contents or we fluff out to the maximum block width. Note:
       // We always shrink wrap when given an unconstrained width.
       if ((0 == (NS_BLOCK_SHRINK_WRAP & mState)) &&
-          !aState.mUnconstrainedWidth && !aState.mShrinkWrapWidth &&
+          !aState.GetFlag(BRS_UNCONSTRAINEDWIDTH) && !aState.GetFlag(BRS_SHRINKWRAPWIDTH) &&
           !compact) {
         // Set our width to the max width if we aren't already that
         // wide. Note that the max-width has nothing to do with our
@@ -1956,9 +1989,9 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       }
 
       // See if we should compute our max element size
-      if (aState.mComputeMaxElementSize) {
+      if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
         // Adjust the computedWidth
-        if (aState.mNoWrap) {
+        if (aState.GetFlag(BRS_NOWRAP)) {
           // When no-wrap is true the max-element-size.width is the
           // width of the widest line plus the right border. Note that
           // aState.mKidXMost already has the left border factored in
@@ -1996,7 +2029,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // need to do horizontal alignment of the inline lines and make sure
       // blocks are correctly sized and positioned. Any lines that need
       // final adjustment will have been marked as dirty
-      if (aState.mShrinkWrapWidth && aState.mNeedResizeReflow) {
+      if (aState.GetFlag(BRS_SHRINKWRAPWIDTH) && aState.GetFlag(BRS_NEEDRESIZEREFLOW)) {
         // If the parent reflow state is also shrink wrap width, then
         // we don't need to do this, because it will reflow us after it
         // calculates the final width
@@ -2025,7 +2058,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       }
     }
 
-    if (aState.mShrinkWrapWidth) {
+    if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
       PRBool  parentIsShrinkWrapWidth = PR_FALSE;
       if (aReflowState.parentReflowState) {
         if (NS_SHRINKWRAPWIDTH == aReflowState.parentReflowState->mComputedWidth) {
@@ -2047,7 +2080,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // Don't carry out a bottom margin when our height is fixed
       // unless the bottom of the last line adjoins the bottom of our
       // content area.
-      if (!aState.mIsBottomMarginRoot) {
+      if (!aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
         if (aState.mY + aState.mPrevBottomMargin != aMetrics.height) {
           aState.mPrevBottomMargin = 0;
         }
@@ -2057,7 +2090,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       nscoord autoHeight = aState.mY;
 
       // Shrink wrap our height around our contents.
-      if (aState.mIsBottomMarginRoot) {
+      if (aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
         // When we are a bottom-margin root make sure that our last
         // childs bottom margin is fully applied.
         // XXX check for a fit
@@ -2082,7 +2115,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       }
       aMetrics.height = autoHeight;
 
-      if (aState.mComputeMaxElementSize) {
+      if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
         maxHeight = aState.mMaxElementSize.height +
           borderPadding.top + borderPadding.bottom;
       }
@@ -2090,7 +2123,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
     aMetrics.ascent = aMetrics.height;
     aMetrics.descent = 0;
-    if (aState.mComputeMaxElementSize) {
+    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
       // Store away the final value
       aMetrics.maxElementSize->width = maxWidth;
       aMetrics.maxElementSize->height = maxHeight;
@@ -2098,14 +2131,14 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
     // Return bottom margin information
     aMetrics.mCarriedOutBottomMargin =
-      aState.mIsBottomMarginRoot ? 0 : aState.mPrevBottomMargin;
+      aState.GetFlag(BRS_ISBOTTOMMARGINROOT) ? 0 : aState.mPrevBottomMargin;
 
 #ifdef DEBUG
     if (CRAZY_WIDTH(aMetrics.width) || CRAZY_HEIGHT(aMetrics.height)) {
       ListTag(stdout);
       printf(": WARNING: desired:%d,%d\n", aMetrics.width, aMetrics.height);
     }
-    if (aState.mComputeMaxElementSize &&
+    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE) &&
         ((maxWidth > aMetrics.width) || (maxHeight > aMetrics.height))) {
       ListTag(stdout);
       printf(": WARNING: max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
@@ -2115,7 +2148,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     }
 #endif
 #ifdef NOISY_MAX_ELEMENT_SIZE
-    if (aState.mComputeMaxElementSize) {
+    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
       IndentBy(stdout, GetDepth());
       if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
         printf("PASS1 ");
@@ -2130,7 +2163,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 
   // If we're requested to update our maximum width, then compute it
-  if (aState.mComputeMaximumWidth) {
+  if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
     // We need to add in for the right border/padding
     aMetrics.mMaximumWidth = aState.mMaximumWidth + borderPadding.right;
   }
@@ -2337,8 +2370,13 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
   // See if we can try and avoid marking all the lines as dirty
   PRBool  tryAndSkipLines = PR_FALSE;
 
-  // See if this is this a constrained resize reflow
-  if ((aState.mReflowState.reason == eReflowReason_Resize) &&
+  // we need to calculate if any part of then block itself 
+  // is impacted by a floater (bug 19579)
+  aState.GetAvailableSpace();
+
+  // See if this is this a constrained resize reflow that is not impacted by floaters
+  if ((PR_FALSE==aState.IsImpactedByFloater()) &&
+      (aState.mReflowState.reason == eReflowReason_Resize) &&
       (NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableWidth)) {
 
     // If the text is left-aligned, then we try and avoid reflowing the lines
@@ -2389,7 +2427,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
     }
 #endif
     
-    PRBool notWrapping = aState.mNoWrap;
+    PRBool notWrapping = aState.GetFlag(BRS_NOWRAP);
     while (nsnull != line) {
 
       if (line->IsBlock()) {
@@ -2402,8 +2440,6 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       printf("PrepareResizeReflow thinks line %p is %simpacted by floaters\n", 
         line, line->IsImpactedByFloater() ? "" : "not ");
 #endif
-
-
         if (notWrapping) {
           // When no-wrap is set then the only line-breaking that
           // occurs for inline lines is triggered by BR elements or by
@@ -2430,7 +2466,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
           printf("skipped: line=%p next=%p %s %s %s%s%s breakType=%d xmost=%d\n",
                  line, line->mNext,
                  line->IsBlock() ? "block" : "inline",
-                 aState.mNoWrap ? "no-wrap" : "wrapping",
+                 aState.GetFlag(BRS_NOWRAP) ? "no-wrap" : "wrapping",
                  line->HasBreak() ? "has-break " : "",
                  line->HasFloaters() ? "has-floaters " : "",
                  line->IsImpactedByFloater() ? "impacted " : "",
@@ -2628,7 +2664,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       ListTag(stdout);
       printf(": incrementally reflowing dirty lines: type=%s(%d) isInline=%s",
              kReflowCommandType[type], type,
-             aState.mIsInlineIncrReflow ? "true" : "false");
+             aState.GetFlag(BRS_ISINLINEINCRREFLOW) ? "true" : "false");
     }
     else {
       IndentBy(stdout, gNoiseIndent);
@@ -2651,7 +2687,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   // Reflow the lines that are already ours
   aState.mPrevLine = nsnull;
   nsLineBox* line = mLines;
-  if (aState.mIsInlineIncrReflow && aState.mNextRCFrame)
+  if (aState.GetFlag(BRS_ISINLINEINCRREFLOW) && aState.mNextRCFrame)
   {
     const nsLineBox* incrTargetLine = aState.mCurrentLine;
     aState.mCurrentLine = line;
@@ -2662,6 +2698,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       RecoverStateFrom(aState, line, deltaY, incrementalReflow ?
                        &damageRect : 0);
       if (incrementalReflow && !damageRect.IsEmpty()) {
+#ifdef NOISY_BLOCK_INVALIDATE
+        printf("%p invalidate 4 (%d, %d, %d, %d)\n",
+               this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
+#endif
         Invalidate(aState.mPresContext, damageRect);
       }
       aState.mPrevLine = line;
@@ -2689,7 +2729,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // If we're supposed to update our maximum width, then we'll also need to
     // reflow this line if it's line wrapped and any of the continuing lines
     // are dirty
-    if (line->IsDirty() || (aState.mComputeMaximumWidth && ::WrappedLinesAreDirty(line))) {
+    if (line->IsDirty() || (aState.GetFlag(BRS_COMPUTEMAXWIDTH) && ::WrappedLinesAreDirty(line))) {
       // Compute the dirty lines "before" YMost, after factoring in
       // the running deltaY value - the running value is implicit in
       // aState.mY.
@@ -2729,6 +2769,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       RecoverStateFrom(aState, line, deltaY, incrementalReflow ?
                        &damageRect : 0);
       if (incrementalReflow && !damageRect.IsEmpty()) {
+#ifdef NOISY_BLOCK_INVALIDATE
+        printf("%p invalidate 5 (%d, %d, %d, %d)\n",
+               this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
+#endif
         Invalidate(aState.mPresContext, damageRect);
       }
     }
@@ -2902,6 +2946,10 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         // XXX We need to improve on this...
         nsRect  dirtyRect;
         dirtyRect.UnionRect(oldCombinedArea, lineCombinedArea);
+#ifdef NOISY_BLOCK_INVALIDATE
+        printf("%p invalidate 6 (%d, %d, %d, %d)\n",
+               this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
+#endif
         Invalidate(aState.mPresContext, dirtyRect);
 
       } else {
@@ -2918,6 +2966,10 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                             dirtyRect.x;
           dirtyRect.height = PR_MAX(oldCombinedArea.height,
                                     lineCombinedArea.height);
+#ifdef NOISY_BLOCK_INVALIDATE
+          printf("%p invalidate 7 (%d, %d, %d, %d)\n",
+                 this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
+#endif
           Invalidate(aState.mPresContext, dirtyRect);
         }
         if (oldCombinedArea.height != lineCombinedArea.height) {
@@ -2933,6 +2985,10 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
           dirtyRect.height = PR_MAX(oldCombinedArea.YMost(),
                                     lineCombinedArea.YMost()) -
                              dirtyRect.y;
+#ifdef NOISY_BLOCK_INVALIDATE
+          printf("%p invalidate 8 (%d, %d, %d, %d)\n",
+                 this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
+#endif
           Invalidate(aState.mPresContext, dirtyRect);
         }
       }
@@ -2951,21 +3007,21 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // we'll either need to recover the floater state that applies to the
     // unconstrained reflow or keep it around in a separate space manager...
     PRBool  isBeginningLine = !aState.mPrevLine || !aState.mPrevLine->IsLineWrapped();
-    if (aState.mComputeMaximumWidth && isBeginningLine) {
+    if (aState.GetFlag(BRS_COMPUTEMAXWIDTH) && isBeginningLine) {
       nscoord oldY = aState.mY;
       nscoord oldPrevBottomMargin = aState.mPrevBottomMargin;
-      PRBool  oldUnconstrainedWidth = aState.mUnconstrainedWidth;
+      PRBool  oldUnconstrainedWidth = aState.GetFlag(BRS_UNCONSTRAINEDWIDTH);
 
       // First reflow the line with an unconstrained width. When doing this
       // we need to set the block reflow state's "mUnconstrainedWidth" variable
       // to PR_TRUE so if we encounter a placeholder and then reflow its
       // associated floater we don't end up resetting the line's right edge and
       // have it think the width is unconstrained...
-      aState.mUnconstrainedWidth = PR_TRUE;
+      aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, PR_TRUE);
       ReflowInlineFrames(aState, aLine, aKeepReflowGoing, PR_TRUE);
       aState.mY = oldY;
       aState.mPrevBottomMargin = oldPrevBottomMargin;
-      aState.mUnconstrainedWidth = oldUnconstrainedWidth;
+      aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, oldUnconstrainedWidth);
 
       // Update the line's maximum width
       aLine->mMaximumWidth = aLine->mBounds.XMost();
@@ -2980,14 +3036,14 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       // Note: we need to reset both member variables, because the inline
       // code examines mComputeMaxElementSize and if there is a placeholder
       // on this line the code to reflow the floater looks at both...
-      nscoord oldComputeMaxElementSize = aState.mComputeMaxElementSize;
-      nscoord oldComputeMaximumWidth = aState.mComputeMaximumWidth;
+      nscoord oldComputeMaxElementSize = aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE);
+      nscoord oldComputeMaximumWidth = aState.GetFlag(BRS_COMPUTEMAXWIDTH);
         
-      aState.mComputeMaxElementSize = PR_FALSE;
-      aState.mComputeMaximumWidth = PR_FALSE;
+      aState.SetFlag(BRS_COMPUTEMAXELEMENTSIZE, PR_FALSE);
+      aState.SetFlag(BRS_COMPUTEMAXWIDTH, PR_FALSE);
       rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
-      aState.mComputeMaxElementSize = oldComputeMaxElementSize;
-      aState.mComputeMaximumWidth = oldComputeMaximumWidth;
+      aState.SetFlag(BRS_COMPUTEMAXELEMENTSIZE, oldComputeMaxElementSize);
+      aState.SetFlag(BRS_COMPUTEMAXWIDTH, oldComputeMaximumWidth);
 
     } else {
       rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
@@ -3001,6 +3057,10 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
 
       nsRect dirtyRect;
       dirtyRect.UnionRect(oldCombinedArea, combinedArea);
+#ifdef NOISY_BLOCK_INVALIDATE
+      printf("%p invalidate 9 (%d, %d, %d, %d)\n",
+             this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
+#endif
       Invalidate(aState.mPresContext, dirtyRect);
     }
   }
@@ -3368,7 +3428,7 @@ PRBool
 nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
                                    nsLineBox* aLine)
 {
-  if (aState.mApplyTopMargin) {
+  if (aState.GetFlag(BRS_APPLYTOPMARGIN)) {
     // Apply short-circuit check to avoid searching the line list
     return PR_TRUE;
   }
@@ -3377,7 +3437,7 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
     // If we aren't at the top Y coordinate then something of non-zero
     // height must have been placed. Therefore the childs top-margin
     // applies.
-    aState.mApplyTopMargin = PR_TRUE;
+    aState.SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
     return PR_TRUE;
   }
 
@@ -3387,13 +3447,13 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
     if (line->IsBlock()) {
       // A line which preceeds aLine contains a block; therefore the
       // top margin applies.
-      aState.mApplyTopMargin = PR_TRUE;
+      aState.SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
       return PR_TRUE;
     }
     else if (line->HasFloaters()) {
       // A line which preceeds aLine is not empty therefore the top
       // margin applies.
-      aState.mApplyTopMargin = PR_TRUE;
+      aState.SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
       return PR_TRUE;
     }
     line = line->mNext;
@@ -3486,8 +3546,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   frame->GetStyleData(eStyleStruct_Display,
                       (const nsStyleStruct*&) display);
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
-                           aState.mComputeMaxElementSize,
-                           aState.mComputeMaximumWidth);
+                           aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE),
+                           aState.GetFlag(BRS_COMPUTEMAXWIDTH));
   brc.SetNextRCFrame(aState.mNextRCFrame);
 
   // See if we should apply the top margin. If the block frame being
@@ -3611,14 +3671,14 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                        &collapsedBottomMargin,
                                        aLine->mBounds, combinedArea);
 
-    if (aState.mShrinkWrapWidth) {
+    if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
       // Mark the line as block so once we known the final shrink wrap width
       // we can reflow the block to the correct size
       // XXX We don't always need to do this...
       aLine->MarkDirty();
-      aState.mNeedResizeReflow = PR_TRUE;
+      aState.SetFlag(BRS_NEEDRESIZEREFLOW, PR_TRUE);
     }
-    if (aState.mUnconstrainedWidth || aState.mShrinkWrapWidth) {
+    if (aState.GetFlag(BRS_UNCONSTRAINEDWIDTH) || aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
       // Add the right margin to the line's bounnds. That way it will be taken into
       // account when we compute our shrink wrap size
       nscoord marginRight = brc.GetMargin().right;
@@ -3709,7 +3769,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
       // Post-process the "line"
       nsSize maxElementSize(0, 0);
-      if (aState.mComputeMaxElementSize) {
+      if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
         maxElementSize = brc.GetMaxElementSize();
         if (aState.IsImpactedByFloater() &&
             (NS_FRAME_SPLITTABLE_NON_RECTANGULAR != splitType)) {
@@ -3721,7 +3781,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       }
       // If we asked the block to update its maximum width, then record the
       // updated value in the line, and update the current maximum width
-      if (aState.mComputeMaximumWidth) {
+      if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
         aLine->mMaximumWidth = brc.GetMaximumWidth();
         aState.UpdateMaximumWidth(aLine->mMaximumWidth);
 
@@ -3849,7 +3909,7 @@ nsBlockFrame::DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
   nsLineLayout* ll = new nsLineLayout(aState.mPresContext,
                                       aState.mReflowState.mSpaceManager,
                                       &aState.mReflowState,
-                                      aState.mComputeMaxElementSize);
+                                      aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE));
   if (!ll) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -3872,7 +3932,7 @@ nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
   nsLineLayout lineLayout(aState.mPresContext,
                           aState.mReflowState.mSpaceManager,
                           &aState.mReflowState,
-                          aState.mComputeMaxElementSize);
+                          aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE));
   lineLayout.Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
   lineLayout.SetReflowTextRuns(mTextRuns);
   nsresult rv = DoReflowInlineFrames(aState, lineLayout, aLine,
@@ -3910,7 +3970,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   nscoord x = aState.mAvailSpaceRect.x + borderPadding.left;
   nscoord availWidth = aState.mAvailSpaceRect.width;
   nscoord availHeight;
-  if (aState.mUnconstrainedHeight) {
+  if (aState.GetFlag(BRS_UNCONSTRAINEDHEIGHT)) {
     availHeight = NS_UNCONSTRAINEDSIZE;
   }
   else {
@@ -4359,7 +4419,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   nsSize maxElementSize;
   aLineLayout.VerticalAlignFrames(aLine, maxElementSize);
   // See if we're shrink wrapping the width
-  if (aState.mShrinkWrapWidth) {
+  if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
     // When determining the line's width we also need to include any
     // right floaters that impact us. This represents the shrink wrap
     // width of the line
@@ -4388,25 +4448,20 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // Only block frames horizontally align their children because
   // inline frames "shrink-wrap" around their children (therefore
   // there is no extra horizontal space).
-#if XXX_fix_me
-  PRBool allowJustify = PR_TRUE;
-  if (NS_STYLE_TEXT_ALIGN_JUSTIFY == aState.mStyleText->mTextAlign) {
-    allowJustify = ShouldJustifyLine(aState, aLine);
-  }
-#else
-  PRBool allowJustify = PR_FALSE;
-#endif
-
-  PRBool successful;
-  nsRect combinedArea;
-  successful = aLineLayout.HorizontalAlignFrames(aLine->mBounds, allowJustify,
-                                                 aState.mShrinkWrapWidth);
+  const nsStyleText* styleText = (const nsStyleText*)
+    mStyleContext->GetStyleData(eStyleStruct_Text);
+  PRBool allowJustify = NS_STYLE_TEXT_ALIGN_JUSTIFY == styleText->mTextAlign
+    && !aLineLayout.GetLineEndsInBR() && ShouldJustifyLine(aState, aLine);
+  PRBool successful = aLineLayout.HorizontalAlignFrames(aLine->mBounds, allowJustify,
+                                                 aState.GetFlag(BRS_SHRINKWRAPWIDTH));
   if (!successful) {
     // Mark the line dirty and then later once we've determined the width
     // we can do the horizontal alignment
     aLine->MarkDirty();
-    aState.mNeedResizeReflow = PR_TRUE;
+    aState.SetFlag(BRS_NEEDRESIZEREFLOW, PR_TRUE);
   }
+
+  nsRect combinedArea;
   aLineLayout.RelativePositionFrames(combinedArea);
   aLine->SetCombinedArea(combinedArea);
   if (addedBullet) {
@@ -4454,7 +4509,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
 
   aState.mY = newY;
-  if (aState.mComputeMaxElementSize) {
+  if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
 #ifdef NOISY_MAX_ELEMENT_SIZE
     IndentBy(stdout, GetDepth());
     if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
@@ -4478,7 +4533,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // we don't want updated...
   if (aUpdateMaximumWidth) {
     // However, we do need to update the max-element-size if requested
-    if (aState.mComputeMaxElementSize) {
+    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
       aState.UpdateMaxElementSize(maxElementSize);
       // We also cache the max element width in the line. This is needed for
       // incremental reflow
@@ -4519,7 +4574,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     CombineRects(aState.mFloaterCombinedArea, lineCombinedArea);
 
     if (aState.mHaveRightFloaters &&
-        (aState.mUnconstrainedWidth || aState.mShrinkWrapWidth)) {
+        (aState.GetFlag(BRS_UNCONSTRAINEDWIDTH) || aState.GetFlag(BRS_SHRINKWRAPWIDTH))) {
       // We are reflowing in an unconstrained situation or shrink wrapping and
       // have some right floaters. They were placed at the infinite right edge
       // which will cause the combined area to be unusable.
@@ -4540,11 +4595,11 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       aState.mRightFloaterCombinedArea.x = aLine->mBounds.XMost();
       CombineRects(aState.mRightFloaterCombinedArea, lineCombinedArea);
 
-      if (aState.mShrinkWrapWidth) {
+      if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
         // Mark the line dirty so we come back and re-place the floater once
         // the shrink wrap width is determined
         aLine->MarkDirty();
-        aState.mNeedResizeReflow = PR_TRUE;
+        aState.SetFlag(BRS_NEEDRESIZEREFLOW, PR_TRUE);
       }
     }
     aLine->SetCombinedArea(lineCombinedArea);
@@ -4629,7 +4684,7 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   }
 
   // Update max-element-size
-  if (aState.mComputeMaxElementSize) {
+  if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
     aState.UpdateMaxElementSize(aMaxElementSize);
     // We also cache the max element width in the line. This is needed for
     // incremental reflow
@@ -4639,7 +4694,7 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   // If this is an unconstrained reflow, then cache the line width in the
   // line. We'll need this during incremental reflow if we're asked to
   // calculate the maximum width
-  if (aState.mUnconstrainedWidth) {
+  if (aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)) {
     aLine->mMaximumWidth = aLine->mBounds.XMost();
   }
 
@@ -4653,7 +4708,7 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
 #endif
   // If we're shrink wrapping our width and the line was wrapped,
   // then make sure we take up all of the available width
-  if (aState.mShrinkWrapWidth && aLine->IsLineWrapped()) {
+  if (aState.GetFlag(BRS_SHRINKWRAPWIDTH) && aLine->IsLineWrapped()) {
     aState.mKidXMost = aState.BorderPadding().left + aState.mContentArea.width;
 
   }
@@ -5187,6 +5242,10 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         // cases...
         nsRect lineCombinedArea;
         line->GetCombinedArea(&lineCombinedArea);
+#ifdef NOISY_BLOCK_INVALIDATE
+        printf("%p invalidate 10 (%d, %d, %d, %d)\n",
+               this, lineCombinedArea.x, lineCombinedArea.y, lineCombinedArea.width, lineCombinedArea.height);
+#endif
         Invalidate(aPresContext, lineCombinedArea);
         line->Destroy(presShell);
         line = next;
@@ -5282,8 +5341,8 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   // Setup block reflow state to reflow the floater
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
-                           aState.mComputeMaxElementSize,
-                           aState.mComputeMaximumWidth);
+                           aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE),
+                           aState.GetFlag(BRS_COMPUTEMAXWIDTH));
   brc.SetNextRCFrame(aState.mNextRCFrame);
 
   // Reflow the floater
@@ -5324,7 +5383,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   floater->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // If we computed it, then stash away the max-element-size for later
-  if (aState.mComputeMaxElementSize) {
+  if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
     aState.StoreMaxElementSize(floater, brc.GetMaxElementSize());
   }
 
@@ -5389,7 +5448,7 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
     // Pass on updated available space to the current inline reflow engine
     GetAvailableSpace();
     aLineLayout.UpdateBand(mAvailSpaceRect.x + BorderPadding().left, mY,
-                           mUnconstrainedWidth ? NS_UNCONSTRAINEDSIZE : mAvailSpaceRect.width,
+                           GetFlag(BRS_UNCONSTRAINEDWIDTH) ? NS_UNCONSTRAINEDSIZE : mAvailSpaceRect.width,
                            mAvailSpaceRect.height,
                            isLeftFloater,
                            aPlaceholder->GetOutOfFlowFrame());
@@ -5615,7 +5674,12 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   }
   else {
     isLeftFloater = PR_FALSE;
-    region.x = mAvailSpaceRect.XMost() - region.width;
+    if (NS_UNCONSTRAINEDSIZE != mAvailSpaceRect.XMost())
+      region.x = mAvailSpaceRect.XMost() - region.width;
+    else {
+      okToAddRectRegion = PR_FALSE;
+      region.x = mAvailSpaceRect.x;
+    }
   }
   *aIsLeftFloater = isLeftFloater;
   const nsMargin& borderPadding = BorderPadding();
@@ -5682,7 +5746,8 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   nsRect combinedArea = aFloaterCache->mCombinedArea;
   combinedArea.x += x;
   combinedArea.y += y;
-  if (!isLeftFloater && (mUnconstrainedWidth || mShrinkWrapWidth)) {
+  if (!isLeftFloater && 
+      (GetFlag(BRS_UNCONSTRAINEDWIDTH) || GetFlag(BRS_SHRINKWRAPWIDTH))) {
     // When we are placing a right floater in an unconstrained situation or
     // when shrink wrapping, we don't apply it to the floater combined area
     // immediately. Otherwise we end up with an infinitely wide combined

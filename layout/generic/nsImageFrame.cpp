@@ -879,6 +879,13 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
       }
     }
   }
+  else if (nsHTMLAtoms::width == aAttribute || nsHTMLAtoms::height == aAttribute)
+  { // XXX: could check for new width == old width, and make that a no-op
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    mState |= NS_FRAME_IS_DIRTY;
+	  mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
+  }
 
   return NS_OK;
 }
