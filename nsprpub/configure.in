@@ -1108,7 +1108,6 @@ case "$target" in
 	    DLL_SUFFIX=dll
         
         CFLAGS="$CFLAGS -W3 -nologo -GF -Gy"
-        _DEBUG_FLAGS=
 
         if test -n "$MOZ_DEBUG"; then
             AC_DEFINE(_DEBUG)
@@ -1118,11 +1117,11 @@ case "$target" in
 
         if test -n "$MOZ_OPTIMIZE"; then
             CFLAGS="$CFLAGS -MD"
-            OPTIMIZER=-O2
+            _OPTIMIZE_FLAGS=-O2
             DLLFLAGS='-OUT:"$@"'
 
             if test -n "$MOZ_PROFILE"; then
-                OPTIMIZER="$OPTIMIZER -Z7"
+                _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Z7"
                 DLLFLAGS="$DLLFLAGS -DEBUG -DEBUGTYPE:CV"
                 LDFLAGS="$LDFLAGS -DEBUG -DEBUGTYPE:CV"
             fi
@@ -1132,7 +1131,7 @@ case "$target" in
             else
                 CFLAGS="$CFLAGS -MD"
             fi
-            OPTIMIZER="-Od -Z7"
+            _DEBUG_FLAGS="-Od -Z7"
             DLLFLAGS='-DEBUG -DEBUGTYPE:CV -OUT:"$@"'
             if test -n "$GLOWCODE"; then
                 DLLFLAGS='-DEBUG -DEBUGTYPE:both -INCLUDE:_GlowCode -OUT:"$@"'
@@ -2110,13 +2109,11 @@ if test -n "$_SAVE_OPTIMIZE_FLAGS"; then
 fi
 
 if test -n "$MOZ_OPTIMIZE"; then
-    CFLAGS="$CFLAGS $_OPTIMIZE_FLAGS"
-    CXXFLAGS="$CXXFLAGS $_OPTIMIZE_FLAGS"
+    OPTIMIZER=$_OPTIMIZE_FLAGS
 fi
 
 if test -n "$MOZ_DEBUG"; then
-    CFLAGS="$CFLAGS $_DEBUG_FLAGS"
-    CXXFLAGS="$CXXFLAGS $_DEBUG_FLAGS"
+    OPTIMIZER=$_DEBUG_FLAGS
 fi
 
 if test -n "$MOZ_OPTIMIZE"; then
