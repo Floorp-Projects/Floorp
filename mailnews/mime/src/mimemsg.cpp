@@ -16,16 +16,17 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
+#include "nsIMimeEmitter.h"
 #include "mimerosetta.h"
 #include "mimemsg.h"
 #include "mimemoz2.h"
-#include "nsIMimeEmitter.h"
 #include "prmem.h"
 #include "prio.h"
 #include "plstr.h"
-#include "nsCRT.h"
 #include "msgCore.h"
 #include "prlog.h"
+#include "nsCRT.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMessage, MimeMessageClass, mimeMessageClass,

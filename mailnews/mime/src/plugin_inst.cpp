@@ -15,13 +15,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "plugin_inst.h"
 #include <stdio.h>
 #include <string.h>
 #include "plstr.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "mimemoz2.h"
-#include "plugin_inst.h"
 #include "nsIMimeEmitter.h"
 #include "nsRepository.h"
 
@@ -213,20 +213,20 @@ MimePluginInstance::Initialize(nsINetOStream* stream, const char *stream_name)
   {
     res = nsRepository::CreateInstance(kMimeXMLEmitterCID, 
                                        NULL, nsIMimeEmitter::GetIID(), 
-                                       (void **) &mEmitter); 
+                                       (void **) getter_AddRefs(mEmitter)); 
   }
   else if (PL_strcmp(mOutputFormat, "text/html") == 0)
   {
     res = nsRepository::CreateInstance(kMimeHTMLEmitterCID, 
                                        NULL, nsIMimeEmitter::GetIID(), 
-                                       (void **) &mEmitter); 
+                                       (void **) getter_AddRefs(mEmitter)); 
   }
   else
   {
     // Need to create a raw emitter here!
     res = nsRepository::CreateInstance(kMimeRawEmitterCID, 
                                         NULL, nsIMimeEmitter::GetIID(), 
-                                        (void **) &mEmitter); 
+                                        (void **) getter_AddRefs(mEmitter)); 
   }
 
   if ((NS_OK != res) || (!mEmitter))
@@ -238,7 +238,6 @@ MimePluginInstance::Initialize(nsINetOStream* stream, const char *stream_name)
   mBridgeStream = mime_bridge_create_stream(this, mEmitter, stream_name, format_out);
   if (!mBridgeStream)
   {  
-    mEmitter->Release();
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -312,7 +311,6 @@ nsresult MimePluginInstance::InternalCleanup(void)
   if (mEmitter)
   {
     mEmitter->Complete();
-    mEmitter->Release();
   }
 
   PR_FREEIF(mOutputFormat);

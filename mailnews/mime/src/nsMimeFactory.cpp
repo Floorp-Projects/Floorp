@@ -41,9 +41,9 @@ static   NS_DEFINE_CID(kCMimeMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCE
 static   NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 // These are necessary for the new stream converter/plugin interface...
-static   NS_DEFINE_IID(kINetPluginIID,      NS_INET_PLUGIN_IID);
 static   NS_DEFINE_CID(kINetPluginCID,      NS_INET_PLUGIN_CID);
 static   NS_DEFINE_CID(kINetPluginMIMECID,  NS_INET_PLUGIN_MIME_CID);
+static   NS_DEFINE_IID(kINetPluginIID,      NS_INET_PLUGIN_IID);
 
 #include "nsMsgHeaderParser.h"
 static NS_DEFINE_CID(kCMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -256,6 +256,11 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
+  // The interface for URL utils
+  rv = compMgr->RegisterComponent(kCIMimeURLUtilsCID, NULL, NULL, path, 
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -285,6 +290,8 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 	rv = compMgr->UnregisterComponent(kINetPluginMIMECID, path);
   if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMsgHeaderParserCID, path);
+  if (NS_FAILED(rv)) goto done;
+  rv = compMgr->UnregisterComponent(kCIMimeURLUtilsCID, path);
   if (NS_FAILED(rv)) goto done;
 
   done:

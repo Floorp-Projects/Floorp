@@ -17,7 +17,7 @@
  */
 #include "nsIComponentManager.h" 
 #include "nsMimeObjectClassAccess.h"
-
+#include "nsCOMPtr.h"
 static NS_DEFINE_CID(kMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCESS_CID); 
 
 /*
@@ -27,17 +27,14 @@ static NS_DEFINE_CID(kMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCESS_CID)
 extern "C" void *
 COM_GetmimeInlineTextClass(void)
 {
-  nsMimeObjectClassAccess	*objAccess;
-  void                    *ptr = NULL;
+  nsCOMPtr<nsIMimeObjectClassAccess>  objAccess;
+  void                                *ptr = NULL;
 
-  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
-                                      (void **) &objAccess); 
-  if (res == NS_OK && objAccess) 
-  { 
+  nsresult res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
+                                                    NULL, nsIMimeObjectClassAccess::GetIID(), 
+                                                    (void **) getter_AddRefs(objAccess)); 
+  if (NS_SUCCEEDED(res) && objAccess)
     objAccess->GetmimeInlineTextClass(&ptr);
-    objAccess->Release(); 
-  } 
 
   return ptr;
 }
@@ -45,17 +42,14 @@ COM_GetmimeInlineTextClass(void)
 extern "C" void *
 COM_GetmimeLeafClass(void)
 {
-  nsMimeObjectClassAccess	*objAccess;
-  void                    *ptr = NULL;
+  nsCOMPtr<nsIMimeObjectClassAccess>  objAccess;
+  void                                *ptr = NULL;
 
-  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
-                                      (void **) &objAccess); 
-  if (res == NS_OK && objAccess) 
-  { 
+  nsresult res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
+                                                    NULL, nsIMimeObjectClassAccess::GetIID(), 
+                                                    (void **) getter_AddRefs(objAccess)); 
+  if (NS_SUCCEEDED(res) && objAccess)
     objAccess->GetmimeLeafClass(&ptr);
-    objAccess->Release(); 
-  } 
 
   return ptr;
 }
@@ -63,17 +57,14 @@ COM_GetmimeLeafClass(void)
 extern "C" void *
 COM_GetmimeObjectClass(void)
 {
-  nsMimeObjectClassAccess	*objAccess;
-  void                    *ptr = NULL;
+  nsCOMPtr<nsIMimeObjectClassAccess>  objAccess;
+  void                                *ptr = NULL;
 
-  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
-                                      (void **) &objAccess); 
-  if (res == NS_OK && objAccess) 
-  { 
+  nsresult res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
+                                                    NULL, nsIMimeObjectClassAccess::GetIID(), 
+                                                    (void **) getter_AddRefs(objAccess)); 
+  if (NS_SUCCEEDED(res) && objAccess)
     objAccess->GetmimeObjectClass(&ptr);
-    objAccess->Release(); 
-  } 
 
   return ptr;
 }
@@ -81,17 +72,14 @@ COM_GetmimeObjectClass(void)
 extern "C" void *
 COM_GetmimeContainerClass(void)
 {
-  nsMimeObjectClassAccess	*objAccess;
-  void                    *ptr = NULL;
+  nsCOMPtr<nsIMimeObjectClassAccess>  objAccess;
+  void                                *ptr = NULL;
 
-  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
-                                      (void **) &objAccess); 
-  if (res == NS_OK && objAccess) 
-  { 
+  nsresult res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
+                                                    NULL, nsIMimeObjectClassAccess::GetIID(), 
+                                                    (void **) getter_AddRefs(objAccess)); 
+  if (NS_SUCCEEDED(res) && objAccess)
     objAccess->GetmimeContainerClass(&ptr);
-    objAccess->Release(); 
-  } 
 
   return ptr;
 }
@@ -99,17 +87,14 @@ COM_GetmimeContainerClass(void)
 extern "C" void *
 COM_GetmimeMultipartClass(void)
 {
-  nsMimeObjectClassAccess	*objAccess;
-  void                    *ptr = NULL;
+  nsCOMPtr<nsIMimeObjectClassAccess>  objAccess;
+  void                                *ptr = NULL;
 
-  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
-                                      (void **) &objAccess); 
-  if (res == NS_OK && objAccess) 
-  { 
+  nsresult res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
+                                                    NULL, nsIMimeObjectClassAccess::GetIID(), 
+                                                    (void **) getter_AddRefs(objAccess)); 
+  if (NS_SUCCEEDED(res) && objAccess)
     objAccess->GetmimeMultipartClass(&ptr);
-    objAccess->Release(); 
-  } 
 
   return ptr;
 }
@@ -117,17 +102,14 @@ COM_GetmimeMultipartClass(void)
 extern "C" void *
 COM_GetmimeMultipartSignedClass(void)
 {
-  nsMimeObjectClassAccess	*objAccess;
-  void                    *ptr = NULL;
+  nsCOMPtr<nsIMimeObjectClassAccess>  objAccess;
+  void                                *ptr = NULL;
 
-  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
-                                      (void **) &objAccess); 
-  if (res == NS_OK && objAccess) 
-  { 
+  nsresult res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
+                                                    NULL, nsIMimeObjectClassAccess::GetIID(), 
+                                                    (void **) getter_AddRefs(objAccess)); 
+  if (NS_SUCCEEDED(res) && objAccess)
     objAccess->GetmimeMultipartSignedClass(&ptr);
-    objAccess->Release(); 
-  } 
 
   return ptr;
 }
@@ -136,37 +118,20 @@ extern "C" int
 COM_MimeObject_write(void *mimeObject, char *data, PRInt32 length, 
                      PRBool user_visible_p)
 {
-  nsMimeObjectClassAccess	*objAccess;
-  int                     rc = -1;
+  nsCOMPtr<nsIMimeObjectClassAccess>  objAccess;
+  void                                *ptr = NULL;
+  PRInt32                             rc;
 
-  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
-                                      (void **) &objAccess); 
-  if (res == NS_OK && objAccess) 
+  nsresult res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
+                                                    NULL, nsIMimeObjectClassAccess::GetIID(), 
+                                                    (void **) getter_AddRefs(objAccess)); 
+  if (NS_SUCCEEDED(res) && objAccess)
   { 
     if (objAccess->MimeObjectWrite(mimeObject, data, length, user_visible_p) == NS_OK)
       rc = length;
     else
       rc = -1;
-    objAccess->Release(); 
   } 
 
   return rc;
 }
-
-
-
-
-
-
-  
-/**  
-  // NOTE: Need to do these in the global registry
-  // register our dll
-  nsComponentManager::RegisterFactory(kRFC822toHTMLStreamConverterCID, 
-                                "mime.dll", PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterFactory(kMimeObjectClassAccessCID,
-                                "mime.dll", PR_FALSE, PR_FALSE);
-  
-
-*/

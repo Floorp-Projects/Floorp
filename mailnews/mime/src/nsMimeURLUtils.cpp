@@ -27,22 +27,7 @@
 #include "mimebuf.h"
 #include "nsMimeURLUtils.h"
 
-nsMimeURLUtils::nsMimeURLUtils()
-{
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
-}
-
-nsMimeURLUtils::~nsMimeURLUtils()
-{
-}
-
-/* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ADDREF(nsMimeURLUtils)
-NS_IMPL_RELEASE(nsMimeURLUtils)
-NS_IMPL_QUERY_INTERFACE(nsMimeURLUtils, nsIMimeURLUtils::GetIID()); /* we need to pass in the interface ID of this interface */
-
- /* this function will be used by the factory to generate an RFC-822 Parser....*/
+/* this function will be used by the factory to generate an RFC-822 Parser....*/
 nsresult NS_NewMimeURLUtils(nsIMimeURLUtils ** aInstancePtrResult)
 {
 	/* note this new macro for assertions...they can take a string describing the assertion */
@@ -57,6 +42,21 @@ nsresult NS_NewMimeURLUtils(nsIMimeURLUtils ** aInstancePtrResult)
 	}
 	else
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
+}
+
+/* the following macros actually implement addref, release and query interface for our component. */
+NS_IMPL_ADDREF(nsMimeURLUtils)
+NS_IMPL_RELEASE(nsMimeURLUtils)
+NS_IMPL_QUERY_INTERFACE(nsMimeURLUtils, nsIMimeURLUtils::GetIID()); /* we need to pass in the interface ID of this interface */
+
+nsMimeURLUtils::nsMimeURLUtils()
+{
+  /* the following macro is used to initialize the ref counting data */
+  NS_INIT_REFCNT();
+}
+
+nsMimeURLUtils::~nsMimeURLUtils()
+{
 }
 
 /* from libnet/mkutils.c */
@@ -929,3 +929,143 @@ nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, char * relative_url, char *
   
   return ReduceURL(ret_url, retURL);
 }
+
+static void
+Append(char** output, int32* output_max, char** curoutput, const char* buf, int32 length)
+{
+  if (length + (*curoutput) - (*output) >= *output_max) {
+    int offset = (*curoutput) - (*output);
+    do {
+      (*output_max) += 1024;
+    } while (length + (*curoutput) - (*output) >= *output_max);
+    *output = (char *)PR_Realloc(*output, *output_max);
+    if (!*output) return;
+    *curoutput = *output + offset;
+  }
+  nsCRT::memcpy(*curoutput, buf, length);
+  *curoutput += length;
+}
+
+nsresult
+nsMimeURLUtils::ScanHTMLForURLs(const char* input, char **retBuf)
+{
+    char* output = NULL;
+    char* curoutput;
+    int32 output_max;
+    char* tmpbuf = NULL;
+    int32 tmpbuf_max;
+    int32 inputlength;
+    const char* inputend;
+    const char* linestart;
+    const char* lineend;
+
+    PR_ASSERT(input);
+    if (!input) 
+    {
+      *retBuf = NULL;
+      return NS_OK;
+    }
+    inputlength = PL_strlen(input);
+
+    output_max = inputlength + 1024; /* 1024 bytes ought to be enough to quote
+                                        several URLs, which ought to be as many
+                                        as most docs use. */
+    output = (char *)PR_Malloc(output_max);
+    if (!output) goto FAIL;
+
+    tmpbuf_max = 1024;
+    tmpbuf = (char *)PR_Malloc(tmpbuf_max);
+    if (!tmpbuf) goto FAIL;
+
+    inputend = input + inputlength;
+
+    linestart = input;
+    curoutput = output;
+
+
+    /* Here's the strategy.  We find a chunk of plainish looking text -- no
+       embedded CR or LF, no "<" or "&".  We feed that off to ScanForURLs,
+       and append the result.  Then we skip to the next bit of plain text.  If
+       we stopped at an "&", go to the terminating ";".  If we stopped at a
+       "<", well, if it was a "<A>" tag, then skip to the closing "</A>".
+       Otherwise, skip to the end of the tag.
+       */
+
+
+    lineend = linestart;
+    while (linestart < inputend && lineend <= inputend) {
+        switch (*lineend) {
+        case '<':
+        case '>':
+        case '&':
+        case CR:
+        case LF:
+        case '\0':
+            if (lineend > linestart) {
+                int length = lineend - linestart;
+                if (length * 3 > tmpbuf_max) {
+                    tmpbuf_max = length * 3 + 512;
+                    PR_Free(tmpbuf);
+                    tmpbuf = (char *)PR_Malloc(tmpbuf_max);
+                    if (!tmpbuf) goto FAIL;
+                }
+                if (ScanForURLs(linestart, length,
+                                tmpbuf, tmpbuf_max, TRUE) != NS_OK) {
+                    goto FAIL;
+                }
+                length = PL_strlen(tmpbuf);
+                Append(&output, &output_max, &curoutput, tmpbuf, length);
+                if (!output) goto FAIL;
+
+            }
+            linestart = lineend;
+            lineend = NULL;
+            if (inputend - linestart < 5) {
+                /* Too little to worry about; shove the rest out. */
+                lineend = inputend;
+            } else {
+                switch (*linestart) {
+                case '<':
+                    if ((linestart[1] == 'a' || linestart[1] == 'A') &&
+                        linestart[2] == ' ') {
+                        lineend = PL_strcasestr(linestart, "</a");
+                        if (lineend) {
+                            lineend = PL_strchr(lineend, '>');
+                            if (lineend) lineend++;
+                        }
+                    } else {
+                        lineend = PL_strchr(linestart, '>');
+                        if (lineend) lineend++;
+                    }
+                    break;
+                case '&':
+                    lineend = PL_strchr(linestart, ';');
+                    if (lineend) lineend++;
+                    break;
+                default:
+                    lineend = linestart + 1;
+                    break;
+                }
+            }
+            if (!lineend) lineend = inputend;
+            Append(&output, &output_max, &curoutput, linestart,
+                   lineend - linestart);
+            if (!output) goto FAIL;
+            linestart = lineend;
+            break;
+        default:
+            lineend++;
+        }
+    }
+    PR_Free(tmpbuf);
+    tmpbuf = NULL;
+    *curoutput = '\0';
+    *retBuf = output;
+
+FAIL:
+    if (tmpbuf) PR_Free(tmpbuf);
+    if (output) PR_Free(output);
+    *retBuf = NULL;
+    return NS_OK;
+}
+

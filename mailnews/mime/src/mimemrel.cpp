@@ -100,6 +100,7 @@
 
    = free all the cached data
  */
+#include "nsCOMPtr.h"
 #include "mimemrel.h"
 #include "prmem.h"
 #include "prprf.h"
@@ -110,7 +111,6 @@
 #include "nsIURL.h"
 #include "nsCRT.h"
 #include "msgCore.h"
-#include "nsCOMPtr.h"
 #include "nsMimeURLUtils.h"
 
 extern "C" int MK_UNABLE_TO_OPEN_TMP_FILE;

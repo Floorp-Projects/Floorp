@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "mimepbuf.h"
 #include "mimemoz2.h"
 #include "prmem.h"

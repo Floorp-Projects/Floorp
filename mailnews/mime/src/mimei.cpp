@@ -21,6 +21,7 @@
 #include HG01966
 #endif
 
+#include "nsCOMPtr.h"
 #include "modmime.h"
 #include "mimeobj.h"	/*  MimeObject (abstract)							*/
 #include "mimecont.h"	/*   |--- MimeContainer (abstract)					*/
@@ -67,7 +68,6 @@
 #include "nsIMimeContentTypeHandler.h"
 #include "nsIComponentManager.h"
 #include "nsVoidArray.h"
-#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIMimeContentTypeHandlerIID, NS_IMIME_CONTENT_TYPE_HANDLER_IID);

@@ -21,6 +21,7 @@
 #include "nsIMimeEmitter.h"
 #include "nsINetOStream.h"
 #include "nsINetPluginInstance.h"
+#include "nsCOMPtr.h"
 
 // The ProgID for message/rfc822 messages
 #define	PROGRAM_ID	        "message/rfc822"
@@ -28,7 +29,7 @@
 // {B21EDB21-D10C-11d2-B373-525400E2D63A}
 #define NS_INET_PLUGIN_MIME_CID          \
     { 0xb21edb21, 0xd10c, 0x11d2,         \
-    { 0xb3, 0x73, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } };
+    { 0xb3, 0x73, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } }
 
 class MimePluginInstance : public nsINetPluginInstance, public nsINetOStream {
 public:
@@ -77,7 +78,7 @@ public:
 
     nsINetOStream   *mOutStream;
     void            *mBridgeStream;
-    nsIMimeEmitter  *mEmitter;
+    nsCOMPtr<nsIMimeEmitter>  mEmitter;
 
     // Type of output, entire message, header only, body only
     char            *mOutputFormat;
