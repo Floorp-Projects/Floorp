@@ -201,6 +201,7 @@ void nsRadioGroup::SetName(const nsString &aName)
 //-------------------------------------------------------------------------
 void nsRadioGroup::Clicked(nsIRadioButton * aChild) 
 {
+#if 0
 	if (mChildren) {
 		nsIEnumerator  * enumerator = GetChildren();
 		nsIRadioButton * child      = (nsIRadioButton*)enumerator->Next();
@@ -211,6 +212,7 @@ void nsRadioGroup::Clicked(nsIRadioButton * aChild)
 		}
     NS_RELEASE(enumerator);
 	}
+#endif
 }
 
 //-------------------------------------------------------------------------
