@@ -57,6 +57,11 @@ public:
 
 protected:
 
+  NS_IMETHOD ConvertToHTML(nsString & aStr);
+  NS_IMETHOD ConvertToText(nsString & aStr);
+  NS_IMETHOD ConvertToAOLMail(nsString & aStr);
+  NS_IMETHOD ConvertToXIF(nsString & aStr);
+
   nsISupportsArray * mDFList;
   nsDataObj * mDataObj;
 

@@ -23,9 +23,26 @@
 #include "nsISupportsArray.h"
 #include "nsRepository.h"
 
+#include <strstrea.h>
+
+#include "nsDataObj.h"
+#include "DDCOMM.h"
+
+// XIF convertor stuff
+#include "nsIParser.h"
+#include "nsParserCIID.h"
+#include "nsHTMLContentSinkStream.h"
+#include "nsHTMLToTXTSinkStream.h"
+#include "nsXIFDTD.h"
+
+
 static NS_DEFINE_IID(kITransferableIID,  NS_ITRANSFERABLE_IID);
 static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
+
+static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
 
 NS_IMPL_ADDREF(nsTransferable)
 NS_IMPL_RELEASE(nsTransferable)
@@ -43,6 +60,11 @@ nsTransferable::nsTransferable()
   mDataPtr  = nsnull;
 
   nsresult rv = NS_NewISupportsArray(&mDFList);
+  if (NS_OK == rv) {
+    AddDataFlavor(kTextMime, "Text Format");
+    AddDataFlavor(kXIFMime,  "XIF Format");
+    AddDataFlavor(kHTMLMime, "HTML Format");
+  }
 
 }
 
@@ -138,13 +160,30 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void 
   aDataFlavor->GetMimeType(mimeInQuestion);
 
   if (mimeInQuestion.Equals(kTextMime)) {
+    //char * str = mStrCache->ToNewCString();
+    //*aDataLen = mStrCache->Length()+1;
+    //mDataPtr = (void *)str;
+    //*aData = mDataPtr; 
+    nsAutoString text;
+    if (NS_OK == ConvertToText(text)) {
+      char * str = text.ToNewCString();
+      *aDataLen = text.Length()+1;
+      mDataPtr = (void *)str;
+      *aData = mDataPtr; 
+    }
+  } else if (mimeInQuestion.Equals(kHTMLMime)) {
+    nsAutoString html;
+    if (NS_OK == ConvertToHTML(html)) {
+      char * str = html.ToNewCString();
+      *aDataLen = html.Length()+1;
+      mDataPtr = (void *)str;
+      *aData = mDataPtr; 
+    }
+  } else if (mimeInQuestion.Equals(kXIFMime)) {
     char * str = mStrCache->ToNewCString();
     *aDataLen = mStrCache->Length()+1;
-
     mDataPtr = (void *)str;
     *aData = mDataPtr; 
-  } else if (mimeInQuestion.Equals(kHTMLMime)) {
-
   }
 
   return NS_OK;
@@ -235,3 +274,125 @@ NS_IMETHODIMP nsTransferable::IsLargeDataSet()
   return NS_ERROR_FAILURE;
 }
 
+/**
+  * 
+  *
+  */
+NS_IMETHODIMP nsTransferable::ConvertToText(nsString & aStr)
+{
+  aStr = "";
+  nsIParser* parser;
+  nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                             nsnull, 
+                                             kCParserIID, 
+                                             (void **)&parser);
+  if (NS_OK != rv)
+    return rv;
+
+  nsIHTMLContentSink* sink = nsnull;
+
+//  rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+//  Changed to do plain text only for Dogfood -- gpk 3/14/99
+  rv = NS_New_HTMLToTXT_SinkStream(&sink);
+
+  if (NS_OK == rv) {
+    parser->SetContentSink(sink);
+	
+    nsIDTD* dtd = nsnull;
+    rv = NS_NewXIFDTD(&dtd);
+    if (NS_OK == rv) 
+    {
+      parser->RegisterDTD(dtd);
+      //dtd->SetContentSink(sink);
+      //dtd->SetParser(parser);
+      parser->Parse(*mStrCache, 0, "text/xif",PR_FALSE,PR_TRUE);           
+    }
+    NS_IF_RELEASE(dtd);
+
+    ((nsHTMLToTXTSinkStream*)sink)->GetStringBuffer(aStr);
+  }
+  NS_IF_RELEASE(sink);
+  NS_RELEASE(parser);
+
+  return NS_OK;
+}
+
+/**
+  * 
+  *
+  */
+NS_IMETHODIMP nsTransferable::ConvertToHTML(nsString & aStr)
+{
+  aStr = "";
+  nsIParser* parser;
+
+  nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                             nsnull, 
+                                             kCParserIID, 
+                                             (void **)&parser);
+  if (NS_OK != rv)
+    return rv;
+
+  nsIHTMLContentSink* sink = nsnull;
+
+  rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+
+  ostrstream* copyStream;
+
+#ifdef XP_MAC
+  copyStream = new stringstream;
+#else
+  copyStream = new ostrstream;
+#endif
+
+
+  ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
+  if (NS_OK == rv) {
+    parser->SetContentSink(sink);
+	
+    nsIDTD* dtd = nsnull;
+    rv = NS_NewXIFDTD(&dtd);
+    if (NS_OK == rv) {
+      parser->RegisterDTD(dtd);
+      parser->Parse(*mStrCache, 0, "text/xif",PR_FALSE,PR_TRUE);           
+    }
+    NS_IF_RELEASE(dtd);
+  }
+  NS_IF_RELEASE(sink);
+  NS_RELEASE(parser);
+
+  PRInt32 len = copyStream->pcount();
+  char* str = (char*)copyStream->str();
+
+  if (str) {
+    aStr.SetString(str, len);
+    delete[] str;
+  }
+
+  return NS_OK;
+}
+
+/**
+  * 
+  *
+  */
+NS_IMETHODIMP nsTransferable::ConvertToAOLMail(nsString & aStr)
+{
+  nsAutoString html;
+  if (NS_OK == ConvertToHTML(html)) {
+    aStr = "<HTML>";
+    aStr.Append(html);
+    aStr.Append("</HTML>");
+  }
+  return NS_OK;
+}
+
+/**
+  * 
+  *
+  */
+NS_IMETHODIMP nsTransferable::ConvertToXIF(nsString & aStr)
+{
+  aStr = *mStrCache;
+  return NS_OK;
+}
