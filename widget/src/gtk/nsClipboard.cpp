@@ -190,3 +190,38 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
   // Need to add entries for XIF and HTML
 
 }
+
+
+// 
+// The event handler to handle selection requests: 
+// 
+void nsClipboard::SelectionRequestCB( GtkWidget        *widget,  
+                                         GtkSelectionData *selection_data, 
+                                         guint      /*info*/, 
+                                         guint      /*time*/, 
+                                         gpointer   data) 
+{ 
+  printf("  nsClipboard::SelectionRequestCB\n"); 
+} 
+
+
+
+// Called when another app requests the selection: 
+void nsClipboard::SelectionClearCB( GtkWidget *widget, 
+                                       GdkEventSelection *event, 
+                                       gpointer data) 
+{ 
+  printf("  nsClipboard::SelectionClearCB\n"); 
+} 
+ 
+
+void 
+nsClipboard::SelectionReceivedCB (GtkWidget *aWidget, 
+                                     GtkSelectionData *aSelectionData, 
+                                     gpointer aData) 
+{ 
+  // ARGHH!  GTK doesn't pass the arg to the callback, so we can't 
+  // get "this" back!  Until we solve this, use the global: 
+ 
+   printf("  nsClipboard::SelectionReceivedCB\n");  
+} 
