@@ -670,6 +670,25 @@ PRInt32 nsCRT::atoi( const PRUnichar *aString )
 #endif
 }
 
+// This should use NSPR but NSPR isn't exporting its PR_strtoll function
+// Until then...
+PRInt64 nsCRT::atoll(const char *str)
+{
+    if (!str)
+        return LL_Zero();
+
+    PRInt64 ll = LL_Zero(), digitll = LL_Zero();
+
+    while (*str && *str >= '0' && *str <= '9') {
+        LL_MUL(ll, ll, 10);
+        LL_UI2L(digitll, (*str - '0'));
+        LL_ADD(ll, ll, digitll);
+        str++;
+    }
+
+    return ll;
+}
+
 /**
  *  Determine if given char in valid ascii range
  *  

@@ -214,7 +214,7 @@ xptiInterfaceInfo::PartiallyResolveLocked(XPTInterfaceDescriptor*  aDescriptor,
 
     if(!ScriptableFlagIsValid())
     {
-        NS_ASSERTION(0, "unexpected scriptable flag!");
+        NS_ERROR("unexpected scriptable flag!");
         SetScriptableFlag(XPT_ID_IS_SCRIPTABLE(mInterface->mDescriptor->flags));
     }
     SetResolvedState(PARTIALLY_RESOLVED);
@@ -320,7 +320,7 @@ xptiInterfaceInfo::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
     if(index >= mInterface->mMethodBaseIndex + 
                 mInterface->mDescriptor->num_methods)
     {
-        NS_ASSERTION(0, "bad param");
+        NS_ERROR("bad param");
         *info = NULL;
         return NS_ERROR_INVALID_ARG;
     }
@@ -428,7 +428,7 @@ xptiInterfaceInfo::GetInfoForParam(uint16 methodIndex,
     }
 
     if(XPT_TDP_TAG(td->prefix) != TD_INTERFACE_TYPE) {
-        NS_ASSERTION(0, "not an interface");
+        NS_ERROR("not an interface");
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -470,7 +470,7 @@ xptiInterfaceInfo::GetTypeInArray(const nsXPTParamInfo* param,
 
     for (uint16 i = 0; i < dimension; i++) {
         if(XPT_TDP_TAG(td->prefix) != TD_ARRAY) {
-            NS_ASSERTION(0, "bad dimension");
+            NS_ERROR("bad dimension");
             return NS_ERROR_INVALID_ARG;
         }
         td = &additional_types[td->type.additional_type];
@@ -499,7 +499,7 @@ xptiInterfaceInfo::GetTypeForParam(uint16 methodIndex,
     if(methodIndex >= mInterface->mMethodBaseIndex + 
                       mInterface->mDescriptor->num_methods)
     {
-        NS_ASSERTION(0, "bad index");
+        NS_ERROR("bad index");
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -537,7 +537,7 @@ xptiInterfaceInfo::GetSizeIsArgNumberForParam(uint16 methodIndex,
     if(methodIndex >= mInterface->mMethodBaseIndex + 
                       mInterface->mDescriptor->num_methods)
     {
-        NS_ASSERTION(0, "bad index");
+        NS_ERROR("bad index");
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -558,7 +558,7 @@ xptiInterfaceInfo::GetSizeIsArgNumberForParam(uint16 methodIndex,
       case TD_PWSTRING_SIZE_IS:
         break;
       default:
-        NS_ASSERTION(0, "not a size_is");
+        NS_ERROR("not a size_is");
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -586,7 +586,7 @@ xptiInterfaceInfo::GetLengthIsArgNumberForParam(uint16 methodIndex,
     if(methodIndex >= mInterface->mMethodBaseIndex + 
                       mInterface->mDescriptor->num_methods)
     {
-        NS_ASSERTION(0, "bad index");
+        NS_ERROR("bad index");
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -608,7 +608,7 @@ xptiInterfaceInfo::GetLengthIsArgNumberForParam(uint16 methodIndex,
       case TD_PWSTRING_SIZE_IS:
         break;
       default:
-        NS_ASSERTION(0, "not a length_is");
+        NS_ERROR("not a length_is");
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -635,7 +635,7 @@ xptiInterfaceInfo::GetInterfaceIsArgNumberForParam(uint16 methodIndex,
     if(methodIndex >= mInterface->mMethodBaseIndex + 
                       mInterface->mDescriptor->num_methods)
     {
-        NS_ASSERTION(0, "bad index");
+        NS_ERROR("bad index");
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -647,7 +647,7 @@ xptiInterfaceInfo::GetInterfaceIsArgNumberForParam(uint16 methodIndex,
     }
 
     if(XPT_TDP_TAG(td->prefix) != TD_INTERFACE_IS_TYPE) {
-        NS_ASSERTION(0, "not an iid_is");
+        NS_ERROR("not an iid_is");
         return NS_ERROR_INVALID_ARG;
     }
 

@@ -260,7 +260,10 @@ public:
 
   /// String to integer.
   static PRInt32 atoi( const PRUnichar *string );
-  
+
+  // String to longlong
+  static PRInt64 atoll(const char *str);
+
   static PRUnichar ToUpper(PRUnichar aChar);
 
   static PRUnichar ToLower(PRUnichar aChar);

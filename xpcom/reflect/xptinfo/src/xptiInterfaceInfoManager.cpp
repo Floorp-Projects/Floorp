@@ -49,7 +49,15 @@ xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef()
 {
     if(!gInterfaceInfoManager)
     {
-        gInterfaceInfoManager = new xptiInterfaceInfoManager();
+        nsCOMPtr<nsISupportsArray> searchPath;
+        BuildFileSearchPath(getter_AddRefs(searchPath));
+        if(!searchPath)
+        {
+            NS_ERROR("can't get xpt search path!");    
+            return nsnull;
+        }
+
+        gInterfaceInfoManager = new xptiInterfaceInfoManager(searchPath);
         if(gInterfaceInfoManager)
             NS_ADDREF(gInterfaceInfoManager);
         if(!gInterfaceInfoManager->IsValid())
@@ -95,11 +103,12 @@ xptiInterfaceInfoManager::IsValid()
            mAutoRegLock;
 }        
 
-xptiInterfaceInfoManager::xptiInterfaceInfoManager()
-    :   mWorkingSet(),
+xptiInterfaceInfoManager::xptiInterfaceInfoManager(nsISupportsArray* aSearchPath)
+    :   mWorkingSet(aSearchPath),
         mOpenLogFile(nsnull),
         mResolveLock(PR_NewLock()),
-        mAutoRegLock(PR_NewLock())
+        mAutoRegLock(PR_NewLock()),
+        mSearchPath(aSearchPath)
 {
     NS_INIT_ISUPPORTS();
     
@@ -174,78 +183,145 @@ GetDirectoryFromDirService(const char* codename, nsILocalFile** aDir)
     return PR_FALSE;
 }
 
-PRBool 
-xptiInterfaceInfoManager::GetComponentsDir(nsILocalFile** aDir)
+// static 
+PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
 {
-    return GetDirectoryFromDirService(NS_XPCOM_COMPONENT_DIR, aDir);
+#ifdef DEBUG
+    static int callCount = 0;
+    NS_ASSERTION(!callCount++, "Expected only one call!");
+#endif
+        
+    nsCOMPtr<nsISupportsArray> searchPath =   
+        do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
+   
+    if(!searchPath)
+        return PR_FALSE;
+    
+    nsCOMPtr<nsILocalFile> dir;
+
+    // XXX We'd like to get the *right* path from the embedding.
+
+    // For now we'll add the following...
+
+    // Add components dir
+
+    if(NS_FAILED(GetDirectoryFromDirService(NS_XPCOM_COMPONENT_DIR, 
+                                            getter_AddRefs(dir))) ||
+       !searchPath->AppendElement(dir))
+    {
+        return PR_FALSE;
+    }
+
+#if 0
+    // XXX Let's not do this untill we're sure about what we want to do.
+    // XXX Without this block we are compatible with previous versions.
+
+    // Add plugins dir
+    // No error checking here since this is optional in some embeddings
+
+    if(NS_SUCCEEDED(GetDirectoryFromDirService(NS_APP_PLUGINS_DIR, 
+                                               getter_AddRefs(dir))))
+    {
+        searchPath->AppendElement(dir);
+    }
+#endif
+
+
+    NS_ADDREF(*aPath = searchPath);
+    return PR_TRUE;
 }
 
 PRBool 
-xptiInterfaceInfoManager::GetManifestDir(nsILocalFile** aDir)
+xptiInterfaceInfoManager::GetCloneOfManifestDir(nsILocalFile** aDir)
 {
-    // XXX This does not look like the right place yet.
-    // return GetDirectoryFromDirService(NS_XPCOM_APPLICATION_REGISTRY_DIR, aDir);
-    return GetDirectoryFromDirService(NS_XPCOM_COMPONENT_DIR, aDir);
+    // We cache the manifest directory to ensure that this call always returns 
+    // the same directory. Not doing so could be a problem if we try something 
+    // fancier in the future and that algorithm has different results when
+    // run at startup than when run later.
+
+    if(!mManifestDir)
+    {
+        // If we are going to do something fancy to get some other dir, then
+        // do it here...
+
+        if(!GetDirectoryFromDirService(NS_XPCOM_COMPONENT_DIR,
+                                       getter_AddRefs(mManifestDir)))
+            return PR_FALSE;
+    
+        // To be sure after the stuff above.
+        if(!mManifestDir)
+            return PR_FALSE;
+    }
+    return NS_SUCCEEDED(xptiCloneLocalFile(mManifestDir, aDir));
 }
 
 PRBool 
-xptiInterfaceInfoManager::BuildFileList(nsISupportsArray** aFileList)
+xptiInterfaceInfoManager::GetApplicationDir(nsILocalFile** aDir)
+{
+    // We *trust* that this will not change!
+    return GetDirectoryFromDirService(NS_XPCOM_CURRENT_PROCESS_DIR, aDir);
+}
+
+PRBool 
+xptiInterfaceInfoManager::BuildFileList(nsISupportsArray* aSearchPath,
+                                        nsISupportsArray** aFileList)
 {
     NS_ASSERTION(aFileList, "loser!");
     
     nsresult rv;
-
-    nsCOMPtr<nsILocalFile> dir;
-    
-    rv = GetComponentsDir(getter_AddRefs(dir));
-    if(NS_FAILED(rv) || !dir)
-        return PR_FALSE;
-
-    nsCOMPtr<nsISimpleEnumerator> entries;
-    rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
-    if(NS_FAILED(rv) || !entries)
-        return PR_FALSE;
 
     nsCOMPtr<nsISupportsArray> fileList = 
         do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
     if(!fileList)
         return PR_FALSE;
 
-    PRUint32 count = 0;
-    PRBool hasMore;
-    while(NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore)
+    PRUint32 pathCount;
+    if(NS_FAILED(aSearchPath->Count(&pathCount)))
+        return PR_FALSE;
+
+    for(PRUint32 i = 0; i < pathCount; i++)
     {
-        nsCOMPtr<nsISupports> sup;
-        entries->GetNext(getter_AddRefs(sup));
-        if(!sup)
-            return PR_FALSE;
-        nsCOMPtr<nsIFile> file = do_QueryInterface(sup);
-        if(!file)
+        nsCOMPtr<nsILocalFile> dir;
+        rv = xptiCloneElementAsLocalFile(aSearchPath, i, getter_AddRefs(dir));
+        if(NS_FAILED(rv) || !dir)
             return PR_FALSE;
 
-        PRBool isFile;
-        if(NS_FAILED(file->IsFile(&isFile)) || !isFile)
+        nsCOMPtr<nsISimpleEnumerator> entries;
+        rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
+        if(NS_FAILED(rv) || !entries)
+            return PR_FALSE;
+
+        PRUint32 count = 0;
+        PRBool hasMore;
+        while(NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore)
         {
-            continue;
-        }
+            nsCOMPtr<nsISupports> sup;
+            entries->GetNext(getter_AddRefs(sup));
+            if(!sup)
+                return PR_FALSE;
+            nsCOMPtr<nsIFile> file = do_QueryInterface(sup);
+            if(!file)
+                return PR_FALSE;
+
+            PRBool isFile;
+            if(NS_FAILED(file->IsFile(&isFile)) || !isFile)
+            {
+                continue;
+            }
      
-        char* name;
-        if(NS_FAILED(file->GetLeafName(&name)))
-            return PR_FALSE;
+            nsXPIDLCString name;
+            if(NS_FAILED(file->GetLeafName(getter_Copies(name))))
+                return PR_FALSE;
 
-        if(xptiFileType::IsUnknown(name))
-        {
-            nsMemory::Free(name);
-            continue;
+            if(xptiFileType::IsUnknown(name))
+                continue;
+
+            LOG_AUTOREG(("found file: %s\n", name.get()));
+
+            if(!fileList->InsertElementAt(file, count))
+                return PR_FALSE;
+            ++count;
         }
-
-        LOG_AUTOREG(("found file: %s\n", name));
-
-        nsMemory::Free(name);
-
-        if(!fileList->InsertElementAt(file, count))
-            return PR_FALSE;
-        ++count;
     }
 
     NS_ADDREF(*aFileList = fileList); 
@@ -329,7 +405,8 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
     xptiZipItem* zipItem = nsnull;
 
     nsCOMPtr<nsILocalFile> file;
-    if(!GetComponentsDir(getter_AddRefs(file)) || !file)
+    if(NS_FAILED(aWorkingSet->GetCloneOfDirectoryAt(fileRecord->GetDirectory(),
+                                    getter_AddRefs(file))) || !file)
         return PR_FALSE;
 
     if(NS_FAILED(file->Append(fileRecord->GetName())))
@@ -424,40 +501,67 @@ IndexOfFileWithName(const char* aName, const xptiWorkingSet* aWorkingSet)
     return -1;        
 }        
 
+static int
+IndexOfDirectoryOfFile(nsISupportsArray* aSearchPath, nsILocalFile* aFile)
+{
+    nsCOMPtr<nsIFile> parent;
+    aFile->GetParent(getter_AddRefs(parent));
+    if(parent)
+    {
+        PRUint32 count = 0;
+        aSearchPath->Count(&count);
+        NS_ASSERTION(count, "broken search path! bad count");
+        for(PRUint32 i = 0; i < count; i++)
+        {
+            nsCOMPtr<nsIFile> current;
+            aSearchPath->QueryElementAt(i, NS_GET_IID(nsIFile), 
+                                        getter_AddRefs(current));
+            NS_ASSERTION(current, "broken search path! bad element");
+            PRBool same;
+            if(NS_SUCCEEDED(parent->Equals(current, &same)) && same)
+                return (int) i;
+        }
+    }
+    NS_ERROR("file not in search directory!");
+    return -1;
+}        
+
+struct SortData
+{
+    nsISupportsArray* mSearchPath;
+    xptiWorkingSet*   mWorkingSet;
+};
+
 PR_STATIC_CALLBACK(int)
 xptiSortFileList(const void * p1, const void *p2, void * closure)
 {
     nsILocalFile* pFile1 = *((nsILocalFile**) p1);
     nsILocalFile* pFile2 = *((nsILocalFile**) p2);
-    xptiWorkingSet* pWorkingSet = (xptiWorkingSet*) closure;
-        
-    char* name1;
-    char* name2;
+    SortData* data = (SortData*) closure;
     
-    if(NS_FAILED(pFile1->GetLeafName(&name1)))
+    
+    nsXPIDLCString name1;
+    nsXPIDLCString name2;
+        
+    if(NS_FAILED(pFile1->GetLeafName(getter_Copies(name1))))
     {
-        NS_ASSERTION(0, "way bad, with no happy out!");
+        NS_ERROR("way bad, with no happy out!");
         return 0;    
     }    
-    if(NS_FAILED(pFile2->GetLeafName(&name2)))
+    if(NS_FAILED(pFile2->GetLeafName(getter_Copies(name2))))
     {
-        NS_ASSERTION(0, "way bad, with no happy out!");
+        NS_ERROR("way bad, with no happy out!");
         return 0;    
     }    
 
-    int index1 = IndexOfFileWithName(name1, pWorkingSet); 
-    int index2 = IndexOfFileWithName(name2, pWorkingSet); 
+    int index1 = IndexOfFileWithName(name1, data->mWorkingSet); 
+    int index2 = IndexOfFileWithName(name2, data->mWorkingSet); 
    
     // Get these now in case we need them later.
     PRBool isXPT1 = xptiFileType::IsXPT(name1);
     PRBool isXPT2 = xptiFileType::IsXPT(name2);
     int nameOrder = PL_strcmp(name1, name2);
     
-    nsMemory::Free(name1);
-    nsMemory::Free(name2);
-
-    // XXX need to test with non-empty working sets to be sure this right
-
     // both in workingSet, preserve old order
     if(index1 != -1 && index2 != -1)
         return index1 - index2;
@@ -468,6 +572,16 @@ xptiSortFileList(const void * p1, const void *p2, void * closure)
     if(index2 != -1)
         return -1;
 
+    // neither is in workingset
+
+    // check how they compare in search path order
+    
+    int dirIndex1 = IndexOfDirectoryOfFile(data->mSearchPath, pFile1);
+    int dirIndex2 = IndexOfDirectoryOfFile(data->mSearchPath, pFile2);
+
+    if(dirIndex1 != dirIndex2)
+        return dirIndex1 - dirIndex2;
+
     // .xpt files come before archives (.zip, .jar, etc)
     if(isXPT1 &&!isXPT2)
         return -1;
@@ -475,19 +589,20 @@ xptiSortFileList(const void * p1, const void *p2, void * closure)
     if(!isXPT1 && isXPT2)
         return 1;
     
-    // neither element is in the workingSet and both are same type, sort by size
+    // neither element is in the workingSet and both are same type and in 
+    // the same directory, sort by size
 
     PRInt64 size1;
     PRInt64 size2;
 
     if(NS_FAILED(pFile1->GetFileSize(&size1)))
     {
-        NS_ASSERTION(0, "way bad, with no happy out!");
+        NS_ERROR("way bad, with no happy out!");
         return 0;    
     }    
     if(NS_FAILED(pFile2->GetFileSize(&size2)))
     {
-        NS_ASSERTION(0, "way bad, with no happy out!");
+        NS_ERROR("way bad, with no happy out!");
         return 0;    
     }    
 
@@ -497,7 +612,8 @@ xptiSortFileList(const void * p1, const void *p2, void * closure)
 }        
 
 nsILocalFile** 
-xptiInterfaceInfoManager::BuildOrderedFileArray(nsISupportsArray* aFileList,
+xptiInterfaceInfoManager::BuildOrderedFileArray(nsISupportsArray* aSearchPath,
+                                                nsISupportsArray* aFileList,
                                                 xptiWorkingSet* aWorkingSet)
 {
     // We want to end up with a file list that starts with the files from
@@ -540,14 +656,17 @@ xptiInterfaceInfoManager::BuildOrderedFileArray(nsISupportsArray* aFileList,
     }
 
     // sort the filelist
+
+    SortData sortData = {aSearchPath, aWorkingSet};
     NS_QuickSort(orderedFileList, countOfFilesInFileList, sizeof(nsILocalFile*),
-                 xptiSortFileList, aWorkingSet);
+                 xptiSortFileList, &sortData);
      
     return orderedFileList;
 }
 
 xptiInterfaceInfoManager::AutoRegMode 
-xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
+xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aSearchPath,
+                                                   nsISupportsArray* aFileList,
                                                    xptiWorkingSet* aWorkingSet)
 {
     NS_ASSERTION(aFileList, "loser!");
@@ -567,10 +686,9 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
 
     if(NS_FAILED(aFileList->Count(&countOfFilesInFileList)))
     {
-        NS_ASSERTION(0, "unexpected!");
+        NS_ERROR("unexpected!");
         return FULL_VALIDATION_REQUIRED;
     }       
-
 
     if(countOfFilesInFileList == countOfFilesInWorkingSet)
     {
@@ -582,15 +700,18 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
             nsCOMPtr<nsILocalFile> file;
             aFileList->QueryElementAt(i, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
             NS_ASSERTION(file, "loser!");
-    
-            char*   name;
+
             PRInt64 size;
             PRInt64 date;
+            nsXPIDLCString name;
+            PRUint32 directory;
+
             if(NS_FAILED(file->GetFileSize(&size)) ||
                NS_FAILED(file->GetLastModificationDate(&date)) ||
-               NS_FAILED(file->GetLeafName(&name)))
+               NS_FAILED(file->GetLeafName(getter_Copies(name))) ||
+               !aWorkingSet->FindDirectoryOfFile(file, &directory))
             {
-                NS_ASSERTION(0, "unexpected!");
+                NS_ERROR("unexpected!");
                 return FULL_VALIDATION_REQUIRED;
             }    
 
@@ -598,7 +719,8 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
             {
                 xptiFile& target = aWorkingSet->GetFileAt(k);
                 
-                if(0 == PL_strcasecmp(name, target.GetName()))
+                if(directory == target.GetDirectory() &&
+                   0 == PL_strcmp(name, target.GetName()))
                 {
                     if(nsInt64(size) != target.GetSize() ||
                        nsInt64(date) != target.GetDate())
@@ -609,8 +731,6 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
             // failed to find our file in the workingset?
             if(k == countOfFilesInWorkingSet)
                 same = PR_FALSE;
-            
-            nsMemory::Free(name);
         }
         if(same)
             return NO_FILES_CHANGED;
@@ -632,19 +752,18 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
                 aFileList->QueryElementAt(k, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
                 NS_ASSERTION(file, "loser!");
                 
-                char*   name;
+                nsXPIDLCString name;
                 PRInt64 size;
                 PRInt64 date;
                 if(NS_FAILED(file->GetFileSize(&size)) ||
                    NS_FAILED(file->GetLastModificationDate(&date)) ||
-                   NS_FAILED(file->GetLeafName(&name)))
+                   NS_FAILED(file->GetLeafName(getter_Copies(name))))
                 {
-                    NS_ASSERTION(0, "unexpected!");
+                    NS_ERROR("unexpected!");
                     return FULL_VALIDATION_REQUIRED;
                 }    
             
-                PRBool sameName = (0 == PL_strcasecmp(name, target.GetName()));
-                nsMemory::Free(name);
+                PRBool sameName = (0 == PL_strcmp(name, target.GetName()));
                 if(sameName)
                 {
                     if(nsInt64(size) != target.GetSize() ||
@@ -665,8 +784,9 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
 }
 
 PRBool 
-xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList,
-                                                     xptiWorkingSet* aWorkingSet)
+xptiInterfaceInfoManager::AddOnlyNewFilesFromFileList(nsISupportsArray* aSearchPath,
+                                                      nsISupportsArray* aFileList,
+                                                      xptiWorkingSet* aWorkingSet)
 {
     nsILocalFile** orderedFileArray;
     PRUint32 countOfFilesInFileList;
@@ -683,7 +803,7 @@ xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList
     PRUint32 countOfFilesInWorkingSet = aWorkingSet->GetFileCount();
     NS_ASSERTION(countOfFilesInFileList > countOfFilesInWorkingSet,"loser!");
 
-    orderedFileArray = BuildOrderedFileArray(aFileList, aWorkingSet);
+    orderedFileArray = BuildOrderedFileArray(aSearchPath, aFileList, aWorkingSet);
 
     if(!orderedFileArray)
         return PR_FALSE;
@@ -699,30 +819,30 @@ xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList
     {
         nsILocalFile* file = orderedFileArray[i];
 
-        char*   name;
+        nsXPIDLCString name;
         PRInt64 size;
         PRInt64 date;
+        PRUint32 dir;
         if(NS_FAILED(file->GetFileSize(&size)) ||
            NS_FAILED(file->GetLastModificationDate(&date)) ||
-           NS_FAILED(file->GetLeafName(&name)))
+           NS_FAILED(file->GetLeafName(getter_Copies(name))) ||
+           !aWorkingSet->FindDirectoryOfFile(file, &dir))
         {
             return PR_FALSE;
         }    
     
 
-        if(xptiWorkingSet::NOT_FOUND != aWorkingSet->FindFileWithName(name))
+        if(xptiWorkingSet::NOT_FOUND != aWorkingSet->FindFile(dir, name))
         {
             // This file was found in the working set, so skip it.       
-            nsMemory::Free(name);
             continue;
         }
 
-        LOG_AUTOREG(("  finding interfaces in new file: %s\n", name));
+        LOG_AUTOREG(("  finding interfaces in new file: %s\n", name.get()));
 
         xptiFile fileRecord;
-        fileRecord = xptiFile(nsInt64(size), nsInt64(date),
+        fileRecord = xptiFile(nsInt64(size), nsInt64(date), dir,
                               name, aWorkingSet);
-        nsMemory::Free(name);
 
         if(xptiFileType::IsXPT(fileRecord.GetName()))
         {
@@ -730,7 +850,7 @@ xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList
             if(!header)
             {
                 // XXX do something!
-                NS_ASSERTION(0,"");    
+                NS_ERROR("");    
                 continue;
             }
 
@@ -796,8 +916,9 @@ xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList
 }        
 
 PRBool 
-xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aFileList,
-                                                          xptiWorkingSet* aWorkingSet)
+xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aSearchPath,
+                                                            nsISupportsArray* aFileList,
+                                                            xptiWorkingSet* aWorkingSet)
 {
     nsILocalFile** orderedFileArray;
     PRUint32 countOfFilesInFileList;
@@ -813,12 +934,12 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
 
     if(!countOfFilesInFileList)
     {
-        // maybe there are no xpt file to register.  
+        // maybe there are no xpt files to register.  
         // a minimal install would have this case.
         return PR_TRUE;
     }
 
-    orderedFileArray = BuildOrderedFileArray(aFileList, aWorkingSet);
+    orderedFileArray = BuildOrderedFileArray(aSearchPath, aFileList, aWorkingSet);
 
     if(!orderedFileArray)
         return PR_FALSE;
@@ -839,22 +960,23 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
     {
         nsILocalFile* file = orderedFileArray[i];
 
-        char*   name;
+        nsXPIDLCString name;
         PRInt64 size;
         PRInt64 date;
+        PRUint32 dir;
         if(NS_FAILED(file->GetFileSize(&size)) ||
            NS_FAILED(file->GetLastModificationDate(&date)) ||
-           NS_FAILED(file->GetLeafName(&name)))
+           NS_FAILED(file->GetLeafName(getter_Copies(name))) ||
+           !aWorkingSet->FindDirectoryOfFile(file, &dir))
         {
             return PR_FALSE;
         }    
 
-        LOG_AUTOREG(("  finding interfaces in file: %s\n", name));
+        LOG_AUTOREG(("  finding interfaces in file: %s\n", name.get()));
     
         xptiFile fileRecord;
-        fileRecord = xptiFile(nsInt64(size), nsInt64(date),
+        fileRecord = xptiFile(nsInt64(size), nsInt64(date), dir,
                               name, aWorkingSet);
-        nsMemory::Free(name);
 
 //        printf("* found %s\n", fileRecord.GetName());
 
@@ -865,7 +987,7 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
             if(!header)
             {
                 // XXX do something!
-                NS_ASSERTION(0,"Unable to read an XPT file, turn logging on to see which file");    
+                NS_ERROR("Unable to read an XPT file, turn logging on to see which file");    
                 LOG_AUTOREG(("      unable to read file\n"));
                 continue;
             }
@@ -1294,12 +1416,11 @@ xptiInterfaceInfoManager::DEBUG_DumpFileList(nsISupportsArray* aFileList)
         if(!file)
             return PR_FALSE;
 
-        char* name;
-        if(NS_FAILED(file->GetLeafName(&name)))
+        nsXPIDLCString name;
+        if(NS_FAILED(file->GetLeafName(getter_Copies(name))))
             return PR_FALSE;
 
-        printf("* found %s\n", name);
-        nsMemory::Free(name);
+        printf("* found %s\n", name.get());
     }
     return PR_TRUE;
 }
@@ -1325,12 +1446,11 @@ xptiInterfaceInfoManager::DEBUG_DumpFileArray(nsILocalFile** aFileArray,
     {
         nsILocalFile* file = aFileArray[i];
     
-        char* name;
-        if(NS_FAILED(file->GetLeafName(&name)))
+        nsXPIDLCString name;
+        if(NS_FAILED(file->GetLeafName(getter_Copies(name))))
             return PR_FALSE;
 
-        printf("found file: %s\n", name);
-        nsMemory::Free(name);
+        printf("found file: %s\n", name.get());
     }        
     return PR_TRUE;        
 }        
@@ -1542,12 +1662,12 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateInterfaces(nsIEnumerator **_ret
 NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
 {
     nsCOMPtr<nsISupportsArray> fileList;
-    xptiWorkingSet workingSet;
     AutoRegMode mode;
     PRBool ok;
 
     nsAutoLock lock(xptiInterfaceInfoManager::GetAutoRegLock());
 
+    xptiWorkingSet workingSet(mSearchPath);
     if(!workingSet.IsValid())
         return NS_ERROR_UNEXPECTED;
 
@@ -1564,13 +1684,13 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
     LOG_AUTOREG(("read of manifest %s\n", ok ? "successful" : "FAILED"));
 
     // Grovel for all the typelibs we can find (in .xpt or .zip, .jar,...).
-    if(!BuildFileList(getter_AddRefs(fileList)) || !fileList)
+    if(!BuildFileList(mSearchPath, getter_AddRefs(fileList)) || !fileList)
         return NS_ERROR_UNEXPECTED;
     
     // DEBUG_DumpFileList(fileList);
 
     // Check to see how much work we need to do.
-    mode = DetermineAutoRegStrategy(fileList, &workingSet);
+    mode = DetermineAutoRegStrategy(mSearchPath, fileList, &workingSet);
 
     switch(mode)
     {
@@ -1580,7 +1700,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
         return NS_OK;
     case FILES_ADDED_ONLY:
         LOG_AUTOREG(("autoreg strategy: files added only\n"));
-        if(!AddOnlyNewFileFromFileList(fileList, &workingSet))
+        if(!AddOnlyNewFilesFromFileList(mSearchPath, fileList, &workingSet))
         {
             LOG_AUTOREG(("FAILED to add new files\n"));
             return NS_ERROR_UNEXPECTED;
@@ -1588,22 +1708,26 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
         break;
     case FULL_VALIDATION_REQUIRED:
         LOG_AUTOREG(("autoreg strategy: doing full validation merge\n"));
-        if(!DoFullValidationMergeFromFileList(fileList, &workingSet))
+        if(!DoFullValidationMergeFromFileList(mSearchPath, fileList, &workingSet))
         {
             LOG_AUTOREG(("FAILED to do full validation\n"));
             return NS_ERROR_UNEXPECTED;
         }
         break;
     default:
-        NS_ASSERTION(0,"switch missing a case");
+        NS_ERROR("switch missing a case");
         return NS_ERROR_UNEXPECTED;
     }
 
-    // XXX Is failure to write the file a good reason to not merge?
+    // Failure to write the manifest is not fatal in production builds.
+    // However, this would require the next startup to find and read all the
+    // xpt files. This will make that startup slower. If this ever becomes a 
+    // chronic problem for anyone, then we'll want to figure out why!
+    
     if(!xptiManifest::Write(this, &workingSet))
     {
         LOG_AUTOREG(("FAILED to write manifest\n"));
-        return NS_ERROR_UNEXPECTED;
+        NS_ERROR("Failed to write xpti manifest!");
     }
     
     if(!MergeWorkingSets(&mWorkingSet, &workingSet))

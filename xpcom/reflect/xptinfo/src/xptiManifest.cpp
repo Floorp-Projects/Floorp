@@ -50,15 +50,22 @@ static const char g_TOKEN_ArchiveItems[]   = "ArchiveItems";
 static const char g_TOKEN_Interfaces[]     = "Interfaces";
 static const char g_TOKEN_Header[]         = "Header";
 static const char g_TOKEN_Version[]        = "Version";
+static const char g_TOKEN_AppDir[]         = "AppDir";
+static const char g_TOKEN_Directories[]    = "Directories";
 
-static const int  g_VERSION_MAJOR          = 1;
+static const int  g_VERSION_MAJOR          = 2;
 static const int  g_VERSION_MINOR          = 0;
 
-// This is used to make PR_sscanf for strings safer. We refuse to even 
-// attempt to do a PR_sscanf from a line longer than this.
-static const PRUint32 g_MAX_LINE_LEN = 256;
-
 /***************************************************************************/
+
+static PRBool GetCurrentAppDirString(xptiInterfaceInfoManager* aMgr, char** aStr)
+{
+    nsCOMPtr<nsILocalFile> appDir;
+    aMgr->GetApplicationDir(getter_AddRefs(appDir));
+    if(appDir)
+        return NS_SUCCEEDED(appDir->GetPersistentDescriptor(aStr));
+    return PR_FALSE;
+}
 
 PR_STATIC_CALLBACK(PRIntn)
 xpti_InterfaceWriter(PLHashEntry *he, PRIntn i, void *arg)
@@ -89,6 +96,7 @@ xpti_InterfaceWriter(PLHashEntry *he, PRIntn i, void *arg)
     return success ? HT_ENUMERATE_NEXT : HT_ENUMERATE_STOP;
 }
 
+
 // static
 PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
                            xptiWorkingSet*           aWorkingSet)
@@ -97,10 +105,12 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
     PRBool succeeded = PR_FALSE;
     PRFileDesc* fd = nsnull;
     PRUint32 i;
+    PRUint32 size32;
     PRIntn interfaceCount = 0;
-
+    nsXPIDLCString appDirString;
+    
     nsCOMPtr<nsILocalFile> tempFile;
-    if(!aMgr->GetManifestDir(getter_AddRefs(tempFile)) || !tempFile)
+    if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(tempFile)) || !tempFile)
         return PR_FALSE;
 
     if(NS_FAILED(tempFile->Append(g_TempManifestFilename)))
@@ -121,14 +131,46 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
     if(!PR_fprintf(fd, "%s\n", g_Disclaimer))
         goto out;
 
-    // write the [Header] block and version number.
+    // write the [Header] block, version number, and appdir.
 
-    if(!PR_fprintf(fd, "\n[%s,%d]\n", g_TOKEN_Header, 1))
+    if(!PR_fprintf(fd, "\n[%s,%d]\n", g_TOKEN_Header, 2))
         goto out;
 
     if(!PR_fprintf(fd, "%d,%s,%d,%d\n", 
                        0, g_TOKEN_Version, g_VERSION_MAJOR, g_VERSION_MINOR))
         goto out;
+
+    GetCurrentAppDirString(aMgr, getter_Copies(appDirString));
+    if(!appDirString)
+        goto out;
+
+    if(!PR_fprintf(fd, "%d,%s,%s\n", 
+                       1, g_TOKEN_AppDir, appDirString.get()))
+        goto out;
+
+    // write Directories list
+
+    if(!PR_fprintf(fd, "\n[%s,%d]\n", 
+                       g_TOKEN_Directories, 
+                       (int) aWorkingSet->GetDirectoryCount()))
+        goto out;
+
+    for(i = 0; i < aWorkingSet->GetDirectoryCount(); i++)
+    {
+        nsCOMPtr<nsILocalFile> dir;        
+        nsXPIDLCString str;
+
+        aWorkingSet->GetDirectoryAt(i, getter_AddRefs(dir));
+        if(!dir)
+            goto out;
+
+        dir->GetPersistentDescriptor(getter_Copies(str));
+        if(!str)
+            goto out;
+        
+        if(!PR_fprintf(fd, "%d,%s\n", (int) i, str.get()))
+            goto out;
+    }
 
     // write Files list
 
@@ -139,11 +181,15 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
 
     for(i = 0; i < aWorkingSet->GetFileCount(); i++)
     {
-        if(!PR_fprintf(fd, "%d,%s,%lld,%lld\n",
+        const xptiFile& file = aWorkingSet->GetFileAt(i);
+
+        LL_L2UI(size32, file.GetSize());
+    
+        if(!PR_fprintf(fd, "%d,%s,%d,%u,%lld\n",
                            (int) i,
-                           aWorkingSet->GetFileAt(i).GetName(),
-                           PRInt64(aWorkingSet->GetFileAt(i).GetSize()),
-                           PRInt64(aWorkingSet->GetFileAt(i).GetDate())))
+                           file.GetName(),
+                           (int) file.GetDirectory(),
+                           size32, file.GetDate()))
         goto out;
     }
 
@@ -186,12 +232,12 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
 out:
     if(fd)
         PR_Close(fd);
-
+    
     if(succeeded)
     {
         // delete the old file and rename this
         nsCOMPtr<nsILocalFile> mainFile;
-        if(!aMgr->GetManifestDir(getter_AddRefs(mainFile)) || !mainFile)
+        if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(mainFile)) || !mainFile)
             return PR_FALSE;
     
         if(NS_FAILED(mainFile->Append(g_MainManifestFilename)))
@@ -209,7 +255,7 @@ out:
         // http://bugzilla.mozilla.org/show_bug.cgi?id=33098
 #if 1        
         nsCOMPtr<nsILocalFile> dir;
-        if(!aMgr->GetManifestDir(getter_AddRefs(dir)) || !dir)
+        if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(dir)) || !dir)
             return PR_FALSE;
 
         if(NS_FAILED(tempFile->CopyTo(dir, g_MainManifestFilename)))
@@ -224,6 +270,8 @@ out:
     return succeeded;
 }        
 
+/***************************************************************************/
+/***************************************************************************/
 
 static char* 
 ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
@@ -233,9 +281,10 @@ ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
     PRInt32 flen;
     PRInt64 fileSize;
     char* whole = nsnull;
+    PRBool success = PR_FALSE;
 
     nsCOMPtr<nsILocalFile> aFile;
-    if(!aMgr->GetManifestDir(getter_AddRefs(aFile)) || !aFile)
+    if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(aFile)) || !aFile)
         return nsnull;
     
     if(NS_FAILED(aFile->Append(g_MainManifestFilename)))
@@ -244,11 +293,11 @@ ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
 #ifdef DEBUG
     {
         static PRBool shown = PR_FALSE;
-        char* path;
-        if(!shown && NS_SUCCEEDED(aFile->GetPath(&path)) && path)
+        
+        nsXPIDLCString path;
+        if(!shown && NS_SUCCEEDED(aFile->GetPath(getter_Copies(path))) && path)
         {
-            printf("Type Manifest File: %s\n", path);
-            nsMemory::Free(path);
+            printf("Type Manifest File: %s\n", path.get());
             shown = PR_TRUE;        
         } 
     }            
@@ -269,11 +318,20 @@ ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
     if(flen > PR_Read(fd, whole, flen))
         goto out;
 
+    success = PR_TRUE;
+
  out:
     if(fd)
         PR_Close(fd);
+
+    if(!success)     
+    {
+        delete [] whole;
+        return nsnull;
+    }
+
     *pLength = flen;
-    return whole;
+    return whole;    
 }
 
 /***************************************************/
@@ -291,6 +349,7 @@ public:
     PRBool      NextLine();
     char*       LinePtr() {return mCur;}    
     PRUint32    LineLength() {return mLength;}    
+    int         ParseLine(char** chunks, int maxChunks);
 
 private:
     char*       mCur;
@@ -326,12 +385,37 @@ ManifestLineReader::NextLine()
     }
     return PR_FALSE;        
 }
+
+int    
+ManifestLineReader::ParseLine(char** chunks, int maxChunks)
+{
+    NS_ASSERTION(mCur && maxChunks && chunks, "bad call to ParseLine");
+
+    int found = 0;
+
+    chunks[found++] = mCur;
+
+    if(found < maxChunks)
+    {
+        for(char* cur = mCur; *cur; cur++)
+        {
+            if(*cur == ',')
+            {
+                *cur = 0;
+                chunks[found++] = cur+1;
+                if(found == maxChunks)
+                    break;
+            }
+        }
+    }
+    return found;
+}
+
 /***************************************************/
 
 static
 PRBool ReadSectionHeader(ManifestLineReader& reader, 
-                         const char *token, int minCount,
-                         char* name, int* count)
+                         const char *token, int minCount, int* count)
 {
     while(1)
     {
@@ -339,16 +423,23 @@ PRBool ReadSectionHeader(ManifestLineReader& reader,
             break;
         if(*reader.LinePtr() == '[')
         {
-            if(reader.LineLength() > g_MAX_LINE_LEN)
+            char* p = reader.LinePtr() + (reader.LineLength() - 1);
+            if(*p != ']')
                 break;
-            if(2 == PR_sscanf(reader.LinePtr(), "[%[^','],%d]", 
-                              name, count) &&
-               0 == PL_strcmp(name, token) &&
-               *count >= minCount)
-            {
-                return PR_TRUE;
-            }
-            break;
+            *p = 0;
+
+            char* values[2];
+            if(2 != reader.ParseLine(values, 2))
+                break;
+
+            // ignore the leading '['
+            if(0 != PL_strcmp(values[0]+1, token))
+                break;
+
+            if((*count = atoi(values[1])) < minCount)
+                break;
+            
+            return PR_TRUE;
         }
     }
     return PR_FALSE;
@@ -359,21 +450,21 @@ PRBool ReadSectionHeader(ManifestLineReader& reader,
 PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
                           xptiWorkingSet*           aWorkingSet)
 {
+    int i;
+    nsXPIDLCString appDirString;
     char* whole = nsnull;
-    char* name = nsnull;
-    char* iidStr = nsnull;
     PRBool succeeded = PR_FALSE;
     PRUint32 flen;
     ManifestLineReader reader;
     int headerCount = 0;
+    int dirCount = 0;
     int fileCount = 0;
     int zipItemCount = -1;
     int interfaceCount = 0;
-    int i;
-    int index;
-    int major;
-    int minor;
+    int dir;
     int flags;
+    char* values[6];    // 6 is currently the max items we need to parse
+    PRUint32 size32;
     PRInt64 size;
     PRInt64 date;
 
@@ -385,15 +476,6 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
 
     // all exits from on here should be via 'goto out' 
     
-    // We are going to scanf into these buffers, let's make them big.
-    name = new char[g_MAX_LINE_LEN];
-    if(!name)
-        goto out;
-    
-    iidStr = new char[g_MAX_LINE_LEN];
-    if(!iidStr)
-        goto out;
-
     // Look for "Header" section
 
     // This version accepts only version 1,0. We also freak if the header
@@ -402,33 +484,86 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
     // the software. Future versions may wish to support updating older
     // manifests in some interesting way.
 
-    if(!ReadSectionHeader(reader, g_TOKEN_Header, 1, name, &headerCount))
+    if(!ReadSectionHeader(reader, g_TOKEN_Header, 2, &headerCount))
         goto out;
-    
-    // get the version
 
-    if(headerCount != 1)
+    if(headerCount != 2)
         goto out;
+
+    // Verify the version number
 
     if(!reader.NextLine())
         goto out;
 
-    if(reader.LineLength() > g_MAX_LINE_LEN)
+    // index,VersionLiteral,major,minor
+    if(4 != reader.ParseLine(values, 4))
         goto out;
-        
-    if(4 != PR_sscanf(reader.LinePtr(), "%d,%[^','],%d,%d", 
-                      &index, name, &major, &minor) ||
-       0 != index ||
-       0 != PL_strcmp(name, g_TOKEN_Version) ||
-       major != g_VERSION_MAJOR ||
-       minor != g_VERSION_MINOR)
+
+    // index
+    if(0 != atoi(values[0]))
+        goto out;
+
+    // VersionLiteral
+    if(0 != PL_strcmp(values[1], g_TOKEN_Version))
+        goto out;
+
+    // major
+    if(g_VERSION_MAJOR != atoi(values[2]))
+        goto out;
+
+    // minor
+    if(g_VERSION_MINOR != atoi(values[3]))
+        goto out;
+
+    // Verify the application directory
+
+    if(!reader.NextLine())
+        goto out;
+
+    // index,AppDirLiteral,directoryname
+    if(3 != reader.ParseLine(values, 3))
+        goto out;
+
+    // index
+    if(1 != atoi(values[0]))
+        goto out;
+
+    // AppDirLiteral
+    if(0 != PL_strcmp(values[1], g_TOKEN_AppDir))
+        goto out;
+
+    GetCurrentAppDirString(aMgr, getter_Copies(appDirString));
+    if(!appDirString || 0 != PL_strcmp(appDirString, values[2]))
+        goto out;
+
+    // Look for "Directories" section
+
+    if(!ReadSectionHeader(reader, g_TOKEN_Directories, 1, &dirCount))
+        goto out;
+
+    // Read the directory records
+
+    for(i = 0; i < dirCount; ++i)
     {
-        goto out;    
+        if(!reader.NextLine())
+            goto out;
+       
+        // index,directoryname
+        if(2 != reader.ParseLine(values, 2))
+            goto out;
+
+        // index
+        if(i != atoi(values[0]))
+            goto out;
+
+        // directoryname
+        if(!aWorkingSet->DirectoryAtHasPersistentDescriptor(i, values[1]))
+            goto out;    
     }
 
     // Look for "Files" section
 
-    if(!ReadSectionHeader(reader, g_TOKEN_Files, 1, name, &fileCount))
+    if(!ReadSectionHeader(reader, g_TOKEN_Files, 1, &fileCount))
         goto out;
 
 
@@ -444,26 +579,43 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         if(!reader.NextLine())
             goto out;
 
-        if(reader.LineLength() > g_MAX_LINE_LEN)
+        // index,filename,dirIndex,dilesSize,filesDate
+        if(5 != reader.ParseLine(values, 5))
             goto out;
-            
-        if(4 != PR_sscanf(reader.LinePtr(), "%d,%[^','],%lld,%lld", 
-                          &index, name, &size, &date) ||
-           i != index ||
-           !*name)
-        {
-            goto out;    
-        }
+
+        // index
+        if(i != atoi(values[0]))
+            goto out;
+
+        // filename
+        if(!*values[1])
+            goto out;
+
+        // dirIndex
+        dir = atoi(values[2]);
+        if(dir < 0 || dir > dirCount)
+            goto out;
+
+        // fileSize
+        size32 = atoi(values[3]);
+        if(size32 <= 0)
+            goto out;
+        LL_UI2L(size, size32);
+
+        // fileDate
+        date = nsCRT::atoll(values[4]);
+        if(LL_IS_ZERO(date))
+            goto out;
         
         // Append a new file record to the array.
 
         aWorkingSet->AppendFile(
-            xptiFile(nsInt64(size), nsInt64(date), name, aWorkingSet));
+            xptiFile(nsInt64(size), nsInt64(date), dir, values[1], aWorkingSet));
     }
 
     // Look for "ZipItems" section
 
-    if(!ReadSectionHeader(reader, g_TOKEN_ArchiveItems, 0, name, &zipItemCount))
+    if(!ReadSectionHeader(reader, g_TOKEN_ArchiveItems, 0, &zipItemCount))
         goto out;
 
     // Alloc room in the WorkingSet for the zipItemarray.
@@ -479,25 +631,26 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         if(!reader.NextLine())
             goto out;
 
-        if(reader.LineLength() > g_MAX_LINE_LEN)
+        // index,filename
+        if(2 != reader.ParseLine(values, 2))
             goto out;
-            
-        if(2 != PR_sscanf(reader.LinePtr(), "%d,%[^',']", 
-                          &index, name) ||
-           i != index ||
-           !*name)
-        {
-            goto out;    
-        }
+
+        // index
+        if(i != atoi(values[0]))
+            goto out;
+
+        // filename
+        if(!*values[1])
+            goto out;
         
         // Append a new zipItem record to the array.
 
-        aWorkingSet->AppendZipItem(xptiZipItem(name, aWorkingSet));
+        aWorkingSet->AppendZipItem(xptiZipItem(values[1], aWorkingSet));
     }
 
     // Look for "Interfaces" section
 
-    if(!ReadSectionHeader(reader, g_TOKEN_Interfaces, 1, name, &interfaceCount))
+    if(!ReadSectionHeader(reader, g_TOKEN_Interfaces, 1, &interfaceCount))
         goto out;
 
     // Read the interface records
@@ -513,23 +666,36 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         if(!reader.NextLine())
             goto out;
 
-        if(reader.LineLength() > g_MAX_LINE_LEN)
+        // index,interfaceName,iid,fileIndex,zipIndex,flags
+        if(6 != reader.ParseLine(values, 6))
             goto out;
-            
-        if(6 != PR_sscanf(reader.LinePtr(), "%d,%[^','],%[^','],%d,%d,%d", 
-                          &index, name, iidStr, &fileIndex, &zipItemIndex,
-                          &flags) ||
-           i != index ||
-           !*name     ||
-           !*iidStr   ||
-           !iid.Parse(iidStr) ||
-           fileIndex < 0 ||
-           fileIndex >= fileCount ||
-           (zipItemIndex != -1 && zipItemIndex >= zipItemCount) ||
-           (flags != 0 && flags != 1))
-        {
-            goto out;    
-        }
+
+        // index
+        if(i != atoi(values[0]))
+            goto out;
+
+        // interfaceName
+        if(!*values[1])
+            goto out;
+
+        // iid
+        if(!iid.Parse(values[2]))
+            goto out;
+
+        // fileIndex
+        fileIndex = atoi(values[3]);
+        if(fileIndex < 0 || fileIndex >= fileCount)
+            goto out;
+
+        // zipIndex (NOTE: -1 is a valid value)
+        zipItemIndex = atoi(values[4]);
+        if(zipItemIndex < -1 || zipItemIndex >= zipItemCount)
+            goto out;
+
+        // flags
+        flags = atoi(values[5]);
+        if(flags != 0 && flags != 1)
+            goto out;
         
         // Build an InterfaceInfo and hook it in.
 
@@ -537,11 +703,9 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
             typelibRecord.Init(fileIndex);
         else
             typelibRecord.Init(fileIndex, zipItemIndex);
-        info = new xptiInterfaceInfo(name, iid, typelibRecord, aWorkingSet);
+        info = new xptiInterfaceInfo(values[1], iid, typelibRecord, aWorkingSet);
         if(!info)
-        {
             goto out;    
-        }    
         
         NS_ADDREF(info);
         if(!info->IsValid())
@@ -565,10 +729,6 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
  out:
     if(whole)
         delete [] whole;
-    if(name)
-        delete [] name;
-    if(iidStr)
-        delete [] iidStr;
 
     if(!succeeded)
     {
