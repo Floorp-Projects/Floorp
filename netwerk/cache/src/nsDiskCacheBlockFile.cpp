@@ -36,7 +36,6 @@
 nsresult
 nsDiskCacheBlockFile::Open( nsILocalFile *  blockFile, PRUint32  blockSize)
 {
-    PRStatus  err = PR_SUCCESS;
     PRInt32   fileSize;
 
     mBlockSize = blockSize;

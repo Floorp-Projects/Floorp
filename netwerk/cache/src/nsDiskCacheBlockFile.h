@@ -27,8 +27,7 @@
 #include "nsILocalFile.h"
 #include "nspr.h"
 
-enum { kBitMapBytes = 4096 };
-
+const unsigned short kBitMapBytes = 4096;
 
 /******************************************************************************
  *  nsDiskCacheBlockFile
