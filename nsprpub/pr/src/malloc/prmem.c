@@ -342,11 +342,24 @@ pr_ZoneRealloc(void *oldptr, PRUint32 bytes)
             "Warning: reallocing memory block %p from ordinary malloc\n",
             oldptr);
 #endif
+        /*
+         * We are going to realloc oldptr.  If realloc succeeds, the
+         * original value of oldptr will point to freed memory.  So this
+         * function must not fail after a successfull realloc call.  We
+         * must perform any operation that may fail before the realloc
+         * call.
+         */
+        rv = pr_ZoneMalloc(bytes);  /* this may fail */
+        if (!rv) {
+            return rv;
+        }
+
         /* We don't know how big it is.  But we can fix that. */
         oldptr = realloc(oldptr, bytes);
         if (!oldptr) {
             if (bytes) {
                 PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+                pr_ZoneFree(rv);
                 return oldptr;
             }
         }
@@ -367,17 +380,18 @@ pr_ZoneRealloc(void *oldptr, PRUint32 bytes)
             return oldptr;
         }
         ours = 1;
+        rv = pr_ZoneMalloc(bytes);
+        if (!rv) {
+            return rv;
+        }
     }
     
-    rv = pr_ZoneMalloc(bytes);
-    if (rv) {
-        if (oldptr && mb->s.requestedSize)
-            memcpy(rv, oldptr, mb->s.requestedSize);
-        if (ours)
-            pr_ZoneFree(oldptr);
-        else if (oldptr)
-            free(oldptr);
-    }
+    if (oldptr && mb->s.requestedSize)
+        memcpy(rv, oldptr, mb->s.requestedSize);
+    if (ours)
+        pr_ZoneFree(oldptr);
+    else if (oldptr)
+        free(oldptr);
     return rv;
 }
 
