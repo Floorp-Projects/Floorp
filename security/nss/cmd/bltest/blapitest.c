@@ -1427,16 +1427,16 @@ print_td:
     if (!td) {
 	fprintf(stdout, "%8d", info->repetitions);
 	fprintf(stdout, "%8d", info->cxreps);
-	fprintf(stdout, "%10.3f", info->cxtime);
-	fprintf(stdout, "%10.3f", info->optime);
+	fprintf(stdout, "%12.3f", info->cxtime);
+	fprintf(stdout, "%12.3f", info->optime);
 	fprintf(stdout, "\n");
 	return;
     }
 
     fprintf(stdout, "%8s", "opreps");
     fprintf(stdout, "%8s", "cxreps");
-    fprintf(stdout, "%10s", "context");
-    fprintf(stdout, "%10s", "op");
+    fprintf(stdout, "%12s", "context");
+    fprintf(stdout, "%12s", "op");
     fprintf(stdout, "\n");
     fprintf(stdout, "%8s", mode_strings[info->mode]);
     fprintf(stdout, "_%c", (cxonly) ? 'c' : (encrypt) ? 'e' : 'd');
