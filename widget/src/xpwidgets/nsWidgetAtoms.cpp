@@ -37,32 +37,22 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsWidgetAtoms.h"
+#include "nsStaticAtom.h"
+#include "nsMemory.h"
 
+#define WIDGET_ATOM(_name, _value) nsIAtom* nsWidgetAtoms::_name = 0;
+#include "nsWidgetAtomList.h"
+#undef WIDGET_ATOM
+
+static const nsStaticAtom widget_atoms[] = {
 // define storage for all atoms
-#define WIDGET_ATOM(_name, _value) nsIAtom* nsWidgetAtoms::_name;
+#define WIDGET_ATOM(_name, _value) { _value, &nsWidgetAtoms::_name },
 #include "nsWidgetAtomList.h"
 #undef WIDGET_ATOM
+};
 
 
-static nsrefcnt gRefCnt = 0;
+void nsWidgetAtoms::RegisterAtoms() {
 
-void nsWidgetAtoms::AddRefAtoms() {
-
-  if (gRefCnt == 0) {
-    // now register the atoms
-#define WIDGET_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
-#include "nsWidgetAtomList.h"
-#undef WIDGET_ATOM
-  }
-  ++gRefCnt;
-}
-
-void nsWidgetAtoms::ReleaseAtoms() {
-
-  NS_PRECONDITION(gRefCnt != 0, "bad release of xul atoms");
-  if (--gRefCnt == 0) {
-#define WIDGET_ATOM(_name, _value) NS_RELEASE(_name);
-#include "nsWidgetAtomList.h"
-#undef WIDGET_ATOM
-  }
+  NS_RegisterStaticAtoms(widget_atoms, NS_ARRAY_LENGTH(widget_atoms));
 }
