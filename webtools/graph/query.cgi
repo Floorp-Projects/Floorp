@@ -82,11 +82,11 @@ sub show_graph {
   print "<title>$TBOX $TESTNAME</title><br>\n";
 
   my $neg_autoscale = !$AUTOSCALE;
-  print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$neg_autoscale&days=$DAYS\">autoscale</a><br>\n";
+  print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$neg_autoscale&days=$DAYS&units=$UNITS\">autoscale</a><br>\n";
 
 
   # graph
-  print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS\">";
+  print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS\">";
 }
 
 if(!$TESTNAME) {
