@@ -201,6 +201,12 @@ xlib_rgb_get_display (void);
 Screen *
 xlib_rgb_get_screen (void);
 
+unsigned long
+xlib_get_prec_from_mask(unsigned long);
+
+unsigned long
+xlib_get_shift_from_mask(unsigned long);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

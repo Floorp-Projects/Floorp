@@ -196,7 +196,7 @@ static int static_image_idx;
 static unsigned char *colorcube;
 static unsigned char *colorcube_d;
 
-static unsigned long
+unsigned long
 xlib_get_prec_from_mask(unsigned long val)
 {
   unsigned long retval = 0;
@@ -212,7 +212,7 @@ xlib_get_prec_from_mask(unsigned long val)
   return retval;
 }
 
-static unsigned long
+unsigned long
 xlib_get_shift_from_mask(unsigned long val)
 {
   unsigned long cur_bit = 0;
