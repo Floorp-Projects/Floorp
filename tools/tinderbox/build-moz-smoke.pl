@@ -121,19 +121,35 @@ sub SetupPath {
     }
 
     if ( $OS eq 'SunOS' ) {
-	$ENV{'PATH'} = '/usr/ccs/bin:' . $ENV{'PATH'};
-	$ConfigureArgs .= '--with-pthreads';
+	if ( $OSVerMajor eq '4' ) {
+	    $ENV{'PATH'} = '/usr/gnu/bin:/usr/local/sun4/bin:/usr/bin:' . $ENV{'PATH'};
+	    $ENV{'LD_LIBRARY_PATH'} = '/home/motif/usr/lib:' . $ENV{'LD_LIBRARY_PATH'};
+	    $ConfigureArgs .= '--x-libraries=/home/motif/usr/lib';
+	    $ConfigureEnvArgs = 'CC="egcc -DSUNOS4" CXX="eg++ -DSUNOS4"';
+	} else {
+	    $ENV{'PATH'} = '/usr/ccs/bin:' . $ENV{'PATH'};
+	    $ConfigureArgs .= '--with-pthreads';
+	}
 	if ( $CPU eq 'i86pc' ) {
 	    $ENV{'PATH'} = '/opt/gnu/bin:' . $ENV{'PATH'};
 	    $ENV{'LD_LIBRARY_PATH'} .= ':/opt/gnu/lib';
 	    $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
 	    # This may just be an NSPR bug, but if USE_PTHREADS is defined, then
 	    # _PR_HAVE_ATOMIC_CAS gets defined (erroneously?) and libnspr21 doesn't work.
-	    $NSPRArgs .= 'CLASSIC_NSPR=1';
+	    $NSPRArgs .= 'CLASSIC_NSPR=1 NS_USE_GCC=1 NS_USE_NATIVE=';
 	} else {
-	    $NSPRArgs .= 'USE_PTHREADS=1';
+	    # This is utterly lame....
+	    if ( $ENV{'HOST'} eq 'fugu' ) {
+		$ENV{'PATH'} = '/tools/ns/workshop/bin:' . $ENV{'PATH'};
+		$ConfigureEnvArgs = 'CC=cc CXX=CC';
+		$NSPRArgs .= 'NS_USE_NATIVE=1';
+	    } else {
+		$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
+	    }
+	    if ( $OSVerMajor eq '5' ) {
+		$NSPRArgs .= 'USE_PTHREADS=1';
+	    }
 	}
-	$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
     }
 
     $Path = $ENV{PATH};
@@ -234,8 +250,15 @@ sub GetSystemInfo {
 	    $ObjDir = 'obj-i386-pc-solaris' . $OSVer;
 	    $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	} else {
-	    $ObjDir = 'obj-sparc-sun-solaris' . $OSVer;
-	    $BuildName = $host . ' ' . $OS . '/sparc ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	    $ObjDir = 'obj-sparc-sun-';
+	    $OSVerMajor = substr($OSVer, 0, 1);
+	    if ( $OSVerMajor eq '4' ) {
+		$ObjDir .= 'sunos';
+	    } else {
+		$ObjDir .= 'solaris';
+		$BuildName = $host . ' ' . $OS . '/sparc ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	    }
+	    $ObjDir .= $OSVer;
 	}
 	$ObjDir =~ s/s5\./s2./o;
     }
@@ -286,7 +309,7 @@ sub BuildIt {
 	
 	print "opening $logfile\n";
 	open( LOG, ">$logfile" ) || print "can't open $?\n";
-	print LOG "current dir is -- $hostname:$CurrentDir\n";
+	print LOG "current dir is -- " . $ENV{'HOST'} . ":$CurrentDir\n";
 	print LOG "Build Administrator is $BuildAdministrator\n";
 	&PrintEnv;
 	
