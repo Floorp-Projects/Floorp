@@ -503,6 +503,9 @@ static void InitTraceLog(void)
     if (NS_WARN_IF_FALSE(gTypesToLog, "out of memory")) {
       fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- unable to log specific classes\n");
     }
+    else if (!gAllocLog && !gRefcntsLog) {
+      fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- but neither XPCOM_MEM_REFCNT_LOG nor XPCOM_MEM_ALLOC_LOG are defined\n");
+    }
     else {
       fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- only logging these classes: ");
       const char* cp = classes;
@@ -658,6 +661,22 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
                    _SymGetModuleBase,        // module base routine
                    0);                       // translate address routine
 
+    if (!ok) {
+      LPVOID lpMsgBuf;
+      FormatMessage( 
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+        FORMAT_MESSAGE_FROM_SYSTEM | 
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        GetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+        (LPTSTR) &lpMsgBuf,
+        0,
+        NULL 
+        );
+      fprintf(stderr, "### ERROR: WalkStack: %s\n", lpMsgBuf);
+      LocalFree( lpMsgBuf );
+    }
     if (!ok || frame.AddrPC.Offset == 0)
       break;
 
@@ -936,8 +955,8 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
 #ifndef NS_LOSING_ARCHITECTURE
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogNewXPCOM instead to get file and line numbers.)
-    PRBool loggingThisType = (gTypesToLog && LogThisType(aClazz));
-    if (aRefCnt == 1 && (gAllocLog || loggingThisType)) {
+    PRBool loggingThisType = (!gTypesToLog || LogThisType(aClazz));
+    if (aRefCnt == 1 && gAllocLog && loggingThisType) {
       fprintf(gAllocLog, "\n<%s> 0x%08X Create\n",
               aClazz, PRInt32(aPtr));
       WalkTheStack(gAllocLog);
@@ -945,7 +964,7 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
 
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogAddRefCall instead to get file and line numbers.)
-    if (gRefcntsLog || loggingThisType) {
+    if (gRefcntsLog && loggingThisType) {
       if (gLogToLeaky) {
         (*leakyLogAddRef)(aPtr, aRefCnt - 1, aRefCnt);
       }
@@ -985,8 +1004,8 @@ nsTraceRefcnt::LogRelease(void* aPtr,
 #ifndef NS_LOSING_ARCHITECTURE
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogReleaseCall instead to get file and line numbers.)
-    PRBool loggingThisType = (gTypesToLog && LogThisType(aClazz));
-    if (gRefcntsLog || loggingThisType) {
+    PRBool loggingThisType = (!gTypesToLog || LogThisType(aClazz));
+    if (gRefcntsLog && loggingThisType) {
       if (gLogToLeaky) {
         (*leakyLogRelease)(aPtr, aRefCnt + 1, aRefCnt);
       }
@@ -1003,7 +1022,7 @@ nsTraceRefcnt::LogRelease(void* aPtr,
 
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
-    if (aRefCnt == 0 && (gAllocLog || loggingThisType)) {
+    if (aRefCnt == 0 && gAllocLog && loggingThisType) {
       fprintf(gAllocLog,
               "\n<%s> 0x%08X Destroy\n",
               aClazz, PRInt32(aPtr));
@@ -1135,7 +1154,7 @@ nsTraceRefcnt::LogCtor(void* aPtr,
 #ifndef NS_LOSING_ARCHITECTURE
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogNewXPCOM instead to get file and line numbers.)
-    if (gAllocLog || (gTypesToLog && LogThisType(aType))) {
+    if (gAllocLog && (!gTypesToLog || LogThisType(aType))) {
       fprintf(gAllocLog, "\n<%s> 0x%08X Ctor (%d)\n",
              aType, PRInt32(aPtr), aInstanceSize);
       WalkTheStack(gAllocLog);
@@ -1168,7 +1187,7 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aType,
 #ifndef NS_LOSING_ARCHITECTURE
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
-    if (gAllocLog || (gTypesToLog && LogThisType(aType))) {
+    if (gAllocLog && (!gTypesToLog || LogThisType(aType))) {
       fprintf(gAllocLog, "\n<%s> 0x%08X Dtor (%d)\n",
              aType, PRInt32(aPtr), aInstanceSize);
       WalkTheStack(gAllocLog);
