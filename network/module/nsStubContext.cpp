@@ -29,6 +29,10 @@
 #include "nsINetSupport.h"
 #include "nsNetStream.h"
 
+
+void free_stub_context(MWContext *window_id);
+
+
 /****************************************************************************/
 /* Beginning  of MWContext Evil!!!                                          */
 /* -------------------------------                                          */
@@ -92,6 +96,7 @@ static nsINetSupport *getNetSupport(URL_Struct *URL_s)
   return netSupport;
 }
 
+PRIVATE
 void stub_Alert(MWContext *context,
                 const char *msg)
 {
@@ -128,6 +133,7 @@ extern "C" char * fe_GetProgramDirectory(char *buffer, int length) {
 }
 #endif
 
+PRIVATE
 XP_Bool stub_Confirm(MWContext *context,
                      const char *msg)
 {
@@ -157,6 +163,7 @@ XP_Bool stub_Confirm(MWContext *context,
   return bResult;
 }
 
+PRIVATE
 char *stub_Prompt(MWContext *context,
                   const char *msg,
                   const char *def)
@@ -243,6 +250,7 @@ stub_PromptUsernameAndPassword(MWContext *context,
   return bResult;
 }
 
+PRIVATE
 char *stub_PromptPassword(MWContext *context,
                           const char *msg)
 {
@@ -542,6 +550,7 @@ extern "C" MWContext * XP_FindContextOfType (MWContext * context,
 /* End of MWContext Evil!!!                                                 */
 /****************************************************************************/
 
+PRIVATE
 nsConnectionInfo *GetConnectionInfoFromStream(NET_StreamClass *stream)
 {
     URL_Struct *URL_s = (URL_Struct *)stream->data_object;
@@ -555,6 +564,7 @@ nsConnectionInfo *GetConnectionInfoFromStream(NET_StreamClass *stream)
  * and fires off notifications through the nsIStreamListener interface
  */
 
+PRIVATE
 void stub_complete(NET_StreamClass *stream)
 {
     URL_Struct *URL_s = (URL_Struct *)stream->data_object;
@@ -579,6 +589,7 @@ void stub_complete(NET_StreamClass *stream)
     NET_DropURLStruct(URL_s);
 }
 
+PRIVATE
 void stub_abort(NET_StreamClass *stream, int status)
 {
     URL_Struct *URL_s = (URL_Struct *)stream->data_object;
@@ -607,6 +618,7 @@ void stub_abort(NET_StreamClass *stream, int status)
     NET_DropURLStruct(URL_s);
 }
 
+PRIVATE
 int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
 {
     PRUint32 bytesWritten;
@@ -641,6 +653,7 @@ int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
     return 1;
 }
 
+PRIVATE
 unsigned int stub_is_write_ready(NET_StreamClass *stream)
 {
     nsresult errorCode;
