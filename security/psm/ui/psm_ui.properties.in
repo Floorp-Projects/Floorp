@@ -8035,7 +8035,29 @@ cert_renewal_hdrs=""
 cert_renewal_width=520
 cert_renewal_height=350
 cert_renewal_content:
-{frame_set cert_renewal,formsubmit}
+<html>
+{help_monitor_js}
+<script language=JavaScript>
+{pop_up_alert}
+
+function submitCheck()
+{
+	var renewal_url = CertRenewalContent.document.forms[0].elements['renewal_url'].value;
+
+	if (CertRenewalContent.document.forms[0].action[0].checked) {
+		window.top.open(renewal_url);
+	}
+	return true;
+}
+</script>
+{formsubmit_monitor_with_check_js submitCheck}
+{help_monitor_js}
+<frameset rows="50,*,40" border="0" frameborder="NO">
+<frame src="get?baseRef=cert_renewal_top&target=%1$d" name="CertRenewalTop" scrolling="NO" marginwidth="0" marginheight="0">
+<frame src="get?baseRef=cert_renewal_main&target=%1$d" name="CertRenewalContent" scrolling="Auto" marginwidth="0" marginheight="0">
+<frame src="get?baseRef=cert_renewal_bottom&target=%1$d" name="CertRenewalFoot" scrolling="NO" marginwidth="0" marginheight="0">
+</frameset>
+</html>
 :cert_renewal_content
 
 
@@ -8044,6 +8066,25 @@ cert_renewal_top__hdrs=""
 cert_renewal_top_content:
 {top_frame cert_renewal_title,certgif,35,35}
 :cert_renewal_top_content
+
+cert_renewal_bottom_type=text/html
+cert_renewal_bottom_hdrs=
+cert_renewal_bottom_content={cert_renewal_bottom_template blank}
+
+cert_renewal_bottom_template:
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+{disable_right_click_js}
+</head>
+{{$1}}
+<body class=foot alink="#333399" 
+      onLoad="parent.SetHelpURL('help.htm#1055232')">
+{ok_cancel_help cert_renewal,pkcs12_button_reply,close_if_cancel}
+</body>
+</html>
+:cert_renewal_bottom_template
 
 cert_renewal_buttons_type="text/html"
 cert_renewal_buttons_hdrs=""
@@ -8067,6 +8108,10 @@ cert_renewal_main_content:
 <body class=content alink="#FF0000">
 <p>{cert_renewal_info_string}</p>
 
+<form method="get" action="formsubmit_handler" name="cert_renewal">
+<input type=hidden name="baseRef" value="windowclose_doclose_js">
+<input type=hidden name="target" value="%1$d">
+
 <table WIDTH=500px>
 <tr VALIGN=CENTER>
 <td ALIGN=CENTER WIDTH="90px"><img SRC="get?baseRef=certgif" height=60 width=80></td>
@@ -8078,9 +8123,6 @@ cert_renewal_main_content:
 
 <HR WIDTH=96%% ALIGN=CENTER>
 
-<form method="get" action="formsubmit_handler" name="cert_renewal">
-<input type=hidden name="baseRef" value="windowclose_doclose_js">
-<input type=hidden name="target" value="%1$d">
 <div class=Plainbox>
 <TABLE>
 <TR valign=top>
@@ -8135,5 +8177,8 @@ Expires on: %3$s
 Issued under: %4$s
 </div>
 </td><td></td></tr></table>
+
+<input type=hidden name="renewal_url" value="%5$s">
+
 :cert_renewal_cert_info
 
