@@ -23,6 +23,7 @@ EXPORTS =                           \
         nsIHTTPEventSink.h          \
         nsIHTTPConnection.h 		\
         nsIHTTPHandler.h 			\
+        nsHTTPEnums.h 				\
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
