@@ -195,16 +195,12 @@ find_interfaces(IDL_tree_func_data *tfd, gpointer user_data)
     return TRUE;
 }
 
-/* parse str and fill id */
-
-static const char nsIDFmt1[] =
-  "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
-
-static const char nsIDFmt2[] =
-  "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x";
-
 #ifdef DEBUG_shaver
 /* for calling from gdb */
+/* this should (instead) print to a string... and be the validator for iid
+ * handling in header mode.  Don't forget also to check in the code in
+ * nsID.cpp.
+ */
 static void
 print_IID(struct nsID *iid, FILE *file)
 {
@@ -218,44 +214,6 @@ print_IID(struct nsID *iid, FILE *file)
 }
 #endif
 
-/* we cannot link against libxpcom, so we re-implement nsID::Parse here. */
-static gboolean
-fill_iid(struct nsID *id, char *str)
-{
-    PRInt32 count = 0;
-    PRInt32 n1, n2, n3[8];
-    PRInt32 n0, i;
-
-    if (!str[0]) {
-        memset(id, 0, sizeof(*id));
-        return TRUE;
-    }
-#ifdef DEBUG_shaver_iid
-    fprintf(stderr, "parsing iid   %s\n", str);
-#endif
-
-    count = sscanf(str, (str[0] == '{' ? nsIDFmt1 : nsIDFmt2),
-                   &n0, &n1, &n2,
-                   &n3[0],&n3[1],&n3[2],&n3[3],
-                   &n3[4],&n3[5],&n3[6],&n3[7]);
-
-    id->m0 = (PRInt32) n0;
-    id->m1 = (PRInt16) n1;
-    id->m2 = (PRInt16) n2;
-    for (i = 0; i < 8; i++) {
-      id->m3[i] = (PRInt8) n3[i];
-    }
-
-#ifdef DEBUG_shaver_iid
-    if (count == 11) {
-        fprintf(stderr, "IID parsed to ");
-        print_IID(id, stderr);
-        fputs("\n", stderr);
-    }
-#endif
-    return (gboolean)(count == 11);
-}
-
 /* fill the interface_directory IDE table from the interface_map */
 static gboolean
 fill_ide_table(gpointer key, gpointer value, gpointer user_data)
@@ -264,18 +222,20 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
     NewInterfaceHolder *holder = (NewInterfaceHolder *) value;
     struct nsID id;
     XPTInterfaceDirectoryEntry *ide;
-    char *iid;
 
     XPT_ASSERT(holder);
-    iid = holder->iid ? holder->iid : "";
 
 #ifdef DEBUG_shaver_ifaces
     fprintf(stderr, "filling %s\n", holder->full_name);
 #endif
 
-    if (!fill_iid(&id, iid)) {
-        IDL_tree_error(state->tree, "cannot parse IID %s\n", iid);
-        return FALSE;
+    if (holder->iid) {
+        if (!xpidl_parse_iid(&id, holder->iid)) {
+            IDL_tree_error(state->tree, "cannot parse IID %s\n", holder->iid);
+            return FALSE;
+        }
+    } else {
+        memset(&id, 0, sizeof(id));
     }
 
     ide = &(HEADER(state)->interface_directory[IFACES(state)]);

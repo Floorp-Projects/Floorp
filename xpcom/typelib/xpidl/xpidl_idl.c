@@ -561,8 +561,6 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
          * upgrade libIDL versions, it'll handle comments for us, which will
          * help a lot.
          *
-         * XXX our line counts are pretty much always wrong (bugzilla #5872)
-         *
          * XXX const string foo = "/\*" will just screw us horribly.
          */
 
@@ -741,3 +739,49 @@ xpidl_write_comment(TreeState *state, int indent)
     fputs(" */\n", state->file);
 }
 
+/* We only parse the {}-less format.  (xpidl_header never has, so we're safe.) */
+static const char nsIDFmt2[] =
+  "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x";
+
+/*
+ * Parse a uuid string into an nsID struct.  We cannot link against libxpcom,
+ * so we re-implement nsID::Parse here.
+ */
+gboolean
+xpidl_parse_iid(struct nsID *id, char *str)
+{
+    PRInt32 count = 0;
+    PRInt32 n1, n2, n3[8];
+    PRInt32 n0, i;
+
+    assert(str != NULL);
+    
+    if (strlen(str) != 36) {
+        return FALSE;
+    }
+     
+#ifdef DEBUG_shaver_iid
+    fprintf(stderr, "parsing iid   %s\n", str);
+#endif
+
+    count = sscanf(str, nsIDFmt2,
+                   &n0, &n1, &n2,
+                   &n3[0],&n3[1],&n3[2],&n3[3],
+                   &n3[4],&n3[5],&n3[6],&n3[7]);
+
+    id->m0 = (PRInt32) n0;
+    id->m1 = (PRInt16) n1;
+    id->m2 = (PRInt16) n2;
+    for (i = 0; i < 8; i++) {
+      id->m3[i] = (PRInt8) n3[i];
+    }
+
+#ifdef DEBUG_shaver_iid
+    if (count == 11) {
+        fprintf(stderr, "IID parsed to ");
+        print_IID(id, stderr);
+        fputs("\n", stderr);
+    }
+#endif
+    return (gboolean)(count == 11);
+}

@@ -125,4 +125,12 @@ xpidl_process_node(TreeState *state);
 void
 xpidl_write_comment(TreeState *state, int indent);
 
+#include "xpt_struct.h"
+/*
+ * Parse a uuid string into an nsID struct.  We cannot link against libxpcom,
+ * so we re-implement nsID::Parse here.
+ */
+gboolean
+xpidl_parse_iid(nsID *id, char *str);
+
 #endif /* __xpidl_h */
