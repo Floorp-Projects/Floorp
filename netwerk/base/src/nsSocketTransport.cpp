@@ -1915,7 +1915,7 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
             break;
         case eSocketState_WaitReadWrite:
             {
-                static nsAutoString frommesg("Transfering data from ");
+                static nsAutoString frommesg("Transferring data from ");
                 static nsAutoString tomesg("Sending request to ");
                 *oString = (mWriteContext == nsnull) ? 
                     frommesg.ToNewUnicode() : tomesg.ToNewUnicode();
