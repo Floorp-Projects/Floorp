@@ -51,11 +51,11 @@ nsXPFCMenuContainer::~nsXPFCMenuContainer()
 	  mChildMenus->CreateIterator(&iterator);
 	  iterator->Init();
 
-    nsISupports * item;
+    nsIXPFCMenuItem * item;
 
 	  while(!(iterator->IsDone()))
 	  {
-		  item = (nsISupports *) iterator->CurrentItem();
+		  item = (nsIXPFCMenuItem *) iterator->CurrentItem();
 		  NS_RELEASE(item);
 		  iterator->Next();
 	  }
