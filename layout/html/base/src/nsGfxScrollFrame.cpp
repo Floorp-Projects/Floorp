@@ -653,7 +653,13 @@ nsGfxScrollFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 nsGfxScrollFrame::ScrollbarStyles
 nsGfxScrollFrame::GetScrollbarStyles() const
 {
-  PRInt32 overflow = GetStyleDisplay()->mOverflow;
+  PRUint8 overflow;
+  if (GetParent() && GetParent()->GetType() == nsLayoutAtoms::viewportFrame) {
+    overflow = GetPresContext()->GetViewportOverflowOverride();
+  } else {
+    overflow = GetStyleDisplay()->mOverflow;
+  }
+
   switch (overflow) {
   case NS_STYLE_OVERFLOW_SCROLL:
   case NS_STYLE_OVERFLOW_HIDDEN:
@@ -661,6 +667,8 @@ nsGfxScrollFrame::GetScrollbarStyles() const
   case NS_STYLE_OVERFLOW_AUTO:
     return ScrollbarStyles(overflow, overflow);
   case NS_STYLE_OVERFLOW_SCROLLBARS_NONE:
+    // This isn't quite right. The scrollframe will still be scrollable using keys.
+    // This can happen when HTML or BODY has propagated this style to the viewport.
     return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
   case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
     return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_SCROLL);
