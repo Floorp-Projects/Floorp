@@ -16,9 +16,14 @@
  * Reserved.
  */
 
+#ifndef _nsMsgHdr_H
+#define _nsMsgHdr_H
 
 #include "nsString.h"
+#include "MailNewsTypes.h"
+#include "xp.h"
 #include "mdb.h"
+class nsMsgDatabase;
 
 // this could inherit from nsISupports mainly to get ref-counting semantics
 // but I don't intend it to be a public interface. I'll just
@@ -33,7 +38,7 @@ public:
     nsrefcnt	Release(void);   
 	nsresult	GetProperty(const char *propertyName, nsString &resultProperty);
 	uint16		GetNumReferences();
-	nsresult	GetStringReference(int32 refNum, nsString &resultReference);
+	nsresult	GetStringReference(PRInt32 refNum, nsString &resultReference);
 	time_t		GetDate() {return m_date;}
 
 	MessageKey	GetArticleNum();
@@ -42,20 +47,23 @@ public:
 
 			// this is almost always the m_messageKey, except for the first message.
 			// NeoAccess doesn't allow fID's of 0.
-			virtual uint32 GetMessageOffset() {return m_messageKey;}
+			virtual PRUint32 GetMessageOffset() {return m_messageKey;}
 protected:
 	nsrefcnt mRefCnt;                                                         
 
 	MessageKey	m_threadId; 
 	MessageKey	m_messageKey; 	//news: article number, mail mbox offset, imap uid...
 	time_t 		m_date;                         
-	uint32		m_messageSize;	// lines for news articles, bytes for mail messages
-	uint32		m_flags;
-	uint16		m_numReferences;	// x-ref header for threading
+	PRUint32		m_messageSize;	// lines for news articles, bytes for mail messages
+	PRUint32		m_flags;
+	PRUint16		m_numReferences;	// x-ref header for threading
 
   // nsMsgHdrs will have to know what db and row they belong to, since they are really
 // just a wrapper around the msg row in the mdb. This could cause problems,
 // though I hope not.
-	nsIMsgDatabase		*m_mdb;
+	nsMsgDatabase		*m_mdb;
 	mdbRow				*m_mdbRow;
-}
+};
+
+#endif
+
