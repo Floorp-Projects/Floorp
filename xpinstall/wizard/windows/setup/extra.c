@@ -2910,7 +2910,7 @@ void RestoreInvisibleFlag(siC *siCNode)
   lstrcpy(szAttribute, szBuf);
   strupr(szAttribute);
 
-  if(strstr(szAttribute, "INVISIBLE"))
+  if(strstr(szAttribute, "INVISIBLE") || siCNode->bSupersede)
     siCNode->dwAttributes |= SIC_INVISIBLE;
   else
     siCNode->dwAttributes &= ~SIC_INVISIBLE;
@@ -4057,6 +4057,7 @@ BOOL ResolveSupersede(siC *siCObject)
     {
       siCObject->dwAttributes &= ~SIC_SELECTED;
       siCObject->dwAttributes |= SIC_DISABLED;
+      siCObject->dwAttributes |= SIC_INVISIBLE;
     }
     else
       /* Make sure to unset the DISABLED bit.  If the Setup Type is other than
