@@ -41,7 +41,6 @@ CPPSRCS		= \
 	nsProxyEvent.cpp \
 	nsXPComFactory.cpp \
 	nsEventQueueService.cpp \
-    nsAllocator.cpp \
 	xcDll.cpp \
 	xcDllStore.cpp \
 	nsAllocator.cpp \
