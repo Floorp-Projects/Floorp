@@ -540,6 +540,18 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // XXX support it.
   if ( mWindowType == eWindowType_popup )
     ::SetWindowClass(mWindowPtr, kModalWindowClass);
+  
+  // Setup the live window resizing
+  if ( mWindowType == eWindowType_toplevel ) {
+    const UInt32 kWindowLiveResizeAttribute = (1L << 28);     // BAD!!! our headers don't yet support this
+    ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, kWindowNoAttributes );
+    
+    EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowBoundsChanged} };
+    OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 1, windEventList, this, NULL );
+      // note, passing NULL as the final param to IWEH() causes the UPP to be disposed automatically
+      // when the event target (the window) goes away. See CarbonEvents.h for info.
+    NS_ASSERTION(err == noErr, "Couldn't install Carbon Event handler");
+  }  
 #endif
   
   // create a phantom scrollbar to catch the attention of mousewheel 
@@ -577,6 +589,44 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
 	return NS_OK;
 }
+
+
+#if TARGET_CARBON
+
+pascal OSStatus
+nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
+{
+  WindowRef myWind = NULL;
+  ::GetEventParameter ( inEvent, kEventParamDirectObject, typeWindowRef, NULL, sizeof(myWind), NULL, &myWind );
+  if ( myWind ) {
+    UInt32 what = ::GetEventKind ( inEvent );
+    switch ( what ) {
+    
+      case kEventWindowBoundsChanged:
+        Rect bounds;
+        ::InvalWindowRect(myWind, ::GetWindowPortBounds(myWind, &bounds));
+
+        // resize the window and repaint
+        nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
+        if ( self ) {
+          self->mMacEventHandler->ResizeEvent(myWind);
+          self->mMacEventHandler->UpdateEvent();
+        }
+        break;
+        
+      default:
+        // do nothing...
+        break;
+    
+    } // case of which event?
+  }
+  
+  return noErr;
+  
+} // WindowEventHandler
+
+#endif
+
 
 //-------------------------------------------------------------------------
 //

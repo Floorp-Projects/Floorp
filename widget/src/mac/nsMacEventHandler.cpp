@@ -421,7 +421,7 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 			break;
 
 		case updateEvt:
-			retVal = HandleUpdateEvent(aOSEvent);
+			retVal = UpdateEvent();
 			break;
 
 		case mouseDown:
@@ -1180,12 +1180,31 @@ if (KeyDown(0x39))	// press [caps lock] to start the profile
 
 //-------------------------------------------------------------------------
 //
-// HandleUpdateEvent
+// UpdateEvent
 //
 //-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleUpdateEvent(EventRecord& aOSEvent)
+PRBool nsMacEventHandler::UpdateEvent ( )
 {
 	mTopLevelWidget->HandleUpdateEvent(nil);
+
+	return PR_TRUE;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// ResizeEvent
+//
+//-------------------------------------------------------------------------
+PRBool nsMacEventHandler::ResizeEvent ( WindowRef inWindow )
+{
+	Rect macRect;
+	::GetWindowPortBounds ( inWindow, &macRect );
+	::LocalToGlobal(&topLeft(macRect));
+	::LocalToGlobal(&botRight(macRect));
+	mTopLevelWidget->Resize(macRect.right - macRect.left + 1, macRect.bottom - macRect.top + 1, PR_FALSE);
+	if (nsnull != gRollupListener && (nsnull != gRollupWidget) )
+		gRollupListener->Rollup();
 
 	return PR_TRUE;
 }
@@ -1262,15 +1281,8 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 
 		case inGrow:
 		{
-			Rect macRect;
-			::GetWindowPortBounds ( whichWindow, &macRect );
-			::LocalToGlobal(&topLeft(macRect));
-			::LocalToGlobal(&botRight(macRect));
-			mTopLevelWidget->Resize(macRect.right - macRect.left + 1, macRect.bottom - macRect.top + 1, PR_FALSE);
-			if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
-				gRollupListener->Rollup();
-			}
-			break;
+      ResizeEvent ( whichWindow );
+      break;
 		}
 
 		case inGoAway:
