@@ -44,10 +44,7 @@ MOZPNG=95
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
-GTK_MAJ_VER=1
-GTK_MIN_VER=1
-GTK_REL_VER=5
-GTK_VERSION=${GTK_MAJ_VER}.${GTK_MIN_VER}.${GTK_REL_VER}
+GTK_VERSION=1.1.5
 
 dnl Set various checks
 dnl ========================================================
@@ -84,21 +81,6 @@ AC_PATH_XTRA
 
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"
-
-if [ test "$no_x" != "yes" ]; then
-    if [ test ! -z "$x_includes" ]; then
-	MOTIF_XINCS="-xif -I$x_includes"
-    fi
-
-    MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS`
-    MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS -if`
-    MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS -sf`
-    MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS -df`
-    MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS -dp`
-    MOTIF_REQUIRES_XPM=`${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS -xpm`
-
-    ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
-fi
 
 if [ test "$GCC" = "yes" ]; then
     GNU_CC=1
@@ -532,6 +514,21 @@ dnl Check for toolkit libs
 dnl ========================================================
 res=`echo :$MOZ_TOOLKIT | grep -c "motif"`
 if [ test $res != 0 ]; then
+if [ test "$no_x" != "yes" ]; then
+    if [ test ! -z "$x_includes" ]; then
+	MOTIF_XINCS="-xif -I$x_includes"
+    fi
+
+    MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS`
+    MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS -if`
+    MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS -sf`
+    MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS -df`
+    MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS -dp`
+    MOTIF_REQUIRES_XPM=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS -xpm`
+
+    ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
+fi
+
     if [ test "$MOTIF_REQUIRES_XPM" = "True" || test "$MOTIF_VERSION" = "2.1" ]; then
         _SAVE_LDFLAGS="$LDFLAGS"
     	LDFLAGS="$XLDFLAGS $LDFLAGS"
