@@ -2618,6 +2618,12 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
             NS_ERROR_FAILURE);
          }
       }
+
+  // Stop any activity that may be happening in the old document before
+  // releasing it...
+  if (mContentViewer) {
+    mContentViewer->Stop();
+  }
    mContentViewer = nsnull;
    // End copying block (Don't hold content/document viewer ref beyond here!!)
 

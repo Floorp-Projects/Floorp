@@ -1162,22 +1162,6 @@ NS_IMETHODIMP
 nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
                            nsIChannel* channel)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> aURL;
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
-
-
-  // Stop loading of the earlier document completely when the document url
-  // load starts.  Now we know that this url is valid and available.
-  nsLoadFlags loadFlags = 0;
-  channel -> GetLoadAttributes (&loadFlags);
-
-  PRBool equals = PR_FALSE;
-  if (NS_SUCCEEDED(aURL->Equals(mCurrentURI, &equals)) && equals && !(loadFlags & nsIChannel::LOAD_REPLACE))
-    Stop();
-
   /*
    *Fire the OnStartDocumentLoad of the webshell observer
    */
