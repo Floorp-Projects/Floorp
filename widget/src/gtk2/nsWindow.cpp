@@ -1693,30 +1693,27 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
     nsSizeModeEvent event;
     InitSizeModeEvent(event);
 
-    // did we change to maximized?
-    if (aEvent->changed_mask & GDK_WINDOW_STATE_MAXIMIZED &&
-        aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
+    // We don't care about anything but changes in the maximized/icon
+    // states
+    if (aEvent->changed_mask &
+        (GDK_WINDOW_STATE_ICONIFIED|GDK_WINDOW_STATE_MAXIMIZED) == 0) {
+        return;
+    }
+
+    if (aEvent->new_window_state & GDK_WINDOW_STATE_ICONIFIED) {
+        LOG(("\tIconified\n"));
+        event.mSizeMode = nsSizeMode_Minimized;
+        mSizeState = nsSizeMode_Minimized;
+    }
+    else if (aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
         LOG(("\tMaximized\n"));
         event.mSizeMode = nsSizeMode_Maximized;
         mSizeState = nsSizeMode_Maximized;
     }
-    // did we change to iconified?
-    else if (aEvent->changed_mask & GDK_WINDOW_STATE_ICONIFIED &&
-             aEvent->new_window_state & GDK_WINDOW_STATE_ICONIFIED) {
-        LOG(("\tMinimized\n"));
-        event.mSizeMode = nsSizeMode_Minimized;
-        mSizeState = nsSizeMode_Minimized;
-    }
-    // are we now normal?
-    else if (aEvent->changed_mask == 0 && aEvent->new_window_state == 0) {
+    else {
         LOG(("\tNormal\n"));
         event.mSizeMode = nsSizeMode_Normal;
         mSizeState = nsSizeMode_Normal;
-    }
-    else {
-          // if we got here it means that it's not an event we want to
-          // dispatch
-          return;
     }
 
     nsEventStatus status;
