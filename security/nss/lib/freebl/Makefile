@@ -102,7 +102,9 @@ endif
 # Note: -xarch=v8 or v9 is now done in coreconf
 ifeq ($(OS_TARGET),SunOS)
 ifeq ($(CPU_ARCH),sparc)
+ifndef NS_USE_GCC
     OS_CFLAGS += -xchip=ultra2
+endif
 ifeq ($(OS_RELEASE),5.5.1)
     SYSV_SPARC = 1
 endif
