@@ -1143,12 +1143,12 @@ ED_SizeStyle EDT_CanSizeObject(MWContext *pContext, LO_Element *pLoElement, int3
 */
 XP_Bool EDT_IsSizing(MWContext *pContext);
 
-/*  If bLockAspect is TRUE, constrain rect to keep original aspect ratio
+/*  If bModifierKeyPressed is FALSE, constrain rect to keep original aspect ratio
  *  This returns the rect to draw sizing feedback in View's coordinate system
  *  Returns sizing style if sizing was started OK
 */
 ED_SizeStyle EDT_StartSizing(MWContext *pContext, LO_Element *pLoElement, int32 xVal, int32 yVal,
-                             XP_Bool bLockAspect, XP_Rect *pRect);
+                             XP_Bool bModifierKeyPressed, XP_Rect *pRect);
 
 /* Get the rect in View coordinates, so you can use it
  * directly for drawing "selection feedback"
@@ -1157,7 +1157,7 @@ ED_SizeStyle EDT_StartSizing(MWContext *pContext, LO_Element *pLoElement, int32 
  *  so you need to do sizing feedback only if we return TRUE;
 */
 XP_Bool EDT_GetSizingRect(MWContext *pContext, int32 xVal, int32 yVal,
-                          XP_Bool bLockAspect, XP_Rect *pRect);
+                          XP_Bool bModifierKeyPressed, XP_Rect *pRect);
 
 /* Uses rect (xVal and yVal) from last mouse move to
  * get new width and height and change current object size
