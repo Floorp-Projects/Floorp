@@ -23,6 +23,7 @@
 #include "nsTextWidget.h"
 #include "nsCheckButton.h"
 #include "nsRadioButton.h"
+#include "nsScrollbar.h"
 #include "nsFileWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIMenuItem.h"
@@ -40,14 +41,14 @@ struct nsKeyConverter {
   XID keysym; // X keysym key code
 };
 
-struct nsKeyConverter nsKeycodes[] = { 
-  NS_VK_CANCEL,     XK_Cancel, 
+struct nsKeyConverter nsKeycodes[] = {
+  NS_VK_CANCEL,     XK_Cancel,
   NS_VK_BACK,       XK_BackSpace,
   NS_VK_TAB,        XK_Tab,
   NS_VK_CLEAR,      XK_Clear,
   NS_VK_RETURN,     XK_Return,
-  NS_VK_SHIFT,      XK_Shift_L,      
-  NS_VK_SHIFT,      XK_Shift_R,      
+  NS_VK_SHIFT,      XK_Shift_L,
+  NS_VK_SHIFT,      XK_Shift_R,
   NS_VK_CONTROL,    XK_Control_L,
   NS_VK_CONTROL,    XK_Control_R,
   NS_VK_ALT,        XK_Alt_L,
@@ -63,12 +64,12 @@ struct nsKeyConverter nsKeycodes[] = {
   NS_VK_LEFT,       XK_Left,
   NS_VK_UP,         XK_Up,
   NS_VK_RIGHT,      XK_Right,
-  NS_VK_DOWN,       XK_Down, 
+  NS_VK_DOWN,       XK_Down,
   NS_VK_PRINTSCREEN, XK_Print,
   NS_VK_INSERT,     XK_Insert,
   NS_VK_DELETE,     XK_Delete,
 
-  NS_VK_NUMPAD0,    XK_KP_0, 
+  NS_VK_NUMPAD0,    XK_KP_0,
   NS_VK_NUMPAD1,    XK_KP_1,
   NS_VK_NUMPAD2,    XK_KP_2,
   NS_VK_NUMPAD3,    XK_KP_3,
@@ -111,14 +112,14 @@ struct nsKeyConverter nsKeycodes[] = {
   NS_VK_F24,        XK_F24,
 
   NS_VK_COMMA,      XK_comma,
-  NS_VK_PERIOD,     XK_period, 
-  NS_VK_SLASH,      XK_slash, 
-//XXX: How do you get a BACK_QUOTE?  NS_VK_BACK_QUOTE, XK_backquote, 
-  NS_VK_OPEN_BRACKET, XK_bracketleft, 
-  NS_VK_CLOSE_BRACKET, XK_bracketright, 
+  NS_VK_PERIOD,     XK_period,
+  NS_VK_SLASH,      XK_slash,
+//XXX: How do you get a BACK_QUOTE?  NS_VK_BACK_QUOTE, XK_backquote,
+  NS_VK_OPEN_BRACKET, XK_bracketleft,
+  NS_VK_CLOSE_BRACKET, XK_bracketright,
   NS_VK_QUOTE, XK_quotedbl
-  
-}; 
+
+};
 
 
 int nsConvertKey(XID keysym)
@@ -137,7 +138,7 @@ int nsConvertKey(XID keysym)
 void nsGtkWidget_InitNSEvent(GdkEvent *aGev,
                             gpointer   p,
                             nsGUIEvent &anEvent,
-                            PRUint32   aEventType) 
+                            PRUint32   aEventType)
 {
   GdkEventButton *anXEv = (GdkEventButton*)aGev;
 
@@ -157,7 +158,7 @@ void nsGtkWidget_InitNSEvent(GdkEvent *aGev,
 void nsGtkWidget_InitNSMouseEvent(GdkEvent *aGev,
                                  gpointer     p,
                                  nsMouseEvent &anEvent,
-                                 PRUint32     aEventType) 
+                                 PRUint32     aEventType)
 {
   GdkEventButton *anXEv = (GdkEventButton*)aGev;
 
@@ -197,19 +198,19 @@ typedef struct COLLAPSE_INFO {
 
 //==============================================================
 #if 0
-static Bool checkForExpose(Display *dpy, XEvent *evt, XtPointer client_data) 
+static Bool checkForExpose(Display *dpy, XEvent *evt, XtPointer client_data)
 {
-    CollapseInfo *cinfo = (CollapseInfo*)client_data; 
+    CollapseInfo *cinfo = (CollapseInfo*)client_data;
 
     if ((evt->type == Expose && evt->xexpose.window == cinfo->win &&
          INTERSECTS(cinfo->r->x, cinfo->r->width, cinfo->r->y, cinfo->r->height,
-                    evt->xexpose.x, evt->xexpose.y, 
-                    evt->xexpose.x + evt->xexpose.width, 
+                    evt->xexpose.x, evt->xexpose.y,
+                    evt->xexpose.x + evt->xexpose.width,
                     evt->xexpose.y + evt->xexpose.height)) ||
          (evt->type == GraphicsExpose && evt->xgraphicsexpose.drawable == cinfo->win &&
          INTERSECTS(cinfo->r->x, cinfo->r->width, cinfo->r->y, cinfo->r->height,
-                    evt->xgraphicsexpose.x, evt->xgraphicsexpose.y, 
-                    evt->xgraphicsexpose.x + evt->xgraphicsexpose.width, 
+                    evt->xgraphicsexpose.x, evt->xgraphicsexpose.y,
+                    evt->xgraphicsexpose.x + evt->xgraphicsexpose.width,
                     evt->xgraphicsexpose.y + evt->xgraphicsexpose.height))) {
 
         return True;
@@ -322,7 +323,7 @@ void nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p)
 
   XmAnyCallbackStruct * cbs = (XmAnyCallbackStruct*)call_data;
   nsGUIEvent event;
-  nsGtkWidget_InitNSEvent(cbs->event, p, event, 
+  nsGtkWidget_InitNSEvent(cbs->event, p, event,
                          cbs->reason == XmCR_FOCUS?NS_GOTFOCUS:NS_LOSTFOCUS);
   widgetWindow->DispatchFocus(event);
 #endif
@@ -384,10 +385,14 @@ void nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p)
 //==============================================================
 void nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p)
 {
-  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
+  //  nsScrollbar *widget = (nsScrollbar*)gtk_object_get_user_data(GTK_OBJECT(w));
+  nsScrollbar *widget = (nsScrollbar*) p;
+  nsScrollbarEvent sevent;
+
+  g_print("in Scrollbar callback\n");
+
 #if 0
   nsWindow * widgetWindow = (nsWindow *) p ;
-  nsScrollbarEvent sevent;
   XmScrollBarCallbackStruct * cbs = (XmScrollBarCallbackStruct*) call_data;
   sevent.widget  = (nsWindow *) p;
   if (cbs->event != nsnull) {
@@ -428,8 +433,10 @@ void nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p)
     default:
       break;
   }
-  widgetWindow->OnScroll(sevent, cbs->value);
 #endif
+  sevent.message = NS_SCROLLBAR_POS;
+  sevent.widget  = (nsWidget *) p;
+  widget->OnScroll(sevent, GTK_ADJUSTMENT(w)->value);
 }
 
 
@@ -492,8 +499,8 @@ void nsGtkWidget_Text_Callback(GtkWidget *w, gpointer p)
     printf("Setting Length [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
   } else if (cbs->startPos == cbs->currInsert) {   /* backspace */
     data->mPassword.Append(cbs->text->ptr);
-  } 
-  
+  }
+
   for (len = 0; len < cbs->text->length; len++)
     cbs->text->ptr[len] = '*';
 #endif
@@ -533,15 +540,15 @@ void nsGtkWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent,
   KeySym res;
 
   nsGtkWidget_InitNSEvent(event, p, aKeyEvent, aEventType);
-  XKeyEvent* xKeyEvent =  (XKeyEvent*)event; 
+  XKeyEvent* xKeyEvent =  (XKeyEvent*)event;
 
    // Get the modout to test for shift + control
-  XtTranslateKeycode(xKeyEvent->display,xKeyEvent->keycode, xKeyEvent->state, &modout, &res); 
+  XtTranslateKeycode(xKeyEvent->display,xKeyEvent->keycode, xKeyEvent->state, &modout, &res);
   res = XKeycodeToKeysym(xKeyEvent->display, xKeyEvent->keycode, 0);
 
   aKeyEvent.keyCode   = nsConvertKey(res) & 0x00FF;
-  aKeyEvent.time      = xKeyEvent->time; 
-  aKeyEvent.isShift   = (xKeyEvent->state & ShiftMask) ? PR_TRUE : PR_FALSE; 
+  aKeyEvent.time      = xKeyEvent->time;
+  aKeyEvent.isShift   = (xKeyEvent->state & ShiftMask) ? PR_TRUE : PR_FALSE;
   aKeyEvent.isControl = (xKeyEvent->state & ControlMask) ? PR_TRUE : PR_FALSE;
   aKeyEvent.isAlt     = (xKeyEvent->state & Mod1Mask) ? PR_TRUE : PR_FALSE;
 #endif
@@ -594,4 +601,3 @@ void nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p)
     mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
   }
 }
-

@@ -480,6 +480,18 @@ nsIAppShell* nsWindow::GetAppShell()
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+  g_print("nsWindow::Scroll\n");
+
+  if (GTK_IS_LAYOUT(mWidget)) {
+    g_print ("is layout dX = %d, dY = %d\n", aDx, aDy);
+    GtkAdjustment* horiz = gtk_layout_get_hadjustment(GTK_LAYOUT(mWidget));
+    GtkAdjustment* vert = gtk_layout_get_vadjustment(GTK_LAYOUT(mWidget));
+    horiz->value += aDx;
+    vert->value += aDy;
+    gtk_signal_emit_by_name(GTK_OBJECT(horiz), "value_changed");
+    gtk_signal_emit_by_name(GTK_OBJECT(vert), "value_changed");
+  }
+
 #if 0
   if (mWidget == nsnull) {
     return NS_ERROR_FAILURE;
@@ -647,7 +659,8 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 
 PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
- return FALSE;
+  g_print("nsWindow::OnScroll\n");
+  return FALSE;
 }
 
 void nsWindow::SetIgnoreResize(PRBool aIgnore)
@@ -824,7 +837,7 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 }
 
 /**
- * 
+ *
  *
  **/
 NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
@@ -849,4 +862,3 @@ NS_METHOD nsWindow::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
 
   return NS_OK;
 }
-
