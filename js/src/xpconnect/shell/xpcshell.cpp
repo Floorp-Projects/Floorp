@@ -60,6 +60,11 @@
 #include "nsCOMPtr.h"
 #include "nsIXPCSecurityManager.h"
 
+#ifndef XPCONNECT_STANDALONE
+#include "nsIScriptSecurityManager.h"
+#include "nsIPrincipal.h"
+#endif
+
 // all this crap is needed to do the interactive shell stuff
 #include <stdlib.h>
 #include <errno.h>
@@ -95,6 +100,8 @@ FILE *gErrFile = NULL;
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
 static JSBool reportWarnings = JS_TRUE;
+
+JSPrincipals *gJSPrincipals = nsnull;
 
 JS_STATIC_DLL_CALLBACK(void)
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
@@ -214,6 +221,7 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSBool ok;
     jsval result;
+    FILE *file;
 
     for (i = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
@@ -221,7 +229,9 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
         filename = JS_GetStringBytes(str);
-        script = JS_CompileFile(cx, obj, filename);
+        file = fopen(filename, "r");
+        script = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
+                                                   gJSPrincipals);
         if (!script)
             ok = JS_FALSE;
         else {
@@ -573,7 +583,10 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
         }
         ungetc(ch, file);
         DoBeginRequest(cx);
-        script = JS_CompileFileHandle(cx, obj, filename, file);
+
+        script = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
+                                                   gJSPrincipals);
+
         if (script) {
             (void)JS_ExecuteScript(cx, obj, script, &result);
             JS_DestroyScript(cx, script);
@@ -608,8 +621,8 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
         DoBeginRequest(cx);
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
-        script = JS_CompileScript(cx, obj, buffer, strlen(buffer),
-                                  "typein", startline);
+        script = JS_CompileScriptForPrincipals(cx, obj, gJSPrincipals, buffer,
+                                               strlen(buffer), "typein", startline);
         if (script) {
             JSErrorReporter older;
 
@@ -1016,6 +1029,33 @@ main(int argc, char **argv, char **envp)
 
         //    xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE);
         //    xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE);
+
+#ifndef XPCONNECT_STANDALONE
+        // Fetch the system principal and store it away in a global, to use for
+        // script compilation in Load() and ProcessFile() (including interactive
+        // eval loop)
+        {
+            nsCOMPtr<nsIPrincipal> princ;
+            nsresult rv = NS_OK;
+
+            nsCOMPtr<nsIScriptSecurityManager> securityManager =
+                do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+            if (NS_SUCCEEDED(rv) && securityManager) {
+                rv = securityManager->GetSystemPrincipal(getter_AddRefs(princ));
+                if (NS_FAILED(rv)) {
+                    fprintf(gErrFile, "+++ Failed to obtain SystemPrincipal from ScriptSecurityManager service.\n");
+                } else {
+                    // fetch the JS principals and stick in a global
+                    rv = princ->GetJSPrincipals(cx, &gJSPrincipals);
+                    if (NS_FAILED(rv)) {
+                        fprintf(gErrFile, "+++ Failed to obtain JS principals from SystemPrincipal.\n");
+                    }
+                }
+            } else {
+                fprintf(gErrFile, "+++ Failed to get ScriptSecurityManager service, running without principals");
+            }
+        }
+#endif
 
 #ifdef TEST_TranslateThis
         nsCOMPtr<nsIXPCFunctionThisTranslator>
