@@ -54,17 +54,13 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
-#include "nsIIOService.h"
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #else
 #include "nsIPostToServer.h"
 #endif // NECKO
-#include "nsIBuffer.h"
 #include "nsIInputStream.h"
-#include "nsIBufferInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIRDFSearch.h"
 
