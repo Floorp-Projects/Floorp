@@ -62,8 +62,8 @@ static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 
 static const char kURINC_RelatedLinksRoot[] = "NC:RelatedLinks";
 
-nsString              RelatedLinksHandlerImpl::mRLServerURL;
-PRInt32               RelatedLinksHandlerImpl::gRefCnt;
+nsString              *RelatedLinksHandlerImpl::mRLServerURL = nsnull;
+PRInt32               RelatedLinksHandlerImpl::gRefCnt = 0;
 nsIRDFService    *RelatedLinksHandlerImpl::gRDFService;
 nsIRDFResource        *RelatedLinksHandlerImpl::kNC_RelatedLinksRoot;
 nsIRDFResource        *RelatedLinksHandlerImpl::kNC_Child;
@@ -590,6 +590,9 @@ RelatedLinksHandlerImpl::~RelatedLinksHandlerImpl()
 
 	if (--gRefCnt == 0)
 	{
+		delete mRLServerURL;
+		mRLServerURL = nsnull;
+
 		NS_IF_RELEASE(kNC_RelatedLinksRoot);
 		NS_IF_RELEASE(kRDF_type);
 		NS_IF_RELEASE(kNC_RelatedLinksTopic);
@@ -620,20 +623,21 @@ RelatedLinksHandlerImpl::Init()
 		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
 
 		NS_WITH_SERVICE(nsIPref, prefServ, kPrefCID, &rv);
+		mRLServerURL = new nsString();
 		if (NS_SUCCEEDED(rv) && (prefServ))
 		{
 			char	*prefVal = nsnull;
 			if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("browser.related.provider",
 				&prefVal)) && (prefVal))
 			{
-				mRLServerURL.AssignWithConversion(prefVal);
+				mRLServerURL->AssignWithConversion(prefVal);
 				nsCRT::free(prefVal);
 				prefVal = nsnull;
 			}
 			else
 			{
 				// no preference, so fallback to a well-known URL
-				mRLServerURL.AssignWithConversion("http://www-rl.netscape.com/wtgn?");
+				mRLServerURL->Assign(NS_LITERAL_STRING("http://www-rl.netscape.com/wtgn?"));
 			}
 		}
 	}
@@ -696,7 +700,7 @@ RelatedLinksHandlerImpl::SetURL(const char* aURL)
 	rv = purgeable->Sweep();
 	if (NS_FAILED(rv)) return rv;
 
-	nsAutoString	relatedLinksQueryURL(mRLServerURL);
+	nsAutoString	relatedLinksQueryURL(*mRLServerURL);
 	relatedLinksQueryURL.AppendWithConversion(mRelatedLinksURL);
 
 	nsCOMPtr<nsIURI> url;

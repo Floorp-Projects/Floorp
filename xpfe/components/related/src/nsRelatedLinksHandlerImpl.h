@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -38,7 +38,7 @@ class RelatedLinksHandlerImpl : public nsIRelatedLinksHandler,
 {
 private:
 	char			*mRelatedLinksURL;
-	static nsString		mRLServerURL;
+        static nsString         *mRLServerURL;
 
    // pseudo-constants
 	static PRInt32		gRefCnt;
