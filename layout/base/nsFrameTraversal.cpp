@@ -19,6 +19,9 @@
  *
  * Contributor(s): 
  */
+#include "nsCOMPtr.h"
+#include "nsLayoutAtoms.h"
+
 #include "nsFrameTraversal.h"
 #include "nsFrameList.h"
 
@@ -211,7 +214,7 @@ NS_IMETHODIMP
 nsLeafIterator::Next()
 {
 //recursive-oid method to get next frame
-  nsIFrame *result;
+  nsIFrame *result = nsnull;
   nsIFrame *parent = getCurrent();
   if (!parent)
     parent = getLast();
@@ -227,7 +230,8 @@ nsLeafIterator::Next()
     result = parent;
   }
   else {
-    while(parent){
+    nsCOMPtr<nsIAtom>atom;
+    while(parent && NS_SUCCEEDED(parent->GetFrameType(getter_AddRefs(atom))) && atom != nsLayoutAtoms::rootFrame){
       if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
         parent = result;
         while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
@@ -238,7 +242,7 @@ nsLeafIterator::Next()
         break;
       }
       else
-        if (NS_FAILED(parent->GetParent(&result)) || !result){
+        if (NS_FAILED(parent->GetParent(&result)) || !result || (NS_SUCCEEDED(result->GetFrameType(getter_AddRefs(atom))) && atom == nsLayoutAtoms::rootFrame)){
           result = nsnull;
           break;
         }

@@ -6170,7 +6170,7 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
     else
       return NS_OK; //just stop it
   }
-  return NS_OK;
+  return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 

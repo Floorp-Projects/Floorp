@@ -382,7 +382,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsAutoScrollTimer()
-      : mSelection(0), mTimer(0), mFrame(0), mPresContext(0), mPoint(0,0), mDelay(30)
+      : mSelection(0), mTimer(0), mFrame(0), mPresContext(0), mPoint(0,0), mScrollPoint(0,0), mDelay(30)
   {
     NS_INIT_ISUPPORTS();
   }
@@ -396,7 +396,7 @@ public:
     }
   }
 
-  nsresult Start(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
+  nsresult Start(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint &aPoint)
   {
     mFrame       = aFrame;
     mPresContext = aPresContext;
@@ -444,11 +444,24 @@ public:
   {
     if (mSelection && mPresContext && mFrame)
     {
-      mFrameSelection->HandleDrag(mPresContext, mFrame, mPoint);
+      //the frame passed in here will be a root frame for the view. there is no need to call the constrain
+      //method here. the root frame has NO content now unfortunately...
+      PRInt32 startPos = 0;
+      PRInt32 contentOffsetEnd = 0;
+      PRBool  beginOfContent;
+      nsCOMPtr<nsIContent> newContent;
+      nsresult result = mFrame->GetContentAndOffsetsFromPoint(mPresContext, mPoint,
+                                                   getter_AddRefs(newContent), 
+                                                   startPos, contentOffsetEnd,beginOfContent);
+
+      if (NS_SUCCEEDED(result))
+      {
+        result = mFrameSelection->HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE, beginOfContent);
+      }
+      //mFrameSelection->HandleDrag(mPresContext, mFrame, mPoint);
       mSelection->DoAutoScroll(mPresContext, mFrame, mPoint);
     }
   }
-
 private:
   nsSelection    *mFrameSelection;
   nsDOMSelection *mSelection;
@@ -456,6 +469,7 @@ private:
   nsIFrame       *mFrame;
   nsIPresContext *mPresContext;
   nsPoint         mPoint;
+  nsPoint         mScrollPoint;
   PRUint32        mDelay;
 };
 
@@ -1442,8 +1456,8 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
                        PRBool aMultipleSelection, PRBool aHint) 
 {
   InvalidateDesiredX();
-  mHint = HINT(aHint);
   
+  mHint = HINT(aHint);
   // Don't take focus when dragging off of a table
   if (!mSelectingTableCells)
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
@@ -3293,7 +3307,7 @@ nsDOMSelection::StopAutoScrollTimer()
   if (mAutoScrollTimer)
     return mAutoScrollTimer->Stop();
 
-  return NS_OK;
+  return NS_OK; 
 }
 
 nsresult
@@ -3369,10 +3383,11 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
         // scrollable view's parent hierarchy.
         //
 
-        nsIView *view = (nsIView*)cView;
+        nsIView *view = (nsIView*)frameView;
+        
         nscoord x, y;
 
-        while (view && view != frameView)
+        while (view && view != cView)
         {
           result = view->GetParent(view);
 
@@ -3407,8 +3422,8 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
 
           nsRect bounds;
 
-          result = cView->GetBounds(bounds);
-
+          result = view->GetBounds(bounds);
+          scrollableView->GetScrollPosition(bounds.x,bounds.y);
           if (NS_SUCCEEDED(result))
           {
             //
@@ -3484,7 +3499,13 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
                 viewManager->Composite();
                 result = scrollableView->ScrollTo(scrollX + dx, scrollY + dy, NS_VMREFRESH_NO_SYNC);
                 if (mAutoScrollTimer)
-                  result = mAutoScrollTimer->Start(aPresContext, aFrame, aPoint);
+                {
+                  nsPoint point(aPoint.x + dx,aPoint.y + dy);
+                  result = mAutoScrollTimer->Start(aPresContext, parentFrame, point);
+#ifdef DEBUG_SELECTION
+printf("point out of view: x=%u, y=%u\n", (point.x), (point.y));
+#endif
+                }
               }
             }
           }
@@ -3548,7 +3569,7 @@ nsDOMSelection::AddRange(nsIDOMRange* aRange)
   nsCOMPtr<nsIPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   selectFrames(presContext, aRange, PR_TRUE);        
-  ScrollIntoView();
+  //ScrollIntoView(); this should not happen automatically
 
   return mFrameSelection->NotifySelectionListeners();
 }

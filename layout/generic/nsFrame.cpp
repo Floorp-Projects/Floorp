@@ -72,6 +72,8 @@
 #include "nsILineIterator.h"
 // [HACK] Foward Declarations
 void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame);
+PRBool IsSelectable(nsIFrame *aFrame); //checks style to see if we can selected
+
 //non Hack prototypes
 #if 0
 static void RefreshContentFrames(nsIPresContext* aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
@@ -782,7 +784,11 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
     {
       nsCOMPtr<nsIFrameSelection> frameselection;
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection)
-        frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
+      {
+        frameselection->SetMouseDownState( PR_TRUE);//not important if it fails here
+        if (!IsMouseCaptured(aPresContext))
+          CaptureMouse(aPresContext, PR_TRUE);
+      }
       HandlePress(aPresContext, aEvent, aEventStatus);
     }break;
   case NS_MOUSE_LEFT_BUTTON_UP:
@@ -885,6 +891,31 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
   return NS_OK;
 }
 
+static
+PRBool IsSelectable(nsIFrame *aFrame) //checks style to see if we can selected
+{
+  if (!aFrame)
+    return PR_FALSE;
+  nsIFrame *parent;
+  if (NS_FAILED(aFrame->GetParent(&parent)))
+    return PR_FALSE;
+	const nsStyleUserInterface* userinterface;
+	aFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+	if (userinterface) {
+		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
+				// if 'user-select' isn't set for this frame, use the parent's
+				if (parent) {
+					parent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+				}
+		}
+		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
+		  return PR_FALSE;//do not continue no selection for this frame.
+		}
+	}
+  return PR_TRUE;//default to true.
+}
+
+
 /**
   * Handles the Mouse Press Event for the frame
  */
@@ -896,6 +927,18 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
+
+//IF THIS FRAME IS GENERATED
+  result = kid->GetFrameState(&frameState);
+
+      if (NS_FAILED(result))
+        return result;
+
+      if (frameState & NS_FRAME_GENERATED_CONTENT) {
+        // It's generated content, so skip it!
+        skipThisKid = PR_TRUE;
+  
+  
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
   if (me->clickCount >1 )
     return HandleMultiplePress(aPresContext,aEvent,aEventStatus);
@@ -903,20 +946,8 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 
 	// check whether style allows selection
   // if not dont tell selection the mouse event even occured.
-	const nsStyleUserInterface* userinterface;
-	GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-	if (userinterface) {
-		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
-				// if 'user-select' isn't set for this frame, use the parent's
-				if (mParent) {
-					mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-				}
-		}
-		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
-		  return NS_OK;//do not continue no selection for this frame.
-		}
-	}
-  
+  if (!IsSelectable(this))
+    return NS_OK;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
@@ -933,6 +964,8 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection)
       {
         frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
+        if (!IsMouseCaptured(aPresContext))
+          CaptureMouse(aPresContext, PR_TRUE);
 
         nsCOMPtr<nsIContent>parentContent;
         PRInt32  contentOffset;
@@ -1096,6 +1129,8 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
     nsCOMPtr<nsIFrameSelection> frameselection;
 
     result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
+    if (IsMouseCaptured(aPresContext))
+      CaptureMouse(aPresContext, PR_FALSE);
 
     if (NS_SUCCEEDED(result) && frameselection)
       frameselection->StopAutoScrollTimer();
@@ -1996,19 +2031,8 @@ nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aS
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
 	// check whether style allows selection
-	const nsStyleUserInterface* userinterface;
-	GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-	if (userinterface) {
-		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
-				// if 'user-select' isn't set for this frame, use the parent's
-				if (mParent) {
-					mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-				}
-		}
-		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
-		  return NS_OK;//do not continue no selection for this frame.
-		}
-	}
+  if (!IsSelectable(this))
+    return NS_OK;
 
 /*  nsresult rv;
 
@@ -2230,11 +2254,16 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
         nsPoint point;
         point.x = aPos->mDesiredX;
         point.y = 0;
-        result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
+        result = NS_ERROR_FAILURE;
+        nsIView*  view;//if frame has a view. then stop. no doubleclicking into views
+        if (NS_FAILED(resultFrame->GetView(aPresContext, &view)) || !view)
+        {
+          result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
                                           getter_AddRefs(aPos->mResultContent),
                                           aPos->mContentOffset,
                                           aPos->mContentOffsetEnd,
                                           aPos->mPreferLeft);
+        }
         if (NS_SUCCEEDED(result))
         {
           found = PR_TRUE;
@@ -2272,6 +2301,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
         result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
                                           getter_AddRefs(aPos->mResultContent), aPos->mContentOffset,
                                           aPos->mContentOffsetEnd, aPos->mPreferLeft);
+        if (!IsSelectable(resultFrame))
+          return NS_ERROR_FAILURE;//cant go to unselectable frame
         if (NS_SUCCEEDED(result))
         {
           found = PR_TRUE;
@@ -2344,7 +2375,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               (aPos->mDirection == eDirPrevious && newOffset >= aPos->mStartOffset))
           {
             result = GetFrameFromDirection(aPresContext, aPos);
-            if (NS_FAILED(result) || !aPos->mResultFrame)
+            if (NS_FAILED(result) || !aPos->mResultFrame || !IsSelectable(aPos->mResultFrame))
             {
               return result?result:NS_ERROR_FAILURE;
             }
@@ -2511,7 +2542,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
             nsIView * view; //used for call of get offset from view
             nextFrame->GetOffsetFromView(aPresContext, offsetPoint, &view);
 
-            offsetPoint.x = 2* usedRect.width; //2* just to be sure we are off the edge
+            offsetPoint.x += 2* usedRect.width; //2* just to be sure we are off the edge
 
             result = nextFrame->GetContentAndOffsetsFromPoint(context,
                                             offsetPoint,
@@ -2661,6 +2692,8 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
   //for speed reasons
   nsIFrame *newFrame = (nsIFrame *)isupports;
+  if (!IsSelectable(newFrame))
+    return NS_ERROR_FAILURE;
   if (aPos->mDirection == eDirNext)
     aPos->mStartOffset = 0;
   else
@@ -2827,6 +2860,63 @@ nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                aPresS
   return rv;
 }
 
+
+nsresult
+nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
+{
+    // get its view
+  nsIView* view = nsnull;
+  nsIFrame *parent;//might be THIS frame thats ok
+  nsresult rv = GetParentWithView(aPresContext, &parent);
+  if (!parent || NS_FAILED(rv))
+    return rv?rv:NS_ERROR_FAILURE;
+  parent->GetView(aPresContext,&view);
+
+  nsCOMPtr<nsIViewManager> viewMan;
+  PRBool result;
+
+  if (view) {
+    view->GetViewManager(*getter_AddRefs(viewMan));
+    if (viewMan) {
+      if (aGrabMouseEvents) {
+        viewMan->GrabMouseEvents(view,result);
+      } else {
+        viewMan->GrabMouseEvents(nsnull,result);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+PRBool
+nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
+{
+    // get its view
+  nsIView* view = nsnull;
+
+  nsIFrame *parent;//might be THIS frame thats ok
+  nsresult rv = GetParentWithView(aPresContext, &parent);
+  if (!parent || NS_FAILED(rv))
+    return rv?rv:NS_ERROR_FAILURE;
+  parent->GetView(aPresContext,&view);
+
+  nsCOMPtr<nsIViewManager> viewMan;
+  
+  if (view) {
+    view->GetViewManager(*getter_AddRefs(viewMan));
+
+    if (viewMan) {
+        nsIView* grabbingView;
+        viewMan->GetMouseEventGrabber(grabbingView);
+        if (grabbingView == view)
+          return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 #ifdef NS_DEBUG
 static void
 GetTagName(nsFrame* aFrame, nsIContent* aContent, PRIntn aResultSize,
@@ -2896,5 +2986,6 @@ nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
     NS_ASSERTION(frameState & NS_FRAME_IS_DIRTY, "dirty bit not set");
   }
 }
+
 
 #endif

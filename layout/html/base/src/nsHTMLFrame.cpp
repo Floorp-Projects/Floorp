@@ -417,8 +417,17 @@ RootFrame::HandleEvent(nsIPresContext* aPresContext,
 
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP ||
       aEvent->message == NS_MOUSE_MIDDLE_BUTTON_UP ||
-      aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP) {
-    nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+      aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP ||
+      aEvent->message == NS_MOUSE_MOVE ) {
+    nsIFrame *firstChild;
+    nsresult rv = FirstChild(aPresContext,nsnull,&firstChild);
+    //root frame needs to pass mouse events to its area frame so that mouse movement
+    //and selection code will work properly. this will still have the necessary effects
+    //that would have happened if nsFrame::HandleEvent was called.
+    if (NS_SUCCEEDED(rv) && firstChild)
+      firstChild->HandleEvent(aPresContext, aEvent, aEventStatus);
+    else
+      nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
 
   return NS_OK;
