@@ -110,13 +110,13 @@ while ( $EarlyExit ) {
     $BuildStatus = 0;
     if (!($BuildTest)) {
 # pull tree
-	print LOG "cvs co ns/client.mk";
+	print LOG "cvs co MozillaSourceMotif";
 
 	if ( $BuildTag ne '' ) {
-	    open( PULLMAKE, "cvs co -r $BuildTag ns/client.mk 2>&1 |");
+	    open( PULLMAKE, "cvs co -r $BuildTag MozillaSourceMotif 2>&1 |");
 	}
 	else {
-	    open( PULLMAKE, "cvs co ns/client.mk 2>&1 |");
+	    open( PULLMAKE, "cvs co MozillaSourceMotif 2>&1 |");
 	}
 
 	while ( <PULLMAKE> ) {
@@ -125,21 +125,21 @@ while ( $EarlyExit ) {
 	}
 	close( PULLMAKE );
 	
-	print LOG "gmake -f ns/client.mk setup";
-
-	if ( $BuildTag ne '' ) {
-	    open( PULL, "cvs co -r $BuildTag client.mk 2>&1 |");
-	}
-	else {
-	    open( PULL, "gmake -f ns/client.mk setup 2>&1 |");
-	}
-
-	while ( <PULL> ) {
-	    print $_;
-	    print LOG $_;
-	}
-	close( PULL );
-   }
+#	print LOG "gmake export libs install";
+#
+#	if ( $BuildTag ne '' ) {
+#	    open( PULL, "cvs co -r $BuildTag client.mk 2>&1 |");
+#	}
+#	else {
+#	    open( PULL, "gmake -f ns/client.mk setup 2>&1 |");
+#	}
+#
+#	while ( <PULL> ) {
+#	    print $_;
+#	    print LOG $_;
+#	}
+#	close( PULL );
+#   }
     chdir($BuildConfigDir) || die "couldn't chdir to $BuildConfigDir";
     print LOG "gmake show_objname 2>&1 |\n";
     open ( GETOBJ, "gmake show_objname 2>&1 |\n");
