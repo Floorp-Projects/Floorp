@@ -337,15 +337,19 @@ nsTableCellMap::RemoveRows(nsIPresContext* aPresContext,
 PRInt32
 nsTableCellMap::GetNumCellsOriginatingInRow(PRInt32 aRowIndex)
 {
-  PRInt32 cellCount = 0;
-  CellData* tempCell;
-  do
-  {
-	  tempCell = GetCellAt(aRowIndex,cellCount);
-	  if (tempCell)
-		  cellCount++;
-  }while(tempCell);
-  return cellCount;
+  PRInt32 originCount = 0;
+
+  CellData* cellData;
+  PRInt32   colIndex = 0;
+
+  do {
+	  cellData = GetCellAt(aRowIndex, colIndex);
+	  if (cellData && cellData->GetCellFrame())
+		  originCount++;
+    colIndex++;
+  } while(cellData);
+
+  return originCount;
 }
 
 PRInt32 

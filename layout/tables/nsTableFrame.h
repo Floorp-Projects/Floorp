@@ -207,6 +207,8 @@ public:
                               float        aPixelToTwips,
                               nsPixelRound aRound= eAlwaysRoundUp);
 
+  static void NotifyAncestorsOfSpecialReflow(const nsHTMLReflowState& aReflowState);
+
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
 
   static nsresult AppendDirtyReflowCommand(nsIPresShell* aPresShell,
@@ -258,6 +260,7 @@ public:
                                       nsIAtom*        aChildType);
   PRBool IsAutoWidth(PRBool* aIsPctWidth = nsnull);
   PRBool IsAutoHeight();
+  static PRBool IsPctHeight(nsIStyleContext* aStyleContext);
   
   /** @return PR_TRUE if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
@@ -491,14 +494,18 @@ public:
                                   PRInt32*           aColSpan = nsnull);
 
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
+  PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
 
   PRBool HasPctCol() const;
   void SetHasPctCol(PRBool aValue);
 
   PRBool HasCellSpanningPctCol() const;
   void SetHasCellSpanningPctCol(PRBool aValue);
-  // is this the 3rd reflow due to a height on a table in pagination mode.
-  PRBool IsThirdPassReflow() const;
+
+  PRBool NeedSpecialReflow() const;
+  void   SetNeedSpecialReflow(PRBool aValue);
+  PRBool NeedToInitiateSpecialReflow() const;
+  void   SetNeedToInitiateSpecialReflow(PRBool aValue);
 
 protected:
 
@@ -527,7 +534,6 @@ protected:
   void   SetDescendantReflowedNotTimeout(PRBool aValue);
   PRBool RequestedTimeoutReflow() const;
   void   SetRequestedTimeoutReflow(PRBool aValue);
-  void   SetThirdPassReflow(PRBool aValue);
 
   void   InterruptNotification(nsIPresContext* aPresContext,
                                PRBool          aIsRequest);
@@ -652,18 +658,12 @@ protected:
   // reflow state, and for the table attributes and parent 
   nscoord CalcDesiredHeight(nsIPresContext*          aPresContext,
                             const nsHTMLReflowState& aReflowState);
-  // The following two functions are helpers for CalcDesiredHeight 
+
+  // The following is a helper for CalcDesiredHeight 
  
-  void DistributeSpaceToCells(nsIPresContext*          aPresContext, 
+  void DistributeHeightToRows(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
-                              nsIFrame*                aRowGroupFrame);
-  void DistributeSpaceToRows(nsIPresContext*          aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nsIFrame*                aRowGroupFrame, 
-                             nscoord                  aSumOfRowHeights,
-                             nscoord                  aExcess,
-                             nscoord&                 aExcessAllocated,
-                             nscoord&                 aRowGroupYPos);
+                              nscoord                  aAmount);
 
   void PlaceChild(nsIPresContext*      aPresContext,
                   nsTableReflowState&  aReflowState,
@@ -830,8 +830,6 @@ public: /* ----- Cell Map public methods ----- */
   // percentage height cells
   void ComputePercentBasisForRows(const nsHTMLReflowState& aReflowState);
 
-  nscoord GetPercentBasisForRows();
-
   nscoord GetMinWidth() const;
   void    SetMinWidth(nscoord aWidth);
   
@@ -895,8 +893,9 @@ protected:
     // targeted at us, as an optimization.
     unsigned mRequestedTimeoutReflow:1;
     unsigned mRowInserted:1;
-    unsigned mThirdPassReflow:1;
-    int : 21;                          // unused
+    unsigned mNeedSpecialReflow:1;
+    unsigned mNeedToInitiateSpecialReflow:1;
+    int : 19;                          // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
@@ -939,11 +938,6 @@ inline PRBool nsTableFrame::IsRowGroup(PRInt32 aDisplayType) const
   return PRBool((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aDisplayType) ||
                 (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aDisplayType) ||
                 (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aDisplayType));
-}
-
-inline nscoord nsTableFrame::GetPercentBasisForRows()
-{
-  return mPercentBasisForRows;
 }
 
 inline void nsTableFrame::SetHadInitialReflow(PRBool aValue)
@@ -1006,16 +1000,25 @@ inline void nsTableFrame::SetRequestedTimeoutReflow(PRBool aValue)
   mBits.mRequestedTimeoutReflow = (unsigned)aValue;
 }
 
-inline PRBool nsTableFrame::IsThirdPassReflow() const
+inline PRBool nsTableFrame::NeedSpecialReflow() const
 {
-  return (PRBool)mBits.mThirdPassReflow;
+  return (PRBool)mBits.mNeedSpecialReflow;
 }
 
-inline void nsTableFrame::SetThirdPassReflow(PRBool aValue)
+inline void nsTableFrame::SetNeedSpecialReflow(PRBool aValue)
 {
-  mBits.mThirdPassReflow = (unsigned)aValue;
+  mBits.mNeedSpecialReflow = (unsigned)aValue;
 }
 
+inline PRBool nsTableFrame::NeedToInitiateSpecialReflow() const
+{
+  return (PRBool)mBits.mNeedToInitiateSpecialReflow;
+}
+
+inline void nsTableFrame::SetNeedToInitiateSpecialReflow(PRBool aValue)
+{
+  mBits.mNeedToInitiateSpecialReflow = (unsigned)aValue;
+}
 inline PRBool nsTableFrame::IsRowInserted() const
 {
   return (PRBool)mBits.mRowInserted;

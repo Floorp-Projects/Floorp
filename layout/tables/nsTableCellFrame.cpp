@@ -91,6 +91,22 @@ nsTableCellFrame::~nsTableCellFrame()
 #endif
 }
 
+nsTableCellFrame*  
+nsTableCellFrame::GetNextCell() const
+{
+  nsIFrame* childFrame;
+  GetNextSibling(&childFrame);
+  while (childFrame) {
+    nsCOMPtr<nsIAtom> frameType;
+    childFrame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::tableCellFrame == frameType.get()) {
+      return (nsTableCellFrame*)childFrame;
+    }
+    childFrame->GetNextSibling(&childFrame);
+  }
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsTableCellFrame::Init(nsIPresContext*  aPresContext,
                        nsIContent*      aContent,
@@ -694,6 +710,15 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   nsresult rv = NS_OK;
+
+  if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)     &&
+      ((NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) || 
+       (0                    == aReflowState.mComputedHeight))  && 
+      !mPrevInFlow                                              && 
+      nsTableFrame::IsPctHeight(mStyleContext)) {
+    nsTableFrame::NotifyAncestorsOfSpecialReflow(aReflowState);
+    SetNeedSpecialReflow(PR_TRUE);
+  }
   // this should probably be cached somewhere
   nsCompatibility compatMode;
   aPresContext->GetCompatibilityMode(&compatMode);
@@ -714,6 +739,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTableFrame* tableFrameFirstInFlow = (nsTableFrame*)tableFrame->GetFirstInFlow();
+
   nsMargin borderPadding = aReflowState.mComputedPadding;
   nsMargin border;
   GetCellBorder(border, tableFrame);
@@ -768,6 +795,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.availableWidth);
   nsIFrame* firstKid = mFrames.FirstChild();
+
+  if (aReflowState.mFlags.mSpecialTableReflow) {
+    ((nsHTMLReflowState&)aReflowState).mComputedHeight = mRect.height - topInset - bottomInset;
+  }
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
                                    availSize);
 
@@ -898,8 +929,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 
   // if the table allocated extra vertical space to row groups, rows, cells in pagination mode
   // then use that height as the desired height unless the cell needs to split.
-  nsTableFrame* tableFrameFirstInFlow = (nsTableFrame*)tableFrame->GetFirstInFlow();
-  if ((NS_FRAME_COMPLETE == aStatus) && tableFrameFirstInFlow->IsThirdPassReflow()) {
+  if ((NS_FRAME_COMPLETE == aStatus) && aReflowState.mFlags.mSpecialTableReflow) {
     cellHeight = PR_MAX(cellHeight, mRect.height);
   }
   // next determine the cell's width
@@ -941,6 +971,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   }
   // remember my desired size for this reflow
   SetDesiredSize(aDesiredSize);
+
+  if (aReflowState.mFlags.mSpecialTableReflow) {
+    SetNeedSpecialReflow(PR_FALSE);
+  }
 
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);

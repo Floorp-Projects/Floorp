@@ -79,9 +79,13 @@ struct nsRowGroupReflowState {
 { 0xe940e7bc, 0xb534, 0x11d2,  \
   { 0x95, 0xa2, 0x0, 0x60, 0xb0, 0xc3, 0x44, 0x14 } }
 
-// use a bit from nsFrame's frame state bits to determine whether a 
+// use the following bits from nsFrame's frame state 
+
 // thead or tfoot should be repeated on every printed page
-#define NS_ROWGROUP_REPEATABLE 0x80000000
+#define NS_ROWGROUP_REPEATABLE           0x80000000
+#define NS_ROWGROUP_HAS_STYLE_HEIGHT     0x40000000
+// we need a 3rd pass reflow to deal with pct height nested tables 
+#define NS_ROWGROUP_NEED_SPECIAL_REFLOW  0x20000000
 /**
  * nsTableRowGroupFrame is the frame that maps row groups 
  * (HTML tags THEAD, TFOOT, and TBODY). This class cannot be reused
@@ -176,6 +180,10 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
+  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
+
+  nsTableRowFrame* GetFirstRow();
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -206,6 +214,7 @@ public:
    * Get the total height of all the row rects
    */
   nscoord GetHeightOfRows(nsIPresContext* aPresContext);
+  nscoord GetHeightBasis(const nsHTMLReflowState& aReflowState);
   
 // nsILineIterator methods
 public:
@@ -255,6 +264,9 @@ protected:
                            const nsHTMLReflowState& aReflowState,
                            nsTableRowFrame*         aStartRowFrameIn = nsnull);
 
+  void DidResizeRows(nsIPresContext&          aPresContext,
+                     const nsHTMLReflowState& aReflowState,
+                     nsTableRowFrame*         aStartRowFrameIn = nsnull);
 
   /** Incremental Reflow attempts to do column balancing with the minimum number of reflow
     * commands to child elements.  This is done by processing the reflow command,
@@ -337,8 +349,12 @@ public:
   virtual nsIFrame* GetLastFrame() { return mFrames.LastChild(); };
   virtual void GetNextFrame(nsIFrame*  aFrame, 
                             nsIFrame** aResult) { aFrame->GetNextSibling(aResult); };
-  PRBool  IsRepeatable();
-  void    SetRepeatable(PRBool aRepeatable);
+  PRBool IsRepeatable() const;
+  void   SetRepeatable(PRBool aRepeatable);
+  PRBool HasStyleHeight() const;
+  void   SetHasStyleHeight(PRBool aValue);
+  PRBool NeedSpecialReflow() const;
+  void   SetNeedSpecialReflow(PRBool aValue);
 
 #ifdef DEBUG_TABLE_REFLOW_TIMING
 public:
@@ -347,7 +363,7 @@ public:
 };
 
 
-inline PRBool nsTableRowGroupFrame::IsRepeatable()
+inline PRBool nsTableRowGroupFrame::IsRepeatable() const
 {
   return (mState & NS_ROWGROUP_REPEATABLE) == NS_ROWGROUP_REPEATABLE;
 }
@@ -361,4 +377,31 @@ inline void nsTableRowGroupFrame::SetRepeatable(PRBool aRepeatable)
   }
 }
 
+inline PRBool nsTableRowGroupFrame::NeedSpecialReflow() const
+{
+  return (mState & NS_ROWGROUP_NEED_SPECIAL_REFLOW) == NS_ROWGROUP_NEED_SPECIAL_REFLOW;
+}
+
+inline void nsTableRowGroupFrame::SetNeedSpecialReflow(PRBool aValue)
+{
+  if (aValue) {
+    mState |= NS_ROWGROUP_NEED_SPECIAL_REFLOW;
+  } else {
+    mState &= ~NS_ROWGROUP_NEED_SPECIAL_REFLOW;
+  }
+}
+
+inline PRBool nsTableRowGroupFrame::HasStyleHeight() const
+{
+  return (mState & NS_ROWGROUP_HAS_STYLE_HEIGHT) == NS_ROWGROUP_HAS_STYLE_HEIGHT;
+}
+
+inline void nsTableRowGroupFrame::SetHasStyleHeight(PRBool aValue)
+{
+  if (aValue) {
+    mState |= NS_ROWGROUP_HAS_STYLE_HEIGHT;
+  } else {
+    mState &= ~NS_ROWGROUP_HAS_STYLE_HEIGHT;
+  }
+}
 #endif

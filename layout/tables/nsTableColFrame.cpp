@@ -84,6 +84,7 @@ void nsTableColFrame::SetType(nsTableColType aType) {
   mBits.mType = aType - eColContent;
 }
 
+
 // XXX what about other style besides width
 nsStyleCoord nsTableColFrame::GetStyleWidth() const
 {

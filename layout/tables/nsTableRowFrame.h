@@ -47,7 +47,7 @@ class  nsTableCellFrame;
 class nsReflowTimer;
 #endif
 
-#define NS_TABLE_MAX_ROW_INDEX  (1<<19)
+#define NS_ROW_NEED_SPECIAL_REFLOW    0x20000000
 #define NS_ROW_FRAME_PAINT_SKIP_ROW   0x00000001
 #define NS_ROW_FRAME_PAINT_SKIP_CELLS 0x00000002
 
@@ -121,6 +121,8 @@ public:
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**        aFrame);
 
+  nsTableCellFrame* GetFirstCell() ;
+
   /** calls Reflow for all of its child cells.
     * Cells with rowspan=1 are all set to the same height and stacked horizontally.
     * <P> Cells are not split unless absolutely necessary.
@@ -155,19 +157,17 @@ public:
                     PRUint32*         aResult) const;
 #endif
  
-  void SetTallestCell(nscoord           aHeight,
-                      nscoord           aAscent,
-                      nscoord           aDescent,
-                      nsTableFrame*     aTableFrame = nsnull,
-                      nsTableCellFrame* aCellFrame  = nsnull);
+  void UpdateHeight(nscoord           aHeight,
+                    nscoord           aAscent,
+                    nscoord           aDescent,
+                    nsTableFrame*     aTableFrame = nsnull,
+                    nsTableCellFrame* aCellFrame  = nsnull);
 
-  void ResetTallestCell(nscoord aRowStyleHeight);
+  void ResetHeight(nscoord aRowStyleHeight);
 
-  // calculate the tallest child when the previous tallest child gets shorter
-  void CalcTallestCell();
-
-  /** returns the tallest child in this row (ignoring any cell with rowspans) */
-  nscoord GetTallestCell() const;
+  // calculate the height, considering content height of the 
+  // cells and the style height of the row and cells, excluding pct heights
+  nscoord CalcHeight(const nsHTMLReflowState& aReflowState);
 
   // Support for cells with 'vertical-align: baseline'.
 
@@ -210,13 +210,37 @@ public:
 
   void RemoveCellFrame(nsTableCellFrame* aFrame);
 
-  nsresult CalculateCellActualSize(nsIFrame* aRowFrame,
-                                   nscoord&  aDesiredWidth,
-                                   nscoord&  aDesiredHeight,
-                                   nscoord   aAvailWidth);
+  nsresult CalculateCellActualSize(nsIFrame*       aRowFrame,
+                                   nscoord&        aDesiredWidth,
+                                   nscoord&        aDesiredHeight,
+                                   nscoord         aAvailWidth);
 
   PRBool IsFirstInserted() const;
   void   SetFirstInserted(PRBool aValue);
+
+  PRBool NeedSpecialReflow() const;
+  void   SetNeedSpecialReflow(PRBool aValue);
+
+  PRBool GetContentHeight() const;
+  void   SetContentHeight(nscoord aTwipValue);
+
+  PRBool HasStyleHeight() const;
+
+  PRBool HasFixedHeight() const;
+  void   SetHasFixedHeight(PRBool aValue);
+
+  PRBool HasPctHeight() const;
+  void   SetHasPctHeight(PRBool aValue);
+
+  nscoord GetFixedHeight() const;
+  void    SetFixedHeight(nscoord aValue);
+
+  float   GetPctHeight() const;
+  void    SetPctHeight(float aPctValue);
+
+  nscoord GetHeight(nscoord aBasis = 0) const;
+
+  nsTableRowFrame* GetNextRow() const;
 
 protected:
 
@@ -262,10 +286,6 @@ protected:
 
   // row-specific methods
 
-  void GetMinRowSpan(nsTableFrame *aTableFrame);
-
-  void FixMinCellHeight(nsTableFrame *aTableFrame);
-
   nscoord ComputeCellXOffset(const nsHTMLReflowState& aState,
                              nsIFrame*                aKidFrame,
                              const nsMargin&          aKidMargin) const;
@@ -280,19 +300,18 @@ protected:
                             nsReflowStatus&          aStatus,
                             PRBool                   aDirtyOnly = PR_FALSE);
 
-public:
-  struct RowBits {
-    int      mRowIndex:20;
-    unsigned mMinRowSpan:11; // the smallest row span among all my child cells
-    unsigned mFirstInserted; // if true, then it was the top most newly inserted row 
-  };
-
 private:
-  union {
-    PRUint32 mAllBits;
-    RowBits  mBits;
-  };
-  nscoord  mTallestCell;          // not my height, but the height of my tallest child
+  struct RowBits {
+    unsigned mRowIndex:29;
+    unsigned mHasFixedHeight:1; // set if the dominating style height on the row or any cell is pixel based
+    unsigned mHasPctHeight:1;   // set if the dominating style height on the row or any cell is pct based
+    unsigned mFirstInserted:1;  // if true, then it was the top most newly inserted row 
+  } mBits;
+
+  nscoord mContentHeight; // the desired height based on the content of the tallest cell in the row
+  nscoord mStyleHeight;   // the height based on a style pct on either the row or any cell if mHasPctHeight 
+                          // is set, otherwise the height based on a style pixel height on the row or any 
+                          // cell if mHasFixedHeight is set
 
   // max-ascent and max-descent amongst all cells that have 'vertical-align: baseline'
   nscoord mMaxCellAscent;  // does include cells with rowspan > 1
@@ -311,7 +330,6 @@ inline PRInt32 nsTableRowFrame::GetRowIndex() const
 
 inline void nsTableRowFrame::SetRowIndex (int aRowIndex)
 {
-  NS_PRECONDITION(aRowIndex < NS_TABLE_MAX_ROW_INDEX, "unexpected row index");
   mBits.mRowIndex = aRowIndex;
 }
 
@@ -325,4 +343,68 @@ inline void nsTableRowFrame::SetFirstInserted(PRBool aValue)
   mBits.mFirstInserted = aValue;
 }
 
+inline PRBool nsTableRowFrame::HasStyleHeight() const
+{
+  return (PRBool)mBits.mHasFixedHeight || (PRBool)mBits.mHasPctHeight;
+}
+
+inline PRBool nsTableRowFrame::HasFixedHeight() const
+{
+  return (PRBool)mBits.mHasFixedHeight;
+}
+
+inline void nsTableRowFrame::SetHasFixedHeight(PRBool aValue)
+{
+  mBits.mHasFixedHeight = aValue;
+}
+
+inline PRBool nsTableRowFrame::HasPctHeight() const
+{
+  return (PRBool)mBits.mHasPctHeight;
+}
+
+inline void nsTableRowFrame::SetHasPctHeight(PRBool aValue)
+{
+  mBits.mHasPctHeight = aValue;
+}
+
+inline nscoord nsTableRowFrame::GetContentHeight() const
+{
+  return mContentHeight;
+}
+
+inline void nsTableRowFrame::SetContentHeight(nscoord aValue)
+{
+  mContentHeight = aValue;
+}
+
+inline nscoord nsTableRowFrame::GetFixedHeight() const
+{
+  if (mBits.mHasFixedHeight && !mBits.mHasPctHeight) 
+    return mStyleHeight;
+  else
+    return 0;
+}
+
+inline float nsTableRowFrame::GetPctHeight() const
+{
+  if (mBits.mHasPctHeight) 
+    return (float)mStyleHeight / 100.0f;
+  else
+    return 0.0f;
+}
+
+inline PRBool nsTableRowFrame::NeedSpecialReflow() const
+{
+  return (mState & NS_ROW_NEED_SPECIAL_REFLOW) == NS_ROW_NEED_SPECIAL_REFLOW;
+}
+
+inline void nsTableRowFrame::SetNeedSpecialReflow(PRBool aValue)
+{
+  if (aValue) {
+    mState |= NS_ROW_NEED_SPECIAL_REFLOW;
+  } else {
+    mState &= ~NS_ROW_NEED_SPECIAL_REFLOW;
+  }
+}
 #endif
