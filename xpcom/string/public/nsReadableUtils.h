@@ -107,10 +107,27 @@ NS_COM PRUnichar* ToNewUnicode( const nsAString& aSource );
    * This conversion is not well defined; but it reproduces legacy string behavior.
    * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
    *
-   * @param aSource an 8-bit wide string
+   * @param aSource an 8-bit wide string (a C-string, NOT UTF-8)
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
    */
 NS_COM PRUnichar* ToNewUnicode( const nsACString& aSource );
+
+  /**
+   * Returns a new |PRUnichar| buffer containing a zero-terminated copy
+   * of |aSource|.
+   *
+   * Allocates and returns a new |char| buffer which you must free with
+   * |nsMemory::Free|.  Performs an encoding conversion by 0-padding
+   * 8-bit wide characters up to 16-bits wide while copying |aSource| to
+   * your new buffer.  This conversion is not well defined; but it
+   * reproduces legacy string behavior.  The new buffer is
+   * zero-terminated, but that may not help you if |aSource| contains
+   * embedded nulls.
+   *
+   * @param aSource an 8-bit wide string, UTF-8 encoded
+   * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
+   */
+NS_COM PRUnichar* UTF8ToNewUnicode( const nsACString& aSource );
 
   /**
    * Copies |aLength| 16-bit characters from the start of |aSource| to the
@@ -280,6 +297,15 @@ NS_COM PRUint32 CountCharInReadable( const nsAString& aStr,
                                      PRUnichar aChar );
 NS_COM PRUint32 CountCharInReadable( const nsACString& aStr,
                                      char aChar );
+
+NS_COM PRBool StringBeginsWith( const nsAString& aSource,
+                                const nsAString& aSubstring);
+NS_COM PRBool StringBeginsWith( const nsACString& aSource,
+                                const nsACString& aSubstring);
+NS_COM PRBool StringEndsWith( const nsAString& aSource,
+                              const nsAString& aSubstring);
+NS_COM PRBool StringEndsWith( const nsACString& aSource,
+                              const nsACString& aSubstring);
 
 NS_COM PRUint32 HashString( const nsAString& aStr );
 NS_COM PRUint32 HashString( const nsACString& aStr );

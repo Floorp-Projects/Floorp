@@ -25,6 +25,7 @@
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsUTF8Utils.h"
 
 #ifndef nsStringTraits_h___
 #include "nsStringTraits.h"
@@ -208,6 +209,8 @@ NS_COM
 char*
 ToNewUTF8String( const nsAString& aSource )
   {
+    // XXX The conversion code in NS_ConvertUCS2toUTF8 needs to be
+    // refactored so that we can use it here without a double-copy.
     NS_ConvertUCS2toUTF8 temp(aSource);
 
     char* result;
@@ -265,6 +268,26 @@ ToNewUnicode( const nsACString& aSource )
     nsACString::const_iterator fromBegin, fromEnd;
     LossyConvertEncoding<char, PRUnichar> converter(result);
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter).write_terminator();
+    return result;
+  }
+
+NS_COM
+PRUnichar*
+UTF8ToNewUnicode( const nsACString& aSource )
+  {
+    nsACString::const_iterator start, end;
+    CalculateUTF8Length calculator;
+    copy_string(aSource.BeginReading(start), aSource.EndReading(end),
+                calculator);
+
+    PRUnichar *result = NS_STATIC_CAST(PRUnichar*,
+        nsMemory::Alloc(sizeof(PRUnichar) * (calculator.Length() + 1)));
+
+    ConvertUTF8toUCS2 converter(result);
+    copy_string(aSource.BeginReading(start), aSource.EndReading(end),
+                converter);
+    NS_ASSERTION(calculator.Length() == converter.Length(), "length mismatch");
+
     return result;
   }
 
@@ -1079,6 +1102,48 @@ CountCharInReadable( const nsACString& aStr,
 
   return count;
 }
+
+NS_COM PRBool
+StringBeginsWith( const nsAString& aSource, const nsAString& aSubstring)
+  {
+    nsAString::size_type src_len = aSource.Length(),
+                         sub_len = aSubstring.Length();
+    if (sub_len > src_len)
+      return PR_FALSE;
+    return Substring(aSource, 0, sub_len) == aSubstring;
+  }
+
+NS_COM PRBool
+StringBeginsWith( const nsACString& aSource, const nsACString& aSubstring)
+  {
+    nsACString::size_type src_len = aSource.Length(),
+                          sub_len = aSubstring.Length();
+    if (sub_len > src_len)
+      return PR_FALSE;
+    return Substring(aSource, 0, sub_len) == aSubstring;
+  }
+
+NS_COM PRBool
+StringEndsWith( const nsAString& aSource, const nsAString& aSubstring)
+  {
+    nsAString::size_type src_len = aSource.Length(),
+                         sub_len = aSubstring.Length();
+    if (sub_len > src_len)
+      return PR_FALSE;
+    return Substring(aSource, src_len - sub_len, sub_len) == aSubstring;
+  }
+
+NS_COM PRBool
+StringEndsWith( const nsACString& aSource, const nsACString& aSubstring)
+  {
+    nsACString::size_type src_len = aSource.Length(),
+                          sub_len = aSubstring.Length();
+    if (sub_len > src_len)
+      return PR_FALSE;
+    return Substring(aSource, src_len - sub_len, sub_len) == aSubstring;
+  }
+
+
 
 template <class CharT>
 class CalculateHashCode

@@ -44,6 +44,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsDebug.h"
+#include "nsUTF8Utils.h"
 
 #ifndef nsCharTraits_h___
 #include "nsCharTraits.h"
@@ -1347,61 +1348,6 @@ NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const nsACString& aCString )
         start.advance(start.size_forward());
       }
   }
-
-class CalculateUTF8Length
-  {
-    public:
-      typedef nsACString::char_type value_type;
-
-    CalculateUTF8Length() : mLength(0), mErrorEncountered(PR_FALSE) { }
-
-    size_t Length() const { return mLength; }
-
-    PRUint32 write( const value_type* start, PRUint32 N )
-      {
-          // ignore any further requests
-        if ( mErrorEncountered )
-            return N;
-
-        // algorithm assumes utf8 units won't
-        // be spread across fragments
-        const value_type* p = start;
-        const value_type* end = start + N;
-        for ( ; p < end /* && *p */; ++mLength )
-          {
-            if ( UTF8traits::isASCII(*p) )
-                p += 1;
-            else if ( UTF8traits::is2byte(*p) )
-                p += 2;
-            else if ( UTF8traits::is3byte(*p) )
-                p += 3;
-            else if ( UTF8traits::is4byte(*p) ) {
-                p += 4;
-                ++mLength;
-            }
-            else if ( UTF8traits::is5byte(*p) )
-                p += 5;
-            else if ( UTF8traits::is6byte(*p) )
-                p += 6;
-            else
-              {
-                break;
-              }
-          }
-        if ( p != end )
-          {
-            NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
-            mErrorEncountered = PR_TRUE;
-            mLength = 0;
-            return N;
-          }
-        return p - start;
-      }
-
-    private:
-      size_t mLength;
-      PRBool mErrorEncountered;
-  };
 
 void
 NS_ConvertUTF8toUCS2::Init( const nsACString& aCString )
