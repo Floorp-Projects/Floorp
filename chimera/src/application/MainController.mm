@@ -613,7 +613,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // check if someone has previously done a find before allowing findAgain to be enabled
   if (action == @selector(findAgain:)) {
     if ([self isMainWindowABrowserWindow])
-      return (mFindDialog != nil);
+      return (mFindDialog && [[mFindDialog getSearchText] length] > 0);
     else
       return NO;
   }

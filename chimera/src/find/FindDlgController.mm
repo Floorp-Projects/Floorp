@@ -80,10 +80,9 @@
     BOOL found = [browserController findInPageWithPattern:mSearchText caseSensitive:!ignoreCase
         wrap:wrapSearch backwards:searchBack];
 
-    if ( found ) 
-      [self close];
-    else
+    if (! found ) 
       NSBeep();
+    // we stay open
   }
   else
     NSBeep();
@@ -133,4 +132,10 @@
   mSearchText = inText;
   [mSearchText retain];
 }
+
+- (NSString*)getSearchText
+{
+  return mSearchText;
+}
+
 @end
