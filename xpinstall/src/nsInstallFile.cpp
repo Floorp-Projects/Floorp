@@ -107,14 +107,36 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
 
     delete [] qualifiedRegNameString;
 
-    
-     mFinalFile = new nsFileSpec(folderSpec);
+    mFinalFile = new nsFileSpec(folderSpec);
+
+    if ( mFinalFile->Exists() )
+    {
+        // is there a file with the same name as the proposed folder?
+        if ( mFinalFile->IsFile() ) 
+        {
+            *error = nsInstall::FILENAME_ALREADY_USED;
+            return;
+        }
+        // else this directory already exists, so do nothing
+    }
+    else
+    {
+        /* the nsFileSpecMac.cpp operator += requires "this" (the nsFileSpec)
+         * to be an existing dir
+         */
+        int dirPermissions = 755; // std default for UNIX, ignored otherwise
+        mFinalFile->CreateDir(dirPermissions);
+    }
+
     *mFinalFile += inPartialPath;
     
     mReplaceFile = mFinalFile->Exists();
     
     if (mReplaceFile == PR_FALSE)
     {
+       /* although it appears that we are creating the dir _again_ it is necessary
+        * when inPartialPath has arbitrary levels of nested dirs before the leaf
+        */
         nsFileSpec parent;
         mFinalFile->GetParent(parent);
         nsFileSpec makeDirs(parent.GetCString(), PR_TRUE);

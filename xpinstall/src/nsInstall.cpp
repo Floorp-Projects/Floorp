@@ -751,10 +751,6 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
         if(aSubdirectory != "")
         {
           nsfsDir += aSubdirectory;
-          if(!nsfsDir.Exists())
-          {
-              nsfsDir.CreateDirectory();
-          }
         }
         *aFolder  = new nsString(nsfsDir.GetNativePathCString());
     }
