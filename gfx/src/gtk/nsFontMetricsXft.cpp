@@ -944,8 +944,7 @@ nsFontMetricsXft::FindFont(PRUint32 aChar)
     }
 
     // Now check the remaining fonts
-
-    for (PRInt32 end = mLoadedFonts.Count(); i < end; ++i) {
+    for (; i < mLoadedFonts.Count(); ++i) {
         nsFontXft *font = (nsFontXft *)mLoadedFonts.ElementAt(i);
         if (font->HasChar(aChar)) {
             if (font->GetXftFont())
