@@ -32,7 +32,8 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsILocalFile.h"
-#include "nsCOMPtr.h"
+#include "plhash.h"
+
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 
