@@ -95,6 +95,9 @@ function OnLoadMsgHeaderPane()
     msgPaneData.AttachmentPopup = document.getElementById("attachmentPopup");
     msgPaneData.AttachmentButton = document.getElementById("attachmentButton");
 
+	// Edit Draft button
+    msgPaneData.EditMessageButton = document.getElementById("editMessageButton");
+
     // Second toolbar 
     msgPaneData.ToBox = document.getElementById("ToBox");
     
@@ -147,6 +150,7 @@ var messageHeaderSink = {
       ClearCurrentHeaders();
       gGeneratedViewAllHeaderInfo = false;
       ClearAttachmentMenu();
+      ClearEditMessageButton();
     },
 
     onEndHeaders: function() 
@@ -175,6 +179,8 @@ var messageHeaderSink = {
       
       ShowMessageHeaderPane();
       UpdateMessageHeaders();
+      if (gIsEditableMsgFolder)
+        ShowEditMessageButton();
     },
 
     handleHeader: function(headerName, headerValue, dontCollectAddress) 
@@ -336,6 +342,20 @@ function ClearAttachmentMenu()
   attachmentUrlArray.length = 0;
   attachmentDisplayNameArray.length = 0;
   attachmentMessageUriArray.length = 0;
+}
+
+function ShowEditMessageButton() 
+{
+  var editBox = document.getElementById("editMessageBox");
+  if (editBox)
+    editBox.removeAttribute("collapsed");
+} 
+
+function ClearEditMessageButton() 
+{ 
+  var editBox = document.getElementById("editMessageBox");
+  if (editBox)
+    editBox.setAttribute("collapsed", "true");
 }
 
 // Assumes that all the child nodes of the parent div need removed..leaving

@@ -72,6 +72,15 @@ function ThreadPaneOnClick(event)
 	}
 }
 
+
+function MsgComposeDraftMessage()
+{
+    var loadedFolder = GetLoadedMsgFolder();
+    var messageArray = GetSelectedMessages();
+
+    ComposeMessage(msgComposeType.Draft, msgComposeFormat.Default, loadedFolder, messageArray);
+}
+
 function ThreadPaneDoubleClick()
 {
 	var loadedFolder;
@@ -80,10 +89,7 @@ function ThreadPaneDoubleClick()
 
 	if(IsSpecialFolderSelected("Drafts"))
 	{
-		loadedFolder = GetLoadedMsgFolder();
-		messageArray = GetSelectedMessages();
-
-		ComposeMessage(msgComposeType.Draft, msgComposeFormat.Default, loadedFolder, messageArray);
+		MsgComposeDraftMessage();
 	}
 	else if(IsSpecialFolderSelected("Templates"))
 	{

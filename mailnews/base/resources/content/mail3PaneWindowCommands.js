@@ -80,7 +80,7 @@ var FolderPaneController =
                 }
 				else
 					return false;
-			
+
 			default:
 				return false;
 		}
@@ -137,7 +137,7 @@ var ThreadPaneController =
 			case "cmd_copy":
 			case "cmd_paste":
 				return false;
-				
+
 			default:
 				return false;
 		}
@@ -189,6 +189,7 @@ var DefaultController =
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
+			case "cmd_editDraft":
 			case "cmd_nextMsg":
 			case "cmd_nextUnreadMsg":
 			case "cmd_nextFlaggedMsg":
@@ -257,6 +258,7 @@ var DefaultController =
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
 			case "cmd_file":
+			case "cmd_editDraft":
 				var numSelected = GetNumSelectedMessages();
 
 				if ( command == "cmd_delete")
@@ -281,6 +283,10 @@ var DefaultController =
                         }
                     }
 				}
+				else if (command == "cmd_editDraft")
+        {
+          return (gIsEditableMsgFolder && numSelected > 0);
+        }
 				return ( numSelected > 0 );
 			case "cmd_nextMsg":
 			case "cmd_nextUnreadMsg":
@@ -378,6 +384,11 @@ var DefaultController =
 				break;
 			case "button_delete":
 				MsgDeleteMessage(false, true);
+				break;
+			case "cmd_editDraft":
+				var threadTree = GetThreadTree();
+				if (threadTree && threadTree.selectedItems)
+					MsgComposeDraftMessage();
 				break;
 			case "cmd_nextUnreadMsg":
 				MsgNextUnreadMessage();
@@ -529,6 +540,7 @@ function CommandUpdate_Mail()
 {
 	goUpdateCommand('button_delete');
 	goUpdateCommand('cmd_delete');
+	goUpdateCommand('cmd_editDraft');
 	goUpdateCommand('cmd_nextMsg');
 	goUpdateCommand('cmd_nextUnreadMsg');
 	goUpdateCommand('cmd_nextUnreadThread');

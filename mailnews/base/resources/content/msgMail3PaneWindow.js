@@ -51,6 +51,10 @@ var gHaveLoadedMessage;
 
 var gBatching = false;
 
+
+// for checking if the folder loaded is Draft or Unsent which msg is editable
+var gIsEditableMsgFolder = false;
+
 // the folderListener object
 var folderListener = {
     OnItemAdded: function(parentItem, item, view) {},
@@ -112,6 +116,8 @@ var folderListener = {
 					{
 						msgFolder.endFolderLoading();
 						RerootFolder(uri, msgFolder, gCurrentLoadingFolderIsThreaded, gCurrentLoadingFolderSortID, gCurrentLoadingFolderSortDirection, gCurrentLoadingFolderViewType);
+						gIsEditableMsgFolder = IsSpecialFolder(msgFolder, [ "Drafts" ]);
+
 						gCurrentLoadingFolderIsThreaded = false;
 						gCurrentLoadingFolderSortID = "";
 						gCurrentLoadingFolderSortDirection = null;

@@ -32,3 +32,4 @@ Rights Reserved.
 <!ENTITY userAgentField.label "User-Agent: ">
 <!ENTITY saveAll.label "Save All..">
 
+<!ENTITY editMessage.label "Edit Draft...">

@@ -108,6 +108,8 @@ Rights Reserved.
 <!ENTITY undoDefaultCmd.accesskey "u">
 <!ENTITY redoDefaultCmd.label "Redo">
 <!ENTITY redoDefaultCmd.accesskey "r">
+<!ENTITY editDraftCmd.label "Edit Draft">
+<!ENTITY editDraftCmd.accesskey "f">
 
 <!-- View Menu -->
 <!-- LOCALIZATION NOTE (showSidebarMenu) : Do not translate line. -->

@@ -72,6 +72,7 @@ Rights Reserved.
                  valueNewsMessage="&cancelNewsMsgCmd.label;"
 				 valueMessages="&deleteMsgsCmd.label;"/>
 	<broadcaster id="button_delete"/>
+	<broadcaster id="cmd_editDraft" oncommand="goDoCommand('cmd_editDraft')" disabled="true"/>
 	<broadcaster id="cmd_selectAll"/>
 	<broadcaster id="cmd_preferences"/>
 	
@@ -712,6 +713,9 @@ Rights Reserved.
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
 			<menuitem id="menu_delete"/>
+			<menuitem value="&editDraftCmd.label;" 
+					  accesskey="&editDraftCmd.accesskey;" 
+					  observes="cmd_editDraft"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>

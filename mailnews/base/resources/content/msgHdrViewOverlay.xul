@@ -69,6 +69,12 @@ Rights Reserved.
 					</box>
 				</box>
 
+        <box id="editMessageBox" class="header-part1" orient="vertical" collapsed="true">
+          <spring class="buttonSpacer"/>
+          <button id="editMessageButton" value="&editMessage.label;" orient="right" onclick="MsgComposeDraftMessage()"/>
+          <spring class="buttonSpacer"/>
+        </box>
+
         <box id="attachmentBox" class="header-part1" orient="horizontal" collapsed="true">
           <spring class="buttonSpacer"/>
             <vbox>
