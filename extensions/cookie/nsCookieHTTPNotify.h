@@ -53,13 +53,13 @@ public:
   virtual ~nsCookieHTTPNotify();
 
   static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static nsresult RegisterProc(nsIComponentManager *aCompMgr,
-                               nsIFile *aPath,
-                               const char *registryLocation,
-                               const char *componentType);
-  static nsresult UnregisterProc(nsIComponentManager *aCompMgr,
-                                 nsIFile *aPath,
-                                 const char *registryLocation);
+  static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr,
+                                nsIFile *aPath,
+                                const char *registryLocation,
+                                const char *componentType);
+  static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr,
+                                  nsIFile *aPath,
+                                  const char *registryLocation);
 
 private:
     nsCOMPtr<nsIAtom> mCookieHeader;

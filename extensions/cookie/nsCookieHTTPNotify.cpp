@@ -51,10 +51,10 @@ nsresult nsCookieHTTPNotify::Create(nsISupports *aOuter, REFNSIID aIID, void **a
     return nsCookieHTTPNotifyConstructor(aOuter, aIID, aResult);
 }
 
-nsresult nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
-                                                   nsIFile *aPath,
-                                                   const char *registryLocation,
-                                                   const char *componentType)
+NS_METHOD nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
+                                           nsIFile *aPath,
+                                           const char *registryLocation,
+                                           const char *componentType)
 {
     // Register ourselves into the NS_CATEGORY_HTTP_STARTUP
     nsresult rv;
@@ -72,9 +72,9 @@ nsresult nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
 
 }
 
-nsresult nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
-                                                     nsIFile *aPath,
-                                                     const char *registryLocation)
+NS_METHOD nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
+                                             nsIFile *aPath,
+                                             const char *registryLocation)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
