@@ -58,7 +58,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     m_pResponseDataListener(nsnull),
     mLoadAttributes(LOAD_NORMAL),
     mResponseContext(nsnull),
-    mLoadGroup(nsnull)
+    mLoadGroup(nsnull),
+    mPostStream(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -76,7 +77,7 @@ nsHTTPChannel::~nsHTTPChannel()
     //TODO if we keep our copy of m_URI, then delete it too.
     NS_IF_RELEASE(m_pRequest);
     NS_IF_RELEASE(m_pResponse);
-
+    NS_IF_RELEASE(mPostStream);
     NS_IF_RELEASE(m_pResponseDataListener);
     NS_IF_RELEASE(mLoadGroup);
 }
@@ -345,7 +346,8 @@ nsHTTPChannel::GetEventSink(nsIHTTPEventSink* *o_EventSink)
 NS_IMETHODIMP
 nsHTTPChannel::SetRequestMethod(PRUint32/*HTTPMethod*/ i_Method)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ASSERTION(m_pRequest, "No request set as yet!");
+    return m_pRequest ? m_pRequest->SetMethod((HTTPMethod)i_Method) : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -555,4 +557,24 @@ nsHTTPChannel::GetResponseContext(nsISupports** aContext)
   return NS_ERROR_NULL_POINTER;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+nsresult
+nsHTTPChannel::SetPostDataStream(nsIInputStream* postDataStream)
+{
+    NS_IF_RELEASE(mPostStream);
+    mPostStream = postDataStream;
+    if (mPostStream)
+        NS_ADDREF(mPostStream);
+    return NS_OK;
+}
+
+nsresult
+nsHTTPChannel::GetPostDataStream(nsIInputStream **o_postStream)
+{ 
+    if (o_postStream)
+    {
+        *o_postStream = mPostStream; 
+        NS_IF_ADDREF(*o_postStream); 
+        return NS_OK; 
+    }
+    return NS_ERROR_NULL_POINTER;
+}
