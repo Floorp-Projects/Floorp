@@ -334,6 +334,7 @@ public:
     NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference);
     NS_IMETHOD SetContainer(nsISupports *aContainer);
     NS_IMETHOD GetContainer(nsISupports **aContainer);
+    NS_IMETHOD GetScriptEventManager(nsIScriptEventManager **aResult);
 
     virtual void SetDisplaySelection(PRInt8 aToggle);
 

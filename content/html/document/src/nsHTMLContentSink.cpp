@@ -5624,16 +5624,27 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     return rv;
   }
 
+  // Determine whether the script is really an event handler.
+  // Event handler scripts are NOT immediately evaluated.
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement = do_QueryInterface(element);
+  PRBool bIsEventHandler = PR_FALSE;
+  nsAutoString forString;
+
+  scriptElement->GetHtmlFor(forString);
+  if (!forString.IsEmpty()) {
+    bIsEventHandler = PR_TRUE;
+  }
+
   nsCOMPtr<nsIDTD> dtd;
   mParser->GetDTD(getter_AddRefs(dtd));
   NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(element));
   nsAutoString script;
   PRInt32 lineNo = 0;
 
   dtd->CollectSkippedContent(eHTMLTag_script, script, lineNo);
 
-  nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(element));
   if (sele) {
     sele->SetLineNumber((PRUint32)lineNo);
   }
@@ -5673,10 +5684,11 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     // Assume that we're going to block the parser with a script load.
     // If it's an inline script, we'll be told otherwise in the call
     // to our ScriptAvailable method.
-    mNeedToBlockParser = PR_TRUE;
+    //
+    // However, if this script is an event handler, then DO NOT block the
+    // parser because it will NOT be executed now.
+    mNeedToBlockParser = !bIsEventHandler;
 
-    nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement =
-      do_QueryInterface(element);
     mScriptElements->AppendElement(scriptElement);
   }
 

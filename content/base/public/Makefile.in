@@ -78,6 +78,8 @@ XPIDLSRCS	= \
 		nsIPrintStatusFeedback.idl  \
 		nsIDragDropHandler.idl \
 		nsIDragDropOverride.idl \
+		nsIScriptEventHandler.idl \
+		nsIScriptEventManager.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

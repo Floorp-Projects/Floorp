@@ -2558,6 +2558,13 @@ nsXULDocument::GetContainer(nsISupports **aContainer)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULDocument::GetScriptEventManager(nsIScriptEventManager **aResult)
+{
+  *aResult = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void
 nsXULDocument::SetDisplaySelection(PRInt8 aToggle)
 {

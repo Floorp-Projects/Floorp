@@ -101,6 +101,7 @@ CPPSRCS		= \
 		nsStyleLinkElement.cpp \
 		nsContentAreaDragDrop.cpp \
 		nsFrameLoader.cpp \
+		nsScriptEventManager.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

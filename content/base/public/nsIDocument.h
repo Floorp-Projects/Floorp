@@ -81,6 +81,7 @@ class nsISupportsArray;
 class nsIScriptLoader;
 class nsString;
 class nsIContentSink;
+class nsIScriptEventManager;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -394,6 +395,8 @@ public:
    * Get the container (docshell) for this document.
    */
   NS_IMETHOD GetContainer(nsISupports **aContainer) = 0;
+
+  NS_IMETHOD GetScriptEventManager(nsIScriptEventManager **aResult) = 0;
 };
 
 
