@@ -575,6 +575,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://communicator/skin/icons/lock-broken.gif");
 }
 
+#privacy-button {
+  list-style-image: url("chrome://communicator/skin/cookie/taskbar-cookie.gif");
+}
+
 #popupIcon {
   list-style-image: url("chrome://navigator/skin/icons/popup-blocked.png");
 }
