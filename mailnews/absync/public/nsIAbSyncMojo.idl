@@ -39,7 +39,9 @@ interface nsIAbSyncMojo : nsISupports {
 	 */
   string  BuildMojoString(in nsIDocShell aRootDocShell);
   void		StartAbSyncMojo(in nsIStreamListener aListener, 
-                          in nsIDocShell aRootDocShell);
+                          in nsIDocShell aRootDocShell,
+                          in string      aUser);
   void		GetAbSyncMojoResults(out string aMojoUser, out string aMojoString,
                                out string aMojoSpec, out long aMojoPort);
+  void    CancelTheMojo();                               
 };

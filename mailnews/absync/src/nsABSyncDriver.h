@@ -44,6 +44,7 @@ private:
   nsCOMPtr<nsIStringBundle>       mStringBundle;
   PRInt32                         mTransactionID;
   nsCOMPtr<nsIMsgStatusFeedback>  mStatus;
+  PRBool                          mCancelled;
 };
 
 #endif /* __nsAbSyncDriver_h__ */

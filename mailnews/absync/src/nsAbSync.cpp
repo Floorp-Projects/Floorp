@@ -67,6 +67,7 @@ nsAbSync::nsAbSync()
   mListenerArray = nsnull;
   mStringBundle = nsnull;
   mRootDocShell = nsnull;
+  mUserName = nsnull;
 
   InternalInit();
   InitSchemaColumns();
@@ -89,7 +90,6 @@ nsAbSync::InternalInit()
   mNewServerTable = nsnull;
 
   mLastChangeNum = 1;
-  mUserName = nsCString("RHPizzarro").ToNewCString();
 
   mLocale.AssignWithConversion("");
   mDeletedRecordTags = nsnull;
@@ -152,8 +152,6 @@ nsAbSync::InternalCleanup(nsresult aResult)
     if (NS_SUCCEEDED(aResult))
       mLockFile->Delete(PR_FALSE);
   }
-
-  PR_FREEIF(mUserName);
 
   if (mDeletedRecordTags)
   {
@@ -345,6 +343,15 @@ nsAbSync::SetDOMWindow(nsIDOMWindow *aWindow)
   }
 
   return rv;
+}
+
+/* void SetAbSyncUser (in string aUser); */
+NS_IMETHODIMP 
+nsAbSync::SetAbSyncUser(const char *aUser)
+{
+  if (aUser)
+    mUserName = nsCRT::strdup(aUser);
+  return NS_OK;
 }
 
 /* void AddSyncListener (in nsIAbSyncListener aListener); */
@@ -673,7 +680,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(nsIDOMWindow *aDOMWindow, PRInt32 *aTransa
     goto EarlyExit;
 
   // Ok, FIRE!
-  rv = mPostEngine->SendAbRequest(nsnull, mAbSyncPort, protocolRequest, mTransactionID, mRootDocShell);
+  rv = mPostEngine->SendAbRequest(nsnull, mAbSyncPort, protocolRequest, mTransactionID, mRootDocShell, mUserName);
   if (NS_SUCCEEDED(rv))
   {
     mCurrentState = nsIAbSyncState::nsIAbSyncRunning;

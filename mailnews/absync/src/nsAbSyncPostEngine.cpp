@@ -44,11 +44,14 @@
 #include "nsTextFormatter.h"
 #include "nsIHTTPHeader.h"
 #include "nsICookieService.h"
+#include "nsIAbSync.h"
+#include "nsAbSyncCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_IID(kCAbSyncMojoCID, NS_AB_SYNC_MOJO_CID);
+static NS_DEFINE_CID(kAbSync, NS_ABSYNC_SERVICE_CID);
 
 /* 
  * This function will be used by the factory to generate an 
@@ -472,6 +475,11 @@ nsAbSyncPostEngine::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */
 
     if (NS_SUCCEEDED(rv))
     {
+      // Before we really get started...lets let sync know who is doing this...
+	    NS_WITH_SERVICE(nsIAbSync, sync, kAbSync, &rv); 
+	    if (NS_SUCCEEDED(rv) || sync) 
+        sync->SetAbSyncUser(mUser);
+
       // Base64 encode then url encode it...
       //
       char    tUser[256] = "";
@@ -736,7 +744,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::BuildMojoString(nsIDocShell *aRootDocShell, ch
 }
 
 NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort, const char *aProtocolRequest, PRInt32 aTransactionID,
-                                                nsIDocShell *aDocShell)
+                                                nsIDocShell *aDocShell, const char *aUser)
 {
   nsresult      rv;
   char          *mojoUser = nsnull;
@@ -754,7 +762,9 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
       return NS_ERROR_FAILURE;
   }
 
-  if (NS_FAILED(mSyncMojo->StartAbSyncMojo(this, aDocShell)))
+  if (aUser)
+    mUser = nsCRT::strdup(aUser);
+  if (NS_FAILED(mSyncMojo->StartAbSyncMojo(this, aDocShell, mUser)))
     return NS_ERROR_FAILURE;  
 
   // Set transaction ID and save/init Sync info...
@@ -830,9 +840,16 @@ nsAbSyncPostEngine::CancelAbSync()
 {
   nsresult      rv = NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(mChannel);
-  if (httpChannel)
-    rv = httpChannel->Cancel(NS_BINDING_ABORTED);
+  if (mSyncMojo)
+  {
+    rv = mSyncMojo->CancelTheMojo();
+  }
+  else
+  {
+    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(mChannel);
+    if (httpChannel)
+      rv = httpChannel->Cancel(NS_BINDING_ABORTED);
+  }
 
   return rv;
 }

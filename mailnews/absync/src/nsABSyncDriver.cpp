@@ -60,6 +60,7 @@ nsAbSyncDriver::OnStartAuthOperation(void)
 
     // Tweak the button...
     mStatus->StartMeteors();
+    mStatus->ShowProgress(0);
 
     outValue = GetString(NS_ConvertASCIItoUCS2("syncStartingAuth").GetUnicode());
     
@@ -110,6 +111,7 @@ NS_IMETHODIMP nsAbSyncDriver::OnStartOperation(PRInt32 aTransactionID, PRUint32 
 
     // Tweak the button...
     mStatus->StartMeteors();
+    mStatus->ShowProgress(50);
 
     outValue = GetString(NS_ConvertASCIItoUCS2("syncStarting").GetUnicode());
     msgValue = nsTextFormatter::smprintf(outValue, aMsgSize);
@@ -157,11 +159,17 @@ NS_IMETHODIMP nsAbSyncDriver::OnStopOperation(PRInt32 aTransactionID, nsresult a
 
     // Tweak the button...
     mStatus->StopMeteors();
+    mStatus->CloseWindow();
 
     if (NS_SUCCEEDED(aStatus))
       outValue = GetString(NS_ConvertASCIItoUCS2("syncDoneSuccess").GetUnicode());
     else
-      outValue = GetString(NS_ConvertASCIItoUCS2("syncDoneFailed").GetUnicode());
+    {
+      if (mCancelled)
+        outValue = GetString(NS_ConvertASCIItoUCS2("syncDoneCancelled").GetUnicode());
+      else
+        outValue = GetString(NS_ConvertASCIItoUCS2("syncDoneFailed").GetUnicode());
+    }
     
     mStatus->ShowStatusString(outValue);
     PR_FREEIF(outValue);
@@ -179,6 +187,7 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus, nsIDOMWindow
 	if (NS_FAILED(rv) || !sync) 
 		return rv;
 
+  mCancelled = PR_FALSE;
   sync->GetCurrentState(&stateVar);
   if (stateVar != nsIAbSyncState::nsIAbSyncIdle)
     return NS_ERROR_FAILURE;
@@ -203,6 +212,7 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus, nsIDOMWindow
   {
     // We failed, turn the button back on...
     mStatus->StopMeteors();
+    mStatus->CloseWindow();
   }
   return rv;
 }
@@ -244,6 +254,7 @@ NS_IMETHODIMP nsAbSyncDriver::CancelIt()
   nsresult rv = NS_OK;
   PRInt32  stateVar;
 
+  mCancelled = PR_TRUE;
   NS_WITH_SERVICE(nsIAbSync, sync, kAbSync, &rv); 
 	if (NS_FAILED(rv) || !sync) 
 		return rv;
