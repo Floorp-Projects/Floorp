@@ -528,122 +528,6 @@ ALARM RELATED CODE
 
 ******************************************************************************************************
 *******************************************************************************************************/
-
-
-CalendarEventDataSource.prototype.launchAlarmDialog = function( Event )
-{
-   //var args = new Object();
-
-   //args.calendarEvent = Event;
-
-   //openDialog( "caAlarmDialog", "chrome://calendar/content/ca-event-alert-dialog.xul", false, args );   
-}
-
-
-CalendarEventDataSource.prototype.checkAlarmDialog = function( )
-{
-   //var AlarmDialogIsOpen = Root.getRootWindowAppPath( "controlbar" ).penapplication.getDialogPath( "caAlarmDialog" ); //change this to do something
-   
-   //if( AlarmDialogIsOpen )
-   //   return( true );
-   //else
-   //   return( false );
-
-}
-
-CalendarEventDataSource.prototype.addEventToDialog = function( Event )
-{
-   //if( this.checkAlarmDialog() )
-   //{
-   //   var DialogWindow = Root.getRootWindowAppPath( "controlbar" ).penapplication.getDialogPath( "caAlarmDialog" );
-
-   //   DialogWindow.createAlarmBox( Event );
-   //}
-   //else
-   //{
-   //   this.launchAlarmDialog( Event );
-   //}
-}
-
-
-
-CalendarEventDataSource.prototype.makeXmlNode = function( xmlDocument, calendarEvent )
-{
-    
-    var doDate = function( node, name, icaldate )
-    {
-        var jsDate = new Date( icaldate.getTime() );
-        
-        node.setAttribute( name,  jsDate.toString() );
-        node.setAttribute( name + "Year",   jsDate.getFullYear() );
-        node.setAttribute( name + "Month",  jsDate.getMonth() + 1);
-        node.setAttribute( name + "Day",    jsDate.getDate() );
-        node.setAttribute( name + "Hour",   jsDate.getHours() );
-        node.setAttribute( name + "Minute", jsDate.getMinutes() );
-    }
-    
-    var checkString = function( str )
-    {
-        if( typeof( str ) == "string" )
-            return str;
-        else
-            return ""
-    }
-    
-    var checkNumber = function( num )
-    {
-        if( typeof( num ) == "undefined" || num == null )
-            return "";
-        else
-            return num
-    }
-    
-    var checkBoolean = function( bool )
-    {
-        if( bool == "false")      
-            return "false"
-        else if( bool )      // this is false for: false, 0, undefined, null, ""
-            return "true";
-        else
-            return "false"
-    }
-    
-    // make the event tag
-    var eventNode = xmlDocument.createElement( "event" );
-
-    eventNode.setAttribute( "id",               calendarEvent.id );
-    eventNode.setAttribute( "syncId",           calendarEvent.syncId );
-    
-    doDate( eventNode, "start", calendarEvent.start );
-    doDate( eventNode, "end", calendarEvent.end );
-    
-    eventNode.setAttribute( "allDay",           checkBoolean( calendarEvent.allDay ) );
-    
-    eventNode.setAttribute( "title",            checkString( calendarEvent.title ) );
-    eventNode.setAttribute( "description",      checkString( calendarEvent.description ) );
-    eventNode.setAttribute( "category",         checkString( calendarEvent.category ) );
-    eventNode.setAttribute( "location",         checkString( calendarEvent.location ) );
-    eventNode.setAttribute( "privateEvent",     checkBoolean( calendarEvent.privateEvent ) );
-    
-    eventNode.setAttribute( "inviteEmailAddress", checkString( calendarEvent.inviteEmailAddress ) );
-    
-    eventNode.setAttribute( "alarm",            checkBoolean( calendarEvent.alarm ) );
-    eventNode.setAttribute( "alarmLength",      checkNumber( calendarEvent.alarmLength ) );
-    eventNode.setAttribute( "alarmUnits",       checkString( calendarEvent.alarmUnits ) );  
-    eventNode.setAttribute( "alarmEmailAddress",checkString( calendarEvent.alarmEmailAddress ) );
-    
-    eventNode.setAttribute( "recur",            checkBoolean( calendarEvent.recur ) );
-    eventNode.setAttribute( "recurUnits",       checkString( calendarEvent.recurUnits ) ); 
-    eventNode.setAttribute( "recurForever",     checkBoolean( calendarEvent.recurForever ) );
-    eventNode.setAttribute( "recurInterval",    checkNumber( calendarEvent.recurInterval ) );
-    eventNode.setAttribute( "recurWeekdays",    checkNumber( calendarEvent.recurWeekdays ) );
-    eventNode.setAttribute( "recurWeekNumber",  checkNumber( calendarEvent.recurWeekNumber ) );
-    
-    doDate( eventNode, "recurEnd", calendarEvent.recurEnd );
-   
-    return eventNode;
-}
-
 CalendarEventDataSource.prototype.prepareAlarms = function( )
 {
     this.alarmObserver =  new CalendarAlarmObserver( this );
@@ -654,8 +538,27 @@ CalendarEventDataSource.prototype.prepareAlarms = function( )
 
 function CalendarAlarmObserver( calendarService )
 {
-   this.calendarService = calendarService;
+    this.pendingAlarmList = new Array();
+    this.addToPending = true;
+    this.calendarService = calendarService;
 }
+
+CalendarAlarmObserver.prototype.firePendingAlarms = function( observer )
+{
+    this.addToPending = false;
+    
+    for( var i in this.pendingAlarmList )
+    {
+        this.fireAlarm( this.pendingAlarmList[ i ] );
+        
+        observer.onAlarm( this.pendingAlarmList[ i ] ); 
+    }
+    
+    this.pendingAlarmList = null;
+    
+    
+}
+
 CalendarAlarmObserver.prototype.onStartBatch = function()
 {
 }
@@ -683,27 +586,33 @@ CalendarAlarmObserver.prototype.onDeleteItem = function( calendarEvent )
 
 CalendarAlarmObserver.prototype.onAlarm = function( calendarEvent )
 {
-   debug( "caEvent.alarmWentOff is "+ calendarEvent );
-         
-   this.calendarService.addEventToDialog( calendarEvent );
+    debug( "caEvent.alarmWentOff is "+ calendarEvent );
+    
+    if( this.addToPending )
+    {
+        debug( "defering alarm "+ calendarEvent );
+        this.pendingAlarmList.push( calendarEvent );
+    }
+    else
+    {
+        this.fireAlarm( calendarEvent )
+    }
+}
 
+CalendarAlarmObserver.prototype.fireAlarm = function( calendarEvent )
+{
+   debug( "Fire alarm "+ calendarEvent );
+   
    if ( calendarEvent.alarmEmailAddress )
    {
       
       //debug( "about to send an email to "+ calendarEvent.alarmEmailAddress + "with subject "+ calendarEvent.title );
       
-      var emailService = Root.getRootWindowAppPath( "controlbar" ).penapplication.getService( "org.penzilla.email" );
-        
-      if( emailService )
-      {
-         var EmailBody = "Calendar Event Alarm Went Off!\n----------------------------\n";
-         EmailBody += "Title: "+calendarEvent.title + " at " + calendarEvent.start.toString() +  "\n";
-         EmailBody += "This message sent to you from the OECalendar.\nhttp://www.oeone.com";
-
-         emailService.sendEmail( 'Calendar Event', EmailBody, calendarEvent.alarmEmailAddress );
-      }
+      //send an email for the event
+      // TO DO
    }
 }
+
 
 function debug(str )
 {
