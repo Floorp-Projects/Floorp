@@ -1887,7 +1887,9 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
 {
     // call the event callback 
     if (mEventCallback) {
+      if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
         return(DispatchStandardEvent(aEventType));
+      }
     }
 
     return PR_FALSE;
