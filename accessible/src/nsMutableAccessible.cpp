@@ -127,9 +127,10 @@ NS_IMETHODIMP nsMutableAccessible::GetAccName(PRUnichar **_retval)
   if (mNameNodeValue) {
     // see if we can get nodevalue
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mNode);
-    if (node)
+    if (node) {
       node->GetNodeValue(value);
-    else {
+      value.StripWhitespace();
+    } else {
       *_retval = nsnull;
       return NS_ERROR_NOT_IMPLEMENTED;
     }
@@ -138,7 +139,7 @@ NS_IMETHODIMP nsMutableAccessible::GetAccName(PRUnichar **_retval)
   } else if (mNameAttribute) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(mNode);
     content->GetAttribute(kNameSpaceID_None, mNameAttribute, value);
-    value.Trim(" ");
+    value.StripWhitespace();
   } else {
      *_retval = nsnull;
      return NS_ERROR_NOT_IMPLEMENTED;

@@ -47,11 +47,18 @@ class nsAccessible : public nsIAccessible
 		nsAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
 		virtual ~nsAccessible();
 
+    virtual void GetListAtomForFrame(nsIFrame* aFrame, nsIAtom*& aList) { aList = nsnull; }
+
 protected:
   virtual nsIFrame* GetFrame();
+  virtual nsIFrame* GetBoundsFrame();
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
+  virtual nsIAccessible* CreateNewNextAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewPreviousAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewParentAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewFirstAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
+  virtual nsIAccessible* CreateNewLastAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
   virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
-  virtual nsIAtom* GetListName() { return nsnull; }
 
   nsCOMPtr<nsIContent> mContent;
   nsCOMPtr<nsIWeakReference> mPresShell;

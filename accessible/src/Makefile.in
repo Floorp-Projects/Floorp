@@ -35,6 +35,7 @@ CPPSRCS		= \
 		nsAccessibilityService.cpp \
 		nsMutableAccessible.cpp \
 		nsRootAccessible.cpp \
+		nsSelectAccessible.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
