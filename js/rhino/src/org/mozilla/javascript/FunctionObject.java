@@ -340,31 +340,46 @@ public class FunctionObject extends BaseFunction {
         setParentScope(scope);
     }
 
-    static public Object convertArg(Context cx, Scriptable scope,
+    public static Object convertArg(Context cx, Scriptable scope,
                                     Object arg, Class desired)
     {
-        if (desired == ScriptRuntime.StringClass)
+        if (desired == ScriptRuntime.StringClass) {
+            if (arg instanceof String) {
+                return arg;
+            }
             return ScriptRuntime.toString(arg);
+        }
         if (desired == ScriptRuntime.IntegerClass ||
             desired == Integer.TYPE)
         {
+            if (arg instanceof Integer) {
+                return arg;
+            }
             return new Integer(ScriptRuntime.toInt32(arg));
         }
         if (desired == ScriptRuntime.BooleanClass ||
             desired == Boolean.TYPE)
         {
+            if (arg instanceof Boolean) {
+                return arg;
+            }
             return ScriptRuntime.toBoolean(arg) ? Boolean.TRUE
                                                 : Boolean.FALSE;
         }
         if (desired == ScriptRuntime.DoubleClass ||
             desired == Double.TYPE)
         {
+            if (arg instanceof Double) {
+                return arg;
+            }
             return new Double(ScriptRuntime.toNumber(arg));
         }
-        if (desired == ScriptRuntime.ScriptableClass)
+        if (desired == ScriptRuntime.ScriptableClass) {
             return ScriptRuntime.toObject(cx, scope, arg);
-        if (desired == ScriptRuntime.ObjectClass)
+        }
+        if (desired == ScriptRuntime.ObjectClass) {
             return arg;
+        }
 
         // Note that the long type is not supported; see the javadoc for
         // the constructor for this class
@@ -402,39 +417,58 @@ public class FunctionObject extends BaseFunction {
                 }
             }
         }
+
         Object[] invokeArgs;
-        int i;
         if (parmsLength == args.length) {
+            // Do not allocate new argument array if java arguments are
+            // the same as the original js ones.
             invokeArgs = args;
-            // avoid copy loop if no conversions needed
-            i = (types == null) ? parmsLength : 0;
+            for (int i = 0; i != parmsLength; ++i) {
+                Object arg = args[i];
+                Object converted = convertArg(cx, scope, arg, types[i]);
+                if (arg != converted) {
+                    if (invokeArgs == args) {
+                        invokeArgs = (Object[])args.clone();
+                    }
+                    invokeArgs[i] = converted;
+                }
+            }
+        } else if (parmsLength == 0) {
+            invokeArgs = ScriptRuntime.emptyArgs;
         } else {
             invokeArgs = new Object[parmsLength];
-            i = 0;
-        }
-        for (; i < parmsLength; i++) {
-            Object arg = (i < args.length)
-                         ? args[i]
-                         : Undefined.instance;
-            if (types != null) {
-                arg = convertArg(cx, this, arg, types[i]);
+            for (int i = 0; i != parmsLength; ++i) {
+                Object arg = (i < args.length)
+                             ? args[i]
+                             : Undefined.instance;
+                invokeArgs[i] = convertArg(cx, scope, arg, types[i]);
             }
-            invokeArgs[i] = arg;
         }
-        try {
-            Object result = method == null ? ctor.newInstance(invokeArgs)
-                                           : doInvoke(cx, thisObj, invokeArgs);
-            return hasVoidReturn ? Undefined.instance : result;
+
+        Object result;
+        if (invoker != null) {
+            if (method == null) Context.codeBug();
+            try {
+                result = invoker.invoke(thisObj, invokeArgs);
+            } catch (Exception e) {
+                throw JavaScriptException.wrapException(cx, scope, e);
+            }
+        } else {
+            try {
+                result = (method == null) ? ctor.newInstance(invokeArgs)
+                                          : method.invoke(thisObj, invokeArgs);
+            }
+            catch (InvocationTargetException e) {
+                throw JavaScriptException.wrapException(cx, scope, e);
+            }
+            catch (IllegalAccessException e) {
+                throw WrappedException.wrapException(e);
+            }
+            catch (InstantiationException e) {
+                throw WrappedException.wrapException(e);
+            }
         }
-        catch (InvocationTargetException e) {
-            throw JavaScriptException.wrapException(cx, scope, e);
-        }
-        catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (InstantiationException e) {
-            throw WrappedException.wrapException(e);
-        }
+        return hasVoidReturn ? Undefined.instance : result;
     }
 
     /**
@@ -482,26 +516,13 @@ public class FunctionObject extends BaseFunction {
         return super.construct(cx, scope, args);
     }
 
-    private final Object doInvoke(Context cx, Object thisObj, Object[] args)
-        throws IllegalAccessException, InvocationTargetException
-    {
-        if (invoker != null) {
-            try {
-                return invoker.invoke(thisObj, args);
-            } catch (Exception e) {
-                throw new InvocationTargetException(e);
-            }
-        }
-        return method.invoke(thisObj, args);
-    }
-
     private Object callVarargs(Context cx, Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
         try {
             if (parmsLength == VARARGS_METHOD) {
                 Object[] invokeArgs = { cx, thisObj, args, this };
-                Object result = doInvoke(cx, null, invokeArgs);
+                Object result = method.invoke(null, invokeArgs);
                 return hasVoidReturn ? Undefined.instance : result;
             } else {
                 boolean inNewExpr = (thisObj == null);
@@ -509,7 +530,7 @@ public class FunctionObject extends BaseFunction {
                 Object[] invokeArgs = { cx, args, this, b };
                 return (method == null)
                        ? ctor.newInstance(invokeArgs)
-                       : doInvoke(cx, null, invokeArgs);
+                       : method.invoke(null, invokeArgs);
             }
         }
         catch (InvocationTargetException e) {
