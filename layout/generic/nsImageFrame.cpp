@@ -146,7 +146,20 @@ static PRBool HaveFixedSize(const struct nsStylePosition& aStylePosition)
 inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
 { 
   NS_ASSERTION(aReflowState.mStylePosition, "crappy reflowState - null stylePosition");
-  return HaveFixedSize(*(aReflowState.mStylePosition)); 
+  // when an image has percent css style height or width, but mComputedHeight 
+  // or mComputedWidth of reflow state is  NS_UNCONSTRAINEDSIZE  
+  // it needs to return PR_FALSE to cause an incremental reflow later
+  // if an image is inside table like bug 156731 simple testcase III, 
+  // during pass 1 reflow, mComputedWidth is NS_UNCONSTRAINEDSIZE
+  // in pass 2 reflow, mComputedWidth is 0, it also needs to return PR_FALSE
+  // see bug 156731
+  nsStyleUnit heightUnit = (*(aReflowState.mStylePosition)).mHeight.GetUnit();
+  nsStyleUnit widthUnit = (*(aReflowState.mStylePosition)).mWidth.GetUnit();
+  return ((eStyleUnit_Percent == heightUnit && NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) ||
+          (eStyleUnit_Percent == widthUnit && (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth ||
+           0 == aReflowState.mComputedWidth)))
+          ? PR_FALSE
+          : HaveFixedSize(*(aReflowState.mStylePosition)); 
 }
 
 nsresult
