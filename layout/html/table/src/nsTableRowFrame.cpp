@@ -367,7 +367,8 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
 
     // at this point, we know the column widths.  
     // so we get the avail width from the known column widths
-    PRInt32 cellColSpan = ((nsTableCellFrame *)kidFrame)->GetColSpan();
+    PRInt32 cellColSpan = aState.tableFrame->GetEffectiveColSpan(((nsTableCellFrame *)kidFrame)->GetColIndex(),
+                                                                 ((nsTableCellFrame *)kidFrame));
     nscoord availWidth = 0;
     for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
     {
@@ -741,7 +742,8 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext&  aPresContext,
   // At this point, we know the column widths. Get the available width
   // from the known column widths
   PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
-  PRInt32 cellColSpan = ((nsTableCellFrame *)kidFrame)->GetColSpan();
+  PRInt32 cellColSpan = aState.tableFrame->GetEffectiveColSpan(((nsTableCellFrame *)kidFrame)->GetColIndex(),
+                                                                 ((nsTableCellFrame *)kidFrame));
   nscoord availWidth = 0;
   for (PRInt32 numColSpan = 0; numColSpan < cellColSpan; numColSpan++)
   {

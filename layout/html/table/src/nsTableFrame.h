@@ -352,12 +352,12 @@ protected:
   /** for debugging only
     * prints out information about the cell map
     */
-  void DumpCellMap() const;
+  void DumpCellMap();
 
   /** for debugging only
     * prints out info about the table layout state, printing columns and their cells
     */
-  void ListColumnLayoutData(FILE* out, PRInt32 aIndent) const;
+  void ListColumnLayoutData(FILE* out, PRInt32 aIndent);
 
   /** ResetColumns is called when the column structure of the table is changed.
     * Call with caution, only when adding or removing columns, changing 
@@ -414,6 +414,11 @@ public: /* ----- Cell Map public methods ----- */
 
   virtual PRInt32 GetColCount();
 
+  /** adjust the col count for screwy table attributes.
+    * currently just handles excess colspan at end of table
+    */
+  virtual void SetEffectiveColCount();
+
   nsTableColFrame * GetColFrame(PRInt32 aColIndex);
 
   nsTableCellFrame * GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex);
@@ -436,6 +441,7 @@ private:
   PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
   PRInt32      mColCount;           // the number of columns in this table
+  PRInt32      mEffectiveColCount;  // the number of columns in this table adjusted for weird table attributes
   nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
 };
 
