@@ -1944,13 +1944,13 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(ab4xFile));
   NS_ASSERTION(NS_SUCCEEDED(rv) && ab4xFile,"ab migration failed: failed to get profile dir");
   if (NS_FAILED(rv) || !ab4xFile) return;
+  
+  rv = ab4xFile->AppendNative(nsDependentCString(abFileName));
+  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed:  failed to append filename");
+  if (NS_FAILED(rv)) return;
 
   // TODO: Change users of nsIFileSpec to nsIFile and avoid this.
   rv = NS_NewFileSpecFromIFile(ab4xFile, getter_AddRefs(ab4xFileSpec));
-  if (NS_FAILED(rv)) return;
-  
-  rv = ab4xFileSpec->AppendRelativeUnixPath((const char *)abFileName);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed:  failed to append filename");
   if (NS_FAILED(rv)) return;
 
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpLDIFFile));
@@ -2029,9 +2029,11 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
 #ifdef DEBUG_AB_MIGRATION
   printf("remove the tmp file\n");
 #endif /* DEBUG_AB_MIGRATION */
+  rv = ab4xFile->Remove(PR_FALSE);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"failed to delete the na2 file");
+  if (NS_FAILED(rv)) return;
   rv = tmpLDIFFile->Remove(PR_TRUE);
   NS_ASSERTION(NS_SUCCEEDED(rv),"failed to delete the temp ldif file");
-  if (NS_FAILED(rv)) return;
   
   return;
 }
