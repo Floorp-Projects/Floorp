@@ -1918,7 +1918,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
         }
       }
       // put in the original cell from the cell map
-      CellData* data = (CellData*) row->ElementAt(colX);
+      CellData* data = (CellData*) row->SafeElementAt(colX);
       if (data && data->IsOrig()) {
         AppendCell(aMap, data->GetCellFrame(), rowX, PR_FALSE, aDamageArea);
       }
@@ -1936,8 +1936,9 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
     nsVoidArray* row = (nsVoidArray *)origRows[rowX];
     PRInt32 len = row->Count();
     for (PRInt32 colX = 0; colX < len; colX++) {
-      CellData* data = (CellData*) row->ElementAt(colX);
-      delete data;
+      CellData* data = (CellData*) row->SafeElementAt(colX);
+      if(data)
+        delete data;
     }
     delete row;
   }
