@@ -115,4 +115,4 @@ pref("network.protocol-handler.warn-external.nntp", false);
 
 // defaults for cmd-click opening windows or tabs (default to windows)
 pref("browser.tabs.opentabfor.middleclick", false);
-pref("browser.tabs.loadInBackground"", false);
+pref("browser.tabs.loadInBackground", false);
