@@ -835,7 +835,9 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && parentContent, rv);
 
   nsAutoString url;
-  NS_ENSURE_TRUE(GetURL(parentContent, url), NS_ERROR_UNEXPECTED);
+  GetURL(parentContent, url);
+  if (url.IsEmpty())
+    return NS_OK;
 
   // Make an absolute URL
   nsCOMPtr<nsIURI> baseURL;
