@@ -68,11 +68,6 @@ public:
     virtual ~PropfindStreamListener() { }
 protected:
 
-    static NS_METHOD StreamReaderCallback(nsIInputStream *in, void *closure,
-                                          const char *fromRawSegment,
-                                          PRUint32 toOffset, PRUint32 count,
-                                          PRUint32 *writeCount);
-
     NS_METHOD SignalCompletion(PRUint32 aStatusCode)
     {
         if (LOG_ENABLED()) {
@@ -305,21 +300,6 @@ PropfindStreamListener::OnStopRequest(nsIRequest *aRequest,
     return NS_OK;
 }
 
-NS_METHOD
-PropfindStreamListener::StreamReaderCallback(nsIInputStream *aInputStream,
-                                             void *aClosure,
-                                             const char *aRawSegment,
-                                             PRUint32 aToOffset,
-                                             PRUint32 aCount,
-                                             PRUint32 *aWriteCount)
-{
-    PropfindStreamListener *psl = NS_STATIC_CAST(PropfindStreamListener *,
-                                                 aClosure);
-    psl->mBody.Append(aRawSegment, aCount);
-    *aWriteCount = aCount;
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 PropfindStreamListener::OnDataAvailable(nsIRequest *aRequest,
                                         nsISupports *aContext,
@@ -339,8 +319,8 @@ PropfindStreamListener::OnDataAvailable(nsIRequest *aRequest,
     }
 
     PRUint32 totalRead;
-    return aInputStream->ReadSegments(StreamReaderCallback, (void *)this,
-                                      aCount, &totalRead);
+    return aInputStream->ReadSegments(NS_WD_StreamReaderStringAppendCallback,
+                                      (void *)&mBody, aCount, &totalRead);
 }
 
 nsIStreamListener *

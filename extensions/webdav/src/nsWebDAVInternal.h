@@ -102,4 +102,9 @@ NS_WD_GetDocAndResponseListFromBuffer(const nsACString &buffer,
                                       nsIDOMNodeList **responseList,
                                       PRUint32 *length);
 
+nsresult
+NS_WD_StreamReaderStringAppendCallback(nsIInputStream *in, void *closure,
+                                       const char *fromRawSegment,
+                                       PRUint32 toOffset, PRUint32 count,
+                                       PRUint32 *writeCount);
 #endif /* nsWebDAVInternal_h__ */
