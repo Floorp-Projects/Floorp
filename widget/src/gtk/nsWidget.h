@@ -149,6 +149,9 @@ public:
   void IndentByDepth(FILE* out);
 #endif
 
+  // Return the Gdk window used for rendering
+  virtual GdkWindow * GetRenderWindow();
+
 protected:
 
   virtual void InitCallbacks(char * aName = nsnull);
