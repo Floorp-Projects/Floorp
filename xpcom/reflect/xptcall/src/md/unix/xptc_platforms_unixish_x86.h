@@ -128,7 +128,7 @@
 #elif defined(__BEOS__) 
 #define CFRONT_STYLE_THIS_ADJUST
 
-#elif defined(__sun__)
+#elif defined(__sun__) || defined(__sun)
 #define CFRONT_STYLE_THIS_ADJUST
 
 #else
