@@ -1199,7 +1199,7 @@ const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
 static int globalCount;
 static PRThread *gDOMThread;
 
-static JSBool
+static JSBool PR_CALLBACK
 DOMGCCallback(JSContext *cx, JSGCStatus status)
 {
   if (status == JSGC_BEGIN && PR_GetCurrentThread() != gDOMThread)
