@@ -83,7 +83,7 @@ public:
     void OnQueryComplete(nsresult status, const ipcmMessageClientInfo *msg);
 
     PRUint32 QueryID()    { return mQueryID; }
-    PRBool   IsCanceled() { return mHandler == NULL; }
+    PRBool   IsCanceled() { return mHandler.get() == NULL; }
 
     ipcClientQuery                  *mNext;
 private:
