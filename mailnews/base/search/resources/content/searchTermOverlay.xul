@@ -41,13 +41,13 @@
       <hbox id="searchterms"/>
       <listbox flex="1" id="searchTermList">
         <listcols>
-          <listcol flex="1"/>
-          <listcol flex="4"/>
-          <listcol flex="0"/>
-          <listcol flex="4"/>
-          <listcol flex="0"/>
-          <listcol flex="4"/>
-          <listcol flex="1"/>
+          <listcol flex="&searchTermListSpace1FlexValue;"/>
+          <listcol flex="&searchTermListAttributesFlexValue;"/>
+          <listcol flex="&searchTermListSpace2FlexValue;"/>
+          <listcol flex="&searchTermListOperatorsFlexValue;"/>
+          <listcol flex="&searchTermListSpace3FlexValue;"/>
+          <listcol flex="&searchTermListValueFlexValue;"/>
+          <listcol flex="&searchTermListSpace4FlexValue;"/>
         </listcols>
 
         <!-- this is what the listitems will look like:
