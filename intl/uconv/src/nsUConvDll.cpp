@@ -30,6 +30,7 @@
 #include "nsICharsetAlias.h"
 #include "nsCharsetAliasFactory.h"
 #include "nsIServiceManager.h"
+#include "nsUConvDll.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
