@@ -4083,15 +4083,36 @@ nsresult nsAddrDatabase::GetCollationKeyGenerator()
 	return rv;
 }
 
-NS_IMETHODIMP nsAddrDatabase::CreateCollationKey(const PRUnichar* sourceStr, nsString& resultStr)
-{
-	nsString sourceString(sourceStr);
-
-	nsresult rv = GetCollationKeyGenerator();
-	if (NS_SUCCEEDED(rv) && m_collationKeyGenerator)
-		rv = m_collationKeyGenerator->CreateSortKey(kCollationCaseInSensitive, sourceString, resultStr) ;
-	return rv;
-}
+  NS_IMETHODIMP nsAddrDatabase::CreateCollationKey(const PRUnichar* sourceStr, nsString& resultStr)
+  {
+        nsresult rv = GetCollationKeyGenerator();
+        if (NS_SUCCEEDED(rv) && m_collationKeyGenerator)
+       {
+               nsAutoString sourceString(sourceStr);
+               PRUint32 aLength;
+               PRUint8 *aKey;
+               rv = m_collationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, &aLength);
+               if (NS_SUCCEEDED(rv))
+               {
+                       aKey = (PRUint8 *) PR_Malloc(aLength + 2);    // plus two for null termination
+                       if (aKey) 
+                       {
+                               rv = m_collationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceString, aKey, &aLength);
+                               if (NS_SUCCEEDED(rv))
+                               {
+                                       // Generate a null terminated unicode string.
+                                       // Note using PRUnichar* to store collation key is not recommented since the key may contains 0x0000.
+                                       aKey[aLength] = 0;
+                                       aKey[aLength+1] = 0;
+                                       resultStr.Assign((PRUnichar *) aKey);
+                               }
+                               else
+                                       PR_Free(aKey);
+                       }
+               }
+       }
+        return rv;
+  }
 
 NS_IMETHODIMP nsAddrDatabase::GetDirectoryName(PRUnichar **name)
 {

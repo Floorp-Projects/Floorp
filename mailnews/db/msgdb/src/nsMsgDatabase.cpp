@@ -2623,15 +2623,41 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
 	return err;
 }
 
-nsresult nsMsgDatabase::CreateCollationKey(const PRUnichar *sourceString, PRUnichar **resultString)
-{
-	nsresult err = GetCollationKeyGenerator();
-    nsAutoString resultStr;
-	if (NS_SUCCEEDED(err) && m_collationKeyGenerator)
-		err = m_collationKeyGenerator->CreateSortKey( kCollationCaseInSensitive, sourceString, resultStr) ;
-    *resultString = resultStr.ToNewUnicode();
-	return err;
-}
+  nsresult nsMsgDatabase::CreateCollationKey(const PRUnichar *sourceString, PRUnichar **resultString)
+  {
+        nsresult err = GetCollationKeyGenerator();
+       if (NS_SUCCEEDED(err) && m_collationKeyGenerator) 
+       {
+               PRUint32 aLength;
+               PRUint8 *aKey;
+               nsAutoString sourceStr(sourceString);
+               err = m_collationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceStr, &aLength);
+               if (NS_SUCCEEDED(err)) 
+               {
+                       aKey = (PRUint8 *) PR_Malloc(aLength + 2);    // plus two for null termination
+                       if (aKey) 
+                       {
+                               err = m_collationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceStr, aKey, &aLength);
+                               if (NS_SUCCEEDED(err)) 
+                               {
+                                       // Generate a null terminated unicode string.
+                                       // Note using PRUnichar* to store collation key is not recommented since the key may contains 0x0000.
+                                       aKey[aLength] = 0;
+                                       aKey[aLength+1] = 0;
+                                       *resultString = (PRUnichar *) aKey;
+                               }
+                               else
+                                       PR_Free(aKey);
+                       }
+               }
+       }
+       else 
+       {
+               nsAutoString resultStr;
+               *resultString = resultStr.ToNewUnicode();
+       }
+        return err;
+  }
 
 nsIMsgHeaderParser *nsMsgDatabase::GetHeaderParser()
 {
