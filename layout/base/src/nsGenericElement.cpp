@@ -1050,7 +1050,7 @@ nsGenericElement::Release()
 void
 nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
                               nsLinkVerb aVerb,
-                              const nsString& aBase,
+                              nsIURL* aBaseURL,
                               const nsString& aURLSpec,
                               const nsString& aTargetSpec,
                               PRBool aClick)
@@ -1059,23 +1059,14 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
   nsresult rv = aPresContext.GetLinkHandler(&handler);
   if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
     // Resolve url to an absolute url
-    nsIURL* docURL = nsnull;
-    nsIDocument* doc;
-    rv = GetDocument(doc);
-    if (NS_SUCCEEDED(rv) && (nsnull != doc)) {
-      docURL = doc->GetDocumentURL();
-      NS_RELEASE(doc);
-    }
-
     nsAutoString absURLSpec;
-    if (aURLSpec.Length() > 0) {
-      nsresult rv = NS_MakeAbsoluteURL(docURL, aBase, aURLSpec, absURLSpec);
+    if (nsnull != aBaseURL) {
+      nsString empty;
+      NS_MakeAbsoluteURL(aBaseURL, empty, aURLSpec, absURLSpec);
     }
     else {
       absURLSpec = aURLSpec;
     }
-
-    NS_IF_RELEASE(docURL);
 
     // Now pass on absolute url to the click handler
     if (aClick) {
@@ -1640,16 +1631,18 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (nsnull != mAttributes) {
     PRInt32 count = mAttributes->Count();
     PRInt32 index;
+    PRBool  found = PR_FALSE;
     for (index = 0; index < count; index++) {
       nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
       if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
         mAttributes->RemoveElementAt(index);
         delete attr;
+        found = PR_TRUE;
         break;
       }
     }
 
-    if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
+    if (NS_SUCCEEDED(rv) && found && aNotify && (nsnull != mDocument)) {
       mDocument->AttributeChanged(mContent, aName, NS_STYLE_HINT_UNKNOWN);
     }
   }
