@@ -593,10 +593,18 @@ print "
 
 <NOBR><B>Sort By:</B>
 <SELECT NAME=\"order\">
-  <OPTION>Bug Number
-  <OPTION SELECTED>\"Importance\"
-  <OPTION>Assignee
-</SELECT></NOBR>
+";
+
+my $deforder = "'Importance'";
+my @orders = ('Bug Number', $deforder, 'Assignee');
+
+if ($::COOKIE{'LASTORDER'}) {
+    $deforder = "Reuse same sort as last time";
+    unshift(@orders, $deforder);
+}
+    
+print make_options(\@orders, $deforder);
+print "</SELECT></NOBR>
 <INPUT TYPE=\"submit\" VALUE=\"Submit query\">
 <INPUT TYPE=\"reset\" VALUE=\"Reset back to the default query\">
 <INPUT TYPE=hidden name=form_name VALUE=query>

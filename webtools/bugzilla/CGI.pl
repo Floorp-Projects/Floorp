@@ -268,6 +268,7 @@ sub navigation_header {
 	} else {
 	    print "<I><FONT COLOR=\#777777>Next</FONT></I>\n";
 	}
+        print qq{&nbsp;&nbsp;<A HREF="buglist.cgi?regetlastlist=1">Show list</A>\n};
     }
     print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=query.cgi>Query page</A>\n";
     print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=enter_bug.cgi>Enter new bug</A>\n"

@@ -29,7 +29,6 @@ use Date::Parse;
 
 use vars %::MFORM,
     @::components,
-    @::db,
     @::default_column_list,
     @::keywordsbyname,
     @::legal_keywords,
@@ -45,6 +44,7 @@ use vars %::MFORM,
 
 ConnectToDatabase();
 
+# print "Content-type: text/plain\n\n";    # Handy for debugging.
 
 if (!defined $::FORM{'cmdtype'}) {
     # This can happen if there's an old bookmark to a query...
@@ -249,6 +249,23 @@ and    bugs.product = projector.program
 and    bugs.version = projector.value
 and    bugs.groupset & $::usergroupset = bugs.groupset
 ";
+
+if ($::FORM{'regetlastlist'}) {
+    if (!$::COOKIE{'BUGLIST'}) {
+        print qq{
+Sorry, I seem to have lost the cookie that recorded the results of your last
+query.  You will have to start over at the <A HREF="query.cgi">query page</A>.
+};
+        PutTrailer();
+        exit;
+    }
+    my @list = split(/:/, $::COOKIE{'BUGLIST'});
+    $::MFORM{'bug_id'} = \@list;
+    $::FORM{'bug_id'} = join('', $::MFORM{'bug_id'});
+    if (!$::FORM{'order'}) {
+        $::FORM{'order'} = 'reuse last sort';
+    }
+}
 
 if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
     (defined $::FORM{'emailcc2'} && $::FORM{'emailcc2'})) {
@@ -532,7 +549,11 @@ foreach my $f ("short_desc", "long_desc", "bug_file_loc",
 
 $query .= "group by bugs.bug_id\n";
 
+
 if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
+    if ($::COOKIE{'LASTORDER'} && $::FORM{'order'} =~ /^reuse/i) {
+        $::FORM{'order'} = url_decode($::COOKIE{'LASTORDER'});
+    }
     $query .= "order by ";
     $::FORM{'order'} =~ s/votesum/bugs.votes/; # Silly backwards compatability
                                                # hack.
@@ -732,6 +753,10 @@ if ($serverpush) {
     # Note! HTML header not yet closed
 }
 my $toolong = 0;
+if ($::FORM{'order'}) {
+    my $q = url_quote($::FORM{'order'});
+    print "Set-Cookie: LASTORDER=$q ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+}
 if (length($buglist) < 4000) {
     print "Set-Cookie: BUGLIST=$buglist\n\n";
 } else {
