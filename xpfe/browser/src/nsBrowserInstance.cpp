@@ -1118,7 +1118,7 @@ nsBrowserInstance::SetForcedCharset(const PRUnichar * aCharset)
   nsCOMPtr<nsIDocumentCharsetInfo> dcInfo = NULL;
 
   res = docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
-  if (dcInfo == NULL) {
+  if (dcInfo.get() == NULL) {
     res = nsComponentManager::CreateInstance(kDocumentCharsetInfoCID, NULL,
       NS_GET_IID(nsIDocumentCharsetInfo), getter_AddRefs(dcInfo));
     if (NS_FAILED(res)) return NS_ERROR_FAILURE;
@@ -1155,7 +1155,7 @@ nsBrowserInstance::SetForcedDetector()
   nsCOMPtr<nsIDocumentCharsetInfo> dcInfo = NULL;
 
   res = docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
-  if (dcInfo == NULL) {
+  if (dcInfo.get() == NULL) {
     res = nsComponentManager::CreateInstance(kDocumentCharsetInfoCID, NULL,
       NS_GET_IID(nsIDocumentCharsetInfo), getter_AddRefs(dcInfo));
     if (NS_FAILED(res)) return NS_ERROR_FAILURE;
