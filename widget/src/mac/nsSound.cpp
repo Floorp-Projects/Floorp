@@ -740,8 +740,8 @@ NS_IMETHODIMP
 nsMovieSoundRequest::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
-                                        PRUint32 stringLen,
-                                        const char *stringData)
+                                        PRUint32 dataLen,
+                                        const PRUint8 *data)
 {
   NS_ENSURE_ARG(aLoader);
   
@@ -759,14 +759,14 @@ nsMovieSoundRequest::OnStreamComplete(nsIStreamLoader *aLoader,
   // we could use a Pointer data handler type, and avoid this
   // allocation/copy, in QuickTime 5 and above.
   OSErr     err;
-  mDataHandle = ::TempNewHandle(stringLen, &err);
+  mDataHandle = ::TempNewHandle(dataLen, &err);
   if (!mDataHandle) return NS_ERROR_OUT_OF_MEMORY;
 
-  ::BlockMoveData(stringData, *mDataHandle, stringLen);
+  ::BlockMoveData(data, *mDataHandle, dataLen);
 
   NS_ASSERTION(mMovie == nsnull, "nsMovieSoundRequest has a movie already");
   
-  err = ImportMovie(mDataHandle, stringLen, contentType);
+  err = ImportMovie(mDataHandle, dataLen, contentType);
   if (err != noErr) {
     Cleanup();
     return NS_ERROR_FAILURE;
@@ -778,7 +778,7 @@ nsMovieSoundRequest::OnStreamComplete(nsIStreamLoader *aLoader,
   // put it in the cache. Not vital that this succeeds.
   // for the data size we just use the string data, since the movie simply wraps this
   // (we have to keep the handle around until the movies are done playing)
-  nsresult rv = macSound->PutSoundInCache(channel, stringLen, NS_STATIC_CAST(nsITimerCallback*, this));
+  nsresult rv = macSound->PutSoundInCache(channel, dataLen, NS_STATIC_CAST(nsITimerCallback*, this));
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to put sound in cache");
   
   return PlaySound();
