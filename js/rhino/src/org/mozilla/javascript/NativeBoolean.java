@@ -82,13 +82,17 @@ final class NativeBoolean extends IdScriptable {
     {
         if (prototypeFlag) {
             if (methodId == Id_constructor) {
-                return jsConstructor(args, thisObj == null);
-            }
-            else if (methodId == Id_toString) {
-                return realThis(thisObj, f).jsFunction_toString();
-            }
-            else if (methodId == Id_valueOf) {
-                return wrap_boolean(realThis(thisObj, f).jsFunction_valueOf());
+                boolean b = ScriptRuntime.toBoolean(args, 0);
+                if (thisObj == null) {
+                    // new Boolean(val) creates a new boolean object.
+                    return new NativeBoolean(b);
+                }
+                // Boolean(val) converts val to a boolean.
+                return wrap_boolean(b);
+            } else if (methodId == Id_toString) {
+                return realThis(thisObj, f).booleanValue ? "true" : "false";
+            } else if (methodId == Id_valueOf) {
+                return wrap_boolean(realThis(thisObj, f).booleanValue);
             }
         }
 
@@ -100,26 +104,6 @@ final class NativeBoolean extends IdScriptable {
             thisObj = nextInstanceCheck(thisObj, f, true);
         }
         return (NativeBoolean)thisObj;
-    }
-
-
-    private Object jsConstructor(Object[] args, boolean inNewExpr) {
-        boolean b = ScriptRuntime.toBoolean(args, 0);
-        if (inNewExpr) {
-            // new Boolean(val) creates a new boolean object.
-            return new NativeBoolean(b);
-        }
-
-        // Boolean(val) converts val to a boolean.
-        return wrap_boolean(b);
-    }
-
-    private String jsFunction_toString() {
-        return booleanValue ? "true" : "false";
-    }
-
-    private boolean jsFunction_valueOf() {
-        return booleanValue;
     }
 
     protected String getIdName(int id) {

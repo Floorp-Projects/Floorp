@@ -175,23 +175,23 @@ final class NativeDate extends IdScriptable {
 
                 case Id_toLocaleString: {
                     double t = realThis(thisObj, f, true).date;
-                    return jsFunction_toLocaleString(t);
+                    return js_toLocaleString(t);
                 }
 
                 case Id_toLocaleTimeString: {
                     double t = realThis(thisObj, f, true).date;
-                    return jsFunction_toLocaleTimeString(t);
+                    return js_toLocaleTimeString(t);
                 }
 
                 case Id_toLocaleDateString: {
                     double t = realThis(thisObj, f, true).date;
-                    return jsFunction_toLocaleDateString(t);
+                    return js_toLocaleDateString(t);
                 }
 
                 case Id_toUTCString: {
                     double t = realThis(thisObj, f, true).date;
-                    if (t == t) { return jsFunction_toUTCString(t); }
-                    return jsFunction_NaN_date_str;
+                    if (t == t) { return js_toUTCString(t); }
+                    return js_NaN_date_str;
                 }
 
                 case Id_valueOf:
@@ -202,7 +202,7 @@ final class NativeDate extends IdScriptable {
 
                 case Id_getYear: {
                     double t = realThis(thisObj, f, true).date;
-                    if (t == t) { t = jsFunction_getYear(cx, t); }
+                    if (t == t) { t = js_getYear(cx, t); }
                     return wrap_double(t);
                 }
 
@@ -304,13 +304,13 @@ final class NativeDate extends IdScriptable {
 
                 case Id_getTimezoneOffset: {
                     double t = realThis(thisObj, f, true).date;
-                    if (t == t) { t = jsFunction_getTimezoneOffset(t); }
+                    if (t == t) { t = js_getTimezoneOffset(t); }
                     return wrap_double(t);
                 }
 
                 case Id_setTime:
                     return wrap_double(realThis(thisObj, f, true).
-                        jsFunction_setTime(ScriptRuntime.toNumber(args, 0)));
+                        js_setTime(ScriptRuntime.toNumber(args, 0)));
 
                 case Id_setMilliseconds:
                     return wrap_double(realThis(thisObj, f, false).
@@ -370,7 +370,7 @@ final class NativeDate extends IdScriptable {
 
                 case Id_setYear:
                     return wrap_double(realThis(thisObj, f, false).
-                        jsFunction_setYear(ScriptRuntime.toNumber(args, 0)));
+                        js_setYear(ScriptRuntime.toNumber(args, 0)));
             }
         }
 
@@ -906,7 +906,9 @@ final class NativeDate extends IdScriptable {
                         return ScriptRuntime.NaN;
                     tzoffset = n;
                 } else if (n >= 70  ||
-                           (prevc == '/' && mon >= 0 && mday >= 0 && year < 0)) {
+                           (prevc == '/' && mon >= 0 && mday >= 0
+                            && year < 0))
+                {
                     if (year >= 0)
                         return ScriptRuntime.NaN;
                     else if (c <= ' ' || c == ',' || c == '/' || i >= limit)
@@ -1021,7 +1023,7 @@ final class NativeDate extends IdScriptable {
 
     private static String date_format(double t, int format) {
         if (t != t)
-            return jsFunction_NaN_date_str;
+            return js_NaN_date_str;
 
         StringBuffer result = new StringBuffer(60);
         double local = LocalTime(t);
@@ -1171,7 +1173,7 @@ final class NativeDate extends IdScriptable {
     }
 
     /* constants for toString, toUTCString */
-    private static String jsFunction_NaN_date_str = "Invalid Date";
+    private static String js_NaN_date_str = "Invalid Date";
 
     private static String[] days = {
         "Sun","Mon","Tue","Wed","Thu","Fri","Sat"
@@ -1186,35 +1188,36 @@ final class NativeDate extends IdScriptable {
                                           java.text.DateFormat formatter)
     {
         if (t != t)
-            return jsFunction_NaN_date_str;
+            return js_NaN_date_str;
 
         java.util.Date tempdate = new Date((long) t);
         return formatter.format(tempdate);
     }
 
-    private static String jsFunction_toLocaleString(double date) {
-        if (localeDateTimeFormatter == null)
+    private static String js_toLocaleString(double date) {
+        if (localeDateTimeFormatter == null) {
             localeDateTimeFormatter =
-                DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
-
+                DateFormat.getDateTimeInstance(DateFormat.LONG,
+                                               DateFormat.LONG);
+        }
         return toLocale_helper(date, localeDateTimeFormatter);
     }
 
-    private static String jsFunction_toLocaleTimeString(double date) {
+    private static String js_toLocaleTimeString(double date) {
         if (localeTimeFormatter == null)
             localeTimeFormatter = DateFormat.getTimeInstance(DateFormat.LONG);
 
         return toLocale_helper(date, localeTimeFormatter);
     }
 
-    private static String jsFunction_toLocaleDateString(double date) {
+    private static String js_toLocaleDateString(double date) {
         if (localeDateFormatter == null)
             localeDateFormatter = DateFormat.getDateInstance(DateFormat.LONG);
 
         return toLocale_helper(date, localeDateFormatter);
     }
 
-    private static String jsFunction_toUTCString(double date) {
+    private static String js_toUTCString(double date) {
         StringBuffer result = new StringBuffer(60);
 
         String dateStr = Integer.toString(DateFromTime(date));
@@ -1260,7 +1263,7 @@ final class NativeDate extends IdScriptable {
         return result.toString();
     }
 
-    private static double jsFunction_getYear(Context cx, double date) {
+    private static double js_getYear(Context cx, double date) {
 
         int result = YearFromTime(LocalTime(date));
 
@@ -1275,11 +1278,11 @@ final class NativeDate extends IdScriptable {
         return result;
     }
 
-    private static double jsFunction_getTimezoneOffset(double date) {
+    private static double js_getTimezoneOffset(double date) {
         return (date - LocalTime(date)) / msPerMinute;
     }
 
-    private double jsFunction_setTime(double time) {
+    private double js_setTime(double time) {
         this.date = TimeClip(time);
         return this.date;
     }
@@ -1360,11 +1363,11 @@ final class NativeDate extends IdScriptable {
         return date;
     }
 
-    private double jsFunction_setHours(Object[] args) {
+    private double js_setHours(Object[] args) {
         return makeTime(args, 4, true);
     }
 
-    private double jsFunction_setUTCHours(Object[] args) {
+    private double js_setUTCHours(Object[] args) {
         return makeTime(args, 4, false);
     }
 
@@ -1437,7 +1440,7 @@ final class NativeDate extends IdScriptable {
         return date;
     }
 
-    private double jsFunction_setYear(double year) {
+    private double js_setYear(double year) {
         double day, result;
         if (year != year || Double.isInfinite(year)) {
             this.date = ScriptRuntime.NaN;

@@ -170,7 +170,7 @@ public class BaseFunction extends IdScriptable implements Function {
                     return jsConstructor(cx, scope, args);
 
                 case Id_toString:
-                    return jsFunction_toString(cx, thisObj, args);
+                    return js_toString(cx, thisObj, args);
 
                 case Id_apply:
                     return applyOrCall(true, cx, scope, thisObj, args);
@@ -376,8 +376,8 @@ public class BaseFunction extends IdScriptable implements Function {
         return fn;
     }
 
-    private static Object jsFunction_toString(Context cx, Scriptable thisObj,
-                                              Object[] args)
+    private static Object js_toString(Context cx, Scriptable thisObj,
+                                      Object[] args)
     {
         int indent = ScriptRuntime.toInt32(args, 0);
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);

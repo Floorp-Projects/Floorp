@@ -112,15 +112,14 @@ public class NativeScript extends NativeFunction implements Script {
                     return jsConstructor(cx, scope, args);
 
                 case Id_toString:
-                    return realThis(thisObj, f, true).
-                        jsFunction_toString(cx, args);
+                    return realThis(thisObj, f, true).js_toString(cx, args);
 
                 case Id_exec:
-                    return realThis(thisObj, f, true).jsFunction_exec();
+                    return realThis(thisObj, f, true).js_exec();
 
                 case Id_compile:
                     return realThis(thisObj, f, false).
-                        jsFunction_compile(cx, ScriptRuntime.toString(args, 0));
+                        js_compile(cx, ScriptRuntime.toString(args, 0));
             }
         }
 
@@ -143,7 +142,7 @@ public class NativeScript extends NativeFunction implements Script {
     private static Object jsConstructor(Context cx, Scriptable scope,
                                         Object[] args)
     {
-        String source = args.length == 0
+        String source = (args.length == 0)
                         ? ""
                         : ScriptRuntime.toString(args[0]);
         return compile(cx, scope, source);
@@ -166,18 +165,17 @@ public class NativeScript extends NativeFunction implements Script {
         }
     }
 
-    private Scriptable jsFunction_compile(Context cx, String source) {
+    private Scriptable js_compile(Context cx, String source) {
         script = compile(cx, null, source);
         return this;
     }
 
-    private Object jsFunction_exec() throws JavaScriptException {
+    private Object js_exec() throws JavaScriptException {
         throw Context.reportRuntimeError1
             ("msg.cant.call.indirect", "exec");
     }
 
-    private Object jsFunction_toString(Context cx, Object[] args)
-    {
+    private Object js_toString(Context cx, Object[] args) {
         Script thisScript = script;
         if (thisScript == null) { thisScript = this; }
         Scriptable scope = getTopLevelScope(this);
