@@ -104,7 +104,7 @@ callCapsCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     /* stack depth of 1: first frame is for the native function called */
     if (!(*fn)(cx, target, 1)) {
-        // XXX report error, later, throw exception
+        /* XXX report error, later, throw exception */
         return JS_FALSE;
     }
     return JS_TRUE;
