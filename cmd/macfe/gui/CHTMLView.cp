@@ -1785,6 +1785,12 @@ void CHTMLView::CopyPixels(
 		::OffsetRgn(FE_GetMDRegion(inCopyRgn), scrollOffset.h, scrollOffset.v );
 		::OffsetRect ( &dstRect, scrollOffset.h, scrollOffset.v );
 		
+		// pinkerton
+		// we need a way to prevent images/etc in the HTML area from drawing over the 
+		// popdown treeView if it is visible. Clip it out.
+		StClipRgnState savedClip;
+		CBrowserWindow::ClipOutPopdown(this);
+		
 		CopyBits ( &((GrafPtr) srcGWorld)->portBits, &qd.thePort->portBits, &srcRect,
 			&dstRect, srcCopy, FE_GetMDRegion(inCopyRgn) );
 		
