@@ -126,7 +126,7 @@ void CnsICommandMgr::IsCommandEnabledTest(const char *aCommandName)
 	FormatAndPrintOutput("isEnabled boolean = ", isEnabled, 2);
 }
 
-void CnsICommandMgr::GetCommandStateTest(const char *aCommandName, const char *aParameter)
+void CnsICommandMgr::GetCommandStateTest(const char *aCommandName, const char *stateType)
 {
 	PRBool enabled = PR_FALSE;
 
@@ -134,7 +134,8 @@ void CnsICommandMgr::GetCommandStateTest(const char *aCommandName, const char *a
 	cmdParamObj = GetCommandParamsObject();
 	rv = cmdMgrObj->GetCommandState(aCommandName, cmdParamObj);
 	RvTestResult(rv, "GetCommandState() test", 2);
-	cmdParamObj->GetBooleanValue(aParameter, &enabled);
+	FormatAndPrintOutput("The input state type = ", stateType, 2);
+	cmdParamObj->GetBooleanValue(stateType, &enabled);
 	FormatAndPrintOutput("isEnabled boolean = ", enabled, 2);
 }
 
@@ -167,7 +168,7 @@ void CnsICommandMgr::OnStartTests(UINT nMenuID)
 			IsCommandEnabledTest("cmd_bold");
 			break;
 		case ID_INTERFACES_NSICOMMANDMANAGER_GETCOMMANDSTATE :
-			GetCommandStateTest("cmd_bold", "state_enabled");
+			GetCommandStateTest("cmd_bold", "state_attribute");
 			break;
 		case ID_INTERFACES_NSICOMMANDMANAGER_DOCOMMAND :
 			nsCAutoString value;

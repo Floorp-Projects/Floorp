@@ -107,6 +107,7 @@ CPPSRCS		= \
 		WebProgDlg.cpp \
 		nsIEditSession.cpp \
 		nsICommandMgr.cpp \
+		nsICmdParams.cpp \
 		$(NULL)
 
 EXTRA_DSO_LIBS	= embed_base_s gkgfx testEmbedComponents
