@@ -79,7 +79,7 @@ nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
     eSocketState_Done,          // WaitWrite   -> Done
     eSocketState_Connected,     // Done        -> Connected
     eSocketState_Error,         // Timeout     -> Error
-    eSocketState_Connected          // Error       -> Connected
+    eSocketState_Connected      // Error       -> Connected
   }
 };
 
@@ -101,8 +101,6 @@ static PRIntervalTime gConnectTimeout = -1;
 #define MAX_IO_BUFFER_SIZE   8192
 
 static char gIOBuffer[MAX_IO_BUFFER_SIZE];
-
-
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -153,7 +151,7 @@ nsSocketTransport::~nsSocketTransport()
   NS_IF_RELEASE(mService);
 
   if (mHostName) {
-    PR_Free(mHostName);
+    nsCRT::free(mHostName);
   }
 
   if (mSocketFD) {
@@ -174,11 +172,6 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
 
   mPort = aPort;
   if (aHost) {
-    // Copy the host name...
-    //
-    // XXX:  This is so evil!  Since this is a char* it must be freed with
-    //       PR_Free(...) NOT delete[] like PRUnichar* buffers...
-    //
     mHostName = nsCRT::strdup(aHost);
     if (!mHostName) {
       rv = NS_ERROR_OUT_OF_MEMORY;
@@ -733,13 +726,65 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
 NS_IMETHODIMP
 nsSocketTransport::OpenInputStream(nsIInputStream* *result)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_OK;
+
+  if (eSocketOperation_None != mOperation) {
+    // XXX: This should be NS_ERROR_IN_PROGRESS...
+    rv = NS_ERROR_FAILURE;
+  }
+
+  if (NS_SUCCEEDED(rv) && !mReadStream) {
+    rv = NS_NewByteBufferInputStream(&mReadStream, PR_FALSE, 
+                                     MAX_IO_BUFFER_SIZE);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    NS_IF_RELEASE(mContext);
+    mContext = nsnull;
+
+    NS_IF_RELEASE(mListener);
+    rv = NS_NewSyncStreamListener(&mListener, result);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    mOperation = eSocketOperation_Read;
+
+    mService->AddToWorkQ(this);
+  }
+
+  return rv;
 }
 
 
 NS_IMETHODIMP
 nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
 {
+#if 0
+  nsresult rv = NS_OK;
+
+  if (eSocketOperation_None != mOperation) {
+    // XXX: This should be NS_ERROR_IN_PROGRESS...
+    rv = NS_ERROR_FAILURE;
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    NS_IF_RELEASE(mWriteStream);
+    mWriteStream = nsnull;
+
+    NS_IF_RELEASE(mContext);
+    mContext = nsnull;
+
+    NS_IF_RELEASE(mListener);
+    rv = NS_NewSyncStreamObserver(&mListener, result);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    mOperation = eSocketOperation_Write;
+    mService->AddToWorkQ(this);
+  }
+
+  return rv;
+#endif
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -41,7 +41,7 @@ nsFileTransport::nsFileTransport()
 
 nsFileTransport::~nsFileTransport()
 {
-    if (mPath) delete[] mPath;
+    if (mPath) nsCRT::free(mPath);
     NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mContext);
     NS_IF_RELEASE(mService);
