@@ -81,6 +81,7 @@ public:
   NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
   virtual nsCursor        GetCursor();
   NS_IMETHOD              SetCursor(nsCursor aCursor);
+  NS_IMETHOD              GetWindowType(nsWindowType& aWindowType);
   virtual nsIRenderingContext* GetRenderingContext();
   virtual nsIDeviceContext* GetDeviceContext();
   virtual nsIAppShell *   GetAppShell();

@@ -240,7 +240,9 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 	}
 
   if(aActivatedWidget) {
-    if ( eWindowType_popup == aActivatedWidget->GetWindowType() ) {
+    nsWindowType wtype;
+    aActivatedWidget->GetWindowType(wtype);
+    if ( eWindowType_popup == wtype ) {
       //printf("nsMacEventDispatcher::SetActivated type popup, bail\n");
       return;
     }
@@ -277,7 +279,9 @@ void nsMacEventDispatchHandler::SetDeactivated(nsWindow *aDeactivatedWidget)
 {
     //printf("nsMacEventDispatchHandler::SetDeactivated\n");
     if(aDeactivatedWidget) {
-      if ( eWindowType_popup == aDeactivatedWidget->GetWindowType() ) {
+      nsWindowType wtype;
+      aDeactivatedWidget->GetWindowType(wtype);
+      if ( eWindowType_popup == wtype ) {
         //printf("nsMacEventDispatchHandler::SetDeactivated type popup, bail\n");
         return;
       }
@@ -1520,7 +1524,9 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 
 	// get the widget hit and the hit point inside that widget
 	Point hitPoint = aOSEvent.where;
-	PRBool topLevelIsAPopup = (mTopLevelWidget->GetWindowType() == eWindowType_popup);
+  nsWindowType wtype;
+  mTopLevelWidget->GetWindowType(wtype);
+	PRBool topLevelIsAPopup = (wtype == eWindowType_popup);
 	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
 	::SetPortWindowPort(wind);
 	Rect savePortRect;

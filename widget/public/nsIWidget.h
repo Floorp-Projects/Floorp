@@ -523,6 +523,13 @@ class nsIWidget : public nsISupports {
 
     NS_IMETHOD SetCursor(nsCursor aCursor) = 0;
 
+    /** 
+     * Get the window type of this widget
+     *
+     * @param aWindowType the window type of the widget
+     */
+    NS_IMETHOD GetWindowType(nsWindowType& aWindowType) = 0;
+
     /**
      * Validate the widget.
      *
