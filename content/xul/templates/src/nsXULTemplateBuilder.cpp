@@ -1000,13 +1000,13 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
                                      void (*aTextCallback)(nsXULTemplateBuilder*, const nsAReadableString&, void*),
                                      void* aClosure)
 {
-    nsAReadableString::const_iterator done_parsing;
+    nsAString::const_iterator done_parsing;
     aAttributeValue.EndReading(done_parsing);
 
-    nsAReadableString::const_iterator iter;
+    nsAString::const_iterator iter;
     aAttributeValue.BeginReading(iter);
 
-    nsAReadableString::const_iterator mark(iter), backup(iter);
+    nsAString::const_iterator mark(iter), backup(iter);
 
     for (; iter != done_parsing; backup = ++iter) {
         // A variable is either prefixed with '?' (in the extended
@@ -1043,7 +1043,7 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
         // in the rule's symbol table. The symbol is terminated by a
         // space character, a caret, or the end of the string,
         // whichever comes first.
-        nsAReadableString::const_iterator first(backup);
+        nsAString::const_iterator first(backup);
 
         PRUnichar c = 0;
         while (iter != done_parsing) {
@@ -1054,7 +1054,7 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
             ++iter;
         }
 
-        nsAReadableString::const_iterator last(iter);
+        nsAString::const_iterator last(iter);
 
         // Back up so we don't consume the terminating character
         // *unless* the terminating character was a caret: the caret
