@@ -765,7 +765,9 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_text)
   {
-    Write(text);
+    // Bug 31994 says we shouldn't output the contents of SELECT elements.
+    if (mTagStackIndex <= 0 || (mTagStack[mTagStackIndex-1] != eHTMLTag_select))
+      Write(text);
   }
   else if (type == eHTMLTag_entity)
   {
