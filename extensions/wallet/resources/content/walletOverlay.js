@@ -279,17 +279,20 @@
       if (framesArray.length != 0) {
         var frame;
         for (frame=0; frame<framesArray.length; ++frame) {
-          formsArray = framesArray[frame].document.forms;
-          state =
-            getStateFromFormsArray(formsArray, captureOrPrefill, threshhold);
-          if (state == enable) {
-            if (elementCount > threshhold) {
-              gIsEncrypted = -1;
-              return enable;
+          var frameDocument = framesArray[frame].document;
+          if (frameDocument) {
+            formsArray = frameDocument.forms;
+            state =
+              getStateFromFormsArray(formsArray, captureOrPrefill, threshhold);
+            if (state == enable) {
+              if (elementCount > threshhold) {
+                gIsEncrypted = -1;
+                return enable;
+              }
+              bestState = enable;
+            } else if (state == disable && bestState == hide) {
+              bestState = disable;
             }
-            bestState = enable;
-          } else if (state == disable && bestState == hide) {
-            bestState = disable;
           }
         }
       }
