@@ -67,7 +67,7 @@
 #include <unistd.h>
 #include "nsCursorManager.h"
 
-#define USE_OPAQUE_VIEWS  1
+// #define USE_OPAQUE_VIEWS  1
 
 #define NSAppKitVersionNumber10_2 663
 
