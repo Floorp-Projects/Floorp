@@ -764,8 +764,10 @@ echo "configure:762: checking for tclX flock in mysqltclsh" >&5
   if test "$MYSQLTCL" = "no" ; then
     no_mysqltclsh=yes
   else
-    have_flock=`cat tclx_test.tcl | $MYSQLTCL`
-    if test "x$have_flock" = "x0" ; then
+    
+    have_flock=`echo "echo [infox have_flock]" | $MYSQLTCL 2>/dev/null`
+    
+    if test "x$have_flock" != "x1" ; then
       no_mysqltclsh=yes
     fi
   fi
@@ -787,7 +789,7 @@ echo "configure:762: checking for tclX flock in mysqltclsh" >&5
 
 
   echo $ac_n "checking for perl DBD::mysql module""... $ac_c" 1>&6
-echo "configure:791: checking for perl DBD::mysql module" >&5
+echo "configure:793: checking for perl DBD::mysql module" >&5
   $PERL -w -c -e 'use DBD::mysql' 2>/dev/null; has_dbd=$?
   if test "x$has_dbd" = "x0" ; then
      echo "$ac_t""yes" 1>&6
@@ -800,7 +802,7 @@ echo "configure:791: checking for perl DBD::mysql module" >&5
 
 
   echo $ac_n "checking for perl Date::parse module""... $ac_c" 1>&6
-echo "configure:804: checking for perl Date::parse module" >&5
+echo "configure:806: checking for perl Date::parse module" >&5
   $PERL -w -c -e 'use Date::Parse' 2>/dev/null; has_dateparse=$?
   if test "x$has_dateparse" = "x0" ; then
      echo "$ac_t""yes" 1>&6
@@ -815,7 +817,7 @@ echo "configure:804: checking for perl Date::parse module" >&5
 # Extract the first word of "co", so it can be a program name with args.
 set dummy co; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:819: checking for $ac_word" >&5
+echo "configure:821: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_CO'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -846,7 +848,7 @@ fi
 # Extract the first word of "cvs", so it can be a program name with args.
 set dummy cvs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:850: checking for $ac_word" >&5
+echo "configure:852: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_CVS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -877,7 +879,7 @@ fi
 # Extract the first word of "rlog", so it can be a program name with args.
 set dummy rlog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:881: checking for $ac_word" >&5
+echo "configure:883: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_RLOG'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -908,7 +910,7 @@ fi
 # Extract the first word of "rcsdiff", so it can be a program name with args.
 set dummy rcsdiff; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:912: checking for $ac_word" >&5
+echo "configure:914: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_RCSDIFF'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -939,7 +941,7 @@ fi
 
 
 echo $ac_n "checking for crypt in -lcrypt""... $ac_c" 1>&6
-echo "configure:943: checking for crypt in -lcrypt" >&5
+echo "configure:945: checking for crypt in -lcrypt" >&5
 ac_lib_var=`echo crypt'_'crypt | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -947,7 +949,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lcrypt  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 951 "configure"
+#line 953 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -958,7 +960,7 @@ int main() {
 crypt()
 ; return 0; }
 EOF
-if { (eval echo configure:962: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:964: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else

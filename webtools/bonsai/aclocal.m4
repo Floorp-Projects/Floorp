@@ -1,5 +1,5 @@
 dnl autoconf tests for bonsai
-dnl Pontus Lidman 99-04-27
+dnl Pontus Lidman 99-05-04
 dnl
 dnl Check if mysqltclsh is compiled with tclX support
 dnl
@@ -20,8 +20,10 @@ dnl
 dnl
 dnl Perform test
 dnl
-    have_flock=`cat tclx_test.tcl | $MYSQLTCL`
-    if test "x$have_flock" = "x0" ; then
+    changequote(<<,>>)
+    have_flock=`echo "echo [infox have_flock]" | $MYSQLTCL 2>/dev/null`
+    changequote([,])
+    if test "x$have_flock" != "x1" ; then
       no_mysqltclsh=yes
     fi
   fi
