@@ -73,6 +73,7 @@ usage( void )
     fprintf( stderr, "    -e\t\tminimize base-64 encoding of values\n" );
     fprintf( stderr, "    -u\t\tinclude User Friendly entry names in the output\n" );
     fprintf( stderr, "    -o\t\tprint entries using old format (default is LDIF)\n" );
+    fprintf( stderr, "    -r\t\tflush output after each entry is printed (useful with -C)\n" );
     fprintf( stderr, "    -T\t\tdon't fold (wrap) long lines (default is to fold)\n" );
     fprintf( stderr, "    -1\t\tomit leading \"version: %d\" line in LDIF output\n", LDIF_VERSION_ONE );
     fprintf( stderr, "    -A\t\tretrieve attribute names only (no values)\n" );
@@ -86,7 +87,7 @@ usage( void )
     fprintf( stderr, "            \t(alias dereferencing)\n" );
     fprintf( stderr, "    -l time lim\ttime limit (in seconds) for search\n" );
     fprintf( stderr, "    -z size lim\tsize limit (in entries) for search\n" );
-    fprintf( stderr, "    -C ps:changetype[:changesonly[:entrychgcontrols]]\n" );
+    fprintf( stderr, "    -C PS:changetype[:changesonly[:entrychgcontrols]]\n" );
     fprintf( stderr, "\t\tchangetypes are add,delete,modify,moddn,any\n" );
     fprintf( stderr, "\t\tchangesonly and  entrychgcontrols are boolean values\n" );
     fprintf( stderr, "\t\t(default is 1)\n" );
@@ -108,6 +109,7 @@ static int	attrsonly, timelimit, sizelimit, server_sort, fold;
 static int	minimize_base64, produce_file_urls;
 static int	use_vlv = 0, vlv_before, vlv_after, vlv_index, vlv_count;
 static int	use_psearch=0;
+static int	flush_after_each_entry=0;
 static int	write_ldif_version = 1;
 
 /* Persistent search variables */
@@ -140,8 +142,8 @@ main( int argc, char **argv )
 
 
     ldaptool_reset_control_array( ldaptool_request_ctrls );
-    optind = ldaptool_process_args( argc, argv, "ABLTU1eotuxa:b:F:G:l:S:s:z:C:",
-        0, options_callback );
+    optind = ldaptool_process_args( argc, argv,
+	    "ABLTU1eortuxa:b:F:G:l:S:s:z:C:", 0, options_callback );
 
     if ( optind == -1 ) {
 	usage();
@@ -319,6 +321,9 @@ options_callback( int option, char *optarg )
     case 'o':	/* print entries using old ldapsearch format */
 	ldif = 0;
 	break;
+    case 'r':	/* flush output after each entry is written */
+	flush_after_each_entry = 1;
+	break;
     case 'B':	/* allow binary values to be printed, even if -o used */
 	++allow_binary;
 	break;
@@ -421,14 +426,14 @@ options_callback( int option, char *optarg )
 	    }
 	    else
 	    {
-		fprintf( stderr,"Illegal 'after' paramater for virtual list\n" );
+		fprintf( stderr,"Illegal 'after' parameter for virtual list\n" );
 		exit( LDAP_PARAM_ERROR );
 	    }
 	    
 	}
 	else
 	{
-	    fprintf( stderr,"Illegal 'before' paramater for virtual list\n" );
+	    fprintf( stderr,"Illegal 'before' parameter for virtual list\n" );
 	    exit( LDAP_PARAM_ERROR );
 	}
 	break;
@@ -823,6 +828,14 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
 
     if (mallocd_filter) free(filterp);
 
+    if ( flush_after_each_entry ) {
+	/*
+	 * Ensure that sort control, VLV control, and other status
+	 * information is flushed in a timely fashion.
+	 */
+	fflush( stdout );
+    }
+
     ldap_msgfree( res );
     return( rc );
 }
@@ -965,6 +978,10 @@ print_entry( ld, entry, attrsonly )
     if ( ldap_get_lderrno( ld, NULL, NULL ) != LDAP_SUCCESS ) {
 	(void)ldaptool_print_lderror( ld, "ldap_first_attribute/ldap_next_attribute",
 		LDAPTOOL_CHECK4SSL_IF_APPROP );
+    }
+
+    if ( flush_after_each_entry ) {
+	fflush( stdout );
     }
 
     if ( ber != NULL ) {

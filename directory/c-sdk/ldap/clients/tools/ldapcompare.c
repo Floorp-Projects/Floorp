@@ -139,7 +139,7 @@ options_callback( int option, char *optarg )
     case 'c':	/* continuous operation mode */
 	++contoper;
 	break;
-    case 'q':	/* continuous operation mode */
+    case 'q':	/* quiet mode */
 	++ldapcompare_quiet;
 	break;
     default:
