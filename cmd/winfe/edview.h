@@ -63,6 +63,11 @@ typedef struct _ED_FORMATSTATE {
     BOOL     bFontFaceMaybeChanged;
 } ED_FORMATSTATE, *LPED_FORMATSTATE;
 
+    
+// Gets the type(s) of data on clipboard
+// Return TRUE if there's anything on the clipboard
+BOOL wfe_GetClipboardTypes(MWContext *pMWContext, BOOL& bHaveText, BOOL& bHaveImage, BOOL& bHaveLink, BOOL& bHaveTable );
+
 /////////////////////////////////////////////////////////////////////////////
 // 
 class CEditViewDropTarget : public COleDropTarget
@@ -262,8 +267,10 @@ public:
     void DropFiles( HDROP hDropInfo, BOOL bGetDropPoint = FALSE );
     
     // Common Paste handler for Clipboard or DragNdrop
-    BOOL DoPasteItem(COleDataObject* pDataObject, CPoint* pPoint, BOOL bDeleteSource );
-
+    // New PasteType param allows us to predetermine the 
+    //  type of data we want to paste
+    BOOL DoPasteItem(COleDataObject* pDataObject, CPoint* pPoint, 
+                     BOOL bDeleteSource, ED_PasteType iPasteType = ED_PASTE_NORMAL);
     // Caret-related stuff
     CCaret m_caret;
 

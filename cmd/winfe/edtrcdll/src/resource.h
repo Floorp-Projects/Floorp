@@ -25,7 +25,6 @@
 #define IDD_FECONVERTIMAGE              103
 #define IDD_LOCATION_DLG                104
 #define IDD_PAGE_TITLE                  105
-#define IDD_PASTE_SPECIAL               112
 #define IDD_TABLE_INSERT                136
 #define IDC_FONTFACE_COMBO              213
 #define IDC_AUTO_SAVE_MINUTES           214

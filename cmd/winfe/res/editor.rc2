@@ -87,8 +87,6 @@ BEGIN
 	    MENUITEM "Paste as &Quotation",         IDM_PASTEASQUOTE
 	    MENUITEM "&Delete\tDel"                 ID_EDIT_DELETE
 	    MENUITEM SEPARATOR
-        MENUITEM "Copy St&yle\tCtrl+Y"          ID_COPY_STYLE
-	    MENUITEM SEPARATOR
    	    MENUITEM "Remove Lin&k",				ID_REMOVE_LINKS
 	    MENUITEM SEPARATOR
 	    MENUITEM "Select &All\tCtrl+A",         ID_EDIT_SELECTALL
@@ -249,6 +247,8 @@ BEGIN
         MENUITEM "{&D}"                            ID_DELETE_TABLE
         // Will be replaced with IDM_COMPOSER_TABLE_SELECTMENU
         MENUITEM "{&S}"                            ID_SELECT_TABLE
+        // Will be replaced with IDM_COMPOSER_TABLE_PASTEMENU
+        MENUITEM "{&P}"                            ID_PASTE_TABLE
         MENUITEM SEPARATOR
         POPUP "&Align Table"
         BEGIN
@@ -363,8 +363,6 @@ BEGIN
 	    MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
 	    MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
 	    MENUITEM "&Delete\tDel"                 ID_EDIT_DELETE
-	    MENUITEM SEPARATOR
-        MENUITEM "Copy St&yle\tCtrl+Y"          ID_COPY_STYLE
 	    MENUITEM SEPARATOR
 	    MENUITEM "Remove Lin&k",                   ID_REMOVE_LINKS
 	    MENUITEM SEPARATOR
@@ -526,6 +524,8 @@ BEGIN
         MENUITEM "{&D}"                            ID_DELETE_TABLE
         // Will be replaced with IDM_COMPOSER_TABLE_SELECTMENU
         MENUITEM "{&S}"                            ID_SELECT_TABLE
+        // Will be replaced with IDM_COMPOSER_TABLE_PASTEMENU
+        MENUITEM "{&P}"                            ID_PASTE_TABLE
         MENUITEM SEPARATOR
         POPUP "&Align Table"
         BEGIN
@@ -626,17 +626,23 @@ END
 
 IDM_COMPOSER_TABLE_PASTEMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "Nested &Table..."            ID_PASTE_TABLE_BASE
+    MENUITEM "Nested &Table..."            ID_PASTE_BASE
     MENUITEM SEPARATOR
-    MENUITEM "Above current &Row"          ID_PASTE_TABLE_BASE+1
-    MENUITEM "&Below current Row"          ID_PASTE_TABLE_BASE+2
+    MENUITEM "&Above current Row"          ID_PASTE_BASE+1
+    MENUITEM "&Below current Row"          ID_PASTE_BASE+2
     MENUITEM SEPARATOR
-    MENUITEM "Before current C&olumn"      ID_PASTE_TABLE_BASE+3
-    MENUITEM "After current Co&lumn"       ID_PASTE_TABLE_BASE+4
+    MENUITEM "B&efore current Column"      ID_PASTE_BASE+3
+    MENUITEM "A&fter current Column"       ID_PASTE_BASE+4
     MENUITEM SEPARATOR
-    MENUITEM "&Replace cells"              ID_PASTE_TABLE_BASE+5
+    MENUITEM "&Replace cells"              ID_PASTE_TABLE_REPLACE  // MUST = ID_PASTE_BASE+5 in edres2.h
 END
-
+// Optional menu when both text and image are on clipboard together
+IDM_COMPOSER_PASTEMENU MENU DISCARDABLE
+BEGIN
+    MENUITEM "&Table"                      ID_PASTE_BASE,
+    MENUITEM "Te&xt"                       ID_PASTE_TEXT,  // ID_PASTE_BASE+6
+    MENUITEM "&Image"                      ID_PASTE_IMAGE  // ID_PASTE_BASE+7
+END
 
 IDM_COMPOSER_TABLE_DELETEMENU MENU DISCARDABLE
 BEGIN
@@ -734,6 +740,17 @@ BEGIN
     ID_DISPLAY_TABLES                           "Display formated tables while editing"
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+	ID_PASTE_BASE             "Paste a new table at the insert point"
+    ID_PASTE_BASE+1           "Paste new rows above the current row"
+    ID_PASTE_BASE+2           "Paste new rows below the current row"
+    ID_PASTE_BASE+3           "Paste new column before the current column"
+    ID_PASTE_BASE+4           "Paste new column after the current column"
+    ID_PASTE_BASE+5           "Paste cells over selected cells or cells starting with current cell"
+    ID_PASTE_BASE+6           "Paste the text version of clipboard data"
+    ID_PASTE_BASE+7           "Paste the image version of clipboard data"
+END
 
 STRINGTABLE DISCARDABLE 
 BEGIN

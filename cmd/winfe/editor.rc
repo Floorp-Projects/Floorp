@@ -337,7 +337,7 @@ STRINGTABLE PRELOAD DISCARDABLE
 BEGIN
     ID_COMBO_FONTSIZE       "Change font size\nFont Size"
     ID_COMBO_FONTFACE       "Change font face\nFont"
-    ID_COMBO_FONTCOLOR      "Change font color\nFont Color"
+    ID_COMBO_FONTCOLOR      "Change font color. Press Alt to change Background Color\nFont Color [+Alt for Background]"
     ID_COMBO_PARA           "Change paragraph or heading style\nParagraph style"
     ID_OPEN_NAV_WINDOW      "Preview current edit page in a new Navigator window\nPreview in Navigator\nPreview"
     IDS_LINK_TO_FILE        "Link to File"
@@ -407,7 +407,7 @@ BEGIN
     ID_FILE_EDITSOURCE      "Edit page file with another program"
     IDS_PROPS_IMAGE         "Image Pr&operties"
     IDS_PROPS_HRULE         "Horizontal Line Pr&operties"
-    IDS_PROPS_PARAGRAPH     "&Paragraph / List Properties"
+    IDS_PROPS_PARAGRAPH     "Pa&ragraph / List Properties"
     IDS_PROPS_CHARACTER     "Character Pr&operties"
     IDS_PROPS_IMAGE_LINK    "Image / Link Pr&operties"
     IDS_PROPS_TAG           "HTML Tag Pr&operties"
@@ -444,12 +444,12 @@ STRINGTABLE PRELOAD DISCARDABLE
 BEGIN
     IDS_PROPS_TABLE_CAPTION     "Table Properties"
     IDS_POPUP_TABLE_PROPS       "T&able Properties"
-    IDS_POPUP_TABLE_CELL_PROPS  "Table Cell Pr&operties"
+    IDS_POPUP_TABLE_CELL_PROPS  "Table C&ell Properties"
     IDS_MERGE_NEXT_CELL         "&Join with Cell to the Right"
     IDS_SUBMENU_SELECT_TABLE    "&Select"
     IDS_SUBMENU_INSERT_TABLE    "&Insert"
     IDS_SUBMENU_DELETE_TABLE    "&Delete"
-    IDS_SUBMENU_PASTE_TABLE     "&Paste Table or Cells"
+    IDS_SUBMENU_PASTE_TABLE     "Paste into &Table"
     IDS_REPLACE_SELECTED_CELLS  "Replace &Selected Cells"
 END
     
@@ -570,9 +570,11 @@ BEGIN
                             "Use the selected image as the background image of the page"
     IDS_EDIT_CUT            "Cu&t"
     IDS_EDIT_COPY           "&Copy"
-    IDS_EDIT_PASTE          "&Paste"
+    IDS_EDIT_PASTE          "&Paste\tCtrl+V"
     IDS_EDIT_PASTE_LINK     "&Paste Link"
-    IDS_EDIT_SAVE_IMAGE     "&Save Image as..."
+    IDS_EDIT_PASTE_TEXT     "Paste Te&xt"
+    IDS_EDIT_PASTE_IMAGE    "Paste Ima&ge"
+    IDS_EDIT_SAVE_IMAGE     "Save Ima&ge as..."
 END
 
 STRINGTABLE DISCARDABLE 
@@ -869,6 +871,8 @@ BEGIN
     ID_FORMAT_INCREASE_FONTSIZE "Increase font size 1 unit\nIncrease font size"
     ID_FORMAT_DECREASE_FONTSIZE "Decrease font size 1 unit\nDecrease font size"
     IDS_8_PTS                   "8 pts"
+    IDS_EDIT_LINK_HINT           " [Press Ctrl and click to edit link]"
+
 END
 
 #endif    // English (U.S.) resources

@@ -42,6 +42,7 @@
 #define IDM_COMPOSER_TABLE_INSERTMENU   71
 #define IDM_COMPOSER_TABLE_DELETEMENU   72
 #define IDM_COMPOSER_TABLE_PASTEMENU    73
+#define IDM_COMPOSER_PASTEMENU          74
 #define VK_APPS                         0x5D
 #define IDD_ABOUTBOX                    100
 #define HOTLIST1_DIALOG                 101
@@ -56,7 +57,6 @@
 #define IDD_LOCATION_DLG                104
 #define IDS_COMPOSE_PRIORITY            104
 #define IDD_PAGE_TITLE                  105
-#define IDD_PASTE_SPECIAL               112
 #define IDS_WARN_REMOVE_SERVER          105
 #define IDD_ALERTBOX                    106
 #define IDS_USERNAME                    106
@@ -2690,11 +2690,13 @@
 #define IDS_EDIT_COPY                   42122
 #define IDS_EDIT_PASTE                  42123
 #define IDS_EDIT_PASTE_LINK             42124
-#define IDS_EDIT_COPY_LINK              42125
-#define IDS_EDIT_SAVE_IMAGE             42126
-#define IDS_EDIT_ADD_LINK2BOOKMARKS     42127
-#define IDS_ERR_DIF_LOCAL_DEVICE_LINK   42128
-#define IDS_ERR_DIF_LOCAL_DEVICE_IMG    42129
+#define IDS_EDIT_PASTE_TEXT             42125
+#define IDS_EDIT_PASTE_IMAGE            42126
+#define IDS_EDIT_COPY_LINK              42127
+#define IDS_EDIT_SAVE_IMAGE             42128
+#define IDS_EDIT_ADD_LINK2BOOKMARKS     42129
+#define IDS_ERR_DIF_LOCAL_DEVICE_LINK   42130
+#define IDS_ERR_DIF_LOCAL_DEVICE_IMG    42131
 #define ID_INSERT_LINK                  42134
 #define ID_EDIT_WINDOW_BOOKMARKS        42135
 #define IDS_INSERT_IMAGE                42136
@@ -3126,6 +3128,7 @@
 #define ID_FORMAT_INCREASE_FONTSIZE     42764
 #define ID_FORMAT_DECREASE_FONTSIZE     42765
 #define IDS_8_PTS                       42766
+#define IDS_EDIT_LINK_HINT              42767
 #define ID_HISTORY_LOPCONTAINS          43000
 #define ID_HISTORY_LOPNOTCONTAINS       43001
 #define ID_HISTORY_LOPIS                43002

@@ -481,37 +481,6 @@ protected:
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// CPasteSpecialDlg dialog
-// Called for user feedback when saving remote images
-//
-class CPasteSpecialDlg : public CDialog
-{
-// Construction
-public:
-	CPasteSpecialDlg(CWnd* pParent);
-
-    // Put user's choice here
-    int m_iResult;
-
-// Dialog Data
-	//{{AFX_DATA(CSaveFileOverwriteDlg)
-	enum { IDD = IDD_PASTE_SPECIAL };
-	//}}AFX_DATA
-
-private:
-    // This will change resource hInstance to Editor dll (in constructor)
-    CEditorResourceSwitcher m_ResourceSwitcher;
-
-// Implementation
-protected:
-
-	//{{AFX_MSG(CSaveFileOverwriteDlg)
-	virtual BOOL OnInitDialog();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
-};
-
-/////////////////////////////////////////////////////////////////////////////
 // CGetColumnsDlg dialog
 
 class CGetColumnsDlg : public CDialog

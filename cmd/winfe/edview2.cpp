@@ -1376,10 +1376,19 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
 	}
 	
     BOOL bIsSelected = bSelectTableOrCell || EDT_IsSelected(pMWContext);
-    BOOL bCanPaste = (0 < GetPriorityClipboardFormat( m_pClipboardFormats, 
-                                          MAX_CLIPBOARD_FORMATS ) );
-    BOOL bHaveLink = !m_csRBLink.IsEmpty();
     BOOL bInTable = bSelectTableOrCell || EDT_IsInsertPointInTable(pMWContext);
+
+    // Get what types are available on the clipboard
+    BOOL bHaveText, bHaveLink, bHaveImage, bHaveTable;
+    BOOL bCanPaste = wfe_GetClipboardTypes(pMWContext, bHaveText, bHaveImage, bHaveLink, bHaveTable );
+
+#ifdef DEBUG
+    if( bHaveLink )
+        XP_ASSERT(!m_csRBLink.IsEmpty());
+#endif
+
+    // Pasting a table in a table offers a submenu of options
+    BOOL bCanPasteTableInTable = bInTable ? bHaveTable : FALSE;
 
     // This gives us lots of usefull info, but ONLY if caret is in text
     //   or selection contains some text
@@ -1537,6 +1546,8 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     HMENU hSelectMenu = 0;
     HMENU hInsertMenu = 0;
     HMENU hDeleteMenu = 0;
+    HMENU hPasteTableMenu = 0;
+    HMENU hPasteMenu = 0;
 
     if( bInTable )
     {
@@ -1544,27 +1555,6 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
         //  get table properties, so lets always include both Table and Cell items
         cmPopup.AppendMenu(uState, ID_PROPS_TABLE, szLoadString(IDS_POPUP_TABLE_PROPS));
         cmPopup.AppendMenu(uState, ID_PROPS_TABLE_CELL, szLoadString(IDS_POPUP_TABLE_CELL_PROPS));
-#if 0
-        // Default is "Table Properties" -- first table property page
-        nID = ID_PROPS_TABLE;
-        nIDS = IDS_POPUP_TABLE_PROPS;
-        // If we clicked on specific table region,
-        //    show properties item for that region instead
-        switch( iTableHit )
-        {
-            case ED_HIT_SEL_TABLE:
-            case ED_HIT_ADD_ROWS:
-            case ED_HIT_ADD_COLS:
-            case ED_HIT_SIZE_TABLE_WIDTH:
-                break;
-            default:
-                nID = ID_PROPS_TABLE_CELL;
-                nIDS = IDS_POPUP_TABLE_CELL_PROPS; 
-                break;
-
-        }
-        cmPopup.AppendMenu(uState, nID, szLoadString(nIDS));
-#endif        
         ED_MergeType MergeType = EDT_GetMergeTableCellsType(pMWContext);
         if( MergeType != ED_MERGE_NONE )
         {
@@ -1587,6 +1577,22 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
             cmPopup.AppendMenu(MF_POPUP, (UINT)hDeleteMenu, szLoadString(IDS_SUBMENU_DELETE_TABLE));
         if( hSelectMenu )
             cmPopup.AppendMenu(MF_POPUP, (UINT)hSelectMenu, szLoadString(IDS_SUBMENU_SELECT_TABLE));
+        
+        if( bCanPasteTableInTable )
+        {
+            hPasteTableMenu = ::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_TABLE_PASTEMENU));
+            if( hPasteTableMenu )
+            {
+                // If cells are selected, replace last item with "Replace Selected Cells"
+                if( bSelectTableOrCell )
+                {
+                    ::ModifyMenu(hPasteTableMenu, ID_PASTE_TABLE_REPLACE, MF_BYCOMMAND | MF_STRING, 
+                                 ID_PASTE_TABLE_REPLACE,
+                                 szLoadString(IDS_REPLACE_SELECTED_CELLS));
+                }
+                cmPopup.AppendMenu(MF_POPUP, (UINT)hPasteTableMenu, szLoadString(IDS_SUBMENU_PASTE_TABLE));
+            }
+        }
 
         cmPopup.AppendMenu(MF_SEPARATOR);
     }
@@ -1699,14 +1705,29 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
         cmPopup.AppendMenu(MF_ENABLED, ID_EDIT_CUT, szLoadString(IDS_EDIT_CUT));
 	    cmPopup.AppendMenu(MF_ENABLED, ID_EDIT_COPY, szLoadString(IDS_EDIT_COPY));
     }
-    if ( bCanPaste )
+    if( bHaveText && bHaveImage )
     {
-        if ( IsClipboardFormatAvailable( RegisterClipboardFormat(NETSCAPE_BOOKMARK_FORMAT)) )
+        if( bCanPasteTableInTable || !bHaveTable )
         {
-            nID = IDS_EDIT_PASTE_LINK;
-        } else {
-            nID = IDS_EDIT_PASTE;
+    	    // Since the "Table" item is handled in table submen or there's no table available,
+            //  there's no point in a 2-item submenu,
+            //  just add separate Text and Image paste items 
+            cmPopup.AppendMenu(MF_ENABLED, ID_PASTE_TEXT, szLoadString(IDS_EDIT_PASTE_TEXT));
+    	    cmPopup.AppendMenu(MF_ENABLED, ID_PASTE_IMAGE, szLoadString(IDS_EDIT_PASTE_IMAGE));
         }
+        else
+        {
+            // Caret is not inside a table, so we can only paste
+            // This submenu lets user choose between Table, Text and Image versions
+            //   (most like spreadsheet-style data)
+            hPasteMenu = ::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_PASTEMENU));
+            if( hPasteMenu )
+                cmPopup.AppendMenu(MF_POPUP, (UINT)hPasteMenu, szLoadString(IDS_EDIT_PASTE));
+        }
+    }
+    else if( !bCanPasteTableInTable ) // All table items we can paste are covered above
+    {
+        nID = bHaveLink ? IDS_EDIT_PASTE_LINK : IDS_EDIT_PASTE;
 	    cmPopup.AppendMenu(MF_ENABLED, ID_EDIT_PASTE, szLoadString(nID));
     }
 
@@ -1732,6 +1753,8 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     if( hSelectMenu) ::DestroyMenu(hSelectMenu);
     if( hInsertMenu) ::DestroyMenu(hInsertMenu);
     if( hDeleteMenu) ::DestroyMenu(hDeleteMenu);
+    if( hPasteTableMenu) ::DestroyMenu(hPasteTableMenu);
+    if( hPasteMenu) ::DestroyMenu(hPasteMenu);
     if( pCharData ) EDT_FreeCharacterData(pCharData);
 }
 
@@ -4374,6 +4397,8 @@ LRESULT CNetscapeEditView::OnImeChangeComposition(HGLOBAL p_global)
 
 void CNetscapeEditView::BuildEditHistoryMenu(HMENU hMenu, int iStartItem)
 {
+    if( !hMenu )
+        return;
     int nCount = GetMenuItemCount(hMenu);
     int i;
     
@@ -4693,7 +4718,8 @@ BOOL CEditViewDropTarget::OnDrop(CWnd* pWnd,
 
     // Use paste routine shared with clipboard pasting
     BOOL bResult = (pView->DoPasteItem(pDataObject, &cPoint, 
-                               dropEffect == DROPEFFECT_MOVE ));
+                                       dropEffect == DROPEFFECT_MOVE, // bDeleteSource
+                                       ED_PASTE_NORMAL ));
 
 
     // TRACE2("OnDrop m_hWnd=%X, SafeHwnd=%X\n", pWnd->m_hWnd, pWnd->GetSafeHwnd() );

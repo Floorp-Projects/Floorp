@@ -1423,43 +1423,6 @@ void CPageTitleDlg::OnOK()
     }
 }
 
-ED_PasteType FE_GetTablePasteType(MWContext *pMWContext, intn iRows, intn iCols, XP_Bool bInTable, XP_Bool bCellIsSelected)
-{
-    return ED_PASTE_NORMAL;
-}
-
-CPasteSpecialDlg::CPasteSpecialDlg(CWnd* pParent)
-	: CDialog(CPasteSpecialDlg::IDD, pParent),
-    m_iResult(0)
-{
-}
-
-BEGIN_MESSAGE_MAP(CPasteSpecialDlg, CDialog)
-	//{{AFX_MSG_MAP(CPasteSpecialDlg)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-BOOL CPasteSpecialDlg::OnInitDialog()
-{
-    m_ResourceSwitcher.Reset();
-	CDialog::OnInitDialog();
-	return TRUE;
-}
-
-#if 0
-void CPasteSpecialDlg::OnPasteImage()
-{
-    m_iResult = ED_PASTE_IMAGE;
-	CDialog::OnOK();
-}
-
-void CPasteSpecialDlg::OnPasteText()
-{
-    m_iResult = ED_PASTE_TEXT;
-	CDialog::OnOK();
-}
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // CGetColumnsDlg dialog
 

@@ -6279,7 +6279,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
             goto FINISH_MOUSE_OVER;
         }
     }
-#endif
+#endif // EDITOR
 
     // See if we are over some text that is a link
     text_struct = (LO_TextStruct *) lo_element;
@@ -6292,6 +6292,18 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
         BOOL bIsLink = (text_struct->anchor_href && text_struct->anchor_href->anchor);
         if(bIsLink && !bTextSet)
         {
+#ifdef EDITOR
+            if( EDT_IS_EDITOR(context) )
+            {
+                // Condense the URL of the link and append hint that
+                //   pressing Ctrl + mouse click will edit the link
+                CString csStatus = (char*)text_struct->anchor_href->anchor;
+                WFE_CondenseURL(csStatus, 40, FALSE);
+                csStatus += szLoadString(IDS_EDIT_LINK_HINT);
+                wfe_Progress(context, csStatus);
+            }
+            else
+#endif // EDITOR
             wfe_Progress(context, (char *) text_struct->anchor_href->anchor);
             bTextSet = TRUE;
         }
@@ -6311,7 +6323,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
             }
 #else
             XP_ASSERT(0);
-#endif 
+#endif // EDITOR
         } else if( bIsLink )
         {
             // Set anchor cursor only if not in editor

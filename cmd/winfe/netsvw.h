@@ -30,8 +30,17 @@
 #define NETSCAPE_IMAGE_FORMAT "Netscape Image Format"
 #define NETSCAPE_EDIT_FORMAT  "NETSCAPE_EDITOR"
 
-// Number of formats registered for m_pClipboardFormats array
+#ifdef EDITOR
+// Array of clipboard formats accepted for pasting into document
+// We put here instead of Editor's view because we need to drag 
+//   FROM a Browser window
+extern UINT *wfe_pClipboardFormats;
+extern CLIPFORMAT   wfe_cfEditorFormat;
+extern CLIPFORMAT   wfe_cfBookmarkFormat;
+extern CLIPFORMAT   wfe_cfImageFormat;
+#endif
 
+// Number of formats registered for wfe_pClipboardFormats array
 #ifdef _IMAGE_CONVERT
 #define MAX_CLIPBOARD_FORMATS   12
 #else
@@ -129,16 +138,6 @@ public:
     CViewDropTarget * m_pDropTarget;
     int m_SubView;  // Are we the top ledge, main view or bottom ledge
 
-#ifdef EDITOR
-    // Array of clipboard formats accepted for pasting into document
-    // We put here instead of Editor's view because we need to drag 
-    //   FROM a Browser window
-    UINT * m_pClipboardFormats;
-    
-    CLIPFORMAT   m_cfEditorFormat;
-    CLIPFORMAT   m_cfBookmarkFormat;
-    CLIPFORMAT   m_cfImageFormat;
-#endif
     // Progress dialog used for Editor Publishing and 
     //   FTP/HTTP upload
     CSaveFileDlg*  m_pSaveFileDlg;	

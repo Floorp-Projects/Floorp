@@ -74,9 +74,14 @@ static char BASED_CODE THIS_FILE[] = __FILE__;
 
 extern char *EDT_NEW_DOC_URL;
 extern char *EDT_NEW_DOC_NAME;
-#endif
-// CNetscapeView
 
+UINT *wfe_pClipboardFormats =0;
+CLIPFORMAT   wfe_cfEditorFormat;
+CLIPFORMAT   wfe_cfBookmarkFormat;
+CLIPFORMAT   wfe_cfImageFormat;
+#endif
+
+// CNetscapeView
 
 #ifndef _AFXDLL
 #undef new
@@ -155,63 +160,69 @@ CNetscapeView::CNetscapeView()
     //  if we are actually an editor
     m_bIsEditor = FALSE;
 
-    // Register our HTML-preserving clipboard format
-    m_cfEditorFormat = RegisterClipboardFormat(NETSCAPE_EDIT_FORMAT);
-
-    // Be sure BookmarkName clipboard format was registered also
-    m_cfBookmarkFormat = (CLIPFORMAT)RegisterClipboardFormat(NETSCAPE_BOOKMARK_FORMAT);
-
-    // Used to drag image reference from browser window to insert into editor
-    m_cfImageFormat = (CLIPFORMAT)RegisterClipboardFormat(NETSCAPE_IMAGE_FORMAT);
-
     // Construct our list of supported clipboard formats
     // Be sure size is same as number of formats!
     // *** This should be done at some centralized app-data!
+
+    // Initialize the global clipboard data just once    
+    if( !wfe_pClipboardFormats )
+    {
+
+        // Register our HTML-preserving clipboard format
+        wfe_cfEditorFormat = RegisterClipboardFormat(NETSCAPE_EDIT_FORMAT);
+
+        // Be sure BookmarkName clipboard format was registered also
+        wfe_cfBookmarkFormat = (CLIPFORMAT)RegisterClipboardFormat(NETSCAPE_BOOKMARK_FORMAT);
+
+        // Used to drag image reference from browser window to insert into editor
+        wfe_cfImageFormat = (CLIPFORMAT)RegisterClipboardFormat(NETSCAPE_IMAGE_FORMAT);
+
+        wfe_pClipboardFormats = new UINT[MAX_CLIPBOARD_FORMATS];
+
+        ASSERT(wfe_pClipboardFormats);
     
-    m_pClipboardFormats = new UINT[MAX_CLIPBOARD_FORMATS];
-    ASSERT(m_pClipboardFormats);
-    
-    for( int i = 0; i < MAX_CLIPBOARD_FORMATS; i++ ){
-        m_pClipboardFormats[i] = 0;
-    }
+        for( int i = 0; i < MAX_CLIPBOARD_FORMATS; i++ ){
+            wfe_pClipboardFormats[i] = 0;
+        }
 
-    // This is stupid! Clipboard format array must be UINT,
-    //  but CLIPFORMAT type is an unsigned short!
-    // Editor's own format for HTML text
-    m_pClipboardFormats[0] = (UINT)m_cfEditorFormat;
-    // Bookmark format
-    m_pClipboardFormats[1] = (UINT)m_cfBookmarkFormat;
+        // This is stupid! Clipboard format array must be UINT,
+        //  but CLIPFORMAT type is an unsigned short!
+        // Editor's own format for HTML text
+        wfe_pClipboardFormats[0] = (UINT)wfe_cfEditorFormat;
+        // Bookmark format
+        wfe_pClipboardFormats[1] = (UINT)wfe_cfBookmarkFormat;
 
-    // Used to drag 
-    m_pClipboardFormats[2] = (UINT)m_cfImageFormat;
+        // Used to drag 
+        wfe_pClipboardFormats[2] = (UINT)wfe_cfImageFormat;
 
-    // These are from shlobj.h Not all used right now
+        // These are from shlobj.h Not all used right now
 #ifdef XP_WIN32
-    m_pClipboardFormats[3] = (UINT)RegisterClipboardFormat(CFSTR_SHELLIDLIST);
-    m_pClipboardFormats[4] = (UINT)RegisterClipboardFormat(CFSTR_NETRESOURCES);
-    m_pClipboardFormats[5] = (UINT)RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR);
-    m_pClipboardFormats[6] = (UINT)RegisterClipboardFormat(CFSTR_FILECONTENTS);
-    m_pClipboardFormats[7] = (UINT)RegisterClipboardFormat(CFSTR_FILENAME);
-    m_pClipboardFormats[8] = (UINT)RegisterClipboardFormat(CFSTR_PRINTERGROUP);
-    m_pClipboardFormats[9] = (UINT)CF_UNICODETEXT;
+        wfe_pClipboardFormats[3] = (UINT)RegisterClipboardFormat(CFSTR_SHELLIDLIST);
+        wfe_pClipboardFormats[4] = (UINT)RegisterClipboardFormat(CFSTR_NETRESOURCES);
+        wfe_pClipboardFormats[5] = (UINT)RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR);
+        wfe_pClipboardFormats[6] = (UINT)RegisterClipboardFormat(CFSTR_FILECONTENTS);
+        wfe_pClipboardFormats[7] = (UINT)RegisterClipboardFormat(CFSTR_FILENAME);
+        wfe_pClipboardFormats[8] = (UINT)RegisterClipboardFormat(CFSTR_PRINTERGROUP);
+        wfe_pClipboardFormats[9] = (UINT)CF_UNICODETEXT;
 #endif
     
-    // Built-in Windows formats:
-    m_pClipboardFormats[10] = (UINT)CF_TEXT;
+        // Built-in Windows formats:
+        wfe_pClipboardFormats[10] = (UINT)CF_TEXT;
 #ifdef _IMAGE_CONVERT
-    m_pClipboardFormats[11] = (UINT)CF_DIB;
-    ASSERT( MAX_CLIPBOARD_FORMATS == 12 );
+        wfe_pClipboardFormats[11] = (UINT)CF_DIB;
+        ASSERT( MAX_CLIPBOARD_FORMATS == 12 );
 #else
-    ASSERT( MAX_CLIPBOARD_FORMATS == 11 );
+        ASSERT( MAX_CLIPBOARD_FORMATS == 11 );
 #endif //_IMAGE_CONVERT
 
 
-            // m_pClipboardFormats[10] = CF_BITMAP;
-            // m_pClipboardFormats[11] = CF_DIB;
-            // m_pClipboardFormats[12] = CF_METAFILEPICT;
+                // wfe_pClipboardFormats[10] = CF_BITMAP;
+                // wfe_pClipboardFormats[11] = CF_DIB;
+                // wfe_pClipboardFormats[12] = CF_METAFILEPICT;
 
-    // ARE YOU ADDING A CLIPBOARD FORMAT???
-    //  don't forget to update MAX_CLIPBOARD_FORMATS in NETSVW.H
+        // ARE YOU ADDING A CLIPBOARD FORMAT???
+        //  don't forget to update MAX_CLIPBOARD_FORMATS in NETSVW.H
+    }
 
 #endif // EDITOR
 }
@@ -235,8 +246,8 @@ CNetscapeView::~CNetscapeView()
 #endif
 
 #ifdef EDITOR
-    if ( m_pClipboardFormats )
-        delete [] m_pClipboardFormats;
+    if ( wfe_pClipboardFormats )
+        delete [] wfe_pClipboardFormats;
 #endif
 }
 

@@ -368,11 +368,12 @@ FE_DestroyCaret(MWContext * context)
     CNetscapeEditView * pView = (CNetscapeEditView *)WINCX(context)->GetView();
 
     if(!context || pView->GetFocus() != pView ){
-//        TRACE0( "FE_DestroyCaret called, but CNetscapeEditView does not have focus\n");
+        //TRACE0( "FE_DestroyCaret called, but CNetscapeEditView does not have focus\n");
         return;
     }
 
     DestroyCaret();
+    //TRACE0( "FE_DestroyCaret\n");
 
     pView->m_caret.cShown = 0;
     pView->m_caret.bEnabled = FALSE;
@@ -571,6 +572,7 @@ void WFE_HideEditCaret(MWContext * pMWContext)
         if( pView && pView->m_caret.bEnabled && pView->m_caret.cShown ) {
             pView->HideCaret();
             pView->m_caret.cShown = 0;
+            //TRACE0("WFE_HideCaret\n");
         } 
     }
 }
@@ -584,6 +586,7 @@ void WFE_ShowEditCaret(MWContext * pMWContext)
         if( pView->m_caret.bEnabled ) {
             pView->ShowCaret();
             pView->m_caret.cShown = 1;
+            //TRACE0("WFE_ShowCaret\n");
         }
     }
 }

@@ -1091,6 +1091,12 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
             OnPointSize(nID);
             return TRUE;
         }
+        else if( nID >= ID_PASTE_BASE && nID <= ID_PASTE_END)
+        {
+            ED_PasteType iType = (ED_PasteType) (nID - ID_PASTE_BASE + 1);
+            DoPasteItem(NULL, NULL, FALSE, iType );
+            return TRUE;
+        }
         break;
 
     case CN_UPDATE_COMMAND_UI:
@@ -1148,6 +1154,15 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
         else if( nID >= ID_FORMAT_CHAR_BOLD && nID <= ID_FORMAT_CHAR_BLINK )
         {
             OnUpdateCharacterStyle(nID, pCmdUI);
+            return TRUE;
+        }
+        else if( nID >= ID_PASTE_BASE && nID <= ID_PASTE_END)
+        {
+            // All but ID_PASTE_BASE (which = ID_PASTE_TABLE )
+            //  should only be active when insert point is in table,
+            //  but don't waste any processing here because we disable 
+            //  the parent submenu item not inside a table
+            pCmdUI->Enable(TRUE);
             return TRUE;
         }
         break;
@@ -1932,7 +1947,7 @@ void CNetscapeEditView::OnEditCopy()
         string = (char *) GlobalLock(hData);
         XP_HUGE_MEMCPY(string, htmlData, hLen);
         GlobalUnlock(hData);
-        h = SetClipboardData(m_cfEditorFormat, hData); 
+        h = SetClipboardData(wfe_cfEditorFormat, hData); 
     }
     XP_HUGE_FREE( htmlData );
 
@@ -2053,7 +2068,7 @@ void CNetscapeEditView::OnEditCut()
         string = (char *) GlobalLock(hData);
         XP_HUGE_MEMCPY(string, htmlData, hLen);
         GlobalUnlock(hData);
-        h = SetClipboardData(m_cfEditorFormat, hData); 
+        h = SetClipboardData(wfe_cfEditorFormat, hData); 
     }
     XP_HUGE_FREE( htmlData );
 
@@ -2116,36 +2131,96 @@ BOOL wfe_GetBookmarkData( COleDataObject* pDataObject, char ** ppURL, char ** pp
     return TRUE;
 }
 
+// Peek into the clipboard data to get the type of data copied
+BOOL wfe_GetClipboardTypes(MWContext *pMWContext, BOOL& bHaveText, BOOL& bHaveImage, BOOL& bHaveLink, BOOL& bHaveTable )
+{
+    bHaveText = FALSE;
+    bHaveImage = FALSE;
+    bHaveLink = FALSE;
+    bHaveTable = FALSE;
+
+	COleDataObject clipboardData;
+    HGLOBAL h;
+    
+    if ( clipboardData.AttachClipboard() )
+    {
+        bHaveText = clipboardData.IsDataAvailable(CF_TEXT);
+
+        if( clipboardData.IsDataAvailable(wfe_cfEditorFormat) )
+        {
+            h = clipboardData.GetGlobalData(wfe_cfEditorFormat);
+            if( h )
+            {
+                char * pHTML = (char*) GlobalLock( h );
+                bHaveTable = (EDT_GetHTMLCopyType(pHTML) > ED_COPY_NORMAL);
+                GlobalUnlock( h );
+            }
+        }
+        else if( clipboardData.IsDataAvailable(wfe_cfBookmarkFormat) )
+        {
+            bHaveLink = TRUE;
+        }
+        else 
+        {
+            // If we have editor or bookmark data, we can't have anything else
+            // Check for spreadsheet type data in the text
+            if( bHaveText )
+            {
+                h = clipboardData.GetGlobalData(CF_TEXT);
+                if ( h )
+                {
+                    char *pString = (char *) GlobalLock(h);
+                    if( pString && *pString )
+                        bHaveTable = EDT_CanPasteTextAsTable(pMWContext, pString, 0, 0, 0);
+                    GlobalUnlock( h );
+                }
+            }
+#ifdef _IMAGE_CONVERT
+            // We can have both text and image data, e.g., from Excel
+            bHaveImage = clipboardData.IsDataAvailable(CF_DIB);
+#endif
+        }
+        if( bHaveText || bHaveLink || bHaveImage )
+            return TRUE;
+        else
+            // Check for other Netscape-acceptable formats 
+            return (0 < GetPriorityClipboardFormat(wfe_pClipboardFormats, MAX_CLIPBOARD_FORMATS) );
+    }
+    // No clipboard data
+    return FALSE;
+}
+
 // Common Paste handler for Clipboard or drag/drop
 BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject, 
-                                CPoint *pPoint, BOOL bDeleteSource )
+                                CPoint *pPoint, BOOL bDeleteSource,
+                                ED_PasteType iPasteType )
 {
     CWinCX *     pContext = GetContext();
-    if ( !pContext ) {
+    if ( !pContext )
         return(FALSE);    
-    }
+
     MWContext  * pMWContext = pContext->GetContext();
     // Assume drop data is from dragged object
     BOOL bDropObject = TRUE;
     
-    if(!pMWContext ) {
+    if(!pMWContext ) 
         return(FALSE);
-    }
 
 	// use clipboard data if not doing drag/drop
 	COleDataObject clipboardData;
 	if (pDataObject == NULL)
 	{
-		if ( ! clipboardData.AttachClipboard() ){
+		if ( ! clipboardData.AttachClipboard() )
             return FALSE;
-        }		
+
 		pDataObject = &clipboardData;
         // No data on clipboard?
         if (
 #ifdef XP_WIN32
                  !pDataObject->m_bClipboard ||
 #endif
-                 -1 == GetPriorityClipboardFormat(m_pClipboardFormats, MAX_CLIPBOARD_FORMATS )) {
+                 -1 == GetPriorityClipboardFormat(wfe_pClipboardFormats, MAX_CLIPBOARD_FORMATS ))
+        {
             return FALSE;
         }
         bDropObject = FALSE;
@@ -2171,32 +2246,34 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
     cDocPoint.y = CASTINT(yVal);
     
     // We are doing Drag/Drop if we have an object
-    if( bDropObject ){
+    if( bDropObject )
         bPtInSelection = GetContext()->PtInSelectedRegion(cDocPoint);
-    }
 
     // Don't do anything if drag source is selected region and
     //   drop target is same.
-    if ( GetContext()->IsDragging() && bPtInSelection ) {
+    if ( GetContext()->IsDragging() && bPtInSelection )
         return(FALSE);
-    }
  
     HGLOBAL hString = NULL;
     char * pString = NULL;
     char * pConvertedString = NULL;
-    BOOL bHaveText = FALSE;
-    BOOL bHaveHTML = pDataObject->IsDataAvailable(m_cfEditorFormat);
+    BOOL bPasteText = FALSE;
+    BOOL bPasteTextAsTable = FALSE;
+    BOOL bPasteImage = FALSE;
+    BOOL bPasteHTML = pDataObject->IsDataAvailable(wfe_cfEditorFormat);
  
     // Get any string data
-    if ( pDataObject->IsDataAvailable(CF_TEXT) ) {
+    if ( pDataObject->IsDataAvailable(CF_TEXT) )
+    {
         hString = pDataObject->GetGlobalData(CF_TEXT);
 
         // get a pointer to the actual bytes
-        if ( hString ) {
+        if ( hString ) 
+        {
             pString = (char *) GlobalLock(hString);
             if( pString && *pString )
-                bHaveText = TRUE;
-       }
+                bPasteText = TRUE;
+        }
     }
 
     if ( m_bIsEditor )
@@ -2210,9 +2287,7 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
 
         EDT_BeginBatchChanges(pMWContext);
 
-        BOOL bHaveImage = FALSE;
-
-        if( !bHaveHTML ) // HTML overrides image and text formats
+        if( !bPasteHTML ) // HTML overrides image and text formats
         {
 #ifdef XP_WIN32
             if( pDataObject->IsDataAvailable(CF_UNICODETEXT) && 
@@ -2224,11 +2299,13 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
 			    char * pUnicodeString = NULL;
 
 			    // Get any string data
-			    if ( pDataObject->IsDataAvailable(CF_UNICODETEXT) ) {
+			    if ( pDataObject->IsDataAvailable(CF_UNICODETEXT) )
+                {
 				    hUnicodeStr = pDataObject->GetGlobalData(CF_UNICODETEXT);
 
 				    // get a pointer to the actual bytes
-				    if ( hUnicodeStr ) {
+				    if ( hUnicodeStr )
+                    {
 					    pUnicodeString = (char *) GlobalLock(hUnicodeStr);    
 
 					    // Now, let's convert the Unicode text into the datacsid encoding
@@ -2245,7 +2322,7 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
                             if( pConvertedString && *pConvertedString )
                             {
                                 pString = pConvertedString;
-                                bHaveText = TRUE;
+                                bPasteText = TRUE;
                             }
 					    }
 					    GlobalUnlock(hUnicodeStr);    
@@ -2255,53 +2332,46 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
 #endif // XP_WIN32
 #ifdef EDITOR
 
-            // Check if text data is a tab-delimited spreadsheet format
-
-#ifdef _IMAGE_CONVERT
-            bHaveImage = pDataObject->IsDataAvailable(CF_DIB);
-#endif
-            intn iRows, iCols;
-            XP_Bool bInTable = FALSE;
-
-            if( bHaveText && 
-                (bHaveImage || 
-                 EDT_CanPasteTextAsTable(pMWContext, pString, &iRows, &iCols, &bInTable)) )
+            // Check if text data is a tab-delimited spreadsheet format,
+            //  but input PasteType may override whether we try to do that
+            if( bPasteText && iPasteType != ED_PASTE_IMAGE &&
+                iPasteType != ED_PASTE_TEXT &&
+                EDT_CanPasteTextAsTable(pMWContext, pString, 0, 0, 0) )
             {
-                CPasteSpecialDlg dlg(this);
-                if( IDOK == dlg.DoModal() && dlg.m_iResult > 0 )
-                {
-#if 0
-// TODO: FINISH NEW DIALOG
-                    if( dlg.m_iResult == ED_PASTE_IMAGE )
-                    {
-                        // Paste the image - ignore the text
-                        bHaveText = FALSE;                
-                    } else {
-                        // Ignore the image
-                        bHaveImage = FALSE;
-                        if( dlg.m_iResult == ED_PASTE_TEXT )
-                    } 
-#endif
-                } else {
-                    goto NO_PASTE;                
-                }
+                bPasteTextAsTable = TRUE;
+                bPasteText = FALSE;
             }
+#ifdef _IMAGE_CONVERT
+            // Look for an image, but not if user told us to paste text instead
+            else if( iPasteType != ED_PASTE_TEXT )
+            {
+                bPasteImage = pDataObject->IsDataAvailable(CF_DIB);
+                // Override the text format if told to do so
+                // Otherwise, text will be pasted in preference to image data
+                if( bPasteImage && iPasteType == ED_PASTE_IMAGE )
+                    bPasteText = FALSE;
+            }
+#endif
         }
 #endif // EDITOR
 
-        if( bDeleteSource ){
+        if( bDeleteSource )
+        {
             // This deletes current selection and sets
             //  cursor at point where moved data will be inserted.
             EDT_DeleteSelectionAndPositionCaret( pMWContext, xVal, yVal );
-        } else if( !bPtInSelection && bDropObject ) {
+        } 
+        else if( !bPtInSelection && bDropObject )
+        {
             // Remove existing selection and set new caret position
             //   to the drop ONLY if doing a drop NOT within the selection
             EDT_PositionCaret( pMWContext, xVal, yVal );
         }
 
         // Drop according to type of data
-        if( pDataObject->IsDataAvailable(m_cfBookmarkFormat) &&
-            wfe_GetBookmarkData(pDataObject, &pURL, &pTitle) ){
+        if( pDataObject->IsDataAvailable(wfe_cfBookmarkFormat) &&
+            wfe_GetBookmarkData(pDataObject, &pURL, &pTitle) )
+        {
             // Create new link: insert both Anchor text and HREF,
             // First resolve (convert to relative) URL
             CString csURL = pURL;
@@ -2309,18 +2379,22 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
 			int bKeepLinks;
 			PREF_GetBoolPref("editor.publish_keep_links",&bKeepLinks);
 
-            if ( FE_ResolveLinkURL(pMWContext, csURL,bKeepLinks) ){
+            if ( FE_ResolveLinkURL(pMWContext, csURL,bKeepLinks) )
+            {
                 // Check for ugly format from Livewire Sitemanager:
-                if( 0 == _strnicmp(pTitle, "File: file://", 13) ){
+                if( 0 == _strnicmp(pTitle, "File: file://", 13) )
+                {
                     // Skip over redundant "File: "
                     pTitleText += 6;
                 }
                 // Bug in Sitemanager: treats graphic files that are not
                 //  "managed" as a link. Convert to image 
                 char * pExt = strrchr( pURL, '.');
-                if( CanSupportImageFile(pExt) ){
+                if( CanSupportImageFile(pExt) )
+                {
                     EDT_ImageData* pEdtData = EDT_NewImageData();
-                    if( pEdtData ){
+                    if( pEdtData )
+                    {
                         // We just need to set the URL
                         pEdtData->pSrc = pURL;
 
@@ -2345,24 +2419,30 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
             }
             if( pURL) XP_FREE(pURL);
             XP_FREE(pTitle);
-        } else if ( bHaveHTML ) {
-            h = pDataObject->GetGlobalData(m_cfEditorFormat);
-            if( h ){
+        } 
+        else if ( bPasteHTML ) 
+        {
+            h = pDataObject->GetGlobalData(wfe_cfEditorFormat);
+            if( h )
+            {
                 char * pHTML = (char*) GlobalLock( h );
-                EDT_PasteHTML( pMWContext, pHTML, ED_PASTE_NORMAL );
+                EDT_PasteHTML( pMWContext, pHTML, iPasteType );
                 GlobalUnlock( h );
             }
         } 
 #ifdef EDITOR
-        else if( pDataObject->IsDataAvailable(m_cfImageFormat) ) {
-                h = pDataObject->GetGlobalData(m_cfImageFormat);
-                WFE_DragDropImage(h, pMWContext);
-            } 
+        else if( pDataObject->IsDataAvailable(wfe_cfImageFormat) )
+        {
+            h = pDataObject->GetGlobalData(wfe_cfImageFormat);
+            WFE_DragDropImage(h, pMWContext);
+        } 
 #endif // EDITOR
 #ifdef XP_WIN32
-        else if( pDataObject->IsDataAvailable(CF_HDROP) ){
+        else if( pDataObject->IsDataAvailable(CF_HDROP) )
+        {
             HDROP handle = (HDROP)pDataObject->GetGlobalData(CF_HDROP);
-            if( handle ){
+            if( handle )
+            {
                 // Do same thing we would do for Win3.x and NT
                 //  (old-style file-manager-drop)
                 // FALSE = caret is already positioned correctly
@@ -2371,23 +2451,26 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
         // **** Test for other formats here
         }
 #endif //XP_WIN32
-        else if ( bHaveText ) {
-            if( pString ) {
-                // *** TODO: Analyze string?
-                // Check if its a valid local filename (use XP_STAT). If yes, pop-up menu:
-                //    1. If over selected text: Create a link to 
-                //         Pop-up menu: Create Link or paste filename or load file
-                //    2. If over an existing link:
-                //         Pop-up menu: Modify Link or load file or 
-                //    3. In ordinary text:
-                //         Popup:  Insert Link or paste filename or load file
-                
-                EDT_PasteText( pMWContext, pString ); 
-            }
+        else if( bPasteTextAsTable )
+        {
+            EDT_PasteTextAsTable(pMWContext, pString, iPasteType);
+        }
+        else if( bPasteText )
+        {
+            // *** TODO: Analyze string?
+            // Check if its a valid local filename (use XP_STAT). If yes, pop-up menu:
+            //    1. If over selected text: Create a link to 
+            //         Pop-up menu: Create Link or paste filename or load file
+            //    2. If over an existing link:
+            //         Pop-up menu: Modify Link or load file or 
+            //    3. In ordinary text:
+            //         Popup:  Insert Link or paste filename or load file
+            EDT_PasteText( pMWContext, pString ); 
         }
 #ifdef EDITOR
 #ifdef _IMAGE_CONVERT
-        else if( bHaveImage ) {
+        else if( bPasteImage )
+        {
             CONVERT_IMGCONTEXT imageContext;
             CONVERT_IMG_INFO imageInfo;
             memset(&imageContext,0,sizeof(CONVERT_IMGCONTEXT));
@@ -2406,16 +2489,17 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
                     imageContext.m_parentwindow=(void *)this;
                     CONVERT_IMAGERESULT result=convert_stream2image(imageContext,&imageInfo,1,NULL);//1 for 1 output
                     GlobalUnlock(handle);
+
                     if (result>CONV_OK)//not cancel or ok
-                    {
                         AfxMessageBox(m_converrmsg[result]);
-                    }
                 }
             }
         } 
 #endif //_IMAGE_CONVERT
 #endif // EDITOR
-    } else if ( pString) {              // Navigator window - assume string is a URL
+    } 
+    else if ( pString )
+    {              // Navigator window - assume string is a URL
         char * szURL = XP_STRDUP(pString);
         // Maybe check for valid local filename here?
 	    if ( NET_URL_Type != 0 ) {
@@ -2424,10 +2508,8 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
         XP_FREE(szURL);
     }
 
-NO_PASTE:
-    if ( hString ) {
+    if ( hString )
         GlobalUnlock(hString);
-    }
     
     if ( m_bIsEditor )
         EDT_EndBatchChanges(pMWContext);
@@ -2456,7 +2538,7 @@ void CNetscapeEditView::OnEditPaste(){
     if ( m_bIsEditor && pContext
         && EDT_COP_OK != EDT_CanPaste(pContext->GetContext(), TRUE) )
         return;
-    DoPasteItem(NULL, NULL, FALSE );
+    DoPasteItem(NULL, NULL, FALSE, ED_PASTE_NORMAL );
 }
 
 BOOL UpdateCanCopyInEditControl(CWnd *pView, CCmdUI* pCmdUI)
@@ -2517,7 +2599,7 @@ void CNetscapeEditView::OnUpdateEditPaste(CCmdUI* pCmdUI)
         !pMWContext->waitingMode && !EDT_IsBlocked(pMWContext)  &&
         !m_imebool){//added check for IME composition
         // Check if any of our supported formats is in the clipboard
-        int iClip = GetPriorityClipboardFormat(m_pClipboardFormats, MAX_CLIPBOARD_FORMATS);
+        int iClip = GetPriorityClipboardFormat(wfe_pClipboardFormats, MAX_CLIPBOARD_FORMATS);
         pCmdUI->Enable( iClip != 0 && iClip != -1 && 
                         EDT_COP_OK == EDT_CanPaste(pMWContext, TRUE) );
     } else { 

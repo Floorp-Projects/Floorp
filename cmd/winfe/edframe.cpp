@@ -320,7 +320,8 @@ void WFE_InitComposer()
     // Register edtplug java-to-C++ Open-the-editor callback.
     EDTPLUG_RegisterEditURLCallback(&wfe_EditURLCallback);
 
-    ed_DragCaretBitmap.LoadBitmap(IDB_ED_DRAG);
+    if( !ed_DragCaretBitmap.LoadBitmap(IDB_ED_DRAG) )
+        XP_ASSERT(FALSE);
 
     // Get global last-color-picked from prefs
     char * pCustomColor = NULL;
@@ -806,15 +807,18 @@ int CEditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
         HMENU hTableMenu = ::GetSubMenu(hMenu, ED_MENU_TABLE);
         if( hTableMenu )
         {
-            ::ModifyMenu( hTableMenu, ID_SELECT_TABLE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
-                          (UINT)::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_TABLE_SELECTMENU)),
-                          szLoadString(IDS_SUBMENU_SELECT_TABLE) );
             ::ModifyMenu( hTableMenu, ID_INSERT_TABLE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
                           (UINT)::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_TABLE_INSERTMENU)),
                           szLoadString(IDS_SUBMENU_INSERT_TABLE) );
+            ::ModifyMenu( hTableMenu, ID_SELECT_TABLE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
+                          (UINT)::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_TABLE_SELECTMENU)),
+                          szLoadString(IDS_SUBMENU_SELECT_TABLE) );
             ::ModifyMenu( hTableMenu, ID_DELETE_TABLE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
                           (UINT)::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_TABLE_DELETEMENU)),
                           szLoadString(IDS_SUBMENU_DELETE_TABLE) );
+            ::ModifyMenu( hTableMenu, ID_PASTE_TABLE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
+                          (UINT)::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_TABLE_PASTEMENU)),
+                          szLoadString(IDS_SUBMENU_PASTE_TABLE) );
         }
     }
 	return 0;
@@ -2142,10 +2146,27 @@ void CGenericFrame::OnUpdateActivateSiteManager(CCmdUI* pCmdUI)
 #endif
 }
 
+static BOOL bInFileMenu = FALSE;
 static BOOL bInFontMenu = FALSE;
 static BOOL bInSizeMenu = FALSE;
 static BOOL bInHistoryMenu = FALSE;
 static BOOL bInTableMenu = FALSE;
+static BOOL bInEditMenu = FALSE;
+
+// Not totally cool to use fixed menu indexes, but much more efficient
+
+#define ed_RECENTFILE_INDEX 2 // In File menu
+
+#define ed_PASTE_INDEX 4      // In Edit menu
+
+#define ed_FONT_FACE_INDEX  0 // In Format Menu
+#define ed_FONT_SIZE_INDEX  1 // In Format Menu
+
+#define ed_SELECT_MENU_INDEX 1 // These are in Table menu
+#define ed_DELETE_MENU_INDEX 2
+#define ed_PASTE_MENU_INDEX  3
+#define ed_ALIGN_MENU_INDEX  5
+
 
 // Put all Composer-only code here - called only from CGenericFrame::OnMenuSelect()
 void CGenericFrame::OnMenuSelectComposer(UINT nItemID, UINT nFlags, HMENU hSysMenu)
@@ -2153,10 +2174,12 @@ void CGenericFrame::OnMenuSelectComposer(UINT nItemID, UINT nFlags, HMENU hSysMe
     if ( nFlags == 0xFFFF && hSysMenu == 0 )
     {
         // Menu is being destroyed - clear rebuild flags
+        bInFileMenu = FALSE;
         bInFontMenu = FALSE;
         bInSizeMenu = FALSE;
         bInHistoryMenu = FALSE;
         bInTableMenu = FALSE;
+        bInEditMenu = FALSE;
         return;
     }
 
@@ -2169,7 +2192,6 @@ void CGenericFrame::OnMenuSelectComposer(UINT nItemID, UINT nFlags, HMENU hSysMe
         }
         int nCount = GetMenuItemCount(hMenu);
         HMENU hEditHistoryMenu = NULL;
-        HMENU hFormatMenu = NULL;
         HMENU hFontMenu = NULL;
         HMENU hSizeMenu = NULL;
 		HMENU hSubMenu = NULL;
@@ -2181,174 +2203,185 @@ void CGenericFrame::OnMenuSelectComposer(UINT nItemID, UINT nFlags, HMENU hSysMe
     		hSubMenu = GetSubMenu(hMenu, i);
 		    if( hSubMenu )
             {
-                // Modify item(s) in the Table menu
-                if( i == ED_MENU_TABLE )
+                // We need to build recent files submenu only when that item is selected
+                if( i == ED_MENU_FILE && nItemID == ed_RECENTFILE_INDEX)
+                {
+                    if( bInEditMenu )
+                        return;
+                    bInFileMenu = TRUE;
+                    // Build a menu of recently-edited URL titles
+                    ((CNetscapeEditView*)GetActiveView())->BuildEditHistoryMenu(::GetSubMenu(hSubMenu, ed_RECENTFILE_INDEX), 0);
+                }
+                // Checking nItemID assures we do stuff only when the popup opens first time
+                else if( i == ED_MENU_EDIT && nItemID == ED_MENU_EDIT )
+                {
+                    if( bInEditMenu )
+                        return;
+                    bInEditMenu = TRUE;
+                    BOOL bInTable = EDT_IsInsertPointInTable(pMWContext);
+                    // Get what types are available on the clipboard
+                    BOOL bHaveText, bHaveLink, bHaveImage, bHaveTable;
+                    BOOL bCanPaste = wfe_GetClipboardTypes(pMWContext, bHaveText, bHaveImage, bHaveLink, bHaveTable );
+                    HMENU hPasteMenu = ::GetSubMenu(hSubMenu, ed_PASTE_INDEX);
+                    if( bHaveText && bHaveImage )
+                    {
+                        if( hPasteMenu && bHaveTable && ::GetMenuItemCount(hPasteMenu) == 2 )
+                        {
+                            // We already had a submenu with 2 items, but we need 3,
+                            //  just reload the menu
+                            ::DestroyMenu(hPasteMenu);
+                            hPasteMenu = 0;
+                        }
+                        if( !hPasteMenu )
+                        {
+                            hPasteMenu = ::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_PASTEMENU));
+                            ::ModifyMenu(hSubMenu, ed_PASTE_INDEX, MF_BYPOSITION | MF_POPUP | MF_STRING, (UINT)hPasteMenu,
+                                         szLoadString(IDS_EDIT_PASTE));
+                        }
+                        if( !bHaveTable && ::GetMenuItemCount(hPasteMenu) == 3 )
+                        {
+                            ::DeleteMenu(hPasteMenu, 0, MF_BYPOSITION);                            
+                        }
+                    }
+                    else if( hPasteMenu )
+                    {
+                        // Replace the existing submenu with the single "Paste" command
+                        ::DestroyMenu(hPasteMenu);
+                        ::ModifyMenu(hSubMenu, ed_PASTE_INDEX, MF_BYPOSITION | MF_STRING, ID_EDIT_PASTE,
+                                     szLoadString(IDS_EDIT_PASTE) );
+                    }
+                }
+                // Do things in Format menu only when specific submenu is selected
+                else if( i == ED_MENU_FORMAT && hSubMenu == hSysMenu)
+                {
+                    if( nItemID == ed_FONT_FACE_INDEX )
+                    {
+                        hFontMenu = ::GetSubMenu(hSubMenu, ed_FONT_FACE_INDEX);
+                        // Prevent rebuilding menu when mouse moves away
+                        if( bInFontMenu )
+                            return;
+                        bInFontMenu = TRUE;
+            
+                        // Delete any existing items
+                        for( int i = ::GetMenuItemCount(hFontMenu) - 1; i >= 0; i--){
+                            DeleteMenu(hFontMenu, i, MF_BYPOSITION);
+                        }
+                        // Get list of FontFace fonts defined in XP_Strings
+                        char * pFontFaces = EDT_GetFontFaces();
+
+                        // Build the FontFace menu
+                        if( pFontFaces )
+                        {
+                            char * pFont = pFontFaces;
+                            ::AppendMenu(hFontMenu, MF_STRING, ID_FORMAT_FONTFACE_BASE, pFont);
+                            pFont += XP_STRLEN(pFont) + 1;
+                            if( *pFont )
+                            {
+                                ::AppendMenu(hFontMenu, MF_STRING, ID_FORMAT_FONTFACE_BASE+1, pFont);
+                            }
+                            int nCount = 0;
+                            if( wfe_iTrueTypeFontCount && wfe_ppTrueTypeFonts )
+                            {
+                                // Add separator
+                                ::AppendMenu(hFontMenu, MF_SEPARATOR,0,0);
+                
+                                // Add TrueType fonts but don't overflow the screen height
+                                // Number of items that will fit, minus some for items already
+                                //  added, separators, and a bit extra
+                                nCount = (sysInfo.m_iScreenHeight / GetSystemMetrics(SM_CYMENU)) - 6;
+                                for( int i = 0; i < min(wfe_iTrueTypeFontCount, nCount); i++ ){
+                                    ::AppendMenu(hFontMenu, MF_STRING, ID_FORMAT_FONTFACE_BASE+i+2, 
+                                                 wfe_ppTrueTypeFonts[i]);
+                                }
+                            }                    
+                            if( nCount < wfe_iTrueTypeFontCount )
+                            {
+                                ::AppendMenu(hFontMenu, MF_SEPARATOR,0,0);
+                                // Last item is "Other..." to launch Window's Font Face dialog
+                                ::AppendMenu(hFontMenu, MF_STRING, ID_OTHER_FONTFACE, ed_pOther);
+                            }
+                        }
+                    }
+                    else if( nItemID == ed_FONT_SIZE_INDEX )
+                    {
+                        hSizeMenu = ::GetSubMenu(hSubMenu, ed_FONT_SIZE_INDEX);
+                        if( bInSizeMenu )
+                            return;
+                        bInSizeMenu = TRUE;
+                        int iCount = ::GetMenuItemCount(hSizeMenu);
+                        if( iCount == 1 )
+                        {
+                            // Initial menu has 1 placeholder - modify that
+                            //   and append the rest
+                            // First 2 menu items are relative size change
+                            ::ModifyMenu( hSizeMenu, 0, MF_BYPOSITION | MF_STRING, ID_FORMAT_INCREASE_FONTSIZE,
+                                          szLoadString(IDS_INCREASE_FONTSIZE) );
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_DECREASE_FONTSIZE,
+                                          szLoadString(IDS_DECREASE_FONTSIZE) );
+                            ::AppendMenu( hSizeMenu, MF_SEPARATOR, 0, 0);
+                        }            
+                        // Delete any existing items except for 1st three
+                        for( i = iCount - 1; i > 2; i--)
+                        {
+                            DeleteMenu(hSizeMenu, i, MF_BYPOSITION);
+                        }
+
+                        // Check if current base font is fixed width
+                        BOOL bFixedWidth = (EDT_GetFontFaceIndex(pMWContext) == 1);
+                        // Change font size strings based on current font base
+                        for ( i = 0; i < MAX_FONT_SIZE; i++ ){
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_FONTSIZE_BASE + i,
+                                          wfe_GetFontSizeString(pMWContext, i+1, bFixedWidth,
+                                                                TRUE) ); // Format for menu
+                        }
+                        if( wfe_iFontSizeMode == ED_FONTSIZE_ADVANCED )
+                        {
+                            // The "Advanced" absolute point size strings
+                            ::AppendMenu( hSizeMenu, MF_SEPARATOR, 0, 0);
+                            // This string is "8 pts" so it must be translated
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE, szLoadString(IDS_8_PTS));
+                            // Others assume pure numbers don't have to be translated
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+1, "9");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+2, "10");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+3, "11");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+4, "12");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+5, "14");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+6, "16");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+7, "18");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+8, "20");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+9, "22");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+10, "24");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+11, "26");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+12, "28");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+13, "36");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+14, "48");
+                            ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+15, "72");
+                        }
+                    }
+                }
+                else if( i == ED_MENU_TABLE && nItemID == ED_MENU_TABLE )
                 {
                     if( bInTableMenu )
                         return;
                     bInTableMenu = TRUE;
+                    BOOL bInTable = EDT_IsInsertPointInTable(pMWContext);
+                    ::EnableMenuItem(hSubMenu, ed_DELETE_MENU_INDEX, MF_BYPOSITION | (bInTable ? MF_ENABLED : MF_GRAYED)) ; 
+                    ::EnableMenuItem(hSubMenu, ed_SELECT_MENU_INDEX, MF_BYPOSITION | (bInTable ? MF_ENABLED : MF_GRAYED)); 
+                    ::EnableMenuItem(hSubMenu, ed_PASTE_MENU_INDEX, MF_BYPOSITION | (bInTable ? MF_ENABLED : MF_GRAYED));
+                    ::EnableMenuItem(hSubMenu, ed_ALIGN_MENU_INDEX, MF_BYPOSITION | (bInTable ? MF_ENABLED : MF_GRAYED));
+
                     // Show "Convert table to text" when table is selected or
                     //  caret is inside table with nothing selected
                     BOOL bConvertToText = EDT_IsTableSelected(pMWContext) || 
-                                           (EDT_IsInsertPointInTable(pMWContext) &&
+                                           (bInTable &&
                                             !EDT_IsSelected(pMWContext) &&
                                             EDT_GetSelectedCellCount(pMWContext) == 0);
 
                     ::ModifyMenu(hSubMenu, ID_TABLE_TEXT_CONVERT, MF_BYCOMMAND | MF_STRING, ID_TABLE_TEXT_CONVERT,
                                  szLoadString(bConvertToText ? IDS_CONVERT_TABLE_TO_TEXT : IDS_CONVERT_TEXT_TO_TABLE) );
-                    // We can return here ONLY if we don't need to look at menus after "Table"
-                    break;
                 }
-                // Search for the "Open Recent" subsubmenu under the File submenu,
-                //  which is always the first top-level menu
-                UINT nSubCount = GetMenuItemCount(hSubMenu);
-                for(UINT j = 0; j < nSubCount; j++ )
-                {
-                    hSubSubMenu = GetSubMenu(hSubMenu, j);
-                    UINT nID = GetMenuItemID(hSubMenu, j);
-
-                    // Is the the currently-selected menu?
-                    if( hSubSubMenu &&
-#ifdef XP_WIN32
-                        // In Win32, nItemID is INDEX to the submenu item...
-                        nItemID == j && hSysMenu == hSubMenu )
-#else
-                        // ...in Win16, it is the handle to subsubmenu
-                        nItemID == (UINT)hSubSubMenu )
-#endif
-                    {
-                        // The first item in the SubSubMenu identifies that menu
-                        UINT nID = GetMenuItemID(hSubSubMenu, 0);
-                        switch( nID )
-                        {
-                            case ID_EDIT_HISTORY_BASE:
-                                // Build a menu of recently-edited URL titles
-                                ((CNetscapeEditView*)GetActiveView())->BuildEditHistoryMenu(hSubSubMenu, 0);
-                                return;
-                            case ID_FORMAT_FONTSIZE_BASE:
-                                hFormatMenu = hSubMenu;
-                                hSizeMenu = hSubSubMenu;
-                                break;
-                            case ID_FORMAT_FONTFACE_BASE:
-                                hFormatMenu = hSubMenu;
-                                hFontMenu = hSubSubMenu;
-                                break;
-                        }
-                    }
-                }
-                // We are done when we found the format menu
-                if( hFormatMenu )
-                    break;
             }
 	    }
-
-        // The reest only pertain to Format menu
-        if( !hFormatMenu )
-        	return;
-
-        if( hFontMenu )
-        {
-            // Prevent rebuilding menu when mouse moves away
-            if( bInFontMenu )
-                return;
-            bInFontMenu = TRUE;
-		    TRACE0("Recreating Font Menu\n");
-            
-            // Delete any existing items
-            for( int i = ::GetMenuItemCount(hFontMenu) - 1; i >= 0; i--){
-                DeleteMenu(hFontMenu, i, MF_BYPOSITION);
-            }
-            // Get list of FontFace fonts defined in XP_Strings
-            char * pFontFaces = EDT_GetFontFaces();
-
-            // Build the FontFace menu
-            if( pFontFaces )
-            {
-                char * pFont = pFontFaces;
-                ::AppendMenu(hFontMenu, MF_STRING, ID_FORMAT_FONTFACE_BASE, pFont);
-                pFont += XP_STRLEN(pFont) + 1;
-                if( *pFont )
-                {
-                    ::AppendMenu(hFontMenu, MF_STRING, ID_FORMAT_FONTFACE_BASE+1, pFont);
-                }
-                int nCount = 0;
-                if( wfe_iTrueTypeFontCount && wfe_ppTrueTypeFonts )
-                {
-                    // Add separator
-                    ::AppendMenu(hFontMenu, MF_SEPARATOR,0,0);
-                
-                    // Add TrueType fonts but don't overflow the screen height
-                    // Number of items that will fit, minus some for items already
-                    //  added, separators, and a bit extra
-                    nCount = (sysInfo.m_iScreenHeight / GetSystemMetrics(SM_CYMENU)) - 6;
-                    for( int i = 0; i < min(wfe_iTrueTypeFontCount, nCount); i++ ){
-                        ::AppendMenu(hFontMenu, MF_STRING, ID_FORMAT_FONTFACE_BASE+i+2, 
-                                     wfe_ppTrueTypeFonts[i]);
-                    }
-                }                    
-                if( nCount < wfe_iTrueTypeFontCount )
-                {
-                    ::AppendMenu(hFontMenu, MF_SEPARATOR,0,0);
-                    // Last item is "Other..." to launch Window's Font Face dialog
-                    ::AppendMenu(hFontMenu, MF_STRING, ID_OTHER_FONTFACE, ed_pOther);
-                }
-            }
-        }  
-        else if( hSizeMenu )
-        {
-            if( bInSizeMenu )
-                return;
-            bInSizeMenu = TRUE;
-            int iCount = ::GetMenuItemCount(hSizeMenu);
-            if( iCount == 1 )
-            {
-                // Initial menu has 1 placeholder - modify that
-                //   and append the rest
-                // First 2 menu items are relative size change
-                ::ModifyMenu( hSizeMenu, 0, MF_BYPOSITION | MF_STRING, ID_FORMAT_INCREASE_FONTSIZE,
-                              szLoadString(IDS_INCREASE_FONTSIZE) );
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_DECREASE_FONTSIZE,
-                              szLoadString(IDS_DECREASE_FONTSIZE) );
-                ::AppendMenu( hSizeMenu, MF_SEPARATOR, 0, 0);
-            }            
-            // Delete any existing items except for 1st three
-            for( i = iCount - 1; i > 2; i--)
-            {
-                DeleteMenu(hSizeMenu, i, MF_BYPOSITION);
-            }
-
-            // Check if current base font is fixed width
-            BOOL bFixedWidth = (EDT_GetFontFaceIndex(pMWContext) == 1);
-            // Change font size strings based on current font base
-            for ( i = 0; i < MAX_FONT_SIZE; i++ ){
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_FONTSIZE_BASE + i,
-                              wfe_GetFontSizeString(pMWContext, i+1, bFixedWidth,
-                                                    TRUE) ); // Format for menu
-            }
-            if( wfe_iFontSizeMode == ED_FONTSIZE_ADVANCED )
-            {
-                // The "Advanced" absolute point size strings
-                ::AppendMenu( hSizeMenu, MF_SEPARATOR, 0, 0);
-                // This string is "8 pts" so it must be translated
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE, szLoadString(IDS_8_PTS));
-                // Others assume pure numbers don't have to be translated
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+1, "9");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+2, "10");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+3, "11");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+4, "12");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+5, "14");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+6, "16");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+7, "18");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+8, "20");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+9, "22");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+10, "24");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+11, "26");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+12, "28");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+13, "36");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+14, "48");
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+15, "72");
-            }
-        }
     }
 }
 

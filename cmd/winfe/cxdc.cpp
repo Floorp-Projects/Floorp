@@ -3150,7 +3150,8 @@ void CDCCX::DisplayCell(MWContext *pContext, int iLocation, LO_CellStruct *pCell
         {
             if( pCell->border_width == 0 || LO_IsEmptyCell(pCell) )
             {
-                EraseToBackground(Rect);
+                // If we do this, image background doesn't show up
+                //EraseToBackground(Rect);
             }
             int32 iExtraSpace = 0;
             int32 iBorder = pCell->border_width;
@@ -3663,12 +3664,14 @@ void CDCCX::DisplayText(MWContext *pContext, int iLocation, LO_TextStruct *pText
 			// If the text is the same color as the background we are selecting text
 			//   and need to go into OPAQUE mode so the text will show up on the screen
 			COLORREF rgbOldBackgroundColor;
-			if (pText->ele_attrmask & LO_ELE_SELECTED) {
+            if (pText->ele_attrmask & LO_ELE_SELECTED) {
                 display_background_color = TRUE;
 				wfe_GetSelectionColors(m_rgbBackgroundColor, &rgbColor, &textBackColor);
 			}
 
-            if(display_background_color)
+            //cmanske: Why would we EVER want to draw opaque EXCEPT for selected text?
+            //  This messes up drawing text in tables when background color and/or image is set
+            if(pText->ele_attrmask & LO_ELE_SELECTED /*display_background_color*/)
             {
                 rgbOldBackgroundColor = ::SetBkColor(hdc, textBackColor);
 			    ::SetBkMode(hdc, OPAQUE);

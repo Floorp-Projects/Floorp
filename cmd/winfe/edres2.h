@@ -76,7 +76,15 @@
 #define ID_EDIT_HISTORY_BASE            (ID_TOOLS_MENU_BASE+MAX_EDITOR_PLUGINS+10+105)
 // RESERVE MAX_EDIT_HISTORY_LOCATIONS (Currently 10) items here
 
-#define ID_PASTE_TABLE_BASE             (ID_EDIT_HISTORY_BASE + 10)
+// NOTE: The order of these 7 PASTE defines here must match order of ED_PasteType enums in edttypes.h
+#define ID_PASTE_BASE                   (ID_EDIT_HISTORY_BASE + 11)
+// This is the last item in IDM_COMPOSER_TABLE_PASTEMENU
+#define ID_PASTE_TABLE_REPLACE          (ID_PASTE_BASE+5)
+// These are used in IDM_COMPOSER_PASTEMENU 
+#define ID_PASTE_TABLE                  (ID_PASTE_BASE)
+#define ID_PASTE_TEXT                   (ID_PASTE_BASE+6)
+#define ID_PASTE_IMAGE                  (ID_PASTE_BASE+7)
+#define ID_PASTE_END                    (ID_PASTE_BASE+7)
 
-#define ID_EDIT_LAST_ID                 (ID_PASTE_TABLE_BASE + 10)
+#define ID_EDIT_LAST_ID                 (ID_PASTE_BASE + 10)
 #endif
