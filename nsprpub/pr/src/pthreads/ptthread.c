@@ -921,8 +921,8 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
         PR_Unlock(pt_book.ml);
 
         _PR_LogCleanup();
-        /* Close all the fd's before calling _PR_CleanupFdCache */
-        _PR_CleanupFdCache();
+        /* Close all the fd's before calling _PR_CleanupIO */
+        _PR_CleanupIO();
 
         /*
          * I am not sure if it's safe to delete the cv and lock here,
