@@ -63,22 +63,28 @@ nsAbStubEntry SearchNameCompletionEntryTable[] =
     {"Scott Putterman",		"scottip@netscape.com"},
     {"mailnewsstaff",		"mailnewsstaff@netscape.com"},
     {"David Bienvenu",		"bievenu@netscape.com"},
-    {"Jeff Tsaii",			"jefft@netscape.com"},	
-    {"Alec Flett",			"alecf@netscape.com"},
+    {"Jeff Tsai",		"jefft@netscape.com"},	
+    {"Alec Flett",		"alecf@netscape.com"},
     {"Candice Huang",		"chuang@netscape.com"},
-    {"Jean-Francois Ducarroz",		"ducarroz@netscape.com"},
-	{"Lisa Chiang",					"lchiang@netscape.com"},
-    {"Esther Goes",					"esther@netscape.com"},
+    {"Jean-Francois Ducarroz",	"ducarroz@netscape.com"},
+    {"Esther Goes",		"esther@netscape.com"},
     {"Rich Pizzaro",		"rhp@netscape.com"},
     {"Par Pandit",		"ppandit@netscape.com"},
-    {"mailnewsqa",			"mailnewsqa@netscape.com"},	
-    {"Ninoschka Baca",			"nbaca@netscape.com"},
+    {"mailnewsqa",		"mailnewsqa@netscape.com"},	
+    {"Ninoschka Baca",		"nbaca@netscape.com"},
+    {"Lisa Chiang",		"lchiang@netscape.com"},
     {"Fenella Gor ",		"fenella@netscape.com"},
-	{"Peter Mock",			"pmock@netscape.com"},	
-    {"Suresh Kasinathan",	"suresh@netscape.com"}
+    {"Peter Mock",		"pmock@netscape.com"},	
+    {"Suresh Kasinathan",	"suresh@netscape.com"},
+    {"Paul Hangas",		"hangas@netscape.com"},
+    {"David Hyatt",		"hyatt@netscape.com"},
+    {"Chris Waterson",		"waterson@netscape.com"},
+    {"Phil Peterson",		"phil@netscape.com"},
+    {"Syd Logan",		"syd@netscape.com"},
+    {"Dave Rothschild",		"daver@netscape.com"}
 };
 
-const PRInt32 numStubEntries = 18;
+const PRInt32 numStubEntries = 24;
 
 
 NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener)
