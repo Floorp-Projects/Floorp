@@ -789,7 +789,7 @@ nsLocalFile::nsLocalFile()
 ,	mLastResolveFlag(PR_FALSE)
 ,	mHaveFileInfo(PR_FALSE)
 ,   mFollowSymlinks(PR_FALSE)
-,   mType('????')
+,   mType('TEXT')
 ,   mCreator(kDefaultCreator)
 {
 	NS_INIT_REFCNT();
