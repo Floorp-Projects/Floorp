@@ -28,6 +28,7 @@
  * Date         Modified by     Description of modification
  * 03/31/2000   IBM Corp.       @JSK32365 - Set WS_CLIPSIBLINGS on
  *                              nsCanvas objects to fix bleed-through
+ * 04/31/2000   IBM Corp.       Change parms to DispatchMouseEvent to match Windows.
  *
  */
 
@@ -214,8 +215,7 @@ PRBool nsCanvas::OnKey( MPARAM mp1, MPARAM mp2)
 
 extern BOOL g_bHandlingMouseClick;
 
-PRBool nsCanvas::DispatchMouseEvent( PRUint32 msg, int clickcount,
-                                     MPARAM mp1, MPARAM mp2)
+PRBool nsCanvas::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2)
 {
    PRBool rc = PR_FALSE;
 
@@ -227,7 +227,7 @@ PRBool nsCanvas::DispatchMouseEvent( PRUint32 msg, int clickcount,
  
    if( mEventCallback || mMouseListener)
    {
-      switch( msg)
+      switch( aEventType)
       {
          case NS_MOUSE_LEFT_BUTTON_DOWN:
          case NS_MOUSE_MIDDLE_BUTTON_DOWN:
@@ -242,14 +242,14 @@ PRBool nsCanvas::DispatchMouseEvent( PRUint32 msg, int clickcount,
          default:
             break;
       }
-      rc = nsWindow::DispatchMouseEvent( msg, clickcount, mp1, mp2);
+      rc = nsWindow::DispatchMouseEvent( aEventType, mp1, mp2);
    }
 
 // Mousemove messages mustn't propagate to get cursors working.  Try commenting
 // this block out & then move the mouse over a link.
 
-   if( msg == NS_MOUSE_MOVE)
-      rc = PR_TRUE;
+   if( aEventType == NS_MOUSE_MOVE)
+    rc = PR_TRUE;
 
    return rc;
 }

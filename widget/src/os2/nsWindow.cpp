@@ -29,6 +29,8 @@
  * Date             Modified by     Description of modification
  * 03/23/2000       IBM Corp.      Added InvalidateRegion method; keyboard (OnKey) handling; and
  *                                         fixed uninitialized event.isMeta.
+ * 04/12/2000       IBM Corp.      DispatchMouseEvent changes.
+ * 04/14/2000       IBM Corp.      Ported CaptureRollupEvents changes from Windows.
  *
  */
 
@@ -51,7 +53,11 @@
 #include "nsMenu.h"
 #include "nsDragService.h"
 #include "nsContextMenu.h"
+#include "nsIRollupListener.h"
 #include "nsIRegion.h"
+
+//~~~ windowless plugin support
+#include "nsplugindefs.h"
 
 #include "tabapi.h"   // !! TAB-FIX
 
@@ -86,6 +92,12 @@
 
 // XXX don't deliver click-events to obscured parents
 BOOL g_bHandlingMouseClick = FALSE;
+
+nsWindow* nsWindow::gCurrentWindow = nsnull;
+
+static nsIRollupListener * gRollupListener           = nsnull;
+static nsIWidget         * gRollupWidget             = nsnull;
+static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 
 // --------------------------------------------------------------------------
 // HWND -> (nsWindow *) conversion ------------------------------------------
@@ -330,6 +342,10 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 //
 nsWindow::~nsWindow()
 {
+   if (gCurrentWindow == this) {
+      gCurrentWindow = nsnull;
+   }
+
    // If the widget was released without calling Destroy() then the native
    // window still exists, and we need to destroy it.
    if( mWindowState != nsWindowState_eDead)
@@ -405,6 +421,24 @@ void nsWindow::OnDestroy()
    mWindowState = nsWindowState_eDead;
 }
 
+PRBool 
+nsWindow::EventIsInsideWindow(nsWindow* aWindow) 
+{
+   RECTL r;
+   POINTL ptl;
+   if (WinQueryMsgPos( 0/*hab*/, &ptl)) {
+      WinMapWindowPoints( HWND_DESKTOP, aWindow->mWnd, &ptl, 1);
+      WinQueryWindowRect( aWindow->mWnd, &r);
+      // now make sure that it wasn't one of our children
+      if (ptl.x < r.xLeft || ptl.x > r.xRight ||
+          ptl.y > r.yTop || ptl.y < r.yBottom) {
+         return PR_FALSE;
+      }
+   } 
+
+   return PR_TRUE;
+}
+
 // --------------------------------------------------------------------------
 // PM messaging layer - wndproc, subclasser, default handler ----------------
 
@@ -413,6 +447,24 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
    // Get the nsWindow for this hwnd
    nsWindow *wnd = NS_HWNDToWindow( hwnd);
+
+   // check to see if we have a rollup listener registered
+   if (nsnull != gRollupListener && nsnull != gRollupWidget) {
+      if (msg == WM_ACTIVATE || msg == WM_BUTTON1DOWN || 
+          msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
+         // Rollup if the event is outside the popup
+         if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
+/* OS2TODO - This is causing the menu bar dropdowns to disappear too quickly */
+            gRollupListener->Rollup();
+
+            // if we are supposed to be consuming events and it is
+            // a Mouse Button down, let it go through
+            if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
+//               return FALSE;
+            }
+         } 
+      }
+    }
 
    // Messages which get re-routed if their source was an nsWindow
    // (it's very bad to reroute messages whose source isn't an nsWindow,
@@ -506,6 +558,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
          event.tipIndex = LONGFROMMP(mp1);
          event.eventStructType = NS_TOOLTIP_EVENT;
          result = DispatchEventInternal(&event);
+//         NS_RELEASE(event.widget);
          break;
       }
 
@@ -552,46 +605,46 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
       // behaviour (see nsEditorEventListeners.cpp)
 
       case WM_BUTTON1DOWN:
-         result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_DOWN, 1, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_DOWN, mp1, mp2);
          break;
       case WM_BUTTON1UP:
-         result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_UP, 1, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_UP, mp1, mp2);
          break;
       case WM_BUTTON1DBLCLK:
-         result = DispatchMouseEvent( NS_MOUSE_LEFT_DOUBLECLICK, 2, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_LEFT_DOUBLECLICK, mp1, mp2);
          break;
 
       case WM_BUTTON2DOWN:
-         result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_DOWN, 1, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_DOWN, mp1, mp2);
          break;
       case WM_BUTTON2UP:
-         result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_UP, 1, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_UP, mp1, mp2);
          break;
       case WM_BUTTON2DBLCLK:
-         result = DispatchMouseEvent( NS_MOUSE_RIGHT_DOUBLECLICK, 2, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_RIGHT_DOUBLECLICK, mp1, mp2);
          break;
 
       case WM_CHORD:
-         result = DispatchMouseEvent( 0, 1, mp1, mp2);
+         result = DispatchMouseEvent( 0, mp1, mp2);
          break;
       case WM_BUTTON3DOWN:
-         result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_DOWN, 1, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_DOWN, mp1, mp2);
          break;
       case WM_BUTTON3UP:
-         result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_UP, 1, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_UP, mp1, mp2);
          break;
       case WM_BUTTON3DBLCLK:
-         result = DispatchMouseEvent( NS_MOUSE_MIDDLE_DOUBLECLICK, 2, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_MIDDLE_DOUBLECLICK, mp1, mp2);
          break;
 
       case WM_MOUSEMOVE:
-         result = DispatchMouseEvent( NS_MOUSE_MOVE, 0, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_MOVE, mp1, mp2);
          break;
       case WMU_MOUSEENTER:
-         result = DispatchMouseEvent( NS_MOUSE_ENTER, 0, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_ENTER, mp1, mp2);
          break;
       case WMU_MOUSELEAVE:
-         result = DispatchMouseEvent( NS_MOUSE_EXIT, 0, mp1, mp2);
+         result = DispatchMouseEvent( NS_MOUSE_EXIT, mp1, mp2);
          break;
 
       case WM_SETFOCUS:
@@ -662,13 +715,18 @@ PRBool nsWindow::ConvertStatus( nsEventStatus aStatus)
    return rc;
 }
 
-// Initialize an event pre-dispatch
-void nsWindow::InitEvent( nsGUIEvent &event, PRUint32 aEventType, nsPoint *pt)
+//-------------------------------------------------------------------------
+//
+// Initialize an event to dispatch
+//
+//-------------------------------------------------------------------------
+void nsWindow::InitEvent( nsGUIEvent &event, PRUint32 aEventType, nsPoint * aPoint)
 {
    event.widget = this;
+// OS2TODO   NS_ADDREF(event.widget);
    event.nativeMsg = nsnull;
 
-   if( !pt)
+   if (nsnull == aPoint)       // use the point from the event
    {
       // get the message position in client coordinates
       POINTL ptl;
@@ -680,13 +738,18 @@ void nsWindow::InitEvent( nsGUIEvent &event, PRUint32 aEventType, nsPoint *pt)
       event.point.y = ptl.y;
    }
    else
-   {
-      event.point.x = pt->x;
-      event.point.y = pt->y;
+   {                      // use the point override if provided
+      event.point.x = aPoint->x;
+      event.point.y = aPoint->y;
    }
 
    event.time = WinQueryMsgTime( 0/*hab*/);
    event.message = aEventType;
+
+   /* OS2TODO
+   mLastPoint.x = event.point.x;
+   mLastPoint.y = event.point.y;
+   */
 }
 
 // Invokes callback and ProcessEvent method on Event Listener object
@@ -728,37 +791,42 @@ NS_IMETHODIMP nsWindow::DispatchEvent( nsGUIEvent *event,
 // Dispatch a standard event
 PRBool nsWindow::DispatchStandardEvent( PRUint32 aMsg, PRUint8 aEST)
 {
+   PRBool result;
+
    nsGUIEvent event;
    event.eventStructType = aEST;
    InitEvent( event, aMsg);
-   return DispatchEventInternal( &event);
+   result = DispatchEventInternal( &event);
+//   NS_RELEASE(event.widget);
+   return result;
 }
 
+//-------------------------------------------------------------------------
+//
 // Deal with all sort of mouse event
-PRBool nsWindow::DispatchMouseEvent( PRUint32 msg, int clickcount,
-                                     MPARAM mp1, MPARAM mp2)
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2)
 {
    PRBool result = PR_FALSE;
 
-   if( !mEventCallback && !mMouseListener)
+   if (nsnull == mEventCallback && nsnull == mMouseListener) {
       return result;
+   }
+
+   nsMouseEvent event;
 
    // Stop multiple messages for the same PM action
    if( g_bHandlingMouseClick)
       return result;
 
-   nsMouseEvent event;
-   event.eventStructType = NS_MOUSE_EVENT;
-   event.clickCount = clickcount;
-   event.isMeta = PR_FALSE;
-
    // Mouse leave & enter messages don't seem to have position built in.
-   if( msg && msg != NS_MOUSE_ENTER && msg != NS_MOUSE_EXIT)
+   if( aEventType && aEventType != NS_MOUSE_ENTER && aEventType != NS_MOUSE_EXIT)
    {
       POINTL ptl = { SHORT1FROMMP( mp1), SHORT2FROMMP( mp1) };
       PM2NS( ptl);
       nsPoint pt( ptl.x, ptl.y);
-      InitEvent( event, msg, &pt);
+      InitEvent( event, aEventType, &pt);
 
       USHORT usFlags = SHORT2FROMMP( mp2);
       event.isShift = (usFlags & KC_SHIFT) ? PR_TRUE : PR_FALSE;
@@ -767,46 +835,200 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 msg, int clickcount,
    }
    else
    {
-      if( !msg) msg = NS_MOUSE_MIDDLE_BUTTON_DOWN; // WM_CHORD hack
+      if( !aEventType) aEventType = NS_MOUSE_MIDDLE_BUTTON_DOWN; // WM_CHORD hack
 
-      InitEvent( event, msg, nsnull);
+      InitEvent( event, aEventType, nsnull);
       event.isShift = WinIsKeyDown( VK_SHIFT);
       event.isControl = WinIsKeyDown( VK_CTRL);
       event.isAlt = WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF);
    }
 
-   // call the listeners
-   if( mMouseListener)
-      switch( msg)
-      {
-         case NS_MOUSE_MOVE:
+   event.isMeta    = PR_FALSE;
+   event.eventStructType = NS_MOUSE_EVENT;
+
+   //Dblclicks are used to set the click count, then changed to mousedowns
+   if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
+       aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
+      event.message = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) ? 
+                      NS_MOUSE_LEFT_BUTTON_DOWN : NS_MOUSE_RIGHT_BUTTON_DOWN;
+      event.clickCount = 2;
+   }
+   else {
+      event.clickCount = 1;
+   }
+
+   nsPluginEvent pluginEvent;
+
+   switch (aEventType)//~~~
+   {
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+         pluginEvent.event = WM_BUTTON1DOWN;
+         break;
+      case NS_MOUSE_LEFT_BUTTON_UP:
+         pluginEvent.event = WM_BUTTON1UP;
+         break;
+      case NS_MOUSE_LEFT_DOUBLECLICK:
+         pluginEvent.event = WM_BUTTON1DBLCLK;
+         break;
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+         pluginEvent.event = WM_BUTTON2DOWN;
+         break;
+      case NS_MOUSE_RIGHT_BUTTON_UP:
+         pluginEvent.event = WM_BUTTON2UP;
+         break;
+      case NS_MOUSE_RIGHT_DOUBLECLICK:
+         pluginEvent.event = WM_BUTTON2DBLCLK;
+         break;
+      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+         pluginEvent.event = WM_BUTTON3DOWN;
+         break;
+      case NS_MOUSE_MIDDLE_BUTTON_UP:
+         pluginEvent.event = WM_BUTTON3UP;
+         break;
+      case NS_MOUSE_MIDDLE_DOUBLECLICK:
+         pluginEvent.event = WM_BUTTON3DBLCLK;
+         break;
+      case NS_MOUSE_MOVE:
+         pluginEvent.event = WM_MOUSEMOVE;
+         break;
+      default:
+         break;
+   }
+
+   pluginEvent.wParam = 0;
+/* OS2TODO
+   pluginEvent.wParam |= (event.isShift) ? MK_SHIFT : 0;
+   pluginEvent.wParam |= (event.isControl) ? MK_CONTROL : 0;
+*/
+   pluginEvent.lParam = MAKELONG(event.point.x, event.point.y);
+
+   event.nativeMsg = (void *)&pluginEvent;
+
+   // call the event callback 
+   if (nsnull != mEventCallback) {
+
+//    result = DispatchWindowEvent(&event);
+      result = DispatchEventInternal(&event);   // OS2TODO change to DispatchWindowEvent
+
+#if 0  // OS2TODO
+      if (aEventType == NS_MOUSE_MOVE) {
+
+         // if we are not in mouse capture mode (mouse down and hold)
+         // then use "this" window
+         // if we are in mouse capture, then all events are being directed
+         // back to the nsWindow doing the capture. So therefore, the detection
+         // of whether we are in a new nsWindow is wrong. Meaning this MOUSE_MOVE
+         // event hold the captured windows pointer not the one the mouse is over.
+         //
+         // So we use "WindowFromPoint" to find what window we are over and 
+         // set that window into the mouse trailer timer.
+         if (!mIsInMouseCapture) {
+            MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+            MouseTrailer::SetMouseTrailerWindow(this);
+            mouseTrailer->CreateTimer();
+         } else {
+            POINT mp;
+            DWORD pos = ::GetMessagePos();
+            mp.x      = LOWORD(pos);
+            mp.y      = HIWORD(pos);
+
+            // OK, now find out if we are still inside
+            // the captured native window
+            POINT cpos;
+            cpos.x = LOWORD(pos);
+            cpos.y = HIWORD(pos);
+
+            nsWindow * someWindow = NULL;
+            HWND hWnd = ::WindowFromPoint(mp);
+            if (hWnd != NULL) {
+               ::ScreenToClient(hWnd, &cpos);
+               RECT r;
+               VERIFY(::GetWindowRect(hWnd, &r));
+               if (cpos.x >= r.left && cpos.x <= r.right &&
+                   cpos.y >= r.top && cpos.y <= r.bottom) {
+                  // yes we are so we should be able to get a valid window
+                  // although, strangley enough when we are on the frame part of the
+                  // window we get right here when in capture mode
+                  // but this window won't match the capture mode window so
+                  // we are ok
+                  someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
+               } 
+            }
+            // only set the window into the mouse trailer if we have a good window
+            if (nsnull != someWindow)  {
+               MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+               MouseTrailer::SetMouseTrailerWindow(someWindow);
+               mouseTrailer->CreateTimer();
+            }
+         }
+
+         nsRect rect;
+         GetBounds(rect);
+         rect.x = 0;
+         rect.y = 0;
+
+         if (rect.Contains(event.point.x, event.point.y)) {
+            if (gCurrentWindow == NULL || gCurrentWindow != this) {
+               if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
+                  MouseTrailer::IgnoreNextCycle();
+                  gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, gCurrentWindow->GetLastPoint());
+               }
+               gCurrentWindow = this;
+               if (!mIsDestroying) {
+                  gCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER);
+               }
+            }
+         } 
+      } else if (aEventType == NS_MOUSE_EXIT) {
+         if (gCurrentWindow == this) {
+            gCurrentWindow = nsnull;
+         }
+      }
+#endif //OS2TODO
+      g_bHandlingMouseClick = TRUE;
+//    NS_RELEASE(event.widget);
+      return result;
+   }
+
+   if (nsnull != mMouseListener) {
+      switch (aEventType) {
+         case NS_MOUSE_MOVE: 
+         {
             result = ConvertStatus( mMouseListener->MouseMoved( event));
-            break;
+            nsRect rect;
+            GetBounds(rect);
+            if (rect.Contains(event.point.x, event.point.y)) {
+               if (gCurrentWindow == NULL || gCurrentWindow != this) {
+                  gCurrentWindow = this;
+               }
+            } else {
+               //printf("Mouse exit");
+            }
+         } break;
 
          case NS_MOUSE_LEFT_BUTTON_DOWN:
          case NS_MOUSE_MIDDLE_BUTTON_DOWN:
          case NS_MOUSE_RIGHT_BUTTON_DOWN:
-           result = ConvertStatus( mMouseListener->MousePressed( event));
-           break;
-   
+            result = ConvertStatus( mMouseListener->MousePressed( event));
+            break;
+
          case NS_MOUSE_LEFT_BUTTON_UP:
          case NS_MOUSE_MIDDLE_BUTTON_UP:
          case NS_MOUSE_RIGHT_BUTTON_UP:
-           result = ConvertStatus( mMouseListener->MouseReleased( event));
-           break;
+            result = ConvertStatus( mMouseListener->MouseReleased( event));
+//            result = ConvertStatus( mMouseListener->MouseClicked( event));
+            break;
 
          case NS_MOUSE_LEFT_CLICK:
          case NS_MOUSE_MIDDLE_CLICK:
          case NS_MOUSE_RIGHT_CLICK:
             result = ConvertStatus( mMouseListener->MouseClicked( event));
             break;
-      } 
-   else
-      result = DispatchEventInternal( &event);
-
+      } // switch
+   } 
 
    g_bHandlingMouseClick = TRUE;
-
+//    NS_RELEASE(event.widget);
    return result;
 }
 
@@ -868,6 +1090,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    event.charCode = 0;
 
    PRBool rc = DispatchEventInternal( &event);
+//   NS_RELEASE(event.widget);
 
    // Break off now if this was a key-up.
    if( fsFlags & KC_KEYUP) return rc;
@@ -947,12 +1170,15 @@ PRBool nsWindow::OnReposition( PSWP pSwp)
 // Params here are in XP-space for the desktop
 PRBool nsWindow::OnMove( PRInt32 aX, PRInt32 aY)
 {            
+   PRBool result;
    nsGUIEvent event;
    InitEvent( event, NS_MOVE);
    event.point.x = aX;
    event.point.y = aY;
    event.eventStructType = NS_GUI_EVENT;
-   return DispatchEventInternal( &event);
+   result = DispatchEventInternal( &event);
+//   NS_RELEASE(event.widget);
+   return result;
 }
 
 PRBool nsWindow::OnPaint()
@@ -969,6 +1195,7 @@ PRBool nsWindow::OnResize( PRInt32 aX, PRInt32 aY)
 
 PRBool nsWindow::DispatchResizeEvent( PRInt32 aX, PRInt32 aY)
 {
+   PRBool result;
    // call the event callback 
    nsSizeEvent event;
    nsRect      rect( 0, 0, aX, aY);
@@ -979,7 +1206,9 @@ PRBool nsWindow::DispatchResizeEvent( PRInt32 aX, PRInt32 aY)
    event.mWinWidth = mBounds.width;
    event.mWinHeight = mBounds.height;
 
-   return DispatchEventInternal( &event);
+   result = DispatchEventInternal( &event);
+//   NS_RELEASE(event.widget);
+   return result;
 }                                           
 
 PRBool nsWindow::OnScroll( MPARAM mp1, MPARAM mp2)
@@ -1085,6 +1314,7 @@ PRBool nsWindow::OnMenuClick( USHORT aCmd)
       // Clean up
       NS_IF_RELEASE(aItem);
       NS_IF_RELEASE(aListener);
+//      NS_RELEASE(event.widget);
    }
 
    return result;
@@ -1120,6 +1350,8 @@ PRBool nsWindow::OnActivateMenu( HWND hwndMenu, BOOL aActivate)
          es = aMenu->MenuDeselected( event);
 
       result = ConvertStatus( es);
+
+//      NS_RELEASE(event.widget);
    }
 
    return result;
@@ -1332,6 +1564,10 @@ nsresult nsWindow::ModalEventFilter( PRBool aRealEvent,
       hwnd = WinQueryWindow(hwnd, QW_PARENT);
 
       if( hwnd == mQmsg.hwnd || WinIsChild( mQmsg.hwnd, hwnd))
+         isInWindow = PR_TRUE;
+      else if (!isInWindow && gRollupWidget &&
+               EventIsInsideWindow((nsWindow*)gRollupWidget))
+         // include for consideration any popup menu which may be active at the moment
          isInWindow = PR_TRUE;
 
       // XXX really ought to do something about focus here
@@ -2100,7 +2336,25 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
 
 // XXXX STUB FIX Find out what this is supposed to do
 NS_IMETHODIMP
- nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
+nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
+   if (aDoCapture) {
+      /* we haven't bothered carrying a weak reference to gRollupWidget because
+         we believe lifespan is properly scoped. this next assertion helps
+         assure that remains true. */
+      NS_ASSERTION(!gRollupWidget, "rollup widget reassigned before release");
+      gRollupConsumeRollupEvent = aConsumeRollupEvent;
+      NS_IF_RELEASE(gRollupListener);
+      NS_IF_RELEASE(gRollupWidget);
+      gRollupListener = aListener;
+      NS_ADDREF(aListener);
+      gRollupWidget = this;
+      NS_ADDREF(this);
+   } else {
+      NS_IF_RELEASE(gRollupListener);
+      //gRollupListener = nsnull;
+      NS_IF_RELEASE(gRollupWidget);
+   }
+
   return NS_OK;
 }

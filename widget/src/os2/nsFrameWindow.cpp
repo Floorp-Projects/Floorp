@@ -27,6 +27,7 @@
  *
  * Date             Modified by     Description of modification
  * 03/23/2000       IBM Corp.      Fix missing title bars on profile wizard windows.
+ * 04/11/2000       IBM Corp.      Remove assertion.
  */
 
 // Frame window - produced when NS_WINDOW_CID is required.
@@ -53,8 +54,10 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                                   nsIAppShell *aAppShell,
                                   nsWidgetInitData *aInitData, HWND hwndO)
 {
-   NS_ASSERTION( hwndP == HWND_DESKTOP && aParent == nsnull,
-                 "Attempt to create non-top-level frame");
+/* OS2TODO Removing assertion since mail setup wizard and mail password windows come through 
+    here with a non-HWND_DESKTOP hwndP */
+/*   NS_ASSERTION( hwndP == HWND_DESKTOP && aParent == nsnull,
+                 "Attempt to create non-top-level frame");   */
 
 #if DEBUG
    printf("\nIn nsFrameWindow::RealDoCreate:\n");
