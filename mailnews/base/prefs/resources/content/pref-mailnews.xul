@@ -49,7 +49,7 @@
     <title><text value="&messengerStartPage.label;"/></title>
 
     <checkbox allowevents="true" id="mailnewsStartPageEnabled" value="&enableStartPage.label;"
-              pref="true" preftype="bool" prefstring="mailnews.start_page_enabled"
+              pref="true" preftype="bool" prefstring="mailnews.start_page.enabled"
               prefattribute="checked"/>
     <box autostretch="never" class="indent">
       <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="mailnews.start_page.url"/>
