@@ -20,7 +20,7 @@
 #define nsComponentManager_h__
 
 #include "nsIComponentManager.h"
-#include "NSReg.h"
+#include "nsIRegistry.h"
 #include "nsHashtable.h"
 #include "prtime.h"
 #include "prmon.h"
@@ -150,7 +150,6 @@ protected:
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
 
-    nsresult PlatformDeleteKey(HREG hreg, RKEY rootkey, const char *hierarchy);
     nsresult PlatformVersionCheck();
     nsresult PlatformCreateDll(const char *fullname, nsDll* *result);
     nsresult PlatformMarkNoComponents(nsDll *dll);
@@ -164,12 +163,14 @@ protected:
     nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
     nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
     nsresult PlatformCLSIDToProgID(nsCID *aClass, char* *aClassName, char* *aProgID);
+	void     PlatformGetFileInfo(nsIRegistry::Key Key,PRTime *lastModifiedTime,PRUint32 *fileSize);
 
 protected:
     nsHashtable*  mFactories;
     nsHashtable*  mProgIDs;
     PRMonitor*    mMon;
-    nsHashtable*   mDllStore;
+    nsHashtable*  mDllStore;
+	nsIRegistry*  mRegistry;
 };
 
 #define NS_MAX_FILENAME_LEN	1024
@@ -206,8 +207,9 @@ protected:
  * alpha0.20 : First time we did versioning
  * alpha0.30 : Changing autoreg to begin registration from ./components on unix
  * alpha0.40 : repository -> component manager
+ * alpha0.50 : using nsIRegistry
  */
-#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.46"
+#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.50"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
