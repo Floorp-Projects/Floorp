@@ -31,7 +31,9 @@ static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwner, NS_ISCRIPTOBJECTOWNER_IID);
 
+static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 nsHTMLTagContent::nsHTMLTagContent()
 {
@@ -644,12 +646,13 @@ PRBool nsHTMLTagContent::ParseImageProperty(nsIAtom* aAttribute,
                                             nsHTMLValue& aResult)
 {
   if ((aAttribute == nsHTMLAtoms::width) ||
-      (aAttribute == nsHTMLAtoms::height) ||
-      (aAttribute == nsHTMLAtoms::border)) {
+      (aAttribute == nsHTMLAtoms::height)) {
     ParseValueOrPercent(aString, aResult, eHTMLUnit_Pixel);
     return PR_TRUE;
-  } else if ((aAttribute == nsHTMLAtoms::hspace) ||
-             (aAttribute == nsHTMLAtoms::vspace)) {
+  }
+  else if ((aAttribute == nsHTMLAtoms::hspace) ||
+           (aAttribute == nsHTMLAtoms::vspace) ||
+           (aAttribute == nsHTMLAtoms::border)) {
     ParseValue(aString, 0, aResult, eHTMLUnit_Pixel);
     return PR_TRUE;
   }
@@ -699,6 +702,64 @@ nsHTMLTagContent::MapImagePropertiesInto(nsIStyleContext* aContext,
     }
     else if (value.GetUnit() == eHTMLUnit_Percent) {
       pos->mHeight.SetPercentValue(value.GetPercentValue());
+    }
+  }
+}
+
+void
+nsHTMLTagContent::MapImageBorderInto(nsIStyleContext* aContext, 
+                                     nsIPresContext* aPresContext,
+                                     nscolor aBorderColors[4])
+{
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+
+    // border: pixels
+    GetAttribute(nsHTMLAtoms::border, value);
+    if (value.GetUnit() != eHTMLUnit_Pixel) {
+      if (nsnull == aBorderColors) {
+        return;
+      }
+      // If no border is defined and we are forcing a border, force
+      // the size to 2 pixels.
+      value.SetPixelValue(2);
+    }
+
+    float p2t = aPresContext->GetPixelsToTwips();
+    nscoord twips = nscoord(p2t * value.GetPixelValue());
+
+    // Fixup border-padding sums: subtract out the old size and then
+    // add in the new size.
+    nsStyleSpacing* spacing = (nsStyleSpacing*)
+      aContext->GetData(kStyleSpacingSID);
+    nsStyleCoord coord(twips, eStyleUnit_Coord);
+    spacing->InvalidateBorderPaddingCache();
+    spacing->mBorder.SetTop(coord);
+    spacing->mBorder.SetRight(coord);
+    spacing->mBorder.SetBottom(coord);
+    spacing->mBorder.SetLeft(coord);
+    spacing->mBorderStyle[0] = NS_STYLE_BORDER_STYLE_SOLID;
+    spacing->mBorderStyle[1] = NS_STYLE_BORDER_STYLE_SOLID;
+    spacing->mBorderStyle[2] = NS_STYLE_BORDER_STYLE_SOLID;
+    spacing->mBorderStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
+
+    // Use supplied colors if provided, otherwise use color for border
+    // color
+    if (nsnull != aBorderColors) {
+      spacing->mBorderColor[0] = aBorderColors[0];
+      spacing->mBorderColor[1] = aBorderColors[1];
+      spacing->mBorderColor[2] = aBorderColors[2];
+      spacing->mBorderColor[3] = aBorderColors[3];
+    }
+    else {
+      // Color is inherited from "color"
+      nsStyleColor* styleColor = (nsStyleColor*)
+        aContext->GetData(kStyleColorSID);
+      nscolor color = styleColor->mColor;
+      spacing->mBorderColor[0] = color;
+      spacing->mBorderColor[1] = color;
+      spacing->mBorderColor[2] = color;
+      spacing->mBorderColor[3] = color;
     }
   }
 }
