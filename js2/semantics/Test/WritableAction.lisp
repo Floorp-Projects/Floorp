@@ -29,7 +29,7 @@
             (action<- (serial-num :expr 0) g))
            ((value)
             (const i integer (+ (* 10 (serial-num :expr 0)) (value :digit)))
-            (return (append (vector i) ((value :expr)))))))
+            (return (cons i ((value :expr)))))))
        
        (rule :main ((value (vector integer)))
          (production :main (:expr) main-expr
