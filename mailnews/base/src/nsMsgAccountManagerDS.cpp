@@ -218,23 +218,13 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       str = "Advanced";
 
     else {
-    /* why does this make RDF crash? */
-#if 0
       nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source, &rv);
       if (NS_SUCCEEDED(rv)) {
-        nsXPIDLCString prettyName;
+        nsXPIDLString prettyName;
         rv = folder->GetPrettyName(getter_Copies(prettyName));
         if (NS_SUCCEEDED(rv))
           str = prettyName;
-#else
-      // pick out the server name, and just display that.
-      char *server=srcval;
-      
-      while (*server != ':') server++;
-      while (*server == ':') server++;
-      while (*server == '/') server++;
-      str = server;
-#endif
+      }
     }
   }
 
