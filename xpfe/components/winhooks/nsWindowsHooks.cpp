@@ -73,6 +73,8 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include "nsXPFEComponentsCID.h"
 
@@ -866,7 +868,7 @@ NS_IMETHODIMP nsWindowsHooks::StartupRemoveOption(const char* option) {
 }
 
 nsresult
-WriteBitmap(nsString& aPath, gfxIImageFrame* aImage)
+WriteBitmap(nsIFile* aFile, gfxIImageFrame* aImage)
 {
   PRInt32 width, height;
   aImage->GetWidth(&width);
@@ -905,14 +907,9 @@ WriteBitmap(nsString& aPath, gfxIImageFrame* aImage)
 
   // get a file output stream
   nsresult rv;
-  nsCOMPtr<nsILocalFile> path;
-  rv = NS_NewLocalFile(aPath, PR_TRUE, getter_AddRefs(path));
-  
-  if (NS_FAILED(rv))
-    return rv;
-
   nsCOMPtr<nsIOutputStream> stream;
-  NS_NewLocalFileOutputStream(getter_AddRefs(stream), path);
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(stream), aFile);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // write the bitmap headers and rgb pixel data to the file
   rv = NS_ERROR_FAILURE;
@@ -963,11 +960,11 @@ nsWindowsHooks::SetImageAsWallpaper(nsIDOMElement* aElement, PRBool aUseBackgrou
   if (!gfxFrame)
     return NS_ERROR_FAILURE;
 
-  // get the windows directory ('c:\windows' usually)
-  char winDir[256];
-  ::GetWindowsDirectory(winDir, sizeof(winDir));
-  nsAutoString winPath;
-  winPath.AssignWithConversion(winDir);
+  // get the profile root directory
+  nsCOMPtr<nsIFile> file;
+  rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR,
+                              getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // get the product brand name from localized strings
   nsXPIDLString brandName;
@@ -984,17 +981,22 @@ nsWindowsHooks::SetImageAsWallpaper(nsIDOMElement* aElement, PRBool aUseBackgrou
     }
   }
   
-  // build the file name
-  winPath.Append(NS_LITERAL_STRING("\\").get());
-  winPath.Append(brandName);
-  winPath.Append(NS_LITERAL_STRING(" Wallpaper.bmp").get());
-  
-  // write the bitmap to a file in the windows dir
-  rv = WriteBitmap(winPath, gfxFrame);
+  // eventually, the path is %APPDATA%\Mozilla\Mozilla Wallpaper.bmp
+  brandName.AppendLiteral(" Wallpaper.bmp");
+  rv = file->Append(brandName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // if the file was written successfully, set it as the system wallpaper
-  if (NS_SUCCEEDED(rv))
-    ::SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, ToNewCString(winPath), SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
+  // write the bitmap to the target file
+  rv = WriteBitmap(file, gfxFrame);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // set it as the system wallpaper
+  nsCAutoString nativePath;
+  rv = file->GetNativePath(nativePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  ::SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) nativePath.get(),
+                         SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
 
   return rv;
 }
