@@ -32,25 +32,19 @@ vxBaseTxn.prototype = {
 
   notifyListeners: function (aEvent, aTransaction, aIRQ) 
   {
-    _dd("vxBaseTxn::notifyListeners");
     for (var i = 0; i < this.mListeners.length; i++) {
-      if (aEvent in this.mListeners[i]) {
-        _ddf("calling listener for transaction complete", aTransaction.commandString);
+      if (aEvent in this.mListeners[i])
         this.mListeners[i][aEvent](undefined, aTransaction, aIRQ);
-      }
     }
   },
   
   addListener: function (aListener)
   {
-    _dd("vxBaseTxn::addListener");
     this.mListeners = this.mListeners.concat(aListener);
-    _ddf("vxBaseTxn::mListeners", this.mListeners);
   },
   
   removeListener: function (aListener)
   {
-    _dd("vxBaseTxn::removeListener");
     var listeners = [].concat(aListener);
     for (var i = 0; i < this.mListeners.length; i++) {
       for (var k = 0; k < listeners.length; k++) {
@@ -73,8 +67,7 @@ vxBaseTxn.prototype = {
   generateID: function ()
   {
     var val = ((new Date()).getUTCMilliseconds())*Math.random()*100000;
-    _ddf("value", val);
-    return val;
+    return Math.floor(val);
   }
 };
 

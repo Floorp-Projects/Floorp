@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+
+<window id="vxHistory" orient="vertical"
+        windowtype="vixen:history"
+        title="Edit History for [Form1]"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="vxHistory.startup();">
+
+  <!-- utility functions -->
+  <script src="chrome://global/content/nsJSComponentManager.js"></script>
+  <script src="chrome://vixen/content/vxUtils.js"></script>
+  
+  <!-- history -->
+  <script src="chrome://vixen/content/history/history.js"></script>
+  
+  <!-- transaction manager -->
+  <script src="chrome://vixen/content/vfd/vxVFDTransactionManager.js"></script>
+
+  <tree id="historyTree" style="width: 0px; height; 0px;"
+        flex="1" multiple="true" datasources="rdf:null"
+        ref="urn:mozilla:vixen:transactions">
+    <treecolgroup>
+      <treecol flex="1"/>
+    </treecolgroup>
+    <template>
+      <rule>
+        <conditions>
+          <content uri="?uri"/>
+          <triple subject="?uri"
+                  predicate="http://www.mozilla.org/projects/vixen/rdf#transaction-list"
+                  object="?transaction-list"/>
+          <member container="?transaction-list" child="?transaction"/>
+          <triple subject="?transaction"
+                  predicate="http://www.mozilla.org/projects/vixen/rdf#command-string"
+                  object="?command-string"/>
+        </conditions>
+        <action>
+          <treechildren>
+            <treeitem uri="?transaction">
+              <treerow>
+                <treecell value="?command-string"/>
+              </treerow>
+            </treeitem>          
+          </treechildren>
+        </action>
+      </rule>
+    </template>
+  </tree>
+
+</window>      
+  

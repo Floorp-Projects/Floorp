@@ -49,13 +49,16 @@ var vxShell =
     // load the palette
     vxShell.loadPalette();
     
+    // load the history window
+    // vxShell.loadHistory();
+    
     // load a blank form (until projects come online)
-    this.focusedWindow = vxShell.loadDocument(null);
+    vxShell.focusedWindow = vxShell.loadDocument(null);
   
     // initialise the document focus observer
     const kObserverServiceCONTRACTID = "@mozilla.org/observer-service;1";
     const kObserverServiceIID = "nsIObserverService";
-    this.mFocusObserver = nsJSComponentManager.getService(kObserverServiceCONTRACTID, kObserverServiceIID);
+    vxShell.mFocusObserver = nsJSComponentManager.getService(kObserverServiceCONTRACTID, kObserverServiceIID);
     
   },
   
@@ -81,7 +84,19 @@ var vxShell =
     // size the palette window
     hPalette.moveTo(0, kMenuHeight + 5);
     hPalette.outerWidth = kPropertiesWidth;
-    hPalette.outerHeight = screen.availHeight - kMenuHeight - 20;
+    hPalette.outerHeight = screen.availHeight - kMenuHeight - 60;
+  },
+  
+  loadHistory: function ()
+  {
+    // open the history window
+    const features = "resizable=no,dependent,chrome,dialog=yes";
+    var hHistory = openDialog("chrome://vixen/content/history/history.xul", "", features);
+    
+    // size the history window
+    hHistory.moveTo(screen.availWidth - kPropertiesWidth - 10, kMenuHeight + 5);
+    hHistory.outerWidth = kPropertiesWidth;
+    hHistory.outerHeight = screen.availHeight - kMenuHeight - 60;
   },
   
   loadDocument: function (aURL)
@@ -93,11 +108,9 @@ var vxShell =
       documentURL: aURL
     };
     var hVFD = window.openDialog("chrome://vixen/content/vfd/vfd.xul", "", features, params);
-    _dd("we've opened a dialog succesfully");
     hVFD.moveTo(kPropertiesWidth + 5, kMenuHeight + 5);
     hVFD.outerWidth = screen.availWidth - kPropertiesWidth - kProjectWidth - 10;
     hVFD.outerHeight = screen.availHeight - kMenuHeight - 20;
-    _dd("by all rights, we should be done");
     return hVFD;
   },
   
@@ -127,13 +140,11 @@ var vxShell =
    */
   undo: function ()
   {
-    _dd("undoing transaction");
     this.mFocusedWindow.vxVFD.mTxMgrShell.undoTransaction();
   },
    
   redo: function ()
   {
-    _dd("redoing transaction");
     this.mFocusedWindow.vxVFD.mTxMgrShell.redoTransaction();
   },
 
