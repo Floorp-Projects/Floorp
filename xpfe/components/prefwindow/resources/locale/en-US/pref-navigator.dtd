@@ -19,3 +19,5 @@
 <!ENTITY  browseFile.label          "Choose File...">
 <!ENTITY  browseFile.accesskey      "c">
 
+<!ENTITY  alwaysCheckWhenDropHome.label "check when drop home? Fix me ben!">
+<!ENTITY  alwaysCheckWhenDropHome.accesskey "">
