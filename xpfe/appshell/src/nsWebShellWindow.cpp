@@ -964,7 +964,41 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     return NS_OK;
   }
   
-  // XXX Handle the arbitrary popup XUL case.
+  // Handle the arbitrary popup XUL case.
+  
+  // (1) Create a top-level chromeless window. The size of the window can be specified
+  // on the window tag contained inside.  Retrieve the webshell from the new nsWebShellWindow.
+  
+  // (2) Set the opener property to link the popup to the parent.
+
+  // (3) We need to create a new document that clones the original document's popup
+  // content.  This new document must use the different root and a different global script 
+  // context (window object) but everything else about it is the same (namespaces, URLs,
+  // stylesheets).
+
+  // The tricky part now is bypassing the normal load process and just putting a document into
+  // the webshell.  This is particularly nasty, since webshells don't normally even know
+  // about their documents
+  // (4) Create a document viewer 
+  
+  // (5) Set a UA stylesheet on the doc viewer
+  
+  // (6) Bind the document viewer to the new document we made in (3)
+  
+  // (7) QI the WebShell from (1) to an nsIContentViewerContainer and feed it to the document 
+  // viewer
+  
+  // (8) Tell the content viewer container to embed the content viewer.
+  //     (This step causes everything to be set up for an initial flow.)
+  
+  // (9) Hook up a blur handler to the window that will cause it to close.
+
+  // (10) Show the window, and give the window the focus.
+
+  // (11) Return the new popup object.
+
+  // (12) Perform cleanup
+
   return rv;
 }
 
