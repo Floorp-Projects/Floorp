@@ -2175,17 +2175,7 @@ NS_IMETHODIMP DocumentViewerImpl::CopyLinkLocation()
   return clipboard->CopyString(locationText);
 }
 
-NS_IMETHODIMP DocumentViewerImpl::CopyImageLocation()
-{
-  nsCOMPtr<nsIImageLoadingContent> node;
-  GetPopupImageNode(getter_AddRefs(node));
-  // make noise if we're not in an image
-  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-
-  return nsCopySupport::ImageCopy(node, PR_FALSE);
-}
-
-NS_IMETHODIMP DocumentViewerImpl::CopyImageContents()
+NS_IMETHODIMP DocumentViewerImpl::CopyImage(PRInt32 aCopyFlags)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsIImageLoadingContent> node;
@@ -2193,7 +2183,7 @@ NS_IMETHODIMP DocumentViewerImpl::CopyImageContents()
   // make noise if we're not in an image
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
-  return nsCopySupport::ImageCopy(node, PR_TRUE);
+  return nsCopySupport::ImageCopy(node, aCopyFlags);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)

@@ -62,7 +62,7 @@ class nsCopySupport
     static nsresult GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata);
     
     static nsresult ImageCopy(nsIImageLoadingContent* aImageElement,
-                              PRBool aCopyImageData);
+                              PRInt32 aCopyFlags);
 };
 
 #endif

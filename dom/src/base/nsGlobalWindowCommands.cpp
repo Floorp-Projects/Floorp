@@ -603,9 +603,12 @@ nsresult
 nsClipboardImageCommands::DoClipboardCommand(const char *aCommandName, nsIContentViewerEdit* aEdit, nsICommandParams* aParams)
 {
   if (!nsCRT::strcmp(sCopyImageLocationString, aCommandName))
-    return aEdit->CopyImageLocation();
+    return aEdit->CopyImage(nsIContentViewerEdit::COPY_IMAGE_TEXT);
 
-  return aEdit->CopyImageContents();
+  PRInt32 copyFlags = nsIContentViewerEdit::COPY_IMAGE_ALL;
+  if (aParams)
+    aParams->GetLongValue("imageCopy", &copyFlags);
+  return aEdit->CopyImage(copyFlags);
 }
 
 #if 0
