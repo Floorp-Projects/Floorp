@@ -38,6 +38,7 @@
 static NS_DEFINE_IID(kIDOMHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
 
 class nsHTMLAreaElement : public nsIDOMHTMLAreaElement,
+                          public nsIDOMNSHTMLAreaElement,
                           public nsIJSScriptObject,
                           public nsIHTMLContent
 {
@@ -137,7 +138,8 @@ nsHTMLAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLAreaElement))) {
-    *aInstancePtr = (void*)(nsIDOMNSHTMLAreaElement*) this;
+    nsIDOMNSHTMLAreaElement* tmp = this;
+    *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
