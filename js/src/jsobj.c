@@ -2661,7 +2661,7 @@ void printObj(JSObject *jsobj) {
 }
 
 void printVal(jsval val) {
-    fprintf(stderr, "val %d (0x%p) = ", val, val);
+    fprintf(stderr, "val %d (0x%p) = ", val, (void *) val);
     if (JSVAL_IS_NULL(val)) {
 	fprintf(stderr, "null\n");
     } else if (JSVAL_IS_VOID(val)) {
@@ -2683,7 +2683,7 @@ void printVal(jsval val) {
 }
 
 void printId(jsid id) {
-    fprintf(stderr, "id %d (0x%p) is ", id, id);
+    fprintf(stderr, "id %d (0x%p) is ", id, (void *) id);
     printVal(js_IdToValue(id));
 }
 
