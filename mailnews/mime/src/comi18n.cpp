@@ -948,6 +948,8 @@ convert_and_encode:
     if (end == NULL)
       break;
     begin = end + 1;
+    if ('\0' == *begin)
+      begin++;
   }
 
   if (srcbuf)
