@@ -285,7 +285,7 @@ _IMGCB_DestroyPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap)
 JMC_PUBLIC_API(void)
 _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
                      IL_Pixmap* mask, jint x, jint y, jint x_offset,
-                     jint y_offset, jint width, jint height)
+                     jint y_offset, jint width, jint height, jint req_w, jint req_h )
 {
   int i;
   int row_parity;
@@ -860,7 +860,7 @@ MKICON_GetImage(char *file)
   /* Write out the decoded image data. */
   IMGCB_DisplayPixmap(img_cx->img_cb, img_cx->dpy_cx, ic->image, ic->mask,
                       0, 0, 0, 0, ic->image->header.width,
-                      ic->image->header.height);
+                      ic->image->header.height, 0, 0);
 
   /* Clean up. */
   free (file_data);
