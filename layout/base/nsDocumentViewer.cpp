@@ -439,6 +439,8 @@ public:
   PRInt32                     mNumPagesPrinted;
   float                       mShrinkRatio;
   float                       mOrigDCScale;
+  float                       mOrigTextZoom;
+  float                       mOrigZoom;
 
   nsCOMPtr<nsIPrintSettings>  mPrintSettings;
   nsCOMPtr<nsIPrintOptions>   mPrintOptions;
@@ -852,7 +854,7 @@ PrintData::PrintData() :
   mIsAborted(PR_FALSE), mPreparingForPrint(PR_FALSE), mDocWasToBeDestroyed(PR_FALSE),
   mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
   mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0),
-  mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(NULL), 
+  mShrinkRatio(1.0), mOrigDCScale(1.0), mOrigTextZoom(1.0), mOrigZoom(1.0), mPPEventListeners(NULL), 
   mIsCachingPresentation(PR_FALSE), mCachedPresObj(nsnull), mBrandName(nsnull)
 {
 #ifdef DEBUG_PRINTING
@@ -876,6 +878,13 @@ PrintData::PrintData() :
 
 PrintData::~PrintData() 
 {
+
+  // Set the cached Zoom value back into the DC
+  if (mPrintDC) {
+    mPrintDC->SetTextZoom(mOrigTextZoom);
+    mPrintDC->SetZoom(mOrigZoom);
+  }
+
   // removed any cached
   if (mCachedPresObj) {
     delete mCachedPresObj;
@@ -5930,14 +5939,21 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // maintain the the original presentation if it is there
-  // by transfering it over to the new PrintData object
-  if (mOldPrtPreview && mOldPrtPreview->HasCachedPres()) {
-    mPrt->mIsCachingPresentation = mOldPrtPreview->mIsCachingPresentation;
-    mPrt->mCachedPresObj         = mOldPrtPreview->mCachedPresObj;
-    // don't want it to get deleted when the mOldPrtPreview is deleted 
-    mOldPrtPreview->mIsCachingPresentation = PR_FALSE;
-    mOldPrtPreview->mCachedPresObj         = nsnull;
+  // Check to see if we need to transfer any of our old values
+  // over to the new PrintData object
+  if (mOldPrtPreview) {
+    mPrt->mOrigZoom     = mOldPrtPreview->mOrigZoom;
+    mPrt->mOrigTextZoom = mOldPrtPreview->mOrigTextZoom;
+
+    // maintain the the original presentation if it is there
+    // by transfering it over to the new PrintData object
+    if (mOldPrtPreview->HasCachedPres()) {
+      mPrt->mIsCachingPresentation = mOldPrtPreview->mIsCachingPresentation;
+      mPrt->mCachedPresObj         = mOldPrtPreview->mCachedPresObj;
+      // don't want it to get deleted when the mOldPrtPreview is deleted 
+      mOldPrtPreview->mIsCachingPresentation = PR_FALSE;
+      mOldPrtPreview->mCachedPresObj         = nsnull;
+    }
   }
 
   // You have to have both a PrintOptions and a PrintSetting to call CheckForPrinters. 
@@ -6096,6 +6112,12 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
   mPrt->mPrintDC = mDeviceContext; 
   // Get the Original PixelScale incase we need to start changing it
   mPrt->mPrintDC->GetCanonicalPixelScale(mPrt->mOrigDCScale);
+
+  // Cache original Zoom value and then set it to 1.0
+  mPrt->mPrintDC->GetTextZoom(mPrt->mOrigTextZoom);
+  mPrt->mPrintDC->GetZoom(mPrt->mOrigZoom);
+  mPrt->mPrintDC->SetTextZoom(1.0f);
+  mPrt->mPrintDC->SetZoom(1.0f);
 
   if (mDeviceContext) {
     mDeviceContext->SetUseAltDC(kUseAltDCFor_FONTMETRICS, PR_TRUE);
