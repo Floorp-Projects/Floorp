@@ -39,27 +39,18 @@ Contributors:
     
   <dialogheader title="&securityTitle.label;"/>
 
-  <label hidden="true" wsm_persist="true" id="identity.encryptionpolicy" genericattr="true"
-                pref="true" preftype="int" prefattribute="value"
-                prefstring="mail.identity.%identitykey%.encryptionpolicy"/>
+  <label hidden="true" wsm_persist="true" id="identity.encryptionpolicy" />
 
   <description>&securityHeading.label;</description>
 
   <groupbox id="signing.titlebox">
     <caption label="&signingGroupTitle.label;"/>
     
-    <checkbox id="identity.sign_mail" iscontrolcontainer="true" wsm_persist="true" genericattr="true" pref="true"
-              preftype="bool" prefattribute="value"  
-              prefstring="mail.identity.%identitykey%.sign_mail"
-              label="&signMessage.label;"/>
-    
-    <separator class="thin"/>
     <label value="&signingCert.message;"/>
 
     <hbox align="center">
-      <textbox id="identity.signing_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
-             pref="true" preftype="wstring" prefattribute="value" 
-             prefstring="mail.identity.%identitykey%.signing_cert_name" readonly="true" disabled="true"/>
+      <textbox id="identity.signing_cert_name" wsm_persist="true" flex="1" 
+             readonly="true" disabled="true"/>
 
       <button id="signingCertSelectButton"
               label="&certificate.button;"
@@ -69,10 +60,31 @@ Contributors:
               label="&certificate_clear.button;"
               oncommand="smimeClearCert('identity.signing_cert_name')"/>
     </hbox>
+    
+    <separator class="thin"/>
+
+    <checkbox id="identity.sign_mail" wsm_persist="true" label="&signMessage.label;"/>
   </groupbox>
 
   <groupbox id="encryption.titlebox">
     <caption label="&encryptionGroupTitle.label;"/>
+
+    <label value="&encryptionCert.message;"/>
+    
+    <hbox align="center">
+      <textbox id="identity.encryption_cert_name" wsm_persist="true" flex="1" 
+               readonly="true" disabled="true"/>
+
+      <button id="encryptionCertSelectButton"
+              label="&certificate.button;"
+              oncommand="smimeSelectCert('identity.encryption_cert_name')"/>
+      
+      <button id="encryptionCertClearButton"
+              label="&certificate_clear.button;"
+              oncommand="smimeClearCert('identity.encryption_cert_name')"/>
+    </hbox>
+
+    <separator class="thin"/>
 
     <label value="&encryptionChoiceLabel.label;"/>
 
@@ -83,22 +95,5 @@ Contributors:
       <radio id="encrypt_mail_always" wsm_persist="true" value="2"
               label="&alwaysEncryptMessage.label;"/>
     </radiogroup>
-
-    <separator class="thin"/>
-    <label value="&encryptionCert.message;"/>
-    
-    <hbox align="center">
-      <textbox id="identity.encryption_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
-               pref="true" preftype="wstring" prefattribute="value" 
-               prefstring="mail.identity.%identitykey%.encryption_cert_name" readonly="true" disabled="true"/>
-
-      <button id="encryptionCertSelectButton"
-              label="&certificate.button;"
-              oncommand="smimeSelectCert('identity.encryption_cert_name')"/>
-      
-      <button id="encryptionCertClearButton"
-              label="&certificate_clear.button;"
-              oncommand="smimeClearCert('identity.encryption_cert_name')"/>
-    </hbox>
   </groupbox>    
 </page>
