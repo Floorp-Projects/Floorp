@@ -2561,7 +2561,7 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 	return NULL;
     }
 
-    outKey.len == (key_size = 0) ? len : key_size;
+    outKey.len = (key_size == 0) ? len : key_size;
 
     if (PK11_DoesMechanism(slot,target)) {
 	symKey = pk11_ImportSymKeyWithTempl(slot, target, PK11_OriginUnwrap, 
