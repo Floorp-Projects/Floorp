@@ -91,8 +91,10 @@ BOOL bIsGold = FALSE;
 #include "slavewnd.h"
 #include "feutil.h"
 #include "cxicon.h"
+#ifdef MOZ_FULLCIRCLE
 // Full Circle stuff - see http://www.fullsoft.com for more info
-#include "fullsoft.h"
+#include "../../../ns/fullsoft/public/fullsoft.h"
+#endif
 
 #ifdef MOZ_NGLAYOUT
 #include "nsISupports.h"
@@ -1020,6 +1022,7 @@ BOOL CNetscapeApp::InitInstance()
 	if (!login_QueryForCurrentProfile())
 		return FALSE;
 
+#ifdef MOZ_FULLCIRCLE
     // Full Circle initialization must happen once the current
     //  profile is known, such that the prefs calls work.
     XP_Bool fullcircle_enable = TRUE;
@@ -1027,6 +1030,7 @@ BOOL CNetscapeApp::InitInstance()
     if(fullcircle_enable)   {
 	    FCInitialize();
     }
+#endif
 	
 #endif  // NEW_PREF_ARCH
 
