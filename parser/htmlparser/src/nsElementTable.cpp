@@ -87,7 +87,16 @@ DECL_TAG_LIST(gTREndParents,{eHTMLTag_tbody COMMA eHTMLTag_tfoot COMMA eHTMLTag_
 
 DECL_TAG_LIST(gContainsText,{eHTMLTag_text COMMA eHTMLTag_newline COMMA eHTMLTag_whitespace COMMA eHTMLTag_entity})
 DECL_TAG_LIST(gUnknownKids,{eHTMLTag_html COMMA eHTMLTag_frameset})
-DECL_TAG_LIST(gContainsOpts,{eHTMLTag_option COMMA eHTMLTag_optgroup COMMA eHTMLTag_script})
+
+// The presence of <input>, <select>, and <textarea> in gContainsOpts is due to
+// the exclgroup that <select> sets...  If I don't include those here, they
+// just get dropped automatically, since they are not allowed to open inside
+// <select>.  Note that we are NOT allowing them to actually open without
+// closing the select -- see gInputAutoClose.  Further note that I'm not
+// including <button> in the list because in IE it doesn't autoclose <select>!
+DECL_TAG_LIST(gContainsOpts,{eHTMLTag_option COMMA eHTMLTag_optgroup COMMA eHTMLTag_script COMMA eHTMLTag_input COMMA eHTMLTag_select COMMA eHTMLTag_textarea })
+// Similar deal for <option> except it allows all of gContainsText _and_ the things that should autoclose selects.
+DECL_TAG_LIST(gContainedInOpt,{eHTMLTag_text COMMA eHTMLTag_newline COMMA eHTMLTag_whitespace COMMA eHTMLTag_entity COMMA eHTMLTag_input COMMA eHTMLTag_select COMMA eHTMLTag_textarea})
 DECL_TAG_LIST(gContainsParam,{eHTMLTag_param})
 DECL_TAG_LIST(gColgroupKids,{eHTMLTag_col}) 
 DECL_TAG_LIST(gAddressKids,{eHTMLTag_p})
@@ -144,6 +153,8 @@ DECL_TAG_LIST(gPAutoClose,{eHTMLTag_p COMMA eHTMLTag_li})
 DECL_TAG_LIST(gHRAutoClose,{eHTMLTag_p})
 DECL_TAG_LIST(gOLAutoClose,{eHTMLTag_p COMMA eHTMLTag_ol})
 DECL_TAG_LIST(gDivAutoClose,{eHTMLTag_p})
+// Form controls that autoclose <select> use this
+DECL_TAG_LIST(gInputAutoClose,{eHTMLTag_select COMMA eHTMLTag_optgroup COMMA eHTMLTag_option})
 
 DECL_TAG_LIST(gHeadingTags,{eHTMLTag_h1 COMMA eHTMLTag_h2 COMMA eHTMLTag_h3 COMMA eHTMLTag_h4 COMMA eHTMLTag_h5 COMMA eHTMLTag_h6})
 
@@ -709,7 +720,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_input,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*autoclose starttags and endtags*/ &gInputAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kFormControl, kNone, kNone,	
       /*special props, prop-range*/       kNonContainer|kRequiresBody,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
@@ -912,7 +923,7 @@ void InitializeElementTable(void) {
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kPCDATA, kFlowEntity,	
       /*special props, prop-range*/       kNoStyleLeaksIn|kNoPropagate, kDefaultPropRange,
-      /*special parents,kids,skip*/       &gOptgroupParents,&gContainsText,eHTMLTag_unknown);
+      /*special parents,kids,skip*/       &gOptgroupParents,&gContainedInOpt,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_p,
@@ -999,7 +1010,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_select,
       /*requiredAncestor*/                eHTMLTag_unknown, eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInForm,&gInForm,	
-      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*autoclose starttags and endtags*/ &gInputAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity|kDLChild,	
       /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kDefaultPropRange,
       /*special parents,kids,skip*/       &gInForm,&gContainsOpts,eHTMLTag_unknown);
@@ -1144,7 +1155,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_textarea,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInForm,	&gInForm,	
-      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*autoclose starttags and endtags*/ &gInputAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kFormControl, kPCDATA, kNone,	
       /*special props, prop-range*/       kRequiresBody,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInForm,&gContainsText,eHTMLTag_textarea);
