@@ -686,7 +686,7 @@ CalendarView.prototype.getViewLimits = function calView_getViewLimits( dayDispla
 *      event.startDrawSlot  - the first horizontal slot the event occupies
 *      event.drawSlotCount  - how many slots the event occupies
 *      event.totalSlotCount - total horizontal slots (during  events duration)
-*   Used in Dayview, usable also in  weekview
+*   Used in DayView, WeekView
 */
 CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( dayEventList ) {
   //non-allday Events sorted on displayDate

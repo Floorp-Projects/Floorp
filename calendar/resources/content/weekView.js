@@ -136,7 +136,8 @@ WeekView.prototype.refreshEvents = function( )
    var LowestStartHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
    var HighestEndHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );
    
-   var dayEventList = new Array();
+   var allDayEventList = new Array();
+   var normalEventList = new Array();   
    var eventList = new Array();
    
    for ( dayIndex = 1; dayIndex <= 7; ++dayIndex ) {
@@ -147,12 +148,13 @@ WeekView.prototype.refreshEvents = function( )
       if( gOnlyWorkdayChecked === "true" && ( dayToGetDay == 0 || dayToGetDay == 6 )) {
          continue ;
       }
-      dayEventList = gEventSource.getEventsForDay( dayToGet );
-      eventList[dayIndex] = new Array();
-      eventList[dayIndex] = dayEventList ;
+      
+      eventList[dayIndex] = gEventSource.getEventsForDay( dayToGet );
+      allDayEventList[dayIndex] = new Array();
+      normalEventList[dayIndex] = new Array();
       
       // get limits for current day
-      var limits = this.getViewLimits(dayEventList, dayToGet);
+      var limits = this.getViewLimits(eventList[dayIndex], dayToGet);
       
       if( limits.startHour < LowestStartHour ) {
          LowestStartHour = limits.startHour;
@@ -160,9 +162,13 @@ WeekView.prototype.refreshEvents = function( )
       if( limits.endHour > HighestEndHour ) {
          HighestEndHour = limits.endHour;
       }
+      //divide events into allday and normal (non-allday) events
       for ( var i = 0; i < eventList[dayIndex].length; i++ ) {
          if( eventList[dayIndex][i].event.allDay == true ) {
+            allDayEventList[dayIndex].push(eventList[dayIndex][i]); 
             allDayExist = true;
+         } else {
+            normalEventList[dayIndex].push(eventList[dayIndex][i]); 
          }
       }
    }
@@ -190,62 +196,26 @@ WeekView.prototype.refreshEvents = function( )
    for ( dayIndex = 1; dayIndex <= 7; ++dayIndex ) {
       dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
       dayToGetDay = dayToGet.getDay() ;
-      if( gOnlyWorkdayChecked === "true" && ( dayToGetDay == 0 || dayToGetDay == 6 )) {
-         /* its a weekend */
-         continue ;
+      if( gOnlyWorkdayChecked == "true" && ( dayToGetDay == 0 || dayToGetDay == 6 )) {
+        /* its a weekend */
+        continue ;
+      }
+     
+      // Calculate event draw properties (where events are drawn on view)
+      this.setDrawProperties(normalEventList[dayIndex]);
+      
+      // Add non-allday events to DOM
+      for ( var i = 0; i < normalEventList[dayIndex].length; ++i )
+      {
+         eventBox = this.createEventBox( normalEventList[dayIndex][i] );
+         document.getElementById( "week-view-content-board" ).appendChild( eventBox );
+         this.kungFooDeathGripOnEventBoxes.push( eventBox );
       }
       
-      //refresh the array and the current spot.
-      for ( i = 0; i < eventList[dayIndex].length; i++ ) {
-         eventList[dayIndex][i].OtherSpotArray = new Array('0');
-         eventList[dayIndex][i].CurrentSpot = 0;
-         eventList[dayIndex][i].NumberOfSameTimeEvents = 0;
-      }
-      
-      for ( i = 0; i < eventList[dayIndex].length; i++ ) {
-         var ThisSpot = 0;
-         var calendarEventDisplay = eventList[dayIndex][i];
-         
-         if ( calendarEventDisplay.event.allDay != true ) {
-            
-            //see if there's another event at the same start time.
-            for ( var j = 0; j < eventList[dayIndex].length; j++ ) {
-               var thisCalendarEventDisplay = eventList[dayIndex][j];
-   
-               //if this event overlaps with another event...
-               if ( ( ( thisCalendarEventDisplay.displayDate >= calendarEventDisplay.displayDate &&
-                    thisCalendarEventDisplay.displayDate < calendarEventDisplay.event.end.getTime() ) ||
-                     ( calendarEventDisplay.displayDate >= thisCalendarEventDisplay.displayDate &&
-                    calendarEventDisplay.displayDate < thisCalendarEventDisplay.event.end.getTime() ) ) &&
-                    calendarEventDisplay.event.id != thisCalendarEventDisplay.event.id &&
-                    thisCalendarEventDisplay.event.allDay != true ) {
-                  //get the spot that this event will go in.
-                  ThisSpot = thisCalendarEventDisplay.CurrentSpot;
-                  
-                  calendarEventDisplay.OtherSpotArray.push( ThisSpot );
-                  ThisSpot++;
-                  
-                  if ( ThisSpot > calendarEventDisplay.CurrentSpot ) {
-                     calendarEventDisplay.CurrentSpot = ThisSpot;
-                  } 
-               }
-            }
-            var SortedOtherSpotArray = new Array();
-            //the sort must use the global variable gCalendarWindow, not this.calendarWindow
-            SortedOtherSpotArray = calendarEventDisplay.OtherSpotArray.sort( gCalendarWindow.compareNumbers);
-            var LowestNumber = this.calendarWindow.getLowestElementNotInArray( SortedOtherSpotArray );
-            
-            //this is the actual spot (0 -> n) that the event will go in on the day view.
-            calendarEventDisplay.CurrentSpot = LowestNumber;
-            if ( SortedOtherSpotArray.length > 4 ) {
-               calendarEventDisplay.NumberOfSameTimeEvents = 4;
-            } else {
-               calendarEventDisplay.NumberOfSameTimeEvents = SortedOtherSpotArray.length;
-            }
-         eventList[dayIndex][i] = calendarEventDisplay;
-         }
-      }
-      
+      //
+      //Everything below this point is old code that will be changed in the near future.
+      //It only deals with allday events
+      //
       var ThisDayAllDayBox = document.getElementById( "all-day-content-box-week-"+dayIndex );
       while ( ThisDayAllDayBox.hasChildNodes() ) {
          ThisDayAllDayBox.removeChild( ThisDayAllDayBox.firstChild );
@@ -298,11 +268,6 @@ WeekView.prototype.refreshEvents = function( )
             
             ThisDayAllDayBox.appendChild( newImage );
             ThisDayAllDayBox.appendChild( newHTMLNode );
-         } else if ( calendarEventDisplay.CurrentSpot <= 4 ) {
-            eventBox = this.createEventBox( calendarEventDisplay, dayIndex );
-            
-            //add the box to the bulletin board.
-            document.getElementById( "week-view-content-board" ).appendChild( eventBox );
          }
          
          if( this.calendarWindow.EventSelection.isSelectedEvent( calendarEventDisplay.event ) ) {
@@ -314,9 +279,9 @@ WeekView.prototype.refreshEvents = function( )
 
 /** PRIVATE
 *
-*   This creates an event box for the day view
+*   This creates an event box for the week view
 */
-WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
+WeekView.prototype.createEventBox = function ( calendarEventDisplay )
 {
    var eventText = calendarEventDisplay.event.title;
    
@@ -333,7 +298,10 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    var Height = eventDuration * hourHeight + 1 ;
    eventBox.setAttribute( "height", Height );
    
-   var Width = Math.floor( ElementOfRef.boxObject.width / calendarEventDisplay.NumberOfSameTimeEvents + 1);
+   var hourWidth = ElementOfRef.boxObject.width;
+   var eventSlotWidth = Math.round( hourWidth / calendarEventDisplay.totalSlotCount );
+   
+   var Width = ( calendarEventDisplay.drawSlotCount * eventSlotWidth ) - 1;
    eventBox.setAttribute( "width", Width );
    
    var top = eval( ElementOfRef.boxObject.y + ( ( startMinutes/60 ) * hourHeight ) );
@@ -347,8 +315,9 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
       index = index + 7;
    }
    var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
-                 document.getElementById( "week-view-content-box" ).boxObject.x - 
-                 3 + ( Width * ( calendarEventDisplay.CurrentSpot - 1 ) );
+                 document.getElementById( "week-view-content-box" ).boxObject.x +
+                 ( calendarEventDisplay.startDrawSlot * eventSlotWidth ) 
+                 - 2;
    eventBox.setAttribute( "left", boxLeft );
    
    // start calendar color change by CofC
