@@ -584,3 +584,9 @@ JAVA_DEFINES	+= -DAWTSDLL=\"$(AWTSDLL)\" -DCONDLL=\"$(CONDLL)\" -DJBNDLL=\"$(JBN
 		   -DJSJDLL=\"$(JSJDLL)\" -DNETDLL=\"$(NETDLL)\" -DNSCDLL=\"$(NSCDLL)\" -DZPWDLL=\"$(ZPWDLL)\" \
                    -DJAR_NAME=\"$(JAR_NAME)\"
 
+ifeq ($(AWT_11),1)
+JAVA_DEFINES    += -DAWT_11
+else
+JAVA_DEFINES    += -DAWT_102
+endif
+
