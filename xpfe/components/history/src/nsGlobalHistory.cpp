@@ -914,7 +914,23 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     return isupports->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aTarget);
   }
   else if (aProperty == kNC_URL) {
-    return aSource->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aTarget);
+    rv = aSource->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aTarget);
+    if (NS_SUCCEEDED(rv))
+    {
+    	// Yes, a nasty hack so that any URL starting with "NC:" isn't returned.
+    	// In truth, the history datasource should only answer on the URL property
+    	// if the source is actually in the history store.
+	const char	*url = nsnull;
+	if (NS_SUCCEEDED(rv = aSource->GetValueConst(&url)) && (url))
+	{
+		nsAutoString	urlStr = url;
+		if (urlStr.Find("NC:", PR_TRUE) == 0)
+		{
+			rv = NS_RDF_NO_VALUE;
+		}
+	}
+    }
+    return(rv);
   }
   else if ((aProperty == kNC_Date) ||
            (aProperty == kNC_VisitCount) ||
