@@ -334,6 +334,8 @@ typedef struct _wallet_PrefillElement {
   PRUint32 count;
 } wallet_PrefillElement;
 
+nsIURI * wallet_lastUrl = NULL;
+
 /***********************************************************/
 /* The following routines are for diagnostic purposes only */
 /***********************************************************/
@@ -1015,6 +1017,7 @@ wallet_Clear(nsVoidArray ** list) {
     PRInt32 count2 = LIST_COUNT(ptr->itemList);
     for (PRInt32 i2=0; i2<count2; i2++) {
       ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
+      delete ptr1;
     }
     delete ptr->itemList;
     (*list)->RemoveElement(ptr);
@@ -1876,6 +1879,26 @@ wallet_ReadFromURLFieldToSchemaFile
 /* The following are utility routines for the main wallet processing */
 /*********************************************************************/
  
+nsAutoString
+wallet_GetHostFile(nsIURI * url) {
+  nsAutoString urlName = nsAutoString("");
+  char* host;
+  nsresult rv = url->GetHost(&host);
+  if (NS_FAILED(rv)) {
+    return nsAutoString("");
+  }
+  urlName = urlName + host;
+  nsCRT::free(host);
+  char* file;
+  rv = url->GetPath(&file);
+  if (NS_FAILED(rv)) {
+    return nsAutoString("");
+  }
+  urlName = urlName + file;
+  nsCRT::free(file);
+  return urlName;
+}
+
 /*
  * given a field name, get the value
  */
@@ -1935,7 +1958,7 @@ PRInt32 FieldToValue(
   } else {
     /* schema name not found, use field name as schema name and fetch value */
     PRInt32 index2 = index;
-    if (wallet_ReadFromList(field, value, itemList, wallet_SchemaToValue_list, index2)) {
+    if (wallet_ReadFromList(wallet_GetHostFile(wallet_lastUrl)+":"+field, value, itemList, wallet_SchemaToValue_list, index2)) {
       /* value found, prefill it into form */
       schema = nsAutoString(field);
       index = index2;
@@ -2256,44 +2279,23 @@ wallet_InitializeURLList() {
   }
 }
 
-nsAutoString
-wallet_GetHostFile(nsIURI * url) {
-  nsAutoString urlName = nsAutoString("");
-  char* host;
-  nsresult rv = url->GetHost(&host);
-  if (NS_FAILED(rv)) {
-    return nsAutoString("");
-  }
-  urlName = urlName + host;
-  nsCRT::free(host);
-  char* file;
-  rv = url->GetPath(&file);
-  if (NS_FAILED(rv)) {
-    return nsAutoString("");
-  }
-  urlName = urlName + file;
-  nsCRT::free(file);
-  return urlName;
-}
-
 /*
  * initialization for current URL
  */
 void
 wallet_InitializeCurrentURL(nsIDocument * doc) {
-  static nsIURI * lastUrl = NULL;
 
   /* get url */
   nsIURI* url;
   url = doc->GetDocumentURL();
-  if (lastUrl == url) {
+  if (wallet_lastUrl == url) {
     NS_RELEASE(url);
     return;
   } else {
-    if (lastUrl) {
+    if (wallet_lastUrl) {
 //??      NS_RELEASE(lastUrl);
     }
-    lastUrl = url;
+    wallet_lastUrl = url;
   }
 
   /* get host+file */
@@ -2547,7 +2549,7 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoS
     /* is this a new value for the schema */
     PRInt32 index = 0;
     PRInt32 lastIndex = index;
-    while(wallet_ReadFromList(field, oldValue, dummy, wallet_SchemaToValue_list, index)) {
+    while(wallet_ReadFromList(wallet_GetHostFile(wallet_lastUrl)+":"+field, oldValue, dummy, wallet_SchemaToValue_list, index)) {
       if (oldValue == value) {
         /*
          * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
@@ -2571,7 +2573,8 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoS
 
     /* this is a new value so store it */
     dummy = 0;
-    wallet_WriteToList(field, value, dummy, wallet_SchemaToValue_list);
+    nsAutoString hostFileField = wallet_GetHostFile(wallet_lastUrl)+":"+field;
+    wallet_WriteToList(hostFileField, value, dummy, wallet_SchemaToValue_list);
     wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE);
   }
 }
@@ -2673,7 +2676,7 @@ WLLT_PostEdit(nsAutoString walletList) {
   for (;;) {
     separator = tail.FindChar(BREAK);
     if (-1 == separator) {
-      return;
+      break;
     }
     tail.Left(head, separator);
     tail.Mid(temp, separator+1, tail.Length() - (separator+1));
@@ -3011,17 +3014,8 @@ wallet_ClearStopwatch();
   }
 }
 
-#define FORM_TYPE_TEXT          1
-#define FORM_TYPE_PASSWORD      7
-#ifdef	XP_MAC
-#define MAX_ARRAY_SIZE 50
-#else
-#define MAX_ARRAY_SIZE 500
-#endif
-
 extern void
-SINGSIGN_RememberSignonData
-  (char* URLName, nsAutoString* name_array, nsAutoString* value_array, char** type_array, PRInt32 value_cnt);
+SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData);
 
 PUBLIC void
 WLLT_RequestToCapture(nsIPresShell* shell) {
@@ -3148,6 +3142,15 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
   }
 }
 
+/* should move this to an include file */
+class si_SignonDataStruct {
+public:
+  si_SignonDataStruct() : name(""), value(""), isPassword(PR_FALSE) {}
+  nsAutoString name;
+  nsAutoString value;
+  PRBool isPassword;
+};
+
 PUBLIC void
 WLLT_OnSubmit(nsIContent* formNode) {
 
@@ -3174,10 +3177,8 @@ WLLT_OnSubmit(nsIContent* formNode) {
     result = formElement->GetElements(&elements);
     if ((NS_SUCCEEDED(result)) && (nsnull != elements)) {
 
-      nsAutoString name_array[MAX_ARRAY_SIZE];
-      nsAutoString value_array[MAX_ARRAY_SIZE];
-      uint8 type_array[MAX_ARRAY_SIZE];
-      PRInt32 value_cnt = 0;
+      nsVoidArray * signonData = new nsVoidArray();
+      si_SignonDataStruct * data;
 
       /* got to the form elements at long last */
       /* now build arrays for single signon */
@@ -3200,23 +3201,18 @@ WLLT_OnSubmit(nsIContent* formNode) {
               if (isText) {
                 count++;
               }
-              if (value_cnt < MAX_ARRAY_SIZE) {
-                if (isText) {
-                  type_array[value_cnt] = FORM_TYPE_TEXT;
-                } else if (isPassword) {
-                  type_array[value_cnt] = FORM_TYPE_PASSWORD;
-                }
-                if (isText || isPassword) {
-                  nsAutoString value;
-                  result = inputElement->GetValue(value);
+              if (isText || isPassword) {
+                nsAutoString value;
+                result = inputElement->GetValue(value);
+                if (NS_SUCCEEDED(result)) {
+                  nsAutoString field;
+                  result = inputElement->GetName(field);
                   if (NS_SUCCEEDED(result)) {
-                    nsAutoString field;
-                    result = inputElement->GetName(field);
-                    if (NS_SUCCEEDED(result)) {
-                      value_array[value_cnt] = value;
-                      name_array[value_cnt] = field;
-                      value_cnt++;
-                    }
+                    data = new si_SignonDataStruct;
+                    data->value = value;
+                    data->name = field;
+                    data->isPassword = isPassword;
+                    signonData->AppendElement(data);
                   }
                 }
               }
@@ -3228,8 +3224,14 @@ WLLT_OnSubmit(nsIContent* formNode) {
       }
 
       /* save login if appropriate */
-      SINGSIGN_RememberSignonData
-        (URLName, name_array, value_array, (char**)type_array, value_cnt);
+      SINGSIGN_RememberSignonData (URLName, signonData);
+
+      PRInt32 count = signonData->Count();
+      for (PRInt32 i=count-1; i>=0; i--) {
+        data = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(i));
+        delete data;
+      }
+      delete signonData;
 
 #ifndef AutoCapture
       /* give notification if this is first significant form submitted */

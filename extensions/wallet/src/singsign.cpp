@@ -80,19 +80,6 @@ PRIVATE int
 si_SaveSignonDataInKeychain();
 #endif
 
-/* the following is from the now-defunct lo_ele.h */
-
-struct si_FormSubmitData_struct {
-  int32 value_cnt;
-  nsAutoString* name_array;
-  nsAutoString* value_array;
-  PRUnichar ** type_array;
-};
-typedef struct si_FormSubmitData_struct si_FormSubmitData;
-
-#define FORM_TYPE_TEXT          1
-#define FORM_TYPE_PASSWORD      7
-
 
 /*************************************
  * Externs to Routines in Wallet.cpp *
@@ -334,11 +321,15 @@ SI_GetCharPref(const char * prefname, char** aPrefvalue) {
  *********************************/
 
 static const char *pref_rememberSignons = "signon.rememberSignons";
+#ifdef DefaultIsOff
 static const char *pref_Notified = "signon.Notified";
+#endif
 static const char *pref_SignonFileName = "signon.SignonFileName";
 
 PRIVATE PRBool si_RememberSignons = PR_FALSE;
+#ifdef DefaultIsOff
 PRIVATE PRBool si_Notified = PR_FALSE;
+#endif
 
 PRIVATE int
 si_SaveSignonDataLocked(PRBool fullSave);
@@ -349,6 +340,7 @@ SI_LoadSignonData(PRBool fullLoad);
 PRIVATE void
 si_RemoveAllSignonData();
 
+#ifdef DefaultIsOff
 PRIVATE PRBool
 si_GetNotificationPref(void) {
   return si_Notified;
@@ -359,6 +351,7 @@ si_SetNotificationPref(PRBool x) {
   SI_SetBoolPref(pref_Notified, x);
   si_Notified = x;
 }
+#endif
 
 PRIVATE void
 si_SetSignonRememberingPref(PRBool x) {
@@ -388,8 +381,10 @@ si_RegisterSignonPrefCallbacks(void) {
   if(first_time) {
     first_time = PR_FALSE;
     SI_LoadSignonData(PR_FALSE);
+#ifdef DefaultIsOff
     x = SI_GetBoolPref(pref_Notified, PR_FALSE);
     si_SetNotificationPref(x);        
+#endif
     x = SI_GetBoolPref(pref_rememberSignons, PR_FALSE);
     si_SetSignonRememberingPref(x);
     SI_RegisterCallback(pref_rememberSignons, si_SignonRememberingPrefChanged, NULL);
@@ -414,6 +409,7 @@ si_GetSignonRememberingPref(void) {
 
   si_RegisterSignonPrefCallbacks();
 
+#ifdef DefaultIsOff
   /*
    * We initially want the rememberSignons pref to be PR_FALSE.  But this will
    * prevent the notification message from ever occurring.  To get around
@@ -425,6 +421,9 @@ si_GetSignonRememberingPref(void) {
   } else {
     return si_RememberSignons;
   }
+#else
+  return si_RememberSignons;
+#endif
 }
 
 extern char* Wallet_RandomName(char* suffix);
@@ -1238,17 +1237,19 @@ si_PutReject(char * URLName, nsAutoString userName, PRBool save) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE void
-si_PutData(char * URLName, si_FormSubmitData * submit, PRBool save) {
+si_PutData(char * URLName, nsVoidArray * signonData, PRBool save) {
   PRBool added_to_list = PR_FALSE;
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
+  si_SignonDataStruct * data2;
   PRBool mismatch;
 
   /* discard this if the password is empty */
-  for (PRInt32 i=0; i<submit->value_cnt; i++) {
-    if (((uint8*)submit->type_array)[i] == FORM_TYPE_PASSWORD)
-      if (((submit->value_array) [i]).Length() == 0 ) {
+  PRInt32 count = signonData->Count();
+  for (PRInt32 i=0; i<count; i++) {
+    data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(i));
+    if (data2->isPassword && data2->value.Length()==0) {
       return;
     }
   }
@@ -1344,35 +1345,26 @@ si_PutData(char * URLName, si_FormSubmitData * submit, PRBool save) {
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
     for (PRInt32 i3=0; i3<dataCount; i3++) {
       data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i3));
-
-
       mismatch = PR_FALSE;
 
-      /* skip non text/password fields */
-      while ((j < submit->value_cnt) &&
-            (((uint8*)submit->type_array)[j]!=FORM_TYPE_TEXT) &&
-            (((uint8*)submit->type_array)[j]!=FORM_TYPE_PASSWORD)) {
-        j++;
-      }
-
       /* check for match on name field and type field */
-      if ((j < submit->value_cnt) &&
-          (data->isPassword ==
-            (((uint8*)submit->type_array)[j]==FORM_TYPE_PASSWORD)) &&
-            (data->name == (submit->name_array)[j])) {
+      if (j < signonData->Count()) {
+        data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
+        if ((data->isPassword == data2->isPassword) &&
+            (data->name == data2->name)) {
 
-        /* success, now check for match on value field if not password */
-        if (data->value == (submit->value_array)[j] || data->isPassword) {
-          j++; /* success */
+          /* success, now check for match on value field if not password */
+          if (data->value == data2->value || data->isPassword) {
+            j++; /* success */
+          } else {
+            mismatch = PR_TRUE;
+            break; /* value mismatch, try next user */
+          }
         } else {
           mismatch = PR_TRUE;
-          break; /* value mismatch, try next user */
+          break; /* name or type mismatch, try next user */
         }
-      } else {
-        mismatch = PR_TRUE;
-        break; /* name or type mismatch, try next user */
       }
-
     }
     if (!mismatch) {
 
@@ -1390,18 +1382,12 @@ si_PutData(char * URLName, si_FormSubmitData * submit, PRBool save) {
       for (PRInt32 i4=0; i4<dataCount2; i4++) {
         data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i4));
 
-        /* skip non text/password fields */
-        while ((j < submit->value_cnt) &&
-              (((uint8*)submit->type_array)[j]!=FORM_TYPE_TEXT) &&
-              (((uint8*)submit->type_array)[j]!=FORM_TYPE_PASSWORD)) {
-          j++;
-        }
-
         /* update saved password */
-        if ((j < submit->value_cnt) && data->isPassword) {
-          if (data->value != (submit->value_array)[j]) {
+        if ((j < signonData->Count()) && data->isPassword) {
+          data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
+          if (data->value != data2->value) {
             si_signon_list_changed = PR_TRUE;
-            data->value = (submit->value_array)[j];
+            data->value = data2->value;
             si_Randomize(data->value);
           }
         }
@@ -1444,13 +1430,7 @@ si_PutData(char * URLName, si_FormSubmitData * submit, PRBool save) {
   }
 
   /* create and fill in data nodes for new user node */
-  for (PRInt32 k=0; k<submit->value_cnt; k++) {
-
-    /* skip non text/password fields */
-    if((((uint8*)submit->type_array)[k]!=FORM_TYPE_TEXT) &&
-        (((uint8*)submit->type_array)[k]!=FORM_TYPE_PASSWORD)) {
-      continue;
-    }
+  for (PRInt32 k=0; k<signonData->Count(); k++) {
 
     /* create signon data node */
     data = new si_SignonDataStruct;
@@ -1462,9 +1442,10 @@ si_PutData(char * URLName, si_FormSubmitData * submit, PRBool save) {
       }
       return;
     }
-    data->isPassword = (((uint8 *)submit->type_array)[k] == FORM_TYPE_PASSWORD);
-    data->name = (submit->name_array)[k];
-    data->value = (submit->value_array)[k];
+    data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(k));
+    data->isPassword = data2->isPassword;
+    data->name = data2->name;
+    data->value = data2->value;
     if (data->isPassword) {
       si_Randomize(data->value);
     }
@@ -1505,12 +1486,6 @@ extern PRUnichar
 Wallet_UTF8Get(nsInputFileStream strm);
 
 #define BUFFER_SIZE 4096
-
-#ifdef	XP_MAC
-#define MAX_ARRAY_SIZE 50
-#else
-#define MAX_ARRAY_SIZE 500
-#endif
 
 /*
  * get a line from a file
@@ -1567,10 +1542,6 @@ SI_LoadSignonData(PRBool fullLoad) {
    * should never have to give his password to unlock the password file
    */
   char * URLName;
-  si_FormSubmitData submit;
-  nsAutoString name_array[MAX_ARRAY_SIZE];
-  nsAutoString value_array[MAX_ARRAY_SIZE];
-  uint8 type_array[MAX_ARRAY_SIZE];
   nsAutoString buffer;
   PRBool badInput;
 
@@ -1637,20 +1608,16 @@ SI_LoadSignonData(PRBool fullLoad) {
     Recycle (URLName);
   }
 
-  /* initialize the submit structure */
-  submit.name_array = name_array;
-  submit.value_array = value_array;
-  submit.type_array = (PRUnichar **)type_array;
-
   /* read the URL line */
   while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, PR_FALSE))) {
     si_StripLF(buffer);
     URLName = buffer.ToNewCString();
 
     /* prepare to read the name/value pairs */
-    submit.value_cnt = 0;
     badInput = PR_FALSE;
 
+    nsVoidArray * signonData = new nsVoidArray();
+    si_SignonDataStruct * data;
     while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, PR_FALSE))) {
 
       /* line starting with . terminates the pairs for this URL entry */
@@ -1663,15 +1630,17 @@ SI_LoadSignonData(PRBool fullLoad) {
       /* save the name part and determine if it is a password */
       PRBool ret;
       si_StripLF(buffer);
+      nsAutoString name;
+      nsAutoString value;
+      PRBool isPassword;
       if (buffer.CharAt(0) == '*') {
-        type_array[submit.value_cnt] = FORM_TYPE_PASSWORD;
+        isPassword = PR_TRUE;
         nsAutoString temp;
-        buffer.Mid(temp, 1, buffer.Length()-1);
-        name_array[submit.value_cnt] = temp;
+        buffer.Mid(name, 1, buffer.Length()-1);
         ret = si_ReadLine(strm, strmx, buffer, fullLoad);
       } else {
-        type_array[submit.value_cnt] = FORM_TYPE_TEXT;
-        name_array[submit.value_cnt] = buffer;
+        isPassword = PR_FALSE;
+        name = buffer;
         ret = si_ReadLine(strm, strmx, buffer, PR_FALSE);
       }
 
@@ -1682,12 +1651,13 @@ SI_LoadSignonData(PRBool fullLoad) {
         break;
       }
       si_StripLF(buffer);
-      value_array[submit.value_cnt++] = buffer;
+      value = buffer;
 
-      /* check for overruning of the arrays */
-      if (submit.value_cnt >= MAX_ARRAY_SIZE) {
-        break;
-      }
+      data = new si_SignonDataStruct;
+      data->name = name;
+      data->value = value;
+      data->isPassword = isPassword;
+      signonData->AppendElement(data);
     }
 
     /* store the info for this URL into memory-resident data structure */
@@ -1695,7 +1665,7 @@ SI_LoadSignonData(PRBool fullLoad) {
       badInput = PR_TRUE;
     }
     if (!badInput) {
-      si_PutData(URLName, &submit, PR_FALSE);
+      si_PutData(URLName, signonData, PR_FALSE);
     }
 
     /* free up all the allocations done for processing this URL */
@@ -1704,6 +1674,13 @@ SI_LoadSignonData(PRBool fullLoad) {
       si_unlock_signon_list();
       return (1);
     }
+
+    PRInt32 count = signonData->Count();
+    for (PRInt32 i=count-1; i>=0; i--) {
+      data = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(i));
+      delete data;
+    }
+    delete signonData;
   }
 
   si_unlock_signon_list();
@@ -1902,6 +1879,7 @@ si_OkToSave(char *URLName, nsAutoString userName) {
     return PR_TRUE;
   }
 
+#ifdef DefaultIsOff
   if (!si_RememberSignons && !si_GetNotificationPref()) {
     PRUnichar * notification = Wallet_Localize("PasswordNotification");
     si_SetNotificationPref(PR_TRUE);
@@ -1913,6 +1891,7 @@ si_OkToSave(char *URLName, nsAutoString userName) {
     Recycle(notification);
     SI_SetBoolPref(pref_rememberSignons, PR_TRUE);
   }
+#endif
 
   strippedURLName = si_StrippedURL(URLName);
   if (si_CheckForReject(strippedURLName, userName)) {
@@ -1939,17 +1918,14 @@ si_OkToSave(char *URLName, nsAutoString userName) {
  * Check for a signon submission and remember the data if so
  */
 PUBLIC void
-SINGSIGN_RememberSignonData
-       (char* URLName, nsAutoString* name_array, nsAutoString* value_array, char** type_array, PRInt32 value_cnt)
+SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
 {
   int passwordCount = 0;
   int pswd[3];
-
-  si_FormSubmitData submit;
-  submit.name_array = name_array;
-  submit.value_array = value_array;
-  submit.type_array = (PRUnichar **)type_array;
-  submit.value_cnt = value_cnt;
+  si_SignonDataStruct * data;
+  si_SignonDataStruct * data0;
+  si_SignonDataStruct * data1;
+  si_SignonDataStruct * data2;
 
   /* do nothing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
@@ -1957,8 +1933,9 @@ SINGSIGN_RememberSignonData
   }
 
   /* determine how many passwords are in the form and where they are */
-  for (PRInt32 i=0; i<submit.value_cnt; i++) {
-    if (((uint8 *)submit.type_array)[i] == FORM_TYPE_PASSWORD) {
+  for (PRInt32 i=0; i<signonData->Count(); i++) {
+    data = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(i));
+    if (data->isPassword) {
       if (passwordCount < 3 ) {
         pswd[passwordCount] = i;
       }
@@ -1971,17 +1948,19 @@ SINGSIGN_RememberSignonData
     /* one-password form is a log-in so remember it */
 
     /* obtain the index of the first input field (that is the username) */
-    PRInt32 j;
-    for (j=0; j<submit.value_cnt; j++) {
-      if (((uint8 *)submit.type_array)[j] == FORM_TYPE_TEXT) {
+    for (PRInt32 j=0; j<signonData->Count(); j++) {
+      data = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
+      if (!data->isPassword) {
         break;
       }
     }
 
-    if ((j<submit.value_cnt) && si_OkToSave(URLName, /* urlname */
-        (submit.value_array)[j] /* username */)) {
-      SI_LoadSignonData(PR_TRUE);
-      si_PutData(URLName, &submit, PR_TRUE);
+    if (j<signonData->Count()) {
+      data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
+      if (si_OkToSave(URLName, data2->value /* username */)) {
+        SI_LoadSignonData(PR_TRUE);
+        si_PutData(URLName, signonData, PR_TRUE);
+      }
     }
   } else if (passwordCount == 2) {
     /* two-password form is a registration */
@@ -1993,16 +1972,17 @@ SINGSIGN_RememberSignonData
     si_SignonUserStruct* user;
 
     /* make sure all passwords are non-null and 2nd and 3rd are identical */
-    if ((submit.value_array[pswd[0]]).Length() == 0 ||
-        (submit.value_array[pswd[1]]).Length() == 0 ||
-        (submit.value_array[pswd[2]]).Length() == 0 ||
-        (submit.value_array)[pswd[1]] != (submit.value_array)[pswd[2]]) {
+    data0 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(pswd[0]));
+    data1 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(pswd[1]));
+    data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(pswd[2]));
+    if (data0->value.Length() == 0 || data1->value.Length() == 0 ||
+        data2->value.Length() == 0 || data1->value != data2->value) {
       return;
     }
 
     /* ask user if this is a password change */
     si_lock_signon_list();
-    user = si_GetURLAndUserForChangeForm((submit.value_array)[pswd[0]]);
+    user = si_GetURLAndUserForChangeForm(data0->value);
 
     /* return if user said no */
     if (!user) {
@@ -2012,7 +1992,7 @@ SINGSIGN_RememberSignonData
 
     /* get to password being saved */
     SI_LoadSignonData(PR_TRUE); /* this destroys "user" so we need to recalculate it */
-    user = si_GetURLAndUserForChangeForm((submit.value_array)[pswd[0]]);
+    user = si_GetURLAndUserForChangeForm(data0->value);
     if (!user) { /* this should never happen but just in case */
       si_unlock_signon_list();
       return;
@@ -2026,17 +2006,20 @@ SINGSIGN_RememberSignonData
     }
 
     /*
-     * if second password is "generate" then generate a random
+     * if second password is "********" then generate a random
      * password for it and use same random value for third password
      * as well (Note: this all works because we already know that
      * second and third passwords are identical so third password
-     * must also be "generate".  Furthermore si_Randomize() will
+     * must also be "********".  Furthermore si_Randomize() will
      * create a random password of exactly eight characters -- the
-     * same length as "generate".)
+     * same length as "********".)
      */
-    si_Randomize((submit.value_array)[pswd[1]]);
-    (submit.value_array)[pswd[2]] = (submit.value_array)[pswd[1]];
-    data->value = (submit.value_array)[pswd[1]];
+
+/* commenting out because I don't see how such randomizing could ever have worked. */
+//    si_Randomize(data1->value);
+//    data2->value = data1->value;
+
+    data->value = data1->value;
     si_signon_list_changed = PR_TRUE;
     si_SaveSignonDataLocked(PR_TRUE);
     si_unlock_signon_list();
@@ -2134,33 +2117,31 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
  */
 PRIVATE void
 si_RememberSignonDataFromBrowser(char* URLName, nsAutoString username, nsAutoString password) {
-  si_FormSubmitData submit;
-  nsAutoString name_array[2];
-  nsAutoString value_array[2];
-  uint8 type_array[2];
-
   /* do nothing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
     return;
   }
 
-  /* initialize a temporary submit structure */
-  submit.name_array = name_array;
-  submit.value_array = value_array;
-  submit.type_array = (PRUnichar **)type_array;
-  submit.value_cnt = 2;
-
-  name_array[0] = nsAutoString("username");
-  value_array[0] = nsAutoString(username);
-  type_array[0] = FORM_TYPE_TEXT;
-
-  name_array[1] = nsAutoString("password");
-  value_array[1] = nsAutoString(password);
-  type_array[1] = FORM_TYPE_PASSWORD;
+  nsVoidArray * signonData = new nsVoidArray();
+  si_SignonDataStruct * data1 = new si_SignonDataStruct;
+  data1 -> name = nsAutoString("username");
+  data1 -> value = nsAutoString(username);
+  data1 -> isPassword = PR_FALSE;
+  signonData->AppendElement(data1);
+  si_SignonDataStruct * data2 = new si_SignonDataStruct;
+  data2 -> name = nsAutoString("password");
+  data2 -> value = nsAutoString(password);
+  data2 -> isPassword = PR_TRUE;
+  signonData->AppendElement(data2);
 
   /* Save the signon data */
   SI_LoadSignonData(PR_TRUE);
-  si_PutData(URLName, &submit, PR_TRUE);
+  si_PutData(URLName, signonData, PR_TRUE);
+
+  /* Deallocate */
+  delete data1;
+  delete data2;
+  delete signonData;
 }
 
 /*
@@ -2256,7 +2237,7 @@ SINGSIGN_PromptUsernameAndPassword
 
   /* remember these values for next time */
   if (si_OkToSave(host, nsAutoString(username))) {
-    si_RememberSignonDataFromBrowser (host, username, password);
+    si_RememberSignonDataFromBrowser (host, nsAutoString(*user), nsAutoString(*pwd));
   }
 
   /* cleanup and return */
@@ -2578,12 +2559,14 @@ si_LoadSignonDataFromKeychain() {
 
   status = KCFindFirstItem( &attrList, &searchRef, &itemRef );
 
+#ifdef DefaultIsOff
   if (status == noErr) {
     /* if we found a Netscape item, let's assume notice has been given */
     si_SetNotificationPref(PR_TRUE);
   } else {
     si_SetNotificationPref(PR_FALSE);
   }
+#endif
 
   si_lock_signon_list();
   while(status == noErr) {
