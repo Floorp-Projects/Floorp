@@ -64,9 +64,7 @@ class nsDocAccessible : public nsBlockAccessible,
                         public nsIDOMMutationListener,
                         public nsIScrollPositionListener,
                         public nsSupportsWeakReference
-{
-  enum EBusyState {eBusyStateUninitialized, eBusyStateLoading, eBusyStateDone};
-  
+{  
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEDOCUMENT
   NS_DECL_NSPIACCESSIBLEDOCUMENT
@@ -104,13 +102,15 @@ class nsDocAccessible : public nsBlockAccessible,
     NS_IMETHOD Init();
 
   protected:
+    enum EBusyState {eBusyStateUninitialized, eBusyStateLoading, eBusyStateDone};
+
     virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsIFrame* GetFrame();
     virtual nsresult AddEventListeners();
     virtual nsresult RemoveEventListeners();
     void AddScrollListener();
     void RemoveScrollListener();
-    void FireDocLoadFinished();
+    virtual void FireDocLoadFinished();
     void HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aEventType);
     static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);

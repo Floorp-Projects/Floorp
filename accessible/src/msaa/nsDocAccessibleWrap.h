@@ -98,6 +98,14 @@ public:
         /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent);
 
     NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
+    NS_IMETHOD OnLocationChange(nsIWebProgress *aWebProgress,
+                                nsIRequest *aRequest, nsIURI *location);
+protected:
+    void FireDocLoadFinished();
+private:
+    void FireAnchorJumpEvent();
+    already_AddRefed<nsIAccessible> GetFirstLeafAccessible(nsIDOMNode *aStartNode);
+    PRPackedBool mWasAnchor;
 };
 
 #endif

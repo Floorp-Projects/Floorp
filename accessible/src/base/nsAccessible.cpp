@@ -662,7 +662,6 @@ void nsAccessible::GetScreenOrigin(nsPresContext *aPresContext, nsIFrame *aFrame
   origin.y = NSTwipsToIntPixels(origin.y, t2p);
   
   // Add the widget's screen coordinates to the offset we've counted
-  //nsIWidget *widget = view->GetWidget();
   NS_ASSERTION(widget, "No widget for top view");
   widget->WidgetToScreen(nsRect(origin.x, origin.y, 1, 1), *aRect);
 }
