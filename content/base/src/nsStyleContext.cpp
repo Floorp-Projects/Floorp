@@ -111,7 +111,7 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
   mBackgroundXPosition = 0;
   mBackgroundYPosition = 0;
 
-  mCursor = NS_STYLE_CURSOR_INHERIT;
+  mCursor = NS_STYLE_CURSOR_AUTO;
 }
 
 
