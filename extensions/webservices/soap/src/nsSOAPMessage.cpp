@@ -271,9 +271,9 @@ NS_IMETHODIMP
                           PRUint32 aParameterCount,
                           nsISOAPParameter ** aParameters)
 {
-  static const NS_NAMED_LITERAL_STRING(realEmptySOAPDocStr1,
+  static NS_NAMED_LITERAL_STRING(realEmptySOAPDocStr1,
                         "<env:Envelope xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:enc=\"http://schemas.xmlsoap.org/soap/encoding/\"><env:Header/><env:Body/></env:Envelope>");
-  static const NS_NAMED_LITERAL_STRING(realEmptySOAPDocStr2,
+  static NS_NAMED_LITERAL_STRING(realEmptySOAPDocStr2,
                         "<env:Envelope xmlns:env=\"http://www.w3.org/2001/09/soap-envelope\" xmlns:enc=\"http://www.w3.org/2001/09/soap-encoding\"><env:Header/><env:Body/></env:Envelope>");
   static const nsAString *kEmptySOAPDocStr[] = {
     &realEmptySOAPDocStr1, &realEmptySOAPDocStr2

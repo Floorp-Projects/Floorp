@@ -232,7 +232,7 @@ protected:
   {
     nsGlobalHistory* history;
     size_t prefixCount;
-    nsAFlatString* prefixes[AUTOCOMPLETE_PREFIX_LIST_COUNT];
+    const nsAFlatString* prefixes[AUTOCOMPLETE_PREFIX_LIST_COUNT];
   };
 
   // caching of PR_Now() so we don't call it every time we do

@@ -439,7 +439,7 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     const char*                  a_in = "some string";
     nsCOMPtr<nsITestXPCFoo>      b_in = new nsTestXPCFoo();
     nsCOMPtr<nsIWritableVariant> c_in = do_CreateInstance("@mozilla.org/variant;1"); 
-    static const NS_NAMED_LITERAL_STRING(d_in, "foo bar");
+    static NS_NAMED_LITERAL_STRING(d_in, "foo bar");
     const char*                  e_in = "another meaningless chunck of text";
     
 
