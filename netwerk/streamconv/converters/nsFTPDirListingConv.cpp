@@ -418,13 +418,13 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         // ENTRY TYPE
         switch (thisEntry->mType) {
         case Dir:
-            indexFormat.Append("Directory");
+            indexFormat.Append("DIRECTORY");
             break;
         case Link:
-            indexFormat.Append("Sym-Link");
+            indexFormat.Append("SYM-LINK");
             break;
         default:
-            indexFormat.Append("File");
+            indexFormat.Append("FILE");
         }
         indexFormat.Append(' ');
 
