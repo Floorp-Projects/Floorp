@@ -101,7 +101,8 @@ directories.
 web server.  Bugzilla keeps some temporary files here.
 
   Create an empty file in that directory named "comments"; make sure
-it is writable by the web server.
+it is writable by the web server.  Also, create empty files named
+"nomail" and "mail".
 
 3. Setting up database
 
