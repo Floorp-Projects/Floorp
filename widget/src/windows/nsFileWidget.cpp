@@ -118,7 +118,7 @@ PRBool nsFileWidget::Show()
 
   nsString filterList;
   GetFilterListArray(filterList);
-  char *filterBuffer = filterList.ToNewCString();
+  char *filterBuffer = ConvertToFileSystemCharset(filterList.GetUnicode(), filterList.Length());
   char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
   if (nsnull == title)
     title = mTitle.ToNewCString();
@@ -391,7 +391,7 @@ void nsFileWidget::GetFileSystemCharset(nsString & fileSystemCharset)
 }
 
 //-------------------------------------------------------------------------
-char * nsFileWidget::ConvertToFileSystemCharset(const PRUnichar *inString)
+char * nsFileWidget::ConvertToFileSystemCharset(const PRUnichar *inString, PRInt32 inLength)
 {
   char *outString = nsnull;
   nsresult rv = NS_OK;
@@ -409,7 +409,8 @@ char * nsFileWidget::ConvertToFileSystemCharset(const PRUnichar *inString)
 
   // converts from unicode to the file system charset
   if (NS_SUCCEEDED(rv)) {
-    PRInt32 inLength = nsCRT::strlen(inString);
+    if(inLength < 0)
+		inLength = nsCRT::strlen(inString);
     PRInt32 outLength;
     rv = mUnicodeEncoder->GetMaxLength(inString, inLength, &outLength);
     if (NS_SUCCEEDED(rv)) {
