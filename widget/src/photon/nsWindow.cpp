@@ -58,7 +58,7 @@ nsWindow::nsWindow()
   mShell           = nsnull;
   mFontMetrics     = nsnull;
   mClipChildren    = PR_TRUE;		/* This needs to be true for Photon */
-  mClipSiblings    = PR_TRUE;		/* TRUE = Fixes Pop-Up Menus over animations */
+  mClipSiblings    = PR_FALSE;		/* TRUE = Fixes Pop-Up Menus over animations */
   mBorderStyle     = eBorderStyle_default;
   mWindowType      = eWindowType_child;
   mIsResizing      = PR_FALSE;
@@ -210,7 +210,7 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative (%p) - parent = %p.\n", this, parentWidget));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative (%p) - parent = %p IsChild=<%d> \n", this, parentWidget, IsChild()));
 
   PtArg_t arg[20];
   PhPoint_t pos;
@@ -248,7 +248,8 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  border style = %X\n", mBorderStyle ));
 
-  if( IsChild() )
+//  if ( (IsChild()) && ( mWindowType != eWindowType_popup ) )
+  if ( IsChild() )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Child window class\n" ));
 
@@ -267,9 +268,7 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     PtSetArg( &arg[5], Pt_ARG_TOP_BORDER_COLOR, Pg_RED, 0 );
     PtSetArg( &arg[6], Pt_ARG_BOT_BORDER_COLOR, Pg_RED, 0 );
     PtSetArg( &arg[7], RDC_DRAW_FUNC, RawDrawFunc, 0 );
-//    PtStartFlux( parentWidget );
     mWidget = PtCreateWidget( PtRawDrawContainer, parentWidget, 8, arg );
-//    PtEndFlux( parentWidget );
   }
   else
   {
@@ -1012,6 +1011,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", n
 	  else
 	  {
          printf("nsWindow::RawDrawFunc SetWindowClipping resulted in nothing to draw\n");
+         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc SetWindowClipping resulted in nothing to draw this=<%p>\n", pWin));
 	  }
 	  
 	  NS_RELEASE(pev.renderingContext);
@@ -1181,33 +1181,6 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
   PtArg_t    arg;
 
   clip_tiles = last = nsnull;
-
-// kedl, I bet we need to look at our parents window type; since we are probably a dale
-// widget here.... (always a child)
-//damn
-switch (mWindowType)
-{
-	case 0:	// top
-mClipChildren = PR_TRUE;
-mClipSiblings = PR_TRUE;
-	break;
-	case 1: // dialog, prefs
-mClipChildren = PR_TRUE;
-mClipSiblings = PR_TRUE;
-	break;
-	case 2: // popup, menu
-mClipChildren = PR_FALSE;
-mClipSiblings = PR_TRUE;
-	break;
-	case 3: // child
-mClipChildren = PR_TRUE;  // better be true or big rips
-mClipSiblings = PR_TRUE;  // true means animations don't show thru menus, no rip as edit
-			  // comes up, but block in upper left and rips under prefs bad
-	break;
-	default:
-	break;
-}
-
 
   if ( mClipChildren )
   {
