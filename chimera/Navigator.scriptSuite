@@ -1,25 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist SYSTEM
-"file://localhost/System/Library/DTDs/PropertyList.dtd">
+<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
 <plist version="0.9">
 <dict>
- 	<key>AppleEventCode</key>
- 	<string>CHIM</string>
- 	<key>Commands</key>
- 	<dict>
- 		<key>GetURL</key>
- 		<dict>
- 			<key>AppleEventClassCode</key>
- 			<string>GURL</string>
- 			<key>AppleEventCode</key>
- 			<string>GURL</string>
- 			<key>CommandClass</key>
- 			<string>CHGetURLCommand</string>
- 			<key>Type</key>
- 			<string></string>
- 		</dict>
- 	</dict>
- 	<key>Name</key>
- 	<string>Navigator</string>
+	<key>AppleEventCode</key>
+	<string>CHIM</string>
+	<key>Commands</key>
+	<dict>
+		<key>GetURL</key>
+		<dict>
+			<key>AppleEventClassCode</key>
+			<string>GURL</string>
+			<key>AppleEventCode</key>
+			<string>GURL</string>
+			<key>CommandClass</key>
+			<string>CHGetURLCommand</string>
+		</dict>
+	</dict>
+	<key>Name</key>
+	<string>Navigator</string>
 </dict>
 </plist>
