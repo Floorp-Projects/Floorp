@@ -2820,7 +2820,7 @@ nsSyncHelper::Run()
     nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = service->CreateThreadEventQueue();
+    rv = service->CreateMonitoredThreadEventQueue();
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIEventQueue> currentThreadQ;
