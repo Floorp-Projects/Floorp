@@ -39,7 +39,7 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://messenger/locale/addressbook/pref-directory-add.dtd">
 
