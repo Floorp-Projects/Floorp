@@ -1724,26 +1724,27 @@ public abstract class ScriptableObject implements Scriptable {
     }
         
     private Object[] getIds(boolean getAll) {
-        if (slots == null)
-            return ScriptRuntime.emptyArgs;
-        int count = 0;
-        for (int i=slots.length-1; i >= 0; i--) {
-            Slot slot = slots[i];
+        Slot[] s = slots;
+        Object[] a = ScriptRuntime.emptyArgs;
+        if (s == null)
+            return a;
+        int c = 0;
+        for (int i=0; i < s.length; i++) {
+            Slot slot = s[i];
             if (slot == null || slot == REMOVED)
                 continue;
-            if (getAll || (slot.attributes & DONTENUM) == 0)
-                count++;
+            if (getAll || (slot.attributes & DONTENUM) == 0) {
+                if (c == 0)
+                    a = new Object[s.length - i];
+                a[c++] = slot.stringKey != null
+                             ? (Object) slot.stringKey
+                             : new Integer(slot.intKey);
+            }
         }
-        Object[] result = new Object[count];
-        for (int i=slots.length-1; i >= 0; i--) {
-            Slot slot = slots[i];
-            if (slot == null || slot == REMOVED)
-                continue;
-            if (getAll || (slot.attributes & DONTENUM) == 0)
-                result[--count] = slot.stringKey != null
-                                  ? (Object) slot.stringKey
-                                  : new Integer(slot.intKey);
-        }
+        if (c == a.length)
+            return a;
+        Object[] result = new Object[c];
+        System.arraycopy(a, 0, result, 0, c);
         return result;
     }
 
