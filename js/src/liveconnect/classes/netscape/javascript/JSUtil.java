@@ -51,16 +51,4 @@ public class JSUtil {
 
 	return captureStream.toString();
     }
-
-    /**
-     * This method is used to work around a bug in AIX JDK1.1.6, in which
-     * static initializers are not run when a static field is referenced from
-     * native code.  The problem does not manifest itself if the field is
-     * accessed from Java code.
-     */
-    private static void workAroundAIXJavaBug() {
-        if (java.lang.Void.TYPE == null)
-            java.lang.System.out.println("JDK bug: " +
-                                         "java.lang.Void.TYPE uninitialized");
-    }
 }
