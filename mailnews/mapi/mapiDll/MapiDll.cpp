@@ -233,8 +233,6 @@ ULONG FAR PASCAL MAPISendMail (LHANDLE lhSession, ULONG ulUIParam, lpnsMapiMessa
     else
         lpFiles = lpMessage->lpFiles ;
 
-    HANDLE hEvent = CreateEvent (NULL, FALSE, FALSE, (LPCTSTR) MAPI_SENDCOMPLETE_EVENT) ;
-
     hr = pNsMapi->SendMail (lhSession, lpMessage, 
                             (short) lpMessage->nRecipCount, lpRecips,
                             (short) lpMessage->nFileCount, lpFiles,
@@ -244,10 +242,6 @@ ULONG FAR PASCAL MAPISendMail (LHANDLE lhSession, ULONG ulUIParam, lpnsMapiMessa
     // MS COM interface in mozilla, we are getting this error here. This is a temporary hack !!
     if (hr == 0x800703e6)
         hr = SUCCESS_SUCCESS;
-    
-    if (hr == SUCCESS_SUCCESS)
-        WaitForSingleObject (hEvent, INFINITE) ;
-    CloseHandle (hEvent) ;
     
     if (bTempSession)
         MAPILogoff (lhSession, ulUIParam, 0,0) ;
@@ -271,14 +265,8 @@ ULONG FAR PASCAL MAPISendDocuments(ULONG ulUIParam, LPTSTR lpszDelimChar, LPTSTR
 
     HRESULT hr;
 
-    HANDLE hEvent = CreateEvent (NULL, FALSE, FALSE, (LPCTSTR) MAPI_SENDCOMPLETE_EVENT) ;
-
     hr = pNsMapi->SendDocuments(lhSession, (LPTSTR) lpszDelimChar, (LPTSTR) lpszFilePaths, 
                                     (LPTSTR) lpszFileNames, ulReserved) ;
-
-    if (hr == SUCCESS_SUCCESS)
-        WaitForSingleObject (hEvent, INFINITE) ;
-    CloseHandle (hEvent) ;
 
     MAPILogoff (lhSession, ulUIParam, 0,0) ;
 
