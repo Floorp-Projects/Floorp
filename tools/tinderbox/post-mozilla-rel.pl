@@ -643,6 +643,7 @@ sub main {
   if (is_windows()) {
     # hack for cygwin installs with "unix" filetypes
     TinderUtils::run_shell_command "unix2dos $mozilla_build_dir/mozilla/LICENSE";
+    TinderUtils::run_shell_command "unix2dos $mozilla_build_dir/mozilla/mail/LICENSE.txt";
     TinderUtils::run_shell_command "unix2dos $mozilla_build_dir/mozilla/README.txt";
   }
 
