@@ -14,25 +14,16 @@
 # Reserved.
 
 
-# Enable builds on any drive if defined.
-!if !defined(MOZ_SRC)
-MOZ_SRC=y:
-!endif
-
 # Enable builds from user defined top level directory.
 !if !defined(MOZ_TOP)
 MOZ_TOP=mozilla
 !endif
 
-#//------------------------------------------------------------------------
-#// Defines specific to MOZ_NGLAYOUT
-#//------------------------------------------------------------------------
-!if defined(MOZ_NGLAYOUT)
+MODULAR_NETLIB=1
 NGLAYOUT_MAKEFILE=nglayout.mak
-NGLAYOUT_ENV_VARS=STANDALONE_IMAGE_LIB=1 MODULAR_NETLIB=1 NGLAYOUT_BUILD_PREFIX=1
-MOZNGLAYOUT_BRANCH=RAPTOR_INTEGRATION0_BRANCH
+NGLAYOUT_PLUGINS=1
+STANDALONE_IMAGE_LIB=1
 CVSCO = cvs -q co -P
-!endif
 
 
 #//------------------------------------------------------------------------
@@ -80,65 +71,34 @@ pull_clobber_build_all:: pull_all \
 clobber_build_all:: 	clobber_all \
 			build_all
 
-!if defined(MOZ_NGLAYOUT)
-# The MOZ_NGLAYOUT pull is complicated, be very careful choosing which files are on 
-# the tip and which are on the branches.
-pull_all:: pull_client_source_product pull_nglayout pull_netlib repull_ngl_integration pull_imglib repull_include
-!else
-pull_all:: pull_client_source_product 
-!endif
+pull_all:: pull_config pull_nglayout pull_client_source_product 
 
-!if defined(MOZ_NGLAYOUT)
+pull_config:
+	@cd $(MOZ_SRC)
+	$(CVSCO) $(MOZ_TOP)/config
+	
+
 pull_nglayout:
 	@cd $(MOZ_SRC)
 	$(CVSCO) $(MOZ_TOP)/$(NGLAYOUT_MAKEFILE)
 	@cd $(MOZ_SRC)/$(MOZ_TOP)
-	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) pull_nglayout $(NGLAYOUT_ENV_VARS)
+	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) pull_all $(NGLAYOUT_ENV_VARS)
 
-pull_netlib:
-	@cd $(MOZ_SRC)/$(MOZ_TOP)
-	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) pull_netlib $(NGLAYOUT_ENV_VARS)
-
-# Here is where we pull everything on the layout integration branch
-repull_ngl_integration:
-	@cd $(MOZ_SRC)
-	$(CVSCO) -r $(MOZNGLAYOUT_BRANCH) $(MOZ_TOP)/include $(MOZ_TOP)/cmd $(MOZ_TOP)/lib $(MOZ_TOP)/modules
-	@cd $(MOZ_SRC)/$(MOZ_TOP)
-
-# Careful to put this after repull_ngl_integration, want modules/libutil and 
-# modules/libimg to be on imglib branch
-pull_imglib:
-	@cd $(MOZ_SRC)/$(MOZ_TOP)
-	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) pull_imglib $(NGLAYOUT_ENV_VARS)
-
-# Want certain files in the include directory to be on the tip
-repull_include:
-	@cd $(MOZ_SRC)
-	$(CVSCO) -A $(MOZ_TOP)/include/net.h
-!endif
 
 
 pull_client_source_product:
     @echo +++ client.mak: checking out the client with "$(CVS_BRANCH)"
     cd $(MOZ_SRC)\.
-    -cvs -q co $(CVS_BRANCH)      MozillaSourceWin
+    -cvs -q co $(CVS_BRANCH)      SeaMonkeyBrowser
 
 
-!if defined(MOZ_NGLAYOUT)
-# Build NGLayout first.
 build_all:  build_nglayout \
 			build_dist  \
 			build_client
-!else
-build_all:  build_dist  \
-			build_client
-!endif
 
-!if defined(MOZ_NGLAYOUT)
 build_nglayout: 
 	cd $(MOZ_SRC)\$(MOZ_TOP)
 	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) $(NGLAYOUT_ENV_VARS)
-!endif
 
 build_dist:
     @echo +++ client.mak: building dist
@@ -146,40 +106,20 @@ build_dist:
     $(NMAKE) -f makefile.win
 
 
-build_client:
-    @echo +++ client.mak: building client
-    cd $(MOZ_SRC)\$(MOZ_TOP)\cmd\winfe\mkfiles32
-!if "$(MOZ_BITS)" == "16"
-    $(NMAKE) -f mozilla.mak exports
-!endif
-    $(NMAKE) -f mozilla.mak DEPEND=1
-    $(NMAKE) -f mozilla.mak
-
-
-#
-# remove all source files from the tree and print a report of what was missed
-#
-!if defined(MOZ_NGLAYOUT)
 clobber_all:: clobber_moz clobber_nglayout
-!else
-clobber_all:: clobber_moz
-!endif
 
 clobber_moz:
     cd $(MOZ_SRC)\$(MOZ_TOP)
     $(NMAKE) -f makefile.win clobber_all
     cd $(MOZ_SRC)\$(MOZ_TOP)\cmd\winfe\mkfiles32
-    $(NMAKE) -f mozilla.mak clobber_all
 !if !defined(MOZ_MEDIUM)
     cd $(MOZ_SRC)\$(MOZ_TOP)\netsite\ldap\libraries\msdos\winsock
     $(NMAKE) -f nsldap.mak clobber_all
 !endif
 
-!if defined(MOZ_NGLAYOUT)
 clobber_nglayout:
 	cd $(MOZ_SRC)\$(MOZ_TOP)
-	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) clobber $(NGLAYOUT_ENV_VARS)
-!endif
+	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) clobber_all $(NGLAYOUT_ENV_VARS)
 
 depend:
     -del /s /q make.dep
