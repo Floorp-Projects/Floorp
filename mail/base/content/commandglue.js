@@ -897,9 +897,8 @@ function FolderPaneSelectionChange()
                 gPreQuickSearchView.close();
                 gPreQuickSearchView = null;  
               }
-              var searchInput = document.getElementById("searchInput");  //reset the search input on folder switch
-              if (searchInput) 
-                searchInput.value = "";
+              
+              clearQuickSearchAfterFolderChange();
             }
             ClearMessagePane();
 

@@ -108,6 +108,7 @@ var gSearchNotificationListener =
         gStatusBar.setAttribute("mode","normal");
         gSearchInProgress = false;
         viewDebug("gSearchInput = " + gSearchInput.value + "\n");
+
         // ### TODO need to find out if there's quick search within a virtual folder.
         if (gCurrentVirtualFolderUri &&
          (gSearchInput.value == "" || gSearchInput.showingSearchCriteria))
@@ -585,6 +586,13 @@ function ClearQSIfNecessary()
     return;
 
   Search("");
+}
+
+// called after the user switches folders while inside
+// of a quick search view...
+function clearQuickSearchAfterFolderChange()
+{
+  gSearchInput.setSearchCriteriaText();
 }
 
 function Search(str)
