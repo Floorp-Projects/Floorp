@@ -28,7 +28,9 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsCacheEntry.h"
 
-class nsCacheEntryDescriptor : public nsICacheEntryDescriptor
+class nsCacheEntryDescriptor :
+    public nsICacheEntryDescriptor,
+    public nsITransport
 {
 public:
     NS_DECL_ISUPPORTS
@@ -55,9 +57,10 @@ public:
     
 protected:
     
-    PRCList           mListLink;
-    nsCacheEntry    * mCacheEntry; // we are a child of the entry
-    nsCacheAccessMode mAccessGranted;
+    PRCList                 mListLink;
+    nsCacheEntry          * mCacheEntry; // we are a child of the entry
+    nsCacheAccessMode       mAccessGranted;
+    nsCOMPtr<nsITransport>  mTransport;
 };
 
 
