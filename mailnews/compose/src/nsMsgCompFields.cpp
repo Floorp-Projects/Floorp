@@ -483,6 +483,20 @@ nsMsgCompFields::GetTheForcePlainText(PRBool *_retval)
   return NS_OK;    
 }
 
+nsresult   
+nsMsgCompFields::SetUseMultipartAlternativeFlag(PRBool value)
+{
+  m_multipart_alt = value;
+  return NS_OK;    
+}
+
+nsresult   
+nsMsgCompFields::GetUseMultipartAlternativeFlag(PRBool *_retval)
+{
+  *_retval = m_multipart_alt;
+  return NS_OK;
+}
+
 
 HJ36954
 {

@@ -687,28 +687,42 @@ nsMsgComposeAndSend::GatherMimeAttachments()
       // Setup the maincontainer stuff...
       status = maincontainer->SetType(MULTIPART_ALTERNATIVE);
       if (status < 0)
-				goto FAIL;
+			  goto FAIL;
 
-      mpartcontainer = new nsMsgSendPart(this);
-      if (!mpartcontainer)
-        goto FAILMEM;
+      // Only create multipart related if its really necessary...
+      if (mMultipartRelatedAttachmentCount > 0)
+      {
+        mpartcontainer = new nsMsgSendPart(this);
+        if (!mpartcontainer)
+          goto FAILMEM;
 
-			status = mpartcontainer->SetType(MULTIPART_RELATED);
-			if (status < 0)
-				goto FAIL;
+			  status = mpartcontainer->SetType(MULTIPART_RELATED);
+			  if (status < 0)
+				  goto FAIL;
 
-			status = mpartcontainer->AddChild(htmlpart);
-			if (status < 0)
-				goto FAIL;
+			  status = mpartcontainer->AddChild(htmlpart);
+			  if (status < 0)
+				  goto FAIL;
 
-      // Hang stuff off of the maincontainer...
-      status = maincontainer->AddChild(plainpart);
-			if (status < 0)
-				goto FAIL;
+        // Hang stuff off of the maincontainer...
+        status = maincontainer->AddChild(plainpart);
+			  if (status < 0)
+				  goto FAIL;
 
-      status = maincontainer->AddChild(mpartcontainer);
-			if (status < 0)
-				goto FAIL;
+        status = maincontainer->AddChild(mpartcontainer);
+			  if (status < 0)
+				  goto FAIL;
+      }
+      else    // Just a single HTML doc for the HTML mail
+      {
+        status = maincontainer->AddChild(plainpart);
+			  if (status < 0)
+				  goto FAIL;
+
+        status = maincontainer->AddChild(htmlpart);
+			  if (status < 0)
+				  goto FAIL;
+      }
 
 			// Create the encoder for the plaintext part here,
 			// because we aren't the main part (attachment1).

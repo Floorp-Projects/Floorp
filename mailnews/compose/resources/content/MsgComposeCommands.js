@@ -464,7 +464,34 @@ function UUEncodeMenuSelect()
 
 function OutputFormatMenuSelect(target)
 {
-//	dump(target.getAttribute('id') + "\n");
+	dump("Set Message Format to " + target.getAttribute('id') + "\n");
+	if (msgCompose)
+	{
+		var msgCompFields = msgCompose.compFields;
+   
+    if (msgCompFields)
+    {
+      switch (target.getAttribute('id'))
+	    {
+		    case "1":        
+			    break;	    
+		    case "2":
+          msgCompFields.SetTheForcePlainText(true);
+          msgCompFields.SetUseMultipartAlternativeFlag(false);
+			    break;	    
+		    case "3":
+          msgCompFields.SetTheForcePlainText(false);
+          msgCompFields.SetUseMultipartAlternativeFlag(false);
+			    break;
+        case "4":
+          msgCompFields.SetTheForcePlainText(false);
+          msgCompFields.SetUseMultipartAlternativeFlag(true);
+          break;
+		    default:
+			    break;		
+	    }
+    }
+	}
 }
 
 function SelectAddress() 

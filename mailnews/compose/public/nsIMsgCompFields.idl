@@ -116,6 +116,9 @@ interface nsIMsgCompFields : nsISupports {
 	void SetUUEncodeAttachments(in boolean value);
 	boolean GetUUEncodeAttachments();
 
+	void SetUseMultipartAlternativeFlag(in boolean value);
+	boolean GetUseMultipartAlternativeFlag();
+
 	void SetTheForcePlainText(in boolean value);
 	boolean GetTheForcePlainText();
 };

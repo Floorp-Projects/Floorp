@@ -77,11 +77,11 @@
 <!ENTITY returnReceiptCmd.label "Return receipt">
 <!ENTITY uuEncodeCmd.label "Use uuencode instead of MIME for attachments">
 
-<!ENTITY outputFormatMenu.label ".Format">
+<!ENTITY outputFormatMenu.label "Format">
 <!ENTITY askmeFormatCmd.label ".Ask me">
-<!ENTITY plainTextFormatCmd.label ".Plain Text only">
-<!ENTITY htmlFormatCmd.label ".HTML only">
-<!ENTITY bothFormatCmd.label ".Plain Text and HTML">
+<!ENTITY plainTextFormatCmd.label "Plain Text only">
+<!ENTITY htmlFormatCmd.label "HTML only">
+<!ENTITY bothFormatCmd.label "Plain Text and HTML">
 
 <!ENTITY fileCarbonCopyCmd.label "File Carbon Copy">
 

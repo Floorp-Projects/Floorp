@@ -215,6 +215,9 @@ public:
 	void        SetForcePlainText(PRBool value) {m_force_plain_text = value;}
 	PRBool      GetForcePlainText() {return m_force_plain_text;}
 
+  NS_IMETHOD  SetUseMultipartAlternativeFlag(PRBool value);
+	NS_IMETHOD  GetUseMultipartAlternativeFlag(PRBool *_retval);
+
 	void SetUseMultipartAlternative(PRBool value) {m_multipart_alt = value;}
 	PRBool GetUseMultipartAlternative() {return m_multipart_alt;}
 
