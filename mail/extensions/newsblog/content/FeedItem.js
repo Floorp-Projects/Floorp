@@ -190,6 +190,10 @@ FeedItem.prototype.isStored = function() {
     debug(this.feed.name + " folder doesn't exist; creating");
 		debug("creating " + this.feed.name + "as child of " + server.rootMsgFolder + "\n");
     server.rootMsgFolder.createSubfolder(this.feed.name, getMessageWindow());
+    folder = server.rootMsgFolder.FindSubFolder(this.feed.name);
+    var msgdb = folder.getMsgDatabase(null);
+    var folderInfo = msgdb.dBFolderInfo;
+    folderInfo.setCharPtrProperty("feedUrl", this.url);
     debug(this.identity + " not stored (folder didn't exist)");
     return false;
   }
@@ -203,19 +207,6 @@ FeedItem.prototype.isStored = function() {
       return true;
     }
     else {
-      debug(this.identity + " not stored? let's check all headers");
-      var foo = db.EnumerateMessages();
-      var i=0;
-      while (foo.hasMoreElements()) {
-        ++i;
-        var bar = foo.getNext();
-        bar = bar.QueryInterface(Components.interfaces.nsIMsgDBHdr);
-        if (this.messageID == bar.messageId) {
-          debug(this.identity + " stored (found it while checking all headers)");
-          return true;
-        }
-      }
-      debug(this.identity + " not stored (checked " + i + " headers but couldn't find it)");
       return false;
     }
   }

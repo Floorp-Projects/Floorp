@@ -64,10 +64,10 @@ function doAdd() {
         debug("folder for new feed " + feedProperties.feedName + " doesn't exist; creating");
 				debug("creating " + feedProperties.feedName + "as child of " + server.rootMsgFolder + "\n");
         server.rootMsgFolder.createSubfolder(feedProperties.feedName, getMessageWindow());
-				folder = server.rootMsgFolder.FindSubFolder(feedProperties.feedName);
-				var msgdb = folder.getMsgDatabase(null);
-				var folderInfo = msgdb.dBFolderInfo;
-				folderInfo.setCharPtrProperty("feedUrl", feedProperties.feedLocation);
+        folder = server.rootMsgFolder.FindSubFolder(feedProperties.feedName);
+        var msgdb = folder.getMsgDatabase(null);
+        var folderInfo = msgdb.dBFolderInfo;
+        folderInfo.setCharPtrProperty("feedUrl", feedProperties.feedLocation);
     }
 
     // XXX This should be something like "subscribe to feed".
@@ -152,6 +152,9 @@ function doEdit() {
             // the old folder as it is and merely create a new folder.
             //old_folder.rename(new_title, msgWindow);
             server.rootMsgFolder.createSubfolder(feedProperties.feedName, msgWindow);
+            folder = rootMsgFolder.FindSubFolder(feedProperties.feedName);
+            var msgdb = folder.getMsgDatabase(null);
+            msgdb.dBFolderInfo.setCharPtrProperty("feedUrl", feedProperties.feedLocation);
         }
         else if (new_folder) {
             // Do nothing, as everything is as it should be.
@@ -159,6 +162,9 @@ function doEdit() {
         else {
             // Neither old nor new folders exist, so just create the new one.
             server.rootMsgFolder.createSubfolder(feedProperties.feedName, msgWindow);
+            folder = rootMsgFolder.FindSubFolder(feedProperties.feedName);
+            var msgdb = folder.getMsgDatabase(null);
+            msgdb.dBFolderInfo.setCharPtrProperty("feedUrl", feedProperties.feedLocation);
         }
         updateTitle(item.id, feedProperties.feedName);
     }
