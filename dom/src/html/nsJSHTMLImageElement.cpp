@@ -25,14 +25,17 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMImage.h"
 #include "nsIDOMHTMLImageElement.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIImageIID, NS_IDOMIMAGE_IID);
 static NS_DEFINE_IID(kIHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 
+NS_DEF_PTR(nsIDOMImage);
 NS_DEF_PTR(nsIDOMHTMLImageElement);
 
 //
@@ -666,6 +669,7 @@ nsresult NS_InitHTMLImageElementClass(nsIScriptContext *aContext, void **aProtot
       return NS_ERROR_FAILURE;
     }
 
+    JS_AliasProperty(jscontext, global, "HTMLImageElement", "Image");
   }
   else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) {
     proto = JSVAL_TO_OBJECT(vp);

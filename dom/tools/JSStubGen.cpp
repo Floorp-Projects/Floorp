@@ -181,6 +181,7 @@ JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
 {
   char buf[512];
   ofstream *file = GetFile();
+  int any_props = 0;
 
   int i, icount = aSpec.InterfaceCount();
   for (i = 0; i < icount; i++) {
@@ -194,9 +195,13 @@ JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
       IdlAttribute *attr = iface->GetAttributeAt(a);
       char attr_name[128];
 
+      any_props = 1;
       if ((i == 0) && (a == 0)) {
         sprintf(buf, kPropEnumStr, iface->GetName(), iface->GetName());
         *file << buf;
+      }
+      else if (a == 0) {
+        *file << ",\n";
       }
 
       strcpy(attr_name, attr->GetName());
@@ -204,13 +209,13 @@ JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
 
       sprintf(buf, kPropSlotStr, iface_name, attr_name, i+1, a+1);
       *file << buf;
-      if ((a == acount-1) && (i == icount-1)) {
-        *file << "\n};\n";
-      }
-      else {
+      if (a != acount-1) {
         *file << ",\n";
       }
     }
+  }
+  if (any_props) {
+    *file << "\n};\n";
   }
 }
 
@@ -1042,6 +1047,9 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
   int i, icount = aSpec.InterfaceCount();
   for (i = 0; i < icount; i++) {
     IdlInterface *iface = aSpec.GetInterfaceAt(i);
+    char iface_name[128];
+
+    GetCapitalizedName(iface_name, *iface);
 
     int m, mcount = iface->FunctionCount();
     for (m = 0; m < mcount; m++) {
@@ -1052,6 +1060,13 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
       int p, pcount = func->ParameterCount();
 
       GetCapitalizedName(method_name, *func);
+      // If this is a constructor defined in a non-primary interface
+      // don't have a method for it...we'll alias it to the constructor
+      // for the primary interface.
+      if ((strcmp(method_name, iface_name) == 0) && 
+          (iface != primary_iface)) {
+        continue;
+      }
       GetVariableTypeForLocal(return_type, *rval);
       if (i == 0) {
         sprintf(buf, kMethodBeginStr, method_name, iface->GetName(),
@@ -1292,6 +1307,9 @@ JSStubGen::GenerateClassFunctions(IdlSpecification &aSpec)
   int i, icount = aSpec.InterfaceCount();
   for (i = 0; i < icount; i++) {
     IdlInterface *iface = aSpec.GetInterfaceAt(i);
+    char iface_name[128];
+    
+    GetCapitalizedName(iface_name, *iface);
     
     int m, mcount = iface->FunctionCount();
     for (m = 0; m < mcount; m++) {
@@ -1299,6 +1317,13 @@ JSStubGen::GenerateClassFunctions(IdlSpecification &aSpec)
       IdlFunction *func = iface->GetFunctionAt(m);
 
       GetCapitalizedName(method_name, *func);
+      // If this is a constructor defined in a non-primary interface
+      // don't have a method for it...we'll alias it to the constructor
+      // for the primary interface.
+      if ((strcmp(method_name, iface_name) == 0) && 
+          (iface != primary_iface)) {
+        continue;
+      }
       sprintf(buf, kFuncSpecEntryStr, func->GetName(),
               iface->GetName(), method_name,
               func->ParameterCount());
@@ -1410,6 +1435,9 @@ static const char *kInitClassBodyStr =
    sprintf(buffer, kInitClassBodyStr, className, className,     \
            className, className) 
 
+static const char *kAliasConstructorStr =
+"    JS_AliasProperty(jscontext, global, \"%s\", \"%s\");\n";
+
 static const char *kInitStaticBeginStr =
 "    if ((PR_TRUE == JS_LookupProperty(jscontext, global, \"%s\", &vp)) &&\n"
 "        JSVAL_IS_OBJECT(vp) &&\n"
@@ -1466,8 +1494,31 @@ JSStubGen::GenerateInitClass(IdlSpecification &aSpec)
   JSGEN_GENERATE_INITCLASSBODY(buf, primary_class);
   *file << buf;
 
-  int c, ccount = primary_iface->ConstCount();
-  
+  int i, icount = aSpec.InterfaceCount();
+  for (i = 0; i < icount; i++) {
+    IdlInterface *iface = aSpec.GetInterfaceAt(i);
+    char iface_name[128];
+    
+    GetCapitalizedName(iface_name, *iface);
+    
+    int m, mcount = iface->FunctionCount();
+    for (m = 0; m < mcount; m++) {
+      char method_name[128];
+      IdlFunction *func = iface->GetFunctionAt(m);
+
+      GetCapitalizedName(method_name, *func);
+      // If this is a constructor defined in a non-primary interface
+      // don't have a method for it...we'll alias it to the constructor
+      // for the primary interface.
+      if ((strcmp(method_name, iface_name) == 0) && 
+          (iface != primary_iface)) {
+        sprintf(buf, kAliasConstructorStr, primary_class, method_name);
+        *file << buf;
+      }
+    }
+  }
+
+  int c, ccount = primary_iface->ConstCount();  
   if (ccount > 0) {
     sprintf(buf, kInitStaticBeginStr, primary_iface->GetName());
     *file << buf;

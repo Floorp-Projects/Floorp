@@ -13,3 +13,7 @@
      attribute wstring         vspace;
      attribute wstring         width;
    };
+
+   interface Image {
+     void Image();
+   };

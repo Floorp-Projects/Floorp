@@ -27,6 +27,7 @@
 #include "nsIDOMAttribute.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMHTMLImageElement.h"
 
 const uint32 gGCSize = 4L * 1024L * 1024L;
 const size_t gStackSize = 8192;
@@ -137,7 +138,9 @@ nsresult nsJSContext::InitClasses()
       NS_OK == NS_InitTextClass(this, nsnull) &&
       NS_OK == NS_InitAttributeClass(this, nsnull) &&
       NS_OK == NS_InitNamedNodeMapClass(this, nsnull) &&
-      NS_OK == NS_InitNodeListClass(this, nsnull)) {
+      NS_OK == NS_InitNodeListClass(this, nsnull) &&
+      // XXX Temporarily here. This shouldn't be hardcoded.
+      NS_OK == NS_InitHTMLImageElementClass(this, nsnull)) {
     res = NS_OK;
   }
 
