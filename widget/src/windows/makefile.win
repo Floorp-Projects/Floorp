@@ -33,7 +33,6 @@ CPPSRCS =              \
 	nsMenuBar.cpp        \
 	nsMenu.cpp           \
 	nsMenuItem.cpp       \
-	nsObject.cpp         \
 	nsWindow.cpp         \
 	nsButton.cpp         \
 	nsCheckButton.cpp    \
