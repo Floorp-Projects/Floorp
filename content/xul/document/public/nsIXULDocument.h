@@ -101,13 +101,10 @@ public:
    */
   NS_IMETHOD AddForwardReference(nsForwardReference* aForwardReference) = 0;
 
-  NS_IMETHOD ResolveForwardReferences() = 0;
-
   /**
-   * Create a XUL document from a prototype
+   * Resolve the all of the document's forward references.
    */
-  NS_IMETHOD CreateFromPrototype(const char* aCommand,
-                                 nsIXULPrototypeDocument* aPrototype) = 0;
+  NS_IMETHOD ResolveForwardReferences() = 0;
 };
 
 // factory functions

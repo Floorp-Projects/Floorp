@@ -286,9 +286,6 @@ public:
     NS_IMETHOD AddForwardReference(nsForwardReference* aRef);
     NS_IMETHOD ResolveForwardReferences();
 
-    NS_IMETHOD CreateFromPrototype(const char* aCommand,
-                                   nsIXULPrototypeDocument* aPrototype);
-
     // nsIStreamLoadableDocument interface
     NS_IMETHOD LoadFromStream(nsIInputStream& xulStream,
                               nsISupports* aContainer,
@@ -750,24 +747,21 @@ protected:
     nsTime mLoadStart;
 #endif
 
-    class CachedChromeLoader : public nsIStreamObserver
-    {
+    class CachedChromeStreamListener : public nsIStreamListener {
     protected:
         nsXULDocument* mDocument;
-        PRBool mLoading;
+
+        virtual ~CachedChromeStreamListener();
 
     public:
-        CachedChromeLoader(nsXULDocument* aDocument);
-        virtual ~CachedChromeLoader();
+        CachedChromeStreamListener(nsXULDocument* aDocument);
 
-        // nsISupports interface
         NS_DECL_ISUPPORTS
-
-        // nsIStreamObserver interface
         NS_DECL_NSISTREAMOBSERVER
+        NS_DECL_NSISTREAMLISTENER
     };
 
-    friend class CachedChromeLoader;
+    friend class CachedChromeStreamListener;
 };
 
 
