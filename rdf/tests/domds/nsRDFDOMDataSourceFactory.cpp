@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsCOMPtr.h"
+#include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsRDFDOMDataSource.h"
 #include "nsRDFDOMResourceFactory.h"
@@ -31,71 +32,21 @@ static NS_DEFINE_CID(kRDFDOMDataSourceCID, NS_RDF_DOMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFDOMResourceFactoryCID, NS_RDF_DOMRESOURCEFACTORY_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-// return the proper factory to the caller
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char* aClassName,
-             const char* aProgID,
-             nsIFactory **aFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRDFDOMDataSource);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRDFDOMViewerElement);
+
+struct components_t {
+  nsCID cid;
+  nsIGenericFactory::ConstructorProcPtr constructor;
+  const char *progid;
+  const char *description;
+};
+
+static components_t components[] =
 {
-  nsresult rv=NS_OK;
-  nsIGenericFactory* fact;
-  if (aClass.Equals(kRDFDOMDataSourceCID)) {
-    rv = NS_NewGenericFactory(&fact, nsRDFDOMDataSource::Create);
-    printf("Creating datasource: %s\n", NS_SUCCEEDED(rv) ? "succeed" : "failed");
-  } else
-  if (aClass.Equals(kRDFDOMResourceFactoryCID)) {
-    rv = NS_NewGenericFactory(&fact, nsRDFDOMViewerElement::Create);
-    printf("Creating resource: %s\n", NS_SUCCEEDED(rv) ? "succeed" : "failed");
-  }
-  else
-    rv = NS_ERROR_FAILURE;
+  { NS_RDF_DOMDATASOURCE_CID,        &nsRDFDOMDataSourceConstructor,  NS_RDF_DATASOURCE_PROGID_PREFIX "domds",  },
+  { NS_RDF_DOMRESOURCEFACTORY_CID, &nsRDFDOMViewerElementConstructor, NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "dom", },
+};
 
-  if (NS_SUCCEEDED(rv))
-    *aFactory = fact;
-
-#ifdef DEBUG_alecf
-  printf("nsRDFDOMDataSource's NSGetFactory!\n");
-#endif
-  return rv;
-}
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
-{
-  nsresult rv;
-  NS_WITH_SERVICE1(nsIComponentManager,
-                   compMgr,
-                   aServMgr,
-                   kComponentManagerCID,
-                   &rv);
-  
-  if (NS_FAILED(rv)) return rv;
-  printf("Registering DOM Viewer\n");
-  rv = compMgr->RegisterComponent(kRDFDOMDataSourceCID,
-                                  "Generic DataSource DataSource",
-                                  NS_RDF_DATASOURCE_PROGID_PREFIX "domds",
-                                  aPath, PR_TRUE, PR_TRUE);
-
-  rv = compMgr->RegisterComponent(kRDFDOMResourceFactoryCID,
-                                  "DOM element resource factory",
-                                  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "dom",
-                                  aPath, PR_TRUE, PR_TRUE);
-  return rv;
-
-}
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
-{
-    nsresult rv;
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr,
-                     aServMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->UnregisterComponent(kRDFDOMDataSourceCID, aPath);
-    rv = compMgr->UnregisterComponent(kRDFDOMResourceFactoryCID, aPath);
-
-    return rv;
-}
+NS_IMPL_MODULE(components)
+NS_IMPL_NSGETMODULE(nsModule)
