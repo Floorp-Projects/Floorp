@@ -49,13 +49,13 @@ native nsAutoString(nsAutoString);
 interface nsIWalletService : nsISupports {
   [noscript]void WALLET_PreEdit(in nsAutoStringRef walletList);
   [noscript]void WALLET_PostEdit(in nsAutoString walletList);
-  void WALLET_ChangePassword();
+  boolean WALLET_ChangePassword();
   void WALLET_DeleteAll();
-  void WALLET_RequestToCapture(in nsIPresShell shell);
-  void WALLET_Prefill(in nsIPresShell shell, in boolean quick);
+  PRUint32 WALLET_RequestToCapture(in nsIPresShell shell);
+  boolean WALLET_Prefill(in nsIPresShell shell, in boolean quick);
   [noscript]void WALLET_PrefillReturn(in nsAutoString results);
   void WALLET_FetchFromNetCenter();
-  void WALLET_ExpirePassword();
+  boolean WALLET_ExpirePassword();
 
   void SI_RemoveUser(in string key, in wstring userName);
   void SI_StorePassword(in string key, in wstring userName, in wstring pwd);

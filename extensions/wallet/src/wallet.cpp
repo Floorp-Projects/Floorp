@@ -1061,36 +1061,25 @@ PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
 }
 
 PUBLIC void
-WLLT_ExpirePassword() {
+WLLT_ExpirePassword(PRBool* status) {
   nsresult rv = wallet_CryptSetup();
   if (NS_SUCCEEDED(rv)) {
     rv = gSecretDecoderRing->Logout();
   }
-  PRUnichar * message;
-  if (NS_FAILED(rv)) {
-    message = Wallet_Localize("PasswordNotExpired");
-  } else {
-    message = Wallet_Localize("PasswordExpired");
-  }
-  Wallet_Alert(message);
-  Recycle(message);
+  *status = NS_SUCCEEDED(rv);
 }
 
 PRBool changingPassword = PR_FALSE;
 
-PUBLIC
-void WLLT_ChangePassword() {
+PUBLIC void
+WLLT_ChangePassword(PRBool* status) {
   nsresult rv = wallet_CryptSetup();
   if (NS_SUCCEEDED(rv)) {
     changingPassword = PR_TRUE;
     rv = gSecretDecoderRing->ChangePassword();
     changingPassword = PR_FALSE;
   }
-  if (NS_FAILED(rv)) {
-    PRUnichar * message = Wallet_Localize("PasswordNotChanged");
-    Wallet_Alert(message);
-    Recycle(message);
-  }
+  *status = NS_SUCCEEDED(rv);
 }
 
 PUBLIC nsresult
@@ -2873,16 +2862,11 @@ WLLT_PreEdit(nsString& walletList)
 
 PUBLIC void
 WLLT_DeleteAll() {
-  PRUnichar * message;
-  message = Wallet_Localize("AllDataWillBeCleared");
-  if (Wallet_Confirm(message)) {
-    wallet_Initialize(PR_FALSE);
-    wallet_Clear(&wallet_SchemaToValue_list);
-    wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
-    SI_DeleteAll();
-    SI_SetBoolPref(pref_Crypto, PR_FALSE);
-  }
-  Recycle(message);
+  wallet_Initialize(PR_FALSE);
+  wallet_Clear(&wallet_SchemaToValue_list);
+  wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
+  SI_DeleteAll();
+  SI_SetBoolPref(pref_Crypto, PR_FALSE);
 }
 
 MODULE_PRIVATE int PR_CALLBACK
@@ -3102,9 +3086,10 @@ WLLT_PrefillReturn(const nsString& results)
  * get the form elements on the current page and prefill them if possible
  */
 PUBLIC nsresult
-WLLT_Prefill(nsIPresShell* shell, PRBool quick)
+WLLT_Prefill(nsIPresShell* shell, PRBool quick, PRBool* doPrefillMessage)
 {
   nsAutoString urlName;
+  *doPrefillMessage = PR_FALSE;
 
   /* create list of elements that can be prefilled */
   nsVoidArray *wallet_PrefillElement_list=new nsVoidArray();
@@ -3210,11 +3195,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick)
 
   /* return if no elements were put into the list */
   if (LIST_COUNT(wallet_PrefillElement_list) == 0) {
-    if (!gEncryptionFailure) {
-      PRUnichar * message = Wallet_Localize("noPrefills");
-      Wallet_Alert(message);
-      Recycle(message);
-    }
+    *doPrefillMessage = !gEncryptionFailure;
     return NS_ERROR_FAILURE; // indicates to caller not to display preview screen
   }
 
@@ -3265,7 +3246,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick)
 }
 
 PUBLIC void
-WLLT_RequestToCapture(nsIPresShell* shell) {
+WLLT_RequestToCapture(nsIPresShell* shell, PRUint32* status) {
   /* starting with the present shell, get each form element and put them on a list */
   nsresult result;
   PRInt32 captureCount = 0;
@@ -3349,16 +3330,13 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
       }
     }
   }
-  PRUnichar * message;
   if (gEncryptionFailure) {
-    message = Wallet_Localize("UnableToCapture");
+    *status = -1; /* UnableToCapture */
   } else if (captureCount) {
-    message = Wallet_Localize("Captured");
+    *status = 0; /* Captured */
   } else {
-    message = Wallet_Localize("NotCaptured");
+    *status = +1; /* NotCaptured */
   }
-  Wallet_Alert(message);
-  Recycle(message);
 }
 
 /* should move this to an include file */

@@ -982,7 +982,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
     nsString urlString2;
-    res = walletservice->WALLET_Prefill(shell, (PRVCY_QPREFILL == aID));
+//    res = walletservice->WALLET_Prefill(shell, (PRVCY_QPREFILL == aID));
     NS_RELEASE(walletservice);
   }
 

@@ -79,8 +79,8 @@ NS_IMETHODIMP nsWalletlibService::WALLET_PostEdit(nsAutoString walletList) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_ChangePassword() {
-  ::WLLT_ChangePassword();
+NS_IMETHODIMP nsWalletlibService::WALLET_ChangePassword(PRBool* status) {
+  ::WLLT_ChangePassword(status);
   return NS_OK;
 }
 
@@ -89,13 +89,13 @@ NS_IMETHODIMP nsWalletlibService::WALLET_DeleteAll() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_RequestToCapture(nsIPresShell* shell) {
-  ::WLLT_RequestToCapture(shell);
+NS_IMETHODIMP nsWalletlibService::WALLET_RequestToCapture(nsIPresShell* shell, PRUint32* status) {
+  ::WLLT_RequestToCapture(shell, status);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_Prefill(nsIPresShell* shell, PRBool quick) {
-  return ::WLLT_Prefill(shell, quick);
+NS_IMETHODIMP nsWalletlibService::WALLET_Prefill(nsIPresShell* shell, PRBool quick, PRBool* doPrefillMessage) {
+  return ::WLLT_Prefill(shell, quick, doPrefillMessage);
 }
 
 NS_IMETHODIMP nsWalletlibService::WALLET_PrefillReturn(nsAutoString results){
@@ -108,8 +108,8 @@ NS_IMETHODIMP nsWalletlibService::WALLET_FetchFromNetCenter(){
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_ExpirePassword(){
-  ::WLLT_ExpirePassword();
+NS_IMETHODIMP nsWalletlibService::WALLET_ExpirePassword(PRBool* status){
+  ::WLLT_ExpirePassword(status);
   return NS_OK;
 }
 

@@ -273,17 +273,26 @@ function CheckForWalletAndImage()
 // perform a wallet action
 function WalletAction( action ) 
 {
+  var strings = document.getElementById("strings");
   if (action == "password" || action == "expire" || action == "clear") {
     wallet = Components.classes['component://netscape/wallet/wallet-service'];
     wallet = wallet.getService();
     wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
 
     if (action == "password") {
-      wallet.WALLET_ChangePassword();
+      if (!wallet.WALLET_ChangePassword()) {
+        window.alert(strings.getAttribute("PasswordNotChanged"));
+      }
     } else if (action == "expire") {
-      wallet.WALLET_ExpirePassword();
+      if (wallet.WALLET_ExpirePassword()) {
+        window.alert(strings.getAttribute("PasswordExpired"));
+      } else {
+        window.alert(strings.getAttribute("PasswordNotExpired"));
+      }
     } else if (action == "clear") {
-      wallet.WALLET_DeleteAll();
+      if (window.confirm(strings.getAttribute("AllDataWillBeCleared"))) {
+        wallet.WALLET_DeleteAll();
+      }
     }
     return;
   }
@@ -331,17 +340,28 @@ function WalletAction( action )
   if( appCore ) {
     switch( action ) {
       case "safefill":
-        appCore.walletPreview(window, window._content);
+        if (appCore.walletPreview(window, window._content)) {
+          window.alert(strings.getAttribute("noPrefills"));
+        }
         break;
 //    case "password":
 //      appCore.walletChangePassword();
 //      break;
       case "quickfill": 
-        appCore.walletQuickFillin(window._content);
+        if (appCore.walletQuickFillin(window._content)) {
+          window.alert(strings.getAttribute("noPrefills"));
+        }
         break;
       case "capture":
       default:
-        appCore.walletRequestToCapture(window._content);
+        status = appCore.walletRequestToCapture(window._content);
+        if (status == -1) { /* UnableToCapture */
+          window.alert(strings.getAttribute("UnableToCapture"));
+        } else if (status == 0) { /* Captured */
+          window.alert(strings.getAttribute("Captured"));
+        } else if (status == +1) { /* NotCaptured */
+          window.alert(strings.getAttribute("NotCaptured"));
+        }
         break;
     }
   }

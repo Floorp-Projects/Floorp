@@ -45,7 +45,7 @@ XP_BEGIN_PROTOS
 static const char *pref_Crypto = "wallet.crypto";
 
 extern void
-WLLT_ChangePassword();
+WLLT_ChangePassword(PRBool* status);
 
 extern void
 WLLT_DeleteAll();
@@ -60,10 +60,10 @@ extern void
 WLLT_PrefillReturn(const nsString& results);
 
 extern void
-WLLT_RequestToCapture(nsIPresShell* shell);
+WLLT_RequestToCapture(nsIPresShell* shell, PRUint32* status);
 
 extern nsresult
-WLLT_Prefill(nsIPresShell* shell, PRBool quick);
+WLLT_Prefill(nsIPresShell* shell, PRBool quick, PRBool* doPrefillMessage);
 
 extern void
 WLLT_GetNopreviewListForViewer(nsString& aNopreviewList);
@@ -81,7 +81,7 @@ extern void
 WLLT_FetchFromNetCenter();
 
 extern void
-WLLT_ExpirePassword();
+WLLT_ExpirePassword(PRBool* status);
 
 extern void
 WLLT_InitReencryptCallback();

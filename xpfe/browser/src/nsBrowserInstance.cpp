@@ -809,7 +809,7 @@ nsBrowserInstance::GotoHistoryIndex(PRInt32 aIndex)
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
+nsBrowserInstance::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm, PRBool* doPrefillMessage)
 {
   NS_PRECONDITION(aForm != nsnull, "null ptr");
   if (! aForm)
@@ -828,7 +828,7 @@ nsBrowserInstance::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if (NS_SUCCEEDED(res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(presShell, PR_FALSE);
+    res = walletservice->WALLET_Prefill(presShell, PR_FALSE, doPrefillMessage);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     if (NS_FAILED(res)) { /* this just means that there was nothing to prefill */
       return NS_OK;
@@ -863,7 +863,7 @@ nsBrowserInstance::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::WalletChangePassword()
+nsBrowserInstance::WalletChangePassword(PRBool* status)
 {
   nsIWalletService *walletservice;
   nsresult res;
@@ -871,7 +871,7 @@ nsBrowserInstance::WalletChangePassword()
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_ChangePassword();
+    res = walletservice->WALLET_ChangePassword(status);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
   }
   return NS_OK;
@@ -880,7 +880,7 @@ nsBrowserInstance::WalletChangePassword()
 #include "nsIDOMHTMLDocument.h"
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 NS_IMETHODIMP    
-nsBrowserInstance::WalletQuickFillin(nsIDOMWindow* aWin)
+nsBrowserInstance::WalletQuickFillin(nsIDOMWindow* aWin, PRBool* doPrefillMessage)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (! aWin)
@@ -900,7 +900,7 @@ nsBrowserInstance::WalletQuickFillin(nsIDOMWindow* aWin)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(presShell, PR_TRUE);
+    res = walletservice->WALLET_Prefill(presShell, PR_TRUE, doPrefillMessage);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     return NS_OK;
   } else {
@@ -909,7 +909,7 @@ nsBrowserInstance::WalletQuickFillin(nsIDOMWindow* aWin)
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::WalletRequestToCapture(nsIDOMWindow* aWin)
+nsBrowserInstance::WalletRequestToCapture(nsIDOMWindow* aWin, PRUint32* status)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (! aWin)
@@ -929,7 +929,7 @@ nsBrowserInstance::WalletRequestToCapture(nsIDOMWindow* aWin)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_RequestToCapture(presShell);
+    res = walletservice->WALLET_RequestToCapture(presShell, status);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     return NS_OK;
   } else {

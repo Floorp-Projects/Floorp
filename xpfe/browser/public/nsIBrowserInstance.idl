@@ -47,11 +47,11 @@ interface nsIBrowserInstance : nsISupports {
 	void updateGoMenu(in nsIDOMNode goMenu);
     
     // Wallet (should reside elsewhere, somehow).
-    void walletPreview(in nsIDOMWindow win, in nsIDOMWindow form);
+    boolean walletPreview(in nsIDOMWindow win, in nsIDOMWindow form);
  
-    void walletChangePassword();
-    void walletQuickFillin(in nsIDOMWindow win);
-    void walletRequestToCapture(in nsIDOMWindow win);
+    boolean walletChangePassword();
+    boolean walletQuickFillin(in nsIDOMWindow win);
+    PRUint32 walletRequestToCapture(in nsIDOMWindow win);
     
     
     // Infrastructure.
