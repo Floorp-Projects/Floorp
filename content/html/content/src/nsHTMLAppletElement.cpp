@@ -225,6 +225,6 @@ nsHTMLAppletElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

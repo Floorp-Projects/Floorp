@@ -829,7 +829,7 @@ nsHTMLBodyElement::GetStyleHintForAttributeChange(
     *aHint = NS_STYLE_HINT_VISUAL;
   }
   else {
-    nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
+    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
   }
 
   return NS_OK;

@@ -1917,7 +1917,7 @@ static PRBool AttributeChangeRequiresReframe(const nsIAtom* aAttribute)
 }
 
 PRBool
-nsGenericHTMLElement::SetStyleHintForCommonAttributes(const nsIContent* aNode,
+nsGenericHTMLElement::GetStyleHintForCommonAttributes(const nsIContent* aNode,
                                                       const nsIAtom* aAttribute,
                                                       PRInt32* aHint)
 {

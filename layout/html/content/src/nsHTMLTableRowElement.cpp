@@ -631,7 +631,7 @@ nsHTMLTableRowElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, 
+  if (PR_TRUE == nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, 
     aAttribute, aHint)) {
     // Do nothing
   }
