@@ -1960,6 +1960,8 @@ build_user_agent_string(char *versionLocale)
 	strcat (buf, "NetBSD");
 #elif defined(__386BSD__)
 	strcat (buf, "BSD/386");
+#elif defined(__bsdi__)
+	strcat (buf, "BSD/OS");
 #elif defined(__osf__)
 	strcat (buf, "OSF1");
 #elif defined(AIXV3)
