@@ -64,6 +64,11 @@ TimeVal TimeVal::operator+(PRUint32 msec) const
 
   t->mSeconds += (PRUint32)(msec / 1000);
   t->mUSeconds += (msec % 1000) * 1000;
+
+  if (t->mUSeconds >= 1000000) {
+    t->mUSeconds -= 1000000;
+    t->mSeconds++;
+  }
  
   return *t;
 }
