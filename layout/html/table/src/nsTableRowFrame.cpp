@@ -1336,7 +1336,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
   }
   
   // recover the overflow area
-  aDesiredSize.mOverflowArea = nsRect(0, 0, mRect.width, mRect.height);
+  aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
   for (nsIFrame* cell = mFrames.FirstChild(); cell; cell = cell->GetNextSibling()) {
     ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, cell);
   }
