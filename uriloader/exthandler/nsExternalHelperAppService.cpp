@@ -1288,6 +1288,10 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutStream), mTempFile,
                                    PR_WRONLY | PR_CREATE_FILE, 0600);
+  if (NS_FAILED(rv)) {
+    mTempFile->Remove(PR_FALSE);
+    return rv;
+  }
 
 #if defined(XP_MAC) || defined (XP_MACOSX)
     nsXPIDLCString contentType;
@@ -1329,6 +1333,15 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   }
 
   nsresult rv = SetUpTempFile(aChannel);
+  if (NS_FAILED(rv)) {
+    mCanceled = PR_TRUE;
+    request->Cancel(rv);
+    nsAutoString path;
+    if (mTempFile)
+      mTempFile->GetPath(path);
+    SendStatusChange(kWriteError, rv, request, path);
+    return NS_OK;
+  }
 
   // Extract mime type for later use below.
   nsXPIDLCString MIMEType;
