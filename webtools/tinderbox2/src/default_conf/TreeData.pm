@@ -29,9 +29,9 @@
 # issue to work out.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/11/29 21:48:42 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2001/02/15 21:11:40 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
 
@@ -208,6 +208,21 @@ foreach $tree (keys %VC_TREE) {
 		     'Restricted' => "#e7e7e7", # a light grey
 		     'Closed' => "silver",
 		    );
+
+
+# Sort the buildnames, into a display order.  It may make sense to
+# define a local replacement function which sorts different trees into
+# locally meaningful orders (build columns in dependency order, test
+# columns last, etc)
+
+sub sort_tree_buildnames {
+  my ($tree, $buildnames_ref);
+
+  my (@out) = sort @{ $buildnames_ref };
+
+  return @out;
+}
+
 
 
 sub TreeState2color {
