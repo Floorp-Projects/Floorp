@@ -35,6 +35,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsProxyObjectManager.h"
+#include "nsIWebShell.h"
 
 #include "nsIEvaluateStringProxy.h"
 
@@ -228,8 +229,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     if (NS_FAILED(rv))
         return rv;
 
-    // Get principal of currently executing code, save for execution
-    
+    // Get principal of code for execution
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
     if (NS_FAILED(rv))
@@ -237,22 +237,23 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     
     PRBool hasPrincipal;
     if (NS_FAILED(securityManager->HasSubjectPrincipal(&hasPrincipal)))
-        return NS_ERROR_FAILURE;  
+        return NS_ERROR_FAILURE;
     nsCOMPtr<nsIPrincipal> principal;
     if (hasPrincipal) {
+        // script is currently executing; get principal from that script
 		if (NS_FAILED(securityManager->GetSubjectPrincipal(getter_AddRefs(principal))))
 			return NS_ERROR_FAILURE;
     } else {
-		// No scripts currently executing; get principal from global object
-		nsCOMPtr<nsIScriptGlobalObject> global;
-		owner->GetScriptGlobalObject(getter_AddRefs(global));
-		if (!global)
-			return NS_ERROR_FAILURE;
-		nsCOMPtr<nsIScriptGlobalObjectData> globalData(do_QueryInterface(global));
-		if (!globalData)
-			return NS_ERROR_FAILURE;
-		if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(principal)))) 
-		  return NS_ERROR_FAILURE;
+        // No scripts currently executing; get principal from referrer of link
+        nsCOMPtr<nsIWebShell> webShell;
+        webShell = do_QueryInterface(owner);
+        if (!webShell)
+            return NS_ERROR_FAILURE;
+        nsCOMPtr<nsIURI> uri;
+        if (NS_FAILED(webShell->GetReferrer(getter_AddRefs(uri))))
+            return NS_ERROR_FAILURE;
+        if (NS_FAILED(securityManager->CreateCodebasePrincipal(uri, getter_AddRefs(principal))))
+            return NS_ERROR_FAILURE;
 	}
 
 
