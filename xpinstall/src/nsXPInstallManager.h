@@ -105,7 +105,6 @@ class nsXPInstallManager : public nsIXPIListener,
         PRBool              mNeedsShutdown;
   
         nsCOMPtr<nsIXPIProgressDialog>  mDlg;
-        nsCOMPtr<nsIStringBundle>       mStringBundle;
         nsCOMPtr<nsISoftwareUpdate>     mInstallSvc;
 
         nsCOMPtr<nsIDOMWindowInternal>  mParentWindow;

@@ -91,18 +91,6 @@ nsXPInstallManager::nsXPInstallManager()
 
     // initialize mLastUpdate to the current time
     mLastUpdate = PR_Now();
-
-    // get the resourced xpinstall string bundle
-    mStringBundle = nsnull;
-    nsresult rv;
-    nsCOMPtr<nsIStringBundleService> service =
-        do_GetService( kStringBundleServiceCID, &rv );
-
-    if (NS_SUCCEEDED(rv) && service)
-    {
-        rv = service->CreateBundle( XPINSTALL_BUNDLE_URL,
-                                    getter_AddRefs(mStringBundle) );
-    }
 }
 
 
