@@ -921,7 +921,6 @@ void XSLTProcessor::processAction
 
         Element* actionElement = (Element*)xslAction;
         ps->pushAction(actionElement);
-        ps->pushCurrentNode(node);
 
         switch ( getElementType(nodeName, ps) ) {
 
@@ -955,20 +954,27 @@ void XSLTProcessor::processAction
                         child = child->getNextSibling();
                     }
 
+                    // Process xsl:with-param elements
+                    NamedMap* actualParams = processParameters(actionElement, node, ps);
+
                     //-- push nodeSet onto context stack
                     ps->getNodeSetStack()->push(nodeSet);
                     for (int i = 0; i < nodeSet->size(); i++) {
-                        Element* xslTemplate = ps->findTemplate(nodeSet->get(i), node, mode);
+                        Node* currNode = nodeSet->get(i);
+                        Element* xslTemplate = ps->findTemplate(currNode, node, mode);
                         if (xslTemplate) {
-                            NamedMap* actualParams = processParameters(actionElement, node, ps);
-                            processTemplate(nodeSet->get(i), xslTemplate, ps, actualParams);
-                            delete actualParams;
+                            ps->pushCurrentNode(currNode);
+                            processTemplate(currNode, xslTemplate, ps, actualParams);
+                            ps->popCurrentNode();
                         }
-                        else
-                            processDefaultTemplate(nodeSet->get(i), ps, mode);
+                        else {
+                            processDefaultTemplate(currNode, ps, mode);
+                        }
                     }
                     //-- remove nodeSet from context stack
                     ps->getNodeSetStack()->pop();
+
+                    delete actualParams;
                 }
                 else {
                     notifyError("error processing apply-templates");
@@ -1191,7 +1197,10 @@ void XSLTProcessor::processAction
                     //-- push nodeSet onto context stack
                     ps->getNodeSetStack()->push(nodeSet);
                     for (int i = 0; i < nodeSet->size(); i++) {
-                        processChildren(nodeSet->get(i), actionElement, ps);
+                        Node* currNode = nodeSet->get(i);
+                        ps->pushCurrentNode(currNode);
+                        processChildren(currNode, actionElement, ps);
+                        ps->popCurrentNode();
                     }
                     //-- remove nodeSet from context stack
                     ps->getNodeSetStack()->pop();
@@ -1453,7 +1462,6 @@ void XSLTProcessor::processAction
                 break;
         } //-- switch
         ps->popAction();
-        ps->popCurrentNode();
     } //-- end if (element)
 
     //cout << "XSLTProcessor#processAction [exit]\n";
@@ -1653,11 +1661,16 @@ void XSLTProcessor::processDefaultTemplate(Node* node, ProcessorState* ps, Strin
             //-- push nodeSet onto context stack
             ps->getNodeSetStack()->push(nodeSet);
             for (int i = 0; i < nodeSet->size(); i++) {
-                Element* xslTemplate = ps->findTemplate(nodeSet->get(i), node, mode);
-                if (xslTemplate)
-                    processTemplate(nodeSet->get(i), xslTemplate, ps, NULL);
-                else
-                    processDefaultTemplate(nodeSet->get(i), ps, mode);
+                Node* currNode = nodeSet->get(i);
+                Element* xslTemplate = ps->findTemplate(currNode, node, mode);
+                if (xslTemplate) {
+                    ps->pushCurrentNode(currNode);
+                    processTemplate(currNode, xslTemplate, ps, NULL);
+                    ps->popCurrentNode();
+                }
+                else {
+                    processDefaultTemplate(currNode, ps, mode);
+                }
             }
             //-- remove nodeSet from context stack
             ps->getNodeSetStack()->pop();
