@@ -5470,8 +5470,11 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 	nsresult	rv;
 	PRBool		isBookmarkedFlag = PR_FALSE, canAcceptFlag = PR_FALSE, isOrdinal;
 
-	if (NS_SUCCEEDED(rv = IsBookmarkedInternal(aSource, &isBookmarkedFlag)) &&
+	if (
+#ifndef MOZ_PHOENIX
+        NS_SUCCEEDED(rv = IsBookmarkedInternal(aSource, &isBookmarkedFlag)) &&
 		(isBookmarkedFlag == PR_TRUE) &&
+#endif
 		(NS_SUCCEEDED(rv = gRDFC->IsOrdinalProperty(aProperty, &isOrdinal))))
 	{
 		if (isOrdinal == PR_TRUE)
