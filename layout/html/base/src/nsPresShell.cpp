@@ -196,6 +196,10 @@ public:
     return rv;
   }
 
+  void operator delete(void* ptr, size_t size) {
+    delete [] ptr;
+  }
+
   // nsISupports
   NS_DECL_ISUPPORTS
 
@@ -367,7 +371,7 @@ private:
  * Note: the log module is created during library initialization which
  * means that you cannot perform logging before then.
  */
-static PRLogModuleInfo* gLogModule = PR_NewLogModule("verifyreflow");
+static PRLogModuleInfo* gLogModule;
 #endif
 
 static PRBool gVerifyReflow = PRBool(0x55);
@@ -378,6 +382,7 @@ nsIPresShell::GetVerifyReflowEnable()
 {
 #ifdef NS_DEBUG
   if (gVerifyReflow == PRBool(0x55)) {
+    gLogModule = PR_NewLogModule("verifyreflow");
     gVerifyReflow = 0 != gLogModule->level;
     if (gLogModule->level > 1) {
       gVerifyReflowAll = PR_TRUE;
