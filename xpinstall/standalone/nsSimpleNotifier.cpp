@@ -72,6 +72,12 @@ nsSimpleNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
     printf("Installation aborted.\n");
 }
 
+NS_IMETHODIMP
+nsSimpleNotifier::LogComment(const PRUnichar *message)
+{
+    printf("**NOTE: %s\n",message);
+}
+
 NS_IMETHOD
 nsSimpleNotifier::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {

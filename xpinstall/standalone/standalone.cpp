@@ -101,15 +101,14 @@ main(int argc, char **argv)
 
         nsSimpleNotifier *progress = new nsSimpleNotifier();
 
-        softwareUpdate->RegisterNotifier(progress);
-
 
         nsFileSpec jarFile(argv[i]);
         nsFileURL jarFileURL(jarFile);
         
         softwareUpdate->InstallJar(  nsString( jarFileURL.GetAsString() ) ,
                                      nsString( nsNSPRPath(jarFile) ), 
-                                     0x00000001);
+                                     0x0000FFFF,
+                                     progress);
 
     }
 
