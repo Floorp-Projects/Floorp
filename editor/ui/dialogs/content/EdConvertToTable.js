@@ -47,7 +47,6 @@ function Startup()
   dialog.deleteSepCharacter.checked = true;
 
   gIndex = dialog.sepRadioGroup.getAttribute("index");
-dump("***** Previous index of radio group in EdConvertToTable="+gIndex+"\n");
 
   switch (gIndex)
   {
@@ -71,33 +70,29 @@ dump("***** Previous index of radio group in EdConvertToTable="+gIndex+"\n");
   SetWindowLocation();
 }
 
+function InputSepCharacter()
+{
+  var str = dialog.sepCharacterInput.value;
+
+  // Limit input to 1 character
+  if (str.length > 1)
+    str.slice(0,1);
+
+  // We can never allow tag delimeters for separator character
+  if (str == "<" || str == ">")
+    str = "";
+
+  dialog.sepCharacterInput.value = str;
+}
+
 function SelectCharacter(radioGroupIndex)
 {
   gIndex = radioGroupIndex;
-dump("***** SelectCharacter index of radio group ="+gIndex+"\n");
   SetElementEnabledById("SepCharacterInput", gIndex == gOtherIndex);
 }
 
 function onOK()
 {
-  // 1 = OutputSelectionOnly, 1024 = OutputLFLineBreak
-  // 256 = OutputEncodeEntities
-  var str = editorShell.GetContentsAs("text/html", 1+1024);
-
-  // Replace nbsp with spaces:
-  str = str.replace(/\u00a0/g, " ");
-
-  // Trim trailing <p> or <br>
-  str = str.replace(/\s*<br>\s*$/, "");
-  str = str.replace(/\s*<p>\s*$/, "");
-
-  // Trim leading and trailing spaces
-  str = str.replace(/^\s+/, "");
-  str = str.replace(/\s+$/, "");
-  // Trim whitespace adjacent to <p> and <br> tags
-  str = str.replace(/\s+<p>\s+/g, "<br>");
-  str = str.replace(/\s+<br>\s+/g, "<br>");
-
   var sepCharacter = "";
   switch ( gIndex )
   {
@@ -112,12 +107,102 @@ function onOK()
       break;
   }
 
-  if (sepCharacter.length == 0)
-  {
-    ShowInputErrorMessage(editorShell.GetString("NoSeparatorCharacter"));
-    SetTextboxFocus(dialog.sepCharacterInput);
-    return false;
-  }
+  // 1 = OutputSelectionOnly, 1024 = OutputLFLineBreak
+  // 256 = OutputEncodeEntities
+  var str = editorShell.GetContentsAs("text/html", 1+1024);
+
+  // Replace nbsp with spaces:
+  str = str.replace(/\u00a0/g, " ");
+
+  // Strip out </p> completely
+  str = str.replace(/\s*<\/p>\s*/g, "");
+
+  // Trim whitespace adjacent to <p> and <br> tags
+  //  and replace <p> with <br> 
+  //  (which will be replaced with </tr> below)
+  str = str.replace(/\s*<p>\s*|\s*<br>\s*/g, "<br>");
+
+  // Trim leading <br>s
+  str = str.replace(/^(<br>)+/, "");
+
+  // Trim trailing <br>s
+  str = str.replace(/(<br>)+$/, "");
+
+  // Reduce multiple internal <br> to just 1
+  str = str.replace(/(<br>)+/g, "<br>");
+
+  // Trim leading and trailing spaces
+  str = str.replace(/^\s+|\s+$/, "");
+
+  // Remove all tag contents so we don't replace
+  //   separator character within tags
+  // Also converts lists to something usefull
+  var stack = [];
+  var start;
+  var end;
+  var searchStart = 0;
+  var listSeparator = "";
+  var listItemSeparator = "";
+  var endList = false;
+
+  do {
+    start = str.indexOf("<", searchStart);
+
+    if (start >= 0)
+    {
+      var end = str.indexOf(">", start+1);
+      if (end > start)
+      {
+        var tagContent = TrimString(str.slice(start+1, end));
+
+        if ( tagContent.match(/^ol|^ul|^dl/) )
+        {
+          //  Replace list tag with <BR> to start new row 
+          //   at begining of second or greater list tag
+          str = str.slice(0, start) + listSeparator + str.slice(end+1);
+          if (listSeparator == "")
+            listSeparator = "<br>";
+          
+          // Reset for list item separation into cells
+          listItemSeparator = "";
+        }
+        else if ( tagContent.match(/^li|^dt|^dd/) )
+        {
+          // Start a new row if this is first item after the ending the last list
+          if (endList)
+            listItemSeparator = "<br>";
+
+          // Start new cell at begining of second or greater list items
+          str = str.slice(0, start) + listItemSeparator + str.slice(end+1);
+
+          if (endList || listItemSeparator == "")
+            listItemSeparator = sepCharacter;
+
+          endList = false;
+        }
+        else 
+        {
+          // Find end tags
+          endList = tagContent.match(/^\/ol|^\/ul|^\/dl/);
+          if ( endList || tagContent.match(/^\/li|^\/dt|^\/dd/) )
+          {
+            // Strip out tag
+            str = str.slice(0, start) + str.slice(end+1);
+          }
+          else
+          {
+            // Not a list-related tag: Store tag contents in an array
+            stack.push(tagContent);
+           
+            // Keep the "<" and ">" while removing from source string
+            start++;
+            str = str.slice(0, start) + str.slice(end);
+          }
+        }
+      }
+      searchStart = start + 1;
+    }
+  } while (start >= 0);
 
   // Replace separator characters with table cells
   var replaceString;
@@ -126,7 +211,7 @@ function onOK()
     replaceString = "";
     // Replace one or more adjacent spaces
     if (sepCharacter == " ")
-      sepCharacter += "+"; 
+      sepCharacter += "\+"; 
   }  
   else
   {
@@ -134,25 +219,106 @@ function onOK()
     //  so include it at start of string to replace
     replaceString = sepCharacter;
   }
-  replaceString += " <td>"; 
+  replaceString += "<td>"; 
 
-  var pattern = new RegExp("\\" + sepCharacter, "g");
-  //pattern.global = true;
-  str = str.replace(pattern, replaceString);
+  if (sepCharacter.length > 0)
+  {
+    var pattern = new RegExp("\\" + sepCharacter, "g");
+    str = str.replace(pattern, replaceString);
+  }
+
+  // Put back tag contents that we removed above
+  searchStart = 0;
+  var stackIndex = 0;
+  do {
+    start = str.indexOf("<", searchStart);
+    end = start + 1;
+    if (start >= 0 && str.charAt(end) == ">")
+    {
+      // We really need a FIFO stack!
+      str = str.slice(0, end) + stack[stackIndex++] + str.slice(end);
+    }
+    searchStart = end;
+
+  } while (start >= 0);
 
   // End table row and start another for each br or p
   str = str.replace(/\s*<br>\s*/g, "</tr>\n<tr><td>");
 
   // Add the table tags and the opening and closing tr/td tags
-  str = "<table border=\"1\">\n<tr><td>" + str + "</tr>\n</table>\n";
+  // Default table attributes should be same as those used in nsHTMLEditor::CreateElementWithDefaults()
+  // (Default width="100%" is used in EdInsertTable.js)
+  str = "<table border=\"1\" width=\"100%\" cellpadding=\"2\" cellspacing=\"2\">\n<tr><td>" + str + "</tr>\n</table>\n";
 
   editorShell.BeginBatchChanges();
-  editorShell.InsertSource(str);
   
-  // Get the table just inserted
-  var selection = editorShell.editorSelection;
+  // Delete the selection -- makes it easier to find where table will insert
+  editorShell.DeleteSelection(0);
 
-  editorShell.NormalizeTable(null);
+  var anchorNodeBeforeInsert = editorShell.editorSelection.anchorNode;
+  var offset = editorShell.editorSelection.anchorOffset;
+  var nodeBeforeTable = null;
+  var nodeAfterTable = null;
+  if (anchorNodeBeforeInsert.nodeType == Node.TEXT_NODE)
+  {
+    // Text was split. Table should be right after the first or before 
+    nodeBeforeTable = anchorNodeBeforeInsert.previousSibling;
+    nodeAfterTable = anchorNodeBeforeInsert;
+  }
+  else
+  {
+    // Table should be inserted right after node pointed to by selection
+    if (offset > 0)
+      nodeBeforeTable = anchorNodeBeforeInsert.childNodes.item(offset - 1);
+
+    nodeAfterTable = anchorNodeBeforeInsert.childNodes.item(offset);
+  }
+  
+  editorShell.InsertSource(str);
+
+  var table = null;
+  if (nodeAfterTable)
+  {
+    var previous = nodeAfterTable.previousSibling;
+    if (previous && previous.nodeName.toLowerCase() == "table")
+      table = previous;
+  }
+  if (!table && nodeBeforeTable)
+  {
+    var next = nodeBeforeTable.nextSibling;
+    if (next && next.nodeName.toLowerCase() == "table")
+      table = next;
+  }
+
+  if (table)
+  {
+    // Fixup table only if pref is set
+    var prefs = GetPrefs();
+    try {
+      if (prefs && prefs.GetBoolPref("editor.table.maintain_structure") )
+        editorShell.NormalizeTable(table);
+    } catch(ex) {
+      dump(ex);
+    }
+
+    // Put caret in first cell
+    var firstRow = editorShell.GetFirstRow(table);
+    if (firstRow)
+    {
+      var node2 = firstRow.firstChild;
+      do {
+        if (node2.nodeName.toLowerCase() == "td" ||
+            node2.nodeName.toLowerCase() == "th")
+        {
+          cellNode = node2;
+          editorShell.editorSelection.collapse(node2, 0);
+          break;
+        }
+        node2 = node.nextSibling;
+      } while (node2);
+    }
+  }
+
   editorShell.EndBatchChanges();
 
   // Save persisted attributes
