@@ -145,15 +145,23 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 //-------------------------------------------------------------------------
 void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 {
+    //printf("nsMacEventDispatcher::SetActivated \n");
 	if (aActivatedWidget == mActiveWidget)
 		return;
 
+    if(aActivatedWidget) {
+      if ( eWindowType_popup == aActivatedWidget->GetWindowType() ) {
+        //printf("nsMacEventDispatcher::SetActivated type popup, bail\n");
+        return;
+      }
+    }
+    
 	// tell the old widget it is not focused
 	if (mActiveWidget)
 	{
 		mActiveWidget->ResetInputState();
 		mActiveWidget->RemoveDeleteObserver(this);
-		printf("nsMacEventDispatchHandler::SetActivated sends NS_LOSTFOCUS\n");
+		//printf("nsMacEventDispatchHandler::SetActivated sends NS_LOSTFOCUS\n");
 		DispatchGuiEvent(mActiveWidget, NS_LOSTFOCUS);
 	}
 
@@ -163,10 +171,10 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 	if (mActiveWidget)
 	{
 		mActiveWidget->AddDeleteObserver(this);
-		printf("nsMacEventDispatcher::SetActivated sends NS_GOTFOCUS\n");
+		//printf("nsMacEventDispatcher::SetActivated sends NS_GOTFOCUS\n");
 		DispatchGuiEvent(mActiveWidget, NS_GOTFOCUS);
 		
-		printf("nsMacEventDispatchHandler::SetActivated sends NS_ACTIVATE\n");
+		//printf("nsMacEventDispatchHandler::SetActivated sends NS_ACTIVATE\n");
 		DispatchGuiEvent(mActiveWidget, NS_ACTIVATE);
 	}
 }
@@ -176,10 +184,18 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 //-------------------------------------------------------------------------
 void nsMacEventDispatchHandler::SetDeactivated(nsWindow *aDeactivatedWidget)
 {
+    //printf("nsMacEventDispatchHandler::SetDeactivated\n");
+    if(aDeactivatedWidget) {
+      if ( eWindowType_popup == aDeactivatedWidget->GetWindowType() ) {
+        //printf("nsMacEventDispatchHandler::SetDeactivated type popup, bail\n");
+        return;
+      }
+    }
+      
 	// let the old one know it lost activation
 	if (mActiveWidget)
 	{	
-	    printf("nsMacEventDispatchHandler::SetDeactivated sends NS_DEACTIVATE\n");
+	    //printf("   nsMacEventDispatchHandler::SetDeactivated sends NS_DEACTIVATE\n");
 		DispatchGuiEvent(mActiveWidget, NS_DEACTIVATE);		
 		mActiveWidget->RemoveDeleteObserver(this);
 		mActiveWidget = nsnull;
@@ -954,8 +970,8 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 //-------------------------------------------------------------------------
 PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 {
-	OSErr	err;
- Boolean isActive;
+  OSErr err;
+  Boolean isActive;
 
   switch (aOSEvent.what)
   {
@@ -985,8 +1001,7 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		(err==noErr)?"":"ERROR", err);
 #endif
 		
-		//€TODO: we should restore the focus to the the widget
-		//       that had it when the window was deactivated
+		
 		nsWindow*	focusedWidget = mTopLevelWidget;
 		gEventDispatchHandler.SetActivated(focusedWidget);
 		
