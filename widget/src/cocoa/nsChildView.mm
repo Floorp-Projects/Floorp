@@ -1734,8 +1734,18 @@ nsChildView::GetQuickDrawPort()
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
-  // XXX Fire the context menu event into Gecko.
+  // Fire the context menu event into Gecko.
+  nsMouseEvent geckoEvent;
+  geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  [self convert:theEvent message:NS_CONTEXTMENU toGeckoEvent:&geckoEvent];
+  geckoEvent.clickCount = 0;
+  
+  // send event into Gecko by going directly to the
+  // the widget.
+  PRBool result = mGeckoChild->DispatchMouseEvent(geckoEvent);
 
+  printf("The result is: %d\n");
+  
   // XXX If we don't get an ignore status, then we now need to go up our
   // view chain and ask for a menu to return.
   return nil;
