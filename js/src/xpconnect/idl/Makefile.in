@@ -59,4 +59,10 @@ XPIDLSRCS	= \
 		XPCIDispatch.idl \
 		$(NULL)
 
+ifdef XPC_IDISPATCH_SUPPORT
+XPIDLSRCS	+= \
+		nsIDispatchSupport.idl \
+		$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk

@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -76,7 +77,7 @@ VARTYPE XPCDispConvert::JSTypeToCOMType(XPCCallContext& ccx, jsval val)
 }
 
 JSBool XPCDispConvert::JSArrayToCOMArray(XPCCallContext& ccx, JSObject *obj, 
-                                        VARIANT & var, uintN& err)
+                                        VARIANT & var, nsresult& err)
 {
     err = NS_OK;
     jsuint len;
@@ -89,7 +90,7 @@ JSBool XPCDispConvert::JSArrayToCOMArray(XPCCallContext& ccx, JSObject *obj,
     SAFEARRAY * array = SafeArrayCreateVector(VT_VARIANT, 0, len);
     for(long index = 0; index < len; ++index)
     {
-        VARIANT arrayVar;
+        _variant_t arrayVar;
         jsval val;
         if(JS_GetElement(ccx, obj, index, &val) &&
            JSToCOM(ccx, val, arrayVar, err))
@@ -113,7 +114,7 @@ JSBool XPCDispConvert::JSArrayToCOMArray(XPCCallContext& ccx, JSObject *obj,
 JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
                               jsval src,
                               VARIANT & dest,
-                              uintN& err)
+                              nsresult& err)
 {
     err = NS_OK;
     if(JSVAL_IS_STRING(src))
@@ -191,8 +192,9 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
     return JS_TRUE;
 }
 
-JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx, const VARIANT & src,
-                                        jsval & dest,uintN& err)
+JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx,
+                                        const _variant_t & src,
+                                        jsval & dest, nsresult& err)
 {
     err = NS_OK;
     // We only support one dimensional arrays for now
@@ -214,7 +216,7 @@ JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx, const VARIANT & sr
         err = NS_ERROR_OUT_OF_MEMORY;
     }
     // Devine the type of our array
-    VARIANT var;
+    _variant_t var;
     if((src.vt & VT_ARRAY) != 0)
     {
         var.vt = src.vt & ~VT_ARRAY;
@@ -240,12 +242,34 @@ JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx, const VARIANT & sr
     return JS_TRUE;
 }
 
-JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const VARIANT & src,
-                              jsval & dest,uintN& err)
+inline
+jsval NumberToJSVal(JSContext* cx, int value)
+{
+    jsval val;
+    if (INT_FITS_IN_JSVAL(value))
+        val = INT_TO_JSVAL(value);
+    else
+    {
+        if (!JS_NewDoubleValue(cx, NS_STATIC_CAST(jsdouble,value), &val))
+            val = JSVAL_ZERO;
+    }
+    return val;
+}
+
+inline
+jsval NumberToJSVal(JSContext* cx, double value)
+{
+    jsval val;
+    if (JS_NewDoubleValue(cx, NS_STATIC_CAST(jsdouble, value), &val))
+        return val;
+    else
+        return JSVAL_ZERO;
+}
+
+JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const _variant_t & src,
+                              jsval& dest, nsresult& err)
 {
     err = NS_OK;
-    int x = VT_BSTR;
-    int y = VT_BYREF;
     if(src.vt & VT_ARRAY || src.vt == VT_SAFEARRAY)
     {
         return COMArrayToJSArray(ccx, src, dest, err);
@@ -269,7 +293,7 @@ JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const VARIANT & src,
         break;
         case VT_I4:
         {
-            dest = INT_TO_JSVAL(src.lVal);
+            dest = NumberToJSVal(ccx, src.lVal);
         }
         break;
         case VT_UI1:
@@ -284,12 +308,12 @@ JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const VARIANT & src,
         break;
         case VT_R4:
         {
-            dest = DOUBLE_TO_JSVAL(NS_STATIC_CAST(float,src.fltVal));
+            dest = NumberToJSVal(ccx, src.fltVal);
         }
         break;
         case VT_R8:
         {
-            dest = DOUBLE_TO_JSVAL(src.dblVal);
+            dest = NumberToJSVal(ccx, src.dblVal);
         }
         break;
         case VT_BOOL:
@@ -311,7 +335,6 @@ JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const VARIANT & src,
         case VT_CY:
         case VT_DATE:
         case VT_UNKNOWN:
-        case VT_ARRAY:
         case VT_I1:
         case VT_UI2:
         case VT_UI4:

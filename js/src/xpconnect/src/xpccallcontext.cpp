@@ -168,6 +168,9 @@ XPCCallContext::SetName(jsval name)
 
     mName = name;
 
+#ifdef XPC_IDISPATCH_SUPPORT
+    mIDispatchMember = nsnull;
+#endif
     if(mTearOff)
     {
         mSet = nsnull;
@@ -220,6 +223,9 @@ XPCCallContext::SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
 
     if(mState < HAVE_NAME)
         mState = HAVE_NAME;
+#ifdef XPC_IDISPATCH_SUPPORT
+    mIDispatchMember = nsnull;
+#endif
 }
 
 void
@@ -476,6 +482,7 @@ XPCCallContext::SetIDispatchInfo(XPCNativeInterface* iface,
 
     mSet = nsnull;
     mInterface = iface;
+    mMember = nsnull;
     mIDispatchMember = member;
     mName = NS_REINTERPRET_CAST(XPCDispInterface::Member*,member)->GetName();
 

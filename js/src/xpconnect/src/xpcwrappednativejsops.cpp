@@ -647,8 +647,8 @@ MarkScopeJSObjects(JSContext *cx, XPCWrappedNativeScope* scope, void *arg)
     }
 }
 
-static void
-MarkForValidWrapper(JSContext *cx, XPCWrappedNative* wrapper, void *arg)
+void
+xpc_MarkForValidWrapper(JSContext *cx, XPCWrappedNative* wrapper, void *arg)
 {
     // NOTE: It might be nice to also do the wrapper->Mark() call here too.
     // That call marks the wrapper's and wrapper's proto's interface sets.
@@ -687,7 +687,7 @@ XPC_WN_Shared_Mark(JSContext *cx, JSObject *obj, void *arg)
         XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
 
     if(wrapper && wrapper->IsValid())
-        MarkForValidWrapper(cx, wrapper, arg);
+        xpc_MarkForValidWrapper(cx, wrapper, arg);
     return 1;
 }
 
@@ -881,7 +881,7 @@ XPC_WN_Helper_Mark(JSContext *cx, JSObject *obj, void *arg)
     if(wrapper && wrapper->IsValid())
     {
         wrapper->GetScriptableCallback()->Mark(wrapper, cx, obj, arg, &ignored);
-        MarkForValidWrapper(cx, wrapper, arg);
+        xpc_MarkForValidWrapper(cx, wrapper, arg);
     }
     return (uint32) ignored;
 }

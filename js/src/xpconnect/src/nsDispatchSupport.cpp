@@ -35,17 +35,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-%{C++
-#error "You should not be including this file"
-%}
+#include "XPCPrivate.h"
 
-#include "nsISupports.idl"
+nsDispatchSupport* nsDispatchSupport::mInstance = nsnull;
 
-/**
- * This interface is not to be used directly, it is to be used internally
- * for XPConnect's IDispatch support
- */
-[scriptable, uuid(00020400-0000-0000-C000-000000000046)]
-interface IDispatch : nsISupports
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDispatchSupport, nsIDispatchSupport)
+
+nsDispatchSupport::nsDispatchSupport()
 {
-};
+  NS_INIT_ISUPPORTS();
+  /* member initializers and constructor code */
+}
+
+nsDispatchSupport::~nsDispatchSupport()
+{
+  /* destructor code */
+}
+
+/* void COMVariant2JSVal (in COMVARIANTPtr comvar, out JSVal val); */
+NS_IMETHODIMP nsDispatchSupport::COMVariant2JSVal(VARIANT * comvar, jsval *val)
+{
+    XPCCallContext ccx(NATIVE_CALLER);
+    nsresult retval;
+    XPCDispConvert::COMToJS(ccx, *comvar, *val, retval);
+    return retval;
+}
+
+/* void COMArray2JSArray (in COMVARIANTPtr comvar, out JSObjectPtr obj); */
+NS_IMETHODIMP nsDispatchSupport::JSVal2COMVariant(jsval val, VARIANT * comvar)
+{
+    XPCCallContext ccx(NATIVE_CALLER);
+    nsresult retval;
+    XPCDispConvert::JSToCOM(ccx, val, *comvar, retval);
+    return retval;
+}
+
+NS_IMETHODIMP nsDispatchSupport::CreateInstance(const char * className, PRBool testScriptability, IDispatch ** result)
+{
+    return XPCDispObject::COMCreateInstance(className, testScriptability, result);
+}
+
+nsDispatchSupport* nsDispatchSupport::GetSingleton()
+{
+    if(!mInstance)
+    {
+        mInstance = new nsDispatchSupport;
+        NS_IF_ADDREF(mInstance);
+    }
+    NS_IF_ADDREF(mInstance);
+    return mInstance;
+}

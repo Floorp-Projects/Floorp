@@ -563,17 +563,17 @@ inline void XPCNativeSet::ASSERT_NotMarked()
 /***************************************************************************/
 
 inline
-JSObject* XPCWrappedNativeTearOff::GetJSObject() const 
+JSObject* XPCWrappedNativeTearOff::GetJSObject() const
 {
 #ifdef XPC_IDISPATCH_SUPPORT
-    return IsIDispatch() ? GetIDispatchInfo()->GetJSObject() : mJSObject; 
+    return IsIDispatch() ? GetIDispatchInfo()->GetJSObject() : mJSObject;
 #else
     return mJSObject;
 #endif
 }
 
 inline
-void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)                
+void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)
 {
 #ifdef XPC_IDISPATCH_SUPPORT
     if(IsIDispatch())
@@ -585,27 +585,38 @@ void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)
 
 #ifdef XPC_IDISPATCH_SUPPORT
 inline void
-XPCWrappedNativeTearOff::SetIDispatch(JSContext* cx) 
+XPCWrappedNativeTearOff::SetIDispatch(JSContext* cx)
 {
     mJSObject = (JSObject*)(((jsword)
-        ::XPCDispInterface::NewInstance(cx, 
-                                          mNative)) | 2); 
+        ::XPCDispInterface::NewInstance(cx,
+                                          mNative)) | 2);
 }
 
 inline XPCDispInterface* 
-XPCWrappedNativeTearOff::GetIDispatchInfo() const 
+XPCWrappedNativeTearOff::GetIDispatchInfo() const
 {
     return NS_REINTERPRET_CAST(XPCDispInterface*,
                                (((jsword)mJSObject) & ~JSOBJECT_MASK));
 }
 
-inline JSBool 
-XPCWrappedNativeTearOff::IsIDispatch() const 
+inline JSBool
+XPCWrappedNativeTearOff::IsIDispatch() const
 {
     return (JSBool)(((jsword)mJSObject) & IDISPATCH_BIT);
 }
 
 #endif
+
+inline
+XPCWrappedNativeTearOff::~XPCWrappedNativeTearOff()
+{
+    NS_ASSERTION(!(GetInterface()||GetNative()||GetJSObject()), "tearoff not empty in dtor");
+#ifdef XPC_IDISPATCH_SUPPORT
+    if (IsIDispatch())
+        delete GetIDispatchInfo();
+#endif
+}
+
 /***************************************************************************/
 
 inline JSBool

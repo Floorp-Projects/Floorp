@@ -94,6 +94,7 @@ class xpcPropertyBagEnumerator;
 // Forwards
 class XPCDispInterface;
 struct IDispatch;
+class XPCDispParams;
 #endif
 
 
