@@ -63,7 +63,7 @@ CPPSRCS = \
     nsInstallFileOpItem.cpp     \
     $(NULL)
 
-INCLUDES += -I$(srcdir)/../public
+LOCAL_INCLUDES += -I$(srcdir)/../public
 
 include $(topsrcdir)/config/rules.mk
 
