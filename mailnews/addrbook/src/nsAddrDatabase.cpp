@@ -1576,6 +1576,18 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 	return err;
 }
 
+NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDBWithKey(nsIAbCard *newCard, PRBool notify /* = FALSE */, PRUint32 *key)
+{
+  nsresult	err = NS_OK;
+  *key = 0;
+
+  err = CreateNewCardAndAddToDB(newCard, notify);
+  if (NS_SUCCEEDED(err))
+    *key = m_LastRecordKey;
+
+  return err;
+}
+
 NS_IMETHODIMP nsAddrDatabase::CreateNewListCardAndAddToDB(PRUint32 listRowID, nsIAbCard *newCard, PRBool notify /* = FALSE */)
 {
 	if (!newCard || !m_mdbPabTable)

@@ -52,6 +52,7 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void forceClosed();
 
 	void createNewCardAndAddToDB(in nsIAbCard newCard, in boolean beNotify);
+	void createNewCardAndAddToDBWithKey(in nsIAbCard newCard, in boolean beNotify, out unsigned long key);	
 	void createNewListCardAndAddToDB(in unsigned long listRowID, in nsIAbCard newCard, in boolean beNotify);
 	void createMailListAndAddToDB(in nsIAbDirectory newList, in boolean beNotify);
 	nsIEnumerator enumerateCards(in nsIAbDirectory directory);

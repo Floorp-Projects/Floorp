@@ -270,12 +270,9 @@ Rights Reserved.
 			<!-- card view -->
 			<box id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
 		
-			<box id="status-bar">
-				<!-- replace spring with real stuff later -->
-				<spring style="width:10px"/>
-				<text value="Status Bar"/>
-				<spring flex="100%"/>
-			</box>
+      <box id="status-bar">
+          <text id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>
+      </box>		
 
 		</box>
 		

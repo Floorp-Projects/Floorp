@@ -96,3 +96,5 @@ Rights Reserved.
 <!-- Sidebar -->  
 <!ENTITY addressbook-sidebar-header.label "Address Books">  
 
+<!-- Status Bar -->  
+<!ENTITY  statusText.label "">
