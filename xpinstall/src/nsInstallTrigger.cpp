@@ -378,7 +378,9 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
     version.Truncate();
 
     /* if we got the version */
-    if ( status == REGERR_OK && VR_ValidateComponent( tempCString ) == REGERR_OK) 
+    // XXX fix the right way after PR3 or RTM
+    // if ( status == REGERR_OK && VR_ValidateComponent( tempCString ) == REGERR_OK) 
+    if ( status == REGERR_OK )
     {
         nsInstallVersion regNameVersion;
         
