@@ -661,6 +661,7 @@ nss_DumpCertificateCacheInfo;
 ;+       *;
 ;+};
 ;+NSS_3.5 { 	# cert creation APIs used by certutil
+;+    global:
 CERT_AddExtension;
 CERT_CopyRDN;
 CERT_CreateCertificate;
