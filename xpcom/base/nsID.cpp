@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include "nsID.h"
 
-const static char gIDFormat[] = 
+static const char gIDFormat[] = 
   "{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
 
 /* 
