@@ -413,6 +413,7 @@ HRESULT nsPluginHostCtrl::CleanupPluginList()
             free(pI->szPluginPath);
         free(pI);
     }
+    m_Plugins.Empty();
     return S_OK;
 }
 
