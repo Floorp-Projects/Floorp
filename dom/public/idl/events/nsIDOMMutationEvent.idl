@@ -22,7 +22,7 @@
 #include "nsIDOMEvent.idl"
 
 [scriptable, uuid(8E440D86-886A-4E76-9E59-C13B939C9A4B)]
-interface MutationEvent : nsIDOMEvent
+interface nsIDOMMutationEvent : nsIDOMEvent
 {
   const unsigned short      MODIFICATION       = 1;
   const unsigned short      ADDITION           = 2;

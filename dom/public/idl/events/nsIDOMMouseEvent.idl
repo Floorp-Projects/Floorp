@@ -22,7 +22,7 @@
 #include "nsIDOMUIEvent.idl"
 
 [scriptable, uuid(FF751EDC-8B02-AAE7-0010-8301838A3123)]
-interface MouseEvent : nsIDOMUIEvent
+interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
   readonly attribute long               screenX;
   readonly attribute long               screenY;

@@ -22,7 +22,7 @@
 #include "nsIDOMUIEvent.idl"
 
 [scriptable, uuid(028E0E6E-8B01-11D3-AAE7-0010838A3123)]
-interface KeyEvent : nsIDOMUIEvent
+interface nsIDOMKeyEvent : nsIDOMUIEvent
 {
   const unsigned long DOM_VK_CANCEL         = 0x03;
   const unsigned long DOM_VK_BACK_SPACE     = 0x08;
