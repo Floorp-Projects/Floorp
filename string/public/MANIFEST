@@ -37,7 +37,6 @@ nsDependentSubstring.h
 nsFragmentedString.h
 nsLiteralString.h
 nsPrintfCString.h
-nsPrivateSharableString.h
 nsPromiseFlatString.h
 nsReadableUtils.h
 nsSharableString.h
