@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsXULCommandDispatcher.cpp \
 		nsXULControllers.cpp \
 		nsXULKeyListener.cpp \
+		nsXULPopupElement.cpp \
 		nsXULTreeElement.cpp \
 		nsXULEditorElement.cpp \
 		nsXULPrototypeDocument.cpp \
