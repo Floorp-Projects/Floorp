@@ -35,49 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-/*--------------------------------------------------------------------
- *  U N I F I N D E R
- *-------------------------------------------------------------------*/
-
-debuggggggggggggggg 
-{
-   border : 1px black solid;
-}
-
-
-.unifinder-toolbox
-{
-  border-bottom: 0px ;
-}
-
-#unifinder-toolbar 
-{
-  background-color	    : #e5e5ec;
-  border-bottom         : 0px solid #000000;
-}
-
-#unifinder-toolbar > .toolbar-holder {
-  border-top: 0px solid #92ABC9;
-  border-right: 0px solid #92ABC9;
-  border-bottom: 0px solid #92ABC9;
-  border-left: 0px solid #92ABC9;
-}
-
-
-
-
-
-
-
-
 /*--------------------------------------------------------------------
  * Style for toolbar grippy
  * THIS SHOULD BE MOVED TO A GLOBAL PLACE
  *-------------------------------------------------------------------*/
-  
-
-
 
 
 toolbarseparator { 
@@ -92,7 +53,11 @@ toolbarseparator {
   border-bottom		    : 1px solid #000000;
 }
 
-
+#unifinder-toolbar
+{
+	height: 33px !important;
+/*   background-color       : #dde3eb; */
+}
 
 
 .unifinder-tabs-spacer
@@ -111,12 +76,8 @@ toolbarseparator {
 
 tabpanels {
    border: none;
-  background-color: white;
+  background-color: c7d0d9;
 }
-
-
-
-
 
 
 /*--------------------------------------------------------------------
@@ -162,8 +123,7 @@ tabpanels {
 
 .unifinder-internal-box
 {
-   background-color       : #a5bad6; 
-   
+   background-color       : #c7d0d9;
 }
 
 /* The top box has the icons in it */
@@ -172,12 +132,6 @@ tabpanels {
 {
 	overflow: never;
    margin-bottom          : 1px;
-}
-
-#unifinder-toolbar
-{
-   background-image        : url("chrome://calendar/skin/unifinder/topbar_striped.png");
-   background-repeat       : repeat;
 }
 
 /* Make space around the little dialog items in some tabs, like the search field and label */
@@ -211,7 +165,6 @@ tabpanels {
 .unifinder-tree-class > treechildren treeitem[selected="true"][current="true"] > treerow > treecell > .unifinder-treecell-box-class
 {
    background-color        : #d5e3f2; 
-   /* border                  : 1px #2085c4 solid; */
 }
 
 .unifinder-treecell-box-class
@@ -407,6 +360,6 @@ tabpanels {
 {
         font-family             : helvetica;
         font-size               : 10pt;
-        color                   : #ffffff;
+        color                   : #000000;
 }
 

@@ -54,8 +54,8 @@
     <content orient="vertical">
       <xul:box orient="vertical" class="unifinder-internal-box" flex="1" >
         <xul:box orient="horizontal" class="unifinder-top-box"  >
-          <xul:toolbox class="toolbox-top" flex="1">
-            <xul:toolbar id="unifinder-toolbar" flex="1">
+          <xul:toolbox class="unifinder-toolbox"  flex="1">
+            <xul:toolbar id="unifinder-toolbar" class="chromeclass-toolbar" flex="1">
                 <xul:box>
                     <children includes="unifinder-button" />
                 </xul:box>
