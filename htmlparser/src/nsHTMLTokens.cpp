@@ -1385,6 +1385,13 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
         if(NS_OK==result) {
           mTextKey.Append(aChar);
           result=ConsumeQuotedString(aChar,mTextKey,aScanner);
+          if(result==kBadStringLiteral) {
+            // Ref. Bug: 58455
+            // If you're here it means that we have searched all the way thro'
+            // the document for a matching quote and haven't found it. Tell the
+            // caller that we are done searching and proceed with whatever we have.
+            result=NS_OK; 
+          }
           if(!aRetainWhitespace)
             mTextKey.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
         }//if
