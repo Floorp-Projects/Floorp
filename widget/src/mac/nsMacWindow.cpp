@@ -701,11 +701,18 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 		localRect.width = 100;
 		localRect.height = 100;	
 
-		if(mOffsetParent != nsnull) {
+		if ( mOffsetParent ) {
 			mOffsetParent->WidgetToScreen(localRect,globalRect);
 			aX=globalRect.x;
 			aY=globalRect.y;
-			::MoveWindow(mWindowPtr, aX, aY, false);
+			
+			// there is a bug on OSX where if we call ::MoveWindow() with the same
+			// coordinates as it's current location, it will go to (0,0,-1,-1). The
+			// fix is to not move the window if we're already there. (radar# 2669004)
+			Rect currBounds;
+			::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &currBounds );
+			if ( currBounds.left != aX || currBounds.top != aY )
+			  ::MoveWindow(mWindowPtr, aX, aY, false);
 		}
 
 		return NS_OK;
