@@ -8,7 +8,6 @@
 ; ; file comment
 ;
 
-
 [core]
 bin/mozilla-apprunner.sh
 bin/run-mozilla.sh
@@ -24,20 +23,19 @@ bin/libmozjs.so
 bin/libnspr3.so
 bin/libplc3.so
 bin/libplds3.so
-bin/libpref.so
+bin/components/libpref.so
 bin/libraptorgfx.so
-bin/libraptorhtmlpars.so
+bin/components/libraptorhtmlpars.so
 bin/libraptorplugin.so
-bin/libraptorview.so
+bin/components/libraptorview.so
 bin/libraptorwebwidget.so
 bin/libsecfree.so
 bin/libxpcom.so
 
-bin/components/initpref.js
-bin/components/all.js
-bin/components/config.js
-bin/components/unix.js
-bin/components/xpinstall.js
+bin/defaults/pref/all.js
+bin/defaults/pref/config.js
+bin/defaults/pref/unix.js
+bin/defaults/pref/xpinstall.js
 bin/components/libsample.so
 bin/components/libnecko.so
 bin/components/libnecko_about.so
@@ -82,7 +80,6 @@ bin/components/libtxtsvc.so
 bin/components/libnsxpi.so
 bin/components/libxpiflash.so
 bin/components/libprofile.so
-bin/components/libprofileservices.so
 bin/components/libmozbrwsr.so
 bin/components/libbookmarks.so
 bin/components/libdirectory.so
@@ -125,7 +122,6 @@ bin/components/widget.xpt
 bin/components/rdf.xpt
 bin/components/editor.xpt
 bin/components/nsxpi.xpt
-bin/components/profileservices.xpt
 bin/components/appshell.xpt
 bin/components/appcores.xpt
 bin/components/mozbrwsr.xpt
@@ -144,6 +140,7 @@ bin/components/cookieviewer.xpt
 bin/components/walletpreview.xpt
 bin/components/addrbook.xpt
 
+bin/chrome/xul.css
 bin/chrome/bookmarks/*
 bin/chrome/global/*
 bin/chrome/history/*
@@ -166,7 +163,7 @@ bin/help/browserhelp/*
 bin/help/troubleshoot/*
 
 ;[mail]
-bin/components/mailnews.js
+bin/defaults/pref/mailnews.js
 bin/components/libaddrbook.so
 bin/components/libmork.so
 bin/components/libmsgdb.so
@@ -181,7 +178,6 @@ bin/components/libmsgdb.so
 bin/components/libvcard.so
 bin/components/libmsgimap.so
 bin/components/addrbook.xpt
-bin/components/mailnews.js
 bin/components/mime.xpt
 bin/components/msgbase.xpt
 bin/components/msgdb.xpt
