@@ -434,7 +434,7 @@ sub print_ci {
 sub print_head {
 
 if ($versioninfo ne "") {
-    print "<FORM action='multidiff.cgi' method=get>";
+    print "<FORM action='multidiff.cgi' method=post>";
     print "<INPUT TYPE='HIDDEN' name='allchanges' value = '$versioninfo'>";
     print "<INPUT TYPE='HIDDEN' name='cvsroot' value = '$CVS_ROOT'>";
     print "<INPUT TYPE=SUBMIT VALUE='Show me ALL the Diffs'>";
