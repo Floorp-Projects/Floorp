@@ -291,41 +291,44 @@ NS_IMETHODIMP nsAddressBook::SetDocShellWindow(nsIDOMWindowInternal *aWin)
 
 NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDatabase **db)
 {
-	nsCOMPtr<nsIAddrDatabase> database;  
-
-	nsresult rv = NS_ERROR_NULL_POINTER;
-	if (uri)
-	{
-		nsFileSpec* dbPath = nsnull;
-
-		nsCOMPtr<nsIAddrBookSession> abSession = 
-		         do_GetService(kAddrBookSessionCID, &rv); 
-		if(NS_SUCCEEDED(rv))
-			abSession->GetUserProfileDirectory(&dbPath);
-		
-		nsAutoString file; file.AssignWithConversion(&(uri[PL_strlen(kMDBDirectoryRoot)]));
-		PRInt32 pos = file.Find("/");
-		if (pos != -1)
-			file.Truncate(pos);
-		(*dbPath) += file;
-
-		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-		         do_GetService(kAddressBookDBCID, &rv);
-
-		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
-
+  nsCOMPtr<nsIAddrDatabase> database;  
+  
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  if (uri)
+  {
+    nsFileSpec* dbPath = nsnull;
+    
+    nsCOMPtr<nsIAddrBookSession> abSession = 
+      do_GetService(kAddrBookSessionCID, &rv); 
+    if(NS_SUCCEEDED(rv))
+      abSession->GetUserProfileDirectory(&dbPath);
+    
+    if (NS_SUCCEEDED(rv) && dbPath)
+    {
+      nsAutoString file; file.AssignWithConversion(&(uri[PL_strlen(kMDBDirectoryRoot)]));
+      PRInt32 pos = file.Find("/");
+      if (pos != -1)
+        file.Truncate(pos);
+      (*dbPath) += file;
+      
+      nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
+        do_GetService(kAddressBookDBCID, &rv);
+      
+      if (NS_SUCCEEDED(rv) && addrDBFactory)
+        rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
+      
       delete dbPath;
-
-		if (NS_SUCCEEDED(rv) && database)
-		{
-			*db = database;
-			NS_IF_ADDREF(*db);
-		}
-		else
-			rv = NS_ERROR_NULL_POINTER;
-	}
-	return rv;
+      
+      if (NS_SUCCEEDED(rv) && database)
+      {
+        *db = database;
+        NS_IF_ADDREF(*db);
+      }
+      else
+        rv = NS_ERROR_NULL_POINTER;
+    }
+  }
+  return rv;
 }
 
 nsresult nsAddressBook::GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **db)
