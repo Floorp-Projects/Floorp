@@ -35,7 +35,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.7 $ $Date: 2001/11/28 16:23:44 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.8 $ $Date: 2001/12/11 20:28:38 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -73,28 +73,41 @@ PR_BEGIN_EXTERN_C
 
 typedef struct nssDecodedCertStr nssDecodedCert;
 
-typedef struct nssPKIObjectInstanceStr nssPKIObjectInstance;
+/*
+ * A note on ephemeral certs
+ *
+ * The key objects defined here can only be created on tokens, and can only
+ * exist on tokens.  Therefore, any instance of a key object must have
+ * a corresponding cryptoki instance.  OTOH, certificates created in 
+ * crypto contexts need not be stored as session objects on the token.
+ * There are good performance reasons for not doing so.  The certificate
+ * and trust objects have been defined with a cryptoContext field to
+ * allow for ephemeral certs, which may have a single instance in a crypto
+ * context along with any number (including zero) of cryptoki instances.
+ * Since contexts may not share objects, there can be only one context
+ * for each object.
+ */
 
-typedef struct nssPKIObjectStr nssPKIObject;
-
-struct nssPKIObjectInstanceStr
+/* The common data from which all objects inherit */
+struct nssPKIObjectBaseStr 
 {
-    nssCryptokiInstance cryptoki;
-    NSSTrustDomain *trustDomain;
-    NSSCryptoContext *cryptoContext;
-};
-
-struct nssPKIObjectStr 
-{
-    PRInt32 refCount;
+    /* The arena for all object memory */
     NSSArena *arena;
-    nssList *instanceList; /* list of nssPKIObjectInstance */
+    /* Thread-safe reference counting */
+    PZLock *lock;
+    PRInt32 refCount;
+    /* List of nssCryptokiInstance's of the object */
+    nssList *instanceList;
     nssListIterator *instances;
+    /* The object must live in a trust domain */
+    NSSTrustDomain *trustDomain;
+    /* The object may live in a crypto context */
+    NSSCryptoContext *cryptoContext;
 };
 
 struct NSSTrustStr 
 {
-    struct nssPKIObjectStr object;
+    struct nssPKIObjectBaseStr object;
     NSSCertificate *certificate;
     nssTrustLevel serverAuth;
     nssTrustLevel clientAuth;
@@ -104,7 +117,7 @@ struct NSSTrustStr
 
 struct NSSCertificateStr
 {
-    struct nssPKIObjectStr object;
+    struct nssPKIObjectBaseStr object;
     NSSCertificateType type;
     NSSItem id;
     NSSBER encoding;

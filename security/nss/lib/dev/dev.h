@@ -35,7 +35,7 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.14 $ $Date: 2001/11/28 16:23:38 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.15 $ $Date: 2001/12/11 20:28:33 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
@@ -250,8 +250,7 @@ nssToken_ImportCertificate
   NSSToken *tok,
   nssSession *sessionOpt,
   NSSCertificate *cert,
-  NSSTrustDomain *td,
-  NSSCryptoContext *cc
+  PRBool asTokenObject
 );
  
 NSS_EXTERN PRStatus
@@ -260,8 +259,7 @@ nssToken_ImportTrust
   NSSToken *tok,
   nssSession *sessionOpt,
   NSSTrust *trust,
-  NSSTrustDomain *trustDomain,
-  NSSCryptoContext *cryptoContext
+  PRBool asTokenObject
 );
 
 NSS_EXTERN NSSPublicKey *
@@ -292,7 +290,8 @@ nssToken_FindTrustForCert
 (
   NSSToken *token,
   nssSession *sessionOpt,
-  NSSCertificate *c
+  NSSCertificate *c,
+  nssTokenSearchType searchType
 );
 
 NSS_EXTERN PRStatus
@@ -336,7 +335,8 @@ nssToken_FindCertificateByIssuerAndSerialNumber
   NSSToken *token,
   nssSession *sessionOpt,
   NSSDER *issuer,
-  NSSDER *serial
+  NSSDER *serial,
+  nssTokenSearchType searchType
 );
 
 NSS_EXTERN NSSCertificate *
@@ -344,7 +344,8 @@ nssToken_FindCertificateByEncodedCertificate
 (
   NSSToken *token,
   nssSession *sessionOpt,
-  NSSBER *encodedCertificate
+  NSSBER *encodedCertificate,
+  nssTokenSearchType searchType
 );
 
 NSS_EXTERN NSSTrust *
@@ -352,7 +353,8 @@ nssToken_FindTrustForCert
 (
   NSSToken *token,
   nssSession *session,
-  NSSCertificate *c
+  NSSCertificate *c,
+  nssTokenSearchType searchType
 );
 
 NSS_EXTERN NSSItem *

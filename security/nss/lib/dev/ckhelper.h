@@ -41,7 +41,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.10 $ $Date: 2001/11/08 00:14:52 $ $Name:  $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.11 $ $Date: 2001/12/11 20:28:33 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -67,18 +67,31 @@ NSS_EXTERN_DATA const NSSItem g_ck_class_cert;
 NSS_EXTERN_DATA const NSSItem g_ck_class_pubkey;
 NSS_EXTERN_DATA const NSSItem g_ck_class_privkey;
 
-#define NSS_CK_SET_ATTRIBUTE_VAR(cktemplate, index, var)  \
-    (cktemplate)[index].pValue = (CK_VOID_PTR)&var;       \
-    (cktemplate)[index].ulValueLen = (CK_ULONG)sizeof(var)
+#define NSS_CK_TEMPLATE_START(_template, attr, size)   \
+    attr = _template;                                  \
+    size = 0;
 
-/* so, nssUTF8_Size or nssUTF8_Length?  \0 or no? */
-#define NSS_CK_SET_ATTRIBUTE_UTF8(cktemplate, index, utf8)  \
-    (cktemplate)[index].pValue = (CK_VOID_PTR)utf8;         \
-    (cktemplate)[index].ulValueLen = (CK_ULONG)nssUTF8_Size(utf8, NULL);
+#define NSS_CK_SET_ATTRIBUTE_ITEM(pattr, kind, item)  \
+    (pattr)->type = kind;                             \
+    (pattr)->pValue = (CK_VOID_PTR)(item)->data;      \
+    (pattr)->ulValueLen = (CK_ULONG)(item)->size;     \
+    (pattr)++;
 
-#define NSS_CK_SET_ATTRIBUTE_ITEM(cktemplate, index, item)  \
-    (cktemplate)[index].pValue = (CK_VOID_PTR)(item)->data; \
-    (cktemplate)[index].ulValueLen = (CK_ULONG)(item)->size;
+#define NSS_CK_SET_ATTRIBUTE_UTF8(pattr, kind, utf8)  \
+    (pattr)->type = kind;                             \
+    (pattr)->pValue = (CK_VOID_PTR)utf8;              \
+    (pattr)->ulValueLen = (CK_ULONG)nssUTF8_Size(utf8, NULL); \
+    (pattr)++;
+
+#define NSS_CK_SET_ATTRIBUTE_VAR(pattr, kind, var)    \
+    (pattr)->type = kind;                             \
+    (pattr)->pValue = (CK_VOID_PTR)&var;              \
+    (pattr)->ulValueLen = (CK_ULONG)sizeof(var);      \
+    (pattr)++;
+
+#define NSS_CK_TEMPLATE_FINISH(_template, attr, size) \
+    size = (attr) - (_template);                      \
+    PR_ASSERT(size <= sizeof(_template)/sizeof(_template[0]));
 
 /* NSS_CK_ATTRIBUTE_TO_ITEM(attrib, item)
  *
