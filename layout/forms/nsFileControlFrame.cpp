@@ -374,6 +374,9 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
   // except for when style is used to change its size.
   nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(rv) && mTextFrame != nsnull) {
+    const nsStyleVisibility* vis;
+    GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+
     nsIFrame * child;
     FirstChild(aPresContext, nsnull, &child);
     while (child == mTextFrame) {
@@ -385,32 +388,46 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
       mTextFrame->GetRect(txtRect);
       child->GetRect(buttonRect);
 
-      // check to see if we must reflow just the texField
-      // because style width or height was set.
+      // check to see if we must reflow just the area frame again 
+      // in order for the text field to be the correct height
+      // reflowing just the textfield (for some reason) 
+      // messes up the button's rect
       if (txtRect.width + buttonRect.width != aDesiredSize.width ||
           txtRect.height != aDesiredSize.height) {
-
-        nsSize txtAvailSize(aDesiredSize.width - buttonRect.width, aDesiredSize.height);
+        nsSize txtAvailSize(aReflowState.availableWidth, aDesiredSize.height);
         nsHTMLReflowMetrics txtKidSize(&txtAvailSize);
-        nsHTMLReflowState   txtKidReflowState(aPresContext, aReflowState, mTextFrame, txtAvailSize);
+        nsHTMLReflowState   txtKidReflowState(aPresContext, aReflowState, this, txtAvailSize);
         txtKidReflowState.reason = eReflowReason_Resize;
-        txtKidReflowState.mComputedWidth  = txtAvailSize.width;
-        txtKidReflowState.mComputedHeight = txtAvailSize.height;
-        mTextFrame->WillReflow(aPresContext);
-        nsReflowStatus status;
-        rv = mTextFrame->Reflow(aPresContext, txtKidSize, txtKidReflowState, status);
-        if (NS_FAILED(rv)) return rv;
-        rv = mTextFrame->DidReflow(aPresContext, &txtKidReflowState, aStatus);
-        if (NS_FAILED(rv)) return rv;
+        txtKidReflowState.mComputedHeight = aDesiredSize.height;
+        rv = nsAreaFrame::WillReflow(aPresContext);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Should have succeeded");
+        rv = nsAreaFrame::Reflow(aPresContext, txtKidSize, txtKidReflowState, aStatus);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Should have succeeded");
+        rv = nsAreaFrame::DidReflow(aPresContext, &txtKidReflowState, aStatus);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Should have succeeded");
 
-        // now adjust the frame positions
-        buttonRect.x = aDesiredSize.width - buttonRect.width + aReflowState.mComputedBorderPadding.left;
+        // If LTR then re-calc and set the correct rect
+        if (NS_STYLE_DIRECTION_RTL != vis->mDirection) {
+          // now adjust the frame positions
+          txtRect.y      = aReflowState.mComputedBorderPadding.top;
+          txtRect.height = aDesiredSize.height;
+          mTextFrame->SetRect(aPresContext, txtRect);
+        }
+      }
+
+      // Do RTL positioning
+      // for some reason the areaframe does set the X coord of the rects correctly
+      // so we must redo them here
+      // and we must make sure the text field is the correct height
+      if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+        buttonRect.x      = aReflowState.mComputedBorderPadding.left;
         child->SetRect(aPresContext, buttonRect);
-        txtRect.y      = aReflowState.mComputedBorderPadding.top;
-        txtRect.height = aDesiredSize.height;
-        txtRect.width  = aDesiredSize.width - buttonRect.width;
+        txtRect.x         = aDesiredSize.width - txtRect.width + aReflowState.mComputedBorderPadding.left;
+        txtRect.y         = aReflowState.mComputedBorderPadding.top;
+        txtRect.height    = aDesiredSize.height;
         mTextFrame->SetRect(aPresContext, txtRect);
       }
+
     }
   }
   return rv;
