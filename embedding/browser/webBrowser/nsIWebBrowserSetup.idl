@@ -21,42 +21,83 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIEnumerator.idl"
 
 /**
- * The nsIWebBrowserSetup    
+ * The nsIWebBrowserSetup interface allows certain properties of a new browser
+ * object to set before the browser window is opened.
  *
- * @status UNDER_REVIEW
+ * @note Unless stated otherwise, settings are presumed to be enabled by
+ *       default.
+ *
+ * @status FROZEN
  */
-
 [scriptable, uuid(F15398A0-8018-11d3-AF70-00A024FFC08C)]
 interface nsIWebBrowserSetup : nsISupports
 {
-   const unsigned long SETUP_ALLOW_PLUGINS         = 1;
-   const unsigned long SETUP_ALLOW_JAVASCRIPT      = 2;
-   const unsigned long SETUP_ALLOW_META_REDIRECTS  = 3;
-   const unsigned long SETUP_ALLOW_SUBFRAMES       = 4;
+    /**
+     * Enables/disables plugin support for this browser.
+     *
+     * @see setProperty
+     */
+    const unsigned long SETUP_ALLOW_PLUGINS         = 1;
 
-   /**
-    * SETUP_ALLOW_IMAGES enables/disables image loading for a given webBrowser
-    * window. If you disable the images, load a page, then enable the images,
-    * the page will *not* automatically load the images for the previously
-    * loaded page. This flag controls the state of a webBrowser at load time 
-    * and does not automatcially re-load a page when the state is toggled. 
-    * Reloading must be done by hand, or by walking through the DOM tree and 
-    * re-setting the src attributes.
-    */
-   const unsigned long SETUP_ALLOW_IMAGES          = 5;
+    /**
+     * Enables/disables Javascript support for this browser.
+     *
+     * @see setProperty
+     */
+    const unsigned long SETUP_ALLOW_JAVASCRIPT      = 2;
 
-   /* SETUP_FOCUS_DOC_BEFORE_CONTENT lets an embeddor control whether the document
-    * as a whole gets focus before traversing the document's content, or after
-    * traversing its content.
-    */
+    /**
+     * Enables/disables meta redirect support for this browser.
+     * Meta redirect timers will be ignored if this option is disabled.
+     *
+     * @see setProperty
+     */
+    const unsigned long SETUP_ALLOW_META_REDIRECTS  = 3;
 
-   const unsigned long SETUP_FOCUS_DOC_BEFORE_CONTENT = 6;
+    /**
+     * Enables/disables subframes within the browser
+     *
+     * @see setProperty
+     */
+    const unsigned long SETUP_ALLOW_SUBFRAMES       = 4;
 
-   const unsigned long SETUP_USE_GLOBAL_HISTORY    = 256;
+    /**
+     * Enables/disables image loading for this browser
+     * window. If you disable the images, load a page, then enable the images,
+     * the page will *not* automatically load the images for the previously
+     * loaded page. This flag controls the state of a webBrowser at load time 
+     * and does not automatically re-load a page when the state is toggled. 
+     * Reloading must be done by hand, or by walking through the DOM tree and 
+     * re-setting the src attributes.
+     *
+     * @see setProperty
+     */
+    const unsigned long SETUP_ALLOW_IMAGES          = 5;
 
-	void setProperty(in unsigned long aId, in unsigned long aValue);
+    /**
+     * Enables/disables whether the document as a whole gets focus before
+     * traversing the document's content, or after traversing its content.
+     *
+     * @see setProperty
+     */
+    const unsigned long SETUP_FOCUS_DOC_BEFORE_CONTENT = 6;
+
+    /**
+     * Enables/disables the use of global history in the browser. Visited
+     * URLs will not be recorded in the global history when it is disabled.
+     *
+     * @see setProperty
+     */
+    const unsigned long SETUP_USE_GLOBAL_HISTORY    = 256;
+
+    /**
+     * Sets a property on the new web browser object.
+     *
+     * @param aId The identifier of the property to be set.
+     * @param aValue The value of the property.
+     */
+    void setProperty(in unsigned long aId, in unsigned long aValue);
 };
 
