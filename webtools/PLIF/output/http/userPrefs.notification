@@ -5,10 +5,14 @@ TemplateToolkit
    title = 'User Preferences: Notes'
 %]
 
-[% FOREACH notification = notifications %]
-
-   <p>User = [% notification.0 %], Field = [% notification.1 %], Message = [% notification.2 %]</p>
-
-[% END %]
+  <ol>
+  [%- FOREACH notification = notifications -%]
+   [%- SWITCH notification.2 -%]
+   [%- CASE '' %]
+   [%- CASE DEFAULT %]
+   <li>[% notification.2 %] ([% notification.1 %])</li>
+   [%- END -%]
+  [%- END %]
+  </ol>
 
 [% INCLUDE template.footer %]
