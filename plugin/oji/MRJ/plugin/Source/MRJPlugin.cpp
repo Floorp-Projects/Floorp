@@ -235,6 +235,16 @@ NS_METHOD MRJPlugin::GetMIMEDescription(const char* *result)
 	return NS_OK;
 }
 
+NS_METHOD MRJPlugin::GetValue(nsPluginVariable variable, void *value)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_METHOD MRJPlugin::SetValue(nsPluginVariable variable, void *value)
+{
+	return NS_ERROR_FAILURE;
+}
+
 MRJSession* MRJPlugin::getSession()
 {
 	StartupJVM();
@@ -518,7 +528,7 @@ NS_METHOD MRJPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 	// create a context for the applet we will run.
 	mContext = new MRJContext(mSession, this);
 
-	if (mWindowlessPeer != NULL) {
+	if (thePluginManager2 != NULL) {
 		mContext->processAppletTag();
 		mContext->createContext();
 	} else {
@@ -532,8 +542,7 @@ NS_METHOD MRJPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 	return NS_OK;
 }
 
-NS_METHOD MRJPluginInstance::OnDataAvailable(const char* url, nsIInputStream* input,
-                    PRUint32 offset, PRUint32 length, nsIPluginStreamInfo* pluginInfo)
+NS_METHOD MRJPluginInstance::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length)
 {
 	// hopefully all our data is available.
 	char* codeBase = new char[length + 1];
@@ -676,6 +685,19 @@ NS_METHOD MRJPluginInstance::HandleEvent(nsPluginEvent* pluginEvent, PRBool* eve
 		}
 	}
 	
+	return NS_OK;
+}
+
+NS_METHOD MRJPluginInstance::GetValue(nsPluginInstanceVariable variable, void *value)
+{
+	switch (variable) {
+	case nsPluginInstanceVariable_WindowlessBool:
+		*(PRBool*)value = PR_FALSE;
+		break;
+	case nsPluginInstanceVariable_TransparentBool:
+		*(PRBool*)value = PR_FALSE;
+		break;
+	}
 	return NS_OK;
 }
 
