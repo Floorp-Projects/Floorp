@@ -43,7 +43,6 @@
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionListener.h"
-#include "nsWidgetsCID.h"
 #include "nsIDOMDocument.h"
 #include "nsCopySupport.h"
 #include "nsIClipboard.h"
