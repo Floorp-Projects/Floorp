@@ -43,6 +43,7 @@ LINCS=  \
 
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
+ $(DIST)\lib\nspr3.lib \
  -SUBSYSTEM:CONSOLE
 
 include <$(DEPTH)\config\rules.mak>
