@@ -836,6 +836,14 @@ PresShell::DocumentWillBeDestroyed(nsIDocument *aDocument)
   return NS_OK;
 }
 
+static PRBool
+IsZeroSizedFrame(nsIFrame *aFrame)
+{
+  nsSize size;
+  aFrame->GetSize(size);
+  return ((0 == size.width) && (0 == size.height));
+}
+
 static nsIFrame*
 FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
 {
@@ -843,8 +851,17 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
    
   aFrame->GetContent(frameContent);
   if (frameContent == aContent) {
-    NS_RELEASE(frameContent);
-    return aFrame;
+    // XXX Sleazy hack to check whether this is a placeholder frame.
+    // If it is, we skip it and go on to (hopefully) find the 
+    // absolutely positioned frame.
+    const nsStylePosition*  position;
+
+    aFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)position);
+    if ((NS_STYLE_POSITION_ABSOLUTE != position->mPosition) ||
+        !IsZeroSizedFrame(aFrame)) {
+      NS_RELEASE(frameContent);
+      return aFrame;
+    }
   }
   NS_RELEASE(frameContent);
 
