@@ -2094,6 +2094,7 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 {
     JSObjectMap *map;
     JSScope *scope;
+    uint32 i;
 
     CHECK_REQUEST(cx);
     /* XXXbe push this into jsobj.c or jsscope.c */
@@ -2104,8 +2105,10 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 	scope->ops->clear(cx, scope);
     }
 
-    /* Reset freeslot so we're consistent. */
+    /* Clear slot values and reset freeslot so we're consistent. */
     map->freeslot = JSSLOT_FREE(OBJ_GET_CLASS(cx, obj));
+    for (i = map->nslots-1; i >= map->freeslot; --i)
+        obj->slots[i] = JSVAL_VOID;
     JS_UNLOCK_OBJ(cx, obj);
 }
 

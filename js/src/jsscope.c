@@ -205,6 +205,20 @@ js_hash_scope_remove(JSContext *cx, JSScope *scope, jsid id)
     return JS_HashTableRemove(table, (const void *)id);
 }
 
+JS_STATIC_DLL_CALLBACK(intN)
+js_hash_scope_slot_invalidator(JSHashEntry *he, intN i, void *arg)
+{
+    JSSymbol *sym = (JSSymbol *) he;
+    JSScopeProperty *sprop;
+
+    if (sym) {
+        sprop = (JSScopeProperty *) sym->entry.value;
+        if (sprop)
+            sprop->slot = SPROP_INVALID_SLOT;
+    }
+    return HT_ENUMERATE_NEXT;
+} 
+
 /* Forward declaration for use by js_hash_scope_clear(). */
 extern JS_FRIEND_DATA(JSScopeOps) js_list_scope_ops;
 
@@ -217,6 +231,7 @@ js_hash_scope_clear(JSContext *cx, JSScope *scope)
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     priv = (JSScopePrivate *) table->allocPriv;
     priv->context = cx;
+    JS_HashTableEnumerateEntries(table, js_hash_scope_slot_invalidator, NULL);
     JS_HashTableDestroy(table);
     JS_free(cx, priv);
     scope->ops = &js_list_scope_ops;
@@ -340,13 +355,17 @@ js_list_scope_clear(JSContext *cx, JSScope *scope)
 {
     JSSymbol *sym;
     JSScopePrivate priv;
+    JSScopeProperty *sprop;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     while ((sym = (JSSymbol *) scope->data) != NULL) {
-	scope->data = sym->entry.next;
-	priv.context = cx;
-	priv.scope = scope;
-	js_free_symbol(&priv, &sym->entry, HT_FREE_ENTRY);
+        scope->data = sym->entry.next;
+        priv.context = cx;
+        priv.scope = scope;
+        sprop = (JSScopeProperty *) sym->entry.value;
+        if (sprop)
+            sprop->slot = SPROP_INVALID_SLOT;
+        js_free_symbol(&priv, &sym->entry, HT_FREE_ENTRY);
     }
 }
 
@@ -497,7 +516,9 @@ js_DestroyScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop)
     if (scope) {
 	JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
 	if (scope->object) {
-	    js_FreeSlot(cx, scope->object, sprop->slot);
+            JS_ASSERT(sprop);
+            if (SPROP_HAS_VALID_SLOT(sprop))
+                js_FreeSlot(cx, scope->object, sprop->slot);
 	    *sprop->prevp = sprop->next;
 	    if (sprop->next)
 		sprop->next->prevp = sprop->prevp;
