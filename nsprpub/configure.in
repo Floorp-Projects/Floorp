@@ -1505,7 +1505,9 @@ mips-sony-newsos*)
     DSO_CFLAGS=-fPIC
     MDCPUCFG_H=_openbsd.cfg
     PR_MD_CSRCS=openbsd.c
-    USE_NSPR_THREADS=1
+    if test -z "$USE_NSPR_THREADS"; then
+        USE_PTHREADS=1
+    fi
     DSO_LDOPTS='-shared -fPIC'
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     ;;
