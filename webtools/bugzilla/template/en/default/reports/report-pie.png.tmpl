@@ -26,9 +26,10 @@
 [% FILTER null;
   USE graph = GD.Graph.pie(width, height);
     
-  graph.set(title       => col_field_disp,
-            pie_height  => 20,
-            start_angle => 180);
+  graph.set(title          => col_field_disp,
+            pie_height     => 20,
+            suppress_angle => 2,
+            start_angle    => 180);
     
   graph.plot(data.0).png | stdout(1);
   END;

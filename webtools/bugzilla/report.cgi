@@ -120,13 +120,13 @@ $columns{''}                 = "42217354";
 # Validate the values in the axis fields or throw an error.
 !$row_field 
   || ($columns{$row_field} && trick_taint($row_field))
-  || ThrowCodeError("report_axis_invalid", { fld=>"x", val=>$row_field });
+  || ThrowCodeError("report_axis_invalid", {fld => "x", val => $row_field});
 !$col_field 
   || ($columns{$col_field} && trick_taint($col_field))
-  || ThrowCodeError("report_axis_invalid", { fld=>"y", val=>$col_field });
+  || ThrowCodeError("report_axis_invalid", {fld => "y", val => $col_field});
 !$tbl_field 
   || ($columns{$tbl_field} && trick_taint($tbl_field))
-  || ThrowCodeError("report_axis_invalid", { fld=>"z", val=>$tbl_field });
+  || ThrowCodeError("report_axis_invalid", {fld => "z", val => $tbl_field});
 
 my @axis_fields = ($row_field, $col_field, $tbl_field);
 
@@ -260,6 +260,10 @@ my $format = GetFormat("reports/report", $formatparam, $cgi->param('ctype'));
 # set debug=1 to always get an HTML content-type, and view the error.
 $format->{'ctype'} = "text/html" if $::FORM{'debug'};
 
+my @time = localtime(time());
+my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
+my $filename = "report-$date.$format->{extension}";
+print "Content-Disposition: inline; filename=$filename\n";
 print "Content-Type: $format->{'ctype'}\n\n";
 
 # Problems with this CGI are often due to malformed data. Setting debug=1

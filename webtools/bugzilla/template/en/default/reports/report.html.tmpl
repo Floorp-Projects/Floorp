@@ -119,7 +119,7 @@
           [% other_format.description %]
           [% "</a>" UNLESS other_format.name == format %] | 
         [% END %]
-        <a href="[% formaturl %]&amp;ctype=csv">CSV</a> 
+        <a href="[% formaturl %]&amp;ctype=csv&amp;format=table">CSV</a> 
       </td>
       
       [% IF format != "table" %]
