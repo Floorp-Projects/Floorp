@@ -263,7 +263,7 @@ ShowVerifyReflowFlags()
 #ifdef MOZ_REFLOW_PERF
 class ReflowCountMgr;
 
-static const char * kGrandTotalsStr = "Grand Totals";
+static const char kGrandTotalsStr[] = "Grand Totals";
 #define NUM_REFLOW_TYPES 5
 
 // Counting Class

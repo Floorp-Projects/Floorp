@@ -349,8 +349,8 @@ nsGlyphTable::GetAnnotation(nsMathMLChar* aChar, PRInt32 aPosition)
   NS_ASSERTION(aChar->mDirection == NS_STRETCH_DIRECTION_VERTICAL ||
                aChar->mDirection == NS_STRETCH_DIRECTION_HORIZONTAL,
                "invalid call");
-  static const char* kVertical   = "TMBG";
-  static const char* kHorizontal = "LMRG";
+  static const char kVertical[]   = "TMBG";
+  static const char kHorizontal[] = "LMRG";
   if (aPosition >= 4) {
     // return an ASCII digit for the size=0,1,2,...
     return '0' + aPosition - 4;
