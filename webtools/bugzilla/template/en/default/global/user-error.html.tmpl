@@ -691,6 +691,12 @@
     [% title = "Access Denied" %]
     You do not have the permissions necessary to run a sanity check.
 
+  [% ELSIF error == "search_content_without_matches" %]
+    [% title = "Illegal Search" %]
+    The "content" field can only be used with "matches" search 
+    and the "matches" search can only be used with the "content"
+    field.
+
   [% ELSIF error == "series_already_exists" %]
     [% title = "Series Already Exists" %]
       A series named <em>[% series.category FILTER html %] /

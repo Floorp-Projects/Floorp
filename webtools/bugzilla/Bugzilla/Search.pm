@@ -478,6 +478,9 @@ sub init {
                  push(@fields, $select_term);
              }
          },
+         "^content," => sub {
+             ThrowUserError("search_content_without_matches");
+         },
          "^commenter,(?:equals|anyexact),(%\\w+%)" => sub {
              my $match = pronoun($1, $user);
              my $chartseq = $chartid;
@@ -827,6 +830,9 @@ sub init {
          },
          ",lessthan" => sub {
              $term = "$ff < $q";
+         },
+         ",matches" => sub {
+             ThrowUserError("search_content_without_matches");
          },
          ",greaterthan" => sub {
              $term = "$ff > $q";
