@@ -524,6 +524,31 @@ public:
 };
 
 
+// ContentList helper
+
+class nsContentListSH : public nsHTMLCollectionSH
+{
+protected:
+  nsContentListSH(nsDOMClassInfoData* aData) : nsHTMLCollectionSH(aData)
+  {
+  }
+
+  virtual ~nsContentListSH()
+  {
+  }
+
+public:
+  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsContentListSH(aData);
+  }
+};
+
+
+
 // FomrControlList helper
 
 class nsFormControlListSH : public nsHTMLCollectionSH

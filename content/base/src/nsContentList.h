@@ -171,6 +171,7 @@ public:
   NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn);
 
   /// nsIContentList
+  NS_IMETHOD GetParentObject(nsISupports** aParentObject);
   NS_IMETHOD GetLength(PRUint32* aLength, PRBool aDoFlush);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn,
                   PRBool aDoFlush);
