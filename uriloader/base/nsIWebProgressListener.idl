@@ -67,24 +67,16 @@ interface nsIWebProgressListener : nsISupports
 	@param channel - The child channel that we are getting this progress change
 		for.
 
-	@param curSelfProgress - The current position of progress.  This is
+	@param curChildProgress - The current position of progress.  This is
 		between 0 and maxSelfProgress.  This is the position of only this 
-		progress object.  It doesn not include the progress of all children.
+		child progress object.
 
-	@param maxSelfProgress - The maximum position that progress will go to.
+	@param maxChildProgress - The maximum position that progress will go to.
 		This sets a relative position point for the current progress to relate
-		to.  This is the max position of only this progress object.  It does not
-		include the progress of all the children.
-
-	@param curTotalProgress - The current position of progress for this object
-		and all children added together.  This is between 0 and maxTotalProgress.
-		
-	@param maxTotalProgress - The maximum position that progress will go to for
-		the max of this progress object and all children.  This sets the relative
-		position point for the current progress to relate to.
+		to.  This is the max position of only this child progress object.
 	*/
-	void onChildProgressChange(in nsIChannel channel, in long curSelfProgress,
-		in long curTotalProgress);
+	void onChildProgressChange(in nsIChannel channel, in long curChildProgress,
+		in long maxChildProgress);
 
 	/*
 	Notification that the progress status flags have changed for the main item
