@@ -22,6 +22,9 @@ interface nsIDOMXULCommandDispatcher;
 [scriptable, uuid(D5B61B82-1DA4-11d3-BF87-00105A1B0627)]
 interface nsIController : nsISupports {
 	attribute nsIDOMXULCommandDispatcher commandDispatcher;
-	boolean IsCommandEnabled(in string command);
-	void DoCommand(in string command);
+
+	boolean isCommandEnabled(in wstring command);
+	boolean supportsCommand(in wstring command);
+
+	void doCommand(in wstring command);
 };

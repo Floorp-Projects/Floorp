@@ -69,6 +69,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
+#include "nsRDFCID.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #if defined(OJI)
@@ -103,6 +104,8 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
+static NS_DEFINE_CID(kXULControllersCID,          NS_XULCONTROLLERS_CID);
 
 GlobalWindowImpl::GlobalWindowImpl()
 {
@@ -201,6 +204,11 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIDOMEventTargetIID)) {
     *aInstancePtrResult = (void*)(nsISupports*)(nsIDOMEventTarget*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsPIDOMWindow::GetIID())) {
+    *aInstancePtrResult = (void*)(nsISupports*)(nsPIDOMWindow*)this;
     AddRef();
     return NS_OK;
   }
@@ -3354,6 +3362,23 @@ NavigatorImpl::Preference(JSContext* cx,
   return result;
 }
 
+// Controllers Methods
+NS_IMETHODIMP
+GlobalWindowImpl::GetControllers(nsIControllers** aResult)
+{
+  if(!mControllers){
+    nsresult rv = nsComponentManager::CreateInstance(kXULControllersCID,
+                                            nsnull,
+                                            NS_GET_IID(nsIControllers),
+                                            getter_AddRefs(mControllers));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a controllers");
+    if (NS_FAILED(rv)) return rv;
+  }
+  *aResult = mControllers;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
 nsresult
 GlobalWindowImpl::GetModalWindowSupport(nsIModalWindowSupport **msw)
 {
@@ -3374,3 +3399,28 @@ GlobalWindowImpl::GetModalWindowSupport(nsIModalWindowSupport **msw)
   return NS_OK;
 }
 
+// nsPIDOMWindow methods
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow** aParent)
+{
+  nsresult ret = NS_OK;
+  
+  *aParent = nsnull;
+  if (nsnull != mWebShell) {
+    nsIWebShell *parentWebShell;
+    mWebShell->GetParentEvenIfChrome(parentWebShell);
+    
+    if (nsnull != parentWebShell) {
+      nsCOMPtr<nsIDOMWindow> domWindow;
+      ret = WebShellToDOMWindow(parentWebShell, getter_AddRefs(domWindow));
+      domWindow->QueryInterface(nsPIDOMWindow::GetIID(),(void**)aParent);
+      NS_RELEASE(parentWebShell);
+    } 
+    else {
+      *aParent = nsnull;
+    }
+  }
+
+  return ret;
+}

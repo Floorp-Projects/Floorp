@@ -29,32 +29,32 @@
 #include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIController.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIDOMXULElement.h"
 #include "nsIRDFResource.h"
+#include "nsIControllers.h"
 #include "nsIDOMNodeList.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIControllerIID, NS_ICONTROLLER_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
 static NS_DEFINE_IID(kIXULElementIID, NS_IDOMXULELEMENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
-NS_DEF_PTR(nsIController);
 NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMCSSStyleDeclaration);
 NS_DEF_PTR(nsIRDFCompositeDataSource);
 NS_DEF_PTR(nsIDOMXULElement);
 NS_DEF_PTR(nsIRDFResource);
+NS_DEF_PTR(nsIControllers);
 NS_DEF_PTR(nsIDOMNodeList);
 
 //
@@ -66,7 +66,7 @@ enum XULElement_slots {
   XULELEMENT_STYLE = -3,
   XULELEMENT_DATABASE = -4,
   XULELEMENT_RESOURCE = -5,
-  XULELEMENT_CONTROLLER = -6
+  XULELEMENT_CONTROLLERS = -6
 };
 
 /***********************************************************************/
@@ -183,19 +183,19 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case XULELEMENT_CONTROLLER:
+      case XULELEMENT_CONTROLLERS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controller", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controllers", PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
-        nsIController* prop;
+        nsIControllers* prop;
         nsresult result = NS_OK;
-        result = a->GetController(&prop);
+        result = a->GetControllers(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIController::GetIID(), cx, vp);
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIControllers::GetIID(), cx, vp);
         }
         else {
           return nsJSUtils::nsReportError(cx, result);
@@ -276,23 +276,6 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
       
         a->SetDatabase(prop);
-        NS_IF_RELEASE(prop);
-        break;
-      }
-      case XULELEMENT_CONTROLLER:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controller", PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        nsIController* prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,
-                                                kIControllerIID, cx, *vp)) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);
-        }
-      
-        a->SetController(prop);
         NS_IF_RELEASE(prop);
         break;
       }
@@ -575,7 +558,7 @@ static JSPropertySpec XULElementProperties[] =
   {"style",    XULELEMENT_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"database",    XULELEMENT_DATABASE,    JSPROP_ENUMERATE},
   {"resource",    XULELEMENT_RESOURCE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"controller",    XULELEMENT_CONTROLLER,    JSPROP_ENUMERATE},
+  {"controllers",    XULELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

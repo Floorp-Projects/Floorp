@@ -32,6 +32,7 @@ CPP_OBJS=\
 	.\$(OBJDIR)\nsRDFGenericBuilder.obj       \
 	.\$(OBJDIR)\nsXULAttributes.obj		  \
 	.\$(OBJDIR)\nsXULCommandDispatcher.obj    \
+	.\$(OBJDIR)\nsXULControllers.obj    \
 	.\$(OBJDIR)\nsXULPopupListener.obj        \
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \

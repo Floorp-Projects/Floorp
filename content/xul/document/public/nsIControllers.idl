@@ -17,14 +17,21 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIController.idl"
 interface nsIDOMXULCommandDispatcher;
 
-[scriptable, uuid(D5B61B82-1DA4-11d3-BF87-00105A1B0627)]
-interface nsIController : nsISupports {
+[scriptable, uuid(A5ED3A01-7CC7-11d3-BF87-00105A1B0627)]
+interface nsIControllers : nsISupports {
 	attribute nsIDOMXULCommandDispatcher commandDispatcher;
 
-	boolean isCommandEnabled(in wstring command);
-	boolean supportsCommand(in wstring command);
+	nsIController getControllerForCommand(in wstring command);
 
-	void doCommand(in wstring command);
+	void insertControllerAt(in unsigned long index, in nsIController controller);
+	nsIController removeControllerAt(in unsigned long index);
+	nsIController getControllerAt(in unsigned long index);
+
+    void appendController(in nsIController controller);
+	void removeController(in nsIController controller);
+
+	unsigned long getControllerCount();
 };

@@ -19,6 +19,7 @@
 #define nsGlobalWindow_h___
 
 #include "nscore.h"
+#include "nsCOMPtr.h"
 #include "nsIFactory.h"
 #include "nsIPrincipal.h"
 #include "nsISupports.h"
@@ -38,6 +39,8 @@
 #include "nsIScriptGlobalObjectData.h"
 #include "nsDOMWindowList.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIControllers.h"
+#include "nsPIDOMWindow.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -65,7 +68,8 @@ class HistoryImpl;
 
 // Global object for scripting
 class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow, 
-                         public nsIJSScriptObject, public nsIScriptGlobalObjectData, public nsIDOMEventReceiver
+                         public nsIJSScriptObject, public nsIScriptGlobalObjectData, public nsIDOMEventReceiver,
+                         public nsPIDOMWindow
 {
 public:
   GlobalWindowImpl();
@@ -182,7 +186,8 @@ public:
                             PRInt32 aXPos, PRInt32 aYPos, 
                             const nsString& aPopupType, const nsString& anAnchorAlignment,
                             const nsString& aPopupAlignment, nsIDOMWindow** outPopup);
-  
+  NS_IMETHOD    GetControllers(nsIControllers** aResult);
+
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -215,6 +220,9 @@ public:
   
   // nsIScriptGlobalObjectData interface
   NS_IMETHOD        GetPrincipal(nsIPrincipal **prin);
+
+  // nsPIDOMWindowInterface
+  NS_IMETHOD        GetPrivateParent(nsPIDOMWindow** aResult);
 
   friend void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure);
 
@@ -267,6 +275,7 @@ protected:
   BarPropImpl *mScrollbars;
   
   nsIContent* mChromeElement;
+  nsCOMPtr<nsIControllers> mControllers;
 
   nsTimeoutImpl *mTimeouts;
   nsTimeoutImpl **mTimeoutInsertionPoint;

@@ -26,7 +26,8 @@
 
 class nsIController;
 class nsIDOMElement;
-class nsIDOMWindow;
+class nsIDOMNode;
+class nsIControllers;
 
 #define NS_IDOMXULCOMMANDDISPATCHER_IID \
  { 0xf3c50361, 0x14fe, 0x11d3, \
@@ -36,11 +37,8 @@ class nsIDOMXULCommandDispatcher : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULCOMMANDDISPATCHER_IID; return iid; }
 
-  NS_IMETHOD    GetFocusedElement(nsIDOMElement** aFocusedElement)=0;
-  NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement)=0;
-
-  NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow)=0;
-  NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow)=0;
+  NS_IMETHOD    GetFocusedNode(nsIDOMNode** aFocusedNode)=0;
+  NS_IMETHOD    SetFocusedNode(nsIDOMNode* aFocusedNode)=0;
 
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets)=0;
 
@@ -48,35 +46,31 @@ public:
 
   NS_IMETHOD    UpdateCommands(const nsString& aEventName)=0;
 
-  NS_IMETHOD    GetController(nsIController** aReturn)=0;
+  NS_IMETHOD    GetControllerForCommand(const nsString& aCommand, nsIController** aReturn)=0;
 
-  NS_IMETHOD    SetController(nsIController* aController)=0;
+  NS_IMETHOD    GetControllers(nsIControllers** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMXULCOMMANDDISPATCHER   \
-  NS_IMETHOD    GetFocusedElement(nsIDOMElement** aFocusedElement);  \
-  NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement);  \
-  NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow);  \
-  NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow);  \
+  NS_IMETHOD    GetFocusedNode(nsIDOMNode** aFocusedNode);  \
+  NS_IMETHOD    SetFocusedNode(nsIDOMNode* aFocusedNode);  \
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets);  \
   NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater);  \
   NS_IMETHOD    UpdateCommands(const nsString& aEventName);  \
-  NS_IMETHOD    GetController(nsIController** aReturn);  \
-  NS_IMETHOD    SetController(nsIController* aController);  \
+  NS_IMETHOD    GetControllerForCommand(const nsString& aCommand, nsIController** aReturn);  \
+  NS_IMETHOD    GetControllers(nsIControllers** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMXULCOMMANDDISPATCHER(_to)  \
-  NS_IMETHOD    GetFocusedElement(nsIDOMElement** aFocusedElement) { return _to GetFocusedElement(aFocusedElement); } \
-  NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement) { return _to SetFocusedElement(aFocusedElement); } \
-  NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow) { return _to GetFocusedWindow(aFocusedWindow); } \
-  NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow) { return _to SetFocusedWindow(aFocusedWindow); } \
+  NS_IMETHOD    GetFocusedNode(nsIDOMNode** aFocusedNode) { return _to GetFocusedNode(aFocusedNode); } \
+  NS_IMETHOD    SetFocusedNode(nsIDOMNode* aFocusedNode) { return _to SetFocusedNode(aFocusedNode); } \
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets) { return _to AddCommandUpdater(aUpdater, aEvents, aTargets); }  \
   NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater) { return _to RemoveCommandUpdater(aUpdater); }  \
   NS_IMETHOD    UpdateCommands(const nsString& aEventName) { return _to UpdateCommands(aEventName); }  \
-  NS_IMETHOD    GetController(nsIController** aReturn) { return _to GetController(aReturn); }  \
-  NS_IMETHOD    SetController(nsIController* aController) { return _to SetController(aController); }  \
+  NS_IMETHOD    GetControllerForCommand(const nsString& aCommand, nsIController** aReturn) { return _to GetControllerForCommand(aCommand, aReturn); }  \
+  NS_IMETHOD    GetControllers(nsIControllers** aReturn) { return _to GetControllers(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULCommandDispatcherClass(nsIScriptContext *aContext, void **aPrototype);

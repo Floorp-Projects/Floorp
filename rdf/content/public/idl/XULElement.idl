@@ -7,7 +7,7 @@ interface XULElement : Element {
         readonly attribute CSSStyleDeclaration             style;
                  attribute xpidl nsIRDFCompositeDataSource database;
         readonly attribute xpidl nsIRDFResource            resource;
-                 attribute xpidl nsIController             controller;
+        readonly attribute xpidl nsIControllers            controllers;
 
         void addBroadcastListener(in DOMString attr, in Element element);
         void removeBroadcastListener(in DOMString attr, in Element element);

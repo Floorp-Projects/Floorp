@@ -120,14 +120,12 @@ function goToggleToolbar( id, elementID )
 //
 function goUpdateCommand(command)
 {
-	var controller = top.document.commandDispatcher.getController();
-	if ( !controller )
-		controller = top.goDefaultController;
+	var controller = top.document.commandDispatcher.getControllerForCommand(command);
 	
 	var enabled = false;
 	
 	if ( controller )
-		enabled = controller.IsCommandEnabled(command);
+		enabled = controller.isCommandEnabled(command);
 	else
 		goSetMenuValue(command, 'valueDefault');
 		
@@ -136,18 +134,16 @@ function goUpdateCommand(command)
 
 function goDoCommand(command)
 {
-	var controller = top.document.commandDispatcher.getController();
-	if ( !controller )
-		controller = top.goDefaultController;
+	var controller = top.document.commandDispatcher.getControllerForCommand(command);
 
 	if ( controller )
-		controller.DoCommand(command);
+		controller.doCommand(command);
 }
 
 
 function goSetDefaultController(controller)
 {
-	top.goDefaultController = controller;
+	top.controllers.appendController(controller);
 }
 
 function goSetCommandEnabled(id, enabled)

@@ -39,6 +39,7 @@ XPIDLSRCS	= \
 		nsIRDFXMLSink.idl \
 		nsIRDFXMLSource.idl \
 		nsIController.idl \
+		nsIController.idl \
 		xulstubs.idl \
 		nsIXULSortService.idl \
 		$(NULL)
