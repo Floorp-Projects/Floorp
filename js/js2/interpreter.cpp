@@ -151,7 +151,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             // tell any listeners about the current execution state.
             // XXX should only do this if we're single stepping/tracing.
             if (mListeners.size())
-                broadcast(STEP);
+                broadcast(IS_STEP);
 
             Instruction* instruction = *mPC;
             switch (instruction->op()) {

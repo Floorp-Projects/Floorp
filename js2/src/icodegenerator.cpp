@@ -46,12 +46,18 @@ namespace ICG {
 
     using namespace VM;
 
+    uint32 ICodeModule::sMaxID = 0;
         
     Formatter& operator<<(Formatter &f, ICodeGenerator &i)
     {
         return i.print(f);
     }
-        
+
+    Formatter& operator<<(Formatter &f, ICodeModule &i)
+    {
+        return i.print(f);
+    }
+  
     //
     // ICodeGenerator
     //
@@ -85,7 +91,7 @@ namespace ICG {
     ICodeModule *ICodeGenerator::complete()
     {
         ASSERT(stitcher.empty());
-        ASSERT(labelSet == NULL);
+        //ASSERT(labelSet == NULL);
 #ifdef DEBUG
         for (LabelList::iterator i = labels.begin();
              i != labels.end(); i++) {
@@ -785,27 +791,17 @@ namespace ICG {
 
     Formatter& ICodeGenerator::print(Formatter& f)
     {
-        f << "ICG! " << (uint32)iCode->size() << "\n";
-        for (InstructionIterator i = iCode->begin(); 
-             i != iCode->end(); i++) {
-            bool isLabel = false;
-
-            for (LabelList::iterator k = labels.begin(); 
-                 k != labels.end(); k++)
-                if ((ptrdiff_t)(*k)->mOffset == (i - iCode->begin())) {
-                    f << "#" << (uint32)(i - iCode->begin()) << "\t";
-                    isLabel = true;
-                    break;
-                }
-
-            if (!isLabel)
-                f << "\t";
-                
-            f << **i << "\n";
-        }
-
+        f << "ICG! " << (uint32)iCode->size() << "\n" << *iCode;
         return f;
     }
+
+    Formatter& ICodeModule::print(Formatter& f)
+    {
+        f << "ICM! " << (uint32)its_iCode->size() << "\n" << *its_iCode;
+        return f;
+    }
+    
+
         
 } // namespace ICG
     

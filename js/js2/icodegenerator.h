@@ -85,21 +85,25 @@ namespace ICG {
 
     class ICodeModule {
     public:
-        ICodeModule(InstructionStream *iCode,
-                        VariableList *variables,
-                        uint32 maxRegister, 
-                        uint32 maxParameter) :
-            its_iCode(iCode), 
-            itsVariables(variables),
-            itsParameterCount(maxParameter),
-            itsMaxRegister(maxRegister) { }
+        ICodeModule(InstructionStream *iCode, VariableList *variables,
+                    uint32 maxRegister, uint32 maxParameter) :
+            its_iCode(iCode), itsVariables(variables),
+            itsParameterCount(maxParameter), itsMaxRegister(maxRegister),
+            mID(++sMaxID) { }
+
+        Formatter& print(Formatter& f);
         
         InstructionStream *its_iCode;
         VariableList *itsVariables;
-        uint32  itsMaxRegister;
-        uint32  itsParameterCount;
+        uint32 itsParameterCount;
+        uint32 itsMaxRegister;
+        uint32 mID;
+        static uint32 sMaxID;
+        
     };
-    
+
+    Formatter& operator<<(Formatter &f, ICodeModule &i);
+
     /****************************************************************/
     
     // An ICodeGenerator provides the interface between the parser and the

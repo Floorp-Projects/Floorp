@@ -81,7 +81,8 @@ static bool promptLine(LineReader &inReader, string &s,
 
 
 JavaScript::World world;
-JavaScript::Debugger::Shell jsd(world, JavaScript::stdOut, JavaScript::stdOut);
+JavaScript::Debugger::Shell jsd(world, cin, JavaScript::stdOut,
+                                JavaScript::stdOut);
 const bool showTokens = true;
 
 static void readEvalPrint(FILE *in, World &world)
@@ -127,33 +128,6 @@ static void readEvalPrint(FILE *in, World &world)
 }
 
 
-#if 0
-class Tracer : public Context::Listener {
-    void listen(Context* context, InterpretStage stage)
-    {
-        static String lastLine (widenCString("\n"));
-        String line;
-        ICodeModule *iCode = context->getICode();
-        InstructionIterator pc = context->getPC();
-
-        stdOut << "jsd [pc:";
-        printFormat (stdOut, "%04X", (pc - iCode->its_iCode->begin()));
-        stdOut << ", reason:" << (uint)stage << "]> ";
-        
-        std::getline(cin, line);
-        if (line.size() == 0)
-            line = lastLine;
-        else
-        {
-            line.append(widenCString("\n"));
-            lastLine = line;
-        }
-        
-        jsd.doCommand(context, line);
-    }
-};
-
-#else
 /**
  * Poor man's instruction tracing facility.
  */
@@ -167,7 +141,9 @@ class Tracer : public Context::Listener {
         
         
         InstructionOffset offset = (pc - iCode->its_iCode->begin());
-        printFormat(stdOut, "%04X: ", offset);
+        printFormat(stdOut, "trace [%02u:%04u]: ",
+                    iCode->mID, offset);
+
         Instruction* i = *pc;
         stdOut << *i;
         if (i->op() != BRANCH && i->count() > 0) {
@@ -179,7 +155,6 @@ class Tracer : public Context::Listener {
         }
     }
 };
-#endif
 
 static void testICG(World &world)
 {
@@ -310,8 +285,11 @@ static float64 testFunctionCall(World &world, float64 n)
 {
     JSScope glob;
     Context cx(world, &glob);
+    /*
     Tracer t;
     cx.addListener(&t);
+    */
+    jsd.attachToContext(&cx);
     
     uint32 position = 0;
     //StringAtom& global = world.identifiers[widenCString("global")];

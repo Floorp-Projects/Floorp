@@ -82,13 +82,13 @@ $ops{"LOAD_NAME"} =
   {
    super  => "Instruction_2",
    rem    => "dest, name",
-   params => [ ("Register", "StringAtom*" ) ]
+   params => [ ("Register", "const StringAtom*" ) ]
   };
 $ops{"SAVE_NAME"} =
   {
    super  => "Instruction_2",
    rem    => "name, source",
-   params => [ ("StringAtom*", "Register") ]
+   params => [ ("const StringAtom*", "Register") ]
   };
 $ops{"NEW_OBJECT"} =
   {
@@ -106,13 +106,13 @@ $ops{"GET_PROP"} =
   {
    super  => "Instruction_3",
    rem    => "dest, object, prop name",
-   params => [ ("Register", "Register", "StringAtom*") ]
+   params => [ ("Register", "Register", "const StringAtom*") ]
   };
 $ops{"SET_PROP"} =
   {
    super  => "Instruction_3",
    rem    => "object, name, source",
-   params => [ ("Register", "StringAtom*", "Register") ]
+   params => [ ("Register", "const StringAtom*", "Register") ]
   };
 $ops{"GET_ELEMENT"} =
   {
@@ -392,7 +392,7 @@ sub get_print_body {
             push (@oplist, "\"R\" << mOp$op");
         } elsif ($type eq "Label*") {
             push (@oplist, "\"Offset \" << mOp$op->mOffset");
-        } elsif ($type eq "StringAtom*") {
+        } elsif ($type =~ /StringAtom/) {
             push (@oplist, "\"'\" << *mOp$op << \"'\"");
         } else {
             push (@oplist, "mOp$op");

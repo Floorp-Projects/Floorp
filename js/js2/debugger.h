@@ -41,38 +41,20 @@
 
 namespace JavaScript {
 namespace Debugger {
-    class Shell {
-    public:        
-        Shell (World &aWorld, Formatter &aOut, Formatter &aErr) :
-            mWorld(aWorld), mOut(aOut), mErr(aErr) {}
 
-        bool doCommand (Interpreter::Context *context,
-                        const String &aSource);
-
-    private:
-        World &mWorld;
-        Formatter &mOut, &mErr;        
-        
-    };
-    
-#if 0
-    typedef void (debuggerCallback) (Context *aContext, ICodeDebugger *aICD);
+    using namespace Interpreter;
     
     class Breakpoint {
+    public:
         /* representation of a breakpoint */
         void set();
         void clear();
         bool getState();
         InstructionIterator getPC();
-    };
-    
+    };    
+
     class ICodeDebugger {
     public:
-        /**
-         * set a debugger callback, returning the old one
-         */
-        static debuggerCallback * setCallback (debuggerCallback *aCallback);
-        
         /**
          * install an icdebugger on a context
          */
@@ -128,7 +110,52 @@ namespace Debugger {
         
     }; /* class ICodeDebugger */
 
-#endif /* 0 */
+    class Shell : public Context::Listener {
+    public:        
+        Shell (World &aWorld, istream &aIn, Formatter &aOut, Formatter &aErr) :
+            mWorld(aWorld), mIn(aIn), mOut(aOut), mErr(aErr),
+            mStopMask(IS_ALL), mTraceFlag(true)
+        {
+            mDebugger = new ICodeDebugger();
+        }
+
+        ~Shell ()
+        {
+            delete mDebugger;
+        }
+        
+        void listen(Context *context, InterpretStage stage);
+        
+        /**
+         * install on a context
+         */
+        bool attachToContext (Context *aContext)
+        {
+            aContext->addListener (this);
+            return true;
+        }
+        
+        /**
+         * detach an icdebugger from a context
+         */
+        bool detachFromContext (Context *aContext)
+        {
+            aContext->removeListener (this);
+            return true;
+        }
+
+    private:
+        bool doCommand (Context *context, const String &aSource);
+        void doSetVariable (Lexer &lex);
+        void doPrint (Context *cx, Lexer &lex);
+        
+        World &mWorld;
+        istream &mIn;
+        Formatter &mOut, &mErr;
+        ICodeDebugger *mDebugger;
+        uint32 mStopMask;
+        bool mTraceFlag;
+    };    
 
 } /* namespace Debugger */
 } /* namespace JavaScript */

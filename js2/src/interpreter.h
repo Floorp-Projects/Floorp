@@ -35,9 +35,11 @@ namespace Interpreter {
     struct Activation;
     
     enum InterpretStage {
-        STEP,
-        CATCH,
-        TRAP
+        IS_NONE = 0,
+        IS_STEP = 1,
+        IS_THROW = 2,
+        IS_TRAP = 4,
+        IS_ALL = 0xffff
     };
     
     struct Linkage;

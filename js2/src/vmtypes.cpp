@@ -76,6 +76,37 @@ namespace VM {
         return f;
     }
 
+    Formatter& operator<< (Formatter &f, InstructionStream &is)
+    {
+
+        for (InstructionIterator i = is.begin(); 
+             i != is.end(); i++) {
+            /*
+            bool isLabel = false;
+
+            for (LabelList::iterator k = labels.begin(); 
+                 k != labels.end(); k++)
+                if ((ptrdiff_t)(*k)->mOffset == (i - is.begin())) {
+                    f << "#" << (uint32)(i - is.begin()) << "\t";
+                    isLabel = true;
+                    break;
+                }
+
+            if (!isLabel)
+                f << "\t";
+
+            f << **i << "\n";
+            */
+
+            printFormat(stdOut, "%04u", (uint32)(i - is.begin()));
+            f << ": " << **i << "\n";
+        
+        }
+
+
+        return f;
+    }
+
 } /* namespace VM */
 } /* namespace JavaScript */
 

@@ -176,6 +176,7 @@ namespace VM {
     typedef std::vector<Register> RegisterList;        
     typedef std::vector<Instruction *> InstructionStream;
     typedef InstructionStream::iterator InstructionIterator;
+    typedef std::map<String, Register, std::less<String> > VariableMap;
     
     /**
      * Helper to print Call operands.
@@ -192,6 +193,7 @@ namespace VM {
     Formatter& operator<< (Formatter& f, Instruction& i);
     Formatter& operator<< (Formatter& f, RegisterList& rl);
     Formatter& operator<< (Formatter& f, const ArgList& al);
+    Formatter& operator<< (Formatter& f, InstructionStream& is);
     
     /********************************************************************/
     
@@ -325,7 +327,6 @@ namespace VM {
     /********************************************************************/
     
     /* Specific opcodes */
-
     class Add : public Arithmetic {
     public:
         /* dest, source1, source2 */
@@ -514,11 +515,11 @@ namespace VM {
         }
     };
 
-    class GetProp : public Instruction_3<Register, Register, StringAtom*> {
+    class GetProp : public Instruction_3<Register, Register, const StringAtom*> {
     public:
         /* dest, object, prop name */
-        GetProp (Register aOp1, Register aOp2, StringAtom* aOp3) :
-            Instruction_3<Register, Register, StringAtom*>
+        GetProp (Register aOp1, Register aOp2, const StringAtom* aOp3) :
+            Instruction_3<Register, Register, const StringAtom*>
             (GET_PROP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[GET_PROP] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "'" << *mOp3 << "'";
@@ -561,11 +562,11 @@ namespace VM {
         }
     };
 
-    class LoadName : public Instruction_2<Register, StringAtom*> {
+    class LoadName : public Instruction_2<Register, const StringAtom*> {
     public:
         /* dest, name */
-        LoadName (Register aOp1, StringAtom* aOp2) :
-            Instruction_2<Register, StringAtom*>
+        LoadName (Register aOp1, const StringAtom* aOp2) :
+            Instruction_2<Register, const StringAtom*>
             (LOAD_NAME, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[LOAD_NAME] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'";
@@ -711,11 +712,11 @@ namespace VM {
         }
     };
 
-    class SaveName : public Instruction_2<StringAtom*, Register> {
+    class SaveName : public Instruction_2<const StringAtom*, Register> {
     public:
         /* name, source */
-        SaveName (StringAtom* aOp1, Register aOp2) :
-            Instruction_2<StringAtom*, Register>
+        SaveName (const StringAtom* aOp1, Register aOp2) :
+            Instruction_2<const StringAtom*, Register>
             (SAVE_NAME, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[SAVE_NAME] << "\t" << "'" << *mOp1 << "'" << ", " << "R" << mOp2;
@@ -743,11 +744,11 @@ namespace VM {
         }
     };
 
-    class SetProp : public Instruction_3<Register, StringAtom*, Register> {
+    class SetProp : public Instruction_3<Register, const StringAtom*, Register> {
     public:
         /* object, name, source */
-        SetProp (Register aOp1, StringAtom* aOp2, Register aOp3) :
-            Instruction_3<Register, StringAtom*, Register>
+        SetProp (Register aOp1, const StringAtom* aOp2, Register aOp3) :
+            Instruction_3<Register, const StringAtom*, Register>
             (SET_PROP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[SET_PROP] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'" << ", " << "R" << mOp3;
