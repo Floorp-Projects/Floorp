@@ -46,6 +46,8 @@
 #include "nsFileSpec.h"
 #include "nsReadableUtils.h"
 
+static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
+
 nsScannerString::nsScannerString(PRUnichar* aStorageStart, 
                                  PRUnichar* aDataEnd, 
                                  PRUnichar* aStorageEnd) : nsSlidingString(aStorageStart, aDataEnd, aStorageEnd)

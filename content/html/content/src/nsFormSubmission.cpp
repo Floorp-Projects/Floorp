@@ -43,17 +43,13 @@
 #include "nsIFileSpec.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFormProcessor.h"
-static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsLinebreakConverter.h"
 #include "nsICharsetConverterManager.h"
-static NS_DEFINE_CID(kCharsetConverterManagerCID,
-                     NS_ICHARSETCONVERTERMANAGER_CID);
 #include "xp_path.h"
 #include "nsICharsetAlias.h"
 #include "nsEscape.h"
@@ -68,6 +64,8 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
 #include "nsBidiUtils.h"
 //end
 
+static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
+static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 /**
  * Helper superclass implementation of nsIFormSubmission, providing common

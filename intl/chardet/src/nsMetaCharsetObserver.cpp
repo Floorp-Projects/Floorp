@@ -56,8 +56,8 @@
 #include "nsMetaCharsetCID.h"
 #include "nsUnicharUtils.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
+static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
+static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
  
 static const eHTMLTags gWatchTags[] = 
 { eHTMLTag_meta,

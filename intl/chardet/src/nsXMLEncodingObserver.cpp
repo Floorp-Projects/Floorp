@@ -53,7 +53,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 static const eHTMLTags gTags[] = 
 { eHTMLTag_instruction,
