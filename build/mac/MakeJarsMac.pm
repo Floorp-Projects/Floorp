@@ -15,42 +15,43 @@ use vars qw( @ISA @EXPORT );
 @ISA		= qw(Exporter);
 @EXPORT     = qw(ProcessJarManifest);
 
-sub _addToJar($$$$)
+sub _addToJar($$$$$)
 {
-      my($thing, $thingDir, $zip, $compress) = @_;
-      #print "_addToJar($thing, $thingDir, $zip, $compress)\n";
+      my($thing, $srcPath, $jarManDir, $zip, $compress) = @_;
+      #print "_addToJar($thing, $srcPath, $jarManDir, $zip, $compress)\n";
       
-      my $filepath = "$thingDir/$thing";
+      my $existingMember = $zip->memberNamed($thing);
+      if ($existingMember) {
+          my $modtime = $existingMember->lastModTime();
+          print "already have $thing at $modtime\n";  # XXX need to check mod time here!
+          return 0;
+      }
+      
+      my $filepath = "$jarManDir:$srcPath";
       $filepath =~ s|/|:|g;
-      if (-d $filepath) {
-              my $dir = $filepath;
-              $dir =~ s|/|:|g;
-              opendir(DIR, $dir) or die "Cannot open dir $dir\n";
-              my @files = readdir(DIR);
-              closedir DIR;
-
-              my $file;
-              foreach $file (@files)
-              {        
-                      _addToJar("$thing/$file", $thingDir, $zip, $compress);
-              }
+      
+      if (!-e $filepath) {
+          $srcPath =~ /([\w\d.:\-\\\/]+)[:\\\/]([\w\d.\-]+)/;
+          $filepath = "$jarManDir:$2";
+          if (!-e $filepath) {
+              die "$filepath does not exist\n";
+          }
       }
-      else {
-              my $member = Archive::Zip::Member->newFromFile($filepath);
-              die "Failed to create zip file member $filepath\n" unless $member;
+      
+      my $member = Archive::Zip::Member->newFromFile($filepath);
+      die "Failed to create zip file member $filepath\n" unless $member;
 
-              $member->fileName($thing);
+      $member->fileName($thing);
 
-              print "Adding $filepath as $thing\n";
+      print "Adding $filepath as $thing\n";
 
-              if ($compress) {
-                      $member->desiredCompressionMethod(Archive::Zip::COMPRESSION_DEFLATED);            
-              } else {
-                      $member->desiredCompressionMethod(Archive::Zip::COMPRESSION_STORED);
-              }
-
-              $zip->addMember($member);
+      if ($compress) {
+          $member->desiredCompressionMethod(Archive::Zip::COMPRESSION_DEFLATED);            
+      } else {
+          $member->desiredCompressionMethod(Archive::Zip::COMPRESSION_STORED);
       }
+
+      $zip->addMember($member);
 }
 
 sub JarIt($$)
@@ -67,76 +68,6 @@ sub JarIt($$)
     MacPerl::SetFileInfo("ZIP ", "ZIP ", $jarTempFile);
     rename($jarTempFile, $jarfile);
     print "+++ finished jarring $jarfile\n";
-}
-
-sub MkDirs($)
-{
-    my ($path) = @_;
-    #print "MkDirs $path\n";
-    if ($path =~ /([\w\d.\-]+)[:\\\/](.*)/) {
-        my $dir = $1;
-        $path = $2;
-        if (!-e $dir) {
-            mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-        }
-        chdir $dir;
-        MkDirs($path);
-        chdir "::";
-    }
-    else {
-        my $dir = $path;
-        if ($dir eq "") { return 0; } 
-        if (!-e $dir) {
-            mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-        }
-    }
-}
-
-sub CopyFile($$)
-{
-    my ($from, $to) = @_;
-    #print "CopyFile($from, $to)\n";
-    open(OUT, ">$to") || die "error: can't open '$to': $!";
-    open(IN, "<$from") || die "error: can't open '$from': $!";
-    while (<IN>) {
-        print OUT $_;
-    }
-    close(IN) || die "error: can't close '$from': $!";
-    close(OUT) || die "error: can't close '$to': $!";
-}
-
-sub EnsureFileInDir($$)
-{
-    my ($destPath, $srcPath) = @_;
-    $destPath =~ s|/|:|g;
-    $destPath = ":$destPath";
-    $srcPath =~ s|/|:|g;
-    $srcPath = ":$srcPath";
-
-    #print "EnsureFileInDir($destPath, $srcPath)\n";
-    if (!-e $destPath) {
-        my $dir = "";
-        my $file;
-        if ($destPath =~ /([\w\d.:\-\\\/]+)[:\\\/]([\w\d.\-]+)/) {
-            $dir = $1;
-            $file = $2;
-        }
-        else {
-            $file = $destPath;
-        }
-
-        if ($srcPath) {
-            $file = $srcPath;
-        }
-
-        if (!-e $file) {
-            die "error: file '$file' doesn't exist\n";
-        }
-        MkDirs($dir);
-        CopyFile($file, $destPath);
-        return 1;
-    }
-    return 0;
 }
 
 sub ProcessJarManifest($$)
@@ -158,9 +89,6 @@ sub ProcessJarManifest($$)
     else {
     	die "bad jar.mn specification";
     }
-
-	my $prevDir = cwd();
-    chdir($jarManDir);
 
     open(FILE, "<$jarManPath") || die "could not open $jarManPath: $!";
 	while (<FILE>) {
@@ -185,14 +113,15 @@ sub ProcessJarManifest($$)
 	            if (/^\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
 					my $dest = $1;
 					my $srcPath = $2;
-
                 	if ( $srcPath ) {  
                 	    $srcPath = substr($srcPath,1,-1);
                 	}
+                	else {
+                		$srcPath = ":" . $dest;
+                	}
+                	$srcPath =~ s|/|:|g;
 
-	                EnsureFileInDir($dest, $srcPath);
-	                #$args = "$args$dest ";
-	                _addToJar($dest, $jarManDir, $zip, 1);
+	                _addToJar($dest, $srcPath, $jarManDir, $zip, 1);
 	            } elsif (/^\s*$/) {
 	                # end with blank line
 	                last;
@@ -213,6 +142,5 @@ sub ProcessJarManifest($$)
 	    }
 	}
     close(FILE);
-    chdir($prevDir);
 }
 
