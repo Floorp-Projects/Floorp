@@ -37,7 +37,9 @@ PLSRCS		= nfspwd.pl revdepth.pl
 TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
 
 # Generate the build number on the fly.
+ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
 TARGETS		+= $(DEPTH)/build/build_number
+endif
 
 # If this is an "official mozilla build" make them shortlived.
 ifdef MOZILLA_OFFICIAL
@@ -81,12 +83,8 @@ $(DEPTH)/build/build_number: FORCE
 	@$(MAKE_OBJDIR)
 	$(RM) $@
 	$(PERL) $(srcdir)/bdate.pl > $@
-	$(PERL) $(srcdir)/build_header.pl nsBuildID.h $(DEPTH)/build/build_number
-	$(INSTALL) -m 444 nsIBuild.h $(PUBLIC)
-ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
 	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/locale/en-US/navigator.dtd $@
 	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/content/viewSource.xul $@
-endif
 
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
 	$(PERL) $(srcdir)/set-timebomb.pl 0 30
