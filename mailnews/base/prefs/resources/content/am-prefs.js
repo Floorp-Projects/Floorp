@@ -77,6 +77,7 @@ function getAccountValueIsLocked(element)
   var prefstr = "";
   var preftype;
   var prefval;
+  var prefstring;
 
   if (!nsPrefBranch) {
     var prefService = Components.classes["@mozilla.org/preferences-service;1"];
