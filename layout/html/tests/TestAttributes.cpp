@@ -71,7 +71,7 @@ void testAttributes(nsIHTMLContent* content) {
     printf("test 3 (case comparison) failed\n");
   }
 
-  content->UnsetAttribute(sWIDTH);
+  content->UnsetAttribute(sWIDTH, PR_FALSE);
 
   nsISupportsArray* allNames;
   NS_NewISupportsArray(&allNames);

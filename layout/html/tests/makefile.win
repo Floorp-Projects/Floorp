@@ -68,7 +68,6 @@ install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG2) $(DIST)\bin
 	$(MAKE_INSTALL) $(PROG3) $(DIST)\bin
 	$(MAKE_INSTALL) $(PROG4) $(DIST)\bin
-	$(MAKE_INSTALL) $(PROG5) $(DIST)\bin
 
 clobber::
 	rm -f $(DIST)\bin\TestCSSScanner.exe
