@@ -137,6 +137,7 @@ nsSocketTransport::nsSocketTransport():
     mProxyPort(0),
     mProxyHost(nsnull),
     mProxyTransparent(PR_FALSE),
+    mSSLProxy(PR_FALSE),
     mReadWriteState(0),
     mSelectFlags(0),
     mService(nsnull),
@@ -325,6 +326,10 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                     // for SOCKS proxys, we want to switch some of
                     // the default proxy behavior
                     mProxyTransparent = PR_TRUE;
+                }
+                if (mProxyHost && (nsCRT::strcmp(socketType, "ssl") == 0))
+                {
+                    mSSLProxy = PR_TRUE;
                 }
             }
         }
@@ -1839,7 +1844,10 @@ nsSocketTransport::GetOriginalURI(nsIURI* *aURL)
 {
   nsStdURL *url;
   url = new nsStdURL(nsnull);
-  if( mProxyHost && !mProxyTransparent)
+  // XXX: not sure this is correct behavior, but we should somehow
+  // prevent reusing the same nsSocketTransport for different SSL hosts
+  // in proxied case.
+  if (mProxyHost && !(mProxyTransparent || mSSLProxy))
   {
     url->SetHost(mProxyHost);
     url->SetPort(mProxyPort);

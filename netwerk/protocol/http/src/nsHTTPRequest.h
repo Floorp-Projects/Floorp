@@ -132,6 +132,7 @@ public:
     nsHTTPChannel*              mConnection;
     nsCOMPtr<nsIURL>            mURI;
     PRBool                      mDoingProxySSLConnect;
+    PRBool                      mSSLConnected;
 
 protected:
     virtual ~nsHTTPRequest();
