@@ -734,23 +734,25 @@ lo_ScrapeElement(MWContext *context, LO_Element *element)
                                 CL_DestroyLayer(layer);
                                 element->lo_cell.cell_bg_layer = NULL;
                             }
+
+			    /* Free the lo_TableCell record associated with this cell */
+			    if ( element->lo_cell.table_cell != NULL )
+			    {
+				lo_TopState *top_state;
+				lo_DocState *state;
+
+				top_state = lo_FetchTopState( XP_DOCID(context) );
+				state = top_state->doc_state;
+				if (state != NULL)
+				    lo_free_cell_record( context, state, element->lo_cell.table_cell );
+			    }
 			}
 			break;
 
 
 		case LO_TABLE:
 			{
-				lo_TableRec *table = (lo_TableRec *) element->lo_table.table;
-				lo_TopState *top_state;
-				lo_DocState *state;
-                            
-			    if (table != NULL)
-				{
-					top_state = lo_FetchTopState(XP_DOCID(context));
-					state = top_state->doc_state;
-					lo_free_table_record(context, state, table, TRUE);
-				}
-
+			lo_ScrapeTableElement( context, element );
 			}
 			break;
 

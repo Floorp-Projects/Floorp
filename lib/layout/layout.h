@@ -1000,8 +1000,9 @@ extern void lo_FreeGridRec(lo_GridRec *);
 extern void lo_FreeGridCellRec(MWContext *, lo_GridRec *, lo_GridCellRec *);
 extern void lo_FreeGridEdge(lo_GridEdge *);
 extern void lo_FreeFormElementData(LO_FormElementData *element_data);
-extern void lo_free_table_record(MWContext *context, lo_DocState *state,
-			lo_TableRec *table, Bool partial);
+extern void lo_free_cell_record(MWContext *context, lo_DocState *state, lo_TableCell *cell);
+extern void lo_ScrapeTableElement( MWContext *context, LO_TableStruct *table_ele );
+
 
 #ifdef MEMORY_ARENAS
 extern void lo_InitializeMemoryArena(lo_TopState *);

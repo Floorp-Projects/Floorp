@@ -98,20 +98,15 @@ int32
 	lo_align_cell(MWContext *context, lo_DocState *state, lo_TableCell *cell_ptr,
 		LO_CellStruct *cell, lo_TableRec *table, lo_table_span *row_max);
 
-#if 0	/* No longer used after Mariner */
-void
-	lo_RelayoutTags(MWContext *context, lo_DocState *state, PA_Tag * tag_ptr,
-		PA_Tag * tag_end_ptr, LO_Element * elem_list);
-#endif
-	
-PA_Tag *
-	lo_FindReuseableElement(MWContext *context, lo_DocState *state,
-		LO_Element ** elem_list);
-
 static void
 lo_reuse_current_state(MWContext *context, lo_DocState *state,
 	int32 width, int32 height, int32 margin_width, int32 margin_height,
 	Bool destroyLineLists);
+
+static void lo_FreeAllExceptRows( MWContext *context, lo_DocState *state, 
+								 lo_TableRec *table );
+static void lo_FreeTableSpanArray( lo_table_span *spanArray );
+
 /*
  ********************************************************************************
  * Some Helper Functions
@@ -2907,204 +2902,6 @@ lo_RelayoutCaptionSubdoc(MWContext *context, lo_DocState *state, lo_TableCaption
 	 */
 	state = new_state;
 
-	/*
-	tag_ptr = old_state->subdoc_tags;
-	tag_end_ptr = old_state->subdoc_tags_end;
-	old_state->subdoc_tags = NULL;
-	old_state->subdoc_tags_end = NULL;
-	if (tag_end_ptr != NULL)
-	{
-		tag_end_ptr = tag_end_ptr->next;
-	}
-	*/
-
-	/*
-	 * Clean up memory used by old subdoc state.
-	 */
-	/*
-	lo_cleanup_state(context, old_state);
-	*/
-
-#if 0    /* Doesn't need to happen any more because we do non-destructive reflow */
-	/*
-	 * Save our parent's state levels
-	 */
-	save_diff_state = top_state->diff_state;
-	save_state_pushes = top_state->state_pushes;
-	save_state_pops = top_state->state_pops;
-
-	while (tag_ptr != tag_end_ptr)
-	{
-		PA_Tag *tag;
-		lo_DocState *sub_state;
-		lo_DocState *up_state;
-		lo_DocState *tmp_state;
-		Bool may_save;
-
-		tag = tag_ptr;
-		tag_ptr = tag_ptr->next;
-		tag->next = NULL;
-		tag_list = tag_ptr;
-
-		up_state = NULL;
-		sub_state = state;
-		while (sub_state->sub_state != NULL)
-		{
-			up_state = sub_state;
-			sub_state = sub_state->sub_state;
-		}
-
-		if ((sub_state->is_a_subdoc == SUBDOC_CELL)||
-			(sub_state->is_a_subdoc == SUBDOC_CAPTION))
-		{
-			may_save = TRUE;
-		}
-		else
-		{
-			may_save = FALSE;
-		}
-
-		/*
-		 * Reset these so we can tell if anything happened
-		 */
-		top_state->diff_state = FALSE;
-		top_state->state_pushes = 0;
-		top_state->state_pops = 0;
-
-#ifdef MOCHA
-		sub_state->in_relayout = TRUE;
-#endif
-		lo_LayoutTag(context, sub_state, tag);
-		tmp_state = lo_CurrentSubState(state);
-#ifdef MOCHA
-		if (tmp_state == sub_state)
-		{
-			sub_state->in_relayout = FALSE;
-		}
-#endif
-
-		if (may_save != FALSE)
-		{
-			int32 state_diff;
-			
-			/* how has our state level changed? */
-			state_diff = top_state->state_pushes - top_state->state_pops;
-			
-			/*
-			 * That tag popped us up one state level.  If this new
-			 * state is still a subdoc, save the tag there.
-			 */
-			if (state_diff == -1)
-			{
-				if ((tmp_state->is_a_subdoc == SUBDOC_CELL)||
-				    (tmp_state->is_a_subdoc == SUBDOC_CAPTION))
-				{
-                    /* if we just popped a table we need to insert
-                     * a dummy end tag to pop the dummy start tag
-                     * we shove on the stack after createing a table
-                     */
-   					PA_Tag *new_tag = LO_CreateStyleSheetDummyTag(tag);
-					if(new_tag)
-					{
-						lo_SaveSubdocTags(context, tmp_state, new_tag);
-					}
-
-				    lo_SaveSubdocTags(context, tmp_state, tag);
-				}
-				else
-				{
-				    PA_FreeTag(tag);
-				}
-			}
-			/*
-			 * Else that tag put us in a new subdoc on the same
-			 * level.  It needs to be saved one level up,
-			 * if the parent is also a subdoc.
-			 */
-			else if (( up_state != NULL ) &&
-				( top_state->diff_state != FALSE ) &&
-				( state_diff == 0 ))
-			{
-				if ((up_state->is_a_subdoc == SUBDOC_CELL)||
-				     (up_state->is_a_subdoc == SUBDOC_CAPTION))
-				{
-				    lo_SaveSubdocTags(context, up_state, tag);
-				}
-				else
-				{
-				    PA_FreeTag(tag);
-				}
-			}
-			/*
-			 * Else we are still in the same subdoc
-			 */
-			else if (( top_state->diff_state == FALSE ) &&
-				( state_diff == 0 ))
-			{
-				lo_SaveSubdocTags(context, sub_state, tag);
-			}
-			/*
-			 * Else that tag started a new, nested subdoc.
-			 * Add the starting tag to the parent.
-			 */
-			else if (( state_diff == 1 ))
-			{
-				lo_SaveSubdocTags(context, sub_state, tag);
-				/*
-				 * Since we have extended the parent chain,
-				 * we need to reset the child to the new
-				 * parent end-chain.
-				 */
-				if ((tmp_state->is_a_subdoc == SUBDOC_CELL)||
-				    (tmp_state->is_a_subdoc == SUBDOC_CAPTION))
-				{
-					PA_Tag *new_tag;
-					
-					tmp_state->subdoc_tags =
-						sub_state->subdoc_tags_end;
-
-					/* add an aditional dummy tag so that style sheets
-					 * can use it to query styles from for this entry
-					 * that created a table
-					 */
-					new_tag = LO_CreateStyleSheetDummyTag(tag);
-					if(new_tag)
-					{
-						lo_SaveSubdocTags(context, tmp_state, new_tag);
-					}
-				}
-			}
-			/*
-			 * This can never happen.
-			 */
-			else
-			{
-				PA_FreeTag(tag);
-			}
-		}
-		tag_ptr = tag_list;
-	}
-
-	/*
-	 * Restore our parent's state levels
-	 */
-	top_state->diff_state = save_diff_state;
-	top_state->state_pushes = save_state_pushes;
-	top_state->state_pops = save_state_pops;
-#endif
-
-	/*
-	 * Link the end of this subdoc's tag chain back to
-	 * its parent.  The beginning should have never been
-	 * unlinked from the parent.
-	 */
-	/*
-	if (state->subdoc_tags_end != NULL)
-	{
-		state->subdoc_tags_end->next = tag_end_ptr;
-	}
-	*/
-
 	lo_rl_ReflowDocState( context, state );
 
 	/*
@@ -4385,7 +4182,7 @@ lo_BeginTableCaption(MWContext *context, lo_DocState *state, lo_TableRec *table,
 	PA_Block buff;
 	char *str;
 
-	caption = XP_NEW(lo_TableCaption);
+	caption = XP_NEW_ZAP(lo_TableCaption);
 	if (caption == NULL)
 	{
 		return;
@@ -6603,7 +6400,7 @@ lo_cell_rowspan_pass(MWContext *context, lo_TableRec *table, lo_cell_data XP_HUG
 }
 
 
-static void
+void
 lo_free_cell_record(MWContext *context, lo_DocState *state, lo_TableCell *cell)
 {
 	if (cell == NULL)
@@ -6651,7 +6448,6 @@ lo_free_cell_record(MWContext *context, lo_DocState *state, lo_TableCell *cell)
 
 
 static void
-
 lo_free_row_record(MWContext *context, lo_DocState *state,
 			lo_TableRow *row, Bool partial)
 {
@@ -6727,70 +6523,8 @@ void lo_free_table_record(MWContext *context, lo_DocState *state,
 		table->row_ptr = NULL;
 	}
 
-	lo_FreeTableCaption( context, state, table );
-
-	if (table->width_spans != NULL)
-	{
-		lo_table_span *span_ptr;
-		lo_table_span *span;
-
-		span_ptr = table->width_spans;
-		while (span_ptr != NULL)
-		{
-			span = span_ptr;
-			span_ptr = span_ptr->next;
-			XP_DELETE(span);
-		}
-		table->width_spans = NULL;
-		table->width_span_ptr = NULL;
-	}
-
-	if (table->height_spans != NULL)
-	{
-		lo_table_span *span_ptr;
-		lo_table_span *span;
-
-		span_ptr = table->height_spans;
-		while (span_ptr != NULL)
-		{
-			span = span_ptr;
-			span_ptr = span_ptr->next;
-			XP_DELETE(span);
-		}
-		table->height_spans = NULL;
-		table->height_span_ptr = NULL;
-	}
-
-    XP_FREEIF(table->backdrop.bg_color);
-    XP_FREEIF(table->backdrop.url);
-
-	/*
-	 * Whether the partial flag is set or not, we always
-	 * want to eliminate this subdoc and all its contents
-	 * when the table is done.
-	 */
-	if (table->current_subdoc != NULL)
-	{
-		lo_FreePartialSubDoc(context, state, table->current_subdoc);
-		table->current_subdoc = NULL;
-	}
-
-	if ( table->fixed_col_widths != NULL )
-	{
-		XP_FREE(table->fixed_col_widths);
-	}
-	
-	/*
-	 * Reset back pointer in table layout element
-	 */
-	if (table->table_ele != NULL) {
-		table->table_ele->table = NULL;
-	}
-
-	XP_DELETE(table);
+	lo_FreeAllExceptRows( context, state, table );
 }
-
-
 
 void
 lo_FreePartialTable(MWContext *context, lo_DocState *state, lo_TableRec *table)
@@ -7451,6 +7185,7 @@ fprintf(stderr, "lo_EndTable called\n");
 				cell_ele = table->caption->cell_ele;
 				lo_UpdateCaptionCellFromSubDoc(context, state, subdoc, cell_ele);
 			}
+			
 			/* table->caption->subdoc = NULL; */
 
 			if (cell_ele == NULL)
@@ -7863,11 +7598,11 @@ fprintf(stderr, "lo_EndTable called\n");
 
 		if (relayout == FALSE)
 		{
-			lo_AppendFloatInLineList(state, (LO_Element *)table->table_ele, save_line_list );
+		    lo_AppendFloatInLineList(state, (LO_Element *)table->table_ele, save_line_list );
 		}
 		else
 		{
-			state->line_list = save_line_list;
+		    state->line_list = save_line_list;
 		}
 		
 
@@ -7914,21 +7649,6 @@ fprintf(stderr, "lo_EndTable called\n");
 
 	}
 
-	/*  Now cell records get freed when the LO_TABLE element in the line list gets recycled
-	for (y=0; y < table->rows; y++)
-	{
-		for (x=0; x < table->cols; x++)
-		{
-			indx = (y * table->cols) + x;
-			cell_ptr = cell_array[indx].cell;
-			if ((cell_ptr != &blank_cell)&&(cell_ptr != NULL))
-			{
-				lo_free_cell_record(context, state, cell_ptr);
-			}
-		}
-	}
-	*/
-
 	/* Decrement table nesting level (used for passing into lo_CreateCellBackGroundLayer() */
 	if (!relayout)
 	{
@@ -7942,348 +7662,8 @@ fprintf(stderr, "lo_EndTable called\n");
 	XP_FREE_BLOCK(cell_array_buff);
 #endif
 
-	/* 
-	 * Don't wanna free the table record any more because this information
-	 * is used during relayout.
-	 */
-	/*
-
-	lo_free_table_record(context, state, table, FALSE);
-
-	*/
 }
 
-
-#if 0
-/*
- * This function relaysout the tags in a table cell. It knows how to handle
- * certain types of elements that can be resused directly rather than thrown
- * away and relayedout from scratch (the default case).
- */
-void
-lo_RelayoutTags(MWContext *context, lo_DocState *state, PA_Tag * tag_ptr,
-	PA_Tag * tag_end_ptr, LO_Element * elem_list)
-{
-	PA_Tag * next_tag;
-	Bool save_diff_state;
-	int32 save_state_pushes;
-	int32 save_state_pops;
-	lo_TopState *top_state;
-	PA_Tag *tag_list;
-	
-	next_tag = NULL;
-	top_state = state->top_state;
-
-	/*
-	 * Save our parent's state levels
-	 */
-	save_diff_state = top_state->diff_state;
-	save_state_pushes = top_state->state_pushes;
-	save_state_pops = top_state->state_pops;
-
-	while (tag_ptr != tag_end_ptr)
-	{
-		PA_Tag *tag;
-		lo_DocState *sub_state;
-		lo_DocState *up_state;
-		lo_DocState *tmp_state;
-		Bool may_save;
-
-		tag = tag_ptr;
-		tag_ptr = tag_ptr->next;
-		tag->next = NULL;
-		tag_list = tag_ptr;
-
-		up_state = NULL;
-		sub_state = state;
-		while (sub_state->sub_state != NULL)
-		{
-			up_state = sub_state;
-			sub_state = sub_state->sub_state;
-		}
-
-		if ((sub_state->is_a_subdoc == SUBDOC_CELL)||
-			(sub_state->is_a_subdoc == SUBDOC_CAPTION))
-		{
-			may_save = TRUE;
-		}
-		else
-		{
-			may_save = FALSE;
-		}
-
-		/*
-		 * Reset these so we can tell if anything happened
-		 */
-		top_state->diff_state = FALSE;
-		top_state->state_pushes = 0;
-		top_state->state_pops = 0;
-
-#ifdef MOCHA
-		sub_state->in_relayout = TRUE;
-#endif
-		/*
-		 * If we're not currently searching for a tag, then find the next
-		 * one to look for.
-		 */
-		if ( next_tag == NULL && elem_list != NULL )
-		{
-			next_tag = lo_FindReuseableElement ( context, state, &elem_list );
-		}
-				
-		/*
-		 * Can we reuse this current element?
-		 */
-		if ( (tag == next_tag) && (elem_list != NULL) )
-		{			
-			LO_Element *eptr;
-			LO_Element *enext;
-			
-			/*
-			 * Yup, remove it from the list and call the object layout code to
-			 * do the relayout.
-			 */
-			eptr = elem_list;
-			enext = eptr->lo_any.next;
-			
-			elem_list = enext;
-			
-			if ( enext != NULL )
-			{
-				enext->lo_any.prev = NULL;
-			}
-			
-			eptr->lo_any.next = 0L;
-			eptr->lo_any.prev = 0L;
-			
-			switch ( eptr->type )
-			{
-				case LO_EMBED:
-					lo_RelayoutEmbed ( context, sub_state, &eptr->lo_embed, tag );
-					break;
-#ifdef JAVA
-				case LO_JAVA:
-					lo_RelayoutJavaApp ( context, sub_state, tag, &eptr->lo_java );
-					break;
-#endif /* JAVA */
-				
-				default:
-					/*
-					 * We goofed and got something we don't know how to relayout
-					 */
-					lo_relayout_recycle ( context, state, eptr );
-					lo_LayoutTag(context, sub_state, tag);
-					break;
-			}
-			
-			/*
-			 * Force us to look for the next reusable element.
-			 */
-			next_tag = NULL;
-		}
-		else
-		{
-			/*
-			 * Nope, call the standard layout code.
-			 */
-			lo_LayoutTag(context, sub_state, tag);
-		}
-
-		tmp_state = lo_CurrentSubState(state);
-#ifdef MOCHA
-		if (tmp_state == sub_state)
-		{
-			sub_state->in_relayout = FALSE;
-		}
-#endif
-
-		tmp_state = lo_CurrentSubState(state);
-#ifdef MOCHA
-		if (tmp_state == sub_state)
-		{
-			sub_state->in_relayout = FALSE;
-		}
-#endif
-
-		if (may_save != FALSE)
-		{
-			int32 state_diff;
-			
-			/* how has our state level changed? */
-			state_diff = top_state->state_pushes - top_state->state_pops;
-			
-			/*
-			 * That tag popped us up one state level.  If this new
-			 * state is still a subdoc, save the tag there.
-			 */
-			if (state_diff == -1)
-			{
-				if ((tmp_state->is_a_subdoc == SUBDOC_CELL)||
-				    (tmp_state->is_a_subdoc == SUBDOC_CAPTION))
-				{
-                    /* if we just popped a table we need to insert
-                     * a dummy end tag to pop the dummy start tag
-                     * we shove on the stack after createing a table
-                     */
-   					PA_Tag *new_tag = LO_CreateStyleSheetDummyTag(tag);
-					if(new_tag)
-					{
-						lo_SaveSubdocTags(context, tmp_state, new_tag);
-					}
-
-				    lo_SaveSubdocTags(context, tmp_state, tag);
-				}
-				else
-				{
-				    PA_FreeTag(tag);
-				}
-			}
-			/*
-			 * Else that tag put us in a new subdoc on the same
-			 * level.  It needs to be saved one level up,
-			 * if the parent is also a subdoc.
-			 */
-			else if (( up_state != NULL ) &&
-				( top_state->diff_state != FALSE ) &&
-				( state_diff == 0 ))
-			{
-				if ((up_state->is_a_subdoc == SUBDOC_CELL)||
-				     (up_state->is_a_subdoc == SUBDOC_CAPTION))
-				{
-				    lo_SaveSubdocTags(context, up_state, tag);
-				}
-				else
-				{
-				    PA_FreeTag(tag);
-				}
-			}
-			/*
-			 * Else we are still in the same subdoc
-			 */
-			else if (( top_state->diff_state == FALSE ) &&
-				( state_diff == 0 ))
-			{
-				lo_SaveSubdocTags(context, sub_state, tag);
-			}
-			/*
-			 * Else that tag started a new, nested subdoc.
-			 * Add the starting tag to the parent.
-			 */
-			else if (( state_diff == 1 ))
-			{
-				lo_SaveSubdocTags(context, sub_state, tag);
-				/*
-				 * Since we have extended the parent chain,
-				 * we need to reset the child to the new
-				 * parent end-chain.
-				 */
-				if ((tmp_state->is_a_subdoc == SUBDOC_CELL)||
-				    (tmp_state->is_a_subdoc == SUBDOC_CAPTION))
-				{
-					PA_Tag *new_tag;
-					
-					tmp_state->subdoc_tags =
-						sub_state->subdoc_tags_end;
-
-					/* add an aditional dummy tag so that style sheets
-					 * can use it to query styles from for this entry
-					 * that created a table
-					 */
-					new_tag = LO_CreateStyleSheetDummyTag(tag);
-					if(new_tag)
-					{
-						lo_SaveSubdocTags(context, tmp_state, new_tag);
-					}
-				}
-			}
-			/*
-			 * This can never happen.
-			 */
-			else
-			{
-				PA_FreeTag(tag);
-			}
-		}
-		tag_ptr = tag_list;
-	}
-
-	/*
-	 * Restore our parent's state levels
-	 */
-	top_state->diff_state = save_diff_state;
-	top_state->state_pushes = save_state_pushes;
-	top_state->state_pops = save_state_pops;
-}
-#endif
-
-/*
- * Walk the element list, throwing them away until we find one
- * that can be reused.
- */
-PA_Tag *
-lo_FindReuseableElement(MWContext *context, lo_DocState *state, LO_Element ** elem_list)
-{
-	LO_Element * eptr;
-	LO_Element * enext;
-	PA_Tag * tag;
-	
-	tag = NULL;
-	eptr = *elem_list;
-	enext = NULL;
-	
-	/*
-	 * Keep going until we've gone through all the elements
-	 * or found one that we can reuse.
-	 */
-	while ( (eptr != NULL) && (tag == NULL) )
-	{		
-		enext = eptr->lo_any.next;
-		
-		/*
-		 * Any element found by this switch statement will attempt to be relayed out
-		 * using the same element structure. DO NOT put anything in here that can
-		 * have atributes set by style sheets until the lo_PreLayoutTag function
-		 * can correctly handle stylesheets.
-		 */
-		switch ( eptr->type )
-		{
-			case LO_EMBED:
-				tag = eptr->lo_embed.objTag.tag;
-				break;
-#ifdef JAVA
-			case LO_JAVA:
-				tag = eptr->lo_java.objTag.tag;
-				break;
-#endif /* JAVA */
-		}
-		
-		/*
-		 * If we didn't find a tag from that element, then dispose of it and
-		 * keep looking.
-		 */
-		if ( tag == NULL )
-		{
-			/*
-			 * We dunno how to reuse this type of element, so throw
-			 * it away and someone else will relay it out from scratch.
-			 */				
-			eptr->lo_any.prev = NULL;
-			eptr->lo_any.next = NULL;
-			lo_relayout_recycle ( context, state, eptr );
-			if ( enext != NULL )
-			{
-				enext->lo_any.prev = NULL;
-			}
-			eptr = enext;
-		}
-	}
-	/*
-	 * Advance the element list to the new head
-	 */
-	*elem_list = eptr;
-	
-	return tag;
-}
 
 /* 
  * Functions separated out of lo_BeginTableAttributes
@@ -8506,6 +7886,126 @@ static void lo_FreeCaptionCell( MWContext *context, lo_DocState *state, LO_CellS
 	lo_FreeElement(context, (LO_Element *)cell_ele, TRUE);
 
 }
+
+/* Delete the lo_TableRec data structure associated with the LO_TABLE element. 
+   Does not free the LO_TABLE element itself. */
+void lo_ScrapeTableElement( MWContext *context, LO_TableStruct *table_ele )
+{
+	lo_TableRec *table = (lo_TableRec *) table_ele->table;
+	lo_TopState *top_state = lo_FetchTopState(XP_DOCID(context));
+	lo_DocState *state = top_state->doc_state;
+                
+	if (table != NULL)
+	{
+		/* Free the table row list */
+		if (table->row_list != NULL)
+		{
+			lo_TableRow *row_ptr;
+			lo_TableRow *row;
+
+			row_ptr = table->row_list;
+			while (row_ptr != NULL)
+			{
+				row = row_ptr;
+				row_ptr = row_ptr->next;	
+				
+				/* The lo_TableCell structures will get freed when their peer
+				   LO_CELL elements get recycled, so just null out the pointers
+				   to those structures. */
+				row->cell_list = NULL;
+				row->cell_ptr = NULL;
+
+				XP_FREEIF(row->backdrop.bg_color);
+				XP_FREEIF(row->backdrop.url);
+				XP_DELETE(row);
+			}
+			table->row_list = NULL;
+			table->row_ptr = NULL;
+		}
+
+		/* Clean up the line array pointers to the elements contained inside the caption
+		   cell.  Otherwise, the freeing of the caption frees those elements and a double
+		   free crash occurs when those elements are freed by their peer LO_CELL element */
+		if (table->caption && table->caption->subdoc &&
+			table->caption->subdoc->state)
+			lo_cleanup_old_state( table->caption->subdoc->state );
+
+		lo_FreeAllExceptRows( context, state, table );
+	}
+}
+
+
+static void lo_FreeAllExceptRows( MWContext *context, lo_DocState *state, lo_TableRec *table )
+{
+	/* Free backdrop info */		
+	XP_FREEIF(table->backdrop.bg_color);
+	XP_FREEIF(table->backdrop.url);
+
+	/* Free width and height span arrays */
+	lo_FreeTableSpanArray(table->width_spans);
+	table->width_spans = NULL;
+	table->width_span_ptr = NULL;
+
+	lo_FreeTableSpanArray(table->height_spans);
+	table->height_spans = NULL;
+	table->height_span_ptr = NULL;
+
+	/* Free caption information. */
+	if (table->caption != NULL)
+	{
+		/* The LO_CELL element associated with the caption will get freed 
+		   when it gets recycled in the line list.  So, just null out the
+		   pointer to it. */
+		table->caption->cell_ele = NULL;
+
+		if ( table->caption->subdoc != NULL )
+		{
+			lo_FreePartialSubDoc ( context, state, table->caption->subdoc );
+			table->caption->subdoc = NULL;
+		}
+	
+		XP_DELETE(table->caption);
+		table->caption = NULL;
+	}
+
+	/* Free the subdoc state */
+	if (table->current_subdoc != NULL)
+	{
+		lo_FreePartialSubDoc(context, state, table->current_subdoc);
+		table->current_subdoc = NULL;
+	}
+
+
+	if ( table->fixed_col_widths != NULL )
+	{
+		XP_FREE(table->fixed_col_widths);
+	}
+	
+	/* Reset back pointer in table layout element */
+	if (table->table_ele != NULL) {
+		table->table_ele->table = NULL;
+	}
+
+	XP_DELETE(table);
+}
+
+static void lo_FreeTableSpanArray( lo_table_span *spanArray )
+{
+	if (spanArray != NULL)
+	{
+		lo_table_span *span_ptr;
+		lo_table_span *span;
+
+		span_ptr = spanArray;
+		while (span_ptr != NULL)
+		{
+			span = span_ptr;
+			span_ptr = span_ptr->next;
+			XP_DELETE(span);
+		}
+	}
+}
+
 #ifdef TEST_16BIT
 #undef XP_WIN16
 #endif /* TEST_16BIT */
