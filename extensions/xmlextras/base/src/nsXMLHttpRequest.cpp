@@ -1069,7 +1069,7 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
 
   nsCOMPtr<nsIStringInputStream> inputStream(do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
   if (NS_SUCCEEDED(rv)) {
-    rv = inputStream->AdoptData(postData, charLength +4);
+    rv = inputStream->AdoptData(postData, charLength);
     if (NS_SUCCEEDED(rv)) {
       return CallQueryInterface(inputStream, aStream);
     }
