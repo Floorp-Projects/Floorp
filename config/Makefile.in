@@ -27,27 +27,21 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifneq (,$(filter-out WINNT OS2,$(OS_ARCH)))
-ifdef CROSS_COMPILE
 HOST_PROGRAM	= nsinstall$(BIN_SUFFIX)
-else
-PROGRAM		= nsinstall$(BIN_SUFFIX)
-endif
+HOST_CSRCS	= nsinstall.c pathsub.c
 endif
 
 PLSRCS		= nfspwd.pl revdepth.pl
-ifdef CROSS_COMPILE
-HOST_CSRCS	= nsinstall.c pathsub.c
-else
-CSRCS		= nsinstall.c pathsub.c
-endif
 
-TARGETS		= $(HOST_PROGRAM) $(PROGRAM) $(PLSRCS:.pl=) $(SIMPLE_PROGRAMS)
+TARGETS		= $(HOST_PROGRAM) $(PLSRCS:.pl=) $(SIMPLE_PROGRAMS)
 
 # Generate the build number on the fly.
 TARGETS		+= build_number nsBuildID.h
 
+ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
 TARGETS		+= elf-dynstr-gc
+endif
 endif
 
 ifeq ($(OS_ARCH), Darwin)
@@ -151,12 +145,14 @@ nsBuildID.h: nsBuildID.h.in build_number
 	$(RM) $@
 	$(PERL) -I$(srcdir) $(srcdir)/aboutime.pl $@ build_number $(srcdir)/nsBuildID.h.in
 
+ifndef CROSS_COMPILE
+ifdef USE_ELF_DYNSTR_GC
 elf-dynstr-gc: elf-dynstr-gc.c Makefile Makefile.in
 	$(CC) $(COMPILE_CFLAGS) $(GLIB_CFLAGS) $(GLIB_LIBS) $(LDFLAGS) -o $@ $<
 
-ifdef USE_ELF_DYNSTR_GC
 export:: elf-dynstr-gc
 	$(INSTALL) -m 555 elf-dynstr-gc $(DIST)/bin
+endif
 endif
 
 FORCE:
