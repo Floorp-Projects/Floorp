@@ -90,26 +90,29 @@ CHTMLToken::~CHTMLToken() {
  *  @return  
  */
 CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
-  mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
-  mOrigin=-1;
   mContainerInfo=eFormUnknown;
+#ifdef DEBUG
+  mAttributed = PR_FALSE;
+#endif
 }
 
 CStartToken::CStartToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
-  mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
-  mOrigin=-1;
   mContainerInfo=eFormUnknown;
   mTextValue.Assign(aName);
+#ifdef DEBUG
+  mAttributed = PR_FALSE;
+#endif
 }
 
 CStartToken::CStartToken(const nsAReadableString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
-  mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
-  mOrigin=-1;
   mContainerInfo=eFormUnknown;
   mTextValue.Assign(aName);
+#ifdef DEBUG
+  mAttributed = PR_FALSE;
+#endif
 }
 
 nsresult CStartToken::GetIDAttributeAtom(nsIAtom** aResult)
@@ -165,28 +168,6 @@ const char*  CStartToken::GetClassName(void) {
  */
 PRInt32 CStartToken::GetTokenType(void) {
   return eToken_start;
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-void CStartToken::SetAttributed(PRBool aValue) {
-  mAttributed=aValue;
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-PRBool CStartToken::IsAttributed(void) {
-  return mAttributed;
 }
 
 /*
@@ -1350,8 +1331,10 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
  *  @return  
  */
 CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
-  mLastAttribute=PR_FALSE;
   mHasEqualWithoutValue=PR_FALSE;
+#ifdef DEBUG
+  mLastAttribute = PR_FALSE;
+#endif
 }
 
 /*
@@ -1363,8 +1346,10 @@ CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
  */
 CAttributeToken::CAttributeToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
   mTextValue.Assign(aName);
-  mLastAttribute=PR_FALSE;
   mHasEqualWithoutValue=PR_FALSE;
+#ifdef DEBUG
+  mLastAttribute = PR_FALSE;
+#endif
 }
 
 /*
@@ -1378,8 +1363,10 @@ CAttributeToken::CAttributeToken(const nsAReadableString& aName) : CHTMLToken(eH
 CAttributeToken::CAttributeToken(const nsAReadableString& aKey, const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
   mTextValue.Assign(aName);
   mTextKey.Rebind(aKey);
-  mLastAttribute=PR_FALSE;
   mHasEqualWithoutValue=PR_FALSE;
+#ifdef DEBUG
+  mLastAttribute = PR_FALSE;
+#endif
 }
 
 /*
@@ -1771,7 +1758,9 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
 
     if (NS_OK==result) {
       result=aScanner.Peek(aChar);
-      mLastAttribute= PRBool((kGreaterThan==aChar) || (kEOF==result));
+#ifdef DEBUG
+      mLastAttribute = (kGreaterThan == aChar || kEOF == result);
+#endif
     }
   }//if
   return result;
