@@ -57,8 +57,16 @@ var expectedvalues = [];
  * Set both |actual| and |expect| to a dummy value.
  */
 status = inSection(1);
-var N = 100;
-var str = make_deep_nest(N);
+var N = 1000;
+try
+{
+  make_deep_nest(N);
+}
+catch (e)
+{
+  // An exception is OK, as the runtime can throw one in response to too deep
+  // recursion. We haven't crashed; good! Continue on to set the dummy values -
+}
 actual = 1;
 expect = 1;
 addThis();
