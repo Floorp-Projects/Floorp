@@ -48,7 +48,7 @@ interface nsIHTTPChannel : nsIChannel
     */
     string GetResponseHeader(in string headerName);
 
-    readonly attribute nsresult ResponseStatus;
+    readonly attribute unsigned long ResponseStatus;
 
     readonly attribute string ResponseString;
 
