@@ -151,8 +151,13 @@ class Accessible : public IAccessible
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 
 
+  // NT4 does not have the oleacc that defines these methods. So we define copies here that automatically
+  // load the library only if needed.
+  static STDMETHODIMP AccessibleObjectFromWindow(HWND hwnd,DWORD dwObjectID,REFIID riid,void **ppvObject);
+  static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid,WPARAM wParam,LPUNKNOWN pAcc);
 
-    static ULONG g_cRef;              // the cum reference count of all instances
+  
+  static ULONG g_cRef;              // the cum reference count of all instances
     ULONG        m_cRef;              // the reference count
     nsCOMPtr<nsIAccessible> mAccessible;
     nsCOMPtr<nsIAccessible> mCachedChild;
@@ -164,6 +169,12 @@ class Accessible : public IAccessible
     virtual void GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc);
     PRBool InState(const nsString& aStates, const char* aState);
     STDMETHODIMP GetAttribute(const char* aName, VARIANT varChild, BSTR __RPC_FAR *aString);
+
+private:
+    /// the accessible library and cached methods
+    static HINSTANCE gmAccLib;
+    static LPFNACCESSIBLEOBJECTFROMWINDOW gmAccessibleObjectFromWindow;
+    static LPFNLRESULTFROMOBJECT gmLresultFromObject;
 
 };
 
