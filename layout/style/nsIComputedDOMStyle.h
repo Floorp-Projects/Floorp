@@ -52,7 +52,7 @@ class nsIComputedDOMStyle : public nsIDOMCSSStyleDeclaration
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMPUTEDDOMSTYLE_IID)
 
-  NS_IMETHOD Init(nsIDOMElement *aElement, const nsAReadableString& aPseudoElt,
+  NS_IMETHOD Init(nsIDOMElement *aElement, const nsAString& aPseudoElt,
                   nsIPresShell *aPresShell) = 0;
 };
 

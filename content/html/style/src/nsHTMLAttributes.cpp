@@ -70,7 +70,7 @@ struct HTMLAttribute {
     MOZ_COUNT_CTOR(HTMLAttribute);
   }
 
-  HTMLAttribute(nsIAtom* aAttribute, const nsAReadableString& aValue)
+  HTMLAttribute(nsIAtom* aAttribute, const nsAString& aValue)
     : mAttribute(aAttribute),
       mValue(aValue),
       mNext(nsnull)
@@ -137,7 +137,7 @@ struct HTMLAttribute {
     mValue = aValue;
   }
 
-  void Set(nsIAtom* aAttribute, const nsAReadableString& aValue)
+  void Set(nsIAtom* aAttribute, const nsAString& aValue)
   {
     NS_IF_RELEASE(mAttribute);
     mAttribute = aAttribute;
@@ -312,7 +312,7 @@ public:
   NS_IMETHOD Reset(void);
   NS_IMETHOD SetMappingFunction(nsMapRuleToAttributesFunc aMapRuleFunc);
 
-  NS_IMETHOD SetAttribute(nsIAtom* aAttrName, const nsAReadableString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttrName, const nsAString& aValue);
   NS_IMETHOD SetAttribute(nsIAtom* aAttrName, const nsHTMLValue& aValue);
   NS_IMETHOD UnsetAttribute(nsIAtom* aAttrName, PRInt32& aAttrCount);
 
@@ -462,7 +462,7 @@ nsHTMLMappedAttributes::SetMappingFunction(nsMapRuleToAttributesFunc aMapRuleFun
 }
 
 NS_IMETHODIMP
-nsHTMLMappedAttributes::SetAttribute(nsIAtom* aAttrName, const nsAReadableString& aValue)
+nsHTMLMappedAttributes::SetAttribute(nsIAtom* aAttrName, const nsAString& aValue)
 {
   if (! aAttrName) {
     return NS_ERROR_NULL_POINTER;
@@ -843,7 +843,7 @@ public:
                              nsIHTMLContent* aContent,
                              nsIHTMLStyleSheet* aSheet,
                              PRInt32& aAttrCount);
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttrName, const nsAReadableString& aValue,
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttrName, const nsAString& aValue,
                              PRBool aMappedToStyle,
                              nsIHTMLContent* aContent,
                              nsIHTMLStyleSheet* aSheet);
@@ -1008,7 +1008,7 @@ NS_IMPL_ISUPPORTS1(HTMLAttributesImpl, nsIHTMLAttributes)
 
 const PRUnichar kNullCh = PRUnichar('\0');
 
-static void ParseClasses(const nsAReadableString& aClassString, nsClassList& aClassList)
+static void ParseClasses(const nsAString& aClassString, nsClassList& aClassList)
 {
   nsAutoString  classStr(aClassString);  // copy to work buffer
   classStr.Append(kNullCh);  // put an extra null at the end
@@ -1165,7 +1165,7 @@ HTMLAttributesImpl::UniqueMapped(nsIHTMLStyleSheet* aSheet)
 }
 
 NS_IMETHODIMP
-HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName, const nsAReadableString& aValue,
+HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName, const nsAString& aValue,
                                     PRBool aMappedToStyle, nsIHTMLContent* aContent,
                                     nsIHTMLStyleSheet* aSheet)
 {

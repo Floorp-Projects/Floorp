@@ -128,7 +128,7 @@ class nsCSSScanner {
   void Init(nsIUnicharInputStream* aInput, nsIURI* aURI);
 
 #ifdef CSS_REPORT_PARSE_ERRORS
-  void AddToError(const nsAReadableString& aErrorText);
+  void AddToError(const nsAString& aErrorText);
   void OutputError();
   void ClearError();
 #endif

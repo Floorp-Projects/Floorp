@@ -820,7 +820,7 @@ public:
   NS_IMETHOD AppendMedium(nsIAtom* aMedium);
   NS_IMETHOD ClearMedia(void);
   NS_IMETHOD DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
-  NS_IMETHOD InsertRuleIntoGroup(nsAReadableString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
+  NS_IMETHOD InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
   
   NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
   NS_IMETHOD SetEnabled(PRBool aEnabled);
@@ -1038,8 +1038,8 @@ class DOMMediaListImpl : public nsIDOMMediaList,
 private:
   nsresult BeginMediaChange(void);
   nsresult EndMediaChange(void);
-  nsresult Delete(nsAReadableString & aOldMedium);
-  nsresult Append(nsAReadableString & aOldMedium);
+  nsresult Delete(const nsAString & aOldMedium);
+  nsresult Append(const nsAString & aOldMedium);
 
   nsCOMPtr<nsISupportsArray> mArray;
   // not refcounted; sheet will let us know when it goes away
@@ -1082,7 +1082,7 @@ NS_NewMediaList(nsIMediaList** aInstancePtrResult) {
 }
 
 nsresult
-NS_NewMediaList(const nsAReadableString& aMediaText, nsIMediaList** aInstancePtrResult) {
+NS_NewMediaList(const nsAString& aMediaText, nsIMediaList** aInstancePtrResult) {
   nsresult rv;
   NS_ASSERTION(aInstancePtrResult, "Null out param.");
 
@@ -1114,7 +1114,7 @@ nsresult NS_NewMediaList(nsISupportsArray* aArray, nsICSSStyleSheet* aSheet, nsI
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::GetText(nsAWritableString& aMediaText)
+DOMMediaListImpl::GetText(nsAString& aMediaText)
 {
   aMediaText.Truncate();
 
@@ -1141,7 +1141,7 @@ DOMMediaListImpl::GetText(nsAWritableString& aMediaText)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::SetText(const nsAReadableString& aMediaText)
+DOMMediaListImpl::SetText(const nsAString& aMediaText)
 {
   nsresult rv = Clear();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1202,13 +1202,13 @@ DOMMediaListImpl::DropReference(void)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::GetMediaText(nsAWritableString& aMediaText)
+DOMMediaListImpl::GetMediaText(nsAString& aMediaText)
 {
   return GetText(aMediaText);
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::SetMediaText(nsAReadableString& aMediaText)
+DOMMediaListImpl::SetMediaText(const nsAString& aMediaText)
 {
   nsresult rv;
   rv = BeginMediaChange();
@@ -1239,7 +1239,7 @@ DOMMediaListImpl::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::Item(PRUint32 aIndex, nsAWritableString& aReturn)
+DOMMediaListImpl::Item(PRUint32 aIndex, nsAString& aReturn)
 {
   nsCOMPtr<nsISupports> tmp(dont_AddRef(ElementAt(aIndex)));
 
@@ -1258,7 +1258,7 @@ DOMMediaListImpl::Item(PRUint32 aIndex, nsAWritableString& aReturn)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::DeleteMedium(const nsAReadableString& aOldMedium)
+DOMMediaListImpl::DeleteMedium(const nsAString& aOldMedium)
 {
   nsresult rv;
   rv = BeginMediaChange();
@@ -1274,7 +1274,7 @@ DOMMediaListImpl::DeleteMedium(const nsAReadableString& aOldMedium)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::AppendMedium(const nsAReadableString& aNewMedium)
+DOMMediaListImpl::AppendMedium(const nsAString& aNewMedium)
 {
   nsresult rv;
   rv = BeginMediaChange();
@@ -1290,7 +1290,7 @@ DOMMediaListImpl::AppendMedium(const nsAReadableString& aNewMedium)
 }
 
 nsresult
-DOMMediaListImpl::Delete(const nsAReadableString& aOldMedium)
+DOMMediaListImpl::Delete(const nsAString& aOldMedium)
 {
   if (aOldMedium.IsEmpty())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
@@ -1310,7 +1310,7 @@ DOMMediaListImpl::Delete(const nsAReadableString& aOldMedium)
 }
 
 nsresult
-DOMMediaListImpl::Append(const nsAReadableString& aNewMedium)
+DOMMediaListImpl::Append(const nsAString& aNewMedium)
 {
   if (aNewMedium.IsEmpty())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
@@ -2641,7 +2641,7 @@ CSSStyleSheetImpl::SetModified(PRBool aModified)
 
   // nsIDOMStyleSheet interface
 NS_IMETHODIMP    
-CSSStyleSheetImpl::GetType(nsAWritableString& aType)
+CSSStyleSheetImpl::GetType(nsAString& aType)
 {
   aType.Assign(NS_LITERAL_STRING("text/css"));
   return NS_OK;
@@ -2693,7 +2693,7 @@ CSSStyleSheetImpl::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::GetHref(nsAWritableString& aHref)
+CSSStyleSheetImpl::GetHref(nsAString& aHref)
 {
   if (mInner && mInner->mURL) {
     nsCAutoString str;
@@ -2715,7 +2715,7 @@ CSSStyleSheetImpl::GetTitle(nsString& aTitle) const
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::GetTitle(nsAWritableString& aTitle)
+CSSStyleSheetImpl::GetTitle(nsAString& aTitle)
 {
   aTitle.Assign(mTitle);
   return NS_OK;
@@ -2772,7 +2772,7 @@ CSSStyleSheetImpl::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 }
 
 NS_IMETHODIMP    
-CSSStyleSheetImpl::InsertRule(const nsAReadableString& aRule, 
+CSSStyleSheetImpl::InsertRule(const nsAString& aRule, 
                               PRUint32 aIndex, 
                               PRUint32* aReturn)
 {
@@ -3032,7 +3032,7 @@ CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::InsertRuleIntoGroup(nsAReadableString & aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval)
+CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval)
 {
   nsresult result;
   // check that the group actually belongs to this sheet!

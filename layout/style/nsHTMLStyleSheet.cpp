@@ -856,7 +856,7 @@ public:
   NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
                               nsIHTMLAttributes*& aAttributes);
   NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute,
-                             const nsAReadableString& aValue, 
+                             const nsAString& aValue, 
                              PRBool aMappedToStyle,
                              nsIHTMLContent* aContent, 
                              nsIHTMLAttributes*& aAttributes);
@@ -1418,7 +1418,7 @@ HTMLStyleSheetImpl::SetAttributesFor(nsIHTMLContent* aContent,
 
 NS_IMETHODIMP
 HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute, 
-                                    const nsAReadableString& aValue,
+                                    const nsAString& aValue,
                                     PRBool aMappedToStyle,
                                     nsIHTMLContent* aContent, 
                                     nsIHTMLAttributes*& aAttributes)

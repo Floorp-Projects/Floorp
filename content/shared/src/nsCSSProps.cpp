@@ -104,7 +104,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
 }
 
 nsCSSProperty 
-nsCSSProps::LookupProperty(const nsAReadableString& aProperty) {
+nsCSSProps::LookupProperty(const nsAString& aProperty) {
   nsCAutoString theProp; theProp.AssignWithConversion(aProperty);
   return LookupProperty(theProp);
 }

@@ -73,7 +73,7 @@ NS_IMPL_RELEASE(nsDOMCSSDeclaration);
 
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetCssText(nsAWritableString& aCssText)
+nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
 {
   nsCSSDeclaration* decl;
   aCssText.Truncate();
@@ -88,7 +88,7 @@ nsDOMCSSDeclaration::GetCssText(nsAWritableString& aCssText)
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCssText(const nsAReadableString& aCssText)
+nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 {
   return ParseDeclaration(aCssText, PR_FALSE, PR_TRUE);
 }
@@ -125,7 +125,7 @@ nsDOMCSSDeclaration::GetParentRule(nsIDOMCSSRule** aParentRule)
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
+nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAString& aPropertyName,
                                          nsIDOMCSSValue** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -137,7 +137,7 @@ nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::Item(PRUint32 aIndex, nsAWritableString& aReturn)
+nsDOMCSSDeclaration::Item(PRUint32 aIndex, nsAString& aReturn)
 {
   nsCSSDeclaration *decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
@@ -151,8 +151,8 @@ nsDOMCSSDeclaration::Item(PRUint32 aIndex, nsAWritableString& aReturn)
 }
 
 NS_IMETHODIMP    
-nsDOMCSSDeclaration::GetPropertyValue(const nsAReadableString& aPropertyName, 
-                                     nsAWritableString& aReturn)
+nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName, 
+                                      nsAString& aReturn)
 {
   nsCSSValue val;
   nsCSSDeclaration *decl;
@@ -167,8 +167,8 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsAReadableString& aPropertyName,
 }
 
 NS_IMETHODIMP    
-nsDOMCSSDeclaration::GetPropertyPriority(const nsAReadableString& aPropertyName, 
-                                        nsAWritableString& aReturn)
+nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName, 
+                                         nsAString& aReturn)
 {
   nsCSSDeclaration *decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
@@ -189,9 +189,9 @@ nsDOMCSSDeclaration::GetPropertyPriority(const nsAReadableString& aPropertyName,
 }
 
 NS_IMETHODIMP    
-nsDOMCSSDeclaration::SetProperty(const nsAReadableString& aPropertyName, 
-                                 const nsAReadableString& aValue, 
-                                 const nsAReadableString& aPriority)
+nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName, 
+                                 const nsAString& aValue, 
+                                 const nsAString& aPriority)
 {
   if (aValue.IsEmpty()) {
      // If the new value of the property is an empty string we remove the
@@ -210,8 +210,8 @@ nsDOMCSSDeclaration::SetProperty(const nsAReadableString& aPropertyName,
  */
 static nsresult
 CallSetProperty(nsDOMCSSDeclaration* aDecl,
-                const nsAReadableString& aPropName,
-                const nsAReadableString& aValue)
+                const nsAString& aPropName,
+                const nsAString& aValue)
 {
   if (aValue.IsEmpty()) {
     // If the new value of the property is an empty string we remove the
@@ -225,13 +225,13 @@ CallSetProperty(nsDOMCSSDeclaration* aDecl,
 
 #define IMPL_CSSPROP(attname_, propname_)                                     \
   NS_IMETHODIMP                                                               \
-  nsDOMCSSDeclaration::Get##attname_(nsAWritableString& aValue)               \
+  nsDOMCSSDeclaration::Get##attname_(nsAString& aValue)                       \
   {                                                                           \
     return GetPropertyValue(propname_, aValue);                               \
   }                                                                           \
                                                                               \
   NS_IMETHODIMP                                                               \
-  nsDOMCSSDeclaration::Set##attname_(const nsAReadableString& aValue)         \
+  nsDOMCSSDeclaration::Set##attname_(const nsAString& aValue)                 \
   {                                                                           \
     return CallSetProperty(this, propname_, aValue);                          \
   }

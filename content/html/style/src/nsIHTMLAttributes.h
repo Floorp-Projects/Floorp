@@ -68,7 +68,7 @@ public:
                              PRInt32& aAttrCount) = 0;
   // this string value version lets you avoid an extra string copy, 
   // the value is still stored in a nsHTMLValue
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsAReadableString& aValue,
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsAString& aValue,
                              PRBool aMappedToStyle, 
                              nsIHTMLContent* aContent,
                              nsIHTMLStyleSheet* aSheet) = 0;

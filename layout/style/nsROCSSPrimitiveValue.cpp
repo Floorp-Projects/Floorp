@@ -74,7 +74,7 @@ NS_INTERFACE_MAP_END
 
 
 NS_IMETHODIMP
-nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
+nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
 {
   nsAutoString tmpStr;
   aCssText.Truncate();
@@ -245,7 +245,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
 
 
 NS_IMETHODIMP
-nsROCSSPrimitiveValue::SetCssText(const nsAReadableString& aCssText)
+nsROCSSPrimitiveValue::SetCssText(const nsAString& aCssText)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
@@ -353,14 +353,14 @@ nsROCSSPrimitiveValue::GetFloatValue(PRUint16 aUnitType, float* aReturn)
 
 NS_IMETHODIMP
 nsROCSSPrimitiveValue::SetStringValue(PRUint16 aStringType,
-                                      const nsAReadableString& aStringValue)
+                                      const nsAString& aStringValue)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 
 NS_IMETHODIMP
-nsROCSSPrimitiveValue::GetStringValue(nsAWritableString& aReturn)
+nsROCSSPrimitiveValue::GetStringValue(nsAString& aReturn)
 {
   switch (mType) {
     case CSS_IDENT:

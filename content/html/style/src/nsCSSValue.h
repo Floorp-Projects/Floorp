@@ -126,7 +126,7 @@ public:
 
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit);
   nsCSSValue(float aValue, nsCSSUnit aUnit);
-  nsCSSValue(const nsAReadableString& aValue, nsCSSUnit aUnit);
+  nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit);
   nsCSSValue(nscolor aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   ~nsCSSValue(void)
@@ -156,7 +156,7 @@ public:
   PRInt32   GetIntValue(void) const;
   float     GetPercentValue(void) const;
   float     GetFloatValue(void) const;
-  nsAWritableString& GetStringValue(nsAWritableString& aBuffer) const;
+  nsAString& GetStringValue(nsAString& aBuffer) const;
   nscolor   GetColorValue(void) const;
   nscoord   GetLengthTwips(void) const
   {
@@ -224,7 +224,7 @@ public:
     }
   }
 
-  void  SetStringValue(const nsAReadableString& aValue, nsCSSUnit aUnit);
+  void  SetStringValue(const nsAString& aValue, nsCSSUnit aUnit);
   void  SetColorValue(nscolor aValue);
   void  SetAutoValue(void);
   void  SetInheritValue(void);
@@ -233,8 +233,8 @@ public:
   void  SetNormalValue(void);
 
   // debugging methods only
-  void  AppendToString(nsAWritableString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
-  void  ToString(nsAWritableString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
+  void  AppendToString(nsAString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
+  void  ToString(nsAString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
 
 protected:
   nsCSSUnit mUnit;
@@ -275,7 +275,7 @@ inline float nsCSSValue::GetFloatValue(void) const
   return 0.0f;
 }
 
-inline nsAWritableString& nsCSSValue::GetStringValue(nsAWritableString& aBuffer) const
+inline nsAString& nsCSSValue::GetStringValue(nsAString& aBuffer) const
 {
   NS_ASSERTION((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters), "not a string value");
   aBuffer.Truncate();

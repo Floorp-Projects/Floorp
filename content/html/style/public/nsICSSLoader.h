@@ -39,7 +39,7 @@
 #define nsICSSLoader_h___
 
 #include "nsISupports.h"
-#include "nsAReadableString.h"
+#include "nsAString.h"
 #include "nsICSSImportRule.h"
 
 class nsIAtom;
@@ -69,7 +69,7 @@ public:
 
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive) = 0;
   NS_IMETHOD SetQuirkMode(PRBool aQuirkMode) = 0;
-  NS_IMETHOD SetPreferredSheet(const nsAReadableString& aTitle) = 0;
+  NS_IMETHOD SetPreferredSheet(const nsAString& aTitle) = 0;
 
   // Get/Recycle a CSS parser for general use
   NS_IMETHOD GetParserFor(nsICSSStyleSheet* aSheet,

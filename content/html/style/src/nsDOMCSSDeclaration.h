@@ -55,22 +55,22 @@ public:
   NS_DECL_ISUPPORTS
 
   // NS_DECL_IDOMCSSSTYLEDECLARATION
-  NS_IMETHOD    GetCssText(nsAWritableString& aCssText);
-  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText);
+  NS_IMETHOD    GetCssText(nsAString& aCssText);
+  NS_IMETHOD    SetCssText(const nsAString& aCssText);
   NS_IMETHOD    GetLength(PRUint32* aLength);
   NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule);
-  NS_IMETHOD    GetPropertyValue(const nsAReadableString& aPropertyName,
-                                 nsAWritableString& aReturn);
-  NS_IMETHOD    GetPropertyCSSValue(const nsAReadableString& aPropertyName,
+  NS_IMETHOD    GetPropertyValue(const nsAString& aPropertyName,
+                                 nsAString& aReturn);
+  NS_IMETHOD    GetPropertyCSSValue(const nsAString& aPropertyName,
                                     nsIDOMCSSValue** aReturn);
-  NS_IMETHOD    RemoveProperty(const nsAReadableString& aPropertyName,
-                               nsAWritableString& aReturn) = 0;
-  NS_IMETHOD    GetPropertyPriority(const nsAReadableString& aPropertyName,
-                                    nsAWritableString& aReturn);
-  NS_IMETHOD    SetProperty(const nsAReadableString& aPropertyName,
-                            const nsAReadableString& aValue,
-                            const nsAReadableString& aPriority);
-  NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn);
+  NS_IMETHOD    RemoveProperty(const nsAString& aPropertyName,
+                               nsAString& aReturn) = 0;
+  NS_IMETHOD    GetPropertyPriority(const nsAString& aPropertyName,
+                                    nsAString& aReturn);
+  NS_IMETHOD    SetProperty(const nsAString& aPropertyName,
+                            const nsAString& aValue,
+                            const nsAString& aPriority);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsAString& aReturn);
 
 
   NS_DECL_NSIDOMCSS2PROPERTIES
@@ -82,9 +82,9 @@ public:
   // Note! This will only set the declaration if a style rule already exists
   virtual nsresult SetCSSDeclaration(nsCSSDeclaration *aDecl) = 0;
 
-  virtual nsresult ParsePropertyValue(const nsAReadableString& aPropName,
-                                      const nsAReadableString& aPropValue) = 0;
-  virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
+  virtual nsresult ParsePropertyValue(const nsAString& aPropName,
+                                      const nsAString& aPropValue) = 0;
+  virtual nsresult ParseDeclaration(const nsAString& aDecl,
                                     PRBool aParseOnlyOneDecl,
                                     PRBool aClearOldDecl) = 0;
   virtual nsresult GetParent(nsISupports **aParent) = 0;

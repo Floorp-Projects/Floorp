@@ -62,7 +62,7 @@ public:
   static void ReleaseTable(void);
 
   // Given a property string, return the enum value
-  static nsCSSProperty LookupProperty(const nsAReadableString& aProperty);
+  static nsCSSProperty LookupProperty(const nsAString& aProperty);
   static nsCSSProperty LookupProperty(const nsACString& aProperty);
 
   // Given a property enum, get the string value

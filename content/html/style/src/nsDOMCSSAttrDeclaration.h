@@ -55,8 +55,8 @@ public:
   nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent);
   ~nsDOMCSSAttributeDeclaration();
 
-  NS_IMETHOD RemoveProperty(const nsAReadableString& aPropertyName,
-                            nsAWritableString& aReturn);
+  NS_IMETHOD RemoveProperty(const nsAString& aPropertyName,
+                            nsAString& aReturn);
 
   virtual void DropReference();
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
@@ -66,9 +66,9 @@ public:
                                             nsIURI** aBaseURI,
                                             nsICSSLoader** aCSSLoader,
                                             nsICSSParser** aCSSParser);
-  virtual nsresult ParsePropertyValue(const nsAReadableString& aPropName,
-                                      const nsAReadableString& aPropValue);
-  virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
+  virtual nsresult ParsePropertyValue(const nsAString& aPropName,
+                                      const nsAString& aPropValue);
+  virtual nsresult ParseDeclaration(const nsAString& aDecl,
                                     PRBool aParseOnlyOneDecl,
                                     PRBool aClearOldDecl);
   virtual nsresult GetParent(nsISupports **aParent);

@@ -130,7 +130,7 @@ nsTextFragment::operator=(const PRUnichar *aString)
 }
 
 nsTextFragment&
-nsTextFragment::operator=(const nsAReadableString& aString)
+nsTextFragment::operator=(const nsAString& aString)
 {
   ReleaseText();
 

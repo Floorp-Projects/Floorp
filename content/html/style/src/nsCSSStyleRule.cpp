@@ -695,7 +695,7 @@ static PRBool IsPseudoElement(nsIAtom* aAtom)
   return PR_FALSE;
 }
 
-void nsCSSSelector::AppendNegationToString(nsAWritableString& aString)
+void nsCSSSelector::AppendNegationToString(nsAString& aString)
 {
   aString.Append(NS_LITERAL_STRING(":not("));
 }
@@ -704,7 +704,7 @@ void nsCSSSelector::AppendNegationToString(nsAWritableString& aString)
 // Builds the textual representation of a selector. Called by DOM 2 CSS 
 // StyleRule:selectorText
 //
-nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet, PRBool aIsPseudoElem,
+nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, PRBool aIsPseudoElem,
                                   PRInt8 aNegatedIndex) const
 {
   const PRUnichar* temp;
@@ -1068,8 +1068,8 @@ public:
   DOMCSSDeclarationImpl(nsICSSStyleRule *aRule);
   ~DOMCSSDeclarationImpl(void);
 
-  NS_IMETHOD RemoveProperty(const nsAReadableString& aPropertyName, 
-                            nsAWritableString& aReturn);
+  NS_IMETHOD RemoveProperty(const nsAString& aPropertyName, 
+                            nsAString& aReturn);
 
   virtual void DropReference(void);
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
@@ -1081,9 +1081,9 @@ public:
                                             nsIURI** aURI,
                                             nsICSSLoader** aCSSLoader,
                                             nsICSSParser** aCSSParser);
-  virtual nsresult ParsePropertyValue(const nsAReadableString& aPropName,
-                                      const nsAReadableString& aPropValue);
-  virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
+  virtual nsresult ParsePropertyValue(const nsAString& aPropName,
+                                      const nsAString& aPropValue);
+  virtual nsresult ParseDeclaration(const nsAString& aDecl,
                                     PRBool aParseOnlyOneDecl,
                                     PRBool aClearOldDecl);
   virtual nsresult GetParent(nsISupports **aParent);
@@ -1109,8 +1109,8 @@ DOMCSSDeclarationImpl::~DOMCSSDeclarationImpl(void)
 }
 
 NS_IMETHODIMP
-DOMCSSDeclarationImpl::RemoveProperty(const nsAReadableString& aPropertyName, 
-                                      nsAWritableString& aReturn)
+DOMCSSDeclarationImpl::RemoveProperty(const nsAString& aPropertyName, 
+                                      nsAString& aReturn)
 {
   aReturn.Truncate();
 
@@ -1233,8 +1233,8 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsICSSStyleRule* aRule,
 }
 
 nsresult
-DOMCSSDeclarationImpl::ParsePropertyValue(const nsAReadableString& aPropName,
-                                          const nsAReadableString& aPropValue)
+DOMCSSDeclarationImpl::ParsePropertyValue(const nsAString& aPropName,
+                                          const nsAString& aPropValue)
 {
   nsCSSDeclaration* decl;
   nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
@@ -1279,7 +1279,7 @@ DOMCSSDeclarationImpl::ParsePropertyValue(const nsAReadableString& aPropName,
 }
 
 nsresult 
-DOMCSSDeclarationImpl::ParseDeclaration(const nsAReadableString& aDecl,
+DOMCSSDeclarationImpl::ParseDeclaration(const nsAString& aDecl,
                                         PRBool aParseOnlyOneDecl,
                                         PRBool aClearOldDecl)
 {
@@ -2500,7 +2500,7 @@ CSSStyleRuleImpl::GetType(PRUint16* aType)
 }
 
 NS_IMETHODIMP    
-CSSStyleRuleImpl::GetCssText(nsAWritableString& aCssText)
+CSSStyleRuleImpl::GetCssText(nsAString& aCssText)
 {
   mSelector.ToString( aCssText, mSheet, IsPseudoElement(mSelector.mTag),
                       0 );
@@ -2519,7 +2519,7 @@ CSSStyleRuleImpl::GetCssText(nsAWritableString& aCssText)
 }
 
 NS_IMETHODIMP    
-CSSStyleRuleImpl::SetCssText(const nsAReadableString& aCssText)
+CSSStyleRuleImpl::SetCssText(const nsAString& aCssText)
 {
   // XXX TBI - need to re-parse rule & declaration
   return NS_OK;
@@ -2546,14 +2546,14 @@ CSSStyleRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 }
 
 NS_IMETHODIMP    
-CSSStyleRuleImpl::GetSelectorText(nsAWritableString& aSelectorText)
+CSSStyleRuleImpl::GetSelectorText(nsAString& aSelectorText)
 {
   mSelector.ToString( aSelectorText, mSheet, IsPseudoElement(mSelector.mTag), 0 );
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-CSSStyleRuleImpl::SetSelectorText(const nsAReadableString& aSelectorText)
+CSSStyleRuleImpl::SetSelectorText(const nsAString& aSelectorText)
 {
   // XXX TBI - get a parser and re-parse the selectors, 
   // XXX then need to re-compute the cascade

@@ -78,7 +78,7 @@ nsHTMLValue::nsHTMLValue(float aValue)
   mValue.mFloat = aValue;
 }
 
-nsHTMLValue::nsHTMLValue(const nsAReadableString& aValue, nsHTMLUnit aUnit)
+nsHTMLValue::nsHTMLValue(const nsAString& aValue, nsHTMLUnit aUnit)
   : mUnit(aUnit)
 {
   NS_ASSERTION((eHTMLUnit_String == aUnit) ||
@@ -245,7 +245,7 @@ void nsHTMLValue::SetPercentValue(float aValue)
   mValue.mFloat = aValue;
 }
 
-void nsHTMLValue::SetStringValue(const nsAReadableString& aValue,
+void nsHTMLValue::SetStringValue(const nsAString& aValue,
                                  nsHTMLUnit aUnit)
 {
   Reset();
@@ -277,7 +277,7 @@ void nsHTMLValue::SetEmptyValue(void)
 }
 
 #ifdef DEBUG
-void nsHTMLValue::AppendToString(nsAWritableString& aBuffer) const
+void nsHTMLValue::AppendToString(nsAString& aBuffer) const
 {
   if (eHTMLUnit_Null == mUnit) {
     return;

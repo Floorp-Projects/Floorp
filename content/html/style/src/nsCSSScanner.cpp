@@ -227,7 +227,7 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI)
 
 #ifdef CSS_REPORT_PARSE_ERRORS
 
-void nsCSSScanner::AddToError(const nsAReadableString& aErrorText)
+void nsCSSScanner::AddToError(const nsAString& aErrorText)
 {
   if (mError.IsEmpty()) {
     mErrorLineNumber = mLineNumber;

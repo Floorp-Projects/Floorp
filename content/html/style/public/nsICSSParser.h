@@ -39,7 +39,7 @@
 #define nsCSS1Parser_h___
 
 #include "nsISupports.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 class nsIStyleRule;
 class nsICSSStyleSheet;
 class nsIUnicharInputStream;
@@ -85,22 +85,22 @@ public:
   // Parse HTML style attribute or its equivalent in other markup
   // languages.  aBaseURL is the base url to use for relative links in
   // the declaration.
-  NS_IMETHOD ParseStyleAttribute(const nsAReadableString& aAttributeValue,
+  NS_IMETHOD ParseStyleAttribute(const nsAString&         aAttributeValue,
                                  nsIURI*                  aBaseURL,
                                  nsIStyleRule**           aResult) = 0;
 
-  NS_IMETHOD ParseAndAppendDeclaration(const nsAReadableString& aBuffer,
+  NS_IMETHOD ParseAndAppendDeclaration(const nsAString&         aBuffer,
                                        nsIURI*                  aBaseURL,
                                        nsCSSDeclaration*        aDeclaration,
                                        PRBool                   aParseOnlyOneDecl,
                                        PRInt32*                 aHint) = 0;
 
-  NS_IMETHOD ParseRule(nsAReadableString& aRule,
+  NS_IMETHOD ParseRule(const nsAString&   aRule,
                        nsIURI*            aBaseURL,
                        nsISupportsArray** aResult) = 0;
 
-  NS_IMETHOD ParseProperty(const nsAReadableString& aPropName,
-                           const nsAReadableString& aPropValue,
+  NS_IMETHOD ParseProperty(const nsAString& aPropName,
+                           const nsAString& aPropValue,
                            nsIURI* aBaseURL,
                            nsCSSDeclaration* aDeclaration,
                            PRInt32* aHint) = 0;
@@ -110,11 +110,11 @@ public:
   //  charset to be anything other than the default
 
   // sets the out-param to the current charset, as set by SetCharset
-  NS_IMETHOD GetCharset(/*out*/nsAWritableString &aCharsetDest) const = 0;
+  NS_IMETHOD GetCharset(/*out*/nsAString &aCharsetDest) const = 0;
 
   // SetCharset expects the charset to be the preferred charset
   // and it just records the string exactly as passed in (no alias resolution)
-  NS_IMETHOD SetCharset(/*in*/ const nsAReadableString &aCharsetSrc) = 0;
+  NS_IMETHOD SetCharset(/*in*/ const nsAString &aCharsetSrc) = 0;
 };
 
 // Values or'd in the GetInfoMask; other bits are reserved
