@@ -23,6 +23,7 @@
 
 class nsTreeFrame;
 class nsCSSFrameConstructor;
+class nsISupportsArray;
 
 class nsTreeRowGroupFrame : public nsTableRowGroupFrame, public nsIScrollbarListener
 {
@@ -75,8 +76,6 @@ protected:
   void DestroyRows(nsIPresContext& aPresContext, PRInt32& rowsToLose);
   void ReverseDestroyRows(nsIPresContext& aPresContext, PRInt32& rowsToLose);
 
-  void ConstructContentChain(PRInt32 aOldIndex, PRInt32 aNewIndex, nsIContent* aContent);
-
   NS_IMETHOD     ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize,
                                       RowGroupReflowState& aReflowState,
@@ -88,6 +87,9 @@ protected:
 
   void LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult);
 
+  void ConstructContentChain(nsIContent* aRowContent);
+  void FindPreviousRowContent(PRInt32 aDelta, nsIContent* aHint, nsIContent** aResult);
+
 protected: // Data Members
   nsIFrame* mTopFrame; // The current topmost frame in the view.
   nsIFrame* mBottomFrame; // The current bottom frame in the view.
@@ -97,5 +99,7 @@ protected: // Data Members
 
   nsIFrame* mScrollbar; // Our scrollbar.
   
+  nsCOMPtr<nsISupportsArray> mContentChain; // Our content chain
+
   nsCSSFrameConstructor* mFrameConstructor; // We don't own this. (No addref/release allowed, punk.)
 }; // class nsTreeRowGroupFrame
