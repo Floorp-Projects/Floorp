@@ -418,9 +418,12 @@ typedef struct _EDT_DivisionData EDT_DivisionData;
 
 /*--------------------------- Page Properties --------------------------------*/
 struct _EDT_MetaData {
-    XP_Bool bHttpEquiv;        /* true, http-equiv="fdsfds", false name="fdsfds" */
-    char *pName;            /* http-equiv's or name's value */
-    char *pContent;
+    XP_Bool bHttpEquiv;      /* true, http-equiv="fdsfds", false name="fdsfds" */
+    char *pName;             /* http-equiv's or name's value */
+    char *pContent;          /* value of the CONTENT param */
+    char *pPrevContent;      /* The previous CONTENT value to search for 
+                                so we can support multiple items with same
+                                name or http-equiv param */
 };
 
 typedef struct _EDT_MetaData EDT_MetaData;
