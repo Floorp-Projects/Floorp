@@ -1603,7 +1603,7 @@ EarlyExit:
 }
 
 nsresult
-nsAbSync::PatchHistoryTableWithNewID(PRInt32 clientID, PRInt32 serverID, PRInt32 aMultiplier)
+nsAbSync::PatchHistoryTableWithNewID(PRInt32 clientID, PRInt32 serverID, PRInt32 aMultiplier, ulong crc)
 {
   for (PRUint32 i = 0; i < mNewTableSize; i++)
   {
@@ -1614,6 +1614,9 @@ nsAbSync::PatchHistoryTableWithNewID(PRInt32 clientID, PRInt32 serverID, PRInt32
 #endif
 
       mNewSyncMapingTable[i].serverID = serverID;
+      // Patch CRC if it's not 0.
+      if (crc)
+        mNewSyncMapingTable[i].CRC = crc;
       return NS_OK;
     }
   }
@@ -1760,7 +1763,7 @@ nsAbSync::ProcessOpReturn()
         rv += ExtractInteger(renop, SERVER_OP_RETURN_SID, ' ', &serverID);
         if (NS_SUCCEEDED(rv))
         {
-          PatchHistoryTableWithNewID(clientID, serverID, -1);
+          PatchHistoryTableWithNewID(clientID, serverID, -1, 0);
         }
       }
     }
@@ -2809,7 +2812,7 @@ nsAbSync::AddNewUsers()
         // fails, then flip the flag to TRUE and have a new record created
         // in newSyncRecord
         //
-        if (NS_FAILED(PatchHistoryTableWithNewID(localID, serverID, 1)))
+        if (NS_FAILED(PatchHistoryTableWithNewID(localID, serverID, 1, GetCRC(tLine))))
           isNewCard = PR_TRUE;
       }
 

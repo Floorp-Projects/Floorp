@@ -238,7 +238,7 @@ private:
   nsresult        ExtractInteger(char *aLine, char *aTag, char aDelim, PRInt32 *aRetVal);
   char            *ExtractCharacterString(char *aLine, char *aTag, char aDelim);
 
-  nsresult        PatchHistoryTableWithNewID(PRInt32 clientID, PRInt32 serverID, PRInt32 aMultiplier);
+  nsresult        PatchHistoryTableWithNewID(PRInt32 clientID, PRInt32 serverID, PRInt32 aMultiplier, ulong crc);
   nsresult        DeleteRecord();
   nsresult        DeleteList();
   nsresult        DeleteGroup();
