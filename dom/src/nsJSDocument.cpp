@@ -23,6 +23,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMText.h"
 #include "nsString.h"
 
 static NS_DEFINE_IID(kIScriptObjectIID, NS_ISCRIPTOBJECT_IID);
@@ -195,7 +196,29 @@ CreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 PR_STATIC_CALLBACK(JSBool)
 CreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  //XXX TBI
+  nsIDOMDocument *document = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+
+  if (nsnull != document) {
+    NS_ASSERTION(1 == argc, "unexpected argument count");
+
+    JSString*    jsstring1 = JSVAL_TO_STRING(argv[0]);
+    nsString     data(JS_GetStringChars(jsstring1));
+    nsIDOMText*  textNode;
+  
+    if (NS_OK == document->CreateTextNode(data, &textNode)) {
+      // get the js object
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == textNode->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(textNode);
+    }
+  }
   return JS_TRUE;
 }
 

@@ -783,23 +783,37 @@ nsresult nsHTMLContainer::GetFirstChild(nsIDOMNode **aNode)
 
 nsresult nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
 {
-  nsIContent* content = nsnull;
-  nsresult res = refChild->QueryInterface(kIContentIID, (void**)&content);
-  NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
+  NS_PRECONDITION(nsnull != newChild, "Null new child");
+
+  // Get the nsIContent interface for the new content
+  nsIContent* newContent = nsnull;
+  nsresult    res = newChild->QueryInterface(kIContentIID, (void**)&newContent);
+  NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
+
   if (NS_OK == res) {
-    PRInt32 pos = IndexOf(content);
-    if (pos >= 0) {
-      nsIContent* newContent = nsnull;
-      res = newChild->QueryInterface(kIContentIID, (void**)&newContent);
-      NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
+    if (nsnull == refChild) {
+      // Append the new child to the end
+      if (PR_FALSE == AppendChild(newContent)) {
+        res == NS_ERROR_FAILURE;
+      }
+    } else {
+      nsIContent* content = nsnull;
+
+      // Get the index of where to insert the new child
+      res = refChild->QueryInterface(kIContentIID, (void**)&content);
+      NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
       if (NS_OK == res) {
-        if (PR_FALSE == InsertChildAt(newContent, pos)) {
-          res = NS_ERROR_FAILURE;
+        PRInt32 pos = IndexOf(content);
+        if (pos >= 0) {
+          if (PR_FALSE == InsertChildAt(newContent, pos)) {
+            res = NS_ERROR_FAILURE;
+          }
         }
-        NS_RELEASE(newContent);
+        NS_RELEASE(content);
       }
     }
-    NS_RELEASE(content);
+
+    NS_RELEASE(newContent);
   }
 
   return res;

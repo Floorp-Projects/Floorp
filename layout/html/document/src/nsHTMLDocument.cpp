@@ -28,9 +28,11 @@
 #include "nsIImageMap.h"
 #include "nsIHTMLContent.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMText.h"
 
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 NS_LAYOUT nsresult
@@ -205,6 +207,18 @@ nsresult nsHTMLDocument::CreateElement(nsString &aTagName,
   }
 
   NS_RELEASE(atom);
+  return rv;
+}
+
+nsresult nsHTMLDocument::CreateTextNode(nsString &aData, nsIDOMText** aTextNode)
+{
+  nsIHTMLContent* text = nsnull;
+  nsresult        rv = NS_NewHTMLText(&text, aData, aData.Length());
+
+  if (NS_OK == rv) {
+    rv = text->QueryInterface(kIDOMTextIID, (void**)aTextNode);
+  }
+
   return rv;
 }
 
