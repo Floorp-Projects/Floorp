@@ -608,6 +608,24 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 #endif
 
 /**
+ * Macro for releasing a reference to an interface.
+ *
+ * Note that when MOZ_TRACE_XPCOM_REFCNT is defined that the release will
+ * be done before the trace message is logged. If the reference count
+ * goes to zero and implementation of Release logs a message, the two
+ * messages will be logged out of order.
+ *
+ * @param _ptr The interface pointer.
+ */
+#ifdef MOZ_TRACE_XPCOM_REFCNT
+#define NS_RELEASE_THIS()                                                  \
+    nsTraceRefcnt::Release(this, Release(), __FILE__, __LINE__)
+#else
+#define NS_RELEASE_THIS()    \
+    Release()
+#endif
+
+/**
  * Macro for releasing a reference to an interface, except that this
  * macro preserves the return value from the underlying Release call.
  * The interface pointer argument will only be NULLed if the reference count
