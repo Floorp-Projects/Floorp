@@ -80,6 +80,7 @@ extern int XFE_EDITOR_TABLE_IMAGE_SPACE_RANGE;
 /* End of BWEEP! BWEEP! section */
 
 #define RANGE_CHECK(o, a, b) ((o) < (a) || (o) > (b))
+#define FE_SET_BIT(x,tf)   (x |= tf)
 
 #include "EditTableDialog.h"
 
@@ -104,7 +105,8 @@ extern "C" {
 static void fe_bg_group_set(fe_bgGroup* group, LO_Color* color,
                             char* bg_image, XP_Bool leave_image);
 static void fe_bg_group_get(fe_bgGroup* group, LO_Color** color_r,
-                     char** bg_image_r, XP_Bool* leave_image_r);
+                            char** bg_image_r, XP_Bool* leave_image_r,
+                            EDT_TableCellData *);
 
 static Widget fe_CreateFolder(Widget parent, char* name,
                               Arg* args, Cardinal n);
@@ -373,6 +375,7 @@ XFE_EditTableDialog::changeSelection(Boolean nextP)
         EDT_ChangeTableSelection(m_context, ED_HIT_SEL_COL,
                                  moveType, cellData);
     }
+    cellPropertiesInit();
 }
 
 void
@@ -916,13 +919,9 @@ XFE_EditTableDialog::cellPropertiesSet()
 	fe_bg_group_get(&(m_cell.bg_group),
 					&cell_data.pColorBackground,
 					&cell_data.pBackgroundImage,
-					&cell_data.bBackgroundNoSave);
+					&cell_data.bBackgroundNoSave,
+                    &cell_data);
 
-#ifdef DEBUG_akkana
-    printf("Setting color: %x %x %x\n", cell_data.pColorBackground->red,
-           cell_data.pColorBackground->green,
-           cell_data.pColorBackground->blue);
-#endif
     fe_EditorTableCellSetData(m_context, &cell_data);
 
 	if (cell_data.pColorBackground)
@@ -1407,7 +1406,8 @@ XFE_EditTableDialog::tablePropertiesSet()
 	fe_bg_group_get(&(m_table.bg_group),
 					&table_data.td.pColorBackground,
 					&table_data.td.pBackgroundImage,
-					&table_data.td.bBackgroundNoSave);
+					&table_data.td.bBackgroundNoSave,
+                    0);
 
 	fe_EditorTableSetData(m_context, &table_data);
 
@@ -1605,7 +1605,8 @@ fe_bg_group_set(fe_bgGroup* group,
 
 static void
 fe_bg_group_get(fe_bgGroup* group,
-				LO_Color** color_r, char** bg_image_r, XP_Bool* leave_image_r)
+				LO_Color** color_r, char** bg_image_r, XP_Bool* leave_image_r,
+                EDT_TableCellData *cell_data)
 {
 	XP_Bool use_color = FALSE;
 	XP_Bool use_image = FALSE;
@@ -1637,6 +1638,8 @@ fe_bg_group_get(fe_bgGroup* group,
 			fe_NewSwatchGetColor(use_color_swatch, foo);
 		}
 		*color_r = foo;
+        if (cell_data)
+            FE_SET_BIT(cell_data->mask, CF_BACK_COLOR); 
 	}
 
 	if (bg_image_r != NULL) {
@@ -1649,6 +1652,8 @@ fe_bg_group_get(fe_bgGroup* group,
 					XP_FREE(tmp);
 					tmp = NULL;
 				}
+                if (cell_data)
+                    FE_SET_BIT(cell_data->mask, CF_BACK_COLOR); 
 			}
 		}
 			
