@@ -394,7 +394,7 @@ void NPP_URLNotify(NPP /*instance*/, const char* /*url*/, NPReason /*reason*/, v
 {
 }
 
-
+#ifdef OJI
 //------------------------------------------------------------------------------------
 // NPP_GetJavaClass:
 //------------------------------------------------------------------------------------
@@ -402,6 +402,7 @@ jref NPP_GetJavaClass(void)
 {
 	return NULL;
 }
+#endif /* OJI */
 
 #pragma mark -
 
