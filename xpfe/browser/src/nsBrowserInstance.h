@@ -156,11 +156,11 @@ class nsBrowserInstance : public nsIBrowserInstance,
     nsIWebShellWindow  *mWebShellWin;								// weak reference
     nsIWebShell *       mWebShell;									// weak reference
     nsIWebShell *       mContentAreaWebShell;				// weak reference
+    nsIDocumentLoader * mContentAreaDocLoader;          // weak reference
 
     nsISessionHistory*  mSHistory;			           // this is a service
 
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
-
     nsInstanceCounter   mInstanceCounter;
 #ifdef DEBUG_warren
     PRIntervalTime      mLoadStartTime;

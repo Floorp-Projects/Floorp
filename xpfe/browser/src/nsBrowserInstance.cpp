@@ -157,10 +157,10 @@ nsBrowserAppCore::nsBrowserAppCore()
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
   mContentAreaWebShell  = nsnull;
+  mContentAreaDocLoader = nsnull;
   mSHistory             = nsnull;
   mIsViewSource         = PR_FALSE;
   NS_INIT_REFCNT();
-
 }
 
 nsBrowserAppCore::~nsBrowserAppCore()
@@ -314,9 +314,12 @@ NS_IMETHODIMP
 nsBrowserAppCore::Stop()
 {
   mContentAreaWebShell->Stop();
+
   nsAutoString v( "false" );
+  // XXX: The throbber should be turned off when the OnStopDocumentLoad 
+  //      notification is received 
   setAttribute( mWebShell, "Browser:Throbber", "busy", v );
-	return NS_OK;
+  return NS_OK;
 }
 
 
@@ -772,7 +775,6 @@ nsBrowserAppCore::ClearHistoryPopup(nsIDOMNode * aParent)
 }
 
 
-
 static void DOMWindowToWebShellWindow(
               nsIDOMWindow *DOMWindow,
               nsCOMPtr<nsIWebShellWindow> *webWindow)
@@ -1077,7 +1079,6 @@ GetScriptContext(nsIDOMWindow * aWin) {
   return scriptContext;
 }
 
-
 NS_IMETHODIMP    
 nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
 {
@@ -1105,6 +1106,13 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     // NS_ADDREF(mContentAreaWebShell); WE DO NOT OWN THIS
     webShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
     webShell->SetSessionHistory((nsISessionHistory *)this);
+
+    // Cache the Document Loader for the content area webshell.  This is a 
+    // weak reference that is *not* reference counted...
+    nsCOMPtr<nsIDocumentLoader> docLoader;
+
+    webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+    mContentAreaDocLoader = docLoader.get();
 
     const PRUnichar * name;
     webShell->GetName( &name);
@@ -1312,8 +1320,8 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
   //Set the "at-work" protocol icon.
 
-  char* scheme;
-  aURL->GetScheme(&scheme);
+  nsXPIDLCString scheme;
+  aURL->GetScheme(getter_Copies(scheme));
   
   nsIFileSpec* chrome = NS_LocateFileOrDirectory( nsSpecialFileSpec::App_ChromeDirectory);
   
@@ -1366,6 +1374,15 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
   nsXPIDLCString url;
   rv = aUrl->GetSpec(getter_Copies(url));
   if (NS_FAILED(rv)) return rv;
+
+  if (mContentAreaDocLoader) {
+    PRBool isBusy = PR_FALSE;
+
+    mContentAreaDocLoader->IsBusy(isBusy);
+    if (isBusy) {
+      return NS_OK;
+    }
+  }
 
   if (NS_SUCCEEDED(aStatus)) {
     nsCOMPtr<nsIWebShell> webshell, parent;
@@ -1549,8 +1566,7 @@ nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader,
                                  nsIContentViewer* aViewer)
 #endif
 {
-
-   return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1604,8 +1620,7 @@ nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader,
                                nsIURI* aURL, PRInt32 aStatus)
 #endif
 {
-
-   return NS_OK;
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////
