@@ -23,41 +23,56 @@ function doLoad() {
     tree.builder.rebuild();
 }
 
+// opens the feed properties dialog
+// optionally, pass in the name and 
+function openFeedEditor(feedProperties)
+{
+    window.openDialog('feed-properties.xul', 'feedproperties', 'modal,titlebar,chrome,center', feedProperties);
+    return feedProperties;
+}
+
 function doAdd() {
-    var url = window.prompt("Location:", "");
-    if (url == null)
+    var userAddedFeed = false; 
+    var feedProperties = { feedName: "", feedLocation: "", result: userAddedFeed};
+
+    feedProperties = openFeedEditor(feedProperties);
+
+    // if the user hit cancel, exit without doing anything
+    if (!feedProperties.result)
+      return;
+
+    if (!feedProperties.feedLocation)
         return;
 
     const DEFAULT_FEED_TITLE = "feed title";
     const DEFAULT_FEED_URL = "feed location";
 
-    feed = new Feed(url || DEFAULT_FEED_URL);
+    feed = new Feed(feedProperties.feedLocation || DEFAULT_FEED_URL);
     feed.download(false, false);
-    if (!feed.title)
-        feed.title = DEFAULT_FEED_TITLE;
-
+    if (!feedProperties.feedName)
+        feedProperties.feedName = DEFAULT_FEED_TITLE;
 
     var server = getIncomingServer();
     var folder;
     try {
         //var folder = server.rootMsgFolder.FindSubFolder(feed.name);
-        folder = server.rootMsgFolder.getChildNamed(feed.name);
+        folder = server.rootMsgFolder.getChildNamed(feedProperties.feedName);
     }
     catch(e) {
         // If we're here, it's probably because the folder doesn't exist yet,
         // so create it.
-        debug("folder for new feed " + feed.title + " doesn't exist; creating");
-				debug("creating " + feed.name + "as child of " + server.rootMsgFolder + "\n");
-        server.rootMsgFolder.createSubfolder(feed.name, getMessageWindow());
-				folder = server.rootMsgFolder.FindSubFolder(feed.name);
+        debug("folder for new feed " + feedProperties.feedName + " doesn't exist; creating");
+				debug("creating " + feedProperties.feedName + "as child of " + server.rootMsgFolder + "\n");
+        server.rootMsgFolder.createSubfolder(feedProperties.feedName, getMessageWindow());
+				folder = server.rootMsgFolder.FindSubFolder(feedProperties.feedName);
 				var msgdb = folder.getMsgDatabase(null);
 				var folderInfo = msgdb.dBFolderInfo;
-				folderInfo.setCharPtrProperty("feedUrl", feed.url);
+				folderInfo.setCharPtrProperty("feedUrl", feedProperties.feedLocation);
     }
 
     // XXX This should be something like "subscribe to feed".
-		dump ("feed name = " + feed.name + "\n");
-    addFeed(feed.url, feed.title, null, folder);
+		dump ("feed name = " + feedProperties.feedName + "\n");
+    addFeed(feedProperties.feedLocation, feedProperties.feedName, null, folder);
     // XXX Maybe we can combine this with the earlier download?
     feed.download();
 }
@@ -77,10 +92,14 @@ function doEdit() {
     old_url =
         old_url ? old_url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
 
-    new_title = window.prompt("Title:", old_title);
-    if (new_title == null)
+    var userModifiedFeed = false; 
+    var feedProperties = { feedName: old_title, feedLocation: old_url, result: userModifiedFeed};
+
+    feedProperties = openFeedEditor(feedProperties);
+    if (!feedProperties.result) // did the user cancel?
         return;
-    else if (new_title != old_title) {
+
+    if (feedProperties.feedName != old_title) {
         var server = getIncomingServer();
         var msgWindow = getMessageWindow();
 
@@ -95,7 +114,7 @@ function doEdit() {
         } catch(e) {}
         var new_folder;
         try {
-            new_folder = server.rootMsgFolder.getChildNamed(new_title);
+            new_folder = server.rootMsgFolder.getChildNamed(feedProperties.feedName);
             new_folder = new_folder.QueryInterface(Components.interfaces.nsIMsgFolder);
         } catch(e) {}
 
@@ -132,36 +151,33 @@ function doEdit() {
             // whether they are or not (and perhaps even then), better to leave
             // the old folder as it is and merely create a new folder.
             //old_folder.rename(new_title, msgWindow);
-            server.rootMsgFolder.createSubfolder(new_title, msgWindow);
+            server.rootMsgFolder.createSubfolder(feedProperties.feedName, msgWindow);
         }
         else if (new_folder) {
             // Do nothing, as everything is as it should be.
         }
         else {
             // Neither old nor new folders exist, so just create the new one.
-            server.rootMsgFolder.createSubfolder(new_title, msgWindow);
+            server.rootMsgFolder.createSubfolder(feedProperties.feedName, msgWindow);
         }
-        updateTitle(item.id, new_title);
+        updateTitle(item.id, feedProperties.feedName);
     }
 
-    new_url = window.prompt("Location:", old_url);
-    if (new_url == null) {
+    if (!feedProperties.feedLocation) {
         // The user cancelled the edit, but not until after potentially changing
         // the title, so despite the cancellation we should still redownload
         // the feed if the title has changed.
         if (new_title != old_title) {
-            feed = new Feed(old_url, null, new_title);
+            feed = new Feed(old_url, null, feedProperties.feedName);
             feed.download();
         }
         return;
     }
-    else if (new_url != old_url)
-        updateURL(item.id, new_url);
+    else if (feedProperties.feedLocation != old_url)
+        updateURL(item.id, feedProperties.feedLocation);
 
-    feed = new Feed(new_url, null, new_title);
+    feed = new Feed(feedProperties.feedLocation, null, feedProperties.feedName);
     feed.download();
-
-    //tree.builder.rebuild();
 }
 
 function doRemove() {

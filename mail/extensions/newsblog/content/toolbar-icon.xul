@@ -1,29 +1,38 @@
 <?xml version="1.0"?>
+
 <!DOCTYPE overlay SYSTEM "chrome://messenger-newsblog/locale/newsblog.dtd">
-
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
 
 <script type="application/x-javascript">
   function openSubscriptionsDialog() {
-    window.openDialog("chrome://messenger-newsblog/content/subscriptions.xul",
-                      "",
-                      "centerscreen,resizable=yes");
+
+    //check for an existing subscriptions window and focus it.
+    const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
+    const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
+    const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
+    var lastSubscriptionWindow = kWindowMediator.getMostRecentWindow("Mail:News-BlogSubscriptions");
+  
+    if (lastSubscriptionWindow)
+      lastSubscriptionWindow.focus();
+    else 
+      window.openDialog("chrome://messenger-newsblog/content/subscriptions.xul", "",
+                        "centerscreen,resizable=yes");
   }
+
 </script>
 
 <menupopup id="taskPopup">
   <menuitem id="newsAndBlogsCmd"
             label="&newsBlogMenu.label;"
             insertbefore="menu_preferences"
-            accesskey="e"
+            accesskey="&newsBlogMenu.accesskey;"
             oncommand="openSubscriptionsDialog();"/>
 </menupopup>
 
 <toolbarpalette id="MailToolbarPalette">
     <toolbarbutton id="button-newsandblogs"
-                   label="News &amp; Blogs"
-                   tooltiptext="manage news and blog feeds"
+                   label="&newsBlogMenu.label;"
+                   tooltiptext="&newsBlogMenu.tooltip;"
                    oncommand="openSubscriptionsDialog();"/>
 </toolbarpalette>
 

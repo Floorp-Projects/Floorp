@@ -1,2 +1,22 @@
-<!ENTITY newsBlogMenu.label "Feeds...">
-<!ENTITY newsBlogSubscriptions.label "Feeds">
+<!-- Tools Window Overlay -->
+<!ENTITY newsBlogMenu.label "News Feed Subscriptions...">
+<!ENTITY newsBlogMenu.accesskey "b">
+
+<!-- customizeable toolbar button -->
+<!ENTITY newsBlogMenu.label "News &amp; Blogs">
+<!ENTITY newsBlogMenu.tooltip "Manage news and blog feeds">
+
+<!-- Subscription Dialog -->
+<!ENTITY newsBlogSubscriptions.label "News Feed Subscriptions">
+<!ENTITY subscriptionDesc.label "Manage your News &amp; Blogs feeds.">
+<!ENTITY feedNameTreeCol.label "Name">
+<!ENTITY locationTreeCol.label "Location">
+<!ENTITY addButton.label       "Add">
+<!ENTITY addButton.accesskey   "A">
+<!ENTITY editButton.label      "Edit">
+<!ENTITY editButton.accesskey  "E">
+<!ENTITY deleteButton.label    "Delete">
+<!ENTITY deleteButton.accesskey   "D">
+
+<!ENTITY feedNameTreeCol.label "Name">
+

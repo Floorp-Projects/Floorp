@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Forumzilla style rules.
+ * The Original Code is RSS News & Blogs subscription style rules.
  *
  * Contributor(s):
  *   Myk Melez <myk@melez.com>
@@ -31,14 +31,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#button-newsandblogs {
-  -moz-box-orient:vertical;
-  list-style-image: url("chrome://messenger-newsblog/content/icon.gif");
-}
-
 /* ::::: Subscription UI icons :::::: */
 
 treechildren::-moz-tree-image(subs-name-column) {
   margin-right: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/folder-closed.gif");
+  list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
 }

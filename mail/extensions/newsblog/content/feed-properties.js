@@ -1,3 +1,4 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,10 +12,9 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Forumzilla style rules.
+ * The Original Code is Mozilla Mail Code.
  *
  * Contributor(s):
- *   Myk Melez <myk@melez.com>
  *   Scott MacGregor <mscott@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -31,14 +31,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#button-newsandblogs {
-  -moz-box-orient:vertical;
-  list-style-image: url("chrome://messenger-newsblog/content/icon.gif");
+function onLoad()
+{
+  if (window.arguments[0].feedName)
+    document.getElementById('feedName').value = window.arguments[0].feedName;
+  
+  if (window.arguments[0].feedLocation)
+    document.getElementById('feedLocation').value = window.arguments[0].feedLocation;  
 }
 
-/* ::::: Subscription UI icons :::::: */
+function onOk()
+{
+  // eventually, add some validation code to make sure they've entered a location and a name
+  // before trying to create a feed entry...
 
-treechildren::-moz-tree-image(subs-name-column) {
-  margin-right: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/folder-closed.gif");
+  window.arguments[0].feedName = document.getElementById('feedName').value;
+  window.arguments[0].feedLocation = document.getElementById('feedLocation').value
+  window.arguments[0].result = true;
+
+  return true;
 }

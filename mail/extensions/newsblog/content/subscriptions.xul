@@ -1,73 +1,115 @@
-<?xml-stylesheet href="edittree.css" type="text/css"?>
+<?xml version="1.0"?> 
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+ Version: MPL 1.1/GPL 2.0/LGPL 2.1
+
+ The contents of this file are subject to the Mozilla Public License Version
+ 1.1 (the "License"); you may not use this file except in compliance with
+ the License. You may obtain a copy of the License at
+ http://www.mozilla.org/MPL/
+
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for the specific language governing rights and limitations under the
+ License.
+
+ The Original Code is Thunderbird RSS Integration code.
+
+ Contributor(s):
+   Myk Melez <myk@melez.com>
+   David Bienvenu <bienvenu@nventure.com>
+   Scott MacGregor <mscott@mozilla.org>
+
+ Alternatively, the contents of this file may be used under the terms of
+ either of the GNU General Public License Version 2 or later (the "GPL"),
+ or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ in which case the provisions of the GPL or the LGPL are applicable instead
+ of those above. If you wish to allow use of your version of this file only
+ under the terms of either the GPL or the LGPL, and not to allow others to
+ use your version of this file under the terms of the MPL, indicate your
+ decision by deleting the provisions above and replace them with the notice
+ and other provisions required by the GPL or the LGPL. If you do not delete
+ the provisions above, a recipient may use your version of this file under
+ the terms of any one of the MPL, the GPL or the LGPL.
+
+ ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger-newsblog/skin/subscriptions.css" type="text/css"?>
+
 <!DOCTYPE dialog SYSTEM "chrome://messenger-newsblog/locale/newsblog.dtd">
 
-<window id="subscriptionsDialog"
-        title="newsBlogSubscriptions.label"
+<dialog id="subscriptionsDialog"
+        title="&newsBlogSubscriptions.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        width="400"
-        height="400"
+        style="width: 44em; height: 20em;"
         persist="width height"
+        buttons="accept"
         onload="doLoad();"
-        flex="1"
-        windowtype="mail:3pane">
+        windowtype="Mail:News-BlogSubscriptions"
+        flex="1">
 
-<script type="application/x-javascript" src="utils.js" />
-<script type="application/x-javascript" src="file-utils.js" />
-<script type="application/x-javascript" src="debug-utils.js" />
-<script type="application/x-javascript" src="subscriptions.js" />
-<script type="application/x-javascript" src="Feed.js" />
-<script type="application/x-javascript" src="FeedItem.js" />
+  <script type="application/x-javascript" src="utils.js" />
+  <script type="application/x-javascript" src="file-utils.js" />
+  <script type="application/x-javascript" src="debug-utils.js" />
+  <script type="application/x-javascript" src="subscriptions.js" />
+  <script type="application/x-javascript" src="Feed.js" />
+  <script type="application/x-javascript" src="FeedItem.js" />
 
-<!-- The global Mozilla scripts that implement drag-and-drop support -->
-<!--
-<script src="chrome://global/content/nsDragAndDrop.js"/>
-<script src="chrome://global/content/nsTransferable.js"/>
--->
+  <!-- The global Mozilla scripts that implement drag-and-drop support -->
+  <!--
+  <script src="chrome://global/content/nsDragAndDrop.js"/>
+  <script src="chrome://global/content/nsTransferable.js"/>
+  -->
 
-<hbox flex="1">
-  <tree id="subscriptions" flex="1" seltype="single"
-          datasources="rdf:null"
-          style="width: 100%"
-          ref="urn:forumzilla:root"
-          onselect="this.treeBoxObject.view.selectionChanged();"
-          ondraggesture="//nsDragAndDrop.startDrag(event, subscriptionsDragDropObserver);"
-          ondragover="//nsDragAndDrop.dragOver(event, subscriptionsDragDropObserver);"
-          ondragdrop="//nsDragAndDrop.drop(event, subscriptionsDragDropObserver);">
-      <template>
-          <rule>
-              <conditions>
-                  <content uri="?root" />
-                  <triple subject="?root" predicate="urn:forumzilla:feeds" object="?feeds" />
-                  <member container="?feeds" child="?feed" />
-              </conditions>
-              <bindings>
-                  <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/title" object="?title" />
-                  <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/identifier" object="?url" />
-              </bindings>
-              <action>
-                  <treechildren flex="1">
-                      <treeitem uri="?feed">
-                          <treerow>
-                              <treecell src="" label="?title"/>
-                              <treecell src="" label="?url"/>
-                          </treerow>
-                      </treeitem>
-                  </treechildren>
-              </action>
-          </rule>
-      </template>
-      <treecols>
-          <treecol id="subs-name-column" flex="1" label="Name" primary="true" />
-          <treecol id="subs-url-column" flex="1" label="Location" hidden="false" />
-      </treecols>
-  </tree>
-  <vbox>
-      <button label="Add" oncommand="doAdd();" />
-      <button label="Edit" oncommand="doEdit();" />
-      <button label="Remove" oncommand="doRemove();" />
-      <spring flex="1"/>
-      <button label="Done" oncommand="window.close();" />
-  </vbox>
-</hbox>
+  <description>&subscriptionDesc.label;</description>
 
-</window>
+  <separator class="thin"/>
+
+  <hbox flex="1">
+    <tree id="subscriptions" flex="1" seltype="single" hidecolumnpicker="true"
+            datasources="rdf:null"
+            style="width: 100%"
+            ref="urn:forumzilla:root"
+            onselect="this.treeBoxObject.view.selectionChanged();"
+            ondraggesture="//nsDragAndDrop.startDrag(event, subscriptionsDragDropObserver);"
+            ondragover="//nsDragAndDrop.dragOver(event, subscriptionsDragDropObserver);"
+            ondragdrop="//nsDragAndDrop.drop(event, subscriptionsDragDropObserver);">
+        <template>
+            <rule>
+                <conditions>
+                    <content uri="?root"/>
+                    <triple subject="?root" predicate="urn:forumzilla:feeds" object="?feeds"/>
+                    <member container="?feeds" child="?feed"/>
+                </conditions>
+                <bindings>
+                    <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/title" object="?title"/>
+                    <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/identifier" object="?url"/>
+                </bindings>
+                <action>
+                    <treechildren flex="1">
+                        <treeitem uri="?feed">
+                            <treerow>
+                                <treecell src="" label="?title"/>
+                                <treecell src="" label="?url"/>
+                            </treerow>
+                        </treeitem>
+                    </treechildren>
+                </action>
+            </rule>
+        </template>
+        <treecols>
+            <treecol id="subs-name-column" flex="1" label="&feedNameTreeCol.label;" primary="true"/> 
+            <splitter class="tree-splitter"/>
+            <treecol id="subs-url-column" flex="3" label="&locationTreeCol.label;" hidden="false"/>
+        </treecols>
+    </tree>
+
+    <vbox>
+        <button label="&addButton.label;" accesskey="&addButton.accesskey;" oncommand="doAdd();"/>
+        <button label="&editButton.label;" accesskey="&editButton.accesskey;" oncommand="doEdit();"/>
+        <button label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" oncommand="doRemove();"/>
+    </vbox>
+  </hbox>
+
+</dialog>
