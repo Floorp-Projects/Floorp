@@ -19,6 +19,7 @@
 #include "nsString.h"
 #include "nsIDOMDocument.h"
 
+#include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsITextEditor.h"
 #include "nsEditorCID.h"
@@ -83,16 +84,21 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
 static nsresult PrintEditorOutput(nsIHTMLEditor* editor, PRInt32 aCommandID)
 {
 	nsString		outString;
-	char*				cString;
+	char*			cString;
+	nsString		formatString;
+    PRUint32        flags;
 	
 	switch (aCommandID)
 	{
       case VIEWER_DISPLAYTEXT:
-        gEditor->OutputTextToString(outString, PR_FALSE);
+        formatString = "text/plain";
+        flags = nsIEditor::EditorOutputFormatted;
+        gEditor->OutputToString(outString, formatString, flags);
         break;
         
       case VIEWER_DISPLAYHTML:
-        gEditor->OutputHTMLToString(outString, PR_FALSE);
+        formatString = "text/html";
+        gEditor->OutputToString(outString, formatString, flags);
         break;
 	}
 

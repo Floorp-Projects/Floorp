@@ -512,25 +512,18 @@ nsJSEditorLog::InsertHTML(const nsString &aInputString)
 }
 
 NS_IMETHODIMP
-nsJSEditorLog::OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly)
+nsJSEditorLog::OutputToString(nsString& aOutputString,
+                              const nsString& aFormatType,
+                              PRUint32 aFlags)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsJSEditorLog::OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJSEditorLog::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJSEditorLog::OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly)
+nsJSEditorLog::OutputToStream(nsIOutputStream* aOutputStream,
+                              const nsString& aFormatType,
+                              const nsString* aCharsetOverride,
+                              PRUint32 aFlags)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

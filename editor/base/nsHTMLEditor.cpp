@@ -63,8 +63,6 @@ static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
 static NS_DEFINE_IID(kFileWidgetCID,  NS_FILEWIDGET_CID);
-static NS_DEFINE_CID(kHTMLEncoderCID, NS_HTML_ENCODER_CID);
-static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -661,44 +659,21 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
   return res;
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly)
+NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
+                                           const nsString& aFormatType,
+                                           PRUint32 aFlags)
 {
-  return nsTextEditor::OutputTextToString(aOutputString, aSelectionOnly);
+  return nsTextEditor::OutputToString(aOutputString, aFormatType, aFlags);
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly)
+NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
+                                           const nsString& aFormatType,
+                                           const nsString* aCharset,
+                                           PRUint32 aFlags)
 {
-#if defined(DEBUG_akkana)
-  printf("============Content dump:===========\n");
-
-  nsCOMPtr<nsIDocument> thedoc;
-  nsCOMPtr<nsIPresShell> presShell;
-  if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))))
-  {
-    presShell->GetDocument(getter_AddRefs(thedoc));
-    if (thedoc) {
-      nsIContent* root = thedoc->GetRootContent();
-      if (nsnull != root) {
-        root->List(stdout);
-        NS_RELEASE(root);
-      }
-    }
-  }
-#endif
-
-  return nsTextEditor::OutputHTMLToString(aOutputString, aSelectionOnly);
+  return nsTextEditor::OutputToStream(aOutputStream, aFormatType,
+                                      aCharset, aFlags);
 }
-
-NS_IMETHODIMP nsHTMLEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharset, PRBool aSelectionOnly)
-{
-  return nsTextEditor::OutputTextToStream(aOutputStream, aCharset, aSelectionOnly);
-}
-
-NS_IMETHODIMP nsHTMLEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharset, PRBool aSelectionOnly)
-{
-  return nsTextEditor::OutputHTMLToStream(aOutputStream, aCharset, aSelectionOnly);
-}
-
 
 NS_IMETHODIMP
 nsHTMLEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)

@@ -193,12 +193,14 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
         nsICSSRule*   rule = nsnull;
 
         cssSheet->StyleRuleCount(ruleCount);
-        aConverter.BeginCSSStyleSheet();
-        for (ruleIndex = 0; ruleIndex < ruleCount; ruleIndex++)
+        if (ruleCount > 0)
         {
-          if (NS_OK == cssSheet->GetStyleRuleAt(ruleIndex, rule))
+          aConverter.BeginCSSStyleSheet();
+          for (ruleIndex = 0; ruleIndex < ruleCount; ruleIndex++)
           {
-            aConverter.BeginCSSRule();
+            if (NS_OK == cssSheet->GetStyleRuleAt(ruleIndex, rule))
+            {
+              aConverter.BeginCSSRule();
 
               if (nsnull != rule)
               {
@@ -218,10 +220,11 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
                 NS_IF_RELEASE(rule);
               } // ruleAt
 
-            aConverter.EndCSSRule();
-          } // for loop
-        }
-        aConverter.EndCSSStyleSheet();
+              aConverter.EndCSSRule();
+            } // for loop
+          }
+          aConverter.EndCSSStyleSheet();
+        } // if ruleCount > 0
         NS_RELEASE(cssSheet);
       } // css_sheet
       NS_RELEASE(sheet);

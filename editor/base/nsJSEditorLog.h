@@ -98,11 +98,13 @@ public:
 
   NS_IMETHOD InsertHTML(const nsString &aInputString);
 
-  NS_IMETHOD OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly);
-  NS_IMETHOD OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly);
-
-  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly);
-  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly);
+  NS_IMETHOD OutputToString(nsString& aOutputString,
+                            const nsString& aFormatType,
+                            PRUint32 aFlags);
+  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
+                            const nsString& aFormatType,
+                            const nsString* aCharsetOverride,
+                            PRUint32 aFlags);
 
   NS_IMETHOD ApplyStyleSheet(const nsString& aURL);
 

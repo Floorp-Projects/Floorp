@@ -33,12 +33,6 @@ interface nsIFileSpec;
 [scriptable, uuid(9afff72b-ca9a-11d2-96c9-0060b0fb9956)]
 interface nsIEditorShell : nsISupports
 {
-  readonly attribute wstring           contentsAsText;
-  readonly attribute wstring           contentsAsHTML;
-
-  readonly attribute wstring           selectionAsHTML;
-  readonly attribute wstring           selectionAsText;
-
   readonly attribute nsIDOMDocument    editorDocument;
   readonly attribute nsIDOMSelection   editorSelection;
   
@@ -110,6 +104,14 @@ interface nsIEditorShell : nsISupports
 
   void ApplyStyleSheet(in wstring url);
     
+  /* Output.
+   * format is mime type, e.g. text/html;
+   * See nsIEditor.h for legal flag values.
+   */
+  wstring GetContentsAs(in wstring format, in PRUint32 flags);
+  /* For debugging, dump the content tree: */
+  void DumpContentTree();
+
   /* Utility */
   wstring GetLocalFileURL(in nsIDOMWindow parent, in wstring filterType);
 

@@ -29,6 +29,7 @@ class nsIEditActionListener;
 class nsIFileSpec;
 class nsIDOMTextRangeList;
 class nsICSSStyleSheet;
+class nsIOutputStream;
 
 /*
 Editor interface to outside world
@@ -204,7 +205,28 @@ public:
 
   NS_IMETHOD EndComposition(void) = 0;
 
+  /**
+   * Output methods flags:
+   */
+  const PRUint32 EditorOutputSelectionOnly = 1;
+  const PRUint32 EditorOutputFormatted = 2;
+  const PRUint32 EditorOutputNoDoctype = 4;
 
+  /**
+   * Output methods:
+   * aFormatType is a mime type, like text/plain.
+   */
+  NS_IMETHOD OutputToString(nsString& aOutputString,
+                            const nsString& aFormatType,
+                            PRUint32 aFlags) = 0;
+  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
+                            const nsString& aFormatType,
+                            const nsString* aCharsetOverride,
+                            PRUint32 aFlags) = 0;
+  /**
+   * And a debug method -- show us what the tree looks like right now
+   */
+  NS_IMETHOD DumpContentTree() = 0;
 
   /** 
    * DeleteNode removes aChild from aParent.

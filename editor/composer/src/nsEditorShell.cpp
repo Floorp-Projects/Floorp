@@ -243,6 +243,7 @@ nsEditorShell::Init()
   nsAutoString    editorType = "html";      // default to creating HTML editor
   mEditorTypeString = editorType;
   mEditorTypeString.ToLowerCase();
+  mWrapColumn = 0;
 
   return NS_OK;
 }
@@ -328,6 +329,9 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
       {
         mEditor = do_QueryInterface(editor);		// this does the addref that is the owning reference
         mEditorType = ePlainTextEditorType;
+
+        // and set the initial wrap column
+        editor->SetBodyWrapWidth(mWrapColumn);
       }
     }
   }
@@ -1505,131 +1509,36 @@ nsEditorShell::FindNext()
 }
 
 NS_IMETHODIMP
-nsEditorShell::GetContentsAsText(PRUnichar * *contentsAsText)
+nsEditorShell::GetContentsAs(const PRUnichar *format, PRUint32 flags,
+                             PRUnichar **contentsAs)
 {
   nsresult  err = NS_NOINTERFACE;
-  
-  nsString aContentsAsText;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-      {
-        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
-        if (textEditor)
-          err = textEditor->OutputTextToString(aContentsAsText, PR_FALSE);
-      }
-      break;
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-        if (htmlEditor)
-          err = htmlEditor->OutputTextToString(aContentsAsText, PR_FALSE);
-      }
-      break;
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
 
-  *contentsAsText = aContentsAsText.ToNewUnicode();
+  nsString aFormat (format);
+  nsString aContentsAs;
+
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+  if (htmlEditor)
+    err = htmlEditor->OutputToString(aContentsAs, aFormat, flags);
+  else
+  {
+    nsCOMPtr<nsITextEditor> textEditor = do_QueryInterface(mEditor);
+    if (textEditor)
+      err = textEditor->OutputToString(aContentsAs, aFormat, flags);
+  }
+  
+  *contentsAs = aContentsAs.ToNewUnicode();
   
   return err;
 }
 
 NS_IMETHODIMP
-nsEditorShell::GetContentsAsHTML(PRUnichar * *contentsAsHTML)
+nsEditorShell::DumpContentTree()
 {
-  nsresult  err = NS_NOINTERFACE;
-  
-  nsString aContentsAsHTML;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-      {
-        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
-        if (textEditor)
-          err = textEditor->OutputHTMLToString(aContentsAsHTML, PR_FALSE);
-      }
-      break;
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-        if (htmlEditor)
-          err = htmlEditor->OutputHTMLToString(aContentsAsHTML, PR_FALSE);
-      }
-      break;
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  *contentsAsHTML = aContentsAsHTML.ToNewUnicode();
-  
-  return err;
-}
-
-NS_IMETHODIMP
-nsEditorShell::GetSelectionAsText(PRUnichar * *contentsAsText)
-{
-  nsresult  err = NS_NOINTERFACE;
-  
-  nsString aContentsAsText;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-      {
-        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
-        if (textEditor)
-          err = textEditor->OutputTextToString(aContentsAsText, PR_TRUE);
-      }
-      break;
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-        if (htmlEditor)
-          err = htmlEditor->OutputTextToString(aContentsAsText, PR_TRUE);
-      }
-      break;
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  *contentsAsText = aContentsAsText.ToNewUnicode();
-  
-  return err;
-}
-
-NS_IMETHODIMP
-nsEditorShell::GetSelectionAsHTML(PRUnichar * *contentsAsHTML)
-{
-  nsresult  err = NS_NOINTERFACE;
-  
-  nsString aContentsAsHTML;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-      {
-        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
-        if (textEditor)
-          err = textEditor->OutputHTMLToString(aContentsAsHTML, PR_TRUE);
-      }
-      break;
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-        if (htmlEditor)
-          err = htmlEditor->OutputHTMLToString(aContentsAsHTML, PR_TRUE);
-      }
-      break;
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  *contentsAsHTML = aContentsAsHTML.ToNewUnicode();
-  
-  return err;
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor)
+    return NS_ERROR_NOT_INITIALIZED;
+  return editor->DumpContentTree();
 }
 
 NS_IMETHODIMP
@@ -1641,8 +1550,13 @@ nsEditorShell::GetWrapColumn(PRInt32* aWrapColumn)
     return NS_ERROR_NULL_POINTER;
   
   // fill result in case of failure
-  *aWrapColumn = 0;
-  
+  *aWrapColumn = mWrapColumn;
+
+  // If we don't have an editor yet, say we're not initialized
+  // even though mWrapColumn may have a value.
+  if (!mEditor)
+    return NS_ERROR_NOT_INITIALIZED;
+
   switch (mEditorType)
   {
     case ePlainTextEditorType:
@@ -1667,22 +1581,24 @@ nsEditorShell::GetWrapColumn(PRInt32* aWrapColumn)
 NS_IMETHODIMP
 nsEditorShell::SetWrapColumn(PRInt32 aWrapColumn)
 {
-  nsresult  err = NS_NOINTERFACE;
-  
-  if (!aWrapColumn)
-    return NS_ERROR_NULL_POINTER;
-    
-  switch (mEditorType)
+  nsresult  err = NS_OK;
+
+  mWrapColumn = aWrapColumn;
+
+  if (mEditor)
   {
-    case ePlainTextEditorType:
-      {
-        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
-        if (textEditor)
-          err = textEditor->SetBodyWrapWidth(aWrapColumn);
-      }
-      break;
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
+    switch (mEditorType)
+    {
+        case ePlainTextEditorType:
+        {
+          nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+          if (textEditor)
+            err = textEditor->SetBodyWrapWidth(mWrapColumn);
+        }
+        break;
+        default:
+          err = NS_ERROR_NOT_IMPLEMENTED;
+    }
   }
 
   return err;

@@ -29,6 +29,7 @@
 #include "nsIMessage.h"		//temporary!
 #include "nsMsgQuote.h"
 #include "nsIPref.h"
+#include "nsIEditor.h"    // for output flags
 #include "nsXPIDLString.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
@@ -380,10 +381,16 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
 	{
 		nsAutoString msgBody;
 		PRUnichar *bodyText = NULL;
+    nsString format;
+    PRUint32 flags = 0;
 		if (m_composeHTML)
-			m_editor->GetContentsAsHTML(&bodyText);
+			format = "text/html";
 		else
-			m_editor->GetContentsAsText(&bodyText);
+    {
+      flags = nsIEditor::EditorOutputFormatted;
+			format = "text/plain";
+    }
+    m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
 		
 		msgBody = bodyText;
 		delete [] bodyText;

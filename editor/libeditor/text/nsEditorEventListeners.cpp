@@ -290,11 +290,19 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           aProcessed=PR_TRUE;
           nsString output;
           nsresult res = NS_ERROR_FAILURE;
+          nsString format;
+          if (isShift)
+            format = "text/plain";
+          else
+            format = "text/html";
+          res = mEditor->OutputToString(output, format,
+                                        nsEditor::EditorOutputFormatted);
+#if 0
           nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(mEditor));
           if (htmlEditor)
           {
             if (isShift)
-              res = htmlEditor->OutputTextToString(output, PR_FALSE);
+              res = htmlEditor->OutputTextToString(output, PR_TRUE, PR_FALSE);
             else
               res = htmlEditor->OutputHTMLToString(output, PR_FALSE);
           }
@@ -304,11 +312,12 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             if (textEditor)
             {
               if (isShift)
-                res = textEditor->OutputTextToString(output, PR_FALSE);
+                res = textEditor->OutputTextToString(output, PR_TRUE, PR_FALSE);
               else
                 res = textEditor->OutputHTMLToString(output, PR_FALSE);
             }
           }
+#endif
 
           if (NS_SUCCEEDED(res))
           {

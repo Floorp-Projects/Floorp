@@ -2849,6 +2849,11 @@ nsDocument::IncrementModCount(PRInt32 aNumMods)
   return NS_OK;
 }
 
+//
+// FindContent does a depth-first search from aStartNode
+// and returns the first of aTest1 or aTest2 which it finds.
+// I think.
+//
 nsIContent* nsDocument::FindContent(const nsIContent* aStartNode,
                                     const nsIContent* aTest1, 
                                     const nsIContent* aTest2) const
@@ -2892,7 +2897,16 @@ PRBool nsDocument::IsInRange(const nsIContent *aStartContent, const nsIContent* 
   {
     result = IsBefore(aStartContent,aContent);
     if (result == PR_TRUE)
+    {
       result = IsBefore(aContent,aEndContent);
+      if (!result)
+      {
+        // If aContent is a parent of aEndContent, then
+        // IsBefore returned false but IsInRange should be true.
+        if (FindContent(aContent, aEndContent, 0) == aEndContent)
+          result = PR_TRUE;
+      }
+    }
   }
   return result;
 
