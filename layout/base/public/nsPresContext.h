@@ -370,8 +370,6 @@ public:
   NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const = 0;
 
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager) = 0;
-  NS_IMETHOD GetDefaultDirection(PRUint8* aDirection) = 0;
-  NS_IMETHOD SetDefaultDirection(PRUint8 aDirection) = 0;
   NS_IMETHOD GetLanguage(nsILanguageAtom** aLanguage) = 0;
 
   /**
