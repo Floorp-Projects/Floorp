@@ -345,7 +345,7 @@ BEGIN {
                           $tt+$rowspan+$previous_rowspan-1)) {
           print "\n", &query_ref($br->{td}, 
                                  $br->{previousbuildtime},
-                                 $br->{starttime} - 1);
+                                 $br->{buildtime} - 1);
           print "C</a>";
         }
       }
