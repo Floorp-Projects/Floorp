@@ -218,11 +218,13 @@ CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
   aContainingBlockWidth = -1;  // have reflow state calculate
   aContainingBlockHeight = -1; // have reflow state calculate
 
-  // We should probably do this for all frames, but for the time being just
-  // do this for relatively positioned block frames. The issue there is that
-  // for a 'height' of 'auto' the reflow state code won't know how to calculate
-  // the containing block height
-  if (NS_STYLE_POSITION_RELATIVE == aReflowState.mStylePosition->mPosition) {
+  // The issue there is that for a 'height' of 'auto' the reflow state code
+  // won't know how to calculate the containing block height because it's
+  // calculated bottom up. We don't really want to do this for the initial
+  // containing block so that's why we have the check for if the element
+  // is absolutely or relatively positioned
+  if (aReflowState.mStylePosition->IsAbsolutelyPositioned() ||
+      (NS_STYLE_POSITION_RELATIVE == aReflowState.mStylePosition->mPosition)) {
     aContainingBlockWidth = aFrameWidth;
     aContainingBlockHeight = aFrameHeight;
 
