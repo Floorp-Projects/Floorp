@@ -909,6 +909,7 @@ fi
 if test "`echo $target_os | egrep "nto"`"; then
         MOZ_WIDGET_TOOLKIT="photon"
         AC_DEFINE(NO_X11)
+        TK_CFLAGS='-I/usr/nto/include/photon'
         TK_LIBS='-lphoton -lphrender'
 fi
 
