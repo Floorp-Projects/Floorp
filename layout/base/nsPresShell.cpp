@@ -605,7 +605,10 @@ PresShell::PresShell()
   mCurrentEventContent = nsnull;
   mCurrentEventFrame = nsnull;
   EnableScrolling();
-  mPendingReflowEvent = PR_FALSE;  
+  mPendingReflowEvent = PR_FALSE;
+  // XXX This is temporary code that should be removed once we've tested
+  // the "async reflow after document load" code path.
+  mDocumentIsLoading = PR_TRUE;
 
 #ifdef DEBUG_nisheeth
   mReflows = 0;
