@@ -1297,6 +1297,14 @@ nsBrowserInstance::Close()
   else
     mIsClosed = PR_TRUE;
 
+  // Remove listeners we may have registered
+  nsIDocShell* docShell = GetContentAreaDocShell();
+  if (docShell)
+  {
+    nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
+    webProgress->RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
+  }
+
   // Undo other stuff we did in SetContentWindow.
   if ( GetContentAreaDocShell() ) {
       GetContentAreaDocShell()->SetDocLoaderObserver( 0 );
