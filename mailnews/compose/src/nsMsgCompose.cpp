@@ -2035,7 +2035,7 @@ static nsresult OpenAddressBook(const char * dbName, nsIAddrDatabase** aDatabase
 		return rv;
 
 	// query interface 
-	rv = resource->QueryInterface(nsIAbDirectory::GetIID(), aDirectory);
+	rv = resource->QueryInterface(nsIAbDirectory::GetIID(), (void **)aDirectory);
 	return rv;
 }
 
