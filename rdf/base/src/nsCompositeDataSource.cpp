@@ -552,9 +552,9 @@ CompositeDataSourceImpl::GetSource(nsIRDFResource* property,
             return NS_OK;
 
         NS_RELEASE(*source);
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_RDF_NO_VALUE;
     }
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_RDF_NO_VALUE;
 }
 
 NS_IMETHODIMP
@@ -592,12 +592,11 @@ CompositeDataSourceImpl::GetTarget(nsIRDFResource* source,
         if (!HasAssertionN(count-1, source, property, *target, !tv)) 
             return NS_OK;
 
-
         NS_RELEASE(*target);
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_RDF_NO_VALUE;
     }
 
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_RDF_NO_VALUE;
 }
 
 PRBool

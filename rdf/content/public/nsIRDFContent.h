@@ -40,16 +40,25 @@ class nsIRDFResource;
  */
 class nsIRDFContent : public nsIContent {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFCONTENT_IID; return iid; }
+
+    /**
+     * Return the RDF resource on which this RDF content element was based.
+     */
     NS_IMETHOD GetResource(nsIRDFResource*& aResource) const = 0;
-    NS_IMETHOD ChildrenHaveBeenGenerated(PRBool& aResult) const = 0;
+
+    /**
+     * Mark a an element as a "container element" so that its contents
+     * will be generated on-demand.
+     */
+    NS_IMETHOD SetContainer(PRBool aIsContainer) = 0;
 };
 
 nsresult
 NS_NewRDFResourceElement(nsIRDFContent** aResult,
                          nsIRDFResource* aResource,
                          PRInt32 aNameSpaceID,
-                         nsIAtom* aTag,
-                         PRBool aChildrenMustBeGenerated);
+                         nsIAtom* aTag);
 
 nsresult
 NS_NewRDFGenericElement(nsIContent** aResult,

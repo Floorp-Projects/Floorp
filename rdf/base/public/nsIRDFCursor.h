@@ -43,6 +43,8 @@ class nsIRDFResource;
  */
 class nsIRDFCursor : public nsISupports {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFCURSOR_IID; return iid; }
+
     /**
      * Advance the cursor to the next element.
      * @return NS_ERROR_RDF_CURSOR_EMPTY if the cursor has reached the end
@@ -73,6 +75,7 @@ public:
  */
 class nsIRDFAssertionCursor : public nsIRDFCursor {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFASSERTIONCURSOR_IID; return iid; }
 
     /**
      * Retrieve the assertion's subject resource.
@@ -110,6 +113,7 @@ public:
  */
 class nsIRDFArcsOutCursor : public nsIRDFCursor {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFARCSOUTCURSOR_IID; return iid; }
     
 
     /**
@@ -137,6 +141,7 @@ public:
  */
 class nsIRDFArcsInCursor : public nsIRDFCursor {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFARCSINCURSOR_IID; return iid; }
 
     /**
      * Retrieve the "object" node in which the arc terminates.
@@ -161,6 +166,7 @@ public:
  */
 class nsIRDFResourceCursor : public nsIRDFCursor {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFRESOURCECURSOR_IID; return iid; }
     NS_IMETHOD GetResource(nsIRDFResource** aResource) = 0;
 };
 

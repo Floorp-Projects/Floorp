@@ -229,6 +229,7 @@ protected:
     nsIRDFResource*   mRootResource;
     PRBool            mIsLoading; // true while the document is loading
     NameSpaceMap*     mNameSpaces;
+    nsID              mContentModelBuilderCID;
 
 public:
     RDFXMLDataSourceImpl(void);
@@ -339,9 +340,11 @@ public:
     NS_IMETHOD GetCSSStyleSheetURLs(nsIURL*** aStyleSheetURLs, PRInt32* aCount);
     NS_IMETHOD AddNamedDataSourceURI(const char* aNamedDataSourceURI);
     NS_IMETHOD GetNamedDataSourceURIs(const char* const** aNamedDataSourceURIs, PRInt32* aCount);
+    NS_IMETHOD AddNameSpace(nsIAtom* aPrefix, const nsString& aURI);
+    NS_IMETHOD SetContentModelBuilderCID(nsID* aCID);
+    NS_IMETHOD GetContentModelBuilderCID(nsID* aCID);
     NS_IMETHOD AddXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver);
     NS_IMETHOD RemoveXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver);
-    NS_IMETHOD AddNameSpace(nsIAtom* aPrefix, const nsString& aURI);
 
     // nsIRDFXMLSource interface
     NS_IMETHOD Serialize(nsIOutputStream* aStream);
@@ -886,21 +889,6 @@ RDFXMLDataSourceImpl::GetNamedDataSourceURIs(const char* const** aNamedDataSourc
 }
 
 NS_IMETHODIMP
-RDFXMLDataSourceImpl::AddXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver)
-{
-    mObservers.AppendElement(aObserver);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFXMLDataSourceImpl::RemoveXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver)
-{
-    mObservers.RemoveElement(aObserver);
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
 RDFXMLDataSourceImpl::AddNameSpace(nsIAtom* aPrefix, const nsString& aURI)
 {
     NameSpaceMap* entry;
@@ -923,6 +911,42 @@ RDFXMLDataSourceImpl::AddNameSpace(nsIAtom* aPrefix, const nsString& aURI)
     mNameSpaces = entry;
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+RDFXMLDataSourceImpl::SetContentModelBuilderCID(nsID* aCID)
+{
+    mContentModelBuilderCID = *aCID;
+
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
+        obs->OnContentModelBuilderSpecified(this, &mContentModelBuilderCID);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFXMLDataSourceImpl::GetContentModelBuilderCID(nsID* aCID)
+{
+    *aCID = mContentModelBuilderCID;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFXMLDataSourceImpl::AddXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver)
+{
+    mObservers.AppendElement(aObserver);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFXMLDataSourceImpl::RemoveXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver)
+{
+    mObservers.RemoveElement(aObserver);
+    return NS_OK;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////

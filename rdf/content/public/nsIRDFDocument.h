@@ -49,11 +49,17 @@ class nsIRDFResource;
 class nsIRDFDocument : public nsIXMLDocument
 {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IRDFDOCUMENT_IID; return iid; }
+
   /**
-   * Initialize the document object. This will force the document to create
-   * its internal RDF database.
+   * Set the document's content model builder.
    */
-  NS_IMETHOD Init(nsIRDFContentModelBuilder* aBuilder) = 0;
+  NS_IMETHOD SetContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;
+
+  /**
+   * Get the document's content model builder.
+   */
+  NS_IMETHOD GetContentModelBuilder(nsIRDFContentModelBuilder** aBuilder) = 0;
 
   /**
    * Set the document's "root" resource.
@@ -64,13 +70,6 @@ public:
    * Retrieve the document's RDF data base.
    */
   NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource*& rDataBase) = 0;
-
-  /**
-   * Given an nsIRDFContent element in the document, create its
-   * "content children," that is, a set of nsIRDFContent elements that
-   * should appear as the node's children in the content model.
-   */
-  NS_IMETHOD CreateChildren(nsIRDFContent* element) = 0;
 
   // XXX the following two methods should probably accept strings as
   // parameters so you can mess with them via JS. Also, should they

@@ -14,5 +14,6 @@ mozilla/rdf/content/src/nsRDFGenericElement.cpp
 mozilla/rdf/content/src/nsRDFHTMLBuilder.cpp
 mozilla/rdf/content/src/nsRDFResourceElement.cpp
 mozilla/rdf/content/src/nsRDFTreeBuilder.cpp
+mozilla/rdf/content/src/nsRDFXULBuilder.cpp
 mozilla/rdf/datasource/src/nsBookmarkDataSource.cpp
 mozilla/rdf/datasource/src/nsMailDataSource.cpp

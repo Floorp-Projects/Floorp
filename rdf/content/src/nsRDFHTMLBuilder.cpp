@@ -67,6 +67,7 @@ public:
     // nsIRDFContentModelBuilder interface
     NS_IMETHOD SetDocument(nsIRDFDocument* aDocument);
     NS_IMETHOD CreateRoot(nsIRDFResource* aResource);
+    NS_IMETHOD CreateContents(nsIRDFContent* aElement);
     NS_IMETHOD OnAssert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
     NS_IMETHOD OnUnassert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
 
@@ -136,7 +137,7 @@ RDFHTMLBuilderImpl::AddTreeChild(nsIRDFContent* parent,
     if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, &tag)))
         goto done;
 
-    if (NS_FAILED(rv = NS_NewRDFResourceElement(&child, value, nameSpaceID, tag, PR_TRUE)))
+    if (NS_FAILED(rv = NS_NewRDFResourceElement(&child, value, nameSpaceID, tag /* , PR_TRUE */)))
         goto done;
 
     if (NS_FAILED(rv = value->GetValue(&p)))
@@ -176,7 +177,7 @@ RDFHTMLBuilderImpl::AddLeafChild(nsIRDFContent* parent,
     if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, &tag)))
         goto done;
 
-    if (NS_FAILED(rv = NS_NewRDFResourceElement(&child, property, nameSpaceID, tag, PR_FALSE)))
+    if (NS_FAILED(rv = NS_NewRDFResourceElement(&child, property, nameSpaceID, tag /* , PR_FALSE */)))
         goto done;
 
     if (NS_FAILED(rv = parent->AppendChildTo(child, PR_TRUE)))
@@ -240,7 +241,7 @@ RDFHTMLBuilderImpl::CreateRoot(nsIRDFResource* aResource)
         goto done;
 
     // PR_TRUE indicates that children should be recursively generated on demand
-    if (NS_FAILED(rv = NS_NewRDFResourceElement(&body, aResource, kNameSpaceID_None, tag, PR_TRUE)))
+    if (NS_FAILED(rv = NS_NewRDFResourceElement(&body, aResource, kNameSpaceID_None, tag /* , PR_TRUE */)))
         goto done;
 
     if (NS_FAILED(rv = root->AppendChildTo(body, PR_FALSE)))
@@ -254,6 +255,13 @@ done:
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+RDFHTMLBuilderImpl::CreateContents(nsIRDFContent* aElement)
+{
+    NS_NOTYETIMPLEMENTED("Adapt the implementation from RDFTreeBuilderImpl");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 
 NS_IMETHODIMP

@@ -47,6 +47,8 @@ class nsIRDFResourceCursor;
 
 class nsIRDFDataSource : public nsISupports {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFDATASOURCE_IID; return iid; }
+
     // XXX I didn't make some of these methods "const" because it's
     // probably pretty likely that many data sources will just make
     // stuff up at runtime to answer queries.

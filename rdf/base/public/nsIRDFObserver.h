@@ -35,9 +35,16 @@ class nsIRDFNode;
 /**
  * An observer on an nsIRDFDataSource.
  */
+
+// 3cc75360-484a-11d2-bc16-00805f912fe7
+#define NS_IRDFOBSERVER_IID \
+{ 0x3cc75360, 0x484a, 0x11d2, { 0xbc, 0x16, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } }
+
 class nsIRDFObserver : public nsISupports
 {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFOBSERVER_IID; return iid; }
+
     /**
      * Called whenever a new assertion is made in the data source.
      */
@@ -53,9 +60,5 @@ public:
                           nsIRDFNode* object) = 0;
 };
 
-
-// 3cc75360-484a-11d2-bc16-00805f912fe7
-#define NS_IRDFOBSERVER_IID \
-{ 0x3cc75360, 0x484a, 0x11d2, { 0xbc, 0x16, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } }
 
 #endif /* nsIRDFObserver_h__ */

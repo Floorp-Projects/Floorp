@@ -37,15 +37,16 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
-static NS_DEFINE_CID(kRDFBookmarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,  NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFDocumentCID,           NS_RDFDOCUMENT_CID);
-static NS_DEFINE_CID(kRDFHTMLBuilderCID,        NS_RDFHTMLBUILDER_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
-static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFTreeBuilderCID,        NS_RDFTREEBUILDER_CID);
+static NS_DEFINE_CID(kRDFContentSinkCID,         NS_RDFCONTENTSINK_CID);
+static NS_DEFINE_CID(kRDFDocumentCID,            NS_RDFDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFHTMLBuilderCID,         NS_RDFHTMLBUILDER_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFTreeBuilderCID,         NS_RDFTREEBUILDER_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
 
 class RDFFactoryImpl : public nsIFactory
 {
@@ -155,6 +156,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kRDFTreeBuilderCID)) {
         if (NS_FAILED(rv = NS_NewRDFTreeBuilder((nsIRDFContentModelBuilder**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kRDFXULBuilderCID)) {
+        if (NS_FAILED(rv = NS_NewRDFXULBuilder((nsIRDFContentModelBuilder**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFContentSinkCID)) {

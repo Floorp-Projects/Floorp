@@ -657,6 +657,7 @@ static const char kStyleSheetPI[] = "<?xml-stylesheet";
 static const char kCSSType[] = "text/css";
 
 static const char kDataSourcePI[] = "<?rdf-datasource";
+static const char kContentModelBuilderPI[] = "<?rdf-builder";
 
     nsresult rv;
     FlushText();
@@ -709,6 +710,21 @@ static const char kDataSourcePI[] = "<?rdf-datasource";
         href.ToCString(uri, sizeof(uri));
 
         rv = mDataSource->AddNamedDataSourceURI(uri);
+    }
+    else if (0 == text.Find(kContentModelBuilderPI)) {
+        nsAutoString cidStr;
+        rv = rdf_GetQuotedAttributeValue(text, "cid", cidStr);
+        if (NS_FAILED(rv) || (0 == cidStr.Length()))
+            return rv;
+
+        char buf[256];
+        cidStr.ToCString(buf, sizeof(buf));
+
+        nsID cid;
+        if (! cid.Parse(buf))
+            return NS_ERROR_FAILURE;
+
+        rv = mDataSource->SetContentModelBuilderCID(&cid);
     }
 
     return rv;

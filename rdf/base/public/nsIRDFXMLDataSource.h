@@ -45,6 +45,8 @@ class nsIRDFXMLDataSource;
 class nsIRDFXMLDataSourceObserver : public nsISupports
 {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFXMLDOCUMENTOBSERVER_IID; return iid; }
+
     /**
      * Called when the RDF/XML document begins to load.
      */
@@ -81,6 +83,13 @@ public:
      * instruction) to the document.
      */
     NS_IMETHOD OnNamedDataSourceAdded(nsIRDFXMLDataSource* aStream, const char* aNamedDataSourceURI) = 0;
+
+    /**
+     * Called when a content model builder is specified (via XML processing
+     * instruction).
+     */
+    NS_IMETHOD OnContentModelBuilderSpecified(nsIRDFXMLDataSource* aStream,
+                                              nsID* aCID) = 0;
 };
 
 
@@ -91,6 +100,8 @@ public:
 class nsIRDFXMLDataSource : public nsIRDFDataSource
 {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFXMLDATASOURCE_IID; return iid; }
+
     /**
      * Sets the RDF/XML stream to load either synchronously or
      * asynchronously when nsIRDFDataSource::Init() is called.
@@ -169,6 +180,16 @@ public:
      * Add a new namespace declaration to the RDF/XML document.
      */
     NS_IMETHOD AddNameSpace(nsIAtom* aPrefix, const nsString& aURI) = 0;
+
+    /**
+     * Set the RDF/XML document's content model builder class ID.
+     */
+    NS_IMETHOD SetContentModelBuilderCID(nsID* aCID) = 0;
+
+    /**
+     * Get the RDF/XML document's content model builder class ID.
+     */
+    NS_IMETHOD GetContentModelBuilderCID(nsID* aCID) = 0;
 
     /**
      * Add an observer to the document. The observer will be notified of

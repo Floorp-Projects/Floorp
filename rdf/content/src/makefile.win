@@ -27,6 +27,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRDFHTMLBuilder.obj          \
         .\$(OBJDIR)\nsRDFResourceElement.obj      \
         .\$(OBJDIR)\nsRDFTreeBuilder.obj          \
+        .\$(OBJDIR)\nsRDFXULBuilder.obj           \
 	$(NULL)
 
 LINCS=  -I$(PUBLIC)\rdf          \

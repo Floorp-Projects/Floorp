@@ -10,6 +10,7 @@
 <?xml-stylesheet href="LocalStore.css" type="text/css"?>
 <?rdf-datasource href="rdf:mail"?>
 <?rdf-datasource href="rdf:bookmarks"?>
+<?rdf-builder cid="{3D262D00-8B5A-11d2-8EB0-00805F29F370}"?>
 
 <RDF:RDF xmlns:RDF="http://www.w3.org/TR/WD-rdf-syntax#" 
 	 xmlns:nc="http://home.netscape.com/NC-rdf#"
