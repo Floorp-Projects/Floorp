@@ -684,9 +684,9 @@ getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, 
 	nsresult		rv;
 
 	cellVal1 = "";
-	if (NS_SUCCEEDED(rv = node1->QueryInterface(kIDomXulElementIID, (void **)&dom1)))
+	if (NS_SUCCEEDED(rv = node1->QueryInterface(kIDomXulElementIID, (void **)&dom1)) && (nsnull != dom1))
 	{
-		if (NS_SUCCEEDED(rv = dom1->GetResource(&res1)))
+		if (NS_SUCCEEDED(rv = dom1->GetResource(&res1)) && (nsnull != res1))
 		{
 			if ((sortInfo->naturalOrderSort == PR_FALSE) && (sortInfo->sortProperty))
 			{
