@@ -103,6 +103,7 @@ public:
 	static BOOL			GetLargeStringProperty( LPMAPIPROP pProp, ULONG tag, nsCString& val);
 	static BOOL			GetLargeStringProperty( LPMAPIPROP pProp, ULONG tag, nsString& val);
 	static BOOL			IsLargeProperty( LPSPropValue pVal);
+	static ULONG    GetEmailPropertyTag(LPMAPIPROP lpProp, LONG nameID);
 
 	// Debugging & reporting stuff
 	static void			ListProperties( LPMAPIPROP lpProp, BOOL getValues = TRUE);

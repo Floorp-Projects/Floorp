@@ -95,6 +95,19 @@ static MAPIFields	gMapiFields[] = {
 
 #define	kCopyBufferSize		(16 * 1024)
 
+// The email address in Outlook Contacts doesn't have a named 
+// property,  we need to use this mapi name ID to access the email 
+// The MAPINAMEID for email address has ulKind=MNID_ID
+// Outlook stores each email address in two IDs,  32899/32900 for Email1
+// 32915/32916 for Email2, 32931/32932 for Email3
+// Current we use OUTLOOK_EMAIL1_MAPI_ID1 for primary email
+// OUTLOOK_EMAIL2_MAPI_ID1 for secondary email
+#define	OUTLOOK_EMAIL1_MAPI_ID1 32899    
+#define	OUTLOOK_EMAIL1_MAPI_ID2 32900    
+#define	OUTLOOK_EMAIL2_MAPI_ID1 32915   
+#define	OUTLOOK_EMAIL2_MAPI_ID2 32916   
+#define	OUTLOOK_EMAIL3_MAPI_ID1 32931    
+#define	OUTLOOK_EMAIL3_MAPI_ID2 32932  
 
 nsOutlookMail::nsOutlookMail()
 {
@@ -362,7 +375,7 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
 	ULONG		cbEid;
 	LPENTRYID	lpEid;
 	ULONG		oType;
-	LPMESSAGE	lpMsg;
+	LPMESSAGE	lpMsg = nsnull;
 	int			attachCount;
 	ULONG		totalCount;
 	PRFloat64	doneCalc;
@@ -919,7 +932,7 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 				IMPORT_LOG1( "*** Error opening messages in mailbox: %S\n", pName);
 				return( NS_ERROR_FAILURE);
 			}
-			
+
 			// Get the PR_MESSAGE_CLASS attribute,
 			// ensure that it is IPM.Contact
 			pVal = m_mapi.GetMapiProperty( lpMsg, PR_MESSAGE_CLASS);
@@ -992,12 +1005,28 @@ PRBool nsOutlookMail::BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, n
 	nsString		eMail;
 	nsString		nickName;
 	nsString		middleName;
+	nsString		secondEMail;
 
-	LPSPropValue	pProp = m_mapi.GetMapiProperty( pUser, PR_EMAIL_ADDRESS);
-	if (pProp) {
-		m_mapi.GetStringFromProp( pProp, eMail);
-		SanitizeValue( eMail);
-	}
+  LPSPropValue	pProp;
+
+  ULONG emailTag = m_mapi.GetEmailPropertyTag(pUser, OUTLOOK_EMAIL1_MAPI_ID1);
+  if (emailTag) {
+	  pProp = m_mapi.GetMapiProperty( pUser, emailTag);
+	  if (pProp) {
+		  m_mapi.GetStringFromProp( pProp, eMail);
+		  SanitizeValue( eMail);
+	  }
+  }
+
+  // for secondary email
+  emailTag = m_mapi.GetEmailPropertyTag(pUser, OUTLOOK_EMAIL2_MAPI_ID1);
+  if (emailTag) {
+	  pProp = m_mapi.GetMapiProperty( pUser, emailTag);
+	  if (pProp) {
+		  m_mapi.GetStringFromProp( pProp, secondEMail);
+		  SanitizeValue( secondEMail);
+	  }
+  }
 
 	pProp = m_mapi.GetMapiProperty( pUser, PR_GIVEN_NAME);
 	if (pProp) {
@@ -1066,6 +1095,10 @@ PRBool nsOutlookMail::BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, n
 	}
 	if (!eMail.IsEmpty()) {
 		pDb->AddPrimaryEmail( newRow, pCStr = eMail.ToNewUTF8String());
+		nsCRT::free( pCStr);
+	}
+	if (!secondEMail.IsEmpty()) {
+		pDb->Add2ndEmail( newRow, pCStr = secondEMail.ToNewUTF8String());
 		nsCRT::free( pCStr);
 	}
 
