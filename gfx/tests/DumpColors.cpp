@@ -19,13 +19,15 @@
 #include <stdio.h>
 #include "nsColor.h"
 #include "nsColorNames.h"
+#include "nsString.h"
 
 int main(int argc, char** argv)
 {
-  const nsColorNames::NameTableEntry* et = &nsColorNames::kNameTable[0];
-  for (int i = 0; i < COLOR_MAX; i++, et++) {
+  char  buffer[1024];
+  for (int i = 0; i < eColorName_COUNT; i++) {
     nscolor rgba = nsColorNames::kColors[i];
-    printf("%s: NS_RGB(%d,%d,%d,%d)\n", et->name,
+    nsColorNames::GetStringValue(nsColorName(i)).ToCString(buffer, sizeof(buffer));
+    printf("%s: NS_RGB(%d,%d,%d,%d)\n", buffer,
 	   NS_GET_R(rgba), NS_GET_G(rgba), NS_GET_B(rgba), NS_GET_A(rgba));
   }
   return 0;
