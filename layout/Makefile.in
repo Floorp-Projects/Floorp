@@ -22,11 +22,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base html xml xul events build
+DIRS		= base html xml xul
 
 ifdef MOZ_MATHML
-DIRS += mathml
+DIRS           += mathml
 endif
+
+DIRS           += events build
 
 include $(topsrcdir)/config/rules.mk
 
