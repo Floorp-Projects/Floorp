@@ -97,7 +97,7 @@ function saveAccount(accountValues, account)
       if (dest == undefined) continue;
       
       if (dest[slot] != typeArray[slot]) {
-        dump("Saving: " + slot + " to " + dest + "\n");
+        // dump("Saving: " + slot + " to " + dest + "\n");
         dest[slot] = typeArray[slot];
       }
     }
@@ -218,14 +218,12 @@ function getAccountValue(account, accountValues, type, slot) {
 
   // fill in the slot from the account if necessary
   if (accountValues[type][slot]== undefined) {
-    dump("Array->Form: lazily reading in the " + slot + " from the " + type + "\n");
+    // dump("Array->Form: lazily reading in the " + slot + " from the " + type + "\n");
     var source = null;
     if (type == "identity") {
       source = account.defaultIdentity;
     }
     else if (type == "server") {
-	dump(account);
-	dump(account.incomingServer);
       source = account.incomingServer;
     }
     else if (type == "pop3server") {
@@ -234,18 +232,12 @@ function getAccountValue(account, accountValues, type, slot) {
 	if (check == type) {
 		source = server.QueryInterface(Components.interfaces.nsIPop3IncomingServer); 
 	}
-	else {
-		dump("error: " + check + " vs " + type + "\n");
-	}
     }
     else if (type == "imapserver") {
 	var server= account.incomingServer; 
 	var check = server.type + "server";
 	if (check == type) {
 		source = server.QueryInterface(Components.interfaces.nsIImapIncomingServer); 
-	}
-	else {
-		dump("error: " + check + " vs " + type + "\n");
 	}
     }
     else if (type == "noneserver") {
@@ -254,18 +246,12 @@ function getAccountValue(account, accountValues, type, slot) {
 	if (check == type) {
 		source = server.QueryInterface(Components.interfaces.nsINoIncomingServer); 
 	}
-	else {
-		dump("error: " + check + " vs " + type + "\n");
-	}
     }
     else if (type == "nntpserver") {
 	var server= account.incomingServer; 
 	var check = server.type + "server";
 	if (check == type) {
 		source = server.QueryInterface(Components.interfaces.nsINntpIncomingServer); 
-	}
-	else {
-		dump("error: " + check + " vs " + type + "\n");
 	}
     }
     else { 
@@ -276,7 +262,7 @@ function getAccountValue(account, accountValues, type, slot) {
     	accountValues[type][slot] = source[slot];
     }
     else {
-	dump("error getting: (" + type + "," + slot + ")\n");
+	// dump("error getting: (" + type + "," + slot + ")\n");
 	accountValues[type][slot] = null;
     }
   }
