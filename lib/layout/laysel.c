@@ -976,9 +976,16 @@ lo_BoundaryJumpingNext(MWContext *context, lo_DocState *state, LO_Element *eptr)
         }
 
         success=TRUE; /* unless we detect a LO_TEXTBLOCK */
-        /* check textblock until not textblock leave prev as null if you hit
-		   null */
-		if (( next && eptr->type == LO_TEXTBLOCK ) || ( next && eptr->type == LO_DESCTITLE ))
+
+		/* HACK: Fix for bug 123318.  Only do the following check for the editor.  If you don't do it
+ 		   for the editor, backspacing between lines gets hosed.  If you do it for the browser,
+ 		   selection goes into an infinite loop.
+ 
+ 		   Earlier comment by mike/anthony:
+ 		   check textblock until not textblock leave prev as null if you hit
+ 		   null */
+
+ 		if (EDT_IS_EDITOR( context ) && (( next && eptr->type == LO_TEXTBLOCK ) || ( next && eptr->type == LO_DESCTITLE )))
 		{
             success=FALSE;
 		}
@@ -1038,9 +1045,15 @@ lo_BoundaryJumpingPrev(MWContext *context, lo_DocState *state, LO_Element *eptr)
 
         eptr = prev;
 
-        /* check textblock until not textblock leave prev as null if you hit
-		   null */
-		if (( prev && eptr->type == LO_TEXTBLOCK ) || ( prev && eptr->type == LO_DESCTITLE ))
+        /* HACK: Fix for bug 123318.  Only do the following check for the editor.  If you don't do it
+ 		   for the editor, backspacing between lines gets hosed.  If you do it for the browser,
+ 		   selection goes into an infinite loop.
+  
+ 		   Earlier comment by mike/anthony:
+ 		   check textblock until not textblock leave prev as null if you hit
+  		   null */
+
+ 		if (EDT_IS_EDITOR( context ) && (( prev && eptr->type == LO_TEXTBLOCK ) || ( prev && eptr->type == LO_DESCTITLE )))
 		{
             success=FALSE;
 		}
