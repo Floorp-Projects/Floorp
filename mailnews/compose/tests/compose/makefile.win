@@ -75,7 +75,11 @@ LLIBS=	 $(LLIBS) ole32.lib	\
 
 LINCS=$(LINCS)  -I. \
 		-I$(PUBLIC)\mailnews   \
-        -I$(PUBLIC)\xpcom		\
+		-I$(PUBLIC)\pref   \
+		-I$(PUBLIC)\js   \
+                -I$(PUBLIC)\xpcom		\
+                -I$(PUBLIC)\netlib		\
+                -I$(PUBLIC)\rdf		\
 		-I$(PUBLIC)\raptor
 
 # clobber and clobber_all will remove the following garbage:
