@@ -225,7 +225,7 @@
     </deck>
 
     <toolbar id="EditModeToolbar" hidden="true" autostretch="never" valign="middle" persist="hidden collapsed">
-      <tabbox class="tabbox-bottom" orient="horizontal" flex="1">
+      <tabbox id="EditModeTabbox" class="tabbox-bottom" orient="horizontal" flex="1">
      	<tab id="NormalModeButton"/>
       	<tab id="TagModeButton"/>
       	<tab id="SourceModeButton"/>
