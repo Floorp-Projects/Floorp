@@ -52,7 +52,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   virtual ~nsHTMLContentSerializer();
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
-                  nsIAtom* aCharSet);
+                  nsIAtom* aCharSet, PRBool aIsCopying);
 
   NS_IMETHOD AppendText(nsIDOMText* aText, 
                         PRInt32 aStartOffset,
@@ -69,6 +69,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   PRBool LineBreakAfterOpen(nsIAtom* aName, PRBool aHasDirtyAttr);
   PRBool LineBreakBeforeClose(nsIAtom* aName, PRBool aHasDirtyAttr);
   PRBool LineBreakAfterClose(nsIAtom* aName, PRBool aHasDirtyAttr);
+  PRBool IsFirstChildOfOL(nsIDOMElement* aElement);
   void StartIndentation(nsIAtom* aName, 
                         PRBool aHasDirtyAttr,
                         nsAWritableString& aStr);
@@ -80,6 +81,8 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   void SerializeAttributes(nsIContent* aContent,
                            nsIAtom* aTagName,
                            nsAWritableString& aStr);
+  void SerializeLIValueAttribute(nsIDOMElement* aElement,
+                                 nsAWritableString& aStr);
   virtual void AppendToString(const PRUnichar* aStr,
                               PRInt32 aLength,
                               nsAWritableString& aOutputStr);
@@ -109,6 +112,10 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   PRPackedBool  mDoFormat;
   PRPackedBool  mDoHeader;
   PRPackedBool  mBodyOnly;
+  PRPackedBool  mIsCopying; // Set to PR_TRUE only while copying
+
+  // To keep track of First LI child of OL in selected range 
+  PRPackedBool  mIsFirstChildOfOL;
   PRInt32       mPreLevel;
 
   /*
@@ -128,6 +135,17 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   nsString  mLineBreak;
 
   nsCOMPtr<nsIAtom> mCharSet;
+
+ // To keep track of startvalue of OL and first list item for nested lists
+  struct olState {
+    olState(PRInt32 aStart, PRBool aIsFirst):startVal(aStart),isFirstListItem(aIsFirst)
+    {
+    }
+    PRInt32 startVal;
+    PRBool isFirstListItem;
+  };
+
+  nsAutoVoidArray   mOLStateStack;// Stack to store one olState struct per <OL>.
 };
 
 extern nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer);

@@ -84,7 +84,7 @@ NS_IMPL_ISUPPORTS1(nsXMLContentSerializer, nsIContentSerializer)
 
 NS_IMETHODIMP 
 nsXMLContentSerializer::Init(PRUint32 flags, PRUint32 aWrapColumn,
-                             nsIAtom* aCharSet)
+                             nsIAtom* aCharSet, PRBool aIsCopying)
 {
   return NS_OK;
 }
