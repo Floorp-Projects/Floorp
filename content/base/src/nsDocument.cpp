@@ -85,6 +85,9 @@
 #include "nsIXBLService.h"
 #include "nsIXPointer.h"
 #include "nsIFileChannel.h"
+#include "nsIMultiPartChannel.h"
+#include "nsIRefreshURI.h"
+#include "nsIWebNavigation.h"
 
 #include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
 
@@ -1081,7 +1084,7 @@ nsDocument::SetDocumentCharacterSet(const nsACString& aCharSetID)
         NS_STATIC_CAST(nsIObserver *, mCharSetObservers.ElementAt(i));
 
       observer->Observe(NS_STATIC_CAST(nsIDocument *, this), "charset",
-                        NS_ConvertASCIItoUCS2(aCharSetID).get());
+                        NS_ConvertASCIItoUTF16(aCharSetID).get());
     }
   }
 }
@@ -1232,6 +1235,21 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
           sheet->SetEnabled(enabled);
         }
       }
+    }
+  }
+
+  if (aHeaderField == nsHTMLAtoms::refresh) {
+    // We get into this code before we have a script global yet, so get to
+    // our container via mDocumentContainer.
+    nsCOMPtr<nsIRefreshURI> refresher = do_QueryReferent(mDocumentContainer);
+    if (refresher) {
+      // Note: using mDocumentURI instead of mBaseURI here, for consistency
+      // (used to just use the current URI of our webnavigation, but that
+      // should really be the same thing).  Note that this code can run
+      // before the current URI of the webnavigation has been updated, so we
+      // can't assert equality here.
+      refresher->SetupRefreshURIFromHeader(mDocumentURI,
+                                           NS_LossyConvertUTF16toASCII(aData));
     }
   }
 }
@@ -4361,6 +4379,30 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
     if (NS_FAILED(rv)) {
       mReferrer.Truncate();
     }
+
+    static const char *const headers[] = {
+      "default-style",
+      "content-style-type",
+      "content-language",
+      "content-disposition",
+      "refresh",
+      // add more http headers if you need
+      // XXXbz don't add content-location support without reading bug
+      // 238654 and its dependencies/dups first.
+      0
+    };
+    
+    nsCAutoString headerVal;
+    const char *const *name = headers;
+    while (*name) {
+      rv =
+        httpChannel->GetResponseHeader(nsDependentCString(*name), headerVal);
+      if (NS_SUCCEEDED(rv) && !headerVal.IsEmpty()) {
+        nsCOMPtr<nsIAtom> key = do_GetAtom(*name);
+        SetHeaderData(key, NS_ConvertASCIItoUCS2(headerVal));
+      }
+      ++name;
+    }
   } else {
     nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
     if (fileChannel) {
@@ -4374,6 +4416,16 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
           PRInt64 intermediateValue;
           LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
           LL_MUL(modDate, msecs, intermediateValue);
+        }
+      }
+    } else {
+      nsCOMPtr<nsIMultiPartChannel> partChannel = do_QueryInterface(aChannel);
+      if (partChannel) {
+        nsCAutoString contentDisp;
+        rv = partChannel->GetContentDisposition(contentDisp);
+        if (NS_SUCCEEDED(rv) && !contentDisp.IsEmpty()) {
+          SetHeaderData(nsHTMLAtoms::headerContentDisposition,
+                        NS_ConvertASCIItoUCS2(contentDisp));
         }
       }
     }

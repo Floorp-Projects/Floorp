@@ -4278,22 +4278,16 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
 
 NS_IMETHODIMP nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
 {
-    nsresult
-        rv;
+    nsresult rv;
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel, &rv));
     if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIURI> referrer;
-        rv = httpChannel->GetReferrer(getter_AddRefs(referrer));
+        nsCAutoString refreshHeader;
+        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("refresh"),
+                                            refreshHeader);
 
-        if (NS_SUCCEEDED(rv)) {
-            SetReferrerURI(referrer);
-
-            nsCAutoString refreshHeader;
-            rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("refresh"),
-                                                refreshHeader);
-
-            if (!refreshHeader.IsEmpty())
-                rv = SetupRefreshURIFromHeader(mCurrentURI, refreshHeader);
+        if (!refreshHeader.IsEmpty()) {
+            SetupReferrerFromChannel(aChannel);
+            rv = SetupRefreshURIFromHeader(mCurrentURI, refreshHeader);
         }
     }
     return rv;
@@ -6220,6 +6214,18 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
     return rv;
 }
 
+void
+nsDocShell::SetupReferrerFromChannel(nsIChannel * aChannel)
+{
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+    if (httpChannel) {
+        nsCOMPtr<nsIURI> referrer;
+        nsresult rv = httpChannel->GetReferrer(getter_AddRefs(referrer));
+        if (NS_SUCCEEDED(rv)) {
+            SetReferrerURI(referrer);
+        }
+    }
+}
 
 PRBool
 nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
@@ -6356,9 +6362,8 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     }
     PRBool onLocationChangeNeeded = SetCurrentURI(aURI, aChannel,
                                                   aFireOnLocationChange);
-    // if there's a refresh header in the channel, this method
-    // will set it up for us. 
-    SetupRefreshURI(aChannel);
+    // Make sure to store the referrer from the channel, if any
+    SetupReferrerFromChannel(aChannel);
     return onLocationChangeNeeded;
 }
 
