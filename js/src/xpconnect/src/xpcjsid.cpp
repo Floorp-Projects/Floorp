@@ -371,6 +371,9 @@ NS_INTERFACE_MAP_BEGIN(nsJSIID)
   NS_INTERFACE_MAP_ENTRY(nsIJSID)
   NS_INTERFACE_MAP_ENTRY(nsIJSIID)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
+#endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJSID)
   NS_IMPL_QUERY_CLASSINFO(nsJSIID)
 NS_INTERFACE_MAP_END_THREADSAFE
@@ -599,6 +602,50 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
     }
     return rv;
 }
+
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+static char* CloneAllAccess()
+{
+    static const char allAccess[] = "AllAccess";
+    return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
+}
+
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP
+nsJSIID::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+    // We let anyone do this...
+    *_retval = CloneAllAccess();
+    return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP
+nsJSIID::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsJSIID::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsJSIID::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+#endif
 
 /***************************************************************************/
 

@@ -1761,8 +1761,8 @@ nsXPCComponents::AttachNewComponentsObject(XPCCallContext& ccx,
 NS_IMETHODIMP
 nsXPCComponents::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
-    // If you have to ask, then the answer is NO
-    *_retval = nsnull;
+    // We let anyone do this...
+    *_retval = CloneAllAccess();
     return NS_OK;
 }
 
