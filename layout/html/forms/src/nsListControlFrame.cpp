@@ -60,6 +60,7 @@
 #include "nsIDOMEventTarget.h"
 
 #include "nsISelectElement.h"
+#include "nsIPrivateDOMEvent.h"
 
 static NS_DEFINE_IID(kIDOMMouseListenerIID,       NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
@@ -2569,7 +2570,7 @@ nsListControlFrame::SyncViewWithFrame(nsIPresContext* aPresContext)
   view->GetDimensions(&width, &height);
 
   if (width != mRect.width || height != mRect.height) {
-    viewManager->ResizeView(view, mRect.width, mRect.height);
+    //viewManager->ResizeView(view, mRect.width, mRect.height);
   }
   nscoord x;
   nscoord y;
@@ -2803,6 +2804,20 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   }
 
   if (IsInDropDownMode() == PR_TRUE) {
+    // XXX This is a bit of a hack, but.....
+    // But the idea here is to make sure you get an "onclick" event when you mouse
+    // down on the select and the drag over an option and let go
+    // And then NOT get an "onclick" event when when you click down on the select
+    // and then up outside of the select
+    // the EventStateManager tracks the content of the mouse down and the mouse up
+    // to make sure they are the same, and the onclick is sent in the PostHandleEvent
+    // depeneding on whether the clickCount is non-zero.
+    // So we cheat here by either setting or unsetting the clcikCount in the native event
+    // so the right thing happens for the onclick event
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
+    nsMouseEvent * mouseEvent;
+    privateEvent->GetInternalNSEvent((nsEvent**)&mouseEvent);
+
     if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, mOldSelectedIndex, mSelectedIndex))) {
       REFLOW_DEBUG_MSG2(">>>>>> Found Index: %d", mSelectedIndex);
       if (kNothingSelected != mSelectedIndex) {
@@ -2811,6 +2826,10 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
       if (mComboboxFrame) {
         mComboboxFrame->ListWasSelected(mPresContext); 
       } 
+      mouseEvent->clickCount = 1;
+    } else {
+      // the click was out side of the select or its dropdown
+      mouseEvent->clickCount = 0;
     }
   } else {
     REFLOW_DEBUG_MSG(">>>>>> Didn't find");
