@@ -60,8 +60,8 @@
 
         <row>
           <html>&addressLine1.label;</html>
-          <menulist id="street.line1" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="street.line1" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -70,8 +70,8 @@
 
         <row>
           <html>&addressLine2.label;</html>
-          <menulist id="street.line2" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="street.line2" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -80,8 +80,8 @@
 
         <row>
           <html>&addressLine3.label;</html>
-          <menulist id="street.line3" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="street.line3" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -90,8 +90,8 @@
 
         <row>
           <html>&addressCity.label;</html>
-          <menulist id="city" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="city" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -100,8 +100,8 @@
 
         <row>
           <html>&addressState.label;</html>
-          <menulist id="state" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="state" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -111,15 +111,15 @@
         <row>
           <html>&addressZipcode.label;</html>
           <box>
-          <menulist id="postalcode.prefix" editable="true" flex="55%" width="0"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="postalcode.prefix" editable="true" autoSelectMenuitem="false" flex="55%" width="0"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <text value="__"/>
-          <menulist id="postalcode.suffix" editable="true" flex="45%" width="0"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="postalcode.suffix" editable="true" autoSelectMenuitem="false" flex="45%" width="0"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -129,8 +129,8 @@
 
         <row>
           <html>&addressCountry.label;</html>
-          <menulist id="country" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="country" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -139,8 +139,8 @@
 
         <row>
           <html>&email.label;</html>
-          <menulist id="email" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="email" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -149,8 +149,8 @@
 
         <row>
           <html>&homepage.label;</html>
-          <menulist id="uri" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="uri" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
 
             <menupopup>
               <menuitem label="" len="0"/>

@@ -55,15 +55,14 @@ function Startup() {
     if (count == (prefillList[i]-1)) {
       menuItem.setAttribute("selected", "true");
     }
-    menuItem.setAttribute("data", prefillList[i+1]);
     menuItem.setAttribute("label", prefillList[i+2]);
     menuPopup.appendChild(menuItem);
 
     if(count == 0) {
       var menuList = document.createElement("menulist");
+      menuList.setAttribute("data", prefillList[i+1]);
       menuList.setAttribute("id", "xx"+(++fieldCount));
       menuList.setAttribute("allowevents", "true");
-      menuList.setAttribute("onchange", "UpdateMenuListValue(this)");
 //    menuList.setAttribute("editable", "true");  // done later to avoid crash
       menuList.appendChild(menuPopup);
 
@@ -96,14 +95,6 @@ function Startup() {
   doSetOKCancel(Save, Cancel);
 }
 
-function UpdateMenuListValue(menuList) {
-  /* transfer value from menu list to the selected menu item */
-  var menuItem = menuList.selectedItem;
-  if (menuItem) {
-    menuItem.setAttribute('value', menuList.value);
-  }
-}
-
 function UpdateMenuListEnable(checkBox) {
   var id = checkBox.getAttribute("id");
   var menuList = document.getElementById("x" + id);
@@ -131,12 +122,12 @@ function Save() {
 
   for (var i=1; i<=fieldCount; i++) { 
     var menuList = document.getElementById("xx" + i);
-    var menuItem = menuList.selectedItem;
-    if (menuItem) {
-      fillins += menuItem.getAttribute("data") + "#*%$";
+    if (menuList)
+    {
+      fillins += menuList.getAttribute("data")  + "#*%$";
       var localCheckBox = document.getElementById("x" + i);
       if (localCheckBox.checked) {
-        fillins += menuItem.getAttribute("label");
+        fillins += menuList.value;
       }
       fillins += "#*%$";
     }

@@ -230,7 +230,7 @@ nsWalletViewer.prototype =
     if (!thisMenuItem) {
       return;
     }
-    thisMenuItem.setAttribute('label',thisMenuList.label);
+    thisMenuItem.setAttribute('label', thisMenuList.value);
 
     /* determine previous size of textbox */
     var len = Number(thisMenuItem.getAttribute("len"));

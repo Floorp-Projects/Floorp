@@ -58,8 +58,8 @@
 
         <row>
           <html>&employName.label;</html>
-          <menulist id="business.companyname" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="business.companyname" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -68,8 +68,8 @@
 
         <row>
           <html>&employTitle.label;</html>
-          <menulist id="business.jobtitle" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="business.jobtitle" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -78,8 +78,8 @@
 
         <row>
           <html>&employDepartment.label;</html>
-          <menulist id="business.department" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="business.department" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>

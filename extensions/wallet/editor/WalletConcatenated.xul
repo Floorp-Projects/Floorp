@@ -74,8 +74,8 @@
 
         <row hidden="true">
           <html>&concatName.label;</html>
-          <menulist id="name" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="name" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -84,8 +84,8 @@
 
         <row hidden="true">
           <html>&concatZipcode.label;</html>
-          <menulist id="home.postalcode" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.postalcode" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -94,8 +94,8 @@
 
         <row hidden="true">
           <html>&concatPhone.label;</html>
-          <menulist id="home.phone" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.phone" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -104,8 +104,8 @@
 
         <row hidden="true">
           <html>&concatPhonenumber.label;</html>
-          <menulist id="home.phone.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.phone.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -114,8 +114,8 @@
 
         <row hidden="true">
           <html>&concatAltPhone.label;</html>
-          <menulist id="home.altphone" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.altphone" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -124,8 +124,8 @@
 
         <row hidden="true">
           <html>&concatAltPhonenumber.label;</html>
-          <menulist id="home.altphone.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.altphone.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -134,8 +134,8 @@
 
         <row hidden="true">
           <html>&concatFax.label;</html>
-          <menulist id="home.fax" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.fax" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -144,8 +144,8 @@
 
         <row hidden="true">
           <html>&concatFaxnumber.label;</html>
-          <menulist id="home.fax.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.fax.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -154,8 +154,8 @@
 
         <row hidden="true">
           <html>&concatMobile.label;</html>
-          <menulist id="home.mobile" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.mobile" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -164,8 +164,8 @@
 
         <row hidden="true">
           <html>&concatMobilenumber.label;</html>
-          <menulist id="home.mobile.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.mobile.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -174,8 +174,8 @@
 
         <row hidden="true">
           <html>&concatPager.label;</html>
-          <menulist id="home.pager" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.pager" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -184,8 +184,8 @@
 
         <row hidden="true">
           <html>&concatPagernumber.label;</html>
-          <menulist id="home.pager.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="home.pager.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -207,8 +207,8 @@
 
         <row hidden="true">
           <html>&concatShiptoName.label;</html>
-          <menulist id="shipto.name" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.name" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -217,8 +217,8 @@
 
         <row hidden="true">
           <html>&concatShiptoZipcode.label;</html>
-          <menulist id="shipto.postalcode" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.postalcode" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -227,8 +227,8 @@
 
         <row hidden="true">
           <html>&concatShiptoPhone.label;</html>
-          <menulist id="shipto.phone" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.phone" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -237,8 +237,8 @@
 
         <row hidden="true">
           <html>&concatShiptoPhonenumber.label;</html>
-          <menulist id="shipto.phone.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.phone.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -247,8 +247,8 @@
 
         <row hidden="true">
           <html>&concatShiptoAltPhone.label;</html>
-          <menulist id="shipto.altphone" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.altphone" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -257,8 +257,8 @@
 
         <row hidden="true">
           <html>&concatShiptoAltPhonenumber.label;</html>
-          <menulist id="shipto.altphone.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.altphone.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -267,8 +267,8 @@
 
         <row hidden="true">
           <html>&concatShiptoFax.label;</html>
-          <menulist id="shipto.fax" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.fax" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -277,8 +277,8 @@
 
         <row hidden="true">
           <html>&concatShiptoFaxnumber.label;</html>
-          <menulist id="shipto.fax.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.fax.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -287,8 +287,8 @@
 
         <row hidden="true">
           <html>&concatShiptoMobile.label;</html>
-          <menulist id="shipto.mobile" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.mobile" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -297,8 +297,8 @@
 
         <row hidden="true">
           <html>&concatShiptoMobilenumber.label;</html>
-          <menulist id="shipto.mobile.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.mobile.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -307,8 +307,8 @@
 
         <row hidden="true">
           <html>&concatShiptoPager.label;</html>
-          <menulist id="shipto.pager" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.pager" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -317,8 +317,8 @@
 
         <row hidden="true">
           <html>&concatShiptoPagernumber.label;</html>
-          <menulist id="shipto.pager.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="shipto.pager.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -340,8 +340,8 @@
 
         <row hidden="true">
           <html>&concatBilltoName.label;</html>
-          <menulist id="billto.name" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.name" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -350,8 +350,8 @@
 
         <row hidden="true">
           <html>&concatBilltoZipcode.label;</html>
-          <menulist id="billto.postalcode" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.postalcode" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -360,8 +360,8 @@
 
         <row hidden="true">
           <html>&concatBilltoPhone.label;</html>
-          <menulist id="billto.phone" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.phone" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -370,8 +370,8 @@
 
         <row hidden="true">
           <html>&concatBilltoPhonenumber.label;</html>
-          <menulist id="billto.phone.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.phone.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -380,8 +380,8 @@
 
         <row hidden="true">
           <html>&concatBilltoAltPhone.label;</html>
-          <menulist id="billto.altphone" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.altphone" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -390,8 +390,8 @@
 
         <row hidden="true">
           <html>&concatBilltoAltPhonenumber.label;</html>
-          <menulist id="billto.altphone.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.altphone.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -400,8 +400,8 @@
 
         <row hidden="true">
           <html>&concatBilltoFax.label;</html>
-          <menulist id="billto.fax" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.fax" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -410,8 +410,8 @@
 
         <row hidden="true">
           <html>&concatBilltoFaxnumber.label;</html>
-          <menulist id="billto.fax.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.fax.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -420,8 +420,8 @@
 
         <row hidden="true">
           <html>&concatBilltoMobile.label;</html>
-          <menulist id="billto.mobile" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.mobile" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -430,8 +430,8 @@
 
         <row hidden="true">
           <html>&concatBilltoMobilenumber.label;</html>
-          <menulist id="billto.mobile.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.mobile.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -440,8 +440,8 @@
 
         <row hidden="true">
           <html>&concatBilltoPager.label;</html>
-          <menulist id="billto.pager" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.pager" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -450,8 +450,8 @@
 
         <row hidden="true">
           <html>&concatBilltoPagernumber.label;</html>
-          <menulist id="billto.pager.number" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="billto.pager.number" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -473,8 +473,8 @@
 
         <row hidden="true">
           <html>&concatCardExpdate.label;</html>
-          <menulist id="card.expdate" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="card.expdate" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -483,8 +483,8 @@
 
         <row hidden="true">
           <html>&concatSocSec.label;</html>
-          <menulist id="socsec" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="socsec" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -493,8 +493,8 @@
 
         <row hidden="true">
           <html>&concatBdate.label;</html>
-          <menulist id="bdate" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="bdate" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
@@ -503,8 +503,8 @@
 
         <row hidden="true">
           <html>&concatAnniv.label;</html>
-          <menulist id="anniv" editable="true"
-                    onchange="Append(this)" onmousedown="Append(this)">
+          <menulist id="anniv" editable="true" autoSelectMenuitem="false"
+                    onchange="Append(this)">
             <menupopup>
               <menuitem label="" len="0"/>
             </menupopup>
