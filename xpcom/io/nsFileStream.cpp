@@ -29,25 +29,25 @@
 //----------------------------------------------------------------------------------------
 PRFileDesc* nsFileStreamHelpers::open(
 	const nsFilePath& inFile,
-    ios::openmode mode,
+    IOS_BASE::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 {
     PRFileDesc* descriptor = 0;
-    const ios::openmode valid_modes[]=
+    const IOS_BASE::openmode valid_modes[]=
     {
-        ios::out, 
-        ios::out | ios::app, 
-        ios::out | ios::trunc, 
-        ios::in, 
-        ios::in  | ios::out, 
-        ios::in  | ios::out    | ios::trunc, 
-//      ios::out | ios::binary, 
-//      ios::out | ios::app    | ios::binary, 
-//      ios::out | ios::trunc  | ios::binary, 
-//      ios::in  | ios::binary, 
-//      ios::in  | ios::out    | ios::binary, 
-//      ios::in  | ios::out    | ios::trunc | ios::binary,
+        IOS_BASE::out, 
+        IOS_BASE::out | IOS_BASE::app, 
+        IOS_BASE::out | IOS_BASE::trunc, 
+        IOS_BASE::in, 
+        IOS_BASE::in  | IOS_BASE::out, 
+        IOS_BASE::in  | IOS_BASE::out    | IOS_BASE::trunc, 
+//      IOS_BASE::out | IOS_BASE::binary, 
+//      IOS_BASE::out | IOS_BASE::app    | IOS_BASE::binary, 
+//      IOS_BASE::out | IOS_BASE::trunc  | IOS_BASE::binary, 
+//      IOS_BASE::in  | IOS_BASE::binary, 
+//      IOS_BASE::in  | IOS_BASE::out    | IOS_BASE::binary, 
+//      IOS_BASE::in  | IOS_BASE::out    | IOS_BASE::trunc | IOS_BASE::binary,
         0 
     };
 
@@ -67,7 +67,7 @@ PRFileDesc* nsFileStreamHelpers::open(
 //      "w+b",
         0 };
     int ind=0;
-    while (valid_modes[ind] && valid_modes[ind] != (mode&~ios::ate))
+    while (valid_modes[ind] && valid_modes[ind] != (mode&~IOS_BASE::ate))
         ++ind;
     if (!nspr_modes[ind]) 
         return 0;
@@ -118,7 +118,7 @@ PRFileDesc* nsFileStreamHelpers::open(
 	//	Platforms other than Macintosh...
     if ((descriptor = PR_Open(inFile, nspr_modes[ind], accessMode)) != 0)
 #endif
-       if (mode&ios::ate && PR_Seek(descriptor, 0, PR_SEEK_END) >= 0)
+       if (mode&IOS_BASE::ate && PR_Seek(descriptor, 0, PR_SEEK_END) >= 0)
        {
           PR_Close(descriptor);
           descriptor = 0;
