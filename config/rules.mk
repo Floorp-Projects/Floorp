@@ -699,7 +699,7 @@ endif
 # Note: Passing depth to make-makefile is optional.
 #       It saves the script some work, though.
 Makefile: Makefile.in
-	$(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH)
+	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH)
 
 $(SUBMAKEFILES): % : %.in
 	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH) $@
