@@ -201,7 +201,13 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 
 nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventType)
 {
-#ifdef XP_MAC
+  static PRBool executingKeyBind = PR_FALSE;
+  
+  if(executingKeyBind)
+    return NS_OK;
+  else 
+    executingKeyBind = PR_TRUE;
+  
   if(aKeyEvent && mDOMDocument) {
     // Get DOMEvent target
     nsIDOMNode* target = nsnull;
@@ -217,6 +223,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   nsCOMPtr<nsIDOMElement> rootElement;
   mDOMDocument->GetDocumentElement(getter_AddRefs(rootElement));
   if (!rootElement) {
+    executingKeyBind = PR_FALSE;
     return !NS_OK;
   }
   nsString rootName;
@@ -231,8 +238,10 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   while (keysetNode) {
      nsString keysetNodeType;
      nsCOMPtr<nsIDOMElement> keysetElement(do_QueryInterface(keysetNode));
-     if(!keysetElement)
+     if(!keysetElement) {
+       executingKeyBind = PR_FALSE;
        return rv;
+     }
        
      keysetElement->GetNodeName(keysetNodeType);
 	 if (keysetNodeType.Equals("keyset")) {
@@ -353,14 +362,18 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 				    // document is appearing.
 				    nsCOMPtr<nsIContent> content;
 				    content = do_QueryInterface(keyElement);
-				    if (!content)
+				    if (!content) {
+				      executingKeyBind = PR_FALSE;
 				      return NS_OK;
+				    }
 				
 				    nsCOMPtr<nsIDocument> document;
 				    content->GetDocument(*getter_AddRefs(document));
 				
-				    if (!document)
+				    if (!document) {
+				      executingKeyBind = PR_FALSE;
 				      return NS_OK;
+				    }
 				
 				    PRInt32 count = document->GetNumberOfShells();
 				    for (PRInt32 i = 0; i < count; i++) {
@@ -384,6 +397,8 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 				          case eKeyDown:   event.message = NS_KEY_DOWN; break;
 				          default:         event.message = NS_KEY_UP; break;
 				        }
+				        aKeyEvent->PreventBubble();
+				        aKeyEvent->PreventCapture();
 				        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
 
                 if (aEventType == eKeyPress) {
@@ -409,10 +424,8 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
       oldkeysetNode->GetNextSibling(getter_AddRefs(keysetNode));
 	} // end while(keysetNode)
   } // end if(aKeyEvent && mDOMDocument) 
+  executingKeyBind = PR_FALSE;
   return NS_ERROR_BASE;
-#else
-  return NS_OK;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////
