@@ -26,12 +26,8 @@ VPATH		= @srcdir@
 
 EXPORTS         = \
 		csid.h \
-		merrors.h \
-		msgtypes.h \
-		net.h \
 		npapi.h \
 		npupp.h \
-		ntypes.h \
                 platform.h \
                 xp_core.h \
                 xp_file.h \
