@@ -315,4 +315,7 @@ endif
 	cd xpi; zip -T -r ../$(PLATFORM)/psm.xpi psm install.js
 	rm -rf xpi
 	$(NSINSTALL) -m 644 moz-install.html $(PLATFORM)
-	
+
+release_xpi: build_xpi
+	$(NSINSTALL) -m 644 $(PLATFORM)/psm.xpi $(RELEASE_TREE)/$(PLATFORM)/xpi
+	$(NSINSTALL) -m 644 moz-install.html $(RELEASE_TREE)/$(PLATFORM)/xpi
