@@ -21,8 +21,8 @@
  *
  */
 
-/* ===== formatting.css =================================================
-  == Styles for various formatting styles.
+/* ===== global.css =====================================================
+  == Styles that apply everywhere.
   ======================================================================= */
 
 /* all localizable skin settings shall live here */
@@ -32,18 +32,26 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: bindings ::::: */
+/* ::::: XBL bindings ::::: */
 
 button {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#button");
 }
 
-button.plain {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#buttonleft");
+button[type="menu"] {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#button-menu");
 }
 
-menubutton {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#menubutton-single");
+button[type="menu-button"] {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#menu-button");
+}
+
+button.plain {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#button");
+}
+
+toolbarbutton[type="menu-button"] {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#toolbar-menu-button");
 }
 
 menulist {
@@ -173,15 +181,11 @@ iframe {
   overflow: hidden;
 }
 
-statusbarpanel {
+statusbarpanel, .statusbar-panel {
   border-top: 1px solid #E0ECF6;
   border-right: 1px solid #8997A1;
   border-left: 1px solid #E0ECF6;
   padding: 0px 4px;
-}
-
-.statusbar-panel-icon {
-  margin: 0px 2px 0px 0px;
 }
 
 .statusbarpanel-icononly {

@@ -24,7 +24,7 @@
 
   <!-- :::/ widgets \ ::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
-  <binding id="button" extends="chrome://global/content/bindings/button.xml#button-base">
+  <binding id="button" extends="chrome://global/content/bindings/button.xml#button">
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:box class="box-inherit" orient="horizontal" dir="ltr" flex="1">
@@ -41,10 +41,11 @@
              <xul:spacer class="button-mid-btm" inherits="default,disabled"/>
           </xul:vbox>
 
-          <xul:hbox inherits="orient,align,pack,dir" class="box-inherit button-text-box" align="center" pack="center">
+          <xul:hbox class="box-inherit button-text-box" inherits="orient,align,pack,dir"
+                    align="center" pack="center">
             <children>
-              <xul:image class="button-icon-mid" inherits="src=image"/>
-              <xul:label class="button-text-mid" flex="1"
+              <xul:image class="button-icon" inherits="src=image"/>
+              <xul:label class="button-text" flex="1" crop="right"
                          inherits="default,value=label,crop,accesskey"/>
             </children>
           </xul:hbox>
@@ -76,6 +77,26 @@
       <image src="chrome://global/skin/button/btn-def-act-rit-mid.gif"/>
       <image src="chrome://global/skin/button/btn-def-act-rit-btm.gif"/>
     </resources>
+  </binding>
+
+  <binding id="button-menu" extends="chrome://global/skin/globalBindings.xml#button" display="xul:menu"/>
+
+  <binding id="toolbar-menu-button" display="xul:menu"
+           extends="chrome://global/content/bindings/toolbarbutton.xml#menu-button">
+    <content>
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:stack class="box-inherit toolbarbutton-menubutton-stack">
+        <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button"
+             anonid="button" allowevents="true"
+             inherits="disabled,image,label,crop,accesskey,
+                       buttonover,buttondown,align,dir,pack,orient">
+          <children/>
+        </xul:toolbarbutton>
+        <xul:hbox class="toolbarbutton-menubutton-dropmarker-box" pack="center">
+          <xul:image class="toolbarbutton-menubutton-dropmarker" inherits="open,disabled"/>
+        </xul:hbox>
+      </xul:stack>
+    </content>
   </binding>
 
   <binding id="menulist" extends="chrome://global/content/bindings/menulist.xml#menulist">
@@ -134,20 +155,6 @@
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
         <xul:spacer flex="1"/>
         <xul:text class="menulist-compact-text" inherits="value=label,accesskey,crop,disabled" crop="right"/>
-      </xul:hbox>
-      <children includes="menupopup"/>
-    </content>
-  </binding>
-
-  <binding id="menubutton-single" extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
-    <content>
-      <xul:hbox class="menubutton-single-internal-box" flex="1">
-        <xul:button class="menubutton-single-button" flex="1" inherits="open,label,disabled">
-          <xul:image class="button-icon-mid" inherits="src=image"/>
-          <xul:label class="button-text-mid" flex="1"
-                    inherits="value=label,crop,accesskey"/>
-          <xul:image class="menubutton-single-dropmarker" inherits="open,disabled"/>
-        </xul:button>
       </xul:hbox>
       <children includes="menupopup"/>
     </content>

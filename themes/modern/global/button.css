@@ -47,7 +47,7 @@ button {
   padding: 3px 2px 3px 2px;
 }
 
-.button-text-mid {
+.button-text {
   margin: 0px 3px !important;
   text-align: center;
 }
@@ -123,7 +123,7 @@ button[open="true"] {
 }
   
 button:hover:active > .box-inherit > .button-box-left > .button-left-top,
-button[open="true"] > .button-box-left > .button-left-top {
+button[open="true"] > .box-inherit > .button-box-left > .button-left-top {
   background-image: url("chrome://global/skin/button/btn-act-lft-top.gif");
 }
 
@@ -371,6 +371,32 @@ button[default="true"][disabled="true"] {
   height: 8px;
 }
 
+/* ::::: menu-buttons ::::: */
+
+button[type="menu-button"] {
+  -moz-user-focus: ignore;
+  margin: 0px;
+  border: none;
+}
+
+.button-menubutton-dropmarker-box {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+.button-menubutton-dropmarker {
+  margin: 1px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.button-menubutton-dropmarker[disabled="true"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
+}
+
+.button-menubutton-dropmarker[open="true"] {
+  margin: 2px 0px 0px 2px;
+}
+
 /* ::::: plain buttons ::::: */
 
 button.plain,
@@ -393,21 +419,9 @@ button.plain > .button-internal-box > .button.icon:hover:active
   padding: 0px;
 }
 
-/* ::::: reorder buttons ::::: */
+/* ::::: dlgtype buttons ::::: */
 
-.reorder-up {
-  min-width: 0px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
-}
-
-.reorder-down {
-  min-width: 0px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-.reorder-up > .button-internal-box > .button-icon,
-.reorder-down > .button-internal-box > .button-icon
-{
-  margin: 0px;
-  padding: 0px;
+/* XXX change me to dlgtype="ok" */
+.exit-dialog {
+  font: menu;
 }

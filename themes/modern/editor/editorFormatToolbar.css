@@ -25,16 +25,11 @@
 
 /* ::::: formatting buttons ::::: */
 
-.button-toolbar-2 {
-  min-width: 48px;
+#FormatToolbar > toolbarbutton {
+  border: none !important;
 }
 
-#FormatToolbar > .button-toolbar {
-  border: none;
-  padding: 0px;
-}
-
-#FormatToolbar > .button-toolbar[toggled="true"] {
+#FormatToolbar > toolbarbutton[toggled="true"] {
   background-color: transparent;
 }
 

@@ -27,185 +27,81 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: standard toolbar buttons ::::: */
- 
-.button-toolbar {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#buttonleft");
-  -moz-user-focus: ignore;
-  margin: 0px;
-  border: 1px solid transparent;
-  min-width: 0px;
-  max-width: 10em;
-  height: 0px;
-  color: inherit;
-  font: message-box;
+/* ::::: large toolbar buttons ::::: */
+
+.toolbarbutton-1 {
+  -moz-box-orient: vertical;
+  border: none;
+  color: #323642;
+  font-size: smaller;
 }
- 
-.button-toolbar > .button-internal-box > .button-icon {
-  margin: 0px;
-  padding: 0px 2px 0px 0px;
+
+.toolbarbutton-1 > .toolbarbutton-box,
+.toolbarbutton-1 > .toolbarbutton-menubutton-stack 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box
+{
+  -moz-box-pack: start;
 }
-    
-.button-toolbar > .button-internal-box > .button-text-container,
-.button-toolbar > .button-internal-box > .button-text-container > .button-text {
-  margin: 0px;
+
+.toolbarbutton-1 > .toolbarbutton-box,
+.toolbarbutton-1:hover:active > .toolbarbutton-box,
+.toolbarbutton-1[open="true"] > .toolbarbutton-box,
+.toolbarbutton-1 > .toolbarbutton-menubutton-stack 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box,
+.toolbarbutton-1:hover:active > .toolbarbutton-menubutton-stack 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box,
+.toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-stack 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box 
+{
+  padding: 0px !important;
+}
+
+.toolbarbutton-1:hover:active {
+  color: #FFFFFF;
+}
+
+.toolbarbutton-1,
+.toolbarbutton-1 > .toolbarbutton-menubutton-stack > .toolbarbutton-menubutton-button {
+  border: none !important;
+}
+
+.toolbarbutton-1 > .toolbarbutton-box > .toolbarbutton-icon,
+.toolbarbutton-1 > .toolbarbutton-menubutton-stack > .toolbarbutton-menubutton-button 
+  > .toolbarbutton-box > .toolbarbutton-icon {
   padding: 0px;
 }
 
-.button-toolbar > .button-internal-box,
-.button-toolbar:hover > .button-internal-box,
-.button-toolbar[disabled="true"] > .button-internal-box,
-.button-toolbar[disabled="true"]:hover > .button-internal-box,
-.button-toolbar[disabled="true"]:hover:active > .button-internal-box,
-.button-toolbar:hover:active[home-dragover="true"] > .button-internal-box {
-  padding: 1px 2px 1px 2px;
-  border: none;
-}
-    
-.button-toolbar:hover {
-  border: 1px outset #C7D0D9;
+.toolbarbutton-1[type="menu"] > .toolbarbutton-box > .toolbarbutton-dropmarker {
+  display: none;
 }
 
-.button-toolbar:hover:active,
-.button-toolbar[open="true"] {
-  border: 1px inset #C7D0D9;
-  color: inherit;
-}
-
-.button-toolbar:hover:active > .button-internal-box {
-  padding: 2px 1px 0px 3px;
-}
-
-.button-toolbar[home-dragover="true"] {
-  border: 1px solid #ffffff;
-}
-    
-.button-toolbar[disabled="true"],
-.button-toolbar[disabled="true"]:hover,
-.button-toolbar[disabled="true"]:hover:active {
-  border: 1px solid transparent;
-  color: #999999;
-}
-
-/* ..... toggled state ..... */
-
-.button-toolbar[toggled="true"],
-.button-toolbar[toggled="true"]:hover,
-.button-toolbar[toggled="true"]:hover:active {
-  border-top: 1px solid #454C55;
-  border-right: 1px solid #7D848D;
-  border-bottom: 1px solid #7D848D;
-  border-left: 1px solid #454C55;
-  background-color: #8C9AA8;
-  color: #EFF1F4;
-}
-
-.button-toolbar[toggled="true"]:hover:active > .button-internal-box {
-  padding: 1px 2px 1px 2px;
-}
-
-/* ::::: the largest type of toolbar buttons ::::: */
-
-.button-toolbar-1 {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#button-toolbar-2");
-  -moz-user-focus: ignore;
-  margin: 3px 2px 0px 2px;
-  border: none;
-  min-width: 0px;
-  font: message-box;
-  font-size: smaller;
-}
-    
-.button-toolbar-1,
-.button-toolbar-1:hover:active {
-  color: inherit;
-}
-
-.button-toolbar-1[disabled="true"],
-.button-toolbar-1[disabled="true"]:hover:active {
-  color: #5A5E5F;
-}
-    
-/* :::::
-   :: Styles for the standard 'large' toolbar button, these buttons are used for
-   :: toolbar buttons that are the most commonly used elements on a toolbar, e.g.
-   :: 'GetMsg' in Mailnews or 'Send' in Mail/Compose.
-   ::::: */
-
-.button-toolbar-2 {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#button-toolbar-2");
-  -moz-user-focus: ignore;
-  margin: 0px;
-  border: none;
-  min-width: 0px;
-  color: #323642;
-  font: message-box;
-  font-size: smaller;
-}
-
-.button-toolbar-2:hover:active {
-  color: #FFFFFF;
-}
-    
-.button-toolbar-2[disabled="true"],
-.button-toolbar-2[disabled="true"]:hover,
-.button-toolbar-2[disabled="true"]:hover:active {
-  color: #9399AB;
-}
-
-/* :::::
-   :: Buttons that look like normal buttons but are meant to sit in a toolbar
-   ::::: */
-
-.button-toolbar-3 {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#button");
+/* ::::: standard toolbar buttons ::::: */
+ 
+.button-toolbar {
   -moz-user-focus: ignore !important;
   margin: 0px;
   border: none;
 }
 
-/* ::::: button styles for taskbar, sidebar headers, etc. ::::: */
+/* ::::: reorder buttons ::::: */
 
-.button-toolbar-4 {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#buttonleft");
-  -moz-user-focus: ignore !important;
+.reorder-up {
+  min-width: 0px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+.reorder-down {
+  min-width: 0px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.reorder-up > .button-internal-box > .button-icon,
+.reorder-down > .button-internal-box > .button-icon
+{
   margin: 0px;
-  border: 0px;
-  padding: 1px;
-  min-width: 0px;
-  background: transparent;
-  color: inherit;
-  font: message-box;
+  padding: 0px;
 }
-
-.button-toolbar-4 > .button-internal-box,
-.button-toolbar-4 > .menubutton-internal-box {
-  border: 0px !important;
-  padding: 0px !important;
-} 
-
-.button-toolbar-4:hover:active {
-  color: #808080;
-}
-
-/* :::::::::: menubutton variation :::::::::: */
-  
-menubutton.button-toolbar-4 {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-single-right") !important;
-  margin: 0px 6px;
-  min-width: 0px;
-}
-
-.button-toolbar-4 > .menubutton-internal-box > .menubutton-single-icon {
-  list-style-image: url("chrome://communicator/skin/toolbar/mb-single-arrow.gif");
-}
-
-/* ::::: shared text wrapping frame ::::: */
-
-.button-text {
-  padding: 0px 2px 0px 2px;
-}
-  
+ 
 /* ::::: ok/cancel buttons in dialogs ::::: */
 
 .exit-dialog {

@@ -1,154 +1,82 @@
 @import url(chrome://communicator/skin/bookmarks/bookmarks.css);
 
-/**
- * Bookmark toolbar buttons
- **/    
+/* ::::: bookmark toolbarbuttons ::::: */
     
-  .button-toolbar.bookmark-item,
-  .button-toolbar.bookmark-item:hover,
-  .button-toolbar.bookmark-item:hover:active
-    {
-      border              : none !important;
-    }
+toolbarbutton.bookmark-item {
+  cursor	            : pointer;
+  min-width           : 0px;
+  max-width           : 13em;
+}
 
-  .button-toolbar.bookmark-item > .button-internal-box,
-  .button-toolbar.bookmark-item:hover > .button-internal-box,
-  .button-toolbar.bookmark-item:hover:active > .button-internal-box,
-  .button-toolbar.bookmark-item 
-      > .menubutton-toolbar-single-internal-box,
-  .button-toolbar.bookmark-item:hover 
-      > .menubutton-toolbar-single-internal-box,
-  .button-toolbar.bookmark-item:hover:active 
-      > .menubutton-toolbar-single-internal-box
-    {
-      border              : none !important;
-      padding             : 1px 2px 1px 2px;
-    }
+toolbarbutton.bookmark-item[container="true"] {
+  cursor              : default;
+}
+
+toolbarbutton.bookmark-item > .toolbarbutton-box > .toolbarbutton-dropmarker {
+  display             : none;
+}
     
-  .button-toolbar.bookmark-item[mode="edit"] > .button-internal-box,
-  .button-toolbar.bookmark-item[mode="edit"]:hover > .button-internal-box,
-  .button-toolbar.bookmark-item[mode="edit"]:hover:active > .button-internal-box,
-  .button-toolbar.bookmark-item[mode="edit"] 
-      > .menubutton-toolbar-single-internal-box,
-  .button-toolbar.bookmark-item[mode="edit"]:hover 
-      > .menubutton-toolbar-single-internal-box,
-  .button-toolbar.bookmark-item[mode="edit"]:hover:active 
-      > .menubutton-toolbar-single-internal-box
-    {
-      padding             : 1px 2px 0px 2px;
-    }
+toolbarbutton.bookmark-item:hover {
+  color               : #0000FF;
+  text-decoration     : underline;
+}
 
-  .bookmark-item.button-toolbar
-    {
-      cursor	            : pointer;
-      -moz-binding        : url("chrome://global/content/bindings/general.xml#buttonleft-ile");
-    }
+toolbarbutton.bookmark-item[container="true"]:hover {
+  text-decoration     : none;
+}
 
-  .bookmark-item.button-toolbar[container="true"],
-  .bookmark-item.button-toolbar[container="true"]:hover,
-  .bookmark-item.button-toolbar[container="true"]:hover:active
-    {
-      -moz-binding        : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single-ile");
-      cursor              : default;
-      background-color    : transparent;
-      color               : inherit;
-      text-decoration     : none;
-    }
+toolbarbutton.bookmark-item:not([container="true"]):hover,
+toolbarbutton.bookmark-item:not([container="true"]):hover:active,
+toolbarbutton.bookmark-item:not([container="true"]):hover > .toolbarbutton-box,
+toolbarbutton.bookmark-item:not([container="true"]):hover:active > .toolbarbutton-box {
+  border: 1px solid transparent;
+}
+
+/* ::::: toolbarbutton drag and drop feedback ::::: */
+
+toolbarbutton.bookmark-item[dragover-right="true"] {
+  border-right        : 2px solid ThreeDDarkShadow !important;
+}
+
+toolbarbutton.bookmark-item[dragover-left="true"] {
+  border-left         : 2px solid ThreeDDarkShadow !important;
+}
+    
+.toolbarbutton-text[dragover-top="true"] {
+  background-color    : ThreeDDarkShadow;
+  color               : ThreeDHighlight;
+}
+
+/* ::::: menu drag and drop feedback ::::: */
+
+menuitem[dragover-top="true"].bookmark-item {
+  border-top          : 1px solid ThreeDDarkShadow !important;
+}
+
+menu[dragover-top="true"].bookmark-item {
+  border-top          : 1px solid ThreeDDarkShadow !important;
+} 
+
+menuitem.bookmark-item {
+  border-top          : 1px solid transparent !important;
+  border-bottom       : 1px solid transparent !important;
+}
   
-  .bookmark-item.button-toolbar[container="true"]
-    {
-      border              : 1px solid transparent !important;
-    }
-    
-  .bookmark-item.button-toolbar[container="true"]:hover
-    {
-      border              : 1px outset ThreeDFace !important;
-      color               : #0000FF;
-    }
+menu.bookmark-item {
+  border-top          : 1px solid transparent !important;
+  border-bottom       : 1px solid transparent !important;
+}
+  
+menu[dragover="true"].bookmark-item {
+  background-color      : Highlight !important;
+  color                 : HighlightText !important;
+}
 
-  .bookmark-item.button-toolbar[container="true"]:hover:active,
-  .bookmark-item.button-toolbar[container="true"][open="true"]
-    {
-      border              : 1px inset ThreeDFace !important;
-      color               : #FF0000;
-    }
+menuitem[dragover-bottom="true"].bookmark-item {
+  border-bottom       : 1px solid ThreeDDarkShadow !important;
+}
 
-  .bookmark-item > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
-    {
-      display             : none;
-    }
-    
-  .button-toolbar.bookmark-item
-    {
-      max-width           : 13em !important;
-    }
-    
-  .bookmark-item.button-toolbar:hover
-    {
-      color               : #0000FF;
-      text-decoration     : underline;
-    }
+menu[dragover-bottom="true"].bookmark-item {
+  border-bottom       : 1px solid ThreeDDarkShadow !important;
+}
 
-  .bookmark-item.button-toolbar:hover:active
-    {
-      background-color    : transparent;
-      color               : #FF0000;
-      text-decoration     : underline;
-    }
-
-  /* drag and drop feedback */
-  .bookmark-item.button-toolbar[dragover-left="true"]
-    {
-      border-left         : 2px solid ThreeDDarkShadow !important;
-    }
-    
-  menuitem[dragover-top="true"].bookmark-item
-    {
-      border-top          : 1px solid ThreeDDarkShadow !important;
-    }
-
-  menu[dragover-top="true"].bookmark-item
-    {
-      border-top          : 1px solid ThreeDDarkShadow !important;
-    } 
-
-  menuitem.bookmark-item
-    {
-      border-top          : 1px solid transparent !important;
-      border-bottom       : 1px solid transparent !important;
-    }
-    
-  menu.bookmark-item
-    {
-      border-top          : 1px solid transparent !important;
-      border-bottom       : 1px solid transparent !important;
-    }
-    
-  menu[dragover="true"].bookmark-item
-    {
-      background-color      : Highlight !important;
-      color                 : HighlightText !important;
-    }
-
-  menuitem[dragover-bottom="true"].bookmark-item
-    {
-      border-bottom       : 1px solid ThreeDDarkShadow !important;
-    }
-
-  menu[dragover-bottom="true"].bookmark-item
-    {
-      border-bottom       : 1px solid ThreeDDarkShadow !important;
-    }
-
-  .bookmark-item.button-toolbar[dragover-right="true"]
-    {
-      border-right        : 2px solid ThreeDDarkShadow !important;
-    }
-
-  .menubutton-toolbar-single-text[dragover-top="true"]
-    {
-      background-color    : ThreeDDarkShadow;
-      color               : ThreeDHighlight;
-    }
-    
-    

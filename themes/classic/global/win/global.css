@@ -1,47 +1,56 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ===== global.css =====================================================
+  == Styles that apply everywhere.
+  ======================================================================= */
+
 /* all localizable skin settings shall live here */
-@import url(chrome://global/locale/intl.css);
+@import url("chrome://global/locale/intl.css");
 
 @import url("chrome://global/skin/formatting.css");
-/*
-@import url("chrome://global/content/bindings/outliner.css");
-@import url("chrome://global/content/bindings/popup.css");
-@import url("chrome://global/content/bindings/scrollbar.css");
-@import url("chrome://global/content/bindings/tree.css");
 
-@import url("chrome://global/skin/button.css");
-@import url("chrome://global/skin/checkbox.css");
-@import url("chrome://global/skin/colorpicker.css");
-@import url("chrome://global/skin/menu.css");
-@import url("chrome://global/skin/menubutton.css");
-@import url("chrome://global/skin/menulist.css");
-@import url("chrome://global/skin/outliner.css");
-@import url("chrome://global/skin/popup.css");
-@import url("chrome://global/skin/progressmeter.css");
-@import url("chrome://global/skin/radio.css");
-@import url("chrome://global/skin/scrollbox.css");
-@import url("chrome://global/skin/splitter.css");
-@import url("chrome://global/skin/tabcontrol.css");
-@import url("chrome://global/skin/textbox.css");
-@import url("chrome://global/skin/toolbar.css");
-@import url("chrome://global/skin/tree.css");
-*/
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
+/* ::::: bindings ::::: */
 
-/**  
- * bindings
- **/
+button {
+  -moz-binding: url("chrome://global/skin/buttonBindings.xml#button");
+}
+  
+button[type="menu"] {
+  -moz-binding: url("chrome://global/skin/buttonBindings.xml#button-menu");
+}
 
-  button, button.left
-    {
-      -moz-binding        : url("chrome://global/skin/buttonBindings.xml#buttonleft");
-    }
- 
+button[type="menu-button"] {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#menu-button");
+}
+
   checkbox 
     {
       -moz-binding        : url("chrome://global/skin/classicBindings.xml#checkbox");
     }
-
+  
   menulist 
     {
       -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulist");
@@ -57,22 +66,17 @@
     {
       -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulistpopup");
     }
-
+  
   .menulist-compact
     {
       -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulist-compact");
-    }
-    
-  menubutton
-    {
-      -moz-binding        : url("chrome://global/skin/classicBindings.xml#menubutton-single");
     }
     
   radio 
     {
       -moz-binding        : url("chrome://global/skin/classicBindings.xml#radio");
     }
-
+  
   grippy, grippy[collapse="before"]
     {
       -moz-binding          : url("chrome://global/skin/classicBindings.xml#grippy");
@@ -82,22 +86,22 @@
     {
       -moz-binding        : url("chrome://global/skin/classicBindings.xml#splitter");
     }
-
+  
   tabs 
     {
       -moz-binding: url("chrome://global/skin/tabBindings.xml#tabs");
     }
-
+  
   toolbargrippy
     {
       -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbargrippy");
     }
-
+  
   toolbargrippy[tbgrippy-collapsed="true"] 
     {
       -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbargrippy-collapsed");
     }
-
+  
   .treecell-popupcell-menu 
     {
       -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic") !important;
@@ -206,11 +210,6 @@
       padding             : 0px;
     }    
     
-  .statusbar-panel-icon
-    {
-      list-style-image    : inherit;
-    }      
-
 /**
  * iframe default sizing 
  **/
@@ -222,22 +221,6 @@
       height              : 100px;
       border              : none;
     }
-
-/**
- * disabled text
- **/
-    
-.disabled-text-bottom
-  {
-    color                 : ThreeDShadow;
-    margin                : 0px 1px 1px 0px;
-  }  
-  
-.disabled-text-top
-  {
-    color                 : ThreeDHighlight;
-    margin                : 1px 0px 0px 1px;
-  }
 
 /* has to be in here since scoped stylesheets can't apply
    to explicit children yet */

@@ -5,7 +5,7 @@
  **/
 
 /* outer frame */
-  button, button.left
+  button
     {
       margin              : 1px 5px 2px 5px;
       min-width           : 6.3em;
@@ -29,9 +29,9 @@
       border-bottom       : 1px solid ThreeDDarkShadow;
     }
 
-  .button-box-1,
-  button[disabled="true"][default] > .button-box-1,
-  button[disabled="true"]:hover:active > .button-box-1
+  .button-box,
+  button[disabled="true"][default] > .button-box,
+  button[disabled="true"]:hover:active > .button-box
     {
       border-left         : 1px solid ThreeDLightShadow;
       border-top          : 1px solid ThreeDLightShadow;
@@ -41,8 +41,8 @@
     }
 
   .button-box-2,
-  button[disabled="true"][default] > .button-box-1 > .button-box-2,
-  button[disabled="true"]:hover:active > .button-box-1 > .button-box-2
+  button[disabled="true"][default] > .button-box > .button-box-2,
+  button[disabled="true"]:hover:active > .button-box > .button-box-2
     {
 			border              : 1px solid ThreeDFace;	
     }
@@ -53,20 +53,22 @@
       border              : 1px solid ThreeDDarkShadow;
     }
 
-  button:hover:active > .button-box-1,
-  button[open="true"] > .button-box-1
+  button:hover:active > .button-box,
+  button[open="true"] > .button-box,
+  button[open="true"]:focus > .button-box
     {
       border              : 1px solid ThreeDShadow;
     }
 
-  button:hover:active > .button-box-1 > .button-box-2,
-  button[open="true"] > .button-box-1 > .button-box-2
+  button:hover:active > .button-box > .button-box-2,
+  button[open="true"] > .button-box > .button-box-2,
+  button[open="true"]:focus > .button-box > .button-box-2
     {
-      border              : 1px solid ThreeDFace;
+      border              : 1px solid transparent;
     }
 
-  button:hover:active > .button-box-1 > .button-box-2 > .button-box-text,
-  button[open="true"] > .button-box-1 > .button-box-2 > .button-box-text
+  button:hover:active > .button-box > .button-box-2 > .button-box-text,
+  button[open="true"] > .button-box > .button-box-2 > .button-box-text
     {
       padding             : 1px 2px 0px 3px; 
     }
@@ -77,22 +79,22 @@
       color               : GrayText;
     }
         
-  button[disabled="true"] > .button-box-1 > .button-box-2 > .button-box-text,
-  button[disabled="true"]:hover:active > .button-box-1 > .button-box-2 > .button-box-text
+  button[disabled="true"] > .button-box > .button-box-2 > .button-box-text,
+  button[disabled="true"]:hover:active > .button-box > .button-box-2 > .button-box-text
     {
       padding             : 0px 3px 1px 2px;
     }
 
 /* text wrapping frame (hack because <text> does not support alignment) */
   .button-box-text,
-  button[disabled]:focus > .button-box-1 > .button-box-2 > .button-box-text
+  button[disabled]:focus > .button-box > .button-box-2 > .button-box-text
     {
       padding             : 0px 3px 1px 2px;
       border              : 1px solid ThreeDFace;
       margin              : 1px;
     }
 
-  button:focus > .button-box-1 > .button-box-2 > .button-box-text
+  button:focus > .button-box > .button-box-2 > .button-box-text
     {
       border              : 1px dotted ThreeDDarkShadow;
     }    
@@ -107,8 +109,8 @@
       border              : 1px solid ThreeDDarkShadow;
     }
 
-  button[default] > .button-box-1,
-  button:focus > .button-box-1
+  button[default] > .button-box,
+  button:focus > .button-box
     {
       border-left         : 1px solid ThreeDHighlight;
       border-top          : 1px solid ThreeDHighlight;
@@ -116,58 +118,40 @@
       border-bottom       : 1px solid ThreeDDarkShadow;
     }
 
-  button[default] > .button-box-1 > .button-box-2,
-  button:focus > .button-box-1 > .button-box-2
+  button[default] > .button-box > .button-box-2,
+  button:focus > .button-box > .button-box-2
     {
       border-left         : 1px solid ThreeDLightShadow;
       border-top          : 1px solid ThreeDLightShadow;
       border-right        : 1px solid ThreeDShadow;
       border-bottom       : 1px solid ThreeDShadow;
     }
+
+/* ::::: menu-button buttons ::::: */
+
+button[type="menu-button"] {
+  margin: 0px !important;
+  border: none !important;
+}
+
+.menu-button-dropmarker {
+  list-style-image: url("chrome://global/skin/scroll-down.gif");
+}
   
-/** plain (raw) buttons, class="plain" **/
-  button.plain, button.plain:hover, button.plain:hover:active,
-  button.plain:hover:active > .button-internal-box,
-  button.plain > .button-internal-box, 
-  button.plain > .button-internal-box:hover:active,
-  button.plain > .button-internal-box > .button-text-container, 
-  button.plain > .button-internal-box > .button-text-container:hover:active,
-  button.plain > .button-internal-box > .button-text-container > .button-text, 
-  button.plain > .button-internal-box > .button-text-container > .button.text:hover:active,
-  button-plain > .button-internal-box > .button-icon, 
-  button.plain > .button-internal-box > .button.icon:hover:active
-    {
-      border              : 0px ! important;
-      margin              : 0px;
-      padding             : 0px;
-    }
+.menu-button-dropmarker[disabled="true"] {
+  list-style-image: url("chrome://global/skin/scroll-down-disabled.gif");
+}
 
-/*** class = "plain-extended" ***/
-/********************************/
-/* This is a dummy class that is specified in several XUL files for the sake of the
- * Macintosh Classic Skin.  This class has essentially the same behavior and styles as
- * the above <button> and accompanying styles, but is useful in the Mac Classic skin.  This is because <button>
- * styles have been completely rewritten to produce Macintosh buttons with bevels, rounded corners,
- * etc.  Plain-extended thereby functions to produce square buttons with all the same hover and active
- * effects that modern <button>'s do.
- ********************************/
+/* ::::: plain buttons ::::: */
 
-  button.plain-extended {}
+button.plain, 
+button.plain:hover,
+button.plain:hover:active,
+button.plain > .button-box, 
+button.plain:hover > .button-box, 
+button.plain:hover:active > .button-box {
+  border: 0px ! important;
+  margin: 0px;
+  padding: 0px;
+}
 
-  .reorder-up
-    {
-      min-width           : 0px;
-    }    
-    
-  .reorder-down
-    {
-      min-width           : 0px;
-    }    
-    
-  .reorder-up > .button-internal-box > .button-icon,
-  .reorder-down > .button-internal-box > .button-icon
-    {
-      margin              : 0;
-      padding             : 0;
-    }
-    

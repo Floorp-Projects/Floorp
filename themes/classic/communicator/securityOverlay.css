@@ -5,7 +5,6 @@
 #security-button
   {
     list-style-image:url("chrome://communicator/skin/unlock.gif");
-    margin-right: 16px;
   }
 
 #security-button[level="high"] 

@@ -35,56 +35,49 @@
 
 /* ::::: primary toolbar buttons ::::: */
 
-.menubutton-dual {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-1");
-}
-
 #back-button {
-  margin: 0px;
   list-style-image: url("chrome://navigator/skin/btn1/back.gif");
 }
 
 #back-button[disabled="true"],
 #back-button[disabled="true"]:hover,
 #back-button[disabled="true"]:hover:active,
-#back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
-#back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#back-button[disabled="true"][buttonover="true"],
+#back-button[disabled="true"][buttondown="true"]
+{
   list-style-image: url("chrome://navigator/skin/btn1/back-dis.gif");
 }
 
-#back-button > .menubutton-dual-stack > .menubutton-dual-button:hover {
+#back-button[buttonover="true"] {
   list-style-image: url("chrome://navigator/skin/btn1/back-hov.gif");
 }
 
-#back-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#back-button[buttondown="true"] {
   list-style-image: url("chrome://navigator/skin/btn1/back-act.gif");
 }
 
 #forward-button {
-  margin: 0px;
   list-style-image: url("chrome://navigator/skin/btn1/forward.gif");
 }
 
 #forward-button[disabled="true"],
 #forward-button[disabled="true"]:hover,
 #forward-button[disabled="true"]:hover:active,
-#forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
-#forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#forward-button[disabled="true"][buttonover="true"],
+#forward-button[disabled="true"][buttondown="true"] 
+{
   list-style-image: url("chrome://navigator/skin/btn1/forward-dis.gif");
 }
 
-#forward-button > .menubutton-dual-stack > .menubutton-dual-button:hover {
+#forward-button[buttonover="true"] {
   list-style-image: url("chrome://navigator/skin/btn1/forward-hov.gif");
 }
 
-#forward-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#forward-button[buttondown="true"] {
   list-style-image: url("chrome://navigator/skin/btn1/forward-act.gif");
 }
 
 #reload-button {
-  margin: 0px;
   list-style-image: url("chrome://navigator/skin/btn1/reload.gif");
 }
   
@@ -103,7 +96,6 @@
 }
 
 #stop-button {
-  margin: 0px;
   list-style-image: url("chrome://navigator/skin/btn1/stop.gif");
 } 
 
@@ -128,22 +120,23 @@
 #print-button[disabled="true"],
 #print-button[disabled="true"]:hover,
 #print-button[disabled="true"]:hover:active,
-#print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
-#print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#print-button[disabled="true"][buttonover="true"],
+#print-button[disabled="true"][buttondown="true"] {
   list-style-image: url("chrome://navigator/skin/btn1/print-dis.gif");
 }
 
-#print-button > .menubutton-dual-stack > .menubutton-dual-button:hover {
+#print-button[buttonover="true"] {
   list-style-image: url("chrome://navigator/skin/btn1/print-hov.gif");
 }
 
-#print-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#print-button[buttondown="true"] {
   list-style-image: url("chrome://navigator/skin/btn1/print-act.gif");
 }
 
 /* Hides text below the above buttons */
-.button-toolbar-1 > .button-internal-box > .button-text-container {
+.toolbarbutton-1 > .toolbarbutton-menubutton-stack > .toolbarbutton-menubutton-button 
+    > .toolbarbutton-box > .toolbarbutton-text,
+.toolbarbutton-1 > .toolbarbutton-box > .toolbarbutton-text {
   display: none;
 }
 
@@ -170,12 +163,18 @@
 
 /* ..... dropmarker box ..... */
 
-#back-button > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box,
-#forward-button > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box
+#back-button > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker-box,
+#forward-button > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker-box
 {
   margin: 30px 0px 0px 34px;
+}
+
+#print-button > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker-box
+{
+  margin: 20px 0px 0px 40px;
 }
 
 #reload-button {
@@ -336,7 +335,7 @@
   padding: 2px 0px;
 }
 
-#search-button > .box-inherit > .button-stack > .button-text-box > .button-text-mid {
+#search-button > .box-inherit > .button-stack > .button-text-box > .button-text {
   margin-right: 0px;
 }
 

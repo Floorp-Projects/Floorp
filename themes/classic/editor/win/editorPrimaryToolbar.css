@@ -20,11 +20,6 @@
  * Contributor(s): 
  */
 
-#EditorToolbox 
-  {
-    min-width             : 1px;
-  }
-
 #newButton
   {
     list-style-image      : url("chrome://editor/skin/images/newfile.gif");
@@ -162,19 +157,17 @@
 	  list-style-image      : url("chrome://editor/skin/images/print.gif");
   } 
 
-#printButton[disabled="true"],
-#printButton[disabled="true"]:hover,
-#printButton[disabled="true"]:hover:active
+#printButton[disabled="true"]
   {
-    list-style-image      : url("chrome://editor/skin/images/print-disabled.gif");
+    list-style-image      : url("chrome://editor/skin/images/print-disabled.gif") !important;
   } 
 
-#printButton:hover
+#printButton[buttonover="true"]
   {
     list-style-image      : url("chrome://editor/skin/images/print-hover.gif");
   } 
 
-#printButton:hover:active
+#printButton[buttondown="true"]
   {
     list-style-image      : url("chrome://editor/skin/images/print-hover-active.gif");
   }

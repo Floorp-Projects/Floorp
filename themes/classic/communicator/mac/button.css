@@ -1,250 +1,90 @@
-/** The largest type of toolbar buttons. In the Seamonkey implementation, 
- *  these are only used in the navigation toolbar in the navigator package.
- **/
- 
-  /* outer frame */
-  .button-toolbar-1, .button-toolbar-2
-    {
-      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttontop");
-      min-width           : 0px;
-      margin              : 0px 1px;
-      border              : 1px solid transparent;
-      background-color	  : transparent;
-    }
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
 
-  .button-toolbar, .button-toolbar-4
-    {
-      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttonleft");
-      min-width           : 0px;
-      border              : 1px solid transparent;
-      background-color	  : transparent;
-      min-width           : 0px;
-      max-width			  : 14em;
-    }
+/* ==== button.css ==========================================================
+   == Styles for special buttons in the Communicator suite.
+   ========================================================================== */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: large toolbar buttons ::::: */
+
+.toolbarbutton-1,
+.toolbarbutton-1 > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button
+{
+  min-width: 47px;
+  -moz-box-orient: vertical;
+}
+
+.toolbarbutton-1[type="menu-button"] {
+  -moz-box-orient: horizontal;
+}
+
+.toolbarbutton-1 > .toolbarbutton-box,
+.toolbarbutton-1 > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box,
+.toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box,
+.toolbarbutton-1[disabled="true"]:hover:active > .toolbarbutton-box,
+.toolbarbutton-1[disabled="true"][buttondown="true"] > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box
+{
+  padding             : 2px 7px 2px 6px;
+}
+
+.toolbarbutton-1:hover:active > .toolbarbutton-box,
+.toolbarbutton-1[open="true"] > .toolbarbutton-box,
+.toolbarbutton-1[buttondown="true"] > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box
+{
+  padding             : 3px 6px 1px 7px;
+}
+
+.toolbarbutton-1[type="menu"] > .toolbarbutton-box > .toolbarbutton-dropmarker {
+  display: none;
+}
+
+/* ::::: normal buttons on toolbars ::::: */
+
+.button-toolbar {
+  -moz-user-focus     : ignore;
+  min-width           : 0px;
+}  
   
-  .button-toolbar
-    {
-  	  margin			  : 1px;
-    }
-  	
-  .button-toolbar-4
-  	{
-  	  margin			  : 0px 0px 1px 0px;	
-  	}  
+/* ::::: reorder buttons ::::: */
 
-  .button-toolbar > .button-internal-box
-    {
-      border              : 1px solid transparent;
-      padding             : 1px 3px;
-    }
+.reorder-up {
+  min-width           : 0px;
+}    
 
-  .button-toolbar-1 > .button-internal-box,
-  .button-toolbar-2 > .button-internal-box
-    {
-      padding             : 2px 6px 2px 5px;
-      -moz-box-pack       : center;
-      border              : 1px solid transparent;
-    }    
+.reorder-down {
+  min-width           : 0px;
+}    
+
+.reorder-up > .button-internal-box > .button-icon,
+.reorder-down > .button-internal-box > .button-icon {
+  margin              : 0;
+  padding             : 0;
+}
   
- .button-toolbar-4 > .button-internal-box
-    {
-      border              : 1px solid transparent;
-      padding			  : 0px 1px;
-      -moz-box-pack          : center;
-    }
-  
-  .button-toolbar[value] > .button-internal-box > .button-text-container
-    {
-      padding-left        : 4px;
-    }    
-
-  .button-toolbar-1[disabled="true"],
-  .button-toolbar-1[disabled="true"]:hover,
-  .button-toolbar-1[disabled="true"]:hover:active,
-  .button-toolbar[disabled="true"],
-  .button-toolbar[disabled="true"]:hover,
-  .button-toolbar[disabled="true"]:hover:active,    
-  .button-toolbar-2[disabled="true"],
-  .button-toolbar-2[disabled="true"]:hover,
-  .button-toolbar-2[disabled="true"]:hover:active,
-  .button-toolbar-4[disabled="true"],
-  .button-toolbar-4[disabled="true"]:hover,
-  .button-toolbar-4[disabled="true"]:hover:active
-    {
-      border              : 1px solid transparent;
-      color               : #777777;
-      background-color	  : transparent;
-    }
-    
-/* internal frame */
-  .button-toolbar:hover,
-  .button-toolbar-1:hover,
-  .button-toolbar-2:hover,
-  .button-toolbar-4:hover
-    {
-      border              : 1px solid #000000;
-      color               : #0000FF;
-    }
-
-  .button-toolbar:hover > .button-internal-box,
-  .button-toolbar-1:hover > .button-internal-box,
-  .button-toolbar-2:hover > .button-internal-box,
-  .button-toolbar-4:hover > .button-internal-box
-    {
-      border-left         : 1px solid #FFFFFF;
-      border-top          : 1px solid #FFFFFF;
-      border-right        : 1px solid #9D9D9D;
-      border-bottom       : 1px solid #9D9D9D;
-    }
-
-  .button-toolbar-4:hover:active > .button-internal-box
-    {
-      padding			  : 0px 0px 0px 2px;
-    }
-
-  .button-toolbar:hover:active, 
-  .button-toolbar-1:hover:active, 
-  .button-toolbar-2:hover:active,
-  .button-toolbar-4:hover:active
-    {
-      border              : 1px solid #000000;
-      color				  : #FFFFFF;
-      background-color	  : #666666;
-    }
-
-  .button-toolbar:hover:active > .button-internal-box
-    {
-      padding             : 2px 2px 0px 4px;
-    }
-
-  .button-toolbar-1:hover:active > .button-internal-box,
-  .button-toolbar-2:hover:active > .button-internal-box
-    {
-      padding             : 3px 5px 1px 6px;
-    }
-
-  .button-toolbar-4:hover:active > .button-internal-box
-    {
-      padding			  : 0px 0px 0px 2px;
-    }
-
-  .button-toolbar:hover:active > .button-internal-box,
-  .button-toolbar-1:hover:active > .button-internal-box,
-  .button-toolbar-2:hover:active > .button-internal-box,
-  .button-toolbar-4:hover:active > .button-internal-box
-    {
-      border-left         : 1px solid #444444;
-      border-top          : 1px solid #444444;
-      border-right        : 1px solid #AAAAAA;
-      border-bottom       : 1px solid #AAAAAA;
-    }
-    
-  .button-toolbar-1 > .button-internal-box > .button-text-container,
-  .button-toolbar > .button-internal-box > .button-text-container,
-  .button-toolbar-2 > .button-internal-box > .button-text-container,
-  .button-toolbar-4 > .button-internal-box > .button-text-container
-    {
-      -moz-box-pack       : center;
-    }
-  
-  .button-toolbar-4 > .button-internal-box > .button-icon
-    { 
-  	  padding			  : 0px;
-    }
-  
-  .button-toolbar[disabled="true"] > .button-internal-box,
-  .button-toolbar[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar[disabled="true"]:hover:active > .button-internal-box,
-  .button-toolbar-4[disabled="true"] > .button-internal-box,
-  .button-toolbar-4[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-4[disabled="true"]:hover:active > .button-internal-box
-    {
-      border              : 1px solid transparent;
-  	  padding             : 1px 3px !important;
-    }
-    
-  .button-toolbar-1[disabled="true"] > .button-internal-box,
-  .button-toolbar-1[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box,
-  .button-toolbar-2[disabled="true"] > .button-internal-box,
-  .button-toolbar-2[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
-    {
-      border              : 1px solid transparent !important;
-      padding             : 2px 6px 2px 5px;
-    }
-      
-
-/** "Green" buttons, e.g. "Search"
- *  class="button-toolbar-3"
- **
- * The commented areas make it revert from mac button look to old classic look 
- **/  
-  .button-toolbar-3 
-    {
-      margin                : 0px 0px 0px 3px;
-      font-weight           : bold;
-      -moz-user-focus:			: ignore;
-      background-color	 	: transparent;
-    }  
-    
-  .button-toolbar-3 > .button-internal-box
-    {
-      border                : 1px outset #99CCCC;
-      padding               : 1px;
-    }
-    
-  .button-toolbar-3:hover:active > .button-internal-box 
-    {
-      border                : 1px inset #99CCCC;
-      padding               : 2px 0px 0px 2px;
-    }
-
-/** Expanding Region Button **/
-
-/* outer frame */
-  button.expander
-    {
-      border              : none;
-      padding             : 0px;
-      margin              : 1px 5px 3px 1px;
-      background-color    : inherit;
-      list-style-image    : url("chrome://global/skin/twisty-closed.gif");
-    }
-  
-  button.expander:hover:active
-    {
-  	  list-style-image    : url("chrome://global/skin/twisty-closed-active.gif");
-    }
-  
-  button[open="true"].expander 
-    {
-      list-style-image    : url("chrome://global/skin/twisty-open.gif");
-    }
-    
-  button.expander[open="true"]:hover:active
-    {
-  	  list-style-image    : url("chrome://global/skin/twisty-open-active.gif");
-    }
-    
-/* internal frame */
-  button.expander > .button-internal-box
-    {
-      border              : none;
-      background-color    : inherit;
-      padding             : 0px;
-      margin              : 0px;
-    }
-
-/* text frame */
-  button.expander > .button-internal-box > .button-text-container > .button-text
-    {
-      color               : #0000FF;
-      text-decoration     : underline;
-    }
-    
-  button.expander:hover > .button-internal-box > .button-text-container > .button-text
-    {
-      color               : #FF0000;
-    }
-

@@ -226,11 +226,7 @@
     list-style-image      : url("chrome://messenger/skin/trash-hover-active.gif");
   } 
 
-#button-print {
-	list-style-image:url("chrome://global/skin/print.gif");
-}
-
-#button-print 
+#button-print
   {
     list-style-image      : url("chrome://global/skin/print.gif");
   }

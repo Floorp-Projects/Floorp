@@ -1,63 +1,55 @@
-/** this should only contain XUL dialog and document window widget defaults. Defaults for widgets of
-    a particular application should be in that application's style sheet.
-	For example style definitions for navigator can be found in navigator.css
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
 
-   THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST HAVING YOUR
-   CHANGES REVIEWED BY hyatt@netscape.com.
-**/
-
-/* import the widget style sheets */
+/* ===== global.css =====================================================
+  == Styles that apply everywhere.
+  ======================================================================= */
 
 /* all localizable skin settings shall live here */
-@import url(chrome://global/locale/intl.css);
+@import url("chrome://global/locale/intl.css");
 
 @import url("chrome://global/skin/formatting.css");
-/*
-@import url("chrome://global/content/bindings/outliner.css");
-@import url("chrome://global/content/bindings/popup.css");
-@import url("chrome://global/content/bindings/scrollbar.css");
-@import url("chrome://global/content/bindings/tree.css");
 
-@import url("chrome://global/skin/button.css");
-@import url("chrome://global/skin/checkbox.css");
-@import url("chrome://global/skin/colorpicker.css");
-@import url("chrome://global/skin/menu.css");
-@import url("chrome://global/skin/menubutton.css");
-@import url("chrome://global/skin/menulist.css");
-@import url("chrome://global/skin/outliner.css");
-@import url("chrome://global/skin/popup.css");
-@import url("chrome://global/skin/progressmeter.css");
-@import url("chrome://global/skin/radio.css");
-@import url("chrome://global/skin/scrollbox.css");
-@import url("chrome://global/skin/splitter.css");
-@import url("chrome://global/skin/tabcontrol.css");
-@import url("chrome://global/skin/textbox.css");
-@import url("chrome://global/skin/toolbar.css");
-@import url("chrome://global/skin/tree.css");
-*/
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
+/* ::::: bindings ::::: */
 
-/**  
- * bindings
- **/
-
-  button.plain
-    {
-      -moz-binding			  : url(chrome://global/content/bindings/button.xml#buttonleft);
-    }
-
-  button.plain-extended
-    {
-      -moz-binding        : url("chrome://global/skin/buttonBindings.xml#buttonleft");
-    }
-
-  button, 
-  .exit-dialog 
-    {
-  	  -moz-binding        : url(chrome://global/skin/buttonBindings.xml#nine-slice-button);
-    }
+button {
+  -moz-binding: url("chrome://global/skin/buttonBindings.xml#button");
+}
   
+button[type="menu"] {
+  -moz-binding: url("chrome://global/skin/buttonBindings.xml#button-menu");
+}
+
+button[type="menu-button"] {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#menu-button");
+}
+
+button.plain {
+  -moz-binding			  : url("chrome://global/content/bindings/button.xml#button");
+}
+
   menulist 
     {
       -moz-binding		  : url(chrome://global/skin/menulistBindings.xml#nine-slice-menulist);
@@ -66,11 +58,6 @@
   menulist[editable="true"] 
     {
       -moz-binding          : url("chrome://global/skin/menulistBindings.xml#menulist-editable") !important;
-    }
-
-  menubutton
-    {
-      -moz-binding        : url("chrome://global/skin/classicBindings.xml#menubutton-single");
     }
 
   grippy, grippy[collapse="before"]
@@ -209,17 +196,11 @@
       border-right        : 1px solid #9D9D9D;
       border-bottom       : 1px solid #9D9D9D;
       padding             : 0px 4px 0px 4px;
- 
     }
     
   .statusbarpanel-icononly
     {
       padding             : 0px;
-    }
-    
-  .statusbar-panel-icon
-    {
-      list-style-image    : inherit;
     }
 
 /**

@@ -31,10 +31,6 @@
 
 /* ::::: primary toolbar buttons ::::: */
 
-.button-toolbar-2 {
-  min-width: 48px;
-}
-
 #newButton {
   list-style-image: url("chrome://editor/skin/btn1/newfile.gif");
 }
@@ -115,22 +111,15 @@
   list-style-image: url("chrome://communicator/skin/btn1/print.gif");
 }
 
-#printButton[disabled="true"],
-#printButton[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-button:hover,
-#printButton[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-button:hover:active
-{
-  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
+#printButton[disabled="true"] {
+  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif") !important;
 }
 
-#printButton > .menubutton-dual-stack > .menubutton-dual-button:hover {
+#printButton[buttonover="true"] {
   list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
 }
 
-#printButton > .menubutton-dual-stack
-    > .menubutton-dual-button:hover:active
-{
+#printButton[buttondown="true"] {
   list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
 }
 

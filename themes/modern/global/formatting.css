@@ -96,7 +96,7 @@ separator.groove[orient="horizontal"] {
   margin-bottom: 0.4em;
 }
   
-  separator.groove[orient="vertical"] {
+separator.groove[orient="vertical"] {
   border-left: 1px solid #7A8490;
   border-right: 1px solid #FEFEFE;
   margin-left: 0.4em;

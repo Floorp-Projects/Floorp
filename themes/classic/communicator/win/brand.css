@@ -1,7 +1,7 @@
 
 #navigator-throbber
   {
-    -moz-binding          : url("chrome://global/content/bindings/button.xml#buttontop");
+    -moz-binding          : url("chrome://global/content/bindings/button.xml#button");
     border                : 1px solid ThreeDDarkShadow;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
     margin                : 1px 2px 1px 10px;
@@ -10,7 +10,7 @@
     -moz-user-focus       : ignore;
   }  
   
-#navigator-throbber > .button-internal-box
+#navigator-throbber > .button-box
   {
     border-left           : 1px solid ThreeDHighlight;
     border-top            : 1px solid ThreeDHighlight;
@@ -19,12 +19,12 @@
     padding               : 1px;
   }
   
-#navigator-throbber > .button-internal-box > .button-text-container
+#navigator-throbber > .button-box > .button-text
   {
     display               : none;
   }  
 
-#navigator-throbber:hover:active > .button-internal-box
+#navigator-throbber:hover:active > .button-box
   {
     border-left           : 1px solid ThreeDShadow !important;
     border-top            : 1px solid ThreeDShadow !important;

@@ -30,15 +30,16 @@
     color                 : InactiveCaptionText;
     padding               : 1px 2px 1px 6px;
   }
+
+#sidebar-panel-picker {
+  -moz-box-direction: reverse;
+  color: inherit;
+}
   
-#sidebar-panel-picker
+#sidebar-panel-picker > .toolbarbutton-box > .toolbarbutton-dropmarker
   {
-    color                 : InactiveCaptionText !important;
-  }
-  
-#sidebar-panel-picker:hover
-  {
-    color                 : InactiveCaptionText !important;
+    padding-left            : 4px;
+    list-style-image        : url("chrome://global/skin/menu-arrow.gif");
   }
 
 .sidebar-header-text  
@@ -61,12 +62,6 @@
     list-style-image	    : url("chrome://global/skin/grippy-short-vert-before.gif"); 
   }
   
-.menubutton-toolbar-single-dropmarker[menubuttontype="sidebar-panels"]
-  {
-    list-style-image      : url("chrome://global/skin/menu-arrow-hover.gif");  
-    margin-left           : 2px;
-  }
-
 /**
  * texttab folder lookalike e.g. for sidebar panel headers
  */

@@ -11,7 +11,6 @@ classic.jar:
     skin/classic/global/global.css
     skin/classic/global/groupbox.css
     skin/classic/global/menu.css
-    skin/classic/global/menubutton.css
     skin/classic/global/menulist.css
     skin/classic/global/popup.css
     skin/classic/global/progressmeter.css
@@ -22,6 +21,7 @@ classic.jar:
     skin/classic/global/tabbox.css
     skin/classic/global/textbox.css
     skin/classic/global/toolbar.css
+    skin/classic/global/toolbarbutton.css
     skin/classic/global/tree.css
     skin/classic/global/outliner.css
     skin/classic/global/wizard.css

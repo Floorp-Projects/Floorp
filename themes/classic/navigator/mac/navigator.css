@@ -155,14 +155,6 @@
 	  list-style-image        : url("chrome://communicator/skin/bookmarks/location-disabled.gif");
   }
 
-#ubhist-keyword-popup, #ubhist-keyword-popup:hover, #ubhist-keyword-popup:hover:active 
-  {
-      -moz-binding          : url("chrome://global/skin/classicBindings.xml#menubutton-icon-nostretch") !important;
-	  margin                : 0px 4px 0px 0px;
-	  width                 : 10px; 
-	  list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif"); 
-  } 
-
 #action-popup 
   {
     list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif"); 
@@ -184,7 +176,8 @@
   
 #search-button
   {
-    margin-right          : 2px;
+    margin-right: 2px;
+    font-weight: bold;
   }
   
 #statusbar-icon

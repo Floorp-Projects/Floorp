@@ -59,10 +59,6 @@
 #sidebar-panel-picker {
   margin-right: 1px;
   margin-top: 1px;
-  border: 1px solid transparent;
-  padding: 2px;
-  color: #000000;
-  -moz-border-radius: 0px;
 }
 
 #sidebar-panel-picker:hover {
@@ -73,9 +69,18 @@
   border-style: inset;
 }
 
-#sidebar-panel-picker > .menubutton-internal-box > .menubutton-single-icon {
+#sidebar-panel-picker {
+  padding: 2px;
+}
+
+#sidebar-panel-picker {
+  -moz-box-direction: reverse;
+}
+
+#sidebar-panel-picker > .toolbarbutton-box > .toolbarbutton-dropmarker {
   list-style-image: url("chrome://communicator/skin/sidebar/sbpicker-arrow.gif");
-  padding-left: 2px;
+  padding-right: 0px;
+  padding-left: 4px;
 }
 
 /* ::::: loading info ::::: */

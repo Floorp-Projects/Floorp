@@ -126,26 +126,6 @@
     </content>
   </binding>
   
-  <binding id="menubutton-icon"
-           extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
-    <content>
-      <xul:hbox class="menubutton-icon-box">
-        <xul:image inherits="src" class="menubutton-icon-image"/>
-      </xul:hbox>
-    <children includes="menupopup"/>
-    </content>
-  </binding>
-
-  <binding id="menubutton-icon-nostretch"
-           extends="chrome://global/content/bindings/tree.xml#treecell-header">
-    <content>
-      <xul:hbox class="menubutton-icon-box" align="center">
-        <xul:image inherits="src" class="menubutton-icon-image"/>
-      </xul:hbox>
-    <children includes="menupopup"/>
-    </content>
-  </binding>
-
   <binding id="tab" extends="chrome://global/content/bindings/tabbox.xml#tab">
     <content>
       <xul:spacer class="tab-image-left" inherits="selected"/>

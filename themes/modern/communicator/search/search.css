@@ -49,10 +49,3 @@ treeitem[selected="true"] > .searchresult {
   color: blue;
   text-decoration: underline;
 }
-
-/* :::::: undo boldness of button-toolbar-3 :::::: */
-
-#saveQueryButton {
-  font-weight: normal;
-}
-

@@ -4,7 +4,6 @@ classic.jar:
     skin/classic/communicator/button.css
     skin/classic/communicator/communicator.css 
     skin/classic/communicator/formatting.css 
-    skin/classic/communicator/menubutton.css 
     skin/classic/communicator/toolbar.css
     skin/classic/communicator/dialogOverlay.css 
     skin/classic/communicator/tasksOverlay.css 

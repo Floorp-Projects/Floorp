@@ -4,12 +4,13 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="buttonleft" extends="chrome://global/content/bindings/button.xml#button-base">
+  <binding id="button" extends="chrome://global/content/bindings/button.xml#button">
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
-      <xul:box class="box-inherit button-box-1" orient="horizontal" flex="1">
+      <xul:box class="box-inherit button-box" orient="horizontal" flex="1">
         <xul:hbox class="box-inherit button-box-2" flex="1">
-          <xul:hbox class="box-inherit button-box-text" inherits="orient,dir,align,pack" flex="1" align="center" pack="center">
+          <xul:hbox class="box-inherit button-box-text" inherits="orient,dir,align,pack"
+                    flex="1" align="center" pack="center">
             <children>
               <xul:image class="button-icon" inherits="src=image"/>
               <xul:label class="button-text" flex="1" inherits="disabled,value=label,accesskey,crop"/>
@@ -20,47 +21,7 @@
     </content>
   </binding>
 
-  <binding id="buttonright" extends="chrome://global/content/bindings/button.xml#button-base">
-    <content>
-      <xul:hbox class="button-box-1" flex="1">
-        <xul:hbox class="button-box-2" align="center" flex="1">
-          <xul:hbox class="button-box-text" flex="1" align="center" pack="center">
-            <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
-            <children/>
-          </xul:hbox>
-          <xul:image class="button-icon" inherits="src"/>
-        </xul:hbox>
-      </xul:hbox>
-    </content>
-  </binding>
-  
-  <binding id="buttontop" extends="chrome://global/content/bindings/button.xml#button-base">
-    <content>
-      <xul:hbox class="button-box-1" flex="1">
-        <xul:vbox class="button-box-2" align="center" flex="1">
-          <xul:image class="button-icon" inherits="src"/>
-          <xul:hbox class="button-box-text" flex="1" align="center" pack="center">
-            <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
-            <children/>
-          </xul:hbox>
-        </xul:vbox>
-      </xul:hbox>
-    </content>
-  </binding>
-
-  <binding id="buttonbottom" extends="chrome://global/content/bindings/button.xml#button-base">
-    <content>
-      <xul:hbox class="button-box-1" flex="1">
-        <xul:vbox class="button-box-2" align="center" flex="1">
-          <xul:hbox class="button-box-text" flex="1" align="center" pack="center">
-            <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
-            <children/>
-          </xul:hbox>
-          <xul:image class="button-icon" inherits="src"/>
-        </xul:vbox>
-      </xul:hbox>
-    </content>
-  </binding>
+  <binding id="button-menu" display="xul:menu" extends="chrome://global/skin/buttonBindings.xml#button"/>
 
   <binding id="simplebutton" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>

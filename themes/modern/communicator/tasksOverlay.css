@@ -41,7 +41,7 @@
 
 #mini-mail {
   list-style-image: url("chrome://communicator/skin/taskbar/mail.gif");
-  margin-left: 0px;
+  margin-left: 1px;
 }
 
 #mini-mail:hover:active {
@@ -72,37 +72,18 @@
   list-style-image: url("chrome://communicator/skin/taskbar/composer-act.gif");
 }
 
-/* ::::: taskbar ::::: */
-
-#taskbar {
-  -moz-user-focus: ignore;
-  min-height: 18px;
-  background-color: #C7D0D9;
-  color: #22262F;
-}
-
-.taskbarspacer {
-  max-width: 0px;
-}
-
-/* hide goto menu bug #47633 */ 
-
-#taskbarGotoMenuBox {
-  display: none;  
-}  
-
-/* ::::: taskbar buttons and spacers ::::: */
-
-.taskbutton {
-  margin: 0px 3px;
-  padding: 0px;
-}
-
 /* ::::: component bar ::::: */
 
 #component-bar {
-  border-top: 1px solid #E0ECF6;
-  border-right: 1px solid #8997A1;
-  border-left: 1px solid #E0ECF6;
   padding: 1px 3px 0px 3px;
 }
+
+.taskbutton {
+  border: none !important;
+  margin: 0px 4px;
+}
+
+.taskbutton > .toolbarbutton-box {
+  padding: 0px !important;
+}
+

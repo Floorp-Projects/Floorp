@@ -52,34 +52,3 @@
          list-style-image      : url("chrome://global/skin/taskbar-composer-hover.gif");
   }
 
-.taskbutton 
-  {
-	  margin-right          : 3px !important;
-  }
-
-.taskbarspacer 
-  {
-    min-width             : 0.3em;
-    width                 : 1em;
-  }
-
-#taskbar-toolbar > toolbargrippy
-  {
-    display               : none;
-  }
-  
-/* hide goto menu bug #47633 */ 
-#taskbarGotoMenuBox{
-	display:none;	
-}   
-
-
-
-/* ::::: component bar ::::: */
-
-
-
-#component-bar {
-} 
-
-

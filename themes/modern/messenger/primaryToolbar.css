@@ -35,25 +35,21 @@
 
 /* ::::: primary toolbar buttons ::::: */
 
-.button-toolbar-2 {
-  min-width: 52px;
-}
-
 #button-getmsg {
   list-style-image: url("chrome://messenger/skin/btn1/getmsg.gif");
 }
 
 #button-getmsg[disabled="true"],
-#button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#button-getmsg[disabled="true"][buttonover="true"],
+#button-getmsg[disabled="true"][buttondown="true"] {
   list-style-image: url("chrome://messenger/skin/btn1/getmsg-dis.gif");
 } 
 
-#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover {
+#button-getmsg[buttonover="true"] {
   list-style-image: url("chrome://messenger/skin/btn1/getmsg-hov.gif");
 } 
 
-#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#button-getmsg[buttondown="true"] {
   list-style-image: url("chrome://messenger/skin/btn1/getmsg-act.gif");
 } 
 
@@ -189,16 +185,16 @@
 }
 
 #button-mark[disabled="true"],
-#button-mark[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#button-mark[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#button-mark[disabled="true"][buttonover="true"],
+#button-mark[disabled="true"][buttondown="true"] {
   list-style-image: url("chrome://messenger/skin/btn1/mark-dis.gif");
 } 
 
-#button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover {
+#button-mark[buttonover="true"] {
   list-style-image: url("chrome://messenger/skin/btn1/mark-hov.gif");
 } 
 
-#button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#button-mark[buttondown="true"] {
   list-style-image: url("chrome://messenger/skin/btn1/mark-act.gif");
 } 
 
@@ -207,16 +203,16 @@
 }
 
 #button-print[disabled="true"],
-#button-print[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#button-print[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#button-print[disabled="true"][buttonover="true"],
+#button-print[disabled="true"][buttondown="true"] {
   list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
 }
 
-#button-print > .menubutton-dual-stack > .menubutton-dual-button:hover {
+#button-print[buttonover="true"] {
   list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
 }
 
-#button-print > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+#button-print[buttondown="true"] {
   list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
 }
 

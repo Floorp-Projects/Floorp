@@ -20,7 +20,6 @@
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com>
  *   Josh Soref  <timeless@mac.com>
- *
  */
 
 /* ===== bookmarksToolbar.css ===========================================
@@ -31,98 +30,78 @@
 
 /* ::::: bookmark toolbar buttons ::::: */
 
-.bookmark-item.button-toolbar {
+/* ..... bookmark items ..... */
+
+toolbarbutton.bookmark-item {
   cursor: pointer;
-  -moz-binding: url("chrome://global/content/bindings/general.xml#buttonleft-ile");
+  max-width: 10em;  
 }
 
-.bookmark-item.button-toolbar:hover {
+toolbarbutton.bookmark-item:hover {
   text-decoration: underline;
 }
 
-.bookmark-item.button-toolbar:hover,
-.bookmark-item.button-toolbar:hover:active,
-.bookmark-item.button-toolbar[open="true"] {
-  border: 1px solid transparent;
-}
-
-.bookmark-item.button-toolbar[container="true"] {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-toolbar-single-ile");
-}
-
-.bookmark-item.button-toolbar[container="true"],
-.bookmark-item.button-toolbar[container="true"]:hover {
+toolbarbutton.bookmark-item[container="true"],
+toolbarbutton.bookmark-item[container="true"]:hover {
   cursor: default;
   text-decoration: none;
 }
 
-/* make folders look like normal toolbar buttons */
-
-.bookmark-item.button-toolbar[container="true"]:hover {
-  border-top: 1px solid #D5DAE5;
-  border-right: 1px solid #7681A2;
-  border-bottom: 1px solid #7681A2;
-  border-left: 1px solid #D5DAE5;
+toolbarbutton.bookmark-item:not([container="true"]):hover,
+toolbarbutton.bookmark-item:not([container="true"]):hover:active {
+  border: 1px solid transparent;
 }
 
-.bookmark-item.button-toolbar[container="true"]:hover:active,
-.bookmark-item.button-toolbar[container="true"][open="true"] {
+.bookmark-item > .toolbarbutton-box > .toolbarbutton-dropmarker {
+  display: none;
+}
+
+/* ..... drag and drop styles ..... */
+
+toolbarbutton.bookmark-item[dragover-left="true"] {
+  border-left: 1px solid #000000;
+}
+
+toolbarbutton.bookmark-item[dragover-right="true"] {
+  border-right: 1px solid #000000;
+}
+
+toolbarbutton.bookmark-item[dragover-top="true"] {
   border-top: 1px solid #7681A2;
   border-right: 1px solid #D5DAE5;
   border-bottom: 1px solid #D5DAE5;
   border-left: 1px solid #7681A2;
 }
 
-/* when dragging stuff over personal toolbar items */
-.bookmark-item.button-toolbar[dragover-left="true"] {
-  border-left: 1px solid black;
+/* ::::: drag and drop styles for bookmark menus ::::: */
+
+menuitem[dragover-top="true"].bookmark-item {
+  border-top: 1px solid ThreeDDarkShadow !important;
 }
 
-.bookmark-item.button-toolbar[dragover-right="true"] {
-  border-right: 1px solid black;
+menu[dragover-top="true"].bookmark-item {
+  border-top: 1px solid ThreeDDarkShadow !important;
+} 
+
+menuitem.bookmark-item {
+  border-top: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
 }
-
-.bookmark-item.button-toolbar[dragover-top="true"] {
-  border-top: 1px solid #7681A2;
-  border-right: 1px solid #D5DAE5;
-  border-bottom: 1px solid #D5DAE5;
-  border-left: 1px solid #7681A2;
-}
-
-menuitem[dragover-top="true"].bookmark-item
-  {
-    border-top          : 1px solid ThreeDDarkShadow !important;
-  }
-
-menu[dragover-top="true"].bookmark-item
-  {
-    border-top          : 1px solid ThreeDDarkShadow !important;
-  } 
-
-menuitem.bookmark-item
-  {
-    border-top          : 1px solid transparent !important;
-    border-bottom       : 1px solid transparent !important;
-  }
   
-menu.bookmark-item
-  {
-    border-top          : 1px solid transparent !important;
-    border-bottom       : 1px solid transparent !important;
-  }
+menu.bookmark-item {
+  border-top: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
+}
   
-menu[dragover="true"].bookmark-item
-  {
-    background-color      : Highlight !important;
-    color                 : HighlightText !important;
-  }
+menu[dragover="true"].bookmark-item {
+  background: 1px solid Highlight !important;
+  color: HighlightText !important;
+}
 
-menuitem[dragover-bottom="true"].bookmark-item
-  {
-    border-bottom       : 1px solid ThreeDDarkShadow !important;
-  }
+menuitem[dragover-bottom="true"].bookmark-item {
+  border-bottom: 1px solid ThreeDDarkShadow !important;
+}
 
-menu[dragover-bottom="true"].bookmark-item
-  {
-    border-bottom       : 1px solid ThreeDDarkShadow !important;
-  }
+menu[dragover-bottom="true"].bookmark-item {
+  border-bottom: 1px solid ThreeDDarkShadow !important;
+}

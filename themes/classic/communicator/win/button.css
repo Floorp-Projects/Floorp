@@ -1,333 +1,134 @@
-/** The largest type of toolbar buttons. In the Seamonkey implementation, 
- *  these are only used in the navigation toolbar in the navigator package.
- **/
- 
-  /* outer frame */
-  .button-toolbar-1, .button-toolbar-2
-    {
-      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttontop");
-      min-width           : 47px;
-      margin              : 0px;
-      border              : 1px solid transparent;
-      background-color    : transparent;
-      color               : -moz-DialogText;
-      -moz-user-focus     : ignore;
-    }
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
 
-  .button-toolbar-1:hover, .button-toolbar-2:hover
-    {
-      border              : 1px solid ThreeDDarkShadow;
-      color               : #0000FF;
-    } 
-    
-  .button-toolbar-1 > .button-internal-box,
-  .button-toolbar-2 > .button-internal-box
-    {
-      padding             : 2px 7px 2px 6px;
-      border              : 1px solid transparent;
-      color               : inherit;
-      background-color    : -moz-Dialog;
-    }    
-    
-  .button-toolbar-1[disabled="true"],
-  .button-toolbar-1[disabled="true"]:hover,
-  .button-toolbar-1[disabled="true"]:hover:active,
-  .button-toolbar-2[disabled="true"],
-  .button-toolbar-2[disabled="true"]:hover,
-  .button-toolbar-2[disabled="true"]:hover:active
-    {
-      border              : 1px solid transparent;
-      color               : GrayText;
-    }
+/* ==== button.css ==========================================================
+   == Styles for special buttons in the Communicator suite.
+   ========================================================================== */
 
-  .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box,
-  .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
-    {
-      color               : GrayText;
-    }
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-  .button-toolbar-1:hover > .button-internal-box,
-  .button-toolbar-2:hover > .button-internal-box
-    {
-      border-left         : 1px solid ThreeDHighlight;
-      border-top          : 1px solid ThreeDHighlight;
-      border-right        : 1px solid ThreeDShadow;
-      border-bottom       : 1px solid ThreeDShadow;
-    }
+/* ::::: large toolbar buttons ::::: */
 
-  .button-toolbar-1:hover:active > .button-internal-box,
-  .button-toolbar-2:hover:active > .button-internal-box
-    {
-      padding             : 3px 6px 1px 7px;
-      border-left         : 1px solid ThreeDShadow !important;
-      border-top          : 1px solid ThreeDShadow !important;
-      border-right        : 1px solid ThreeDHighlight !important;
-      border-bottom       : 1px solid ThreeDHighlight !important;
-      color               : #000080;
-    }
-    
-  .button-toolbar-1[disabled="true"] > .button-internal-box,
-  .button-toolbar-1[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box,
-  .button-toolbar-2[disabled="true"] > .button-internal-box,
-  .button-toolbar-2[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
-    {
-      padding             : 2px 7px 2px 6px !important;
-      border              : 1px solid transparent !important;
-    }
+.toolbarbutton-1,
+.toolbarbutton-1 > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button
+{
+  min-width: 47px;
+  -moz-box-orient: vertical;
+}
 
-/**
- * Standard Toolbar Buttons
- *   for secondary command toolbars, e.g. formatting toolbar 
- **/
-  .button-toolbar
-    {
-      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttonleft");
-      margin              : 1px; 
-      border              : 1px solid transparent;
-      min-width           : 0px;
-      max-width           : 14em;
-      color               : -moz-DialogText;
-      background-color    : -moz-Dialog;
-      -moz-user-focus     : ignore;
-    }
+.toolbarbutton-1[type="menu-button"] {
+  -moz-box-orient: horizontal;
+}
 
-  .button-toolbar > .button-internal-box
-    {
-      border              : 1px solid transparent;
-  	  padding             : 1px 3px 1px 3px;
-    }
-    
-  /* toggled toolbar styles (editor formatting toolbars, etc) */
-  .button-toolbar[toggled="true"] > .button-internal-box
-    {
-      border-left         : 1px solid ThreeDShadow;
-      border-top          : 1px solid ThreeDShadow;
-      border-right        : 1px solid ThreeDHighlight;
-      border-bottom       : 1px solid ThreeDHighlight;
-      background-color	  : ThreeDHighlight;
-    }
-    
-  .button-toolbar[toggled="true"]:hover > .button-internal-box
-    {
-      border-left         : 1px solid ThreeDShadow;
-      border-top          : 1px solid ThreeDShadow;
-      border-right        : 1px solid ThreeDHighlight;
-      border-bottom       : 1px solid ThreeDHighlight;
-      background-color	  : -moz-Dialog;
-      background-image    : none;
-    }
-    
-  .button-toolbar[value] > .button-internal-box > .button-text-container
-    {
-      padding-left        : 4px;
-    }    
+.toolbarbutton-1 > .toolbarbutton-box,
+.toolbarbutton-1 > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box,
+.toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box,
+.toolbarbutton-1[disabled="true"]:hover:active > .toolbarbutton-box,
+.toolbarbutton-1[disabled="true"][buttondown="true"] > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box
+{
+  padding             : 2px 7px 2px 6px;
+}
 
-  .button-toolbar:hover
-    {
-      border              : 1px solid ThreeDDarkShadow;
-      color               : #0000FF;
-    }
-    
-  .button-toolbar:hover > .button-internal-box
-    { 
-      border-left         : 1px solid ThreeDHighlight;
-      border-top          : 1px solid ThreeDHighlight;
-      border-right        : 1px solid ThreeDShadow;
-      border-bottom       : 1px solid ThreeDShadow;
-    }
-    
-  .button-toolbar:hover:active
-    {
-      color               : #000080;
-    }
-    
-  .button-toolbar:hover:active > .button-internal-box
-    {
-      padding             : 2px 2px 0px 4px;
-      border-left         : 1px solid ThreeDShadow;
-      border-top          : 1px solid ThreeDShadow;
-      border-right        : 1px solid ThreeDHighlight;
-      border-bottom       : 1px solid ThreeDHighlight;
-    }
-    
-  .button-toolbar[disabled="true"],
-  .button-toolbar[disabled="true"]:hover,
-  .button-toolbar[disabled="true"]:hover:active    
-    {
-      color               : GrayText;
-      border              : 1px solid transparent;
-    }
+.toolbarbutton-1:hover:active > .toolbarbutton-box,
+.toolbarbutton-1[open="true"] > .toolbarbutton-box,
+.toolbarbutton-1[buttondown="true"] > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box
+{
+  padding             : 3px 6px 1px 7px;
+}
 
-  .button-toolbar[disabled="true"] > .button-internal-box,
-  .button-toolbar[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar[disabled="true"]:hover:active > .button-internal-box
-    {
-      border              : 1px solid transparent;
-  	  padding             : 1px 3px 1px 3px !important;
-    }
-    
-/**
- * Low profile toolbar buttons
- *   e.g. taskbar
- **/
-  .button-toolbar-4    
-    {
-      background-color    : transparent;
-      color               : -moz-DialogText;
-      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttonleft");
-      min-width           : 0px;
-      margin              : 0px;
-      border              : 1px solid transparent;
-      -moz-user-focus     : ignore;
-    }
-    
-  .button-toolbar-4 > .button-internal-box
-    {
-      background-color    : -moz-Dialog;
-      color               : inherit;
-      padding             : 0px;
-      border              : 1px solid transparent;
-    }
+.toolbarbutton-1[type="menu"] > .toolbarbutton-box > .toolbarbutton-dropmarker {
+  display: none;
+}
+
+/* ::::: normal buttons on toolbars ::::: */
+
+.button-toolbar {
+  -moz-user-focus     : ignore;
+  min-width           : 0px;
+  background-color    : transparent;
+}  
   
-  .button-toolbar-4:hover
-    {
-      border              : 1px solid ThreeDDarkShadow;
-      color               : #0000FF;
-    } 
-    
-  .button-toolbar-4[disabled="true"],
-  .button-toolbar-4[disabled="true"]:hover,
-  .button-toolbar-4[disabled="true"]:hover:active
-    {
-      border              : 1px solid transparent;
-      color               : GrayText;
-    }
-    
-  .button-toolbar-4:hover > .button-internal-box
-    {
-      border-left         : 1px solid ThreeDHighlight;
-      border-top          : 1px solid ThreeDHighlight;
-      border-right        : 1px solid ThreeDShadow;
-      border-bottom       : 1px solid ThreeDShadow;
-    }
+.button-toolbar, 
+.button-toolbar[disabled="true"]:hover,
+.button-toolbar[disabled="true"]:hover:active {
+  border              : 1px solid transparent;
+}
+  
+.button-toolbar:hover,
+.button-toolbar:hover:active {
+  border-color        : ThreeDDarkShadow;
+}
+  
+.button-toolbar > .button-box,
+.button-toolbar[disabled="true"] > .button-box,
+.button-toolbar[disabled="true"]:hover > .button-box,
+.button-toolbar[disabled="true"]:hover:active > .button-box {
+  border-left         : 1px solid ThreeDHighlight !important;
+  border-top          : 1px solid ThreeDHighlight !important;
+  border-right        : 1px solid ThreeDShadow !important;
+  border-bottom       : 1px solid ThreeDShadow !important;
+}
+  
+.button-toolbar:hover:active > .button-box {
+  border-left         : 1px solid ThreeDShadow !important;
+  border-top          : 1px solid ThreeDShadow !important;
+  border-bottom       : 1px solid ThreeDHighlight !important;
+  border-right        : 1px solid ThreeDHighlight !important;
+} 
 
-  .button-toolbar-4:hover:active > .button-internal-box
-    {
-      padding             : 0px;
-      border-left         : 1px solid ThreeDShadow !important;
-      border-top          : 1px solid ThreeDShadow !important;
-      border-right        : 1px solid ThreeDHighlight !important;
-      border-bottom       : 1px solid ThreeDHighlight !important;
-    }
+.button-toolbar > .button-box > .button-box-2,
+.button-toolbar > .button-box > .button-box-2 > .button-box-text {
+  margin: none;
+  border: none !important;
+  padding: 0px 2px;
+}
 
-  .button-toolbar-4[disabled="true"] > .button-internal-box,
-  .button-toolbar-4[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-4[disabled="true"]:hover:active > .button-internal-box
-    {
-      padding             : 0px !important;
-      border              : 1px solid transparent !important;
-    }
+.button-toolbar > .button-box > .button-icon {
+  margin-right: 5px;
+}
 
-  menubutton.button-toolbar-4
-    {
-      -moz-binding        : url("chrome://global/content/bindings/menubutton.xml#menubutton-single-right");
-    }
+.button-toolbar > .button-box > .button-text {
+  margin-right: 2px;
+}  
 
-/** Low profile rollover buttons, e.g. "search"
- **/  
- 
-  .button-toolbar-3
-    {
-      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttonleft");
-      margin              : 0px 0px 1px 3px !important;
-      min-width           : 0px;
-      background-color    : transparent;
-      color               : -moz-DialogText;
-      -moz-user-focus     : ignore;
-    }  
-    
-  .button-toolbar-3 > .button-internal-box
-    {
-      background-color    : -moz-Dialog;
-      color                 : inherit;
-    }
-    
-  .button-toolbar-3, 
-  .button-toolbar-3[disabled="true"]:hover,
-  .button-toolbar-3[disabled="true"]:hover:active
-    {
-      border              : 1px solid transparent;
-    }
-    
-  .button-toolbar-3:hover, .button-toolbar-3:hover:active
-    {
-      border-color        : ThreeDDarkShadow;
-    }
-    
-  .button-toolbar-3 > .button-internal-box,
-  .button-toolbar-3[disabled="true"] > .button-internal-box,
-  .button-toolbar-3[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-3[disabled="true"]:hover:active > .button-internal-box
-    {
-      border-left         : 1px solid ThreeDHighlight !important;
-      border-top          : 1px solid ThreeDHighlight !important;
-      border-right        : 1px solid ThreeDShadow !important;
-      border-bottom       : 1px solid ThreeDShadow !important;
-      padding             : 1px 4px 1px 4px;
-    }
-    
-  .button-toolbar-3:hover:active > .button-internal-box 
-    {
-      border-left         : 1px solid ThreeDShadow !important;
-      border-top          : 1px solid ThreeDShadow !important;
-      border-bottom       : 1px solid ThreeDHighlight !important;
-      border-right        : 1px solid ThreeDHighlight !important;
-      padding             : 2px 3px 0px 5px;
-    } 
+/* ::::: reorder buttons ::::: */
 
-  .button-toolbar-3 > .button-internal-box > .button-icon,
-  .button-toolbar-3 > .button-internal-box > .button-text
-    {
-      margin-right        : 2px;
-    }  
+.reorder-up {
+  min-width           : 0px;
+}    
 
-  .button-toolbar > .button-internal-box > .button-icon
-    {
-      margin-right        : 5px;
-    }
+.reorder-down {
+  min-width           : 0px;
+}    
 
-/** Expanding Region Button **/
-
-/* outer frame */
-  .button-expander
-    {
-      border              : none;
-      padding             : 0;
-      margin              : 1px 5px 3px 1px;
-      background-color    : inherit;
-      list-style-image    : url("chrome://global/skin/closedtwisty.gif");
-      color               : #0000FF;
-      text-decoration     : underline;
-    }
-    
-  .button-expander[open="true"]
-    {
-      list-style-image    : url("chrome://global/skin/opentwisty.gif");
-    }
-    
-  .button-expander > .button-internal-box
-    {
-      border              : none;
-      background-color    : inherit;
-      padding             : 0;
-      margin              : 0;
-    }
-
-  .button-expander:hover 
-    {
-      color               : #FF0000;
-    }
-
-
+.reorder-up > .button-internal-box > .button-icon,
+.reorder-down > .button-internal-box > .button-icon {
+  margin              : 0;
+  padding             : 0;
+}
+  

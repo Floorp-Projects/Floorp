@@ -156,7 +156,7 @@
     list-style-image      : url("chrome://messenger/skin/file-hover.gif");
   } 
 
-#button-file:hover:active
+#button-file[open="true"]
   {
     list-style-image      : url("chrome://messenger/skin/file-hover-active.gif");
   } 

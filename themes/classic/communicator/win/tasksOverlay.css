@@ -48,28 +48,13 @@
     list-style-image      : url("chrome://global/skin/taskbar-composer-hover.gif");
   }
 
-.taskbutton 
-  {
-	  margin-right          : 3px ! important;
-  }
+.taskbutton > .toolbarbutton-box,
+.taskbutton > .toolbarbutton-box:hover:active {
+  padding: 1px;
+}
 
-.taskbutton > .button-internal-box > .button-text-container 
+.taskbutton > .toolbarbutton-box > .toolbarbutton-text
   {
     display               : none;
   }  
   
-.taskbarspacer 
-  {
-    min-width             : 0.3em;
-    width                 : 1em;
-  }
-  
-/* hide goto menu bug #47633 */ 
-#taskbarGotoMenuBox{
-	display:none;	
-}
-
-#security-button {
-  /** override securityOverlay.css for windows which has no growbox yet **/
-  margin-right: 0px !important;
-}

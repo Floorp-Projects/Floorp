@@ -47,24 +47,19 @@
     list-style-image      : url("chrome://navigator/skin/back.gif");
   }
 
-#back-button[disabled="true"],
-#back-button[disabled="true"]:hover,
-#back-button[disabled="true"]:hover:active,
-#back-button[disabled="true"] > .menubutton-dual-ex-button:hover,
-#back-button[disabled="true"] > .menubutton-dual-ex-button:hover:active
+#back-button[disabled="true"]
   {
-    list-style-image      : url("chrome://navigator/skin/back-disabled.gif");
+    list-style-image      : url("chrome://navigator/skin/back-disabled.gif") !important;
   }
 
 #back-button:hover,
-#back-button > .menubutton-dual-ex-button:hover,
-#back-button[open="true"] > .menubutton-dual-ex-button
+#back-button[buttonover="true"],
+#back-button[open="true"]
   {
     list-style-image      : url("chrome://navigator/skin/back-hover.gif");
   }
 
-#back-button:hover:active,
-#back-button > .menubutton-dual-ex-button:hover:active
+#back-button[buttondown="true"]
   {
     list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
   }
@@ -74,50 +69,22 @@
     list-style-image      : url("chrome://navigator/skin/forward.gif");
   }
 
-#forward-button[disabled="true"],
-#forward-button[disabled="true"]:hover,
-#forward-button[disabled="true"]:hover:active,
-#forward-button[disabled="true"] > .menubutton-dual-ex-button:hover,
-#forward-button[disabled="true"] > .menubutton-dual-ex-button:hover:active
+#forward-button[disabled="true"]
   {
-    list-style-image      : url("chrome://navigator/skin/forward-disabled.gif");
+    list-style-image      : url("chrome://navigator/skin/forward-disabled.gif") !important;
   }
 
 #forward-button:hover,
-#forward-button > .menubutton-dual-ex-button:hover,
-#forward-button[open="true"] > .menubutton-dual-ex-button
+#forward-button[buttonover="true"],
+#forward-button[open="true"]
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
   }
 
-#forward-button:hover:active,
-#forward-button > .menubutton-dual-ex-button:hover:active
+#forward-button[buttondown="true"]
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover-active.gif");
   }
-
-
-#stop-button 
-  {
-	  list-style-image      : url("chrome://navigator/skin/stop.gif");
-  } 
-
-#stop-button[disabled="true"],
-#stop-button[disabled="true"]:hover,
-#stop-button[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://navigator/skin/stop-disabled.gif");
-  } 
-
-#stop-button:hover
-  {
-    list-style-image      : url("chrome://navigator/skin/stop-hover.gif");
-  } 
-
-#stop-button:hover:active
-  {
-    list-style-image      : url("chrome://navigator/skin/stop-hover-active.gif");
-  } 
 
 #reload-button 
   {
@@ -134,13 +101,52 @@
   list-style-image        : url("chrome://navigator/skin/reload-hover-active.gif");
   }
 
-#reload-button[disabled="true"],
-#reload-button[disabled="true"]:hover,
-#reload-button[disabled="true"]:hover:active
+#reload-button[disabled="true"]
   {
-	  list-style-image      : url("chrome://navigator/skin/reload-disabled.gif");
+	  list-style-image      : url("chrome://navigator/skin/reload-disabled.gif") !important;
   }
+
+#stop-button 
+  {
+	  list-style-image      : url("chrome://navigator/skin/stop.gif");
+  } 
+
+#stop-button[disabled="true"]
+  {
+    list-style-image      : url("chrome://navigator/skin/stop-disabled.gif") !important;
+  } 
+
+#stop-button:hover
+  {
+    list-style-image      : url("chrome://navigator/skin/stop-hover.gif");
+  } 
+
+#stop-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/stop-hover-active.gif");
+  } 
   
+#print-button 
+  {
+    list-style-image      : url("chrome://global/skin/print.gif");
+  }
+
+#print-button[disabled="true"] {
+    list-style-image      : url("chrome://global/skin/print-disabled.gif") !important;
+  }
+
+#print-button:hover,
+#print-button[buttonover="true"],
+#print-button[open="true"]
+  {
+    list-style-image      : url("chrome://global/skin/print-hover.gif");
+  }
+
+#print-button[buttondown="true"]
+  {
+    list-style-image      : url("chrome://global/skin/print-hover-active.gif");
+  }
+
 /*all the urlbar stuff*/
 #page-proxy-button
   {
@@ -165,30 +171,30 @@
     list-style-image        : url("chrome://communicator/skin/bookmarks/location-disabled.gif");
   }
 
-#ubhist-keyword-popup 
-  {
-    margin                : 2px 3px 3px 0px !important;
-    list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif"); 
-  }
-
 #content-frame 
   {
     min-width             : 0px;
     min-height            : 0px;
   }
   
-#nav-bar-inner
-  {
-    -moz-box-align        : center;
-    min-width             : 0px;
-    margin                : 8px 0px 8px 6px;
-  }
+#nav-bar-inner {
+  min-width             : 0px;
+  margin                : 8px 6px;
+}
+  
+#urlbar-group {
+  margin: 0px 5px 0px 0px;
+}  
+
+#search-button, 
+#go-button {
+  margin: 0px 5px 0px 0px;
+}
 
 #search-button
   {
     list-style-image      : url("chrome://communicator/skin/search.gif");
     font-weight           : bold;
-    margin-right          : 5px !important;
   }
 
 #search-button:hover
@@ -204,33 +210,6 @@
 .menuitem-iconic
   {
     padding               : 2px;
-  }
-
-#print-button 
-  {
-    list-style-image      : url("chrome://global/skin/print.gif");
-  }
-
-#print-button[disabled="true"],
-#print-button[disabled="true"]:hover,
-#print-button[disabled="true"]:hover:active,
-#print-button[disabled="true"] > .menubutton-dual-ex-button:hover,
-#print-button[disabled="true"] > .menubutton-dual-ex-button:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/print-disabled.gif");
-  }
-
-#print-button:hover,
-#print-button > .menubutton-dual-ex-button:hover,
-#print-button[open="true"] > .menubutton-dual-ex-button
-  {
-    list-style-image      : url("chrome://global/skin/print-hover.gif");
-  }
-
-#print-button:hover:active,
-#print-button > .menubutton-dual-ex-button:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/print-hover-active.gif");
   }
 
 /* ::::: urlbar autocomplete widget ::::: */

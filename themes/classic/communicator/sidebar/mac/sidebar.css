@@ -3,7 +3,6 @@
   {
     border-left           : 1px solid #9D9D9D;
     border-right          : 1px solid #FFFFFF;
-    border-bottom         : 1px solid #FFFFFF;
     background-color      : #9D9D9D;
   }
 
@@ -52,22 +51,16 @@
     list-style-image	: url("chrome://global/skin/grippy-short-vert-before.gif"); 
 }
 
-#sidebar-panel-picker > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
+#sidebar-panel-picker {
+  -moz-box-direction: reverse;
+  color: inherit;
+}
+
+#sidebar-panel-picker > .toolbarbutton-box > .toolbarbutton-dropmarker
   {
     padding-left            : 4px;
-    list-style-image        : url("chrome://global/skin/menu-arrow.gif") !important;
+    list-style-image        : url("chrome://global/skin/menu-arrow.gif");
   }
-
-
-#sidebar-panel-picker > .menu-right {
-    padding-left		: 0px;
-}
-#sidebar-panel-picker > .menu-text {
-    padding-left: 0px;
-}
-#sidebar-panel-picker > .menu-accel {
-    display: none;
-}
 
 /**
  * texttab folder lookalike e.g. for sidebar panel headers

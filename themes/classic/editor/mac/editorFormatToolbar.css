@@ -91,11 +91,8 @@
 }
 
 .smiley > .menu-iconic-left {
-
     margin-right: 15px;
 }
-
-
 
 #italicButton
   {
@@ -297,18 +294,18 @@
 }
 
 #InsertPopupButton:hover {
-	list-style-image        : url("chrome://editor/skin/images/insert-hov.gif");
+	list-style-image        : url("chrome://editor/skin/images/insert-hover.gif");
 }
 
 #InsertPopupButton:hover:active,
 #InsertPopupButton[open="true"] {
-	list-style-image        : url("chrome://editor/skin/images/insert-act.gif");
+	list-style-image        : url("chrome://editor/skin/images/insert-hover-active.gif");
 }
 
 #InsertPopupButton[disabled="true"],
 #InsertPopupButton[disabled="true"]:hover,
 #InsertPopupButton[disabled="true"]:hover:active {
-	list-style-image        : url("chrome://editor/skin/images/insert-dis.gif");
+	list-style-image        : url("chrome://editor/skin/images/insert-disabled.gif");
 }
 
 #text-align-left,

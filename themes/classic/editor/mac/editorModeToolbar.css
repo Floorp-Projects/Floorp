@@ -32,65 +32,8 @@
     margin-bottom         : 0px;
     min-width             : 1px;
     color                 : white;
-    background-color      : threedface;
-    overflow              : hidden;
+    background-color      : ThreeDFace;
   }
-
-#EditModeToolbar > .toolbar-holder 
-  {
-    border-top: none;
-    padding-bottom: 2px;
-  }
-  
-#EditModeToolbar > toolbargrippy 
-  {
-    display: none;
-  }
-  
-#EditModeLabel 
-  {
-    display: none;
-  }
-
-button.edit-mode:hover, 
-button.edit-mode:hover:active,
-button.edit-mode 
-  {
-    -moz-binding          : url(chrome://global/content/bindings/button.xml#buttonleft);
-    -moz-border-radius    : 0px 0px 8px 8px;
-    padding               : 1px 5px 1px 4px;
-    margin                : 0px 1px;
-    color                 : black;
-    background-color      : #CCCCCC;
-    border-top            : 0px;
-    border-bottom         : 1px solid #666666;
-    border-left           : 1px solid white;
-    border-right          : 1px solid #666666;
-  }
-
-button.edit-mode:hover 
-  {
-    border                : 1px solid black;
-    border-top            : 0px;
-  }
-
-button.edit-mode:hover:active 
-  {
-    padding               : 2px 4px 0px 5px;
-  }
-
-button.edit-mode[selected="1"] 
-  {
-    background-color      : #FFFFFF;
-  }
-
-button.edit-mode[selected="1"]:active,
-button.edit-mode[selected="1"]:hover:active 
-  {
-    padding               : 2px 4px 0px 5px;
-  }
-  
-    
 
 #NormalModeButton 
   {

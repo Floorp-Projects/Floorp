@@ -1,0 +1,200 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== toolbarbutton.css =====================================================
+  == Styles used by the XUL button element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+toolbarbutton {
+  margin              : 0px;
+  border              : 1px solid transparent;
+  background-color    : transparent;
+  color               : -moz-DialogText;
+}
+
+.toolbarbutton-box {
+  -moz-box-align      : center;
+  -moz-box-pack       : center;
+  border              : 1px solid transparent;
+  padding             : 2px;
+}
+
+.toolbarbutton-icon {
+  margin-right: 2px;
+}
+
+.toolbarbutton-text {
+  margin: 0px !important;
+}
+
+toolbarbutton[value] > .toolbarbutton-box > .toolbarbutton-text {
+  padding-left        : 4px;
+}    
+
+toolbarbutton:hover,
+toolbarbutton[buttonover="true"],
+toolbarbutton[open="true"] {
+  border              : 1px solid ThreeDDarkShadow;
+  color               : #0000FF;
+} 
+    
+toolbarbutton:hover > .toolbarbutton-box {
+  border-left         : 1px solid ThreeDHighlight;
+  border-top          : 1px solid ThreeDHighlight;
+  border-right        : 1px solid ThreeDShadow;
+  border-bottom       : 1px solid ThreeDShadow;
+}
+
+toolbarbutton:hover:active {
+  color               : #000080;
+}
+
+toolbarbutton:hover:active > .toolbarbutton-box,
+toolbarbutton[open="true"] > .toolbarbutton-box {
+  padding             : 3px 1px 1px 3px;
+  border-left         : 1px solid ThreeDShadow;
+  border-top          : 1px solid ThreeDShadow;
+  border-right        : 1px solid ThreeDHighlight;
+  border-bottom       : 1px solid ThreeDHighlight;
+}
+    
+toolbarbutton[disabled="true"],
+toolbarbutton[disabled="true"]:hover,
+toolbarbutton[disabled="true"]:hover:active {
+  border              : 1px solid transparent;
+  color               : GrayText;
+}
+
+toolbarbutton[disabled="true"] > .toolbarbutton-box,
+toolbarbutton[disabled="true"]:hover > .toolbarbutton-box,
+toolbarbutton[disabled="true"]:hover:active > .toolbarbutton-box,
+toolbarbutton[disabled="true"][buttonover="true"] > .toolbarbutton-box,
+toolbarbutton[disabled="true"][buttondown="true"] > .toolbarbutton-box {
+  border              : 1px solid transparent;
+  padding             : 2px;
+}
+
+/* ..... toggled state ..... */
+
+toolbarbutton[toggled="true"] > .toolbarbutton-box {
+  border-left         : 1px solid ThreeDShadow;
+  border-top          : 1px solid ThreeDShadow;
+  border-right        : 1px solid ThreeDHighlight;
+  border-bottom       : 1px solid ThreeDHighlight;
+  background-color	  : ThreeDHighlight;
+}
+    
+toolbarbutton[toggled="true"]:hover > .toolbarbutton-box {
+  border-left         : 1px solid ThreeDShadow;
+  border-top          : 1px solid ThreeDShadow;
+  border-right        : 1px solid ThreeDHighlight;
+  border-bottom       : 1px solid ThreeDHighlight;
+  background-color	  : -moz-Dialog;
+  background-image    : none;
+}
+
+/* ::::: toolbarbutton menu ::::: */
+
+.toolbarbutton-dropmarker {
+  list-style-image      : url("chrome://global/skin/scroll-down.gif");
+}
+
+.toolbarbutton-dropmarker[disabled="true"] {
+  list-style-image      : url("chrome://global/skin/scroll-down-disabled.gif");
+}
+
+/* ::::: toolbarbutton menu-button ::::: */
+
+.toolbarbutton-menubutton-dropmarker-box {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+toolbarbutton[type="menu-button"]:hover:active {
+  color: #0000FF;
+}
+
+.toolbarbutton-menubutton-button {
+  border: none !important;
+  color: inherit;
+}
+
+.toolbarbutton-menubutton-dropmarker {
+  list-style-image: url("chrome://global/skin/scroll-down.gif");
+} 
+
+.toolbarbutton-menubutton-dropmarker[disabled="true"] {
+  list-style-image: url("chrome://global/skin/scroll-down-disabled.gif");
+} 
+
+.toolbarbutton-menubutton-dropmarker-box {
+  border                : 1px solid transparent;
+  padding               : 1px 0px 1px 0px;
+}
+
+toolbarbutton[disabled="true"]:hover > .toolbarbutton-menubutton-box
+  > .toolbarbutton-menubutton-button  > .toolbarbutton-box
+{
+  border                : 1px solid transparent;
+}
+
+toolbarbutton:hover > .toolbarbutton-menubutton-box
+  > .toolbarbutton-menubutton-button  > .toolbarbutton-box,
+toolbarbutton[open="true"] > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-button > .toolbarbutton-box
+{
+  border-left         : 1px solid ThreeDHighlight;
+  border-top          : 1px solid ThreeDHighlight;
+  border-right        : 1px solid ThreeDShadow;
+  border-bottom       : 1px solid ThreeDShadow;
+}
+
+toolbarbutton:hover > .toolbarbutton-menubutton-box
+  > .toolbarbutton-menubutton-dropmarker-box,
+toolbarbutton[buttonover="true"] > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-dropmarker-box
+{
+  border-left           : 1px solid ThreeDHighlight;
+  border-top            : 1px solid ThreeDHighlight;
+  border-right          : 1px solid ThreeDShadow;
+  border-bottom         : 1px solid ThreeDShadow;
+}
+
+toolbarbutton[buttondown="true"] > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-dropmarker-box,
+toolbarbutton[open="true"] > .toolbarbutton-menubutton-box 
+  > .toolbarbutton-menubutton-dropmarker-box
+{
+  border-left           : 1px solid ThreeDShadow;
+  border-top            : 1px solid ThreeDShadow;
+  border-right          : 1px solid ThreeDHighlight;
+  border-bottom         : 1px solid ThreeDHighlight;
+  padding               : 2px 0px 0px 0px;
+}
+
+.toolbarbutton-menubutton-dropmarker-box[disabled="true"] {
+  border: 1px solid transparent !important;
+  padding: 0px !important;
+}

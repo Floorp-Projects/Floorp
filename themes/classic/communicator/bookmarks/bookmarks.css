@@ -25,48 +25,28 @@
 /** 
  * Style rules for generic bookmarks items. 
  */    
-  .bookmark-item, outlinerbody:-moz-outliner-image(Name)
-    {
-      padding-right: 2px;
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-    }
+ 
+outlinerbody:-moz-outliner-image(Name) {
+    padding-right: 2px;
+}
+ 
+.bookmark-item, outlinerbody:-moz-outliner-image(Name) {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
+}
 
-  .bookmark-item[container="true"], outlinerbody:-moz-outliner-image(Name, container)
-    {
-      padding-right: 2px;
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
-    }
+.bookmark-item[container="true"], outlinerbody:-moz-outliner-image(Name, container) {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
+}
 
-  .bookmark-item[container="true"][open="true"], outlinerbody:-moz-outliner-image(Name, open)
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-    }
+.bookmark-item[container="true"][open="true"], outlinerbody:-moz-outliner-image(Name, open) {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
+}
 
-  .bookmark-item[container="true"][open="true"][loading="true"]
-    {
-      list-style-image    : url("chrome://global/skin/loading.gif") ! important ;
-    }
+.bookmark-item[container="true"][open="true"][loading="true"] {
+  list-style-image: url("chrome://global/skin/loading.gif") !important;
+}
 
-  .bookmark-item[status="new"]
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item-updated.gif") ! important ;
-    }
-
-/**
- * XXX - need to create some different icons for file system objects
- */    
-  .bookmark-item[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"]
-    {
-      list-style-image    : url("chrome://communicator/skin/directory/file-folder-open.gif");
-    }
-
-  .bookmark-item[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"]
-    {
-      list-style-image    : url("chrome://communicator/skin/directory/file-folder-closed.gif");
-    }
-
-  .bookmark-item[type="http://home.netscape.com/NC-rdf#FileSystemObject"]
-    {
-      list-style-image    : url("chrome://communicator/skin/directory/file-icon.gif");
-    }
+.bookmark-item[status="new"] {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item-updated.gif") !important;
+}
 

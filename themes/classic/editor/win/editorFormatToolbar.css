@@ -20,6 +20,14 @@
  * Contributor(s): 
  */
 
+#FormatToolbar > toolbarbutton {
+  min-width: 3em;
+}
+ 
+#FormatToolbar > toolbarbutton > .toolbarbutton-box > .toolbarbutton-text {
+  display: none;
+}
+
 #boldButton 
   {
     list-style-image      : url(chrome://editor/skin/images/bold.gif); 
