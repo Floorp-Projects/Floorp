@@ -475,7 +475,7 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
             
           for (i = 0 ; i < MAX_NUMBER_OF_EMAIL_ADDRESSES; i ++)
           {
-            if (pEmailStr[i].IsEmpty())
+            if (!bIsMailList && pEmailStr[i].IsEmpty())
               continue;
 
             MatchType matchType;
