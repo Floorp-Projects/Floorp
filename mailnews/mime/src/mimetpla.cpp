@@ -23,6 +23,7 @@
 #include "nsMimeTransition.h"
 #include "nsMimeURLUtils.h"
 #include "nsCRT.h"
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextPlain, MimeInlineTextPlainClass,
@@ -65,7 +66,7 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
 	  strs[3] = "<PRE VARIABLE WRAP>";
 	  s = PL_strdup(strs[(obj->options->variable_width_plaintext_p ? 1 : 0) +
 						(obj->options->wrap_long_lines_p ? 2 : 0)]);
-	  if (!s) return MK_OUT_OF_MEMORY;
+	  if (!s) return MIME_OUT_OF_MEMORY;
 	  status = MimeObject_write(obj, s, PL_strlen(s), PR_FALSE);
 	  PR_Free(s);
 	  if (status < 0) return status;

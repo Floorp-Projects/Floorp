@@ -24,6 +24,7 @@
 #include "prlog.h"
 #include "nsMimeTypes.h"
 #include "nsCRT.h"
+#include "nsMimeStringResources.h"
 
 /* Way to destroy any notions of modularity or class hierarchy, Terry! */
 # include "mimetpla.h"
@@ -169,7 +170,7 @@ MimeObject_parse_begin (MimeObject *obj)
 	  PR_ASSERT(!obj->headers);  /* should be the outermost object. */
 
 	  obj->options->state = PR_NEW(MimeParseStateObject);
-	  if (!obj->options->state) return MK_OUT_OF_MEMORY;
+	  if (!obj->options->state) return MIME_OUT_OF_MEMORY;
     nsCRT::memset(obj->options->state, 0, sizeof(*obj->options->state));
 	  obj->options->state->root = obj;
 	  obj->options->state->separator_suppressed_p = PR_TRUE; /* no first sep */
@@ -183,7 +184,7 @@ MimeObject_parse_begin (MimeObject *obj)
   else
 	{
 	  char *id = mime_part_address(obj);
-	  if (!id) return MK_OUT_OF_MEMORY;
+	  if (!id) return MIME_OUT_OF_MEMORY;
 	  obj->output_p = !PL_strcmp(id, obj->options->part_to_load);
 	  PR_Free(id);
 	}

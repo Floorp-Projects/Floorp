@@ -23,6 +23,7 @@
 #include "prlog.h"
 #include "nsMimeTypes.h"
 #include "msgCore.h"
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeUntypedText, MimeUntypedTextClass,
@@ -262,14 +263,14 @@ MimeUntypedText_open_subpart (MimeObject *obj,
    */
 
   uty->open_hdrs = MimeHeaders_new();
-  if (!uty->open_hdrs) return MK_OUT_OF_MEMORY;
+  if (!uty->open_hdrs) return MIME_OUT_OF_MEMORY;
 
   h = (char *) PR_MALLOC(PL_strlen(type) +
 						(enc ? PL_strlen(enc) : 0) +
 						(desc ? PL_strlen(desc) : 0) +
 						(name ? PL_strlen(name) : 0) +
 						100);
-  if (!h) return MK_OUT_OF_MEMORY;
+  if (!h) return MIME_OUT_OF_MEMORY;
 
   PL_strcpy(h, HEADER_CONTENT_TYPE ": ");
   PL_strcat(h, type);
@@ -323,7 +324,7 @@ MimeUntypedText_open_subpart (MimeObject *obj,
 
 	if (!uty->open_subpart)
 	  {
-		status = MK_OUT_OF_MEMORY;
+		status = MIME_OUT_OF_MEMORY;
 		goto FAIL;
 	  }
   }

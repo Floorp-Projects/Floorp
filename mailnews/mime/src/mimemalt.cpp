@@ -21,6 +21,7 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "nsMimeTypes.h"
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartAlternative, MimeMultipartAlternativeClass,
@@ -63,7 +64,7 @@ MimeMultipartAlternative_initialize (MimeObject *obj)
   PR_ASSERT(!malt->part_buffer);
   malt->part_buffer = MimePartBufferCreate();
   if (!malt->part_buffer)
-	return MK_OUT_OF_MEMORY;
+	return MIME_OUT_OF_MEMORY;
 
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);
 }
@@ -140,7 +141,7 @@ MimeMultipartAlternative_create_child(MimeObject *obj)
 
 	  PR_ASSERT(!malt->buffered_hdrs);
 	  malt->buffered_hdrs = MimeHeaders_copy(mult->hdrs);
-	  if (!malt->buffered_hdrs) return MK_OUT_OF_MEMORY;
+	  if (!malt->buffered_hdrs) return MIME_OUT_OF_MEMORY;
 	  return 0;
 	}
   else
@@ -254,7 +255,7 @@ MimeMultipartAlternative_display_cached_part(MimeObject *obj)
 					 malt->buffered_hdrs, obj->options);
 
   PR_FREEIF(ct);
-  if (!body) return MK_OUT_OF_MEMORY;
+  if (!body) return MIME_OUT_OF_MEMORY;
 
   multipart_p = mime_typep(body, (MimeObjectClass *) &mimeMultipartClass);
 

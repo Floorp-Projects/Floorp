@@ -26,6 +26,8 @@
 #include "prerror.h"
 #include "nsMimeTypes.h"
 #include "msgCore.h"
+#include "nsMimeStringResources.h"
+
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartSigned, MimeMultipartSignedClass,
@@ -386,7 +388,7 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 					->xlation_signature_hash)),
 				  sig->xlation_closure);
 			if (!sig->sig_decoder_data)
-			  return MK_OUT_OF_MEMORY;
+			  return MIME_OUT_OF_MEMORY;
 		  }
 	  }
 
@@ -497,7 +499,7 @@ MimeMultipartSigned_parse_child_line (MimeObject *obj,
 		{
 		  sig->part_buffer = MimePartBufferCreate();
 		  if (!sig->part_buffer)
-			return MK_OUT_OF_MEMORY;
+			return MIME_OUT_OF_MEMORY;
 		}
 	  /* fall through */
 
@@ -591,7 +593,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 	{
 	  char *html = (((MimeMultipartSignedClass *) obj->clazz)
 					->xlation_generate_html (sig->xlation_closure));
-	  if (!html) return -1; /* MK_OUT_OF_MEMORY? */
+	  if (!html) return -1; /* MIME_OUT_OF_MEMORY? */
 
 	  status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
 	  PR_Free(html);

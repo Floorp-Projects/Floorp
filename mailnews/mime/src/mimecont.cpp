@@ -21,6 +21,7 @@
 #include "nsCRT.h"
 #include "prio.h"
 #include "mimecont.h"
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeObjectClass
 MimeDefClass(MimeContainer, MimeContainerClass,
@@ -167,7 +168,7 @@ MimeContainer_add_child (MimeObject *parent, MimeObject *child)
 
   old_kids = cont->children;
   new_kids = (MimeObject **)PR_MALLOC(sizeof(MimeObject *) * (cont->nchildren + 1));
-  if (!new_kids) return MK_OUT_OF_MEMORY;
+  if (!new_kids) return MIME_OUT_OF_MEMORY;
   
   if (cont->nchildren > 0)
     nsCRT::memcpy(new_kids, old_kids, sizeof(MimeObject *) * cont->nchildren);

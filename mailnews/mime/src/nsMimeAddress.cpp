@@ -25,8 +25,6 @@
 
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 
-extern int MK_OUT_OF_MEMORY;
-
 int
 ParseRFC822Addresses (const char *line,
 						              char **names,

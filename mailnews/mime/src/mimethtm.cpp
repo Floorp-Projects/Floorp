@@ -21,6 +21,7 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "msgCore.h"
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextHTML, MimeInlineTextHTMLClass,
@@ -87,7 +88,7 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
 		  const char *in;
 		  char *out;
 		  if (!buf)
-			return MK_OUT_OF_MEMORY;
+			return MIME_OUT_OF_MEMORY;
 
 		  /* The value of the Content-Base header is a number of "words".
 			 Whitespace in this header is not significant -- it is assumed

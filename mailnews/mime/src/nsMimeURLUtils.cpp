@@ -637,7 +637,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 
       if (!invalidHit)
       {
-        if ((ambitiousHit) && ((cp2-cp) < PL_strlen(mailToTag)))
+        if ((ambitiousHit) && ((cp2-cp) < (PRInt32)PL_strlen(mailToTag)))
           invalidHit = PR_TRUE;
         if ( (!ambitiousHit) && (cp2-cp < 7) )
           invalidHit = PR_TRUE;

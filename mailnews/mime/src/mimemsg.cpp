@@ -27,6 +27,7 @@
 #include "msgCore.h"
 #include "prlog.h"
 #include "nsCRT.h"
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMessage, MimeMessageClass, mimeMessageClass,
@@ -169,7 +170,7 @@ MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		{
 		  /* Hack a newline onto the end. */
 		  char *s = (char *)PR_MALLOC(length + MSG_LINEBREAK_LEN + 1);
-		  if (!s) return MK_OUT_OF_MEMORY;
+		  if (!s) return MIME_OUT_OF_MEMORY;
 		  nsCRT::memcpy(s, line, length);
 		  PL_strcpy(s + length, MSG_LINEBREAK);
 		  status = kid->clazz->parse_buffer (s, length + MSG_LINEBREAK_LEN, kid);
@@ -184,7 +185,7 @@ MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
   if (!msg->hdrs)
 	{
 	  msg->hdrs = MimeHeaders_new();
-	  if (!msg->hdrs) return MK_OUT_OF_MEMORY;
+	  if (!msg->hdrs) return MIME_OUT_OF_MEMORY;
 	}
 
 #ifdef MIME_DRAFTS
@@ -377,7 +378,7 @@ HG09091
   body = mime_create(ct, msg->hdrs, obj->options);
 
   PR_FREEIF(ct);
-  if (!body) return MK_OUT_OF_MEMORY;
+  if (!body) return MIME_OUT_OF_MEMORY;
   status = ((MimeContainerClass *) obj->clazz)->add_child (obj, body);
   if (status < 0)
 	{

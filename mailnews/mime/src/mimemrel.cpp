@@ -112,8 +112,7 @@
 #include "nsCRT.h"
 #include "msgCore.h"
 #include "nsMimeURLUtils.h"
-
-extern "C" int MK_UNABLE_TO_OPEN_TMP_FILE;
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartRelated, MimeMultipartRelatedClass,
@@ -159,7 +158,7 @@ MimeMultipartRelated_initialize(MimeObject* obj)
   relobj->hash = PL_NewHashTable(20, PL_HashString, PL_CompareStrings, PL_CompareValues,
                                 (PLHashAllocOps *)NULL, NULL);
 
-	if (!relobj->hash) return MK_OUT_OF_MEMORY;
+	if (!relobj->hash) return MIME_OUT_OF_MEMORY;
 
 	return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);
 }
@@ -549,13 +548,13 @@ MimeMultipartRelated_parse_child_line (MimeObject *obj,
 	   make a file buffer. */
 	if (!relobj->head_buffer && !relobj->file_buffer_name) {
 		relobj->file_buffer_name = GetOSTempFile("nsma");
-		if (!relobj->file_buffer_name) return MK_OUT_OF_MEMORY;
+		if (!relobj->file_buffer_name) return MIME_OUT_OF_MEMORY;
 
 		relobj->file_stream = PR_Open(relobj->file_buffer_name, 
 						PR_RDWR | PR_CREATE_FILE,
 						0);
 		if (!relobj->file_stream) {
-			return MK_UNABLE_TO_OPEN_TMP_FILE;
+			return MIME_UNABLE_TO_OPEN_TMP_FILE;
 		}
 	}
   
@@ -577,13 +576,13 @@ MimeMultipartRelated_parse_child_line (MimeObject *obj,
 			if (!relobj->file_buffer_name) {
 				relobj->file_buffer_name = GetOSTempFile("nsma");
 			}
-			if (!relobj->file_buffer_name) return MK_OUT_OF_MEMORY;
+			if (!relobj->file_buffer_name) return MIME_OUT_OF_MEMORY;
 
 			relobj->file_stream = PR_Open(relobj->file_buffer_name,
 						PR_RDWR | PR_CREATE_FILE,
 						0);
 			if (!relobj->file_stream) {
-				return MK_UNABLE_TO_OPEN_TMP_FILE;
+				return MIME_UNABLE_TO_OPEN_TMP_FILE;
 			}
 
 			if (relobj->head_buffer && relobj->head_buffer_fp) {
@@ -647,7 +646,7 @@ push_tag(MimeMultipartRelated* relobj, const char* buf, PRInt32 size)
 			relobj->curtag = (char*) PR_Realloc(relobj->curtag,
 												relobj->curtag_max);
 		}
-		if (!relobj->curtag) return MK_OUT_OF_MEMORY;
+		if (!relobj->curtag) return MIME_OUT_OF_MEMORY;
 	}
 	nsCRT::memcpy(relobj->curtag + relobj->curtag_length, buf, size);
 	relobj->curtag_length += size;
@@ -867,7 +866,7 @@ MimeMultipartRelated_parse_eof (MimeObject *obj, PRBool abort_p)
 	body = mime_create(((ct && *ct) ? ct : (dct ? dct : TEXT_HTML)),
 					   relobj->buffered_hdrs, obj->options);
 	if (!body) {
-		status = MK_OUT_OF_MEMORY;
+		status = MIME_OUT_OF_MEMORY;
 		goto FAIL;
 	}
 	status = ((MimeContainerClass *) obj->clazz)->add_child(obj, body);
@@ -917,7 +916,7 @@ MimeMultipartRelated_parse_eof (MimeObject *obj, PRBool abort_p)
 
 		buf = (char *) PR_MALLOC(buf_size);
 		if (!buf) {
-			status = MK_OUT_OF_MEMORY;
+			status = MIME_OUT_OF_MEMORY;
 			goto FAIL;
 		}
 
@@ -928,7 +927,7 @@ MimeMultipartRelated_parse_eof (MimeObject *obj, PRBool abort_p)
 						  PR_RDONLY, 0);
 		if (!relobj->file_stream) {
 			PR_Free(buf);
-			status = MK_UNABLE_TO_OPEN_TMP_FILE;
+			status = MIME_UNABLE_TO_OPEN_TMP_FILE;
 			goto FAIL;
 		}
 

@@ -22,6 +22,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prlog.h"
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeObjectClass
 MimeDefClass(MimeLeaf, MimeLeafClass, mimeLeafClass, &MIME_SUPERCLASS);
@@ -118,7 +119,7 @@ MimeLeaf_parse_begin (MimeObject *obj)
 			obj);
 
 	  if (!leaf->decoder_data)
-		return MK_OUT_OF_MEMORY;
+		return MIME_OUT_OF_MEMORY;
 	}
 
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);

@@ -56,7 +56,7 @@
 #include "secrng.h"
 #include "secmod.h"
 #include "pk11func.h"
-
+#include "nsMimeStringResources.h"
 
 #ifndef XP_UNIX
 ERROR!	This is a unix-only file for the "mimefilt" standalone program.
@@ -256,7 +256,7 @@ test(FILE *in, FILE *out,
   if (status < 0)
 	{
 	  PR_Free(opt);
-	  return MK_OUT_OF_MEMORY;
+	  return MIME_OUT_OF_MEMORY;
 	}
 
   opt->url					= url;
@@ -286,7 +286,7 @@ test(FILE *in, FILE *out,
   if (!obj)
 	{
 	  PR_Free(opt);
-	  return MK_OUT_OF_MEMORY;
+	  return MIME_OUT_OF_MEMORY;
 	}
   obj->options = opt;
 
@@ -297,7 +297,7 @@ test(FILE *in, FILE *out,
 	{
 	  PR_Free(opt);
 	  PR_Free(obj);
-	  return MK_OUT_OF_MEMORY;
+	  return MIME_OUT_OF_MEMORY;
 	}
 
   while (1)

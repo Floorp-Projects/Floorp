@@ -21,6 +21,7 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "nsMimeTypes.h"
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeInlineImage, MimeInlineImageClass,
@@ -90,12 +91,12 @@ MimeInlineImage_parse_begin (MimeObject *obj)
 	  const char *ct;
 
 	  part = mime_part_address(obj);
-	  if (!part) return MK_OUT_OF_MEMORY;
+	  if (!part) return MIME_OUT_OF_MEMORY;
 	  image_url = mime_set_url_part(obj->options->url, part, PR_TRUE);
 	  if (!image_url)
 		{
 		  PR_Free(part);
-		  return MK_OUT_OF_MEMORY;
+		  return MIME_OUT_OF_MEMORY;
 		}
 	  PR_Free(part);
 
@@ -106,10 +107,10 @@ MimeInlineImage_parse_begin (MimeObject *obj)
 		obj->options->image_begin(image_url, ct, obj->options->stream_closure);
 	  PR_Free(image_url);
 
-	  if (!img->image_data) return MK_OUT_OF_MEMORY;
+	  if (!img->image_data) return MIME_OUT_OF_MEMORY;
 
 	  html = obj->options->make_image_html(img->image_data);
-	  if (!html) return MK_OUT_OF_MEMORY;
+	  if (!html) return MIME_OUT_OF_MEMORY;
 
 	  status = MimeObject_write(obj, html, PL_strlen(html), PR_TRUE);
 	  PR_Free(html);

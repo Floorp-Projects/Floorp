@@ -22,6 +22,7 @@
 #include "prlog.h"
 #include "nsMimeTypes.h"
 #include "msgCore.h"
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeSunAttachment, MimeSunAttachmentClass,
@@ -292,7 +293,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
   child = mime_create(mime_ct, mult->hdrs, obj->options);
   if (!child)
 	{
-	  status = MK_OUT_OF_MEMORY;
+	  status = MIME_OUT_OF_MEMORY;
 	  goto FAIL;
 	}
 

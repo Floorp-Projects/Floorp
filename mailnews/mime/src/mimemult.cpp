@@ -23,6 +23,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prio.h"
+#include "nsMimeStringResources.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMultipart, MimeMultipartClass,
@@ -161,7 +162,7 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
 			MimeHeaders_free(mult->hdrs);
 		  mult->hdrs = MimeHeaders_new();
 		  if (!mult->hdrs)
-			return MK_OUT_OF_MEMORY;
+			return MIME_OUT_OF_MEMORY;
 		}
 
 	  /* Now return, to ignore the boundary line itself. */
@@ -289,7 +290,7 @@ MimeMultipart_create_child(MimeObject *obj)
   body = mime_create(((ct && *ct) ? ct : (dct ? dct: TEXT_PLAIN)),
 					 mult->hdrs, obj->options);
   PR_FREEIF(ct);
-  if (!body) return MK_OUT_OF_MEMORY;
+  if (!body) return MIME_OUT_OF_MEMORY;
   status = ((MimeContainerClass *) obj->clazz)->add_child(obj, body);
   if (status < 0)
 	{

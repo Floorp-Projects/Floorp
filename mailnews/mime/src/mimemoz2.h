@@ -134,6 +134,8 @@ extern "C" nsIPref          *GetPrefServiceManager(MimeDisplayOptions *opt);
 
 extern "C" char             *GetOSTempFile(const char *name);
 
+/* This is the next generation string retrieval call */
+extern "C" char             *MimeGetStringByID(PRInt32 stringID);
 
 #ifdef __cplusplus
 }

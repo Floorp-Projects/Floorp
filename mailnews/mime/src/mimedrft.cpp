@@ -30,6 +30,8 @@
 #include "nsIPref.h"
 #include "msgCore.h"
 #include "nsCRT.h"
+#include "nsMimeStringResources.h"
+
 
 
 #define HEADER_NNTP_POSTING_HOST             "NNTP-Posting-Host"
@@ -37,31 +39,6 @@
 #define HEADER_START_JUNK  "<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>"
 #define HEADER_MIDDLE_JUNK ": </TH><TD>"
 #define HEADER_END_JUNK    "</TD></TR>"
-
-extern "C" int MK_MIMEHTML_DISP_SUBJECT;
-extern "C" int MK_MIMEHTML_DISP_RESENT_COMMENTS;
-extern "C" int MK_MIMEHTML_DISP_RESENT_DATE;
-extern "C" int MK_MIMEHTML_DISP_RESENT_SENDER;
-extern "C" int MK_MIMEHTML_DISP_RESENT_FROM;
-extern "C" int MK_MIMEHTML_DISP_RESENT_TO;
-extern "C" int MK_MIMEHTML_DISP_RESENT_CC;
-extern "C" int MK_MIMEHTML_DISP_DATE;
-extern "C" int MK_MIMEHTML_DISP_SENDER;
-extern "C" int MK_MIMEHTML_DISP_FROM;
-extern "C" int MK_MIMEHTML_DISP_REPLY_TO;
-extern "C" int MK_MIMEHTML_DISP_ORGANIZATION;
-extern "C" int MK_MIMEHTML_DISP_TO;
-extern "C" int MK_MIMEHTML_DISP_CC;
-extern "C" int MK_MIMEHTML_DISP_BCC;
-extern "C" int MK_MIMEHTML_DISP_NEWSGROUPS;
-extern "C" int MK_MIMEHTML_DISP_FOLLOWUP_TO;
-extern "C" int MK_MIMEHTML_DISP_REFERENCES;
-extern "C" int MK_MIMEHTML_DISP_NAME;
-extern "C" int MK_MIMEHTML_DISP_TYPE;
-extern "C" int MK_MIMEHTML_DISP_ENCODING;
-extern "C" int MK_MIMEHTML_DISP_DESCRIPTION;
-extern "C" int MK_UNABLE_TO_OPEN_TMP_FILE;
-extern "C" int MK_MIME_ERROR_WRITING_FILE;
 
 extern "C" char *
 MIME_StripContinuations(char *original);
@@ -174,7 +151,7 @@ mime_draft_process_attachments ( struct mime_draft_data *mdd,
 	return -1;
 
   attachData = PR_MALLOC( ( (mdd->attachments_count+1) * sizeof (MSG_AttachmentData) ) );
-  if ( !attachData ) return MK_OUT_OF_MEMORY;
+  if ( !attachData ) return MIME_OUT_OF_MEMORY;
 
   memset ( attachData, 0, (mdd->attachments_count+1) * sizeof (MSG_AttachmentData) );
 
@@ -293,18 +270,6 @@ static void mime_intl_insert_message_header_1(char **body, char **hdr_value,
 		mime_SACat(*body, HEADER_END_JUNK);
 }
 
-static void mime_intl_insert_message_header(char **body, char**hdr_value,
-											char *hdr_str, 
-											int html_hdr_id,
-											PRInt16 mailcsid,
-											PRBool htmlEdit)
-{
-	const char *newName = NULL;
-	newName = XP_GetStringForHTML(html_hdr_id, mailcsid, hdr_str);
-	mime_intl_insert_message_header_1(body, hdr_value, hdr_str, newName,
-									  mailcsid, htmlEdit);
-}
-
 static void mime_insert_all_headers(char **body,
 									MimeHeaders *headers,
 									MSG_EditorType editorType,
@@ -386,7 +351,7 @@ static void mime_insert_all_headers(char **body,
 		end--;
 
 	  name = PR_MALLOC(colon - head + 1);
-	  if (!name) return /* MK_OUT_OF_MEMORY */;
+	  if (!name) return /* MIME_OUT_OF_MEMORY */;
 	  nsCRT::memcpy(name, head, colon - head);
 	  name[colon - head] = 0;
 
@@ -394,7 +359,7 @@ static void mime_insert_all_headers(char **body,
 	  if (!c2)
 		{
 		  PR_Free(name);
-		  return /* MK_OUT_OF_MEMORY */;
+		  return /* MIME_OUT_OF_MEMORY */;
 		}
 	  nsCRT::memcpy(c2, contents, end - contents);
 	  c2[end - contents] = 0;
@@ -478,105 +443,105 @@ static void mime_insert_normal_headers(char **body,
 					 MSG_LINEBREAK MSG_LINEBREAK "-------- Original Message --------");
 	}
 	if (subject)
-		mime_intl_insert_message_header(&newBody, &subject, HEADER_SUBJECT,
-										MK_MIMEHTML_DISP_SUBJECT,
+		mime_intl_insert_message_header_1(&newBody, &subject, HEADER_SUBJECT,
+										MimeGetNamedString(MIME_MHTML_SUBJECT),
 											mailcsid, htmlEdit);
 	if (resent_comments)
-		mime_intl_insert_message_header(&newBody, &resent_comments,
+		mime_intl_insert_message_header_1(&newBody, &resent_comments,
 										HEADER_RESENT_COMMENTS, 
-										MK_MIMEHTML_DISP_RESENT_COMMENTS,
+										MimeGetNamedString(MIME_MHTML_RESENT_COMMENTS),
 											mailcsid, htmlEdit);
 	if (resent_date)
-		mime_intl_insert_message_header(&newBody, &resent_date,
+		mime_intl_insert_message_header_1(&newBody, &resent_date,
 										HEADER_RESENT_DATE,
-										MK_MIMEHTML_DISP_RESENT_DATE,
+										MimeGetNamedString(MIME_MHTML_RESENT_DATE),
 											mailcsid, htmlEdit);
 	if (resent_from)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&resent_from);
-		mime_intl_insert_message_header(&newBody, &resent_from,
+		mime_intl_insert_message_header_1(&newBody, &resent_from,
 										HEADER_RESENT_FROM,
-										MK_MIMEHTML_DISP_RESENT_FROM,
+										MimeGetNamedString(MIME_MHTML_RESENT_FROM),
 											mailcsid, htmlEdit);
 	}
 	if (resent_to)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&resent_to);
-		mime_intl_insert_message_header(&newBody, &resent_to,
+		mime_intl_insert_message_header_1(&newBody, &resent_to,
 										HEADER_RESENT_TO,
-										MK_MIMEHTML_DISP_RESENT_TO,
+										MimeGetNamedString(MIME_MHTML_RESENT_TO),
 											mailcsid, htmlEdit);
 	}
 	if (resent_cc)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&resent_cc);
-		mime_intl_insert_message_header(&newBody, &resent_cc,
+		mime_intl_insert_message_header_1(&newBody, &resent_cc,
 										HEADER_RESENT_CC,
-										MK_MIMEHTML_DISP_RESENT_CC,
+										MimeGetNamedString(MIME_MHTML_RESENT_CC),
 											mailcsid, htmlEdit);
 	}
 	if (date)
-		mime_intl_insert_message_header(&newBody, &date, HEADER_DATE,
-										MK_MIMEHTML_DISP_DATE,
+		mime_intl_insert_message_header_1(&newBody, &date, HEADER_DATE,
+										MimeGetNamedString(MIME_MHTML_DATE),
 										mailcsid, htmlEdit);
 	if (from)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&from);
-		mime_intl_insert_message_header(&newBody, &from, HEADER_FROM,
-										MK_MIMEHTML_DISP_FROM,
+		mime_intl_insert_message_header_1(&newBody, &from, HEADER_FROM,
+										MimeGetNamedString(MIME_MHTML_FROM),
 										mailcsid, htmlEdit);
 	}
 	if (reply_to)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&reply_to);
-		mime_intl_insert_message_header(&newBody, &reply_to, HEADER_REPLY_TO,
-										MK_MIMEHTML_DISP_REPLY_TO,
+		mime_intl_insert_message_header_1(&newBody, &reply_to, HEADER_REPLY_TO,
+										MimeGetNamedString(MIME_MHTML_REPLY_TO),
 										mailcsid, htmlEdit);
 	}
 	if (organization)
-		mime_intl_insert_message_header(&newBody, &organization,
+		mime_intl_insert_message_header_1(&newBody, &organization,
 										HEADER_ORGANIZATION,
-										MK_MIMEHTML_DISP_ORGANIZATION,
+										MimeGetNamedString(MIME_MHTML_ORGANIZATION),
 										mailcsid, htmlEdit);
 	if (to)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&to);
-		mime_intl_insert_message_header(&newBody, &to, HEADER_TO,
-										MK_MIMEHTML_DISP_TO,
+		mime_intl_insert_message_header_1(&newBody, &to, HEADER_TO,
+										MimeGetNamedString(MIME_MHTML_TO),
 										mailcsid, htmlEdit);
 	}
 	if (cc)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&cc);
-		mime_intl_insert_message_header(&newBody, &cc, HEADER_CC,
-										MK_MIMEHTML_DISP_CC,
+		mime_intl_insert_message_header_1(&newBody, &cc, HEADER_CC,
+										MimeGetNamedString(MIME_MHTML_CC),
 										mailcsid, htmlEdit);
 	}
 	if (bcc)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&bcc);
-		mime_intl_insert_message_header(&newBody, &bcc, HEADER_BCC,
-										MK_MIMEHTML_DISP_BCC,
+		mime_intl_insert_message_header_1(&newBody, &bcc, HEADER_BCC,
+										MimeGetNamedString(MIME_MHTML_BCC),
 										mailcsid, htmlEdit);
 	}
 	if (newsgroups)
-		mime_intl_insert_message_header(&newBody, &newsgroups, HEADER_NEWSGROUPS,
-										MK_MIMEHTML_DISP_NEWSGROUPS,
+		mime_intl_insert_message_header_1(&newBody, &newsgroups, HEADER_NEWSGROUPS,
+										MimeGetNamedString(MIME_MHTML_NEWSGROUPS),
 										mailcsid, htmlEdit);
 	if (followup_to)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&followup_to);
-		mime_intl_insert_message_header(&newBody, &followup_to,
+		mime_intl_insert_message_header_1(&newBody, &followup_to,
 										HEADER_FOLLOWUP_TO,
-										MK_MIMEHTML_DISP_FOLLOWUP_TO,
+										MimeGetNamedString(MIME_MHTML_FOLLOWUP_TO),
 										mailcsid, htmlEdit);
 	}
 	if (references)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&references);
-		mime_intl_insert_message_header(&newBody, &references,
+		mime_intl_insert_message_header_1(&newBody, &references,
 										HEADER_REFERENCES,
-										MK_MIMEHTML_DISP_REFERENCES,
+										MimeGetNamedString(MIME_MHTML_REFERENCES),
 										mailcsid, htmlEdit);
 	}
 	if (htmlEdit)
@@ -657,52 +622,52 @@ static void mime_insert_micro_headers(char **body,
 	if (from)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&from);
-		mime_intl_insert_message_header(&newBody, &from, HEADER_FROM,
-										MK_MIMEHTML_DISP_FROM,
+		mime_intl_insert_message_header_1(&newBody, &from, HEADER_FROM,
+										MimeGetNamedString(MIME_MHTML_FROM),
 										mailcsid, htmlEdit);
 	}
 	if (subject)
-		mime_intl_insert_message_header(&newBody, &subject, HEADER_SUBJECT,
-										MK_MIMEHTML_DISP_SUBJECT,
+		mime_intl_insert_message_header_1(&newBody, &subject, HEADER_SUBJECT,
+										MimeGetNamedString(MIME_MHTML_SUBJECT),
 											mailcsid, htmlEdit);
 /*
 	if (date)
-		mime_intl_insert_message_header(&newBody, &date, HEADER_DATE,
-										MK_MIMEHTML_DISP_DATE,
+		mime_intl_insert_message_header_1(&newBody, &date, HEADER_DATE,
+										MimeGetNamedString(MIME_MHTML_DATE),
 										mailcsid, htmlEdit);
 */
 	if (resent_from)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&resent_from);
-		mime_intl_insert_message_header(&newBody, &resent_from,
+		mime_intl_insert_message_header_1(&newBody, &resent_from,
 										HEADER_RESENT_FROM,
-										MK_MIMEHTML_DISP_RESENT_FROM,
+										MimeGetNamedString(MIME_MHTML_RESENT_FROM),
 										mailcsid, htmlEdit);
 	}
 	if (to)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&to);
-		mime_intl_insert_message_header(&newBody, &to, HEADER_TO,
-										MK_MIMEHTML_DISP_TO,
+		mime_intl_insert_message_header_1(&newBody, &to, HEADER_TO,
+										MimeGetNamedString(MIME_MHTML_TO),
 										mailcsid, htmlEdit);
 	}
 	if (cc)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&cc);
-		mime_intl_insert_message_header(&newBody, &cc, HEADER_CC,
-										MK_MIMEHTML_DISP_CC,
+		mime_intl_insert_message_header_1(&newBody, &cc, HEADER_CC,
+										MimeGetNamedString(MIME_MHTML_CC),
 										mailcsid, htmlEdit);
 	}
 	if (bcc)
 	{
 		if (htmlEdit) mime_fix_up_html_address(&bcc);
-		mime_intl_insert_message_header(&newBody, &bcc, HEADER_BCC,
-										MK_MIMEHTML_DISP_BCC,
+		mime_intl_insert_message_header_1(&newBody, &bcc, HEADER_BCC,
+										MimeGetNamedString(MIME_MHTML_BCC),
 										mailcsid, htmlEdit);
 	}
 	if (newsgroups)
-		mime_intl_insert_message_header(&newBody, &newsgroups, HEADER_NEWSGROUPS,
-										MK_MIMEHTML_DISP_NEWSGROUPS,
+		mime_intl_insert_message_header_1(&newBody, &newsgroups, HEADER_NEWSGROUPS,
+										MimeGetNamedString(MIME_MHTML_NEWSGROUPS),
 										mailcsid, htmlEdit);
 	if (htmlEdit)
 	{
@@ -1187,7 +1152,7 @@ mime_decompose_file_init_fn ( void *stream_closure,
 	mdd->messageBody = PR_NEWZAP (MSG_AttachedFile);
 	PR_ASSERT (mdd->messageBody);
 	if (!mdd->messageBody) 
-	  return MK_OUT_OF_MEMORY;
+	  return MIME_OUT_OF_MEMORY;
 	newAttachment = mdd->messageBody;
 	creatingMsgBody = PR_TRUE;
   }
@@ -1201,7 +1166,7 @@ mime_decompose_file_init_fn ( void *stream_closure,
 								sizeof (MSG_AttachedFile) * 
 								(nAttachments + 2));
 	  if (!attachments)
-		return MK_OUT_OF_MEMORY;
+		return MIME_OUT_OF_MEMORY;
 	  mdd->attachments = attachments;
 	  mdd->attachments_count++;
 	}
@@ -1210,7 +1175,7 @@ mime_decompose_file_init_fn ( void *stream_closure,
 	  
 	  attachments = PR_MALLOC ( sizeof (MSG_AttachedFile) * 2);
 	  if (!attachments) 
-		return MK_OUT_OF_MEMORY;
+		return MIME_OUT_OF_MEMORY;
 	  mdd->attachments_count++;
 	  mdd->attachments = attachments;
 	}
@@ -1270,12 +1235,12 @@ mime_decompose_file_init_fn ( void *stream_closure,
   mdd->tmp_file_name = GetOSTempFile("nsmail");
 
   if (!mdd->tmp_file_name)
-	return MK_OUT_OF_MEMORY;
+	return MIME_OUT_OF_MEMORY;
 
   mime_SACopy (&(newAttachment->file_name), mdd->tmp_file_name);
   mdd->tmp_file = PR_Open ( mdd->tmp_file_name, PR_RDWR | PR_CREATE_FILE, 493 );
   if (!mdd->tmp_file)
-	return MK_UNABLE_TO_OPEN_TMP_FILE;
+	return MIME_UNABLE_TO_OPEN_TMP_FILE;
 
   /* if need an URL and we don't have one, let's fake one */
   if (needURL && !newAttachment->orig_url) {
@@ -1308,7 +1273,7 @@ mime_decompose_file_init_fn ( void *stream_closure,
 			mdd->tmp_file);
 	  
 	  if (!mdd->decoder_data)
-		return MK_OUT_OF_MEMORY;
+		return MIME_OUT_OF_MEMORY;
 	}
   }
   return 0;
@@ -1339,7 +1304,7 @@ mime_decompose_file_output_fn ( char *buf,
   else {
     ret = PR_Write(mdd->tmp_file, buf, size);
 	if (ret < size)
-	  return MK_MIME_ERROR_WRITING_FILE;
+	  return MIME_ERROR_WRITING_FILE;
   }
   
   return 0;

@@ -159,6 +159,8 @@ LINCS=$(LINCS)  -I.                         		\
 			   -I$(PUBLIC)\uconv		\
 			   -I$(PUBLIC)\netcnvts		\
 			   -I$(PUBLIC)\plugin		\
+         -I$(PUBLIC)\intl \
+         -I$(PUBLIC)\locale \
 			   $(NULL)
 
 #//------------------------------------------------------------------------

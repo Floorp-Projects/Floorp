@@ -39,58 +39,8 @@
 #include "nsMailHeaders.h"
 #include "msgCore.h"
 #include "nsMimeURLUtils.h"
-
-extern "C" int MK_OUT_OF_MEMORY;
-extern "C" int MK_MSG_NO_HEADERS;
-extern "C" int MK_MSG_MIME_MAC_FILE;
-extern "C" int MK_MSG_IN_MSG_X_USER_WROTE;
-
-extern "C" int MK_MSG_USER_WROTE;
-extern "C" int MK_MSG_UNSPECIFIED_TYPE;
-extern "C" int MK_MSG_XSENDER_INTERNAL;
-extern "C" int MK_MSG_ADDBOOK_MOUSEOVER_TEXT;
-extern "C" int MK_MSG_SHOW_ATTACHMENT_PANE;
-
-extern "C" int MK_MIMEHTML_DISP_SUBJECT;
-extern "C" int MK_MIMEHTML_DISP_RESENT_COMMENTS;
-extern "C" int MK_MIMEHTML_DISP_RESENT_DATE;
-extern "C" int MK_MIMEHTML_DISP_RESENT_SENDER;
-extern "C" int MK_MIMEHTML_DISP_RESENT_FROM;
-extern "C" int MK_MIMEHTML_DISP_RESENT_TO;
-extern "C" int MK_MIMEHTML_DISP_RESENT_CC;
-extern "C" int MK_MIMEHTML_DISP_DATE;
-extern "C" int MK_MIMEHTML_DISP_SUBJECT;
-extern "C" int MK_MIMEHTML_DISP_SENDER;
-extern "C" int MK_MIMEHTML_DISP_FROM;
-extern "C" int MK_MIMEHTML_DISP_REPLY_TO;
-extern "C" int MK_MIMEHTML_DISP_ORGANIZATION;
-extern "C" int MK_MIMEHTML_DISP_TO;
-extern "C" int MK_MIMEHTML_DISP_CC;
-extern "C" int MK_MIMEHTML_DISP_NEWSGROUPS;
-extern "C" int MK_MIMEHTML_DISP_FOLLOWUP_TO;
-extern "C" int MK_MIMEHTML_DISP_REFERENCES;
-extern "C" int MK_MIMEHTML_DISP_MESSAGE_ID;
-extern "C" int MK_MIMEHTML_DISP_RESENT_MESSAGE_ID;
-extern "C" int MK_MIMEHTML_DISP_BCC;
-extern "C" int MK_MIMEHTML_SHOW_SECURITY_ADVISOR;
-extern "C" int MK_MIMEHTML_VERIFY_SIGNATURE;
-extern "C" int MK_MIMEHTML_DOWNLOAD_STATUS_HEADER;
-extern "C" int MK_MIMEHTML_DOWNLOAD_STATUS_NOT_DOWNLOADED;
-
-extern "C" int MK_MIMEHTML_ENC_AND_SIGNED;
-extern "C" int MK_MIMEHTML_SIGNED;
-extern "C" int MK_MIMEHTML_XLATED;
-extern "C" int MK_MIMEHTML_CERTIFICATES;
-extern "C" int MK_MIMEHTML_ENC_SIGNED_BAD;
-extern "C" int MK_MIMEHTML_SIGNED_BAD;
-extern "C" int MK_MIMEHTML_XLATED_BAD;
-extern "C" int MK_MIMEHTML_CERTIFICATES_BAD;
-extern "C" int MK_MIMEHTML_SIGNED_UNVERIFIED;
-
-#ifdef RICHIE
-extern "C" int MK_MSG_SHOW_ALL_RECIPIENTS;
-extern "C" int MK_MSG_SHOW_SHORT_RECIPIENTS;
-#endif /* RICHIE */
+#include "nsMimeStringResources.h"
+#include "mimemoz2.h"
 
 extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
 
@@ -317,7 +267,7 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
    */
   hdrs->heads = (char **) PR_MALLOC((hdrs->heads_size + 1) * sizeof(char *));
   if (!hdrs->heads)
-	return MK_OUT_OF_MEMORY;
+	return MIME_OUT_OF_MEMORY;
   memset(hdrs->heads, 0, (hdrs->heads_size + 1) * sizeof(char *));
 
 
@@ -615,7 +565,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 		  !PL_strncasecmp(token_start, parm_name, parm_len))
 		{
 		  s = (char *) PR_MALLOC ((value_end - value_start) + 1);
-		  if (! s) return 0;  /* MK_OUT_OF_MEMORY */
+		  if (! s) return 0;  /* MIME_OUT_OF_MEMORY */
 		  nsCRT::memcpy (s, value_start, value_end - value_start);
 		  s [value_end - value_start] = 0;
 		  /* if the parameter spans across multiple lines we have to strip out the
@@ -847,7 +797,9 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
 		char *jsSafeName = mime_escape_quotes ((unquotedName && *unquotedName) ? unquotedName : unquotedAddr);
 		if (jsSafeName)
 		{
-			char *localizedPart = PR_smprintf (XP_GetString (MK_MSG_ADDBOOK_MOUSEOVER_TEXT), jsSafeName);
+      char  *mouseText = MimeGetStringByID(MIME_MSG_ADDBOOK_MOUSEOVER_TEXT);
+			char *localizedPart = PR_smprintf (mouseText, jsSafeName);
+      PR_FREEIF(mouseText);
 			if (localizedPart)
 			{
 				mouseOverText = PR_smprintf ("onMouseOver=\"window.status='%s'; return true\" onMouseOut=\"window.status=''\"", localizedPart);
@@ -916,53 +868,59 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
 
 
 
-static const char *
-MimeHeaders_localize_header_name(const char *name, MimeDisplayOptions *opt)
+static char *
+MimeHeaders_localize_header_name(char *name, MimeDisplayOptions *opt)
 {
-  const char *new_name = 0;
-  PRInt16 output_csid = 0;
-  int display_key =  (!PL_strcasecmp(name,HEADER_BCC)			     ? MK_MIMEHTML_DISP_BCC :
-                      !PL_strcasecmp(name,HEADER_CC)			     ? MK_MIMEHTML_DISP_CC :
-                      !PL_strcasecmp(name,HEADER_DATE)			   ? MK_MIMEHTML_DISP_DATE :
-                      !PL_strcasecmp(name,HEADER_FOLLOWUP_TO)	 ? MK_MIMEHTML_DISP_FOLLOWUP_TO :
-                      !PL_strcasecmp(name,HEADER_FROM)			   ? MK_MIMEHTML_DISP_FROM :
-                      !PL_strcasecmp(name,HEADER_MESSAGE_ID)	 ? MK_MIMEHTML_DISP_MESSAGE_ID :
-                      !PL_strcasecmp(name,HEADER_NEWSGROUPS)	 ? MK_MIMEHTML_DISP_NEWSGROUPS :
-                      !PL_strcasecmp(name,HEADER_ORGANIZATION) ? MK_MIMEHTML_DISP_ORGANIZATION :
-                      !PL_strcasecmp(name,HEADER_REFERENCES)	 ? MK_MIMEHTML_DISP_REFERENCES :
-                      !PL_strcasecmp(name,HEADER_REPLY_TO)		 ? MK_MIMEHTML_DISP_REPLY_TO :
-                      !PL_strcasecmp(name,HEADER_RESENT_CC)		 ? MK_MIMEHTML_DISP_RESENT_CC :
-                      !PL_strcasecmp(name,HEADER_RESENT_COMMENTS)
-                                    ? MK_MIMEHTML_DISP_RESENT_COMMENTS :
-                      !PL_strcasecmp(name,HEADER_RESENT_DATE)	 ? MK_MIMEHTML_DISP_RESENT_DATE :
-                      !PL_strcasecmp(name,HEADER_RESENT_FROM)	 ? MK_MIMEHTML_DISP_RESENT_FROM :
-                      !PL_strcasecmp(name,HEADER_RESENT_MESSAGE_ID)
-                                    ? MK_MIMEHTML_DISP_RESENT_MESSAGE_ID :
-                      !PL_strcasecmp(name,HEADER_RESENT_SENDER)? MK_MIMEHTML_DISP_RESENT_SENDER :
-                      !PL_strcasecmp(name,HEADER_RESENT_TO)		 ? MK_MIMEHTML_DISP_RESENT_TO :
-                      !PL_strcasecmp(name,HEADER_SENDER)		   ? MK_MIMEHTML_DISP_SENDER :
-                      !PL_strcasecmp(name,HEADER_SUBJECT)		   ? MK_MIMEHTML_DISP_SUBJECT :
-                      !PL_strcasecmp(name,HEADER_TO)			     ? MK_MIMEHTML_DISP_TO :
-                      !PL_strcasecmp(name,HEADER_SUBJECT)		   ? MK_MIMEHTML_DISP_SUBJECT :
-                      0);
-  
-  if (!display_key)
-    return name;
-  
-  output_csid = INTL_CharSetNameToID((opt->override_charset
-                                      ? opt->override_charset
-                                      : opt->default_charset));
-  new_name = XP_GetStringForHTML(display_key, output_csid, (char*)name);  
-  if (new_name)
-    return new_name;
-  else
-    return name;
+  if (!PL_strcasecmp(name,HEADER_BCC))
+    return MimeGetStringByID(MIME_MHTML_BCC);
+  if (!PL_strcasecmp(name,HEADER_CC))
+    return MimeGetStringByID(MIME_MHTML_CC);
+  if (!PL_strcasecmp(name,HEADER_DATE))
+    return MimeGetStringByID(MIME_MHTML_DATE);
+  if (!PL_strcasecmp(name,HEADER_FOLLOWUP_TO))
+    return MimeGetStringByID(MIME_MHTML_FOLLOWUP_TO);
+  if (!PL_strcasecmp(name,HEADER_FROM))
+    return MimeGetStringByID(MIME_MHTML_FROM);
+  if (!PL_strcasecmp(name,HEADER_MESSAGE_ID))
+    return MimeGetStringByID(MIME_MHTML_MESSAGE_ID);
+  if (!PL_strcasecmp(name,HEADER_NEWSGROUPS))
+    return MimeGetStringByID(MIME_MHTML_NEWSGROUPS);
+  if (!PL_strcasecmp(name,HEADER_ORGANIZATION))
+    return MimeGetStringByID(MIME_MHTML_ORGANIZATION);
+  if (!PL_strcasecmp(name,HEADER_REFERENCES))
+    return MimeGetStringByID(MIME_MHTML_REFERENCES);
+  if (!PL_strcasecmp(name,HEADER_REPLY_TO))
+    return MimeGetStringByID(MIME_MHTML_REPLY_TO);
+  if (!PL_strcasecmp(name,HEADER_RESENT_CC))
+    return MimeGetStringByID(MIME_MHTML_RESENT_CC);
+  if (!PL_strcasecmp(name,HEADER_RESENT_COMMENTS))
+    return MimeGetStringByID(MIME_MHTML_RESENT_COMMENTS);
+  if (!PL_strcasecmp(name,HEADER_RESENT_DATE))
+    return MimeGetStringByID(MIME_MHTML_RESENT_DATE);
+  if (!PL_strcasecmp(name,HEADER_RESENT_FROM))
+    return MimeGetStringByID(MIME_MHTML_RESENT_FROM);
+  if (!PL_strcasecmp(name,HEADER_RESENT_MESSAGE_ID))
+    return MimeGetStringByID(MIME_MHTML_RESENT_MESSAGE_ID);
+  if (!PL_strcasecmp(name,HEADER_RESENT_SENDER))
+    return MimeGetStringByID(MIME_MHTML_RESENT_SENDER);
+  if (!PL_strcasecmp(name,HEADER_RESENT_TO))
+    return MimeGetStringByID(MIME_MHTML_RESENT_TO);
+  if (!PL_strcasecmp(name,HEADER_SENDER))
+    return MimeGetStringByID(MIME_MHTML_SENDER);
+  if (!PL_strcasecmp(name,HEADER_SUBJECT))
+    return MimeGetStringByID(MIME_MHTML_SUBJECT);
+  if (!PL_strcasecmp(name,HEADER_TO))
+    return MimeGetStringByID(MIME_MHTML_TO);
+  if (!PL_strcasecmp(name,HEADER_SUBJECT))
+    return MimeGetStringByID(MIME_MHTML_SUBJECT);
+
+  return NULL;  
 }
 
 
 static int
 MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
-								   const char *name, const char *contents,
+								   char *name, const char *contents,
 								   MimeDisplayOptions *opt,
 								   PRBool subject_p)
 {
@@ -971,7 +929,8 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
   char *out;
   char *converted = 0;
   PRInt32 converted_length = 0;
-  char    *cleanName = NULL;  /* To make sure there is no nasty HTML/JavaScript in Headers */
+  char        *cleanName = NULL;  /* To make sure there is no nasty HTML/JavaScript in Headers */
+  char        *orig_name = name;
 
   PR_ASSERT(hdrs);
   if (!hdrs) return -1;
@@ -987,7 +946,7 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
   {
     cleanName = nsEscapeHTML(name);
     if (!cleanName)
-      return MK_OUT_OF_MEMORY;
+      return MIME_OUT_OF_MEMORY;
     else
       name = cleanName;
   }
@@ -1000,6 +959,8 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
   if (status < 0) 
   {
     PR_FREEIF(cleanName);
+    if (orig_name != name)
+      PR_FREEIF(name);
     return status;
   }
   if (converted)
@@ -1014,6 +975,8 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 	{
 	  PR_FREEIF(converted);
     PR_FREEIF(cleanName);
+    if (orig_name != name)
+      PR_FREEIF(name);
 	  return status;
 	}
 
@@ -1055,7 +1018,11 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 								              hdrs->obuffer_size - (out - hdrs->obuffer) -10,
 								              PR_TRUE);
     if (status != NS_OK)
+    {
+      if (orig_name != name)
+        PR_FREEIF(name);
       return status;
+    }
 
 	  out += PL_strlen(out);
 	  PR_ASSERT(out < (hdrs->obuffer + hdrs->obuffer_size));
@@ -1100,6 +1067,9 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
   status = MimeHeaders_write(opt, hdrs->obuffer, out - hdrs->obuffer);
   PR_FREEIF(converted);
   PR_FREEIF(cleanName);
+  if (orig_name != name)
+    PR_FREEIF(name);
+
   if (status < 0)
 	return status;
   else
@@ -1108,7 +1078,7 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 
 
 static int
-MimeHeaders_write_random_header (MimeHeaders *hdrs, const char *name,
+MimeHeaders_write_random_header (MimeHeaders *hdrs, char *name,
 								 PRBool all_p, MimeDisplayOptions *opt)
 {
   int status = 0;
@@ -1120,7 +1090,7 @@ MimeHeaders_write_random_header (MimeHeaders *hdrs, const char *name,
 }
 
 static int
-MimeHeaders_write_subject_header_1 (MimeHeaders *hdrs, const char *name,
+MimeHeaders_write_subject_header_1 (MimeHeaders *hdrs, char *name,
 									const char *contents,
 									MimeDisplayOptions *opt)
 {
@@ -1128,7 +1098,7 @@ MimeHeaders_write_subject_header_1 (MimeHeaders *hdrs, const char *name,
 }
 
 static int
-MimeHeaders_write_subject_header (MimeHeaders *hdrs, const char *name,
+MimeHeaders_write_subject_header (MimeHeaders *hdrs, char *name,
 								  MimeDisplayOptions *opt)
 {
   int status = 0;
@@ -1139,7 +1109,7 @@ MimeHeaders_write_subject_header (MimeHeaders *hdrs, const char *name,
 }
 
 static int
-MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
+MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, char *name,
 									const char *contents,
 									MimeDisplayOptions *opt,
 									PRBool mail_header_p)
@@ -1171,7 +1141,13 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
 	  PRInt32 converted_length = 0;
 	  status = MimeHeaders_convert_rfc1522(opt, contents, contents_length,
 										   &converted, &converted_length);
-	  if (status < 0) return status;
+	  if (status < 0) 
+    {
+      if (orig_name != name)
+        PR_FREEIF(name);
+      return status;
+    }
+
 	  if (converted)
 		{
 		  contents = converted;
@@ -1180,10 +1156,12 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
 	}
 
   /* grow obuffer with potential XSENDER AUTH string */
+  char  *tString = MimeGetStringByID(MIME_MSG_XSENDER_INTERNAL);
   status = MimeHeaders_grow_obuffer (hdrs, (name ? PL_strlen (name) : 0)
 									 + 100 + 2 *
-									 PL_strlen(XP_GetString(MK_MSG_XSENDER_INTERNAL)) +
+									 PL_strlen(tString) +
 									 (contents_length * 4));
+  PR_FREEIF(tString);
   if (status < 0) goto FAIL;
 
   out = hdrs->obuffer;
@@ -1257,7 +1235,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
       s = nsEscapeHTML (hdrs->obuffer);
       if (!s)
       {
-        status = MK_OUT_OF_MEMORY;
+        status = MIME_OUT_OF_MEMORY;
         goto FAIL;
       }
       status = MimeHeaders_write(opt, s, PL_strlen (s));
@@ -1287,7 +1265,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
       s = nsEscapeHTML (hdrs->obuffer);
       if (!s)
       {
-        status = MK_OUT_OF_MEMORY;
+        status = MIME_OUT_OF_MEMORY;
         goto FAIL;
       }
       mail_p = (mail_header_p || !PL_strcasecmp ("poster", hdrs->obuffer));
@@ -1379,7 +1357,9 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
         }
         
         if (flags & MSG_FLAG_SENDER_AUTHED) {
-          PL_strcpy (out, XP_GetString(MK_MSG_XSENDER_INTERNAL));
+          char  *tString = MimeGetStringByID(MIME_MSG_XSENDER_INTERNAL);
+          PL_strcpy (out, tString);
+          PR_FREEIF(tString);
           out += PL_strlen (out);
         }
       }
@@ -1464,12 +1444,14 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
   else status = 1;
 
  FAIL:
+  if (orig_name != name)
+    PR_FREEIF(name);
   PR_FREEIF(converted);
   return status;
 }
 
 static int
-MimeHeaders_write_grouped_header (MimeHeaders *hdrs, const char *name,
+MimeHeaders_write_grouped_header (MimeHeaders *hdrs, char *name,
 								  MimeDisplayOptions *opt,
 								  PRBool mail_header_p)
 {
@@ -1494,13 +1476,14 @@ MimeHeaders_write_grouped_header (MimeHeaders *hdrs, const char *name,
 
 
 static int
-MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
+MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, char *name,
 							   const char *contents, PRBool show_ids,
 							   MimeDisplayOptions *opt)
 {
   int status = 0;
   PRInt32 contents_length;
   char *out;
+  const char    *orig_name = name;
 
   PR_ASSERT(hdrs);
   if (!hdrs) return -1;
@@ -1571,7 +1554,7 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
 			s = nsEscapeHTML (hdrs->obuffer);
 			if (!s)
 			  {
-				status = MK_OUT_OF_MEMORY;
+				status = MIME_OUT_OF_MEMORY;
 				goto FAIL;
 			  }
 			status = MimeHeaders_write(opt, s, PL_strlen (s));
@@ -1622,7 +1605,7 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
 				s = nsEscapeHTML (hdrs->obuffer);
 				if (!s)
 				  {
-					status = MK_OUT_OF_MEMORY;
+					status = MIME_OUT_OF_MEMORY;
 					goto FAIL;
 				  }
 			  }
@@ -1633,7 +1616,7 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
 				s = PL_strdup(buf);
 				if (!s)
 				  {
-					status = MK_OUT_OF_MEMORY;
+					status = MIME_OUT_OF_MEMORY;
 					goto FAIL;
 				  }
 			  }
@@ -1684,11 +1667,13 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
   else status = 1;
 
  FAIL:
+  if (orig_name != name)
+    PR_FREEIF(name);
   return status;
 }
 
 static int
-MimeHeaders_write_id_header (MimeHeaders *hdrs, const char *name,
+MimeHeaders_write_id_header (MimeHeaders *hdrs, char *name,
 							 PRBool show_ids, MimeDisplayOptions *opt)
 {
   int status = 0;
@@ -1721,7 +1706,7 @@ static int MimeHeaders_write_citation_headers (MimeHeaders *,
   #### We should come up with some secret way to set this from a user 
   preference, perhaps from a special file in the ~/.netscape/ directory.
  */
-static const char *mime_interesting_headers[] = {
+static char *mime_interesting_headers[] = {
   HEADER_SUBJECT,
   HEADER_RESENT_COMMENTS,
   HEADER_RESENT_DATE,
@@ -1756,7 +1741,7 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 {
   PRBool wrote_any_p = PR_FALSE;
   int status = 0;
-  const char **rest;
+  char **rest;
   PRBool did_from = PR_FALSE;
   PRBool did_resent_from = PR_FALSE;
 
@@ -1768,7 +1753,7 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 
   for (rest = mime_interesting_headers; *rest; rest++)
 	{
-	  const char *name = *rest;
+	  char *name = *rest;
 
 	  /* The Subject header gets written in bold.
 	   */
@@ -1970,7 +1955,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
       end--;
     
     name = (char *)PR_MALLOC(colon - head + 1);
-    if (!name) return MK_OUT_OF_MEMORY;
+    if (!name) return MIME_OUT_OF_MEMORY;
     nsCRT::memcpy(name, head, colon - head);
     name[colon - head] = 0;
     
@@ -1978,7 +1963,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     if (!c2)
     {
       PR_Free(name);
-      return MK_OUT_OF_MEMORY;
+      return MIME_OUT_OF_MEMORY;
     }
     nsCRT::memcpy(c2, contents, end - contents);
     c2[end - contents] = 0;
@@ -2035,6 +2020,8 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   char *from  = MimeHeaders_get (hdrs, HEADER_FROM, PR_FALSE, PR_TRUE);
   char *date  = MimeHeaders_get (hdrs, HEADER_DATE, PR_FALSE, PR_TRUE);
   char *out;
+  char *tString = NULL;
+  char *tString2 = NULL;
 
   if (!from)
 	from = MimeHeaders_get (hdrs, HEADER_SENDER, PR_FALSE, PR_TRUE);
@@ -2091,11 +2078,13 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
 
   out = hdrs->obuffer;
 
+  tString = MimeGetStringByID(MIME_MHTML_FROM);
   PR_snprintf(out, sizeof(out), "\
 <TR><TD VALIGN=TOP BGCOLOR=\"#CCCCCC\" ALIGN=RIGHT><B>%s: </B></TD>\
 <TD VALIGN=TOP BGCOLOR=\"#CCCCCC\" width=100%%>\
 <table border=0 cellspacing=0 cellpadding=0 width=100%%><tr>\
-<td valign=top>", XP_GetString(MK_MIMEHTML_DISP_FROM));
+<td valign=top>", tString);
+  PR_FREEIF(tString);
   out += PL_strlen(out);
 
   if (from) {
@@ -2118,7 +2107,9 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   PL_strcpy(out,
 			"</TR><TR><TD VALIGN=TOP BGCOLOR=\"#CCCCCC\" ALIGN=RIGHT><B>");
   out += PL_strlen(out);
-  PL_strcpy(out, XP_GetString(MK_MIMEHTML_DISP_SUBJECT));
+  tString2 = MimeGetStringByID(MIME_MHTML_SUBJECT);
+  PL_strcpy(out, tString2);
+  PR_FREEIF(tString2);
   out += PL_strlen(out);
   PL_strcpy(out, ": </B></TD><TD VALIGN=TOP BGCOLOR=\"#CCCCCC\">");
   out += PL_strlen(out);
@@ -2185,7 +2176,6 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
   int status;
   char *from = 0, *name = 0, *id = 0;
-  const char *fmt = 0;
   char *converted = 0;
   PRInt32 converted_length = 0;
 
@@ -2202,7 +2192,7 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 	from = PL_strdup("Unknown");
   if (!from)
 	{
-	  status = MK_OUT_OF_MEMORY;
+	  status = MIME_OUT_OF_MEMORY;
 	  goto FAIL;
 	}
 
@@ -2218,14 +2208,20 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 	}
   PR_FREEIF(from);
 
-  fmt = (id
-		 ? XP_GetString(MK_MSG_IN_MSG_X_USER_WROTE)
-		 : XP_GetString(MK_MSG_USER_WROTE));
+  char  *tString;
+  if (id)
+    tString = MimeGetStringByID(MIME_MSG_X_USER_WROTE);
+  else
+    tString = MimeGetStringByID(MIME_MSG_USER_WROTE);
 
   status = MimeHeaders_grow_obuffer (hdrs,
-									 PL_strlen(fmt) + PL_strlen(name) +
+									 PL_strlen(tString) + PL_strlen(name) +
 									 (id ? PL_strlen(id) : 0) + 58);
-  if (status < 0) return status;
+  if (status < 0) 
+  {
+    PR_FREEIF(tString);
+    return status;
+  }
 
   if (opt->nice_html_only_p) {
 	PRBool nReplyWithExtraLines = PR_FALSE, eReplyOnTop = PR_FALSE;
@@ -2238,20 +2234,28 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 //	  for (; nReplyWithExtraLines > 0; nReplyWithExtraLines--) {
 	  if (nReplyWithExtraLines) {
 		status = MimeHeaders_write(opt, "<BR>", 4);
-		if (status < 0) return status;
+		if (status < 0) 
+    {
+      PR_FREEIF(tString);
+      return status;
+    }
 	  }
 	}
   }
 
   if (id)
-	  PR_snprintf(hdrs->obuffer, sizeof(hdrs->obuffer), fmt, id, name);
+	  PR_snprintf(hdrs->obuffer, sizeof(hdrs->obuffer), tString, id, name);
   else
-	  PR_snprintf(hdrs->obuffer, sizeof(hdrs->obuffer), fmt, name);
+	  PR_snprintf(hdrs->obuffer, sizeof(hdrs->obuffer), tString, name);
 
   status = MimeHeaders_convert_rfc1522(opt, hdrs->obuffer,
 									   PL_strlen(hdrs->obuffer),
 									   &converted, &converted_length);
-  if (status < 0) return status;
+  if (status < 0) 
+  {
+    PR_FREEIF(tString);
+    return status;
+  }
 
   if (converted)
 	{
@@ -2272,6 +2276,7 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 
  FAIL:
 
+  PR_FREEIF(tString);
   PR_FREEIF(from);
   PR_FREEIF(name);
   PR_FREEIF(id);
@@ -2389,11 +2394,12 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBo
 #define MHTML_TABLE_COLUMN_BEGIN "<TR><TD><B><I>"
 #define MHTML_TABLE_COLUMN_END   "</I></B></TD></TR>"
 
-    const char *msg = XP_GetString(MK_MSG_NO_HEADERS);
+    char *msg = MimeGetStringByID(MIME_MSG_NO_HEADERS);
 	  PL_strcpy (hdrs->obuffer, MHTML_TABLE_COLUMN_BEGIN);
 	  PL_strcat (hdrs->obuffer, msg);
 	  PL_strcat (hdrs->obuffer, MHTML_TABLE_COLUMN_END);
 	  status = MimeHeaders_write(opt, hdrs->obuffer, PL_strlen(hdrs->obuffer));
+    PR_FREEIF(msg);
 	  if (status < 0) goto FAIL;
 	}
 
@@ -2406,7 +2412,7 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBo
     if (!opt->nice_html_only_p && opt->fancy_links_p) {
       if (opt->attachment_icon_layer_id == 0) {
         static PRInt32 randomid = 1; /* Not very random. ### */
-        char *mouseOverStatusString = XP_GetString(MK_MSG_SHOW_ATTACHMENT_PANE);
+        char *mouseOverStatusString = MimeGetStringByID(MIME_MSG_SHOW_ATTACHMENT_PANE);
         opt->attachment_icon_layer_id = randomid;
         
 #define MHTML_CLIP_START         "</TD><TD VALIGN=TOP><DIV "
@@ -2444,6 +2450,7 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBo
           MHTML_CLIP_END,
           (long) randomid, (long) randomid, mouseOverStatusString);
 
+        PR_FREEIF(mouseOverStatusString);
         randomid++;
       }
     }

@@ -21,6 +21,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsCRT.h"
+#include "nsMimeStringResources.h"
 
 /* See mimepbuf.h for a description of the mission of this file.
 
@@ -48,8 +49,6 @@
 	 the provided read-function with either: the contents of the memory
 	 buffer; or blocks read from the disk file.
  */
-
-extern "C" int MK_UNABLE_TO_OPEN_TMP_FILE;
 
 #define TARGET_MEMORY_BUFFER_SIZE    (1024 * 50)  /* try for 50k mem buffer */
 #define TARGET_MEMORY_BUFFER_QUANTUM (1024 * 5)   /* decrease in steps of 5k */
@@ -162,11 +161,11 @@ MimePartBufferWrite (MimePartBufferData *data,
   if (!data->part_buffer && !data->file_buffer_name)
 	{
 	  data->file_buffer_name = GetOSTempFile("nsma");
-	  if (!data->file_buffer_name) return MK_OUT_OF_MEMORY;
+	  if (!data->file_buffer_name) return MIME_OUT_OF_MEMORY;
 
 	  data->file_stream = PR_Open(data->file_buffer_name, PR_RDWR | PR_CREATE_FILE, 493);
 	  if (!data->file_stream)
-		return MK_UNABLE_TO_OPEN_TMP_FILE;
+		return MIME_UNABLE_TO_OPEN_TMP_FILE;
   }
 
   PR_ASSERT(data->part_buffer || data->file_stream);
@@ -191,11 +190,11 @@ MimePartBufferWrite (MimePartBufferData *data,
 		{
 		  if (!data->file_buffer_name)
 			data->file_buffer_name = GetOSTempFile("nsma");
-		  if (!data->file_buffer_name) return MK_OUT_OF_MEMORY;
+		  if (!data->file_buffer_name) return MIME_OUT_OF_MEMORY;
 
 		  data->file_stream = PR_Open(data->file_buffer_name, PR_RDWR | PR_CREATE_FILE, 493);
 		  if (!data->file_stream)
-			return MK_UNABLE_TO_OPEN_TMP_FILE;
+			return MIME_UNABLE_TO_OPEN_TMP_FILE;
 
 		  if (data->part_buffer && data->part_buffer_fp)
 			{
@@ -249,7 +248,7 @@ MimePartBufferRead (MimePartBufferData *data,
 	  if (!data->file_buffer_name) return -1;
 
 	  buf = (char *) PR_MALLOC(buf_size);
-	  if (!buf) return MK_OUT_OF_MEMORY;
+	  if (!buf) return MIME_OUT_OF_MEMORY;
 
 	  if (data->file_stream)
 		PR_Close(data->file_stream);
@@ -257,7 +256,7 @@ MimePartBufferRead (MimePartBufferData *data,
 	  if (!data->file_stream)
 		{
 		  PR_Free(buf);
-		  return MK_UNABLE_TO_OPEN_TMP_FILE;
+		  return MIME_UNABLE_TO_OPEN_TMP_FILE;
 		}
 
 	  while(1)

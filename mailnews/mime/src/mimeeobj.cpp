@@ -16,17 +16,18 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "mimeeobj.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "prlog.h"
 #include "nsMimeTransition.h"
+#include "nsMimeStringResources.h"
+#include "mimemoz2.h"
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeExternalObject, MimeExternalObjectClass,
 			 mimeExternalObjectClass, &MIME_SUPERCLASS);
-
-extern "C" int MK_MSG_ATTACHMENT;
 
 #ifdef XP_MAC
 extern MimeObjectClass mimeMultipartAppleDoubleClass;
@@ -119,7 +120,7 @@ MimeExternalObject_parse_begin (MimeObject *obj)
 	  id = mime_part_address (obj);
 	  if (obj->options->missing_parts)
 		id_imap = mime_imap_part_address (obj);
-	  if (! id) return MK_OUT_OF_MEMORY;
+	  if (! id) return MIME_OUT_OF_MEMORY;
 
       if (obj->options && obj->options->url)
 		{
@@ -137,14 +138,14 @@ MimeExternalObject_parse_begin (MimeObject *obj)
 		  if (!id_url)
 			{
 			  PR_Free(id);
-			  return MK_OUT_OF_MEMORY;
+			  return MIME_OUT_OF_MEMORY;
 			}
 		}
 
 	  if (!PL_strcmp (id, "0"))
 		{
 		  PR_Free(id);
-		  id = PL_strdup(XP_GetString(MK_MSG_ATTACHMENT));
+		  id = MimeGetStringByID(MIME_MSG_ATTACHMENT);
 		}
 	  else
 		{
@@ -154,7 +155,7 @@ MimeExternalObject_parse_begin (MimeObject *obj)
 			{
 			  PR_Free(id);
 			  PR_Free(id_url);
-			  return MK_OUT_OF_MEMORY;
+			  return MIME_OUT_OF_MEMORY;
 			}
   		  /* we have a valid id */
 		  if (id)

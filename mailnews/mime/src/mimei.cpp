@@ -68,6 +68,7 @@
 #include "nsIMimeContentTypeHandler.h"
 #include "nsIComponentManager.h"
 #include "nsVoidArray.h"
+#include "nsMimeStringResources.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIMimeContentTypeHandlerIID, NS_IMIME_CONTENT_TYPE_HANDLER_IID);
@@ -715,7 +716,7 @@ mime_part_address(MimeObject *obj)
 	  if (obj->parent->parent)
 		{
 		  higher = mime_part_address(obj->parent);
-		  if (!higher) return 0;  /* MK_OUT_OF_MEMORY */
+		  if (!higher) return 0;  /* MIME_OUT_OF_MEMORY */
 		}
 
 	  if (!higher)
@@ -726,7 +727,7 @@ mime_part_address(MimeObject *obj)
 		  if (!s)
 			{
 			  PR_Free(higher);
-			  return 0;  /* MK_OUT_OF_MEMORY */
+			  return 0;  /* MIME_OUT_OF_MEMORY */
 			}
 		  PL_strcpy(s, higher);
 		  PL_strcat(s, ".");
@@ -889,7 +890,7 @@ mime_address_to_part(const char *part, MimeObject *obj)
   else
 	{
 	  char *part2 = mime_part_address(obj);
-	  if (!part2) return 0;  /* MK_OUT_OF_MEMORY */
+	  if (!part2) return 0;  /* MIME_OUT_OF_MEMORY */
 	  match = !PL_strcmp(part, part2);
 	  PR_Free(part2);
 	}
@@ -1084,7 +1085,7 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
 			{
 			  options->part_to_load = (char *) PR_MALLOC(end - value + 1);
 			  if (!options->part_to_load)
-				return MK_OUT_OF_MEMORY;
+				return MIME_OUT_OF_MEMORY;
 			  nsCRT::memcpy(options->part_to_load, value, end-value);
 			  options->part_to_load[end-value] = 0;
 			}
@@ -1178,14 +1179,14 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
 		  PR_Free(options->part_to_load);
 		  options->part_to_load = PL_strdup("1");
 		  if (!options->part_to_load)
-			return MK_OUT_OF_MEMORY;
+			return MIME_OUT_OF_MEMORY;
 		}
 	  else if (PL_strcmp(options->part_to_load, "1"))	/* not 1 */
 		{
 		  const char *prefix = "1.";
 		  char *s = (char *) PR_MALLOC(PL_strlen(options->part_to_load) +
 									  PL_strlen(prefix) + 1);
-		  if (!s) return MK_OUT_OF_MEMORY;
+		  if (!s) return MIME_OUT_OF_MEMORY;
 		  PL_strcpy(s, prefix);
 		  PL_strcat(s, options->part_to_load);
 		  PR_Free(options->part_to_load);

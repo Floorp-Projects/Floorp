@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "mimeebod.h"
 #include "prmem.h"
 #include "nsCRT.h"
@@ -24,13 +25,12 @@
 #include "nsEscape.h"
 #include "msgCore.h"
 #include "nsMimeTransition.h"
+#include "nsMimeStringResources.h"
+#include "mimemoz2.h"
 
 #define MIME_SUPERCLASS mimeObjectClass
 MimeDefClass(MimeExternalBody, MimeExternalBodyClass,
 			 mimeExternalBodyClass, &MIME_SUPERCLASS);
-
-extern "C" int MK_MSG_LINK_TO_DOCUMENT;
-extern "C" int MK_MSG_DOCUMENT_INFO;
 
 #ifdef XP_MAC
 extern MimeObjectClass mimeMultipartAppleDoubleClass;
@@ -116,7 +116,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	{
 	  int L = PL_strlen(bod->body);
 	  char *new_str = (char *)PR_Realloc(bod->body, L + length + 1);
-	  if (!new_str) return MK_OUT_OF_MEMORY;
+	  if (!new_str) return MIME_OUT_OF_MEMORY;
 	  bod->body = new_str;
 	  nsCRT::memcpy(bod->body + L, line, length);
 	  bod->body[L + length] = 0;
@@ -129,7 +129,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
   if (!bod->hdrs)
 	{
 	  bod->hdrs = MimeHeaders_new();
-	  if (!bod->hdrs) return MK_OUT_OF_MEMORY;
+	  if (!bod->hdrs) return MIME_OUT_OF_MEMORY;
 	}
 
   status = MimeHeaders_parse_line(line, length, bod->hdrs);
@@ -141,7 +141,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
   if (*line == CR || *line == LF)
 	{
 	  bod->body = PL_strdup("");
-	  if (!bod->body) return MK_OUT_OF_MEMORY;
+	  if (!bod->body) return MIME_OUT_OF_MEMORY;
 	}
 
   return 0;
@@ -285,7 +285,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  char *h = 0, *lname = 0, *lurl = 0, *body = 0;
 	  MimeHeaders *hdrs = 0;
 
-	  if (!ct) return MK_OUT_OF_MEMORY;
+	  if (!ct) return MIME_OUT_OF_MEMORY;
 
 	  at   = MimeHeaders_get_parameter(ct, "access-type", NULL, NULL);
 	  lexp  = MimeHeaders_get_parameter(ct, "expiration", NULL, NULL);
@@ -317,7 +317,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 							(url ? PL_strlen(url) : 0) + 100);
 	  if (!h)
 		{
-		  status = MK_OUT_OF_MEMORY;
+		  status = MIME_OUT_OF_MEMORY;
 		  goto FAIL;
 		}
 
@@ -339,7 +339,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  hdrs = MimeHeaders_new();
 	  if (!hdrs)
 		{
-		  status = MK_OUT_OF_MEMORY;
+		  status = MIME_OUT_OF_MEMORY;
 		  goto FAIL;
 		}
 
@@ -373,11 +373,11 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 									   name, url, site, svr, subj, bod->body);
 	  if (lurl)
 		{
-		  lname = PL_strdup(XP_GetString(MK_MSG_LINK_TO_DOCUMENT));
+		  lname = MimeGetStringByID(MIME_MSG_LINK_TO_DOCUMENT);
 		}
 	  else
 		{
-		  lname = PL_strdup(XP_GetString(MK_MSG_DOCUMENT_INFO));
+		  lname = MimeGetStringByID(MIME_MSG_DOCUMENT_INFO);
 		  all_headers_p = PR_TRUE;
 		}
 		

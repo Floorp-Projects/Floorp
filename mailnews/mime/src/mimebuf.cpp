@@ -23,8 +23,7 @@
 #include "prlog.h"
 #include "nsCRT.h"
 #include "msgCore.h"
-
-extern "C" int MK_OUT_OF_MEMORY;
+#include "nsMimeStringResources.h"
 
 extern "C" int
 mime_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
@@ -43,7 +42,7 @@ mime_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
 				 : (char *) PR_MALLOC ((*size + increment)
 									  * (element_size / sizeof(char))));
 	  if (! new_buf)
-		  return MK_OUT_OF_MEMORY;
+		  return MIME_OUT_OF_MEMORY;
 	  *buffer = new_buf;
 	  *size += increment;
 	}

@@ -16,16 +16,17 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "mimemapl.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "nsMimeTransition.h"
+#include "nsMimeStringResources.h"
+#include "mimemoz2.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartAppleDouble, MimeMultipartAppleDoubleClass,
 			 mimeMultipartAppleDoubleClass, &MIME_SUPERCLASS);
-
-extern "C" int MK_MSG_ATTACHMENT;
 
 static int MimeMultipartAppleDouble_parse_begin (MimeObject *);
 static PRBool MimeMultipartAppleDouble_output_child_p(MimeObject *,
@@ -96,7 +97,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 	  PRBool all_headers_p = obj->options->headers == MimeHeadersAll;
 
 	  id = mime_part_address (obj);
-	  if (! id) return MK_OUT_OF_MEMORY;
+	  if (! id) return MIME_OUT_OF_MEMORY;
 	  if (obj->options->missing_parts)
 		id_imap = mime_imap_part_address (obj);
 
@@ -116,14 +117,14 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 		  if (!id_url)
 			{
 			  PR_Free(id);
-			  return MK_OUT_OF_MEMORY;
+			  return MIME_OUT_OF_MEMORY;
 			}
 		}
 
 	  if (!PL_strcmp (id, "0"))
 		{
 		  PR_Free(id);
-		  id = PL_strdup(XP_GetString(MK_MSG_ATTACHMENT));
+		  id = MimeGetStringByID(MIME_MSG_ATTACHMENT);
 		}
 	  else
 		{
@@ -133,7 +134,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 			{
 			  PR_Free(id);
 			  PR_Free(id_url);
-			  return MK_OUT_OF_MEMORY;
+			  return MIME_OUT_OF_MEMORY;
 			}
 		  PL_strcpy(s, p);
 		  PL_strcat(s, id);

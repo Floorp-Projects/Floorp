@@ -357,12 +357,6 @@ extern int MimeOptions_write(MimeDisplayOptions *,
 extern int MimeObject_write_separator(MimeObject *);
 
 
-/* Random junk
- */
-
-extern "C" int MK_OUT_OF_MEMORY;
-
-
 /* Turn this on if you want to play with the idea of displaying icons in the
    headers to represent attachments, and put icons next to each attachment so
    you can easily save them without having to bring up the "as links" view.
