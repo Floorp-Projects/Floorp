@@ -42,6 +42,9 @@
 
  */
 
+#include "nsNetUtil.h"
+#include "nsIURI.h"
+#include "nsIIoService.h"
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
 #include "nsIComponentManager.h"
@@ -396,20 +399,24 @@ LocalStoreImpl::LoadData()
     // directory. Bomb if we can't find it.
 
     nsCOMPtr<nsIFile> aFile;
-    nsCOMPtr<nsIFileSpec> tempSpec;
-
     rv = NS_GetSpecialDirectory(NS_APP_LOCALSTORE_50_FILE, getter_AddRefs(aFile));
     if (NS_FAILED(rv)) return rv;
 
-    // Turn the nsIFile into a nsFileSpec.
-    // This is evil! nsOutputFileStream needs
-    // to take an nsILocalFile (bug #46394)
-    nsXPIDLCString pathBuf;
-    rv = aFile->GetPath(getter_Copies(pathBuf));
+    nsCOMPtr<nsIURI> aURI;
+    rv = NS_NewFileURI(getter_AddRefs(aURI), aFile);
     if (NS_FAILED(rv)) return rv;
-    nsFileSpec spec((const char *)pathBuf);
 
-    if (! spec.Exists()) {
+    nsXPIDLCString pathBuf;
+    rv = aURI->GetSpec(getter_Copies(pathBuf));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool fileExistsFlag = PR_FALSE;
+    if (NS_SUCCEEDED(rv = aFile->Exists(&fileExistsFlag)) && (!fileExistsFlag)) {
+        // Turn the nsIFile into a nsFileSpec.
+        // This is evil! nsOutputFileStream needs
+        // to take an nsILocalFile (bug #46394)
+        nsFileSpec spec(pathBuf);
+
         {
             nsOutputFileStream os(spec);
 
@@ -433,7 +440,7 @@ LocalStoreImpl::LoadData()
     nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = remote->Init((const char*) nsFileURL(spec));
+    rv = remote->Init(pathBuf);
     if (NS_FAILED(rv)) return rv;
 
     // Read the datasource synchronously.
