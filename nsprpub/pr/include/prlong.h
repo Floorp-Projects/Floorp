@@ -188,10 +188,10 @@ NSPR_API(PRInt64) LL_Zero(void);
 #define LL_NE(a, b)        (((a).hi != (b).hi) || ((a).lo != (b).lo))
 #define LL_GE_ZERO(a)        (((a).hi >> 31) == 0)
 
-#define LL_CMP(a, op, b)    (((PRInt32)(a).hi op (PRInt32)(b).hi) || \
-                 (((a).hi == (b).hi) && ((a).lo op (b).lo)))
-#define LL_UCMP(a, op, b)    (((a).hi op (b).hi) || \
-                 (((a).hi == (b).hi) && ((a).lo op (b).lo)))
+#define LL_CMP(a, op, b)    (((a).hi == (b).hi) ? ((a).lo op (b).lo) : \
+                 ((PRInt32)(a).hi op (PRInt32)(b).hi))
+#define LL_UCMP(a, op, b)    (((a).hi == (b).hi) ? ((a).lo op (b).lo) : \
+                 ((a).hi op (b).hi))
 
 #define LL_AND(r, a, b)        ((r).lo = (a).lo & (b).lo, \
                  (r).hi = (a).hi & (b).hi)
