@@ -238,22 +238,19 @@ NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
 NS_IMETHODIMP
 nsHTMLButtonElement::Blur()
 {
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
-  return RemoveFocus(presContext);
+  return SetElementFocus(PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsHTMLButtonElement::Focus()
 {
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
-  return SetFocus(presContext);
+  return SetElementFocus(PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_HTML,
@@ -279,6 +276,7 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   // If we are disabled, we probably shouldn't have focus in the
   // first place, so allow it to be removed.
   nsresult rv = NS_OK;

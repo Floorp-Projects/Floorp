@@ -4063,6 +4063,23 @@ nsGenericHTMLLeafFormElement::SetAttribute(PRInt32 aNameSpaceID,
 }
 
 nsresult
+nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
+{
+  nsCOMPtr<nsIPresContext> presContext;
+  GetPresContext(this, getter_AddRefs(presContext));
+  if (!presContext) {
+    return NS_OK;
+  }
+
+  if (aDoFocus) {
+    return SetFocus(presContext);
+  }
+
+  return RemoveFocus(presContext);
+}
+
+
+nsresult
 nsGenericHTMLElement::GetPluginInstance(nsIPluginInstance** aPluginInstance)
 {
   NS_ENSURE_ARG_POINTER(aPluginInstance);

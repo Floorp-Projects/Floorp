@@ -992,27 +992,6 @@ nsFormControlHelper::DoManualSubmitOrReset(nsIPresContext* aPresContext,
       }
     }
   }
-
-  // Check status after handling event to make sure we should continue
-  if (nsEventStatus_eConsumeNoDefault != status) {
-    // get the form manager interface
-    nsIFormManager* formMan = nsnull; // weak reference, not refcounted
-    result = aFormFrame->QueryInterface(NS_GET_IID(nsIFormManager), (void**)&formMan);
-    if (NS_SUCCEEDED(result) && formMan) {
-      // now do the Submit or Reset
-      if (aDoSubmit) {
-        // Now go back and get the frame for the control's content 
-        // to make sure it is still valid
-        nsIFrame* controlFrame;
-        aPresShell->GetPrimaryFrameFor(controlContent, &controlFrame);
-        if (controlFrame != nsnull) {
-          formMan->OnSubmit(aPresContext, controlFrame);
-        }
-      } else {
-        formMan->OnReset(aPresContext);
-      }
-    }
-  }
   return result;
 }
 

@@ -260,47 +260,19 @@ nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 NS_IMETHODIMP
 nsHTMLAnchorElement::Blur()
 {
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
-  return RemoveFocus(presContext);
+  return SetElementFocus(PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::Focus()
 {
-  nsCOMPtr<nsIDocument> doc; // Strong
-  nsresult rv = GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!doc) { return NS_ERROR_NULL_POINTER; }
-
-  PRInt32 numShells = doc->GetNumberOfShells();
-  nsCOMPtr<nsIPresContext> context;
-
-  for (PRInt32 i=0; i<numShells; i++) {
-    nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(i));
-    if (!shell) { return NS_ERROR_NULL_POINTER; }
-
-    rv = shell->GetPresContext(getter_AddRefs(context));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    if (!context) {
-      return NS_ERROR_NULL_POINTER;
-    }
-
-    rv = SetFocus(context);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-  return NS_OK;
+  return SetElementFocus(PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   // don't make the link grab the focus if there is no link handler
   nsCOMPtr<nsILinkHandler> handler;
   nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
@@ -337,6 +309,7 @@ nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   // If we are disabled, we probably shouldn't have focus in the
   // first place, so allow it to be removed.
   nsresult rv = NS_OK;
