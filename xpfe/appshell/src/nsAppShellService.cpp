@@ -103,7 +103,7 @@ nsAppShellService::~nsAppShellService()
  */
 NS_IMPL_ISUPPORTS2(nsAppShellService,
                    nsIAppShellService,
-                   nsIObserver);
+                   nsIObserver)
 
 nsresult 
 nsAppShellService::SetXPConnectSafeContext()
