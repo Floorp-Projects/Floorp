@@ -68,13 +68,16 @@ ifndef MOZ_SUNBIRD
 ifdef MOZ_HAVE_BROWSER
 DIRS	= \
 			directory \
-			filepicker \
 			find \
 			search \
 			intl \
 			resetPref \
 			killAll \
 			windowds \
+			$(NULL)
+
+TOOL_DIRS = \
+			filepicker \
 			$(NULL)
 
 ifndef MOZ_PHOENIX
@@ -136,7 +139,7 @@ endif
 endif
 
 ifdef MOZ_ENABLE_XREMOTE
-DIRS		+= xremote
+TOOL_DIRS	+= xremote
 endif
 
 ifdef MOZ_HAVE_BROWSER
