@@ -3833,8 +3833,9 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         nsCOMPtr<nsINodeInfo> ni = aTargetNode->GetNodeInfo();
 
         if (ni) {
-            ni->NodeInfoManager()->GetNodeInfo(attr, prefix, nameSpaceID,
-                                               getter_AddRefs(ni));
+            nsCOMPtr<nsINodeInfoManager> manager = ni->NodeInfoManager();
+            manager->GetNodeInfo(attr, prefix, nameSpaceID,
+                                 getter_AddRefs(ni));
         }
 
         rv = aTargetNode->SetAttr(ni, value, PR_FALSE);
