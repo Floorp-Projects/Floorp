@@ -1670,12 +1670,16 @@ nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
 #define UCS4_LE "UTF-32LE"
 #define UCS4_2143 "X-ISO-10646-UCS-4-2143"
 #define UCS4_3412 "X-ISO-10646-UCS-4-3412"
+#define UTF8 "UTF-8"
 
 static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset, nsCharsetSource& oCharsetSource) {
  oCharsetSource= kCharsetFromAutoDetection;
  oCharset.SetLength(0);
  // see http://www.w3.org/TR/1998/REC-xml-19980210#sec-oCharseting
  // for details
+ // Also, MS Win2K notepad now generate 3 bytes BOM in UTF8 as UTF8 signature
+ // We need to check that
+ // UCS2 BOM FEFF = UTF8 EF BB BF
  switch(aBytes[0])
 	 {
    case 0x00:
@@ -1739,6 +1743,14 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
              }
            }
        }
+     }
+   break;
+   case 0xEF:  
+     if((0xBB==aBytes[1]) && (0xBF==aBytes[2])) {
+        // EF BB BF
+        // Win2K UTF-8 BOM
+        oCharset.AssignWithConversion(UTF8); 
+        oCharsetSource= kCharsetFromByteOrderMark;
      }
    break;
    case 0xFE:
