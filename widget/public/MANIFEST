@@ -31,3 +31,5 @@ nsIPopUpMenu.h
 nsIKeyBindMgr.h
 nsStringUtil.h
 nsIContextMenu.h
+nsWidgetAtoms.h
+nsWidgetAtomList.h
