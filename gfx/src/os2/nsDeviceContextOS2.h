@@ -99,6 +99,7 @@ public:
   // Static Helper Methods
   static char* GetACPString(const nsString& aStr);
   nsresult   SetDPI(PRInt32 aPrefDPI);
+  int        GetDPI() { return mDpi; };
 
 protected:
   virtual ~nsDeviceContextOS2();

@@ -198,7 +198,6 @@ class nsFontMetricsOS2 : public nsIFontMetrics
 
   static nsVoidArray*  gGlobalFonts;
   static PLHashTable*  gFamilyNames;
-  static long          gSystemRes;
   static nsICollation* gCollation;
   
   nsStringArray       mFonts;
