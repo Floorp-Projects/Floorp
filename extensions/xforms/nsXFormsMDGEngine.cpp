@@ -146,7 +146,7 @@ nsXFormsMDGEngine::Init()
 }
 
 nsresult
-nsXFormsMDGEngine::AddMIP(PRInt32                aType,
+nsXFormsMDGEngine::AddMIP(ModelItemPropName      aType,
                           nsIDOMXPathExpression *aExpression,
                           nsXFormsMDGSet        *aDependencies,
                           PRBool                 aDynFunc,
@@ -222,6 +222,7 @@ nsXFormsMDGEngine::MarkNodeAsChanged(nsIDOMNode* aContextNode)
 
   ns->Set(kFlags_ALL_DISPATCH, PR_TRUE);
 
+  // Get the node, eMode_type == get any type of node
   nsXFormsMDGNode* n = GetNode(aContextNode, eModel_type, PR_FALSE);
   if (n) {
     while (n) {

@@ -84,4 +84,9 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    *      @see https://bugzilla.mozilla.org/show_bug.cgi?id=278370
    */
   readonly attribute nsXFormsMDGEngine MDG;
+
+  /**
+   * Validates the instance node against the schemas loaded by the model.
+   */
+  PRBool validateNode(in nsIDOMNode instanceNode);
 };

@@ -91,8 +91,11 @@ public:
   
   /** Does expression use dynamic functions */
   PRBool mDynFunc;
-  
-  /** Pointer to next nsXFormsMDGNode with same nsIDOMNode, but different type */
+
+  /**
+   * Pointer to next nsXFormsMDGNode with same nsIDOMNode, but different
+   * MIP type (mType)
+   */
   nsXFormsMDGNode* mNext;
 
   /**
@@ -235,6 +238,9 @@ protected:
    * @param aCreate          Create the node and insert it into the graph
    *                         if it does not exist?
    * @return                 The node, nsnull if not found and aCreate != PR_TRUE
+   *
+   * @note aType == eModel_type means "any type", as we do not store type
+   * information in the MDG.
    */
   nsXFormsMDGNode* GetNode(nsIDOMNode       *aDomNode,
                            ModelItemPropName aType,
@@ -330,7 +336,7 @@ public:
    * @param aContextPos      The context positions of aExpression
    * @param aContextSize     The context size for aExpression
    */
-  nsresult AddMIP(PRInt32                aType,
+  nsresult AddMIP(ModelItemPropName      aType,
                   nsIDOMXPathExpression *aExpression,
                   nsXFormsMDGSet        *aDependencies,
                   PRBool                 aDynFunc,

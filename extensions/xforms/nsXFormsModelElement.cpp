@@ -778,6 +778,14 @@ nsXFormsModelElement::GetMDG(nsXFormsMDGEngine **aMDG)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode,
+                                   PRBool *aResult)
+{
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+
 // internal methods
 
 already_AddRefed<nsIDOMDocument>
@@ -821,7 +829,7 @@ nsXFormsModelElement::FinishConstruction()
     children->GetLength(&childCount);
 
   nsAutoString namespaceURI, localName;
-
+  nsresult rv;
   for (PRUint32 i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDOMNode> child;
     children->Item(i, getter_AddRefs(child));
@@ -831,9 +839,9 @@ nsXFormsModelElement::FinishConstruction()
     if (localName.EqualsLiteral("bind")) {
       child->GetNamespaceURI(namespaceURI);
       if (namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
-        if (!ProcessBind(xpath, firstInstanceRoot, 1, 1,
-                         nsCOMPtr<nsIDOMElement>(do_QueryInterface(child)))) {
-          nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
+        rv = ProcessBind(xpath, firstInstanceRoot, 1, 1,
+                         nsCOMPtr<nsIDOMElement>(do_QueryInterface(child)));
+        if (NS_FAILED(rv)) {
           return NS_OK;
         }
       }
@@ -883,30 +891,17 @@ nsXFormsModelElement::MaybeNotifyCompletion()
   }
 }
 
-static void
-ReleaseExpr(void    *aElement,
-            nsIAtom *aPropertyName,
-            void    *aPropertyValue,
-            void    *aData)
-{
-  nsIDOMXPathExpression *expr = NS_STATIC_CAST(nsIDOMXPathExpression*,
-                                               aPropertyValue);
-
-  NS_RELEASE(expr);
-}
-
-PRBool
+nsresult
 nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
                                   nsIDOMNode           *aContextNode,
                                   PRInt32              aContextPosition,
                                   PRInt32              aContextSize,
                                   nsIDOMElement        *aBindElement)
 {
-  // Get the model item properties specified by this <bind>.
+  // Get the model item properties specified by this \<bind\>.
   nsCOMPtr<nsIDOMXPathExpression> props[eModel__count];
-  nsAutoString exprStrings[eModel__count];
-  PRInt32 propCount = 0;
-  nsresult rv = NS_OK;
+  nsAutoString propStrings[eModel__count];
+  nsresult rv;
   nsAutoString attrStr;
 
   nsCOMPtr<nsIDOMXPathNSResolver> resolver;
@@ -915,16 +910,16 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
   for (int i = 0; i < eModel__count; ++i) {
     sModelPropsList[i]->ToString(attrStr);
 
-    aBindElement->GetAttribute(attrStr, exprStrings[i]);
-    if (!exprStrings[i].IsEmpty()) {
-      rv = aEvaluator->CreateExpression(exprStrings[i], resolver,
+    aBindElement->GetAttribute(attrStr, propStrings[i]);
+    if (!propStrings[i].IsEmpty() &&
+        i != eModel_type &&
+        i != eModel_p3ptype) {
+      rv = aEvaluator->CreateExpression(propStrings[i], resolver,
                                         getter_AddRefs(props[i]));
       if (NS_FAILED(rv)) {
         nsXFormsUtils::DispatchEvent(mElement, eEvent_ComputeException);
-        return PR_FALSE;
+        return rv;
       }
-
-      ++propCount;
     }
   }
 
@@ -943,10 +938,10 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
                             nsnull, getter_AddRefs(result));
   if (NS_FAILED(rv)) {
     nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
-    return PR_FALSE;
+    return rv;
   }
 
-  NS_ENSURE_TRUE(result, PR_FALSE);
+  NS_ENSURE_STATE(result);
 
   PRUint32 snapLen;
   rv = result->GetSnapshotLength(&snapLen);
@@ -970,39 +965,88 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
     // Apply MIPs
     nsXFormsXPathParser parser;
     nsXFormsXPathAnalyzer analyzer(aEvaluator, resolver);
+    PRBool multiMIP = PR_FALSE;
     for (int j = 0; j < eModel__count; ++j) {
-      if (props[j]) {
-        nsCOMPtr<nsIContent> content = do_QueryInterface(node, &rv);
+      if (propStrings[j].IsEmpty())
+        continue;
+
+      // type and p3ptype are applied as attributes on the instance node
+      if (j == eModel_type || j == eModel_p3ptype) {
+        nsCOMPtr<nsIDOMElement> nodeElem = do_QueryInterface(node, &rv);
 
         if (NS_FAILED(rv)) {
-          NS_WARNING("nsXFormsModelElement::ProcessBind(): Node is not IContent!\n");
+          NS_WARNING("nsXFormsModelElement::ProcessBind(): Node is not nsIDOMElement!\n");
           continue;
         }
 
-        nsIDOMXPathExpression *expr = props[j];
-        NS_ADDREF(expr);
-
-        // Set property
-        rv = content->SetProperty(sModelPropsList[j], expr, ReleaseExpr);
-        if (rv == NS_PROPTABLE_PROP_OVERWRITTEN) {
-          return PR_FALSE;
+        // Check whether attribute already exists
+        if (j == eModel_type) {
+          rv = nodeElem->HasAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
+                                        NS_LITERAL_STRING("type"),
+                                        &multiMIP);
+        } else {
+          rv = nodeElem->HasAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                        NS_LITERAL_STRING("p3ptype"),
+                                        &multiMIP);
         }
-        
-        // Get node dependencies
-        nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(exprStrings[j]));
-        set.Clear();
-        rv = analyzer.Analyze(node, xNode, expr, &exprStrings[j], &set);
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
+        // It is an error to set a MIP twice, so break and emit an exception.
+        if (multiMIP) {
+          break;
+        }
+ 
+        // Set attribute
+        if (j == eModel_type) {
+          rv = nodeElem->SetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
+                                        NS_LITERAL_STRING("type"),
+                                        propStrings[j]);
+        } else {
+          rv = nodeElem->SetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                        NS_LITERAL_STRING("p3ptype"),
+                                        propStrings[j]);
+        }
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        // the rest of the MIPs are given to the MDG
+        nsCOMPtr<nsIDOMXPathExpression> expr = props[j];
+
+        // Get node dependencies
+        nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(propStrings[j]));
+        set.Clear();
+        rv = analyzer.Analyze(node, xNode, expr, &propStrings[j], &set);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         // Insert into MDG
-        rv = mMDG.AddMIP((ModelItemPropName) j, expr, &set, parser.UsesDynamicFunc(),
-                         node, snapItem + 1, snapLen);
+        rv = mMDG.AddMIP((ModelItemPropName) j,
+                         expr,
+                         &set,
+                         parser.UsesDynamicFunc(),
+                         node,
+                         snapItem + 1,
+                         snapLen);
+
+        // if the call results in NS_ERROR_ABORT the page has tried to set a
+        // MIP twice, break and emit an exception.
+        if (rv == NS_ERROR_ABORT) {
+          multiMIP = PR_TRUE;
+          break;
+        }
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
 
+    // If the attribute is already there, the page sets a MIP twice
+    // which is illegal, and should result in an xforms-binding-exception.
+    // @see http://www.w3.org/TR/xforms/slice4.html#evt-modelConstruct
+    // (item 4, c)
+    if (multiMIP) {
+      nsXFormsUtils::DispatchEvent(aBindElement,
+                                   eEvent_BindingException);
+      return NS_ERROR_FAILURE;
+    }
 
-    // Now evaluate any child <bind> elements.
+    // Now evaluate any child \<bind\> elements.
     nsCOMPtr<nsIDOMNodeList> children;
     aBindElement->GetChildNodes(getter_AddRefs(children));
     if (children) {
@@ -1023,17 +1067,16 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
           if (!value.EqualsLiteral(NS_NAMESPACE_XFORMS))
             continue;
 
-          if (!ProcessBind(aEvaluator, node,
+          rv = ProcessBind(aEvaluator, node,
                            snapItem + 1, snapLen,
-                           nsCOMPtr<nsIDOMElement>(do_QueryInterface(child))))
-            return PR_FALSE;
-          
+                           nsCOMPtr<nsIDOMElement>(do_QueryInterface(child)));
+          NS_ENSURE_SUCCESS(rv, rv);
         }
       }
     }
   }
 
-  return PR_TRUE;
+  return NS_OK;
 }
 
 /* static */ void
