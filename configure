@@ -4709,7 +4709,7 @@ else
     DSO_LDOPTS='-shared -h $@'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-KPIC'
-    _DEFINES_CFLAGS='$(ACDEFINES) -DMOZILLA_CLIENT'
+    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
 fi
 
 if test "$GNU_CXX"; then
@@ -4723,7 +4723,7 @@ if test "$GNU_CXX"; then
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h'
     _USE_CPP_INCLUDE_FLAG=1
 else
-    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT $(ACDEFINES)'
+    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_MOZILLA_CONFIG_H_ $(ACDEFINES)'
 fi
 
 MKSHLIB_FORCE_ALL=
@@ -13307,8 +13307,8 @@ if test "$_cpp_md_flag"; then
 else
   COMPILER_DEPEND=
   _USE_CPP_INCLUDE_FLAG=
-  _DEFINES_CFLAGS='$(ACDEFINES) -DMOZILLA_CLIENT'
-  _DEFINES_CXXFLAGS='$(ACDEFINES) -DMOZILLA_CLIENT'
+  _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
+  _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
 fi
 fi # MOZ_AUTO_DEPS
 MDDEPDIR='.deps'
@@ -14931,6 +14931,24 @@ for lib_arg in $NSPR_LIBS $TK_LIBS; do
 done
 
 
+my_srcdir=$srcdir
+case "$target_os" in
+msvc*|mksnt*|cygwin*|mingw*)
+    my_srcdir=`cygpath -w ${srcdir} | sed  's|\\\\|/|g'`
+    my_perl=$_WIN32_PERL
+    ;;
+*)
+    my_perl=$PERL
+    ;;
+esac
+
+MOZILLA_VERSION=`$my_perl $my_srcdir/config/milestone.pl -topsrcdir $my_srcdir`
+cat >> confdefs.h <<EOF
+#define MOZILLA_VERSION "$MOZILLA_VERSION"
+EOF
+
+
+
 
 # Save the defines header file before autoconf removes it.
 # (Do not add AC_DEFINE calls after this line.)
@@ -14968,21 +14986,12 @@ EOF
 
 
 . ${srcdir}/allmakefiles.sh
-my_srcdir=$srcdir
 case "$target_os" in
 msvc*|mksnt*|cygwin*|mingw*)
-    my_srcdir=`cygpath -w ${srcdir} | sed  's|\\\\|/|g'`
     MAKEFILES=`echo $MAKEFILES | sed -e 's|/cygdrive/\(.\)/|\1:/|g'`
-    my_perl=$_WIN32_PERL
     ;;
 *)
-    my_perl=$PERL
-    ;;
 esac
-
-MOZILLA_VERSION=`$my_perl $my_srcdir/config/milestone.pl -topsrcdir $my_srcdir`
-
-
 echo $MAKEFILES | $my_perl $my_srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 . ./conftest.sh
 rm conftest.sh
@@ -15427,8 +15436,8 @@ s%@ASM_SUFFIX@%$ASM_SUFFIX%g
 s%@USE_N32@%$USE_N32%g
 s%@MOZ_MOVEMAIL@%$MOZ_MOVEMAIL%g
 s%@LIBS_PATH@%$LIBS_PATH%g
-s%@MOZ_DEFINES@%$MOZ_DEFINES%g
 s%@MOZILLA_VERSION@%$MOZILLA_VERSION%g
+s%@MOZ_DEFINES@%$MOZ_DEFINES%g
 
 CEOF
 EOF

@@ -667,7 +667,7 @@ else
     DSO_LDOPTS='-shared -h $@'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-KPIC'
-    _DEFINES_CFLAGS='$(ACDEFINES) -DMOZILLA_CLIENT'
+    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
 fi
 
 if test "$GNU_CXX"; then
@@ -682,7 +682,7 @@ if test "$GNU_CXX"; then
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h'
     _USE_CPP_INCLUDE_FLAG=1
 else
-    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT $(ACDEFINES)'
+    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_MOZILLA_CONFIG_H_ $(ACDEFINES)'
 fi
 
 dnl gcc can come with its own linker so it is better to use the pass-thru calls
@@ -4368,8 +4368,8 @@ if test "$_cpp_md_flag"; then
 else
   COMPILER_DEPEND=
   _USE_CPP_INCLUDE_FLAG=
-  _DEFINES_CFLAGS='$(ACDEFINES) -DMOZILLA_CLIENT'
-  _DEFINES_CXXFLAGS='$(ACDEFINES) -DMOZILLA_CLIENT'
+  _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
+  _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
 fi
 fi # MOZ_AUTO_DEPS
 MDDEPDIR='.deps'
@@ -4957,6 +4957,22 @@ for lib_arg in $NSPR_LIBS $TK_LIBS; do
 done
 AC_SUBST(LIBS_PATH)
 
+my_srcdir=$srcdir
+case "$target_os" in
+msvc*|mksnt*|cygwin*|mingw*)
+    my_srcdir=`cygpath -w ${srcdir} | sed  's|\\\\|/|g'`
+    my_perl=$_WIN32_PERL
+    ;;
+*)
+    my_perl=$PERL
+    ;;
+esac
+
+dnl Get mozilla version from central milestone file
+MOZILLA_VERSION=`$my_perl $my_srcdir/config/milestone.pl -topsrcdir $my_srcdir`
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
+AC_SUBST(MOZILLA_VERSION)
+
 dnl Spit out some output
 dnl ========================================================
 
@@ -5010,22 +5026,12 @@ dnl This does not change the $MAKEFILES variable.
 dnl
 dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
 dnl
-my_srcdir=$srcdir
 case "$target_os" in
 msvc*|mksnt*|cygwin*|mingw*)
-    my_srcdir=`cygpath -w ${srcdir} | sed  's|\\\\|/|g'`
     MAKEFILES=`echo $MAKEFILES | sed -e 's|/cygdrive/\(.\)/|\1:/|g'`
-    my_perl=$_WIN32_PERL
     ;;
 *)
-    my_perl=$PERL
-    ;;
 esac
-
-dnl Get mozilla version from central milestone file
-MOZILLA_VERSION=`$my_perl $my_srcdir/config/milestone.pl -topsrcdir $my_srcdir`
-AC_SUBST(MOZILLA_VERSION)
-
 echo $MAKEFILES | $my_perl $my_srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 . ./conftest.sh
 rm conftest.sh
