@@ -25,18 +25,27 @@
 #include <PP_Prefix.h>
 #include <LApplication.h>
 
-#ifndef nsError_h
 #include "nsError.h"
-#endif
-
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
  
 class	CBrowserApp : public PP_PowerPlant::LApplication
+
+#if USE_PROFILES
+                      ,public nsIObserver
+                      ,public nsSupportsWeakReference
+#endif
+
 {
 
 public:
-					        CBrowserApp();	// constructor registers PPobs
-	virtual 			    ~CBrowserApp();	// stub destructor
+					                CBrowserApp();	// constructor registers PPobs
+	virtual 			          ~CBrowserApp();	// stub destructor
 
+#if USE_PROFILES
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+#endif
 
     virtual void            ProcessNextEvent();
 
@@ -67,4 +76,9 @@ protected:
 
     virtual Boolean         SelectFileObject(PP_PowerPlant::CommandT	inCommand,
                                              FSSpec& outSpec);
+    
+#if USE_PROFILES
+    Boolean                 ConfirmProfileSwitch();
+#endif
+
 };

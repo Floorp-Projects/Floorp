@@ -8,4 +8,6 @@
 //--------------------------------------------------------------------------------
 
 #define wantDebugging 0
+#define wantProfiles 1
+
 #include "BrowserHeaders.pch.h"

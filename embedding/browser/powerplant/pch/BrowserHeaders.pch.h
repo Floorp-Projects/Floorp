@@ -40,11 +40,16 @@
 		#else
 			#undef DEBUG
 		#endif
+
+		#if wantProfiles
+		    #define USE_PROFILES 1
+		#else
+		    #define USE_PROFILES 1
+        #endif
 		
 		#include "DefinesMac.h"
 		#include "DefinesMozilla.h"
-	
-	
+		        	
 		//	Support for automatically naming the precompiled header file ...
 		#if __POWERPC__
 			#if wantDebugging
