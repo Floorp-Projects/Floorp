@@ -392,7 +392,8 @@ CC=$_SAVE_CC
 
 # Mozilla specific options
 # ========================================================
-dnl builtin(include, build/autoconf/mozconfig.in)dnl
+dnl The macros used for command line options
+dnl are defined in build/autoconf/altoptions.m4.
 
 dnl nglayout only supports building with one toolkit
 dnl so ignore everything after the first,
