@@ -21,4 +21,5 @@
      readonly attribute wstring encoding;
 
      Element namedItem(in wstring name);
+     Element item(in unsigned long index);
    };
