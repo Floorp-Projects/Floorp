@@ -99,6 +99,9 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetValue(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD DoAction(PRUint8 index);
 };
 
 class nsHTMLGroupboxAccessible : public nsAccessibleWrap

@@ -415,6 +415,35 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetNumActions(PRUint8 *_retval)
+{
+  *_retval = eSingle_Action;
+  return NS_OK;;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+{
+  if (index == eAction_Click) {
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("activate"), _retval);
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::DoAction(PRUint8 index)
+{
+  if (index == 0) {
+    nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
+    if ( element )
+    {
+      element->Focus();
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
 // --- groupbox  -----
 
 /*
