@@ -16,4 +16,6 @@ netwerk/protocol/ftp/src/Makefile
 netwerk/protocol/http/Makefile
 netwerk/protocol/http/public/Makefile
 netwerk/protocol/http/src/Makefile
+netwerk/protocol/resource/Makefile
+netwerk/protocol/resource/src/Makefile
 netwerk/test/Makefile
