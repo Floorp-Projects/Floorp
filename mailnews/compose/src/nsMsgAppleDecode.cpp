@@ -1132,21 +1132,7 @@ static char index_64[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 };
 
-#ifdef XP_OS2_HACK
-/*DSR102196 - the OS/2 Visual Age compiler croaks when it tries*/
-/*to optomize this macro (/O+ on CSD4)                         */ 
-char CHAR64(int c)
-{
-   unsigned char index;
-   char rc;
-
-   index = (unsigned char) c;
-   rc = index_64[index];
-   return rc;
-} 
-#else /*normal code...*/
 #define CHAR64(c)  (index_64[(unsigned char)(c)])
-#endif
 #define EndOfBuff(p)	((p)->pos_inbuff >= (p)->s_inbuff)
 
 PRIVATE int fetch_next_char_64(
