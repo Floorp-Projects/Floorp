@@ -68,9 +68,7 @@ public:
     
     NS_IMETHOD        PreCreateWidget(nsWidgetInitData *aInitData);
 
-#ifdef MOZ_UNICODE
     virtual LPCWSTR   WindowClassW();
-#endif /* MOZ_UNICODE */
     virtual LPCTSTR   WindowClass();
     virtual DWORD     WindowStyle();
     virtual PRBool    AutoErase();

@@ -77,9 +77,7 @@ public:
 protected:
   nsString mLabel;
 
-#ifdef MOZ_UNICODE
   virtual LPCWSTR WindowClassW();
-#endif /* MOZ_UNICODE */
   virtual LPCTSTR WindowClass();
   virtual DWORD   WindowStyle();
   virtual DWORD   WindowExStyle();

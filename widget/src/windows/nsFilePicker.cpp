@@ -43,18 +43,14 @@
 #include <commdlg.h>
 #include <cderr.h>
 
-#ifdef MOZ_UNICODE
 #include "nsString.h"
 #include "nsToolkit.h"
-#endif // MOZ_UNICODE
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
-#ifdef MOZ_UNICODE
 nsString nsFilePicker::mLastUsedUnicodeDirectory;
-#endif
 char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 
 #define MAX_EXTENSION_LENGTH 10
@@ -90,7 +86,6 @@ nsFilePicker::~nsFilePicker()
 // Show - Display the file dialog
 //
 //-------------------------------------------------------------------------
-#ifdef MOZ_UNICODE
 NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 {
   NS_ENSURE_ARG_POINTER(aReturnVal);
@@ -333,308 +328,24 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 
   return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
-#ifdef MOZ_UNICODE
 {
   return ShowW(aReturnVal);
 }
-#else
-{
-  NS_ENSURE_ARG_POINTER(aReturnVal);
-
-  // suppress blur event
-  if (mParentWidget) {
-    nsWindow *parent = NS_STATIC_CAST(nsWindow *, mParentWidget);
-    parent->SuppressBlurEvents(PR_TRUE);
-  }
-
-  PRBool result = PR_FALSE;
-  char fileBuffer[MAX_PATH+1] = "";
-  char *converted = ConvertToFileSystemCharset(mDefault.get());
-  if (nsnull == converted) {
-    mDefault.ToCString(fileBuffer,MAX_PATH);
-  }
-  else {
-    PL_strncpyz(fileBuffer, converted, MAX_PATH+1);
-    nsMemory::Free( converted );
-  }
-
-  char htmExt[] = "html";
-
-  char *title = ConvertToFileSystemCharset(mTitle.get());
-  if (nsnull == title)
-    title = ToNewCString(mTitle);
-  nsCAutoString initialDir;
-  mDisplayDirectory->GetNativePath(initialDir);
-  // If no display directory, re-use the last one.
-  if(initialDir.IsEmpty()) {
-    // Allocate copy of last used dir.
-    initialDir = mLastUsedDirectory;
-  }
-
-  mFile.SetLength(0);
-
-  if (mMode == modeGetFolder) {
-
-    char dirBuffer[MAX_PATH+1];
-    PL_strncpy(dirBuffer, initialDir.get(), MAX_PATH);
-    BROWSEINFO browserInfo;
-    browserInfo.hwndOwner      = (HWND)
-      (mParentWidget ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
-    browserInfo.pidlRoot       = nsnull;
-    browserInfo.pszDisplayName = (LPSTR)dirBuffer;
-    browserInfo.lpszTitle      = title;
-    browserInfo.ulFlags        = BIF_RETURNONLYFSDIRS;//BIF_STATUSTEXT | BIF_RETURNONLYFSDIRS;
-    browserInfo.lpfn           = nsnull;
-    browserInfo.lParam         = nsnull;
-    browserInfo.iImage         = nsnull;
-
-    // XXX UNICODE support is needed here --> DONE
-    LPITEMIDLIST list = ::SHBrowseForFolder(&browserInfo);
-    if (list != NULL) {
-      result = ::SHGetPathFromIDList(list, (LPSTR)fileBuffer);
-      if (result) {
-          mFile.Append(fileBuffer);
-      }
-  
-      // free PIDL
-      LPMALLOC pMalloc = NULL;
-      ::SHGetMalloc(&pMalloc);
-      if(pMalloc) {
-         pMalloc->Free(list);
-         pMalloc->Release();
-      }
-    }
-  }
-  else {
-
-    OPENFILENAME ofn;
-    memset(&ofn, 0, sizeof(ofn));
-
-    ofn.lStructSize = sizeof(ofn);
-
-    char extensionBuffer[MAX_EXTENSION_LENGTH+1] = "";
-    
-    PRInt32 l = (mFilterList.Length()+2)*2;
-    char *filterBuffer = (char*) nsMemory::Alloc(l);
-    int len = WideCharToMultiByte(CP_ACP, 0,
-                                  mFilterList.get(),
-                                  mFilterList.Length(),
-                                  filterBuffer,
-                                  l, NULL, NULL);
-    filterBuffer[len] = '\0';
-    filterBuffer[len+1] = '\0';
-                                  
-    if (!initialDir.IsEmpty()) {
-      ofn.lpstrInitialDir = initialDir.get();
-    }
-    
-    ofn.lpstrTitle   = title;
-    ofn.lpstrFilter  = filterBuffer;
-    ofn.nFilterIndex = mSelectedType;
-    ofn.hwndOwner    = (HWND)
-      (mParentWidget ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
-    ofn.lpstrFile    = fileBuffer;
-    ofn.nMaxFile     = MAX_PATH;
-
-    ofn.Flags = OFN_NOCHANGEDIR | OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
-
-    if (!mDefaultExtension.IsEmpty()) {
-      // Someone was cool and told us what to do
-      char *convertedExt = ConvertToFileSystemCharset(mDefaultExtension.get());
-      if (!convertedExt) {
-        mDefaultExtension.ToCString(extensionBuffer, MAX_EXTENSION_LENGTH);
-      }
-      else {
-        PL_strncpyz(extensionBuffer, convertedExt, MAX_EXTENSION_LENGTH+1);
-        nsMemory::Free( convertedExt );
-      }
-      ofn.lpstrDefExt = extensionBuffer;
-    }
-    else {
-      // Get file extension from suggested filename
-      //  to detect if we are saving an html file
-      //XXX: nsIFile SHOULD HAVE A GetExtension() METHOD!
-      PRInt32 extIndex = mDefault.RFind(".");
-      if ( extIndex >= 0) {
-        nsAutoString ext;
-        mDefault.Right(ext, mDefault.Length() - extIndex);
-        // Should we test for ".cgi", ".asp", ".jsp" and other
-        // "generated" html pages?
-
-        if ( ext.EqualsIgnoreCase(".htm")  ||
-             ext.EqualsIgnoreCase(".html") ||
-             ext.EqualsIgnoreCase(".shtml") ) {
-          // This is supposed to append ".htm" if user doesn't supply an extension
-          //XXX Actually, behavior is sort of weird:
-          //    often appends ".html" even if you have an extension
-          //    It obeys your extension if you put quotes around name
-          ofn.lpstrDefExt = htmExt;
-        }
-      }
-    }
-
-    if (mMode == modeOpen) {
-      // FILE MUST EXIST!
-      ofn.Flags |= OFN_FILEMUSTEXIST;
-      result = ::GetOpenFileName(&ofn);
-    }
-    else if (mMode == modeOpenMultiple) {
-      ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
-      result = ::GetOpenFileName(&ofn);
-    }
-    else if (mMode == modeSave) {
-      ofn.Flags |= OFN_NOREADONLYRETURN | OFN_PATHMUSTEXIST;
-      result = ::GetSaveFileName(&ofn);
-      if (!result) {
-        // Error, find out what kind.
-        if (::GetLastError() == ERROR_INVALID_PARAMETER ||
-            ::CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
-          // probably the default file name is too long or contains illegal characters!
-          // Try again, without a starting file name.
-          ofn.lpstrFile[0] = 0;
-          result = ::GetSaveFileName(&ofn);
-        }
-      }
-    }
-    else {
-      NS_ASSERTION(0, "Only load, save and getFolder are supported modes"); 
-    }
-  
-    // Remember what filter type the user selected
-    mSelectedType = (PRInt16)ofn.nFilterIndex;
-
-    // Clean up filter buffers
-    if (filterBuffer)
-      nsMemory::Free( filterBuffer );
-
-    // Set user-selected location of file or directory
-    if (result == PR_TRUE) {
-      // I think it also needs a conversion here (to unicode since appending to nsString) 
-      // but doing that generates garbage file name, weird.
-      if (mMode == modeOpenMultiple) {
-        nsresult rv = NS_NewISupportsArray(getter_AddRefs(mFiles));
-        NS_ENSURE_SUCCESS(rv,rv);
-
-        // from msdn.microsoft.com, "Open and Save As Dialog Boxes" section:
-        // If you specify OFN_EXPLORER,
-        // The directory and file name strings are NULL separated, 
-        // with an extra NULL character after the last file name. 
-        // This format enables the Explorer-style dialog boxes
-        // to return long file names that include spaces. 
-        char *current = fileBuffer;
-
-        nsCAutoString dirName(current);
-        // sometimes dirName contains a trailing slash
-        // and sometimes it doesn't.
-        if (current[dirName.Length() - 1] != '\\')
-          dirName += '\\';
-
-        while (current && *current && *(current + strlen(current) + 1)) {
-          current = current + strlen(current) + 1;
-          
-          nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
-          NS_ENSURE_SUCCESS(rv,rv);
-
-          rv = file->InitWithNativePath(dirName + nsDependentCString(current));
-          NS_ENSURE_SUCCESS(rv,rv);
-           
-          rv = mFiles->AppendElement(file);
-          NS_ENSURE_SUCCESS(rv,rv);
-        }
-         
-        // handle the case where the user selected just one
-        // file.  according to msdn.microsoft.com:
-        // If you specify OFN_ALLOWMULTISELECT and the user selects 
-        // only one file, the lpstrFile string does not have 
-        // a separator between the path and file name.
-        if (current && *current && (current == fileBuffer)) {
-          nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
-          NS_ENSURE_SUCCESS(rv,rv);
-
-          rv = file->InitWithNativePath(nsDependentCString(current));
-          NS_ENSURE_SUCCESS(rv,rv);
-           
-          rv = mFiles->AppendElement(file);
-          NS_ENSURE_SUCCESS(rv,rv);
-        }
-      }
-      else {
-        mFile.Append(fileBuffer);
-      }
-    }
-  }
-
-  if (title)
-    nsMemory::Free( title );
-
-  if (result) {
-    PRInt16 returnOKorReplace = returnOK;
-
-    // Remember last used directory.
-    nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-    NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-
-    file->InitWithNativePath(mFile);
-    nsCOMPtr<nsIFile> dir;
-    if (NS_SUCCEEDED(file->GetParent(getter_AddRefs(dir)))) {
-      nsCOMPtr<nsILocalFile> localDir(do_QueryInterface(dir));
-      if (localDir) {
-        nsCAutoString newDir;
-        localDir->GetNativePath(newDir);
-        if(!newDir.IsEmpty())
-          PL_strncpyz(mLastUsedDirectory, newDir.get(), MAX_PATH+1);
-        // Update mDisplayDirectory with this directory, also.
-        // Some callers rely on this.
-        mDisplayDirectory->InitWithNativePath( nsDependentCString(mLastUsedDirectory) );
-      }
-    }
-
-    if (mMode == modeSave) {
-      // Windows does not return resultReplace,
-      //   we must check if file already exists
-      PRBool exists = PR_FALSE;
-      file->Exists(&exists);
-      if (exists)
-        returnOKorReplace = returnReplace;
-    }
-    *aReturnVal = returnOKorReplace;
-  }
-  else {
-    *aReturnVal = returnCancel;
-  }
-  if (mParentWidget) {
-    nsWindow *parent = NS_STATIC_CAST(nsWindow *, mParentWidget);
-    parent->SuppressBlurEvents(PR_FALSE);
-  }
-
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
 
-#ifdef MOZ_UNICODE
   if (mUnicodeFile.IsEmpty())
       return NS_OK;
-#else
-  if (mFile.IsEmpty())
-      return NS_OK;
-#endif
 
   nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
     
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-#ifdef MOZ_UNICODE
   file->InitWithPath(mUnicodeFile);
-#else
-  file->InitWithNativePath(mFile);
-#endif
 
   NS_ADDREF(*aFile = file);
 
@@ -646,11 +357,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
   nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-#ifdef MOZ_UNICODE
   file->InitWithPath(mUnicodeFile);
-#else
-  file->InitWithNativePath(mFile);
-#endif
 
   nsCOMPtr<nsIURI> uri;
   NS_NewFileURI(getter_AddRefs(uri), file);

@@ -3517,16 +3517,8 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval
     char * leafName = fileSpec.GetLeafName();
     if (leafName && *leafName)
     {
-#ifdef MOZ_UNICODE
-        /* file URL is now in UTF-8 */
-        *_retval = ToNewUnicode(NS_ConvertUTF8toUCS2(leafName));
-#else
-        nsAutoString tempStr;
-        nsresult rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), leafName, tempStr);
-        if (NS_FAILED(rv))
-          tempStr.AssignWithConversion(leafName);
-      *_retval = ToNewUnicode(tempStr);
-#endif /* MOZ_UNICODE */
+      /* file URL is now in UTF-8 */
+      *_retval = ToNewUnicode(NS_ConvertUTF8toUCS2(leafName));
       nsCRT::free(leafName);
       return NS_OK;
     }

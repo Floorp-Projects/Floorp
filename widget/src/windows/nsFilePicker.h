@@ -59,9 +59,7 @@ public:
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD Show(PRInt16 *aReturnVal); 
-#ifdef MOZ_UNICODE
   NS_IMETHOD ShowW(PRInt16 *aReturnVal); 
-#endif
   NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter) ;
 
 protected:
@@ -89,11 +87,8 @@ protected:
   PRInt16                mSelectedType;
   nsCOMPtr <nsISupportsArray> mFiles;
   static char            mLastUsedDirectory[];
-
-#ifdef MOZ_UNICODE
   nsString               mUnicodeFile;
   static nsString        mLastUsedUnicodeDirectory;
-#endif
 };
 
 #endif // nsFilePicker_h__

@@ -41,13 +41,9 @@
 #include "nsdefs.h"
 #include "nsIToolkit.h"
 
-#ifdef MOZ_AIMM
 struct IActiveIMMApp;
-#endif
 
-#ifdef MOZ_UNICODE
 #include "nsWindowAPI.h"
-#endif
 
 struct MethodInfo;
 class nsIEventQueue;
@@ -106,13 +102,10 @@ public:
     static void Startup(HINSTANCE hModule);
     static void Shutdown();
 
-#ifdef MOZ_AIMM
     // Active Input Method support
     static IActiveIMMApp *gAIMMApp;
     static PRInt32       gAIMMCount;
-#endif
 
-#ifdef MOZ_UNICODE
     // Ansi API support
     static HMODULE              mShell32Module;
     static NS_DefWindowProc     mDefWindowProc;
@@ -131,7 +124,6 @@ public:
     static NS_UnregisterClass   mUnregisterClass;
     static NS_SHGetPathFromIDList mSHGetPathFromIDList;
     static NS_SHBrowseForFolder   mSHBrowseForFolder;
-#endif
 };
 
 #define WM_CALLMETHOD   (WM_USER+1)

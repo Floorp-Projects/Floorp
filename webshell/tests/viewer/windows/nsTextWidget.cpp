@@ -179,7 +179,6 @@ PRBool nsTextWidget::OnResize(nsRect &aWindowRect)
     return PR_FALSE;
 }
 
-#ifdef MOZ_UNICODE
 //-------------------------------------------------------------------------
 //
 // return the window class name and initialize the class if needed
@@ -189,7 +188,6 @@ LPCWSTR nsTextWidget::WindowClassW()
 {
   return(nsTextHelper::WindowClassW());
 }
-#endif /* MOZ_UNICODE */
 
 //-------------------------------------------------------------------------
 //
