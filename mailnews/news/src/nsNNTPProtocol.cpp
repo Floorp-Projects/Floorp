@@ -3344,7 +3344,6 @@ PRInt32 nsNNTPProtocol::XoverSend()
 				m_firstArticle, 
 				m_lastArticle);
 
-	PR_LOG(NNTP,PR_LOG_ALWAYS,("XOVER %d-%d", m_firstArticle, m_lastArticle));
 	NNTP_LOG_WRITE(outputBuffer);
 
     m_nextState = NNTP_RESPONSE;
