@@ -74,11 +74,11 @@ public:
 	void GoToIndexTest();
 	void LoadUriTest(char *, const unsigned long);
 	void ReloadTest(const unsigned long);
-	void StopUriTest(char *);
+	void StopUriTest(char *, const unsigned long);
 	void GetDocumentTest(void);
 	void GetCurrentURITest(void);
 	void GetSHTest(void);
-	void LoadUriandReload();
+	void LoadUriandReload(int);
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();
 

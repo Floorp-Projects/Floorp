@@ -746,6 +746,10 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,131,22,50,14
     LTEXT           "Enter URL here:",IDC_ENTER_URLTEXT,64,55,71,8
     EDITTEXT        IDC_URLFIELD,25,68,134,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_COMBO1,25,29,86,72,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Select Load Flag:",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,32,14,80,10
 END
 
 IDD_RUNTESTSDLG DIALOG DISCARDABLE  0, 0, 331, 186
@@ -866,6 +870,33 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_URLDIALOG DLGINIT
+BEGIN
+    IDC_COMBO1, 0x403, 6, 0
+0x4f4e, 0x454e, 0x0020, 
+    IDC_COMBO1, 0x403, 5, 0
+0x414d, 0x4b53, "\000" 
+    IDC_COMBO1, 0x403, 8, 0
+0x5349, 0x4c5f, 0x4e49, 0x004b, 
+    IDC_COMBO1, 0x403, 15, 0
+0x5942, 0x4150, 0x5353, 0x485f, 0x5349, 0x4f54, 0x5952, "\000" 
+    IDC_COMBO1, 0x403, 16, 0
+0x4552, 0x4c50, 0x4341, 0x5f45, 0x4948, 0x5453, 0x524f, 0x0059, 
+    IDC_COMBO1, 0x403, 13, 0
+0x5942, 0x4150, 0x5353, 0x435f, 0x4341, 0x4548, "\000" 
+    IDC_COMBO1, 0x403, 13, 0
+0x5942, 0x4150, 0x5353, 0x505f, 0x4f52, 0x5958, "\000" 
+    IDC_COMBO1, 0x403, 15, 0
+0x4843, 0x5241, 0x4553, 0x5f54, 0x4843, 0x4e41, 0x4547, "\000" 
+    0
+END
 
 
 /////////////////////////////////////////////////////////////////////////////
