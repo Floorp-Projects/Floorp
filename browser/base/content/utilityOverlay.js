@@ -43,17 +43,9 @@
 
 var goPrefWindow = 0;
 
-function getBrowserURL() {
-
-  try {
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    var url = prefs.getCharPref("browser.chromeURL");
-    if (url)
-      return url;
-  } catch(e) {
-  }
-  return "chrome://navigator/content/navigator.xul";
+function getBrowserURL()
+{
+  return "chrome://browser/content/browser.xul";
 }
 
 function goPageSetup(domwin, printSettings)
@@ -78,29 +70,19 @@ function goPageSetup(domwin, printSettings)
 
 function goToggleToolbar( id, elementID )
 {
-  var toolbar = document.getElementById( id );
-  var element = document.getElementById( elementID );
-  if ( toolbar )
+  var toolbar = document.getElementById(id);
+  var element = document.getElementById(elementID);
+  if (toolbar)
   {
-    var attribValue = toolbar.getAttribute("hidden") ;
-
-    if ( attribValue == "true" )
-    {
-      toolbar.setAttribute("hidden", "false" );
-      if ( element )
-        element.setAttribute("checked","true")
-    }
-    else
-    {
-      toolbar.setAttribute("hidden", true );
-      if ( element )
-        element.setAttribute("checked","false")
-    }
+    var isHidden = toolbar.hidden;
+    toolbar.hidden = !isHidden;
     document.persist(id, 'hidden');
-    document.persist(elementID, 'checked');
+    if (element) {
+      element.checked = isHidden;
+      document.persist(elementID, 'checked');
+    }
   }
 }
-
 
 function goClickThrobber( urlPref )
 {

@@ -26,7 +26,6 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/bookmarks/bookmarksManager.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css" type="text/css"?>
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -34,8 +33,6 @@
 %utilDTD;
 <!ENTITY % bmDTD SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd">
 %bmDTD;
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
 ]>
 
 <window id="bookmark-window" windowtype="bookmarks:manager"
@@ -47,13 +44,9 @@
         persist="width height screenX screenY sizemode"
         onload="Startup();" onunload="Shutdown();">
 
-  <!-- The order of loading of these script files is IMPORTANT -->
-
-  <!-- Shared Libraries -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-
   <!-- XXX - This should SO become an XBL widget -->
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
   <!-- Shared Bookmarks Utility Library -->
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
@@ -196,7 +189,7 @@
                     label="&menuitem.view.command.toolbar.label;"
                     accesskey="&menuitem.view.command.toolbar.accesskey;"
                     oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar'); event.preventBubble();"
-                    persist="checked"/>
+                    checked="true"/>
           <menu id="descending" label="&menuitem.view.show_columns.label;"
                 accesskey="&menuitem.view.show_columns.accesskey;">
             <menupopup id="columnsPopup" onpopupshowing="fillColumnsMenu(event);"
