@@ -215,7 +215,6 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISup
     mRealObject      = realObject;
     mDestQueue       = do_QueryInterface(destQueue);
     mProxyType       = proxyType;
-    mLock            = PR_NewLock();
 }
 
 
@@ -230,7 +229,6 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const
 
     mDestQueue       = do_QueryInterface(destQueue);
     mProxyType       = proxyType;
-    mLock            = PR_NewLock();
 }
 
 nsProxyObject::~nsProxyObject()
@@ -240,7 +238,6 @@ nsProxyObject::~nsProxyObject()
     
     mRealObject = 0;
     mDestQueue  = 0;
-    PR_DestroyLock(mLock);
 }
 
 // GetRealObject

@@ -95,8 +95,6 @@ public:
     nsISupports*        GetRealObject();
     nsIEventQueue*      GetQueue();
     PRInt32             GetProxyType() const { return mProxyType; }
-    
-    PRLock* GetLock() const { return mLock; }
 
 private:
     
@@ -106,9 +104,7 @@ private:
     
     nsCOMPtr<nsISupports>     mRealObject;       /* the non-proxy object that this event is referring to. 
                                                     This is a strong ref. */
-    PRLock                    *mLock;
 
-    
     nsresult convertMiniVariantToVariant(nsXPTMethodInfo   * methodInfo, 
                                          nsXPTCMiniVariant * params, 
                                          nsXPTCVariant     **fullParam, 
