@@ -193,12 +193,13 @@ nsLeafBoxFrame::GetFrame(nsIFrame** aFrame)
 }
 
 NS_IMETHODIMP
-nsLeafBoxFrame::DidReflow(nsIPresContext* aPresContext,
-                   nsDidReflowStatus aStatus)
+nsLeafBoxFrame::DidReflow(nsIPresContext*           aPresContext,
+                          const nsHTMLReflowState*  aReflowState,
+                          nsDidReflowStatus         aStatus)
 {
   PRBool isDirty = mState & NS_FRAME_IS_DIRTY;
   PRBool hasDirtyChildren = mState & NS_FRAME_HAS_DIRTY_CHILDREN;
-  nsresult rv = nsFrame::DidReflow(aPresContext, aStatus);
+  nsresult rv = nsFrame::DidReflow(aPresContext, aReflowState, aStatus);
   if (isDirty)
     mState |= NS_FRAME_IS_DIRTY;
 

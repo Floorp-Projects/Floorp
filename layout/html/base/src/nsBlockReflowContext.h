@@ -76,11 +76,12 @@ public:
                        nsMargin& aComputedOffsets,
                        nsReflowStatus& aReflowStatus);
 
-  PRBool PlaceBlock(PRBool aForceFit,
-                    const nsMargin& aComputedOffsets,
-                    nsCollapsingMargin& aBottomMarginResult /* out */,
-                    nsRect& aInFlowBounds,
-                    nsRect& aCombinedRect);
+  PRBool PlaceBlock(const nsHTMLReflowState& aReflowState,
+                    PRBool                   aForceFit,
+                    const nsMargin&          aComputedOffsets,
+                    nsCollapsingMargin&      aBottomMarginResult /* out */,
+                    nsRect&                  aInFlowBounds,
+                    nsRect&                  aCombinedRect);
 
   void AlignBlockHorizontally(nscoord aWidth, nsBlockHorizontalAlign&);
 

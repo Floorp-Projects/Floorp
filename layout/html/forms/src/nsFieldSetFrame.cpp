@@ -425,7 +425,8 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                  availSize.width = mLegendRect.width;
           }
 
-          FinishReflowChild(mLegendFrame, aPresContext, legendDesiredSize, 0, 0, NS_FRAME_NO_MOVE_FRAME);    
+          FinishReflowChild(mLegendFrame, aPresContext, &legendReflowState, 
+                            legendDesiredSize, 0, 0, NS_FRAME_NO_MOVE_FRAME);    
 
         }
     }
@@ -480,7 +481,8 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
               kidDesiredSize.height = aReflowState.mComputedHeight-(borderPadding.top + mLegendSpace);
             }
 
-            FinishReflowChild(mContentFrame, aPresContext, kidDesiredSize, contentRect.x, contentRect.y, 0);
+            FinishReflowChild(mContentFrame, aPresContext, &kidReflowState, 
+                              kidDesiredSize, contentRect.x, contentRect.y, 0);
 
             nsFrameState  kidState;
             mContentFrame->GetFrameState(&kidState);

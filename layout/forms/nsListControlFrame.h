@@ -206,7 +206,9 @@ public:
                    nsIStyleContext* aContext,
                    nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext, nsDidReflowStatus aStatus);
+  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext, 
+                       const nsHTMLReflowState*  aReflowState, 
+                       nsDidReflowStatus         aStatus);
   NS_IMETHOD MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
   NS_IMETHOD Destroy(nsIPresContext *aPresContext);
 

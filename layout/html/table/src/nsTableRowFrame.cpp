@@ -936,7 +936,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
     if (aDirtyOnly && ((frameState & NS_FRAME_IS_DIRTY) == 0)) {
       doReflowChild = PR_FALSE;
     }
-    if (aReflowState.mFlags.mSpecialTableReflow) {
+    if (aReflowState.mFlags.mSpecialHeightReflow) {
       if (!isPaginated && (nsLayoutAtoms::tableCellFrame == frameType.get() &&
                            !((nsTableCellFrame*)kidFrame)->NeedSpecialReflow())) {
         kidFrame = iter.Next(); 
@@ -981,7 +981,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
             (cellDesiredSize.width > cellFrame->GetPriorAvailWidth()) ||
             (eReflowReason_StyleChange == aReflowState.reason)        ||
             isPaginated                                               ||
-            (aReflowState.mFlags.mSpecialTableReflow && cellFrame->NeedSpecialReflow()) ||
+            (aReflowState.mFlags.mSpecialHeightReflow && cellFrame->NeedSpecialReflow()) ||
             HasPctHeight() ||
             notifyStyleChange ){
           // Reflow the cell to fit the available width, height
@@ -1088,7 +1088,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           desiredSize.width = PR_MAX(availCellWidth, availColWidth);
         }
 
-        FinishReflowChild(kidFrame, aPresContext, desiredSize, x, 0, 0);
+        FinishReflowChild(kidFrame, aPresContext, nsnull, desiredSize, x, 0, 0);
         x += desiredSize.width;  
       }
       else {// it's an unknown frame type, give it a generic reflow and ignore the results
@@ -1097,7 +1097,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
         nsHTMLReflowMetrics desiredSize(nsnull);
         nsReflowStatus  status;
         ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, 0, 0, 0, status);
-        kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+        kidFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
       }
     }
     else if (nsLayoutAtoms::tableCellFrame == frameType.get()) {
@@ -1323,7 +1323,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
 
     // Now place the child
     cellMet.width = colAvailWidth;
-    FinishReflowChild(aNextFrame, aPresContext, cellMet, cellOrigin.x, 0, 0);
+    FinishReflowChild(aNextFrame, aPresContext, nsnull, cellMet, cellOrigin.x, 0, 0);
 
     // Notify the table if the cell width changed so it can decide whether to rebalance
     if (!aDesiredSize.mNothingChanged) {
@@ -1399,7 +1399,7 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
         if (nsLayoutAtoms::tableRowGroupFrame == fType.get()) {
           nscoord pctBasis = ((nsTableRowGroupFrame*)parentRS->frame)->GetHeightBasis(*parentRS);
           if (0 == pctBasis) {
-            nsTableFrame::NotifyAncestorsOfSpecialReflow(aReflowState);
+            nsTableFrame::NotifyAncestorsOfSpecialReflow(*this);
             SetNeedSpecialReflow(PR_TRUE);
           }
         }
@@ -1430,7 +1430,7 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
   // just set our width to what was available. The table will calculate the width and not use our value.
   aDesiredSize.width = aReflowState.availableWidth;
 
-  if (aReflowState.mFlags.mSpecialTableReflow) {
+  if (aReflowState.mFlags.mSpecialHeightReflow) {
     SetNeedSpecialReflow(PR_FALSE);
   }
 
@@ -1500,7 +1500,7 @@ nsTableRowFrame::ReflowCellFrame(nsIPresContext*          aPresContext,
   // XXX What happens if this cell has 'vertical-align: baseline' ?
   // XXX Why is it assumed that the cell's ascent hasn't changed ?
   aCellFrame->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
-  aCellFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+  aCellFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 
   return desiredSize.height;
 }

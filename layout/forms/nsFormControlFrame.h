@@ -126,8 +126,9 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                       nsDidReflowStatus aStatus);
+  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
+                       const nsHTMLReflowState*  aReflowState,
+                       nsDidReflowStatus         aStatus);
 
   /**
     * Respond to the request to resize and/or reflow

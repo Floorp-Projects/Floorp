@@ -86,7 +86,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   : mReflowDepth(0)
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
-  mFlags.mSpecialTableReflow = mFlags.mUnused = 0;
+  mFlags.mSpecialHeightReflow = mFlags.mUnused = 0;
   parentReflowState = nsnull;
   frame = aFrame;
   reason = aReason;
@@ -96,7 +96,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   rendContext = aRenderingContext;
   mSpaceManager = nsnull;
   mLineLayout = nsnull;
-  isTopOfPage = PR_FALSE;
+  mFlags.mIsTopOfPage = PR_FALSE;
+  mPercentHeightObserver = nsnull;
   Init(aPresContext);
 #ifdef IBMBIDI
   mRightEdge = NS_UNCONSTRAINEDSIZE;
@@ -114,7 +115,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");  
 
-  mFlags.mSpecialTableReflow = mFlags.mUnused = 0;
+  mFlags.mSpecialHeightReflow = mFlags.mUnused = 0;
   reason = eReflowReason_Incremental;
   parentReflowState = nsnull;
   frame = aFrame;
@@ -124,7 +125,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   rendContext = aRenderingContext;
   mSpaceManager = nsnull;
   mLineLayout = nsnull;
-  isTopOfPage = PR_FALSE;
+  mFlags.mIsTopOfPage = PR_FALSE;
+  mPercentHeightObserver = nsnull;
   Init(aPresContext);
 #ifdef IBMBIDI
   mRightEdge = NS_UNCONSTRAINEDSIZE;
@@ -154,7 +156,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   rendContext = aParentReflowState.rendContext;
   mSpaceManager = aParentReflowState.mSpaceManager;
   mLineLayout = aParentReflowState.mLineLayout;
-  isTopOfPage = aParentReflowState.isTopOfPage;
+  mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
+  mPercentHeightObserver = aParentReflowState.mPercentHeightObserver;
 
   Init(aPresContext);
 
@@ -182,7 +185,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   rendContext = aParentReflowState.rendContext;
   mSpaceManager = aParentReflowState.mSpaceManager;
   mLineLayout = aParentReflowState.mLineLayout;
-  isTopOfPage = aParentReflowState.isTopOfPage;
+  mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
+  mPercentHeightObserver = aParentReflowState.mPercentHeightObserver;
 
   Init(aPresContext);
 
@@ -211,7 +215,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   rendContext = aParentReflowState.rendContext;
   mSpaceManager = aParentReflowState.mSpaceManager;
   mLineLayout = aParentReflowState.mLineLayout;
-  isTopOfPage = aParentReflowState.isTopOfPage;
+  mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
+  mPercentHeightObserver = aParentReflowState.mPercentHeightObserver;
 
   Init(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
 
@@ -226,8 +231,6 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
                         nscoord         aContainingBlockHeight)
 {
   mCompactMarginWidth = 0;
-  mAlignCharOffset = 0;
-  mUseAlignCharOffset = 0;
 #ifdef DEBUG
   mDebugHook = nsnull;
 #endif
@@ -1871,12 +1874,12 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     }
   }
   // Check for blinking text and permission to display it
-  mBlinks = (parentReflowState && parentReflowState->mBlinks);
-  if (!mBlinks && BlinkIsAllowed()) {
+  mFlags.mBlinks = (parentReflowState && parentReflowState->mFlags.mBlinks);
+  if (!mFlags.mBlinks && BlinkIsAllowed()) {
     const nsStyleTextReset* st;
     frame->GetStyleData(eStyleStruct_TextReset,
                         (const nsStyleStruct*&)st);
-    mBlinks = (st->mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK);
+    mFlags.mBlinks = (st->mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK);
   }
 }
 

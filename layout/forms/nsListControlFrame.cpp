@@ -2411,19 +2411,20 @@ nsListControlFrame::GetScrollingParentView(nsIPresContext* aPresContext,
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::DidReflow(nsIPresContext* aPresContext,
-                              nsDidReflowStatus aStatus)
+nsListControlFrame::DidReflow(nsIPresContext*           aPresContext,
+                              const nsHTMLReflowState*  aReflowState,
+                              nsDidReflowStatus         aStatus)
 {
   if (PR_TRUE == IsInDropDownMode()) 
   {
     //SyncViewWithFrame();
     mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-    nsresult rv = nsScrollFrame::DidReflow(aPresContext, aStatus);
+    nsresult rv = nsScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
     mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
     SyncViewWithFrame(aPresContext);
     return rv;
   } else {
-    nsresult rv = nsScrollFrame::DidReflow(aPresContext, aStatus);
+    nsresult rv = nsScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
     PRInt32 selectedIndex = mEndSelectionIndex;
     if (selectedIndex == kNothingSelected) {
       GetSelectedIndex(&selectedIndex);

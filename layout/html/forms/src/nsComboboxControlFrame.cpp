@@ -672,7 +672,8 @@ nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame,
                             rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW |NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY, aStatus);
  
    // Set the child's width and height to it's desired size
-  FinishReflowChild(aFrame, aPresContext, aDesiredSize, rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW |NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY);
+  FinishReflowChild(aFrame, aPresContext, &kidReflowState, aDesiredSize, 
+                    rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW |NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY);
   return rv;
 }
 

@@ -42,6 +42,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsTableRowFrame.h"  // need to actually include this here to inline GetRowIndex
 #include "nsIStyleContext.h"
+#include "nsIPercentHeightObserver.h"
 
 class nsTableFrame;
 class nsHTMLValue;
@@ -51,7 +52,8 @@ class nsHTMLValue;
  */
 #define NS_TABLE_CELL_CONTENT_EMPTY       0x80000000
 #define NS_TABLE_CELL_NEED_SPECIAL_REFLOW 0x40000000
-#define NS_TABLE_CELL_PCT_OVER_HEIGHT     0x20000000
+#define NS_TABLE_CELL_HAD_SPECIAL_REFLOW  0x20000000
+#define NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT 0x10000000
 
 /**
  * nsTableCellFrame
@@ -64,7 +66,9 @@ class nsHTMLValue;
  *
  * @author  sclark
  */
-class nsTableCellFrame : public nsHTMLContainerFrame, public nsITableCellLayout
+class nsTableCellFrame : public nsHTMLContainerFrame, 
+                         public nsITableCellLayout, 
+                         public nsIPercentHeightObserver
 {
 public:
 
@@ -110,6 +114,8 @@ public:
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
+
+  NS_IMETHOD NotifyPercentHeight(const nsHTMLReflowState& aReflowState);
 
   void InitCellFrame(PRInt32 aColIndex);
 
@@ -244,16 +250,19 @@ public:
   PRBool NeedSpecialReflow();
   void SetNeedSpecialReflow(PRBool aContentEmpty);
 
+  PRBool HadSpecialReflow();
+  void SetHadSpecialReflow(PRBool aValue);
+
   PRBool HasPctOverHeight();
   void SetHasPctOverHeight(PRBool aValue);
+
+  nscoord GetLastBlockHeight();
+  void    SetLastBlockHeight(nscoord aValue);
 
   // The collapse offset is (0,0) except for cells originating in a row/col which is collapsed
   void    SetCollapseOffsetX(nsIPresContext* aPresContext, nscoord aXOffset);
   void    SetCollapseOffsetY(nsIPresContext* aPresContext, nscoord aYOffset);
   void    GetCollapseOffset(nsIPresContext* aPresContext, nsPoint& aOffset);
-
-  void    SetPctOverHeightValue(nsIPresContext* aPresContext, nscoord aValue);
-  void    GetPctOverHeightValue(nsIPresContext* aPresContext, nscoord& aValue);
 
   nsTableCellFrame* GetNextCell() const;
 
@@ -291,6 +300,10 @@ protected:
 
 protected:
 
+  struct Bits {
+    PRUint32 mColIndex:15;     
+    PRUint32 mLastBlockHeight:17;
+  } mBits;
   PRInt32      mColIndex;             // the starting column for this cell 
 
   // XXX these could be stored as pixels for a savings of 6 x 2 bytes
@@ -369,21 +382,45 @@ inline void nsTableCellFrame::SetNeedSpecialReflow(PRBool aValue)
   }
 }
 
+inline PRBool nsTableCellFrame::HadSpecialReflow()
+{
+  return (mState & NS_TABLE_CELL_HAD_SPECIAL_REFLOW) ==
+         NS_TABLE_CELL_HAD_SPECIAL_REFLOW;
+}
+
+inline void nsTableCellFrame::SetHadSpecialReflow(PRBool aValue)
+{
+  if (aValue) {
+    mState |= NS_TABLE_CELL_HAD_SPECIAL_REFLOW;
+  } else {
+    mState &= ~NS_TABLE_CELL_HAD_SPECIAL_REFLOW;
+  }
+}
+
 inline PRBool nsTableCellFrame::HasPctOverHeight()
 {
-  return (mState & NS_TABLE_CELL_PCT_OVER_HEIGHT) ==
-         NS_TABLE_CELL_PCT_OVER_HEIGHT;
+  return (mState & NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT) ==
+         NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
 }
 
 inline void nsTableCellFrame::SetHasPctOverHeight(PRBool aValue)
 {
   if (aValue) {
-    mState |= NS_TABLE_CELL_PCT_OVER_HEIGHT;
+    mState |= NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
   } else {
-    mState &= ~NS_TABLE_CELL_PCT_OVER_HEIGHT;
+    mState &= ~NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
   }
 }
 
+inline nscoord nsTableCellFrame::GetLastBlockHeight()
+{
+  return (nscoord)mBits.mLastBlockHeight;
+}
+
+inline void nsTableCellFrame::SetLastBlockHeight(nscoord aValue)
+{
+  mBits.mLastBlockHeight = aValue;
+}
 #endif
 
 

@@ -477,7 +477,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   aKidFrame->GetView(aPresContext, &kidView);
   nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, kidView,
                                              &kidDesiredSize.mOverflowArea);
-  aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+  aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
 
   // If the frame has visible overflow, then store it as a property on the
   // frame. This allows us to be able to recover it without having to reflow

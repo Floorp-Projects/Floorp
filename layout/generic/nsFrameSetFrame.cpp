@@ -1013,7 +1013,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
   // Place and size the child
   metrics.width = aSize.width;
   metrics.height = aSize.height;
-  FinishReflowChild(aChild, aPresContext, metrics, aOffset.x, aOffset.y, 0);
+  FinishReflowChild(aChild, aPresContext, nsnull, metrics, aOffset.x, aOffset.y, 0);
 }
 
 static

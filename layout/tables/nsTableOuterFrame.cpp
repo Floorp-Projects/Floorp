@@ -955,6 +955,8 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
   nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame,
                             nsSize(availWidth, availHeight));
   childRS.reason = aReflowReason;
+  childRS.mPercentHeightObserver = nsnull; // the observer is for non table related frames inside cells
+
 
   // If mComputedWidth > availWidth and availWidth >= minWidth for a nested percent table 
   // then adjust mComputedWidth based on availableWidth if this isn't the intial reflow   
@@ -1137,7 +1139,7 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
 
     GetInnerOrigin(aPresContext, captionSide, containSize, captionSize,
                    captionMargin, innerSize, innerMargin, innerOrigin);
-    rv = FinishReflowChild(mInnerTableFrame, aPresContext, innerMet,
+    rv = FinishReflowChild(mInnerTableFrame, aPresContext, nsnull, innerMet,
                            innerOrigin.x, innerOrigin.y, 0);
     if (NS_FAILED(rv)) return rv;
     
@@ -1156,7 +1158,7 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
     MoveFrameTo(aPresContext, mInnerTableFrame, innerOrigin.x, innerOrigin.y); 
   }
 
-  rv = FinishReflowChild(mCaptionFrame, aPresContext, captionMet,
+  rv = FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                          captionOrigin.x, captionOrigin.y, 0);
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
@@ -1328,7 +1330,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
 
       GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
                        innerMargin, captionSize, captionMargin, captionOrigin);
-      FinishReflowChild(mCaptionFrame, aPresContext, captionMet,
+      FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                         captionOrigin.x, captionOrigin.y, 0);
 
       GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
@@ -1358,7 +1360,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
                    captionMargin, innerSize, innerMargin, innerOrigin);
   }
 
-  FinishReflowChild(mInnerTableFrame, aPresContext, innerMet,
+  FinishReflowChild(mInnerTableFrame, aPresContext, nsnull, innerMet,
                     innerOrigin.x, innerOrigin.y, 0);
 
   UpdateReflowMetrics(captionSide, aOuterMet, innerMargin, innerMarginNoAuto, 
@@ -1418,7 +1420,7 @@ nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*           aPresContext,
 
     GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
                    captionMargin, innerSize, innerMargin, innerOrigin);
-    rv = FinishReflowChild(mInnerTableFrame, aPresContext, innerMet,
+    rv = FinishReflowChild(mInnerTableFrame, aPresContext, nsnull, innerMet,
                            innerOrigin.x, innerOrigin.y, 0);
     if (NS_FAILED(rv)) return rv;
     GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
@@ -1436,7 +1438,7 @@ nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*           aPresContext,
     MoveFrameTo(aPresContext, mInnerTableFrame, innerOrigin.x, innerOrigin.y); 
   }
 
-  rv = FinishReflowChild(mCaptionFrame, aPresContext, captionMet,
+  rv = FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                          captionOrigin.x, captionOrigin.y, 0);
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
@@ -1548,7 +1550,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
         mCaptionFrame->WillReflow(aPresContext);
         rv = mCaptionFrame->Reflow(aPresContext, captionMet, captionReflowState, aStatus);
-        mCaptionFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+        mCaptionFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
         mMinCaptionWidth = maxElementSize.width;
       }
     }
@@ -1586,7 +1588,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
       GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
                        innerMargin, captionSize, captionMargin, captionOrigin);
-      FinishReflowChild(mCaptionFrame, aPresContext, captionMet,
+      FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                         captionOrigin.x, captionOrigin.y, 0);
 
       GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
@@ -1599,7 +1601,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
                      captionMargin, innerSize, innerMargin, innerOrigin);
     }
 
-    FinishReflowChild(mInnerTableFrame, aPresContext, innerMet,
+    FinishReflowChild(mInnerTableFrame, aPresContext, nsnull, innerMet,
                       innerOrigin.x, innerOrigin.y, 0);
 
     UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 

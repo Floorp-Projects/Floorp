@@ -414,9 +414,9 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
 
   if (aPlaceOrigin) {
     // place base
-    FinishReflowChild (baseFrame, aPresContext, baseSize, dxBase, dyBase, 0);
+    FinishReflowChild (baseFrame, aPresContext, nsnull, baseSize, dxBase, dyBase, 0);
     // place overscript
-    FinishReflowChild (overFrame, aPresContext, overSize, dxOver, dyOver, 0);
+    FinishReflowChild (overFrame, aPresContext, nsnull, overSize, dxOver, dyOver, 0);
   }
   return NS_OK;
 }

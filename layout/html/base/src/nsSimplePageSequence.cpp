@@ -391,7 +391,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
       // max width then center it horizontally
       ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, x, y, 0, status);
 
-      FinishReflowChild(kidFrame, aPresContext, kidSize, x, y, 0);
+      FinishReflowChild(kidFrame, aPresContext, nsnull, kidSize, x, y, 0);
       y += kidSize.height;
 
       // Leave a slight gap between the pages

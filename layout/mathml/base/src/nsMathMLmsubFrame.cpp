@@ -246,13 +246,13 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
     nscoord dx, dy;
     // now place the base ...
     dx = 0; dy = aDesiredSize.ascent - baseSize.ascent;
-    FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
+    FinishReflowChild (baseFrame, aPresContext, nsnull, baseSize, dx, dy, 0);
     // ... and subscript
     // XXX adding mScriptSpace seems to add more space than i like
     // may want to remove later.
     dx = bmBase.width + aScriptSpace; 
     dy = aDesiredSize.ascent - (subScriptSize.ascent - actualSubScriptShift);
-    FinishReflowChild (subScriptFrame, aPresContext, subScriptSize, dx, dy, 0);
+    FinishReflowChild (subScriptFrame, aPresContext, nsnull, subScriptSize, dx, dy, 0);
   }
 
   return NS_OK;

@@ -1580,7 +1580,7 @@ PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
 {
   PRBool result = PR_TRUE;
   if (eReflowReason_Resize == aReflowState.reason) {
-    if (aReflowState.mFlags.mSpecialTableReflow &&
+    if (aReflowState.mFlags.mSpecialHeightReflow &&
         !NeedSpecialReflow()                   &&
         !NeedToInitiateSpecialReflow()) {
       result = PR_FALSE;
@@ -1816,26 +1816,25 @@ ProcessRowInserted(nsIPresContext* aPresContext,
 }
 
 void
-nsTableFrame::NotifyAncestorsOfSpecialReflow(const nsHTMLReflowState& aReflowState)
+nsTableFrame::NotifyAncestorsOfSpecialReflow(nsIFrame& aFrame)
 {
-  const nsHTMLReflowState* rs = aReflowState.parentReflowState;
-  while (rs) {
+  nsIFrame* parent;
+  for (aFrame.GetParent(&parent); parent; parent->GetParent(&parent)) {
     nsCOMPtr<nsIAtom> frameType;
-    rs->frame->GetFrameType(getter_AddRefs(frameType));
+    parent->GetFrameType(getter_AddRefs(frameType));
     if (nsLayoutAtoms::tableCellFrame == frameType.get()) {
-      ((nsTableCellFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
+      ((nsTableCellFrame*)parent)->SetNeedSpecialReflow(PR_TRUE);
     }
     else if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
-      ((nsTableRowFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
+      ((nsTableRowFrame*)parent)->SetNeedSpecialReflow(PR_TRUE);
     }
     else if (nsLayoutAtoms::tableRowGroupFrame == frameType.get()) {
-      ((nsTableRowGroupFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
+      ((nsTableRowGroupFrame*)parent)->SetNeedSpecialReflow(PR_TRUE);
     }
     else if (nsLayoutAtoms::tableFrame == frameType.get()) {
-      ((nsTableFrame*)rs->frame)->SetNeedToInitiateSpecialReflow(PR_TRUE);
+      ((nsTableFrame*)parent)->SetNeedToInitiateSpecialReflow(PR_TRUE);
       break;
     }
-    rs = rs->parentReflowState;
   }
 }
 
@@ -1969,7 +1968,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
       if ( ((NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight)  || 
             (0                    == aReflowState.mComputedHeight)) && 
             IsPctHeight(mStyleContext) && IsSpecialNested(aReflowState)) {
-        NotifyAncestorsOfSpecialReflow(aReflowState);
+        NotifyAncestorsOfSpecialReflow(*this);
         SetNeedSpecialReflow(PR_TRUE);
       }
       // see if an extra reflow will be necessary in pagination mode when there is a specified table height 
@@ -1982,21 +1981,21 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
       }
     }
     // if we need to reflow the table an extra time, then don't constrain the height of the previous reflow
-    nscoord availHeight = !aReflowState.mFlags.mSpecialTableReflow && 
+    nscoord availHeight = !aReflowState.mFlags.mSpecialHeightReflow && 
                           (NeedSpecialReflow() | NeedToInitiateSpecialReflow()) 
       ? NS_UNCONSTRAINEDSIZE : aReflowState.availableHeight;
 
     ReflowTable(aPresContext, aDesiredSize, aReflowState, availHeight, nextReason, doCollapse, balanced, aStatus);
 
-    if (!aReflowState.mFlags.mSpecialTableReflow && NeedToInitiateSpecialReflow() && !NeedSpecialReflow()) {
+    if (!aReflowState.mFlags.mSpecialHeightReflow && NeedToInitiateSpecialReflow() && !NeedSpecialReflow()) {
       aDesiredSize.height = CalcDesiredHeight(aPresContext, aReflowState); // distributes extra vertical space to rows
-      ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialTableReflow = PR_TRUE;
+      ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_TRUE;
       ReflowTable(aPresContext, aDesiredSize, aReflowState, aReflowState.availableHeight, 
                   nextReason, doCollapse, balanced, aStatus);
       haveDesiredHeight = PR_TRUE;
     }
   }
-  else if (aReflowState.mFlags.mSpecialTableReflow) {
+  else if (aReflowState.mFlags.mSpecialHeightReflow) {
     aDesiredSize.width  = mRect.width;
     aDesiredSize.height = mRect.height;
 #if defined DEBUG_TABLE_REFLOW_TIMING
@@ -2060,7 +2059,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  if (aReflowState.mFlags.mSpecialTableReflow) {
+  if (aReflowState.mFlags.mSpecialHeightReflow) {
     SetNeedSpecialReflow(PR_FALSE);
     SetNeedToInitiateSpecialReflow(PR_FALSE);
   }
@@ -2846,7 +2845,7 @@ nsTableFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
   // the footer frame as well. We'll adjust the footer frame later on in
   // AdjustSiblingsAfterReflow()
   nsRect  kidRect(aReflowState.x, aReflowState.y, desiredSize.width, desiredSize.height);
-  FinishReflowChild(aNextFrame, aPresContext, desiredSize, aReflowState.x, aReflowState.y, 0);
+  FinishReflowChild(aNextFrame, aPresContext, nsnull, desiredSize, aReflowState.x, aReflowState.y, 0);
 
 #ifndef TABLE_REFLOW_COALESCING_OFF
   // update the descendant reflow counts and determine if we need to request a timeout reflow
@@ -2923,7 +2922,7 @@ void nsTableFrame::PlaceChild(nsIPresContext*      aPresContext,
                               nsHTMLReflowMetrics& aDesiredSize)
 {
   // Place and size the child
-  FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, aReflowState.x, aReflowState.y, 0);
+  FinishReflowChild(aKidFrame, aPresContext, nsnull, aDesiredSize, aReflowState.x, aReflowState.y, 0);
 
   // Adjust the running y-offset
   aReflowState.y += aDesiredSize.height;
@@ -3188,7 +3187,7 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
         nsReflowStatus status;
         ReflowChild(kidFrame, aPresContext, unusedDesiredSize, kidReflowState,
                     0, 0, 0, status);
-        kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+        kidFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
       }
     }
     else if (childX < numRowGroups) { // it is a row group but isn't being reflowed
@@ -3214,7 +3213,7 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
                                        aReflowState.availSize, aReflowState.reason);
       nsReflowStatus cgStatus;
       ReflowChild(kidFrame, aPresContext, kidMet, kidReflowState, 0, 0, 0, cgStatus);
-      FinishReflowChild(kidFrame, aPresContext, kidMet, 0, 0, 0);
+      FinishReflowChild(kidFrame, aPresContext, nsnull, kidMet, 0, 0, 0);
     }
     SetHaveReflowedColGroups(PR_TRUE);
   }
@@ -4662,7 +4661,7 @@ void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
     PrettyUC(aState.availableWidth, width);
     PrettyUC(aState.availableHeight, height);
     printf("r=%d ", aState.reason);
-    if (aState.mFlags.mSpecialTableReflow) {
+    if (aState.mFlags.mSpecialHeightReflow) {
       printf("special ");
     }   
     printf("a=%s,%s ", width, height); 
@@ -5085,10 +5084,6 @@ nsTableFrame::GetProperty(nsIPresContext*      aPresContext,
         if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
           value = new nsPoint(0, 0);
           dtorFunc = DestroyPointFunc;
-        }
-        else if (aPropertyName == nsLayoutAtoms::cellPctOverHeightProperty) {
-          value = new nscoord;
-          dtorFunc = DestroyCoordFunc;
         }
         else if (aPropertyName == nsLayoutAtoms::rowUnpaginatedHeightProperty) {
           value = new nscoord;

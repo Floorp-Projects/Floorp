@@ -834,12 +834,13 @@ nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
  * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
  */
 nsresult
-nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
-                                    nsIPresContext*      aPresContext,
-                                    nsHTMLReflowMetrics& aDesiredSize,
-                                    nscoord              aX,
-                                    nscoord              aY,
-                                    PRUint32             aFlags)
+nsContainerFrame::FinishReflowChild(nsIFrame*                 aKidFrame,
+                                    nsIPresContext*           aPresContext,
+                                    const nsHTMLReflowState*  aReflowState,
+                                    nsHTMLReflowMetrics&      aDesiredSize,
+                                    nscoord                   aX,
+                                    nscoord                   aY,
+                                    PRUint32                  aFlags)
 {
   nsPoint curOrigin;
   nsRect  bounds(aX, aY, aDesiredSize.width, aDesiredSize.height);
@@ -863,7 +864,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
     PositionChildViews(aPresContext, aKidFrame);
   }
   
-  return aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+  return aKidFrame->DidReflow(aPresContext, aReflowState, NS_FRAME_REFLOW_FINISHED);
 }
 
 /**

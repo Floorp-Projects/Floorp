@@ -183,7 +183,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       nsSize  maxSize(mPD->mReflowRect.width - mPD->mReflowMargin.right - mPD->mReflowMargin.left, 
                       mPD->mReflowRect.height - mPD->mReflowMargin.top - mPD->mReflowMargin.bottom);
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
-      kidReflowState.isTopOfPage = PR_TRUE;
+      kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
       kidReflowState.availableWidth  = maxSize.width;
       kidReflowState.availableHeight = maxSize.height;
 
@@ -196,7 +196,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
 
 
       // Place and size the child
-      FinishReflowChild(frame, aPresContext, aDesiredSize, xc, yc, 0);
+      FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, xc, yc, 0);
 
       // Make sure the child is at least as tall as our max size (the containing window)
       if (aDesiredSize.height < aReflowState.availableHeight) {

@@ -501,10 +501,11 @@ nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::DidReflow(nsIPresContext* aPresContext,
-                        nsDidReflowStatus aStatus)
+nsFormControlFrame::DidReflow(nsIPresContext*           aPresContext,
+                              const nsHTMLReflowState*  aReflowState,
+                              nsDidReflowStatus         aStatus)
 {
-  nsresult rv = nsLeafFrame::DidReflow(aPresContext, aStatus);
+  nsresult rv = nsLeafFrame::DidReflow(aPresContext, aReflowState, aStatus);
 
 
   // The view is created hidden; once we have reflowed it and it has been

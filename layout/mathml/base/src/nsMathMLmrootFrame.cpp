@@ -338,7 +338,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   // place the index
   dx = dxIndex;
   dy = aDesiredSize.ascent - (indexRaisedAscent + indexSize.ascent - bmIndex.ascent);
-  FinishReflowChild(indexFrame, aPresContext, indexSize, dx, dy, 0);
+  FinishReflowChild(indexFrame, aPresContext, nsnull, indexSize, dx, dy, 0);
 
   // place the radical symbol and the radical bar
   dx = dxSqr;
@@ -349,7 +349,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
 
   // place the base
   dy = aDesiredSize.ascent - baseSize.ascent;
-  FinishReflowChild(baseFrame, aPresContext, baseSize, dx, dy, 0);
+  FinishReflowChild(baseFrame, aPresContext, nsnull, baseSize, dx, dy, 0);
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;

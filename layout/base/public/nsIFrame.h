@@ -80,6 +80,7 @@ class nsIView;
 class nsIWidget;
 class nsIDOMRange;
 class nsISelectionController;
+class nsIPercentHeightObserver;
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
@@ -908,8 +909,9 @@ public:
    * XXX Don't we want the semantics to dictate that we only call this once for
    * a given reflow?
    */
-  NS_IMETHOD  DidReflow(nsIPresContext*   aPresContext,
-                        nsDidReflowStatus aStatus) = 0;
+  NS_IMETHOD  DidReflow(nsIPresContext*           aPresContext,
+                        const nsHTMLReflowState*  aReflowState,
+                        nsDidReflowStatus         aStatus) = 0;
 
   // XXX Maybe these three should be a separate interface?
 

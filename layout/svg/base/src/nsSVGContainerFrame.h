@@ -65,8 +65,9 @@ public:
                                      PRInt32&        aCursor);
 
 
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                      nsDidReflowStatus aStatus);
+  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
+                       const nsHTMLReflowState*  aReflowState,
+                       nsDidReflowStatus         aStatus);
 
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 

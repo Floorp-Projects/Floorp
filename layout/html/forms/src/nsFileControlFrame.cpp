@@ -400,7 +400,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
         nsReflowStatus status;
         rv = mTextFrame->Reflow(aPresContext, txtKidSize, txtKidReflowState, status);
         if (NS_FAILED(rv)) return rv;
-        rv = mTextFrame->DidReflow(aPresContext, aStatus);
+        rv = mTextFrame->DidReflow(aPresContext, &txtKidReflowState, aStatus);
         if (NS_FAILED(rv)) return rv;
 
         // now adjust the frame positions
