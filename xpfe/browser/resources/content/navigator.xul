@@ -319,15 +319,17 @@ Contributor(s): ______________________________________. -->
           </rule>
 
           <rule iscontainer="true" isempty="true"
-                image="rdf:http://home.netscape.com/NC-rdf#Icon"
-                validate="never"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder">
             <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*" 
-                    label="rdf:http://home.netscape.com/NC-rdf#Name">
+                  image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                  validate="never"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup>
                   <menuitem label="&emptyItem.label;" disabled="true"
-                            ondraggesture="event.preventBubble(); return false;"/>
+                      src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                      validate="never"
+                      ondraggesture="event.preventBubble(); return false;"/>
                 </menupopup>
               </menu>
             </menupopup>
