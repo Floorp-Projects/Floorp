@@ -24,6 +24,7 @@
 
 #include "nsIMailboxService.h"
 #include "nsIURL.h"
+#include "nsIUrlListener.h"
 #include "nsIStreamListener.h"
 #include "nsFileSpec.h"
 
@@ -47,7 +48,8 @@ public:
 	// we suppport the nsIMailboxService Interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener * aMailboxParser, nsIURL ** aURL);
+	NS_IMETHOD ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener * aMailboxParser, 
+							nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
 	NS_IMETHOD DisplayMessage(const nsFilePath& aMailboxPath, PRUint32 aStartByte, PRUint32 aEndByte, 
 		nsISupports * aDisplayConsumer, nsIURL ** aURL);

@@ -38,7 +38,8 @@ nsMailboxService::~nsMailboxService()
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsMailboxService, nsIMailboxService::IID());
 
-nsresult nsMailboxService::ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener *aMailboxParser, nsIURL ** aURL)
+nsresult nsMailboxService::ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener *aMailboxParser, 
+										nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
 	nsMailboxUrl * mailboxUrl = nsnull;
 	nsIMailboxUrl * url = nsnull;
@@ -56,6 +57,8 @@ nsresult nsMailboxService::ParseMailbox(const nsFilePath& aMailboxPath, nsIStrea
 			url->SetSpec(urlSpec);
 			PR_FREEIF(urlSpec);
 			url->SetMailboxParser(aMailboxParser);
+			if (aUrlListener)
+				url->RegisterListener(aUrlListener);
 
 			nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
 			if (protocol)
