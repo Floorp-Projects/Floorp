@@ -44,7 +44,8 @@ public:
 				              nsIAppShell *aAppShell = nsnull,
 				              nsIToolkit *aToolkit = nsnull,
 				              nsWidgetInitData *aInitData = nsnull);
-
+  NS_IMETHOD			Destroy ( ) ;
+  
   // nsWindow Interface
   virtual PRBool	DispatchMouseEvent(nsMouseEvent &aEvent);
   virtual PRBool	DispatchWindowEvent(nsGUIEvent& aEvent);
