@@ -114,6 +114,9 @@ public:
   NS_IMETHOD ViewAllMessages(nsIRDFCompositeDataSource *databsae);
   NS_IMETHOD ViewUnreadMessages(nsIRDFCompositeDataSource *databsae);
 	NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database);
+	NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
+						const char *name);
+
 
 
 private:
@@ -810,7 +813,61 @@ nsMsgAppCore::ViewAllThreadMessages(nsIRDFCompositeDataSource *database)
 	}
 
 	return NS_OK;
-	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAppCore::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
+						const char *name)
+{
+	nsresult rv;
+	nsIRDFResource *resource;
+	nsIMsgFolder *parentFolder;
+	nsISupportsArray *nameArray, *folderArray;
+
+	if(!parentFolderElement || !name)
+		return NS_ERROR_NULL_POINTER;
+
+	rv = parentFolderElement->GetResource(&resource);
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = resource->QueryInterface(nsIMsgFolder::GetIID(), (void**)&parentFolder);
+	if(NS_FAILED(rv))
+		return rv;
+
+	if(NS_FAILED(NS_NewISupportsArray(&nameArray)))
+	{
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	if(NS_FAILED(NS_NewISupportsArray(&folderArray)))
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	folderArray->AppendElement(parentFolder);
+
+	nsIRDFService* gRDFService = nsnull;
+	rv = nsServiceManager::GetService(kRDFServiceCID,
+												nsIRDFService::GetIID(),
+												(nsISupports**) &gRDFService);
+	if(NS_SUCCEEDED(rv))
+	{
+		nsString nameStr = name;
+		nsIRDFLiteral *nameLiteral;
+		nsIRDFResource *newFolderResource;
+
+	    gRDFService->GetLiteral(nameStr, &nameLiteral);
+		nameArray->AppendElement(nameLiteral);
+		if(NS_SUCCEEDED(rv = gRDFService->GetResource("http://home.netscape.com/NC-rdf#NewFolder", &newFolderResource)))
+		{
+			rv = database->DoCommand(folderArray, newFolderResource, nameArray);
+			NS_RELEASE(newFolderResource);
+		}
+		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+	}
+	NS_IF_RELEASE(nameArray);
+	NS_IF_RELEASE(resource);
+	NS_IF_RELEASE(parentFolder);
+	return rv;
 }
 
 //  to load the webshell!

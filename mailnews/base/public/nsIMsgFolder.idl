@@ -57,7 +57,7 @@ interface nsIMsgFolder : nsIFolder {
 	void PropagateDelete(inout nsIMsgFolder folder, in boolean deleteStorage);
 	void RecursiveDelete(in boolean deleteStorage);
 
-	void CreateSubfolder(in string leafNameFromUser, out nsIMsgFolder outFolder, out unsigned long outPos);
+	void CreateSubfolder(in string folderName);
 
 	void Rename(in string name);
 	void Adopt(in nsIMsgFolder srcFolder, out unsigned long outPos);

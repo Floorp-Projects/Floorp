@@ -81,7 +81,7 @@ class nsIMsgFolder : public nsIFolder {
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage) = 0;
 
   /* void CreateSubfolder (in string leafNameFromUser, out nsIMsgFolder outFolder, out unsigned long outPos); */
-  NS_IMETHOD CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos) = 0;
+  NS_IMETHOD CreateSubfolder(const char *folderName) = 0;
 
   /* void Rename (in string name); */
   NS_IMETHOD Rename(const char *name) = 0;

@@ -604,6 +604,61 @@ MsgAppCoreViewAllThreadMessages(JSContext *cx, JSObject *obj, uintN argc, jsval 
   return JS_TRUE;
 }
 
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreNewFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+	nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+	JSBool rBool = JS_FALSE;
+	nsIDOMXULElement *parentFolder;
+	nsIRDFCompositeDataSource *db;
+	nsAutoString nameStr;
+	const nsString typeName;
+
+
+	*rval = JSVAL_NULL;
+
+	// If there's no private data, this must be the prototype, so ignore
+	if (nsnull == nativeThis) {
+		return NS_OK;
+	}
+
+	if (argc >= 2) {
+
+		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&db,
+									nsIRDFCompositeDataSource::GetIID(),
+									typeName,
+									cx,
+									argv[0]);
+		
+		
+		
+		rBool = rBool && nsJSUtils::nsConvertJSValToObject((nsISupports**)&parentFolder,
+									nsIDOMXULElement::GetIID(),
+									typeName,
+									cx,
+									argv[1]);
+
+	    nsJSUtils::nsConvertJSValToString(nameStr, cx, argv[2]);
+
+		char * name = nameStr.ToNewCString();
+
+
+		if (!rBool || NS_OK != nativeThis->NewFolder(db, parentFolder, name)) {
+		return JS_FALSE;
+		}
+		delete[] name;
+
+		NS_RELEASE(parentFolder);
+		NS_RELEASE(db);
+  }
+  else {
+    JS_ReportError(cx, "Function NewFolder requires 3 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
 /***********************************************************************/
 //
 // class for MsgAppCore
@@ -648,6 +703,7 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"ViewAllMessages",	MsgAppCoreViewAllMessages, 1},
   {"ViewUnreadMessages", MsgAppCoreViewUnreadMessages, 1},
   {"ViewAllThreadMessages", MsgAppCoreViewAllThreadMessages, 1},
+  {"NewFolder",			MsgAppCoreNewFolder, 3},
   {0}
 };
 

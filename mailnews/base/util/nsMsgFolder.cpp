@@ -638,7 +638,7 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 	return status;
 }
 
-NS_IMETHODIMP nsMsgFolder::CreateSubfolder(const char *, nsIMsgFolder**, PRUint32*)
+NS_IMETHODIMP nsMsgFolder::CreateSubfolder(const char *folderName)
 {
 	return NS_OK;
 

@@ -106,6 +106,9 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 
 #define NS_MSG_FOLDER_BUSY NS_MSG_GENERATE_FAILURE(10)
 
+#define NS_MSG_COULD_NOT_CREATE_DIRECTORY NS_MSG_GENERATE_FAILURE(11)
+#define NS_MSG_CANT_CREATE_FOLDER NS_MSG_GENERATE_FAILURE(12)
+
 #ifdef XP_MAC
 #  define LINEBREAK             "\012"		/* ducarroz: it must be defined to \012 to avoid
 														 definition conflit with fe_proto.h */

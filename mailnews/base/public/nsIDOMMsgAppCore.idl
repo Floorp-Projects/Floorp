@@ -59,6 +59,8 @@ interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
 	void ViewAllMessages(in nsIRDFCompositeDataSource database);
 	void ViewUnreadMessages(in nsIRDFCompositeDataSource database);
 	void ViewAllThreadMessages(in nsIRDFCompositeDataSource database);
+	void NewFolder(in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement,
+				   in string name);
 };
 
 /* hack to make MsgAppCore visible from AppCore */

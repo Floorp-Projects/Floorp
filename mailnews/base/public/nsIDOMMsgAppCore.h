@@ -66,6 +66,9 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
   /* void ViewAllThreadMessages (in nsIRDFCompositeDataSource database); */
   NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database) = 0;
 
+  /* void NewFolder (in nsIDOMXULElement parentFolderElement, in string name); */
+  NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement, const char *name) = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDOMMsgAppCore *priv);

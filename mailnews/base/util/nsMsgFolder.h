@@ -30,7 +30,7 @@
 #include "nsRDFResource.h"
 #include "nsIRDFResourceFactory.h"
 #include "nsIDBFolderInfo.h"
-#include "nsMsgDatabase.h"
+#include "nsIMsgDatabase.h"
 
  /* 
   * MsgFolder
@@ -143,7 +143,7 @@ public:
   NS_IMETHOD PropagateDelete(nsIMsgFolder **folder, PRBool deleteStorage);
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage);  // called by PropagateDelete
 
-  NS_IMETHOD CreateSubfolder(const char *leafNameFromuser, nsIMsgFolder** outFolder, PRUint32* outPos);
+  NS_IMETHOD CreateSubfolder(const char *folderName);
 
   NS_IMETHOD Rename(const char *name);
   NS_IMETHOD Adopt(const nsIMsgFolder *srcFolder, PRUint32*);
