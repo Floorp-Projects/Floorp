@@ -936,8 +936,10 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 		if(mustunlock && mView->Parent() == 0)
 			havewindow = true;
 
+#ifdef MOZ_DEBUG
 		if(! aRepaint)
 			printf("nsWindow::Resize FIXME: no repaint not implemented\n");
+#endif
 
 		if(mView->Parent() || ! havewindow)
                        mView->ResizeTo(aWidth-1, GetHeight(aHeight)-1);
@@ -988,8 +990,10 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 		if(mustunlock && mView->Parent() == 0)
 			havewindow = true;
 
+#ifdef MOZ_DEBUG
 		if(! aRepaint)
 			printf("nsWindow::Resize FIXME: no repaint not implemented\n");
+#endif
 		
 		if(mView->Parent() || ! havewindow)
 		{
