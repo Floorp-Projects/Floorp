@@ -63,11 +63,6 @@
 #define LOCK_DOC(doc)
 #define UNLOCK_DOC(doc)
 
-static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_CID(kCDOMRangeCID, NS_RANGE_CID);
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kITextServicesDocumentIID, NS_ITEXTSERVICESDOCUMENT_IID);
 
 class OffsetEntry
 {
@@ -2903,7 +2898,7 @@ nsTextServicesDocument::CreateDocumentContentRange(nsIDOMRange **aRange)
   if (!node)
     return NS_ERROR_NULL_POINTER;
 
-  result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
+  result = nsComponentManager::CreateInstance("@mozilla.org/content/range;1", nsnull,
                                               NS_GET_IID(nsIDOMRange), 
                                               (void **)aRange);
 
@@ -2993,7 +2988,7 @@ nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *a
     }
   }
 
-  result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
+  result = nsComponentManager::CreateInstance("@mozilla.org/content/range;1", nsnull,
                                               NS_GET_IID(nsIDOMRange), 
                                               (void **)aRange);
 
@@ -4206,12 +4201,8 @@ nsTextServicesDocument::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
   if (aParent1 == aParent2 && aOffset1 == aOffset2)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMRange> range;
-
-  result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
-                                              NS_GET_IID(nsIDOMRange), 
-                                              getter_AddRefs(range));
-
+  nsCOMPtr<nsIDOMRange> range =
+                  do_CreateInstance("@mozilla.org/content/range;1", &result);
   if (NS_FAILED(result))
     return result;
 
@@ -4277,7 +4268,7 @@ nsTextServicesDocument::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffs
 {
   nsresult result;
 
-  result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
+  result = nsComponentManager::CreateInstance("@mozilla.org/content/range;1", nsnull,
                                               NS_GET_IID(nsIDOMRange), 
                                               (void **)aRange);
 

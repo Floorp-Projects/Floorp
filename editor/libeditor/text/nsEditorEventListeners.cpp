@@ -74,7 +74,6 @@
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
-#include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
@@ -84,15 +83,10 @@
 #include "nsIContent.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsLayoutCID.h"
 #include "nsIDOMNSRange.h"
 #include "nsEditorUtils.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIEventStateManager.h"
-
-// Drag & Drop, Clipboard Support
-static NS_DEFINE_CID(kLookAndFeelCID,          NS_LOOKANDFEEL_CID);
-static NS_DEFINE_CID(kCaretCID,                NS_CARET_CID);
 
 //#define DEBUG_IME
 
@@ -549,7 +543,7 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
   {
     if (!mCaret)
     {
-      mCaret = do_CreateInstance(kCaretCID);
+      mCaret = do_CreateInstance("@mozilla.org/layout/caret;1");
       if (mCaret)
       {
         mCaret->Init(mPresShell);
@@ -1073,7 +1067,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
             nsresult result;
 
             nsCOMPtr<nsILookAndFeel> look = 
-                     do_GetService(kLookAndFeelCID, &result);
+                     do_GetService("@mozilla.org/widget/lookandfeel;1", &result);
 
             if (NS_SUCCEEDED(result) && look)
             {
