@@ -27,6 +27,8 @@ nsRegionWin :: nsRegionWin()
 
   mRegion = NULL;
   mRegionType = NULLREGION;
+  mData = NULL;
+  mDataSize = 0;
 }
 
 nsRegionWin :: ~nsRegionWin()
@@ -35,6 +37,14 @@ nsRegionWin :: ~nsRegionWin()
   {
     ::DeleteObject(mRegion);
     mRegion = NULL;
+  }
+
+  if (NULL != mData)
+  {
+    PR_Free(mData);
+
+    mData = NULL;
+    mDataSize = 0;
   }
 }
 
@@ -167,17 +177,22 @@ PRBool nsRegionWin :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt
   return ::RectInRegion(mRegion, &trect) ? PR_TRUE : PR_FALSE;
 }
 
-PRBool nsRegionWin :: ForEachRect(nsRectInRegionFunc *func, void *closure)
+NS_IMETHODIMP nsRegionWin :: GetRects(nsRegionRectSet **aRects)
 {
-	LPRGNDATA pRgnData;
-	LPRECT pRects;
-	DWORD dwCount, dwResult;
-	unsigned int num_rects;
-	nsRect rect;
+  nsRegionRectSet *rects;
+  nsRegionRect    *rect;
+	LPRECT          pRects;
+	DWORD           dwCount, dwResult;
+	unsigned int    num_rects;
+
+  NS_ASSERTION(!(nsnull == aRects), "bad ptr");
+
+  rects = *aRects;
+
+  if (nsnull != rects)
+    rects->mNumRects = 0;
 
   // code lifted from old winfe. MMP
-
-	NS_ASSERTION(!(nsnull == func), "no callback");
 
 	/* Get the size of the region data */
 	dwCount = GetRegionData(mRegion, 0, NULL);
@@ -187,45 +202,68 @@ PRBool nsRegionWin :: ForEachRect(nsRectInRegionFunc *func, void *closure)
 	if (dwCount == 0)
 	  return PR_FALSE;
 
-	pRgnData = (LPRGNDATA)PR_Malloc(dwCount);
+  if (dwCount > mDataSize)
+	  mData = (LPRGNDATA)PR_Malloc(dwCount);
 
-	NS_ASSERTION(!(nsnull == pRgnData), "failed allocation");
+	NS_ASSERTION(!(nsnull == mData), "failed allocation");
 
-	if (pRgnData == NULL)
-	  return PR_FALSE;
+	if (mData == NULL)
+	  return NS_OK;
 
-	dwResult = GetRegionData(mRegion, dwCount, pRgnData);
+	dwResult = GetRegionData(mRegion, dwCount, mData);
 
 	NS_ASSERTION(!(dwResult == 0), "get data failed");
 
-	if (dwResult == 0) {
-		PR_Free(pRgnData);
-		return PR_FALSE;
-	}
-  
-	for (pRects = (LPRECT)pRgnData->Buffer, num_rects = 0; 
-		 num_rects < pRgnData->rdh.nCount; 
-		 num_rects++, pRects++)
+	if (dwResult == 0)
+		return NS_OK;
+
+  if ((nsnull == rects) || (rects->mRectsLen < mData->rdh.nCount))
   {
-		rect.x = pRects->left;
-		rect.y = pRects->top;
-		rect.width = pRects->right - rect.x;
-		rect.height = pRects->bottom - rect.y;
-		(*func)(closure, rect);
+    void *buf = PR_Realloc(rects, sizeof(nsRegionRectSet) + (sizeof(nsRegionRect) * (mData->rdh.nCount - 1)));
+
+    if (nsnull == buf)
+    {
+      if (nsnull != rects)
+        rects->mNumRects = 0;
+
+      return NS_OK;
+    }
+
+    rects = (nsRegionRectSet *)buf;
+    rects->mRectsLen = mData->rdh.nCount;
+  }
+
+  rects->mNumRects = mData->rdh.nCount;
+  rect = &rects->mRects[0];
+
+  for (pRects = (LPRECT)mData->Buffer, num_rects = 0; 
+		   num_rects < mData->rdh.nCount; 
+		   num_rects++, pRects++, rect++)
+  {
+		rect->x = pRects->left;
+		rect->y = pRects->top;
+		rect->width = pRects->right - rect->x;
+		rect->height = pRects->bottom - rect->y;
 	}
 
-	PR_Free(pRgnData);
+  *aRects = rects;
 
-  return PR_FALSE;
-}
-
-NS_IMETHODIMP nsRegionWin :: GetRects(nsRegionRectSet **aRects)
-{
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRegionWin :: FreeRects(nsRegionRectSet *aRects)
 {
+  if (nsnull != aRects)
+    PR_Free((void *)aRects);
+
+  if (NULL != mData)
+  {
+    PR_Free(mData);
+
+    mData = NULL;
+    mDataSize = 0;
+  }
+
   return NS_OK;
 }
 

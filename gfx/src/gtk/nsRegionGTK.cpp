@@ -20,6 +20,7 @@
 #include <gdk/gdkprivate.h>
 #include "nsRegionGTK.h"
 #include "xregion.h"
+#include "prmem.h"
 
 static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
@@ -198,41 +199,62 @@ PRBool nsRegionGTK::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32
 
 }
 
-PRBool nsRegionGTK::ForEachRect(nsRectInRegionFunc *func, void *closure)
+NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)
 {
-  GdkRegionPrivate *priv = (GdkRegionPrivate *)mRegion;
-  Region pRegion = priv->xregion;
-  int nbox;
-  BOX *pbox;
-  nsRect rect;
+  nsRegionRectSet   *rects;
+  GdkRegionPrivate  *priv = (GdkRegionPrivate *)mRegion;
+  Region            pRegion = priv->xregion;
+  int               nbox;
+  BOX               *pbox;
+  nsRegionRect      *rect;
+
+  NS_ASSERTION(!(nsnull == aRects), "bad ptr");
 
   //code lifted from old xfe. MMP
-
-  NS_ASSERTION(!(nsnull == func), "no callback");
 
   pbox = pRegion->rects;
   nbox = pRegion->numRects;
 
-  while (nbox--)
+  rects = *aRects;
+
+  if ((nsnull == rects) || (rects->mRectsLen < (PRUint32)nbox))
   {
-    rect.x = pbox->x1;
-    rect.width = (pbox->x2 - pbox->x1);
-    rect.y = pbox->y1;
-    rect.height = (pbox->y2 - pbox->y1);
-    (*func)(closure, rect);
-    pbox++;
+    void *buf = PR_Realloc(rects, sizeof(nsRegionRectSet) + (sizeof(nsRegionRect) * (nbox - 1)));
+
+    if (nsnull == buf)
+    {
+      if (nsnull != rects)
+        rects->mNumRects = 0;
+
+      return NS_OK;
+    }
+
+    rects = (nsRegionRectSet *)buf;
+    rects->mRectsLen = nbox;
   }
 
-  return PR_FALSE;
-}
+  rects->mNumRects = nbox;
+  rect = &rects->mRects[0];
 
-NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)
-{
+  while (nbox--)
+  {
+    rect->x = pbox->x1;
+    rect->width = (pbox->x2 - pbox->x1);
+    rect->y = pbox->y1;
+    rect->height = (pbox->y2 - pbox->y1);
+
+    pbox++;
+    rect++;
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRegionGTK::FreeRects(nsRegionRectSet *aRects)
 {
+  if (nsnull != aRects)
+    PR_Free((void *)aRects);
+
   return NS_OK;
 }
 
