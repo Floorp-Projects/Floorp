@@ -26,6 +26,7 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"//XXX adding weak ref knowledge
 #include "nsString.h"
 #include "nsISupports.h"
 
@@ -178,7 +179,8 @@ class nsEditorShell :   public nsIEditorShell,
     PRInt32 mDisplayMode;
     
     nsIDOMWindow            *mWebShellWindow;				// weak reference
-    nsIDOMWindow            *mContentWindow;				// weak reference
+    //nsIDOMWindow            *mContentWindow;				// weak reference
+    nsWeakPtr                mContentWindow;        // weak reference
 
     nsEditorParserObserver  *mParserObserver;       // we hold the owning ref to this.
     nsInterfaceState        *mStateMaintainer;      // we hold the owning ref to this.

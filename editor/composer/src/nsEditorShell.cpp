@@ -18,7 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdio.h>
@@ -598,7 +597,13 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   // Force initial focus to the content window except if in mail compose
   if (!mMailCompose)
   {
-    mContentWindow->Focus();
+    if(!mContentWindow)
+      return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+      cwP->Focus();
+
+    //mContentWindow->Focus();
     // Collapse the selection to the begining of the document
     // (this also turns on the caret)
     mEditor->SetCaretToDocumentStart();
@@ -611,8 +616,15 @@ nsresult nsEditorShell::GetDocumentEventReceiver(nsIDOMEventReceiver **aEventRec
   if (!aEventReceiver) return NS_ERROR_NULL_POINTER;
   if (!mContentWindow || !mEditor) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDOMDocument> domDoc;          
-  mContentWindow->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDOMDocument> domDoc;
+
+  if(!mContentWindow)
+    return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+  if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+    cwP->GetDocument(getter_AddRefs(domDoc));
+  //mContentWindow->GetDocument(getter_AddRefs(domDoc));
+
   if (!domDoc) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMElement> rootElement;
@@ -638,10 +650,11 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
   if (!aWin)
       return NS_ERROR_NULL_POINTER;
 
-  mContentWindow = aWin;
+  mContentWindow = getter_AddRefs( NS_GetWeakReference(aWin) );  // weak reference to aWin
+  //mContentWindow = aWin;
 
   nsresult  rv;
-  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(mContentWindow, &rv);
+  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryReferent(mContentWindow, &rv);
   if (NS_FAILED(rv) || !globalObj)
     return NS_ERROR_FAILURE;
 
@@ -656,7 +669,12 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
     
   // we make two controllers
   nsCOMPtr<nsIControllers> controllers;      
-  rv = mContentWindow->GetControllers(getter_AddRefs(controllers));      
+  if(!mContentWindow)
+    return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+  if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+    cwP->GetControllers(getter_AddRefs(controllers));
+  //rv = mContentWindow->GetControllers(getter_AddRefs(controllers));
   if (NS_FAILED(rv)) return rv;
   
   {
@@ -695,7 +713,14 @@ NS_IMETHODIMP
 nsEditorShell::GetContentWindow(nsIDOMWindow * *aContentWindow)
 {
   NS_ENSURE_ARG_POINTER(aContentWindow);
-  NS_IF_ADDREF(*aContentWindow = mContentWindow);
+
+  if(!mContentWindow)
+    return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+  if (!cwP) 
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  NS_IF_ADDREF(*aContentWindow = cwP);
   return NS_OK;
 }
 
@@ -1511,7 +1536,12 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               msgStr1 += NS_ConvertASCIItoUCS2("\n") + msgStr2;
               
               PRBool retVal = PR_FALSE;
-              res = dialog->Prompt(mContentWindow, captionStr.GetUnicode(), msgStr1.GetUnicode(),
+              if(!mContentWindow)
+                return NS_ERROR_NOT_INITIALIZED;
+              nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+              if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+
+              res = dialog->Prompt(cwP, captionStr.GetUnicode(), msgStr1.GetUnicode(),
                                    title.GetUnicode(), &titleUnicode, &retVal); 
               
               if( retVal == PR_FALSE)
@@ -2665,7 +2695,11 @@ nsEditorShell::DoFind(PRBool aFindNext)
   // make the search context if we need to
   if (!mSearchContext)
   {
-    rv = findComponent->CreateContext(mContentWindow, nsnull, getter_AddRefs(mSearchContext));
+    if(!mContentWindow)
+      return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+    rv = findComponent->CreateContext(cwP, nsnull, getter_AddRefs(mSearchContext));
   }
   
   if (NS_SUCCEEDED(rv))
@@ -2785,7 +2819,11 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     if ( NS_SUCCEEDED( rv ) ) 
     { 
       PRInt32 buttonPressed = 0; 
-      rv = dialog->DoDialog( mContentWindow, block, "chrome://global/content/commonDialog.xul" ); 
+      if(!mContentWindow)
+        return result;
+      nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+      if (!cwP) return result;
+      rv = dialog->DoDialog( cwP, block, "chrome://global/content/commonDialog.xul" ); 
       block->GetInt( nsICommonDialogs::eButtonPressed, &buttonPressed ); 
       // NOTE: If order of buttons changes in nsICommonDialogs,
       //       then we must change the EConfirmResult enums in nsEditorShell.h
@@ -2806,7 +2844,11 @@ nsEditorShell::Confirm(const nsString& aTitle, const nsString& aQuestion)
   NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
   if (NS_SUCCEEDED(rv) && dialog)
   {
-    rv = dialog->Confirm(mContentWindow, aTitle.GetUnicode(), aQuestion.GetUnicode(), &result);
+    if(!mContentWindow)
+      return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+    rv = dialog->Confirm(cwP, aTitle.GetUnicode(), aQuestion.GetUnicode(), &result);
   }
   return result;
 }
@@ -2820,7 +2862,13 @@ nsEditorShell::AlertWithTitle(const PRUnichar *aTitle, const PRUnichar *aMsg)
   nsresult rv = NS_ERROR_FAILURE;
   NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
   if (NS_SUCCEEDED(rv) && dialog)
-    rv = dialog->Alert(mContentWindow, aTitle, aMsg);
+  {
+    if(!mContentWindow)
+      return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+    rv = dialog->Alert(cwP, aTitle, aMsg);
+  }
 
   return rv;
 }
@@ -2832,7 +2880,11 @@ nsEditorShell::Alert(const nsString& aTitle, const nsString& aMsg)
   NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
   if (NS_SUCCEEDED(rv) && dialog)
   {
-    rv = dialog->Alert(mContentWindow, aTitle.GetUnicode(), aMsg.GetUnicode());
+    if(!mContentWindow)
+      return;
+    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    if (!cwP) return;
+    rv = dialog->Alert(cwP, aTitle.GetUnicode(), aMsg.GetUnicode());
   }
 }
 
@@ -4766,7 +4818,11 @@ nsEditorShell::EditElementProperties(nsIDOMElement *aElement, int x, int y)
 #endif
   // Get the ComposerController:
   nsCOMPtr<nsIControllers> controllers;      
-  rv = mContentWindow->GetControllers(getter_AddRefs(controllers));      
+  if(!mContentWindow)
+    return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+  if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+  rv = cwP->GetControllers(getter_AddRefs(controllers));      
   if (NS_FAILED(rv)) return rv;
   if (!controllers) return NS_ERROR_NULL_POINTER;
 
