@@ -80,6 +80,7 @@
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 
+#include "nsIStringBundle.h"
 
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
@@ -110,7 +111,11 @@ static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kFileLocatorCID,             NS_FILELOCATOR_CID); 
 static NS_DEFINE_CID(kIOServiceCID,		  NS_IOSERVICE_CID);
+static NS_DEFINE_IID(kIIOServiceIID,		  NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
+static NS_DEFINE_IID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_IID(kIStringBundleServiceIID,    NS_ISTRINGBUNDLESERVICE_IID);
 
 //static NS_DEFINE_CID(kNSCOMMONDIALOGSCID,       NS_CommonDialog_CID);
 //static NS_DEFINE_IID(kNSCOMMONDIALOGSIID,       NS_ICOMMONDIALOGS_IID);
@@ -130,6 +135,8 @@ static const char kURINC_IEFavoritesRoot[]       = "NC:IEFavoritesRoot"; // XXX?
 static const char kURINC_PersonalToolbarFolder[] = "NC:PersonalToolbarFolder"; // XXX?
 static const char kPersonalToolbarFolder[]       = "Personal Toolbar Folder";
 static const char kBookmarkCommand[]             = "http://home.netscape.com/NC-rdf#bookmarkcommand?";
+
+#define bookmark_properties "chrome://bookmarks/locale/bookmark.properties"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1448,6 +1455,8 @@ protected:
 	nsCOMPtr<nsIRDFResource>	busyResource;
 	PRUint32			htmlSize;
 	nsCOMPtr<nsISupportsArray>      mObservers;
+	nsCOMPtr<nsIStringBundle>	mBundle;
+
 #ifdef	XP_MAC
 	PRBool				mIEFavoritesAvailable;
 
@@ -1475,6 +1484,8 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 
 	nsresult ChangeURL(nsIRDFResource* aOldURL,
                            nsIRDFResource* aNewURL);
+
+	nsresult getLocaleString(const char *key, nsString &str);
 
 	nsBookmarksService();
 	virtual ~nsBookmarksService();
@@ -1649,16 +1660,46 @@ nsBookmarksService::Init()
 {
 	nsresult rv;
 	rv = bm_AddRefGlobals();
-	if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv))	return(rv);
 
 	rv = ReadBookmarks();
-	if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv))	return(rv);
 
 	// register this as a named data source with the RDF service
 	rv = gRDF->RegisterDataSource(this, PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
 
-	busyResource = null_nsCOMPtr();
+	/* create a URL for the string resource file */
+	nsCOMPtr<nsIIOService>	pNetService;
+	if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kIOServiceCID, kIIOServiceIID,
+		getter_AddRefs(pNetService))))
+	{
+		nsCOMPtr<nsIURI>	uri;
+		if (NS_SUCCEEDED(rv = pNetService->NewURI(bookmark_properties, nsnull,
+			getter_AddRefs(uri))))
+		{
+			/* create a bundle for the localization */
+			nsCOMPtr<nsIStringBundleService>	stringService;
+			if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kStringBundleServiceCID,
+				kIStringBundleServiceIID, getter_AddRefs(stringService))))
+			{
+				char	*spec = nsnull;
+				if (NS_SUCCEEDED(rv = uri->GetSpec(&spec)) && (spec))
+				{
+					nsCOMPtr<nsILocale>		locale = nsnull;
+					if (NS_SUCCEEDED(rv = stringService->CreateBundle(spec,
+						locale, getter_AddRefs(mBundle))))
+					{
+					}
+					nsCRT::free(spec);
+					spec = nsnull;
+				}
+			}
+		}
+	}
+
+	/* timer initialization */
+	busyResource = nsnull;
 
 	if (!mTimer)
 	{
@@ -1671,6 +1712,27 @@ nsBookmarksService::Init()
 	}
 
 	return NS_OK;
+}
+
+
+
+nsresult
+nsBookmarksService::getLocaleString(const char *key, nsString &str)
+{
+	PRUnichar	*keyUni = nsnull;
+	nsAutoString	keyStr(key);
+	nsresult	rv;
+	if (mBundle && (NS_SUCCEEDED(rv = mBundle->GetStringFromName(keyStr.GetUnicode(), &keyUni)))
+		&& (keyUni))
+	{
+		str = keyUni;
+		nsCRT::free(keyUni);
+	}
+	else
+	{
+		str.Truncate();
+	}
+	return(rv);
 }
 
 
@@ -2278,10 +2340,10 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 				NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
 				if (NS_SUCCEEDED(rv))
 				{
-					// XXX localization (for the hard-coded strings below)
-
 					nsAutoString	promptStr;
-					promptStr += "The following web page has been updated:\n\n";
+					getLocaleString("WebPageUpdated", promptStr);
+					if (promptStr.Length() > 0)	promptStr += "\n\n";
+
 					nsCOMPtr<nsIRDFNode>	nameNode;
 					if (NS_SUCCEEDED(mInner->GetTarget(busyResource, kNC_Name,
 						PR_TRUE, getter_AddRefs(nameNode))))
@@ -2293,18 +2355,32 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 							if (NS_SUCCEEDED(rv = nameLiteral->GetValueConst(&nameUni))
 								&& (nameUni))
 							{
-								promptStr += "Title: ";
+								nsAutoString	info;
+								getLocaleString("WebPageTitle", info);
+								promptStr += info;
+								promptStr += " ";
 								promptStr += nameUni;
-								promptStr += "\nURL: ";
+								promptStr += "\n";
+								getLocaleString("WebPageURL", info);
+								promptStr += info;
+								promptStr += " ";
 							}
 						}
 					}
 					promptStr += uri;
-					promptStr += "\n\nWould you like to display it?";
 					
+					nsAutoString	temp;
+					getLocaleString("WebPageAskDisplay", temp);
+					if (temp.Length() > 0)
+					{
+						promptStr += "\n\n";
+						promptStr += temp;
+					}
+
+					nsAutoString	stopOption;
+					getLocaleString("WebPageAskStopOption", stopOption);
 					PRBool		stopCheckingFlag = PR_FALSE;
-					rv = dialog->ConfirmCheck(promptStr.GetUnicode(),
-						nsAutoString("Stop checking for updates on this web page").GetUnicode(),
+					rv = dialog->ConfirmCheck(promptStr.GetUnicode(), stopOption.GetUnicode(),
 						&stopCheckingFlag, &openURLFlag);
 					if (NS_FAILED(rv))
 					{
@@ -2730,39 +2806,27 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 	{
 		nsAutoString	name;
 		if (aSource == kNC_BookmarkCommand_NewBookmark)
-		{
-			name = "New Bookmark";	// XXX localization
-		}
+			getLocaleString("NewBookmark", name);
 		else if (aSource == kNC_BookmarkCommand_NewFolder)
-		{
-			name = "New Folder";		// XXX localization
-		}
+			getLocaleString("NewFolder", name);
 		else if (aSource == kNC_BookmarkCommand_NewSeparator)
-		{
-			name = "New Separator";	// XXX localization
-		}
+			getLocaleString("NewSeparator", name);
 		else if (aSource == kNC_BookmarkCommand_DeleteBookmark)
-		{
-			name = "Delete Bookmark";	// XXX localization
-		}
+			getLocaleString("DeleteBookmark", name);
 		else if (aSource == kNC_BookmarkCommand_DeleteBookmarkFolder)
-		{
-			name = "Delete Folder";	// XXX localization
-		}
+			getLocaleString("DeleteFolder", name);
 		else if (aSource == kNC_BookmarkCommand_DeleteBookmarkSeparator)
-		{
-			name = "Delete Separator";	// XXX localization
-		}
+			getLocaleString("DeleteSeparator", name);
 
 		if (name.Length() > 0)
 		{
-			nsIRDFLiteral	*literal;
-			rv = gRDF->GetLiteral(name.GetUnicode(), &literal);
-
-			rv = literal->QueryInterface(nsIRDFNode::GetIID(), (void**) aTarget);
-			NS_RELEASE(literal);
-
-			return rv;
+			*aTarget = nsnull;
+			nsCOMPtr<nsIRDFLiteral>	literal;
+			if (NS_FAILED(rv = gRDF->GetLiteral(name.GetUnicode(), getter_AddRefs(literal))))
+				return(rv);
+			*aTarget = literal;
+			NS_IF_ADDREF(*aTarget);
+			return(rv);
 		}
 	}
 
@@ -3205,18 +3269,14 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 		return(rv);
 
 	// set a default name for bookmarks/folders
-	nsAutoString			newName("");
+	nsAutoString			newName;
 
-	if (objType == kNC_Bookmark)
-	{
-		newName = "New Bookmark";		// XXX localization
-	}
+	if (objType == kNC_Bookmark)	getLocaleString("NewBookmark", newName);
 	else if (objType == kNC_Folder)
 	{
 		if (NS_FAILED(rv = gRDFC->MakeSeq(mInner, newElement, nsnull)))
 			return(rv);
-
-		newName = "New Folder";			// XXX localization
+		getLocaleString("NewFolder", newName);
 	}
 
 	if (newName.Length() > 0)
@@ -3432,8 +3492,10 @@ nsBookmarksService::ReadFavorites()
 	Microseconds((UnsignedWide *)&now);
 	printf("Start reading in IE Favorites.html\n");
 #endif
+
 	// look for and import any IE Favorites
-	nsAutoString	ieTitle("Imported IE Favorites");			// XXX localization?
+	nsAutoString	ieTitle;
+	getLocaleString("ImportedIEFavorites", ieTitle);
 
 	nsSpecialSystemDirectory ieFavoritesFile(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
 	ieFavoritesFile += "Explorer";
@@ -3559,9 +3621,12 @@ nsBookmarksService::ReadBookmarks()
 	} // <-- scope the stream to get the open/close automatically.
 	
 	// look for and import any IE Favorites
-	nsAutoString	ieTitle("Imported IE Favorites");			// XXX localization?
+	nsAutoString	ieTitle;
+	getLocaleString("ImportedIEFavorites", ieTitle);
+
 #ifdef	XP_BEOS
-	nsAutoString	netPositiveTitle("Imported NetPositive Bookmarks");	// XXX localization?
+	nsAutoString	netPositiveTitle;
+	getLocaleString("ImportedNetPositiveBookmarks", ieTitle);
 #endif
 
 #ifdef	XP_MAC
@@ -3719,10 +3784,8 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 	if (nsnull == indentation)	return(NS_ERROR_OUT_OF_MEMORY);
 
 	nsCOMPtr<nsIRDFContainer> container;
-	rv = nsComponentManager::CreateInstance(kRDFContainerCID,
-											nsnull,
-											nsIRDFContainer::GetIID(),
-											getter_AddRefs(container));
+	rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
+		nsIRDFContainer::GetIID(), getter_AddRefs(container));
 	if (NS_FAILED(rv)) return rv;
 
 	rv = container->Init(ds, parent);

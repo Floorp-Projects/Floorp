@@ -52,6 +52,7 @@ CHROME_SKIN = \
 CHROME_L10N = \
 	.\locale\en-US\bm-props.dtd \
 	.\locale\en-US\bookmarks.dtd \
+	.\locale\en-US\bookmark.properties \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
