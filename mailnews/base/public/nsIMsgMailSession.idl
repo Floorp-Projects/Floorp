@@ -32,9 +32,6 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIMsgIdentity.idl"
-#include "nsIMsgIncomingServer.idl"
-#include "nsIMsgAccountManager.idl"
 #include "nsIFolderListener.idl"
 #include "nsIMsgWindow.idl"
 #include "nsISupportsArray.idl"
