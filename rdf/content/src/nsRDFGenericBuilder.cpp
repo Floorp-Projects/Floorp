@@ -72,7 +72,7 @@
 #include "rdfutil.h"
 
 // Return values for EnsureElementHasGenericChild()
-#define NS_RDF_ELEMENT_WAS_CREATED NS_RDF_NO_VALUE
+#define NS_RDF_ELEMENT_GOT_CREATED NS_RDF_NO_VALUE
 #define NS_RDF_ELEMENT_WAS_THERE   NS_OK
 
 static PRLogModuleInfo* gLog;
@@ -284,6 +284,8 @@ protected:
     static nsIAtom* kInstanceOfAtom;
     static nsIAtom* kIsContainerAtom;
     static nsIAtom* kIsEmptyAtom;
+    static nsIAtom* kMenuAtom;
+    static nsIAtom* kMenuPopupAtom;
     static nsIAtom* kNaturalOrderPosAtom;
     static nsIAtom* kOpenAtom;
     static nsIAtom* kPersistAtom;
@@ -327,6 +329,8 @@ nsIAtom* RDFGenericBuilderImpl::kIgnoreAtom;
 nsIAtom* RDFGenericBuilderImpl::kInstanceOfAtom;
 nsIAtom* RDFGenericBuilderImpl::kIsContainerAtom;
 nsIAtom* RDFGenericBuilderImpl::kIsEmptyAtom;
+nsIAtom* RDFGenericBuilderImpl::kMenuAtom;
+nsIAtom* RDFGenericBuilderImpl::kMenuPopupAtom;
 nsIAtom* RDFGenericBuilderImpl::kNaturalOrderPosAtom;
 nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
 nsIAtom* RDFGenericBuilderImpl::kPersistAtom;
@@ -407,6 +411,8 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_IF_RELEASE(kInstanceOfAtom);
         NS_IF_RELEASE(kIsContainerAtom);
         NS_IF_RELEASE(kIsEmptyAtom);
+        NS_IF_RELEASE(kMenuAtom);
+        NS_IF_RELEASE(kMenuPopupAtom);
         NS_IF_RELEASE(kNaturalOrderPosAtom);
         NS_IF_RELEASE(kOpenAtom);
         NS_IF_RELEASE(kPersistAtom);
@@ -469,6 +475,8 @@ RDFGenericBuilderImpl::Init()
         kInstanceOfAtom                 = NS_NewAtom("instanceOf");
         kIsContainerAtom                = NS_NewAtom("iscontainer");
         kIsEmptyAtom                    = NS_NewAtom("isempty");
+        kMenuAtom                       = NS_NewAtom("menu");
+        kMenuPopupAtom                  = NS_NewAtom("menupopup");
         kNaturalOrderPosAtom            = NS_NewAtom("pos");
         kOpenAtom                       = NS_NewAtom("open");
         kPersistAtom                    = NS_NewAtom("persist");
@@ -720,7 +728,9 @@ RDFGenericBuilderImpl::OpenContainer(nsIContent* aElement)
     rv = CreateContainerContents(aElement, resource, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    if (rv == NS_RDF_ELEMENT_WAS_CREATED) {
+    // We need to special-case hack the tree control, re: bug
+    // 11102. Something to do with collapsed styles.
+    if (rv == NS_RDF_ELEMENT_WAS_THERE) {
         nsCOMPtr<nsIAtom> tag;
         rv = aElement->GetTag(*getter_AddRefs(tag));
         if (NS_FAILED(rv)) return rv;
@@ -1766,6 +1776,27 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 if (NS_FAILED(rv)) return rv;
             }
 
+            
+            if (nameSpaceID == kNameSpaceID_HTML) {
+                // If we just built HTML, then we have to recurse "by
+                // hand" because HTML won't build itself up
+                // lazily. Note that we _don't_ need to notify: we'll
+                // add the entire subtree in a single whack.
+                rv = BuildContentFromTemplate(tmplKid, realKid, aIsUnique, aChild, -1, PR_FALSE);
+                if (NS_FAILED(rv)) return rv;
+            }
+            else {
+                // Otherwise, just mark the XUL element as requiring
+                // more work to be done. We'll get around to it when
+                // somebody asks for it.
+                nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(realKid);
+                if (! xulcontent)
+                    return NS_ERROR_UNEXPECTED;
+
+                rv = xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+                if (NS_FAILED(rv)) return rv;
+            }
+
             // We'll _already_ have added the unique elements.
             if (! aIsUnique) {
                 // Add into content model, special casing treeitems.
@@ -1781,24 +1812,6 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                     rv = aRealNode->AppendChildTo(realKid, aNotify);
                     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert element");
                 }
-            }
-
-            if (nameSpaceID == kNameSpaceID_HTML) {
-                // If we just built HTML, then we have to recurse "by
-                // hand" because HTML won't build itself up lazily.
-                rv = BuildContentFromTemplate(tmplKid, realKid, aIsUnique, aChild, -1, aNotify);
-                if (NS_FAILED(rv)) return rv;
-            }
-            else {
-                // Otherwise, just mark the XUL element as requiring
-                // more work to be done. We'll get around to it when
-                // somebody asks for it.
-                nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(realKid);
-                if (! xulcontent)
-                    return NS_ERROR_UNEXPECTED;
-
-                rv = xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
-                if (NS_FAILED(rv)) return rv;
             }
         }
 	}
@@ -2082,7 +2095,7 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
     }
 
     if (contentsGenerated)
-        return NS_RDF_ELEMENT_WAS_CREATED;
+        return NS_RDF_ELEMENT_WAS_THERE;
 
     // Now mark the element's contents as being generated so that
     // any re-entrant calls don't trigger an infinite recursion.
@@ -2147,7 +2160,7 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
         }
     }
 
-    return NS_OK;
+    return NS_RDF_ELEMENT_GOT_CREATED;
 }
 
 
@@ -2239,7 +2252,7 @@ RDFGenericBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
 
         *result = element;
         NS_ADDREF(*result);
-        return NS_RDF_ELEMENT_WAS_CREATED;
+        return NS_RDF_ELEMENT_GOT_CREATED;
     }
     else {
         return NS_RDF_ELEMENT_WAS_THERE;
@@ -2555,16 +2568,12 @@ RDFGenericBuilderImpl::FindInsertionPoint(nsIContent* aElement, nsIContent** aRe
     rv = aElement->GetTag(*getter_AddRefs(tag));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString tagName;
-    rv = tag->ToString(tagName);
-    if (NS_FAILED(rv)) return rv;
-
-    if (tagName.Equals("tree") || tagName.Equals("treeitem")) {
-        rv = gXULUtils->FindChildByTag(aElement, kNameSpaceID_XUL, NS_NewAtom("treechildren"), aResult);
+    if (tag.get() == kTreeAtom || tag.get() == kTreeItemAtom) {
+        rv = gXULUtils->FindChildByTag(aElement, kNameSpaceID_XUL, kTreeChildrenAtom, aResult);
         if (NS_FAILED(rv)) return rv;
     }
-    else if (tagName.Equals("menu")) {
-        rv = gXULUtils->FindChildByTag(aElement, kNameSpaceID_XUL, NS_NewAtom("menupopup"), aResult);
+    else if (tag.get() == kMenuAtom) {
+        rv = gXULUtils->FindChildByTag(aElement, kNameSpaceID_XUL, kMenuPopupAtom, aResult);
         if (NS_FAILED(rv)) return rv;
     }
     else {
