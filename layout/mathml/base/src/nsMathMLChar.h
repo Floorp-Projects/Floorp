@@ -24,48 +24,82 @@
 
 #include "nsMathMLOperators.h"
 
+typedef PRUint32 nsStretchDirection;
+
+#define NS_STRETCH_DIRECTION_HORIZONTAL   0
+#define NS_STRETCH_DIRECTION_VERTICAL     1
+
+// Structure used for a char's size and alignment information.
+struct nsCharMetrics {
+//  nscoord leading;
+  nscoord descent, ascent;
+  nscoord width, height;
+
+  nsCharMetrics(nscoord Descent=0, nscoord Ascent=0, 
+                nscoord Width=0, nscoord Height=0) {
+    width = Width; 
+    height = Height;
+    ascent = Ascent; 
+    descent = Descent;
+  }
+
+  nsCharMetrics(const nsCharMetrics& aCharMetrics) {
+    width = aCharMetrics.width; 
+    height = aCharMetrics.height;
+    ascent = aCharMetrics.ascent; 
+    descent = aCharMetrics.descent;
+  }
+
+  nsCharMetrics(const nsReflowMetrics& aReflowMetrics) {
+    width = aReflowMetrics.width; 
+    height = aReflowMetrics.height;
+    ascent = aReflowMetrics.ascent; 
+    descent = aReflowMetrics.descent;
+  }
+
+  void 
+  operator=(const nsCharMetrics& aCharMetrics) {
+    width = aCharMetrics.width; 
+    height = aCharMetrics.height;
+    ascent = aCharMetrics.ascent; 
+    descent = aCharMetrics.descent;
+  }
+
+  PRBool
+  operator==(const nsCharMetrics& aCharMetrics) {
+    return (width == aCharMetrics.width &&
+            height == aCharMetrics.height &&
+            ascent == aCharMetrics.ascent &&
+            descent == aCharMetrics.descent);
+  }
+};
+
+// class used to handle stretchy symbols (accent and boundary symbols)
 class nsMathMLChar
 {
 public:
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    nsIStyleContext*     aStyleContext,
-                   const nsRect&        aRect);
+                   const nsPoint&       aOffset);
 
   // This is the method called to ask the char to stretch itself.
   // aDesiredStretchSize is an IN/OUT parameter.
   // On input  - it contains our current size.
-  // On output - the same size or the new size, including padding that we want.
-  NS_IMETHOD Stretch(nsIPresContext&  aPresContext,
-                     nsIStyleContext* aStyleContext,
-                     nsCharMetrics&   aContainerSize,
-                     nsCharMetrics&   aDesiredStretchSize);
+  // On output - the same size or the new size that we want.
+  NS_IMETHOD Stretch(nsIPresContext&    aPresContext,
+                     nsIStyleContext*   aStyleContext,
+                     nsStretchDirection aStretchDirection,
+                     nsCharMetrics&     aContainerSize,
+                     nsCharMetrics&     aDesiredStretchSize);
 
-  void Init(nsIFrame*                aFrame,
-            const PRInt32            aLength,
-            const nsString&          aData,
-            const nsOperatorFlags    aFlags,
-            const float              aLeftSpace,
-            const float              aRightSpace,
-            const nsStretchDirection aDirection)
+  void SetData(nsString& aData)
   {
-    mFrame      = aFrame;
-    mLength     = aLength;
-    mData       = aData;
-    mFlags      = aFlags;
-    mLeftSpace  = aLeftSpace;
-    mRightSpace = aRightSpace;
-    mDirection  = aDirection;
+    mData = aData;
   }
 
-  void SetLength(const PRInt32 aLength)
-  {
-    mLength = aLength;
-  }
-
-  PRInt32 GetLength()
-  {
-    return mLength;
+  void GetData(nsString& aData) {
+    aData = mData;
   }
 
   // constructor and destructor
@@ -78,14 +112,7 @@ public:
   }
 
 protected:
-  PRInt32            mLength;
-  nsString           mData;
-  nsOperatorFlags    mFlags;
-  float              mLeftSpace;
-  float              mRightSpace;
-  nsStretchDirection mDirection;
-  nsPoint            mOffset;
-  nsIFrame*          mFrame; // up-pointer to the frame that contains us.
+  nsString  mData;
 };
 
 #endif /* nsMathMLChar_h___ */

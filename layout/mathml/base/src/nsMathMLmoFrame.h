@@ -25,7 +25,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsMathMLContainerFrame.h"
-#include "nsMathMLChar.h"
 
 //
 // <mo> -- operator, fence, or separator
@@ -56,14 +55,20 @@ public:
           nsCharMetrics&     aContainerSize,
           nsCharMetrics&     aDesiredStretchSize);
 
+  // helper method to lookup the operator dictionary and initialize our member data
+  void InitData();
+  
 protected:
   nsMathMLmoFrame();
   virtual ~nsMathMLmoFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }
 
-  PRBool mOperator; // True if we are listed in the operator dictionary.
-  nsMathMLChar mMathMLChar; // Here is the MathChar that will deal with the operator.
+  nsMathMLChar    mMathMLChar; // Here is the MathChar that will deal with the operator.
+  nsOperatorFlags mFlags;
+  float           mLeftSpace;
+  float           mRightSpace;
+  nsPoint         mCharOffset;
 };
 
 #endif /* nsMathMLmoFrame_h___ */

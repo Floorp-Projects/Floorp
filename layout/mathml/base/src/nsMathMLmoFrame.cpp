@@ -38,10 +38,6 @@
 
 #include "nsIDOMText.h"
 
-#include "nsMathMLAtoms.h"
-#include "nsMathMLParts.h"
-#include "nsMathMLChar.h"
-#include "nsMathMLOperators.h"
 #include "nsMathMLmoFrame.h"
 
 //
@@ -112,49 +108,21 @@ nsMathMLmoFrame::~nsMathMLmoFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::Init(nsIPresContext&  aPresContext,
-                      nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsIStyleContext* aContext,
-                      nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = NS_OK;
-  rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // candidly assume we are an operator until proven false -- see Stretch()
-  mOperator = PR_TRUE;
-
-  // record that the MathChar doesn't know anything yet
-  mMathMLChar.SetLength(-1);  
-
-//  mMathMLChar.Init(this, -1, 0, 0, 0.0f, 0.0f, 0);
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsMathMLmoFrame::Paint(nsIPresContext&      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer)
 {
   nsresult rv = NS_OK;
-  
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer)
-    return rv;
-  
-  if (mOperator && 0 < mMathMLChar.GetLength()) {
-//printf("Doing the painting with mMathMLChar\n");
+
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
+      NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) {
     rv = mMathMLChar.Paint(aPresContext, 
                            aRenderingContext,
-                           mStyleContext,     
-                           nsRect(0,0,mRect.width,mRect.height));
-  }	
+                           mStyleContext,
+                           mCharOffset);
+  }
   else { // let the base class worry about the painting
-//printf("Doing the painting with nsMathMLContainerFrame\n");  	
     rv = nsMathMLContainerFrame::Paint(aPresContext, 
                                        aRenderingContext,
                                        aDirtyRect, 
@@ -163,91 +131,78 @@ nsMathMLmoFrame::Paint(nsIPresContext&      aPresContext,
   return rv;
 }
 
-
-#if 0
-void DEBUG_PrintString(const nsString aString) {
-#if 0
-   PRUnichar* pc = (PRUnichar*)(const PRUnichar*)aString.GetUnicode();
-   while (*pc) {
-      if (*pc < 0x00FF)
-         printf("%c", char(*pc++));
-      else
-         printf("[%04x]", *pc++);
-   }
-#endif
-
-  PRInt32 i;
-  for (i = 0; i<aString.Length(); i++) {
-    PRUnichar ch = aString.CharAt(i);
-    if (nsString::IsAlpha(ch) || nsString::IsDigit(ch) || ch == ' ')
-      printf("%c", char(ch));
-    else
-      printf("[0x%04X]", ch);
-  }
-}
-#endif
-
-// NOTE: aDesiredStretchSize is an IN/OUT parameter
-//       On input  - it contains our current size
-//       On output - the same size or the new size that we want
 NS_IMETHODIMP
-nsMathMLmoFrame::Stretch(nsIPresContext&    aPresContext,
-                         nsStretchDirection aStretchDirection,
-                         nsCharMetrics&     aContainerSize,
-                         nsCharMetrics&     aDesiredStretchSize)
+nsMathMLmoFrame::Init(nsIPresContext&  aPresContext,
+                      nsIContent*      aContent,
+                      nsIFrame*        aParent,
+                      nsIStyleContext* aContext,
+                      nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = NS_OK;
+  // Let the base class do its Init()
+  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  if (!mOperator)   // don't wander here if we are not an operator 
-    return NS_OK;   // XXX Need to set default values for lspace and rspace
+  // Init our local attributes
+  mFlags = 0;
+  mLeftSpace = 0.0f; // .27777f;
+  mRightSpace = 0.0f; // .27777f;
+  mCharOffset.x = 0;
+  mCharOffset.y = 0;
 
-  // find the text that we enclose if it is the first time we come here
-  PRInt32 aLength = mMathMLChar.GetLength();
-  if (0 > aLength) { // this means it is the very first time we have been here.
-                     // we will not be going over all this again when the 
-                     // window is repainted (resize, scroll).
+  return rv;
+}
 
-    // if we exit prematurely from now on, we are surely not an operator
-    mOperator = PR_FALSE;
-          
-    // get the text that we enclose. XXX TrimWhitespace?
-    
-    nsAutoString aData;
-//    PRInt32 aLength = 0;
-    
-    // kids can be comment-nodes, attribute-nodes, text-nodes...
-    // we use to DOM to ensure that we only look at text-nodes...
-    PRInt32 numKids;
-    mContent->ChildCount(numKids);
-    for (PRInt32 kid=0; kid<numKids; kid++) {
-      nsCOMPtr<nsIContent> kidContent;
-      mContent->ChildAt(kid, *getter_AddRefs(kidContent));
-      if (kidContent.get()) {      	
-        nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
-        if (kidText.get()) {
-          // PRUint32 kidLength;
-          // kidText->GetLength(&kidLength);
-          // aLength += kidLength;        
-          nsAutoString kidData;
-          kidText->GetData(kidData);
-          aData += kidData;
-        }
+void
+nsMathMLmoFrame::InitData()
+{
+
+  // get the text that we enclose. // XXX aData.CompressWhitespace() ?
+  nsAutoString aData;
+  // PRInt32 aLength = 0;
+  // kids can be comment-nodes, attribute-nodes, text-nodes...
+  // we use to DOM to ensure that we only look at text-nodes...
+  PRInt32 numKids;
+  mContent->ChildCount(numKids);
+  for (PRInt32 kid=0; kid<numKids; kid++) {
+    nsCOMPtr<nsIContent> kidContent;
+    mContent->ChildAt(kid, *getter_AddRefs(kidContent));
+    if (kidContent.get()) {      	
+      nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
+      if (kidText.get()) {
+        // PRUint32 kidLength;
+        // kidText->GetLength(&kidLength);
+        // aLength += kidLength;        
+        nsAutoString kidData;
+        kidText->GetData(kidData);
+        aData += kidData;
       }
     }
+  }
 
-    // Look at our position from our parent (frames are singly-linked together).                
+  // find our form 
+  nsAutoString value;
+  nsOperatorFlags aForm = NS_MATHML_OPERATOR_FORM_INFIX;
+
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+                   nsMathMLAtoms::form, value)) {
+    if (value == "prefix") 
+      aForm = NS_MATHML_OPERATOR_FORM_PREFIX;
+    else if (value == "postfix") 
+      aForm = NS_MATHML_OPERATOR_FORM_POSTFIX;
+  }
+  else { // look at our position from our parent (frames are singly-linked together).                
+
     //////////////
     // WHITESPACE: don't forget that whitespace doesn't count in MathML!
     // Here is the situation: we may have empty frames between us:
     // [space*] [prev] [space*] [this] [space*] [next]
     // We want to skip them... 
     // The problem looks like a regexp, we ask a little flag to help us.
-
+   
     PRInt32 state = 0;
     nsIFrame* prev = nsnull;
     nsIFrame* next = nsnull;
     nsIFrame* aFrame;
-
+   
     mParent->FirstChild(nsnull, &aFrame);
     while (nsnull != aFrame) {
       if (aFrame == this) { // we start looking for next
@@ -262,87 +217,153 @@ nsMathMLmoFrame::Stretch(nsIPresContext&    aPresContext,
           break; // we can exit the while loop
         }
       }
-      rv = aFrame->GetNextSibling(&aFrame);
-      NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next sibbling");
+      aFrame->GetNextSibling(&aFrame);
     }
-
+   
     // set our form flag depending on our position
-    nsOperatorFlags aForm = NS_MATHML_OPERATOR_FORM_INFIX;
     if (nsnull == prev && nsnull != next)
       aForm = NS_MATHML_OPERATOR_FORM_PREFIX;
     else if (nsnull != prev && nsnull == next)
       aForm = NS_MATHML_OPERATOR_FORM_POSTFIX;
+  }
 
-    // Now that we know the text, we can lookup the operator dictionary to see if
-    // it was right to assume that this is an operator
-    // XXX aData.CompressWhitespace() ?
-    nsOperatorFlags aFlags;
-    float aLeftSpace, aRightSpace;                 
-    mOperator = nsMathMLOperators::LookupOperator(aData, aForm,              
-                                   &aFlags, &aLeftSpace, &aRightSpace);
+  // cache our form
+  mFlags |= aForm;
 
-    // If it doesn't exist in the the dictionary, stop now
-    if (!mOperator) 
-      return NS_OK;
+  // Now that we know our text an our form, we can lookup the operator dictionary
+  PRBool found;
+  found = nsMathMLOperators::LookupOperator(aData, aForm,              
+                                            &mFlags, &mLeftSpace, &mRightSpace);
 
-    // XXX If we don't want extra space when we are a script
-//    if (mScriptLevel > 0) {
-//      aLeftSpace = aRightSpace = 0;
-//    }
+  // If the operator exists in the dictionary and is stretchy, it is mutable
+  if (found && NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
+    mFlags |= NS_MATHML_OPERATOR_MUTABLE;
+  }
+
+  // If we don't want extra space when we are a script
+//  if (mScriptLevel > 0) {
+//    mLeftSpace = mRightSpace = 0;
+//  }
+
 
 // XXX Factor all this in nsMathMLAttributes.cpp
 
-    // Now see if there are user-defined attributes that override the dictionary. 
-    // XXX If an attribute can be forced to be true when it is false in the 
-    // dictionary, then the following code has to change...
-   
-    // For each attribute disabled by the user, turn off its bit flag.
-    // movablelimits|separator|largeop|accent|fence|stretchy|form
+  // Now see if there are user-defined attributes that override the dictionary. 
+  // XXX If an attribute can be forced to be true when it is false in the 
+  // dictionary, then the following code has to change...
+  
+  // For each attribute disabled by the user, turn off its bit flag.
+  // movablelimits|separator|largeop|accent|fence|stretchy|form
 
-    nsAutoString kfalse("false");
-    nsAutoString value;
-    if (NS_MATHML_OPERATOR_IS_STRETCHY(aFlags)) {
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                       nsMathMLAtoms::stretchy, value) && value == kfalse)
-        aFlags &= ~NS_MATHML_OPERATOR_STRETCHY;
-    }
-    if (NS_MATHML_OPERATOR_IS_FENCE(aFlags)) {
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                       nsMathMLAtoms::fence, value) && value == kfalse)
-        aFlags &= ~NS_MATHML_OPERATOR_FENCE;
-    }
-    if (NS_MATHML_OPERATOR_IS_ACCENT(aFlags)) {
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                       nsMathMLAtoms::accent, value) && value == kfalse)
-        aFlags &= ~NS_MATHML_OPERATOR_ACCENT;
-    }
-    if (NS_MATHML_OPERATOR_IS_LARGEOP(aFlags)) {
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                       nsMathMLAtoms::largeop, value) && value == kfalse)
-        aFlags &= ~NS_MATHML_OPERATOR_LARGEOP;
-    }
-    if (NS_MATHML_OPERATOR_IS_SEPARATOR(aFlags)) {
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                       nsMathMLAtoms::separator, value) && value == kfalse)
-        aFlags &= ~NS_MATHML_OPERATOR_SEPARATOR;
-    }
-    if (NS_MATHML_OPERATOR_IS_MOVABLELIMITS(aFlags)) {
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                       nsMathMLAtoms::movablelimits, value) && value == kfalse)
-        aFlags &= ~NS_MATHML_OPERATOR_MOVABLELIMITS;
-    }
-
-    // TODO: add also lspace and rspace, minsize, maxsize later ...
-
-    // cache all what we have learnt about this operator
-    mMathMLChar.Init(this, aData.Length(), aData, aFlags, 
-                     aLeftSpace, aRightSpace, aStretchDirection);
+  nsAutoString kfalse("false");
+  if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+                     nsMathMLAtoms::stretchy, value) && value == kfalse)
+      mFlags &= ~NS_MATHML_OPERATOR_STRETCHY;
+  }
+  if (NS_MATHML_OPERATOR_IS_FENCE(mFlags)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+                     nsMathMLAtoms::fence, value) && value == kfalse)
+      mFlags &= ~NS_MATHML_OPERATOR_FENCE;
+  }
+  if (NS_MATHML_OPERATOR_IS_ACCENT(mFlags)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+                     nsMathMLAtoms::accent, value) && value == kfalse)
+      mFlags &= ~NS_MATHML_OPERATOR_ACCENT;
+  }
+  if (NS_MATHML_OPERATOR_IS_LARGEOP(mFlags)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+                     nsMathMLAtoms::largeop, value) && value == kfalse)
+      mFlags &= ~NS_MATHML_OPERATOR_LARGEOP;
+  }
+  if (NS_MATHML_OPERATOR_IS_SEPARATOR(mFlags)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+                     nsMathMLAtoms::separator, value) && value == kfalse)
+      mFlags &= ~NS_MATHML_OPERATOR_SEPARATOR;
+  }
+  if (NS_MATHML_OPERATOR_IS_MOVABLELIMITS(mFlags)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+                     nsMathMLAtoms::movablelimits, value) && value == kfalse)
+      mFlags &= ~NS_MATHML_OPERATOR_MOVABLELIMITS;
   }
 
-  // let the MathMLChar stretch itself...
-  mMathMLChar.Stretch(aPresContext, mStyleContext, 
-                      aContainerSize, aDesiredStretchSize);
-  return rv;
+  // TODO: add also lspace and rspace, minsize, maxsize later ...
+
+  // If the stretchy attribute has been disabled, the operator is not mutable
+  if (!found || !NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
+    mFlags &= ~NS_MATHML_OPERATOR_MUTABLE;
+    return;
+  }
+
+  // cache the operator
+  mMathMLChar.SetData(aData);
+
+  return;
 }
 
+// NOTE: aDesiredStretchSize is an IN/OUT parameter
+//       On input  - it contains our current size
+//       On output - the same size or the new size that we want
+NS_IMETHODIMP
+nsMathMLmoFrame::Stretch(nsIPresContext&    aPresContext,
+                         nsStretchDirection aStretchDirection,
+                         nsCharMetrics&     aContainerSize,
+                         nsCharMetrics&     aDesiredStretchSize)
+{
+  if (0 == mFlags) { // first time...
+    InitData();
+  }
 
+  // get the value of 'em';
+  const nsStyleFont* aFont =
+    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+  nscoord em = NSToCoordRound(float(aFont->mFont.size));
+
+  mCharOffset.x = nscoord( mLeftSpace * em );
+  mCharOffset.y = 0;
+
+  // check if it makes sense to stretch
+  if (NS_MATHML_OPERATOR_IS_MUTABLE(mFlags) &&
+      ((NS_MATHML_OPERATOR_IS_FENCE(mFlags) &&
+        NS_STRETCH_DIRECTION_VERTICAL == aStretchDirection) ||
+       (NS_MATHML_OPERATOR_IS_ACCENT(mFlags) && 
+        NS_STRETCH_DIRECTION_HORIZONTAL == aStretchDirection))) {
+
+    mCharOffset.y = aContainerSize.ascent 
+                  - aDesiredStretchSize.ascent; // XXX temp hack
+
+    nsCharMetrics old(aDesiredStretchSize);
+
+    // let the MathMLChar stretch itself...
+    mMathMLChar.Stretch(aPresContext, mStyleContext, aStretchDirection,
+                        aContainerSize, aDesiredStretchSize);
+
+    if (old == aDesiredStretchSize) { // hasn't changed !
+      mFlags &= ~NS_MATHML_OPERATOR_MUTABLE;
+      mCharOffset.y = 0;
+    }
+  }
+  else {
+    mFlags &= ~NS_MATHML_OPERATOR_MUTABLE;
+  }
+
+  // account the spacing
+  aDesiredStretchSize.width += mCharOffset.x + nscoord( mRightSpace * em );
+
+  // adjust the offsets of our children to leave the spacing
+  if (0 < mCharOffset.x || 0 < mCharOffset.y) {
+    nsRect rect;
+    nscoord dx = mCharOffset.x;
+    nsIFrame* childFrame = mFrames.FirstChild();
+    while (nsnull != childFrame) {
+      if (!IsOnlyWhitespace(childFrame)) {
+        childFrame->GetRect(rect);
+        childFrame->MoveTo(dx, rect.y + mCharOffset.y);
+        dx += rect.width; 
+      }
+      childFrame->GetNextSibling(&childFrame);
+    }
+  }
+
+  return NS_OK;
+}

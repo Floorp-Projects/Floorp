@@ -47,39 +47,23 @@
 
 // aDesiredStretchSize is an IN/OUT parameter.
 NS_IMETHODIMP
-nsMathMLChar::Stretch(nsIPresContext&  aPresContext,
-                      nsIStyleContext* aStyleContext,
-                      nsCharMetrics&   aContainerSize,
-                      nsCharMetrics&   aDesiredStretchSize)
+nsMathMLChar::Stretch(nsIPresContext&    aPresContext,
+                      nsIStyleContext*   aStyleContext,
+                      nsStretchDirection aStretchDirection,
+                      nsCharMetrics&     aContainerSize,
+                      nsCharMetrics&     aDesiredStretchSize)
 {
-  // get the value of 'em';
-  const nsStyleFont* aFont =
-    (const nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font);
-  nscoord em = NSToCoordRound(float(aFont->mFont.size));
-
-  mOffset.x = nscoord(mLeftSpace * em);
-  mOffset.y = 0;
-  
-  // do the stretching
-  if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
-    if (mDirection == NS_STRETCH_DIRECTION_VERTICAL) {
-      mOffset.y = aContainerSize.ascent - aDesiredStretchSize.ascent;
-
-      // vertical stretching... for a boundary symbol
-      aDesiredStretchSize.descent = aContainerSize.descent;
-      aDesiredStretchSize.ascent  = aContainerSize.ascent;
-      aDesiredStretchSize.height = aDesiredStretchSize.ascent 
-                                 + aDesiredStretchSize.descent;
-
-    }
-    else if (mDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
-      // horizontal stretching... for an accent
-      aDesiredStretchSize.width = aContainerSize.width;
-    }
+  if (aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) {
+    // vertical stretching... for a boundary symbol
+    aDesiredStretchSize.descent = aContainerSize.descent;
+    aDesiredStretchSize.ascent  = aContainerSize.ascent;
+    aDesiredStretchSize.height = aDesiredStretchSize.ascent 
+                               + aDesiredStretchSize.descent;
   }
-
-  // adjust the spacing
-  aDesiredStretchSize.width += nscoord((mLeftSpace+mRightSpace)*em);
+  else if (aStretchDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
+    // horizontal stretching... for an accent
+    aDesiredStretchSize.width = aContainerSize.width;
+  }
 
   return NS_OK;
 }
@@ -88,7 +72,7 @@ NS_IMETHODIMP
 nsMathMLChar::Paint(nsIPresContext&      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     nsIStyleContext*     aStyleContext,     
-                    const nsRect&        aRect)
+                    const nsPoint&       aOffset)
 {
   nsresult rv = NS_OK;
   const nsStyleColor* color =
@@ -102,13 +86,7 @@ nsMathMLChar::Paint(nsIPresContext&      aPresContext,
 
   // Display the char 
   const PRUnichar* aString = mData.GetUnicode();  
-  PRUint32 aLength = mLength;
-  aRenderingContext.DrawString(aString, aLength, mOffset.x, mOffset.y);
-
-// DEBUG
-// Draw a border around the char
-//aRenderingContext.SetColor(NS_RGB(255,0,0));
-//aRenderingContext.DrawRect(aRect);
+  aRenderingContext.DrawString(aString, PRUint32(mData.Length()), aOffset.x, aOffset.y);
 
   return rv;
 }
