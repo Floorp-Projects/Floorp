@@ -134,6 +134,7 @@ public:
   NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext);
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex);
   NS_IMETHOD AbsolutelyPositionDropDown();
+  NS_IMETHOD GetAbsoluteRect(nsRect* aRect);
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);
