@@ -1,13 +1,15 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# TinderDB::BT_GENERIC - a generic methods to display the changes to
+# TinderDB::BT_GENERIC - A generic methods to display the changes to
 # the bug tracking system.  I am hoping that we will not need to have
 # one specialized method per bug ticket system but can instead use
-# this method for all commonly used systems.  This module will display
-# bugs which have been 'closed' (developers close bugs when their
-# latest version control chceck in fixes them) or 'reopened' (since
-# that means that developers closed the bugs incorrectly.)
+# this method for all commonly used (Bug Tracking, Modification
+# Request) systems.  This module will display bugs which have been
+# 'closed' (developers close bugs when their latest version control
+# chceck in fixes them) or 'reopened' (since that means that
+# developers closed the bugs incorrectly).  BTData.pm contains all the
+# local settings which configure this module.
 
 
 # The contents of this file are subject to the Mozilla Public
@@ -67,7 +69,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.3 $ )[1];
+$VERSION = ( qw $Revision: 1.4 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -98,7 +100,7 @@ sub trim_db_history {
 }
 
 
-# get the recent data from CVS and the treestate file.
+# get the recent data from where the MDA puts the parsed data.
 
 
 sub apply_db_updates {
@@ -113,7 +115,7 @@ sub apply_db_updates {
   scalar(@sorted_files) || return 0;
 
   foreach $update_file (@sorted_files) {
-    my $full_file = "$dirname/$update_file";
+    my ($full_file) = "$dirname/$update_file";
     my ($record) = Persistence::load_structure($full_file);
 
     ($record) ||
@@ -139,9 +141,9 @@ sub apply_db_updates {
     # Add the record to the datastructure
 
     # Notice: We store the raw $status and do not use
-    # BTData::STATUS_PROGRESS to convert it to $progress.  This is so
-    # that the progress mapping can change later and not invalidate
-    # old data.
+    # BTData::STATUS_PROGRESS to convert it to our display format:
+    # $progress.  This is so that the progress mapping can change
+    # later and not invalidate old data.
 
     $DATABASE{$tree}{$timenow}{$status}{$bug_id} = $record;
 
@@ -171,7 +173,7 @@ sub apply_db_updates {
 sub status_table_legend {
   my ($out)='';
 
-  # I am not sure the best way to explain this
+  # I am not sure the best way to explain this to our users
 
   return ($out);  
 }
@@ -224,11 +226,11 @@ sub status_table_start {
 sub status_table_row {
   my ($self, $row_times, $row_index, $tree, ) = @_;
 
-  my @outrow = ();
+  my (@outrow) = ();
 
   # find all the bug_ids which changed at any point in this cell.
 
-  my %bug_ids = ();
+  my (%bug_ids) = ();
   
   while (1) {
    my ($time) = $DB_TIMES[$NEXT_DB];
@@ -239,7 +241,7 @@ sub status_table_row {
     $NEXT_DB++;
 
     foreach $status (keys %{ $DATABASE{$tree}{$time} }) {
-      my $query_links = '';
+      my ($query_links) = '';
       foreach $bug_id (sort keys %{ $DATABASE{$tree}{$time}{$status} }) {
 	
 	my ($table) = '';
@@ -275,7 +277,7 @@ sub status_table_row {
 
 	# a link to the cgibin page which displays the bug
 	
-	my ($href) = $rec->{'tinderbox_bug_url'};
+	my ($href) = BTData::bug_id2bug_url($bug_id);
 	my ($window_title) = "BT Info bug_id: $bug_id";
 
 	# we display the list of names in 'teletype font' so that the
@@ -290,8 +292,8 @@ sub status_table_row {
 			  
 			  "windowtxt" => $table,
 			  "windowtitle" => $window_title,
-			  "windowheight" => ($num_rows * 20) + 100,
-			  "windowwidth" => ($max_length * 10) + 100,
+			  "windowheight" => ($num_rows * 25) + 100,
+			  "windowwidth" => ($max_length * 15) + 100,
 			 );
 
 	# put each link on its own line and add good comments so we
