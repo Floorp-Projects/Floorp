@@ -27,6 +27,7 @@ DEPTH =..\..\..\..\..
 REQUIRES = \
     xpcom \
     java \
+    plugin \
     $(NULL)
 
 

@@ -192,11 +192,16 @@ NPError NewControl(const char *pluginType,
             USES_CONVERSION;
 
             std::wstring szName;
-            std::wstring szParam(A2W(argv[i]));
 
             if (strnicmp(argn[i], "PARAM_", 6) == 0)
             {
                 szName = A2W(argn[i]+6);
+            }
+            else if (stricmp(argn[i], "PARAM") == 0)
+            {
+                // The next argn and argv values after this symbol
+                // will be <param> tag names and values
+                continue;
             }
             else
             {
@@ -208,6 +213,8 @@ NPError NewControl(const char *pluginType,
             {
                 continue;
             }
+
+            std::wstring szParam(A2W(argv[i]));
 
             // Check for existing params with the same name
             BOOL bFound = FALSE;
