@@ -916,7 +916,7 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
 
         nsIRDFResource* container = VALUE_TO_IRDFRESOURCE(val);
 
-        PRInt32 row = 0;
+        PRInt32 row = -1;
         nsOutlinerRows::Subtree* parent = nsnull;
 
         if (container != mRows.GetRootResource()) {
@@ -942,7 +942,7 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
         }
         else
             parent = mRows.GetRoot();
-
+ 
         if (parent) {
             // By default, place the new element at the end of the container
             PRInt32 index = parent->Count();
@@ -966,7 +966,7 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
             }
 
             mRows.InsertRowAt(aNewMatch, parent, index);
-            mBoxObject->RowCountChanged(row + index, +1);
+            mBoxObject->RowCountChanged(row + index + 1, +1);
         }
     }
 
