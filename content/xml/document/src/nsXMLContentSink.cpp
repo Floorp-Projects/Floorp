@@ -1596,7 +1596,7 @@ nsXMLContentSink::ResumeParsing()
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo, const char* aVersion)
+nsXMLContentSink::EvaluateScript(nsString& aScript, nsIURI *aScriptURI, PRUint32 aLineNo, const char* aVersion)
 {
   nsresult rv = NS_OK;
 
@@ -1608,10 +1608,9 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo, const char
       NS_ENSURE_SUCCESS(scriptGlobal->GetContext(getter_AddRefs(context)),
          NS_ERROR_FAILURE);
 
-      nsIURI* docURL = mDocument->GetDocumentURL();
-      char* url;
-      if (docURL) {
-        rv = docURL->GetSpec(&url);
+      char* url = nsnull;
+      if (aScriptURI) {
+        rv = aScriptURI->GetSpec(&url);
       }
 
       nsCOMPtr<nsIPrincipal> principal;
@@ -1626,9 +1625,8 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo, const char
 
         (void) context->EvaluateString(aScript, nsnull, principal, url, aLineNo, aVersion,
                                        val, &isUndefined);
-
-        NS_IF_RELEASE(docURL);
-
+      }
+      if (url) {
         nsCRT::free(url);
       }
     }
@@ -1644,7 +1642,8 @@ nsXMLContentSink::ProcessEndSCRIPTTag(const nsIParserNode& aNode)
   if (mInScript) {
     nsAutoString script;
     script.Assign(mText, mTextLength);
-    result = EvaluateScript(script, mScriptLineNo, mScriptLanguageVersion);
+    nsCOMPtr<nsIURI> docURI( dont_AddRef( mDocument->GetDocumentURL() ) );
+    result = EvaluateScript(script, docURI, mScriptLineNo, mScriptLanguageVersion);
     FlushText(PR_FALSE);
     mInScript = PR_FALSE;
   }
@@ -1700,7 +1699,15 @@ nsXMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
   nsString aData; aData.AssignWithConversion(string, stringLen);
 
   if (NS_OK == aStatus) {
-    rv = EvaluateScript(aData, 0, mScriptLanguageVersion);
+    { // scope in block so nsCOMPtr released at one point
+      nsCOMPtr<nsIChannel> channel;
+      aLoader->GetChannel(getter_AddRefs(channel));
+      nsCOMPtr<nsIURI> url;
+      if (channel) {
+        channel->GetURI(getter_AddRefs(url));
+      }
+      rv = EvaluateScript(aData, url, 1, mScriptLanguageVersion);
+    }
     if (NS_FAILED(rv)) return rv;
   }
 
