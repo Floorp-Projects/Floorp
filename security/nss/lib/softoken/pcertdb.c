@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.15 2002/04/05 09:17:50 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.16 2002/04/08 23:37:48 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3612,6 +3612,14 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
 	
 	if (appName) {
 	    handle->permCertDB=rdbopen( appName, prefix, "cert", NO_CREATE);
+
+	    updatedb = dbopen(certdbname, NO_RDONLY, 0600, DB_HASH, 0);
+	    if (updatedb) {
+		db_Copy(handle->permCertDB,updatedb);
+		(*updatedb->close)(updatedb);
+		PORT_Free(certdbname);
+		return(SECSuccess);
+	    }
 	} else {
 	    handle->permCertDB=dbopen(certdbname, NO_CREATE, 0600, DB_HASH, 0);
 	}

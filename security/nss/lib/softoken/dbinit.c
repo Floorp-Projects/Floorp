@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.9 2002/04/05 09:17:49 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.10 2002/04/08 23:37:47 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -289,4 +289,22 @@ DB * rdbopen(const char *appName, const char *prefix,
     /* couldn't find the entry point, unload the library and fail */
     PR_UnloadLibrary(lib);
     return NULL;
+}
+
+SECStatus
+db_Copy(DB *dest,DB *src)
+{
+    int ret;
+    DBT key,data;
+    ret = (*src->seq)(src, &key, &data, R_FIRST);
+    if (ret)  {
+	return SECSuccess;
+    }
+
+    do {
+	(void)(*dest->put)(dest,&key,&data, R_NOOVERWRITE);
+    } while ( (*src->seq)(src, &key, &data, R_NEXT) == 0);
+    (void)(*dest->sync)(dest,0);
+
+    return SECSuccess;
 }

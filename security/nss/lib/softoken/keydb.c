@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.15 2002/04/05 09:17:49 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.16 2002/04/08 23:37:48 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -875,6 +875,13 @@ newdb:
 
 	if (appName) {
 	    handle->db = rdbopen( appName, prefix, "key", NO_CREATE);
+	    handle->updatedb = dbopen( dbname, NO_RDONLY, 0600, DB_HASH, 0 );
+	    if (handle->updatedb) {
+		db_Copy(handle->db, handle->updatedb);
+		(*handle->updatedb->close)(handle->updatedb);
+		handle->updatedb = NULL;
+		goto done;
+	    }
 	} else {
 	    handle->db = dbopen( dbname, NO_CREATE, 0600, DB_HASH, 0 );
 	}
@@ -929,6 +936,8 @@ newdb:
 	    goto loser;
 	}
     }
+
+done:
 
     handle->global_salt = GetKeyDBGlobalSalt(handle);
     if ( dbname )
