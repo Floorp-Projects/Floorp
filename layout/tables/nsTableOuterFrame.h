@@ -227,6 +227,12 @@ protected:
     */
   virtual void CreateInnerTableFrame(nsIPresContext* aPresContext);
 
+  nsresult RecoverState(OuterTableReflowState& aState, nsIFrame* aKidFrame);
+  nsresult IncrementalReflow(nsIPresContext* aPresContext,
+                             nsReflowMetrics& aDesiredSize,
+                             const nsReflowState& aReflowState,
+                             nsReflowStatus& aStatus);
+
 
 private:
   /** used to keep track of this frame's children */

@@ -24,7 +24,7 @@ REQUIRES=xpcom raptor
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=nsCellLayoutData.cpp nsCellMap.cpp nsColLayoutData.cpp \
-    nsTableCaption.cpp nsTableCaptionFrame.cpp nsTableCell.cpp \
+    nsTableCaption.cpp nsTableCell.cpp \
     nsTableCellFrame.cpp nsTableCol.cpp nsTableColGroup.cpp \
     nsTableColGroupFrame.cpp nsTableContent.cpp nsTableFrame.cpp \
     nsTableOuterFrame.cpp nsTablePart.cpp nsTableRow.cpp \
@@ -33,7 +33,7 @@ CPPSRCS=nsCellLayoutData.cpp nsCellMap.cpp nsColLayoutData.cpp \
 
 CPP_OBJS=.\$(OBJDIR)\nsCellLayoutData.obj .\$(OBJDIR)\nsCellMap.obj \
     .\$(OBJDIR)\nsColLayoutData.obj .\$(OBJDIR)\nsTableCaption.obj \
-    .\$(OBJDIR)\nsTableCaptionFrame.obj .\$(OBJDIR)\nsTableCell.obj \
+    .\$(OBJDIR)\nsTableCell.obj \
     .\$(OBJDIR)\nsTableCellFrame.obj .\$(OBJDIR)\nsTableCol.obj \
     .\$(OBJDIR)\nsTableColGroup.obj .\$(OBJDIR)\nsTableColGroupFrame.obj \
     .\$(OBJDIR)\nsTableContent.obj .\$(OBJDIR)\nsTableFrame.obj \

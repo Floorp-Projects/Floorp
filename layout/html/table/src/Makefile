@@ -28,7 +28,6 @@ CPPSRCS =				\
 	nsCellMap.cpp			\
 	nsColLayoutData.cpp		\
 	nsTableCaption.cpp		\
-	nsTableCaptionFrame.cpp		\
 	nsTableCell.cpp			\
 	nsTableCellFrame.cpp		\
 	nsTableCol.cpp			\
