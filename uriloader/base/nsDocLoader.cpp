@@ -78,7 +78,7 @@ void GetURIStringFromChannel(nsIRequest *aRequest, nsXPIDLCString &aStr)
 
 /* Define IIDs... */
 static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_IID);
+static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENTVIEWERCONTAINER_IID);
 
 
 struct nsChannelInfo {
