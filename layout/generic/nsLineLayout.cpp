@@ -1561,8 +1561,8 @@ nsLineLayout::IsPercentageAwareReplacedElement(nsIPresContext *aPresContext,
   {
     nsCOMPtr<nsIAtom> frameType;
     aFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::brFrame != frameType && 
-        nsLayoutAtoms::textFrame != frameType)
+    if (nsLayoutAtoms::brFrame != frameType.get() && 
+        nsLayoutAtoms::textFrame != frameType.get())
     {
       const nsStyleSpacing* space;
       nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct*&) space);
