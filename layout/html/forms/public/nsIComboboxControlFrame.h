@@ -66,31 +66,26 @@ public:
 
   /**
    * Indicates whether the list is dropped down
-   *
    */
   NS_IMETHOD IsDroppedDown(PRBool * aDoDropDown) = 0;
 
   /**
    * Shows or hides the drop down
-   *
    */
   NS_IMETHOD ShowDropDown(PRBool aDoDropDown) = 0;
 
   /**
    * Gets the Drop Down List
-   *
    */
   NS_IMETHOD GetDropDown(nsIFrame** aDropDownFrame) = 0;
 
   /**
    * Sets the Drop Down List
-   *
    */
   NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame) = 0;
 
   /**
    * Tells the combobox to roll up
-   *
    */
   NS_IMETHOD RollupFromList(nsIPresContext* aPresContext) = 0;
 
@@ -98,6 +93,11 @@ public:
    * Redisplay the selected text (will do nothing if text has not changed)
    */
   NS_IMETHOD RedisplaySelectedText() = 0;
+
+  /**
+   * Method for the listbox to notify the combobox that onChange has been fired
+   */
+  NS_IMETHOD SetNeedToFireOnChange(PRBool aNeedToFireOnChange) = 0;
 
   /**
    *

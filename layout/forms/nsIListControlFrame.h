@@ -100,19 +100,19 @@ public:
   NS_IMETHOD SyncViewWithFrame(nsIPresContext* aPresContext) = 0;
 
   /**
-   * 
+   * Called by combobox when it's about to drop down
    */
   NS_IMETHOD AboutToDropDown() = 0;
 
   /**
-   * 
+   * Called by combobox when it's about to roll up
    */
   NS_IMETHOD AboutToRollup() = 0;
 
   /**
-   *
+   * Fire on change (used by combobox)
    */
-  NS_IMETHOD UpdateSelection() = 0;
+  NS_IMETHOD FireOnChange() = 0;
 
   /**
    *

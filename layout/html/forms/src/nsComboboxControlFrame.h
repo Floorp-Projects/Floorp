@@ -182,6 +182,7 @@ public:
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect);
   NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex);
   NS_IMETHOD RedisplaySelectedText();
+  NS_IMETHOD SetNeedToFireOnChange(PRBool aNeedToFireOnChange);
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
@@ -272,7 +273,6 @@ protected:
   nsIPresContext*          mPresContext;             // XXX: Remove the need to cache the pres context.
   nsFormFrame*             mFormFrame;               // Parent Form Frame
   nsCOMPtr<nsITextContent> mDisplayContent;          // Anonymous content used to display the current selection
-  PRPackedBool             mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
   nsIFrame*                mDisplayFrame;            // frame to display selection
   nsIFrame*                mButtonFrame;             // button frame
   nsIFrame*                mDropdownFrame;           // dropdown list frame
@@ -291,8 +291,11 @@ protected:
   //nscoord               mItemDisplayHeight;
   nsCSSFrameConstructor* mFrameConstructor;
 
+  PRPackedBool          mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
   PRPackedBool          mGoodToGo;
+  PRPackedBool          mNeedToFireOnChange;
 
+  PRInt32               mRecentSelectedIndex;
   PRInt32               mDisplayedIndex;
 
   // make someone to listen to the button. If its programmatically pressed by someone like Accessibility
