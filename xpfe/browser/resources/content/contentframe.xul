@@ -1,22 +1,22 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://global/skin/contentframe.css" type="text/css"?> 
+<?xml-stylesheet href="chrome:/global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome:/navigator/skin/contentframe.css" type="text/css"?> 
 
 <!DOCTYPE window> 
 
 <window style="height:100%;width:100%"
    xmlns:html="http://www.w3.org/TR/REC-html40"
-   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   onload="init_sidebar('browser', 'resource:/res/rdf/sidebar-browser.xul',
+                        170);" align="horizontal"> 
 
 <html:script src="contentframe.js" />
 
-<box id="container" align="horizontal" style="height: 100%; width: 100%">
-  <html:iframe id="sidebarframe" class="sidebarframe" 
-               src="about:blank" />
-  <box align="vertical" style="height: 100%;">
-    <titledbutton id="grippy" class="grippy" onclick="toggleOpenClose();"
-                  flex="100%" />
-  </box>
-  <html:iframe type="content" id="content" src="about:blank" flex="100%" />
-</box>
+  <html:iframe id="sidebarframe" class="sidebarframe" src="about:blank" />
+  <titledbutton id="grippy" class="grippy" onclick="toggle_open_close();"/>
+  <!-- type attribute is used by frame construction to locate iframes
+       intended to hold (html) content -->
+  <!-- id's use is a mystery -->
+  <html:iframe type="content-primary" id="content" src="about:blank" flex="100%" />
+
 </window>

@@ -21,6 +21,7 @@
   var appCoreName = "";
   var defaultStatus = "default status text";
   var debugSecurity = false; // Set this true to enable Security chrome testing.
+  var explicitURL = false;
 
   function Startup()
   {
@@ -37,6 +38,15 @@
     }
   }
 
+  function Shutdown() {
+    // Close the app core.
+    if ( appCore ) {
+        appCore.close();
+        // Remove app core from app core manager.
+        XPAppCoresManager.Remove( appCore );
+    }
+  }
+
   function onLoadWithArgs() {
     // See if Startup has been run.
     if ( appCore ) {
@@ -50,59 +60,73 @@
     } else {
         // onLoad handler timing is not correct yet.
         dump( "onLoadWithArgs not needed yet\n" );
+        // Remember that we want this url.
+        explicitURL = true;
     }
   }
 
   function tryToSetContentWindow() {
-    if ( window.frames[0].frames[1] ) {
+    if ( window.content ) {
         dump("Setting content window\n");
-        appCore.setContentWindow( window.frames[0].frames[1] );
+        appCore.setContentWindow( window.content );
         // Have browser app core load appropriate initial page.
 
-        var pref = Components.classes['component://netscape/preferences'];
-
-        // if all else fails, use trusty "about:" as the start page
-        var startpage = "about:";  
-        if (pref) {
-          pref = pref.getService();
+        if ( !explicitURL ) {
+            var pref = Components.classes['component://netscape/preferences'];
+	    dump("Components = " + Components + "\n");
+	    dump("Components.classes = " + Components.classes + "\n");
+	    dump("Components.classes[component://netscape/preferences] = " + pref + "\n");
+    
+            // if all else fails, use trusty "about:blank" as the start page
+            var startpage = "about:blank";  
+            if (pref) {
+              pref = pref.getService();
+            }
+	    else {
+		dump("failed to get component://netscape/preferences\n");
+	    }
+            if (pref) {
+              pref = pref.QueryInterface(Components.interfaces.nsIPref);
+            }
+	    else {
+		dump("failed to get pref service\n");
+	    }
+            if (pref) {
+              // from mozilla/modules/libpref/src/init/all.js
+              // 0 = blank 
+              // 1 = home (browser.startup.homepage)
+              // 2 = last 
+              choice = pref.GetIntPref("browser.startup.page");
+		dump("browser.startup.page = " + choice + "\n");
+    	  switch (choice) {
+    		case 0:
+                		startpage = "about:blank";
+          			break;
+    		case 1:
+                		startpage = pref.CopyCharPref("browser.startup.homepage");
+          			break;
+    		case 2:
+                		var history = Components.classes['component://netscape/browser/global-history'];
+    			if (history) {
+                   			history = history.getService();
+    	    		}
+    	    		if (history) {
+                  			history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+    	    		}
+    	    		if (history) {
+    				startpage = history.GetLastPageVisted();
+    	    		}
+          			break;
+       		default:
+                		startpage = "about:blank";
+    	  }
+            }
+            else {
+		dump("failed to QI pref service\n");
+	    }
+	    dump("startpage = " + startpage + "\n");
+            document.getElementById("args").setAttribute("value", startpage);
         }
-        if (pref) {
-          pref = pref.QueryInterface(Components.interfaces.nsIPref);
-        }
-        if (pref) {
-          // from mozilla/modules/libpref/src/init/all.js
-          // 0 = blank 
-          // 1 = home (browser.startup.homepage)
-          // 2 = last 
-          // 3 = splash (browser.startup.splash)
-          choice = pref.GetIntPref("browser.startup.page");
-	  switch (choice) {
-		case 0:
-            		startpage = "about:blank";
-      			break;
-		case 1:
-            		startpage = pref.CopyCharPref("browser.startup.homepage");
-      			break;
-		case 2:
-            		var history = Components.classes['component://netscape/browser/global-history'];
-			if (history) {
-               			history = history.getService();
-	    		}
-	    		if (history) {
-              			history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-	    		}
-	    		if (history) {
-				startpage = history.GetLastPageVisted();
-	    		}
-      			break;
-		case 3:
-            		startpage = pref.CopyCharPref("browser.startup.splash");
-      			break;
-   		default:
-            		startpage = "about:";
-	  }
-        }
-        document.getElementById("args").setAttribute("value", startpage);
         appCore.loadInitialPage();
     } else {
         // Try again.
@@ -117,15 +141,16 @@
 	service += "?AlisSourceLang=" + src;
 	service += "&AlisTargetLang=" + dest;
 	service += "&AlisMTEngine=SSI";
-	service += "&AlisTargetURI=" + window.frames[0].frames[1].location.href;
-	window.frames[0].frames[1].location.href = service;
+	service += "&AlisTargetURI=" + window.content.location.href;
+	window.content.location.href = service;
   }
 
   function RefreshUrlbar()
   {
    //Refresh the urlbar bar
-    document.getElementById('urlbar').value = window.frames[0].frames[1].location.href;
+    document.getElementById('urlbar').value = window.content.location.href;
   }
+
 
   function BrowserBack()
   {
@@ -143,6 +168,7 @@
     }
   }
 
+
   function BrowserForward()
   {
      // Get a handle to the back-button
@@ -159,20 +185,21 @@
     }
   }
 
+
   function BrowserSetForward()
   {
      var forwardBElem = document.getElementById("canGoForward");
      if (!forwardBElem) {
-	dump("Couldn't obtain handle to forward Broarcast element\n");
-	return;
-	}
+	     dump("Couldn't obtain handle to forward Broarcast element\n");
+	     return;
+	   }
 
      var canForward = forwardBElem.getAttribute("disabled");
      var fb = document.getElementById("forward-button");
      
      if (!fb) {
-	dump("Could not obtain handle to forward button\n");
-	return;
+	      dump("Could not obtain handle to forward button\n");
+	      return;
      }
 	
      // Enable/Disable the Forward button      
@@ -195,10 +222,8 @@
         fm.setAttribute("disabled", "true");
      }
      else {
-	dump("Setting forward menu item enabled\n");
         fm.setAttribute("disabled", "");
-     }
-    
+     }    
   }
 
   function BrowserCanStop() {
@@ -213,6 +238,15 @@
                 stopButton.setAttribute( "disabled", "" );
             }
         }
+        //Enable/disable the stop menu item
+        var stopMenu   = document.getElementById( "menuitem-stop" );
+        if ( stopMenu ) {
+            if ( stopDisabled == "true") {
+                stopMenu.setAttribute( "disabled", "true" );
+            } else {
+                stopMenu.setAttribute( "disabled", "" );
+            }
+        }
     }
   }
 
@@ -222,14 +256,14 @@
      if (!stopBElem) {
         dump("Couldn't obtain handle to stop Broadcast element\n");
         return;
-	 }
+	   }
 
      var canStop = stopBElem.getAttribute("disabled");
      var sb = document.getElementById("stop-button");
      
      if (!sb) {
-    	dump("Could not obtain handle to stop button\n");
-	    return;
+     	 dump("Could not obtain handle to stop button\n");
+	     return;
      }
 
      // If the stop button is currently disabled, just return
@@ -262,16 +296,16 @@
   {
      var backBElem = document.getElementById("canGoBack");
      if (!backBElem) {
-	dump("Couldn't obtain handle to back Broadcast element\n");
-	return;
-	}
+	     dump("Couldn't obtain handle to back Broadcast element\n");
+	     return;
+	   }
 
      var canBack = backBElem.getAttribute("disabled");
      var bb = document.getElementById("back-button");
      
      if (!bb) {
-	dump("Could not obtain handle to back button\n");
-	return;
+	     dump("Could not obtain handle to back button\n");
+	     return;
      }
 	
      // Enable/Disable the Back button      
@@ -294,16 +328,85 @@
         bm.setAttribute("disabled", "true");
      }
      else {
-	dump("Setting Back menuitem to enabled\n");
         bm.setAttribute("disabled", "");
-     }
-    
+     }     
+  }
+
+
+  function BrowserSetReload() {
+    var reload = document.getElementById("canReload");
+    if ( reload ) {
+        var reloadDisabled = reload.getAttribute("disabled");
+        //Enable/disable the reload button
+        var reloadButton   = document.getElementById( "reload-button" );
+        
+        if ( reloadButton ) {
+            if ( reloadDisabled == "true") {
+                reloadButton.setAttribute( "disabled", "true" );
+            } else {
+                reloadButton.setAttribute( "disabled", "" );
+            }
+        }
+        //Enable/disable the reload menu
+        var reloadMenu = document.getElementById("menuitem-reload");
+        if ( reloadMenu ) {
+            if ( reloadDisabled == "true") {
+                
+                reloadMenu.setAttribute( "disabled", "true" );
+            } else {
+                
+                reloadMenu.setAttribute( "disabled", "" );
+            }
+        }
+    }
+  }
+
+  function BrowserReallyReload(reloadType) {
+     // Get a handle to the "canReload" broadcast id
+     var reloadBElem = document.getElementById("canReload");
+     if (!reloadBElem) {
+        dump("Couldn't obtain handle to reload Broadcast element\n");
+        return;
+	   }
+
+     var canreload = reloadBElem.getAttribute("disabled");
+     var sb = document.getElementById("reload-button");
      
+     if (!sb) {
+    	 dump("Could not obtain handle to reload button\n");
+	     return;
+     }
+
+     // If the reload button is currently disabled, just return
+     if ((sb.getAttribute("disabled")) == "true") {
+	     return;
+     }
+	
+     //reload button has just been pressed. Disable it. 
+     sb.setAttribute("disabled", "true");
+
+     // Get a handle to the reload menu item.
+     var sm = document.getElementById("menuitem-reload");
+     if (!sm) {
+       dump("Couldn't obtain menu item reload\n");
+     } else {
+       // Disable the reload menu-item.
+       
+       sm.setAttribute("disabled", "true");
+     }
+  
+     //Call in to BrowserAppcore to reload the current loading
+     if (appCore != null) {
+        dump("Going to reload\n");
+        appCore.reload(reloadType);
+     } else {
+        dump("BrowserAppCore has not been created!\n");
+     }
   }
 
   function BrowserHome()
   {
-   window.frames[0].frames[1].home();
+   window.content.home();
    RefreshUrlbar();
   }
 
@@ -319,7 +422,7 @@
       return false;
     }
 
-    window.frames[0].frames[1].location.href = url;
+    window.content.location.href = url;
     RefreshUrlbar();
   }
 
@@ -343,7 +446,7 @@
         }
     }
     if ( core ) {
-        core.ShowWindowWithArgs( "chrome://editor/content", window, "chrome://editor/content/EditorInitPage.html" );
+        core.ShowWindowWithArgs( "chrome://editor/content", window, "resource:/res/html/empty_doc.html" );
     } else {
         dump("Error; can't create toolkitCore\n");
     }
@@ -391,12 +494,12 @@
         }
     }
     if ( core ) {
-        //core.ShowWindowWithArgs( "chrome:/navigator/content/openLocation.xul", window, appCoreName );
+        //core.ShowWindowWithArgs( "resource:/res/samples/openLocation.xul", window, appCoreName );
         var name = appCoreName.replace( /\./, /\_/ );
         // Note: Use width/height one less than actual so resizing occurs.
         //       This bypasses bug whereby dialog contents don't appear
         //       till the dialog is resized.
-        window.openDialog( "chrome:/navigator/chrome/openLocation.xul", name+"_openLocation", "chrome,width=419,height=189", appCoreName );
+        window.openDialog( "chrome://navigator/content/openLocation.xul", name+"_openLocation", "chrome,width=419,height=189", appCoreName );
     } else {
         dump("Error; can't create toolkitCore\n");
     }
@@ -490,7 +593,7 @@
   {
     if (appCore != null) {
       appCore.SetDocumentCharset(aCharset);
-      window.frames[0].frames[1].location.reload();
+      window.content.location.reload();
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -585,7 +688,7 @@
   {
     if (appCore != null) {
       dump("Wallet Safe Fillin\n");
-      appCore.walletPreview(window, window.frames[0].frames[1]);
+      appCore.walletPreview(window, window.content);
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -606,7 +709,7 @@
   {
     if (appCore != null) {
       dump("Wallet Quick Fillin\n");
-      appCore.walletQuickFillin(window.frames[0].frames[1]);
+      appCore.walletQuickFillin(window.content);
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -644,32 +747,12 @@
 
   function OpenMessenger()
   {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("chrome://messenger/content/",
-                             window);
-    }
+	window.open("chrome://messenger/content/", "_new", "chrome");
   }
 
   function OpenAddressbook()
   {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("chrome://addressbook/content/",
-                             window);
-    }
+	window.open("chrome://addressbook/content/", "_new", "chrome");
   }
 
   function MsgNewMessage()
@@ -682,8 +765,8 @@
       }
     }
     if (toolkitCore) {
-      toolkitCore.ShowWindow("chrome://messengercompose/content/",
-                             window);
+      // We need to use ShowWindowWithArgs because message compose depend on callback
+      toolkitCore.ShowWindowWithArgs("chrome://messengercompose/content/", window, "");
     }
   }
   
@@ -706,9 +789,9 @@
       }
     }
     if (toolkitCore) {
-      var url = window.frames[0].frames[1].location;
+      var url = window.content.location;
       dump("Opening view of source for" + url + "\n");
-      toolkitCore.ShowWindowWithArgs("chrome:/navigator/content/viewSource.xul", window, url);
+      toolkitCore.ShowWindowWithArgs("chrome://navigator/content/viewSource.xul", window, url);
     }
   }
 
@@ -783,16 +866,17 @@
             var meter    = document.getElementById("Browser:LoadingProgress");
             if ( throbber && meter ) {
                 var busy = throbber.getAttribute("busy");
+                var wasBusy = meter.getAttribute("mode") == "undetermined" ? "true" : "false";
                 if ( busy == "true" ) {
-                    mode = "undetermined";
-					if ( !startTime ) {
-						startTime = (new Date()).getTime();
-					}
-                } else {
-                    mode = "normal";
-                }
-                meter.setAttribute("mode",mode);
-                if ( mode == "normal" ) {
+                    if ( wasBusy == "false" ) {
+                        // Remember when loading commenced.
+    				    startTime = (new Date()).getTime();
+                        // Turn progress meter on.
+                        meter.setAttribute("mode","undetermined");
+                    }
+                    // Update status bar.
+                } else if ( busy == "false" && wasBusy == "true" ) {
+                    // Record page loading time.
                     var status = document.getElementById("Browser:Status");
                     if ( status ) {
 						var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
@@ -801,7 +885,8 @@
                         status.setAttribute("value",msg);
                         defaultStatus = msg;
                     }
-					startTime = 0;
+                    // Turn progress meter off.
+                    meter.setAttribute("mode","normal");
                 }
             }
         }
