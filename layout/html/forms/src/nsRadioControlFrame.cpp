@@ -82,7 +82,7 @@ nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWi
 }
 
 void 
-nsRadioControlFrame::MouseClicked(nsIPresContext* aPresContext) 
+nsRadioControlFrame::MouseUp(nsIPresContext* aPresContext) 
 {
   SetRadioControlFrameState(NS_STRING_TRUE);
   
@@ -201,6 +201,11 @@ nsRadioControlFrame::HandleEvent(nsIPresContext& aPresContext,
         }
       }
       break;
+    case NS_MOUSE_LEFT_BUTTON_UP:
+       MouseUp(&aPresContext);
+     break;
+
+    
     default:
       break;
   }
