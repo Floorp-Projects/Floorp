@@ -105,8 +105,8 @@ interface nsIXULChromeRegistry : nsIChromeRegistry {
   /* runtimeProvider == true: don't assert the runtime change */
   void setRuntimeProvider(in boolean runtimeProvider); 
 
-  boolean checkThemeVersion(in wstring skinName);
-  boolean checkLocaleVersion(in wstring localeName);
+  boolean checkThemeVersion(in ACString skinName);
+  boolean checkLocaleVersion(in ACString localeName);
 
   /* Apply skin/locale to a specific package */
   void selectSkinForPackage(in ACString skinName,
