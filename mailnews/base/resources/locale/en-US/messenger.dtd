@@ -75,7 +75,7 @@ Rights Reserved.
 <!ENTITY downloadFlaggedCmd.label "Get Flagged Messages">
 <!ENTITY downloadFlaggedCmd.accesskey "F">
 <!ENTITY printPreviewCmd.label ".Print Preview">
-<!ENTITY printCmd.label "Print">
+<!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.accesskey "P">
 <!ENTITY printCmd.key "p">
 
@@ -97,7 +97,7 @@ Rights Reserved.
 <!ENTITY unsubscribeNewsgroupCmd.label "Unsubscribe">
 <!ENTITY unsubscribeNewsgroupCmd.accesskey "n">
 <!ENTITY selectMenu.label "Select">
-<!ENTITY selectMenu.accesskey "l">
+<!ENTITY selectMenu.accesskey "S">
 <!ENTITY selectThreadCmd.label "Thread">
 <!ENTITY selectThreadCmd.accesskey "T">
 <!ENTITY selectThreadCmd.key "a">
@@ -138,8 +138,8 @@ Rights Reserved.
 
 <!ENTITY showLocationToolbarCmd.label		".Location Toolbar">
 <!ENTITY showLocationToolbarCmd.accesskey "L">
-<!ENTITY showMessageCmd.label "Message">
-<!ENTITY showMessageCmd.accesskey "e">
+<!ENTITY showMessageCmd.label "Message Pane">
+<!ENTITY showMessageCmd.accesskey "M">
 
 <!-- sortMenu is also used by addressbook -->
 <!ENTITY sortMenu.label "Sort by">
@@ -171,7 +171,7 @@ Rights Reserved.
 <!ENTITY sortDescending.label "Descending">
 <!ENTITY sortDescending.accesskey "D">
 <!ENTITY msgsMenu.label "Messages">
-<!ENTITY msgsMenu.accesskey "a">
+<!ENTITY msgsMenu.accesskey "M">
 <!ENTITY allMsgsCmd.label "All">
 <!ENTITY allMsgsCmd.accesskey "A">
 <!ENTITY expandOrCollapseMenu.label "Expand/Collapse">
@@ -289,10 +289,6 @@ Rights Reserved.
 <!ENTITY searchInternetCmd.label "Search the Web">
 <!ENTITY searchInternetCmd.accesskey "W">
 
-<!-- searchAddressesCmd is also used by addressbook -->
-<!ENTITY searchAddressesCmd.label                       "Search Addresses">
-<!ENTITY searchAddressesCmd.accesskey                   "A">
-
 <!ENTITY searchMailCmd.label "Search Messages...">
 <!ENTITY searchMailCmd.accesskey "M">
 <!ENTITY searchMailCmd.key "f">
@@ -341,6 +337,8 @@ Rights Reserved.
 <!ENTITY msgMenu.accesskey "M">
 <!ENTITY newMsgCmd.label "New Message">
 <!ENTITY newMsgCmd.accesskey "N">
+<!ENTITY newNewMsgCmd.label "Message">
+<!ENTITY newNewMsgCmd.accesskey "M">
 <!ENTITY replyMsgCmd.label "Reply">
 <!ENTITY replyMsgCmd.accesskey "R">
 <!ENTITY replyMsgCmd.key	"r">
@@ -363,13 +361,13 @@ Rights Reserved.
 <!ENTITY editMsgAsNewCmd.label "Edit Message As New">
 <!ENTITY editMsgAsNewCmd.accesskey "E">
 <!ENTITY editMsgAsNewCmd.key "e">
-<!ENTITY createFilter.label "Create Filter...">
+<!ENTITY createFilter.label "Create Filter From Message...">
 <!ENTITY createFilter.accesskey "a">
-<!ENTITY moveMsgMenu.label "Move Message">
+<!ENTITY moveMsgMenu.label "Move">
 <!ENTITY moveMsgMenu.accesskey "M">
 <!ENTITY copyMessageLocation.label "Copy Message Location">
 <!ENTITY copyMessageLocation.accesskey "M">
-<!ENTITY copyMsgMenu.label "Copy Message">
+<!ENTITY copyMsgMenu.label "Copy">
 <!ENTITY copyMsgMenu.accesskey "C">
 <!ENTITY killThreadMenu.label "Ignore Thread">
 <!ENTITY killThreadMenu.accesskey "I">
@@ -474,7 +472,7 @@ Rights Reserved.
 <!ENTITY contextReplyNewsgroup.label "Reply to Newsgroup">
 <!ENTITY contextReplyNewsgroup.accesskey "y">
 <!ENTITY contextReplyAll.label "Reply to All">
-<!ENTITY contextReplyAll.accesskey "p">
+<!ENTITY contextReplyAll.accesskey "A">
 <!ENTITY contextForward.label "Forward">
 <!ENTITY contextForward.accesskey "F">
 <!ENTITY contextForwardAsAttachment.label "Forward as Attachments">
@@ -520,7 +518,7 @@ Rights Reserved.
 <!ENTITY folderContextSearchMessages.label "Search Messages...">
 <!ENTITY folderContextSearchMessages.accesskey "S">
 <!ENTITY folderContextProperties.label "Properties...">
-<!ENTITY folderContextProperties.accesskey "o">
+<!ENTITY folderContextProperties.accesskey "P">
 <!ENTITY folderContextCopyLocation.label "Copy Folder Location">
 <!ENTITY folderContextCopyLocation.accesskey "C">
 <!-- Message Header View Popup -->
@@ -530,7 +528,7 @@ Rights Reserved.
 <!ENTITY SendMailTo.accesskey "s">
 <!ENTITY CopyEmailAddress.label "Copy Email Address">
 <!ENTITY CopyEmailAddress.accesskey "C">
-<!ENTITY CreateFilter.label "Create Filter...">
+<!ENTITY CreateFilter.label "Create Filter from Message...">
 <!ENTITY CreateFilter.accesskey "F">
 <!ENTITY BlockAddress.label "Block Address">
 <!ENTITY BlockAddress.accesskey "A">
@@ -542,3 +540,9 @@ Rights Reserved.
 <!ENTITY advancedButton.label "Advanced...">
 <!ENTITY clearButton.label "Clear">
 <!ENTITY clearButton.accesskey "C">
+
+<!ENTITY all.label "All">
+<!ENTITY all.accesskey "A">
+
+<!ENTITY searchAddressesCmd.label "Search Addresses...">
+<!ENTITY searchAddressesCmd.accesskey "S">

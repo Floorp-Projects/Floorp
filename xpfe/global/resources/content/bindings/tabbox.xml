@@ -35,6 +35,20 @@
         ]]>
         </getter>
       </property>
+      
+      <property name="handleCtrlPageUpDown">
+        <setter>
+        <![CDATA[
+          this.setAttribute("handleCtrlPageUpDown", val);
+          return val;
+        ]]>
+        </setter>
+        <getter>
+        <![CDATA[
+          return (this.getAttribute("handleCtrlPageUpDown") != "false");
+        ]]>
+        </getter>
+      </property>
 
       <property name="_tabs">
         <getter>
@@ -117,18 +131,16 @@
 
       <handler event="keypress" keycode="vk_page_up" modifiers="control">
         <![CDATA[
-         if (this._tabs) {
+         if (this._tabs && this.handleCtrlPageUpDown) {
            this._tabs.advanceSelectedTab(-1);
-           event.preventDefault();
          }
          ]]>
       </handler>
 
       <handler event="keypress" keycode="vk_page_down" modifiers="control">
         <![CDATA[
-         if (this._tabs) {
+         if (this._tabs && this.handleCtrlPageUpDown) {
            this._tabs.advanceSelectedTab(1);
-           event.preventDefault();
          }
          ]]>
       </handler>

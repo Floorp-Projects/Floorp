@@ -65,10 +65,8 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 /* ..... internal content .... */
 
 .menu-text, 
-.menu-accel,
 .menu-iconic-left,
-.menu-iconic-text,
-.menu-iconic-accel {
+.menu-iconic-text {
   margin: 0px 2px 0px 0px !important;
   color: inherit;
 }
@@ -78,14 +76,11 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   font-weight: inherit;
 }
 
-.menu-accel {
-  margin-left: 4px;
-  padding-right: 14px;
-}
-
+.menu-accel,
 .menu-iconic-accel {
-  margin-left: 4px;
+  margin: 0px 2px 0px 7px !important;
   padding-right: 14px;
+  color: inherit;
 }
 
 .menu-iconic-icon {

@@ -71,7 +71,8 @@ Contributor(s):
         commandupdater="true"
         events="focus,addrbook-select"
         oncommandupdate="CommandUpdate_AddressBook()"/>
-  
+  <commandset id="selectEditMenuItems"/> 
+  <commandset id="undoEditMenuItems"/>
   <commandset id="globalEditMenuItems"/>
     <command id="cmd_newNavigator"/>
     <command id="cmd_newEditor"/>
@@ -81,7 +82,12 @@ Contributor(s):
     <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="AbClose()"/>
     <command id="cmd_properties" oncommand="goDoCommand('button_edit');"/>
-    <command id='cmd_selectAll'/>
+    <command id="cmd_undo"/>
+    <command id="cmd_redo"/>
+    <command id="cmd_copy"/>
+    <command id="cmd_paste"/>
+    <command id="cmd_cut"/>
+    <command id="cmd_selectAll"/>
     <commandset id="tasksCommands"/>
     <command id="toggleSidebar"/>
 </commandset>
@@ -107,6 +113,11 @@ Contributor(s):
   <key id="key_quit"/>
   <!-- Edit Menu -->
   <key id="key_delete"/>
+  <key id="key_undo"/>
+  <key id="key_redo"/>
+  <key id="key_cut"/>
+  <key id="key_copy"/>
+  <key id="key_paste"/>
   <key id="key_selectAll"/>
   <key id="showHideSidebar"/>
   <key id="key_properties" key="&propertiesCmd.key;" command="cmd_properties" modifiers="accel"/>
@@ -118,46 +129,48 @@ Contributor(s):
     <menubar id="ab-menubar" grippytooltiptext="&menuBar.tooltip;">
         <menu id="menu_File">
             <menupopup id="menu_FilePopup">
-        <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard('dirTree')"/>
                 <menu id="menu_New">
                     <menupopup id="menu_NewPopup">
-            <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList('dirTree')"/>
-            <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
-                        <menuseparator/>
-                        <menuitem id="menu_newNavigator"/>
+                      <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard('dirTree')"/>
+                      <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList('dirTree')"/>
+                      <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
+                      <menuseparator/>
+                      <menuitem id="menu_newNavigator"/>
                       <menuitem id="menu_newEditor"/>
                     </menupopup>
                 </menu>
-                <menuseparator/>
                 <menuitem id="menu_close"/>
-                <menuseparator/>
-        <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
-        <menuitem label="&exportCmd.label;" accesskey="&exportCmd.accesskey;" oncommand="AbExport()"/>
                 <menuseparator/>
         <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
         <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printCard"/>
-        <menuitem id="printAddressBook" label="&printAddressBook.label;" command="cmd_printAddressBook"/>
+        <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;"
+                  command="cmd_printAddressBook"/>
             </menupopup>
         </menu>
         
         <menu id="menu_Edit">
           <menupopup>
+            <menuitem id="menu_undo"/>
+            <menuitem id="menu_redo"/>
+            <menuseparator/>
+            <menuitem id="menu_cut"/>
+            <menuitem id="menu_copy"/>
+            <menuitem id="menu_paste"/>
             <menuitem id="menu_delete" observes="button_delete"/>
             <menuseparator/>
             <menuitem id="menu_selectAll"/>
             <menuseparator/>
-      <menuitem label="&propertiesCmd.label;"
+            <menuitem label="&propertiesCmd.label;"
                       accesskey="&propertiesCmd.accesskey;"
-                  key="key_properties"
-          command="cmd_properties"/>
-            <menuseparator id="menu_PrefsSeparator"/>
+                      key="key_properties"
+                      command="cmd_properties"/>
             <menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://messenger/content/addressbook/pref-addressing.xul')"/>
           </menupopup>
         </menu>
         <menu id="menu_View">
             <menupopup id="menu_View_Popup">
                 <menu id="menu_Toolbars">
-                    <menupopup>
+                    <menupopup id="view_toolbars_popup">
                         <menuitem id="menu_showAbToolbar"
                                   label="&showAbToolbarCmd.label;"
                                   accesskey="&showAbToolbarCmd.accesskey;"
@@ -253,21 +266,20 @@ Contributor(s):
                     </menupopup>
                 </menu>
             </menupopup>
+        </menu>       
+        <menu id="tasksMenu">
+          <menupopup id="taskPopup">
+            <menuitem label="&searchAddressesCmd.label;" 
+                      accesskey="&searchAddressesCmd.accesskey;"
+                      id="menu_search_addresses" 
+                      oncommand="onAdvancedAbSearch();"/>
+            <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
+            <menuitem label="&exportCmd.label;" accesskey="&exportCmd.accesskey;" oncommand="AbExport()"/>
+            <menuseparator/>
+          </menupopup>
         </menu>
-        <menu label="&searchMenu.label;"
-              accesskey="&searchMenu.accesskey;">
-            <menupopup>
-                <menuitem label="&searchAddressesCmd.label;" 
-                          accesskey="&searchAddressesCmd.accesskey;"
-                          id="menu_search_addresses" 
-                          oncommand="onAdvancedAbSearch();"/>
-                <menuitem label="&searchInternetCmd.label;" 
-                          accesskey="&searchInternetCmd.accesskey;" 
-                          oncommand="openTopWin(xlateURL('urn:clienturl:srchmenu:srchinternet'));"/>
-            </menupopup>
-        </menu>
-        
-        <menu id="tasksMenu"/>
+
+        <menu id="windowMenu"/>
         <menu id="menu_Help"/>
         <spacer flex="1"/>
     </menubar>

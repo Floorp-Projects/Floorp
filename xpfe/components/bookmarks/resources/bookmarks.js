@@ -77,24 +77,6 @@ function Shutdown ()
   bookmarksView.flushBMDatasource();
 }
 
-function updateSendLinkItem()                                                   
-{                                                                               
-  var tree = document.getElementById("bookmarks-view");
-  var command = document.getElementById("Browser:SendLink");
-  if (command) {
-    if (tree.canSendLink())
-      command.removeAttribute("disabled");
-    else
-      command.setAttribute("disabled", "true");
-  }    
-}                                                                               
-
-function sendBookmarksLink()
-{
-  var tree = document.getElementById("bookmarks-view");
-  tree.sendLink();
-}
-
 var gConstructedViewMenuSortItems = false;
 function fillViewMenu(aEvent)
 {

@@ -7,9 +7,14 @@
 <!ENTITY  formCapture.tooltip         "Save data found on this form">
 <!ENTITY  formView.tooltip            "View previously-saved data for this form">
 
-<!ENTITY captureCmd.label             "Save Form Data">
-<!ENTITY captureCmd.accesskey         "s"> 
-<!ENTITY prefillCmd.label             "Prefill Form">
+<!ENTITY captureCmd.label             "Save Form Info">
+<!ENTITY captureCmd.accesskey         "S"> 
+<!ENTITY prefillCmd.label             "Fill in Form">
 <!ENTITY prefillCmd.accesskey         "m"> 
-<!ENTITY formshowCmd.label             "Manage Saved Data">
-<!ENTITY formshowCmd.accesskey         "D"> 
+
+<!ENTITY walletContentsCmd.label "Edit Form Info">
+<!ENTITY walletContentsCmd.accesskey "E">
+<!ENTITY walletSitesCmd.label "Manage Sites">
+<!ENTITY walletSitesCmd.accesskey "M">
+<!ENTITY walletFormManager.label "Form Manager">
+<!ENTITY walletFormManager.accesskey "f">

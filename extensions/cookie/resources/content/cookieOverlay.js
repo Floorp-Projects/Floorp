@@ -36,11 +36,6 @@ function viewCookiesFromIcon() {
                     "chrome,resizable=yes", "cookieManagerFromIcon");
 }  
 
-function viewTutorial() {
-  window.openDialog
-    ("chrome://communicator/content/wallet/privacy.xul","tutorial","modal=no,chrome,resizable=yes,height=400,width=600", 0);
-}  
-
 function viewP3P() {
   window.openDialog
     ("chrome://cookie/content/p3p.xul","_blank","chrome,resizable=no");

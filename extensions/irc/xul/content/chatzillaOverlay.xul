@@ -17,7 +17,7 @@
   <command id="Tasks:IRC" oncommand="toIRC();"/>
 </commandset>
 
-<menupopup id="taskPopup">
+<menupopup id="windowPopup">
   <menuitem
         label="&ircCmd.label;"
         accesskey="&ircCmd.accesskey;"

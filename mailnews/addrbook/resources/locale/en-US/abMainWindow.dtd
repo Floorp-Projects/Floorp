@@ -45,7 +45,8 @@ Rights Reserved.
 <!ENTITY printCardViewCmd.accesskey                     "p">
 <!-- LOCALIZATION NOTE (printCardViewCmd.key) : DONT_TRANSLATE -->  
 <!ENTITY printCardViewCmd.key                           "P">
-<!ENTITY printAddressBook.label                         "Print Address Book...">  
+<!ENTITY printAddressBook.label                         "Print Address Book..."> 
+<!ENTITY printAddressBook.accesskey                     "A"> 
 
 <!-- Edit Menu -->
 <!ENTITY deleteAbCmd.label                              "Delete Address Book">  
@@ -59,9 +60,6 @@ Rights Reserved.
 <!-- View Menu -->
 <!ENTITY showAbToolbarCmd.label                         "Address Book Toolbar"> 
 <!ENTITY showAbToolbarCmd.accesskey                     "o">  
-
-<!-- override sortMenu.accesskey from messenger.dtd -->
-<!ENTITY sortMenu.accesskey "S">
 
 <!ENTITY showCardPane.label                             "Card Summary Pane">
 <!ENTITY showCardPane.accesskey                         "C">

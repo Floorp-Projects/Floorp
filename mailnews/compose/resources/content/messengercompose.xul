@@ -198,9 +198,10 @@
     <menubar id="compose-menubar" grippytooltiptext="&menuBar.tooltip;">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
-          <menuitem label="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
           <menu id="menu_New">
             <menupopup id="menu_NewPopup">
+              <menuitem label="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
+              <menuseparator/>
               <menuitem id="menu_newNavigator"/>
               <menuitem id="menu_newEditor"/>
             </menupopup>
@@ -208,8 +209,8 @@
           <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
           <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
           <menuitem hidden="true" observes="Communicator:WorkMode"/>
-          <menuseparator/>
           <menuitem id="menu_close"/>
+          <menuseparator/>
           <menuitem label="&saveCmd.label;" accesskey="&saveCmd.accesskey;" key="key_save" command="cmd_saveDefault"/>
           <menu label="&saveAsCmd.label;" accesskey="&saveAsCmd.accesskey;">
             <menupopup>
@@ -368,6 +369,7 @@
       </menu>
       <!--menu id="debugMenu"/-->
       <menu id="tasksMenu"/>
+      <menu id="windowMenu"/>
       <menu id="menu_Help"/>
     </menubar>
 

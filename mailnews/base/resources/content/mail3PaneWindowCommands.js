@@ -206,7 +206,6 @@ var DefaultController =
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
-			case "cmd_editDraft":
 			case "cmd_nextMsg":
       case "button_next":
 			case "cmd_nextUnreadMsg":
@@ -354,8 +353,6 @@ var DefaultController =
       case "cmd_label4":
       case "cmd_label5":
         return(MailAreaHasFocus() && GetNumSelectedMessages() > 0);
-      case "cmd_editDraft":
-                return (gIsEditableMsgFolder && (GetNumSelectedMessages() > 0));
       case "button_next":
         return IsViewNavigationItemEnabled();
       case "cmd_nextMsg":
@@ -389,6 +386,7 @@ var DefaultController =
       case "cmd_viewThreadsWithUnread":
       case "cmd_viewWatchedThreadsWithUnread":
       case "cmd_viewIgnoredThreads":
+      case "cmd_stop":
         return true;
       case "cmd_undo":
       case "cmd_redo":
@@ -493,10 +491,6 @@ var DefaultController =
       case "cmd_watchThread":
         gDBView.doCommand(nsMsgViewCommandType.toggleThreadWatched);
         break;
-			case "cmd_editDraft":
-                if (gDBView.numSelected >= 0)
-                    MsgComposeDraftMessage();
-				break;
       case "button_next":
 			case "cmd_nextUnreadMsg":
 				MsgNextUnreadMessage();
@@ -592,6 +586,9 @@ var DefaultController =
 			case "cmd_markAllRead":
                 gDBView.doCommand(nsMsgViewCommandType.markAllRead);
 				return;
+      case "cmd_stop":
+        MsgStop();
+        return;
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
 				return;

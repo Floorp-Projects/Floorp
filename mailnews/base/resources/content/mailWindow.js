@@ -247,8 +247,7 @@ nsMsgStatusFeedback.prototype =
   statusTextFld : null,
   statusBar     : null,
   throbber      : null,
-  stopMenu      : null,
-  stopButton    : null,
+  stopCmd       : null,
   startTimeoutID : null,
   stopTimeoutID  : null,
   pendingStartRequests : 0,
@@ -259,8 +258,7 @@ nsMsgStatusFeedback.prototype =
       if (!this.statusTextFld ) this.statusTextFld = document.getElementById("statusText");
       if (!this.statusBar) this.statusBar = document.getElementById("statusbar-icon");
       if(!this.throbber)   this.throbber = document.getElementById("navigator-throbber");
-      if(!this.stopButton) this.stopButton = document.getElementById("button-stop");
-      if(!this.stopMenu)   this.stopMenu = document.getElementById("stopMenuitem");
+      if(!this.stopCmd)   this.stopCmd = document.getElementById("cmd_stop");
     },
 
   // nsIXULBrowserWindow implementation
@@ -304,8 +302,7 @@ nsMsgStatusFeedback.prototype =
       this.throbber.setAttribute("busy", true);
 
       //turn on stop button and menu
-    this.stopButton.setAttribute("disabled", false);
-    this.stopMenu.setAttribute("disabled", false);
+    this.stopCmd.removeAttribute("disabled");
 
       // Remember when loading commenced.
       this.startTime = (new Date()).getTime();
@@ -347,8 +344,7 @@ nsMsgStatusFeedback.prototype =
       this.statusBar.setAttribute("mode","normal");
       this.statusBar.value = 0;  // be sure to clear the progress bar
       this.statusBar.label = "";
-      this.stopButton.setAttribute("disabled", true);
-      this.stopMenu.setAttribute("disabled", true);
+      this.stopCmd.setAttribute("disabled", "true");
 
       this.meteorsSpinning = false;
       this.stopTimeoutID = null;

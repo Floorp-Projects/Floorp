@@ -31,7 +31,6 @@
 <!ENTITY newBlankPageCmd.label "New Composer Page">
 <!ENTITY newBlankPage.accesskey "n" >
 <!ENTITY newMenu.label "New">
-<!ENTITY newMenu.accesskey "e">
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY fileopen.accesskey "o">
 <!ENTITY fileopen.keybinding "o">
@@ -112,7 +111,7 @@
 <!ENTITY editfind.accesskey "f">
 <!ENTITY editfind.keybinding "f">
 <!ENTITY findAgainCmd.label "Find Again">
-<!ENTITY editfindnext.accesskey "n">
+<!ENTITY editfindnext.accesskey "g">
 <!ENTITY editfindnext.keybinding "g">
 <!ENTITY checkSpellingCmd.label "Check Spelling">
 <!ENTITY validateCmd.label "Validate HTML">

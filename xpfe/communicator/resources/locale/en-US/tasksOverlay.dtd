@@ -1,6 +1,4 @@
 <!-- extracted from tasksOverlay.xul -->
-<!ENTITY tasksMenu.label				    "Tasks">
-<!ENTITY tasksMenu.accesskey                "t"> 
 <!-- LOCALIZATION NOTE (navigatorCmd.label): DONT_TRANSLATE -->  
 <!ENTITY navigatorCmd.label					"Navigator">  
 <!ENTITY navigatorCmd.accesskey             "n">
@@ -10,11 +8,6 @@
 <!ENTITY editorCmd.accesskey				"c">
 <!ENTITY editorCmd.commandkey				"4">
 
-<!ENTITY toolsMenu.label					"Tools"> 
-<!ENTITY toolsMenu.accesskey				"t">
-<!ENTITY historyCmd.label						"History">  
-<!ENTITY historyCmd.accesskey				"h">
-<!ENTITY history.commandKey				"h">
 <!ENTITY securityInfoCmd.label					".Security Info">  
 <!ENTITY securityInfoCmd.accesskey				"s">
 <!ENTITY javaConsoleCmd.label					"Java Console">
@@ -23,9 +16,6 @@
 <!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey				"S">
 
-<!ENTITY downloadManagerCmd.label "Download Manager">
-<!ENTITY downloadManagerCmd.accesskey "D">
-
 <!-- LOCALIZATION NOTE (privacyMenu.label): DONT_TRANSLATE -->
 <!ENTITY privacyMenu.label "Privacy &amp; Security">
 <!ENTITY privacyMenu.accesskey "p">
@@ -33,3 +23,21 @@
 <!ENTITY taskNavigator.tooltip  "Navigator">
 <!ENTITY taskComposer.tooltip  "Composer">
 <!ENTITY taskBar.tooltip  "Status Bar">
+
+<!ENTITY webDevelopment.label "Web Development">
+<!ENTITY webDevelopment.accesskey "W">
+
+<!ENTITY windowMenu.label "Window">
+<!ENTITY windowMenu.accesskey "W">
+
+<!ENTITY search.label "Search">
+<!ENTITY search.accesskey "e">
+
+<!ENTITY tasksMenu.label            "Tools">
+<!ENTITY tasksMenu.accesskey                "T"> 
+
+<!ENTITY searchInternetCmd.label "Search the Web">
+<!ENTITY searchInternetCmd.accesskey "w">
+
+<!ENTITY downloadManagerCmd.label "Download Manager">
+<!ENTITY downloadManagerCmd.accesskey "D">

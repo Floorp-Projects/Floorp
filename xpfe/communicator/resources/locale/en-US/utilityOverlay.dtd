@@ -7,7 +7,7 @@
 <!ENTITY fileMenu.label					"File"> 
 <!ENTITY fileMenu.accesskey				"f">
 <!ENTITY newMenu.label						"New">
-<!ENTITY newMenu.accesskey					"e">
+<!ENTITY newMenu.accesskey					"N">
 <!ENTITY newBlankPageCmd.label "Blank Page to Edit">
 <!ENTITY newBlankPageCmd.accesskey "E" >
 <!ENTITY newBlankPageCmd.key "n" >

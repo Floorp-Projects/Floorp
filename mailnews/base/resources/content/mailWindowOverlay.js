@@ -114,11 +114,6 @@ function InitEditMessagesMenu()
   document.commandDispatcher.updateCommands('create-menu-edit');
 }
 
-function InitSearchMessagesMenu()
-{
-  document.commandDispatcher.updateCommands('create-menu-search');
-}
-
 function InitGoMessagesMenu()
 {
   document.commandDispatcher.updateCommands('create-menu-go');
@@ -1075,32 +1070,6 @@ function MsgCanFindAgain()
 {
   return canFindAgainInPage();
 }
-
-function MsgSearchMessages()
-{
-    var preselectedFolder = GetFirstSelectedMsgFolder();
-    var windowManagerInterface = GetWindowMediator();
-    var searchWindow = windowManagerInterface.getMostRecentWindow("mailnews:search");
-
-    if (searchWindow)
-        searchWindow.focus();
-    else
-        window.openDialog("chrome://messenger/content/SearchDialog.xul", "", 
-                          "chrome,resizable,status,centerscreen,dialog=no", { folder: preselectedFolder });
-}
-
-function MsgSearchAddresses()
-{
-    var windowManagerInterface = GetWindowMediator();
-    var abSearchWindow = windowManagerInterface.getMostRecentWindow("mailnews:absearch");
-
-    if (abSearchWindow)
-        abSearchWindow.focus();
-    else
-        window.openDialog("chrome://messenger/content/ABSearchDialog.xul", "", 
-                          "chrome,resizable,status,centerscreen,dialog=no", {directory: null});
-}
-
 
 function MsgFilters(emailAddress)
 {

@@ -32,7 +32,10 @@
       }
     }
 
-    function openComposeWindow(pageUrl, pageTitle, attachPage)
+    // attachment: 0 - link
+    //             1 - page
+    //             2 - image
+    function openComposeWindow(url, title, attachment)
     {                                                                          
       var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
       if (params)
@@ -40,31 +43,41 @@
         params.composeFields = Components.classes['@mozilla.org/messengercompose/composefields;1'].createInstance(Components.interfaces.nsIMsgCompFields);
         if (params.composeFields)
         {
-          params.composeFields.body = pageUrl;
-          params.composeFields.subject = pageTitle;
-          if (attachPage)
+          if (attachment == 0 || attachment == 1)
+          {
+            params.composeFields.body = url;
+            params.composeFields.subject = title;
+            params.bodyIsLink = true;
+          }
+          if (attachment == 1 || attachment == 2)
           {
             var attachmentData = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
             if (attachmentData)
             {
-              attachmentData.url = pageUrl;
+              attachmentData.url = url;
               params.composeFields.addAttachment(attachmentData);
             }
           }
-          params.bodyIsLink = true;
           params.identity = getCurrentIdentityKey();
           var composeService = Components.classes["@mozilla.org/messengercompose;1"].getService(Components.interfaces.nsIMsgComposeService);
           if (composeService)
             composeService.OpenComposeWindowWithParams(null, params);
-      }                                                                         
+        }                                                                         
       }                                                                         
     }   
   
     function sendLink(pageUrl, pageTitle)
     {
       try {
-        openComposeWindow(pageUrl, pageTitle, false);
+        openComposeWindow(pageUrl, pageTitle, 0);
       } catch(ex) { dump("Cannot Send Link: " + ex + "\n"); }
+    }
+
+    function sendImage(imageURL)
+    {
+      try {
+        openComposeWindow(imageURL, null, 2);
+      } catch(ex) { dump("Cannot Send Image: " + ex + "\n"); }
     }
 
     function sendPage(aDocument)
@@ -76,18 +89,15 @@
       var pageTitle = aDocument.title;
 
       try {
-        openComposeWindow(pageUrl, pageTitle, true);
+        openComposeWindow(pageUrl, pageTitle, 1);
       } catch(ex) { dump("Cannot Send Page: " + ex + "\n"); }
     }
 
     function initMailContextMenuItems(aEvent)
     {
-      var shouldShowSendPage = !gContextMenu.onImage && !gContextMenu.onLink && !gContextMenu.onTextInput;
+      var shouldShowSendPage = !(gContextMenu.onTextInput || gContextMenu.isTextSelected) && !(gContextMenu.onLink && gContextMenu.onImage);
       gContextMenu.showItem("context-sendpage", shouldShowSendPage);
-
-      var shouldShowSendLink = gContextMenu.onLink;
-      gContextMenu.showItem("context-sendlink", shouldShowSendLink);
-      
+   
       gContextMenu.showItem("context-sep-apps", gContextMenu.shouldShowSeparator("context-sep-apps"));
     }
       
@@ -114,26 +124,38 @@
          
   <!-- navigator specific UI items -->
   <menupopup id="menu_NewPopup">
-    <menuitem id="menu_newCard" position="3"/>
-    <menuitem id="menu_newMessage" position="2"/>
+    <menuitem id="menu_newCard" insertafter="navBeginGlobalNewItems"/>
+    <menuitem id="menu_newMessage" insertafter="navBeginGlobalNewItems"/>
   </menupopup>
 
   <menupopup id="menu_FilePopup">
-    <menuitem id="menu_sendPage" label="&sendPage.label;" accesskey="&sendPage.accesskey;" command="cmd_sendPage" position="11"/>
-    <menuitem id="menu_sendLink" label="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" command="Browser:SendLink" position="12"/>
+    <menu label="&sendMenu.label;" accesskey="&sendMenu.accesskey;" position="9">
+      <menupopup>      
+        <menuitem id="menu_sendPage" label="&sendPage.label;" accesskey="&sendPage.accesskey;" command="cmd_sendPage"/>
+        <menuitem id="menu_sendLink" label="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" command="Browser:SendLink"/>
+      </menupopup>
+    </menu>
   </menupopup>
 
   <popup id="contentAreaContextMenu">
     <menuitem id="context-sendpage"
-              label="&sendPage.label;"
-              accesskey="&sendPage.accesskey;"
+              label="&contextSendPage.label;"
+              accesskey="&contextSendPage.accesskey;"
               oncommand="sendPage(gContextMenu.target.ownerDocument);"
-              insertafter="context-sep-save"/>
-    <menuitem id="context-sendlink"
-              label="&sendLinkCmd.label;"
-              accesskey="&sendLinkCmd.accesskey;"
-              oncommand="sendLink(gContextMenu.linkURL(), gContextMenu.linkText());"
-              insertafter="context-sep-save"/>
+              insertafter="context-savepage"/>
+    <menuitem id="context-sendimage"
+              label="&contextSendImage.label;"
+              accesskey="&contextSendImage.accesskey;"
+              oncommand="sendImage(gContextMenu.imageURL);"
+              insertafter="context-saveimage"/>
+    <menu id="frame">
+    <menupopup id="frame_popup">
+      <menuitem insertafter="saveframeas"
+                label="&contextSendFrame.label;"
+                accesskey="&contextSendFrame.accesskey;"
+                oncommand="sendPage(gContextMenu.target.ownerDocument);"/>
+    </menupopup>
+    </menu>
   </popup> 
   
 </overlay>

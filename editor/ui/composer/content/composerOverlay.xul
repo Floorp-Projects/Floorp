@@ -27,8 +27,7 @@
 
   <!-- Items in the Edit menu used only by Composer app -->
   <menupopup id="edEditMenuPopup">
-    <menuitem id="menu_validate"        insertbefore="menu_PrefsSeparator" observes="cmd_validate"/>
-    <menuitem id="menu_publishSettings" insertafter="menu_PrefsSeparator"  observes="cmd_publishSettings"/>
+    <menuitem id="menu_publishSettings" insertafter="menu_prefsSep"  observes="cmd_publishSettings"/>
   </menupopup>
 
 </overlay>    

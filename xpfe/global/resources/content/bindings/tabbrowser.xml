@@ -532,7 +532,6 @@
           if (aShow) {
             // XXXdwh temporary unclean dependency on specific menu items in navigator.xul
             document.getElementById("menu_closeWindow").hidden = false;
-            document.getElementById("menu_closeSeparator").hidden = false;
             document.getElementById("menu_close").setAttribute("label", this.mStringBundle.getString("tabs.closeTab"));
             if (!this.mTabbedMode)
               this.enterTabbedMode();
@@ -540,7 +539,6 @@
           else {
             // XXXdwh temporary unclean dependency on specific menu items in navigator.xul
             document.getElementById("menu_closeWindow").hidden = true;
-            document.getElementById("menu_closeSeparator").hidden = true;
             document.getElementById("menu_close").setAttribute("label", this.mStringBundle.getString("tabs.close"));
           }
         ]]>

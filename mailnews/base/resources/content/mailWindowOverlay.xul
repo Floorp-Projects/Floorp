@@ -105,6 +105,7 @@ Rights Reserved.
   <!--The cmd_createFilterFromPopup is used to notify the email context popup -->
   <command id="cmd_createFilterFromPopup"/>
   <!-- <command id="cmd_pageSetup"/>-->
+  <command id="cmd_search" oncommand="goDoCommand('cmd_search')" disabled="true"/>
 </commandset>
 <commandset id="mailViewMenuItems"
             commandupdater="true"
@@ -161,7 +162,6 @@ Rights Reserved.
          valueIMAPDeletedMessagesAccessKey="&undeleteMsgsCmd.accesskey;"
          valueNewsMessages="&cancelNewsMsgsCmd.label;"
          valueNewsMessagesAccessKey="&cancelNewsMsgsCmd.accesskey;"/>
-  <command id="cmd_editDraft" oncommand="goDoCommand('cmd_editDraft')" disabled="true"/>
   <command id="cmd_selectAll"/>
   <command id="cmd_selectThread" oncommand="goDoCommand('cmd_selectThread')"/>
   <command id="cmd_selectFlagged" oncommand="goDoCommand('cmd_selectFlagged')"/>
@@ -169,21 +169,15 @@ Rights Reserved.
          valueNewsgroup="&folderPropsNewsgroupCmd.label;"
          valueFolder="&folderPropsFolderCmd.label;"
          valueGeneric="&folderPropsCmd.label;"/>
+  <command id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
+  <command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
+  <command id="cmd_stop" oncommand="goDoCommand('cmd_stop')"/>
 </commandset>
 
 <commandset id="mailEditContextMenuItems">
   <command id="cmd_copyLink"/>
   <command id="cmd_copyImageLocation"/>
   <command id="cmd_copyImageContents"/>
-</commandset>
-
-<commandset id="mailSearchMenuItems"
-            commandupdater="true"
-            events="create-menu-search"
-            oncommandupdate="goUpdateMailMenuItems(this)">
-  <command id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
-  <command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
-  <command id="cmd_search" oncommand="goDoCommand('cmd_search')" disabled="true"/>
 </commandset>
 
 <commandset id="mailGoMenuItems"
@@ -315,8 +309,8 @@ Rights Reserved.
              oncommand="goDoCommand('cmd_getMsgsForAuthAccounts');"
              modifiers="accel, shift"/>
   <key id="key_find" key="&findCmd.key;"  oncommand="goDoCommand('cmd_find')" modifiers="accel"/>
-  <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="goDoCommand('cmd_search')" modifiers="accel, shift"/>
   <key id="key_findAgain" key="&findAgainCmd.key;"   oncommand="goDoCommand('cmd_findAgain')" modifiers="accel"/>
+  <key id="key_stop" keycode="VK_ESCAPE" command="cmd_stop"/>
   <keyset id="viewZoomKeys"/>
 
   <!-- Tab/F6 Keys -->
@@ -883,6 +877,7 @@ Rights Reserved.
                   accesskey="&saveLinkCmd.accesskey;"
                   oncommand="gContextMenu.saveLink();"/>
         <menuitem id="context-saveimage"
+                  label="&saveImageCmd.label;"
                   accesskey="&saveImageCmd.accesskey;"
                   oncommand="gContextMenu.saveImage();"/>
         <menuitem id="context-bookmarklink"
@@ -896,12 +891,12 @@ Rights Reserved.
 <menubar id="mailMenubar" grippytooltiptext="&menuBar.tooltip;">
   <menu id="menu_File" >
     <menupopup id="menu_FilePopup" onpopupshowing="file_init();">
-      <menuitem label="&newMsgCmd.label;"
-      accesskey="&newMsgCmd.accesskey;"
-      key="key_newMessage"
-      oncommand="MsgNewMessage(event);"/>
       <menu id="menu_New">
         <menupopup id="menu_NewPopup" onpopupshowing="menu_new_init();">
+          <menuitem label="&newNewMsgCmd.label;"
+                    accesskey="&newNewMsgCmd.accesskey;"
+                    key="key_newMessage"
+                    oncommand="MsgNewMessage(event);"/>
           <menuitem label="&newFolderCmd.label;"
                      oncommand="MsgNewFolder(NewFolder);"
                      accesskey="&newFolderCmd.accesskey;"/>
@@ -920,8 +915,8 @@ Rights Reserved.
       <menu id="fileAttachmentMenu" label="&openAttachmentCmd.label;" accesskey="&openAttachmentCmd.accesskey;">
         <menupopup id="attachmentMenuList" onpopupshowing="FillAttachmentListPopup(this);"/>
       </menu>
-      <menuseparator/>
       <menuitem id="menu_close"/>
+      <menuseparator/>
       <menu label="&saveAsMenu.label;" accesskey="&saveAsMenu.accesskey;">
         <menupopup>
           <menuitem label="&saveAsFileCmd.label;"
@@ -976,14 +971,11 @@ Rights Reserved.
       <menuitem id="menu_renameFolder" label="&renameFolder.label;"
              accesskey="&renameFolder.accesskey;"
              observes="cmd_renameFolder"/>
+      <menuitem id="menu_compactFolder" label="&compactFolders.label;" accesskey="&compactFolder.accesskey;" observes="cmd_compactFolder"/>
       <menuitem id="menu_emptyTrash" label="&emptyTrashCmd.label;"
              accesskey="&emptyTrashCmd.accesskey;"
              observes="cmd_emptyTrash"/>
-            <menuitem id="menu_compactFolder" label="&compactFolders.label;" accesskey="&compactFolder.accesskey;" observes="cmd_compactFolder"/>
       <menuseparator id="trashMenuSeparator"/>
-      <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
-      <menuseparator/>
-
       <menu label="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
         <menupopup>
            <menuitem id="offlineGoOfflineCmd"/>
@@ -1011,13 +1003,12 @@ Rights Reserved.
       <menuitem id="menu_copy"/>
       <menuitem id="menu_paste"/>
       <menuitem id="menu_delete" observes="cmd_delete"/>
-      <menuitem label="&editDraftCmd.label;" 
-            accesskey="&editDraftCmd.accesskey;" 
-            observes="cmd_editDraft"/>
       <menuseparator/>
-      <menuitem id="menu_selectAll"/>
       <menu label="&selectMenu.label;" accesskey="&selectMenu.accesskey;">
         <menupopup>
+          <menuitem label="&all.label;" accesskey="&all.accesskey;" key="key_selectAll"
+                    command="cmd_selectAll"/>
+          <menuseparator/>
           <menuitem label="&selectThreadCmd.label;"
            accesskey="&selectThreadCmd.accesskey;"
            key="key_selectThread"
@@ -1025,13 +1016,12 @@ Rights Reserved.
         </menupopup>
       </menu>
       <menuseparator/>
-      <menuitem label="&filtersCmd.label;"
-                      accesskey="&filtersCmd.accesskey;"
-                      oncommand="MsgFilters(null);"/>
-            <menuitem id="menu_properties" label="&folderPropsCmd.label;"
-                      accesskey="&folderPropsCmd.accesskey;"
-                      observes="cmd_properties"/>
+      <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
+      <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
       <menuseparator/>
+      <menuitem id="menu_properties" label="&folderPropsCmd.label;"
+                accesskey="&folderPropsCmd.accesskey;"
+                observes="cmd_properties"/>
       <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager(null);"/>
       <menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
     </menupopup>
@@ -1040,7 +1030,7 @@ Rights Reserved.
   <menu id="menu_View">
     <menupopup id="menu_View_Popup" onpopupshowing="view_init()">
       <menu id="menu_Toolbars">
-        <menupopup>
+        <menupopup id="view_toolbars_popup">
           <menuitem id="menu_showMessengerToolbar"
            type="checkbox"
            label="&showMessengerToolbarCmd.label;"
@@ -1054,13 +1044,14 @@ Rights Reserved.
            oncommand="goToggleToolbar('searchBox', 'menu_showSearchToolbar'); SearchBarToggled();"
            checked="true"/>
           <menuitem type="checkbox" id="menu_showTaskbar"/>
+          <menuseparator/>
+          <menuitem id="menu_showMessage"
+           type="checkbox"
+           label="&showMessageCmd.label;"
+           accesskey="&showMessageCmd.accesskey;"
+           oncommand="MsgToggleMessagePane();"/>
         </menupopup>
       </menu>
-      <menuitem id="menu_showMessage"
-       type="checkbox"
-       label="&showMessageCmd.label;"
-       accesskey="&showMessageCmd.accesskey;"
-       oncommand="MsgToggleMessagePane();"/>
       <menuseparator/>
       <menu id="viewSortMenu" accesskey="&sortMenu.accesskey;" label="&sortMenu.label;">
         <menupopup onpopupshowing="InitViewSortByMenu()">
@@ -1112,26 +1103,14 @@ Rights Reserved.
         </menupopup>
       </menu>
       <menuseparator/>
+      <menuitem id="stopMenuitem" label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" key="key_stop" disabled="true" command="cmd_stop"/>
+      <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>
+      <menuseparator/>
       <!-- overlayed from viewZoomOverlay.xul -->
       <menu id="menu_textZoom"/>
-      <menuseparator><observes element="menu_textZoom" attribute="hidden"/></menuseparator>
-      <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>
-      <menuitem id="stopMenuitem" label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" disabled="true" oncommand="MsgStop();"/>
+      <menu id="mailviewCharsetMenu" />
       <menuseparator/>
       <menuitem id="pageSourceMenuItem" label="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" observes="cmd_viewPageSource"/>
-      <menuseparator/>
-      <menu id = "mailviewCharsetMenu" />
-    </menupopup>
-  </menu>
-  <menu label="&searchMenu.label;" accesskey="&searchMenu.accesskey;">
-    <menupopup  onpopupshowing="InitSearchMessagesMenu();">
-      <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
-      <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
-      <menuseparator/>
-      <menuitem label="&searchMailCmd.label;" key="key_searchMail" accesskey="&searchMailCmd.accesskey;" observes="cmd_search"/>
-      <menuseparator/>
-      <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin(xlateURL('urn:clienturl:srchmenu:srchinternet'));"/>
-      <menuitem label="&searchAddressesCmd.label;" accesskey="&searchAddressesCmd.accesskey;" oncommand="MsgSearchAddresses(null)"/>
     </menupopup>
   </menu>
   <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;">
@@ -1192,10 +1171,6 @@ Rights Reserved.
             accesskey="&editMsgAsNewCmd.accesskey;"
             key="key_editAsNew"
             observes="cmd_editAsNew"/>
-    <menuseparator/>
-    <menuitem id="createFilter" label="&createFilter.label;"
-      accesskey="&createFilter.accesskey;"
-      observes="cmd_createFilterFromMenu"/>
     <menuseparator/>
     <menu label="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
      sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
@@ -1328,7 +1303,6 @@ Rights Reserved.
         </rule>
       </template>
     </menu>
-    <menuseparator/>
     <menu label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
       <menupopup id="menuPopup-labels" onpopupshowing="InitMessageLabel('menuPopup')">
         <menuitem
@@ -1370,7 +1344,6 @@ Rights Reserved.
            observes="cmd_label5"/>
       </menupopup>
     </menu>
-    <menuseparator/>
     <menu label="&markMenu.label;" accesskey="&markMenu.accesskey;">
       <menupopup onpopupshowing="InitMessageMark()">
         <menuitem type="checkbox" key="key_toggleRead" id="markReadMenuItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead"/>
@@ -1380,6 +1353,10 @@ Rights Reserved.
         <menuitem type="checkbox" id="markFlaggedMenuItem" label="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
       </menupopup>
     </menu>
+    <menuseparator/>
+    <menuitem id="createFilter" label="&createFilter.label;"
+              accesskey="&createFilter.accesskey;"
+              observes="cmd_createFilterFromMenu"/>
     <menuseparator id="threadItemsSeparator"/>
     <menuitem label="&killThreadMenu.label;"
         accesskey="&killThreadMenu.accesskey;"
@@ -1394,7 +1371,17 @@ Rights Reserved.
   </menupopup>
 </menu>
 
-<menu id="tasksMenu"/>
+<menu id="tasksMenu">
+  <menupopup id="taskPopup">
+    <menuitem label="&searchMailCmd.label;" key="key_searchMail" accesskey="&searchMailCmd.accesskey;" command="cmd_searchMsgs"/>
+    <menuitem label="&filtersCmd.label;"
+              accesskey="&filtersCmd.accesskey;"
+              oncommand="MsgFilters(null);"/>
+    <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
+    <menuseparator/>
+  </menupopup>
+</menu>
+<menu id="windowMenu"/>
 <menu id="menu_Help"/>
 <spacer flex="100%"/>
 </menubar>
@@ -1520,7 +1507,7 @@ Rights Reserved.
           <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
           </menupopup>
       </toolbarbutton>
-      <toolbarbutton class="toolbarbutton-1" id="button-stop" label="&stopButton.label;" tooltiptext="&stopButton.tooltip;" oncommand="MsgStop();"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-stop" label="&stopButton.label;" tooltiptext="&stopButton.tooltip;" command="cmd_stop"/>
       <spacer flex="1"/>
             <hbox id="throbber-box" align="center">
                 <button id="navigator-throbber" oncommand="goClickThrobber('messenger.throbber.url')" tooltiptext="&throbber.tooltip;"/>

@@ -352,3 +352,24 @@
       bestState = {capture: hide, prefill: hide};
       return rv;
     }
+
+    // display a Wallet Dialog
+    function WalletDialog(which) {
+      switch( which ) {
+        case "signon":
+          window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
+                            "_blank","chrome,resizable=yes","S"); 
+          break;
+        case "samples":
+          window._content.location.href = 'chrome://communicator/locale/wallet/index.html';
+          break;
+        case "walletsites":
+          window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
+                            "_blank","chrome,resizable=no","W"); 
+          break;
+        case "wallet":
+        default:
+          formShow();
+          break;
+      }
+    }

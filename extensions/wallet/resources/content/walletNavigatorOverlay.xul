@@ -107,22 +107,17 @@
 
   <!-- edit menu -->
   <menupopup id="menu_Edit_Popup" onpopupshowing="initEditItems();">
-    <menuitem id="edit_formshow"
-              label="&formshowCmd.label;"
-              accesskey="&formshowCmd.accesskey;"
-              oncommand="formShow();"
-              insertafter="menu_selectAll"/>
-    <menuitem id="edit_capture"
-              label="&captureCmd.label;"
-              accesskey="&captureCmd.accesskey;"
-              oncommand="formCapture();"
-              insertafter="menu_selectAll"/>
+    <menuseparator insertbefore="menu_PrefsSeparator"/> 
     <menuitem id="edit_prefill"
               label="&prefillCmd.label;"
               accesskey="&prefillCmd.accesskey;"
               oncommand="formPrefill();"
-              insertafter="menu_selectAll"/>
-    <menuseparator insertafter="menu_selectAll"/> 
+              insertbefore="menu_PrefsSeparator"/>
+    <menuitem id="edit_capture"
+              label="&captureCmd.label;"
+              accesskey="&captureCmd.accesskey;"
+              oncommand="formCapture();"
+              insertbefore="menu_PrefsSeparator"/>
   </menupopup>
 
   <!-- Form toolbar items -->
@@ -156,5 +151,32 @@
     </toolbar>
   </hbox>
 -->
+  <menupopup id="taskPopup">
+    <menu label="&walletFormManager.label;"
+          accesskey="&walletFormManager.accesskey;"
+          id="wallet"
+          insertafter="menu_searchWeb">
+      <menupopup>
+        <menuitem id="edit_prefill"
+                  label="&prefillCmd.label;"
+                  accesskey="&prefillCmd.accesskey;"
+                  oncommand="formPrefill();"/>
+        <menuitem id="edit_capture"
+                  label="&captureCmd.label;"
+                  accesskey="&captureCmd.accesskey;"
+                  oncommand="formCapture();"/>
+        <menuseparator/>
+        <menuitem label="&walletContentsCmd.label;"
+                  accesskey="&walletContentsCmd.accesskey;"
+                  id="walleteditor"
+                  oncommand="WalletDialog('wallet');"/> 
+        <menuitem label="&walletSitesCmd.label;"
+                  accesskey="&walletSitesCmd.accesskey;"
+                  id="walletsites"
+                  oncommand="WalletDialog('walletsites');"/> 
+      </menupopup>
+    </menu>
+  </menupopup>
+
 
 </overlay>

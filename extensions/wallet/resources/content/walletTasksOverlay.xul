@@ -67,7 +67,7 @@
       var wallet = Components.classes['@mozilla.org/wallet/wallet-service;1'];
       wallet = wallet.getService();
       wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
-      var strings = document.getElementById("personalManagers");
+      var strings = document.getElementById("menu_passwordManager");
 
       var pref;
       pref = Components.classes['@mozilla.org/preferences-service;1'];
@@ -123,44 +123,18 @@
           break;
       }
     }  
-
-    // display a Wallet Dialog
-    function WalletDialog(which) {
-      switch( which ) {
-        case "signon":
-          window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
-                            "_blank","chrome,resizable=yes","S"); 
-          break;
-        case "samples":
-          window._content.location.href = 'chrome://communicator/locale/wallet/index.html';
-          break;
-        case "walletsites":
-          window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
-                            "_blank","chrome,resizable=no","W"); 
-          break;
-        case "wallet":
-        default:
-          formShow();
-          break;
-      }
-    }
-
   ]]>
   </script>         
 
   <!-- tasksOverlay menu items -->
-  <menupopup  id="personalManagers"
-              PasswordNotChanged = "&PasswordNotChanged;"
-              PasswordExpired = "&PasswordExpired;"
-              PasswordNotExpired = "&PasswordNotExpired;"
-              AllDataWillBeCleared = "&AllDataWillBeCleared;"
-              UnableToCapture = "&UnableToCapture;"
-              Captured = "&Captured;"
-              NotCaptured = "&NotCaptured;"
-              noPrefills = "&noPrefills;">
-    <menu label="&walletPasswordManager.label;"
+  <menupopup id="taskPopup">
+    <menu id="menu_passwordManager"
+          insertafter="search"
+          label="&walletPasswordManager.label;"
           accesskey="&walletPasswordManager.accesskey;"
-          position="1">
+          PasswordNotChanged = "&PasswordNotChanged;"
+          PasswordExpired = "&PasswordExpired;"
+          PasswordNotExpired = "&PasswordNotExpired;">
       <menupopup onpopupshowing="CheckForEncrypt()">
         <menuitem label="&walletDisplaySignonsCmd.label;"
                   accesskey="&walletDisplaySignonsCmd.accesskey;"
@@ -184,41 +158,6 @@
                   id="clear"
                   accesskey="&walletClearCmd.accesskey;" 
                   oncommand="WalletAction('clear');"/>
-      </menupopup>
-    </menu>
-    <menu label="&walletFormManager.label;"
-          accesskey="&walletFormManager.accesskey;"
-          id="wallet"
-          position="2">
-      <menupopup>
-        <menuitem label="&walletContentsCmd.label;"
-                  accesskey="&walletContentsCmd.accesskey;"
-                  id="walleteditor"
-                  oncommand="WalletDialog('wallet');"/> 
-        <menuitem label="&walletSitesCmd.label;"
-                  accesskey="&walletSitesCmd.accesskey;"
-                  id="walletsites"
-                  oncommand="WalletDialog('walletsites');"/> 
-<!--        
-        <menuseparator/>
-        <menuitem label="&walletSafeFillCmd.label;"
-                  accesskey="&walletSafeFillCmd.accesskey;"
-                  id="walletSafeFill"
-                  oncommand="WalletAction('safefill');"/> 
-        <menuitem label="&walletQuickFillCmd.label;"
-                  accesskey="&walletQuickFillCmd.accesskey;"
-                  id="walletQuickFill"
-                  oncommand="WalletAction('quickfill');"/> 
-        <menuitem label="&walletRequestToCaptureCmd.label;"
-                  accesskey="&walletRequestToCaptureCmd.accesskey;"
-                  id="walletCapture"
-                  oncommand="WalletAction('capture');"/> 
-        <menuseparator/>
-        <menuitem label="&walletSamplesCmd.label;"
-                  accesskey="&walletSamplesCmd.accesskey;"
-                  id="walletSamples"
-                  oncommand="WalletDialog('samples');"/> 
--->
       </menupopup>
     </menu>
   </menupopup>

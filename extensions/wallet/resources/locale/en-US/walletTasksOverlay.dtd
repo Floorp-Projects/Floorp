@@ -1,5 +1,3 @@
-<!ENTITY walletFormManager.label "Form Manager">
-<!ENTITY walletFormManager.accesskey "f">
 <!ENTITY walletPasswordManager.label "Password Manager">
 <!ENTITY walletPasswordManager.accesskey "p">
 <!ENTITY walletSafeFillCmd.label "Prefill Form">
@@ -8,10 +6,6 @@
 <!ENTITY walletQuickFillCmd.accesskey "q">
 <!ENTITY walletRequestToCaptureCmd.label "Save Form Data">
 <!ENTITY walletRequestToCaptureCmd.accesskey "S">
-<!ENTITY walletContentsCmd.label "Manage Stored Form Data">
-<!ENTITY walletContentsCmd.accesskey "M">
-<!ENTITY walletSitesCmd.label "Manage Sites">
-<!ENTITY walletSitesCmd.accesskey "S">
 <!ENTITY walletDisplaySignonsCmd.label "Manage Stored Passwords">
 <!ENTITY walletDisplaySignonsCmd.accesskey "M">
 <!ENTITY walletInterviewCmd.label "Interview">
@@ -32,8 +26,3 @@
 <!ENTITY PasswordNotChanged "Unable to change your master password.">
 <!ENTITY PasswordExpired "You are now logged out.">
 <!ENTITY PasswordNotExpired "Unable to log out.">
-<!ENTITY AllDataWillBeCleared "All stored data will be erased.">
-<!ENTITY UnableToCapture "Unable to capture data.">
-<!ENTITY Captured "Data has been captured.">
-<!ENTITY NotCaptured "There is nothing to capture.">
-<!ENTITY noPrefills "There are no fields that can be prefilled.">
