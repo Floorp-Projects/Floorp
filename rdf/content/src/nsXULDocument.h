@@ -36,6 +36,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentView.h"
+#include "nsIDOMDocumentXBL.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
@@ -96,6 +97,7 @@ class nsXULDocument : public nsIDocument,
                       public nsIDOMXULDocument,
                       public nsIDOMDocumentEvent,
                       public nsIDOMDocumentView,
+                      public nsIDOMDocumentXBL,
                       public nsIDOMNSDocument,
                       public nsIDOMEventCapturer,
                       public nsIJSScriptObject,
@@ -355,6 +357,9 @@ public:
     // nsIDOMDocumentView interface
     NS_DECL_IDOMDOCUMENTVIEW
 
+    // nsIDOMDocumentXBL interface
+    NS_DECL_IDOMDOCUMENTXBL
+
     // nsIDOMNSDocument interface
     NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets);
     NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet);
@@ -362,7 +367,6 @@ public:
     NS_IMETHOD    CreateRange(nsIDOMRange** aRange);
     NS_IMETHOD    GetWidth(PRInt32* aWidth);
     NS_IMETHOD    GetHeight(PRInt32* aHeight);
-    NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElement, nsIDOMNodeList** aResult);
     NS_IMETHOD    Load (const nsString& aUrl, const nsString& aMimeType);
 
     // nsIDOMXULDocument interface

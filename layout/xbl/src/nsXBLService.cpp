@@ -207,7 +207,7 @@ nsXBLService::~nsXBLService(void)
 // This function loads a particular XBL file and installs all of the bindings
 // onto the element.
 NS_IMETHODIMP
-nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL) 
+nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aAugmentFlag) 
 { 
   nsresult rv;
 
@@ -218,39 +218,73 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
   
   nsCOMPtr<nsIXBLBinding> binding;
   bindingManager->GetBinding(aContent, getter_AddRefs(binding));
-  if (binding) {
-    nsAutoString bindingURI;
-    binding->GetBindingURI(bindingURI);
-    if(aURL.Equals(bindingURI))    
-      return NS_OK;
-    else
-      FlushBindings(aContent);
+  if (binding && !aAugmentFlag) {
+    nsCOMPtr<nsIXBLBinding> styleBinding;
+    binding->GetFirstStyleBinding(getter_AddRefs(styleBinding));
+    if (styleBinding) {
+      // See if the URIs match.
+      nsAutoString uri;
+      styleBinding->GetBindingURI(uri);
+      if (uri.Equals(aURL))
+        return NS_OK;
+      else FlushStyleBindings(aContent);
+    }
   }
 
+  nsCOMPtr<nsIXBLBinding> newBinding;
   nsCAutoString url; url.AssignWithConversion(aURL);
-  if (NS_FAILED(rv = GetBinding(url, getter_AddRefs(binding)))) {
+  if (NS_FAILED(rv = GetBinding(url, getter_AddRefs(newBinding)))) {
     NS_ERROR("Failed loading an XBL document for content node.");
     return rv;
   }
 
-  if (!binding) {
+  if (!newBinding) {
     nsCAutoString str = "Failed to locate XBL binding. XBL is now using id instead of name to reference bindings. Make sure you have switched over.  The invalid binding name is: ";
     str.AppendWithConversion(aURL);
     NS_ERROR(str);
     return NS_ERROR_FAILURE;
   }
 
-  // Install the binding on the content node.
-  bindingManager->SetBinding(aContent, binding);
+  if (aAugmentFlag) {
+    nsCOMPtr<nsIXBLBinding> baseBinding;
+    nsCOMPtr<nsIXBLBinding> nextBinding = newBinding;
+    do {
+      baseBinding = nextBinding;
+      baseBinding->GetBaseBinding(getter_AddRefs(nextBinding));
+      baseBinding->SetIsStyleBinding(PR_FALSE);
+    } while (nextBinding);
+
+    // XXX Handle adjusting the prototype chain! We need to somehow indicate to
+    // InstallProperties that the whole chain should just be whacked and rebuilt.
+    // We are becoming the new binding.
+    bindingManager->SetBinding(aContent, newBinding);
+    baseBinding->SetBaseBinding(binding);
+  }
+  else {
+    // We loaded a style binding.  It goes on the end.
+    if (binding) {
+      // Get the last binding that is in the append layer.
+      nsCOMPtr<nsIXBLBinding> rootBinding;
+      binding->GetRootBinding(getter_AddRefs(rootBinding));
+      rootBinding->SetBaseBinding(newBinding);
+    }
+    else {
+      // Install the binding on the content node.
+      bindingManager->SetBinding(aContent, newBinding);
+    }
+  }
+
+  // Set the binding's bound element.
+  newBinding->SetBoundElement(aContent);
 
   // Tell the binding to build the anonymous content.
-  binding->GenerateAnonymousContent(aContent);
+  newBinding->GenerateAnonymousContent(aContent);
 
   // Tell the binding to install event handlers
-  binding->InstallEventHandlers(aContent);
+  newBinding->InstallEventHandlers(aContent);
 
   // Set up our properties
-  binding->InstallProperties(aContent);
+  newBinding->InstallProperties(aContent);
 
   return NS_OK; 
 }
@@ -305,7 +339,7 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, n
 }
 
 NS_IMETHODIMP
-nsXBLService::FlushBindings(nsIContent* aContent)
+nsXBLService::FlushStyleBindings(nsIContent* aContent)
 {
   nsCOMPtr<nsIDocument> document;
   aContent->GetDocument(*getter_AddRefs(document));
@@ -316,14 +350,20 @@ nsXBLService::FlushBindings(nsIContent* aContent)
   bindingManager->GetBinding(aContent, getter_AddRefs(binding));
   
   if (binding) {
-    // Clear out the script references.
-    nsCOMPtr<nsIDocument> document;
-    aContent->GetDocument(*getter_AddRefs(document));
-    binding->ChangeDocument(document, nsnull);
+    nsCOMPtr<nsIXBLBinding> styleBinding;
+    binding->GetFirstStyleBinding(getter_AddRefs(styleBinding));
+
+    if (styleBinding) {
+      // Clear out the script references.
+      nsCOMPtr<nsIDocument> document;
+      aContent->GetDocument(*getter_AddRefs(document));
+      styleBinding->ChangeDocument(document, nsnull);
+    }
+
+    if (styleBinding == binding) 
+      bindingManager->SetBinding(aContent, nsnull); // Flush old style bindings
   }
-  
-  bindingManager->SetBinding(aContent, nsnull); // Flush old bindings
-  
+   
   return NS_OK;
 }
 

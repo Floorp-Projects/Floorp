@@ -48,10 +48,10 @@ public:
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.
-  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL) = 0;
+  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aAugmentFlag) = 0;
 
   // This function clears out the bindings on a given content node.
-  NS_IMETHOD FlushBindings(nsIContent* aContent) = 0;
+  NS_IMETHOD FlushStyleBindings(nsIContent* aContent) = 0;
 
   // This function clears out the binding documents in our cache.
   NS_IMETHOD FlushBindingDocuments() = 0;

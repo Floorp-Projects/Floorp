@@ -596,6 +596,9 @@ nsXULDocument::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMDocumentView))) {
         *result = NS_STATIC_CAST(nsIDOMDocumentView*, this);
     }
+    else if (iid.Equals(NS_GET_IID(nsIDOMDocumentXBL))) {
+        *result = NS_STATIC_CAST(nsIDOMDocumentXBL*, this);
+    }
     else if (iid.Equals(NS_GET_IID(nsIJSScriptObject))) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
     }
@@ -2887,6 +2890,27 @@ nsXULDocument::GetHeight(PRInt32* aHeight)
 {
     NS_NOTREACHED("nsXULDocument::GetHeight");
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULDocument::AddBinding(nsIDOMElement* aContent, const nsString& aURL)
+{
+  nsCOMPtr<nsIBindingManager> bm;
+  GetBindingManager(getter_AddRefs(bm));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));
+
+  return bm->AddLayeredBinding(content, aURL);
+}
+
+NS_IMETHODIMP
+nsXULDocument::RemoveBinding(nsIDOMElement* aContent, const nsString& aURL)
+{
+  if (mBindingManager) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));
+    return mBindingManager->RemoveLayeredBinding(content, aURL);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

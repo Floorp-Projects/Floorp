@@ -35,7 +35,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMNSDocument.h"
+#include "nsIDOMDocumentXBL.h"
 #include "nsIXULPopupListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
@@ -486,7 +486,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
       if (popup)
         popupContent = do_QueryInterface(popup);
     } else {
-      nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(xulDocument));
+      nsCOMPtr<nsIDOMDocumentXBL> nsDoc(do_QueryInterface(xulDocument));
       nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(content));
       nsCOMPtr<nsIDOMNodeList> list;
       nsDoc->GetAnonymousNodes(xulElement, getter_AddRefs(list));

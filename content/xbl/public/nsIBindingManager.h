@@ -55,6 +55,9 @@ public:
   NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult) = 0;
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, 
                                      PRBool* aMultipleInsertionPoints) = 0;
+
+  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsString& aURL) = 0;
+  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsString& aURL) = 0;
 };
 
 #endif // nsIBinding_Manager_h__
