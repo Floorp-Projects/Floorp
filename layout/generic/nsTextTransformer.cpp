@@ -438,6 +438,12 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
       firstChar = ' ';
       *aWasTransformed = PR_TRUE;
     }
+    nsresult rv = mTransformBuf.GrowTo(mBufferPos + 1);
+    if (NS_FAILED(rv)) {
+		*aWordLen = 0;
+		return offset - 1;
+	}
+
     mTransformBuf.mBuffer[mBufferPos++] = firstChar;
 
     if (!breakBetween) {
@@ -493,6 +499,11 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
       firstChar = ' ';
       *aWasTransformed = PR_TRUE;
     }
+    nsresult rv = mTransformBuf.GrowTo(mBufferPos + 1);
+    if (NS_FAILED(rv)) {
+		*aWordLen = 0;
+		return offset - 1;
+	}
     mTransformBuf.mBuffer[mBufferPos++] = firstChar;
   }
 
