@@ -87,9 +87,10 @@ MAIL_OR_COMPOSE_ICONS = $(wildcard images/MNC*.gif \
 			   images/MNAB_NewPerson*.gif \
 			   images/MN_Draft*.gif \
 			   images/MN_Collect*.gif \
-			   images/MN_MailAttach.gif \
-			   images/MN_P*.gif \
-			   images/MN_Template*.gif )
+			   images/MN_Template*.gif ) \
+			 images/MN_MailAttach.gif \
+			 images/MN_Person.gif \
+			 images/MN_People.gif
 
 ifdef MOZ_MAIL_NEWS
 ICONS += $(MAIL_OR_COMPOSE_ICONS) \
