@@ -506,10 +506,10 @@ sampleJSTransaction.prototype = {
     return false;
   },
 
-  QueryInterface: function(aUID, theResult)
+  QueryInterface: function(aIID, theResult)
   {
-    if (aUID.equals(Components.interfaces.nsITransaction) ||
-        aUID.equals(Components.interfaces.nsISupports))
+    if (aIID.equals(Components.interfaces.nsITransaction) ||
+        aIID.equals(Components.interfaces.nsISupports))
       return this;
 
     Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
