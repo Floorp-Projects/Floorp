@@ -93,8 +93,13 @@ CPU_ARCH_TAG	:= _$(CPU_ARCH)
 PERL		:= perl
 endif
 ifeq ($(OS_ARCH),QNX)
+ifeq ($(OS_TARGET),NTO)
+LD		:= qcc -Vgcc_ntox86 -nostdlib
+else
 OS_RELEASE	:= $(shell uname -v | sed 's/^\([0-9]\)\([0-9]*\)$$/\1.\2/')
 LD		:= $(CC)
+endif
+OS_TEST		:= x86
 endif
 ifeq ($(OS_ARCH),SCO_SV)
 OS_ARCH		:= SCOOS
