@@ -47,3 +47,4 @@ CSRCS	= rsaperf.c defkey.c
 
 PROGRAM	= rsaperf
 
+USE_STATIC_LIBS = 1
