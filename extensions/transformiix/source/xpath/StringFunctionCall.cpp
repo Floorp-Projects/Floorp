@@ -72,8 +72,12 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
                 return new StringResult(NS_LITERAL_STRING("error"));
 
             nsAutoString arg1, arg2;
-            evaluateToString((Expr*)iter.next(), aContext, arg1);
+            Expr* arg1Expr = (Expr*)iter.next();
             evaluateToString((Expr*)iter.next(), aContext, arg2);
+            if (arg2.IsEmpty())
+                return new BooleanResult(PR_TRUE);
+
+            evaluateToString(arg1Expr, aContext, arg1);
             return new BooleanResult(arg1.Find(arg2) >= 0);
         }
         case NORMALIZE_SPACE:
@@ -116,8 +120,12 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
                 return new StringResult(NS_LITERAL_STRING("error"));
 
             nsAutoString arg1, arg2;
-            evaluateToString((Expr*)iter.next(), aContext, arg1);
+            Expr* arg1Expr = (Expr*)iter.next();
             evaluateToString((Expr*)iter.next(), aContext, arg2);
+            if (arg2.IsEmpty())
+                return new BooleanResult(PR_TRUE);
+
+            evaluateToString(arg1Expr, aContext, arg1);
             return new BooleanResult(arg1.Find(arg2) == 0);
         }
         case STRING_LENGTH:
@@ -182,6 +190,9 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             nsAutoString arg1, arg2;
             evaluateToString((Expr*)iter.next(), aContext, arg1);
             evaluateToString((Expr*)iter.next(), aContext, arg2);
+            if (arg2.IsEmpty())
+                return new StringResult(arg1);
+
             PRInt32 idx = arg1.Find(arg2);
             if (idx != kNotFound) {
                 PRUint32 len = arg2.Length();
@@ -196,8 +207,13 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
                 return new StringResult(NS_LITERAL_STRING("error"));
 
             nsAutoString arg1, arg2;
-            evaluateToString((Expr*)iter.next(), aContext, arg1);
+            Expr* arg1Expr = (Expr*)iter.next();
             evaluateToString((Expr*)iter.next(), aContext, arg2);
+            if (arg2.IsEmpty())
+                return new StringResult();
+
+            evaluateToString(arg1Expr, aContext, arg1);
+
             PRInt32 idx = arg1.Find(arg2);
             if (idx != kNotFound) {
                 return new StringResult(Substring(arg1, 0, idx));
