@@ -48,6 +48,7 @@ extern CComModule _Module;
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
+#define DEBUG_LEAKS 1
 //#define DEBUG_LEAKS
 
 #ifdef DEBUG_LEAKS
@@ -924,7 +925,6 @@ RootAccessible::Release(void)
 
 RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):DocAccessible(aAcc,nsnull,aWnd)
 {
-
   mListCount = 0;
   mNextId = -1;
   mNextPos = 0;
@@ -938,7 +938,7 @@ RootAccessible::~RootAccessible()
 {
   nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
   if (r) 
-    r->RemoveAccessibleEventListener(this);
+    r->RemoveAccessibleEventListener();
 
   // free up accessibles
   for (int i=0; i < mListCount; i++)
@@ -964,18 +964,12 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
 
 NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible)
 {
-#ifdef DEBUG
-  // print focus event!!
-  printf("Focus Changed!!!\n");
-#endif
-
   // get the id for the accessible
   PRInt32 id = GetIdFor(aAccessible);
 
   // notify the window system
   NotifyWinEvent(aEvent, mWnd, OBJID_CLIENT, id);
   
-
   return NS_OK;
 }
 
