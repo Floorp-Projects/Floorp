@@ -44,6 +44,9 @@
 #define INCL_DOS
 #define INCL_DOSERRORS
 #define INCL_SPLDOSPRINT
+#define INCL_DEV
+#define INCL_DEVDJP
+#define INCL_GRE_DEVICE
 
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintOptions.h"
@@ -54,7 +57,7 @@
 #endif /* USE_XPRINT */
 #include "nsPrintdOS2.h"
 #include <os2.h>
-
+#include <pmddim.h>
 
 //---------------------------------------------------------------------------
 // OS/2 Printing   - was in libprint
@@ -78,6 +81,10 @@ public:
    int GetDefaultPrinter ();
    char* GetPrinter (int numPrinter);
    PRTQUEUE* SetPrinterQueue (int numPrinter);
+   HDC GetDCHandle (int numPrinter);
+   PLONG GetPrintDriverSize (int printer);
+   PDRIVDATA GetPrintDriver (int printer);
+   char* GetDriverType (int printer);
    BOOL ShowProperties(int index);
    PRTQUEUE* SelectPrinter (HWND hwndOwner, BOOL bQuiet);
 
@@ -155,6 +162,7 @@ public:
   virtual ~nsDeviceContextSpecOS2();
 
   static PRINTDLG PrnDlg;
+  static nsresult SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, int printer);
 
 protected:
 

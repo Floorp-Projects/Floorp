@@ -97,6 +97,93 @@ static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
 #endif
 
+void SetupDevModeFromSettings(int printer, nsIPrintSettings* aPrintSettings)
+{
+  if (aPrintSettings) {
+    PDJP_ITEM pDJP = new DJP_ITEM;
+    HDC hdc = nsDeviceContextSpecOS2::PrnDlg.GetDCHandle(printer);
+
+    // Setup Orientation
+    PRInt32 orientation;
+    aPrintSettings->GetOrientation(&orientation);
+    pDJP->lType = DJP_CURRENT;
+    pDJP->cb = sizeof(DJP_ITEM);
+    pDJP->ulNumReturned = 1;
+    pDJP->ulProperty = DJP_SJ_ORIENTATION;
+    pDJP->ulValue = orientation == nsIPrintSettings::kPortraitOrientation?DJP_ORI_PORTRAIT:DJP_ORI_LANDSCAPE;
+    long rc = GreEscape (hdc, DEVESC_SETJOBPROPERTIES, sizeof (DJP_ITEM),
+                         pDJP, nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer), 
+                         PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+
+    // Setup Number of Copies
+    PRInt32 copies;
+    aPrintSettings->GetNumCopies(&copies);
+    pDJP->cb = sizeof(DJP_ITEM);
+    pDJP->lType = DJP_CURRENT;
+    pDJP->ulNumReturned = 1;
+    pDJP->ulProperty = DJP_SJ_COPIES;
+    pDJP->ulValue = copies;
+    rc = GreEscape (hdc, DEVESC_SETJOBPROPERTIES, sizeof (DJP_ITEM), pDJP,
+                    nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer), 
+                    PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+
+    delete [] pDJP;
+    DevCloseDC(hdc);
+  }
+}
+
+nsresult nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, int printer)
+{
+  if (aPrintSettings == nsnull)
+    return NS_ERROR_FAILURE;
+
+  PDJP_ITEM pDJP = new DJP_ITEM;
+  HDC hdc = nsDeviceContextSpecOS2::PrnDlg.GetDCHandle(printer);
+  char* driver = nsDeviceContextSpecOS2::PrnDlg.GetDriverType(printer);
+
+  //Get Number of Copies from Job Properties
+  pDJP->lType = DJP_CURRENT;
+  pDJP->cb = sizeof(DJP_ITEM);
+  pDJP->ulNumReturned = 1;
+  pDJP->ulProperty = DJP_SJ_COPIES;
+  pDJP->ulValue = 1;
+  long rc = GreEscape(hdc, DEVESC_QUERYJOBPROPERTIES, sizeof(DJP_ITEM), 
+                      pDJP, nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer),
+                      PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+
+  if ((rc == DEV_OK) || ((rc == DEV_WARNING) && (pDJP->lType > 0))) {
+    if (pDJP->ulProperty == DJP_SJ_COPIES) {
+      aPrintSettings->SetNumCopies(PRInt32(pDJP->ulValue));
+    }
+  }
+
+  //Get Orientation from Job Properties
+  if (!strcmp(driver, "LASERJET"))
+    pDJP->lType = DJP_ALL;
+  else
+    pDJP->lType = DJP_CURRENT;
+  pDJP->cb = sizeof(DJP_ITEM);
+  pDJP->ulNumReturned = 1;
+  pDJP->ulProperty = DJP_SJ_ORIENTATION;
+  pDJP->ulValue = 1;
+  rc = GreEscape(hdc, DEVESC_QUERYJOBPROPERTIES, sizeof(DJP_ITEM),
+                 pDJP, nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer),
+                 PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+
+  if ((rc == DEV_OK) || ((rc == DEV_WARNING) && (pDJP->lType > 0))) { 
+    if (pDJP->ulProperty == DJP_SJ_ORIENTATION) {
+      if ((pDJP->ulValue == DJP_ORI_PORTRAIT) || (pDJP->ulValue == DJP_ORI_REV_PORTRAIT))
+         aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
+      else
+         aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
+    }
+  }
+
+  delete [] pDJP;
+  DevCloseDC(hdc);  
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceContextSpecOS2 :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr)
@@ -174,15 +261,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
     }
   }
 
-  char      *path;
-  PRBool     canPrint       = PR_FALSE;
-  PRBool     tofile         = PR_FALSE;
-  PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
-  PRInt32    fromPage       = 1;
-  PRInt32    toPage         = 1;
-  PRInt32    copies         = 1;
-  PRUnichar *printer        = nsnull;
-  PRUnichar *printfile      = nsnull;
+  PRBool canPrint = PR_FALSE;
 
   rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
@@ -242,7 +321,15 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
   }
 
   if (canPrint) {
-    if (mPrintSettings) {
+    if (aPS) {
+      PRBool     tofile         = PR_FALSE;
+      PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
+      PRInt32    fromPage       = 1;
+      PRInt32    toPage         = 1;
+      PRInt32    copies         = 1;
+      PRUnichar *printer        = nsnull;
+      PRUnichar *printfile      = nsnull;
+
       mPrintSettings->GetPrinterName(&printer);
       mPrintSettings->GetPrintRange(&printRange);
       mPrintSettings->GetToFileName(&printfile);
@@ -262,32 +349,31 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
       }
       if (printer != nsnull) 
         strcpy(mPrData.printer, NS_ConvertUCS2toUTF8(printer).get());  
-    }
-
-    mPrData.toPrinter = !tofile;
-    mPrData.copies = copies;
-
-    rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
-    if (NS_FAILED(rv))
-      return rv;
-
-    const nsAFlatString& printerUCS2 = NS_ConvertUTF8toUCS2(mPrData.printer);
-    int numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-    if (numPrinters) {
-       for(int i = 0; (i < numPrinters) && !mQueue; i++) {
-          if ((GlobalPrinters::GetInstance()->GetStringAt(i)->Equals(printerUCS2, nsCaseInsensitiveStringComparator())))
-             mQueue = PrnDlg.SetPrinterQueue(i);
-       }
-    }
-
-    if (printfile != nsnull) 
-      nsMemory::Free(printfile);
     
-    if (printer != nsnull) 
-      nsMemory::Free(printer);
+      mPrData.toPrinter = !tofile;
+      mPrData.copies = copies;
+
+      rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
+      if (NS_FAILED(rv))
+        return rv;
+
+      const nsAFlatString& printerUCS2 = NS_ConvertUTF8toUCS2(mPrData.printer);
+      int numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
+      if (numPrinters) {
+         for(int i = 0; (i < numPrinters) && !mQueue; i++) {
+            if ((GlobalPrinters::GetInstance()->GetStringAt(i)->Equals(printerUCS2, nsCaseInsensitiveStringComparator()))) {
+               SetupDevModeFromSettings(i, aPS);
+               mQueue = PrnDlg.SetPrinterQueue(i);
+            }
+         }
+      }
+
+      if (printfile != nsnull) 
+        nsMemory::Free(printfile);
     
-    GlobalPrinters::GetInstance()->FreeGlobalPrinters();
-    return NS_OK;
+      if (printer != nsnull) 
+        nsMemory::Free(printer);
+    }
   }
 
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
@@ -410,7 +496,24 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::GetDefaultPrinterName(PRUnichar * *aDefaul
 /* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
 NS_IMETHODIMP nsPrinterEnumeratorOS2::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+   NS_ENSURE_ARG_POINTER(aPrinterName);
+   NS_ENSURE_ARG_POINTER(aPrintSettings);
+
+   if (!*aPrinterName) 
+     return NS_OK;
+
+  if (NS_FAILED(GlobalPrinters::GetInstance()->InitializeGlobalPrinters())) 
+    return NS_ERROR_FAILURE;
+
+  PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
+  for(int i = 0; i < numPrinters; i++) {
+    if ((GlobalPrinters::GetInstance()->GetStringAt(i)->Equals(aPrinterName, nsCaseInsensitiveStringComparator()))) 
+      nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(aPrintSettings, i);
+  }
+
+  // Free them, we won't need them for a while
+  GlobalPrinters::GetInstance()->FreeGlobalPrinters();
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPrinterEnumeratorOS2::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings *aPrintSettings)
@@ -424,10 +527,13 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::DisplayPropertiesDlg(const PRUnichar *aPri
 
   for(int i = 0; i < numPrinters; i++) {
     if ((GlobalPrinters::GetInstance()->GetStringAt(i)->Equals(aPrinter, nsCaseInsensitiveStringComparator()))) {
-       if ( nsDeviceContextSpecOS2::PrnDlg.ShowProperties(i) ) 
+       SetupDevModeFromSettings(i, aPrintSettings);
+       if ( nsDeviceContextSpecOS2::PrnDlg.ShowProperties(i) ) {
+          nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(aPrintSettings, i);
           return NS_OK;
-       else
+       } else {
           return NS_ERROR_FAILURE;
+       }
     }
   }
   return NS_ERROR_FAILURE;
@@ -482,7 +588,6 @@ void GlobalPrinters::FreeGlobalPrinters()
 // OS/2 Printing   - was in libprint.cpp
 //---------------------------------------------------------------------------
 static HMODULE hmodRes;
-static BOOL prnEscape (HDC hdc, long lEscape);
 
 #define SHIFT_PTR(ptr,offset) ( *((LONG*)&ptr) += offset )
 
@@ -655,6 +760,47 @@ PRTQUEUE* PRINTDLG::SetPrinterQueue (int numPrinter)
    return new PRTQUEUE (*pPQ);
 }
 
+PLONG PRINTDLG::GetPrintDriverSize (int printer)
+{
+   LONG size = mPQBuf[GetIndex(printer)]->PQI3().pDriverData->cb;
+
+   PLONG driverSize = (PLONG)&size;
+   return driverSize;
+}
+
+PDRIVDATA PRINTDLG::GetPrintDriver (int printer)
+{
+   if (printer > mQueueCount)
+      return NULL;
+
+   return mPQBuf[GetIndex(printer)]->PQI3().pDriverData;
+}
+
+HDC PRINTDLG::GetDCHandle (int numPrinter)
+{
+    HDC hdc = 0;
+    int index = GetIndex(numPrinter);
+    DEVOPENSTRUC dop;
+
+    dop.pszLogAddress      = 0; 
+    dop.pszDriverName      = (char *) mPQBuf[index]->DriverName();
+    dop.pdriv              = mPQBuf[index]->PQI3 ().pDriverData;
+    dop.pszDataType        = 0; 
+    dop.pszComment         = 0;
+    dop.pszQueueProcName   = 0;     
+    dop.pszQueueProcParams = 0;   
+    dop.pszSpoolerParams   = 0;     
+    dop.pszNetworkParams   = 0;     
+
+    hdc = ::DevOpenDC( 0, OD_INFO, "*", 9, (PDEVOPENDATA) &dop, NULLHANDLE);
+    return hdc;
+}
+
+char* PRINTDLG::GetDriverType (int printer)
+{
+  return (char *)mPQBuf[GetIndex(printer)]->DriverName ();
+}
+
 BOOL PRINTDLG::ShowProperties (int index)
 {
     BOOL          rc = FALSE;
@@ -759,21 +905,6 @@ if (hdc == 0)
 
    return hdc;
 }
-
-BOOL prnEscape( HDC hdc, long lEscape)
-{
-   BOOL rc = FALSE;
-
-   if( hdc)
-   {
-      long lDummy = 0;
-      long lResult = ::DevEscape( hdc, lEscape, 0, NULL, &lDummy, NULL);
-      rc = (lResult == DEV_OK);
-   }
-
-   return rc;
-}
-
 
 /* find the selected form */
 BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo)
