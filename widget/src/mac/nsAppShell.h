@@ -21,6 +21,12 @@
 
 #include "nsIAppShell.h"
 #include "nsToolKit.h"
+#include <Fonts.h>
+#include <TextEdit.h>
+#include <Dialogs.h>
+#include <Traps.h>
+#include <Events.h>
+#include <Menus.h>
 
 
 /**
@@ -30,12 +36,19 @@
 class nsAppShell : public nsIAppShell
 {
   private:
-    //Widget              mTopLevel;
-    //XtAppContext        mAppContext;
     nsDispatchListener*		mDispatchListener;
     nsToolkit*     				mToolKit;
     PRBool								mRunning;
 
+
+	// CLASS METHODS
+	private:
+		    void			DoMouseDown(EventRecord *aTheEvent);
+		    void			IdleWidgets();
+				void			doKey(EventRecord *aTheEvent);
+		    
+		    
+		    
   public:
     nsAppShell();
     virtual ~nsAppShell();
@@ -47,6 +60,8 @@ class nsAppShell : public nsIAppShell
     virtual void            Create(int* argc, char ** argv);
     virtual nsresult        Run(); 
     virtual void            Exit();
+    	
+
 
     virtual void            SetDispatchListener(nsDispatchListener* aDispatchListener);
 
