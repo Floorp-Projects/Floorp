@@ -138,6 +138,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsCExternalHandlerService.h"
+#include "nsIExternalProtocolService.h"
 #include "nsIMIMEService.h"
 
 #include "nsILinkHandler.h"                                                                              
@@ -588,6 +589,19 @@ nsMessenger::OpenURL(const char *aURL)
   return rv;
 }
 
+NS_IMETHODIMP nsMessenger::LaunchExternalURL(const char * aURL)
+{
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), aURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIExternalProtocolService> extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return extProtService->LoadUrl(uri); 
+}
+
 NS_IMETHODIMP
 nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
 {
@@ -605,24 +619,8 @@ nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), uriString);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  // cheat....if we were given a dom window, then use the docshell from it
-  // and pass the url out as a link...this is really just used by stand alone
-  // mail right now and could be wrapped in a MOZ_THUNDERBIRD ifdef if we needed to.
-  if (aWin)
-  {
-    nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(aWin, &rv);    
-    NS_ENSURE_SUCCESS(rv,rv);                                                    
-    nsCOMPtr <nsIDocShell> docShell; 
-    rv = globalObj->GetDocShell(getter_AddRefs(docShell));  
-    NS_ENSURE_SUCCESS(rv,rv);
-    nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(docShell, &rv);              
-    NS_ENSURE_SUCCESS(rv,rv); 
-    return rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, uri,nsnull,nsnull,nsnull);                                                     
-  }
-  else
-  {
-    NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
   nsCOMPtr<nsIMsgMailNewsUrl> msgurl = do_QueryInterface(uri);
   if (msgurl)
     msgurl->SetMsgWindow(mMsgWindow);
@@ -632,7 +630,6 @@ nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
   NS_ENSURE_SUCCESS(rv, rv);
   loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormal);
   return mDocShell->LoadURI(uri, loadInfo, 0, PR_TRUE);
-  }
 }
 
 nsresult

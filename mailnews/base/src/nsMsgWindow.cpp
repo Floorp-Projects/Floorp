@@ -69,6 +69,10 @@
 // XXX Remove
 #include "nsIWebShell.h"
 
+// used to dispatch urls to default protocol handlers
+#include "nsCExternalHandlerService.h"
+#include "nsIExternalProtocolService.h"
+
 static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 
@@ -415,6 +419,49 @@ NS_IMETHODIMP nsMsgWindow::StopUrls()
 // nsIURIContentListener support
 NS_IMETHODIMP nsMsgWindow::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 {
+#ifdef MOZ_THUNDERBIRD
+  // XXX ugly thunderbird hack to force all url clicks to go to the system default app
+  // I promise this will be removed once we figure out a better way. 
+  nsCAutoString scheme;
+  aURI->GetScheme(scheme);
+                                          
+  static const char kMailToURI[] = "mailto";                                    
+  static const char kNewsURI[] = "news";                                        
+  static const char kSnewsURI[] = "snews";                                      
+  static const char kNntpURI[] = "nntp";                                        
+  static const char kImapURI[] = "imap"; 
+  if (scheme.EqualsIgnoreCase(kMailToURI)) 
+  {
+    // the scheme is mailto, we can handle it
+  } 
+  else if (scheme.EqualsIgnoreCase(kNewsURI)) 
+  {
+    // the scheme is news, we can handle it
+  } 
+  else if (scheme.EqualsIgnoreCase(kSnewsURI)) 
+  {
+     // the scheme is snews, we can handle it
+  } 
+  else if (scheme.EqualsIgnoreCase(kNntpURI)) 
+  {
+     // the scheme is nntp, we can handle it 
+  } else if (scheme.EqualsIgnoreCase(kImapURI)) 
+  {
+      // the scheme is imap, we can handle it
+  }
+  else 
+  {
+    // we don't handle this type, the the registered handler take it 
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIExternalProtocolService> extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = extProtService->LoadUrl(aURI);
+
+    *aAbortOpen = PR_TRUE;
+    return rv;                                                                  
+  }                                                                               
+#endif
+
   return NS_OK;
 }
 
