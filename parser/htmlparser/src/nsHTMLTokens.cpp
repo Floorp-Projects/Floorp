@@ -1417,7 +1417,7 @@ nsresult CCommentToken::ConsumeQuirksComment(nsScanner& aScanner)
         // wait for more content, and try again.
         // XXX For performance reasons we should cache where we were, and
         //     continue from there for next call
-        return kEOF;  // not really an nsresult, but...
+        return kEOF;
       }
 
       // If you're here, then we're in a special state. 
@@ -1469,7 +1469,14 @@ nsresult CCommentToken::ConsumeQuirksComment(nsScanner& aScanner)
     return NS_OK;
   }
 
-  return kEOF; // not really an nsresult, but...
+  if (!aScanner.IsIncremental()) {
+    // This isn't a comment at all, go back to the < and consume as text.
+    aScanner.SetPosition(lt, PR_FALSE, PR_TRUE);
+    return kNotAComment;
+  }
+
+  // Wait for more data...
+  return kEOF;
 }
 
 /*

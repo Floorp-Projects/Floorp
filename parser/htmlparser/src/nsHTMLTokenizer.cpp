@@ -549,11 +549,12 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
 
     switch(aChar) {
       case kForwardSlash:
-        // Get the original "<" (we've already seen it with a Peek)
-        aScanner.GetChar(oldChar);
+        result=aScanner.Peek(theNextChar, 2);
 
-        result=aScanner.Peek(theNextChar, 1);
         if(NS_OK==result) {
+          // Get the original "<" (we've already seen it with a Peek)
+          aScanner.GetChar(oldChar);
+
           // xml allow non ASCII tag name, consume as end tag. need to make xml view source work
           PRBool isXML=(mFlags & NS_IPARSER_FLAG_XML);
           if(nsCRT::IsAsciiAlpha(theNextChar)||(kGreaterThan==theNextChar)|| 
@@ -562,14 +563,16 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
           }
           else result=ConsumeComment(aChar,aToken,aScanner);
         }//if
+
         break;
 
       case kExclamation:
-        // Get the original "<" (we've already seen it with a Peek)
-        aScanner.GetChar(oldChar);
+        result=aScanner.Peek(theNextChar, 2);
 
-        result=aScanner.Peek(theNextChar, 1);
         if(NS_OK==result) {
+          // Get the original "<" (we've already seen it with a Peek)
+          aScanner.GetChar(oldChar);
+
           if((kMinus==theNextChar) || (kGreaterThan==theNextChar)) {
             result=ConsumeComment(aChar,aToken,aScanner);
           }
@@ -601,6 +604,14 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
     } //switch
 
   } //if
+ 
+  // Last ditch attempt to make sure we don't lose data.
+  if (kEOF == result && !aScanner.IsIncremental()) {
+    // Whoops, we don't want to lose any data! Consume the rest as text.
+    // This normally happens for either a trailing < or </
+    result = ConsumeText(aToken,aScanner);
+  }
+
   return result;
 }
 
@@ -725,8 +736,12 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       result = aScanner.Peek(aChar);
       if (NS_FAILED(result)) {
         aToken->SetInError(PR_TRUE);
+
+        // Note: We know here that the scanner is not incremental since if
+        // this peek fails, then we've already masked over a kEOF coming from
+        // the Consume() call above.
+        return NS_OK;
       }
-      NS_ENSURE_SUCCESS(result, result);
 
       if(kGreaterThan != aChar) { //look for '>' 
         result = ConsumeAttributes(aChar, aToken, aScanner);
@@ -866,8 +881,12 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
     result = aScanner.Peek(aChar);
     if (NS_FAILED(result)) {
       aToken->SetInError(PR_TRUE);
+
+      // Note: We know here that the scanner is not incremental since if
+      // this peek fails, then we've already masked over a kEOF coming from
+      // the Consume() call above.
+      return NS_OK;
     }
-    NS_ENSURE_SUCCESS(result, result);
 
     if(kGreaterThan != aChar) {
       result = ConsumeAttributes(aChar, aToken, aScanner);
