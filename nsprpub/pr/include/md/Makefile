@@ -139,6 +139,10 @@ ifeq ($(OS_ARCH),QNX)
 MDCPUCFG_H = _qnx.cfg
 endif
 
+ifeq ($(OS_ARCH),NTO)
+MDCPUCFG_H = _nto.cfg
+endif
+
 ifeq ($(OS_ARCH),BeOS)
 MDCPUCFG_H = _beos.cfg
 endif

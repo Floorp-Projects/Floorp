@@ -52,7 +52,7 @@
 #define _PRSockLen_t int
 #elif (defined(AIX) && !defined(AIX4_1)) || defined(FREEBSD) \
     || defined(NETBSD) || defined(OPENBSD) || defined(UNIXWARE) \
-    || defined(DGUX) || defined(VMS)
+    || defined(DGUX) || defined(VMS) || defined(NTO)
 #define _PRSockLen_t size_t
 #else
 #error "Cannot determine architecture"
@@ -3420,7 +3420,51 @@ void PR_XNotifyAll(void)
     PR_NotifyAll(_pr_Xfe_mon);
 }
 
-#ifdef HAVE_BSD_FLOCK
+#if defined(HAVE_FCNTL_FILE_LOCKING)
+
+PR_IMPLEMENT(PRStatus)
+_MD_LockFile(PRInt32 f)
+{
+    PRInt32 rv;
+    struct flock arg;
+
+    arg.l_type = F_WRLCK;
+    rv = fcntl(f, F_SETLKW, &arg);
+    if (rv == 0)
+        return PR_SUCCESS;
+    _PR_MD_MAP_FLOCK_ERROR(_MD_ERRNO());
+    return PR_FAILURE;
+}
+
+PR_IMPLEMENT(PRStatus)
+_MD_TLockFile(PRInt32 f)
+{
+    PRInt32 rv;
+    struct flock arg;
+
+    arg.l_type = F_WRLCK;
+    rv = fcntl(f, F_SETLK, &arg);
+    if (rv == 0)
+        return PR_SUCCESS;
+    _PR_MD_MAP_FLOCK_ERROR(_MD_ERRNO());
+    return PR_FAILURE;
+}
+
+PR_IMPLEMENT(PRStatus)
+_MD_UnlockFile(PRInt32 f)
+{
+    PRInt32 rv;
+    struct flock arg;
+
+    arg.l_type = F_UNLCK;
+    rv = fcntl(f, F_SETLK, &arg);
+    if (rv == 0)
+        return PR_SUCCESS;
+    _PR_MD_MAP_FLOCK_ERROR(_MD_ERRNO());
+    return PR_FAILURE;
+}
+
+#elif defined(HAVE_BSD_FLOCK)
 
 #include <sys/file.h>
 
