@@ -921,8 +921,8 @@ Contributor(s): ______________________________________. -->
        <sidebarheader id="sidebarhdrSidebar" class="sidebarheader-main"
                       type="box" persist="label"
                       collapse="after">
-         <toolbarbutton id="sidebar-close-button" oncommand="SidebarHide();"
-                        tooltiptext="close"/>
+         <toolbarbutton id="btnSidebarClose" oncommand="SidebarHide();"
+                        tooltiptext="&closeButton.label;"/>
        </sidebarheader>
        <browser id="browserSidebar" flex="1" persist="src"/>
     </vbox>
