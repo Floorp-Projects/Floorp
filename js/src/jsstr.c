@@ -529,6 +529,10 @@ str_enumerate(JSContext *cx, JSObject *obj)
     JSString *str, *str1;
     size_t i, length;
 
+    /* Avoid infinite recursion via js_obj_toSource (see bug 271477). */
+    if (cx->version == JSVERSION_1_2)
+        return JS_TRUE;
+
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
     if (!str)
         return JS_FALSE;
