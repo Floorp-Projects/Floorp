@@ -55,9 +55,10 @@ enum Event_slots {
   EVENT_CTRLKEY = -18,
   EVENT_SHIFTKEY = -19,
   EVENT_METAKEY = -110,
-  EVENT_CHARCODE = -111,
-  EVENT_KEYCODE = -112,
-  EVENT_BUTTON = -113,
+  EVENT_CANCELBUBBLE = -111,
+  EVENT_CHARCODE = -112,
+  EVENT_KEYCODE = -113,
+  EVENT_BUTTON = -114,
   NSEVENT_LAYERX = -21,
   NSEVENT_LAYERY = -22
 };
@@ -199,6 +200,17 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         PRBool prop;
         if (NS_OK == a->GetMetaKey(&prop)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case EVENT_CANCELBUBBLE:
+      {
+        PRBool prop;
+        if (NS_OK == a->GetCancelBubble(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -486,6 +498,22 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
+      case EVENT_CANCELBUBBLE:
+      {
+        PRBool prop;
+        JSBool temp;
+        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
+          prop = (PRBool)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a boolean");
+          return JS_FALSE;
+        }
+      
+        a->SetCancelBubble(prop);
+        
+        break;
+      }
       case EVENT_CHARCODE:
       {
         PRUint32 prop;
@@ -704,6 +732,7 @@ static JSPropertySpec EventProperties[] =
   {"ctrlKey",    EVENT_CTRLKEY,    JSPROP_ENUMERATE},
   {"shiftKey",    EVENT_SHIFTKEY,    JSPROP_ENUMERATE},
   {"metaKey",    EVENT_METAKEY,    JSPROP_ENUMERATE},
+  {"cancelBubble",    EVENT_CANCELBUBBLE,    JSPROP_ENUMERATE},
   {"charCode",    EVENT_CHARCODE,    JSPROP_ENUMERATE},
   {"keyCode",    EVENT_KEYCODE,    JSPROP_ENUMERATE},
   {"button",    EVENT_BUTTON,    JSPROP_ENUMERATE},

@@ -28,6 +28,7 @@ class nsIDOMDocument;
 class nsIDOMEvent;
 class nsIPresContext;
 class nsIWebShell;
+class nsIDOMWindow;
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
 { 0x2b16fc80, 0xfa41, 0x11d1,  \
@@ -43,6 +44,7 @@ public:
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext)=0;
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument)=0;
   NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell)=0;
+  NS_IMETHOD_(void)       SetOpenerWindow(nsIDOMWindow *aOpener)=0;
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
                             nsEvent* aEvent, 

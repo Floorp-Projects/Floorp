@@ -45,8 +45,6 @@ public:
 
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator)=0;
 
-  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener)=0;
-
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent)=0;
 
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop)=0;
@@ -54,6 +52,9 @@ public:
   NS_IMETHOD    GetClosed(PRBool* aClosed)=0;
 
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames)=0;
+
+  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener)=0;
+  NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener)=0;
 
   NS_IMETHOD    GetStatus(nsString& aStatus)=0;
   NS_IMETHOD    SetStatus(const nsString& aStatus)=0;
@@ -68,6 +69,10 @@ public:
 
   NS_IMETHOD    Alert(const nsString& aStr)=0;
 
+  NS_IMETHOD    Focus()=0;
+
+  NS_IMETHOD    Blur()=0;
+
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID)=0;
 
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID)=0;
@@ -76,7 +81,7 @@ public:
 
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn)=0;
 
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn)=0;
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
 };
 
 
@@ -85,11 +90,12 @@ public:
   NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf);  \
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);  \
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);  \
-  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);  \
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent);  \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);  \
   NS_IMETHOD    GetClosed(PRBool* aClosed);  \
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames);  \
+  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);  \
+  NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener);  \
   NS_IMETHOD    GetStatus(nsString& aStatus);  \
   NS_IMETHOD    SetStatus(const nsString& aStatus);  \
   NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus);  \
@@ -98,11 +104,13 @@ public:
   NS_IMETHOD    SetName(const nsString& aName);  \
   NS_IMETHOD    Dump(const nsString& aStr);  \
   NS_IMETHOD    Alert(const nsString& aStr);  \
+  NS_IMETHOD    Focus();  \
+  NS_IMETHOD    Blur();  \
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);  \
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID);  \
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
 
 
 
@@ -111,11 +119,12 @@ public:
   NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf) { return _to##GetSelf(aSelf); } \
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument) { return _to##GetDocument(aDocument); } \
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator) { return _to##GetNavigator(aNavigator); } \
-  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener) { return _to##GetOpener(aOpener); } \
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent) { return _to##GetParent(aParent); } \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop) { return _to##GetTop(aTop); } \
   NS_IMETHOD    GetClosed(PRBool* aClosed) { return _to##GetClosed(aClosed); } \
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames) { return _to##GetFrames(aFrames); } \
+  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener) { return _to##GetOpener(aOpener); } \
+  NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener) { return _to##SetOpener(aOpener); } \
   NS_IMETHOD    GetStatus(nsString& aStatus) { return _to##GetStatus(aStatus); } \
   NS_IMETHOD    SetStatus(const nsString& aStatus) { return _to##SetStatus(aStatus); } \
   NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus) { return _to##GetDefaultStatus(aDefaultStatus); } \
@@ -124,11 +133,13 @@ public:
   NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
   NS_IMETHOD    Dump(const nsString& aStr) { return _to##Dump(aStr); }  \
   NS_IMETHOD    Alert(const nsString& aStr) { return _to##Alert(aStr); }  \
+  NS_IMETHOD    Focus() { return _to##Focus(); }  \
+  NS_IMETHOD    Blur() { return _to##Blur(); }  \
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID) { return _to##ClearTimeout(aTimerID); }  \
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID) { return _to##ClearInterval(aTimerID); }  \
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to##SetTimeout(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to##SetInterval(cx, argv, argc, aReturn); }  \
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to##Open(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to##Open(cx, argv, argc, aReturn); }  \
 
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);
