@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.5 2001/12/07 01:35:49 relyea%netscape.com Exp $
+ * $Id: ocsp.c,v 1.6 2002/05/15 23:59:40 jpierre%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -1490,6 +1490,9 @@ ocsp_GetResponseSignature(CERTOCSPResponse *response)
     ocspBasicOCSPResponse *basic;
 
     PORT_Assert(response != NULL);
+    if (NULL == response->responseBytes) {
+        return NULL;
+    }
     PORT_Assert(response->responseBytes != NULL);
     PORT_Assert(response->responseBytes->responseTypeTag
 		== SEC_OID_PKIX_OCSP_BASIC_RESPONSE);
@@ -1515,7 +1518,7 @@ CERT_DestroyOCSPResponse(CERTOCSPResponse *response)
 {
     if (response != NULL) {
 	ocspSignature *signature = ocsp_GetResponseSignature(response);
-	if (signature->cert != NULL)
+	if (signature && signature->cert != NULL)
 	    CERT_DestroyCertificate(signature->cert);
 
 	/*
@@ -1853,7 +1856,8 @@ ocsp_GetEncodedResponse(PRArenaPool *arena, PRFileDesc *sock)
 
 
     bufsize = OCSP_BUFSIZE;
-    buf = PORT_Alloc(bufsize);
+    buf = PORT_Alloc(bufsize+1);
+    buf[bufsize] = 0; /* NULL termination so string functions are OK */
     if (buf == NULL) {
 	goto loser;
     }
@@ -2013,26 +2017,6 @@ ocsp_GetEncodedResponse(PRArenaPool *arena, PRFileDesc *sock)
 		pendingCR = PR_FALSE;
 	    }
 	    continue;
-	}
-	/*
-	 * So, we have a good newline pointer (just past a CR, LF or CRLF),
-	 * but now we want to make sure that what it points to is long
-	 * enough to be something we are looking for.  If it isn't, add
-	 * more to the buffer after first copying what's left to the
-	 * beginning.
-	 */
-	if (((char *)bufEnd - newline) < 40) {
-	    len = (char *)bufEnd - newline;
-	    PORT_Memmove(buf, newline, len);
-	    bytesRead = ocsp_MinMaxRead(sock, buf + len, 40 - len,
-					bufsize - len);
-	    if (bytesRead <= 0) {
-		if (bytesRead == 0)
-		    PORT_SetError(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
-		goto loser;
-	    }
-	    newline = (char *)buf;
-	    bufEnd = buf + len + bytesRead;
 	}
 	/*
 	 * Okay, now we know that we are looking at an HTTP header line
