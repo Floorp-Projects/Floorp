@@ -1849,12 +1849,12 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         AddScriptEventListener(aName, aValue, kIDOMKeyListenerIID);
     else if (attributeName.EqualsIgnoreCase("onmousemove"))
         AddScriptEventListener(aName, aValue, kIDOMMouseMotionListenerIID); 
-    // XXX Temporarily commented out to avoid bustage of nsIXULWindowCallbacks in nsWebShellWindow
-    //else if (attributeName.EqualsIgnoreCase("onload"))
-    //    AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID); 
-    else if (attributeName.EqualsIgnoreCase("onunload") ||
+    else if (attributeName.EqualsIgnoreCase("onload") ||
+             attributeName.EqualsIgnoreCase("onunload") ||
              attributeName.EqualsIgnoreCase("onabort") ||
-             attributeName.EqualsIgnoreCase("onerror"))
+             attributeName.EqualsIgnoreCase("onerror") ||
+             attributeName.EqualsIgnoreCase("onconstruct") ||
+             attributeName.EqualsIgnoreCase("ondestruct"))
         AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID);
     else if (attributeName.EqualsIgnoreCase("onfocus") ||
              attributeName.EqualsIgnoreCase("onblur"))
