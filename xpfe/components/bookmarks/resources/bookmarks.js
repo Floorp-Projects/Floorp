@@ -205,7 +205,8 @@ function DropOnTree ( event )
 	if ( !trans )		return(false);
 	trans.addDataFlavor("text/plain");
 
-	var bookmarksChangedFlag = false;
+	var dirty = false;
+
 	for ( var i = 0; i < dragSession.numDropItems; ++i )
 	{
 		dragSession.getData ( trans, i );
@@ -248,17 +249,17 @@ function DropOnTree ( event )
 			if (dropAction == "after")	++nodeIndex;
 
 			RDFC.InsertElementAt(sourceNode, nodeIndex, true);
-			bookmarksChangedFlag = true;
+			dirty = true;
 		}
 		else
 		{
 			// drop on
 			RDFC.AppendElement(sourceNode);
-			bookmarksChangedFlag = true;
+			dirty = true;
 		}
 	}
 
-	if (bookmarksChangedFlag == true)
+	if (dirty == true)
 	{
 		var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
 		if (remote)
@@ -432,6 +433,8 @@ function doPaste()
 
 	dump("Loop over strings\n");
 
+	var dirty = false;
+
 	for (var x=0; x<strings.length; x=x+2)
 	{
 		var theID = strings[x];
@@ -445,12 +448,19 @@ function doPaste()
 			var IDRes = RDF.GetResource(theID);
 			if (!IDRes)	continue;
 
+			if (RDFC.IndexOf(IDRes) > 0)
+			{
+				dump("Unable to add ID:'" + theID + "' as its already in this folder.\n");
+				continue;
+			}
+
 			if (theName != "")
 			{
 				var NameLiteral = RDF.GetLiteral(theName);
 				if (NameLiteral)
 				{
 					Bookmarks.Assert(IDRes, nameRes, NameLiteral, true);
+					dirty = true;
 				}
 			}
 
@@ -461,17 +471,21 @@ function doPaste()
 			}
 			else
 			{
-				RDFC.InsertElementAt(IDRes, pasteNodeIndex++, false);	// XXX should probably be true
+				RDFC.InsertElementAt(IDRes, pasteNodeIndex++, true);
 				dump("Pasted at index # " + pasteNodeIndex + "\n");
 			}
+			dirty = true;
 		}
 	}
 
-	var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-	if (remote)
+	if (dirty == true)
 	{
-		remote.Flush();
-		dump("Wrote out bookmark changes.\n");
+		var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+		if (remote)
+		{
+			remote.Flush();
+			dump("Wrote out bookmark changes.\n");
+		}
 	}
 
 	return(true);
@@ -506,6 +520,8 @@ function doDelete(promptFlag)
 	var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
 	if (!Bookmarks)	return(false);
 
+	var dirty = false;
+
 	// note: backwards delete so that we handle odd deletion cases such as
 	//       deleting a child of a folder as well as the folder itself
 	for (var nodeIndex=select_list.length-1; nodeIndex>=0; nodeIndex--)
@@ -527,15 +543,20 @@ function doDelete(promptFlag)
 		if (!parentIDRes)	continue;
 
 		RDFC.Init(Bookmarks, parentIDRes);
-		RDFC.RemoveElement(IDRes, false);		// XXX should probably be true
+		RDFC.RemoveElement(IDRes, true);
+		dirty = true;
 	}
 
-	var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-	if (remote)
+	if (dirty == true)
 	{
-		remote.Flush();
-		dump("Wrote out bookmark changes.\n");
+		var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+		if (remote)
+		{
+			remote.Flush();
+			dump("Wrote out bookmark changes.\n");
+		}
 	}
+
 	return(true);
 }
 
@@ -543,12 +564,9 @@ function doDelete(promptFlag)
 
 function doSelectAll()
 {
-	// XXX once selectAll() is implemented, use that
-/*
 	var treeNode = document.getElementById("bookmarksTree");
 	if (!treeNode)    return(false);
 	treeNode.selectAll();
-*/
 	return(true);
 }
 
