@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.21 $ $Date: 2002/01/10 14:28:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.22 $ $Date: 2002/01/11 00:41:26 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -352,11 +352,16 @@ nssTrustDomain_RemoveCertFromCache
 {
     nssList *subjectList;
     PRStatus nssrv;
+    cache_entry *ce;
 #ifdef DEBUG_CACHE
     log_cert_ref("attempt to remove cert", cert);
 #endif
     PZ_Lock(td->cache->lock);
-    if (!nssHash_Exists(td->cache->issuerAndSN, cert)) {
+    ce = (cache_entry *)nssHash_Lookup(td->cache->issuerAndSN, cert);
+    if (!ce || ce->entry.cert != cert) {
+	/* If it's not in the cache, or a different cert is (this is really
+	 * for safety reasons, though it shouldn't happen), do nothing 
+	 */
 	PZ_Unlock(td->cache->lock);
 #ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("but it wasn't in the cache"));
@@ -431,7 +436,7 @@ remove_token_certs(const void *k, void *v, void *a)
 
 /* 
  * Remove all certs for the given token from the cache.  This is
- * needed if the token is removed.
+ * needed if the token is removed. 
  */
 NSS_IMPLEMENT PRStatus
 nssTrustDomain_RemoveTokenCertsFromCache
