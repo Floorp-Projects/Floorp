@@ -1377,17 +1377,6 @@ WaitForDebugger(void)
 }
 #endif
 
-#ifdef LINUX  /* bug 119340 */
-#include <signal.h>
-
-static void sigterm_handler(int signum)
-{
-    static char err_msg[] = "selfserv: received SIGTERM\n";
-    write(1, err_msg, sizeof(err_msg) - 1);
-    _exit(1);
-}
-#endif /* LINUX */
-
 int
 main(int argc, char **argv)
 {
@@ -1416,17 +1405,6 @@ main(int argc, char **argv)
     PLOptStatus          status;
     PRThread             *loggerThread;
     PRBool               debugCache = PR_FALSE; /* bug 90518 */
-#ifdef LINUX  /* bug 119340 */
-    struct sigaction     act;
-
-    act.sa_handler = sigterm_handler;
-    sigemptyset(&act.sa_mask);
-    act.sa_flags = 0;
-    if (sigaction(SIGTERM, &act, NULL) == -1) {
-        fprintf(stderr, "selfserv: sigaction failed: %d\n", errno);
-        exit(1);
-    }
-#endif /* LINUX */
 
 
     tmp = strrchr(argv[0], '/');
