@@ -1965,7 +1965,7 @@ SSM_ViewCertInfoKeywordHandler(SSMTextGenContext * cx)
   style = (char *) SSM_At(cx->m_params, STYLE_PARAM);
   PR_FREEIF(cx->m_result);
   if (!strcmp(style, "pretty")) 
-    rv = SSM_PrettyFormatCert(cert, pattern, &cx->m_result);
+    rv = SSM_PrettyFormatCert(cert, pattern, &cx->m_result, PR_TRUE);
   else
     rv = SSM_FormatCert(cert, pattern, &cx->m_result);
   goto done;
@@ -2598,15 +2598,25 @@ SSMStatus
 SSM_MakeUniqueNameForIssuerWindow(SSMTextGenContext *cx)
 {
   SSMResourceCert *certres;
-  CERTCertificate *issuer;
+  CERTCertificate *issuer, *serverCert;
   char *certHex=NULL, *issuerHex=NULL;
+  SSMSSLDataConnection *sslConn;
 
-  if (!SSM_IsAKindOf(cx->m_request->target, SSM_RESTYPE_CERTIFICATE)) {
-    return SSM_FAILURE;
+  if (SSM_IsAKindOf(cx->m_request->target, SSM_RESTYPE_CERTIFICATE)) {
+      certres = (SSMResourceCert*)cx->m_request->target;
+      serverCert = certres->cert;
+  } else if (SSM_IsAKindOf(cx->m_request->target, 
+			   SSM_RESTYPE_SSL_DATA_CONNECTION)) {
+      sslConn = (SSMSSLDataConnection*)cx->m_request->target;
+      serverCert = SSL_PeerCertificate(sslConn->socketSSL);
+      if (serverCert == NULL) {
+	goto loser;
+      }
+  } else {
+      goto loser;
   }
-  certres = (SSMResourceCert*)cx->m_request->target;
-  issuer = CERT_FindCertIssuer(certres->cert,PR_Now(),certUsageAnyCA);
-  certHex = CERT_Hexify(&certres->cert->serialNumber,0);
+  issuer = CERT_FindCertIssuer(serverCert,PR_Now(),certUsageAnyCA);
+  certHex = CERT_Hexify(&serverCert->serialNumber,0);
   if (issuer != NULL) {
     issuerHex = CERT_Hexify(&issuer->serialNumber,0);
     CERT_DestroyCertificate(issuer);
@@ -2616,6 +2626,8 @@ SSM_MakeUniqueNameForIssuerWindow(SSMTextGenContext *cx)
   PR_FREEIF(issuerHex);
   PR_Free(certHex);
   return SSM_SUCCESS;
+ loser:
+  return SSM_FAILURE;
 }
 
 SSMStatus 

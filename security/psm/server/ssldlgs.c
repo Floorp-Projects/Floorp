@@ -229,7 +229,8 @@ SSMStatus SSM_ServerCertKeywordHandler(SSMTextGenContext* cx)
     if (formatKey[0] ==  's') {
         rv = SSM_FormatCert(serverCert, pattern, &cx->m_result);
     } else if (formatKey[0] == 'p') {
-        rv = SSM_PrettyFormatCert(serverCert, pattern, &cx->m_result);
+        rv = SSM_PrettyFormatCert(serverCert, pattern, 
+                                  &cx->m_result, PR_FALSE);
     } else {
         SSM_DEBUG("cannot understand the format key.\n");
         rv = SSM_FAILURE;
@@ -1223,7 +1224,7 @@ loser:
 }
 
 SSMStatus SSM_PrettyFormatCert(CERTCertificate* cert, char* fmt, 
-                               char** result)
+                               char** result,PRBool addIssuerLink)
 {
     SSMStatus rv = SSM_SUCCESS;
     char * displayName = NULL, *location=NULL, *state = NULL, *country = NULL;
@@ -1276,7 +1277,8 @@ SSMStatus SSM_PrettyFormatCert(CERTCertificate* cert, char* fmt,
         /*
          * Don't add the extra link if this is a self-signed cert.
          */
-        if (CERT_CompareName(&cert->subject, &cert->issuer) != SECEqual) {
+        if (addIssuerLink &&
+            CERT_CompareName(&cert->subject, &cert->issuer) != SECEqual) {
             tmp=PR_smprintf("<a href=\"javascript:openIssuerWindow();\">%s</a>",
                               issuer);
             PR_Free(issuer);
