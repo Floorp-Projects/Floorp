@@ -5830,9 +5830,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       } // End of BOX CONSTRUCTION logic
 #ifdef MOZ_XUL
       // ------- Begin Grid ---------
-      else if ((!aXBLBaseTag && (display->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID ||
-                                 display->mDisplay == NS_STYLE_DISPLAY_GRID)) ||
-                aTag == nsXULAtoms::grid) {
+      else if (display->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID ||
+               display->mDisplay == NS_STYLE_DISPLAY_GRID) {
         processChildren = PR_TRUE;
         isReplaced = PR_TRUE;
         nsCOMPtr<nsIBoxLayout> layout;
