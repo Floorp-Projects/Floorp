@@ -158,3 +158,16 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
 }
 
 
+// XXX temporary code for Dialog investigation
+nsresult nsAppShell::GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent)
+{
+  aIsInWindow   = PR_FALSE;
+  aIsMouseEvent = PR_FALSE;
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsAppShell::DispatchNativeEvent(void * aEvent)
+{
+  return NS_ERROR_FAILURE;
+}

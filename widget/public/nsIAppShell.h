@@ -42,6 +42,7 @@ class nsDispatchListener {
     virtual void AfterDispatch() = 0;
 };
 
+class nsIWidget;
 
 /**
  * Application shell used for Test applications
@@ -64,6 +65,18 @@ public:
   */
   
   virtual nsresult Run() = 0;
+
+ /**
+  * After event dispatch execute app specific code
+  */
+  
+  NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent) = 0;
+
+ /**
+  * After event dispatch execute app specific code
+  */
+  
+  NS_IMETHOD DispatchNativeEvent(void * aEvent) = 0;
 
  /**
   * After event dispatch execute app specific code

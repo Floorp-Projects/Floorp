@@ -66,6 +66,9 @@ class nsAppShell : public nsIAppShell
 
     virtual void* GetNativeData(PRUint32 aDataType);
 
+    // XXX temporary for Dialog investigation
+    NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
+    NS_IMETHOD DispatchNativeEvent(void * aEvent);
 };
 
 #endif // nsAppShell_h__
