@@ -390,6 +390,9 @@ protected:
   // Convert a border style into line style.
   nsLineStyle ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle);
 
+  // Cache the box object
+  void EnsureBoxObject();
+
 protected: // Data Members
   // Our cached pres context.
   nsIPresContext* mPresContext;
