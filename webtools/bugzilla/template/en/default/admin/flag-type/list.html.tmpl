@@ -98,7 +98,7 @@
         <td>
           <a href="editflagtypes.cgi?action=copy&amp;id=[% type.id %]">Copy</a>
           | <a href="editflagtypes.cgi?action=confirmdelete&amp;id=[% type.id %]"
-               onclick="return confirmDelete([% type.id %], '[% type.name FILTER js %]',
+               onclick="return confirmDelete([% type.id %], '[% type.name FILTER js FILTER html %]',
                                              [% type.flag_count %]);">Delete</a>
         </td>
       </tr>

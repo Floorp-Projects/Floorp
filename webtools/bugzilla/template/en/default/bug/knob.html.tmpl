@@ -97,7 +97,7 @@
         [% terms.bug %] to
       </label>
       <input name="assigned_to" size="32"
-             onchange="if ((this.value != '[% bug.assigned_to.email FILTER js %]') &&
+             onchange="if ((this.value != '[% bug.assigned_to.email FILTER js FILTER html %]') &&
                             (this.value != '')) {
                          document.changeform.knob[[% knum %]].checked=true;
                        }"
