@@ -18,38 +18,12 @@
         style="&prefWindow.size;"
         windowtype="mozilla:preferences"
         buttons="accept,cancel,help"
-        onload="Startup();"
-        ondialogaccept="return hPrefWindow.onOK(event);"
-        ondialogcancel="return hPrefWindow.onCancel(event);"
-        ondialoghelp="return doHelpButton(event)"
+        onload="onLoad();"
+        ondialogaccept="return hPrefWindow.onAccept();"
+        ondialogcancel="return hPrefWindow.onCancel();"
+        ondialoghelp="doHelpButton();"
         persist="screenX screenY"> 
 
-  <script>
-  <![CDATA[
-
-  var hPrefWindow = null;
-
-  /** General startup routine for preferences dialog. 
-   *  Place all necessary modifications to pref tree here. 
-   **/
-  function Startup()
-    {
-      hPrefWindow = new nsPrefWindow('panelFrame');  
-      
-      if( !hPrefWindow )
-        throw "failed to create prefwindow";
-
-      hPrefWindow.init();
-
-      // If this call worked, we could center the window here:
-      // centerWindowOnScreen();
-      
-    }
-  
-  ]]>
-  
-  </script>        
-        
   <stringbundle id="bundle_prefutilities"
                src="chrome://communicator/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/nsWidgetStateManager.js"/>
@@ -81,5 +55,5 @@
       }
     ]]>
     </script>
-     
+
 </dialog>
