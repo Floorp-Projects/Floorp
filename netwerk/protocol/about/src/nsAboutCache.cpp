@@ -356,7 +356,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
     // Stream based
     mBuffer.Append("<tt>&nbsp;&nbsp;Stream based: </tt>");
     PRBool b = PR_TRUE;
-    entryInfo->GetStreamBased(&b);
+    entryInfo->IsStreamBased(&b);
     mBuffer.Append(b ? "TRUE" : "FALSE");
     mBuffer.Append("<br>\n");
 
