@@ -111,7 +111,7 @@ while($line = <fpInIt>)
       $installSizeArchive = OutputInstallSizeArchive("$inXpiPath/$componentName");
     }
 
-    print fpOutIni "Install Size Archive=$installSizeArchive\n";
+    print fpOutIni "Archive Size=$installSizeArchive\n";
   }
   elsif($line =~ /\$Version\$/i)
   {
@@ -153,7 +153,6 @@ sub OutputInstallSizeArchive()
 
   print "   calculating size for $inPath\n";
   ($dev, $ino, $mode, $nlink, $uid, $gui, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat $inPath;
-  $installSizeArchive   += 32768; # take into account install.js
   $installSizeArchive    = int($size / 1024);
   $installSizeArchive   += 1;
   return($installSizeArchive);
