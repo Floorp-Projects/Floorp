@@ -2,7 +2,7 @@
  * default prefs for mdn
  */
 
-pref("mail.identity.default.use_custom_prefs", true);            // false: Use global true: Use custom
+pref("mail.identity.default.use_custom_prefs", false);            // false: Use global true: Use custom
 
 pref("mail.identity.default.request_return_receipt_on", false);
 
