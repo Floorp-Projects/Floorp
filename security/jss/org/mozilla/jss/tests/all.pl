@@ -49,6 +49,12 @@ sub usage {
 }
 
 my $nss_lib_dir;
+my $dist_dir;
+my $pathsep       = ":";
+my $scriptext     = "sh";
+my $exe_suffix    = "";
+my $jss_rel_dir   = "";
+my $jss_classpath = "";
 
 sub setup_vars {
     my $argv = shift;
@@ -56,10 +62,9 @@ sub setup_vars {
     my $osname = `uname -s`;
 
     my $truncate_lib_path = 1;
-    my $pathsep = ":";
-    my $exe_suffix = "";
     if( $osname =~ /HP/ ) {
         $ld_lib_path = "SHLIB_PATH";
+	$scriptext = "sh";
     } elsif( $osname =~ /win/i ) {
         $ld_lib_path = "PATH";
         $truncate_lib_path = 0;
@@ -67,9 +72,11 @@ sub setup_vars {
         $exe_suffix = ".exe";
     } else {
         $ld_lib_path = "LD_LIBRARY_PATH";
+	$scriptext = "sh";
     }
 
-    my $dbg_suffix = "_dbg";
+    my $jar_dbg_suffix = "_dbg";
+    my $dbg_suffix     = "_DBG";
     $ENV{BUILD_OPT} and $dbg_suffix = "";
 
     $ENV{CLASSPATH}  = "";
@@ -77,24 +84,27 @@ sub setup_vars {
 
     if( $$argv[0] eq "dist" ) {
         shift @$argv;
-        my $dist_dir = shift @$argv or usage("did not provide dist_dir");
+        $dist_dir = shift @$argv or usage("did not provide dist_dir");
 
-        $ENV{CLASSPATH} .= "$dist_dir/../xpclass$dbg_suffix.jar";
+        $ENV{CLASSPATH} .= "$dist_dir/../xpclass$jar_dbg_suffix.jar";
         ( -f $ENV{CLASSPATH} ) or die "$ENV{CLASSPATH} does not exist";
         $ENV{$ld_lib_path} = $ENV{$ld_lib_path} . $pathsep . "$dist_dir/lib";
-        $nss_lib_dir = "$dist_dir/lib"
+        $nss_lib_dir   = "$dist_dir/lib";
+        $jss_rel_dir   = "$dist_dir/../classes$dbg_suffix/org";
+        $jss_classpath = "$dist_dir/../xpclass$jar_dbg_suffix.jar";
     } elsif( $$argv[0] eq "release" ) {
         shift @$argv;
 
-        my $jss_rel_dir = shift @$argv or usage();
-        my $nss_rel_dir = shift @$argv or usage();
+        $jss_rel_dir     = shift @$argv or usage();
+        my $nss_rel_dir  = shift @$argv or usage();
         my $nspr_rel_dir = shift @$argv or usage();
 
-        $ENV{CLASSPATH} .= "$jss_rel_dir/../xpclass$dbg_suffix.jar";
+        $ENV{CLASSPATH} .= "$jss_rel_dir/../xpclass$jar_dbg_suffix.jar";
         $ENV{$ld_lib_path} =
             "$jss_rel_dir/lib$pathsep$nss_rel_dir/lib$pathsep$nspr_rel_dir/lib"
             . $pathsep . $ENV{$ld_lib_path};
         $nss_lib_dir = "$nss_rel_dir/lib";
+        $jss_classpath = "$jss_rel_dir/../xpclass$jar_dbg_suffix.jar";
     } else {
         usage();
     }
@@ -153,6 +163,7 @@ if( ! -d $testdir ) {
     $result and die "Failed to copy builtins library";
 }
 my $result;
+
 print STDERR "============= Setup DB\n";
 $result = system("$java org.mozilla.jss.tests.SetupDBs testdir $pwfile");
 $result >>=8;
@@ -195,6 +206,13 @@ $result = system("$java org.mozilla.jss.tests.SigTest $testdir " .
             "\"$signingToken\" $pwfile"); $result >>=8;
 $result and die "SigTest returned $result";
 
+# test JCA Sig Test
+#
+print STDERR "============= test Mozilla-JSS SigatureSPI JCASitTest\n";
+$result = system("$java org.mozilla.jss.tests.JCASigTest $testdir $pwfile");
+$result >>=8;
+$result and die "TestJCASigTest returned $result";
+
 # test Secret Decoder Ring
 #
 print STDERR "============= test Secret Decoder Ring\n";
@@ -202,9 +220,52 @@ $result = system("$java org.mozilla.jss.tests.TestSDR $testdir $pwfile");
 $result >>=8;
 $result and die "TestSDR returned $result";
 
-# test JCA Sig Test
 #
-print STDERR "============= test Mozilla-JSS SigatureSPI JCASitTest\n";
-$result = system("$java org.mozilla.jss.tests.JCASigTest $testdir $pwfile");
+# Generate a known cert pair that can be used for testing
+#
+print STDERR "============= Generate known cert pair for testing\n";
+$result=system("$java org.mozilla.jss.tests.GenerateTestCert $testdir $pwfile");
 $result >>=8;
-$result and die "TestJCASigTest returned $result";
+$result and die "Generate known cert pair for testing returned $result";
+
+#
+# Create keystore.pfx from generated cert db
+# for "JSSCATestCert"
+print STDERR "============= convert PKCS11 cert to PKCS12 format\n";
+$result = system("$nss_lib_dir/../bin/pk12util$exe_suffix -o keystore.pfx -n JSSCATestCert -d ./$testdir -K netscape -W netscape");
+$result >>=8;
+$result and die "Convert PKCS11 to PKCS12 returned $result";
+
+#
+# Start both JSS and JSSE servers
+#
+print STDERR "============= Start JSSE server tests\n";
+$result=system("./startJsseServ.$scriptext $jss_classpath $testdir");
+$result >>=8;
+$result and die "JSSE servers returned $result";
+
+#
+# Test JSS client communication
+#
+print STDERR "============= Start JSS client tests\n";
+$result = system("cp $testdir/*.db .");
+$result = system("$java org.mozilla.jss.tests.JSS_SSLClient");
+$result >>=8;
+$result and die "JSS client returned $result";
+
+#
+# Start both JSS and JSSE servers
+#
+print STDERR "============= Start JSS server tests\n";
+$result=system("./startJssServ.$scriptext $jss_classpath $testdir");
+$result >>=8;
+$result and die "JSS servers returned $result";
+
+#
+# Test JSSE client communication
+#
+print STDERR "============= Start JSSE client tests\n";
+$result = system("$java org.mozilla.jss.tests.JSSE_SSLClient");
+$result >>=8;
+$result and die "JSSE client returned $result";
+
