@@ -29,7 +29,7 @@
 #include "nsIInputStream.h"
 #include "nsIURL.h"
 #include "nsINetService.h"
-
+#include "nsRepository.h"
 #include "nsString.h"
 
 int urlLoaded;
@@ -37,6 +37,19 @@ PRBool bTraceEnabled;
 PRBool bLoadAsync;
 
 #include "nsIPostToServer.h"
+#include "nsINetService.h"
+
+#ifdef XP_PC
+#define NETLIB_DLL "netlib.dll"
+#else
+#ifdef XP_MAC
+#include "nsMacRepository.h"
+#else
+#define NETLIB_DLL "netlib.so"
+#endif
+#endif
+
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
 
@@ -199,6 +212,8 @@ int main(int argc, char **argv)
         printf("test: [-trace] [-sync] <URL>\n");
         return 0;
     }
+
+    nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     bTraceEnabled = PR_FALSE;
     bLoadAsync    = PR_TRUE;
