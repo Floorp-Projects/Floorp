@@ -2238,7 +2238,12 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
                 NS_ERROR("Menu/key event will fail without the ability to create the event early.");
                 return ret;
             }
-            //domEvent->SetTarget(this);
+            
+            nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
+            if (privateEvent) {
+              privateEvent->SetTarget(this);
+            }
+            else return NS_ERROR_FAILURE;
         }
     }
   

@@ -121,6 +121,7 @@ public:
 
   // nsIPrivateDOMEvent interface
   NS_IMETHOD    DuplicatePrivateData();
+  NS_IMETHOD    SetTarget(nsIDOMNode* aNode);
 
 protected:
 
