@@ -1,3 +1,7 @@
 Makefile
 .deps
 _img_list
+imglib2.dll
+module.rc
+module.res
+dependentLibs.h
