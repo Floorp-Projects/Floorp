@@ -749,34 +749,6 @@ nsGfxScrollFrame::Reflow(nsIPresContext*   aPresContext,
       size->height = mInner->mMaxElementSize.height;
     else 
       mInner->mMaxElementSize.height = size->height;
-    
-
-    // make sure we add in our scrollbar.
-    nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
-
-    const nsStyleDisplay* styleDisplay = nsnull;
-
-    nsIFrame* frame = nsnull;
-    GetFrame(&frame);
-    frame->GetStyleData(eStyleStruct_Display,
-                      (const nsStyleStruct*&)styleDisplay);
-
-    if (mInner->mHasVerticalScrollbar || 
-      styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
-      styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) {
-      nsSize vSize(0,0);
-      mInner->mVScrollbarBox->GetMinSize(state, vSize);
-      AddMargin(mInner->mVScrollbarBox, vSize);
-      size->width += vSize.width;
-  
-      nsMargin border;
-      GetBorderAndPadding(border);
-      nsMargin inset;
-      GetInset(inset);
-      border += inset;
-     
-      size->width += border.left + border.right + inset.left + inset.right;
-    }
   }
   
   return rv;
