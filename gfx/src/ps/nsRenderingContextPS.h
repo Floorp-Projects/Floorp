@@ -197,8 +197,28 @@ public:
                                nsTextDimensions& aLastWordDimensions,
                                PRInt32*          aFontID = nsnull);
 
-  NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint);
-  NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
+  
+  /** ---------------------------------------------------
+   *  Draw an image
+   *    @param aImage     The image to draw
+   *           aSrcRect   The portion of the image to draw. [x,y] denotes
+   *                      the top left corner of the region.
+   *           aDestPoint The location of the image on the page. [x,y] denotes
+   *                      the top left corner.
+   */
+  NS_IMETHOD DrawImage(imgIContainer *aImage,
+    const nsRect * aSrcRect, const nsPoint * aDestPoint);
+
+  /** ---------------------------------------------------
+   *  Draw an image, scaling it to fit a specified rectangle.
+   *    @param aImage     The image to draw
+   *           aSrcRect   The portion of the image to draw. [x,y] denotes
+   *                      the top left corner of the region.
+   *           aDestPoint The region of the page that the image should
+   *                      occupy. [x,y] denotes the top left corner.
+   */
+  NS_IMETHOD DrawScaledImage(imgIContainer *aImage,
+    const nsRect * aSrcRect, const nsRect * aDestRect);
 
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
@@ -211,18 +231,6 @@ public:
    */
   void PostscriptFont(nscoord aHeight, PRUint8 aStyle, 
 			  PRUint8 aVariant, PRUint16 aWeight, PRUint8 decorations);
-
-  /** ---------------------------------------------------
-   *  Output postscript text to a file set up by the nsDeviceContextPS
-   *	@update 12/21/98 dwc
-   */  
-  void PostscriptTextOut(const char *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY, PRInt32 aFontID,
-                                    const nscoord* aSpacing, PRBool aIsUnicode);
-
-  void PostscriptTextOut(const PRUnichar  *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY, PRInt32 aFontID,
-                                    const nscoord* aSpacing, PRBool aIsUnicode);
 
   inline nsPostScriptObj* GetPostScriptObj() { return mPSObj; };
 
@@ -267,6 +275,15 @@ public:
                                 PRInt32*           aFontID = nsnull);
 #endif /* MOZ_MATHML */
 
+  /** ---------------------------------------------------
+   *  Output postscript supplied by the caller to the print job. The
+   *  caller should have already called PushState() (and preferably
+   *  SetClipRect()).
+   *    @update  9/31/2003 kherron
+   *    @param   aData    Buffer containing postscript to be output
+   *             aDataLen Number of characters in aData
+   *    @return  NS_OK
+   */
   NS_IMETHOD RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen);
 
 private:

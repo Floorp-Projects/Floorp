@@ -45,6 +45,7 @@
 #ifdef __cplusplus
 #include "nsColor.h"
 #include "nsCoord.h"
+#include "nsRect.h"
 #include "nsString.h"
 
 #include "nsCOMPtr.h"
@@ -62,9 +63,6 @@ class nsIImage;
 
 #define N_FONTS 8
 #define INCH_TO_PAGE(f) ((int) (.5 + (f)*720))
-#define PAGE_TO_POINT_I(f) ((int) ((f) / 10.0))
-#define PAGE_TO_POINT_F(f) ((f) / 10.0)
-#define POINT_TO_PAGE(p) ((p)*10)
 
 typedef int XP_Bool;
 
@@ -169,13 +167,13 @@ typedef struct PrintInfo_ PrintInfo;
 ** Used to pass info into text and/or postscript translation
 */
 struct PrintSetup_ {
-  int top;                        /* Margins  (PostScript Only) */
-  int bottom;
-  int left;
-  int right;
+  nscoord top;			/* Margins -- distance from the edge */
+  nscoord bottom;		/* of the printable region to the */
+  nscoord left;			/* edge of the paper. Measured in twips. */
+  nscoord right;
 
-  int width;                       /* Paper size, # of cols for text xlate */
-  int height;
+  nscoord width;		/* Paper size, in twips. */
+  nscoord height;
   
   const char* header;
   const char* footer;
@@ -263,22 +261,24 @@ public:
    */
   void add_cid_check();
   /** ---------------------------------------------------
-   *  move the cursor to this location
-   *	@update 2/1/99 dwc
+   *  move the current point to this location
+   *	@update 9/30/2003 kherron
+   *	@param  aX   X coordinate
+   *	        aY   Y coordinate
+   *    @return VOID
    */
-  void moveto(int aX, int aY);
+  void moveto(nscoord aX, nscoord aY);
   /** ---------------------------------------------------
-   *  move the cursor to this location
-   *	@update 2/1/99 dwc
+   *  Add a line to the current path, from the current point
+   *  to the specified point.
+   *	@update 9/30/2003
+   *	@param  aX   X coordinate
+   *	        aY   Y coordinate
+   *	@return VOID
    */
-  void moveto_loc(int aX, int aY);
+  void lineto(nscoord aX, nscoord aY);
   /** ---------------------------------------------------
-   *  put down a line from the current cursor to the x and y location
-   *	@update 2/1/99 dwc
-   */
-  void lineto(int aX, int aY);
-  /** ---------------------------------------------------
-   *  close the current postscript path, basically will return to the starting point
+   *  close the current path.
    *	@update 2/1/99 dwc
    */
   void closepath();
@@ -288,29 +288,42 @@ public:
    *  @param aWidth - Width of the ellipse
    *  @param aHeight - Height of the ellipse
    */
-  void ellipse(int aWidth, int aHeight);
+  void ellipse(nscoord aWidth, nscoord aHeight);
   /** ---------------------------------------------------
    *  create an elliptical path
    *	@update 2/1/99 dwc
    *  @param aWidth - Width of the ellipse
    *  @param aHeight - Height of the ellipse
    */
-  void arc(int aWidth, int aHeight,float aStartAngle,float aEndAngle);
+  void arc(nscoord aWidth, nscoord aHeight,float aStartAngle,float aEndAngle);
   /** ---------------------------------------------------
-   *  create a retangular path
-   *	@update 2/1/99 dwc
+   *  create a retangular path. The current point is at
+   *  the top left corner.
+   *	@update 9/30/2003 kherron
+   *	@param aX      Starting point X
+   *	@param aY      Starting point Y
+   *	@param aWidth  Distance rightwards.
+   *	@param aHeight Distance downwards.
    */
-  void box(int aWidth, int aHeight);
+  void box(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   /** ---------------------------------------------------
-   *  create a retangular path, but winding the opposite way of a normal path, for clipping
-   *	@update 2/1/99 dwc
+   *  create a retangular path, drawing counterclockwise.
+   *  The current point is at the top left corner.
+   *	@update 9/30/2003 kherron
+   *	@param aWidth  Distance rightwards.
+   *	@param aHeight Distance downwards.
    */
-  void box_subtract(int aWidth, int aHeight);
+  void box_subtract(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   /** ---------------------------------------------------
-   *  Draw a postscript line
-   *	@update 2/1/99 dwc
+   *  Draw (stroke) a line.
+   *	@update 9/30/2003 kherron
+   *	@param  aX1     Starting point X
+   *	        aY1     Starting point Y
+   *	        aX2     Ending point X
+   *	        aY2     Ending point Y
+   *	        aThick  Line thickness
    */
-  void line(int aX1, int aY1, int aX2, int aY2, int aThink);
+  void line(nscoord aX1, nscoord aY1, nscoord aX2, nscoord aY2, nscoord aThick);
   /** ---------------------------------------------------
    *  strock the current path
    *	@update 2/1/99 dwc
@@ -331,21 +344,24 @@ public:
    *	@update 2/1/99 dwc
    */
   void graphics_restore();
+
   /** ---------------------------------------------------
    *  output a color postscript image
-   *	@update 2/1/99 dwc
+   *	@update 9/30/2003 kherron
+   *	@param aImage   The image to draw
+   *	       sRect    The portion of the image to draw
+   *	       dRect    Where on the page to place the image
    */
-  void colorimage(nsIImage *aImage,
-                  int aSX, int aSY, int aSWidth, int aSHeight,
-                  int aDX, int aDY, int aDWidth, int aDHeight);
+  void colorimage(nsIImage *aImage, const nsRect& sRect, const nsRect& dRect);
 
   /** ---------------------------------------------------
    *  output a grayscale postscript image
-   *	@update 9/1/99 dwc
+   *	@update 9/30/2003 kherron
+   *	@param aImage   The image to draw
+   *	       sRect    The portion of the image to draw
+   *	       dRect    Where on the page to place the image
    */
-  void grayimage(nsIImage *aImage,
-                 int aSX, int aSY, int aSWidth, int aSHeight,
-                 int aDX, int aDY, int aDWidth, int aDHeight);
+  void grayimage(nsIImage *aImage, const nsRect& sRect, const nsRect& dRect);
 
   /** ---------------------------------------------------
    *  ???
@@ -369,9 +385,11 @@ public:
   void annotate_page( const char*, int, int, int);
   /** ---------------------------------------------------
    *  translate the current coordinate system
-   *	@update 2/1/99 dwc
+   *	@update 9/30/2003
+   *	@param aX   Distance to move X coordinates
+   *	       aY   Distance to move Y coordinates
    */
-  void translate(int aX, int aY);
+  void translate(nscoord aX, nscoord aY);
   /** ---------------------------------------------------
    *  Issue a PS show command, which causes image to be rastered
    *	@update 2/1/99 dwc

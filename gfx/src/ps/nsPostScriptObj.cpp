@@ -89,7 +89,6 @@ static PRLogModuleInfo *nsPostScriptObjLM = PR_NewLogModule("nsPostScriptObj");
 #define NS_PS_BLUE(x) (((float)(NS_GET_B(x))) / 255.0) 
 #define NS_PS_GRAY(x) (((float)(x)) / 255.0) 
 #define NS_RGB_TO_GRAY(r,g,b) ((int(r) * 77 + int(g) * 150 + int(b) * 29) / 256)
-#define NS_TWIPS_TO_POINTS(x) (((x) / 20))
 #define NS_IS_BOLD(x) (((x) >= 401) ? 1 : 0) 
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -394,7 +393,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     memset(mPrintContext, 0, sizeof(struct PSContext_));
     memset(pi, 0, sizeof(struct PrintInfo_));
 
-    mPrintSetup->dpi = 72.0f;                  // dpi for externally sized items 
+    mPrintSetup->dpi = 72.0f;   // dpi for externally sized items 
     aSpec->GetLandscape( landscape );
     fwidth  = mPrintSetup->paper_size->width;
     fheight = mPrintSetup->paper_size->height;
@@ -406,13 +405,19 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
       fheight = temp;
     }
 
-    mPrintSetup->left   = (int)(mPrintSetup->paper_size->left   * mPrintSetup->dpi);
-    mPrintSetup->top    = (int)(mPrintSetup->paper_size->top    * mPrintSetup->dpi);
-    mPrintSetup->bottom = (int)(mPrintSetup->paper_size->bottom * mPrintSetup->dpi);
-    mPrintSetup->right  = (int)(mPrintSetup->paper_size->right  * mPrintSetup->dpi);
+    mPrintSetup->left   = NSToCoordRound(mPrintSetup->paper_size->left
+                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
+    mPrintSetup->top    = NSToCoordRound(mPrintSetup->paper_size->top
+                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
+    mPrintSetup->bottom = NSToCoordRound(mPrintSetup->paper_size->bottom
+                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
+    mPrintSetup->right  = NSToCoordRound(mPrintSetup->paper_size->right
+                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
     
-    mPrintSetup->width  = (int)(fwidth  * mPrintSetup->dpi);
-    mPrintSetup->height = (int)(fheight * mPrintSetup->dpi);
+    mPrintSetup->width  = NSToCoordRound(fwidth
+                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
+    mPrintSetup->height = NSToCoordRound(fheight
+                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
 #ifdef DEBUG
     printf("\nPreWidth = %f PreHeight = %f\n",fwidth,fheight);
     printf("\nWidth = %d Height = %d\n",mPrintSetup->width,mPrintSetup->height);
@@ -450,8 +455,8 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintSetup->carg = nsnull;                // Data saved for completion routine 
     mPrintSetup->status = 0;                   // Status of URL on completion 
 
-    pi->page_height = mPrintSetup->height * 10;	// Size of printable area on page 
-    pi->page_width = mPrintSetup->width * 10;	// Size of printable area on page 
+    pi->page_height = mPrintSetup->height;	// Size of printable area on page 
+    pi->page_width = mPrintSetup->width;	// Size of printable area on page 
     pi->page_break = 0;	              // Current page bottom 
     pi->page_topy = 0;	              // Current page top 
     pi->phase = 0;
@@ -504,21 +509,6 @@ nsPostScriptObj::initialize_translation(PrintSetup* pi)
   PrintSetup *dup = (PrintSetup *)malloc(sizeof(PrintSetup));
   *dup = *pi;
   mPrintContext->prSetup = dup;
-  dup->width = POINT_TO_PAGE(dup->width);
-  dup->height = POINT_TO_PAGE(dup->height);
-  dup->top = POINT_TO_PAGE(dup->top);
-  dup->left = POINT_TO_PAGE(dup->left);
-  dup->bottom = POINT_TO_PAGE(dup->bottom);
-  dup->right = POINT_TO_PAGE(dup->right);
-/*
-  if (pi->landscape){
-    dup->height = POINT_TO_PAGE(pi->width);
-    dup->width = POINT_TO_PAGE(pi->height);
-    //XXX Should I swap the margins too ??? 
-    //XXX kaie: I don't think so... The user still sees the options
-    //          named left margin etc.
-  }	
-*/
 }
 
 /** ---------------------------------------------------
@@ -533,11 +523,11 @@ FILE *f;
 
   f = mPrintContext->prSetup->out;
   fprintf(f, "%%!PS-Adobe-3.0\n");
-  fprintf(f, "%%%%BoundingBox: %d %d %d %d\n",
-              PAGE_TO_POINT_I(mPrintContext->prSetup->left),
-	            PAGE_TO_POINT_I(mPrintContext->prSetup->top),
-	            PAGE_TO_POINT_I(mPrintContext->prSetup->width-mPrintContext->prSetup->right),
-	            PAGE_TO_POINT_I(mPrintContext->prSetup->height-(mPrintContext->prSetup->bottom + mPrintContext->prSetup->top)));
+  fprintf(f, "%%%%BoundingBox: %g %g %g %g\n",
+    NSTwipsToFloatPoints(mPrintContext->prSetup->left),
+    NSTwipsToFloatPoints(mPrintContext->prSetup->top),
+    NSTwipsToFloatPoints(mPrintContext->prSetup->width-mPrintContext->prSetup->right),
+    NSTwipsToFloatPoints(mPrintContext->prSetup->height-(mPrintContext->prSetup->bottom + mPrintContext->prSetup->top)));
 
   fprintf(f, "%%%%Creator: Mozilla PostScript module (%s/%lu)\n",
              "rv:" MOZILLA_VERSION, (unsigned long)NS_BUILD_ID);
@@ -593,90 +583,40 @@ FILE *f;
 
   fprintf(f, "] /isolatin1encoding exch def\n");
 
+  // Procedure to reencode and invert a font
+  fprintf(f, "%s",
+      "/Mfr {\n"
+      "  findfont dup length dict\n"
+      "  begin\n"
+      "    {1 index /FID ne {def} {pop pop} ifelse} forall\n"
+      "    /Encoding isolatin1encoding def\n"
+      // Generate a new fontmatrix with the Y scale inverted
+      "    1 -1 matrix scale /FontMatrix load\n"
+      "    matrix concatmatrix /FontMatrix exch def\n"
+      "    currentdict\n"
+      "  end\n"
+      "  definefont pop\n"
+      "} bind def\n");
+
+  // Procedure to select and scale a font, using selectfont if available. See
+  // Adobe Technical note 5048. Note msf args are backwards from selectfont.
+  fprintf(f, "%s",
+    "/Msf /selectfont where\n"
+    "  { pop { exch selectfont } }\n"
+    "  { { findfont exch scalefont setfont } }\n"
+    "  ifelse\n"
+    "  bind def\n");
+
   for(i=0;i<NUM_AFM_FONTS;i++){
     fprintf(f, 
-	          "/F%d\n"
-	          "    /%s findfont\n"
-	          "    dup length dict begin\n"
-	          "	{1 index /FID ne {def} {pop pop} ifelse} forall\n"
-	          "	/Encoding isolatin1encoding def\n"
-	          "    currentdict end\n"
-	          "definefont pop\n"
-	          "/f%d { /csize exch def /F%d findfont csize scalefont setfont } bind def\n",
-		        i, gSubstituteFonts[i].mPSName, i, i);
+      "/F%d /%s Mfr\n"
+      "/f%d { dup /csize exch def /F%d Msf } bind def\n",
+      i, gSubstituteFonts[i].mPSName, i, i);
 
   }
 
   fprintf(f, "%s",
-    "/rhc {\n"
-    "    {\n"
-    "        currentfile read {\n"
-    "	    dup 97 ge\n"
-    "		{ 87 sub true exit }\n"
-    "		{ dup 48 ge { 48 sub true exit } { pop } ifelse }\n"
-    "	    ifelse\n"
-    "	} {\n"
-    "	    false\n"
-    "	    exit\n"
-    "	} ifelse\n"
-    "    } loop\n"
-    "} bind def\n"
-    "\n"
-    "/cvgray { % xtra_char npix cvgray - (string npix long)\n"
-    "    dup string\n"
-    "    0\n"
-    "    {\n"
-    "	rhc { cvr 4.784 mul } { exit } ifelse\n"
-    "	rhc { cvr 9.392 mul } { exit } ifelse\n"
-    "	rhc { cvr 1.824 mul } { exit } ifelse\n"
-    "	add add cvi 3 copy put pop\n"
-    "	1 add\n"
-    "	dup 3 index ge { exit } if\n"
-    "    } loop\n"
-    "    pop\n"
-    "    3 -1 roll 0 ne { rhc { pop } if } if\n"
-    "    exch pop\n"
-    "} bind def\n"
-    "\n"
-    "/smartimage12rgb { % w h b [matrix] smartimage12rgb -\n"
-    "    /colorimage where {\n"
-    "	pop\n"
-    "	{ currentfile rowdata readhexstring pop }\n"
-    "	false 3\n"
-    "	colorimage\n"
-    "    } {\n"
-    "	exch pop 8 exch\n"
-    "	3 index 12 mul 8 mod 0 ne { 1 } { 0 } ifelse\n"
-    "	4 index\n"
-    "	6 2 roll\n"
-    "	{ 2 copy cvgray }\n"
-    "	image\n"
-    "	pop pop\n"
-    "    } ifelse\n"
-    "} def\n"
-    "/cshow { dup stringwidth pop 2 div neg 0 rmoveto show } bind def\n"
-    "/rshow { dup stringwidth pop neg 0 rmoveto show } bind def\n"
-    "/BeginEPSF {\n"
-    "  /b4_Inc_state save def\n"
-    "  /dict_count countdictstack def\n"
-    "  /op_count count 1 sub def\n"
-    "  userdict begin\n"
-    "  /showpage {} def\n"
-    "  0 setgray 0 setlinecap 1 setlinewidth 0 setlinejoin\n"
-    "  10 setmiterlimit [] 0 setdash newpath\n"
-    "  /languagelevel where\n"
-    "  { pop languagelevel 1 ne\n"
-    "    { false setstrokeadjust false setoverprint } if\n"
-    "  } if\n"
-    "} bind def\n"
-    "/EndEPSF {\n"
-    "  count op_count sub {pop} repeat\n"
-    "  countdictstack dict_count sub {end} repeat\n"
-    "  b4_Inc_state restore\n"
-    "} bind def\n"
-
-    "\n"
-
+    // Unicode glyph dictionary
     "/UniDict    <<\n"
     "16#0020    /space\n"
     "16#0021    /exclam\n"
@@ -1792,7 +1732,7 @@ FILE *f;
 
     "/draw_undefined_char\n"
     "{\n"
-    "  /NoglyphFont findfont csize scalefont setfont (a) show\n"
+    "  csize /NoglyphFont Msf (a) show\n"
     "} bind def\n"
     "\n"
     "/real_unicodeshow\n"
@@ -1828,7 +1768,7 @@ FILE *f;
     "    NativeFont findfont /FontName get /Courier eq {\n"
     "      false\n"
     "    } {\n"
-    "      NativeFont findfont csize scalefont setfont\n"
+    "      csize NativeFont Msf\n"
     "      /Unicode2NativeDict where {\n"
     "        pop\n"
     "        Unicode2NativeDict ccode known {\n"
@@ -1869,7 +1809,7 @@ FILE *f;
     "    UCS2Font findfont /FontName get /Courier eq {\n"
     "      false\n"
     "    } {\n"
-    "      UCS2Font findfont csize scalefont setfont\n"
+    "      csize UCS2Font Msf\n"
     "      ccode mbshow\n"
     "      true\n"
     "    } ifelse\n"
@@ -1929,6 +1869,34 @@ FILE *f;
     "  /unicodeshow2 { real_unicodeshow_native } bind def\n"
     "} bind def\n"
 
+    // Procedure to stroke a rectangle. Coordinates are rounded
+    // to device pixel boundaries. See Adobe Technical notes 5111 and
+    // 5126 and the "Scan Conversion" section of the PS Language
+    // Reference for background.
+    "/Mrect { % x y w h Mrect -\n"
+    "  2 index add\n"		// x y w h+y
+    "  4 1 roll\n"		// h+y x y w
+    "  2 index add\n"		// h+y x y w+x
+    "  4 1 roll\n"		// w+x h+y x y
+    "  transform round .1 add exch round .1 add exch itransform\n"
+    "  4 -2 roll\n"		// x' y' w+x h+x
+    "  transform round .1 sub exch round .1 sub exch itransform\n"
+    "  2 index sub\n"		// x' y' w'+x h'
+    "  4 1 roll\n"		// h' x' y' w'+x
+    "  2 index sub\n"		// h' x' y' w'
+    "  4 1 roll\n"		// w' h' x' y'
+    "  moveto\n"		// w' h'
+    "  dup 0 exch rlineto\n"	// w' h'
+    "  exch 0 rlineto\n"	// h'
+    "  neg 0 exch rlineto\n"	// -
+    "  closepath\n"
+    "} bind def\n"
+
+    // Setstrokeadjust, or null if not supported
+    "/Msetstrokeadjust /setstrokeadjust where\n"
+    "  { pop /setstrokeadjust } { /pop } ifelse\n"
+    "  load def\n"
+
     "\n"
     );
 
@@ -1971,21 +1939,25 @@ FILE *f;
       mPrintSetup->num_copies);
   }
   fprintf(f,"/pagelevel save def\n");
+  // Rescale the coordinate system from points to twips, with the Y
+  // axis increasing downwards.
+  fprintf(f, "%g -%g scale\n",
+    1.0 / TWIPS_PER_POINT_FLOAT, 1.0 / TWIPS_PER_POINT_FLOAT);
   if (mPrintContext->prSetup->landscape){
-    fprintf(f, "%d 0 translate 90 rotate\n",PAGE_TO_POINT_I(mPrintContext->prSetup->height));
+    fprintf(f, "%d 0 translate 90 rotate\n", mPrintContext->prSetup->height);
   }
-  fprintf(f, "%d 0 translate\n", PAGE_TO_POINT_I(mPrintContext->prSetup->left));
-  fprintf(f, "0 %d translate\n", PAGE_TO_POINT_I(mPrintContext->prSetup->top));
+  // Move the origin to the top left of the printable area.
+  fprintf(f, "%d -%d translate\n", mPrintContext->prSetup->left,
+    mPrintContext->prSetup->bottom + mPrintContext->prSetup->height);
+  // Try to turn on automatic stroke adjust
+  fputs("true Msetstrokeadjust\n", f);
   fprintf(f, "%%%%EndPageSetup\n");
 #if 0
   annotate_page( mPrintContext->prSetup->header, 0, -1, pn);
 #endif
-  fprintf(f, "newpath 0 %d moveto ", PAGE_TO_POINT_I(mPrintContext->prSetup->top));
-  fprintf(f, "%d 0 rlineto 0 %d rlineto -%d 0 rlineto ",
-			PAGE_TO_POINT_I(mPrintContext->prInfo->page_width),
-			PAGE_TO_POINT_I(mPrintContext->prInfo->page_height),
-			PAGE_TO_POINT_I(mPrintContext->prInfo->page_width));
-  fprintf(f, " closepath clip newpath\n");
+  // Set up a clipping rectangle around the printable area.
+  fprintf(f, "0 0 %d %d Mrect closepath clip newpath\n",
+    mPrintContext->prInfo->page_width, mPrintContext->prInfo->page_height);
 
   // need to reset all U2Ntable
   gLangGroups->Enumerate(ResetU2Ntable, nsnull);
@@ -2286,18 +2258,10 @@ nsPostScriptObj::show(const PRUnichar* txt, int len,
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::moveto(int x, int y)
+nsPostScriptObj::moveto(nscoord x, nscoord y)
 {
   XL_SET_NUMERIC_LOCALE();
-  y -= mPrintContext->prInfo->page_topy;
-
-  // invert y
- // y = (mPrintContext->prInfo->page_height - y - 1) + mPrintContext->prSetup->bottom;
-
-  y = (mPrintContext->prInfo->page_height - y - 1);
-  
-  fprintf(mPrintContext->prSetup->tmpBody, "%g %g moveto\n",
-		PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
+  fprintf(mPrintContext->prSetup->tmpBody, "%d %d moveto\n", x, y);
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
@@ -2306,37 +2270,10 @@ nsPostScriptObj::moveto(int x, int y)
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::moveto_loc(int x, int y)
-{
-  /* This routine doesn't care about the clip region in the page */
-
-  XL_SET_NUMERIC_LOCALE();
-
-  // invert y
-  y = (mPrintContext->prSetup->height - y - 1);
-
-  fprintf(mPrintContext->prSetup->tmpBody, "%g %g moveto\n",
-		PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
-  XL_RESTORE_NUMERIC_LOCALE();
-}
-
-
-/** ---------------------------------------------------
- *  See documentation in nsPostScriptObj.h
- *	@update 2/1/99 dwc
- */
-void 
-nsPostScriptObj::lineto( int aX1, int aY1)
+nsPostScriptObj::lineto(nscoord aX, nscoord aY)
 {
   XL_SET_NUMERIC_LOCALE();
-
-  aY1 -= mPrintContext->prInfo->page_topy;
-  //aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) + mPrintContext->prSetup->bottom;
-  aY1 = (mPrintContext->prInfo->page_height - aY1 - 1)  ;
-
-  fprintf(mPrintContext->prSetup->tmpBody, "%g %g lineto\n",
-		PAGE_TO_POINT_F(aX1), PAGE_TO_POINT_F(aY1));
-
+  fprintf(mPrintContext->prSetup->tmpBody, "%d %d lineto\n", aX, aY);
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
@@ -2345,13 +2282,13 @@ nsPostScriptObj::lineto( int aX1, int aY1)
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::ellipse( int aWidth, int aHeight)
+nsPostScriptObj::ellipse(nscoord aWidth, nscoord aHeight)
 {
   XL_SET_NUMERIC_LOCALE();
 
   // Ellipse definition
   fprintf(mPrintContext->prSetup->tmpBody,"%g %g ",
-                PAGE_TO_POINT_F(aWidth)/2, PAGE_TO_POINT_F(aHeight)/2);
+                aWidth * 0.5, aHeight * 0.5);
   fprintf(mPrintContext->prSetup->tmpBody,
                 " matrix currentmatrix currentpoint translate\n");
   fprintf(mPrintContext->prSetup->tmpBody,
@@ -2364,13 +2301,14 @@ nsPostScriptObj::ellipse( int aWidth, int aHeight)
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::arc( int aWidth, int aHeight,float aStartAngle,float aEndAngle)
+nsPostScriptObj::arc(nscoord aWidth, nscoord aHeight,
+  float aStartAngle,float aEndAngle)
 {
 
   XL_SET_NUMERIC_LOCALE();
   // Arc definition
   fprintf(mPrintContext->prSetup->tmpBody,"%g %g ",
-                PAGE_TO_POINT_F(aWidth)/2, PAGE_TO_POINT_F(aHeight)/2);
+                aWidth * 0.5, aHeight * 0.5);
   fprintf(mPrintContext->prSetup->tmpBody,
                 " matrix currentmatrix currentpoint translate\n");
   fprintf(mPrintContext->prSetup->tmpBody,
@@ -2387,12 +2325,11 @@ nsPostScriptObj::arc( int aWidth, int aHeight,float aStartAngle,float aEndAngle)
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::box( int aW, int aH)
+nsPostScriptObj::box(nscoord aX, nscoord aY, nscoord aW, nscoord aH)
 {
   XL_SET_NUMERIC_LOCALE();
   fprintf(mPrintContext->prSetup->tmpBody,
-          "%g 0 rlineto 0 %g rlineto %g 0 rlineto ",
-          PAGE_TO_POINT_F(aW), -PAGE_TO_POINT_F(aH), -PAGE_TO_POINT_F(aW));
+    "%d %d %d %d Mrect ", aX, aY, aW, aH);
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
@@ -2401,12 +2338,12 @@ nsPostScriptObj::box( int aW, int aH)
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::box_subtract( int aW, int aH)
+nsPostScriptObj::box_subtract(nscoord aX, nscoord aY, nscoord aW, nscoord aH)
 {
   XL_SET_NUMERIC_LOCALE();
   fprintf(mPrintContext->prSetup->tmpBody,
-          "0 %g rlineto %g 0 rlineto 0 %g rlineto  ",
-          PAGE_TO_POINT_F(-aH), PAGE_TO_POINT_F(aW), PAGE_TO_POINT_F(aH));
+    "%d %d moveto 0 %d rlineto %d 0 rlineto 0 %d rlineto closepath ",
+    aX, aY, aH, aW, -aH);
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
@@ -2475,24 +2412,14 @@ nsPostScriptObj::initclip()
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::line( int aX1, int aY1, int aX2, int aY2, int aThick)
+nsPostScriptObj::line(nscoord aX1, nscoord aY1,
+  nscoord aX2, nscoord aY2, nscoord aThick)
 {
   XL_SET_NUMERIC_LOCALE();
-  fprintf(mPrintContext->prSetup->tmpBody,
-          "gsave %g setlinewidth\n ",PAGE_TO_POINT_F(aThick));
-
-  aY1 -= mPrintContext->prInfo->page_topy;
- // aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) + mPrintContext->prSetup->bottom;
-  aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) ;
-  aY2 -= mPrintContext->prInfo->page_topy;
- // aY2 = (mPrintContext->prInfo->page_height - aY2 - 1) + mPrintContext->prSetup->bottom;
-  aY2 = (mPrintContext->prInfo->page_height - aY2 - 1) ;
-
-  fprintf(mPrintContext->prSetup->tmpBody, "%g %g moveto %g %g lineto\n",
-		    PAGE_TO_POINT_F(aX1), PAGE_TO_POINT_F(aY1),
-		    PAGE_TO_POINT_F(aX2), PAGE_TO_POINT_F(aY2));
+  fprintf(mPrintContext->prSetup->tmpBody, "gsave %d setlinewidth\n ", aThick);
+  fprintf(mPrintContext->prSetup->tmpBody, " %d %d moveto %d %d lineto\n",
+    aX1, aY1, aX2, aY2);
   stroke();
-
   fprintf(mPrintContext->prSetup->tmpBody, "grestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
 }
@@ -2542,15 +2469,10 @@ nsPostScriptObj::graphics_restore()
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::translate(int x, int y)
+nsPostScriptObj::translate(nscoord x, nscoord y)
 {
     XL_SET_NUMERIC_LOCALE();
-    y -= mPrintContext->prInfo->page_topy;
-    // Y inversion
-    //y = (mPrintContext->prInfo->page_height - y - 1) + mPrintContext->prSetup->bottom;
-    y = (mPrintContext->prInfo->page_height - y - 1) ;
-
-    fprintf(mPrintContext->prSetup->tmpBody, "%g %g translate\n", PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
+    fprintf(mPrintContext->prSetup->tmpBody, "%d %d translate\n", x, y);
     XL_RESTORE_NUMERIC_LOCALE();
 }
 
@@ -2561,9 +2483,8 @@ nsPostScriptObj::translate(int x, int y)
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::grayimage(nsIImage *aImage,
-                            int aSX, int aSY, int aSWidth, int aSHeight,
-                            int aDX, int aDY, int aDWidth, int aDHeight)
+nsPostScriptObj::grayimage(
+  nsIImage *aImage, const nsRect& sRect, const nsRect& dRect)
 {
   PRInt32 rowData, x, y;
   PRInt32 width, height, bytewidth, cbits, n;
@@ -2571,7 +2492,10 @@ nsPostScriptObj::grayimage(nsIImage *aImage,
   PRBool isTopToBottom;
   PRInt32 sRow, eRow, rStep; 
 
-  XL_SET_NUMERIC_LOCALE();
+  // No point in scaling images to 0--some printers choke on it (bug 191684)
+  if (dRect.width == 0 || dRect.height == 0) {
+    return;
+  }
 
   aImage->LockImagePixels(PR_FALSE);
   theBits = aImage->GetBits();
@@ -2586,35 +2510,37 @@ nsPostScriptObj::grayimage(nsIImage *aImage,
   rowData = aImage->GetLineStride();
   height = aImage->GetHeight();
   width = aImage->GetWidth();
-  bytewidth = 3*aSWidth;
+  bytewidth = 3 * sRect.width;
   cbits = 8;
+
+  XL_SET_NUMERIC_LOCALE();
 
   FILE *f = mPrintContext->prSetup->tmpBody;
   fprintf(f, "gsave\n");
   fprintf(f, "/rowdata %d string def\n", bytewidth/3);
-  translate(aDX, aDY + aDHeight);
-  fprintf(f, "%g %g scale\n",
-          PAGE_TO_POINT_F(aDWidth), PAGE_TO_POINT_F(aDHeight));
-  fprintf(f, "%d %d ", aSWidth, aSHeight);
-  fprintf(f, "%d ", cbits);
-  fprintf(f, "[%d 0 0 %d 0 0]\n", aSWidth, aSHeight);
+  // Translate to the lower left corner of the image
+  translate(dRect.x, dRect.y + dRect.height);
+  // Set the image scale, keeping in mind the Y axis is inverted
+  fprintf(f, "%d %d scale\n", dRect.width, -dRect.height);
+  fprintf(f, "%d %d %d ", sRect.width, sRect.height, cbits);
+  fprintf(f, "[ %d 0 0 %d 0 0 ]\n", sRect.width, sRect.height);
   fprintf(f, " { currentfile rowdata readhexstring pop }\n");
   fprintf(f, " image\n");
 
   n = 0;
   if ( ( isTopToBottom = aImage->GetIsRowOrderTopToBottom()) == PR_TRUE ) {
-    sRow = aSY + aSHeight - 1;
-    eRow = aSY;
+    sRow = sRect.y + sRect.height - 1;
+    eRow = sRect.y;
     rStep = -1;
   } else {
-	sRow = aSY;
-    eRow = aSY + aSHeight;
+    sRow = sRect.y;
+    eRow = sRect.y + sRect.height;
     rStep = 1;
   }
 
   y = sRow;
   while ( 1 ) {
-    curline = theBits + y * rowData + 3 * aSX;
+    curline = theBits + y * rowData + 3 * sRect.x;
     for(x=0; x < bytewidth; x+=3) {
       if (n > 71) {
           fprintf(mPrintContext->prSetup->tmpBody, "\n");
@@ -2642,9 +2568,8 @@ nsPostScriptObj::grayimage(nsIImage *aImage,
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::colorimage(nsIImage *aImage, 
-                            int aSX, int aSY, int aSWidth, int aSHeight,
-                            int aDX, int aDY, int aDWidth, int aDHeight)
+nsPostScriptObj::colorimage(
+  nsIImage *aImage, const nsRect& sRect, const nsRect& dRect)
 {
   PRInt32 rowData, x, y;
   PRInt32 width, height, bytewidth, cbits, n;
@@ -2652,17 +2577,13 @@ nsPostScriptObj::colorimage(nsIImage *aImage,
   PRBool isTopToBottom;
   PRInt32 sRow, eRow, rStep; 
 
-  // No point in scaling images to 0--some printers choke on it (bug 191684)
-  if (aDWidth == 0 || aDHeight == 0) {
+  if(mPrintSetup->color == PR_FALSE) {
+    this->grayimage(aImage, sRect, dRect);
     return;
   }
 
-  XL_SET_NUMERIC_LOCALE();
-
-  if(mPrintSetup->color == PR_FALSE ){
-    this->grayimage(aImage,
-                    aSX, aSY, aSWidth, aSHeight,
-                    aDX, aDY, aDWidth, aDHeight);
+  // No point in scaling images to 0--some printers choke on it (bug 191684)
+  if (dRect.width == 0 || dRect.height == 0) {
     return;
   }
 
@@ -2679,35 +2600,37 @@ nsPostScriptObj::colorimage(nsIImage *aImage,
   rowData = aImage->GetLineStride();
   height = aImage->GetHeight();
   width = aImage->GetWidth();
-  bytewidth = 3*aSWidth;
+  bytewidth = 3 * sRect.width;
   cbits = 8;
+
+  XL_SET_NUMERIC_LOCALE();
 
   FILE *f = mPrintContext->prSetup->tmpBody;
   fprintf(f, "gsave\n");
   fprintf(f, "/rowdata %d string def\n", bytewidth);
-  translate(aDX, aDY + aDHeight);
-  fprintf(f, "%g %g scale\n",
-          PAGE_TO_POINT_F(aDWidth), PAGE_TO_POINT_F(aDHeight));
-  fprintf(f, "%d %d ", aSWidth, aSHeight);
-  fprintf(f, "%d ", cbits);
-  fprintf(f, "[%d 0 0 %d 0 0]\n", aSWidth, aSHeight);
+  // Translate to the lower left corner of the image
+  translate(dRect.x, dRect.y + dRect.height);
+  // Set the image scale, keeping in mind the Y axis is inverted
+  fprintf(f, "%d %d scale\n", dRect.width, -dRect.height);
+  fprintf(f, "%d %d %d ", sRect.width, sRect.height, cbits);
+  fprintf(f, "[ %d 0 0 %d 0 0 ]\n", sRect.width, sRect.height);
   fprintf(f, " { currentfile rowdata readhexstring pop }\n");
   fprintf(f, " false 3 colorimage\n");
 
   n = 0;
   if ( ( isTopToBottom = aImage->GetIsRowOrderTopToBottom()) == PR_TRUE ) {
-	sRow = aSY + aSHeight - 1;
-    eRow = aSY;
+    sRow = sRect.y + sRect.height - 1;
+    eRow = sRect.y;
     rStep = -1;
   } else {
-	sRow = aSY;
-    eRow = aSY + aSHeight;
+    sRow = sRect.y;
+    eRow = sRect.y + sRect.height;
     rStep = 1;
   }
 
   y = sRow;
   while ( 1 ) {
-    curline = theBits + y * rowData + 3 * aSX;
+    curline = theBits + y * rowData + 3 * sRect.x;
     for(x=0; x < bytewidth; x++) {
       if (n > 71) {
           fprintf(f, "\n");
@@ -2760,9 +2683,7 @@ float greyBrightness;
 void nsPostScriptObj::setfont(const nsCString aFontName, PRUint32 aHeight)
 {
   fprintf(mPrintContext->prSetup->tmpBody,
-          "/%s findfont %d scalefont setfont\n",
-          aFontName.get(),
-          NS_TWIPS_TO_POINTS(aHeight));
+          "%d /%s Msf\n", aHeight, aFontName.get());
 }
 
 /** ---------------------------------------------------
@@ -2778,9 +2699,9 @@ int postscriptFont = 0;
 
 //    fprintf(mPrintContext->prSetup->out, "%% aFontIndex = %d, Family = %s, aStyle = %d, 
 //        aWeight=%d, postscriptfont = %d\n", aFontIndex, &aFamily, aStyle, aWeight, postscriptFont);
-  fprintf(mPrintContext->prSetup->tmpBody,"%d",NS_TWIPS_TO_POINTS(aHeight));
-	
-  
+  fprintf(mPrintContext->prSetup->tmpBody,"%d", aHeight);
+
+ 
   if( aFontIndex >= 0) {
     postscriptFont = aFontIndex;
   } else {
