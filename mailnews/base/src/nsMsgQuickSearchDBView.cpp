@@ -116,8 +116,11 @@ nsMsgQuickSearchDBView::OnSearchDone(nsresult status)
 {
   if (m_sortType != nsMsgViewSortType::byThread)//we do not find levels for the results.
   {
+    nsMsgKeyArray preservedSelection;
+    SaveAndClearSelection(&preservedSelection);
     m_sortValid = PR_FALSE;       //sort the results 
     Sort(m_sortType, m_sortOrder);
+    RestoreSelection(&preservedSelection);
   }
   return NS_OK;
 }
