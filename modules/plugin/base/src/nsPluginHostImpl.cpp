@@ -1172,7 +1172,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetURL(nsISupports* pluginInst,
 									   const char* referrer,
 									   PRBool forceJSEnabled)
 {
-  nsAutoString      string = nsAutoString(url);
+  nsAutoString      string; string.AssignWithConversion(url);
   nsIPluginInstance *instance;
   nsresult          rv;
 
@@ -1235,7 +1235,7 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
 										PRUint32 postHeadersLength, 
 										const char* postHeaders)
 {
-  nsAutoString      string = nsAutoString(url);
+  nsAutoString      string; string.AssignWithConversion(url);
   nsIPluginInstance *instance;
   nsresult          rv;
 
@@ -1696,7 +1696,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
        nsIPluginInstance* instance = NULL;
 	nsIPlugin* plugin = NULL;
 	const char* mimetype;
-       nsString strProgID (NS_INLINE_PLUGIN_PROGID_PREFIX);
+       nsString strProgID; strProgID.AssignWithConversion (NS_INLINE_PLUGIN_PROGID_PREFIX);
        char buf[255];  // todo: need to use a const
 		
 	if(!aURL)
@@ -1722,7 +1722,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 	else
 		mimetype = aMimeType;
 
-    strProgID += mimetype;
+    strProgID.AppendWithConversion(mimetype);
     strProgID.ToCString(buf, 255);     // todo: need to use a const
   
     result = nsComponentManager::CreateInstance(buf,
@@ -1884,9 +1884,9 @@ public:
 	DOMMimeTypeImpl(nsPluginTag* aPluginTag, PRUint32 aMimeTypeIndex)
 	{
 		NS_INIT_ISUPPORTS();
-		mDescription = aPluginTag->mMimeDescriptionArray[aMimeTypeIndex];
-		mSuffixes = aPluginTag->mExtensionsArray[aMimeTypeIndex];
-		mType = aPluginTag->mMimeTypeArray[aMimeTypeIndex];
+		mDescription.AssignWithConversion(aPluginTag->mMimeDescriptionArray[aMimeTypeIndex]);
+		mSuffixes.AssignWithConversion(aPluginTag->mExtensionsArray[aMimeTypeIndex]);
+		mType.AssignWithConversion(aPluginTag->mMimeTypeArray[aMimeTypeIndex]);
 	}
 	
 	virtual ~DOMMimeTypeImpl() {
@@ -1939,19 +1939,19 @@ public:
 
 	NS_METHOD GetDescription(nsString& aDescription)
 	{
-		aDescription = mPluginTag.mDescription;
+		aDescription.AssignWithConversion(mPluginTag.mDescription);
 		return NS_OK;
 	}
 
 	NS_METHOD GetFilename(nsString& aFilename)
 	{
-		aFilename = mPluginTag.mFileName;
+		aFilename.AssignWithConversion(mPluginTag.mFileName);
 		return NS_OK;
 	}
 
 	NS_METHOD GetName(nsString& aName)
 	{
-		aName = mPluginTag.mName;
+		aName.AssignWithConversion(mPluginTag.mName);
 		return NS_OK;
 	}
 
@@ -1972,7 +1972,7 @@ public:
 	NS_METHOD NamedItem(const nsString& aName, nsIDOMMimeType** aReturn)
 	{
 		for (int index = mPluginTag.mVariants - 1; index >= 0; --index) {
-			if (aName.Equals(mPluginTag.mMimeTypeArray[index]))
+			if (aName.EqualsWithConversion(mPluginTag.mMimeTypeArray[index]))
 				return Item(index, aReturn);
 		}
 		return NS_OK;
@@ -2568,7 +2568,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
     return NS_ERROR_FAILURE;
   }
   
-  cookieString.Assign((const char *) inCookieBuffer,(PRInt32) inCookieSize);
+  cookieString.AssignWithConversion((const char *) inCookieBuffer,(PRInt32) inCookieSize);
   
   rv = cookieService->SetCookieString(uriIn, cookieString);
   
