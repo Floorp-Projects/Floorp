@@ -24,8 +24,8 @@
 # variables substituted.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2002/04/25 00:15:03 $ 
+# $Revision: 1.7 $ 
+# $Date: 2002/04/25 00:55:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/generic.sample.buildcf,v $ 
 # $Name:  $ 
@@ -61,6 +61,11 @@ package UserDef;
 # side to translate a treename into a module and branch.
 
 use lib '/home/build/lib';
+
+# set the standard tinderbox search path to allow us to compile on the
+# machine we run make on.
+
+use lib '#tinder_libdir#';
 
 use TreeData;
 
@@ -121,12 +126,12 @@ sub build_environment{
                   '/bin:'.
                   '/usr/local/bin:'.
                   '/home/build/bin'.
-                  );
+                  '');
 
     $ENV{CVSROOT} = (
                      "buildmaster\@cvs.yourcompany.com:".
-                     $TreeData::VC_TREE{tree_name()}{'root'}
-                     );
+                     $TreeData::VC_TREE{tree_name()}{'root'}.
+                     "");
     
     $ENV{CVS_RSH} = "ssh2";
     
