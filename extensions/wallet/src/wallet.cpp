@@ -350,8 +350,6 @@ typedef struct _wallet_PrefillElement {
 
 nsIURI * wallet_lastUrl = NULL;
 
-static PRBool wallet_oldFormat = PR_FALSE;
-
 /***********************************************************/
 /* The following routines are for diagnostic purposes only */
 /***********************************************************/
@@ -1553,8 +1551,6 @@ wallet_InitKeyFileName() {
     if (!schemaValueFileName) {
       schemaValueFileName = Wallet_RandomName("w");
       SI_SetCharPref(pref_WalletSchemaValueFileName, schemaValueFileName);
-    } else if (PL_strstr(schemaValueFileName, ".wlt")) {
-      wallet_oldFormat = PR_TRUE;
     }
     SI_InitSignonFileName();
     namesInitialized = PR_TRUE;
@@ -1984,13 +1980,6 @@ wallet_WriteToFile(const char * filename, nsVoidArray* list, PRBool obscure) {
     return;
   }
 
-  if (filename == schemaValueFileName && wallet_oldFormat) {
-    /* change name of schemaValueFileName file from "xxxxxxxx.wlt" to "xxxxxxxx.w" */    
-    schemaValueFileName[10] = '\0';
-    SI_SetCharPref(pref_WalletSchemaValueFileName, schemaValueFileName);
-    wallet_oldFormat = PR_FALSE;
-  }
-
   nsOutputFileStream strm(dirSpec + filename);
   if (!strm.is_open()) {
     NS_ERROR("unable to open file");
@@ -2058,7 +2047,7 @@ wallet_ReadFromFile
   nsKeyType readCount = 0;
 
   /* read in the header */
-  if (filename == schemaValueFileName && !wallet_oldFormat) {
+  if (filename == schemaValueFileName) {
     wallet_GetHeader(strm, saveCountW, readCount);
   }
 
@@ -3299,13 +3288,6 @@ WLLT_PostEdit(nsAutoString walletList) {
   /* return if OK button was not pressed */
   if (head != "OK") {
     return;
-  }
-
-  if (wallet_oldFormat) {
-    /* change name of schemaValueFileName file from "xxxxxxxx.wlt" to "xxxxxxxx.w" */    
-    schemaValueFileName[10] = '\0';
-    SI_SetCharPref(pref_WalletSchemaValueFileName, schemaValueFileName);
-    wallet_oldFormat = PR_FALSE;
   }
 
   /* open SchemaValue file */

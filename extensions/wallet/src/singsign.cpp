@@ -456,10 +456,8 @@ static const char *pref_rememberSignons = "signon.rememberSignons";
 #ifdef DefaultIsOff
 static const char *pref_Notified = "signon.Notified";
 #endif
-static const char *pref_SignonFileName = "signon.SignonFileName"; /* for old format only */
 static const char *pref_SignonFileNameP = "signon.SignonPasswordFileName";
 static const char *pref_SignonFileNameU = "signon.SignonURLFileName";
-static PRBool si_oldFormat = PR_FALSE;
 
 PRIVATE PRBool si_RememberSignons = PR_FALSE;
 #ifdef DefaultIsOff
@@ -565,41 +563,15 @@ extern char* Wallet_RandomName(char* suffix);
 
 PUBLIC void
 SI_InitSignonFileName() {
-  /*
-   * All files created by wallet and single signon will have a format designation number
-   * in the first line of the file.  However the original files did not do that.  So we
-   * go to great pains to maintain backwards compatibility with these old files.  We
-   * accomplish this by changing the names of the old files.
-   *
-   * The original and new names of the files are:
-   *
-   *                   old names       new names
-   *    key file:      xxxxxxxx.key    xxxxxxxx.k
-   *    wallet data:   xxxxxxxx.wlt    xxxxxxxx.w
-   *    ss passwords:  xxxxxxxx.psw    xxxxxxxx.p
-   *    ss urls:       signon.tab      xxxxxxxx.u
-   *
-   * Furtherore, the names of the first three files were stored in prefs.js for the old
-   * files but all four are stored there for the new ones.
-   */
   SI_GetCharPref(pref_SignonFileNameP, &signonFileNameP);
-
   if (!signonFileNameP) {
-    SI_GetCharPref(pref_SignonFileName, &signonFileNameP);
-    if (!signonFileNameP) {
-      signonFileNameP = Wallet_RandomName("p");
-      SI_SetCharPref(pref_SignonFileNameP, signonFileNameP);
-    } else {
-      si_oldFormat = PR_TRUE;
-    }
+    signonFileNameP = Wallet_RandomName("p");
+    SI_SetCharPref(pref_SignonFileNameP, signonFileNameP);
   }
-
-  if (!si_oldFormat) {
-    SI_GetCharPref(pref_SignonFileNameU, &signonFileNameU);
-    if (!signonFileNameU) {
-      signonFileNameU = Wallet_RandomName("u");
-      SI_SetCharPref(pref_SignonFileNameU, signonFileNameU);
-    }
+  SI_GetCharPref(pref_SignonFileNameU, &signonFileNameU);
+  if (!signonFileNameU) {
+    signonFileNameU = Wallet_RandomName("u");
+    SI_SetCharPref(pref_SignonFileNameU, signonFileNameU);
   }
 }
 
@@ -1772,10 +1744,7 @@ SI_LoadSignonData(PRBool fullLoad) {
   }
 
   SI_InitSignonFileName();
-  nsInputFileStream strmu(dirSpec+"signon.tbl");
-  if (!si_oldFormat) {
-    strmu = nsInputFileStream(dirSpec+signonFileNameU);
-  }
+  nsInputFileStream strmu(dirSpec+signonFileNameU);
 
   if (!strmu.is_open()) {
     /* this means no data was previously saved, so we must be fully loaded at this time */
@@ -1810,48 +1779,45 @@ SI_LoadSignonData(PRBool fullLoad) {
   nsKeyType temp;
   PRInt32 error;
 
-  if (!si_oldFormat) {
+  /* format */
 
-    /* format */
-
-    if (NS_FAILED(si_ReadLine(strmu, strmp, format, fullLoad, 0, 0, PR_TRUE))) {
-      return -1;
-    }
-    if (format != HEADER_VERSION_1) {
-      /* something's wrong */
-      return -1;
-    }
-
-    /* saveCount */
-
-    if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
-      return -1;
-    }
-    if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
-      return -1;
-    }
-    temp = (nsKeyType)(buffer.ToInteger(&error));
-    if (error) {
-      return -1;
-    }
-    saveCountP = temp;
-
-    /* readCount */
-
-    if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
-      return -1;
-    }
-    if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
-      return -1;
-    }
-    temp = (nsKeyType)(buffer.ToInteger(&error));
-    if (error) {
-      return -1;
-    }
-    readCount = temp;
-
-    Wallet_StreamGeneratorReset();
+  if (NS_FAILED(si_ReadLine(strmu, strmp, format, fullLoad, 0, 0, PR_TRUE))) {
+    return -1;
   }
+  if (format != HEADER_VERSION_1) {
+    /* something's wrong */
+    return -1;
+  }
+
+  /* saveCount */
+
+  if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
+    return -1;
+  }
+  if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
+    return -1;
+  }
+  temp = (nsKeyType)(buffer.ToInteger(&error));
+  if (error) {
+    return -1;
+  }
+  saveCountP = temp;
+
+  /* readCount */
+
+  if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
+    return -1;
+  }
+  if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
+    return -1;
+  }
+  temp = (nsKeyType)(buffer.ToInteger(&error));
+  if (error) {
+    return -1;
+  }
+  readCount = temp;
+
+  Wallet_StreamGeneratorReset();
 
   /* read the reject list */
   si_lock_signon_list();
@@ -1861,14 +1827,6 @@ SI_LoadSignonData(PRBool fullLoad) {
     }
     si_StripLF(buffer);
     URLName = buffer.ToNewCString();
-    if (si_oldFormat) {
-      if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, PR_FALSE))) {
-        /* error in input file so give up */
-        badInput = PR_TRUE;
-        break;
-      }
-      si_StripLF(buffer);
-    }
     si_PutReject(URLName, buffer, PR_FALSE); /* middle parameter is obsolete */
     Recycle (URLName);
   }
@@ -1906,11 +1864,7 @@ SI_LoadSignonData(PRBool fullLoad) {
       } else {
         isPassword = PR_FALSE;
         name = buffer;
-        if (si_oldFormat) {
-          ret = si_ReadLine(strmu, strmp, buffer, PR_FALSE);
-        } else {
-          ret = si_ReadLine(strmu, strmp, buffer, fullLoad, saveCountP, &readCount);
-        }
+        ret = si_ReadLine(strmu, strmp, buffer, fullLoad, saveCountP, &readCount);
       }
 
       /* read in and save the value part */
@@ -2007,14 +1961,13 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   si_SignonDataStruct * data;
   si_Reject * reject;
   nsKeyType writeCount = 0;
-  PRBool fullSave2 = fullSave || si_oldFormat;
 
   /* do nothing if signon list has not changed */
   if(!si_signon_list_changed) {
     return(-1);
   }
 
-  if (fullSave2) {
+  if (fullSave) {
     PRUnichar * message = Wallet_Localize("IncorrectKey_TryAgain?");
     if (si_KeyTimedOut()) {
       SI_RemoveAllSignonData();
@@ -2047,27 +2000,13 @@ si_SaveSignonDataLocked(PRBool fullSave) {
     return 0;
   }
 
-  if (si_oldFormat) {
-
-    /* change name of signonFileNameP from "xxxxxxxx.psw" to "xxxxxxxx.p" */    
-    signonFileNameP[10] = '\0';
-    SI_SetCharPref(pref_SignonFileNameP, signonFileNameP);
-
-    /* create signonFileNameU and set it to "xxxxxxxx.u" */
-    signonFileNameU = PL_strdup(signonFileNameP); /* set it to "xxxxxxxx.p" */
-    signonFileNameU[9] = 'u'; /* change .p to .u */
-    SI_SetCharPref(pref_SignonFileNameU, signonFileNameU);
-
-    si_oldFormat = PR_FALSE;
-  }
-
   nsOutputFileStream strmu(dirSpec + signonFileNameU);
   if (!strmu.is_open()) {
     return 0;
   }
   nsOutputFileStream strmp
-    (fullSave2 ? (dirSpec+signonFileNameP) : dirSpec); // not used if !fullSave
-  if (fullSave2 && !strmp.is_open()) {
+    (fullSave ? (dirSpec+signonFileNameP) : dirSpec); // not used if !fullSave
+  if (fullSave && !strmp.is_open()) {
     return 0;
   }
 
@@ -2084,7 +2023,7 @@ si_SaveSignonDataLocked(PRBool fullSave) {
 
   /* format revision number */
 
-  si_WriteLine(strmu, strmp, nsAutoString(HEADER_VERSION_1), PR_FALSE, fullSave2, 0, 0, PR_TRUE);
+  si_WriteLine(strmu, strmp, nsAutoString(HEADER_VERSION_1), PR_FALSE, fullSave, 0, 0, PR_TRUE);
 
   /* saveCount */
 
@@ -2092,15 +2031,15 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   buffer = "";
   saveCountP += 16; /* preserve low order four bits which designate the file type */
   buffer.Append(PRInt32(saveCountP),10);
-  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
-  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
+  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave, 0, 0, PR_TRUE);
+  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave, 0, 0, PR_TRUE);
 
   /* writeCount */
 
   buffer = "";
   buffer.Append(PRInt32(writeCount),10);
-  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
-  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
+  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave, 0, 0, PR_TRUE);
+  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave, 0, 0, PR_TRUE);
 
   Wallet_StreamGeneratorReset();
 
@@ -2118,10 +2057,10 @@ si_SaveSignonDataLocked(PRBool fullSave) {
     PRInt32 rejectCount = LIST_COUNT(si_reject_list);
     for (PRInt32 i=0; i<rejectCount; i++) {
       reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-      si_WriteLine(strmu, strmp, nsAutoString(reject->URLName), PR_FALSE, fullSave2);
+      si_WriteLine(strmu, strmp, nsAutoString(reject->URLName), PR_FALSE, fullSave);
     }
   }
-  si_WriteLine(strmu, strmp, nsAutoString("."), PR_FALSE, fullSave2);
+  si_WriteLine(strmu, strmp, nsAutoString("."), PR_FALSE, fullSave);
 
   /* format for cached logins shall be:
    * url LINEBREAK {name LINEBREAK value LINEBREAK}*  . LINEBREAK
@@ -2139,7 +2078,7 @@ si_SaveSignonDataLocked(PRBool fullSave) {
       for (PRInt32 i3=0; i3<userCount; i3++) {
         user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i3));
         si_WriteLine
-          (strmu, strmp, nsAutoString(url->URLName), PR_FALSE, fullSave2);
+          (strmu, strmp, nsAutoString(url->URLName), PR_FALSE, fullSave);
 
         /* write out each data node of the user node */
         PRInt32 dataCount = LIST_COUNT(user->signonData_list);
@@ -2148,18 +2087,18 @@ si_SaveSignonDataLocked(PRBool fullSave) {
           if (data->isPassword) {
             si_WriteChar(strmu, '*');
           }
-          si_WriteLine(strmu, strmp, nsAutoString(data->name), PR_FALSE, fullSave2);
+          si_WriteLine(strmu, strmp, nsAutoString(data->name), PR_FALSE, fullSave);
           si_WriteLine(strmu, strmp, nsAutoString(data->value), PR_TRUE,
-            fullSave2, saveCountP, &writeCount);
+            fullSave, saveCountP, &writeCount);
         }
-        si_WriteLine(strmu, strmp, nsAutoString("."), PR_FALSE, fullSave2);
+        si_WriteLine(strmu, strmp, nsAutoString("."), PR_FALSE, fullSave);
       }
     }
   }
   si_signon_list_changed = PR_FALSE;
   strmu.flush();
   strmu.close();
-  if (fullSave2) {
+  if (fullSave) {
     strmp.flush();
     strmp.close();
   }
