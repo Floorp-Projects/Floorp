@@ -273,13 +273,12 @@ function loadCalendarEventDialog()
    setFieldValue( "categories-field", gEvent.categories );
    
    /* Server stuff */
-   var serverList = opener.gCalendarWindow.calendarManager.calendars;
    document.getElementById( "server-menulist-menupopup" ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
    document.getElementById( "server-menulist-menupopup" ).builder.rebuild();
    
    if( args.mode == "new" )
    {
-      if( args.server )
+      if( "server" in args )
       {
          setFieldValue( "server-field", args.server );
       }
@@ -423,7 +422,7 @@ function onOKCommand()
 
    var listbox = document.getElementById( "exception-dates-listbox" );
 
-   for( i = 0; i < listbox.childNodes.length; i++ )
+   for( var i = 0; i < listbox.childNodes.length; i++ )
    {
       debug( "\n exception added for "+listbox.childNodes[i].value );
 

@@ -44,7 +44,6 @@
 
 <!-- CSS File with all styles specific to the dialog -->
 <?xml-stylesheet href="chrome://calendar/skin/eventDialog.css" ?>
-<?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
 <?xml-stylesheet
  href="chrome://calendar/content/datetimepickers/datetimepicker.css" ?>
 
@@ -117,8 +116,6 @@
 
 <!-- Dialog content -->
 
-   <vbox id="standard-dialog-content"  flex="1">
-   
       <tabbox>
          <tabs>
             <tab label="&newtodo.newtodo.tab.label;"/>
@@ -710,6 +707,4 @@
          </tabpanel>
       </tabpanels>
    </tabbox>
-
-   </vbox> <!-- standard-dialog-content -->
 </dialog>

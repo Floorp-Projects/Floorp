@@ -37,16 +37,16 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
     <!ENTITY % dtd SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd;
 ]>
 
-<window title="&calendar.about.title;"
+<dialog title="&calendar.about.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  class="dialog"
-  orient="vertical">
+  buttons="accept"
+  onload="document.documentElement.getButton('accept').focus();"
+  ondialogaccept="return true;">
 
   <tabbox flex="1">
     <tabs>
@@ -58,10 +58,4 @@
       <iframe id="aboutframe" src="chrome://calendar/content/about.html"/>
     </tabpanels>
   </tabbox>
-
-  <hbox>
-    <spring flex="1"/>
-    <button label="OK" onclick="doOKButton()"/>
-
-  </hbox>
-</window>
+</dialog>
