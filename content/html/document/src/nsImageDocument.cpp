@@ -505,7 +505,6 @@ nsImageDocument::CreateSyntheticDocument()
   // Make sure not to start the image load from here...
   imageLoader->SetLoadingEnabled(PR_FALSE);
   image->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, srcString, PR_FALSE);
-  imageLoader->SetLoadingEnabled(PR_TRUE);
 
   if (mStringBundle) {
     const PRUnichar* formatString[1] = { srcString.get() };
@@ -518,6 +517,7 @@ nsImageDocument::CreateSyntheticDocument()
   }
 
   body->AppendChildTo(image, PR_FALSE, PR_FALSE);
+  imageLoader->SetLoadingEnabled(PR_TRUE);
 
   return NS_OK;
 }
