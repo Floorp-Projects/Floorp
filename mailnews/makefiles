@@ -11,6 +11,7 @@ mailnews/base/src/Makefile
 mailnews/base/util/Makefile
 mailnews/base/build/Makefile
 mailnews/base/tests/Makefile
+mailnews/base/tests/Makefile
 mailnews/db/Makefile
 mailnews/db/mdb/Makefile
 mailnews/db/mdb/public/Makefile
