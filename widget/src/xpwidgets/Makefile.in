@@ -22,21 +22,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
 LIBRARY_NAME = raptorbasewidget_s
 
+#REQUIRES=util img xpcom raptor netlib dom js
+#MODULES=widget
 #LCFLAGS=-D_IMPL_NS_WIDGET 
-
-INCLUDES += -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../$(MOZ_TOOLKIT) -I$(srcdir)
-
-ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
-CFLAGS += $(TK_GTK_CFLAGS)
-else
-ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
-CFLAGS += $(TK_MOTIF_CFLAGS)
-endif
-endif
 
 CPPSRCS=nsBaseWidget.cpp                \
 	nsMenuButton.cpp                \
@@ -54,12 +44,14 @@ CPPSRCS=nsBaseWidget.cpp                \
 	nsTreeView.cpp \
 	$(NULL)
 
-MODULE=widget
+LOCAL_INCLUDES := \
+	-I$(srcdir)/../$(MOZ_TOOLKIT) \
+	-I$(srcdir) \
+	$(NULL)
 
-REQUIRES=util img xpcom raptor netlib dom js
+include $(topsrcdir)/config/config.mk
 
-TARGETS = $(LIBRARY)
-
+CFLAGS += $(TK_CFLAGS)
 
 MKSHLIB :=
 

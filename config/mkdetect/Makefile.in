@@ -155,7 +155,7 @@ endif
 ## Motif
 ##
 
-ifdef TK_MOTIF_LIBS
+ifeq ($(MOZ_TOOLKIT),motif)
 
 ##
 ## Set the motif include flags
