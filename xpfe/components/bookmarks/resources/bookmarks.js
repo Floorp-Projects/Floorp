@@ -338,8 +338,7 @@ function doDelete(promptFlag)
 		if (!ID)    continue;
 
 		// don't allow deletion of various "special" folders
-		if ((ID == "NC:BookmarksRoot") || (ID == "NC:PersonalToolbarFolder") ||
-		    (ID == "NC:IEFavoritesRoot"))
+		if ((ID == "NC:BookmarksRoot") || (ID == "NC:IEFavoritesRoot"))
 		{
 			continue;
 		}
@@ -819,6 +818,22 @@ function doContextCmd(cmdName)
 		{
 			selectionArray.AppendElement(rdfNode);
 		}
+
+		// add singular arguments into arguments array
+		if ((nameVal) && (nameVal != ""))
+		{
+			var nameLiteral = rdf.GetLiteral(nameVal);
+			if (!nameLiteral)	return(false);
+			argumentsArray.AppendElement(nameArc);
+			argumentsArray.AppendElement(nameLiteral);
+		}
+		if ((urlVal) && (urlVal != ""))
+		{
+			var urlLiteral = rdf.GetLiteral(urlVal);
+			if (!urlLiteral)	return(false);
+			argumentsArray.AppendElement(urlArc);
+			argumentsArray.AppendElement(urlLiteral);
+		}
 	}
 	else for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
 	{
@@ -856,7 +871,7 @@ function doContextCmd(cmdName)
 		var parentNode = rdf.GetResource(parentURI, true);
 		if (!parentNode)	return(false);
 
-		// add arguments into arguments array
+		// add multiple arguments into arguments array
 		argumentsArray.AppendElement(parentArc);
 		argumentsArray.AppendElement(parentNode);
 
