@@ -111,7 +111,6 @@
 #include "nsPIBoxObject.h"
 #include "nsXULAtoms.h"
 
-static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
@@ -119,7 +118,6 @@ static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 #include "nsILineBreakerFactory.h"
 #include "nsIWordBreakerFactory.h"
 #include "nsLWBrkCIID.h"
-static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 
 #include "nsIHTMLDocument.h"
 
@@ -456,16 +454,14 @@ nsDOMImplementation::GetScriptObject(nsIScriptContext *aContext,
 {
   nsresult result = NS_OK;
 
-  if (nsnull == mScriptObject) {
-    NS_WITH_SERVICE(nsIDOMScriptObjectFactory, factory, 
-                    kDOMScriptObjectFactoryCID, &result);
+  if (!mScriptObject) {
+    nsCOMPtr<nsIDOMScriptObjectFactory> factory(do_GetService(kDOMScriptObjectFactoryCID, &result));
 
     if (NS_OK == result) {
-      nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+      nsCOMPtr<nsIScriptGlobalObject> global(dont_AddRef(aContext->GetGlobalObject()));
 
       result = factory->NewScriptDOMImplementation(aContext, (nsISupports*)(nsIDOMDOMImplementation*)this,
                                                    global, &mScriptObject);
-      NS_RELEASE(global);
     }
   }
   
@@ -616,9 +612,7 @@ nsDocument::nsDocument()
   mDOMStyleSheets = nsnull;
   mNameSpaceManager = nsnull;
   mHeaderData = nsnull;
-  mLineBreaker = nsnull;
   mChildNodes = nsnull;
-  mWordBreaker = nsnull;
   mModCount = 0;
   mPrincipal = nsnull;
   mNextContentID = NS_CONTENT_ID_COUNTER_BASE;
@@ -686,118 +680,30 @@ nsDocument::~nsDocument()
     delete mHeaderData;
     mHeaderData = nsnull;
   }
-  NS_IF_RELEASE(mLineBreaker);
-  NS_IF_RELEASE(mWordBreaker);
 
   NS_IF_RELEASE(mDTD);
   	
   delete mBoxObjectTable;
 }
 
-nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDocument))) {
-    nsIDocument* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMDocument))) {
-    nsIDOMDocument* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMNSDocument))) {
-    nsIDOMNSDocument* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMDocumentEvent))) {
-    nsIDOMDocumentEvent* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMDocumentStyle))) {
-    nsIDOMDocumentStyle* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMDocumentView))) {
-    nsIDOMDocumentView* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMDocumentXBL))) {
-    nsIDOMDocumentXBL* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
-    nsIJSScriptObject* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectPrincipal))) {
-    nsIScriptObjectPrincipal* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {
-    nsIDOMEventReceiver* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventTarget))) {
-    nsIDOMEventTarget* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
-    nsIDOMNode* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDiskDocument))) {
-    nsIDiskDocument* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
-    nsISupportsWeakReference* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    nsIDocument* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentStyle)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentView)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentXBL)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
+  NS_INTERFACE_MAP_ENTRY(nsIJSScriptObject)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDiskDocument)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDocument)
 NS_IMPL_RELEASE(nsDocument)
@@ -996,12 +902,11 @@ nsDocument::AddPrincipal(nsIPrincipal *aNewPrincipal)
   if (!mPrincipal)
     GetPrincipal(nsnull);
 
-  nsCOMPtr<nsIAggregatePrincipal> agg =
-    do_QueryInterface(mPrincipal, &rv);
-  if (NS_SUCCEEDED(rv))
-  {
+  nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(mPrincipal, &rv));
+  if (NS_SUCCEEDED(rv)) {
     rv = agg->Intersect(aNewPrincipal);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+      return rv;
   }
 
   return NS_OK;
@@ -1017,7 +922,7 @@ nsDocument::GetContentType(nsAWritableString& aContentType) const
 NS_IMETHODIMP
 nsDocument::GetDocumentLoadGroup(nsILoadGroup **aGroup) const
 {
-  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+  nsCOMPtr<nsILoadGroup> group(do_QueryReferent(mDocumentLoadGroup));
 
   *aGroup = group;
   NS_IF_ADDREF(*aGroup);
@@ -1068,62 +973,47 @@ NS_IMETHODIMP nsDocument::RemoveCharSetObserver(nsIObserver* aObserver)
 
 NS_IMETHODIMP nsDocument::GetLineBreaker(nsILineBreaker** aResult) 
 {
-  if(nsnull == mLineBreaker ) {
-     // no line breaker, find a default one
-     nsILineBreakerFactory *lf;
-     nsresult result;
-     result = nsServiceManager::GetService(kLWBrkCID,
-                                          NS_GET_IID(nsILineBreakerFactory),
-                                          (nsISupports **)&lf);
-     if (NS_SUCCEEDED(result)) {
-      nsILineBreaker *lb = nsnull ;
+  if (!mLineBreaker) {
+    // no line breaker, find a default one
+    nsresult result;
+    nsCOMPtr<nsILineBreakerFactory> lbf(do_GetService(NS_LWBRK_CONTRACTID, &result));
+
+    if (NS_SUCCEEDED(result)) {
       nsAutoString lbarg;
-      result = lf->GetBreaker(lbarg, &lb);
-      if(NS_SUCCEEDED(result)) {
-         mLineBreaker = lb;
-      }
-      result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
-     }
+      lbf->GetBreaker(lbarg, getter_AddRefs(mLineBreaker));
+    }
   }
   *aResult = mLineBreaker;
-  NS_IF_ADDREF(mLineBreaker);
+  NS_IF_ADDREF(*aResult);
   return NS_OK; // XXX we should do error handling here
 }
+
 NS_IMETHODIMP nsDocument::SetLineBreaker(nsILineBreaker* aLineBreaker) 
 {
-  NS_IF_RELEASE(mLineBreaker);
   mLineBreaker = aLineBreaker;
-  NS_IF_ADDREF(mLineBreaker);
   return NS_OK;
 }
+
 NS_IMETHODIMP nsDocument::GetWordBreaker(nsIWordBreaker** aResult) 
 {
-  if(nsnull == mWordBreaker ) {
-     // no line breaker, find a default one
-     nsIWordBreakerFactory *lf;
-     nsresult result;
-     result = nsServiceManager::GetService(kLWBrkCID,
-                                          NS_GET_IID(nsIWordBreakerFactory),
-                                          (nsISupports **)&lf);
-     if (NS_SUCCEEDED(result)) {
-      nsIWordBreaker *lb = nsnull ;
-      nsAutoString lbarg;
-      result = lf->GetBreaker(lbarg, &lb);
-      if(NS_SUCCEEDED(result)) {
-         mWordBreaker = lb;
-      }
-      result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
-     }
+  if (!mWordBreaker) {
+    // no word breaker, find a default one
+    nsresult result;
+    nsCOMPtr<nsIWordBreakerFactory> wbf(do_GetService(NS_LWBRK_CONTRACTID, &result));
+
+    if (NS_SUCCEEDED(result)) {
+      nsAutoString wbarg;
+      wbf->GetBreaker(wbarg, getter_AddRefs(mWordBreaker));
+    }
   }
   *aResult = mWordBreaker;
-  NS_IF_ADDREF(mWordBreaker);
+  NS_IF_ADDREF(*aResult);
   return NS_OK; // XXX we should do error handling here
 }
+
 NS_IMETHODIMP nsDocument::SetWordBreaker(nsIWordBreaker* aWordBreaker) 
 {
-  NS_IF_RELEASE(mWordBreaker);
   mWordBreaker = aWordBreaker;
-  NS_IF_ADDREF(mWordBreaker);
   return NS_OK;
 }
 
@@ -2046,13 +1936,12 @@ nsDocument::CreateElement(const nsAReadableString& aTagName,
 NS_IMETHODIMP
 nsDocument::CreateTextNode(const nsAReadableString& aData, nsIDOMText** aReturn)
 {
-  nsIContent* text = nsnull;
-  nsresult        rv = NS_NewTextNode(&text);
+  nsCOMPtr<nsIContent> text;
+  nsresult rv = NS_NewTextNode(getter_AddRefs(text));
 
   if (NS_OK == rv) {
     rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)aReturn);
     (*aReturn)->AppendData(aData);
-    NS_RELEASE(text);
   }
 
   return rv;
@@ -2067,13 +1956,12 @@ nsDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
 NS_IMETHODIMP    
 nsDocument::CreateComment(const nsAReadableString& aData, nsIDOMComment** aReturn)
 {
-  nsIContent* comment = nsnull;
-  nsresult        rv = NS_NewCommentNode(&comment);
+  nsCOMPtr<nsIContent> comment;
+  nsresult rv = NS_NewCommentNode(getter_AddRefs(comment));
 
   if (NS_OK == rv) {
     rv = comment->QueryInterface(NS_GET_IID(nsIDOMComment), (void**)aReturn);
     (*aReturn)->AppendData(aData);
-    NS_RELEASE(comment);
   }
 
   return rv;
@@ -2128,7 +2016,7 @@ NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsAReadableString& aTagname, 
                                  nsIDOMNodeList** aReturn)
 {
-  nsCOMPtr<nsIAtom> nameAtom = dont_AddRef(NS_NewAtom(aTagname));
+  nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aTagname)));
 
   nsContentList* list = new nsContentList(this, nameAtom, kNameSpaceID_Unknown);
   NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
@@ -2141,10 +2029,8 @@ nsDocument::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
                                    const nsAReadableString& aLocalName,
                                    nsIDOMNodeList** aReturn)
 {
-  nsCOMPtr<nsIAtom> nameAtom;
-  PRInt32 nameSpaceId = kNameSpaceID_Unknown;
 
-  nameAtom = dont_AddRef(NS_NewAtom(aLocalName));
+  PRInt32 nameSpaceId = kNameSpaceID_Unknown;
 
   nsContentList* list = nsnull;
 
@@ -2159,6 +2045,7 @@ nsDocument::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
   }
 
   if (!list) {
+    nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aLocalName)));
     list = new nsContentList(this, nameAtom, nameSpaceId);
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
   }
@@ -2449,8 +2336,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     mBoxObjectTable = new nsSupportsHashtable;
   else {
     nsISupportsKey key(aElement);
-    nsCOMPtr<nsISupports> supports = 
-      getter_AddRefs(NS_STATIC_CAST(nsISupports*, mBoxObjectTable->Get(&key))); 
+    nsCOMPtr<nsISupports> supports(dont_AddRef(NS_STATIC_CAST(nsISupports*, mBoxObjectTable->Get(&key))));
     nsCOMPtr<nsIBoxObject> boxObject(do_QueryInterface(supports));
     if (boxObject) {
       *aResult = boxObject;
@@ -2488,7 +2374,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   }
   contractID += ";1";
   
-  nsCOMPtr<nsIBoxObject> boxObject(do_CreateInstance(contractID));
+  nsCOMPtr<nsIBoxObject> boxObject(do_CreateInstance(contractID.get()));
   if (!boxObject) 
     return NS_ERROR_FAILURE;
 
@@ -2865,7 +2751,7 @@ nsDocument::Normalize()
   // XXX Not completely correct, since you can still have unnormalized
   // text nodes as immediate children of the document.
   if (mRootContent) {
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mRootContent);
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mRootContent));
 
     if (node) {
       return node->Normalize();
@@ -2971,11 +2857,11 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
 
 nsresult nsDocument::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-  nsIEventListenerManager *manager;
+  nsCOMPtr<nsIEventListenerManager> manager;
 
-  if (NS_OK == GetListenerManager(&manager)) {
+  GetListenerManager(getter_AddRefs(manager));
+  if (manager) {
     manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    NS_RELEASE(manager);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -2993,13 +2879,13 @@ nsresult nsDocument::RemoveEventListenerByIID(nsIDOMEventListener *aListener, co
 nsresult nsDocument::AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, 
                                       PRBool aUseCapture)
 {
-  nsIEventListenerManager *manager;
+  nsCOMPtr<nsIEventListenerManager> manager;
 
-  if (NS_OK == GetListenerManager(&manager)) {
+  GetListenerManager(getter_AddRefs(manager));
+  if (manager) {
     PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     manager->AddEventListenerByType(aListener, aType, flags);
-    NS_RELEASE(manager);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -3025,7 +2911,7 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent)
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(GetShellAt(0));
+  nsCOMPtr<nsIPresShell> shell(getter_AddRefs(GetShellAt(0)));
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> presContext;
@@ -3047,16 +2933,17 @@ nsDocument::CreateEvent(const nsAReadableString& aEventType, nsIDOMEvent** aRetu
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(GetShellAt(0));
+  nsCOMPtr<nsIPresShell> shell(getter_AddRefs(GetShellAt(0)));
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
 
   if (presContext) {
-    nsCOMPtr<nsIEventListenerManager> lm;
-    if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(lm)))) {
-      return lm->CreateEvent(presContext, nsnull, aEventType, aReturn);
+    nsCOMPtr<nsIEventListenerManager> manager;
+    GetListenerManager(getter_AddRefs(manager));
+    if (manager) {
+      return manager->CreateEvent(presContext, nsnull, aEventType, aReturn);
     }
   }
 
@@ -3083,89 +2970,56 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
   PRBool result = PR_TRUE;
 
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
-    nsAutoString mPropName, mPrefix;
-    mPropName.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(JS_ValueToString(aContext, aID))));
-    if (mPropName.Length() > 2)
-      mPrefix.Assign(mPropName.GetUnicode(), 2);
-    if (mPrefix.EqualsWithConversion("on")) {
-      nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(mPropName));
-      nsIEventListenerManager *mManager = nsnull;
+    const PRUnichar* str = NS_REINTERPRET_CAST(const PRUnichar *, JS_GetStringChars(JS_ValueToString(aContext, aID)));
+
+    if (str && str[0] == 'o' && str[1] == 'n' && str[2]) {
+      PRBool iidFound = PR_TRUE;
+      nsIID theIID;
+      nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(str)));
 
       if (atom.get() == nsLayoutAtoms::onmousedown || atom.get() == nsLayoutAtoms::onmouseup || atom.get() ==  nsLayoutAtoms::onclick ||
          atom.get() == nsLayoutAtoms::onmouseover || atom.get() == nsLayoutAtoms::onmouseout) {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMMouseListener))) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
+        theIID = NS_GET_IID(nsIDOMMouseListener);
       }
       else if (atom.get() == nsLayoutAtoms::onkeydown || atom.get() == nsLayoutAtoms::onkeyup || atom.get() == nsLayoutAtoms::onkeypress) {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMKeyListener))) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
+        theIID = NS_GET_IID(nsIDOMKeyListener);
       }
       else if (atom.get() == nsLayoutAtoms::onmousemove) {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMMouseMotionListener))) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
+        theIID = NS_GET_IID(nsIDOMMouseMotionListener);
       }
       else if (atom.get() == nsLayoutAtoms::onfocus || atom.get() == nsLayoutAtoms::onblur) {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMFocusListener))) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
+        theIID = NS_GET_IID(nsIDOMFocusListener);
       }
       else if (atom.get() == nsLayoutAtoms::onsubmit || atom.get() == nsLayoutAtoms::onreset || atom.get() == nsLayoutAtoms::onchange ||
                atom.get() == nsLayoutAtoms::onselect) {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMFormListener))) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
+        theIID = NS_GET_IID(nsIDOMFormListener);
       }
       else if (atom.get() == nsLayoutAtoms::onload || atom.get() == nsLayoutAtoms::onunload || atom.get() == nsLayoutAtoms::onabort ||
                atom.get() == nsLayoutAtoms::onerror) {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMLoadListener))) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
+        theIID = NS_GET_IID(nsIDOMLoadListener);
       }
       else if (atom.get() == nsLayoutAtoms::onpaint) {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this,
-                                                             atom, NS_GET_IID(nsIDOMPaintListener))) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
+        theIID = NS_GET_IID(nsIDOMPaintListener);
+      }
+      else {
+        iidFound = PR_FALSE;
+      }
+
+      if (iidFound) {
+        nsCOMPtr<nsIEventListenerManager> manager;
+        GetListenerManager(getter_AddRefs(manager));
+
+        if (manager) {
+          nsCOMPtr<nsIScriptContext> scriptContext;
+          nsresult rv = nsLayoutUtils::GetStaticScriptContext(aContext, NS_STATIC_CAST(JSObject*, mScriptObject),
+                                                              getter_AddRefs(scriptContext));
+          if (NS_SUCCEEDED(rv) && scriptContext) {
+            rv = manager->RegisterScriptEventListener(scriptContext, this, atom, theIID);
           }
+          if (NS_FAILED(rv))
+            result = PR_FALSE;
         }
       }
-      NS_IF_RELEASE(mManager);
     }
   }
 
@@ -3249,7 +3103,7 @@ nsDocument::SaveFile( nsIFile*          aFile,
     return NS_ERROR_FAILURE;				// where are the file I/O errors?
   
   
-  nsCOMPtr<nsIFileOutputStream> outputStream = do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
+  nsCOMPtr<nsIFileOutputStream> outputStream(do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
   
   rv = outputStream->Init(aFile, -1, -1);
@@ -3259,7 +3113,7 @@ nsDocument::SaveFile( nsIFile*          aFile,
   nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
   contractID.AppendWithConversion(aFileType);
   
-  nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(contractID, &rv);
+  nsCOMPtr<nsIDocumentEncoder> encoder(do_CreateInstance(contractID.get(), &rv));
   if (NS_FAILED(rv))
     return rv;
   
@@ -3291,11 +3145,13 @@ nsDocument::SaveFile( nsIFile*          aFile,
     {
       // we clone the nsIFile here, rather than just holding onto a ref,
       // in case the caller does something to aFile later
-      nsresult rv = aFile->Clone(getter_AddRefs(mFileSpec));
-      if (NS_FAILED(rv)) return rv;
-      
-      // and mark the document as clean
-      ResetModificationCount();
+      rv = aFile->Clone(getter_AddRefs(mFileSpec));
+
+      if (NS_SUCCEEDED(rv))
+      {
+        // and mark the document as clean
+        ResetModificationCount();
+      }
     }
   }
   
