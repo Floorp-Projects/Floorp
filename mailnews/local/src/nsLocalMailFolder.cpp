@@ -244,6 +244,7 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
+	folder->SetDepth(mDepth + 1);
 	if(name.Compare("Inbox", PR_TRUE) == 0)
 	{
 		folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
