@@ -43,7 +43,7 @@
                                      if (controlElementID)
                                        controlElement = document.getElementById(controlElementID);
                                      if(controlElement)
-                                       controlElementID.focus();
+                                       controlElement.focus();
                                     "/>
     </handlers>
   </binding>  
