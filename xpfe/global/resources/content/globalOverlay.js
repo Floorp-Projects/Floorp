@@ -9,12 +9,12 @@ function goQuitApplication()
 {
 	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-	var enumerator = windowManagerInterface.GetEnumerator( null );
+	var enumerator = windowManagerInterface.getEnumerator( null );
 	
 	while ( enumerator.HasMoreElements()  )
 	{
 		var  windowToClose = enumerator.GetNext();
-		var domWindow = windowManagerInterface.ConvertISupportsToDOMWindow( windowToClose );
+		var domWindow = windowManagerInterface.convertISupportsToDOMWindow( windowToClose );
 		domWindow.focus();
 		if ( domWindow.tryToClose == null )
 		{
