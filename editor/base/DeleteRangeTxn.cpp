@@ -221,7 +221,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
           result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
           if (nsnull!=txn)
           {
-            txn->Init(child, aStartParent);
+            txn->Init(child);
             AppendChild(txn);
           }
           else
@@ -286,7 +286,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
             result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
             if (nsnull!=txn)
             {
-              txn->Init(child, aParent);
+              txn->Init(child);
               AppendChild(txn);
             }
             else
@@ -307,7 +307,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
           result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
           if (nsnull!=txn)
           {
-            txn->Init(child, aParent);
+            txn->Init(child);
             AppendChild(txn);
           }
           else
@@ -387,7 +387,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
         result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
         if (nsnull!=txn)
         {
-          txn->Init(child, parent);
+          txn->Init(child);
           AppendChild(txn);
         }
         else
@@ -449,7 +449,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
           result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
           if (nsnull!=txn)
           {
-            txn->Init(child, parent);
+            txn->Init(child);
             AppendChild(txn);
           }
           else

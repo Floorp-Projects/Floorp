@@ -29,13 +29,17 @@
 {0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
 /**
- * A transaction that changes an attribute of a content node. 
- * This transaction covers add, remove, and change attribute.
+ * A transaction that removes text from a content node. 
  */
 class DeleteTextTxn : public EditTxn
 {
 public:
 
+  /** initialize the transaction.
+    * @param aElement the content node to remove text from
+    * @param aOffset  the location in aElement to begin the deletion
+    * @param aNumCharsToDelete  the number of characters to delete.  Not the number of bytes!
+    */
   virtual nsresult Init(nsIDOMCharacterData *aElement,
                         PRUint32 aOffset,
                         PRUint32 aNumCharsToDelete);
@@ -48,7 +52,6 @@ public:
   virtual nsresult Do(void);
 
   virtual nsresult Undo(void);
-
 
   virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 

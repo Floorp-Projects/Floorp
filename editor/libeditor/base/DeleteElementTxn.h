@@ -35,8 +35,10 @@ class DeleteElementTxn : public EditTxn
 {
 public:
 
-  virtual nsresult Init(nsIDOMNode *aElement,
-                        nsIDOMNode *aParent);
+  /** initialize the transaction.
+    * @param aElement the node to delete
+    */
+  virtual nsresult Init(nsIDOMNode *aElement);
 
 private:
   DeleteElementTxn();

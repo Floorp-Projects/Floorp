@@ -37,8 +37,15 @@ class ChangeAttributeTxn : public EditTxn
 {
 public:
 
+  /** Initialize the transaction.
+    * @param aEditor the object providing core editing operations
+    * @param aNode   the node whose attribute will be changed
+    * @param aAttribute the name of the attribute to change
+    * @param aValue     the new value for aAttribute, if aRemoveAttribute is false
+    * @param aRemoveAttribute if PR_TRUE, remove aAttribute from aNode
+    */
   virtual nsresult Init(nsIEditor      *aEditor,
-                        nsIDOMElement  *aElement,
+                        nsIDOMElement  *aNode,
                         const nsString& aAttribute,
                         const nsString& aValue,
                         PRBool aRemoveAttribute);

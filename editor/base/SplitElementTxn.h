@@ -37,6 +37,13 @@ class SplitElementTxn : public EditTxn
 {
 public:
 
+  /** initialize the transaction.
+    * @param aEditor  the provider of core editing operations
+    * @param aNode    the node to split
+    * @param aOffset  the location within aNode to do the split.
+    *                 aOffset may refer to children of aNode, or content of aNode.
+    *                 The left node will have child|content 0..aOffset-1.
+    */
   virtual nsresult Init (nsIEditor  *aEditor,
                          nsIDOMNode *aNode,
                          PRInt32     aOffset);
@@ -66,7 +73,7 @@ protected:
   nsCOMPtr<nsIDOMNode> mExistingRightNode;
 
   /** the offset into mElement where the children of mElement are split.<BR>
-    * mOffset is the index of the last child in the left node. 
+    * mOffset is the index of the first child in the right node. 
     * -1 means the new node gets no children.
     */
   PRInt32  mOffset;

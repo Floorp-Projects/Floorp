@@ -128,8 +128,7 @@ public:
                               PRInt32      aPosition);
   virtual nsresult InsertText(const nsString& aStringToInsert);
 
-  virtual nsresult DeleteNode(nsIDOMNode * aParent,
-                              nsIDOMNode * aChild);
+  virtual nsresult DeleteNode(nsIDOMNode * aChild);
 
   virtual nsresult DeleteSelection(nsIEditor::Direction aDir);
 
@@ -206,8 +205,7 @@ protected:
                                              PRInt32         aPosition,
                                              CreateElementTxn ** aTxn);
 
-  virtual nsresult CreateTxnForDeleteElement(nsIDOMNode * aParent,
-                                             nsIDOMNode * aElement,
+  virtual nsresult CreateTxnForDeleteElement(nsIDOMNode * aElement,
                                              DeleteElementTxn ** aTxn);
 
   virtual nsresult CreateTxnForInsertText(const nsString & aStringToInsert,
