@@ -20,6 +20,7 @@
  *   Ramiro Estrugo <ramiro@eazel.com>
  */
 #include <stdlib.h>
+#include <time.h>
 #include "gtkmozembed.h"
 #include "nsIWebBrowser.h"
 #include "nsCWebBrowser.h"
