@@ -67,6 +67,7 @@ nsFontMetricsBeOS::~nsFontMetricsBeOS()
     mFont = nsnull;
   }
   if (mDeviceContext) {
+    // Notify our device context that owns us so that it can update its font cache
     mDeviceContext->FontMetricsDeleted(this);
     mDeviceContext = nsnull;
   }

@@ -64,6 +64,7 @@ nsFontMetricsMac :: ~nsFontMetricsMac()
     mFont = nsnull;
   }
   if (mContext) {
+    // Notify our device context that owns us so that it can update its font cache
     mContext->FontMetricsDeleted(this);
     mContext = nsnull;
   }

@@ -108,11 +108,11 @@ nsDeviceContextOS2::~nsDeviceContextOS2()
 
 nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
 {
-  nsresult retval = DeviceContextImpl::Init(aWidget);
+  mWidget = aWidget;
 
   CommonInit(::WinOpenWindowDC((HWND)aWidget));
 
-  return retval;
+  return NS_OK;
 }
 
 // This version of Init() is called when creating a print DC
