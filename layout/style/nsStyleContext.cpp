@@ -833,6 +833,8 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   fprintf(out, "<column data=\"%d ",
     (int)column->mColumnCount);
   column->mColumnWidth.ToString(str);
+  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  column->mColumnGap.ToString(str);
   fprintf(out, "%s", NS_ConvertUCS2toUTF8(str).get());
   fprintf(out, "\" />\n");
 

@@ -1161,7 +1161,8 @@ nsCSSColumn::nsCSSColumn(void)
 }
 
 nsCSSColumn::nsCSSColumn(const nsCSSColumn& aCopy)
-  : mColumnCount(aCopy.mColumnCount), mColumnWidth(aCopy.mColumnWidth)
+  : mColumnCount(aCopy.mColumnCount), mColumnWidth(aCopy.mColumnWidth),
+    mColumnGap(aCopy.mColumnGap)
 {
   MOZ_COUNT_CTOR(nsCSSColumn);
 }
@@ -1179,6 +1180,7 @@ void nsCSSColumn::List(FILE* out, PRInt32 aIndent) const
   nsAutoString buffer;
 
   mColumnWidth.AppendToString(buffer, eCSSProperty__moz_column_width);
+  mColumnGap.AppendToString(buffer, eCSSProperty__moz_column_gap);
   mColumnCount.AppendToString(buffer, eCSSProperty__moz_column_count);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }

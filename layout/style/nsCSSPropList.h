@@ -332,6 +332,7 @@ CSS_PROP_DISPLAY(clip, clip, Clip, Display, mClip, eCSSType_Rect, PR_FALSE, nsnu
 CSS_PROP_COLOR(color, color, Color, Color, mColor, eCSSType_Value, PR_FALSE, nsnull)
 CSS_PROP_COLUMN(-moz-column-count, _moz_column_count, MozColumnCount, Column, mColumnCount, eCSSType_Value, PR_FALSE, nsnull)
 CSS_PROP_COLUMN(-moz-column-width, _moz_column_width, MozColumnWidth, Column, mColumnWidth, eCSSType_Value, PR_TRUE, nsnull)
+CSS_PROP_COLUMN(-moz-column-gap, _moz_column_gap, MozColumnGap, Column, mColumnGap, eCSSType_Value, PR_TRUE, nsnull)
 CSS_PROP_CONTENT(content, content, Content, Content, mContent, eCSSType_ValueList, PR_FALSE, kContentKTable)
 CSS_PROP_NOTIMPLEMENTED(counter-increment, counter_increment, CounterIncrement)
 CSS_PROP_NOTIMPLEMENTED(counter-reset, counter_reset, CounterReset)

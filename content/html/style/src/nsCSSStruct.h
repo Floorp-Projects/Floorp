@@ -518,6 +518,7 @@ struct nsCSSColumn : public nsCSSStruct  {
 
   nsCSSValue  mColumnCount;
   nsCSSValue  mColumnWidth;
+  nsCSSValue  mColumnGap;
 };
 
 struct nsRuleDataColumn : public nsCSSColumn {

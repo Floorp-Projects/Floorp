@@ -734,6 +734,7 @@ nsStyleColumn::nsStyleColumn()
 { 
   mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
   mColumnWidth.SetAutoValue();
+  mColumnGap.SetCoordValue(0);
 }
 
 nsStyleColumn::~nsStyleColumn() 
@@ -747,10 +748,18 @@ nsStyleColumn::nsStyleColumn(const nsStyleColumn& aSource)
 
 nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
 {
-  if (mColumnWidth == aOther.mColumnWidth &&
-      mColumnCount == aOther.mColumnCount)
-    return NS_STYLE_HINT_NONE;
-  return nsChangeHint_ReconstructFrame;
+  if ((mColumnWidth.GetUnit() == eStyleUnit_Auto)
+      != (aOther.mColumnWidth.GetUnit() == eStyleUnit_Auto) ||
+      (mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO)
+      != (aOther.mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO))
+    return nsChangeHint_ReconstructFrame;
+
+  if (mColumnCount != aOther.mColumnCount ||
+      mColumnWidth != aOther.mColumnWidth ||
+      mColumnGap != aOther.mColumnGap)
+    return nsChangeHint_ReflowFrame;
+
+  return NS_STYLE_HINT_NONE;
 }
 
 #ifdef MOZ_SVG
