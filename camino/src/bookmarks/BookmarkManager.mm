@@ -631,6 +631,7 @@ static unsigned gFirstUserCollection = 0;
   NSScanner *tokenScanner;
   NSString *tokenTag, *tokenString, *tempItem;
   unsigned scanIndex;
+  NSRange tempRange, keyRange;
   BOOL justSetTitle = NO;
   // Scan through file.  As we find a token, do something useful with it.
   while (![fileScanner isAtEnd]) {
@@ -641,24 +642,36 @@ static unsigned gFirstUserCollection = 0;
       // now we pick out if it's something we want to save.
       // check in a "most likely thing first" order
       if (([tokenTag isEqualToString:@"<DT "]) || ([tokenTag isEqualToString:@"<dt "])) {
-        [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
+        [fileScanner setScanLocation:(scanIndex+1)];
       }
       else if (([tokenTag isEqualToString:@"<P>"]) || ([tokenTag isEqualToString:@"<p>"])) {
-        [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
+        [fileScanner setScanLocation:(scanIndex+1)];
       }
       else if (([tokenTag isEqualToString:@"<A "]) || ([tokenTag isEqualToString:@"<a "])) {
         // adding a new bookmark to end of currentArray.
         [fileScanner scanUpToString:@"</A>" intoString:&tokenString];
         tokenScanner = [[NSScanner alloc] initWithString:tokenString];
         [tokenScanner scanUpToString:@"href=\"" intoString:NULL];
-        [tokenScanner setScanLocation:([tokenScanner scanLocation]+6)];
-        [tokenScanner scanUpToString:@"\"" intoString:&tempItem];
-        currentItem = [currentArray addBookmark];
-        [(Bookmark *)currentItem setUrl:[tempItem stringByRemovingAmpEscapes]];
-        [tokenScanner scanUpToString:@">" intoString:NULL];
-        [currentItem setTitle:[[tokenString substringFromIndex:([tokenScanner scanLocation]+1)] stringByRemovingAmpEscapes]];
+        // might be a menu spacer.  check to make sure.
+        if (![tokenScanner isAtEnd]) {
+          [tokenScanner setScanLocation:([tokenScanner scanLocation]+6)];
+          [tokenScanner scanUpToString:@"\"" intoString:&tempItem];
+          currentItem = [currentArray addBookmark];
+          [(Bookmark *)currentItem setUrl:[tempItem stringByRemovingAmpEscapes]];
+          [tokenScanner scanUpToString:@">" intoString:&tempItem];
+          [currentItem setTitle:[[tokenString substringFromIndex:([tokenScanner scanLocation]+1)] stringByRemovingAmpEscapes]];
+          justSetTitle = YES;
+          // see if we had a keyword
+          if (isNetscape) {
+            tempRange = [tempItem rangeOfString:@"SHORTCUTURL=\"" options: NSCaseInsensitiveSearch];
+            if (tempRange.location != NSNotFound) {
+              // throw everything to next " into keyword
+              keyRange = [tempItem rangeOfString:@"\"" options:0 range:NSMakeRange(tempRange.location+tempRange.length,[tempItem length]-(tempRange.location+tempRange.length))];
+              [currentItem setKeyword:[tempItem substringWithRange:NSMakeRange(tempRange.location+tempRange.length,keyRange.location - (tempRange.location+tempRange.length))]];
+            }
+          }
+        }
         [tokenScanner release];
-        justSetTitle = YES;
         [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
       }
       else if (([tokenTag isEqualToString:@"<DD"]) || ([tokenTag isEqualToString:@"<dd"])) {
@@ -675,8 +688,12 @@ static unsigned gFirstUserCollection = 0;
         currentArray = (BookmarkFolder *)currentItem;
         tokenScanner = [[NSScanner alloc] initWithString:tokenString];
         if (isNetscape) {
-          [tokenScanner scanUpToString:@">" intoString:NULL];
+          [tokenScanner scanUpToString:@">" intoString:&tempItem];
           [currentItem setTitle:[[tokenString substringFromIndex:([tokenScanner scanLocation]+1)] stringByRemovingAmpEscapes]];
+          // check for group
+          tempRange = [tempItem rangeOfString:@"FOLDER_GROUP=\"true\"" options: NSCaseInsensitiveSearch];
+          if (tempRange.location != NSNotFound)
+            [(BookmarkFolder *)currentItem setIsGroup:YES];          
         } else {
           [tokenScanner scanUpToString:@"<a>" intoString:NULL];
           [tokenScanner setScanLocation:([tokenScanner scanLocation]+3)];
@@ -687,11 +704,11 @@ static unsigned gFirstUserCollection = 0;
         [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
       }
       else if (([tokenTag isEqualToString:@"<DL"]) || ([tokenTag isEqualToString:@"<dl"])) {
-        [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
+        [fileScanner setScanLocation:(scanIndex+1)];
       }
       else if (([tokenTag isEqualToString:@"</D"]) || ([tokenTag isEqualToString:@"</d"])) {
         currentArray = (BookmarkFolder *)[currentArray parent];
-        [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
+        [fileScanner setScanLocation:(scanIndex+1)];
       }
       else if (([tokenTag isEqualToString:@"<H1"]) || ([tokenTag isEqualToString:@"<h1"])) {
         [fileScanner scanUpToString:@">" intoString:NULL];
@@ -712,7 +729,7 @@ static unsigned gFirstUserCollection = 0;
           [currentItem setTitle:[[currentItem title] stringByAppendingString:tempItem]];
         else
           [currentItem setDescription:[[currentItem description] stringByAppendingString:tempItem]];
-        [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
+        [fileScanner setScanLocation:(scanIndex+1)];
       }
       else if (([tokenTag isEqualToString:@"</H"]) || ([tokenTag isEqualToString:@"</h"])) {
         // if it's not html, we'll include in previous text string
