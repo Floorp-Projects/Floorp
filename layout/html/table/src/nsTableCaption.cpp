@@ -27,6 +27,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
+#include "nsHTMLAtoms.h"
 
 
 #ifdef NS_DEBUG
@@ -75,6 +76,38 @@ int nsTableCaption::GetType()
 {
   return nsITableContent::kTableCaptionType;
 }
+
+void nsTableCaption::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+{
+  nsHTMLValue val;
+
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (ParseAlignParam(aValue, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+    }
+    return;
+  }
+}
+
+void nsTableCaption::MapAttributesInto(nsIStyleContext* aContext,
+                                    nsIPresContext* aPresContext)
+{
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+
+  nsHTMLValue value;
+
+  // align
+  GetAttribute(nsHTMLAtoms::align, value);
+  if (value.GetUnit() != eHTMLUnit_Null) {
+    NS_ASSERTION(value.GetUnit() == eHTMLUnit_Enumerated, "unexpected unit");
+
+    nsStyleText* captionStyle =
+      (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+    captionStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+  }
+}
+
 
 nsresult
 nsTableCaption::CreateFrame(nsIPresContext* aPresContext,

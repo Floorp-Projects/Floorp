@@ -58,6 +58,12 @@ public:
   /** returns nsITableContent::kTableCaptionType */
   virtual int GetType();
 
+  /* ---------- overrides ---------- */
+  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+
+  virtual void MapAttributesInto(nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext);
+
   /** @see nsIHTMLContent::CreateFrame */
   virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
                                nsIFrame*        aParentFrame,

@@ -149,6 +149,7 @@ public:
   static nsIAtom* src;
   static nsIAtom* start;
   static nsIAtom* style;
+  static nsIAtom* summary;
   static nsIAtom* suppress;
 
   static nsIAtom* table;

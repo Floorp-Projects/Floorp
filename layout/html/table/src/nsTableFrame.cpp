@@ -615,8 +615,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
   if (gsDebug==PR_TRUE) 
   {
     printf("-----------------------------------------------------------------\n");
-    printf("nsTableFrame::Reflow: maxSize=%d,%d\n",
-                               aReflowState.maxSize.width, aReflowState.maxSize.height);
+    printf("nsTableFrame::Reflow: table %p given maxSize=%d,%d\n",
+            this, aReflowState.maxSize.width, aReflowState.maxSize.height);
   }
 
 #ifdef NS_DEBUG
@@ -629,9 +629,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
   if (gsTiming) {
     startTime = PR_IntervalNow();
   }
-
-  if (PR_TRUE==gsDebug) 
-    printf ("*** tableframe reflow\t\t%p\n", this);
 
   if (PR_TRUE==NeedsReflow(aReflowState.maxSize))
   {
@@ -669,6 +666,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
   PostReflowCheck(aStatus);
 #endif  
 
+  if (PR_TRUE==gsDebug) printf("end reflow for table %p\n", this);
   return NS_OK;
 }
 
@@ -690,9 +688,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   NS_ASSERTION(nsnull!=aPresContext, "bad pres context param");
   NS_ASSERTION(nsnull==mPrevInFlow, "illegal call, cannot call pass 1 on a continuing frame.");
 
-  if (gsDebug==PR_TRUE) printf("nsTableFrame::ResizeReflow Pass1: maxSize=%d,%d\n",
-                               aReflowState.maxSize.width, aReflowState.maxSize.height);
-  if (PR_TRUE==gsDebug) printf ("*** tableframe reflow pass1\t\t%d\n", this); 
+  if (PR_TRUE==gsDebug) printf("nsTableFrame::ResizeReflow Pass1 for %p: maxSize=%d,%d\n",
+                               this, aReflowState.maxSize.width, aReflowState.maxSize.height);
   nsReflowStatus result = NS_FRAME_COMPLETE;
 
   mChildCount = 0;
@@ -851,10 +848,9 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   NS_PRECONDITION(aReflowState.frame == this, "bad reflow state");
   NS_PRECONDITION(aReflowState.parentReflowState->frame == mGeometricParent,
                   "bad parent reflow state");
-  if (PR_TRUE==gsDebug) printf ("***tableframe reflow pass2\t\t%d\n", this);
   if (gsDebug==PR_TRUE)
-    printf("nsTableFrame::ResizeReflow Pass2: maxSize=%d,%d\n",
-           aReflowState.maxSize.width, aReflowState.maxSize.height);
+    printf("nsTableFrame::ResizeReflow Pass2 %p: maxSize=%d,%d\n",
+           this, aReflowState.maxSize.width, aReflowState.maxSize.height);
 
   nsReflowStatus result = NS_FRAME_COMPLETE;
 

@@ -268,15 +268,25 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
       if (NextChildOffset() < mContent->ChildCount()) {
         aStatus = NS_FRAME_NOT_COMPLETE;
       }
-    } else if (NextChildOffset() < mContent->ChildCount()) {
-      // Try and pull-up some children from a next-in-flow
-      if (PullUpChildren(aPresContext, state, aDesiredSize.maxElementSize)) {
-        // If we still have unmapped children then create some new frames
-        NS_ABORT(); // huge error for tables!
-      } else {
-        // We were unable to pull-up all the existing frames from the next in flow
-        aStatus = NS_FRAME_NOT_COMPLETE;
+    } 
+    else {
+// this is where any other kind of frame would call PullUpChildren
+// but that logic doesn't seem to work with tables because of the way
+// captions are done.  captions can come before or after the inner table, 
+// making compares between nextChildOffset and mContent->ChildCount unsuitable
+/*
+      PRInt32 nextChildOffset = NextChildOffset();
+      if ( nextChildOffset < mContent->ChildCount()) {
+        // Try and pull-up some children from a next-in-flow
+        if (PullUpChildren(aPresContext, state, aDesiredSize.maxElementSize)) {
+          // If we still have unmapped children then create some new frames
+          NS_ABORT(); // huge error for tables!
+        } else {
+          // We were unable to pull-up all the existing frames from the next in flow
+          aStatus = NS_FRAME_NOT_COMPLETE;
+        }
       }
+*/
     }
   }
 
