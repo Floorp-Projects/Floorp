@@ -218,10 +218,8 @@ private:
    * Create a Device Dependent bitmap from a drawing surface
    * @update dc - 05/20/99
    * @param aSurface - The drawingsurface to create the DIB from.
-   * @param aWidth - width of DIB
-   * @param aHeight - height of DIB
    */
-  nsresult ConvertDDBtoDIB(PRInt32 aWidth,PRInt32 aHeight);
+  nsresult ConvertDDBtoDIB();
 
 
   /** 

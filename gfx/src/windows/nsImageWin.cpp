@@ -746,6 +746,10 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 
 
   if( mAlphaDepth == 8){
+    if(!mImageBits){
+      ConvertDDBtoDIB();
+    }
+
     /** 
      *  do alpha depth equal to 8 here.. this needs some special attention
      *  draw the alpha and the bitmap to an offscreen buffer.. for the blend.. first 
@@ -814,9 +818,12 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   }
 
 
-  // we have to use the old way.. for 256 color mode and printing.. slow, but will always work.
-  if ((mAlphaDepth>8) || ((mAlphaDepth==8)&&tryAgain) || (canRaster==DT_RASPRINTER) || (256==mNumPaletteColors)
-      || (imageScaledWidth>MAX_BUFFER_WIDTH) || (imageScaledHeight>MAX_BUFFER_HEIGHT)){
+  // if Alpha is greater than 8 or is 8 but failed or we are printing or we have a color lookup
+  // or.. we are not on windows NT and the tile is larger than our buffer, PatBlt on nt can handle that case
+  if ((mAlphaDepth>8) || ((mAlphaDepth==8)&&tryAgain) || (canRaster==DT_RASPRINTER) 
+      || (256==mNumPaletteColors) || 
+      ( (PR_TRUE != gIsWinNT) && ((imageScaledWidth>MAX_BUFFER_WIDTH) || (imageScaledHeight>MAX_BUFFER_HEIGHT)) )   ){
+    
     for(y=aY0;y<aY1;y+=imageScaledHeight){
       for(x=aX0;x<aX1;x+=imageScaledWidth){
       Draw(aContext, aSurface,
@@ -840,7 +847,8 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     return (PR_FALSE);
   }
 
-  // can not create a compatible bitmap with an offscreen DC (it will be black and white)
+  // IF WE MADE IT THIS FAR.. A PROGRESSIVE DOUBLING ALGORITHM WILL BE USED TO TILE
+
   // so we will create a screen compatible bitmap and then install this into the offscreen DC
   tvrect.SetRect(0,0,aX1-aX0,aY1-aY0);
   offDC = ::CreateCompatibleDC(TheHDC);
@@ -1163,7 +1171,7 @@ nsImageWin::PrintDDB(nsDrawingSurface aSurface,PRInt32 aX, PRInt32 aY, PRInt32 a
 
   if (mIsOptimized == PR_TRUE){
     if (mHBitmap != nsnull){
-      ConvertDDBtoDIB(aWidth,aHeight);
+      ConvertDDBtoDIB();
       ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
 
       if (mBHead->biBitCount == 8) {
@@ -1192,7 +1200,7 @@ nsImageWin::PrintDDB(nsDrawingSurface aSurface,PRInt32 aX, PRInt32 aY, PRInt32 a
  * @return the result of the operation, if NS_OK, then the pixelmap is unoptimized
  */
 nsresult 
-nsImageWin::ConvertDDBtoDIB(PRInt32 aWidth, PRInt32 aHeight)
+nsImageWin::ConvertDDBtoDIB()
 {
   PRInt32             numbytes,tWidth,tHeight;
   BITMAP              srcinfo;
@@ -1387,7 +1395,7 @@ nsImageWin::GetBits()
 {
   // if mImageBits did not exist.. then
   if (!mImageBits) {
-    ConvertDDBtoDIB(GetWidth(), GetHeight());
+    ConvertDDBtoDIB();
     mDIBTemp = PR_TRUE;   // only set to true if the DIB is being created here as temporary
   }
 
