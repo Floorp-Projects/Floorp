@@ -1704,7 +1704,7 @@ nsCAutoString::nsCAutoString(const char* aCString,PRInt32 aLength) : nsCString()
  * Copy construct from ascii c-string
  * @param   aCString is a ptr to a 1-byte cstr
  */
-nsCAutoString::nsCAutoString(CBufDescriptor& aBuffer) : nsCString() {
+nsCAutoString::nsCAutoString(const CBufDescriptor& aBuffer) : nsCString() {
   mAgent=0;
   if(!aBuffer.mBuffer) {
     nsStr::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
