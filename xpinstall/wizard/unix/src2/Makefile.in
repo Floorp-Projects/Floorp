@@ -80,6 +80,10 @@ LIBS        = \
         -lpthread \
         $(NULL)
 
+ifeq ($(OS_ARCH),SunOS)
+LIBS    += -lnsl
+endif
+
 LOCAL_INCLUDES += -I$(srcdir)/../../../stub
 LOCAL_INCLUDES += -I$(srcdir)/../../libxpnet/src
 
