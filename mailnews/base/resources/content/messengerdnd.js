@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -48,6 +48,10 @@ function GetRDFService()
 
 function DragOverTree(event)
 {
+    if (event.target.localName != "treecell" &&
+        event.target.localName != "treeitem")
+        return false;
+
 	var validFlavor = false;
 	var dragSession = null;
 	var retVal = true;
@@ -77,12 +81,18 @@ function DragOverTree(event)
 function BeginDragFolderTree(event)
 {
 	debugDump("BeginDragFolderTree\n");
+    if (event.target.localName != "treecell" &&
+        event.target.localName != "treeitem")
+        return false;
 	return(false);
 }
 
 function BeginDragThreadTree(event)
 {
 	debugDump("BeginDragThreadTree\n");
+    if (event.target.localName != "treecell" &&
+        event.target.localName != "treeitem")
+        return false;
 
 	//XXX we rely on a capturer to already have determined which item the mouse was over
 	//XXX and have set an attribute.
@@ -287,5 +297,9 @@ function DropOnFolderTree(event)
 function DropOnThreadTree(event)
 {
 	debugDump("DropOnThreadTree\n");
+    if (event.target.localName != "treecell" &&
+        event.target.localName != "treeitem")
+        return false;
+    
 	return false;
 }

@@ -20,6 +20,10 @@
 
 function ThreadPaneOnClick(event)
 {
+    if (event.target.localName != "treecell" &&
+        event.target.localName != "treeitem")
+        return;
+    
     var targetclass = event.target.getAttribute('class');
     debug('targetclass = ' + targetclass + '\n');
 
