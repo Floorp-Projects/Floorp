@@ -34,7 +34,7 @@
 /*
  * Private header defining OCSP types.
  *
- * $Id: ocspti.h,v 1.3 2002/07/03 00:02:35 javi%netscape.com Exp $
+ * $Id: ocspti.h,v 1.4 2002/07/03 20:18:07 javi%netscape.com Exp $
  */
 
 #ifndef _OCSPTI_H_
@@ -204,16 +204,41 @@ struct CERTOCSPCertIDStr {
 };
 
 /*
+ * This describes the value of the responseStatus field in an OCSPResponse.
+ * The corresponding ASN.1 definition is:
+ *
+ * OCSPResponseStatus	::=	ENUMERATED {
+ *	successful		(0),	--Response has valid confirmations
+ *	malformedRequest	(1),	--Illegal confirmation request
+ *	internalError		(2),	--Internal error in issuer
+ *	tryLater		(3),	--Try again later
+ *					--(4) is not used
+ *	sigRequired		(5),	--Must sign the request
+ *	unauthorized		(6),	--Request unauthorized
+ * }
+ */
+typedef enum {
+    ocspResponse_successful = 0,
+    ocspResponse_malformedRequest = 1,
+    ocspResponse_internalError = 2,
+    ocspResponse_tryLater = 3,
+    ocspResponse_unused = 4,
+    ocspResponse_sigRequired = 5,
+    ocspResponse_unauthorized = 6,
+    ocspResponse_other			/* unknown/unrecognized value */
+} ocspResponseStatus;
+
+/*
  * An OCSPResponse is what is sent (encoded) by an OCSP responder.
  *
  * The field "responseStatus" is the ASN.1 encoded value; the field
  * "statusValue" is simply that same value translated into our local
- * type OCSPResponseStatus.
+ * type ocspResponseStatus.
  */
 struct CERTOCSPResponseStr {
     PRArenaPool *arena;			/* local; not part of encoding */
     SECItem responseStatus;		/* an ENUMERATED, see above */
-    OCSPResponseStatus statusValue;	/* local; not part of encoding */
+    ocspResponseStatus statusValue;	/* local; not part of encoding */
     ocspResponseBytes *responseBytes;	/* only when status is successful */
 };
 

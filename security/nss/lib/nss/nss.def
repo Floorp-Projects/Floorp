@@ -692,7 +692,7 @@ CERT_CreateOCSPRequest;
 CERT_GetOCSPStatusForCertID;
 CERT_DecodeOCSPResponse;
 CERT_VerifyOCSPResponseSignature;
-CERT_GetStatusValue;
+CERT_GetOCSPResponseStatus;
 CERT_DestroyOCSPCertID;
 CERT_CreateOCSPCertID;
 ;+    local:
