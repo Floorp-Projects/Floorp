@@ -111,9 +111,7 @@ ImageGroupImpl::~ImageGroupImpl()
   
   NS_IF_RELEASE(mManager);
   NS_IF_RELEASE(mNetContext);
-#ifndef NECKO
   NS_IF_RELEASE(mLoadGroup);
-#endif
 }
 
 NS_IMPL_ISUPPORTS(ImageGroupImpl, kIImageGroupIID)
