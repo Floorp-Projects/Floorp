@@ -162,8 +162,6 @@ bin\components\prefmigr.xpt
 bin\components\profile.dll
 bin\components\profile.xpt
 bin\components\proxyObjInst.xpt
-bin\components\psmglue.dll
-bin\components\psmglue.xpt
 bin\components\rdf.dll
 bin\components\rdf.xpt
 bin\components\regviewer.xpt
@@ -318,7 +316,11 @@ bin\chrome\chatzilla.jar
 bin\chrome\chatzilla\*
 
 [psm]
-bin\psm.exe
 bin\nssckbi.dll
-bin\psmdata\*
+bin\components\pipnss.dll
+bin\components\pipnss.xpt
+bin\components\pippki.dll
+bin\components\pippki.xpt
+bin\chrome\pipnss.jar
+bin\chrome\pippki.jar
 
