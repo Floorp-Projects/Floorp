@@ -38,7 +38,11 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
 #include "nsILocalFileMac.h"
 static nsresult GetMacFolder(OSType folderType, nsILocalFile** aFile);
 #endif
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_OS2)
+#define INCL_DOSPROCESS
+#define INCL_DOSMODULEMGR
+#include <os2.h>
+#elif defined(XP_PC)
 #include <windows.h>
 #include <shlobj.h>
 static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile);
@@ -467,7 +471,25 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
       rv = pLocalFile->Create(nsIFile::DIRECTORY_TYPE, 0);
       NS_ENSURE_SUCCESS(rv, rv);
     }    
-#elif defined(XP_PC) && !defined(XP_OS2)
+#elif defined(XP_OS2)
+    PPIB ppib;
+    PTIB ptib;
+    char buffer[CCHMAXPATH];
+    DosGetInfoBlocks( &ptib, &ppib);
+    DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
+    *strrchr( buffer, '\\') = '\0'; // OS2TODO DBCS misery
+    *strrchr( buffer, '\\') = '\0'; // OS2TODO DBCS misery
+    rv = NS_NewLocalFile(buffer, PR_TRUE, aLocalFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+    pLocalFile = *aLocalFile;
+    pLocalFile->AppendRelativePath("Users50");
+    rv = pLocalFile->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!exists) {
+      rv = pLocalFile->Create(nsIFile::DIRECTORY_TYPE, 0);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+#elif defined(XP_PC)
     rv = GetWindowsFolder(CSIDL_PROGRAMS, aLocalFile);
     NS_ENSURE_SUCCESS(rv, rv);
     pLocalFile = *aLocalFile;
