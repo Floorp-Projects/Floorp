@@ -2738,14 +2738,14 @@ nsTableFrame::MoveOverflowToChildList()
   nsTableFrame* prevInFlow = (nsTableFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
     if (prevInFlow->mOverflowFrames.NotEmpty()) {
-      mFrames.Join(this, prevInFlow->mOverflowFrames);
+      mFrames.AppendFrames(this, prevInFlow->mOverflowFrames);
       result = PR_TRUE;
     }
   }
 
   // It's also possible that we have an overflow list for ourselves
   if (mOverflowFrames.NotEmpty()) {
-    mFrames.Join(nsnull, mOverflowFrames);
+    mFrames.AppendFrames(nsnull, mOverflowFrames);
     result = PR_TRUE;
   }
   return result;

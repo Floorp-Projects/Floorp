@@ -489,13 +489,13 @@ NS_METHOD nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext& aPresContext)
       // Any frames on the next-in-flow's overflow list?
       if (nextInFlow->mOverflowFrames.NotEmpty()) {
         // Yes, append them to its child list
-        nextInFlow->mFrames.Join(nextInFlow, nextInFlow->mOverflowFrames);
+        nextInFlow->mFrames.AppendFrames(nextInFlow, nextInFlow->mOverflowFrames);
       }
 
       // Any row frames?
       if (nextInFlow->mFrames.NotEmpty()) {
         // Append them to our child list
-        mFrames.Join(this, nextInFlow->mFrames);
+        mFrames.AppendFrames(this, nextInFlow->mFrames);
       }
 
       // Move to the next-in-flow        

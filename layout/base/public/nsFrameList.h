@@ -97,11 +97,6 @@ public:
                       nsIFrame* aLastChild,
                       nsFrameList& aFromList);
 
-  void Join(nsIFrame* aParent, nsFrameList& aList) {
-    AppendFrames(aParent, aList.mFirstChild);
-    aList.mFirstChild = nsnull;
-  }
-
   nsIFrame* FirstChild() const {
     return mFirstChild;
   }

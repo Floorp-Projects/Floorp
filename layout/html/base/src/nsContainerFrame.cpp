@@ -534,7 +534,7 @@ nsContainerFrame::MoveOverflowToChildList()
   // It's also possible that we have an overflow list for ourselves
   if (mOverflowFrames.NotEmpty()) {
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-    mFrames.Join(nsnull, mOverflowFrames);
+    mFrames.AppendFrames(nsnull, mOverflowFrames);
     result = PR_TRUE;
   }
   return result;
