@@ -50,20 +50,19 @@ OBJS=					\
 	.\$(OBJDIR)\xpcwrappedjsclass.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\
 	.\$(OBJDIR)\xpcwrappednativeclass.obj	\
-	.\$(OBJDIR)\xpt_cpp.obj	\
 	$(NULL)
 
 EXPORTS =					\
-    nsIInterfaceInfo.h \
-    nsIInterfaceInfoManager.h \
     nsIXPCScriptable.h \
     nsIXPConnect.h     \
     xpccomponents.h     \
     xpcjsid.h     \
     xpclog.h     \
+    xpctest.h     \
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\raptor -I$(PUBLIC)\libxpt
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\raptor \
+      -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -74,6 +73,7 @@ LLIBS=	$(LIBNSPR)	\
         $(MD_LIBRARY)	\
 		$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib	\
 		$(DIST)\lib\xpcom$(MOZ_BITS).lib	\
+		$(DIST)\lib\xptinfo$(MOZ_BITS).lib	\
 
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib

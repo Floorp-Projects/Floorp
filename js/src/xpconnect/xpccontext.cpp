@@ -49,7 +49,9 @@ XPCContext::newXPCContext(JSContext* aJSContext,
        xpcc->GetWrappedJSMap()          &&
        xpcc->GetWrappedNativeMap()      &&
        xpcc->GetWrappedJSClassMap()     &&
-       xpcc->GetWrappedNativeClassMap())
+       xpcc->GetWrappedNativeClassMap() &&
+       xpcc->mConstuctorStrID           &&
+       xpcc->mToStringStrID)
     {
         return xpcc;
     }
@@ -71,6 +73,12 @@ XPCContext::XPCContext(JSContext* aJSContext,
     mWrappedNativeMap = Native2WrappedNativeMap::newMap(WrappedNativeMapSize);
     mWrappedJSClassMap = IID2WrappedJSClassMap::newMap(WrappedJSClassMapSize);
     mWrappedNativeClassMap = IID2WrappedNativeClassMap::newMap(WrappedNativeClassMapSize);
+    JS_ValueToId(aJSContext, 
+                 STRING_TO_JSVAL(JS_InternString(aJSContext, "constructor")), 
+                 &mConstuctorStrID);
+    JS_ValueToId(aJSContext, 
+                 STRING_TO_JSVAL(JS_InternString(aJSContext, "toString")), 
+                 &mToStringStrID);
 }
 
 XPCContext::~XPCContext()

@@ -25,8 +25,10 @@
 #include "jsapi.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
+#include "xptinfo.h"
 
 #include "xpccomponents.h"
+#include "xpcjsid.h"
 
 /*
  * The linkage of XPC API functions differs depending on whether the file is

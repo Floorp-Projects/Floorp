@@ -23,84 +23,6 @@
 /***************************************************************************/
 // stuff used for both classes...
 
-class IDForJSScriptable : public nsIXPCScriptable
-{
-public:
-    NS_DECL_ISUPPORTS;
-    XPC_DECLARE_IXPCSCRIPTABLE;
-    IDForJSScriptable();
-    virtual ~IDForJSScriptable();
-};
-
-IDForJSScriptable::IDForJSScriptable()
-{
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-}
-
-IDForJSScriptable::~IDForJSScriptable() {}
-
-static NS_DEFINE_IID(kIDForJSScriptableIID, NS_IXPCSCRIPTABLE_IID);
-NS_IMPL_ISUPPORTS(IDForJSScriptable, kIDForJSScriptableIID);
-
-XPC_IMPLEMENT_IGNORE_CREATE(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_GETPROPERTY(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_SETPROPERTY(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(IDForJSScriptable);
-//XPC_IMPLEMENT_IGNORE_DEFAULTVALUE(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_ENUMERATE(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_CHECKACCESS(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_CALL(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_CONSTRUCT(IDForJSScriptable);
-XPC_IMPLEMENT_IGNORE_FINALIZE(IDForJSScriptable);
-
-NS_IMETHODIMP
-IDForJSScriptable::DefaultValue(JSContext *cx, JSObject *obj,
-                            JSType type, jsval *vp,
-                            nsIXPConnectWrappedNative* wrapper,
-                            nsIXPCScriptable* arbitrary,
-                            JSBool* retval)
-{
-    JSBool success = JS_FALSE;
-    if(type == JSTYPE_STRING || type == JSTYPE_VOID)
-    {
-        nsIJSID* nsid;
-        if(NS_SUCCEEDED(wrapper->GetNative((nsISupports**)&nsid)))
-        {
-            char* str;
-            if(NS_SUCCEEDED(nsid->GetNumber(&str)))
-            {
-                JSString* jsstr = JS_NewStringCopyZ(cx, str);
-                XPCMem::Free(str);
-                if(jsstr)
-                {
-                    *vp = STRING_TO_JSVAL(jsstr);
-                    *retval = success = JS_TRUE;
-                }
-            }
-            NS_RELEASE(nsid);
-            if(success)
-                return NS_OK;
-        }
-    }
-    return arbitrary->DefaultValue(cx, obj, type, vp, wrapper, NULL, retval);
-}
-
-/****************************************************/
-
-// we leak one of these over the lifetime of the process...
-static IDForJSScriptable* GetSharedScriptable()
-{
-    static IDForJSScriptable* scriptable = NULL;
-    if(!scriptable)
-        scriptable = new IDForJSScriptable;
-    return scriptable;
-}
-
 static const nsID& GetInvalidIID()
 {
     // {BB1F47B0-D137-11d2-9841-006008962422}
@@ -125,12 +47,6 @@ nsJSIID::QueryInterface(REFNSIID aIID, void** aInstancePtr)
       aIID.Equals(nsIJSIID::GetIID())) {
     *aInstancePtr = (void*) this;
     NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsIXPCScriptable::GetIID())) {
-    IDForJSScriptable* scriptable = GetSharedScriptable();
-    *aInstancePtr = (void*) scriptable;
-    NS_ADDREF(scriptable);
     return NS_OK;
   }
   *aInstancePtr = NULL;
@@ -309,6 +225,12 @@ nsJSIID::init(const char *idString, PRBool *_retval)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsJSIID::toString(char **_retval)
+{
+    return GetName(_retval);
+}
+
 /***************************************************************************/
 // nsJSCID
 
@@ -323,12 +245,6 @@ nsJSCID::QueryInterface(REFNSIID aIID, void** aInstancePtr)
       aIID.Equals(nsIJSCID::GetIID())) {
     *aInstancePtr = (void*) this;
     NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsIXPCScriptable::GetIID())) {
-    IDForJSScriptable* scriptable = GetSharedScriptable();
-    *aInstancePtr = (void*) scriptable;
-    NS_ADDREF(scriptable);
     return NS_OK;
   }
   *aInstancePtr = NULL;
@@ -487,6 +403,12 @@ nsJSCID::init(const char *idString, PRBool *_retval)
 }
 
 NS_IMETHODIMP
+nsJSCID::toString(char **_retval)
+{
+    return GetName(_retval);
+}
+
+NS_IMETHODIMP
 nsJSCID::newInstance(nsISupports **_retval)
 {
     if(!_retval)
@@ -547,7 +469,8 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj)
         nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx, obj);
     if(wrapper)
     {
-        if(wrapper->GetIID().Equals(nsIJSIID::GetIID()) ||
+        if(wrapper->GetIID().Equals(nsIJSID::GetIID())  ||
+           wrapper->GetIID().Equals(nsIJSIID::GetIID()) ||
            wrapper->GetIID().Equals(nsIJSCID::GetIID()))
         {
             ((nsIJSID*)wrapper->GetNative())->GetId(&id);

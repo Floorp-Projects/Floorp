@@ -239,10 +239,31 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
     case JSTYPE_VOID:
     case JSTYPE_STRING:
-        // XXX perhaps more expressive toString?
-        *vp = STRING_TO_JSVAL(
-                JS_NewStringCopyZ(cx, wrapper->GetClass()->GetInterfaceName()));
-        return JS_TRUE;
+    {
+        nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
+        NS_ASSERTION(clazz,"wrapper without class");
+        const XPCNativeMemberDescriptor* desc = 
+            clazz->LookupMemberByID(clazz->GetXPCContext()->GetToStringStrID());
+        if(desc && desc->IsMethod())
+        {
+            if(!clazz->CallWrappedMethod(cx, wrapper, desc, 
+                                         JS_FALSE, 0, NULL, vp))
+                return JS_FALSE;
+            if(JSVAL_IS_PRIMITIVE(*vp))
+                return JS_TRUE;
+        }
+
+        // else...
+        char* sz = JS_smprintf("[xpconnect wrapped %s]", 
+                               wrapper->GetClass()->GetInterfaceName());
+        if(sz)
+        {
+            *vp = STRING_TO_JSVAL(JS_NewString(cx, sz, strlen(sz)));
+            return JS_TRUE;
+        }
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
 
     case JSTYPE_NUMBER:
         *vp = JSVAL_ONE;
@@ -360,18 +381,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     jsval src;
     uint8 vtblIndex;
     nsresult invokeResult;
-    nsIAllocator* al = NULL;
-    const nsID* conditional_iid = NULL;
-    JSBool iidIsOwned = JS_TRUE;
+    nsID* conditional_iid = NULL;
     uintN err;
 
     *vp = JSVAL_NULL;
-
-    if(!(al = nsXPConnect::GetAllocator()))
-    {
-        ThrowException(XPCJSError::UNEXPECTED, cx, desc);
-        goto done;
-    }
 
     // make sure we have what we need
 
@@ -416,7 +429,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     // iterate through the params doing conversions
     for(i = 0; i < paramCount; i++)
     {
-        nsIAllocator* conditional_al = NULL;
+        JSBool useAllocator = JS_FALSE;
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
 
@@ -448,7 +461,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             // in the future there may be a param flag indicating 'shared'
             if(type.IsPointer())
             {
-                conditional_al = al;
+                useAllocator = JS_TRUE;
                 dp->flags |= nsXPCVariant::VAL_IS_OWNED;
             }
         }
@@ -457,7 +470,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             src = argv[i];
             if(type.IsPointer() && type.TagPart() == nsXPTType::T_IID)
             {
-                conditional_al = al;
+                useAllocator = JS_TRUE;
                 dp->flags |= nsXPCVariant::VAL_IS_OWNED;
             }
         }
@@ -466,13 +479,13 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         {
             dp->flags |= nsXPCVariant::VAL_IS_IFACE;
 
-            if(!(conditional_iid = param.GetInterfaceIID()))
+            if(NS_FAILED(GetInterfaceInfo()->
+                                GetIIDForParam(&param, &conditional_iid)))
             {
                 ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
                                        cx, desc, i);
                 goto done;
             }
-            iidIsOwned = JS_FALSE;
         }
         else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
         {
@@ -483,7 +496,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             const nsXPTType& type = param.GetType();
             if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
                !XPCConvert::JSData2Native(cx, &conditional_iid, argv[arg_num],
-                                          type, al, NULL, NULL))
+                                          type, JS_TRUE, NULL, NULL))
             {
                 ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
                                        cx, desc, i);
@@ -492,17 +505,15 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         }
 
         if(!XPCConvert::JSData2Native(cx, &dp->val, src, type,
-                                      conditional_al, conditional_iid, &err))
+                                      useAllocator, conditional_iid, &err))
         {
             ThrowBadParamException(err, cx, desc, i);
             goto done;
         }
         if(conditional_iid)
         {
-            if(iidIsOwned)
-                al->Free((void*)conditional_iid);
+            XPCMem::Free((void*)conditional_iid);
             conditional_iid = NULL;
-            iidIsOwned = JS_TRUE;
         }
     }
 
@@ -521,7 +532,6 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     {
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
-        const nsID* conditional_iid = NULL;
 
         nsXPCVariant* dp = &dispatchParams[i];
         if(param.IsOut())
@@ -530,7 +540,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
             if(type.TagPart() == nsXPTType::T_INTERFACE)
             {
-                if(!(conditional_iid = param.GetInterfaceIID()))
+                if(NS_FAILED(GetInterfaceInfo()->
+                                    GetIIDForParam(&param, &conditional_iid)))
                 {
                     ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
                                            cx, desc, i);
@@ -543,7 +554,9 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 const nsXPTParamInfo& param = info->GetParam(arg_num);
                 const nsXPTType& type = param.GetType();
                 if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
-                   !(conditional_iid = (nsID*)dispatchParams[arg_num].val.p))
+                   !(conditional_iid = (nsID*)
+                         XPCMem::Clone(dispatchParams[arg_num].val.p, 
+                                       sizeof(nsID))))
                 {
                     ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
                                            cx, desc, i);
@@ -571,6 +584,11 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                     goto done;
                 }
             }
+            if(conditional_iid)
+            {
+                XPCMem::Free((void*)conditional_iid);
+                conditional_iid = NULL;
+            }
         }
     }
     retval = JS_TRUE;
@@ -584,18 +602,16 @@ done:
         void* p = dp->val.p;
         if(!p)
             continue;
-        if(dp->IsValOwned() && al)
-            al->Free(p);
+        if(dp->IsValOwned())
+            XPCMem::Free(p);
         if(dp->IsValInterface())
             ((nsISupports*)p)->Release();
     }
-    if(conditional_iid && iidIsOwned && al)
-        al->Free((void*)conditional_iid);
+    if(conditional_iid)
+        XPCMem::Free((void*)conditional_iid);
 
     if(dispatchParams && dispatchParams != paramBuffer)
         delete [] dispatchParams;
-    if(al)
-        NS_RELEASE(al);
     return retval;
 }
 
@@ -662,7 +678,8 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(!wrapper)
     {
-        if(isConstructorID(cx, id))
+        XPCContext* xpcc = nsXPConnect::GetContext(cx);
+        if(xpcc && id == xpcc->GetConstructorStrID())
         {
             // silently fail when looking for constructor property
             *vp = JSVAL_VOID;

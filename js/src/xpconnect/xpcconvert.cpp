@@ -260,7 +260,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
 JSBool
 XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                           const nsXPTType& type,
-                          nsIAllocator* al, const nsID* iid,
+                          JSBool useAllocator, const nsID* iid,
                           uintN* pErr)
 {
     NS_PRECONDITION(d, "bad param");
@@ -385,7 +385,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             return JS_FALSE;
         case nsXPTType::T_IID:
         {
-            NS_ASSERTION(al,"trying to convert a JSID to nsID without allocator");
+            NS_ASSERTION(useAllocator,"trying to convert a JSID to nsID without allocator");
 
             JSObject* obj;
             const nsID* pid=NULL;
@@ -414,10 +414,10 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             {
                 return JS_FALSE;
             }
-            if(al)
+            if(useAllocator)
             {
                 int len = strlen(bytes)+1;
-                if(!(*((void**)d) = al->Alloc(len)))
+                if(!(*((void**)d) = XPCMem::Alloc(len)))
                 {
                     return JS_FALSE;
                 }
@@ -439,10 +439,10 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             {
                 return JS_FALSE;
             }
-            if(al)
+            if(useAllocator)
             {
                 int byte_len = (JS_GetStringLength(str)+1)*sizeof(jschar);
-                if(!(*((void**)d) = al->Alloc(byte_len)))
+                if(!(*((void**)d) = XPCMem::Alloc(byte_len)))
                 {
                     // XXX should report error
                     return JS_FALSE;

@@ -32,6 +32,8 @@ interface nsIJSID : nsISupports
 
     boolean equals(in nsIJSID other);
     boolean init(in string idString);
+
+    string toString();
 };
 
 [uuid(e08dcda0-d651-11d2-9843-006008962422)]

@@ -170,7 +170,7 @@ nsXPConnect::nsXPConnect()
                                  (nsISupports **)&mAllocator);
 
     // XXX later this will be a service
-    mInterfaceInfoManager = XPT_GetInterfaceInfoManager();
+    mInterfaceInfoManager = XPTI_GetInterfaceInfoManager();
     mThrower = new XPCJSThrower(JS_TRUE);
 }
 

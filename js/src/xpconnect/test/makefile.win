@@ -22,7 +22,7 @@ IGNORE_MANIFEST=1
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestXPC.exe
 PROGRAMS = $(PROG1)
-TESTCASES = testxpc.js
+TESTCASES = testxpc.js simpletest.js
 
 LCFLAGS=-DUSE_NSREG -DJSFILE
 
@@ -30,7 +30,8 @@ DEFINES=-DWIN32_LEAN_AND_MEAN -DJS_THREADSAFE
 
 REQUIRES=xpcom js xpconnect
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\xpconnect -I$(PUBLIC)\raptor
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\xpconnect \
+      -I$(PUBLIC)\raptor -I$(PUBLIC)\xptinfo
 
 LLIBS=					\
  $(DIST)\lib\xpcom32.lib		\

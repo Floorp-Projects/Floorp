@@ -21,7 +21,7 @@ include <$(DEPTH)\config\config.mak>
 
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API -DJS_THREADSAFE -DDEBUG
 LINCS=-I..\.. -I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\raptor \
-      -I$(PUBLIC)\libxpt
+      -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo
 
 LCFLAGS = \
         $(LCFLAGS) \

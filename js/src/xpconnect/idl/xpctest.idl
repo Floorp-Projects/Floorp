@@ -1,0 +1,68 @@
+
+#include "nsISupports.idl"
+
+/* XXX should be built in */
+native nsID(nsID *);
+
+[uuid(159E36D0-991E-11d2-AC3F-00C09300144B)]
+interface nsITestXPCFoo : nsISupports {
+    long Test(in long p1, in long p2);
+    void Test2();
+};
+
+[uuid(5F9D20C0-9B6B-11d2-9FFE-000064657374)]
+interface nsITestXPCFoo2 : nsITestXPCFoo {
+};
+
+
+[uuid(CD2F2F40-C5D9-11d2-9838-006008962422)]
+interface nsIEcho : nsISupports {
+
+    void SetReciever(in nsIEcho aReciever);
+    void SendOneString(in string str);
+    long In2OutOneInt(in long input);
+
+    long In2OutAddTwoInts(in  long input1,  in  long input2,
+                          out long output1, out long output2);
+
+    string In2OutOneString(in string input);
+    void SimpleCallNoEcho();
+    void SendManyTypes(in octet                 p1,
+                       in short                 p2,
+                       in long                  p3,
+                       in long long             p4,
+                       in octet                 p5,
+                       in unsigned short        p6,
+                       in unsigned long         p7,
+                       in unsigned long long    p8,
+                       in float                 p9,
+                       in double                p10,
+                       in boolean               p11,
+                       in char                  p12,
+                       in wchar                 p13,
+                       in nsID                  p14,
+                       in string                p15,
+                       in wstring               p16);
+
+    void SendInOutManyTypes(inout octet                 p1,
+                            inout short                 p2,
+                            inout long                  p3,
+                            inout long long             p4,
+                            inout octet                 p5,
+                            inout unsigned short        p6,
+                            inout unsigned long         p7,
+                            inout unsigned long long    p8,
+                            inout float                 p9,
+                            inout double                p10,
+                            inout boolean               p11,
+                            inout char                  p12,
+                            inout wchar                 p13,
+                            inout nsID                  p14,
+                            inout string                p15,
+                            inout wstring               p16);
+    
+    void MethodWithNative(in long p1, in voidStar p2);
+    void ReturnCode(in long code);
+    void FailInJSTest(in long fail);
+};
+

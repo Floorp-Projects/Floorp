@@ -3,13 +3,14 @@
 function nsID(str)
 {
     var id = Components.classes.nsIID.newInstance();
-    id = id.QueryInterface(Components.interfaces.nsIID);
+    id = id.QueryInterface(Components.interfaces.nsIJSIID);
     id.init(str);
     return id;
 }    
 
 var NS_ISUPPORTS_IID    = new nsID("{00000000-0000-0000-c000-000000000046}");
 var NS_ITESTXPC_FOO_IID = new nsID("{159E36D0-991E-11d2-AC3F-00C09300144B}");
+
 
 var baz = foo.QueryInterface(NS_ITESTXPC_FOO_IID);
 print("baz = "+baz);
@@ -113,7 +114,7 @@ print("In2OutOneString - "+(
 // SendManyTypes
 
 var reciever_results = new Object();
-var send_params = [-1,-2,-3,-102020,2,4,6,1023,1.5,2.000008,true,'a','b',NS_ITESTXPC_FOO_IID,"a string","another string"];
+var send_params = [1,-2,-3,-102020,2,4,6,1023,1.5,2.000008,true,'a','b',NS_ITESTXPC_FOO_IID,"a string","another string"];
 echo.SendManyTypes(send_params[0],
                    send_params[1], 
                    send_params[2], 
@@ -148,8 +149,8 @@ if(all_ok)
 // SendInOutManyTypes
 
 var reciever_results = new Object();
-var send_params   = [-1,-2,-3,-102020,2,4,6,1023,1.5,2.000008,true,'a','b',NS_ITESTXPC_FOO_IID,"a string","another string"];
-var resend_params = [-2,-3,-7,-10220,12,14,16,123,2.5,8.000008,false,'z','l',NS_ISUPPORTS_IID,"foo string","yet another string"];
+var send_params   = [1,-2,-3,-102020,2,4,6,1023,1.5,2.000008,true,'a','b',NS_ITESTXPC_FOO_IID,"a string","another string"];
+var resend_params = [2,-3,-7,-10220,18,14,16,123,2.5,8.000008,false,'z','l',NS_ISUPPORTS_IID,"foo string","yet another string"];
 
 reciever.SendInOutManyTypes = function() 
     {
