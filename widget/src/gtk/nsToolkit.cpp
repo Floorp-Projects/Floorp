@@ -79,6 +79,7 @@ NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
 //-------------------------------------------------------------------------
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
+  mSharedGC = nsnull;
   return NS_OK;
 }
 
