@@ -418,9 +418,7 @@ nsresult nsMessengerMigrator::Init()
 nsresult 
 nsMessengerMigrator::Shutdown()
 {
-  if (m_prefs) {
 	m_prefs = nsnull;
-  }
 
   m_haveShutdown = PR_TRUE;
   return NS_OK;
@@ -734,16 +732,16 @@ nsMessengerMigrator::UpgradePrefs()
     rv = MigrateNewsAccounts(identity);
     if (NS_FAILED(rv)) return rv;
 
+    // this will upgrade the ldap prefs
+#if defined(MOZ_LDAP_XPCOM)
+    nsCOMPtr <nsILDAPPrefsService> ldapPrefsService = do_GetService("@mozilla.org/ldapprefs-service;1", &rv);
+#endif    
     rv = MigrateAddressBookPrefs();
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = MigrateAddressBooks();
     if (NS_FAILED(rv)) return rv;
 
-    // this will upgrade the ldap prefs
-#if defined(MOZ_LDAP_XPCOM)
-    nsCOMPtr <nsILDAPPrefsService> ldapPrefsService = do_GetService("@mozilla.org/ldapprefs-service;1", &rv);
-#endif    
     // we're done migrating, let's save the prefs
     rv = m_prefs->SavePrefFile(nsnull);
     if (NS_FAILED(rv)) return rv;
@@ -751,6 +749,7 @@ nsMessengerMigrator::UpgradePrefs()
 	// remove the temporary identity we used for migration purposes
     identity->ClearAllValues();
     rv = accountManager->RemoveIdentity(identity);
+
     return rv;
 }
 
@@ -1925,9 +1924,12 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   printf("investigate pref: %s\n",aPref);
 #endif
   nsXPIDLCString abFileName;
-  if (!strncmp(aPref, "ldap_2.servers.pab", strlen("ldap_2.servers.pab")))
-  {
-    // check for pab without a filename and if so, set it to pab.na2
+  // we only care about ldap_2.servers.*.filename" prefs
+  if (!charEndsWith(aPref, ADDRESSBOOK_PREF_NAME_SUFFIX)) return;
+      
+  // check for pab without a filename and if so, set it to pab.na2.
+  // This is an ugly hack for installations that haven't set 
+  // pab.filename.
       rv = prefs->CopyCharPref(DEFAULT_PAB_FILENAME_PREF_NAME, getter_Copies(abFileName));
       if (NS_FAILED(rv))
       {
@@ -1935,9 +1937,20 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
         prefs->SetCharPref(DEFAULT_PAB_FILENAME_PREF_NAME, "pab.na2");
         aPref = "ldap_2.servers.pab.filename";
       }
-  }
-  // we only care about ldap_2.servers.*.filename" prefs
-  if (!charEndsWith(aPref, ADDRESSBOOK_PREF_NAME_SUFFIX)) return;
+
+  // check if this really is an ldap server, in which case, we're not going to migrate
+  // the na2 file for now, since it confuses RDF when the import code adds this
+  // server as a personal address book. I'd like to fix that but it's tricky
+  // and the .na2 file for ldap servers should only be for offline data.
+
+  nsCAutoString serverPrefName(aPref);
+  PRInt32 fileNamePos = serverPrefName.Find(".filename");
+  serverPrefName.Truncate(fileNamePos + 1);
+  serverPrefName.Append("serverName");
+  nsXPIDLCString serverName;
+  rv = prefs->CopyCharPref(serverPrefName.get(), getter_Copies(serverName));
+  if (NS_SUCCEEDED(rv) && !serverName.IsEmpty())
+    return; // skip this - it's an ldap server
       
   rv = prefs->CopyCharPref(aPref,getter_Copies(abFileName));
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to get ab filename");

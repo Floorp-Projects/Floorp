@@ -2943,7 +2943,7 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 		DIR_ConvertServerFileName(server);
 
     // the string "s" is the default uri ( <scheme> + "://" + <filename> )
-    nsCString s(kMDBDirectoryRoot);
+  nsCString s((server->dirType == PABDirectory) ? kMDBDirectoryRoot : kLDAPDirectoryRoot);
     s.Append (server->fileName);
     server->uri = DIR_GetStringPref (prefstring, "uri", tempstring, s.get ());
     
