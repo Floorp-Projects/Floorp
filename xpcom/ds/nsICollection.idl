@@ -48,8 +48,8 @@ interface nsICollection : nsISerializable
   void QueryElementAt(in PRUint32 index, in nsIIDRef uuid, 
                       [iid_is(uuid),retval] out nsQIResult result);
   void SetElementAt(in PRUint32 index, in nsISupports item);
-  void AppendElement(in nsISupports item);
-  void RemoveElement(in nsISupports item);
+  [notxpcom] boolean AppendElement(in nsISupports item);
+  [notxpcom] boolean RemoveElement(in nsISupports item);
 
   nsIEnumerator Enumerate();
 
