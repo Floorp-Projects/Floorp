@@ -8,7 +8,7 @@
     <resources>
       <stylesheet src="chrome://global/skin/menu.css"/>
     </resources>
-    <implementation implements="nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
       <property name="accessible">
         <getter>
           <![CDATA[
