@@ -37,12 +37,12 @@
 #include "nspr.h"
 #include "png.h"
 
-PR_STATIC_CALLBACK(void) info_callback(png_structp png_ptr, png_infop info_ptr);
-PR_STATIC_CALLBACK(void) row_callback(png_structp png_ptr, png_bytep new_row,
-                                      png_uint_32 row_num, int pass);
-PR_STATIC_CALLBACK(void) end_callback(png_structp png_ptr, png_infop info_ptr);
-PR_STATIC_CALLBACK(void) error_callback(png_structp png_ptr, png_const_charp error_msg);
-PR_STATIC_CALLBACK(void) warning_callback(png_structp png_ptr, png_const_charp warning_msg);
+static void PNGAPI info_callback(png_structp png_ptr, png_infop info_ptr);
+static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row,
+                           png_uint_32 row_num, int pass);
+static void PNGAPI end_callback(png_structp png_ptr, png_infop info_ptr);
+static void PNGAPI error_callback(png_structp png_ptr, png_const_charp error_msg);
+static void PNGAPI warning_callback(png_structp png_ptr, png_const_charp warning_msg);
 
 #ifdef PR_LOGGING
 PRLogModuleInfo *gPNGLog = PR_NewLogModule("PNGDecoder");
