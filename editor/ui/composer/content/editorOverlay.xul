@@ -180,7 +180,7 @@
     <broadcaster id="Editor:PrintSetup"   value="&printSetupCmd.label;"    oncommand="EditorPrintSetup()"   disabled="true"/>
     <broadcaster id="Editor:PrintPreview" value="&printPreviewCmd.label;"  oncommand="EditorPrintPreview()" disabled="true"/>
     <broadcaster id="Editor:Print"                                         oncommand="EditorPrint()"/>
-    <broadcaster id="Editor:Exit"         value="&exitCmd.label;"          oncommand="EditorExit()"/>
+    <broadcaster id="Editor:Exit"         value="&exitCmd.label;"          oncommand="goQuitApplication()"/>
     
     <!-- need to toggle the menu item text through style -->
  	<broadcaster id="cmd_viewCompToolbar"   oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');" checked="true"/>
@@ -817,15 +817,22 @@
     <!-- end DEBUG only -->
 
     <!-- Window bottom -->
-    <box align="horizontal" id="status-bar">
-      <titledbutton value="&tempNotification.label;" onclick="doTests()"/>
-      <box id="EditorProgressBox" align="vertical" flex="100%">
-        <spring flex="100%"/>
-        <progressmeter mode="normal" value="0">
-        </progressmeter>
-        <spring flex="100%"/>
+      <box id="status-bar" chromeclass="status">
+        <box id="state-box" align="horizontal" flex="100%" style="min-width: 1px">
+          <box align="vertical" style="width:100px">
+          <spring flex="100%"/>
+          <progressmeter id="statusbar-icon" mode="normal" align="horizontal" value="0">
+              <observes element="Editor:Throbber" attribute="busy"/>
+          </progressmeter>
+          <spring flex="100%"/>
+        </box>
+        <spring style="width: 1em"/>
+        <titledbutton id="statusText" class="status-bar" align="left" flex="100%" 
+          value="&tempDoneLoading.label;"  style="min-width: 1px">
+        </titledbutton>
+    
+        <titledbutton class="status-bar" align="left" value=""/>
       </box>
-      <titledbutton id="statusText" align="right" flex="100%" value="&tempDoneLoading.label;" style="font-family:sans-serif;font-size:2.5mm">
-      </titledbutton>
-    </box>
+     </box>
+     
 </overlay>
