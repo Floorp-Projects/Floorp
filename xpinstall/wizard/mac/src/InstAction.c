@@ -265,7 +265,7 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 				compsDone++;
 			}
 		}
-		else if (compsDone == gControls->cfg->st[instChoice].numComps)
+		else if (compsDone >= gControls->cfg->st[instChoice].numComps)
 			break;  
 	}			
 	

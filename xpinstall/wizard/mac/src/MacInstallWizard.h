@@ -243,15 +243,14 @@ if (err) 								\
 #define sComponent		22
 #define sArchive		23
 #define sInstSize		24
-#define sAttr			25
+#define sAttributes		25
 #define	sURL			26
 
 #define sTermDlg		27
 		
-#define sAttributes		28
-#define	sSELECTED		29
-#define sINVISIBLE		30
-#define	sLAUNCHAPP		31	/* end parse keys */
+#define	sSELECTED		28
+#define sINVISIBLE		29
+#define	sLAUNCHAPP		30	/* end parse keys */
 
 #define	eParseFailed	501	/* errors */
 
@@ -543,7 +542,6 @@ OSErr		CleanupExtractedFiles(short, long);
  *   XPInstallGlue
  *-----------------------------------------------------------*/
 OSErr		RunAllXPIs(short vRefNum, long dirID);
-OSErr		RunXPI(FSSpec&, FSSpec&, FSSpec&);
 /* NB:
 ** See XPInstallGlue.c for rest of prototypes
 */

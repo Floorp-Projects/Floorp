@@ -225,6 +225,9 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		HUnlock(gControls->cfg->st[gControls->opt->instChoice-1].longDesc);
 		EraseRect( &r );
 		TEUpdate( &r, gControls->stw->instDescTxt);
+		
+		ClearDiskSpaceMsgs();
+		DrawDiskSpaceMsgs(gControls->opt->vRefNum);
 		return;
 	}
 	
@@ -522,13 +525,15 @@ DiskSpaceNeeded(void)
 	char *cSpaceNeeded;
 	short i;
 	long spaceNeeded = 0;
+	int instChoice = gControls->opt->instChoice - 1;
 	
 	/* loop through all components cause they may be scattered through 
 	 * the array for this particular setup type 
 	 */
 	for (i=0; i<kMaxComponents; i++)
 	{	
-		if (gControls->cfg->comp[i].selected == true)
+		if ((gControls->cfg->comp[i].selected == true) && 
+			(gControls->cfg->st[instChoice].comp[i] == kInSetupType))
 		{
 			spaceNeeded += gControls->cfg->comp[i].size;
 		}
