@@ -896,7 +896,7 @@
   <!-- Paste as quotation is used by mail compose,
        but in composer it has to go in the debug menu
    -->
-  <menuitem id="menu_pasteQuote" accesskey="&editpastequotation.accesskey;" observes="cmd_pasteQuote"/>
+  <menuitem id="menu_pasteQuote" accesskey="&editpastequotation.accesskey;" command="cmd_pasteQuote" key="pastequotationkb"/>
 
   <!-- DEBUG only -->
   <menu id="debugMenu" label="&debugMenu.label;">
