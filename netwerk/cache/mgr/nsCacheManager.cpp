@@ -66,9 +66,9 @@ nsCacheManager::nsCacheManager()
 nsCacheManager::~nsCacheManager()
 {
     gCacheManager = 0;
-    delete mActiveCacheRecords;
-    delete mMemSpaceManager;
-    delete mDiskSpaceManager;
+    if (mActiveCacheRecords) delete mActiveCacheRecords;
+    if (mMemSpaceManager)    delete mMemSpaceManager;
+    if (mDiskSpaceManager)   delete mDiskSpaceManager;
 }
 
 
