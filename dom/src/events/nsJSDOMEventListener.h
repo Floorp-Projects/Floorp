@@ -31,7 +31,7 @@
 //nsIDOMMouseListener interface
 class nsJSDOMEventListener : public nsIDOMEventListener, public nsIScriptEventListener {
 public:
-  nsJSDOMEventListener(JSContext *aContext, JSObject *aObj, JSFunction *aFun);
+  nsJSDOMEventListener(JSContext *aContext, JSObject *aScopeObj, JSObject *aFunObj);
   virtual ~nsJSDOMEventListener();
 
   NS_DECL_ISUPPORTS
@@ -44,8 +44,8 @@ public:
 
 protected:
   JSContext *mContext;
-  JSObject *mJSObj;
-  JSFunction *mJSFun;
+  JSObject  *mScopeObj;
+  JSObject  *mFunObj;
 
 };
 

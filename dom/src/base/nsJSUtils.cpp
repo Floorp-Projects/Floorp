@@ -184,7 +184,7 @@ nsJSUtils::nsLookupGlobalName(nsISupports* aSupports,
   nsresult result;
 
   if (JSVAL_IS_STRING(aId)) {
-    JSString* jsstring = JS_ValueToString(aContext, aId);
+    JSString* jsstring = JSVAL_TO_STRING(aId);
     nsAutoString name(JS_GetStringChars(jsstring));
     nsIScriptNameSpaceManager* manager;
     nsIScriptContext* scriptContext = (nsIScriptContext*)JS_GetContextPrivate(aContext);
@@ -441,11 +441,10 @@ nsJSUtils::nsConvertJSValToFunc(nsIDOMEventListener** aListener,
     *aListener = nsnull;
   }
   else if (JSVAL_IS_OBJECT(aValue)) {
-    JSFunction* jsfun = JS_ValueToFunction(aContext, aValue);
-    if (jsfun){
+    if (JS_TypeOfValue(aContext, aValue) == JSTYPE_FUNCTION){
       nsIScriptContext* scriptContext = (nsIScriptContext*)JS_GetContextPrivate(aContext);
       
-      if (NS_OK == NS_NewScriptEventListener(aListener, scriptContext, (void*)aObj, (void*)jsfun)) {
+      if (NS_OK == NS_NewScriptEventListener(aListener, scriptContext, (void*)aObj, (void*)JSVAL_TO_OBJECT(aValue))) {
         return JS_TRUE;
       }
       else {
@@ -454,7 +453,7 @@ nsJSUtils::nsConvertJSValToFunc(nsIDOMEventListener** aListener,
       }
     }
     else {
-      JS_ReportError(aContext, "Parameter isn't a object");
+      JS_ReportError(aContext, "Parameter isn't a callable object");
       return JS_FALSE;
     }
   }
@@ -513,7 +512,7 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
   jsval val;
 
   if (JSVAL_IS_STRING(aId)) {
-    JSString* jsstring = JS_ValueToString(aContext, aId);
+    JSString* jsstring = JSVAL_TO_STRING(aId);
     nsAutoString name(JS_GetStringChars(jsstring));
     nsIScriptNameSpaceManager* manager;
     nsIScriptContext* scriptContext = (nsIScriptContext*)JS_GetContextPrivate(aContext);
