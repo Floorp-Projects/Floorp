@@ -4374,7 +4374,8 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
 
   // This is a two-step process.
   // Step 1: Find the bounds of the rect we want to scroll into view.  For
-  //         example, for an inline frame we want to scroll in the whole line.
+  //         example, for an inline frame we may want to scroll in the whole
+  //         line.
   // Step 2: Walk the views that are parents of the frame and scroll them
   //         appropriately.
   
@@ -4384,45 +4385,48 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   aFrame->GetOffsetFromView(mPresContext, offset, &closestView);
   frameBounds.MoveTo(offset);
 
-  // If this is an inline frame, we need to change the top of the
-  // bounds to include the whole line.
-  nsCOMPtr<nsIAtom> frameType;
-  nsIFrame *prevFrame = aFrame;
-  nsIFrame *frame = aFrame;
+  // If this is an inline frame and either the bounds height is 0 (quirks
+  // layout model) or aVPercent is not NS_PRESSHELL_SCROLL_ANYWHERE, we need to
+  // change the top of the bounds to include the whole line.
+  if (frameBounds.height == 0 || aVPercent != NS_PRESSHELL_SCROLL_ANYWHERE) {
+    nsCOMPtr<nsIAtom> frameType;
+    nsIFrame *prevFrame = aFrame;
+    nsIFrame *frame = aFrame;
 
-  while (frame && (frame->GetFrameType(getter_AddRefs(frameType)),
-                   frameType == nsLayoutAtoms::inlineFrame)) {
-    prevFrame = frame;
-    frame = prevFrame->GetParent();
-  }
+    while (frame && (frame->GetFrameType(getter_AddRefs(frameType)),
+                     frameType == nsLayoutAtoms::inlineFrame)) {
+      prevFrame = frame;
+      frame = prevFrame->GetParent();
+    }
 
-  if (frame != aFrame &&
-      frame &&
-      frameType == nsLayoutAtoms::blockFrame) {
-    // find the line containing aFrame and increase the top of |offset|.
-    nsCOMPtr<nsILineIterator> lines( do_QueryInterface(frame) );
+    if (frame != aFrame &&
+        frame &&
+        frameType == nsLayoutAtoms::blockFrame) {
+      // find the line containing aFrame and increase the top of |offset|.
+      nsCOMPtr<nsILineIterator> lines( do_QueryInterface(frame) );
 
-    if (lines) {
-      PRInt32 index = -1;
-      lines->FindLineContaining(prevFrame, &index);
-      if (index >= 0) {
-        nsIFrame *trash1;
-        PRInt32 trash2;
-        nsRect lineBounds;
-        PRUint32 trash3;
+      if (lines) {
+        PRInt32 index = -1;
+        lines->FindLineContaining(prevFrame, &index);
+        if (index >= 0) {
+          nsIFrame *trash1;
+          PRInt32 trash2;
+          nsRect lineBounds;
+          PRUint32 trash3;
 
-        if (NS_SUCCEEDED(lines->GetLine(index, &trash1, &trash2,
-                                        lineBounds, &trash3))) {
-          nsPoint blockOffset;
-          nsIView* blockView;
-          frame->GetOffsetFromView(mPresContext, blockOffset, &blockView);
+          if (NS_SUCCEEDED(lines->GetLine(index, &trash1, &trash2,
+                                          lineBounds, &trash3))) {
+            nsPoint blockOffset;
+            nsIView* blockView;
+            frame->GetOffsetFromView(mPresContext, blockOffset, &blockView);
 
-          if (blockView == closestView) {
-            // XXX If views not equal, this is hard.  Do we want to bother?
-            nscoord newoffset = lineBounds.y + blockOffset.y;
+            if (blockView == closestView) {
+              // XXX If views not equal, this is hard.  Do we want to bother?
+              nscoord newoffset = lineBounds.y + blockOffset.y;
 
-            if (newoffset < frameBounds.y)
-              frameBounds.y = newoffset;
+              if (newoffset < frameBounds.y)
+                frameBounds.y = newoffset;
+            }
           }
         }
       }
