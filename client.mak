@@ -320,6 +320,13 @@ browse_info::
 	-bscmake /Es /o mozilla.bsc @sbrlist.tmp
 	-rm sbrlist.tmp
 
+regchrome::
+	@cd $(MOZ_SRC)\mozilla\.
+	set DIST_DIRS=1
+	set LAYOUT_DIRS=1
+	set CLIENT_DIRS=1
+	nmake /f makefile.win regchrome
+
 deliver::
 	@cd $(MOZ_SRC)\mozilla\.
 	set DIST_DIRS=1

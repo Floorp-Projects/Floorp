@@ -59,7 +59,12 @@ mkdir("$cwdDist\\stage", 775);
 system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\stage -f $cwdPackager\\packages-win -o dos -v");
 
 chdir("$cwdPackager\\windows");
-system("perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install");
+if(system("perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install") != 0)
+{
+  print "Error: perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install\n";
+  exit(1);
+}
+
 chdir($cwdBuilder);
 
 # Copy the .xpi files to the same directory as setup.exe.
@@ -69,7 +74,11 @@ chdir($cwdBuilder);
 # Mozilla-win32-install.exe (a self extracting file) will use the .xpi
 # files from its current directory as well, but it is not a requirement
 # that they exist because it already contains the .xpi files within itself.
-system("copy $cwdDistWin\\install\\xpi\\*.* $cwdDistWin\\install");
+if(system("copy $cwdDistWin\\install\\xpi\\*.* $cwdDistWin\\install") != 0)
+{
+  print "Error: copy $cwdDistWin\\install\\xpi\\*.* $cwdDistWin\\install\n";
+  exit(1);
+}
 
 print "\n";
 print "**\n";
