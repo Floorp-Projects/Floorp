@@ -197,6 +197,9 @@ file:///s:/mozilla/layout/html/tests/block/bugs/134580-1.html
 file:///s:/mozilla/layout/html/tests/block/bugs/134580-2.html
 file:///s:/mozilla/layout/html/tests/block/bugs/148245.html
 file:///s:/mozilla/layout/html/tests/block/bugs/151620.html
+file:///s:/mozilla/layout/html/tests/block/bugs/153429a.html
+file:///s:/mozilla/layout/html/tests/block/bugs/153429b.html
+file:///s:/mozilla/layout/html/tests/block/bugs/153429c.html
 file:///s:/mozilla/layout/html/tests/block/bugs/155333-1.html
 file:///s:/mozilla/layout/html/tests/block/bugs/155333-2.html
 file:///s:/mozilla/layout/html/tests/block/bugs/154741.html
