@@ -45,7 +45,7 @@
 </popup>
 </popupset>
 
-    <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
+    <tree id="bookmarksTree" class="bookmarks-panel-tree" context="contextual" ref="NC:BookmarksRoot"
       flex="1"
       multiple="true"
       ondragover="return DragOverTree(event);"
