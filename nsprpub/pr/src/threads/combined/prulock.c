@@ -100,22 +100,21 @@ void _PR_IntsOn(_PRCPU *cpu)
 }
 
 /*
-** Unblock threads waiting for the lock. Skip over
+** Unblock the first runnable waiting thread. Skip over
 ** threads that are trying to be suspended
 ** Note: Caller must hold _PR_LOCK_LOCK()
 */
-PRThread * _PR_UnblockWaiters(PRLock *lock)
+void _PR_UnblockLockWaiter(PRLock *lock)
 {
     PRThread *t = NULL;
     PRThread *me;
     PRCList *q;
-    PRThreadPriority pri;
 
     q = lock->waitQ.next;
     PR_ASSERT(q != &lock->waitQ);
     while (q != &lock->waitQ) {
-        /* Assign lock to first waiter */
-        t = _PR_THREAD_CONDQ_PTR(lock->waitQ.next);
+        /* Unblock first waiter */
+        t = _PR_THREAD_CONDQ_PTR(q);
 
 		/* 
 		** We are about to change the thread's state to runnable and for local
@@ -127,14 +126,12 @@ PRThread * _PR_UnblockWaiters(PRLock *lock)
         if (t->flags & _PR_SUSPENDING) {
             q = q->next;
             _PR_THREAD_UNLOCK(t);
-	    	t = NULL;
             continue;
         }
 
         /* Found a runnable thread */
 	    PR_ASSERT(t->state == _PR_LOCK_WAIT);
 	    PR_ASSERT(t->wait.lock == lock);
-        pri = t->priority;
         t->wait.lock = 0;
         PR_REMOVE_LINK(&t->waitQLinks);         /* take it off lock's waitQ */
 
@@ -166,7 +163,7 @@ PRThread * _PR_UnblockWaiters(PRLock *lock)
         _PR_MD_WAKEUP_WAITER(t);
         break;
     }
-    return t;
+    return;
 }
 
 /************************************************************************/
@@ -372,12 +369,12 @@ PR_IMPLEMENT(PRStatus) PR_Unlock(PRLock *lock)
         }
     }
 
-    /* Unblock the lock waiters */
+    /* Unblock the first waiting thread */
     q = lock->waitQ.next;
     if (q != &lock->waitQ)
-      _PR_UnblockWaiters(lock);
-	lock->boostPriority = PR_PRIORITY_LOW;
-	lock->owner = 0;
+        _PR_UnblockLockWaiter(lock);
+    lock->boostPriority = PR_PRIORITY_LOW;
+    lock->owner = 0;
     _PR_LOCK_UNLOCK(lock);
     if (!_PR_IS_NATIVE_THREAD(me))
     	_PR_INTSON(is);
