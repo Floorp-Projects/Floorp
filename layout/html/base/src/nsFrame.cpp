@@ -804,10 +804,10 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParentContent,
-                                  PRInt32 *aContentOffset, PRUint32 *aTarget)
+nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEvent *aMouseEvent, 
+                                  nsIContent **aParentContent, PRInt32 *aContentOffset, PRUint32 *aTarget)
 {
-  if (!aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
+  if (!aFrameSelection || !aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
     return NS_ERROR_NULL_POINTER;
 
   *aParentContent = nsnull;
@@ -816,22 +816,33 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
 
   // Test if special 'table selection' key is pressed
   PRBool doTableSelection;
-
+  
 #ifdef XP_MAC
   doTableSelection = aMouseEvent->isMeta;
 #else
   doTableSelection = aMouseEvent->isControl;
 #endif
 
-  if (!doTableSelection) return NS_OK;
+  if (!doTableSelection) 
+  {
+    // We allow table selection when just Shift is pressed
+    //  only if already in table/cell selection mode
+    if (aMouseEvent->isShift)
+      aFrameSelection->GetTableCellSelection(&doTableSelection);
+
+    if (!doTableSelection) 
+      return NS_OK;
+  }
 
   // Get the cell frame or table frame (or parent) of the current content node
   nsIFrame *frame = this;
   nsresult result = NS_OK;
   PRBool foundCell = PR_FALSE;
   PRBool foundTable = PR_FALSE;
-  PRBool selectColumn = PR_FALSE;
-  PRBool selectRow = PR_FALSE;
+  //We don't initiate row/col selection from here now,
+  //  but we may in future
+  //PRBool selectColumn = PR_FALSE;
+  //PRBool selectRow = PR_FALSE;
 
   while (frame && NS_SUCCEEDED(result))
   {
@@ -841,23 +852,8 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
     if (NS_SUCCEEDED(result) && cellElement)
     {
       foundCell = PR_TRUE;
-      PRInt32 colIndex, rowIndex;
-      result = cellElement->GetCellIndexes(rowIndex, colIndex);
-      // Give precedence to row over column
-      if (colIndex == 0)
-      {
-//printf(" * SelRow: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->point.y);
-        //TODO: We need to test for proximity to top border
-        // For now, just go into row selection mode
-        selectRow = PR_TRUE;
-      }
-      else if (rowIndex == 0)
-      {
-//printf(" * SelCol: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->point.y);
-        //TODO: We need to test for proximity to left border
-        // For now, just go into COLUMN selection mode
-        selectColumn = PR_TRUE;
-      }
+      //TODO: If we want to use proximity to top or left border
+      //      for row and column selection, this is the place to do it
       break;
     }
     else
@@ -903,11 +899,14 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
 
   *aContentOffset = offset;
 
+#if 0
   if (selectRow)
     *aTarget = TABLESELECTION_ROW;
   else if (selectColumn)
     *aTarget = TABLESELECTION_COLUMN;
-  else if (foundCell)
+  else 
+#endif
+  if (foundCell)
     *aTarget = TABLESELECTION_CELL;
   else if (foundTable)
     *aTarget = TABLESELECTION_TABLE;
@@ -1007,6 +1006,19 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
+  // Let Ctrl/Cmd+mouse down do table selection instead of drag initiation
+  nsCOMPtr<nsIContent>parentContent;
+  PRInt32  contentOffset;
+  PRUint32 target;
+  rv = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
+  if (NS_SUCCEEDED(rv) && parentContent)
+  {
+    rv = frameselection->SetMouseDownState( PR_TRUE );
+    if (NS_FAILED(rv)) return rv;
+  
+    return frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+  }
+
   PRBool supportsDelay = PR_FALSE;
 
   frameselection->GetDelayCaretOverExistingSelection(&supportsDelay);
@@ -1071,19 +1083,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIContent>parentContent;
-  PRInt32  contentOffset;
-  PRUint32 target;
-
-  rv = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
-
-  if (NS_SUCCEEDED(rv) && parentContent)
-    rv = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
-  else
-    rv = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
-
-  return rv;
-
+  return frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
 }
  
 /**
@@ -1269,7 +1269,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
     PRInt32 contentOffset;
     PRUint32 target;
     nsMouseEvent *me = (nsMouseEvent *)aEvent;
-    result = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
+    result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
     if (NS_SUCCEEDED(result) && parentContent)
       frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
     else
@@ -1342,31 +1342,34 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
 
     if (NS_SUCCEEDED(result) && !mouseDown && me && me->clickCount < 2)
     {
+      // We are doing this to simulate what we would have done on HandlePress
       result = frameselection->SetMouseDownState( PR_TRUE );
 
+      nsCOMPtr<nsIContent> content;
+      PRInt32 startOffset = 0, endOffset = 0;
+      PRBool  beginFrameContent = PR_FALSE;
+
+      result = GetContentAndOffsetsFromPoint(aPresContext, me->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+      if (NS_FAILED(result)) return result;
+
+      result = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
+      if (NS_FAILED(result)) return result;
+    }
+    else
+    {
+      me = (nsMouseEvent *)aEvent;
       nsCOMPtr<nsIContent>parentContent;
       PRInt32  contentOffset;
       PRUint32 target;
-
-      result = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
+      result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
 
       if (NS_SUCCEEDED(result) && parentContent)
-        result = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
-      else
       {
-        nsCOMPtr<nsIContent> content;
-        PRInt32 startOffset = 0, endOffset = 0;
-        PRBool  beginFrameContent = PR_FALSE;
-
-        result = GetContentAndOffsetsFromPoint(aPresContext, me->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
-
-        if (NS_FAILED(result))
-          return result;
-
-        result = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
+        frameselection->SetMouseDownState( PR_FALSE );
+        result = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+        if (NS_FAILED(result)) return result;
       }
     }
-
     result = frameselection->SetDelayedCaretData(0);
   }
 
