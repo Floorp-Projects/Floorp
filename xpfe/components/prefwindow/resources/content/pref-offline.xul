@@ -38,16 +38,16 @@
 	</box>
 
   <html:fieldset>
-    <html:div>&descipt1;</html:div>
+    <html:div class="hspace-both">&descipt1;</html:div>
     <spring style="height: 10px"/>
-    <box align="horizontal">
+    <box align="horizontal" class="hspace-both">
       <html:div>
     		<html:input name="state" type="radio" id="offlineStartupState0"
                     pref="true" preftype="int" prefindex="0" prefstring="offline.startup_state"/>
       </html:div>
       <html:label for="offlineStartupState0">&prevRadio.label;</html:label>
     </box>
-    <box align="horizontal">
+    <box align="horizontal" class="hspace-both">
       <html:div>
     		<html:input name="state" type="radio" id="offlineStartupState1"
                     pref="true" preftype="int" prefindex="0" prefstring="offline.startup_state"/>
@@ -58,21 +58,21 @@
   </html:fieldset>    
   <html:fieldset>    
     <html:legend>&header2;</html:legend>
-    <box align="horizontal">
+    <box align="horizontal" class="hspace-both">
       <html:div>
         <html:input name="offmail" type="radio" id="offlineSendUnsentMessages0"
                     pref="true" preftype="int" prefindex="0" prefstring="offline.send.unsent_messages"/>
       </html:div>
       <html:label for="offlineSendUnsentMessages0">&unsentAskRadio.label;</html:label>
     </box>
-    <box align="horizontal">
+    <box align="horizontal" class="hspace-both">
       <html:div>
         <html:input name="offmail" type="radio" id="offlineSendUnsentMessages1"
                     pref="true" preftype="int" prefindex="1" prefstring="offline.send.unsent_messages"/>
       </html:div>
       <html:label for="offlineSendUnsentMessages1">&unsentAutoRadio.label;</html:label>
     </box>
-    <box align="horizontal">
+    <box align="horizontal" class="hspace-both">
       <html:div>
         <html:input name="offmail" type="radio" id="offlineSendUnsentMessages2"
                     pref="true" preftype="int" prefindex="2" prefstring="offline.send.unsent_messages"/>
@@ -82,7 +82,7 @@
   </html:fieldset>    
   <html:fieldset>    
     <html:legend>&header3;</html:legend>
-    <box align="horizontal">
+    <box align="horizontal" class="hspace-both">
       <html:div>
         <html:input type="checkbox" id="offlinePromptSynchOnExit"
                     pref="true" preftype="bool" prefstring="offline.prompt_synch_on_exit"/>
