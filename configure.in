@@ -41,8 +41,10 @@ dnl unset d
 
 dnl Build optimized by default
 dnl ========================================================
-CFLAGS="${CFLAGS=-O}"
-CXXFLAGS="${CXXFLAGS=-O}"
+OPTIMIZE="${OPTIMIZE=-O}"
+COMPILER_WARNINGS=-Wall
+CFLAGS="${CFLAGS}"
+CXXFLAGS="${CXXFLAGS}"
 
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
@@ -113,9 +115,14 @@ DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
 DSO_CFLAGS='-KPIC'
 
 dnl gcc can come with its own linker so its better to use the pass-thru calls
+dnl MKSHLIB_FORCE_ALL is used to force the linker to include all object
+dnl files present in an archive. MKSHLIB_UNFORCE_ALL reverts the linker to
+dnl normal behavior.
 dnl ========================================================
 if [ test "$GNU_CC" = 1]; then
-    MKSHLIB='$(CC) $(DSO_LDOPTS)'
+    MKSHLIB='$(CXX) $(DSO_LDOPTS)'
+    MKSHLIB_FORCE_ALL='-Wl,--whole-archive'
+    MKSHLIB_UNFORCE_ALL='-Wl,--no-whole-archive'
     DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     DSO_CFLAGS='-fPIC'
 fi
@@ -190,10 +197,13 @@ alpha*-*-osf*)
 
 *-irix*)
     AC_DEFINE(IRIX6_3)
-    DSO_LDOPTS='-elf -shared -all'
-    LD_ALL='-all'
-    LD_NONE='-none'
-    CFLAGS="$CFLAGS -woff 3262" ;;
+    DSO_LDOPTS='-elf -shared'
+    CFLAGS="$CFLAGS -woff 3262"
+    if test -z "$GNU_CC"; then
+	MKSHLIB_FORCE_ALL=-all
+	MKSHLIB_UNFORCE_ALL=-none
+    fi
+    ;;
 
 esac
 
@@ -450,7 +460,7 @@ AC_ARG_ENABLE(oji,
 AC_ARG_ENABLE(debug,
 [  --enable-debug	  enable debug symbols],
 	[if test "$enableval" = yes; then
-	    MOZ_DEBUG=1 CFLAGS="$CFLAGS -g"
+	    MOZ_DEBUG=1 OPTIMIZE="-g"
 	 else
 	    MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'`
 	fi] )
@@ -532,6 +542,19 @@ AC_ARG_ENABLE(idltool,
 	[if test "$enableval" = "yes"; then
 	    MOZ_IDL_TOOL=1
 	fi] )
+
+AC_ARG_ENABLE(wrap-malloc,
+[  --enable-wrap-malloc    wrap malloc calls (gnu linker only) (default=no) ],
+	[if test "$enableval" = "yes"; then
+            if test "$GNU_CC" = 1; then
+                WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
+                MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS)'
+	    fi
+	fi] )
+
+AC_ARG_WITH(wrap-malloc,
+[  --with-wrap-malloc-=\$dir location of malloc wrapper library],
+	WRAP_MALLOC_LIB=$withval)
 
 AC_SUBST(OS_TARGET)
 AC_SUBST(MOZ_TOOLKIT)
@@ -949,6 +972,7 @@ AC_CHECK_LIB(plds21, PL_GetEvent, NSPR_LIBS="-lplds21 $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplds21"], $NSPR_LIBS)
 
 CFLAGS=$_SAVE_CFLAGS
+CFLAGS="${OPTIMIZE} ${COMPILER_WARNINGS} ${CFLAGS}"
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
@@ -980,7 +1004,11 @@ AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
 
+AC_SUBST(WRAP_MALLOC_CFLAGS)
+AC_SUBST(WRAP_MALLOC_LIB)
 AC_SUBST(MKSHLIB)
+AC_SUBST(MKSHLIB_FORCE_ALL)
+AC_SUBST(MKSHLIB_UNFORCE_ALL)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
 AC_SUBST(DLL_SUFFIX)
@@ -1134,9 +1162,9 @@ layout/xul/base/Makefile
 layout/xul/base/src/Makefile
 layout/xul/content/Makefile
 layout/xul/content/src/Makefile
-lib/liblayer/Makefile
-lib/liblayer/include/Makefile
-lib/liblayer/src/Makefile
+dnl lib/liblayer/Makefile
+dnl lib/liblayer/include/Makefile
+dnl lib/liblayer/src/Makefile
 lib/libpwcac/Makefile
 lib/xp/Makefile
 modules/libimg/Makefile
