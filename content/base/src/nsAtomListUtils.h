@@ -41,21 +41,12 @@
 #include "prtypes.h"
 
 class nsIAtom;
-
-#define MOZ_ARRAY_LENGTH(a_) (sizeof(a_)/sizeof(a_[0]))
-
-struct nsAtomListInfo {
-    nsIAtom** mAtom;
-    const char* mString;
-};
+struct nsStaticAtom;
 
 class nsAtomListUtils {
 public:
-    static void AddRefAtoms(const nsAtomListInfo* aInfo, PRUint32 aCount);
-    static void ReleaseAtoms(const nsAtomListInfo* aInfo, PRUint32 aCount);
-
     static PRBool IsMember(nsIAtom *aAtom,
-                           const nsAtomListInfo* aInfo,
+                           const nsStaticAtom* aInfo,
                            PRUint32 aInfoCount);
 };
 

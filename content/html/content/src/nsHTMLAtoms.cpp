@@ -36,35 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsHTMLAtoms.h"
-#include "nsAtomListUtils.h"
+#include "nsStaticAtom.h"
+#include "nsMemory.h"
 
 // define storage for all atoms
 #define HTML_ATOM(_name, _value) nsIAtom* nsHTMLAtoms::_name;
 #include "nsHTMLAtomList.h"
 #undef HTML_ATOM
 
-static nsrefcnt gRefCnt;
-
-static const nsAtomListInfo HTMLAtoms_info[] = {
-#define HTML_ATOM(name_, value_) { &nsHTMLAtoms::name_, value_ },
+static const nsStaticAtom HTMLAtoms_info[] = {
+#define HTML_ATOM(name_, value_) { value_, &nsHTMLAtoms::name_ },
 #include "nsHTMLAtomList.h"
 #undef HTML_ATOM
 };
 
 void nsHTMLAtoms::AddRefAtoms()
 {
-  if (0 == gRefCnt++) {
-    nsAtomListUtils::AddRefAtoms(HTMLAtoms_info,
-                                 MOZ_ARRAY_LENGTH(HTMLAtoms_info));
-  }
-}
-
-void nsHTMLAtoms::ReleaseAtoms()
-{
-  NS_PRECONDITION(gRefCnt != 0, "bad release atoms");
-  if (--gRefCnt == 0) {
-    nsAtomListUtils::ReleaseAtoms(HTMLAtoms_info,
-                                  MOZ_ARRAY_LENGTH(HTMLAtoms_info));
-  }
+  NS_RegisterStaticAtoms(HTMLAtoms_info, NS_ARRAY_LENGTH(HTMLAtoms_info));
 }
 

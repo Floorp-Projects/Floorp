@@ -47,6 +47,9 @@
  * argument is the string value of the atom.
  */
 
+// OUTPUT_CLASS=nsCSSPseudoClasses
+// MACRO_NAME=CSS_PSEUDO_CLASS
+
 CSS_PSEUDO_CLASS(empty, ":empty")
 CSS_PSEUDO_CLASS(lang, ":lang")
 CSS_PSEUDO_CLASS(notPseudo, ":not")

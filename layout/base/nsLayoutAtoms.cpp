@@ -36,7 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsLayoutAtoms.h"
-#include "nsAtomListUtils.h"
+#include "nsStaticAtom.h"
+#include "nsMemory.h"
 
 // define storage for all atoms
 #define LAYOUT_ATOM(_name, _value) nsIAtom* nsLayoutAtoms::_name;
@@ -44,28 +45,15 @@
 #undef LAYOUT_ATOM
 
 
-static nsrefcnt gRefCnt;
-
-static const nsAtomListInfo LayoutAtoms_info[] = {
-#define LAYOUT_ATOM(name_, value_) { &nsLayoutAtoms::name_, value_ },
+static const nsStaticAtom LayoutAtoms_info[] = {
+#define LAYOUT_ATOM(name_, value_) { value_, &nsLayoutAtoms::name_ },
 #include "nsLayoutAtomList.h"
 #undef LAYOUT_ATOM
 };
 
 void nsLayoutAtoms::AddRefAtoms()
 {
-  if (0 == gRefCnt++) {
-    nsAtomListUtils::AddRefAtoms(LayoutAtoms_info,
-                                 MOZ_ARRAY_LENGTH(LayoutAtoms_info));
-  }
-}
-
-void nsLayoutAtoms::ReleaseAtoms()
-{
-  NS_PRECONDITION(gRefCnt != 0, "bad release atoms");
-  if (--gRefCnt == 0) {
-    nsAtomListUtils::ReleaseAtoms(LayoutAtoms_info,
-                                  MOZ_ARRAY_LENGTH(LayoutAtoms_info));
-  }
+  NS_RegisterStaticAtoms(LayoutAtoms_info,
+                         NS_ARRAY_LENGTH(LayoutAtoms_info));
 }
 

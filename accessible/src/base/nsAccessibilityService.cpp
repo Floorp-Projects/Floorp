@@ -234,7 +234,6 @@ nsAccessibilityService::GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **a
 NS_IMETHODIMP nsAccessibilityService::Shutdown()
 {
   if (mIsActive) {
-   nsLayoutAtoms::ReleaseAtoms();
    mIsActive = PR_FALSE;
   }
 

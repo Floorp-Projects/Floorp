@@ -35,7 +35,6 @@ class nsMathMLAtoms {
 public:
 
   static void AddRefAtoms();
-  static void ReleaseAtoms();
 
   /* Declare all atoms
 

@@ -48,7 +48,6 @@ class nsCSSAnonBoxes {
 public:
 
   static void AddRefAtoms();
-  static void ReleaseAtoms();
 
   static PRBool IsAnonBox(nsIAtom *aAtom);
 
