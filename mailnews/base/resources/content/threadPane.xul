@@ -72,8 +72,8 @@ Rights Reserved.
                   value="rdf:http://home.netscape.com/NC-rdf#Flagged" />
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#StatusString"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Size" class="treecell-align-right"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages" class="treecell-align-right"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages" class="treecell-align-right"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#OrderReceived"/>
 				<treecell/>
 	  		</treerow>
