@@ -1091,7 +1091,7 @@ nsIFontMetrics  *fMetrics;
   fMetrics = mFontMetrics;
 
   if (nsnull != fMetrics){
-    nsFont *font;
+    const nsFont *font;
     fMetrics->GetFont(font);
     PRUint8 decorations = font->decorations;
 
@@ -1250,7 +1250,7 @@ int             ptr = 0;
 unsigned int    i;
 char            *buf = 0;
 nscoord         fontHeight = 0,yCoord;
-nsFont          *font;
+const nsFont          *font;
 
   mFontMetrics->GetHeight(fontHeight);
   mFontMetrics->GetFont(font);
