@@ -223,8 +223,6 @@ protected:
   void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
   void InitTextStr(nsIPresContext* aPresContext, PRBool aUpdate);
   nsresult GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
-  nsIFrame* GetButtonFrame(nsIPresContext* aPresContext);
-  nsIFrame* GetDropdownFrame();
   NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
   NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext); // Default to option 0
 
@@ -246,14 +244,12 @@ protected:
   nsString                 mTextStr;                 // Current Combo box selection
   PRInt32                  mSelectedIndex;           // current selected index
   nsCOMPtr<nsITextContent> mDisplayContent;          // Anonymous content used to display the current selection
-  nsIHTMLContent*          mButtonContent;           // Anonymous content used to popup the dropdown list
-  PRBool                   mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
+  PRPackedBool             mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
   nsIFrame*                mDisplayFrame;            // frame to display selection
   nsIFrame*                mButtonFrame;             // button frame
   nsIFrame*                mDropdownFrame;           // dropdown list frame
   nsIFrame*                mTextFrame;               // display area frame
   nsIListControlFrame *    mListControlFrame;        // ListControl Interface for the dropdown frame
-  PRBool                   mIgnoreFocus;             // Tells the combo to ignore all focus notifications
 
   
   nsCOMPtr<nsIPresState> mPresState;               // Need cache state when list is null
@@ -270,7 +266,7 @@ protected:
   //nscoord               mItemDisplayHeight;
   nsCSSFrameConstructor* mFrameConstructor;
 
-  PRBool mGoodToGo;
+  PRPackedBool          mGoodToGo;
 
 #ifdef DO_REFLOW_COUNTER
   PRInt32 mReflowId;
