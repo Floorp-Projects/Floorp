@@ -32,4 +32,8 @@ NET_SetSendRefererHeader(Bool b);
 extern void
 NET_InitHTTPProtocol(void);
 
+extern void
+NET_getInternetKeyword(const URL_Struct *inURL, char *outKeyword,
+	int16 inMaxLength);
+
 #endif /* MKHTTP_H */
