@@ -520,6 +520,43 @@ morkPool::NewBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom,
   return newAtom;
 }
 
+morkBookAtom*
+morkPool::NewFarBookAtomCopy(morkEnv* ev, const morkFarBookAtom& inAtom,
+  morkZone* ioZone)
+  // make the smallest kind of book atom that can hold content in inAtom.
+  // The inAtom parameter is often expected to be a staged book atom in
+  // the store, which was used to search an atom space for existing atoms.
+{
+  morkBookAtom* newAtom = 0;
+
+  mork_cscode form = inAtom.mFarBookAtom_Form;
+  mork_fill fill = inAtom.mFarBookAtom_Size;
+  mork_bool needBig = ( form || fill > 255 );
+  mork_size size = ( needBig )?
+    morkBigBookAtom::SizeForFill(fill) :
+    morkWeeBookAtom::SizeForFill(fill);
+
+#ifdef morkZone_CONFIG_ARENA
+  // a zone 'chip' remembers no size, and so cannot be deallocated:
+  newAtom = (morkBookAtom*) ioZone->ZoneNewChip(ev, size);
+#else /*morkZone_CONFIG_ARENA*/
+  MORK_USED_1(ioZone);
+  mPool_Heap->Alloc(ev->AsMdbEnv(), size, (void**) &newAtom);
+#endif /*morkZone_CONFIG_ARENA*/
+  if ( newAtom )
+  {
+    morkBuf buf(inAtom.mFarBookAtom_Body, fill);
+    if ( needBig )
+      ((morkBigBookAtom*) newAtom)->InitBigBookAtom(ev,
+        buf, form, inAtom.mBookAtom_Space, inAtom.mBookAtom_Id);
+    else
+      ((morkWeeBookAtom*) newAtom)->InitWeeBookAtom(ev,
+        buf, inAtom.mBookAtom_Space, inAtom.mBookAtom_Id);
+  }
+  return newAtom;
+}
+
 
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
+

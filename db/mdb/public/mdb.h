@@ -2141,6 +2141,49 @@ public:
     nsIMdbRow* ioSourceRow) = 0; // row to duplicate
   // } ----- end row methods -----
 
+  // { ----- begin blob methods -----  
+  virtual mdb_err SetCellYarn(nsIMdbEnv* ev, // synonym for AddColumn()
+    mdb_column inColumn, // column to write
+    const mdbYarn* inYarn) = 0;   // reads from yarn slots
+  // make this text object contain content from the yarn's buffer
+  
+  virtual mdb_err GetCellYarn(nsIMdbEnv* ev, 
+    mdb_column inColumn, // column to read 
+    mdbYarn* outYarn) = 0;  // writes some yarn slots 
+  // copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
+  
+  virtual mdb_err AliasCellYarn(nsIMdbEnv* ev, 
+    mdb_column inColumn, // column to alias
+    mdbYarn* outYarn) = 0; // writes ALL yarn slots
+  
+  virtual mdb_err NextCellYarn(nsIMdbEnv* ev, // iterative version of GetCellYarn()
+    mdb_column* ioColumn, // next column to read
+    mdbYarn* outYarn) = 0;  // writes some yarn slots 
+  // copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
+  //
+  // The ioColumn argument is an inout parameter which initially contains the
+  // last column accessed and returns the next column corresponding to the
+  // content read into the yarn.  Callers should start with a zero column
+  // value to say 'no previous column', which causes the first column to be
+  // read.  Then the value returned in ioColumn is perfect for the next call
+  // to NextCellYarn(), since it will then be the previous column accessed.
+  // Callers need only examine the column token returned to see which cell
+  // in the row is being read into the yarn.  When no more columns remain,
+  // and the iteration has ended, ioColumn will return a zero token again.
+  // So iterating over cells starts and ends with a zero column token.
+
+  virtual mdb_err SeekCellYarn( // resembles nsIMdbRowCellCursor::SeekCell()
+    nsIMdbEnv* ev, // context
+    mdb_pos inPos, // position of cell in row sequence
+    mdb_column* outColumn, // column for this particular cell
+    mdbYarn* outYarn) = 0; // writes some yarn slots
+  // copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
+  // Callers can pass nil for outYarn to indicate no interest in content, so
+  // only the outColumn value is returned.  NOTE to subclasses: you must be
+  // able to ignore outYarn when the pointer is nil; please do not crash.
+
+  // } ----- end blob methods -----
+
 // } ===== end nsIMdbRow methods =====
 };
 
@@ -2361,3 +2404,4 @@ public:
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #endif /* _MDB_ */
+

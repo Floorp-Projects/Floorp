@@ -373,6 +373,11 @@ morkBookAtom::HashFormAndBody(morkEnv* ev) const
     size = ((const morkBigBookAtom*) this)->mBigBookAtom_Size;
     body = ((const morkBigBookAtom*) this)->mBigBookAtom_Body;
   }
+  else if ( this->IsFarBook() )
+  {
+    size = ((const morkFarBookAtom*) this)->mFarBookAtom_Size;
+    body = ((const morkFarBookAtom*) this)->mFarBookAtom_Body;
+  }
   else
     this->NonBookAtomTypeError(ev);
   
@@ -414,6 +419,12 @@ morkBookAtom::EqualFormAndBody(morkEnv* ev, const morkBookAtom* inAtom) const
     body = ((const morkBigBookAtom*) inAtom)->mBigBookAtom_Body;
     form = ((const morkBigBookAtom*) inAtom)->mBigBookAtom_Form;
   }
+  else if ( inAtom->IsFarBook() )
+  {
+    size = ((const morkFarBookAtom*) inAtom)->mFarBookAtom_Size;
+    body = ((const morkFarBookAtom*) inAtom)->mFarBookAtom_Body;
+    form = ((const morkFarBookAtom*) inAtom)->mFarBookAtom_Form;
+  }
   else
     inAtom->NonBookAtomTypeError(ev);
 
@@ -432,6 +443,12 @@ morkBookAtom::EqualFormAndBody(morkEnv* ev, const morkBookAtom* inAtom) const
     thisSize = ((const morkBigBookAtom*) this)->mBigBookAtom_Size;
     thisBody = ((const morkBigBookAtom*) this)->mBigBookAtom_Body;
     thisForm = ((const morkBigBookAtom*) this)->mBigBookAtom_Form;
+  }
+  else if ( this->IsFarBook() )
+  {
+    thisSize = ((const morkFarBookAtom*) this)->mFarBookAtom_Size;
+    thisBody = ((const morkFarBookAtom*) this)->mFarBookAtom_Body;
+    thisForm = ((const morkFarBookAtom*) this)->mFarBookAtom_Form;
   }
   else
     this->NonBookAtomTypeError(ev);
@@ -533,4 +550,30 @@ morkBigBookAtom::InitBigBookAtom(morkEnv* ev, const morkBuf& inBuf,
     ev->NilPointerError();
 }
 
+void morkFarBookAtom::InitFarBookAtom(morkEnv* ev, const morkBuf& inBuf,
+  mork_cscode inForm, morkAtomSpace* ioSpace, mork_aid inAid)
+{
+  mAtom_Kind = 0;
+  mAtom_Change = morkChange_kNil;
+  if ( ioSpace )
+  {
+    if ( inAid )
+    {
+      mAtom_CellUses = 0;
+      mAtom_Kind = morkAtom_kKindFarBook;
+      mAtom_Size = 0;
+      mBookAtom_Space = ioSpace;
+      mBookAtom_Id = inAid;
+      mFarBookAtom_Form = inForm;
+      mFarBookAtom_Size = inBuf.mBuf_Fill;
+      mFarBookAtom_Body = (mork_u1*) inBuf.mBuf_Body;
+    }
+    else
+      this->ZeroAidError(ev);
+  }
+  else
+    ev->NilPointerError();
+}
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
+

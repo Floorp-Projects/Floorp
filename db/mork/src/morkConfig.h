@@ -104,11 +104,11 @@
 
 /* ===== separating switchable features ===== */
 
-//define MORK_ENABLE_ZONE_ARENAS 1 /* using morkZone for pooling */
+#define MORK_ENABLE_ZONE_ARENAS 1 /* using morkZone for pooling */
 
-//define MORK_ENABLE_PROBE_MAPS 1 /* use smaller hash tables */
+#define MORK_ENABLE_PROBE_MAPS 1 /* use smaller hash tables */
 
-//define MORK_BEAD_OVER_NODE_MAPS 1 /* use bead not node maps */
+#define MORK_BEAD_OVER_NODE_MAPS 1 /* use bead not node maps */
 
 /* ===== pooling ===== */
 
@@ -209,3 +209,4 @@ MORK_LIB(mork_size) mork_strlen(const void* inString);
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #endif /* _MORKCONFIG_ */
+

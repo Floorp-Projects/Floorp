@@ -36,6 +36,10 @@
 #include "morkHandle.h"
 #endif
 
+#ifndef _MORKATOM_
+#include "morkAtom.h"
+#endif
+
 #ifndef _MORKROW_
 #include "morkRow.h"
 #endif
@@ -688,8 +692,142 @@ orkinRow::SetRow( // make exact duplicate of another row
 }
 // } ----- end row methods -----
 
+// { ----- begin blob methods -----
+/*virtual*/ mdb_err
+orkinRow::SetCellYarn( // synonym for AddColumn()
+  nsIMdbEnv* mev, // context
+  mdb_column inColumn, // column to add
+  const mdbYarn* inYarn)
+{
+  mdb_err outErr = 0;
+  morkRow* row = 0;
+  morkEnv* ev = this->CanUseRow(mev, /*inMutable*/ morkBool_kFalse,
+    &outErr, &row);
+  if ( ev )
+  {
+    morkStore* store = this->CanUseRowStore(ev);
+    if ( store )
+      row->AddColumn(ev, inColumn, inYarn, store);
+      
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+/*virtual*/ mdb_err
+orkinRow::GetCellYarn(
+  nsIMdbEnv* mev, // context
+  mdb_column inColumn, // column to read 
+  mdbYarn* outYarn)  // writes some yarn slots 
+// copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
+{
+  mdb_err outErr = 0;
+  morkRow* row = 0;
+  morkEnv* ev = this->CanUseRow(mev, /*inMutable*/ morkBool_kFalse,
+    &outErr, &row);
+  if ( ev )
+  {
+    morkStore* store = this->CanUseRowStore(ev);
+    if ( store )
+    {
+	    morkAtom* atom = row->GetColumnAtom(ev, inColumn);
+	    atom->GetYarn(outYarn);
+	    // note nil atom works and sets yarn correctly
+    }
+      
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinRow::AliasCellYarn(
+  nsIMdbEnv* mev, // context
+    mdb_column inColumn, // column to alias
+    mdbYarn* outYarn) // writes ALL yarn slots
+{
+  mdb_err outErr = 0;
+  morkRow* row = 0;
+  morkEnv* ev = this->CanUseRow(mev, /*inMutable*/ morkBool_kFalse,
+    &outErr, &row);
+  if ( ev )
+  {
+    morkStore* store = this->CanUseRowStore(ev);
+    if ( store )
+    {
+	    morkAtom* atom = row->GetColumnAtom(ev, inColumn);
+	    atom->AliasYarn(outYarn);
+	    // note nil atom works and sets yarn correctly
+    }
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinRow::NextCellYarn(nsIMdbEnv* mev, // iterative version of GetCellYarn()
+  mdb_column* ioColumn, // next column to read
+  mdbYarn* outYarn)  // writes some yarn slots 
+// copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
+//
+// The ioColumn argument is an inout parameter which initially contains the
+// last column accessed and returns the next column corresponding to the
+// content read into the yarn.  Callers should start with a zero column
+// value to say 'no previous column', which causes the first column to be
+// read.  Then the value returned in ioColumn is perfect for the next call
+// to NextCellYarn(), since it will then be the previous column accessed.
+// Callers need only examine the column token returned to see which cell
+// in the row is being read into the yarn.  When no more columns remain,
+// and the iteration has ended, ioColumn will return a zero token again.
+// So iterating over cells starts and ends with a zero column token.
+{
+  mdb_err outErr = 0;
+  morkRow* row = 0;
+  morkEnv* ev = this->CanUseRow(mev, /*inMutable*/ morkBool_kFalse,
+    &outErr, &row);
+  if ( ev )
+  {
+    morkStore* store = this->CanUseRowStore(ev);
+    if ( store )
+      row->NextColumn(ev, ioColumn, outYarn);
+      
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinRow::SeekCellYarn( // resembles nsIMdbRowCellCursor::SeekCell()
+  nsIMdbEnv* mev, // context
+  mdb_pos inPos, // position of cell in row sequence
+  mdb_column* outColumn, // column for this particular cell
+  mdbYarn* outYarn) // writes some yarn slots
+// copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
+// Callers can pass nil for outYarn to indicate no interest in content, so
+// only the outColumn value is returned.  NOTE to subclasses: you must be
+// able to ignore outYarn when the pointer is nil; please do not crash.
+
+{
+  mdb_err outErr = 0;
+  morkRow* row = 0;
+  morkEnv* ev = this->CanUseRow(mev, /*inMutable*/ morkBool_kFalse,
+    &outErr, &row);
+  if ( ev )
+  {
+    morkStore* store = this->CanUseRowStore(ev);
+    if ( store )
+      row->SeekColumn(ev, inPos, outColumn, outYarn);
+      
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+// } ----- end blob methods -----
+
+
 // } ===== end nsIMdbRow methods =====
 
 
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
+
