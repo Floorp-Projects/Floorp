@@ -775,7 +775,7 @@ Contributor(s): ______________________________________. -->
           </titledbutton>
     </toolbar>
 
-    <toolbar class="main-bar" chromeclass="toolbar" datasources="rdf:bookmarks" id="NC:PersonalToolbarFolder">
+    <toolbar class="main-bar" chromeclass="toolbar" datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder">
     <template>
         <rule iscontainer="true">
             <titledbutton uri="..." src="resource:/res/rdf/folder-closed.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" popup="bookmark-popup" />
