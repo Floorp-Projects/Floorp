@@ -66,11 +66,15 @@ static void MenuProc(PRUint32 aId)
     bw->DispatchMenuItem(aId);
 }
 
+PRInt32 gMenuBarHeight = 0;
+
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
     CreateViewerMenus((QWidget*)mWindow->GetNativeData(NS_NATIVE_WIDGET),
-                      this);
+                      this,
+                      &gMenuBarHeight);
+
     return NS_OK;
 }
 
@@ -79,7 +83,7 @@ nsNativeBrowserWindow::GetMenuBarHeight(PRInt32 * aHeightOut)
 {
   NS_ASSERTION(nsnull != aHeightOut,"null out param.");
 
-  *aHeightOut = 50;
+  *aHeightOut = gMenuBarHeight;
 
   return NS_OK;
 }
