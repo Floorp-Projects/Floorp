@@ -86,10 +86,8 @@ function Startup()
 
   var tab = window.arguments[0];
   if (tab == "S") {
-    element = document.getElementById("signonTab");
-    element.setAttribute("selected", "true");
-    element = document.getElementById("panel");
-    element.setAttribute("index","0" );
+    element = document.getElementById("signonTabbox");
+    element.selectedIndex = 0;
 
     // hide non-used tabs
     element = document.getElementById("nopreview");
@@ -104,16 +102,14 @@ function Startup()
     element = document.getElementById("signonviewer");
     element.setAttribute("title", element.getAttribute("alttitle"));
     
+    element = document.getElementById("signonTabbox");
+    element.selectedIndex = 2;
     // hide non-used tabs
-    element = document.getElementById("nopreview");
-    element.selected = true;
     element = document.getElementById("signonTab");
     element.setAttribute("hidden", "true");
     element = document.getElementById("signonSitesTab");
     element.setAttribute("hidden", "true");
 
-    element = document.getElementById("panel");
-    element.setAttribute("index","2" );
     LoadNopreview();
     LoadNocapture();
   } else {

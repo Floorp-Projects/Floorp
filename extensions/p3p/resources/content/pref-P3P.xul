@@ -266,9 +266,9 @@
                             if (purposeDeck) {
                               var selectedItem = categoryTree.selectedItems.length ? categoryTree.selectedItems[0] : null;
                               if (selectedItem) {
-                                purposeDeck.setAttribute('index', selectedItem.getAttribute('index'));
+                                purposeDeck.setAttribute('selectedIndex', selectedItem.getAttribute('selectedIndex'));
                               } else {
-                                purposeDeck.setAttribute('index', '0');
+                                purposeDeck.setAttribute('selectedIndex', '0');
                               }
                             }
                           }"

@@ -1337,7 +1337,7 @@ function SetDisplayMode(mode)
     if (mode == DisplayModeSource)
     {
       // Switch to the sourceWindow (second in the deck)
-      gContentWindowDeck.setAttribute("index","1");
+      gContentWindowDeck.setAttribute("selectedIndex","1");
 
       //Hide the formatting toolbar if not already hidden
       gFormatToolbarHidden = gFormatToolbar.getAttribute("hidden");
@@ -1351,7 +1351,7 @@ function SetDisplayMode(mode)
     else
     {
       // Switch to the normal editor (first in the deck)
-      gContentWindowDeck.setAttribute("index","0");
+      gContentWindowDeck.setAttribute("selectedIndex","0");
 
       // Restore menus and toolbars
       if (gFormatToolbarHidden != "true")

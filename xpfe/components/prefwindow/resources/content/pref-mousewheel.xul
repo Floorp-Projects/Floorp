@@ -34,11 +34,10 @@
 %prefMousewheelDTD;
 ]>
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
+<page xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    class="color-dialog"
-    onload="parent.initPanel('chrome://communicator/content/pref/pref-mousewheel.xul');"
-    orient="vertical">
+    orient="vertical"
+    onload="parent.initPanel('chrome://communicator/content/pref/pref-mousewheel.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -50,7 +49,7 @@
   function switchPage( aElement )
   {
     var deck = document.getElementById( "modifierDeck" );
-    deck.setAttribute( "index", aElement.selectedItem.value );
+    deck.setAttribute( "selectedIndex", aElement.selectedItem.value );
   }
   
   function doEnableElement( aEventTarget, aElementID )
@@ -207,5 +206,5 @@
   </groupbox>
   
 
-</window>
+</page>
 

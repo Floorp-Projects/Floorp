@@ -45,7 +45,7 @@ Rights Reserved.
        title="&importTitle.label;"
        description="&importDesc.label;"/>
 
-  <deck id="stateDeck" index="0">
+  <deck id="stateDeck" selectedIndex="0">
     <vbox class="wizard-box">
       <html>&importDescription.label;</html>
       <html>&importDescription2.label;</html>

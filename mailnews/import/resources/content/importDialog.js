@@ -180,7 +180,7 @@ function ImportDialogOKButton()
               progressStatusEl.setAttribute("label", "");
               progressTitleEl.setAttribute("label", meterText);
 
-              deck.setAttribute("index", "2");
+              deck.setAttribute("selectedIndex", "2");
               progressInfo.progressWindow = top.window;
               progressInfo.intervalState = setInterval("ContinueImportCallback()", 100);
               return( true);
@@ -220,7 +220,7 @@ function ImportDialogOKButton()
               progressStatusEl.setAttribute("label", "");
               progressTitleEl.setAttribute("label", meterText);
 
-              deck.setAttribute("index", "2");
+              deck.setAttribute("selectedIndex", "2");
               progressInfo.progressWindow = top.window;
               progressInfo.intervalState = setInterval("ContinueImportCallback()", 100);
 
@@ -328,7 +328,7 @@ function ContinueImport( info) {
       clearInterval( info.intervalState);
       if (info.progressWindow != null) {
         deck = document.getElementById("stateDeck");
-        deck.setAttribute("index", "3");
+        deck.setAttribute("selectedIndex", "3");
         info.progressWindow = null;
       }
 
@@ -357,7 +357,7 @@ function ContinueImport( info) {
       info.importSuccess = true;
       if (info.progressWindow) {
         deck = document.getElementById("stateDeck");
-        deck.setAttribute("index", "3");
+        deck.setAttribute("selectedIndex", "3");
         info.progressWindow = null;
       }
 
@@ -389,7 +389,7 @@ function ShowResults(doesWantProgress, result)
                        progressStatusEl.setAttribute("label", "");
                        progressTitleEl.setAttribute("label", meterText);
 
-                       deck.setAttribute("index", "2");
+                       deck.setAttribute("selectedIndex", "2");
                        progressInfo.progressWindow = top.window;
                        progressInfo.intervalState = setInterval("ContinueImportCallback()", 100);
                }
@@ -433,7 +433,7 @@ function ShowImportResultsRaw(title, results, good)
   dump("*** results = " + results + "\n");
   attachStrings("results", results);
   var deck = document.getElementById("stateDeck");
-  deck.setAttribute("index", "3");
+  deck.setAttribute("selectedIndex", "3");
   var nextButton = document.getElementById("forward");
   nextButton.label = nextButton.getAttribute("finishedval");
   nextButton.removeAttribute("disabled");
@@ -769,7 +769,7 @@ function ImportAddress( module, success, error) {
   if (selectedModuleName == gImportMsgsBundle.getString('Comm4xImportName'))
   {
                var deck = document.getElementById("stateDeck");
-               deck.setAttribute("index", "4");
+               deck.setAttribute("selectedIndex", "4");
                var isHomeRadioGroup = document.getElementById("homeorwork");
                isHomeRadioGroup.selectedItem = document.getElementById("workRadio");
                var forwardButton = document.getElementById("forward");
@@ -832,14 +832,14 @@ function SwitchType( newType)
 function next()
 {
   var deck = document.getElementById("stateDeck");
-  var index = deck.getAttribute("index");
+  var index = deck.getAttribute("selectedIndex");
   switch (index) {
   case "0":
     var backButton = document.getElementById("back");
     backButton.removeAttribute("disabled");
     var radioGroup = document.getElementById("importFields");
     SwitchType(radioGroup.value);
-    deck.setAttribute("index", "1");
+    deck.setAttribute("selectedIndex", "1");
     enableAdvance();
     break;
   case "1":
@@ -888,12 +888,12 @@ function enableAdvance()
 function back()
 {
   var deck = document.getElementById("stateDeck");
-  if (deck.getAttribute("index") == "1") {
+  if (deck.getAttribute("selectedIndex") == "1") {
     var backButton = document.getElementById("back");
     backButton.setAttribute("disabled", "true");
     var nextButton = document.getElementById("forward");
     nextButton.label = nextButton.getAttribute("nextval");
     nextButton.removeAttribute("disabled");
-    deck.setAttribute("index", "0");
+    deck.setAttribute("selectedIndex", "0");
   }
 }

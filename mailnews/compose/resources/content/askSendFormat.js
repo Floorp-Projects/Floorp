@@ -66,19 +66,19 @@ function Startup()
       {
         case msgCompConvertible.Plain:
           // We shouldn't be here at all
-          labeldeck.setAttribute("index", 1);
+          labeldeck.setAttribute("selectedIndex", 1);
           // No icon
           break;
         case msgCompConvertible.Yes:
-          labeldeck.setAttribute("index", 1);
+          labeldeck.setAttribute("selectedIndex", 1);
           icon.setAttribute("id", "convertYes");
           break;
         case msgCompConvertible.Altering:
-          labeldeck.setAttribute("index", 2);
+          labeldeck.setAttribute("selectedIndex", 2);
           icon.setAttribute("id", "convertAltering");
           break;
         case msgCompConvertible.No:
-          labeldeck.setAttribute("index", 3);
+          labeldeck.setAttribute("selectedIndex", 3);
           icon.setAttribute("id", "convertNo");
           break;
       }

@@ -91,8 +91,6 @@ function Startup()
       if (tab == "0") {
         element = document.getElementById("cookiesTab");
         element2.selectedTab = element;
-        element = document.getElementById("panel");
-        element.setAttribute("index","0" );
         element = document.getElementById("imagesTab");
         element.setAttribute("hidden","true" );
       } else {
@@ -100,8 +98,6 @@ function Startup()
         element.setAttribute("title", bundle.GetStringFromName("imageTitle"));
         element = document.getElementById("imagesTab");
         element2.selectedTab = element;
-        element = document.getElementById("panel");
-        element.setAttribute("index","2" );
         element = document.getElementById("serversTab");
         element.setAttribute("hidden","true" );
         element = document.getElementById("cookiesTab");

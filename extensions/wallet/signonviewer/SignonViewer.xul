@@ -44,7 +44,7 @@
 
   <keyset id="dialogKeys"/>
            
-  <tabbox flex="1">
+  <tabbox id="signonTabbox" flex="1">
     <tabs>
       <tab id="signonTab" label="&tab.signonsstored.label;"/>
       <tab id="signonSitesTab" label="&tab.signonsnotstored.label;"/>

@@ -279,7 +279,7 @@ function showActionElementFor(menuitem)
     if (!menuitem) return;
     var indexValue = menuitem.getAttribute("actionvalueindex");
 
-    gActionValueDeck.setAttribute("index", indexValue);
+    gActionValueDeck.setAttribute("selectedIndex", indexValue);
 
     // Disable the "New Folder..." button if any other action than MoveToFolder is chosen
     document.getElementById("newFolderButton").setAttribute("disabled", indexValue == "0" ? "false" : "true");

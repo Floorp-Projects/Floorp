@@ -135,7 +135,7 @@ FindDialog.prototype =
   setLabel1: function(aIndex)
   {
     var deck = document.getElementById("rwRow1Text");
-    deck.setAttribute("index", aIndex);
+    deck.setAttribute("selectedIndex", aIndex);
   },
 
   showRow2: function(aTruth)

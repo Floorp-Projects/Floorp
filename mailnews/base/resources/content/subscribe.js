@@ -300,7 +300,7 @@ function StateChanged(name,state)
 function InSearchMode()
 {
     // search is the second card in the deck
-    return (gSubscribeDeck.getAttribute("index") == "1");
+    return (gSubscribeDeck.getAttribute("selectedIndex") == "1");
 }
 
 function SearchOnClick(event)
@@ -470,13 +470,13 @@ function InvalidateSearchOutliner()
 function SwitchToNormalView()
 {
   // the first card in the deck is the "normal" view
-  gSubscribeDeck.setAttribute("index","0");
+  gSubscribeDeck.setAttribute("selectedIndex","0");
 }
 
 function SwitchToSearchView()
 {
   // the second card in the deck is the "search" view
-  gSubscribeDeck.setAttribute("index","1");
+  gSubscribeDeck.setAttribute("selectedIndex","1");
 }
 
 function Search()

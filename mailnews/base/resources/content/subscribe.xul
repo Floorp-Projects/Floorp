@@ -94,7 +94,7 @@ Rights Reserved.
         <spacer/>
       </row>
       <row flex="1">
-      <deck id="subscribedeck" index="0">
+      <deck id="subscribedeck" selectedIndex="0">
       <hbox id="normalview">
         <tree class="inset" flex="1"
               id="subscribetree"

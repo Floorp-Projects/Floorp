@@ -82,7 +82,7 @@ var progressListener = {
           // right now, all that supports restarting downloads is ftp (rfc959)    
           ftpChannel = aRequest.QueryInterface(Components.interfaces.nsIFTPChannel);
           if (ftpChannel) {
-            dialog.pauseResumeDeck.setAttribute("index", "1");
+            dialog.pauseResumeDeck.setAttribute("selectedIndex", "1");
           }
         }
         catch (ex) {}
@@ -475,14 +475,14 @@ function doPauseButton() {
     {
         // resume
         dialog.downloadPaused = false;
-        dialog.pauseResumeDeck.setAttribute("index", "1");
+        dialog.pauseResumeDeck.setAttribute("selectedIndex", "1");
         dialog.request.resume()
     }
     else
     {
         // suspend
         dialog.downloadPaused = true;
-        dialog.pauseResumeDeck.setAttribute("index", "2");
+        dialog.pauseResumeDeck.setAttribute("selectedIndex", "2");
         dialog.request.suspend()
     }
 }

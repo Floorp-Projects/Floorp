@@ -347,13 +347,13 @@
             // we inherit from a deck, so just use it's index attribute
             // to hide/show widgets
             if (val == Components.interfaces.nsMsgSearchAttrib.Priority)
-              this.setAttribute("index", "1");
+              this.setAttribute("selectedIndex", "1");
             else if (val == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
-              this.setAttribute("index", "2");
+              this.setAttribute("selectedIndex", "2");
             else if (val == Components.interfaces.nsMsgSearchAttrib.Date)
-              this.setAttribute("index", "3");
+              this.setAttribute("selectedIndex", "3");
             else
-              this.setAttribute("index", "0");
+              this.setAttribute("selectedIndex", "0");
             return val;
           ]]>
         </setter>

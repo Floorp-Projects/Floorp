@@ -237,7 +237,7 @@
   <splitter id="sidebar-splitter" class="chromeclass-extrachrome" hidden="true"/>
 
   <vbox id="appcontent" flex="1">
-    <deck id="ContentWindowDeck" index="0" flex="1">
+    <deck id="ContentWindowDeck" selectedIndex="0" flex="1">
       <!-- KLUDGE:  Temporary fix for bug 34414:
            The current editor tag doesn't have a view, 
            which breaks deck frame-hiding mechanism 

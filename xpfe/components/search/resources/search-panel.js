@@ -842,7 +842,7 @@ function OpenSearch(aSearchStr, engineURIs)
 function switchTab(aPageIndex)
 {
   var deck = document.getElementById("advancedDeck");
-  deck.setAttribute("index", aPageIndex);
+  deck.setAttribute("selectedIndex", aPageIndex);
 
   // decide whether to show/hide/enable/disable save search query button
   if (aPageIndex != 0)

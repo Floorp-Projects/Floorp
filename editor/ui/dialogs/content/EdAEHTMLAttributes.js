@@ -215,7 +215,7 @@ function onInputHTMLAttributeName()
     var listLen = 0;
 
     // Index to which widget we were using to edit the value
-    var deckIndex = gDialog.AddHTMLAttributeValueDeck.getAttribute("index");
+    var deckIndex = gDialog.AddHTMLAttributeValueDeck.getAttribute("selectedIndex");
 
     if (valueListName in gHTMLAttr)
     {
@@ -235,7 +235,7 @@ function onInputHTMLAttributeName()
         {
           // Switch to using editable menulist
           gDialog.AddHTMLAttributeValueInput = gDialog.AddHTMLAttributeValueMenulist;
-          gDialog.AddHTMLAttributeValueDeck.setAttribute("index", "1");
+          gDialog.AddHTMLAttributeValueDeck.setAttribute("selectedIndex", "1");
         }
         // Rebuild the list
         for (var i = 0; i < listLen; i++)
@@ -261,7 +261,7 @@ function onInputHTMLAttributeName()
     {
       // No list: Use textbox for input instead
       gDialog.AddHTMLAttributeValueInput = gDialog.AddHTMLAttributeValueTextbox;
-      gDialog.AddHTMLAttributeValueDeck.setAttribute("index", "0");
+      gDialog.AddHTMLAttributeValueDeck.setAttribute("selectedIndex", "0");
     }
 
     // If attribute already exists in tree, use associated value,

@@ -66,9 +66,10 @@ radiogroup {
   -moz-user-focus: normal;
 }
 
-/******** window ******/
+/******** window & page ******/
 
-window { 
+window, 
+page {
   overflow: hidden;
 }
 
@@ -272,6 +273,10 @@ tooltip {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#tooltips");
 }
 
+.titletip {
+  -moz-binding: url("chrome://global/content/bindings/outliner.xml#titletip");
+}
+
 /********** floating popups **********/
   
 titlebar {
@@ -424,6 +429,7 @@ outlinercol[hidden="true"] {
 
 deck {
   display: -moz-deck;
+  -moz-binding: url("chrome://global/content/bindings/general.xml#deck");
 }
 
 stack, bulletinboard {
