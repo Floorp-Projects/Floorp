@@ -55,6 +55,7 @@
 
 #include "nsIDeviceContextSpecPS.h"
 #include "nsIPersistentProperties2.h"
+#include "nsTempfilePS.h"
 
 class nsIImage;
 #endif
@@ -197,9 +198,7 @@ struct PrintSetup_ {
 
   struct URL_Struct_ *url;      /* url of doc being translated */
   FILE *out;                    /* Where to send the output */
-  const char *filename;         /* output file name, if any */
   FILE *tmpBody;                   /* temp file for True-Type printing */
-  const char *tmpBody_filename;    /* temp file name*/
   XL_CompletionRoutine completion; /* Called when translation finished */
   void* carg;                   /* Data saved for completion routine */
   int status;                   /* Status of URL on completion */
@@ -469,6 +468,9 @@ private:
   PRUint16              mPageNumber;
   nsCOMPtr<nsIPersistentProperties> mPrinterProps;
   char                  *mTitle;
+  nsTempfilePS          mTempfileFactory;
+  nsCOMPtr<nsILocalFile> mDocProlog;
+  nsCOMPtr<nsILocalFile> mDocScript;
 
 
 
