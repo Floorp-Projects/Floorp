@@ -297,6 +297,7 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
 
    window->SetModal(PR_TRUE);
    mContinueModalLoop = PR_TRUE;
+   EnableParent(PR_FALSE);
 
    nsCOMPtr<nsIJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
    nsresult rv = NS_OK;
