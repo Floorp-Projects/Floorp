@@ -65,23 +65,13 @@ package org.mozilla.javascript;
 public abstract class SecurityController {
 
     /**
-     * Define and load a Java class.
-     * <p>
-     * In embeddings that care about security, the securityDomain
-     * must be associated with the defined class such that a call to
-     * <code>getSecurityDomain</code> with that class will return this security
-     * context.
-     * <p>
-     * @param name the name of the class
-     * @param data the bytecode of the class
+     * Get class loader-like object that can be used
+     * to define classes with the given security context.
      * @param securityDomain some object specifying the security
-     *        context of the code that is defining this class.
-     *        Embeddings that don't care about security may allow
-     *        null here. This value propagated from the values passed
-     *        into methods of Context that evaluate scripts.
+     *        context of the code that is defined by the returned class loader.
      */
-    public abstract Class defineClass(String name, byte[] data,
-                                      Object securityDomain);
+    public abstract GeneratedClassLoader
+    createClassLoader(Object securityDomain);
 
     /**
      * Get dynamic security domain that allows an action only if it is allowed

@@ -48,9 +48,21 @@ public class JavaPolicySecurity extends SecurityProxy
 {
 
     private static class Loader extends ClassLoader
+        implements GeneratedClassLoader
     {
-        Class defineClass(String name, byte[] data, ProtectionDomain domain) {
+        private ProtectionDomain domain;
+
+        Loader(ClassLoader parent, ProtectionDomain domain) {
+            super(parent != null ? parent : getSystemClassLoader());
+            this.domain = domain;
+        }
+
+        public Class defineClass(String name, byte[] data) {
             return super.defineClass(name, data, 0, data.length, domain);
+        }
+
+        public void linkClass(Class cl) {
+            resolveClass(cl);
         }
     }
 
@@ -134,7 +146,7 @@ public class JavaPolicySecurity extends SecurityProxy
         URL urlObj;
         try {
             urlObj = new URL(url);
-        }catch (MalformedURLException ex) {
+        } catch (MalformedURLException ex) {
             // Assume as Main.processFileSecure it is file, need to build its
             // URL
             String curDir = System.getProperty("user.dir");
@@ -145,7 +157,7 @@ public class JavaPolicySecurity extends SecurityProxy
             try {
                 URL curDirURL = new URL("file:"+curDir);
                 urlObj = new URL(curDirURL, url);
-            }catch (MalformedURLException ex2) {
+            } catch (MalformedURLException ex2) {
                 throw new RuntimeException
                     ("Can not construct file URL for '"+url+"':"
                      +ex2.getMessage());
@@ -160,15 +172,9 @@ public class JavaPolicySecurity extends SecurityProxy
         return new ProtectionDomain(cs, pc);
     }
 
-    void doPrivileged(final Runnable code) {
-    }
-
-    public Class defineClass(String name, byte[] data,
-                             Object securityDomain)
-    {
+    public GeneratedClassLoader createClassLoader(Object securityDomain) {
         ProtectionDomain domain = (ProtectionDomain)securityDomain;
-        Loader loader = new Loader();
-        return loader.defineClass(name, data, domain);
+        return new Loader(getClass().getClassLoader(), domain);
     }
 
     public Object getDynamicSecurityDomain(Object securityDomain)

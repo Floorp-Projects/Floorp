@@ -40,12 +40,16 @@ package org.mozilla.classfile;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
+import org.mozilla.javascript.GeneratedClassLoader;
+
 /**
  * Load generated classes.
  *
  * @author Norris Boyd
  */
-public class DefiningClassLoader extends ClassLoader {
+public class DefiningClassLoader extends ClassLoader
+    implements GeneratedClassLoader
+{
 
     public static ClassLoader getContextClassLoader() {
         try {
@@ -62,8 +66,12 @@ public class DefiningClassLoader extends ClassLoader {
         return DefiningClassLoader.class.getClassLoader();
     }
 
-    public Class defineClass(String name, byte data[]) {
+    public Class defineClass(String name, byte[] data) {
         return super.defineClass(name, data, 0, data.length);
+    }
+
+    public void linkClass(Class cl) {
+        resolveClass(cl);
     }
 
     public Class loadClass(String name, boolean resolve)

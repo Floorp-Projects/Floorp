@@ -80,9 +80,11 @@ public class Codegen extends Interpreter {
 
         Exception e = null;
         Class result = null;
-        DefiningClassLoader classLoader = null;
+        GeneratedClassLoader loader;
         if (securityController == null) {
-            classLoader = new DefiningClassLoader();
+            loader = new DefiningClassLoader();
+        } else {
+            loader = securityController.createClassLoader(securityDomain);
         }
         nameHelper.reset();
 
@@ -98,39 +100,25 @@ public class Codegen extends Interpreter {
                 String name = (String) names.get(i);
                 byte[] classFile = (byte[]) classFiles.get(i);
                 boolean isTopLevel = name.equals(generatedName);
-
                 try {
                     if (repository.storeClass(name, classFile, isTopLevel)) {
-                        Class clazz = null;
-                        if (securityController != null) {
-                            clazz = securityController.
-                                defineClass(name, classFile, securityDomain);
-                            if (clazz == null) {
-                                throw new NullPointerException
-                                    ("SecurityController.defineClass"
-                                     +" may not return null");
-                            }
-                        } else {
-                            clazz = classLoader.defineClass(name, classFile);
-                            ClassLoader loader = clazz.getClassLoader();
-                            clazz = loader.loadClass(name);
+                        Class cl = loader.defineClass(name, classFile);
+                        if (isTopLevel) {
+                            result = cl;
                         }
-                        if (isTopLevel)
-                            result = clazz;
                     }
                 } catch (ClassFormatError ex) {
-                    throw new RuntimeException(ex.toString());
-                } catch (ClassNotFoundException ex) {
                     throw new RuntimeException(ex.toString());
                 } catch (IOException iox) {
                     throw WrappedException.wrapException(iox);
                 }
             }
-        }
-        catch (SecurityException x) {
+            if (result != null) {
+                loader.linkClass(result);
+            }
+        } catch (SecurityException x) {
             e = x;
-        }
-        catch (IllegalArgumentException x) {
+        } catch (IllegalArgumentException x) {
             e = x;
         }
         if (e != null)
