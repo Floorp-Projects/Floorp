@@ -1,0 +1,83 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Bill Law       law@netscape.com
+ *   IBM Corp.
+ */
+#include <os2.h>
+
+// Splash screen dialog ID.
+#define IDD_SPLASH  100
+
+// Splash screen bitmap ID.
+#define IDB_SPLASH  101
+
+// DDE application name
+#define ID_DDE_APPLICATION_NAME 102
+
+
+ICON 1 "mozos2.ico"
+
+DLGTEMPLATE IDD_SPLASH DISCARDABLE 
+BEGIN
+    DIALOG "", IDD_SPLASH, 0, 0, 390, 261, , FCF_BORDER
+    BEGIN
+    END
+END
+
+//BITMAP IDB_SPLASH "splash.bmp"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_DDE_APPLICATION_NAME,            "Thunderbird"
+END
+
+#ifdef MOZ_STATIC_BUILD
+
+// XXX This code is copied from resource.h and widget.rc.  It's a work-around
+// for the limitation that only one resource file can be used in an .exe.  We
+// should develop a method, for static builds only, to combine multiple .rc
+// files into a single .rc file, and then use that to build the single .res
+// file for the .exe.
+
+#include "resource.h"
+
+POINTER IDC_SELECTANCHOR   res\select.ptr
+POINTER IDC_ARROWNORTH     res\arrow_north.ptr
+POINTER IDC_ARROWNORTHPLUS res\arrow_north_plus.ptr
+POINTER IDC_ARROWSOUTH     res\arrow_south.ptr
+POINTER IDC_ARROWSOUTHPLUS res\arrow_south_plus.ptr
+POINTER IDC_ARROWWEST      res\arrow_west.ptr
+POINTER IDC_ARROWWESTPLUS  res\arrow_west_plus.ptr
+POINTER IDC_ARROWEAST      res\arrow_east.ptr
+POINTER IDC_ARROWEASTPLUS  res\arrow_east_plus.ptr
+POINTER IDC_GRAB           res\grab.ptr
+POINTER IDC_GRABBING       res\grabbing.ptr
+POINTER IDC_CELL           res\cell.ptr
+POINTER IDC_COPY           res\copy.ptr
+POINTER IDC_ALIAS          res\aliasb.ptr
+POINTER IDC_ZOOMIN         res\zoom_in.ptr
+POINTER IDC_ZOOMOUT        res\zoom_out.ptr
+
+POINTER IDC_ARROWWAIT      res\arrow_wait.ptr
+POINTER IDC_CROSS          res\crosshair.ptr
+POINTER IDC_HELP           res\help.ptr
+
+#endif
