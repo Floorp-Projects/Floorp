@@ -43,8 +43,6 @@
 #include "vmtypes.h"
 
 
-#define NS_JSICG JavaScript::IGC
-
 namespace JavaScript {
 namespace ICG {
     
