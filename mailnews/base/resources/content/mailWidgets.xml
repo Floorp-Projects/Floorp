@@ -14,7 +14,7 @@
        use headerValue to set the header value. -->
   <binding id="mail-toggle-headerfield">
     <content>
-      <xul:hbox class="headerBox" inherits="orient">
+      <xul:hbox class="headerBox" inherits="orient" flex="1">
         <xul:hbox class="headerValueBox" align="start">
           <xul:image class="expandHeaderViewButton" inherits="onclick=ontwistyclick"/>
           <xul:spacer flex="1"/>
