@@ -836,7 +836,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     // This is hard. Sometimes 0 is a better number, but
     // how to know?
     EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted)
-                        ? 1 : 0);
+                        ? mEmptyLines + 1 : mEmptyLines);
   }
 
   //////////////////////////////////////////////////////////////
