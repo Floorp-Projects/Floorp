@@ -53,6 +53,7 @@
 #include "nsIProgressDialog.h"
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
+#include "nsIPromptService.h"
 
 /* Outstanding issues/todo:
  * 1. Implement pause/resume.
@@ -242,6 +243,7 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPersistentDescriptor)
 
     // update percentage
     item->GetPercentComplete(&percentComplete);
+
     rv = mDataSource->GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
     if (NS_FAILED(rv)) return rv;
 
@@ -286,7 +288,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
 
   item->SetDownloadManager(this);
 
-  (*aDownloadItem)->SetTarget(aTarget);
+  item->SetTarget(aTarget);
 
   nsXPIDLCString persistentDescriptor;
   aTarget->GetPersistentDescriptor(getter_Copies(persistentDescriptor));
@@ -313,7 +315,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     aTarget->GetUnicodeLeafName(getter_Copies(prettyName));
     displayName.Assign(prettyName);
   }
-  (*aDownloadItem)->SetPrettyName(displayName.get());
+  item->SetPrettyName(displayName.get());
  
   nsCOMPtr<nsIRDFLiteral> nameLiteral;
   gRDFService->GetLiteral(displayName.get(), getter_AddRefs(nameLiteral));
@@ -324,7 +326,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     return rv;
   }
 
-  (*aDownloadItem)->SetSource(aSource);
+  item->SetSource(aSource);
   // NC:URL
   nsXPIDLCString spec;
   aSource->GetSpec(getter_Copies(spec));
@@ -359,7 +361,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   // if a persist object was specified, set the download item as the progress listener
   // this will create a cycle that will be broken in DownloadItem::OnStateChange
   if (aPersist) {
-    (*aDownloadItem)->SetPersist(aPersist);
+    item->SetPersist(aPersist);
     nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(*aDownloadItem);
     aPersist->SetProgressListener(listener);
   }
@@ -509,6 +511,22 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPersistentDescriptor, nsID
     return NS_ERROR_FAILURE;
 
   nsIDownloadItem* item = NS_STATIC_CAST(nsIDownloadItem*, mCurrDownloadItems->Get(&key));
+  nsISupports* supports = (nsISupports*)item;
+  DownloadItem* dlItem = NS_STATIC_CAST(DownloadItem*, supports);
+
+  nsCOMPtr<nsIProgressDialog> oldDialog;
+  dlItem->GetDialog(getter_AddRefs(oldDialog));
+  
+  if (oldDialog) {
+    nsCOMPtr<nsIDOMWindow> window;
+    oldDialog->GetDialog(getter_AddRefs(window));
+    if (window) {
+      nsCOMPtr<nsIDOMWindowInternal> internalWin = do_QueryInterface(window);
+      internalWin->Focus();
+      return NS_OK;
+    }
+  }
+
   nsCOMPtr<nsIProgressDialog> dialog(do_CreateInstance("@mozilla.org/progressdialog;1", &rv));
   if (NS_FAILED(rv)) return rv;
   
@@ -534,8 +552,8 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPersistentDescriptor, nsID
 
   // now set the listener so we forward notifications to the dialog
   nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(dialog);
-  nsISupports* supports = (nsISupports*)item;
-  (NS_STATIC_CAST(DownloadItem*, supports))->SetDialogListener(listener);
+  dlItem->SetDialogListener(listener);
+  dlItem->SetDialog(dialog);
   
   return dialog->Open(aParent, nsnull);
 }
@@ -632,6 +650,49 @@ DownloadItem::GetDialogListener(nsIWebProgressListener** aDialogListener)
   return NS_OK;
 }
 
+nsresult
+DownloadItem::SetDialog(nsIProgressDialog* aDialog)
+{
+  mDialog = aDialog;
+  return NS_OK;
+}
+
+nsresult
+DownloadItem::GetDialog(nsIProgressDialog** aDialog)
+{
+  *aDialog = mDialog;
+  NS_IF_ADDREF(*aDialog);
+  return NS_OK;
+}
+
+nsresult
+DownloadItem::SetPersist(nsIWebBrowserPersist* aPersist)
+{
+  mPersist = aPersist;
+  return NS_OK;
+}
+
+nsresult
+DownloadItem::SetSource(nsIURI* aSource)
+{
+  mSource = aSource;
+  return NS_OK;
+}
+
+nsresult
+DownloadItem::SetTarget(nsILocalFile* aTarget)
+{
+  mTarget = aTarget;
+  return NS_OK;
+}
+
+nsresult
+DownloadItem::SetPrettyName(const PRUnichar* aPrettyName)
+{
+  mPrettyName = aPrettyName;
+  return NS_OK;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 
@@ -643,8 +704,10 @@ DownloadItem::OnProgressChange(nsIWebProgress *aWebProgress,
                                PRInt32 aCurTotalProgress,
                                PRInt32 aMaxTotalProgress)
 {
-  if (aMaxTotalProgress)
+  if (aMaxTotalProgress > 0)
     mPercentComplete = aCurTotalProgress * 100 / aMaxTotalProgress;
+  else
+    mPercentComplete = -1;
 
   if (mListener) {
     mListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
@@ -693,6 +756,18 @@ DownloadItem::OnStatusChange(nsIWebProgress *aWebProgress,
                              nsIRequest *aRequest, nsresult aStatus,
                              const PRUnichar *aMessage)
 {   
+  // throw a dialog if an error occurs (temporary)
+  if (NS_FAILED(aStatus)) {
+    nsresult rv;
+    nsCOMPtr<nsIPromptService> prompt = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+  
+    // I'm not worrying that this has no parent or title string.
+    // This is a very temporary solution, with the real fix (displaying
+    // the error in the manager) coming shortly after initial checkin.
+    prompt->Alert(nsnull, nsnull, aMessage);
+  }
+
   if (mListener)
     mListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
 
@@ -776,24 +851,10 @@ DownloadItem::GetPrettyName(PRUnichar** aPrettyName)
 }
 
 NS_IMETHODIMP
-DownloadItem::SetPrettyName(const PRUnichar* aPrettyName)
-{
-  mPrettyName = aPrettyName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 DownloadItem::GetTarget(nsILocalFile** aTarget)
 {
   *aTarget = mTarget;
   NS_IF_ADDREF(*aTarget);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DownloadItem::SetTarget(nsILocalFile* aTarget)
-{
-  mTarget = aTarget;
   return NS_OK;
 }
 
@@ -806,9 +867,10 @@ DownloadItem::GetSource(nsIURI** aSource)
 }
 
 NS_IMETHODIMP
-DownloadItem::SetSource(nsIURI* aSource)
+DownloadItem::GetPersist(nsIWebBrowserPersist** aPersist)
 {
-  mSource = aSource;
+  *aPersist = mPersist;
+  NS_IF_ADDREF(*aPersist);
   return NS_OK;
 }
 
@@ -838,21 +900,6 @@ DownloadItem::GetListener(nsIWebProgressListener** aListener)
 {
   *aListener = mListener;
   NS_IF_ADDREF(*aListener);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DownloadItem::SetPersist(nsIWebBrowserPersist* aPersist)
-{
-  mPersist = aPersist;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DownloadItem::GetPersist(nsIWebBrowserPersist** aPersist)
-{
-  *aPersist = mPersist;
-  NS_IF_ADDREF(*aPersist);
   return NS_OK;
 }
 

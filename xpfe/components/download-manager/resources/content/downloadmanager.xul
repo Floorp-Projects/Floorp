@@ -47,7 +47,12 @@
         onload="Startup();">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+
+  <!-- gee, it would be lovely to use outliner, since tree sucks, and its column resizing
+       is totally horked. But outliner doesn't support progressmeter in cells yet. -->
+
   <script type="application/x-javascript" src="chrome://global/content/treePopups.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
 
   <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/downloadmanager.js"/>
 
@@ -118,14 +123,14 @@
 
   <toolbox>
     <toolbar>
-      <toolbarbutton id="btn_properties" command="cmd_properties"/>
-      <toolbarbutton id="btn_pause" command="cmd_pause"/>
+      <toolbarbutton command="cmd_properties"/>
+      <toolbarbutton command="cmd_pause"/>
       <toolbarseparator/>
-      <toolbarbutton id="btn_cancel" command="cmd_cancel"/>
-      <toolbarbutton id="btn_remove" command="cmd_remove"/>
+      <toolbarbutton command="cmd_cancel"/>
+      <toolbarbutton command="cmd_remove"/>
       <toolbarseparator/>
-      <toolbarbutton id="btn_openfile" command="cmd_openfile"/>
-      <toolbarbutton id="btn_showinshell" command="cmd_showinshell"/>
+      <toolbarbutton command="cmd_openfile"/>
+      <toolbarbutton command="cmd_showinshell"/>
     </toolbar>
   </toolbox>
 
@@ -145,10 +150,6 @@
                   label="&view.header.progress.label;"
                   onclick="return TriStateColumnSort('Progress');"
                   observes="Progress" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&view.header.status.label;"
-                  onclick="return TriStateColumnSort('Status');"
-                  observes="Status" />
         <treecell class="treecell-header sortDirectionIndicator"
                   label="&view.header.progresstext.label;"
                   onclick="return TriStateColumnSort('ProgressText');"
@@ -193,7 +194,6 @@
               <treecell>
                 <progressmeter class="tree-progressmeter" value="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"/>
               </treecell>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#Status"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#ProgressText"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Transferred"/>
@@ -217,12 +217,6 @@
                sortSeparators="true" width="4*" flex="4"
                persist="width sortActive sortDirection hidden"
                resource="http://home.netscape.com/NC-rdf#Progress"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="Status"
-               sortSeparators="true" width="4*" flex="4"
-               persist="width sortActive sortDirection hidden"
-               resource="http://home.netscape.com/NC-rdf#Status"
                resource2="http://home.netscape.com/NC-rdf#Name"/>
       <splitter class="tree-splitter"/>
       <treecol id="ProgressText"  hidden="true"
