@@ -12,11 +12,11 @@ libgtkmozilla_la_SOURCES = \
 			nsNewTimer.cpp \
 			nsSetupRegistry.cpp
 
-MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include
+MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include -I@NSPR_DIR@/include
 
 # Mozilla libs:
 NULL = 
-NSPR_LIBS       = -lplds3 -lplc3 -lnspr3 -lpthread
+NSPR_LIBS       = -L@NSPR_DIR@/lib -lplds3 -lplc3 -lnspr3 -lpthread
 
 BASE_LIBS =          \
         -lmozjs \
