@@ -128,8 +128,9 @@ pref("editor.always_show_publish_dialog",    false);
  */
 //pref("editor.encode_entity",                 "html");
 
+#ifndef XP_MACOSX
 #ifdef XP_UNIX
 pref("editor.disable_spell_checker", false);
 pref("editor.dont_lock_spell_files", true);
 #endif
-
+#endif

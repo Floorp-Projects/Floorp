@@ -559,21 +559,13 @@ pref("mail.standalone", false);
 
 pref("mailnews.view.last",0); // 0 == "all" view
 
-#if OS_ARCH==WINNT
+#ifdef XP_WIN
 // Unread mail count timer. Value to be specified in seconds
 // default is 5 minutes, i.e., 5 * 60 seconds = 300
 pref("mail.windows_xp_integration.unread_count_interval", 300);
 #endif
 
-#if MOZ_WIDGET_TOOLKIT==cocoa
-#define MAC_PREFS 1
-#else
-#if MOZ_WIDGET_TOOLKIT==mac
-#define MAC_PREFS 1
-#endif
-#endif
-
-#ifdef MAC_PREFS
+#ifdef XP_MACOSX
 pref("mail.notification.sound",             "");
 pref("mail.close_message_window.on_delete", true);
 pref("mail.close_message_window.on_file", true);
@@ -581,6 +573,7 @@ pref("mail.close_message_window.on_file", true);
 pref("mail.server_type_on_restart",         -1);
 #endif
 
+#ifndef XP_MACOSX
 #ifdef XP_UNIX
 pref("mail.empty_trash", false);
 
@@ -600,5 +593,6 @@ pref("mail.signature_date", 0);
 
 // until bug #130581 is fixed, we need to override this on linux
 pref("mail.compose.max_recycled_windows", 0);
+# XP_UNIX
 #endif
-
+#endif
