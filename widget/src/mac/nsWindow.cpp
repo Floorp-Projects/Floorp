@@ -240,7 +240,7 @@ static void blinkRgn(RgnHandle rgn, PRBool isPaint)
 
 #endif
 
-
+#ifdef DEBUG
 static Boolean control_key_down()
 {
 	EventRecord event;
@@ -254,6 +254,7 @@ static long long microseconds()
 	Microseconds((UnsignedWide*)&micros);
 	return micros;
 }
+#endif
 
 #pragma mark -
 
