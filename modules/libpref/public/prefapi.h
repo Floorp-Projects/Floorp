@@ -33,6 +33,15 @@
 
 #define NEW_PREF_ARCH
 
+#if defined(VMS)
+/* Deal with case naming conflicts */
+#define pref_CopyCharPref prefl_CopyCharPref
+#define pref_GetBoolPref prefl_GetBoolPref
+#define pref_GetCharPref prefl_GetCharPref
+#define pref_GetIntPref prefl_GetIntPref
+#define pref_LockPref prefl_LockPref
+#endif /* VMS */
+
 NSPR_BEGIN_EXTERN_C
 
 /*

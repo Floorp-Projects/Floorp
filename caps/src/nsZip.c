@@ -39,10 +39,6 @@
 #include <stat.h>
 #endif
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>  /* for SEEK_SET and SEEK_END on some platforms */
-#endif
-
 #include "prlog.h"
 #include "prio.h"
 #include "prdtoa.h"
@@ -55,7 +51,7 @@
 #include "nsZip.h"
 #include "zlib.h"
 #include "xp.h"						/* for XP_STRDUP */
-#include "xp_qsort.h"
+#include "nsQuickSort.h"
 #include "prmem.h"
 #include "prerror.h"
 
@@ -183,7 +179,7 @@ static void
 ns_zip_errmsg(const char *msg)
 {
 #ifdef DEBUG
-    PRFileDesc* prfd = PR_GetSpecialFD(2);
+    PRFileDesc* prfd = PR_GetSpecialFD(PR_StandardError);
     PR_Write(prfd, msg, strlen(msg));
 #endif
 }
@@ -317,7 +313,7 @@ nsZipFindEnd(ns_zip_t *zip, char *endbuf)
     PRUint32 len, off, mark;
 
     /* Need to search backwards from end of file */
-    if ((len = PR_Seek(zip->fd, 0, SEEK_END)) == -1) {
+    if ((len = PR_Seek(zip->fd, 0, PR_SEEK_END)) == -1) {
 #if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
@@ -342,7 +338,7 @@ nsZipFindEnd(ns_zip_t *zip, char *endbuf)
     for (off = len; off > mark; ) {
 	long n = min(off - mark, INBUFSIZ);
 	memcpy(buf + n, buf, SIGSIZ);
-	if (PR_Seek(zip->fd, off -= n, SEEK_SET) == -1) {
+	if (PR_Seek(zip->fd, off -= n, PR_SEEK_SET) == -1) {
 #if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
@@ -364,7 +360,7 @@ nsZipFindEnd(ns_zip_t *zip, char *endbuf)
 		if ((buf+n-bp) >= ENDHDRSIZ) {
 		    memcpy(endbuf, bp, ENDHDRSIZ);
 		} else {
-		    if (PR_Seek(zip->fd, endoff, SEEK_SET) == -1) {
+		    if (PR_Seek(zip->fd, endoff, PR_SEEK_SET) == -1) {
 #if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
@@ -380,7 +376,7 @@ nsZipFindEnd(ns_zip_t *zip, char *endbuf)
 		if (endoff + ENDHDRSIZ + ENDCOM(endbuf) != len) {
 		    continue;
 		}
-		if (PR_Seek(zip->fd, endoff, SEEK_SET) == -1) {
+		if (PR_Seek(zip->fd, endoff, PR_SEEK_SET) == -1) {
 #if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
@@ -416,6 +412,12 @@ ns_zip_unixtime(int dostime)
 
 static int
 ns_zip_direlcmp(const void *d1, const void *d2)
+{
+    return strcmp(((direl_t *)d1)->fn, ((direl_t *)d2)->fn);
+}
+
+static int
+ns_zip_direlcmp2(const void *d1, const void *d2, void *unused)
 {
     return strcmp(((direl_t *)d1)->fn, ((direl_t *)d2)->fn);
 }
@@ -476,7 +478,7 @@ ns_zip_initReader(ns_zip_t *zip)
 	return PR_FALSE;
     }
     /* Seek to first CEN header */
-    if (PR_Seek(zip->fd, zip->cenoff, SEEK_SET) == -1) {
+    if (PR_Seek(zip->fd, zip->cenoff, PR_SEEK_SET) == -1) {
 #if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
@@ -550,7 +552,7 @@ ns_zip_initReader(ns_zip_t *zip)
     /* Free temporary buffer */
     PR_Free(cenbuf);
     /* Sort directory elements by name */
-    XP_QSORT(zip->dir, (size_t) zip->nel, sizeof(direl_t), ns_zip_direlcmp);
+    NS_QuickSort(zip->dir, (size_t) zip->nel, sizeof(direl_t), ns_zip_direlcmp2, NULL);
     return PR_TRUE;
 }
 
@@ -828,7 +830,7 @@ ns_zip_get(ns_zip_t *zip, const char *fn, void HUGEP *buf, PRInt32 len)
 	return PR_FALSE;
     }
     /* Seek to beginning of LOC header */
-    if (PR_Seek(zip->fd, dp->off, SEEK_SET) == -1) {
+    if (PR_Seek(zip->fd, dp->off, PR_SEEK_SET) == -1) {
 #if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
@@ -864,7 +866,7 @@ ns_zip_get(ns_zip_t *zip, const char *fn, void HUGEP *buf, PRInt32 len)
 	return PR_FALSE;
     }
     /* Seek to file data */
-    if (PR_Seek(zip->fd, off, SEEK_SET) == -1) {
+    if (PR_Seek(zip->fd, off, PR_SEEK_SET) == -1) {
 #if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16

@@ -121,7 +121,6 @@ nsPrefsCore::~nsPrefsCore()
     }
     
 #ifdef NS_DEBUG
-    NS_ASSERTION(!firstTime, "There can be only one");
     firstTime = PR_TRUE;
 #endif
 }

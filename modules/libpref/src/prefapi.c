@@ -60,13 +60,7 @@
 #include "prprf.h"
 #include "xpassert.h"
 #include "xp_str.h"
-
-#define XP_QSORT qsort
-
-#if defined(XP_MAC) && defined (__MWERKS__)
-/* Can't get the xp people to fix warnings... */
-#pragma require_prototypes off
-#endif
+#include "nsQuickSort.h"
 
 typedef union
 {
@@ -79,34 +73,29 @@ typedef struct
 {
 	PrefValue	defaultPref;
 	PrefValue	userPref;
-	uint8		flags;
+	PRUint8		flags;
 } PrefNode;
 
 /*-----------------------
 ** Hash table allocation
 **----------------------*/
 
-PR_IMPLEMENT(void *) pref_AllocTable(void *pool, size_t size)
+PR_STATIC_CALLBACK(void*) pref_AllocTable(void *pool, size_t size)
 {
     return malloc(size);
 }
 
-PR_IMPLEMENT(void) pref_FreeTable(void *pool, void *item)
+PR_STATIC_CALLBACK(void) pref_FreeTable(void *pool, void *item)
 {
     free(item);		/* free items? */
 }
 
-PR_IMPLEMENT(PLHashEntry *) pref_AllocEntry(void *pool, const void *key)
+PR_STATIC_CALLBACK(PLHashEntry*) pref_AllocEntry(void *pool, const void *key)
 {
     return malloc(sizeof(PLHashEntry));
 }
 
-/* if we're using gcc's -pedantic-errors, uint isn't defined */
-#if defined(__STRICT_ANSI__) || !defined(HAVE_UINT)
-typedef unsigned int uint;
-#endif
-
-PR_IMPLEMENT(void) pref_FreeEntry(void *pool, PLHashEntry *he, uint flag)
+PR_STATIC_CALLBACK(void) pref_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
 {
 	PrefNode *pref = (PrefNode *) he->value;
 	if (pref)
@@ -126,18 +115,18 @@ PR_IMPLEMENT(void) pref_FreeEntry(void *pool, PLHashEntry *he, uint flag)
 	}
 }
 
-JSBool PR_CALLBACK pref_NativeDefaultPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-JSBool PR_CALLBACK pref_NativeUserPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-JSBool PR_CALLBACK pref_NativeLockPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-JSBool PR_CALLBACK pref_NativeUnlockPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-JSBool PR_CALLBACK pref_NativeSetConfig(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-JSBool PR_CALLBACK pref_NativeGetPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-JSBool PR_CALLBACK pref_NativeGetLDAPAttr(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) pref_NativeDefaultPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) pref_NativeUserPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) pref_NativeLockPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) pref_NativeUnlockPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) pref_NativeSetConfig(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) pref_NativeGetPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) pref_NativeGetLDAPAttr(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 /* LI_STUFF add nativelilocalpref */
-JSBool PR_CALLBACK pref_NativeLILocalPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) pref_NativeLILocalPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 /* LI_STUFF add NativeLIUserPref - does both lilocal and user at once */
-JSBool PR_CALLBACK pref_NativeLIUserPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-JSBool PR_CALLBACK pref_NativeLIDefPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) pref_NativeLIUserPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
+PR_STATIC_CALLBACK(JSBool) pref_NativeLIDefPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 
 /*----------------------------------------------------------------------------------------*/
 #include "prefapi_private_data.h"
@@ -749,7 +738,7 @@ PREF_SetBinaryPref(const char *pref_name, void * value, long size)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_SetColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue)
+PREF_SetColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue)
 {
 	char colstr[63];
 	PrefValue pref;
@@ -759,9 +748,9 @@ PREF_SetColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue)
 	return pref_HashPref(pref_name, pref, PREF_STRING, PREF_SETUSER);
 }
 
-#define MYGetboolVal(rgb)   ((uint8) ((rgb) >> 16))
-#define MYGetGValue(rgb)   ((uint8) (((uint16) (rgb)) >> 8)) 
-#define MYGetRValue(rgb)   ((uint8) (rgb)) 
+#define MYGetboolVal(rgb)   ((PRUint8) ((rgb) >> 16))
+#define MYGetGValue(rgb)   ((PRUint8) (((PRUint16) (rgb)) >> 8)) 
+#define MYGetRValue(rgb)   ((PRUint8) (rgb)) 
 
 PR_IMPLEMENT(PrefResult)
 PREF_SetColorPrefDWord(const char *pref_name, PRUint32 colorref)
@@ -780,7 +769,7 @@ PREF_SetColorPrefDWord(const char *pref_name, PRUint32 colorref)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_SetRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom)
+PREF_SetRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom)
 {
 	char rectstr[63];
 	PrefValue pref;
@@ -835,7 +824,7 @@ PREF_SetDefaultBinaryPref(const char *pref_name,void * value,long size)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_SetDefaultColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue)
+PREF_SetDefaultColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue)
 {
 	char colstr[63];
 	PR_snprintf( colstr, 63, "#%02X%02X%02X", red, green, blue);
@@ -844,7 +833,7 @@ PREF_SetDefaultColorPref(const char *pref_name, uint8 red, uint8 green, uint8 bl
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_SetDefaultRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom)
+PREF_SetDefaultRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom)
 {
 	char rectstr[63];
 	PR_snprintf( rectstr, 63, "%d,%d,%d,%d", left, top, right, bottom);
@@ -991,7 +980,7 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
 }
 
 PR_IMPLEMENT(int)
-pref_CompareStrings(const void *v1, const void *v2)
+pref_CompareStrings(const void *v1, const void *v2, void *unused)
 {
 	char *s1 = *(char**) v1;
 	char *s2 = *(char**) v2;
@@ -1074,7 +1063,7 @@ PREF_SavePrefFileWith(const char *filename, PLHashEnumerator heSaveProc)
 		PR_HashTableEnumerateEntries(gHashTable, heSaveProc, valueArray);
 		
 		/* Sort the preferences to make a readable file on disk */
-		XP_QSORT(valueArray, gHashTable->nentries, sizeof(char*), pref_CompareStrings);
+		NS_QuickSort(valueArray, gHashTable->nentries, sizeof(char*), pref_CompareStrings, NULL);
 		for (valueIdx = 0; valueIdx < gHashTable->nentries; valueIdx++)
 		{
 			if (valueArray[valueIdx])
@@ -1337,7 +1326,7 @@ PREF_GetBoolPref(const char *pref_name, PRBool * return_value)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue)
+PREF_GetColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue)
 {
 	char colstr[8];
 	int iSize = 8;
@@ -1347,7 +1336,7 @@ PREF_GetColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue)
 	if (result == PREF_NOERROR)
 	{
 		int r, g, b;
-		sscanf(colstr, "#%02X%02X%02X", &r, &g, &b);
+		sscanf(colstr, "#%02x%02x%02x", &r, &g, &b);
 		*red = r;
 		*green = g;
 		*blue = b;
@@ -1355,12 +1344,12 @@ PREF_GetColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue)
 	return result;
 }
 
-#define MYRGB(r, g ,b)  ((PRUint32) (((uint8) (r) | ((uint16) (g) << 8)) | (((PRUint32) (uint8) (b)) << 16))) 
+#define MYRGB(r, g ,b)  ((PRUint32) (((PRUint8) (r) | ((PRUint16) (g) << 8)) | (((PRUint32) (PRUint8) (b)) << 16))) 
 
 PR_IMPLEMENT(PrefResult)
 PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref)
 {
-    uint8 red, green, blue;
+    PRUint8 red, green, blue;
     PrefResult   result;
     PR_ASSERT(colorref);
     result = PREF_GetColorPref(pref_name, &red, &green, &blue);
@@ -1370,7 +1359,7 @@ PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, int16 *bottom)
+PREF_GetRectPref(const char *pref_name, PRInt16 *left, PRInt16 *top, PRInt16 *right, PRInt16 *bottom)
 {
 	char rectstr[64];
 	int iSize=64;
@@ -1504,7 +1493,7 @@ PREF_GetDefaultBinaryPref(const char *pref_name, void * return_value, int * leng
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue)
+PREF_GetDefaultColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue)
 {
 	char colstr[8];
 	int iSize = 8;
@@ -1514,7 +1503,7 @@ PREF_GetDefaultColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 
 	if (result == PREF_NOERROR)
 	{
 		int r, g, b;
-		sscanf(colstr, "#%02X%02X%02X", &r, &g, &b);
+		sscanf(colstr, "#%02x%02x%02x", &r, &g, &b);
 		*red = r;
 		*green = g;
 		*blue = b;
@@ -1526,7 +1515,7 @@ PREF_GetDefaultColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 
 PR_IMPLEMENT(PrefResult)
 PREF_GetDefaultColorPrefDWord(const char *pref_name, PRUint32 * colorref)
 {
-    uint8 red, green, blue;
+    PRUint8 red, green, blue;
     PrefResult   result;
     PR_ASSERT(colorref);
     result = PREF_GetDefaultColorPref(pref_name, &red, &green, &blue);
@@ -1536,7 +1525,7 @@ PREF_GetDefaultColorPrefDWord(const char *pref_name, PRUint32 * colorref)
 }
 
 PR_IMPLEMENT(PrefResult)
-PREF_GetDefaultRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, int16 *bottom)
+PREF_GetDefaultRectPref(const char *pref_name, PRInt16 *left, PRInt16 *top, PRInt16 *right, PRInt16 *bottom)
 {
 	char rectstr[256];
 	int iLen = 256;
