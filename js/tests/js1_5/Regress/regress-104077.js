@@ -268,6 +268,38 @@ captureThis();
 
 
 
+function entry_menu()
+{
+  var document = new Object();
+  var dialog = new Object();
+  var num = 100;
+
+  with (document)
+  {
+    with (dialog)
+    {
+      try
+      {
+        while (true)
+        {
+          return num;
+        }
+      }
+      finally
+      {
+      }
+    }
+  }
+}
+
+status = inSection(8);
+actual = entry_menu();
+expect = 100;
+captureThis();
+
+
+
+
 //-----------------------------------------------------------------------------
 test();
 //-----------------------------------------------------------------------------
