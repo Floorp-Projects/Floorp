@@ -21,7 +21,16 @@
 #include <cassert>
 #include "htrdf.h"
 
+#include "vocab.h"							// provides tokens needed in lookup functions
+	// ...and because vocab.h mistakenly does not declare these, we must
+extern RDF_NCVocab		gNavCenter;
+extern RDF_CoreVocab	gCoreVocab;
 
+
+	/*
+		The functions |pane_params_from|, |view_params_from|, and |is_docked| should be
+		within an anonymous namespace.
+	*/
 
 static
 SPaneInfo
@@ -36,7 +45,7 @@ pane_params_from( HT_View /*ht_view*/, LView* pp_superview )
 		info.width			= superview_size.width;
 
 		info.height			= 24; // NO! Get this value from the |HT_View|.
-		info.visible		= true;
+		info.visible		= false;		// we'll get shown when bar is added.
 		info.enabled		= true;
 
 		SBooleanRect bindings = { true, true, true, false };
@@ -87,6 +96,11 @@ CRDFToolbar::CRDFToolbar( HT_View ht_view, LView* pp_superview )
 		assert( _ht_view );											// There must be an |HT_View|...
 		assert( !HT_GetViewFEData(_ht_view) );	//	...and it must not be linked to any other FE object.
 
+		// the toolbar can stream in at any time, so we need to make sure that the container gets
+		// updated even after it has been initialized. Setting the |available| flag to false ensures
+		// that the container will update correctly when it sees this toolbar.
+ 		SetAvailable(false);
+		
 		HT_SetViewFEData(_ht_view, this);
 
 			// TO BE FIXED: 1103 needs a better name and visibility
@@ -98,7 +112,9 @@ CRDFToolbar::CRDFToolbar( HT_View ht_view, LView* pp_superview )
 		LView* view = UReanimator::CreateView(1104, this, window);	// create the CToolbarPatternBevelView
 		view->ResizeFrameBy(-12, 0, false);
 #endif
-	}
+
+		notice_background_changed();
+}
 
 CRDFToolbar::~CRDFToolbar()
 	{
@@ -108,7 +124,56 @@ CRDFToolbar::~CRDFToolbar()
 	}
 
 void
-CRDFToolbar::HandleNotification( HT_Notification, HT_Resource, HT_Event, void*, uint32 )
+CRDFToolbar::Draw( RgnHandle inSuperDrawRgnH )
 	{
-		// ...
+			// We don't like the way |CDragBar| does it
+		LView::Draw(inSuperDrawRgnH);
 	}
+
+void
+CRDFToolbar::DrawSelf()
+	{
+		Rect frame;
+		if ( CalcLocalFrameRect(frame) )
+			{
+				Point top_left = { frame.top, frame.left };
+				DrawImage(top_left, kTransformNone, frame.right-frame.left, frame.bottom-frame.top);
+			}
+		// Note: I don't want |CDragBar::DrawSelf()|s behavior, and |LView| doesn't implement
+		//	|DrawSelf|, so, nothing else to do here.
+	}
+
+void
+CRDFToolbar::ImageIsReady()
+	{
+		Refresh();
+	}
+
+void
+CRDFToolbar::DrawStandby( const Point&, const IconTransformType ) const
+	{
+		// TO BE WRITTEN
+	}
+
+void
+CRDFToolbar::HandleNotification( HT_Notification, HT_Resource, HT_Event event, void*, uint32 )
+	{
+		switch ( event )
+			{
+				case HT_EVENT_NODE_VPROP_CHANGED:
+					notice_background_changed();
+					break;
+			}
+	}
+
+void
+CRDFToolbar::notice_background_changed()
+	{
+		char* cp = 0;
+		if ( HT_GetTemplateData(HT_TopNode(_ht_view), gNavCenter->viewBGURL, HT_COLUMN_STRING, &cp) )
+			SetImageURL(string(cp));
+		else
+			SetImageURL("file:///Incoming/bk.gif");
+		Refresh();
+	}
+

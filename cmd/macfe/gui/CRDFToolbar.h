@@ -19,12 +19,14 @@
 #pragma once
 
 #include "CDragBar.h"									// ...is a base class
+#include "CImageIconMixin.h"					// ...is a base class
 #include "CRDFNotificationHandler.h"	// ...is a base class
 
 
 
 class CRDFToolbar
 		: public CDragBar,
+			public CTiledImageMixin,
 			public CRDFNotificationHandler
 
 		/*
@@ -42,9 +44,20 @@ class CRDFToolbar
 			CRDFToolbar( const CRDFToolbar& );						// DON'T IMPLEMENT
 			CRDFToolbar& operator=( const CRDFToolbar& );	// DON'T IMPLEMENT
 
+		public:			// ...for |LPane|, |LView|, |CDragBar|...
+			virtual void Draw( RgnHandle );
+			virtual void DrawSelf();
 
-		public: // ...overriding the appropriate methods of |CRDFNotificationHandler|
+		protected:	// ...for |CTiledImageMixin|
+			virtual void ImageIsReady();
+			virtual void DrawStandby( const Point&, const IconTransformType ) const;
+			
+
+		public:			// ...for |CRDFNotificationHandler|
 			virtual void HandleNotification( HT_Notification, HT_Resource, HT_Event, void*, uint32 );
+
+		protected:
+			void notice_background_changed();
 
 		private:
 			HT_View _ht_view;
