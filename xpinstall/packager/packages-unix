@@ -199,6 +199,7 @@ bin/res/entityTables/*
 bin/res/FieldSchema.tbl
 bin/res/SchemaConcat.tbl
 bin/res/URLFieldSchema.tbl
+bin/res/DistinguishedSchema.tbl
 bin/res/arrow.gif
 bin/res/charsetalias.properties
 bin/res/acceptlanguage.properties

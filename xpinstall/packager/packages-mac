@@ -179,7 +179,10 @@ viewer:res:charsetData.properties
 viewer:res:langGroups.properties
 viewer:res:language.properties
 viewer:res:entityTables:*
+viewer:res:SchemaConcat.tbl
 viewer:res:FieldSchema.tbl
+viewer:res:URLFieldSchema.tbl
+viewer:res:DistinguishedSchema.tbl
 viewer:res:html:*
 viewer:res:html.css
 viewer:res:maccharset.properties 
@@ -216,12 +219,10 @@ viewer:res:samples:sampleimages
 -viewer:res:samples:sampleimages:CVS
 -viewer:res:samples:sampleimages:Makefile.in
 -viewer:res:samples:sampleimages:makefile.win
-viewer:res:SchemaConcat.tbl
 viewer:res:strres-test.js
 viewer:res:strres-test.xul
 viewer:res:throbber:*
 viewer:res:ua.css
-viewer:res:URLFieldSchema.tbl
 
 [mail] 
 viewer:chrome:packages:messenger:*

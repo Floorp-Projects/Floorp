@@ -197,12 +197,16 @@ bin\searchplugins\*
 bin\res\html.css
 bin\res\ua.css
 bin\res\arrow.gif
+bin\res\FieldSchema.tbl
+bin\res\SchemaConcat.tbl
+bin\res\URLFieldSchema.tbl
+bin\res\DistinguishedSchema.tbl
 bin\res\wincharset.properties
 bin\res\charsetalias.properties
 bin\res\charsetData.properties
 bin\res\charsetTitles.properties
 bin\res\langGroups.properties
-bin/res/acceptlanguage.properties
+bin\res\acceptlanguage.properties
 bin\res\entityTables\*
 bin\res\rdf\article.gif
 bin\res\rdf\document.gif
