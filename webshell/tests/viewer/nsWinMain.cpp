@@ -48,9 +48,10 @@ nsNativeViewerApp::Run()
         !gConsole->GetMainWindow() ||
         !TranslateAccelerator(gConsole->GetMainWindow(),
                               JSConsole::sAccelTable, &msg)) {
-      TranslateMessage(&msg);
+
+	  TranslateMessage(&msg);
       DispatchMessage(&msg);
-    }
+	}
   }
   return msg.wParam;
 }

@@ -138,6 +138,11 @@ struct nsKeyEvent : public nsInputEvent {
  * Tooltip event
  */
 
+struct nsTextEvent : public nsInputEvent {
+	PRUnichar*			theText;
+	PRBool				commitText;
+};
+
 struct nsTooltipEvent : public nsGUIEvent {
                 /// Index of tooltip area which generated the event. @see SetTooltips in nsIWidget
     PRUint32        tipIndex;           
@@ -196,6 +201,7 @@ struct nsDragDropEvent : public nsGUIEvent {
 #define NS_TOOLTIP_EVENT    9
 #define NS_MENU_EVENT       10
 #define NS_DRAGDROP_EVENT   11
+#define NS_TEXT_EVENT		12
  
  /**
  * GUI MESSAGES

@@ -73,6 +73,7 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN nsIFrameSelection interfaces*/
+  NS_IMETHOD HandleTextEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGUIEvent);
   NS_IMETHOD HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent);
   NS_IMETHOD TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection);
   NS_IMETHOD ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame);
@@ -539,6 +540,42 @@ void printRange(nsIDOMRange *aDomRange)
          */
 }
 
+NS_IMETHODIMP
+nsRangeList::HandleTextEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGUIEvent)
+{
+	if (!aGUIEvent || !aTracker)
+		return NS_ERROR_NULL_POINTER;
+
+#ifdef DEBUG_TAGUE
+	printf("nsRangeList: HandleTextEvent\n");
+#endif
+
+	nsIFrame *anchor;
+	nsIFrame *frame;
+	nsresult result = aTracker->GetFocus(&frame, &anchor);
+	if (NS_FAILED(result))
+		return result;
+	if (NS_TEXT_EVENT == aGUIEvent->message) {
+		PRBool selected;
+		PRInt32 beginoffset = 0;
+		PRInt32 endoffset;
+		PRInt32 contentoffset;
+		nsresult result = NS_OK;
+
+		nsTextEvent *textEvent = (nsTextEvent *)aGUIEvent; //this is ok. It really is a textevent
+
+		nsIFrame *resultFrame;
+		PRInt32   frameOffset;
+		PRInt32   contentOffset;
+		PRInt32   offsetused = beginoffset;
+		nsIFrame *frameused;
+		nsSelectionAmount amount = eSelectCharacter;		// for now
+		result = frame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
+
+		result = ScrollIntoView(aTracker);
+	}
+	return NS_OK;
+}
 
 /** This raises a question, if this method is called and the aFrame does not reflect the current
  *  focus  DomNode, it is invalid?  The answer now is yes.

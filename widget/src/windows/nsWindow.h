@@ -186,6 +186,7 @@ protected:
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
     void GetNonClientBounds(nsRect &aRect);
+	void HandleTextEvent(PRBool commit);
 
 protected:
     static      nsWindow* gCurrentWindow;
@@ -213,6 +214,14 @@ protected:
     PRInt32       mMenuCmdId;
     nsIMenu     * mHitMenu;
     nsVoidArray * mHitSubMenus;
+
+	// For Input Method Support
+	DWORD		mIMEProperty;
+	PRBool		mIMEIsComposing;
+	char*		mIMECompositionString;
+	PRUnichar*	mIMECompositionUniString;
+	PRInt32		mIMECompositionStringLength;
+	PRInt32		mIMECompositionStringSize;
 
     // Drag & Drop
 

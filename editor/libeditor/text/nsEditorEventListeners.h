@@ -22,6 +22,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMTextListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsITextEditor.h"
 #include "nsCOMPtr.h"
@@ -67,6 +68,39 @@ protected:
 
 /** editor Implementation of the MouseListener interface
  */
+class nsTextEditorTextListener : public nsIDOMTextListener 
+{
+public:
+  /** default constructor
+   */
+  nsTextEditorTextListener();
+  /** default destructor
+   */
+  virtual ~nsTextEditorTextListener();
+
+  /** SetEditor gives an address to the editor that will be accessed
+   *  @param aEditor the editor this listener calls for editing operations
+   */
+  void SetEditor(nsITextEditor *aEditor){mEditor = do_QueryInterface(aEditor);}
+
+/*interfaces for addref and release and queryinterface*/
+  NS_DECL_ISUPPORTS
+
+/*BEGIN implementations of textevent handler interface*/
+    virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+public:
+    virtual nsresult HandleText(nsIDOMEvent* aTextEvent);
+/*END implementations of textevent handler interface*/
+
+protected:
+	nsCOMPtr<nsITextEditor> mEditor;
+	PRBool					mCommitText;
+	PRBool					mInTransaction;
+};
+
+
+/** editor Implementation of the TextListener interface
+ */
 class nsTextEditorMouseListener : public nsIDOMMouseListener 
 {
 public:
@@ -101,6 +135,7 @@ protected:
 
 };
 
+
 /** editor Implementation of the MouseListener interface
  */
 class nsTextEditorDragListener : public nsIDOMDragListener 
@@ -133,6 +168,7 @@ protected:
 
 };
 
+
 /** factory for the editor key listener
  */
 extern nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, nsITextEditor *aEditor);
@@ -140,6 +176,10 @@ extern nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResul
 /** factory for the editor mouse listener
  */
 extern nsresult NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsITextEditor *aEditor);
+
+/** factory for the editor text listener
+ */
+extern nsresult NS_NewEditorTextListener(nsIDOMEventListener** aInstancePtrResult, nsITextEditor *aEditor);
 
 /** factory for the editor drag listener
  */

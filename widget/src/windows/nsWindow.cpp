@@ -41,6 +41,7 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 #include "nsMenuItem.h"
+#include <imm.h>
 
 
 #ifdef DRAG_DROP
@@ -100,11 +101,19 @@ nsWindow::nsWindow() : nsBaseWidget()
     mHitSubMenus        = new nsVoidArray();
     mVScrollbar         = nsnull;
 
+	mIMEProperty		= 0;
+	mIMEIsComposing		= PR_FALSE;
+	mIMECompositionString = NULL;
+	mIMECompositionStringSize = 0;
+	mIMECompositionStringSize = 0;
+	mIMECompositionUniString = NULL;
+
 #ifdef DRAG_DROP
     mDragDrop           = nsnull;
     mDropTarget         = nsnull;
     mDropSource         = nsnull;
 #endif
+
 }
 
 
@@ -1762,7 +1771,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             //LONG newdata2 = (data & 0xFFFF00F);
             int x = 0;
             }
-            result = OnKey(NS_KEY_UP, wParam, LOWORD(lParam), HIWORD(lParam));
+            
+			if (!mIMEIsComposing)
+				result = OnKey(NS_KEY_UP, wParam, LOWORD(lParam), HIWORD(lParam));
+			else
+				result = PR_FALSE;
             break;
 
         case WM_KEYDOWN:
@@ -1770,8 +1783,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
             mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-
-            result = OnKey(NS_KEY_DOWN, wParam, LOWORD(lParam), HIWORD(lParam));
+			
+			if (!mIMEIsComposing)
+				result = OnKey(NS_KEY_DOWN, wParam, LOWORD(lParam), HIWORD(lParam));
+			else
+				result = PR_FALSE;
             break;
 
         // say we've dealt with erase background if widget does
@@ -2028,6 +2044,95 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = PR_TRUE;
             break;
 
+		case WM_IME_STARTCOMPOSITION: {
+			COMPOSITIONFORM compForm;
+			HIMC hIMEContext;
+
+			mIMEIsComposing = PR_TRUE;
+#ifdef		DEBUG_TAGUE
+			printf("IME: Recieved WM_IME_STARTCOMPOSITION\n");
+#endif
+			if ((mIMEProperty & IME_PROP_SPECIAL_UI) || (mIMEProperty & IME_PROP_AT_CARET)) {
+				return PR_FALSE;
+			}
+
+			hIMEContext = ::ImmGetContext(mWnd);
+			if (hIMEContext==NULL) {
+				return PR_TRUE;
+			}
+
+			compForm.dwStyle = CFS_POINT;
+			compForm.ptCurrentPos.x = 100;
+			compForm.ptCurrentPos.y = 100;
+
+			::ImmSetCompositionWindow(hIMEContext,&compForm);
+			::ImmReleaseContext(mWnd,hIMEContext);
+
+			result = PR_TRUE;
+			}
+			break;
+
+		case WM_IME_COMPOSITION: {
+			COMPOSITIONFORM compForm;
+			HIMC hIMEContext;
+
+			result = PR_FALSE;					// will change this if an IME message we handle
+
+			hIMEContext = ::ImmGetContext(mWnd);
+			if (hIMEContext==NULL) {
+				return PR_TRUE;
+			}
+
+			if (lParam & GCS_COMPSTR) {
+				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,NULL,0);
+				if (compStrLen+1>mIMECompositionStringSize) {
+					if (mIMECompositionString!=NULL) delete [] mIMECompositionString;
+					mIMECompositionString = new char[compStrLen+32];
+					mIMECompositionStringSize = compStrLen+32;
+				}
+				
+				::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,mIMECompositionString,mIMECompositionStringSize);
+				mIMECompositionStringLength = compStrLen;
+				mIMECompositionString[compStrLen]='\0';
+				HandleTextEvent(PR_FALSE);
+				result = PR_TRUE;
+			}
+
+			if (lParam & GCS_RESULTSTR) {
+				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,NULL,0);
+				if (compStrLen+1>mIMECompositionStringSize) {
+					delete [] mIMECompositionString;
+					mIMECompositionString = new char[compStrLen+32];
+					mIMECompositionStringSize = compStrLen+32;
+				}
+				
+				::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,mIMECompositionString,mIMECompositionStringSize);
+				mIMECompositionStringLength = compStrLen;
+				mIMECompositionString[compStrLen]='\0';
+				result = PR_TRUE;
+				HandleTextEvent(PR_TRUE);
+			}
+#ifdef DEBUG_TAGUE
+			if (lParam & GCS_COMPSTR)
+				printf("IME: Composition String = %s\n",mIMECompositionString);
+			if (lParam & GCS_RESULTSTR)
+				printf("IME: Result String = %s\n",mIMECompositionString);
+#endif			
+			
+			::ImmReleaseContext(mWnd,hIMEContext);
+
+			}
+			break;
+
+		case WM_IME_ENDCOMPOSITION:
+
+			mIMEIsComposing = PR_FALSE;
+#ifdef DEBUG_TAGUE
+			printf("IME: Received WM_IME_ENDCOMPOSITION\n");
+#endif
+			result = PR_TRUE;
+			break;
+
         case WM_DROPFILES: {
           HDROP hDropInfo = (HDROP) wParam;
 	        UINT nFiles = ::DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
@@ -2046,7 +2151,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             DispatchEvent(&event, status);
 	        }
         } break;
-
     }
 
     return result;
@@ -2555,6 +2659,35 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
+void
+nsWindow::HandleTextEvent(PRBool commit)
+{
+  nsTextEvent event;
+  nsPoint point;
+  size_t	unicharSize;
 
+  point.x = 0;
+  point.y = 0;
 
+  InitEvent(event, NS_TEXT_EVENT, &point);
+  if (mIMECompositionUniString!=NULL)
+	  delete [] mIMECompositionUniString;
+  
+  unicharSize = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
+	  mIMECompositionUniString,0);
+  mIMECompositionUniString = new PRUnichar[unicharSize+1];
+  ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
+	  mIMECompositionUniString,unicharSize);
+  mIMECompositionUniString[unicharSize] = (PRUnichar)0;
 
+  event.theText      = mIMECompositionUniString;
+  event.commitText	 = commit;
+  event.isShift   = mIsShiftDown;
+  event.isControl = mIsControlDown;
+  event.isAlt     = mIsAltDown;
+  event.eventStructType = NS_TEXT_EVENT;
+
+  (void)DispatchWindowEvent(&event);
+  NS_RELEASE(event.widget);
+
+}
