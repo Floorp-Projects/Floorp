@@ -35,6 +35,7 @@ EXPORTS= \
 	$(NULL)
 
 MODULE=content 
+XPIDL_MODULE=content_html
 
 include <$(DEPTH)\config\rules.mak>
 
