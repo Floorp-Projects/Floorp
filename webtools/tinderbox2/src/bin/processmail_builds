@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.28 $ 
-# $Date: 2002/05/08 22:14:49 $ 
+# $Revision: 1.29 $ 
+# $Date: 2002/05/08 22:42:09 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -927,7 +927,7 @@ sub parse_mail_body {
 
         my $good_line = (
                          ($print !~ m!<\s*a\s+!i) ||
-                         ($print =~ m!>[^<>]*<\s*/a\s+!i)
+                         ($print =~ m!>[^<>]*<\s*/a\s*>!i)
                          );
 
         if ($good_line) {
