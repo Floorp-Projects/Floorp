@@ -102,10 +102,10 @@ private:
     nsProfileLock mCurrentProfileLock;
 
     PRBool mIsUILocaleSpecified;
-    nsString mUILocaleName;
+    nsCString mUILocaleName;
 
     PRBool mIsContentLocaleSpecified;
-    nsString mContentLocaleName;
+    nsCString mContentLocaleName;
     
 public:
     nsProfile();
