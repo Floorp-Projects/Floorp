@@ -785,7 +785,7 @@ NET_CookiePermission(char* URLName) {
 /* called from mkgeturl.c, NET_InitNetLib(). This sets the module local cookie pref variables
    and registers the callbacks */
 PUBLIC void
-NET_RegisterCookiePrefCallbacks(void)
+COOKIE_RegisterCookiePrefCallbacks(void)
 {
 	PRInt32	n;
 	PRBool	x;

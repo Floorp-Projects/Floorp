@@ -160,6 +160,8 @@ nsCookieService::Init()
     rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID, eventQ, mCookieHTTPNotify, &kCookieHTTPNotifyCID);
     if (NS_FAILED(rv))
         return rv; 
+
+    COOKIE_RegisterCookiePrefCallbacks();
      
 	return rv;
 }
