@@ -33,8 +33,8 @@
 
 package Support::Files;
 
-@additional_files = ('syncshadowdb');
-@exclude_files    = ('processmail','importxml.pl');
+@additional_files = ('syncshadowdb','processmail');
+@exclude_files    = ('importxml.pl');
 
 $file = '*';
 @files = glob($file);

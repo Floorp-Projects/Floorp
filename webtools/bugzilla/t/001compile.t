@@ -53,7 +53,14 @@ $perlapp=$^X;
 foreach $file (@testitems) {
         $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
         next if (!$file); # skip null entries
-	$command = "$perlapp"." -c $file 2>&1";
+        open (FILE,$file);
+        my $bang = <FILE>;
+        close (FILE);
+        my $T = "";
+        if ($bang =~ m/#!\S*perl\s+-.*T/) {
+            $T = "T";
+        }
+	$command = "$perlapp"." -c$T $file 2>&1";
 	$loginfo=`$command`;
 #	  print '@@'.$loginfo.'##';
 	if ($loginfo =~ /syntax ok$/im) {
