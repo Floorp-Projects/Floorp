@@ -1100,16 +1100,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 
-  // Set the visibility of the scrollbars
-  // although this may "turn on" both scrollbars everythime
-  // they do get adjusted back and show correctly
-  nsIScrollableView* scrollableView;
-  GetScrollableView(scrollableView);
-  if (scrollableView) {
-    PRBool isVis = vis->IsVisible();
-    scrollableView->SetScrollbarVisibility(isVis, isVis);
-  }
-
   aStatus = NS_FRAME_COMPLETE;
 
 #ifdef DEBUG_rodsX
