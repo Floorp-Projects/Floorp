@@ -38,6 +38,7 @@
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
@@ -53,20 +54,22 @@ nsIOService::Init()
 
     // initialize the version and app components
     // XXX we're forcing these to be single byte strings for now.
-    mAppName = new nsString2("Netscape", eOneByte);
+    nsresult rv;
+
+    mAppName = new nsCString("Netscape");
     if (!mAppName) return NS_ERROR_OUT_OF_MEMORY;
-    mAppCodeName = new nsString2("Mozilla", eOneByte);
+    mAppCodeName = new nsCString("Mozilla");
     if (!mAppCodeName) return NS_ERROR_OUT_OF_MEMORY;
-    mAppVersion = new nsString2(eOneByte);
+    mAppVersion = new nsCString();
     if (!mAppVersion) return NS_ERROR_OUT_OF_MEMORY;
-    mAppLanguage = new nsString2("en", eOneByte);
+    mAppLanguage = new nsCString("en");
     if (!mAppLanguage) return NS_ERROR_OUT_OF_MEMORY;
 #ifdef XP_MAC
-    mAppPlatform = new nsString2("Mac", eOneByte);
+    mAppPlatform = new nsCString("Mac");
 #elif WIN32
-    mAppPlatform = new nsString2("Win32", eOneByte);
+    mAppPlatform = new nsCString("Win32");
 #else
-    mAppPlatform = new nsString2("Unix", eOneByte);
+    mAppPlatform = new nsCString("Unix");
 #endif
     if (!mAppPlatform) return NS_ERROR_OUT_OF_MEMORY;
 
