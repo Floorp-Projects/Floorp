@@ -203,7 +203,7 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
                                           body, 
                                           functionUri.get(),
                                           mUncompiledMethod->mBodyText.GetLineNumber(),
-                                          PR_FALSE,
+                                          PR_TRUE,
                                           (void **) &methodObject);
 
   // Destroy our uncompiled method and delete our arg list.
