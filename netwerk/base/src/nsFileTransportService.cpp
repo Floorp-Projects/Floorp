@@ -38,7 +38,7 @@ nsFileTransportService::nsFileTransportService()
     NS_INIT_REFCNT();
 }
 
-#define NS_FILE_TRANSPORT_WORKER_STACK_SIZE     (8*1024)
+#define NS_FILE_TRANSPORT_WORKER_STACK_SIZE     (64 * 1024) /* (8*1024) */
 
 nsresult
 nsFileTransportService::Init()
