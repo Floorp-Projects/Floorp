@@ -623,7 +623,20 @@ nsMsgFolderDataSource::createTotalMessagesNode(nsIMsgFolder *folder,
 	PRInt32 totalMessages;
 	rv = folder->GetTotalMessages(PR_FALSE, &totalMessages);
 	if(NS_SUCCEEDED(rv))
-		rv = createNode(totalMessages, target);
+	{
+		if(totalMessages >= 0)
+			rv = createNode(totalMessages, target);
+		else if(totalMessages == -1)
+		{
+			nsString unknownMessages("???");
+			createNode(unknownMessages, target);
+		}
+		else if(totalMessages == -2)
+		{
+			nsString unknownMessages("");
+			createNode(unknownMessages, target);
+		}
+	}
 	return rv;
 }
 
@@ -635,7 +648,21 @@ nsMsgFolderDataSource::createUnreadMessagesNode(nsIMsgFolder *folder,
 	PRInt32 totalUnreadMessages;
 	rv = folder->GetNumUnread(PR_FALSE, &totalUnreadMessages);
 	if(NS_SUCCEEDED(rv))
-		rv = createNode(totalUnreadMessages, target);
+	{
+		if(totalUnreadMessages >=0)
+			rv = createNode(totalUnreadMessages, target);
+		else if(totalUnreadMessages == -1)
+		{
+			nsString unknownMessages("???");
+			createNode(unknownMessages, target);
+		}
+		else if(totalUnreadMessages == -2)
+		{
+			nsString unknownMessages("");
+			createNode(unknownMessages, target);
+		}
+	}
+
 	return NS_OK;
 }
 
@@ -712,6 +739,11 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupp
   if (cnt > 0)
 		rv = folder->DeleteMessages(messageArray);
 
+/*	rv = folderArray->Count(&cnt);
+	if (NS_FAILED(rv)) return rv;
+	if (cnt > 0)
+		rv = folder->DeleteSubFolders(folderArray);
+*/
 	return rv;
 }
 

@@ -37,45 +37,61 @@ peq(nsIRDFResource* r1, nsIRDFResource* r2)
   }
 }
 
-PRBool
-peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
+static PRBool
+peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, PRBool *isParameter, const char *parameter)
 {
-	if(!isSort)
-		return PR_FALSE;
-
 	char *r1Str, *r2Str;
-	nsString r1nsStr, r2nsStr, r1nsSortStr;
+	nsString r1nsStr, r2nsStr, r1nsParameterStr;
 
 	r1->GetValue(&r1Str);
 	r2->GetValue(&r2Str);
 
 	r1nsStr = r1Str;
 	r2nsStr = r2Str;
-	r1nsSortStr = r1Str;
+	r1nsParameterStr = r1Str;
 
 	nsAllocator::Free(r1Str);
 	nsAllocator::Free(r2Str);
 
 	//probably need to not assume this will always come directly after property.
-	r1nsSortStr +="?sort=true";
+	r1nsParameterStr +=parameter;
 
 	if(r1nsStr == r2nsStr)
 	{
-		*isSort = PR_FALSE;
+		*isParameter = PR_FALSE;
 		return PR_TRUE;
 	}
-	else if(r1nsSortStr == r2nsStr)
+	else if(r1nsParameterStr == r2nsStr)
 	{
-		*isSort = PR_TRUE;
+		*isParameter = PR_TRUE;
 		return PR_TRUE;
 	}
   else
 	{
 		//In case the resources are equal but the values are different.  I'm not sure if this
 		//could happen but it is feasible given interface.
-		*isSort = PR_FALSE;
+		*isParameter = PR_FALSE;
 		return(peq(r1, r2));
 	}
+}
+
+PRBool
+peqCollationSort(nsIRDFResource *r1, nsIRDFResource *r2, PRBool *isCollationSort)
+{
+
+	if(!isCollationSort)
+		return PR_FALSE;
+
+	return peqWithParameter(r1, r2, isCollationSort, "?collation=true");
+}
+
+PRBool
+peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
+{
+	if(!isSort)
+		return PR_FALSE;
+
+	return peqWithParameter(r1, r2, isSort, "?sort=true");
 }
 
 nsresult createNode(nsString& str, nsIRDFNode **node)

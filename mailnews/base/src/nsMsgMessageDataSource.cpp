@@ -489,10 +489,10 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
                                          nsIRDFResource *property,
                                          nsIRDFNode **target)
 {
-		PRBool sort;
-    if (peqSort(kNC_Subject, property, &sort))
+	PRBool sort;
+    if (peqCollationSort(kNC_Subject, property, &sort))
       return createMessageNameNode(message, sort, target);
-    else if (peqSort(kNC_Sender, property, &sort))
+    else if (peqCollationSort(kNC_Sender, property, &sort))
       return createMessageSenderNode(message, sort, target);
     else if (peq(kNC_Date, property))
       return createMessageDateNode(message, target);

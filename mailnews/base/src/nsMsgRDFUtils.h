@@ -65,6 +65,10 @@ peq(nsIRDFResource* r1, nsIRDFResource* r2);
 PRBool
 peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort);
 
+//Returns PR_TRUE if r1 is equal to r2 and r2 is the collation property.
+PRBool
+peqCollationSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isCollation);
+
 //Given an nsString, create an nsIRDFNode
 nsresult createNode(nsString& str, nsIRDFNode **node);
 
