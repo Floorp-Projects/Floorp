@@ -777,11 +777,17 @@ handle_gdk_event (GdkEvent *event, gpointer data)
   if (event_time)
     nsWidget::SetLastEventTime(event_time);
 
-  // process any pending events first
+  // Get the next X event serial ID and save it for later for event
+  // processing.  If it stays zero then events won't be processed
+  // later.  We're using this as a flag too but with a number this big
+  // we're probably not going to overflow and even if we did there
+  // wouldn't any harm.
+  unsigned long serial = 0;
+
   if (XPending(GDK_DISPLAY())) {
     XEvent temp_event;
     XPeekEvent(GDK_DISPLAY(), &temp_event);
-    nsAppShell::ProcessBeforeID(temp_event.xany.serial - 1);
+    serial = temp_event.xany.serial - 1;
   }
 
   // try to get the user data for the event window.
@@ -800,7 +806,7 @@ handle_gdk_event (GdkEvent *event, gpointer data)
       // if we don't have a window here anymore, we are probably in
       // the process of being or have been destroyed.  give up now.
       if (!window)
-        return;
+        goto end;
 
       // there are three possibilities here.
       // o there's a gtk grab in effect but no superwin grab
@@ -835,7 +841,7 @@ handle_gdk_event (GdkEvent *event, gpointer data)
       if (!current_grab && !superwin_grab)
       {
         dispatch_superwin_event(event, window);
-        return;
+        goto end;
       }
 
       // o there's a gtk grab in effect but no superwin grab
@@ -848,7 +854,7 @@ handle_gdk_event (GdkEvent *event, gpointer data)
         if (superwin_child_of_gtk_widget(window, current_grab))
         {
           dispatch_superwin_event(event, window);
-          return;
+          goto end;
         }
         //
         // if not, then rewrite the event widget window to the nearest
@@ -859,7 +865,7 @@ handle_gdk_event (GdkEvent *event, gpointer data)
         gdk_window_ref (event->any.window);
         // dispatch it.
         gtk_main_do_event(event);
-        return;
+        goto end;
       }
       
       // o there's a superwin grab in effect but no gtk grab
@@ -868,7 +874,7 @@ handle_gdk_event (GdkEvent *event, gpointer data)
         // easy.  let the nsWindow associated with the superwin handle
         // the event.
         dispatch_superwin_event(event, window);
-        return;
+        goto end;
       }
 
       // o there's both a gtk and superwin grab in effect
@@ -893,14 +899,14 @@ handle_gdk_event (GdkEvent *event, gpointer data)
           gdk_window_ref (event->any.window);
           // dispatch it.
           gtk_main_do_event(event);
-          return;
+          goto end;
         }
         // if it in't then rewrite the event to the nearest MozArea
         // widget since it will get rewritten again in gtk.
         else
         {
           dispatch_superwin_event(event, window);
-          return;
+          goto end;
 
         }
       }
@@ -963,7 +969,7 @@ handle_gdk_event (GdkEvent *event, gpointer data)
           // if the gtk widget in question wasn't the child of the
           // grabbing window then the grabbing window gets it.
           dispatch_superwin_event(event, grabbingWindow);
-          return;
+          goto end;
         }
       }
     }
@@ -971,6 +977,15 @@ handle_gdk_event (GdkEvent *event, gpointer data)
     if (tempWidget)
       gtk_grab_remove(tempWidget);
   }
+
+ end:
+
+
+  // use the saved serial to process any pending events, now that all
+  // the window events have been processed
+  if (serial)
+    nsAppShell::ProcessBeforeID(serial);
+
 }
 
 void
