@@ -218,12 +218,14 @@ protected:
     unsigned char* m1b;
   };
 
+public:
   struct FragmentBits {
     PRUint32 mInHeap : 1;
     PRUint32 mIs2b : 1;
     PRUint32 mLength : 30;
   };
 
+protected:
   union {
     PRUint32 mAllBits;
     FragmentBits mState;
@@ -233,3 +235,4 @@ protected:
 };
 
 #endif /* nsTextFragment_h___ */
+
