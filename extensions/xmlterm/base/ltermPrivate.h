@@ -535,6 +535,7 @@ extern LtermGlobal ltermGlobal;
 /* Visible prototypes */
 
 /* ltermIO.c */
+int ltermInterruptOutput(struct lterms *lts);
 int ltermSendLine(struct lterms *lts, UNICHAR uch,
                   int echoControl, int completionCode);
 int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout);

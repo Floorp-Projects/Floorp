@@ -118,10 +118,12 @@ protected:
     STDIN_ELEMENT,
     STDOUT_ELEMENT,
     STDERR_ELEMENT,
+    MIXED_ELEMENT,
+    WARNING_ELEMENT,
     SESSION_ELEMENT_TYPES
   };
 
-  /** user-generated input event type */
+  /** allowed user-generated input event type */
   enum SessionEventType {
     CLICK_EVENT = 0,
     DBLCLICK_EVENT,
@@ -141,9 +143,9 @@ protected:
     NO_NODE          = 0,
     PRE_STDOUT_NODE,
     PRE_STDERR_NODE,
-    SPAN_STDOUT_NODE,
-    SPAN_STDERR_NODE,
-    SPAN_MIXED_NODE,
+    PRE_STDIN_NODE,
+    DIV_MIXED_NODE,
+    SPAN_DUMMY_NODE,
     OUTPUT_DISPLAY_TYPES
   };
 
@@ -155,6 +157,9 @@ protected:
     HTML_FRAGMENT,
     HTML_DOCUMENT,
     XML_DOCUMENT,
+    INSECURE_FRAGMENT,
+    OVERFLOW_FRAGMENT,
+    INCOMPLETE_FRAGMENT,
     OUTPUT_MARKUP_TYPES
   };
 
@@ -237,7 +242,7 @@ protected:
                         PRBool streamIsSecure);
 
   /** Breaks output display by flushing and deleting incomplete lines */
-  NS_IMETHOD BreakOutput(void);
+  NS_IMETHOD BreakOutput(PRBool positionCursorBelow);
 
   /** Processes output string with specified style
    * @param aString string to be processed
@@ -250,6 +255,13 @@ protected:
                            const nsString& aStyle,
                            PRBool newline,
                            PRBool streamOutput);
+
+  /** Ensures the total number of output lines stays within a limit
+   * by deleting the oldest output line.
+   * @param deleteAllOld if true, delete all previous display nodes
+   *                     (excluding the current one)
+   */
+  NS_IMETHOD LimitOutputLines(PRBool deleteAllOld);
 
   /** Appends text string to output buffer
    *  (appended text may need to be flushed for it to be actually displayed)
@@ -289,21 +301,54 @@ protected:
                             nsIDOMNode* beforeNode = nsnull,
                             PRBool replace = false);
 
-  /** Deep refresh of selected attributes for DOM elements
+  /** Substitute all occurrences of the '#' character in aString with
+   * aNumber, if aNumber >= 0;
+   * @ param aString string to be modified
+   * @ param aNumber number to substituted
+   */
+  void SubstituteCommandNumber(nsString& aString,
+                               PRInt32 aNumber);
+
+  /** Sanitize event handler attribute values by imposing syntax checks.
+   * @param aAttrValue attribute value to be sanitized
+   * @param aEventName name of event being handled ("Click", "DblClick", ...)
+   */
+  void SanitizeAttribute(nsString& aAttrValue,
+                         const char* aEventName);
+
+  /** Deep sanitizing of event handler attributes ("on*") prior to insertion
+   * of HTML fragments, to enfore consistent UI behaviour in XMLTerm and
+   * for security. The following actions are carried out:
+   * 1. Any SCRIPT tags in the fragment are simply deleted
+   * 2. All event handler attributes, except a few selected ones, are deleted.
+   * 3. The retained event handler attribute values are subject to strict
+   *    checks.
+   * 4. If entryNumber >= 0, all '#' characters in the ID attribute and
+   *     retained event handler attributes are substituted with entryNumber.
+   *     
+   * @param domNode DOM node for HTML fragment to be sanitized
+   * @param parentNode parent DOM node (needed to delete SCRIPT elements;
+   *                                    set to null if root element)
+   * @param entryNumber entry number (default value = -1)
+   */
+  NS_IMETHOD DeepSanitizeFragment(nsCOMPtr<nsIDOMNode>& domNode,
+                                  nsIDOMNode* parentNode,
+                                  PRInt32 entryNumber);
+
+  /** Deep refresh of selected event handler attributes for DOM elements
    * (WORKAROUND for inserting HTML fragments properly)
    * @param domNode DOM node of branch to be refreshed
-   * @param entryNumber entry number (default value = -1)
-   *                   (if entryNumber >= 0, all '#' characters in event
-   *                    handler scripts are substituted by entryNumber)
    */
-  NS_IMETHOD DeepRefreshAttributes(nsCOMPtr<nsIDOMNode>& domNode,
-                                   PRInt32 entryNumber = -1);
+  NS_IMETHOD DeepRefreshEventHandlers(nsCOMPtr<nsIDOMNode>& domNode);
 
   /** Forces display of data in output buffer
    * @param flushAction type of flush action: display, split-off, clear, or
    *                                          close incomplete lines
    */
   NS_IMETHOD FlushOutput(FlushActionType flushAction);
+
+  /** Positions cursor below the last output element */
+  void PositionOutputCursor(mozILineTermAux* lineTermAux);
 
   /** Scrolls document to align bottom and left margin with screen */
   NS_IMETHOD ScrollToBottomLeft(void);
@@ -336,18 +381,17 @@ protected:
    */
   NS_IMETHOD GetRow(PRInt32 aRow, nsIDOMNode** aRowNode);
 
-  /** Returns DOM text node and offset corresponding to screen row/col position
+  /** Positions cursor to specified screen row/col position
    */
-  NS_IMETHOD GetScreenText(PRInt32 aRow, PRInt32 aCol,
-                           nsIDOMNode** aTextNode,
-                           PRInt32 *aOffset);
+  NS_IMETHOD PositionScreenCursor(PRInt32 aRow, PRInt32 aCol);
 
   /** Create a PRE element with attributes NAME="row", CLASS="row",
    * containing an empty text node, and insert it as a
    * child of the SCREEN element before beforeRowNode, or at the
    * end if beforeRowNode is null.
    */
-  NS_IMETHOD NewRow(nsIDOMNode* beforeRowNode);
+  NS_IMETHOD NewRow(nsIDOMNode* beforeRowNode,
+                    nsIDOMNode** resultNode);
 
   /** Displays screen output string with specified style
    * @param aString string to be processed
@@ -375,12 +419,16 @@ protected:
    * @param parentNode parent node for element
    * @param blockNode (output) block-level DOM node for created element
    * @param textNode (output) child text DOM node of element
+   * @param beforeNode child node before which to insert new node
+   *                   if null, insert after last child node
+   *                   (default value is null)
    */
   NS_IMETHOD NewElementWithText(const nsString& tagName,
                                 const nsString& name, PRInt32 number,
                                 nsIDOMNode* parentNode,
                                 nsCOMPtr<nsIDOMNode>& blockNode,
-                                nsCOMPtr<nsIDOMNode>& textNode);
+                                nsCOMPtr<nsIDOMNode>& textNode,
+                                nsIDOMNode* beforeNode = nsnull);
 
   /** Creates an empty anchor (A) element with tag name tagName with attributes
    * CLASS="classAttribute", and ID="classAttribute#", and appends it as a
@@ -407,11 +455,15 @@ protected:
    *             (If < 0, no ID attribute is defined)
    * @param parentNode parent node for element
    * @param blockNode (output) block-level DOM node for created element
+   * @param beforeNode child node before which to insert new node
+   *                   if null, insert after last child node
+   *                   (default value is null)
    */
   NS_IMETHOD NewElement(const nsString& tagName,
                         const nsString& name, PRInt32 number,
                         nsIDOMNode* parentNode,
-                        nsCOMPtr<nsIDOMNode>& blockNode);
+                        nsCOMPtr<nsIDOMNode>& blockNode,
+                        nsIDOMNode* beforeNode = nsnull);
 
   /** Creates a new DOM text node, and appends it as a child of the
    * specified parent.
@@ -571,6 +623,9 @@ protected:
   /** current text node for command output */
   nsCOMPtr<nsIDOMNode> mOutputTextNode;
 
+  /** line offset of current text node for command output */
+  PRInt32 mOutputTextOffset;
+
   /** current XMLTerm stream interface for stream display */
   nsCOMPtr<mozIXMLTermStream> mXMLTermStream;
 
@@ -592,12 +647,15 @@ protected:
   AutoDetectOption     mAutoDetect;
 
 
-  /** flag indicating whether a line break needs to be output */
-  PRBool               mLineBreakNeeded;
-
   /** flag marking the first line of output */
   PRBool               mFirstOutputLine;
 
+
+  /** total count of PRE/mixed text lines displayed for this entry */
+  PRInt32              mEntryOutputLines;
+
+  /** count of PRE complete text lines in buffer */
+  PRInt32              mPreTextBufferLines;
 
   /** buffer for incomplete line of PRE text */
   nsString             mPreTextIncomplete;

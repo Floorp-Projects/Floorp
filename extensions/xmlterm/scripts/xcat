@@ -23,13 +23,14 @@ my $dir = cwd();
 foreach my $url (@ARGV) {                 # for each argument
     my ($protocol, $slashpair, $username, $host, $port, $pathname);
 
+    # Check if argument is a valid URL
     if ( $url =~ m%\b                             # initiator
                  ([a-zA-Z]\w*)?:                  # protocol
                  (//)?                            # slashpair
                  (?:([\w.]+)@)?                   # username
                  ([\w\-]+(?:\.[\w\-]+)*)?         # host
                  (?::(\d+))?                      # port
-                 (/\S*?)?                         # pathname
+                 (/\S*?)                          # pathname
                  (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # terminator (look ahead)
                  %x ) {
 
@@ -45,6 +46,7 @@ foreach my $url (@ARGV) {                 # for each argument
 
 ##        print STDERR "Not an URL; assume local file $url\n";
 
+        # Create a file URL
         ($protocol, $slashpair, $username, $host, $port, $pathname) =
           ("file", "//", "", "", "", $url);
 
@@ -105,7 +107,7 @@ foreach my $url (@ARGV) {                 # for each argument
                  (?:([\w.]+)@)?                   # username
                  ([\w\-]+(?:\.[\w\-]+)*)?         # host
                  (?::(\d+))?                      # port
-                 (/\S*?)?                         # pathname
+                 (/\S*?)                          # pathname
                  (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # terminator (look ahead)
                  %x ) {
             $urlvals[$nurl] = $&;
@@ -120,7 +122,7 @@ foreach my $url (@ARGV) {                 # for each argument
             $urldesc = $urlstr if !$urldesc;
 
             my $clickcmd =
-                 qq%onclick="return clickXMLTerm('textlink',-#,'$urlstr')"%;
+                 qq%onClick="return HandleEvent(event,'click','textlink',-\#,'$urlstr')"%;
 
             print "\e{S$cookie\a";             # HTML stream escape sequence
             if ($nurl >= 2) {
@@ -138,25 +140,28 @@ foreach my $url (@ARGV) {                 # for each argument
         print "<pre>";
 
         while (<INFILE>) {
-            s/&/&amp;/g;
-            s/</&lt;/g;
-            s/>/"&gt;"/g;
-                s%\b                              # initiator
-                 ([a-zA-Z]\w*)?:                  # protocol
-                 (//)?                            # slashpair
-                 (?:([\w.]+)@)?                   # username
-                 ([\w\-]+(?:\.[\w\-]+)*)?         # host
-                 (?::(\d+))?                      # port
-                 (/\S*?)?                         # pathname
-                 (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # terminator (look ahead)
-                 %<span class="textlink" onClick="return clickXMLTerm('textlink',-1,'$&')">$&</span>%xg;
-                s/"&gt;"/&gt;/g;
+            s/&/&amp;/g;       # Replace & with &amp;
+            s/</&lt;/g;        # Replace < with &lt;
+            s/>/"&gt;"/g;      # Temporarily replace > with "&gt;"
+                               # to allow termination of <http://xyz.com> etc.
+
+            s%\b                              # URL word boundary
+             ([a-zA-Z]\w*)?:                  # protocol
+             (//)?                            # slashpair
+             (?:([\w.]+)@)?                   # username
+             ([\w\-]+(?:\.[\w\-]+)*)?         # host
+             (?::(\d+))?                      # port
+             (/\S*?)                          # pathname
+             (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # URL terminator (look ahead)
+             %<span class="textlink" onClick="return HandleEvent(event,'click','textlink',-\#,'$&')">$&</span>%xg;
+
+            s/"&gt;"/&gt;/g;   # Replace "&gt;" with &gt; in the end
 
             print $_;
         }
 
         print "</pre>";
-        print "\000";                      # Terminate HTML stream
+        print "\000";          # Terminate HTML stream
         close INFILE;
 
     } else {                            # unknown file type

@@ -46,7 +46,7 @@ foreach $file (glob("*")) {        # for each file in current directory
     if ($opt_window) {
         $sendcmd = "createln";
     } else {
-        $sendcmd = "sendln";
+        $sendcmd = "exec";
     }
 
     my ($filetype, $fileimg, $sendtxt1, $sendtxt2);
@@ -74,22 +74,23 @@ foreach $file (glob("*")) {        # for each file in current directory
         $_ = <INFILE>;
         close INFILE;
 
+        # Extract content URL and the icon URL (if any)
         my @urlvals;
         my $nurl = 0;
-        while ( m%\b                              # initiator
-                 (http|file|mailto):              # scheme
+        while ( m%\b                              # URL word boundary
+                 (http|file|mailto):              # protocol
                  (//)?                            # slashpair
                  (?:([\w.]+)@)?                   # username
                  ([\w\-]+(?:\.[\w\-]+)*)?         # host
                  (?::(\d+))?                      # port
-                 (/\S*?)?                         # pathname
-                 (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # terminator (look ahead)
+                 (/\S*?)                          # pathname
+                 (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # URL terminator (look ahead)
                  %x ) {
             $urlvals[$nurl] = $&;
             s%$&%%;
             $nurl++;
         }
-        s%\A\s*(\S.*?)?\s*\Z%$1%;
+        s%\A\s*(\S.*?)?\s*\Z%$1%;                 # trim leading/trailing space
 
         if ($nurl >= 1) {
             my $urldesc = $_;
@@ -100,9 +101,9 @@ foreach $file (glob("*")) {        # for each file in current directory
             
             $filetype = "urlfile";
             if ($nurl >= 2) {
-                $fileimg  = "$urlvals[1]";
+                $fileimg  = "$urlvals[1]";       # use icon URL
             } else {
-                $fileimg  = "$imgdir/$img{$filetype}";
+                $fileimg  = "$imgdir/$img{$filetype}";  #default URL icon
             }
             $sendtxt1 = "$urlstr";
             $sendtxt2 = "$urlstr";
@@ -124,7 +125,7 @@ foreach $file (glob("*")) {        # for each file in current directory
     my $tail = $comps[$#comps];            # file name
 
     my $clickcmd =
-     qq%onclick="return clickXMLTerm('$sendcmd',-\#,'$sendtxt1','$sendtxt2')"%;
+     qq%onClick="return HandleEvent(event,'click','$sendcmd',-\#,'$sendtxt1','$sendtxt2')"%;
 
     $rowimg .= "<TD><IMG HEIGHT=48 WIDTH=48 SRC='$fileimg' $clickcmd>";
     $rowtxt .= "<TD><SPAN CLASS='$filetype' $clickcmd>";

@@ -9,9 +9,11 @@ of invoking XMLterm.
               XMLterm control-flow/layering hierarchy
               =======================================
   
-          mozilla-executable                xmlterm-executable
+          mozilla-executable               geckoterm-executable
                  |                                 |
-       ../ui/content/xmlterm.html                  |
+       ../ui/content/xmlterm.xul                   |
+                 |                                 |
+       ../ui/content/xmlterm.html       ../ui/content/xmlterm.html
                  |                                 |
           mozXMLTermShell              ../geckoterm/mozGeckoTerm
                  |                              |        |
@@ -24,11 +26,11 @@ of invoking XMLterm.
      mozXMLTermSession    mozLineTermAux      mozXMLTermListeners
             |                   |                    |
             |                   |                    |
-   mozXMLTermStream...      (LineTerm)          (user input)
-   (rendering ...)      (pseudo-TTY/shell)
+      (rendering...)       (LineTerm)           (user input)
+                       (pseudo-TTY/shell)
 
 
-2 Dec 1999
+1 Mar 2000
 ===========================================================================
 FILES:
 

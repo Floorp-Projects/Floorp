@@ -438,7 +438,8 @@ int ltermWrite(struct lterms *lts, int *opcodes)
 /** Reads a (possibly incomplete) line from LTERM.
  * The LtermRead structure *LTR contains both input and output parameters,
  * returning opcodes values of 
- * OPCODES ::= STREAMDATA NEWLINE? COOKIESTR? DOCSTREAM? XMLSTREAM? WINSTREAM?
+ * OPCODES ::= STREAMDATA NEWLINE? ERROR?
+ *                        COOKIESTR? DOCSTREAM? XMLSTREAM? WINSTREAM?
  * if StreamMode data is being returned.
  *
  * OPCODES ::= SCREENDATA BELL? ( OUTPUT | CLEAR | INSERT | DELETE | SCROLL )?
@@ -790,10 +791,27 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
   return -1;
 }
 
+/** Interrupts output operations in response to an input TTY interrupt signal
+ * @return  0 if successful,
+ *         -1 if an error occurred
+ */
+int ltermInterruptOutput(struct lterms *lts)
+{
+  struct LtermOutput *lto = &(lts->ltermOutput);
+
+  if (lto->outputMode == LTERM0_STREAM_MODE) {
+    /* Abnormally terminate output stream */
+    lto->streamOpcodes |= LTERM_ERROR_CODE;
+  }
+
+  return 0;
+}
+
 
 /** Returns stream data from STDOUT
  * (Auxiliary procedure for ltermRead.)
- * OPCODES ::= STREAMDATA NEWLINE? COOKIESTR? DOCSTREAM? XMLSTREAM? WINSTREAM?
+ * OPCODES ::= STREAMDATA NEWLINE? ERROR?
+ *                        COOKIESTR? DOCSTREAM? XMLSTREAM? WINSTREAM?
  * The LtermRead structure *LTR contains both input and output parameters.
  * @return  0 if successful,
  *         -1 if an error occurred while reading,
@@ -806,8 +824,27 @@ static int ltermReturnStreamData(struct lterms *lts, struct LtermRead *ltr)
 
   LTERM_LOG(ltermReturnStreamData,30,("start\n"));
 
-  if (lto->decodedChars == 0)
+  if (lto->streamOpcodes & LTERM_ERROR_CODE) {
+    /* Error in stream output; terminate stream abnormally */
+    LTERM_LOG(ltermReturnStreamData,32,("Error termination of STREAM mode\n"));
+
+    if (lto->savedOutputMode == LTERM1_SCREEN_MODE) {
+      if (ltermSwitchToScreenMode(lts) != 0)
+        return -1;
+    } else {
+      if (ltermSwitchToLineMode(lts) != 0)
+        return -1;
+    }
+
+    ltr->opcodes = lto->streamOpcodes | LTERM_STREAMDATA_CODE
+                                      | LTERM_NEWLINE_CODE;
+    ltr->read_count = 0;
     return 0;
+
+  } else if (lto->decodedChars == 0) {
+    /* No output data available; return null opcode */
+    return 0;
+  }
 
   ltr->opcodes = LTERM_STREAMDATA_CODE | lto->streamOpcodes;
 
@@ -866,7 +903,7 @@ static int ltermReturnStreamData(struct lterms *lts, struct LtermRead *ltr)
         if (ltermSwitchToLineMode(lts) != 0)
           return -1;
       }
-      LTERM_LOG(ltermReturnStreamData,22,("terminating STREAM mode\n"));
+      LTERM_LOG(ltermReturnStreamData,32,("terminating STREAM mode\n"));
     }
   }
 

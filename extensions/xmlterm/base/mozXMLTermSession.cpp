@@ -74,9 +74,12 @@ const char* const mozXMLTermSession::sessionElementNames[] = {
   "command",
   "stdin",
   "stdout",
-  "stderr"
+  "stderr",
+  "mixed",
+  "warning"
 };
 
+// Should HTML event names should always be in lower case for DOM to work?
 const char* const mozXMLTermSession::sessionEventNames[] = {
   "click",
   "dblclick"
@@ -119,7 +122,7 @@ mozXMLTermSession::mozXMLTermSession() :
   mStartEntryNode(nsnull),
   mCurrentEntryNode(nsnull),
 
-  mMaxHistory(50),
+  mMaxHistory(20),
   mStartEntryNumber(0),
   mCurrentEntryNumber(0),
 
@@ -142,9 +145,10 @@ mozXMLTermSession::mozXMLTermSession() :
   mMetaCommandType(NO_META_COMMAND),
   mAutoDetect(FIRST_LINE),
 
-  mLineBreakNeeded(false),
   mFirstOutputLine(false),
 
+  mEntryOutputLines(0),
+  mPreTextBufferLines(0),
   mPreTextIncomplete(""),
   mPreTextBuffered(""),
   mPreTextDisplayed(""),
@@ -456,7 +460,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 {
   PRInt32 opcodes, opvals, buf_row, buf_col;
   PRUnichar *buf_str, *buf_style;
-  PRBool newline, streamData, screenData;
+  PRBool newline, errorFlag, streamData, screenData;
   nsAutoString bufString, bufStyle;
 
   XMLT_LOG(mozXMLTermSession::ReadAll,60,("\n"));
@@ -490,6 +494,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
     screenData = (opcodes & LTERM_SCREENDATA_CODE);
     streamData = (opcodes & LTERM_STREAMDATA_CODE);
     newline =    (opcodes & LTERM_NEWLINE_CODE);
+    errorFlag =  (opcodes & LTERM_ERROR_CODE);
 
     // Copy character/style strings
     bufString = buf_str;
@@ -507,8 +512,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       // Initiate screen mode
       XMLT_LOG(mozXMLTermSession::ReadAll,62,("Initiate SCREEN mode\n"));
 
-      // Break stream output display
-      result = BreakOutput();
+      // Break output display
+      result = BreakOutput(PR_FALSE);
       if (NS_FAILED(result))
         break;
 
@@ -534,12 +539,26 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       // Delete screen element
       nsCOMPtr<nsIDOMNode> resultNode;
       mSessionNode->RemoveChild(mScreenNode, getter_AddRefs(resultNode));
+      if (NS_FAILED(result))
+        break;
       mScreenNode = nsnull;
 
       if (mRestoreInputEcho) {
         lineTermAux->SetEchoFlag(true);
         mRestoreInputEcho = false;
       }
+
+      // Show the caret
+      // WORKAROUND for some unknown bug in the full screen implementation.
+      // Without this, if you delete a line using "vi" and save the file,
+      // the cursor suddenly disappears
+      nsCOMPtr<nsICaret> caret;
+      if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret)))) {
+  	caret->SetCaretVisible(PR_TRUE);
+  	caret->SetCaretReadOnly(PR_FALSE);
+      }
+
+      mPresShell->SetCaretEnabled(PR_TRUE);
     }
 
     if (streamData) {
@@ -570,9 +589,9 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           }
 
         } else {
-          // Insecure stream; treat as text fragment
+          // Insecure stream; do not display
           streamURL = "http://in.sec.ure";
-          streamMarkupType = TEXT_FRAGMENT;
+          streamMarkupType = INSECURE_FRAGMENT;
         }
 
         if (!(opcodes & LTERM_JSSTREAM_CODE) &&
@@ -604,8 +623,12 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           mEntryHasOutput = true;
         }
 
+        if (errorFlag) {
+          mOutputMarkupType = INCOMPLETE_FRAGMENT;
+        }
+
         // Break stream output display
-        result = BreakOutput();
+        result = BreakOutput(PR_TRUE);
         if (NS_FAILED(result))
           break;
 
@@ -669,7 +692,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           }
 
           for (row=0; row < opvals; row++)
-            NewRow(rowNode);
+            NewRow(rowNode, getter_AddRefs(resultNode));
         }
 
       } else if (opcodes & LTERM_DELETE_CODE) {
@@ -706,7 +729,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           }
 
           for (row=0; row < opvals; row++)
-            NewRow(rowNode);
+            NewRow(rowNode, getter_AddRefs(resultNode));
         }
 
       } else if (opcodes & LTERM_SCROLL_CODE) {
@@ -729,7 +752,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           break;
       }
 
-      // Determine cursor position
+      // Determine cursor position and position cursor
       PRInt32 cursorRow = 0;
       PRInt32 cursorCol = 0;
       result = lineTermAux->GetCursorRow(&cursorRow);
@@ -738,26 +761,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       XMLT_LOG(mozXMLTermSession::ReadAll,62, ("cursorRow=%d, cursorCol=%d\n",
                                                cursorRow, cursorCol));
 
-      // Get selection
-      nsCOMPtr<nsIDOMSelection> selection;
-
-      result = mPresShell->GetSelection(SELECTION_NORMAL,
-                                        getter_AddRefs(selection));
-      if (NS_SUCCEEDED(result) && selection) {
-        // Collapse selection to cursor position
-        nsCOMPtr<nsIDOMNode> cursTextNode;
-        PRInt32 offset;
-
-        result = GetScreenText(cursorRow, cursorCol,
-                               getter_AddRefs(cursTextNode), &offset);
-
-        if (NS_FAILED(result) || !cursTextNode)
-          break;
-
-        result = selection->Collapse(cursTextNode, offset);
-        if (NS_FAILED(result))
-          break;
-      }
+      result = PositionScreenCursor(cursorRow, cursorCol);
 
     } else {
       // Process line data
@@ -875,7 +879,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         // Display meta command
         if (mEntryHasOutput) {
           // Break previous output display
-          result = BreakOutput();
+          result = BreakOutput(PR_FALSE);
 
           // Create new entry block
           result = NewEntry(promptStr);
@@ -1008,7 +1012,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
               break;
 
             // Break metacommand output display
-            result = BreakOutput();
+            result = BreakOutput(PR_FALSE);
           }
 
           // Reset newline flag
@@ -1024,7 +1028,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         // Prompt line
         if (mEntryHasOutput) {
           // Break previous output display
-          result = BreakOutput();
+          result = BreakOutput(PR_FALSE);
 
           // Create new entry block
           result = NewEntry(promptStr);
@@ -1110,10 +1114,11 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
     // Flush output, splitting off incomplete line
     result = FlushOutput(SPLIT_INCOMPLETE_FLUSH);
 
-    // printf("mozXMLTermSession::ReadAll (flush)\n");
+    if (mEntryHasOutput)
+      PositionOutputCursor(lineTermAux);
+
     result = mPresShell->ScrollSelectionIntoView(SELECTION_NORMAL,
                                                  SELECTION_FOCUS_REGION);
-
   }
 
   // Scroll frame (ignore result)
@@ -1290,13 +1295,16 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
                                              streamMarkupType));
 
   // Break previous output display
-  result = BreakOutput();
+  result = BreakOutput(PR_FALSE);
   if (NS_FAILED(result))
     return result;
 
-  if ((streamMarkupType == TEXT_FRAGMENT) ||
-      (streamMarkupType == JS_FRAGMENT) ||
-      (streamMarkupType == HTML_FRAGMENT)) {
+  if ((streamMarkupType == TEXT_FRAGMENT)     ||
+      (streamMarkupType == JS_FRAGMENT)       ||
+      (streamMarkupType == HTML_FRAGMENT)     ||
+      (streamMarkupType == INSECURE_FRAGMENT) ||
+      (streamMarkupType == OVERFLOW_FRAGMENT) ||
+      (streamMarkupType == INCOMPLETE_FRAGMENT)) {
     // Initialize fragment buffer
     mFragmentBuffer = "";
 
@@ -1379,18 +1387,22 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
 
 
 /** Breaks output display by flushing and deleting incomplete lines */
-NS_IMETHODIMP mozXMLTermSession::BreakOutput(void)
+NS_IMETHODIMP mozXMLTermSession::BreakOutput(PRBool positionCursorBelow)
 {
   nsresult result;
 
-  XMLT_LOG(mozXMLTermSession::BreakOutput,70,("mOutputMarkupType=%d\n",
-                                              mOutputMarkupType));
+  XMLT_LOG(mozXMLTermSession::BreakOutput,70,
+           ("positionCursorBelow=%x, mOutputMarkupType=%d\n",
+             positionCursorBelow, mOutputMarkupType));
 
   if (!mEntryHasOutput)
     return NS_OK;
 
   switch (mOutputMarkupType) {
 
+  case INSECURE_FRAGMENT:
+  case OVERFLOW_FRAGMENT:
+  case INCOMPLETE_FRAGMENT:
   case TEXT_FRAGMENT:
     {
       // Display text fragment using new SPAN node
@@ -1407,6 +1419,20 @@ NS_IMETHODIMP mozXMLTermSession::BreakOutput(void)
       nsCOMPtr<nsIDOMNode> resultNode;
       result = mOutputBlockNode->AppendChild(spanNode,
                                              getter_AddRefs(resultNode));
+
+      // Handle stream output error messages
+      switch (mOutputMarkupType) {
+      case INSECURE_FRAGMENT:
+        mFragmentBuffer = "XMLTerm: *Error* Insecure stream data; is LTERM_COOKIE set?";
+        break;
+
+      case INCOMPLETE_FRAGMENT:
+        mFragmentBuffer = "XMLTerm: *Error* Incomplete stream data";
+        break;
+
+      default:
+        break;
+      }
 
       // Display text
       result = SetDOMText(textNode, mFragmentBuffer);
@@ -1467,6 +1493,7 @@ NS_IMETHODIMP mozXMLTermSession::BreakOutput(void)
     if (NS_FAILED(result))
       return result;
 
+    mPreTextBufferLines = 0;
     mPreTextBuffered = "";
     mPreTextDisplayed = "";
     mOutputDisplayNode = nsnull;
@@ -1477,6 +1504,10 @@ NS_IMETHODIMP mozXMLTermSession::BreakOutput(void)
 
   // Revert to plain text type
   mOutputMarkupType = PLAIN_TEXT;
+
+  if (positionCursorBelow) {
+    PositionOutputCursor(nsnull);
+  }
 
   return NS_OK;
 }
@@ -1512,14 +1543,32 @@ NS_IMETHODIMP mozXMLTermSession::ProcessOutput(const nsString& aString,
 
     switch (mOutputMarkupType) {
 
+    case INSECURE_FRAGMENT:
+    case OVERFLOW_FRAGMENT:
+    case INCOMPLETE_FRAGMENT:
+      // Do nothing
+      break;
+
     case TEXT_FRAGMENT:
     case JS_FRAGMENT:
     case HTML_FRAGMENT:
       // Append complete lines to fragment buffer
       if (newline || streamOutput) {
-        mFragmentBuffer += aString;
-        if (newline)
-          mFragmentBuffer += '\n';
+        PRInt32 strLen = mFragmentBuffer.Length()+aString.Length();
+
+        if (strLen < 100000) {
+          mFragmentBuffer += aString;
+          if (newline)
+            mFragmentBuffer += '\n';
+
+        } else {
+          mOutputMarkupType = OVERFLOW_FRAGMENT;
+          mFragmentBuffer = "XMLTerm: *Error* Stream data overflow (";
+          mFragmentBuffer.Append(strLen,10);
+          mFragmentBuffer.Append(" chars)");
+        break;
+
+        }
       }
 
       break;
@@ -1555,10 +1604,151 @@ NS_IMETHODIMP mozXMLTermSession::ProcessOutput(const nsString& aString,
 }
 
 
+/** Ensures the total number of output lines stays within a limit
+ * by deleting the oldest output line.
+ * @param deleteAllOld if true, delete all previous display nodes
+ *                     (excluding the current one)
+ */
+NS_IMETHODIMP mozXMLTermSession::LimitOutputLines(PRBool deleteAllOld)
+{
+  nsresult result;
+  nsAutoString attValue;
+
+  XMLT_LOG(mozXMLTermSession::LimitOutputLines,70,
+           ("deleteAllOld=%d, mEntryOutputLines=%d\n",
+            deleteAllOld, mEntryOutputLines));
+
+  nsCOMPtr<nsIDOMNode> firstChild;
+  result = mOutputBlockNode->GetFirstChild(getter_AddRefs(firstChild));
+  if (NS_FAILED(result) || !firstChild)
+    return NS_ERROR_FAILURE;
+
+  result = mozXMLTermUtils::GetNodeAttribute(firstChild, "class", attValue);
+  if (NS_FAILED(result))
+    return result;
+
+  if (!attValue.Equals(sessionElementNames[WARNING_ELEMENT])) {
+    // Create warning message element
+    nsCOMPtr<nsIDOMNode> divNode, textNode;
+    nsAutoString tagName = "div";
+    nsAutoString elementName = sessionElementNames[WARNING_ELEMENT];
+    result = NewElementWithText(tagName, elementName, -1,
+                                mOutputBlockNode, divNode, textNode,
+                                firstChild);
+    if (NS_FAILED(result) || !divNode || !textNode)
+      return NS_ERROR_FAILURE;
+
+    firstChild = divNode;
+
+    nsAutoString warningMsg ="XMLTerm: *WARNING* Command output truncated to ";
+    warningMsg.Append(300,10);
+    warningMsg.Append(" lines");
+    result = SetDOMText(textNode, warningMsg);
+  }
+
+  PR_ASSERT(mOutputDisplayNode != firstChild);
+
+  nsCOMPtr<nsIDOMNode> nextChild;
+
+  PRInt32 decrementedLineCount = 0;
+
+  for (;;) {
+    result = firstChild->GetNextSibling(getter_AddRefs(nextChild));
+    PR_ASSERT(NS_SUCCEEDED(result) && nextChild);
+
+    // Do not modify current display node
+    if (nextChild.get() == mOutputDisplayNode.get())
+      break;
+
+    PRInt32 deleteNode = 0;
+
+    if (deleteAllOld) {
+      deleteNode = 1;
+
+    } else {
+      result = mozXMLTermUtils::GetNodeAttribute(nextChild, "class", attValue);
+
+      if (NS_FAILED(result)|| (attValue.Length() == 0)) {
+        deleteNode = 1;
+
+      } else {
+
+        if (attValue.Equals(sessionElementNames[MIXED_ELEMENT])) {
+          // Delete single line containing mixed style output
+          deleteNode = 1;
+          decrementedLineCount = 1;
+
+          XMLT_LOG(mozXMLTermSession::LimitOutputLines,79,
+                   ("deleted mixed line\n"));
+
+        } else if ( (attValue.Equals(sessionElementNames[STDIN_ELEMENT]))  ||
+                    (attValue.Equals(sessionElementNames[STDOUT_ELEMENT])) ||
+                    (attValue.Equals(sessionElementNames[STDERR_ELEMENT]))) {
+          // Delete first line from STDIN/STDOUT/STDERR PRE output
+
+          nsCOMPtr<nsIDOMNode> textNode;
+          result = nextChild->GetFirstChild(getter_AddRefs(textNode));
+          PR_ASSERT( NS_SUCCEEDED(result) && textNode);
+
+          nsCOMPtr<nsIDOMText> domText (do_QueryInterface(textNode));
+          PR_ASSERT(domText);
+
+          // Delete first line from text
+          nsAutoString text;
+          domText->GetData(text);
+
+          PRInt32 offset = text.FindChar((PRUnichar) U_LINEFEED);
+
+          if (offset < 0) {
+            deleteNode = 1;
+          } else {
+            text.Cut(0,offset+1);
+            domText->SetData(text);
+          }
+          decrementedLineCount = 1;
+
+          XMLT_LOG(mozXMLTermSession::LimitOutputLines,79,
+                   ("deleted PRE line\n"));
+
+        } else {
+          // Unknown type of DOM element, delete
+          deleteNode = 1;
+        }
+      }
+    }
+
+    if (deleteNode) {
+      // Delete next child node
+      nsCOMPtr<nsIDOMNode> resultNode;
+      result = mOutputBlockNode->RemoveChild(nextChild,
+                                             getter_AddRefs(resultNode));
+      if (NS_FAILED(result))
+        return result;
+    }
+
+    if (decrementedLineCount || !deleteNode)
+      break;
+  }
+
+  if (deleteAllOld) {
+    mEntryOutputLines = 0;
+    return NS_OK;
+
+  } else if (decrementedLineCount) {
+    mEntryOutputLines--;
+    return NS_OK;
+
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+}
+
+
 /** Appends text string to output buffer
  *  (appended text may need to be flushed for it to be actually displayed)
- * @param aString string to be processed
+ * @param aString string to be processed (may be null string, for dummy line)
  * @param aStyle style values for string (see lineterm.h)
+ *               (may be a single Unichar, for uniform style)
  *               (if it is a null string, STDOUT style is assumed)
  * @param newline true if this is a complete line of output
  */
@@ -1572,21 +1762,21 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
   const PRInt32   styleLength = aStyle.Length();
   const PRUnichar *strStyle   = aStyle.GetUnicode();
 
-  XMLT_LOG(mozXMLTermSession::AppendOutput,70,("\n"));
+  XMLT_LOG(mozXMLTermSession::AppendOutput,70,("strLength=%d\n", strLength));
 
   // Check if line has uniform style
-  PRUnichar allStyles = LTERM_STDOUT_STYLE;
   PRUnichar uniformStyle = LTERM_STDOUT_STYLE;
+  PRInt32 styleChanges = 0;
 
   if (styleLength > 0) {
     PRInt32 j;
-    allStyles = strStyle[0];
     uniformStyle = strStyle[0];
 
-    for (j=1; j<strLength; j++) {
-      allStyles |= strStyle[j];
-      if (strStyle[j] != strStyle[0]) {
+    PR_ASSERT((styleLength == 1) || (styleLength == strLength));
+    for (j=1; j<styleLength; j++) {
+      if (strStyle[j] != strStyle[j-1]) {
         uniformStyle = 0;
+        styleChanges++;
       }
     }
   }
@@ -1604,14 +1794,18 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
   // Do not use PRE text
   if (0) {
 #else
-  if ((uniformStyle == LTERM_STDOUT_STYLE) ||
-      (uniformStyle == LTERM_STDERR_STYLE)) {
+  if (uniformStyle != 0) {
 #endif
-    // Pure STDOUT/STDERR data; display as preformatted block
+    // Uniform style data; display as preformatted block
     OutputDisplayType preDisplayType;
     nsAutoString elementName = "";
 
-    if (uniformStyle == LTERM_STDERR_STYLE) {
+    if (uniformStyle == LTERM_STDIN_STYLE) {
+      preDisplayType = PRE_STDIN_NODE;
+      elementName = sessionElementNames[STDIN_ELEMENT];
+      XMLT_LOG(mozXMLTermSession::AppendOutput,72, ("PRE_STDIN_NODE\n"));
+
+    } else if (uniformStyle == LTERM_STDERR_STYLE) {
       preDisplayType = PRE_STDERR_NODE;
       elementName = sessionElementNames[STDERR_ELEMENT];
       XMLT_LOG(mozXMLTermSession::AppendOutput,72, ("PRE_STDERR_NODE\n"));
@@ -1647,6 +1841,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
       mOutputDisplayType = preDisplayType;
       mOutputDisplayNode = preNode;
       mOutputTextNode = textNode;
+      mOutputTextOffset = 0;
 
       // Display incomplete line
       result = SetDOMText(mOutputTextNode, aString);
@@ -1656,6 +1851,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
       // Initialize PRE text string buffers
       mPreTextDisplayed = aString;
       mPreTextBuffered = "";
+      mPreTextBufferLines = 0;
     }
 
     // Save incomplete line
@@ -1663,92 +1859,152 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
 
     if (newline) {
       // Complete line; append to buffer
-      if (mPreTextBuffered.Length() > 0) {
+      if (mPreTextBufferLines > 0) {
         mPreTextBuffered += '\n';
       }
+      mPreTextBufferLines++;
       mPreTextBuffered += mPreTextIncomplete;
       mPreTextIncomplete = "";
-    }
 
-    mLineBreakNeeded = false;
+      if (mPreTextBufferLines > 300) {
+        // Delete all earlier PRE/mixed blocks and first line of current block
+
+        result = LimitOutputLines(true);
+        if (NS_FAILED(result))
+          return result;
+
+        // Delete first line from PRE text buffer
+        PRInt32 offset = mPreTextBuffered.FindChar((PRUnichar) U_LINEFEED);
+        if (offset < 0) {
+          mPreTextBuffered = "";
+        } else {
+          mPreTextBuffered.Cut(0,offset+1);
+        }
+
+        mPreTextBufferLines--;
+
+      } else if (mEntryOutputLines+mPreTextBufferLines > 300) {
+        // Delete oldest PRE/mixed line so as to stay within the limit
+
+        result = LimitOutputLines(false);
+        if (NS_FAILED(result))
+          return result;
+      }
+    }
 
     XMLT_LOG(mozXMLTermSession::AppendOutput,72,
-             ("mPreTextDisplayed.Length()=%d, mPreTextBuffered.Length()=%d\n",
-              mPreTextDisplayed.Length(), mPreTextBuffered.Length()));
+             ("mPreTextDisplayed.Length()=%d, mPreTextBufferLines()=%d\n",
+              mPreTextDisplayed.Length(), mPreTextBufferLines));
 
   } else {
-    // Create uniform style SPAN display node
-    OutputDisplayType spanDisplayType;
-    nsAutoString elementName = "";
+    // Create uniform style DIV display node
 
-    if (uniformStyle == LTERM_STDERR_STYLE) {
-      // STDERR style
-      spanDisplayType = SPAN_STDERR_NODE;
-      elementName = sessionElementNames[STDERR_ELEMENT];
-      XMLT_LOG(mozXMLTermSession::AppendOutput,72,("SPAN_STDERR_NODE\n"));
+    XMLT_LOG(mozXMLTermSession::AppendOutput,72,("DIV_MIXED_NODE\n"));
 
-    } else {
-      // STDOUT style (the default output style)
-      spanDisplayType = SPAN_STDOUT_NODE;
-      elementName = sessionElementNames[STDOUT_ELEMENT];
-      XMLT_LOG(mozXMLTermSession::AppendOutput,72,("SPAN_STDOUT_NODE\n"));
-    }
-
-    PRBool preDisplay = (mOutputDisplayType == PRE_STDOUT_NODE) ||
-                        (mOutputDisplayType == PRE_STDERR_NODE);
-
-    if (preDisplay) {
-      // Flush buffer, clearing incomplete line
-      result = FlushOutput(CLEAR_INCOMPLETE_FLUSH);
-    }
-
-    if (mLineBreakNeeded) {
-      // Insert line break element
-      result = NewBreak(mOutputBlockNode);
-      mLineBreakNeeded = false;
-    }
-
-    if (elementName.Length() > 0) {
-      // Create new SPAN node
-      nsCOMPtr<nsIDOMNode> spanNode, textNode;
-      nsAutoString tagName = "span";
-      result = NewElementWithText(tagName, elementName, -1,
-                                  mOutputBlockNode, spanNode, textNode);
-
-      if (NS_FAILED(result) || !spanNode || !textNode)
-        return NS_ERROR_FAILURE;
-
-      XMLT_LOG(mozXMLTermSession::AppendOutput,72,
-               ("Creating new SPAN node\n"));
-
-      if (mOutputDisplayNode != nsnull) {
-        // Replace node
-        nsCOMPtr<nsIDOMNode> resultNode;
-        result = mOutputBlockNode->ReplaceChild(spanNode, mOutputDisplayNode,
-                                                getter_AddRefs(resultNode));
-      } else {
-        // Append node
-        nsCOMPtr<nsIDOMNode> resultNode;
-        result = mOutputBlockNode->AppendChild(spanNode,
-                                                getter_AddRefs(resultNode));
-      }
-
-      mOutputDisplayType = spanDisplayType;
-      mOutputDisplayNode = spanNode;
-      mOutputTextNode = textNode;
-    }
-
-    // Display line
-    result = SetDOMText(mOutputTextNode, aString);
+    // Flush buffer, clearing incomplete line
+    result = FlushOutput(CLEAR_INCOMPLETE_FLUSH);
     if (NS_FAILED(result))
+      return result;
+
+    // Create new DIV node
+    nsAutoString elementName = sessionElementNames[MIXED_ELEMENT];
+    nsCOMPtr<nsIDOMNode> divNode;
+    nsAutoString tagName = "div";
+    result = NewElement(tagName, elementName, -1,
+                        mOutputBlockNode, divNode);
+
+    if (NS_FAILED(result) || !divNode)
       return NS_ERROR_FAILURE;
 
+    // Append node
+    nsCOMPtr<nsIDOMNode> resultNode;
+    result = mOutputBlockNode->AppendChild(divNode,
+                                                getter_AddRefs(resultNode));
+    if (NS_FAILED(result))
+      return result;
+
+    nsCOMPtr<nsIDOMNode> spanNode, textNode;
+    nsAutoString subString;
+    PRInt32 k;
+    PRInt32 passwordPrompt = 0;
+    PRUnichar currentStyle = LTERM_STDOUT_STYLE;
+    if (styleLength > 0) 
+      currentStyle = strStyle[0];
+
+    mOutputTextOffset = 0;
+    tagName = "span";
+
+    PR_ASSERT(strLength > 0);
+
+    for (k=1; k<strLength+1; k++) {
+      if ((k == strLength) || ((k < styleLength) &&
+                               (strStyle[k] != currentStyle)) ) {
+        // Change of style or end of string
+        switch (currentStyle) {
+        case LTERM_STDIN_STYLE:
+          elementName = sessionElementNames[STDIN_ELEMENT];
+          break;
+        case LTERM_STDERR_STYLE:
+          elementName = sessionElementNames[STDERR_ELEMENT];
+          break;
+        default:
+          elementName = sessionElementNames[STDOUT_ELEMENT];
+          break;
+        }
+
+        result = NewElementWithText(tagName, elementName, -1,
+                                    divNode, spanNode, textNode);
+
+        if (NS_FAILED(result) || !spanNode || !textNode)
+          return NS_ERROR_FAILURE;
+
+        aString.Mid(subString, mOutputTextOffset, k-mOutputTextOffset);
+        result = SetDOMText(textNode, subString);
+        if (NS_FAILED(result))
+          return result;
+
+        if (k < styleLength) {
+          // Change style
+          PRInt32 strLen = subString.Length();
+          if ((styleChanges = 1) &&
+              (currentStyle == LTERM_STDOUT_STYLE)         &&
+              (strStyle[k] == LTERM_STDIN_STYLE)           &&
+              ( ((strLen-10) == subString.RFind("password: ",PR_TRUE)) ||
+                ((strLen-9) == subString.RFind("password:",PR_TRUE))) ) {
+            // Password prompt detected; break loop
+            passwordPrompt = 1;
+            break;
+          }
+
+          currentStyle = strStyle[k];
+          mOutputTextOffset = k;
+        }
+      }
+    }
+
+    mOutputDisplayType = DIV_MIXED_NODE;
+    mOutputDisplayNode = divNode;
+    mOutputTextNode = textNode;
+
     if (newline) {
+      // Increment total output line count for entry
+      mEntryOutputLines++;
+
+      if (mEntryOutputLines > 300) {
+        // Delete oldest PRE/mixed line so as to stay within the limit
+        result = LimitOutputLines(false);
+        if (NS_FAILED(result))
+          return result;
+      }
+
+      if (passwordPrompt) {
+        result = mOutputBlockNode->RemoveChild(mOutputDisplayNode,
+                                               getter_AddRefs(resultNode));
+      }
       mOutputDisplayType = NO_NODE;
       mOutputDisplayNode = nsnull;
       mOutputTextNode = nsnull;
 
-      mLineBreakNeeded = true;
     }
   }
 
@@ -1874,11 +2130,11 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
     for (j=0; j<SESSION_EVENT_TYPES; j++) {
       markupString += " on";
       markupString += sessionEventNames[j];
-      markupString += "=\"return ";
+      markupString += "=\"return HandleEvent(event, '";
       markupString += sessionEventNames[j];
-      markupString += "XMLTerm('";
+      markupString += "','";
       markupString += fileTypeNames[fileType];
-      markupString += "',-1,'";
+      markupString += "',-#,'";
       markupString += pathname;
       markupString += "');\"";
     }
@@ -1934,8 +2190,9 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
  * @param aString HTML fragment string to be inserted
  * @param parentNode parent node for HTML fragment
  * @param entryNumber entry number (default value = -1)
- *                   (if entryNumber >= 0, all '#' characters in aString
- *                    are substituted by entryNumber)
+ *                   (if entryNumber >= 0, all '#' characters in
+ *                    id/onclick/ondblclick attribute values are substituted
+ *                    with entryNumber)
  * @param beforeNode child node before which to insert fragment;
  *                   if null, insert after last child node
  *                   (default value is null)
@@ -2019,6 +2276,15 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
   if (!docfragNode)
     return NS_ERROR_FAILURE;
 
+  // Sanitize all nodes in document fragment (deep)
+  result = DeepSanitizeFragment(docfragNode, nsnull, entryNumber);
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+
+  // If fragment was deleted during the sanitization process, simply return
+  if (!docfragNode)
+    return NS_OK;
+
   // Insert child nodes of document fragment before PRE text node
   nsCOMPtr<nsIDOMNode> childNode;
   result = docfragNode->GetFirstChild(getter_AddRefs(childNode));
@@ -2068,7 +2334,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
       return result;
 
     // Refresh attributes of inserted child node (deep)
-    DeepRefreshAttributes(resultNode, entryNumber);
+    DeepRefreshEventHandlers(resultNode);
 
     childNode = nextChild;
   }
@@ -2078,58 +2344,268 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
 }
 
 
-/** Deep refresh of selected attributes for DOM elements
- * (WORKAROUND for inserting HTML fragments properly)
- * @param domNode DOM node of branch to be refreshed
- * @param entryNumber entry number (default value = -1)
- *                   (if entryNumber >= 0, all '#' characters in event
- *                    handler scripts are substituted by entryNumber)
+/** Substitute all occurrences of the '#' character in aString with
+ * aNumber, if aNumber >= 0;
+ * @ param aString string to be modified
+ * @ param aNumber number to substituted
  */
-NS_IMETHODIMP mozXMLTermSession::DeepRefreshAttributes(
-                                  nsCOMPtr<nsIDOMNode>& domNode,
-                                  PRInt32 entryNumber)
+void mozXMLTermSession::SubstituteCommandNumber(nsString& aString,
+                                                PRInt32 aNumber)
 {
-  static const PRInt32 REFRESH_ATTRIBUTE_NAMES = 3;
-  static const char* const refreshAttributeNames[] = {
-    "id",
-    "onclick",
-    "ondblclick"
-  };
 
-  nsresult result;
+  if (aNumber < 0)
+    return;
+
+  PRInt32 numberOffset;
   nsAutoString numberString = "";
 
-  if (entryNumber >= 0)
-    numberString.Append(entryNumber,10);
+  numberString.Append(aNumber,10);
+
+  for (;;) {
+    // Search for '#' character
+    numberOffset = aString.FindChar((PRUnichar) '#');
+
+    if (numberOffset < 0)
+      break;
+
+    // Substitute '#' with supplied number
+    aString.Cut(numberOffset,1);
+    aString.Insert(numberString, numberOffset);
+  }
+}
+
+
+/** Sanitize event handler attribute values by imposing syntax checks.
+ * @param aAttrValue attribute value to be sanitized
+ * @param aEventName name of event being handled ("click", "dblclick", ...)
+ */
+void mozXMLTermSession::SanitizeAttribute(nsString& aAttrValue,
+                                          const char* aEventName)
+{
+  // ****************NOTE***************
+  // At the moment this method simply prevents the word function and the
+  // the character '{' both occurring in the event handler attribute.
+  // NEEDS TO BE IMPROVED TO ENFORCE STRICTER REQUIREMENTS
+  // such as: the event handler attribute should always be of the form
+  // "return EventHandler(str_arg1, num_arg2, str_arg3, str_arg4);"
+
+  if ((aAttrValue.FindChar((PRUnichar)'{') >= 0) &&
+      (aAttrValue.Find("function") >= 0)) {
+    // Character '{' and string "function" both found in attribute value;
+    // set to null string
+
+    char* temCString = aAttrValue.ToNewCString();
+    XMLT_WARNING("mozXMLTermSession::SanitizeAttribute: Warning - deleted attribute on%s='%s'\n", aEventName, temCString);
+    nsCRT::free(temCString);
+
+    aAttrValue = "";
+  }
+
+  return;
+}
+
+
+/** Deep sanitizing of event handler attributes ("on*") prior to insertion
+ * of HTML fragments, to enfore consistent UI behaviour in XMLTerm and
+ * for security. The following actions are carried out:
+ * 1. Any SCRIPT tags in the fragment are simply deleted
+ * 2. All event handler attributes, except a few selected ones, are deleted.
+ * 3. The retained event handler attribute values are subject to strict
+ *    checks.
+ * 4. If entryNumber >= 0, all '#' characters in the ID attribute and
+ *     retained event handler attributes are substituted with entryNumber.
+ *     
+ * @param domNode DOM node for HTML fragment to be sanitized
+ * @param parentNode parent DOM node (needed to delete SCRIPT elements;
+ *                                    set to null if root element)
+ * @param entryNumber entry number (default value = -1)
+ */
+NS_IMETHODIMP mozXMLTermSession::DeepSanitizeFragment(
+                                  nsCOMPtr<nsIDOMNode>& domNode,
+                                  nsIDOMNode* parentNode,
+                                  PRInt32 entryNumber)
+{
+  nsresult result;
+  PRInt32 j;
+
+  XMLT_LOG(mozXMLTermSession::DeepSanitizeFragment,72,("entryNumber=%d\n",
+                                                       entryNumber));
+
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(domNode);
+
+  if (domElement) {
+    // Check if this is a script element (IGNORE CASE)
+    nsAutoString tagName = "";
+    result = domElement->GetTagName(tagName);
+
+    if (NS_SUCCEEDED(result) && tagName.EqualsIgnoreCase("script")) {
+      // Remove script element and return
+
+      XMLT_WARNING("mozXMLTermSession::DeepSanitizeFragment: Warning - rejected SCRIPT element in inserted HTML fragment\n");
+
+      if (parentNode) {
+        nsCOMPtr<nsIDOMNode> resultNode;
+        result = parentNode->RemoveChild(domNode, getter_AddRefs(resultNode));
+        if (NS_FAILED(result))
+          return result;
+
+      } else {
+        domNode = nsnull;
+      }
+
+      return NS_OK;
+    }
+
+    nsAutoString eventAttrVals[SESSION_EVENT_TYPES];
+    for (j=0; j<SESSION_EVENT_TYPES; j++)
+      eventAttrVals[j] = "";
+
+    nsAutoString attName, attValue;
+
+    for (j=0; j<SESSION_EVENT_TYPES; j++) {
+      attName = "on";
+      attName.Append(sessionEventNames[j]);
+
+      result = domElement->GetAttribute(attName, attValue);
+      if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
+        // Save allowed event attribute value for re-insertion
+        eventAttrVals[j] = attValue;
+      }
+    }
+
+    nsCOMPtr<nsIDOMNamedNodeMap> namedNodeMap(nsnull);
+    result = domNode->GetAttributes(getter_AddRefs(namedNodeMap));
+
+    if (NS_SUCCEEDED(result) && namedNodeMap) {
+      // Cycle through all attributes and delete all event attributes ("on*")
+      PRUint32 nodeCount;
+      result = namedNodeMap->GetLength(&nodeCount);
+
+      if (NS_SUCCEEDED(result)) {
+        nsCOMPtr<nsIDOMNode> attrNode;
+        PRUint32 k;
+        nsAutoString attrName, attrValue, prefix;
+        nsAutoString nullStr = "";
+
+        for (k=0; k<nodeCount; k++) {
+          result = namedNodeMap->Item(k, getter_AddRefs(attrNode));
+
+          if (NS_SUCCEEDED(result)) {
+            nsCOMPtr<nsIDOMAttr> attr = do_QueryInterface(attrNode);
+
+            if (attr) {
+              result = attr->GetName(attrName);
+
+              if (NS_SUCCEEDED(result)) {
+                result = attr->GetValue(attrValue);
+                if (NS_SUCCEEDED(result) && (attrName.Length() >= 2)) {
+
+                  attrName.Left(prefix,2);
+
+                  if (prefix.EqualsIgnoreCase("on")) {
+                    // Delete event handler attribute
+
+                    XMLT_LOG(mozXMLTermSession::DeepSanitizeFragment,79,
+                             ("Deleting event handler in fragment\n"));
+
+                    result = domElement->SetAttribute(attrName, nullStr);
+                    if (NS_FAILED(result))
+                    return result;
+                  }
+                }
+
+              }
+            }
+
+          }
+        }
+
+      }
+    }
+
+    if (entryNumber >= 0) {
+      // Process ID attribute
+      attName = "id";
+
+      result = domElement->GetAttribute(attName, attValue);
+
+      if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
+        // Modify attribute value
+        SubstituteCommandNumber(attValue, entryNumber);
+        domElement->SetAttribute(attName, attValue);
+      }
+    }
+
+    for (j=0; j<SESSION_EVENT_TYPES; j++) {
+      // Re-introduce sanitized event attribute values
+      attName = "on";
+      attName.Append(sessionEventNames[j]);
+      attValue = eventAttrVals[j];
+
+
+      if (attValue.Length() > 0) {
+        SubstituteCommandNumber(attValue, entryNumber);
+
+        // Sanitize attribute value
+        SanitizeAttribute(attValue, sessionEventNames[j]);
+
+        // Insert attribute value
+        domElement->SetAttribute(attName, attValue);
+      }
+    }
+
+  }
+
+  // Iterate over all child nodes for deep refresh
+  nsCOMPtr<nsIDOMNode> child;
+  result = domNode->GetFirstChild(getter_AddRefs(child));
+  if (NS_FAILED(result))
+    return NS_OK;
+
+  while (child) {
+    DeepSanitizeFragment(child, domNode, entryNumber);
+
+    nsCOMPtr<nsIDOMNode> temp = child;
+    result = temp->GetNextSibling(getter_AddRefs(child));
+    if (NS_FAILED(result))
+      break;
+  }
+
+  return NS_OK;
+}
+
+
+/** Deep refresh of selected event handler attributes for DOM elements
+ * (WORKAROUND for inserting HTML fragments properly)
+ * @param domNode DOM node of branch to be refreshed
+ */
+NS_IMETHODIMP mozXMLTermSession::DeepRefreshEventHandlers(
+                                  nsCOMPtr<nsIDOMNode>& domNode)
+{
+  nsresult result;
+
+  XMLT_LOG(mozXMLTermSession::DeepRefreshEventHandlers,82,("\n"));
 
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(domNode);
   if (!domElement)
     return NS_OK;
 
   int j;
-  for (j=0; j<REFRESH_ATTRIBUTE_NAMES; j++) {
-    nsAutoString attName = refreshAttributeNames[j];
-    nsAutoString attValue;
+  nsAutoString attName, attValue;
+
+  // Refresh event attributes
+  for (j=0; j<SESSION_EVENT_TYPES; j++) {
+    attName = "on";
+    attName.Append(sessionEventNames[j]);
+
+    XMLT_LOG(mozXMLTermSession::DeepRefreshEventHandlers,89,
+             ("Refreshing on%s attribute\n",sessionEventNames[j] ));
 
     result = domElement->GetAttribute(attName, attValue);
+
     if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
-
-      if (entryNumber >= 0) {
-        // Search for number character
-        PRInt32 numberOffset = attValue.FindChar((PRUnichar) '#');
-
-        if (numberOffset >= 0) {
-          // Substitute number sign with supplied number
-          attValue.Cut(numberOffset,1);
-          attValue.Insert(numberString, numberOffset);
-        }
-      }
-
       // Refresh attribute value
       domElement->SetAttribute(attName, attValue);
-
-      XMLT_LOG(mozXMLTermSession::DeepRefreshEventAttributes,82,
-               ("Refreshing on%s attribute\n",sessionEventNames[j] ));
     }
   }
 
@@ -2140,7 +2616,7 @@ NS_IMETHODIMP mozXMLTermSession::DeepRefreshAttributes(
     return NS_OK;
 
   while (child) {
-    DeepRefreshAttributes(child, entryNumber);
+    DeepRefreshEventHandlers(child);
 
     nsCOMPtr<nsIDOMNode> temp = child;
     result = temp->GetNextSibling(getter_AddRefs(child));
@@ -2168,7 +2644,8 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
            flushAction, mOutputDisplayType));
 
   PRBool preDisplay = (mOutputDisplayType == PRE_STDOUT_NODE) ||
-                      (mOutputDisplayType == PRE_STDERR_NODE);
+                      (mOutputDisplayType == PRE_STDERR_NODE) ||
+                      (mOutputDisplayType == PRE_STDIN_NODE);
 
   if (preDisplay) {
     // PRE text display
@@ -2177,6 +2654,10 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
 
     if (flushAction != DISPLAY_INCOMPLETE_FLUSH) {
       // Split/clear/close incomplete line
+
+      XMLT_LOG(mozXMLTermSession::FlushOutput,72,
+               ("mPreTextIncomplete.Length()=%d\n",
+                mPreTextIncomplete.Length() ));
 
       if (flushAction == SPLIT_INCOMPLETE_FLUSH) {
         // Move incomplete text to new PRE element
@@ -2190,8 +2671,8 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
       // Clear incomplete PRE text
       mPreTextIncomplete = "";
 
-      if (mPreTextBuffered.Length() == 0) {
-        // Remove last text node
+      if ((mPreTextBufferLines == 0) && (mPreTextBuffered.Length() == 0)) {
+        // Remove lone text node
         nsCOMPtr<nsIDOMNode> resultNode;
         result = mOutputDisplayNode->RemoveChild(mOutputTextNode,
                                              getter_AddRefs(resultNode));
@@ -2218,6 +2699,9 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
       nsAutoString outString = mPreTextBuffered;
       outString += mPreTextIncomplete;
 
+      // Increment total output line count for entry
+      mEntryOutputLines += mPreTextBufferLines;
+
       if (outString != mPreTextDisplayed) {
         // Display updated buffer
         mPreTextDisplayed = outString;
@@ -2228,29 +2712,36 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
         result = SetDOMText(mOutputTextNode, mPreTextDisplayed);
         if (NS_FAILED(result))
           return NS_ERROR_FAILURE;
+
       }
+    }
 
-      if (flushAction != DISPLAY_INCOMPLETE_FLUSH) {
-        // Split/clear/close incomplete line
-        mOutputDisplayNode = nsnull;
-        mOutputDisplayType = NO_NODE;
-        mOutputTextNode = nsnull;
+    if (flushAction != DISPLAY_INCOMPLETE_FLUSH) {
+      // Split/clear/close incomplete line
+      mOutputDisplayNode = nsnull;
+      mOutputDisplayType = NO_NODE;
+      mOutputTextNode = nsnull;
 
-        if ( (flushAction == SPLIT_INCOMPLETE_FLUSH) &&
-             (preTextSplit.Length() > 0) ) {
-          // Create new PRE element with incomplete text
-          nsAutoString styleStr = "";
+      if ( (flushAction == SPLIT_INCOMPLETE_FLUSH) &&
+           (preTextSplit.Length() > 0) ) {
+        // Create new PRE element with incomplete text
+        nsAutoString styleStr = "";
 
-          if (preDisplayType == PRE_STDERR_NODE) {
-            styleStr += (PRUnichar) LTERM_STDERR_STYLE;
-          } else {
-            styleStr += (PRUnichar) LTERM_STDOUT_STYLE;
-          }
+        if (preDisplayType == PRE_STDIN_NODE) {
+          styleStr += (PRUnichar) LTERM_STDIN_STYLE;
 
-          XMLT_LOG(mozXMLTermSession::FlushOutput,72,("splitting\n"));
+        } else if (preDisplayType == PRE_STDERR_NODE) {
+          styleStr += (PRUnichar) LTERM_STDERR_STYLE;
 
-          AppendOutput(preTextSplit, styleStr, false);
+        } else {
+          styleStr += (PRUnichar) LTERM_STDOUT_STYLE;
         }
+
+        XMLT_LOG(mozXMLTermSession::FlushOutput,72,("splitting\n"));
+
+        AppendOutput(preTextSplit, styleStr, false);
+
+        FlushOutput(DISPLAY_INCOMPLETE_FLUSH);
       }
     }
 
@@ -2269,12 +2760,62 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
       mOutputDisplayNode = nsnull;
       mOutputDisplayType = NO_NODE;
       mOutputTextNode = nsnull;
+
     }
   }
 
   XMLT_LOG(mozXMLTermSession::FlushOutput,71,("returning\n"));
 
   return NS_OK;
+}
+
+
+/** Positions cursor below the last output element */
+void mozXMLTermSession::PositionOutputCursor(mozILineTermAux* lineTermAux)
+{
+  nsresult result;
+
+  XMLT_LOG(mozXMLTermSession::PositionOutputCursor,80,("\n"));
+
+  if (!mOutputTextNode) {
+    // Append dummy output line
+    nsCOMPtr<nsIDOMNode> spanNode, textNode;
+    nsAutoString tagName = "span";
+    nsAutoString elementName = sessionElementNames[STDOUT_ELEMENT];
+    result = NewElementWithText(tagName, elementName, -1,
+                                mOutputBlockNode, spanNode, textNode);
+
+    if (NS_FAILED(result) || !spanNode || !textNode)
+      return;
+
+    mOutputDisplayType = SPAN_DUMMY_NODE;
+    mOutputDisplayNode = spanNode;
+    mOutputTextNode = textNode;
+    mOutputTextOffset = 0;
+  }
+
+  // Get selection
+  nsCOMPtr<nsIDOMSelection> selection;
+
+  result = mPresShell->GetSelection(SELECTION_NORMAL,
+                                    getter_AddRefs(selection));
+  if (NS_SUCCEEDED(result) && selection) {
+    // Position cursor at end of line
+    nsCOMPtr<nsIDOMText> domText( do_QueryInterface(mOutputTextNode) );
+    nsAutoString text = "";
+    domText->GetData(text);
+
+    PRInt32 textOffset = text.Length();
+    if (lineTermAux && (mOutputDisplayType == PRE_STDIN_NODE)) {
+      // Get cursor column
+      PRInt32 cursorCol = 0;
+      lineTermAux->GetCursorColumn(&cursorCol);
+      textOffset = cursorCol - mOutputTextOffset;
+      if (textOffset > text.Length())
+        textOffset = text.Length();
+    }
+    result = selection->Collapse(mOutputTextNode, textOffset);
+  }
 }
 
 
@@ -2578,6 +3119,8 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
   // No command output processed yet
   mEntryHasOutput = false;
 
+  mEntryOutputLines = 0;
+
   return NS_OK;
 }
 
@@ -2605,9 +3148,18 @@ NS_IMETHODIMP mozXMLTermSession::NewScreen(void)
   mScreenNode = divNode;
 
   // Create individual row elements
+  nsCOMPtr<nsIDOMNode> resultNode;
   PRInt32 row;
   for (row=0; row < mScreenRows; row++) {
-    NewRow(nsnull);
+    NewRow(nsnull, getter_AddRefs(resultNode));
+  }
+
+  // Collapse selection to bottom of screen (for scrolling)
+  result = PositionScreenCursor(0, 0);
+
+  if (NS_SUCCEEDED(result)) {
+    result = mPresShell->ScrollSelectionIntoView(SELECTION_NORMAL,
+                                                 SELECTION_FOCUS_REGION);
   }
 
   return NS_OK;
@@ -2655,18 +3207,15 @@ NS_IMETHODIMP mozXMLTermSession::GetRow(PRInt32 aRow, nsIDOMNode** aRowNode)
 }
 
 
-/** Returns DOM text node and offset corresponding to screen row/col position
+/** Positions cursor to specified screen row/col position
  */
-NS_IMETHODIMP mozXMLTermSession::GetScreenText(PRInt32 aRow, PRInt32 aCol,
-                                               nsIDOMNode** aTextNode,
-                                               PRInt32 *aOffset)
+NS_IMETHODIMP mozXMLTermSession::PositionScreenCursor(PRInt32 aRow,
+                                                      PRInt32 aCol)
 {
   nsresult result;
 
-  XMLT_LOG(mozXMLTermSession::GetScreenText,60,("row=%d, col=%d\n",aRow,aCol));
-
-  if (!aTextNode || !aOffset)
-    return NS_ERROR_NULL_POINTER;
+  XMLT_LOG(mozXMLTermSession::PositionScreenCursor,60,
+           ("row=%d, col=%d\n",aRow,aCol));
 
   // Get row node
   nsCOMPtr<nsIDOMNode> rowNode;
@@ -2674,27 +3223,75 @@ NS_IMETHODIMP mozXMLTermSession::GetScreenText(PRInt32 aRow, PRInt32 aCol,
   if (NS_FAILED(result) || !rowNode)
     return NS_ERROR_FAILURE;
 
-  // Get text node
-  nsCOMPtr<nsIDOMNode> textNode;
-  result = rowNode->GetFirstChild(getter_AddRefs(textNode));
-  if (NS_FAILED(result) || !textNode)
-    return result;
+  nsCOMPtr<nsIDOMNodeList> childNodes;
+  result = rowNode->GetChildNodes(getter_AddRefs(childNodes));
+  if (NS_FAILED(result) || !childNodes)
+    return NS_ERROR_FAILURE;
+
+  PRUint32 nChildren = 0;
+  childNodes->GetLength(&nChildren);
+  XMLT_LOG(mozXMLTermSession::GetScreenText,60,("children=%d\n",nChildren));
 
   PRUint16 nodeType;
-  result = textNode->GetNodeType(&nodeType);
-  if (NS_FAILED(result))
-    return result;
+  PRUint32 j;
+  PRInt32 prevCols = 0;
+  PRInt32 textOffset = 0;
+  nsCOMPtr<nsIDOMNode> textNode = nsnull;
+  nsCOMPtr<nsIDOMNode> childNode;
+  nsAutoString text = "";
 
-  if (nodeType == nsIDOMNode::TEXT_NODE) {
-    /* Text node */
-    *aTextNode = textNode.get();
-    NS_ADDREF(*aTextNode);
-    *aOffset = aCol;
+  for (j=0; j<nChildren; j++) {
+    result = childNodes->Item(j, getter_AddRefs(childNode));
+    if (NS_FAILED(result) || !childNode)
+      return NS_ERROR_FAILURE;
 
-  } else {
-    /* Not a text node */
-    *aTextNode = nsnull;
-    *aOffset = 0;
+    result = childNode->GetNodeType(&nodeType);
+    if (NS_FAILED(result))
+      return result;
+
+    XMLT_LOG(mozXMLTermSession::GetScreenText,60,
+             ("j=%d, nodeType=%d\n", j, nodeType));
+    if (nodeType != nsIDOMNode::TEXT_NODE) {
+      nsCOMPtr<nsIDOMNode> temNode;
+      result = childNode->GetFirstChild(getter_AddRefs(temNode));
+      if (NS_FAILED(result))
+        return result;
+
+      childNode = temNode;
+
+      result = childNode->GetNodeType(&nodeType);
+      if (NS_FAILED(result))
+        return result;
+      PR_ASSERT(nodeType == nsIDOMNode::TEXT_NODE);
+    }
+
+    nsCOMPtr<nsIDOMText> domText( do_QueryInterface(childNode) );
+    result = domText->GetData(text);
+    if (NS_FAILED(result))
+      return result;
+
+    XMLT_LOG(mozXMLTermSession::GetScreenText,60,("prevCols=%d\n",prevCols));
+
+    if (prevCols+text.Length() >= aCol) {
+      // Determine offset in current text element
+      textOffset = aCol - prevCols;
+      textNode = childNode;
+    } else if (j == nChildren-1) {
+      // Position at end of line
+      textOffset = text.Length();
+      textNode = childNode;
+    }
+  }
+
+  // Get selection
+  nsCOMPtr<nsIDOMSelection> selection;
+
+  result = mPresShell->GetSelection(SELECTION_NORMAL,
+                                    getter_AddRefs(selection));
+
+  if (NS_SUCCEEDED(result) && selection) {
+    // Collapse selection to cursor position
+    result = selection->Collapse(textNode, textOffset);
   }
 
   return NS_OK;
@@ -2706,7 +3303,8 @@ NS_IMETHODIMP mozXMLTermSession::GetScreenText(PRInt32 aRow, PRInt32 aCol,
  * child of the SCREEN element before beforeRowNode, or at the
  * end if beforeRowNode is null.
  */
-NS_IMETHODIMP mozXMLTermSession::NewRow(nsIDOMNode* beforeRowNode)
+NS_IMETHODIMP mozXMLTermSession::NewRow(nsIDOMNode* beforeRowNode,
+                                        nsIDOMNode** resultNode)
 {
   nsresult result;
 
@@ -2734,16 +3332,12 @@ NS_IMETHODIMP mozXMLTermSession::NewRow(nsIDOMNode* beforeRowNode)
   val = "1";
   preElement->SetAttribute(att, val);
 
-  nsCOMPtr<nsIDOMNode> resultNode;
-
   if (beforeRowNode) {
     // Insert row node
-    result = mScreenNode->InsertBefore(preNode, beforeRowNode,
-                                       getter_AddRefs(resultNode));
+    result = mScreenNode->InsertBefore(preNode, beforeRowNode, resultNode);
   } else {
     // Append row node
-    result = mScreenNode->AppendChild(preNode,
-                                      getter_AddRefs(resultNode));
+    result = mScreenNode->AppendChild(preNode, resultNode);
   }
 
   return NS_OK;
@@ -2761,18 +3355,145 @@ NS_IMETHODIMP mozXMLTermSession::DisplayRow(const nsString& aString,
                                             PRInt32 aRow)
 {
   nsresult result;
-  PRInt32 offset;
 
-  XMLT_LOG(mozXMLTermSession::DisplayRow,70,("aRow=%d\n", aRow));
+  const PRInt32   strLength   = aString.Length();
+  const PRInt32   styleLength = aStyle.Length();
+  const PRUnichar *strStyle   = aStyle.GetUnicode();
 
-  nsCOMPtr<nsIDOMNode> rowTextNode;
-  result = GetScreenText(aRow, 0, getter_AddRefs(rowTextNode), &offset);
-  if (NS_FAILED(result) || !rowTextNode)
-    return result;
+  XMLT_LOG(mozXMLTermSession::DisplayRow,70,
+           ("aRow=%d, strLength=%d, styleLength=%d\n",
+            aRow, strLength, styleLength));
 
-  result = SetDOMText(rowTextNode, aString);
-  if (NS_FAILED(result))
-    return result;
+  // Check if line has uniform style
+  PRUnichar uniformStyle = LTERM_STDOUT_STYLE;
+
+  if (styleLength > 0) {
+    PRInt32 j;
+
+    PR_ASSERT(styleLength == strLength);
+
+    uniformStyle = strStyle[0];
+
+    for (j=1; j<strLength; j++) {
+      if (strStyle[j] != strStyle[0]) {
+        uniformStyle = 0;
+      }
+    }
+  }
+
+  nsCOMPtr<nsIDOMNode> rowNode;
+  result = GetRow(aRow, getter_AddRefs(rowNode));
+  if (NS_FAILED(result) || !rowNode)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNodeList> childNodes;
+  result = rowNode->GetChildNodes(getter_AddRefs(childNodes));
+  if (NS_FAILED(result) || !childNodes)
+    return NS_ERROR_FAILURE;
+
+  PRUint32 nChildren = 0;
+  childNodes->GetLength(&nChildren);
+
+  XMLT_LOG(mozXMLTermSession::DisplayRow,79,("nChildren=%d\n", nChildren));
+
+  if ((nChildren == 1) && (uniformStyle == LTERM_STDOUT_STYLE)) {
+    // Get child node
+    nsCOMPtr<nsIDOMNode> childNode;
+
+    result = rowNode->GetFirstChild(getter_AddRefs(childNode));
+    if (NS_FAILED(result) || !childNode)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMText> domText( do_QueryInterface(childNode) );
+    if (domText) {
+      // Display uniform style
+      result = SetDOMText(childNode, aString);
+      if (NS_FAILED(result))
+        return result;
+
+      return NS_OK;
+    }
+  }
+
+  // Delete all child nodes for the row
+  nsCOMPtr<nsIDOMNode> childNode;
+  PRInt32 j;
+  for (j=nChildren-1; j>=0; j--) {
+    result = childNodes->Item(j, getter_AddRefs(childNode));
+    if (NS_FAILED(result) || !childNode)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMNode> resultNode;
+    result = rowNode->RemoveChild(childNode, getter_AddRefs(resultNode));
+    if (NS_FAILED(result))
+      return result;
+  }
+
+  nsCOMPtr<nsIDOMNode> spanNode, textNode;
+  nsAutoString tagName = "span";
+  nsAutoString elementName;
+  nsAutoString subString;
+  PRInt32 k;
+  PRUnichar currentStyle = LTERM_STDOUT_STYLE;
+  if (styleLength > 0) 
+    currentStyle = strStyle[0];
+  PRInt32 offset = 0;
+  offset = 0;
+
+  PR_ASSERT(strLength > 0);
+
+  for (k=1; k<strLength+1; k++) {
+    if ((k == strLength) || ((k < styleLength) &&
+                             (strStyle[k] != currentStyle)) ) {
+      // Change of style or end of string
+
+      if (currentStyle == LTERM_STDOUT_STYLE) {
+        // Create text node
+        result = NewTextNode(rowNode, textNode);
+        if (NS_FAILED(result) || !textNode)
+          return NS_ERROR_FAILURE;
+
+      } else {
+        // Span Node
+
+        switch (currentStyle) {
+        case LTERM_STDOUT_STYLE | LTERM_BOLD_STYLE:
+          elementName = "boldstyle";
+          break;
+        case LTERM_STDOUT_STYLE | LTERM_ULINE_STYLE:
+          elementName = "underlinestyle";
+          break;
+        case LTERM_STDOUT_STYLE | LTERM_BLINK_STYLE:
+          elementName = "blinkstyle";
+          break;
+        case LTERM_STDOUT_STYLE | LTERM_INVERSE_STYLE:
+          elementName = "inversestyle";
+          break;
+        default:
+          elementName = "boldstyle";
+          break;
+        }
+
+        result = NewElementWithText(tagName, elementName, -1,
+                                    rowNode, spanNode, textNode);
+
+        if (NS_FAILED(result) || !spanNode || !textNode)
+          return NS_ERROR_FAILURE;
+      }
+
+      aString.Mid(subString, offset, k-offset);
+      result = SetDOMText(textNode, subString);
+      if (NS_FAILED(result))
+        return result;
+
+      if (k < styleLength) {
+        // Change style
+        currentStyle = strStyle[k];
+        offset = k;
+      }
+    }
+  }
+    
   return NS_OK;
 }
 
@@ -2811,19 +3532,24 @@ NS_IMETHODIMP mozXMLTermSession::NewBreak(nsIDOMNode* parentNode)
  * @param parentNode parent node for element
  * @param blockNode (output) block-level DOM node for created element
  * @param textNode (output) child text DOM node of element
+ * @param beforeNode child node before which to insert new node
+ *                   if null, insert after last child node
+ *                   (default value is null)
  */
 NS_IMETHODIMP mozXMLTermSession::NewElementWithText(const nsString& tagName,
                                       const nsString& name, PRInt32 number,
                                       nsIDOMNode* parentNode,
                                       nsCOMPtr<nsIDOMNode>& blockNode,
-                                      nsCOMPtr<nsIDOMNode>& textNode)
+                                      nsCOMPtr<nsIDOMNode>& textNode,
+                                      nsIDOMNode* beforeNode)
 {
   nsresult result;
 
   XMLT_LOG(mozXMLTermSession::NewElementWithText,80,("\n"));
 
   // Create block element
-  result = NewElement(tagName, name, number, parentNode, blockNode);
+  result = NewElement(tagName, name, number, parentNode, blockNode,
+                      beforeNode);
   if (NS_FAILED(result) || !blockNode)
     return NS_ERROR_FAILURE;
 
@@ -2900,11 +3626,15 @@ NS_IMETHODIMP mozXMLTermSession::NewAnchor(const nsString& classAttribute,
  *             (If < 0, no ID attribute is defined)
  * @param parentNode parent node for element
  * @param blockNode (output) block-level DOM node for created element
+ * @param beforeNode child node before which to insert new node
+ *                   if null, insert after last child node
+ *                   (default value is null)
  */
 NS_IMETHODIMP mozXMLTermSession::NewElement(const nsString& tagName,
                                      const nsString& name, PRInt32 number,
                                      nsIDOMNode* parentNode,
-                                     nsCOMPtr<nsIDOMNode>& blockNode)
+                                     nsCOMPtr<nsIDOMNode>& blockNode,
+                                     nsIDOMNode* beforeNode)
 {
   nsresult result;
 
@@ -2934,11 +3664,21 @@ NS_IMETHODIMP mozXMLTermSession::NewElement(const nsString& tagName,
     }
   }
 
-  // Append child to parent
   nsCOMPtr<nsIDOMNode> newBlockNode = do_QueryInterface(newElement);
-  result = parentNode->AppendChild(newBlockNode, getter_AddRefs(blockNode));
-  if (NS_FAILED(result) || !blockNode)
-    return NS_ERROR_FAILURE;
+
+  if (beforeNode) {
+    // Insert child
+    result = parentNode->InsertBefore(newBlockNode, beforeNode,
+                                      getter_AddRefs(blockNode));
+    if (NS_FAILED(result) || !blockNode)
+      return NS_ERROR_FAILURE;
+
+  } else {
+    // Append child
+    result = parentNode->AppendChild(newBlockNode, getter_AddRefs(blockNode));
+    if (NS_FAILED(result) || !blockNode)
+      return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -3082,9 +3822,9 @@ NS_IMETHODIMP mozXMLTermSession::SetEventAttributes(const nsString& name,
     nsAutoString attName("on");
     attName += sessionEventNames[j];
 
-    nsAutoString attValue("return ");
+    nsAutoString attValue("return HandleEvent(event, '");
     attValue += sessionEventNames[j];
-    attValue += "XMLTerm('";
+    attValue += "','";
     attValue += name;
     attValue += "','";
     attValue.Append(number,10);
