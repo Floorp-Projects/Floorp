@@ -1138,7 +1138,7 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
    GetCurrentIndex(&indix);
    if (indix >= 0) {
      nsCOMPtr<nsISupports>  historyState;
-     nsresult rv = prev->GetHistoryState(getter_AddRefs(historyState));
+     nsresult rv = prev->CaptureHistoryState(getter_AddRefs(historyState));
 	 if (NS_SUCCEEDED(rv) && historyState)
 		 SetHistoryObjectForIndex(indix, historyState);
    }
