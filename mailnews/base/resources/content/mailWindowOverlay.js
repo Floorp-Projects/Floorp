@@ -727,21 +727,11 @@ function GetMessagesForInboxOnServer(server)
 function MsgGetMessage()
 {
   // if offline, prompt for getting messages
-  if(CheckOnline()) {
+  if(CheckOnline())
     GetFolderMessages();
-  }
-  else {
-    var option = PromptGetMessagesOffline();
-    if(option == 0) {
-      if (!gOfflineManager) 
-        GetOfflineMgrService();
-      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
-                               false /* playbackOfflineImapOperations */, 
-                               msgWindow);
+  else if (DoGetNewMailWhenOffline())
       GetFolderMessages();
     }
-  }
-}
 
 function MsgGetMessagesForAllServers(defaultServer)
 {
@@ -782,21 +772,11 @@ function MsgGetMessagesForAllServers(defaultServer)
   */
 function MsgGetMessagesForAllAuthenticatedAccounts()
 {
-  if(CheckOnline()) {
+  if(CheckOnline())
     GetMessagesForAllAuthenticatedAccounts();
-  }
-  else {
-    var option = PromptGetMessagesOffline();
-    if(option == 0) {
-      if (!gOfflineManager) 
-        GetOfflineMgrService();
-      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
-                               false /* playbackOfflineImapOperations */, 
-                               msgWindow);
+  else if (DoGetNewMailWhenOffline())
       GetMessagesForAllAuthenticatedAccounts();
     }
-  }
-}
 
 /**
   * Get messages for the account selected from Menu dropdowns.
@@ -807,21 +787,11 @@ function MsgGetMessagesForAccount(aEvent)
   if (!aEvent)
     return;
 
-  if(CheckOnline()) {
+  if(CheckOnline())
     GetMessagesForAccount(aEvent);
-  }
-  else {
-    var option = PromptGetMessagesOffline();
-    if(option == 0) {
-      if (!gOfflineManager) 
-        GetOfflineMgrService();
-      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
-                               false /* playbackOfflineImapOperations */, 
-                               msgWindow);
+  else if (DoGetNewMailWhenOffline()) 
       GetMessagesForAccount(aEvent);
     }
-  }
-}
 
 // if offline, prompt for getNextNMessages
 function MsgGetNextNMessages()
@@ -833,21 +803,14 @@ function MsgGetNextNMessages()
     if(folder) 
       GetNextNMessages(folder);
   }
-  else {
-    var option = PromptGetMessagesOffline();
-    if(option == 0) {
-      if (!gOfflineManager) 
-        GetOfflineMgrService();
-      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
-                               false /* playbackOfflineImapOperations */, 
-                               msgWindow);
+
+  else if(DoGetNewMailWhenOffline()) {
       folder = GetFirstSelectedMsgFolder();
       if(folder) {
         GetNextNMessages(folder);
       }
     }
   }   
-}
 
 function MsgDeleteMessage(reallyDelete, fromToolbar)
 {
@@ -1781,6 +1744,33 @@ function InitPrompts()
   }
   if (!gOfflinePromptsBundle) 
     gOfflinePromptsBundle = document.getElementById("bundle_offlinePrompts");
+}
+
+function DoGetNewMailWhenOffline()
+{
+  var sendUnsent = false;
+  var goOnline = PromptGetMessagesOffline() == 0;
+  if (goOnline)
+  {
+    if (this.CheckForUnsentMessages != undefined && CheckForUnsentMessages())
+    {
+      sendUnsent = gPromptService.confirmEx(window, 
+                          gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
+                          gOfflinePromptsBundle.getString('sendMessagesLabel'),
+                          gPromptService.BUTTON_TITLE_IS_STRING * (gPromptService.BUTTON_POS_0 + 
+                            gPromptService.BUTTON_POS_1),
+                          gOfflinePromptsBundle.getString('sendMessagesSendButtonLabel'),
+                          gOfflinePromptsBundle.getString('sendMessagesNoSendButtonLabel'),
+                          null, null, {value:0}) == 0;
+    }
+    if (!gOfflineManager) 
+      GetOfflineMgrService();
+    gOfflineManager.goOnline(sendUnsent /* sendUnsentMessages */, 
+                             false /* playbackOfflineImapOperations */, 
+                             msgWindow);
+ 
+  }
+  return goOnline;
 }
 
 // prompt for getting messages when offline
