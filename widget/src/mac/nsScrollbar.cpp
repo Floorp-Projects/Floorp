@@ -187,8 +187,10 @@ void nsScrollbar::DoScrollAction(ControlPartCode part)
  */ 
 PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
+	PRBool eatEvent = PR_FALSE;
 	switch (aEvent.message)
 	{
+		case NS_MOUSE_LEFT_DOUBLECLICK:
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
 			NS_ASSERTION(this != 0, "NULL nsScrollbar2");
 			::SetControlReference(mControl, (UInt32) this);
@@ -214,6 +216,10 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 						// for the thumb (this was illegal in previous
 						// versions of the defproc).
 						::TrackControl(mControl, thePoint, sControlActionProc);
+						// We don't dispatch the mouseDown event because mouseUp is eaten
+						// by TrackControl anyway and the only messages the app really
+						// cares about are the NS_SCROLLBAR_xxx messages.
+						eatEvent = PR_TRUE;
 						break;
 #if 0
 					case kControlIndicatorPart:
@@ -263,6 +269,9 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 			}
 			break;
 	}
+
+	if (eatEvent)
+		return PR_TRUE;
 	return (Inherited::DispatchMouseEvent(aEvent));
 
 }
