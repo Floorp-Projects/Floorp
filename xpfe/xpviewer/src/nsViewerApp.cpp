@@ -206,21 +206,6 @@ nsViewerApp::Initialize(int argc, char** argv)
   return rv;
 }
 
-nsresult
-nsViewerApp::Run()
-{
-  return mAppShell->Run();
-}
-
-
-nsresult
-nsViewerApp::Exit()
-{
-  Destroy();
-  mAppShell->Exit();
-  NS_RELEASE(mAppShell);
-  return NS_OK;
-}
 
 
 static void
@@ -626,9 +611,8 @@ static void* GetWidgetNativeData(nsISupports* aObject)
 }
 
 
+#ifdef XP_PC
 
-
-#ifdef XP_PC_ROBOT
 extern JSConsole *gConsole;
 // XXX temporary robot code until it's made XP
 extern HINSTANCE gInstance, gPrevInstance;
@@ -1204,7 +1188,7 @@ nsViewerApp::CreateSiteWalker(nsBrowserWindow* aWindow)
 
 //----------------------------------------
 
-#ifdef XP_PC_ROBOT
+#ifdef XP_PC
 #include "jsconsres.h"
 
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
@@ -1220,7 +1204,7 @@ static void DestroyConsole()
 
 static void ShowConsole(nsBrowserWindow* aWindow)
 {
- /*   HWND hWnd = (HWND)aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET);
+    HWND hWnd = (HWND)aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET);
     if (!gConsole) {
 
       // load the accelerator table for the console
@@ -1250,14 +1234,14 @@ static void ShowConsole(nsBrowserWindow* aWindow)
       else {
         MessageBox(hWnd, "Unable to load JavaScript", "Viewer Error", MB_ICONSTOP);
       }
-    }*/
+    }
 }
 #endif
 
 NS_IMETHODIMP
 nsViewerApp::CreateJSConsole(nsBrowserWindow* aWindow)
 {
-#ifdef XP_PC_ROBOT
+#ifdef XP_PC
   if (nsnull == gConsole) {
     ShowConsole(aWindow);
   }
@@ -1280,5 +1264,37 @@ nsViewerApp::DoPrefs(nsBrowserWindow* aWindow)
   pPrefs->Release();
   CoUninitialize();
 #endif
+  return NS_OK;
+}
+
+nsresult
+nsViewerApp::Run()
+{
+  //OpenWindow();
+ 
+  // Process messages
+  /*MSG msg;
+  while (::GetMessage(&msg, NULL, 0, 0)) {
+    if (!JSConsole::sAccelTable ||
+        !gConsole ||
+        !gConsole->GetMainWindow() ||
+        !TranslateAccelerator(gConsole->GetMainWindow(),
+                              JSConsole::sAccelTable, &msg)) {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
+  }
+
+  return NS_OK;*/
+  return mAppShell->Run();
+}
+
+
+nsresult
+nsViewerApp::Exit()
+{
+  Destroy();
+  mAppShell->Exit();
+  NS_RELEASE(mAppShell);
   return NS_OK;
 }

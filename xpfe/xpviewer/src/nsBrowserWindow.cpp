@@ -3329,14 +3329,14 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
   nsIMenu * commMenu = CreateMenu(aMenuBar,  "Communicator", 'C');
   nsIMenu * helpMenu = CreateMenu(aMenuBar,  "Help", 'H');
 
-  /*nsIMenu * debugMenu = CreateMenu(aMenuBar,  "Debug", 'D');
+  nsIMenu * debugMenu = CreateMenu(aMenuBar,  "Debug", 'D');
   i = 0;
   while (debugMenus[i].title != nsnull) {
     CreateMenuItem(debugMenu, debugMenus[i].title, debugMenus[i].command);
     i++;
   }
 
-  nsIMenu * toolsMenu = CreateMenu(aMenuBar,  "Tools", 'T');
+  /*nsIMenu * toolsMenu = CreateMenu(aMenuBar,  "Tools", 'T');
   CreateMenuItem(toolsMenu, "Java Script Console", JS_CONSOLE);
   CreateMenuItem(toolsMenu, "Editor Mode", EDITOR_MODE);*/
 
@@ -3347,13 +3347,7 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
 nsresult
 nsBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
-  /*HMENU menu = ::LoadMenu(gInstance, "Viewer");
-  HWND hwnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WIDGET);
-  ::SetMenu(hwnd, menu);
-  */
-
-/*  nsIMenuBar * menuBar;
-
+  nsIMenuBar * menuBar;
   nsresult rv = nsRepository::CreateInstance(kMenuBarCID,
                                              nsnull,
                                              kIMenuBarIID,
@@ -3366,15 +3360,12 @@ nsBrowserWindow::CreateMenuBar(PRInt32 aWidth)
       widget->Create((nsIWidget *)nsnull, rect, nsnull, nsnull, mAppShell, nsnull, nsnull);
 
       CreateBrowserMenus(menuBar);
-
-      HMENU menu = (HMENU)widget->GetNativeData(NS_NATIVE_WIDGET);
-      HWND  hwnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WIDGET);
-      ::SetMenu(hwnd, menu);
+      mWindow->SetMenuBar(menuBar);
 		  NS_RELEASE(widget);
 	  }
 
   }
-*/
+
   return NS_OK;
 }
 
