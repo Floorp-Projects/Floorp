@@ -217,10 +217,10 @@ nsView::~nsView()
     }
   }
 
-  DropMouseGrabbing();
-  
   if (mViewManager)
   {
+    DropMouseGrabbing();
+  
     nsView *rootView = mViewManager->GetRootView();
     
     if (rootView)
