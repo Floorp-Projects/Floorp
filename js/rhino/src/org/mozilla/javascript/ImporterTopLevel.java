@@ -100,10 +100,16 @@ public class ImporterTopLevel extends IdScriptable
     {
         cx.initStandardObjects(this, sealed);
         prototypeFlag = true;
-        addAsPrototype(MAX_PROTOTYPE_ID, cx, this, sealed);
-        // set the flag after IdScriptable.addAsPrototype() calls
-        // getClassName() to get constructor name right.
         topScopeFlag = true;
+        // topScopeFlag hides constructor property so constructor name
+        // would refer to constructor property in the prototype of the scope
+        // and not to JavaImporter.prototype.constructor.
+        // For this reason addAsPrototype can not be used to replace
+        // the following 4 lines as it requires to have id for "constructor".
+        setMaxId(MAX_PROTOTYPE_ID);
+        IdFunction ctor = newIdFunction("JavaImporter", Id_constructor, this);
+        ctor.markAsConstructor(this);
+        ctor.exportAsScopeProperty(sealed);
     }
 
     public boolean has(String name, Scriptable start) {
@@ -291,6 +297,11 @@ public class ImporterTopLevel extends IdScriptable
             if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
 // #/generated#
+
+        if (id == Id_constructor && topScopeFlag) {
+            // see comments in initStandardObjects
+            id = 0;
+        }
         return id;
     }
 
