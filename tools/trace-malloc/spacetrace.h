@@ -337,8 +337,10 @@ typedef struct __struct_STRun
 
         /*
         ** Callsites like to keep some information.
+        ** As callsites are possibly shared between all contexts, each
+        **      different context needs to keep different stats.
         */
-        STCallsiteStats mStats;
+        STCallsiteStats *mFacts;
 
 } STRun;
 
@@ -687,7 +689,7 @@ typedef struct __struct_STGlobals
 /*
 ** Function prototypes
 */
-extern STRun* createRun(PRUint32 aStamp);
+extern STRun* createRun(STContext* inContext, PRUint32 aStamp);
 extern void freeRun(STRun* aRun);
 extern int initCategories(STGlobals* g);
 extern int categorizeRun(STOptions* inOptions, STContext* inContext, const STRun* aRun, STGlobals* g);
@@ -695,7 +697,7 @@ extern STCategoryNode* findCategoryNode(const char *catName, STGlobals *g);
 extern int freeCategories(STGlobals* g);
 extern int displayCategoryReport(STRequest* inRequest, STCategoryNode *root, int depth);
 
-extern int recalculateAllocationCost(STOptions* inOptions, STRun* aRun, STAllocation* aAllocation, PRBool updateParent);
+extern int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun* aRun, STAllocation* aAllocation, PRBool updateParent);
 extern void htmlHeader(STRequest* inRequest, const char* aTitle);
 extern void htmlFooter(STRequest* inRequest);
 extern void htmlAnchor(STRequest* inRequest, const char* aHref, const char* aText, const char* aTarget, STOptions* inOptions);

@@ -539,7 +539,7 @@ int categorizeAllocation(STOptions* inOptions, STContext* inContext, STAllocatio
         ** Create run with positive timestamp as we can harvest it later
         ** for callsite details summarization
         */
-        node->runs[inContext->mIndex] = createRun(PR_IntervalNow());
+        node->runs[inContext->mIndex] = createRun(inContext, PR_IntervalNow());
         if (!node->runs[inContext->mIndex])
         {
             REPORT_ERROR(__LINE__, categorizeAllocation_No_Memory);
@@ -568,7 +568,7 @@ int categorizeAllocation(STOptions* inOptions, STContext* inContext, STAllocatio
     ** at this time. That will happen when we focus on this category. This updating of
     ** stats will provide us fast categoryreports.
     */
-    recalculateAllocationCost(inOptions, node->runs[inContext->mIndex], aAllocation, PR_FALSE);
+    recalculateAllocationCost(inOptions, inContext, node->runs[inContext->mIndex], aAllocation, PR_FALSE);
 
     /* Propogate upwards the statistics */
     /* XXX */
@@ -617,11 +617,11 @@ PRBool printNodeProcessor(STRequest* inRequest, STOptions* inOptions, STContext*
 {
     STCategoryNode* root = (STCategoryNode*) clientData;
     fprintf(stderr, "%-25s [ %9s size", node->categoryName,
-            FormatNumber(node->run ? node->run->mStats.mSize:0));
+            FormatNumber(node->run ? node->run->mFacts[inContext->mIndex].mSize:0));
     fprintf(stderr, ", %5.1f%%",
-            node->run ? ((double)node->run->mStats.mSize / root->run->mStats.mSize * 100):0);
+            node->run ? ((double)node->run->mFacts[inContext->mIndex].mSize / root->run->mFacts[inContext->mIndex].mSize * 100):0);
     fprintf(stderr, ", %7s allocations ]\n",
-            FormatNumber(node->run ? node->run->mStats.mCompositeCount:0));
+            FormatNumber(node->run ? node->run->mFacts[inContext->mIndex].mCompositeCount:0));
     return PR_TRUE;
 }
 
@@ -656,14 +656,14 @@ int compareNode(const void* aNode1, const void* aNode2, void* aContext)
     {
         if (oc->mOptions->mOrderBy == ST_COUNT)
         {
-            a = (node1->runs[oc->mContext->mIndex]) ? node1->runs[oc->mContext->mIndex]->mStats.mCompositeCount : 0;
-            b = (node2->runs[oc->mContext->mIndex]) ? node2->runs[oc->mContext->mIndex]->mStats.mCompositeCount : 0;
+            a = (node1->runs[oc->mContext->mIndex]) ? node1->runs[oc->mContext->mIndex]->mFacts[oc->mContext->mIndex].mCompositeCount : 0;
+            b = (node2->runs[oc->mContext->mIndex]) ? node2->runs[oc->mContext->mIndex]->mFacts[oc->mContext->mIndex].mCompositeCount : 0;
         }
         else
         {
             /* Default is by size */
-            a = (node1->runs[oc->mContext->mIndex]) ? node1->runs[oc->mContext->mIndex]->mStats.mSize : 0;
-            b = (node2->runs[oc->mContext->mIndex]) ? node2->runs[oc->mContext->mIndex]->mStats.mSize : 0;
+            a = (node1->runs[oc->mContext->mIndex]) ? node1->runs[oc->mContext->mIndex]->mFacts[oc->mContext->mIndex].mSize : 0;
+            b = (node2->runs[oc->mContext->mIndex]) ? node2->runs[oc->mContext->mIndex]->mFacts[oc->mContext->mIndex].mSize : 0;
         }
         if (a < b)
             retval = __LINE__;
@@ -873,24 +873,24 @@ PRBool displayCategoryNodeProcessor(STRequest* inRequest, STOptions* inOptions, 
         /*
         ** Byte size
         */
-        byteSize = node->runs[inContext->mIndex]->mStats.mSize;
+        byteSize = node->runs[inContext->mIndex]->mFacts[inContext->mIndex].mSize;
 
         /*
         ** Composite count
         */
-        count = node->runs[inContext->mIndex]->mStats.mCompositeCount;
+        count = node->runs[inContext->mIndex]->mFacts[inContext->mIndex].mCompositeCount;
 
         /*
         ** Heap operation cost
         **/
-        heapCost = node->runs[inContext->mIndex]->mStats.mHeapRuntimeCost;
+        heapCost = node->runs[inContext->mIndex]->mFacts[inContext->mIndex].mHeapRuntimeCost;
 
         /*
         ** % of total size
         */
         if (root->runs[inContext->mIndex])
         {
-            percent = ((double) byteSize) / root->runs[inContext->mIndex]->mStats.mSize * 100;
+            percent = ((double) byteSize) / root->runs[inContext->mIndex]->mFacts[inContext->mIndex].mSize * 100;
         }
     }
 

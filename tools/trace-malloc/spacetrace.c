@@ -653,7 +653,7 @@ PRUint32 byteSize(STOptions* inOptions, STAllocation* aAlloc)
 ** Given an allocation, does a recalculation of Cost - weight, heapcount etc.
 ** and does the right thing to propogate the cost upwards.
 */
-int recalculateAllocationCost(STOptions* inOptions, STRun* aRun, STAllocation* aAllocation, PRBool updateParent)
+int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun* aRun, STAllocation* aAllocation, PRBool updateParent)
 {
     /*
     ** Now, see if they desire a callsite update.
@@ -663,7 +663,7 @@ int recalculateAllocationCost(STOptions* inOptions, STRun* aRun, STAllocation* a
     **  stamp as well, so as to mark them as being relevant to
     **  the current run in question.
     */
-    if(0 != aRun->mStats.mStamp)
+    if(NULL != inContext && 0 != aRun->mFacts[inContext->mIndex].mStamp)
     {
         PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
         PRUint32 size = byteSize(inOptions, aAllocation);
@@ -679,11 +679,11 @@ int recalculateAllocationCost(STOptions* inOptions, STRun* aRun, STAllocation* a
         /*
         ** First, update this run.
         */
-        aRun->mStats.mCompositeCount++;
-        aRun->mStats.mHeapRuntimeCost += heapCost;
-        aRun->mStats.mSize += size;
-        LL_ADD(aRun->mStats.mTimeval64, aRun->mStats.mTimeval64, timeval64);
-        LL_ADD(aRun->mStats.mWeight64, aRun->mStats.mWeight64, weight64);
+        aRun->mFacts[inContext->mIndex].mCompositeCount++;
+        aRun->mFacts[inContext->mIndex].mHeapRuntimeCost += heapCost;
+        aRun->mFacts[inContext->mIndex].mSize += size;
+        LL_ADD(aRun->mFacts[inContext->mIndex].mTimeval64, aRun->mFacts[inContext->mIndex].mTimeval64, timeval64);
+        LL_ADD(aRun->mFacts[inContext->mIndex].mWeight64, aRun->mFacts[inContext->mIndex].mWeight64, weight64);
 
         /*
         ** Use the first event of the allocation to update the parent
@@ -707,10 +707,10 @@ int recalculateAllocationCost(STOptions* inOptions, STRun* aRun, STAllocation* a
                     /*
                     ** Do we init it?
                     */
-                    if(callsiteRun->mStats.mStamp != aRun->mStats.mStamp)
+                    if(callsiteRun->mFacts[inContext->mIndex].mStamp != aRun->mFacts[inContext->mIndex].mStamp)
                     {
-                        memset(&callsiteRun->mStats, 0, sizeof(STCallsiteStats));
-                        callsiteRun->mStats.mStamp = aRun->mStats.mStamp;
+                        memset(&callsiteRun->mFacts[inContext->mIndex], 0, sizeof(STCallsiteStats));
+                        callsiteRun->mFacts[inContext->mIndex].mStamp = aRun->mFacts[inContext->mIndex].mStamp;
                     }
                             
                     /*
@@ -729,11 +729,11 @@ int recalculateAllocationCost(STOptions* inOptions, STRun* aRun, STAllocation* a
                     **  but I fear it will take mucho memory and this
                     **  is perhaps good enough for now.
                     */
-                    callsiteRun->mStats.mCompositeCount++;
-                    callsiteRun->mStats.mHeapRuntimeCost += heapCost;
-                    callsiteRun->mStats.mSize += size;
-                    LL_ADD(callsiteRun->mStats.mTimeval64, callsiteRun->mStats.mTimeval64, timeval64);
-                    LL_ADD(callsiteRun->mStats.mWeight64, callsiteRun->mStats.mWeight64, weight64);
+                    callsiteRun->mFacts[inContext->mIndex].mCompositeCount++;
+                    callsiteRun->mFacts[inContext->mIndex].mHeapRuntimeCost += heapCost;
+                    callsiteRun->mFacts[inContext->mIndex].mSize += size;
+                    LL_ADD(callsiteRun->mFacts[inContext->mIndex].mTimeval64, callsiteRun->mFacts[inContext->mIndex].mTimeval64, timeval64);
+                    LL_ADD(callsiteRun->mFacts[inContext->mIndex].mWeight64, callsiteRun->mFacts[inContext->mIndex].mWeight64, weight64);
                 }
                         
                 callsite = callsite->parent;
@@ -752,11 +752,11 @@ int recalculateAllocationCost(STOptions* inOptions, STRun* aRun, STAllocation* a
 ** No DUP checks are done.
 ** Also, we might want to update the parent callsites with stats.
 ** We decide to do this heavy duty work only if the run we are appending
-**  to has a non ZERO mStats.mStamp, meaning that it is asking to track
+**  to has a non ZERO mFacts[].mStamp, meaning that it is asking to track
 **  such information when it was created.
 ** Returns !0 on success.
 */
-int appendAllocation(STOptions* inOptions, STRun* aRun, STAllocation* aAllocation)
+int appendAllocation(STOptions* inOptions, STContext* inContext, STRun* aRun, STAllocation* aAllocation)
 {
     int retval = 0;
 
@@ -802,7 +802,7 @@ int appendAllocation(STOptions* inOptions, STRun* aRun, STAllocation* aAllocatio
             /*
             ** update allocation cost
             */
-            recalculateAllocationCost(inOptions, aRun, aAllocation, PR_TRUE);
+            recalculateAllocationCost(inOptions, inContext, aRun, aAllocation, PR_TRUE);
         }
         else
         {
@@ -884,7 +884,7 @@ int hasCallsiteMatch(tmcallsite* aCallsite, const char* aMatch, int aDirection)
 **
 ** Returns !0 on error, though aOutRun may contain a partial data set.
 */
-int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
+int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions, STContext* inContext)
 {
     int retval = 0;
 
@@ -893,7 +893,7 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
     fprintf(stderr, "DEBUG: harvesting run...\n");
 #endif
 
-    if(NULL != aInRun && NULL != aOutRun && aInRun != aOutRun && NULL != aOptions)
+    if(NULL != aInRun && NULL != aOutRun && aInRun != aOutRun && NULL != aOptions && NULL != inContext)
     {
         PRUint32 traverse = 0;
         STAllocation* current = NULL;
@@ -1025,7 +1025,7 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
                 /*
                 ** You get here, we add to the run.
                 */
-                appendRes = appendAllocation(aOptions, aOutRun, current);
+                appendRes = appendAllocation(aOptions, inContext, aOutRun, current);
                 if(0 == appendRes)
                 {
                     retval = __LINE__;
@@ -1048,7 +1048,7 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
 ** Goes over all allocations of a run and recalculates and propogates
 ** the allocation costs - weight, heapcount, size
 */
-int recalculateRunCost(STOptions* inOptions, STRun* aRun)
+int recalculateRunCost(STOptions* inOptions, STContext* inContext, STRun* aRun)
 {
     PRUint32 traverse = 0;
     STAllocation* current = NULL;
@@ -1062,17 +1062,17 @@ int recalculateRunCost(STOptions* inOptions, STRun* aRun)
         return -1;
 
     /* reset stats of this run to 0 to begin recalculation */
-    memset(&aRun->mStats, 0, sizeof(STCallsiteStats));
+    memset(&aRun->mFacts[inContext->mIndex], 0, sizeof(STCallsiteStats));
 
     /* reset timestamp to force propogation of cost */
-    aRun->mStats.mStamp = PR_IntervalNow();
+    aRun->mFacts[inContext->mIndex].mStamp = PR_IntervalNow();
 
     for(traverse = 0; traverse < aRun->mAllocationCount; traverse++)
     {
         current = aRun->mAllocations[traverse];
         if(NULL != current)
         {
-            recalculateAllocationCost(inOptions, aRun, current, PR_TRUE);
+            recalculateAllocationCost(inOptions, inContext, aRun, current, PR_TRUE);
         }
     }
 
@@ -1239,14 +1239,26 @@ int sortRun(STOptions* inOptions, STRun* aRun)
 **
 ** Returns NULL on failure.
 */
-STRun* createRun(PRUint32 aStamp)
+STRun* createRun(STContext* inContext, PRUint32 aStamp)
 {
     STRun* retval = NULL;
 
     retval = (STRun*)calloc(1, sizeof(STRun));
     if(NULL != retval)
     {
-        retval->mStats.mStamp = aStamp;
+        retval->mFacts = (STCallsiteStats*)calloc(globals.mCommandLineOptions.mContexts, sizeof(STCallsiteStats));
+        if(NULL != retval->mFacts)
+        {
+            if(NULL != inContext)
+            {
+                retval->mFacts[inContext->mIndex].mStamp = aStamp;
+            }
+        }
+        else
+        {
+            free(retval);
+            retval = NULL;
+        }
     }
 
     return retval;
@@ -1271,6 +1283,13 @@ void freeRun(STRun* aRun)
             free(aRun->mAllocations);
             aRun->mAllocations = NULL;
         }
+
+        if(NULL != aRun->mFacts)
+        {
+            free(aRun->mFacts);
+            aRun->mFacts = NULL;
+        }
+
         free(aRun);
         aRun = NULL;
     }
@@ -1295,13 +1314,13 @@ STRun* createRunFromGlobal(STOptions* inOptions, STContext* inContext)
         **  callsite backtrace with the information as well.
         ** In this manner, we can provide meaningful callsite data.
         */
-        retval = createRun(PR_IntervalNow());
+        retval = createRun(inContext, PR_IntervalNow());
         
         if(NULL != retval)
         {
             STCategoryNode* node = NULL;
             int failure = 0;
-            int harvestRes = harvestRun(&globals.mRun, retval, inOptions);
+            int harvestRes = harvestRun(&globals.mRun, retval, inOptions, inContext);
             if(0 == harvestRes)
             {
                 int sortRes = sortRun(inOptions, retval);
@@ -1341,7 +1360,7 @@ STRun* createRunFromGlobal(STOptions* inOptions, STContext* inContext)
             if (node)
             {
                 /* Recalculate cost of run */
-                recalculateRunCost(inOptions, node->runs[inContext->mIndex]);
+                recalculateRunCost(inOptions, inContext, node->runs[inContext->mIndex]);
                 
                 retval = node->runs[inContext->mIndex];
             }
@@ -1766,8 +1785,8 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRun
                     ** A new allocation needs to be added to the global run.
                     ** A new allocation needs to be added to the callsite.
                     */
-                    runAppendResult = appendAllocation(&globals.mCommandLineOptions, &globals.mRun, allocation);
-                    callsiteAppendResult = appendAllocation(&globals.mCommandLineOptions, CALLSITE_RUN(aCallsite), allocation);
+                    runAppendResult = appendAllocation(&globals.mCommandLineOptions, NULL, &globals.mRun, allocation);
+                    callsiteAppendResult = appendAllocation(&globals.mCommandLineOptions, NULL, CALLSITE_RUN(aCallsite), allocation);
                     if(0 != runAppendResult && 0 != callsiteAppendResult)
                     {
                         /*
@@ -1801,7 +1820,7 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRun
                         {
                             int appendResult = 0;
 
-                            appendResult = appendAllocation(&globals.mCommandLineOptions, CALLSITE_RUN(aCallsite), allocation);
+                            appendResult = appendAllocation(&globals.mCommandLineOptions, NULL, CALLSITE_RUN(aCallsite), allocation);
                             if(0 != appendResult)
                             {
                                 /*
@@ -2008,7 +2027,7 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
 
                         if(0 != createrun)
                         {
-                            callsite->data = createRun(0);
+                            callsite->data = createRun(NULL, 0);
                         }
                     }
                 }
@@ -2239,7 +2258,7 @@ void htmlCallsiteAnchor(STRequest* inRequest, tmcallsite* aCallsite, const char*
                 myRun = CALLSITE_RUN(namesite);
                 upRun = CALLSITE_RUN(namesite->parent);
                 
-                if(0 != memcmp(&myRun->mStats, &upRun->mStats, sizeof(STCallsiteStats)))
+                if(0 != memcmp(&myRun->mFacts[inRequest->mContext->mIndex], &upRun->mFacts[inRequest->mContext->mIndex], sizeof(STCallsiteStats)))
                 {
                     /*
                     ** Doesn't match, stop.
@@ -2890,7 +2909,7 @@ int displayCallsites(STRequest* inRequest, tmcallsite* aCallsite, int aFollow, P
         */
         if(0 == aStamp && NULL != inRequest->mContext->mSortedRun)
         {
-            aStamp = inRequest->mContext->mSortedRun->mStats.mStamp;
+            aStamp = inRequest->mContext->mSortedRun->mFacts[inRequest->mContext->mIndex].mStamp;
         }
 
         /*
@@ -2903,7 +2922,7 @@ int displayCallsites(STRequest* inRequest, tmcallsite* aCallsite, int aFollow, P
             run = CALLSITE_RUN(aCallsite);
             if(NULL != run)
             {
-                if(aStamp == run->mStats.mStamp)
+                if(aStamp == run->mFacts[inRequest->mContext->mIndex].mStamp)
                 {
                     /*
                     ** We got a header?
@@ -2938,27 +2957,27 @@ int displayCallsites(STRequest* inRequest, tmcallsite* aCallsite, int aFollow, P
                     /*
                     ** Byte Size.
                     */
-                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n", run->mStats.mSize);
+                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n", run->mFacts[inRequest->mContext->mIndex].mSize);
 
                     /*
                     ** Seconds.
                     */
-                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mStats.mTimeval64));
+                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mFacts[inRequest->mContext->mIndex].mTimeval64));
 
                     /*
                     ** Weight.
                     */
-                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%llu</td>\n", run->mStats.mWeight64);
+                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%llu</td>\n", run->mFacts[inRequest->mContext->mIndex].mWeight64);
                     
                     /*
                     ** Allocation object count.
                     */
-                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n", run->mStats.mCompositeCount);
+                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n", run->mFacts[inRequest->mContext->mIndex].mCompositeCount);
 
                     /*
                     ** Heap Operation Seconds.
                     */
-                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mStats.mHeapRuntimeCost));
+                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mFacts[inRequest->mContext->mIndex].mHeapRuntimeCost));
 
                     PR_fprintf(inRequest->mFD, "</tr>\n");
                 }
@@ -3142,7 +3161,7 @@ int displayAllocationDetails(STRequest* inRequest, STAllocation* aAllocation)
 int compareCallsites(const void* aSite1, const void* aSite2, void* aContext)
 {
     int retval = 0;
-    STOptions* inOptions = (STOptions*)aContext;
+    STRequest* inRequest = (STRequest*)aContext;
 
     if(NULL != aSite1 && NULL != aSite2)
     {
@@ -3156,13 +3175,13 @@ int compareCallsites(const void* aSite1, const void* aSite2, void* aContext)
 
             if(NULL != run1 && NULL != run2)
             {
-                STCallsiteStats* stats1 = &(run1->mStats);
-                STCallsiteStats* stats2 = &(run2->mStats);
+                STCallsiteStats* stats1 = &(run1->mFacts[inRequest->mContext->mIndex]);
+                STCallsiteStats* stats2 = &(run2->mFacts[inRequest->mContext->mIndex]);
 
                 /*
                 ** Logic determined by pref/option.
                 */
-                switch(inOptions->mOrderBy)
+                switch(inRequest->mOptions.mOrderBy)
                 {
                     case ST_WEIGHT:
                     {
@@ -3302,13 +3321,13 @@ int displayTopCallsites(STRequest* inRequest, tmcallsite** aCallsites, PRUint32 
         */
         if(0 == aStamp && NULL != inRequest->mContext->mSortedRun)
         {
-            aStamp = inRequest->mContext->mSortedRun->mStats.mStamp;
+            aStamp = inRequest->mContext->mSortedRun->mFacts[inRequest->mContext->mIndex].mStamp;
         }
 
         /*
         ** Sort the things.
         */
-        NS_QuickSort(aCallsites, aCallsiteCount, sizeof(tmcallsite*), compareCallsites, &inRequest->mOptions);
+        NS_QuickSort(aCallsites, aCallsiteCount, sizeof(tmcallsite*), compareCallsites, inRequest);
 
         /*
         ** Time for output.
@@ -3321,7 +3340,7 @@ int displayTopCallsites(STRequest* inRequest, tmcallsite** aCallsites, PRUint32 
             /*
             ** Only if the same stamp....
             */
-            if(aStamp == run->mStats.mStamp)
+            if(aStamp == run->mFacts[inRequest->mContext->mIndex].mStamp)
             {
                 /*
                 ** We got a header yet?
@@ -3362,27 +3381,27 @@ int displayTopCallsites(STRequest* inRequest, tmcallsite** aCallsites, PRUint32 
                 /*
                 ** Size.
                 */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%u</td>\n", run->mStats.mSize);
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%u</td>\n", run->mFacts[inRequest->mContext->mIndex].mSize);
 
                 /*
                 ** Timeval.
                 */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mStats.mTimeval64));
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mFacts[inRequest->mContext->mIndex].mTimeval64));
 
                 /*
                 ** Weight.
                 */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%llu</td>\n", run->mStats.mWeight64);
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%llu</td>\n", run->mFacts[inRequest->mContext->mIndex].mWeight64);
 
                 /*
                 ** Allocation object count.
                 */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%u</td>\n", run->mStats.mCompositeCount);
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%u</td>\n", run->mFacts[inRequest->mContext->mIndex].mCompositeCount);
 
                 /*
                 ** Heap operation seconds.
                 */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mStats.mHeapRuntimeCost));
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mFacts[inRequest->mContext->mIndex].mHeapRuntimeCost));
 
                 PR_fprintf(inRequest->mFD, "</tr>\n");
 
@@ -3449,11 +3468,11 @@ int displayCallsiteDetails(STRequest* inRequest, tmcallsite* aCallsite)
         }
 
         PR_fprintf(inRequest->mFD, "<table border=0>\n");
-        PR_fprintf(inRequest->mFD, "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n", thisRun->mStats.mSize);
-        PR_fprintf(inRequest->mFD, "<tr><td>Composite Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE64(thisRun->mStats.mTimeval64));
-        PR_fprintf(inRequest->mFD, "<tr><td>Composite Weight:</td><td align=right>%llu</td></tr>\n", thisRun->mStats.mWeight64);
-        PR_fprintf(inRequest->mFD, "<tr><td>Heap Object Count:</td><td align=right>%u</td></tr>\n", thisRun->mStats.mCompositeCount);
-        PR_fprintf(inRequest->mFD, "<tr><td>Heap Operation Seconds:</td><td align=right>" ST_MICROVAL_FORMAT "</td></tr>\n", ST_MICROVAL_PRINTABLE(thisRun->mStats.mHeapRuntimeCost));
+        PR_fprintf(inRequest->mFD, "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n", thisRun->mFacts[inRequest->mContext->mIndex].mSize);
+        PR_fprintf(inRequest->mFD, "<tr><td>Composite Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE64(thisRun->mFacts[inRequest->mContext->mIndex].mTimeval64));
+        PR_fprintf(inRequest->mFD, "<tr><td>Composite Weight:</td><td align=right>%llu</td></tr>\n", thisRun->mFacts[inRequest->mContext->mIndex].mWeight64);
+        PR_fprintf(inRequest->mFD, "<tr><td>Heap Object Count:</td><td align=right>%u</td></tr>\n", thisRun->mFacts[inRequest->mContext->mIndex].mCompositeCount);
+        PR_fprintf(inRequest->mFD, "<tr><td>Heap Operation Seconds:</td><td align=right>" ST_MICROVAL_FORMAT "</td></tr>\n", ST_MICROVAL_PRINTABLE(thisRun->mFacts[inRequest->mContext->mIndex].mHeapRuntimeCost));
         PR_fprintf(inRequest->mFD, "</table>\n<p>\n");
 
         /*
@@ -3514,12 +3533,12 @@ int displayCallsiteDetails(STRequest* inRequest, tmcallsite* aCallsite)
         ** Allocations we did.
         ** Simply harvest our own run.
         */
-        sortedRun = createRun(0);
+        sortedRun = createRun(inRequest->mContext, 0);
         if(NULL != sortedRun)
         {
             int harvestRes = 0;
 
-            harvestRes = harvestRun(CALLSITE_RUN(aCallsite), sortedRun, &inRequest->mOptions);
+            harvestRes = harvestRun(CALLSITE_RUN(aCallsite), sortedRun, &inRequest->mOptions, inRequest->mContext);
             if(0 == harvestRes)
             {
                 if(0 != sortedRun->mAllocationCount)
@@ -4936,7 +4955,7 @@ STContext* contextLookup(STOptions* inOptions)
                 if(node)
                 {
                     /* Recalculate cost of run */
-                    recalculateRunCost(&inCache->mItems[retval->mIndex].mOptions, node->runs[retval->mIndex]);
+                    recalculateRunCost(&inCache->mItems[retval->mIndex].mOptions, retval, node->runs[retval->mIndex]);
                     retval->mSortedRun = node->runs[retval->mIndex];
                 }
 
@@ -5486,7 +5505,7 @@ void handleClient(void* inArg)
                 **      mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.35 2002/05/13 01:48:29 blythe%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.36 2002/05/13 02:43:25 blythe%netscape.com Exp $", crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if(NULL != strstr(start, ".png"))
                 {
@@ -6058,7 +6077,7 @@ int main(int aArgCount, char** aArgArray)
     }
 
     /*
-    **  Small category code init.
+    **  Small alloc code init.
     */
     globals.mCategoryRoot.runs = (STRun**)calloc(globals.mCommandLineOptions.mContexts, sizeof(STRun*));
     if(NULL == globals.mCategoryRoot.runs)
@@ -6106,7 +6125,7 @@ int main(int aArgCount, char** aArgArray)
     */
 
     /*
-    **  Category root has a small modification to clear up.
+    **  globlas has a small modification to clear up.
     */
     if(NULL != globals.mCategoryRoot.runs)
     {
