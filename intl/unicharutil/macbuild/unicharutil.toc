@@ -1,0 +1,2 @@
+mozilla/intl/unicharutil/src/nsCaseConversionImp2.cpp
+mozilla/intl/unicharutil/src/nsUnicharUtilFactory.cpp
