@@ -25,32 +25,39 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
+////////////////////////////////////////////////////////////////////////
+
+PRInt32        nsRDFResource::gRefCnt;
+nsIRDFService* nsRDFResource::gRDFService;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsRDFResource::nsRDFResource(void)
     : mURI(nsnull)
 {
     NS_INIT_REFCNT();
+
+    if (gRefCnt++ == 0) {
+        nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                   nsIRDFService::IID(),
+                                                   (nsISupports**) &gRDFService);
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+    }
 }
 
 nsRDFResource::~nsRDFResource(void)
 {
-    nsresult rv;
-
-    nsIRDFService* mgr;
-    rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      nsIRDFService::IID(),
-                                      (nsISupports**) &mgr);
-
-    PR_ASSERT(NS_SUCCEEDED(rv));
-    if (NS_SUCCEEDED(rv)) {
-        mgr->UnregisterResource(this);
-        nsServiceManager::ReleaseService(kRDFServiceCID, mgr);
-    }
+    gRDFService->UnregisterResource(this);
 
     // N.B. that we need to free the URI *after* we un-cache the resource,
     // due to the way that the resource manager is implemented.
     delete[] mURI;
+
+    if (--gRefCnt == 0) {
+        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+        gRDFService = nsnull;
+    }
 }
 
 NS_IMPL_ADDREF(nsRDFResource)
@@ -83,7 +90,8 @@ nsRDFResource::Init(const char* uri)
     mURI = nsCRT::strdup(uri);
     if (mURI == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+
+    return gRDFService->RegisterResource(this, PR_TRUE);
 }
 
 NS_IMETHODIMP
