@@ -9,11 +9,12 @@ AC_DEFUN(AM_PATH_GLIB,
 [dnl 
 dnl Get the cflags and libraries from the glib-config script
 dnl
-AC_ARG_WITH(glib-prefix,[  --with-glib-prefix=PFX   Prefix where GLIB is installed (optional)],
+AC_ARG_WITH(glib-prefix,[  --with-glib-prefix=PFX  Prefix where GLIB is installed (optional)],
             glib_config_prefix="$withval", glib_config_prefix="")
-AC_ARG_WITH(glib-exec-prefix,[  --with-glib-exec-prefix=PFX Exec prefix where GLIB is installed (optional)],
+AC_ARG_WITH(glib-exec-prefix,[  --with-glib-exec-prefix=PFX
+                          Exec prefix where GLIB is installed (optional)],
             glib_config_exec_prefix="$withval", glib_config_exec_prefix="")
-AC_ARG_ENABLE(glibtest, [  --disable-glibtest       Do not try to compile and run a test GLIB program],
+AC_ARG_ENABLE(glibtest, [  --disable-glibtest      Do not try to compile and run a test GLIB program],
 		    , enable_glibtest=yes)
 
   if test x$glib_config_exec_prefix != x ; then
