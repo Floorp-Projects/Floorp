@@ -23,6 +23,7 @@ EXPORTS = \
 	nsIPop3Sink.h				\
 	nsIPop3URL.h				\
 	nsIMailboxUrl.h				\
+	nsIMailboxService.h			\
 	$(NULL)
 
 MODULE=mailnews
