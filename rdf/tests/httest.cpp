@@ -50,6 +50,9 @@
 static NS_DEFINE_IID(kNetServiceCID,           NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kCRDFTreeDataModelCID,    NS_RDFTREEDATAMODEL_CID);
 static NS_DEFINE_IID(kCRDFToolbarDataModelCID, NS_RDFTOOLBARDATAMODEL_CID);
+static NS_DEFINE_IID(kITreeDataModelIID,       NS_ITREEDATAMODEL_IID);
+static NS_DEFINE_IID(kITreeDMItemIID,          NS_ITREEDMITEM_IID);
+
 
 int
 main(int argc, char** argv)
@@ -60,7 +63,6 @@ main(int argc, char** argv)
     nsRepository::RegisterFactory(kCRDFTreeDataModelCID, RDF_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCRDFToolbarDataModelCID, RDF_DLL, PR_FALSE, PR_FALSE);
 
-    static NS_DEFINE_IID(kITreeDataModelIID, NS_ITREEDATAMODEL_IID);
     nsITreeDataModel* tree;
     nsresult res =
         nsRepository::CreateInstance(kCRDFTreeDataModelCID,
@@ -82,29 +84,32 @@ main(int argc, char** argv)
 
         {
             PRUint32 size;
-            tree->GetTreeItemCount(size);
+            tree->GetItemCount(size);
 
-            nsITreeDMItem* item;
+            nsIDMItem* item;
             for (int i = 0; i < size; ++i) {
-                if (NS_FAILED(tree->GetNthTreeItem(item, i)))
-                    break;
+                if (NS_SUCCEEDED(tree->GetNthItem(item, i))) {
+                    nsITreeDMItem* treeItem;
+                    if (NS_SUCCEEDED(item->QueryInterface(kITreeDMItemIID, (void**) &treeItem))) {
+                        std::cout << "Item " << i << ": ";
 
-                std::cout << "Item " << i << ": ";
+                        for (int j = 0; j < numColumns; ++j) {
+                            nsString columnName;
+                            columns[j]->GetColumnName(columnName);
 
-                for (int j = 0; j < numColumns; ++j) {
-                    nsString columnName;
-                    columns[j]->GetColumnName(columnName);
+                            nsString valueText;
+                            tree->GetItemTextForColumn(valueText, treeItem, columns[j]);
 
-                    nsString valueText;
-                    tree->GetItemTextForColumn(valueText, item, columns[j]);
+                            char buf[256];
+                            std::cout << columnName.ToCString(buf, sizeof buf);
+                            std::cout << "=\"" << valueText.ToCString(buf, sizeof buf) << "\" ";
+                        }
 
-                    char buf[256];
-                    std::cout << columnName.ToCString(buf, sizeof buf);
-                    std::cout << "=\"" << valueText.ToCString(buf, sizeof buf) << "\" ";
+                        std::cout << std::endl;
+                        treeItem->Release();
+                    }
+                    item->Release();
                 }
-
-                std::cout << std::endl;
-                item->Release();
             }
         }
 
