@@ -32,10 +32,10 @@ options {
 	static final int BlockScope = 2;
 
 	// Possible abbreviation contexts
-	static final int Abbrev = 0;
+/*	static final int Abbrev = 0;
 	static final int AbbrevNonEmpty = 1;
 	static final int AbbrevNoShortIf = 2;
-	static final int Full = 3;
+	static final int Full = 3;*/
 }
 
 // ********* Identifiers **********
@@ -211,7 +211,15 @@ relational_operator[boolean allowIn]
 	;
 
 relational_expression[boolean initial, boolean allowIn]
-	:	shift_expression[initial] (relational_operator[allowIn] shift_expression[false])*
+	:	shift_expression[initial]
+		(
+			// ANTLR reports an ambiguity here because the FOLLOW set of a relational_expression
+			// includes the "in" token (from the for-in statement), but there's no real ambiguity
+			// here because the 'allowIn' semantic predicate is used to prevent the two from being
+			// confused.
+			options { warnWhenFollowAmbig=false; }:
+			relational_operator[allowIn] shift_expression[false]
+		)*
 	;
 
 // ********* Equality Operators **********
@@ -254,9 +262,7 @@ conditional_expression[boolean initial, boolean allowIn]
 		//  Assume the latter by using ANTLR's default behavior of consuming input as
 		//  soon as possible and quell the resultant warning.
 		(
-			options {
-           		warnWhenFollowAmbig=false;
-            }
+			options {warnWhenFollowAmbig=false;}
 		:	"?" assignment_expression[false, allowIn] ":" assignment_expression[false, allowIn]
 		)*
 	;
@@ -315,42 +321,38 @@ type_expression[boolean initial, boolean allowIn]
 
 // ********* Statements **********
 
-statement[int scope, int abbrev]
-	:	code_statement[abbrev]
-//	|	definition[context, abbrev]  FIXME
+statement[int scope, boolean non_empty]
+	:	code_statement[non_empty]
+	|	definition[scope]
 	;
 
-code_statement[int abbrev]
-	:	empty_statement[abbrev]
-	|	expression_statement semicolon[abbrev]
+code_statement[boolean non_empty]
+	:	empty_statement[non_empty]
+	|	(identifier ":") => labeled_statement[non_empty]
+	|	expression_statement semicolon
 	|	block[BlockScope]
-/*	|	labeled_statement[abbrev]
-	|	if_statement[abbrev]
-	|	switch_statement[abbrev]
-	|	do_statement semicolon[abbrev]
-	|	while_statement[abbrev]
-	|	for_statement[abbrev]
-	|	with_statement[abbrev]
-	|	continue_statement semicolon[abbrev]
-	|	break_statement semicolon[abbrev]
-	|	return_statement semicolon[abbrev]
-	|	throw_statement semicolon[abbrev]
+	|	if_statement[non_empty]
+	|	switch_statement
+	|	do_statement semicolon
+	|	while_statement[non_empty]
+	|	for_statement[non_empty]
+	|	with_statement[non_empty]
+	|	continue_statement semicolon
+	|	break_statement semicolon
+	|	return_statement semicolon
+	|	throw_statement semicolon
 	|	try_statement
-	|	import_statement[abbrev] FIXME */
+	|	import_statement[non_empty]
 	;
 
-semicolon[int abbrev]
-// FIXME
-//	:	{abbrev == Full}?	";"
-//	|	(";")?
+semicolon
+// FIXME - Add abbreviation
 	:	";"
 	;
 
 // ********* Empty Statement **********
 // FIXME
-empty_statement[int abbrev]
-//	:	{abbrev == Full || abbrev == AbbrevNonEmpty}? ";"
-//	|	(";")?
+empty_statement[boolean non_empty]
 	:	";"
 	;
 
@@ -366,24 +368,27 @@ block[int scope]
 
 // FIXME
 statements[int scope]
-//	:	statement[scope, Abbrev]
-//	|	(statement[scope, Full])+ statement[scope, AbbrevNonEmpty]
-	:	(statement[scope, Full])+
+	:	(statement[scope, false])+
 	;
 
 // ********* Labeled Statements **********
-labeled_statement[int abbrev]
-	:	identifier ":" code_statement[abbrev]
+labeled_statement[boolean non_empty]
+	:	identifier ":" code_statement[non_empty]
 	;
 
 // ********* If statement **********
-if_statement[int abbrev]
-	:	"if" 
+if_statement[boolean non_empty]
+	:	"if" parenthesized_expression code_statement[non_empty]
+		(
+			// Standard if/else ambiguity
+			options { warnWhenFollowAmbig=false; }:
+			"else" code_statement[non_empty]
+		)?
 	;
 
 // ********* Switch statement **********
 switch_statement
-	:	"switch" parenthesized_expression "{" (case_groups last_case_group)? "}"
+	:	"switch" parenthesized_expression "{" (case_groups)? "}"
 	;
 
 case_groups
@@ -391,11 +396,7 @@ case_groups
 	;
 
 case_group
-	:	(case_guard)+ (code_statement[Full])+
-	;
-
-last_case_group
-	:	(case_guard)+ case_statements
+	:	(case_guard)+ (code_statement[true])+
 	;
 
 case_guard
@@ -405,29 +406,28 @@ case_guard
 
 // FIXME
 case_statements
-//	:	(code_statement[Full])+ code_statement[AbbrevNonEmpty]
-	:	(code_statement[Full])+
+	:	(code_statement[false])+
 	;
 
 // ********* Do-While statement **********
 do_statement
-	:	"do" code_statement[AbbrevNonEmpty] "while" parenthesized_expression
+	:	"do" code_statement[true] "while" parenthesized_expression
 	;
 
 // ********* While statement **********
-while_statement[int abbrev]
-	:	"while" parenthesized_expression code_statement[abbrev]
+while_statement[boolean non_empty]
+	:	"while" parenthesized_expression code_statement[non_empty]
 	;
 
 // ********* For statement **********
-for_statement[int abbrev]
+for_statement[boolean non_empty]
 	:	"for" "("
 		(
 			(for_initializer ";") => for_initializer ";" optional_expression ";" optional_expression
 		|	for_in_binding "in" expression[false, true]
 		)
 		")"
-		code_statement[abbrev]
+		code_statement[non_empty]
 	;
 
 for_initializer
@@ -445,8 +445,8 @@ for_in_binding
 	;
 
 // ********* With statement **********
-with_statement[int abbrev]
-	:	"with" parenthesized_expression code_statement[abbrev]
+with_statement[boolean non_empty]
+	:	"with" parenthesized_expression code_statement[non_empty]
 	;
 
 // ********* Continue and Break statement **********
@@ -478,6 +478,84 @@ catch_clause
 	;
 
 // ********* Import statement **********
+import_statement[boolean non_empty]
+	:	"import" import_list
+		(
+			";"
+		|	block[BlockScope] ("else" code_statement[non_empty])
+		)
+	;
+
+import_list
+	:	import_item ("," import_item)*
+	;
+
+import_item
+	:	(identifier "=") => identifier "=" import_source
+	|	import_source
+	|	"protected" identifier "=" import_source
+	;
+
+import_source
+	:	non_assignment_expression[false, false] (":" Version)
+	;
+
+// ********* Definitions **********
+definition[int scope]
+	:	visibility global_definition
+	|	local_definition[scope]
+	;
+
+global_definition
+	:	version_definition semicolon
+	|	variable_definition semicolon
+	|	function_definition
+	|	member_definition
+	|	class_definition
+	;
+
+local_definition[int scope]
+	:	{scope == TopLevelScope || scope == ClassScope}? (class_definition | member_definition)
+	|	variable_definition semicolon
+	|	function_definition
+	;
+
+// ********* Visibility Specifications **********
+visibility
+	:	"private"
+	|	"package"
+	|	"public" versions_and_renames
+	;
+
+// ********* Versions **********
+
+// FIXME
+versions_and_renames:
+	version_range_and_alias ("," version_range_and_alias)*
+	;
+
+version_range_and_alias
+	:	version_range (":" identifier)
+	;
+
+version_range
+	:	(version)? (".." (version)?)
+	;
+
+version:	STRING ;
+
+// ********* Version Definition **********
+version_definition
+	:	"version" version
+		(
+			">" version_list
+			"=" version
+		)?
+	;
+
+version_list
+	:	version ("," version)*
+	;
 
 // ********* Variable Definition **********
 variable_definition
@@ -545,7 +623,14 @@ rest_parameter
 	
 
 result_signature
-	:	(type_expression[true, true])?
+	:	(
+			// ANTLR reports an ambiguity here because the FOLLOW set of a parameter_signature
+			// includes the "{" token (from the block that contains a function's code), but there's
+			// no real ambiguity here because the 'allowIn' semantic predicate is used to prevent the
+			// two from being confused.
+			options { warnWhenFollowAmbig=false; }:
+			type_expression[true, true]
+		)?
 	;
 
 traditional_function
@@ -554,6 +639,45 @@ traditional_function
 
 traditional_parameter_list
 	:	(identifier ("," identifier)* )?
+	;
+
+// ********* Class Member Definitions **********
+member_definition
+	:	field_definition semicolon
+	|	method_definition
+	|	constructor_definition
+	;
+
+field_definition
+	:	"field" variable_binding_list[true]
+	;
+
+method_definition
+	:	method_prefix identifier function_signature (block[BlockScope] | semicolon)
+	;
+
+method_prefix
+	:	("final")? ("override")? ("getter" | "setter")? "method"
+	;
+
+constructor_definition
+	:	"constructor" ("new" | identifier) parameter_signature block[BlockScope]
+	;
+
+// ********* Class Definition **********
+class_definition
+	:	"class" 
+		(
+			"extends" type_expression[true, true]
+		|	identifier ("extends" type_expression[true, true])?
+		)
+		block[ClassScope]
+	;
+
+// ********* Programs **********
+// Start symbol for JS programs
+program
+	:	statements[TopLevelScope]
 	;
 
 // ************************************************************************************************
