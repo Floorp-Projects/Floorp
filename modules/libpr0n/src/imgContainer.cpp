@@ -509,12 +509,6 @@ void imgContainer::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
   switch (prevFrameDisposalMethod) {
     default:
     case 0: // DISPOSE_NOT_SPECIFIED
-      *aFrameToUse = mCompositingFrame;
-      NS_ADDREF(*aFrameToUse);
-
-      nextFrame->DrawTo(mCompositingFrame, x, y, width, height);
-      break;
-
     case 1: // DISPOSE_KEEP Leave previous frame in the framebuffer
       *aFrameToUse = mCompositingFrame;
       NS_ADDREF(*aFrameToUse);
