@@ -22,9 +22,10 @@
 #include "nsIDOMSelectionListener.h"
 #include "nsICaret.h"
 
-
 class nsITimer;
 class nsCaretProperties;
+class nsIView;
+class nsIRenderingContext;
 
 // {E14B66F6-BFC5-11d2-B57E-00105AA83B2F}
 #define NS_CARET_CID \
@@ -44,16 +45,17 @@ class nsCaret : public nsICaret,
 
 	public:
 	
-	  /* nsICaret interface */
+	  // nsICaret interface
   	NS_IMETHOD    Init(nsIPresShell *inPresShell, nsCaretProperties *inCaretProperties);
 
  		NS_IMETHOD    SetCaretVisible(PRBool inMakeVisible);
   	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
-  	NS_IMETHOD    Refresh();
+  	NS_IMETHOD    Refresh(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect);
+		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
 	
-	  /* nsIDOMSelectionListener interface */
+	  //nsIDOMSelectionListener interface
 	  NS_IMETHOD    NotifySelectionChanged();
-	 
+	  		               				
 		static void		CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
 	
 	protected:
@@ -64,6 +66,11 @@ class nsCaret : public nsICaret,
 		nsresult			StartBlinking();
 		nsresult			StopBlinking();
 		
+		void					GetViewForRendering(nsPoint &viewOffset, nsIView* &outView);
+		PRBool				SetupDrawingFrameAndOffset();
+		void					RefreshDrawCaret(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect);
+		void 					DrawCaretWithContext(nsIRenderingContext& inRendContext);
+
 		void					DrawCaret();
 		void					ToggleDrawnStatus()	{ 	mDrawn = !mDrawn; }
 
@@ -78,7 +85,12 @@ class nsCaret : public nsICaret,
 		
 	private:
 	
-		PRBool				mDrawn;							// this should be mutable
+		PRBool								mDrawn;							// this should be mutable
 		
+		nsRect								mCaretRect;					// the last caret rect
+		nsIRenderingContext*	mRendContext;				// rendering context. We have to keep this around so that we can
+																							// erase the caret without doing all the frame searching again
+		nsIFrame*							mLastCaretFrame;		// store the frame the caret was last drawn in.
+		PRInt32								mLastContentOffset;
 };
 
