@@ -583,7 +583,7 @@ static nsresult drawThemeMenuItem(Arguments& args, nsIInputStream **result, PRIn
     return rv;
 }
 
-static nsresult drawThemeMenuSeperator(Arguments& args, nsIInputStream **result, PRInt32 *length)
+static nsresult drawThemeMenuSeparator(Arguments& args, nsIInputStream **result, PRInt32 *length)
 {
     int width = getIntArgument(args, "width", 60);
     int height = getIntArgument(args, "height", 3);
@@ -808,7 +808,7 @@ static ThemeEntry kThemeEntries[] = {
     "button", &drawThemeButton,
     "menu", &drawThemeMenu,
     "menuitem", &drawThemeMenuItem,
-    "menuseperator", &drawThemeMenuSeperator,
+    "menuseparator", &drawThemeMenuSeparator,
     "scrollbar", &drawThemeScrollbar,
     "progressbar", &drawThemeProgressbar
 };
