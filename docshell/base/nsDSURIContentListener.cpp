@@ -68,9 +68,10 @@ NS_IMETHODIMP nsDSURIContentListener::GetProtocolHandler(nsIURI* aURI,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType, nsURILoadCommand aCommand, 
-   const char* aWindowTarget, nsIChannel* aOpenedChannel,
-   nsIStreamListener** aContentHandler, PRBool* aAbortProcess)
+NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType, 
+   nsURILoadCommand aCommand, const char* aWindowTarget, 
+   nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler,
+   PRBool* aAbortProcess)
 {
    NS_ENSURE_ARG_POINTER(aContentHandler);
    if(aAbortProcess)
@@ -87,7 +88,8 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType, nsURIL
    aOpenedChannel->GetURI(getter_AddRefs(aURI));
    mDocShell->OnLoadingSite(aURI);
 
-   // XX mDocShell->CreateContentViewer();
+   NS_ENSURE_SUCCESS(mDocShell->CreateContentViewer(aContentType, aCommand, 
+      aOpenedChannel, aContentHandler), NS_ERROR_FAILURE);
 
    if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
       mDocShell->SetFocus();

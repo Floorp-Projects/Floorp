@@ -1833,51 +1833,84 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
    nsURILoadCommand aCommand, nsIChannel* aOpenedChannel, 
    nsIStreamListener** aContentHandler)
 {
-   //XXX We should return NS_ERROR_FAILURE if we can't create a new 
-   // one and then leave our window in tact....
-   //XXXQ Can we check the content type of the current content viewer
+   // Can we check the content type of the current content viewer
    // and reuse it without destroying it and re-creating it?
 
-   // XXXIMPL Do cleanup....
+   nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(mLoadCookie));
+   NS_ENSURE_TRUE(loadGroup, NS_ERROR_FAILURE);
 
    // Instantiate the content viewer object
-   NS_ENSURE_SUCCESS(NewContentViewerObj(aContentType, aCommand, aOpenedChannel,
-      aContentHandler), NS_ERROR_FAILURE);
+   nsCOMPtr<nsIContentViewer> viewer;
+   if(NS_FAILED(NewContentViewerObj(aContentType, aCommand, aOpenedChannel,
+      loadGroup, aContentHandler, getter_AddRefs(viewer))))
+      return NS_ERROR_FAILURE;
 
-   //XXXIMPL Do stuff found in embed here.  Don't call embed it is going away.
+   // let's try resetting the load group if we need to...
+   nsCOMPtr<nsILoadGroup> currentLoadGroup;
+   NS_ENSURE_SUCCESS(aOpenedChannel->GetLoadGroup(getter_AddRefs(currentLoadGroup)),
+      NS_ERROR_FAILURE);
 
-   return NS_ERROR_FAILURE;
+   if(currentLoadGroup.get() != loadGroup.get())
+      {
+      nsLoadFlags loadAttribs = 0;
+
+      //Cancel any URIs that are currently loading...
+      /// XXX: Need to do this eventually      Stop();
+      //
+      // Retarget the document to this loadgroup...
+      //
+      if(currentLoadGroup)
+         currentLoadGroup->RemoveChannel(aOpenedChannel, nsnull, nsnull, nsnull);
+      
+      aOpenedChannel->SetLoadGroup(loadGroup);
+
+      // Mark the channel as being a document URI...
+      aOpenedChannel->GetLoadAttributes(&loadAttribs);
+      loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
+
+      aOpenedChannel->SetLoadAttributes(loadAttribs);
+
+      loadGroup->AddChannel(aOpenedChannel, nsnull);
+      }
+
+   NS_ENSURE_SUCCESS(SetupNewViewer(viewer), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
-   nsURILoadCommand aCommand, nsIChannel* aOpenedChannel, 
-   nsIStreamListener** aContentHandler)
+   nsURILoadCommand aCommand, nsIChannel* aOpenedChannel,
+   nsILoadGroup* aLoadGroup, nsIStreamListener** aContentHandler,
+   nsIContentViewer** aViewer)
 {
-   //XXX This should probably be some category thing....
-   char id[256];
-   PR_snprintf(id, sizeof(id), NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
-      aCommand , aContentType);
-
-   // Create an instance of the document-loader-factory
-   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory(do_CreateInstance(id));
-   NS_ENSURE_TRUE(docLoaderFactory, NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mLoadCookie));
-   // Now create an instance of the content viewer
    nsXPIDLCString strCommand;
    // go to the uri loader and ask it to convert the uri load command into a old
    // world style string
-   nsresult rv = NS_OK;
-   NS_WITH_SERVICE(nsIURILoader, pURILoader, NS_URI_LOADER_PROGID, &rv);
-   if (NS_SUCCEEDED(rv))
-    NS_ENSURE_SUCCESS(pURILoader->GetStringForCommand(aCommand, getter_Copies(strCommand)), NS_ERROR_FAILURE);
+   nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
+   NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
    
-   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(strCommand, aOpenedChannel,
-      loadGroup, aContentType, NS_STATIC_CAST(nsIContentViewerContainer*, this),
-      nsnull /*XXXQ Need ExtraInfo???*/,
-      aContentHandler, getter_AddRefs(mContentViewer)), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(uriLoader->GetStringForCommand(aCommand, 
+      getter_Copies(strCommand)), NS_ERROR_FAILURE);
+   
+   //XXX This should probably be some category thing....
+   char id[256];
+   PR_snprintf(id, sizeof(id), NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
+      (const char*)strCommand , aContentType);
 
-   return rv;
+   // Create an instance of the document-loader-factory
+   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory(do_CreateInstance(id));
+   if(!docLoaderFactory)
+      return NS_ERROR_FAILURE;
+
+   // Now create an instance of the content viewer
+   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(strCommand,
+      aOpenedChannel, aLoadGroup, aContentType,
+      NS_STATIC_CAST(nsIContentViewerContainer*, this), nsnull, 
+      aContentHandler, aViewer), NS_ERROR_FAILURE);
+
+   (*aViewer)->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer*, this));
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
@@ -1968,32 +2001,15 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
    NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
 
    nsRect bounds(x, y, cx, cy);
-/*   if(NS_FAILED(mContentViewer->Init(widget->GetNativeData(NS_NATIVE_WIDGET),
-      mDeviceContext, mPrefs, bounds, nsScrollPreference_kAuto)))
+   nsCOMPtr<nsIDeviceContext> deviceContext(dont_AddRef(widget->GetDeviceContext()));
+   if(NS_FAILED(mContentViewer->Init(widget->GetNativeData(NS_NATIVE_WIDGET),
+      deviceContext, mPrefs, bounds, nsScrollPreference_kAuto)))
       {
       mContentViewer = nsnull;
       NS_ERROR("ContentViewer Initialization failed");
       return NS_ERROR_FAILURE;
       }   
 
-   /*
-    XXXTAB Don't think we need this in new world
-    // If the history state has been set by session history,
-    // set it on the pres shell now that we have a content
-    // viewer.
-   if(mContentViewer && mHistoryState)
-      {
-      nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
-      if(docv)
-         {
-         nsCOMPtr<nsIPresShell> shell;
-         docv->GetPresShell(*getter_AddRefs(shell));
-         if(shell)
-            shell->SetHistoryState(mHistoryState);
-         }
-      }
-   */
-   NS_ERROR("Uncomment above");
    mContentViewer->Show();
 
    // Now that we have switched documents, forget all of our children
