@@ -93,7 +93,9 @@ NS_IMETHODIMP nsDSWebProgressListener::OnStatusChange(nsIChannel* aChannel,
    // window
    if(mDocShell)
       {
-      if(aProgressStatusFlags & nsIWebProgress::flag_net_start)
+      if(aProgressStatusFlags & nsIWebProgress::flag_net_start &&
+         PR_TRUE /*XXX Eventually check some flag to make sure there is not
+         already window activity.  If there is don't add the window start*/)
          aProgressStatusFlags |= nsIWebProgress::flag_win_start;
       else if(aProgressStatusFlags & nsIWebProgress::flag_net_stop &&
          PR_TRUE /*XXX Eventually check some flag to see if there is animation
