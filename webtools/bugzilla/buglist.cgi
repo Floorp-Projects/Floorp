@@ -203,7 +203,11 @@ if {[info exists FORM(sql)]} {
           if {[cequal $v "(empty)"]} {
               qadd "\t\t${or}bugs.$field is null\n"
           } else {
-              qadd "\t\t${or}bugs.$field = '$v'\n"
+              if {[cequal $v "---"]} {
+                  qadd "\t\t${or}bugs.$field = ''\n"
+              } else {
+                  qadd "\t\t${or}bugs.$field = '$v'\n"
+              }
           }
           set or "or "
         }

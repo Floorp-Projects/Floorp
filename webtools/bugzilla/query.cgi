@@ -112,7 +112,7 @@ puts "
 </td>
 <td align=left valign=top>
 <SELECT NAME=\"resolution\" MULTIPLE SIZE=7>
-[make_options $legal_resolution $default(resolution) $type(resolution)]
+[make_options [concat $legal_resolution [list "---"]] $default(resolution) $type(resolution)]
 </SELECT>
 </td>
 <td align=left valign=top>
