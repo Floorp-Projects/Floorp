@@ -354,6 +354,8 @@ nsSVGCairoPathGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_retv
     *_retval = mCoveredRegion;
     NS_IF_ADDREF(*_retval);
   }
+
+  return NS_OK;
 }
 
 /** Implements nsISVGRendererRegion getCoveredRegion(); */
