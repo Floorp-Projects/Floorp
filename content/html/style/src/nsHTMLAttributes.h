@@ -42,6 +42,8 @@
 #include "nsHTMLValue.h"
 #include "nsIHTMLContent.h"
 #include "nsINodeInfo.h"
+#include "nsIStyleRule.h"
+
 class nsIAtom;
 class nsISupportsArray;
 class nsIHTMLStyleSheet;
@@ -54,7 +56,7 @@ class nsHTMLMappedAttributes;
 {0x0fdd27a0, 0x2e7b, 0x11d3,            \
     {0x80, 0x60, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
-class nsIHTMLMappedAttributes : public nsISupports
+class nsIHTMLMappedAttributes : public nsIStyleRule
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTML_MAPPED_ATTRIBUTES_IID);

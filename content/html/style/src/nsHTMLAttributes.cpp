@@ -43,7 +43,6 @@
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
-#include "nsIStyleRule.h"
 #include "nsString.h"
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
@@ -300,7 +299,8 @@ MOZ_DECL_CTOR_COUNTER(nsHTMLClassList)
 
 // ----------------
 
-class nsHTMLMappedAttributes : public nsIHTMLMappedAttributes, public nsIStyleRule {
+class nsHTMLMappedAttributes : public nsIHTMLMappedAttributes
+{
 public:
   nsHTMLMappedAttributes(void);
   nsHTMLMappedAttributes(const nsHTMLMappedAttributes& aCopy);
