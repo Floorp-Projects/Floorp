@@ -99,7 +99,11 @@ the following information:
       What port to connect to on the IRC server. Typically, this will
       be 6667 or therabouts.
 
-   3. Channels.
+   3. Password.
+      If your server has a password, enter it here. If there isn't one
+      (and this is almost certainly the case) then just hit enter.
+
+   4. Channels.
       What channels the bot should initially connect to. It is
       recommended that this just be a bot channel or a test channel,
       for example #mozbot, since running a bot for the first time
@@ -110,19 +114,19 @@ the following information:
       'channelKeys' variable. To do this, the bot will have to be on
       IRC first, so don't worry about it for now.)
 
-   4. Your e-mail address.
+   5. Your e-mail address.
       In case of great difficulties, mozbot may try to e-mail you. If
       this happens, it will use the e-mail address you gave here. This
       only happens if (a) it absolutely cannot connect to the server
       you gave it, or (b) it cannot find a nick that is not in use.
 
-   5. SMTP server. 
+   6. SMTP server. 
       The name of the SMTP server it should try to talk with in order
       to send you mail. If you type in an invalid server name, it will
       just fail to send mail and instead will complain bitterly to its
       console.
 
-   6. Nicks.
+   7. Nicks.
       Some nicks for IRC. For example, 'mozbot'. It is customary to
       clearly mark the bot as being non-human, for example by putting
       'bot' in the name. You should enter several possibilities
@@ -281,9 +285,10 @@ are prompted for during initial startup. The interesting ones are:
 
    currentnick -- the nick. This can be changed on the fly.
 
-   server, port -- the server and port to connect to. If you change
-   these and then cycle the bot (/msg mozbot cycle) then the bot will
-   change servers without shutting down.
+   server, port, password -- the server and port to connect to, and
+   the server password to use. If you change these and then cycle the
+   bot (/msg mozbot cycle) then the bot will change servers without
+   shutting down.
 
    channels -- unlike other modules, the channels variable for the
    Admin module actually controls which channels the bot itself

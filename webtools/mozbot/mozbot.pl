@@ -182,7 +182,7 @@ $cfgfile = $1; # untaint it -- we trust this, it comes from the admin.
 
 # - setup variables
 # note: owner is only used by the Mails module
-my ($server, $port, $localAddr, @nicks, @channels, %channelKeys, $owner,
+my ($server, $port, $password, $localAddr, @nicks, @channels, %channelKeys, $owner,
     @ignoredUsers, @ignoredTargets);
 my $nick = 0;
 my $sleepdelay = 60;
@@ -202,6 +202,7 @@ my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
 &registerConfigVariables(
     [\$server, 'server'],
     [\$port, 'port'],
+    [\$password, 'password'],
     [\$localAddr, 'localAddr'],
     [\@nicks, 'nicks'],
     [\$nick, 'currentnick'], # pointer into @nicks
@@ -232,6 +233,7 @@ my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
 $changed = &Configuration::Ensure([
     ['Connect to which server?', \$server],
     ['To which port should I connect?', \$port],
+    ['What is the server\'s password? (Leave blank if there isn\'t one.)', \$password],
     ['What channels should I join?', \@channels],
     ['What is the e-mail address of my owner?', \$owner],
     ['What is your SMTP host?', \$Mails::smtphost],
@@ -301,6 +303,7 @@ sub connect {
            $bot = $irc->newconn(
              Server => $server,
              Port => $port,
+             Password => $password,
              Nick => $nicks[$nick],
              Ircname => $ircname,
              Username => $USERNAME,
@@ -321,7 +324,7 @@ sub connect {
         }
         $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], "[mozbot] $helpline", $nicks[0]) unless $mailed;
         sleep($sleepdelay);
-        &Configuration::Get($cfgfile, &configStructure(\$server, \$port, \@nicks, \$nick, \$owner, \$sleepdelay));
+        &Configuration::Get($cfgfile, &configStructure(\$server, \$port, \$password, \@nicks, \$nick, \$owner, \$sleepdelay));
         &debug("connecting to $server:$port...");
     }
 
@@ -598,7 +601,7 @@ sub on_disconnected {
     return if defined($self->{'__mozbot__shutdown'}); # HACK HACK HACK
     $self->{'__mozbot__shutdown'} = 1; # HACK HACK HACK
     my($reason) = $event->args;
-    if ($reason eq 'Bad user info' and $serverRestrictsIRCNames ne $server) {
+    if ($reason =~ /Bad user info/osi and $serverRestrictsIRCNames ne $server) {
         # change our IRC name to something simpler by setting the flag
         $serverRestrictsIRCNames = $server;
         &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
@@ -610,6 +613,19 @@ sub on_disconnected {
         &Configuration::Save($cfgfile, &configStructure(\$delaytime));
         &debug('Hrm, we it seems flooded the server. Trying again with a delay 20% longer.');
         &debug("The full message from the server was: '$reason'");
+    } elsif ($reason =~ /Bad Password/osi) {
+        &debug('Hrm, we don\'t seem to know the server password.');
+        &debug("The full message from the server was: '$reason'");
+        if (-t) {
+            print "Please enter the server password: ";
+            $password = <>;
+            chomp($password);
+            &Configuration::Save($cfgfile, &configStructure(\$password));
+        } else {
+            &debug("edit $cfgfile to set the password *hint* *hint*");
+            &debug("going to wait $sleepdelay seconds so as not to overload ourselves."); 
+            sleep $sleepdelay;
+        }
     } else {
         &debug("eek! disconnected from network: '$reason'");
     }
