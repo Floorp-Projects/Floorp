@@ -124,7 +124,7 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
           rv = m_sourceFolder->GetMessageHeader(keysToAdd->ElementAt(keyIndex), getter_AddRefs(mailHdr));
           if (NS_SUCCEEDED(rv) && mailHdr)
           {
-            nsCOMPtr<nsISupports> iSupports = mailHdr;
+            nsCOMPtr<nsISupports> iSupports = do_QueryInterface(mailHdr);
             messages->AppendElement(iSupports);
           }
         }
