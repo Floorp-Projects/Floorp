@@ -4486,15 +4486,53 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   SetSVGPaint(SVGData.mStroke, parentSVG->mStroke, mPresContext, svg->mStroke, inherited);
 
   // stroke-dasharray: <dasharray>, none, inherit
-  if (eCSSUnit_String == SVGData.mStrokeDasharray.GetUnit()) {
-    SVGData.mStrokeDasharray.GetStringValue(svg->mStrokeDasharray);
-  }
-  else if (eCSSUnit_None == SVGData.mStrokeDasharray.GetUnit()) {
-    svg->mStrokeDasharray.Truncate();
-  }
-  else if (eCSSUnit_Inherit == SVGData.mStrokeDasharray.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mStrokeDasharray = parentSVG->mStrokeDasharray;
+  nsCSSValueList *list = SVGData.mStrokeDasharray;
+  if (list) {
+    if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+      // only do the copy if weren't already set up by the copy constructor
+      if (!svg->mStrokeDasharray) {
+        inherited = PR_TRUE;
+        svg->mStrokeDasharrayLength = parentSVG->mStrokeDasharrayLength;
+        if (svg->mStrokeDasharrayLength) {
+          svg->mStrokeDasharray = new float[svg->mStrokeDasharrayLength];
+          if (svg->mStrokeDasharray)
+            memcpy(svg->mStrokeDasharray,
+                   parentSVG->mStrokeDasharray,
+                   svg->mStrokeDasharrayLength * sizeof(float));
+          else
+            svg->mStrokeDasharrayLength = 0;
+        }
+      }
+    } else {
+      delete [] svg->mStrokeDasharray;
+      svg->mStrokeDasharray = nsnull;
+      svg->mStrokeDasharrayLength = 0;
+      
+      if (eCSSUnit_Initial != list->mValue.GetUnit() &&
+          eCSSUnit_None    != list->mValue.GetUnit()) {
+        // count number of values
+        nsCSSValueList *value = SVGData.mStrokeDasharray;
+        while (nsnull != value) {
+          svg->mStrokeDasharrayLength++;
+          value = value->mNext;
+        }
+        
+        NS_ASSERTION(svg->mStrokeDasharrayLength != 0, "no dasharray items");
+        
+        svg->mStrokeDasharray = new float[svg->mStrokeDasharrayLength];
+
+        if (svg->mStrokeDasharray) {
+          value = SVGData.mStrokeDasharray;
+          PRUint32 i = 0;
+          while (nsnull != value) {
+            SetSVGLength(value->mValue, 0, svg->mStrokeDasharray[i++],
+                         aContext, mPresContext, inherited);
+            value = value->mNext;
+          }
+        } else
+          svg->mStrokeDasharrayLength = 0;
+      }
+    }
   }
 
   // stroke-dashoffset: <dashoffset>, inherit

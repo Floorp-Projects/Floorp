@@ -1257,7 +1257,8 @@ struct nsStyleSVG : public nsStyleStruct {
   nsStyleSVGPaint  mStopColor;        // [inherited]
   float            mStopOpacity;      // [inherited]
   nsStyleSVGPaint  mStroke;           // [inherited]
-  nsString         mStrokeDasharray;  // [inherited] XXX we want a parsed value here
+  float           *mStrokeDasharray;  // [inherited]
+  PRUint32         mStrokeDasharrayLength;
   float            mStrokeDashoffset; // [inherited]
   PRUint8          mStrokeLinecap;    // [inherited] see nsStyleConsts.h
   PRUint8          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h

@@ -276,6 +276,10 @@ protected:
   PRBool ParseTextDecoration(nsresult& aErrorCode, nsCSSValue& aValue);
   PRBool ParseTextShadow(nsresult& aErrorCode);
 
+#ifdef MOZ_SVG
+  PRBool ParseDasharray(nsresult& aErrorCode);
+#endif
+
   // Reused utility parsing routines
   void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue);
   PRBool ParseBoxProperties(nsresult& aErrorCode, nsCSSRect& aResult,
@@ -4048,6 +4052,11 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
     REPORT_UNEXPECTED(PEInaccessibleProperty);
     return PR_FALSE;
 
+#ifdef MOZ_SVG
+  case eCSSProperty_stroke_dasharray:
+    return ParseDasharray(aErrorCode);
+#endif
+
   default:  // must be single property
     {
       nsCSSValue value;
@@ -4137,6 +4146,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_size:
   case eCSSProperty_text_shadow:
   case eCSSProperty_COUNT:
+#ifdef MOZ_SVG
+  case eCSSProperty_stroke_dasharray:
+#endif
     NS_ERROR("not a single value property");
     return PR_FALSE;
 
@@ -4270,9 +4282,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_stroke:
     return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE | VARIANT_URL,
                         nsnull);
-  case eCSSProperty_stroke_dasharray:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HOS,
-                        nsnull); // XXX parse into new CSS value type, not string
   case eCSSProperty_stroke_dashoffset:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLPN,
                         nsnull);
@@ -5768,3 +5777,52 @@ PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
   }
   return PR_FALSE;
 }
+
+#ifdef MOZ_SVG
+PRBool CSSParserImpl::ParseDasharray(nsresult& aErrorCode)
+{
+  nsCSSValue value;
+  if (ParseVariant(aErrorCode, value, VARIANT_HLPN | VARIANT_NONE, nsnull)) {
+    nsCSSValueList *listHead = new nsCSSValueList;
+    nsCSSValueList *list = listHead;
+    if (!list) {
+      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      return PR_FALSE;
+    }
+
+    list->mValue = value;
+
+    while (list) {
+      if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+        mTempData.SetPropertyBit(eCSSProperty_stroke_dasharray);
+        mTempData.mSVG.mStrokeDasharray = listHead;
+        aErrorCode = NS_OK;
+        return PR_TRUE;
+      }
+
+      if (eCSSUnit_Inherit == value.GetUnit() ||
+          eCSSUnit_Initial == value.GetUnit()) {
+        return PR_FALSE;
+      }
+
+      if (!ExpectSymbol(aErrorCode, ',', PR_TRUE))
+        break;
+
+      if (ParseVariant(aErrorCode, value,
+                       VARIANT_LENGTH | VARIANT_PERCENT | VARIANT_NUMBER,
+                       nsnull)) {
+        list->mNext = new nsCSSValueList;
+        list = list->mNext;
+        if (list)
+          list->mValue = value;
+        else
+          aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        break;
+      }
+    }
+    delete listHead;
+  }
+  return PR_FALSE;
+}
+#endif

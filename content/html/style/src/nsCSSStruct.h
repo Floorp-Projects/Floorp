@@ -583,7 +583,7 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mStopColor;
   nsCSSValue mStopOpacity;
   nsCSSValue mStroke;
-  nsCSSValue mStrokeDasharray;
+  nsCSSValueList *mStrokeDasharray;
   nsCSSValue mStrokeDashoffset;
   nsCSSValue mStrokeLinecap;
   nsCSSValue mStrokeLinejoin;

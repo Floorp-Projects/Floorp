@@ -874,8 +874,12 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
     fprintf(out, "%s ", URICString(svg->mStroke.mPaint.mPaintServer).get());
   else
     fprintf(out, "%ld ", (long)svg->mStroke.mPaint.mColor);
-  fprintf(out, "%s %f %d %d %f %f %f %d %d\" />\n",
-          NS_ConvertUCS2toUTF8(svg->mStrokeDasharray).get(),
+  for (PRUint32 i = 0; i < svg->mStrokeDasharrayLength; i++)
+    fprintf(out,
+            "%f%c",
+            svg->mStrokeDasharray[i],
+            (i == svg->mStrokeDasharrayLength) ? ' ' : ',');
+  fprintf(out, "%f %d %d %f %f %f %d %d\" />\n",
           svg->mStrokeDashoffset,
           (int)svg->mStrokeLinecap,
           (int)svg->mStrokeLinejoin,
