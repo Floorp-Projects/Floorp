@@ -374,7 +374,7 @@ static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 static const char kDOMStringBundleURL[] =
-  "chrome://communicator/locale/dom/dom.properties";
+  "chrome://global/locale/dom/dom.properties";
 
 // NOTE: DEFAULT_SCRIPTABLE_FLAGS and DOM_DEFAULT_SCRIPTABLE_FLAGS
 //       are defined in nsIDOMClassInfo.h.
