@@ -3009,14 +3009,14 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   }
 
   MSG msg;
-  BOOL gotMsg = ::PeekMessage(&msg, mWnd, 0, 0, PM_NOREMOVE | PM_NOYIELD);
+  BOOL gotMsg = ::PeekMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
   // Enter and backspace are always handled here to avoid for example the
   // confusion between ctrl-enter and ctrl-J.
   if (virtualKeyCode == NS_VK_RETURN || virtualKeyCode == NS_VK_BACK)
   {
     // Remove a possible WM_CHAR or WM_SYSCHAR from the message queue
     if (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR)) {
-      ::GetMessage(&msg, mWnd, 0, 0);
+      ::GetMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST);
     }
   }
   else if (gotMsg &&
