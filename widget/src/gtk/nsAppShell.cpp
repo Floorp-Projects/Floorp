@@ -229,7 +229,11 @@ NS_METHOD nsAppShell::Run()
 
 
 done:
+
+#ifdef DEBUG
   printf("Calling gdk_input_add with event queue\n");
+#endif /* DEBUG */
+
   gdk_input_add(EQueue->GetEventQueueSelectFD(),
                 GDK_INPUT_READ,
                 event_processor_callback,
