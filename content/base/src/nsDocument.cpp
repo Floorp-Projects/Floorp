@@ -95,6 +95,12 @@ static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
 static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
+
+#include "nsILineBreakerFactory.h"
+#include "nsLWBrkCIID.h"
+static NS_DEFINE_IID(kLWBrkCID, NS_LWBRK_CID);
+static NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
+
 class nsDOMStyleSheetCollection : public nsIDOMStyleSheetCollection,
                                   public nsIScriptObjectOwner,
                                   public nsIDocumentObserver
@@ -561,6 +567,7 @@ nsDocument::nsDocument()
   mDOMStyleSheets = nsnull;
   mNameSpaceManager = nsnull;
   mHeaderData = nsnull;
+  mLineBreaker = nsnull;
 
   Init();/* XXX */
 }
@@ -614,6 +621,7 @@ nsDocument::~nsDocument()
     delete mHeaderData;
     mHeaderData = nsnull;
   }
+  NS_IF_RELEASE(mLineBreaker);
 }
 
 nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -801,6 +809,37 @@ nsString* nsDocument::GetDocumentCharacterSet() const
 void nsDocument::SetDocumentCharacterSet(nsString* aCharSetID)
 {
   mCharacterSet = aCharSetID;
+}
+
+NS_IMETHODIMP nsDocument::GetLineBreaker(nsILineBreaker** aResult) 
+{
+  if(nsnull == mLineBreaker ) {
+     // no line breaker, find a default one
+     nsILineBreakerFactory *lf;
+     nsresult result;
+     result = nsServiceManager::GetService(kLWBrkCID,
+                                          kILineBreakerFactoryIID,
+                                          (nsISupports **)&lf);
+     if (NS_SUCCEEDED(result)) {
+      nsILineBreaker *lb = nsnull ;
+      nsAutoString lbarg("");
+      result = lf->GetBreaker(lbarg, &lb);
+      if(NS_SUCCEEDED(result)) {
+         mLineBreaker = lb;
+      }
+      result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
+     }
+  }
+  *aResult = mLineBreaker;
+  NS_IF_ADDREF(mLineBreaker);
+  return NS_OK; // XXX we should do error handling here
+}
+NS_IMETHODIMP nsDocument::SetLineBreaker(nsILineBreaker* aLineBreaker) 
+{
+  NS_IF_RELEASE(mLineBreaker);
+  mLineBreaker = aLineBreaker;
+  NS_IF_ADDREF(mLineBreaker);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

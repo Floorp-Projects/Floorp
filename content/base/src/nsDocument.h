@@ -122,6 +122,12 @@ public:
   virtual void SetDocumentCharacterSet(nsString* aCharSetID);
 
   /**
+   * Return the Line Breaker for the document
+   */
+  NS_IMETHOD GetLineBreaker(nsILineBreaker** aResult)  ;
+  NS_IMETHOD SetLineBreaker(nsILineBreaker* aLineBreaker) ;
+
+  /**
    * Access HTTP header data (this may also get set from other sources, like
    * HTML META tags).
    */
@@ -362,6 +368,7 @@ protected:
   nsDOMStyleSheetCollection *mDOMStyleSheets;
   nsINameSpaceManager* mNameSpaceManager;
   nsDocHeaderData* mHeaderData;
+  nsILineBreaker* mLineBreaker;
 };
 
 #endif /* nsDocument_h___ */
