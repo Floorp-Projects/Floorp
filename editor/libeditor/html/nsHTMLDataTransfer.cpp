@@ -75,8 +75,6 @@
 #include "nsIEnumerator.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsEditorCID.h"
-#include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsISupportsArray.h"
@@ -86,7 +84,6 @@
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsWidgetsCID.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
@@ -106,7 +103,6 @@
 #include "nsNetUtil.h"
 
 // Drag & Drop, Clipboard
-#include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsIDragService.h"
@@ -121,13 +117,8 @@
 
 const PRUnichar nbsp = 160;
 
-static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
 static NS_DEFINE_CID(kCParserCID,     NS_PARSER_CID);
 
-// Drag & Drop, Clipboard Support
-static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
-static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
-static NS_DEFINE_CID(kCHTMLFormatConverterCID, NS_HTMLFORMATCONVERTER_CID);
 // private clipboard data flavors for html copy/paste
 #define kHTMLContext   "text/_moz_htmlcontext"
 #define kHTMLInfo      "text/_moz_htmlinfo"
@@ -873,7 +864,7 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
                                                     PRBool aHavePrivFlavor)
 {
   // Create generic Transferable for getting the data
-  nsresult rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+  nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/widget/transferable;1", nsnull, 
                                           NS_GET_IID(nsITransferable), 
                                           (void**)aTransferable);
   if (NS_FAILED(rv))
@@ -1207,13 +1198,15 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     PRUint32 contextLen, infoLen;
     nsCOMPtr<nsISupportsString> textDataObj;
     
-    nsCOMPtr<nsITransferable> contextTrans = do_CreateInstance(kCTransferableCID);
+    nsCOMPtr<nsITransferable> contextTrans =
+                      do_CreateInstance("@mozilla.org/widget/transferable;1");
     NS_ENSURE_TRUE(contextTrans, NS_ERROR_NULL_POINTER);
     contextTrans->AddDataFlavor(kHTMLContext);
     dragSession->GetData(contextTrans, i);
     contextTrans->GetTransferData(kHTMLContext, getter_AddRefs(contextDataObj), &contextLen);
 
-    nsCOMPtr<nsITransferable> infoTrans = do_CreateInstance(kCTransferableCID);
+    nsCOMPtr<nsITransferable> infoTrans =
+                      do_CreateInstance("@mozilla.org/widget/transferable;1");
     NS_ENSURE_TRUE(infoTrans, NS_ERROR_NULL_POINTER);
     infoTrans->AddDataFlavor(kHTMLInfo);
     dragSession->GetData(infoTrans, i);
@@ -1422,7 +1415,7 @@ nsHTMLEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
   if (NS_FAILED(rv)) return rv;
 
   /* create html flavor transferable */
-  nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID);
+  nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1");
   NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
 
   if (bIsPlainTextControl)
@@ -1451,7 +1444,8 @@ nsHTMLEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
     rv = trans->AddDataFlavor(kHTMLMime);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kCHTMLFormatConverterCID);
+    nsCOMPtr<nsIFormatConverter> htmlConverter =
+             do_CreateInstance("@mozilla.org/widget/htmlformatconverter;1");
     NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
 
     rv = trans->SetConverter(htmlConverter);
@@ -1522,7 +1516,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 
   // Get Clipboard Service
   nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv))
     return rv;
   
@@ -1548,13 +1542,15 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
         PRUint32 contextLen, infoLen;
         nsCOMPtr<nsISupportsString> textDataObj;
         
-        nsCOMPtr<nsITransferable> contextTrans = do_CreateInstance(kCTransferableCID);
+        nsCOMPtr<nsITransferable> contextTrans =
+                      do_CreateInstance("@mozilla.org/widget/transferable;1");
         NS_ENSURE_TRUE(contextTrans, NS_ERROR_NULL_POINTER);
         contextTrans->AddDataFlavor(kHTMLContext);
         clipboard->GetData(contextTrans, aSelectionType);
         contextTrans->GetTransferData(kHTMLContext, getter_AddRefs(contextDataObj), &contextLen);
 
-        nsCOMPtr<nsITransferable> infoTrans = do_CreateInstance(kCTransferableCID);
+        nsCOMPtr<nsITransferable> infoTrans =
+                      do_CreateInstance("@mozilla.org/widget/transferable;1");
         NS_ENSURE_TRUE(infoTrans, NS_ERROR_NULL_POINTER);
         infoTrans->AddDataFlavor(kHTMLInfo);
         clipboard->GetData(infoTrans, aSelectionType);
@@ -1602,7 +1598,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
 
   // Get Clipboard Service
   nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv))
     return rv;
     
@@ -1635,16 +1631,15 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
     return NS_OK;
     
   nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv)) return rv;
   
   // the flavors that we can deal with
   const char* const textEditorFlavors[] = { kUnicodeMime, nsnull };
   const char* const htmlEditorFlavors[] = { kHTMLMime, kJPEGImageMime, nsnull };
 
-  nsCOMPtr<nsISupportsArray> flavorsList;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
-         NS_GET_IID(nsISupportsArray), getter_AddRefs(flavorsList));
+  nsCOMPtr<nsISupportsArray> flavorsList =
+                           do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   
   PRUint32 editorFlags;
@@ -1752,14 +1747,12 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
 {
   // Get Clipboard Service
   nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv)) return rv;
 
   // Create generic Transferable for getting the data
-  nsCOMPtr<nsITransferable> trans;
-  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                          NS_GET_IID(nsITransferable), 
-                                          (void**) getter_AddRefs(trans));
+  nsCOMPtr<nsITransferable> trans =
+                 do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   if (NS_SUCCEEDED(rv) && trans)
   {
     // We only handle plaintext pastes here
@@ -2242,9 +2235,8 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
   PRBool bContext = (aTagStack.Count()==0);
 
   // create the parser to do the conversion.
-  nsCOMPtr<nsIParser> parser;
-  nsresult res = nsComponentManager::CreateInstance(kCParserCID, nsnull, NS_GET_IID(nsIParser),
-                                                     getter_AddRefs(parser));
+  nsresult res;
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &res);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(parser, NS_ERROR_FAILURE);
 
@@ -2354,8 +2346,8 @@ nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
     aEndOffset = fragLen;
   }
 
-  nsCOMPtr<nsIDOMRange> docFragRange;
-  docFragRange = do_CreateInstance(kCRangeCID);
+  nsCOMPtr<nsIDOMRange> docFragRange =
+                          do_CreateInstance("@mozilla.org/content/range;1");
   if (!docFragRange) return NS_ERROR_OUT_OF_MEMORY;
 
   res = docFragRange->SetStart(aStartNode, aStartOffset);

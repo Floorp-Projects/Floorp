@@ -47,7 +47,7 @@
 #include "TransactionFactory.h"
 #include "nsIContentIterator.h"
 #include "nsIContent.h"
-#include "nsLayoutCID.h"
+#include "nsComponentManagerUtils.h"
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -321,11 +321,9 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
   return result;
 }
 
-static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
-
 NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
 {
-  nsCOMPtr<nsIContentIterator> iter = do_CreateInstance(kSubtreeIteratorCID);
+  nsCOMPtr<nsIContentIterator> iter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1");
   if (!iter) return NS_ERROR_NULL_POINTER;
 
   nsresult result = iter->Init(mRange);

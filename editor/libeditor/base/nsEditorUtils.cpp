@@ -89,9 +89,6 @@ nsAutoSelectionReset::Abort()
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
-static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
-
 nsDOMIterator::nsDOMIterator() :
 mIter(nsnull)
 {
@@ -104,22 +101,20 @@ nsDOMIterator::~nsDOMIterator()
 nsresult
 nsDOMIterator::Init(nsIDOMRange* aRange)
 {
-  nsresult res = nsComponentManager::CreateInstance(kContentIteratorCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIContentIterator), 
-                                        getter_AddRefs(mIter));
+  nsresult res;
+  mIter = do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
   if (NS_FAILED(res)) return res;
+  if (!mIter) return NS_ERROR_FAILURE;
   return mIter->Init(aRange);
 }
 
 nsresult
 nsDOMIterator::Init(nsIDOMNode* aNode)
 {
-  nsresult res = nsComponentManager::CreateInstance(kContentIteratorCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIContentIterator), 
-                                        getter_AddRefs(mIter));
+  nsresult res;
+  mIter = do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
   if (NS_FAILED(res)) return res;
+  if (!mIter) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   return mIter->Init(content);
 }
@@ -180,22 +175,20 @@ nsDOMSubtreeIterator::~nsDOMSubtreeIterator()
 nsresult
 nsDOMSubtreeIterator::Init(nsIDOMRange* aRange)
 {
-  nsresult res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIContentIterator), 
-                                        getter_AddRefs(mIter));
+  nsresult res;
+  mIter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
   if (NS_FAILED(res)) return res;
+  if (!mIter) return NS_ERROR_FAILURE;
   return mIter->Init(aRange);
 }
 
 nsresult
 nsDOMSubtreeIterator::Init(nsIDOMNode* aNode)
 {
-  nsresult res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIContentIterator), 
-                                        getter_AddRefs(mIter));
+  nsresult res;
+  mIter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
   if (NS_FAILED(res)) return res;
+  if (!mIter) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   return mIter->Init(content);
 }

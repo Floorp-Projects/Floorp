@@ -87,9 +87,6 @@
 #include "nsIEnumerator.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsEditorCID.h"
-#include "nsLayoutCID.h"
-#include "nsContentCID.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsISupportsArray.h"
@@ -97,7 +94,6 @@
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsWidgetsCID.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
@@ -117,7 +113,6 @@
 #include "nsNetUtil.h"
 
 // Drag & Drop, Clipboard
-#include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsIDragService.h"
@@ -141,13 +136,7 @@
 #include "nsIView.h"
 #include "nsIWidget.h"
 
-static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
-static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
-static NS_DEFINE_IID(kRangeUtilsCID, NS_RANGEUTILS_CID);
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCTransitionalDTDCID,  NS_CTRANSITIONAL_DTD_CID);
-static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 
 // Some utilities to handle annoying overloading of "A" tag for link and named anchor
 static char hrefText[] = "href";
@@ -250,7 +239,7 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   nsresult result = NS_OK, rulesRes = NS_OK;
 
   // make a range util object for comparing dom points
-  mRangeHelper = do_CreateInstance(kRangeUtilsCID);
+  mRangeHelper = do_CreateInstance("@mozilla.org/content/range-utils;1");
   if (!mRangeHelper) return NS_ERROR_NULL_POINTER;
    
   if (1)
@@ -601,7 +590,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
   if (!tagAtom) return NS_ERROR_NULL_POINTER;
 
   if (!sParserService) {
-    sParserService = do_GetService(kParserServiceCID, &rv);
+    sParserService = do_GetService("@mozilla.org/parser/parser-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -895,9 +884,8 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
   if (!aRange) {return NS_ERROR_NULL_POINTER;}
 
   nsresult result;
-  nsCOMPtr<nsIContentIterator>iter;
-  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              NS_GET_IID(nsIContentIterator), getter_AddRefs(iter));
+  nsCOMPtr<nsIContentIterator>iter =
+    do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &result);
   if ((NS_SUCCEEDED(result)) && iter)
   {
     nsCOMPtr<nsIDOMRange> lastRange;
@@ -959,9 +947,8 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
               }
               if (PR_TRUE==addRange) 
               {
-                nsCOMPtr<nsIDOMRange> range;
-                result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
-                                                            NS_GET_IID(nsIDOMRange), getter_AddRefs(range));
+                nsCOMPtr<nsIDOMRange> range =
+                     do_CreateInstance("@mozilla.org/content/range;1", &result);
                 if ((NS_SUCCEEDED(result)) && range)
                 { // initialize the range
                   range->SetStart(leftNode, 0);
@@ -999,10 +986,10 @@ nsHTMLEditor::NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir)
   
   if (!aNode)  return nullNode;
 
-  nsCOMPtr<nsIContentIterator> iter;
-  if (NS_FAILED(nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                        NS_GET_IID(nsIContentIterator), 
-                                        getter_AddRefs(iter))))
+  nsresult rv;
+  nsCOMPtr<nsIContentIterator> iter =
+       do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
+  if (NS_FAILED(rv))
     return nullNode;
 
   // much gnashing of teeth as we twit back and forth between content and domnode types
@@ -1440,10 +1427,8 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
 
   // advance to next cell
   // first create an iterator over the table
-  nsCOMPtr<nsIContentIterator> iter;
-  res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                           NS_GET_IID(nsIContentIterator), 
-                                           getter_AddRefs(iter));
+  nsCOMPtr<nsIContentIterator> iter =
+      do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
   if (NS_FAILED(res)) return res;
   if (!iter) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIContent> cTbl = do_QueryInterface(tbl);
@@ -3238,10 +3223,8 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
         if ((NS_SUCCEEDED(res)) && currentItem)
         {
           nsCOMPtr<nsIDOMRange> currange( do_QueryInterface(currentItem) );
-          nsCOMPtr<nsIContentIterator> iter;
-          res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                      NS_GET_IID(nsIContentIterator), 
-                                                      getter_AddRefs(iter));
+          nsCOMPtr<nsIContentIterator> iter =
+            do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
           if (NS_FAILED(res)) return res;
           if (iter)
           {
@@ -3457,8 +3440,8 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
             {
               // We must clear the string buffers
               //   because GetName, GetValue appends to previous string!
-              name.SetLength(0);
-              value.SetLength(0);
+              name.Truncate();
+              value.Truncate();
 
               res = attribute->GetName(name);
               if (NS_FAILED(res)) return res;
@@ -3563,10 +3546,8 @@ nsHTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
   if (NS_FAILED(res)) return res;
   if (!*aNodeList) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIContentIterator> iter;
-  res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                           NS_GET_IID(nsIContentIterator), 
-                                           getter_AddRefs(iter));
+  nsCOMPtr<nsIContentIterator> iter =
+       do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
   if (!iter) return NS_ERROR_NULL_POINTER;
   if ((NS_SUCCEEDED(res)))
   {
@@ -3971,10 +3952,8 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
   if (NS_FAILED(res)) return res;
   if (!*aNodeList) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIContentIterator> iter;
-  res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                           NS_GET_IID(nsIContentIterator), 
-                                           getter_AddRefs(iter));
+  nsCOMPtr<nsIContentIterator> iter =
+      do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
   if (!iter) return NS_ERROR_NULL_POINTER;
   if ((NS_SUCCEEDED(res)))
   {
@@ -4825,10 +4804,9 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
 
   // build a list of editable text nodes
-  nsCOMPtr<nsIContentIterator> iter;
-  nsresult result = nsComponentManager::CreateInstance(kSubtreeIteratorCID, nsnull,
-                                              NS_GET_IID(nsIContentIterator), 
-                                              getter_AddRefs(iter));
+  nsresult result;
+  nsCOMPtr<nsIContentIterator> iter =
+    do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &result);
   if (NS_FAILED(result)) return result;
   if (!iter) return NS_ERROR_NULL_POINTER;
 
@@ -5813,10 +5791,8 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
         // a list of them (since doing operations on the document during
         // iteration would perturb the iterator).
 
-        nsCOMPtr<nsIContentIterator> iter;
-        res = nsComponentManager::CreateInstance(kSubtreeIteratorCID, nsnull,
-                                                  NS_GET_IID(nsIContentIterator), 
-                                                  getter_AddRefs(iter));
+        nsCOMPtr<nsIContentIterator> iter =
+          do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
         if (NS_FAILED(res)) return res;
         if (!iter)          return NS_ERROR_FAILURE;
 
@@ -5982,7 +5958,7 @@ nsHTMLEditor::ParseStyleAttrIntoCSSRule(const nsAString& aString,
     return NS_ERROR_UNEXPECTED;
   nsCOMPtr <nsIURI> docURL;
   doc->GetBaseURL(getter_AddRefs(docURL));
-  nsCOMPtr<nsICSSParser> css = do_CreateInstance(kCSSParserCID);;
+  nsCOMPtr<nsICSSParser> css = do_CreateInstance("@mozilla.org/content/css-parser;1");
   NS_ASSERTION(css, "can't get a css parser");
   if (!css) return NS_ERROR_NULL_POINTER;    
 

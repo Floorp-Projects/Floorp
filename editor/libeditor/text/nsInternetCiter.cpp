@@ -50,16 +50,15 @@
 #include "nsILineBreakerFactory.h"
 #include "nsLWBrkCIID.h"
 
-static PRUnichar gt ('>');
-static PRUnichar space (' ');
-static PRUnichar nbsp (0xa0);
-static PRUnichar nl ('\n');
-static PRUnichar cr('\r');
+const PRUnichar gt ('>');
+const PRUnichar space (' ');
+const PRUnichar nbsp (0xa0);
+const PRUnichar nl ('\n');
+const PRUnichar cr('\r');
 
 /** Mail citations using the Internet style: > This is a citation
   */
 
-static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 
 nsInternetCiter::nsInternetCiter()
 {
@@ -204,18 +203,18 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
 
   nsCOMPtr<nsILineBreaker> lineBreaker;
   nsILineBreakerFactory *lf;
-  nsresult rv = NS_OK;
-  rv = nsServiceManager::GetService(kLWBrkCID,
+  nsresult rv;
+  rv = nsServiceManager::GetService(NS_LWBRK_CONTRACTID,
                                     NS_GET_IID(nsILineBreakerFactory),
                                     (nsISupports **)&lf);
   if (NS_SUCCEEDED(rv))
   {
     nsAutoString lbarg;
     rv = lf->GetBreaker(lbarg, getter_AddRefs(lineBreaker));
-    nsServiceManager::ReleaseService(kLWBrkCID, lf);
+    nsServiceManager::ReleaseService(NS_LWBRK_CONTRACTID, lf);
   }
 
-  aOutString.SetLength(0);
+  aOutString.Truncate();
 
   // Loop over lines in the input string, rewrapping each one.
   PRUint32 length = aInString.Length();

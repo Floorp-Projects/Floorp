@@ -43,12 +43,10 @@
 #include "nsIPrivateTextRange.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
-#include "nsLayoutCID.h"
 #include "nsISelectionController.h"
+#include "nsComponentManagerUtils.h"
 
 // #define DEBUG_IMETXN
-static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
-
 
 nsIAtom *IMETextTxn::gIMETextTxnName = nsnull;
 
@@ -350,18 +348,14 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
              if(selectionStart == selectionEnd)
                 continue;
 
-             nsCOMPtr<nsIDOMRange> newRange;
-
              result= selCon->GetSelection(TextRangeToSelection(textRangeType),
                      getter_AddRefs(imeSel));
              NS_ASSERTION(NS_SUCCEEDED(result), "Cannot get selction");
              if(NS_FAILED(result))
                 break;
 
-             result = nsComponentManager::CreateInstance(kRangeCID,
-                                   nsnull,
-                                   NS_GET_IID(nsIDOMRange),
-                                   getter_AddRefs(newRange));
+             nsCOMPtr<nsIDOMRange> newRange = do_CreateInstance(
+                                      "@mozilla.org/content/range;1", &result);
              NS_ASSERTION(NS_SUCCEEDED(result), "Cannot create new nsIDOMRange");
              if(NS_FAILED(result))
                 break;
