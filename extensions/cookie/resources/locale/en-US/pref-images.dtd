@@ -9,20 +9,20 @@
 <!ENTITY imageDetails                   "Specify how &brandShortName; handles images on web pages.">
 
 <!ENTITY accAllImagesRadio.label        "Accept all images">
-<!ENTITY accAllImagesRadio.accesskey    "i">
+<!ENTITY accAllImagesRadio.accesskey    "A">
 <!ENTITY accOrgImagesRadio.label        "Accept images that come from the originating server only">
-<!ENTITY accOrgImagesRadio.accesskey    "n">
+<!ENTITY accOrgImagesRadio.accesskey    "r">
 <!ENTITY disableImages.label            "Do not load any images">
-<!ENTITY disableImages.accesskey        "y">
-<!ENTITY warnAboutImages.label          "Alert me before downloading an image">
-<!ENTITY warnAboutImages.accesskey      "e">
+<!ENTITY disableImages.accesskey        "n">
+<!ENTITY warnAboutImages.label          "Ask me before downloading an image">
+<!ENTITY warnAboutImages.accesskey      "k">
 <!ENTITY viewImagesExplanation.label    "View list of sites about which image acceptance information is stored">
 <!ENTITY viewImages.label               "View Image Permissions">
-<!ENTITY viewImages.accesskey           "p">
+<!ENTITY viewImages.accesskey           "P">
 <!ENTITY animLoopingTitle.label         "Animated images should loop">
-<!ENTITY animLoopAsSpecified.label          "As many times as the image specifies">
-<!ENTITY animLoopAsSpecified.accesskey      "A">
+<!ENTITY animLoopAsSpecified.label      "As many times as the image specifies">
+<!ENTITY animLoopAsSpecified.accesskey  "m">
 <!ENTITY animLoopOnce.label             "Once">
 <!ENTITY animLoopOnce.accesskey         "O">
 <!ENTITY animLoopNever.label            "Never">
-<!ENTITY animLoopNever.accesskey        "N">
+<!ENTITY animLoopNever.accesskey        "v">
