@@ -931,6 +931,6 @@ int formatLogItem(LogItemStruct * plis, LPSTR szOutput, LPSTR szEndOfItem, BOOL 
   strcat(szOutput, szString);
   strcat(szOutput, szTime);
   strcat(szOutput, szEOI);
-  iRet = strlen(szString) + strlen(szRet) + strlen(szTime) + strlen(szEOI) + 1;
+  iRet = strlen(szString) + strlen(szTime) + strlen(szEOI);
   return iRet;
 }
