@@ -14,6 +14,16 @@
 <!ENTITY menu_highlightSyntax.label "Syntax Highlighting">
 <!ENTITY menu_highlightSyntax.accesskey "H">
 
+<!ENTITY savePageCmd.label "Save Page As...">
+<!ENTITY savePageCmd.accesskey "A">
+<!ENTITY savePageCmd.commandkey "S">
+<!ENTITY printCmd.label "Print...">
+<!ENTITY printCmd.accesskey "P">
+<!ENTITY printCmd.commandkey "P">
+<!ENTITY closeCmd.label "Close">
+<!ENTITY closeCmd.accesskey "C">
+<!ENTITY closeCmd.commandkey "W">
+
 <!ENTITY findNextCmd.label "Find Next">
 <!ENTITY findNextCmd.accesskey "n">
 <!ENTITY fileMenu.label           "File">
