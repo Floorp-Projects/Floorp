@@ -178,14 +178,10 @@ public:
                              nsIContent* aOldChild,
                              nsIContent* aNewChild,
                              PRInt32 aIndexInContainer);
-  NS_IMETHOD ContentWillBeRemoved(nsIDocument *aDocument,
-                                  nsIContent* aContainer,
-                                  nsIContent* aChild,
-                                  PRInt32 aIndexInContainer);
-  NS_IMETHOD ContentHasBeenRemoved(nsIDocument *aDocument,
-                                   nsIContent* aContainer,
-                                   nsIContent* aChild,
-                                   PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
+                            nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer);
   NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
@@ -791,25 +787,11 @@ PresShell::ContentReplaced(nsIDocument* aDocument,
 #endif
 }
 
-// XXX keep this?
 NS_IMETHODIMP
-PresShell::ContentWillBeRemoved(nsIDocument *aDocument,
-                                nsIContent* aContainer,
-                                nsIContent* aChild,
-                                PRInt32     aIndexInContainer)
-{
-  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-     ("PresShell::ContentWillBeRemoved: container=%p[%s] child=%p[%s][%d]",
-      aContainer, ContentTag(aContainer, 0),
-      aChild, ContentTag(aChild, 1), aIndexInContainer));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::ContentHasBeenRemoved(nsIDocument *aDocument,
-                                 nsIContent* aContainer,
-                                 nsIContent* aChild,
-                                 PRInt32     aIndexInContainer)
+PresShell::ContentRemoved(nsIDocument *aDocument,
+                          nsIContent* aContainer,
+                          nsIContent* aChild,
+                          PRInt32     aIndexInContainer)
 {
 #ifdef FRAME_CONSTRUCTION
   nsresult  rv = mPresContext->ContentRemoved(aDocument, aContainer,
@@ -822,7 +804,7 @@ PresShell::ContentHasBeenRemoved(nsIDocument *aDocument,
   nsIFrame* frame = FindFrameWithContent(aContainer);
   NS_PRECONDITION(nsnull != frame, "null frame");
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-     ("PresShell::ContentHasBeenRemoved: container=%p child=%p[%d] frame=%p",
+     ("PresShell::ContentDeleted: container=%p child=%p[%d] frame=%p",
       aContainer, aChild, aIndexInContainer, frame));
   frame->ContentDeleted(this, mPresContext, aContainer, aChild,
                         aIndexInContainer);

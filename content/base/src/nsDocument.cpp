@@ -505,41 +505,48 @@ nsDocument::EndLoad()
   return NS_OK;
 }
 
-void nsDocument::ContentChanged(nsIContent* aContent,
-                                nsISupports* aSubContent)
+NS_IMETHODIMP
+nsDocument::ContentChanged(nsIContent* aContent,
+                           nsISupports* aSubContent)
 {
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentChanged(this, aContent, aSubContent);
   }
+  return NS_OK;
 }
 
-void nsDocument::ContentAppended(nsIContent* aContainer,
-                                 PRInt32     aNewIndexInContainer)
+NS_IMETHODIMP
+nsDocument::ContentAppended(nsIContent* aContainer,
+                            PRInt32 aNewIndexInContainer)
 {
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentAppended(this, aContainer, aNewIndexInContainer);
   }
+  return NS_OK;
 }
 
-void nsDocument::ContentInserted(nsIContent* aContainer,
-                                 nsIContent* aChild,
-                                 PRInt32 aIndexInContainer)
+NS_IMETHODIMP
+nsDocument::ContentInserted(nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer)
 {
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentInserted(this, aContainer, aChild, aIndexInContainer);
   }
+  return NS_OK;
 }
 
-void nsDocument::ContentReplaced(nsIContent* aContainer,
-                                 nsIContent* aOldChild,
-                                 nsIContent* aNewChild,
-                                 PRInt32 aIndexInContainer)
+NS_IMETHODIMP
+nsDocument::ContentReplaced(nsIContent* aContainer,
+                            nsIContent* aOldChild,
+                            nsIContent* aNewChild,
+                            PRInt32 aIndexInContainer)
 {
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
@@ -547,30 +554,33 @@ void nsDocument::ContentReplaced(nsIContent* aContainer,
     observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
                               aIndexInContainer);
   }
+  return NS_OK;
 }
 
-void nsDocument::ContentWillBeRemoved(nsIContent* aContainer,
-                                      nsIContent* aChild,
-                                      PRInt32 aIndexInContainer)
+NS_IMETHODIMP
+nsDocument::ContentRemoved(nsIContent* aContainer,
+                           nsIContent* aChild,
+                           PRInt32 aIndexInContainer)
 {
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentWillBeRemoved(this, aContainer, 
-                                   aChild, aIndexInContainer);
+    observer->ContentRemoved(this, aContainer, 
+                             aChild, aIndexInContainer);
   }
+  return NS_OK;
 }
 
-void nsDocument::ContentHasBeenRemoved(nsIContent* aContainer,
-                                       nsIContent* aChild,
-                                       PRInt32 aIndexInContainer)
+NS_IMETHODIMP
+nsDocument::AttributeChanged(nsIContent* aChild,
+                             nsIAtom* aAttribute)
 {
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentHasBeenRemoved(this, aContainer, 
-                                    aChild, aIndexInContainer);
+    observer->AttributeChanged(this, aChild, aAttribute);
   }
+  return NS_OK;
 }
 
 nsresult nsDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
