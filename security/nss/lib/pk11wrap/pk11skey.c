@@ -298,17 +298,6 @@ PK11_SymKeyFromHandle(PK11SlotInfo *slot, PK11SymKey *parent, PK11Origin origin,
     symKey->origin = origin;
     symKey->owner = owner;
 
-    /* adopt the parent's session */
-    /* This is only used by SSL. What we really want here is a session
-     * structure with a ref count so  the session goes away only after all the
-     * keys do. */
-    if (owner && parent) {
-	pk11_CloseSession(symKey->slot, symKey->session,symKey->sessionOwner);
-	symKey->sessionOwner = parent->sessionOwner;
-	symKey->session = parent->session;
-	parent->sessionOwner = PR_FALSE;
-    }
-
     return symKey;
 }
 
@@ -3243,7 +3232,16 @@ PK11_ExitContextMonitor(PK11Context *cx) {
 void
 PK11_DestroyContext(PK11Context *context, PRBool freeit)
 {
-    pk11_CloseSession(context->slot,context->session,context->ownSession);
+    if (context->ownSession && context->key && /* context owns session & key */
+        context->key->session == context->session && /* sharing session */
+        !context->key->sessionOwner)              /* sanity check */
+    {
+	/* session still valid, let the key free it as necessary */
+        (void)PK11_Finalize(context); /* end any ongoing activity */
+	context->key->sessionOwner = PR_TRUE;
+    } else {
+	pk11_CloseSession(context->slot,context->session,context->ownSession);
+    }
     /* initialize the critical fields of the context */
     if (context->savedData != NULL ) PORT_Free(context->savedData);
     if (context->key) PK11_FreeSymKey(context->key);
@@ -3427,7 +3425,14 @@ static PK11Context *pk11_CreateNewContextInSlot(CK_MECHANISM_TYPE type,
     context->operation = operation;
     context->key = symKey ? PK11_ReferenceSymKey(symKey) : NULL;
     context->slot = PK11_ReferenceSlot(slot);
-    context->session = pk11_GetNewSession(slot,&context->ownSession);
+    if (symKey && symKey->sessionOwner) {
+	/* The symkey owns a session.  Adopt that session. */
+	context->session = symKey->session;
+	context->ownSession = symKey->sessionOwner;
+	symKey->sessionOwner = PR_FALSE;
+    } else {
+	context->session = pk11_GetNewSession(slot, &context->ownSession);
+    }
     context->cx = symKey ? symKey->cx : NULL;
     /* get our session */
     context->savedData = NULL;
@@ -3645,6 +3650,55 @@ PK11_SaveContext(PK11Context *cx,unsigned char *save,int *len, int saveLength)
 	*len = cx->savedLength;
     }
     return (data != NULL) ? SECSuccess : SECFailure;
+}
+
+/* same as above, but may allocate the return buffer. */
+unsigned char *
+PK11_SaveContextAlloc(PK11Context *cx,
+                      unsigned char *preAllocBuf, unsigned int pabLen,
+                      unsigned int *stateLen)
+{
+    unsigned char *stateBuf = NULL;
+    unsigned long length = (unsigned long)pabLen;
+    PRBool callerHasBuf = (preAllocBuf != NULL);
+
+    if (cx->ownSession) {
+        PK11_EnterContextMonitor(cx);
+	stateBuf = (unsigned char *)pk11_saveContextHelper(cx, preAllocBuf,
+	                                                   &length,
+	                                                   callerHasBuf, 
+	                                                   PR_FALSE);
+	if (stateBuf == NULL && callerHasBuf) {
+	    /* pk11_saveContextHelper will attempt to free the supplied
+	     * buffer if staticBuffer == PR_FALSE.  However, it won't
+	     * allocate a new buffer unless staticBuffer == PR_FALSE.  We
+	     * want to allocate a new buffer if this one isn't big enough,
+	     * but we don't want the caller buffer to be freed.  So, 
+	     * we have to try again.
+	     */
+	    length = 0;
+	    stateBuf = (unsigned char *)pk11_saveContextHelper(cx, NULL,
+	                                                       &length, 
+	                                                       PR_FALSE, 
+	                                                       PR_FALSE);
+	}
+        PK11_ExitContextMonitor(cx);
+	*stateLen = (stateBuf != NULL) ? length : 0;
+    } else {
+	if (pabLen < cx->savedLength) {
+	    stateBuf = (unsigned char *)PORT_Alloc(cx->savedLength);
+	    if (!stateBuf) {
+		return (unsigned char *)NULL;
+	    }
+	} else {
+	    stateBuf = preAllocBuf;
+	}
+	if (cx->savedData) {
+	    PORT_Memcpy(stateBuf, cx->savedData, cx->savedLength);
+	}
+	*stateLen = cx->savedLength;
+    }
+    return stateBuf;
 }
 
 /*
