@@ -19,6 +19,8 @@ nsStreamListenerTee::OnStopRequest(nsIRequest *request,
                                    const PRUnichar *statusText)
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
+    mInputTee = 0;
+    mSink = 0;
     return mListener->OnStopRequest(request, context, status, statusText);
 }
 
