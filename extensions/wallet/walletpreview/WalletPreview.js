@@ -108,8 +108,8 @@ function Startup() {
 
   /* create checkbox label */
 
-  var checkBoxText = document.getElementById("checkboxText");
-  checkBoxText.setAttribute("value", bypass);
+  var checkBox = document.getElementById("checkbox");
+  checkBox.setAttribute("value", bypass);
 
   /* initialization OK and Cancel buttons */
 

@@ -60,8 +60,7 @@
 
   <spring style="height: 10px;"/>
   <box align="horizontal">
-    <html:input id="checkbox" type="checkbox"/>
-    <text id="checkboxText"/>
+    <checkbox id="checkbox"/>
     <spring flex="100%"/>
   </box>
 
