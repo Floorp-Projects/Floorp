@@ -24,6 +24,8 @@
 #include "xp_ncent.h"
 #include "rdfliner.h"
 #include "urlbar.h"
+#include "intlwin.h"
+#include "libi18n.h"
 
 extern "C" {
 #include "xpgetstr.h"
@@ -150,9 +152,43 @@ int CRDFToolbarButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceButt
 {
 	m_bookmark = bookmark;
 
+	int16 localecsid = CIntlWin::GetSystemLocaleCsid();
+
+	// Ad Hoc I18N Fix
+	// Untill we draw the status bar by ourself
+	// The pStatusText come in CRDFToolbarButton is always UTF8
+	// The pStatusText pass to CToolbarButton is the locale csid
+	LPSTR pLocaleStatusText = (LPSTR)
+		INTL_ConvertLineWithoutAutoDetect(
+			CS_UTF8,
+			localecsid,
+			(unsigned char*)pStatusText,
+			XP_STRLEN(pStatusText)
+		);
+
+	// Ad Hoc I18N Fix
+	// Untill we bring back the real implementation of 
+	// tooltip.cpp
+	// The pToolTipText come in CRDFToolbarButton is always UTF8
+	// The pToolTipText pass to CToolbarButton is the locale csid
+	LPSTR pLocaleToolTipText = (LPSTR)
+		INTL_ConvertLineWithoutAutoDetect(
+			CS_UTF8,
+			localecsid,
+			(unsigned char*)pToolTipText,
+			XP_STRLEN(pToolTipText)
+		);
+
+	// For pButtonText, 
+	// We do not convert it to the limited locale csid because we can
+	// Draw the text by ourself to overcome the OS limitation.
+
 	BOOL bResult = CToolbarButton::Create(pParent, nToolbarStyle, noviceButtonSize, advancedButtonSize,
-		pButtonText, pToolTipText, pStatusText, 0, 0,
+		pButtonText, pLocaleToolTipText, pLocaleStatusText, 0, 0,
 		bitmapSize, TRUE, 0, nMaxTextChars, nMinTextChars, dwButtonStyle);
+
+	XP_FREEIF(pLocaleStatusText);
+	XP_FREEIF(pLocaleToolTipText);
 
 	if(bResult)
 	{
@@ -1141,6 +1177,25 @@ void CRDFToolbarButton::DrawButtonBitmap(HDC hDC, CRect rcImg)
 	}
 }
 
+ HFONT CRDFToolbarButton::GetFont(HDC hDC)
+ {
+	return CToolbarButton::GetFont(hDC);
+ }
+
+ int CRDFToolbarButton::DrawText(HDC hDC, LPCSTR lpString, int nCount, LPRECT lpRect, UINT uFormat)
+ {
+	// XP_ASSERT(IsUTF8Text(lpString, nCount));
+	// In RDF, everything is UTF8
+	return CIntlWin::DrawText(CS_UTF8, hDC, (char*)lpString, nCount, lpRect, uFormat );
+ }
+
+BOOL CRDFToolbarButton::GetTextExtentPoint32(HDC hDC, LPCSTR lpString, int nCount, LPSIZE lpSize)
+ {
+	// XP_ASSERT(IsUTF8Text(lpString, nCount));
+	// In RDF, everything is UTF8
+	return  CIntlWin::GetTextExtentPoint(CS_UTF8, hDC, (char*)lpString, nCount, lpSize);
+ }
+
 ///////////////////////////////////////////////////////////////////////////
 // Class CRDFSeparatorButton
 ///////////////////////////////////////////////////////////////////////////
@@ -1486,6 +1541,7 @@ int CRDFToolbar::Create(CWnd *pParent)
 			fixedSize = TRUE;
 	}
 	SetButtonsSameWidth(fixedSize);
+
 
 	return result;
 }

@@ -130,6 +130,11 @@ protected:
 	virtual void GetPicturesModeTextRect(CRect &rect);
     virtual void DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString strTxt);
 	
+
+	virtual HFONT GetFont(HDC hDC);
+	virtual int DrawText(HDC hDC, LPCSTR lpString, int nCount, LPRECT lpRect, UINT uFormat);
+	virtual BOOL GetTextExtentPoint32(HDC hDC, LPCSTR lpString, int nCount, LPSIZE lpSize);
+
 protected:
 		// Generated message map functions
 	//{{AFX_MSG(CRDFToolbarButton)

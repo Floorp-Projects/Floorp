@@ -186,7 +186,7 @@ void CNavTitleBar::OnPaint( )
 
 	HFONT hOldFont = (HFONT)::SelectObject(dc.m_hDC, font);
 	CRect sizeRect(titleBarRect);
-	int height = ::DrawText(dc.m_hDC, titleText, titleText.GetLength(), &sizeRect, DT_CALCRECT | DT_WORDBREAK);
+	int height = CIntlWin::DrawText(CS_UTF8, dc.m_hDC, titleText.GetBuffer(0), titleText.GetLength(), &sizeRect, DT_CALCRECT | DT_WORDBREAK);
 	
 	if (sizeRect.Width() > rect.Width() - 9)
 	{
@@ -207,7 +207,7 @@ void CNavTitleBar::OnPaint( )
 	COLORREF oldColor;
 
 	oldColor = dc.SetTextColor(m_ForegroundColor);
-	dc.DrawText((LPCSTR)titleText, -1, &sizeRect, nFormat);
+	CIntlWin::DrawText(CS_UTF8, dc.m_hDC, titleText.GetBuffer(0), -1, &sizeRect, nFormat);
 
 	// Draw the control strip text.
 	CFont smallArialFont;
@@ -227,7 +227,7 @@ void CNavTitleBar::OnPaint( )
 	//	modeText = (char*)data;
 	
 	CRect addRect(controlStripRect);
-	int smallHeight = ::DrawText(dc.m_hDC, addText, addText.GetLength(), &addRect, DT_CALCRECT | DT_WORDBREAK);
+	int smallHeight = CIntlWin::DrawText(CS_UTF8, dc.m_hDC, addText.GetBuffer(0), addText.GetLength(), &addRect, DT_CALCRECT | DT_WORDBREAK);
 	
 	if (addRect.Width() > rect.Width() - 9)
 	{
@@ -254,7 +254,7 @@ void CNavTitleBar::OnPaint( )
 	//	modeText = (char*)data;
 
 	CRect modeRect(controlStripRect);
-	smallHeight = ::DrawText(dc.m_hDC, modeText, modeText.GetLength(), &modeRect, DT_CALCRECT | DT_WORDBREAK);
+	smallHeight = CIntlWin::DrawText(CS_UTF8,dc.m_hDC, modeText.GetBuffer(0), modeText.GetLength(), &modeRect, DT_CALCRECT | DT_WORDBREAK);
 	
 	if (modeRect.Width() > rect.Width() - 9)
 	{
@@ -282,7 +282,7 @@ void CNavTitleBar::OnPaint( )
 	  closeText = (char*)data;
 
 	CRect closeRect(controlStripRect);
-	::DrawText(dc.m_hDC, closeText, closeText.GetLength(), &closeRect, DT_CALCRECT | DT_WORDBREAK);
+	CIntlWin::DrawText(CS_UTF8, dc.m_hDC, closeText.GetBuffer(0), closeText.GetLength(), &closeRect, DT_CALCRECT | DT_WORDBREAK);
 	
 	int closeWidth = closeRect.Width();
 
@@ -309,9 +309,9 @@ void CNavTitleBar::OnPaint( )
 
 	// Draw the text
 	dc.SetTextColor(m_ControlStripForegroundColor);
-	dc.DrawText((LPCSTR)closeText, -1, &closeRect, nFormat);
-	dc.DrawText((LPCSTR)modeText, -1, &modeRect, nFormat);
-	dc.DrawText((LPCSTR)addText, -1, &addRect, nFormat);
+	CIntlWin::DrawText(CS_UTF8, dc.m_hDC, closeText.GetBuffer(0), -1, &closeRect, nFormat);
+	CIntlWin::DrawText(CS_UTF8, dc.m_hDC, modeText.GetBuffer(0), -1, &modeRect, nFormat);
+	CIntlWin::DrawText(CS_UTF8, dc.m_hDC, addText.GetBuffer(0), -1, &addRect, nFormat);
 
 	// See if we're supposed to draw a framing rect.
 	
