@@ -1465,12 +1465,13 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     
     nsGenericAttribute* attr;
     PRBool successful = PR_FALSE;
-    PRInt32 index;
+    PRInt32 index = 0;
     PRInt32 count = mAttributes->Count();
     while (index < count) {
         attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
         if ((aNameSpaceID == attr->mNameSpaceID) && (aName == attr->mName))
             break;
+        index++;
     }
 
     if (index < count) {
