@@ -714,6 +714,106 @@ public:
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
   }                                                                        
+
+#define NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(_g)     \
+  NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
+    return _g.GetDocument(aResult);                                        \
+  }                                                                        \
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep);            \
+  NS_IMETHOD GetParent(nsIContent*& aResult) const {                       \
+    return _g.GetParent(aResult);                                          \
+  }                                                                        \
+  NS_IMETHOD SetParent(nsIContent* aParent);                               \
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const {                   \
+    return _g.CanContainChildren(aResult);                                 \
+  }                                                                        \
+  NS_IMETHOD ChildCount(PRInt32& aResult) const {                          \
+    return _g.ChildCount(aResult);                                         \
+  }                                                                        \
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {         \
+    return _g.ChildAt(aIndex, aResult);                                    \
+  }                                                                        \
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const { \
+    return _g.IndexOf(aPossibleChild, aResult);                            \
+  }                                                                        \
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,               \
+                           PRBool aNotify) {                               \
+    return _g.InsertChildAt(aKid, aIndex, aNotify);                        \
+  }                                                                        \
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,              \
+                            PRBool aNotify) {                              \
+    return _g.ReplaceChildAt(aKid, aIndex, aNotify);                       \
+  }                                                                        \
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) {             \
+    return _g.AppendChildTo(aKid, aNotify);                                \
+  }                                                                        \
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {               \
+    return _g.RemoveChildAt(aIndex, aNotify);                              \
+  }                                                                        \
+  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
+    return _g.IsSynthetic(aResult);                                        \
+  }                                                                        \
+  NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      \
+    return _g.GetNameSpaceID(aResult);                                     \
+  }                                                                        \
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
+    return _g.GetTag(aResult);                                             \
+  }                                                                        \
+  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
+                                  nsIAtom*& aName,                         \
+                                  PRInt32& aNameSpaceID) {                 \
+    return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
+  }                                                                        \
+  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                \
+                                nsIAtom*& aPrefix) {                       \
+    return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
+  }                                                                        \
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
+  }                                                                        \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
+                          nsString& aResult) const {                       \
+    return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
+  }                                                                        \
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
+                            PRBool aNotify) {                              \
+    return _g.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           \
+  }                                                                        \
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
+                                PRInt32& aNameSpaceID,                     \
+                                nsIAtom*& aName) const {                   \
+    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             \
+  }                                                                        \
+  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
+    return _g.GetAttributeCount(aResult);                                  \
+  }                                                                        \
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      \
+    return _g.List(out, aIndent);                                          \
+  }                                                                        \
+  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
+    return _g.BeginConvertToXIF(aConverter);                               \
+  }                                                                        \
+  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
+    return _g.ConvertContentToXIF(aConverter);                             \
+  }                                                                        \
+  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
+    return _g.FinishConvertToXIF(aConverter);                              \
+  }                                                                        \
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                  \
+                            nsEvent* aEvent,                               \
+                            nsIDOMEvent** aDOMEvent,                       \
+                            PRUint32 aFlags,                               \
+                            nsEventStatus& aEventStatus);                  \
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {                               \
+    return _g.RangeAdd(aRange);                                            \
+  }                                                                        \
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange) {                            \
+    return _g.RangeRemove(aRange);                                         \
+  }                                                                        \
+  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
+    return _g.GetRangeList(aResult);                                       \
+  }                                                                        
   
 /**
  * Implement the nsIScriptObjectOwner API by forwarding the methods to a
