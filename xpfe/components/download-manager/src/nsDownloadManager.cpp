@@ -623,6 +623,49 @@ nsDownloadManager::RemoveDownload(const char* aPath)
   nsCOMPtr<nsIRDFResource> res;
   gRDFService->GetResource(aPath, getter_AddRefs(res));
 
+  // remove all the arcs for this resource, and then remove it from the Seq
+  nsCOMPtr<nsISimpleEnumerator> arcs;
+  rv = mDataSource->ArcLabelsOut(res, getter_AddRefs(arcs));
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool moreArcs;
+  rv = arcs->HasMoreElements(&moreArcs);
+  if (NS_FAILED(rv)) return rv;
+
+  while (moreArcs) {
+    nsCOMPtr<nsISupports> supports;
+    rv = arcs->GetNext(getter_AddRefs(supports));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRDFResource> arc(do_QueryInterface(supports, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISimpleEnumerator> targets;
+    rv = mDataSource->GetTargets(res, arc, PR_TRUE, getter_AddRefs(targets));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool moreTargets;
+    rv = targets->HasMoreElements(&moreTargets);
+    if (NS_FAILED(rv)) return rv;
+
+    while (moreTargets) {
+      rv = targets->GetNext(getter_AddRefs(supports));
+      if (NS_FAILED(rv)) return rv;
+
+      nsCOMPtr<nsIRDFNode> target(do_QueryInterface(supports, &rv));
+      if (NS_FAILED(rv)) return rv;
+
+      // and now drop this assertion from the graph
+      rv = mDataSource->Unassert(res, arc, target);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = targets->HasMoreElements(&moreTargets);
+      if (NS_FAILED(rv)) return rv;
+    }
+    rv = arcs->HasMoreElements(&moreArcs);
+    if (NS_FAILED(rv)) return rv;
+  }
+
   PRInt32 itemIndex;
   downloads->IndexOf(res, &itemIndex);
   if (itemIndex <= 0)
