@@ -75,6 +75,9 @@
 #include "nsIFontMetrics.h"
 #include "nsIImageRequest.h"
 #include "nsITimer.h"
+#include "nsIDocumentWidget.h"
+#include "nsIStyleSet.h"
+#include "nsIStyleContext.h"
 
 // Class ID's
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
@@ -169,78 +172,6 @@ extern int  NET_PollSockets();
 };
 
 //----------------------------------------------------------------------
-
-void
-WindowData::ShowContentSize()
-{
-  if (nsnull == observer) {
-    return;
-  }
-  nsISizeOfHandler* szh;
-  if (NS_OK != NS_NewSizeOfHandler(&szh)) {
-    return;
-  }
-
-  nsIDocument* doc;
-  doc = observer->mWebWidget->GetDocument();
-  if (nsnull != doc) {
-    nsIContent* content;
-    content = doc->GetRootContent();
-    if (nsnull != content) {
-      content->SizeOf(szh);
-      PRUint32 totalSize;
-      szh->GetSize(totalSize);
-      printf("Content model size is approximately %d bytes\n", totalSize);
-      NS_RELEASE(content);
-    }
-    NS_RELEASE(doc);
-  }
-  NS_RELEASE(szh);
-}
-
-void
-WindowData::ShowFrameSize()
-{
-  if (nsnull == observer) {
-    return;
-  }
-
-  nsIDocument* doc;
-
-  doc = observer->mWebWidget->GetDocument();
-  if (nsnull != doc ){
-    PRInt32 i, shells = doc->GetNumberOfShells();
-    for (i = 0; i < shells; i++) {
-      nsIPresShell* shell = doc->GetShellAt(i);
-      if (nsnull != shell) {
-        nsISizeOfHandler* szh;
-        if (NS_OK != NS_NewSizeOfHandler(&szh)) {
-          return;
-        }
-        nsIFrame* root;
-        root = shell->GetRootFrame();
-        if (nsnull != root) {
-          root->SizeOf(szh);
-          PRUint32 totalSize;
-          szh->GetSize(totalSize);
-          printf("Frame model for shell=%p size is approximately %d bytes\n",
-                 shell, totalSize);
-        }
-        NS_RELEASE(szh);
-        NS_RELEASE(shell);
-      }
-    }
-    NS_RELEASE(doc);
-  }
-}
-
-void
-WindowData::ShowStyleSize()
-{
-  if (nsnull == observer) {
-    return;
-  }
-}
 
 //----------------------------------------------------------------------
 
@@ -1227,7 +1158,7 @@ void nsViewer::SelectAll(WindowData* wd)
     nsIDocument* doc = wd->observer->mWebWidget->GetDocument();
     if (doc != nsnull) {
       doc->SelectAll();
-      wd->observer->mWebWidget->ShowFrameBorders(PR_FALSE);
+      nsIFrame::ShowFrameBorders(PR_FALSE);
       /*PRInt32 numShells = doc->GetNumberOfShells();
       for (PRInt32 i=0;i<numShells;i++) {
         nsIPresShell   * shell   = doc->GetShellAt(i);
@@ -1413,33 +1344,33 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
 
     case VIEWER_VISUAL_DEBUGGING:
       if ((nsnull != wd) && (nsnull != wd->observer)) {
-        wd->observer->mWebWidget->ShowFrameBorders(PRBool(!wd->observer->mWebWidget->GetShowFrameBorders()));
+        gTheViewer->ToggleFrameBorders(wd->observer->mWebWidget);
       }
       break;
 
     case VIEWER_DUMP_CONTENT:
       if ((nsnull != wd) && (nsnull != wd->observer)) {
-        wd->observer->mWebWidget->DumpContent();
+        gTheViewer->DumpContent(wd->observer->mWebWidget);
       }
       break;
     case VIEWER_DUMP_FRAMES:
       if ((nsnull != wd) && (nsnull != wd->observer)) {
-        wd->observer->mWebWidget->DumpFrames();
+        gTheViewer->DumpFrames(wd->observer->mWebWidget);
       }
       break;
     case VIEWER_DUMP_VIEWS:
       if ((nsnull != wd) && (nsnull != wd->observer)) {
-        wd->observer->mWebWidget->DumpViews();
+        gTheViewer->DumpViews(wd->observer->mWebWidget);
       }
       break;
     case VIEWER_DUMP_STYLE_SHEETS:
       if ((nsnull != wd) && (nsnull != wd->observer)) {
-        wd->observer->mWebWidget->DumpStyleSheets();
+        gTheViewer->DumpStyleSheets(wd->observer->mWebWidget);
       }
       break;
     case VIEWER_DUMP_STYLE_CONTEXTS:
       if ((nsnull != wd) && (nsnull != wd->observer)) {
-        wd->observer->mWebWidget->DumpStyleContexts();
+        gTheViewer->DumpStyleContexts(wd->observer->mWebWidget);
       }
       break;
 
@@ -1448,20 +1379,20 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
       break;
 
     case VIEWER_SHOW_CONTENT_SIZE:
-      if (nsnull != wd) {
-        wd->ShowContentSize();
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        gTheViewer->ShowContentSize(wd->observer->mWebWidget);
       }
       break;
 
     case VIEWER_SHOW_FRAME_SIZE:
-      if (nsnull != wd) {
-        wd->ShowFrameSize();
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        gTheViewer->ShowFrameSize(wd->observer->mWebWidget);
       }
       break;
 
     case VIEWER_SHOW_STYLE_SIZE:
-      if (nsnull != wd) {
-        wd->ShowStyleSize();
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        gTheViewer->ShowStyleSize(wd->observer->mWebWidget);
       }
       break;
 
@@ -2010,4 +1941,234 @@ nsViewer::GetPlatform(nsString& aPlatform)
   aPlatform.SetString("Win32");
   
   return NS_OK;
+}
+
+static NS_DEFINE_IID(kIWebWidgetViewerIID, NS_IWEBWIDGETVIEWER_IID);
+
+nsIPresShell*
+nsViewer::GetPresShell(nsIWebWidget* aWebWidget)
+{
+  nsIPresShell* shell = nsnull;
+  if (nsnull != aWebWidget) {
+    nsIContentViewer* cv = nsnull;
+    aWebWidget->GetContentViewer(cv);
+    if (nsnull != cv) {
+      nsIWebWidgetViewer* wwv = nsnull;
+      cv->QueryInterface(kIWebWidgetViewerIID, (void**) &wwv);
+      if (nsnull != wwv) {
+        nsIPresContext* cx = wwv->GetPresContext();
+        if (nsnull != cx) {
+          shell = cx->GetShell();
+          NS_RELEASE(cx);
+        }
+        NS_RELEASE(wwv);
+      }
+      NS_RELEASE(cv);
+    }
+  }
+  return shell;
+}
+
+void
+nsViewer::DumpContent(nsIWebWidget* aWebWidget)
+{
+  nsIPresShell* shell = GetPresShell(aWebWidget);
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsIContent* root = doc->GetRootContent();
+      if (nsnull != root) {
+        root->List(stdout);
+        NS_RELEASE(root);
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
+  }
+  else {
+    fputs("null pres shell\n", stdout);
+  }
+}
+
+void
+nsViewer::DumpFrames(nsIWebWidget* aWebWidget)
+{
+  nsIPresShell* shell = GetPresShell(aWebWidget);
+  if (nsnull != shell) {
+    nsIFrame* root = shell->GetRootFrame();
+    if (nsnull != root) {
+      root->List(stdout);
+    }
+    NS_RELEASE(shell);
+  }
+  else {
+    fputs("null pres shell\n", stdout);
+  }
+}
+
+void
+nsViewer::DumpViews(nsIWebWidget* aWebWidget)
+{
+  nsIPresShell* shell = GetPresShell(aWebWidget);
+  if (nsnull != shell) {
+    nsIViewManager* vm = shell->GetViewManager();
+    if (nsnull != vm) {
+      nsIView* root = vm->GetRootView();
+      if (nsnull != root) {
+        root->List(stdout);
+        NS_RELEASE(root);
+      }
+      NS_RELEASE(vm);
+    }
+    NS_RELEASE(shell);
+  }
+  else {
+    fputs("null pres shell\n", stdout);
+  }
+}
+
+void
+nsViewer::DumpStyleSheets(nsIWebWidget* aWebWidget)
+{
+  nsIPresShell* shell = GetPresShell(aWebWidget);
+  if (nsnull != shell) {
+    nsIStyleSet* styleSet = shell->GetStyleSet();
+    if (nsnull == styleSet) {
+      fputs("null style set\n", stdout);
+    } else {
+      styleSet->List(stdout);
+      NS_RELEASE(styleSet);
+    }
+    NS_RELEASE(shell);
+  }
+  else {
+    fputs("null pres shell\n", stdout);
+  }
+}
+
+void
+nsViewer::DumpStyleContexts(nsIWebWidget* aWebWidget)
+{
+  nsIPresShell* shell = GetPresShell(aWebWidget);
+  if (nsnull != shell) {
+    nsIPresContext* cx = shell->GetPresContext();
+    nsIStyleSet* styleSet = shell->GetStyleSet();
+    if (nsnull == styleSet) {
+      fputs("null style set\n", stdout);
+    } else {
+      nsIFrame* root = shell->GetRootFrame();
+      if (nsnull == root) {
+        fputs("null root frame\n", stdout);
+      } else {
+        nsIStyleContext* rootContext;
+        root->GetStyleContext(cx, rootContext);
+        if (nsnull != rootContext) {
+          styleSet->ListContexts(rootContext, stdout);
+          NS_RELEASE(rootContext);
+        }
+        else {
+          fputs("null root context", stdout);
+        }
+      }
+      NS_RELEASE(styleSet);
+    }
+    NS_IF_RELEASE(cx);
+    NS_RELEASE(shell);
+  } else {
+    fputs("null pres shell\n", stdout);
+  }
+}
+
+void
+nsViewer::ToggleFrameBorders(nsIWebWidget* aWebWidget)
+{
+  PRBool showing = nsIFrame::GetShowFrameBorders();
+  nsIFrame::ShowFrameBorders(!showing);
+  ForceRefresh(aWebWidget);
+}
+
+void
+nsViewer::ForceRefresh(nsIWebWidget* aWebWidget)
+{
+  nsIPresShell* shell = GetPresShell(aWebWidget);
+  if (nsnull != shell) {
+    nsIViewManager* vm = shell->GetViewManager();
+    if (nsnull != vm) {
+      nsIView* root = vm->GetRootView();
+      if (nsnull != root) {
+        nsRect r;
+        root->GetBounds(r);
+        vm->UpdateView(root, r, NS_VMREFRESH_IMMEDIATE);
+        NS_RELEASE(root);
+      }
+      NS_RELEASE(vm);
+    }
+    NS_RELEASE(shell);
+  }
+}
+
+void
+nsViewer::ShowContentSize(nsIWebWidget* aWebWidget)
+{
+  nsISizeOfHandler* szh;
+  if (NS_OK != NS_NewSizeOfHandler(&szh)) {
+    return;
+  }
+
+  nsIPresShell* shell = GetPresShell(aWebWidget);
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsIContent* content = doc->GetRootContent();
+      if (nsnull != content) {
+        content->SizeOf(szh);
+        PRUint32 totalSize;
+        szh->GetSize(totalSize);
+        printf("Content model size is approximately %d bytes\n", totalSize);
+        NS_RELEASE(content);
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
+  }
+  NS_RELEASE(szh);
+}
+
+void
+nsViewer::ShowFrameSize(nsIWebWidget* aWebWidget)
+{
+  nsIPresShell* shell0 = GetPresShell(aWebWidget);
+  if (nsnull != shell0) {
+    nsIDocument* doc = shell0->GetDocument();
+    if (nsnull != doc) {
+      PRInt32 i, shells = doc->GetNumberOfShells();
+      for (i = 0; i < shells; i++) {
+        nsIPresShell* shell = doc->GetShellAt(i);
+        if (nsnull != shell) {
+          nsISizeOfHandler* szh;
+          if (NS_OK != NS_NewSizeOfHandler(&szh)) {
+            return;
+          }
+          nsIFrame* root;
+          root = shell->GetRootFrame();
+          if (nsnull != root) {
+            root->SizeOf(szh);
+            PRUint32 totalSize;
+            szh->GetSize(totalSize);
+            printf("Frame model for shell=%p size is approximately %d bytes\n",
+                   shell, totalSize);
+          }
+          NS_RELEASE(szh);
+          NS_RELEASE(shell);
+        }
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell0);
+  }
+}
+
+void
+nsViewer::ShowStyleSize(nsIWebWidget* aWebWidget)
+{
 }
