@@ -171,14 +171,27 @@ public:
     }
 
     // Compare this connection info to another...
+    // Two connections are 'equal' if they end up talking the same
+    // protocol to the same server. This is needed to properly manage
+    // persistent connections to proxies
     PRBool Equals(const nsHttpConnectionInfo *info)
     {
-        return !PL_strcasecmp(info->mHost, mHost) &&
-               !PL_strcasecmp(info->mProxyHost, mProxyHost) &&
-               !PL_strcasecmp(info->mProxyType, mProxyType) &&
+        // if its a host independent proxy, then compare the proxy
+        // servers.
+        if ((info->mProxyHost.get() || mProxyHost.get()) &&
+            !mUsingSSL &&
+            PL_strcasecmp(mProxyType, "socks") != 0) {
+            return (!PL_strcasecmp(info->mProxyHost, mProxyHost) &&
+                    !PL_strcasecmp(info->mProxyType, mProxyType) &&
+                    info->mProxyPort == mProxyPort &&
+                    info->mUsingSSL == mUsingSSL);
+        }
+
+        // otherwise, just check the hosts
+        return (!PL_strcasecmp(info->mHost, mHost) &&
                 info->mPort == mPort &&
-                info->mProxyPort == mProxyPort &&
-                info->mUsingSSL == mUsingSSL;
+                info->mUsingSSL == mUsingSSL);
+
     }
 
     const char *Host()      { return mHost; }
