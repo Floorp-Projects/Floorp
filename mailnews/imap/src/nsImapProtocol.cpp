@@ -2099,9 +2099,11 @@ void nsImapProtocol::ProcessSelectedStateURL()
               (ImapOnlineCopyState) ImapOnlineCopyStateType::kFailedCopy;
               if (m_imapMailFolderSink)
                 m_imapMailFolderSink->OnlineCopyCompleted(this, copyState);
-                    
+            
+              // Don't mark msg 'Deleted' for aol servers since we already issued 'xaol-move' cmd.
            if (GetServerStateParser().LastCommandSuccessful() &&
-                        (m_imapAction == nsIImapUrl::nsImapOnlineMove))
+                        (m_imapAction == nsIImapUrl::nsImapOnlineMove) &&
+                        !GetServerStateParser().ServerIsAOLServer())
            {
              Store(messageIdString, "+FLAGS (\\Deleted)",
                             bMessageIdsAreUids); 
@@ -6258,7 +6260,12 @@ void nsImapProtocol::Copy(const char * messageList,
   nsCAutoString protocolString(GetServerCommandTag());
   if (idsAreUid)
     protocolString.Append(" uid");
-  protocolString.Append(" copy ");
+  // If it's a MOVE operation on aol servers then use 'xaol-move' cmd.
+  if ((m_imapAction == nsIImapUrl::nsImapOnlineMove) &&
+      GetServerStateParser().ServerIsAOLServer())
+    protocolString.Append(" xaol-move ");
+  else
+    protocolString.Append(" copy ");
   protocolString.Append(messageList);
   protocolString.Append(" \"");
   protocolString.Append(escapedDestination);
