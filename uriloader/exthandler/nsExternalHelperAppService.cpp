@@ -94,7 +94,7 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { TEXT_HTML, "htm,html,shtml,ehtml", "HyperText Markup Language", 'TEXT', 'MOSS' },
   { TEXT_RDF, "rdf", "Resource Description Framework", 'TEXT','ttxt' },
   { TEXT_XUL, "xul", "XML-Based User Interface Language", 'TEXT', 'ttxt' },
-  { TEXT_XML,          "xml,xsl", "Extensible Markup Language", 'TEXT', 'ttxt' },
+  { TEXT_XML,          "xml,xsl,xbl", "Extensible Markup Language", 'TEXT', 'ttxt' },
   { "application/xhtml+xml", "xhtml,xht", "Extensible HyperText Markup Language", 'TEXT', 'ttxt' },
 #ifdef MOZ_SVG
   { "image/svg+xml", "svg", "Scalable Vector Graphics", 'svg ', 'ttxt' },
