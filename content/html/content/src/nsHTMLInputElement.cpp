@@ -1709,7 +1709,9 @@ nsHTMLInputElement::ParseAttribute(nsIAtom* aAttribute,
     if (mType == NS_FORM_INPUT_FILE) {
       // If the type is being changed to file, set the element value
       // to the empty string. This is for security.
-      SetValue(EmptyString());
+      // Call SetValueInternal so that this doesn't accidentally get caught
+      // in the security checks in SetValue.
+      SetValueInternal(EmptyString(), nsnull);
     }
 
     return PR_TRUE;
