@@ -42,7 +42,7 @@
 class nsIFileChannel;
 class nsJARChannel;
 
-#define NS_JARCHANNEL_CID                            \
+#define NS_JARCHANNEL_CID							 \
 { /* 0xc7e410d5-0x85f2-11d3-9f63-006008a6efe9 */     \
     0xc7e410d5,                                      \
     0x85f2,                                          \
@@ -82,10 +82,10 @@ public:
 
 protected:
     nsCOMPtr<nsIJARProtocolHandler>     mJARProtocolHandler;
-    nsCOMPtr<nsIJARURI>                 mURI;
-    nsCOMPtr<nsILoadGroup>              mLoadGroup;
-    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
-    nsCOMPtr<nsIURI>                    mOriginalURI;
+	nsCOMPtr<nsIJARURI>                 mURI;
+	nsCOMPtr<nsILoadGroup>              mLoadGroup;
+	nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
+	nsCOMPtr<nsIURI>                    mOriginalURI;
     nsLoadFlags                         mLoadFlags;
     nsCOMPtr<nsISupports>               mOwner;
 

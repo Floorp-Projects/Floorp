@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): 
  */
 
 #include "nsJARProtocolHandler.h"
@@ -48,7 +48,7 @@ nsresult
 nsJARProtocolHandler::Init()
 {
     nsresult rv;
-    rv = nsComponentManager::CreateInstance(kZipReaderCacheCID,
+	rv = nsComponentManager::CreateInstance(kZipReaderCacheCID,
                                             nsnull,
                                             NS_GET_IID(nsIZipReaderCache),
                                             getter_AddRefs(mJARCache));
@@ -62,8 +62,8 @@ nsJARProtocolHandler::~nsJARProtocolHandler()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsJARProtocolHandler,
-                              nsIJARProtocolHandler,
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsJARProtocolHandler, 
+                              nsIJARProtocolHandler, 
                               nsIProtocolHandler)
 
 NS_METHOD
@@ -154,12 +154,12 @@ NS_IMETHODIMP
 nsJARProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     nsresult rv;
-
-    nsJARChannel* channel;
+    
+	nsJARChannel* channel;
     rv = nsJARChannel::Create(nsnull, NS_GET_IID(nsIJARChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(this, uri);
+	rv = channel->Init(this, uri);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;
@@ -170,10 +170,10 @@ nsJARProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 
-NS_IMETHODIMP
+NS_IMETHODIMP 
 nsJARProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
 {
-    // don't override anything.
+    // don't override anything.  
     *_retval = PR_FALSE;
     return NS_OK;
 }

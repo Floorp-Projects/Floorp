@@ -1572,7 +1572,7 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
         nsCOMPtr<nsIObjectInputStream> objectInput;
         nsXULDocument::GetFastLoadService(getter_AddRefs(fastLoadService));
         if (fastLoadService)
-            fastLoadService->GetInputStream(getter_AddRefs(objectInput));
+            fastLoadService->GetCurrentInputStream(getter_AddRefs(objectInput));
 
         if (objectInput) {
             PRBool useXULCache = PR_TRUE;
@@ -1623,7 +1623,7 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
                     // muxed stream to get inline objects that are contained in
                     // the current document.
                     PRInt32 direction;
-                    fastLoadService->GetDirection(&direction);
+                    fastLoadService->GetCurrentDirection(&direction);
                     if (direction != nsIFastLoadService::NS_FASTLOAD_READ)
                         rv2 = NS_ERROR_NOT_AVAILABLE;
                 }

@@ -23,7 +23,7 @@
 #include "nsISerializable.h"
 #include "nsCOMPtr.h"
 
-#define NS_JARURI_CID                                \
+#define NS_JARURI_CID					 \
 { /* 0xc7e410d7-0x85f2-11d3-9f63-006008a6efe9 */     \
     0xc7e410d7,                                      \
     0x85f2,                                          \

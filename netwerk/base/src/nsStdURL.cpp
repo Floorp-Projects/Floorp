@@ -63,14 +63,15 @@ nsIURLParser * nsStdURL::gNoAuthURLParser = NULL;
 #if defined (XP_MAC)
 static void SwapSlashColon(char * s)
 {
-    while (*s) {
-        if (*s == '/')
-            *s++ = ':';
-        else if (*s == ':')
-            *s++ = '/';
-        else
-            *s++;
-    }
+	while (*s)
+	{
+		if (*s == '/')
+			*s++ = ':';
+		else if (*s == ':')
+			*s++ = '/';
+		else
+			*s++;
+	}
 } 
 #endif
 
@@ -227,7 +228,7 @@ nsStdURL::~nsStdURL()
     CRTFREEIF(mRef);
 }
 
-NS_IMPL_AGGREGATED(nsStdURL)
+NS_IMPL_AGGREGATED(nsStdURL);
 
 NS_IMETHODIMP
 nsStdURL::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -1153,9 +1154,10 @@ nsStdURL::GetFile(nsIFile * *aFile)
 
     NS_ASSERTION(mUsername == nsnull, "file: with mUsername");
 
-    // we do not use the path cause it can contain the # char
+	// we do not use the path cause it can contain the # char
     nsCAutoString path;
-    if (mDirectory) {
+    if (mDirectory)
+    {
         rv = AppendString(path,mDirectory,ESCAPED,nsIIOService::url_Directory);
 #if defined( XP_MAC )
         // Now Swap the / and colons to convert back to a mac path
@@ -1179,9 +1181,9 @@ nsStdURL::GetFile(nsIFile * *aFile)
         nsCAutoString host(mHost);
         PRInt32 len = host.Length();
         if (len == 2 && host.CharAt(1) == '|') {
-            host.SetCharAt(':', 1);
-            path.Insert(host, 0);
-        }
+             host.SetCharAt(':', 1);
+             path.Insert(host, 0);
+         }
     }
 
     if ((path.CharAt(0) == '/' && path.CharAt(1) == '/')) {
@@ -1210,8 +1212,8 @@ nsStdURL::GetFile(nsIFile * *aFile)
     rv = NS_NewLocalFile(path, PR_FALSE, getter_AddRefs(localFile));
 
     mFile = localFile;
-    *aFile = mFile;
-    NS_IF_ADDREF(*aFile);
+	*aFile = mFile;
+	NS_IF_ADDREF(*aFile);
     return rv;
 }
 
@@ -1237,32 +1239,33 @@ nsStdURL::SetFile(nsIFile * aFile)
 #if defined (XP_PC)
         // Replace \ with / to convert to an url
         char* s = ePath;
-        while (*s) {
+	    while (*s)
+	    {
 #ifndef XP_OS2
             // We need to call IsDBCSLeadByte because
             // Japanese windows can have 0x5C in the sencond byte 
             // of a Japanese character, for example 0x8F 0x5C is
             // one Japanese character
-            if (::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
+            if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
                 s++;
-            } else 
+		    } else 
 #endif
-            if (*s == '\\')
-                *s = '/';
-            s++;
-        }
+                if (*s == '\\')
+                    *s = '/';
+		    s++;
+	    }
 #endif
 #if defined( XP_MAC )
-        // Swap the / and colons to convert to an url
+   	    // Swap the / and colons to convert to an url
         SwapSlashColon(ePath);
 #endif
         // Escape the path with the directory mask
         rv = nsURLEscape(ePath,nsIIOService::url_Directory+
                          nsIIOService::url_Forced,escPath);
         if (NS_SUCCEEDED(rv)) {
-            PRBool dir = PR_FALSE;
+            PRBool dir;
             rv = aFile->IsDirectory(&dir);
-            if (dir && escPath[escPath.Length() - 1] != '/') {
+            if (NS_SUCCEEDED(rv) && dir && escPath[escPath.Length() - 1] != '/') {
                 // make sure we have a trailing slash
                 escPath += "/";
             }

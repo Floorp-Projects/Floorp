@@ -42,7 +42,6 @@
 #include "nsIXBLDocumentInfo.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "nsXULDocument.h"
 
 class nsXULPrototypeCache : public nsIXULPrototypeCache
 {
@@ -69,8 +68,6 @@ public:
     NS_IMETHOD Flush();
 
     NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
-
-    NS_IMETHOD AbortFastLoads();
 
 protected:
     friend NS_IMETHODIMP
@@ -332,11 +329,4 @@ nsXULPrototypeCache::GetEnabled(PRBool* aIsEnabled)
 {
     *aIsEnabled = !gDisableXULCache;
     return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsXULPrototypeCache::AbortFastLoads()
-{
-    return nsXULDocument::AbortFastLoads();
 }
