@@ -55,18 +55,6 @@ PRLogModuleInfo *IMAP;
 
 #include "nsProxyObjectManager.h"
 
-
-
-// for temp message hack
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#define MESSAGE_PATH "/tmp/tempMessage.eml"
-#elif defined(XP_PC)
-#define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
-#elif defined(XP_MAC)
-#define MESSAGE_PATH  "tempMessage.eml"
-#endif
-
-
 #define ONE_SECOND ((PRUint32)1000)    // one second
 #define FOUR_K ((PRUint32)4096)
 

@@ -33,6 +33,7 @@
 #include "prlog.h"
 #include "prerror.h"
 #include "prprf.h"
+
 #include "nsFileStream.h"
 
 #define ENABLE_SMOKETEST  1
@@ -101,8 +102,7 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 	m_nextState = MAILBOX_READ_FOLDER;
 	m_initialState = MAILBOX_READ_FOLDER;
 
-	nsFileSpec fileSpec(MESSAGE_PATH);
-	NS_NewFileSpecWithSpec(fileSpec, getter_AddRefs(m_tempMessageFile));
+	NS_NewFileSpecWithSpec(m_tempMsgFileSpec, getter_AddRefs(m_tempMessageFile));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,8 +188,7 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 	// disply hack: run a file url on the temp file
 	if (m_mailboxAction == nsIMailboxUrl::ActionDisplayMessage && m_displayConsumer)
 	{
-		nsFilePath filePath(MESSAGE_PATH);
-		nsFileURL  fileURL(filePath);
+		nsFileURL  fileURL(m_tempMsgFileSpec);
 		char * message_path_url = PL_strdup(fileURL.GetAsString());
 
 		rv = m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE);

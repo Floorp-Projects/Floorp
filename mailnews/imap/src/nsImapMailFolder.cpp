@@ -53,15 +53,10 @@
 #include "nsImapMoveCoalescer.h"
 #include "nsIPrompt.h"
 #include "nsINetSupportDialogService.h"
+#include "nsSpecialSystemDirectory.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
-
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
@@ -74,23 +69,13 @@ static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 
-////////////////////////////////////////////////////////////////////////////////
-// for temp message hack
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#define MESSAGE_PATH "/tmp/tempMessage.eml"
-#elif defined(XP_PC)
-#define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
-#elif defined(XP_MAC)
-#define MESSAGE_PATH  "tempMessage.eml"
-#endif
-
 #define FOUR_K 4096
 
 nsImapMailFolder::nsImapMailFolder() :
     m_initialized(PR_FALSE),m_haveDiscoveredAllFolders(PR_FALSE),
     m_haveReadNameFromDB(PR_FALSE), 
     m_curMsgUid(0), m_nextMessageByteLength(0),
-    m_urlRunning(PR_FALSE), m_tempMessageFile(MESSAGE_PATH),
+    m_urlRunning(PR_FALSE),
 	m_verifiedAsOnlineFolder(PR_FALSE),
 	m_explicitlyVerify(PR_FALSE) 
 {
@@ -107,6 +92,8 @@ nsImapMailFolder::nsImapMailFolder() :
         pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
                                             getter_AddRefs(m_eventQueue));
 	m_moveCoalescer = nsnull;
+	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+	m_tempMsgFileSpec += "tempMessage.eml";
 
 }
 
@@ -2260,9 +2247,9 @@ nsImapMailFolder::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
 	// create a temp file to write the message into. We need to do this because
 	// we don't have pluggable converters yet. We want to let mkfile do the work of 
 	// converting the message from RFC-822 to HTML before displaying it...
-	m_tempMessageFile.Delete(PR_FALSE);
+	m_tempMsgFileSpec.Delete(PR_FALSE);
 	nsISupports * supports;
-	NS_NewIOFileStream(&supports, m_tempMessageFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+	NS_NewIOFileStream(&supports, m_tempMsgFileSpec, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
 	m_tempMessageStream = do_QueryInterface(supports);
 	NS_IF_RELEASE(supports);
     return NS_OK;
@@ -2295,11 +2282,10 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
         if (NS_SUCCEEDED(res))
         {
             nsCOMPtr<nsIWebShell> webShell;
-            nsFilePath filePath(MESSAGE_PATH);
             webShell = do_QueryInterface(aSupport, &res);
             if (NS_SUCCEEDED(res) && webShell)
             {
-                nsFileURL  fileURL(filePath);
+                nsFileURL  fileURL(m_tempMsgFileSpec);
                 char * message_path_url = PL_strdup(fileURL.GetAsString());
                 res = webShell->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE);
 				if (NS_SUCCEEDED(res))
@@ -2323,10 +2309,9 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
                     nsCOMPtr<nsIURI> aUrl;
                     res = aProtocol->GetRunningUrl(getter_AddRefs(aUrl));
 					nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(aUrl);
-                    nsFileSpec fileSpec(filePath);
                     nsInputFileStream *inputFileStream = nsnull;
                     nsCOMPtr<nsIInputStream> inputStream;
-                    inputFileStream = new nsInputFileStream(fileSpec);
+                    inputFileStream = new nsInputFileStream(m_tempMsgFileSpec);
                     if (!inputFileStream) return NS_ERROR_OUT_OF_MEMORY;
                     inputStream =
                         do_QueryInterface(inputFileStream->GetIStream(), &res);

@@ -36,6 +36,7 @@
 #include "CNavDTD.h"
 #include "nsMsgCompUtils.h"
 #include "nsMsgComposeStringBundle.h"
+#include "nsSpecialSystemDirectory.h"
 #include "nsMsgSend.h"
 
 // XXX temporary so we can use the current identity hack -alecf
@@ -43,19 +44,7 @@
 #include "nsMsgBaseCID.h"
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#define TEMP_PATH_DIR "/tmp/"
-#elif defined(XP_PC)
-#define TEMP_PATH_DIR "c:\\temp\\"
-#elif defined(XP_MAC)
-#define TEMP_PATH_DIR ""
-#else
-#error TEMP_PATH_DIR_NOT_DEFINED
-#endif 
-
 #define TEMP_MESSAGE_IN       "tempMessage.eml"
-#define TEMP_MESSAGE_OUT      "tempMessage.html"
-#define TEMP_MESSAGE_OUT_TEXT "tempMessage.txt"
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
@@ -931,10 +920,9 @@ void nsMsgCompose::HackToGetBody(PRInt32 what)
   char *buffer = (char *) PR_CALLOC(16384);
   if (buffer)
   {
-    nsString fileName(TEMP_PATH_DIR);
-    fileName += TEMP_MESSAGE_IN;
+	nsFileSpec fileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+    fileSpec += TEMP_MESSAGE_IN;
     
-    nsFileSpec fileSpec(fileName);
     nsInputFileStream fileStream(fileSpec);
     
     nsString msgBody = (what == 2 && !m_composeHTML) ? "--------Original Message--------\r\n"  : ""; 

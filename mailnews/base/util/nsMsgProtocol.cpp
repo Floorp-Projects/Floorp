@@ -21,6 +21,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsISocketTransportService.h"
 #include "nsXPIDLString.h"
+#include "nsSpecialSystemDirectory.h"
 #include "nsIIOService.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -35,6 +36,9 @@ nsMsgProtocol::nsMsgProtocol()
 	m_startPosition = 0;
 	m_readCount = 0;
 	m_socketIsOpen = PR_FALSE;
+		
+	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+	m_tempMsgFileSpec += "tempMessage.eml";
 }
 
 nsMsgProtocol::~nsMsgProtocol()

@@ -437,7 +437,7 @@ nsDummyBufferStream::QueryInterface(REFNSIID aIID, void** result)
     return NS_ERROR_NO_INTERFACE;
 }
 
-nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH), m_tempErrorFile(ERROR_PATH)
+nsNNTPProtocol::nsNNTPProtocol()
 {
 	m_messageID = nsnull;
 	m_cancelFromHdr = nsnull;
@@ -445,6 +445,8 @@ nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH), m_tempErrorF
 	m_cancelDistribution = nsnull;
 	m_cancelID = nsnull;
 	m_cancelMessageFile = nsnull;
+	m_tempErrorFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+	m_tempErrorFileSpec += "errorMessage.htm";
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
@@ -1853,9 +1855,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         char *group_name = nsnull;
         char outputBuffer[OUTPUT_BUFFER_SIZE];
 
-        m_tempErrorFile.Delete(PR_FALSE);
+        m_tempErrorFileSpec.Delete(PR_FALSE);
         nsCOMPtr <nsISupports> supports;
-        NS_NewIOFileStream(getter_AddRefs(supports), m_tempErrorFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+        NS_NewIOFileStream(getter_AddRefs(supports), m_tempErrorFileSpec, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
         m_tempErrorStream = do_QueryInterface(supports);
         
         if (m_newsgroup) {
@@ -1891,21 +1893,22 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
             m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
         }
   
-        // and close the article file if it was open....
+		// and close the article file if it was open....
 		if (m_tempErrorStream)
 			m_tempErrorStream->Close();
 
         /* cut and paste from below */
         if (m_displayConsumer)
 		{
-			nsFilePath filePath(ERROR_PATH);
-			nsFileURL  fileURL(filePath);
+			nsFileURL  fileURL(m_tempErrorFileSpec);
 			char * error_path_url = PL_strdup(fileURL.GetAsString());
 
 #ifdef DEBUG_NEWS
 			printf("load this url to display the error message: %s\n", error_path_url);
 #endif
+#ifdef DEBUG_mscott
 			printf ("mscott fix me...as part of necko...we don't have stream converters hooked up...");
+#endif
 			m_displayConsumer->LoadURL(nsAutoString(error_path_url).GetUnicode(), nsnull, PR_TRUE);
 			
 			PR_FREEIF(error_path_url);
@@ -2041,16 +2044,16 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   // article...
   if (m_copyStreamListener)
   {
-      m_tempArticleFile.Delete(PR_FALSE);
+      m_tempMsgFileSpec.Delete(PR_FALSE);
       m_tempArticleStream = null_nsCOMPtr();
       nsCOMPtr<nsISupports> aURL(do_QueryInterface(m_runningURL));
       m_copyStreamListener->OnStartRequest(nsnull, aURL);
   }
   else
   {
-      m_tempArticleFile.Delete(PR_FALSE);
+      m_tempMsgFileSpec.Delete(PR_FALSE);
       nsCOMPtr <nsISupports> supports;
-      NS_NewIOFileStream(getter_AddRefs(supports), m_tempArticleFile,
+      NS_NewIOFileStream(getter_AddRefs(supports), m_tempMsgFileSpec,
                          PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
       m_tempArticleStream = do_QueryInterface(supports);
   }
@@ -2113,8 +2116,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 
 		if (m_displayConsumer)
 		{
-			nsFilePath filePath(ARTICLE_PATH);
-			nsFileURL  fileURL(filePath);
+			nsFileURL  fileURL(m_tempMsgFileSpec);
 			char * article_path_url = PL_strdup(fileURL.GetAsString());
 
 #ifdef DEBUG_NEWS

@@ -35,22 +35,12 @@
 #include "nsIMsgOfflineNewsState.h"
 
 #include "nsMsgLineBuffer.h"
+#include "nsSpecialSystemDirectory.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
-
-#if defined(XP_UNIX) || defined (XP_BEOS)
-#define ARTICLE_PATH "/tmp/tempMessage.eml"
-#define ERROR_PATH "/tmp/errorMessage.htm"
-#elif defined(XP_PC)
-#define ARTICLE_PATH  "c:\\temp\\tempMessage.eml"
-#define ERROR_PATH "c:\\temp\\errorMessage.htm"
-#elif defined(XP_MAC)
-#define ARTICLE_PATH "tempMessage.eml"
-#define ERROR_PATH "errorMessage.htm"
-#endif
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
@@ -183,11 +173,10 @@ private:
 	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
 	// converter interface...
 	nsCOMPtr<nsIOutputStream> m_tempArticleStream;
-	nsFileSpec m_tempArticleFile;
     // same trick as above, but used for showing error message in the 
     // message pane.
 	nsCOMPtr<nsIOutputStream> m_tempErrorStream;
-	nsFileSpec m_tempErrorFile;
+	nsFileSpec m_tempErrorFileSpec;
 
     // uber copy service support
     nsCOMPtr<nsIStreamListener> m_copyStreamListener; // per message
