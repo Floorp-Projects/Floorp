@@ -98,7 +98,8 @@ all: checkout build
 
 checkout::
 	cd $(ROOTDIR) && \
-	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk
+	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk && \
+	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/camino/config/mozconfig
 	@cd $(ROOTDIR) && $(MAKE) -f mozilla/client.mk checkout
 	cd $(ROOTDIR) && $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/camino.mk
 	@cd $(ROOTDIR) && $(MAKE) -f mozilla/camino.mk real_checkout
