@@ -6504,32 +6504,14 @@ ResDef(XP_EDT_MSG_TEXT_BUFFER_TOO_LARGE,    (XP_MSG_BASE + 843),
 "This document has %ld characters. The Spelling Checker cannot process more than %ld characters.")
 ResDef(XP_EDT_MSG_CANNOT_PASTE, (XP_MSG_BASE + 844),
 "You cannot paste this much text in a single operation.\nTry pasting the text in several smaller segments.")
-
-ResDef(XP_EDT_CAN_PASTE_AS_TABLE, (XP_MSG_BASE + 845),
-"Text can be pasted as %d rows and %d columns.\n\n")
-ResDef(XP_EDT_REPLACE_CELLS, (XP_MSG_BASE + 846),
-"Replace existing cells?")
-ResDef(XP_EDT_PASTE_AS_TABLE, (XP_MSG_BASE + 847),
-"Paste text as a new table?")
-
-ResDef(XP_EDT_CHARSET_LABEL, (XP_MSG_BASE + 849),
-"The character set label of this page is '%s'.")
-ResDef(XP_EDT_CHARSET_CANT_EDIT, (XP_MSG_BASE + 850),
-"\nCommunicator does not recognize this and cannot edit it.")
-ResDef(XP_EDT_CURRENT_CHARSET, (XP_MSG_BASE + 851),
-"\nYour current character set is '%s'.")
-ResDef(XP_EDT_CHARSET_EDIT_REPLACE, (XP_MSG_BASE + 852),
-"\n\nSelect OK to edit the page and change the character set label to '%s'.")
-ResDef(XP_EDT_CHARSET_EDIT_CANCEL, (XP_MSG_BASE + 853),
-"\nSelect Cancel to abort editing this page.")
-ResDef(XP_EDT_CHARSET_EDIT_NOREPLACE, (XP_MSG_BASE + 854),
-"\nSelect Cancel to edit the page and keep '%s'.")
-ResDef(XP_EDT_CHARSET_EDIT_SUGGESTED, (XP_MSG_BASE + 855),
-"\nThe suggested character set to use is '%s'.")
-ResDef(XP_EDT_CHARSET_CONVERT_PAGE, (XP_MSG_BASE + 856),
-"This may alter some of the characters in your page.\nYou cannot undo this action.")
-ResDef(XP_EDT_CHARSET_SET_METATAG, (XP_MSG_BASE + 857),
-"This only changes the Content-Type information saved with the page.\nIt will not convert any characters in your page.")
+ResDef(XP_EDT_CAN_PASTE_AS_TABLE, (XP_MSG_BASE + 845),"Text can be pasted as %d rows and %d columns.\n\n")
+ResDef(XP_EDT_REPLACE_CELLS, (XP_MSG_BASE + 846),"Replace existing cells?")
+ResDef(XP_EDT_PASTE_AS_TABLE, (XP_MSG_BASE + 847),"Paste text as a new table?")
+ResDef(XP_EDT_DELETE_OR_COPY_CAPTION, (XP_MSG_BASE + 848),"Delete/Copy/Cut Selection")
+ResDef(XP_EDT_SELECTION_CROSSES_NESTED_TABLE, (XP_MSG_BASE + 849),
+"The selection includes a nested table boundary.\nCopying and deleting are not allowed.")
+ResDef(XP_EDT_DOCUMENT_BUSY, (XP_MSG_BASE + 850),
+"Cannot delete, copy or cut at this time.\nPlease try again later.")
 
 
 ResDef(MK_ADDR_DELETE_ALL, XP_MSG_BASE+860, "Delete From All Lists")  /* new entry in address book context menus - delete all from list */
@@ -7341,52 +7323,76 @@ ResDef(XP_EDT_PERCENT_TABLE, XP_MSG_BASE + 1173,
        "% of table  ")
 
 ResDef(XP_EDT_SEL_TABLE, XP_MSG_BASE + 1174,
-       "Select table (Press Ctrl to select all cells instead)")
+       "Click to select table")
 
-ResDef(XP_EDT_SEL_COL, XP_MSG_BASE + 1175,
-       "Select all cells in column")
+ResDef(XP_EDT_SEL_TABLE_EXTRA, XP_MSG_BASE + 1175,
+       " (Also press Ctrl to select all cells instead)")
 
-ResDef(XP_EDT_SEL_ROW, XP_MSG_BASE + 1176,
-       "Select all cells in row")
+ResDef(XP_EDT_SEL_COL, XP_MSG_BASE + 1176,
+       "Click to select all cells in column")
 
-ResDef(XP_EDT_SEL_CELL, XP_MSG_BASE + 1177,
-       "Select or deselect cell")
+ResDef(XP_EDT_SEL_ROW, XP_MSG_BASE + 1177,
+       "Click to select all cells in row")
 
-ResDef(XP_EDT_SEL_ALL_CELLS, XP_MSG_BASE + 1178,
-       "Select all cells in table")
+ResDef(XP_EDT_SEL_CELL, XP_MSG_BASE + 1178,
+       "Click to select or deselect cell")
 
-ResDef(XP_EDT_SIZE_TABLE_WIDTH, XP_MSG_BASE + 1179,
+ResDef(XP_EDT_SEL_ALL_CELLS, XP_MSG_BASE + 1179,
+       "Click to select all cells in table")
+
+ResDef(XP_EDT_SIZE_TABLE_WIDTH, XP_MSG_BASE + 1180,
        "Drag to change width of table")
 
-ResDef(XP_EDT_SIZE_TABLE_HEIGHT, XP_MSG_BASE + 1180,
+ResDef(XP_EDT_SIZE_TABLE_HEIGHT, XP_MSG_BASE + 1181,
        "Drag to change height of table")
 
-ResDef(XP_EDT_SIZE_COL, XP_MSG_BASE + 1181,
+ResDef(XP_EDT_SIZE_COL, XP_MSG_BASE + 1182,
        "Drag to change width of column to the left")
 
-ResDef(XP_EDT_SIZE_ROW, XP_MSG_BASE + 1182,
+ResDef(XP_EDT_SIZE_ROW, XP_MSG_BASE + 1183,
        "Drag to change height of row above")
 
-ResDef(XP_EDT_ADD_ROWS, XP_MSG_BASE + 1183,
+ResDef(XP_EDT_ADD_ROWS, XP_MSG_BASE + 1184,
        "Drag down to add more rows to the table")
 
-ResDef(XP_EDT_ADD_COLS, XP_MSG_BASE + 1184,
+ResDef(XP_EDT_ADD_COLS, XP_MSG_BASE + 1185,
        "Drag right to add more columns to the table")
 
-ResDef(XP_EDT_DRAG_TABLE, XP_MSG_BASE + 1185,
+ResDef(XP_EDT_DRAG_TABLE, XP_MSG_BASE + 1186,
        "Relocate caret or drag selected table or cells")
 
-ResDef(XP_EDT_NOT_ALL_CELLS_PASTED, XP_MSG_BASE + 1186,
+ResDef(XP_EDT_NOT_ALL_CELLS_PASTED, XP_MSG_BASE + 1187,
        "Not all cells in source were pasted\n")
 
-ResDef(XP_EDT_CLICK_TO_SELECT_IMAGE, XP_MSG_BASE + 1187,
+ResDef(XP_EDT_CLICK_TO_SELECT_IMAGE, XP_MSG_BASE + 1188,
        "Click to select the image before you can drag it")
 
-ResDef(XP_EDT_CLICK_AND_DRAG_IMAGE, XP_MSG_BASE + 1188,
+ResDef(XP_EDT_CLICK_AND_DRAG_IMAGE, XP_MSG_BASE + 1189,
        "Click mouse button down and drag to move or copy image")
 
-/* XP_NSCOLOR_BASE and the 70 color strings removed 
- * We would like to reserve the range through 1250 for Editor
+ResDef(XP_EDT_SEL_LINE, XP_MSG_BASE + 1190,
+       "Click to select the entire line to the right")
+
+ResDef(XP_EDT_CHARSET_LABEL, (XP_MSG_BASE + 1200),
+"The character set label of this page is '%s'.")
+ResDef(XP_EDT_CHARSET_CANT_EDIT, (XP_MSG_BASE + 1201),
+"\nCommunicator does not recognize this and cannot edit it.")
+ResDef(XP_EDT_CURRENT_CHARSET, (XP_MSG_BASE + 1202),
+"\nYour current character set is '%s'.")
+ResDef(XP_EDT_CHARSET_EDIT_REPLACE, (XP_MSG_BASE + 1203),
+"\n\nSelect OK to edit the page and change the character set label to '%s'.")
+ResDef(XP_EDT_CHARSET_EDIT_CANCEL, (XP_MSG_BASE + 1204),
+"\nSelect Cancel to abort editing this page.")
+ResDef(XP_EDT_CHARSET_EDIT_NOREPLACE, (XP_MSG_BASE + 1205),
+"\nSelect Cancel to edit the page and keep '%s'.")
+ResDef(XP_EDT_CHARSET_EDIT_SUGGESTED, (XP_MSG_BASE + 1206),
+"\nThe suggested character set to use is '%s'.")
+ResDef(XP_EDT_CHARSET_CONVERT_PAGE, (XP_MSG_BASE + 1207),
+"This may alter some of the characters in your page.\nYou cannot undo this action.")
+ResDef(XP_EDT_CHARSET_SET_METATAG, (XP_MSG_BASE + 1208),
+"This only changes the Content-Type information saved with the page.\nIt will not convert any characters in your page.")
+
+/* We would like to reserve the range through 1250 for Editor
 */
 
 ResDef(SU_NOT_A_JAR_FILE, XP_MSG_BASE + 1262,

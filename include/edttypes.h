@@ -627,6 +627,8 @@ typedef int32 EDT_ClipboardResult;
 #define EDT_COP_DOCUMENT_BUSY 1
 #define EDT_COP_SELECTION_EMPTY 2
 #define EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL 3
+#define EDT_COP_SELECTION_CROSSES_NESTED_TABLE 4
+
 /* For the result EDT_COP_CLIPBOARD_BAD the XP code has already
  * given the user an error dialog. So FE code should not
  * give an additional error dialog. (Only occurs on

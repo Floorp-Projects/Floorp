@@ -604,6 +604,10 @@ void EDT_ConvertTextToTable(MWContext *pMWContext, intn iColumns);
 /* Convert the table into text - unravel existing paragraphs in cells */
 void EDT_ConvertTableToText(MWContext *pMWContext);
 
+/* Adjust the top or bottom of the supplied rect to surround area of the caption 
+ * Returns TRUE only if top or bottom was changed */ 
+XP_Bool EDT_AdjustTableRectForCaption(LO_TableStruct *pTable, XP_Rect *pRect);
+
 /* Save the character and paragraph style of selection or at caret */
 void EDT_CopyStyle(MWContext *pMWContext);
 

@@ -2716,6 +2716,10 @@ typedef int16 INTLCharSetID;
 
 INTLCharSetID INTL_GetCharSetID(INTL_CharSetID_Selector selector); 
 
+
+const char* INTL_CharsetCorrection(const char* charsetname);
+
+
 XP_END_PROTOS
 
 #endif /* INTL_LIBI18N_H */

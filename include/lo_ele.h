@@ -1317,6 +1317,8 @@ struct LO_Selection_struct {
 #define LO_HIT_UNKNOWN  0
 #define LO_HIT_LINE  1
 #define LO_HIT_ELEMENT  2
+/* Used just for the EDITOR when clicking on a line after a table */
+#define LO_HIT_TABLE_LINE  3
 
 #define LO_HIT_LINE_REGION_BEFORE  0
 #define LO_HIT_LINE_REGION_AFTER  1
