@@ -9,6 +9,7 @@ Run Mode=Normal
 
 Company Name=$CompanyName$
 Product Name=$ProductName$
+Product NameInternal=$ProductName$
 User Agent=$UserAgent$
 
 ; Destination Path values:
@@ -108,7 +109,7 @@ Confirmation Message=There was an error encountered during installation of $Prod
 
 
 
-; HKey:              valid decryptable setup key is [Product CurrentVersion]
+; HKey:              valid decryptable setup key is [Product CurrentVersion] or [Product PreviousVersion]
 ; Decrypt HKey:      there are times when '[' and ']' are valid part of windows registry key names.
 ; Contains Filename: tells setup that the path contains filename needed to be removed before
 ;                    using it as a path.
