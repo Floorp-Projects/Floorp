@@ -1019,7 +1019,7 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
       fprintf(out,"Column Data [%d] \n",colIndex);
       for (PRInt32 rowIndex = 0; rowIndex < numRows; rowIndex++)
       {
-        nsTableCellFrame* cellFrame = cellMap->GetCellInfoAt(rowIndex, colIndex);
+//        nsTableCellFrame* cellFrame = cellMap->GetCellInfoAt(rowIndex, colIndex);
         PRInt32 rowIndent;
         for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);
         fprintf(out,"Cell Data [%d] \n",rowIndex);

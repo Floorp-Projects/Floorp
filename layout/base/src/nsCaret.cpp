@@ -390,11 +390,10 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
       
 			if (contentNode)
 			{
-				PRBool  canContainChildren;
-			  
 		      // see if we have an offset between child nodes, or an offset into a text
 		      // node.
 #if NOT_NEEDED
+				PRBool  canContainChildren;
 				if (NS_SUCCEEDED(contentNode->CanContainChildren(canContainChildren)) && canContainChildren)
 				{
 					// point the caret to the start of the child node
