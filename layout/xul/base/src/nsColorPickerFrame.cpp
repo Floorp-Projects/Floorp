@@ -181,7 +181,6 @@ nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
   // call the color picker's paint method
   mColorPicker->Paint(&aPresContext, &aRenderingContext);
 
-
   aRenderingContext.PopState(clipState);
 
   return NS_OK;
