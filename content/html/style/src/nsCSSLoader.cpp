@@ -312,8 +312,6 @@ public:
   nsVoidArray   mPendingDocSheets;  // loaded sheet waiting for doc insertion
   nsVoidArray   mPendingAlternateSheets;  // alternates waiting for load to start
 
-  nsHashtable   mSheetMapTable;  // map to insertion index arrays
-
   // @charset support
   nsString      mCharset;        // the charset we are using
 
@@ -486,13 +484,6 @@ static PRBool PR_CALLBACK DeleteLoadData(void* aData, void* aClosure)
   return PR_TRUE;
 }
 
-static PRBool PR_CALLBACK DeleteSheetMap(nsHashKey* aKey, void* aData, void* aClosure)
-{
-  nsAutoVoidArray* map = (nsAutoVoidArray*)aData;
-  delete map;
-  return PR_TRUE;
-}
-
 CSSLoaderImpl::~CSSLoaderImpl(void)
 {
   if (mLoadingSheets.Count() > 0) {
@@ -503,7 +494,6 @@ CSSLoaderImpl::~CSSLoaderImpl(void)
   mLoadingSheets.Enumerate(DeleteHashLoadData);
   mPendingDocSheets.EnumerateForwards(DeletePendingData, nsnull);
   mPendingAlternateSheets.EnumerateForwards(DeleteLoadData, nsnull);
-  mSheetMapTable.Enumerate(DeleteSheetMap);
 }
 
 NS_IMPL_ISUPPORTS1(CSSLoaderImpl, nsICSSLoader)
@@ -1119,7 +1109,7 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (nsnull != aElement) {
+  if (aElement) {
     nsIDOMNode* domNode = nsnull;
     if (NS_SUCCEEDED(aElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&domNode))) {
       aSheet->SetOwningNode(domNode);
@@ -1138,37 +1128,11 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
   aSheet->GetTitle(title);
   aSheet->SetEnabled(! IsAlternate(title));
 
-  nsVoidKey key(mDocument);
-  nsAutoVoidArray*  sheetMap = (nsAutoVoidArray*)mSheetMapTable.Get(&key);
-  if (! sheetMap) {
-    sheetMap = new nsAutoVoidArray();
-    if (sheetMap) {
-      mSheetMapTable.Put(&key, sheetMap);
-    }
+  mDocument->InsertStyleSheetAt(aSheet, aDocIndex, aNotify);
+  if (aObserver) {
+    aObserver->StyleSheetLoaded(aSheet, aNotify);
   }
-
-  if (sheetMap) {
-    PRInt32 insertIndex = sheetMap->Count();
-    PRBool insertedSheet = PR_FALSE;
-    while (0 <= --insertIndex) {
-      PRInt32 targetIndex = NS_PTR_TO_INT32(sheetMap->ElementAt(insertIndex));
-      if (targetIndex < aDocIndex) {
-        mDocument->InsertStyleSheetAt(aSheet, insertIndex + 1, aNotify);
-        sheetMap->InsertElementAt((void*)aDocIndex, insertIndex + 1);
-        insertedSheet = PR_TRUE;
-        break;
-      }
-    }
-    if (!insertedSheet) { // didn't insert yet
-      mDocument->InsertStyleSheetAt(aSheet, 0, aNotify);
-      sheetMap->InsertElementAt((void*)aDocIndex, 0);
-    }
-    if (nsnull != aObserver) {
-      aObserver->StyleSheetLoaded(aSheet, aNotify);
-    }
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 nsresult
@@ -1179,33 +1143,8 @@ CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aPar
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsVoidKey key(aParentSheet);
-  nsAutoVoidArray*  sheetMap = (nsAutoVoidArray*)mSheetMapTable.Get(&key);
-  if (! sheetMap) {
-    sheetMap = new nsAutoVoidArray();
-    if (sheetMap) {
-      mSheetMapTable.Put(&key, sheetMap);
-    }
-  }
-
-  if (sheetMap) {
-    PRInt32 insertIndex = sheetMap->Count();
-    while (0 <= --insertIndex) {
-      PRInt32 targetIndex = NS_PTR_TO_INT32(sheetMap->ElementAt(insertIndex));
-      if (targetIndex < aIndex) {
-        aParentSheet->InsertStyleSheetAt(aSheet, insertIndex + 1);
-        sheetMap->InsertElementAt((void*)aIndex, insertIndex + 1);
-        aSheet = nsnull;
-        break;
-      }
-    }
-    if (nsnull != aSheet) { // didn't insert yet
-      aParentSheet->InsertStyleSheetAt(aSheet, 0);
-      sheetMap->InsertElementAt((void*)aIndex, 0);
-    }
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
+  aParentSheet->InsertStyleSheetAt(aSheet, aIndex);
+  return NS_OK;
 }
 
 nsresult
