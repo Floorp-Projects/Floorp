@@ -16,6 +16,8 @@
 		</html:div>
 
 
+		<keyset id="keyset"/>
+
 		<box align="vertical" flex="100%">
 				<html:div id="info.header" style="margin-left:2em; margin-right:2em; margin-top:5px; font-size: 110%; font-weight: bold;">
 					&header.label;

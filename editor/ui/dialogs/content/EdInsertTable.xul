@@ -44,6 +44,8 @@
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <xul:broadcaster id="args" value=""/>
+  <keyset id="keyset"/>
+
   <table>
     <tr class="vcenter">
       <td align="right">

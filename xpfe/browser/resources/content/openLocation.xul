@@ -36,6 +36,7 @@ Contributor(s): ______________________________________. -->
               
    <html:script language="javascript" src="openLocation.js"/>
                    
+	<keyset id="keyset"/>
            
            
 	<box align="horizontal" style="width: 36em; height: 100%;">

@@ -32,6 +32,8 @@
 		class="dialog"
                 align="vertical">
 
+<keyset id="keyset"/>
+
 <html:div flex="100%">
 <box align="vertical">
 	<box align="horizontal">

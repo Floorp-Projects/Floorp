@@ -44,6 +44,8 @@
 
     <broadcaster id="args" value=""/>
 
+    <keyset id="keyset"/>
+
     <box align="horizontal">
         <html:label flex="100%">&currentattributesfor.label;</html:label>
         <html:div flex="100%" id="tagLabel"/>
