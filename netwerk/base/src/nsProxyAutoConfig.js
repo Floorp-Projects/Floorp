@@ -206,7 +206,8 @@ pacFactory.createInstance =
             throw Components.results.NS_ERROR_NO_AGGREGATION;
 
         if (!iid.equals(nsIProxyAutoConfig) &&
-            !!iid.equals(Components.interfaces.nsIStreamListener) &&
+            !iid.equals(Components.interfaces.nsIStreamListener) &&
+            !iid.equals(Components.interfaces.nsIRequestObserver) &&
             !iid.equals(Components.interfaces.nsISupports)) {
             // shouldn't this be NO_INTERFACE?
             throw Components.results.NS_ERROR_INVALID_ARG;
