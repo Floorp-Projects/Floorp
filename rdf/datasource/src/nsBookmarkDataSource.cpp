@@ -67,6 +67,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkAddDate);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Description);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, IEFavorite);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, PersonalToolbarFolderCategory);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
@@ -91,6 +92,7 @@ nsIRDFResource* kNC_BookmarkAddDate;
 nsIRDFResource* kNC_BookmarksRoot;
 nsIRDFResource* kNC_Description;
 nsIRDFResource* kNC_Folder;
+nsIRDFResource* kNC_IEFavorite;
 nsIRDFResource* kNC_IEFavoritesRoot;
 nsIRDFResource* kNC_Name;
 nsIRDFResource* kNC_PersonalToolbarFolder;
@@ -118,6 +120,7 @@ bm_AddRefGlobals()
         gRDFService->GetResource(kURINC_BookmarksRoot,     &kNC_BookmarksRoot);
         gRDFService->GetResource(kURINC_Description,       &kNC_Description);
         gRDFService->GetResource(kURINC_Folder,            &kNC_Folder);
+        gRDFService->GetResource(kURINC_IEFavorite,        &kNC_IEFavorite);
         gRDFService->GetResource(kURINC_IEFavoritesRoot,   &kNC_IEFavoritesRoot);
         gRDFService->GetResource(kURINC_Name,              &kNC_Name);
         gRDFService->GetResource(kURINC_PersonalToolbarFolder, &kNC_PersonalToolbarFolder);
@@ -143,6 +146,7 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_BookmarksRoot);
         NS_IF_RELEASE(kNC_Description);
         NS_IF_RELEASE(kNC_Folder);
+        NS_IF_RELEASE(kNC_IEFavorite);
         NS_IF_RELEASE(kNC_IEFavoritesRoot);
         NS_IF_RELEASE(kNC_Name);
         NS_IF_RELEASE(kNC_PersonalToolbarFolder);
@@ -171,8 +175,8 @@ protected:
                         nsIRDFResource* aLabel,
                         PRInt32 aTime);
 
-    nsresult ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer);
-    nsresult ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aContainer);
+    nsresult ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer, nsIRDFResource *nodeType);
+    nsresult ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aContainer, nsIRDFResource *nodeType);
     nsresult ParseBookmarkSeparator(const nsString& aLine, nsIRDFResource* aContainer);
     nsresult ParseHeaderBegin(const nsString& aLine, nsIRDFResource* aContainer);
     nsresult ParseHeaderEnd(const nsString& aLine);
@@ -186,10 +190,10 @@ public:
     ~BookmarkParser();
 
     nsresult Init(nsInputFileStream *aStream, nsIRDFDataSource *aDataSource);
-    nsresult Parse(nsIRDFResource* aContainer);
+    nsresult Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType);
     nsresult AddBookmark(nsIRDFResource * aContainer, const char *url, const char *optionalTitle,
 			PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate,
-			const char *shortcutURL);
+			const char *shortcutURL, nsIRDFResource *nodeType);
 };
 
 
@@ -236,7 +240,7 @@ static const char kShortcutURLEquals[]  = "SHORTCUTURL=\"";
 
 
 nsresult
-BookmarkParser::Parse(nsIRDFResource* aContainer)
+BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 {
 	// tokenize the input stream.
 	// XXX this needs to handle quotes, etc. it'd be nice to use the real parser for this...
@@ -252,13 +256,13 @@ BookmarkParser::Parse(nsIRDFResource* aContainer)
         PRInt32 offset;
 
         if ((offset = line.Find(kHREFEquals)) >= 0) {
-            rv = ParseBookmark(line, aContainer);
+            rv = ParseBookmark(line, aContainer, nodeType);
         }
         else if ((offset = line.Find(kOpenHeading)) >= 0 &&
                  nsString::IsDigit(line.CharAt(offset + 2))) {
             // XXX Ignore <H1> so that bookmarks root _is_ <H1>
             if (line.CharAt(offset + 2) != PRUnichar('1'))
-                rv = ParseBookmarkHeader(line, aContainer);
+                rv = ParseBookmarkHeader(line, aContainer, nodeType);
         }
         else if ((offset = line.Find(kSeparator)) >= 0) {
             rv = ParseBookmarkSeparator(line, aContainer);
@@ -284,7 +288,7 @@ BookmarkParser::Parse(nsIRDFResource* aContainer)
 
 
 nsresult
-BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer)
+BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 {
     NS_PRECONDITION(aContainer != nsnull, "null ptr");
     if (! aContainer)
@@ -408,7 +412,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer)
 		char *cName = name.ToNewCString();
 		char *cShortcutURL = shortcut.ToNewCString();
 		nsresult rv = AddBookmark(aContainer, cURL, cName, addDate,
-			lastVisitDate, lastModifiedDate, cShortcutURL);
+			lastVisitDate, lastModifiedDate, cShortcutURL, nodeType);
 		delete [] cURL;
 		if (cName)		delete [] cName;
 		if (cShortcutURL)	delete [] cShortcutURL;
@@ -421,7 +425,8 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer)
     // Now create the bookmark
 nsresult
 BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const char *optionalTitle,
-		PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate, const char *shortcutURL)
+		PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate, const char *shortcutURL,
+		nsIRDFResource *nodeType)
 {
 	nsresult rv;
 	nsCOMPtr<nsIRDFResource> bookmark;
@@ -440,7 +445,7 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");
     if (NS_FAILED(rv)) return rv;
 
-	rv = mDataSource->Assert(bookmark, kRDF_type, kNC_Bookmark, PR_TRUE);
+	rv = mDataSource->Assert(bookmark, kRDF_type, nodeType, PR_TRUE);
     if (rv != NS_RDF_ASSERTION_ACCEPTED)
     {
 		NS_ERROR("unable to add bookmark to data source");
@@ -498,7 +503,7 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 
 
 nsresult
-BookmarkParser::ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aContainer)
+BookmarkParser::ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 {
     // Snip out the header
     PRInt32 start = aLine.Find(kOpenHeading);
@@ -587,7 +592,7 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aCont
 
     // And now recursively parse the rest of the file...
     
-    if (NS_FAILED(rv = Parse(folder))) {
+    if (NS_FAILED(rv = Parse(folder, nodeType))) {
         NS_ERROR("recursive parse of bookmarks file failed");
         return rv;
     }
@@ -614,15 +619,18 @@ BookmarkParser::ParseBookmarkSeparator(const nsString& aLine, nsIRDFResource* aC
 		}
 		if (NS_SUCCEEDED(rv = mDataSource->Assert(separator, kRDF_type, kNC_BookmarkSeparator, PR_TRUE)))
 		{
-            nsCOMPtr<nsIRDFContainer> container;
-            rv = NS_NewRDFContainer(mDataSource, aContainer, getter_AddRefs(container));
-            if (NS_SUCCEEDED(rv)) {
-                rv = container->AppendElement(separator);
-            }
+			nsCOMPtr<nsIRDFContainer>	container;
+			rv = NS_NewRDFContainer(mDataSource, aContainer, getter_AddRefs(container));
+			if (NS_SUCCEEDED(rv))
+			{
+				rv = container->AppendElement(separator);
+			}
 		}
 	}
 	return(rv);
 }
+
+
 
 nsresult
 BookmarkParser::ParseHeaderBegin(const nsString& aLine, nsIRDFResource* aContainer)
@@ -714,7 +722,7 @@ public:
 	BookmarkParser parser;
 	parser.Init(nsnull, NS_STATIC_CAST(nsIRDFDataSource *, this));
 	nsresult rv = parser.AddBookmark(kNC_BookmarksRoot, uri, optionalTitle,
-					0L, 0L, 0L, nsnull);
+					0L, 0L, 0L, nsnull, kNC_Bookmark);
     	return(rv);
     }
 
@@ -1001,32 +1009,33 @@ BookmarkDataSourceImpl::DoCommand(nsISupportsArray* aSources,
 nsresult
 BookmarkDataSourceImpl::ReadBookmarks(void)
 {
-    nsresult rv;
+	nsresult rv;
 
-    NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+	NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+	if (NS_FAILED(rv)) return rv;
 
-    rv = rdfc->MakeSeq(mInner, kNC_BookmarksRoot, nsnull);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:BookmarksRoot a sequence");
-    if (NS_FAILED(rv)) return rv;
+	rv = rdfc->MakeSeq(mInner, kNC_BookmarksRoot, nsnull);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:BookmarksRoot a sequence");
+	if (NS_FAILED(rv)) return rv;
 
 	nsSpecialSystemDirectory bookmarksFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 
 	// XXX we should get this from prefs.
-    bookmarksFile += "res";
-    bookmarksFile += "rdf";
-    bookmarksFile += "bookmarks.html";
+	bookmarksFile += "res";
+	bookmarksFile += "rdf";
+	bookmarksFile += "bookmarks.html";
 
 	nsInputFileStream strm(bookmarksFile);
 
-	if (! strm.is_open()) {
+	if (! strm.is_open())
+	{
 		NS_ERROR("unable to open file");
 		return NS_ERROR_FAILURE;
 	}
 
 	BookmarkParser parser;
 	parser.Init(&strm, NS_STATIC_CAST(nsIRDFDataSource *, this));
-	parser.Parse(kNC_BookmarksRoot);
+	parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
 
 	// look for and import any IE Favorites
 	nsAutoString	ieTitle("Imported IE Favorites");
@@ -1049,35 +1058,40 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 				{
 					BookmarkParser parser;
 					parser.Init(&ieStream, this);
-					parser.Parse(ieFolder);
+					parser.Parse(ieFolder, kNC_IEFavorite);
 					
 					nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
 					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
 					{
 						rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
 					}
-                    nsCOMPtr<nsIRDFContainer> bookmarksRoot;
-                    rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(bookmarksRoot));
-                    if (NS_SUCCEEDED(rv)) {
-					if (NS_SUCCEEDED(rv = bookmarksRoot->AppendElement(ieFolder)))
+					
+					nsCOMPtr<nsIRDFContainer> bookmarksRoot;
+					rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(bookmarksRoot));
+					if (NS_SUCCEEDED(rv))
 					{
-						BookmarkParser parser;
-						parser.Init(&ieStream, this);
-						parser.Parse(ieFolder);
-						
-						nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
-						if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
+						if (NS_SUCCEEDED(rv = bookmarksRoot->AppendElement(ieFolder)))
 						{
-							rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
-						}
+/*
+							BookmarkParser parser;
+							parser.Init(&ieStream, this);
+							parser.Parse(ieFolder, kNC_IEFavorite);
+							
+							nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
+							if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
+							{
+								rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
+							}
 
-	                    nsCOMPtr<nsIRDFContainer> container;
-	                    rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(container));
-	                    if (NS_SUCCEEDED(rv)) {
-	                        rv = container->AppendElement(ieFolder);
-	                    }
+							nsCOMPtr<nsIRDFContainer> container;
+							rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(container));
+							if (NS_SUCCEEDED(rv))
+							{
+								rv = container->AppendElement(ieFolder);
+							}
+*/
+						}
 					}
-                    }
 				}
 			}
 		}
@@ -1098,11 +1112,12 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 			rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
 		}
 
-        nsCOMPtr<nsIRDFContainer> container;
-        rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(container));
-        if (NS_SUCCEEDED(rv)) {
-            rv = container->AppendElement(ieFolder);
-        }
+		nsCOMPtr<nsIRDFContainer> container;
+		rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(container));
+		if (NS_SUCCEEDED(rv))
+		{
+			rv = container->AppendElement(ieFolder);
+		}
 	}
 #endif
 

@@ -78,6 +78,10 @@ treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treecell > 
  list-style-image: url("resource:/res/rdf/bookmark-item.gif");
 }
 
+treeitem[type="http://home.netscape.com/NC-rdf#IEFavorite"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/IEFavorite.gif");
+}
+
 treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/bookmark-item.gif");
 }
