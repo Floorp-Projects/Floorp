@@ -238,7 +238,7 @@ public:
     nsCOMPtr<nsIObserverService> obsServ = 
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = obsServ->AddObserver(this, "EndDocumentLoad", PR_TRUE );
+    rv = obsServ->AddObserver(this, "EndDocumentLoad", PR_FALSE );
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self to observer service");
     return rv; 
   }
