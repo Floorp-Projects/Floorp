@@ -130,6 +130,18 @@ interface oeIICalObserver : nsISupports
     void onAlarm( in oeIICalEvent e);
 };
 
+[scriptable, uuid(7a4fd625-69a8-4008-932e-cccc227b402c)]
+interface oeIICalTodoObserver : nsISupports
+{
+    void onStartBatch();
+    void onEndBatch();
+    void onLoad();
+    void onAddItem( in oeIICalTodo e);
+    void onModifyItem( in oeIICalTodo e, in oeIICalTodo olde );
+    void onDeleteItem( in oeIICalTodo e);
+    void onAlarm( in oeIICalTodo e);
+};
+
 [scriptable, uuid(981ab93d-ad51-45bb-a4a2-e158c2cfdeb4)]
 interface oeIICal : nsISupports
 {
@@ -141,6 +153,8 @@ interface oeIICal : nsISupports
 	void setServer( in string str );
     void addObserver( in oeIICalObserver observer );
     void removeObserver( in oeIICalObserver observer );
+    void addTodoObserver( in oeIICalTodoObserver observer );
+    void removeTodoObserver( in oeIICalTodoObserver observer );
 	string addEvent( in oeIICalEvent icalevent );
 	string modifyEvent( in oeIICalEvent icalevent );
 	void deleteEvent( in string id );

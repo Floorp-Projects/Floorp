@@ -300,6 +300,10 @@ oeICalImpl::~oeICalImpl()
         m_observerlist[i]->Release();
     }
     m_observerlist.clear();
+    for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+        m_todoobserverlist[i]->Release();
+    }
+    m_todoobserverlist.clear();
     if( m_alarmtimer  ) {
         if ( m_alarmtimer->GetDelay() != 0 )
             m_alarmtimer->Cancel();
@@ -761,7 +765,22 @@ oeICalImpl::SetServer( const char *str ) {
     icalfileset_free(stream);
     
     for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-        m_observerlist[i]->OnLoad();
+        nsresult rv;
+        rv = m_observerlist[i]->OnLoad();
+        #ifdef ICAL_DEBUG
+        if( NS_FAILED( rv ) ) {
+            printf( "oeICalImpl::SetServer() : WARNING Call to observer's onLoad() unsuccessful: %x\n", rv );
+        }
+        #endif
+    }
+    for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+        nsresult rv;
+        rv = m_todoobserverlist[i]->OnLoad();
+        #ifdef ICAL_DEBUG
+        if( NS_FAILED( rv ) ) {
+            printf( "oeICalImpl::SetServer() : WARNING Call to observer's onLoad() unsuccessful: %x\n", rv );
+        }
+        #endif
     }
     
     SetupAlarmManager();
@@ -798,10 +817,46 @@ NS_IMETHODIMP oeICalImpl::SetBatchMode(PRBool aBatchMode)
 
         for( unsigned int i=0; i<m_observerlist.size(); i++ ) 
         {
-            if( m_batchMode )
-                m_observerlist[i]->OnStartBatch();
-            else
-                m_observerlist[i]->OnEndBatch();
+            if( m_batchMode ) {
+                nsresult rv;
+                rv = m_observerlist[i]->OnStartBatch();
+                #ifdef ICAL_DEBUG
+                if( NS_FAILED( rv ) ) {
+                    printf( "oeICalImpl::SetBatchMode() : WARNING Call to observer's onStartBatch() unsuccessful: %x\n", rv );
+                }
+                #endif
+            }
+            else {
+                nsresult rv;
+                rv = m_observerlist[i]->OnEndBatch();
+                #ifdef ICAL_DEBUG
+                if( NS_FAILED( rv ) ) {
+                    printf( "oeICalImpl::SetBatchMode() : WARNING Call to observer's onEndBatch() unsuccessful: %x\n", rv );
+                }
+                #endif
+            }
+
+        }
+        for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) 
+        {
+            if( m_batchMode ) {
+                nsresult rv;
+                rv = m_todoobserverlist[i]->OnStartBatch();
+                #ifdef ICAL_DEBUG
+                if( NS_FAILED( rv ) ) {
+                    printf( "oeICalImpl::SetBatchMode() : WARNING Call to observer's onStartBatch() unsuccessful: %x\n", rv );
+                }
+                #endif
+            }
+            else {
+                nsresult rv;
+                rv = m_todoobserverlist[i]->OnEndBatch();
+                #ifdef ICAL_DEBUG
+                if( NS_FAILED( rv ) ) {
+                    printf( "oeICalImpl::SetBatchMode() : WARNING Call to observer's onEndBatch() unsuccessful: %x\n", rv );
+                }
+                #endif
+            }
 
         }
     }
@@ -868,7 +923,13 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
     m_eventlist.Add( icalevent );
 
     for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-        m_observerlist[i]->OnAddItem( icalevent );
+        nsresult rv;
+        rv = m_observerlist[i]->OnAddItem( icalevent );
+        #ifdef ICAL_DEBUG
+        if( NS_FAILED( rv ) ) {
+            printf( "oeICalImpl::AddEvent() : WARNING Call to observer's onAddItem() unsuccessful: %x\n", rv );
+        }
+        #endif
     }
 
     SetupAlarmManager();
@@ -963,7 +1024,13 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
     icalfileset_free(stream);
     
     for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-        m_observerlist[i]->OnModifyItem( icalevent, oldevent );
+        nsresult rv;
+        rv = m_observerlist[i]->OnModifyItem( icalevent, oldevent );
+        #ifdef ICAL_DEBUG
+        if( NS_FAILED( rv ) ) {
+            printf( "oeICalImpl::ModifyEvent() : WARNING Call to observer's onModifyItem() unsuccessful: %x\n", rv );
+        }
+        #endif
     }
 
     oldevent->Release();
@@ -1085,7 +1152,13 @@ oeICalImpl::DeleteEvent( const char *id )
     m_eventlist.Remove( id );
     
     for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-        m_observerlist[i]->OnDeleteItem( icalevent );
+        nsresult rv;
+        rv = m_observerlist[i]->OnDeleteItem( icalevent );
+        #ifdef ICAL_DEBUG
+        if( NS_FAILED( rv ) ) {
+            printf( "oeICalImpl::DeleteEvent() : WARNING Call to observer's onDeleteItem() unsuccessful: %x\n", rv );
+        }
+        #endif
     }
 
     icalevent->Release();
@@ -1651,6 +1724,38 @@ oeICalImpl::RemoveObserver(oeIICalObserver *observer)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+oeICalImpl::AddTodoObserver(oeIICalTodoObserver *observer)
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::AddTodoObserver()\n" );
+#endif
+    if( observer ) {
+        observer->AddRef();
+        m_todoobserverlist.push_back( observer );
+        observer->OnLoad();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+oeICalImpl::RemoveTodoObserver(oeIICalTodoObserver *observer)
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::RemoveTodoObserver()\n" );
+#endif
+    if( observer ) {
+        for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+            if( observer == m_todoobserverlist[i] ) {
+//                m_todoobserverlist.erase( &m_todoobserverlist[i] );
+//                observer->Release();
+                break;
+            }
+        }
+    }
+    return NS_OK;
+}
+
 void AlarmTimerCallback(nsITimer *aTimer, void *aClosure)
 {
 #ifdef ICAL_DEBUG
@@ -1699,7 +1804,13 @@ void oeICalImpl::SetupAlarmManager() {
 #endif
                     
                     for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-                        m_observerlist[i]->OnAlarm( event );
+                        nsresult rv;
+                        rv = m_observerlist[i]->OnAlarm( event );
+                        #ifdef ICAL_DEBUG
+                        if( NS_FAILED( rv ) ) {
+                            printf( "oeICalImpl::SetupAlarmManager() : WARNING Call to observer's onAlarm() unsuccessful: %x\n", rv );
+                        }
+                        #endif
                     }
                 }
                 else {
@@ -1790,8 +1901,14 @@ NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
     icaltodo->AddRef();
     m_todolist.Add( icaltodo );
 
-    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-        m_observerlist[i]->OnAddItem( icaltodo );
+    for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+        nsresult rv;
+        rv = m_todoobserverlist[i]->OnAddItem( icaltodo );
+        #ifdef ICAL_DEBUG
+        if( NS_FAILED( rv ) ) {
+            printf( "oeICalImpl::AddTodo() : WARNING Call to observer's onAddItem() unsuccessful: %x\n", rv );
+        }
+        #endif
     }
 
 //    SetupAlarmManager();
@@ -1861,8 +1978,14 @@ oeICalImpl::DeleteTodo( const char *id )
 
     m_todolist.Remove( id );
     
-    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-        m_observerlist[i]->OnDeleteItem( icalevent );
+    for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+        nsresult rv;
+        rv = m_todoobserverlist[i]->OnDeleteItem( icalevent );
+        #ifdef ICAL_DEBUG
+        if( NS_FAILED( rv ) ) {
+            printf( "oeICalImpl::DeleteTodo() : WARNING Call to observer's onDeleteItem() unsuccessful: %x\n", rv );
+        }
+        #endif
     }
 
     icalevent->Release();
@@ -1967,8 +2090,14 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
     }
     icalfileset_free(stream);
     
-    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-        m_observerlist[i]->OnModifyItem( icalevent, oldevent );
+    for( unsigned int i=0; i<m_todoobserverlist.size(); i++ ) {
+        nsresult rv;
+        rv = m_todoobserverlist[i]->OnModifyItem( icalevent, oldevent );
+        #ifdef ICAL_DEBUG
+        if( NS_FAILED( rv ) ) {
+            printf( "oeICalImpl::ModifyTodo() : WARNING Call to observer's onModifyItem() unsuccessful: %x\n", rv );
+        }
+        #endif
     }
 
     oldevent->Release();

@@ -240,6 +240,7 @@ class oeICalImpl : public oeIICal
 private:
     icaltimetype GetNextEvent( icaltimetype starting );
     std::vector<oeIICalObserver*> m_observerlist;
+    std::vector<oeIICalTodoObserver*> m_todoobserverlist;
     bool m_batchMode;
     EventList m_eventlist;
     TodoList m_todolist;

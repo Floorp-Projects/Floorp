@@ -51,6 +51,47 @@ const DEFAULT_RECURUNITS = "days";
 const DEFAULT_RECURFOREVER = true;
 
 var iCalLib = null;
+var gObserver = null;
+var gTodoObserver = null;
+
+function Observer() 
+{
+}
+
+Observer.prototype.onAddItem = function( icalevent )
+{
+	dump( "Observer.prototype.onAddItem\n" );
+}
+
+Observer.prototype.onModifyItem = function( icalevent, oldevent )
+{
+	dump( "Observer.prototype.onModifyItem\n" );
+}
+
+Observer.prototype.onDeleteItem = function( icalevent )
+{
+	dump( "Observer.prototype.onDeleteItem\n" );
+}
+
+Observer.prototype.onAlarm = function( icalevent )
+{
+	dump( "Observer.prototype.onAlarm\n" );
+}
+
+Observer.prototype.onLoad = function()
+{
+	dump( "Observer.prototype.onLoad\n" );
+}
+
+Observer.prototype.onStartBatch = function()
+{
+	dump( "Observer.prototype.onStartBatch\n" );
+}
+
+Observer.prototype.onEndBatch = function()
+{
+	dump( "Observer.prototype.onEndBatch\n" );
+}
 
 function Test()
 {
@@ -62,7 +103,7 @@ function Test()
     
    iCalLib.setServer( "/tmp/.oecalendar" );
    iCalLib.Test();
-   alert( "Test Successfull" );
+   alert( "Finished Test" );
 }
 
 function TestAll()
@@ -72,9 +113,25 @@ function TestAll()
       var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
       iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
    }
+   if( gObserver == null ) {
+	   gObserver = new Observer();
+	   iCalLib.addObserver( gObserver );
+   }
+   if( gTodoObserver == null ) {
+	   gTodoObserver = new Observer();
+	   iCalLib.addTodoObserver( gTodoObserver );
+   }
    iCalLib.setServer( "/tmp/.oecalendar" );
    var id = TestAddEvent();
+   if( id == 0 ) {
+	   alert( "Stopped Test" );
+	   return;
+   }
    var iCalEvent = TestFetchEvent( id );
+   if( iCalEvent == null ) {
+	   alert( "Stopped Test" );
+	   return;
+   }
    id = TestUpdateEvent( iCalEvent );
 //    TestSearchEvent();
    TestDeleteEvent( id );
@@ -86,7 +143,7 @@ function TestAll()
    id = TestUpdateTodo( iCalTodo );
    TestDeleteTodo( id );
    TestFilterTodo( id );
-   alert( "Test Successfull" );
+   alert( "Finished Test" );
 }
 
 function TestAddEvent()
@@ -95,7 +152,6 @@ function TestAddEvent()
     
     var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
 
-    iCalEvent.id = 999999999;
     iCalEvent.title = DEFAULT_TITLE;
     iCalEvent.description = DEFAULT_DESCRIPTION;
     iCalEvent.location = DEFAULT_LOCATION;
@@ -130,38 +186,70 @@ function TestAddEvent()
 
     var id = iCalLib.addEvent( iCalEvent );
     
-    if( id == null )
-       alert( "Invalid Id" );
-    if( iCalEvent.title != DEFAULT_TITLE )
-       alert( "Invalid Title" );
-    if( iCalEvent.description != DEFAULT_DESCRIPTION )
-       alert( "Invalid Description" );
-    if( iCalEvent.location != DEFAULT_LOCATION )
-       alert( "Invalid Location" );
-    if( iCalEvent.categories != DEFAULT_CATEGORY )
-       alert( "Invalid Category" );
-    if( iCalEvent.privateEvent != DEFAULT_PRIVATE )
-       alert( "Invalid PrivateEvent Setting" );
-    if( iCalEvent.allDay != DEFAULT_ALLDAY )
-       alert( "Invalid AllDay Setting" );
-    if( iCalEvent.alarm != DEFAULT_ALARM )
-       alert( "Invalid Alarm Setting" );
-    if( iCalEvent.alarmUnits != DEFAULT_ALARMUNITS )
-       alert( "Invalid Alarm Units" );
-    if( iCalEvent.alarmLength != DEFAULT_ALARMLENGTH )
-       alert( "Invalid Alarm Length" );
-    if( iCalEvent.alarmEmailAddress != DEFAULT_EMAIL )
-       alert( "Invalid Alarm Email Address" );
-    if( iCalEvent.inviteEmailAddress != DEFAULT_EMAIL )
-       alert( "Invalid Invite Email Address" );
-    if( iCalEvent.recur != DEFAULT_RECUR )
-       alert( "Invalid Recur Setting" );
-    if( iCalEvent.recurInterval != DEFAULT_RECURINTERVAL )
-       alert( "Invalid Recur Interval" );
-    if( iCalEvent.recurUnits != DEFAULT_RECURUNITS )
-       alert( "Invalid Recur Units" );
-    if( iCalEvent.recurForever != DEFAULT_RECURFOREVER )
-       alert( "Invalid Recur Forever" );
+    if( id == null ){
+		alert( "TestAddEvent(): Invalid Id" );
+		return 0;
+	}
+    if( iCalEvent.title != DEFAULT_TITLE ){
+		alert( "TestAddEvent(): Invalid Title" );
+		return 0;
+	}
+    if( iCalEvent.description != DEFAULT_DESCRIPTION ){
+		alert( "TestAddEvent(): Invalid Description" );
+		return 0;
+	}
+    if( iCalEvent.location != DEFAULT_LOCATION ){
+		alert( "TestAddEvent(): Invalid Location" );
+		return 0;
+	}
+    if( iCalEvent.categories != DEFAULT_CATEGORY ){
+		alert( "TestAddEvent(): Invalid Category" );
+		return 0;
+	}
+    if( iCalEvent.privateEvent != DEFAULT_PRIVATE ){
+		alert( "TestAddEvent(): Invalid PrivateEvent Setting" );
+		return 0;
+	}
+    if( iCalEvent.allDay != DEFAULT_ALLDAY ){
+		alert( "TestAddEvent(): Invalid AllDay Setting" );
+		return 0;
+	}
+    if( iCalEvent.alarm != DEFAULT_ALARM ){
+		alert( "TestAddEvent(): Invalid Alarm Setting" );
+		return 0;
+	}
+    if( iCalEvent.alarmUnits != DEFAULT_ALARMUNITS ){
+		alert( "TestAddEvent(): Invalid Alarm Units" );
+		return 0;
+	}
+    if( iCalEvent.alarmLength != DEFAULT_ALARMLENGTH ){
+		alert( "TestAddEvent(): Invalid Alarm Length" );
+		return 0;
+	}
+    if( iCalEvent.alarmEmailAddress != DEFAULT_EMAIL ){
+		alert( "TestAddEvent(): Invalid Alarm Email Address" );
+		return 0;
+	}
+    if( iCalEvent.inviteEmailAddress != DEFAULT_EMAIL ){
+		alert( "TestAddEvent(): Invalid Invite Email Address" );
+		return 0;
+	}
+    if( iCalEvent.recur != DEFAULT_RECUR ){
+		alert( "TestAddEvent(): Invalid Recur Setting" );
+		return 0;
+	}
+    if( iCalEvent.recurInterval != DEFAULT_RECURINTERVAL ){
+		alert( "TestAddEvent(): Invalid Recur Interval" );
+		return 0;
+	}
+    if( iCalEvent.recurUnits != DEFAULT_RECURUNITS ){
+		alert( "TestAddEvent(): Invalid Recur Units" );
+		return 0;
+	}
+    if( iCalEvent.recurForever != DEFAULT_RECURFOREVER ){
+		alert( "TestAddEvent(): Invalid Recur Forever" );
+		return 0;
+	}
 
     //TODO: Check for start and end date
 
@@ -171,38 +259,70 @@ function TestAddEvent()
 function TestFetchEvent( id )
 {
     var iCalEvent = iCalLib.fetchEvent( id );
-    if( id == null )
-       alert( "Invalid Id" );
-    if( iCalEvent.title != DEFAULT_TITLE )
-       alert( "Invalid Title" );
-    if( iCalEvent.description != DEFAULT_DESCRIPTION )
-       alert( "Invalid Description" );
-    if( iCalEvent.location != DEFAULT_LOCATION )
-       alert( "Invalid Location" );
-    if( iCalEvent.categories != DEFAULT_CATEGORY )
-       alert( "Invalid Category" );
-    if( iCalEvent.privateEvent != DEFAULT_PRIVATE )
-       alert( "Invalid PrivateEvent Setting" );
-    if( iCalEvent.allDay != DEFAULT_ALLDAY )
-       alert( "Invalid AllDay Setting" );
-    if( iCalEvent.alarm != DEFAULT_ALARM )
-       alert( "Invalid Alarm Setting" );
-    if( iCalEvent.alarmUnits != DEFAULT_ALARMUNITS )
-       alert( "Invalid Alarm Units" );
-    if( iCalEvent.alarmLength != DEFAULT_ALARMLENGTH )
-       alert( "Invalid Alarm Length" );
-    if( iCalEvent.alarmEmailAddress != DEFAULT_EMAIL )
-       alert( "Invalid Alarm Email Address" );
-    if( iCalEvent.inviteEmailAddress != DEFAULT_EMAIL )
-       alert( "Invalid Invite Email Address" );
-    if( iCalEvent.recur != DEFAULT_RECUR )
-       alert( "Invalid Recur Setting" );
-    if( iCalEvent.recurInterval != DEFAULT_RECURINTERVAL )
-       alert( "Invalid Recur Interval" );
-    if( iCalEvent.recurUnits != DEFAULT_RECURUNITS )
-       alert( "Invalid Recur Units" );
-    if( iCalEvent.recurForever != DEFAULT_RECURFOREVER )
-       alert( "Invalid Recur Forever" );
+    if( id == null ){
+		alert( "TestFetchEvent(): Invalid Id" );
+		return null;
+	}
+    if( iCalEvent.title != DEFAULT_TITLE ){
+		alert( "TestFetchEvent(): Invalid Title" );
+		return null;
+	}
+    if( iCalEvent.description != DEFAULT_DESCRIPTION ){
+		alert( "TestFetchEvent(): Invalid Description" );
+		return null;
+	}
+    if( iCalEvent.location != DEFAULT_LOCATION ){
+		alert( "TestFetchEvent(): Invalid Location" );
+		return null;
+	}
+    if( iCalEvent.categories != DEFAULT_CATEGORY ){
+		alert( "TestFetchEvent(): Invalid Category" );
+		return null;
+	}
+    if( iCalEvent.privateEvent != DEFAULT_PRIVATE ){
+		alert( "TestFetchEvent(): Invalid PrivateEvent Setting" );
+		return null;
+	}
+    if( iCalEvent.allDay != DEFAULT_ALLDAY ){
+		alert( "TestFetchEvent(): Invalid AllDay Setting" );
+		return null;
+	}
+    if( iCalEvent.alarm != DEFAULT_ALARM ){
+		alert( "TestFetchEvent(): Invalid Alarm Setting" );
+		return null;
+	}
+    if( iCalEvent.alarmUnits != DEFAULT_ALARMUNITS ){
+		alert( "TestFetchEvent(): Invalid Alarm Units" );
+		return null;
+	}
+    if( iCalEvent.alarmLength != DEFAULT_ALARMLENGTH ){
+		alert( "TestFetchEvent(): Invalid Alarm Length" );
+		return null;
+	}
+    if( iCalEvent.alarmEmailAddress != DEFAULT_EMAIL ){
+		alert( "TestFetchEvent(): Invalid Alarm Email Address" );
+		return null;
+	}
+    if( iCalEvent.inviteEmailAddress != DEFAULT_EMAIL ){
+		alert( "TestFetchEvent(): Invalid Invite Email Address" );
+		return null;
+	}
+    if( iCalEvent.recur != DEFAULT_RECUR ){
+		alert( "TestFetchEvent(): Invalid Recur Setting" );
+		return null;
+	}
+    if( iCalEvent.recurInterval != DEFAULT_RECURINTERVAL ){
+		alert( "TestFetchEvent(): Invalid Recur Interval" );
+		return null;
+	}
+    if( iCalEvent.recurUnits != DEFAULT_RECURUNITS ){
+		alert( "TestFetchEvent(): Invalid Recur Units" );
+		return null;
+	}
+    if( iCalEvent.recurForever != DEFAULT_RECURFOREVER ){
+		alert( "TestFetchEvent(): Invalid Recur Forever" );
+		return null;
+	}
 
     //TODO: Check for start and end date
 
@@ -236,23 +356,23 @@ function TestUpdateEvent( iCalEvent )
     var id = iCalLib.modifyEvent( iCalEvent );
     
     if( id == null )
-       alert( "Invalid Id" );
+       alert( "TestUpdateEvent(): Invalid Id" );
     if( iCalEvent.title != DEFAULT_TITLE+"*NEW*" )
-       alert( "Invalid Title" );
+       alert( "TestUpdateEvent(): Invalid Title" );
     if( iCalEvent.description != DEFAULT_DESCRIPTION+"*NEW*" )
-       alert( "Invalid Description" );
+       alert( "TestUpdateEvent(): Invalid Description" );
     if( iCalEvent.location != DEFAULT_LOCATION+"*NEW*" )
-       alert( "Invalid Location" );
+       alert( "TestUpdateEvent(): Invalid Location" );
     if( iCalEvent.categories != DEFAULT_CATEGORY+"*NEW*" )
-       alert( "Invalid Category" );
+       alert( "TestUpdateEvent(): Invalid Category" );
     if( iCalEvent.privateEvent != !DEFAULT_PRIVATE )
-       alert( "Invalid PrivateEvent Setting" );
+       alert( "TestUpdateEvent(): Invalid PrivateEvent Setting" );
     if( iCalEvent.allDay != !DEFAULT_ALLDAY )
-       alert( "Invalid AllDay Setting" );
+       alert( "TestUpdateEvent(): Invalid AllDay Setting" );
     if( iCalEvent.alarm != !DEFAULT_ALARM )
-       alert( "Invalid Alarm Setting" );
+       alert( "TestUpdateEvent(): Invalid Alarm Setting" );
     if( iCalEvent.recur != !DEFAULT_RECUR )
-       alert( "Invalid Recur Setting" );
+       alert( "TestUpdateEvent(): Invalid Recur Setting" );
 
     //TODO check start and end dates
 
@@ -316,7 +436,6 @@ function TestAddTodo()
     
     var iCalTodo = iCalTodoComponent.QueryInterface(Components.interfaces.oeIICalTodo);
 
-    iCalTodo.id = 999999999;
     iCalTodo.title = DEFAULT_TITLE;
     iCalTodo.description = DEFAULT_DESCRIPTION;
     iCalTodo.location = DEFAULT_LOCATION;
@@ -349,37 +468,37 @@ function TestAddTodo()
     var id = iCalLib.addTodo( iCalTodo );
     
     if( id == null )
-       alert( "Invalid Id" );
+       alert( "TestAddTodo(): Invalid Id" );
     if( iCalTodo.title != DEFAULT_TITLE )
-       alert( "Invalid Title" );
+       alert( "TestAddTodo(): Invalid Title" );
     if( iCalTodo.description != DEFAULT_DESCRIPTION )
-       alert( "Invalid Description" );
+       alert( "TestAddTodo(): Invalid Description" );
     if( iCalTodo.location != DEFAULT_LOCATION )
-       alert( "Invalid Location" );
+       alert( "TestAddTodo(): Invalid Location" );
     if( iCalTodo.categories != DEFAULT_CATEGORY )
-       alert( "Invalid Category" );
+       alert( "TestAddTodo(): Invalid Category" );
     if( iCalTodo.privateEvent != DEFAULT_PRIVATE )
-       alert( "Invalid PrivateEvent Setting" );
+       alert( "TestAddTodo(): Invalid PrivateEvent Setting" );
     if( iCalTodo.allDay != DEFAULT_ALLDAY )
-       alert( "Invalid AllDay Setting" );
+       alert( "TestAddTodo(): Invalid AllDay Setting" );
     if( iCalTodo.alarm != DEFAULT_ALARM )
-       alert( "Invalid Alarm Setting" );
+       alert( "TestAddTodo(): Invalid Alarm Setting" );
     if( iCalTodo.alarmUnits != DEFAULT_ALARMUNITS )
-       alert( "Invalid Alarm Units" );
+       alert( "TestAddTodo(): Invalid Alarm Units" );
     if( iCalTodo.alarmLength != DEFAULT_ALARMLENGTH )
-       alert( "Invalid Alarm Length" );
+       alert( "TestAddTodo(): Invalid Alarm Length" );
     if( iCalTodo.alarmEmailAddress != DEFAULT_EMAIL )
-       alert( "Invalid Alarm Email Address" );
+       alert( "TestAddTodo(): Invalid Alarm Email Address" );
     if( iCalTodo.inviteEmailAddress != DEFAULT_EMAIL )
-       alert( "Invalid Invite Email Address" );
+       alert( "TestAddTodo(): Invalid Invite Email Address" );
     if( iCalTodo.recur != DEFAULT_RECUR )
-       alert( "Invalid Recur Setting" );
+       alert( "TestAddTodo(): Invalid Recur Setting" );
     if( iCalTodo.recurInterval != DEFAULT_RECURINTERVAL )
-       alert( "Invalid Recur Interval" );
+       alert( "TestAddTodo(): Invalid Recur Interval" );
     if( iCalTodo.recurUnits != DEFAULT_RECURUNITS )
-       alert( "Invalid Recur Units" );
+       alert( "TestAddTodo(): Invalid Recur Units" );
     if( iCalTodo.recurForever != DEFAULT_RECURFOREVER )
-       alert( "Invalid Recur Forever" );
+       alert( "TestAddTodo(): Invalid Recur Forever" );
 
     //TODO: Check for start and end date
 
@@ -390,37 +509,37 @@ function TestFetchTodo( id )
 {
     var iCalEvent = iCalLib.fetchTodo( id );
     if( id == null )
-       alert( "Invalid Id" );
+       alert( "TestFetchTodo(): Invalid Id" );
     if( iCalEvent.title != DEFAULT_TITLE )
-       alert( "Invalid Title" );
+       alert( "TestFetchTodo(): Invalid Title" );
     if( iCalEvent.description != DEFAULT_DESCRIPTION )
-       alert( "Invalid Description" );
+       alert( "TestFetchTodo(): Invalid Description" );
     if( iCalEvent.location != DEFAULT_LOCATION )
-       alert( "Invalid Location" );
+       alert( "TestFetchTodo(): Invalid Location" );
     if( iCalEvent.categories != DEFAULT_CATEGORY )
-       alert( "Invalid Category" );
+       alert( "TestFetchTodo(): Invalid Category" );
     if( iCalEvent.privateEvent != DEFAULT_PRIVATE )
-       alert( "Invalid PrivateEvent Setting" );
+       alert( "TestFetchTodo(): Invalid PrivateEvent Setting" );
     if( iCalEvent.allDay != DEFAULT_ALLDAY )
-       alert( "Invalid AllDay Setting" );
+       alert( "TestFetchTodo(): Invalid AllDay Setting" );
     if( iCalEvent.alarm != DEFAULT_ALARM )
-       alert( "Invalid Alarm Setting" );
+       alert( "TestFetchTodo(): Invalid Alarm Setting" );
     if( iCalEvent.alarmUnits != DEFAULT_ALARMUNITS )
-       alert( "Invalid Alarm Units" );
+       alert( "TestFetchTodo(): Invalid Alarm Units" );
     if( iCalEvent.alarmLength != DEFAULT_ALARMLENGTH )
-       alert( "Invalid Alarm Length" );
+       alert( "TestFetchTodo(): Invalid Alarm Length" );
     if( iCalEvent.alarmEmailAddress != DEFAULT_EMAIL )
-       alert( "Invalid Alarm Email Address" );
+       alert( "TestFetchTodo(): Invalid Alarm Email Address" );
     if( iCalEvent.inviteEmailAddress != DEFAULT_EMAIL )
-       alert( "Invalid Invite Email Address" );
+       alert( "TestFetchTodo(): Invalid Invite Email Address" );
     if( iCalEvent.recur != DEFAULT_RECUR )
-       alert( "Invalid Recur Setting" );
+       alert( "TestFetchTodo(): Invalid Recur Setting" );
     if( iCalEvent.recurInterval != DEFAULT_RECURINTERVAL )
-       alert( "Invalid Recur Interval" );
+       alert( "TestFetchTodo(): Invalid Recur Interval" );
     if( iCalEvent.recurUnits != DEFAULT_RECURUNITS )
-       alert( "Invalid Recur Units" );
+       alert( "TestFetchTodo(): Invalid Recur Units" );
     if( iCalEvent.recurForever != DEFAULT_RECURFOREVER )
-       alert( "Invalid Recur Forever" );
+       alert( "TestFetchTodo(): Invalid Recur Forever" );
 
     //TODO: Check for start and end date
 
@@ -448,23 +567,23 @@ function TestUpdateTodo( iCalTodo )
     var id = iCalLib.modifyTodo( iCalTodo );
     
     if( id == null )
-       alert( "Invalid Id" );
+       alert( "TestUpdateTodo(): Invalid Id" );
     if( iCalTodo.title != DEFAULT_TITLE+"*NEW*" )
-       alert( "Invalid Title" );
+       alert( "TestUpdateTodo(): Invalid Title" );
     if( iCalTodo.description != DEFAULT_DESCRIPTION+"*NEW*" )
-       alert( "Invalid Description" );
+       alert( "TestUpdateTodo(): Invalid Description" );
     if( iCalTodo.location != DEFAULT_LOCATION+"*NEW*" )
-       alert( "Invalid Location" );
+       alert( "TestUpdateTodo(): Invalid Location" );
     if( iCalTodo.categories != DEFAULT_CATEGORY+"*NEW*" )
-       alert( "Invalid Category" );
+       alert( "TestUpdateTodo(): Invalid Category" );
     if( iCalTodo.privateEvent != !DEFAULT_PRIVATE )
-       alert( "Invalid PrivateEvent Setting" );
+       alert( "TestUpdateTodo(): Invalid PrivateEvent Setting" );
     if( iCalTodo.allDay != !DEFAULT_ALLDAY )
-       alert( "Invalid AllDay Setting" );
+       alert( "TestUpdateTodo(): Invalid AllDay Setting" );
     if( iCalTodo.alarm != !DEFAULT_ALARM )
-       alert( "Invalid Alarm Setting" );
+       alert( "TestUpdateTodo(): Invalid Alarm Setting" );
     if( iCalTodo.recur != !DEFAULT_RECUR )
-       alert( "Invalid Recur Setting" );
+       alert( "TestUpdateTodo(): Invalid Recur Setting" );
 
     //TODO check start and end dates
 
@@ -486,8 +605,6 @@ function TestFilterTodo()
     var iCalTodoComponent = Components.classes["@mozilla.org/icaltodo;1"].createInstance();
     
     var iCalTodo = iCalTodoComponent.QueryInterface(Components.interfaces.oeIICalTodo);
-
-    iCalTodo.id = 999999999;
 
     iCalTodo.start.year = 2002;
     iCalTodo.start.month = 0;
