@@ -48,6 +48,7 @@ nsCommonWidget::nsCommonWidget()
   mListenForResizes = PR_FALSE;
   mIsShown          = PR_FALSE;
   mNeedsShow        = PR_FALSE;
+  mEnabled          = PR_TRUE;
 
   mPreferredWidth   = 0;
   mPreferredHeight  = 0;
@@ -455,6 +456,22 @@ nsCommonWidget::SetPreferredSize(PRInt32 aWidth,
 {
   mPreferredWidth  = aWidth;
   mPreferredHeight = aHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::Enable(PRBool aState)
+{
+  mEnabled = aState;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::IsEnabled(PRBool *aState)
+{
+  *aState = mEnabled;
+
   return NS_OK;
 }
 
