@@ -1044,61 +1044,7 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceC
 
 void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
-  // compute this view's origin
-  nsPoint origin(0, 0);
-  ComputeViewOffset(aRootView, &origin);
-    
-  nsView *displayRoot = aRootView;
-  for (;;) {
-    // Mark the view as a parent of the rendered view.
-    displayRoot->SetCompositorFlags(IS_PARENT_OF_REFRESHED_VIEW);
-
-    nsView *displayParent = displayRoot->GetParent();
-
-    if (nsnull == displayParent) {
-      break;
-    }
-    PRBool isFloating = PR_FALSE;
-    displayRoot->GetFloating(isFloating);
-    PRBool isParentFloating = PR_FALSE;
-    displayParent->GetFloating(isParentFloating);
-
-    if (isFloating && !isParentFloating) {
-      break;
-    }
-    displayRoot = displayParent;
-  }
-    
-  DisplayZTreeNode *zTree;
-
-  if (nsnull != mOpaqueRgn) {
-    mOpaqueRgn->SetTo(0, 0, 0, 0);
-    AddCoveringWidgetsToOpaqueRegion(mOpaqueRgn, mContext, aRootView);
-  }
-
-  nsPoint displayRootOrigin(0, 0);
-  ComputeViewOffset(displayRoot, &displayRootOrigin);
-    
-  // Create the Z-ordered view tree
-  PRBool paintFloaters;
-  displayRoot->GetFloating(paintFloaters);
-  CreateDisplayList(displayRoot, PR_FALSE, zTree, PR_FALSE, origin.x, origin.y,
-                    aRootView, &aRect, nsnull, displayRootOrigin.x, displayRootOrigin.y, paintFloaters);
-  mMapPlaceholderViewToZTreeNode.Reset();
-    
-  if (nsnull != zTree) {
-    // Apply proper Z-order handling
-    nsAutoVoidArray mergeTmp;
-
-    SortByZOrder(zTree, mDisplayList, mergeTmp, PR_TRUE);
-    // This builds the display list in reverse order to the way the old
-    // nsViewManager did it. C'est la vie, it's easier this way.
-  }
-    
-  mDisplayListCount = mDisplayList.Count();
-    
-  DestroyZTreeNode(zTree);
-    
+  BuildDisplayList(aRootView, aRect, PR_FALSE, PR_FALSE);
   nsRect fakeClipRect;
   PRInt32 index = 0;
   PRBool anyRendered;
@@ -1205,13 +1151,6 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
   }
     
   mDisplayList.Clear();
-    
-  nsView *marker = aRootView;
-  while (marker != nsnull) {
-    // Mark the view with specified flags.
-    marker->SetCompositorFlags(0);
-    marker = marker->GetParent();
-  }
 }
 
 void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRenderingContext &aRC)
@@ -1825,6 +1764,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         nsView* view;
         nsPoint offset;
         nsIScrollbar* sb;
+        PRBool capturedEvent = PR_FALSE;
 
         if (NS_IS_MOUSE_EVENT(aEvent) || NS_IS_KEY_EVENT(aEvent)) {
           gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
@@ -1837,16 +1777,19 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         //for hittesting.
         if (nsnull != mMouseGrabber && (NS_IS_MOUSE_EVENT(aEvent) || (NS_IS_DRAG_EVENT(aEvent)))) {
           view = mMouseGrabber;
+          capturedEvent = PR_TRUE;
         }
         else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent)) {
           view = mKeyGrabber;
+          capturedEvent = PR_TRUE;
         }
         else if (NS_OK == aEvent->widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void**)&sb)) {
           view = baseView;
+          capturedEvent = PR_TRUE;
           NS_RELEASE(sb);
         }
         else {
-          view = mRootView;
+          view = baseView;
         }
 
         if (nsnull != view) {
@@ -1891,9 +1834,10 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
           aEvent->point.x += offset.x;
           aEvent->point.y += offset.y;
- 
-          PRBool handled = PR_FALSE;
-          view->HandleEvent(aEvent, 0, aStatus, PR_TRUE, handled);
+
+          *aStatus = view->HandleEvent(this, aEvent, capturedEvent);
+
+          // From here on out, "this" could have been deleted!!!
 
           // From here on out, "this" could have been deleted!!!
 
@@ -1926,6 +1870,157 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
     }
 
   return NS_OK;
+}
+
+void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
+  PRBool aCaptured) {
+  // compute this view's origin
+  nsPoint origin(0, 0);
+  ComputeViewOffset(aView, &origin);
+    
+  nsView *displayRoot = aView;
+  if (!aCaptured) {
+    for (;;) {
+      nsView *displayParent = displayRoot->GetParent();
+
+      if (nsnull == displayParent) {
+        break;
+      }
+      PRBool isFloating = PR_FALSE;
+      displayRoot->GetFloating(isFloating);
+      PRBool isParentFloating = PR_FALSE;
+      displayParent->GetFloating(isParentFloating);
+
+      if (isFloating && !isParentFloating) {
+        break;
+      }
+      displayRoot = displayParent;
+    }
+  }
+    
+  DisplayZTreeNode *zTree;
+
+  if (!aEventProcessing && nsnull != mOpaqueRgn) {
+    mOpaqueRgn->SetTo(0, 0, 0, 0);
+    AddCoveringWidgetsToOpaqueRegion(mOpaqueRgn, mContext, aView);
+  }
+
+  nsPoint displayRootOrigin(0, 0);
+  ComputeViewOffset(displayRoot, &displayRootOrigin);
+    
+  // Create the Z-ordered view tree
+  PRBool paintFloaters;
+  if (aEventProcessing) {
+    paintFloaters = PR_TRUE;
+  } else {
+    displayRoot->GetFloating(paintFloaters);
+  }
+  CreateDisplayList(displayRoot, PR_FALSE, zTree, PR_FALSE, origin.x, origin.y,
+                    aView, &aRect, nsnull, displayRootOrigin.x, displayRootOrigin.y, paintFloaters, aEventProcessing);
+  mMapPlaceholderViewToZTreeNode.Reset();
+    
+  if (nsnull != zTree) {
+    // Apply proper Z-order handling
+    nsAutoVoidArray mergeTmp;
+
+    SortByZOrder(zTree, mDisplayList, mergeTmp, PR_TRUE);
+  }
+    
+  mDisplayListCount = mDisplayList.Count();
+    
+  DestroyZTreeNode(zTree);
+}
+
+void nsViewManager::BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent,
+  PRBool aCaptured) {
+  NS_ASSERTION(!mPainting, "View manager cannot handle events during a paint");
+  if (mPainting) {
+    return;
+  }
+
+  nsRect eventRect(aEvent->point.x, aEvent->point.y, 1, 1);
+
+  BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured);
+
+  // ShowDisplayList(mDisplayListCount);
+
+  // The display list is in order from back to front. We return the target list in order from
+  // front to back.
+  for (PRInt32 i = mDisplayListCount - 1; i >= 0; --i) {
+    DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(i));
+    if (element->mFlags & VIEW_RENDERED) {
+      aTargets.AppendElement(element);
+    } else {
+      delete element;
+    }
+  }
+    
+  mDisplayList.Clear();
+}
+
+nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured) {
+//printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
+//       event->message, event->point.x, event->point.y);
+
+  // Hold a refcount to the observer. The continued existence of the observer will
+  // delay deletion of this view hierarchy should the event want to cause its
+  // destruction in, say, some JavaScript event handler.
+  nsCOMPtr<nsIViewObserver> obs;
+  GetViewObserver(*getter_AddRefs(obs));
+
+  // if accessible event pass directly to the view observer
+  if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT || aEvent->message == NS_CONTEXTMENU_KEY) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    if (obs) {
+       PRBool handled;
+       obs->HandleEvent(aView, aEvent, &status, PR_TRUE, handled);
+    }
+    return status;
+  }
+
+  nsAutoVoidArray targetViews;
+
+  // In fact, we only need to take this expensive path when the event is a mouse event ... riiiight?
+  BuildEventTargetList(targetViews, aView, aEvent, aCaptured);
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+
+  for (PRInt32 i = 0; i < targetViews.Count(); i++) {
+    DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, targetViews.ElementAt(i));
+    nsView* v = element->mView;
+
+    if (nsnull != v->GetClientData() && nsnull != obs) {
+      PRBool handled = PR_FALSE;
+      nsRect r;
+      v->GetDimensions(r);
+
+      nscoord x = element->mAbsX - r.x;
+      nscoord y = element->mAbsY - r.y;
+
+      aEvent->point.x -= x;
+      aEvent->point.y -= y;
+
+      obs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
+
+      aEvent->point.x += x;
+      aEvent->point.y += y;
+
+      if (handled) {
+        while (i < targetViews.Count()) {
+          DisplayListElement2* e = NS_STATIC_CAST(DisplayListElement2*, targetViews.ElementAt(i));
+          delete e;
+          i++;
+        }
+        break;
+      }
+      // if the child says "not handled" but did something which deleted the entire view hierarchy,
+      // we'll crash in the next iteration. Oh well. The old code would have crashed too.
+    }
+
+    delete element;
+  }
+
+  return status;
 }
 
 NS_IMETHODIMP nsViewManager::GrabMouseEvents(nsIView *aView, PRBool &aResult)
@@ -2802,7 +2897,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
                                         DisplayZTreeNode* &aResult, PRBool aInsideRealView,
                                         nscoord aOriginX, nscoord aOriginY, nsView *aRealView,
                                         const nsRect *aDamageRect, nsView *aTopView,
-                                        nscoord aX, nscoord aY, PRBool aPaintFloaters)
+                                        nscoord aX, nscoord aY, PRBool aPaintFloaters,
+                                        PRBool aEventProcessing)
 {
   PRBool retval = PR_FALSE;
 
@@ -2823,6 +2919,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     posX = posY = 0;
   }
 
+  aInsideRealView = aInsideRealView || aRealView == aView,
+
   // -> to global coordinates (relative to aTopView)
   bounds.x += aX;
   bounds.y += aY;
@@ -2841,6 +2939,11 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     overlap = irect.IntersectRect(bounds, *aDamageRect);
     if (isClipView) {
       aDamageRect = &irect;
+    }
+    if (aEventProcessing && aRealView == aView) {
+      // Always deliver an event somewhere, at least to the top-level target.
+      // There may be mouse capturing going on.
+      overlap = PR_TRUE;
     }
   }
   else
@@ -2884,13 +2987,18 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
   PRInt32 childCount = aView->GetChildCount();
   nsView *childView = nsnull;
 
+  if (aEventProcessing
+      && (aView->GetViewFlags() & NS_VIEW_FLAG_DONT_CHECK_CHILDREN) != 0) {
+    childCount = 0;
+  }
+
   if (childCount > 0) {
     if (isClipView) {
       // -> to refresh-frame coordinates (relative to aRealView)
       bounds.x -= aOriginX;
       bounds.y -= aOriginY;
 
-      retval = AddToDisplayList(aView, aResult, bounds, bounds, POP_CLIP, aX - aOriginX, aY - aOriginY);
+      retval = AddToDisplayList(aView, aResult, bounds, bounds, POP_CLIP, aX - aOriginX, aY - aOriginY, PR_FALSE);
 
       if (retval)
         return retval;
@@ -2908,8 +3016,9 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
 
       DisplayZTreeNode* createdNode;
       retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
-                                 aInsideRealView || aRealView == aView,
-                                 aOriginX, aOriginY, aRealView, aDamageRect, aTopView, posX, posY, aPaintFloaters);
+                                 aInsideRealView,
+                                 aOriginX, aOriginY, aRealView, aDamageRect, aTopView, posX, posY, aPaintFloaters,
+                                 aEventProcessing);
       if (createdNode != nsnull) {
         EnsureZTreeNodeCreated(aView, aResult);
         createdNode->mZSibling = aResult->mZChild;
@@ -2935,7 +3044,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       aView->GetOpacity(opacity);
       aView->HasTransparency(transparent);
 
-      if ((nsViewVisibility_kShow == visibility) && (opacity > 0.0f)) {
+      if ((nsViewVisibility_kShow == visibility) && (aEventProcessing || opacity > 0.0f)) {
         PRUint32 flags = VIEW_RENDERED;
         if (transparent)
           flags |= VIEW_TRANSPARENT;
@@ -2943,7 +3052,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
         if (opacity < 1.0f)
           flags |= VIEW_TRANSLUCENT;
 #endif
-        retval = AddToDisplayList(aView, aResult, bounds, irect, flags, aX - aOriginX, aY - aOriginY);
+        retval = AddToDisplayList(aView, aResult, bounds, irect, flags, aX - aOriginX, aY - aOriginY,
+                                  aEventProcessing && aRealView == aView);
       }
 
       // -> to global coordinates (relative to aTopView)
@@ -2964,8 +3074,9 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       for (; nsnull != childView; childView = childView->GetNextSibling()) {
         DisplayZTreeNode* createdNode;
         retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
-                                   aInsideRealView || aRealView == aView,
-                                   aOriginX, aOriginY, aRealView, aDamageRect, aTopView, posX, posY, aPaintFloaters);
+                                   aInsideRealView,
+                                   aOriginX, aOriginY, aRealView, aDamageRect, aTopView, posX, posY, aPaintFloaters,
+                                   aEventProcessing);
         if (createdNode != nsnull) {
           EnsureZTreeNodeCreated(aView, aResult);
           createdNode->mZSibling = aResult->mZChild;
@@ -2983,7 +3094,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     bounds.x -= aOriginX;
     bounds.y -= aOriginY;
 
-    if (AddToDisplayList(aView, aResult, bounds, bounds, PUSH_CLIP, aX - aOriginX, aY - aOriginY)) {
+    if (AddToDisplayList(aView, aResult, bounds, bounds, PUSH_CLIP, aX - aOriginX, aY - aOriginY, PR_FALSE)) {
       retval = PR_TRUE;
     }
   }
@@ -3027,7 +3138,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
 }
 
 PRBool nsViewManager::AddToDisplayList(nsView *aView, DisplayZTreeNode* &aParent,
-  nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags,nscoord aAbsX, nscoord aAbsY)
+  nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags,nscoord aAbsX, nscoord aAbsY,
+  PRBool aAssumeIntersection)
 {
   PRBool empty;
   PRBool clipped;
@@ -3045,7 +3157,7 @@ PRBool nsViewManager::AddToDisplayList(nsView *aView, DisplayZTreeNode* &aParent
   }
 
   PRBool overlap = clipRect.IntersectRect(clipRect, aDirtyRect);
-  if (!overlap) {
+  if (!overlap && !aAssumeIntersection) {
     return PR_FALSE;
   }
 
@@ -3239,9 +3351,6 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
   for (cnt = 0; cnt < 400; cnt++)
     nest[cnt] = ' ';
 
-  float t2p;
-  mContext->GetAppUnitsToDevUnits(t2p);
-
   printf("### display list length=%d ###\n", flatlen);
 
   for (cnt = 0; cnt < flatlen; cnt++) {
@@ -3259,7 +3368,6 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
 
     nest[nestcnt << 1] = 0;
 
-    rect *= t2p;
     printf("%snsIView@%p{%d,%d,%d,%d @ %d,%d; p=%p, z=%d} [x=%d, y=%d, w=%d, h=%d, absX=%d, absY=%d]\n",
            nest, (void*)view,
            dim.x, dim.y, dim.width, dim.height,

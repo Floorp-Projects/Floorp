@@ -268,16 +268,19 @@ private:
                 const nsRect &aDamageRect);
 
   void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut, PRUint32 aUpdateFlags);
-
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
                                           PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
-    
+
   nsresult CreateBlendingBuffers(nsIRenderingContext &aRC);
           
+  void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing, PRBool aCaptured);
+  void BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
+
   PRBool CreateDisplayList(nsView *aView, PRBool aReparentedViewsPresent, DisplayZTreeNode* &aResult, nscoord aOriginX, nscoord aOriginY,
                            PRBool aInsideRealView, nsView *aRealView, const nsRect *aDamageRect,
-                           nsView *aTopView, nscoord aX, nscoord aY, PRBool aPaintFloaters);
-  PRBool AddToDisplayList(nsView *aView, DisplayZTreeNode* &aParent, nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY);
+                           nsView *aTopView, nscoord aX, nscoord aY, PRBool aPaintFloaters, PRBool aEventProcessing);
+  PRBool AddToDisplayList(nsView *aView, DisplayZTreeNode* &aParent, nsRect &aClipRect,
+    nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY, PRBool aAssumeIntersection);
   void ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex);
   nsresult OptimizeDisplayList(const nsRect& aDamageRect, nsRect& aFinalTransparentRect);
     // Remove redundant PUSH/POP_CLIP pairs.
@@ -351,6 +354,8 @@ public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootView() const { return mRootView; }
   nsView* GetMouseEventGrabber() const { return mMouseGrabber; }
 	nsView* GetKeyEventGrabber() const { return mKeyGrabber; }
+
+  nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
 
 private:
   nsIDeviceContext  *mContext;
