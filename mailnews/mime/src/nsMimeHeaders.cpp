@@ -44,7 +44,8 @@ nsresult nsMimeHeaders::Initialize(const char * aAllHeaders)
 	if (mHeaders)
 		MimeHeaders_free(mHeaders);
 
-	if (mHeaders = MimeHeaders_new())
+	mHeaders = MimeHeaders_new();
+	if (mHeaders)
 		return MimeHeaders_parse_line(aAllHeaders, nsCRT::strlen(aAllHeaders), mHeaders);
 	
 	return NS_ERROR_OUT_OF_MEMORY;
