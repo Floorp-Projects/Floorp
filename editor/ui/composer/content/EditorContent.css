@@ -23,19 +23,14 @@
 /* Styles to alter look of things in the Editor content window */
 
 /* new feature, not implemented yet */
-/*
+
 a[name] {
   display: inline-block;
   min-width: 10px; 
   width: 10px; 
   height: 10px; 
-  background-image: 
+  background-image: url(chrome://editor/skin/images/ED_Left.gif);
   border: 1px solid blue; 
-}
-*/
-
-a[name]:before {
-  content: url(chrome://editor/skin/images/ED_Left.gif);
 }
 
 table {
