@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.8 2002/07/25 03:59:38 wtc%netscape.com Exp $
+ * $Id: pcertt.h,v 1.9 2002/08/28 21:51:10 relyea%netscape.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -47,7 +47,6 @@
 #include "nssilock.h"
 #include "prio.h"
 #include "prmon.h"
-
 
 /* Non-opaque objects */
 typedef struct NSSLOWCERTCertDBHandleStr               NSSLOWCERTCertDBHandle;
@@ -213,7 +212,8 @@ typedef enum {
     certDBEntryTypeRevocation = 4,
     certDBEntryTypeKeyRevocation = 5,
     certDBEntryTypeSMimeProfile = 6,
-    certDBEntryTypeContentVersion = 7
+    certDBEntryTypeContentVersion = 7,
+    certDBEntryTypeBlob = 8
 } certDBEntryType;
 
 typedef struct {
