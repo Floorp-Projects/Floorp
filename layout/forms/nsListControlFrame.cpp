@@ -353,6 +353,14 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
   // Do the inherited Reflow. This reflow uses the computed widths which
   // are setup above.
   // Don't set the height. Let the height be unconstrained
+
+  if (mInDropDownMode) {
+     // The dropdown list height is the smaller of it's height setting or the height
+     // of the smallest box that can drawn around it's contents.
+    if (tempReflowState.computedHeight > (desiredSize.height)) {
+      tempReflowState.computedHeight = desiredSize.height ;
+    }
+  }
  
   nsScrollFrame::Reflow(aPresContext, 
                     aDesiredSize,
@@ -362,10 +370,12 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
   // Now that we have reflowed, we may need to adjust the width and height returned
   // for the listbox. 
 
-  // Set the desired height to the computed height above only if it has not
-  // been explicitly set by CSS.
-  if (NS_UNCONSTRAINEDSIZE == tempReflowState.computedHeight) {
-    aDesiredSize.height = desiredSize.height;
+  if (PR_FALSE == mInDropDownMode) {
+    // Set the desired height to the computed height above only if it has not
+    // been explicitly set by CSS.
+    if (NS_UNCONSTRAINEDSIZE == tempReflowState.computedHeight) {
+      aDesiredSize.height = desiredSize.height;
+    }
   }
 
   //Need to addback the scrollbar because the inherited reflow
@@ -651,6 +661,31 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresConte
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsListControlFrame :: CaptureMouseEvents(PRBool aGrabMouseEvents)
+{
+    // get its view
+  nsIView* view = nsnull;
+  GetView(&view);
+  nsCOMPtr<nsIViewManager> viewMan;
+  PRBool result;
+
+  if (view) {
+    view->GetViewManager(*getter_AddRefs(viewMan));
+
+    if (viewMan) {
+      if (aGrabMouseEvents) {
+        viewMan->GrabMouseEvents(view,result);
+      } else {
+        viewMan->GrabMouseEvents(nsnull,result);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aPresContext, 
                                                        nsGUIEvent*     aEvent,
@@ -688,7 +723,13 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aP
       mCurrentHitContent = mHitContent;
     }
 
+  } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+      // Initiate mouse capture
+     CaptureMouseEvents(PR_TRUE);
+      
   } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+     // Stop grabbing mouse events
+     CaptureMouseEvents(PR_FALSE);
   
     // Start by finding the newly "hit" content from the hit frame
     PRInt32 index = SetContentSelected(mHitFrame, mHitContent, PR_TRUE);
@@ -722,12 +763,12 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aP
       }
 
       if (mComboboxFrame) {
-        mComboboxFrame->ListWasSelected(&aPresContext);
+        mComboboxFrame->ListWasSelected(&aPresContext); 
       }
 
     }
 
-  }
+  } 
   return NS_OK;
 }
 
