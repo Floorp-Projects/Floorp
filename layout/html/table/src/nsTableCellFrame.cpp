@@ -255,7 +255,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
 
 
       //TABLECELL SELECTION
-      PRBool displaySelection;
+      PRInt16 displaySelection;
       displaySelection = DisplaySelection(aPresContext);
       if (displaySelection)
       {
@@ -278,11 +278,18 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
             if (NS_SUCCEEDED(result) && tableCellSelectionMode)
             {
               frameSelection->GetTableCellSelectionStyleColor(&myColor); 
-	            nsILookAndFeel* look = nsnull;
-	            if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
-	              look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, ((nsStyleColor *)myColor)->mBackgroundColor);//VERY BAD CAST..TEMPORARY
-	              NS_RELEASE(look);
-	            }
+              if(displaySelection==nsISelectionController::SELECTION_DISABLED)
+              {
+                ((nsStyleColor *)myColor)->mBackgroundColor = NS_RGB(176,176,176);// disabled color
+              }
+              else
+              {
+  	            nsILookAndFeel* look = nsnull;
+	              if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
+	                look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, ((nsStyleColor *)myColor)->mBackgroundColor);//VERY BAD CAST..TEMPORARY
+	                NS_RELEASE(look);
+	              }
+              }
             }
           }
         }
@@ -401,6 +408,25 @@ nsTableCellFrame::SetSelected(nsIPresContext* aPresContext,
   // Note that in current version, aRange and aSpread are ignored,
   //   only this frame is considered
   nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread);
+
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(result))
+    return result;
+  nsCOMPtr<nsIFrameSelection> frameSelection;
+  result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+  if (NS_SUCCEEDED(result) && frameSelection)
+  {
+    PRBool tableCellSelectionMode;
+    result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
+    if (NS_SUCCEEDED(result) && tableCellSelectionMode)
+    {
+      nsRect frameRect;
+      GetRect(frameRect);
+      nsRect rect(0, 0, frameRect.width, frameRect.height);
+      Invalidate(aPresContext, rect, PR_FALSE);
+    }
+  }
   return NS_OK;
 }
 

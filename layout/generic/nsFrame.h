@@ -396,7 +396,7 @@ protected:
   nsFrame();
   virtual ~nsFrame();
 
-  PRBool DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
+  PRInt16 DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
 
   //this will modify aPos and return the next frame ect.
   NS_IMETHOD GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos);

@@ -3374,7 +3374,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext* aPresContext,
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
-  if (!DisplaySelection(aPresContext)) {
+  if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
     return NS_OK;
   }
   

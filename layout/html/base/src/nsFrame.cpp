@@ -576,10 +576,10 @@ NS_IMETHODIMP nsFrame::FirstChild(nsIPresContext* aPresContext,
   return nsnull == aListName ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
-PRBool
+PRInt16
 nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
 {
-  PRInt16 result = PR_FALSE;
+  PRInt16 result = nsISelectionController::SELECTION_OFF;
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
@@ -600,14 +600,14 @@ nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
 							}
 					}
 		      if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
-		        result = PR_FALSE;
+		        result = nsISelectionController::SELECTION_OFF;
 		        isOkToTurnOn = PR_FALSE;
 		      }
 		    }
 		  }
       if (isOkToTurnOn && !result) {
         selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-        result = PR_TRUE;
+        result = nsISelectionController::SELECTION_ON;
       }
     }
   }
@@ -921,7 +921,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 {
   if (!IsMouseCaptured(aPresContext))
     CaptureMouse(aPresContext, PR_TRUE);
-  if (!DisplaySelection(aPresContext)) {
+  if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
     return NS_OK;
   }
 
@@ -974,7 +974,7 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
                              nsGUIEvent*     aEvent,
                              nsEventStatus*  aEventStatus)
 {
-   if (!DisplaySelection(aPresContext)) {
+  if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
     return NS_OK;
   }
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
@@ -1058,7 +1058,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
                                   nsGUIEvent*     aEvent,
                                   nsEventStatus*  aEventStatus)
 {
-  if (!DisplaySelection(aPresContext)) {
+   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
     return NS_OK;
   }
   nsresult result;
@@ -1102,7 +1102,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
   if (IsMouseCaptured(aPresContext))
     CaptureMouse(aPresContext, PR_FALSE);
 
-  if (!DisplaySelection(aPresContext))
+  if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF)
     return NS_OK;
 
   nsresult result;
