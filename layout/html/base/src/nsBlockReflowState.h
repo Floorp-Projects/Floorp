@@ -2108,41 +2108,28 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
 nsresult
 nsBlockFrame::MarkLineDirty(nsLineBox* aLine, nsLineBox* aPrevLine)
 {
-  // If the line that was affected is a block then just mark it dirty
-  // so that we reflow it.
-  if (aLine->IsBlock()) {
-    aLine->MarkDirty();
+  // Mark aLine dirty
+  aLine->MarkDirty();
+#ifdef DEBUG
+  if (gNoisyReflow) {
+    IndentBy(stdout, gNoiseIndent);
+    ListTag(stdout);
+    printf(": mark line %p dirty\n", aLine);
+  }
+#endif
+
+  // Mark previous line dirty if its an inline line so that it can
+  // maybe pullup something from the line just affected.
+  // XXX We don't need to do this if aPrevLine ends in a break-after...
+  if (aPrevLine && !aPrevLine->IsBlock()) {
+    aPrevLine->MarkDirty();
 #ifdef DEBUG
     if (gNoisyReflow) {
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
-      printf(": mark line %p dirty\n", aLine);
+      printf(": mark prev-line %p dirty\n", aPrevLine);
     }
 #endif
-  }
-  else {
-    // Mark previous line dirty if its an inline line so that it can
-    // maybe pullup something from the line just affected.
-    if (aPrevLine && !aPrevLine->IsBlock()) {
-      aPrevLine->MarkDirty();
-#ifdef DEBUG
-      if (gNoisyReflow) {
-        IndentBy(stdout, gNoiseIndent);
-        ListTag(stdout);
-        printf(": mark prev-line %p dirty\n", aPrevLine);
-      }
-#endif
-    }
-    else {
-      aLine->MarkDirty();
-#ifdef DEBUG
-      if (gNoisyReflow) {
-        IndentBy(stdout, gNoiseIndent);
-        ListTag(stdout);
-        printf(": mark line %p dirty\n", aLine);
-      }
-#endif
-    }
   }
 
   return NS_OK;
