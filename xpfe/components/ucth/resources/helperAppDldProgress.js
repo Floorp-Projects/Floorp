@@ -429,6 +429,8 @@ function setupPostProgressUI()
   }
 
   dialog.pause.setAttribute("disabled", true);
+  keepProgressWindowUpBox.disabled = true;
+  
 }
 
 // when we receive a stop notification we are done reporting progress on the download
@@ -437,7 +439,7 @@ function setupPostProgressUI()
 function processEndOfDownload()
 {
   if (!keepProgressWindowUpBox.checked)
-    return window.setTimeout( "closeWindow();", 2000 ); // shut down, we are all done.
+    closeWindow(); // shut down, we are all done.
 
   // o.t the user has asked the window to stay open so leave it open and enable the open and open new folder buttons
   setupPostProgressUI();
