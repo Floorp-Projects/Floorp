@@ -94,7 +94,8 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -2270,21 +2271,21 @@ void nsImageFrame::IconLoad::GetPrefs(nsIPresContext *aPresContext)
   NS_ASSERTION(aPresContext, "null presContext is not allowed in GetAltModePref");
   // NOTE: the presContext could be used to fetch a cached pref if needed, but is not for now
 
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (prefs) {
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
     PRBool boolPref;
     PRInt32 intPref;
-    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.display.force_inline_alttext", &boolPref))) {
+    if (NS_SUCCEEDED(prefBranch->GetBoolPref("browser.display.force_inline_alttext", &boolPref))) {
       mPrefForceInlineAltText = boolPref;
     } else {
       mPrefForceInlineAltText = PR_FALSE;
     }
-    if (NS_SUCCEEDED(prefs->GetIntPref("network.image.imageBehavior", &intPref)) && intPref == 2) {
+    if (NS_SUCCEEDED(prefBranch->GetIntPref("network.image.imageBehavior", &intPref)) && intPref == 2) {
       mPrefAllImagesBlocked = PR_TRUE;
     } else {
       mPrefAllImagesBlocked = PR_FALSE;
     }
-    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.display.show_image_placeholders", &boolPref))) {
+    if (NS_SUCCEEDED(prefBranch->GetBoolPref("browser.display.show_image_placeholders", &boolPref))) {
       mPrefShowPlaceholders = boolPref;
     } else {
       mPrefShowPlaceholders = PR_TRUE;

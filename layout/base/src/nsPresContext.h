@@ -43,7 +43,7 @@
 #include "nsFont.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsICharsetConverterManager.h"
 #include "nsILanguageAtomService.h"
 #include "nsIURL.h"
@@ -206,7 +206,7 @@ protected:
   // class, please make the ownership explicit (pinkerton, scc).
   
   nsIPresShell*         mShell;         // [WEAK]
-  nsCOMPtr<nsIPref>     mPrefs;
+  nsCOMPtr<nsIPrefBranch>     mPrefBranch;
   nsRect                mVisibleArea;
   nsCOMPtr<nsIDeviceContext>  mDeviceContext; // could be weak, but better safe than sorry. Cannot reintroduce cycles
                                               // since there is no dependency from gfx back to layout.
@@ -289,7 +289,6 @@ protected:
   void SetImgAnimations(nsCOMPtr<nsIContent>& aParent, PRUint16 aMode);
 
 private:
-  static int PR_CALLBACK PrefChangedCallback(const char*, void*);
   void   PreferenceChanged(const char* aPrefName);
 
   // these are private, use the list in nsFont.h if you want a public list

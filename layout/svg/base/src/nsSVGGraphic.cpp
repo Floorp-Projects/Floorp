@@ -44,7 +44,8 @@
 #include "nsASVGGraphicSource.h"
 #include "nsStyleStruct.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "prdtoa.h"
 
 nsSVGGraphic::nsSVGGraphic()
@@ -239,14 +240,12 @@ double nsSVGGraphic::GetBezierFlatness()
 
   double flatness = 0.5;
   
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-	if (!prefs) return flatness;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!prefBranch) return flatness;
 
-  // XXX: wouldn't it be great if nsIPref had a 'GetFloatPref()'-function?
-  char	*valuestr = nsnull;
-  if (NS_SUCCEEDED(prefs->CopyCharPref("svg.bezier_flatness",&valuestr)) && (valuestr)) {
+  nsXPIDLCString valuestr;
+  if (NS_SUCCEEDED(prefBranch->GetCharPref("svg.bezier_flatness", getter_Copies(valuestr)))) {
     flatness = PR_strtod(valuestr, nsnull);
-    nsMemory::Free(valuestr);
   }
 
   return flatness;

@@ -43,6 +43,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMXULListener.h"
+#include "nsIObserver.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsITimer.h"
@@ -54,7 +55,8 @@
 class nsXULTooltipListener : public nsIDOMMouseListener,
                              public nsIDOMMouseMotionListener,
                              public nsIDOMKeyListener,
-                             public nsIDOMXULListener
+                             public nsIDOMXULListener,
+                             public nsIObserver
 {
 public:
 
@@ -93,6 +95,8 @@ public:
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+
+  NS_DECL_NSIOBSERVER
 
   nsresult Init(nsIContent* aSourceNode, nsIRootBox* aRootBox);
   nsresult SetDefaultTooltip(nsIContent* aDefaultTooltip);
