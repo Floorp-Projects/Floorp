@@ -32,7 +32,13 @@ MODULE=intl
 
 REQUIRES=xpcom netlib raptor 
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\raptor -I$(PUBLIC)\intl
+LINCS=\
+    -I$(PUBLIC)\xpcom \
+    -I$(PUBLIC)\netlib \
+    -I$(PUBLIC)\raptor \
+    -I$(PUBLIC)\intl \
+    -I$(PUBLIC)\locale \
+    $(NULL)
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = strres
