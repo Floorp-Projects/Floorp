@@ -97,7 +97,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mBufferSegmentSize(0),
     mBufferMaxSize(0),
     mStatus(NS_OK),
-    mPipeliningAllowed (PR_FALSE)
+    mPipeliningAllowed (PR_FALSE),
+    mPipelinedRequest (nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -123,6 +124,7 @@ nsHTTPChannel::~nsHTTPChannel()
 #endif
     NS_IF_RELEASE(mResponse);
     NS_IF_RELEASE(mCachedResponse);
+    NS_IF_RELEASE(mPipelinedRequest);
 
     mHandler         = null_nsCOMPtr();
     mEventSink       = null_nsCOMPtr();
@@ -1308,11 +1310,11 @@ nsHTTPChannel::Open(void)
         }
     } /* WAITING_FOR_OPEN */
 
-    nsCOMPtr<nsHTTPPipelinedRequest> pReq = mPipelinedRequest;
+    nsHTTPPipelinedRequest * pReq = mPipelinedRequest;
 
     if (!pReq)
     {
-        mHandler -> GetPipelinedRequest (this, getter_AddRefs (pReq));
+        mHandler -> GetPipelinedRequest (this, &pReq);
         pReq -> AddToPipeline (mRequest);
     }
 
@@ -1326,6 +1328,8 @@ nsHTTPChannel::Open(void)
     {
         if (!mPipelinedRequest)
             mPipelinedRequest = pReq;
+        else
+            NS_RELEASE (pReq);
         
         rv = pReq -> WriteRequest ();
 
@@ -1344,6 +1348,7 @@ nsHTTPChannel::Open(void)
     else
     {
         mHandler -> AddPipelinedRequest (pReq);
+        NS_RELEASE (pReq);
     }
     
     mState = HS_WAITING_FOR_RESPONSE;

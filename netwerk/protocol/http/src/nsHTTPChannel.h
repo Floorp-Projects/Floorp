@@ -171,7 +171,7 @@ protected:
     nsresult                            mStatus;
 
     nsCOMPtr<nsIChannel>                mCacheTransport;
-    nsCOMPtr<nsHTTPPipelinedRequest>    mPipelinedRequest;
+    nsHTTPPipelinedRequest*             mPipelinedRequest;
 
     PRBool                              mPipeliningAllowed;
 };
