@@ -35,7 +35,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.10 $ $Date: 2002/02/16 00:29:37 $ $Name:  $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.11 $ $Date: 2002/02/27 21:36:19 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -135,6 +135,7 @@ struct NSSTokenStr
 #ifdef NSS_3_4_CODE
     PK11SlotInfo *pk11slot;
     nssList *certList; /* local cache of certs for slow tokens */
+    PRBool loggedIn;
 #endif
 };
 
