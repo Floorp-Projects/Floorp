@@ -23,7 +23,7 @@
 #include "nsIUrlListenerManager.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 
-class nsImapUrl : public nsIImapUrl
+class nsImapUrl : public nsIImapUrl, public nsINetlibURL
 {
 public:
 
