@@ -43,6 +43,11 @@ typedef enum {
         u2BytesSwapCharset,
         u4BytesCharset,
         u4BytesSwapCharset,
+        u2BytesGRPrefix8EA3Charset,
+        u2BytesGRPrefix8EA4Charset,
+        u2BytesGRPrefix8EA5Charset,
+        u2BytesGRPrefix8EA6Charset,
+        u2BytesGRPrefix8EA7Charset,
         uNumOfCharsetType
 } uScanClassID;
 
