@@ -57,6 +57,10 @@ ifdef SUNCTL
 REQUIRES	+= ctl
 endif
 
+ifdef MOZ_ENABLE_XPRINT
+REQUIRES	+= xprintutil
+endif
+
 # Code shared between GTK+, Xlib and Xprint gfx modules
 # (empty for now - but this will be filled soon...)
 X11SHARED_LCPPSRCS = \
@@ -83,14 +87,13 @@ ifdef HAVE_XIE
 CSRCS		+= XIE.c
 endif
 
-ifdef MOZ_ENABLE_XPRINT
-XPU_LCSRCS	 = xprintutil.c
-CSRCS           += $(XPU_LCSRCS)
-endif
-
 GARBAGE         += $(X11SHARED_LCPPSRCS) $(XPU_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_ENABLE_XPRINT
+EXTRA_DSO_LDOPTS += -lxprintutil
+endif
 
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_XLIB_LDFLAGS)
 CXXFLAGS	+= $(MOZ_XLIB_CFLAGS)

@@ -54,6 +54,10 @@ ifdef SUNCTL
 REQUIRES	+= ctl
 endif
 
+ifdef MOZ_ENABLE_XPRINT
+REQUIRES	+= xprintutil
+endif
+
 NATIVE_THEME_SUPPORT = 1
 
 CSRCS		= nsPrintdGTK.c
@@ -123,11 +127,6 @@ endif
 
 endif
 
-ifdef MOZ_ENABLE_XPRINT
-XPU_LCSRCS	 = xprintutil.c
-CSRCS           += $(XPU_LCSRCS)
-endif
-
 GARBAGE         += $(X11SHARED_LCPPSRCS) $(XPU_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 ifdef MOZ_ENABLE_FREETYPE2
@@ -160,6 +159,10 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		$(GFX_XINERAMA_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
+endif
+
+ifdef MOZ_ENABLE_XPRINT
+EXTRA_DSO_LDOPTS += -lxprintutil
 endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS)
