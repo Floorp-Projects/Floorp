@@ -655,6 +655,7 @@ nsSetupTypeDlg::SelectFolderCancel(GtkWidget *aWidget,
                                    GtkFileSelection *aFileSel)
 {
     // tear down file sel dlg
+    gtk_object_destroy(GTK_OBJECT(aWidget)); 
     gtk_object_destroy(GTK_OBJECT(aFileSel)); 
     sFilePickerUp = FALSE;
 }

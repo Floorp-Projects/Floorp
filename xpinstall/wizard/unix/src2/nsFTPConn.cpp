@@ -196,7 +196,15 @@ BAIL:
         RawClose(mDataFd);
         mDataFd = -1;
     }
+    if (connfd > 0)
+    {
+        RawClose(connfd);
     
+        /* flush control connection after closing data connection */
+        respBufSize = RESP_BUF_SIZE;
+        RawRecv((unsigned char *)resp, &respBufSize, mCntlFd);
+    }
+
     mState = OPEN;
 
     return err;
@@ -496,7 +504,7 @@ nsFTPConn::RawRecv(unsigned char *aBuf, int *aBufSize, int aFd)
                 break;
         }
         
-        // XXX TODO: prevent inf loop retruning at TIMEOUT_THREASHOLD_USECS
+        // XXX TODO: prevent inf loop returning at TIMEOUT_THRESHOLD_USECS
         if (!FD_ISSET(aFd, &selset))
             continue;           /* not ready to read; retry */
             
