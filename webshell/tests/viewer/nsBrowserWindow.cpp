@@ -156,6 +156,7 @@ static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 #define BUTTON_WIDTH 90
 #define BUTTON_HEIGHT THROBBER_HEIGHT
+#define MAX_TEXT_LENGTH 30000
 
 #ifdef INSET_WEBSHELL
 #define WEBSHELL_LEFT_INSET 5
@@ -1674,6 +1675,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     PRUint32 size;
     nsAutoString empty;
     mLocation->SetText(empty, size);
+    mLocation->SetMaxTextLength(MAX_TEXT_LENGTH);
     NS_RELEASE(widget);
   }
 
@@ -1733,6 +1735,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
     widget->SetForegroundColor(NS_RGB(0, 0, 0));
     PRUint32 size;
     mStatus->SetText(nsAutoString(),size);
+    mStatus->SetMaxTextLength(MAX_TEXT_LENGTH);
 
     nsITextWidget* textWidget = nsnull;
     if (NS_OK == mStatus->QueryInterface(kITextWidgetIID,(void**)&textWidget))
