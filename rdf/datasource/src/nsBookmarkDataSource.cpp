@@ -491,6 +491,10 @@ public:
         return mInner->ArcLabelsOut(source, labels);
     }
 
+    NS_IMETHOD GetAllResources(nsIRDFResourceCursor** aCursor) {
+        return mInner->GetAllResources(aCursor);
+    }
+
     NS_IMETHOD Flush(void);
 
     NS_IMETHOD IsCommandEnabled(const char* aCommand,

@@ -39,6 +39,7 @@ class nsIRDFDataBase;
 class nsIRDFNode;
 class nsIRDFObserver;
 class nsIRDFResource;
+class nsIRDFResourceCursor;
 
 /**
  * An RDF data source.
@@ -170,6 +171,12 @@ public:
      */
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
                             nsIRDFArcsOutCursor** labels /* out */) = 0;
+
+    /**
+     * Retrieve all of the resources that the data source currently
+     * refers to.
+     */
+    NS_IMETHOD GetAllResources(nsIRDFResourceCursor** aCursor) = 0;
 
     /**
      * Request that a data source write it's contents out to 

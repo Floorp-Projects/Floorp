@@ -153,6 +153,8 @@ public:
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
                             nsIRDFArcsOutCursor** labels); 
 
+    NS_IMETHOD GetAllResources(nsIRDFResourceCursor** aCursor);
+
     NS_IMETHOD Flush();
 
     NS_IMETHOD IsCommandEnabled(const char* aCommand,

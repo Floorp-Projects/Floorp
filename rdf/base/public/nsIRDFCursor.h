@@ -19,7 +19,8 @@
 /*
 
   Interfaces for RDF cursors, including nsIRDFCursor,
-  nsIRDFAssertionCursor, nsIRDFArcsInCursor, and nsIRDFArcsOutCursor.
+  nsIRDFAssertionCursor, nsIRDFArcsInCursor, nsIRDFArcsOutCursor,
+  nad nsIRDFResourceCursor.
 
  */
 
@@ -122,12 +123,6 @@ public:
      * @return NS_OK, unless a catastrophic error occurs.
      */
     NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) = 0;
-    /**
-     * Retrieve the truth value of the arc.
-     * @return NS_OK, unless a catastrophic error occurs.
-     * xxx rvg --- truth value doesn't make sense here. 
-    NS_IMETHOD GetTruthValue(PRBool* aTruthValue) = 0;
-    */
 
 };
 
@@ -154,13 +149,19 @@ public:
      * @return NS_OK, unless a catastrophic error occurs.
      */
     NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) = 0;
-    /**
-     * Retrieve the truth value of the arc.
-     * @return NS_OK, unless a catastrophic error occurs.
-     * xxx rvg --- truth value doesn't make sense here. 
-    NS_IMETHOD GetTruthValue(PRBool* aTruthValue) = 0;
-    */
 
+};
+
+// {C2850C10-B0CF-11d2-A684-00104BDE6048}
+#define NS_IRDFRESOURCECURSOR_IID \
+{ 0xc2850c10, 0xb0cf, 0x11d2, { 0xa6, 0x84, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
+
+/**
+ * A cursor that enumerates all of the resources in a data source.
+ */
+class nsIRDFResourceCursor : public nsIRDFCursor {
+public:
+    NS_IMETHOD GetResource(nsIRDFResource** aResource) = 0;
 };
 
 

@@ -31,8 +31,10 @@
 #define nsIRDFXMLDataSource_h__
 
 #include "nsIRDFDataSource.h"
+class nsIAtom;
 class nsIOutputStream;
 class nsIURL;
+class nsString;
 
 // {EB1A5D30-AB33-11d2-8EC6-00805F29F370}
 #define NS_IRDFXMLDOCUMENTOBSERVER_IID \
@@ -164,6 +166,11 @@ public:
     NS_IMETHOD GetNamedDataSourceURIs(const char* const** aNamedDataSourceURIs, PRInt32* aCount) = 0;
 
     /**
+     * Add a new namespace declaration to the RDF/XML document.
+     */
+    NS_IMETHOD AddNameSpace(nsIAtom* aPrefix, const nsString& aURI) = 0;
+
+    /**
      * Add an observer to the document. The observer will be notified of
      * RDF/XML events via the nsIRDFXMLDataSourceObserver interface. Note that
      * the observer is <em>not</em> reference counted.
@@ -174,7 +181,6 @@ public:
      * Remove an observer from the document.
      */
     NS_IMETHOD RemoveXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver) = 0;
-
 };
 
 

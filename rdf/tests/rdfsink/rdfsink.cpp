@@ -18,13 +18,14 @@
 
 #include <io.h>
 #include "nsIContent.h"
+#include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
 #include "nsINetService.h"
 #include "nsINetService.h"
 #include "nsIOutputStream.h"
 #include "nsIPostToServer.h"
-#include "nsIRDFDataBase.h"
-#include "nsIRDFDataSource.h"
+#include "nsIRDFCompositeDataSource.h"
+#include "nsIRDFXMLDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -32,11 +33,13 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
+#include "nsDOMCID.h"    // for NS_SCRIPT_NAMESET_REGISTRY_CID
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
 #include "nsRDFCID.h"
 #include "nsRepository.h"
+#include "nsXPComCIID.h"
 #include "plevent.h"
 #include "plstr.h"
 
@@ -45,12 +48,29 @@
 #define FAILURE -1
 
 
-#ifdef XP_PC
+#if defined(XP_PC)
+#define DOM_DLL    "jsdom.dll"
+#define LAYOUT_DLL "raptorhtml.dll"
 #define NETLIB_DLL "netlib.dll"
 #define PARSER_DLL "raptorhtmlpars.dll"
 #define RDF_DLL    "rdf.dll"
-#define LAYOUT_DLL "raptorhtml.dll"
+#define XPCOM_DLL  "xpcom32.dll"
+#elif defined(XP_UNIX)
+#define DOM_DLL    "libjsdom.so"
+#define LAYOUT_DLL "libraptorhtml.so"
+#define NETLIB_DLL "libnetlib.so"
+#define PARSER_DLL "libraptorhtmlpars.so"
+#define RDF_DLL    "librdf.so"
+#define XPCOM_DLL  "libxpcom.so"
+#elif defined(XP_MAC)
+#define DOM_DLL    "DOM_DLL"
+#define LAYOUT_DLL "LAYOUT_DLL"
+#define NETLIB_DLL "NETLIB_DLL"
+#define PARSER_DLL "PARSER_DLL"
+#define RDF_DLL    "RDF_DLL"
+#define XPCOM_DLL  "XPCOM_DLL"
 #endif
+
 
 ////////////////////////////////////////////////////////////////////////
 // CIDs
@@ -62,9 +82,9 @@ static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFDataBaseCID,           NS_RDFDATABASE_CID);
+static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
-static NS_DEFINE_CID(kRDFStreamDataSourceCID,   NS_RDFSTREAMDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
 
 // parser
 static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID);
@@ -73,32 +93,47 @@ static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 // layout
 static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 
+// dom
+static NS_DEFINE_IID(kScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
+
+// xpcom
+static NS_DEFINE_CID(kEventQueueServiceCID,     NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // IIDs
 
-//NS_DEFINE_IID(kIPostToServerIID,       NS_IPOSTTOSERVER_IID);
+NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 NS_DEFINE_IID(kIOutputStreamIID,       NS_IOUTPUTSTREAM_IID);
-NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
+NS_DEFINE_IID(kIRDFXMLDataSourceIID,   NS_IRDFXMLDATASOURCE_IID);
 NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 NS_DEFINE_IID(kIRDFXMLSourceIID,       NS_IRDFXMLSOURCE_IID);
 
 static nsresult
 SetupRegistry(void)
 {
+    // netlib
     nsRepository::RegisterFactory(kNetServiceCID,            NETLIB_DLL, PR_FALSE, PR_FALSE);
 
+    // rdf
     nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFInMemoryDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFServiceCID,            RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFContentSinkCID,        RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFDataBaseCID,           RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFStreamDataSourceCID,   RDF_DLL,    PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kRDFCompositeDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kRDFXMLDataSourceCID,      RDF_DLL,    PR_FALSE, PR_FALSE);
 
+    // parser
     nsRepository::RegisterFactory(kParserCID,                PARSER_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kWellFormedDTDCID,         PARSER_DLL, PR_FALSE, PR_FALSE);
 
+    // layout
     nsRepository::RegisterFactory(kNameSpaceManagerCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
+
+    // dom
+    nsRepository::RegisterFactory(kScriptNameSetRegistryCID, DOM_DLL,    PR_FALSE, PR_FALSE);
+
+    // xpcom
+    nsRepository::RegisterFactory(kEventQueueServiceCID,     XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
     return NS_OK;
 }
@@ -143,38 +178,68 @@ main(int argc, char** argv)
         return 1;
     }
 
-    PL_InitializeEventsLib("");
-    PLEventQueue* mainQueue = PL_GetMainEventQueue();
-
     SetupRegistry();
 
-    nsIRDFDataSource* ds = nsnull;
-    nsIRDFXMLSource* xmlSource = nsnull;
-    PRInt32 i;
+    nsIEventQueueService* theEventQueueService = nsnull;
+    PLEventQueue* mainQueue      = nsnull;
+    nsIRDFService* theRDFService = nsnull;
+    nsIRDFXMLDataSource* ds      = nsnull;
+    nsIOutputStream* out         = nsnull;
+    nsIRDFXMLSource* source      = nsnull;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFStreamDataSourceCID,
+    // Get netlib off the floor...
+    if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                                    kIEventQueueServiceIID,
+                                                    (nsISupports**) &theEventQueueService)))
+        goto done;
+
+    if (NS_FAILED(rv = theEventQueueService->CreateThreadEventQueue()))
+        goto done;
+
+    if (NS_FAILED(rv = theEventQueueService->GetThreadEventQueue(PR_GetCurrentThread(),
+                                                                 &mainQueue)))
+        goto done;
+
+    // Create a stream data source and initialize it on argv[1], which
+    // is hopefully a "file:" URL. (Actually, we can do _any_ kind of
+    // URL, but only a "file:" URL will be written back to disk.)
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFXMLDataSourceCID,
                                                     nsnull,
-                                                    kIRDFDataSourceIID,
+                                                    kIRDFXMLDataSourceIID,
                                                     (void**) &ds)))
         goto done;
 
+    if (NS_FAILED(rv = ds->SetSynchronous(PR_TRUE)))
+        goto done;
+
+    // Okay, this should load the XML file...
     if (NS_FAILED(rv = ds->Init(argv[1])))
         goto done;
 
-    // XXX This is really gross. I need to figure out the right way to do it...
-    for (i = 0; i < 1000000; ++i) {
-		PLEvent* event = PL_GetEvent(mainQueue);
-        PL_HandleEvent(event);
+    // And finally, write it back out.
+    if ((out = new ConsoleOutputStreamImpl()) == nsnull) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto done;
     }
 
-    if (NS_SUCCEEDED(ds->QueryInterface(kIRDFXMLSourceIID, (void**) &xmlSource))) {
-        ConsoleOutputStreamImpl* out = new ConsoleOutputStreamImpl();
-        xmlSource->Serialize(out);
-        NS_RELEASE(xmlSource);
-    }
+    NS_ADDREF(out);
+
+    if (NS_FAILED(rv = ds->QueryInterface(kIRDFXMLSourceIID, (void**) &source)))
+        goto done;
+
+    if (NS_FAILED(rv = source->Serialize(out)))
+        goto done;
 
 done:
+    NS_IF_RELEASE(out);
     NS_IF_RELEASE(ds);
+    if (theRDFService) {
+        nsServiceManager::ReleaseService(kRDFServiceCID, theRDFService);
+        theRDFService = nsnull;
+    }
+    if (theEventQueueService) {
+        nsServiceManager::ReleaseService(kEventQueueServiceCID, theEventQueueService);
+        theEventQueueService = nsnull;
+    }
     return (NS_FAILED(rv) ? 1 : 0);
 }
-

@@ -30,6 +30,7 @@ PROGRAM=        .\$(OBJDIR)\$(EXENAME).exe
 OBJS=           .\$(OBJDIR)\rdfsink.obj
 
 LINCS=          -I$(PUBLIC)\rdf         \
+                -I$(PUBLIC)\dom         \
                 -I$(LIBNSPR)            \
                 -I$(PUBLIC)\xpcom       \
                 -I$(PUBLIC)\netlib      \

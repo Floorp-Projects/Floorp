@@ -126,6 +126,8 @@ public:
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
                             nsIRDFArcsOutCursor** labels);
 
+    NS_IMETHOD GetAllResources(nsIRDFResourceCursor** aCursor);
+
     NS_IMETHOD Flush();
 
     NS_IMETHOD IsCommandEnabled(const char* aCommand,
@@ -763,6 +765,13 @@ CompositeDataSourceImpl::ArcLabelsOut(nsIRDFResource* source,
     NS_ADDREF(result);
     *labels = result;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+CompositeDataSourceImpl::GetAllResources(nsIRDFResourceCursor** aCursor)
+{
+    NS_ASSERTION(PR_FALSE, "not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
