@@ -188,6 +188,10 @@ public:
 protected:
   PRRWLock* mLock;
 
+#ifdef HAVE_CPP_AMBIGUITY_RESOLVING_USING
+  using nsTHashtable<nsBaseHashtableET<KeyClass,DataType> >::mTable;
+#endif
+
   /**
    * used internally during EnumerateRead.  Allocated on the stack.
    * @param func the enumerator passed to EnumerateRead
