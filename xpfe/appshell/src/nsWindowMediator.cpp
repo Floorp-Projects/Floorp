@@ -364,7 +364,7 @@ NS_IMETHODIMP nsWindowMediator::UnregisterWindow( nsIWebShellWindow* inWindow )
 	for ( windowIndex = 0; windowIndex< count; windowIndex++ )
 	{
 		windowInfo = (nsWindowInfo*) mWindowList[windowIndex];
-		if ( ( windowInfo )->mWindow == inWindow )
+		if ( ( windowInfo )->mWindow.get() == inWindow )
 			break;
 		windowInfo = NULL;
 	}
@@ -457,7 +457,7 @@ NS_IMETHODIMP nsWindowMediator::UpdateWindowTimeStamp( nsIWebShellWindow* inWind
 	for ( int32 i = 0; i< count; i++ )
 	{	
 		nsWindowInfo* windowInfo = (nsWindowInfo*) mWindowList[i];
-		if (  windowInfo->mWindow == inWindow ) 
+		if (  windowInfo->mWindow.get() == inWindow ) 
 		{
 			mTimeStamp++;
 			windowInfo->mTimeStamp = mTimeStamp;
@@ -476,7 +476,7 @@ NS_IMETHODIMP  nsWindowMediator::UpdateWindowTitle( nsIWebShellWindow* inWindow,
 	for ( int32 i = 0; i< count; i++ )
 	{	
 		nsWindowInfo* windowInfo = (nsWindowInfo*) mWindowList[i];
-		if (  windowInfo->mWindow == inWindow ) 
+		if (  windowInfo->mWindow.get() == inWindow ) 
 		{
 			nsIRDFResource* window = windowInfo->mRDFID;
 			// Get rid of the old value
