@@ -339,11 +339,7 @@ nsXULContentBuilder::nsXULContentBuilder()
 nsXULContentBuilder::~nsXULContentBuilder()
 {
     if (--gRefCnt == 0) {
-        if (gXULSortService) {
-            nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
-            gXULSortService = nsnull;
-        }
-
+        NS_IF_RELEASE(gXULSortService);
         NS_IF_RELEASE(gHTMLElementFactory);
         NS_IF_RELEASE(gXMLElementFactory);
     }
@@ -353,24 +349,17 @@ nsresult
 nsXULContentBuilder::Init()
 {
     if (gRefCnt++ == 0) {
-        nsresult rv;
+        nsresult rv = CallGetService(kXULSortServiceCID, &gXULSortService);
+        if (NS_FAILED(rv))
+            return rv;
 
-        rv = nsServiceManager::GetService(kXULSortServiceCID,
-                                          NS_GET_IID(nsIXULSortService),
-                                          (nsISupports**) &gXULSortService);
-        if (NS_FAILED(rv)) return rv;
+        rv = CallGetService(kHTMLElementFactoryCID, &gHTMLElementFactory);
+        if (NS_FAILED(rv))
+            return rv;
 
-        rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
-                                                nsnull,
-                                                NS_GET_IID(nsIElementFactory),
-                                                (void**) &gHTMLElementFactory);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = nsComponentManager::CreateInstance(kXMLElementFactoryCID,
-                                                nsnull,
-                                                NS_GET_IID(nsIElementFactory),
-                                                (void**) &gXMLElementFactory);
-        if (NS_FAILED(rv)) return rv;
+        rv = CallGetService(kXMLElementFactoryCID, &gXMLElementFactory);
+        if (NS_FAILED(rv))
+            return rv;
     }
 
     return nsXULTemplateBuilder::Init();
@@ -709,11 +698,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = SubstituteText(*aMatch, attrValue, value);
                 if (NS_FAILED(rv)) return rv;
 
-                nsCOMPtr<nsITextContent> content;
-                rv = nsComponentManager::CreateInstance(kTextNodeCID,
-                                                        nsnull,
-                                                        NS_GET_IID(nsITextContent),
-                                                        getter_AddRefs(content));
+                nsCOMPtr<nsITextContent> content =
+                  do_CreateInstance(kTextNodeCID, &rv);
                 if (NS_FAILED(rv)) return rv;
 
                 rv = content->SetText(value.get(), value.Length(), PR_FALSE);
@@ -2160,7 +2146,7 @@ nsXULContentBuilder::CompileContentCondition(nsTemplateRule* aRule,
     aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::tag, tagstr);
 
     if (!tagstr.IsEmpty()) {
-        tag = dont_AddRef(NS_NewAtom(tagstr));
+        tag = do_GetAtom(tagstr);
     }
 
     nsCOMPtr<nsIDocument> doc;
@@ -2206,7 +2192,7 @@ nsXULContentBuilder::CompileSimpleAttributeCondition(PRInt32 aNameSpaceID,
         // the previous node, because it'll cause an unconstrained
         // search if we ever came "up" through this path. Need a
         // JoinNode in here somewhere.
-        nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(aValue));
+        nsCOMPtr<nsIAtom> tag = do_GetAtom(aValue);
 
         *aResult = new nsContentTagTestNode(aParentNode, mConflictSet, mContentVar, tag);
         if (*aResult)

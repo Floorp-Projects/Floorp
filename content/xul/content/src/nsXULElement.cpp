@@ -461,10 +461,7 @@ nsXULElement::Init()
     if (gRefCnt++ == 0) {
         nsresult rv;
 
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          NS_GET_IID(nsIRDFService),
-                                          (nsISupports**) &gRDFService);
-
+        rv = CallGetService(kRDFServiceCID, &gRDFService);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_FAILED(rv)) return rv;
 
@@ -496,10 +493,7 @@ nsXULElement::~nsXULElement()
     if (--gRefCnt == 0) {
         FinishEventHandlerMap();
 
-        if (gRDFService) {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-            gRDFService = nsnull;
-        }
+        NS_IF_RELEASE(gRDFService);
     }
 }
 
@@ -715,7 +709,7 @@ NS_IMETHODIMP
 nsXULElement::GetParentNode(nsIDOMNode** aParentNode)
 {
     if (mParent) {
-        return mParent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aParentNode);
+        return CallQueryInterface(mParent, aParentNode);
     }
 
     if (mDocument) {
@@ -729,7 +723,7 @@ nsXULElement::GetParentNode(nsIDOMNode** aParentNode)
             // If we don't have a parent, and we're the root content
             // of the document, DOM says that our parent is the
             // document.
-            return mDocument->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aParentNode);
+            return CallQueryInterface(mDocument, aParentNode);
         }
     }
 
@@ -761,9 +755,8 @@ nsXULElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
         if (NS_FAILED(rv))
             break;
 
-        nsCOMPtr<nsIDOMNode> domNode;
-        rv = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) getter_AddRefs(domNode));
-        if (NS_FAILED(rv)) {
+        nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(child);
+        if (!domNode) {
             NS_WARNING("child content doesn't support nsIDOMNode");
             continue;
         }
@@ -787,8 +780,8 @@ nsXULElement::GetFirstChild(nsIDOMNode** aFirstChild)
     nsCOMPtr<nsIContent> child;
     rv = ChildAt(0, *getter_AddRefs(child));
 
-    if (NS_SUCCEEDED(rv) && (child != nsnull)) {
-        rv = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aFirstChild);
+    if (child) {
+        rv = CallQueryInterface(child, aFirstChild);
         NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
         return rv;
     }
@@ -810,10 +803,10 @@ nsXULElement::GetLastChild(nsIDOMNode** aLastChild)
         nsCOMPtr<nsIContent> child;
         rv = ChildAt(count - 1, *getter_AddRefs(child));
 
-        NS_ASSERTION(child != nsnull, "no child");
+        NS_ASSERTION(child, "no child");
 
         if (child) {
-            rv = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aLastChild);
+            rv = CallQueryInterface(child, aLastChild);
             NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
             return rv;
         }
@@ -834,8 +827,8 @@ nsXULElement::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
             nsCOMPtr<nsIContent> prev;
             mParent->ChildAt(--pos, *getter_AddRefs(prev));
             if (prev) {
-                nsresult rv = prev->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aPreviousSibling);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
+                nsresult rv = CallQueryInterface(prev, aPreviousSibling);
+                NS_ASSERTION(*aPreviousSibling, "not a DOM node");
                 return rv;
             }
         }
@@ -858,8 +851,8 @@ nsXULElement::GetNextSibling(nsIDOMNode** aNextSibling)
             nsCOMPtr<nsIContent> next;
             mParent->ChildAt(++pos, *getter_AddRefs(next));
             if (next) {
-                nsresult res = next->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aNextSibling);
-                NS_ASSERTION(NS_OK == res, "not a DOM Node");
+                nsresult res = CallQueryInterface(next, aNextSibling);
+                NS_ASSERTION(*aNextSibling, "not a DOM Node");
                 return res;
             }
         }
@@ -943,7 +936,7 @@ nsXULElement::SetPrefix(const nsAString& aPrefix)
     nsCOMPtr<nsIAtom> prefix;
 
     if (!aPrefix.IsEmpty() && !DOMStringIsNull(aPrefix)) {
-        prefix = dont_AddRef(NS_NewAtom(aPrefix));
+        prefix = do_GetAtom(aPrefix);
         NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
     }
 
@@ -1362,14 +1355,12 @@ nsXULElement::GetAttributeNode(const nsAString& aName,
     if (NS_FAILED(rv)) return rv;
 
     if (node) {
-        rv = node->QueryInterface(NS_GET_IID(nsIDOMAttr), (void**) aReturn);
-    }
-    else {
-        *aReturn = nsnull;
-        rv = NS_OK;
+        return CallQueryInterface(node, aReturn);
     }
 
-    return rv;
+    *aReturn = nsnull;
+
+    return NS_OK;
 }
 
 
@@ -1430,7 +1421,7 @@ nsXULElement::GetAttributeNS(const nsAString& aNamespaceURI,
                              const nsAString& aLocalName,
                              nsAString& aReturn)
 {
-    nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
+    nsCOMPtr<nsIAtom> name = do_GetAtom(aLocalName);
     PRInt32 nsid;
 
     nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
@@ -1469,7 +1460,7 @@ nsXULElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
                                 const nsAString& aLocalName)
 {
     PRInt32 nameSpaceId;
-    nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(aLocalName));
+    nsCOMPtr<nsIAtom> tag = do_GetAtom(aLocalName);
 
     nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
                                                           nameSpaceId);
@@ -1495,14 +1486,12 @@ nsXULElement::GetAttributeNodeNS(const nsAString& aNamespaceURI,
     if (NS_FAILED(rv)) return rv;
 
     if (node) {
-        rv = node->QueryInterface(NS_GET_IID(nsIDOMAttr), (void**) aReturn);
-    }
-    else {
-        *aReturn = nsnull;
-        rv = NS_OK;
+        return CallQueryInterface(node, aReturn);
     }
 
-    return rv;
+    *aReturn = nsnull;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1580,7 +1569,7 @@ nsXULElement::HasAttributeNS(const nsAString& aNamespaceURI,
 {
     NS_ENSURE_ARG_POINTER(aReturn);
 
-    nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
+    nsCOMPtr<nsIAtom> name = do_GetAtom(aLocalName);
     PRInt32 nsid;
 
     nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, nsid);
@@ -1761,14 +1750,12 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName,
 NS_IMETHODIMP
 nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
 {
-    if (! mListenerManager) {
+    if (!mListenerManager) {
         nsresult rv;
+        mListenerManager = do_CreateInstance(kEventListenerManagerCID, &rv);
+        if (NS_FAILED(rv))
+            return rv;
 
-        rv = nsComponentManager::CreateInstance(kEventListenerManagerCID,
-                                                nsnull,
-                                                NS_GET_IID(nsIEventListenerManager),
-                                                getter_AddRefs(mListenerManager));
-        if (NS_FAILED(rv)) return rv;
         mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIStyledContent*, this));
     }
 
@@ -2629,9 +2616,9 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
 
         mutation.mAttrName = attrName;
         if (!oldValue.IsEmpty())
-          mutation.mPrevAttrValue = dont_AddRef(NS_NewAtom(oldValue));
+          mutation.mPrevAttrValue = do_GetAtom(oldValue);
         if (!aValue.IsEmpty())
-          mutation.mNewAttrValue = dont_AddRef(NS_NewAtom(aValue));
+          mutation.mNewAttrValue = do_GetAtom(aValue);
         if (modification)
           mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
         else
@@ -2878,7 +2865,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
 
         mutation.mAttrName = aName;
         if (!oldValue.IsEmpty())
-            mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(oldValue));
+            mutation.mPrevAttrValue = do_GetAtom(oldValue);
         mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
         nsEventStatus status = nsEventStatus_eIgnore;
         HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
@@ -3421,10 +3408,10 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
           // still has a ref to the DOM Event but the internal data
           // hasn't been malloc'd.  Force a copy of the data here so the
           // DOM Event is still valid.
-          nsIPrivateDOMEvent *privateEvent;
-          if (NS_OK == (*aDOMEvent)->QueryInterface(NS_GET_IID(nsIPrivateDOMEvent), (void**)&privateEvent)) {
+          nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
+            do_QueryInterface(*aDOMEvent);
+          if (privateEvent) {
             privateEvent->DuplicatePrivateData();
-            NS_RELEASE(privateEvent);
           }
         }
         aDOMEvent = nsnull;
@@ -4551,11 +4538,8 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     // Add a popup listener to the element
     nsresult rv;
 
-    nsCOMPtr<nsIXULPopupListener> popupListener;
-    rv = nsComponentManager::CreateInstance(kXULPopupListenerCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIXULPopupListener),
-                                            getter_AddRefs(popupListener));
+    nsCOMPtr<nsIXULPopupListener> popupListener =
+        do_CreateInstance(kXULPopupListenerCID, &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to create an instance of the popup listener object.");
     if (NS_FAILED(rv)) return rv;
 

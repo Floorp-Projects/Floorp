@@ -194,9 +194,7 @@ protected:
 
     gRefCnt++;
     if (gRefCnt == 1) {
-      nsServiceManager::GetService("@mozilla.org/xbl;1",
-                                   NS_GET_IID(nsIXBLService),
-                                   (nsISupports**) &gXBLService);
+      CallGetService("@mozilla.org/xbl;1", &gXBLService);
     }
   }
 
@@ -204,8 +202,7 @@ protected:
   {
     gRefCnt--;
     if (gRefCnt == 0) {
-      nsServiceManager::ReleaseService("@mozilla.org/xbl;1", gXBLService);
-      gXBLService = nsnull;
+      NS_IF_RELEASE(gXBLService);
     }
   }
 
@@ -280,10 +277,8 @@ nsXBLStreamListener::nsXBLStreamListener(nsXBLService* aXBLService,
   mBindingDocument = aBindingDocument;
   gRefCnt++;
   if (gRefCnt == 1) {
-    nsresult rv;
-    rv = nsServiceManager::GetService("@mozilla.org/xul/xul-prototype-cache;1",
-                                      NS_GET_IID(nsIXULPrototypeCache),
-                                      (nsISupports**) &gXULCache);
+    nsresult rv = CallGetService("@mozilla.org/xul/xul-prototype-cache;1",
+                                 &gXULCache);
     if (NS_FAILED(rv)) return;
   }
 }
@@ -293,10 +288,7 @@ nsXBLStreamListener::~nsXBLStreamListener()
   /* destructor code */
   gRefCnt--;
   if (gRefCnt == 0) {
-    if (gXULCache) {
-      nsServiceManager::ReleaseService("@mozilla.org/xul/xul-prototype-cache;1", gXULCache);
-      gXULCache = nsnull;
-    }
+    NS_IF_RELEASE(gXULCache);
   }
 }
 
@@ -936,7 +928,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
       nsAutoString nameSpace;
 
       if (!prefix.IsEmpty()) {
-        nsCOMPtr<nsIAtom> prefixAtom = getter_AddRefs(NS_NewAtom(prefix));
+        nsCOMPtr<nsIAtom> prefixAtom = do_GetAtom(prefix);
 
         nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(child));
 
@@ -956,7 +948,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
             nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(nameSpace,
                                                                   nameSpaceID);
 
-            nsCOMPtr<nsIAtom> tagName = getter_AddRefs(NS_NewAtom(display));
+            nsCOMPtr<nsIAtom> tagName = do_GetAtom(display);
             protoBinding->SetBaseTag(nameSpaceID, tagName);
           }
         }

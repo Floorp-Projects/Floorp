@@ -1630,7 +1630,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   if (svp) {
     svp->GetScrollableView(&sv);
     if (sv)
-      sv->QueryInterface(NS_GET_IID(nsIView), (void**) &focusView);
+      CallQueryInterface(sv, &focusView);
   } else {
     focusFrame->GetView(aPresContext, &focusView);
     if (!focusView) {
@@ -2228,16 +2228,16 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
 nsIScrollableView*
 nsEventStateManager::GetNearestScrollingView(nsIView* aView)
 {
-  nsIScrollableView* sv;
-  if (NS_OK == aView->QueryInterface(NS_GET_IID(nsIScrollableView),
-                                     (void**)&sv)) {
+  nsIScrollableView* sv = nsnull;
+  CallQueryInterface(aView, &sv);
+  if (sv) {
     return sv;
   }
 
   nsIView* parent;
   aView->GetParent(parent);
 
-  if (nsnull != parent) {
+  if (parent) {
     return GetNearestScrollingView(parent);
   }
 
@@ -4544,8 +4544,7 @@ nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
   if (nsnull == manager) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv =  manager->QueryInterface(NS_GET_IID(nsIEventStateManager),
-                                 (void **) aInstancePtrResult);
+  rv = CallQueryInterface(manager, aInstancePtrResult);
   if (NS_FAILED(rv)) return rv;
 
   return manager->Init();

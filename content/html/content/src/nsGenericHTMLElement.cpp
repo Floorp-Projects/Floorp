@@ -849,8 +849,7 @@ nsGenericHTMLElement::GetOffsetParent(nsIDOMElement** aOffsetParent)
   nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
   if (NS_SUCCEEDED(res)) {
     if (parent) {
-      res = parent->QueryInterface(NS_GET_IID(nsIDOMElement),
-                                   (void**)aOffsetParent);
+      res = CallQueryInterface(parent, aOffsetParent);
     } else {
       *aOffsetParent = nsnull;
     }
@@ -1699,9 +1698,9 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
 
       mutation.mAttrName = aAttribute;
       if (!strValue.IsEmpty())
-        mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(strValue));
+        mutation.mPrevAttrValue = do_GetAtom(strValue);
       if (!aValue.IsEmpty())
-        mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(aValue));
+        mutation.mNewAttrValue = do_GetAtom(aValue);
       if (modification)
         mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
       else
@@ -1799,9 +1798,9 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
 
       mutation.mAttrName = localName;
       if (!strValue.IsEmpty())
-        mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(strValue));
+        mutation.mPrevAttrValue = do_GetAtom(strValue);
       if (!aValue.IsEmpty())
-        mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(aValue));
+        mutation.mNewAttrValue = do_GetAtom(aValue);
       if (modification)
         mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
       else
@@ -1975,9 +1974,9 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
       nsAutoString newValueStr;
       GetAttr(kNameSpaceID_None, aAttribute, newValueStr);
       if (!newValueStr.IsEmpty())
-        mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(newValueStr));
+        mutation.mNewAttrValue = do_GetAtom(newValueStr);
       if (!oldValueStr.IsEmpty())
-        mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(oldValueStr));
+        mutation.mPrevAttrValue = do_GetAtom(oldValueStr);
       if (modification)
         mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
       else
@@ -2066,7 +2065,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
       nsAutoString attr;
       GetAttr(aNameSpaceID, aAttribute, attr);
       if (!attr.IsEmpty())
-        mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(attr));
+        mutation.mPrevAttrValue = do_GetAtom(attr);
       mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -2420,13 +2419,12 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  nsIAtom* tag;
-  GetTag(tag);
-  if (tag != nsnull) {
+  nsCOMPtr<nsIAtom> tag;
+  GetTag(*getter_AddRefs(tag));
+  if (tag) {
     nsAutoString buf;
     tag->ToString(buf);
     fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
-    NS_RELEASE(tag);
   }
   fprintf(out, "@%p", (void*)this);
 
@@ -2460,10 +2458,10 @@ nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) co
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  nsIAtom* tag;
   nsAutoString buf;
-  GetTag(tag);
-  if (tag != nsnull) {
+  nsCOMPtr<nsIAtom> tag;
+  GetTag(*getter_AddRefs(tag));
+  if (tag) {
     tag->ToString(buf);
     fputs("<",out);
     fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
@@ -2471,7 +2469,6 @@ nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) co
     if(aDumpAll) ListAttributes(out);
 
     fputs(">",out);
-    NS_RELEASE(tag);
   }
 
   PRBool canHaveKids;
@@ -2961,9 +2958,7 @@ nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
     // Get the pres state for this key, if it doesn't exist, create one
     result = history->GetState(key, aPresState);
     if (!*aPresState) {
-      result = nsComponentManager::CreateInstance(kPresStateCID, nsnull,
-                                                  NS_GET_IID(nsIPresState),
-                                                  (void**)aPresState);
+      result = CallCreateInstance(kPresStateCID, aPresState);
       if (NS_SUCCEEDED(result)) {
         result = history->AddState(key, *aPresState);
       }
@@ -3877,12 +3872,13 @@ nsGenericHTMLContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
   nsDOMSlots *slots = GetDOMSlots();
 
-  if (nsnull == slots->mChildNodes) {
+  if (!slots->mChildNodes) {
     slots->mChildNodes = new nsChildContentList(this);
+    // XXX Need to check for out-of-memory
     NS_ADDREF(slots->mChildNodes);
   }
 
-  return slots->mChildNodes->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aChildNodes);
+  return CallQueryInterface(slots->mChildNodes, aChildNodes);
 }
 
 NS_IMETHODIMP
@@ -3902,10 +3898,9 @@ nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
 {
   nsIContent *child = (nsIContent *)mChildren.SafeElementAt(0);
   if (child) {
-    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
-                                         (void**)aNode);
+    nsresult res = CallQueryInterface(child, aNode);
+    NS_ASSERTION(NS_SUCCEEDED(res), "Must be a DOM Node"); // must be a DOM Node
 
-    NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
   *aNode = nsnull;
@@ -3918,10 +3913,9 @@ nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
   if (0 != mChildren.Count()) {
     nsIContent *child = (nsIContent *)mChildren.ElementAt(mChildren.Count()-1);
     if (child) {
-      nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
-                                           (void**)aNode);
-      
-      NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
+      nsresult res = CallQueryInterface(child, aNode);
+      NS_ASSERTION(NS_SUCCEEDED(res), "Must be a DOM Node"); // must be a DOM Node
+
       return res;
     }
   }

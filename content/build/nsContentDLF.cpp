@@ -146,7 +146,8 @@ NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIDocumentLoaderFactory), (void**)aResult);
+
+  return CallQueryInterface(it, aResult);
 }
 
 nsContentDLF::nsContentDLF()
@@ -415,9 +416,7 @@ nsContentDLF::CreateDocument(const char* aCommand,
   nsCOMPtr<nsIDocumentViewer> docv;
   do {
     // Create the document
-    rv = nsComponentManager::CreateInstance(aDocumentCID, nsnull,
-                                            NS_GET_IID(nsIDocument),
-                                            getter_AddRefs(doc));
+    doc = do_CreateInstance(aDocumentCID, &rv);
     if (NS_FAILED(rv))
       break;
 
@@ -482,9 +481,7 @@ nsContentDLF::CreateRDFDocument(nsISupports* aExtraInfo,
   nsresult rv = NS_ERROR_FAILURE;
     
   // Create the XUL document
-  rv = nsComponentManager::CreateInstance(kXULDocumentCID, nsnull,
-                                          NS_GET_IID(nsIDocument),
-                                          getter_AddRefs(*doc));
+  *doc = do_CreateInstance(kXULDocumentCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // Create the image content viewer...

@@ -83,7 +83,7 @@ nsWyciwygChannel::GetInterface(const nsIID &aIID, void **aResult)
 
   if (mCallbacks)
     return mCallbacks->GetInterface(aIID, aResult);
-  
+
   return NS_ERROR_NO_INTERFACE;
 }
 

@@ -309,7 +309,7 @@ nsXULAttribute::SetPrefix(const nsAString& aPrefix)
     nsCOMPtr<nsIAtom> prefix;
 
     if (!aPrefix.IsEmpty()) {
-        prefix = dont_AddRef(NS_NewAtom(aPrefix));
+        prefix = do_GetAtom(aPrefix);
         NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
     }
 
@@ -469,8 +469,7 @@ nsXULAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
 {
   NS_ENSURE_ARG_POINTER(aOwnerElement);
 
-  return mContent->QueryInterface(NS_GET_IID(nsIDOMElement),
-                                  (void **)aOwnerElement);
+  return CallQueryInterface(mContent, aOwnerElement);
 }
 
 

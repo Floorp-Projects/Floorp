@@ -1135,12 +1135,13 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
         attrTok.Left(left, index);
         attrTok.Right(right, attrTok.Length()-index-1);
 
-        atom = getter_AddRefs(NS_NewAtom(right.get()));
-        attribute = getter_AddRefs(NS_NewAtom(left.get()));
+        atom = do_GetAtom(right);
+        attribute = do_GetAtom(left);
       }
       else {
-        nsAutoString tok; tok.AssignWithConversion(token);
-        atom = getter_AddRefs(NS_NewAtom(tok.get()));
+        nsAutoString tok;
+        tok.AssignWithConversion(token);
+        atom = do_GetAtom(tok);
         attribute = atom;
       }
       
@@ -1230,11 +1231,11 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
 
         char* token = nsCRT::strtok( str, "| ", &newStr );
         while( token != NULL ) {
+          nsAutoString tok;
+          tok.AssignWithConversion(token);
+
           // Build an atom out of this string.
-          nsCOMPtr<nsIAtom> atom;
-            
-          nsAutoString tok; tok.AssignWithConversion(token);
-          atom = getter_AddRefs(NS_NewAtom(tok.get()));
+          nsCOMPtr<nsIAtom> atom = do_GetAtom(tok);
            
           nsISupportsKey key(atom);
           mInsertionPointTable->Put(&key, xblIns);

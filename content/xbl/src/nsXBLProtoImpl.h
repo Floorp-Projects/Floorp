@@ -45,7 +45,7 @@
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLProtoImplMember.h"
 
-MOZ_DECL_CTOR_COUNTER(nsXBLProtoImpl);
+MOZ_DECL_CTOR_COUNTER(nsXBLProtoImpl)
 
 class nsXBLProtoImpl
 {

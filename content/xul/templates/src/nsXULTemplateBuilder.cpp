@@ -163,22 +163,10 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
 nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
 {
     if (--gRefCnt == 0) {
-        if (gRDFService) {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-            gRDFService = nsnull;
-        }
-
-        if (gRDFContainerUtils) {
-            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
-            gRDFContainerUtils = nsnull;
-        }
-
+        NS_IF_RELEASE(gRDFService);
+        NS_IF_RELEASE(gRDFContainerUtils);
         NS_IF_RELEASE(gSystemPrincipal);
-
-        if (gScriptSecurityManager) {
-            nsServiceManager::ReleaseService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, gScriptSecurityManager);
-            gScriptSecurityManager = nsnull;
-        }
+        NS_IF_RELEASE(gScriptSecurityManager);
     }
 }
 
@@ -191,23 +179,22 @@ nsXULTemplateBuilder::Init()
 
         // Initialize the global shared reference to the service
         // manager and get some shared resource objects.
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          NS_GET_IID(nsIRDFService),
-                                          (nsISupports**) &gRDFService);
-        if (NS_FAILED(rv)) return rv;
+        rv = CallGetService(kRDFServiceCID, &gRDFService);
+        if (NS_FAILED(rv))
+            return rv;
 
-        rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                          NS_GET_IID(nsIRDFContainerUtils),
-                                          (nsISupports**) &gRDFContainerUtils);
-        if (NS_FAILED(rv)) return rv;
+        rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
+        if (NS_FAILED(rv))
+            return rv;
 
-        rv = nsServiceManager::GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                                          NS_GET_IID(nsIScriptSecurityManager),
-                                          (nsISupports**) &gScriptSecurityManager);
-        if (NS_FAILED(rv)) return rv;
+        rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+                            &gScriptSecurityManager);
+        if (NS_FAILED(rv))
+            return rv;
 
         rv = gScriptSecurityManager->GetSystemPrincipal(&gSystemPrincipal);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv))
+            return rv;
     }
 
 #ifdef PR_LOGGING

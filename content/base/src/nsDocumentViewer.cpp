@@ -1785,7 +1785,7 @@ DocumentViewerImpl::FindFrameSetWithIID(nsIContent * aParentContent,
 
   // do a breadth search across all siblings
   PRInt32 inx;
-  for (inx=0;inx<numChildren;inx++) {
+  for (inx = 0; inx < numChildren; ++inx) {
     nsCOMPtr<nsIContent> child;
     if (NS_SUCCEEDED(aParentContent->ChildAt(inx, *getter_AddRefs(child))) && child) {
       nsCOMPtr<nsISupports> temp;
@@ -1869,7 +1869,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
     nsISupports* data = (nsISupports*)clientData;
 
     if (data) {
-      data->QueryInterface(NS_GET_IID(nsIView), (void **)&containerView);
+      CallQueryInterface(data, &containerView);
     }
   }
 

@@ -905,8 +905,7 @@ NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
       nsCOMPtr<nsIStyleSheet> sheet;
       sheet = getter_AddRefs(GetAgentStyleSheetAt(i));
       if (sheet) {
-        nsCOMPtr<nsICSSStyleSheet> cssSheet;
-        sheet->QueryInterface(NS_GET_IID(nsICSSStyleSheet), getter_AddRefs(cssSheet));
+        nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(sheet);
         if (cssSheet) {
           nsCOMPtr<nsIStyleSheet> quirkSheet;
           PRBool bHasSheet = PR_FALSE;
@@ -1774,17 +1773,16 @@ void StyleSetImpl::ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt3
 NS_EXPORT nsresult
 NS_NewStyleSet(nsIStyleSet** aInstancePtrResult)
 {
-  if (aInstancePtrResult == nsnull) {
+  if (!aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
   StyleSetImpl  *it = new StyleSetImpl();
-
-  if (nsnull == it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(NS_GET_IID(nsIStyleSet), (void **) aInstancePtrResult);
+  return CallQueryInterface(it, aInstancePtrResult);
 }
 
 // nsITimeRecorder implementation
@@ -1822,17 +1820,18 @@ StyleSetImpl::DisableTimer(PRUint32 aTimerID)
 NS_IMETHODIMP
 StyleSetImpl::IsTimerEnabled(PRBool *aIsEnabled, PRUint32 aTimerID)
 {
-  NS_ASSERTION(aIsEnabled != nsnull, "aIsEnabled paramter cannot be null" );
+  NS_ASSERTION(aIsEnabled, "aIsEnabled parameter cannot be null" );
   nsresult rv = NS_OK;
 
   if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
-	  if (*aIsEnabled != nsnull) {
+    if (*aIsEnabled) {
       *aIsEnabled = mTimerEnabled;		
-	  }
+    }
   }
-  else 
+  else {
     rv = NS_ERROR_NOT_IMPLEMENTED;
-  
+  }
+
   return rv;
 }
 
@@ -1987,7 +1986,7 @@ StyleSetImpl::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
 ******************************************************************************/
 void StyleSetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 {
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+  NS_ASSERTION(aSizeOfHandler, "SizeOf handler cannot be null");
 
   // first get the unique items collection
   UNIQUE_STYLE_ITEMS(uniqueItems);
@@ -1998,8 +1997,7 @@ void StyleSetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     return;
   }
   // get or create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("StyleSet"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("StyleSet");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(StyleSetImpl);
 

@@ -6117,8 +6117,7 @@ void nsCSSDeclaration::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   }
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("nsCSSDeclaration"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("nsCSSDeclaration");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
 

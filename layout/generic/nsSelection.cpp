@@ -101,11 +101,12 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 
-//nodtifications
+// notifications
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 
 #include "nsISelectionController.h"//for the enums
+#include "nsHTMLAtoms.h"
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 
@@ -532,12 +533,6 @@ private:
   PRPackedBool mMouseDoubleDownState; //has the doubleclick down happened
   PRPackedBool mDesiredXSet;
   short mReason; //reason for notifications of selection changing
-public:
-  static nsIAtom *sTableAtom;
-  static nsIAtom *sRowAtom;
-  static nsIAtom *sCellAtom;
-  static nsIAtom *sTbodyAtom;
-  static PRInt32 sInstanceCount;
 };
 
 class nsSelectionIterator : public nsIBidirectionalEnumerator
@@ -714,13 +709,6 @@ nsresult NS_NewDomSelection(nsISelection **aDomSelection)
   rlist->AddRef();
   return NS_OK;
 }
-
-//Horrible statics but no choice
-nsIAtom *nsSelection::sTableAtom = 0;
-nsIAtom *nsSelection::sRowAtom = 0;
-nsIAtom *nsSelection::sCellAtom = 0;
-nsIAtom *nsSelection::sTbodyAtom = 0;
-PRInt32 nsSelection::sInstanceCount = 0;
 
 static PRInt8
 GetIndexFromSelectionType(SelectionType aType)
@@ -978,15 +966,7 @@ nsSelection::nsSelection()
   
   mMouseDoubleDownState = PR_FALSE;
   
-  if (sInstanceCount <= 0)
-  {
-    sTableAtom = NS_NewAtom("table");
-    sRowAtom   = NS_NewAtom("tr");
-    sCellAtom  = NS_NewAtom("td");
-    sTbodyAtom = NS_NewAtom("tbody");
-  }
   mHint = HINTLEFT;
-  sInstanceCount ++;
   mDragSelectingCells = PR_FALSE;
   mSelectingTableCellMode = 0;
   mSelectedCellIndex = 0;
@@ -1024,19 +1004,11 @@ nsSelection::nsSelection()
 
 nsSelection::~nsSelection() 
 {
-  if (sInstanceCount <= 1)
-  {
-    NS_IF_RELEASE(sTableAtom);
-    NS_IF_RELEASE(sRowAtom);
-    NS_IF_RELEASE(sCellAtom);
-    NS_IF_RELEASE(sTbodyAtom);
-  }
   PRInt32 i;
   for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
     if (mDomSelections[i])
         NS_IF_RELEASE(mDomSelections[i]);
   }
-  sInstanceCount--;
 }
 
 
@@ -1445,8 +1417,7 @@ ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
   if (!aNode || !aParent || !aChildOffset)
     return NS_ERROR_NULL_POINTER;
   nsresult result = NS_OK;
-  nsCOMPtr<nsIContent> content;
-  result = aNode->QueryInterface(NS_GET_IID(nsIContent),getter_AddRefs(content));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode, &result);
   if (NS_SUCCEEDED(result) && content)
   {
     nsCOMPtr<nsIContent> parent;
@@ -1454,8 +1425,9 @@ ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
     if (NS_SUCCEEDED(result) && parent)
     {
       result = parent->IndexOf(content, *aChildOffset);
-      if (NS_SUCCEEDED(result))
-        result = parent->QueryInterface(NS_GET_IID(nsIDOMNode),(void **)aParent);
+      if (NS_SUCCEEDED(result)) {
+        result = CallQueryInterface(parent, aParent);
+      }
     }
   }
   return result;
@@ -1474,7 +1446,7 @@ GetCellParent(nsIDOMNode *aDomNode)
     while(current)
     {
       tag = GetTag(current);
-      if (tag == nsSelection::sCellAtom)
+      if (tag == nsHTMLAtoms::td)
         return current;
       if (NS_FAILED(ParentOffset(current,getter_AddRefs(parent),&childOffset)) || !parent)
         return 0;
@@ -1892,11 +1864,12 @@ nsresult FindLineContaining(nsIFrame* aFrame, nsIFrame** aBlock, PRInt32* aLine)
   {
     thisBlock = blockFrame;
     result = blockFrame->GetParent(&blockFrame);
-    if (NS_SUCCEEDED(result) && blockFrame){
-      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
+    if (NS_SUCCEEDED(result) && blockFrame) {
+      it = do_QueryInterface(blockFrame, &result);
     }
-    else
+    else {
       blockFrame = nsnull;
+    }
   }
   if (!blockFrame || !it)
     return NS_ERROR_FAILURE;
@@ -2345,11 +2318,12 @@ nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
   {
     thisBlock = blockFrame;
     result = blockFrame->GetParent(&blockFrame);
-    if (NS_SUCCEEDED(result) && blockFrame){
-      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
+    if (NS_SUCCEEDED(result) && blockFrame) {
+      it = do_QueryInterface(blockFrame, &result);
     }
-    else
+    else {
       blockFrame = nsnull;
+    }
   }
   if (!blockFrame || !it)
     return NS_ERROR_FAILURE;
@@ -3416,19 +3390,21 @@ static PRBool IsCell(nsIContent *aContent)
 {
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
-  return (tag != 0 && tag.get() == nsSelection::sCellAtom);
+  return (tag == nsHTMLAtoms::td);
 }
 
 nsITableCellLayout* 
 nsSelection::GetCellLayout(nsIContent *aCellContent)
 {
   // Get frame for cell
-  nsIFrame  *cellFrame = nsnull;
-  nsresult result = GetTracker()->GetPrimaryFrameFor(aCellContent, &cellFrame);
-  if (!cellFrame) return nsnull;
+  nsIFrame *cellFrame = nsnull;
+  GetTracker()->GetPrimaryFrameFor(aCellContent, &cellFrame);
+  if (!cellFrame)
+    return nsnull;
+
   nsITableCellLayout *cellLayoutObject = nsnull;
-  result = cellFrame->QueryInterface(NS_GET_IID(nsITableCellLayout), (void**)(&cellLayoutObject)); 
-  if (NS_FAILED(result)) return nsnull;
+  CallQueryInterface(cellFrame, &cellLayoutObject);
+
   return cellLayoutObject;
 }
 
@@ -3436,12 +3412,14 @@ nsITableLayout*
 nsSelection::GetTableLayout(nsIContent *aTableContent)
 {
   // Get frame for table
-  nsIFrame  *tableFrame = nsnull;
-  nsresult result = GetTracker()->GetPrimaryFrameFor(aTableContent, &tableFrame);
-  if (!tableFrame) return nsnull;
+  nsIFrame *tableFrame = nsnull;
+  GetTracker()->GetPrimaryFrameFor(aTableContent, &tableFrame);
+  if (!tableFrame)
+    return nsnull;
+
   nsITableLayout *tableLayoutObject = nsnull;
-  result = tableFrame->QueryInterface(NS_GET_IID(nsITableLayout), (void**)(&tableLayoutObject)); 
-  if (NS_FAILED(result)) return nsnull;
+  CallQueryInterface(tableFrame, &tableLayoutObject);
+
   return tableLayoutObject;
 }
 
@@ -4180,7 +4158,7 @@ nsSelection::GetParentTable(nsIContent *aCell, nsIContent **aTable)
   {  
     nsIAtom *tag;
     parent->GetTag(tag);
-    if (tag && tag == nsSelection::sTableAtom)
+    if (tag == nsHTMLAtoms::table)
     {
       *aTable = parent;
       NS_ADDREF(*aTable);
@@ -4381,7 +4359,7 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
   content->GetTag(*getter_AddRefs(atom));
   if (!atom) return NS_ERROR_FAILURE;
 
-  if (atom.get() == nsSelection::sRowAtom)
+  if (atom == nsHTMLAtoms::tr)
   {
     *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_CELL;
   }
@@ -4395,9 +4373,9 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
     child->GetTag(*getter_AddRefs(atom));
     if (!atom) return NS_ERROR_FAILURE;
 
-    if (atom.get() == nsSelection::sTableAtom)
+    if (atom == nsHTMLAtoms::table)
       *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_TABLE;
-    else if (atom.get() == nsSelection::sRowAtom)
+    else if (atom == nsHTMLAtoms::tr)
       *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_ROW;
   }
   return result;
@@ -5119,8 +5097,9 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
       mFrameSelection->GetTableCellSelection(&tablesel);
       if (tablesel)
       {
-        nsITableCellLayout *tcl;
-        if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsITableCellLayout),(void **)&tcl)) && tcl)
+        nsITableCellLayout *tcl = nsnull;
+        CallQueryInterface(frame, &tcl);
+        if (tcl)
         {
           return NS_OK;
         }
@@ -5181,28 +5160,25 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange
     return NS_OK;//nothing to do
   if (!aRange || !aPresContext) 
     return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIContentIterator> iter;
-  nsCOMPtr<nsIContentIterator> inneriter;
-  nsresult result = nsComponentManager::CreateInstance(
+
+  nsresult result;
+  nsCOMPtr<nsIContentIterator> iter = do_CreateInstance(
 #ifdef USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
                                               kCGenSubtreeIteratorCID,
 #else
                                               kCSubtreeIteratorCID,
 #endif // USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
-                                              nsnull,
-                                              NS_GET_IID(nsIContentIterator), 
-                                              getter_AddRefs(iter));
+                                              &result);
   if (NS_FAILED(result))
     return result;
-  result = nsComponentManager::CreateInstance(
+
+  nsCOMPtr<nsIContentIterator> inneriter = do_CreateInstance(
 #ifdef USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
                                               kCGenContentIteratorCID,
 #else
                                               kCContentIteratorCID,
 #endif // USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
-                                              nsnull,
-                                              NS_GET_IID(nsIContentIterator), 
-                                              getter_AddRefs(inneriter));
+                                              &result);
 
   if ((NS_SUCCEEDED(result)) && iter && inneriter)
   {
@@ -5504,11 +5480,10 @@ nsTypedSelection::GetClosestScrollableView(nsIView *aView, nsIScrollableView **a
 
   while (!*aScrollableView && aView)
   {
-    nsresult result = aView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)aScrollableView);
-
+    CallQueryInterface(aView, aScrollableView);
     if (!*aScrollableView)
     {
-      result = aView->GetParent(aView);
+      nsresult result = aView->GetParent(aView);
 
       if (NS_FAILED(result))
         return result;
@@ -5759,7 +5734,7 @@ nsTypedSelection::ScrollPointIntoView(nsIPresContext *aPresContext, nsIView *aVi
       nsIView *scrolledView = 0;
       nsIView *view = 0;
 
-      result = scrollableView->QueryInterface(NS_GET_IID(nsIView), (void**)&view);
+      CallQueryInterface(scrollableView, &view);
 
       if (view)
       {
@@ -5819,13 +5794,11 @@ nsTypedSelection::ScrollPointIntoView(nsIPresContext *aPresContext, nsIView *aVi
           //
 
           view = 0;
-          result = scrollableView->QueryInterface(NS_GET_IID(nsIView), (void**)&view);
-
-          if (NS_FAILED(result))
+          result = CallQueryInterface(scrollableView, &view);
+          if (!view)
             return result;
 
-          if (view)
-            view->GetParent(view);
+          view->GetParent(view);
         }
       }
     }
@@ -6290,7 +6263,7 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
   // if end node is a tbody then all bets are off we cannot select "rows"
   nsCOMPtr<nsIAtom> atom;
   atom = GetTag(endNode);
-  if (atom.get() == nsSelection::sTbodyAtom)
+  if (atom == nsHTMLAtoms::tbody)
     return NS_ERROR_FAILURE; //cannot select INTO row node ony cells
 
   //get common parent
@@ -6336,7 +6309,7 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
       while (tempNode != parent)
       {
         atom = GetTag(tempNode);
-        if (atom.get() == nsSelection::sTableAtom) //select whole table  if in cell mode, wait for cell
+        if (atom == nsHTMLAtoms::table) //select whole table  if in cell mode, wait for cell
         {
           result = ParentOffset(tempNode, getter_AddRefs(startNode), &startOffset);
           if (NS_FAILED(result))
@@ -6346,7 +6319,7 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
           dirtystart = PR_TRUE;
           cellMode = PR_FALSE;
         }
-        else if (atom.get() == nsSelection::sCellAtom) //you are in "cell" mode put selection to end of cell
+        else if (atom == nsHTMLAtoms::td) //you are in "cell" mode put selection to end of cell
         {
           cellMode = PR_TRUE;
           result = ParentOffset(tempNode, getter_AddRefs(startNode), &startOffset);
@@ -6373,7 +6346,7 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
       while (tempNode != parent)
       {
         atom = GetTag(tempNode);
-        if (atom.get() == nsSelection::sTableAtom) //select whole table  if in cell mode, wait for cell
+        if (atom == nsHTMLAtoms::table) //select whole table  if in cell mode, wait for cell
         {
           if (!cellMode)
           {
@@ -6387,7 +6360,7 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
           else
             found = PR_FALSE; //didnt find the right cell yet
         }
-        else if (atom.get() == nsSelection::sCellAtom) //you are in "cell" mode put selection to end of cell
+        else if (atom == nsHTMLAtoms::td) //you are in "cell" mode put selection to end of cell
         {
           result = ParentOffset(tempNode, getter_AddRefs(endNode), &endOffset);
           if (NS_FAILED(result))
@@ -7141,7 +7114,7 @@ nsTypedSelection::GetFrameToScrolledViewOffsets(nsIScrollableView *aScrollableVi
 
   // XXX Deal with the case where there is a scrolled element, e.g., a
   // DIV in the middle...
-  while ((closestView != nsnull) && (closestView != scrolledView)) {
+  while (closestView && closestView != scrolledView) {
     nscoord dx, dy;
 
     // Update the offset
@@ -7610,14 +7583,9 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
     //
 
     nsIView *view = 0;
-
-    rv = aScrollableView->QueryInterface(NS_GET_IID(nsIView), (void **)&view);
-
-    if (NS_FAILED(rv))
-      return rv;
-
+    rv = CallQueryInterface(aScrollableView, &view);
     if (!view)
-      return NS_ERROR_FAILURE;
+      return rv;
 
     rv = view->GetParent(view);
 

@@ -142,8 +142,7 @@ NS_EXPORT nsresult
 NS_NewSVGDocument(nsIDocument** aInstancePtrResult)
 {
   nsSVGDocument* doc = new nsSVGDocument();
-  if (!doc)
-    return NS_ERROR_OUT_OF_MEMORY;
-  return doc->QueryInterface(NS_GET_IID(nsIDocument),
-                             (void**) aInstancePtrResult);
+  NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
+
+  return CallQueryInterface(doc, aInstancePtrResult);
 }

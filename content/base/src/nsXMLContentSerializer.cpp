@@ -71,7 +71,7 @@ nsresult NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(NS_GET_IID(nsIContentSerializer), (void**)aSerializer);
+  return CallQueryInterface(it, aSerializer);
 }
 
 nsXMLContentSerializer::nsXMLContentSerializer()

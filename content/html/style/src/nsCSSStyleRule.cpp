@@ -336,8 +336,7 @@ void nsAttrSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   PRUint32 localSize=0;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("nsAttrSelector"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("nsAttrSelector");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
 
@@ -655,8 +654,7 @@ void nsCSSSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   PRUint32 localSize=0;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("nsCSSSelector"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("nsCSSSelector");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   
@@ -1071,8 +1069,7 @@ void CSSImportantRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   PRUint32 localSize=0;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("CSSImportantRule"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSImportantRule");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(CSSImportantRule);
   aSizeOfHandler->AddSize(tag,aSize);
@@ -1377,12 +1374,13 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAString& aDecl,
 nsresult 
 DOMCSSDeclarationImpl::GetParent(nsISupports **aParent)
 {
-  if (nsnull != mRule) {
-    return mRule->QueryInterface(kISupportsIID, (void **)aParent);
-  } else {
-    NS_ENSURE_ARG_POINTER(aParent);
-    *aParent = nsnull;
+  NS_ENSURE_ARG_POINTER(aParent);
+
+  if (mRule) {
+    return CallQueryInterface(mRule, aParent);
   }
+
+  *aParent = nsnull;
 
   return NS_OK;
 }
@@ -1698,7 +1696,7 @@ CSSStyleRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSStyleRuleImpl* clone = new CSSStyleRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(NS_GET_IID(nsICSSRule), (void **)&aClone);
+    return CallQueryInterface(clone, &aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -2446,8 +2444,7 @@ void CSSStyleRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   PRUint32 localSize=0;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("CSSStyleRuleImpl"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSStyleRuleImpl");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   // remove the sizeof the mSelector's class since we count it seperately below
@@ -2509,8 +2506,8 @@ CSSStyleRuleImpl::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
-  if (nsnull != mSheet) {
-    return mSheet->QueryInterface(NS_GET_IID(nsIDOMCSSStyleSheet), (void**)aSheet);
+  if (mSheet) {
+    return CallQueryInterface(mSheet, aSheet);
   }
   *aSheet = nsnull;
   return NS_OK;
@@ -2566,10 +2563,10 @@ NS_EXPORT nsresult
     return NS_ERROR_NULL_POINTER;
   }
 
-  CSSStyleRuleImpl  *it = new CSSStyleRuleImpl(aSelector);
-
-  if (nsnull == it) {
+  CSSStyleRuleImpl *it = new CSSStyleRuleImpl(aSelector);
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void **) aInstancePtrResult);
+
+  return CallQueryInterface(it, aInstancePtrResult);
 }

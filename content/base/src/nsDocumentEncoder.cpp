@@ -527,7 +527,7 @@ static nsresult ChildAt(nsIDOMNode* aNode, PRInt32 aIndex, nsIDOMNode*& aChild)
   node->ChildAt(aIndex, *getter_AddRefs(child));
 
   if (child)
-    child->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&aChild);
+    return CallQueryInterface(child, &aChild);
 
   return NS_OK;
 }

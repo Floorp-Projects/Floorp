@@ -158,11 +158,11 @@ nsDOMMutationEvent::InitMutationEvent(const nsAString& aTypeArg, PRBool aCanBubb
   if (mutation) {
     mutation->mRelatedNode = aRelatedNodeArg;
     if (!aPrevValueArg.IsEmpty())
-      mutation->mPrevAttrValue = getter_AddRefs(NS_NewAtom(aPrevValueArg));
+      mutation->mPrevAttrValue = do_GetAtom(aPrevValueArg);
     if (!aNewValueArg.IsEmpty())
-      mutation->mNewAttrValue = getter_AddRefs(NS_NewAtom(aNewValueArg));
+      mutation->mNewAttrValue = do_GetAtom(aNewValueArg);
     if (!aAttrNameArg.IsEmpty()) {
-      mutation->mAttrName = getter_AddRefs(NS_NewAtom(aAttrNameArg));
+      mutation->mAttrName = do_GetAtom(aAttrNameArg);
     }
     mutation->mAttrChange = aAttrChangeArg;
   }
@@ -178,6 +178,6 @@ nsresult NS_NewDOMMutationEvent(nsIDOMEvent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  
-  return it->QueryInterface(NS_GET_IID(nsIDOMEvent), (void **) aInstancePtrResult);
+
+  return CallQueryInterface(it, aInstancePtrResult);
 }

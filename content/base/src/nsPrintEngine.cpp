@@ -4788,19 +4788,18 @@ int RemoveFilesInDir(const char * aDir)
  */
 static void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
-  if((nsnull == aPresContext) || (nsnull == out))
+  if (!aPresContext || !out)
     return;
 
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
-  if (nsnull != shell) {
+  if (shell) {
     nsIFrame* frame;
     shell->GetRootFrame(&frame);
-    if(nsnull != frame) {
+    if (frame) {
       nsIFrameDebug* debugFrame;
-      nsresult rv;
-      rv = frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&debugFrame);
-      if(NS_SUCCEEDED(rv))
+      nsresult rv = CallQueryInterface(frame, &debugFrame);
+      if (NS_SUCCEEDED(rv))
         debugFrame->List(aPresContext, out, aIndent);
     }
   }

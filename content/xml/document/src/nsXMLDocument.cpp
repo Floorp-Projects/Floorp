@@ -80,7 +80,6 @@
 #include "nsIPrincipal.h"
 #include "nsIAggregatePrincipal.h"
 #include "nsLayoutCID.h"
-#include "nsContentCID.h"
 #include "nsDOMAttribute.h"
 #include "nsGUIEvent.h"
 #include "nsFIXptr.h"
@@ -95,8 +94,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
 #include "nsIScriptGlobalObjectOwner.h"
-
-static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
@@ -182,8 +179,7 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 }
 
 nsXMLDocument::nsXMLDocument() 
-  : mAttrStyleSheet(nsnull), mInlineStyleSheet(nsnull), 
-    mCountCatalogSheets(0), mParser(nsnull),
+  : mCountCatalogSheets(0), mParser(nsnull),
     mCrossSiteAccessEnabled(PR_FALSE), mXMLDeclarationBits(0)
 {
 }
@@ -193,11 +189,9 @@ nsXMLDocument::~nsXMLDocument()
   NS_IF_RELEASE(mParser);  
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
-    NS_RELEASE(mAttrStyleSheet);
   }
   if (mInlineStyleSheet) {
     mInlineStyleSheet->SetOwningDocument(nsnull);
-    NS_RELEASE(mInlineStyleSheet);
   }
   if (mCSSLoader) {
     mCSSLoader->DropDocumentReference();
@@ -224,20 +218,20 @@ NS_IMETHODIMP
 nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsresult result = nsDocument::Reset(aChannel, aLoadGroup);
-  if (NS_FAILED(result)) return result;
+  if (NS_FAILED(result))
+    return result;
   nsCOMPtr<nsIURI> url;
   if (aChannel) {
     result = aChannel->GetURI(getter_AddRefs(url));
-    if (NS_FAILED(result)) return result;
+    if (NS_FAILED(result))
+      return result;
   }
 
-  if (nsnull != mAttrStyleSheet) {
+  if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
-    NS_RELEASE(mAttrStyleSheet);
   }
-  if (nsnull != mInlineStyleSheet) {
+  if (mInlineStyleSheet) {
     mInlineStyleSheet->SetOwningDocument(nsnull);
-    NS_RELEASE(mInlineStyleSheet);
   }
 
   result = SetDefaultStylesheets(url);
@@ -377,7 +371,7 @@ nsXMLDocument::Load(const nsAString& aUrl)
     if (NS_SUCCEEDED(stack->Peek(&cx)) && cx) {
       nsISupports *priv = (nsISupports *)::JS_GetContextPrivate(cx);
       if (priv) {
-        priv->QueryInterface(NS_GET_IID(nsIScriptContext), getter_AddRefs(mScriptContext));        
+        mScriptContext = do_QueryInterface(priv);
       }
     }
   }
@@ -398,13 +392,14 @@ nsXMLDocument::Load(const nsAString& aUrl)
   mPrincipal = nsnull;
   nsCOMPtr<nsISupports> channelOwner;
   rv = channel->GetOwner(getter_AddRefs(channelOwner));
-  if (NS_SUCCEEDED(rv) && channelOwner)
-      mPrincipal = do_QueryInterface(channelOwner, &rv);
+  if (NS_SUCCEEDED(rv) && channelOwner) {
+    mPrincipal = do_QueryInterface(channelOwner, &rv);
+  }
 
   if (NS_FAILED(rv) || !channelOwner)
   {
     rv = secMan->GetCodebasePrincipal(uri, getter_AddRefs(mPrincipal));
-    if (!mPrincipal) return rv;
+    NS_ENSURE_TRUE(mPrincipal, rv);
   }
 
   // Prepare for loading the XML document "into oneself"
@@ -490,9 +485,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
   static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
-  rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
-                                          NS_GET_IID(nsIParser), 
-                                          (void **)&mParser);
+  rv = CallCreateInstance(kCParserCID, &mParser);
   if (NS_FAILED(rv))  return rv;
 
   nsCOMPtr<nsIXMLContentSink> sink;
@@ -516,11 +509,11 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
       rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, nsnull, aChannel);
   }
 
-  if (NS_OK == rv) {      
+  if (NS_SUCCEEDED(rv)) {      
     // Set the parser as the stream listener for the document loader...
-    rv = mParser->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)aDocListener);
+    rv = CallQueryInterface(mParser, aDocListener);
 
-    if (NS_OK == rv) {
+    if (NS_SUCCEEDED(rv)) {
       SetDocumentCharacterSet(charset);
       mParser->SetDocumentCharset(charset, charsetSource);
       mParser->SetCommand(aCommand);
@@ -563,34 +556,26 @@ nsXMLDocument::EndLoad()
 NS_IMETHODIMP 
 nsXMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
+
   *aResult = mAttrStyleSheet;
-  if (nsnull == mAttrStyleSheet) {
-    return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
-  }
-  else {
-    NS_ADDREF(mAttrStyleSheet);
-  }
+  NS_ENSURE_TRUE(mAttrStyleSheet, NS_ERROR_NOT_AVAILABLE); // probably not the right error...
+
+  NS_ADDREF(*aResult);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsXMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
+
   *aResult = mInlineStyleSheet;
-  if (nsnull == mInlineStyleSheet) {
-    return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
-  }
-  else {
-    NS_ADDREF(mInlineStyleSheet);
-  }
+  NS_ENSURE_TRUE(mInlineStyleSheet, NS_ERROR_NOT_AVAILABLE); // probably not the right error...
+
+  NS_ADDREF(*aResult);
+
   return NS_OK;
 }
 
@@ -691,13 +676,12 @@ nsXMLDocument::CreateCDATASection(const nsAString& aData, nsIDOMCDATASection** a
   if (FindInReadable(NS_LITERAL_STRING("]]>"),begin,end))
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
 
-  nsIContent* content;
-  nsresult rv = NS_NewXMLCDATASection(&content);
+  nsCOMPtr<nsIContent> content;
+  nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(content));
 
-  if (NS_OK == rv) {
-    rv = content->QueryInterface(NS_GET_IID(nsIDOMCDATASection), (void**)aReturn);
+  if (NS_SUCCEEDED(rv)) {
+    rv = CallQueryInterface(content, aReturn);
     (*aReturn)->AppendData(aData);
-    NS_RELEASE(content);
   }
 
   return rv;
@@ -720,17 +704,14 @@ nsXMLDocument::CreateProcessingInstruction(const nsAString& aTarget,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsIContent* content;
-  nsresult rv = NS_NewXMLProcessingInstruction(&content, aTarget, aData);
-
-  if (NS_OK != rv) {
+  nsCOMPtr<nsIContent> content;
+  nsresult rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content),
+                                               aTarget, aData);
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = content->QueryInterface(NS_GET_IID(nsIDOMProcessingInstruction), (void**)aReturn);
-  NS_RELEASE(content);
-  
-  return rv;
+  return CallQueryInterface(content, aReturn);
 }
  
 NS_IMETHODIMP    
@@ -817,7 +798,7 @@ nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     }
   }
 
-  return newDoc->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
+  return CallQueryInterface(newDoc, aReturn);
 }
  
 NS_IMETHODIMP
@@ -842,12 +823,10 @@ nsXMLDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
-  nsDOMAttribute* attribute;
-
-  attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
+  nsDOMAttribute* attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY); 
 
-  return attribute->QueryInterface(NS_GET_IID(nsIDOMAttr), (void**)aReturn);
+  return CallQueryInterface(attribute, aReturn);
 }
 
 NS_IMETHODIMP
@@ -929,7 +908,7 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
 
   nsresult rv = NS_OK;
   if (content) {
-    rv = content->QueryInterface(NS_GET_IID(nsIDOMElement),(void**)aReturn);
+    rv = CallQueryInterface(content, aReturn);
   }
 
   return rv;
@@ -941,19 +920,11 @@ nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
 {
   nsresult result = NS_OK;
   if (aUrl) {
-    //result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aUrl, this);
-    result = nsComponentManager::CreateInstance(kHTMLStyleSheetCID,nsnull,NS_GET_IID(nsIHTMLStyleSheet),(void**)&mAttrStyleSheet);
+    result = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aUrl, this);
     if (NS_SUCCEEDED(result)) {
-      result = mAttrStyleSheet->Init(aUrl,this);
-      if (NS_FAILED(result)) {
-        NS_RELEASE(mAttrStyleSheet);
-      }
-    }
-    if (NS_OK == result) {
+      result = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mInlineStyleSheet), aUrl, this);
       AddStyleSheet(mAttrStyleSheet, 0); // tell the world about our new style sheet
-      
-      result = NS_NewHTMLCSSStyleSheet(&mInlineStyleSheet, aUrl, this);
-      if (NS_OK == result) {
+      if (NS_SUCCEEDED(result)) {
         AddStyleSheet(mInlineStyleSheet, 0); // tell the world about our new style sheet
       }
     }

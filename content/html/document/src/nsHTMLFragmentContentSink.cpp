@@ -173,43 +173,31 @@ public:
 nsresult
 NS_NewHTMLFragmentContentSink2(nsIHTMLFragmentContentSink** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsHTMLFragmentContentSink2* it;
-  NS_NEWXPCOM(it, nsHTMLFragmentContentSink2);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult rv = it->Init();
-  if (NS_FAILED(rv)) {
-    delete it;
-    return rv;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  return it->QueryInterface(NS_GET_IID(nsIHTMLFragmentContentSink), (void **)aResult);
+  nsCOMPtr<nsHTMLFragmentContentSink2> it;
+  NS_NEWXPCOM(it, nsHTMLFragmentContentSink2);
+  NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = it->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(it, aResult);
 }
 
 nsresult
 NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsHTMLFragmentContentSink* it;
-  NS_NEWXPCOM(it, nsHTMLFragmentContentSink);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult rv = it->Init();
-  if (NS_FAILED(rv)) {
-    delete it;
-    return rv;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  return it->QueryInterface(NS_GET_IID(nsIHTMLFragmentContentSink), (void **)aResult);
+  nsCOMPtr<nsHTMLFragmentContentSink> it;
+  NS_NEWXPCOM(it, nsHTMLFragmentContentSink);
+  NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = it->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(it, aResult);
 }
 
 nsHTMLFragmentContentSink::nsHTMLFragmentContentSink()
@@ -302,18 +290,15 @@ nsresult nsHTMLFragmentContentSink::Init()
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::WillBuildModel(void)
 {
-  nsresult result = NS_OK;
-
-  if (nsnull == mRoot) {
-    nsIDOMDocumentFragment* frag;
-
-    result = NS_NewDocumentFragment(&frag, nsnull);
-    if (NS_SUCCEEDED(result)) {
-      result = frag->QueryInterface(NS_GET_IID(nsIContent), (void**)&mRoot);
-      NS_RELEASE(frag);
-    }
+  if (mRoot) {
+    return NS_OK;
   }
-  return result;
+
+  nsCOMPtr<nsIDOMDocumentFragment> frag;
+  nsresult rv = NS_NewDocumentFragment(getter_AddRefs(frag), nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(frag, &mRoot);
 }
 
 NS_IMETHODIMP 
@@ -710,10 +695,9 @@ nsHTMLFragmentContentSink::AddComment(const nsIParserNode& aNode)
   FlushText();
   
   result = NS_NewCommentNode(&comment);
-  if (NS_OK == result) {
-    result = comment->QueryInterface(NS_GET_IID(nsIDOMComment), 
-                                     (void **)&domComment);
-    if (NS_OK == result) {
+  if (NS_SUCCEEDED(result)) {
+    result = CallQueryInterface(comment, &domComment);
+    if (NS_SUCCEEDED(result)) {
       domComment->AppendData(aNode.GetText());
       NS_RELEASE(domComment);
       
@@ -757,13 +741,13 @@ nsHTMLFragmentContentSink::DoFragment(PRBool aFlag)
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::GetFragment(nsIDOMDocumentFragment** aFragment)
 {
-  if (nsnull != mRoot) {
-    return mRoot->QueryInterface(NS_GET_IID(nsIDOMDocumentFragment), (void**)aFragment);
+  if (mRoot) {
+    return CallQueryInterface(mRoot, aFragment);
   }
-  else {
-    *aFragment = nsnull;
-    return NS_OK;
-  }
+
+  *aFragment = nsnull;
+
+  return NS_OK;
 }
 
 nsIContent* 
@@ -938,7 +922,7 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
     k.Assign(key);
     ToLowerCase(k);
 
-    nsIAtom*  keyAtom = NS_NewAtom(k);
+    nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(k);
     
     if (NS_CONTENT_ATTR_NOT_THERE == 
         aContent->GetAttr(kNameSpaceID_None, keyAtom, v)) {
@@ -948,7 +932,6 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
       // Add attribute to content
       aContent->SetAttr(kNameSpaceID_None, keyAtom, v, PR_FALSE);
     }
-    NS_RELEASE(keyAtom);
   }
   return NS_OK;
 }

@@ -124,13 +124,11 @@
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsIXMLContent.h" //for createelementNS
-#include "nsHTMLParts.h" //for createelementNS
 #include "nsIJSContextStack.h"
 #include "nsContentUtils.h"
 #include "nsIDocumentViewer.h"
 #include "nsIWyciwygChannel.h"
 
-#include "nsContentCID.h"
 #include "nsIPrompt.h"
 //AHMED 12-2 
 #ifdef IBMBIDI
@@ -167,8 +165,6 @@ static PRBool
 IsNamedItem(nsIContent* aContent, nsIAtom *aTag, nsAString& aName);
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
-
-static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
 nsIRDFService* nsHTMLDocument::gRDF;
 nsrefcnt       nsHTMLDocument::gRefCntRDFService = 0;
@@ -287,8 +283,6 @@ IdAndNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
 
 nsHTMLDocument::nsHTMLDocument()
   : nsMarkupDocument(),
-    mAttrStyleSheet(nsnull),
-    mStyleAttrStyleSheet(nsnull),
     mBaseURL(nsnull),
     mBaseTarget(nsnull),
     mLastModified(nsnull),
@@ -319,13 +313,7 @@ nsHTMLDocument::nsHTMLDocument()
   
   if (gRefCntRDFService++ == 0)
   {
-    nsresult rv;    
-		rv = nsServiceManager::GetService(kRDFServiceCID,
-						  NS_GET_IID(nsIRDFService),
-						  (nsISupports**) &gRDF);
-
-    //nsCOMPtr<nsIRDFService> gRDF(do_GetService(kRDFServiceCID,
-    //&rv));
+    CallGetService(kRDFServiceCID, &gRDF);
   }
 }
 
@@ -363,9 +351,8 @@ nsHTMLDocument::~nsHTMLDocument()
     mCSSLoader->DropDocumentReference();  // release weak ref
   }
 
-  if (--gRefCntRDFService == 0)
-  {     
-     nsServiceManager::ReleaseService("@mozilla.org/rdf/rdf-service;1", gRDF);
+  if (--gRefCntRDFService == 0) {
+    NS_IF_RELEASE(gRDF);
   }
 
   if (mIdAndNameHashIsLive) {
@@ -454,16 +441,8 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
 
   if (aURL) {
     if (!mAttrStyleSheet) {
-      //result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
-      result = nsComponentManager::CreateInstance(kHTMLStyleSheetCID, nsnull,
-                                                  NS_GET_IID(nsIHTMLStyleSheet),
-                                                  getter_AddRefs(mAttrStyleSheet));
-      if (NS_SUCCEEDED(result)) {
-        result = mAttrStyleSheet->Init(aURL, this);
-        if (NS_FAILED(result)) {
-          mAttrStyleSheet = nsnull;
-        }
-      }
+      result = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aURL,
+                                    this);
     }
     else {
       result = mAttrStyleSheet->Reset(aURL);
@@ -561,7 +540,7 @@ nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
   } else if (aDocInfo) {
     nsCOMPtr<nsIAtom> csAtom;
     aDocInfo->GetForcedCharset(getter_AddRefs(csAtom));
-    if (csAtom.get() != nsnull) {
+    if (csAtom) {
       csAtom->ToString(aCharset);
       aCharsetSource = kCharsetFromUserForced;  
       aDocInfo->SetForcedCharset(nsnull);
@@ -880,9 +859,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   if (needsParser) {
-    rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
-                                            NS_GET_IID(nsIParser), 
-                                            (void **)&mParser);
+    rv = CallCreateInstance(kCParserCID, &mParser);
     if (NS_FAILED(rv)) { return rv; }
   }
 
@@ -1019,8 +996,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   // Set the parser as the stream listener for the document loader...
   if (mParser) {
-    rv = mParser->QueryInterface(NS_GET_IID(nsIStreamListener),
-                                 (void**)aDocListener);
+    rv = CallQueryInterface(mParser, aDocListener);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1205,10 +1181,8 @@ nsHTMLDocument::GetImageMap(const nsString& aMapName,
 NS_IMETHODIMP
 nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
 {
-  NS_PRECONDITION(aResult, "null ptr");
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
+
   *aResult = mAttrStyleSheet;
   if (!mAttrStyleSheet) {
     return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
@@ -1221,10 +1195,8 @@ nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
 NS_IMETHODIMP
 nsHTMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
 {
-  NS_PRECONDITION(aResult, "null ptr");
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
+
   *aResult = mStyleAttrStyleSheet;
   if (!mStyleAttrStyleSheet) {
     return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
@@ -1670,7 +1642,7 @@ nsHTMLDocument::CreateElement(const nsAString& aTagName,
                                      PR_FALSE);
   if (NS_SUCCEEDED(rv)) {
     content->SetContentID(mNextContentID++);
-    rv = content->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aReturn);
+    rv = CallQueryInterface(content, aReturn);
   }
   return rv;
 }
@@ -2513,9 +2485,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     mRootContent = root;
   }
 
-  result = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
-                                              NS_GET_IID(nsIParser), 
-                                              (void **)&mParser);
+  result = CallCreateInstance(kCParserCID, &mParser);
   mIsWriting = 1;
 
   if (NS_SUCCEEDED(result)) { 
@@ -3025,9 +2995,7 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
       // just use the view size itself
       if (view) {
         nsIScrollableView* scrollableView = nsnull;
-
-        view->QueryInterface(NS_GET_IID(nsIScrollableView),
-                             (void**)&scrollableView);
+        CallQueryInterface(view, &scrollableView);
 
         if (scrollableView) {
           scrollableView->GetScrolledView(view);
@@ -3912,7 +3880,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
         list = fc_list;
       }
 
-      return list->QueryInterface(NS_GET_IID(nsISupports), (void **)aResult);
+      return CallQueryInterface(list, aResult);
     }
   }
 
@@ -3979,12 +3947,11 @@ nsHTMLDocument::GetBodyContent()
 NS_IMETHODIMP
 nsHTMLDocument::GetBodyElement(nsIDOMHTMLBodyElement** aBody)
 {
-  if (!mBodyContent && PR_FALSE == GetBodyContent()) {
+  if (!mBodyContent && !GetBodyContent()) {
     return NS_ERROR_FAILURE;
   }
-  
-  return mBodyContent->QueryInterface(NS_GET_IID(nsIDOMHTMLBodyElement), 
-                                      (void**)aBody);
+
+  return CallQueryInterface(mBodyContent, aBody);  
 }
 
 // forms related stuff

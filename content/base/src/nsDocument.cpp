@@ -319,9 +319,11 @@ NS_EXPORT nsresult
 NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
 {
   nsDOMImplementation* domImpl = new nsDOMImplementation();
-  if (domImpl == nsnull)
+  if (!domImpl) {
     return NS_ERROR_OUT_OF_MEMORY;
-  return domImpl->QueryInterface(NS_GET_IID(nsIDOMDOMImplementation), (void**) aInstancePtrResult);
+  }
+
+  return CallQueryInterface(domImpl, aInstancePtrResult);
 }
 
 nsDOMImplementation::nsDOMImplementation(nsIURI* aBaseURI)
@@ -448,14 +450,14 @@ nsDocumentChildNodes::GetLength(PRUint32* aLength)
 NS_IMETHODIMP    
 nsDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIContent> content;
-
   *aReturn = nsnull;
-  if (nsnull != mDocument) {
+
+  nsresult result = NS_OK;
+  if (mDocument) {
+    nsCOMPtr<nsIContent> content;
     result = mDocument->ChildAt(aIndex, *getter_AddRefs(content));
-    if ((NS_OK == result) && (nsnull != content)) {
-      result = content->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
+    if (NS_SUCCEEDED(result) && content) {
+      result = CallQueryInterface(content, aReturn);
     }
   }
 
@@ -516,9 +518,7 @@ nsDocument::nsDocument() : mSubDocuments(nsnull),
   mInDestructor = PR_FALSE;
   mHeaderData = nsnull;
   mChildNodes = nsnull;
-  mModCount = 0;
   mNextContentID = NS_CONTENT_ID_COUNTER_BASE;
-  mDTD = 0;
   mBoxObjectTable = nsnull;
   mNumCapturers = 0;
 #ifdef IBMBIDI
@@ -615,8 +615,6 @@ nsDocument::~nsDocument()
     mHeaderData = nsnull;
   }
 
-  NS_IF_RELEASE(mDTD);
-    
   delete mBoxObjectTable;
 
   if (mNodeInfoManager) {
@@ -2285,8 +2283,7 @@ nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
       node->GetNodeType(&nodeType);
 
       if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) {
-        return node->QueryInterface(NS_GET_IID(nsIDOMDocumentType),
-                                    (void **)aDoctype);
+        return CallQueryInterface(node, aDoctype);
       }
     }
   }
@@ -2300,11 +2297,11 @@ nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
   // For now, create a new implementation every time. This shouldn't
   // be a high bandwidth operation
   nsDOMImplementation* impl = new nsDOMImplementation(mDocumentURL);
-  if (nsnull == impl) {
+  if (!impl) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return impl->QueryInterface(NS_GET_IID(nsIDOMDOMImplementation), (void**)aImplementation);
+  return CallQueryInterface(impl, aImplementation);
 }
 
 NS_IMETHODIMP    
@@ -2352,7 +2349,7 @@ nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
   nsresult rv = NS_NewTextNode(getter_AddRefs(text));
 
   if (NS_SUCCEEDED(rv)) {
-    rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)aReturn);
+    rv = CallQueryInterface(text, aReturn);
     (*aReturn)->AppendData(aData);
   }
 
@@ -2371,8 +2368,8 @@ nsDocument::CreateComment(const nsAString& aData, nsIDOMComment** aReturn)
   nsCOMPtr<nsIContent> comment;
   nsresult rv = NS_NewCommentNode(getter_AddRefs(comment));
 
-  if (NS_OK == rv) {
-    rv = comment->QueryInterface(NS_GET_IID(nsIDOMComment), (void**)aReturn);
+  if (NS_SUCCEEDED(rv)) {
+    rv = CallQueryInterface(comment, aReturn);
     (*aReturn)->AppendData(aData);
   }
 
@@ -2413,7 +2410,7 @@ nsDocument::CreateAttribute(const nsAString& aName,
   attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY); 
 
-  return attribute->QueryInterface(NS_GET_IID(nsIDOMAttr), (void**)aReturn);
+  return CallQueryInterface(attribute, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2437,7 +2434,7 @@ NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsAString& aTagname, 
                                  nsIDOMNodeList** aReturn)
 {
-  nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aTagname)));
+  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
 
   nsCOMPtr<nsIContentList> list;
   NS_GetContentList(this, nameAtom, kNameSpaceID_Unknown, nsnull,
@@ -2470,7 +2467,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   }
 
   if (!list) {
-    nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aLocalName)));
+    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
     NS_GetContentList(this, nameAtom, nameSpaceId, nsnull,
                       getter_AddRefs(list));
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
@@ -2614,7 +2611,7 @@ GetElementByAttribute(nsIContent* aContent,
   nsresult rv = aContent->GetAttr(kNameSpaceID_None, aAttrName, value);
   if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
     if (aUniversalMatch || value.Equals(aAttrValue))
-      return aContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aResult);
+      return CallQueryInterface(aContent, aResult);
   }
   
   PRInt32 childCount;
@@ -2647,7 +2644,7 @@ nsDocument::GetAnonymousElementByAttribute(nsIDOMElement* aElement,
   if (!nodeList) 
     return NS_OK;
 
-  nsCOMPtr<nsIAtom> attribute = getter_AddRefs(NS_NewAtom(aAttrName));
+  nsCOMPtr<nsIAtom> attribute = do_GetAtom(aAttrName);
 
   PRUint32 length;
   nodeList->GetLength(&length);
@@ -2737,15 +2734,10 @@ nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
   rv = ctx->GetContainer(getter_AddRefs(container));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
 
-  nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
-  NS_ENSURE_TRUE(ifrq, NS_OK);
-
-  nsCOMPtr<nsIDOMWindowInternal> window;
-  ifrq->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(window));
+  nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(container);
   NS_ENSURE_TRUE(window, NS_OK);
 
-  window->QueryInterface(NS_GET_IID(nsIDOMAbstractView),
-                         (void **)aDefaultView);
+  CallQueryInterface(window, aDefaultView);
 
   return NS_OK;
 }
@@ -3022,15 +3014,15 @@ nsDocument::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP    
 nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  if (nsnull == mChildNodes) {
+  if (!mChildNodes) {
     mChildNodes = new nsDocumentChildNodes(this);
-    if (nsnull == mChildNodes) {
+    if (!mChildNodes) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(mChildNodes);
   }
 
-  return mChildNodes->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void**)aChildNodes);
+  return CallQueryInterface(mChildNodes, aChildNodes);
 }
 
 NS_IMETHODIMP    
@@ -3461,7 +3453,7 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
   if (nsnull != mListenerManager) {
-    return mListenerManager->QueryInterface(NS_GET_IID(nsIEventListenerManager), (void**) aInstancePtrResult);
+    return CallQueryInterface(mListenerManager, aInstancePtrResult);
   }
   if (NS_OK == NS_NewEventListenerManager(aInstancePtrResult)) {
     mListenerManager = *aInstancePtrResult;
@@ -3539,12 +3531,12 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
       nsrefcnt rc;
       NS_RELEASE2(*aDOMEvent, rc);
       if (0 != rc) {
-      //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
-      //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
-        nsIPrivateDOMEvent *mPrivateEvent;
-        if (NS_OK == (*aDOMEvent)->QueryInterface(NS_GET_IID(nsIPrivateDOMEvent), (void**)&mPrivateEvent)) {
-          mPrivateEvent->DuplicatePrivateData();
-          NS_RELEASE(mPrivateEvent);
+        // Okay, so someone in the DOM loop (a listener, JS object) still has
+        // a ref to the DOM Event but the internal data hasn't been malloc'd.
+        // Force a copy of the data here so the DOM Event is still valid.
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+        if (privateEvent) {
+          privateEvent->DuplicatePrivateData();
         }
       }
       aDOMEvent = nsnull;

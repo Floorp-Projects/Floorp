@@ -1779,7 +1779,7 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
   // Otherwise we get icky things like crashes in layout...  We need
   // to stop blocking the parser.  We really do.
   PRBool seenParser = PR_FALSE;
-  
+
   // Go through and deal with the whole linked list.
   SheetLoadData* data = aLoadData;
   while (data) {

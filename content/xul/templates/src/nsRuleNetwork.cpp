@@ -144,12 +144,9 @@ value_to_isupports(const nsIID& aIID, const Value& aValue)
     // Need to const_cast aValue because QI() & Release() are not const
     nsISupports* isupports = NS_STATIC_CAST(nsISupports*, NS_CONST_CAST(Value&, aValue));
     if (isupports) {
-        nsISupports* dummy;
-        rv = isupports->QueryInterface(aIID, (void**) &dummy);
-        if (NS_SUCCEEDED(rv)) {
-            NS_RELEASE(dummy);
-        }
-        else {
+        nsCOMPtr<nsISupports> dummy;
+        rv = isupports->QueryInterface(aIID, getter_AddRefs(dummy));
+        if (NS_FAILED(rv)) {
             NS_ERROR("value does not support expected interface");
         }
     }

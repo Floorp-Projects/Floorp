@@ -198,10 +198,11 @@ nsDOMDocumentType::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
                                                 mPublicId,
                                                 mSystemId,
                                                 mInternalSubset);
-  if (nsnull == it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  return CallQueryInterface(it, aReturn);
 }
 
 #ifdef DEBUG

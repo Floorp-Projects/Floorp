@@ -1097,9 +1097,8 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia,
         }
         ToLowerCase(mToken.mIdent);  // case insensitive from CSS - must be lower cased
         if (aMediaAtoms) {
-          nsIAtom* medium = NS_NewAtom(mToken.mIdent);
+          nsCOMPtr<nsIAtom> medium = do_GetAtom(mToken.mIdent);
           aMediaAtoms->AppendElement(medium);
-          NS_RELEASE(medium);
         }
         aMedia.Append(mToken.mIdent);
         first = PR_FALSE;
@@ -1323,7 +1322,7 @@ PRBool CSSParserImpl::ProcessNameSpace(PRInt32& aErrorCode, const nsString& aPre
   nsCOMPtr<nsIAtom> prefix;
 
   if (!aPrefix.IsEmpty()) {
-    prefix = dont_AddRef(NS_NewAtom(aPrefix));
+    prefix = do_GetAtom(aPrefix);
   }
 
   NS_NewCSSNameSpaceRule(getter_AddRefs(rule), prefix, aURLSpec);
@@ -1838,12 +1837,10 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
       aDataMask |= SEL_MASK_NSPACE;
       PRInt32 nameSpaceID = kNameSpaceID_Unknown;
       if (mNameSpace) {
-        nsIAtom* prefix;
         ToLowerCase(buffer); // always case insensitive, since stays within CSS
-        prefix = NS_NewAtom(buffer);
+        nsCOMPtr<nsIAtom> prefix = do_GetAtom(buffer);
         mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
-        NS_IF_RELEASE(prefix);
-      } // else, no delcared namespaces
+      } // else, no declared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
         REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown namespace prefix '") +
                           buffer + NS_LITERAL_STRING("'."));
@@ -2027,12 +2024,10 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was a namespace
       nameSpaceID = kNameSpaceID_Unknown;
       if (mNameSpace) {
-        nsIAtom* prefix;
         ToLowerCase(attr); // always case insensitive, since stays within CSS
-        prefix = NS_NewAtom(attr);
+        nsCOMPtr<nsIAtom> prefix = do_GetAtom(attr);
         mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
-        NS_IF_RELEASE(prefix);
-      } // else, no delcared namespaces
+      } // else, no declared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
         REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown namespace prefix '") +
                           attr + NS_LITERAL_STRING("'."));
@@ -2690,7 +2685,7 @@ PRBool CSSParserImpl::ParseTreePseudoElement(PRInt32& aErrorCode,
         return PR_FALSE;
       }
       else if (eCSSToken_Ident == mToken.mType) {
-        nsCOMPtr<nsIAtom> pseudo = getter_AddRefs(NS_NewAtom(mToken.mIdent));
+        nsCOMPtr<nsIAtom> pseudo = do_GetAtom(mToken.mIdent);
         aSelector.AddPseudoClass(pseudo);
       }
       else if (eCSSToken_Symbol == mToken.mType) {
@@ -3252,12 +3247,10 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
         if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // namespace
           PRInt32 nameSpaceID = kNameSpaceID_Unknown;
           if (mNameSpace) {
-            nsIAtom* prefix;
             ToLowerCase(holdIdent); // always case insensitive, since stays within CSS
-            prefix = NS_NewAtom(holdIdent);
+            nsCOMPtr<nsIAtom> prefix = do_GetAtom(holdIdent);
             mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
-            NS_IF_RELEASE(prefix);
-          } // else, no delcared namespaces
+          } // else, no declared namespaces
           if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
             return PR_FALSE;
           }

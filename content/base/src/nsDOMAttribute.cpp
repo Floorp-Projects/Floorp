@@ -190,8 +190,7 @@ nsDOMAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
   NS_ENSURE_ARG_POINTER(aOwnerElement);
 
   if (mContent) {
-    return mContent->QueryInterface(NS_GET_IID(nsIDOMElement),
-                                    (void **)aOwnerElement);
+    return CallQueryInterface(mContent, aOwnerElement);
   }
 
   *aOwnerElement = nsnull;
@@ -292,13 +291,13 @@ nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
       nsCOMPtr<nsITextContent> content;
 
       result = NS_NewTextNode(getter_AddRefs(content));
-      if (NS_OK != result) {
+      if (NS_FAILED(result)) {
         return result;
       }
-      result = content->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&mChild);
+      result = CallQueryInterface(content, &mChild);
     }
     mChild->SetData(value);
-    result = mChild->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aFirstChild);
+    result = CallQueryInterface(mChild, aFirstChild);
   }
   else {
     *aFirstChild = nsnull;
@@ -387,7 +386,7 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return newAttr->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
+  return CallQueryInterface(newAttr, aReturn);
 }
 
 NS_IMETHODIMP 
@@ -395,11 +394,9 @@ nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   nsresult result = NS_OK;
   if (mContent) {
-    nsIDOMNode* node;
-    result = mContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent, &result);
     if (NS_SUCCEEDED(result)) {
       result = node->GetOwnerDocument(aOwnerDocument);
-      NS_RELEASE(node);
     }
   }
   else {
@@ -434,7 +431,7 @@ nsDOMAttribute::SetPrefix(const nsAString& aPrefix)
   nsresult rv = NS_OK;
 
   if (!aPrefix.IsEmpty() && !DOMStringIsNull(aPrefix))
-    prefix = dont_AddRef(NS_NewAtom(aPrefix));
+    prefix = do_GetAtom(aPrefix);
 
   rv = mNodeInfo->PrefixChanged(prefix, *getter_AddRefs(newNodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);

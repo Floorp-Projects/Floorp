@@ -63,17 +63,16 @@ NS_NewXBLContentSink(nsIXMLContentSink** aResult,
                      nsIURI* aURL,
                      nsIWebShell* aWebShell)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aResult);
+
   nsXBLContentSink* it;
   NS_NEWXPCOM(it, nsXBLContentSink);
-  if (!it)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
+
   nsresult rv = it->Init(aDoc, aURL, aWebShell);
-  if (NS_FAILED(rv))
-    return rv;
-  return it->QueryInterface(NS_GET_IID(nsIXMLContentSink), (void **)aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(it, aResult);
 }
 
 nsXBLContentSink::nsXBLContentSink()
@@ -800,7 +799,7 @@ nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts,
 
     if (kNameSpaceID_Unknown == nameSpaceID) {
       nameSpaceID = kNameSpaceID_None;
-      nameAtom = dont_AddRef(NS_NewAtom(key));
+      nameAtom = do_GetAtom(key);
       nameSpacePrefix = nsnull;
     } 
 
@@ -831,12 +830,8 @@ nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts,
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
       if (!mCSSParser) {
-          rv = nsComponentManager::CreateInstance(kCSSParserCID,
-                                                  nsnull,
-                                                  NS_GET_IID(nsICSSParser),
-                                                  getter_AddRefs(mCSSParser));
-
-          if (NS_FAILED(rv)) return rv;
+          mCSSParser = do_CreateInstance(kCSSParserCID, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
       }
 
       rv = mCSSParser->ParseStyleAttribute(value, mDocumentURL,

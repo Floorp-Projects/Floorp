@@ -819,7 +819,7 @@ void nsHTMLMappedAttributes::SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult)
     return;
   }
   nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("HTMLMappedAttributes"));
+  tag = do_GetAtom("HTMLMappedAttributes");
   aResult = sizeof(*this);
   aSizer->AddSize(tag, aResult);
 }
@@ -1625,7 +1625,7 @@ void nsHTMLAttributes::SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult)
   aResult = sum;
 
   nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("nsHTMLAttributes"));
+  tag = do_GetAtom("nsHTMLAttributes");
   aSizer->AddSize(tag, aResult);
 }
 #endif

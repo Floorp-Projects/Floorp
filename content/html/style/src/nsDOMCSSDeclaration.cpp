@@ -158,7 +158,7 @@ nsDOMCSSDeclaration::GetParentRule(nsIDOMCSSRule** aParentRule)
   GetParent(getter_AddRefs(parent));
 
   if (parent) {
-    parent->QueryInterface(NS_GET_IID(nsIDOMCSSRule), (void **)aParentRule);
+    CallQueryInterface(parent, aParentRule);
   }
 
   return NS_OK;

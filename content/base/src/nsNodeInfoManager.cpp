@@ -226,7 +226,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
 {
   NS_ENSURE_ARG(!aName.IsEmpty());
 
-  nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aName)));
+  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
   return GetNodeInfo(name, aPrefix, aNamespaceID, aNodeInfo);
@@ -240,13 +240,13 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
 {
   NS_ENSURE_ARG(!aName.IsEmpty());
 
-  nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aName)));
+  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIAtom> prefix;
 
   if (!aPrefix.IsEmpty()) {
-    prefix = dont_AddRef(NS_NewAtom(aPrefix));
+    prefix = do_GetAtom(aPrefix);
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
   }
 
@@ -262,13 +262,13 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
 {
   NS_ENSURE_ARG(!aName.IsEmpty());
 
-  nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aName)));
+  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIAtom> prefix;
 
   if (!aPrefix.IsEmpty()) {
-    prefix = dont_AddRef(NS_NewAtom(aPrefix));
+    prefix = do_GetAtom(aPrefix);
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
   }
 
@@ -295,13 +295,13 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
     name.Cut(0, nsoffset+1);
   }
 
-  nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(name)));
+  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(name);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIAtom> prefixAtom;
 
   if (!prefix.IsEmpty()) {
-    prefixAtom = dont_AddRef(NS_NewAtom(prefix));
+    prefixAtom = do_GetAtom(prefix);
     NS_ENSURE_TRUE(prefixAtom, NS_ERROR_OUT_OF_MEMORY);
   }
 

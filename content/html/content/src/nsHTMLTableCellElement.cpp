@@ -200,8 +200,7 @@ nsHTMLTableCellElement::GetRow(nsIDOMHTMLTableRowElement** aRow)
   GetParentNode(getter_AddRefs(rowNode));
 
   if (rowNode) {
-    rowNode->QueryInterface(NS_GET_IID(nsIDOMHTMLTableRowElement),
-                            (void**)aRow);
+    CallQueryInterface(rowNode, aRow);
   }
 }
 

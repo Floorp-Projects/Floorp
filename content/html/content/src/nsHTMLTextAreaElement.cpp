@@ -662,8 +662,7 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
   nsIFrame* formFrame = nsnull;
 
   if (formControlFrame &&
-      NS_SUCCEEDED(formControlFrame->QueryInterface(NS_GET_IID(nsIFrame),
-                                                    (void **)&formFrame)) &&
+      NS_SUCCEEDED(CallQueryInterface(formControlFrame, &formFrame)) &&
       formFrame) {
     const nsStyleUserInterface* uiStyle;
     formFrame->GetStyleData(eStyleStruct_UserInterface,
@@ -804,15 +803,10 @@ nsHTMLTextAreaElement::GetControllers(nsIControllers** aResult)
 
   if (!mControllers)
   {
-    NS_ENSURE_SUCCESS (
-      nsComponentManager::CreateInstance(kXULControllersCID,
-                                         nsnull,
-                                         NS_GET_IID(nsIControllers),
-                                         getter_AddRefs(mControllers)),
-      NS_ERROR_FAILURE);
-    if (!mControllers) { return NS_ERROR_NULL_POINTER; }
-
     nsresult rv;
+    mControllers = do_CreateInstance(kXULControllersCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/editorcontroller;1", &rv);
     if (NS_FAILED(rv))
       return rv;

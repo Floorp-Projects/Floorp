@@ -864,7 +864,7 @@ void nsStyleContext::List(FILE* out, PRInt32 aIndent)
 ******************************************************************************/
 void nsStyleContext::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 {
-  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+  NS_ASSERTION(aSizeOfHandler, "SizeOf handler cannot be null");
 
   // first get the unique items collection
   UNIQUE_STYLE_ITEMS(uniqueItems);
@@ -878,7 +878,7 @@ void nsStyleContext::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 
   // get or create a tag for this instance
   nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("nsStyleContext"));
+  tag = do_GetAtom("nsStyleContext");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   // add in the size of the member mPseudoTag
@@ -1191,9 +1191,10 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
 
   nsStyleContext* context = new (aPresContext) nsStyleContext(aParentContext, aPseudoTag, 
                                                               aRuleNode, aPresContext);
-  if (nsnull == context) {
+  if (!context) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return context->QueryInterface(NS_GET_IID(nsIStyleContext), (void **) aInstancePtrResult);
+
+  return CallQueryInterface(context, aInstancePtrResult);
 }
 

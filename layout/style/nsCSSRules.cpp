@@ -271,8 +271,7 @@ void CSSCharsetRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
   PRUint32 localSize=0;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("CSSCharsetRuleImpl"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSCharsetRuleImpl");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   // add the string for encoding value
@@ -295,7 +294,7 @@ CSSCharsetRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSCharsetRuleImpl* clone = new CSSCharsetRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(NS_GET_IID(nsICSSRule), (void **)&aClone);
+    return CallQueryInterface(clone, &aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -520,8 +519,7 @@ void CSSImportRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize
   PRUint32 localSize=0;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("CSSImportRuleImpl"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSImportRuleImpl");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
 
@@ -546,7 +544,7 @@ CSSImportRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSImportRuleImpl* clone = new CSSImportRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(NS_GET_IID(nsICSSRule), (void **)&aClone);
+    return CallQueryInterface(clone, &aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -935,8 +933,7 @@ void CSSMediaRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   PRUint32 localSize=0;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("CSSMediaRuleImpl"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSMediaRuleImpl");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
 
@@ -981,7 +978,7 @@ CSSMediaRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSMediaRuleImpl* clone = new CSSMediaRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(NS_GET_IID(nsICSSRule), (void **)&aClone);
+    return CallQueryInterface(clone, &aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1380,8 +1377,7 @@ void CSSNameSpaceRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aS
   PRUint32 localSize=0;
 
   // create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = getter_AddRefs(NS_NewAtom("CSSNameSpaceRuleImpl"));
+  nsCOMPtr<nsIAtom> tag = do_GetAtom("CSSNameSpaceRuleImpl");
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   
@@ -1410,7 +1406,7 @@ CSSNameSpaceRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSNameSpaceRuleImpl* clone = new CSSNameSpaceRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(NS_GET_IID(nsICSSRule), (void **)&aClone);
+    return CallQueryInterface(clone, &aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;

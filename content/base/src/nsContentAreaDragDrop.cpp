@@ -1048,9 +1048,9 @@ nsContentAreaDragDrop::GetImageFrame(nsIContent* aContent, nsIDocument *aDocumen
 		if (NS_SUCCEEDED(rv) && frame) {
 			nsCOMPtr<nsIAtom> type;
 			frame->GetFrameType(getter_AddRefs(type));
-			if (type.get() == nsLayoutAtoms::imageFrame) {
+			if (type == nsLayoutAtoms::imageFrame) {
 				nsIImageFrame* imageFrame;
-				rv = frame->QueryInterface(NS_GET_IID(nsIImageFrame), (void**)&imageFrame);
+				rv = CallQueryInterface(frame, &imageFrame);
 				if (NS_FAILED(rv)) {
 					NS_WARNING("Should not happen - frame is not image frame even though type is nsLayoutAtoms::imageFrame");
 					return rv;
@@ -1108,10 +1108,11 @@ nsContentAreaDragDrop::GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage**outImag
 					if (imgContainer) {
 						nsCOMPtr<gfxIImageFrame> imgFrame;
 						imgContainer->GetFrameAt(0, getter_AddRefs(imgFrame));
-						if ( imgFrame )	{
+						if (imgFrame)	{
 							nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(imgFrame);
-							if ( ir )
-								rv = ir->GetInterface(NS_GET_IID(nsIImage), (void**)outImage);      // will addreff
+							if (ir) {
+								rv = CallGetInterface(ir.get(), outImage);
+							}
 						}
 					}
 				}

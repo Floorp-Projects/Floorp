@@ -42,11 +42,9 @@
 
 GenericElementCollection::GenericElementCollection(nsIContent *aParent, 
                                                    nsIAtom *aTag)
-  : nsGenericDOMHTMLCollection()
+  : mParent(aParent),
+    mTag(aTag)
 {
-  mParent = aParent;
-  mTag = aTag;
-  NS_IF_ADDREF(aTag);
 }
 
 GenericElementCollection::~GenericElementCollection()
@@ -55,88 +53,74 @@ GenericElementCollection::~GenericElementCollection()
   // release it!  this is to avoid circular references.  The
   // instantiator who provided mParent is responsible for managing our
   // reference for us.
-
-  // Release reference on the tag
-  NS_IF_RELEASE(mTag);
 }
 
-// we re-count every call.  A better implementation would be to set ourselves up as
-// an observer of contentAppended, contentInserted, and contentDeleted
+// we re-count every call. A better implementation would be to set ourselves
+// up as an observer of contentAppended, contentInserted, and contentDeleted.
 NS_IMETHODIMP 
 GenericElementCollection::GetLength(PRUint32* aLength)
 {
-  if (nsnull==aLength)
-    return NS_ERROR_NULL_POINTER;
-  *aLength=0;
-  nsresult result = NS_OK;
-  if (nsnull!=mParent)
-  {
-    nsIContent *child=nsnull;
-    PRUint32 childIndex=0;
-    mParent->ChildAt(childIndex, child);
-    while (nsnull!=child)
-    {
-      nsIAtom *childTag;
-      child->GetTag(childTag);
-      if (mTag==childTag)
-      {
-        (*aLength)++;
+  NS_ENSURE_ARG_POINTER(aLength);
+
+  *aLength = 0;
+
+  if (mParent) {
+    nsCOMPtr<nsIContent> child;
+    PRUint32 childIndex = 0;
+    mParent->ChildAt(childIndex, *getter_AddRefs(child));
+    while (child) {
+      nsCOMPtr<nsIAtom> childTag;
+      child->GetTag(*getter_AddRefs(childTag));
+      if (mTag == childTag) {
+        ++(*aLength);
       }
-      NS_RELEASE(childTag);
-      NS_RELEASE(child);
-      childIndex++;
-      mParent->ChildAt(childIndex, child);
+      mParent->ChildAt(++childIndex, *getter_AddRefs(child));
     }
   }
-  return result;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  *aReturn=nsnull;
-  PRUint32 theIndex = 0;
-  nsresult rv = NS_OK;
-  if (nsnull!=mParent)
-  {
-    nsIContent *child=nsnull;
-    PRUint32 childIndex=0;
-    mParent->ChildAt(childIndex, child);
-    while (nsnull!=child)
-    {
-      nsIAtom *childTag;
-      child->GetTag(childTag);
-      if (mTag==childTag)
-      {
-        if (aIndex==theIndex)
-        {
-          child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);   // out-param addref
-          NS_ASSERTION(nsnull!=aReturn, "content element must be an nsIDOMNode");
-          NS_RELEASE(childTag);
-          NS_RELEASE(child);
-          break;
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  *aReturn = nsnull;
+
+  if (mParent) {
+    nsCOMPtr<nsIContent> child;
+    PRUint32 childIndex = 0;
+    mParent->ChildAt(childIndex, *getter_AddRefs(child));
+
+    PRUint32 theIndex = 0;
+    while (child) {
+      nsCOMPtr<nsIAtom> childTag;
+      child->GetTag(*getter_AddRefs(childTag));
+      if (mTag == childTag) {
+        if (aIndex == theIndex) {
+          CallQueryInterface(child, aReturn);
+          NS_ASSERTION(aReturn, "content element must be an nsIDOMNode");
+
+          return NS_OK;
         }
-        theIndex++;
+        ++theIndex;
       }
-      NS_RELEASE(childTag);
-      NS_RELEASE(child);
-      childIndex++;
-      mParent->ChildAt(childIndex, child);
+      mParent->ChildAt(++childIndex, *getter_AddRefs(child));
     }
   }
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 GenericElementCollection::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
+
   *aReturn = nsnull;
-  nsresult rv = NS_OK;
-  if (nsnull!=mParent)
-  {
-  }
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -144,6 +128,7 @@ GenericElementCollection::ParentDestroyed()
 {
   // see comment in destructor, do NOT release mParent!
   mParent = nsnull;
+
   return NS_OK;
 }
 
@@ -152,8 +137,10 @@ nsresult
 GenericElementCollection::SizeOf(nsISizeOfHandler* aSizer,
                                  PRUint32* aResult) const
 {
-  if (!aResult) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aResult);
+
   *aResult = sizeof(*this);
+
   return NS_OK;
 }
 #endif
