@@ -56,6 +56,14 @@
 #include "nsLocaleCID.h"
 #include "prprf.h"
 #include "nsReadableUtils.h"
+#include <unidef.h>
+
+extern "C" {
+#include <callconv.h>
+int APIENTRY UniQueryLocaleValue ( const LocaleObject locale_object,
+                                   LocaleItem item,
+                                  int *info_item);
+}
 
 /* nsOS2Locale ISupports */
 NS_IMPL_ISUPPORTS1(nsOS2Locale,nsIOS2Locale)
@@ -75,22 +83,27 @@ nsOS2Locale::~nsOS2Locale(void)
 #endif
 
 NS_IMETHODIMP 
-nsOS2Locale::GetPlatformLocale(PRUnichar* os2Locale, size_t length)
+nsOS2Locale::GetPlatformLocale(const nsAString& locale, PULONG os2Codepage)
 {
-
   LocaleObject locObj = NULL;
-  UniChar      *localeName = NULL;
+  int codePage;
+  nsAutoString tempLocale(locale);
+  tempLocale.ReplaceChar('-', '_');
+
  
-  int  ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
+  int  ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)PromiseFlatString(tempLocale).get(), &locObj);
   if (ret != ULS_SUCCESS)
     UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"C", &locObj);
 
-  ret = UniQueryLocaleItem(locObj, LOCI_sName, &localeName);
+  ret = UniQueryLocaleValue(locObj, LOCI_iCodepage, &codePage);
   if (ret != ULS_SUCCESS)
     return NS_ERROR_FAILURE;
-    
-  UniStrncpy((UniChar*)os2Locale, localeName, length);
-  UniFreeMem(localeName);
+
+  if (codePage == 437) {
+    *os2Codepage = 850;
+  } else {
+    *os2Codepage = codePage;
+  }
   UniFreeLocaleObject(locObj);
 
   return NS_OK;

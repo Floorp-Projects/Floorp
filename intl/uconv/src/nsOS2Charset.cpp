@@ -152,8 +152,27 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
 NS_IMETHODIMP
 nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACString &oResult)
 {
-  oResult.AssignLiteral("ISO-8859-1");
-  return NS_OK;
+  nsCOMPtr<nsIOS2Locale>	os2Locale;
+  ULONG						codepage;
+  char						acp_name[6];
+
+  //
+  // convert locale name to a code page
+  //
+  nsresult rv;
+  oResult.Truncate();
+
+  os2Locale = do_CreateInstance(NS_OS2LOCALE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) { return rv; }
+
+  rv = os2Locale->GetPlatformLocale(localeName, &codepage);
+  if (NS_FAILED(rv)) { return rv; }
+
+  nsAutoString os2_key(NS_LITERAL_STRING("os2."));
+  os2_key.AppendInt((PRUint32)codepage);
+
+  return MapToCharset(os2_key, oResult);
+
 }
 
 NS_IMETHODIMP 

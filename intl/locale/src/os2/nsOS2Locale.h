@@ -41,6 +41,7 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsIOS2Locale.h"
+#include <os2.h>
 
 
 class nsOS2Locale : public nsIOS2Locale {
@@ -52,8 +53,7 @@ public:
   nsOS2Locale();
   virtual ~nsOS2Locale();
    
-  NS_IMETHOD GetPlatformLocale(PRUnichar* os2Locale,
-                                size_t length);
+  NS_IMETHOD GetPlatformLocale(const nsAString& locale, PULONG os2Codepage);
   NS_IMETHOD GetXPLocale(const char* os2Locale, nsAString& locale);
 
 protected:
