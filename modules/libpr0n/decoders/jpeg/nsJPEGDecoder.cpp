@@ -563,9 +563,10 @@ my_error_exit (j_common_ptr cinfo)
       error_code = MK_IMAGE_LOSSAGE;
 #endif
 
+  fprintf(stderr, "my_error_exit()\n");
+
   /* Return control to the setjmp point. */
   longjmp(err->setjmp_buffer, error_code);
-
 }
 
 /******************************************************************************/
