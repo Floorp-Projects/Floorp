@@ -130,7 +130,7 @@ struct SavedRegistryEntry : public RegistryEntry {
 struct ProtocolRegistryEntry : public SavedRegistryEntry {
     nsCString protocol;
     ProtocolRegistryEntry( const char* protocol )
-        : SavedRegistryEntry( HKEY_LOCAL_MACHINE, "", "", thisApplication() ),
+        : SavedRegistryEntry( HKEY_LOCAL_MACHINE, "", "", thisApplication().get() ),
           protocol( protocol ) {
         keyName = "Software\\Classes\\";
         keyName += protocol;
@@ -239,25 +239,25 @@ PRBool RegistryEntry::isAlreadySet() const {
 // Gives registry entry the desired setting.
 nsresult RegistryEntry::set() {
 #ifdef DEBUG_law
-printf( "Setting %s=%s\n", (const char*)fullName(), (const char*)setting );
+printf( "Setting %s=%s\n", fullName().get(), setting.get() );
 #endif
     nsresult result = NS_ERROR_FAILURE;
 
     HKEY   key;
-    LONG   rc = ::RegOpenKey( baseKey, keyName, &key );
+    LONG   rc = ::RegOpenKey( baseKey, keyName.get(), &key );
 
     // See if key doesn't exist yet...
     if ( rc == ERROR_FILE_NOT_FOUND ) {
-        rc = ::RegCreateKey( baseKey, keyName, &key );
+        rc = ::RegCreateKey( baseKey, keyName.get(), &key );
     }
     if ( rc == ERROR_SUCCESS ) {
         char buffer[4096] = { 0 };
         DWORD len = sizeof buffer;
         rc = ::RegQueryValueEx( key, valueNameArg(), NULL, NULL, (LPBYTE)buffer, &len );
-        if ( strcmp( setting, buffer ) != 0 ) {
-            rc = ::RegSetValueEx( key, valueNameArg(), NULL, REG_SZ, (LPBYTE)(const char*)setting, strlen(setting) );
+        if ( strcmp( setting.get(), buffer ) != 0 ) {
+            rc = ::RegSetValueEx( key, valueNameArg(), NULL, REG_SZ, (LPBYTE)setting.get(), setting.Length() );
 #ifdef DEBUG_law
-NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, (const char*)fullName() );
+NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, fullName().get() );
 #endif
             if ( rc == ERROR_SUCCESS ) {
                 result = NS_OK;
@@ -269,7 +269,7 @@ NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, (const char*)fullName() );
         ::RegCloseKey( key );
     } else {
 #ifdef DEBUG_law
-NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, (const char*)fullName() );
+NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, fullName().get() );
 #endif
     }
     return result;
@@ -285,7 +285,7 @@ nsresult SavedRegistryEntry::set() {
         rv = RegistryEntry::set();
         if ( NS_SUCCEEDED( rv ) ) {
             // Save old.
-            RegistryEntry( HKEY_LOCAL_MACHINE, "Software\\Mozilla\\Desktop", fullName(), prev ).set();
+            RegistryEntry( HKEY_LOCAL_MACHINE, "Software\\Mozilla\\Desktop", fullName().get(), prev.get() ).set();
         }
     }
     return rv;
@@ -298,7 +298,7 @@ nsresult ProtocolRegistryEntry::set() {
     nsresult rv = SavedRegistryEntry::set();
 
     // Save and set corresponding DDE entry(ies).
-    DDERegistryEntry( protocol ).set();
+    DDERegistryEntry( protocol.get() ).set();
 
     return rv;
 }
@@ -306,7 +306,7 @@ nsresult ProtocolRegistryEntry::set() {
 // Not being a "saved" entry, we can't restore, so just delete it.
 nsresult RegistryEntry::reset() {
     HKEY key;
-    LONG rc = ::RegOpenKey( baseKey, keyName, &key );
+    LONG rc = ::RegOpenKey( baseKey, keyName.get(), &key );
     if ( rc == ERROR_SUCCESS ) {
         rc = ::RegDeleteValue( key, valueNameArg() );
     }
@@ -325,7 +325,7 @@ nsresult SavedRegistryEntry::reset() {
     // Test if we "own" it.
     if ( current == setting ) {
         // Unset it, then.  First get saved value it had previously.
-        RegistryEntry saved = RegistryEntry( HKEY_LOCAL_MACHINE, mozillaKeyName, fullName(), "" );
+        RegistryEntry saved = RegistryEntry( HKEY_LOCAL_MACHINE, mozillaKeyName, fullName().get(), "" );
         saved.setting = saved.currentSetting();
         if ( !saved.setting.IsEmpty() ) {
             // Set to previous value.
@@ -348,7 +348,7 @@ nsresult ProtocolRegistryEntry::reset() {
     nsresult rv = SavedRegistryEntry::reset();
 
     // Do same for corresponding DDE entry.
-    DDERegistryEntry( protocol ).reset();
+    DDERegistryEntry( protocol.get() ).reset();
 
     return rv;
 }
@@ -369,7 +369,7 @@ nsCString RegistryEntry::currentSetting() const {
     nsCString result;
 
     HKEY   key;
-    LONG   rc = ::RegOpenKey( baseKey, keyName, &key );
+    LONG   rc = ::RegOpenKey( baseKey, keyName.get(), &key );
     if ( rc == ERROR_SUCCESS ) {
         char buffer[4096];
         DWORD len = sizeof buffer;
@@ -392,7 +392,7 @@ nsresult FileTypeRegistryEntry::set() {
     for ( int i = 0; NS_SUCCEEDED( rv ) && ext[i]; i++ ) {
         nsCAutoString thisExt( "Software\\Classes\\" );
         thisExt += ext[i];
-        rv = SavedRegistryEntry( HKEY_LOCAL_MACHINE, thisExt, "", fileType ).set();
+        rv = SavedRegistryEntry( HKEY_LOCAL_MACHINE, thisExt.get(), "", fileType.get() ).set();
     }
 
     // If OK, set file type opener.
@@ -403,7 +403,7 @@ nsresult FileTypeRegistryEntry::set() {
         if ( NS_SUCCEEDED( rv ) ) {
             nsCAutoString descKey( "Software\\Classes\\" );
             descKey += protocol;
-            RegistryEntry descEntry( HKEY_LOCAL_MACHINE, descKey, NULL, desc );
+            RegistryEntry descEntry( HKEY_LOCAL_MACHINE, descKey.get(), NULL, desc.get() );
             if ( descEntry.currentSetting().IsEmpty() ) {
                 descEntry.set();
             }
@@ -411,8 +411,8 @@ nsresult FileTypeRegistryEntry::set() {
             iconKey += protocol;
             iconKey += "\\DefaultIcon";
 
-            RegistryEntry iconEntry( HKEY_LOCAL_MACHINE, iconKey, NULL,
-                                     nsCAutoString( thisApplication() + NS_LITERAL_CSTRING(",0") ) );
+            RegistryEntry iconEntry( HKEY_LOCAL_MACHINE, iconKey.get(), NULL,
+                                     nsCAutoString( thisApplication() + NS_LITERAL_CSTRING(",0") ).get() );
 
             if ( iconEntry.currentSetting().IsEmpty() ) {
                 iconEntry.set();
@@ -432,7 +432,7 @@ nsresult FileTypeRegistryEntry::reset() {
     for ( int i = 0; ext[ i ]; i++ ) {
         nsCAutoString thisExt( "Software\\Classes\\" );
         thisExt += ext[i];
-        (void)SavedRegistryEntry( HKEY_LOCAL_MACHINE, thisExt, "", fileType ).reset();
+        (void)SavedRegistryEntry( HKEY_LOCAL_MACHINE, thisExt.get(), "", fileType.get() ).reset();
     }
 
     return rv;
@@ -452,7 +452,7 @@ nsresult EditableFileTypeRegistryEntry::set() {
         editKey += "\\shell\\edit\\command";
         nsCAutoString editor( thisApplication() );
         editor += " -edit \"%1\"";
-        rv = RegistryEntry( HKEY_LOCAL_MACHINE, editKey, "", editor ).set();
+        rv = RegistryEntry( HKEY_LOCAL_MACHINE, editKey.get(), "", editor.get() ).set();
     }
     return rv;
 }

@@ -79,7 +79,7 @@ nsMozIconURI::FormatSpec(char* *result)
     spec += mContentType.get();
   }
   
-  *result = nsCRT::strdup(spec);
+  *result = ToNewCString(spec);
   return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -180,7 +180,7 @@ nsMozIconURI::SetSpec(const char * aSpec)
     else // we must have a url
     {
       // we have a file url.....so store it...
-      rv = ioService->NewURI(mDummyFilePath, nsnull, getter_AddRefs(mFileIcon));
+      rv = ioService->NewURI(mDummyFilePath.get(), nsnull, getter_AddRefs(mFileIcon));
       if (NS_FAILED(rv)) return NS_ERROR_MALFORMED_URI;
     }
   }

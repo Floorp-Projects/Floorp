@@ -96,8 +96,8 @@ LRESULT CPropertyDlg::OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 
 LRESULT CPPageDlg::OnInitDialog(UINT uMsg, WPARAM wParam,  LPARAM lParam, BOOL& bHandled)
 {
-    SetDlgItemText(IDC_PROTOCOL, mProtocol);
-    SetDlgItemText(IDC_TYPE, mType);
-    SetDlgItemText(IDC_ADDRESS, mURL);
+    SetDlgItemText(IDC_PROTOCOL, mProtocol.get());
+    SetDlgItemText(IDC_TYPE, mType.get());
+    SetDlgItemText(IDC_ADDRESS, mURL.get());
     return 1;
 }
