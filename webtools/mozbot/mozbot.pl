@@ -949,7 +949,7 @@ sub do {
                         $continue = ($continue and $currentResponse);
                     }
                 }
-            } while (@modulesInNextLoop);
+            } while ($continue and @modulesInNextLoop);
         } while ($continue and scalar(@_));
     } else {
         &debug('Ignored (from \'' . $event->userhost . "'): $channel <".$event->nick.'> '.join(' ', $event->args));
