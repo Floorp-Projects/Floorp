@@ -1482,6 +1482,7 @@ pref("browser.download.dir", "/boot/home/Downloads");
 // Handled differently under Mac/Windows
 pref("network.hosts.smtp_server", "localhost");
 pref("network.hosts.pop_server", "pop");
+pref("network.protocol-handler.warn-external.file", false);
 pref("browser.display.screen_resolution", 0); // System setting
 pref("browser.drag_out_of_frame_style", 1);
 pref("editor.singleLine.pasteNewlines", 0);
