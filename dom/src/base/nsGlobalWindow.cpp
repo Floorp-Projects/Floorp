@@ -2871,10 +2871,7 @@ GlobalWindowImpl::CheckForAbusePoint ()
     return PR_FALSE;
   
   if (!mIsDocumentLoaded || mRunningTimeout) {
-    PRBool blocked = IsPopupBlocked(mDocument);
-    if (blocked)
-      FirePopupBlockedEvent(mDocument);
-    return blocked;
+    return IsPopupBlocked(mDocument);
   }
 
   PRInt32 clickDelay = 0;
@@ -2886,12 +2883,8 @@ GlobalWindowImpl::CheckForAbusePoint ()
     LL_SUB(ll_delta, now, mLastMouseButtonAction);
     LL_L2I(delta, ll_delta);
     delta /= 1000;
-    if (delta > clickDelay)
-    {
-      PRBool blocked = IsPopupBlocked(mDocument);
-      if (blocked)
-        FirePopupBlockedEvent(mDocument);
-      return blocked;
+    if (delta > clickDelay) {
+      return IsPopupBlocked(mDocument);
     }
   }
 
@@ -2955,6 +2948,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
    */
   if (CheckForAbusePoint()) {
     if (name.IsEmpty()) {
+      FirePopupBlockedEvent(mDocument);
       return NS_OK;
     }
 
@@ -2968,6 +2962,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
                             getter_AddRefs(namedWindow));
 
     if (!namedWindow) {
+      FirePopupBlockedEvent(mDocument);
       return NS_OK;
     }
   }
