@@ -42,6 +42,12 @@ var vxUtils = {
     return wm.getMostRecentWindow(aWindowType);
   },
   
+  getRootShell: function ()
+  {
+    var main = this.getWindow("vixen:main");
+    return main.vxShell;
+  },
+  
   positionDocumentWindow: function (aWindowType)
   {
     var prevFD = vxUtils.getWindow(aWindowType);

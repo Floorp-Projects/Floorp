@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://vixen/skin/history/history.css"?>
 
 <window id="vxHistory" orient="vertical"
-        windowtype="vixen:history" class="dialog"
+        windowtype="vixen:history"
         title="Edit History for [Form1]"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="vxHistory.startup();">
@@ -19,8 +20,10 @@
   <script src="chrome://vixen/content/vfd/vxVFDTransactionManager.js"></script>
   <script src="chrome://vixen/content/txmgr/vxTransactionDataSource.js"></script>
 
-  <tree id="historyTree" style="width: 0px; height; 0px;" class="inset"
-        flex="1" multiple="true" datasources="rdf:null"
+  <stringbundle id="historyBundle" src="chrome://vixen/locale/history/history.properties"/>
+
+  <tree id="historyTree" style="width: 0px; height; 0px;"
+        flex="1" datasources="rdf:null" multiple="true"
         ref="urn:mozilla:vixen:transactions">
     <treecolgroup>
       <treecol flex="1"/>
@@ -38,14 +41,22 @@
                   object="?command-string"/>
         </conditions>
         <bindings>
-          <triple subject="?transaction"
-                  predicate="http://www.mozilla.org/projects/vixen/rdf#description"
-                  object="?description"/>
+          <binding subject="?transaction"
+                   predicate="http://www.mozilla.org/projects/vixen/rdf#description"
+                   object="?description"/>
+          <binding subject="?transaction"
+                   predicate="http://www.mozilla.org/projects/vixen/rdf#state"
+                   object="?transaction-state"/>
+          <binding subject="?transaction"
+                   predicate="http://www.mozilla.org/projects/vixen/rdf#position"
+                   object="?transaction-position"/>
         </bindings>
         <action>
           <treechildren>
             <treeitem uri="?transaction">
-              <treerow>
+              <treerow class="transaction-row" 
+                       state="?transaction-state"
+                       position="?transaction-position">
                 <treecell value="?description" command="?command-string"/>
               </treerow>
             </treeitem>          
@@ -54,8 +65,8 @@
       </rule>
     </template>
     
-    <treechildren id="historyKids"/>
+    <treechildren id="historyKids" flex="1"/>
   </tree>
-
+  
 </window>      
   

@@ -26,8 +26,9 @@ vixen.jar:
        content/vixen/history/history.js               (content/history/history.js)
        skin/modern/vixen/contents.rdf                 (skin/contents.rdf)
        skin/modern/vixen/vfdScratch.css               (skin/vfdScratch.css)
+       skin/modern/vixen/history/history.css          (skin/history/history.css)
        locale/en-US/vixen/vxKeysetOverlay.dtd         (locale/en-US/vxKeysetOverlay.dtd)
        locale/en-US/vixen/contents.rdf                (locale/en-US/contents.rdf)
        locale/en-US/vixen/vfdScratch.dtd              (locale/en-US/vfdScratch.dtd)
        locale/en-US/vixen/xuledit.dtd                 (locale/en-US/xuledit.dtd)
-
+       locale/en-US/vixen/history/history.properties  (locale/en-US/history/history.properties)

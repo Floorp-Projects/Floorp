@@ -26,7 +26,7 @@ var vxVFD =
   mParams       : null,
   mTxMgrShell   : null,
   mSelection    : null,
-  
+    
   getContent: function (asContext)
   {
     return asContext ? frames["vfdDocument"] : document.getElementById("vfdDocument");
@@ -50,17 +50,26 @@ var vxVFD =
     
     // initialise the selection manager
     this.mSelection = new vxVFDSelectionManager();
+    
+    // set unique identifier
+    this.mDocumentID = Math.floor(((new Date()).getUTCMilliseconds())*Math.random()*100000);
+    
+    if (this.mTxMgrShell) {
+      var rootShell = vxUtils.getRootShell();
+      rootShell.observerService.Notify(this.mTxMgrShell.mDataSource.mDataSource, 
+                                       "vfd-focus", this);
+    }
   },
   
   focusVFD: function ()
   {
-    var vixenMain = vxUtils.getWindow("vixen:main");
+    var rootShell = vxUtils.getRootShell();
     // for a focused vfd, send "vfd,url"
     // vixenMain.vxShell.mFocusObserver.Notify({ }, "window_focus", ("vfd," + this.mParams.documentURL));
-    vixenMain.vxShell.mFocusedWindow = window;
+    rootShell.mFocusedWindow = window;
     
     if (this.mTxMgrShell) 
-      vixenMain.vxShell.observerService.Notify(this.mTxMgrShell.mDataSource.mDataSource, "vfd-focus", null);
+      rootShell.observerService.Notify(this.mTxMgrShell.mDataSource.mDataSource, "vfd-focus", this);
   },
   
   get vfdDocumentWindowNode()

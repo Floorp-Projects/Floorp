@@ -30,6 +30,7 @@ var vxShell =
 {
   mFocusObserver: null,
   mFocusedWindow: null,
+  mTxnSvc: null,
 
   startup: function ()
   {
@@ -95,7 +96,7 @@ var vxShell =
   loadHistory: function ()
   {
     // open the history window
-    const features = "resizable=no,dependent,chrome,dialog=yes";
+    const features = "resizable=yes,dependent,chrome,dialog=yes";
     var hHistory = openDialog("chrome://vixen/content/history/history.xul", "", features);
     
     // size the history window

@@ -4,17 +4,17 @@
 
   <!-- list all the skins being supplied by this jar -->
   <RDF:Seq about="urn:mozilla:skin:root">
-    <RDF:li resource="urn:mozilla:skin:modern"/>
+    <RDF:li resource="urn:mozilla:skin:classic/1.0"/>
   </RDF:Seq>
 
   <!-- skin information -->
-  <RDF:Description about="urn:mozilla:skin:modern"
+  <RDF:Description about="urn:mozilla:skin:classic/1.0"
         chrome:displayName="Modern"
         chrome:author="Ben Goodger"
-        chrome:name="modern">
+        chrome:name="classic/1.0">
     <chrome:packages>
-      <RDF:Seq about="urn:mozilla:skin:modern/1.0:packages">
-        <RDF:li resource="urn:mozilla:skin:modern/1.0:vixen"/>
+      <RDF:Seq about="urn:mozilla:skin:classic/1.0:packages">
+        <RDF:li resource="urn:mozilla:skin:classic/1.0:vixen"/>
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>

@@ -72,10 +72,29 @@ vxVFDTransactionManager.prototype =
     this.mTxnStack.push(aTransaction);
 
     var resource = this.mDataSource.mRDFS.GetResource(kTxnURI + (this.mTxnStack.index-1));
+    // Set the Command string
     var commandLiteral = this.mDataSource.mRDFS.GetLiteral(aTransaction.commandString);
     this.mDataSource.Assert(resource, gVxTxnCommandString, commandLiteral, true);
+    // Set the Description string
     var descriptionLiteral = this.mDataSource.mRDFS.GetLiteral(aTransaction.description);
     this.mDataSource.Assert(resource, gVxTxnDescription, descriptionLiteral, true);
+    // Set the Transaction state to that of the top undo item (which has the bottom border)
+    var lastundoStateLiteral = this.mDataSource.mRDFS.GetLiteral("last-undo");
+    this.mDataSource.Assert(resource, gVxTxnState, lastundoStateLiteral, true);
+    // Set this item as the top of the stack
+    var topofStackLiteral = this.mDataSource.mRDFS.GetLiteral("top-of-stack");
+    this.mDataSource.Assert(resource, gVxTxnPosition, topofStackLiteral, true);
+    // Change the Transaction state of the previous item to be plain undo, not 'last-undo'
+    var prevItem = this.mDataSource.mRDFS.GetResource(kTxnURI + (this.mTxnStack.index-2));
+    var undoStateLiteral = this.mDataSource.mRDFS.GetLiteral("undo");
+    this.mDataSource.Change(prevItem, gVxTxnState, lastundoStateLiteral, undoStateLiteral);
+    // Change the Transaction position of the previous item so it's not top of stack
+    this.mDataSource.Unassert(prevItem, gVxTxnPosition, topofStackLiteral, true);
+    // Set the Transaction Stack Index
+    var indexLiteral = this.mDataSource.mRDFS.GetLiteral(this.mTxnStack.index);
+    this.mDataSource.Assert(resource, gVxTxnStackIndex, indexLiteral, true);
+    
+    // Append to the transaction sequence. 
     this.mTxnSeq.AppendElement(resource);
     
     for (i = 0; i < this.mTransactionListeners.length; i++) {
@@ -105,7 +124,20 @@ vxVFDTransactionManager.prototype =
     // undo the transaction
     if (txn) {
       txn.undoTransaction();
-      this.mTxnStack.index--;
+      
+      var resource = this.mDataSource.mRDFS.GetResource(kTxnURI + (this.mTxnStack.index-1));
+      // Set the Transaction state (undo/redo)
+      var undoStateLiteral = this.mDataSource.mRDFS.GetLiteral("undo");
+      var redoStateLiteral = this.mDataSource.mRDFS.GetLiteral("redo");
+      this.mDataSource.Change(resource, gVxTxnState, undoStateLiteral, redoStateLiteral);
+      // Set the Transaction Stack Index
+      var indexLiteral = this.mDataSource.mRDFS.GetLiteral(this.mTxnStack.index--);
+      this.mDataSource.Assert(resource, gVxTxnStackIndex, indexLiteral, true);
+      // Set the state of the previous item to be last-undo. 
+      var prevItem = this.mDataSource.mRDFS.GetResource(kTxnURI + (this.mTxnStack.index-1));
+      var lastUndoItemLiteral = this.mDataSource.mRDFS.GetLiteral("last-undo");
+      var oldStateLiteral = this.mDataSource.GetTarget(prevItem, gVxTxnState, true);
+      this.mDataSource.Change(prevItem, gVxTxnState, oldStateLiteral, lastUndoItemLiteral);
     }
 
     for (i = 0; i < this.mTransactionListeners.length; i++) {
