@@ -83,7 +83,7 @@ public class TokenStream {
             String name = Token.name(token);
 
             switch (token) {
-            case Token.ASSIGN:
+            case Token.ASSIGNOP:
                 return name + " " + Token.name(this.op);
 
             case Token.STRING:
@@ -738,7 +738,7 @@ public class TokenStream {
                     return Token.OR;
                 } else if (matchChar('=')) {
                     this.op = Token.BITOR;
-                    return Token.ASSIGN;
+                    return Token.ASSIGNOP;
                 } else {
                     return Token.BITOR;
                 }
@@ -746,7 +746,7 @@ public class TokenStream {
             case '^':
                 if (matchChar('=')) {
                     this.op = Token.BITXOR;
-                    return Token.ASSIGN;
+                    return Token.ASSIGNOP;
                 } else {
                     return Token.BITXOR;
                 }
@@ -756,7 +756,7 @@ public class TokenStream {
                     return Token.AND;
                 } else if (matchChar('=')) {
                     this.op = Token.BITAND;
-                    return Token.ASSIGN;
+                    return Token.ASSIGNOP;
                 } else {
                     return Token.BITAND;
                 }
@@ -768,7 +768,6 @@ public class TokenStream {
                     else
                         return Token.EQ;
                 } else {
-                    this.op = Token.NOP;
                     return Token.ASSIGN;
                 }
 
@@ -797,7 +796,7 @@ public class TokenStream {
                 if (matchChar('<')) {
                     if (matchChar('=')) {
                         this.op = Token.LSH;
-                        return Token.ASSIGN;
+                        return Token.ASSIGNOP;
                     } else {
                         return Token.LSH;
                     }
@@ -814,14 +813,14 @@ public class TokenStream {
                     if (matchChar('>')) {
                         if (matchChar('=')) {
                             this.op = Token.URSH;
-                            return Token.ASSIGN;
+                            return Token.ASSIGNOP;
                         } else {
                             return Token.URSH;
                         }
                     } else {
                         if (matchChar('=')) {
                             this.op = Token.RSH;
-                            return Token.ASSIGN;
+                            return Token.ASSIGNOP;
                         } else {
                             return Token.RSH;
                         }
@@ -837,7 +836,7 @@ public class TokenStream {
             case '*':
                 if (matchChar('=')) {
                     this.op = Token.MUL;
-                    return Token.ASSIGN;
+                    return Token.ASSIGNOP;
                 } else {
                     return Token.MUL;
                 }
@@ -913,7 +912,7 @@ public class TokenStream {
 
                 if (matchChar('=')) {
                     this.op = Token.DIV;
-                    return Token.ASSIGN;
+                    return Token.ASSIGNOP;
                 } else {
                     return Token.DIV;
                 }
@@ -921,7 +920,7 @@ public class TokenStream {
             case '%':
                 if (matchChar('=')) {
                     this.op = Token.MOD;
-                    return Token.ASSIGN;
+                    return Token.ASSIGNOP;
                 } else {
                     return Token.MOD;
                 }
@@ -932,7 +931,7 @@ public class TokenStream {
             case '+':
                 if (matchChar('=')) {
                     this.op = Token.ADD;
-                    return Token.ASSIGN;
+                    return Token.ASSIGNOP;
                 } else if (matchChar('+')) {
                     return Token.INC;
                 } else {
@@ -942,7 +941,7 @@ public class TokenStream {
             case '-':
                 if (matchChar('=')) {
                     this.op = Token.SUB;
-                    c = Token.ASSIGN;
+                    c = Token.ASSIGNOP;
                 } else if (matchChar('-')) {
                     if (0 == (flags & TSF_DIRTYLINE)) {
                         // treat HTML end-comment after possible whitespace

@@ -147,12 +147,12 @@ public class Decompiler
         append((char)Token.EOL);
     }
 
-    void addAssign(int op)
+    void addAssignOp(int op)
     {
         if (!(0 <= op && op <= Token.LAST_TOKEN))
             throw new IllegalArgumentException();
 
-        append((char)Token.ASSIGN);
+        append((char)Token.ASSIGNOP);
         append((char)op);
     }
 
@@ -598,12 +598,12 @@ public class Decompiler
                 break;
 
             case Token.ASSIGN:
+                result.append(" = ");
+                break;
+
+            case Token.ASSIGNOP:
                 ++i;
                 switch (source.charAt(i)) {
-                case Token.NOP:
-                    result.append(" = ");
-                    break;
-
                 case Token.ADD:
                     result.append(" += ");
                     break;

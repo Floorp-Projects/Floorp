@@ -234,7 +234,7 @@ class Parser {
             syntheticType = FunctionNode.FUNCTION_EXPRESSION;
             // transform 'function' <memberExpr> to  <memberExpr> = function
             // even in the decompilated source
-            decompiler.addAssign(Token.NOP);
+            decompiler.addToken(Token.ASSIGN);
         }
 
         boolean nested = (currentScriptOrFn.type == Token.FUNCTION);
@@ -331,7 +331,7 @@ class Parser {
             }
         } else {
             pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
-            pn = nf.createAssignment(Token.NOP, memberExprNode, pn);
+            pn = nf.createAssignment(memberExprNode, pn);
             if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
                 pn = nf.createExprStatement(pn, baseLineno);
             }
@@ -881,10 +881,7 @@ class Parser {
             // omitted check for argument hiding
 
             if (ts.matchToken(Token.ASSIGN)) {
-                if (ts.getOp() != Token.NOP)
-                    reportError(ts, "msg.bad.var.init");
-
-                decompiler.addAssign(Token.NOP);
+                decompiler.addToken(Token.ASSIGN);
 
                 init = assignExpr(ts, inForInit);
                 nf.addChildToBack(name, init);
@@ -912,11 +909,17 @@ class Parser {
     {
         Object pn = condExpr(ts, inForInit);
 
-        if (ts.matchToken(Token.ASSIGN)) {
-            // omitted: "invalid assignment left-hand side" check.
+        int tt = ts.peekToken();
+        // omitted: "invalid assignment left-hand side" check.
+        if (tt == Token.ASSIGN) {
+            ts.getToken();
+            decompiler.addToken(Token.ASSIGN);
+            pn = nf.createAssignment(pn, assignExpr(ts, inForInit));
+        } else if (tt == Token.ASSIGNOP) {
+            ts.getToken();
             int op = ts.getOp();
-            decompiler.addAssign(op);
-            pn = nf.createAssignment(op, pn, assignExpr(ts, inForInit));
+            decompiler.addAssignOp(op);
+            pn = nf.createAssignmentOp(op, pn, assignExpr(ts, inForInit));
         }
 
         return pn;

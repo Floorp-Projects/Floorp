@@ -344,8 +344,7 @@ public class IRFactory {
         cond.addChildToBack(temp);
         cond.addChildToBack(new Node(Token.NULL));
         Node newBody = new Node(Token.BLOCK);
-        Node assign = (Node) createAssignment(Token.NOP, lvalue,
-                                              createUseTemp(temp));
+        Node assign = (Node) createAssignment(lvalue, createUseTemp(temp));
         newBody.addChildToBack(new Node(Token.POP, assign));
         newBody.addChildToBack((Node) body);
         Node result = (Node) createWhile(cond, newBody, lineno);
@@ -782,13 +781,13 @@ public class IRFactory {
         // and using a Float creates a stack mismatch.
         Node rhs = (Node) createNumber(1.0);
 
-        return createAssignment(nodeType == Token.INC
+        return createAssignmentOp(nodeType == Token.INC
                                     ? Token.ADD
                                     : Token.SUB,
-                                childNode,
-                                rhs,
-                                true,
-                                post);
+                                  childNode,
+                                  rhs,
+                                  true,
+                                  post);
     }
 
     /**
@@ -955,32 +954,36 @@ public class IRFactory {
         return new Node(nodeType, left, right);
     }
 
-    public Object createAssignment(int assignOp, Object left, Object right)
+    public Object createAssignment(Object leftObj, Object rightObj)
     {
-        return createAssignment(assignOp, (Node) left, (Node) right,
-                                false, false);
-    }
+        Node left = (Node)leftObj;
+        Node right = (Node)rightObj;
 
-    private Node createAssignment(int assignOp, Node left, Node right,
-                                  boolean tonumber, boolean postfix)
-    {
         int nodeType = left.getType();
-        String idString;
-        Node id = null;
         switch (nodeType) {
           case Token.NAME:
-            return createSetName(assignOp, left, right, tonumber, postfix);
+            left.setType(Token.BINDNAME);
+            return new Node(Token.SETNAME, left, right);
 
           case Token.GETPROP:
-            idString = (String) left.getProp(Node.SPECIAL_PROP_PROP);
-            if (idString != null)
-                id = Node.newString(idString);
-            /* fall through */
-          case Token.GETELEM:
-            if (id == null)
-                id = left.getLastChild();
-            return createSetProp(nodeType, assignOp, left.getFirstChild(),
-                                 id, right, tonumber, postfix);
+          case Token.GETELEM: {
+            Node obj = left.getFirstChild();
+            Node id = left.getLastChild();
+            int type;
+            if (nodeType == Token.GETPROP) {
+                type = Token.SETPROP;
+                String special = (String) left.getProp(Node.SPECIAL_PROP_PROP);
+                if (special != null) {
+                    Node result = new Node(Token.SETPROP, obj, right);
+                    result.putProp(Node.SPECIAL_PROP_PROP, special);
+                    return result;
+                }
+            } else {
+                type = Token.SETELEM;
+            }
+            return new Node(type, obj, id, right);
+          }
+
           default:
             // TODO: This should be a ReferenceError--but that's a runtime
             //  exception. Should we compile an exception into the code?
@@ -989,37 +992,95 @@ public class IRFactory {
         }
     }
 
-    private Node createSetName(int assignOp, Node left, Node right,
-                               boolean tonumber, boolean postfix)
+    public Object createAssignmentOp(int assignOp, Object left, Object right)
     {
-        if (assignOp == Token.NOP) {
-            left.setType(Token.BINDNAME);
-            return new Node(Token.SETNAME, left, right);
-        }
+        return createAssignmentOp(assignOp, (Node) left, (Node) right,
+                                  false, false);
+    }
 
-        String s = left.getString();
+    private Node createAssignmentOp(int assignOp, Node left, Node right,
+                                    boolean tonumber, boolean postfix)
+    {
+        int nodeType = left.getType();
+        switch (nodeType) {
+          case Token.NAME: {
+            String s = left.getString();
 
-        if (s.equals("__proto__") || s.equals("__parent__")) {
-            Node result = new Node(Token.SETPROP, left, right);
-            result.putProp(Node.SPECIAL_PROP_PROP, s);
-            return result;
-        }
+            Node opLeft = Node.newString(Token.NAME, s);
+            if (tonumber)
+                opLeft = new Node(Token.POS, opLeft);
 
-        Node opLeft = Node.newString(Token.NAME, s);
-        if (tonumber)
-            opLeft = new Node(Token.POS, opLeft);
+            if (!postfix) {
+                Node op = new Node(assignOp, opLeft, right);
+                Node lvalueLeft = Node.newString(Token.BINDNAME, s);
+                return new Node(Token.SETNAME, lvalueLeft, op);
+            } else {
+                opLeft = createNewTemp(opLeft);
+                Node op = new Node(assignOp, opLeft, right);
+                Node lvalueLeft = Node.newString(Token.BINDNAME, s);
+                Node result = new Node(Token.SETNAME, lvalueLeft, op);
+                result = new Node(Token.COMMA, result, createUseTemp(opLeft));
+                return result;
+            }
+          }
 
-        if (!postfix) {
-            Node op = new Node(assignOp, opLeft, right);
-            Node lvalueLeft = Node.newString(Token.BINDNAME, s);
-            return new Node(Token.SETNAME, lvalueLeft, op);
-        } else {
-            opLeft = createNewTemp(opLeft);
-            Node op = new Node(assignOp, opLeft, right);
-            Node lvalueLeft = Node.newString(Token.BINDNAME, s);
-            Node result = new Node(Token.SETNAME, lvalueLeft, op);
-            result = new Node(Token.COMMA, result, createUseTemp(opLeft));
-            return result;
+          case Token.GETPROP:
+          case Token.GETELEM: {
+            Node obj = left.getFirstChild();
+            Node id = left.getLastChild();
+
+            int type = nodeType == Token.GETPROP
+                       ? Token.SETPROP
+                       : Token.SETELEM;
+
+/*
+*    If the RHS expression could modify the LHS we have
+*    to construct a temporary to hold the LHS context
+*    prior to running the expression. Ditto, if the id
+*    expression has side-effects.
+*
+*    XXX If the hasSideEffects tests take too long, we
+*       could make this an optimizer-only transform
+*       and always do the temp assignment otherwise.
+*
+*/
+            Node tmp1, tmp2, opLeft;
+            if (obj.getType() != Token.NAME || id.hasChildren() ||
+                hasSideEffects(right) || hasSideEffects(id))
+            {
+                tmp1 = createNewTemp(obj);
+                Node useTmp1 = createUseTemp(tmp1);
+
+                tmp2 = createNewTemp(id);
+                Node useTmp2 = createUseTemp(tmp2);
+
+                opLeft = new Node(nodeType, useTmp1, useTmp2);
+            } else {
+                tmp1 = Node.newString(Token.NAME, obj.getString());
+                tmp2 = id.cloneNode();
+                opLeft = new Node(nodeType, obj, id);
+            }
+
+            if (tonumber)
+                opLeft = new Node(Token.POS, opLeft);
+
+            if (!postfix) {
+                Node op = new Node(assignOp, opLeft, right);
+                return new Node(type, tmp1, tmp2, op);
+            } else {
+                opLeft = createNewTemp(opLeft);
+                Node op = new Node(assignOp, opLeft, right);
+                Node result = new Node(type, tmp1, tmp2, op);
+                result = new Node(Token.COMMA, result, createUseTemp(opLeft));
+                return result;
+            }
+          }
+
+          default:
+            // TODO: This should be a ReferenceError--but that's a runtime
+            //  exception. Should we compile an exception into the code?
+            ts.reportCurrentLineError("msg.bad.lhs.assign", null);
+            return left;
         }
     }
 
@@ -1107,67 +1168,6 @@ public class IRFactory {
                 break;
         }
         return false;
-    }
-
-    private Node createSetProp(int nodeType, int assignOp, Node obj, Node id,
-                               Node expr, boolean tonumber, boolean postfix)
-    {
-        int type = nodeType == Token.GETPROP
-                   ? Token.SETPROP
-                   : Token.SETELEM;
-
-        if (type == Token.SETPROP) {
-            String s = id.getString();
-            if (s != null && s.equals("__proto__") || s.equals("__parent__")) {
-                Node result = new Node(type, obj, expr);
-                result.putProp(Node.SPECIAL_PROP_PROP, s);
-                return result;
-            }
-        }
-
-        if (assignOp == Token.NOP)
-            return new Node(type, obj, id, expr);
-/*
-*    If the RHS expression could modify the LHS we have
-*    to construct a temporary to hold the LHS context
-*    prior to running the expression. Ditto, if the id
-*    expression has side-effects.
-*
-*    XXX If the hasSideEffects tests take too long, we
-*       could make this an optimizer-only transform
-*       and always do the temp assignment otherwise.
-*
-*/
-        Node tmp1, tmp2, opLeft;
-        if (obj.getType() != Token.NAME || id.hasChildren() ||
-            hasSideEffects(expr) || hasSideEffects(id))
-        {
-            tmp1 = createNewTemp(obj);
-            Node useTmp1 = createUseTemp(tmp1);
-
-            tmp2 = createNewTemp(id);
-            Node useTmp2 = createUseTemp(tmp2);
-
-            opLeft = new Node(nodeType, useTmp1, useTmp2);
-        } else {
-            tmp1 = Node.newString(Token.NAME, obj.getString());
-            tmp2 = id.cloneNode();
-            opLeft = new Node(nodeType, obj, id);
-        }
-
-        if (tonumber)
-            opLeft = new Node(Token.POS, opLeft);
-
-        if (!postfix) {
-            Node op = new Node(assignOp, opLeft, expr);
-            return new Node(type, tmp1, tmp2, op);
-        } else {
-            opLeft = createNewTemp(opLeft);
-            Node op = new Node(assignOp, opLeft, expr);
-            Node result = new Node(type, tmp1, tmp2, op);
-            result = new Node(Token.COMMA, result, createUseTemp(opLeft));
-            return result;
-        }
     }
 
     private Interpreter compiler;

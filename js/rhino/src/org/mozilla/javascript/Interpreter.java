@@ -344,7 +344,6 @@ public class Interpreter
             case Token.DEFAULT :
             case Token.BLOCK :
             case Token.EMPTY :
-            case Token.NOP :
                 iCodeTop = updateLineNumber(node, iCodeTop);
                 while (child != null) {
                     iCodeTop = generateICode(child, iCodeTop);

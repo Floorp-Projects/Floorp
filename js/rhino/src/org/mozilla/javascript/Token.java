@@ -152,47 +152,34 @@ public class Token
         LP          = 73,  // left and right parentheses
         RP          = 74,
         COMMA       = 75,  // comma operator
-        ASSIGN      = 76, // assignment ops (= += -= etc.)
-        HOOK        = 77, // conditional (?:)
-        COLON       = 78,
-        OR          = 79, // logical or (||)
-        AND         = 80, // logical and (&&)
-        INC         = 81, // increment/decrement (++ --)
-        DEC         = 82,
-        DOT         = 83, // member operator (.)
-        FUNCTION    = 84, // function keyword
-        EXPORT      = 85, // export keyword
-        IMPORT      = 86, // import keyword
-        IF          = 87, // if keyword
-        ELSE        = 88, // else keyword
-        SWITCH      = 89, // switch keyword
-        CASE        = 90, // case keyword
-        DEFAULT     = 91, // default keyword
-        WHILE       = 92, // while keyword
-        DO          = 93, // do keyword
-        FOR         = 94, // for keyword
-        BREAK       = 95, // break keyword
-        CONTINUE    = 96, // continue keyword
-        VAR         = 97, // var keyword
-        WITH        = 98, // with keyword
-        CATCH       = 99, // catch keyword
-        FINALLY     = 100, // finally keyword
-        VOID        = 101, // void keyword
-        RESERVED    = 102, // reserved keywords
-
-        /** Added by Mike - these are JSOPs in the jsref, but I
-         * don't have them yet in the java implementation...
-         * so they go here.  Also whatever I needed.
-
-         * Most of these go in the 'op' field when returning
-         * more general token types, eg. 'DIV' as the op of 'ASSIGN'.
-         */
-        NOP         = 103, // NOP
-
-        /**
-         * For JSOPs associated with keywords...
-         * eg. op = ADD; token = ASSIGN
-         */
+        ASSIGN      = 76, // simple assignment  (=)
+        ASSIGNOP    = 77, // assignment with operation (+= -= etc.)
+        HOOK        = 78, // conditional (?:)
+        COLON       = 79,
+        OR          = 80, // logical or (||)
+        AND         = 81, // logical and (&&)
+        INC         = 82, // increment/decrement (++ --)
+        DEC         = 83,
+        DOT         = 84, // member operator (.)
+        FUNCTION    = 85, // function keyword
+        EXPORT      = 86, // export keyword
+        IMPORT      = 87, // import keyword
+        IF          = 88, // if keyword
+        ELSE        = 89, // else keyword
+        SWITCH      = 90, // switch keyword
+        CASE        = 91, // case keyword
+        DEFAULT     = 92, // default keyword
+        WHILE       = 93, // while keyword
+        DO          = 94, // do keyword
+        FOR         = 95, // for keyword
+        BREAK       = 96, // break keyword
+        CONTINUE    = 97, // continue keyword
+        VAR         = 98, // var keyword
+        WITH        = 99, // with keyword
+        CATCH       = 100, // catch keyword
+        FINALLY     = 101, // finally keyword
+        VOID        = 102, // void keyword
+        RESERVED    = 103, // reserved keywords
 
         EMPTY       = 104,
 
@@ -299,6 +286,7 @@ public class Token
                 case RP:              return "rp";
                 case COMMA:           return "comma";
                 case ASSIGN:          return "assign";
+                case ASSIGNOP:        return "assignop";
                 case HOOK:            return "hook";
                 case COLON:           return "colon";
                 case OR:              return "or";
@@ -324,7 +312,6 @@ public class Token
                 case CATCH:           return "catch";
                 case FINALLY:         return "finally";
                 case RESERVED:        return "reserved";
-                case NOP:             return "nop";
                 case EMPTY:           return "empty";
                 case BLOCK:           return "block";
                 case ARRAYLIT:        return "arraylit";

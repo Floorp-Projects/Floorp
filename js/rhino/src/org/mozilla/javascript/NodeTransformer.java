@@ -304,7 +304,6 @@ public class NodeTransformer {
                         messageId = "msg.undef.label";
                     }
                     reportError(messageId, messageArgs, node, tree);
-                    node.setType(Token.NOP);
                     break;
                 }
                 jump.setType(Token.GOTO);
@@ -353,8 +352,7 @@ public class NodeTransformer {
                         continue;
                     Node init = n.getFirstChild();
                     n.removeChild(init);
-                    Node asn = (Node)irFactory.createAssignment(
-                                        Token.NOP, n, init);
+                    Node asn = (Node)irFactory.createAssignment(n, init);
                     Node pop = new Node(Token.POP, asn, node.getLineno());
                     result.addChildToBack(pop);
                 }

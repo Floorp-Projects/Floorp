@@ -1421,7 +1421,6 @@ class BodyCodegen
               case Token.SCRIPT:
               case Token.BLOCK:
               case Token.EMPTY:
-              case Token.NOP:
                 // no-ops.
                 visitStatement(node);
                 while (child != null) {
