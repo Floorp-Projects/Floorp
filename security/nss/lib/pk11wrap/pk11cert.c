@@ -1576,6 +1576,8 @@ PK11_MakeIDFromPubKey(SECItem *pubKeyData) {
     return certCKA_ID;
 }
 
+extern const NSSError NSS_ERROR_INVALID_CERTIFICATE;
+
 /*
  * Write the cert into the token.
  */
@@ -1800,6 +1802,11 @@ done:
 					 emailAddr,
                                          PR_TRUE);
     if (!certobj) {
+	if (NSS_GetError() == NSS_ERROR_INVALID_CERTIFICATE) {
+	    PORT_SetError(SEC_ERROR_REUSED_ISSUER_AND_SERIAL);
+	    SECITEM_FreeItem(keyID,PR_TRUE);
+	    return SECFailure;
+	}
 	goto loser;
     }
     /* add the new instance to the cert, force an update of the

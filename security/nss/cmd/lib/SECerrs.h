@@ -455,3 +455,8 @@ ER3(SEC_ERROR_BAD_TEMPLATE,			(SEC_ERROR_BASE + 136),
 
 ER3(SEC_ERROR_CRL_NOT_FOUND,			(SEC_ERROR_BASE + 137),
 "No matching CRL was found.")
+
+ER3(SEC_ERROR_REUSED_ISSUER_AND_SERIAL,        (SEC_ERROR_BASE + 138),
+"You are attempting to import a cert with the same issuer/serial as \
+an existing cert, but that is not the same cert.")
+
