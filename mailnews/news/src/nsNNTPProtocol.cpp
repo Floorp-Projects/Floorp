@@ -41,7 +41,7 @@
 #include "nsIMsgRFC822Parser.h" 
 #include "nsMsgRFC822Parser.h"
 
-#include "nsINntpURL.h"
+#include "nsINntpUrl.h"
 #include "nsNNTPHost.h"
 #include "nsNNTPArticleSet.h"
 
