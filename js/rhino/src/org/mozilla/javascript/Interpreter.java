@@ -1344,7 +1344,7 @@ public class Interpreter
                         int count = getIndex(iCode, pc + 4);
                         out.println(tname+" "+callType+" "+isNew
                                     +" "+count+" "+line);
-                        pc += 8;
+                        pc += 6;
                         break;
                     }
                     case Token.REGEXP : {
