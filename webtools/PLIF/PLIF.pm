@@ -32,31 +32,22 @@ use vars qw($AUTOLOAD); # it's a package global
 use POSIX qw(strftime); # timestamps in debug output
 use PLIF::Exception;
 my $DEBUG = 9; # level of warnings and dumps to print to STDERR (none go to user)
-my $USER = 1; # level of errors to report to user (all go to STDERR)
-my @FATAL = (); # a list of pointers to functions that want to report errors to the user
-my $LOCKED = 0; # set to '1' while we are calling the error reporting code
 1;
 
 # PLIF = Program Logic Insulation Framework
 
 # Levels are assumed to be something along the following:
-# Things that should never come up during normal operation:
-#  0 = total failure: e.g. no input or output devices
-#  1 = fatal errors: e.g. missing databases, broken connections, out of disk space
-#  2 = security: e.g. warnings about repeated cracking attempts
-#  3 = non-fatal errors: e.g. propagation of eval() errors as warnings
+#  0 = debugging remarks for the section currently under test
+#  1 =
+#  2 =
+#  3 =
 #  4 = important warnings (e.g. unexpected but possibly legitimate lack of data)
-#
-# Useful debugging information:
 #  5 = important events (e.g. application started)
-#  6 = debugging remarks for the section currently under test
+#  6 = 
 #  7 = typical checkpoints (e.g. someone tried to do some output)
 #  8 = frequently hit typical checkpoints
 #  9 = verbose debugging information
 # 10 = ridiculously verbose debugging spam
-#
-# No code in CVS should do anything at level 6, it is reserved for
-# personal debugging.
 
 # Note. All of the methods described in this class except for the
 # propertyGet, propertySet and propertyExists methods are class
@@ -179,7 +170,7 @@ sub propertyGetUndefined {
 sub methodMissing {
     my $self = shift;
     my($method) = @_;
-    $self->error(0, "Internal Error: Tried to access non-existent method '$method' in object '$self'");
+    syntaxError "Tried to access non-existent method '$method' in object '$self'";
 }
 
 
@@ -200,39 +191,24 @@ sub warn {
     my $self = shift;
     my($level, @data) = @_;
     if ($self->isAtDebugLevel($level)) {
-        $self->dump($level, ('-'x12).' Start of Warning Stack Trace '.('-'x12));
+        $self->dump($level, ('-'x20).' Start of Warning Stack Trace '.('-'x20));
         report PLIF::Exception ('message' => join("\n", @data));
-        $self->dump($level, ('-'x12).            ('-'x30)            .('-'x12));
+        $self->dump($level, ('-'x20).            ('-'x30)            .('-'x20));
     }
 }
 
-# raises a generic error with the arguments passed as the message.
-# use this for internal errors that you don't want other code to catch.
+# raises a generic error with the arguments passed as the message
+# use this for internal errors that don't have their own exception objects
+# this should not be called with the @data containing a trailing dot
 sub error { 
     my $self = shift;
     my($level, @data) = @_;
-    $self->dump(9, "error raised: $data[0]");
-    if ($self->isAtUserLevel($level) and not $LOCKED) {
-        # XXX this gets called even in eval{} blocks
-        $LOCKED = 1;
-        $self->dump(10, 'calling @FATAL error handlers...');
-        foreach my $entry (@FATAL) {
-            eval {
-                &{$entry->[1]}(@data);
-            };
-            if ($@) {
-                $self->warn(3, 'Error occured during \@FATAL callback of object \''.($entry->[0])."': $@");
-            }
-        }
-        $self->dump(10, 'done calling @FATAL error handlers');
-        $LOCKED = 0;
-    }
-    $self->dump(9, 'Environment dump:');
-    foreach my $key (sort keys %ENV) {
-        $self->dump(9, "$key = $ENV{$key}");
-    }
-    $self->dump(9, 'Stack trace:');
-    raise PLIF::Exception ('message', join("\n", @data)); # die with stack trace
+    # the next three lines are a highly magical incantation to remove
+    # this call from the stack so that the stack trace looks like the
+    # previous function raised the exception itself
+    my $raise = PLIF::Exception->can('raise');
+    @_ = ('PLIF::Exception', 'message', join("\n", @data));
+    goto &$raise;
 }
 
 # this should not be called with the @data containing a trailing dot
@@ -240,13 +216,13 @@ sub assert {
     my $self = shift;
     my($condition, $level, @data) = @_;
     if (not $condition) {
-        $self->error($level, @data);
+        # the next three lines are a highly magical incantation to remove
+        # this call from the stack so that the stack trace looks like the
+        # previous function raised the exception itself
+        my $raise = PLIF::Exception->can('raise');
+        @_ = ('PLIF::Exception', 'message', join("\n", @data));
+        goto &$raise;
     }
-}
-
-sub debug {
-    my $self = shift;
-    $self->dump(6, @_);
 }
 
 sub notImplemented {
@@ -262,57 +238,11 @@ sub isAtDebugLevel {
     return ($level <= $DEBUG);
 }
 
-# returns true only if the argument is a debug level that is at least
-# as important as the local value of $USER.
-sub isAtUserLevel {
-    my $self = shift;
-    my($level) = @_;
-    return ($level <= $USER);
-}
-
 # returns a reference to the $DEBUG variable for configuration
 # purposes
 sub getDebugLevel {
     return \$DEBUG;
 }
-
-# returns a reference to the $USER variable for configuration purposes
-sub getUserLevel {
-    return \$USER;
-}
-
-# returns a reference to the @FATAL variable for modules that have
-# very exotic needs
-sub getFatalHandlerList {
-    return \@FATAL;
-}
-
-# returns a reference to the $LOCKED variable for modules that wish
-# to block @FATAL reporting
-sub getFatalHandlerLock {
-    return \$LOCKED;
-}
-
-# if you call this, make sure that you call the next function too,
-# guarenteed, otherwise you will never be freed until the app dies.
-# of course, if you _are_ the app then I guess it's ok...
-sub enableErrorReporting {
-    my $self = shift;
-    push(@FATAL, [$self, sub { $self->fatalError(@_); }]);
-}
-
-sub disableErrorReporting {
-    my $self = shift;
-    my @OLDFATAL = @FATAL;
-    @FATAL = ();
-    foreach my $entry (@OLDFATAL) {
-        if ($entry->[0] != $self) {
-            push(@FATAL, $entry);
-        }
-    }
-}
-
-sub fatalError {} # stub
 
 sub DESTROY {
     my $self = shift;
