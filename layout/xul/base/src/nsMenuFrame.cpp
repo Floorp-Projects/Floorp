@@ -61,7 +61,7 @@
 #include "nsIViewManager.h"
 #include "nsIBindingManager.h"
 
-#define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
+#define NS_MENU_POPUP_LIST_INDEX   0
 
 static PRInt32 gEatMouseMove = PR_FALSE;
 
@@ -229,7 +229,15 @@ NS_IMETHODIMP
 nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom** aListName) const
 {
-  return nsBoxFrame::GetAdditionalChildListName(aIndex, aListName);
+  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
+
+  *aListName = nsnull;
+  if (NS_MENU_POPUP_LIST_INDEX == aIndex) {
+    *aListName = nsLayoutAtoms::popupList;
+    NS_ADDREF(*aListName);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
