@@ -104,6 +104,8 @@ protected:
 
   static nscoord        mDpi;
 
+  int mIsPrinting;
+
 };
 
 #endif /* nsDeviceContextPh_h___ */

@@ -56,45 +56,21 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIDeviceC
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
-  nsresult  			  rv = NS_OK;
-  PpPrintContext_t 		  *pc = nsnull;
-  int                     action;
-  
-	/* Create a Printer Context */
-	pc = PpPrintCreatePC();
+	nsresult  		  		rv = NS_ERROR_FAILURE;
+	nsIDeviceContextSpec  	*devSpec = nsnull;
 
-#if 0
-    /* copy over user selections from prOps to PrintContext */
+	if (aOldSpec)
+		devSpec = aOldSpec;
+	else
+		nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
 
-	/* REVISIT: Need to find my parent widget */
-    action = PtPrintSelection(NULL, NULL, NULL, pc, (Pt_PRINTSEL_DFLT_LOOK));
-    if (action == Pt_PRINTSEL_PRINT)
+	if (devSpec != nsnull)
 	{
-#else
-	PpLoadPrinter(pc, NULL);
-	printf("LoadPrinter: %X\n", pc);
-#endif
-
-	  nsIDeviceContextSpec    *devSpec = nsnull;
-	  nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
-
-		if (nsnull != devSpec)
+		if (NS_OK == ((nsDeviceContextSpecPh *)devSpec)->Init(aQuiet))
 		{
-		  /* Pass ownership of the "pc" to the nsDeviceContextSpecPh */
-		  if (NS_OK == ((nsDeviceContextSpecPh *)devSpec)->Init(aQuiet, pc))
-		  {
-		    aNewSpec = devSpec;
+			aNewSpec = devSpec;
 			rv = NS_OK;
-		  }
 		}
-
-#if 0
 	}
-	else if (action == Pt_PRINTSEL_PREVIEW)
-	{
-		/* REVISIT: Somehow trigger a Print Preview? */	
-	}
-#endif
-
 	return rv;
 }

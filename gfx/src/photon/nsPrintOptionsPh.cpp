@@ -21,22 +21,50 @@
  */
 #include "nsPrintOptionsPh.h"
 
+/* Implementation file */
+NS_IMPL_ISUPPORTS1(nsPrintOptionsPh, nsIPrintOptions)
 
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsWin.h
- *	@update 6/21/00 dwc
- */
-nsPrintOptionsPh::nsPrintOptionsPh()
+nsPrintOptionsPh::nsPrintOptionsPh(void *data)
 {
-
+  NS_INIT_ISUPPORTS();
+  /* member initializers and constructor code */
+  mPC = (PpPrintContext_t *) data;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 6/21/00 dwc
- */
 nsPrintOptionsPh::~nsPrintOptionsPh()
 {
+  /* destructor code */
 }
 
+/* void SetMargins (in PRInt32 aTop, in PRInt32 aLeft, in PRInt32 aRight, in PRInt32 aBottom); */
+NS_IMETHODIMP nsPrintOptionsPh::SetMargins(PRInt32 aTop, PRInt32 aLeft, PRInt32 aRight, PRInt32 aBottom)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void GetMargins (out PRInt32 aTop, out PRInt32 aLeft, out PRInt32 aRight, out PRInt32 aBottom); */
+NS_IMETHODIMP nsPrintOptionsPh::GetMargins(PRInt32 *aTop, PRInt32 *aLeft, PRInt32 *aRight, PRInt32 *aBottom)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void ShowNativeDialog (); */
+NS_IMETHODIMP nsPrintOptionsPh::ShowNativeDialog()
+{
+	nsresult rv = NS_ERROR_FAILURE;
+	int action;
+
+	action = PtPrintSelection(NULL, NULL, NULL, mPC, (Pt_PRINTSEL_DFLT_LOOK));
+	switch (action)
+	{
+		case Pt_PRINTSEL_PRINT:
+		case Pt_PRINTSEL_PREVIEW:
+			rv = NS_OK;
+			break;
+		case Pt_PRINTSEL_CANCEL:
+			rv = NS_ERROR_FAILURE;
+			break;
+	}
+
+	return rv;
+}

@@ -23,21 +23,27 @@
 #ifndef nsPrintOptionsPh_h__
 #define nsPrintOptionsPh_h__
 
-#include "nsPrintOptionsImpl.h"  
+//#include "nsPrintOptionsImpl.h"  
+#include "nsIPrintOptions.h"  
+#include <Pt.h>
 
 
 //*****************************************************************************
 //***    nsPrintOptions
 //*****************************************************************************
-class nsPrintOptionsPh : public nsPrintOptions
+
+/* Header file */
+class nsPrintOptionsPh : public nsIPrintOptions
 {
 public:
-  nsPrintOptionsPh();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRINTOPTIONS
+
+  nsPrintOptionsPh(void *data);
   virtual ~nsPrintOptionsPh();
 
-
+private:
+	PpPrintContext_t *mPC;
 };
-
-
 
 #endif /* nsPrintOptions_h__ */
