@@ -1153,27 +1153,12 @@ operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   }
 
 
-  // Some compilers incorrectly consider the top-level cv-qualifiers in
-  // overload resolution.  This leads to ambiguities with builtin
-  // |operator==| because the |const| makes the |operator==|
-  // defined here, which would otherwise have a better or equally
-  // good conversion for all parameters, have a worse conversion
-  // for one parameter because of the |const|.  Since the |const|'s
-  // only purpose is to make the argument |const| when used within
-  // the function, we'll remove it for those compilers since we know
-  // we're doing the right thing anyway.  See bug 65664 for details.
-#ifdef CPP_CV_QUALIFIERS_CAUSE_AMBIGUITY
-#define NSCAP_CONST_PARAM
-#else
-#define NSCAP_CONST_PARAM const
-#endif
-
   // Comparing an |nsCOMPtr| to a raw pointer
 
 template <class T, class U>
 inline
 NSCAP_BOOL
-operator==( NSCAP_CONST_PARAM nsCOMPtr<T>& lhs, NSCAP_CONST_PARAM U* rhs )
+operator==( const nsCOMPtr<T>& lhs, const U* rhs )
   {
     return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(const void*, rhs);
   }
@@ -1181,7 +1166,7 @@ operator==( NSCAP_CONST_PARAM nsCOMPtr<T>& lhs, NSCAP_CONST_PARAM U* rhs )
 template <class T, class U>
 inline
 NSCAP_BOOL
-operator==( NSCAP_CONST_PARAM U* lhs, NSCAP_CONST_PARAM nsCOMPtr<T>& rhs )
+operator==( const U* lhs, const nsCOMPtr<T>& rhs )
   {
     return NS_STATIC_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
   }
@@ -1189,7 +1174,7 @@ operator==( NSCAP_CONST_PARAM U* lhs, NSCAP_CONST_PARAM nsCOMPtr<T>& rhs )
 template <class T, class U>
 inline
 NSCAP_BOOL
-operator!=( NSCAP_CONST_PARAM nsCOMPtr<T>& lhs, NSCAP_CONST_PARAM U* rhs )
+operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
   {
     return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs);
   }
@@ -1197,10 +1182,50 @@ operator!=( NSCAP_CONST_PARAM nsCOMPtr<T>& lhs, NSCAP_CONST_PARAM U* rhs )
 template <class T, class U>
 inline
 NSCAP_BOOL
-operator!=( NSCAP_CONST_PARAM U* lhs, NSCAP_CONST_PARAM nsCOMPtr<T>& rhs )
+operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
   {
     return NS_STATIC_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
   }
+
+  // To avoid ambiguities caused by the presence of builtin |operator==|s
+  // creating a situation where one of the |operator==| defined above
+  // has a better conversion for one argument and the builtin has a
+  // better conversion for the other argument, define additional
+  // |operator==| without the |const| on the raw pointer.
+  // See bug 65664 for details.
+#ifndef CANT_RESOLVE_CPP_CONST_AMBIGUITY
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator==( const nsCOMPtr<T>& lhs, U* rhs )
+  {
+    return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(void*, rhs);
+  }
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator==( U* lhs, const nsCOMPtr<T>& rhs )
+  {
+    return NS_STATIC_CAST(void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+  }
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator!=( const nsCOMPtr<T>& lhs, U* rhs )
+  {
+    return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(void*, rhs);
+  }
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator!=( U* lhs, const nsCOMPtr<T>& rhs )
+  {
+    return NS_STATIC_CAST(void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
+  }
+#endif
 
 
 
