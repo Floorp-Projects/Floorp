@@ -39,11 +39,11 @@ a.venkman-link:hover {
 }
 
 .msg-data[msg-type="HELP"]:before {
-    content: "?";
+    content: "";
 }
 
 .msg-data[msg-type="USAGE"]:before {
-    content: "/";
+    content: "?";
 }
 
 .msg-data[msg-type="USAGE"] {
