@@ -497,8 +497,8 @@ nsTreeCreator::CreateTableRowFrame(nsIFrame** aNewFrame) {
 
 nsresult
 nsTreeCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
-  //return NS_NewBoxFrame(mPresShell, aNewFrame);
-  return NS_NewTableCellInnerFrame(mPresShell, aNewFrame);
+  return NS_NewBoxFrame(mPresShell, aNewFrame);
+  //return NS_NewTableCellInnerFrame(mPresShell, aNewFrame);
 }
 
 #endif // INCLUDE_XUL
