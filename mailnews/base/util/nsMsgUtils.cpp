@@ -413,11 +413,11 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
     {
       // extract between "=?" and "?"
       // e.g. =?ISO-2022-JP?
-      char *p1 = strstr(*stringP, "=?");
+      const char *p1 = strstr(*stringP, "=?");
       if (p1) 
       {
         p1 += sizeof("=?")-1;         // skip "=?"
-        char *p2 = strchr(p1, '?');   // then search for '?' 
+        const char *p2 = strchr(p1, '?');   // then search for '?' 
         if (p2) 
         {
           char charset[kMAX_CSNAME] = "";
