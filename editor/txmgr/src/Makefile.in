@@ -24,6 +24,7 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = txmgr
+IS_COMPONENT = 1
 
 CPPSRCS =                           \
     nsTransactionItem.cpp           \

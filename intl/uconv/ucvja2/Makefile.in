@@ -23,6 +23,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ucvja2
 LIBRARY_NAME	= ucvja2
+IS_COMPONENT	= 1
 
 CSRCS		=  \
 		  $(NULL)

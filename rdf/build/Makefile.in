@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = rdf
+IS_COMPONENT = 1
 
 CPPSRCS =				\
 	dlldeps.cpp			\

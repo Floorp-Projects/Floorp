@@ -24,7 +24,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = appcores
-
+IS_COMPONENT = 1
 MODULE=raptor
 
 CPPSRCS= \

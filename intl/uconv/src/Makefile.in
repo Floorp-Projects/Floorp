@@ -23,6 +23,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= uconv
 LIBRARY_NAME	= uconv
+IS_COMPONENT	= 1
 
 CSRCS		=  \
                   ugen.c \

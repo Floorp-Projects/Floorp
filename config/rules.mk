@@ -326,7 +326,11 @@ ifdef MAPS
 	$(INSTALL) -m 444 $(MAPS) $(DIST)/bin
 endif
 ifdef SHARED_LIBRARY
+ifdef IS_COMPONENT
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
+else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
+endif
 endif
 ifdef PROGRAM
 	$(INSTALL) -m 444 $(PROGRAM) $(DIST)/bin
@@ -343,7 +347,11 @@ ifdef LIBRARY
 endif
 endif
 ifdef SHARED_LIBRARY
+ifdef IS_COMPONENT
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
+else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
+endif
 endif
 	+$(LOOP_OVER_DIRS)
 
