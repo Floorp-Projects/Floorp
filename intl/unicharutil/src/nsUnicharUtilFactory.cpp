@@ -22,6 +22,8 @@
 #include "nsIComponentManager.h"
 #include "nsIFactory.h"
 #include "nsUnicharUtilCIID.h"
+#include "nsHankakuToZenkakuCID.h"
+#include "nsTextTransformFactory.h"
 #include "nsICaseConversion.h"
 #include "nsCaseConversionImp2.h"
 #include "nsIServiceManager.h"
@@ -31,6 +33,7 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
+NS_DEFINE_IID(kHankakuToZenkakuCID, NS_HANKAKUTOZENKAKU_CID);
 NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
 
 PRInt32 g_InstanceCount = 0;
@@ -103,6 +106,15 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     }
     return res;
   }
+  if (aClass.Equals(kHankakuToZenkakuCID)) {
+    nsIFactory *factory = NEW_HANKAKU_TO_ZENKAKU_FACTORY();
+    nsresult res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
+    if (NS_FAILED(res)) {
+      *aFactory = NULL;
+      delete factory;
+    }
+    return res;
+  }
   return NS_NOINTERFACE;
 }
 
@@ -122,9 +134,21 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->RegisterComponent(kUnicharUtilCID, NULL, NULL, path,
+  rv = compMgr->RegisterComponent(kUnicharUtilCID, 
+                                  "Unichar Utility", 
+                                  NS_UNICHARUTIL_PROGID, 
+                                  path,
                                   PR_TRUE, PR_TRUE);
 
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv))  goto done;
+
+  rv = compMgr->RegisterComponent(kHankakuToZenkakuCID, 
+                                  "Japanese Hakaku To Zenkaku", 
+                                  NS_HANKAKUTOZENKAKU_PROGID, 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+
+done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
@@ -144,6 +168,11 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 
   rv = compMgr->UnregisterComponent(kUnicharUtilCID, path);
 
+  if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->UnregisterComponent(kHankakuToZenkakuCID, path);
+
+done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
