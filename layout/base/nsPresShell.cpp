@@ -238,9 +238,9 @@ public:
   NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD StyleChangeReflow();
-  virtual nsIFrame* GetRootFrame();
-  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame);
-  virtual nsIFrame* FindFrameWithContent(nsIContent* aContent);
+  NS_IMETHOD GetRootFrame(nsIFrame*& aFrame) const;
+  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) const;
+  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame*& aPrimaryFrame) const;
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame*& aPlaceholderFrame) const;
   NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
@@ -751,14 +751,15 @@ PresShell::StyleChangeReflow()
   return NS_OK; //XXX this needs to be real. MMP
 }
 
-nsIFrame*
-PresShell::GetRootFrame()
+NS_IMETHODIMP
+PresShell::GetRootFrame(nsIFrame*& aFrame) const
 {
-  return mRootFrame;
+  aFrame = mRootFrame;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-PresShell::GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame)
+PresShell::GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) const
 {
   nsIFrame*             child;
   nsIPageSequenceFrame* pageSequence;
@@ -1184,12 +1185,13 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
   return nsnull;
 }
 
-nsIFrame*
-PresShell::FindFrameWithContent(nsIContent* aContent)
+NS_IMETHODIMP
+PresShell::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame*& aPrimaryFrame) const
 {
   // For the time being do a brute force depth-first search of
   // the frame tree
-  return ::FindFrameWithContent(mRootFrame, aContent);
+  aPrimaryFrame = ::FindFrameWithContent(mRootFrame, aContent);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1628,7 +1630,11 @@ PresShell::VerifyIncrementalReflow()
 
   // Now that the document has been reflowed, use its frame tree to
   // compare against our frame tree.
-  CompareTrees(GetRootFrame(), sh->GetRootFrame());
+  nsIFrame* root1;
+  nsIFrame* root2;
+  GetRootFrame(root1);
+  sh->GetRootFrame(root2);
+  CompareTrees(root1, root2);
 
   NS_RELEASE(vm);
   NS_RELEASE(cx);

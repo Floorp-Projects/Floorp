@@ -291,7 +291,8 @@ nsLabelFrame::FindForControl(nsIFormControlFrame*& aResultFrame)
             value.GetStringValue(id);
             id.Trim(whitespace, PR_TRUE, PR_TRUE);    
             if (id.Equals(forId)) {
-              nsIFrame* frame = shell->FindFrameWithContent(htmlContent);
+              nsIFrame* frame;
+              shell->GetPrimaryFrameFor(htmlContent, frame);
               if (nsnull != frame) {
                 nsIFormControlFrame* fcFrame = nsnull;
                 result = frame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);

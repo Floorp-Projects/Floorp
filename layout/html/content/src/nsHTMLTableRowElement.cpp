@@ -117,7 +117,8 @@ void TempList(nsIDOMHTMLTableElement* aTable) {
       }
       nsIPresShell* shell = doc->GetShellAt(0);
       if (nsnull != shell) {
-        nsIFrame* rootFrame = shell->GetRootFrame();
+        nsIFrame* rootFrame;
+        shell->GetRootFrame(rootFrame);
         if (nsnull != rootFrame) {
           rootFrame->List(stdout, 0, nsnull);
         }

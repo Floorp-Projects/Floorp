@@ -276,7 +276,8 @@ nsHTMLFormElement::Submit()
   if ((NS_OK == result) && doc) {
     nsIPresShell *shell = doc->GetShellAt(0);
     if (nsnull != shell) {
-      nsIFrame* frame = shell->FindFrameWithContent(this);
+      nsIFrame* frame;
+      shell->GetPrimaryFrameFor(this, frame);
       if (frame) {
         nsIFormManager* formMan = nsnull;
         nsresult result = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
@@ -309,7 +310,8 @@ nsHTMLFormElement::Reset()
   if ((NS_OK == result) && doc) {
     nsIPresShell *shell = doc->GetShellAt(0);
     if (nsnull != shell) {
-      nsIFrame* frame = shell->FindFrameWithContent(this);
+      nsIFrame* frame;
+      shell->GetPrimaryFrameFor(this, frame);
       if (frame) {
         nsIFormManager* formMan = nsnull;
         nsresult result = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);

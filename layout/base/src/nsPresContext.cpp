@@ -190,7 +190,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
   nsIFrame*         rootFrame;
   nsIStyleContext*  rootStyleContext;
 
-  rootFrame = mShell->GetRootFrame();
+  mShell->GetRootFrame(rootFrame);
   if (nsnull != rootFrame) {
     rootFrame->GetStyleContext(rootStyleContext);
     rootStyleContext->RemapStyle(this);
