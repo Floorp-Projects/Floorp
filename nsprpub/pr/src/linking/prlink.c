@@ -39,15 +39,17 @@
 #ifdef XP_UNIX
 #ifdef USE_DLFCN
 #include <dlfcn.h>
+/* Define these on systems that don't have them. */
+#ifndef RTLD_LAZY
+#define RTLD_LAZY RTLD_NOW
+#endif
+#ifndef RTLD_LOCAL
+#define RTLD_LOCAL 0
+#endif
 #elif defined(USE_HPSHL)
 #include <dl.h>
 #elif defined(USE_MACH_DYLD)
 #include <mach-o/dyld.h>
-#endif
-
-/* Define this on systems which don't have it (AIX) */
-#ifndef RTLD_LAZY
-#define RTLD_LAZY RTLD_NOW
 #endif
 #endif /* XP_UNIX */
 
