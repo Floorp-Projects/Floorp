@@ -207,7 +207,9 @@ public:
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
-  NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell);
+  NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
+                         PRBool aVisible,
+                         nsIWebShell *&aNewWebShell);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell);
 
@@ -1467,10 +1469,12 @@ nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStat
 }
 
 NS_IMETHODIMP
-nsWebShell::NewWebShell(nsIWebShell *&aNewWebShell)
+nsWebShell::NewWebShell(PRUint32 aChromeMask,
+                        PRBool aVisible,
+                        nsIWebShell *&aNewWebShell)
 {
   if (nsnull != mContainer) {
-    return mContainer->NewWebShell(aNewWebShell);
+    return mContainer->NewWebShell(aChromeMask, aVisible, aNewWebShell);
   }
   return NS_OK;
 }
@@ -1607,7 +1611,7 @@ nsWebShell::GetTarget(const PRUnichar* aName)
   
   if (name.EqualsIgnoreCase("_blank")) {
     nsIWebShell *shell;
-    if (NS_OK == NewWebShell(shell))
+    if (NS_OK == NewWebShell(PRUint32(~0), PR_TRUE, shell))
       target = shell;
     else
     {
@@ -1636,7 +1640,7 @@ nsWebShell::GetTarget(const PRUnichar* aName)
     if (nsnull != mContainer) {
       mContainer->FindWebShellWithName(aName, target);
       if (nsnull == target) {
-        mContainer->NewWebShell(target);
+        mContainer->NewWebShell(PRUint32(~0), PR_TRUE, target);
       }
       if (nsnull != target) {
         target->SetName(aName);      
