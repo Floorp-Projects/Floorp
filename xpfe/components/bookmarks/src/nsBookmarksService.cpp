@@ -3031,37 +3031,6 @@ nsBookmarksService::RemoveBookmarkIcon(const char *aURL, const PRUnichar *iconUR
 
 
 NS_IMETHODIMP
-nsBookmarksService::GetAddTime(const char *aBookmarkURL, PRInt64* aAddTime)
-{
-  nsCOMPtr<nsIRDFResource>	bookmark;
-  nsresult			rv;
-  
-  if (NS_SUCCEEDED(rv = gRDF->GetResource(aBookmarkURL, getter_AddRefs(bookmark) )))
-  {
-    // Note: always use mInner!! Otherwise, could get into an infinite loop
-    // due to Assert/Change calling UpdateBookmarkLastModifiedDate()
-
-    nsCOMPtr<nsIRDFNode> nodeType;
-    GetSynthesizedType(bookmark, getter_AddRefs(nodeType));
-    if (nodeType == kNC_Bookmark)
-    {
-      nsCOMPtr<nsIRDFNode> node;      
-      rv = mInner->GetTarget(bookmark, kNC_BookmarkAddDate, PR_TRUE,
-        getter_AddRefs(node));
-      if (rv != NS_RDF_NO_VALUE)
-      {
-        nsCOMPtr<nsIRDFDate> addDate = do_QueryInterface(node);
-        if (addDate)
-        {
-          rv = addDate->GetValue(aAddTime);
-        }
-      }                  
-    }
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsBookmarksService::UpdateLastVisitedDate(const char *aURL, const PRUnichar *aCharset)
 {
 	nsCOMPtr<nsIRDFResource>	bookmark;

@@ -82,7 +82,7 @@
           for (var i in list) {
             var name = list[i];
             if (name != "") {
-              var contractid = "@mozilla.org/autocompleteSession;1?type=" + name;              
+              var contractid = "@mozilla.org/autocompleteSession;1?type=" + name;
               try {
                 var session =
                   Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSession);
@@ -648,12 +648,11 @@
           if (!this.noMatch) {
              var defaultSession = this.getDefaultSession();
              if (defaultSession)
-                this.autoFillInput(defaultSession, this.mLastResults[defaultSession], true);             
+                this.autoFillInput(defaultSession, this.mLastResults[defaultSession], true);         
           }
           
           if (this.mFinishAfterSearch)
             this.finishAutoComplete(false, this.mFireAfterSearch, null);
-
         ]]></body>
       </method>
 
@@ -714,12 +713,8 @@
           this.mNeedToComplete = false;
           this.clearTimer();
 
-          if (!this.noMatch)
-            this.autoComplete();
-
-          if (aFireTextCommand) {            
-            this._fireEvent("textcommand", this.userAction, aTriggeringEvent);            
-          }
+          if (aFireTextCommand)
+            this._fireEvent("textcommand", this.userAction, aTriggeringEvent);
         ]]></body>
       </method>
 
