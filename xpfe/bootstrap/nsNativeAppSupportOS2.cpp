@@ -44,6 +44,13 @@
 #include "nsIAppShellService.h"
 #include "nsIProfileInternal.h"
 #include "rdf.h"
+#include "nsIXULWindow.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIPref.h"
+#include "nsIPromptService.h"
+#include "nsNetCID.h"
+#include "nsIHttpProtocolHandler.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -734,6 +741,7 @@ int   nsNativeAppSupportOS2::mConversations = 0;
 HSZ   nsNativeAppSupportOS2::mApplication   = 0;
 HSZ   nsNativeAppSupportOS2::mTopics[nsNativeAppSupportOS2::topicCount] = { 0 };
 DWORD nsNativeAppSupportOS2::mInstance      = 0;
+nsIDOMWindow* nsNativeAppSupportOS2::mInitialWindow = nsnull;
 
 
 // Added this as pmddeml has no api like this
