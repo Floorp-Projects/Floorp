@@ -113,6 +113,20 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 }
 
 /**
+ * Use this macro to implement the AddRef method for a given <i>_class</i>
+ * implemented as a wholly owned aggregated object intended to implement
+ * interface(s) for its owner
+ * @param _class The name of the class implementing the method
+ * @param _aggregator the owning/containing object
+ */
+#define NS_IMPL_ADDREF_USING_AGGREGATOR(_class, _aggregator)                  \
+NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
+{                                                                             \
+  NS_PRECONDITION(_aggregator, "null aggregator");                            \
+  return (_aggregator)->AddRef();                                            \
+}
+
+/**
  * Use this macro to implement the Release method for a given
  * <i>_class</i>.
  * @param _class The name of the class implementing the method
@@ -162,6 +176,21 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
 #define NS_IMPL_RELEASE(_class) \
   NS_IMPL_RELEASE_WITH_DESTROY(_class, NS_DELETEXPCOM(this))
 
+/**
+ * Use this macro to implement the Release method for a given <i>_class</i>
+ * implemented as a wholly owned aggregated object intended to implement
+ * interface(s) for its owner
+ * @param _class The name of the class implementing the method
+ * @param _aggregator the owning/containing object
+ */
+#define NS_IMPL_RELEASE_USING_AGGREGATOR(_class, _aggregator)                 \
+NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
+{                                                                             \
+  NS_PRECONDITION(_aggregator, "null aggregator");                            \
+  return (_aggregator)->Release();                                            \
+}
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -200,6 +229,11 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
                                     NS_STATIC_CAST(_implClass*, this));       \
   else
 
+#define NS_IMPL_QUERY_BODY_AGGREGATED(_interface, _aggregate)                 \
+  if ( aIID.Equals(NS_GET_IID(_interface)) )                                  \
+    foundInterface = NS_STATIC_CAST(_interface*, _aggregate);                 \
+  else
+
 #define NS_IMPL_QUERY_TAIL_GUTS                                               \
     foundInterface = 0;                                                       \
   nsresult status;                                                            \
@@ -228,6 +262,21 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   return status;                                                              \
 }
 
+#define NS_IMPL_QUERY_TAIL_USING_AGGREGATOR(_aggregator)                      \
+    foundInterface = 0;                                                       \
+  nsresult status;                                                            \
+  if ( !foundInterface ) {                                                    \
+    NS_ASSERTION(_aggregator, "null aggregator");                             \
+    status = _aggregator->QueryInterface(aIID, (void**)&foundInterface);      \
+  } else                                                                      \
+    {                                                                         \
+      NS_ADDREF(foundInterface);                                              \
+      status = NS_OK;                                                         \
+    }                                                                         \
+  *aInstancePtr = foundInterface;                                             \
+  return status;                                                              \
+}
+
 #define NS_IMPL_QUERY_TAIL(_supports_interface)                               \
   NS_IMPL_QUERY_BODY_AMBIGUOUS(nsISupports, _supports_interface)              \
   NS_IMPL_QUERY_TAIL_GUTS
@@ -241,11 +290,16 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   */
 #define NS_INTERFACE_MAP_BEGIN(_implClass)      NS_IMPL_QUERY_HEAD(_implClass)
 #define NS_INTERFACE_MAP_ENTRY(_interface)      NS_IMPL_QUERY_BODY(_interface)
+#define NS_INTERFACE_MAP_ENTRY_AGGREGATED(_interface,_aggregate)              \
+  NS_IMPL_QUERY_BODY_AGGREGATED(_interface,_aggregate)
+
 #define NS_INTERFACE_MAP_END                    NS_IMPL_QUERY_TAIL_GUTS
 #define NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(_interface, _implClass)              \
   NS_IMPL_QUERY_BODY_AMBIGUOUS(_interface, _implClass)
 #define NS_INTERFACE_MAP_END_INHERITING(_baseClass)                           \
   NS_IMPL_QUERY_TAIL_INHERITING(_baseClass)
+#define NS_INTERFACE_MAP_END_AGGREGATED(_aggregator)                          \
+  NS_IMPL_QUERY_TAIL_USING_AGGREGATOR(_aggregator)
 
 #define NS_IMPL_QUERY_INTERFACE0(_class)                                      \
   NS_INTERFACE_MAP_BEGIN(_class)                                              \
