@@ -104,33 +104,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
         this.lastIndex = 0;
         this.parenCount = state.parenCount;
         this.flags = flags;
-/*
-        anchorRegExp(state, ren);
-        optimizeRegExp(state, ren);
 
-        if (debug)
-            dumpRegExp(state, ren);
-
-        this.program = new byte[state.progLength];
-        this.lastIndex = 0;
-        this.parenCount = state.parenCount;
-        this.flags = flags;
-
-        state.progLength = 0;
-        emitRegExp(state, ren);
-
-        if (debug) {
-            for (int i=0; i < program.length; i++) {
-                int b = (program[i] & 0xff);
-                System.err.print(b);
-                if ((i > 0 && i % 8 == 0) || i == program.length-1)
-                    System.err.println();
-                else
-                    System.err.print(", ");
-            }
-            System.err.println();
-        }
-*/
         scope = getTopLevelScope(scope);
         setPrototype(getClassPrototype(scope, "RegExp"));
         setParentScope(scope);
@@ -851,19 +825,11 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 break;
 
               case '*':
-                if ((ren.flags & RENode.NONEMPTY) == 0) {
-                    reportError("msg.re.empty", "*");
-                    return null;
-                }
                 index++;
                 ren = new RENode(state, REOP_STAR, ren);
                 break;
 
               case '+':
-                if ((ren.flags & RENode.NONEMPTY) == 0) {
-                    reportError("msg.re.empty", "+");
-                    return null;
-                }
                 index++;
                 ren2 = new RENode(state, REOP_PLUS, ren);
                 if ((ren.flags & RENode.NONEMPTY) != 0)
@@ -1321,6 +1287,8 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                         ren.next, input, previousKid);
             return matchRENodes(state, ren.next, stop, input, index);   
         }
+        // if we match, but didn't advance, stop now
+        if (kidMatch == index) return kidMatch;
         // go deeper to see how that looks
         int deeper = matchGreedyKid(state, ren, stop, ++kidCount, maxKid,
                                                     input, kidMatch, index);                    
@@ -1442,6 +1410,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                             parsub.charArray = input;
                         }
                         parsub.index = index;
+                        parsub.length = 0;
                         if (num >= state.parenCount)
                             state.parenCount = num + 1;
                         continue;
