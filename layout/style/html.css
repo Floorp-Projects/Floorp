@@ -202,26 +202,22 @@ q:after {
   content: close-quote;
 }
 
-a:link {
-  display: inline;
+a[href]:link {
   color: blue;
   text-decoration: underline;
   cursor: pointer;
 }
-a:visited {
-  display: inline;
+a[href]:visited {
   color: purple;
   text-decoration: underline;
   cursor: pointer;
 }
-a:active {
-  display: inline;
+a[href]:active {
   color: red;
   text-decoration: underline;
   cursor: pointer;
 }
-a:out-of-date {
-  display: inline;
+a[href]:out-of-date {
   color: lime;
   text-decoration: underline;
   cursor: pointer;
@@ -425,9 +421,8 @@ img[align=left] {
 img[align=right] {
   margin-left: 4px;
 }
-a:link img, a:visited img, a:active img,
-a:out-of-date img, img[usemap], object[usemap] {
-  display: inline;
+a[href]:link img, a[href]:visited img, a[href]:active img,
+a[href]:out-of-date img, img[usemap], object[usemap] {
   border: 2px solid;
   cursor: pointer;
 }
@@ -528,11 +523,7 @@ input[type=hidden] {
 }
 
 /*------- Focus ------*/
-a:focus {
-  outline: 1px dotted black;
-}
-
-a:focus img {
+a[href]:focus, a[href]:focus img {
   outline: 1px dotted black;
 }
 
