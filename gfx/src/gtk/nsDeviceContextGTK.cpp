@@ -359,7 +359,7 @@ NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
   
   char* fontName = aFontName.ToNewCString();
   PR_snprintf(wildstring, namelen + 200,
-             "*-%s-*-*-normal--*-*-%d-%d-*-*-*",
+             " -*-%s-*-*-normal-*-*-*-%d-%d-*-*-*-*",
              fontName, dpi, dpi);
   delete [] fontName;
   
