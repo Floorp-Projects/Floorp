@@ -410,7 +410,6 @@ static PRBool gSetupSmoothTextMenu = PR_FALSE;
   return YES;
 }
 
-
 -(IBAction) toggleBookmarksToolbar:(id)aSender
 {
   //XXX do nothing for now
