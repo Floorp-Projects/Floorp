@@ -19,10 +19,9 @@
 #
 # Contributor(s): 
 
-DEPTH=..
+DEPTH=..\..
 
-
-DIRS = src robot robot\test tests
+DIRS = outsinks
 
 
 include <$(DEPTH)\config\rules.mak>
