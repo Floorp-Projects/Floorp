@@ -30,10 +30,11 @@ DISTXUL=$(DIST)\bin\chrome
 
 install::
 	$(MAKE_INSTALL) tasksOverlay.css $(DISTBROWSER)
-	$(MAKE_INSTALL) xul.css $(DISTXUL)
-  $(MAKE_INSTALL) xulBindings.xml $(DISTXUL)
-  $(MAKE_INSTALL) htmlBindings.xml $(DISTXUL)
+	$(MAKE_INSTALL) globalBindings.xml $(DISTBROWSER)
 	$(MAKE_INSTALL) global.css $(DISTBROWSER)
+	$(MAKE_INSTALL) htmlBindings.xml $(DISTXUL)
+	$(MAKE_INSTALL) xulBindings.xml $(DISTXUL)
+	$(MAKE_INSTALL) xul.css $(DISTXUL)
 	$(MAKE_INSTALL) lessCols.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) lessCols_mo.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) lessCols_dis.gif $(DISTBROWSER)
@@ -118,6 +119,10 @@ install::
 	$(MAKE_INSTALL) animthrob_single.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) wizardOverlay.css $(DISTBROWSER)
 	$(MAKE_INSTALL) commonDialog.css $(DISTBROWSER)
-	
+	$(MAKE_INSTALL) seltab-leftedge.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) seltab-rightedge.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) tab-leftedge.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) tab-rightedge.gif $(DISTBROWSER)
+
 clobber::
   rm -f $(DIST)\bin\chrome\global\skin\default\*.*

@@ -30,6 +30,7 @@ DIRS		= unix
 
 EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/tasksOverlay.css \
+		$(srcdir)/globalBindings.xml \
 		$(srcdir)/global.css \
 		$(srcdir)/lessCols.gif \
 		$(srcdir)/lessCols_mo.gif \
@@ -113,11 +114,15 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/progressmeter-busy.gif \
 		$(srcdir)/commonDialog.css \
 		$(srcdir)/wizardOverlay.css \
+		$(srcdir)/seltab-leftedge.gif \
+		$(srcdir)/seltab-rightedge.gif \
+		$(srcdir)/tab-leftedge.gif \
+		$(srcdir)/tab-rightedge.gif \
 		$(NULL)
 
 EXPORT_CHROME	= $(srcdir)/xul.css \
-                $(srcdir)/xulBindings.xml \
 		$(srcdir)/htmlBindings.xml \
+                $(srcdir)/xulBindings.xml \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk
