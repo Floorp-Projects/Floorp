@@ -3053,11 +3053,13 @@ PRBool GlobalWindowImpl::CheckOpenAllow(const nsAString &aName)
     // However it might still not be blocked.
     // Special case items that don't actually open new windows.
     nsAutoString name(aName);
+    // _main is an IE target which should be case-insensitive but isn't
+    // see bug 217886 for details
     if (!name.IsEmpty() &&
         !name.EqualsIgnoreCase("_top") &&
         !name.EqualsIgnoreCase("_self") &&
         !name.EqualsIgnoreCase("_content") &&
-        !name.EqualsIgnoreCase("_main")) {
+        !name.Equals(NS_LITERAL_STRING("_main"))) {
 
       nsCOMPtr<nsIWindowWatcher> wwatch =
           do_GetService(NS_WINDOWWATCHER_CONTRACTID);

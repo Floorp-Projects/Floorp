@@ -208,7 +208,9 @@ NS_IMETHODIMP nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
     return NS_OK;
   if(name.EqualsIgnoreCase("_blank"))
     return NS_OK;
-  if(name.EqualsIgnoreCase("_content") || name.EqualsIgnoreCase("_main")) {
+  // _main is an IE target which should be case-insensitive but isn't
+  // see bug 217886 for details
+  if(name.EqualsIgnoreCase("_content") || name.Equals(NS_LITERAL_STRING("_main"))) {
     *aFoundItem = mWebBrowser->mDocShellAsItem;
     NS_IF_ADDREF(*aFoundItem);
     return NS_OK;
