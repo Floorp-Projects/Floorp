@@ -24,10 +24,11 @@
 //
 
 #include "CNavCenterScroller.h"
+#include <LScrollBar.h>
 
 
 CNavCenterScroller :: CNavCenterScroller ( LStream* inStream )
-	: LActiveScroller(inStream)
+	: LScrollerView(inStream)
 {
 }
 

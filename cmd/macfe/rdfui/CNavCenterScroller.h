@@ -25,10 +25,10 @@
 
 #pragma once
 
-#include <LActiveScroller.h>
+#include <LScrollerView.h>
 
 
-class CNavCenterScroller : public LActiveScroller
+class CNavCenterScroller : public LScrollerView
 {
 public:
 	enum { class_ID = 'NCSc' };
