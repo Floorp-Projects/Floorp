@@ -48,12 +48,12 @@
 #include "nsIStreamListener.h"
 #include "nsNetUtil.h"
 #include "nsQuickSort.h"
-#include "nsIProfileInternal.h"
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h" // for GetMessageServiceFromURI
 #include "prnetdb.h"
 #include "nsIMsgWindow.h"
 #include "prlog.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 static PRLogModuleInfo *BayesianFilterLogModule = nsnull;
 
@@ -832,18 +832,10 @@ void nsBayesianFilter::observeMessage(Tokenizer& tokenizer, const char* messageU
 static nsresult getTrainingFile(nsCOMPtr<nsILocalFile>& file)
 {
     // should we cache the profile manager's directory?
-    nsresult rv;
-    nsCOMPtr<nsIProfileInternal> profileManager = do_GetService("@mozilla.org/profile/manager;1", &rv);
-    if (NS_FAILED(rv)) return rv;
-    
-    nsXPIDLString currentProfile;
-    rv = profileManager->GetCurrentProfile(getter_Copies(currentProfile));
-    if (NS_FAILED(rv)) return rv;
-    
     nsCOMPtr<nsIFile> profileDir;
-    rv = profileManager->GetProfileDir(currentProfile.get(), getter_AddRefs(profileDir));
-    if (NS_FAILED(rv)) return rv;
-    
+
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = profileDir->Append(NS_LITERAL_STRING("training.dat"));
     if (NS_FAILED(rv)) return rv;
     
