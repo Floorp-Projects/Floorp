@@ -1,0 +1,83 @@
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+    Bill Law    <law@netscape.com>
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+  
+
+<!DOCTYPE window [
+<!ENTITY % platformDTD SYSTEM "chrome://global/locale/platformDialogOverlay.dtd" >
+%platformDTD;
+<!ENTITY % prefWinhooksDTD SYSTEM "chrome://communicator/locale/pref/pref-winhooks.dtd" >
+%prefWinhooksDTD;
+]>
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		class="color-dialog"
+		onload="parent.initPanel('chrome://communicator/content/pref/pref-winhooks.xul');"
+		orient="vertical"
+		>
+
+<html:script language="JavaScript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
+    
+    <box class="box-smallheader" title="&title.label;"/>
+
+    <box orient="vertical">
+        <!-- File types -->
+        <titledbox>
+            <title>
+                <text value="&files.label;"/>
+            </title>
+            <box orient="vertical">
+                <html>
+                    &files.text;
+                </html>
+                <checkbox id="isHandlingHTML" value="&html.label;"/>
+                <checkbox id="isHandlingJPEG" value="&jpeg.label;"/>
+                <checkbox id="isHandlingGIF"  value="&gif.label;"/>
+                <checkbox id="isHandlingPNG"  value="&png.label;"/>
+                <checkbox id="isHandlingXML"  value="&xml.label;"/>
+                <checkbox id="isHandlingXUL"  value="&xul.label;"/>
+            </box>
+        </titledbox>
+        <!-- Internet Shortcuts -->
+        <titledbox>
+            <title>
+                <text value="&shortcuts.label;"/>
+            </title>
+            <box orient="vertical">
+                <html>
+                    &shortcuts.text;
+                </html>
+                <checkbox id="isHandlingHTTP"   value="&http.label;"/>
+                <checkbox id="isHandlingHTTPS"  value="&https.label;"/>
+                <checkbox id="isHandlingFTP"    value="&ftp.label;"/>
+                <checkbox id="isHandlingCHROME" value="&chrome.label;"/>
+            </box>
+        </titledbox>
+    </box>
+
+</window>
+
