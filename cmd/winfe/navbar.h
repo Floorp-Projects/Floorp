@@ -27,6 +27,7 @@
 
 class CSelectorButton;
 
+/*  This class may yet be of use.  For now comment it out.
 class CNavMenuButton : public CLinkToolbarButton
 {
 protected:
@@ -43,14 +44,21 @@ public:
 
 	DECLARE_MESSAGE_MAP()
 };
+*/
 
-
-class CNavMenuBar : public CWnd
+class CNavMenuBar : public CWnd, public CCustomImageObject
 {
-	CNavMenuButton* m_pMenuButton;	// Pointer to the button
+	//CNavMenuButton* m_pMenuButton;	// Pointer to the button
 	CSelectorButton* m_pSelectorButton; // Selector button
 	BOOL m_bHasFocus;	// Determines what colors to use for the caption
 	CPoint m_PointHit;	// MouseDown tracking
+	CString titleText;	// Name of the current workspace
+
+	COLORREF m_ForegroundColor;
+	COLORREF m_BackgroundColor;
+	CString m_BackgroundImageURL;
+	NSNavCenterImage* m_pBackgroundImage;
+	HT_View m_View; // The current HT_View.
 
 public:
 	CNavMenuBar();
@@ -58,6 +66,8 @@ public:
 
 	void UpdateView(CSelectorButton* pButton, HT_View view); 
 	void NotifyFocus(BOOL hasFocus) { m_bHasFocus = hasFocus; Invalidate(); }
+
+	void LoadComplete(HT_Resource r) { Invalidate(); }
 
 	//{{AFX_MSG(CNavMenuBar)
 	

@@ -26,7 +26,12 @@
 #include "dropmenu.h"
 #include "rdfliner.h"
 #include "htrdf.h"
+#include "xp_ncent.h"
 
+// The Nav Center vocab element
+extern "C" RDF_NCVocab gNavCenter;
+
+/* This class may yet be of use.  For now comment it out.
 BEGIN_MESSAGE_MAP(CNavMenuButton, CLinkToolbarButton)
 	ON_MESSAGE(NSDRAGMENUOPEN, OnDragMenuOpen) 
 END_MESSAGE_MAP()
@@ -36,8 +41,6 @@ CNavMenuButton::CNavMenuButton()
 {
 	m_bShouldShowRMMenu = FALSE;
 }
-
-extern void DrawUpButton(HDC dc, CRect& rect);
 
 LRESULT CNavMenuButton::OnDragMenuOpen(WPARAM wParam, LPARAM lParam)
 {
@@ -145,6 +148,9 @@ void CNavMenuButton::UpdateButtonText(CRect rect)
 	int height = GetRequiredButtonSize().cy;
 	MoveWindow(2, (rect.Height()-height)/2, width, height);
 }
+*/
+
+extern void DrawUpButton(HDC dc, CRect& rect);
 
 BEGIN_MESSAGE_MAP(CNavMenuBar, CWnd)
 	//{{AFX_MSG_MAP(CNavMenuBar)
@@ -160,13 +166,15 @@ BEGIN_MESSAGE_MAP(CNavMenuBar, CWnd)
 END_MESSAGE_MAP()
 
 CNavMenuBar::CNavMenuBar()
-:m_pSelectorButton(NULL), m_pMenuButton(NULL), m_bHasFocus(FALSE)
+:m_pSelectorButton(NULL), m_bHasFocus(FALSE) // ,m_pMenuButton(NULL)
 {
+	m_pBackgroundImage = NULL;
+	m_View = NULL;
 }
 
 CNavMenuBar::~CNavMenuBar()
 {
-	delete m_pMenuButton;
+//	delete m_pMenuButton;
 }
 
 void CNavMenuBar::OnPaint( )
@@ -175,55 +183,130 @@ void CNavMenuBar::OnPaint( )
 	CRect rect;
 	GetClientRect(&rect);
 	
-	if (m_bHasFocus)
-		m_pMenuButton->SetCustomColors(::GetSysColor(COLOR_CAPTIONTEXT), ::GetSysColor(COLOR_ACTIVECAPTION));
-	else m_pMenuButton->SetCustomColors(::GetSysColor(COLOR_INACTIVECAPTIONTEXT), ::GetSysColor(COLOR_INACTIVECAPTION));
+//	if (m_bHasFocus)
+//		m_pMenuButton->SetCustomColors(::GetSysColor(COLOR_CAPTIONTEXT), ::GetSysColor(COLOR_ACTIVECAPTION));
+//	else m_pMenuButton->SetCustomColors(::GetSysColor(COLOR_INACTIVECAPTIONTEXT), ::GetSysColor(COLOR_INACTIVECAPTION));
 
-	CBrush faceBrush(::GetSysColor(m_bHasFocus? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION));
-
-	dc.FillRect(&rect, &faceBrush);
+	// Read in all the properties
+	HT_Resource top = HT_TopNode(m_View);
+	void* data;
+	PRBool foundData = FALSE;
 	
+	// Foreground color
+	HT_GetNodeData(top, gNavCenter->titleBarFGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_ForegroundColor);
+	else m_ForegroundColor = RGB(255,255,255);
+
+	// background color
+	HT_GetNodeData(top, gNavCenter->titleBarBGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_BackgroundColor);
+	else m_BackgroundColor = RGB(64,64,64);
+
+	// Background image URL
+	m_BackgroundImageURL = "";
+	HT_GetNodeData(top, gNavCenter->treeBGURL, HT_COLUMN_STRING, &data);
+	if (data)
+		m_BackgroundImageURL = (char*)data;
+	m_pBackgroundImage = NULL; // Clear out the BG image.
+	
+	CBrush faceBrush(m_BackgroundColor); // (::GetSysColor(m_bHasFocus? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION));
+
+	if (m_BackgroundImageURL != "")
+	{
+		// There's a background that needs to be drawn.
+		m_pBackgroundImage = LookupImage(m_BackgroundImageURL, NULL);
+	}
+
+	if (m_pBackgroundImage && m_pBackgroundImage->SuccessfullyLoaded())
+	{
+		// Draw the strip of the background image that should be placed
+		// underneath this line.
+		PaintBackground(dc.m_hDC, rect, m_pBackgroundImage);
+	}
+	else
+	{
+		dc.FillRect(&rect, &faceBrush);
+	}
+
+	// Draw the text.
+	HFONT font = WFE_GetUIFont(dc.m_hDC);
+	HFONT hOldFont = (HFONT)::SelectObject(dc.m_hDC, font);
+	CRect sizeRect(0,0,150,0);
+	int height = ::DrawText(dc.m_hDC, titleText, titleText.GetLength(), &sizeRect, DT_CALCRECT | DT_WORDBREAK);
+	
+	if (sizeRect.Width() > rect.Width() - NAVBAR_CLOSEBOX - 9)
+	{
+		// Don't write into the close box area!
+		sizeRect.right = sizeRect.left + (rect.Width() - NAVBAR_CLOSEBOX - 9);
+	}
+	sizeRect.left += 5;	// indent slightly horizontally
+	sizeRect.right += 5;
+
+	// Center the text vertically.
+	sizeRect.top = (rect.Height() - height) / 2;
+	sizeRect.bottom = sizeRect.top + height;
+
+	// Draw the text
+	int nOldBkMode = dc.SetBkMode(TRANSPARENT);
+
+	UINT nFormat = DT_SINGLELINE | DT_VCENTER;
+	COLORREF oldColor;
+
+	oldColor = dc.SetTextColor(RGB(255,255,255));
+	dc.DrawText((LPCSTR)titleText, -1, &sizeRect, DT_CENTER | DT_EXTERNALLEADING | nFormat);
+
+	dc.SetTextColor(oldColor);
+	dc.SetBkMode(nOldBkMode);
+
 	// Draw the close box at the edge of the bar.
+	CNSNavFrame* navFrameParent = (CNSNavFrame*)GetParentFrame();
+	if (XP_IsNavCenterDocked(navFrameParent->GetHTPane()))
+	{
 	
-	int left = rect.right - NAVBAR_CLOSEBOX - 5;
-	int right = left + NAVBAR_CLOSEBOX;
-	int top = rect.top + (rect.Height() - NAVBAR_CLOSEBOX)/2;
-	int bottom = top + NAVBAR_CLOSEBOX;
+		int left = rect.right - NAVBAR_CLOSEBOX - 5;
+		int right = left + NAVBAR_CLOSEBOX;
+		int top = rect.top + (rect.Height() - NAVBAR_CLOSEBOX)/2;
+		int bottom = top + NAVBAR_CLOSEBOX;
 
-	CRect edgeRect(left, top, right, bottom);
-	CBrush* closeBoxBrush = CBrush::FromHandle(sysInfo.m_hbrBtnFace);
-	dc.FillRect(&edgeRect, closeBoxBrush);
+		CRect edgeRect(left, top, right, bottom);
+		CBrush* closeBoxBrush = CBrush::FromHandle(sysInfo.m_hbrBtnFace);
+		dc.FillRect(&edgeRect, closeBoxBrush);
 
-	DrawUpButton(dc.m_hDC, edgeRect);
+		DrawUpButton(dc.m_hDC, edgeRect);
 
-	HPEN hPen = (HPEN)::CreatePen(PS_SOLID, 1, RGB(0,0,0));
-	HPEN hOldPen = (HPEN)(dc.SelectObject(hPen));
+		HPEN hPen = (HPEN)::CreatePen(PS_SOLID, 1, RGB(0,0,0));
+		HPEN hOldPen = (HPEN)(dc.SelectObject(hPen));
 
-	dc.MoveTo(edgeRect.left+4, edgeRect.top+4);
-	dc.LineTo(edgeRect.right-5, edgeRect.bottom-4);
-	dc.MoveTo(edgeRect.right-6, edgeRect.top+4);
-	dc.LineTo(edgeRect.left+3, edgeRect.bottom-4);
-	
-	HPEN hShadowPen = ::CreatePen(PS_SOLID, 1, ::GetSysColor(COLOR_3DSHADOW));
+		dc.MoveTo(edgeRect.left+4, edgeRect.top+4);
+		dc.LineTo(edgeRect.right-5, edgeRect.bottom-4);
+		dc.MoveTo(edgeRect.right-6, edgeRect.top+4);
+		dc.LineTo(edgeRect.left+3, edgeRect.bottom-4);
+		dc.SelectObject(hOldPen);
+
+		VERIFY(::DeleteObject(hPen));
+	}
+/*	HPEN hShadowPen = ::CreatePen(PS_SOLID, 1, ::GetSysColor(COLOR_3DSHADOW));
 
 	dc.SelectObject(hShadowPen);
 	dc.MoveTo(rect.left, rect.bottom-1);
 	dc.LineTo(rect.right, rect.bottom-1);
-	dc.SelectObject(hOldPen);
-
-	VERIFY(::DeleteObject(hPen));
+	
 	VERIFY(::DeleteObject(hShadowPen));
+*/
+
 }
 
 int CNavMenuBar::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-	m_pMenuButton = new CNavMenuButton();
-	BOOKMARKITEM dummy;
+//	m_pMenuButton = new CNavMenuButton();
+//	BOOKMARKITEM dummy;
 
-	m_pMenuButton->Create(this, FALSE, CSize(32, 21), CSize(32, 21), "No view selected.", 
-						  "Click here to view the options menu.",
-						  "Click on the button to view the options menu.", CSize(0,0), 100, 15, dummy,
-						  NULL, TB_HAS_IMMEDIATE_MENU | TB_HAS_DRAGABLE_MENU);
+//	m_pMenuButton->Create(this, FALSE, CSize(32, 21), CSize(32, 21), "No view selected.", 
+//						  "Click here to view the options menu.",
+//						  "Click on the button to view the options menu.", CSize(0,0), 100, 15, dummy,
+//						  NULL, TB_HAS_IMMEDIATE_MENU | TB_HAS_DRAGABLE_MENU);
 	return 0;
 }
 
@@ -289,18 +372,19 @@ void CNavMenuBar::OnLButtonUp(UINT nFlags, CPoint point)
 
 void CNavMenuBar::OnSize( UINT nType, int cx, int cy )
 {	
-	if (m_pMenuButton)
+/*	if (m_pMenuButton)
 	{
 		CRect rect;
 		GetClientRect(&rect);
 		m_pMenuButton->UpdateButtonText(rect);
 	}
+*/
 }
 
 void CNavMenuBar::UpdateView(CSelectorButton* pButton, HT_View view)
 { 
 	m_pSelectorButton = pButton; 
-
+/*
 	if (m_pMenuButton)
 	{
 		CRect rect;
@@ -308,9 +392,21 @@ void CNavMenuBar::UpdateView(CSelectorButton* pButton, HT_View view)
 		m_pMenuButton->UpdateView(view);
 		m_pMenuButton->UpdateButtonText(rect);
 	}
-
+*/
 	if (pButton && pButton->GetTreeView())
 	{
 		((CRDFOutliner*)(pButton->GetTreeView()->GetOutlinerParent()->GetOutliner()))->SetDockedMenuBar(this);
+	}
+
+	titleText = "No View Selected.";
+	m_View = view;
+	if (view)
+	{
+		HT_Resource r = HT_TopNode(view);
+		if (r)
+		{
+			titleText = HT_GetNodeName(r);
+		}
+		Invalidate();
 	}
 }
