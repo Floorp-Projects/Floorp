@@ -1806,8 +1806,11 @@ nsHttpChannel::GetCredentials(const char *challenges,
 
     // proxy auth's never in prehost.  only take user:pass from URL if this
     // is the first 401 response (mIdent holds previously attempted identity).
-    if (!proxyAuth && mIdent.IsEmpty())
+    PRBool identFromURI = PR_FALSE;
+    if (!proxyAuth && mIdent.IsEmpty()) {
         GetIdentityFromURI(authFlags, mIdent);
+        identFromURI = !mIdent.IsEmpty(); 
+    }
 
     const char *host;
     PRInt32 port;
@@ -1874,6 +1877,11 @@ nsHttpChannel::GetCredentials(const char *challenges,
                     return NS_OK;
                 }
             }
+        }
+        else if (!identFromURI) {
+            // hmm... identity invalid, but no auth entry!  the realm probably
+            // changed (see bug 201986).
+            ident->Clear();
         }
 
         if (!entry && ident->IsEmpty()) {
