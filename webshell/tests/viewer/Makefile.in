@@ -98,11 +98,8 @@ BASE_LIBS		= \
 
 GECKO_LIBS		= \
 			-lwidgetsupport_s \
-			$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
 			-lraptorgfx \
-			$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 			$(TIMER_LIBS) \
-			-lraptorhtmlpars \
 			-ljsdom \
 			$(NULL)
 
