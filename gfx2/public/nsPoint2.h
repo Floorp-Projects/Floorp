@@ -75,23 +75,23 @@ struct nsPoint2 {
  * @author Don Cone <dcone@netscape.com> (3/29/00)
  * @version 0.0
  */
-struct nsPathPoint: public nsPoint2{
+struct nsPathPoint2: public nsPoint2{
 
   PRBool  mIsOnCurve;
 
   // Constructors
-  nsPathPoint() {}
-  nsPathPoint(const nsPathPoint& aPoint) {
+  nsPathPoint2() {}
+  nsPathPoint2(const nsPathPoint2& aPoint) {
     x = aPoint.x;
     y = aPoint.y;
     mIsOnCurve = aPoint.mIsOnCurve;
   }
-  nsPathPoint(gfx_coord aX, gfx_coord aY) {
+  nsPathPoint2(gfx_coord aX, gfx_coord aY) {
     x = aX;
     y = aY;
     mIsOnCurve = PR_TRUE;
   }
-  nsPathPoint(gfx_coord aX, gfx_coord aY, PRBool aIsOnCurve) {
+  nsPathPoint2(gfx_coord aX, gfx_coord aY, PRBool aIsOnCurve) {
     x = aX;
     y = aY;
     mIsOnCurve = aIsOnCurve;
