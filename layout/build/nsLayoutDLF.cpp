@@ -54,17 +54,19 @@ extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 
 static char* gHTMLTypes[] = {
   "text/html",
-  "application/rtf",
+  "text/plain",
+  "text/rtf",
+  "text/cpp",
   0
 };
-
+  
 static char* gXMLTypes[] = {
   "text/xml",
   "application/xml",
-  "text/plain",
   "text/css",
   0
 };
+
 
 static char* gRDFTypes[] = {
   "text/rdf",
@@ -236,7 +238,13 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
   nsresult rv = NS_ERROR_FAILURE;
 
   if(0==PL_strcmp(aCommand,"view-source")) {
-    aContentType=gXMLTypes[0];
+    if(0==PL_strcmp(aContentType,gHTMLTypes[1])) {
+      aContentType=gHTMLTypes[0];
+    }
+    else if(0==PL_strcmp(aContentType,gHTMLTypes[2])) {
+      aContentType=gHTMLTypes[0];
+    }
+    else aContentType=gXMLTypes[0];
   }
 
   // Try html
