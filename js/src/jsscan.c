@@ -704,6 +704,7 @@ js_ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
         if (onError)
             (*onError)(cx, message, &report);
     }
+
     if (message)
         JS_free(cx, message);
     if (report.messageArgs) {

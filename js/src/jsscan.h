@@ -139,11 +139,9 @@ struct JSStringBuffer {
     jschar      *base;
     jschar      *limit;         /* length limit for quick bounds check */
     jschar      *ptr;           /* slot for next non-NUL char to store */
-    size_t      length;
-    size_t      offset;
+    void        *data;
     JSBool      (*grow)(JSStringBuffer *sb, size_t newlength);
     void        (*free)(JSStringBuffer *sb);
-    void        *data;
 };
 
 #define STRING_BUFFER_ERROR_BASE        ((jschar *) 1)
