@@ -147,7 +147,13 @@ $charts
 <td align=left>
 <input type=checkbox name=links checked value=1>&nbsp;Links to Bugs<br>
 <input type=checkbox name=banner checked value=1>&nbsp;Banner<br>
-<input type=checkbox name=quip value=1>&nbsp;Quip<br>
+FIN
+	if (Param('usequip')) {
+	    print "<input type=checkbox name=quip value=1>&nbsp;Quip<br>";
+	} else {
+            print "<input type=hidden name=quip value=0>";
+        }
+	print <<FIN;
 </td>
 </tr>
 <tr>

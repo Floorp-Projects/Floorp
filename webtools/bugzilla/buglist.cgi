@@ -568,16 +568,16 @@ my $buglist = join(":", @bugarray);
 
 # This is stupid.  We really really need to move the quip list into the DB!
 my $quip;
-if (open (COMMENTS, "<data/comments")) {
+if (Param('usequip')){
+  if (open (COMMENTS, "<data/comments")) {
     my @cdata;
     while (<COMMENTS>) {
-        push @cdata, $_;
+      push @cdata, $_;
     }
     close COMMENTS;
     $quip = $cdata[int(rand($#cdata + 1))];
-}
-if (!defined $quip) {
-    $quip = "Bugzilla would like to put a random quip here, but nobody has entered any.";
+  }
+  $quip ||= "Bugzilla would like to put a random quip here, but nobody has entered any.";
 }
 
  
@@ -612,7 +612,9 @@ if ($toolong) {
     print "Next/Prev/First/Last buttons won't appear.</h2>\n";
 }
 
-print "<HR><A HREF=newquip.html><I>$quip</I></A></CENTER>\n";
+if (Param('usequip')){
+  print "<HR><A HREF=newquip.html><I>$quip</I></A></CENTER>\n";
+}
 print "<HR SIZE=10>$tablestart\n";
 print $::bugl;
 print "</TABLE>\n";

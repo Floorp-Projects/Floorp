@@ -110,6 +110,10 @@ sub check_urlbase {
     return "";
 }
 
+DefParam("usequip",
+	"If this is on, Bugzilla displays a silly quip at the beginning of buglists, and lets users add to the list of quips.",
+	"b",
+	1);
 
 DefParam("usedespot",
          "If this is on, then we are using the Despot system to control our database of users.  Bugzilla won't ever write into the user database, it will let the Despot code maintain that.  And Bugzilla will send the user over to Despot URLs if they need to change their password.  Also, in that case, Bugzilla will treat the passwords stored in the database as being crypt'd, not plaintext.",
