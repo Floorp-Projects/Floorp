@@ -8039,6 +8039,665 @@ ResDef(RDF_DIRECTORY_DESC_STR, RDF_MSG_BASE+211, "Directory")
 ResDef(RDF_FILE_DESC_STR, RDF_MSG_BASE+212, "File")
 ResDef(RDF_FTP_NAME_STR, RDF_MSG_BASE+213, "FTP Locations")
 
+
+/* The following messages are for capabilities based Signed Applets/JS */
+#define CAPS_MSG_BASE XP_MSG_BASE + 3000
+
+ResDef(CAPS_TARGET_RISK_STR_LOW, (CAPS_MSG_BASE + 1), "\
+low")
+
+ResDef(CAPS_TARGET_RISK_STR_MEDIUM, (CAPS_MSG_BASE + 2), "\
+medium")
+
+ResDef(CAPS_TARGET_RISK_STR_HIGH, (CAPS_MSG_BASE + 3), "\
+high")
+
+ResDef(CAPS_TARGET_RISK_COLOR_LOW, (CAPS_MSG_BASE + 4), "\
+#aaffaa")
+
+ResDef(CAPS_TARGET_RISK_COLOR_MEDIUM, (CAPS_MSG_BASE + 5), "\
+#ffffaa")
+
+ResDef(CAPS_TARGET_RISK_COLOR_HIGH, (CAPS_MSG_BASE + 6), "\
+#ffaaaa")
+
+ResDef(CAPS_TARGET_HELP_URL, (CAPS_MSG_BASE + 7), "\
+http://home.netscape.com/eng/mozilla/4.0/handbook/")
+
+ResDef(CAPS_TARGET_DESC_THREAD_ACCESS, (CAPS_MSG_BASE + 8), "\
+Manipulating other applets (threads) running on your computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_THREAD_ACCESS, (CAPS_MSG_BASE + 9), "\
+Manipulating other applets (threads) running on your computer")
+
+ResDef(CAPS_TARGET_URL_THREAD_ACCESS, (CAPS_MSG_BASE + 10), "\
+#ThreadAccess")
+
+ResDef(CAPS_TARGET_DESC_THREAD_GROUP_ACCESS, (CAPS_MSG_BASE + 11), "\
+Manipulating groups of applets (threads) running on your computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_THREAD_GROUP_ACCESS, (CAPS_MSG_BASE + 12), "\
+Manipulating groups of applets (threads) running on your computer")
+
+ResDef(CAPS_TARGET_URL_THREAD_GROUP_ACCESS, (CAPS_MSG_BASE + 13), "\
+#ThreadGroupAccess")
+
+ResDef(CAPS_TARGET_DESC_EXEC_ACCESS, (CAPS_MSG_BASE + 14), "\
+Starting programs stored on your computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_EXEC_ACCESS, (CAPS_MSG_BASE + 15), "\
+Starting programs that are separate from Communicator and stored on \
+hard disks or other storage media connected to your computer. \
+For example, starting a word-processing or spreadsheet application.")
+
+ResDef(CAPS_TARGET_URL_EXEC_ACCESS, (CAPS_MSG_BASE + 16), "\
+#ExecAccess")
+
+ResDef(CAPS_TARGET_DESC_EXIT_ACCESS, (CAPS_MSG_BASE + 17), "\
+Exiting the Communicator program")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_EXIT_ACCESS, (CAPS_MSG_BASE + 18), "\
+Exiting all parts of the Communicator program that are currently running \
+and releasing the memory they occupy.")
+
+ResDef(CAPS_TARGET_URL_EXIT_ACCESS, (CAPS_MSG_BASE + 19), "\
+#ExitAccess")
+
+ResDef(CAPS_TARGET_DESC_LINK_ACCESS, (CAPS_MSG_BASE + 20), "\
+Using native code stored in dynamically linked libraries")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_LINK_ACCESS, (CAPS_MSG_BASE + 21), "\
+Using code written specifically for the operating system of your computer. \
+Such code must be stored in dynamically linked libraries on hard disks or \
+other storage media connected to your computer.")
+
+ResDef(CAPS_TARGET_URL_LINK_ACCESS, (CAPS_MSG_BASE + 22), "\
+#LinkAccess")
+
+ResDef(CAPS_TARGET_DESC_PROPERTY_WRITE, (CAPS_MSG_BASE + 23), "\
+Modifying sensitive information stored in your computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_PROPERTY_WRITE, (CAPS_MSG_BASE + 24), "\
+Modifying sensitive information stored in your computer that is normally kept \
+private, such as certain security policy controls.")
+
+ResDef(CAPS_TARGET_URL_PROPERTY_WRITE, (CAPS_MSG_BASE + 25), "\
+#PropertyWrite")
+
+ResDef(CAPS_TARGET_DESC_PROPERTY_READ, (CAPS_MSG_BASE + 26), "\
+Reading information stored in your computer, such as your user name")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_PROPERTY_READ, (CAPS_MSG_BASE + 27), "\
+Reading information stored in your computer that is normally kept private, \
+such as your user name and the current directory.")
+
+ResDef(CAPS_TARGET_URL_PROPERTY_READ, (CAPS_MSG_BASE + 28), "\
+#PropertyRead")
+
+ResDef(CAPS_TARGET_DESC_FILE_READ, (CAPS_MSG_BASE + 29), "\
+Reading files stored in your computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_FILE_READ, (CAPS_MSG_BASE + 30), "\
+Reading any files stored on hard disks or other storage media connected to \
+your computer.")
+
+ResDef(CAPS_TARGET_URL_FILE_READ, (CAPS_MSG_BASE + 31), "\
+#FileRead")
+
+ResDef(CAPS_TARGET_DESC_FILE_WRITE, (CAPS_MSG_BASE + 32), "\
+Modifying files stored in your computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_FILE_WRITE, (CAPS_MSG_BASE + 33), "\
+Modifying any files stored on hard disks or other storage media connected to \
+you computer.")
+
+ResDef(CAPS_TARGET_URL_FILE_WRITE, (CAPS_MSG_BASE + 34), "\
+#FileWrite")
+
+ResDef(CAPS_TARGET_DESC_FILE_DELETE, (CAPS_MSG_BASE + 35), "\
+Deleting files stored in your computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_FILE_DELETE, (CAPS_MSG_BASE + 36), "\
+Deletion of any files stored on hard disks or other storage media connected \
+to your computer.")
+
+ResDef(CAPS_TARGET_URL_FILE_DELETE, (CAPS_MSG_BASE + 37), "\
+#FileDelete")
+
+ResDef(CAPS_TARGET_DESC_FD_READ, (CAPS_MSG_BASE + 38), "\
+Reading data from a network connection")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_FD_READ, (CAPS_MSG_BASE + 39), "\
+Reading data from a network connection via file descriptor")
+
+ResDef(CAPS_TARGET_URL_FD_READ, (CAPS_MSG_BASE + 40), "\
+#FdRead")
+
+ResDef(CAPS_TARGET_DESC_FD_WRITE, (CAPS_MSG_BASE + 41), "\
+Writing data from a network connection")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_FD_WRITE, (CAPS_MSG_BASE + 42), "\
+Writing data from a network connection via file descriptor")
+
+ResDef(CAPS_TARGET_URL_FD_WRITE, (CAPS_MSG_BASE + 43), "\
+#FdWrite")
+
+ResDef(CAPS_TARGET_DESC_LISTEN, (CAPS_MSG_BASE + 44), "\
+Accepting connections from other computers on a network")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_LISTEN, (CAPS_MSG_BASE + 45), "\
+Accepting connections from other computers on a network.")
+
+ResDef(CAPS_TARGET_URL_LISTEN, (CAPS_MSG_BASE + 46), "\
+#Listen")
+
+ResDef(CAPS_TARGET_DESC_ACCEPT, (CAPS_MSG_BASE + 47), "\
+Accepting connections from other computers on a network")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_ACCEPT, (CAPS_MSG_BASE + 48), "\
+Accepting connections from other computers on a network.")
+
+ResDef(CAPS_TARGET_URL_ACCEPT, (CAPS_MSG_BASE + 49), "\
+#Accept")
+
+ResDef(CAPS_TARGET_DESC_CONNECT, (CAPS_MSG_BASE + 50), "\
+Contacting and connecting with other computers over a network")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_CONNECT, (CAPS_MSG_BASE + 51), "\
+Contacting and connecting with other computers over a network.")
+
+ResDef(CAPS_TARGET_URL_CONNECT, (CAPS_MSG_BASE + 52), "\
+#Connect")
+
+ResDef(CAPS_TARGET_DESC_REDIRECT, (CAPS_MSG_BASE + 53), "\
+Allow remote computer to redirect connection requests to another computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_REDIRECT, (CAPS_MSG_BASE + 54), "\
+Allow remote computer to redirect connection requests to another computer.")
+
+ResDef(CAPS_TARGET_URL_REDIRECT, (CAPS_MSG_BASE + 55), "\
+#Redirect")
+
+ResDef(CAPS_TARGET_DESC_CLIENT_AUTH, (CAPS_MSG_BASE + 56), "\
+Remotely authenticate as you with SSL")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_CLIENT_AUTH, (CAPS_MSG_BASE + 57), "\
+Connecting to remote computers using SSL and authenticating with a key in your \
+private database.  If the applet additionally has UniversalConnect privileges, \
+it could potentially authenticate with your key to any site on the Internet, \
+which would be more dangerous.")
+
+ResDef(CAPS_TARGET_URL_CLIENT_AUTH, (CAPS_MSG_BASE + 58), "\
+#ClientAuth")
+
+ResDef(CAPS_TARGET_DESC_CONNECT_WITH_REDIRECT, (CAPS_MSG_BASE + 59), "\
+Contacting and connecting with other computers over a network")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_CONNECT_WITH_REDIRECT, (CAPS_MSG_BASE + 60), "\
+Contacting and connecting with other computers, where the remote computer can \
+redirect connection requests to another computer.")
+
+ResDef(CAPS_TARGET_URL_CONNECT_WITH_REDIRECT, (CAPS_MSG_BASE + 61), "\
+#ConnectWithRedirect")
+
+ResDef(CAPS_TARGET_DESC_MULTICAST, (CAPS_MSG_BASE + 62), "\
+Broadcasting information to multiple computers over a network")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_MULTICAST, (CAPS_MSG_BASE + 63), "\
+Broadcasting information to multiple computers over a network.")
+
+ResDef(CAPS_TARGET_URL_MULTICAST, (CAPS_MSG_BASE + 64), "\
+#Multicast")
+
+ResDef(CAPS_TARGET_DESC_TOP_LEVEL_WINDOW, (CAPS_MSG_BASE + 65), "\
+Displaying windows that don't have the unsigned applet label")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_TOP_LEVEL_WINDOW, (CAPS_MSG_BASE + 66), "\
+Displaying windows that don't have the unsigned applet label")
+
+ResDef(CAPS_TARGET_URL_TOP_LEVEL_WINDOW, (CAPS_MSG_BASE + 67), "\
+#TopLevelWindow")
+
+ResDef(CAPS_TARGET_DESC_30_CAPABILITIES, (CAPS_MSG_BASE + 68), "\
+Access required by Navigator plug-ins and similar programs")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_30_CAPABILITIES, (CAPS_MSG_BASE + 69), "\
+Access required by plug-ins and other programs containing native code. \
+This form of access is allowed automatically in Navigator 3.0 for code \
+that is downloaded to your hard disk.")
+
+ResDef(CAPS_TARGET_URL_30_CAPABILITIES, (CAPS_MSG_BASE + 70), "\
+#30Capabilities")
+
+ResDef(CAPS_TARGET_DESC_DIALOG_MODALITY, (CAPS_MSG_BASE + 71), "\
+Displaying a dialog box that may temporarily disable the browser")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_DIALOG_MODALITY, (CAPS_MSG_BASE + 72), "\
+Displaying modal dialog boxes: that is, dialog boxes that require you to \
+type or respond in some way before you can do anything else. Modal dialog \
+boxes temporarily disable the browser and can cause problems if not correctly \
+implemented")
+
+ResDef(CAPS_TARGET_URL_DIALOG_MODALITY, (CAPS_MSG_BASE + 73), "\
+#DialogModality")
+
+ResDef(CAPS_TARGET_DESC_PACKAGE_ACCESS, (CAPS_MSG_BASE + 74), "\
+Using restricted Java system code")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_PACKAGE_ACCESS, (CAPS_MSG_BASE + 75), "\
+Using restricted Java system code")
+
+ResDef(CAPS_TARGET_URL_PACKAGE_ACCESS, (CAPS_MSG_BASE + 76), "\
+#PackageAccess")
+
+ResDef(CAPS_TARGET_DESC_PACKAGE_DEFINITION, (CAPS_MSG_BASE + 77), "\
+Loading restricted Java system code")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_PACKAGE_DEFINITION, (CAPS_MSG_BASE + 78), "\
+Loading restricted Java system code")
+
+ResDef(CAPS_TARGET_URL_PACKAGE_DEFINITION, (CAPS_MSG_BASE + 79), "\
+#PackageDefinition")
+
+ResDef(CAPS_TARGET_DESC_SET_FACTORY, (CAPS_MSG_BASE + 80), "\
+Defining protocol handlers for network connections")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_SET_FACTORY, (CAPS_MSG_BASE + 81), "\
+Defining protocol handlers for network connections")
+
+ResDef(CAPS_TARGET_URL_SET_FACTORY, (CAPS_MSG_BASE + 82), "\
+#SetFactory")
+
+ResDef(CAPS_TARGET_DESC_MEMBER_ACCESS, (CAPS_MSG_BASE + 83), "\
+Examining the Java code for any applet running on your computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_MEMBER_ACCESS, (CAPS_MSG_BASE + 84), "\
+Examining the Java code for any applet running on your computer")
+
+ResDef(CAPS_TARGET_URL_MEMBER_ACCESS, (CAPS_MSG_BASE + 85), "\
+#MemberAccess")
+
+ResDef(CAPS_TARGET_DESC_PRINT_JOB_ACCESS, (CAPS_MSG_BASE + 86), "\
+Printing from within Communicator")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_PRINT_JOB_ACCESS, (CAPS_MSG_BASE + 87), "\
+Printing from within Communicator")
+
+ResDef(CAPS_TARGET_URL_PRINT_JOB_ACCESS, (CAPS_MSG_BASE + 88), "\
+#PrintJobAccess")
+
+ResDef(CAPS_TARGET_DESC_SYSTEM_CLIPBOARD_ACCESS, (CAPS_MSG_BASE + 89), "\
+Reading and writing to the system clipboard for your computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_SYSTEM_CLIPBOARD_ACCESS, (CAPS_MSG_BASE + 90), "\
+Reading and writing to the system clipboard for your computer")
+
+ResDef(CAPS_TARGET_URL_SYSTEM_CLIPBOARD_ACCESS, (CAPS_MSG_BASE + 91), "\
+#SystemClipboardAccess")
+
+ResDef(CAPS_TARGET_DESC_AWT_EVENT_QUEUE_ACCESS, (CAPS_MSG_BASE + 92), "\
+Monitoring or intercepting typing or mouse movements")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_AWT_EVENT_QUEUE_ACCESS, (CAPS_MSG_BASE + 93), "\
+Monitoring or intercepting typing or mouse movements")
+
+ResDef(CAPS_TARGET_URL_AWT_EVENT_QUEUE_ACCESS, (CAPS_MSG_BASE + 94), "\
+#AwtEventQueueAccess")
+
+ResDef(CAPS_TARGET_DESC_SECURITY_PROVIDER, (CAPS_MSG_BASE + 95), "\
+Access to security")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_SECURITY_PROVIDER, (CAPS_MSG_BASE + 96), "\
+Access to security")
+
+ResDef(CAPS_TARGET_URL_SECURITY_PROVIDER, (CAPS_MSG_BASE + 97), "\
+#SecurityProvider")
+
+ResDef(CAPS_TARGET_DESC_CREATE_SECURITY_MANAGER, (CAPS_MSG_BASE + 98), "\
+Creating security policies for your computer")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_CREATE_SECURITY_MANAGER, (CAPS_MSG_BASE + 99), "\
+Creating security policies for your computer")
+
+ResDef(CAPS_TARGET_URL_CREATE_SECURITY_MANAGER, (CAPS_MSG_BASE + 100), "\
+#CreateSecurityManager")
+
+ResDef(CAPS_TARGET_DESC_IMPERSONATOR, (CAPS_MSG_BASE + 101), "\
+Access to impersonate as another application")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_IMPERSONATOR, (CAPS_MSG_BASE + 102), "\
+Access to impersonate as another application")
+
+ResDef(CAPS_TARGET_URL_IMPERSONATOR, (CAPS_MSG_BASE + 103), "\
+#Impersonator")
+
+ResDef(CAPS_TARGET_DESC_BROWSER_READ, (CAPS_MSG_BASE + 104), "\
+Access to browser data")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_BROWSER_READ, (CAPS_MSG_BASE + 105), "\
+Access to browser data that may be considered private, such as a list \
+of web sites visited or the contents of web page forms you may have filled in.")
+
+ResDef(CAPS_TARGET_URL_BROWSER_READ, (CAPS_MSG_BASE + 106), "\
+#BrowserRead")
+
+ResDef(CAPS_TARGET_DESC_BROWSER_WRITE, (CAPS_MSG_BASE + 107), "\
+Modifying the browser")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_BROWSER_WRITE, (CAPS_MSG_BASE + 108), "\
+Modifying the browser in a potentially dangerous way, such as creating \
+windows that may look like they belong to another program or positioning \
+windows anywhere on the screen.")
+
+ResDef(CAPS_TARGET_URL_BROWSER_WRITE, (CAPS_MSG_BASE + 109), "\
+#BrowserWrite")
+
+ResDef(CAPS_TARGET_DESC_BROWSER_ACCESS, (CAPS_MSG_BASE + 110), "\
+Reading or modifying browser data")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_BROWSER_ACCESS, (CAPS_MSG_BASE + 111), "\
+Reading or modifying browser data that may be considered private, such as a \
+list of web sites visited or the contents of web forms you may have filled in. \
+Modifications may also include creating windows that look like they belong to \
+another program or positioning windowsanywhere on the screen.")
+
+ResDef(CAPS_TARGET_URL_BROWSER_ACCESS, (CAPS_MSG_BASE + 112), "\
+#BrowserAccess")
+
+ResDef(CAPS_TARGET_DESC_PREFS_READ, (CAPS_MSG_BASE + 113), "\
+Reading preferences settings")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_PREFS_READ, (CAPS_MSG_BASE + 114), "\
+Access to read the current settings of your preferences.")
+
+ResDef(CAPS_TARGET_URL_PREFS_READ, (CAPS_MSG_BASE + 115), "\
+#PrefsRead")
+
+ResDef(CAPS_TARGET_DESC_PREFS_WRITE, (CAPS_MSG_BASE + 116), "\
+Modifying preferences settings")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_PREFS_WRITE, (CAPS_MSG_BASE + 117), "\
+Modifying the current settings of your preferences.")
+
+ResDef(CAPS_TARGET_URL_PREFS_WRITE, (CAPS_MSG_BASE + 118), "\
+#PrefsWrite")
+
+ResDef(CAPS_TARGET_DESC_SEND_MAIL, (CAPS_MSG_BASE + 119), "\
+Sending email messages on your behalf")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_SEND_MAIL, (CAPS_MSG_BASE + 120), "\
+Sending email messages on your behalf")
+
+ResDef(CAPS_TARGET_URL_SEND_MAIL, (CAPS_MSG_BASE + 121), "\
+#SendMail")
+
+ResDef(CAPS_TARGET_DESC_REG_PRIVATE, (CAPS_MSG_BASE + 122), "\
+Access to the vendor's portion of your computer's registry of installed \
+software")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_REG_PRIVATE, (CAPS_MSG_BASE + 123), "\
+Most computers store information about installed software, such as version \
+numbers, in a registry file. When you install new software, the installation \
+program sometimes needs to read or change entries in the portion of the \
+%-cont-%")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_REG_PRIVATE_1, (CAPS_MSG_BASE + 124), "\
+registry that describes the software vendor's products. You should grant \
+this form of access only if you are installing new software from a reliable \
+vendor. The entity that signs the software can access only that entity's \
+portion of the registry.")
+
+ResDef(CAPS_TARGET_URL_REG_PRIVATE, (CAPS_MSG_BASE + 125), "\
+#RegPrivate")
+
+ResDef(CAPS_TARGET_DESC_REG_STANDARD, (CAPS_MSG_BASE + 126), "\
+Access to shared information in the computer's registry of installed software")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_REG_STANDARD, (CAPS_MSG_BASE + 127), "\
+Most computers store information about installed software, such as version \
+numbers, in a registry file. This file also includes information shared by \
+%-cont-%")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_REG_STANDARD_1, (CAPS_MSG_BASE + 128), "\
+all programs installed on your computer, including information about the user \
+or the system. Programs that have access to shared registry information can \
+obtain information about other programs that have the same access. This allows \
+%-cont-%")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_REG_STANDARD_2, (CAPS_MSG_BASE + 129), "\
+programs that work closely together to get information about each other. \
+You should grant this form of access only if you know that the program \
+requesting it is designed to work with other programs on your hard disk.")
+
+ResDef(CAPS_TARGET_URL_REG_STANDARD, (CAPS_MSG_BASE + 130), "\
+#RegStandard")
+
+ResDef(CAPS_TARGET_DESC_REG_ADMIN, (CAPS_MSG_BASE + 131), "\
+Access to any part of your computer's registry of installed software")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_REG_ADMIN, (CAPS_MSG_BASE + 132), "\
+Most computers store information about installed software, such as version \
+numbers, in a registry file. System administrators sometimes need to change \
+%-cont-%")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_REG_ADMIN_1, (CAPS_MSG_BASE + 133), "\
+entries in the registry for software from a variety of vendors. You should \
+grant this form of access only if you are running software provided by your \
+system administrator.")
+
+ResDef(CAPS_TARGET_URL_REG_ADMIN, (CAPS_MSG_BASE + 134), "\
+#RegAdmin")
+
+ResDef(CAPS_TARGET_DESC_SUPER_USER, (CAPS_MSG_BASE + 135), "\
+Access to all Super User privileges")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_SUPER_USER, (CAPS_MSG_BASE + 136), "\
+Access to all Super User privileges")
+
+ResDef(CAPS_TARGET_URL_SUPER_USER, (CAPS_MSG_BASE + 137), "\
+#SuperUser")
+
+ResDef(CAPS_TARGET_DESC_ACCOUNT_SETUP, (CAPS_MSG_BASE + 138), "\
+Access required to setup and configure your browser")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_ACCOUNT_SETUP, (CAPS_MSG_BASE + 139), "\
+Access to, and modification of, browser data, preferences, files, networking \
+and modem configuration. This access is commonly granted to the main setup \
+program for your browser.")
+
+ResDef(CAPS_TARGET_URL_ACCOUNT_SETUP, (CAPS_MSG_BASE + 140), "\
+#AccountSetup")
+
+ResDef(CAPS_TARGET_DESC_SAR, (CAPS_MSG_BASE + 141), "\
+Access to the site archive file")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_SAR, (CAPS_MSG_BASE + 142), "\
+Access required to add, modify, or delete site archive files and make \
+arbitrary network connections in the process. This form of access is required \
+%-cont-%")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_SAR_1, (CAPS_MSG_BASE + 143), "\
+only by netcasting applications such as Netscape Netcaster, which request it \
+in combination with several other kinds of access. Applications should not \
+normally request this access by itself, and you should not normally grant it.")
+
+ResDef(CAPS_TARGET_URL_SAR, (CAPS_MSG_BASE + 144), "\
+#SiteArchive")
+
+ResDef(CAPS_TARGET_DESC_CONSTELLATION, (CAPS_MSG_BASE + 145), "\
+Access required by netcasting programs")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_CONSTELLATION, (CAPS_MSG_BASE + 146), "\
+Access required by programs, such as Netscape Netcaster, that allow users to \
+receive information over Internet channels and work with network resources \
+offline.")
+
+ResDef(CAPS_TARGET_URL_CONSTELLATION, (CAPS_MSG_BASE + 147), "\
+#Netcaster")
+
+ResDef(CAPS_TARGET_DESC_MARIMBA, (CAPS_MSG_BASE + 148), "\
+Ability to run Marimba Castanet channels in their own applet sandbox with the \
+extension that these channels may write to a part of the disk reserved for \
+them and may find out the full path to the user profile directory.")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_MARIMBA, (CAPS_MSG_BASE + 149), "\
+Granting this target will allow the Marimba Castanet code to run. As part of \
+running channels the Castanet code needs access to the hard-disk and the \
+%-cont-%")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_MARIMBA_1, (CAPS_MSG_BASE + 150), "\
+ability to connect to arbitrary network locations. It also needs to manipulate \
+threads. Castanet channels run in a sandbox similar to untrusted applets except \
+they can read/write to a part of the disk reserved for them separate from the \
+rest of the disk.")
+
+ResDef(CAPS_TARGET_URL_MARIMBA, (CAPS_MSG_BASE + 151), "\
+#Marimba")
+
+ResDef(CAPS_TARGET_DESC_IIOP, (CAPS_MSG_BASE + 152), "\
+Implementing IIOP remote object software")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_IIOP, (CAPS_MSG_BASE + 153), "\
+Internet Inter-ORB Protocol (IIOP) is an open industry standard for distributing \
+objects. It is commonly used for programs, such as banking applications, that \
+%-cont-%")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_IIOP_1, (CAPS_MSG_BASE + 154), "\
+involve transferring information among different kinds of computer systems over \
+a network. Granting this access permits Java code to implement IIOP on your \
+%-cont-%")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_IIOP_2, (CAPS_MSG_BASE + 155), "\
+computer and to access remote objects over a network. You should grant this \
+access only if you are running a program, from a reliable IIOP vendor, that \
+needs to connect with remote objects over a network.")
+
+ResDef(CAPS_TARGET_URL_IIOP, (CAPS_MSG_BASE + 156), "\
+#IIOP")
+
+ResDef(CAPS_TARGET_DESC_CODEBASE_ENV, (CAPS_MSG_BASE + 157), "\
+Ability to read and modify properties associated an applet's code base.")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_CODEBASE_ENV, (CAPS_MSG_BASE + 158), "\
+Allows local code to store and retrieve objects from a table that is \
+associated with the current applet's host of origin.")
+
+ResDef(CAPS_TARGET_URL_CODEBASE_ENV, (CAPS_MSG_BASE + 159), "\
+#CodebaseEnv")
+
+ResDef(CAPS_TARGET_DESC_DEBUGGER, (CAPS_MSG_BASE + 160), "\
+Access to the debugger")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_DEBUGGER, (CAPS_MSG_BASE + 161), "\
+You should grant this access only if you are a professional programmer using \
+debugging software from a reliable vendor.")
+
+ResDef(CAPS_TARGET_URL_DEBUGGER, (CAPS_MSG_BASE + 162), "\
+#Debugger")
+
+ResDef(CAPS_TARGET_DESC_CANVAS_ACCESS, (CAPS_MSG_BASE + 163), "\
+Displaying text or graphics anywhere on the screen")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_CANVAS_ACCESS, (CAPS_MSG_BASE + 164), "\
+Displaying HTML text or graphics on any part of the screen, without window \
+borders, toolbars, or menus. Typically granted to invoke canvas mode, screen \
+savers, and so on.")
+
+ResDef(CAPS_TARGET_URL_CANVAS_ACCESS, (CAPS_MSG_BASE + 165), "\
+#CanvasAccess")
+
+ResDef(CAPS_TARGET_DESC_FILE_ACCESS, (CAPS_MSG_BASE + 166), "\
+Reading, modification, or deletion of any of your files")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_FILE_ACCESS, (CAPS_MSG_BASE + 167), "\
+This form of access is typically required by a program such as a word \
+processor or a debugger that needs to create, read, modify, or delete files \
+on hard disks or other storage media connected to your computer.")
+
+ResDef(CAPS_TARGET_URL_FILE_ACCESS, (CAPS_MSG_BASE + 168), "\
+#FileAccess")
+
+ResDef(CAPS_TARGET_DESC_LIMITED_FILE_ACCESS, (CAPS_MSG_BASE + 169), "\
+Limited file access typically required by games")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_LIMITED_FILE_ACCESS, (CAPS_MSG_BASE + 170), "\
+Reading and modification of a limited area on disk as required by games to \
+save scores")
+
+ResDef(CAPS_TARGET_URL_LIMITED_FILE_ACCESS, (CAPS_MSG_BASE + 171), "\
+#LimitedFileAccess")
+
+ResDef(CAPS_TARGET_DESC_GAMES_ACCESS, (CAPS_MSG_BASE + 172), "\
+Limited registry access typically required by games")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_GAMES_ACCESS, (CAPS_MSG_BASE + 173), "\
+Reading and modification of a limited registry area as required by games to \
+save scores")
+
+ResDef(CAPS_TARGET_URL_GAMES_ACCESS, (CAPS_MSG_BASE + 174), "\
+#GamesAccess")
+
+ResDef(CAPS_TARGET_DESC_WORD_PROCESSOR_ACCESS, (CAPS_MSG_BASE + 175), "\
+File access typically required by word-processing programs")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_WORD_PROCESSOR_ACCESS, (CAPS_MSG_BASE + 176), "\
+Reading, modification, or deletion of any of your files, as required by \
+word-processing programs.")
+
+ResDef(CAPS_TARGET_URL_WORD_PROCESSOR_ACCESS, (CAPS_MSG_BASE + 177), "\
+#WordProcessorAccess")
+
+ResDef(CAPS_TARGET_DESC_SPREADSHEET_ACCESS, (CAPS_MSG_BASE + 178), "\
+File access typically required by spreadsheet programs")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_SPREADSHEET_ACCESS, (CAPS_MSG_BASE + 179), "\
+Reading, modification, or deletion of any of your files, as required by \
+spreadsheet programs.")
+
+ResDef(CAPS_TARGET_URL_SPREADSHEET_ACCESS, (CAPS_MSG_BASE + 180), "\
+#SpreadsheetAccess")
+
+ResDef(CAPS_TARGET_DESC_PRESENTATION_ACCESS, (CAPS_MSG_BASE + 181), "\
+File access typically required by presentation programs")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_PRESENTATION_ACCESS, (CAPS_MSG_BASE + 182), "\
+Reading, modification, or deletion of any of your files, as required by \
+presentation programs.")
+
+ResDef(CAPS_TARGET_URL_PRESENTATION_ACCESS, (CAPS_MSG_BASE + 183), "\
+#PresentationAccess")
+
+ResDef(CAPS_TARGET_DESC_DATABASE_ACCESS, (CAPS_MSG_BASE + 184), "\
+File access typically required by database programs")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_DATABASE_ACCESS, (CAPS_MSG_BASE + 185), "\
+Reading, modification, or deletion of any of your files, as required by \
+database programs.")
+
+ResDef(CAPS_TARGET_URL_DATABASE_ACCESS, (CAPS_MSG_BASE + 186), "\
+#DatabaseAccess")
+
+ResDef(CAPS_TARGET_DESC_TERMINAL_EMULATOR, (CAPS_MSG_BASE + 187), "\
+Access required by terminal emulators and other communications programs")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_TERMINAL_EMULATOR, (CAPS_MSG_BASE + 188), "\
+Reading and writing files and establishing network connections. This form of \
+access is required by terminal emulators such as the 3270 or VT100 emulator.")
+
+ResDef(CAPS_TARGET_URL_TERMINAL_EMULATOR, (CAPS_MSG_BASE + 189), "\
+#TerminalEmulator")
+
+ResDef(CAPS_TARGET_DESC_JAR_PACKAGER, (CAPS_MSG_BASE + 190), "\
+Access needed to create, sign, and manipulate JAR files")
+
+ResDef(CAPS_TARGET_DETAIL_DESC_JAR_PACKAGER, (CAPS_MSG_BASE + 191), "\
+Access required to read and create files, in order to to sign and manipulate \
+JAR container files")
+
+ResDef(CAPS_TARGET_URL_JAR_PACKAGER, (CAPS_MSG_BASE + 192), "\
+#JARPackager")
+
+
 END_STR(mcom_include_xp_msg_i_strings)
 
 /* WARNING: DO NOT TAKE ERROR CODE -666, it is used internally
