@@ -3,14 +3,14 @@
 <?xml-stylesheet href="pref.css" type="text/css"?>
 
 <!DOCTYPE window [
-<!ENTITY  title.label "Sample Prefs Panel">
+<!ENTITY  title.label "Samrt Browsing">
 <!ENTITY  smartHeader.label "Smart Browsing">
 <!ENTITY  enableRelatedRadio.label "Enable Internet Keywords">
 <!ENTITY  autoDecp.label "Automatically load Whats Related information">
 <!ENTITY  neverRadio "Never">
 <!ENTITY  afterAutoloadFirstRadio "After first use">
 <!ENTITY  afterAutoloadAlwaysRadio "Always">
-<!ENTITY  doNotDecp.label "Do not request Whats Related information for the following domains">
+<!ENTITY  doNotDecp.label "Do not request Whats Related information for the following domains (a comma-seperated list)">
 <!ENTITY  internetKeywordsHeader.label "Internet Keywords">
 <!ENTITY  enableKeyCheck.label "Enable Internet Keywords">
 
@@ -18,7 +18,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('smart_browsing');"  title="">
+        onload="return StartUp('smart_browsing');"  title="title.label">
 
 
 <html:script language="JavaScript" src="PrefsWindow.js">

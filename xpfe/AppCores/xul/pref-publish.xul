@@ -3,14 +3,16 @@
 <?xml-stylesheet href="pref.css" type="text/css"?>
 
 <!DOCTYPE window [
-<!ENTITY  window.title "Composer">
-<!ENTITY  composerHeader.label "">
+<!ENTITY  window.title "Publish">
+<!ENTITY  composerHeader.label "Publish">
 <!ENTITY  maintainCheckbox.label "Maintain links.">
-<!ENTITY  adjustDesc.label "Adjust links to work from the page's location.(Links to local pages will work when
+<!ENTITY  keepCheck.label "Keep images with page.">
+
+<!ENTITY  adjustDesc.label "Adjust links to work from the page's location. (Links to local pages will work when
 			      local versions exist.)           ">
 <!ENTITY  saveDesc.label "Save copies of images to the page's location.  Images will always
 				appear in local versions of the page and when the page is published.">
-<!ENTITY  tip.label "Tip:Check both options if you will be using remote publishing.">
+<!ENTITY  tip.label "Tip: Check both options if you will be using remote publishing.">
 <!ENTITY defaultHeader.label  "Default publishing location">
 <!ENTITY  publishFtp.label "If publishing to a FTP site, enter the HTTP address to browse to:">
 <!ENTITY  publishhtp.label "If publishing to a FTP site, enter the HTTP address to browse to:">
@@ -19,7 +21,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Publish');"  title="Sample Prefs Panel">
+        onload="return StartUp('Publish');"  title="&window.title;">
 
 
 <html:script language="JavaScript" src="PrefsWindow.js">
@@ -39,7 +41,7 @@
 				<html:br />&adjustDesc.label;       
 			</html:td></html:tr>
 			<html:tr><html:td>
-				<html:input name="autosave" type="checkbox" id="pref:1:bool:bool:ceditor.publish_keep_links" />Keep images with page.
+				<html:input name="autosave" type="checkbox" id="pref:1:bool:bool:ceditor.publish_keep_links" />&keepCheck.label;
 				<html:br />&saveDesc.label;
 			</html:td></html:tr>
 					&tip.label;
