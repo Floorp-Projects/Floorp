@@ -122,8 +122,9 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports *aOuter,
                              void **aResult)  
 {  
 #ifdef DEBUG_sspitzer
-  printf("nsMsgNewsFactory::CreateInstance()\n");
+	printf("nsMsgNewsFactory::CreateInstance()\n");
 #endif
+	nsISupports *inst = nsnull;
 	nsresult rv = NS_OK;
 
 	if (aResult == nsnull)  
@@ -137,42 +138,29 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports *aOuter,
 	// do they want a news datasource ?
 	if (mClassID.Equals(kNntpUrlCID)) 
 	{		
-    nsNntpUrl * nntpUrl = new nsNntpUrl(nsnull, nsnull);
-		if (nntpUrl)
-			rv = nntpUrl->QueryInterface(aIID, aResult);
-		else
-			rv = NS_ERROR_OUT_OF_MEMORY;
-		
-		if (NS_FAILED(rv) && nntpUrl)
-			delete nntpUrl;
+		inst = NS_STATIC_CAST(nsINntpUrl *, new nsNntpUrl(nsnull, nsnull));
 	}
 	else if (mClassID.Equals(kNntpServiceCID))
 	{
-		nsNntpService *nntpService = new nsNntpService();
-    if (nntpService)
-      rv = nntpService->QueryInterface(aIID, aResult);
-    else
-      rv = NS_ERROR_OUT_OF_MEMORY;
-
-    if (NS_FAILED(rv) && nntpService)
-      delete nntpService;
+		inst = NS_STATIC_CAST(nsINntpService *, new nsNntpService());
 	}
  	else if (mClassID.Equals(kNewsFolderResourceCID)) 
 	{
-		nsMsgNewsFolder *newsFolder = new nsMsgNewsFolder();
-		if (newsFolder)
-			rv = newsFolder->QueryInterface(aIID, aResult);
-		else
-			rv = NS_ERROR_OUT_OF_MEMORY;
+		inst = NS_STATIC_CAST(nsIMsgNewsFolder *, new nsMsgNewsFolder());
+	} 
+	else if (mClassID.Equals(kNntpIncomingServerCID)) 
+	{
+		return NS_NewNntpIncomingServer(aIID, aResult);
+	}
+	else
+		return NS_NOINTERFACE;
 
-		if (NS_FAILED(rv) && newsFolder)
-			delete newsFolder;
-  } 
-  else if (mClassID.Equals(kNntpIncomingServerCID)) {
-    rv = NS_NewNntpIncomingServer(nsISupports::GetIID(), aResult);
-  }
-  else
-    rv = NS_NOINTERFACE;
+	if (inst == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	rv = inst->QueryInterface(aIID, aResult);
+	if (NS_FAILED(rv))
+		delete inst;
 
 	return rv;
 }  
@@ -230,26 +218,33 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 	rv = compMgr->RegisterComponent(kNntpUrlCID, nsnull, nsnull, path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
-	rv = compMgr->RegisterComponent(kNntpServiceCID, nsnull, nsnull, path, PR_TRUE, PR_TRUE);
+	rv = compMgr->RegisterComponent(kNntpServiceCID, "Nntp Service", 
+									"component://netscape/messenger/nntpservice", 
+									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kNewsFolderResourceCID,
+	rv = compMgr->RegisterComponent(kNntpServiceCID, "Nntp Message Service", 
+									"component://netscape/messenger/messageservice;type=nntp", 
+									path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kNewsFolderResourceCID,
                                   "News Folder Resource Factory",
                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) goto done;
 #ifdef NS_DEBUG
 	printf("news registering from %s\n",path);
 #endif
 
-  rv = compMgr->RegisterComponent(kNntpIncomingServerCID,
-                                  "Nntp Incoming Server",
-                                  "component://netscape/messenger/server&type=nntp",
-                                  path, PR_TRUE, PR_TRUE);
+	rv = compMgr->RegisterComponent(kNntpIncomingServerCID,
+									"Nntp Incoming Server",
+									"component://netscape/messenger/server&type=nntp",
+									path, PR_TRUE, PR_TRUE);
                                   
-  if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) goto done;
 
-	done:
+done:
 	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
 	return rv;
 }
@@ -272,11 +267,11 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	rv = compMgr->UnregisterComponent(kNntpServiceCID, path);
 	if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterComponent(kNewsFolderResourceCID, path);
-  if (NS_FAILED(rv)) goto done;
+	rv = compMgr->UnregisterComponent(kNewsFolderResourceCID, path);
+	if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterComponent(kNntpIncomingServerCID, path);
-  if (NS_FAILED(rv)) goto done;
+	rv = compMgr->UnregisterComponent(kNntpIncomingServerCID, path);
+	if (NS_FAILED(rv)) goto done;
 
 done:
 	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
