@@ -399,6 +399,7 @@ nsTableCellMap::GetDataAt(PRInt32 aRowIndex,
 void 
 nsTableCellMap::AddColsAtEnd(PRUint32 aNumCols)
 {
+  PRBool added;
   // XXX We really should have a way to say "make this voidarray at least
   // N entries long" to avoid reallocating N times.  On the other hand, the
   // number of likely allocations here isn't TOO gigantic, and we may not
@@ -406,12 +407,20 @@ nsTableCellMap::AddColsAtEnd(PRUint32 aNumCols)
   for (PRUint32 numX = 1; numX <= aNumCols; numX++) {
     nsColInfo* colInfo = new nsColInfo();
     if (colInfo) {
-      mCols.AppendElement(colInfo);
+      added = mCols.AppendElement(colInfo);
+      if (!added) {
+        delete colInfo;
+        NS_WARNING("Could not AppendElement");
+      }
     }
     if (mBCInfo) {
       BCData* bcData = new BCData();
       if (bcData) {
-        mBCInfo->mBottomBorders.AppendElement(bcData);
+        added = mBCInfo->mBottomBorders.AppendElement(bcData);
+        if (!added) {
+          delete bcData;
+          NS_WARNING("Could not AppendElement");
+        }
       }
     }
   }
@@ -428,7 +437,10 @@ nsTableCellMap::RemoveColsAtEnd()
     nsColInfo* colInfo = (nsColInfo*)mCols.ElementAt(colX);
     if (colInfo) {
       if ((colInfo->mNumCellsOrig <= 0) && (colInfo->mNumCellsSpan <= 0))  {
+
+        delete colInfo;
         mCols.RemoveElementAt(colX);
+
         if (mBCInfo) { 
           PRInt32 count = mBCInfo->mBottomBorders.Count();
           if (colX < count) {
@@ -1792,6 +1804,8 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
   for (rowX = aRowIndex; rowX <= endRowIndex; rowX++) {
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rowX);
     for (colX = endColIndex; colX >= aColIndex; colX--) {
+      CellData* doomedData = (CellData*) row->ElementAt(colX);
+      delete doomedData;
       row->RemoveElementAt(colX);
     }
   }
@@ -2297,6 +2311,10 @@ void nsCellMap::SetDataAt(nsTableCellMap& aMap,
     if (numColsToAdd > 0) {
       GrowRow(*row, numColsToAdd);
     }
+
+    CellData* doomedData = (CellData*)row->ElementAt(aColIndex);
+    delete doomedData;
+
     row->ReplaceElementAt(&aNewCell, aColIndex);
     // update the originating cell counts if cell originates in this row, col
     nsColInfo* colInfo = aMap.GetColInfoAt(aColIndex);
