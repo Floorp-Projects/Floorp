@@ -25,6 +25,7 @@
 #include "nsIWebViewerContainer.h"
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
+#include "nsIXPFCContentSinkContainer.h"
 
 class nsIXPFCCanvas;
 
@@ -44,8 +45,22 @@ public:
    */
   NS_IMETHOD Init() = 0;
 
+#if 0
   NS_IMETHOD LoadURL(nsIWebViewerContainer * aWebViewerContainer,
                      nsIXPFCCanvas * aParentCanvas,
+                     const nsString& aURLSpec, 
+                     nsIPostData * aPostData,
+                     nsIArray * aCalendarVector,
+                     nsIID *aDTDIID = nsnull,
+                     nsIID *aSinkIID = nsnull) = 0;
+#endif
+
+  /** 
+   * aContainer is generic variable used to pass information to sink variable.
+   * replaces aParentCanvas.
+   */
+  NS_IMETHOD LoadURL(nsIWebViewerContainer * aWebViewerContainer,
+                     nsISupports * aContentSinkContainer,
                      const nsString& aURLSpec, 
                      nsIPostData * aPostData,
                      nsIID *aDTDIID = nsnull,
