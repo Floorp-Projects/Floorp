@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
+<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
 
   <chapter id="installation" xreflabel="Bugzilla Installation">
     <title>Installation</title>
@@ -1203,6 +1203,37 @@ bash# ./checksetup.pl
 	</note>
 	
       </para>
+
+      <para>
+	The default .htaccess file may not provide adequate access
+	restrictions, depending on your web server configuration.
+	Be sure to check the &lt;Directory&gt; entries for your
+	Bugzilla directory so that the <filename>.htaccess</filename>
+	file is allowed to override web server defaults.  For instance,
+	let's assume your installation of Bugzilla is installed to 
+	<filename>/usr/local/bugzilla</filename>.  You should have
+	this &lt;Directory&gt; entry in your <filename>httpd.conf</filename>
+	file:
+      </para>
+
+      <para>
+	<programlisting>
+<![CDATA[
+<Directory /usr/local/bugzilla/>
+  Options +FollowSymLinks +Indexes +Includes +ExecCGI
+  AllowOverride All
+</Directory>
+]]>
+	</programlisting>
+      </para>
+
+      <para>
+	The important part above is <quote>AllowOverride All</quote>.
+	Without that, the <filename>.htaccess</filename> file created by 
+	<filename>checksetup.pl</filename> will not have sufficient
+	permissions to protect your Bugzilla installation.
+      </para>
+
       <para>
 	If you are using Internet Information Server or other web
 	server which does not observe <filename>.htaccess</filename>
