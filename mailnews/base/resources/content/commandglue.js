@@ -183,8 +183,11 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection, viewType)
 	ClearThreadPane();
 	return;
   }
-    
-  gBeforeFolderLoadTime = new Date();
+   
+  if (showPerformance) { 
+    gBeforeFolderLoadTime = new Date();
+  }
+
   gCurrentLoadingFolderURI = uri;
   gNextMessageAfterDelete = null; // forget what message to select, if any
 
@@ -471,7 +474,7 @@ function FindThreadPaneColumnBySortResource(sortID)
 //If it's not true then use the direction passed in.
 function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirection, direction, changeCursor)
 {
-	//dump("In SortThreadPane\n");
+	dump("In SortThreadPane, toggleCurrentDirection = " + toggleCurrentDirection + "\n");
 	var node = document.getElementById(column);
 	if(!node)
 		return false;
@@ -503,18 +506,23 @@ function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirectio
 	SetActiveThreadPaneSortColumn(column);
 
 	var selection = SaveThreadPaneSelection();
-	var beforeSortTime = new Date();
+	var beforeSortTime;
+	if(showPerformance) {
+        beforeSortTime = new Date();
+    }
 
 	if(changeCursor)
 		SetBusyCursor(window, true);
 	var result = SortColumn(node, sortKey, secondarySortKey, direction);
 	if(changeCursor)
 		SetBusyCursor(window, false);
-	var afterSortTime = new Date();
-	var timeToSort = (afterSortTime.getTime() - beforeSortTime.getTime())/1000;
 
-	if(showPerformance)
+	if(showPerformance) {
+	    var afterSortTime = new Date();
+	    var timeToSort = (afterSortTime.getTime() - beforeSortTime.getTime())/1000;
 		dump("timeToSort is " + timeToSort + "seconds\n");
+    }
+
 	RestoreThreadPaneSelection(selection);
 	return result;
 }

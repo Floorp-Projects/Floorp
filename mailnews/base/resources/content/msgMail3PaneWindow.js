@@ -21,7 +21,7 @@
 /* This is where functions related to the 3 pane window are kept */
 
 
-var showPerformance;
+var showPerformance = false;
 var msgNavigationService;
 
 var gFolderTree;
@@ -133,18 +133,20 @@ var folderListener = {
 				{
 				  gCurrentLoadingFolderURI = "";
 				  //Now let's select the first new message if there is one
-				  var beforeScrollToNew = new Date();
+                  var beforeScrollToNew;
+				  if(showPerformance) {
+				    beforeScrollToNew = new Date();
+                  }
 				  msgNavigationService.EnsureDocumentIsLoaded(document);
 
 				  ScrollToFirstNewMessage();
-				  var afterScrollToNew = new Date();
-				  var timeToScroll = (afterScrollToNew.getTime() - beforeScrollToNew.getTime())/1000;
 
+				  if(showPerformance) {
+				      var afterScrollToNew = new Date();
+				      var timeToScroll = (afterScrollToNew.getTime() - beforeScrollToNew.getTime())/1000;
 
-				  var afterFolderLoadTime = new Date();
-				  var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
-				  if(showPerformance)
-				  {
+				      var afterFolderLoadTime = new Date();
+				      var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
 					  dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
 				  	  dump("of which scrolling to new is" + timeToScroll + "seconds\n");
 				  }
@@ -300,11 +302,9 @@ function OnLoadMessenger()
 	//Set focus to the Thread Pane the first time the window is opened.
 	SetFocusThreadPane();
 
-	var afterLoadMessenger = new Date();
-
-	var timeToLoad = (afterLoadMessenger.getTime() - beforeLoadMessenger.getTime())/1000;
-	if(showPerformance)
-	{
+	if(showPerformance) {
+	  var afterLoadMessenger = new Date();
+	  var timeToLoad = (afterLoadMessenger.getTime() - beforeLoadMessenger.getTime())/1000;
 	  dump("Time in OnLoadMessger is " +  timeToLoad + " seconds\n");
 	}
 	
