@@ -76,9 +76,19 @@ function MessengerSetDefaultCharacterSet(aCharset)
 
 function Print() {
 	dump("Print()\n");
-	messenger.DoPrint();
+	try {
+		messenger.DoPrint();
+	}
+	catch (ex) {
+		dump("failed to print\n");
+	}
 }
 function PrintPreview() {
 	dump("PrintPreview()\n");
-	messenger.DoPrintPreview();
+	try {
+		messenger.DoPrintPreview();
+	}
+	catch (ex) {
+		dump("failed to print preview\n");
+	}
 }
