@@ -46,6 +46,7 @@
 #include "nsIDOMText.h"
 #include "nsSupportsArray.h"
 #include "nsINameSpace.h"
+#include "nsJSUtils.h"
 
 // Event listeners
 #include "nsIEventListenerManager.h"
@@ -101,10 +102,31 @@ public:
 
 NS_IMPL_ISUPPORTS1(nsXBLAttributeEntry, nsIXBLAttributeEntry)
 
-class nsXBLBinding: public nsIXBLBinding
+/***********************************************************************/
+//
+// The JS class for XBLBinding
+//
+PR_STATIC_CALLBACK(void)
+XBLBindingFinalize(JSContext *cx, JSObject *obj)
+{
+  nsJSUtils::nsGenericFinalize(cx, obj);
+}
+
+static JSClass XBLBindingClass = { 
+  "XBLBinding", JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS, 
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, 
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, XBLBindingFinalize, 
+  JSCLASS_NO_OPTIONAL_MEMBERS 
+}; 
+
+// *********************************************************************/
+// The XBLBinding class
+
+class nsXBLBinding: public nsIXBLBinding, public nsIScriptObjectOwner
 {
   NS_DECL_ISUPPORTS
 
+  // nsIXBLBinding
   NS_IMETHOD GetBaseBinding(nsIXBLBinding** aResult);
   NS_IMETHOD SetBaseBinding(nsIXBLBinding* aBinding);
 
@@ -123,6 +145,10 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD GetBaseTag(nsIAtom** aResult);
 
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);
+
+  // nsIScriptObjectOwner
+  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
 public:
   nsXBLBinding();
@@ -164,6 +190,8 @@ public:
 
 // Internal member functions
 protected:
+  NS_IMETHOD CreateScriptObject(nsIScriptContext* aContext, nsIDocument* aDocument);
+
   void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
   void GetNestedChild(nsIAtom* aTag, nsIContent* aContent, nsIContent** aResult);
   PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);
@@ -182,7 +210,8 @@ protected:
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
   nsCOMPtr<nsIContent> mChildrenElement; // Strong. One of our anonymous content children.
-
+  void* mScriptObject; // Strong
+    
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
   nsSupportsHashtable* mAttributeTable; // A table for attribute entries.
@@ -261,11 +290,11 @@ nsXBLBinding::kEventHandlerMap[] = {
 // Implementation /////////////////////////////////////////////////////////////////
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS1(nsXBLBinding, nsIXBLBinding)
+NS_IMPL_ISUPPORTS2(nsXBLBinding, nsIXBLBinding, nsIScriptObjectOwner)
 
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(void)
-:mAttributeTable(nsnull)
+:mAttributeTable(nsnull), mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
   gRefCnt++;
@@ -295,6 +324,9 @@ nsXBLBinding::nsXBLBinding(void)
       entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
       ++entry;
     }
+
+    // Init the XBLBinding class.
+
   }
 }
 
@@ -621,15 +653,11 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
     rv = global->GetContext(getter_AddRefs(context));
     if (NS_FAILED(rv)) return rv;
 
+    // Create our script object.
+    if (NS_FAILED(rv = CreateScriptObject(context, document)))
+      return rv;
+
     JSContext* cx = (JSContext*)context->GetNativeContext();
-
-    nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mBoundElement));
-    if (!owner)
-      return NS_ERROR_UNEXPECTED;
-
-    void* scopeObject;
-    rv = owner->GetScriptObject(context, (void**) &scopeObject);
-    if (NS_FAILED(rv)) return rv;
 
     // Do a walk.
     PRInt32 childCount;
@@ -689,7 +717,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
         // and then define it as a property.
         if (!body.IsEmpty()) {
           void* myFunc;
-          rv = context->CompileFunction(scopeObject,
+          rv = context->CompileFunction(mScriptObject,
                                         name,
                                         argCount,
                                         (const char**)args,
@@ -720,7 +748,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
             attrs |= JSPROP_READONLY;
 
           if (!getter.IsEmpty()) {
-            rv = context->CompileFunction(scopeObject,
+            rv = context->CompileFunction(mScriptObject,
                                           "onget",
                                           0,
                                           nsnull,
@@ -734,7 +762,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
           }
 
           if (!setter.IsEmpty()) {
-            rv = context->CompileFunction(scopeObject,
+            rv = context->CompileFunction(mScriptObject,
                                           "onset",
                                           1,
                                           gPropertyArg,
@@ -752,7 +780,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
             // destruction of any initial value that might be set.
             // This means we only have to worry about defining the getter
             // or setter.
-            rv = ::JS_DefineUCProperty(cx, (JSObject*)scopeObject, name.GetUnicode(), 
+            rv = ::JS_DefineUCProperty(cx, (JSObject*)mScriptObject, name.GetUnicode(), 
                                        name.Length(), JSVAL_VOID,
                                        (JSPropertyOp) getFunc, 
                                        (JSPropertyOp) setFunc, 
@@ -779,13 +807,13 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
               jsval* result = nsnull;
               PRBool undefined;
               rv = context->EvaluateStringWithValue(answer, 
-                                           scopeObject,
+                                           mScriptObject,
                                            nsnull, nsnull, 0, nsnull,
                                            (void*)result, &undefined);
               
               if (!undefined) {
                 // Define that value as a property
-                rv = ::JS_DefineUCProperty(cx, (JSObject*)scopeObject, name.GetUnicode(), 
+                rv = ::JS_DefineUCProperty(cx, (JSObject*)mScriptObject, name.GetUnicode(), 
                                            name.Length(), *result,
                                            nsnull, nsnull,
                                            attrs); 
@@ -919,7 +947,98 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool
   return NS_OK;
 }
 
+// nsIScriptObjectOwner methods ///////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsXBLBinding::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
+{
+  *aScriptObject = mScriptObject;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::SetScriptObject(void *aScriptObject)
+{
+  // XXX Deal with release??
+  mScriptObject = aScriptObject;
+  return NS_OK;
+}
+
 // Internal helper methods ////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsXBLBinding::CreateScriptObject(nsIScriptContext* aContext, nsIDocument* aDocument)
+{
+  // First ensure our JS class is initialized.
+  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  JSObject *proto = nsnull;
+  JSObject *constructor = nsnull;
+  JSObject *parent_proto = nsnull;
+  JSObject *global = JS_GetGlobalObject(jscontext);
+  jsval vp;
+
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "XBLBinding", &vp)) ||
+      !JSVAL_IS_OBJECT(vp) ||
+      ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
+      (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
+      !JSVAL_IS_OBJECT(vp)) {
+    proto = JS_InitClass(jscontext,     // context
+                         global,        // global object
+                         parent_proto,  // parent proto 
+                         &XBLBindingClass,      // JSClass
+                         nsnull,            // JSNative ctor
+                         0,             // ctor args
+                         nsnull,  // proto props
+                         nsnull,     // proto funcs
+                         nsnull,        // ctor props (static)
+                         nsnull);       // ctor funcs (static)
+    if (nsnull == proto) {
+      return NS_ERROR_FAILURE;
+    }
+
+  }
+  else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) {
+    proto = JSVAL_TO_OBJECT(vp);
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Obtain the bound element's current script object.
+  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mBoundElement));
+ 
+  // create a js object for this binding
+  void* parent;
+  nsCOMPtr<nsIScriptObjectOwner> docOwner(do_QueryInterface(aDocument));
+  docOwner->GetScriptObject(aContext, &parent);
+  if (!parent)
+    return NS_ERROR_FAILURE;
+
+  void* xulElementProto;
+  nsCOMPtr<nsIScriptObjectOwner> elementOwner(do_QueryInterface(mBoundElement));
+  elementOwner->GetScriptObject(aContext, &xulElementProto);
+  JSObject* xulElementProtoObject = (JSObject*)xulElementProto;
+
+  JSObject* parentObject = (JSObject*)parent;
+  JSObject* object = JS_NewObject(jscontext, &XBLBindingClass, xulElementProtoObject, parentObject);
+
+  if (object) {
+    // connect the native object to the js object
+    void* privateData = JS_GetPrivate(jscontext, xulElementProtoObject);
+    JS_SetPrivate(jscontext, object, privateData);
+
+    NS_IF_ADDREF((nsISupports*)privateData);
+
+    // Set ourselves as the new script object.
+    owner->SetScriptObject(object);
+    SetScriptObject(object);
+
+    // Ensure that a reference exists to this binding
+    aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, "nsXBLBinding::mScriptObject");
+  }
+
+  return NS_OK;
+}
 
 void
 nsXBLBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult) 
