@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include "nsCookieHTTPNotify.h"
 #include "nsIHTTPChannel.h"
-#include "nsIHTTPResponse.h"
 #include "nsCookie.h"
 #include "nsIURL.h"
 #include "nsCRT.h"
@@ -186,14 +185,12 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
             return rv;
         }
 
-        nsIHTTPResponse *pHTTPResponse; 
-        rv = pHTTPConnection->QueryInterface(nsIHTTPResponse::GetIID(), (void **)&pHTTPResponse); 
-        if (NS_SUCCEEDED(rv) && nsnull != pHTTPResponse) {
-            char *pDate;
+        char *pDate = nsnull;
+        rv = pHTTPConnection->GetResponseHeader("Date", &pDate);
+            
+        if (NS_SUCCEEDED(rv)) {
             if(pDate) {
-                pHTTPResponse->GetDate(&pDate); 
                 NET_SetCookieStringFromHttp(url, cookie, pDate);
-                NS_RELEASE(pHTTPResponse);
                 nsCRT::free(pDate);
             }
         }
