@@ -269,7 +269,9 @@ endif
 
 # mozapps installer needs to be built after xpinstall
 ifdef MOZ_XUL_APP
+ifdef MOZ_INSTALLER
 tier_50_dirs     +=  toolkit/mozapps/installer
+endif
 endif
 
 #
