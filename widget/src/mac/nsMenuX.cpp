@@ -1334,17 +1334,24 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
     
     mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
 
-    // reuse the existing menu, to avoid invalidating root menu bar.
-    NS_ASSERTION(mMacMenuHandle != NULL, "nsMenuX::AttributeChanged: invalid menu handle.");
-    RemoveAll();
-    CFStringRef titleRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)mLabel.get(), mLabel.Length());
-    NS_ASSERTION(titleRef, "nsMenuX::AttributeChanged: CFStringCreateWithCharacters failed.");
-    ::SetMenuTitleWithCFString(mMacMenuHandle, titleRef);
-    ::CFRelease(titleRef);
-    
-    if (menubarParent)
-        ::DrawMenuBar();
-
+    // invalidate my parent. If we're a submenu parent, we have to rebuild
+    // the parent menu in order for the changes to be picked up. If we're
+    // a regular menu, just change the title and redraw the menubar.
+    if ( !menubarParent ) {
+      nsCOMPtr<nsIMenuListener> parentListener ( do_QueryInterface(mParent) );
+      parentListener->SetRebuild(PR_TRUE);
+    }
+    else {
+      // reuse the existing menu, to avoid rebuilding the root menu bar.
+      NS_ASSERTION(mMacMenuHandle != NULL, "nsMenuX::AttributeChanged: invalid menu handle.");
+      RemoveAll();
+      CFStringRef titleRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)mLabel.get(), mLabel.Length());
+      NS_ASSERTION(titleRef, "nsMenuX::AttributeChanged: CFStringCreateWithCharacters failed.");
+      ::SetMenuTitleWithCFString(mMacMenuHandle, titleRef);
+      ::CFRelease(titleRef);
+      
+      ::DrawMenuBar();
+    }
   }
   else if(aAttribute == nsWidgetAtoms::hidden || aAttribute == nsWidgetAtoms::collapsed) {
     SetRebuild(PR_TRUE);
