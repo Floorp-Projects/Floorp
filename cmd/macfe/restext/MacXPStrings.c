@@ -28,6 +28,7 @@
 /*END NEW NEW_STRING_LIB*/
 
 /* the prefix file should have already defined OTUNIXERRORS at this stage */
+#define OTUNIXERRORS 1
 #include "OpenTransport.h"
 
 
