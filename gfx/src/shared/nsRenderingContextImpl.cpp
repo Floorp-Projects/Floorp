@@ -68,10 +68,9 @@ nsTransform2D       *theTransform;
   // we have to do things ourselves
   hasMask = aImage->GetHasAlphaMask();
 
+  tvrect.SetRect(0,0,aX1-aX0,aY1-aY0);
 
- tvrect.SetRect(0,0,aX1-aX0,aY1-aY0);
-
- if( !hasMask && ((aWidth<(tvrect.width/16)) || (aHeight<(tvrect.height/16)))) {
+  if( !hasMask && ((aWidth<(tvrect.width/16)) || (aHeight<(tvrect.height/16)))) {
 
     // create a larger tile to use
     GetDeviceContext(theDevCon);
@@ -99,7 +98,6 @@ nsTransform2D       *theTransform;
       theDevCon->GetAppUnitsToDevUnits(app2dev);
       theTransform->SetToIdentity();  
 	    theTransform->AddScale(app2dev, app2dev);
-
 
       // copy the initial image to our buffer, this takes twips and converts to pixels.. 
       // which is what the image is in
