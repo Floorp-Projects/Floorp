@@ -29,10 +29,10 @@ class nsInstallObject
         nsInstallObject(nsIDOMInstall* inInstall) {mInstall = inInstall; }
 
         /* Override with your set-up action */
-        virtual char* Prepare() = 0;
+        virtual PRInt32 Prepare() = 0;
 
         /* Override with your Completion action */
-        virtual char* Complete() = 0;
+        virtual PRInt32 Complete() = 0;
 
         /* Override with an explanatory string for the progress dialog */
         virtual char* toString() = 0;

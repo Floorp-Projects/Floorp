@@ -177,8 +177,8 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
 
     if (result != nsIDOMInstall::SU_SUCCESS)
     {
-        SaveError( result );
-        return result;
+        *aReturn = SaveError( result );
+        return NS_OK;
     }
 
 
@@ -194,7 +194,8 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
 
     if (qualifiedRegName == nsnull)
     {
-        return SUERR_BAD_PACKAGE_NAME;  // this will stop the install script
+        *aReturn = SaveError( SUERR_BAD_PACKAGE_NAME );
+        return NS_OK;
     }
     
     /* Check for existence of the newer	version	*/
@@ -235,7 +236,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
 
     if (versionNewer) 
     {
-        char* errorMsg = NULL;
+        PRInt32 error;
     
         ie = new nsInstallFile( this, 
                                 *qualifiedRegName, 
@@ -244,17 +245,17 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
                                 aFolder,
                                 aTargetName, 
                                 aForceMode, 
-                                &errorMsg );
+                                &error );
 
-        if (errorMsg == NULL) 
+        if (error == SU_SUCCESS) 
         {
-            errorMsg = ScheduleForInstall( ie );
+            error = ScheduleForInstall( ie );
         }
     
-        if (errorMsg != NULL) 
+        if (error != SU_SUCCESS) 
         {
-            SaveError( SUERR_UNEXPECTED_ERROR);
-            return SUERR_UNEXPECTED_ERROR;
+            *aReturn = SaveError( error );
+            return NS_OK;
         }
     }
 
@@ -288,6 +289,59 @@ nsInstall::Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* a
 NS_IMETHODIMP    
 nsInstall::FinalizeInstall(PRInt32* aReturn)
 {
+    PRBool  rebootNeeded = PR_FALSE;
+
+    PRInt32 result = SanityCheck();
+
+    if (result != nsIDOMInstall::SU_SUCCESS)
+    {
+        *aReturn = SaveError( result );
+        return NS_OK;
+    }
+    
+    if ( mInstalledFiles == NULL || mInstalledFiles->GetSize() == 0 ) 
+    {
+        // no actions queued: don't register the package version
+        // and no need for user confirmation
+    
+        CleanUp();
+        return NS_OK; 
+    }
+
+    nsInstallObject* ie = nsnull;
+
+    if ( mUninstallPackage )
+    {
+        char* packageName     = mPackageName.ToNewCString();
+        char* userPackageName = mUserPackageName.ToNewCString();
+
+        // The Version Registry is not real.  FIX!
+        //
+        //VR_UninstallCreateNode( packageName, userPackageName);
+        
+        delete packageName;
+        delete userPackageName;
+    }
+      
+    PRUint32 i=0;
+    for (i=0; i < mInstalledFiles->GetSize(); i++) 
+    {
+        ie = (nsInstallObject*)mInstalledFiles->Get(i);
+        if (ie == NULL)
+            continue;
+    //CAN we get rid of char* crap?? FiX
+    //result = ie->Complete();
+        ie->Complete();
+
+        if (result != SU_SUCCESS) 
+        {
+            ie->Abort();
+            *aReturn = SaveError( result );
+            return NS_OK;
+        }
+
+        //SetProgressDialogThermo(++count);
+    }
     return NS_OK;
 }
 
@@ -462,8 +516,9 @@ nsInstall::Uninstall(const nsString& aPackageName, PRInt32* aReturn)
 }
 
 NS_IMETHODIMP    
-nsInstall::ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, nsString& aErrorMsg)
+nsInstall::ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* error)
 {
+    *error = SU_SUCCESS;
     return NS_OK;
 }
 /////////////////////////////////////////////////////////////////////////
@@ -476,10 +531,11 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFi
  * Do not call installedFiles.addElement directly, because this routine also 
  * handles progress messages
  */
-char* 
+PRInt32 
 nsInstall::ScheduleForInstall(nsInstallObject* ob)
 {
-    char *errorMsg = NULL;
+    PRInt32 error = SU_SUCCESS;
+
     char *objString = ob->toString();
 
     // flash current item
@@ -488,11 +544,11 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     PR_FREEIF(objString);
     
     // do any unpacking or other set-up
-    errorMsg = ob->Prepare();
-    if (errorMsg != NULL) 
-    {
-        return errorMsg;
-    }
+    error = ob->Prepare();
+    
+    if (error != SU_SUCCESS) 
+        return error;
+    
     
     // Add to installation list if we haven't thrown out
     
@@ -507,7 +563,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     if (ob->RegisterPackageNode())
         mRegisterPackage = PR_TRUE;
   
-  return NULL;
+  return SU_SUCCESS;
 }
 
 
@@ -568,6 +624,10 @@ nsInstall::GetQualifiedPackageName( const nsString& name )
     {
         qualifedName = CurrentUserNode();
         qualifedName->Insert( name, 7 );
+    }
+    else
+    {
+        qualifedName = new nsString(name);
     }
     
     if (BadRegName(qualifedName)) 
@@ -704,6 +764,36 @@ nsInstall::SaveError(PRInt32 errcode)
   return errcode;
 }
 
+/*
+ * CleanUp
+ * call	it when	done with the install
+ *
+ * XXX: This is a synchronized method. FIX it.
+ */
+void 
+nsInstall::CleanUp(void)
+{
+    nsInstallObject* ie;
+    CloseJARFile();
+    
+    if ( mInstalledFiles != NULL ) 
+    {
+        PRUint32 i=0;
+        for (; i < mInstalledFiles->GetSize(); i++) 
+        {
+            ie = (nsInstallObject*)mInstalledFiles->Get(i);
+            delete (ie);
+        }
+
+        mInstalledFiles->RemoveAll();
+        delete (mInstalledFiles);
+        mInstalledFiles = nsnull;
+    }
+    
+    mPackageName = ""; // used to see if StartInstall() has been called
+
+    //CloseProgressDialog();
+}
 
 PRInt32 
 nsInstall::OpenJARFile(void)
@@ -711,6 +801,10 @@ nsInstall::OpenJARFile(void)
     return SU_SUCCESS;
 }
 
+void
+nsInstall::CloseJARFile(void)
+{
+}
 /////////////////////////////////////////////////////////////////////////
 // 
 /////////////////////////////////////////////////////////////////////////

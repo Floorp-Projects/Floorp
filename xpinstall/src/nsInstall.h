@@ -55,7 +55,7 @@ class nsInstall: public nsIScriptObjectOwner, public nsIDOMInstall
         
 
 /*needs to be noscript*/
-        NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, nsString& aErrorMsg);
+        NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* aError);
 
 
     private:
@@ -85,8 +85,12 @@ class nsInstall: public nsIScriptObjectOwner, public nsIDOMInstall
         PRBool      BadRegName(nsString* regName);
         PRInt32     SaveError(PRInt32 errcode);
 
+        void        CleanUp();
+
         PRInt32     OpenJARFile(void);
-        char*       ScheduleForInstall(nsInstallObject* ob);
+        void        CloseJARFile(void);
+
+        PRInt32      ScheduleForInstall(nsInstallObject* ob);
 
 };
 

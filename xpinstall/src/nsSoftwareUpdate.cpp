@@ -93,7 +93,7 @@ static PRInt32 gLockCnt     = 0;
 
 nsSoftwareUpdate::nsSoftwareUpdate()
 {
-
+        NS_INIT_REFCNT();
 }
 
 nsSoftwareUpdate::~nsSoftwareUpdate()

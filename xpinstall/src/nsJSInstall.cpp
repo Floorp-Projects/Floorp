@@ -981,10 +981,10 @@ InstallExtractFileFromJar(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
   nsIDOMInstall *nativeThis = (nsIDOMInstall*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
+  PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
   nsAutoString b2;
-  nsAutoString b3;
 
   *rval = JSVAL_NULL;
 
@@ -993,7 +993,7 @@ InstallExtractFileFromJar(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
   }
 
-  if (argc >= 4) {
+  if (argc >= 3) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -1001,16 +1001,14 @@ InstallExtractFileFromJar(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
-    nsJSUtils::nsConvertJSValToString(b3, cx, argv[3]);
-
-    if (NS_OK != nativeThis->ExtractFileFromJar(b0, b1, b2, b3)) {
+    if (NS_OK != nativeThis->ExtractFileFromJar(b0, b1, b2, &nativeRet)) {
       return JS_FALSE;
     }
 
-    *rval = JSVAL_VOID;
+    *rval = INT_TO_JSVAL(nativeRet);
   }
   else {
-    JS_ReportError(cx, "Function ExtractFileFromJar requires 4 parameters");
+    JS_ReportError(cx, "Function ExtractFileFromJar requires 3 parameters");
     return JS_FALSE;
   }
 
@@ -1071,7 +1069,7 @@ static JSFunctionSpec InstallMethods[] =
   {"SetPackageFolder",          InstallSetPackageFolder,     1},
   {"StartInstall",          InstallStartInstall,     4},
   {"Uninstall",          InstallUninstall,     1},
-  {"ExtractFileFromJar",          InstallExtractFileFromJar,     4},
+  {"ExtractFileFromJar",          InstallExtractFileFromJar,     3},
   {0}
 };
 
