@@ -10,21 +10,31 @@ require Exporter;
 use strict;
 use Exporter;
 
+use Mac::Events;
+use Mac::StandardFile;
+
 use Moz;
 
 use vars qw(@ISA @EXPORT);
 
 @ISA      = qw(Exporter);
-@EXPORT   = qw(GetDistDirectory BuildOneProject BuildIDLProject AskAndPersistFile DelayFor EmptyTree);
+@EXPORT   = qw(GetBinDirectory
+               BuildOneProject
+               BuildIDLProject
+               BuildFolderResourceAliases
+               AskAndPersistFile
+               DelayFor
+               EmptyTree
+               SetupBuildLog);
 
 
 #--------------------------------------------------------------------------------------------------
-# GetDistDirectory
+# GetBinDirectory
 #--------------------------------------------------------------------------------------------------
-sub GetDistDirectory()
+sub GetBinDirectory()
 {
-    if ($main::DIST_DIRECTORY eq "") { die "Dist directory not set\n"; }
-    return $main::DIST_DIRECTORY;
+    if ($main::BIN_DIRECTORY eq "") { die "Dist directory not set\n"; }
+    return $main::BIN_DIRECTORY;
 }
 
 #--------------------------------------------------------------------------------------------------
@@ -114,7 +124,7 @@ sub BuildOneProject($$$$$)
     
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
     
     # Put libraries in "Essential Files" folder, Components in "Components" folder
     my($component_dir) = $component ? "Components:" : "Essential Files:";
@@ -133,6 +143,37 @@ sub BuildOneProject($$$$$)
     $alias_shlb ? MakeAlias("$project_dir$target_name", "$dist_dir$component_dir") : 0;
     $alias_xSYM ? MakeAlias("$project_dir$target_name.xSYM", "$dist_dir$component_dir") : 0;
 }
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Make resource aliases for one directory
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildFolderResourceAliases($$)
+{
+    my($src_dir, $dest_dir) = @_;
+        
+    # get a list of all the resource files
+    opendir(SRCDIR, $src_dir) || die("can't open $src_dir");
+    my(@resource_files) = readdir(SRCDIR);
+    closedir(SRCDIR);
+    
+    # make aliases for each one into the dest directory
+    print("Placing aliases to all files from $src_dir in $dest_dir\n");
+    for ( @resource_files )
+    {
+        next if $_ eq "CVS";
+        #print("    Doing $_\n");
+        if (-l $src_dir.$_)
+        {
+            print("     $_ is an alias\n");
+            next;
+        }
+        my($file_name) = $src_dir . $_; 
+        MakeAlias($file_name, $dest_dir);
+    }
+}
+
 
 #//--------------------------------------------------------------------------------------------------
 #// DelayFor
@@ -158,7 +199,9 @@ sub DelayFor($)
     {
       print ".";
       $last_time = $cur_time;
-    }      
+    }
+    
+    WaitNextEvent();
   }
 
   STDOUT->autoflush(0);
@@ -202,6 +245,34 @@ sub EmptyTree($)
         }
     }
     closedir(DIR);
+}
+
+
+#-----------------------------------------------
+# SetupBuildLog
+#-----------------------------------------------
+sub SetupBuildLog($)
+{
+  my($timestamped_log) = @_;
+  
+  if ($timestamped_log)
+  {
+  	#Use time-stamped names so that you don't clobber your previous log file!
+  	my $now = localtime();
+  	while ($now =~ s@:@.@) {} # replace all colons by periods
+  	my $logdir = ":Build Logs:";
+  	if (!stat($logdir))
+  	{
+  	        print "Creating directory $logdir\n";
+  	        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+  	}
+  	OpenErrorLog("$logdir$now");
+  }
+  else
+  {
+  	OpenErrorLog("NGLayoutBuildLog");		# Release build
+  	#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
+  }
 }
 
 

@@ -27,6 +27,7 @@ Replaces the AppleScript library I<CodeWarriorLib>.
 use strict;
 use Cwd;
 use Mac::Types;
+use Mac::Events;
 use Mac::AppleEvents;
 use Mac::AppleEvents::Simple;
 use Mac::Processes;
@@ -38,7 +39,7 @@ use vars qw($VERSION);
 $VERSION = '1.02';
 
 my($app)  = 'CWIE';
-my($scriptDir) = cwd();
+my($scriptDir) = cwd();         # could use $0 for this
 
 # 0 == don't switch CWIE to front app in do_event(), 1 == do switch
 # note: activate() still switches when called
@@ -167,6 +168,57 @@ sub build_project ($;$$$) {
 
 =pod
 
+=item appIsRunning()
+
+=cut
+sub _appIsRunning($)
+{
+	my ($appSignature) = @_;
+	my ($psi);
+	my ($found) = 0;
+	my ($appPSN);
+
+	foreach $psi (values(%Process))
+	{
+		if ($psi->processSignature() eq $appSignature)
+		{
+			$appPSN = $psi->processNumber();
+			$found = 1;
+            last;
+		}
+	}
+	
+	return $found;
+}
+
+=pod
+
+=item appIsFrontmost()
+
+=cut
+sub _appIsFrontmost($)
+{
+	my ($appSignature) = @_;
+	my ($psi);
+	my ($found) = 0;
+	my ($appPSN);
+
+	foreach $psi (values(%Process))
+	{
+		if ($psi->processSignature() eq $appSignature)
+		{
+			$appPSN = $psi->processNumber();
+			$found = 1;
+            last;
+		}
+	}
+	
+	return (GetFrontProcess() == $appPSN);
+}
+
+
+=pod
+
 =item activate()
 
 Launches CodeWarrior and brings it to the front.
@@ -253,11 +305,65 @@ sub activate () {
 		launchAppSpec => $appath,
 		launchControlFlags => launchContinue() + launchNoFileFlags()
 	);
-        unless (LaunchApplication($lp)) {
-                unlink($filepath);
-                die $^E;
-        }
+	
+	unless (LaunchApplication($lp)) {
+		unlink($filepath);
+		die $^E;
+	}
+	
+	# wait for CodeWarrior to show up in the list of processes
+	while (!_appIsRunning('CWIE'))
+	{
+		WaitNextEvent();
+	}
+
+	# wait for CodeWarrior to come to the front
+	while (!_appIsFrontmost('CWIE'))
+	{
+		WaitNextEvent();
+	}
 }
+
+=pod
+
+=item getCodeWarriorPath()
+
+Returns a file path relative to the CodeWarrior folder
+
+=cut
+
+sub getCodeWarriorPath($)
+{
+    my($subfolder)=@_;
+    
+    my($app_path) = _read_appath(":idepath.txt");
+    if ($app_path eq "") { die "Error: Failed to get CodeWarrior IDE path\n"; }
+    
+    my($codewarrior_root) = $app_path;
+    $codewarrior_root =~ s/[^:]*$//;
+    return ($codewarrior_root . $subfolder);
+}
+
+
+=pod
+
+=item getCodeWarriorIDEName()
+
+Returns the name of the CodeWarrior application
+
+=cut
+
+sub getCodeWarriorIDEName()
+{
+    my($subfolder)=@_;
+
+    my($app_path) = _read_appath(":idepath.txt");
+    if ($app_path eq "") { die "Error: Failed to get CodeWarrior IDE path\n"; }
+
+    my(@codewarrior_path) = split(/:/, $app_path);
+    return pop(@codewarrior_path);
+}
+
 
 =pod
 

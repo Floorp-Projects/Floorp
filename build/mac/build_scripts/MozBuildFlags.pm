@@ -61,8 +61,9 @@ my(@build_flags) =
 
 my(@options_flags) = 
 (
-  ["jar_manifests", 0],     # use jar.mn files for resources, not MANIFESTs
-  ["jars",          0],     # build jar files
+  ["chrome_jars",   1],     # build jar files
+  ["chrome_files",  0],     # build chrome files
+  ["use_jars",      1],     # build chrome files
   ["transformiix",  0],     # obsolete?
   ["mathml",        0],
   ["svg",           0],
@@ -70,7 +71,7 @@ my(@options_flags) =
   ["ldap",          0],
   ["xmlextras",     0],
   ["mailextras",    1],     # mail importers
-  ["xptlink",       0]      # xpt linker codewarrior plugin
+  ["xptlink",       0]      # link xpt files using the MPW tool
 );
 
 
@@ -191,9 +192,9 @@ sub SetupBuildParams($$$$$)
 
   PropagateAllFlags(\@build_flags);
   
-	SetPullFlags($pull);
-	SetBuildFlags($build);
-	SetBuildOptions($options);
+  SetPullFlags($pull);
+  SetBuildFlags($build);
+  SetBuildOptions($options);
   SetOptionDefines($optiondefines);
   
   #printHash($build);
