@@ -47,29 +47,34 @@ see the Bugzilla Guide for more information.
 
 *** Dependency Requirements ***
 
-MySQL v3.23.6
+MySQL v3.23.41
 Perl v5.6.0
 CGI v2.88
-DBI v1.13
-DBD::MySQL v1.2209
+DBI v1.32
+DBD::mysql v2.1010
 AppConfig v1.52
 Template Toolkit v2.08
-Text::Wrap v20001.0131
+Text::Wrap v2001.0131
 File::Spec v0.82
-Data::Dumper, Date::Parse, CGI::Carp (any)
-GD v1.19 (optional)
+Date::Format v2.21
+Data::Dumper, File::Temp, CGI::Carp (any)
+GD v1.20 (optional)
+GD::Text::Align (any, optional)
+GD::Graph (any, optional)
 Chart::Base v0.99 (optional)
-XML::Parser (any)
+XML::Parser (any, optional)
 
 *** Deprecated Features ***
 
-- This is possibly the last stable release that will work with
+- (already happened - move this in 2.18 notes) This is
+  possibly the last stable release that will work with
   MySQL version 3.22.  Soon Bugzilla will require at least
   version 3.23.x.  The exact minimum version number required
   has not yet been decided.
   (bug 87958)
 
-- This is possibly the last stable release to support the
+- (already happened - move this in 2.18 notes) This is
+  possibly the last stable release to support the
   shadow database.  The replacement (using MySQL's built in
   replication) is not present in 2.16, but we expect that
   very few sites use this feature, so we are not planning a
