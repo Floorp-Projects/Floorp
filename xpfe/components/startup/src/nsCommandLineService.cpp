@@ -168,8 +168,8 @@ PRBool nsCmdLineService::ArgsMatch(const char *lookingFor, const char *userGave)
 
     if (!PL_strcasecmp(lookingFor,userGave)) return PR_TRUE;
 
-#ifdef XP_UNIX
-    /* on unix, we'll allow --mail for -mail */
+#if defined(XP_UNIX) || defined(XP_BEOS)
+    /* on unix and beos, we'll allow --mail for -mail */
     if ((PL_strlen(lookingFor) > 0) && (PL_strlen(userGave) > 1)) {
         if (!PL_strcasecmp(lookingFor+1,userGave+2) && (lookingFor[0] == '-') && (userGave[0] == '-') && (userGave[1] == '-')) return PR_TRUE;
     }
