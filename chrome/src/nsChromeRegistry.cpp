@@ -2755,8 +2755,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
          *chromeProfile,   // "install" or "profile"
          *chromeLocType,   // type of location (local path or URL)
          *chromeLocation;  // base location of chrome (jar file)
-  PRBool isProfile;
-  PRBool isSelection;
+  PRBool installModified = PR_FALSE, profileModified = PR_FALSE;
 
   NS_NAMED_LITERAL_CSTRING(content, "content");
   NS_NAMED_LITERAL_CSTRING(locale, "locale");
@@ -2803,13 +2802,21 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
     *aBuffer = '\0';
 
     // process the parsed line
-    isSelection = select.Equals(chromeLocType);
-    isProfile = profile.Equals(chromeProfile);
-    if (isProfile && !mProfileInitialized) 
-    { // load profile chrome.rdf only if needed
-      rv = LoadProfileDataSource();
-      if (NS_FAILED(rv)) 
-        return rv;
+    PRBool isSelection = select.Equals(chromeLocType);
+    PRBool isProfile = profile.Equals(chromeProfile);
+    if (isProfile)
+    {
+      if (!mProfileInitialized) 
+      { // load profile chrome.rdf only if needed
+        rv = LoadProfileDataSource();
+        if (NS_FAILED(rv)) 
+          return rv;
+      }
+      profileModified = PR_TRUE;
+    }
+    else
+    {
+      installModified = PR_TRUE;   
     }
 
     if (path.Equals(chromeLocType)) {
@@ -2873,10 +2880,18 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
   }
 
   mBatchInstallFlushes = PR_FALSE;
+
   nsCOMPtr<nsIRDFDataSource> dataSource;
-  LoadDataSource(kChromeFileName, getter_AddRefs(dataSource), PR_FALSE, nsnull);
-  nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(dataSource));
-  remote->Flush();
+  if (installModified) {
+    LoadDataSource(kChromeFileName, getter_AddRefs(dataSource), PR_FALSE, nsnull);
+    nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(dataSource));
+    remote->Flush();
+  }
+  if (profileModified) {
+    LoadDataSource(kChromeFileName, getter_AddRefs(dataSource), PR_TRUE, nsnull);
+    nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(dataSource));
+    remote->Flush();
+  }
   return NS_OK;
 }
 
