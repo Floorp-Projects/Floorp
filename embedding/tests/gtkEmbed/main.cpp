@@ -18,13 +18,36 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static gint  io_identifier = 0;
 
-gint delete_window( GtkWidget *widget,
-                    GdkEvent  *event,
-                    gpointer   data )
+typedef struct
 {
-    gtk_main_quit();
-    return(FALSE);
+  GtkWidget *window;
+  GtkWidget *urlEntry;
+  GtkWidget *box;
+  GtkWidget *view;
+  nsIWebBrowserChrome *chrome;
+} MyBrowser;
+
+
+void destroy( GtkWidget *widget, MyBrowser*   data )
+{  
+  printf("Destroying created widgets\n");
+  gtk_widget_destroy( data->window );
+  gtk_widget_destroy( data->urlEntry );
+  gtk_widget_destroy( data->box );
+  //  gtk_widget_destroy( data->view );
+  free (data);
+  
+  gtk_main_quit();
 }
+
+gint delete_event( GtkWidget *widget, GdkEvent  *event, MyBrowser* data )
+{
+  printf("Releasing chrome...");
+  NS_RELEASE(data->chrome);
+  printf("done.\n");
+  return(FALSE);
+}
+
 
 void
 url_activate_cb( GtkEditable *widget, nsIWebBrowserChrome *browser)
@@ -56,7 +79,7 @@ nsresult OpenWebPage(char* url)
     WebBrowserChrome * chrome = new WebBrowserChrome();
     if (!chrome)
         return NS_ERROR_FAILURE;
-    
+  
     NS_ADDREF(chrome); // native window will hold the addref.
 
     nsCOMPtr<nsIWebBrowser> newBrowser;
@@ -92,82 +115,88 @@ nsresult OpenWebPage(char* url)
 
 nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
 {
-   GtkWidget *window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-   GtkWidget *urlEntry = gtk_entry_new();
-   GtkWidget *box = gtk_vbox_new(FALSE, 0);
-   GtkWidget *view = gtk_event_box_new();
-
-   if (!window || !urlEntry || !box || !view)
+   MyBrowser* browser = (MyBrowser*) malloc (sizeof(MyBrowser) );
+   if (!browser)
      return nsnull;
 
+   browser->window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+   browser->urlEntry = gtk_entry_new();
+   browser->box = gtk_vbox_new(FALSE, 0);
+   browser->view = gtk_event_box_new();
+   browser->chrome = chrome;  // take ownership!
+
+   if (!browser->window || !browser->urlEntry || !browser->box || !browser->view)
+     return nsnull;
+   
    /* Put the box into the main window. */
-   gtk_container_add (GTK_CONTAINER (window), box);
+   gtk_container_add (GTK_CONTAINER (browser->window),browser->box);
 
-   gtk_box_pack_start(GTK_BOX(box), urlEntry, FALSE, FALSE, 5);
-   gtk_box_pack_start(GTK_BOX(box), view,     FALSE, FALSE, 5);
+   gtk_box_pack_start(GTK_BOX(browser->box), browser->urlEntry, FALSE, FALSE, 5);
+   gtk_box_pack_start(GTK_BOX(browser->box), browser->view,     FALSE, FALSE, 5);
 
-   gtk_signal_connect (GTK_OBJECT (window), 
+   gtk_signal_connect (GTK_OBJECT (browser->window), 
+                       "destroy",
+                       GTK_SIGNAL_FUNC (destroy), 
+                       browser);
+
+   gtk_signal_connect (GTK_OBJECT (browser->window), 
                        "delete_event",
-                        GTK_SIGNAL_FUNC (delete_window), 
-                        chrome);
+                       GTK_SIGNAL_FUNC (delete_event), 
+                       browser);
 
-   gtk_signal_connect(GTK_OBJECT(urlEntry), "activate",
-		     GTK_SIGNAL_FUNC(url_activate_cb), 
-                     chrome);
+   gtk_signal_connect(GTK_OBJECT(browser->urlEntry),
+                      "activate",
+		      GTK_SIGNAL_FUNC(url_activate_cb), 
+                      chrome);
 
-   gtk_widget_set_usize(view, 430, 430);
+   gtk_widget_set_usize(browser->view, 430, 430);
 
-   gtk_window_set_title (GTK_WINDOW (window), "Embedding is Fun!");
-   gtk_window_set_default_size (GTK_WINDOW(window), 450, 450);
+   gtk_window_set_title (GTK_WINDOW (browser->window), "Embedding is Fun!");
+   gtk_window_set_default_size (GTK_WINDOW(browser->window), 450, 450);
 
-   gtk_container_set_border_width (GTK_CONTAINER (window), 10);
+   gtk_container_set_border_width (GTK_CONTAINER (browser->window), 10);
 
-   gtk_widget_realize (window);
+   gtk_widget_realize (browser->window);
 
-   gtk_widget_show (urlEntry);
-   gtk_widget_show (box);
-   gtk_widget_show (view);
-   gtk_widget_show (window);
+   gtk_widget_show (browser->urlEntry);
+   gtk_widget_show (browser->box);
+   gtk_widget_show (browser->view);
+   gtk_widget_show (browser->window);
 
-  return view;
+  return browser->view;
 }
 
 
 
-int main( int   argc,
-		  char *argv[] )
+int main( int  argc,  char *argv[] )
 {
-  nsresult rv;
+  char *loadURLStr;
+  if (argc > 1)
+    loadURLStr = argv[1];
+  else
+    loadURLStr = "http://www.mozilla.org";
+
   NS_InitEmbedding(nsnull, nsnull);
 
   // set up the thread event queue
-  nsIEventQueueService* eventQService;
-  rv = nsServiceManager::GetService(kEventQueueServiceCID,
-									NS_GET_IID(nsIEventQueueService),
-									(nsISupports **)&eventQService);
-  if (NS_OK == rv)
-	{
-	  // get our hands on the thread event queue
-	  nsIEventQueue *eventQueue;
-	  rv = eventQService->GetThreadEventQueue( NS_CURRENT_THREAD, 
-											   &eventQueue);
-	  if (NS_FAILED(rv))
-		return FALSE;
-    
-	  io_identifier = gdk_input_add( eventQueue->GetEventQueueSelectFD(),
-									 GDK_INPUT_READ,
-									 handle_event_queue,
-									 eventQueue);
-	  NS_RELEASE(eventQService);
-	  NS_RELEASE(eventQueue);
-	}
+  nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID);
+  if (!eventQService) return (-1);
 
+  nsCOMPtr< nsIEventQueue> eventQueue;
+  eventQService->GetThreadEventQueue( NS_CURRENT_THREAD, getter_AddRefs(eventQueue));
+  if (!eventQueue) return (-1);
+    
+  io_identifier = gdk_input_add( eventQueue->GetEventQueueSelectFD(),
+		                 GDK_INPUT_READ,
+				 handle_event_queue,
+				 eventQueue);
+ 
   /* This is called in all GTK applications. Arguments are parsed
    * from the command line and are returned to the application. */
   gtk_init(&argc, &argv);
-         
 
-  if ( NS_FAILED( OpenWebPage("http://people.netscape.com/dougt") ))
+         
+  if ( NS_FAILED( OpenWebPage(loadURLStr) ))
 	  return (-1);
   
  
@@ -175,7 +204,11 @@ int main( int   argc,
    * and waits for an event to occur (like a key press or
    * mouse event). */
   gtk_main ();
-         
+  
+  gtk_input_remove(io_identifier);
+
+  printf("Cleaning up embedding\n");
+  NS_TermEmbedding();        
   return(0);
 }
 
