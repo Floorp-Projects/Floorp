@@ -21,7 +21,6 @@
 
 #include "stdafx.h"
 #include "dropmenu.h"
-#include "cxicon.h"
 
 #define nIMG_SPACE 4
 #define MAX_DROPMENU_ITEM_LENGTH 45
@@ -2574,4 +2573,10 @@ CWnd *CDropMenu::GetTopLevelParent(void)
 	}
 
 	return pMenu->m_pParent;
+}
+
+void CDropMenu::LoadComplete(HT_Resource r)
+{
+	// Need to invalidate the line that corresponds to this particular resource.
+	Invalidate();
 }

@@ -121,7 +121,7 @@ public:
 	//	Don't display partial images.
 	virtual void AllConnectionsComplete(MWContext *pContext);
 	void NiceDestruction();
-	virtual int DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, LTRB& Rect);
+	virtual int DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, int32 lScaleWidth, int32 lScaleHeight, LTRB& Rect);
 };
 
 #endif

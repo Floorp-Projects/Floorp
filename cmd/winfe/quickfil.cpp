@@ -760,6 +760,12 @@ CSize CTreeMenu::DrawImage(CDC * pDC, const CRect & rect, CTreeItem * pItem,
 	
 } // END OF	FUNCTION CTreeMenu::DrawImage()
 	
+
+void CTreeMenu::LoadComplete(HT_Resource r) 
+{
+
+}
+
 /****************************************************************************
 *
 *	Class: CPopupTree

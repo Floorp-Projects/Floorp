@@ -208,7 +208,7 @@ class CTreeMenu : public CTreeMenuBase, public CCustomImageObject
 		BOOL GetMnemonic(TCHAR cMnemonic, UINT &nCommand, int &nPosition);
 		void SetParent(CWnd *pParent) { m_pParent = pParent;}
 
-		virtual void LoadComplete(HT_Resource r) {}
+		virtual void LoadComplete(HT_Resource r);
 
 	protected:
 		virtual void MeasureItem(LPMEASUREITEMSTRUCT lpMI);

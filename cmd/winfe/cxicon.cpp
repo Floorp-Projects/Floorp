@@ -312,7 +312,7 @@ BITMAPINFO * CXIcon::NewPixmap(NI_Pixmap *pImage, BOOL isMask)
 	return CDCCX::NewPixmap(pImage, isMask);
 }
 
-int CXIcon::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, LTRB& Rect)
+int CXIcon::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, int32 lScaleWidth, int32 lScaleHeight, LTRB& Rect)
 {
 	m_image = image;
 	m_mask = mask;

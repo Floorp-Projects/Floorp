@@ -25,6 +25,7 @@
 
 #include "stdafx.h"
 #include "tlbutton.h"
+#include "cxicon.h"
 
 #define DM_DROPOCCURRED		WM_USER + 50
 #define DM_CLOSEALLMENUS	WM_USER + 51
@@ -182,7 +183,7 @@ public:
 		:m_pDataSource(pDataSource), m_PointHit(point) { m_DropEffect = DROPEFFECT_NONE; };
 };
 
-class CDropMenu: public CWnd {
+class CDropMenu: public CWnd, public CCustomImageObject {
 
 protected:
 	CPtrArray m_pMenuItemArray;
@@ -238,6 +239,8 @@ public:
 	~CDropMenu();
 
 	UINT GetMenuItemCount();
+
+	void LoadComplete(HT_Resource r);
 
 	void AppendMenu(UINT nFlags, UINT nIDNewItem, CString szText, BOOL bShowFeedback, HBITMAP hUnselectedBitmap, HBITMAP hSelectedBitmap = NULL, 
 					void* pCustomIcon = NULL, IconType iconType = BUILTIN_BITMAP, void *pUserData = NULL);

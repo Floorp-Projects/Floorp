@@ -596,7 +596,7 @@ void CRDFToolbarButton::FillInMenu(HT_Resource theNode)
 		if (nIconType == LOCAL_FILE)
 			pCustomIcon = FetchLocalFileIcon(theItem);
 		else if (nIconType == ARBITRARY_URL)
-			pCustomIcon = FetchCustomIcon(theItem, this, FALSE);
+			pCustomIcon = FetchCustomIcon(theItem, m_pCachedDropMenu, FALSE);
 
 		HT_SetNodeFEData(theItem, this);
 
