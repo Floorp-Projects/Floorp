@@ -30,7 +30,7 @@
 #include "nsRDFCID.h"
 #include "nsIMsgAccountManager.h"
 #include "nsINntpIncomingServer.h"
-// #include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -78,9 +78,8 @@ nsImapOfflineSync::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
   PRBool stopped = PR_FALSE;
   if (m_window)
     m_window->GetStopped(&stopped);
-
-//  if (stopped)
-//    exitCode = NS_BINDING_ABORTED;
+  if (stopped)
+    exitCode = NS_BINDING_ABORTED;
 
   if (NS_SUCCEEDED(exitCode))
     rv = ProcessNextOperation();
@@ -492,7 +491,6 @@ PRBool nsImapOfflineSync::CreateOfflineFolder(nsIMsgFolder *folder)
 
 PRInt32 nsImapOfflineSync::GetCurrentUIDValidity()
 {
-  PRUint32 uidValidity;
    uid_validity_info uidStruct;
 
   if (m_currentFolder)
@@ -515,296 +513,296 @@ PRInt32 nsImapOfflineSync::GetCurrentUIDValidity()
 nsresult nsImapOfflineSync::ProcessNextOperation()
 {
   nsresult rv;
-	// find a folder that needs to process operations
-	nsIMsgFolder	*deletedAllOfflineEventsInFolder = nsnull;
-
-	// if we haven't created offline folders, and we're updating all folders,
-	// first, find offline folders to create.
-	if (!m_createdOfflineFolders)
-	{
-		if (m_singleFolderToUpdate)
-		{
-			if (!m_pseudoOffline)
-			{
-				AdvanceToFirstIMAPFolder();
-				if (CreateOfflineFolders())
-					return NS_OK;
-			}	
-		}
-		else
-		{
-			if (CreateOfflineFolders())
-				return NS_OK;
-			AdvanceToFirstIMAPFolder();
-		}
-		m_createdOfflineFolders = PR_TRUE;
-	}
-	// if updating one folder only, restore m_currentFolder to that folder
-	if (m_singleFolderToUpdate)
-		m_currentFolder = m_singleFolderToUpdate;
-
+  // find a folder that needs to process operations
+  nsIMsgFolder	*deletedAllOfflineEventsInFolder = nsnull;
+  
+  // if we haven't created offline folders, and we're updating all folders,
+  // first, find offline folders to create.
+  if (!m_createdOfflineFolders)
+  {
+    if (m_singleFolderToUpdate)
+    {
+      if (!m_pseudoOffline)
+      {
+        AdvanceToFirstIMAPFolder();
+        if (CreateOfflineFolders())
+          return NS_OK;
+      }	
+    }
+    else
+    {
+      if (CreateOfflineFolders())
+        return NS_OK;
+      AdvanceToFirstIMAPFolder();
+    }
+    m_createdOfflineFolders = PR_TRUE;
+  }
+  // if updating one folder only, restore m_currentFolder to that folder
+  if (m_singleFolderToUpdate)
+    m_currentFolder = m_singleFolderToUpdate;
+  
   PRUint32 folderFlags;
   nsCOMPtr <nsIDBFolderInfo> folderInfo;
-	while (m_currentFolder && !m_currentDB)
-	{
+  while (m_currentFolder && !m_currentDB)
+  {
     m_currentFolder->GetFlags(&folderFlags);
-		// need to check if folder has offline events, or is configured for offline
-		if (folderFlags & (MSG_FOLDER_FLAG_OFFLINEEVENTS | MSG_FOLDER_FLAG_OFFLINE))
-		{
+    // need to check if folder has offline events, or is configured for offline
+    if (folderFlags & (MSG_FOLDER_FLAG_OFFLINEEVENTS | MSG_FOLDER_FLAG_OFFLINE))
+    {
       m_currentFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(m_currentDB));
-		}
-		if (m_currentDB)
-		{
-			m_CurrentKeys.RemoveAll();
-			m_KeyIndex = 0;
-			if ((m_currentDB->ListAllOfflineOpIds(&m_CurrentKeys) != 0) || !m_CurrentKeys.GetSize())
-			{
-				m_currentDB = nsnull;
+    }
+    if (m_currentDB)
+    {
+      m_CurrentKeys.RemoveAll();
+      m_KeyIndex = 0;
+      if ((m_currentDB->ListAllOfflineOpIds(&m_CurrentKeys) != 0) || !m_CurrentKeys.GetSize())
+      {
+        m_currentDB = nsnull;
         m_currentFolder->ClearFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
-			}
-			else
-			{
-				// trash any ghost msgs
-				PRBool deletedGhostMsgs = PR_FALSE;
-				for (PRUint32 fakeIndex=0; fakeIndex < m_CurrentKeys.GetSize(); fakeIndex++)
-				{
-					nsCOMPtr <nsIMsgOfflineImapOperation> currentOp; 
+      }
+      else
+      {
+        // trash any ghost msgs
+        PRBool deletedGhostMsgs = PR_FALSE;
+        for (PRUint32 fakeIndex=0; fakeIndex < m_CurrentKeys.GetSize(); fakeIndex++)
+        {
+          nsCOMPtr <nsIMsgOfflineImapOperation> currentOp; 
           m_currentDB->GetOfflineOpForKey(m_CurrentKeys[fakeIndex], PR_FALSE, getter_AddRefs(currentOp));
-					if (currentOp)
+          if (currentOp)
           {
             nsOfflineImapOperationType opType; 
             currentOp->GetOperation(&opType);
-
+            
             if (opType == nsIMsgOfflineImapOperation::kMoveResult)
-					  {
-						  m_currentDB->RemoveOfflineOp(currentOp);
-						  deletedGhostMsgs = PR_TRUE;
-						  
-						  nsCOMPtr <nsIMsgDBHdr> mailHdr;
+            {
               nsMsgKey curKey;
               currentOp->GetMessageKey(&curKey);
+              m_currentDB->RemoveOfflineOp(currentOp);
+              deletedGhostMsgs = PR_TRUE;
+              
+              nsCOMPtr <nsIMsgDBHdr> mailHdr;
               m_currentDB->DeleteMessage(curKey, nsnull, PR_FALSE);
-					  }
+            }
           }
-				}
-				
-				if (deletedGhostMsgs)
-					m_currentFolder->SummaryChanged();
-				
-				m_CurrentKeys.RemoveAll();
-				if ( (m_currentDB->ListAllOfflineOpIds(&m_CurrentKeys) != 0) || !m_CurrentKeys.GetSize() )
-				{
-					m_currentDB = nsnull;
-					if (deletedGhostMsgs)
-						deletedAllOfflineEventsInFolder = m_currentFolder;
-				}
-				else if (folderFlags & MSG_FOLDER_FLAG_IMAPBOX)
-				{
-//					if (imapFolder->GetHasOfflineEvents())
-//						XP_ASSERT(PR_FALSE);
-
-					if (!m_pseudoOffline)	// if pseudo offline, falls through to playing ops back.
-					{
-						// there are operations to playback so check uid validity
-						SetCurrentUIDValidity(0);	// force initial invalid state
+        }
+        
+        if (deletedGhostMsgs)
+          m_currentFolder->SummaryChanged();
+        
+        m_CurrentKeys.RemoveAll();
+        if ( (m_currentDB->ListAllOfflineOpIds(&m_CurrentKeys) != 0) || !m_CurrentKeys.GetSize() )
+        {
+          m_currentDB = nsnull;
+          if (deletedGhostMsgs)
+            deletedAllOfflineEventsInFolder = m_currentFolder;
+        }
+        else if (folderFlags & MSG_FOLDER_FLAG_IMAPBOX)
+        {
+          //					if (imapFolder->GetHasOfflineEvents())
+          //						XP_ASSERT(PR_FALSE);
+          
+          if (!m_pseudoOffline)	// if pseudo offline, falls through to playing ops back.
+          {
+            // there are operations to playback so check uid validity
+            SetCurrentUIDValidity(0);	// force initial invalid state
             // do a lite select here and hook ourselves up as a listener.
             nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_currentFolder, &rv);
             if (imapFolder)
               rv = imapFolder->LiteSelect(this);
-  					return rv;	// this is async, we have to return as be called again by the OnStopRunningUrl
-					}
-				}
-			}
-		}
-		
-		if (!m_currentDB)
-		{
-				// only advance if we are doing all folders
-			if (!m_singleFolderToUpdate)
-				AdvanceToNextFolder();
-			else
-				m_currentFolder = nsnull;	// force update of this folder now.
-		}
-			
-	}
-	
+            return rv;	// this is async, we have to return as be called again by the OnStopRunningUrl
+          }
+        }
+      }
+    }
+    
+    if (!m_currentDB)
+    {
+      // only advance if we are doing all folders
+      if (!m_singleFolderToUpdate)
+        AdvanceToNextFolder();
+      else
+        m_currentFolder = nsnull;	// force update of this folder now.
+    }
+    
+  }
+  
   if (m_currentFolder)
     m_currentFolder->GetFlags(&folderFlags);
-	// do the current operation
-	if (m_currentDB)
-	{	
-		PRBool currentFolderFinished = PR_FALSE;
+  // do the current operation
+  if (m_currentDB)
+  {	
+    PRBool currentFolderFinished = PR_FALSE;
     if (!folderInfo)
       m_currentDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
-														// user canceled the lite select! if GetCurrentUIDValidity() == 0
-		if ((m_KeyIndex < m_CurrentKeys.GetSize()) && (m_pseudoOffline || (GetCurrentUIDValidity() != 0) || !(folderFlags & MSG_FOLDER_FLAG_IMAPBOX)) )
-		{
+    // user canceled the lite select! if GetCurrentUIDValidity() == 0
+    if ((m_KeyIndex < m_CurrentKeys.GetSize()) && (m_pseudoOffline || (GetCurrentUIDValidity() != 0) || !(folderFlags & MSG_FOLDER_FLAG_IMAPBOX)) )
+    {
       PRInt32 curFolderUidValidity;
       folderInfo->GetImapUidValidity(&curFolderUidValidity);
-			PRBool uidvalidityChanged = (!m_pseudoOffline && folderFlags & MSG_FOLDER_FLAG_IMAPBOX) && (GetCurrentUIDValidity() != curFolderUidValidity);
-			nsIMsgOfflineImapOperation *currentOp = nsnull;
-			if (uidvalidityChanged)
-				DeleteAllOfflineOpsForCurrentDB();
-			else
-			  m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, &currentOp);
-			
-			if (currentOp)
-			{
+      PRBool uidvalidityChanged = (!m_pseudoOffline && folderFlags & MSG_FOLDER_FLAG_IMAPBOX) && (GetCurrentUIDValidity() != curFolderUidValidity);
+      nsIMsgOfflineImapOperation *currentOp = nsnull;
+      if (uidvalidityChanged)
+        DeleteAllOfflineOpsForCurrentDB();
+      else
+        m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, &currentOp);
+      
+      if (currentOp)
+      {
         nsOfflineImapOperationType opType; 
-
+        
         if (currentOp)
           currentOp->GetOperation(&opType);
-				// loop until we find the next db record that matches the current playback operation
-				while (currentOp && !(opType & mCurrentPlaybackOpType))
+        // loop until we find the next db record that matches the current playback operation
+        while (currentOp && !(opType & mCurrentPlaybackOpType))
         {
           currentOp = nsnull;
           ++m_KeyIndex;
-					if (m_KeyIndex < m_CurrentKeys.GetSize())
-						m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, &currentOp);
+          if (m_KeyIndex < m_CurrentKeys.GetSize())
+            m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, &currentOp);
           if (currentOp)
             currentOp->GetOperation(&opType);
         }
-				
-				// if we did not find a db record that matches the current playback operation,
-				// then move to the next playback operation and recurse.  
-				if (!currentOp)
-				{
-					// we are done with the current type
-					if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kFlagsChanged)
-					{
-						mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kMsgCopy;
-						// recurse to deal with next type of operation
-						m_KeyIndex = 0;
-						ProcessNextOperation();
-					}
-					else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kMsgCopy)
-					{
-						mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kMsgMoved;
-						// recurse to deal with next type of operation
-						m_KeyIndex = 0;
-						ProcessNextOperation();
-					}
-					else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kMsgMoved)
-					{
-						mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kAppendDraft;
-						// recurse to deal with next type of operation
-						m_KeyIndex = 0;
-						ProcessNextOperation();
-					}
-					else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAppendDraft)
-					{
-						mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kAppendTemplate;
-						// recurse to deal with next type of operation
-						m_KeyIndex = 0;
-						ProcessNextOperation();
-					}
-					else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAppendTemplate)
-					{
-						mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kDeleteAllMsgs;
-						m_KeyIndex = 0;
-						ProcessNextOperation();
-					}
-					else
-					{
-						DeleteAllOfflineOpsForCurrentDB();
-						currentFolderFinished = PR_TRUE;
-					}
-					
-				}
-				else
-				{
-					if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kFlagsChanged)
-						ProcessFlagOperation(currentOp);
-					else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kMsgCopy)
-						ProcessCopyOperation(currentOp);
-					else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kMsgMoved)
-						ProcessMoveOperation(currentOp);
-					else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAppendDraft)
-						ProcessAppendMsgOperation(currentOp, nsIMsgOfflineImapOperation::kAppendDraft);
-					else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAppendTemplate)
-						ProcessAppendMsgOperation(currentOp, nsIMsgOfflineImapOperation::kAppendTemplate);
-					else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kDeleteAllMsgs)
-						ProcessEmptyTrash(currentOp);
-					else
-						NS_ASSERTION(PR_FALSE, "invalid playback op type");
-					// currentOp was unreferred by one of the Process functions
-					// so do not reference it again!
-					currentOp = nsnull;
-				}
-			}
-			else
-				currentFolderFinished = PR_TRUE;
-		}
-		else
-			currentFolderFinished = PR_TRUE;
-			
-		if (currentFolderFinished)
-		{
-			m_currentDB = nsnull;
-			if (!m_singleFolderToUpdate)
-			{
-				AdvanceToNextFolder();
-				ProcessNextOperation();
-				return NS_OK;
-			}
-			else
-				m_currentFolder = nsnull;
-		}
-	}
-	
-	if (!m_currentFolder && !m_mailboxupdatesStarted)
-	{
-		m_mailboxupdatesStarted = PR_TRUE;
-		
-		// if we are updating more than one folder then we need the iterator
-		if (!m_singleFolderToUpdate)
-			AdvanceToFirstIMAPFolder();
+        
+        // if we did not find a db record that matches the current playback operation,
+        // then move to the next playback operation and recurse.  
+        if (!currentOp)
+        {
+          // we are done with the current type
+          if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kFlagsChanged)
+          {
+            mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kMsgCopy;
+            // recurse to deal with next type of operation
+            m_KeyIndex = 0;
+            ProcessNextOperation();
+          }
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kMsgCopy)
+          {
+            mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kMsgMoved;
+            // recurse to deal with next type of operation
+            m_KeyIndex = 0;
+            ProcessNextOperation();
+          }
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kMsgMoved)
+          {
+            mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kAppendDraft;
+            // recurse to deal with next type of operation
+            m_KeyIndex = 0;
+            ProcessNextOperation();
+          }
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAppendDraft)
+          {
+            mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kAppendTemplate;
+            // recurse to deal with next type of operation
+            m_KeyIndex = 0;
+            ProcessNextOperation();
+          }
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAppendTemplate)
+          {
+            mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kDeleteAllMsgs;
+            m_KeyIndex = 0;
+            ProcessNextOperation();
+          }
+          else
+          {
+            DeleteAllOfflineOpsForCurrentDB();
+            currentFolderFinished = PR_TRUE;
+          }
+          
+        }
+        else
+        {
+          if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kFlagsChanged)
+            ProcessFlagOperation(currentOp);
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kMsgCopy)
+            ProcessCopyOperation(currentOp);
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kMsgMoved)
+            ProcessMoveOperation(currentOp);
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAppendDraft)
+            ProcessAppendMsgOperation(currentOp, nsIMsgOfflineImapOperation::kAppendDraft);
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAppendTemplate)
+            ProcessAppendMsgOperation(currentOp, nsIMsgOfflineImapOperation::kAppendTemplate);
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kDeleteAllMsgs)
+            ProcessEmptyTrash(currentOp);
+          else
+            NS_ASSERTION(PR_FALSE, "invalid playback op type");
+          // currentOp was unreferred by one of the Process functions
+          // so do not reference it again!
+          currentOp = nsnull;
+        }
+      }
+      else
+        currentFolderFinished = PR_TRUE;
+    }
+    else
+      currentFolderFinished = PR_TRUE;
+    
+    if (currentFolderFinished)
+    {
+      m_currentDB = nsnull;
+      if (!m_singleFolderToUpdate)
+      {
+        AdvanceToNextFolder();
+        ProcessNextOperation();
+        return NS_OK;
+      }
+      else
+        m_currentFolder = nsnull;
+    }
+  }
+  
+  if (!m_currentFolder && !m_mailboxupdatesStarted)
+  {
+    m_mailboxupdatesStarted = PR_TRUE;
+    
+    // if we are updating more than one folder then we need the iterator
+    if (!m_singleFolderToUpdate)
+      AdvanceToFirstIMAPFolder();
     if (m_singleFolderToUpdate)
     {
       m_singleFolderToUpdate->ClearFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
-			m_singleFolderToUpdate->UpdateFolder(m_window);
+      m_singleFolderToUpdate->UpdateFolder(m_window);
       // do we have to do anything? Old code would do a start update...
     }
     else
     {
-			// this means that we are updating all of the folders.  Update the INBOX first so the updates on the remaining
-			// folders pickup the results of any filter moves.
-//			nsIMsgFolder *inboxFolder;
-			if (!m_pseudoOffline )
-			{
- 	      NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
-	      if (NS_FAILED(rv)) return rv;
-	      nsCOMPtr<nsISupportsArray> servers;
-	      
-	      rv = accountManager->GetAllServers(getter_AddRefs(servers));
-	      if (NS_FAILED(rv)) return rv;
+      // this means that we are updating all of the folders.  Update the INBOX first so the updates on the remaining
+      // folders pickup the results of any filter moves.
+      //			nsIMsgFolder *inboxFolder;
+      if (!m_pseudoOffline )
+      {
+        NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsISupportsArray> servers;
+        
+        rv = accountManager->GetAllServers(getter_AddRefs(servers));
+        if (NS_FAILED(rv)) return rv;
         // ### for each imap server, call get new messages.
-      // get next folder...
+        // get next folder...
       }
     }
-
-//		MSG_FolderIterator *updateFolderIterator = m_singleFolderToUpdate ? (MSG_FolderIterator *) 0 : m_folderIterator;
-		
-			
-			// we are done playing commands back, now queue up the sync with each imap folder
-			// If we're using the iterator, m_currentFolder will be set correctly
-//			nsIMsgFolder * folder = m_singleFolderToUpdate ? m_singleFolderToUpdate : m_currentFolder;
-//			while (folder)
-//			{            
-//				PRBool loadingFolder = m_workerPane->GetLoadingImapFolder() == folder;
-//				if ((folder->GetType() == FOLDER_IMAPMAIL) && (deletedAllOfflineEventsInFolder == folder || (folder->GetFolderPrefFlags() & MSG_FOLDER_FLAG_OFFLINE)
-//					|| loadingFolder) 
-//					&& !(folder->GetFolderPrefFlags() & MSG_FOLDER_PREF_IMAPNOSELECT) )
-//				{
-//					PRBool lastChance = ((deletedAllOfflineEventsInFolder == folder) && m_singleFolderToUpdate) || loadingFolder;
-					// if deletedAllOfflineEventsInFolder == folder and we're only updating one folder, then we need to update newly selected folder
-					// I think this also means that we're really opening the folder...so we tell StartUpdate that we're loading a folder.
-//					if (!updateFolderIterator || !(imapMail->GetFlags() & MSG_FOLDER_FLAG_INBOX))		// avoid queueing the inbox twice
-//						imapMail->StartUpdateOfNewlySelectedFolder(m_workerPane, lastChance, queue, nsnsnull, PR_FALSE, PR_FALSE);
-//				}
-//				folder= m_singleFolderToUpdate ? (MSG_FolderInfo *)nsnull : updateFolderIterator->Next();
-//       }
-	}
+    
+    //		MSG_FolderIterator *updateFolderIterator = m_singleFolderToUpdate ? (MSG_FolderIterator *) 0 : m_folderIterator;
+    
+    
+    // we are done playing commands back, now queue up the sync with each imap folder
+    // If we're using the iterator, m_currentFolder will be set correctly
+    //			nsIMsgFolder * folder = m_singleFolderToUpdate ? m_singleFolderToUpdate : m_currentFolder;
+    //			while (folder)
+    //			{            
+    //				PRBool loadingFolder = m_workerPane->GetLoadingImapFolder() == folder;
+    //				if ((folder->GetType() == FOLDER_IMAPMAIL) && (deletedAllOfflineEventsInFolder == folder || (folder->GetFolderPrefFlags() & MSG_FOLDER_FLAG_OFFLINE)
+    //					|| loadingFolder) 
+    //					&& !(folder->GetFolderPrefFlags() & MSG_FOLDER_PREF_IMAPNOSELECT) )
+    //				{
+    //					PRBool lastChance = ((deletedAllOfflineEventsInFolder == folder) && m_singleFolderToUpdate) || loadingFolder;
+    // if deletedAllOfflineEventsInFolder == folder and we're only updating one folder, then we need to update newly selected folder
+    // I think this also means that we're really opening the folder...so we tell StartUpdate that we're loading a folder.
+    //					if (!updateFolderIterator || !(imapMail->GetFlags() & MSG_FOLDER_FLAG_INBOX))		// avoid queueing the inbox twice
+    //						imapMail->StartUpdateOfNewlySelectedFolder(m_workerPane, lastChance, queue, nsnsnull, PR_FALSE, PR_FALSE);
+    //				}
+    //				folder= m_singleFolderToUpdate ? (MSG_FolderInfo *)nsnull : updateFolderIterator->Next();
+    //       }
+  }
   // if we get here, then I *think* we're done. Not sure, though.
 #ifdef DEBUG_bienvenu
   printf("done with offline imap sync\n");
