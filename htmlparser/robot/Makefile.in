@@ -52,7 +52,7 @@ LIBS = \
 	-lpref \
 	-lxp \
 	-l$(MOZ_LIB_JS_PREFIX)js \
-	-lgfxgtk    \
+	-lgfx$(MOZ_TOOLKIT)    \
 	-lraptorgfx \
 	-lgfxps \
 	-limg	\
