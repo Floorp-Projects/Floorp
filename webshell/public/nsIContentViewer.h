@@ -23,6 +23,9 @@
 #include "nsIWidget.h"
 #include "nsIScrollableView.h"
 
+class nsIWebShell;
+
+
 // Forward declarations... 
 class nsIDeviceContext;
 class nsIPref;
@@ -71,9 +74,25 @@ public:
 
   NS_IMETHOD Hide(void) = 0;
 
+  /**
+   * Top lever print for the Content viewer,
+   * this is called by the chrome, etc for printing this Content view
+   * @update 05/13/99 dwc
+   * @return Success or failure of the routine
+   */
   NS_IMETHOD Print(void) = 0;
 
-  NS_IMETHOD PrintContent(void) = 0;
+  /**
+   * Prints the actual content only if the container WebShell is a leaf..
+   * If it is not a leaf node, it will visit all the childern and call the PrintConent for each child.
+   * this method should only be called by the Print or PrintContext, so it is not really used by any 
+   * embedding application or object, etc.
+   * @update 05/13/99 dwc
+   * @param aParent -- Parent WebShell of this ContentViewer
+   * @param aDCContext -- The device context to use for printing.
+   * @return Success or failure of the routine
+   */
+  NS_IMETHOD PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext) = 0;
 
   NS_IMETHOD SetEnableRendering(PRBool aOn) = 0;
 
