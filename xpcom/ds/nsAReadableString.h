@@ -1291,7 +1291,7 @@ template <class CharT>
 nsPromiseSubstring<CharT>
 Substring( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
   {
-    return nsPromiseSubstring<Chart>(aStart, aEnd);
+    return nsPromiseSubstring<CharT>(aStart, aEnd);
   }
 
 template <class CharT>
