@@ -1662,7 +1662,8 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  nsIFra
   switch (aAmount){
   case eCharacter : {
     if (aDirection == ePrevious){
-      for (PRInt32 i = mSelectionOffset -1; i >=0;  i--){
+      PRInt32 i;
+      for (i = mSelectionOffset -1; i >=0;  i--){
         if (ip[i] < ip [mSelectionOffset]){
           *aResultFrame = this;
           *aFrameOffset = i;
@@ -1674,7 +1675,8 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  nsIFra
     }
     else 
       if (aDirection == eNext){
-        for (PRInt32 i = mSelectionOffset +1; i <= mContentLength;  i++){
+        PRInt32 i;
+        for (i = mSelectionOffset +1; i <= mContentLength;  i++){
           if (ip[i] > ip [mSelectionOffset]){
             *aResultFrame = this;
             *aFrameOffset = i;
