@@ -98,7 +98,7 @@ class nsCParserNode;
 class CITokenHandler;
 class nsParser;
 class nsDTDContext;
-class nsTagStack;
+class nsEntryStack;
 class nsITokenizer;
 
 /***************************************************************
@@ -327,7 +327,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool ForwardPropagate(nsTagStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag);
+    virtual PRBool ForwardPropagate(nsEntryStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag);
 
     /**
      * This method tries to design a context map (without actually
@@ -338,7 +338,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool BackwardPropagate(nsTagStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
+    virtual PRBool BackwardPropagate(nsEntryStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
 
     /**
      * Ask parser if a given container is open ANYWHERE on stack

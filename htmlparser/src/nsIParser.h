@@ -47,7 +47,7 @@ class nsIContentSink;
 class nsIStreamObserver;
 class nsString;
 class nsIURL;
-class nsTagStack;
+
 
 enum  eParseMode {
   
@@ -78,6 +78,16 @@ typedef enum {
 } nsCharsetSource;
 
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
+
+
+class nsITagStack {
+public:
+  virtual void        Push(PRUnichar* aTag)=0;
+  virtual PRUnichar*  Pop(PRUnichar* aTag)=0;
+  virtual PRUnichar*  TagAt(PRUint32 anIndex)=0;
+  virtual PRUint32    GetSize(void)=0;
+};
+
 
 /**
  *  This class defines the iparser interface. This XPCOM
@@ -150,8 +160,8 @@ class nsIParser : public nsISupports {
     virtual nsresult	Parse(nsIInputStream& aStream, PRBool aEnableVerify=PR_FALSE) = 0;
     virtual nsresult  Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall) = 0;
 
-    virtual PRBool    IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType)=0;
-    virtual nsresult  InsertFragment(nsString& aSourceBuffer,void* aKey,nsTagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType)=0;
+    virtual PRBool    IsValidFragment(nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType)=0;
+    virtual nsresult  ParseFragment(nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType)=0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time

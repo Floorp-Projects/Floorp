@@ -756,7 +756,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
  *  @param   
  *  @return  
  */
-PRBool nsParser::IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
+PRBool nsParser::IsValidFragment(nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
   PRBool result=PR_FALSE;
   return result;
 }
@@ -767,7 +767,7 @@ PRBool nsParser::IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,PRUi
  *  @param   
  *  @return  
  */
-nsresult nsParser::InsertFragment(nsString& aSourceBuffer,void* aKey,nsTagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
+nsresult nsParser::ParseFragment(nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
   PRBool result=PR_FALSE;
   return result;
 }
@@ -1136,3 +1136,31 @@ void nsParser::DebugDumpSource(ostream& aStream) {
 }
 
 
+/**********************************************************************************
+  This class is used as an interface between an external agent (like the DOM) and
+  the parser. It will contain a stack full of tagnames, which is used in our
+  parser/paste API's.
+ **********************************************************************************/
+
+nsTagStack::nsTagStack() : nsITagStack(), mTags(0) {
+}
+
+void nsTagStack::Push(PRUnichar* aTag) {
+  mTags.Push(aTag);
+}
+
+PRUnichar* nsTagStack::Pop(void) {
+  PRUnichar* result=(PRUnichar*)mTags.Pop();
+  return result;
+}
+
+PRUnichar* nsTagStack::TagAt(PRUint32 anIndex) {
+  PRUnichar* result=0;
+  if(anIndex<(PRUint32)mTags.GetSize())
+    result=(PRUnichar*)mTags.ObjectAt(anIndex);
+  return result;
+}
+
+PRUint32 nsTagStack::GetSize(void) {
+  return mTags.GetSize();
+}

@@ -734,7 +734,7 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
  *  @return  topmost index of tag on stack
  */
 static
-PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsTagStack& aTagStack) {
+PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsEntryStack& aTagStack) {
   int i=0;
   int count = aTagStack.GetSize();
   for(i=(count-1);i>=0;i--){
@@ -755,7 +755,7 @@ PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsTagStack& aTagStack) {
  *  @return  PR_TRUE if autoclosure should occur
  */  
 static
-eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagStack) {
+eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsEntryStack& aTagStack) {
   int theTopIndex = aTagStack.GetSize();
   eHTMLTags thePrevTag=aTagStack.Last();
  
@@ -820,7 +820,7 @@ eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagS
  *  @return  index of kNotFound
  */
 static
-PRInt32 GetIndexOfChildOrSynonym(nsTagStack& aTagStack,eHTMLTags aChildTag) {
+PRInt32 GetIndexOfChildOrSynonym(nsEntryStack& aTagStack,eHTMLTags aChildTag) {
   PRInt32 theChildIndex=aTagStack.GetTopmostIndexOf(aChildTag);
   if(kNotFound==theChildIndex) {
     CTagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
@@ -842,7 +842,7 @@ PRInt32 GetIndexOfChildOrSynonym(nsTagStack& aTagStack,eHTMLTags aChildTag) {
  *  @return  PR_TRUE if child agrees to be opened here.
  */  
 static
-PRBool CanBeContained(eHTMLTags aParentTag,eHTMLTags aChildTag,nsTagStack& aTagStack) {
+PRBool CanBeContained(eHTMLTags aParentTag,eHTMLTags aChildTag,nsEntryStack& aTagStack) {
   PRBool result=PR_TRUE;
 
   /* #    Interesting test cases:       Result:
@@ -1264,7 +1264,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
  *  @return  PR_TRUE if given tag can contain other tags
  */
 static
-PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eHTMLTags aTag,PRBool anEndTag) {
+PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsEntryStack& aTagStack,eHTMLTags aTag,PRBool anEndTag) {
   PRInt32 theRootIndex=aRootTagList.GetTopmostIndexOf(aTagStack);          
   CTagList* theCloseTags=(anEndTag) ? gHTMLElements[aTag].GetAutoCloseEndTags() : gHTMLElements[aTag].GetAutoCloseStartTags();
   PRInt32 theChildIndex=-1;
@@ -1289,7 +1289,7 @@ PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eH
  *  @return  PR_TRUE if autoclosure should occur
  */ 
 static
-eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagStack) {
+eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsEntryStack& aTagStack) {
   int theTopIndex=aTagStack.GetSize();
   eHTMLTags thePrevTag=aTagStack.Last();
  
@@ -1946,7 +1946,7 @@ PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
  * @param   aChild -- tag type of child
  * @return  TRUE if propagation closes; false otherwise
  */
-PRBool CNavDTD::ForwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag)  {
+PRBool CNavDTD::ForwardPropagate(nsEntryStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag)  {
   PRBool result=PR_FALSE;
 
   switch(aParentTag) {
@@ -1991,7 +1991,7 @@ PRBool CNavDTD::ForwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLTa
  * @param   aChild -- tag type of child
  * @return  TRUE if propagation closes; false otherwise
  */
-PRBool CNavDTD::BackwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
+PRBool CNavDTD::BackwardPropagate(nsEntryStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
 
   eHTMLTags theParentTag=aChildTag;
 
@@ -2139,7 +2139,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
 
     int theStackPos=0;
     for(theStackPos=0;theStackPos<mBodyContext->GetCount();theStackPos++){
-      nsTagStack* theStyleStack=mBodyContext->mStyles[theStackPos];
+      nsEntryStack* theStyleStack=mBodyContext->mStyles[theStackPos];
       if(theStyleStack) {
         int theTagPos=0;
         int count = theStyleStack->mTags->GetSize();
@@ -2749,7 +2749,7 @@ nsresult CNavDTD::AddHeadLeaf(const nsIParserNode& aNode){
  */
 nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
   
-  static nsTagStack kPropagationStack;
+  static nsEntryStack kPropagationStack;
   kPropagationStack.Empty();
   
   nsresult  result=(nsresult)kContextMismatch;
@@ -2848,7 +2848,7 @@ nsresult CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTa
   nsresult   result=0;
 
   if(nsHTMLElement::IsStyleTag(aTag)) {
-    nsTagStack* theStyleStack=mBodyContext->GetStyles();
+    nsEntryStack* theStyleStack=mBodyContext->GetStyles();
     if(theStyleStack){
       theStyleStack->Push(aTag);
     }
@@ -2869,7 +2869,7 @@ nsresult
 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
   nsresult result=0;
   
-  nsTagStack* theStyles=mBodyContext->GetStyles();
+  nsEntryStack* theStyles=mBodyContext->GetStyles();
   if(theStyles){
     if(nsHTMLElement::IsStyleTag(aTag)) {
       if(aTag==anActualTag) {
