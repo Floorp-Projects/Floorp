@@ -171,8 +171,8 @@ static pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode otEvent, O
 	switch (otEvent) {
 		case T_DNRSTRINGTOADDRCOMPLETE:
 				if (_PR_MD_GET_INTSOFF()) {
-					cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
 					dnsContext.thread->md.missedIONotify = PR_TRUE;
+					cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
 					return;
 				}
 				DoneWaitingOnThisThread(dnsContext.thread);
@@ -187,8 +187,8 @@ static pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode otEvent, O
                 dnsContext.serviceRef = nil;
 
 				if (_PR_MD_GET_INTSOFF()) {
-					cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
 					dnsContext.thread->md.missedIONotify = PR_TRUE;
+					cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
 					return;
 				}
 				DoneWaitingOnThisThread(dnsContext.thread);
@@ -294,8 +294,8 @@ WakeUpNotifiedThread(PRThread *thread, OTResult result)
 	if (thread) {
 		thread->md.osErrCode = result;
 		if (_PR_MD_GET_INTSOFF()) {
-			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
 			thread->md.missedIONotify = PR_TRUE;
+			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
 			return;
 		}
 		DoneWaitingOnThisThread(thread);
@@ -1171,8 +1171,8 @@ static pascal void  RawEndpointNotifierRoutine(void * contextPtr, OTEventCode co
 	if (thread) {
 		thread->md.osErrCode = result;
 		if (_PR_MD_GET_INTSOFF()) {
-			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
 			thread->md.asyncNotifyPending = PR_TRUE;
+			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
 			return;
 		}
 		DoneWaitingOnThisThread(thread);

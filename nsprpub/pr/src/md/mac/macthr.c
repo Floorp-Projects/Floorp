@@ -36,12 +36,15 @@
 
 #include <string.h>
 
-#include <Types.h>
+#include <MacTypes.h>
 #include <Timer.h>
 #include <OSUtils.h>
 
 #include <LowMem.h>
+#include <Multiprocessing.h>
+#include <Gestalt.h>
 
+#include "mdcriticalregion.h"
 
 TimerUPP	gTimerCallbackUPP	= NULL;
 PRThread *	gPrimaryThread		= NULL;
@@ -168,24 +171,26 @@ _PRInterruptTable _pr_interruptTable[] = {
 pascal void TimerCallback(TMTaskPtr tmTaskPtr)
 {
     _PRCPU *cpu = _PR_MD_CURRENT_CPU();
+    PRIntn is;
 
     if (_PR_MD_GET_INTSOFF()) {
         cpu->u.missed[cpu->where] |= _PR_MISSED_CLOCK;
-		PrimeTime((QElemPtr)tmTaskPtr, kMacTimerInMiliSecs);
-		return;
+        PrimeTime((QElemPtr)tmTaskPtr, kMacTimerInMiliSecs);
+        return;
     }
-    _PR_MD_SET_INTSOFF(1);
 
-	//	And tell nspr that a clock interrupt occured.
-	_PR_ClockInterrupt();
-	
-	if ((_PR_RUNQREADYMASK(cpu)) >> ((_PR_MD_CURRENT_THREAD()->priority)))
-		_PR_SET_RESCHED_FLAG();
-	
-    _PR_MD_SET_INTSOFF(0);
+    _PR_INTSOFF(is);
 
-	//	Reset the clock timer so that we fire again.
-	PrimeTime((QElemPtr)tmTaskPtr, kMacTimerInMiliSecs);
+    //	And tell nspr that a clock interrupt occured.
+    _PR_ClockInterrupt();
+	
+    if ((_PR_RUNQREADYMASK(cpu)) >> ((_PR_MD_CURRENT_THREAD()->priority)))
+        _PR_SET_RESCHED_FLAG();
+	
+    _PR_FAST_INTSON(is);
+
+    //	Reset the clock timer so that we fire again.
+    PrimeTime((QElemPtr)tmTaskPtr, kMacTimerInMiliSecs);
 }
 
 
@@ -219,25 +224,22 @@ void _MD_StopInterrupts(void)
 
 void _MD_PauseCPU(PRIntervalTime timeout)
 {
-#pragma unused (timeout)
-
-	/* unsigned long finalTicks; */
-	EventRecord theEvent;
+    if (timeout != PR_INTERVAL_NO_WAIT)
+    {
+        EventRecord theEvent;
 	
-	if (timeout != PR_INTERVAL_NO_WAIT) {
-	   /* Delay(1,&finalTicks); */
+         /*
+            ** Calling WaitNextEvent() here is suboptimal. This routine should
+            ** pause the process until IO or the timeout occur, yielding time to
+            ** other processes on operating systems that require this (Mac OS classic).
+            ** WaitNextEvent() may incur too much latency, and has other problems,
+            ** such as the potential to drop suspend/resume events, and to handle
+            ** AppleEvents at a time at which we're not prepared to handle them.
+         */
+        (void) WaitNextEvent(nullEvent, &theEvent, 1, NULL);
 	   
-	   /*
-	   ** Rather than calling Delay() which basically just wedges the processor
-	   ** we'll instead call WaitNextEvent() with a mask that ignores all events
-	   ** which gives other apps a chance to get time rather than just locking up
-	   ** the machine when we're waiting for a long time (or in an infinite loop,
-	   ** whichever comes first)
-	   */
-	   (void)WaitNextEvent(nullEvent, &theEvent, 1, NULL);
-	   
-	    (void) _MD_IOInterrupt();
-	}
+        (void) _MD_IOInterrupt();
+    }
 }
 
 
@@ -276,6 +278,11 @@ void WaitOnThisThread(PRThread *thread, PRIntervalTime timeout)
     PRIntervalTime timein = PR_IntervalNow();
 	PRStatus status = PR_SUCCESS;
 
+    // Turn interrupts off to avoid a race over lock ownership with the callback
+    // (which can fire at any time). Interrupts may stay off until we leave
+    // this function, or another NSPR thread turns them back on. They certainly
+    // stay off until PR_WaitCondVar() relinquishes the asyncIOLock lock, which
+    // is what we care about.
 	_PR_INTSOFF(is);
 	PR_Lock(thread->md.asyncIOLock);
 	if (timeout == PR_INTERVAL_NO_TIMEOUT) {
@@ -302,9 +309,24 @@ void DoneWaitingOnThisThread(PRThread *thread)
 {
     intn is;
 
+    PR_ASSERT(thread->md.asyncIOLock->owner == NULL);
+
+	// DoneWaitingOnThisThread() is called from OT notifiers and async file I/O
+	// callbacks that can run at "interrupt" time (Classic Mac OS) or on pthreads
+	// that may run concurrently with the main threads (Mac OS X). They can thus
+	// be called when any NSPR thread is running, or even while NSPR is in a
+	// thread context switch. It is therefore vital that we can guarantee to
+	// be able to get the asyncIOLock without blocking (thus avoiding code
+	// that makes assumptions about the current NSPR thread etc). To achieve
+	// this, we use NSPR interrrupts as a semaphore on the lock; all code 
+	// that grabs the lock also disables interrupts for the time the lock
+	// is held. Callers of DoneWaitingOnThisThread() thus have to check whether
+	// interrupts are already off, and, if so, simply set the missed_IO flag on
+	// the CPU rather than calling this function.
+	
 	_PR_INTSOFF(is);
 	PR_Lock(thread->md.asyncIOLock);
-    thread->io_pending = PR_FALSE;
+	thread->io_pending = PR_FALSE;
 	/* let the waiting thread know that async IO completed */
 	PR_NotifyCondVar(thread->md.asyncIOCVar);
 	PR_Unlock(thread->md.asyncIOLock);
@@ -319,6 +341,7 @@ PR_IMPLEMENT(void) PR_Mac_WaitForAsyncNotify(PRIntervalTime timeout)
 	PRStatus status = PR_SUCCESS;
     PRThread *thread = _PR_MD_CURRENT_THREAD();
 
+    // See commments in WaitOnThisThread()
 	_PR_INTSOFF(is);
 	PR_Lock(thread->md.asyncIOLock);
 	if (timeout == PR_INTERVAL_NO_TIMEOUT) {
@@ -344,11 +367,14 @@ void AsyncNotify(PRThread *thread)
 {
     intn is;
 	
+    PR_ASSERT(thread->md.asyncIOLock->owner == NULL);
+
+    // See commments in DoneWaitingOnThisThread()
 	_PR_INTSOFF(is);
 	PR_Lock(thread->md.asyncIOLock);
-    thread->md.asyncNotifyPending = PR_TRUE;
+	thread->md.asyncNotifyPending = PR_TRUE;
 	/* let the waiting thread know that async IO completed */
-	PR_NotifyCondVar(thread->md.asyncIOCVar);	// let thread know that async IO completed
+	PR_NotifyCondVar(thread->md.asyncIOCVar);
 	PR_Unlock(thread->md.asyncIOLock);
 	_PR_FAST_INTSON(is);
 }
@@ -359,8 +385,8 @@ PR_IMPLEMENT(void) PR_Mac_PostAsyncNotify(PRThread *thread)
 	_PRCPU *  cpu = _PR_MD_CURRENT_CPU();
 	
 	if (_PR_MD_GET_INTSOFF()) {
-		cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
 		thread->md.missedAsyncNotify = PR_TRUE;
+		cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
 	} else {
 		AsyncNotify(thread);
 	}
@@ -407,3 +433,136 @@ PRStatus _MD_KillProcess(PRProcess *process)
 	PR_SetError(PR_NOT_IMPLEMENTED_ERROR, unimpErr);
 	return PR_FAILURE;
 }
+//##############################################################################
+//##############################################################################
+#pragma mark -
+#pragma mark INTERRUPT SUPPORT
+
+#if TARGET_CARBON
+
+/*
+     This critical region support is required for Mac NSPR to work correctly on dual CPU
+     machines on Mac OS X. This note explains why.
+
+     NSPR uses a timer task, and has callbacks for async file I/O and Open Transport
+     whose runtime behaviour differs depending on environment. On "Classic" Mac OS
+     these run at "interrupt" time (OS-level interrupts, that is, not NSPR interrupts),
+     and can thus preempt other code, but they always run to completion.
+
+     On Mac OS X, these are all emulated using MP tasks, which sit atop pthreads. Thus,
+     they can be preempted at any time (and not necessarily run to completion), and can
+     also run *concurrently* with eachother, and with application code, on multiple
+     CPU machines. Note that all NSPR threads are emulated, and all run on the main
+     application MP task.
+
+     We thus have to use MP critical sections to protect data that is shared between
+     the various callbacks and the main MP thread. It so happens that NSPR has this
+     concept of software interrupts, and making interrupt-off times be critical
+     sections works.
+
+*/
+
+
+/*  
+    Whether to use critical regions. True if running on Mac OS X and later
+*/
+
+PRBool  gUseCriticalRegions;
+
+/*
+    Count of the number of times we've entered the critical region.
+    We need this because ENTER_CRITICAL_REGION() will *not* block when
+    called from different NSPR threads (which all run on one MP thread),
+    and we need to ensure that when code turns interrupts back on (by
+    settings _pr_intsOff to 0) we exit the critical section enough times
+    to leave it.
+*/
+
+PRInt32 gCriticalRegionEntryCount;
+
+
+void _MD_SetIntsOff(PRInt32 ints)
+{
+    ENTER_CRITICAL_REGION();
+    gCriticalRegionEntryCount ++;
+    
+    _pr_intsOff = ints;
+    
+    if (!ints)
+    {
+        PRInt32     i = gCriticalRegionEntryCount;
+
+        gCriticalRegionEntryCount = 0;
+        for ( ;i > 0; i --) {
+            LEAVE_CRITICAL_REGION();
+        }
+    }
+}
+
+
+#endif /* TARGET_CARBON */
+
+
+//##############################################################################
+//##############################################################################
+#pragma mark -
+#pragma mark CRITICAL REGION SUPPORT
+
+#if MAC_CRITICAL_REGIONS
+
+MDCriticalRegionID  gCriticalRegion;
+
+void InitCriticalRegion()
+{
+    long        systemVersion;
+    OSStatus    err;    
+    
+    // we only need to do critical region stuff on Mac OS X    
+    err = Gestalt(gestaltSystemVersion, &systemVersion);
+    gUseCriticalRegions = (err == noErr) && (systemVersion >= 0x00001000);
+    
+    if (!gUseCriticalRegions) return;
+    
+    err = MD_CriticalRegionCreate(&gCriticalRegion);
+    PR_ASSERT(err == noErr);
+}
+
+void TermCriticalRegion()
+{
+    OSStatus    err;    
+
+    if (!gUseCriticalRegions) return;
+
+    err = MD_CriticalRegionDelete(gCriticalRegion);
+    PR_ASSERT(err == noErr);
+}
+
+
+void EnterCritialRegion()
+{
+    OSStatus    err;
+    
+    if (!gUseCriticalRegions) return;
+
+    PR_ASSERT(gCriticalRegion != kInvalidID);
+    
+    /* Change to a non-infinite timeout for debugging purposes */
+    err = MD_CriticalRegionEnter(gCriticalRegion, kDurationForever /* 10000 * kDurationMillisecond */ );
+    PR_ASSERT(err == noErr);
+}
+
+void LeaveCritialRegion()
+{
+    OSStatus    err;    
+
+    if (!gUseCriticalRegions) return;
+
+    PR_ASSERT(gCriticalRegion != kInvalidID);
+
+    err = MD_CriticalRegionExit(gCriticalRegion);
+    PR_ASSERT(err == noErr);
+}
+
+
+#endif // MAC_CRITICAL_REGIONS
+
