@@ -33,3 +33,13 @@ Rights Reserved.
 <!ENTITY saveAll.label "Save All..">
 
 <!ENTITY editMessage.label "Edit Draft...">
+<!ENTITY attachmentsTree.label "Attachments:">
+
+<!ENTITY openAttachmentCmd.label    "Open">  
+<!ENTITY openAttachmentCmd.accesskey		"O">  
+<!ENTITY saveAsAttachmentCmd.label    "Save As...">  
+<!ENTITY saveAsAttachmentCmd.accesskey		"A"> 
+<!ENTITY printAttachmentCmd.label    ".Print">  
+<!ENTITY printAttachmentCmd.accesskey		"P">  
+<!ENTITY saveAllAttachmentsCmd.label    "Save All...">  
+<!ENTITY saveAllAttachmentsCmd.accesskey		"l">  
