@@ -745,7 +745,7 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 	if (!msgfolder) return NS_ERROR_FAILURE;
 
 	nsAutoString newsgroupName; newsgroupName.AssignWithConversion(name);
-	rv = msgfolder->CreateSubfolder(newsgroupName.GetUnicode());
+	rv = msgfolder->CreateSubfolder(newsgroupName.GetUnicode(),nsnull);
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;

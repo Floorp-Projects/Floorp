@@ -499,7 +499,7 @@ NS_IMETHODIMP nsMsgNewsFolder::SetNewsrcHasChanged(PRBool newsrcHasChanged)
     return nntpServer->SetNewsrcHasChanged(newsrcHasChanged);
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname)
+NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname, nsIMsgWindow *msgWindow)
 {
 	nsresult rv = NS_OK;
 	if (!uninewsgroupname) return NS_ERROR_NULL_POINTER;
@@ -592,7 +592,7 @@ NS_IMETHODIMP nsMsgNewsFolder::Delete()
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::Rename(const PRUnichar *newName)
+NS_IMETHODIMP nsMsgNewsFolder::Rename(const PRUnichar *newName, nsIMsgWindow *msgWindow)
 {
   NS_ASSERTION(0,"Rename not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
