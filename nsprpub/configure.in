@@ -720,7 +720,7 @@ case "$target" in
     aix4.3*)
         AC_DEFINE(AIX_TIMERS)
         AC_DEFINE(_PR_HAVE_OFF64_T)
-        AC_DEFINE(AIX4_3)
+        AC_DEFINE(AIX4_3_PLUS)
         AC_DEFINE(HAVE_SOCKLEN_T)
         AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
         USE_IPV6=1
@@ -729,6 +729,7 @@ case "$target" in
     *)
         AC_DEFINE(AIX_TIMERS)
         AC_DEFINE(_PR_HAVE_OFF64_T)
+        AC_DEFINE(AIX4_3_PLUS)
         AC_DEFINE(HAVE_SOCKLEN_T)
         AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
         USE_IPV6=1
@@ -2172,6 +2173,14 @@ case "$target" in
         fi
         ;;
     aix4.3*)
+        if test -z "$USE_NSPR_THREADS"; then
+            AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
+        fi
+        if test -n "$USE_PTHREADS"; then
+            AC_DEFINE(_PR_HAVE_THREADSAFE_GETHOST)
+        fi
+        ;;
+    *)
         if test -z "$USE_NSPR_THREADS"; then
             AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
         fi

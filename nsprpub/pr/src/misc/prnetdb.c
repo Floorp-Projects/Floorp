@@ -98,7 +98,7 @@ PRLock *_pr_dnsLock = NULL;
 #endif
 
 #if defined(OSF1) \
-        || defined(AIX4_3) || (defined(AIX) && defined(_THREAD_SAFE)) \
+        || defined(AIX4_3_PLUS) || (defined(AIX) && defined(_THREAD_SAFE)) \
 	|| (defined(HPUX10_10) && defined(_REENTRANT)) \
         || (defined(HPUX10_20) && defined(_REENTRANT))
 #define _PR_HAVE_GETPROTO_R
