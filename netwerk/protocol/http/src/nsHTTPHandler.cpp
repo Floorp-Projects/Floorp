@@ -733,8 +733,14 @@ nsHTTPHandler::InitUserAgentComponents()
             else if (info.dwMajorVersion == 4) {
                 mAppOSCPU = "WinNT4.0";
             }
-            else if (info.dwMajorVersion == 5) {
-                mAppOSCPU = "Windows NT 5.0";
+            else if (info.dwMajorVersion >= 5) {
+                char *buf = PR_smprintf("Windows NT %ld.%ld",
+                                        info.dwMajorVersion,
+                                        info.dwMinorVersion);
+                if (buf) {
+                    mAppOSCPU = buf;
+                    PR_smprintf_free(buf);
+                }
             }
             else {
                 mAppOSCPU = "WinNT";
