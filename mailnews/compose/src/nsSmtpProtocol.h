@@ -68,13 +68,14 @@ SMTP_ERROR_DONE,                                    // 12
 SMTP_FREE,                                          // 13
 SMTP_EXTN_LOGIN_RESPONSE,                           // 14
 SMTP_SEND_EHLO_RESPONSE,                            // 15
-SMTP_SEND_AUTH_LOGIN_USERNAME,                      // 16
-SMTP_SEND_AUTH_LOGIN_PASSWORD,                      // 17
-SMTP_AUTH_LOGIN_RESPONSE,                           // 18
-SMTP_TLS_RESPONSE,                                  // 19
-SMTP_AUTH_EXTERNAL_RESPONSE,                        // 20
-SMTP_AUTH_PROCESS_STATE,                            // 21
-SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE               // 22
+SMTP_SEND_AUTH_LOGIN,                               // 16
+SMTP_SEND_AUTH_LOGIN_USERNAME,                      // 17
+SMTP_SEND_AUTH_LOGIN_PASSWORD,                      // 18
+SMTP_AUTH_LOGIN_RESPONSE,                           // 19
+SMTP_TLS_RESPONSE,                                  // 20
+SMTP_AUTH_EXTERNAL_RESPONSE,                        // 21
+SMTP_AUTH_PROCESS_STATE,                            // 22
+SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE               // 23
 } SmtpState;
 
 // State Flags (Note, I use the word state in terms of storing 
@@ -218,11 +219,12 @@ private:
     ////////////////////////////////////////////////////////////////////////////////////////
 
     PRInt32 SmtpResponse(nsIInputStream * inputStream, PRUint32 length); 
-    PRInt32 LoginResponse(nsIInputStream * inputStream, PRUint32 length);
     PRInt32 ExtensionLoginResponse(nsIInputStream * inputStream, PRUint32 length);
     PRInt32 SendHeloResponse(nsIInputStream * inputStream, PRUint32 length);
     PRInt32 SendEhloResponse(nsIInputStream * inputStream, PRUint32 length);	
 
+    PRInt32 SendAuthLogin();
+    PRInt32 LoginResponse();
     PRInt32 AuthLoginUsername();
     PRInt32 AuthLoginPassword();
     PRInt32 AuthLoginResponse(nsIInputStream * stream, PRUint32 length);
