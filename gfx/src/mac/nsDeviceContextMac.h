@@ -66,6 +66,8 @@ protected:
 
   nsDrawingSurface 			mSurface ;
   PRUint32 							mDepth;
+  nsIDeviceContextSpec  *mSpec;
+
 
 public:
   static bool GetMacFontNumber(const nsString& aFontName, short &fontNum);
