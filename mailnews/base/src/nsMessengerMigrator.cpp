@@ -59,6 +59,9 @@
 #include "nsINoIncomingServer.h"
 #include "nsEscape.h"
 
+#include "nsIUserInfo.h"
+
+
 #define BUF_STR_LEN 1024
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
@@ -130,6 +133,7 @@ static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 #define PREF_4X_MAIL_DELETE_MAIL_LEFT_ON_SERVER "mail.delete_mail_left_on_server"
 #define PREF_4X_NETWORK_HOSTS_SMTP_SERVER "network.hosts.smtp_server"
 #define PREF_4X_MAIL_SMTP_NAME "mail.smtp_name"
+#define PREF_4X_MAIL_SMTP_SSL "mail.smtp.ssl"
 #define PREF_4X_MAIL_SERVER_TYPE "mail.server_type"
 #define PREF_4X_NETWORK_HOSTS_IMAP_SERVER "network.hosts.imap_servers"
 #define PREF_4X_MAIL_USE_IMAP_SENTMAIL "mail.use_imap_sentmail"
@@ -676,9 +680,43 @@ nsMessengerMigrator::UpgradePrefs()
     return rv;
 }
 
+nsresult 
+nsMessengerMigrator::SetUsernameIfNecessary()
+{
+    nsresult rv;
+    nsXPIDLCString usernameIn4x;
+
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_USERNAME, getter_Copies(usernameIn4x));
+    if (NS_SUCCEEDED(rv) && ((const char *)usernameIn4x) && (PL_strlen((const char *)usernameIn4x))) {
+        return NS_OK;
+    }
+
+    nsXPIDLString fullnameFromSystem;
+    
+    nsCOMPtr<nsIUserInfo> userInfo = do_GetService(NS_USERINFO_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!userInfo) return NS_ERROR_FAILURE;
+
+    rv = userInfo->GetFullname(getter_Copies(fullnameFromSystem));
+    if (NS_FAILED(rv) || !((const PRUnichar *)fullnameFromSystem)) {
+        // it is ok not to have this from the system
+        return NS_OK;
+    }
+
+    rv = m_prefs->SetUnicharPref(PREF_4X_MAIL_IDENTITY_USERNAME, (const PRUnichar *)fullnameFromSystem);
+    return rv;
+}
+
 nsresult
 nsMessengerMigrator::MigrateIdentity(nsIMsgIdentity *identity)
 {
+  nsresult rv;
+  
+  rv = SetUsernameIfNecessary();
+  /* SetUsernameIfNecessary() can fail. */
+  //if (NS_FAILED(rv)) return rv;
+
   /* NOTE:  if you add prefs here, make sure you update CopyIdentity() */
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_USEREMAIL,identity,SetEmail)
   MIGRATE_SIMPLE_WSTR_PREF(PREF_4X_MAIL_IDENTITY_USERNAME,identity,SetFullName)
@@ -697,6 +735,8 @@ nsMessengerMigrator::MigrateSmtpServer(nsISmtpServer *server)
 {
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_NETWORK_HOSTS_SMTP_SERVER,server,SetHostname)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_SMTP_NAME,server,SetUsername)
+  MIGRATE_SIMPLE_INT_PREF(PREF_4X_MAIL_SMTP_SSL,server,SetTrySSL)
+
   return NS_OK;
 }
 

@@ -94,6 +94,30 @@ nsSmtpServer::SetHostname(const char * aHostname)
 }
 
 NS_IMETHODIMP
+nsSmtpServer::GetTrySSL(PRInt32 *trySSL)
+{
+    nsresult rv;
+    nsCAutoString pref;
+    NS_ENSURE_ARG_POINTER(trySSL);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    *trySSL= 0;
+    getPrefString("try_ssl", pref);
+    return prefs->GetIntPref(pref, trySSL);
+}
+
+NS_IMETHODIMP
+nsSmtpServer::SetTrySSL(PRInt32 trySSL)
+{
+    nsresult rv;
+    nsCAutoString pref;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    getPrefString("try_ssl", pref);
+    return prefs->SetIntPref(pref, trySSL);
+}
+
+NS_IMETHODIMP
 nsSmtpServer::GetAuthMethod(PRInt32 *authMethod)
 {
     nsresult rv;
@@ -113,6 +137,7 @@ nsSmtpServer::SetAuthMethod(PRInt32 authMethod)
     nsCAutoString pref;
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
+    getPrefString("auth_method", pref);
     return prefs->SetIntPref(pref, authMethod);
 }
 

@@ -34,6 +34,7 @@ interface nsISmtpServer : nsISupports {
     attribute string redirectorType;
     
     attribute long authMethod;
+    attribute long trySSL;
 
     readonly attribute string serverURI;
     string getPasswordWithUI(in wstring promptString, in wstring promptTitle,

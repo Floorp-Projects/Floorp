@@ -92,7 +92,8 @@ private:
   nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
   nsresult SetMailCopiesAndFolders(nsIMsgIdentity *identity, const char *username, const char *hostname);
   nsresult SetNewsCopiesAndFolders(nsIMsgIdentity *identity);
-   
+  nsresult SetUsernameIfNecessary();
+
   nsresult MigrateImapAccounts(nsIMsgIdentity *identity);
   nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostAndPort, PRBool isDefaultAccount);
   
