@@ -36,6 +36,15 @@
 #include "vmtypes.h"
 
 namespace JavaScript {
+namespace JSTypes {
+
+static JSObject kUndefinedObject;
+const JSValue kUndefinedValue(&kUndefinedObject);
+
+} // namespace JSTypes
+} // namespace JavaScript
+
+namespace JavaScript {
 namespace Interpreter {
 
 // operand access macros.
@@ -187,13 +196,13 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case LOAD_NAME:
                 {
                     LoadName* ln = static_cast<LoadName*>(instruction);
-                    (*registers)[dst(ln)] = (*mGlobal)[*src1(ln)];
+                    (*registers)[dst(ln)] = mGlobal->getProperty(*src1(ln));
                 }
                 break;
             case SAVE_NAME:
                 {
                     SaveName* sn = static_cast<SaveName*>(instruction);
-                    (*mGlobal)[*dst(sn)] = (*registers)[src1(sn)];
+                    mGlobal->setProperty(*dst(sn), (*registers)[src1(sn)]);
                 }
                 break;
             case NEW_OBJECT:
@@ -212,14 +221,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 {
                     GetProp* gp = static_cast<GetProp*>(instruction);
                     JSObject* object = (*registers)[src1(gp)].object;
-                    (*registers)[dst(gp)] = (*object)[*src2(gp)];
+                    (*registers)[dst(gp)] = object->getProperty(*src2(gp));
                 }
                 break;
             case SET_PROP:
                 {
                     SetProp* sp = static_cast<SetProp*>(instruction);
                     JSObject* object = (*registers)[dst(sp)].object;
-                    (*object)[*src1(sp)] = (*registers)[src2(sp)];
+                    object->setProperty(*src1(sp), (*registers)[src2(sp)]);
                 }
                 break;
             case GET_ELEMENT:
