@@ -152,6 +152,14 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource showColumnHilite;
   RDF_Resource triggerPlacement;
 
+  /* NavCenter behavior flags */
+  
+  RDF_Resource useInlineEditing;
+  RDF_Resource useSingleClick;
+  RDF_Resource useSelection;	/* also marquee selection, drag and drop, context menus */
+  RDF_Resource loadOpenState;
+  RDF_Resource saveOpenState;
+  
   /* Toolbar Appearance Styles */
   RDF_Resource toolbarBitmapPosition; /* Bitmap's position ("side"/"top") */
 

@@ -227,6 +227,13 @@ createNavCenterVocab () {
   gNavCenter->showColumnHilite = newResource("showColumnHilite", RDF_SHOW_COLUMN_HILITING_STR);
   gNavCenter->triggerPlacement = newResource("triggerPlacement", RDF_TRIGGER_PLACEMENT_STR);
 
+  /* NavCenter behavior properties */
+  gNavCenter->useInlineEditing = newResource("useInlineEditing", 0 /* XXX */);
+  gNavCenter->useSingleClick = newResource("useSingleClick", 0 /* XXX */);
+  gNavCenter->useSelection = newResource("useSelection", 0 /* XXX */);
+  gNavCenter->loadOpenState = newResource("loadOpenState", 0 /* XXX */);
+  gNavCenter->saveOpenState = newResource("saveOpenState", 0 /* XXX */);
+ 
   /* Toolbars */
 
   /* Toolbar Appearance Styles */
