@@ -3189,15 +3189,6 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
           OrderRowGroups(rowGroups, numRowGroups, nsnull);
         }
       }
-      else { // it's an unknown frame type, give it a generic reflow and ignore the results
-        nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState, kidFrame,
-                                         nsSize(0,0), eReflowReason_Resize);
-        nsHTMLReflowMetrics unusedDesiredSize(nsnull);
-        nsReflowStatus status;
-        ReflowChild(kidFrame, aPresContext, unusedDesiredSize, kidReflowState,
-                    0, 0, 0, status);
-        kidFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
-      }
     }
     else if (childX < numRowGroups) { // it is a row group but isn't being reflowed
       nsRect kidRect;
