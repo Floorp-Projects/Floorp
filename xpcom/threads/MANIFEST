@@ -2,3 +2,5 @@ nsAutoLock.h
 nsIEventQueue.h 
 nsIEventQueueService.h
 nsIThread.h
+nsIRunnable.h
+nsIThreadPool.h

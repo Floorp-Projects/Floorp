@@ -43,6 +43,8 @@ EXPORTS = \
 	nsIEventQueue.h        \
 	nsIEventQueueService.h \
 	nsIThread.h            \
+        nsIThreadPool.h        \
+        nsIRunnable.h          \
 	$(NULL)			
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
