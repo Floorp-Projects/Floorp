@@ -120,7 +120,6 @@ nsRenderingContextXlib::nsRenderingContextXlib() :
   mCurrentLineStyle(nsLineStyle_kSolid)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::nsRenderingContextXlib()\n"));
-  NS_INIT_ISUPPORTS();
 
   PushState();
 }

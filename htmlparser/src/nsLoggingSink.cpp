@@ -74,7 +74,6 @@ NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult)
 }
 
 nsLoggingSink::nsLoggingSink() {
-  NS_INIT_ISUPPORTS();
   mOutput = 0;
 	mLevel=-1;
   mSink=0;

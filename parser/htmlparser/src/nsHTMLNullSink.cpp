@@ -135,7 +135,6 @@ NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult)
  *  @return  
  */
 nsHTMLNullSink::nsHTMLNullSink() : nsIHTMLContentSink() {
-  NS_INIT_ISUPPORTS();
   mNodeStackPos=0;
   memset(mNodeStack,0,sizeof(mNodeStack));
 }

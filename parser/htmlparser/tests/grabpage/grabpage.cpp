@@ -87,7 +87,6 @@ protected:
 
 StreamToFile::StreamToFile(FILE* fp)
 {
-  NS_INIT_ISUPPORTS();
   mDone = PR_FALSE;
   mError = PR_FALSE;
   mFile = fp;

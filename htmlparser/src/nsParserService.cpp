@@ -28,7 +28,6 @@
 
 nsParserService::nsParserService() : mEntries(0)
 {
-  NS_INIT_ISUPPORTS();
   mHaveNotifiedCategoryObservers = PR_FALSE;
 }
 

@@ -309,7 +309,6 @@ nsExpatDriver::nsExpatDriver()
    mSink(0), 
    mCatalogData(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsExpatDriver::~nsExpatDriver() 
