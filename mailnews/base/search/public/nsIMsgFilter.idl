@@ -53,9 +53,10 @@ interface nsIMsgFilter : nsISupports {
 
     attribute nsIMsgSearchScopeTerm scope;
 
-    [noscript] void SetAction(in nsMsgRuleActionType type, in voidStar value);
-    [noscript] void GetAction(out nsMsgRuleActionType type, out voidStar value);
-
+    attribute nsMsgRuleActionType action;
+    attribute nsMsgPriorityValue actionPriority;
+    attribute string actionTargetFolderUri;
+    
     void MatchHdr(in nsIMsgDBHdr msgHdr, in nsIMsgFolder folder,
                   in nsIMsgDatabase db, in string headers,
                   in unsigned long headerSize, out boolean result);

@@ -253,7 +253,7 @@ public:
 
 	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 									   nsIMsgDatabase *sourceDB, 
-									   char *destFolder,
+                                     const char *destFolder,
 									   nsIMsgFilter *filter);
 	nsresult StoreImapFlags(imapMessageFlagsType flags, PRBool addFlags, nsMsgKeyArray &msgKeys);
 	static nsresult AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCString &msgIds);

@@ -33,6 +33,7 @@
 #include "nsMsgResultElement.h"
 
 #include "nsMsgBaseCID.h"
+#include "nsMsgSearchValue.h"
 
 static NS_DEFINE_CID(kValidityManagerCID, NS_MSGSEARCHVALIDITYMANAGER_CID);
 
@@ -574,7 +575,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             break;
         case nsMsgSearchAttrib::Priority:
 			{
-				nsMsgPriority msgPriority;
+				nsMsgPriorityValue msgPriority;
 				msgToMatch->GetPriority(&msgPriority);
 				err = pTerm->MatchPriority (msgPriority, &result);
 			}

@@ -506,13 +506,13 @@ NS_IMETHODIMP nsMsgHdr::GetStatusOffset(PRUint32 *result)
     return res;
 }
 
-NS_IMETHODIMP nsMsgHdr::SetPriority(nsMsgPriority priority)
+NS_IMETHODIMP nsMsgHdr::SetPriority(nsMsgPriorityValue priority)
 {
 	SetUInt32Column((PRUint32) priority, m_mdb->m_priorityColumnToken);
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgHdr::GetPriority(nsMsgPriority *result)
+NS_IMETHODIMP nsMsgHdr::GetPriority(nsMsgPriorityValue *result)
 {
 	if (!result)
 	    return NS_ERROR_NULL_POINTER;
@@ -521,7 +521,7 @@ NS_IMETHODIMP nsMsgHdr::GetPriority(nsMsgPriority *result)
 	nsresult rv = GetUInt32Column(m_mdb->m_priorityColumnToken, &priority);
     if (NS_FAILED(rv)) return rv;
     
-	*result = (nsMsgPriority) priority;
+	*result = (nsMsgPriorityValue) priority;
 	return NS_OK;
 }
 
@@ -550,7 +550,7 @@ NS_IMETHODIMP nsMsgHdr::GetLineCount(PRUint32 *result)
 
 NS_IMETHODIMP nsMsgHdr::SetPriorityString(const char *priority)
 {
-	nsMsgPriority priorityVal = nsMsgPriorityNormal;
+	nsMsgPriorityValue priorityVal = nsMsgPriority::normal;
 
 	// NS_MsgGetPriorityFromString will return normal in case of error,
 	// so we can ignore return value.

@@ -212,66 +212,66 @@ nsresult NS_NewMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator,
 
 // Where should this live? It's a utility used to convert a string priority, e.g., "High, Low, Normal" to an enum.
 // Perhaps we should have an interface that groups together all these utilities...
-nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriority *outPriority)
+nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriorityValue *outPriority)
 {
 	if (!outPriority)
 		return NS_ERROR_NULL_POINTER;
 
-	nsMsgPriority retPriority = nsMsgPriorityNormal;
+	nsMsgPriorityValue retPriority = nsMsgPriority::normal;
 
 	if (PL_strcasestr(priority, "Normal") != NULL)
-		retPriority = nsMsgPriorityNormal;
+		retPriority = nsMsgPriority::normal;
 	else if (PL_strcasestr(priority, "Lowest") != NULL)
-		retPriority = nsMsgPriorityLowest;
+		retPriority = nsMsgPriority::lowest;
 	else if (PL_strcasestr(priority, "Highest") != NULL)
-		retPriority = nsMsgPriorityHighest;
+		retPriority = nsMsgPriority::highest;
 	else if (PL_strcasestr(priority, "High") != NULL || 
 			 PL_strcasestr(priority, "Urgent") != NULL)
-		retPriority = nsMsgPriorityHigh;
+		retPriority = nsMsgPriority::high;
 	else if (PL_strcasestr(priority, "Low") != NULL ||
 			 PL_strcasestr(priority, "Non-urgent") != NULL)
-		retPriority = nsMsgPriorityLow;
+		retPriority = nsMsgPriority::low;
 	else if (PL_strcasestr(priority, "1") != NULL)
-		retPriority = nsMsgPriorityHighest;
+		retPriority = nsMsgPriority::highest;
 	else if (PL_strcasestr(priority, "2") != NULL)
-		retPriority = nsMsgPriorityHigh;
+		retPriority = nsMsgPriority::high;
 	else if (PL_strcasestr(priority, "3") != NULL)
-		retPriority = nsMsgPriorityNormal;
+		retPriority = nsMsgPriority::normal;
 	else if (PL_strcasestr(priority, "4") != NULL)
-		retPriority = nsMsgPriorityLow;
+		retPriority = nsMsgPriority::low;
 	else if (PL_strcasestr(priority, "5") != NULL)
-	    retPriority = nsMsgPriorityLowest;
+	    retPriority = nsMsgPriority::lowest;
 	else
-		retPriority = nsMsgPriorityNormal;
+		retPriority = nsMsgPriority::normal;
 	*outPriority = retPriority;
 	return NS_OK;
 		//return nsMsgNoPriority;
 }
 
 
-nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString *outName)
+nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriorityValue p, nsString *outName)
 {
 	if (!outName)
 		return NS_ERROR_NULL_POINTER;
 	switch (p)
 	{
-	case nsMsgPriorityNotSet:
-	case nsMsgPriorityNone:
+	case nsMsgPriority::notSet:
+	case nsMsgPriority::none:
 		outName->AssignWithConversion("None");
 		break;
-	case nsMsgPriorityLowest:
+	case nsMsgPriority::lowest:
 		outName->AssignWithConversion("Lowest");
 		break;
-	case nsMsgPriorityLow:
+	case nsMsgPriority::low:
 		outName->AssignWithConversion("Low");
 		break;
-	case nsMsgPriorityNormal:
+	case nsMsgPriority::normal:
 		outName->AssignWithConversion("Normal");
 		break;
-	case nsMsgPriorityHigh:
+	case nsMsgPriority::high:
 		outName->AssignWithConversion("High");
 		break;
-	case nsMsgPriorityHighest:
+	case nsMsgPriority::highest:
 		outName->AssignWithConversion("Highest");
 		break;
 	default:

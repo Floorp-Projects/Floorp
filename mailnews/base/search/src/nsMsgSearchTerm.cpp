@@ -33,6 +33,7 @@
 #include "nsMsgSearchImap.h"
 #include "nsMsgLocalSearch.h"
 #include "nsMsgSearchNews.h"
+#include "nsMsgSearchValue.h"
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
 //---------------------------------------------------------------------------
@@ -256,7 +257,7 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 nsMsgSearchTerm::nsMsgSearchTerm (
 	nsMsgSearchAttribValue attrib, 
 	nsMsgSearchOpValue op, 
-	nsMsgSearchValue *val,
+	nsIMsgSearchValue *val,
 	nsMsgSearchBooleanOperator boolOp,
 	const char * arbitraryHeader) 
 {
@@ -1079,7 +1080,9 @@ nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch, PRBool *pResult)
 }
 
 
-nsresult nsMsgSearchTerm::MatchPriority (nsMsgPriority priorityToMatch, PRBool *pResult)
+nsresult
+nsMsgSearchTerm::MatchPriority (nsMsgPriorityValue priorityToMatch,
+                                PRBool *pResult)
 {
 	if (!pResult)
 		return NS_ERROR_NULL_POINTER;
@@ -1307,15 +1310,25 @@ char *nsMsgSearchScopeTerm::GetStatusBarName ()
 
 nsMsgResultElement::nsMsgResultElement(nsIMsgSearchAdapter *adapter)
 {
+    NS_NewISupportsArray(getter_AddRefs(m_valueList));
 	m_adapter = adapter;
 }
 
 
 nsMsgResultElement::~nsMsgResultElement () 
 {
-	for (int i = 0; i < m_valueList.Count(); i++)
+#if 0                           // this should happen automatically
+                                // when the nsISupportsArray goes away
+    nsresult rv;
+
+    PRUint32 count;
+    m_valueList->Count(&count);
+	for (PRUint32 i = 0; i < count; i++)
 	{
-		nsMsgSearchValue *value = m_valueList.ElementAt(i);
+		nsCOMPtr<nsIMsgSearchValue> value;
+        rv = m_valueList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchValue),
+                                         (void **)getter_AddRefs(value));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "bad element of array");
 #ifdef HUH_WHATS_THIS
 		if (value->attribute == nsMsgSearchAttrib::JpegFile)
 		{
@@ -1325,65 +1338,63 @@ nsMsgResultElement::~nsMsgResultElement ()
 			XP_FREE(url);
 		}
 #endif
-		nsMsgResultElement::DestroyValue (value);
+#if 0
+        nsMsgResultElement::DestroyValue (value);
+#endif
 	}
+#endif
 }
 
+
+nsresult nsMsgResultElement::AddValue (nsIMsgSearchValue *value)
+{ 
+	m_valueList->AppendElement (value); 
+	return NS_OK;
+}
 
 nsresult nsMsgResultElement::AddValue (nsMsgSearchValue *value)
-{ 
-	m_valueList.AppendElement (value); 
-	return NS_OK;
-}
-
-
-nsresult nsMsgResultElement::DestroyValue (nsMsgSearchValue *value)
 {
-	if (IS_STRING_ATTRIBUTE(value->attribute))
-	{
-		NS_ASSERTION(value->u.string, "got null result value string");
-		PR_Free (value->u.string);
-	}
-	delete value;
-	return NS_OK;
+    nsMsgSearchValueImpl* valueImpl = new nsMsgSearchValueImpl(value);
+    delete value;               // we keep the nsIMsgSearchValue, not
+                                // the nsMsgSearchValue
+    return AddValue(valueImpl);
 }
 
+#if 0
+nsresult nsMsgResultElement::DestroyValue (nsIMsgSearchValue *value)
+{
+	return NS_OK;
+}
+#endif
 
-nsresult nsMsgResultElement::AssignValues (nsMsgSearchValue *src, nsMsgSearchValue *dst)
+nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchValue *dst)
 {
 	// Yes, this could be an operator overload, but nsMsgSearchValue is totally public, so I'd
 	// have to define a derived class with nothing by operator=, and that seems like a bit much
 	nsresult err = NS_OK;
-	switch (src->attribute)
+    src->GetAttrib(&dst->attribute);
+	switch (dst->attribute)
 	{
 	case nsMsgSearchAttrib::Priority:
-		dst->attribute = src->attribute;
-		dst->u.priority = src->u.priority;
+		err = src->GetPriority(&dst->u.priority);
 		break;
 	case nsMsgSearchAttrib::Date:
-		dst->attribute = src->attribute;
-		dst->u.date = src->u.date;
+        err = src->GetDate(&dst->u.date);
 		break;
 	case nsMsgSearchAttrib::MsgStatus:
-		dst->attribute = src->attribute;
-		dst->u.msgStatus = src->u.msgStatus;
+        err = src->GetStatus(&dst->u.msgStatus);
 		break;
 	case nsMsgSearchAttrib::MessageKey:
-		dst->attribute = src->attribute;
-		dst->u.key = src->u.key;
+        err = src->GetMsgKey(&dst->u.key);
 		break;
 	case nsMsgSearchAttrib::AgeInDays:
-		dst->attribute = src->attribute;
-		dst->u.age = src->u.age;
+        err = src->GetAge(&dst->u.age);
 		break;
 	default:
-		if (src->attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)
+		if (dst->attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)
 		{
-			NS_ASSERTION(IS_STRING_ATTRIBUTE(src->attribute), "assigning non-string result");
-			dst->attribute = src->attribute;
-			dst->u.string = PL_strdup(src->u.string);
-			if (!dst->u.string)
-				err = NS_ERROR_OUT_OF_MEMORY;
+			NS_ASSERTION(IS_STRING_ATTRIBUTE(dst->attribute), "assigning non-string result");
+			err = src->GetStr(&dst->u.string);
 		}
 		else
 			err = NS_ERROR_INVALID_ARG;
@@ -1396,13 +1407,19 @@ nsresult nsMsgResultElement::GetValue (nsMsgSearchAttribValue attrib,
                                        nsMsgSearchValue **outValue) const
 {
 	nsresult err = NS_OK;
-	nsMsgSearchValue *value = NULL;
+	nsCOMPtr<nsIMsgSearchValue> value;
 	*outValue = NULL;
 
-	for (int i = 0; i < m_valueList.Count() && err != NS_OK; i++)
+    PRUint32 count;
+    m_valueList->Count(&count);
+	for (PRUint32 i = 0; i < count && err != NS_OK; i++)
 	{
-		value = m_valueList.ElementAt(i);
-		if (attrib == value->attribute)
+		m_valueList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchValue),
+                                   (void **)getter_AddRefs(value));
+
+        nsMsgSearchAttribValue valueAttribute;
+        value->GetAttrib(&valueAttribute);
+		if (attrib == valueAttribute)
 		{
 			*outValue = new nsMsgSearchValue;
 			if (*outValue)
@@ -1436,17 +1453,29 @@ nsresult nsMsgResultElement::GetValue (nsMsgSearchAttribValue attrib,
 }
 
 
-const nsMsgSearchValue *
-nsMsgResultElement::GetValueRef (nsMsgSearchAttribValue attrib) const 
+nsresult
+nsMsgResultElement::GetValueRef (nsMsgSearchAttribValue attrib,
+                                 nsIMsgSearchValue* *aResult) const 
 {
-	nsMsgSearchValue *value =  NULL;
-	for (int i = 0; i < m_valueList.Count(); i++)
+	nsCOMPtr<nsIMsgSearchValue> value;
+    PRUint32 count;
+    m_valueList->Count(&count);
+    nsresult rv;
+	for (PRUint32 i = 0; i < count; i++)
 	{
-		value = m_valueList.ElementAt(i);
-		if (attrib == value->attribute)
-			return value;
+		rv = m_valueList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchValue),
+                                            getter_AddRefs(value));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "bad element of array");
+        if (NS_FAILED(rv)) continue;
+        
+        nsMsgSearchAttribValue valueAttribute;
+        value->GetAttrib(&valueAttribute);
+		if (attrib == valueAttribute) {
+            *aResult = value;
+            NS_ADDREF(*aResult);
+        }
 	}
-	return NULL;
+	return NS_ERROR_FAILURE;
 }
 
 

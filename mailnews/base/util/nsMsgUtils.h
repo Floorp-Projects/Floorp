@@ -61,9 +61,9 @@ NS_MSG_BASE nsresult NS_NewMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcE
 										   nsIMsgFolder *folder,	
 										   nsMessageFromMsgHdrEnumerator **messageEnumerator);
 
-NS_MSG_BASE nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriority *outPriority);
+NS_MSG_BASE nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriorityValue *outPriority);
 
-NS_MSG_BASE nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString *outName);
+NS_MSG_BASE nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriorityValue p, nsString *outName);
 
 NS_MSG_BASE nsresult NS_MsgHashIfNecessary(nsCAutoString &name);
 

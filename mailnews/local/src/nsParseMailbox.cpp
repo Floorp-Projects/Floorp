@@ -1103,7 +1103,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 	const char *s;
 	PRUint32 flags = 0;
 	PRUint32 delta = 0;
-	nsMsgPriority priorityFlags = nsMsgPriorityNotSet;
+	nsMsgPriorityValue priorityFlags = nsMsgPriority::notSet;
 
 	if (!m_mailDB)		// if we don't have a valid db, skip the header.
 		return 0;
@@ -1146,7 +1146,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 			}
 			// strip off and remember priority bits.
 			flags &= ~MSG_FLAG_RUNTIME_ONLY;
-			priorityFlags = (nsMsgPriority) ((flags & MSG_FLAG_PRIORITIES) >> 13);
+			priorityFlags = (nsMsgPriorityValue) ((flags & MSG_FLAG_PRIORITIES) >> 13);
 			flags &= ~MSG_FLAG_PRIORITIES;
 		  /* We trust the X-Mozilla-Status line to be the smartest in almost
 			 all things.  One exception, however, is the HAS_RE flag.  Since
@@ -1184,7 +1184,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 				flags |= MSG_FLAG_MDN_REPORT_NEEDED;
 
 			m_newMsgHdr->SetFlags(flags);
-			if (priorityFlags != nsMsgPriorityNotSet)
+			if (priorityFlags != nsMsgPriority::notSet)
 				m_newMsgHdr->SetPriority(priorityFlags);
 
 			if (delta < 0xffff) 
@@ -1325,8 +1325,8 @@ int nsParseMailMessageState::FinalizeHeaders()
 				}
 				if (priority)
 					m_newMsgHdr->SetPriorityString(priority->value);
-				else if (priorityFlags == nsMsgPriorityNotSet)
-					m_newMsgHdr->SetPriority(nsMsgPriorityNone);
+				else if (priorityFlags == nsMsgPriority::notSet)
+					m_newMsgHdr->SetPriority(nsMsgPriority::none);
 			}
 		} 
 		else
@@ -1683,7 +1683,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore)
 {
 	nsMsgRuleActionType actionType;
-	void				*value = nsnull;
+    nsXPIDLCString actionTargetFolderUri;
 	PRUint32	newFlags;
 	nsresult rv = NS_OK;
 
@@ -1699,8 +1699,10 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 #ifdef DEBUG_bienvenu
 	printf("got a rule hit!\n");
 #endif
-	if (NS_SUCCEEDED(filter->GetAction(&actionType, &value)))
+	if (NS_SUCCEEDED(filter->GetAction(&actionType)))
 	{
+        if (actionType == nsMsgFilterAction::MoveToFolder)
+            filter->GetActionTargetFolderUri(getter_Copies(actionTargetFolderUri));
 		nsCOMPtr<nsIMsgDBHdr> msgHdr = m_newMsgHdr;
 		PRUint32 msgFlags;
 		nsCAutoString trashNameVal;
@@ -1723,14 +1725,15 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 				rv = trash->GetName(&folderName);
 				trashNameVal.AssignWithConversion(folderName);
 				PR_FREEIF(folderName);
-				value = (void *) trashNameVal.GetBuffer();
+				*(char **)getter_Copies(actionTargetFolderUri) = trashNameVal.ToNewCString();
 			}
 
 			msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);	// mark read in trash.
 		}
 		case nsMsgFilterAction::MoveToFolder:
 			// if moving to a different file, do it.
-			if (value && PL_strcasecmp(m_mailboxName, (char *) value))
+			if ((const char*)actionTargetFolderUri &&
+                PL_strcasecmp(m_mailboxName, actionTargetFolderUri))
 			{
 				msgHdr->GetFlags(&msgFlags);
 
@@ -1773,7 +1776,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 					tmp = (char*) cc.value;
 					PR_FREEIF(tmp);
 				}
-				nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (char *) value, filter);
+				nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (const char *) actionTargetFolderUri, filter);
 				if (NS_SUCCEEDED(err))
 				{
 					m_msgMovedByFilter = PR_TRUE;
@@ -1796,7 +1799,11 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 			msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
 			break;
 		case nsMsgFilterAction::ChangePriority:
-			msgHdr->SetPriority(*(nsMsgPriority *) &value);
+            {
+                nsMsgPriorityValue filterPriority;
+                filter->GetActionPriority(&filterPriority);
+                msgHdr->SetPriority(filterPriority);
+            }
 			break;
 		default:
 			break;
@@ -1821,7 +1828,7 @@ int nsParseNewMailState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 
 nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
-											   char *destFolderUri,
+											   const char *destFolderUri,
 											   nsIMsgFilter *filter)
 {
 	nsresult err = 0;

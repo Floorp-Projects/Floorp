@@ -25,9 +25,6 @@
 
 interface nsIMsgFolder;
 
-// for now
-native nsMsgPriority(nsMsgPriority);
-
 [scriptable, uuid(12156d67-6071-4354-b204-4cb9b561cc94)]
 interface nsIMsgSearchValue : nsISupports {
     // type of object
@@ -36,7 +33,7 @@ interface nsIMsgSearchValue : nsISupports {
     // accessing these will throw an exception if the above
     // attribute does not match the type!
     attribute string str;
-    [noscript] attribute nsMsgPriority priority;
+    attribute nsMsgPriorityValue priority;
     attribute PRTime date;
     attribute unsigned long status; // see MSG_FLAG in msgcom.h
     attribute unsigned long size;

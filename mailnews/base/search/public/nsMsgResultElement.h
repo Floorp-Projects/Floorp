@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -40,23 +40,24 @@ public:
 	nsMsgResultElement (nsIMsgSearchAdapter *);
 	virtual ~nsMsgResultElement ();
 
-	static nsresult AssignValues (nsMsgSearchValue *src, nsMsgSearchValue *dst);
+	static nsresult AssignValues (nsIMsgSearchValue *src, nsMsgSearchValue *dst);
 	nsresult GetValue (nsMsgSearchAttribValue, nsMsgSearchValue **) const;
-	nsresult AddValue (nsMsgSearchValue*);
+	nsresult AddValue (nsIMsgSearchValue*);
+    nsresult AddValue (nsMsgSearchValue*);
 
 	nsresult GetPrettyName (nsMsgSearchValue**);
 
 
-	const nsMsgSearchValue *GetValueRef (nsMsgSearchAttribValue) const;
+	nsresult GetValueRef (nsMsgSearchAttribValue, nsIMsgSearchValue**) const;
 	nsresult Open (void *window);
 
 	// added as part of the search as view capabilities...
 	static int CompareByFolderInfoPtrs (const void *, const void *);  
 
 	static int Compare (const void *, const void *);
-	static nsresult DestroyValue (nsMsgSearchValue *value);
+	static nsresult DestroyValue (nsIMsgSearchValue *value);
 
-	nsMsgSearchValueArray m_valueList;
+    nsCOMPtr<nsISupportsArray> m_valueList;
 	nsIMsgSearchAdapter *m_adapter;
 
 protected:

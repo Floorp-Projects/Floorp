@@ -462,11 +462,12 @@ nsresult nsMsgFilterList::LoadTextFilters()
 				err = m_curFilter->ConvertMoveToFolderValue(value);
 			else if (m_curFilter->m_action.m_type == nsMsgFilterAction::ChangePriority)
 			{
-				nsMsgPriority outPriority;
+				nsMsgPriorityValue outPriority;
 				nsresult res = NS_MsgGetPriorityFromString(value.GetBuffer(), &outPriority);
 				if (NS_SUCCEEDED(res))
 				{
-					m_curFilter->SetAction(m_curFilter->m_action.m_type, (void *) (int32) outPriority);
+					m_curFilter->SetAction(m_curFilter->m_action.m_type);
+                    m_curFilter->SetActionPriority(outPriority);
 				}
 				else
 					NS_ASSERTION(PR_FALSE, "invalid priority in filter file");

@@ -28,14 +28,14 @@ nsMsgSearchValueImpl::nsMsgSearchValueImpl(nsMsgSearchValue *aInitialValue)
 {
     NS_INIT_ISUPPORTS();
     mValue = *aInitialValue;
-    // XXX TODO - make a copy of the string if it's a string attribute
-    // (right now we dont' know when it's a string!)
-
+    if (IS_STRING_ATTRIBUTE(aInitialValue->attribute))
+        mValue.u.string = nsCRT::strdup(aInitialValue->u.string);
 }
 
 nsMsgSearchValueImpl::~nsMsgSearchValueImpl()
 {
-    // XXX TODO - free the string if it's a string attribute
+    if (IS_STRING_ATTRIBUTE(mValue.attribute))
+        nsCRT::free(mValue.u.string);
 
 }
 
@@ -58,13 +58,13 @@ nsMsgSearchValueImpl::SetStr(const char* aValue)
 }
 
 NS_IMETHODIMP
-nsMsgSearchValueImpl::GetPriority(nsMsgPriority *aResult)
+nsMsgSearchValueImpl::GetPriority(nsMsgPriorityValue *aResult)
 {
     *aResult = mValue.u.priority;
     return NS_OK;
 }
 NS_IMETHODIMP
-nsMsgSearchValueImpl::SetPriority(nsMsgPriority aValue)
+nsMsgSearchValueImpl::SetPriority(nsMsgPriorityValue aValue)
 {
     aValue = mValue.u.priority;
     return NS_OK;

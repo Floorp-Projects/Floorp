@@ -2176,7 +2176,7 @@ NS_IMETHODIMP nsImapMailFolder::EndMessage(nsMsgKey key)
 NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore)
 {
   nsMsgRuleActionType actionType;
-  void        *value = nsnull;
+  nsXPIDLCString actionTargetFolderUri;
   PRUint32  newFlags;
   nsresult rv = NS_OK;
 
@@ -2189,8 +2189,11 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 #ifdef DEBUG_bienvenu
   printf("got a rule hit!\n");
 #endif
-  if (NS_SUCCEEDED(filter->GetAction(&actionType, &value)))
+  if (NS_SUCCEEDED(filter->GetAction(&actionType)))
   {
+
+    if (actionType == nsMsgFilterAction::MoveToFolder)
+        filter->GetActionTargetFolderUri(getter_Copies(actionTargetFolderUri));
     nsCOMPtr<nsIMsgDBHdr> msgHdr;
 
     if (m_msgParser)
@@ -2223,7 +2226,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
             rv = mailTrash->GetName(&folderName);
             trashNameVal.AssignWithConversion(folderName);
             nsCRT::free(folderName);
-            value = (void *) trashNameVal.GetBuffer();
+            *(char **)getter_Copies(actionTargetFolderUri) = trashNameVal.ToNewCString();
           }
 
           msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);  // mark read in trash.
@@ -2247,7 +2250,8 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
         nsXPIDLCString uri;
         rv = GetURI(getter_Copies(uri));
 
-        if (value && nsCRT::strcasecmp((const char *) uri, (const char *) value))
+        if ((const char*)actionTargetFolderUri &&
+            nsCRT::strcasecmp(uri, actionTargetFolderUri))
         {
           msgHdr->GetFlags(&msgFlags);
 
@@ -2290,7 +2294,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
             PR_FREEIF(tmp);
 #endif
           }
-          nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, (char *) value, filter);
+          nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, actionTargetFolderUri, filter);
           if (NS_SUCCEEDED(err))
           {
             m_msgMovedByFilter = PR_TRUE;
@@ -2320,7 +2324,11 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
         msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
         break;
       case nsMsgFilterAction::ChangePriority:
-        msgHdr->SetPriority(*(nsMsgPriority *) &value);
+          {
+              nsMsgPriorityValue filterPriority;
+              filter->GetActionPriority(&filterPriority);
+              msgHdr->SetPriority(filterPriority);
+          }
         break;
       default:
         break;
@@ -2417,9 +2425,9 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
 }
 
 nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
-                         nsIMsgDatabase *sourceDB, 
-                         char *destFolderUri,
-                         nsIMsgFilter *filter)
+                                                   nsIMsgDatabase *sourceDB, 
+                                                   const char *destFolderUri,
+                                                   nsIMsgFilter *filter)
 {
   nsresult err = NS_OK;
   

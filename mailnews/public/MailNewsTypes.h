@@ -49,6 +49,7 @@ const nsMsgKey nsMsgKey_None = 0xffffffff;
 
 const nsMsgViewIndex nsMsgViewIndex_None = 0xFFFFFFFF;
 
+#if 0
 /* Message priorities as determined by X-Priority hdr, or Priority header? */
 enum nsMsgPriority {
   nsMsgPriorityNotSet = 0,
@@ -59,6 +60,7 @@ enum nsMsgPriority {
   nsMsgPriorityHigh,
   nsMsgPriorityHighest
 };
+#endif
 
 // The following enums are all persistent in databases, so don't go changing the values!
 enum nsMsgSortOrder {

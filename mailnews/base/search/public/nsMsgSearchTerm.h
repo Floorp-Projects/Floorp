@@ -39,9 +39,9 @@ class nsMsgSearchTerm
 public:
 	nsMsgSearchTerm();
 #if 0
-	nsMsgSearchTerm (nsMsgSearchAttribute, nsMsgSearchOperator, nsMsgSearchValue *, PRBool, char * arbitraryHeader); // the bool is true if AND, PR_FALSE if OR
+	nsMsgSearchTerm (nsMsgSearchAttribute, nsMsgSearchOperator, nsIMsgSearchValue *, PRBool, char * arbitraryHeader); // the bool is true if AND, PR_FALSE if OR
 #endif
-	nsMsgSearchTerm (nsMsgSearchAttribValue, nsMsgSearchOpValue, nsMsgSearchValue *, nsMsgSearchBooleanOperator, const char * arbitraryHeader);
+	nsMsgSearchTerm (nsMsgSearchAttribValue, nsMsgSearchOpValue, nsIMsgSearchValue *, nsMsgSearchBooleanOperator, const char * arbitraryHeader);
 
 	virtual ~nsMsgSearchTerm ();
 
@@ -64,7 +64,7 @@ public:
 	nsresult MatchString (nsCString *, const char *charset, PRBool body, PRBool *result);
 	nsresult MatchDate (PRTime, PRBool *result);
 	nsresult MatchStatus (PRUint32, PRBool *result);
-	nsresult MatchPriority (nsMsgPriority, PRBool *result);
+	nsresult MatchPriority (nsMsgPriorityValue, PRBool *result);
 	nsresult MatchSize (PRUint32, PRBool *result);
 	nsresult MatchRfc822String(const char *, const char *charset, PRBool *pResult);
 	nsresult MatchAge (PRTime, PRBool *result);

@@ -190,7 +190,7 @@ typedef struct nsMsgSearchValue
     union
     {
         char *string;
-        nsMsgPriority priority;
+        nsMsgPriorityValue priority;
         PRTime date;
         PRUint32 msgStatus; /* see MSG_FLAG in msgcom.h */
         PRUint32 size;

@@ -22,6 +22,7 @@
 
 #include "nsISupports.idl"
 #include "nsMsgSearchCore.idl"
+#include "nsIMsgSearchValue.idl"
 
 interface nsMsgResultElement;
 interface nsIMsgSearchAdapter;
@@ -35,21 +36,20 @@ interface nsIMsgSearchAdapter;
 [scriptable, uuid(a819050a-0302-11d3-a50a-0060b0fc04b7)]
 interface nsIMsgSearchSession :  nsISupports {
 
-    [noscript]
     void AddSearchTerm(in nsMsgSearchAttribValue attrib, /* attribute for this term */
                        in nsMsgSearchOpValue op,/* operator e.g. opContains */
-                       in nsMsgSearchValue value, /* value e.g. "Dogbert" */
+                       in nsIMsgSearchValue value, /* value e.g. "Dogbert" */
                        in boolean BooleanAND, /* set to true if associated boolean operator is AND */
                        in string arbitraryHeader); /* user defined arbitrary header. ignored unless attrib = attribOtherHeader */
 
     readonly attribute long numSearchTerms;
 
 	readonly attribute nsIMsgSearchAdapter runningAdapter;
-    [noscript]
+
     void GetNthSearchTerm(in long whichTerm,
                           in nsMsgSearchAttribValue attrib,
                           in nsMsgSearchOpValue op,
-                          in nsMsgSearchValue value); // wrong, should be out
+                          in nsIMsgSearchValue value); // wrong, should be out
 
     long CountSearchScopes();
 

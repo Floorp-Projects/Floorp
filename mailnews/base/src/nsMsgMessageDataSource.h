@@ -141,7 +141,7 @@ protected:
 
 	nsresult createMessagePrioritySortNode(nsIMessage *message, nsIRDFNode **target);
 
-	nsresult createPriorityString(nsMsgPriority priority, nsCAutoString &priorityStr);
+	nsresult createPriorityString(nsMsgPriorityValue priority, nsCAutoString &priorityStr);
 
 	nsresult createMessageSizeNode(nsIMessage *message, nsIRDFNode **target, PRBool sort);
 

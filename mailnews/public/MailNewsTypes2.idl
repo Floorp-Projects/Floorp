@@ -23,10 +23,17 @@
 typedef unsigned long nsMsgKey;
 typedef unsigned long nsMsgViewIndex;
 
-/* I'm doing this because I can't get it to build without this.
-   I need to revisit this later*/
+
+typedef long nsMsgPriorityValue;
+
 [uuid(94C0D8D8-2045-11d3-8A8F-0060B0FC04D2)]
-interface hack{
-	void hackFunction();
+interface nsMsgPriority {
+    const nsMsgPriorityValue notSet = 0;
+    const nsMsgPriorityValue none = 1;
+    const nsMsgPriorityValue lowest = 2;
+    const nsMsgPriorityValue low = 3;
+    const nsMsgPriorityValue normal = 4;
+    const nsMsgPriorityValue high = 5;
+    const nsMsgPriorityValue highest = 6;
 };
 

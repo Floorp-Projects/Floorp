@@ -1242,27 +1242,27 @@ nsMsgMessageDataSource::createFlaggedStringFromFlag(PRUint32 flags, nsCAutoStrin
 }
 
 nsresult 
-nsMsgMessageDataSource::createPriorityString(nsMsgPriority priority, nsCAutoString &priorityStr)
+nsMsgMessageDataSource::createPriorityString(nsMsgPriorityValue priority, nsCAutoString &priorityStr)
 {
 	nsresult rv = NS_OK;
 	priorityStr = " ";
 	switch (priority)
 	{
-		case nsMsgPriorityNotSet:
-		case nsMsgPriorityNone:
-		case nsMsgPriorityNormal:
+		case nsMsgPriority::notSet:
+		case nsMsgPriority::none:
+		case nsMsgPriority::normal:
 			priorityStr = " ";
 			break;
-		case nsMsgPriorityLowest:
+		case nsMsgPriority::lowest:
 			priorityStr = "Lowest";
 			break;
-		case nsMsgPriorityLow:
+		case nsMsgPriority::low:
 			priorityStr = "Low";
 			break;
-		case nsMsgPriorityHigh:
+		case nsMsgPriority::high:
 			priorityStr = "High";
 			break;
-		case nsMsgPriorityHighest:
+		case nsMsgPriority::highest:
 			priorityStr = "Highest";
 			break;
 	}
@@ -1274,28 +1274,28 @@ nsMsgMessageDataSource::createMessagePriorityNode(nsIMessage *message,
                                                nsIRDFNode **target)
 {
 	nsresult rv;
-	nsMsgPriority priority;
+	nsMsgPriorityValue priority;
 	rv = message->GetPriority(&priority);
 	if(NS_FAILED(rv))
 		return rv;
 	*target = kEmptyStringLiteral;
 	switch (priority)
 	{
-		case nsMsgPriorityNotSet:
-		case nsMsgPriorityNone:
-		case nsMsgPriorityNormal:
+		case nsMsgPriority::notSet:
+		case nsMsgPriority::none:
+		case nsMsgPriority::normal:
 			*target = kEmptyStringLiteral;
 			break;
-		case nsMsgPriorityLowest:
+		case nsMsgPriority::lowest:
 			*target = kLowestLiteral;
 			break;
-		case nsMsgPriorityLow:
+		case nsMsgPriority::low:
 			*target = kLowLiteral;
 			break;
-		case nsMsgPriorityHigh:
+		case nsMsgPriority::high:
 			*target = kHighLiteral;
 			break;
-		case nsMsgPriorityHighest:
+		case nsMsgPriority::highest:
 			*target = kHighestLiteral;
 			break;
 	}
@@ -1308,28 +1308,28 @@ nsresult
 nsMsgMessageDataSource::createMessagePrioritySortNode(nsIMessage *message, nsIRDFNode **target)
 {
 	nsresult rv;
-	nsMsgPriority priority;
+	nsMsgPriorityValue priority;
 	rv = message->GetPriority(&priority);
 	if(NS_FAILED(rv))
 		return rv;
 	*target = kNormalSortLiteral;
 	switch (priority)
 	{
-		case nsMsgPriorityNotSet:
-		case nsMsgPriorityNone:
-		case nsMsgPriorityNormal:
+		case nsMsgPriority::notSet:
+		case nsMsgPriority::none:
+		case nsMsgPriority::normal:
 			*target = kNormalSortLiteral;
 			break;
-		case nsMsgPriorityLowest:
+		case nsMsgPriority::lowest:
 			*target = kLowestSortLiteral;
 			break;
-		case nsMsgPriorityLow:
+		case nsMsgPriority::low:
 			*target = kLowSortLiteral;
 			break;
-		case nsMsgPriorityHigh:
+		case nsMsgPriority::high:
 			*target = kHighSortLiteral;
 			break;
-		case nsMsgPriorityHighest:
+		case nsMsgPriority::highest:
 			*target = kHighestSortLiteral;
 			break;
 	}

@@ -429,7 +429,7 @@ NS_IMETHODIMP nsMessage::SetLineCount(PRUint32 lineCount)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::SetPriority(nsMsgPriority priority)
+NS_IMETHODIMP nsMessage::SetPriority(nsMsgPriorityValue priority)
 {
 	if(mMsgHdr)
 		return mMsgHdr->SetPriority(priority);
@@ -445,7 +445,7 @@ NS_IMETHODIMP nsMessage::SetPriorityString(const char *priority)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetPriority(nsMsgPriority *result)
+NS_IMETHODIMP nsMessage::GetPriority(nsMsgPriorityValue *result)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetPriority(result);

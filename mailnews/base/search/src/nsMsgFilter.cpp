@@ -201,37 +201,55 @@ NS_IMETHODIMP nsMsgFilter::GetScope(nsIMsgSearchScopeTerm **aResult)
    If type is acMoveToFolder, value is pointer to folder name.
    Otherwise, value is ignored.
 */
-NS_IMETHODIMP nsMsgFilter::SetAction(nsMsgRuleActionType type, void *value)
+NS_IMETHODIMP nsMsgFilter::SetAction(nsMsgRuleActionType type)
 {
-	switch (type)
-	{
-	case nsMsgFilterAction::MoveToFolder:
-		m_action.m_folderUri = (const char *) value;
-		break;
-	case nsMsgFilterAction::ChangePriority:
-		m_action.m_priority = (nsMsgPriority) (PRInt32)  value;
-		break;
-	default:
-		break;
-	}
-
-	return NS_OK;
+    m_action.m_type = type;
+    return NS_OK;
 }
-NS_IMETHODIMP nsMsgFilter::GetAction(nsMsgRuleActionType *type, void **value) 
+
+NS_IMETHODIMP nsMsgFilter::SetActionPriority(nsMsgPriorityValue aPriority)
 {
+    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::ChangePriority,
+                   NS_ERROR_ILLEGAL_VALUE);
+    m_action.m_priority = aPriority;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+    nsMsgFilter::SetActionTargetFolderUri(const char *aUri)
+{
+    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::MoveToFolder,
+                   NS_ERROR_ILLEGAL_VALUE);
+    m_action.m_folderUri = aUri;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilter::GetAction(nsMsgRuleActionType *type)
+{
+    NS_ENSURE_ARG_POINTER(type);
 	*type = m_action.m_type;
-	switch (m_action.m_type)
-	{
-	case nsMsgFilterAction::MoveToFolder:
-		* (const char **) value = m_action.m_folderUri.GetBuffer();
-		break;
-	case nsMsgFilterAction::ChangePriority:
-		* (nsMsgPriority *) value = m_action.m_priority;
-		break;
-	default:
-		break;
-	}
-	return NS_OK;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilter::GetActionPriority(nsMsgPriorityValue *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::ChangePriority,
+                   NS_ERROR_ILLEGAL_VALUE);
+    *aResult = m_action.m_priority;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilter::GetActionTargetFolderUri(char** aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::MoveToFolder,
+                   NS_ERROR_ILLEGAL_VALUE);
+    *aResult = m_action.m_folderUri.ToNewCString();
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHdr)
@@ -240,12 +258,13 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 	PRTime	date;
 	char	dateStr[40];	/* 30 probably not enough */
 	nsMsgRuleActionType actionType;
-	void				*value;
+    nsXPIDLCString actionFolderUri;
+    
 	nsXPIDLCString	author;
 	nsXPIDLCString	subject;
 
 	GetFilterName(&filterName);
-	GetAction(&actionType, &value);
+	GetAction(&actionType);
 	nsresult res;
     res = msgHdr->GetDate(&date);
    	PRExplodedTime exploded;
@@ -266,13 +285,17 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 		*stream << dateStr;
 		*stream << "\n";
 		const char *actionStr = GetActionStr(actionType);
-		char *actionValue = "";
-		if (actionType == nsMsgFilterAction::MoveToFolder)
-			actionValue = (char *) value;
+        
 		*stream << "Action = ";
 		*stream << actionStr;
 		*stream << " ";
-		*stream << actionValue;
+        
+		if (actionType == nsMsgFilterAction::MoveToFolder) {
+            GetActionTargetFolderUri(getter_Copies(actionFolderUri));
+            *stream << (const char *)actionFolderUri;
+        } else {
+            *stream << "";
+        }
 		*stream << "\n\n";
 //		XP_FilePrintf(*m_logFile, "Action = %s %s\n\n", actionStr, actionValue);
 		if (actionType == nsMsgFilterAction::MoveToFolder)
@@ -280,7 +303,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 			nsXPIDLCString msgId;
 			msgHdr->GetMessageId(getter_Copies(msgId));
 			*stream << "mailbox:";
-			*stream << (char *) value;
+			*stream << (const char *) actionFolderUri;
 			*stream << "id = ";
 			*stream << (const char*)msgId;
 			*stream << "\n";

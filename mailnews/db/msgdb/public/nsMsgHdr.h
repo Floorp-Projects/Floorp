@@ -72,7 +72,7 @@ protected:
     PRInt16			m_csID;			// cs id of message
 	nsCString		m_charSet;		// OK, charset of headers, since cs id's aren't supported.
 	nsCStringArray		m_references;  // avoid parsing references every time we want one
-    nsMsgPriority	m_priority;
+    nsMsgPriorityValue	m_priority;
 
     PRBool m_recipientsIsNewsgroup;
     // nsMsgHdrs will have to know what db and row they belong to, since they are really

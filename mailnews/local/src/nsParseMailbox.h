@@ -245,7 +245,7 @@ protected:
 	virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
 	virtual nsresult	MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
-											   char *destFolder,
+                                                const char *destFolder,
 											   nsIMsgFilter *filter);
 	virtual	int			MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr);
 			void		LogRuleHit(nsIMsgFilter *filter, nsIMsgDBHdr *msgHdr);

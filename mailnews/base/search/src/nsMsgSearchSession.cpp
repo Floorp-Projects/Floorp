@@ -59,7 +59,7 @@ nsMsgSearchSession::~nsMsgSearchSession()
 NS_IMETHODIMP
 nsMsgSearchSession::AddSearchTerm(nsMsgSearchAttribValue attrib,
                                   nsMsgSearchOpValue op,
-                                  nsMsgSearchValue * value,
+                                  nsIMsgSearchValue * value,
                                   PRBool BooleanAND,
                                   const char *arbitraryHeader)
 {
@@ -83,7 +83,7 @@ NS_IMETHODIMP
 nsMsgSearchSession::GetNthSearchTerm(PRInt32 whichTerm,
                                      nsMsgSearchAttribValue attrib,
                                      nsMsgSearchOpValue op,
-                                     nsMsgSearchValue * value)
+                                     nsIMsgSearchValue * value)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

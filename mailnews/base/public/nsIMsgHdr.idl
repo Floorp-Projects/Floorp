@@ -33,8 +33,6 @@
 [ref] native nsStringRef(nsString);
 [ref] native nsCStringRef(nsCString);
 
-native nsMsgPriority(nsMsgPriority);
-
 [scriptable, uuid(4e994f60-c317-11d2-8cc9-0060b0fc14a3)]
 interface nsIMsgHdr : nsISupports
 {
@@ -53,7 +51,7 @@ interface nsIMsgHdr : nsISupports
     void markRead(in boolean read);
     void markFlagged(in boolean flagged);
     
-    [noscript] attribute nsMsgPriority priority;
+    attribute nsMsgPriorityValue priority;
     void setPriorityString(in string priority);
     
     /* flag handling routines */
