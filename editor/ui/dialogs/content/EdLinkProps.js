@@ -228,7 +228,9 @@ function Startup()
 //   by AdvancedEdit(), which is shared by all property dialogs
 function InitDialog()
 {
-  dialog.hrefInput.value = globalElement.href;
+  // Must use getAttribute, not "globalElement.href", 
+  //  or foreign chars aren't coverted correctly!
+  dialog.hrefInput.value = globalElement.getAttribute("href");
 }
 
 function chooseFile()
@@ -351,7 +353,10 @@ function SelectNamedAnchor()
   if (canChangeAnchorSelected)
   {
     if (haveNamedAnchors)
+    {
       dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.NamedAnchorList);
+      ChangeText();
+    }
     else
       UnselectNamedAnchor();
   
@@ -364,7 +369,10 @@ function SelectHeading()
   if (canChangeHeadingSelected)
   {
     if (haveHeadings)
+    {
       dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.HeadingsList);
+      ChangeText();
+    }
     else
       UnselectHeadings();
 
