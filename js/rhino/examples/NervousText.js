@@ -1,5 +1,5 @@
 // The Java "NervousText" example ported to JavaScript.
-// Compile using java org.mozilla.tools.jsc.Main -extends java.applet.Applet -implements java.lang.Runnable NervousText.js
+// Compile using java org.mozilla..javascript.tools.jsc.Main -extends java.applet.Applet -implements java.lang.Runnable NervousText.js
 /*  
 Adapted from Java code by
     Daniel Wyszynski 
