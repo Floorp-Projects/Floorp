@@ -60,12 +60,12 @@ class NS_COM nsCString :
 
 #ifdef NEW_STRING_APIS
 protected:
-  typedef nsAReadableCString::FragmentRequest  FragmentRequest;
-  typedef nsAReadableCString::ConstFragment    ConstFragment;
-  typedef nsAWritableCString::Fragment         Fragment;
+  typedef nsAReadableCString::FragmentRequest   FragmentRequest;
+  typedef nsAReadableCString::ReadableFragment  ReadableFragment;
+  typedef nsAWritableCString::WritableFragment  WritableFragment;
 
-  virtual const char* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
-  virtual char* GetFragment( Fragment&, FragmentRequest, PRUint32 );
+  virtual const char* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
+  virtual char* GetWritableFragment( WritableFragment&, FragmentRequest, PRUint32 );
 
 public:
   nsCString( const nsAReadableCString& );

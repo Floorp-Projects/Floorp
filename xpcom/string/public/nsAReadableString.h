@@ -26,14 +26,19 @@
 
   // WORK IN PROGRESS
 
+#ifndef nscore_h___
 #include "nscore.h"
   // for |PRUnichar|
+#endif
 
-#include <string>
-  // for |char_traits|
+#ifndef _nsCharTraits_h__
+#include "nsCharTraits.h"
+#endif
 
 #include <iterator>
   // for |bidirectional_iterator_tag|
+
+#include <algorithm.h>
 
 
 /*
@@ -77,13 +82,13 @@ class basic_nsAReadableString
   {
     protected:
 
-      struct ConstFragment
+      struct ReadableFragment
         {
           const CharT*  mStart;
           const CharT*  mEnd;
           PRUint32      mFragmentIdentifier;
 
-          ConstFragment()
+          ReadableFragment()
               : mStart(0), mEnd(0), mFragmentIdentifier(0)
             {
               // nothing else to do here
@@ -96,12 +101,12 @@ class basic_nsAReadableString
 
       enum FragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment, kFragmentAt };
 
-        // Damn!  Had to make |GetConstFragment| public because the compilers suck.  Should be protected.
-      virtual const CharT* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 = 0 ) const = 0;
+        // Damn!  Had to make |GetReadableFragment| public because the compilers suck.  Should be protected.
+      virtual const CharT* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 = 0 ) const = 0;
 
-      friend class ConstIterator;
-      class ConstIterator
-            : public std::bidirectional_iterator_tag
+      friend class ReadingIterator;
+      class ReadingIterator
+            : public bidirectional_iterator_tag
         {
           public:
             typedef ptrdiff_t                   difference_type;
@@ -113,15 +118,16 @@ class basic_nsAReadableString
           private:
             friend class basic_nsAReadableString<CharT>;
 
-            ConstFragment mFragment;
-            const CharT*  mPosition;
+            ReadableFragment                      mFragment;
+            const CharT*                          mPosition;
             const basic_nsAReadableString<CharT>* mOwningString;
+
 
             void
             normalize_forward()
               {
                 if ( mPosition == mFragment.mEnd )
-                  if ( mOwningString->GetConstFragment(mFragment, kNextFragment) )
+                  if ( mOwningString->GetReadableFragment(mFragment, kNextFragment) )
                     mPosition = mFragment.mStart;
               }
 
@@ -129,13 +135,13 @@ class basic_nsAReadableString
             normalize_backward()
               {
                 if ( mPosition == mFragment.mStart )
-                  if ( mOwningString->GetConstFragment(mFragment, kPrevFragment) )
+                  if ( mOwningString->GetReadableFragment(mFragment, kPrevFragment) )
                     mPosition = mFragment.mEnd;
               }
 
-            ConstIterator( const ConstFragment& aFragment,
-                           const CharT* aStartingPosition,
-                           const basic_nsAReadableString<CharT>& aOwningString )
+            ReadingIterator( const ReadableFragment& aFragment,
+                             const CharT* aStartingPosition,
+                             const basic_nsAReadableString<CharT>& aOwningString )
                 : mFragment(aFragment),
                   mPosition(aStartingPosition),
                   mOwningString(&aOwningString)
@@ -144,8 +150,8 @@ class basic_nsAReadableString
               }
 
           public:
-            // ConstIterator( const ConstIterator& ); ...use default copy-constructor
-            // ConstIterator& operator=( const ConstIterator& ); ...use default copy-assignment operator
+            // ReadingIterator( const ReadingIterator& ); ...use default copy-constructor
+            // ReadingIterator& operator=( const ReadingIterator& ); ...use default copy-assignment operator
 
             
             CharT
@@ -160,7 +166,7 @@ class basic_nsAReadableString
                 return mPosition;
               }
 
-            ConstIterator&
+            ReadingIterator&
             operator++()
               {
                 ++mPosition;
@@ -168,16 +174,16 @@ class basic_nsAReadableString
                 return *this;
               }
 
-            ConstIterator
+            ReadingIterator
             operator++( int )
               {
-                ConstIterator result(*this);
+                ReadingIterator result(*this);
                 ++mPosition;
                 normalize_forward();
                 return result;
               }
 
-            ConstIterator&
+            ReadingIterator&
             operator--()
               {
                 normalize_backward();
@@ -185,16 +191,16 @@ class basic_nsAReadableString
                 return *this;
               }
 
-            ConstIterator
+            ReadingIterator
             operator--( int )
               {
-                ConstIterator result(*this);
+                ReadingIterator result(*this);
                 normalize_backward();
                 --mPosition;
                 return result;
               }
 
-            const ConstFragment&
+            const ReadableFragment&
             fragment() const
               {
                 return mFragment;
@@ -212,7 +218,7 @@ class basic_nsAReadableString
                 return mPosition - mFragment.mStart;
               }
 
-            ConstIterator&
+            ReadingIterator&
             operator+=( difference_type n )
               {
                 if ( n < 0 )
@@ -220,7 +226,7 @@ class basic_nsAReadableString
 
                 while ( n )
                   {
-                    difference_type one_hop = std::min(n, size_forward());
+                    difference_type one_hop = min(n, size_forward());
                     mPosition += one_hop;
                     normalize_forward();
                     n -= one_hop;
@@ -229,7 +235,7 @@ class basic_nsAReadableString
                 return *this;
               }
 
-            ConstIterator&
+            ReadingIterator&
             operator-=( difference_type n )
               {
                 if ( n < 0 )
@@ -237,7 +243,7 @@ class basic_nsAReadableString
 
                 while ( n )
                   {
-                    difference_type one_hop = std::min(n, size_backward());
+                    difference_type one_hop = min(n, size_backward());
                     mPosition -= one_hop;
                     normalize_backward();
                     n -= one_hop;
@@ -250,39 +256,41 @@ class basic_nsAReadableString
               // Damn again!  Problems with templates made me implement comparisons as members.
 
             PRBool
-            operator==( const ConstIterator& rhs ) const
+            operator==( const ReadingIterator& rhs ) const
               {
                 return mPosition == rhs.mPosition;
               }
 
             PRBool
-            operator!=( const ConstIterator& rhs ) const
+            operator!=( const ReadingIterator& rhs ) const
               {
                 return mPosition != rhs.mPosition;
               }
         };
 
+      typedef ReadingIterator ConstIterator;
+
 
     public:
 
-      ConstIterator
-      Begin( PRUint32 aOffset = 0 ) const
+      ReadingIterator
+      BeginReading( PRUint32 aOffset = 0 ) const
         {
-          ConstFragment fragment;
-          const CharT* startPos = GetConstFragment(fragment, kFragmentAt, aOffset);
-          return ConstIterator(fragment, startPos, *this);
+          ReadableFragment fragment;
+          const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, aOffset);
+          return ReadingIterator(fragment, startPos, *this);
         }
 
-      ConstIterator
-      End( PRUint32 aOffset = 0 ) const
+      ReadingIterator
+      EndReading( PRUint32 aOffset = 0 ) const
         {
-          ConstFragment fragment;
-          const CharT* startPos = GetConstFragment(fragment, kFragmentAt, max(0U, Length()-aOffset));
-          return ConstIterator(fragment, startPos, *this);
+          ReadableFragment fragment;
+          const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, max(0U, Length()-aOffset));
+          return ReadingIterator(fragment, startPos, *this);
         }
 
     public:
-      virtual ~basic_nsAReadableString<CharT>() { }
+      virtual ~basic_nsAReadableString() { }
         // ...yes, I expect to be sub-classed.
 
       virtual PRUint32 Length() const = 0;
@@ -445,8 +453,8 @@ const char*
 basic_nsAReadableString<char>::GetBuffer() const
     // DEPRECATED: use the iterators instead
   {
-    ConstFragment fragment;
-    GetConstFragment(fragment, kFirstFragment);
+    ReadableFragment fragment;
+    GetReadableFragment(fragment, kFirstFragment);
     return fragment.mStart;
   }
 
@@ -456,8 +464,8 @@ const PRUnichar*
 basic_nsAReadableString<PRUnichar>::GetUnicode() const
     // DEPRECATED: use the iterators instead
   {
-    ConstFragment fragment;
-    GetConstFragment(fragment, kFirstFragment);
+    ReadableFragment fragment;
+    GetReadableFragment(fragment, kFirstFragment);
     return fragment.mStart;
   }
 
@@ -472,7 +480,7 @@ basic_nsAReadableString<CharT>::Implementation() const
 
   /*
     Note: the following four functions, |CharAt|, |operator[]|, |First|, and |Last|, are implemented
-    in the simplest reasonable scheme; by calling |GetConstFragment| and resolving the pointer it
+    in the simplest reasonable scheme; by calling |GetReadableFragment| and resolving the pointer it
     returns.  The alternative is to force at least one of these methods to be |virtual|.  The ideal
     candidate for that change would be |CharAt|.
 
@@ -488,8 +496,8 @@ CharT
 basic_nsAReadableString<CharT>::CharAt( PRUint32 aIndex ) const
   {
       // ??? Is |CharAt()| supposed to be the 'safe' version?
-    ConstFragment fragment;
-    return *GetConstFragment(fragment, kFragmentAt, aIndex);
+    ReadableFragment fragment;
+    return *GetReadableFragment(fragment, kFragmentAt, aIndex);
   }
 
 template <class CharT>
@@ -521,12 +529,12 @@ PRUint32
 basic_nsAReadableString<CharT>::CountChar( CharT c ) const
   {
 #if 1
-    return PRUint32(count(Begin(), End(), c));
+    return PRUint32(count(BeginReading(), EndReading(), c));
 #else
     PRUint32 result = 0;
     PRUint32 lengthToExamine = Length();
 
-    ConstIterator iter( Begin() );
+    ReadingIterator iter( BeginReading() );
     for (;;)
       {
         PRUint32 lengthToExamineInThisFragment = iter.size_forward();
@@ -567,7 +575,7 @@ PRUint32
 basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
   {
     PRUint32 myLength = Length();
-    aLengthToCopy = std::min(myLength, aLengthToCopy);
+    aLengthToCopy = min(myLength, aLengthToCopy);
     aResult = Substring(*this, myLength-aLengthToCopy, aLengthToCopy);
     return aResult.Length();
   }
@@ -621,17 +629,17 @@ class basic_nsLiteralString
     */
   {
     typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
-    typedef typename basic_nsAWritableString<CharT>::ConstFragment    ConstFragment;
+    typedef typename basic_nsAWritableString<CharT>::ReadableFragment ReadableFragment;
 
     protected:
-      virtual const CharT* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
+      virtual const CharT* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
 
     public:
     
         // Note: _not_ explicit
       basic_nsLiteralString( const CharT* aLiteral )
           : mStart(aLiteral),
-            mEnd(mStart + char_traits<CharT>::length(mStart))
+            mEnd(mStart + nsCharTraits<CharT>::length(mStart))
         {
           // nothing else to do here
         }
@@ -654,7 +662,7 @@ NS_DEF_STRING_COMPARISONS(basic_nsLiteralString<CharT>)
 
 template <class CharT>
 const CharT*
-basic_nsLiteralString<CharT>::GetConstFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const
+basic_nsLiteralString<CharT>::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const
   {
     switch ( aRequest )
       {
@@ -697,7 +705,7 @@ class nsPromiseConcatenation
       Instances of this class only exist as anonymous temporary results from |operator+()|.
       This is the machinery that makes string concatenation efficient.  No allocations or
       character copies are required unless and until a final assignment is made.  It works
-      its magic by overriding and forwarding calls to |GetConstFragment()|.
+      its magic by overriding and forwarding calls to |GetReadableFragment()|.
 
       Note: |nsPromiseConcatenation| imposes some limits on string concatenation with |operator+()|.
         - no more than 33 strings, e.g., |s1 + s2 + s3 + ... s32 + s33|
@@ -708,32 +716,32 @@ class nsPromiseConcatenation
       for a user to need to control it.  Too many strings summed together can easily be worked
       around with an intermediate assignment.  I wouldn't have the parentheses limitation if I
       assigned the identifier mask starting at the top, the first time anybody called
-      |GetConstFragment()|.
+      |GetReadableFragment()|.
     */
   {
     typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
-    typedef typename basic_nsAWritableString<CharT>::ConstFragment    ConstFragment;
+    typedef typename basic_nsAWritableString<CharT>::ReadableFragment ReadableFragment;
 
     protected:
-      virtual const CharT* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
+      virtual const CharT* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
 
       enum { kLeftString, kRightString };
 
       int
-      GetCurrentStringFromFragment( const ConstFragment& aFragment ) const
+      GetCurrentStringFromFragment( const ReadableFragment& aFragment ) const
         {
           return (aFragment.mFragmentIdentifier & mFragmentIdentifierMask) ? kRightString : kLeftString;
         }
 
       int
-      SetLeftStringInFragment( ConstFragment& aFragment ) const
+      SetLeftStringInFragment( ReadableFragment& aFragment ) const
         {
           aFragment.mFragmentIdentifier &= ~mFragmentIdentifierMask;
           return kLeftString;
         }
 
       int
-      SetRightStringInFragment( ConstFragment& aFragment ) const
+      SetRightStringInFragment( ReadableFragment& aFragment ) const
         {
           aFragment.mFragmentIdentifier |= mFragmentIdentifierMask;
           return kRightString;
@@ -772,14 +780,14 @@ nsPromiseConcatenation<CharT>::Length() const
 
 template <class CharT>
 const CharT*
-nsPromiseConcatenation<CharT>::GetConstFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
+nsPromiseConcatenation<CharT>::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
   {
     const int kLeftString   = 0;
     const int kRightString  = 1;
 
     int whichString;
 
-      // based on the request, pick which string we will forward the |GetConstFragment()| call into
+      // based on the request, pick which string we will forward the |GetReadableFragment()| call into
 
     switch ( aRequest )
       {
@@ -814,7 +822,7 @@ nsPromiseConcatenation<CharT>::GetConstFragment( ConstFragment& aFragment, Fragm
     do
       {
         done = true;
-        result = mStrings[whichString]->GetConstFragment(aFragment, aRequest, aPosition);
+        result = mStrings[whichString]->GetReadableFragment(aFragment, aRequest, aPosition);
 
         if ( !result )
           {
@@ -862,20 +870,20 @@ class nsPromiseSubstring
       ...not unlike |nsPromiseConcatenation|.  Instances of this class exist only as anonymous
       temporary results from |Substring()|.  Like |nsPromiseConcatenation|, this class only
       holds a pointer, no string data of its own.  It does its magic by overriding and forwarding
-      calls to |GetConstFragment()|.
+      calls to |GetReadableFragment()|.
     */
   {
     typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
-    typedef typename basic_nsAWritableString<CharT>::ConstFragment    ConstFragment;
+    typedef typename basic_nsAWritableString<CharT>::ReadableFragment ReadableFragment;
 
     protected:
-      virtual const CharT* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
+      virtual const CharT* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
 
     public:
       nsPromiseSubstring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aLength )
           : mString(aString),
-            mStartPos( std::min(aStartPos, aString.Length()) ),
-            mLength( std::min(aLength, aString.Length()-mStartPos) )
+            mStartPos( min(aStartPos, aString.Length()) ),
+            mLength( min(aLength, aString.Length()-mStartPos) )
         {
           // nothing else to do here
         }
@@ -899,7 +907,7 @@ nsPromiseSubstring<CharT>::Length() const
 
 template <class CharT>
 const CharT*
-nsPromiseSubstring<CharT>::GetConstFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
+nsPromiseSubstring<CharT>::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
   {
       // Offset any request for a specific position (First, Last, At) by our
       //  substrings startpos within the owning string
@@ -917,7 +925,7 @@ nsPromiseSubstring<CharT>::GetConstFragment( ConstFragment& aFragment, FragmentR
     else if ( aRequest == kFragmentAt )
       aPosition += mStartPos;
 
-    return mString.GetConstFragment(aFragment, aRequest, aPosition);
+    return mString.GetReadableFragment(aFragment, aRequest, aPosition);
   }
 
 
@@ -945,20 +953,20 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
 
     PRUint32 lLength = lhs.Length();
     PRUint32 rLength = rhs.Length();
-    PRUint32 lengthToCompare = std::min(lLength, rLength);
+    PRUint32 lengthToCompare = min(lLength, rLength);
 
-    basic_nsAReadableString<CharT>::ConstIterator leftIter( lhs.Begin() );
-    basic_nsAReadableString<CharT>::ConstIterator rightIter( rhs.Begin() );
+    basic_nsAReadableString<CharT>::ReadingIterator leftIter( lhs.BeginReading() );
+    basic_nsAReadableString<CharT>::ReadingIterator rightIter( rhs.BeginReading() );
 
     for (;;)
       {
-        PRUint32 lengthAvailable = PRUint32( std::min(leftIter.size_forward(), rightIter.size_forward()) );
+        PRUint32 lengthAvailable = PRUint32( min(leftIter.size_forward(), rightIter.size_forward()) );
         // assert( lengthAvailable >= 0 );
 
         if ( lengthAvailable > lengthToCompare )
           lengthAvailable = lengthToCompare;
         
-        if ( int result = std::char_traits<CharT>::compare(leftIter.operator->(), rightIter.operator->(), lengthAvailable) )
+        if ( int result = nsCharTraits<CharT>::compare(leftIter.operator->(), rightIter.operator->(), lengthAvailable) )
           return result;
 
         if ( !(lengthToCompare -= lengthAvailable) )
@@ -1046,10 +1054,10 @@ operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsLiteralString<
 
 #ifdef SCC_TESTS
 template <class CharT, class TraitsT>
-std::basic_ostream<CharT, class TraitsT>&
+basic_ostream<CharT, TraitsT>&
 operator<<( basic_ostream<CharT, TraitsT>& os, const basic_nsAReadableString<CharT>& s )
   {
-    std::copy(s.Begin(), s.End(), ostream_iterator<CharT, CharT, TraitsT>(os));
+    copy(s.BeginReading(), s.EndReading(), ostream_iterator<CharT, CharT, TraitsT>(os));
     return os;
   }
 #endif

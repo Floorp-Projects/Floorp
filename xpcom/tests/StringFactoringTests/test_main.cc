@@ -16,7 +16,7 @@ print_string( const nsAReadableString& s )
         char operator()( PRUnichar c ) { return char(c); }
       };
 
-    transform(s.Begin(), s.End(), ostream_iterator<char>(cout), PRUnichar_to_char());
+    transform(s.BeginReading(), s.EndReading(), ostream_iterator<char>(cout), PRUnichar_to_char());
     return cout;
   }
 
@@ -71,11 +71,11 @@ test_multifragment_iterators( const basic_nsAReadableString<CharT>& aString )
 
     int tests_failed = 0;
 
-    ConstIterator iter1 = aString.Begin();
-    ConstIterator iter2 = aString.Begin();
+    ConstIterator iter1 = aString.BeginReading();
+    ConstIterator iter2 = aString.BeginReading();
     ++iter2; ++iter2;
 
-    ConstIterator iter3 = aString.End();
+    ConstIterator iter3 = aString.EndReading();
     --iter3;
     ++iter1; ++iter1;
     if ( iter1 != iter2 )
@@ -180,7 +180,7 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::ConstIterator iter = aReadable.Begin();
+    basic_nsAReadableString<CharT>::ConstIterator iter = aReadable.BeginReading();
     if ( *iter != CharT('H') )
       {
         cout << "FAILED |test_readable_hello|: didn't start out pointing to the right thing, or else couldn't be dereferenced. --> '" << *iter << "'" << endl;
@@ -195,25 +195,25 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
         ++tests_failed;
       }
 
-    iter = aReadable.End();
+    iter = aReadable.EndReading();
     --iter;
     if ( *iter != CharT('o') )
       {
-        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |End()|, or else couldn't be decremented, or else couldn't be dereferenced. --> '" << *iter << "'" << endl;
+        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |EndReading()|, or else couldn't be decremented, or else couldn't be dereferenced. --> '" << *iter << "'" << endl;
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::ConstIterator iter1 = aReadable.Begin(3);
+    basic_nsAReadableString<CharT>::ConstIterator iter1 = aReadable.BeginReading(3);
     if ( *iter1 != CharT('l') )
       {
-        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |Begin(n)|, or else couldn't be dereferenced. --> '" << *iter1 << "'" << endl;
+        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |BeginReading(n)|, or else couldn't be dereferenced. --> '" << *iter1 << "'" << endl;
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::ConstIterator iter2 = aReadable.End(2);
+    basic_nsAReadableString<CharT>::ConstIterator iter2 = aReadable.EndReading(2);
     if ( *iter2 != CharT('l') )
       {
-        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |End(n)|, or else couldn't be dereferenced. --> '" << *iter2 << "'" << endl;
+        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |EndReading(n)|, or else couldn't be dereferenced. --> '" << *iter2 << "'" << endl;
         ++tests_failed;
       }
 

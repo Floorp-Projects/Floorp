@@ -137,7 +137,7 @@ nsString::~nsString() {
 }
 
 #ifdef NEW_STRING_APIS
-const PRUnichar* nsString::GetConstFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const {
+const PRUnichar* nsString::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const {
   switch ( aRequest ) {
     case kFirstFragment:
     case kLastFragment:
@@ -152,7 +152,7 @@ const PRUnichar* nsString::GetConstFragment( ConstFragment& aFragment, FragmentR
   }
 }
 
-PRUnichar* nsString::GetFragment( Fragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) {
+PRUnichar* nsString::GetWritableFragment( WritableFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) {
   switch ( aRequest ) {
     case kFirstFragment:
     case kLastFragment:

@@ -68,11 +68,11 @@ class NS_COM nsString :
 #ifdef NEW_STRING_APIS
 protected:
   typedef nsAReadableString::FragmentRequest  FragmentRequest;
-  typedef nsAReadableString::ConstFragment    ConstFragment;
-  typedef nsAWritableString::Fragment         Fragment;
+  typedef nsAReadableString::ReadableFragment ReadableFragment;
+  typedef nsAWritableString::WritableFragment WritableFragment;
 
-  virtual const PRUnichar* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
-  virtual PRUnichar* GetFragment( Fragment&, FragmentRequest, PRUint32 );
+  virtual const PRUnichar* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
+  virtual PRUnichar* GetWritableFragment( WritableFragment&, FragmentRequest, PRUint32 );
 
 public:
   nsString( const nsAReadableString& );

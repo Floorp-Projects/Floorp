@@ -36,7 +36,7 @@ class nsStringAllocator
   };
 
 
-template < class CharT, class TraitsT = char_traits<CharT>, class AllocatorT = nsStringAllocator<CharT> >
+template < class CharT, class TraitsT = nsCharTraits<CharT>, class AllocatorT = nsStringAllocator<CharT> >
 class basic_nsStdStringWrapper
       : public basic_nsAWritableString<CharT>
     /*
@@ -47,8 +47,8 @@ class basic_nsStdStringWrapper
       std::basic_string<CharT, TraitsT, AllocatorT> mRawString;
 
     typedef typename basic_nsAWritableString<CharT>::FragmentRequest  FragmentRequest;
-    typedef typename basic_nsAWritableString<CharT>::ConstFragment    ConstFragment;
-    typedef typename basic_nsAWritableString<CharT>::Fragment         Fragment;
+    typedef typename basic_nsAWritableString<CharT>::ReadableFragment ReadableFragment;
+    typedef typename basic_nsAWritableString<CharT>::WritableFragment WritableFragment;
 
     typedef std::basic_string<CharT, TraitsT, AllocatorT> basic_string_t;
 
@@ -71,8 +71,8 @@ class basic_nsStdStringWrapper
     protected:
       virtual const void* Implementation() const;
 
-      virtual const CharT* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
-      virtual CharT* GetFragment( Fragment&, FragmentRequest, PRUint32 );
+      virtual const CharT* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
+      virtual CharT* GetWritableFragment( WritableFragment&, FragmentRequest, PRUint32 );
 
     public:
       basic_nsStdStringWrapper() { }
@@ -164,7 +164,7 @@ basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Implementation() const
 
 template <class CharT, class TraitsT, class AllocatorT>
 const CharT*
-basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetConstFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const
+basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const
   {
     switch ( aRequest )
       {
@@ -183,7 +183,7 @@ basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetConstFragment( ConstFra
 
 template <class CharT, class TraitsT, class AllocatorT>
 CharT*
-basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetFragment( Fragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset )
+basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetWritableFragment( WritableFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset )
   {
     switch ( aRequest )
       {
@@ -219,7 +219,7 @@ template <class CharT, class TraitsT, class AllocatorT>
 void
 basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Append( const basic_nsAReadableString<CharT>& rhs )
   {
-    mRawString.append(rhs.Begin(), rhs.End());
+    mRawString.append(rhs.BeginReading(), rhs.EndReading());
   }
 
 template <class CharT, class TraitsT, class AllocatorT>
@@ -233,7 +233,7 @@ template <class CharT, class TraitsT, class AllocatorT>
 void
 basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Insert( const basic_nsAReadableString<CharT>& rhs, PRUint32 atPosition )
   {
-    mRawString.insert(mRawString.begin()+atPosition, rhs.Begin(), rhs.End());
+    mRawString.insert(mRawString.begin()+atPosition, rhs.BeginReading(), rhs.EndReading());
   }
 
 template <class CharT, class TraitsT, class AllocatorT>
