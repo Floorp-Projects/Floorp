@@ -29,40 +29,42 @@
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
 
-class nsNntpUrl : public nsINntpUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl
+class nsNntpUrl : public nsINntpUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl, public nsIMsgI18NUrl
 {
 public:
-    NS_DECL_NSINNTPURL
-    NS_DECL_NSIMSGMESSAGEURL
+  NS_DECL_NSINNTPURL
+  NS_DECL_NSIMSGMESSAGEURL
+  NS_DECL_NSIMSGI18NURL
 
 	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
 
-    // nsNntpUrl
-    nsNntpUrl();
-    virtual ~nsNntpUrl();
+  // nsNntpUrl
+  nsNntpUrl();
+  virtual ~nsNntpUrl();
 
-    NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS_INHERITED
 
 protected:  
 	virtual const char * GetUserName() { return nsnull; }
-    nsINNTPNewsgroupPost *m_newsgroupPost;
+  nsINNTPNewsgroupPost *m_newsgroupPost;
 	nsNewsAction m_newsAction; // the action this url represents...parse mailbox, display messages, etc.
     
-    nsFileSpec	*m_filePath; 
+  nsFileSpec	*m_filePath; 
     
     // used by save message to disk
 	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
-    PRBool                m_addDummyEnvelope;
-    PRBool                m_canonicalLineEnding;
+  PRBool                m_addDummyEnvelope;
+  PRBool                m_canonicalLineEnding;
 
 	/* NNTP specific event sinks */
-	nsINNTPHost				* m_newsHost;
+	nsINNTPHost				    * m_newsHost;
 	nsINNTPArticleList		* m_articleList;
-	nsINNTPNewsgroup		* m_newsgroup;
-	nsIMsgOfflineNewsState	* m_offlineNews;
+	nsINNTPNewsgroup		  * m_newsgroup;
+	nsIMsgOfflineNewsState* m_offlineNews;
 	nsINNTPNewsgroupList	* m_newsgroupList;
-    nsMsgKey	              m_messageKey;
-    char *                    m_newsgroupName;	
+  nsMsgKey	              m_messageKey;
+  char *                  m_newsgroupName;	
+  nsCString mURI; // the RDF URI associated with this url.
 };
 
 #endif // nsNntpUrl_h__

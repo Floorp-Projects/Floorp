@@ -40,6 +40,11 @@
 #include "nsXPIDLString.h"
 #include "nsIMsgDatabase.h"
 #include "nsMsgDBCID.h"
+#include "nsIRDFService.h"
+#include "rdf.h"
+#include "nsIMsgFolder.h"
+#include "nsIMessage.h"
+
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
     
@@ -51,12 +56,12 @@ nsNntpUrl::nsNntpUrl()
 	m_newsgroup = nsnull;
 	m_offlineNews = nsnull;
 	m_newsgroupList = nsnull;
-    m_newsgroupPost = nsnull;
-    m_newsgroupName = nsnull;
-    m_messageKey = nsMsgKey_None;
+  m_newsgroupPost = nsnull;
+  m_newsgroupName = nsnull;
+  m_messageKey = nsMsgKey_None;
 	m_newsAction = nsINntpUrl::ActionGetNewNews;
-    m_addDummyEnvelope = PR_FALSE;
-    m_canonicalLineEnding = PR_FALSE;
+  m_addDummyEnvelope = PR_FALSE;
+  m_canonicalLineEnding = PR_FALSE;
 	m_filePath = nsnull;
 }
  
@@ -67,36 +72,19 @@ nsNntpUrl::~nsNntpUrl()
 	NS_IF_RELEASE(m_newsgroup);
 	NS_IF_RELEASE(m_offlineNews);
 	NS_IF_RELEASE(m_newsgroupList);
-    NS_IF_RELEASE(m_newsgroupPost);
-    PR_FREEIF(m_newsgroupName);
+  NS_IF_RELEASE(m_newsgroupPost);
+  PR_FREEIF(m_newsgroupName);
 }
   
 NS_IMPL_ADDREF_INHERITED(nsNntpUrl, nsMsgMailNewsUrl)
 NS_IMPL_RELEASE_INHERITED(nsNntpUrl, nsMsgMailNewsUrl)
-  
-nsresult nsNntpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) 
-	{
-        return NS_ERROR_NULL_POINTER;
-    }
- 
-    if (aIID.Equals(NS_GET_IID(nsINntpUrl)))
-	{
-        *aInstancePtr = (void*) ((nsINntpUrl*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	if (aIID.Equals(NS_GET_IID(nsIMsgMessageUrl)))
-	{
-		*aInstancePtr = (void *) ((nsIMsgMessageUrl *) this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
 
-    return nsMsgMailNewsUrl::QueryInterface(aIID, aInstancePtr);
-}
-
+NS_INTERFACE_MAP_BEGIN(nsNntpUrl)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINntpUrl)
+   NS_INTERFACE_MAP_ENTRY(nsINntpUrl)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgMessageUrl)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgI18NUrl)
+NS_INTERFACE_MAP_END_INHERITING(nsNntpUrl)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsINntpUrl specific support
@@ -241,11 +229,22 @@ nsresult nsNntpUrl::GetNewsgroupList (nsINNTPNewsgroupList ** newsgroupList)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsNntpUrl::SetUri(const char * aURI)
+{
+  mURI= aURI;
+  return NS_OK;
+}
+
 // from nsIMsgMessageUrl
-NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
+NS_IMETHODIMP nsNntpUrl::GetUri(char ** aURI)
 {	
-	nsresult rv;
-	if (aURI)
+	nsresult rv = NS_OK;
+  // if we have been given a uri to associate with this url, then use it
+  // otherwise try to reconstruct a URI on the fly....
+
+  if (!mURI.IsEmpty())
+    *aURI = mURI.ToNewCString();
+	else
 	{
 		nsXPIDLCString spec;
 		GetSpec(getter_Copies(spec));
@@ -259,9 +258,8 @@ NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 		*aURI = uriStr.ToNewCString();
 		return NS_OK;
 	}
-	else {
-		return NS_ERROR_NULL_POINTER;
-	}
+
+  return rv;
 }
 
 NS_IMPL_GETSET(nsNntpUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
@@ -434,4 +432,30 @@ nsNntpUrl::SetOriginalSpec(const char *aSpec)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP nsNntpUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
+{
+  // if we have a RDF URI, then try to get the folder for that URI and then ask the folder
+  // for it's charset....
+
+  nsXPIDLCString uri;
+  GetUri(getter_Copies(uri));
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_PROGID "/rdf-service"); 
+  nsCOMPtr<nsIRDFResource> resource;
+  rdfService->GetResource(uri, getter_AddRefs(resource));
+
+  NS_ENSURE_TRUE(resource, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIMessage> msg (do_QueryInterface(resource));
+  NS_ENSURE_TRUE(msg, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIMsgFolder> folder;
+  msg->GetMsgFolder(getter_AddRefs(folder));
+  NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
+  nsXPIDLString charset; 
+  folder->GetCharset(getter_Copies(charset));
+  *aCharacterSet = nsCRT::strdup(charset);
+
+  return NS_OK;
+}
+
 

@@ -803,6 +803,8 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
   if (NS_FAILED(rv) || !nntpUrl) return rv;
   
   nsCOMPtr <nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
+  nsCOMPtr <nsIMsgMessageUrl> msgUrl = do_QueryInterface(nntpUrl);
+  msgUrl->SetUri(urlString);
   // don't worry this cast is really okay...there'a bug in XPIDL compiler that is preventing
   // a "const char *" in paramemter for uri SetSpec...
   mailnewsurl->SetSpec((char *) urlString);
