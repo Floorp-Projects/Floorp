@@ -489,7 +489,8 @@ protected:
                              nsIAtom*         aTag,
                              nsIStyleContext* aStyleContext,
                              nsAbsoluteItems& aAbsoluteItems,
-                             nsFrameItems&    aFrameItems);
+                             nsFrameItems&    aFrameItems,
+							 PRBool&		  haltProcessing);
 
   nsresult ConstructTreeFrame(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
@@ -1987,7 +1988,8 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
                                       nsIAtom*         aTag,
                                       nsIStyleContext* aStyleContext,
                                       nsAbsoluteItems& aAbsoluteItems,
-                                      nsFrameItems&	   aFrameItems)
+                                      nsFrameItems&	   aFrameItems,
+									  PRBool&		   haltProcessing)
 {
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   nsresult  rv = NS_OK;
@@ -2091,6 +2093,7 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
 				rv = ProcessChildren(aPresContext, aContent, aParentFrame, aAbsoluteItems,
 									 aFrameItems);
 			}
+			else haltProcessing = PR_TRUE;
 		}
 
 		// No more work to do.
@@ -2929,8 +2932,17 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
       // XUL frame. this is temporary, pending planned factoring of this
       // whole process into separate, pluggable steps.
       if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) || (lastChild == aFrameItems.lastChild)))
-        rv = ConstructXULFrame(aPresContext, aContent, aParentFrame, tag,
-                               styleContext, aAbsoluteItems, aFrameItems);
+      {
+		  PRBool haltProcessing = PR_FALSE;
+		  rv = ConstructXULFrame(aPresContext, aContent, aParentFrame, tag,
+                               styleContext, aAbsoluteItems, aFrameItems, haltProcessing);
+		  if (haltProcessing)
+		  {
+			  NS_RELEASE(styleContext);
+			  NS_IF_RELEASE(tag);
+			  return rv;
+		  }
+	  }	
 #endif
 
       if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) || (lastChild == aFrameItems.lastChild))) {
