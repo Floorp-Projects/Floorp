@@ -64,13 +64,13 @@
 #include "nsFormFrame.h"
 #include "nsIScrollableView.h"
 
-#define CSS_NOTSET -1
-#define ATTR_NOTSET -1
-
 // Constants
 const char * kNormal        = "";
 const char * kSelected      = "SELECTED";
 const char * kSelectedFocus = "SELECTEDFOCUS";
+//XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
+// -moz-option-selected in the ua.css style sheet. This will not be needed when
+//The event state manager is functional. KMM
 const char * kMozSelected = "-moz-option-selected";
 
 static NS_DEFINE_IID(kIContentIID,              NS_ICONTENT_IID);
@@ -116,7 +116,6 @@ nsListControlFrame::~nsListControlFrame()
   NS_IF_RELEASE(mComboboxFrame);
 }
 
-
 //----------------------------------------------------------------------
 NS_IMPL_ADDREF(nsListControlFrame)
 NS_IMPL_RELEASE(nsListControlFrame)
@@ -146,6 +145,11 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsListControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
 {
+   // Save the result of GetFrameForPointUsing in the mHitFrame member variable.
+   // mHitFrame is used later in the HandleLikeListEvent to determine what was clicked on.
+   // XXX: This is kludgy, but there doesn't seem to be a way to get what was just clicked
+   // on in the HandleEvent. The GetFrameForPointUsing is always called before the HandleEvent.
+   //
   nsresult rv;
   
   nsIFrame *childFrame;
@@ -178,8 +182,13 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
   nsIFrame* firstKid = nsnull;
   
    
-    // XXX:Hack. This should not be necessary. 
     // Get the scrolled offset from the view.
+    //
+    // XXX:Hack. This should not be necessary. It is only required because we interpose on the
+    // normal event flow by redirecting to the listbox using the SetVFlags(NS_DONT_CHECK_CHILDREN).
+    // What we should really do is have a manager which the option items report there events to.
+    // The listbox frame would be the manager for the option items. KMM.
+    //
     //
     // This is needed because:
     // The scrolled view is below the nsListControlFrame's ScrollingView in 
@@ -227,8 +236,6 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
       }
       NS_RELEASE(content);
       return kid->GetFrameForPoint(tmp, aFrame);
-      //*aFrame = kid;
-      //return NS_OK;
     }
     kid->GetNextSibling(&kid);
   }
@@ -286,7 +293,11 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
   nsIFrame* childFrame = nsnull;
   mContentFrame->FirstChild(nsnull, &childFrame);
   PRInt32 numChildren = LengthOf(childFrame); 
-  PRBool needsVerticalScrollbar = (numChildren > mNumRows);
+
+  PRBool needsVerticalScrollbar = PR_FALSE;
+  if (PR_FALSE == mInDropDownMode) {
+    PRBool needsVerticalScrollbar = (numChildren > mNumRows);
+  }
  
   //--Calculate a width just big enough for the scrollframe to shrink around the
   //longest element in the list
@@ -306,14 +317,12 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
    // XXX: This should be changed to do the inherited reflow unconstrained for 
    // the width to get the real desired width. GetDesiredSize is limited to
    // text strings.
+   //XXX: TODO: Use the width and height of an the first reflow to determine how high and wide
+   //to make the listbox, instead of calculating it. The second reflow can be done actually position
+   //the frames correctly using: tempReflowState.reason = eReflowReason_Resize;
   
   GetDesiredSize(&aPresContext, aReflowState, desiredSize, desiredLineSize);
-   // Only set to the desired width if it hasn't been explicitly defined through CSS.
-   // GetDesiredSize must still be done above to calculate the desired height.
-  if (NS_UNCONSTRAINEDSIZE == tempReflowState.computedWidth) {
-    tempReflowState.computedWidth = desiredLineSize.width;
-  }
- 
+
    // Retrieve the scrollbar's width and height
   float sbWidth = 0.0;
   float sbHeight = 0.0;;
@@ -324,6 +333,16 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
   nscoord scrollbarWidth = NSToCoordRound(sbWidth);
   nscoord scrollbarHeight = NSToCoordRound(sbHeight);
 
+  if (mInDropDownMode) {
+      // For drop-down lists, always size the width of the list based on
+      // the desired lineSize. 
+    tempReflowState.computedWidth = desiredLineSize.width + scrollbarWidth;
+  } else if (NS_UNCONSTRAINEDSIZE == tempReflowState.computedWidth) {
+      // Only set to the desired width if it hasn't been explicitly defined through CSS.
+      // GetDesiredSize must still be done above to calculate the desired height.
+    tempReflowState.computedWidth = desiredLineSize.width;
+  }
+
   // Add vertical scrollbar, Always add it in,
   // even though the vertical scrollbar is not needed all the time
   // the inherited Reflow: allways leave space for the scrollbar by
@@ -333,10 +352,8 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
 
   // Now that we have calculated the width required to just shrink around the longest line. 
   // Go ahead and reflow
-
   // Do the inherited Reflow. This reflow uses the computed widths which
   // are setup above.
-
   // Don't set the height. Let the height be unconstrained
  
   nsScrollFrame::Reflow(aPresContext, 
@@ -368,12 +385,13 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
 	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 
-    //XXX: Set the min element size here to the desired element size here??
+   // XXX: Set the min element size here to the desired element size here??
    // Restore to original reflow state.
   tempReflowState.computedWidth = saveComputedWidth;
   tempReflowState.availableWidth = saveAvailableWidth;
-
+  
   aStatus = NS_FRAME_COMPLETE;
+
   return NS_OK;
 }
 
@@ -443,12 +461,18 @@ nsListControlFrame::GetFont(nsIPresContext*        aPresContext,
 
 void nsListControlFrame::DisplaySelected(nsIContent* aContent) 
 {
+   //XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
+   // -moz-option-selected in the ua.css style sheet. This will not be needed when
+   // The event state manager is functional. KMM
   nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)));
   aContent->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_TRUE);
 }
 
 void nsListControlFrame::DisplayDeselected(nsIContent* aContent) 
 {
+   //XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
+   // -moz-option-selected in the ua.css style sheet. This will not be needed when
+   // The event state manager is functional. KMM
   nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)));
   aContent->UnsetAttribute(kNameSpaceID_None, selectedAtom, PR_TRUE);
 }
@@ -465,7 +489,7 @@ void nsListControlFrame::UpdateItem(nsIContent* aContent, PRBool aSelected)
 //----------------------------------------------------------------------
 PRInt32 nsListControlFrame::SetContentSelected(nsIFrame *    aHitFrame, 
                                         nsIContent *& aHitContent, 
-                                        PRBool        aIsSelected) 
+                                        PRBool        aDisplaySelected) 
 {
   PRInt32 index   = 0;
   nsIFrame* kid;
@@ -476,7 +500,8 @@ PRInt32 nsListControlFrame::SetContentSelected(nsIFrame *    aHitFrame,
       nsIContent* content;
       kid->GetContent(&content);
       aHitContent = content;
- //XXX:     DisplaySelected(aHitContent);
+      if (PR_TRUE == aDisplaySelected)
+        DisplaySelected(aHitContent);
       return index;
     }
     kid->GetNextSibling(&kid);
@@ -557,7 +582,7 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresConte
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
     PRInt32 oldSelectedIndex = mSelectedIndex;
 
-    mSelectedIndex = (PRInt32)SetContentSelected(mHitFrame, mHitContent, PR_TRUE);
+    mSelectedIndex = (PRInt32)SetContentSelected(mHitFrame, mHitContent, PR_FALSE);
     if (-1 < mSelectedIndex) {
       PRBool wasSelected = IsFrameSelected(mSelectedIndex);
       SetFrameSelected(mSelectedIndex, PR_TRUE);
@@ -663,13 +688,12 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aP
       // Now cache the the newly hit frame and content as the "current" values
       mCurrentHitFrame   = mHitFrame;
       mCurrentHitContent = mHitContent;
-
     }
 
   } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
   
     // Start by finding the newly "hit" content from the hit frame
-    PRInt32 index = SetContentSelected(mHitFrame, mHitContent, PR_FALSE);
+    PRInt32 index = SetContentSelected(mHitFrame, mHitContent, PR_TRUE);
     if (-1 < index) {
 
       nsIDOMHTMLOptionElement* option = nsnull;
@@ -905,7 +929,6 @@ nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   for (PRUint32 i = 0; i < numOptions; i++) {
     nsIDOMHTMLOptionElement* option = GetOption(*options, i);
     if (option) {
-      //option->CompressContent();
        nsAutoString text;
       if (NS_CONTENT_ATTR_HAS_VALUE != option->GetText(text)) {
         continue;
@@ -936,28 +959,14 @@ nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aPresContext->GetPixelsToTwips(&p2t);
   aPresContext->GetScaledPixelsToTwips(&sp2t);
 
-  //nscoord scrollbarWidth  = 0;
-  //nscoord scrollbarHeight = 0;
-  //GetScrollBarDimensions(*aPresContext, scrollbarWidth, scrollbarHeight);
-
   if (mInDropDownMode) {
-    //PRUint32 numOptions;
-    //options->GetLength(&numOptions);
     nscoord extra = desiredSize.height - (rowHeight * mNumRows);
 
     mNumRows = (numOptions > 20 ? 20 : numOptions);
     desiredSize.height = (mNumRows * rowHeight) + extra;
-    if (mNumRows < 21) {
-      //calcSize.width += scrollbarWidth;
-    }
   }
 
   aDesiredLayoutSize.width = desiredSize.width;
-  // account for vertical scrollbar, if present  
-  //if (!widthExplicit && ((mNumRows < numOptions) || mIsComboBox)) {
-  //if (!widthExplicit && (mNumRows < (PRInt32)numOptions)) {
-  //  aDesiredLayoutSize.width += scrollbarWidth;
- // }
 
   // XXX put this in widget library, combo boxes are fixed height (visible part)
   //aDesiredLayoutSize.height = (mIsComboBox)
@@ -972,18 +981,7 @@ nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   aDesiredWidgetSize.width  = maxWidth;
   aDesiredWidgetSize.height = rowHeight;
-  //if (mIsComboBox) {  // add in pull down size
-  //  PRInt32 extra = NSIntPixelsToTwips(10, p2t*scale);
-  //  aDesiredWidgetSize.height += (rowHeight * (numOptions > 20 ? 20 : numOptions)) + extra;
-  //}
-
-  // override the width and height for a combo box that has already got a widget
-  //if (mWidget && mIsComboBox) {
-  //  nscoord ignore;
-  //  GetWidgetSize(*aPresContext, ignore, aDesiredLayoutSize.height);
-  //  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
-  //}
-
+ 
   if (aDesiredLayoutSize.maxElementSize) {
     aDesiredLayoutSize.maxElementSize->width  = minSize.width;
     aDesiredLayoutSize.maxElementSize->height = minSize.height;
@@ -1394,6 +1392,7 @@ nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   // XXX I don't know whether to use the aRepaint flag as last param
   // in this call?
   if (mSelectedContent) {
+//XXX: Need correct attribute here   
     mSelectedContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (aOn?kSelectedFocus:kNormal), PR_TRUE);
   }
 
@@ -1420,19 +1419,77 @@ nsListControlFrame::GetSelectedItem(nsString & aStr)
   return NS_OK;
 }
 
+nsresult nsListControlFrame::RequiresWidget(PRBool& aRequiresWidget)
+{
+  aRequiresWidget = PR_FALSE;
+  return NS_OK;
+}
+
+
+PRInt32 nsListControlFrame::GetNumberOfOptions() 
+{
+  nsIDOMHTMLCollection* options = GetOptions(mContent);
+  if (!options) {
+    return 0;
+  }
+  PRUint32 numOptions;
+  options->GetLength(&numOptions);
+  NS_RELEASE(options);
+  return(numOptions);
+}
+
+
 NS_IMETHODIMP nsListControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
+  if (nsHTMLAtoms::selected == aName) {
+    return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
+  } else if (nsHTMLAtoms::selectedindex == aName) {
+    PRInt32 error = 0;
+    PRInt32 selectedIndex = aValue.ToInteger(&error, 10); // Get index from aValue
+    if (error) {
+      return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
+    } else {
+      SetFrameSelected(selectedIndex, PR_TRUE);
+    }
+  } else {
+   //XXX: TODO What about all othe other properties that form elements can set here?
+   // return nsFormControlFrame::SetProperty(aName, aValue);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsListControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
-  return NS_OK;
-}
+  // Get the selected value of option from local cache (optimization vs. widget)
+  if (nsHTMLAtoms::selected == aName) {
+    PRInt32 error = 0;
+    PRBool selected = PR_FALSE;
+    PRInt32 index = aValue.ToInteger(&error, 10); // Get index from aValue
+    if (error == 0)
+       selected = IsFrameSelected(index); 
+  
+    nsFormControlHelper::GetBoolString(selected, aValue);
+    
+  // For selectedIndex, get the value from the widget
+  } else  if (nsHTMLAtoms::selectedindex == aName) {
+     // Spin through loooking for the first selection in the list
+    PRInt32 index = 0;
+    PRInt32 maxOptions = GetNumberOfOptions();
+    PRInt32 selectedIndex = -1;
+    for (index = 0; index < maxOptions; index++) {
+      PRBool isSelected = PR_FALSE;
+     
+      if (PR_TRUE == IsFrameSelected(index)) {
+        selectedIndex = isSelected;
+        break;
+      }
+    }
+    aValue.Append(selectedIndex, 10);
+  } else {
+    //XXX: TODO: What about all of the other form properties??? 
+    //return nsFormControlFrame::GetProperty(aName, aValue);
+  }
 
-nsresult nsListControlFrame::RequiresWidget(PRBool& aRequiresWidget)
-{
-  aRequiresWidget = PR_FALSE;
   return NS_OK;
 }
 

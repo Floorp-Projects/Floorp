@@ -19,12 +19,11 @@
 #ifndef nsComboboxControlFrame_h___
 #define nsComboboxControlFrame_h___
 
+
 #include "nsHTMLContainerFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
-#ifdef PLUGGABLE_EVENTS
-#include "nsIPluggableEventListener.h"
-#endif
+
 
 class nsButtonControlFrame;
 class nsTextControlFrame;
@@ -37,9 +36,7 @@ class nsIListControlFrame;
 class nsComboboxControlFrame : public nsHTMLContainerFrame,
                                public nsIFormControlFrame,
                                public nsIComboboxControlFrame
-#ifdef PLUGGABLE_EVENTS
-                               public nsIPluggableEventListener
-#endif
+
 {
 public:
   nsComboboxControlFrame();
@@ -84,6 +81,9 @@ public:
      // nsIFormControLFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  virtual void PostCreateWidget(nsIPresContext* aPresContext,
+                                nscoord& aWidth,
+                                nscoord& aHeight);
 
   //nsTextControlFrame* GetTextFrame() { return mTextFrame; }
 
@@ -117,9 +117,6 @@ public:
 
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
 
-  nsresult GetFrameForPointUsing(const nsPoint& aPoint,
-                                 nsIAtom*       aList,
-                                 nsIFrame**     aFrame);
   // A Static Helper Functions
 
   // This refreshes a particular pseudo style content when a "ReResolveStyleContent" happens
@@ -131,16 +128,6 @@ public:
 
   // nsIFormMouseListener
   virtual void MouseClicked(nsIPresContext* aPresContext);
-
-  // nsIPluggableEventListener
-  NS_IMETHOD  PluggableEventHandler(nsIPresContext& aPresContext, 
-                                    nsGUIEvent*     aEvent,
-                                    nsEventStatus&  aEventStatus);
-
-  NS_IMETHOD  PluggableGetFrameForPoint(const nsPoint& aPoint, 
-                                        nsIFrame**     aFrame);
-
-  //static PRInt32 gSpacing;
 
   //nsIComboboxControlFrame
   NS_IMETHOD SetDropDown(nsIFrame* aPlaceHolderFrame, nsIFrame* aDropDownFrame);
@@ -154,17 +141,14 @@ protected:
                                     nsIRenderingContext& aRenderingContext,
                                     const nsRect& aDirtyRect,
                                     nsFramePaintLayer aWhichLayer);
-  nsIWidget* GetWindowTemp(nsIView *aView); // XXX temporary
   virtual PRIntn GetSkipSides() const;
 
-
   nsFormFrame*          mFormFrame;               // Parent Form Frame
-
   nsIFrame *            mPlaceHolderFrame;
   nsIFrame *            mListFrame;               // Generic nsIFrame
   nsIListControlFrame * mListControlFrame;        // Specific ListControl Interface
   nsRect                mButtonRect;              // The Arrow Button's Rect cached for Painting
- 
+  
   // DropDown List Visibility Styles
   nsIStyleContext * mVisibleStyleContext;         // Style for the DropDown List to make it visible
   nsIStyleContext * mHiddenStyleContext;          // Style for the DropDown List to make it hidden
@@ -179,7 +163,6 @@ protected:
   nsIStyleContext * mBlockTextStyle;              // Style when there is no selection and it doesn't have focus
   nsIStyleContext * mBlockTextSelectedStyle;      // Style when selected and it doesn't have focus
   nsIStyleContext * mBlockTextSelectedFocusStyle; // Style when selected and it has focus
-
 
   PRBool            mFirstTime; 
 

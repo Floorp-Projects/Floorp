@@ -65,6 +65,7 @@ public:
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
+
   NS_IMETHOD Reflow(nsIPresContext&          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -167,6 +168,8 @@ protected:
   nsListControlFrame();
   virtual ~nsListControlFrame();
 
+  PRInt32 GetNumberOfOptions();
+
   nsIFrame * GetOptionFromChild(nsIFrame* aParentFrame);
 
   nsresult GetFrameForPointUsing(const nsPoint& aPoint,
@@ -194,7 +197,7 @@ protected:
                                  nsEventStatus&  aEventStatus);
   PRInt32 SetContentSelected(nsIFrame *    aHitFrame, 
                              nsIContent *& aHitContent,
-                             PRBool        aIsSelected);
+                             PRBool        aDisplaySelected);
 
   // Data Members
   nsFormFrame* mFormFrame;

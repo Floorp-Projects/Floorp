@@ -332,7 +332,8 @@ protected:
                                 PRBool           aIsAbsolutelyPositioned,
                                 PRBool &         aFrameHasBeenInitialized,
                                 PRBool           aIsFixedPositioned,
-                                nsAbsoluteItems& aFixedItems);
+                                nsAbsoluteItems& aFixedItems,
+                                nsFrameItems&    aFrameItems);
 
   nsresult ConstructFrameByTag(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
