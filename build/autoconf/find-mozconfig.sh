@@ -27,8 +27,10 @@ topsrcdir=`cd \`dirname $0\`/../..; pwd`
 
 for _config in $MOZCONFIG \
                $MOZ_MYCONFIG \
+               $topsrcdir/mozconfig \
                $topsrcdir/mozconfig.sh \
                $topsrcdir/myconfig.sh \
+               $HOME/.mozconfig \
                $HOME/.mozconfig.sh \
                $HOME/.mozmyconfig.sh
 do
