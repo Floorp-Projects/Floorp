@@ -189,7 +189,7 @@ nsPrefWindow.prototype =
             for( var pageTag in this.wsm.dataManager.pageData )
               {
                 var pageData = this.wsm.dataManager.getPageData( pageTag );
-                if (pageData.initialized)
+                if ("initialized" in pageData && pageData.initialized)
                   {
                 for( var elementID in pageData )
                   {
