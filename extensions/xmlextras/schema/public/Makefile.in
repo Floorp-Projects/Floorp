@@ -27,10 +27,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
+XPIDL_MODULE    = xmlschema
 
 XPIDLSRCS	= \
-		.\nsISchema.idl  	\
-		.\nsISchemaLoader.idl	\
+		nsISchema.idl  	\
+		nsISchemaLoader.idl	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
