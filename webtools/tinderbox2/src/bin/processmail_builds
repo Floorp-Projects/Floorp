@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.11 $ 
-# $Date: 2002/02/25 19:34:41 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/04/24 03:27:35 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -506,7 +506,7 @@ sub check_required_vars {
     $err_string .= "Variable: 'timenow' not set.\n";
   } else {
     
-    if( abs($TINDERBOX{'timenow'} - $TIME) < ($main::SECONDS_PER_HOUR*10) ){
+    if( main::is_time_in_sync($TINDERBOX{'timenow'}) ){
       $timenow = $TINDERBOX{'timenow'};
     } else {
       $err_string .= (
@@ -529,20 +529,16 @@ sub check_required_vars {
   if( $TINDERBOX{'starttime'} eq ''){
     $err_string .= "Variable: 'tinderbox: starttime' not set.\n";
   } else {
-    if( abs($TINDERBOX{'starttime'} - $TIME) < ($main::SECONDS_PER_HOUR*10) ){
+    if( $TINDERBOX{'starttime'} <= $TINDERBOX{'timenow'} ){
       $starttime = $TINDERBOX{'starttime'};
     } else {
       $err_string .= (
                       "Variable: 'tinderbox: starttime:',".
-                      " is not of the form ".
-                      "MM/DD/YY HH:MM:SS, or unix date, ".
-                      "or your clock is set incorrectly, ".
-                      "or the mail was delayed for a long time.\n".
-                      "starttime: $TINDERBOX{'starttime'}, timenow: $TIME, (".
-                      ( ($TINDERBOX{'starttime'}-$TIME) / 
-                        $main::SECONDS_PER_MINUTE ).
-                      " minutes)\n".
-                     "");
+                      " is grater then the tinderbox: timenow.\n".
+                      "starttime: $TINDERBOX{'starttime'}, ".
+                      "timenow: $TINDERBOX{'timenow'}".
+                      "\n".
+                      "");
     }
     
   }

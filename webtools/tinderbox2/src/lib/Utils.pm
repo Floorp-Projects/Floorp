@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.26 $ 
-# $Date: 2001/12/14 20:13:01 $ 
+# $Revision: 1.27 $ 
+# $Date: 2002/04/24 03:27:31 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -126,6 +126,12 @@ sub set_static_vars {
   $REFRESH_TIME = ( $TinderConfig::REFRESH_TIME || 
                     (60 * 15)
                   );
+
+  $SECONDS_AGO_ACCEPTABLE = $TinderConfig::SECONDS_AGO_ACCEPTABLE ||
+      ($SECONDS_PER_HOUR*10);
+
+  $SECONDS_FROM_NOW_ACCEPTABLE = $TinderConfig::SECONDS_FROM_NOW_ACCEPTABLE ||
+      ($SECONDS_PER_MINUTE*10);
 
   @ORIG_ARGV = @ARGV;
 
@@ -537,6 +543,24 @@ sub is_time_valid {
   $valid = (
             ($time < $LARGEST_VALID_TIME) &&
             ($time > $SMALLEST_VALID_TIME) 
+           );
+
+  return $valid;
+}
+
+
+# return true iff the argument is a time which is a reasonable time to
+# recive data about (it should not be in the future, or too far in the
+# past).
+
+sub is_time_in_sync {
+  my ($time) = @_;
+  
+  $valid = (
+
+            ( ($TIME - $time) <= ($SECONDS_AGO_ACCEPTABLE) ) &&
+            ( ($TIME + $time) >= ($SECONDS_FROM_NOW_ACCEPTABLE) )
+
            );
 
   return $valid;
