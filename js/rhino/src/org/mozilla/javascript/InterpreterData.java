@@ -102,13 +102,8 @@ class InterpreterData implements Serializable {
     int itsFunctionType;
 
     String[] itsStringTable;
-    int itsStringTableIndex;
-
     double[] itsDoubleTable;
-    int itsDoubleTableIndex;
-
     InterpretedFunction[] itsNestedFunctions;
-
     Object[] itsRegExpLiterals;
 
     byte[] itsICode;

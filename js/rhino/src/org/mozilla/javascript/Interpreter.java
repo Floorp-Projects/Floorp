@@ -206,6 +206,7 @@ public class Interpreter {
             theICodeTop = addByte(END_ICODE, theICodeTop);
         }
         itsData.itsICodeTop = theICodeTop;
+
         if (itsData.itsICode.length != theICodeTop) {
             // Make itsData.itsICode length exactly theICodeTop to save memory
             // and catch bugs with jumps beyound icode as early as possible
@@ -213,6 +214,27 @@ public class Interpreter {
             System.arraycopy(itsData.itsICode, 0, tmp, 0, theICodeTop);
             itsData.itsICode = tmp;
         }
+        if (itsStrings.size() == 0) {
+            itsData.itsStringTable = null;
+        }else {
+            itsData.itsStringTable = new String[itsStrings.size()];
+            ObjToIntMap.Iterator iter = itsStrings.newIterator();
+            for (iter.start(); !iter.done(); iter.next()) {
+                String str = (String)iter.getKey();
+                int index = iter.getValue();
+                if (itsData.itsStringTable[index] != null) Context.codeBug();
+                itsData.itsStringTable[index] = str;
+            }
+        }
+        if (itsDoubleTableTop == 0) {
+            itsData.itsDoubleTable = null;
+        }else if (itsData.itsDoubleTable.length != itsDoubleTableTop) {
+            double[] tmp = new double[itsDoubleTableTop];
+            System.arraycopy(itsData.itsDoubleTable, 0, tmp, 0,
+                             itsDoubleTableTop);
+            itsData.itsDoubleTable = tmp;
+        }
+
         itsData.itsMaxVars = itsVariableTable.size();
         // itsMaxFrameArray: interpret method needs this amount for its
         // stack and sDbl arrays
@@ -398,14 +420,16 @@ public class Interpreter {
                     iCodeTop = addByte(SOURCEFILE_ICODE, iCodeTop);
 
                     int childCount = 0;
-                    short nameIndex = -1;
+                    int nameIndex = -1;
                     while (child != null) {
                         iCodeTop = generateICode(child, iCodeTop);
                         if (nameIndex == -1) {
-                            if (child.getType() == TokenStream.NAME)
-                                nameIndex = (short)(itsData.itsStringTableIndex - 1);
-                            else if (child.getType() == TokenStream.GETPROP)
-                                nameIndex = (short)(itsData.itsStringTableIndex - 1);
+                            int childType = child.getType();
+                            if (childType == TokenStream.NAME
+                                || childType == TokenStream.GETPROP)
+                            {
+                                nameIndex = itsStrings.size() - 1;
+                            }
                         }
                         child = child.getNextSibling();
                         childCount++;
@@ -1107,7 +1131,7 @@ public class Interpreter {
     }
 
     private int addDouble(double num, int iCodeTop) {
-        int index = itsData.itsDoubleTableIndex;
+        int index = itsDoubleTableTop;
         if (index == 0) {
             itsData.itsDoubleTable = new double[64];
         }
@@ -1117,22 +1141,18 @@ public class Interpreter {
             itsData.itsDoubleTable = na;
         }
         itsData.itsDoubleTable[index] = num;
-        itsData.itsDoubleTableIndex = index + 1;
+        itsDoubleTableTop = index + 1;
 
         iCodeTop = addShort(index, iCodeTop);
         return iCodeTop;
     }
 
     private int addString(String str, int iCodeTop) {
-        int index = itsData.itsStringTableIndex;
-        if (itsData.itsStringTable.length == index) {
-            String[] sa = new String[index * 2];
-            System.arraycopy(itsData.itsStringTable, 0, sa, 0, index);
-            itsData.itsStringTable = sa;
+        int index = itsStrings.get(str, -1);
+        if (index == -1) {
+            index = itsStrings.size();
+            itsStrings.put(str, index);
         }
-        itsData.itsStringTable[index] = str;
-        itsData.itsStringTableIndex = index + 1;
-
         iCodeTop = addShort(index, iCodeTop);
         return iCodeTop;
     }
@@ -2735,6 +2755,9 @@ public class Interpreter {
     private String itsSourceFile;
     private int itsLineNumber = 0;
     private LabelTable itsLabels = new LabelTable();
+    private int itsDoubleTableTop;
+    private ObjToIntMap itsStrings = new ObjToIntMap(20);
+
 
     private int version;
     private boolean inLineStepMode;
