@@ -1573,8 +1573,9 @@ nsHTMLEditor::JoinTableCells()
                             startRowIndex2, startColIndex2, rowSpan2, colSpan2, 
                             actualRowSpan2, actualColSpan2, isSelected2);
         if (NS_FAILED(res)) return res;
-        
-        NS_ASSERTION(actualColSpan2 > 0, "JoinTableCells: ColSpan=0");
+
+        // We must have colspan >=1 if we have a cell
+        NS_ASSERTION(!cell2 || (actualColSpan2 > 0), "JoinTableCells: ColSpan=0");
         if (isSelected2)
         {
           if (!cellFoundInRow)
@@ -1599,7 +1600,7 @@ nsHTMLEditor::JoinTableCells()
         }
         else if (cellFoundInRow)
         {
-          // No cell or not selected, but at one in row was found
+          // No cell or not selected, but at least one in row was found
           if (colIndex <= lastColIndex)
           {
             // Cell is in a column less than current right border,
@@ -1610,6 +1611,10 @@ nsHTMLEditor::JoinTableCells()
           // We're done with this row
           break;
         }
+        // Be sure we have >= 1 to increment loop else we're infinite!
+        // (actualColSpan2 = 0 when end of row is reached)
+        actualColSpan2 = PR_MAX(1, actualColSpan2);
+
       } // End of column loop
 
       // Done with this row 
@@ -1673,11 +1678,20 @@ nsHTMLEditor::JoinTableCells()
             //  Instead, build a list of cells to delete and do it later
             NS_ASSERTION(startRowIndex2 == rowIndex, "JoinTableCells: StartRowIndex is in row above");
 
+#if 0
+            //Check if cell "hangs" off the boundary because of colspan or rowspan > 1
+            //  Use split methods to chop off excess
+            PRInt32 extraColSpan = lastColIndex - (startColIndex2 + actualColSpan2);
+            if ( extraColSpan > 0)
+            {
+              res = SplitCellIntoColumns(table, startRowIndex2, startColIndex2, 
+                                         actualColSpan2-extraColSpan, extraColSpan, nsnull);
+              if (NS_FAILED(res)) return res;
+            }
+#endif
             res = MergeCells(firstCell, cell2, PR_FALSE);
             if (NS_FAILED(res)) return res;
             
-            //TODO: Check if cell "hangs" off the boundary because of colspan or rowspan > 1
-            //  Use split methods to chop off excess
 
             // Add cell to list to delete
             deleteList.AppendElement((void *)cell2.get());
@@ -1714,6 +1728,11 @@ nsHTMLEditor::JoinTableCells()
     res = SetRowSpan(firstCell, lastRowIndex-firstRowIndex+1);
     if (NS_FAILED(res)) return res;
     res = SetColSpan(firstCell, lastColIndex-firstColIndex+1);
+    if (NS_FAILED(res)) return res;
+    
+    // But check if we merged multiple rows - rowspan shouldn't be > 1
+    PRInt32 newRowCount;
+    res = FixBadRowSpan(table, firstRowIndex, newRowCount);
     if (NS_FAILED(res)) return res;
   }
   else
