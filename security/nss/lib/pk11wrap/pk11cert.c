@@ -1021,6 +1021,10 @@ PK11_TraverseSlotCerts(SECStatus(* callback)(CERTCertificate*,SECItem *,void *),
     NSSTrustDomain *defaultTD = STAN_GetDefaultTrustDomain();
     struct fake_der_cb_argstr fda;
     struct nss3_cert_cbstr pk11cb;
+
+    /* authenticate to the tokens first */
+    (void) pk11_TraverseAllSlots( NULL, NULL, wincx);
+
     fda.callback = callback;
     fda.arg = arg;
     pk11cb.callback = fake_der_cb;
