@@ -22,6 +22,9 @@
 //---- Factory Includes & Stuff -----// 
 #include "nsIFactory.h" 
 #include "nsIComponentManager.h" 
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
 #include "nsGfxCIID.h" 
 
 #include "nsWidgetsCID.h" 
@@ -64,6 +67,7 @@ char *  gLogFileName   = "selftest.txt";
 FILE *  gFD             = nsnull;
 PRInt32 gOverallStatus   = 0;
 PRInt32 gNonVisualStatus = 0;
+nsIEventQueueService *gEventQService = nsnull;
 
 nsIWidget         *window = NULL;
 nsITextWidget     *statusText = NULL;
@@ -89,12 +93,14 @@ char * gFailedMsg = NULL;
 
 
 #ifdef XP_PC
+#define XPCOM_DLL "xpcom32.dll"
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFX_DLL "raptorgfxwin.dll"
 #define TEXT_HEIGHT 25
 #endif
 
 #ifdef XP_UNIX
+#define XPCOM_DLL "libxpcom.so"
 #ifndef WIDGET_DLL
 #define WIDGET_DLL "libwidgetgtk.so"
 #endif
@@ -105,6 +111,7 @@ char * gFailedMsg = NULL;
 #endif
 
 #ifdef XP_MAC
+#define XPCOM_DLL "XPCOM_DLL"
 #define WIDGET_DLL "WIDGET_DLL"
 #define GFX_DLL "GFXWIN_DLL"
 #define TEXT_HEIGHT 30
@@ -149,15 +156,18 @@ static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 static NS_DEFINE_IID(kCTabWidgetCID, NS_TABWIDGET_CID);
 static NS_DEFINE_IID(kCTooltipWidgetCID, NS_TOOLTIPWIDGET_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 
 
 
 // interface ids
-static NS_DEFINE_IID(kIWindowIID, 				NS_IWINDOW_IID);
+static NS_DEFINE_IID(kIWindowIID,         NS_IWINDOW_IID);
 static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWidgetIID,         NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIButtonIID,         NS_IBUTTON_IID);
@@ -172,6 +182,7 @@ static NS_DEFINE_IID(kIComboBoxIID,       NS_ICOMBOBOX_IID);
 static NS_DEFINE_IID(kIFileWidgetIID,     NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kITabWidgetIID,      NS_ITABWIDGET_IID);
 static NS_DEFINE_IID(kITooltipWidgetIID,  NS_ITOOLTIPWIDGET_IID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,       NS_IAPPSHELL_IID);
 
 
@@ -1196,8 +1207,11 @@ nsresult WidgetTest(int *argc, char **argv)
       exit(1);
     }
 
+    // register xpcom classes
+    nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
     
     // register widget classes
+    nsComponentManager::RegisterComponent(kLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kCWindowCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     
     nsComponentManager::RegisterComponent(kCChildCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -1214,6 +1228,7 @@ nsresult WidgetTest(int *argc, char **argv)
     nsComponentManager::RegisterComponent(kCTabWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kCTooltipWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kCToolkitCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID); 
     static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID); 
     static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID); 
@@ -1224,6 +1239,25 @@ nsresult WidgetTest(int *argc, char **argv)
     nsComponentManager::RegisterComponent(kCDeviceContextIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
     nsComponentManager::RegisterComponent(kCFontMetricsIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
     nsComponentManager::RegisterComponent(kCImageIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
+
+    nsresult  res;
+
+    // Create the Event Queue for the UI thread...
+    res = nsServiceManager::GetService(kEventQueueServiceCID,
+                                       kIEventQueueServiceIID,
+                                       (nsISupports **)&gEventQService);
+
+    if (NS_OK != res) {
+        NS_ASSERTION(PR_FALSE, "Could not obtain the event queue service");
+        return res;
+    }
+
+    printf("Going to create the event queue\n");
+    res = gEventQService->CreateThreadEventQueue();
+    if (NS_OK != res) {
+        NS_ASSERTION(PR_FALSE, "Could not create the event queue for the thread");
+	return res;
+    }
 
       // Create a application shell
     nsIAppShell *appShell;
@@ -1238,7 +1272,6 @@ nsresult WidgetTest(int *argc, char **argv)
     nsIDeviceContext* deviceContext = 0;
 
     // Create a device context for the widgets
-    nsresult  res;
 
     static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
     static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
