@@ -1387,7 +1387,7 @@ function launchBrowser()
    var UrlToGoTo = document.getElementById( "uri-field" ).value;
    
    //launch the browser to that URL
-   window.open( UrlToGoTo, "calendar-opened-window" );
+   opener.window.open( UrlToGoTo, "calendar-opened-window" );
 }
 
 
