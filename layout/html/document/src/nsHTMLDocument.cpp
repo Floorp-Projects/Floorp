@@ -89,6 +89,7 @@ nsHTMLDocument::nsHTMLDocument()
   nsHTMLAtoms::AddrefAtoms();
 
   // Find/Search Init
+  mSearchStr             = nsnull;
   mLastBlockSearchOffset = 0;
   mAdjustToEnd           = PR_FALSE;
   mShouldMatchCase       = PR_FALSE;
@@ -98,6 +99,7 @@ nsHTMLDocument::nsHTMLDocument()
   mCurrentBlockContent   = nsnull;
 
   // These will be converted to a nsDeque
+  mStackInx    = 0;
   mParentStack = (nsIContent**) new PRUint32[32];
   mChildStack  = (nsIContent**) new PRUint32[32];
 
@@ -134,6 +136,8 @@ nsHTMLDocument::~nsHTMLDocument()
   // These will be converted to a nsDeque
   delete[] mParentStack;
   delete[] mChildStack;
+
+  delete mSearchStr;
 }
 
 NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
@@ -1091,7 +1095,9 @@ public:
   BlockText() : mNumSubTexts(0) {}
   virtual ~BlockText();
 
-  char * GetText() { return mText.ToNewCString(); }
+  char * GetText()             { return mText.ToNewCString(); }
+  const nsString & GetNSString() { return mText; }
+
   void AddSubText(nsIContent * aContent, nsString & aStr);
   PRInt32 GetStartEnd(PRInt32 anIndex, PRInt32 aLength,
                        nsIContent ** aStartContent, PRInt32 & aStartOffset,
@@ -1116,8 +1122,8 @@ void BlockText::AddSubText(nsIContent * aContent, nsString & aStr)
   subTxt->mOffset  = mText.Length();
   subTxt->mLength  = aStr.Length();
   mText.Append(aStr);
-  printf("Adding Str to Block [%s]\n", aStr.ToNewCString());
-  printf("Block [%s]\n", mText.ToNewCString());
+  //DEBUG printf("Adding Str to Block [%s]\n", aStr.ToNewCString());
+  //DEBUG printf("Block [%s]\n", mText.ToNewCString());
   mSubTexts[mNumSubTexts++] = subTxt;
 }
 
@@ -1127,12 +1133,12 @@ PRInt32 BlockText::GetStartEnd(PRInt32 anIndex, PRInt32 aLength,
                                nsIContent ** aEndContent,   PRInt32 & aEndOffset,
                                PRInt32       aDirection)
 {
-  // Debug
+  // Debug Start
   char * cStr = mText.ToNewCString();
   if (strstr(cStr, "blue text")) {
     int x = 0;
   }
-  // Debug
+  // Debug End
 
   PRInt32 i      = 0;
   PRInt32 offset = 0;
@@ -1163,14 +1169,27 @@ PRInt32 BlockText::GetStartEnd(PRInt32 anIndex, PRInt32 aLength,
 
 //-----------------------------------------------
 PRBool nsHTMLDocument::SearchBlock(BlockText & aBlockText, 
-                               nsString  & aStr) 
+                                   nsString  & aStr) 
 {
   PRBool found = PR_FALSE;
 
   mLastBlockSearchOffset = (mCurrentBlockContent == mHoldBlockContent? mLastBlockSearchOffset : 0);
 
-  char * searchStr  = aStr.ToNewCString();
-  char * contentStr = aBlockText.GetText();
+  char * searchStr;
+  char * contentStr;
+
+  if (!mShouldMatchCase) {
+    nsString searchTxt(aStr);
+    nsString blockTxt(aBlockText.GetNSString());
+
+    searchTxt.ToLowerCase();
+    blockTxt.ToLowerCase();
+    searchStr  = searchTxt.ToNewCString();
+    contentStr = blockTxt.ToNewCString();
+  } else {
+    searchStr  = aStr.ToNewCString();
+    contentStr = aBlockText.GetText();
+  }
 
   char * adjustedContent;
   char * str = nsnull;
@@ -1252,12 +1271,17 @@ PRBool nsHTMLDocument::ContentIsBlock(nsIContent * aContent)
 // looking for a parent that is a "block"
 /////////////////////////////////////////////
 nsIContent * nsHTMLDocument::FindBlockParent(nsIContent * aContent, 
-                                         PRBool       aSkipThisContent)
+                                             PRBool       aSkipThisContent)
 {
+  // Clear up stack and release content nodes on it
+  PRInt32 i;
+  for (i=0;i<mStackInx;i++) {
+    NS_RELEASE(mParentStack[i]);
+    NS_RELEASE(mChildStack[i]);
+  }
   mStackInx = 0;
   nsIContent * parent = aContent->GetParent();
   nsIContent * child;
-
 
   if (parent == nsnull) {
     return nsnull;
@@ -1320,7 +1344,7 @@ nsIContent * nsHTMLDocument::FindBlockParent(nsIContent * aContent,
 
 //-----------------------------------------------
 PRBool nsHTMLDocument::BuildBlockFromContent(nsIContent   * aContent,
-                                          BlockText    & aBlockText)
+                                             BlockText    & aBlockText)
 {
   // First check to see if it is a new Block node
   // If it is then we need to check the current block text (aBlockText)
@@ -1328,7 +1352,7 @@ PRBool nsHTMLDocument::BuildBlockFromContent(nsIContent   * aContent,
   if (ContentIsBlock(aContent)) {
 
     // Search current block of text
-    if (SearchBlock(aBlockText, mSearchStr)) {
+    if (SearchBlock(aBlockText, *mSearchStr)) {
       return PR_TRUE;
     }
 
@@ -1337,7 +1361,7 @@ PRBool nsHTMLDocument::BuildBlockFromContent(nsIContent   * aContent,
     if (!BuildBlockTraversing(aContent, blockText)) {
       // down inside the search string wasn't found check the full block text 
       // for the search text
-      if (SearchBlock(blockText, mSearchStr)) {
+      if (SearchBlock(blockText, *mSearchStr)) {
         return PR_TRUE;
       }
     } else {
@@ -1356,7 +1380,7 @@ PRBool nsHTMLDocument::BuildBlockFromContent(nsIContent   * aContent,
 // the hiearchy and build the block of text
 //-----------------------------------------
 PRBool nsHTMLDocument::BuildBlockTraversing(nsIContent   * aParent,
-                                        BlockText    & aBlockText) 
+                                            BlockText    & aBlockText) 
 {
   nsIAtom * atom = aParent->GetTag();
   if (atom != nsnull) {
@@ -1366,15 +1390,19 @@ PRBool nsHTMLDocument::BuildBlockTraversing(nsIContent   * aParent,
         for (i=0;i<aParent->ChildCount();i++) {
           nsIContent * child = aParent->ChildAt(i);
           if (BuildBlockFromContent(child, aBlockText)) {
+            NS_IF_RELEASE(child);
             return PR_TRUE;
           }
+          NS_RELEASE(child);
         }
       } else { // Backward
         for (i=aParent->ChildCount()-1;i>=0;i--) {
           nsIContent * child = aParent->ChildAt(i);
           if (BuildBlockFromContent(child, aBlockText)) {
+            NS_IF_RELEASE(child);
             return PR_TRUE;
           }
+          NS_RELEASE(child);
         }
       }
     }
@@ -1398,8 +1426,8 @@ PRBool nsHTMLDocument::BuildBlockTraversing(nsIContent   * aParent,
 // the hiearchy and build the block of text
 //-----------------------------------------
 PRBool nsHTMLDocument::BuildBlockFromStack(nsIContent * aParent,
-                         BlockText  & aBlockText,
-                         PRInt32      aStackInx) 
+                                           BlockText  & aBlockText,
+                                           PRInt32      aStackInx) 
 {
   nsIContent * stackParent = mParentStack[aStackInx];
   nsIContent * stackChild  = mChildStack[aStackInx];
@@ -1413,34 +1441,42 @@ PRBool nsHTMLDocument::BuildBlockFromStack(nsIContent * aParent,
       nsIContent * child = aParent->ChildAt(j);
       if (child == stackChild && aStackInx < mStackInx) {
         if (BuildBlockFromStack(child, aBlockText, aStackInx+1)) {
+          NS_IF_RELEASE(child);
           return PR_TRUE;
         }
       } else {
         if (!BuildBlockTraversing(child, aBlockText)) {
-          if (SearchBlock(aBlockText, mSearchStr)) {
+          if (SearchBlock(aBlockText, *mSearchStr)) {
+            NS_IF_RELEASE(child);
             return PR_TRUE;
           }
         } else {
+          NS_IF_RELEASE(child);
           return PR_TRUE;
         }
       }
+      NS_RELEASE(child);
     }
   } else { // Backward
     for (j=inx;j>=0;j--) {
       nsIContent * child = aParent->ChildAt(j);
       if (child == stackChild && aStackInx < mStackInx) {
         if (BuildBlockFromStack(child, aBlockText, aStackInx+1)) {
+          NS_IF_RELEASE(child);
           return PR_TRUE;
         }
       } else {
         if (!BuildBlockTraversing(child, aBlockText)) {
-          if (SearchBlock(aBlockText, mSearchStr)) {
+          if (SearchBlock(aBlockText, *mSearchStr)) {
+            NS_IF_RELEASE(child);
             return PR_TRUE;
           }
         } else {
-          return PR_TRUE;
+         NS_IF_RELEASE(child);
+         return PR_TRUE;
         }
       }
+      NS_RELEASE(child);
     }
 
   }
@@ -1453,7 +1489,7 @@ PRBool nsHTMLDocument::BuildBlockFromStack(nsIContent * aParent,
 // the hiearchy and build the block of text
 //-----------------------------------------
 PRBool nsHTMLDocument::BuildBlock(nsIContent * aParent,
-                              BlockText  & aBlockText) 
+                                  BlockText  & aBlockText) 
 {
   nsIContent * stackParent = mParentStack[0];
   nsIContent * stackChild  = mChildStack[0];
@@ -1465,17 +1501,21 @@ PRBool nsHTMLDocument::BuildBlock(nsIContent * aParent,
       nsIContent * child = stackParent->ChildAt(j);
       if (child == stackChild && mStackInx > 1) {
         if (BuildBlockFromStack(child, aBlockText, 1)) {
+          NS_IF_RELEASE(child);
           return PR_TRUE;
         }
       } else {
         if (BuildBlockTraversing(child, aBlockText)) {
+          NS_IF_RELEASE(child);
           return PR_TRUE;
         } else {
-          if (SearchBlock(aBlockText, mSearchStr)) {
+          if (SearchBlock(aBlockText, *mSearchStr)) {
+            NS_IF_RELEASE(child);
             return PR_TRUE;
           }
         }
       }
+      NS_IF_RELEASE(child);
     }
   } else {
     for (j=inx;j>=0;j--) {
@@ -1483,18 +1523,22 @@ PRBool nsHTMLDocument::BuildBlock(nsIContent * aParent,
       nsIContent * child = stackParent->ChildAt(j);
       if (child == stackChild && mStackInx > 1) {
         if (BuildBlockFromStack(child, blockText, 1)) {
+          NS_IF_RELEASE(child);
           return PR_TRUE;
         }
       } else {
         if (BuildBlockTraversing(child, blockText)) {
+          NS_IF_RELEASE(child);
           return PR_TRUE;
         } else {
-          if (SearchBlock(blockText, mSearchStr)) {
+          if (SearchBlock(blockText, *mSearchStr)) {
+            NS_IF_RELEASE(child);
             return PR_TRUE;
           }
         }
       }
       mAdjustToEnd = PR_TRUE;
+      NS_IF_RELEASE(child);
     }
   }
   return PR_FALSE;
@@ -1505,10 +1549,15 @@ PRBool nsHTMLDocument::BuildBlock(nsIContent * aParent,
  */
 NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
 {
-  aIsFound = PR_FALSE;
+  aIsFound         = PR_FALSE;
+  mShouldMatchCase = aMatchCase;
 
-  mSearchStr.SetLength(0);
-  mSearchStr.Append(aSearchStr);
+  if (mSearchStr == nsnull) {
+    mSearchStr = new nsString(aSearchStr);
+  } else {
+    mSearchStr->SetLength(0);
+    mSearchStr->Append(aSearchStr);
+  }
 
   nsIContent * start = nsnull;
   nsIContent * end   = nsnull;
@@ -1566,7 +1615,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
     searchContent = (mSearchDirection == kForward ? body:end);
     BlockText blockText;
     if (!BuildBlockTraversing(searchContent, blockText)) {
-      if (SearchBlock(blockText, mSearchStr)) {
+      if (SearchBlock(blockText, *mSearchStr)) {
         aIsFound = PR_TRUE;
       }
     }
@@ -1578,7 +1627,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
       searchContent = end;
       mAdjustToEnd  = PR_TRUE;
     }
-    nsIContent * blockContent = FindBlockParent(searchContent);
+    nsIContent * blockContent = FindBlockParent(searchContent); // this ref counts blockContent
     while (blockContent != nsnull) {
 
       BlockText blockText;
@@ -1589,9 +1638,21 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
 
       mLastBlockSearchOffset = 0;
       mAdjustToEnd           = PR_TRUE;
+
+      NS_RELEASE(blockContent);
       blockContent = FindBlockParent(blockContent, PR_TRUE);
     }
+
+    // Clear up stack and release content nodes on it
+    PRInt32 i;
+    for (i=0;i<mStackInx;i++) {
+      NS_RELEASE(mParentStack[i]);
+      NS_RELEASE(mChildStack[i]);
+    }
   }
+
+  //NS_RELEASE(startContent);
+  //NS_RELEASE(endContent);
 
   SetDisplaySelection(PR_TRUE); 
 
