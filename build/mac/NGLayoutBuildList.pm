@@ -742,6 +742,13 @@ sub BuildIDLProjects()
 	unless( $main::build{idl} ) { return; }
 	_assertRightDirectory();
 
+	if ( $main::build{xpidl} )
+	{
+		#// beard:  build the IDL compiler itself.
+		# BuildProject(":mozilla:xpcom:typelib:xpidl:macbuild:xpidl.mcp", "build all");
+	}
+	
+	die;
 	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"xpcom");
 
 	if ( $main::NECKO )
