@@ -34,7 +34,6 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPPSRCS =				\
 	nsTextToSubURI.cpp		\
 	nsCharsetConverterManager.cpp	\
-	nsUnicodeDecodeUtil.cpp		\
 	nsUnicodeDecodeHelper.cpp	\
 	nsUnicodeEncodeHelper.cpp	\
 	nsWinCharset.cpp		\
@@ -48,7 +47,6 @@ CPPSRCS =				\
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsTextToSubURI.obj			\
 	.\$(OBJDIR)\nsCharsetConverterManager.obj 	\
-	.\$(OBJDIR)\nsUnicodeDecodeUtil.obj 		\
 	.\$(OBJDIR)\nsUnicodeDecodeHelper.obj 		\
 	.\$(OBJDIR)\nsUnicodeEncodeHelper.obj 		\
 	.\$(OBJDIR)\nsWinCharset.obj 			\
