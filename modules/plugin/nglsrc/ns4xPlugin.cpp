@@ -74,12 +74,13 @@ ns4xPlugin::CheckClassInitialized(void)
 ////////////////////////////////////////////////////////////////////////
 
 
-ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown)
+ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, NP_PLUGININIT aInit)
 {
     NS_INIT_REFCNT();
 
     memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
     fShutdownEntry = aShutdown;
+	fInitialize = aInit;
 }
 
 
@@ -192,10 +193,7 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
     if (pfnInitialize == NULL)
         return NS_ERROR_UNEXPECTED; // XXX Right error?
 
-    if (pfnInitialize(&ns4xPlugin::CALLBACKS) != NS_OK)
-        return NS_ERROR_UNEXPECTED; // XXX shoudl convert the 4.x error...
-
-    *result = new ns4xPlugin(&callbacks, pfnShutdown);
+    *result = new ns4xPlugin(&callbacks, pfnShutdown, pfnInitialize);
 
     NS_ADDREF(*result);
 
@@ -253,6 +251,9 @@ ns4xPlugin::Initialize(nsISupports* browserInterfaces)
 
   if (nsnull == mMalloc)
     rv = browserInterfaces->QueryInterface(kIMallocIID, (void **)&mMalloc);
+
+  if (fInitialize(&ns4xPlugin::CALLBACKS) != NS_OK)
+	rv = NS_ERROR_UNEXPECTED; // XXX shoudl convert the 4.x error...
 
   return rv;
 }
