@@ -472,13 +472,13 @@ endif
 
 # Map mozilla targets to standard automake target
 clobber realclean clobber_all::
-ifndef MOZ_SYSTEM_CAIRO
+ifdef MOZ_TREE_CAIRO
 	$(MAKE) -C gfx/cairo/libpixman clean
 	$(MAKE) -C gfx/cairo/cairo clean
 endif
 
 clean distclean::
-ifndef MOZ_SYSTEM_CAIRO
+ifdef MOZ_TREE_CAIRO
 	$(MAKE) -C gfx/cairo/libpixman $@
 	$(MAKE) -C gfx/cairo/cairo $@
 endif
@@ -533,7 +533,7 @@ ifdef MOZ_LDAP_XPCOM
 endif
 
 cairo:
-ifndef MOZ_SYSTEM_CAIRO
+ifdef MOZ_TREE_CAIRO
 	$(MAKE) -C gfx/cairo/libpixman install
 	$(MAKE) -C gfx/cairo/cairo install
 ifneq ($(OS_ARCH),Darwin)
