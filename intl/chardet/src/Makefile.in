@@ -41,6 +41,7 @@ CPPSRCS		= \
 		nsDebugDetector.cpp \
 		nsPSMDetectors.cpp \
 		nsCyrillicDetector.cpp \
+		nsDocumentCharsetInfo.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)

@@ -44,7 +44,7 @@
 #include "nsMetaCharsetCID.h"
 #include "nsXMLEncodingCID.h"
 #include "nsCharsetDetectionAdaptorCID.h"
-
+#include "nsDocumentCharsetInfo.h"
 
 #include "nsPSMDetectors.h"
 
@@ -81,6 +81,7 @@ NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kMetaCharsetCID, NS_META_CHARSET_CID);
 NS_DEFINE_CID(kXMLEncodingCID, NS_XML_ENCODING_CID);
 NS_DEFINE_CID(kCharsetDetectionAdaptorCID, NS_CHARSET_DETECTION_ADAPTOR_CID);
+NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
@@ -169,6 +170,8 @@ nsCharDetModule::GetClassObject(nsIComponentManager *aCompMgr,
   nsIFactory* factory = nsnull;
   if (aClass.Equals(kMetaCharsetCID)) {
     factory = NEW_META_CHARSET_OBSERVER_FACTORY();
+  } else if (aClass.Equals(kDocumentCharsetInfoCID)) {
+    factory = NEW_DOCUMENT_CHARSET_INFO_FACTORY();
   } else if (aClass.Equals(kXMLEncodingCID)) {
     factory = NEW_XML_ENCODING_OBSERVER_FACTORY();
   } else if (aClass.Equals(kCharsetDetectionAdaptorCID)) {
@@ -235,6 +238,8 @@ struct Components {
 static Components gComponents[] = {
   { "Meta Charset", &kMetaCharsetCID,
     NS_META_CHARSET_PROGID, },
+  { "Document Charset Info", &kDocumentCharsetInfoCID,
+    NS_DOCUMENTCHARSETINFO_PID, },
   { "XML Encoding", &kXMLEncodingCID,
     NS_XML_ENCODING_PROGID, },
   { "Charset Detection Adaptor", &kCharsetDetectionAdaptorCID,
