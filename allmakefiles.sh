@@ -45,7 +45,7 @@ if [ -z "${srcdir}" ]; then
 fi
 
 # xpcom standalone mode
-if [ "$XPCOM_STANDALONE" ]; then
+if [ `echo "$BUILD_MODULES" | grep -c xpcom` != 0 ]; then
   add_makefiles <<END_XPCOM_STANDALONE_MAKEFILES
 #
 # General
