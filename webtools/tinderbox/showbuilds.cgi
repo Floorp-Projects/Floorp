@@ -775,8 +775,18 @@ sub do_panel {
     my ($minute,$hour,$mday,$mon) = (localtime)[1..4];
     my $tm = sprintf("%d/%d&nbsp;%d:%02d",$mon+1,$mday,$hour,$minute);
 
-    print q(<body BGCOLOR="#FFFFFF" TEXT="#000000" 
-                  LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">);
+    print q(
+      <head>
+        <style>
+          body, td { 
+            font-family: Verdana, Sans-Serif;
+            font-size: 8pt;
+          }
+        </style>
+      </head>
+      <body BGCOLOR="#FFFFFF" TEXT="#000000" 
+            LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+    );
     print "<a href=showbuilds.cgi?tree=$form{tree}";
     print "&hours=$form{'hours'}" if $form{'hours'};
     print "&nocrap=1" if $form{'nocrap'};
@@ -791,6 +801,8 @@ sub do_panel {
 
     print "<table border=0 cellpadding=1 cellspacing=1>";
     for $buildname (@keys) {
+      $buildname =~ s/Clobber/Clbr/g;
+      $buildname =~ s/Depend/Dep/g;
       print "<tr><td bgcolor='";
       print $build{$buildname} eq 'success' ? '00ff00' : 'FF0000';
       print "'>$buildname</td></tr>";
