@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  gfx \
 		  content \
+		  mimetype \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
