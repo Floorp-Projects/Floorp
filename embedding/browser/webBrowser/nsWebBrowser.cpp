@@ -281,8 +281,10 @@ NS_IMETHODIMP nsWebBrowser::FindItemWithName(const PRUnichar *aName,
    nsISupports* aRequestor, nsIDocShellTreeItem **_retval)
 {
    NS_ENSURE_STATE(mDocShell);
+   NS_ASSERTION(mDocShellTreeOwner, "This should always be set when in this situation");
 
-   return mDocShellAsItem->FindItemWithName(aName, aRequestor, _retval);
+   return mDocShellAsItem->FindItemWithName(aName, 
+      NS_STATIC_CAST(nsIDocShellTreeOwner*, mDocShellTreeOwner), _retval);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
