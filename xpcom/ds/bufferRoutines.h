@@ -36,11 +36,13 @@
 
 #include "nsCRT.h"
 
+#ifndef XPCOM_STANDALONE
 #if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
 #include "nsUnicharUtilCIID.h"
 #include "nsIServiceManager.h"
 #include "nsICaseConversion.h"
 #endif
+#endif /* XPCOM_STANDALONE */
 
 #define KSHIFTLEFT  (0)
 #define KSHIFTRIGHT (1)
@@ -704,6 +706,7 @@ PRInt32 ConvertCase1(char* aString,PRUint32 aCount,PRBool aToUpper){
 
 //----------------------------------------------------------------------------------------
 
+#ifndef XPCOM_STANDALONE
 #if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
 class HandleCaseConversionShutdown3 : public nsIShutdownListener {
 public :
@@ -742,6 +745,7 @@ public:
 };
 
 #endif
+#endif /* XPCOM_STANDALONE */
 
 //----------------------------------------------------------------------------------------
 
@@ -759,6 +763,7 @@ PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper){
   PRUnichar* end = cp + aCount-1;
   PRInt32 result=0;
 
+#ifndef XPCOM_STANDALONE
 #if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
   static CCaseConversionServiceInitializer  gCaseConversionServiceInitializer;
 
@@ -770,6 +775,7 @@ PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper){
   }
   // I18N code end
 #endif
+#endif /* XPCOM_STANDALONE */
 
 
   while (cp <= end) {
