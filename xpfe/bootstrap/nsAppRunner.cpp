@@ -831,7 +831,7 @@ int main(int argc, char* argv[])
 
     int result = main1(argc, argv);
 
-#ifdef NS_DEBUG
+#ifdef 0
 		if ( unsigned long count = NS_TotalWebShellsInExistence() )
 			{
 				printf("!!!Warning: there are still %l instances of nsWebShell outstanding.  OK?\n", count);
