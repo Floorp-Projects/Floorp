@@ -908,7 +908,7 @@ nsEventStatus nsViewer::DispatchMenuItem(PRUint32 aId)
 nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
-printf("Id %d\n", aId);
+
   switch(aId) {
     case VIEWER_EXIT:
       ExitViewer();
