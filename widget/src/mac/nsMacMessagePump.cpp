@@ -190,7 +190,7 @@ nsPaintEvent 		pevent;
 			updateregion = whichwindow->visRgn;
 			thewindow->DoPaintWidgets(updateregion);
 
-			bounds = (**updateregion).rgnBBox;
+			/*bounds = (**updateregion).rgnBBox;
 			rect.x = bounds.left;
 			rect.y = bounds.top;
 			rect.width = bounds.left + (bounds.right-bounds.left);
@@ -204,7 +204,7 @@ nsPaintEvent 		pevent;
 			pevent.point.y = 0;
 			pevent.rect = &rect;
 			pevent.time = 0; 
-			thewindow->OnPaint(pevent);
+			thewindow->OnPaint(pevent);*/
 	    	}
 		EndUpdate(whichwindow);
 		}
