@@ -50,7 +50,7 @@
     
     <description>&cachePara;</description>
 
-    <hbox flex="1" align="center">
+    <hbox align="center">
       <label value="&diskCache.label;" accesskey="&diskCache.accesskey;" control="browserCacheDiskCache"/>
       <textbox id="browserCacheDiskCache" size="8" preftype="int"
                   prefstring="browser.cache.disk.capacity" prefattribute="value"/>
@@ -63,7 +63,7 @@
 
     <vbox>
       <label value="&diskCacheFolder.label;"/>
-      <hbox align="center" flex="1">
+      <hbox align="center">
         <textbox id="browserCacheDiskCacheFolder" flex="1" readonly="true" class="uri-element"/>
         <button label="&chooseDiskCacheFolder.label;" accesskey="&chooseDiskCacheFolder.accesskey;"
               oncommand="prefCacheSelectFolder();" id="chooseDiskCacheFolder"/>
