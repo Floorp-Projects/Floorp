@@ -127,6 +127,7 @@ private:
 
   nsIFrame* GetRealFrame(nsIFrame* aFrame);
   nsIFrame* GetPlaceholderFrame(nsIFrame* aFrame);
+  PRBool    IsPopupFrame(nsIFrame* aFrame);
 
   nsIPresContext* mPresContext;
 };
@@ -483,6 +484,14 @@ nsFocusIterator::GetRealFrame(nsIFrame* aFrame)
   return result;
 }
 
+PRBool
+nsFocusIterator::IsPopupFrame(nsIFrame* aFrame)
+{
+  nsStyleDisplay* display;
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  return (display->mDisplay == NS_STYLE_DISPLAY_POPUP);
+}
+
 nsIFrame*
 nsFocusIterator::GetParentFrame(nsIFrame* aFrame)
 {
@@ -502,6 +511,9 @@ nsFocusIterator::GetFirstChild(nsIFrame* aFrame)
   if (result)
     result = GetRealFrame(result);
 
+  if (result && IsPopupFrame(result))
+    result = GetNextSibling(result);
+
   return result;
 }
 
@@ -515,6 +527,9 @@ nsFocusIterator::GetNextSibling(nsIFrame* aFrame)
     if (result)
       result = GetRealFrame(result);
   }
+
+  if (result && IsPopupFrame(result))
+    result = GetNextSibling(result);
 
   return result;
 }
@@ -534,6 +549,9 @@ nsFocusIterator::GetPrevSibling(nsIFrame* aFrame)
       result = GetRealFrame(result);
     }
   }
+
+  if (result && IsPopupFrame(result))
+    result = GetPrevSibling(result);
 
   return result;
 }
