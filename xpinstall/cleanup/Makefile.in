@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= xpicleanup
+PROGRAM		= xpicleanup$(BIN_SUFFIX)
 REQUIRES	= libreg
 
 CPPSRCS		= \
