@@ -341,6 +341,20 @@ nsXBLService::FlushBindings(nsIContent* aContent)
   if (!bindable)
     return NS_ERROR_FAILURE;
 
+  // Get the original binding.
+  nsCOMPtr<nsIXBLBinding> binding;
+  bindable->GetBinding(getter_AddRefs(binding));
+  if (binding) {
+    // Clear out the script references.
+    nsCOMPtr<nsIDocument> document;
+    aContent->GetDocument(*getter_AddRefs(document));
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    document->GetScriptGlobalObject(getter_AddRefs(global));
+    nsCOMPtr<nsIScriptContext> context;
+    global->GetContext(getter_AddRefs(context));
+    binding->RemoveScriptReferences(context);
+  }
+  
   bindable->SetBinding(nsnull); // Flush old bindings
   return NS_OK;
 }
