@@ -114,7 +114,7 @@ public:
 
 
   virtual void handleDisplayPixmap(Widget, IL_Pixmap *, IL_Pixmap *, PRInt32, PRInt32) { return;}
-  virtual void handleNewPixmap(Widget, IL_Pixmap *, Boolean mask) { return; }
+  virtual void handleNewPixmap(Widget, IL_Pixmap *, Boolean) { return; }
 
   virtual void handleImageComplete(Widget, IL_Pixmap *) {return; }
 
