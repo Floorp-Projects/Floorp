@@ -31,6 +31,8 @@
 #include "nsTransform2D.h"
 #include "nsIScrollableView.h"
 #include "nsVoidArray.h"
+#include "nsGfxCIID.h"
+#include "nsIBlender.h"
 #include "nsIRegion.h"
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
@@ -296,6 +298,11 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   }
   else if (mVis == nsViewVisibility_kShow)
   {
+      float opacity;
+      GetOpacity(opacity);
+
+    if (opacity == 1.0f)
+    {
     nsRect brect;
 
     GetBounds(brect);
@@ -313,6 +320,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
     }
     else if (this != pRoot)
       clipres = rc.SetClipRect(brect, nsClipCombine_kIntersect);
+    }
   }
 
   if (clipres == PR_FALSE)
@@ -383,12 +391,60 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       float opacity;
       GetOpacity(opacity);
 
-      if (opacity > 0.0f)
+      //don't render things that can't be seen...
+
+      if ((opacity > 0.0f) && (mBounds.width > 1) && (mBounds.height > 1))
       {
+        nsIRenderingContext *localcx = nsnull;
+        nsDrawingSurface    surf = nsnull;
+        nsDrawingSurface    redsurf = nsnull;
+        PRBool              hasTransparency;
+
         rc.PushState();
 
-        PRBool  hasTransparency;
         HasTransparency(hasTransparency);
+
+        if (opacity < 1.0f)
+        {
+          nsIDeviceContext  *dx = nsnull;
+          nsIView           *rootview = nsnull;
+
+          //create offscreen bitmap to render view into
+
+          mViewManager->GetDeviceContext(dx);
+          mViewManager->GetRootView(rootview);
+
+          if ((nsnull != dx) && (nsnull != rootview))
+          {
+            dx->CreateRenderingContext(rootview, localcx);
+
+            if (nsnull != localcx)
+            {
+              float   t2p;
+              nscoord width, height;
+
+              //create offscreen buffer for blending...
+
+              dx->GetAppUnitsToDevUnits(t2p);
+
+              width = NSToCoordRound(mBounds.width * t2p);
+              height = NSToCoordRound(mBounds.height * t2p);
+
+              nsRect bitrect = nsRect(0, 0, width, height);
+
+              surf = localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS);
+              redsurf = localcx->CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS);
+
+              if (nsnull != surf)
+                localcx->SelectOffScreenDrawingSurface(surf);
+            }
+
+            NS_RELEASE(dx);
+          }
+        }
+
+        if (nsnull == localcx)
+          localcx = &rc;
 
         if (hasTransparency || (opacity < 1.0f))
         {
@@ -412,7 +468,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
           nscoord     posx, posy;
           nsRect      damRect = rect;
 
-          rc.PushState();
+          localcx->PushState();
 
           GetPosition(&posx, &posy);
 
@@ -421,7 +477,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
           damRect.x += posx;
           damRect.y += posy;
 
-          rc.Translate(-posx, -posy);
+          localcx->Translate(-posx, -posy);
 
           GetNextSibling(curview);
 
@@ -438,7 +494,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
               damRect.x += prect.x;
               damRect.y += prect.y;
 
-              rc.Translate(-prect.x, -prect.y);
+              localcx->Translate(-prect.x, -prect.y);
             }
           }
 
@@ -452,18 +508,20 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
             if (overlap == PR_TRUE)
             {
               // Translate damage area into kid's coordinate system
-              nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
-                                   damageArea.width, damageArea.height);
+//              nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+//                                   damageArea.width, damageArea.height);
+              nsRect kidDamageArea(damRect.x - kidRect.x, damRect.y - kidRect.y,
+                                   damRect.width, damRect.height);
 
               //we will pop the states on the back to front pass...
-              rc.PushState();
+              localcx->PushState();
 
               if (nsnull != views)
                 views->AppendElement(curview);
 
               rects->AppendElement(new nsRect(kidDamageArea));
 
-              curview->Paint(rc, kidDamageArea, aPaintFlags | NS_VIEW_FLAG_FRONT_TO_BACK, clipres);
+              curview->Paint(*localcx, kidDamageArea, aPaintFlags | NS_VIEW_FLAG_FRONT_TO_BACK, clipres);
             }
 
             if (clipres == PR_TRUE)
@@ -486,7 +544,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                 damRect.x += prect.x;
                 damRect.y += prect.y;
 
-                rc.Translate(-prect.x, -prect.y);
+                localcx->Translate(-prect.x, -prect.y);
               }
             }
           }
@@ -509,7 +567,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                 nsRect *trect = (nsRect *)rects->ElementAt(--idx);
                 delete trect;
 
-                rc.PopState();
+                localcx->PopState();
                 isfirst = PR_FALSE;
               }
               else
@@ -517,12 +575,12 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                 curview = (nsIView *)views->ElementAt(--idx);
                 nsRect *trect = (nsRect *)rects->ElementAt(idx);
 
-                curview->Paint(rc, *trect, aPaintFlags | NS_VIEW_FLAG_BACK_TO_FRONT, clipres);
+                curview->Paint(*localcx, *trect, aPaintFlags | NS_VIEW_FLAG_BACK_TO_FRONT, clipres);
 
                 delete trect;
 
                 //pop the state pushed on the front to back pass...
-                rc.PopState();
+                localcx->PopState();
               }
             }
 
@@ -530,8 +588,11 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
             delete views;
           }
 
-          rc.PopState();
+          localcx->PopState();
         }
+
+        if (nsnull != redsurf)
+          localcx->SelectOffScreenDrawingSurface(redsurf);
 
         //now draw ourself...
 
@@ -541,9 +602,66 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
           if (NS_OK == mViewManager->GetViewObserver(obs))
           {
-            obs->Paint((nsIView *)this, rc, rect);
+            obs->Paint((nsIView *)this, *localcx, rect);
             NS_RELEASE(obs);
           }
+        }
+
+        if (localcx != &rc)
+        {
+//          localcx->SelectOffScreenDrawingSurface(nsnull);
+          NS_RELEASE(localcx);
+        }
+        else
+          localcx = nsnull;
+
+        //kill offscreen buffer
+
+        if ((nsnull != surf) && (nsnull != redsurf))
+        {
+          nsRect brect;
+
+          brect.x = brect.y = 0;
+          brect.width = mBounds.width;
+          brect.height = mBounds.height;
+
+          static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
+          static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
+
+          nsIBlender  *blender = nsnull;
+          nsresult rv;
+
+          rv = nsRepository::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&blender);
+
+          if (NS_OK == rv)
+          {
+            nsIDeviceContext  *dx;
+
+            mViewManager->GetDeviceContext(dx);
+
+            float   t2p;
+            nscoord width, height;
+
+            dx->GetAppUnitsToDevUnits(t2p);
+
+            width = NSToCoordRound(mBounds.width * t2p);
+            height = NSToCoordRound(mBounds.height * t2p);
+
+            blender->Init(surf, redsurf);
+            blender->Blend(0, 0, width, height, redsurf, 0, 0, opacity, PR_FALSE);
+
+            NS_RELEASE(blender);
+            NS_RELEASE(dx);
+
+//            rc.CopyOffScreenBits(surf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+            rc.CopyOffScreenBits(redsurf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+          }
+
+          rc.DestroyDrawingSurface(surf);
+          rc.DestroyDrawingSurface(redsurf);
+
+          surf = nsnull;
+          redsurf = nsnull;
         }
 
 #ifdef SHOW_VIEW_BORDERS
@@ -1043,7 +1161,9 @@ nsresult nsView :: LoadWidget(const nsCID &aClassIID)
 
   static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
   rv = nsRepository::CreateInstance(aClassIID, nsnull, kIWidgetIID, (void**)&mWindow);
-  if (NS_OK == rv) {
+
+  if (NS_OK == rv)
+  {
     // Set the widget's client data
     mWindow->SetClientData((void*)this);
   }
