@@ -21,10 +21,15 @@
 *   David Hyatt <hyatt@netscape.com> (Original Author)
 */
 
-#import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 
-@interface CHGetURLCommand : NSScriptCommand {}
+@interface CHExtendedOutlineView : NSOutlineView {
+  SEL mDeleteAction;
+}
 
-- (id)performDefaultImplementation;
+-(void)keyDown:(NSEvent*)aEvent;
+
+-(void)setDeleteAction: (SEL)deleteAction;
+-(SEL)deleteAction;
 
 @end

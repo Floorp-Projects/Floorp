@@ -1,0 +1,94 @@
+{
+    IBClasses = (
+        {CLASS = BookmarkItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {addBookmark = id; addFolder = id; deleteBookmark = id; deleteBookmarks = id; }; 
+            CLASS = BookmarksDataSource; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mAddButton = id; 
+                mBrowserWindowController = id; 
+                mDeleteButton = id; 
+                mOutlineView = id; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = BookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {CLASS = BrowserWindow; LANGUAGE = ObjC; SUPERCLASS = NSWindow; }, 
+        {
+            ACTIONS = {
+                back = id; 
+                cancelAddBookmarkSheet = id; 
+                endAddBookmarkSheet = id; 
+                endLocationSheet = id; 
+                forward = id; 
+                goToLocationFromToolbarURLField = id; 
+                home = id; 
+                manageBookmarks = id; 
+                openLinkInNewTab = id; 
+                openLinkInNewWindow = id; 
+                reload = id; 
+                saveImageAs = id; 
+                saveLinkAs = id; 
+                savePageAs = id; 
+                stop = id; 
+                toggleSidebar = id; 
+                viewOnlyThisImage = id; 
+            }; 
+            CLASS = BrowserWindowController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mAddBookmarkCheckbox = id; 
+                mAddBookmarkFolderField = id; 
+                mAddBookmarkSheetWindow = id; 
+                mAddBookmarkTitleField = id; 
+                mCachedBMDS = id; 
+                mImageLinkMenu = id; 
+                mImageMenu = id; 
+                mInputMenu = id; 
+                mLinkMenu = id; 
+                mLocationSheetURLField = id; 
+                mLocationSheetWindow = id; 
+                mLocationToolbarView = id; 
+                mPageMenu = id; 
+                mPersonalToolbar = BookmarksToolbar; 
+                mProgress = id; 
+                mSidebarBookmarksDataSource = id; 
+                mSidebarBrowserView = id; 
+                mSidebarDrawer = NSDrawer; 
+                mSidebarSourceTabView = id; 
+                mSidebarTabView = id; 
+                mStatus = id; 
+                mTabBrowser = id; 
+                mURLBar = id; 
+            }; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {CLASS = CHExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
+        {CLASS = CHExtendedTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
+        {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = LocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {CLASS = MJExtendedTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
+        {CLASS = MainController; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {load = id; }; 
+            CLASS = MyBrowserView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mImageLinkMenu = id; 
+                mImageMenu = id; 
+                mInputMenu = id; 
+                mLinkMenu = id; 
+                mPageMenu = id; 
+                mWindowController = id; 
+                progress = id; 
+                progressSuper = id; 
+                status = id; 
+                urlbar = id; 
+            }; 
+            SUPERCLASS = NSView; 
+        }
+    ); 
+    IBVersion = 1; 
+}

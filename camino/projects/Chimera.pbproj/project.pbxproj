@@ -2414,12 +2414,12 @@
 		};
 		F5C3AB810270072A01A80166 = {
 			isa = PBXFileReference;
-			path = ExtendedOutlineView.h;
+			path = CHExtendedOutlineView.h;
 			refType = 4;
 		};
 		F5C3AB820270072A01A80166 = {
 			isa = PBXFileReference;
-			path = ExtendedOutlineView.mm;
+			path = CHExtendedOutlineView.mm;
 			refType = 4;
 		};
 		F5C3AB830270072A01A80166 = {
