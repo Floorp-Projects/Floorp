@@ -129,19 +129,19 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
     if (PR_FALSE==keyProcessed)
     {
       switch(keyCode) {
-      case nsIDOMUIEvent::VK_BACK:
-        mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
-        break;
+//      case nsIDOMUIEvent::VK_BACK:
+//        mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
+//        break;
 
       case nsIDOMUIEvent::VK_DELETE:
         mEditor->DeleteSelection(nsIEditor::eDeleteRight);
         break;
 
-      case nsIDOMUIEvent::VK_RETURN:
+//      case nsIDOMUIEvent::VK_RETURN:
       //case nsIDOMUIEvent::VK_ENTER:			// why does this not exist?
         // Need to implement creation of either <P> or <BR> nodes.
-        mEditor->InsertBreak();
-        break;
+//        mEditor->InsertBreak();
+//        break;
       
       case nsIDOMUIEvent::VK_LEFT:
       case nsIDOMUIEvent::VK_RIGHT:
@@ -271,6 +271,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
 	nsAutoString  key;
 	PRUint32     character;
+	PRUint32 keyCode;
 
 	nsCOMPtr<nsIDOMUIEvent>uiEvent;
 	uiEvent = do_QueryInterface(aKeyEvent);
@@ -278,17 +279,27 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 		//non-key event passed to keydown.  bad things.
 		return NS_OK;
 	}
-
+	//
+	// look at the keyCode if it is return or backspace, process it
+	//	we handle these two special characters here because it makes windows integration
+	//	eaiser
+	//
+	if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
+	{
+		if (nsIDOMUIEvent::VK_BACK==keyCode) {
+			mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
+			return NS_OK;
+		}	
+		if (nsIDOMUIEvent::VK_RETURN==keyCode) {
+			mEditor->InsertBreak();
+			return NS_OK;
+		}
+	}
+	
  	if (NS_SUCCEEDED(uiEvent->GetCharCode(&character)))
  	{
-		//
-		// this is a temporary hack to get around the re-firing of key_downs as key_presses
-		// in nsEventStateManager
-		//
-		if (character<0x20) { return NS_OK; }
  		key += character;
- 		if (0!=character)
- 			return mEditor->InsertText(key);
+ 		return mEditor->InsertText(key);
  	}
 
 	return NS_ERROR_BASE;

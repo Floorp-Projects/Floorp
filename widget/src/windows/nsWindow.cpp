@@ -2102,18 +2102,18 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
 //
 //-------------------------------------------------------------------------
 #ifdef tague_keyboard_patch
-BOOL nsWindow::OnChar( UINT aVirtualKeyCode, bool isMultiByte )
+BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte )
 {
   wchar_t	uniChar;
   char		charToConvert[2];
   size_t	length;
 
   if (isMultiByte) {
-	  charToConvert[0]=HIBYTE(aVirtualKeyCode);
-	  charToConvert[1] = LOBYTE(aVirtualKeyCode);
+	  charToConvert[0]=HIBYTE(mbcsCharCode);
+	  charToConvert[1] = LOBYTE(mbcsCharCode);
 	  length=2;
   } else {
-	  charToConvert[0] = LOBYTE(aVirtualKeyCode);
+	  charToConvert[0] = LOBYTE(mbcsCharCode);
 	  length=1;
   }
   // if we get a '\n', ignore it because we already processed it in OnKeyDown.
@@ -2125,7 +2125,7 @@ BOOL nsWindow::OnChar( UINT aVirtualKeyCode, bool isMultiByte )
   ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,charToConvert,length,
 	  &uniChar,sizeof(uniChar));
 
-  DispatchKeyEvent(NS_KEY_PRESS, uniChar, uniChar);
+  DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode);
 
   return FALSE;
 }
@@ -2272,11 +2272,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				UINT			char_result;
 
 				//
-				// check first for backspace or return, these are currently being handled on
-				// the WM_KEYDOWN
+				// check first for backspace or return, handle them specially 
 				//
 				if (ch==0x0d || ch==0x08) {
-					result = PR_TRUE;
+					mHaveDBCSLeadByte = PR_FALSE;
+					result = OnChar(ch,ch==0x0d ? VK_RETURN : VK_BACK,true);
 					break;
 				}
 
@@ -2299,10 +2299,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 					char_result = (mDBCSLeadByte << 8) | ch;
 					mHaveDBCSLeadByte = FALSE;
 					mDBCSLeadByte = 0;
-					result = OnChar(char_result,true);
+					result = OnChar(char_result,0,true);
 				} else {
 					char_result = ch;
-					result = OnChar(char_result,false);
+					result = OnChar(char_result,0,false);
 				}
 
 				break;
