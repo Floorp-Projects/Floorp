@@ -143,6 +143,8 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 XFE_NavCenterView::~XFE_NavCenterView()
 {
 	D(printf("XFE_NavCenterView DESTRUCTING\n"););
+    if (m_pane)
+        HT_DeletePane(m_pane);
 }
 
 //////////////////////////////////////////////////////////////////////////
