@@ -1611,11 +1611,8 @@ PRBool nsHTMLToTXTSinkStream::IsBlockLevel(eHTMLTags aTag)
 {
   if (!mDTD)
   {
-    nsCOMPtr<nsIParser> parser;
-    nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                                     nsnull, 
-                                                     kCParserIID, 
-                                                     (void **)&parser);
+    nsresult rv;
+    nsCOMPtr<nsIParser> parser( do_CreateInstance(kCParserCID, &rv) );
     if (NS_FAILED(rv)) return rv;
     if (!parser) return NS_ERROR_FAILURE;
 

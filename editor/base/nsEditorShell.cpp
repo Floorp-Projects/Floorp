@@ -2002,7 +2002,6 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
     return NS_ERROR_NOT_INITIALIZED;
 
 
-  nsCOMPtr<nsIFileWidget>  fileWidget;
   nsAutoString HTMLTitle;
   GetBundleString(NS_LITERAL_STRING("OpenHTMLFile"), HTMLTitle);
 
@@ -2023,10 +2022,8 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
   // TODO: GET THE DEFAULT DIRECTORY FOR DIFFERENT TYPES FROM PREFERENCES
   nsFileSpec aDisplayDirectory;
 
-  nsresult res = nsComponentManager::CreateInstance(kCFileWidgetCID,
-                                                    nsnull,
-                                                    NS_GET_IID(nsIFileWidget),
-                                                    (void**)&fileWidget);
+  nsresult res;
+  nsCOMPtr<nsIFileWidget> fileWidget( do_CreateInstance(kCFileWidgetCID,&res) );
   if (NS_SUCCEEDED(res))
   {
     nsFileDlgResults dialogResult;

@@ -1185,11 +1185,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
     }
     else {
         // Try to load this as an RDF/XML data source
-        rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                                nsnull,
-                                                NS_GET_IID(nsIRDFDataSource),
-                                                (void**) &ds);
-
+        ds = do_CreateInstance(kRDFXMLDataSourceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         // Start the datasource load asynchronously. If you wanted it

@@ -48,7 +48,7 @@ nsConsoleService::nsConsoleService()
     // XXX deal with below three by detecting null mLock in factory?
     nsresult rv;
     rv = nsSupportsArray::Create(NULL, NS_GET_IID(nsISupportsArray),
-                                 (void**)&mListeners);
+                                 (void**)getter_AddRefs(mListeners));
     mMessages = (nsIConsoleMessage **)
         nsMemory::Alloc(mBufferSize * sizeof(nsIConsoleMessage *));
 

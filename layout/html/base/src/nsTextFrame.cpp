@@ -1973,11 +1973,8 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   ComputeExtraJustificationSpacing(*aRendContext, ts, paintBuffer.mBuffer, textLength, numSpaces);
 
 //IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
-  nsCOMPtr<nsIPref>     prefs;
+  nsCOMPtr<nsIPref> prefs( do_GetService(kPrefCID, &rv) );
   PRInt32 prefInt = 0;
-  rv = nsServiceManager::GetService(kPrefCID, 
-                                    NS_GET_IID(nsIPref), 
-                                    (nsISupports**)&prefs); 
   PRBool outofstylehandled = PR_FALSE;
   if (NS_SUCCEEDED(rv) && prefs) 
   { 
@@ -2767,11 +2764,8 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
       GetOffsetFromView(aCX, origin, &view);
 
 //IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
-      nsCOMPtr<nsIPref>     prefs;
+      nsCOMPtr<nsIPref> prefs( do_GetService(kPrefCID, &rv) );
       PRInt32 prefInt = 0;
-      rv = nsServiceManager::GetService(kPrefCID, 
-                                        NS_GET_IID(nsIPref), 
-                                        (nsISupports**)&prefs); 
       PRBool outofstylehandled = PR_FALSE;
       if (NS_SUCCEEDED(rv) && prefs) 
       { 

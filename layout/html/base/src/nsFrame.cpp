@@ -1237,11 +1237,7 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
     selectPara = PR_TRUE;
   else if (me->clickCount == 3)
   {
-    nsCOMPtr<nsIPref> prefsService;
-    rv = nsServiceManager::GetService(kPrefCID,
-                                      NS_GET_IID(nsIPref),
-                                      (nsISupports**)&prefsService);
-
+    nsCOMPtr<nsIPref> prefsService( do_GetService(kPrefCID, &rv) );
     if (NS_SUCCEEDED(rv) && prefsService)
       prefsService->GetBoolPref("browser.triple_click_selects_paragraph", &selectPara);
   }

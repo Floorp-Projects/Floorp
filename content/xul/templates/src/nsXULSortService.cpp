@@ -1000,8 +1000,7 @@ XULSortServiceImpl::GetCachedTarget(sortPtr sortInfo, PRBool useCache, nsIRDFRes
 	if (!(sortInfo->mInner))
 	{
 		// if we don't have a mInner, create one
-		rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-			nsnull, NS_GET_IID(nsIRDFDataSource), (void **)&(sortInfo->mInner));
+        sortInfo->mInner = do_CreateInstance(kRDFInMemoryDataSourceCID, &rv);
 		if (NS_FAILED(rv))	return(rv);
 	}
 

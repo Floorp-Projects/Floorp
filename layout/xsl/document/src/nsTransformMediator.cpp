@@ -79,8 +79,7 @@ nsTransformMediator::Init(const nsString& aMimeType)
     rv = nsComponentManager::ContractIDToClassID((const char*)contractIDStr, &cid);
     if (NS_SUCCEEDED(rv)) {
       // Try to find a component that implements the nsIDocumentTransformer interface
-      rv = nsComponentManager::CreateInstance(cid, nsnull,
-        NS_GET_IID(nsIDocumentTransformer), (void**) &mTransformer);
+      mTransformer = do_CreateInstance(cid, &rv);
     }
     delete [] contractIDStr;
   }
