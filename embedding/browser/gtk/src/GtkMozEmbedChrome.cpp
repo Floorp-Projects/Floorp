@@ -22,6 +22,7 @@
 #include "GtkMozEmbedChrome.h"
 #include "nsCWebBrowser.h"
 #include "nsIURI.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsCRT.h"
 #include "prlog.h"
 
@@ -36,10 +37,14 @@
 
 static PRLogModuleInfo *mozEmbedLm = NULL;
 
+nsVoidArray *GtkMozEmbedChrome::sBrowsers = NULL;
+
 // constructor and destructor
 GtkMozEmbedChrome::GtkMozEmbedChrome()
 {
   NS_INIT_REFCNT();
+  mOwningGtkWidget  = nsnull;
+  mWebBrowser       = nsnull;
   mNewBrowserCB     = nsnull;
   mNewBrowserCBData = nsnull;
   mDestroyCB        = nsnull;
@@ -67,12 +72,19 @@ GtkMozEmbedChrome::GtkMozEmbedChrome()
   mJSStatus         = NULL;
   mLocation         = NULL;
   mTitle            = NULL;
+  mChromeMask       = 0;
   if (!mozEmbedLm)
     mozEmbedLm = PR_NewLogModule("GtkMozEmbedChrome");
+  if (!sBrowsers)
+    sBrowsers = new nsVoidArray();
+  sBrowsers->AppendElement((void *)this);
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GtkMozEmbedChrome %p\n", this));
 }
 
 GtkMozEmbedChrome::~GtkMozEmbedChrome()
 {
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::~GtkMozEmbedChrome %p\n", this));
+  sBrowsers->RemoveElement((void *)this);
 }
 
 // nsISupports interface
@@ -96,7 +108,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::Init(GtkWidget *aOwningWidget)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::Init\n"));
   mOwningGtkWidget = aOwningWidget;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetNewBrowserCallback(GtkMozEmbedChromeCB *aCallback, void *aData)
@@ -254,25 +266,38 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetOverLink(const PRUnichar *link)
 NS_IMETHODIMP GtkMozEmbedChrome::GetWebBrowser(nsIWebBrowser * *aWebBrowser)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetWebBrowser\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  NS_ENSURE_ARG_POINTER(aWebBrowser);
+  *aWebBrowser = mWebBrowser;
+  NS_IF_ADDREF(*aWebBrowser);
+
+  return NS_OK;
+
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetWebBrowser(nsIWebBrowser * aWebBrowser)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetWebBrowser\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  NS_ENSURE_ARG_POINTER(aWebBrowser);
+  mWebBrowser = aWebBrowser;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetChromeMask(PRUint32 *aChromeMask)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetChromeMask\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aChromeMask);
+  *aChromeMask = mChromeMask;
+  return NS_OK;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetChromeMask(PRUint32 aChromeMask)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetChromeMask\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mChromeMask = aChromeMask;
+  return NS_OK;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetNewBrowser(PRUint32 chromeMask, 
@@ -282,14 +307,34 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetNewBrowser(PRUint32 chromeMask,
   if (mNewBrowserCB)
     return mNewBrowserCB(chromeMask, _retval, mNewBrowserCBData);
   else
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::FindNamedBrowserItem(const PRUnichar *aName, 
 						      nsIDocShellTreeItem **_retval)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::FindNamedBrowserItem\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+
+  PRInt32 i = 0;
+  PRInt32 numBrowsers = sBrowsers->Count();
+
+  for (i = 0; i < numBrowsers; i++)
+  {
+    GtkMozEmbedChrome *chrome = (GtkMozEmbedChrome *)sBrowsers->ElementAt(i);
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    NS_ENSURE_SUCCESS(chrome->GetWebBrowser(getter_AddRefs(webBrowser)), NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(webBrowser));
+    NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+    docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome *, this), _retval);
+    if (!*_retval)
+      return NS_OK;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
@@ -493,7 +538,9 @@ NS_IMETHODIMP GtkMozEmbedChrome::Create(void)
 NS_IMETHODIMP GtkMozEmbedChrome::Destroy(void)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::Destory\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mDestroyCB)
+    mDestroyCB(mDestroyCBData);
+  return NS_OK;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetPosition(PRInt32 x, PRInt32 y)

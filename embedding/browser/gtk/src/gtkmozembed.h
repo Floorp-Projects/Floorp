@@ -58,6 +58,7 @@ struct _GtkMozEmbedClass
   void (* net_stop)     (GtkMozEmbed *embed);
   void (* new_window)   (GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask);
   void (* visibility)   (GtkMozEmbed *embed, gboolean visibility);
+  void (* destroy_brsr) (GtkMozEmbed *embed);
 };
 
 extern GtkType      gtk_moz_embed_get_type         (void);
@@ -68,12 +69,13 @@ extern gboolean     gtk_moz_embed_can_go_back      (GtkMozEmbed *embed);
 extern gboolean     gtk_moz_embed_can_go_forward   (GtkMozEmbed *embed);
 extern void         gtk_moz_embed_go_back          (GtkMozEmbed *embed);
 extern void         gtk_moz_embed_go_forward       (GtkMozEmbed *embed);
-extern void         gtk_moz_embed_reload           (GtkMozEmbed *embed, gint32 flags);
 extern char        *gtk_moz_embed_get_link_message (GtkMozEmbed *embed);
 extern char        *gtk_moz_embed_get_js_status    (GtkMozEmbed *embed);
 extern char        *gtk_moz_embed_get_title        (GtkMozEmbed *embed);
 extern char        *gtk_moz_embed_get_location     (GtkMozEmbed *embed);
 extern void         gtk_moz_embed_reload           (GtkMozEmbed *embed, gint32 flags);
+extern void         gtk_moz_embed_set_chrome_mask  (GtkMozEmbed *embed, guint32 flags);
+extern guint32      gtk_moz_embed_get_chrome_mask  (GtkMozEmbed *embed);
 
 /* These are straight out of nsIWebProgress.h */
 
