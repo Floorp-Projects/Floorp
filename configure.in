@@ -143,7 +143,7 @@ case "$target" in
     fi
     ;;
 
-alpha-*-linux*)
+alpha*-*-linux*)
 	CFLAGS="$CFLAGS -mieee" ;;
 
 alpha*-*-osf*)
