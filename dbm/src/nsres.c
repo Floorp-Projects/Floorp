@@ -2,6 +2,8 @@
 
 #include "nsres.h"
 
+#include <stdio.h>
+
 #if defined(BSDI)||defined(RHAPSODY)
 #include <stdlib.h>
 #else
