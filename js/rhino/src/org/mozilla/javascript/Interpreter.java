@@ -420,6 +420,9 @@ public class Interpreter {
                 if (callType != Node.NON_SPECIALCALL) {
                     // embed line number and source filename
                     iCodeTop = addByte(TokenStream.CALLSPECIAL, iCodeTop);
+                    iCodeTop = addByte(callType, iCodeTop);
+                    iCodeTop = addByte(type == TokenStream.NEW ? 1 : 0,
+                                       iCodeTop);
                     iCodeTop = addShort(itsLineNumber, iCodeTop);
                     iCodeTop = addString(itsSourceFile, iCodeTop);
                 } else {
@@ -1262,12 +1265,15 @@ public class Interpreter {
                             break;
                         }
                         case TokenStream.CALLSPECIAL : {
-                            int line = getShort(iCode, pc);
-                            String name = strings[getIndex(iCode, pc + 2)];
-                            int count = getIndex(iCode, pc + 4);
-                            out.println(tname + " " + count
-                                        + " " + line + " " + name);
-                            pc += 6;
+                            int callType = iCode[pc] & 0xFF;
+                            boolean isNew =  (iCode[pc + 1] != 0);
+                            int line = getShort(iCode, pc+2);
+                            String source = strings[getIndex(iCode, pc + 4)];
+                            int count = getIndex(iCode, pc + 6);
+                            out.println(tname + " " + callType  + " " + isNew
+                                        + " " + count
+                                        + " " + line + " " + source);
+                            pc += 8;
                             break;
                         }
                         case TokenStream.REGEXP : {
@@ -1431,10 +1437,12 @@ public class Interpreter {
                 return 1 + 1;
 
             case TokenStream.CALLSPECIAL :
+                // call type
+                // is new
                 // line number
                 // name string index
                 // arg count
-                return 1 + 2 + 2 + 2;
+                return 1 + 1 + 1 + 2 + 2 + 2;
 
             case TokenStream.REGEXP :
                 // regexp index
@@ -2106,20 +2114,30 @@ public class Interpreter {
             cx.instructionCount = instructionCount;
             instructionCount = -1;
         }
-        int lineNum = getShort(iCode, pc + 1);
-        String name = strings[getIndex(iCode, pc + 3)];
-        int count = getIndex(iCode, pc + 5);
+        int callType = iCode[pc + 1] & 0xFF;
+        boolean isNew =  (iCode[pc + 2] != 0);
+        int sourceLine = getShort(iCode, pc + 3);
+        String sourceName = strings[getIndex(iCode, pc + 5)];
+        int count = getIndex(iCode, pc + 7);
         stackTop -= count;
         Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, count);
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-        --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        Object functionThis;
+        if (isNew) {
+            functionThis = null;
+        } else {
+            functionThis = stack[stackTop];
+            if (functionThis == DBL_MRK) {
+                functionThis = doubleWrap(sDbl[stackTop]);
+            }
+            --stackTop;
+        }
+        Object function = stack[stackTop];
+        if (function == DBL_MRK) function = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.callSpecial(
-                            cx, lhs, rhs, outArgs,
-                            thisObj, scope, name, lineNum);
-        pc += 6;
+                              cx, function, isNew, functionThis, outArgs,
+                              scope, thisObj, callType,
+                              sourceName, sourceLine);
+        pc += 8;
         instructionCount = cx.instructionCount;
         break;
     }

@@ -468,6 +468,19 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         throw NativeGlobal.constructError(cx, "EvalError", m, scope);
     }
 
+    static boolean isEvalFunction(Object functionObj)
+    {
+        if (functionObj instanceof IdFunction) {
+            IdFunction function = (IdFunction)functionObj;
+            if (function.master instanceof NativeGlobal
+                && function.getMethodId() == Id_eval)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * The eval function property of the global object.
      *

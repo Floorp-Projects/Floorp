@@ -306,4 +306,27 @@ public final class OptRuntime extends ScriptRuntime {
     {
         ScriptRuntime.initFunction(cx, scope, fn, functionType, false);
     }
+
+    public static Object callSpecial(Context cx, Object fun,
+                                     Object thisObj, Object[] args,
+                                     Scriptable scope,
+                                     Scriptable callerThis, int callType,
+                                     String fileName, int lineNumber)
+        throws JavaScriptException
+    {
+        return ScriptRuntime.callSpecial(cx, fun, false, thisObj, args, scope,
+                                         callerThis, callType,
+                                         fileName, lineNumber);
+    }
+
+    public static Object newObjectSpecial(Context cx, Object fun,
+                                          Object[] args, Scriptable scope,
+                                          Scriptable callerThis, int callType)
+        throws JavaScriptException
+    {
+        return ScriptRuntime.callSpecial(cx, fun, true, null, args, scope,
+                                         callerThis, callType,
+                                         "", -1);
+    }
+
 }

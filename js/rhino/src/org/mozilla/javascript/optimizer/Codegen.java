@@ -1891,9 +1891,8 @@ public class Codegen extends Interpreter {
         int callType = node.getIntProp(Node.SPECIALCALL_PROP,
                                        Node.NON_SPECIALCALL);
         boolean isSimpleCall = false;
-        String simpleCallName = null;
         if (!firstArgDone && type != TokenStream.NEW) {
-            simpleCallName = getSimpleCallName(node);
+            String simpleCallName = getSimpleCallName(node);
             if (simpleCallName != null && callType == Node.NON_SPECIALCALL) {
                 isSimpleCall = true;
                 push(simpleCallName);
@@ -1957,15 +1956,19 @@ public class Codegen extends Interpreter {
         String callSignature;
 
         if (callType != Node.NON_SPECIALCALL) {
-            className = "org/mozilla/javascript/ScriptRuntime";
+            className = "org/mozilla/javascript/optimizer/OptRuntime";
             if (type == TokenStream.NEW) {
                 methodName = "newObjectSpecial";
                 callSignature = "(Lorg/mozilla/javascript/Context;"
                                 +"Ljava/lang/Object;"
                                 +"[Ljava/lang/Object;"
                                 +"Lorg/mozilla/javascript/Scriptable;"
-                                +")Lorg/mozilla/javascript/Scriptable;";
+                                +"Lorg/mozilla/javascript/Scriptable;"
+                                +"I" // call type
+                                +")Ljava/lang/Object;";
                 aload(variableObjectLocal);
+                aload(thisObjLocal);
+                push(callType);
             } else {
                 methodName = "callSpecial";
                 callSignature = "(Lorg/mozilla/javascript/Context;"
@@ -1974,10 +1977,12 @@ public class Codegen extends Interpreter {
                                 +"[Ljava/lang/Object;"
                                 +"Lorg/mozilla/javascript/Scriptable;"
                                 +"Lorg/mozilla/javascript/Scriptable;"
+                                +"I" // call type
                                 +"Ljava/lang/String;I"  // filename, linenumber
                                 +")Ljava/lang/Object;";
-                aload(thisObjLocal);
                 aload(variableObjectLocal);
+                aload(thisObjLocal);
+                push(callType);
                 push(itsSourceFile == null ? "" : itsSourceFile);
                 push(itsLineNumber);
             }

@@ -87,8 +87,6 @@ public class ScriptRuntime {
     public final static Class
         ContextClass      = classOrNull("org.mozilla.javascript.Context"),
         FunctionClass     = classOrNull("org.mozilla.javascript.Function"),
-        NativeGlobalClass = classOrNull("org.mozilla.javascript.NativeGlobal"),
-        NativeWithClass   = classOrNull("org.mozilla.javascript.NativeWith"),
         ScriptableClass   = classOrNull("org.mozilla.javascript.Scriptable"),
         ScriptableObjectClass = classOrNull(
                                    "org.mozilla.javascript.ScriptableObject"),
@@ -1188,49 +1186,6 @@ public class ScriptRuntime {
         return function.call(cx, scope, thisObj, args);
     }
 
-    private static Object callOrNewSpecial(Context cx, Scriptable scope,
-                                           Object fun, Object jsThis,
-                                           Object thisArg,
-                                           Object[] args, boolean isCall,
-                                           String filename, int lineNumber)
-        throws JavaScriptException
-    {
-        if (fun instanceof IdFunction) {
-            IdFunction f = (IdFunction)fun;
-            String name = f.getFunctionName();
-            if (name.length() == 4) {
-                if (name.equals("eval")) {
-                    if (f.master.getClass() == NativeGlobalClass) {
-                        return NativeGlobal.evalSpecial(cx, scope,
-                                                        thisArg, args,
-                                                        filename, lineNumber);
-                    }
-                }
-                else if (name.equals("With")) {
-                    if (f.master.getClass() == NativeWithClass) {
-                        return NativeWith.newWithSpecial(cx, args, f, !isCall);
-                    }
-                }
-            }
-        }
-
-        if (isCall)
-            return call(cx, fun, jsThis, args, scope);
-        return newObject(cx, fun, args, scope);
-    }
-
-    public static Object callSpecial(Context cx, Object fun,
-                                     Object thisArg, Object[] args,
-                                     Scriptable enclosingThisArg,
-                                     Scriptable scope, String filename,
-                                     int lineNumber)
-        throws JavaScriptException
-    {
-        return callOrNewSpecial(cx, scope, fun, thisArg,
-                                enclosingThisArg, args, true,
-                                filename, lineNumber);
-    }
-
     /**
      * Operator new.
      *
@@ -1248,12 +1203,40 @@ public class ScriptRuntime {
         return function.construct(cx, scope, args);
     }
 
-    public static Scriptable newObjectSpecial(Context cx, Object fun,
-                                              Object[] args, Scriptable scope)
+    public static Object callSpecial(Context cx, Object fun,
+                                     boolean isNew, Object thisObj,
+                                     Object[] args, Scriptable scope,
+                                     Scriptable callerThis, int callType,
+                                     String filename, int lineNumber)
         throws JavaScriptException
     {
-        return (Scriptable) callOrNewSpecial(cx, scope, fun, null, null, args,
-                                             false, null, -1);
+        if (callType == Node.SPECIALCALL_EVAL) {
+            if (NativeGlobal.isEvalFunction(fun)) {
+                if (isNew) {
+                    throw NativeGlobal.typeError1("msg.not.ctor",
+                                                  "eval", scope);
+                }
+                return NativeGlobal.evalSpecial(cx, scope,
+                                                callerThis, args,
+                                                filename, lineNumber);
+            }
+        } else if (callType == Node.SPECIALCALL_WITH) {
+            if (NativeWith.isWithFunction(fun)) {
+                if (!isNew) {
+                    throw Context.reportRuntimeError1("msg.only.from.new",
+                                                      "With");
+                }
+                return NativeWith.newWithSpecial(cx, scope, args);
+            }
+        } else {
+            Context.codeBug();
+        }
+
+        if (isNew) {
+            return newObject(cx, fun, args, scope);
+        } else {
+            return call(cx, fun, thisObj, args, scope);
+        }
     }
 
     /**

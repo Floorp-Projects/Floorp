@@ -69,6 +69,11 @@ public class IdFunction extends BaseFunction
         ScriptableObject.defineProperty(scope, name, f, attributes);
     }
 
+    public final int getMethodId()
+    {
+        return methodId;
+    }
+
     public Scriptable getPrototype()
     {
         // Lazy initialization of prototype: for native functions this

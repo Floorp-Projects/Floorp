@@ -165,16 +165,23 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
         return -1;
     }
 
-    public static Object newWithSpecial(Context cx, Object[] args,
-                                        Function ctorObj, boolean inNewExpr)
+    static boolean isWithFunction(Object functionObj)
     {
-        if (!inNewExpr) {
-            throw Context.reportRuntimeError1("msg.only.from.new", "With");
+        if (functionObj instanceof IdFunction) {
+            IdFunction function = (IdFunction)functionObj;
+            if (function.master instanceof NativeWith
+                && function.getMethodId() == Id_constructor)
+            {
+                return true;
+            }
         }
+        return false;
+    }
 
+    static Object newWithSpecial(Context cx, Scriptable scope, Object[] args)
+    {
         ScriptRuntime.checkDeprecated(cx, "With");
-
-        Scriptable scope = ScriptableObject.getTopLevelScope(ctorObj);
+        scope = ScriptableObject.getTopLevelScope(scope);
         NativeWith thisObj = new NativeWith();
         thisObj.setPrototype(args.length == 0
                              ? ScriptableObject.getClassPrototype(scope,
