@@ -122,38 +122,16 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
             
       this.gICalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
         
-      /*
-      ** FROM HERE TO "<<HERE" IS A HACK FROM JSLIB, REPLACE THIS IF YOU KNOW HOW
-      */
-      const JS_DIR_UTILS_FILE_DIR_CID             = "@mozilla.org/file/directory_service;1";
+      var profileComponent = Components.classes["@mozilla.org/profile/manager;1"].createInstance();
       
-      const JS_DIR_UTILS_I_PROPS                  = "nsIProperties";
+      var profileInternal = profileComponent.QueryInterface(Components.interfaces.nsIProfileInternal);
+ 
+      var profileFile = profileInternal.getProfileDir(profileInternal.currentProfile);
       
-      const JS_DIR_UTILS_DIR                  = new Components.Constructor(
-                                                JS_DIR_UTILS_FILE_DIR_CID,
-                                                JS_DIR_UTILS_I_PROPS);
-      
-      const JS_DIR_UTILS_NSIFILE                  = Components.interfaces.nsIFile;
-      
-      var rv;
+      profileFile.append("CalendarDataFile.ics");
+                      
+      this.gICalLib.setServer( profileFile.path );
 
-      try { rv=(new JS_DIR_UTILS_DIR()).get("ProfD", JS_DIR_UTILS_NSIFILE).path; }
-      
-      catch (e)
-      {
-       dump("ERROR! IN CALENDAR EVENT.JS");
-       rv=null;
-      }
-      
-      /*
-      ** <<HERE
-      */
-
-
-      this.UserPath = rv;
-
-      this.gICalLib.setServer( this.UserPath+"/CalendarDataFile.ics" );
-      
       this.gICalLib.addObserver( observer );
       
       this.prepareAlarms( );
@@ -488,20 +466,22 @@ CalendarEventDataSource.prototype.getEventsWithAlarms = function()
 CalendarEventDataSource.prototype.getAllFutureEvents = function()
 {
    var Today = new Date();
-
-   var Year = Today.getYear() + 1900;
-
-   var Month = Today.getMonth();
-   Month++;
-   if( Month < 10 )
-      Month = "0"+Month;
-
-   var Day = Today.getDate();
    
-   if( Day < 10 )
-      Day = "0"+Day;
+   var Infinity = new Date( 9999, 31, 12 );
 
-   return( this.searchBySql( "SELECT * FROM VEVENT WHERE DTSTART >= '"+Year+""+Month+""+Day+"T000000'" ) );
+   var eventList = this.gICalLib.getFirstEventsForRange( Today, Infinity );
+   
+   var eventArray = new Array();
+   
+   while( eventList.hasMoreElements() )
+   {
+      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
+      
+      eventArray[ eventArray.length ] = tmpevent;
+   }
+   eventArray.sort( this.orderRawEventsByDate );
+
+   return eventArray;
 }
 
 /** PUBLIC
