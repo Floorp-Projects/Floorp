@@ -76,6 +76,11 @@ static PRLogModuleInfo* gLog = nsnull;
 
 // This struct is used as the slot value in the forward and reverse
 // arcs hash tables.
+//
+// Assertion objects are reference counted, because each Assertion's
+// ownership is shared between the datasource and any enumerators that
+// are currently iterating over the datasource.
+//
 class Assertion 
 {
 public:
@@ -84,7 +89,16 @@ public:
               nsIRDFNode* aTarget,
               PRBool aTruthValue);
 
-    ~Assertion();
+    void AddRef()
+    {
+        ++mRefCnt;
+    }
+
+    void Release()
+    {
+        if (--mRefCnt == 0)
+            delete this;
+    }
 
     // public for now, because I'm too lazy to go thru and clean this up.
     nsIRDFResource* mSource;     // OWNER
@@ -92,16 +106,17 @@ public:
     nsIRDFNode*     mTarget;     // OWNER
     Assertion*      mNext;
     Assertion*      mInvNext;
-    PRBool          mTruthValue;
+    PRPackedBool    mTruthValue;
+    PRPackedBool    mMarked;
+    PRInt16         mRefCnt;
 
     // For nsIRDFPurgeableDataSource
     void Mark() { mMarked = PR_TRUE; }
     PRBool IsMarked() { return mMarked; }
     void Unmark() { mMarked = PR_FALSE; }
 
-private:
-    PRBool          mMarked;
-    PRInt16         mRefCnt; // XXX not used yet: to be used for threadsafety
+protected:
+    ~Assertion();
 };
 
 
@@ -274,10 +289,6 @@ private:
     nsIRDFNode*     mValue;
     PRInt32         mCount;
     PRBool          mTruthValue;
-
-    // XXX this implementation is a race condition waiting to
-    // happen. Hopefully, no one will blow away this assertion while
-    // we're iterating, but...
     Assertion*      mNextAssertion;
 
 public:
@@ -327,6 +338,10 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
     else {
         mNextAssertion = mDataSource->GetReverseArcs(mTarget);
     }
+
+    // Add an owning reference from the enumerator
+    if (mNextAssertion)
+        mNextAssertion->AddRef();
 }
 
 InMemoryAssertionEnumeratorImpl::~InMemoryAssertionEnumeratorImpl()
@@ -335,6 +350,9 @@ InMemoryAssertionEnumeratorImpl::~InMemoryAssertionEnumeratorImpl()
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: InMemoryAssertionEnumeratorImpl\n", gInstanceCount);
 #endif
+
+    if (mNextAssertion)
+        mNextAssertion->Release();
 
     NS_IF_RELEASE(mDataSource);
     NS_IF_RELEASE(mSource);
@@ -369,7 +387,18 @@ InMemoryAssertionEnumeratorImpl::HasMoreElements(PRBool* aResult)
             foundIt = PR_TRUE;
         }
 
+        // Remember the last assertion we were holding on to
+        Assertion* as = mNextAssertion;
+
+        // iterate
         mNextAssertion = (mSource) ? mNextAssertion->mNext : mNextAssertion->mInvNext;
+
+        // grab an owning reference from the enumerator to the next assertion
+        if (mNextAssertion)
+            mNextAssertion->AddRef();
+
+        // ...and release the reference from the enumerator to the old one.
+        as->Release();
 
         if (foundIt) {
             *aResult = PR_TRUE;
@@ -667,7 +696,10 @@ InMemoryDataSource::DeleteForwardArcsEntry(PLHashEntry* he, PRIntn i, void* arg)
     while (as) {
         Assertion* doomed = as;
         as = as->mNext;
-        delete doomed;
+
+        // Unlink, and release the datasource's reference.
+        doomed->mNext = doomed->mInvNext = nsnull;
+        doomed->Release();
     }
     return HT_ENUMERATE_NEXT;
 }
@@ -977,7 +1009,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
     } else {
         prev->mNext = as;
     }
-    
+
     // Link it in to the "reverse arcs" table
 
     // XXX Shouldn't we keep a pointer to the end of the list to make
@@ -994,6 +1026,9 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
     } else {
         prev->mInvNext = as;
     }
+
+    // Add the datasource's owning reference.
+    as->AddRef();
 
     return NS_OK;
 }
@@ -1101,8 +1136,9 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
     NS_ASSERTION(foundReverseArc, "in-memory db corrupted: unable to find reverse arc");
 #endif
 
-    // Delete the assertion struct & release resources
-    delete as;
+    // Unlink, and release the datasource's reference
+    as->mNext = as->mInvNext = nsnull;
+    as->Release();
 
     return NS_OK;
 }
@@ -1493,7 +1529,10 @@ InMemoryDataSource::Sweep()
 
         Assertion* doomed = as;
         as = as->mNext;
-        delete doomed;
+
+        // Unlink, and release the datasource's reference
+        doomed->mNext = doomed->mInvNext = nsnull;
+        doomed->Release();
     }
 
     return NS_OK;
