@@ -1,0 +1,5 @@
+/* jband - 09/14/98 -  */
+
+com.netscape.jsdebugging.engine.local implements the
+com.netscape.jsdebugging.engine interface. It supports running the C engine for
+testing.

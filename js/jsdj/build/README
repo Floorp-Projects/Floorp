@@ -1,0 +1,33 @@
+/* jband - 09/14/98 -  */
+
+The build system here currently supports only Microsoft nmake (I use the one
+from MSDEV 4.2). It assumes that Symantec Visual Cafe is installed (i.e. it uses
+sj.exe), and also uses awk. I mostly use the 4NT shell, but I think that
+everything still works with the default NT shell.
+
+This system can build all the Java code here. It can also do jar packaging (with
+dependency checks to assure that you have the right stuff) and produce javadocs.
+
+Netscape's JavaScript in Java engine (known as Rhino) is not currently available
+to the public. The flag 'NO_RHINO=1' is necessary for many of the makefile
+targets when used outside of Netscape.
+
+There is code here to also build a Corba/iiop connection for remote debugging to
+a Netscape Internal version of Enterprise Server 3.51. This is not fully
+functional on the server side. You should normally use the NO_CORBA=1 build
+flag. If you want to play with this stuff then you need an install of ES3.51 and
+you need to set the ES3_ROOT environment variable to point to that install.
+(e.g. mine is 'set ES3_ROOT=E:\Netscape\SuiteSpot'. NOTE: the code in
+com.netscape.jsdebugging.remote.corba is *generated* in an 'interesting' build
+system in js/jsd/corba/src -- it would not be a good idea to modify this
+generated code.
+
+'nmake -f jsdj.mak help' will display a list of possible targets (might not be
+up to date :).
+
+'nmake -f jsdj.mak all NO_RHINO=1 NO_CORBA=1' will build everything.
+
+There are a few .bat files for convenience to build the targets I often build.
+
+
+
