@@ -32,6 +32,7 @@
 #include "nsIImapMessageSink.h"
 #include "nsIImapExtensionSink.h"
 #include "nsIImapMiscellaneousSink.h"
+#include "nsIImapServerSink.h"
 
 /* 21A89610-DC0D-11d2-806C-006008128C4E */
 
@@ -140,7 +141,9 @@ public:
 
     NS_IMETHOD GetImapMiscellaneousSink(nsIImapMiscellaneousSink** aImapMiscellaneousSink) = 0;
     NS_IMETHOD SetImapMiscellaneousSink(nsIImapMiscellaneousSink* aImapMiscellaneousSink) = 0;
-    
+
+    NS_IMETHOD SetImapServerSink(nsIImapServerSink *aImapServerSink) = 0;
+    NS_IMETHOD GetImapServerSink(nsIImapServerSink **aImapServerSink) = 0;
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap url state
 	///////////////////////////////////////////////////////////////////////////////

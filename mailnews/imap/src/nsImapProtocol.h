@@ -321,6 +321,7 @@ private:
 
     nsCOMPtr<nsIImapExtensionSink>		m_imapExtensionSink;
     nsCOMPtr<nsIImapMiscellaneousSink>	m_imapMiscellaneousSink;
+	nsCOMPtr<nsIImapServerSink>				m_imapServerSink;
     // helper function to setup imap sink interface proxies
     void SetupSinkProxy();
 	// End thread support stuff

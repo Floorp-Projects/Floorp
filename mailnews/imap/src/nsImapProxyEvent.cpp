@@ -196,59 +196,6 @@ static NS_DEFINE_IID(kIImapMailFolderSinkIID, NS_IIMAPMAILFOLDERSINK_IID);
 NS_IMPL_THREADSAFE_ISUPPORTS(nsImapMailFolderSinkProxy, kIImapMailFolderSinkIID);
 
 NS_IMETHODIMP
-nsImapMailFolderSinkProxy::PossibleImapMailbox(nsIImapProtocol* aProtocol,
-                                           mailbox_spec* aSpec)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aSpec, "Oops... null mailbox_spec");
-    if(!aSpec)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        PossibleImapMailboxProxyEvent *ev =
-            new PossibleImapMailboxProxyEvent(this, aSpec);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-        {
-            ev->SetNotifyCompletion(PR_TRUE);
-            ev->PostEvent(m_eventQueue);
-        }
-    }
-    else
-    {
-        res = m_realImapMailFolderSink->PossibleImapMailbox(aProtocol,
-                                                        aSpec);
-        aProtocol->NotifyFEEventCompletion();
-    }
-    return res;
-}
-
-NS_IMETHODIMP
-nsImapMailFolderSinkProxy::MailboxDiscoveryDone(nsIImapProtocol* aProtocol)
-{
-    nsresult res = NS_OK;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        MailboxDiscoveryDoneProxyEvent *ev =
-            new MailboxDiscoveryDoneProxyEvent(this);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapMailFolderSink->MailboxDiscoveryDone(aProtocol);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
 nsImapMailFolderSinkProxy::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
                                              mailbox_spec* aSpec)
 {
@@ -1548,58 +1495,6 @@ nsImapMiscellaneousSinkProxy::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::FEAlert(nsIImapProtocol* aProtocol,
-                                  const PRUnichar* aString)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aString, "Oops... null aString");
-    if(!aString)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        FEAlertProxyEvent *ev =
-            new FEAlertProxyEvent(this, aString);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->FEAlert(aProtocol, aString);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::FEAlertFromServer(nsIImapProtocol* aProtocol,
-                                            const char* aString)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aString, "Oops... null aString");
-    if(!aString)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        FEAlertFromServerProxyEvent *ev =
-            new FEAlertFromServerProxyEvent(this, aString);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->FEAlertFromServer(aProtocol, aString);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::ProgressStatus(nsIImapProtocol* aProtocol,
                                          PRUint32 aMsgId, const char *extraInfo)
 {
@@ -1882,81 +1777,11 @@ nsImapMailFolderSinkProxyEvent::~nsImapMailFolderSinkProxyEvent()
     NS_IF_RELEASE (m_proxy);
 }
 
-PossibleImapMailboxProxyEvent::PossibleImapMailboxProxyEvent(
-    nsImapMailFolderSinkProxy* aProxy, mailbox_spec* aSpec) :
-    nsImapMailFolderSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (aSpec, "PossibleImapMailboxProxyEvent: null aSpec");
-    if (aSpec)
-    {
-        m_mailboxSpec = *aSpec;
-        if (aSpec->allocatedPathName)
-            m_mailboxSpec.allocatedPathName =
-                PL_strdup(aSpec->allocatedPathName); 
-#if 0 // mscott - we appear to be creating a new name space on top of the existing one..
-      // i don't really understand what is going on here. but aSpec is pointing to the same
-	  // object as m_mailboxSpec. so m_mailboxSpec.namespacesforfolder =new (aspec->namespacesforfolder)
-	  // isn't going to fly...
-        if (aSpec->namespaceForFolder)
-            m_mailboxSpec.namespaceForFolder = 
-                new nsIMAPNamespace(aSpec->namespaceForFolder->GetType(),
-                                    aSpec->namespaceForFolder->GetPrefix(),
-                                    aSpec->namespaceForFolder->GetDelimiter(),
-                                    aSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
-#endif
-    }
-    else
-    {
-        memset(&m_mailboxSpec, 0, sizeof(mailbox_spec));
-    }
-}
-
-PossibleImapMailboxProxyEvent::~PossibleImapMailboxProxyEvent()
-{
-    if (m_mailboxSpec.allocatedPathName)
-        PL_strfree(m_mailboxSpec.allocatedPathName);
-// mscott - again, i didn't actually copy the namespace over see my comment in the function above...so we 
-// shouldn't delete the name space as this is the original!
-//    if (m_mailboxSpec.namespaceForFolder)
-//        delete m_mailboxSpec.namespaceForFolder;
-}
-
-NS_IMETHODIMP
-PossibleImapMailboxProxyEvent::HandleEvent()
-{
-    nsresult res =
-        m_proxy->m_realImapMailFolderSink->PossibleImapMailbox(
-            m_proxy->m_protocol, &m_mailboxSpec);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-MailboxDiscoveryDoneProxyEvent::MailboxDiscoveryDoneProxyEvent(
-    nsImapMailFolderSinkProxy* aProxy) :
-    nsImapMailFolderSinkProxyEvent(aProxy)
-{
-}
-
-MailboxDiscoveryDoneProxyEvent::~MailboxDiscoveryDoneProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-MailboxDiscoveryDoneProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMailFolderSink->MailboxDiscoveryDone(
-        m_proxy->m_protocol);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
 UpdateImapMailboxInfoProxyEvent::UpdateImapMailboxInfoProxyEvent(
     nsImapMailFolderSinkProxy* aProxy, mailbox_spec* aSpec) :
     nsImapMailFolderSinkProxyEvent(aProxy)
 {
-    NS_ASSERTION (aSpec, "PossibleImapMailboxProxyEvent: null aSpec");
+    NS_ASSERTION (aSpec, "UpdateImapMailboxProxyEvent: null aSpec");
     if (aSpec)
     {
         m_mailboxSpec = *aSpec;
@@ -1998,7 +1823,7 @@ UpdateImapMailboxStatusProxyEvent::UpdateImapMailboxStatusProxyEvent(
     nsImapMailFolderSinkProxy* aProxy, mailbox_spec* aSpec) :
     nsImapMailFolderSinkProxyEvent(aProxy)
 {
-    NS_ASSERTION (aSpec, "PossibleImapMailboxProxyEvent: null aSpec");
+    NS_ASSERTION (aSpec, "UpdateImapMailboxProxyEvent: null aSpec");
     if (aSpec)
     {
         m_mailboxSpec = *aSpec;
@@ -3368,58 +3193,6 @@ LiteSelectUIDValidityProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->LiteSelectUIDValidity(
         m_proxy->m_protocol, m_uidValidity);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-FEAlertProxyEvent::FEAlertProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, const PRUnichar* alertString) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (alertString, "Oops... a null alertString");
-    if (alertString)
-        m_alertString = nsCRT::strdup(alertString);
-    else
-        m_alertString = nsnull;
-}
-
-FEAlertProxyEvent::~FEAlertProxyEvent()
-{
-    PR_FREEIF(m_alertString);
-}
-
-NS_IMETHODIMP
-FEAlertProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->FEAlert(
-        m_proxy->m_protocol, m_alertString);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-FEAlertFromServerProxyEvent::FEAlertFromServerProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, const char* alertString) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (alertString, "Oops... a null alertString");
-    if (alertString)
-        m_alertString = nsCRT::strdup(alertString);
-    else
-        m_alertString = nsnull;
-}
-
-FEAlertFromServerProxyEvent::~FEAlertFromServerProxyEvent()
-{
-    PR_FREEIF (m_alertString);
-}
-
-NS_IMETHODIMP
-FEAlertFromServerProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->FEAlertFromServer(
-        m_proxy->m_protocol, m_alertString);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;

@@ -23,6 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsMsgMailNewsUrl.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsIImapServerSink.h"
 
 class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgUriUrl
 {
@@ -53,6 +54,9 @@ public:
 
     NS_IMETHOD GetImapMiscellaneousSink(nsIImapMiscellaneousSink** aImapMiscellaneousSink);
     NS_IMETHOD SetImapMiscellaneousSink(nsIImapMiscellaneousSink* aImapMiscellaneousSink);
+
+    NS_IMETHOD GetImapServerSink(nsIImapServerSink** aImapServerSink);
+    NS_IMETHOD SetImapServerSink(nsIImapServerSink* aImapServerSink);
 
 	NS_IMPL_CLASS_GETSET(ImapAction, nsImapAction, m_imapAction);
 	NS_IMETHOD GetRequiredImapState(nsImapState * aImapUrlState);
@@ -138,7 +142,10 @@ protected:
     nsIImapMessageSink*	m_imapMessageSink;   // not ref counted
     nsIImapExtensionSink*	m_imapExtensionSink;  // not ref counted
     nsIImapMiscellaneousSink* m_imapMiscellaneousSink;  // not ref counted
-  
+
+	// I AM using nsCOMPtr because I suspect the above problem has gone away.
+	nsCOMPtr <nsIImapServerSink> m_imapServerSink;
+
     // online message copy support; i don't have a better solution yet
     nsISupports* m_copyState;   // ** not refcount'd
     nsIFileSpec* m_fileSpec;

@@ -53,6 +53,10 @@ PRLogModuleInfo *IMAP;
 #include "nsIImapIncomingServer.h"
 #include "nsIPref.h"
 
+#include "nsProxyObjectManager.h"
+
+
+
 // for temp message hack
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #define MESSAGE_PATH "/tmp/tempMessage.eml"
@@ -74,6 +78,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
@@ -439,6 +444,36 @@ nsImapProtocol::SetupSinkProxy()
 				m_imapMiscellaneousSink = do_QueryInterface(miscSink);
             }
         }
+		if (!m_imapServerSink)
+		{
+            nsCOMPtr<nsIImapServerSink> aImapServerSink;
+            res = m_runningUrl->GetImapServerSink(getter_AddRefs(aImapServerSink));
+            if (NS_SUCCEEDED(res) && aImapServerSink)
+            {
+				NS_WITH_SERVICE( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &res);
+    
+				if (NS_FAILED(res)) 
+					return;
+
+				res = proxyManager->GetProxyObject(  m_sinkEventQueue,
+														 nsCOMTypeInfo<nsIImapServerSink>::GetIID(),
+														 aImapServerSink,
+														 PROXY_SYNC | PROXY_ALWAYS,
+														 getter_AddRefs(m_imapServerSink));
+//                 nsImapMiscellaneousSinkProxy * miscSink = new
+  //                  nsImapMiscellaneousSinkProxy(aImapMiscellaneousSink,
+    //                                         this,
+      //                                       m_sinkEventQueue,
+        //                                     m_thread);
+		//		m_imapServerSink = do_QueryInterface(miscSink);
+//				GetProxyObject(nsIEventQueue *destQueue, 
+  //                                                 REFNSIID aIID, 
+    //                                               nsISupports* aObj, 
+      //                                             ProxyType proxyType,
+        //                                           void** aProxyObject) = 0;
+                       
+            }
+		}
     }
 }
 
@@ -3580,11 +3615,10 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
                 
 				boxNameCopy = adoptedBoxSpec->allocatedPathName;
 
-                if (m_imapMailFolderSink)
+                if (m_imapServerSink)
                 {
-                    m_imapMailFolderSink->PossibleImapMailbox(this,
-                                                          adoptedBoxSpec);
-                    WaitForFEEventCompletion();
+                    m_imapServerSink->PossibleImapMailbox(boxNameCopy);
+//                    WaitForFEEventCompletion();
                 
                     PRBool useSubscription = PR_FALSE;
 
@@ -3673,29 +3707,29 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 void
 nsImapProtocol::AlertUserEventUsingId(PRUint32 aMessageId)
 {
-    if (m_imapMiscellaneousSink)
+    if (m_imapServerSink)
 	{
 		PRUnichar *progressString = IMAPGetStringByID(aMessageId);
 
-        m_imapMiscellaneousSink->FEAlert(this, progressString);
+        m_imapServerSink->FEAlert(progressString);
 	}
 }
 
 void
 nsImapProtocol::AlertUserEvent(const char * message)
 {
-    if (m_imapMiscellaneousSink)
+    if (m_imapServerSink)
 	{
 		nsAutoString uniString(message);
-        m_imapMiscellaneousSink->FEAlert(this, uniString.GetUnicode());
+        m_imapServerSink->FEAlert(uniString.GetUnicode());
 	}
 }
 
 void
 nsImapProtocol::AlertUserEventFromServer(const char * aServerEvent)
 {
-    if (m_imapMiscellaneousSink)
-        m_imapMiscellaneousSink->FEAlertFromServer(this, aServerEvent);
+    if (m_imapServerSink)
+        m_imapServerSink->FEAlertFromServer(aServerEvent);
 }
 
 void
@@ -5255,7 +5289,7 @@ void nsImapProtocol::MailboxDiscoveryFinished()
 		m_hostSessionList->SetHaveWeEverDiscoveredFoldersForHost(GetImapHostName(), GetImapUserName(), PR_TRUE);
 
 		// notify front end that folder discovery is complete....
-		m_imapMailFolderSink->MailboxDiscoveryDone(this);
+		m_imapServerSink->DiscoveryDone();
     }
 }
 

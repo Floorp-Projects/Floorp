@@ -38,10 +38,6 @@ public:
         return iid;
     }
 
-    // Tell mail master about a discovered imap mailbox
-    NS_IMETHOD PossibleImapMailbox(nsIImapProtocol* aProtocol,
-                                   mailbox_spec* aSpec) = 0;
-    NS_IMETHOD MailboxDiscoveryDone(nsIImapProtocol* aProtocol) = 0;
     // Tell mail master about the newly selected mailbox
     NS_IMETHOD UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
                                      mailbox_spec* aSpec) = 0;

@@ -72,10 +72,6 @@ public:
     
     NS_DECL_ISUPPORTS
 
-    // Tell mail master about a discovered imap mailbox
-    NS_IMETHOD PossibleImapMailbox(nsIImapProtocol* aProtocol,
-                                   mailbox_spec* aSpec);
-    NS_IMETHOD MailboxDiscoveryDone(nsIImapProtocol* aProtocol);
     // Tell mail master about the newly selected mailbox
     NS_IMETHOD UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
                                      mailbox_spec* aSpec);
@@ -227,11 +223,7 @@ public:
                                     uid_validity_info* aInfo);
     NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
                                      PRUint32 uidValidity);
-    NS_IMETHOD FEAlert(nsIImapProtocol* aProtocol,
-                       const PRUnichar* aString);
-    NS_IMETHOD FEAlertFromServer(nsIImapProtocol* aProtocol,
-                                 const char* aString);
-    NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
+	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
                               PRUint32 statusMsgId, const char *extraInfo);
     NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
@@ -290,23 +282,6 @@ struct nsImapMailFolderSinkProxyEvent : public nsImapEvent
     nsImapMailFolderSinkProxyEvent(nsImapMailFolderSinkProxy* aProxy);
     virtual ~nsImapMailFolderSinkProxyEvent();
     nsImapMailFolderSinkProxy* m_proxy;
-};
-
-struct PossibleImapMailboxProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    PossibleImapMailboxProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                                  mailbox_spec* aSpec);
-    virtual ~PossibleImapMailboxProxyEvent();
-    NS_IMETHOD HandleEvent();
-
-    mailbox_spec m_mailboxSpec;
-};
-
-struct MailboxDiscoveryDoneProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    MailboxDiscoveryDoneProxyEvent(nsImapMailFolderSinkProxy* aProxy);
-    virtual ~MailboxDiscoveryDoneProxyEvent();
-    NS_IMETHOD HandleEvent();
 };
 
 struct UpdateImapMailboxInfoProxyEvent : public nsImapMailFolderSinkProxyEvent
@@ -735,23 +710,6 @@ struct LiteSelectUIDValidityProxyEvent : public nsImapMiscellaneousSinkProxyEven
     PRUint32 m_uidValidity;
 };
 
-struct FEAlertProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    FEAlertProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                      const PRUnichar* aString);
-    virtual ~FEAlertProxyEvent();
-    NS_IMETHOD HandleEvent();
-    PRUnichar* m_alertString;
-};
-
-struct FEAlertFromServerProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    FEAlertFromServerProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                                const char* aString);
-    virtual ~FEAlertFromServerProxyEvent();
-    NS_IMETHOD HandleEvent();
-    char* m_alertString;
-};
 
 struct ProgressStatusProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {

@@ -28,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsIMsgFolder.h"
 #include "nsIImapIncomingServer.h"
+#include "nsIImapServerSink.h"
 
 #include "nsImapUtils.h"
 
@@ -959,11 +960,20 @@ nsImapService::SetImapUrlSink(nsIMsgFolder* aMsgFolder,
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     nsISupports* aInst = nsnull;
+	nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+	nsCOMPtr <nsIImapServerSink> imapServerSink;
 
     NS_ASSERTION (aMsgFolder && aImapUrl, "Oops ... null pointers");
     if (!aMsgFolder || !aImapUrl)
         return rv;
     
+	rv = aMsgFolder->GetServer(getter_AddRefs(incomingServer));
+	if (NS_SUCCEEDED(rv) && incomingServer)
+	{
+		imapServerSink = do_QueryInterface(incomingServer);
+		if (imapServerSink)
+			aImapUrl->SetImapServerSink(imapServerSink);
+	}
     rv = aMsgFolder->QueryInterface(nsIImapLog::GetIID(), (void**)&aInst);
     if (NS_SUCCEEDED(rv) && aInst)
         aImapUrl->SetImapLog((nsIImapLog*) aInst);

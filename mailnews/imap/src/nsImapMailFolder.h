@@ -164,10 +164,6 @@ public:
 	NS_DECL_NSIMSGIMAPMAILFOLDER
 
     // nsIImapMailFolderSink methods
-    // Tell mail master about a discovered imap mailbox
-    NS_IMETHOD PossibleImapMailbox(nsIImapProtocol* aProtocol,
-                                   mailbox_spec* aSpec);
-    NS_IMETHOD MailboxDiscoveryDone(nsIImapProtocol* aProtocol);
     // Tell mail master about the newly selected mailbox
     NS_IMETHOD UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
                                      mailbox_spec* aSpec);
@@ -284,10 +280,6 @@ public:
                                     uid_validity_info* aInfo);
 	NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
                                      PRUint32 uidValidity);
-	NS_IMETHOD FEAlert(nsIImapProtocol* aProtocol,
-                       const PRUnichar* aString);
-	NS_IMETHOD FEAlertFromServer(nsIImapProtocol* aProtocol,
-                                 const char* aString);
 	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
                               PRUint32 aMsgId, const char *extraInfo);
 	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,

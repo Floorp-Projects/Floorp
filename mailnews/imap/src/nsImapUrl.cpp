@@ -181,6 +181,27 @@ NS_IMETHODIMP nsImapUrl::SetImapMessageSink(nsIImapMessageSink  * aImapMessageSi
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapUrl::GetImapServerSink(nsIImapServerSink ** aImapServerSink)
+{
+	if (aImapServerSink)
+	{
+		*aImapServerSink = m_imapServerSink;
+		NS_IF_ADDREF(*aImapServerSink);
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetImapServerSink(nsIImapServerSink  * aImapServerSink)
+{
+    m_imapServerSink = aImapServerSink;
+
+	return NS_OK;
+}
+
+
 NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExtensionSink)
 {
 	if (aImapExtensionSink)
