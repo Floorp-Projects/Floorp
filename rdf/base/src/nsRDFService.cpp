@@ -93,16 +93,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFService
-    NS_IMETHOD GetResource(const char* uri, nsIRDFResource** resource);
-    NS_IMETHOD GetUnicodeResource(const PRUnichar* uri, nsIRDFResource** resource);
-    NS_IMETHOD GetLiteral(const PRUnichar* value, nsIRDFLiteral** literal);
-    NS_IMETHOD GetDateLiteral(PRTime value, nsIRDFDate** date) ;
-    NS_IMETHOD GetIntLiteral(PRInt32 value, nsIRDFInt** intLiteral);
-    NS_IMETHOD RegisterResource(nsIRDFResource* aResource, PRBool replace = PR_FALSE);
-    NS_IMETHOD UnregisterResource(nsIRDFResource* aResource);
-    NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource, PRBool replace = PR_FALSE);
-    NS_IMETHOD UnregisterDataSource(nsIRDFDataSource* dataSource);
-    NS_IMETHOD GetDataSource(const char* uri, nsIRDFDataSource** dataSource);
+    NS_DECL_NSIRDFSERVICE
 
     // Implementation methods
     nsresult RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace = PR_FALSE);
@@ -128,11 +119,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode
-    NS_IMETHOD EqualsNode(nsIRDFNode* aNode, PRBool* aResult);
+    NS_DECL_NSIRDFNODE
 
     // nsIRDFLiteral
-    NS_IMETHOD GetValue(PRUnichar* *aValue);
-    NS_IMETHOD GetValueConst(const PRUnichar** aValue);
+    NS_DECL_NSIRDFLITERAL
 
 private:
     nsAutoString mValue;
@@ -223,7 +213,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode
-    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result);
+    NS_DECL_NSIRDFNODE
 
     // nsIRDFDate
     NS_IMETHOD GetValue(PRTime *value);
@@ -321,7 +311,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode
-    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result);
+    NS_DECL_NSIRDFNODE
 
     // nsIRDFInt
     NS_IMETHOD GetValue(PRInt32 *value);

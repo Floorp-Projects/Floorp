@@ -47,16 +47,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFContainerUtils interface
-    NS_IMETHOD IsOrdinalProperty(nsIRDFResource *aProperty, PRBool *_retval);
-    NS_IMETHOD IndexToOrdinalResource(PRInt32 aIndex, nsIRDFResource **_retval);
-    NS_IMETHOD OrdinalResourceToIndex(nsIRDFResource *aOrdinal, PRInt32 *_retval);
-    NS_IMETHOD IsContainer(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, PRBool *_retval);
-    NS_IMETHOD IsBag(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, PRBool *_retval);
-    NS_IMETHOD IsSeq(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, PRBool *_retval);
-    NS_IMETHOD IsAlt(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, PRBool *_retval);
-    NS_IMETHOD MakeBag(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, nsIRDFContainer **_retval);
-    NS_IMETHOD MakeSeq(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, nsIRDFContainer **_retval);
-    NS_IMETHOD MakeAlt(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, nsIRDFContainer **_retval);
+    NS_DECL_NSIRDFCONTAINERUTILS
 
 private:
     friend nsresult NS_NewRDFContainerUtils(nsIRDFContainerUtils** aResult);
@@ -185,7 +176,7 @@ RDFContainerUtilsImpl::OrdinalResourceToIndex(nsIRDFResource *aOrdinal, PRInt32 
         return NS_ERROR_UNEXPECTED;
     }
 
-    PRInt32 index = 0;
+    PRInt32 idx = 0;
 
     ++s;
     while (*s) {
@@ -194,13 +185,13 @@ RDFContainerUtilsImpl::OrdinalResourceToIndex(nsIRDFResource *aOrdinal, PRInt32 
             return NS_ERROR_UNEXPECTED;
         }
 
-        index *= 10;
-        index += (*s - '0');
+        idx *= 10;
+        idx += (*s - '0');
 
         ++s;
     }
 
-    *aIndex = index;
+    *aIndex = idx;
     return NS_OK;
 }
 

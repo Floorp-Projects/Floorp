@@ -318,23 +318,13 @@ public:
     }
 
     // nsIRDFRemoteDataSource interface
-    NS_IMETHOD Init(const char* uri);
-    NS_IMETHOD Refresh(PRBool aBlocking);
-    NS_IMETHOD Flush(void);
+    NS_DECL_NSIRDFREMOTEDATASOURCE
 
     // nsIRDFXMLSink interface
-    NS_IMETHOD GetReadOnly(PRBool* aIsReadOnly);
-    NS_IMETHOD SetReadOnly(PRBool aIsReadOnly);
-    NS_IMETHOD BeginLoad(void);
-    NS_IMETHOD Interrupt(void);
-    NS_IMETHOD Resume(void);
-    NS_IMETHOD EndLoad(void);
-    NS_IMETHOD AddNameSpace(nsIAtom* aPrefix, const nsString& aURI);
-    NS_IMETHOD AddXMLSinkObserver(nsIRDFXMLSinkObserver* aObserver);
-    NS_IMETHOD RemoveXMLSinkObserver(nsIRDFXMLSinkObserver* aObserver);
+    NS_DECL_NSIRDFXMLSINK
 
     // nsIRDFXMLSource interface
-    NS_IMETHOD Serialize(nsIOutputStream* aStream);
+    NS_DECL_NSIRDFXMLSOURCE
 
     // Implementation methods
     PRBool

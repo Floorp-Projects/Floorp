@@ -69,16 +69,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFContainer interface
-    NS_IMETHOD GetDataSource(nsIRDFDataSource** _retval);
-    NS_IMETHOD GetResource(nsIRDFResource** _retval);
-    NS_IMETHOD Init(nsIRDFDataSource *aDataSource, nsIRDFResource *aContainer);
-    NS_IMETHOD GetCount(PRInt32 *_retval);
-    NS_IMETHOD GetElements(nsISimpleEnumerator **_retval);
-    NS_IMETHOD AppendElement(nsIRDFNode *aElement);
-    NS_IMETHOD RemoveElement(nsIRDFNode *aElement, PRBool aRenumber);
-    NS_IMETHOD InsertElementAt(nsIRDFNode *aElement, PRInt32 aIndex, PRBool aRenumber);
-    NS_IMETHOD RemoveElementAt(PRInt32 aIndex, PRBool aRenumber, nsIRDFNode** _retval);
-    NS_IMETHOD IndexOf(nsIRDFNode *aElement, PRInt32 *_retval);
+    NS_DECL_NSIRDFCONTAINER
 
 private:
     friend nsresult NS_NewRDFContainer(nsIRDFContainer** aResult);
@@ -246,18 +237,19 @@ RDFContainerImpl::RemoveElement(nsIRDFNode *aElement, PRBool aRenumber)
 
     nsresult rv;
 
-    PRInt32 index;
-    rv = IndexOf(aElement, &index);
+    PRInt32 idx;
+    rv = IndexOf(aElement, &idx);
     if (NS_FAILED(rv)) return rv;
 
-    if (index < 0) {
+    if (idx < 0) {
         NS_WARNING("attempt to remove non-existant element");
         return NS_OK;
     }
 
     // Remove the element.
     nsCOMPtr<nsIRDFResource> ordinal;
-    rv = gRDFContainerUtils->IndexToOrdinalResource(index, getter_AddRefs(ordinal));
+    rv = gRDFContainerUtils->IndexToOrdinalResource(idx,
+                                                    getter_AddRefs(ordinal));
     if (NS_FAILED(rv)) return rv;
 
     rv = mDataSource->Unassert(mContainer, ordinal, aElement);
@@ -267,7 +259,7 @@ RDFContainerImpl::RemoveElement(nsIRDFNode *aElement, PRBool aRenumber)
         // Now slide the rest of the collection backwards to fill in
         // the gap. This will have the side effect of completely
         // renumber the container from index to the end.
-        rv = Renumber(index + 1, -1);
+        rv = Renumber(idx + 1, -1);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -379,9 +371,9 @@ RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
     rv = GetCount(&count);
     if (NS_FAILED(rv)) return rv;
 
-    for (PRInt32 index = 1; index <= count; ++index) {
+    for (PRInt32 idx = 1; idx <= count; ++idx) {
         nsCOMPtr<nsIRDFResource> ordinal;
-        rv = gRDFContainerUtils->IndexToOrdinalResource(index, getter_AddRefs(ordinal));
+        rv = gRDFContainerUtils->IndexToOrdinalResource(idx, getter_AddRefs(ordinal));
         if (NS_FAILED(rv)) return rv;
 
         // Get all of the elements in the container with the specified
@@ -411,7 +403,7 @@ RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
                 continue;
 
             // Okay, we've found it!
-            *aIndex = index;
+            *aIndex = idx;
             return NS_OK;
         }
     }

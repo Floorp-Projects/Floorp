@@ -77,106 +77,14 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFDataSource interface
-    NS_IMETHOD GetURI(char* *uri);
-
-    NS_IMETHOD GetSource(nsIRDFResource* property,
-                         nsIRDFNode* target,
-                         PRBool tv,
-                         nsIRDFResource** source);
-
-    NS_IMETHOD GetSources(nsIRDFResource* property,
-                          nsIRDFNode* target,
-                          PRBool tv,
-                          nsISimpleEnumerator** sources);
-
-    NS_IMETHOD GetTarget(nsIRDFResource* source,
-                         nsIRDFResource* property,
-                         PRBool tv,
-                         nsIRDFNode** target);
-
-    NS_IMETHOD GetTargets(nsIRDFResource* source,
-                          nsIRDFResource* property,
-                          PRBool tv,
-                          nsISimpleEnumerator** targets);
-
-    NS_IMETHOD Assert(nsIRDFResource* source, 
-                      nsIRDFResource* property, 
-                      nsIRDFNode* target,
-                      PRBool tv);
-
-    NS_IMETHOD Unassert(nsIRDFResource* source,
-                        nsIRDFResource* property,
-                        nsIRDFNode* target);
-
-    NS_IMETHOD Change(nsIRDFResource* aSource,
-                      nsIRDFResource* aProperty,
-                      nsIRDFNode* aOldTarget,
-                      nsIRDFNode* aNewTarget);
-
-    NS_IMETHOD Move(nsIRDFResource* aOldSource,
-                    nsIRDFResource* aNewSource,
-                    nsIRDFResource* aProperty,
-                    nsIRDFNode* aTarget);
-
-    NS_IMETHOD HasAssertion(nsIRDFResource* source,
-                            nsIRDFResource* property,
-                            nsIRDFNode* target,
-                            PRBool tv,
-                            PRBool* hasAssertion);
-
-    NS_IMETHOD AddObserver(nsIRDFObserver* aObserver);
-
-    NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver);
-
-    NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsISimpleEnumerator** labels);
-
-    NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsISimpleEnumerator** labels);
-
-    NS_IMETHOD GetAllResources(nsISimpleEnumerator** aCursor);
-
-    NS_IMETHOD Flush();
-
-    NS_IMETHOD GetAllCommands(nsIRDFResource* source,
-                              nsIEnumerator/*<nsIRDFResource>*/** commands);
-
-    NS_IMETHOD GetAllCmds(nsIRDFResource* source,
-                              nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
-
-    NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-                                nsIRDFResource*   aCommand,
-                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-                                PRBool* aResult);
-
-    NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-                         nsIRDFResource*   aCommand,
-                         nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+    NS_DECL_NSIRDFDATASOURCE
 
     // nsIRDFCompositeDataSource interface
-    NS_IMETHOD AddDataSource(nsIRDFDataSource* source);
-    NS_IMETHOD RemoveDataSource(nsIRDFDataSource* source);
+    NS_DECL_NSIRDFCOMPOSITEDATASOURCE
 
     // nsIRDFObserver interface
-    NS_IMETHOD OnAssert(nsIRDFResource* subject,
-                        nsIRDFResource* predicate,
-                        nsIRDFNode* object);
+    NS_DECL_NSIRDFOBSERVER
 
-    NS_IMETHOD OnUnassert(nsIRDFResource* subject,
-                          nsIRDFResource* predicate,
-                          nsIRDFNode* object);
-
-    NS_IMETHOD OnChange(nsIRDFResource* aSource,
-                        nsIRDFResource* aProperty,
-                        nsIRDFNode* aOldTarget,
-                        nsIRDFNode* aNewTarget);
-
-    NS_IMETHOD OnMove(nsIRDFResource* aOldSource,
-                      nsIRDFResource* aNewSource,
-                      nsIRDFResource* aProperty,
-                      nsIRDFNode* aTarget);
-
-    // Implementation methods
     PRBool HasAssertionN(int n, nsIRDFResource* source,
                             nsIRDFResource* property,
                             nsIRDFNode* target,
@@ -204,8 +112,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsISimpleEnumerator interface
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
-    NS_IMETHOD GetNext(nsISupports** aResult);
+    NS_DECL_NSISIMPLEENUMERATOR
 
     // pure abstract methods to be overridden
     virtual nsresult
@@ -1133,6 +1040,14 @@ CompositeDataSourceImpl::GetAllResources(nsISimpleEnumerator** aResult)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#if 0
+/*
+ * shaver 19990824: until Composite is made to implement 
+ * nsIRDFRemoteDataSource, we don't need or want this.  When it does implement
+ * nsIRDFRemoteDataSource, we should do a similar thing with Refresh and
+ * make a no-op Init.  I'll be back to finish that off later.
+ */
+
 NS_IMETHODIMP
 CompositeDataSourceImpl::Flush()
 {
@@ -1144,6 +1059,7 @@ CompositeDataSourceImpl::Flush()
     }
     return NS_OK;
 }
+#endif
 
 #if 0
 NS_IMETHODIMP
