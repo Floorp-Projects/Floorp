@@ -41,6 +41,7 @@ REQUIRES = \
   layout \
   locale \
   necko \
+  plugin \
   pref \
   string \
   uriloader \

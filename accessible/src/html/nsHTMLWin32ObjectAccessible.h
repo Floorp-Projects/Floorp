@@ -19,8 +19,9 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- * Contributor(s):  John Gaunt (jgaunt@netscape.com)
+ * Contributor(s):
+ *      John Gaunt (jgaunt@netscape.com) (original author)
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,36 +37,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsAccessibilityService_h__
-#define __nsAccessibilityService_h__
+#ifndef _nsHTMLWin32ObjectAccessible_H_
+#define _nsHTMLWin32ObjectAccessible_H_
 
-#include "nsIAccessibilityService.h"
-#include "nsIContent.h"
-#include "nsIPresShell.h"
-#include "nsIDocShell.h"
-#include "nsObjectFrame.h"
+#include "nsAccessible.h"
+#include "nsIAccessibleWin32Object.h"
 
-class nsIFrame;
-class nsIWeakReference;
-class nsIDOMNode;
+struct IAccessible;
 
-class nsAccessibilityService : public nsIAccessibilityService
+/**
+  * This class is used only internally, we never! send out an IAccessible linked
+  *   back to this object. This class is used to represent a plugin object when
+  *   referenced as a child or sibling of another nsAccessible node. We need only
+  *   a limited portion of the nsIAccessible interface implemented here. The
+  *   in depth accessible information will be returned by the actual IAccessible
+  *   object returned by us in Accessible::NewAccessible() that gets the IAccessible
+  *   from the windows system from the window handle.
+  */
+class nsHTMLWin32ObjectAccessible : public nsAccessible,
+                                    public nsIAccessibleWin32Object
 {
 public:
-  nsAccessibilityService();
-  virtual ~nsAccessibilityService();
 
-  NS_DECL_ISUPPORTS
+  nsHTMLWin32ObjectAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, PRInt32 aHwnd);
+  virtual ~nsHTMLWin32ObjectAccessible() {}
 
-  // nsIAccessibilityService methods:
-  NS_DECL_NSIACCESSIBILITYSERVICE
+  NS_DECL_ISUPPORTS_INHERITED
 
-private:
-  nsresult GetHTMLObjectAccessibleFor(nsIDOMNode *aNode, nsIPresShell *aShell, nsObjectFrame *aFrame, nsIAccessible **_retval);
-  nsresult GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aContent);
-  nsresult GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
-  void GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent);
-  nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
+  // ---- nsIAccessibleWin32Object ----
+  NS_IMETHOD GetHwnd(PRInt32 *aHwnd);
+
+protected:
+  // ---- Data Members ----
+  /** 
+    * A handle to the native plugin window (hopefully), given to 
+    *   Accessible::NewAccessible() so the actual IAccessible can be retrieved.
+    */
+  PRInt32       mHwnd;
 };
 
-#endif /* __nsIAccessibilityService_h__ */
+#endif  

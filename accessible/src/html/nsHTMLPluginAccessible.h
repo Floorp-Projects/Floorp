@@ -19,8 +19,9 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- * Contributor(s):  John Gaunt (jgaunt@netscape.com)
+ * Contributor(s):
+ *       John Gaunt (jgaunt@netscape.com)
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,36 +37,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsAccessibilityService_h__
-#define __nsAccessibilityService_h__
+#include "nsAccessible.h"
 
-#include "nsIAccessibilityService.h"
-#include "nsIContent.h"
-#include "nsIPresShell.h"
-#include "nsIDocShell.h"
-#include "nsObjectFrame.h"
-
-class nsIFrame;
-class nsIWeakReference;
-class nsIDOMNode;
-
-class nsAccessibilityService : public nsIAccessibilityService
+class nsHTMLPluginAccessible : public nsAccessible
 {
 public:
-  nsAccessibilityService();
-  virtual ~nsAccessibilityService();
+  nsHTMLPluginAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
+  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
+  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
 
-  NS_DECL_ISUPPORTS
+protected:
+  nsCOMPtr<nsIAccessibilityService> mAccService;
 
-  // nsIAccessibilityService methods:
-  NS_DECL_NSIACCESSIBILITYSERVICE
-
-private:
-  nsresult GetHTMLObjectAccessibleFor(nsIDOMNode *aNode, nsIPresShell *aShell, nsObjectFrame *aFrame, nsIAccessible **_retval);
-  nsresult GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aContent);
-  nsresult GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
-  void GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent);
-  nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
 };
 
-#endif /* __nsIAccessibilityService_h__ */

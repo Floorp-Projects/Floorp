@@ -64,7 +64,7 @@
 
 // Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
 nsXULButtonAccessible::nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
+nsAccessible(aNode, aShell)
 { 
 }
 

@@ -31,6 +31,7 @@ LIBRARY_NAME = accessibility_html_s
 REQUIRES = \
   content \
   content_xul \
+  docshell \
   dom \
   gfx \
   gfx2 \
@@ -40,6 +41,7 @@ REQUIRES = \
   layout \
   locale \
   necko \
+  plugin \
   string \
   uriloader \
   view \
@@ -55,6 +57,7 @@ CPPSRCS = \
   nsHTMLIFrameRootAccessible.cpp \
   nsHTMLImageAccessible.cpp \
   nsHTMLLinkAccessible.cpp \
+  nsHTMLPluginAccessible.cpp \
   nsHTMLSelectAccessible.cpp \
   nsHTMLTableAccessible.cpp \
   nsHTMLTextAccessible.cpp \
@@ -67,4 +70,5 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base \
+  -I$(srcdir)/../../../layout/html/base/src \
   $(NULL)

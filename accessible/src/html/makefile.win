@@ -24,6 +24,7 @@ MODULE = accessibility
 LIBRARY_NAME = accessibility_html_s
 REQUIRES = \
   content \
+  docshell \
   dom \
   gfx \
   gfx2 \
@@ -33,6 +34,7 @@ REQUIRES = \
   layout \
   locale \
   necko \
+  plugin \
   string \
   uriloader \
   view \
@@ -47,12 +49,15 @@ CPP_OBJS = \
   .\$(OBJDIR)\nsHTMLIFrameRootAccessible.obj \
   .\$(OBJDIR)\nsHTMLImageAccessible.obj \
   .\$(OBJDIR)\nsHTMLLinkAccessible.obj \
+  .\$(OBJDIR)\nsHTMLPluginAccessible.obj \
   .\$(OBJDIR)\nsHTMLSelectAccessible.obj \
   .\$(OBJDIR)\nsHTMLTableAccessible.obj \
   .\$(OBJDIR)\nsHTMLTextAccessible.obj \
+  .\$(OBJDIR)\nsHTMLWin32ObjectAccessible.obj \
   $(NULL)
 
 EXPORTS = \
+  .\nsHTMLWin32ObjectAccessible.h \
   $(NULL)
 
 LINCS = \
@@ -60,6 +65,7 @@ LINCS = \
   -I..\..\..\layout\html\forms\public \
   -I..\..\..\layout\html\forms\src \
   -I..\..\..\layout\html\base\src \
+  -I..\..\..\widget\src\windows \
   $(NULL)
 
 

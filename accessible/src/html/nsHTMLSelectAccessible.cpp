@@ -38,10 +38,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
+#include "nsGUIEvent.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIFrame.h"
 #include "nsIComboboxControlFrame.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -50,10 +53,11 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOListElement.h"
 #include "nsIListControlFrame.h"
-#include "nsIComboboxControlFrame.h"
+#include "nsIOptionElement.h"
+#include "nsISelectControlFrame.h"
 #include "nsIServiceManager.h"
+#include "nsIWidget.h"
 #include "nsLayoutAtoms.h"
-#include "nsIDocument.h"
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
@@ -324,7 +328,6 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccNumActions(PRUint8 *_retval)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsHTMLSelectOptionAccessible::AccDoAction(PRUint8 index)
 {
   if (index == eAction_Select) {   // default action
@@ -488,9 +491,6 @@ nsHTMLListboxAccessible::nsHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakRe
 nsListboxAccessible(aDOMNode, aShell)
 {
 }
-
-/** Inherit the ISupports impl from nsAccessible, we handle nsIAccessibleSelectable */
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLListboxAccessible, nsListboxAccessible, nsIAccessibleSelectable)
 
 /** 
   * Our last (and only) child is an nsHTMLSelectListAccessible object 

@@ -59,10 +59,6 @@ public:
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-
-private:
-  nsCOMPtr<nsIAccessibilityService> mAccService;
-
 };
 
 class nsXULCheckboxAccessible : public nsFormControlAccessible

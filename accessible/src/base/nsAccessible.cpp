@@ -87,6 +87,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLLabelElement.h"
+#include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
@@ -770,7 +771,7 @@ NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState)
 }
 
   /* readonly attribute boolean accFocused; */
-NS_IMETHODIMP nsAccessible::GetAccFocused(nsIAccessible * *aAccFocused) 
+NS_IMETHODIMP nsAccessible::GetAccFocused(nsIAccessible **aAccFocused) 
 { 
   *aAccFocused = nsnull;
 
@@ -1274,11 +1275,15 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMHTMLImageElement> imageContent(do_QueryInterface(aContent));
   nsCOMPtr<nsIDOMHTMLInputElement> inputContent;
-  if (!imageContent)
+  nsCOMPtr<nsIDOMHTMLObjectElement> objectContent;
+  nsCOMPtr<nsIDOMHTMLImageElement> imageContent(do_QueryInterface(aContent));
+  if (!imageContent) {
     inputContent = do_QueryInterface(aContent);
-  if (imageContent || inputContent) {
+    if (!inputContent)
+      objectContent = do_QueryInterface(aContent);
+  }
+  if (imageContent || inputContent || objectContent) {
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContent));
     NS_ASSERTION(elt, "No DOM element for content node!");
     elt->GetAttribute(NS_LITERAL_STRING("alt"), textEquivalent);
@@ -1288,6 +1293,8 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
       elt->GetAttribute(NS_LITERAL_STRING("name"), textEquivalent);
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("src"), textEquivalent);
+    if (textEquivalent.IsEmpty())
+      elt->GetAttribute(NS_LITERAL_STRING("data"), textEquivalent); // for <object>s with images
     return AppendStringWithSpaces(aFlatString, textEquivalent);
   }
 

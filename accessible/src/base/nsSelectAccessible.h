@@ -98,10 +98,14 @@ protected:
 /**
   * A class that represents the Listbox widget.
   */
-class nsListboxAccessible : public nsAccessible
+class nsListboxAccessible : public nsAccessible,
+                            public nsIAccessibleSelectable
 {
 public:
-  
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLESELECTABLE
+
   nsListboxAccessible (nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsListboxAccessible () {}
 

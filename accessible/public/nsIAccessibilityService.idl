@@ -46,9 +46,8 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLGroupboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
-// new
-//  nsIAccessible CreateHTMLObjectAccessible(in nsISupports aFrame);
-// end new
+  nsIAccessible createHTMLNativeWindowAccessible(in nsIDOMNode aDOMNode, in nsIWeakReference aShell, in PRInt32 aHWnd);
+  nsIAccessible createHTMLPluginAccessible(in nsIDOMNode aDOMNode, in nsIWeakReference aShell);
   nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsISupports aPresShell);
   nsIAccessible createHTMLTableAccessible(in nsISupports aFrame);
