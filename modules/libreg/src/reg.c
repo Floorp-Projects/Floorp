@@ -35,8 +35,8 @@
 
 /* Preprocessor Defines
  *  STANDALONE_REGISTRY - define if not linking with Navigator
- *  NOCACHE_HDR         - define if multi-threaded access to registry
- *  SELF_REPAIR         - define to skip header update on open
+ *  NOCACHE_HDR         - define if multi-process access to registry
+ *  SELF_REPAIR         - undefine to skip header update on open
  *  VERIFY_READ         - define TRUE to double-check short reads
  *
 #define NOCACHE_HDR     1
@@ -51,7 +51,6 @@
 
 #ifdef STANDALONE_REGISTRY
 #include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 #include <errno.h>
 
@@ -73,16 +72,6 @@
 
 #include "reg.h"
 #include "NSReg.h"
-
-#if !defined(STANDALONE_REGISTRY) && defined(SEEK_SET)
-    /* Undo the damage caused by xp_core.h, which is included by NSReg.h */
-    #undef SEEK_SET
-    #undef SEEK_CUR
-    #undef SEEK_END
-    #define SEEK_SET PR_SEEK_SET
-    #define SEEK_CUR PR_SEEK_CUR
-    #define SEEK_END PR_SEEK_END
-#endif
 
 #if defined(XP_UNIX)
 #ifndef MAX_PATH
@@ -384,20 +373,26 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
     PR_ASSERT( fh != NULL );
 
     /* Open the file for exclusive random read/write */
-    (*fh) = XP_FileOpen(path, PR_RDWR|PR_CREATE_FILE, 00644);
+    *fh = XP_FileOpen(path, XP_FILE_UPDATE_BIN);
+
     if ( !VALID_FILEHANDLE(*fh) )
     {
         switch (PR_GetError())
         {
-        case PR_FILE_NOT_FOUND_ERROR:   /* file not found */
-            return REGERR_NOFILE;
+        case PR_FILE_NOT_FOUND_ERROR:   
+            /* file not found, try to create it */
+            *fh = XP_FileOpen(path, XP_FILE_TRUNCATE_BIN);
+            if ( VALID_FILEHANDLE(*fh) )
+                return REGERR_OK;
+            else
+                return REGERR_NOFILE;
 
         case PR_FILE_IS_BUSY_ERROR: /* file in use */
         case PR_FILE_IS_LOCKED_ERROR:
         case PR_ILLEGAL_ACCESS_ERROR:
         case PR_NO_ACCESS_RIGHTS_ERROR:
             /* try read only */
-            (*fh) = XP_FileOpen(path, PR_RDONLY, 00644);
+            (*fh) = XP_FileOpen(path, XP_FILE_READ_BIN);
             if ( VALID_FILEHANDLE(*fh) )
                 return REGERR_READONLY;
             else
@@ -472,7 +467,7 @@ static REGERR nr_ReadFile(FILEHANDLE fh, REGOFF offset, int32 len, void *buffer)
             /* If buffer has new data beyond what PR_READ() says it got */
             /* we'll assume the read was OK--this is a gamble but */
             /* missing errors will cause fewer problems than too many. */
-            p = (unsigned char*)buffer+readlen;
+            p = (unsigned char*)buffer + readlen;
             while ( (*p == (unsigned char)FILLCHAR) && (p < dbgend) ) {
                 p++;
             }
@@ -1239,14 +1234,6 @@ static REGERR nr_CatName(REGFILE *reg, REGOFF node, char *path, uint32 bufsize,
                     REGDESC *desc);
 static REGERR nr_ReplaceName(REGFILE *reg, REGOFF node, char *path,
                     uint32 bufsize, REGDESC *desc);
-
-#if 0 /* old interface */
-static char * nr_LastDelim(char *pPath);
-static XP_Bool nr_IsQualifiedEntry(char *pPath);
-static REGERR nr_SplitEntry(char *pPath, char **name, char **value);
-static REGERR nr_CatNameValue(char *path, int bufsize, REGDESC *desc);
-static REGERR nr_ReplaceNameValue(char *path, int bufsize, REGDESC *desc);
-#endif
 /* -------------------------------------------------------------------- */
 
 
@@ -1692,111 +1679,6 @@ static REGERR nr_CreateEntry(REGFILE *reg, REGDESC *pParent, char *name,
 
 }   /* nr_CreateEntry */
 
-
-
-#if 0 /* old interface */
-VR_INTERFACE(REGERR) NR_RegRename(RKEY key, char *path, char *newname)
-{
-
-    REGDESC desc;
-    REGERR err;
-
-    if ( !VALID_FILEHANDLE(gReg.fh) )
-        return REGERR_FAIL;
-
-    /* Okay to Update to "", but names must not be null */
-    if (!newname || !*newname)
-        return REGERR_PARAM;
-
-    err = nr_Lock(&gReg);
-    if (err != REGERR_OK)
-        return err;
-
-    /* Find the key or entry to rename (and validate the
-        incoming parameters) */
-    err = nr_Find((REGOFF)key, path, &desc, 0, 0, FALSE);
-    if (err != REGERR_OK)
-        goto cleanup;
-
-    /* Write the new name string to the file and update
-        the key or entry's pointer */
-    err = nr_AppendName(&gReg, newname, &desc);
-    if (err != REGERR_OK)
-        goto cleanup;
-
-    /* Write the key or entry back to the disk and return */
-    err = nr_WriteDesc(&gReg, &desc);
-
-cleanup:
-    nr_Unlock(&gReg);
-    return err;
-
-}   /* RegRename */
-
-
-
-VR_INTERFACE(REGERR) NR_RegPack(char *newfilename)
-{
-
-    REGFILE dstReg;
-    char *path = NULL;
-    int err = REGERR_OK;
-
-    dstReg.fh = NULL;
-
-    if (!newfilename || !*newfilename)
-        return REGERR_PARAM;
-    if ( !VALID_FILEHANDLE(gReg.fh) )
-        return REGERR_FAIL;
-
-    /* open it & create a header by trying to read */
-    err = nr_OpenFile(newfilename, &dstReg.fh);
-    if (err != REGERR_OK)
-        goto cleanup;
-    err = nr_ReadHdr(&dstReg);
-    if (err != REGERR_OK)
-        goto cleanup;
-
-    /* read records from the current registry file and
-        add them to 'dstReg' */
-    path = XP_ALLOC(PACKBUFFERSIZE);
-    if (path == NULL)
-    {
-        err = REGERR_FAIL;
-        goto cleanup;
-    }
-
-    XP_STRCPY(path, "/");
-
-    err = nr_Lock(&gReg);
-    if (err != REGERR_OK)
-        goto cleanup;
-
-    while (NR_RegNext( 0, PACKBUFFERSIZE, path ) == REGERR_OK)
-    {
-        err = nr_RegGenericAdd(&dstReg, 0, path);
-        if (err != REGERR_OK)
-            break;
-    }
-
-    nr_Unlock(&gReg);
-
-cleanup:
-    XP_FREEIF(path);
-    if ( VALID_FILEHANDLE(dstReg.fh) )
-    {
-        /* even if not caching headers it could be dirty due to an error */
-        if (dstReg.hdrDirty) {
-            nr_WriteHdr(&dstReg);
-        }
-        nr_CloseFile(&dstReg.fh);
-    }
-
-    return err;
-
-}   /* RegPack */
-
-#endif /* old interface */
 
 
 
@@ -3356,8 +3238,10 @@ VR_INTERFACE(REGERR) NR_RegEnumSubkeys( HREG hReg, RKEY key, REGENUM *state,
     key = nr_TranslateKey( reg, key );
     if ( key == 0 )
         err = REGERR_PARAM;
-    else
+    else if ( *state == 0 )
         err = nr_ReadDesc( reg, key, &desc);
+    else
+        err = REGERR_OK;
 
     if ( err == REGERR_OK )
     {
@@ -3750,6 +3634,7 @@ static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *
 }
 
 
+
 /* ---------------------------------------------------------------------
  * NR_RegPack    - Pack an open registry.  
  *                Registry is locked the entire time.
@@ -3760,6 +3645,8 @@ static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *
  */
 VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFunc fn)
 {
+    return REGERR_FAIL; /* XXX resurrect after mozilla beta 1 */
+#if RESURRECT_LATER
     XP_File  fh;
     REGFILE* reg;
     HREG hRegTemp;
@@ -3860,8 +3747,9 @@ safe_exit:
     PR_Unlock( reglist_lock );
     nr_Unlock(reg);
     return err;
-
+#endif /* RESURRECT_LATER */
 }
+
 
 #ifdef XP_MAC
 #pragma export reset

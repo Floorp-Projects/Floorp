@@ -17,6 +17,7 @@
  * 
  * Contributor(s):  James L. Nance <jim_nance@yahoo.com>
  */
+#include <string.h>
 #include "mmapio.h"
 #include "prmem.h"
 #include "prlog.h"
@@ -38,16 +39,16 @@ PRStatus mmio_FileSeek(MmioFile *mmio, PRInt32 offset, PRSeekWhence whence)
 
     switch(whence) {
         case PR_SEEK_SET:
-	    mmio->pos = offset;
-	    break;
-	case PR_SEEK_END:
-	    mmio->pos = mmio->fsize + offset;
-	    break;
-	case PR_SEEK_CUR:
-	    mmio->pos = mmio->pos + offset;
-	    break;
-	default:
-	    return PR_FAILURE;
+            mmio->pos = offset;
+            break;
+        case PR_SEEK_END:
+            mmio->pos = mmio->fsize + offset;
+            break;
+        case PR_SEEK_CUR:
+            mmio->pos = mmio->pos + offset;
+            break;
+        default:
+            return PR_FAILURE;
     }
 
     if(mmio->pos<0) {
@@ -75,28 +76,28 @@ PRInt32  mmio_FileRead(MmioFile *mmio, char *dest, PRInt32 count)
 
     /* Check to see if we need to remap for this read */
     if(mmio->pos+count > mmio->msize) {
-	if(mmio->addr && mmio->msize) {
-	    PR_ASSERT(mmio->fileMap);
-	    PR_MemUnmap(mmio->addr, mmio->msize);
-	    PR_CloseFileMap(mmio->fileMap);
-	    mmio->addr  = NULL;
-	    mmio->msize = 0;
-	}
+        if(mmio->addr && mmio->msize) {
+            PR_ASSERT(mmio->fileMap);
+            PR_MemUnmap(mmio->addr, mmio->msize);
+            PR_CloseFileMap(mmio->fileMap);
+            mmio->addr  = NULL;
+            mmio->msize = 0;
+        }
 
-	LL_UI2L(fsize_l, mmio->fsize);
-	mmio->fileMap = PR_CreateFileMap(mmio->fd, fsize_l, prot);
+        LL_UI2L(fsize_l, mmio->fsize);
+        mmio->fileMap = PR_CreateFileMap(mmio->fd, fsize_l, prot);
 
-	if(!mmio->fileMap) {
-	    return -1;
-	}
+        if(!mmio->fileMap) {
+            return -1;
+        }
 
-	mmio->addr = PR_MemMap(mmio->fileMap, 0, fsize_l);
+        mmio->addr = PR_MemMap(mmio->fileMap, 0, fsize_l);
 
-	if(!mmio->addr) {
-	    return -1;
-	}
+        if(!mmio->addr) {
+            return -1;
+        }
 
-	mmio->msize = mmio->fsize;
+        mmio->msize = mmio->fsize;
     }
 
     memcpy(dest, mmio->addr+mmio->pos, count);
@@ -113,16 +114,16 @@ PRInt32  mmio_FileWrite(MmioFile *mmio, const char *src, PRInt32 count)
 
     if(mmio->needSeek) {
         PR_Seek(mmio->fd, mmio->pos, PR_SEEK_SET);
-	mmio->needSeek = PR_FALSE;
+        mmio->needSeek = PR_FALSE;
     }
 
     wcode = PR_Write(mmio->fd, src, count);
 
     if(wcode>0) {
         mmio->pos += wcode;
-	if(mmio->pos>mmio->fsize) {
-	    mmio->fsize=mmio->pos;
-	}
+        if(mmio->pos>mmio->fsize) {
+            mmio->fsize=mmio->pos;
+        }
     }
 
     return wcode;
@@ -136,9 +137,9 @@ PRInt32  mmio_FileTell(MmioFile *mmio)
 PRStatus mmio_FileClose(MmioFile *mmio)
 {
     if(mmio->addr && mmio->msize) {
-	PR_ASSERT(mmio->fileMap);
+        PR_ASSERT(mmio->fileMap);
         PR_MemUnmap(mmio->addr, mmio->msize);
-	PR_CloseFileMap(mmio->fileMap);
+        PR_CloseFileMap(mmio->fileMap);
     }
 
     PR_Close(mmio->fd);
@@ -163,7 +164,7 @@ MmioFile *mmio_FileOpen(char *path, PRIntn flags, PRIntn mode)
     mmio = PR_MALLOC(sizeof(MmioFile));
 
     if(!mmio || PR_FAILURE==PR_GetOpenFileInfo(fd, &info)) {
-	PR_Close(fd);
+        PR_Close(fd);
         return NULL;
     }
 

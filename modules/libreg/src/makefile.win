@@ -31,11 +31,10 @@ DEPTH= ..\..\..
 
 MAKE_OBJ_TYPE=DLL
 
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
-#//
-#//------------------------------------------------------------------------
+#//--- pick at most one of the IO types. Commenting both of
+#//--- them out gives you normal NSPR I/O
+USE_BUFFERED_REGISTRY_IO=1
+#USE_MMAP_REGISTRY_IO=1
 
 #//------------------------------------------------------------------------
 #// 
@@ -47,7 +46,12 @@ OBJS=                                       \
     .\$(OBJDIR)\reg.obj                     \
     .\$(OBJDIR)\VerReg.obj                  \
     .\$(OBJDIR)\vr_stubs.obj                \
-#    .\$(OBJDIR)\mmapio.obj                  \
+!if defined(USE_MMAP_REGISTRY_IO)
+    .\$(OBJDIR)\mmapio.obj                  \
+!endif
+!if defined(USE_BUFFERED_REGISTRY_IO)
+    .\$(OBJDIR)\nr_bufio.obj                \
+!endif
     $(NULL)
 
 #//------------------------------------------------------------------------
@@ -69,7 +73,12 @@ DLL=$(OBJDIR)\$(DLLNAME).dll
 #//
 #//------------------------------------------------------------------------
 
-#LCFLAGS= -DUSE_MMAP_REGISTRY_IO
+!if defined(USE_MMAP_REGISTRY_IO)
+LCFLAGS=$(LCFLAGS) -DUSE_MMAP_REGISTRY_IO
+!endif
+!if defined(USE_BUFFERED_REGISTRY_IO)
+LCFLAGS=$(LCFLAGS) -DUSE_BUFFERED_REGISTRY_IO
+!endif
 
 LLIBS = \
     $(LIBNSPR)                  \
