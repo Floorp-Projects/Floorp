@@ -147,8 +147,10 @@
                     label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
           <menuitem command="cmd_pagesetup"
                     label="&pageSetupCmd.label;" accesskey="&pageSetupCmd.accesskey;"/>
+#ifndef XP_MACOSX
           <menuitem command="cmd_printpreview"
                     label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;"/>
+#endif
           <menuitem key="key_print" command="cmd_print"
                     label="&printCmd.label;" accesskey="&printCmd.accesskey;"/>
           <menuseparator/>
