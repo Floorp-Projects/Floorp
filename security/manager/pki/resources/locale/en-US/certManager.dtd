@@ -47,7 +47,6 @@
 <!ENTITY certmgr.certdetail.o "Organization (O)">
 <!ENTITY certmgr.certdetail.ou "Organizational Unit (OU)">
 <!ENTITY certmgr.certdetail.serialnumber "Serial Number">
-<!ENTITY certmgr.certdetail.rsapubmodulus "RSA Public Modulus">
 <!ENTITY certmgr.certdetail.sha1fingerprint "SHA1 Fingerprint">
 <!ENTITY certmgr.certdetail.md5fingerprint "MD5 Fingerprint">
 

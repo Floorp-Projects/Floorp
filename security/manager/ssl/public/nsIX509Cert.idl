@@ -53,7 +53,6 @@ interface nsIX509Cert : nsISupports {
   readonly attribute AString subjectName;
   readonly attribute AString issuerName;
   readonly attribute AString serialNumber;
-  readonly attribute AString rsaPubModulus;
   readonly attribute AString sha1Fingerprint;
   readonly attribute AString md5Fingerprint;
   readonly attribute AString issuedDate;
