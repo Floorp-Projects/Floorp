@@ -993,7 +993,7 @@ nsSelection::nsSelection()
   // Check to see if the autocopy pref is enabled
   //   and add the autocopy listener if it is
   nsresult rv;
-	nsCOMPtr<nsIPref> prefs(do_GetService("@mozilla.org/preferences;1", &rv));
+	nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
 	if (NS_SUCCEEDED(rv) && prefs)
   {
     static char pref[] = "clipboard.autocopy";

@@ -126,7 +126,7 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
         nsresult rv;
         nsCOMPtr<nsIPref> prefs = 
-                 do_GetService("@mozilla.org/preferences;1", &rv);
+                 do_GetService(NS_PREF_CONTRACTID, &rv);
         PRUnichar* detector_name = nsnull;
         if(NS_SUCCEEDED(rv) && NS_SUCCEEDED(
              rv = prefs->GetLocalizedUnicharPref("intl.charset.detector",

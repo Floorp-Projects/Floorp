@@ -2930,7 +2930,7 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
     // XXX this sucks ASS. This is a temporary hack until we get
     // around to fixing the skin switching bugs.
     // Select and Remove skins based on a pref set in a previous session.
-    nsCOMPtr<nsIPref> pref(do_GetService("@mozilla.org/preferences;1"));
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
     if (pref) {
       nsXPIDLString skinToSelect;
       rv = pref->CopyUnicharPref("general.skins.selectedSkin", getter_Copies(skinToSelect));
