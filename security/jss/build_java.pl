@@ -54,6 +54,29 @@ org.mozilla.jss.util.Debug
 org.mozilla.jss.util.Password       
 );
 
+@packages = qw(
+org.mozilla.jss
+org.mozilla.jss.asn1
+org.mozilla.jss.crypto
+org.mozilla.jss.pkcs7
+org.mozilla.jss.pkcs10
+org.mozilla.jss.pkcs11
+org.mozilla.jss.pkcs12
+org.mozilla.jss.pkix.primitive
+org.mozilla.jss.pkix.cert
+org.mozilla.jss.pkix.cmc
+org.mozilla.jss.pkix.cmmf
+org.mozilla.jss.pkix.cms
+org.mozilla.jss.pkix.crmf
+org.mozilla.jss.provider
+org.mozilla.jss.provider.java.security
+org.mozilla.jss.provider.javax.crypto
+org.mozilla.jss.ssl
+org.mozilla.jss.tests
+org.mozilla.jss.util
+);
+
+
 # setup variables
 setup_vars(\@ARGV);
 
@@ -93,6 +116,7 @@ sub setup_vars {
     $ENV{JAVA_HOME} or die "Must specify JAVA_HOME environment variable";
     $javac = "$ENV{JAVA_HOME}/bin/javac";
     $javah = "$ENV{JAVA_HOME}/bin/javah";
+    $javadoc = "$ENV{JAVA_HOME}/bin/javadoc";
 
     $dist_dir = $cmdline_vars{SOURCE_PREFIX};
     $ENV{JCE_JAR} or die "Must specify JCE_JAR environment variable";
@@ -248,4 +272,16 @@ sub release {
     # copy all class files into release directory
     ensure_dir_exists("$class_release_dir");
     print_do("cp -r $class_dir/* $class_release_dir");
+}
+
+sub javadoc {
+    my $html_header_opt;
+    if( $ENV{HTML_HEADER} ) {
+        $html_header_opt = "-header '$ENV{HTML_HEADER}'";
+    }
+    ensure_dir_exists("$dist_dir/jssdoc");
+    my $targets = join(" ", @packages);
+    print "$targets\n";
+    print_do("$javadoc -private -sourcepath . -d $dist_dir/jssdoc $html_header_opt $targets");
+    #print "$javadoc -private -sourcepath . -d $dist_dir/jssdoc $html_header_opt $targets" . "\n";
 }

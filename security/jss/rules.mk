@@ -22,3 +22,6 @@ cleanJava:
 
 releaseJava:
 	perl build_java.pl $(PERL_VARIABLES) release
+
+javadoc:
+	perl build_java.pl $(PERL_VARIABLES) javadoc
