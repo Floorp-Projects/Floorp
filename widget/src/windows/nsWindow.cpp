@@ -486,7 +486,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     HWND parent;
     if (nsnull != aParent) { // has a nsIWidget parent
       parent = ((aParent) ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
-       aParent->AddChild(this);
     } else { // has a nsNative parent
        parent = (HWND)aNativeParent;
     }
