@@ -53,7 +53,7 @@
 #include "nsTransferable.h"
 #include "nsXIFFormatConverter.h"
 #include "nsDragService.h"
-//#include "nsFileListTransferable.h"
+#include "nsFileListTransferable.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -256,9 +256,9 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCFontRetrieverService)) {
         inst = (nsISupports*)(nsIFontRetrieverService *)new nsFontRetrieverService();
     }
-    //else if (mClassID.Equals(kCFileListTransferable)) {
-    //    inst = (nsISupports*)(nsITransferable *)new nsFileListTransferable();
-    //}
+    else if (mClassID.Equals(kCFileListTransferable)) {
+        inst = (nsISupports*)(nsITransferable *)new nsFileListTransferable();
+    }
 	/* */
   
     if (inst == NULL) {  
