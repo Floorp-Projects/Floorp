@@ -174,7 +174,7 @@ nsCmdLineService::GetCmdLineValue(const char * aArg, char ** aResult)
 
    for (int i = 0; i<mArgCount; i++)
    {
-     if (!PL_strcmp(aArg, (char *) mArgList.ElementAt(i))) {
+     if (!PL_strcasecmp(aArg, (char *) mArgList.ElementAt(i))) {
        *aResult = (char *)mArgValueList.ElementAt(i);
         return NS_OK;
      }
