@@ -174,7 +174,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
 
   *aBits = GDK_IMAGE_XIMAGE(mImage)->data;
 
-  *aWidthBytes = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
+  *aWidthBytes = aWidth*(mImage->bpp >> 3);
   *aStride = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
 
 #ifdef CHEAP_PERFORMANCE_MEASUREMENT
