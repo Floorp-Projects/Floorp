@@ -135,6 +135,9 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMSelectionListener.h"
 #include "nsIDOMMediaList.h"
+#include "nsIDOMCrypto.h"
+#include "nsIDOMCRMFObject.h"
+#include "nsIDOMPkcs11.h"
 #include "plhash.h"
 
 static NS_DEFINE_IID(kIDOMNativeObjectRegistry, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
@@ -303,6 +306,21 @@ public:
                                   nsISupports *aPI, 
                                   nsISupports *aParent, 
                                   void** aReturn);
+
+  NS_IMETHOD    NewScriptCrypto(nsIScriptContext *aContext, 
+                                nsISupports *aPI, 
+                                nsISupports *aParent, 
+                                void** aReturn);
+
+  NS_IMETHOD    NewScriptCRMFObject(nsIScriptContext *aContext, 
+                                    nsISupports *aPI, 
+                                    nsISupports *aParent, 
+                                    void** aReturn);
+
+  NS_IMETHOD    NewScriptPkcs11(nsIScriptContext *aContext, 
+                                nsISupports *aPI, 
+                                nsISupports *aParent, 
+                                void** aReturn);
   
 };
 
@@ -603,6 +621,33 @@ nsDOMScriptObjectFactory::NewScriptNotation(nsIScriptContext *aContext,
                                             void** aReturn)
 {
   return NS_NewScriptNotation(aContext, aPI, aParent, aReturn);
+}
+
+NS_IMETHODIMP
+nsDOMScriptObjectFactory::NewScriptCrypto(nsIScriptContext *aContext,
+                                          nsISupports *aPI,
+                                          nsISupports *aParent,
+                                          void** aReturn)
+{
+  return NS_NewScriptCrypto(aContext, aPI, aParent, aReturn);
+}
+
+NS_IMETHODIMP
+nsDOMScriptObjectFactory::NewScriptCRMFObject(nsIScriptContext *aContext,
+                                              nsISupports *aPI,
+                                              nsISupports *aParent,
+                                              void** aReturn)
+{
+  return NS_NewScriptCRMFObject(aContext, aPI, aParent, aReturn);
+}
+
+NS_IMETHODIMP
+nsDOMScriptObjectFactory::NewScriptPkcs11(nsIScriptContext *aContext,
+                                          nsISupports *aPI,
+                                          nsISupports *aParent,
+                                          void** aReturn)
+{
+  return NS_NewScriptPkcs11(aContext, aPI, aParent, aReturn);
 }
 
 
