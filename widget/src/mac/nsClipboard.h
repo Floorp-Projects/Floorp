@@ -51,6 +51,10 @@ protected:
   NS_IMETHOD SetNativeClipboardData();
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
 
+  // helper to get the data off the clipboard. Caller responsible for deleting
+  // |outData| with delete[].
+  nsresult GetDataOffClipboard ( ResType inMacFlavor, char** outData, long* outDataSize ) ;
+  
 }; // nsClipboard
 
 #endif // nsClipboard_h__

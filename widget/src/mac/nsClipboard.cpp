@@ -108,6 +108,7 @@ nsClipboard :: SetNativeClipboardData()
   if ( !mTransferable )
     return NS_ERROR_INVALID_ARG;
   
+  nsMimeMapperMac theMapper;
   ::ZeroScrap();
   
   // get flavor list that includes all flavors that can be written (including ones 
@@ -126,7 +127,7 @@ nsClipboard :: SetNativeClipboardData()
     nsString * currentFlavor = (nsString *)flavorList->ElementAt(i);
     if ( nsnull != currentFlavor ) {
       // find MacOS flavor
-      ResType macOSFlavor = nsMimeMapperMac::MapMimeTypeToMacOSType(*currentFlavor);
+      ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(*currentFlavor);
     
       // get data. This takes converters into account. We don't own the data
       // so make sure not to delete it.
@@ -145,6 +146,14 @@ nsClipboard :: SetNativeClipboardData()
   } // foreach flavor in transferable
   delete flavorList;
 
+  // write out the mapping data in a special flavor on the clipboard
+  short mappingLen = 0;
+  const char* mapping = theMapper.ExportMapping(&mappingLen);
+  long numBytes = ::PutScrap ( mappingLen, nsMimeMapperMac::MappingFlavor(), mapping );
+  if ( numBytes != mappingLen )
+    errCode = NS_ERROR_FAILURE;
+  delete [] mapping;
+  
   return errCode;
   
 } // SetNativeClipboardData
@@ -168,9 +177,17 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
   // conversion)
   nsVoidArray * flavorList;
   errCode = aTransferable->FlavorsTransferableCanImport ( &flavorList );
-  if ( errCode != NS_OK )
+  if ( NS_FAILED(errCode) )
     return NS_ERROR_FAILURE;
 
+  // create a mime mapper. It's ok for this to fail because the data may come from
+  // another app which obviously wouldn't put our mime mapping data on the clipboard.
+  char* mimeMapperData = nsnull;
+  GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), &mimeMapperData, nsnull );
+  nsMimeMapperMac theMapper ( mimeMapperData );
+  delete [] mimeMapperData;
+  
+  // 
   // Now walk down the list of flavors. When we find one that is actually on the
   // clipboard, copy out the data into the transferable in that format. SetTransferData()
   // implicitly handles conversions.
@@ -179,48 +196,71 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
     nsString * currentFlavor = (nsString *)flavorList->ElementAt(i);
     if ( nsnull != currentFlavor ) {
       // find MacOS flavor
-      ResType macOSFlavor = nsMimeMapperMac::MapMimeTypeToMacOSType(*currentFlavor);
+      ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(*currentFlavor);
     
-      // check if it is on the clipboard
-      long offsetUnused;
-      if ( ::GetScrap(NULL, macOSFlavor, &offsetUnused) > 0 ) {
-        // we have it, get it off the clipboard. Put it into memory that we allocate
-        // with new[] so that the tranferable can own it (and then later use delete[]
-        // on it).
-        Handle dataHand = ::NewHandle(0);
-        if ( !dataHand )
-          return NS_ERROR_OUT_OF_MEMORY;
-        long dataSize = ::GetScrap ( dataHand, macOSFlavor, &offsetUnused );
-        if ( dataSize > 0 ) {
-          char* dataBuff = new char[dataSize];
-          if ( !dataBuff )
-            return NS_ERROR_OUT_OF_MEMORY;
-          ::HLock(dataHand);
-          ::BlockMoveData ( *dataHand, dataBuff, dataSize );
-          ::HUnlock(dataHand);
-          
-          // put it into the transferable
-          errCode = aTransferable->SetTransferData ( currentFlavor, dataBuff, dataSize );
-          #ifdef NS_DEBUG
-            if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
-          #endif
-        
-          ::DisposeHandle(dataHand);
-        } 
-        else {
-           #ifdef NS_DEBUG
-             printf("nsClipboard: Error getting data off the clipboard, #%d\n", dataSize);
-           #endif
-           errCode = NS_ERROR_FAILURE;
-        }
-        
+      char* clipboardData = nsnull;
+      long dataSize = 0L;
+      nsresult loadResult = GetDataOffClipboard ( macOSFlavor, &clipboardData, &dataSize );
+      if ( NS_SUCCEEDED(loadResult) && clipboardData ) {
+        // put it into the transferable
+        errCode = aTransferable->SetTransferData ( currentFlavor, clipboardData, dataSize );
+        #ifdef NS_DEBUG
+          if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
+        #endif
+
         // we found one, get out of this loop!
-        break;
-        
-      } // if a flavor found
+        break;        
+      } // if flavor found on clipboard
     }
   } // foreach flavor
   delete flavorList;
-
+  
   return errCode;
 }
+
+
+//
+// GetDataOffClipboard
+//
+// 
+nsresult
+nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, char** outData, long* outDataSize )
+{
+  if ( !outData )
+    return NS_ERROR_FAILURE;
+
+  // check if it is on the clipboard
+  long offsetUnused;
+  if ( ::GetScrap(NULL, inMacFlavor, &offsetUnused) > 0 ) {
+    // we have it, get it off the clipboard. Put it into memory that we allocate
+    // with new[] so that the tranferable can own it (and then later use delete[]
+    // on it).
+    Handle dataHand = ::NewHandle(0);
+    if ( !dataHand )
+      return NS_ERROR_OUT_OF_MEMORY;
+    long dataSize = ::GetScrap ( dataHand, inMacFlavor, &offsetUnused );
+    if ( dataSize > 0 ) {
+      char* dataBuff = new char[dataSize];
+      if ( !dataBuff )
+        return NS_ERROR_OUT_OF_MEMORY;
+      ::HLock(dataHand);
+      ::BlockMoveData ( *dataHand, dataBuff, dataSize );
+      ::HUnlock(dataHand);
+      
+      ::DisposeHandle(dataHand);
+      
+      if ( outDataSize )
+        *outDataSize = dataSize;
+      *outData = dataBuff;
+    } 
+    else {
+       #ifdef NS_DEBUG
+         printf("nsClipboard: Error getting data off the clipboard, #%d\n", dataSize);
+       #endif
+       return NS_ERROR_FAILURE;
+    }
+  }
+  
+  return NS_OK;
+  
+} // GetDataOffClipboard

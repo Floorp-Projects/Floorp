@@ -61,9 +61,11 @@ public:
 
 private:
 
+  char* LookupMimeMappingsForItem ( DragReference inDragRef, ItemReference itemRef ) ;
+
   void RegisterDragItemsAndFlavors ( nsISupportsArray * inArray ) ;
   void BuildDragRegion ( nsIRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn ) ;
-  OSErr GetDataForFlavor ( nsISupportsArray* inDragItems, unsigned int inItemIndex, 
+  OSErr GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference inDragRef, unsigned int inItemIndex, 
                              FlavorType inFlavor, void** outData, unsigned int * outSize ) ;
 
     // callback for the MacOS DragManager when a drop site asks for data
