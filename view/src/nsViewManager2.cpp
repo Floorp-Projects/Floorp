@@ -1101,18 +1101,36 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PR
 {
 	NS_PRECONDITION(nsnull != aView, "null view");
 
+    // Only Update the rectangle region of the rect that intersects the view's non clipped rectangle
+  nsRect clippedRect;
+  PRBool isClipped;
+  PRBool isEmpty;
+  aView->GetClippedRect(clippedRect, isClipped, isEmpty);
+  if (isEmpty) {
+    return NS_OK;
+  }
+
+  nsRect damagedRect;
+  damagedRect.x = aRect.x;
+  damagedRect.y = aRect.y;
+  damagedRect.width = aRect.width;
+  damagedRect.height = aRect.height;
+  clippedRect.x = 0;
+  clippedRect.y = 0;
+  damagedRect.IntersectRect(aRect, clippedRect);
+
    // If the rectangle is not visible then abort
    // without invalidating. This is a performance 
    // enhancement since invalidating a native widget
    // can be expensive.
-   // This also checks for silly request like aRect.width = 0 or aRect.height = 0
-  if (! IsRectVisible(aView, aRect)) {
+   // This also checks for silly request like damagedRect.width = 0 or damagedRect.height = 0
+  if (! IsRectVisible(aView, damagedRect)) {
     return NS_OK;
   }
 
 	if (!mRefreshEnabled) {
 		// accumulate this rectangle in the view's dirty region, so we can process it later.
-		AddRectToDirtyRegion(aView, aRect);
+		AddRectToDirtyRegion(aView, damagedRect);
 		++mUpdateCnt;
 		return NS_OK;
 	}
@@ -1128,7 +1146,7 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PR
 
 #if 0
 		// Transform damaged rect to widgetView's coordinate system.
-		nsRect  widgetRect = aRect;
+		nsRect  widgetRect = damagedRect;
 		nsIView *parentView = aView;
 		while (parentView != widgetView) {
 			nscoord x, y;
@@ -1144,7 +1162,7 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PR
 #else
 		// Go ahead and invalidate the entire rectangular area.
 		// regardless of parentage.
-		nsRect  widgetRect = aRect;
+		nsRect  widgetRect = damagedRect;
 		ViewToWidget(aView, widgetView, widgetRect);
 		nsCOMPtr<nsIWidget> widget;
 		widgetView->GetWidget(*getter_AddRefs(widget));
