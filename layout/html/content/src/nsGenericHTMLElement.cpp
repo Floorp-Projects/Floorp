@@ -1226,7 +1226,7 @@ nsGenericHTMLElement::ParseColor(const nsString& aString,
     colorStr.CompressWhitespace();
     char cbuf[40];
     colorStr.ToCString(cbuf, sizeof(cbuf));
-    nscolor color;
+    nscolor color = 0;
     if (NS_ColorNameToRGB(cbuf, &color)) {
       aResult.SetStringValue(colorStr);
       return PR_TRUE;
@@ -1237,9 +1237,15 @@ nsGenericHTMLElement::ParseColor(const nsString& aString,
     }
   }
 
+#if XXX_no_nav_compat
   // Illegal values are mapped to empty
   aResult.SetEmptyValue();
   return PR_FALSE;
+#else
+  // Illegal values in nav are mapped to zero
+  aResult.SetColorValue(0);
+  return PR_TRUE;
+#endif
 }
 
 PRBool
