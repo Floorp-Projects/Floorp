@@ -35,26 +35,22 @@ var dialog;
 
 function Startup()
 {
-  dialog = new Object;
-  if (!dialog)
-    return false;
-
-  dialog.ColorPreview = document.getElementById("ColorPreview");
-  dialog.NormalText = document.getElementById("NormalText");
-  dialog.LinkText = document.getElementById("LinkText");
-  dialog.ActiveLinkText = document.getElementById("ActiveLinkText");
-  dialog.VisitedLinkText = document.getElementById("VisitedLinkText");
-  dialog.DefaultColorsRadio = document.getElementById("DefaultColorsRadio");
-  dialog.CustomColorsRadio = document.getElementById("CustomColorsRadio");
-  dialog.BackgroundImageInput = document.getElementById("BackgroundImageInput");
+  gDialog.ColorPreview = document.getElementById("ColorPreview");
+  gDialog.NormalText = document.getElementById("NormalText");
+  gDialog.LinkText = document.getElementById("LinkText");
+  gDialog.ActiveLinkText = document.getElementById("ActiveLinkText");
+  gDialog.VisitedLinkText = document.getElementById("VisitedLinkText");
+  gDialog.DefaultColorsRadio = document.getElementById("DefaultColorsRadio");
+  gDialog.CustomColorsRadio = document.getElementById("CustomColorsRadio");
+  gDialog.BackgroundImageInput = document.getElementById("BackgroundImageInput");
 
   // The data elements that hold the pref values
-  dialog.NormalData = document.getElementById("textData");
-  dialog.LinkData = document.getElementById("linkData");
-  dialog.ActiveLinkData = document.getElementById("aLinkData");
-  dialog.VisitedLinkData = document.getElementById("fLinkData");
-  dialog.BackgroundColorData = document.getElementById("backgroundColorData");
-  dialog.BackgroundImageData = document.getElementById("backgroundImageData");
+  gDialog.NormalData = document.getElementById("textData");
+  gDialog.LinkData = document.getElementById("linkData");
+  gDialog.ActiveLinkData = document.getElementById("aLinkData");
+  gDialog.VisitedLinkData = document.getElementById("fLinkData");
+  gDialog.BackgroundColorData = document.getElementById("backgroundColorData");
+  gDialog.BackgroundImageData = document.getElementById("backgroundImageData");
 
   browserColors = GetDefaultBrowserColors();
 
@@ -67,14 +63,14 @@ function Startup()
   defaultBackgroundColor=  browserColors.BackgroundColor;
 
   // Get the colors and image set by prefs init code 
-  customTextColor = dialog.NormalData.getAttribute("value"); 
-  customLinkColor = dialog.LinkData.getAttribute("value");
-  customActiveColor = dialog.ActiveLinkData.getAttribute("value");
-  customVisitedColor = dialog.VisitedLinkData.getAttribute("value");
-  customBackgroundColor = dialog.BackgroundColorData.getAttribute("value");
-  backgroundImage = dialog.BackgroundImageData.getAttribute("value");
+  customTextColor = gDialog.NormalData.getAttribute("value"); 
+  customLinkColor = gDialog.LinkData.getAttribute("value");
+  customActiveColor = gDialog.ActiveLinkData.getAttribute("value");
+  customVisitedColor = gDialog.VisitedLinkData.getAttribute("value");
+  customBackgroundColor = gDialog.BackgroundColorData.getAttribute("value");
+  backgroundImage = gDialog.BackgroundImageData.getAttribute("value");
   if (backgroundImage)
-    dialog.BackgroundImageInput.value = backgroundImage;
+    gDialog.BackgroundImageInput.value = backgroundImage;
 
   // "value" attribute value is a string conversion of boolean!
   if( document.getElementById( "useCustomColors" ).value == "true" )
@@ -88,7 +84,7 @@ function Startup()
 function GetColorAndUpdate(ColorWellID)
 {
   // Only allow selecting when in custom mode
-  if (!dialog.CustomColorsRadio.checked) return;
+  if (!gDialog.CustomColorsRadio.checked) return;
 
   var colorObj = new Object;
   var colorWell = document.getElementById(ColorWellID);
@@ -132,23 +128,23 @@ function GetColorAndUpdate(ColorWellID)
   {
     case "textCW":
       color = customTextColor = colorObj.TextColor;
-      dialog.NormalData.setAttribute("value", color); 
+      gDialog.NormalData.setAttribute("value", color); 
       break;
     case "linkCW":
       color = customLinkColor = colorObj.TextColor;
-      dialog.LinkData.setAttribute("value", color);
+      gDialog.LinkData.setAttribute("value", color);
       break;
     case "activeCW":
       color = customActiveColor = colorObj.TextColor;
-      dialog.ActiveLinkData.setAttribute("value", color);
+      gDialog.ActiveLinkData.setAttribute("value", color);
       break;
     case "visitedCW":
       color = customVisitedColor = colorObj.TextColor;
-      dialog.VisitedLinkData.setAttribute("value", color);
+      gDialog.VisitedLinkData.setAttribute("value", color);
       break;
     case "backgroundCW":
       color = customBackgroundColor = colorObj.BackgroundColor;
-      dialog.BackgroundColorData.setAttribute("value", color);
+      gDialog.BackgroundColorData.setAttribute("value", color);
       break;
   }
   setColorWell(ColorWellID, color); 
@@ -160,16 +156,16 @@ function SetColorPreview(ColorWellID, color)
   switch( ColorWellID )
   {
     case "textCW":
-      dialog.NormalText.setAttribute(styleStr,colorStyle+color);
+      gDialog.NormalText.setAttribute(styleStr,colorStyle+color);
       break;
     case "linkCW":
-      dialog.LinkText.setAttribute(styleStr,colorStyle+color);
+      gDialog.LinkText.setAttribute(styleStr,colorStyle+color);
       break;
     case "activeCW":
-      dialog.ActiveLinkText.setAttribute(styleStr,colorStyle+color);
+      gDialog.ActiveLinkText.setAttribute(styleStr,colorStyle+color);
       break;
     case "visitedCW":
-      dialog.VisitedLinkText.setAttribute(styleStr,colorStyle+color);
+      gDialog.VisitedLinkText.setAttribute(styleStr,colorStyle+color);
       break;
     case "backgroundCW":
       // Must combine background color and image style values
@@ -177,7 +173,7 @@ function SetColorPreview(ColorWellID, color)
       if (backgroundImage)
         styleValue += ";"+backImageStyle+backgroundImage+");";
 
-      dialog.ColorPreview.setAttribute(styleStr,styleValue);
+      gDialog.ColorPreview.setAttribute(styleStr,styleValue);
       previewBGColor = color;
       break;
   }
@@ -208,11 +204,11 @@ function UseCustomColors()
   setColorWell("visitedCW",       customVisitedColor);
   setColorWell("backgroundCW",    customBackgroundColor);
 
-  dialog.NormalData.setAttribute("value",          customTextColor); 
-  dialog.LinkData.setAttribute("value",            customLinkColor);
-  dialog.ActiveLinkData.setAttribute("value",      customActiveColor);
-  dialog.VisitedLinkData.setAttribute("value",     customVisitedColor);
-  dialog.BackgroundColorData.setAttribute("value", customBackgroundColor);
+  gDialog.NormalData.setAttribute("value",          customTextColor); 
+  gDialog.LinkData.setAttribute("value",            customLinkColor);
+  gDialog.ActiveLinkData.setAttribute("value",      customActiveColor);
+  gDialog.VisitedLinkData.setAttribute("value",     customVisitedColor);
+  gDialog.BackgroundColorData.setAttribute("value", customBackgroundColor);
 }
 
 function UseDefaultColors()
@@ -252,10 +248,10 @@ function ChooseImageFile()
   var fileName = GetLocalFileURL("img");
   if (fileName)
   {
-    dialog.BackgroundImageInput.value = fileName;
+    gDialog.BackgroundImageInput.value = fileName;
     ValidateAndPreviewImage(true);
   }
-  SetTextboxFocus(dialog.BackgroundImageInput);
+  SetTextboxFocus(gDialog.BackgroundImageInput);
 }
 
 function ChangeBackgroundImage()
@@ -269,7 +265,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   // First make a string with just background color
   var styleValue = backColorStyle+previewBGColor+";";
 
-  var image = dialog.BackgroundImageInput.value.trimString();
+  var image = gDialog.BackgroundImageInput.value.trimString();
   if (image)
   {
     if (IsValidImage(image))
@@ -283,7 +279,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
       backgroundImage = "";
       if (ShowErrorMessage)
       {
-        SetTextboxFocus(dialog.BackgroundImageInput);
+        SetTextboxFocus(gDialog.BackgroundImageInput);
         // Tell user about bad image
         ShowInputErrorMessage(GetString("MissingImageError"));
       }
@@ -293,9 +289,9 @@ function ValidateAndPreviewImage(ShowErrorMessage)
     backgroundImage = "";
 
   // Set style on preview (removes image if not valid)
-  dialog.ColorPreview.setAttribute(styleStr, styleValue);
+  gDialog.ColorPreview.setAttribute(styleStr, styleValue);
   
   // Set the pref data so pref code saves it 
-  dialog.BackgroundImageData.setAttribute("value", backgroundImage ? backgroundImage : "");
+  gDialog.BackgroundImageData.setAttribute("value", backgroundImage ? backgroundImage : "");
 }
 

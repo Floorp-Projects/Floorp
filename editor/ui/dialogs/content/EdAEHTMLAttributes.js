@@ -23,7 +23,7 @@
 
 function BuildHTMLAttributeNameList()
 {
-  ClearMenulist(dialog.AddHTMLAttributeNameInput);
+  ClearMenulist(gDialog.AddHTMLAttributeNameInput);
   
   var elementName = gElement.localName.toLowerCase();
   var attNames = gHTMLAttr[elementName];
@@ -49,17 +49,17 @@ function BuildHTMLAttributeNameList()
           limitFirstChar = name.indexOf("^") >= 0;
           if (limitFirstChar)
           {
-            menuitem = AppendStringToMenulist(dialog.AddHTMLAttributeNameInput, name.replace(/\^/g, ""));
+            menuitem = AppendStringToMenulist(gDialog.AddHTMLAttributeNameInput, name.replace(/\^/g, ""));
             menuitem.setAttribute("limitFirstChar", "true");
           }
           else
-            AppendStringToMenulist(dialog.AddHTMLAttributeNameInput, name);
+            AppendStringToMenulist(gDialog.AddHTMLAttributeNameInput, name);
         }
       }
       else if (name == "-")
       {
         // Signal for separator
-        var popup = dialog.AddHTMLAttributeNameInput.firstChild;
+        var popup = gDialog.AddHTMLAttributeNameInput.firstChild;
         if (popup)
         {
           var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
@@ -80,7 +80,7 @@ function BuildHTMLAttributeNameList()
         // Strip flag characters
         name = name.replace(/[!^#%$+]/g, "");
 
-        menuitem = AppendStringToMenulist(dialog.AddHTMLAttributeNameInput, name);
+        menuitem = AppendStringToMenulist(gDialog.AddHTMLAttributeNameInput, name);
         if (menuitem)
         {
           // Signify "required" attributes by special style
@@ -139,11 +139,11 @@ function BuildHTMLAttributeTable()
 // add or select an attribute in the tree widget
 function onChangeHTMLAttribute()
 {
-  var name  = TrimString(dialog.AddHTMLAttributeNameInput.value);
+  var name = TrimString(gDialog.AddHTMLAttributeNameInput.value);
   if (!name)
     return;
 
-  var value = TrimString(dialog.AddHTMLAttributeValueInput.value);
+  var value = TrimString(gDialog.AddHTMLAttributeValueInput.value);
 
   // First try to update existing attribute
   // If not found, add new attribute
@@ -153,10 +153,10 @@ function onChangeHTMLAttribute()
 
 function ClearHTMLInputWidgets()
 {
-  dialog.AddHTMLAttributeTree.clearItemSelection();
-  dialog.AddHTMLAttributeNameInput.value ="";
-  dialog.AddHTMLAttributeValueInput.value = "";
-  dialog.AddHTMLAttributeNameInput.inputField.focus();
+  gDialog.AddHTMLAttributeTree.clearItemSelection();
+  gDialog.AddHTMLAttributeNameInput.value ="";
+  gDialog.AddHTMLAttributeValueInput.value = "";
+  gDialog.AddHTMLAttributeNameInput.inputField.focus();
 }
 
 function onSelectHTMLTreeItem()
@@ -164,20 +164,20 @@ function onSelectHTMLTreeItem()
   if (!gDoOnSelectTree)
     return;
 
-  var tree = dialog.AddHTMLAttributeTree;
+  var tree = gDialog.AddHTMLAttributeTree;
   if (tree && tree.selectedItems && tree.selectedItems.length)
   {
-    var inputName = TrimString(dialog.AddHTMLAttributeNameInput.value).toLowerCase();
+    var inputName = TrimString(gDialog.AddHTMLAttributeNameInput.value).toLowerCase();
     var selectedName = tree.selectedItems[0].firstChild.firstChild.getAttribute("label");
 
     if (inputName == selectedName)
     {
       // Already editing selected name - just update the value input
-      dialog.AddHTMLAttributeValueInput.value =  GetTreeItemValueStr(tree.selectedItems[0]);
+      gDialog.AddHTMLAttributeValueInput.value = GetTreeItemValueStr(tree.selectedItems[0]);
     }
     else
     {
-      dialog.AddHTMLAttributeNameInput.value =  selectedName;
+      gDialog.AddHTMLAttributeNameInput.value = selectedName;
 
       // Change value input based on new selected name
       onInputHTMLAttributeName();
@@ -187,11 +187,11 @@ function onSelectHTMLTreeItem()
 
 function onInputHTMLAttributeName()
 {
-  var attName = TrimString(dialog.AddHTMLAttributeNameInput.value).toLowerCase();
+  var attName = TrimString(gDialog.AddHTMLAttributeNameInput.value).toLowerCase();
 
   // Clear value widget, but prevent triggering update in tree
   gUpdateTreeValue = false;
-  dialog.AddHTMLAttributeValueInput.value = "";
+  gDialog.AddHTMLAttributeValueInput.value = "";
   gUpdateTreeValue = true; 
 
   if (attName)
@@ -220,7 +220,7 @@ function onInputHTMLAttributeName()
       var valueList = gHTMLAttr[valueListName];
 
       // Index to which widget we were using to edit the value
-      deckIndex = dialog.AddHTMLAttributeValueDeck.getAttribute("index");
+      deckIndex = gDialog.AddHTMLAttributeValueDeck.getAttribute("index");
 
       listLen = valueList.length;
       if (listLen > 0)
@@ -230,13 +230,13 @@ function onInputHTMLAttributeName()
       // one (default) item, don't use menulist for that
       if (listLen > 1)
       {
-        ClearMenulist(dialog.AddHTMLAttributeValueMenulist);
+        ClearMenulist(gDialog.AddHTMLAttributeValueMenulist);
 
         if (deckIndex != "1")
         {
           // Switch to using editable menulist
-          dialog.AddHTMLAttributeValueInput = dialog.AddHTMLAttributeValueMenulist;
-          dialog.AddHTMLAttributeValueDeck.setAttribute("index", "1");
+          gDialog.AddHTMLAttributeValueInput = gDialog.AddHTMLAttributeValueMenulist;
+          gDialog.AddHTMLAttributeValueDeck.setAttribute("index", "1");
         }
         // Rebuild the list
         for (var i = 0; i < listLen; i++)
@@ -244,7 +244,7 @@ function onInputHTMLAttributeName()
           if (valueList[i] == "-")
           {
             // Signal for separator
-            var popup = dialog.AddHTMLAttributeValueInput.firstChild;
+            var popup = gDialog.AddHTMLAttributeValueInput.firstChild;
             if (popup)
             {
               var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
@@ -252,7 +252,7 @@ function onInputHTMLAttributeName()
                 popup.appendChild(sep);
             }        
           } else {
-            AppendStringToMenulist(dialog.AddHTMLAttributeValueMenulist, valueList[i]);
+            AppendStringToMenulist(gDialog.AddHTMLAttributeValueMenulist, valueList[i]);
           }
         }
       }
@@ -261,8 +261,8 @@ function onInputHTMLAttributeName()
     if (listLen <= 1 && deckIndex != "0")
     {
       // No list: Use textbox for input instead
-      dialog.AddHTMLAttributeValueInput = dialog.AddHTMLAttributeValueTextbox;
-      dialog.AddHTMLAttributeValueDeck.setAttribute("index", "0");
+      gDialog.AddHTMLAttributeValueInput = gDialog.AddHTMLAttributeValueTextbox;
+      gDialog.AddHTMLAttributeValueDeck.setAttribute("index", "0");
     }
 
     // If attribute already exists in tree, use associated value,
@@ -271,7 +271,7 @@ function onInputHTMLAttributeName()
     if (existingValue)
       newValue = existingValue;
       
-    dialog.AddHTMLAttributeValueInput.value = newValue;
+    gDialog.AddHTMLAttributeValueInput.value = newValue;
   }
 }
 
@@ -282,13 +282,13 @@ function onInputHTMLAttributeValue()
 
   // Trim spaces only from left since we must allow spaces within the string
   //  (we always reset the input field's value below)
-  var value = TrimStringLeft(dialog.AddHTMLAttributeValueInput.value);
+  var value = TrimStringLeft(gDialog.AddHTMLAttributeValueInput.value);
   if (value)
   {
     // Do value filtering based on type of attribute
     // (Do not use "LimitStringLength()" and "forceInteger()"
     //  to avoid multiple reseting of input's value and flickering)
-    var selectedItem = dialog.AddHTMLAttributeNameInput.selectedItem;
+    var selectedItem = gDialog.AddHTMLAttributeNameInput.selectedItem;
 
     if (selectedItem)
     {
@@ -326,19 +326,19 @@ function onInputHTMLAttributeValue()
       }
 
       // Update once only if it changed
-      if ( value != dialog.AddHTMLAttributeValueInput.value )
-        dialog.AddHTMLAttributeValueInput.value = value;
+      if (value != gDialog.AddHTMLAttributeValueInput.value)
+        gDialog.AddHTMLAttributeValueInput.value = value;
     }
   }
 
   // Always update value in the tree list
-  UpdateExistingAttribute( dialog.AddHTMLAttributeNameInput.value, value, "HTMLAList" );
+  UpdateExistingAttribute(gDialog.AddHTMLAttributeNameInput.value, value, "HTMLAList");
 }
 
 function editHTMLAttributeValue(targetCell)
 {
   if (IsNotTreeHeader(targetCell))
-    dialog.AddHTMLAttributeValueInput.inputField.select();
+    gDialog.AddHTMLAttributeValueInput.inputField.select();
 }
 
 
@@ -349,7 +349,7 @@ function UpdateHTMLAttributes()
   var i;
 
   // remove removed attributes
-  for( i = 0; i < HTMLRAttrs.length; i++ )
+  for (i = 0; i < HTMLRAttrs.length; i++)
   {
     var name = HTMLRAttrs[i];
 
@@ -370,12 +370,12 @@ function UpdateHTMLAttributes()
 
 function RemoveHTMLAttribute()
 {
-  var treechildren = dialog.AddHTMLAttributeTree.lastChild;
+  var treechildren = gDialog.AddHTMLAttributeTree.lastChild;
 
   // We only allow 1 selected item
-  if (dialog.AddHTMLAttributeTree.selectedItems.length)
+  if (gDialog.AddHTMLAttributeTree.selectedItems.length)
   {
-    var item = dialog.AddHTMLAttributeTree.selectedItems[0];
+    var item = gDialog.AddHTMLAttributeTree.selectedItems[0];
     var attr = GetTreeItemAttributeStr(item);
 
     // remove the item from the attribute array
@@ -395,7 +395,7 @@ function SelectHTMLTree( index )
 
   gDoOnSelectTree = false;
   try {
-    dialog.AddHTMLAttributeTree.selectedIndex = index;
+    gDialog.AddHTMLAttributeTree.selectedIndex = index;
   } catch (e) {}
   gDoOnSelectTree = true;
 }

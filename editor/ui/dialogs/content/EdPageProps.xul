@@ -34,6 +34,7 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
+    onunload="onCancel()"
     orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -56,15 +57,15 @@
         <text class="label" id="PageModDate" align="left"/>
       </row>
       <spacer class="spacer"/>
-      <row valign="middle">
+      <row align="center">
         <text class="label" value="&titleInput.label;"/>
         <textbox class="MinWidth20em" id="TitleInput" oninput="TextboxChanged(this.id)"/>
       </row>
-      <row valign="middle">
+      <row align="center">
         <text class="label" value="&authorInput.label;"/>
         <textbox class="MinWidth20em" id="AuthorInput" oninput="TextboxChanged(this.id)"/>
       </row>
-      <row valign="middle">
+      <row align="center">
         <text class="label" value="&descriptionInput.label;"/>
         <textbox class="MinWidth20em" id="DescriptionInput" oninput="TextboxChanged(this.id)"/>
       </row>
@@ -73,5 +74,5 @@
   <spacer class="bigspacer"/>
   <html class="wrap" flex="1">&EditHEADSource.label;</html>
   <separator class="groove"/>
-  <hbox id="okCancelButtons"/> 
+  <hbox id="okCancelButtonsRight"/> 
 </window>

@@ -35,6 +35,7 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
+    onunload="onCancel()"
     orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -60,11 +61,11 @@
           <grid>
             <columns><column/><column/></columns>
             <rows>
-              <row valign="middle">
+              <row align="center">
                 <text class="label" value="&tableRows.label;"/>
                 <textbox class="narrow" id="TableRowsInput" oninput="forceInteger(this.id);"/>
               </row>
-              <row valign="middle">
+              <row align="center">
                 <text class="label" value="&tableColumns.label;"/>
                 <textbox class="narrow" id="TableColumnsInput" oninput="forceInteger(this.id);"/>
               </row>
@@ -74,7 +75,7 @@
           <grid>
             <columns><column/><column/><column flex="1"/></columns>
             <rows>
-              <row valign="middle">
+              <row align="center">
                 <text class="label" value="&tableWidth.label;"/>
                 <textbox class="narrow" id="TableWidthInput" oninput="forceInteger(this.id);"/>
                 <menulist id="TableWidthUnits"/>
@@ -86,17 +87,17 @@
         <grid>
           <columns><column/><column/><column/></columns>
           <rows>
-            <row valign="middle">
+            <row align="center">
               <text class="label" value="&tableBorderWidth.label;"/>
               <textbox class="narrow" id="BorderWidthInput" oninput="forceInteger(this.id);"/>
               <text class="label" align="left" value="&pixels.label;"/>
             </row>
-            <row valign="middle">
+            <row align="center">
               <text class="label" value="&tableSpacing.label;"/>
               <textbox class="narrow" id="SpacingInput" oninput="forceInteger(this.id);"/>
               <text class="label" value="&tablePxBetwCells.label;"/>
             </row>
-            <row valign="middle" autostretch="never">
+            <row align="center">
               <text class="label" value="&tablePadding.label;"/>
               <textbox class="narrow" id="PaddingInput" oninput="forceInteger(this.id);"/>
               <text class="label" value="&tablePxBetwBrdrCellContent.label;"/>
@@ -105,7 +106,7 @@
         </grid>
         </groupbox>
         <!-- Table Alignment and Caption -->
-        <hbox flex="1" valign="middle" autostretch="never">
+        <hbox flex="1" align="center">
           <text class="label" value="&tableAlignment.label;"/>
           <menulist id="TableAlignList">
             <menupopup>
@@ -125,7 +126,7 @@
           </menulist>
         </hbox>
         <separator class="groove"/>
-        <hbox valign="middle" autostretch="never">
+        <hbox align="center">
           <text class="label" value="&backgroundColor.label;"/>
           <button class="color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');">
             <spacer id="tableBackgroundCW" class="color-well"/>
@@ -137,14 +138,14 @@
         <hbox flex="1" autostretch="never">
           <spacer flex="1"/>
           <!-- From EdDialogOvlerlay.xul -->
-          <button class="dialog" id="AdvancedEditButton"/>
+          <button id="AdvancedEditButton"/>
         </hbox>
         <spacer flex="1"/>
       </vbox><!-- Table Panel -->
 
       <!-- CELL PANEL -->
       <vbox id="CellPanel">
-        <groupbox autostretch="never" valign="middle">
+        <groupbox align="center">
           <caption label="&cellSelection.label;"/>
           <vbox>
             <menulist id="SelectionList" oncommand="ChangeSelection(event.target.value)" flex="1">
@@ -156,8 +157,8 @@
               </menupopup>
             </menulist>
             <hbox flex="1">
-              <button id="PreviousButton" class="dialog"             label="&cellSelectPrevious.label;" oncommand="MoveSelection(0)" flex="1"/>
-              <button id="NextButton"     class="dialog align-right" label="&cellSelectNext.label;"     oncommand="MoveSelection(1)" flex="1"/>
+              <button id="PreviousButton" label="&cellSelectPrevious.label;" oncommand="MoveSelection(0)" flex="1"/>
+              <button id="NextButton" class="align-right" label="&cellSelectNext.label;" oncommand="MoveSelection(1)" flex="1"/>
             </hbox>
           </vbox>
           <spacer class="bigspacer"/>
@@ -172,13 +173,13 @@
             <grid>
               <columns><column/><column/><column flex="1"/></columns>
               <rows>
-                <row valign="middle" autostretch="never">
+                <row align="center">
                   <checkbox id="CellHeightCheckbox" label="&tableHeight.label;"/>
                   <textbox class="narrow" id="CellHeightInput"
                            oninput="ChangeIntTextbox(this.id,'CellHeightCheckbox');"/>
                   <menulist id="CellHeightUnits" oncommand="SetCheckbox('CellHeightCheckbox');"/>
                 </row>
-                <row valign="middle" autostretch="never">
+                <row align="center">
                   <checkbox id="CellWidthCheckbox" label="&tableWidth.label;"/>
                   <textbox class="narrow" id="CellWidthInput"
                            oninput="ChangeIntTextbox(this.id,'CellWidthCheckbox');"/>
@@ -193,7 +194,7 @@
             <grid>
               <columns><column/><column flex="1"/><column/></columns>
               <rows>
-                <row valign="middle" autostretch="never">
+                <row align="center">
                   <checkbox id="CellVAlignCheckbox" label="&cellVertical.label;"/>
                   <menulist id="CellVAlignList" oncommand="SetCheckbox('CellVAlignCheckbox');">
                     <menupopup>
@@ -203,7 +204,7 @@
                     </menupopup>
                   </menulist>
                 </row>
-                <row valign="middle" autostretch="never">
+                <row align="center">
                   <checkbox id="CellHAlignCheckbox" label="&cellHorizontal.label;"/>
                   <menulist id="CellHAlignList"  oncommand="SelectCellHAlign()">
                     <menupopup>
@@ -219,7 +220,7 @@
           </groupbox>
         </hbox>
         <spacer class="spacer"/>
-        <hbox valign="middle" autostretch="never">
+        <hbox align="center">
           <checkbox id="CellStyleCheckbox" label="&cellStyle.label;"/>
           <menulist id="CellStyleList" oncommand="SetCheckbox('CellStyleCheckbox');">
             <menupopup>
@@ -237,7 +238,7 @@
           </menulist>
         </hbox>
         <separator class="groove"/>
-        <hbox valign="middle" autostretch="never">
+        <hbox align="center">
           <checkbox id="CellColorCheckbox" label="&backgroundColor.label;"/>
           <button class="color-button" oncommand="GetColorAndUpdate('cellBackgroundCW');">
             <spacer id="cellBackgroundCW" class="color-well"/>
@@ -249,17 +250,16 @@
         <hbox autostretch="never">
           <html  class="wrap" flex="1" style="width: 1em">&cellUseCheckboxHelp.label;</html>
           <!-- From EdDialogOvlerlay.xul -->
-          <button class="dialog" id="AdvancedEditButton2"/>
+          <button id="AdvancedEditButton2"/>
         </hbox>
         <spacer flex="1"/>
       </vbox><!-- Cell Panel -->
-
     </tabpanels> 
-    <spacer class="spacer"/>
-    <!-- from EdDialogOverlay -->
-    <hbox>
-      <spacer flex="1"/>
-      <hbox id="okCancelHelpButtonsRight"/> 
-    </hbox>
   </tabbox>
+  <spacer class="spacer"/>
+  <!-- from EdDialogOverlay -->
+  <hbox>
+    <spacer flex="1"/>
+    <hbox id="okCancelHelpButtonsRight"/> 
+  </hbox>
 </window>

@@ -34,6 +34,7 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:html="http://www.w3.org/1999/xhtml"
    onload = "Startup()"
+   onunload="PreventCancel()"
    orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -51,13 +52,13 @@
   <spacer class="bigspacer"/>
   <hbox flex="1">
     <spacer class="bigspacer"/>
-    <button class="dialog" label="&keepCurrentPageButton.label;"
+    <button label="&keepCurrentPageButton.label;"
             flex="1" oncommand="KeepCurrentPage()"/>
     <spacer class="bigspacer"/>
   </hbox>
   <hbox flex="1">
     <spacer class="bigspacer"/>
-    <button class="dialog" label="&useOtherPageButton.label;"
+    <button label="&useOtherPageButton.label;"
             flex="1" oncommand="UseOtherPage()"/>
     <spacer class="bigspacer"/>
   </hbox>

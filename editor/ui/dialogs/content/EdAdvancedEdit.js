@@ -40,8 +40,6 @@ var JSERAttrs   = [];   // removed js events
 var gDoOnSelectTree = true;
 var gUpdateTreeValue = true;
 
-var dialog;
-
 /************** INITIALISATION && SETUP **************/
 
 /**
@@ -77,23 +75,22 @@ function Startup()
   tagLabel.setAttribute("value", ("<" + gElement.localName + ">"));
 
   // Create dialog object to store controls for easy access
-  dialog                            = {};
-  dialog.AddHTMLAttributeNameInput  = document.getElementById("AddHTMLAttributeNameInput");
+  gDialog.AddHTMLAttributeNameInput  = document.getElementById("AddHTMLAttributeNameInput");
 
   // We use a <deck> to switch between editable menulist and textbox
-  dialog.AddHTMLAttributeValueDeck     = document.getElementById("AddHTMLAttributeValueDeck");
-  dialog.AddHTMLAttributeValueMenulist = document.getElementById("AddHTMLAttributeValueMenulist");
-  dialog.AddHTMLAttributeValueTextbox  = document.getElementById("AddHTMLAttributeValueTextbox");
-  dialog.AddHTMLAttributeValueInput    = dialog.AddHTMLAttributeValueTextbox;
+  gDialog.AddHTMLAttributeValueDeck     = document.getElementById("AddHTMLAttributeValueDeck");
+  gDialog.AddHTMLAttributeValueMenulist = document.getElementById("AddHTMLAttributeValueMenulist");
+  gDialog.AddHTMLAttributeValueTextbox  = document.getElementById("AddHTMLAttributeValueTextbox");
+  gDialog.AddHTMLAttributeValueInput    = gDialog.AddHTMLAttributeValueTextbox;
 
-  dialog.AddHTMLAttributeTree          = document.getElementById("HTMLATree");
-  dialog.AddCSSAttributeNameInput      = document.getElementById("AddCSSAttributeNameInput");
-  dialog.AddCSSAttributeValueInput     = document.getElementById("AddCSSAttributeValueInput");
-  dialog.AddCSSAttributeTree           = document.getElementById("CSSATree");
-  dialog.AddJSEAttributeNameList       = document.getElementById("AddJSEAttributeNameList");
-  dialog.AddJSEAttributeValueInput     = document.getElementById("AddJSEAttributeValueInput");
-  dialog.AddJSEAttributeTree           = document.getElementById("JSEATree");
-  dialog.okButton                      = document.getElementById("ok");
+  gDialog.AddHTMLAttributeTree          = document.getElementById("HTMLATree");
+  gDialog.AddCSSAttributeNameInput      = document.getElementById("AddCSSAttributeNameInput");
+  gDialog.AddCSSAttributeValueInput     = document.getElementById("AddCSSAttributeValueInput");
+  gDialog.AddCSSAttributeTree           = document.getElementById("CSSATree");
+  gDialog.AddJSEAttributeNameList       = document.getElementById("AddJSEAttributeNameList");
+  gDialog.AddJSEAttributeValueInput     = document.getElementById("AddJSEAttributeValueInput");
+  gDialog.AddJSEAttributeTree           = document.getElementById("JSEATree");
+  gDialog.okButton                      = document.getElementById("ok");
 
   // build the attribute trees
   BuildHTMLAttributeTable();

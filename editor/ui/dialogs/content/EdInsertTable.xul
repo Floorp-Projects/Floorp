@@ -36,6 +36,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
+    onunload="onCancel()"
     persist="screenX screenY"
     orient="vertical">
 
@@ -50,19 +51,23 @@
   <popupset id="aTooltipSet" />
   <groupbox orient="vertical"><caption label="&size.label;"/>
     <grid>
-      <columns><column/><column/><column/></columns>
+      <columns>
+        <column flex="1"/>
+        <column flex="1"/>
+        <column flex="6"/>
+      </columns>
       <rows>
-        <row valign="middle" text-align="right" autostretch="never">
+        <row align="center">
           <text class="label align-right" text-align="right" value="&numRowsEditField.label;" />
           <textbox class="narrow" id="rowsInput" oninput="ChangeRowOrColumn(this.id)" />
           <spacer/>
         </row>
-        <row valign="middle" text-align="right" autostretch="never">
+        <row align="center">
           <text class="label align-right" value="&numColumnsEditField.label;" />
           <textbox class="narrow" id="columnsInput" oninput="ChangeRowOrColumn(this.id)" />
           <spacer/>
         </row>
-        <row valign="middle" text-align="right" autostretch="never">
+        <row align="center">
           <text class="label align-right" value="&widthEditField.label;" />
           <textbox class="narrow" id="widthInput" oninput="forceInteger(this.id)" />
           <menulist id="widthPixelOrPercentMenulist"><menupopup/></menulist>
@@ -73,7 +78,7 @@
     <spacer class="spacer"/>
   </groupbox>
   <spacer class="spacer"/>
-  <hbox valign="middle" autostretch="never">
+  <hbox align="center">
     <text class="label align-right" text-align="right" value="&borderEditField.label;"
         tooltip="aTooltip" tooltiptext="&borderEditField.tooltip;" />
     <textbox class="narrow" id="borderInput" oninput="forceInteger(this.id)" />
@@ -82,5 +87,5 @@
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-  <hbox id="okCancelButtons"/> 
+  <hbox id="okCancelButtonsRight"/> 
 </window>

@@ -30,7 +30,6 @@ var maxColumns = 10000;
 var maxPixels = 10000;
 var rows;
 var columns;
-var dialog;
 
 // dialog initialization code
 function Startup()
@@ -47,13 +46,11 @@ function Startup()
     window.close();
     return;
   }
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  dialog.rowsInput    = document.getElementById("rowsInput");
-  dialog.columnsInput = document.getElementById("columnsInput");
-  dialog.widthInput = document.getElementById("widthInput");
-  dialog.borderInput = document.getElementById("borderInput");
-  dialog.widthPixelOrPercentMenulist = document.getElementById("widthPixelOrPercentMenulist");
+  gDialog.rowsInput    = document.getElementById("rowsInput");
+  gDialog.columnsInput = document.getElementById("columnsInput");
+  gDialog.widthInput = document.getElementById("widthInput");
+  gDialog.borderInput = document.getElementById("borderInput");
+  gDialog.widthPixelOrPercentMenulist = document.getElementById("widthPixelOrPercentMenulist");
 
   // Make a copy to use for AdvancedEdit
   globalElement = tableElement.cloneNode(false);
@@ -66,14 +63,14 @@ function Startup()
   //  so don't put them in InitDialog(),
   //  else the user's values will be trashed when they use 
   //  the Advanced Edit dialog
-  dialog.rowsInput.value = 2;
-  dialog.columnsInput.value = 2;
+  gDialog.rowsInput.value = 2;
+  gDialog.columnsInput.value = 2;
 
   // If no default value on the width, set to 100%
-  if (dialog.widthInput.value.length == 0)
+  if (gDialog.widthInput.value.length == 0)
   {
-    dialog.widthInput.value = "100";
-    dialog.widthPixelOrPercentMenulist.selectedIndex = 1;
+    gDialog.widthInput.value = "100";
+    gDialog.widthPixelOrPercentMenulist.selectedIndex = 1;
   }
 
   SetTextboxFocusById("rowsInput");
@@ -89,8 +86,8 @@ function InitDialog()
   // Get default attributes set on the created table:
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of menu combobox list
-  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "width", "widthPixelOrPercentMenulist", gPercent);
-  dialog.borderInput.value = globalElement.getAttribute("border");
+  gDialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "width", "widthPixelOrPercentMenulist", gPercent);
+  gDialog.borderInput.value = globalElement.getAttribute("border");
 }
 
 function ChangeRowOrColumn(id)
@@ -99,10 +96,10 @@ function ChangeRowOrColumn(id)
   forceInteger(id);
 
   // Enable OK only if both rows and columns have a value > 0
-  SetElementEnabledById("ok", dialog.rowsInput.value.length > 0 && 
-                              dialog.rowsInput.value > 0 &&
-                              dialog.columnsInput.value.length > 0 &&
-                              dialog.columnsInput.value > 0);
+  SetElementEnabledById("ok", gDialog.rowsInput.value.length > 0 && 
+                              gDialog.rowsInput.value > 0 &&
+                              gDialog.columnsInput.value.length > 0 &&
+                              gDialog.columnsInput.value > 0);
 }
 
 
@@ -110,20 +107,20 @@ function ChangeRowOrColumn(id)
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
-  rows = ValidateNumber(dialog.rowsInput, null, 1, maxRows, null, null, true)
+  rows = ValidateNumber(gDialog.rowsInput, null, 1, maxRows, null, null, true)
   if (gValidationError)
     return false;
 
-  columns = ValidateNumber(dialog.columnsInput, null, 1, maxColumns, null, null, true)
+  columns = ValidateNumber(gDialog.columnsInput, null, 1, maxColumns, null, null, true)
   if (gValidationError)
     return false;
 
   // Set attributes: NOTE: These may be empty strings (last param = false)
-  ValidateNumber(dialog.borderInput, null, 0, maxPixels, globalElement, "border", false);
+  ValidateNumber(gDialog.borderInput, null, 0, maxPixels, globalElement, "border", false);
   // TODO: Deal with "BORDER" without value issue
   if (gValidationError) return false;
 
-  ValidateNumber(dialog.widthInput, dialog.widthPixelOrPercentMenulist,
+  ValidateNumber(gDialog.widthInput, gDialog.widthPixelOrPercentMenulist,
                  1, maxPixels, globalElement, "width", false);
   if (gValidationError)
     return false;

@@ -23,7 +23,7 @@
 
 function BuildJSEAttributeNameList()
 {
-  ClearMenulist(dialog.AddJSEAttributeNameList);
+  ClearMenulist(gDialog.AddJSEAttributeNameList);
   
   // Get events specific to current element
   var elementName = gElement.localName.toLowerCase();
@@ -48,9 +48,9 @@ function BuildJSEAttributeNameList()
       }
 
       for (i = 0; i < attNames.length; i++)
-        AppendStringToMenulist(dialog.AddJSEAttributeNameList, attNames[i]);
+        AppendStringToMenulist(gDialog.AddJSEAttributeNameList, attNames[i]);
 
-      popup = dialog.AddJSEAttributeNameList.firstChild;
+      popup = gDialog.AddJSEAttributeNameList.firstChild;
       if (popup)
       {
         sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
@@ -66,7 +66,7 @@ function BuildJSEAttributeNameList()
     if (gCoreJSEvents[i] == "-")
     {
       if (!popup)
-        popup = dialog.AddJSEAttributeNameList.firstChild;
+        popup = gDialog.AddJSEAttributeNameList.firstChild;
 
       sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
 
@@ -74,15 +74,15 @@ function BuildJSEAttributeNameList()
         popup.appendChild(sep);
     }
     else
-      AppendStringToMenulist(dialog.AddJSEAttributeNameList, gCoreJSEvents[i]);
+      AppendStringToMenulist(gDialog.AddJSEAttributeNameList, gCoreJSEvents[i]);
   }
   
-  dialog.AddJSEAttributeNameList.selectedIndex = 0;
+  gDialog.AddJSEAttributeNameList.selectedIndex = 0;
 
   // Use current name and value of first tree item if it exists
   onSelectJSETreeItem();
 
-  dialog.AddJSEAttributeNameList.focus();
+  gDialog.AddJSEAttributeNameList.focus();
 }
 
 // build attribute list in tree form from element attributes
@@ -106,7 +106,7 @@ function BuildJSEAttributeTable()
 
     // Select first item
     if (added)
-      dialog.AddJSEAttributeTree.selectedIndex = 0;
+      gDialog.AddJSEAttributeTree.selectedIndex = 0;
   }
 }
 
@@ -126,27 +126,27 @@ function onSelectJSEAttribute()
   if(!gDoOnSelectTree)
     return;
 
-  dialog.AddJSEAttributeValueInput.value = 
-      GetAndSelectExistingAttributeValue(dialog.AddJSEAttributeNameList.label, "JSEAList");
+  gDialog.AddJSEAttributeValueInput.value = 
+      GetAndSelectExistingAttributeValue(gDialog.AddJSEAttributeNameList.label, "JSEAList");
 }
 
 function onSelectJSETreeItem()
 {
-  var tree = dialog.AddJSEAttributeTree;
+  var tree = gDialog.AddJSEAttributeTree;
   if (tree && tree.selectedItems && tree.selectedItems.length)
   {
     var name = GetTreeItemAttributeStr(tree.selectedItems[0]);
 
     // Select attribute name in list
-    if (dialog.AddJSEAttributeNameList.firstChild)
+    if (gDialog.AddJSEAttributeNameList.firstChild)
     {
-      var arr = dialog.AddJSEAttributeNameList.firstChild.getElementsByAttribute('label', name);
+      var arr = gDialog.AddJSEAttributeNameList.firstChild.getElementsByAttribute('label', name);
       if (arr && arr.length)
-        dialog.AddJSEAttributeNameList.selectedItem = arr[0];
+        gDialog.AddJSEAttributeNameList.selectedItem = arr[0];
 
       // Set value input to that in tree (no need to update this in the tree)
       gUpdateTreeValue = false;
-      dialog.AddJSEAttributeValueInput.value =  GetTreeItemValueStr(tree.selectedItems[0]);
+      gDialog.AddJSEAttributeValueInput.value =  GetTreeItemValueStr(tree.selectedItems[0]);
       gUpdateTreeValue = true;
     }
   }
@@ -157,8 +157,8 @@ function onInputJSEAttributeValue()
   if (gUpdateTreeValue)
   {
 
-    var name = TrimString(dialog.AddJSEAttributeNameList.label);
-    var value = TrimString(dialog.AddJSEAttributeValueInput.value);
+    var name = TrimString(gDialog.AddJSEAttributeNameList.label);
+    var value = TrimString(gDialog.AddJSEAttributeValueInput.value);
 
     // Update value in the tree list
     // Since we have a non-editable menulist, 
@@ -171,7 +171,7 @@ function onInputJSEAttributeValue()
 function editJSEAttributeValue(targetCell)
 {
   if (IsNotTreeHeader(targetCell))
-    dialog.AddJSEAttributeValueInput.inputField.select();
+    gDialog.AddJSEAttributeValueInput.inputField.select();
 }
 
 function UpdateJSEAttributes()
@@ -199,18 +199,18 @@ function UpdateJSEAttributes()
 
 function RemoveJSEAttribute()
 {
-  var treechildren = dialog.AddJSEAttributeTree.lastChild;
+  var treechildren = gDialog.AddJSEAttributeTree.lastChild;
 
   // This differs from HTML and CSS panels: 
   // We reselect after removing, because there is not
   //  editable attribute name input, so we can't clear that
   //  like we do in other panels
-  var newIndex = dialog.AddJSEAttributeTree.selectedIndex;
+  var newIndex = gDialog.AddJSEAttributeTree.selectedIndex;
 
   // We only allow 1 selected item
-  if (dialog.AddJSEAttributeTree.selectedItems.length)
+  if (gDialog.AddJSEAttributeTree.selectedItems.length)
   {
-    var item = dialog.AddJSEAttributeTree.selectedItems[0];
+    var item = gDialog.AddJSEAttributeTree.selectedItems[0];
 
     // Name is the text of the treecell
     var attr = GetTreeItemAttributeStr(item);
@@ -227,6 +227,6 @@ function RemoveJSEAttribute()
     treechildren.removeChild (item);
 
     // Reselect an item
-    dialog.AddJSEAttributeTree.selectedIndex = newIndex;
+    gDialog.AddJSEAttributeTree.selectedIndex = newIndex;
   }
 }

@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 
-var dialog;
 var gIndex;
 var gCommaIndex = "0";
 var gSpaceIndex = "1";
@@ -34,17 +33,15 @@ function Startup()
 
   doSetOKCancel(onOK, onCancel);
 
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  dialog.sepRadioGroup      = document.getElementById("SepRadioGroup");
-  dialog.sepCharacterInput  = document.getElementById("SepCharacterInput");
-  dialog.deleteSepCharacter = document.getElementById("DeleteSepCharacter");
-  dialog.collapseSpaces     = document.getElementById("CollapseSpaces");
+  gDialog.sepRadioGroup      = document.getElementById("SepRadioGroup");
+  gDialog.sepCharacterInput  = document.getElementById("SepCharacterInput");
+  gDialog.deleteSepCharacter = document.getElementById("DeleteSepCharacter");
+  gDialog.collapseSpaces     = document.getElementById("CollapseSpaces");
 
   // We persist the user's separator character
-  dialog.sepCharacterInput.value = dialog.sepRadioGroup.getAttribute("character");
+  gDialog.sepCharacterInput.value = gDialog.sepRadioGroup.getAttribute("character");
 
-  gIndex = dialog.sepRadioGroup.getAttribute("index");
+  gIndex = gDialog.sepRadioGroup.getAttribute("index");
 
   switch (gIndex)
   {
@@ -63,14 +60,14 @@ function Startup()
   // Set initial enable state on character input and "collapse" checkbox
   SelectCharacter(gIndex);
 
-  SetTextboxFocus(dialog.sepRadioGroup);
+  SetTextboxFocus(gDialog.sepRadioGroup);
 
   SetWindowLocation();
 }
 
 function InputSepCharacter()
 {
-  var str = dialog.sepCharacterInput.value;
+  var str = gDialog.sepCharacterInput.value;
 
   // Limit input to 1 character
   if (str.length > 1)
@@ -80,7 +77,7 @@ function InputSepCharacter()
   if (str == "<" || str == ">" || str == "&" || str == ";" || str == " ")
     str = "";
 
-  dialog.sepCharacterInput.value = str;
+  gDialog.sepCharacterInput.value = str;
 }
 
 function SelectCharacter(radioGroupIndex)
@@ -102,7 +99,7 @@ function onOK()
       sepCharacter = " ";
       break;
     case gOtherIndex:
-      sepCharacter = dialog.sepCharacterInput.value.slice(0,1);
+      sepCharacter = gDialog.sepCharacterInput.value.slice(0,1);
       break;
   }
 
@@ -206,7 +203,7 @@ function onOK()
 
   // Replace separator characters with table cells
   var replaceString;
-  if (dialog.deleteSepCharacter.checked)
+  if (gDialog.deleteSepCharacter.checked)
   {
     replaceString = "";
   }  
@@ -230,7 +227,7 @@ function onOK()
     {
       // If checkbox is checked, 
       //   one or more adjacent spaces are one separator
-      if (dialog.collapseSpaces.checked)
+      if (gDialog.collapseSpaces.checked)
           tempStr = "\\s+"
         else
           tempStr = "\\s";
@@ -333,9 +330,9 @@ function onOK()
   editorShell.EndBatchChanges();
 
   // Save persisted attributes
-  dialog.sepRadioGroup.setAttribute("index", gIndex);
+  gDialog.sepRadioGroup.setAttribute("index", gIndex);
   if (gIndex == gOtherIndex)
-    dialog.sepRadioGroup.setAttribute("character", sepCharacter);
+    gDialog.sepRadioGroup.setAttribute("character", sepCharacter);
 
   SaveWindowLocation();
   return true;

@@ -29,7 +29,6 @@ var charsetWasChanged = false;
 var insertNewContentType = false;
 var contenttypeElement;
 var initDone = false;
-var dialog;
 
 //Cancel() is in EdDialogCommon.js
 
@@ -40,11 +39,9 @@ function Startup()
 
   doSetOKCancel(onOK, onCancel);
 
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  dialog.TitleInput    = document.getElementById("TitleInput");
-  dialog.charsetTree   = document.getElementById('CharsetTree'); 
-  dialog.exportToText  = document.getElementById('ExportToText');
+  gDialog.TitleInput    = document.getElementById("TitleInput");
+  gDialog.charsetTree   = document.getElementById('CharsetTree'); 
+  gDialog.exportToText  = document.getElementById('ExportToText');
 
   contenttypeElement = GetHTTPEquivMetaElement("content-type");
   if(!contenttypeElement && (editorShell.contentsMIMEType != 'text/plain')) 
@@ -69,7 +66,7 @@ function Startup()
     helpTextParent.appendChild(helpText);
   
   // SET FOCUS TO FIRST CONTROL
-  SetTextboxFocus(dialog.TitleInput);
+  SetTextboxFocus(gDialog.TitleInput);
   LoadAvailableCharSets();
   initDone = true;
 
@@ -79,7 +76,7 @@ function Startup()
   
 function InitDialog() 
 {
-  dialog.TitleInput.value = editorShell.GetDocumentTitle();
+  gDialog.TitleInput.value = editorShell.GetDocumentTitle();
   charset = editorShell.GetDocumentCharacterSet();
 }
 
@@ -97,10 +94,10 @@ function onOK()
   editorShell.EndBatchChanges();
 
   if(titleWasEdited) 
-    window.opener.newTitle = dialog.TitleInput.value.trimString();
+    window.opener.newTitle = gDialog.TitleInput.value.trimString();
 
   window.opener.ok = true;
-  window.opener.exportToText = dialog.exportToText.checked;
+  window.opener.exportToText = gDialog.exportToText.checked;
   SaveWindowLocation();
   return true;
 }
@@ -133,12 +130,12 @@ function LoadAvailableCharSets()
     var selectedItem;
     var item;
 
-    ClearTreelist(dialog.charsetTree);
+    ClearTreelist(gDialog.charsetTree);
 
     for (var i = 0; i < rdfContainer.GetCount(); i++) 
 	{
       charsetNode = availableCharsets.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-      item = AppendStringToTreelist(dialog.charsetTree, readRDFString(rdfDataSource, charsetNode, kNC_name));
+      item = AppendStringToTreelist(gDialog.charsetTree, readRDFString(rdfDataSource, charsetNode, kNC_name));
       item.firstChild.firstChild.setAttribute("value", charsetNode.Value);
       if(charset == charsetNode.Value) 
         selectedItem = item;
@@ -146,8 +143,8 @@ function LoadAvailableCharSets()
 
     if(selectedItem) 
 	{
-      dialog.charsetTree.selectItem(selectedItem);
-      dialog.charsetTree.ensureElementIsVisible(selectedItem);
+      gDialog.charsetTree.selectItem(selectedItem);
+      gDialog.charsetTree.ensureElementIsVisible(selectedItem);
     }
   }
   catch(e) {}
@@ -160,7 +157,7 @@ function SelectCharset()
   {
     try 
 	{
-      charset = GetSelectedTreelistAttribute(dialog.charsetTree, "value");
+      charset = GetSelectedTreelistAttribute(gDialog.charsetTree, "value");
       if(charset != "")
          charsetWasChanged = true;
     }

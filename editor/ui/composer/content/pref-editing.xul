@@ -55,9 +55,9 @@
     </hbox>
   </vbox>
   <spacer class="smallspacer"/>
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" align="start">
     <caption label="&pageColorHeader;"/> 
-    <radiogroup id="useCustomColors" orient="vertical" autostretch="never"  
+    <radiogroup id="useCustomColors" orient="vertical" align="start"  
                 pref="true" preftype="bool" prefstring="editor.use_custom_colors"
                 prefattribute="value">
       <radio class="small-margin" group="useCustomColors" id="DefaultColorsRadio"
@@ -74,35 +74,35 @@
       <grid>
         <columns><column/><column/></columns>
         <rows>
-          <row valign="middle" autostretch="never">
+          <row align="center">
             <text class="label" id="Text" value="&normalText.label;&colon.character;" />
             <button id="TextButton" class="color-button" oncommand="GetColorAndUpdate('textCW');">
               <spacer id="textCW" class="color-well"/>
             </button>
             <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value" wsm_attributes="value"/>
           </row>
-          <row valign="middle" autostretch="never">
+          <row align="center">
             <text class="label" id="Link" value="&linkText.label;&colon.character;" />
             <button id="LinkButton" class="color-button" oncommand="GetColorAndUpdate('linkCW');">
               <spacer id="linkCW" class="color-well"/>
             </button>
             <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
-          <row valign="middle" autostretch="never">
+          <row align="center">
             <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
             <button id="ActiveLinkButton" class="color-button" oncommand="GetColorAndUpdate('activeCW');">
               <spacer id="activeCW" class="color-well"/>
             </button>
             <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
-          <row valign="middle" autostretch="never">
+          <row align="center">
             <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
             <button id="VisitedLinkButton" class="color-button" oncommand="GetColorAndUpdate('visitedCW');">
               <spacer id="visitedCW" class="color-well"/>
             </button>
             <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
-          <row valign="middle" autostretch="never">
+          <row align="center">
             <text class="label" id="Background" value="&background.label;" />
             <button id="BackgroundButton" class="color-button" oncommand="GetColorAndUpdate('backgroundCW');">
               <spacer id="backgroundCW" class="color-well"/>
@@ -126,11 +126,11 @@
     </hbox>
     <spacer class="spacer"/>
     <text class="label small-margin" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
-    <hbox valign="middle" autostretch="never">
+    <hbox align="center">
       <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width: 23em" flex="1">
         <observes element="backgroundImageData" attribute="disabled"/>
       </textbox>
-      <button class="dialog" label="&chooseFile.label;" accesskey="&chooseFile.accesskey;"
+      <button label="&chooseFile.label;" accesskey="&chooseFile.accesskey;"
               oncommand="ChooseImageFile()">
         <observes element="backgroundImageData" attribute="disabled"/>
       </button>

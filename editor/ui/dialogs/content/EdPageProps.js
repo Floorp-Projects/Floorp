@@ -30,7 +30,6 @@ var insertNewDescription = false;
 var titleWasEdited = false;
 var authorWasEdited = false;
 var descWasEdited = false;
-var dialog;
 
 //Cancel() is in EdDialogCommon.js
 // dialog initialization code
@@ -39,17 +38,10 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  dialog = new Object;
-  if (!dialog)
-  {
-    dump("Failed to create dialog object!!!\n");
-    window.close();
-    return;
-  }
-  dialog.PageLocation     = document.getElementById("PageLocation");
-  dialog.TitleInput       = document.getElementById("TitleInput");
-  dialog.AuthorInput      = document.getElementById("AuthorInput");
-  dialog.DescriptionInput = document.getElementById("DescriptionInput");
+  gDialog.PageLocation     = document.getElementById("PageLocation");
+  gDialog.TitleInput       = document.getElementById("TitleInput");
+  gDialog.AuthorInput      = document.getElementById("AuthorInput");
+  gDialog.DescriptionInput = document.getElementById("DescriptionInput");
   doSetOKCancel(onOK, onCancel);
   
   // Default string for new page is set from DTD string in XUL,
@@ -59,7 +51,7 @@ function Startup()
 
   if (location != "about:blank")
   {
-    dialog.PageLocation.setAttribute("value", editorShell.editorDocument.location);
+    gDialog.PageLocation.setAttribute("value", editorShell.editorDocument.location);
 
     // Get last-modified file date+time
     // TODO: Convert this to local time?
@@ -95,14 +87,14 @@ function Startup()
   
   InitDialog();
 
-  SetTextboxFocus(dialog.TitleInput);
+  SetTextboxFocus(gDialog.TitleInput);
 
   SetWindowLocation();
 }
 
 function InitDialog()
 {
-  dialog.TitleInput.value = editorShell.GetDocumentTitle();
+  gDialog.TitleInput.value = editorShell.GetDocumentTitle();
   var author = authorElement.getAttribute("content").trimString();
   if (author.length == 0)
   {
@@ -111,8 +103,8 @@ function InitDialog()
     if (prefs) 
       author = prefs.CopyCharPref("editor.author");
   }
-  dialog.AuthorInput.value = author;
-  dialog.DescriptionInput.value = descriptionElement.getAttribute("content");
+  gDialog.AuthorInput.value = author;
+  gDialog.DescriptionInput.value = descriptionElement.getAttribute("content");
 }
 
 function TextboxChanged(ID)
@@ -133,9 +125,9 @@ function TextboxChanged(ID)
 
 function ValidateData()
 {
-  newTitle = dialog.TitleInput.value.trimString();
-  author = dialog.AuthorInput.value.trimString();
-  description = dialog.DescriptionInput.value.trimString();
+  newTitle = gDialog.TitleInput.value.trimString();
+  author = gDialog.AuthorInput.value.trimString();
+  description = gDialog.DescriptionInput.value.trimString();
   return true;
 }
 

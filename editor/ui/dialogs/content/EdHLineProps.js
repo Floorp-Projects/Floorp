@@ -26,7 +26,6 @@ var width;
 var height;
 var align;
 var shading;
-var dialog;
 
 // dialog initialization code
 function Startup()
@@ -44,15 +43,13 @@ function Startup()
     window.close();
     return;
   }
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  dialog.heightInput = document.getElementById("height");
-  dialog.widthInput = document.getElementById("width");
-  dialog.leftAlign = document.getElementById("leftAlign");
-  dialog.centerAlign = document.getElementById("centerAlign");
-  dialog.rightAlign = document.getElementById("rightAlign");
-  dialog.shading = document.getElementById("3dShading");
-  dialog.pixelOrPercentMenulist = document.getElementById("pixelOrPercentMenulist");
+  gDialog.heightInput = document.getElementById("height");
+  gDialog.widthInput = document.getElementById("width");
+  gDialog.leftAlign = document.getElementById("leftAlign");
+  gDialog.centerAlign = document.getElementById("centerAlign");
+  gDialog.rightAlign = document.getElementById("rightAlign");
+  gDialog.shading = document.getElementById("3dShading");
+  gDialog.pixelOrPercentMenulist = document.getElementById("pixelOrPercentMenulist");
 
   // Make a copy to use for AdvancedEdit and onSaveDefault
   globalElement = hLineElement.cloneNode(false);
@@ -61,7 +58,7 @@ function Startup()
   InitDialog()
 
   // SET FOCUS TO FIRST CONTROL
-  SetTextboxFocus(dialog.widthInput);
+  SetTextboxFocus(gDialog.widthInput);
 
   // Resize window
   window.sizeToContent();
@@ -81,25 +78,25 @@ function InitDialog()
   }
 
   // We will use "height" here and in UI
-  dialog.heightInput.value = height;
+  gDialog.heightInput.value = height;
 
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of menulist (adds pixel and percent menuitems elements)
-  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, hLineElement, "width","pixelOrPercentMenulist");
+  gDialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, hLineElement, "width","pixelOrPercentMenulist");
 
   align = globalElement.getAttribute("align").toLowerCase();
 
-  dialog.centerAlign.checked = (align == "center" || !align);
-  dialog.rightAlign.checked  = (align == "right");
-  dialog.leftAlign.checked   = (align == "left");
+  gDialog.centerAlign.checked = (align == "center" || !align);
+  gDialog.rightAlign.checked  = (align == "right");
+  gDialog.leftAlign.checked   = (align == "left");
 
   // This is tricky! Since the "noshade" attribute doesn't always have a value,
   //  we can't use getAttribute to figure out if it's set!
   // This gets the attribute NODE from the attributes NamedNodeMap
   if (globalElement.attributes.getNamedItem("noshade"))
-    dialog.shading.checked = false;
+    gDialog.shading.checked = false;
   else
-    dialog.shading.checked = true;
+    gDialog.shading.checked = true;
 
 }
 
@@ -160,21 +157,21 @@ function onSaveDefault()
 function ValidateData()
 {
   // Height is always pixels
-  height = ValidateNumber(dialog.heightInput, null, 1, maxPixels,
+  height = ValidateNumber(gDialog.heightInput, null, 1, maxPixels,
                           globalElement, "size", false);
   if (gValidationError)
     return false;
 
-  width = ValidateNumber(dialog.widthInput, dialog.pixelOrPercentMenulist, 1, maxPixels, 
+  width = ValidateNumber(gDialog.widthInput, gDialog.pixelOrPercentMenulist, 1, maxPixels, 
                          globalElement, "width", false);
   if (gValidationError)
     return false;
 
   align = "left";
-  if (dialog.centerAlign.checked) {
+  if (gDialog.centerAlign.checked) {
     // Don't write out default attribute
     align = "";
-  } else if (dialog.rightAlign.checked) {
+  } else if (gDialog.rightAlign.checked) {
     align = "right";
   }
   if (align)
@@ -182,7 +179,7 @@ function ValidateData()
   else
     globalElement.removeAttribute("align");
 
-  if (dialog.shading.checked) {
+  if (gDialog.shading.checked) {
     shading = true;
     globalElement.removeAttribute("noshade");
   } else {

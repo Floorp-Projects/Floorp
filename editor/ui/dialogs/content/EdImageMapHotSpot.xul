@@ -33,6 +33,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
+    onunload="onCancel()"
     orient="vertical"
   >
 
@@ -56,7 +57,7 @@
 
           <textbox id="urlInput" class="MinWidth20em" value="http://"/>
 
-          <button class="dialog" id="Browse" oncommand="chooseFile()" label="&browseButton.label;"/>
+          <button id="Browse" oncommand="chooseFile()" label="&browseButton.label;"/>
         </row>
       
         <row>
@@ -82,7 +83,7 @@
           <text class="label" id="commonLabel" value="&commonFieldset.label;"/>
 
           <menulist id="commonInput" oncommand="changeTarget()">
-            <menupopup valign="middle">
+            <menupopup align="center">
               <menuitem class="middle" value="" label="&none.value;"/>
               <menuitem class="middle" value="_self" label="&same.value;"/>
               <menuitem class="middle" value="_top" label="&whole.value;"/>
@@ -97,5 +98,5 @@
   </groupbox>
 
   <!-- from global dialogOverlay -->
-  <hbox id="okCancelButtons"/>
+  <hbox id="okCancelButtonsRight"/>
 </window>

@@ -39,7 +39,7 @@
 <vbox id="sidebox" flex="1">
  <hbox class="sidebartitle">
   <spacer flex="1"/>
-  <button class="dialog borderless paneltitle" 
+  <button class="borderless paneltitle" 
         label="&sidebar.reload.label;"
         oncommand="window.location.reload()" />
   <button class="borderless paneltitle" 

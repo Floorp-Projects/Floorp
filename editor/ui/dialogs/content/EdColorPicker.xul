@@ -31,7 +31,9 @@
 <window class="dialog"
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    buttonpack="end"
     onload = "Startup()"
+    onunload="onCancel()"
     orient="vertical"
     >
 
@@ -44,7 +46,7 @@
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
   <keyset id="dialogKeys"/>
-  <hbox id="TableOrCellGroup" valign="middle" autostretch="never" collapsed="true">
+  <hbox id="TableOrCellGroup" align="center" collapsed="true">
     <text value="&background.label;"/>
     <radiogroup id="1" orient="horizontal">
       <radio group="1" id="TableRadio" label="&table.label;"/>
@@ -58,7 +60,7 @@
     onkeypress="SelectColorByKeypress(event);"
     onselect="SelectColor();"/>
 <!-- Web palette is not implemented???
-  <hbox valign="middle" autostretch="never">
+  <hbox align="center">
     <text class="label" value="&palette.label;"/>
     <radio id="StandardPalette" label="&standardPalette.label;" oncommand="ChangePalette('standard')"/>
     <radio id="WebPalette" label="&webPalette.label;" oncommand="ChangePalette('web')"/>
@@ -75,12 +77,12 @@
     <text class="label" value="&setColor1.label;"/>
     <text class="label" value="&setColor2.label;"/>
     <text class="label" value="&setColorExample.label;"/>
-    <hbox valign="middle" autostretch="never" flex="1=">
+    <hbox align="center" flex="1=">
       <textbox id="ColorInput" style="width: 8em" oninput="SetColorSwatch(); SetDefaultToOk();"/>
       <spacer flex="1"/>
       <spacer id="ColorPickerSwatch"/>
       <spacer flex="1"/>
-      <button id="DefaultColorButton" class="dialog" label="&default.label;" 
+      <button id="DefaultColorButton" label="&default.label;" 
         style="margin-right:0px;" oncommand="RemoveColor()"/>
     </hbox>
   </vbox>
