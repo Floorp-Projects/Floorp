@@ -148,7 +148,10 @@ nsTypeAheadFind::nsTypeAheadFind():
     return;
 
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  if (!prefs) 
+  mSearchRange = do_CreateInstance(kRangeCID);
+  mStartPointRange = do_CreateInstance(kRangeCID);
+  mEndPointRange = do_CreateInstance(kRangeCID);
+  if (!prefs || !mSearchRange || !mStartPointRange || !mEndPointRange)
     return;
   
   mFind = do_CreateInstance(NS_FIND_CONTRACTID);
@@ -745,14 +748,18 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     // If first character is bad, flush it away anyway
     if (mTypeAheadBuffer.Length == 1)
 #endif
-      mTypeAheadBuffer = Substring(mTypeAheadBuffer, 0, mTypeAheadBuffer.Length() - 1);
+      mTypeAheadBuffer = Substring(mTypeAheadBuffer, 0, 
+                                   mTypeAheadBuffer.Length() - 1);
   }
 
   return NS_OK;
 }
 
 
-nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace)
+nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, 
+                                    PRBool aIsLinksOnly, 
+                                    PRBool aIsFirstVisiblePreferred, 
+                                    PRBool aIsBackspace)
 {
   nsCOMPtr<nsIPresShell> presShell;
   nsCOMPtr<nsIPresShell> startingPresShell(do_QueryReferent(mFocusedWeakShell));
@@ -815,20 +822,17 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
   if (NS_FAILED(GetSearchContainers(currentContainer, aIsRepeatingSameChar, 
                                     aIsFirstVisiblePreferred, PR_TRUE,
                                     getter_AddRefs(presShell), 
-                                    getter_AddRefs(presContext), 
-                                    getter_AddRefs(searchRange), 
-                                    getter_AddRefs(startPointRange), 
-                                    getter_AddRefs(endPointRange))))
+                                    getter_AddRefs(presContext))))
     return NS_ERROR_FAILURE;
 
   if (aIsBackspace && mStartFindRange && startingDocShell == currentDocShell) {
     // when backspace is pressed, start where first char was found
-    mStartFindRange->CloneRange(getter_AddRefs(startPointRange)); 
+    mStartFindRange->CloneRange(getter_AddRefs(mStartPointRange)); 
   }
 
   PRInt32 rangeCompareResult = 0;
-  startPointRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START , 
-                   searchRange, &rangeCompareResult);
+  mStartPointRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START , 
+                                          searchRange, &rangeCompareResult);
   // No need to wrap find in doc if starting at beginning
   PRBool hasWrapped = (rangeCompareResult <= 0);
 
@@ -839,26 +843,28 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
     findBuffer = PromiseFlatString(mTypeAheadBuffer);
 
   while (PR_TRUE) {    // ----- Outer while loop: go through all docs -----
-    while (PR_TRUE) {   // Inner while loop: go through a single document
-      mFind->Find(findBuffer.get(), searchRange, 
-                  startPointRange, endPointRange, getter_AddRefs(returnRange));
+    while (PR_TRUE) {  // === Inner while loop: go through a single doc ===
+      mFind->Find(findBuffer.get(), mSearchRange, 
+                  mStartPointRange, mEndPointRange, getter_AddRefs(returnRange));
       if (!returnRange)
-        break;
+        break;  // Nothing found in this doc, go to outer loop (try next doc)
       // ------- Test resulting found range for success conditions ------
-      PRBool isInsideLink, isStartingLink;
-      RangeStartsInsideLink(returnRange, presShell, &isInsideLink, 
-                            &isStartingLink);
+      PRBool isInsideLink = PR_FALSE, isStartingLink = PR_FALSE;
+      if (aIsLinksOnly)  // Don't check if inside link when searching all text
+        RangeStartsInsideLink(returnRange, presShell, &isInsideLink, 
+                              &isStartingLink);
 
       if (!IsRangeVisible(presShell, presContext, returnRange, 
-          aIsFirstVisiblePreferred, getter_AddRefs(startPointRange)) ||
+                          aIsFirstVisiblePreferred, 
+                          getter_AddRefs(mStartPointRange)) ||
           (aIsRepeatingSameChar && !isStartingLink) || 
           (aIsLinksOnly && !isInsideLink) ||
           (mStartLinksOnlyPref && aIsLinksOnly && !isStartingLink)) {
         // ------ Failure ------
         // Start find again from here 
-        returnRange->CloneRange(getter_AddRefs(startPointRange));
+        returnRange->CloneRange(getter_AddRefs(mStartPointRange));
         // Collapse to end
-        startPointRange->Collapse(mRepeatingMode == eRepeatingReverse);
+        mStartPointRange->Collapse(mRepeatingMode == eRepeatingReverse);
         continue;
       }
 
@@ -896,21 +902,20 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
       DisplayStatus(PR_TRUE, focusedContent, PR_FALSE);
       return NS_OK;
     }   
-    // ======= end-inner-while: go through a single document ==========
+    // ======= end-inner-while (go through a single document) ==========
 
-    // ---------- Nothing found yet -------------
+    // ---------- Nothing found yet, try next document  -------------
     do {
+      // ==== Second inner loop - get another while  ====
       if (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) 
           && hasMoreDocShells) {
         docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
+        NS_ASSERTION(currentContainer, "HasMoreElements lied to us!");
         if (NS_FAILED(GetSearchContainers(currentContainer, 
                                           aIsRepeatingSameChar, 
                                           aIsFirstVisiblePreferred, PR_FALSE,
                                           getter_AddRefs(presShell), 
-                                          getter_AddRefs(presContext), 
-                                          getter_AddRefs(searchRange), 
-                                          getter_AddRefs(startPointRange), 
-                                          getter_AddRefs(endPointRange))))
+                                          getter_AddRefs(presContext))))
           return NS_ERROR_FAILURE;
         currentDocShell = do_QueryInterface(currentContainer);
         if (currentDocShell)
@@ -921,15 +926,15 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
                                                  nsIDocShell::ENUMERATE_FORWARDS,
                                                  getter_AddRefs(docShellEnumerator));
     }
-    while (docShellEnumerator);
+    while (docShellEnumerator);  // ==== end second inner while  ===
 
     if (currentDocShell != startingDocShell)
       continue;  // Try next document
 
     // Finished searching through docshells:
-    // If aFirstVisiblePreferred == PR_TRUE, we may 
-    // need to go through all docshells twice -
-    // once to look for visible matches, the second time for any match
+    // If aFirstVisiblePreferred == PR_TRUE, we may need to go through all 
+    // docshells twice -once to look for visible matches, the second time 
+    // for any match
     if (!hasWrapped || aIsFirstVisiblePreferred) {
       aIsFirstVisiblePreferred = PR_FALSE;
       hasWrapped = PR_TRUE;
@@ -960,14 +965,8 @@ nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
                                               PRBool aIsFirstVisiblePreferred, 
                                               PRBool aCanUseDocSelection,
                                               nsIPresShell **aPresShell, 
-                                              nsIPresContext **aPresContext,
-                                              nsIDOMRange **aSearchRange, 
-                                              nsIDOMRange **aStartPointRange, 
-                                              nsIDOMRange **aEndPointRange)
+                                              nsIPresContext **aPresContext)
 {
-  *aSearchRange = nsnull;
-  *aStartPointRange = nsnull;
-  *aEndPointRange = nsnull;
   *aPresShell = nsnull;
   *aPresContext = nsnull;
 
@@ -993,13 +992,9 @@ nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   if (NS_FAILED(rootContent->ChildCount(childCount)))
     return NS_ERROR_FAILURE;
  
-  nsCOMPtr<nsIDOMRange> searchRange(do_CreateInstance(kRangeCID));
-  nsCOMPtr<nsIDOMRange> startPointRange(do_CreateInstance(kRangeCID));
-  nsCOMPtr<nsIDOMRange> endPointRange(do_CreateInstance(kRangeCID));
-
-  searchRange->SelectNodeContents(rootNode);
-  endPointRange->SetStart(rootNode, childCount);
-  endPointRange->SetEnd(rootNode, childCount);
+  mSearchRange->SelectNodeContents(rootNode);
+  mEndPointRange->SetStart(rootNode, childCount);
+  mEndPointRange->SetEnd(rootNode, childCount);
 
   // Consider current selection as null if 
   // it's not in the currently focused document
@@ -1010,8 +1005,10 @@ nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
 
   if (!currentSelectionRange || aIsFirstVisiblePreferred) {
     // Ensure visible range, move forward if necessary
-    IsRangeVisible(*aPresShell, *aPresContext, searchRange,
-                   aIsFirstVisiblePreferred, getter_AddRefs(startPointRange));
+    // This uses ignores the return value, but usese the side effect of 
+    // IsRangeVisible. It returns the first visible range after searchRange
+    IsRangeVisible(*aPresShell, *aPresContext, mSearchRange,
+                   aIsFirstVisiblePreferred, getter_AddRefs(mStartPointRange));
   }
   else {
     PRInt32 startOffset;
@@ -1026,13 +1023,10 @@ nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     }
     if (!startNode) 
       startNode = rootNode;
-    startPointRange->SetStart(startNode, startOffset);
-    startPointRange->Collapse(PR_TRUE); // collapse to start
+    mStartPointRange->SetStart(startNode, startOffset);
+    mStartPointRange->Collapse(PR_TRUE); // collapse to start
   }
 
-  NS_ADDREF(*aSearchRange = searchRange);
-  NS_ADDREF(*aStartPointRange = startPointRange);
-  NS_ADDREF(*aEndPointRange = endPointRange);
   return NS_OK;
 }
 
@@ -1510,7 +1504,7 @@ PRBool nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     if (containingView) {
       relFrameRect.x = frameOffset.x;
       relFrameRect.y = frameOffset.y;
-      viewManager->IsRectVisible(containingView, relFrameRect
+      viewManager->IsRectVisible(containingView, relFrameRect,
                                  NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
                                  &isFirstVisible, &isBelowViewPort);
     }
@@ -1591,6 +1585,6 @@ void nsTypeAheadFind::DisplayStatus(PRBool aSuccess,
     }
   }
   browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, 
-                           PromiseFlatString(statusString).get());
+                            PromiseFlatString(statusString).get());
 }
 

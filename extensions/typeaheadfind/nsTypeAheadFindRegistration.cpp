@@ -91,4 +91,3 @@ static const nsModuleComponentInfo components[] =
 };
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsTypeAheadFind, components, TypeAheadFindModuleDtor)
-

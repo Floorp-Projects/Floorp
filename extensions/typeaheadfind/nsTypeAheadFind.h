@@ -152,10 +152,7 @@ protected:
                                PRBool aIsFirstVisiblePreferred, 
                                PRBool aCanUseDocSelection,
                                nsIPresShell **aPresShell, 
-                               nsIPresContext **aPresContext,
-                               nsIDOMRange **aSearchRange, 
-                               nsIDOMRange **aStartRange, 
-                               nsIDOMRange **aEndRange);
+                               nsIPresContext **aPresContext);
   void DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent, 
                      PRBool aClearStatus);
   nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
@@ -183,6 +180,9 @@ protected:
 
   // where selection was when user started the find
   nsCOMPtr<nsIDOMRange> mStartFindRange;
+  nsCOMPtr<nsIDOMRange> mSearchRange;
+  nsCOMPtr<nsIDOMRange> mStartPointRange;
+  nsCOMPtr<nsIDOMRange> mEndPointRange;
 
   // Cached useful interfaces
   nsCOMPtr<nsIFind> mFind;
