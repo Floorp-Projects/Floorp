@@ -189,6 +189,10 @@ nsMenuBarFrame::IsOpen()
 NS_IMETHODIMP
 nsMenuBarFrame::SetActive(PRBool aActiveFlag)
 {
+  // If the activity is not changed, there is nothing to do.
+  if (mIsActive == aActiveFlag)
+    return NS_OK;
+
   mIsActive = aActiveFlag;
   if (mIsActive) {
     InstallKeyboardNavigator();
@@ -379,7 +383,8 @@ nsMenuBarFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFl
   if (result) {
     // We got one!
     aHandledFlag = PR_TRUE;
-    mIsActive = PR_TRUE;
+    printf("\nIs active? %d\n", mIsActive);
+    SetActive(PR_TRUE);
     SetCurrentMenuItem(result);
     result->OpenMenu(PR_TRUE);
     result->SelectFirstItem();
@@ -628,14 +633,10 @@ nsMenuBarFrame::Escape(PRBool& aHandledFlag)
     return NS_OK;
   }
 
-  // It's us. Just set our active flag to false.
-  mIsActive = PR_FALSE;
-
   // Clear our current menu item if we've got one.
   SetCurrentMenuItem(nsnull);
 
-  // Remove our keyboard navigator
-  RemoveKeyboardNavigator();
+  SetActive(PR_FALSE);
 
   // Clear out our dismissal listener
   if (nsMenuFrame::sDismissalListener)
