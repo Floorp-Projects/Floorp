@@ -96,7 +96,7 @@ function ReloadCerts()
 
 function getSelectedTab()
 {
-  var selTab = document.getElementById('certMgrTabbox').selectedTab;
+  var selTab = document.getElementById('certMgrTabbox').selectedItem;
   var selTabID = selTab.getAttribute('id');
   if (selTabID == 'mine_tab') {
     key = "?my_certs";
@@ -298,7 +298,7 @@ function deleteCerts()
   var params = Components.classes[nsDialogParamBlock].getService(nsIDialogParamBlock);
   
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var selTab = document.getElementById('certMgrTabbox').selectedTab;
+  var selTab = document.getElementById('certMgrTabbox').selectedItem;
   var selTabID = selTab.getAttribute('id');
   if (selTabID == 'mine_tab') 
   {
