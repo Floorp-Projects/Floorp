@@ -80,13 +80,14 @@ static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 
 NS_IMETHODIMP
 nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
-                                        nsIBufferInputStream *i_pStream, 
+                                        nsIInputStream *i_pStream, 
                                         PRUint32 i_SourceOffset,
                                         PRUint32 i_Length)
 {
     nsresult rv = NS_OK;
     PRUint32 actualBytesRead;
     NS_ASSERTION(i_pStream, "No stream supplied by the transport!");
+	nsCOMPtr<nsIBufferInputStream> bufferInStream = do_QueryInterface(i_pStream);
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("nsHTTPResponseListener::OnDataAvailable [this=%x].\n"
@@ -96,7 +97,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
     if (!m_pResponse)
     {
         // why do I need the connection in the constructor... get rid.. TODO
-        m_pResponse = new nsHTTPResponse (i_pStream);
+        m_pResponse = new nsHTTPResponse (bufferInStream);
         if (!m_pResponse) {
             NS_ERROR("Failed to create the response object!");
             return NS_ERROR_OUT_OF_MEMORY;
@@ -110,7 +111,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
     if (!m_bHeadersDone) {
         nsCOMPtr<nsIBuffer> pBuffer;
 
-        rv = i_pStream->GetBuffer(getter_AddRefs(pBuffer));
+        rv = bufferInStream->GetBuffer(getter_AddRefs(pBuffer));
         if (NS_FAILED(rv)) return rv;
 
         if (!m_bFirstLineParsed) {

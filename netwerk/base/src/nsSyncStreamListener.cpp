@@ -41,7 +41,7 @@ public:
 
     // nsIStreamListener methods:
     NS_IMETHOD OnDataAvailable(nsISupports* context,
-                               nsIBufferInputStream *aIStream, 
+                               nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
 
@@ -52,7 +52,7 @@ public:
     }
     virtual ~nsSyncStreamListener();
 
-    nsresult Init(nsIBufferInputStream* *result);
+    nsresult Init(nsIInputStream* *result);
 
     nsIBufferOutputStream* GetOutputStream() { return mOutputStream; }
 
@@ -66,7 +66,7 @@ protected:
 #define NS_SYNC_STREAM_LISTENER_BUFFER_SIZE     (32 * 1024)
 
 nsresult 
-nsSyncStreamListener::Init(nsIBufferInputStream* *result)
+nsSyncStreamListener::Init(nsIInputStream* *result)
 {
     nsresult rv;
     nsIBufferInputStream* in;
@@ -133,7 +133,7 @@ nsSyncStreamListener::OnStopRequest(nsISupports* context,
 
 NS_IMETHODIMP 
 nsSyncStreamListener::OnDataAvailable(nsISupports* context,
-                                      nsIBufferInputStream *aIStream, 
+                                      nsIInputStream *aIStream, 
                                       PRUint32 aSourceOffset,
                                       PRUint32 aLength)
 {
@@ -151,7 +151,7 @@ nsSyncStreamListener::OnDataAvailable(nsISupports* context,
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_NET nsresult
-NS_NewSyncStreamListener(nsIBufferInputStream **inStream,
+NS_NewSyncStreamListener(nsIInputStream **inStream,
                          nsIBufferOutputStream **outStream,
                          nsIStreamListener **listener)
 {

@@ -57,7 +57,7 @@ public:
 
     // nsIStreamListener functions
     NS_IMETHOD OnDataAvailable(nsISupports* context,
-                               nsIBufferInputStream *aIStream, 
+                               nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
 

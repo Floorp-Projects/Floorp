@@ -301,7 +301,7 @@ nsFTPChannel::OnStopRequest(nsISupports* context,
 
 NS_IMETHODIMP
 nsFTPChannel::OnDataAvailable(nsISupports* context,
-                              nsIBufferInputStream *aIStream, 
+                              nsIInputStream *aIStream, 
                               PRUint32 aSourceOffset,
                               PRUint32 aLength) {
     // Fill in the buffer w/ the new data.

@@ -64,7 +64,7 @@ public:
 
 	// stream listener methods
 	NS_IMETHOD OnDataAvailable(nsISupports* context,
-                               nsIBufferInputStream *aIStream,
+                               nsIInputStream *aIStream,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
 
@@ -99,7 +99,7 @@ TestConsumer::~TestConsumer()
 }
 
 NS_IMETHODIMP TestConsumer::OnDataAvailable(nsISupports *context,
-                                            nsIBufferInputStream* aIStream, 
+                                            nsIInputStream* aIStream, 
                                             PRUint32 aSourceOffset,
                                             PRUint32 aLength) {
     PRUint32 len;

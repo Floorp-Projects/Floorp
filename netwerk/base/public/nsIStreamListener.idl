@@ -19,6 +19,7 @@
 #include "nsIStreamObserver.idl"
 
 interface nsIBufferInputStream;
+interface nsIInputStream;
 interface nsIBufferOutputStream;
 interface nsIEventQueue;
 
@@ -26,7 +27,7 @@ interface nsIEventQueue;
 interface nsIStreamListener : nsIStreamObserver
 {
     void OnDataAvailable(in nsISupports ctxt, 
-                         in nsIBufferInputStream inStr,
+                         in nsIInputStream inStr,
                          in unsigned long sourceOffset,
                          in unsigned long count);
 };
@@ -44,7 +45,7 @@ NS_NewAsyncStreamListener(nsIStreamListener* *result,
 // A synchronous stream listener pushes data through a pipe that ends up
 // in an input stream to be read by another thread.
 extern NS_NET nsresult
-NS_NewSyncStreamListener(nsIBufferInputStream **inStream,
+NS_NewSyncStreamListener(nsIInputStream **inStream,
                          nsIBufferOutputStream **outStream,
                          nsIStreamListener **listener);
 
