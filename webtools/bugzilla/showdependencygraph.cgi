@@ -124,7 +124,8 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
         my $summary = "";
         my $stat;
         if ($::FORM{'showsummary'}) {
-            SendSQL(SelectVisible("select bug_status, short_desc from bugs where bug_id = $k",
+            SendSQL(SelectVisible("SELECT bug_status, short_desc FROM bugs " .
+                                  "WHERE bugs.bug_id = $k",
                                   $::userid,
                                   $::usergroupset));
             ($stat, $summary) = (FetchSQLData());
