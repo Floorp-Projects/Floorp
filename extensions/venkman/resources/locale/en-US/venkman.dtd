@@ -39,15 +39,21 @@
 <!ENTITY app.version "prototype_a">
 <!ENTITY app.author "mozilla.org">
 
-<!ENTITY MainWindow.title "JavaScript Console Debugger">
+<!ENTITY MainWindow.title "JavaScript Debugger">
 <!ENTITY ReloadUI.label "Reload UI">
 <!ENTITY ReloadUI.aKey "R">
 <!ENTITY Debug.label "Debug">
 <!ENTITY Debug.aKey "D">
 <!ENTITY Cont.label "Continue">
 <!ENTITY Cont.aKey "C">
-<!ENTITY StepIn.label "Step In">
+<!ENTITY StepIn.label "Step Into">
 <!ENTITY StepIn.aKey "I">
+<!ENTITY StepOver.label "Step Over">
+<!ENTITY StepOver.aKey "O">
+<!ENTITY StepOut.label "Step Out">
+<!ENTITY StepOut.aKey "T">
+<!ENTITY Stop.label "Stop">
+<!ENTITY Stop.aKey "p">
 <!ENTITY TModeMenu.label "Exceptions">
 <!ENTITY TModeMenu.aKey "E">
 <!ENTITY TModeIgnore.label "Ignore">
@@ -59,12 +65,17 @@
 <!ENTITY TModeCycle.label "Cycle">
 <!ENTITY TModeCycle.aKey "C">
 
-<!ENTITY CallStack.header "Call Stack">
-<!ENTITY FunctionName.header "Function">
-<!ENTITY FileName.header "File">
-<!ENTITY LineNumber.header "Line">
-<!ENTITY IsCurrent.header "Current">
-<!ENTITY Breakpoint.header "Breakpoint">
-<!ENTITY SourceText.header "Source Text">
-<!ENTITY ScriptCount.header "Scripts">
-<!ENTITY URL.header "URL">
+<!-- source outliner -->
+<!ENTITY SourceCol0.display "Margin">
+<!ENTITY SourceCol1.display "Line Number">
+
+<!-- script outliner -->
+<!ENTITY ScriptCol0.header "Name">
+<!ENTITY ScriptCol1.header "Line">
+<!ENTITY ScriptCol2.header "Length">
+
+<!-- stack/expression outliner -->
+<!ENTITY StackCol0.header "Name">
+<!ENTITY StackCol1.header "Type">
+<!ENTITY StackCol2.header "Value">
+<!ENTITY StackCol3.header "Flags">
