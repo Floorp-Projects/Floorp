@@ -100,16 +100,16 @@ the following information:
       be 6667 or therabouts.
 
    3. Channels.
-      What channels the bot should initially connect to.  It is
+
+      What channels the bot should initially connect to. It is
       recommended that this just be a bot channel or a test channel,
       for example #mozbot, since running a bot for the first time
       before it is known to be ready is a bad idea. You can enter more
       than one channel, just hit enter after each one (leave a blank
-      line when you have finished). Currently, mozbot does not support
-      joining keyed channels. To make oopsbot join a keyed channel,
-      you must unkey the channel, make your bot join it, then rekey
-      it. This may change in a future version, but would require a lot
-      of work.
+      line when you have finished). (To make oopsbot join a keyed
+      channel, you must first add the channel's key to the
+      'channelKeys' variable. To do this, the bot will have to be on
+      IRC first, so don't worry about it for now.)
 
    4. Your e-mail address.
       In case of great difficulties, mozbot may try to e-mail you. If
@@ -244,6 +244,10 @@ The main variables are:
    channels -- which channels the module should listen in, and which
    channels the module should send announcements to. Must be in
    lowercase!
+
+   channelKeys -- a mapping of (lowercase) channel names to keys. It
+   is assumed that any channel without an entry in this variable has
+   no key.
 
    autojoin -- whether (1) or not (0) the module should automatically
    add a new channel to its "channels" list when the bot joins a new

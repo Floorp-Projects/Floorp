@@ -130,7 +130,7 @@ $|++;
 
 # internal 'constants'
 my $NAME = 'mozbot';
-my $VERSION = q$Revision: 2.3 $;
+my $VERSION = q$Revision: 2.4 $;
 my $USERNAME = "pid-$$";
 my $LOGFILEPREFIX;
 
@@ -187,7 +187,7 @@ $cfgfile = $1; # untaint it -- we trust this, it comes from the admin.
 
 # - setup variables
 # note: owner is only used by the Mails module
-my ($server, $port, @nicks, @channels, $owner, @modulenames, @ignoredUsers);
+my ($server, $port, @nicks, @channels, %channelKeys, $owner, @modulenames, @ignoredUsers);
 my $nick = 0;
 my $sleepdelay = 60;
 my $connectTimeout = 120;
@@ -204,6 +204,7 @@ my $helpline = 'see http://www.mozilla.org/projects/mozbot/'; # used in IRC name
     [\@nicks, 'nicks'],
     [\$nick, 'currentnick'], # pointer into @nicks
     [\@channels, 'channels'],
+    [\%channelKeys, 'channelKeys'],
     [\@ignoredUsers, 'ignoredUsers'],
     [\@modulenames, 'modules'],
     [\$owner, 'owner'],
@@ -524,7 +525,13 @@ sub on_connect {
 
     # join the channels
     &debug('going to join: '.join(',', @channels));
-    $self->join(join(',', @channels));
+    foreach my $channel (@channels) {
+        if (defined($channelKeys{$channel})) {
+            $self->join($channel, $channelKeys{$channel});
+        } else {
+            $self->join($channel);
+        }
+    }
     
     # try to get our hostname
     $self->whois($self->nick);
@@ -688,7 +695,7 @@ sub on_part { &do(@_, 'SpottedPart'); }
 sub on_quit { &do(@_, 'SpottedQuit'); }
 sub on_invite { &do(@_, 'Invited'); }
 sub on_nick { &do(@_, 'SpottedNickChange'); }
-sub on_mode { &do(@_, 'ModeChange'); } # XXX need to parse modes
+sub on_mode { &do(@_, 'ModeChange'); } # XXX need to parse modes # XXX on key change, change %channelKeys hash
 sub on_umode { &do(@_, 'UModeChange'); }
 sub on_version { &do(@_, 'Version'); }
 sub on_source { &do(@_, 'Source'); }
@@ -919,6 +926,7 @@ sub bot_select {
            (${$pipe}->{'BotModules_Module'}->{'_shutdown'} ? 
             ' (nevermind, module has shutdown)': ''));
     waitpid(${$pipe}->{'BotModules_PID'}, 0);
+    &debug("child ${$pipe}->{'BotModules_PID'} exited.");
     return if ${$pipe}->{'BotModules_Module'}->{'_shutdown'}; # see unload()
     eval {
         ${$pipe}->{'BotModules_Module'}->ChildCompleted(
@@ -2374,8 +2382,12 @@ sub Invited {
     } else {
         if ($self->isAdmin($event) || $self->{'allowInviting'}) {
             $self->debug("Joining $channel, since I was invited.");
+            if (defined($channelKeys{$channel})) {
+                $event->{'bot'}->join($channel, $channelKeys{$channel});
+            } else {
+                $event->{'bot'}->join($channel);
+            }
             push(@channels, $channel);
-            $event->{'bot'}->join($channelName);
             &Configuration::Save($cfgfile, &::configStructure(\@channels));
             $self->debug('about to autojoin modules...');
             foreach (@modules) {
