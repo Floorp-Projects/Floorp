@@ -18,21 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Suresh Duddi <dp@netscape.com>
  */
 
 #include <iostream.h>
-#include "pratom.h"
 #include "TestFactory.h"
-#include "nsCom.h"
-#include "nsISupports.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
-
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-
-NS_DEFINE_CID(kTestLoadedFactoryCID, NS_TESTLOADEDFACTORY_CID);
+#include "nsIGenericFactory.h"
 
 /**
  * ITestClass implementation
@@ -54,124 +45,17 @@ void TestDynamicClassImpl::Test() {
 }
 
 /**
- * TestFactory implementation
+ * Generic Module
  */
 
-static PRInt32 g_FactoryCount = 0;
-static PRInt32 g_LockCount = 0;
+NS_GENERIC_FACTORY_CONSTRUCTOR(TestDynamicClassImpl);
 
-class TestDynamicFactory: public nsIFactory {
-  NS_DECL_ISUPPORTS
-  
-  TestDynamicFactory() {
-    NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_FactoryCount);
+static nsModuleComponentInfo components[] =
+{
+  { "Test Dynamic", NS_TESTLOADEDFACTORY_CID, NS_TESTLOADEDFACTORY_PROGID,
+    TestDynamicClassImplConstructor
   }
-
-  virtual ~TestDynamicFactory() {
-    PR_AtomicDecrement(&g_FactoryCount);
-  }
-
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate,
-                            const nsIID &aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock) {
-    if (aLock) {
-      PR_AtomicIncrement(&g_LockCount);
-    } else {
-      PR_AtomicDecrement(&g_LockCount);
-    }
-    return NS_OK;
-  };
 };
 
-NS_IMPL_ISUPPORTS(TestDynamicFactory, NS_GET_IID(nsIFactory));
+NS_IMPL_NSGETMODULE("nsTestDynamicModule", components)
 
-nsresult TestDynamicFactory::CreateInstance(nsISupports *aDelegate,
-                                            const nsIID &aIID,
-                                            void **aResult)
-{
-  if (aDelegate != NULL) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
-  TestDynamicClassImpl *t = new TestDynamicClassImpl();
-  
-  if (t == NULL) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  nsresult res = t->QueryInterface(aIID, aResult);
-  
-  if (NS_FAILED(res)) {
-    *aResult = NULL;
-    delete t;
-  }
-
-  return res;
-}
-
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
-                                           const nsCID &aClass,
-                                           const char *aClassName,
-                                           const char *aProgID,
-                                           nsIFactory **aFactory)
-{
-  if (aFactory == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aClass.Equals(kTestLoadedFactoryCID)) {
-    TestDynamicFactory *factory = new TestDynamicFactory();
-    nsresult res = factory->QueryInterface(NS_GET_IID(nsIFactory), (void **) aFactory);
-    if (NS_FAILED(res)) {
-      *aFactory = NULL;
-      delete factory;
-    }
-    return res;
-  }
-  return NS_NOINTERFACE;
-}
-
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) {
-  return PRBool(g_FactoryCount == 0 && g_LockCount == 0);
-}
-
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr , const char *path)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           NS_GET_IID(nsIComponentManager), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->RegisterComponent(kTestLoadedFactoryCID, NULL, NULL, path, 
-                                  PR_TRUE, PR_TRUE);
-
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
-}
-
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           NS_GET_IID(nsIComponentManager), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->UnregisterComponent(kTestLoadedFactoryCID, path);
-
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
-}
