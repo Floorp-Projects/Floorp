@@ -68,7 +68,7 @@ public:
   virtual PRInt32 CloseTopmostContainer();
   virtual PRInt32 AddLeaf(const nsIParserNode& aNode);
   virtual void WillBuildModel(void) { }
-  virtual void DidBuildModel(void) { }
+  virtual void DidBuildModel(PRInt32 aQualityLevel) { }
   virtual void WillInterrupt(void) { }
   virtual void WillResume(void) { }
 
