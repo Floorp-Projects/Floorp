@@ -66,27 +66,37 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICLIPVIEW_IID)
 };
 
+//Flag to determine whether the view will check if events can be handled
+//by its children or just handle the events itself
+#define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0001
+
+// indicates that the view is or contains a placeholder view
+#define NS_VIEW_FLAG_CONTAINS_PLACEHOLDER 0x0002
+
 //the view is transparent
 #define NS_VIEW_FLAG_TRANSPARENT          0x0004
+
+//indicates that the view should not be bitblt'd when moved
+//or scrolled and instead must be repainted
+#define NS_VIEW_FLAG_DONT_BITBLT          0x0010
+
 // indicates that the view is using auto z-indexing
 #define NS_VIEW_FLAG_AUTO_ZINDEX          0x0020
+
 // indicates that the view is a floating view.
 #define NS_VIEW_FLAG_FLOATING             0x0040
+
 // set if our widget resized. 
 #define NS_VIEW_FLAG_WIDGET_RESIZED       0x0080
+
 // set if our widget moved. 
 #define NS_VIEW_FLAG_WIDGET_MOVED         0x0100
 #define NS_VIEW_FLAG_CLIPCHILDREN         0x0200
+
 // if set it indicates that this view should be 
 // displayed above z-index:auto views if this view 
 // is z-index:auto also
 #define NS_VIEW_FLAG_TOPMOST              0x0400
-//indicates that the view should not be bitblt'd when moved
-//or scrolled and instead must be repainted
-#define NS_VIEW_FLAG_DONT_BITBLT          0x0010
-//Flag to determine whether the view will check if events can be handled
-//by its children or just handle the events itself
-#define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0001
 
 class nsView : public nsIView
 {
@@ -181,6 +191,12 @@ public:
   void GetDimensions(nsSize &aSize) const { aSize.width = mDimBounds.width; aSize.height = mDimBounds.height; }
 
   /**
+   * This checks whether the view is a placeholder for some view that has
+   * been reparented to a different geometric parent.
+   */
+  virtual PRBool IsZPlaceholderView() { return PR_FALSE; }
+
+  /**
    * Called to set the clip of the children of this view.
    * The clip is relative to the origin of the view.
    * All of the children of this view will be clipped using
@@ -251,12 +267,6 @@ public:
    * @return error status
    */
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
-  /**
-   * Used by the compositor for temporary marking of a view during
-   * compositing. This will eventually replace GetScratchPoint above.
-   */
-  NS_IMETHOD  SetCompositorFlags(PRUint32 aFlags);
-  NS_IMETHOD  GetCompositorFlags(PRUint32 *aFlags);
   /**
    * Return a rectangle containing the view's bounds adjusted for it's ancestors clipping
    * @param aClippedRect views bounds adjusted for ancestors clipping. If aEmpty is TRUE it
@@ -338,7 +348,6 @@ protected:
   float             mOpacity;
   PRUint32          mVFlags;
   nsIRegion*        mDirtyRegion;
-  PRUint32			    mCompositorFlags;
   // Bug #19416
   PRPackedBool      mShouldIgnoreSetPosition;
   PRPackedBool      mChildRemoved;

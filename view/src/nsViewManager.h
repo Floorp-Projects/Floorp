@@ -70,10 +70,6 @@ struct DisplayZTreeNode;
 #include "nsTimer.h"
 #endif
 
-// compositor per-view flags
-#define IS_PARENT_OF_REFRESHED_VIEW  0x00000001
-#define IS_Z_PLACEHOLDER_VIEW        0x80000000
-
 /**
    FIXED-POSITION FRAMES AND Z-ORDERING
 
@@ -105,8 +101,7 @@ public:
   void SetReparentedView(nsView* aView) { mReparentedView = aView; }
   nsView* GetReparentedView() { return mReparentedView; }
 
-  NS_IMETHOD GetCompositorFlags(PRUint32 *aFlags)
-  { nsView::GetCompositorFlags(aFlags); *aFlags |= IS_Z_PLACEHOLDER_VIEW; return NS_OK; }
+  virtual PRBool IsZPlaceholderView() { return PR_TRUE; }
 
 protected:
   virtual ~nsZPlaceholderView() {
@@ -271,6 +266,7 @@ private:
 
   nsresult CreateBlendingBuffers(nsIRenderingContext &aRC);
   
+  void ReparentViews(DisplayZTreeNode* aNode);
   void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing, PRBool aCaptured);
   void BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
 

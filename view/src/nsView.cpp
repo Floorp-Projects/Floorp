@@ -90,10 +90,13 @@ nsView::nsView()
   MOZ_COUNT_CTOR(nsView);
 
   mVis = nsViewVisibility_kShow;
-  mVFlags = 0;
+  // Views should be transparent by default. Not being transparent is
+  // a promise that the view will paint all its pixels opaquely. Views
+  // should make this promise explicitly by calling
+  // SetViewContentTransparency.
+  mVFlags = NS_VIEW_FLAG_TRANSPARENT;
   mOpacity = 1.0f;
   mViewManager = nsnull;
-  mCompositorFlags = 0;
   mChildRemoved = PR_FALSE;
 }
 
@@ -944,19 +947,6 @@ nsresult nsView::GetDirtyRegion(nsIRegion*& aRegion)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::SetCompositorFlags(PRUint32 aFlags)
-{
-	mCompositorFlags = aFlags;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetCompositorFlags(PRUint32 *aFlags)
-{
-	NS_ASSERTION((aFlags != nsnull), "no flags");
-	*aFlags = mCompositorFlags;
-	return NS_OK;
-}
-
 PRBool nsView::IsRoot()
 {
   NS_ASSERTION(mViewManager != nsnull," View manager is null in nsView::IsRoot()");
@@ -985,7 +975,7 @@ PRBool nsView::PointIsInside(nsView& aView, nscoord x, nscoord y) const
 
 NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, PRBool& aEmpty) const
 {
-  // Keep track of the view's offset from its ancestor.
+  // Keep track of this view's offset from its ancestor.
   // This is the origin of this view's parent view in the
   // coordinate space of 'parentView' below.
   nscoord ancestorX = 0;
@@ -1005,20 +995,27 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
     const nsView* zParent = view->GetZParent();
     const nsView* parentView = view->GetParent();
     if (zParent) {
-      // This view was reparented. We need to move back down the view tree
-      // to where it should be to collect whatever might be clipping it there.
+      // This view was reparented. We need to continue collecting clip
+      // rects from the zParent.
 
-      // parentView is an ancestor of zParent ... this is guaranteed by the way these
-      // reparented views are set up; a reparented view is always reparented to one of its
-      // own ancestors
-
-      // we need to get ancestorX and ancestorY into the right coordinate system.
-      // They are the offset of this view within parentView
+      // First we need to get ancestorX and ancestorY into the right
+      // coordinate system.  They are the offset of this view within
+      // parentView
       const nsView* zParentChain;
-      for (zParentChain = zParent; zParentChain != parentView;
+      for (zParentChain = zParent; zParentChain != parentView && zParentChain != nsnull;
            zParentChain = zParentChain->GetParent()) {
-        NS_ASSERTION(zParentChain != nsnull, "Error in view reparenting logic");
         zParentChain->ConvertFromParentCoords(&ancestorX, &ancestorY);
+      }
+      if (zParentChain == nsnull) {
+        // normally we'll hit parentView somewhere, but sometimes we
+        // don't because of odd containing block hierarchies. In this
+        // case we walked from zParentChain all the way up to the
+        // root, subtracting from ancestorX/Y. So now we walk from
+        // parentView up to the root, adding to ancestorX/Y.
+        while (parentView != nsnull) {
+          parentView->ConvertToParentCoords(&ancestorX, &ancestorY);
+          parentView = parentView->GetParent();
+        }
       }
       parentView = zParent;
       // Now start again at zParent to collect all its clip information

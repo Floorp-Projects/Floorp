@@ -1962,6 +1962,71 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
   return NS_OK;
 }
 
+void nsViewManager::ReparentViews(DisplayZTreeNode* aNode) {
+  if (aNode == nsnull) {
+    return;
+  }
+
+  DisplayZTreeNode* child;
+  DisplayZTreeNode** prev = &aNode->mZChild;
+  for (child = aNode->mZChild; nsnull != child; child = *prev) {
+    ReparentViews(child);
+
+    nsZPlaceholderView *zParent = nsnull;
+    if (nsnull != child->mView) {
+      zParent = child->mView->GetZParent();
+    }
+    if (nsnull != zParent) {
+      nsVoidKey key(zParent);
+      DisplayZTreeNode* placeholder = (DisplayZTreeNode *)mMapPlaceholderViewToZTreeNode.Get(&key);
+
+      if (placeholder == child) {
+        // don't do anything if we already reparented this node;
+        // just advance to the next child
+        prev = &child->mZSibling;
+      } else {
+        // unlink the child from the tree
+        *prev = child->mZSibling;
+        child->mZSibling = nsnull;
+        
+        if (nsnull != placeholder) {
+          NS_ASSERTION((placeholder->mDisplayElement == nsnull), "placeholder already has elements?");
+          NS_ASSERTION((placeholder->mZChild == nsnull), "placeholder already has Z-children?");
+          placeholder->mDisplayElement = child->mDisplayElement;
+          placeholder->mView = child->mView;
+          placeholder->mZChild = child->mZChild;
+          delete child;
+        } else {
+          // the placeholder was not added to the display list
+          // we don't need the real view then, either
+          DestroyZTreeNode(child);
+        }
+      }
+    } else {
+      prev = &child->mZSibling;
+    }
+  }
+}
+
+static PRBool ComputePlaceholderContainment(nsView* aView) {
+  PRBool containsPlaceholder = aView->IsZPlaceholderView();
+
+  nsView* child;
+  for (child = aView->GetFirstChild(); child != nsnull; child = child->GetNextSibling()) {
+    if (ComputePlaceholderContainment(child)) {
+      containsPlaceholder = PR_TRUE;
+    }
+  }
+
+  if (containsPlaceholder) {
+    aView->SetViewFlags(aView->GetViewFlags() | NS_VIEW_FLAG_CONTAINS_PLACEHOLDER);
+  } else {
+    aView->SetViewFlags(aView->GetViewFlags() & ~NS_VIEW_FLAG_CONTAINS_PLACEHOLDER);
+  }
+
+  return containsPlaceholder;
+}
+
 /*
   Fills mDisplayList with DisplayListElement2* pointers. The caller is responsible
   for freeing these structs. The display list elements are ordered by z-order so
@@ -2006,6 +2071,9 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
   nsPoint displayRootOrigin(0, 0);
   ComputeViewOffset(displayRoot, &displayRootOrigin);
     
+  // Determine, for each view, whether it is or contains a ZPlaceholderView
+  ComputePlaceholderContainment(displayRoot);
+
   // Create the Z-ordered view tree
   PRBool paintFloaters;
   if (aEventProcessing) {
@@ -2015,6 +2083,9 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
   }
   CreateDisplayList(displayRoot, PR_FALSE, zTree, PR_FALSE, origin.x, origin.y,
                     aView, &aRect, nsnull, displayRootOrigin.x, displayRootOrigin.y, paintFloaters, aEventProcessing);
+
+  // Reparent any views that need reparenting in the Z-order tree
+  ReparentViews(zTree);
   mMapPlaceholderViewToZTreeNode.Reset();
     
   if (nsnull != zTree) {
@@ -3353,7 +3424,21 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
   bounds.x += aOriginX;
   bounds.y += aOriginY;
 
-  if (!overlap && isClipView) {
+  // if there's no overlap between the dirty area and the bounds of
+  // the view, we should be able to ignore the view and all its
+  // children. Unfortunately there is the possibility of reparenting:
+  // some other view in the tree might want to be reparented to one of
+  // our children, and that view might lie outside our
+  // bounds. Typically we need to go ahead and add this view and its
+  // children to the ZTree in case someone wants to reparent into it.
+  //
+  // We can avoid this in two cases: if we clip our children to our
+  // bounds, then even if a view is reparented under us, none of its
+  // visible area can lie outside our bounds, so it can't intersect
+  // the dirty area.  Also, if we don't contain any placeholder views,
+  // then there is no way for anyone to reparent below us.
+  if (!overlap && (isClipView ||
+                   (aView->GetViewFlags() & NS_VIEW_FLAG_CONTAINS_PLACEHOLDER) == 0)) {
     return PR_FALSE;
   }
 
@@ -3365,21 +3450,6 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     PRBool isFloating = PR_FALSE;
     aView->GetFloating(isFloating);
     if (isFloating) {
-      return PR_FALSE;
-    }
-  }
-
-  if (!aReparentedViewsPresent) {
-    for (nsView* childView = aView->GetFirstChild(); nsnull != childView;
-         childView = childView->GetNextSibling()) {
-      nsZPlaceholderView *zParent = childView->GetZParent();
-      if (nsnull != zParent) {
-        aReparentedViewsPresent = PR_TRUE;
-        break;
-      }
-    }
-
-    if (!overlap && !aReparentedViewsPresent) {
       return PR_FALSE;
     }
   }
@@ -3458,10 +3528,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       bounds.x += aOriginX;
       bounds.y += aOriginY;
     } else {
-      PRUint32 compositorFlags = 0;
-      aView->GetCompositorFlags(&compositorFlags);
-
-      if (0 != (compositorFlags & IS_Z_PLACEHOLDER_VIEW)) {
+      if (aView->IsZPlaceholderView()) {
         EnsureZTreeNodeCreated(aView, aResult);
         mMapPlaceholderViewToZTreeNode.Put(new nsVoidKey(aView), aResult);
       }
@@ -3497,41 +3564,6 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     }
   }
 
-  // Reparent any views that need reparenting in the Z-order tree
-  if (nsnull != aResult) {
-    DisplayZTreeNode* child;
-    DisplayZTreeNode** prev = &aResult->mZChild;
-    for (child = aResult->mZChild; nsnull != child; child = *prev) {
-      nsZPlaceholderView *zParent = nsnull;
-      if (nsnull != child->mView) {
-        zParent = child->mView->GetZParent();
-      }
-      if (nsnull != zParent) {
-        // unlink the child from the tree
-        *prev = child->mZSibling;
-        child->mZSibling = nsnull;
-
-        nsVoidKey key(zParent);
-        DisplayZTreeNode* placeholder = (DisplayZTreeNode *)mMapPlaceholderViewToZTreeNode.Remove(&key);
-
-        if (nsnull != placeholder) {
-          NS_ASSERTION((placeholder->mDisplayElement == nsnull), "placeholder already has elements?");
-          NS_ASSERTION((placeholder->mZChild == nsnull), "placeholder already has Z-children?");
-          placeholder->mDisplayElement = child->mDisplayElement;
-          placeholder->mView = child->mView;
-          placeholder->mZChild = child->mZChild;
-          delete child;
-        } else {
-          // the placeholder was never added to the display list ...
-          // we don't need to display this then
-          DestroyZTreeNode(child);
-        }
-      } else {
-        prev = &child->mZSibling;
-      }
-    }
-  }
- 
   return retval;
 }
 
