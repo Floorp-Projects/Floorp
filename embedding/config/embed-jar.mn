@@ -63,7 +63,6 @@ locale/XXXX/pipnss,                                 XXXX/locale/XXXX/pipnss
 locale/XXXX/communicator/wallet,                    XXXX/locale/XXXX/communicator/wallet
 content/cookie/contents.rdf,                        comm/content/cookie/contents.rdf
 locale/XXXX/cookie/contents.rdf,                    XXXX/locale/XXXX/cookie/contents.rdf
-locale/XXXX/cookie/cookie.properties,               XXXX/locale/XXXX/cookie/cookie.properties
 
 # Marquee stuff
 content/xbl-marquee,                                comm/content/xbl-marquee
