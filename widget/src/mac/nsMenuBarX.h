@@ -32,6 +32,7 @@
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsWeakReference.h"
+#include "nsIContent.h"
 
 #include <MacTypes.h>
 #include <UnicodeConverter.h>
