@@ -13,6 +13,9 @@
 # View the graphs by creating graphs with dot:
 # > dot -Tpng foo.dot -o foo.png
 #
+# Note to Linux users: graphviz needs TrueType fonts installed
+# http://support.pa.msu.edu/Help/FAQs/Linux/truetype.html
+#
 
 # Todo:
 # - eliminate arcs implied by transitive dependancies
@@ -33,13 +36,15 @@ Getopt::Long::Configure("auto_abbrev");
 sub PrintUsage {
   die <<END_USAGE
   Prints out required modules for specified directories.
-  usage: module-graph.pl [--list-only] <dir1> <dir2> ...
+  usage: module-graph.pl [--list-only] [--start-module <mod> ] <dir1> <dir2> ...
 END_USAGE
 }
 
 my %clustered;
 my %deps;
 my %toplevel_modules;
+
+my $debug = 0;
 
 my $makecommand;
 
@@ -53,153 +58,169 @@ use Cwd;
 my @dirs;
 my $curdir = getcwd();
 
-my $list_only_mode = 0;
+my $list_only_mode = 0;  # --list-only argument, only print out module names
 my $opt_list_only;
 
-# Print usage if we get an unknown argument.
-PrintUsage() if !GetOptions('list-only' => \$opt_list_only);
+my $opt_start_module;    # --start-module optionally print out dependencies    
+                         # for a given module.
 
 
-# Pick up arguments, if any.
-if($opt_list_only) {
-  $list_only_mode = 1;
-}
+# Parse commandline input.
+sub parse_args() {
+  # Stuff arguments into variables.
+  # Print usage if we get an unknown argument.
+  PrintUsage() if !GetOptions('list-only' => \$opt_list_only,
+							  'start-module=s' => \$opt_start_module);
 
+  # Pick up arguments, if any.
+  if($opt_list_only) {
+	$list_only_mode = 1;
+  }
 
-if (!@ARGV) {
-  @dirs = (getcwd());
-} else {
-  @dirs = @ARGV;
-  # XXX does them in reverse order..
-  my $arg;
-  foreach $arg (@ARGV) {
-    push @dirs, "$curdir/$arg";
+  if (!@ARGV) {
+	@dirs = (getcwd());
+  } else {
+	@dirs = @ARGV;
+	# XXX does them in reverse order..
+	my $arg;
+	foreach $arg (@ARGV) {
+	  push @dirs, "$curdir/$arg";
+	}
   }
 }
 
+
+#  Build up the %deps matrix.
+sub build_deps_matrix() {
 MFILE:
-while ($#dirs != -1) {
-  my ($current_dirs, $current_module, $current_requires);
-  # pop the curdir
-  $curdir = pop @dirs;
+  while ($#dirs != -1) {
+	my ($current_dirs, $current_module, $current_requires);
+	# pop the curdir
+	$curdir = pop @dirs;
+	
+	if(!$list_only_mode) {
+	  print STDERR "Entering $curdir..                 \r";
+	}
+	chdir "$curdir" || next;
+	if ($^O eq "linux") {
+      next if (! -e "$curdir/Makefile");
+	} elsif ($^O eq "MSWin32") {
+      next if (! -e "$curdir/makefile.win");
+	}
+	
+	$current_dirs = "";
+	open(MAKEOUT, "$makecommand echo-dirs echo-module echo-requires|") || die "Can't make: $!\n";
+	
+	$current_dirs = <MAKEOUT>; $current_dirs && chop $current_dirs;
+	$current_module = <MAKEOUT>; $current_module && chop $current_module;
+	$current_requires = <MAKEOUT>; $current_requires && chop $current_requires;
+	close MAKEOUT;
+	
+	if ($current_module) {
+	  #
+	  # now keep a list of all dependancies of the module
+	  #
+	  my @require_list = split(/\s+/,$current_requires);
+	  my $req;
+	  foreach $req (@require_list) {
+		$deps{$current_module}{$req}++;
+	  }
+	
+	  $toplevel_modules{$current_module}++;
+	}
+	
+	next if !$current_dirs;
+	
+	# now push all child directories onto the list
+	my @local_dirs = split(/\s+/,$current_dirs);
+	for (@local_dirs) {
+	  push @dirs,"$curdir/$_" if $_;
+	}
+	
+  }
 
   if(!$list_only_mode) {
-    print STDERR "Entering $curdir..                 \r";
+	print STDERR "\n";
   }
-  chdir "$curdir" || next;
-  if ($^O eq "linux") {
-      next if (! -e "$curdir/Makefile");
-  } elsif ($^O eq "MSWin32") {
-      next if (! -e "$curdir/makefile.win");
-  }
-
-  $current_dirs = "";
-  open(MAKEOUT, "$makecommand echo-dirs echo-module echo-requires|") || die "Can't make: $!\n";
-
-  $current_dirs = <MAKEOUT>; $current_dirs && chop $current_dirs;
-  $current_module = <MAKEOUT>; $current_module && chop $current_module;
-  $current_requires = <MAKEOUT>; $current_requires && chop $current_requires;
-  close MAKEOUT;
-
-  if ($current_module) {
-    #
-    # now keep a list of all dependancies of the module
-    #
-    my @require_list = split(/\s+/,$current_requires);
-    my $req;
-    foreach $req (@require_list) {
-      $deps{$current_module}{$req}++;
-    }
-
-    $toplevel_modules{$current_module}++;
-  }
-  
-
-  next if !$current_dirs;
-
-  # now push all child directories onto the list
-  my @local_dirs = split(/\s+/,$current_dirs);
-  for (@local_dirs) {
-    push @dirs,"$curdir/$_" if $_;
-  }
-
-}
-
-if(!$list_only_mode) {
-  print STDERR "\n";
 }
 
 
-# Print out digraph.
-my $module;
-if(!$list_only_mode) {  
-  print "digraph G {\n";
-  print "    concentrate=true;\n";
-  
-  # figure out the internal nodes, and place them in a cluster
-  
-  #print "    subgraph cluster0 {\n";
-  #print "        color=blue;\n"; # blue outline around cluster
+# Print out %deps.
+sub print_deps_matrix() {
+  my $module;
+  if(!$list_only_mode) {
+	print "digraph G {\n";
+	print "    concentrate=true;\n";
+	
+	# figure out the internal nodes, and place them in a cluster
+	
+	#print "    subgraph cluster0 {\n";
+	#print "        color=blue;\n"; # blue outline around cluster
+	
+	# ** new method: just list all modules that came from MODULE=foo
+	foreach $module (sort keys %toplevel_modules) {
+	  print "        $module [style=filled];\n"
+	}
+  }
 
-  # ** new method: just list all modules that came from MODULE=foo
-  foreach $module (sort keys %toplevel_modules) {
-	print "        $module [style=filled];\n"
+  print_dependency_list();
+
+  if(!$list_only_mode) {
+	print "}\n";
   }
 }
 
 # ** old method: find only internal nodes
 # (nodes with both parents and children)
+sub print_internal_nodes() {
+  my $module;
+  my $depmod;
+  foreach $module (sort { scalar keys %{$deps{$b}} <=> scalar keys %{$deps{$a}} } keys %deps) {
+	foreach $depmod ( keys %deps ) {
+	  # only in cluster if they are a child too
+	  if ($deps{$depmod}{$module}) {
+		print "        $module;\n";
+		$clustered{$module}++;
+		last;
+	  }
+	}
+  }
+}
 
-# foreach $module (sort { scalar keys %{$deps{$b}} <=> scalar keys %{$deps{$a}} } keys %deps) {
-#   foreach $depmod ( keys %deps ) {
-#     # only in cluster if they are a child too
-#     if ($deps{$depmod}{$module}) {
-#       print "        $module;\n";
-#       $clustered{$module}++;
-#       last;
-#     }
-#   }
-# }
-
-#print "    };\n";
-
-
-#
 # Run over dependency array to generate raw component list.
-#
-my @raw_list;
-my @unique_list;
-foreach $module (sort sortby_deps keys %deps) {
-  my $req;
-  foreach $req ( sort { $deps{$module}{$b} <=> $deps{$module}{$a} }
-                 keys %{ $deps{$module} } ) {
-#    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
+sub print_dependency_list() {
+  my @raw_list;
+  my @unique_list;
+  my $module;
 
-    if(!$list_only_mode) {
-      print "    $module -> $req;\n";
-    } else {
-      # print "$req ";
-      push(@raw_list, $req);
-    }
+  foreach $module (sort sortby_deps keys %deps) {
+	my $req;
+	foreach $req ( sort { $deps{$module}{$b} <=> $deps{$module}{$a} }
+				   keys %{ $deps{$module} } ) {
+	  #    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
+	  if(!$list_only_mode) {
+		print "    $module -> $req;\n";
+	  } else {
+		# print "$req ";
+		push(@raw_list, $req);
+	  }
+	}
+  }
+
+  # generate unique list, print it out.
+  if($list_only_mode) {
+	my %saw;
+	undef %saw;
+	@unique_list = grep(!$saw{$_}++, @raw_list);
+	
+	my $i;
+	for ($i=0;$i <= $#unique_list; $i++) {
+	  print $unique_list[$i], " ";
+	}
+	print "\n";
   }
 }
 
-# generate unique list, print it out.
-if($list_only_mode) {
-  my %saw;
-  undef %saw;
-  @unique_list = grep(!$saw{$_}++, @raw_list);
-
-  my $i;
-  for ($i=0;$i <= $#unique_list; $i++) {
-	print $unique_list[$i], " ";
-  }
-  print "\n";
-}
-
-if(!$list_only_mode) {
-  print "}\n";
-}
 
 # we're sorting based on clustering
 # order:
@@ -213,7 +234,7 @@ sub sortby_deps() {
 
   my $keys_a = scalar keys %{$deps{$a}};
   my $keys_b = scalar keys %{$deps{$b}};
-  
+
   # determine if they are the same or not
   if ($clustered{$a} && $clustered{$b}) {
     # both in "clustered" group
@@ -255,5 +276,82 @@ sub sortby_deps() {
       return 1;
     }
   }
-  
+}
+
+#
+# Recursively traverse the deps matrix.
+#
+my %visited_nodes;
+
+sub print_module_digraph {
+  my ($module, $level) = @_;
+
+  # Remember that we visited this node.
+  $visited_nodes{$module}++;
+
+  # Print this node.
+  if (!$list_only_mode) {
+	my $i;
+	for ($i=0; $i<$level; $i++) {
+	  print "  ";
+	}
+	print "$module\n";
+  }
+
+  # If we haven't visited this node, search again
+  # from this node.
+  my $depmod;
+  foreach $depmod ( keys %{ $deps{$module} } ) {
+	my $visited = $visited_nodes{$depmod};
+
+	if(!$visited) {    	# test recursion: if($level < 5)
+	#if($level < 5) {
+	  print_module_digraph($depmod, $level + 1);
+	}
+  }
+
+  if (!$list_only_mode) {
+	if($level == 1) {
+	  print "\n";
+	}
+  }
+}
+
+
+sub print_module_deps {
+  # Recursively hunt down dependencies for $opt_start_module
+  print_module_digraph($opt_start_module, 1);
+
+  my $visited_mod;
+  foreach $visited_mod (sort keys %visited_nodes ) {
+	print "$visited_mod ";
+  }
+  print "\n";
+
+  if($debug) {
+	my @total_visited = (sort keys %visited_nodes);
+	my $total = $#total_visited + 1;
+	print "\ntotal = $total\n";
+  }
+}
+
+
+# main
+{
+  parse_args();
+
+  build_deps_matrix();
+
+  # Print out deps matrix.
+  # --list-only and --start-module together mean to
+  # print out the module deps, not the matrix.
+  if (not ($list_only_mode and $opt_start_module)) {
+	print_deps_matrix();
+  }
+
+  # If we specified a --start-module option, print out
+  # the required modules for that module.
+  if($opt_start_module) {
+	print_module_deps();
+  }
 }
