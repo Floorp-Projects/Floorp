@@ -36,7 +36,18 @@
     fixed directory.
 */
     
-#define USE_PROFILES
+#undef USE_PROFILES
+
+/*
+    SHARED_PROFILE
+    
+    If defined, the application will share profile data (that which is shareable) with
+    other applications in its "suite." The data which is not shared by applications
+    in the suite is stored in a subdir of the profile which is named for each particular
+    member of the suite. This can be used with or without USE_PROFILES.
+*/
+
+#define SHARED_PROFILE
 
 /*
     NATIVE_PROMPTS
