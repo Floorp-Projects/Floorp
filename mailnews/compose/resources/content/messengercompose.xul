@@ -72,8 +72,6 @@
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
-<script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
-<!--script type="application/x-javascript" src="chrome://editor/content/EditorCommandsDebug.js"/-->
 <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
 
 <!-- drag and drop -->
