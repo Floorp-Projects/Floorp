@@ -79,7 +79,7 @@ public final class JavaAdapter
             this.argsToConvert = argsToConvert;
         }
 
-        protected Object ifglue_call(Object[] args)
+        protected final Object ifglue_call(Object[] args)
         {
             Context cx = Context.getCurrentContext();
             if (cx != null) {
@@ -459,22 +459,16 @@ public final class JavaAdapter
         return cfw.toByteArray();
     }
 
-    static boolean canGenerateIFGlue(Class cl, Scriptable scope)
-    {
-        return cl.isInterface() && cl.getMethods().length == 1;
-    }
-
     /**
-     * Get glue object implementing single-method interface cl that will
+     * Make glue object implementing single-method interface cl that will
      * call the supplied JS function when called.
      */
-    static IFGlue getIFGlueMaster(Class cl, Scriptable scope)
+    static IFGlue makeIFGlue(Class cl, Function f)
     {
-        ClassCache cache = ClassCache.get(scope);
+        ClassCache cache = ClassCache.get(f);
         Hashtable masters = cache.javaAdapterIFGlueMasters;
-
-        IFGlue glue = (IFGlue)masters.get(cl);
-        if (glue == null) {
+        IFGlue master = (IFGlue)masters.get(cl);
+        if (master == null) {
             if (!cl.isInterface())
                 return null;
             Method[] interfaceMethods = cl.getMethods();
@@ -488,17 +482,17 @@ public final class JavaAdapter
             byte[] code = createIFGlueCode(cl, method, argTypes, glueName);
             Class glueClass = loadAdapterClass(glueName, code);
             try {
-                glue = (IFGlue)glueClass.newInstance();
+                master = (IFGlue)glueClass.newInstance();
             } catch (Exception ex) {
                 throw ScriptRuntime.throwAsUncheckedException(ex);
             }
             int[] argsToConvert = getArgsToConvert(argTypes);
-            glue.ifglue_initMaster(argsToConvert);
+            master.ifglue_initMaster(argsToConvert);
             if (cache.isCachingEnabled()) {
-                masters.put(cl, glue);
+                masters.put(cl, master);
             }
         }
-        return glue;
+        return master.ifglue_make(f);
     }
 
     private static byte[] createIFGlueCode(Class interfaceClass,

@@ -386,11 +386,9 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 }
             }
             else if (to.isInterface()) {
-                if (fromObj instanceof BaseFunction) {
+                if (fromObj instanceof Function) {
                     // See comments in coerceType
-                    BaseFunction f = (BaseFunction)fromObj;
-                    Scriptable scope = f.getParentScope();
-                    if (JavaAdapter.canGenerateIFGlue(to, scope)) {
+                    if (to.getMethods().length == 1) {
                         return 1;
                     }
                 }
@@ -668,28 +666,35 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                     return value;
                 reportConversionError(value, type, !useErrorHandler);
             }
-            else if (value instanceof BaseFunction) {
-                // Try to wrap function into interface with single method.
-                // Can not wrap generic Function since the resulting object
-                // should be reused next time conversion is made
-                // and generic Function has no storage for it.
-                // WeakMap from JDK 1.2 can address it, but for now
-                // restrict the conversion only to BaseFunction
-                BaseFunction f = (BaseFunction)value;
-                Scriptable scope = f.getParentScope();
-                JavaAdapter.IFGlue masterGlue = JavaAdapter.getIFGlueMaster(
-                                                    type, scope);
-                if (masterGlue == null) {
-                    // No master glue: type is not single-method interface
-                       reportConversionError(value, type, !useErrorHandler);
+            else if (type.isInterface()) {
+                if (value instanceof Function) {
+                    // Try to wrap function into interface with single method.
+                    Function f = (Function)value;
+
+                    // Can not wrap generic Function since the resulting object
+                    // should be reused next time conversion is made
+                    // and generic Function has no storage for it.
+                    // WeakMap from JDK 1.2 can address it, but for now
+                    // restrict the conversion only to classes extending from
+                    // ScriptableObject to use associateValue for storage
+                    if (f instanceof ScriptableObject) {
+                        ScriptableObject so = (ScriptableObject)f;
+                        Object key = Kit.makeHashKeyFromPair(
+                                         COERCED_INTERFACE_KEY, type);
+                        Object old = so.getAssociatedValue(key);
+                        if (old != null) {
+                            // Function was already wrapped
+                            return old;
+                        }
+                        Object glue = JavaAdapter.makeIFGlue(type, f);
+                        if (glue != null) {
+                            // Store for later retrival
+                            glue = so.associateValue(key, glue);
+                            return glue;
+                        }
+                    }
                 }
-                Object glue = f.getAssociatedValue(masterGlue);
-                if (glue == null) {
-                    // create new glue from the master
-                    glue = masterGlue.ifglue_make(f);
-                    glue = f.associateValue(masterGlue, glue);
-                }
-                value = glue;
+                reportConversionError(value, type, !useErrorHandler);
             }
             else {
                 reportConversionError(value, type, !useErrorHandler);
@@ -990,4 +995,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     protected transient Class staticType;
     protected transient JavaMembers members;
     private transient Hashtable fieldAndMethods;
+
+    private static final Object COERCED_INTERFACE_KEY = new Object();
 }
