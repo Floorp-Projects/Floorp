@@ -1,0 +1,87 @@
+# Specify files or whole directories from the chrome that thunderbird
+# needs to include.
+#
+# Format is:
+# 
+# <destination in en-US.jar>,<source in unzipped chrome>
+
+#################################################################################################
+# mail
+#################################################################################################
+locale/en-US/messenger,                                   en-US/locale/en-US/messenger
+locale/en-US/messenger-mdn,                               en-US/locale/en-US/messenger-mdn
+locale/en-US/messenger/addressbook,                       en-US/locale/en-US/messenger/addressbook
+locale/en-US/messenger/messengercompose,                 en-US/locale/en-US/messenger/messengercompose
+
+
+#################################################################################################
+# xpfe extensions (ldap, wallet, etc)
+#################################################################################################
+locale/en-US/mozldap,                                     en-US/locale/en-US/mozldap
+locale/en-US/wallet,					  en-US/locale/en-US/wallet
+locale/en-US/necko,					  en-US/locale/en-US/necko
+
+locale/en-US/navigator/navigator.properties,		  en-US/locale/en-US/navigator/navigator.properties
+
+#################################################################################################
+# global
+#################################################################################################
+locale/en-US/global,                                     en-US/locale/en-US/global
+
+#################################################################################################
+# communicator
+#################################################################################################
+locale/en-US/communicator/dom,                           en-US/locale/en-US/communicator/dom
+locale/en-US/communicator/downloadmanager,               en-US/locale/en-US/communicator/downloadmanager
+locale/en-US/communicator/profile,                       en-US/locale/en-US/communicator/profile
+
+#locale/en-US/communicator/layout,                       en-US/locale/en-US/communicator/layout
+
+locale/en-US/communicator/contentAreaCommands.dtd,       en-US/locale/en-US/communicator/contentAreaCommands.dtd
+locale/en-US/communicator/contentAreaCommands.properties, en-US/locale/en-US/communicator/contentAreaCommands.properties
+locale/en-US/communicator/contents.rdf,                  en-US/locale/en-US/communicator/contents.rdf
+locale/en-US/communicator/printPageSetup.dtd,            en-US/locale/en-US/communicator/printPageSetup.dtd
+locale/en-US/communicator/printPageSetup.properties,     en-US/locale/en-US/communicator/printPageSetup.properties
+locale/en-US/communicator/printPreview.dtd,              en-US/locale/en-US/communicator/printPreview.dtd
+locale/en-US/communicator/utilityOverlay.dtd,            en-US/locale/en-US/communicator/utilityOverlay.dtd
+locale/en-US/communicator/utilityOverlay.properties,     en-US/locale/en-US/communicator/utilityOverlay.properties
+locale/en-US/communicator/viewZoomOverlay.dtd,           en-US/locale/en-US/communicator/viewZoomOverlay.dtd
+locale/en-US/communicator/viewZoomOverlay.properties,    en-US/locale/en-US/communicator/viewZoomOverlay.properties
+
+locale/en-US/communicator/wallet/wallet.properties,      en-US/locale/en-US/communicator/wallet/wallet.properties
+locale/en-US/communicator/pref/pref-charset.dtd, 	 en-US/locale/en-US/communicator/pref/pref-charset.dtd
+locale/en-US/communicator/pref/pref-colors.dtd,  	 en-US/locale/en-US/communicator/pref/pref-colors.dtd
+locale/en-US/communicator/pref/pref-fonts.dtd,   	 en-US/locale/en-US/communicator/pref/pref-fonts.dtd
+locale/en-US/communicator/pref/pref-languages.dtd, 	 en-US/locale/en-US/communicator/pref/pref-languages.dtd
+locale/en-US/communicator/pref/pref-languages.properties, en-US/locale/en-US/communicator/pref/pref-languages.properties
+locale/en-US/communicator/pref/pref-themes.dtd,  	 en-US/locale/en-US/communicator/pref/pref-themes.dtd
+locale/en-US/communicator/pref/pref.dtd,         	 en-US/locale/en-US/communicator/pref/pref.dtd
+locale/en-US/communicator/pref/preftree.dtd,     	 en-US/locale/en-US/communicator/pref/preftree.dtd
+locale/en-US/communicator/pref/prefutilities.properties, en-US/locale/en-US/communicator/pref/prefutilities.properties
+
+#################################################################################################
+# editor
+#################################################################################################
+locale/en-US/editor/editorOverlay.dtd,                    en-US/locale/en-US/editor/editorOverlay.dtd
+locale/en-US/editor/editorSmileyOverlay.dtd,              en-US/locale/en-US/editor/editorSmileyOverlay.dtd
+locale/en-US/editor/contents.rdf,                         en-US/locale/en-US/editor/contents.rdf
+locale/en-US/editor/EditorImageProperties.dtd,            en-US/locale/en-US/editor/EditorImageProperties.dtd
+locale/en-US/editor/EditorInsertChars.dtd,                en-US/locale/en-US/editor/EditorInsertChars.dtd
+locale/en-US/editor/EditorInsertSource.dtd,               en-US/locale/en-US/editor/EditorInsertSource.dtd
+locale/en-US/editor/EditorInsertTOC.dtd,                  en-US/locale/en-US/editor/EditorInsertTOC.dtd
+locale/en-US/editor/EditorInsertTable.dtd,                en-US/locale/en-US/editor/EditorInsertTable.dtd
+locale/en-US/editor/EditorLinkProperties.dtd,             en-US/locale/en-US/editor/EditorLinkProperties.dtd
+locale/en-US/editor/EditorListProperties.dtd,             en-US/locale/en-US/editor/EditorListProperties.dtd
+locale/en-US/editor/EditorReplace.dtd,                    en-US/locale/en-US/editor/EditorReplace.dtd
+locale/en-US/editor/EditorColorProperties.dtd,            en-US/locale/en-US/editor/EditorColorProperties.dtd
+locale/en-US/editor/EditorSpellCheck.dtd,                 en-US/locale/en-US/editor/EditorSpellCheck.dtd
+locale/en-US/editor/EditorTableProperties.dtd,            en-US/locale/en-US/editor/EditorTableProperties.dtd
+
+
+#################################################################################################
+# US
+#################################################################################################
+locale/US/messenger-region,                               US/locale/US/messenger-region
+locale/US/global-region,                                  US/locale/US/global-region
+
+
