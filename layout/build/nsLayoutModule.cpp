@@ -311,6 +311,8 @@ static Components gComponents[] = {
   { "Frame selection", NS_FRAMESELECTION_CID, nsnull, },
   { "Range", NS_RANGE_CID, nsnull, },
   { "Content iterator", NS_CONTENTITERATOR_CID, nsnull, },
+  { "Generated Content iterator", NS_GENERATEDCONTENTITERATOR_CID, nsnull, },
+  { "Generated Subtree iterator", NS_GENERATEDSUBTREEITERATOR_CID, nsnull, },
   { "Subtree iterator", NS_SUBTREEITERATOR_CID, nsnull, },
 
   // XXX ick
