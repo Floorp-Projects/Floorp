@@ -2754,6 +2754,8 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		if (NS_SUCCEEDED(rv = NS_MakeAbsoluteURI(nsCAutoString(hrefStr),
 			aURL, &absURIStr)) && (absURIStr))
 		{
+			hrefStr = absURIStr;
+
 			nsCOMPtr<nsIURI>	absURI;
 			rv = NS_NewURI(getter_AddRefs(absURI), absURIStr);
 			nsCRT::free(absURIStr);
