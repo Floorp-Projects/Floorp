@@ -36,6 +36,7 @@
 #include "plhash.h"
 #include "prlock.h"
 #include "nsCom.h"
+#include "nscore.h"
 
 class NS_COM nsHashKey {
 protected:
@@ -125,9 +126,9 @@ public:
   }
   PRBool Put (nsHashKey *aKey,
               nsISupports *aData,
-              nsISupports **value = NULL);
+              nsISupports **value = nsnull);
   nsISupports* Get (nsHashKey *aKey);
-  PRBool Remove (nsHashKey *aKey, nsISupports **value = NULL);
+  PRBool Remove (nsHashKey *aKey, nsISupports **value = nsnull);
   nsHashtable *Clone();
   void Enumerate (EnumFunc aEnumFunc, void* closure = NULL)
   {
