@@ -1037,8 +1037,6 @@ class DOMMediaListImpl : public nsIDOMMediaList,
   virtual ~DOMMediaListImpl();
 
 private:
-  nsresult BeginMediaChange(void);
-  nsresult EndMediaChange(void);
   nsresult Delete(const nsAString & aOldMedium);
   nsresult Append(const nsAString & aOldMedium);
 
@@ -1207,19 +1205,44 @@ DOMMediaListImpl::GetMediaText(nsAString& aMediaText)
   return GetText(aMediaText);
 }
 
+// "sheet" should be an CSSStyleSheetImpl and "doc" should be an
+// nsCOMPtr<nsIDocument>
+#define BEGIN_MEDIA_CHANGE(sheet, doc)                         \
+  if (sheet) {                                                 \
+    rv = sheet->GetOwningDocument(*getter_AddRefs(doc));       \
+    NS_ENSURE_SUCCESS(rv, rv);                                 \
+  }                                                            \
+  mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, PR_TRUE);    \
+  if (sheet) {                                                 \
+    rv = sheet->WillDirty();                                   \
+    NS_ENSURE_SUCCESS(rv, rv);                                 \
+  }
+
+#define END_MEDIA_CHANGE(sheet, doc)                           \
+  if (sheet) {                                                 \
+    sheet->DidDirty();                                         \
+  }                                                            \
+  /* XXXldb Pass something meaningful? */                      \
+  if (doc) {                                                   \
+    rv = doc->StyleRuleChanged(sheet, nsnull, nsnull);         \
+    NS_ENSURE_SUCCESS(rv, rv);                                 \
+  }
+
+
 NS_IMETHODIMP
 DOMMediaListImpl::SetMediaText(const nsAString& aMediaText)
 {
-  nsresult rv;
-  rv = BeginMediaChange();
-  if (NS_FAILED(rv))
-    return rv;
-  
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDocument> doc;
+
+  BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
+
   rv = SetText(aMediaText);
   if (NS_FAILED(rv))
     return rv;
   
-  rv = EndMediaChange();
+  END_MEDIA_CHANGE(mStyleSheet, doc)
+
   return rv;
 }
                                
@@ -1260,32 +1283,34 @@ DOMMediaListImpl::Item(PRUint32 aIndex, nsAString& aReturn)
 NS_IMETHODIMP
 DOMMediaListImpl::DeleteMedium(const nsAString& aOldMedium)
 {
-  nsresult rv;
-  rv = BeginMediaChange();
-  if (NS_FAILED(rv))
-    return rv;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDocument> doc;
+
+  BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
   
   rv = Delete(aOldMedium);
   if (NS_FAILED(rv))
     return rv;
 
-  rv = EndMediaChange();
+  END_MEDIA_CHANGE(mStyleSheet, doc)
+  
   return rv;
 }
 
 NS_IMETHODIMP
 DOMMediaListImpl::AppendMedium(const nsAString& aNewMedium)
 {
-  nsresult rv;
-  rv = BeginMediaChange();
-  if (NS_FAILED(rv))
-    return rv;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDocument> doc;
+
+  BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
   
   rv = Append(aNewMedium);
   if (NS_FAILED(rv))
     return rv;
 
-  rv = EndMediaChange();
+  END_MEDIA_CHANGE(mStyleSheet, doc)
+  
   return rv;
 }
 
@@ -1326,41 +1351,6 @@ DOMMediaListImpl::Append(const nsAString& aNewMedium)
 
   AppendElement(media);
 
-  return NS_OK;
-}
-
-nsresult
-DOMMediaListImpl::BeginMediaChange(void)
-{
-  nsresult rv;
-  nsCOMPtr<nsIDocument> doc;
-
-  if (mStyleSheet) {
-    rv = mStyleSheet->GetOwningDocument(*getter_AddRefs(doc));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = doc->BeginUpdate(UPDATE_STYLE);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mStyleSheet->WillDirty();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
-}
-
-nsresult
-DOMMediaListImpl::EndMediaChange(void)
-{
-  nsresult rv;
-  nsCOMPtr<nsIDocument> doc;
-  if (mStyleSheet) {
-    mStyleSheet->DidDirty();
-    rv = mStyleSheet->GetOwningDocument(*getter_AddRefs(doc));
-    NS_ENSURE_SUCCESS(rv, rv);
-    // XXXldb Pass something meaningful?
-    rv = doc->StyleRuleChanged(mStyleSheet, nsnull, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = doc->EndUpdate(UPDATE_STYLE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   return NS_OK;
 }
 
@@ -2672,11 +2662,7 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
   if (NS_FAILED(result))
     return result;
 
-  if (mDocument) {
-    result = mDocument->BeginUpdate(UPDATE_STYLE);
-    if (NS_FAILED(result))
-      return result;
-  }
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
   nsCOMPtr<nsISupportsArray> rules;
   result = css->ParseRule(aRule, mInner->mURL, getter_AddRefs(rules));
@@ -2799,11 +2785,6 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
     }
   }
   
-  if (mDocument) {
-    result = mDocument->EndUpdate(UPDATE_STYLE);
-    NS_ENSURE_SUCCESS(result, result);
-  }
-
   if (loader) {
     loader->RecycleParser(css);
   }
@@ -2825,11 +2806,8 @@ CSSStyleSheetImpl::DeleteRule(PRUint32 aIndex)
 
   // XXX TBI: handle @rule types
   if (mInner && mInner->mOrderedRules) {
-    if (mDocument) {
-      result = mDocument->BeginUpdate(UPDATE_STYLE);
-      if (NS_FAILED(result))
-        return result;
-    }
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
+    
     result = WillDirty();
 
     if (NS_SUCCEEDED(result)) {
@@ -2847,9 +2825,6 @@ CSSStyleSheetImpl::DeleteRule(PRUint32 aIndex)
 
         if (mDocument) {
           result = mDocument->StyleRuleRemoved(this, rule);
-          NS_ENSURE_SUCCESS(result, result);
-          
-          result = mDocument->EndUpdate(UPDATE_STYLE);
           NS_ENSURE_SUCCESS(result, result);
         }
       }
@@ -2877,11 +2852,8 @@ CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (mDocument) {
-    result = mDocument->BeginUpdate(UPDATE_STYLE);
-    NS_ENSURE_SUCCESS(result, result);
-  }
-
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
+  
   result = WillDirty();
   NS_ENSURE_SUCCESS(result, result);
 
@@ -2894,9 +2866,6 @@ CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
 
   if (mDocument) {
     result = mDocument->StyleRuleRemoved(this, rule);
-    NS_ENSURE_SUCCESS(result, result);
-    
-    result = mDocument->EndUpdate(UPDATE_STYLE);
     NS_ENSURE_SUCCESS(result, result);
   }
 
@@ -2936,11 +2905,8 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
   }
   NS_ENSURE_SUCCESS(result, result);
 
-  // parse and grab the rule 
-  if (mDocument) {
-    result = mDocument->BeginUpdate(UPDATE_STYLE);
-    NS_ENSURE_SUCCESS(result, result);
-  }
+  // parse and grab the rule
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
   result = WillDirty();
   NS_ENSURE_SUCCESS(result, result);
@@ -2977,11 +2943,6 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
       result = mDocument->StyleRuleAdded(this, rule);
       NS_ENSURE_SUCCESS(result, result);
     }
-  }
-
-  if (mDocument) {
-    result = mDocument->EndUpdate(UPDATE_STYLE);
-    NS_ENSURE_SUCCESS(result, result);
   }
 
   if (loader) {
@@ -3032,17 +2993,13 @@ CSSStyleSheetImpl::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
     nsCOMPtr<nsICSSImportRule> ownerRule;
     aSheet->GetOwnerRule(getter_AddRefs(ownerRule));
     
-    nsresult rv = mDocument->BeginUpdate(UPDATE_STYLE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
     // XXXldb @import rules shouldn't even implement nsIStyleRule (but
     // they do)!
     nsCOMPtr<nsIStyleRule> styleRule(do_QueryInterface(ownerRule));
     
-    rv = mDocument->StyleRuleAdded(this, styleRule);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mDocument->EndUpdate(UPDATE_STYLE);
+    nsresult rv = mDocument->StyleRuleAdded(this, styleRule);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -1032,9 +1032,7 @@ DOMCSSDeclarationImpl::DeclarationChanged()
     sheet->GetOwningDocument(*getter_AddRefs(owningDoc));
   }
 
-  if (owningDoc) {
-    owningDoc->BeginUpdate(UPDATE_STYLE);
-  }
+  mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, PR_TRUE);
 
   nsCOMPtr<nsICSSStyleRule> oldRule = mRule;
   mRule = oldRule->DeclarationChanged(PR_TRUE).get();
@@ -1049,7 +1047,6 @@ DOMCSSDeclarationImpl::DeclarationChanged()
 
   if (owningDoc) {
     owningDoc->StyleRuleChanged(sheet, oldRule, mRule);
-    owningDoc->EndUpdate(UPDATE_STYLE);
   }
   return NS_OK;
 }

@@ -2614,9 +2614,12 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
 
     PRBool do_notify = !!aRefChild;
 
-    if (count && !do_notify && mDocument) {
-      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-    }    
+    // If do_notify is true, then we don't have to handle the notifications
+    // ourselves...  Also, if count is 0 there will be no updates.  So we only
+    // want an update batch to happen if count is nonzero and do_notify is not
+    // true.
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL,
+                                 count && !do_notify);
     
     /*
      * Iterate through the fragments children, removing each from
@@ -2654,7 +2657,6 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
 
     if (count && !do_notify && mDocument) {
       mDocument->ContentAppended(this, old_count);
-      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
     }
 
     doc_fragment->DropChildReferences();
@@ -3403,9 +3405,9 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
   }
 
   // Begin the update _before_ changing the attr value
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+  
   if (aNotify && mDocument) {
-    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-
     mDocument->AttributeWillChange(this, nameSpaceID, name);
   }
 
@@ -3467,7 +3469,6 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
       PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
                                      : PRInt32(nsIDOMMutationEvent::ADDITION);
       mDocument->AttributeChanged(this, nameSpaceID, name, modHint);
-      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
 
@@ -3563,54 +3564,57 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsresult rv = NS_OK;
-
   if (nsnull != mAttributes) {
     PRInt32 count = mAttributes->Count();
     PRInt32 index;
     PRBool  found = PR_FALSE;
+    nsGenericAttribute* attr = nsnull;
     for (index = 0; index < count; index++) {
-      nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+      attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
       if ((aNameSpaceID == kNameSpaceID_Unknown ||
            attr->mNodeInfo->NamespaceEquals(aNameSpaceID)) &&
           attr->mNodeInfo->Equals(aName)) {
-        if (aNotify && (nsnull != mDocument)) {
-          mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-
-          mDocument->AttributeWillChange(this, aNameSpaceID, aName);
-        }
-
-        if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-          nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-          nsMutationEvent mutation;
-          mutation.eventStructType = NS_MUTATION_EVENT;
-          mutation.message = NS_MUTATION_ATTRMODIFIED;
-          mutation.mTarget = node;
-
-          nsAutoString attrName;
-          aName->ToString(attrName);
-          nsCOMPtr<nsIDOMAttr> attrNode;
-          GetAttributeNode(attrName, getter_AddRefs(attrNode));
-          mutation.mRelatedNode = attrNode;
-
-          mutation.mAttrName = aName;
-          if (!attr->mValue.IsEmpty())
-            mutation.mPrevAttrValue = do_GetAtom(attr->mValue);
-          mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
-
-          nsEventStatus status = nsEventStatus_eIgnore;
-          this->HandleDOMEvent(nsnull, &mutation, nsnull,
-                               NS_EVENT_FLAG_INIT, &status);
-        }
-
-        mAttributes->RemoveElementAt(index);
-        delete attr;
         found = PR_TRUE;
         break;
       }
     }
 
-    if (NS_SUCCEEDED(rv) && found && mDocument) {
+    if (!found) {
+      return NS_OK;
+    }
+    
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+    if (aNotify && mDocument) {
+      mDocument->AttributeWillChange(this, aNameSpaceID, aName);
+    }
+
+    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_ATTRMODIFIED;
+      mutation.mTarget = node;
+
+      nsAutoString attrName;
+      aName->ToString(attrName);
+      nsCOMPtr<nsIDOMAttr> attrNode;
+      GetAttributeNode(attrName, getter_AddRefs(attrNode));
+      mutation.mRelatedNode = attrNode;
+
+      mutation.mAttrName = aName;
+      if (!attr->mValue.IsEmpty())
+        mutation.mPrevAttrValue = do_GetAtom(attr->mValue);
+      mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      this->HandleDOMEvent(nsnull, &mutation, nsnull,
+                           NS_EVENT_FLAG_INIT, &status);
+    }
+
+    mAttributes->RemoveElementAt(index);
+    delete attr;
+
+    if (mDocument) {
       nsCOMPtr<nsIBindingManager> bindingManager;
       mDocument->GetBindingManager(getter_AddRefs(bindingManager));
       nsCOMPtr<nsIXBLBinding> binding;
@@ -3621,12 +3625,11 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
       if (aNotify) {
         mDocument->AttributeChanged(this, aNameSpaceID, aName,
                                     nsIDOMMutationEvent::REMOVAL);
-        mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
       }
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -3820,9 +3823,8 @@ nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+
   PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
     NS_ADDREF(aKid);
@@ -3850,9 +3852,7 @@ nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
       }
     }
   }
-  if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
-  }
+  
   return NS_OK;
 }
 
@@ -3864,9 +3864,8 @@ nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != mDocument)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+  
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   nsRange::OwnerChildReplaced(this, aIndex, oldKid);
   PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
@@ -3883,9 +3882,7 @@ nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
   }
-  if (aNotify && (nsnull != mDocument)) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
-  }
+  
   return NS_OK;
 }
 
@@ -3895,9 +3892,8 @@ nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+  
   PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
     NS_ADDREF(aKid);
@@ -3925,9 +3921,7 @@ nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
       }
     }
   }
-  if (aNotify && doc) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
-  }
+
   return NS_OK;
 }
 
@@ -3937,9 +3931,7 @@ nsGenericContainerElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   if (oldKid) {
     nsIDocument* doc = mDocument;
-    if (aNotify && doc) {
-      doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-    }
+    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(oldKid));
@@ -3968,9 +3960,6 @@ nsGenericContainerElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
-    if (aNotify && doc) {
-      doc->EndUpdate(UPDATE_CONTENT_MODEL);
-    }
   }
 
   return NS_OK;

@@ -44,6 +44,7 @@
 #include "nsChangeHint.h"
 #include "nsCOMArray.h"
 #include "nsIDocumentObserver.h"
+#include "nsCOMPtr.h"
 
 class nsIAtom;
 class nsIContent;
@@ -384,6 +385,7 @@ public:
   // Observation hooks used to propagate notifications to document observers.
   // BeginUpdate must be called before any batch of modifications of the
   // content model or of style data, EndUpdate must be called afterward.
+  // To make this easy and painless, use the mozAutoDocUpdate helper class.
   NS_IMETHOD BeginUpdate(nsUpdateType aUpdateType) = 0;
   NS_IMETHOD EndUpdate(nsUpdateType aUpdateType) = 0;
   NS_IMETHOD BeginLoad() = 0;
@@ -474,6 +476,38 @@ public:
   NS_IMETHOD_(PRBool) IsScriptEnabled() = 0;
 };
 
+
+/**
+ * Helper class to automatically handle batching of document updates.  This
+ * class will call BeginUpdate on construction and EndUpdate on destruction on
+ * the given document with the given update type.  The document could be null,
+ * in which case no updates will be called.  The constructor also takes a
+ * boolean that can be set to false to prevent notifications.
+ */
+class mozAutoDocUpdate
+{
+public:
+  mozAutoDocUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType,
+                   PRBool aNotify) :
+    mDocument(aNotify ? aDocument : nsnull),
+    mUpdateType(aUpdateType)
+  {
+    if (mDocument) {
+      mDocument->BeginUpdate(mUpdateType);
+    }
+  }
+
+  ~mozAutoDocUpdate()
+  {
+    if (mDocument) {
+      mDocument->EndUpdate(mUpdateType);
+    }
+  }
+
+private:
+  nsCOMPtr<nsIDocument> mDocument;
+  nsUpdateType mUpdateType;
+};
 
 // XXX These belong somewhere else
 nsresult

@@ -197,9 +197,9 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
       return result;
     }
 
-    if (aNotify && (mDocument)) {
-      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+    
+    if (aNotify && mDocument) {
       mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
     }
 
@@ -215,10 +215,9 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
                                           this, sheet);
   }
 
-  if (aNotify && (mDocument)) {
+  if (aNotify && mDocument) {
     result = mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
                                          nsIDOMMutationEvent::MODIFICATION);
-    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
 
   return result;
