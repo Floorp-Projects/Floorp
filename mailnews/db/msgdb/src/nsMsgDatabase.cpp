@@ -1017,17 +1017,22 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
 
 	}	
 
+    PRUint32 flags;
+	nsMsgKey threadParent;
+
+	//Save off flags and threadparent since they will no longer exist after we remove the header from the db.
+	if (notify)
+	{
+
+        (void)msg->GetFlags(&flags);
+		msg->GetThreadParent(&threadParent);
+	}
 
 //	if (!onlyRemoveFromThread)	// to speed up expiration, try this. But really need to do this in RemoveHeaderFromDB
 	nsresult ret = RemoveHeaderFromDB(msgHdr);
 	
 	if (notify && NS_SUCCEEDED(ret))
 	{
-        PRUint32 flags;
-		nsMsgKey threadParent;
-
-        (void)msg->GetFlags(&flags);
-		msg->GetThreadParent(&threadParent);
 
 		NotifyKeyDeletedAll(key, threadParent, flags, instigator); // tell listeners
     }
