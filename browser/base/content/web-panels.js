@@ -43,3 +43,13 @@ function loadPlaceholderPage() {
     if (gLoadPlaceHolder)
         panelBrowser.setAttribute("src", "chrome://browser/content/web-panels.xml");
 }
+
+
+function grabPage()
+{
+    var panelBrowser = document.getElementById('webpanels-browser');
+    try {
+      panelBrowser.webNavigation.loadURI(window.parent.gBrowser.currentURI.spec, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+    } catch (e) {}
+}
+
