@@ -22,6 +22,8 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecG.h"
 
+#include "nsPrintdGTK.h"
+
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec
 {
 public:
@@ -61,6 +63,8 @@ protected:
   virtual ~nsDeviceContextSpecGTK();
 
 protected:
+
+  UnixPrData mPrData;
 	
 };
 
