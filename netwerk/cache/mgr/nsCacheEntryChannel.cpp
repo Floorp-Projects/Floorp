@@ -28,6 +28,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
+#include "nsIAllocator.h"
 
 nsCacheEntryChannel::nsCacheEntryChannel(nsCachedNetData* aCacheEntry, nsIChannel* aChannel,
                                          nsILoadGroup* aLoadGroup):
