@@ -317,14 +317,9 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
  		appShellService->Release();
  		return result;
  	}
- 	
-  result = appShellService->CreateDialogWindow( nsnull, dialogURL, PR_TRUE, mWebShellWindow, nsnull, this, 300,  150);
 
-	// Run the dialog
-	// Results will be in the XUL callback
-	if ( mWebShellWindow )
-		mWebShellWindow->ShowModal();
-	
+ 	appShellService->RunModalDialog( nsnull, dialogURL, mWebShellWindow, nsnull, this, 300, 200);
+
 	// cleanup
 	if ( mOKButton )
 		RemoveEventListener( mOKButton );
