@@ -789,6 +789,7 @@ NSS_3.2 {               # NSS 3.2 release
         RSA_PublicKeyOp;
         RSA_Sign;
         RSA_SignRaw;
+        SECAnyTemplate;
         SECITEM_AllocItem;
         SECITEM_CompareItem;
         SECITEM_CopyItem;
