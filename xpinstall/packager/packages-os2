@@ -368,7 +368,7 @@ bin/components/mime.dll
 bin/components/mime.xpt
 ;bin/components/msgbase.dll
 bin/components/mailnews.dll
-;bin/components/msgbase.xpt
+bin/components/msgbase.xpt
 bin/components/mailnews.xpt
 bin/components/msgcompo.dll
 ;bin/components/msgcompo.xpt
