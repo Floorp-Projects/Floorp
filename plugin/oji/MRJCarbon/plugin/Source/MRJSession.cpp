@@ -254,10 +254,16 @@ OSStatus MRJSession::open(const char* consolePath)
             jstring path = env->NewStringUTF(consolePath);
             if (path) {
                 env->CallStaticVoidMethod(session, openMethod, path);
+                if (env->ExceptionCheck())
+                    env->ExceptionClear();
                 env->DeleteLocalRef(path);
             }
+        } else {
+            env->ExceptionClear();
         }
         env->DeleteLocalRef(session);
+    } else {
+        env->ExceptionClear();
     }
 
     if (mStatus == noErr)
@@ -266,11 +272,9 @@ OSStatus MRJSession::open(const char* consolePath)
 #if REDIRECT_VFPRINTF
     // XXX test the vfprintf function.
     jclass notThere = env->FindClass("class/not/Found");
-    jobject throwable = env->ExceptionOccurred();
-    if (throwable) {
+    if (env->ExceptionCheck()) {
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->DeleteLocalRef(throwable);
     }
 #endif
 
@@ -294,6 +298,8 @@ OSStatus MRJSession::close()
             jmethodID closeMethod = env->GetStaticMethodID(session, "close", "()V");
             if (closeMethod)
                 env->CallStaticVoidMethod(session, closeMethod);
+            else
+                env->ExceptionClear();
     	    env->DeleteGlobalRef(mSession);
     	    mSession = NULL;
         }

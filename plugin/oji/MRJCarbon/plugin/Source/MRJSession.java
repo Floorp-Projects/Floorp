@@ -50,10 +50,10 @@ import java.net.URL;
  *    integrating with the Netscape 6 security system.
  */
 public class MRJSession {
-	// Save primordial System streams.
-	private static PrintStream out;
-	private static PrintStream err;
-	private static PrintStream console;
+    // Save primordial System streams.
+    private static PrintStream out;
+    private static PrintStream err;
+    private static PrintStream console;
 
     private static Properties loadProperties(String pluginHome) {
         Properties props = new Properties();
@@ -71,12 +71,19 @@ public class MRJSession {
         Properties props = loadProperties(pluginHome);
         boolean append = Boolean.valueOf(props.getProperty("netscape.oji.plugin.console.append")).booleanValue();
     
-        // redirect I/O to specified file.
-		MRJSession.out = System.out;
-		MRJSession.err = System.err;
+        // Make sure the parent directories exist.
+        File consoleFile = new File(consolePath);
+        File parentFile = consoleFile.getParentFile();
+        if (!parentFile.exists()) {
+            parentFile.mkdirs();
+        }
+    
+        // redirect console I/O to specified file.
+        MRJSession.out = System.out;
+        MRJSession.err = System.err;
         console = new PrintStream(new FileOutputStream(consolePath, append));
-		System.setOut(console);
-		System.setErr(console);
+        System.setOut(console);
+        System.setErr(console);
 
         Date date = new Date();
         String version = props.getProperty("netscape.oji.plugin.version");
@@ -98,8 +105,8 @@ public class MRJSession {
     }
 
     public static void close() throws IOException {
-		System.setOut(MRJSession.out);
-		System.setErr(MRJSession.err);
+        System.setOut(MRJSession.out);
+        System.setErr(MRJSession.err);
         console.close();
     }
 }
