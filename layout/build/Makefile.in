@@ -50,9 +50,10 @@ EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/lib	\
 	-lraptorhtmldoc_s	\
 	-lnglhtmlcon_s		\
-	-lraptorhtmlforms_s	\
-	-lraptorhtmlbase_s	\
 	-lraptorhtmlstyle_s	\
+	-lraptorhtmlforms_s	\
+	-lraptorhtmlstyle_s	\
+	-lraptorhtmlbase_s	\
 	-lraptorhtmltable_s	\
 	-lraptorlayout_s        \
 	-lraptorevents_s	\
