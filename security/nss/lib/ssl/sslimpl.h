@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.28 2003/01/23 22:02:37 relyea%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.29 2003/02/15 01:21:24 relyea%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -847,10 +847,6 @@ struct sslSecurityInfoStr {
 
     /* These are used during a connection handshake */
     sslConnectInfo   ci;					/* ssl 2 & 3 */
-    PRIntervalTime   lastTime;			/* last time smart card 
-						 * checked */ /* ssl3 only */  
-    PRBool           lastState;	                /* last state of client auth 
-						 * smart card present (ssl 3) */
 
 };
 
