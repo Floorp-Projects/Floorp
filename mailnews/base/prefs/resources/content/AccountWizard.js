@@ -495,34 +495,6 @@ function finishAccount(account, accountData) {
             destIdentity.smtpServerKey = smtpServer.key;
      }
 
-    // Add any global html domains (i.e., set mailnwes.html_domains pref) which need to 
-    // be excluded from Send Format dialog requirement
-    if (accountData.addGlobalHtmlDomains) {
-        // Check to see if we have already added the 
-        // domain list on a previous account creation process
-        var isDomainListAdded = gPrefs.getBoolPref("mailnews.global_html_domains.added");
-        if (!isDomainListAdded) {
-            var globalHtmlDomainList = gPrefs.getCharPref("mailnews.global_html_domains");
-            var currentHtmlDomainList = gPrefs.getCharPref("mailnews.html_domains");
-            var currentPlaintextDomainList = gPrefs.getCharPref("mailnews.plaintext_domains");
-            // If there is a list already, we need to preserve that
-            if (currentHtmlDomainList || currentPlaintextDomainList) {
-                // Avoid duplication in adding domains. Check both HTML and PlainText domains
-                var globalHtmlDomainListArray = globalHtmlDomainList.split(',');
-                for (var i=0; i < globalHtmlDomainListArray.length; i++) {
-                    if ((currentHtmlDomainList.indexOf(globalHtmlDomainListArray[i]) == -1) && 
-                        (currentPlaintextDomainList.indexOf(globalHtmlDomainListArray[i]) == -1))
-                        currentHtmlDomainList = currentHtmlDomainList + "," + globalHtmlDomainListArray[i];
-                }
-            }
-            else
-                currentHtmlDomainList = globalHtmlDomainList;
-
-            gPrefs.setCharPref("mailnews.html_domains", currentHtmlDomainList);
-            gPrefs.setBoolPref("mailnews.global_html_domains.added", true);
-        }
-    }
-
      if (this.FinishAccountHook != undefined) {
          FinishAccountHook(accountData.domain);
      }

@@ -81,6 +81,7 @@ public:
   nsresult Init();
   void Reset();
   void DeleteCachedWindows();
+  nsresult AddGlobalHtmlDomains();
 
 private:
   PRBool mLogComposePerformance;

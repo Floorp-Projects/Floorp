@@ -91,6 +91,13 @@ static PRBool _just_to_be_sure_we_create_only_on_compose_service_ = PR_FALSE;
 
 #define PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS  "mail.compose.max_recycled_windows"
 
+#define MAILNEWS_ROOT_PREF                         "mailnews."
+#define HTMLDOMAINUPDATE_VERSION_PREF_NAME         "global_html_domains.version"
+#define HTMLDOMAINUPDATE_DOMAINLIST_PREF_NAME      "global_html_domains"
+#define USER_CURRENT_HTMLDOMAINLIST_PREF_NAME      "html_domains"
+#define USER_CURRENT_PLAINTEXTDOMAINLIST_PREF_NAME "plaintext_domains"
+#define DOMAIN_DELIMITER                           ","
+
 #ifdef MSGCOMP_TRACE_PERFORMANCE
 static PRLogModuleInfo *MsgComposeLogModule = nsnull;
 
@@ -169,6 +176,8 @@ nsresult nsMsgComposeService::Init()
   }
 
 	Reset();
+
+  AddGlobalHtmlDomains();
 	
   return rv;
 }
@@ -778,6 +787,114 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
   return rv;
 }
 
+nsresult nsMsgComposeService::AddGlobalHtmlDomains()
+{
+
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(MAILNEWS_ROOT_PREF, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranch> defaultsPrefBranch;
+  rv = prefs->GetDefaultBranch(MAILNEWS_ROOT_PREF, getter_AddRefs(defaultsPrefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  /** 
+   * Check to see if we need to add any global domains.
+   * If so, make sure the following prefs are added to mailnews.js
+   *
+   * 1. pref("mailnews.global_html_domains.version", version number);
+   * This pref registers the current version in the user prefs file. A default value is stored
+   * in mailnews file. Depending the changes we plan to make we can move the default version number.
+   * Comparing version number from user's prefs file and the default one from mailnews.js, we
+   * can effect ppropriate changes.
+   *
+   * 2. pref("mailnews.global_html_domains", <comma separated domain list>);
+   * This pref contains the list of html domains that ISP can add to make that user's contain all
+   * of these under the HTML domains in the Mail&NewsGrpus|Send Format under global preferences.
+   */
+  PRInt32 htmlDomainListCurrentVersion, htmlDomainListDefaultVersion;
+  rv = prefBranch->GetIntPref(HTMLDOMAINUPDATE_VERSION_PREF_NAME, &htmlDomainListCurrentVersion);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = defaultsPrefBranch->GetIntPref(HTMLDOMAINUPDATE_VERSION_PREF_NAME, &htmlDomainListDefaultVersion);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  // Update the list as needed
+  if (htmlDomainListCurrentVersion <= htmlDomainListDefaultVersion) {
+    // Get list of global domains need to be added
+    nsXPIDLCString globalHtmlDomainList;
+    rv = prefBranch->GetCharPref(HTMLDOMAINUPDATE_DOMAINLIST_PREF_NAME, getter_Copies(globalHtmlDomainList));
+
+    if (NS_SUCCEEDED(rv) && !globalHtmlDomainList.IsEmpty()) {
+
+      // Get user's current HTML domain set for send format
+      nsXPIDLCString currentHtmlDomainList;
+      rv = prefBranch->GetCharPref(USER_CURRENT_HTMLDOMAINLIST_PREF_NAME, getter_Copies(currentHtmlDomainList));
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      nsCAutoString newHtmlDomainList(currentHtmlDomainList);
+      // Get the current html domain list into new list var
+      nsCStringArray htmlDomainArray;
+      if (!currentHtmlDomainList.IsEmpty()) 
+        htmlDomainArray.ParseString(currentHtmlDomainList.get(), DOMAIN_DELIMITER);
+
+      // Get user's current Plaintext domain set for send format
+      nsXPIDLCString currentPlaintextDomainList;
+      rv = prefBranch->GetCharPref(USER_CURRENT_PLAINTEXTDOMAINLIST_PREF_NAME, getter_Copies(currentPlaintextDomainList));
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      // Get the current plaintext domain list into new list var
+      nsCStringArray plaintextDomainArray;
+      if (!currentPlaintextDomainList.IsEmpty()) 
+        plaintextDomainArray.ParseString(currentPlaintextDomainList.get(), DOMAIN_DELIMITER);
+    
+      if (htmlDomainArray.Count() || plaintextDomainArray.Count()) {
+        // Tokenize the data and add each html domain if it is not alredy there in 
+        // the user's current html or plaintext domain lists
+        char *newData;
+        char *globalData = ToNewCString(globalHtmlDomainList);
+  
+        char *token = nsCRT::strtok(globalData, DOMAIN_DELIMITER, &newData);
+
+        nsCAutoString htmlDomain;
+        while (token) {
+          if (token && *token) {
+            htmlDomain.Assign(token);
+            htmlDomain.StripWhitespace();
+
+            if (htmlDomainArray.IndexOf(htmlDomain) == -1  && 
+                plaintextDomainArray.IndexOf(htmlDomain) == -1) {
+              if (!newHtmlDomainList.IsEmpty())
+                newHtmlDomainList += DOMAIN_DELIMITER;
+              newHtmlDomainList += htmlDomain;
+            }
+          }
+          token = nsCRT::strtok(newData, DOMAIN_DELIMITER, &newData);
+        }
+        PR_FREEIF(globalData);
+      }
+      else
+      {
+        // User has no domains listed either in html or plain text category.
+        // Assign the global list to be the user's current html domain list
+        newHtmlDomainList = globalHtmlDomainList;
+      }
+
+      // Set user's html domain pref with the updated list
+      rv = prefBranch->SetCharPref(USER_CURRENT_HTMLDOMAINLIST_PREF_NAME, newHtmlDomainList.get());
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      // Increase the version to avoid running the update code unless needed (based on default version)
+      rv = prefBranch->SetIntPref(HTMLDOMAINUPDATE_VERSION_PREF_NAME, htmlDomainListCurrentVersion + 1);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+  }
+  return NS_OK;
+}
 
 CMDLINEHANDLER_IMPL(nsMsgComposeService, "-compose", "general.startup.messengercompose", DEFAULT_CHROME,
                     "Start with messenger compose.", NS_MSGCOMPOSESTARTUPHANDLER_CONTRACTID, "Messenger Compose Startup Handler",
