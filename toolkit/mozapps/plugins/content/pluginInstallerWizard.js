@@ -64,7 +64,9 @@ function nsPluginInstallerWizard(){
 
   if ("arguments" in window) {
     for (var item in window.arguments[0].plugins){
-      this.mPluginRequestArray[window.arguments[0].plugins[item].mimetype] = new nsPluginRequest(window.arguments[0].plugins[item]);
+      this.mPluginRequestArray[window.arguments[0].plugins[item].mimetype] =
+        new nsPluginRequest(window.arguments[0].plugins[item]);
+
       this.mPluginRequestArrayLength++;
     }
 
@@ -73,14 +75,14 @@ function nsPluginInstallerWizard(){
 
   this.WSPluginCounter = 0;
   this.licenseAcceptCounter = 0;
-  
+
   this.prefBranch = null;
 }
 
 nsPluginInstallerWizard.prototype.getPluginData = function (){
   // for each mPluginRequestArray item, call the datasource
   this.WSPluginCounter = 0;
- 
+
   // initiate the datasource call
   var rdfUpdater = new nsRDFItemUpdater(this.getOS(), this.getChromeLocale());
 
@@ -108,7 +110,7 @@ nsPluginInstallerWizard.prototype.pluginInfoReceived = function (aPluginInfo){
   if (progressMeter.getAttribute("mode") == "undetermined")
     progressMeter.setAttribute("mode", "determined");
 
-  progressMeter.setAttribute("value", 
+  progressMeter.setAttribute("value",
       ((this.WSPluginCounter / this.mPluginRequestArrayLength) * 100) + "%");
 
   if (this.WSPluginCounter == this.mPluginRequestArrayLength) {
@@ -117,11 +119,11 @@ nsPluginInstallerWizard.prototype.pluginInfoReceived = function (aPluginInfo){
       this.advancePage("lastpage", true, false, false);
     } else {
       this.advancePage(null, true, false, true);
-    }  
+    }
   } else {
     // process more.
   }
-} 
+}
 
 nsPluginInstallerWizard.prototype.showPluginList = function (){
   var myPluginList = document.getElementById("pluginList");
@@ -145,7 +147,7 @@ nsPluginInstallerWizard.prototype.showPluginList = function (){
     myCheckbox.setAttribute("src", pluginInfo.IconUrl);
 
     myPluginList.appendChild(myCheckbox);
-    
+
     if (pluginInfo.InstallerShowsUI == "true")
       hasPluginWithInstallerUI = true;
   }
@@ -155,7 +157,7 @@ nsPluginInstallerWizard.prototype.showPluginList = function (){
 
   this.canAdvance(true);
   this.canRewind(false);
-} 
+}
 
 nsPluginInstallerWizard.prototype.toggleInstallPlugin = function (aPid, aCheckbox) {
   this.mPluginInfoArray[aPid].toBeInstalled = aCheckbox.checked;
@@ -202,7 +204,14 @@ nsPluginInstallerWizard.prototype.showLicenses = function (){
     this.advancePage(null, false, false, false);
   } else {
     this.licenseAcceptCounter = 0;
-    document.getElementById("licenseIFrame").contentWindow.addEventListener("load", gPluginInstaller.enableNext, false);
+
+    // add a nsIWebProgress listener to the license iframe.
+    var docShell = document.getElementById("licenseIFrame").docShell;
+    var iiReq = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    var webProgress = iiReq.getInterface(Components.interfaces.nsIWebProgress);
+    webProgress.addProgressListener(gPluginInstaller.progressListener,
+                                    Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+
     this.showLicense();
   }
 }
@@ -213,11 +222,40 @@ nsPluginInstallerWizard.prototype.enableNext = function (){
   document.getElementById("licenseRadioGroup2").disabled = false;
 }
 
+const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+nsPluginInstallerWizard.prototype.progressListener = {
+  onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+  {
+    if ((aStateFlags & nsIWebProgressListener.STATE_STOP) &&
+       (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)) {
+      // iframe loaded
+      gPluginInstaller.enableNext();
+    }
+  },
+
+  onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress,
+                              aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
+  {},
+  onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
+  {},
+
+  QueryInterface : function(aIID)
+  {
+     if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+         aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+         aIID.equals(Components.interfaces.nsISupports))
+       return this;
+     throw Components.results.NS_NOINTERFACE;
+   }
+}
+
 nsPluginInstallerWizard.prototype.showLicense = function (){
   var pluginInfo = this.mPluginInfoArray[this.mPluginLicenseArray[this.licenseAcceptCounter]];
 
   this.canAdvance(false);
-  document.getElementById("licenseIFrame").setAttribute("src", pluginInfo.licenseURL);
+
+  loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
+  document.getElementById("licenseIFrame").webNavigation.loadURI(pluginInfo.licenseURL, loadFlags, null, null, null);
 
   document.getElementById("pluginLicenseLabel").firstChild.nodeValue = 
     this.getFormattedString("pluginLicenseAgreement.label", [pluginInfo.name]);
@@ -274,7 +312,7 @@ nsPluginInstallerWizard.prototype.advancePage = function (aPageId, aCanAdvance, 
   this.canAdvance(aCanAdvance);
   this.canRewind(aCanRewind);
   this.canCancel(aCanCancel);
-} 
+}
 
 nsPluginInstallerWizard.prototype.startPluginInstallation = function (){
   this.canAdvance(false);
@@ -292,7 +330,7 @@ nsPluginInstallerWizard.prototype.startPluginInstallation = function (){
     if (pluginItem.toBeInstalled && pluginItem.licenseAccepted) {
       pluginURLArray.push(pluginItem.XPILocation);
       pluginPidArray.push(pluginItem.pid);
-    }  
+    }
   }
 
   if (pluginURLArray.length > 0)
@@ -308,24 +346,24 @@ nsPluginInstallerWizard.prototype.startPluginInstallation = function (){
   3    finished installation
   4    all done
 */
-nsPluginInstallerWizard.prototype.pluginInstallationProgress = function (aPid, aProgress, aError){
+nsPluginInstallerWizard.prototype.pluginInstallationProgress = function (aPid, aProgress, aError) {
 
   var statMsg = null;
   var pluginInfo = gPluginInstaller.mPluginInfoArray[aPid];
 
   switch (aProgress) {
-  
+
     case 0:
       statMsg = this.getFormattedString("pluginInstallation.download.start", [pluginInfo.name]);
       break;
- 
+
     case 1:
       statMsg = this.getFormattedString("pluginInstallation.download.finish", [pluginInfo.name]);
       break;
 
     case 2:
       statMsg = this.getFormattedString("pluginInstallation.install.start", [pluginInfo.name]);
-      break;  
+      break;
 
     case 3:
       if (aError) {
