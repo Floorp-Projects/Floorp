@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Conrad Carlen <ccarlen@netscape.com>
+ *  Jungshik Shin <jshin@mailaps.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -68,6 +69,7 @@
 
 static nsresult MacErrorMapper(OSErr inErr);
 static OSErr FindRunningAppBySignature(OSType aAppSig, ProcessSerialNumber& outPsn);
+static void CopyUTF8toUTF16NFC(nsACString& aSrc, nsAString& aResult);
 
 //*****************************************************************************
 //  Local Helper Classes
@@ -516,7 +518,7 @@ NS_IMETHODIMP nsLocalFile::GetLeafName(nsAString& aLeafName)
   nsresult rv = GetNativeLeafName(nativeString);
   if (NS_FAILED(rv))
     return rv;
-  CopyUTF8toUTF16(nativeString, aLeafName);
+  CopyUTF8toUTF16NFC(nativeString, aLeafName);
   return NS_OK;
 }
 
@@ -815,7 +817,7 @@ NS_IMETHODIMP nsLocalFile::GetPath(nsAString& aPath)
   nsresult rv = GetNativePath(nativeString);
   if (NS_FAILED(rv))
     return rv;
-  CopyUTF8toUTF16(nativeString, aPath);
+  CopyUTF8toUTF16NFC(nativeString, aPath);
   return NS_OK;
 }
 
@@ -2175,4 +2177,64 @@ static OSErr FindRunningAppBySignature(OSType aAppSig, ProcessSerialNumber& outP
       return noErr;
   }
   return procNotFound;
+}
+
+// Convert a UTF-8 string to a UTF-16 string while normalizing to
+// Normalization Form C (composed Unicode). We need this because
+// Mac OS X file system uses NFD (Normalization Form D : decomposed Unicode)
+// while most other OS', server-side programs usually expect NFC.
+
+typedef void (*UnicodeNormalizer) (CFMutableStringRef, CFStringNormalizationForm);
+static void CopyUTF8toUTF16NFC(nsACString& aSrc, nsAString& aResult)
+{
+    static PRBool sChecked = PR_FALSE;
+    static UnicodeNormalizer sUnicodeNormalizer = NULL;
+
+    // CFStringNormalize was not introduced until Mac OS 10.2
+    if (!sChecked) {
+        CFBundleRef carbonBundle =
+            CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Carbon"));
+        if (carbonBundle)
+            sUnicodeNormalizer = (UnicodeNormalizer)
+                ::CFBundleGetFunctionPointerForName(carbonBundle,
+                                                    CFSTR("CFStringNormalize"));
+        sChecked = PR_TRUE;
+    }
+
+    if (!sUnicodeNormalizer) {  // OS X 10.2 or earlier
+        CopyUTF8toUTF16(aSrc, aResult);
+        return;  
+    }
+
+    const nsAFlatCString &inFlatSrc = PromiseFlatCString(aSrc);
+
+    // The number of 16bit code units in a UTF-16 string will never be
+    // larger than the number of bytes in the corresponding UTF-8 string.
+    CFMutableStringRef inStr =
+        ::CFStringCreateMutable(NULL, inFlatSrc.Length());
+
+    if (!inStr) {
+        CopyUTF8toUTF16(aSrc, aResult);
+        return;  
+    }
+     
+    ::CFStringAppendCString(inStr, inFlatSrc.get(), kCFStringEncodingUTF8); 
+
+    sUnicodeNormalizer(inStr, kCFStringNormalizationFormC);
+
+    CFIndex length = CFStringGetLength(inStr);
+    const UniChar* chars = CFStringGetCharactersPtr(inStr);
+
+    if (chars) 
+        aResult.Assign(chars, length);
+    else {
+        StBuffer<UniChar> buffer;
+        if (!buffer.EnsureElemCapacity(length))
+            CopyUTF8toUTF16(aSrc, aResult);
+        else {
+            CFStringGetCharacters(inStr, CFRangeMake(0, length), buffer.get());
+            aResult.Assign(buffer.get(), length);
+        }
+    }
+    CFRelease(inStr);
 }
