@@ -31,14 +31,15 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl
-  title = "Login"
+  title = "Login",
+  onload = "document.forms['login'].Bugzilla_login.focus()"
 %]
 
 <p>
   I need a legitimate login and password to continue.
 </p>
 
-<form action="[% target FILTER html %]" method="POST">
+<form name="login" action="[% target FILTER html %]" method="POST">
   <table>
     <tr>
       <td align="right">
