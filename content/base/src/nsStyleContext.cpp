@@ -206,12 +206,9 @@ nsStyleContext::GetFirstChild(nsIStyleContext** aContext)
 
 void nsStyleContext::AppendChild(nsStyleContext* aChild)
 {
-  nsRuleNode* ruleNode;
-  aChild->GetRuleNode(&ruleNode);
-  
-  if (ruleNode->IsRoot()) {
-    // We matched no rules.
-    if (nsnull == mEmptyChild) {
+  if (aChild->mRuleNode->IsRoot()) {
+    // The child matched no rules.
+    if (!mEmptyChild) {
       mEmptyChild = aChild;
     }
     else {
@@ -222,7 +219,7 @@ void nsStyleContext::AppendChild(nsStyleContext* aChild)
     }
   }
   else {
-    if (nsnull == mChild) {
+    if (!mChild) {
       mChild = aChild;
     }
     else {
@@ -236,16 +233,9 @@ void nsStyleContext::AppendChild(nsStyleContext* aChild)
 
 void nsStyleContext::RemoveChild(nsStyleContext* aChild)
 {
-  NS_ASSERTION((nsnull != aChild) && (this == aChild->mParent), "bad argument");
+  NS_PRECONDITION(nsnull != aChild && this == aChild->mParent, "bad argument");
 
-  if ((nsnull == aChild) || (this != aChild->mParent)) {
-    return;
-  }
-
-  nsRuleNode* ruleNode;
-  aChild->GetRuleNode(&ruleNode);
-  
-  if (ruleNode->IsRoot()) { // is empty 
+  if (aChild->mRuleNode->IsRoot()) { // is empty 
     if (aChild->mPrevSibling != aChild) { // has siblings
       if (mEmptyChild == aChild) {
         mEmptyChild = mEmptyChild->mNextSibling;
