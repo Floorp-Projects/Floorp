@@ -246,6 +246,13 @@ Contributor(s): ______________________________________. -->
 <!ENTITY xptk6Cmd.label "Tab">
 <!ENTITY xptk7Cmd.label "Beep">
 
+<!ENTITY QA.label "QA">
+<!ENTITY QABugCmd.label "Bug Writing">
+<!ENTITY QATempCmd.label "Bug Template">
+<!ENTITY QASmokeCmd.label "Smoke Tests">
+<!ENTITY QAKnownBugCmd.label "Known Bugs">
+
+
 <!-- Toolbar items --> 
 <!ENTITY backButton.label "Back">
 <!ENTITY forwardButton.label "Forward">
@@ -577,13 +584,6 @@ Contributor(s): ______________________________________. -->
     // Menu for testing.
     <menu name="&debugMenu.label;">
 
-<menu name="&debugMenu.label;"> // XPToolkit tests.
-        <menuitem name="&debugQA.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
-        <menuitem name="&debugQABug.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
-        <menuitem name="&debugQAKnowBug.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
-        </menu>
-
-
       <menu name="&debugVerCmd.label;"> // Build verification sites.
         <menuitem name="&ver1Cmd.label;"   onclick="window.content.location.href='http://www.mozilla.org'"/>
         <menuitem name="&ver2Cmd.label;"     onclick="window.content.location.href='http://www.yahoo.com'"/>
@@ -644,7 +644,12 @@ Contributor(s): ______________________________________. -->
       </menu>
 
     </menu>
-
+  <menu name="&QA.label;"> // QA tests.
+        <menuitem name="&QABugCmd.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
+        <menuitem name="&QATempCmd.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/bug-template.html'"/>
+        <menuitem name="&QASmokeCmd.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
+        <menuitem name="&QAKnownBugCmd.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
+		</menu>
   </menubar>
   
    <toolbox>
