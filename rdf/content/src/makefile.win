@@ -34,13 +34,14 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsElementMap.obj              \
         .\$(OBJDIR)\nsControllerCommandManager.obj \
         .\$(OBJDIR)\nsJSXULCommandDispatcher.obj  \
-        .\$(OBJDIR)\nsRDFGenericBuilder.obj       \
+        .\$(OBJDIR)\nsRuleNetwork.obj             \
         .\$(OBJDIR)\nsXULAttributes.obj		        \
         .\$(OBJDIR)\nsXULCommandDispatcher.obj    \
         .\$(OBJDIR)\nsXULControllers.obj          \
         .\$(OBJDIR)\nsXULPopupListener.obj        \
         .\$(OBJDIR)\nsXULPrototypeDocument.obj    \
         .\$(OBJDIR)\nsXULPrototypeCache.obj       \
+        .\$(OBJDIR)\nsXULTemplateBuilder.obj      \
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
         .\$(OBJDIR)\nsJSXULPopupElement.obj       \
