@@ -20,66 +20,30 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
+#include "nsIModule.h"
 #include "nsIGenericFactory.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 
 #include "nsDocShell.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kDocShellCID, NS_DOCSHELL_CID);
 
-//*****************************************************************************
-//*** Library Exports
-//*****************************************************************************
+/*
+   Factory Constructors
+*/
 
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsDocShell)
+
+/*
+   Component Table
+*/
+
+static nsModuleComponentInfo components[] =
 {
-	NS_ENSURE_ARG_POINTER(aFactory);
-   nsresult rv;
+  { "DocShell Component", NS_DOCSHELL_CID, NS_DOCSHELL_PROGID, nsDocShell::Create }
+};
 
-   nsIGenericFactory* fact;
+/*
+   NSGetModule implementation.
+*/
 
-	if(aClass.Equals(kDocShellCID))
-		rv = NS_NewGenericFactory(&fact, nsDocShell::Create);
-   else 
-		rv = NS_NOINTERFACE;
+NS_IMPL_NSGETMODULE("nsDocShellModule", components)
 
-	if(NS_SUCCEEDED(rv))
-		*aFactory = fact;
-	return rv;
-}
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
-{
-	nsresult rv;
-	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	rv = compMgr->RegisterComponent(kDocShellCID,  
-											"nsDocShell",
-											NS_DOCSHELL_PROGID,
-											aPath, PR_TRUE, PR_TRUE);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	return rv;
-}
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
-{
-	nsresult rv;
-
-	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-	NS_ENSURE_SUCCESS(rv, rv);
-	rv = compMgr->UnregisterComponent(kDocShellCID, aPath);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	return rv;
-}
