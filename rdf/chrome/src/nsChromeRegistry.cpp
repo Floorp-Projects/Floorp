@@ -724,6 +724,9 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
         providerNameUC.AssignWithConversion(aProviderName);
         packageNameUC.AssignWithConversion(packageName);
         PRBool useProfile = !mProfileRoot.IsEmpty();
+        if (packageName.Equals("global") || packageName.Equals("communicator"))
+          useProfile = PR_FALSE; // Always force the auto-selection to be in the
+                                 // install dir for the packages required to bring up the profile UI.
         rv = SelectProviderForPackage(aProvider, providerNameUC.GetUnicode(),
                                       packageNameUC.GetUnicode(), aArc, useProfile, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
@@ -1934,6 +1937,12 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
         // See if we're a packages seq in a skin/locale.  If so, we need to set up the baseURL, allowScripts
         // and package arcs.
         if (val.Find(":packages") != -1 && !aProviderType.Equals(nsCAutoString("package"))) {
+          PRBool doAppendPackage = appendPackage;
+          PRInt32 perProviderPackageCount;
+          container->GetCount(&perProviderPackageCount);
+          if (perProviderPackageCount > 1)
+            doAppendPackage = PR_TRUE;
+
           // Iterate over our kids a second time.
           nsCOMPtr<nsISimpleEnumerator> seqKids2;
           rv = container->GetElements(getter_AddRefs(seqKids2));
@@ -1970,7 +1979,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
                 baseURL += providerName;
                 baseURL += "/";
               }
-              if (appendPackage) {
+              if (doAppendPackage) {
                 baseURL += packageName;
                 baseURL += "/";
               }
