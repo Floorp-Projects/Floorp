@@ -129,13 +129,14 @@ public:
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
   NS_IMETHOD PostCreate();
   NS_IMETHOD PreDestroy();
-  NS_IMETHOD GetFlags(PRUint32 *aFlags) = 0;
-  NS_IMETHOD SetFlags(PRUint32 aFlags) = 0;
+  NS_IMETHOD GetFlags(PRUint32 *aFlags);
+  NS_IMETHOD SetFlags(PRUint32 aFlags);
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
   NS_IMETHOD GetRootElement(nsIDOMElement **aElement);
   NS_IMETHOD GetPresShell(nsIPresShell **aPS);
   NS_IMETHOD GetSelectionController(nsISelectionController **aSel);
   NS_IMETHOD GetSelection(nsISelection **aSelection);
+  NS_IMETHOD DeleteSelection(EDirection aAction);
   
   NS_IMETHOD EnableUndo(PRBool aEnable);
   NS_IMETHOD GetTransactionManager(nsITransactionManager* *aTxnManager);
@@ -152,8 +153,7 @@ public:
   NS_IMETHOD EndPlaceHolderTransaction();
   NS_IMETHOD ShouldTxnSetSelection(PRBool *aResult);
 
-  // pure virtual, because the definition of 'empty' depends on the doc type
-  NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)=0;
+  NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty);
 
   // file handling
   NS_IMETHOD GetDocumentModified(PRBool *outDocModified);
@@ -161,13 +161,15 @@ public:
   NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
   NS_IMETHOD SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, const nsString& aFormat);
 
-  // these are pure virtual in this base class
-  NS_IMETHOD Cut() = 0;
-  NS_IMETHOD CanCut(PRBool &aCanCut)=0;
-  NS_IMETHOD Copy() = 0;
-  NS_IMETHOD CanCopy(PRBool &aCanCopy)=0;
-  NS_IMETHOD Paste(PRInt32 aSelectionType) = 0;
-  NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)=0;
+  NS_IMETHOD Cut();
+  NS_IMETHOD CanCut(PRBool &aCanCut);
+  NS_IMETHOD Copy();
+  NS_IMETHOD CanCopy(PRBool &aCanCopy);
+  NS_IMETHOD Paste(PRInt32 aSelectionType);
+  NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste);
+  NS_IMETHOD CanDrag(nsIDOMEvent *aEvent, PRBool &aCanDrag);
+  NS_IMETHOD DoDrag(nsIDOMEvent *aEvent);
+  NS_IMETHOD InsertFromDrop(nsIDOMEvent *aEvent);
 
   NS_IMETHOD SelectAll();
 
