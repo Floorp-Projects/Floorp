@@ -1,17 +1,12 @@
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <head>
-   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="Description" content="This is the unofficial Mozilla Webtools FAQ">
-   <meta name="Author" content="Matthew P. Barnson">
-   <meta name="GENERATOR" content="Mozilla/4.72 [en] (X11; I; Linux 2.2.15-0.25mdksmp i686) [Netscape]">
-   <title>The Unofficial Webtools FAQ v 0.2.1</title>
+   <title>The Bugzilla FAQ v 0.2.4</title>
 </head>
 <body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
 
 <center>
 <h1>
-The Unofficial Webtools FAQ v 0.2.1</h1></center>
+The Bugzilla FAQ v 0.2.4</h1></center>
 The contents of this file are subject to the Mozilla Public License Version
 1.1 (the "License"); you may not use this file except in compliance with
 the License. You may obtain a copy of the License at <a href="http://www.mozilla.org/MPL/">http://www.mozilla.org/MPL/</a>
@@ -19,7 +14,7 @@ the License. You may obtain a copy of the License at <a href="http://www.mozilla
 IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
 the License for the specific language governing rights and limitations
 under the License.
-<p>The Original Code is "The Unofficial Webtools FAQ".
+<p>The Original Code is "The Bugzilla FAQ".
 <p>The Initial Developer of the Original Code is AtHome Corporation. Portions
 created by AtHome are Copyright &copy; 1995-2000 AtHome Corporation. All
 Rights Reserved. @Home, Excite@Home, @Work, and Excite are the trademarks
@@ -34,6 +29,9 @@ of At Home Corporation, and may be registered in certain jurisdictions
 
 <li>
 <a href="mailto:tara@tequilarista.org">Tara Hernandez</a></li>
+
+<li>
+Various contributors (you know who you are... thank you!)</li>
 </ul>
 Last change: April 10, 2000
 <p>Changes:
@@ -41,7 +39,7 @@ Last change: April 10, 2000
 <br>Version 0.2.1: Fixed formatting, released as HTML.&nbsp; Also corrected
 incorrect fix for missing bugs from queries (it's syncshadowdb, not processmail)
 and information about bugzilla maintainers (April 10,2000)
-<br>Version 0.2.2:
+<br>Version 0.2.2: (May 15, 2000)
 <ol>
 <li>
 Fixed mailto: links (they were showing up as "documents/"... weird)</li>
@@ -71,6 +69,31 @@ Removed "Bugzilla Gotchas" section and integrated entries into "Bugzilla
 Bugs"</li>
 </ol>
 
+<p><br>Version 0.2.4: (June 7, 2000)
+<ol>
+<li>
+Added Dave Lawrence's excellent RedHat Bugzilla differences section verbatim.</li>
+
+<li>
+Added more information on Loki Bugzilla ("Fenris").</li>
+
+<li>
+Added questions from some corporate customers</li>
+
+<li>
+Removed unused text in API section</li>
+
+<li>
+Added information about other documentation (pending)</li>
+
+<li>
+Added a section for pointy-haired-bosses</li>
+
+<li>
+This will be the last release in strictly HTML format.&nbsp; Source will be SGML shortly, with
+HTML and TXT versions included with the package from this point on</li>
+</ol>
+
 <p><br>Maintainer: <a href="mailto:mbarnson@excitehome.net">Matthew P.
 Barnson</a>
 <br>&nbsp;
@@ -80,6 +103,9 @@ Table of Contents</h2></center>
 
 <center><a href="#INTRODUCTION">INTRODUCTION</a>
 <br><a href="#BZGENERAL">BUGZILLA GENERAL</a>
+<br><a href="#RHBZ">--redhat bugzilla</a>
+<br><a href="#LOKIBZ">--loki bugzilla</a>
+<br><a href="#PHB">--phb bugzilla</a>
 <br><a href="#BZINSTALLATION">BUGZILLA INSTALLATION</a>
 <br><a href="#BZCONFIGURATION">BUGZILLA CONFIGURATION</a>
 <br><a href="#BZSECURITY">--security</a>
@@ -89,9 +115,7 @@ Table of Contents</h2></center>
 <br><a href="#BZUSE">BUGZILLA USE</a>
 <br><a href="#BZKNOWNBUGS">BUGZILLA KNOWN BUGS</a>
 <br><a href="#BZHACKING">BUGZILLA HACKING</a>
-<br><a href="#BZAPI">--API</a>
-<br><a href="#TINDERBOX">TINDERBOX</a>
-<br><a href="#BONSAI">BONSAI</a></center>
+<br><a href="#BZAPI">--API</a></center>
 
 <p>
 <hr WIDTH="100%">
@@ -103,14 +127,16 @@ Table of Contents</h2></center>
 of bugs"</center>
 
 <hr WIDTH="100%">
-<br>The Unofficial Webtools FAQ is designed to answer common user questions
-outside the scope of the webtools README files and supporting documentation
-in an easy "question and answer" format. Where appropriate, this FAQ will
-refer to URLs rather than including documents in their entirety to ensure
-completeness even should this FAQ become out of date. This is a living
-document; please be sure to update your copy from the latest version available
-in the netscape.public.mozilla.webtools newsgroup before mirroring. As
-yet, there is no permanent home for the document other than the newsgroup.
+<br>The Bugzilla FAQ has a new home!&nbsp; In addition to availability
+via CVS and released versions 2.12 and higher of Bugzilla, you can find
+the latest &amp; greatest version of the FAQ at <a href="http://www.trilobyte.net/barnsons/">http://www.trilobyte.net/barnsons/</a>.&nbsp;
+This is a living document; please be sure you are up-to-date with the latest
+version before mirroring.
+<p>The Bugzilla FAQ is designed to answer common user questions outside
+the scope of the README file and supporting documentation in an easy "question
+and answer" format. Where appropriate, this FAQ will refer to URLs rather
+than including documents in their entirety to ensure completeness even
+should this FAQ become out of date.
 <p>This FAQ is not maintained by Netscape or Netscape employees, so please
 do not contact them regarding errors or omissions contained herein. Please
 direct all questions, comments, updates, flames, etc. to <a href="mailto:mbarnson@excitehome.net">Matthew
@@ -152,7 +178,7 @@ details at <a href="http://www.mozilla.org/MPL/">http://www.mozilla.org/MPL/</a>
 <br><b><i>A</i></b>: As far as I know, there are not yet any companies
 that offer commercial Bugzilla support. However, I've heard there are consulting
 companies that will install and maintain a Bugzilla installation for charge,
-and would accept responsibility for it's upkeep. I'm not sure which large
+and would accept responsibility for its upkeep. I'm not sure which large
 consulting firms do this yet -- I'm open to more contributions in this
 area.
 <p><b><i>Q</i></b>: <i>What major companies or projects are currently using
@@ -165,7 +191,7 @@ welcome:
 <a href="http://www.netscape.com/">Netscape/AOL</a></li>
 
 <li>
-<a href="http://www.mozilla.org/">Mozilla.org</a> (duh!)</li>
+<a href="http://www.mozilla.org/">Mozilla.org</a></li>
 
 <li>
 <a href="http://www.excitestores.com/">AtHome Corporation</a></li>
@@ -206,7 +232,7 @@ recent version of Bugzilla, this is no longer a FAQ.
 <p><b><i>Q</i></b>: <i>How does Bugzilla stack up against other bug-tracking
 databases?</i>
 <br><b><i>A</i></b>: As far as I know, there have been no feature-by-feature
-comparisons to other bug-tracking systems.&nbsp; Howeve, here are some
+comparisons to other bug-tracking systems.&nbsp; However, here are some
 primary reasons people cite for moving to Bugzilla:
 <ol>
 <li>
@@ -236,22 +262,12 @@ Source</a>.</li>
 
 <li>
 Price.&nbsp; However, don't let price be the selling point of Bugzilla
--- it survives on it's own merits.</li>
+-- it survives on its own merits.</li>
 </ol>
 <b><i>Q</i></b>: <i>How do I change my username in Bugzilla?</i>
-<br><b><i>A</i></b>: You can't, through the regular Bugzilla interfaces.
-You can do one of the following:
-<ol>
-<li>
-Create a new user account</li>
-
-<li>
-Change the Real Name associated with your login</li>
-
-<li>
-Manually <a href="#BZDATABASE">edit the database entry</a>.</li>
-</ol>
-<i><b>Q</b>:&nbsp; Why doesn't Bugzilla offer this or that feature or compatability
+<br><b><i>A</i></b>:&nbsp; If you are the administrator, open up editusers.cgi
+and change the login name.&nbsp; Simple!
+<p><i><b>Q</b>: Why doesn't Bugzilla offer this or that feature or compatability
 with &lt;insert cool tracking software here>?</i>
 <br><b><i>A</i></b>:&nbsp; Terry writes,
 <blockquote>I wrote Bugzilla primarily for mozilla.org's use. It is a secondary
@@ -262,9 +278,10 @@ developers would help pitch in and make things easier for everyone.(I'm
 being a little hard on myself here. I *did* spend a week porting the whole
 thing from TCL to Perl, just so that outside folk would have a chance of
 using it. You shoulda seen it before...)</blockquote>
-<b>UPDATE</b>: Bugzilla is making tremendous strides in usability, customizability,
-scalability, and user interfaces.&nbsp; It is widely considered the most
-complete and popular open-source bug database in existence.&nbsp; <a href="http://www.mozilla.org/bugs/source.html">Download
+<b><font color="#FF0000">UPDATE</font></b>: Bugzilla is making tremendous
+strides in usability, customizability, scalability, and user interfaces.&nbsp;
+It is widely considered the most complete and popular open-source bug database
+in existence.&nbsp; <a href="http://www.mozilla.org/bugs/source.html">Download
 a copy today!</a>
 <p><b><i>Q</i></b>: <i>Why MySQL? I'm interested in seeing this run on
 (insert "real" RDBMS name here)...</i>
@@ -278,10 +295,10 @@ not sure if I would have cared, but I didn't even know. So, to me, things
 are "portable" because it uses MySQL, and MySQL is portable enough. I fully
 understand (now) that people want to be portable to other databases, but
 that's never been a real concern of mine.</blockquote>
-<b>UPDATED ANSWER</b>: Looks like RedHat might land changes real soon that
-will bring some more portability to Bugzilla.&nbsp; However, they are in
-severe need of help.&nbsp; Please contact <a href="mailto:dkl@redhat.com">dkl@redhat.com</a>
-if you are interested in helping this effort.
+<b><font color="#FF0000">UPDATE</font></b>: Looks like RedHat might land
+changes real soon that will bring some more portability to Bugzilla.&nbsp;
+However, they are in severe need of help.&nbsp; Please contact <a href="mailto:dkl@redhat.com">Dave
+Lawrence</a> if you are interested in helping this effort.
 <p><b><i>Q</i></b>: <i>Why do the scripts say "/usr/bonsaitools/bin/perl"
 instead of "/usr/bin/perl" or something else?</i>
 <br><b><i>A</i></b>: Mozilla.org uses /usr/bonsaitools/bin/perl. The prime
@@ -292,6 +309,11 @@ Terry says:
 of Perl and other tools that was strictly under my control for the various
 webtools, and not subject to anyone else. Edit it to point to whatever
 you like.</blockquote>
+
+<blockquote>
+<h3>
+<a NAME="RHBZ"></a>Red Hat Bugzilla</h3>
+</blockquote>
 
 <p><br><b><i>Q</i></b>: <i>What about Red Hat Bugzilla?</i>
 <br><b><i>A</i></b>: <a href="http://www.redhat.com/">Red Hat</a> has a
@@ -304,30 +326,468 @@ their changes will be landing in the source tree "real soon now".&nbsp;
 Note that it is based primarily upon the 2.8 Bugzilla tree; Bugzilla has
 made some tremendous advances since the 2.8 release.&nbsp; I recommend
 you download the primary Bugzilla as well as Red Hat's to check out the
-differences for yourself.&nbsp; Red Hat Bugzilla's maintainer, <a href="mailto:dkl@redhat.com">dkl@redhat.com</a>,
-when asked about landing the changes from the Red Hat fork, notes,
+differences for yourself.&nbsp; Red Hat Bugzilla's maintainer, <a href="mailto:dkl@redhat.com">Dave
+Lawrence</a>, when asked about landing the changes from the Red Hat fork,
+notes,
 <blockquote>Somebody needs to take the ball and run with it.&nbsp; I'm
 the only maintainer and am very pressed for time.</blockquote>
+<i><b>Q:</b>&nbsp; What are the primary benefits of Red Hat Bugzilla? (answer
+by Dave Lawrence, of Red Hat)</i>
+<br><i>A:&nbsp; </i>For&nbsp;the record, we are not using any template
+type implementation for the&nbsp;cosmetic changes maded to Bugzilla. It
+is just alot of html changes in&nbsp;the code itself. I admit I may have
+gotten a little carried away with&nbsp;it but the corporate types asked
+for a more standardized interface to&nbsp;match up with other projects
+relating to Red Hat web sites. A lot of other&nbsp;web based internal tools
+I am working on also look like Bugzilla.
+<br>&nbsp; I&nbsp;do want to land the changes that I have made to Bugzilla
+but I may have&nbsp;to back out a good deal and make a different version
+of Red Hat's Bugzilla&nbsp;for checking in to CVS. Especially the cosmetic
+changes because&nbsp;it seems they may not fit the general public.&nbsp;
+I&nbsp;will do that as soon as I can. I also still do my regular QA responsibilities
+along with Bugzilla so time is difficult sometimes to come by.
+<br>&nbsp; There&nbsp;are also a good deal of other changes that were requested
+by management&nbsp;for things like support contracts and different permission
+groups&nbsp;for making bugs private. Here is a short list of the major
+changes&nbsp;that have been made:
+<ol>
+<li>
+No enum types. All old enum types are now separate smaller tables.</li>
 
-<p><br><i><b>Q:&nbsp; </b>What about Loki Bugzilla?</i>
+<li>
+No bit wise operations. Not all databases support this so they were changed
+to a more generic way of doing this task.</li>
+
+<li>
+Bug reports can only be altered by the reporter, assignee, or a privileged
+bugzilla user. The rest of the world can see the bug but in a non-changeable
+format (unless the bug has been marked private).&nbsp; They can however
+add comments, add and remove themselves from the CC list.</li>
+
+<li>
+Different group scheme. Each group has an id number related to it.&nbsp;
+There is a user_group table which contains userid to groupid mappings to
+determine which groups each user belongs to.&nbsp; Additionally there is
+a bug_group table that has bugid to groupid mappings to show which groups
+can see a particular bug. If there are no entries for a bug in this table
+then the bug is public.</li>
+
+<li>
+Product groups. product_table created to only allow certain products to
+be visible for certain groups in both bug entry and query. This was particulary
+helpful for support contracts.</li>
+
+<li>
+Of course many (too many) changes to Bugzilla code itself to allow use
+with Oracle and still allow operation with Mysql if so desired.&nbsp; Currently
+if you use Mysql it is set to use Mysql's old permission scheme to keep
+breakage to a minimum. Hopefully one day this will standardize on one style
+which may of course be something completely different.</li>
+
+<li>
+Uses Text::Template perl module for rendering of the dynamic HTML pages
+such as enter_bug.cgi, query.cgi, bug_form.pl, and for the header and footer
+parts of the page. This allows the html to be separate from the perl code
+for customizing the look and feel of the page to one's preference.</li>
+
+<li>
+There&nbsp;are many other smaller changes. There is also a port to Oracle
+that&nbsp;I have been working on as time permits but is not completely</li>
+
+<li>
+finished&nbsp;but somewhat usable. I will merge it into our standard code
+base&nbsp;when it becomes production quality. Unfortunately there will
+have to&nbsp;be some conditionals in the code to make it work with other
+than Oracle&nbsp;due to some differences between Oracle and Mysql. </li>
+</ol>
+&nbsp; Both&nbsp;the Mysql and Oracle versions of our current code base
+are available&nbsp;from ftp://people.redhat.com/dkl. If Terry/Tara wants
+I can submit patch&nbsp;files for all of the changes I have made and he
+can determine what&nbsp;is suitable for addition to the main bugzilla cade
+base. But for me&nbsp;to commit changes to the actual CVS I will need to
+back out alot of things&nbsp;that are not suitable for the rest of the
+Bugzilla community. I am&nbsp;open to suggestions.
+<br>&nbsp;
+<p>Q:&nbsp; What's the current status of Red Hat Bugzilla?
+<br><font color="#FF0000">Update</font>: From Dave Lawrence (June 7 2000)
+<blockquote>I suppose the current thread warrants an update on the status
+of Oracle and bugzilla ;) We have now been running Bugzilla 2.8 on Oracle
+for the last two days in our production environment. I tried to do as much
+testing as possible with it before going live which is some of the reason
+for the long delay. I did not get enough feedback as I would have liked
+from internal developers to help weed out any bugs still left so I said
+"Fine, i will take it live and then I will get the feedback I want :)"
+So it is now starting to stabilize and it running quite well after working
+feverishly the last two days fixing problems as soon as they came in from
+the outside world. The current branch in cvs is up2date if anyone would
+like to grab it and try it out. The oracle _setup.pl is broken right now
+due to some last minute changes but I will update that soon. Therefore
+you would probably need to create the database tables the old fashioned
+way using the supplied sql creation scripts located in the ./oracle directory.
+We have heavy optimizations in the database it self thanks to the in-house
+DBA&nbsp; here at Red Hat so it is running quite fast. The database itself
+is located on a dual PII450 with 1GB ram and 14 high voltage differential
+raided scsi drives. The tables and indexes are partitioned in 4 chuncks
+across the raided drive which is nice because when ever you need to do
+a full table scan, it is actually starting in 4 different locations on
+4 different drives simultaneously. And the indexes of course are on separate
+drives from the data so that speeds things up tremendously. When&nbsp;
+I can find the time I will document all that we have done to get this&nbsp;
+thing going to help others that may need it.
+<p>As Matt has mentioned it is still using out-dated code and with a&nbsp;
+little help I would like to bring everything up to date for eventual&nbsp;
+incorporation with the main cvs tree. Due to other duties I have with the
+company any help with this wiould be appreciated. What we are using&nbsp;
+now is what I call a best first effort. It definitely can be improved on
+and may even need complete rewrites in a lot of areas. A lot of changes
+may have to be made in the way Bugzilla does things currently&nbsp; to
+make this transition to a more generic database interface.&nbsp; Fortunately
+when making the Oracle changes I made sure I didn't do&nbsp; anything that
+I would consider Oracle specific and could not be easily done with other
+databases. Alot of the sql statements need to be broken up into smaller
+utilities that themselves would need to make decisions on what database
+they are using but the majority of the code can be made database neutral.
+<h3>
+<a NAME="LOKIBZ"></a>Loki Bugzilla (AKA: Fenris)</h3>
+</blockquote>
+<b><i><font color="#FF0000">Note: </font></i></b>This is based primarily
+on a single email conversation with the first developer of Fenris, <a href="mailto:briareos@lokigames.com">Michael
+Vance</a>.&nbsp; Maintenance of Fenris has since been handed off to <a href="mailto:raistlin@lokigames.com">Raphael
+Barrerro</a> &lt;raistlin@lokigames.com>.
+<p><i><b>Q:&nbsp; </b>What about Loki Bugzilla?</i>
 <br><b><i>A</i></b>:&nbsp; Loki Games has a customized version of Bugzilla
 available at <a href="http://fenris.lokigames.com/">http://fenris.lokigames.com</a>.&nbsp;
 From that page,
 <blockquote>You may have noticed that Fenris is a fork from Bugzilla--
 our patches weren't suitable for integration --and a few people have expressed
-interest in the code. Fenris has one major improvement over Bugzilla, and
-that is individual comments are not appended onto a string blob, they are
-stored as a record in a separate table. This allows you to, for instance,
+interest in the code. Fenris has one major&nbsp; improvement over Bugzilla,
+and that is individual comments are not appended onto a string blob, they
+are stored as a record in a separate table. This allows you to, for instance,
 separate comments out according to privilege levels in case your bug database
 could contain sensitive information not for public eyes. We also provide
 things like email hiding to protect user's privacy, additional fields such
 as 'user_affected' in case someone enters someone else's bug, comment editing
 and deletion, and more conditional system variables than Bugzilla does
 (turn off attachments, qacontact, etc.).</blockquote>
-Like Red Hat Bugzilla, I recommend if you are interested in their changes
-that you download the source and compare.
-<blockquote>&nbsp;</blockquote>
+<i><b>Q:</b>&nbsp; Are you interested in landing your [Fenris] changes
+back in the main tree so Fenris can live on the tip again?</i>
+<br><b><i>A:</i></b>&nbsp; Sure, although many of them are probably obsolete
+by now.
+<p><b><i>Q:</i></b>&nbsp; <i>If so, when?</i>
+<br><b><i>A:</i></b>&nbsp; Well, if there's anything interesting, people
+of course can just grab the code. I don't really maintain it anymore. We
+have a real, honest to goodness sysadmin, Raphael Barrerro, who works on
+it now. His email is raistlin@lokigames.com.
+<p><i><b>Q:</b>&nbsp; Main tree bugzilla changed for 2.10 to storing individual
+comments in a separate table.&nbsp; Are there reasons for users to use
+Fenris, based on Bugzilla 2.8, over main tree 2.10 or the current CVS version?&nbsp;
+What are they?</i>
+<br><b><i>A:&nbsp;</i></b> I have no idea :). IMNSHO, Bugzilla is an interesting
+piece of software in that it has a lot of logic encoded into it that is
+sometimes really cumbersome to some people, and then it doesn't have *enough*
+logic in it for other people's tastes. If I were going to start over, I
+would again try to use the CVS and get any changes I felt necessary integrated.
+But for us, right now, it works fine, so we haven't bothered to really
+change our setup.
+<p><b><i>Q:</i></b>&nbsp; <i>What do you mean by "our patches weren't suitable
+for integration" on your web page?</i>
+<br><b><i>A:</i></b>&nbsp; Basically, I did not know:
+<ol>
+<li>
+Apache</li>
 
+<li>
+MySQL, or</li>
+
+<li>
+Perl</li>
+</ol>
+when I was charged with the task of getting our Bugzilla up and running.
+Therefore I found it necessary to futz with a lot of things,
+<br>mostly formatting of the Perl code, until I could understand what they
+were doing. This resulted in lots of whitespace diff, and even when I created
+a diff with -B (no whitespace), it still had too much crud in it. I also
+hadn't written any migration scripts or anything. Terry didn't want to
+bother with it, and that was cool with me. Terry and I had a really weird
+conversation that I didn't quite understand, about us using CVS HEAD, etc.,
+but I just didn't have the time/energy for something that already worked.
+<br>&nbsp;
+<blockquote>
+<h3>
+<a NAME="PHB"></a>Pointy-Haired-Boss Questions</h3>
+</blockquote>
+<b><font color="#FF0000">Note</font></b>: The title of this section doesn't
+mean you're a PHB -- it just means you probably HAVE a PHB who wants to
+know this :)
+<p><i><b>Q:</b>&nbsp; Is Bugzilla web-based or do you have to have specific
+software or specific operating system on your machine?</i>
+<br><b><i>A:</i></b>&nbsp; It is web and e-mail based.&nbsp; You can edit
+bugs by sending specially formatted email to a properly configured Bugzilla,
+or control via the web. Bugzilla works best with Netscape Navigator, but
+works fine with IE (just some Javascript is disabled for IE).
+<p><i><b>Q:&nbsp;</b> Has anyone you know of already done any Bugzilla
+integration with Perforce (SCM software)?</i>
+<br><b><i>A:</i></b>&nbsp; Not to my knowledge -- but that would be a question
+much better asked in the newsgroup (news://netscape.public.mozilla.webtools).
+<p><i><b>Q:</b>&nbsp; Does Bugzilla allow the user to track multiple projects?</i>
+<br><b><i>A:</i></b>&nbsp; It's not specifically a "project management
+tool", although it does have some project management features, such as
+the ability for a task/bug to "block" another task/bug.&nbsp; We use it
+here at Excite@Home to track requests to our Network Operations Center,
+software defects in our online inventories, requests for enhancement, quality
+assurance, personnel tasks, and other things.
+<br>&nbsp; So the answer is: Yes, it handles multiple projects very well.&nbsp;
+When discussing Bugzilla with people who use it a lot, it's helpful to
+refer to a "project" as a "product", individual areas of the project as
+"components", and tasks as "bugs".
+<p><i><b>Q:</b>&nbsp; If I am on many projects, and search for all bugs
+assigned to me, will Bugzilla list them for me and allow me to sort by
+project, severity etc?</i>
+<br><b><i>A:&nbsp;</i></b> The heart of the Bugzilla system is the query
+interface.&nbsp; Within that query interface, you can customize extremely
+powerful queries to deliver exactly what you need.&nbsp; Once delivered,
+you can sort by age (bug ID number), severity, priority, platform, owner,
+current state, or current result (only for "resolved" bugs).
+<br>&nbsp; You cannot sort a query by product/project at this time -- most
+people consider the current options sufficient.&nbsp; We are trying very
+hard to reduce complexity in Bugzilla.&nbsp; I'm personally involved in
+a half-dozen products in Bugzilla, and routinely just sort by priority.
+<p><i><b>Q:</b>&nbsp; Does Bugzilla allow attachments (text, screenshots,
+urls etc)? If yes, are there any that are NOT allowed?</i>
+<br><b><i>A:</i></b>&nbsp; Yes, it allows any kind of attachment.&nbsp;
+However, if you do not have a MIME type defined for that kind of file in
+your web *server*, the browser may klonk on you.&nbsp; URL's in comments
+are automatically hyperlinked if they are properly formatted (http://www.somedomain.com),
+but any HTML in a comment shows up as raw html, not the formatting you'd
+expect.&nbsp; If someone refers to "bug #4444" it's automatically hyperlinked
+to that bug in the existing database.&nbsp; It's pretty cool.
+<p><i><b>Q:&nbsp;</b> Does Bugzilla allow us to define our own priorities
+and levels? Do we have complete freedom to change the labels of fields
+and format of them, and the choice of acceptable values?</i>
+<br><b><i>A:&nbsp;</i></b> In part.&nbsp; Priority, severity, target milestones,
+product names, and many many other fields are completely configurable.&nbsp;
+However, at this time for certain types of changes you need someone who
+knows some Perl and HTML -- not a lot, but enough to provide consistency
+and be able to re-apply your customizations if you update your installation
+of Bugzilla.
+<p><i><b>Q:&nbsp;</b> Does Bugzilla provide any reporting features, metrics,
+graphs, etc? You know, the type of stuff that management likes to see.
+:)</i>
+<br><b><i>A:</i></b>&nbsp; Yes.&nbsp; Check out http://bugzilla.mozilla.org/reports.cgi
+for some pre-cooked reports.&nbsp; The reports other than the pre-fab ones
+that you can create are limited only by your imagination and experience
+in Perl.
+<p><i><b>Q:&nbsp;</b> Is there email notification and if so, what do you
+see when you get an email? Do you see bug number and title or is it only
+the number?</i>
+<br><b><i>A:&nbsp;</i></b> You can choose to see complete status of the
+bug (using old email tech) or just the changes (using new email tech).&nbsp;
+The subject is just the bug ID and short description of the bug, but the
+content is very complete.
+<p><i><b>Q:&nbsp;</b> If there is email notification, can it be set up
+to send to multiple people, some on the To List, CC List, BCC List etc?</i>
+<br><b><i>A:&nbsp;</i></b> You bet!&nbsp; By default, the person who reported
+the bug, the person to whom the bug is assigned, and anyone on the CC list
+for the bug will get email notification when anything regarding the bug
+changes.&nbsp; You can also enable a "Q/A Contact" field that will assign
+a default Q/A person to monitor the bug and ensure it's completed correctly
+(we use this a lot and love it).&nbsp; The
+<br>equivalent to a "BCC" list is a "watcher": someone who watches another
+person's bugs (if they are out of town, whatever).&nbsp; We have several
+of these people who need to see what bugs someone else is working on (team
+leads, coding partners, etc.)
+<p><i><b>Q:&nbsp;</b> If there is email notification, do users have to
+have any particular type of email application? For example, our users have
+a variety of email apps in use, like Outlook, Netscape Mail, Eudora etc.
+Our system would need to work with just about anything.</i>
+<br><b><i>A:</i></b>&nbsp; The emails SENT from Bugzilla will work with
+any mail reader that's reasonably current (newer than about 5 years old).&nbsp;
+However, if you set up the email RECEPTION capabilities of Bugzilla, it's
+important your users configure their mailreader to send mail as plain text
+instead of HTML.&nbsp; HTML mail sent to Bugzilla looks horrible.
+<p><i><b>Q:&nbsp;</b> If I just wanted to track certain bugs, as they go
+through life, can I set it up to alert me via email whenever that bug changes,
+whether it be owner, status or description etc.?</i>
+<br><b><i>A:</i></b>&nbsp; Yes.&nbsp; You could, for instance, set yourself
+up as the default QA contact for all bugs in a certain component of a product,
+and would be CC'd on every single bug that came into that component.
+<p><i><b>Q:&nbsp;</b> Does Bugzilla allow data to be imported and exported?
+If I had outsiders write up a bug report using a MS Word bug template,
+could that template be imported into "matching" fields? If I wanted to
+take the results of a query and export that data to MS Excel, could I do
+that?</i>
+<br><b><i>A:&nbsp;</i></b> Rudimentary exporting ability is currently in
+development, but is not ready for prime-time.&nbsp; Ditto for importing
+data.&nbsp; However, it works against an industry-standard database (MySQL),
+so anyone with a little SQL knowledge can create queries to import and
+export any data they want.&nbsp; That's one of the reasons development
+is going slow on import/export in Bugzilla: SQL already
+<br>has it.&nbsp; It requires a certain level of familiarity with SQL though.
+<p><i><b>Q:&nbsp; </b>Does Bugzilla allow fields to be added, changed or
+deleted? If I want to customize the bug submission form to meet our needs,
+can I do that using our terminology?</i>
+<br><b><i>A:&nbsp;</i></b> This is really two questions in one.
+<br>&nbsp; Bugzilla allows some fields to be added, changed, and deleted
+with ease using the standard parameters.&nbsp; Realize, since you have
+the code (and Bugzilla is really not terribly complicated), you can change
+ANYTHING to behave however you want it.&nbsp; However, the more adjustments
+you make to the code, the more painful your next upgrade will be as you
+re-apply your custom
+<br>patches.&nbsp; On the other hand, you can create your own HTML bug
+submission form to make it look however you want.&nbsp; Check http://www.mozilla.org/quality/help/bug-form.html
+for an example of what can be done creating a standard HTML bug submission
+form.&nbsp; It makes some things much easier, and submitters never have
+to have a clue what the actual names of your fields are -- just the people
+who work with the bugs every day do.
+<p><i><b>Q:&nbsp;</b> Has anyone converted Bugzilla to another language
+to be used in other countries? Is it localizable?</i>
+<br><b><i>A:</i></b>&nbsp; There are efforts underway to allow easy indo-european
+localization of Bugzilla, but i18n (Kanji, Chinese, etc.) are a long way
+off.&nbsp; So, to answer your question, right now, no.
+<p><i><b>Q:</b> Can a user create and save reports? Can they do this in
+Word format?&nbsp; Excel format?</i>
+<br><b><i>A:</i></b>&nbsp; Yes, no, and no.
+<p><i><b>Q:</b>&nbsp; Can a user re-run a report with a new project, same
+query?</i>
+<br><b><i>A:</i></b>&nbsp; Yes.
+<p><i><b>Q:</b>&nbsp; Can a user modify an existing report and then save
+it into another name?</i>
+<br><b><i>A:&nbsp;</i></b> Umm...&nbsp; You'd save the report as HTML from
+your browser.&nbsp; You can modify it however you want after that.
+<p><i><b>Q:</b>&nbsp; Does Bugzilla have the ability to search by word,
+phrase, compound search?</i>
+<br><b><i>A:</i></b>&nbsp; You can search by just about ANYTHING.&nbsp;
+If you know basic boolean formatting, you can go completely crazy and do
+things without even using the query interface (create your own custom query
+in the location bar in your browser).&nbsp; We routinely search here by
+descriptions, subjects, dates, users, reporters, projects, severity, priority,
+and anything else that strikes our fancy.
+<p><i><b>Q:&nbsp;</b> Can the admin person establish separate group and
+individual user privileges?</i>
+<br><b><i>A:&nbsp;</i></b> Yes, using Bug Group Sentry.&nbsp; Right now,
+it's not terribly granular, though: you can restrict users to editing bugs
+assigned to them, reported by them, assigned to a particular product, etc.
+but cannot restrict them based on product components, allow access to only
+certain bugs outside their product, etc.
+<p><i><b>Q:&nbsp;</b> Does Bugzilla provide record locking when there is
+simultaneous access to the same bug? Does the second person get a notice
+that the bug is in use or how are they notified?</i>
+<br><b><i>A:&nbsp;</i></b> If someone has a bug open and another person
+attempts to write to the bug, you get a "mid-air collision" error in Bugzilla.&nbsp;
+the second person is told who currently has the existing record locked,
+and is told he/she cannot commit the bug until they have finished editing
+it.&nbsp; You can specify a timeout value (ours is 30 minutes) where it
+will break locks on the database,
+<br>assuming someone just left the edit screen up.
+<p><i><b>Q:&nbsp; </b>Are there any backup features provided?</i>
+<br><b><i>A:</i></b>&nbsp; You have the ability to lock all users out of
+the database for backups via the Bugzilla interface or using MySQL itself.&nbsp;
+Once you've locked people out of the database, use some backup utility
+standard to your operating system.
+<p><i><b>Q:&nbsp;</b> Can users be on the system while a backup is in progress?</i>
+<br><b><i>A:&nbsp;</i></b> If they make a change, you can end up with a
+corrupt database on your backup tape.&nbsp; Bugzilla databases are relatively
+small.&nbsp; We have over 5000 bugs in our database and a backup takes
+about 45 seconds.&nbsp; We lock the MySQL database, copy the databases
+over to a second hard drive, unlock the database, and that second hard
+drive is covered by our standard backup procedures.
+<br>&nbsp; You may wish to consider a robust backup solution, like ARCserveIT,
+which will backup up open files by finding a time when it can lock the
+file, copy it to memory, unlock it, and back it up.&nbsp; That product
+is the "Open Files Agent", or OFA.&nbsp; That would allow you to never
+have to down your database just to back it up -- but it's a good idea to
+plan on a daily maintenance period in which it's backed up, for the time
+when your database grows absolutely huge.
+<p><i><b>Q:&nbsp;</b> What type of human resources are needed to be on
+staff to install and maintain Bugzilla? Specifically, what type of skills
+does the person need to have? I need to find out if we were to go with
+Bugzilla, what types of individuals would we need to hire and how much
+would that cost vs buying an "Out-of-the-Box" solution.</i>
+<br><b><i>A:</i></b>&nbsp; My experience with "Out-of-the-Box" solutions
+are these:
+<ol>
+<li>
+They are very proprietary.&nbsp; Good luck getting data out of them into
+something else unless you pay the company to create an export filter for
+you.</li>
+
+<li>
+They generally have exhorbitant licensing fees.</li>
+
+<li>
+They tend to lock you in to a particular hardware or software platform</li>
+
+<li>
+They frequently cater much more to the management aspect of bug reporting
+than using it as a day-to-day bug-tracking system.&nbsp; In other words,
+managers/marketdroids love it, your programmers hate it.</li>
+
+<li>
+Forget interoperability with other programs.</li>
+
+<li>
+Many use sub-standard database management techniques.&nbsp; The commercial
+solution I have in mind claims to have an "SQL database" when in fact they
+wrote a small, crippled SQL query method to talk to a heirarchy of flat
+text files.</li>
+
+<li>
+"Out-of-the-box" solutions just seem to suck most of the time.&nbsp; That's
+just my opinion, though ;)</li>
+</ol>
+&nbsp; I'd recommend you hire a consultant to get Bugzilla working the
+way you want, then it's "fire-and-forget".&nbsp; It takes virtually no
+maintenance once it's up and running, if you don't wish to remain "on the
+tip" of the latest development changes.&nbsp; However, finding a consultant
+who already knows Bugzilla may be challenging, I think.
+<br>&nbsp; If you want to hire someone to run it, I'd recommend someone
+with strong UNIX systems administration skills and light Perl and HTML
+skills.&nbsp; They don't need much Perl or HTML knowledge coming in --
+Bugzilla is a pretty standard type of program to install, so a decent SysAdmin
+can get it done easily.&nbsp; If you're using NT, you probably require
+an NT admin with UNIX experience, very strong Perl skills, and light HTML
+skills.&nbsp; Personally, I wouldn't hire someone JUST to maintain Bugzilla.&nbsp;
+If you already have a network admin on staff, get him working on it.&nbsp;
+A basic install requires 1-8 hours of work (depending on how familiar you
+are with
+<br>it).&nbsp; Setting up cool email gateways and tweaking configuration
+parameters seems to suck up enormous amounts of time.
+<p><i><b>Q:&nbsp;</b> What time frame are we looking at if we decide to
+hire people to install and maintain the Bugzilla? Is this something that
+takes hours or weeks to install and a couple of hours per week to maintain
+and customize or is this a multi-week install process, plus a full time
+job for 1 person, 2 people, etc?</i>
+<br><b><i>A:</i></b>&nbsp; It's really hard to say -- it depends on the
+level of commitment you want. If you want someone on-staff who's an absolute
+expert on the system, plan on them working on it full-time for a week,
+then 10 hours a week for a few months thereafter.&nbsp; If you just want
+the thing to work and don't want to worry about how it works, just hire
+that consultant for a week and call it
+<br>good.
+<br>&nbsp; Personally, I spend about 15 minutes a week maintaining our
+installation Bugzilla.&nbsp; But since I'm the documentation person for
+Bugzilla, I spend about 10 hours a week documenting, answering questions
+like this, etc.
+<br>&nbsp; If you get somebody to install Bugzilla, and they don't have
+at least a basic installation mostly functional within a day on UNIX, or
+within a week on NT, you probably should consider getting a different admin
+to install it.
+<p><i><b>Q:</b>&nbsp; Is there any licensing fee or other fees for using
+Bugzilla? Any out-of-pocket cost other than the bodies needed as identified
+above?</i>
+<br><b><i>A:</i></b>&nbsp; No, Bugzilla is free software (free as in speech
+and free as in beer) licensed under the <a href="http://www.mozilla.org/MPL/">Mozilla
+Public License</a>. However, depending on your level of expertise you may
+wish to find a company that you can pay to maintain it for you if you really
+need somebody to blame.&nbsp;&nbsp; MySQL, the database Bugzilla uses for
+storage, asks for a licensing fee if you're going to use it for non-internal
+commercial usage.&nbsp; The license is cheap (170 euro), but support can
+be expensive depending on the level of support you desire.&nbsp; There
+is also a version of Bugzilla available at http://bugzilla.redhat.com which
+runs over top of Oracle; that's a pretty expensive product, but Oracle
+support and proven scalability may be worth it to you.
+<br>&nbsp;
+<p>
 <hr WIDTH="100%">
 <center>
 <h2>
@@ -337,7 +797,7 @@ that you download the source and compare.
 and reboot."</center>
 
 <hr WIDTH="100%">
-<br><b><i>Q</i></b>: <i>How do I download and install Bugzilla?</i>
+<br><b><i>Q</b>: How do I download and install Bugzilla?</i>
 <br><b><i>A</i></b>: The README included with Bugzilla documents the installation
 procedures much more thoroughly than I can do here. You can always find
 a current copy of the README in the distribution tarballs available at
@@ -346,7 +806,7 @@ a current copy of the README in the distribution tarballs available at
 This will eventually be documented in "The Bugzilla Installation Guide".
 <p><b><i>Q</i></b>:&nbsp; <i>How do I install Bugzilla on Windows NT?</i>
 <br><b><i>A</i></b>:&nbsp; That question is complex enough it deserves
-<a href="#BZNT">it's
+<a href="#BZNT">its
 own section</a>, below.
 <p><i><b>Q:&nbsp; </b>Is there an easy way to change the Bugzilla cookie
 name?</i>
@@ -383,7 +843,7 @@ of these permissions issues will make it into checksetup.pl.
 installation. Make sure you are not running mysqld as root. Included is
 one person's examination of their local Bugzilla installation, and how
 they secured it:
-<p><tt><font size=-1>&nbsp; I closed-up some of the all-writeable files
+<p><tt><pre><font size=-1>&nbsp; I closed-up some of the all-writeable files
 and directories. The code itself had to be modified to keep it from making
 directories and files world-writeable again... Once this was done, I felt
 confident that this install of bugzilla was running securely. (We don't
@@ -453,6 +913,7 @@ restarting apache on servers, do (in tcsh anyways):</font></tt>
 <br><tt><font size=-1>apachectl stop</font></tt>
 <br><tt><font size=-1>&lt;wait></font></tt>
 <br><tt><font size=-1>apachectl start</font></tt>
+</pre>
 <p><i><b>Q</b>: I've implemented the security fixes mentioned in Chris
 Yeh's security advisory of 5/10/2000 advising not to run MySQL as root,
 and am running into problems with MySQL no longer working correctly.</i>
@@ -609,7 +1070,7 @@ tarball or rpm from <a href="http://www.mysql.com/">www.mysql.com</a> if
 you want this to work.
 <p><b><i>Q</i></b>: <i>I think I've set up MySQL permissions correctly,
 but bugzilla still can't connect.</i>
-<br><b><i>A</i></b>: Try running MySQL from it's binary: "mysqld --skip-grant-tables".
+<br><b><i>A</i></b>: Try running MySQL from its binary: "mysqld --skip-grant-tables".
 This will allow you to completely rule out grant tables as the cause of
 your frustration. However, I do not recommend you run it this way on a
 regular basis, unless you really want your web site defaced and your machine
@@ -627,6 +1088,15 @@ particularly problems with "groupset".&nbsp; What gives?</i>
 want turn "strictvaluechecks" OFF in editparams.cgi.&nbsp; If you have
 "usebugsentry" set "On", you also cannot submit a bug as readable by more
 than one group with "strictvaluechecks" ON.
+<p><b><i>Q:&nbsp;</i></b> Even after I delete bugs, the long descriptions
+show up?
+<br><b><i>A:</i></b>&nbsp; Delete everything from $BUZILLAHOME/shadow.&nbsp;
+Bugzilla creates shadow files there, with each filename corresponding to
+a
+<br>bug number.&nbsp; Also be sure to run syncshadowdb to make sure, if
+you are using a shadow database, that the shadow database is current.
+<br>&nbsp;
+<br>&nbsp;
 <p>
 <hr WIDTH="100%">
 <center>
@@ -670,8 +1140,7 @@ end of the pathname for perl.exe, as shown in this example: c:\perl\bin\perl.exe
 <p><b><i>Q</i></b>: <i>Can I have some general instructions on how to make
 this work?</i>
 <br><b><i>A</i></b>: Sure. Your Mileage May Vary. Contact <a href="mailto:andrew_lahser@merck.com">Andrew
-Lahser&nbsp; </a>for the patches mentioned. He may decide to kill me for
-saying that, though...
+Lahser&nbsp; </a>for the patches mentioned.
 <ol>
 <li>
 #!C:/perl/bin/perl had to be added to every perl file.</li>
@@ -845,7 +1314,8 @@ it?</i>
 <br><b><i>A</i></b>: Right now, how this should behave is the subject of
 considerable discussion on the mailing list and in the bug database. There
 is a <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=25273">patch
-</a>for this, and a lot of talk. Tara has this to say:
+</a>for
+this, and a lot of talk. Tara has this to say:
 <blockquote>"I think I put this in the main bug itself, but I have to admit
 I *really* don't like the whole "accept" thing at this point. I especially
 am completely against anything that changes the current functionality,
@@ -855,15 +1325,27 @@ harder and harder to understand and maintain, not to mention adding additional
 fields to an already almost overwhelming query form. For now I'm going
 to have to make people who want this suffer through sharing patches until
 I come up with a course of action on it."</blockquote>
-<b></b>
-<p><br><b>Q:&nbsp; </b><i>How do I enable voting?</i>
+I'm working on a real patch for this now that allows you to select which
+behavior you want vi editparams.cgi!
+<p><b>Q:&nbsp; </b><i>How do I enable voting?</i>
 <br><b><i>A</i></b>:&nbsp; Make sure you're using at least version 2.10.&nbsp;
 It's available via editparams.cgi.
 <p><i><b>Q:&nbsp; </b>I can't upload anything into the database via the
 "Create Attachment" link.&nbsp; What am I doing wrong?</i>
 <br><b><i>A</i></b>:&nbsp; The most likely cause is a very old browser
 or a browser that is incompatible with file upload via POST.&nbsp; Download
-the latest Netscape or Microsoft browser to handle uploads correctly.
+the latest Netscape, Microsoft, or Mozilla browser to handle uploads correctly.
+<p><i><b>Q:</b>&nbsp; Email submissions to Bugzilla that have attachments
+end up asking me to save it as a "cgi" file.</i>
+<br><b><i>A:&nbsp;</i></b> Right now, submissions via email only have one
+mime-type "applications/octet-stream".&nbsp; Just save the file and look
+at it in your favorite editor, you'll be fine (even though the name of
+it will be "showattachment.cgi").
+<p><i><b>Q:&nbsp;</b> Argh, I forgot my password!</i>
+<br><b><i>A:</i></b>&nbsp; No problem.&nbsp; Visit the query page, click
+the "log in" button at the bottom, then just type in your email address
+and click the "Email me a password" button.&nbsp; Your password will arrive
+in your inbox in moments.
 <br>&nbsp;
 <p>
 <hr WIDTH="100%">
@@ -903,10 +1385,10 @@ There must be a clean way to define these milestones without a ridiculously
 complex params file</li>
 </ul>
 <i><b>Q:&nbsp; </b>Why shouldn't I delete bugs?</i>
-<br><i>A</i>:&nbsp; If you allow bug deletion, you run the risk of screwing
-up dependencies in your database.&nbsp; While these aren't always critical,
-it's sometimes tought to repair.&nbsp; I recommend you do not allow bug
-deletion.
+<br><b><i>A:</i></b>&nbsp; If you allow bug deletion, you run the risk
+of screwing up dependencies in your database.&nbsp; While these aren't
+always critical, it's sometimes tought to repair.&nbsp; I recommend you
+do not allow bug deletion.
 <br>&nbsp;
 <br>&nbsp;
 <p>
@@ -921,7 +1403,7 @@ my hard drive?"</center>
 <hr WIDTH="100%">
 <p><b><i>Q</i></b>: <i>What's the best way to submit patches?&nbsp; What
 guidelines should I follow.</i>
-<br>A:&nbsp; Tara summed this FAQ up nicely:
+<br><b><i>A:</i></b>&nbsp; Tara summed this FAQ up nicely:
 <blockquote>"Well, I guess I'd better answer this, as I'm the one who's
 supposed to be in charge of this stuff...
 <br>I say, if you have a patch that is a bug fix or feature enhancement,
@@ -972,215 +1454,14 @@ open-source bug-tracking software on the planet :)</li>
 </blockquote>
 <b><i>Q</i></b>:&nbsp; <i>I want to add a new form or module to Bugzilla.&nbsp;
 Where can I find API documention?</i>
-<br>A:&nbsp; Right now, there really is none.&nbsp; I plan on writing copious
-documentation for what each file and module does, as well how to program
-new .cgi's to use the functionality and present alternate interfaces.
-<p>CGI scripts:
-<ul>
-<li>
-backdoor.cgi</li>
-
-<li>
-buglist.cgi</li>
-
-<li>
-changepassword.cgi</li>
-
-<li>
-colchange.cgi</li>
-
-<li>
-createaccount.cgi</li>
-
-<li>
-createattachment.cgi</li>
-
-<li>
-describecomponents.cgi</li>
-
-<li>
-describekeywords.cgi</li>
-
-<li>
-doeditparams.cgi</li>
-
-<li>
-doeditvotes.cgi</li>
-
-<li>
-editcomponents.cgi</li>
-
-<li>
-editgroups.cgi</li>
-
-<li>
-editkeywords.cgi</li>
-
-<li>
-editmilestones.cgi</li>
-
-<li>
-editparams.cgi</li>
-
-<li>
-editproducts.cgi</li>
-
-<li>
-editusers.cgi</li>
-
-<li>
-editversions.cgi</li>
-
-<li>
-enter_bug.cgi</li>
-
-<li>
-long_list.cgi</li>
-
-<li>
-new_comment.cgi</li>
-
-<li>
-post_bug.cgi</li>
-
-<li>
-process_bug.cgi</li>
-
-<li>
-query.cgi</li>
-
-<li>
-relogin.cgi</li>
-
-<li>
-reports.cgi</li>
-
-<li>
-sanitycheck.cgi</li>
-
-<li>
-show_activity.cgi</li>
-
-<li>
-show_bug.cgi</li>
-
-<li>
-showattachment.cgi</li>
-
-<li>
-showdependencygraph.cgi</li>
-
-<li>
-showdependencytree.cgi</li>
-
-<li>
-showvotes.cgi</li>
-
-<li>
-userprefs.cgi</li>
-</ul>
-PM/pl modules:
-<ul>
-<li>
-contrib/BugzillaEmail.pm</li>
-
-<li>
-contrib/bug_email.pl</li>
-
-<li>
-contrib/bugzilla_email_append.pl</li>
-
-<li>
-contrib/gnats2bz.pl</li>
-
-<li>
-CGI.pl</li>
-
-<li>
-bug_form.pl</li>
-
-<li>
-checksetup.pl</li>
-
-<li>
-collectstats.pl</li>
-
-<li>
-defparams.pl</li>
-
-<li>
-globals.pl</li>
-
-<li>
-whineatnews.pl</li>
-
-<li>
-RelationSet.pm</li>
-</ul>
-HTML:
-<ul>
-<li>
-contrib/bugmail_help.html</li>
-
-<li>
-booleanchart.html</li>
-
-<li>
-bug_status.html</li>
-
-<li>
-bugwritinghelp.html</li>
-
-<li>
-confirmhelp.html</li>
-
-<li>
-help.html</li>
-
-<li>
-helpemailquery.html</li>
-
-<li>
-how_to_mail.html</li>
-
-<li>
-index.html</li>
-
-<li>
-newquip.html</li>
-
-<li>
-notargetmilestone.html</li>
-
-<li>
-votehelp.html</li>
-</ul>
-
-<p><br><b><i>Q</i></b>: What are the most-needed features?
+<br><b><i>A:</i></b>&nbsp; Right now, there really is none.&nbsp; I plan
+on writing copious documentation for what each file and module does, as
+well how to program new .cgi's to use the functionality and present alternate
+interfaces.&nbsp; Right now, use the source.
+<p><b><i>Q</i></b>: What are the most-needed features?
 <br><b><i>A</i></b>:&nbsp; Check out the Bugzilla Development Roadmap at
 <a href="http://www.mozilla.org/projects/bugzilla/roadmap.html">http://www.mozilla.org/projects/bugzilla/roadmap.html</a>
-<p>
-<hr WIDTH="100%">
-<center>
-<h2>
-<a NAME="TINDERBOX"></a>TINDERBOX</h2></center>
-
-<center>or "Friendly Fire... isn't"</center>
-
-<hr WIDTH="100%">
-<br>I don't use it yet -- anybody have good FAQ's for this area?
-<p>
-<hr WIDTH="100%">
-<center>
-<h2>
-<a NAME="BONSAI"></a>BONSAI</h2></center>
-
-<center>or "I like to climb trees and eat peanut butter with a spatula
-while singing operas."</center>
-
-<hr WIDTH="100%">
-<br>Same as Tinderbox. But these are still part of webtools, so they need
-to be here for completeness.
+<br>&nbsp;
 <p>
 <hr WIDTH="100%">
 <center>
@@ -1191,7 +1472,7 @@ to be here for completeness.
 <p><i><b>Q:&nbsp; </b>Why do you use this antiquated format for maintaining
 the FAQ, instead of FAQ-O-Matic or (insert cool FAQ program here)</i>
 <br><b><i>A:&nbsp; </i></b>I'm actively seeking a better way to maintain
-this.&nbsp; It's easily maintainable in it's current form, but as it grows
+this.&nbsp; It's easily maintainable in its current form, but as it grows
 it will become much less so.&nbsp; I'm interested in more options, but
 don't want to lose control of the FAQ or be subjected to a page that's
 a nest of hyperlinks and unprintable.&nbsp; The FAQ-O-Matic tends to create
@@ -1201,9 +1482,9 @@ the FAQ as a single, printable document; if you know of a good system that
 will fit the bill, let me know.
 <p><b><i>Q</i></b>: <i>Who are you?</i>
 <br><b><i>A</i></b>:&nbsp; I'm Matthew P. Barnson, manager of Systems Administration
-for <a href="http://www.excitestores.com">Excite@Home E-Business Services
+for <a href="http://www.excitestores.com">Excite Business Applications
 </a>and
-part-time Bugzilla hacker :)
+part-time Bugzilla hacker.
 <p><b><i>Q</i></b>: <i>Why are you doing this?</i>
 <br><b><i>A</i></b>:&nbsp; I have nothing better to do with my time!
 <br>&nbsp; Seriously, I run a fairly large private Bugzilla database.&nbsp;
@@ -1216,16 +1497,18 @@ rewrite than they are more hacks to support more features.&nbsp; Since
 I'm not qualified to write more than trivial hacks for Bugzilla if I were
 to code, I figured doing some documentation would be A Good Thing.
 <p><b><i>Q</i></b>:&nbsp; <i>How are you affiliated with <a href="http://www.mozilla.org">Mozilla.org</a>?</i>
-<br><i>A</i>:&nbsp; I'm not.
+<br><b><i>A:&nbsp;</i></b> I'm not, except I've been appointed the "Docs
+Knight" for Bugzilla, and contribute documentation to other webtools.
 <p><b><i>Q</i></b>:&nbsp; <i>Where do those lame quotes in each section
 heading come from?</i>
 <br><b><i>A</i></b>:&nbsp; Check out <a href="http://bugzilla.mozilla.org/data/comments">http://bugzilla.mozilla.org/data/comments</a>.&nbsp;
 These are random quips added by people who use bugzilla.&nbsp; I find them
 endlessly entertaining.
-<br>&nbsp; I am personally attempting to address the numerous documentation
-needs, including an Installation guide (based upon the README), Administration
-Guide, Troubleshooting guide, Database Management Guide, and Configuration
-Guide.
+<p><i><b>Q:&nbsp;</b> What other documentation is available?</i>
+<br><b><i>A:&nbsp;</i></b> I am personally attempting to address the numerous
+documentation needs, including an Installation guide (based upon the README),
+Administration Guide, Troubleshooting guide, Database Management Guide,
+and Configuration Guide.
 <br>&nbsp;
 <p>
 <hr WIDTH="100%">
