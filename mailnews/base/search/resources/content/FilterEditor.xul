@@ -36,7 +36,7 @@ Contributor(s):
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
   windowtype="mailnews:filtereditor"
-  width="560" height="360"
+  width="560" height="460"
   persist="width height screenX screenY"
   buttons="accept,cancel,help"
   onload="filterEditorOnLoad();"
@@ -73,47 +73,83 @@ Contributor(s):
   <separator/>
 
   <vbox>
-    <label value="&filterActionDesc.label;" accesskey="&filterActionDesc.accesskey;" control="actionMenu"/>
-    <hbox align="start">
-      <menulist class="indent" id="actionMenu" oncommand="onActionChanged(event)">
-        <menupopup>
-          <menuitem value="1" actionvalueindex="0" label="&moveToFolder.label;"/>
-          <menuitem value="2" actionvalueindex="1" label="&changePriority.label;"/>
-          <menuitem value="3" actionvalueindex="3" label="&delete.label;"/>
-          <menuitem value="4" actionvalueindex="3" label="&markRead.label;"/>
-          <menuitem value="7" actionvalueindex="3" label="&markFlagged.label;"/>
-          <menuitem value="8" actionvalueindex="2" label="&label.label;"/>
-        </menupopup>
-      </menulist>
-      <!-- JS stuff depends on this deck being present, don't remove! -->
-      <deck id="actionValueDeck">
-        <menulist id="actionTargetFolder"/>
-        <menulist id="actionValuePriority">
-          <menupopup>
-            <!-- see MailNewsTypes2.idl -->
-            <menuitem value="6" label="&highestPriorityCmd.label;"/>
-            <menuitem value="5" label="&highPriorityCmd.label;"/>
-            <menuitem value="4" label="&normalPriorityCmd.label;"/>
-            <menuitem value="3" label="&lowPriorityCmd.label;"/>
-            <menuitem value="2" label="&lowestPriorityCmd.label;"/>
-          </menupopup>
-        </menulist>
-        <menulist id="actionValueLabel" oncommand="onLabelListChanged(event)">
-          <menupopup id="menuPopup-labels" onpopupshowing="InitMessageLabel()">
-            <!-- see MailNewsTypes2.idl -->
-            <menuitem id="labelMenuItem1" value="1"/>
-            <menuitem id="labelMenuItem2" value="2"/>
-            <menuitem id="labelMenuItem3" value="3"/>
-            <menuitem id="labelMenuItem4" value="4"/>
-            <menuitem id="labelMenuItem5" value="5"/>
-          </menupopup>
-        </menulist>
-        <label id="actionValueNone"/>
-      </deck>
-      <spacer flex="100%"/>
-      <button id="newFolderButton" label="&newFolderButton.label;" 
+    <label value="&filterActionDesc.label;" accesskey="&filterActionDesc.accesskey;"/>
+    <hbox align="start" height="100">
+    <listbox flex="1" id="filterActionList">
+      <listcols>
+        <listcol flex="1"/>
+        <listcol flex="1"/>
+        <listcol flex="1"/>
+      </listcols>
+      <listitem allowevents="true">
+        <listcell>
+          <checkbox id="moveToFolder" label="&moveToFolder.label;"/>
+        </listcell>
+        <listcell> 
+          <menulist id="actionTargetFolder" flex="1"/>
+        </listcell>
+        <listcell> 
+          <button id="newFolderButton" label="&newFolderButton.label;" 
               accesskey="&newFolderButton.accesskey;" 
               oncommand="MsgNewFolder(SearchNewFolderOkCallback);"/>
+        </listcell>
+      </listitem>
+
+      <listitem allowevents="true">
+        <listcell>
+        <checkbox id="label" label="&label.label;"/>
+        </listcell>
+        <listcell> 
+          <menulist id="actionValueLabel" flex="1">
+            <menupopup>
+              <!-- see MailNewsTypes2.idl -->
+              <menuitem id="labelMenuItem1" value="1"/>
+              <menuitem id="labelMenuItem2" value="2"/>
+              <menuitem id="labelMenuItem3" value="3"/>
+              <menuitem id="labelMenuItem4" value="4"/>
+              <menuitem id="labelMenuItem5" value="5"/>
+            </menupopup>
+          </menulist>
+        </listcell>
+      </listitem>
+
+      <listitem allowevents="true">
+        <listcell>
+          <checkbox id="changePriority" label="&changePriority.label;"/>
+        </listcell>
+        <listcell> 
+          <menulist id="actionValuePriority" flex="1">
+            <menupopup>
+              <!-- see MailNewsTypes2.idl -->
+              <menuitem value="6" label="&highestPriorityCmd.label;"/>
+              <menuitem value="5" label="&highPriorityCmd.label;"/>
+              <menuitem value="4" label="&normalPriorityCmd.label;"/>
+              <menuitem value="3" label="&lowPriorityCmd.label;"/>
+              <menuitem value="2" label="&lowestPriorityCmd.label;"/>
+            </menupopup>
+          </menulist>
+        </listcell>
+      </listitem>
+
+      <listitem allowevents="true">
+        <listcell>
+          <checkbox id="markRead" label="&markRead.label;"/>
+        </listcell>
+      </listitem>
+
+      <listitem allowevents="true">
+        <listcell>
+          <checkbox id="markFlagged" label="&markFlagged.label;"/>
+        </listcell>
+      </listitem>
+
+      <listitem allowevents="true">
+        <listcell>
+          <checkbox id="delete" label="&delete.label;"/>
+        </listcell>
+
+      </listitem>
+    </listbox>
     </hbox>
   </vbox>
 

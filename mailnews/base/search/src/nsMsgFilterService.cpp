@@ -186,8 +186,8 @@ NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, n
       filterFile->GetLeafName(getter_Copies(finalLeafName));
       if (!finalLeafName.IsEmpty())
         parentDir->Rename(finalLeafName);
-      else // fall back to rules.dat
-        parentDir->Rename("rules.dat");
+      else // fall back to msgFilterRules.dat
+        parentDir->Rename("msgFilterRules.dat");
 
       tmpFiltersFile->Delete(PR_FALSE);
     }
@@ -485,21 +485,40 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
   nsresult rv = NS_OK;
   if (m_curFilter && m_curFolder)
   {
-    nsMsgRuleActionType actionType;
-    nsXPIDLCString actionTargetFolderUri;
-    if (NS_SUCCEEDED(m_curFilter->GetAction(&actionType)))
-    {
+    // we're going to log the filter actions before firing them because some actions are async
+    PRBool loggingEnabled = PR_FALSE;
+    if (m_filters)
+      (void)m_filters->GetLoggingEnabled(&loggingEnabled);
 
+    nsCOMPtr<nsISupportsArray> actionList;
+    rv = NS_NewISupportsArray(getter_AddRefs(actionList));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = m_curFilter->GetSortedActionList(actionList);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 numActions;
+    actionList->Count(&numActions);
+    PRBool applyMoreActions = PR_TRUE;
+
+    for (PRUint32 actionIndex =0; actionIndex < numActions && applyMoreActions; actionIndex++)
+    {
+      nsCOMPtr<nsIMsgRuleAction> filterAction;
+      actionList->QueryElementAt(actionIndex, NS_GET_IID(nsIMsgRuleAction), (void **)getter_AddRefs(filterAction));
+      nsMsgRuleActionType actionType;
+      if (filterAction)
+        filterAction->GetType(&actionType);
+      else
+        continue;
+      
+      nsXPIDLCString actionTargetFolderUri;
       if (actionType == nsMsgFilterAction::MoveToFolder)
       {
-          m_curFilter->GetActionTargetFolderUri(getter_Copies(actionTargetFolderUri));
-          if (!actionTargetFolderUri || !actionTargetFolderUri[0])
-            return rv;
+        filterAction->GetTargetFolderUri(getter_Copies(actionTargetFolderUri));
+        if (actionTargetFolderUri.IsEmpty())
+        {
+          NS_ASSERTION(PR_FALSE, "actionTargetFolderUri is empty");
+          continue;
+        }
       }
-      // we're going to log the filter actions before firing them because some actions are async
-      PRBool loggingEnabled = PR_FALSE;
-      if (m_filters)
-        (void)m_filters->GetLoggingEnabled(&loggingEnabled);
 
       if (loggingEnabled) 
       {
@@ -508,7 +527,7 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
             nsCOMPtr <nsIMsgDBHdr> msgHdr;
             m_searchHitHdrs->QueryElementAt(msgIndex, NS_GET_IID(nsIMsgDBHdr), getter_AddRefs(msgHdr));
             if (msgHdr)
-              (void)m_curFilter->LogRuleHit(msgHdr); 
+              (void)m_curFilter->LogRuleHit(filterAction, msgHdr); 
           }
       }
       // all actions that pass "this" as a listener in order to chain filter execution
@@ -523,6 +542,8 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
         // This means we're going to end up firing off the delete, and then subsequently 
         // issuing a search for the next filter, which will block until the delete finishes.
         m_curFolder->DeleteMessages(m_searchHitHdrs, m_msgWindow, PR_FALSE, PR_FALSE, nsnull, PR_FALSE /*allow Undo*/ );
+        //if we are deleting then we couldn't care less about applying remaining filter actions
+        applyMoreActions = PR_FALSE;
         break;
       case nsMsgFilterAction::MoveToFolder:
       {
@@ -563,7 +584,10 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
           if (copyService)
             return copyService->CopyMessages(m_curFolder, m_searchHitHdrs, destIFolder, PR_TRUE, this, m_msgWindow, PR_FALSE);
         }
+        //we have already moved the hdrs so we can't apply more actions
+        applyMoreActions = PR_FALSE;
       }
+        
         break;
       case nsMsgFilterAction::MarkRead:
           // crud, no listener support here - we'll probably just need to go on and apply
@@ -601,7 +625,7 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
       case nsMsgFilterAction::ChangePriority:
           {
               nsMsgPriorityValue filterPriority;
-              m_curFilter->GetActionPriority(&filterPriority);
+              filterAction->GetPriority(&filterPriority);
               for (PRUint32 msgIndex = 0; msgIndex < m_searchHits.GetSize(); msgIndex++)
               {
                 nsCOMPtr <nsIMsgDBHdr> msgHdr;
@@ -614,7 +638,7 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
       case nsMsgFilterAction::Label:
         {
             nsMsgLabelValue filterLabel;
-            m_curFilter->GetActionLabel(&filterLabel);
+            filterAction->GetLabel(&filterLabel);
             m_curFolder->SetLabelForMessages(m_searchHitHdrs, filterLabel);
         }
       default:

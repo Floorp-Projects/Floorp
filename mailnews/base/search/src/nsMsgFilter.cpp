@@ -62,22 +62,87 @@
 #include "nsEscape.h"
 
 static const char *kImapPrefix = "//imap:";
+static const char *kWhitespace = "\b\t\r\n ";
 
 nsMsgRuleAction::nsMsgRuleAction()
 {
+  NS_INIT_ISUPPORTS();
 }
 
 nsMsgRuleAction::~nsMsgRuleAction()
 {
 }
 
+NS_IMPL_ISUPPORTS1(nsMsgRuleAction, nsIMsgRuleAction)
+
+NS_IMPL_GETSET(nsMsgRuleAction, Type, nsMsgRuleActionType, m_type);
+
+NS_IMETHODIMP nsMsgRuleAction::SetPriority(nsMsgPriorityValue aPriority)
+{
+  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::ChangePriority,
+                 NS_ERROR_ILLEGAL_VALUE);
+  m_priority = aPriority;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgRuleAction::GetPriority(nsMsgPriorityValue *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::ChangePriority,
+                 NS_ERROR_ILLEGAL_VALUE);
+  *aResult = m_priority;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMsgRuleAction::SetLabel(nsMsgLabelValue aLabel)
+{
+  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::Label,
+                 NS_ERROR_ILLEGAL_VALUE);
+  m_label = aLabel;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgRuleAction::GetLabel(nsMsgLabelValue *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::Label,
+                 NS_ERROR_ILLEGAL_VALUE);
+  *aResult = m_label;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgRuleAction::SetTargetFolderUri(const char *aUri)
+{
+  NS_ENSURE_ARG_POINTER(aUri);
+  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::MoveToFolder,
+                 NS_ERROR_ILLEGAL_VALUE);
+  m_folderUri = aUri;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgRuleAction::GetTargetFolderUri(char** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::MoveToFolder,
+                 NS_ERROR_ILLEGAL_VALUE);
+  *aResult = ToNewCString(m_folderUri);
+  return NS_OK;
+}
+
 nsMsgFilter::nsMsgFilter():
     m_type(1),
     m_temporary(PR_FALSE),
+    m_unparseable(PR_FALSE),
     m_filterList(nsnull)
 {
 	NS_INIT_ISUPPORTS();
   NS_NewISupportsArray(getter_AddRefs(m_termList));
+  NS_NewISupportsArray(getter_AddRefs(m_actionList));
 }
 
 nsMsgFilter::~nsMsgFilter()
@@ -89,43 +154,7 @@ NS_IMPL_ISUPPORTS1(nsMsgFilter, nsIMsgFilter)
 NS_IMPL_GETTER(nsMsgFilter::GetFilterType, nsMsgFilterTypeType, m_type);
 NS_IMPL_GETSET(nsMsgFilter, Enabled, PRBool, m_enabled);
 NS_IMPL_GETSET(nsMsgFilter, Temporary, PRBool, m_temporary);
-NS_IMPL_GETSET(nsMsgFilter, Action, nsMsgRuleActionType, m_action.m_type);
-
-NS_IMETHODIMP nsMsgFilter::SetActionPriority(nsMsgPriorityValue aPriority)
-{
-    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::ChangePriority,
-                   NS_ERROR_ILLEGAL_VALUE);
-    m_action.m_priority = aPriority;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgFilter::GetActionPriority(nsMsgPriorityValue *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::ChangePriority,
-                   NS_ERROR_ILLEGAL_VALUE);
-    *aResult = m_action.m_priority;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFilter::SetActionLabel(nsMsgLabelValue aLabel)
-{
-    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::Label,
-                   NS_ERROR_ILLEGAL_VALUE);
-    m_action.m_label = aLabel;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgFilter::GetActionLabel(nsMsgLabelValue *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::Label,
-                   NS_ERROR_ILLEGAL_VALUE);
-    *aResult = m_action.m_label;
-     return NS_OK;
-}
+NS_IMPL_GETSET(nsMsgFilter, Unparseable, PRBool, m_unparseable);
 
 NS_IMETHODIMP nsMsgFilter::GetFilterName(PRUnichar **name)
 {
@@ -150,6 +179,19 @@ NS_IMETHODIMP nsMsgFilter::GetFilterDesc(char **description)
 NS_IMETHODIMP nsMsgFilter::SetFilterDesc(const char *description)
 {
   m_description.Assign(description);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFilter::GetUnparsedBuffer(char **unparsedBuffer)
+{
+  NS_ENSURE_ARG_POINTER(unparsedBuffer);
+  *unparsedBuffer = ToNewCString(m_unparsedBuffer);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFilter::SetUnparsedBuffer(const char *unparsedBuffer)
+{
+  m_unparsedBuffer.Assign(unparsedBuffer);
 	return NS_OK;
 }
 
@@ -181,6 +223,70 @@ nsMsgFilter::CreateTerm(nsIMsgSearchTerm **aResult)
     *aResult = NS_STATIC_CAST(nsIMsgSearchTerm*,term);
     NS_ADDREF(*aResult);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilter::CreateAction(nsIMsgRuleAction **aAction)
+{
+  NS_ENSURE_ARG_POINTER(aAction);
+  nsMsgRuleAction *action = new nsMsgRuleAction;
+  NS_ENSURE_TRUE(action, NS_ERROR_OUT_OF_MEMORY);
+
+  *aAction = NS_STATIC_CAST(nsIMsgRuleAction*,action);
+  NS_ADDREF(*aAction);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMsgFilter::GetSortedActionList(nsISupportsArray *actionList)
+{
+  NS_ENSURE_ARG_POINTER(actionList);
+  PRUint32 numActions;
+  nsresult err = m_actionList->Count(&numActions);
+  NS_ENSURE_SUCCESS(err, err);
+
+  for (PRInt32 index =0; index < numActions; index++)
+  {
+    nsCOMPtr<nsIMsgRuleAction> action;
+    err = m_actionList->QueryElementAt(index, NS_GET_IID(nsIMsgRuleAction), (void **)getter_AddRefs(action));
+    if (!action)
+      continue;
+ 
+    nsMsgRuleActionType actionType;
+    action->GetType(&actionType);
+    if (actionType == nsMsgFilterAction::MoveToFolder)  //we always want MoveToFolder action to be last
+      actionList->AppendElement(action);
+    else
+      actionList->InsertElementAt(action,0);
+  }
+  return err;
+}
+
+NS_IMETHODIMP
+nsMsgFilter::AppendAction(nsIMsgRuleAction *aAction)
+{
+  return m_actionList->AppendElement(NS_STATIC_CAST(nsISupports*,aAction));
+}
+
+NS_IMETHODIMP
+nsMsgFilter::GetActionAt(PRInt32 aIndex, nsIMsgRuleAction **aAction)
+{
+  NS_ENSURE_ARG_POINTER(aAction);
+  return m_actionList->QueryElementAt(aIndex, NS_GET_IID(nsIMsgRuleAction), 
+                                       (void **) aAction);
+}
+
+NS_IMETHODIMP
+nsMsgFilter::GetActionList(nsISupportsArray **actionList)
+{
+  NS_IF_ADDREF(*actionList = m_actionList);
+  return NS_OK;
+}
+
+NS_IMETHODIMP  //for editing a filter
+nsMsgFilter::ClearActionList()
+{
+  return m_actionList->Clear();
 }
 
 NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex, 
@@ -238,37 +344,12 @@ NS_IMETHODIMP nsMsgFilter::GetScope(nsIMsgSearchScopeTerm **aResult)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-    nsMsgFilter::SetActionTargetFolderUri(const char *aUri)
-{
-    nsresult rv=NS_OK;
-    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::MoveToFolder,
-                   NS_ERROR_ILLEGAL_VALUE);
-    if (aUri)
-      m_action.m_folderUri = aUri;
-    else
-      SetEnabled(PR_FALSE);
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsMsgFilter::GetActionTargetFolderUri(char** aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::MoveToFolder,
-                   NS_ERROR_ILLEGAL_VALUE);
-    if (m_action.m_folderUri.get())
-      *aResult = ToNewCString(m_action.m_folderUri);
-    return NS_OK;
-}
-
 #define LOG_ENTRY_START_TAG "<p>\n"
 #define LOG_ENTRY_START_TAG_LEN (strlen(LOG_ENTRY_START_TAG))
 #define LOG_ENTRY_END_TAG "</p>\n"
 #define LOG_ENTRY_END_TAG_LEN (strlen(LOG_ENTRY_END_TAG))
 
-NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *aMsgHdr)
+NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgRuleAction *aFilterAction, nsIMsgDBHdr *aMsgHdr)
 {
     nsCOMPtr <nsIOutputStream> logStream;
     nsresult rv = m_filterList->GetLogStream(getter_AddRefs(logStream));
@@ -284,7 +365,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *aMsgHdr)
     nsXPIDLString filterName;
 
     GetFilterName(getter_Copies(filterName));
-    GetAction(&actionType);
+    aFilterAction->GetType(&actionType);
     rv = aMsgHdr->GetDate(&date);
     PRExplodedTime exploded;
     PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
@@ -313,7 +394,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *aMsgHdr)
     buffer +=  " ";
         
     if (actionType == nsMsgFilterAction::MoveToFolder) {
-      GetActionTargetFolderUri(getter_Copies(actionFolderUri));
+      aFilterAction->GetTargetFolderUri(getter_Copies(actionFolderUri));
       buffer += actionFolderUri.get();
     } 
          
@@ -392,9 +473,9 @@ void nsMsgFilter::SetFilterScript(nsCString *fileName)
 	m_scriptFileName = *fileName;
 }
 
-nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
+nsresult nsMsgFilter::ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, nsCString &moveValue)
 {
-
+  NS_ENSURE_ARG_POINTER(filterAction);
   PRInt16 filterVersion = kFileVersion;
   if (m_filterList)
       m_filterList->GetVersion(&filterVersion);
@@ -408,29 +489,29 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
     m_filterList->GetFolder(getter_AddRefs(rootFolder));
 
 	  // if relative path starts with kImap, this is a move to folder on the same server
-	  if (moveValue.Find(kImapPrefix) == 0)
-	  {
-		  PRInt32 prefixLen = PL_strlen(kImapPrefix);
-		  moveValue.Mid(m_action.m_originalServerPath, prefixLen, moveValue.Length() - prefixLen);
-          if ( filterVersion == k45Version && impSvc)
-          {
-            nsAutoString unicodeStr;
-            impSvc->SystemStringToUnicode(m_action.m_originalServerPath.get(), unicodeStr);
-            char *utfNewName = CreateUtf7ConvertedStringFromUnicode(unicodeStr.get());
-            m_action.m_originalServerPath.Assign(utfNewName);
-            nsCRT::free(utfNewName);
-          }
+    if (moveValue.Find(kImapPrefix) == 0)
+    {
+      PRInt32 prefixLen = PL_strlen(kImapPrefix);
+      nsCAutoString originalServerPath;
+      moveValue.Mid(originalServerPath, prefixLen, moveValue.Length() - prefixLen);
+      if ( filterVersion == k45Version && impSvc)
+      {
+        nsAutoString unicodeStr;
+        impSvc->SystemStringToUnicode(originalServerPath.get(), unicodeStr);
+        char *utfNewName = CreateUtf7ConvertedStringFromUnicode(unicodeStr.get());
+        originalServerPath.Assign(utfNewName);
+        nsCRT::free(utfNewName);
+      }
 
       nsCOMPtr <nsIFolder> destIFolder;
       if (rootFolder)
       {
-        rootFolder->FindSubFolder (m_action.m_originalServerPath.get(), getter_AddRefs(destIFolder));
+        rootFolder->FindSubFolder(originalServerPath.get(), getter_AddRefs(destIFolder));
         if (destIFolder)
         {
           nsCOMPtr <nsIMsgFolder> msgFolder;
           msgFolder = do_QueryInterface(destIFolder);	
           destIFolder->GetURI(getter_Copies(folderUri));
-		  m_action.m_folderUri.Assign(folderUri);
           moveValue.Assign(folderUri);
         }
       }
@@ -438,9 +519,8 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 	  else
     {
       // start off leaving the value the same.
-      m_action.m_folderUri = moveValue;
+      filterAction->SetTargetFolderUri(moveValue.get());
       nsresult rv = NS_OK;
-
       nsCOMPtr <nsIFolder> localMailRoot;
       rootFolder->GetURI(getter_Copies(folderUri));
       // if the root folder is not imap, than the local mail root is the server root.
@@ -496,14 +576,14 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
         if (destIMsgFolder)
         {
           destIMsgFolder->GetURI(getter_Copies(folderUri));
-		  m_action.m_folderUri.Assign(folderUri);
+		      filterAction->SetTargetFolderUri(folderUri);
           moveValue.Assign(folderUri);
         }
       }
     }
   }
   else
-    SetActionTargetFolderUri(moveValue.get());
+    filterAction->SetTargetFolderUri(moveValue.get());
     
 	return NS_OK;
 	// set m_action.m_value.m_folderUri
@@ -511,6 +591,14 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 
 nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *aStream)
 {
+  NS_ENSURE_ARG_POINTER(aStream);
+  if (m_unparseable)
+  {
+    //we need to trim leading whitespaces before filing out
+    m_unparsedBuffer.Trim(kWhitespace, PR_TRUE /*leadingCharacters*/, PR_FALSE /*trailingCharacters*/);
+    *aStream << m_unparsedBuffer.get();
+    return NS_OK;
+  }
   nsresult err = m_filterList->WriteWstrAttr(nsIMsgFilterList::attribName, m_filterName.get(), aStream);
   err = m_filterList->WriteBoolAttr(nsIMsgFilterList::attribEnabled, m_enabled, aStream);
   err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribDescription, m_description.get(), aStream);
@@ -528,34 +616,55 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
   nsCOMPtr<nsIMsgFilterList> filterList;
   GetFilterList(getter_AddRefs(filterList));
   nsCAutoString	actionFilingStr;
-  
-  GetActionFilingStr(m_action.m_type, actionFilingStr);
-  
-  err = filterList->WriteStrAttr(nsIMsgFilterList::attribAction, actionFilingStr.get(), aStream);
+   
+  PRUint32 numActions;
+  err = m_actionList->Count(&numActions);
   NS_ENSURE_SUCCESS(err, err);
-  
-  switch(m_action.m_type)
+
+  for (PRInt32 index =0; index < numActions; index++)
   {
-  case nsMsgFilterAction::MoveToFolder:
+    nsCOMPtr<nsIMsgRuleAction> action;
+    err = m_actionList->QueryElementAt(index, NS_GET_IID(nsIMsgRuleAction), (void **)getter_AddRefs(action));
+    if (!action)
+      continue;
+ 
+    nsMsgRuleActionType actionType;
+    action->GetType(&actionType);
+    GetActionFilingStr(actionType, actionFilingStr);
+  
+    err = filterList->WriteStrAttr(nsIMsgFilterList::attribAction, actionFilingStr.get(), aStream);
+    NS_ENSURE_SUCCESS(err, err);
+  
+    switch(actionType)
     {
-      nsCAutoString imapTargetString(m_action.m_folderUri);
-      err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, imapTargetString.get(), aStream);
-    }
-    break;
-  case nsMsgFilterAction::ChangePriority:
-    {
-      nsAutoString priority;
-      NS_MsgGetUntranslatedPriorityName (m_action.m_priority, &priority);
-      nsCAutoString cStr;
-      cStr.AssignWithConversion(priority);
-      err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, cStr.get(), aStream);
-    }
-    break;
-  case nsMsgFilterAction::Label:
-      err = filterList->WriteIntAttr(nsIMsgFilterList::attribActionValue, m_action.m_label, aStream);
+      case nsMsgFilterAction::MoveToFolder:
+      {
+        nsXPIDLCString imapTargetString;
+        action->GetTargetFolderUri(getter_Copies(imapTargetString));
+        err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, imapTargetString.get(), aStream);
+      }
       break;
-  default:
-    break;
+      case nsMsgFilterAction::ChangePriority:
+      {
+        nsMsgPriorityValue priorityValue;
+        action->GetPriority(&priorityValue);
+        nsAutoString priority;
+        NS_MsgGetUntranslatedPriorityName (priorityValue, &priority);
+        nsCAutoString cStr;
+        cStr.AssignWithConversion(priority);
+        err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, cStr.get(), aStream);
+      }
+      break;
+      case nsMsgFilterAction::Label:
+      {
+        nsMsgLabelValue label;
+        action->GetLabel(&label);
+        err = filterList->WriteIntAttr(nsIMsgFilterList::attribActionValue, label, aStream);
+      }
+      break;
+      default:
+        break;
+    }
   }
   // and here the fun begins - file out term list...
   PRUint32 searchIndex;
@@ -618,7 +727,10 @@ static struct RuleActionsTableEntry ruleActionsTable[] =
   { nsMsgFilterAction::KillThread,      nsMsgFilterType::All,   0, /*XP_FILTER_KILL_THREAD */     "Ignore thread"},
   { nsMsgFilterAction::WatchThread,     nsMsgFilterType::All,   0, /*XP_FILTER_WATCH_THREAD */    "Watch thread"},
   { nsMsgFilterAction::MarkFlagged,     nsMsgFilterType::All,   0, /*XP_FILTER_MARK_FLAGGED */    "Mark flagged"},
-  { nsMsgFilterAction::Label,           nsMsgFilterType::All,   0, /*XP_FILTER_LABEL */           "Label"}
+  { nsMsgFilterAction::Label,           nsMsgFilterType::All,   0, /*XP_FILTER_LABEL */           "Label"},
+  { nsMsgFilterAction::Reply,           nsMsgFilterType::All,   0, /*XP_FILTER_REPLY */           "Reply"},
+  { nsMsgFilterAction::Forward,         nsMsgFilterType::All,   0, /*XP_FILTER_FORWARD */         "Forward"},
+  { nsMsgFilterAction::StopExecution,   nsMsgFilterType::All,   0, /*XP_FILTER_STOP_EXECUTION */   "Stop execution"}
 };
 
 const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)

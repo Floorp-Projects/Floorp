@@ -111,7 +111,7 @@ protected:
                           PRBool *pResult);
 	nsresult OutputValue(nsCString &outputStr);
 	nsresult ParseAttribute(char *inStream, nsMsgSearchAttribValue *attrib);
-	nsMsgSearchOpValue	ParseOperator(char *inStream);
+	nsresult ParseOperator(char *inStream, nsMsgSearchOpValue *value);
 	nsresult ParseValue(char *inStream);
 	nsresult InitHeaderAddressParser();
     nsresult InitializeAddressBook();

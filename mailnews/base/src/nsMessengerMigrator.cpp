@@ -130,7 +130,7 @@ static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
 #define DEFAULT_4X_TEMPLATES_FOLDER_NAME "Templates"
 #define UNSENT_MESSAGES_FOLDER_NAME "Unsent%20Messages"
 
-#define FILTER_FILE_NAME	"rules.dat"		/* this is XP in 5.x */
+#define FILTER_FILE_NAME	"msgFilterRules.dat"		/* this is XP in 5.x */
 
 /* we are going to clear these after migration */
 #define PREF_4X_MAIL_IDENTITY_USEREMAIL "mail.identity.useremail"

@@ -92,13 +92,15 @@ protected:
   nsresult LoadValue(nsCString &value, nsIOFileStream *aStream);
   nsresult ParseCondition(nsCString &value);
   PRInt16 m_fileVersion;
-  PRBool m_loggingEnabled;
+  PRPackedBool m_loggingEnabled;
+  PRPackedBool m_startWritingToBuffer; //tells us when to start writing one whole filter to m_unparsedBuffer
   nsCOMPtr <nsIMsgFolder> m_folder;
   nsMsgFilter *m_curFilter; // filter we're filing in or out(?)
   const char *m_filterFileName;
   nsCOMPtr<nsISupportsArray> m_filters;
   nsCString m_arbitraryHeaders;
   nsCOMPtr<nsIFileSpec> m_defaultFile;
+  nsCString m_unparsedFilterBuffer; //holds one entire filter unparsed 
 
 private:
   nsresult TruncateLog();

@@ -44,17 +44,22 @@
 #include "nsMsgSearchArray.h"
 #include "nsIMsgSearchScopeTerm.h"
 
-class nsMsgRuleAction
+class nsMsgRuleAction : public nsIMsgRuleAction
 {
 public:
+  NS_DECL_ISUPPORTS
+
 	nsMsgRuleAction();
 	virtual ~nsMsgRuleAction();
-        nsMsgRuleActionType      m_type;
+
+  NS_DECL_NSIMSGRULEACTION
+
+private:
+    nsMsgRuleActionType      m_type;
 		// this used to be a union - why bother?
-        nsMsgPriorityValue	m_priority;  /* priority to set rule to */
-        nsMsgLabelValue         m_label;  /* label to set rule to */
-        nsCString		m_folderUri;    /* Or some folder identifier, if such a thing is invented */
-        nsCString		m_originalServerPath;
+    nsMsgPriorityValue	m_priority;  /* priority to set rule to */
+    nsMsgLabelValue         m_label;  /* label to set rule to */
+    nsCString		m_folderUri;    /* Or some folder identifier, if such a thing is invented */
 } ;
 
 
@@ -90,7 +95,7 @@ public:
 	void	Dump();
 #endif
 
-	nsresult		ConvertMoveToFolderValue(nsCString &relativePath);
+	nsresult		ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, nsCString &relativePath);
 static	const char *GetActionStr(nsMsgRuleActionType action);
 static	nsresult GetActionFilingStr(nsMsgRuleActionType action, nsCString &actionStr);
 static nsMsgRuleActionType GetActionForFilingStr(nsCString &actionStr);
@@ -100,14 +105,18 @@ protected:
 	nsString		m_filterName;
 	nsCString		m_scriptFileName;	// iff this filter is a script.
 	nsCString		m_description;
+  nsCString   m_unparsedBuffer;
 
     PRPackedBool m_enabled;
     PRPackedBool m_temporary;
+    PRPackedBool m_unparseable;
 
     nsIMsgFilterList *m_filterList;	/* owning filter list */
     nsCOMPtr<nsISupportsArray> m_termList;       /* linked list of criteria terms */
     nsCOMPtr<nsIMsgSearchScopeTerm> m_scope;         /* default for mail rules is inbox, but news rules could
 have a newsgroup - LDAP would be invalid */
+    nsCOMPtr<nsISupportsArray> m_actionList;
+    //nsCString		m_originalServerPath;  //used for 4.x filters
 
 };
 

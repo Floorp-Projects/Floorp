@@ -150,29 +150,15 @@ nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
         if (nsCRT::strcasecmp(token, string) == 0)
         {
           *attrib += i; //we found custom header in the pref
-          return NS_OK;
+          found = PR_TRUE;
+          break;
         }
         token = nsCRT::strtok(newStr,":", &newStr);
         i++;
-
-        //we know we can have a max of 50 custom headers
-        if ( nsMsgSearchAttrib::OtherHeader + i >= nsMsgSearchAttrib::kNumMsgSearchAttributes -1)
-        {
-           NS_ASSERTION(0, "pref has more headers than the table can hold");
-           return NS_MSG_CUSTOM_HEADERS_OVERFLOW;
-        }
       }
-
-      *attrib += i; //this is *attrib for the new custom header 
-      headers.Append(": "); //Adding additonal header to the pref so append the separator
     }
-
-    headers.Append(string);
-    prefBranch->SetCharPref(MAILNEWS_CUSTOM_HEADERS, headers);
-
-    prefService->SavePrefFile(nsnull); //save customHeader pref - we have added a new header
-  }	
-	return NS_OK;      // we always succeed now
+  }
+	return (found) ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
 nsresult NS_MsgGetStringForAttribute(PRInt16 attrib, const char **string)
@@ -563,12 +549,11 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 }
 
 // find the operator code for this operator string.
-nsMsgSearchOpValue
-nsMsgSearchTerm::ParseOperator(char *inStream)
+nsresult
+nsMsgSearchTerm::ParseOperator(char *inStream, nsMsgSearchOpValue *value)
 {
+  NS_ENSURE_ARG_POINTER(value);
 	PRInt16				operatorVal;
-	nsresult		err;
-
 	while (nsString::IsSpace(*inStream))
 		inStream++;
 
@@ -577,8 +562,9 @@ nsMsgSearchTerm::ParseOperator(char *inStream)
 	if (commaSep)
 		*commaSep = '\0';
 
-	err = NS_MsgGetOperatorFromString(inStream, &operatorVal);
-	return (nsMsgSearchOpValue) operatorVal;
+	nsresult err = NS_MsgGetOperatorFromString(inStream, &operatorVal);
+  *value = (nsMsgSearchOpValue) operatorVal;
+  return err;
 }
 
 // find the attribute code for this comma-delimited attribute. 
@@ -610,6 +596,8 @@ nsMsgSearchTerm::ParseAttribute(char *inStream, nsMsgSearchAttribValue *attrib)
 		*separator = '\0';
 
 	err = NS_MsgGetAttributeFromString(inStream, &attributeVal);
+  NS_ENSURE_SUCCESS(err, err);
+
 	*attrib = (nsMsgSearchAttribValue) attributeVal;
 	
 	if (*attrib > nsMsgSearchAttrib::OtherHeader && *attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)  // if we are dealing with an arbitrary header....
@@ -633,7 +621,8 @@ nsresult nsMsgSearchTerm::DeStreamNew (char *inStream, PRInt16 /*length*/)
 		return NS_ERROR_INVALID_ARG;
 	char *secondCommaSep = PL_strchr(commaSep + 1, ',');
 	if (commaSep)
-		m_operator = ParseOperator(commaSep + 1);
+		rv = ParseOperator(commaSep + 1, &m_operator);
+  NS_ENSURE_SUCCESS(rv, rv);
 	if (secondCommaSep)
 		ParseValue(secondCommaSep + 1);
 	return NS_OK;

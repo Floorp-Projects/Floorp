@@ -948,17 +948,14 @@ NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListen
 	nsresult status = NS_OK;
   nsCOMPtr <nsIMsgFolder> msgParent;
   GetParentMsgFolder(getter_AddRefs(msgParent));
-  
+
   // parent is probably not set because *this* was probably created by rdf
   // and not by folder discovery. So, we have to compute the parent.
   if (!msgParent)
   {
     nsCAutoString folderName(mURI);
       
-    nsCAutoString uri;
-
     PRInt32 leafPos = folderName.RFindChar('/');
-
     nsCAutoString parentName(folderName);
 
     if (leafPos > 0)
@@ -986,8 +983,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListen
 	  if (NS_SUCCEEDED(rv) && imapService)
     {
       nsCOMPtr <nsIURI> uri;
-
-      imapService->EnsureFolderExists(m_eventQueue, msgParent, folderName, urlListener, getter_AddRefs(uri));
+      imapService->EnsureFolderExists(m_eventQueue, msgParent, folderName.get(), urlListener, getter_AddRefs(uri));
     }
   }
 
@@ -2863,25 +2859,54 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
     NS_ASSERTION(PR_FALSE, "need to return status!");
     return NS_ERROR_NULL_POINTER;
   }
+
   // look at action - currently handle move
-#ifdef DEBUG_bienvenu
-  printf("got a rule hit!\n");
-#endif
-  if (NS_SUCCEEDED(filter->GetAction(&actionType)))
+  #ifdef DEBUG_bienvenu
+    printf("got a rule hit!\n");
+  #endif
+
+  nsCOMPtr<nsIMsgDBHdr> msgHdr;
+
+  if (m_msgParser)
+    m_msgParser->GetNewMsgHdr(getter_AddRefs(msgHdr));
+
+  if (!msgHdr)
+    return NS_ERROR_NULL_POINTER; //fatal error, cannot apply filters
+
+  PRBool loggingEnabled = PR_FALSE;
+  if (m_filterList)
+    (void)m_filterList->GetLoggingEnabled(&loggingEnabled);
+
+  PRBool deleteToTrash = DeleteIsMoveToTrash();
+
+  nsCOMPtr<nsISupportsArray> filterActionList;
+  rv = NS_NewISupportsArray(getter_AddRefs(filterActionList));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = filter->GetSortedActionList(filterActionList);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 numActions;
+  rv = filterActionList->Count(&numActions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 actionIndex =0; actionIndex < numActions && *applyMore; actionIndex++)
   {
-    if (actionType == nsMsgFilterAction::MoveToFolder)
+    nsCOMPtr<nsIMsgRuleAction> filterAction;
+    filterActionList->QueryElementAt(actionIndex, NS_GET_IID(nsIMsgRuleAction), getter_AddRefs(filterAction));
+    if (!filterAction)
+      continue;
+    if (NS_SUCCEEDED(filterAction->GetType(&actionType)))
     {
-        filter->GetActionTargetFolderUri(getter_Copies(actionTargetFolderUri));
-        if (!actionTargetFolderUri || !actionTargetFolderUri[0])
-          return rv;
-    }
-    nsCOMPtr<nsIMsgDBHdr> msgHdr;
+      if (actionType == nsMsgFilterAction::MoveToFolder)
+      {
+        filterAction->GetTargetFolderUri(getter_Copies(actionTargetFolderUri));
+        if (actionTargetFolderUri.IsEmpty())
+        {
+          NS_ASSERTION(PR_FALSE, "actionTargetFolderUri is empty");
+          continue;
+        }
+      }
 
-    if (m_msgParser)
-      m_msgParser->GetNewMsgHdr(getter_AddRefs(msgHdr));
-    if (NS_SUCCEEDED(rv) && msgHdr)
-
-    {
       PRUint32 msgFlags;
       nsMsgKey    msgKey;
       nsCAutoString trashNameVal;
@@ -2891,113 +2916,103 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
       PRBool isRead = (msgFlags & MSG_FLAG_READ);
       switch (actionType)
       {
-      case nsMsgFilterAction::Delete:
-      {
-        PRBool deleteToTrash = DeleteIsMoveToTrash();
-        if (deleteToTrash)
+        case nsMsgFilterAction::Delete:
         {
-          // set value to trash folder
-          nsCOMPtr <nsIMsgFolder> mailTrash;
-          rv = GetTrashFolder(getter_AddRefs(mailTrash));
-          if (NS_SUCCEEDED(rv) && mailTrash)
-            rv = mailTrash->GetURI(getter_Copies(actionTargetFolderUri));
-
-          msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);  // mark read in trash.
-        }
-        else  // (!deleteToTrash)
-        {
-          msgHdr->OrFlags(MSG_FLAG_READ | MSG_FLAG_IMAP_DELETED, &newFlags);
-          nsMsgKeyArray keysToFlag;
-
-          keysToFlag.Add(msgKey);
-          StoreImapFlags(kImapMsgSeenFlag | kImapMsgDeletedFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
-          m_msgMovedByFilter = PR_TRUE; // this will prevent us from adding the header to the db.
-        }
-      }
-      // note that delete falls through to move.
-      case nsMsgFilterAction::MoveToFolder:
-      {
-        // if moving to a different file, do it.
-        nsXPIDLCString uri;
-        rv = GetURI(getter_Copies(uri));
-
-        if ((const char*)actionTargetFolderUri &&
-            nsCRT::strcmp(uri, actionTargetFolderUri))
-        {
-          msgHdr->GetFlags(&msgFlags);
-
-          if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED &&
-            !isRead)
+          if (deleteToTrash)
           {
+            // set value to trash folder
+            nsCOMPtr <nsIMsgFolder> mailTrash;
+            rv = GetTrashFolder(getter_AddRefs(mailTrash));
+            if (NS_SUCCEEDED(rv) && mailTrash)
+              rv = mailTrash->GetURI(getter_Copies(actionTargetFolderUri));
 
-            msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
-            msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
-
+            msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);  // mark read in trash.
           }
-          nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, actionTargetFolderUri, filter, msgWindow);
-          if (NS_SUCCEEDED(err))
-            m_msgMovedByFilter = PR_TRUE;
+          else  // (!deleteToTrash)
+          {
+            msgHdr->OrFlags(MSG_FLAG_READ | MSG_FLAG_IMAP_DELETED, &newFlags);
+            nsMsgKeyArray keysToFlag;
+
+            keysToFlag.Add(msgKey);
+            StoreImapFlags(kImapMsgSeenFlag | kImapMsgDeletedFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
+            m_msgMovedByFilter = PR_TRUE; // this will prevent us from adding the header to the db.
+          }
         }
-      }
-      // don't apply any more filters, even if it was a move to the same folder
-        *applyMore = PR_FALSE; 
+        // note that delete falls through to move.
+        case nsMsgFilterAction::MoveToFolder:
+        {
+          // if moving to a different file, do it.
+          nsXPIDLCString uri;
+          rv = GetURI(getter_Copies(uri));
+
+          if ((const char*)actionTargetFolderUri &&
+            nsCRT::strcmp(uri, actionTargetFolderUri))
+          {
+            msgHdr->GetFlags(&msgFlags);
+
+            if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED && !isRead)
+            {
+               msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
+               msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
+            }
+            nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, actionTargetFolderUri, filter, msgWindow);
+            if (NS_SUCCEEDED(err))
+              m_msgMovedByFilter = PR_TRUE;
+          }
+          // don't apply any more filters, even if it was a move to the same folder
+          *applyMore = PR_FALSE; 
+        }
         break;
-      case nsMsgFilterAction::MarkRead:
+        case nsMsgFilterAction::MarkRead:
         {
           nsMsgKeyArray keysToFlag;
-
           keysToFlag.Add(msgKey);
           StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
         }
-//        MarkFilteredMessageRead(msgHdr);
         break;
-      case nsMsgFilterAction::MarkFlagged:
+        case nsMsgFilterAction::MarkFlagged:
         {
           nsMsgKeyArray keysToFlag;
-
           keysToFlag.Add(msgKey);
           StoreImapFlags(kImapMsgFlaggedFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
         }
         break;
-      case nsMsgFilterAction::KillThread:
-        // for ignore and watch, we will need the db
-        // to check for the flags in msgHdr's that
-        // get added, because only then will we know
-        // the thread they're getting added to.
-        msgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
+        case nsMsgFilterAction::KillThread:
+          // for ignore and watch, we will need the db
+          // to check for the flags in msgHdr's that
+          // get added, because only then will we know
+          // the thread they're getting added to.
+          msgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
         break;
-      case nsMsgFilterAction::WatchThread:
-        msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
+        case nsMsgFilterAction::WatchThread:
+          msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
         break;
-      case nsMsgFilterAction::ChangePriority:
-          {
-              nsMsgPriorityValue filterPriority;
-              filter->GetActionPriority(&filterPriority);
-              msgHdr->SetPriority(filterPriority);
-          }
-        break;
-      case nsMsgFilterAction::Label:
+        case nsMsgFilterAction::ChangePriority:
         {
-            nsMsgLabelValue filterLabel;
-            filter->GetActionLabel(&filterLabel);
-            msgHdr->SetLabel(filterLabel);
-            nsMsgKeyArray keysToFlag;
-
-            keysToFlag.Add(msgKey);
-            StoreImapFlags((filterLabel << 9), PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
+          nsMsgPriorityValue filterPriority;
+          filterAction->GetPriority(&filterPriority);
+          msgHdr->SetPriority(filterPriority);
         }
-      default:
         break;
-      }
-   
-      // we log move hits in MoveIncorporatedMessage()
-      if (actionType != nsMsgFilterAction::MoveToFolder) {
-        PRBool loggingEnabled = PR_FALSE;
-        if (m_filterList)
-          (void)m_filterList->GetLoggingEnabled(&loggingEnabled);
+        case nsMsgFilterAction::Label:
+        {
+          nsMsgLabelValue filterLabel;
+          filterAction->GetLabel(&filterLabel);
+          msgHdr->SetLabel(filterLabel);
+          nsMsgKeyArray keysToFlag;
 
-        if (loggingEnabled) 
-          (void)filter->LogRuleHit(msgHdr); 
+          keysToFlag.Add(msgKey);
+          StoreImapFlags((filterLabel << 9), PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
+        }
+        default:
+          break;
+      }
+      if (loggingEnabled)
+      {
+        // only log if successful move, or non-move action
+        if (m_msgMovedByFilter || (actionType != nsMsgFilterAction::MoveToFolder &&
+             (actionType != nsMsgFilterAction::Delete || !deleteToTrash)))
+          (void) filter->LogRuleHit(filterAction, msgHdr);
       }
     }
   }
@@ -3378,17 +3393,10 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
         // keep track of nsIMsgFolder, nsMsgKeyArray pairs here in the imap code.
 //        nsMsgKeyArray *idsToMoveFromInbox = msgFolder->GetImapIdsToMoveFromInbox();
 //        idsToMoveFromInbox->Add(keyToFilter);
-        PRBool loggingEnabled = PR_FALSE;
-        if (m_filterList)
-          (void)m_filterList->GetLoggingEnabled(&loggingEnabled);
-
-        if (loggingEnabled) 
-          (void)filter->LogRuleHit(mailHdr); 
-
         if (imapDeleteIsMoveToTrash)
         {
         }
-        
+         
         destIFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
         
         if (imapDeleteIsMoveToTrash)  
@@ -3599,7 +3607,12 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
       // db label flags are 0x0E000000 and imap label flags are 0x0E00
       // so we need to shift 16 bits to the left to convert them.
       if (imap_flags & kImapMsgLabelFlags)
+      {
+        // we need to set label attribute on header because the dbview code 
+        // does msgHdr->GetLabel when asked to paint a row
+        tweakMe->SetLabel((imap_flags & kImapMsgLabelFlags) >> 9);
         newFlags |= (imap_flags & kImapMsgLabelFlags) << 16;
+      }
 
       if (newFlags)
         tweakMe->OrFlags(newFlags, &dbHdrFlags);

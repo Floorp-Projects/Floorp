@@ -41,8 +41,25 @@
 #include "nsIMsgSearchScopeTerm.idl"
 #include "nsIMsgSearchValue.idl"
 #include "nsIMsgSearchTerm.idl"
+#include "nsISupportsArray.idl"
 
 interface nsOutputStream;
+
+[scriptable, uuid(09aa663b-ab04-457d-9557-319e4cc7884e)]
+interface nsIMsgRuleAction : nsISupports {
+
+  attribute nsMsgRuleActionType type;
+
+  // target priority.. throws an exception if the action is not priority
+  attribute nsMsgPriorityValue priority;
+
+  // target folder.. throws an exception if the action is not move to folder
+  attribute string targetFolderUri;
+
+  // target label. throws an exception if the action is not label
+  attribute nsMsgLabelValue label;
+
+};
 
 [scriptable, uuid(605db0f8-04a1-11d3-a50a-0060b0fc04b7)]
 interface nsIMsgFilter : nsISupports {
@@ -57,6 +74,8 @@ interface nsIMsgFilter : nsISupports {
     attribute boolean enabled;
     attribute wstring filterName;
     attribute string filterDesc;
+    attribute string unparsedBuffer; //holds the entire filter if we don't know how to handle it
+    attribute boolean unparseable;  //whether we could parse the filter or not
 
     readonly attribute nsIMsgFilterList filterList; // owning filter list
     
@@ -81,17 +100,6 @@ interface nsIMsgFilter : nsISupports {
 
     attribute nsIMsgSearchScopeTerm scope;
 
-    attribute nsMsgRuleActionType action;
-
-    // target priority.. throws an exception if the action is not priority
-    attribute nsMsgPriorityValue actionPriority;
-
-    // target folder.. throws an exception if the action is not move to folder
-    attribute string actionTargetFolderUri;
-
-    // target label. throws an exception if the action is not label
-    attribute nsMsgLabelValue actionLabel;
-
     // marking noscript because "headers" is actually a null-seperated
     // list of headers, which is not scriptable
     [noscript] void MatchHdr(in nsIMsgDBHdr msgHdr, in nsIMsgFolder folder,
@@ -100,5 +108,15 @@ interface nsIMsgFilter : nsISupports {
                   //                  [array, size_is(headerSize)] in string headers,
                   in unsigned long headerSize, out boolean result);
 
-    void logRuleHit(in nsIMsgDBHdr aHeader);
+    void logRuleHit(in nsIMsgRuleAction aFilterAction, in nsIMsgDBHdr aHeader);
+    nsIMsgRuleAction createAction();
+
+    nsIMsgRuleAction getActionAt(in long aIndex);
+
+    void appendAction(in nsIMsgRuleAction action);
+
+    void clearActionList();
+    void getSortedActionList(in nsISupportsArray actionList);  //will return an action list with moveAction (if present) as last one.
+    readonly attribute nsISupportsArray actionList;
 };
+

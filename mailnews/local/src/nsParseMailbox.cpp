@@ -1639,7 +1639,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow)
 NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore)
 {
 	nsMsgRuleActionType actionType;
-    nsXPIDLCString actionTargetFolderUri;
+  nsXPIDLCString actionTargetFolderUri;
 	PRUint32	newFlags;
 	nsresult rv = NS_OK;
 
@@ -1651,88 +1651,109 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
 
 	*applyMore = PR_TRUE;
 
-	// look at action - currently handle move
+  nsCOMPtr<nsIMsgDBHdr> msgHdr = m_newMsgHdr;
+
+  PRBool loggingEnabled = PR_FALSE;
+  if (m_filterList)
+	  m_filterList->GetLoggingEnabled(&loggingEnabled);
+
+  nsCOMPtr<nsISupportsArray> filterActionList;
+  rv = NS_NewISupportsArray(getter_AddRefs(filterActionList));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = filter->GetSortedActionList(filterActionList);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // look at action - currently handle move
 #ifdef DEBUG_bienvenu
 	printf("got a rule hit!\n");
 #endif
-	if (NS_SUCCEEDED(filter->GetAction(&actionType)))
-	{
-        if (actionType == nsMsgFilterAction::MoveToFolder)
-        {
-            filter->GetActionTargetFolderUri(getter_Copies(actionTargetFolderUri));
-            if (!actionTargetFolderUri)
-              return rv;
-        }
-		nsCOMPtr<nsIMsgDBHdr> msgHdr = m_newMsgHdr;
-		PRUint32 msgFlags;
 
-		msgHdr->GetFlags(&msgFlags);
+  PRUint32 numActions;
+  rv = filterActionList->Count(&numActions);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-		switch (actionType)
-		{
-		case nsMsgFilterAction::Delete :
-		{
-			nsCOMPtr <nsIMsgFolder> trash;
-			// set value to trash folder
-			rv = GetTrashFolder(getter_AddRefs(trash));
-			if (NS_SUCCEEDED(rv) && trash)
-				rv = trash->GetURI(getter_Copies(actionTargetFolderUri));
+  for (PRUint32 actionIndex =0; actionIndex < numActions && *applyMore; actionIndex++)
+  {
+    nsCOMPtr<nsIMsgRuleAction> filterAction;
+    filterActionList->QueryElementAt(actionIndex, NS_GET_IID(nsIMsgRuleAction), getter_AddRefs(filterAction));
+    if (!filterAction)
+      continue;
 
-			msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);	// mark read in trash.
-		}
-		case nsMsgFilterAction::MoveToFolder:
-			// if moving to a different file, do it.
-			if ((const char*)actionTargetFolderUri &&
-                nsCRT::strcasecmp(m_inboxUri, actionTargetFolderUri))
-			{
-				msgHdr->GetFlags(&msgFlags);
-
-        nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (const char *) actionTargetFolderUri, filter, msgWindow);
-        if (NS_SUCCEEDED(err))
-          m_msgMovedByFilter = PR_TRUE;
+	  if (NS_SUCCEEDED(filterAction->GetType(&actionType)))
+    {
+      if (actionType == nsMsgFilterAction::MoveToFolder)
+      {
+         filterAction->GetTargetFolderUri(getter_Copies(actionTargetFolderUri));
+         if (actionTargetFolderUri.IsEmpty())
+         {
+           NS_ASSERTION(PR_FALSE, "actionTargetFolderUri is empty");
+           continue;
+         }
       }
-      *applyMore = PR_FALSE; 
-      break;
-		case nsMsgFilterAction::MarkRead:
-			MarkFilteredMessageRead(msgHdr);
-			break;
-		case nsMsgFilterAction::KillThread:
-			// for ignore and watch, we will need the db
-			// to check for the flags in msgHdr's that
-			// get added, because only then will we know
-			// the thread they're getting added to.
-			msgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
-			break;
-		case nsMsgFilterAction::WatchThread:
-			msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
-			break;
-    case nsMsgFilterAction::MarkFlagged:
-      msgHdr->MarkFlagged(PR_TRUE);
-      break;
-		case nsMsgFilterAction::ChangePriority:
+		  switch (actionType)
+      {
+		    case nsMsgFilterAction::Delete:
+        {
+			    nsCOMPtr <nsIMsgFolder> trash;
+			    // set value to trash folder
+			    rv = GetTrashFolder(getter_AddRefs(trash));
+			    if (NS_SUCCEEDED(rv) && trash)
+				    rv = trash->GetURI(getter_Copies(actionTargetFolderUri));
+
+          msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);	// mark read in trash.
+        }
+		    case nsMsgFilterAction::MoveToFolder:
+			    // if moving to a different file, do it.
+			    if ((const char*)actionTargetFolderUri &&
+              nsCRT::strcasecmp(m_inboxUri, actionTargetFolderUri))
+          {
+            nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (const char *) actionTargetFolderUri, filter, msgWindow);
+            if (NS_SUCCEEDED(err))
             {
-                nsMsgPriorityValue filterPriority;
-                filter->GetActionPriority(&filterPriority);
-                msgHdr->SetPriority(filterPriority);
+              if (loggingEnabled)
+                (void)filter->LogRuleHit(filterAction, msgHdr); 
+
+              // cleanup after mailHdr in source DB because we moved the message.
+              m_mailDB->RemoveHeaderMdbRow(msgHdr);
+              m_msgMovedByFilter = PR_TRUE;
             }
-			break;
-		case nsMsgFilterAction::Label:
-            {
-                nsMsgLabelValue filterLabel;
-                filter->GetActionLabel(&filterLabel);
-                nsMsgKey msgKey;
-                msgHdr->GetMessageKey(&msgKey);
-                m_mailDB->SetLabel(msgKey, filterLabel);
-            }
-			break;
-		default:
-			break;
-		}
-	PRBool loggingEnabled = PR_FALSE;
-        if (m_filterList)
-	  m_filterList->GetLoggingEnabled(&loggingEnabled);
-	if (loggingEnabled && !m_msgMovedByFilter && actionType != nsMsgFilterAction::MoveToFolder)
-		filter->LogRuleHit(msgHdr);
+          }
+          *applyMore = PR_FALSE; 
+          break;
+		    case nsMsgFilterAction::MarkRead:
+			    MarkFilteredMessageRead(msgHdr);
+			    break;
+		    case nsMsgFilterAction::KillThread:
+			    // for ignore and watch, we will need the db
+			    // to check for the flags in msgHdr's that
+			    // get added, because only then will we know
+			    // the thread they're getting added to.
+			    msgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
+			    break;
+		    case nsMsgFilterAction::WatchThread:
+			    msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
+			    break;
+        case nsMsgFilterAction::MarkFlagged:
+          msgHdr->MarkFlagged(PR_TRUE);
+          break;
+		    case nsMsgFilterAction::ChangePriority:
+          nsMsgPriorityValue filterPriority;
+          filterAction->GetPriority(&filterPriority);
+          msgHdr->SetPriority(filterPriority);
+          break;
+		    case nsMsgFilterAction::Label:
+          nsMsgLabelValue filterLabel;
+          filterAction->GetLabel(&filterLabel);
+          nsMsgKey msgKey;
+          msgHdr->GetMessageKey(&msgKey);
+          m_mailDB->SetLabel(msgKey, filterLabel);
+			    break;
+		    default:
+			    break;
+      }
+      if (loggingEnabled && actionType != nsMsgFilterAction::MoveToFolder && actionType != nsMsgFilterAction::Delete)  
+        (void)filter->LogRuleHit(filterAction, msgHdr); 
+    }
 	}
 	return rv;
 }
@@ -1940,20 +1961,9 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
       destIFolder->SummaryChanged();
     
     destMailDB->Commit(nsMsgDBCommitType::kLargeCommit);
-  }
-  // We are logging the hit with the old mailHdr, which should work, as long
-  // as LogRuleHit doesn't assume the new hdr.
-  PRBool loggingEnabled = PR_FALSE;
-  if (m_filterList)
-    m_filterList->GetLoggingEnabled(&loggingEnabled);
-  if (loggingEnabled)
-    filter->LogRuleHit(mailHdr);
-  
-  // cleanup after mailHdr in source DB because we moved the message.
-  m_mailDB->RemoveHeaderMdbRow(mailHdr);
+  }  
   
   return err;
-
 }
 
 #ifdef IMAP_NEW_MAIL_HANDLED

@@ -179,6 +179,12 @@ function toggleFilter(aFilterURI)
     var filterResource = gRDF.GetResource(aFilterURI);
     var filter = filterResource.GetDelegate("filter",
                                             Components.interfaces.nsIMsgFilter);
+    if (filter.unparseable)
+    {
+      var str = gFilterBundle.getString("cannotEnableFilter");
+      window.alert(str);
+      return;
+    }
     filter.enabled = !filter.enabled;
     refresh();
 }
@@ -406,8 +412,11 @@ function updateButtons()
     var numFiltersSelected = gFilterTree.view.selection.count;
     var oneFilterSelected = (numFiltersSelected == 1);
 
-    // "edit" and "delete" only enabled when one filter selected
-    gEditButton.disabled = !oneFilterSelected;
+    var filter = currentFilter();
+    // "edit" only enabled when one filter selected or if we couldn't parse the filter
+    gEditButton.disabled = !oneFilterSelected || filter.unparseable;
+    
+    // "delete" only enabled when one filter selected
     gDeleteButton.disabled = !oneFilterSelected;
 
     // we can run multiple filters on a folder

@@ -1091,8 +1091,40 @@ nsMsgIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **
       rv = mFilterFile->FromFileSpec(thisFolder);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      mFilterFile->AppendRelativeUnixPath("rules.dat");
+      mFilterFile->AppendRelativeUnixPath("msgFilterRules.dat");
       
+      PRBool fileExists;
+      mFilterFile->Exists(&fileExists);
+      if (!fileExists)
+      {
+        nsCOMPtr<nsIFileSpec> oldFilterFile = do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = oldFilterFile->FromFileSpec(thisFolder);
+        NS_ENSURE_SUCCESS(rv, rv);
+        oldFilterFile->AppendRelativeUnixPath("rules.dat");
+        
+        oldFilterFile->Exists(&fileExists);
+        if (fileExists)  //copy rules.dat --> msgFilterRules.dat
+        {
+          nsFileSpec rootFolderSpec;
+          thisFolder->GetFileSpec(&rootFolderSpec);
+
+          nsCOMPtr<nsILocalFile> rootFolderDir;
+          rv = NS_FileSpecToIFile(&rootFolderSpec, getter_AddRefs(rootFolderDir));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          nsFileSpec oldFilterSpec;
+          oldFilterFile->GetFileSpec(&oldFilterSpec);
+
+          nsCOMPtr<nsILocalFile> localFilterFile;
+          rv = NS_FileSpecToIFile(&oldFilterSpec, getter_AddRefs(localFilterFile));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          rv = localFilterFile->CopyToNative(rootFolderDir, NS_LITERAL_CSTRING("msgFilterRules.dat"));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      }
       nsCOMPtr<nsIMsgFilterService> filterService =
           do_GetService(NS_MSGFILTERSERVICE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1788,12 +1820,15 @@ nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *fi
             newFilter->AppendTerm(term);
           }
         }
-        newFilter->SetAction(nsMsgFilterAction::MoveToFolder);
+        nsCOMPtr<nsIMsgRuleAction> filterAction;
+        newFilter->CreateAction(getter_AddRefs(filterAction));
+        filterAction->SetType(nsMsgFilterAction::MoveToFolder);
         nsXPIDLCString actionTargetFolderUri;
         rv = sentFolder->GetURI(getter_Copies(actionTargetFolderUri));
         if (NS_SUCCEEDED(rv))
         {
-          newFilter->SetActionTargetFolderUri(actionTargetFolderUri);
+          filterAction->SetTargetFolderUri(actionTargetFolderUri);
+          newFilter->AppendAction(filterAction);
           filterList->InsertFilterAt(0, newFilter);
         }
       }

@@ -42,7 +42,6 @@ var gFilter;
 // cache the key elements we need
 var gFilterList;
 var gFilterNameElement;
-var gActionElement;
 var gActionTargetElement;
 var gActionValueDeck;
 var gActionPriority;
@@ -53,6 +52,12 @@ var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 var gPref;
 var gPrefBranch;
 var gMailSession = null;
+var gMoveToFolderCheckbox;
+var gChangePriorityCheckbox;
+var gLabelCheckbox;
+var gMarkReadCheckbox;
+var gMarkFlaggedCheckbox;
+var gDeleteCheckbox;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
 
@@ -66,6 +71,7 @@ function filterEditorOnLoad()
     gPref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
     gPrefBranch = gPref.getDefaultBranch(null);
     gFilterBundle = document.getElementById("bundle_filter");
+    InitMessageLabel();
     if ("arguments" in window && window.arguments[0]) {
         var args = window.arguments[0];
 
@@ -95,8 +101,6 @@ function filterEditorOnLoad()
             term.value = termValue;
 
             gFilter.appendTerm(term);
-            gFilter.action = nsMsgFilterAction.MoveToFolder;
-
             initializeDialog(gFilter);
           }
           else{
@@ -120,12 +124,7 @@ function filterEditorOnLoad()
         name = stub + " " + count.toString();
       }
       gFilterNameElement.value = name;
-
-      // initialize priority
-      var defaultValue = String(Components.interfaces.nsMsgPriority.Default);
-      gActionPriority.selectedItem = gActionPriority.getElementsByAttribute("value", defaultValue)[0]
     }
-
     gFilterNameElement.select();
     moveToAlertPosition();
 }
@@ -254,56 +253,71 @@ function setLabelAttributes(labelID, menuItemID)
 function initializeFilterWidgets()
 {
     gFilterNameElement = document.getElementById("filterName");
-    gActionElement = document.getElementById("actionMenu");
     gActionTargetElement = document.getElementById("actionTargetFolder");
     gActionValueDeck = document.getElementById("actionValueDeck");
     gActionPriority = document.getElementById("actionValuePriority");
     gActionLabel = document.getElementById("actionValueLabel");
+    gMoveToFolderCheckbox = document.getElementById("moveToFolder");
+    gChangePriorityCheckbox = document.getElementById("changePriority");
+    gLabelCheckbox = document.getElementById("label");
+    gMarkReadCheckbox = document.getElementById("markRead");
+    gMarkFlaggedCheckbox = document.getElementById("markFlagged");
+    gDeleteCheckbox = document.getElementById("delete");
 }
 
 function initializeDialog(filter)
 {
-    var selectedPriority;
     gFilterNameElement.value = filter.filterName;
+    var actionList = filter.actionList;
+    var numActions = actionList.Count();
+    
+    for (var actionIndex=0; actionIndex < numActions; actionIndex++)
+    {
+      var filterAction = actionList.QueryElementAt(actionIndex, Components.interfaces.nsIMsgRuleAction);
 
-    gActionElement.selectedItem=gActionElement.getElementsByAttribute("value", filter.action)[0];
-    showActionElementFor(gActionElement.selectedItem);
-
-    if (filter.action == nsMsgFilterAction.MoveToFolder) {
+      if (filterAction.type == nsMsgFilterAction.MoveToFolder) {
         // preselect target folder
-        var target = filter.actionTargetFolderUri;
-
-        if (target) {
-            SetFolderPicker(target, gActionTargetElement.id);
-        }
-    } else if (filter.action == nsMsgFilterAction.ChangePriority) {
+        gMoveToFolderCheckbox.checked = true;
+        var target = filterAction.targetFolderUri;
+        if (target) 
+          SetFolderPicker(target, gActionTargetElement.id);
+      }
+      else if (filterAction.type == nsMsgFilterAction.ChangePriority) 
+      {
+        gChangePriorityCheckbox.checked = true;
         // initialize priority
-        selectedPriority = gActionPriority.getElementsByAttribute("value", filter.actionPriority);
+        var selectedPriority = gActionPriority.getElementsByAttribute("value", filterAction.priority);
 
-        if (selectedPriority && selectedPriority.length > 0) {
-            selectedPriority = selectedPriority[0];
-            gActionPriority.selectedItem = selectedPriority;
+        if (selectedPriority && selectedPriority.length > 0) 
+        {
+          selectedPriority = selectedPriority[0];
+          gActionPriority.selectedItem = selectedPriority;
         }
-    }
-
-    else if (filter.action == nsMsgFilterAction.Label) {
-      var selectedLabel;
-      // initialize label
-      selectedLabel = gActionLabel.getElementsByAttribute("value", filter.actionLabel);
-        if (selectedLabel && selectedLabel.length > 0) {
-            selectedLabel = selectedLabel[0];
-            gActionLabel.selectedItem = selectedLabel;
+      }
+      else if (filterAction.type == nsMsgFilterAction.Label) 
+      {
+        gLabelCheckbox.checked = true;
+        // initialize label
+        var selectedLabel = gActionLabel.getElementsByAttribute("value", filterAction.label);
+        if (selectedLabel && selectedLabel.length > 0) 
+        {
+          selectedLabel = selectedLabel[0];
+          gActionLabel.selectedItem = selectedLabel;
         }
-        gFilter.actionLabel = gActionLabel.selectedItem.getAttribute("value");
-        // Set the label text on dialog initialization.
-        setLabelAttributes(gFilter.actionLabel, "actionValueLabel");
+      }
+      else if (filterAction.type == nsMsgFilterAction.MarkRead)
+        gMarkReadCheckbox.checked = true;
+      else if (filterAction.type == nsMsgFilterAction.MarkFlagged)
+        gMarkFlaggedCheckbox.checked = true;
+      else if (filterAction.type == nsMsgFilterAction.Delete)
+        gDeleteCheckbox.checked = true;
     }
 
     var scope = getScope(filter);
     setSearchScope(scope);
     initializeSearchRows(scope, filter.searchTerms);
     if (filter.searchTerms.Count() > 1)
-        gSearchLessButton.removeAttribute("disabled", "false");
+      gSearchLessButton.removeAttribute("disabled", "false");
 
 }
 
@@ -311,13 +325,20 @@ function InitMessageLabel()
 {
     /* this code gets the label strings and changes the menu labels */
     var lastLabel = 5;
-
     // start with 1 because there is no None label (id 0) as an filtering
     // option to filter to.
     for (var i = 1; i <= lastLabel; i++)
     {
         setLabelAttributes(i, "labelMenuItem" + i);
     }
+    
+    /* We set the label attribute for labels here because they have to be read from prefs. Default selection
+       is always 0 and the picker thinks that it is already showing the label but it is not. Just setting selectedIndex 
+       to 0 doesn't do it because it thinks that it is already showing 0. So we need to set it to something else than 0 
+       and then back to 0, to make it show the default case- probably some sort of dom optimization*/
+
+    gActionLabel.selectedIndex = 1;
+    gActionLabel.selectedIndex = 0;
 
     document.commandDispatcher.updateCommands('create-menu-label');
 }
@@ -325,115 +346,133 @@ function InitMessageLabel()
 
 // move to overlay
 
-function saveFilter() {
-    var isNewFilter;
-    var str;
+function saveFilter() 
+{
+  var isNewFilter;
+  var str;
+  var filterAction; 
 
-    var filterName= gFilterNameElement.value;
-    if (!filterName || filterName == "") {
-        str = gFilterBundle.getString("mustEnterName");
-        window.alert(str);
-        gFilterNameElement.focus();
-        return false;
+  var filterName= gFilterNameElement.value;
+  if (!filterName || filterName == "") 
+  {
+    str = gFilterBundle.getString("mustEnterName");
+    window.alert(str);
+    gFilterNameElement.focus();
+    return false;
+  }
+
+  if (!gFilter) 
+  {
+    gFilter = gFilterList.createFilter(gFilterNameElement.value);
+    isNewFilter = true;
+    gFilter.enabled=true;
+  } 
+  else 
+  {
+    gFilter.filterName = gFilterNameElement.value;
+    //Prefilter is treated as a new filter.
+    if (gPreFillName) 
+    {
+      isNewFilter = true;
+      gFilter.enabled=true;
+    }
+    else 
+    {
+      isNewFilter = false;
+      gFilter.clearActionList();
+    }
+  }
+
+  if (gMoveToFolderCheckbox.checked)
+  {
+    if (gActionTargetElement)
+      targetUri = gActionTargetElement.getAttribute("uri");
+    if (!targetUri || targetUri == "") 
+    {
+      str = gFilterBundle.getString("mustSelectFolder");
+      window.alert(str);
+      return false;
+    }
+      
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.MoveToFolder;
+    filterAction.targetFolderUri = targetUri;
+    gFilter.appendAction(filterAction);
+  }
+    
+  if (gChangePriorityCheckbox.checked) 
+  {
+    if (!gActionPriority.selectedItem) 
+    {
+      str = gFilterBundle.getString("mustSelectPriority");
+      window.alert(str);
+      return false;
     }
 
-    var targetUri;
-    var action = gActionElement.selectedItem.getAttribute("value");
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.ChangePriority;
+    filterAction.priority = gActionPriority.selectedItem.getAttribute("value");
+    gFilter.appendAction(filterAction);
+  }
 
-    if (action == nsMsgFilterAction.MoveToFolder) {
-        if (gActionTargetElement)
-            targetUri = gActionTargetElement.getAttribute("uri");
-        if (!targetUri || targetUri == "") {
-            str = gFilterBundle.getString("mustSelectFolder");
-            window.alert(str);
-            return false;
-        }
+  if (gLabelCheckbox.checked) 
+  {
+    if (!gActionLabel.selectedItem) 
+    {
+      str = gFilterBundle.getString("mustSelectLabel");
+      window.alert(str);
+      return false;
     }
 
-    else if (action == nsMsgFilterAction.ChangePriority) {
-        if (!gActionPriority.selectedItem) {
-            str = gFilterBundle.getString("mustSelectPriority");
-            window.alert(str);
-            return false;
-        }
-    }
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.Label;
+    filterAction.label = gActionLabel.selectedItem.getAttribute("value");
+    gFilter.appendAction(filterAction);
+  }
 
-    else if (action == nsMsgFilterAction.Label) {
-        if (!gActionLabel.selectedItem) {
-            str = gFilterBundle.getString("mustSelectLabel");
-            window.alert(str);
-            return false;
-        }
-    }
-    // this must happen after everything has
-    if (!gFilter) {
-        gFilter = gFilterList.createFilter(gFilterNameElement.value);
-        isNewFilter = true;
-        gFilter.enabled=true;
-    } else {
-        gFilter.filterName = gFilterNameElement.value;
-        
-        //Prefilter is treated as a new filter.
-        if (gPreFillName) {
-          isNewFilter = true;
-          gFilter.enabled=true;
-        }
-        else {
-          isNewFilter = false;
-        }
-    }
+  if (gMarkReadCheckbox.checked) 
+  {
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.MarkRead;
+    gFilter.appendAction(filterAction);
+  }
 
-    gFilter.action = action;
-    if (action == nsMsgFilterAction.MoveToFolder)
-        gFilter.actionTargetFolderUri = targetUri;
-    else if (action == nsMsgFilterAction.ChangePriority)
-        gFilter.actionPriority = gActionPriority.selectedItem.getAttribute("value");
-    else if (action == nsMsgFilterAction.Label)
-        gFilter.actionLabel = gActionLabel.selectedItem.getAttribute("value");
+  if (gMarkFlaggedCheckbox.checked) 
+  {
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.MarkFlagged;
+    gFilter.appendAction(filterAction);
+  }
 
-    saveSearchTerms(gFilter.searchTerms, gFilter);
+  if (gDeleteCheckbox.checked) 
+  {
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.Delete;
+    gFilter.appendAction(filterAction);
+  }
+ 
+  if (gFilter.actionList.Count() <= 0)
+  {
+    str = gFilterBundle.getString("mustSelectAction");
+    window.alert(str);
+    return false;
+  }
 
-    if (isNewFilter) {
-        // new filter - insert into gFilterList
-        gFilterList.insertFilterAt(0, gFilter);
-    }
+  saveSearchTerms(gFilter.searchTerms, gFilter);
 
-    // success!
-    return true;
+  if (isNewFilter) 
+  {
+    // new filter - insert into gFilterList
+    gFilterList.insertFilterAt(0, gFilter);
+  }
+
+  // success!
+  return true;
 }
 
 function onTargetFolderSelected(event)
 {
     SetFolderPicker(event.target.id, gActionTargetElement.id);
-}
-
-
-function onActionChanged(event)
-{
-    var menuitem = event.target;
-    showActionElementFor(menuitem);
-}
-
-function showActionElementFor(menuitem)
-{
-    if (!menuitem) return;
-    var indexValue = menuitem.getAttribute("actionvalueindex");
-
-    gActionValueDeck.setAttribute("selectedIndex", indexValue);
-
-    // If it's the Label menuItem selected, we need to fill the menulist
-    // associated with this because the very first time it is selected,
-    // it is not filled.
-    // 2 indicates the Labels menu item.
-    if (indexValue == "2")
-    {
-        var labelID = gActionLabel.selectedItem.getAttribute("value");
-
-        setLabelAttributes(labelID, "actionValueLabel");
-    }
-
-    // Disable the "New Folder..." button if any other action than MoveToFolder is chosen
-    document.getElementById("newFolderButton").disabled = (indexValue != "0");
 }
 
 function onLabelListChanged(event)
