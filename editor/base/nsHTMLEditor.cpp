@@ -4427,7 +4427,7 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
 nsresult
 nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode, 
                            PRBool *outIsEmptyNode, 
-                           PRBool aMozBRDoesntCount,
+                           PRBool aSingleBRDoesntCount,
                            PRBool aListOrCellNotEmpty,
                            PRBool aSafeToAskFrames)
 {
@@ -4530,14 +4530,9 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
       {
         // is it the node we are iterating over?
         if (node.get() == aNode) break;
-        // is it a moz-BR and did the caller ask us not to consider those relevant?
-        if ((aMozBRDoesntCount && nsTextEditUtils::IsMozBR(node)))
-        { 
-          // do nothing
-        }
-        else if (isBlock && !seenBR && nsTextEditUtils::IsBreak(node))
+        else if (aSingleBRDoesntCount && isBlock && !seenBR && nsTextEditUtils::IsBreak(node))
         {
-          // the first br in a block doesn't count
+          // the first br in a block doesn't count if the caller so indicated
           seenBR = PR_TRUE;
         }
         else
@@ -4554,7 +4549,7 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
             }
           }
           PRBool isEmptyNode;
-          res = IsEmptyNode(node, &isEmptyNode, aMozBRDoesntCount, aListOrCellNotEmpty);
+          res = IsEmptyNode(node, &isEmptyNode, aSingleBRDoesntCount, aListOrCellNotEmpty);
           if (NS_FAILED(res)) return res;
           if (!isEmptyNode) 
           {
