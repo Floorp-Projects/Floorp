@@ -145,22 +145,16 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
   ourView->SetZIndex(kMaxZ);
   widgetData.mWindowType = eWindowType_popup;
   widgetData.mBorderStyle = eBorderStyle_default;
+
+#ifdef XP_MAC
+  printf("XP Popups: This is a nag to indicate that an inconsistent hack is being done on the Mac for popups.\n");
+  static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
+  ourView->CreateWidget(kCPopupCID, &widgetData, nsnull);
+#else
   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-  ourView->CreateWidget(kCChildCID,
-                     &widgetData,
-                     nsnull);
+  ourView->CreateWidget(kCChildCID, &widgetData, nsnull);
+#endif   
 
-  // Register a listener so that we know when the mouse enters
-  // the menu (have to use moves, since enter is completely flaky).
-  
-  // Create the menu bar listener.
-  /*mMenuPopupEntryListener = new nsMenuPopupEntryListener(this);
-
-  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
-  nsIDOMEventListener* domEventListener = (nsIDOMMouseMotionListener*)mMenuPopupEntryListener;
-  target->AddEventListener("mousemove", domEventListener, PR_FALSE); 
-	*/
-  
   return rv;
 }
 
