@@ -1859,7 +1859,6 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
   PRBool bHasMoreChildren;
   inNode->HasChildNodes(&bHasMoreChildren);
   nsCOMPtr<nsIDOMNode> child;
-  offset = 0;
   while (bHasMoreChildren)
   {
     inNode->GetLastChild(getter_AddRefs(child));

@@ -54,6 +54,7 @@ public:
   nsresult SetProp(nsIAtom *aProp, const nsString &aAttr);
   nsresult SetProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
 
+  nsresult ClearAllProps();
   nsresult ClearProp(nsIAtom *aProp);
   nsresult ClearProp(nsIAtom *aProp, const nsString &aAttr);
   nsresult ClearProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
@@ -82,6 +83,7 @@ protected:
   PRBool IsPropSet(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue, PRInt32 &outIndex);
   PRBool IsPropCleared(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
   PRBool IsPropCleared(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue, PRInt32 &outIndex);
+  PRBool FindPropInList(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue, nsVoidArray &aList, PRInt32 &outIndex);
 
   nsVoidArray mSetArray;
   nsVoidArray mClearedArray;

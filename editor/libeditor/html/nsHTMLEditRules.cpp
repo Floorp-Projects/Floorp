@@ -100,7 +100,7 @@ nsHTMLEditRules::~nsHTMLEditRules()
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLEditRules, nsTextEditRules)
 NS_IMPL_RELEASE_INHERITED(nsHTMLEditRules, nsTextEditRules)
-NS_IMPL_QUERY_INTERFACE2(nsHTMLEditRules, nsIEditRules, nsIEditActionListener)
+NS_IMPL_QUERY_INTERFACE3(nsHTMLEditRules, nsIHTMLEditRules, nsIEditRules, nsIEditActionListener)
 
 
 /********************************************************
@@ -336,6 +336,62 @@ nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
   return nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
 }
   
+/********************************************************
+ *  nsIHTMLEditRules methods
+ ********************************************************/
+
+NS_IMETHODIMP 
+nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)
+{
+  aMixed = PR_FALSE;
+  aOL = PR_FALSE;
+  aUL = PR_FALSE;
+  PRBool bNonList = PR_FALSE;
+  
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  nsresult res = GetListActionNodes(&arrayOfNodes);
+  if (NS_FAILED(res)) return res;
+
+  // yummy yummy yummy i've got nodes in my tummy
+  PRUint32 listCount;
+  PRInt32 i;
+  arrayOfNodes->Count(&listCount);
+  for (i=(PRInt32)listCount-1; i>=0; i--)
+  {
+    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
+    
+    if (nsHTMLEditUtils::IsUnorderedList(curNode))
+      aUL = PR_TRUE;
+    else if (nsHTMLEditUtils::IsOrderedList(curNode))
+      aOL = PR_TRUE;
+    else if (nsHTMLEditUtils::IsListItem(curNode))
+    {
+      nsCOMPtr<nsIDOMNode> parent;
+      PRInt32 offset;
+      res = nsEditor::GetNodeLocation(curNode, &parent, &offset);
+      if (NS_FAILED(res)) return res;
+      if (nsHTMLEditUtils::IsUnorderedList(parent))
+        aUL = PR_TRUE;
+      else if (nsHTMLEditUtils::IsOrderedList(parent))
+        aOL = PR_TRUE;
+    }
+    else bNonList = PR_TRUE;
+  }  
+  
+  // hokey arithmetic with booleans
+  if ( (aUL + aOL + bNonList) > 1) aMixed = PR_TRUE;
+  
+  return res;
+}
+
+
+NS_IMETHODIMP 
+nsHTMLEditRules::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
+{
+  return NS_ERROR_FAILURE;
+}
+
 
 /********************************************************
  *  Protected rules methods 
@@ -1124,46 +1180,13 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
 
   nsAutoSelectionReset selectionResetter(aSelection, mEditor);
   
-  nsCOMPtr<nsISupportsArray> arrayOfRanges;
-  res = GetPromotedRanges(aSelection, &arrayOfRanges, kMakeList);
-  if (NS_FAILED(res)) return res;
-  
-  // use these ranges to contruct a list of nodes to act on.
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  res = GetNodesForOperation(arrayOfRanges, &arrayOfNodes, kMakeList);
-  if (NS_FAILED(res)) return res;                                 
-               
-  // pre process our list of nodes...                      
-  PRUint32 listCount;
-  PRInt32 i;
-  arrayOfNodes->Count(&listCount);
-  for (i=(PRInt32)listCount-1; i>=0; i--)
-  {
-    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
-    nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
-
-    // Remove all non-editable nodes.  Leave them be.
-    if (!mEditor->IsEditable(testNode))
-    {
-      arrayOfNodes->RemoveElementAt(i);
-    }
-    
-    // scan for table elements.  If we find table elements other than table,
-    // replace it with a list of any editable non-table content.
-    if (mEditor->IsTableElement(testNode) && !mEditor->IsTable(testNode))
-    {
-      arrayOfNodes->RemoveElementAt(i);
-      nsCOMPtr<nsISupportsArray> arrayOfTableContent;
-      res = GetTableContent(testNode, &arrayOfTableContent);
-      if (NS_FAILED(res)) return res;
-      arrayOfNodes->AppendElements(arrayOfTableContent);
-    }
-  }
-  
-  
+  res = GetListActionNodes(&arrayOfNodes);
+  if (NS_FAILED(res)) return res;
   
   // if there is only one node in the array, and it is a list, div, or blockquote,
   // then look inside of it until we find what we want to make a list out of.
+  PRUint32 listCount;
   arrayOfNodes->Count(&listCount);
   if (listCount == 1)
   {
@@ -1216,10 +1239,12 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curList;
   nsCOMPtr<nsIDOMNode> prevListItem;
-    
+  
+  PRInt32 i;
   for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
+    nsCOMPtr<nsIDOMNode> newBlock;
     nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
     PRInt32 offset;
@@ -1248,60 +1273,79 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
       }
     }
     
-    if (transitionList[i] &&                                      // transition node
-        ((((i+1)<(PRInt32)listCount) && transitionList[i+1]) ||   // and next node is transistion node
-        ( i+1 >= (PRInt32)listCount)))                            // or there is no next node
+    if (nsHTMLEditUtils::IsList(curNode))
     {
-      // the parent of this node has no other children on the 
-      // list of nodes to make a list out of.  So if this node
-      // is a list, change it's list type if needed instead of 
-      // reparenting it 
-      nsCOMPtr<nsIDOMNode> newBlock;
-      if (nsHTMLEditUtils::IsUnorderedList(curNode))
+      // do we have a curList already?
+      if (curList && !nsHTMLEditUtils::IsDescendantOf(curNode, curList))
       {
-        if (aOrdered)
+        // move all of our dachildren into curList.
+        // cheezy way to do it: move whole list and then
+        // RemoveContainer() on the list
+        res = mEditor->MoveNode(curNode, curList, -1);
+        if (NS_FAILED(res)) return res;
+        res = mEditor->RemoveContainer(curNode);
+        if (NS_FAILED(res)) return res;
+      }
+      else if ( (nsHTMLEditUtils::IsUnorderedList(curNode) && aOrdered) ||
+                (nsHTMLEditUtils::IsOrderedList(curNode) && !aOrdered) )
+
+      {
+        // replace list with new list type
+        res = mEditor->ReplaceContainer(curNode,&newBlock,blockType);
+        if (NS_FAILED(res)) return res;
+        curList = newBlock;
+      }
+      else
+      {
+        curList = curNode;
+      }
+      continue;
+    }
+
+    if (nsHTMLEditUtils::IsListItem(curNode))
+    {
+      if ( (nsHTMLEditUtils::IsUnorderedList(curParent) && aOrdered) ||
+           (nsHTMLEditUtils::IsOrderedList(curParent) && !aOrdered) )
+      {
+        // list item is in wrong type of list.  
+        // if we dont have a curList, split the old list
+        // and make a new list of correct type.
+        if (!curList || nsHTMLEditUtils::IsDescendantOf(curNode, curList))
         {
-          // make a new ordered list, insert it where the current unordered list is,
-          // and move all the children to the new list, and remove the old list
-          res = mEditor->ReplaceContainer(curNode,&newBlock,blockType);
+          res = mEditor->SplitNode(curParent, offset, getter_AddRefs(newBlock));
           if (NS_FAILED(res)) return res;
-          curList = newBlock;
-          continue;
+          nsCOMPtr<nsIDOMNode> p;
+          PRInt32 o;
+          res = nsEditor::GetNodeLocation(curParent, &p, &o);
+          if (NS_FAILED(res)) return res;
+          res = mEditor->CreateNode(listType, p, o, getter_AddRefs(curList));
+          if (NS_FAILED(res)) return res;
         }
+        // move list item to new list
+        res = mEditor->MoveNode(curNode, curList, -1);
+        if (NS_FAILED(res)) return res;
+      }
+      else
+      {
+        // item is in right type of list.  But we might still have to move it.
+        if (!curList)
+          curList = curParent;
         else
         {
-          // do nothing, we are already the right kind of list
-          curList = newBlock;
-          continue;
+          if (curParent != curList)
+          {
+            // move list item to new list
+            res = mEditor->MoveNode(curNode, curList, -1);
+            if (NS_FAILED(res)) return res;
+          }
         }
       }
-      else if (nsHTMLEditUtils::IsOrderedList(curNode))
-      {
-        if (!aOrdered)
-        {
-          // make a new unordered list, insert it where the current ordered list is,
-          // and move all the children to the new list, and remove the old list
-          mEditor->ReplaceContainer(curNode,&newBlock,blockType);
-          if (NS_FAILED(res)) return res;
-          curList = newBlock;
-          continue;
-        }
-        else
-        {
-          // do nothing, we are already the right kind of list
-          curList = newBlock;
-          continue;
-        }
-      }
-      else if (nsHTMLEditUtils::IsDiv(curNode) || nsHTMLEditUtils::IsBlockquote(curNode))
-      {
-        // XXX floppy moose
-      }
-    }  // lonely node
-  
+      continue;
+    }
+    
     // need to make a list to put things in if we haven't already,
     // or if this node doesn't go in list we used earlier.
-    if (!curList || transitionList[i])
+    if (!curList) // || transitionList[i])
     {
       res = SplitAsNeeded(&listType, &curParent, &offset);
       if (NS_FAILED(res)) return res;
@@ -2385,6 +2429,10 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
   nsCOMPtr<nsIDOMNode> parent = aNode;
   PRInt32 offset = aOffset;
   
+  // defualt values
+  *outNode = node;
+  *outOffset = offset;
+
   // we do one thing for InsertText actions, something else entirely for other actions
   if (actionID == kInsertText)
   {
@@ -2424,14 +2472,6 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
   
   // else not kInsertText.  In this case we want to see if we should
   // grab any adjacent inline nodes and/or parents and other ancestors
-  if (nsHTMLEditUtils::IsBody(aNode))
-  {
-    // we cant go any higher
-    *outNode = do_QueryInterface(aNode);
-    *outOffset = aOffset;
-    return res;
-  }
-  
   if (aWhere == kStart)
   {
     // some special casing for text nodes
@@ -2447,47 +2487,42 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
     if (!node) node = parent;
     
     
-    // if this is an inline node who's block parent is the body,
+    // if this is an inline node,
     // back up through any prior inline nodes that
     // aren't across a <br> from us.
     
     if (!nsEditor::IsBlockNode(node))
     {
       nsCOMPtr<nsIDOMNode> block = nsEditor::GetBlockNodeParent(node);
-//    if (IsBody(block))
-//    {
-        nsCOMPtr<nsIDOMNode> prevNode;
+      nsCOMPtr<nsIDOMNode> prevNode;
+      prevNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterBackward);
+      while (prevNode)
+      {
+        if (nsHTMLEditUtils::IsBreak(prevNode))
+          break;
+        if (nsEditor::IsBlockNode(prevNode))
+          break;
+        node = prevNode;
         prevNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterBackward);
-        while (prevNode)
-        {
-          if (nsHTMLEditUtils::IsBreak(prevNode) && !nsHTMLEditUtils::HasMozAttr(prevNode))
-            break;
-          if (nsEditor::IsBlockNode(prevNode))
-            break;
-          node = prevNode;
-          prevNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterBackward);
-        }
-//    }
-//    else
-//    {
-        // just grap the whole block
-//      node = block;
-//    }
+      }
     }
     
     // finding the real start for this point.  look up the tree for as long as we are the 
     // first node in the container, and as long as we haven't hit the body node.
-    res = nsEditor::GetNodeLocation(node, &parent, &offset);
-    if (NS_FAILED(res)) return res;
-    while ((IsFirstNode(node)) && (!nsHTMLEditUtils::IsBody(parent)))
+    if (!nsHTMLEditUtils::IsBody(node))
     {
-      node = parent;
       res = nsEditor::GetNodeLocation(node, &parent, &offset);
       if (NS_FAILED(res)) return res;
-    } 
-    *outNode = parent;
-    *outOffset = offset;
-    return res;
+      while ((IsFirstNode(node)) && (!nsHTMLEditUtils::IsBody(parent)))
+      {
+        node = parent;
+        res = nsEditor::GetNodeLocation(node, &parent, &offset);
+        if (NS_FAILED(res)) return res;
+      } 
+      *outNode = parent;
+      *outOffset = offset;
+      return res;
+    }
   }
   
   if (aWhere == kEnd)
@@ -2505,7 +2540,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
     }
     if (!node) node = parent;
     
-    // if this is an inline node who's block parent is the body, 
+    // if this is an inline node, 
     // look ahead through any further inline nodes that
     // aren't across a <br> from us, and that are enclosed in the same block.
     
@@ -2516,7 +2551,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
       nextNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterForward);
       while (nextNode)
       {
-        if (nsHTMLEditUtils::IsBreak(nextNode) && !nsHTMLEditUtils::HasMozAttr(nextNode))
+        if (nsHTMLEditUtils::IsBreak(nextNode))
         {
           node = nextNode;
           break;
@@ -2530,18 +2565,21 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
     
     // finding the real end for this point.  look up the tree for as long as we are the 
     // last node in the container, and as long as we haven't hit the body node.
-    res = nsEditor::GetNodeLocation(node, &parent, &offset);
-    if (NS_FAILED(res)) return res;
-    while ((IsLastNode(node)) && (!nsHTMLEditUtils::IsBody(parent)))
+    if (!nsHTMLEditUtils::IsBody(node))
     {
-      node = parent;
       res = nsEditor::GetNodeLocation(node, &parent, &offset);
       if (NS_FAILED(res)) return res;
-    } 
-    *outNode = parent;
-    offset++;  // add one since this in an endpoint - want to be AFTER node.
-    *outOffset = offset;
-    return res;
+      while ((IsLastNode(node)) && (!nsHTMLEditUtils::IsBody(parent)))
+      {
+        node = parent;
+        res = nsEditor::GetNodeLocation(node, &parent, &offset);
+        if (NS_FAILED(res)) return res;
+      } 
+      *outNode = parent;
+      offset++;  // add one since this in an endpoint - want to be AFTER node.
+      *outOffset = offset;
+      return res;
+    }
   }
   
   return res;
@@ -2755,6 +2793,56 @@ nsHTMLEditRules::GetChildNodesForOperation(nsIDOMNode *inNode,
   return res;
 }
 
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetListActionNodes: 
+//                       
+nsresult 
+nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes)
+{
+  if (!outArrayOfNodes) return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsISupportsArray> arrayOfRanges;
+  res = GetPromotedRanges(selection, &arrayOfRanges, kMakeList);
+  if (NS_FAILED(res)) return res;
+  
+  // use these ranges to contruct a list of nodes to act on.
+  res = GetNodesForOperation(arrayOfRanges, outArrayOfNodes, kMakeList);
+  if (NS_FAILED(res)) return res;                                 
+               
+  // pre process our list of nodes...                      
+  PRUint32 listCount;
+  PRInt32 i;
+  (*outArrayOfNodes)->Count(&listCount);
+  for (i=(PRInt32)listCount-1; i>=0; i--)
+  {
+    nsCOMPtr<nsISupports> isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
+
+    // Remove all non-editable nodes.  Leave them be.
+    if (!mEditor->IsEditable(testNode))
+    {
+      (*outArrayOfNodes)->RemoveElementAt(i);
+    }
+    
+    // scan for table elements.  If we find table elements other than table,
+    // replace it with a list of any editable non-table content.
+    if (mEditor->IsTableElement(testNode) && !mEditor->IsTable(testNode))
+    {
+      (*outArrayOfNodes)->RemoveElementAt(i);
+      nsCOMPtr<nsISupportsArray> arrayOfTableContent;
+      res = GetTableContent(testNode, &arrayOfTableContent);
+      if (NS_FAILED(res)) return res;
+      (*outArrayOfNodes)->AppendElements(arrayOfTableContent);
+    }
+  }
+  return res;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -3618,6 +3706,7 @@ nsHTMLEditRules::SplitAsNeeded(const nsString *aTag,
     if (mEditor->CanContainTag(parent, *aTag))
     {
       tagParent = parent;
+      break;
     }
     splitNode = parent;
     parent->GetParentNode(getter_AddRefs(temp));
@@ -3628,10 +3717,9 @@ nsHTMLEditRules::SplitAsNeeded(const nsString *aTag,
     // could not find a place to build tag!
     return NS_ERROR_FAILURE;
   }
-  if (tagParent != *inOutParent)
+  if (splitNode)
   {
-    // we found a place for block, but above curParent.  We need to split
-    // up to blockParent.
+    // we found a place for block, but above inOutParent.  We need to split nodes.
     res = mEditor->SplitNodeDeep(splitNode, *inOutParent, *inOutOffset, inOutOffset);
     if (NS_FAILED(res)) return res;
     *inOutParent = tagParent;
@@ -4697,7 +4785,7 @@ nsHTMLEditRules::DidSplitNode(nsIDOMNode *aExistingRightNode,
                               nsresult aResult)
 {
   if (!mListenerEnabled) return NS_OK;
-  nsresult res = mUtilRange->SetStart(aExistingRightNode, 0);
+  nsresult res = mUtilRange->SetStart(aNewLeftNode, 0);
   if (NS_FAILED(res)) return res;
   res = mUtilRange->SetEnd(aExistingRightNode, 0);
   if (NS_FAILED(res)) return res;

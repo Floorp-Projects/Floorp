@@ -24,6 +24,7 @@
 #define nsHTMLEditRules_h__
 
 #include "nsTextEditRules.h"
+#include "nsIHTMLEditRules.h"
 #include "nsIEditActionListener.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
@@ -33,7 +34,7 @@ class nsISupportsArray;
 class nsVoidArray;
 class nsIDOMElement;
 
-class nsHTMLEditRules : public nsTextEditRules, nsIEditActionListener
+class nsHTMLEditRules : public nsIHTMLEditRules, nsTextEditRules, nsIEditActionListener
 {
 public:
 
@@ -49,6 +50,10 @@ public:
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
+
+  // nsIHTMLEditRules methods
+  NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL);
+  NS_IMETHOD GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent);
 
   // nsIEditActionListener methods
   
@@ -132,6 +137,7 @@ protected:
                                    PRInt32 inOperationType);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+  nsresult GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
   nsresult BustUpInlinesAtBRs(nsIDOMNode *inNode, 
                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
   nsresult MakeTransitionList(nsISupportsArray *inArrayOfNodes, 
