@@ -15,7 +15,7 @@
 # Portions created by Sun Microsystems Inc are Copyright (C) 2001
 # All Rights Reserved.
 # 
-# $Id: FileListExt.mk,v 1.2 2001/07/12 19:57:37 edburns%acm.org Exp $
+# $Id: FileListExt.mk,v 1.3 2001/07/18 20:48:15 edburns%acm.org Exp $
 # 
 # Contributor(s):
 # 
@@ -26,4 +26,9 @@ FILES_java =\
 	sun/jvmp/mozilla/MozillaAppletPeer.java \
 	sun/jvmp/mozilla/MozillaHostObjectPeer.java \
 	sun/jvmp/mozilla/MozillaPeerFactory.java \
-	sun/jvmp/mozilla/MozillaSecurityManager.java 
+	sun/jvmp/mozilla/MozillaSecurityManager.java \
+	sun/jvmp/mozilla/JSObject.java \
+	sun/jvmp/mozilla/SecureInvocation.java \
+	sun/jvmp/mozilla/JavaScriptProtectionDomain.java \
+	sun/jvmp/mozilla/JSPermission.java
+
