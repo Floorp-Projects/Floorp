@@ -1,0 +1,8 @@
+messenger.jar:
++   content/messenger/messengercompose/addressingWidgetOverlay.js              (content/addressingWidgetOverlay.js)
++   content/messenger/messengercompose/MsgComposeCommands.js                   (content/MsgComposeCommands.js)
++   content/messenger/messengercompose/messengercompose.xul                    (content/messengercompose.xul)
+
+en-US.jar:
++   locale/en-US/messenger/messengercompose/messengercompose.dtd               (locale/messengercompose.dtd)
+
