@@ -248,8 +248,9 @@ function chooseCategory( aNode )
 	var treeNode = document.getElementById("engineList");
 	if (treeNode)
 	{
-		debug("\nSet search engine list to category='" + category + "'\n\n");
+		dump("*** Set search engine list to category=" + category + "\n");
 		treeNode.setAttribute( "ref", category );
+    treeNode.builder.rebuild();
 	}
 	return(true);
 }
@@ -386,12 +387,12 @@ function MoveDelta(delta)
 	if (select_list.length != 1)	return(false);
 
 	var ref = engineList.getAttribute("ref");
-	if ((!ref) || (ref == ""))	return(false);
+	if (!ref)	return(false);
 	var categoryRes = RDF.GetResource(ref);
 	if (!categoryRes)	return(false);
 
-	var id = select_list[0].getAttribute("id");
-	if ((!id) || (id == ""))	return(false);
+	var id = select_list[0].id;
+	if (!id)	return(false);
 	var idRes = RDF.GetResource(id);
 	if (!idRes)	return(false);
 
@@ -419,6 +420,26 @@ function MoveDelta(delta)
 	return(true);
 }
 
+function doMoveDirectionEnabling()
+{
+  var tree = document.getElementById("engineList")
+  var selectedItems = tree.selectedItems;
+  if (!selectedItems && selectedItems.length != 1)
+    return false;
+  var ref = tree.getAttribute("ref");
+  var categoryResource = RDF.GetResource(ref);
+  var elementResource = RDF.GetResource(selectedItems[0].id);
+  RDFC.Init(catDS, categoryResource);
+  var nodeIndex = RDFC.IndexOf(elementResource);
+  var moveUpButton = document.getElementById("up");
+  var moveDownButton = document.getElementById("down");
+  moveUpButton.removeAttribute("disabled");
+  moveDownButton.removeAttribute("disabled");
+  if (nodeIndex <= 1)  
+    moveUpButton.setAttribute("disabled", "true");
+  if (nodeIndex >= RDFC.GetCount())
+    moveDownButton.setAttribute("disabled", "true");
+}
 
 
 function NewCategory()
