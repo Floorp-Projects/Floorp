@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_pixels.c              copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.0                                                      * */
+/* * version   : 0.9.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : Pixel-row management routines (implementation)             * */
 /* *                                                                        * */
@@ -56,6 +56,9 @@
 /* *             - fixed display_xxxx routines for interlaced images        * */
 /* *             0.5.3 - 06/28/2000 - G.Juyn                                * */
 /* *             - fixed compiler-warning for non-initialized iB variable   * */
+/* *                                                                        * */
+/* *             0.9.1 - 07/05/2000 - G.Juyn                                * */
+/* *             - fixed mandatory BACK color to be opaque                  * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -1485,7 +1488,7 @@ mng_retcode restore_bkgd_backcolor (mng_datap pData)
     *pWork     = (mng_uint8)(pData->iBACKred   >> 8);
     *(pWork+1) = (mng_uint8)(pData->iBACKgreen >> 8);
     *(pWork+2) = (mng_uint8)(pData->iBACKblue  >> 8);
-    *(pWork+3) = 0x00;                 /* transparant for alpha-canvasses */
+    *(pWork+3) = 0xFF;                 /* opaque! it's mandatory */
 
     pWork += 4;
   }

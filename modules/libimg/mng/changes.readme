@@ -1,5 +1,29 @@
 -----------------------------------------------------------
 
+0.9.1 (xxxx nnth nnnn)
+----------------------
+
+in short:
+
+Second beta release.
+
+-------------------
+
+bugfixes:
+
+core:
+- fixed mandatory BACK color to be opaque
+
+samples:
+
+contrib:
+
+doc:
+
+makefiles:
+
+-----------------------------------------------------------
+
 0.9.0 (June 30th 2000)
 ----------------------
 
@@ -80,22 +104,22 @@ core:
 - added support for PPLT chunk                         
 - added trace-codes & -strings for PPLT chunk processing
 - fixed problem with incorrect gamma-correction
-- fixed inclusion of IJG read/write code                  
+- fixed inclusion of IJG read/write code
 - fixed problem with 16-bit GA format
-- fixed problem with cheap transparency for 4-bit gray    
-- fixed display_xxxx routines for interlaced images      
-- added precaution against faulty iCCP chunks from PS     
+- fixed problem with cheap transparency for 4-bit gray
+- fixed display_xxxx routines for interlaced images
+- added precaution against faulty iCCP chunks from PS
 - changed userdata variable to mng_ptr
 - added typedef for mng_size_t
 - changed size parameter for memory allocation to mng_size_t
 - fixed compiler-warning for non-initialized iB variable
-- changed definition for 32-bit ints (64-bit platforms)   
+- changed definition for 32-bit ints (64-bit platforms)
 - changed definition for mng_handle (64-bit platforms)
-- swapped refresh parameters                              
-- fixed initialization routine for new mng_handle type    
+- swapped refresh parameters
+- fixed initialization routine for new mng_handle type
 - added inclusion of stdlib.h for abs()
-- fixed some 64-bit warnings           
-- fixed incompatible return-types                     
+- fixed some 64-bit warnings
+- fixed incompatible return-types
 
 samples:
 
