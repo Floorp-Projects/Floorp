@@ -6,8 +6,8 @@
 # URL.
 
 
-# $Revision: 1.13 $ 
-# $Date: 2001/12/03 19:53:30 $ 
+# $Revision: 1.14 $ 
+# $Date: 2002/05/01 01:46:23 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
@@ -201,6 +201,7 @@ sub gen_rnd_build {
   
   my ($begin) = $end - ($runtime + $run_gap) ;
   $begin =~ s/\..*//;
+  $end =~ s/\..*//;
 
   return ($end, $begin);
 }
