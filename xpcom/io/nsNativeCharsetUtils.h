@@ -45,15 +45,11 @@
  *                                                                           *
  *             *** THESE ARE NOT GENERAL PURPOSE CONVERTERS ***              *
  *                                                                           *
- *   NS_CopyNativeToUnicode / NS_CopyUnicodeToNative should only be used     *
- *   by XPCOM for converting *FILENAMES* between native and unicode. They    *
- *   are not designed or tested for general encoding converter use.          *
+ *    NS_CopyNativeToUnicode / NS_CopyUnicodeToNative should only be used    *
+ *    for converting *FILENAMES* between native and unicode. They are not    *
+ *    designed or tested for general encoding converter use.                 *
  *                                                                           *
 \*****************************************************************************/
-
-
-// XXX XXX XXX XXX only implemented for XP_UNIX XXX XXX XXX XXX
-
 
 /**
  * thread-safe conversion routines that do not depend on uconv libraries.
