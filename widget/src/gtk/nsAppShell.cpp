@@ -396,21 +396,6 @@ NS_IMETHODIMP nsAppShell::Exit()
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// GetNativeData
-//
-//-------------------------------------------------------------------------
-void* nsAppShell::GetNativeData(PRUint32 aDataType)
-{
-  if (aDataType == NS_NATIVE_SHELL) {
-    // this isn't accually used, but if it was, we need to gtk_widget_ref() it.
-
-    //  return mTopLevel;
-  }
-  return nsnull;
-}
-
 NS_IMETHODIMP nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
 {
   GdkEvent *event;

@@ -217,20 +217,6 @@ NS_METHOD nsAppShell::PopThreadEventQueue()
   return rv;
 }
 
-//-------------------------------------------------------------------------
-//
-// GetNativeData
-//
-//-------------------------------------------------------------------------
-void* nsAppShell::GetNativeData(PRUint32 aDataType)
-{
-  if (aDataType == NS_NATIVE_SHELL) 
-  	{
-    //return mTopLevel;
-  	}
-  return nsnull;
-}
-
 NS_METHOD
 nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
