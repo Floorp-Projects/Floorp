@@ -500,7 +500,7 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
 
 		if (err == NS_OK && offlineOpRow)
 		{
-//      *offlineOp = new nsMsgOfflineImapOperation(this, offlineOpRow);
+      *offlineOp = new nsMsgOfflineImapOperation(this, offlineOpRow);
 		}
     if (!hasOid && m_dbFolderInfo)
     {
@@ -734,12 +734,10 @@ nsresult nsMsgOfflineOpEnumerator::PrefetchNext()
   if (offlineOpRow->GetOid(mDB->GetEnv(), &outOid) == NS_OK)
     key = outOid.mOid_Id;
 
-#ifdef DOING_OFFLINE
   nsIMsgOfflineImapOperation *op = new nsMsgOfflineImapOperation(mDB, offlineOpRow);
   mResultOp = op;
   if (!op)
     return NS_ERROR_OUT_OF_MEMORY;
-#endif
 
   if (mResultOp) 
   {

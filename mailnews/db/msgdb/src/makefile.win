@@ -42,6 +42,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj		\
 			.\$(OBJDIR)\nsNewsDatabase.obj		\
 			.\$(OBJDIR)\nsMsgHdr.obj			\
 			.\$(OBJDIR)\nsMsgThread.obj			\
+			.\$(OBJDIR)\nsMsgOfflineImapOperation.obj			\
 			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
