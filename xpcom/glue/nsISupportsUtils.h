@@ -267,7 +267,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
     foundInterface = 0;                                                  \
   nsresult status;                                                       \
   if ( !foundInterface )                                                 \
-    status = _baseclass::QueryInterface(aIID, &foundInterface);           \
+    status = _baseclass::QueryInterface(aIID, (void**)&foundInterface);       \
   else                                                                   \
     {                                                                    \
       NS_ADDREF(foundInterface);                                         \
