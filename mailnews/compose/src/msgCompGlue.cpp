@@ -14,13 +14,13 @@ void				FE_SetWindowLoading(MWContext *, URL_Struct *,Net_GetUrlExitFunc **) {re
 
 XP_Bool				NET_AreThereActiveConnectionsForWindow(MWContext *) {return PR_FALSE;}
 int					NET_SilentInterruptWindow(MWContext * window_id) {return 0;}
-int					NET_ScanForURLs(MSG_Pane*, const char *, PRInt32,char *, int, PRBool) {return NULL;}
+int					NET_ScanForURLs(MSG_Pane*, const char *, PRInt32,char *, int, PRBool) {return nsnull;}
 void				NET_FreeURLStruct (URL_Struct *) {return;}
 URL_Struct *		NET_CreateURLStruct (const char *, NET_ReloadMethod) {return NULL;}
 char *				NET_UnEscape (char * ) {return NULL;}
 char *				NET_EscapeHTML(const char * string) {return NULL;}
 char *				NET_ParseURL (const char *, int ) {return NULL;}
-int					NET_URL_Type (const char *) {return NULL;}
+int					NET_URL_Type (const char *) {return nsnull;}
 XP_Bool				NET_IsLocalFileURL(char *address) {return PR_TRUE;}
 char *				NET_Escape (const char * str, int mask) {return PL_strdup(str);}
 int					NET_InterruptWindow(MWContext * window_id) {return 0;}
@@ -40,14 +40,14 @@ Bool				XP_IsContextBusy(MWContext * context) {return PR_FALSE;}
 const char *		MSG_GetSpecialFolderName(int ) {return NULL;}
 const char *		MSG_GetQueueFolderName() {return NULL;}
 MSG_Pane *			MSG_FindPane(MWContext* , MSG_PaneType ) {return NULL;}
-int					MSG_ExplodeHeaderField(MSG_HEADER_SET,const char * ,MSG_HeaderEntry **) {return NULL;}
+int					MSG_ExplodeHeaderField(MSG_HEADER_SET,const char * ,MSG_HeaderEntry **) {return nsnull;}
 char *				MSG_MakeFullAddress (const char* , const char* ) {return NULL;}
 void				MSG_MailCompositionAllConnectionsComplete (MSG_Pane* /*pane*/) {return;}
 
 
 void				INTL_DestroyCharCodeConverter(CCCDataObject) {return;}
 unsigned char *		INTL_CallCharCodeConverter(CCCDataObject,const unsigned char *,int32) {return NULL;}
-int					INTL_GetCharCodeConverter(int16 ,int16 ,CCCDataObject) {return NULL;}
+int					INTL_GetCharCodeConverter(int16 ,int16 ,CCCDataObject) {return nsnull;}
 CCCDataObject		INTL_CreateCharCodeConverter() {return NULL;}
 int16				INTL_GetCSIWinCSID(INTL_CharSetInfo) {return 2;}
 INTL_CharSetInfo	LO_GetDocumentCharacterSetInfo(MWContext *) {return NULL;}
@@ -70,14 +70,14 @@ char *				MimeGuessURLContentName(MWContext *context, const char *url) {return N
 void				MIME_GetMessageCryptoState(MWContext *,PRBool *,PRBool *,PRBool *,PRBool *) {return;}
 
 int					strcasecomp  (const char *, const char *) {return 0;}
-int					strncasecomp (const char *, const char *, int ) {return NULL;}
+int					strncasecomp (const char *, const char *, int ) {return nsnull;}
 char *				strcasestr (const char * str, const char * substr) {return NULL;}
 
 XP_FILE_NATIVE_PATH WH_FileName (const char *, XP_FileType ) {return NULL;}
 
 HJ10196
 History_entry *		SHIST_GetCurrent(History *) {return NULL;}
-int					MISC_ValidateReturnAddress (MWContext *,const char *) {return NULL;}
+int					MISC_ValidateReturnAddress (MWContext *,const char *) {return nsnull;}
 char *				msg_MagicFolderName(MSG_Prefs* prefs, uint32 flag, int *pStatus) {return NULL;}
 
 extern "C" {
