@@ -72,6 +72,8 @@
 #include "nsITimer.h"
 #include "nsITimerQueue.h"
 
+#define kWindowPositionSlop 10
+
 static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
@@ -1246,6 +1248,35 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 
 //-------------------------------------------------------------------------
 //
+// Constrain a potential move to fit onscreen
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+{
+  if (mWnd && mIsTopWidgetWindow) { // only a problem for top-level windows
+    // XXX: Needs multiple monitor support
+    HDC dc = ::GetDC(mWnd);
+    if(dc) {
+      if (::GetDeviceCaps(dc, TECHNOLOGY) == DT_RASDISPLAY) {
+        RECT workArea;
+        ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+        if (*aX < 0)
+          *aX = 0;
+        if (*aX >= workArea.right - kWindowPositionSlop)
+          *aX = workArea.right - kWindowPositionSlop;
+        if (*aY < 0)
+          *aY = 0;
+        if (*aY >= workArea.bottom - kWindowPositionSlop)
+          *aY = workArea.bottom - kWindowPositionSlop;
+      }
+      ::ReleaseDC(mWnd, dc);
+    }
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
 // Move this component
 //
 //-------------------------------------------------------------------------
@@ -1286,25 +1317,24 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
   mBounds.y = aY;
 
     if (mWnd) {
-      // make sure this isn't a child window
-      if (mIsTopWidgetWindow) {
+#ifdef DEBUG
+      // complain if a window is moved offscreen (legal, but potentially worrisome)
+      if (mIsTopWidgetWindow) { // only a problem for top-level windows
         // Make sure this window is actually on the screen before we move it
         // XXX: Needs multiple monitor support
         HDC dc = ::GetDC(mWnd);
         if(dc) {
-          if (::GetDeviceCaps(dc, TECHNOLOGY) == DT_RASDISPLAY)
-          {
+          if (::GetDeviceCaps(dc, TECHNOLOGY) == DT_RASDISPLAY) {
             RECT workArea;
             ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-            if(mBounds.x >= workArea.right)
-              aX = mBounds.x = workArea.left;
-
-            if(mBounds.y >= workArea.bottom)
-              aY = mBounds.y = workArea.top;
+            // no annoying assertions. just mention the issue.
+            if (aX < 0 || aX >= workArea.right || aY < 0 || aY >= workArea.bottom)
+              printf("window moved to offscreen position\n");
           }
         ::ReleaseDC(mWnd, dc);
         }
       }
+#endif
 
         nsIWidget *par = GetParent();
         HDWP      deferrer = NULL;

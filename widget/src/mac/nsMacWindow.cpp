@@ -55,6 +55,8 @@ static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 // Windows and Mac.
 #define WINDOW_SIZE_TWEAKING
 
+#define kWindowPositionSlop 10
+
 // еее TODO: these should come from the system, not be hard-coded. What if I'm running
 // an elaborate theme with wide window borders?
 const short kWindowTitleBarHeight = 22;
@@ -553,6 +555,47 @@ NS_METHOD nsWindow::Restore(void)
 }
 */
 
+NS_IMETHODIMP nsMacWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+{
+	if (eWindowType_popup == mWindowType || !mWindowMadeHere)
+		return NS_OK;
+
+	// Sanity check against screen size
+	// make sure the window stays visible
+	Rect screenRect;
+	::GetRegionBounds(::GetGrayRgn(), &screenRect);
+
+	// Need to use non-negative coordinates
+	PRInt32 screenWidth;
+	if(screenRect.left < 0)
+		screenWidth = screenRect.right - screenRect.left;
+	else
+		screenWidth = screenRect.right;
+
+	PRInt32 screenHeight;
+	if(screenRect.top < 0)
+		screenHeight = screenRect.bottom - screenRect.top;
+	else
+		screenHeight = screenRect.bottom;
+
+	Rect portBounds;
+	::GetWindowPortBounds(mWindowPtr, &portBounds);
+	short windowWidth = portBounds.right - portBounds.left;
+	short windowHeight = portBounds.bottom - portBounds.top;
+
+	if (*aX <= screenRect.left - windowWidth + kWindowPositionSlop)
+		*aX = screenRect.left - windowWidth + kWindowPositionSlop;
+	else if (*aX >= screenWidth - kWindowPositionSlop)
+		*aX = screenWidth - kWindowPositionSlop;
+        
+	if (*aY < 0) // position is relative to screenRect.top
+		*aY = 0;
+	else if (*aY >= screenHeight - screenRect.top - kWindowPositionSlop)
+		*aY = screenHeight - screenRect.top - kWindowPositionSlop;
+
+	return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Move this window
@@ -565,8 +608,8 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 {
 
 	if (eWindowType_popup == mWindowType) {
-	PRInt32	xOffset=0,yOffset=0;
-	nsRect	localRect,globalRect;
+		PRInt32	xOffset=0,yOffset=0;
+		nsRect	localRect,globalRect;
 
 		// convert to screen coordinates
 		localRect.x = aX;
@@ -583,43 +626,16 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 		
 		return NS_OK;
 	} else if (mWindowMadeHere){
-	    // Sanity check against screen size
-		// make sure the window stays visible
 		Rect screenRect;
 		::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
-        // Need to use non-negative coordinates
-        PRInt32 screenWidth;
-        if(screenRect.left < 0)
-          screenWidth = screenRect.right - screenRect.left;
-        else
-          screenWidth = screenRect.right;
-        
-        PRInt32 screenHeight;
-        if(screenRect.top < 0)
-          screenHeight = screenRect.bottom - screenRect.top;
-        else
-          screenHeight = screenRect.bottom;
-        
 		Rect portBounds;
 		::GetWindowPortBounds(mWindowPtr, &portBounds);
-		short windowWidth = portBounds.right - portBounds.left;
 
-		if (aX <= screenRect.left - windowWidth)
-	      aX = screenRect.left;
-		else if (aX >= screenWidth)
-		  aX = 0;
-        
-		if (aY >= screenRect.bottom - screenRect.top)
-			aY = 0;
-
-		if (mIsDialog)
-		{
+		if (mIsDialog) {
 			aX += kDialogMarginWidth;
 			aY += kDialogTitleBarHeight;
-		}
-		else
-		{
+		} else {
 			aX += kWindowMarginWidth;
 			aY += kWindowTitleBarHeight;
 		}
