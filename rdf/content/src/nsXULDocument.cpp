@@ -2229,7 +2229,7 @@ XULDocumentImpl::RemoveElementForResource(nsIRDFResource* aResource, nsIContent*
         nsXPIDLCString uri;
         aResource->GetValue( getter_Copies(uri) );
         PR_LOG(gMapLog, PR_LOG_ALWAYS,
-               ("xulelement(%p) remove [%p] <-- %s\n",
+               ("xulelemap(%p) remove [%p] <-- %s\n",
                 this, aElement, (const char*) uri));
     }
 #endif
