@@ -19,11 +19,11 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
+DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSWER=$(DIST)\bin\chrome\global\content\default
+DISTBROWSER=$(DIST)\bin\chrome\global\content\default
 
 install::
 	$(MAKE_INSTALL) console.js $(DISTBROWSER)
