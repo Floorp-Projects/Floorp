@@ -552,6 +552,7 @@ nsEventStateManager::GetActiveLink(nsIContent **aLink)
 NS_IMETHODIMP
 nsEventStateManager::SetActiveLink(nsIContent *aLink)
 {
+#if 0
   nsIDocument *mDocument;
 
   //XXX this should just be able to call ContentChanged for the link once
@@ -570,12 +571,12 @@ nsEventStateManager::SetActiveLink(nsIContent *aLink)
     }
     NS_RELEASE(mDocument);
   }
-
+#endif
   NS_IF_RELEASE(mActiveLink);
 
   mActiveLink = aLink;
   NS_IF_ADDREF(mActiveLink);
-
+#if 0
   if (nsnull != mActiveLink) {
     if (NS_OK == mActiveLink->GetDocument(mDocument)) {
       nsIContent *mKid;
@@ -589,7 +590,7 @@ nsEventStateManager::SetActiveLink(nsIContent *aLink)
     }
     NS_RELEASE(mDocument);
   }
-
+#endif
   return NS_OK;
 }
 
