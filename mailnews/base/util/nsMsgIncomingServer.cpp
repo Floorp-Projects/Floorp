@@ -646,7 +646,7 @@ nsMsgIncomingServer::StorePassword()
     rv = GetServerURI(getter_Copies(serverUri));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString password = pwd;
+    nsAutoString password = (const char *)pwd;
     rv = walletservice->SI_StorePassword((const char *)serverUri, PR_FALSE, nsnull, password.GetUnicode());
     return rv;
 }
