@@ -149,4 +149,25 @@ pref("font.min-size.fixed.zh-CN", 16);
 pref("font.min-size.variable.zh-TW", 16);
 pref("font.min-size.fixed.zh-TW", 16);
 
+// ps font
+// this list is used by the postscript font
+// to enumerate the list of langGroups
+// there should be a call to get the
+// langGroups; see bug 75054
+pref("print.psnativefont.ar", "");
+pref("print.psnativefont.el", "");
+pref("print.psnativefont.he", "");
+pref("print.psnativefont.ja", "");
+pref("print.psnativefont.ko", "");
+pref("print.psnativefont.th", "");
+pref("print.psnativefont.tr", "");
+pref("print.psnativefont.x-baltic", "");
+pref("print.psnativefont.x-central-euro", "");
+pref("print.psnativefont.x-cyrillic", "");
+pref("print.psnativefont.x-unicode", "");
+pref("print.psnativefont.x-user-def", "");
+pref("print.psnativefont.x-western", "");
+pref("print.psnativefont.zh-CN", "");
+pref("print.psnativefont.zh-TW", "");
+
 pref("mail.signature_date", 0);
