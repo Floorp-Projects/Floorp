@@ -260,121 +260,100 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 	
 	// for now, assume the url is a news url and load it....
 	nsINntpUrl		*nntpUrl = nsnull;
-	nsCOMPtr<nsINetService> pNetService;
-	nsCOMPtr<nsITransport> transport;
 	nsNNTPProtocol	*nntpProtocol = nsnull;
 	nsresult rv = NS_OK;
 	
-	// make sure we have a netlib service around...
-	rv = NS_NewINetService(getter_AddRefs(pNetService), nsnull);
-	
-	if (NS_SUCCEEDED(rv) && pNetService) {
-		rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), (void **)
-												&nntpUrl);
+	rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), (void **) &nntpUrl);
 		
-		if (NS_SUCCEEDED(rv) && nntpUrl) {
-            printf("hardcoding the server name.  right now, we can only post to news.mozilla.org\n");
-			char *urlstr = PR_smprintf("news://%s/%s","news.mozilla.org",newsgroupName);
-			nntpUrl->SetSpec(urlstr);
-			PR_FREEIF(urlstr);
-			
-            nsCOMPtr <nsINNTPNewsgroup> newsgroup;
-            rv = nsComponentManager::CreateInstance(kNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
-            
-            if (NS_SUCCEEDED(rv) && newsgroup) {
-              newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
-              newsgroup->SetName((char *)newsgroupName);
-            }
-            else {
-				return rv;
-            }            
-            nntpUrl->SetNewsgroup(newsgroup);
-            
-			const char * hostname = nsnull;
-			PRUint32 port = NEWS_PORT;
-			
-			if (aUrlListener) // register listener if there is one...
-				nntpUrl->RegisterListener(aUrlListener);
-			
-			rv = nntpUrl->GetHostPort(&port);
-            if (NS_FAILED(rv)) {
-              return rv;
-            }
-			rv = nntpUrl->GetHost(&hostname);
-            if (NS_FAILED(rv)) {
-              return rv;
-            }
-            
-			// okay now create a transport to run the url in...
+	if (NS_SUCCEEDED(rv) && nntpUrl) {
+        printf("hardcoding the server name.  right now, we can only post to news.mozilla.org\n");
+		char *urlstr = PR_smprintf("news://%s/%s","news.mozilla.org",newsgroupName);
+		nntpUrl->SetSpec(urlstr);
+		PR_FREEIF(urlstr);
+		
+        nsCOMPtr <nsINNTPNewsgroup> newsgroup;
+        rv = nsComponentManager::CreateInstance(kNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
+        
+        if (NS_SUCCEEDED(rv) && newsgroup) {
+          newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
+          newsgroup->SetName((char *)newsgroupName);
+        }
+        else {
+			return rv;
+        }            
+        nntpUrl->SetNewsgroup(newsgroup);
+        
+		const char * hostname = nsnull;
+		PRUint32 port = NEWS_PORT;
+		
+		if (aUrlListener) // register listener if there is one...
+			nntpUrl->RegisterListener(aUrlListener);
+		
+       
+		// okay now create a transport to run the url in...
 #ifdef DEBUG_NEWS
-            printf("nsNntpService::RunNewsUrl(): hostname = %s port = %d\n", hostname, port);
+        printf("nsNntpService::RunNewsUrl(): hostname = %s port = %d\n", hostname, port);
 #endif
-			pNetService->CreateSocketTransport(getter_AddRefs(transport), port, hostname);
-			if (NS_SUCCEEDED(rv) && transport)
-			{
-				// almost there...now create a nntp protocol instance to run the url in...
-				nntpProtocol = new nsNNTPProtocol();
-				if (nntpProtocol) {
-                    rv = nntpProtocol->Initialize(nntpUrl, transport);
-                    if (NS_FAILED(rv)) return rv;
-					// get the current identity from the news session....
-					NS_WITH_SERVICE(nsIMsgMailSession,newsSession,kCMsgMailSessionCID,&rv);
+		// almost there...now create a nntp protocol instance to run the url in...
+		nntpProtocol = new nsNNTPProtocol();
+		if (nntpProtocol) {
+			rv = nntpProtocol->Initialize(nntpUrl);
+            if (NS_FAILED(rv)) return rv;
+			// get the current identity from the news session....
+			NS_WITH_SERVICE(nsIMsgMailSession,newsSession,kCMsgMailSessionCID,&rv);
 
-					if (NS_SUCCEEDED(rv) && newsSession) {
-						nsCOMPtr<nsIMsgIdentity> identity;
-						rv = newsSession->GetCurrentIdentity(getter_AddRefs(identity));
-						if (NS_SUCCEEDED(rv) && identity) {
-							char * fullname = nsnull;
-							char * from = nsnull;
-							char * org = nsnull;
-							
-							identity->GetFullName(&fullname);
-							identity->GetEmail(&from);
-							identity->GetOrganization(&org);
-							
+			if (NS_SUCCEEDED(rv) && newsSession) {
+				nsCOMPtr<nsIMsgIdentity> identity;
+				rv = newsSession->GetCurrentIdentity(getter_AddRefs(identity));
+				if (NS_SUCCEEDED(rv) && identity) {
+					char * fullname = nsnull;
+					char * from = nsnull;
+					char * org = nsnull;
+						
+					identity->GetFullName(&fullname);
+					identity->GetEmail(&from);
+					identity->GetOrganization(&org);
+						
 #ifdef DEBUG_NEWS
-							printf("post message as: %s,%s,%s\n",fullname,from,org);
+						printf("post message as: %s,%s,%s\n",fullname,from,org);
 #endif
-							
-							nsCOMPtr <nsINNTPNewsgroupPost> post;
-                            rv = nsComponentManager::CreateInstance(kNNTPNewsgroupPostCID, nsnull, nsINNTPNewsgroupPost::GetIID(), getter_AddRefs(post));
-							
-							if (NS_SUCCEEDED(rv)) {
-								post->AddNewsgroup(newsgroupName);
-								post->SetSubject((char *)subject);
-								post->SetFrom((char *)from);
-								post->SetOrganization((char *)org);
-#ifdef DEBUG_NEWS
-                                printf("set file to post to %s\n",(const char *)pathToFile);
-#endif
-                                rv = post->SetPostMessageFile(pathToFile);
-                                if (NS_FAILED(rv)) {
-                                  return rv;
-                                }
-
-								rv = nntpUrl->SetMessageToPost(post);
-                                if (NS_FAILED(rv)) {
-                                  return rv;
-                                }
-							}
-							
-							PR_FREEIF(fullname);
-							PR_FREEIF(from);
-							PR_FREEIF(org);
-						}
-						else {
-							NS_ASSERTION(0, "no current identity found for this user....");
-						}
-					}
-
+						
+					nsCOMPtr <nsINNTPNewsgroupPost> post;
+                    rv = nsComponentManager::CreateInstance(kNNTPNewsgroupPostCID, nsnull, nsINNTPNewsgroupPost::GetIID(), getter_AddRefs(post));
+						
 					if (NS_SUCCEEDED(rv)) {
-                      PRInt32 status = 0;
-                      rv = nntpProtocol->LoadURL(nntpUrl, /* aConsumer */ nsnull, &status);
+						post->AddNewsgroup(newsgroupName);
+						post->SetSubject((char *)subject);
+						post->SetFrom((char *)from);
+						post->SetOrganization((char *)org);
+#ifdef DEBUG_NEWS
+                        printf("set file to post to %s\n",(const char *)pathToFile);
+#endif
+                       rv = post->SetPostMessageFile(pathToFile);
+                       if (NS_FAILED(rv)) {
+                          return rv;
+                       }
+
+						rv = nntpUrl->SetMessageToPost(post);
+                        if (NS_FAILED(rv)) {
+                              return rv;
+                        }
 					}
+						
+					PR_FREEIF(fullname);
+					PR_FREEIF(from);
+					PR_FREEIF(org);
 				}
-                //delete nntpProtocol?
+				else {
+						NS_ASSERTION(0, "no current identity found for this user....");
+				}
 			}
-			
+
+			if (NS_SUCCEEDED(rv)) {
+				PRInt32 status = 0;
+				rv = nntpProtocol->LoadUrl(nntpUrl, /* aConsumer */ nsnull, &status);
+			}
+		
 			if (_retval)
 				*_retval = nntpUrl; // transfer ref count
 			else 
@@ -395,72 +374,53 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsISupports * aConsumer, nsIUrlLi
 #endif
 	// for now, assume the url is a news url and load it....
 	nsINntpUrl		*nntpUrl = nsnull;
-	nsCOMPtr<nsINetService> pNetService;
-	nsCOMPtr<nsITransport> transport;
 	nsNNTPProtocol	*nntpProtocol = nsnull;
 	nsresult rv = NS_OK;
 
-	// make sure we have a netlib service around...
-	rv = NS_NewINetService(getter_AddRefs(pNetService), nsnull);
+	rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), (void **) &nntpUrl);
 
-	if (NS_SUCCEEDED(rv) && pNetService)
-	{
-		rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), (void **) &nntpUrl);
+	if (NS_SUCCEEDED(rv) && nntpUrl) {
+		nntpUrl->SetSpec(nsAutoCString(urlString));
 
-		if (NS_SUCCEEDED(rv) && nntpUrl) {
-			nntpUrl->SetSpec(nsAutoCString(urlString));
-
-			nsAutoString newsgroupName;
-			nsNewsURI2Name(kNewsRootURI, nsAutoCString(urlString), newsgroupName);
+		nsAutoString newsgroupName;
+		nsNewsURI2Name(kNewsRootURI, nsAutoCString(urlString), newsgroupName);
 			
-            nsCOMPtr <nsINNTPNewsgroup> newsgroup;
-            rv = nsComponentManager::CreateInstance(kNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
+        nsCOMPtr <nsINNTPNewsgroup> newsgroup;
+        rv = nsComponentManager::CreateInstance(kNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
                          
-            if (NS_SUCCEEDED(rv)) {
-              rv = newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
-              newsgroup->SetName((char *)((const char *)nsAutoCString(newsgroupName)));
-            }
-            else {
-              return rv;
-            }            
+        if (NS_SUCCEEDED(rv)) {
+			rv = newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
+            newsgroup->SetName((char *)((const char *)nsAutoCString(newsgroupName)));
+        }
+        else {
+			return rv;
+        }            
 			
-            nntpUrl->SetNewsgroup(newsgroup);
-            
-			const char * hostname = nsnull;
-			PRUint32 port = NEWS_PORT;
-			
-			if (aUrlListener) // register listener if there is one...
-				nntpUrl->RegisterListener(aUrlListener);
+        nntpUrl->SetNewsgroup(newsgroup);         
+	
+		if (aUrlListener) // register listener if there is one...
+			nntpUrl->RegisterListener(aUrlListener);
 
-			nntpUrl->GetHostPort(&port);
-			nntpUrl->GetHost(&hostname);
-			// okay now create a transport to run the url in...
+		// okay now create a transport to run the url in...
 
 #ifdef DEBUG_NEWS
             printf("nsNntpService::RunNewsUrl(): hostname = %s port = %d\n", hostname, port);
 #endif
-			pNetService->CreateSocketTransport(getter_AddRefs(transport), port, hostname);
-			//PR_FREEIF(hostname);
-			if (NS_SUCCEEDED(rv) && transport) {
-				// almost there...now create a nntp protocol instance to run the url in...
-				nntpProtocol = new nsNNTPProtocol();
-				if (nntpProtocol) {
-                  PRInt32 status = 0;
-                  rv = nntpProtocol->Initialize(nntpUrl, transport);
-                  if (NS_FAILED(rv)) return rv;
-                  rv = nntpProtocol->LoadURL(nntpUrl, aConsumer, &status);
-                  if (NS_FAILED(rv)) return rv;
-                }
+		// almost there...now create a nntp protocol instance to run the url in...
+		nntpProtocol = new nsNNTPProtocol();
+		if (nntpProtocol) {
+			PRInt32 status = 0;
+            rv = nntpProtocol->Initialize(nntpUrl);
+            if (NS_FAILED(rv)) return rv;
+			rv = nntpProtocol->LoadUrl(nntpUrl, aConsumer, &status);
+            if (NS_FAILED(rv)) return rv;
+         }
 
-                //delete nntpProtocol;
-			}
-
-			if (_retval)
-				*_retval = nntpUrl; // transfer ref count
-			else 
-				NS_RELEASE(nntpUrl);
-		}
-	} 
+		if (_retval)
+			*_retval = nntpUrl; // transfer ref count
+		else 
+			NS_RELEASE(nntpUrl);
+	}
 	
 	return rv;
 }
