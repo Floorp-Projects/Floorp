@@ -43,6 +43,7 @@ CPPSRCS		= \
 		nsFontSizeIterator.cpp \
 		nsGtkEventHandler.cpp \
 		nsGtkUtils.cpp \
+		nsKeyboardUtils.cpp \
 		nsLabel.cpp \
 		nsLookAndFeel.cpp \
 		nsScrollbar.cpp \
