@@ -57,6 +57,8 @@
 <!ENTITY copyValue.accesskey "V">
 <!ENTITY modify.label "Modify">
 <!ENTITY modify.accesskey "M">
+<!ENTITY toggle.label "Toggle">
+<!ENTITY toggle.accesskey "T">
 <!ENTITY reset.label "Reset">
 <!ENTITY reset.accesskey "R">
 <!ENTITY new.label "New">
