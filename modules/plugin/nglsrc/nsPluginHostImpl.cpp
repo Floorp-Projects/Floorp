@@ -90,6 +90,9 @@
 #include "nsPluginDocLoaderFactory.h"
 #include "nsIDocumentLoaderFactory.h"
 
+#include "nsIMIMEService.h"
+#include "nsCExternalHandlerService.h"
+
 #ifdef XP_UNIX
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
 #endif
@@ -2442,6 +2445,30 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
   nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
   if(peer == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
+
+	// if we don't have a mimetype, check by file extension
+  nsXPIDLCString mt;
+  if(mimetype == nsnull)
+  {
+    nsresult res = NS_OK;
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURL);
+    if(url)
+    {
+      nsXPIDLCString extension;
+      url->GetFileExtension(getter_Copies(extension));
+    
+      if(extension)
+      {
+        nsCOMPtr<nsIMIMEService> ms (do_GetService(NS_MIMESERVICE_CONTRACTID, &res));
+        if(NS_SUCCEEDED(res) && ms)
+        {
+          res = ms->GetTypeFromExtension(extension, getter_Copies(mt));
+          if(NS_SUCCEEDED(res))
+            mimetype = mt;
+        }
+      }
+    }
+  }
 
   // set up the peer for the instance
   peer->Initialize(aOwner, mimetype);   
