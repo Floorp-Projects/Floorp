@@ -22,6 +22,7 @@
 #include "pratom.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsIRegistry.h"
 #include "nsIFactory.h"
 #include "nsCOMPtr.h"
 #include "nsICharsetConverterInfo.h"
@@ -845,7 +846,66 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
   return NS_NOINTERFACE;
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char * path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports * aServMgr, 
+                                             const char * path)
+{
+  nsresult res;
+  PRUint32 i;
+  nsIComponentManager * compMgr = NULL;
+  nsIRegistry * registry = NULL;
+  nsIRegistry::Key key;
+  char buff[1024];
+
+  // get the service manager
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &res));
+
+  // get the component manager
+  res = servMgr->GetService(kComponentManagerCID, 
+                            nsIComponentManager::GetIID(), 
+                            (nsISupports**)&compMgr);
+  if (NS_FAILED(res)) goto done;
+
+  // get the registry
+  res = servMgr->GetService(NS_REGISTRY_PROGID, 
+                            nsIRegistry::GetIID(), 
+                            (nsISupports**)&registry);
+  if (NS_FAILED(res)) goto done;
+
+  // open the registry
+  res = registry->OpenWellKnownRegistry(
+      nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(res)) goto done;
+
+  for (i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+    // register component
+    res = compMgr->RegisterComponent(*(g_FactoryData[i].mCID), NULL, NULL,
+      path, PR_TRUE, PR_TRUE);
+    if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) goto done;
+
+    // register component info
+    // XXX take these KONSTANTS out of here
+    // XXX free the string from "ToString()"
+    sprintf(buff, "%s/%s", "software/netscape/intl/uconv", (g_FactoryData[i].mCID -> ToString()));
+    res = registry -> AddSubtree(nsIRegistry::Common, buff, &key);
+    if (NS_FAILED(res)) goto done;
+    res = registry -> SetString(key, "source", g_FactoryData[i].mCharsetSrc);
+    if (NS_FAILED(res)) goto done;
+    res = registry -> SetString(key, "destination", g_FactoryData[i].mCharsetDest);
+    if (NS_FAILED(res)) goto done;
+  }
+
+done:
+  if (compMgr != NULL) 
+    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  if (registry != NULL) {
+    registry -> Close();
+    (void)servMgr->ReleaseService(NS_REGISTRY_PROGID, registry);
+  }
+
+  return res;
+}
+
+extern "C" NS_EXPORT nsresult NSRegisterSelf_0(nsISupports* aServMgr, const char * path)
 {
   nsresult rv;
 
