@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -241,40 +242,40 @@ private:
 
 
 
-/**
- *  Represents the XPath NodeSet function calls
-**/
+/*
+ * A representation of the XPath NodeSet funtions
+ */
 class NodeSetFunctionCall : public FunctionCall {
 
 public:
 
-    enum nodeSetFunctions {
-        COUNT = 1,      //-- count()
-        ID,             //-- id()
-        LAST,           //-- last()
-        LOCAL_NAME,     //-- local-name()
-        NAMESPACE_URI,  //-- namespace-uri()
-        NAME,           //-- name()
-        POSITION        //-- position()
+    enum NodeSetFunctions {
+        COUNT,          // count()
+        ID,             // id()
+        LAST,           // last()
+        LOCAL_NAME,     // local-name()
+        NAMESPACE_URI,  // namespace-uri()
+        NAME,           // name()
+        POSITION        // position()
     };
 
-    /**
+    /*
      * Creates a NodeSetFunctionCall of the given type
-    **/
-    NodeSetFunctionCall(short type);
+     */
+    NodeSetFunctionCall(NodeSetFunctions aType);
 
-    /**
+    /*
      * Evaluates this Expr based on the given context node and processor state
      * @param context the context node for evaluation of this Expr
      * @param ps the ContextState containing the stack information needed
      * for evaluation
      * @return the result of the evaluation
-    **/
+     */
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
 
 private:
-    short type;
-}; //-- NodeSetFunctionCall
+    NodeSetFunctions mType;
+};
 
 
 /**

@@ -73,11 +73,11 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
 
     if (mType == NUMBER) {
         if (!requireParams(0, 1, cs))
-            return new NumberResult(Double::NaN);
+            return new StringResult("error");
     }
     else {
         if (!requireParams(1, 1, cs))
-            return new NumberResult(Double::NaN);
+            return new StringResult("error");
     }
 
     switch (mType) {
@@ -115,28 +115,20 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
         }
         case SUM:
         {
-            ExprResult* exprResult =
-                ((Expr*)iter.next())->evaluate(context, cs);
+            NodeSet* nodes;
+            nodes = evaluateToNodeSet((Expr*)iter.next(), context, cs);
 
-            if (!exprResult)
-                return 0;
-
-            if (exprResult->getResultType() != ExprResult::NODESET) {
-                String err("NodeSet expected in call to sum(): ");
-                toString(err);
-                cs->recieveError(err);
-                return new NumberResult(Double::NaN);
-            }
+            if (!nodes)
+                return new StringResult("error");
 
             double res = 0;
-            NodeSet* nodes = (NodeSet*)exprResult;
             int i;
             for (i = 0; i < nodes->size(); i++) {
                 String resultStr;
                 XMLDOMUtils::getNodeValue(nodes->get(i), &resultStr);
                 res += Double::toDouble(resultStr);
             }
-            delete exprResult;
+            delete nodes;
 
             return new NumberResult(res);
         }
@@ -151,5 +143,5 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
             return new NumberResult(Double::toDouble(resultStr));
         }
     }
-    return new NumberResult(Double::NaN);
+    return new StringResult("error");
 }

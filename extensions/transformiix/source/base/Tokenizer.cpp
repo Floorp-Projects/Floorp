@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -48,72 +49,58 @@
  *
  */
 
-/**
- * Tokenizer
+/*
+ * txTokenizer
  * A simple String tokenizer
-**/
+ */
 
 #include "Tokenizer.h"
 
-/**
- * Creates a new Tokenizer
-**/
-Tokenizer::Tokenizer() {
-    currentPos = 0;
-    size = 0;
-} //-- tokenizer
-
-/**
- * Creates a new Tokenizer using the given source string,
- * uses the default set of delimiters {' ', '\r', '\n', '\t'};
-**/
-Tokenizer::Tokenizer(const String& source) {
-    currentPos = 0;
-    //-- copy source
-    str = source;
-    size = str.length();
-    delimiters.append(" \n\r\t");
-} //-- Tokenizer
-
-/**
+/*
  * Creates a new Tokenizer using the given source string
- * and set of character delimiters
-**/
-Tokenizer::Tokenizer(const String& source, const String& delimiters) {
-    currentPos = 0;
-    // copy source
-    str = source;
-    size = str.length();
-    // copy tokens
-    this->delimiters.append(delimiters);
-} //-- Tokenizer
+ */
+txTokenizer::txTokenizer(const String& aSource)
+{
+    mCurrentPos = 0;
+    mSource = aSource;
+    mSize = mSource.length();
 
-
-/**
- * Default Destructor
-**/
-Tokenizer::~Tokenizer() {};
-
-MBool Tokenizer::hasMoreTokens() {
-    return (MBool)(currentPos < size);
-} //-- hasMoreTokens
-
-void Tokenizer::nextToken(String& buffer) {
-    buffer.clear();
-    while ( currentPos < size) {
-        char ch = (char)str.charAt(currentPos);
-        //-- if character is not a delimiter..append
-        if (delimiters.indexOf(ch) < 0) buffer.append(ch);
-        else break;
-        ++currentPos;
+    // Advance to start pos
+    while (mCurrentPos < mSize) {
+        UNICODE_CHAR ch = mSource.charAt(mCurrentPos);
+        // If character is not a whitespace, we are at start of first token
+        if (ch != ' ' && ch != '\n' &&
+            ch != '\r' && ch != '\t')
+            break;
+        ++mCurrentPos;
     }
-    //-- advance to next start pos
-    while ( currentPos < size ) {
-        char ch = (char)str.charAt(currentPos);
-        //-- if character is not a delimiter, we are at
-        //-- start of next token
-        if (delimiters.indexOf(ch) < 0) break;
-        ++currentPos;
+}
+
+MBool txTokenizer::hasMoreTokens()
+{
+    return mCurrentPos < mSize;
+}
+
+void txTokenizer::nextToken(String& aBuffer)
+{
+    aBuffer.clear();
+    while (mCurrentPos < mSize) {
+        UNICODE_CHAR ch = mSource.charAt(mCurrentPos++);
+        // If character is not a delimiter we append it
+        if (ch == ' ' || ch == '\n' ||
+            ch == '\r' || ch == '\t')
+            break;
+        aBuffer.append(ch);
     }
-} //-- nextToken
+
+    // Advance to next start pos
+    while (mCurrentPos < mSize) {
+        UNICODE_CHAR ch = mSource.charAt(mCurrentPos);
+        // If character is not a whitespace, we are at start of next token
+        if (ch != ' ' && ch != '\n' &&
+            ch != '\r' && ch != '\t')
+            break;
+        ++mCurrentPos;
+    }
+}
 

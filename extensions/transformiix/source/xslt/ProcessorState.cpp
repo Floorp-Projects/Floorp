@@ -791,7 +791,7 @@ void ProcessorState::shouldStripSpace(String& aNames,
                                       ImportFrame* aImportFrame)
 {
     //-- split names on whitespace
-    Tokenizer tokenizer(aNames);
+    txTokenizer tokenizer(aNames);
     String name;
     while (tokenizer.hasMoreTokens()) {
         tokenizer.nextToken(name);
