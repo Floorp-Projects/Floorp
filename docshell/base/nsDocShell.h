@@ -81,6 +81,7 @@ public:
    NS_DECL_NSISCROLLABLE
    NS_DECL_NSITEXTSCROLL
    NS_DECL_NSIHTMLDOCSHELL
+   NS_DECL_NSICAPABILITIES
 
    // XXX: move to a macro
    // nsIContentViewerContainer
