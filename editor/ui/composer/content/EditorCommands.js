@@ -370,12 +370,6 @@ function EditorNewPlaintext()
 }
 
 // returns wasSavedSuccessfully
-function EditorCheckAndSaveDocument(reasonToSaveString)
-{
-
-}
-
-// returns wasSavedSuccessfully
 function EditorSaveDocument(doSaveAs, doSaveCopy)
 {
   editorShell.saveDocument(doSaveAs, doSaveCopy);
@@ -409,6 +403,14 @@ function EditorClose()
   // This doesn't work, but we can close
   //   the window in the EditorAppShell, so we don't need it
   //window.close();
+}
+
+// Check for changes to document and allow saving before closing
+// This is hooked up to the OS's window close widget (e.g., "X" for Windows)
+function EditorCanClose()
+{
+  // Returns FALSE only if user cancels save action
+  return editorShell.CheckAndSaveDocument(editorShell.GetString("BeforeClosing"));
 }
 
 // --------------------------- Edit menu ---------------------------
@@ -745,6 +747,44 @@ function EditorRemoveLinks()
   contentWindow.focus();
 }
 
+/*TODO: We need an oncreate hook to do enabling/disabling for the 
+        Format menu. There should be code like this for the 
+        object-specific "Properties..." item
+*/
+
+function EditorObjectProperties()
+{
+  var element = editorShell.GetSelectedElement("");
+  dump("EditorObjectProperties: element="+element+"\n");
+  if (element)
+  {
+    dump("TagName="+element.nodeName+"\n");
+    switch (element.nodeName)
+    {
+      case 'IMG':
+        EditorInsertOrEditImage();
+        break;
+      case 'HR':
+        EditorInsertOrEditHLine();
+        break;
+      case 'TABLE':
+        EditorInsertOrEditTable(false);
+        break;
+      case 'A':
+        if(element.href)
+          EditorInsertOrEditLink();  
+        else if (element.name)
+          EditorInsertOrEditNamedAnchor();  
+        break;
+    }
+  } else {
+    // We get a partially-selected link if asked for specifically
+    element = editorShell.GetSelectedElement("href");
+    if (element)
+      EditorInsertOrEditLink();  
+  }
+}
+
 function EditorListProperties()
 {
   window.openDialog("chrome://editor/content/EdListProps.xul","_blank", "chrome,close,titlebar,modal");
@@ -827,19 +867,19 @@ function EditorInsertHTML()
   contentWindow.focus();
 }
 
-function EditorInsertLink()
+function EditorInsertOrEditLink()
 {
   window.openDialog("chrome://editor/content/EdLinkProps.xul","_blank", "chrome,close,titlebar,modal");
   contentWindow.focus();
 }
 
-function EditorInsertImage()
+function EditorInsertOrEditImage()
 {
   window.openDialog("chrome://editor/content/EdImageProps.xul","_blank", "chrome,close,titlebar,modal");
   contentWindow.focus();
 }
 
-function EditorInsertHLine()
+function EditorInsertOrEditHLine()
 {
   // Inserting an HLine is different in that we don't use properties dialog
   //  unless we are editing an existing line's attributes
@@ -918,7 +958,7 @@ function EditorInsertHLine()
   contentWindow.focus();
 }
 
-function EditorInsertNamedAnchor()
+function EditorInsertOrEditNamedAnchor()
 {
   window.openDialog("chrome://editor/content/EdNamedAnchorProps.xul", "_blank", "chrome,close,titlebar,modal", "");
   contentWindow.focus();
@@ -945,6 +985,30 @@ function EditorInsertOrEditTable(insertAllowed)
   } else if(insertAllowed) {
     EditorInsertTable();
   }
+}
+
+function EditorSelectTable()
+{
+  //TODO: FINISH THIS!
+  contentWindow.focus();
+}
+
+function EditorSelectTableRow()
+{
+  //TODO: FINISH THIS!
+  contentWindow.focus();
+}
+
+function EditorSelectTableColumn()
+{
+  //TODO: FINISH THIS!
+  contentWindow.focus();
+}
+
+function EditorSelectTableCell()
+{
+  //TODO: FINISH THIS!
+  contentWindow.focus();
 }
 
 function EditorInsertTable()
@@ -986,20 +1050,23 @@ function EditorDeleteTable()
 
 function EditorDeleteTableRow()
 {
-  editorShell.DeleteTableRow();
+  // TODO: Get the number of rows to delete from the selection
+  editorShell.DeleteTableRow(1);
   contentWindow.focus();
 }
 
 function EditorDeleteTableColumn()
 {
-  editorShell.DeleteTableColumn();
+  // TODO: Get the number of cols to delete from the selection
+  editorShell.DeleteTableColumn(1);
   contentWindow.focus();
 }
 
 
 function EditorDeleteTableCell()
 {
-  editorShell.DeleteTableCell();
+  // TODO: Get the number of cells to delete from the selection
+  editorShell.DeleteTableCell(1);
   contentWindow.focus();
 }
 

@@ -43,6 +43,87 @@
 #include "nsEditorUtils.h"
 
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+PRBool nsHTMLEditor::IsOnlyCellInRow(nsCOMPtr<nsIDOMElement> &aCell, nsIDOMElement** aParentRow)
+{
+  if (!aParentRow) return NS_ERROR_NULL_POINTER;
+
+  PRBool oneCellFound = PR_FALSE;
+  nsresult res = GetElementOrParentByTagName("tr", aCell, aParentRow);
+  if (NS_SUCCEEDED(res) && aParentRow)
+  {
+    PRBool done = PR_FALSE;
+    do {
+      nsCOMPtr<nsIDOMNode> resultNode;
+      // Scan through all nodes starting at the row we are interested in,
+      // and count the cells we run into.
+      res = GetNextNode(*aParentRow, PR_TRUE, getter_AddRefs(resultNode));
+      if (NS_SUCCEEDED(res) && resultNode)
+      {
+        //Test if it's a cell and parent is = aParentRow
+        //Continue and count cells encountered until we leave the row
+        nsCOMPtr<nsIDOMElement> parent;
+        res = GetElementOrParentByTagName("tr", resultNode, getter_AddRefs(parent));
+        if(NS_SUCCEEDED(res) && parent && (parent == *aParentRow))
+        {
+          if (oneCellFound)
+          {
+            // We found more than one cell, so we're done
+            return PR_FALSE;
+          } else {
+            oneCellFound = PR_TRUE;
+          }            
+        } else {
+          // We are outside of the row, so we're done
+          done = PR_TRUE;
+        }
+
+      } else {
+        // Should never happen!
+        return PR_FALSE;      
+      }
+    } while(!done);
+    // We should always find one cell - the one we started with!
+    //NS_ASSERTION(oneCellFound, "Cell Not Found!");
+  }
+  return oneCellFound;
+}
+
+PRBool nsHTMLEditor::IsOnlyRowInTable(nsCOMPtr<nsIDOMElement> &aRow, nsCOMPtr<nsIDOMElement> &aTable)
+{
+  PRBool oneRowFound = PR_FALSE;
+  PRBool done = PR_FALSE;
+
+  do {
+    nsCOMPtr<nsIDOMNode> resultNode;
+    // Scan through all nodes starting at the row we are interested in
+    nsresult res = GetNextNode(aTable, PR_TRUE, getter_AddRefs(resultNode));
+    if (NS_SUCCEEDED(res))
+    {
+      //Test if it's a row and parent is same as table we are in
+      nsCOMPtr<nsIDOMElement> parent;
+      res = GetElementOrParentByTagName("table", resultNode, getter_AddRefs(parent));
+      if(NS_SUCCEEDED(res) && parent && (parent == aTable))
+      {
+        if (oneRowFound)
+        {
+          // We found more than one row, so we're done
+          return PR_FALSE;
+        } else {
+          oneRowFound = PR_TRUE;
+        }            
+      } else {
+        // We are outside of the table, so we're done
+        done = PR_TRUE;
+      }
+    } else {
+      // Should never happen!
+      return PR_FALSE;      
+    }
+  } while(!done);
+  // We should always find one row - the one we started with!
+    NS_ASSERTION(oneRowFound, "Row Not Found!");
+  return oneRowFound;
+}
 
 // Table Editing methods
 
@@ -268,6 +349,27 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
   return res;
 }
 
+// This is an internal helper (not exposed in IDL)
+NS_IMETHODIMP
+nsHTMLEditor::DeleteTable(nsCOMPtr<nsIDOMElement> &table, nsCOMPtr<nsIDOMSelection> &selection)
+{
+  nsCOMPtr<nsIDOMNode> tableParent;
+  PRInt32 tableOffset;
+  if(NS_FAILED(table->GetParentNode(getter_AddRefs(tableParent))) || !tableParent)
+    return NS_ERROR_FAILURE;
+
+  // Save offset we need to restore the selection
+  if(NS_FAILED(GetChildOffset(table, tableParent, tableOffset)))
+    return NS_ERROR_FAILURE;
+
+  nsresult res = DeleteNode(table);
+
+  // Place selection just before the table
+  selection->Collapse(tableParent, tableOffset);
+  
+  return res;
+}
+
 NS_IMETHODIMP
 nsHTMLEditor::DeleteTable()
 {
@@ -281,19 +383,7 @@ nsHTMLEditor::DeleteTable()
   if (NS_SUCCEEDED(res))
   {
     nsAutoEditBatch beginBatching(this);
-
-    // Save where we need to restore the selection
-    nsCOMPtr<nsIDOMNode> tableParent;
-    PRInt32 tableOffset;
-    if(NS_FAILED(table->GetParentNode(getter_AddRefs(tableParent))) || !tableParent)
-      return NS_ERROR_FAILURE;
-    if(NS_FAILED(GetChildOffset(table, tableParent, tableOffset)))
-      return NS_ERROR_FAILURE;
-
-    res = DeleteNode(table);
-
-    // Place selection just before the table
-    selection->Collapse(tableParent, tableOffset);
+    res = DeleteTable(table, selection);
   }
   return res;
 }
@@ -306,24 +396,43 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
   nsCOMPtr<nsIDOMElement> cell;
   nsCOMPtr<nsIDOMNode> cellParent;
   PRInt32 cellOffset, startRow, startCol;
-  nsresult res = GetCellContext(selection, table, cell, cellParent, cellOffset, startRow, startCol);
-  
-  if (NS_SUCCEEDED(res))
-  {
-    nsAutoEditBatch beginBatching(this);
+  nsresult res = NS_OK;
 
-    // We clear the selection to avoid problems when nodes in the selection are deleted,
-    // Be sure to set it correctly later (in SetCaretAfterTableEdit)!
-    selection->ClearSelection();
-    PRInt32 i;
-    for (i = 0; i < aNumber; i++)
+  nsAutoEditBatch beginBatching(this);
+
+  for (PRInt32 i = 0; i < aNumber; i++)
+  {
+    res = GetCellContext(selection, table, cell, cellParent, cellOffset, startRow, startCol);
+  
+    if (NS_SUCCEEDED(res) && cell)
     {
-      //TODO: FINISH ME!
-      if (NS_FAILED(DeleteNode(cell)))
+      // We clear the selection to avoid problems when nodes in the selection are deleted,
+      // Be sure to set it correctly later (in SetCaretAfterTableEdit)!
+      selection->ClearSelection();
+      nsCOMPtr<nsIDOMElement> parentRow;
+      
+      if (IsOnlyCellInRow(cell, getter_AddRefs(parentRow)))
+      {
+        // We should delete the row instead,
+        //  but first check if its the only row left
+        //  so we can delete the entire table
+        if (IsOnlyRowInTable(parentRow, table))
+          return DeleteTable(table, selection);
+        
+        // Delete the row
+        res = DeleteNode(parentRow);
+      } else {
+        res = DeleteNode(cell);
+        // If we fail, don't try to delete any more cells???
+        if (NS_FAILED(res)) break;
+      }
+      if NS_FAILED(SetCaretAfterTableEdit(table, startRow, startCol, eNoSearch))
+      {
         break;
+      }
     }
-    SetCaretAfterTableEdit(table, startRow, startCol, ePreviousColumn);
   }
+  SetCaretAfterTableEdit(table, startRow, startCol, ePreviousColumn);
   return res;
 }
 
@@ -598,12 +707,18 @@ nsHTMLEditor::SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aCol, PRInt3
   nsCOMPtr<nsIDOMElement> cell;
   res = GetCellAt(aTable, aCol, aRow, *getter_AddRefs(cell));
   nsCOMPtr<nsIDOMNode> cellNode = do_QueryInterface(cell);
-  if (NS_SUCCEEDED(res) && cell)
+
+  if (NS_SUCCEEDED(res))
   {
-    // Set the caret to just before the first child of the cell?
-    // TODO: Should we really be placing the caret at the END
-    //  of the cell content?
-    selection->Collapse(cell, 0);
+    if (cell)
+    {
+      // Set the caret to just before the first child of the cell?
+      // TODO: Should we really be placing the caret at the END
+      //  of the cell content?
+      selection->Collapse(cell, 0);
+    } else {
+      res = NS_ERROR_FAILURE;
+    }
   }
     //TODO: SEARCH FOR NEAREST CELL TO PLACE CARET INTO
   return res;
