@@ -125,8 +125,10 @@ nsresult nsPluginInstancePeerImpl::QueryInterface(const nsIID& iid, void** insta
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetValue(nsPluginInstancePeerVariable variable, void *value)
 {
-printf("instance peer getvalue %d called\n", variable);
-  return NS_ERROR_FAILURE;
+  if(!mOwner)
+    return NS_ERROR_FAILURE;
+
+  return mOwner->GetValue(variable, value);
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetMIMEType(nsMIMEType *result)
@@ -934,17 +936,26 @@ nsresult nsPluginInstancePeerImpl::GetOwner(nsIPluginInstanceOwner *&aOwner)
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::InvalidateRect(nsPluginRect *invalidRect)
 {
-	return NS_OK;
+  if(!mOwner)
+    return NS_ERROR_FAILURE;
+
+  return mOwner->InvalidateRect(invalidRect);
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::InvalidateRegion(nsPluginRegion invalidRegion)
 {
-	return NS_OK;
+  if(!mOwner)
+    return NS_ERROR_FAILURE;
+
+  return mOwner->InvalidateRegion(invalidRegion);
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::ForceRedraw(void)
 {
-	return NS_OK;
+  if(!mOwner)
+    return NS_ERROR_FAILURE;
+
+  return mOwner->ForceRedraw();
 }
 
 /*void 
