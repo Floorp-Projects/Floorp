@@ -21,11 +21,14 @@ DEPTH	= ..\..\..
 
 MODULE	= oji
 
+XPIDLSRCS =                     \
+            .\nsIJVMManager.idl     \
+            $(NULL)
+
 EXPORTS	=			  \
 	nsjvm.h			  \
 	nsIJRIPlugin.h		  \
 	nsIJVMConsole.h		  \
-	nsIJVMManager.h		  \
 	nsIJVMPlugin.h		  \
 	nsIJVMPluginInstance.h	  \
 	nsIJVMPluginTagInfo.h	  \

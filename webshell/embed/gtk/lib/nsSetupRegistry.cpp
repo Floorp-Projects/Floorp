@@ -39,7 +39,6 @@
 #ifdef OJI
 #include "nsICapsManager.h"
 #include "nsILiveconnect.h"
-#include "nsIJVMManager.h"
 #endif
 #include "nsIPluginManager.h"
 #include "nsIProperties.h"
@@ -201,7 +200,6 @@ static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
 #ifdef OJI
 static NS_DEFINE_CID(kCapsManagerCID,             NS_CCAPSMANAGER_CID);
 static NS_DEFINE_CID(kCLiveconnectCID,             NS_CLIVECONNECT_CID);
-static NS_DEFINE_CID(kCJVMManagerCID,              NS_JVMMANAGER_CID);
 #endif
 
 extern "C" void
@@ -284,6 +282,5 @@ NS_SetupRegistry()
 #ifdef OJI
   nsComponentManager::RegisterComponentLib(kCapsManagerCID, NULL, NULL, CAPS_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCLiveconnectCID, NULL, NULL, LIVECONNECT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCJVMManagerCID,  NULL, NULL, OJI_DLL, PR_FALSE, PR_FALSE);
 #endif
 }

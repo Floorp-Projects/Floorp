@@ -13,7 +13,7 @@
 <!ENTITY securityInfoCmd.label					".Security Info">  
 <!ENTITY messageCenterCmd.label					".Message Center">  
 <!ENTITY importUtilCmd.label					".Import Utility">  
-<!ENTITY javaConsoleCmd.label					".Java Console">
+<!ENTITY javaConsoleCmd.label					"Java Console">
 
 <!-- taskbar -->
 <!ENTITY  mozillaButton.label "Mozilla">
@@ -26,5 +26,5 @@
 <!ENTITY  bonsai.label "Look at Bonsai">
 
 <!ENTITY  booksButton.label "Buy Books at Fatbrain">
-<!ENTITY  cdButton.label "Buy CDs at CDNOW">
+<!ENTITY  cdButton.label "Buy CD's at CDNOW">
 <!ENTITY  lifeButton.label "Get a Life at Match.com">

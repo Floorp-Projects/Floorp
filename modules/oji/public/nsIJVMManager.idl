@@ -16,21 +16,9 @@
  * Reserved.
  */
 
-////////////////////////////////////////////////////////////////////////////////
-// NETSCAPE JAVA VM PLUGIN EXTENSIONS
-// 
-// This interface allows a Java virtual machine to be plugged into
-// Communicator to implement the APPLET tag and host applets.
-// 
-// Note that this is the C++ interface that the plugin sees. The browser
-// uses a specific implementation of this, nsJVMPlugin, found in jvmmgr.h.
-////////////////////////////////////////////////////////////////////////////////
+#include "nsISupports.idl"
 
-#ifndef nsIJVMManager_h___
-#define nsIJVMManager_h___
-
-#include "nsISupports.h"
-
+%{C++
 #ifndef JNI_H
 #include "jni.h"
 #endif
@@ -41,13 +29,13 @@
 // to JVM plugins for browsers that support JVM plugins.
 
 
-#define NS_IJVMMANAGER_IID                           \
-{ /* a1e5ed50-aa4a-11d1-85b2-00805f0e4dfe */         \
-    0xa1e5ed50,                                      \
-    0xaa4a,                                          \
-    0x11d1,                                          \
-    {0x85, 0xb2, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
-}
+      //#define NS_IJVMMANAGER_IID                           \
+      //{ /* a1e5ed50-aa4a-11d1-85b2-00805f0e4dfe */         \
+//    0xa1e5ed50,                                      \
+//    0xaa4a,                                          \
+//    0x11d1,                                          \
+//    {0x85, 0xb2, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
+//}
 
 #define NS_JVMMANAGER_CID                            \
 { /* 38e7ef10-58df-11d2-8164-006008119d7a */         \
@@ -57,13 +45,19 @@
     {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
 
-class nsIJVMPlugin;
-class nsISecureEnv;
+%}
 
-class nsIJVMManager : public nsISupports {
-public:
-	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMMANAGER_IID)
+interface nsIJVMPlugin;
+interface nsISecureEnv;
+native JNIEnv(JNIEnv *);
+
+[scriptable, uuid(a1e5ed50-aa4a-11d1-85b2-00805f0e4dfe)]
+interface nsIJVMManager : nsISupports {
+
+%{C++
+      //	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMMANAGER_IID)
 	NS_DEFINE_STATIC_CID_ACCESSOR(NS_JVMMANAGER_CID)
+%}
 
     /**
      * Creates a proxy JNI with an optional secure environment (which can be NULL).
@@ -71,23 +65,23 @@ public:
      * calling this method multiple times from the same thread will return
      * the same proxy JNI.
      */
-	NS_IMETHOD
-	CreateProxyJNI(nsISecureEnv* inSecureEnv, JNIEnv** outProxyEnv) = 0;
-	   
+	void CreateProxyJNI(in nsISecureEnv secureEnv, out JNIEnv outProxyEnv);
+
 	/**
 	 * Returns the proxy JNI associated with the current thread, or NULL if no
 	 * such association exists.
 	 */
-	NS_IMETHOD
-	GetProxyJNI(JNIEnv** outProxyEnv) = 0;
+	void GetProxyJNI(out JNIEnv outProxyEnv);
 
 	/**
 	 * Returns whether or not Java is enabled.
 	 */
-	NS_IMETHOD
-	IsJavaEnabled(PRBool* outEnabled) = 0;
+	void IsJavaEnabled(out boolean outEnabled);
+
+	/**
+	 * Called from Java Console menu item.
+	 */
+
+	void ShowJavaConsole();
+
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-#endif /* nsIJVMManager_h___ */

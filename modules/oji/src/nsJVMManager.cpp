@@ -83,6 +83,8 @@ static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
 static NS_DEFINE_IID(kISymantecDebugManagerIID, NS_ISYMANTECDEBUGMANAGER_IID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_AGGREGATED(nsJVMManager);
@@ -139,6 +141,13 @@ nsJVMManager::IsJavaEnabled(PRBool* outEnabled)
 	return NS_OK;
 }
 
+NS_METHOD
+nsJVMManager::ShowJavaConsole(void)
+{
+    JVM_ShowConsole();
+    return NS_OK;
+}
+    
 // nsIThreadManager:
 
 NS_METHOD
@@ -300,13 +309,18 @@ nsJVMManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_OK;
     }
     if (aIID.Equals(kIThreadManagerIID)) {
-        *aInstancePtr = (void*) (nsIThreadManager*) this;
+        *aInstancePtr = (void*) NS_STATIC_CAST(nsIThreadManager*, this);
         AddRef();
         return NS_OK;
     }
     if (aIID.Equals(kILiveConnectManagerIID)) {
-        *aInstancePtr = (void*) (nsILiveConnectManager*) this;
+        *aInstancePtr = (void*) NS_STATIC_CAST(nsILiveConnectManager*, this);
         AddRef();
+        return NS_OK;
+    }
+    if (aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = GetInner();
+        NS_ADDREF((nsISupports*)*aInstancePtr);
         return NS_OK;
     }
 #ifdef XP_PC
@@ -778,48 +792,4 @@ nsJVMManager::AddToClassPath(const char* dirPath)
     }
     return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-class nsJVMFactory : public nsIFactory {
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              REFNSIID aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-    nsJVMFactory(void);
-    virtual ~nsJVMFactory(void);
-};
-
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsJVMFactory, kIFactoryIID);
-
-nsJVMFactory::nsJVMFactory(void)
-{
-}
-
-nsJVMFactory::~nsJVMFactory(void)
-{
-}
-
-NS_METHOD
-nsJVMFactory::CreateInstance(nsISupports *aOuter,
-                             REFNSIID aIID,
-                             void **aResult)
-{
-    return nsJVMManager::Create(aOuter, aIID, aResult);
-}
-
-NS_METHOD
-nsJVMFactory::LockFactory(PRBool aLock)
-{
-    // nothing to do here since we're not a DLL (yet)
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
