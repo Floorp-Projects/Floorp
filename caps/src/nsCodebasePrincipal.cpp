@@ -20,6 +20,8 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
+#include "nsXPIDLString.h"
+
 
 static NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
 
@@ -105,10 +107,10 @@ nsCodebasePrincipal::Equals(nsIPrincipal * other, PRBool * result)
   (* result) = (itsType == oType) ? PR_TRUE : PR_FALSE;	
   if ((* result) != PR_TRUE) return NS_OK;
   nsICodebasePrincipal * cbother;
-  char * oCodebase = nsnull, * myCodebase = nsnull;
+  nsXPIDLCString oCodebase, myCodebase;
   other->QueryInterface(NS_GET_IID(nsICodebasePrincipal),(void * *)& cbother);
-  cbother->GetURLString(& oCodebase);
-  this->GetURLString(& myCodebase);
+  cbother->GetURLString(getter_Copies(oCodebase));
+  this->GetURLString(getter_Copies(myCodebase));
   (* result) = (PL_strcmp(myCodebase, oCodebase) == 0) ? PR_TRUE : PR_FALSE;	
   return NS_OK;
 }

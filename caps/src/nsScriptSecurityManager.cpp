@@ -26,6 +26,8 @@
 #endif
 #include "nspr.h"
 #include "plstr.h"
+#include "nsCRT.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kURLCID, NS_STANDARDURL_CID);
@@ -99,8 +101,8 @@ nsScriptSecurityManager::NewJSPrincipals(nsIURI *aURL, nsString *aName,
   }
 #endif 
     nsresult rv;
-    char *codebaseStr = NULL;
-    if (!NS_SUCCEEDED(rv = GetOriginFromSourceURL(aURL, &codebaseStr))) 
+    nsXPIDLCString codebaseStr;
+    if (!NS_SUCCEEDED(rv = GetOriginFromSourceURL(aURL, getter_Copies(codebaseStr)))) 
         return rv;
     if (!codebaseStr) {
         return NS_ERROR_FAILURE;
@@ -201,17 +203,17 @@ nsScriptSecurityManager::GetObjectOriginURL(JSContext *aCx, JSObject *aObj,
 NS_IMETHODIMP
 nsScriptSecurityManager::GetOriginFromSourceURL(nsIURI *url, char **result)
 {
-    char *tempChars;
+    nsXPIDLCString tempChars;
     nsresult rv;
-    if (!NS_SUCCEEDED(rv = url->GetScheme(&tempChars)))
+    if (!NS_SUCCEEDED(rv = url->GetScheme(getter_Copies(tempChars))))
         return rv;
     nsAutoString buffer(tempChars);
     // NB TODO: what about file: urls and about:blank?
     buffer.Append("://");
-    if (!NS_SUCCEEDED(rv = url->GetHost(&tempChars)))
+    if (!NS_SUCCEEDED(rv = url->GetHost(getter_Copies(tempChars))))
         return rv;
     buffer.Append(tempChars);
-    if (!NS_SUCCEEDED(rv = url->GetPath(&tempChars)))
+    if (!NS_SUCCEEDED(rv = url->GetPath(getter_Copies(tempChars))))
         return rv;
     buffer.Append(tempChars);
     if (buffer.Length() == 0 || buffer.EqualsIgnoreCase(gUnknownOriginStr))
@@ -249,9 +251,9 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, 
                                           PRInt16 aTarget, PRBool* aReturn)
 {
-    char *subjectOrigin = nsnull;
-    char *objectOrigin = nsnull;
-    nsresult rv = GetSubjectOriginURL(aCx, &subjectOrigin);
+    nsXPIDLCString subjectOrigin;
+    nsXPIDLCString objectOrigin;
+    nsresult rv = GetSubjectOriginURL(aCx, getter_Copies(subjectOrigin));
     if (!NS_SUCCEEDED(rv))
         return rv;
     /*
@@ -260,7 +262,7 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     ** dropping a reference due to an origin changing
     ** underneath us.
     */
-    rv = GetObjectOriginURL(aCx, aObj, &objectOrigin);
+    rv = GetObjectOriginURL(aCx, aObj, getter_Copies(objectOrigin));
     if (rv != NS_OK || !subjectOrigin || !objectOrigin) {
         *aReturn = PR_FALSE;
         return NS_OK;
@@ -284,7 +286,7 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
         }
     }
     
-    JS_ReportError(aCx, accessErrorMessage, subjectOrigin);
+    JS_ReportError(aCx, accessErrorMessage, (const char*)subjectOrigin);
     *aReturn = PR_FALSE;
     return NS_OK;
 }
@@ -312,9 +314,9 @@ nsScriptSecurityManager::GetContainerPrincipals(JSContext *aCx,
   globalData->GetPrincipal(result);
   if (* result) {
     nsICodebasePrincipal * cbprin;
-    char * cbStr;
+    nsXPIDLCString cbStr;
     (* result)->QueryInterface(NS_GET_IID(nsICodebasePrincipal),(void * *)& cbprin);
-    cbprin->GetURLString(& cbStr);
+    cbprin->GetURLString(getter_Copies(cbStr));
     if (this->SameOrigins(aCx, originUrl, cbStr)) {
       delete originUrl;
       return NS_OK;
@@ -380,17 +382,19 @@ nsScriptSecurityManager::GetCanonicalizedOrigin(JSContext* aCx, const char * aUr
   nsString * buffer;
   nsIURL * url;
   nsresult rv;
-  char * origin = (char *)aUrlString;
+  nsXPIDLCString tmp;
+  char * origin;
   NS_WITH_SERVICE(nsIComponentManager, compMan,kComponentManagerCID,&rv);
   if (!NS_SUCCEEDED(rv)) return nsnull;
   rv = compMan->CreateInstance(kURLCID,NULL,NS_GET_IID(nsIURL),(void * *)& url);
   if (!NS_SUCCEEDED(rv)) return nsnull;
-  rv = url->SetSpec(origin);
+  rv = url->SetSpec((char*) aUrlString);
   if (!NS_SUCCEEDED(rv)) return nsnull;
-  url->GetScheme(& origin);
-  buffer = new nsString(origin);
-  url->GetHost(& origin);
-  buffer->Append(origin);
+  url->GetScheme(getter_Copies(tmp));
+  buffer = new nsString(tmp);
+  url->GetHost(getter_Copies(tmp)); 
+  // I dont understand this part enuf but shouldn't there be a separator here? 
+  buffer->Append(tmp);
   if (!buffer) {
     JS_ReportOutOfMemory(aCx);
     return nsnull;
@@ -425,8 +429,8 @@ nsScriptSecurityManager::FindOriginURL(JSContext * aCx, JSObject * aGlobal)
     }
   }
   if (origin != nsnull) {
-    char *spec;
-    origin->GetSpec(&spec);
+    nsXPIDLCString spec;
+    origin->GetSpec(getter_Copies(spec));
     nsAutoString urlString(spec);
     NS_IF_RELEASE(globalData);
     return urlString.ToNewCString();
@@ -564,7 +568,7 @@ nsScriptSecurityManager::GetSitePolicy(const char *org)
         && sp[splen-1] != '/'	/* site policy ends with / */
         && org[splen] != '/'	/* site policy doesn't, but org does */
         )) {
-        PR_Free(prot);
+        nsCRT::free(prot);
         continue;			/* no match */
       }
     }
@@ -593,7 +597,7 @@ nsScriptSecurityManager::GetSitePolicy(const char *org)
     if (sp != end) retval = PL_strdup(sp);
   }
   
-  PR_FREEIF(orghost);
+  nsCRT::free(orghost);
   PR_FREEIF(sitepol);
   return retval;
 }
