@@ -84,7 +84,7 @@
 <!ENTITY pref.numberofweeks.6      "6 Wochen" >
 <!ENTITY pref.numberofpreviousweeks.label     "Anzahl der vergangenen Wochen:" >
 
-<!ENTITY pref.hour.help.description    "Wird überschrieben, wenn Ereignisse außerhalb dieser Zeiten liegen" >
+<!ENTITY pref.hour.help.description    "Übergangen, wenn Ereignisse außerhalb dieser Zeiten liegen" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
 <!ENTITY pref.hour.02    "02:00" >

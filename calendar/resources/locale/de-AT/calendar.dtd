@@ -150,7 +150,7 @@
 <!ENTITY newtodo.duedate.warning    "Ihr Startdatum ist nach Ihrem Enddatum.">
 <!ENTITY newtodo.repeatstart.warning "Beginnzeit wird für Wiederholung benötigt.">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
+<!ENTITY calendar.confirm.deleteallevents  "Sind Sie sicher, dass Sie alle ausgewählten Ereignisse löschen wollen?" >
 <!ENTITY calendar.confirm.deleteevent "Wollen Sie dieses Ereignis wirklich löschen: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Wollen Sie dieses unbenannte Ereignis wirklich löschen?" >
 
@@ -185,7 +185,7 @@
 <!ENTITY calendar.weekview.accesskey           "W" >
 <!ENTITY calendar.flat.topbar.monthview        "Monatsansicht" >
 <!ENTITY calendar.monthview.accesskey          "M" >
-<!ENTITY calendar.flat.topbar.multiweekview    "Mehrwochen" >
+<!ENTITY calendar.flat.topbar.multiweekview    "Mehrwochenansicht" >
 <!ENTITY calendar.multiweekview.accesskey      "e" >
 <!ENTITY calendar.dayView.key                  "1" >
 <!ENTITY calendar.weekView.key                 "2" >
@@ -196,7 +196,7 @@
 <!ENTITY calendar.tools.modify.tooltip         "Ereignis ändern" >
 
 <!ENTITY calendar.newtask.button.tooltip          "Neue Aufgabe erstellen" >
-<!ENTITY calendar.newevent.button.tooltip         "Neues Ereignis erstellen" >
+<!ENTITY calendar.newevent.button.tooltip         "Neues Kalender-Ereignis erstellen" >
 <!ENTITY calendar.delete.button.tooltip           "Ausgewähltes Ereigniss löschen" >
 <!ENTITY calendar.edit.button.tooltip             "Ausgewähltes Ereignis bearbeiten" >
 
@@ -218,10 +218,10 @@
 <!ENTITY calendar.events.filter.month.label "Ereignisse des nächsten Monats">
 <!ENTITY calendar.events.filter.future.label "Alle zukünftigen Ereignisse">
 <!ENTITY calendar.events.filter.current.label "Momentan gewählter Tag">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "Ereignisse in den nächsten 7 Tagen">
+<!ENTITY calendar.events.filter.next14Days.label "Ereignisse in den nächsten 14 Tagen">
+<!ENTITY calendar.events.filter.next31Days.label "Ereignisse in den nächsten 31 Tagen">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Ereignisse in diesem Kalendermonat">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Erledigt">
 <!ENTITY calendar.unifinder.tree.priority.label      "Priorität">
@@ -231,7 +231,7 @@
 <!ENTITY calendar.unifinder.tree.enddate.label       "Ende">
 <!ENTITY calendar.unifinder.tree.duedate.label       "fällig">
 <!ENTITY calendar.unifinder.tree.completeddate.label "Beendet">
-<!ENTITY calendar.unifinder.tree.categories.label    "Kategorien">
+<!ENTITY calendar.unifinder.tree.categories.label    "Kategorie">
 <!ENTITY calendar.unifinder.tree.location.label    "Ort">
 <!ENTITY calendar.unifinder.tree.status.label    "Status">
 <!ENTITY calendar.unifinder.tree.filename.label    "Kalender-Name">
@@ -278,10 +278,10 @@
 <!ENTITY calendar.subscribe.button.label           "Abonnieren" >
 <!ENTITY calendar.publish.button.label             "Publizieren" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Lokale neu laden" >
+<!ENTITY calendar.localreload.button.tooltip  "Alle lokalen Kalender neu laden" >
+<!ENTITY calendar.remotereload.button.label   "Neu laden" >
+<!ENTITY calendar.remotereload.button.tooltip   "Alle entfernten Kalender neu laden" >
 
 <!ENTITY calendar.dayview.button.label          "Tagesansicht" >
 <!ENTITY calendar.weekview.button.label         "Wochenansicht" >
@@ -328,21 +328,21 @@
 <!ENTITY window.title            "Mozilla-Kalender">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Anpassen">
+<!ENTITY calendar.context.customize.label             "Anpassen...">
 <!ENTITY calendar.context.customize.accesskey         "A">
-<!ENTITY calendar.menu.customize.label                "Symbolleisten anpassen">
+<!ENTITY calendar.menu.customize.label                "Symbolleiste anpassen...">
 <!ENTITY calendar.menu.customize.accesskey            "p">
 <!ENTITY calendar.maintoolbar.name                    "Haupt-Symbolleiste">
 <!ENTITY calendar.maintoolbar.accesskey               "H">
 
 <!-- Context Menu -->
-<!ENTITY calendar.context.newevent.label              "Neues Ereignis">
+<!ENTITY calendar.context.newevent.label              "Neues Ereignis...">
 <!ENTITY calendar.context.newevent.accesskey          "e">
-<!ENTITY calendar.context.newtodo.label               "Neue Aufgabe">
+<!ENTITY calendar.context.newtodo.label               "Neue Aufgabe...">
 <!ENTITY calendar.context.newtodo.accesskey           "a">
-<!ENTITY calendar.context.modifyevent.label           "Ausgewähltes Ereignis bearbeiten">
+<!ENTITY calendar.context.modifyevent.label           "Ausgewähltes Ereignis bearbeiten...">
 <!ENTITY calendar.context.modifyevent.accesskey       "B">
-<!ENTITY calendar.context.modifytask.label            "Aufgabe bearbeiten">
+<!ENTITY calendar.context.modifytask.label            "Aufgabe bearbeiten...">
 <!ENTITY calendar.context.modifytask.accesskey        "B">
 <!ENTITY calendar.context.deleteevent.label           "Lösche ausgewähltes Ereignis">
 <!ENTITY calendar.context.deleteevent.accesskey       "L">
@@ -364,13 +364,13 @@
 <!ENTITY calendar.context.weekview.accesskey          "W">
 <!ENTITY calendar.context.monthview.label             "Zur Monatsansicht wechseln">
 <!ENTITY calendar.context.monthview.accesskey         "M">
-<!ENTITY calendar.context.multiweekview.label        "Zur Mehrwochen-Ansicht umschalten">
-<!ENTITY calendar.context.multiweekview.accesskey    "h">
+<!ENTITY calendar.context.multiweekview.label         "Zur Mehrwochen-Ansicht umschalten">
+<!ENTITY calendar.context.multiweekview.accesskey     "h">
 <!ENTITY calendar.context.reload.label                "Neu laden">
 <!ENTITY calendar.context.reload.accesskey            "l">
-<!ENTITY calendar.context.emailevent.label            "Ereignis(se) per E-Mail senden">
+<!ENTITY calendar.context.emailevent.label            "Ereignis(se) per E-Mail senden...">
 <!ENTITY calendar.context.emailevent.accesskey        "e">
-<!ENTITY calendar.context.emailtask.label             "Aufgabe per E-Mail senden">
+<!ENTITY calendar.context.emailtask.label             "Aufgabe per E-Mail senden...">
 <!ENTITY calendar.context.emailtask.accesskey         "a">
 
 <!-- Task Context Menu -->
@@ -399,8 +399,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "e">
 <!ENTITY calendar.context.deleteserver.label           "Kalender löschen">
 <!ENTITY calendar.context.deleteserver.accesskey       "l">
-<!ENTITY calendar.context.reloadserver.label           "Externe Kalender neu laden">
-<!ENTITY calendar.context.reloadserver.accesskey       "e">
+<!ENTITY calendar.context.reloadserver.label           "Entfernte Kalender neu laden">
+<!ENTITY calendar.context.reloadserver.accesskey       "E">
 <!ENTITY calendar.context.publish.label                "Kompletten Kalender publizieren">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -421,20 +421,20 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Neuen Kalender hinzufügen">
-<!ENTITY calendar.server.dialog.title.open          "Öffnen Kalender hinzufügen">
+<!ENTITY calendar.server.dialog.title.new           "Neue Kalenderdatei">
+<!ENTITY calendar.server.dialog.title.open          "Kalenderdatei öffnen">
 <!ENTITY calendar.server.dialog.title.edit          "Kalender bearbeiten">
-<!ENTITY calendar.server.dialog.name.label          "Name">
-<!ENTITY calendar.server.dialog.publish.label       "Änderungen automatisch publizieren? Bei entfernten Kalendern lädt dies eine neue Version herunter, bevor Sie ein Ereignis hinzufügen, bearbeiten oder löschen. Dann wird Ihre Aktion ausgeführt und die neue Datei auf den Server geladen.">
-<!ENTITY calendar.server.dialog.location.label      "Adresse">
-<!ENTITY calendar.server.dialog.local.location.label "Lokale Datei-Adresse">
+<!ENTITY calendar.server.dialog.name.label          "Kalender-Name:">
+<!ENTITY calendar.server.dialog.publish.label       "Automatisch Ihre Änderungen auf entferntem Kalender publizieren? Wenn dies aktiviert ist, wird eine neue Version des Kalenders heruntergeladen, bevor irgendwelche Ihrer Änderungen angewendet werden. Ihre Änderungen werden dann angewendet und die neue Datei zurück auf den Server geladen.">
+<!ENTITY calendar.server.dialog.location.label      "Entfernte Server-URL:">
+<!ENTITY calendar.server.dialog.local.location.label "Lokale Datei-Adresse:">
 <!ENTITY calendar.server.dialog.browse.label        "Durchsuchen...">
 <!ENTITY calendar.server.dialog.help.label          "Sie können einen lokalen oder einen entfernten Dateipfad angeben. Wie: http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Sie können optional eine Datei-Adresse angeben, auf der der Kalender erstellt werden soll.">
-<!ENTITY calendar.local.calendar.dialog.optional.label "Die folgenden Felder sind optional und werden zum Publizieren von Kalendern auf einer entfernten Adresse verwendet.">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Verwenden Sie dies, um anzugeben, wo auf Ihrem Computer die Kalenderdatei gespeichert wird. Dies ist optional.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Diese optionalen Einstellungen werden verwendet, wenn Sie diesen Kalender auf einer entfernten Adresse publizieren.">
 
 <!-- Calendar Coloring -->
-<!ENTITY calendar.server.dialog.color.label "Farben">
+<!ENTITY calendar.server.dialog.color.label "Farben:">
 
 
 <!-- Calendar Publish Dialog -->
