@@ -101,8 +101,13 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
     nsCOMPtr<nsISmtpServer> smtpServer;
 
     // first try the identity's preferred server
-    if (aSenderIdentity)
-        rv = aSenderIdentity->GetSmtpServer(getter_AddRefs(smtpServer));
+    if (aSenderIdentity) {
+        nsXPIDLCString smtpServerKey;
+        rv = aSenderIdentity->GetSmtpServerKey(getter_Copies(smtpServerKey));
+        if (NS_SUCCEEDED(rv) && (const char *)smtpServerKey)
+            rv = smtpService->GetServerByKey(smtpServerKey,
+                                             getter_AddRefs(smtpServer));
+    }
 
     // fallback to the default
     if (NS_FAILED(rv) || !smtpServer)

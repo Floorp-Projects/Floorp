@@ -26,7 +26,6 @@
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 
-#include "nsISmtpService.h"
 #include "nsMsgCompCID.h"
 #include "nsIRDFService.h"
 #include "nsIRDFResource.h"
@@ -402,63 +401,12 @@ nsMsgIdentity::clearPrefEnum(const char *aPref, void *aClosure)
     prefs->ClearUserPref(aPref);
 }
 
-NS_IMETHODIMP
-nsMsgIdentity::GetSmtpServer(nsISmtpServer **aResult)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsISmtpServer> smtpServer =
-    do_QueryReferent(m_smtpServer, &rv);
-
-  // try to load, but ignore the error and return null if nothing
-  if (!smtpServer)
-    loadSmtpServer(getter_AddRefs(smtpServer));
-
-  *aResult = smtpServer;
-  NS_IF_ADDREF(*aResult);
-  
-  return NS_OK;
-}
-
-nsresult
-nsMsgIdentity::loadSmtpServer(nsISmtpServer** aResult)
-{
-  nsresult rv;
-  
-  nsXPIDLCString smtpServerKey;
-  rv = getCharPref("smtpServer", getter_Copies(smtpServerKey));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsISmtpService> smtpService =
-    do_GetService(NS_SMTPSERVICE_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  return smtpService->GetServerByKey(smtpServerKey, aResult);
-}
-
-NS_IMETHODIMP
-nsMsgIdentity::SetSmtpServer(nsISmtpServer *aServer)
-{
-  nsresult rv;
-  
-  m_smtpServer = getter_AddRefs(NS_GetWeakReference(aServer, &rv));
-
-  if (aServer) {
-    nsXPIDLCString smtpServerKey;
-    rv = aServer->GetKey(getter_Copies(smtpServerKey));
-    if (NS_SUCCEEDED(rv)) {
-      setCharPref("smtpServer", smtpServerKey);
-    }
-  }
-
-  return NS_OK;
-}
-
 
 NS_IMPL_GETSET(nsMsgIdentity, VCard, nsIMsgVCard*, m_vCard);
   
 NS_IMPL_GETTER_STR(nsMsgIdentity::GetKey, m_identityKey);
 
+NS_IMPL_IDPREF_STR(SmtpServerKey, "smtpServer");
 NS_IMPL_IDPREF_WSTR(FullName, "fullName");
 NS_IMPL_IDPREF_STR(Email, "useremail");
 NS_IMPL_IDPREF_STR(ReplyTo, "reply_to");

@@ -25,8 +25,6 @@
 #include "nsIFileSpec.idl"
 #include "nsIMsgVCard.idl"
 
-interface nsISmtpServer;
-
 /*
  * this interface contains all the personal outgoing mail information
  * for a given person.
@@ -107,7 +105,7 @@ interface nsIMsgIdentity : nsISupports {
    * if this is set, this the smtp server that should be used
    * for the message send
    */
-  attribute nsISmtpServer smtpServer;
+  attribute string smtpServerKey;
   
   /* copy the attributes of the identity we pass in */
   void copy(in nsIMsgIdentity identity);

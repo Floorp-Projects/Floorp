@@ -234,8 +234,10 @@ function PageDataToAccountData(pageData, accountData)
                 server.rememberPassword = pageData.login.rememberPassword.value;
         }
 
+        dump("pageData.server = " + pageData.server + "\n");
         if (pageData.server) {
-            if (pageData.server.smtphostname)
+            dump("pageData.server.smtphostname.value = " + pageData.server.smtphostname + "\n");
+            if (pageData.server.smtphostname.value)
                 smtp.hostname = pageData.server.smtphostname.value;
         }
     }
@@ -304,12 +306,13 @@ function finishAccount(account, accountData) {
         
     if (accountData.smtpCreateNewServer)
         smtpServer = smtpService.createSmtpServer();
-    
+
+    dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
     copyObjectToInterface(smtpServer, accountData.smtp);
 
     // some identities have 'preferred' 
     if (accountData.smtpUsePreferredServer && destIdentity)
-        destIdentity.smtpServer = smtpServer;
+        destIdentity.smtpServerKey = smtpServer.key;
 
 }
 
