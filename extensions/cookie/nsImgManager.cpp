@@ -39,6 +39,7 @@
 #include "nsImgManager.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
+#include "nsINodeInfo.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIURI.h"
@@ -143,11 +144,18 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
 
     nsCOMPtr<nsIURI> baseURI;
     nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsINodeInfo> nodeinfo;
     nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
     NS_ASSERTION(content, "no content available");
     if (content) {
       rv = content->GetDocument(*getter_AddRefs(doc));
-      if (NS_FAILED(rv) || !doc) return rv;
+      if (NS_FAILED(rv) || !doc) {
+        rv = content->GetNodeInfo(*getter_AddRefs(nodeinfo));
+        if (NS_FAILED(rv) || !nodeinfo) return rv;
+
+        rv = nodeinfo->GetDocument(*getter_AddRefs(doc));
+        if (NS_FAILED(rv) || !doc) return rv;
+      }
 
       rv = doc->GetBaseURL(*getter_AddRefs(baseURI));
       if (NS_FAILED(rv) || !baseURI) return rv;
