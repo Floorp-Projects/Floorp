@@ -172,20 +172,6 @@ public:
 
 
   /**
-   * Converts chars in this to lowercase
-   * @update  gess 7/27/98
-   */
-  void ToLowerCase();
-
-
-  /**
-   * Converts chars in this to uppercase
-   * @update  gess 7/27/98
-   */
-  void ToUpperCase();
-
-
-  /**
    *  This method is used to remove all occurances of the
    *  characters found in aSet from this string.
    *  
