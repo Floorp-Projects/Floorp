@@ -289,12 +289,14 @@ public:
                       TextStyle& aStyle,
                       nscoord dx, nscoord dy);
 
-  nscoord ComputeTotalWordWidth(nsLineLayout& aLineLayout,
+  nscoord ComputeTotalWordWidth(nsIPresContext& aPresContext,
+                                nsLineLayout& aLineLayout,
                                 const nsHTMLReflowState& aReflowState,
                                 nsIFrame* aNextFrame,
                                 nscoord aBaseWidth);
 
-  nscoord ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
+  nscoord ComputeWordFragmentWidth(nsIPresContext& aPresContext,
+                                   nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
                                    nsIFrame* aNextFrame,
                                    nsITextContent* aText,
@@ -2377,8 +2379,8 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
           // Look ahead in the text-run and compute the final word
           // width, taking into account any style changes and stopping
           // at the first breakable point.
-          nscoord wordWidth = ComputeTotalWordWidth(lineLayout, aReflowState,
-                                                    next, lastWordWidth);
+          nscoord wordWidth = ComputeTotalWordWidth(aPresContext, lineLayout,
+                                                    aReflowState, next, lastWordWidth);
           if (!breakable || (x - lastWordWidth + wordWidth <= maxWidth)) {
             // The fully joined word has fit. Account for the joined
             // word's affect on the max-element-size here (since the
@@ -2606,7 +2608,8 @@ TextFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
 }
 
 nscoord
-TextFrame::ComputeTotalWordWidth(nsLineLayout& aLineLayout,
+TextFrame::ComputeTotalWordWidth(nsIPresContext& aPresContext,
+                                 nsLineLayout& aLineLayout,
                                  const nsHTMLReflowState& aReflowState,
                                  nsIFrame* aNextFrame,
                                  nscoord aBaseWidth)
@@ -2627,7 +2630,8 @@ TextFrame::ComputeTotalWordWidth(nsLineLayout& aLineLayout,
         nsITextContent* tc;
         if (NS_OK == content->QueryInterface(kITextContentIID, (void**)&tc)) {
           PRBool stop;
-          nscoord moreWidth = ComputeWordFragmentWidth(aLineLayout,
+          nscoord moreWidth = ComputeWordFragmentWidth(aPresContext,
+                                                       aLineLayout,
                                                        aReflowState,
                                                        frame, tc,
                                                        stop);
@@ -2668,7 +2672,8 @@ TextFrame::ComputeTotalWordWidth(nsLineLayout& aLineLayout,
 }
 
 nscoord
-TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
+TextFrame::ComputeWordFragmentWidth(nsIPresContext& aPresContext,
+                                    nsLineLayout& aLineLayout,
                                     const nsHTMLReflowState& aReflowState,
                                     nsIFrame* aTextFrame,
                                     nsITextContent* aText,
@@ -2678,6 +2683,15 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
   nsIDocument* doc;
 
   mContent->GetDocument(doc);
+  if (!doc) {
+    // Not all content objects have a document pointer. Anonymous content
+    // objects, e.g. generated content, do not live in the document model
+    nsIPresShell* shell;
+
+    aPresContext.GetShell(&shell);
+    shell->GetDocument(&doc);
+    NS_RELEASE(shell);
+  }
 
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
