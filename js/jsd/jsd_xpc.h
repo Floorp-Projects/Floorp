@@ -355,6 +355,8 @@ class jsdService : public jsdIDebuggerService
     jsdService();
     virtual ~jsdService() { }
     
+    static jsdService *GetService ();
+    
   private:
     PRBool      mOn;
     PRUint32    mNestedLoopLevel;
