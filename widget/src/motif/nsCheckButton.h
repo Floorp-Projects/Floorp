@@ -26,16 +26,26 @@
  * Native Motif Checkbox wrapper
  */
 
-class nsCheckButton : public nsWindow
-                      
+class nsCheckButton : public nsWindow,
+                      public nsICheckButton
 {
 
 public:
+                            nsCheckButton();
+    virtual                 ~nsCheckButton();
 
-  nsCheckButton(nsISupports *aOuter);
-  virtual                 ~nsCheckButton();
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
+    // nsICheckButton part
+    NS_IMETHOD SetLabel(const nsString &aText);
+    NS_IMETHOD GetLabel(nsString &aBuffer);
+    NS_IMETHOD SetState(const PRBool aState);
+    NS_IMETHOD GetState(PRBool& aState);
+
+
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -52,16 +62,9 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-  // nsICheckButton part
-  virtual void            SetLabel(const nsString& aText);
-  virtual void            GetLabel(nsString& aBuffer);
-
-  virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool          OnPaint(nsPaintEvent &aEvent);
-  virtual PRBool          OnResize(nsSizeEvent &aEvent);
-
-  virtual void            SetState(PRBool aState);
-  virtual PRBool          GetState();
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
+  virtual PRBool OnPaint(nsPaintEvent &aEvent);
+  virtual PRBool OnResize(nsRect &aWindowRect);
 
   // These are needed to Override the auto check behavior
   void Armed();
@@ -69,36 +72,10 @@ public:
 
 private:
 
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsCheckButton,mAggWidget);
-  }
-
   Boolean mInitialState;
   Boolean mNewValue;
   Boolean mValueWasSet;
   Boolean mIsArmed;
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIButton interface to nsCheckButton w/o using multiple
-  // inheritance.
-  class AggCheckButton : public nsICheckButton {
-  public:
-    AggCheckButton();
-    virtual ~AggCheckButton();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsICheckButton
-    virtual void   SetLabel(const nsString &aText);
-    virtual void   GetLabel(nsString &aBuffer);
-    virtual void   SetState(PRBool aState);
-    virtual PRBool GetState();
-
-
-  };
-  AggCheckButton mAggWidget;
-  friend class AggCheckButton;
 
 };
 
