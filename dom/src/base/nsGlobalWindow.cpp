@@ -2637,7 +2637,7 @@ GlobalWindowImpl::Unescape(const nsAReadableString& aStr,
   char *src = nsUnescape(inBuf);
 
   PRInt32 maxLength, srcLen;
-  srcLen = nsCRT::strlen(src);
+  srcLen = strlen(src);
 
   // Get the expected length of the result string
   result = decoder->GetMaxLength(src, srcLen, &maxLength);

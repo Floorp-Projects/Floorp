@@ -4655,7 +4655,7 @@ AHTC_WriteFunc(nsIInputStream * in,
                PRUint32 toOffset, PRUint32 count, PRUint32 * writeCount)
 {
     if (nsnull == writeCount || nsnull == closure ||
-        nsnull == fromRawSegment || nsCRT::strlen(fromRawSegment) < 1) {
+        nsnull == fromRawSegment || strlen(fromRawSegment) < 1) {
         return NS_BASE_STREAM_CLOSED;
     }
 
@@ -4664,7 +4664,7 @@ AHTC_WriteFunc(nsIInputStream * in,
     // pointer to where we should start copying bytes from rawSegment
     char *pHeadersBuf = nsnull;
     PRUint32 headersBufLen;
-    PRUint32 rawSegmentLen = nsCRT::strlen(fromRawSegment);
+    PRUint32 rawSegmentLen = strlen(fromRawSegment);
 
     // if the buffer has no data yet
     if (!headersBuf) {
@@ -4681,7 +4681,7 @@ AHTC_WriteFunc(nsIInputStream * in,
         pHeadersBuf = headersBuf;
 
         // create a new buffer
-        headersBufLen = nsCRT::strlen(headersBuf);
+        headersBufLen = strlen(headersBuf);
         headersBuf =
             (char *) nsMemory::Alloc(rawSegmentLen + headersBufLen + 1);
         if (!headersBuf) {

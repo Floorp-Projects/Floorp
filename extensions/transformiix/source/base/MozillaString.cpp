@@ -677,7 +677,7 @@ char* String::toCharArray() const
 **/
 char* String::toCharArray(char* dest) const
 {
-  ptrNSString->ToCString(dest, nsCRT::strlen(dest)+1);
+  ptrNSString->ToCString(dest, strlen(dest)+1);
   return dest;
 }
 

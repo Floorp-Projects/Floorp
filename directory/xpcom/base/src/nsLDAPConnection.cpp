@@ -894,7 +894,7 @@ nsLDAPConnection::OnFound(nsISupports *aContext,
             // list of IPs.
             //
             PR_NetAddrToString(&netAddress, addrbuf, sizeof(addrbuf));
-            if ((addrbuf[0] == ':') && (nsCRT::strlen(addrbuf) > 7))
+            if ((addrbuf[0] == ':') && (strlen(addrbuf) > 7))
                 mResolvedIP.Append(addrbuf+7);
             else
                 mResolvedIP.Append(addrbuf);

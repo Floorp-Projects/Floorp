@@ -63,7 +63,7 @@ nsPassword::~nsPassword(void) {
 
 NS_IMETHODIMP nsPassword::GetHost(char * *aHost) {
   if (passwordHost) {
-    *aHost = (char *) nsMemory::Clone(passwordHost, nsCRT::strlen(passwordHost) + 1);
+    *aHost = (char *) nsMemory::Clone(passwordHost, strlen(passwordHost) + 1);
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;

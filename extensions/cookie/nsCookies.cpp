@@ -1517,7 +1517,7 @@ COOKIE_Write() {
         continue;
       }
 
-      strm.write(cookie_s->host, nsCRT::strlen(cookie_s->host));
+      strm.write(cookie_s->host, strlen(cookie_s->host));
 
       if (cookie_s->isDomain) {
         strm.write("\tTRUE\t", 6);
@@ -1525,7 +1525,7 @@ COOKIE_Write() {
         strm.write("\tFALSE\t", 7);
       }
 
-      strm.write(cookie_s->path, nsCRT::strlen(cookie_s->path));
+      strm.write(cookie_s->path, strlen(cookie_s->path));
 
       if (cookie_s->isSecure) {
         strm.write("\tTRUE\t", 6);
@@ -1535,11 +1535,11 @@ COOKIE_Write() {
 
       PR_snprintf(date_string, sizeof(date_string), "%lu", NS_STATIC_CAST(unsigned long, cookie_s->expires));
 
-      strm.write(date_string, nsCRT::strlen(date_string));
+      strm.write(date_string, strlen(date_string));
       strm.write("\t", 1);
-      strm.write(cookie_s->name, nsCRT::strlen(cookie_s->name));
+      strm.write(cookie_s->name, strlen(cookie_s->name));
       strm.write("\t", 1);
-      strm.write(cookie_s->cookie, nsCRT::strlen(cookie_s->cookie));
+      strm.write(cookie_s->cookie, strlen(cookie_s->cookie));
       strm.write("\n", 1);
   }
 

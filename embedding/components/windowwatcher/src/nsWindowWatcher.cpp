@@ -1698,7 +1698,7 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
 
       p->GetData(&data);
 
-      JSString *str = ::JS_NewString(cx, data, nsCRT::strlen(data));
+      JSString *str = ::JS_NewString(cx, data, strlen(data));
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
       *aArgv = STRING_TO_JSVAL(str);

@@ -2651,7 +2651,7 @@ SINGSIGN_Enumerate
   hostStruct = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(hostNumber));
   NS_ASSERTION(hostStruct, "corrupt singlesignon list");
   *host = (char *) nsMemory::Clone
-    (hostStruct->passwordRealm, nsCRT::strlen(hostStruct->passwordRealm) + 1);
+    (hostStruct->passwordRealm, strlen(hostStruct->passwordRealm) + 1);
   NS_ENSURE_ARG_POINTER(host);
   userStruct = NS_STATIC_CAST
     (si_SignonUserStruct*, hostStruct->signonUser_list.ElementAt(userNumber));
@@ -2713,7 +2713,7 @@ SINGSIGN_RejectEnumerate
   NS_ASSERTION(reject, "corrupt reject list");
 
   *host = (char *) nsMemory::Clone
-    (reject->passwordRealm, nsCRT::strlen(reject->passwordRealm) + 1);
+    (reject->passwordRealm, strlen(reject->passwordRealm) + 1);
   NS_ENSURE_ARG_POINTER(host);
   return NS_OK;
 }

@@ -116,7 +116,7 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
 nsTextFragment&
 nsTextFragment::operator=(const char *aString)
 {
-  SetTo(aString, nsCRT::strlen(aString));
+  SetTo(aString, strlen(aString));
 
   return *this;
 }

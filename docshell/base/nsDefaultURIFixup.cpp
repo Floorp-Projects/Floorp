@@ -220,7 +220,7 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
     }
     else if (numDots == 1)
     {
-        if (oldHost.EqualsIgnoreCase(prefix, nsCRT::strlen(prefix))) {
+        if (oldHost.EqualsIgnoreCase(prefix, strlen(prefix))) {
             newHost.Assign(oldHost);
             newHost.Append(suffix);
         }

@@ -519,18 +519,18 @@ nsresult nsAutoConfig::getEmailAddr(nsAWritableCString & emailAddr)
     // Checking prefValue and its length.  Since by default the preference 
     // is set to nothing
     PRUint32 len;
-    if (NS_SUCCEEDED(rv) && (len = nsCRT::strlen(prefValue)) > 0) {
+    if (NS_SUCCEEDED(rv) && (len = strlen(prefValue)) > 0) {
         emailAddr = NS_LITERAL_CSTRING("mail.account.") + 
             nsDependentCString(prefValue, len) + NS_LITERAL_CSTRING(".identities");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                       getter_Copies(prefValue));
-        if (NS_FAILED(rv) || (len = nsCRT::strlen(prefValue)) == 0) 
+        if (NS_FAILED(rv) || (len = strlen(prefValue)) == 0) 
             return rv;
         emailAddr = NS_LITERAL_CSTRING("mail.identity.") + 
             nsDependentCString(prefValue, len) + NS_LITERAL_CSTRING(".useremail");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                       getter_Copies(prefValue));
-        if (NS_FAILED(rv)  || (len = nsCRT::strlen(prefValue)) == 0) 
+        if (NS_FAILED(rv)  || (len = strlen(prefValue)) == 0) 
             return rv;
         emailAddr = nsDependentCString(prefValue, len);
     }

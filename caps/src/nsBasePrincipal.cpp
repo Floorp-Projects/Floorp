@@ -87,7 +87,7 @@ nsBasePrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
     *result = nsIPrincipal::ENABLE_GRANTED;
     for(;;) {
         const char *space = PL_strchr(start, ' ');
-        int len = space ? space - start : nsCRT::strlen(start);
+        int len = space ? space - start : strlen(start);
         nsCAutoString capString(start, len);
         nsCStringKey key(capString);
         PRInt16 value = (PRInt16)NS_PTR_TO_INT32(mCapabilities->Get(&key));
@@ -125,7 +125,7 @@ nsBasePrincipal::SetCanEnableCapability(const char *capability,
     const char *start = capability;
     for(;;) {
         const char *space = PL_strchr(start, ' ');
-        int len = space ? space - start : nsCRT::strlen(start);
+        int len = space ? space - start : strlen(start);
         nsCAutoString capString(start, len);
         nsCStringKey key(capString);
         mCapabilities->Put(&key, (void *) canEnable);
@@ -149,7 +149,7 @@ nsBasePrincipal::IsCapabilityEnabled(const char *capability, void *annotation,
     const char *start = capability;
     for(;;) {
         const char *space = PL_strchr(start, ' ');
-        int len = space ? space - start : nsCRT::strlen(start);
+        int len = space ? space - start : strlen(start);
         nsCAutoString capString(start, len);
         nsCStringKey key(capString);
         *result = (ht->Get(&key) == (void *) AnnotationEnabled);
@@ -184,7 +184,7 @@ nsBasePrincipal::RevertCapability(const char *capability, void **annotation)
         const char *start = capability;
         for(;;) {
             const char *space = PL_strchr(start, ' ');
-            int len = space ? space - start : nsCRT::strlen(start);
+            int len = space ? space - start : strlen(start);
             nsCAutoString capString(start, len);
             nsCStringKey key(capString);
             ht->Remove(&key);
@@ -212,7 +212,7 @@ nsBasePrincipal::SetCapability(const char *capability, void **annotation,
     const char *start = capability;
     for(;;) {
         const char *space = PL_strchr(start, ' ');
-        int len = space ? space - start : nsCRT::strlen(start);
+        int len = space ? space - start : strlen(start);
         nsCAutoString capString(start, len);
         nsCStringKey key(capString);
         nsHashtable *ht = (nsHashtable *) *annotation;
