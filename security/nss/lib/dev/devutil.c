@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.6 $ $Date: 2002/04/19 16:14:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.7 $ $Date: 2002/04/19 17:32:22 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -1100,6 +1100,28 @@ finish:
     return rvObjects;
 }
 
+static PRBool
+cache_available_for_object_type
+(
+  nssTokenObjectCache *cache,
+  PRUint32 objectType
+)
+{
+    if (!cache->doObjectType[objectType]) {
+	/* not caching this object kind */
+	return PR_FALSE;
+    }
+    if (!cache->searchedObjectType[objectType]) {
+	/* objects are not cached yet */
+	return PR_FALSE;
+    }
+    if (!search_for_objects(cache)) {
+	/* not logged in or removed */
+	return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
 NSS_IMPLEMENT PRStatus
 nssTokenObjectCache_GetObjectAttributes
 (
@@ -1116,13 +1138,18 @@ nssTokenObjectCache_GetObjectAttributes
     nssArenaMark *mark = NULL;
     nssCryptokiObjectAndAttributes *cachedOA = NULL;
     nssCryptokiObjectAndAttributes **oa = NULL;
+    PRUint32 objectType;
     PZ_Lock(cache->lock);
     switch (objclass) {
-    case CKO_CERTIFICATE:    oa = cache->objects[cachedCerts]; break;
-    case CKO_NETSCAPE_TRUST: oa = cache->objects[cachedTrust]; break;
-    case CKO_NETSCAPE_CRL:   oa = cache->objects[cachedCRLs];  break;
+    case CKO_CERTIFICATE:    objectType = cachedCerts; break;
+    case CKO_NETSCAPE_TRUST: objectType = cachedTrust; break;
+    case CKO_NETSCAPE_CRL:   objectType = cachedCRLs;  break;
     default: goto loser;
     }
+    if (!cache_available_for_object_type(cache, objectType)) {
+	goto loser;
+    }
+    oa = cache->objects[objectType];
     if (!oa) {
 	goto loser;
     }
@@ -1244,14 +1271,13 @@ nssTokenObjectCache_ImportObject
     case CKO_CERTIFICATE:    objectType = cachedCerts; break;
     case CKO_NETSCAPE_TRUST: objectType = cachedTrust; break;
     case CKO_NETSCAPE_CRL:   objectType = cachedCRLs;  break;
-    default: status = PR_FAILURE;
-    }
-    if (status != PR_SUCCESS || /* failed */
-        !cache->doObjectType[objectType] || /* not caching this kind */
-        !cache->searchedObjectType[objectType]) /* not cached yet anyway */
-    {
+    default:
 	PZ_Unlock(cache->lock);
-	return status;
+	return PR_SUCCESS; /* don't need to import it here */
+    }
+    if (!cache_available_for_object_type(cache, objectType)) {
+	PZ_Unlock(cache->lock);
+	return PR_SUCCESS; /* cache not active, ignored */
     }
     count = 0;
     otype = &cache->objects[objectType]; /* index into array of types */
@@ -1286,7 +1312,9 @@ nssTokenObjectCache_RemoveObject
     nssCryptokiObjectAndAttributes **oa, **swp = NULL;
     PZ_Lock(cache->lock);
     for (oType=0; oType<3; oType++) {
-	if (!cache->objects[oType]) {
+	if (!cache_available_for_object_type(cache, oType) ||
+	    !cache->objects[oType])
+	{
 	    continue;
 	}
 	for (oa = cache->objects[oType]; *oa; oa++) {
