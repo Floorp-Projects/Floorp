@@ -47,6 +47,8 @@
 [ptr] native JSDStackFrameInfo(JSDStackFrameInfo);
 [ptr] native JSDThreadState(JSDThreadState);
 [ptr] native JSDValue(JSDValue);
+[ptr] native JSRuntime(JSRuntime);
+
 native jsuword(jsuword);
 
 interface jsdIValue;
@@ -252,7 +254,8 @@ interface jsdIDebuggerService : nsISupports
     attribute jsdIScriptHook    scriptHook;
     attribute jsdIExecutionHook throwHook;
     
-    void on ();
+    void on ();  /* this function should only be called from js */
+    [noscript] void onForRuntime (in JSRuntime rt); /* native version of on() */
     void off ();
 
     void clearAllBreakpoints ();
