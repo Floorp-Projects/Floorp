@@ -227,10 +227,10 @@ if(system("cp $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\setup\\license.txt"))
 }
 
 # copy the icons
-if(system("cp $inDistPath\\mozilla.ico $inDistPath\\setup\\mozilla.ico"))
-{
-  die "\n Error: copy $inDistPath\\mozilla.ico $inDistPath\\setup\\mozilla.ico\n";
-}
+#if(system("cp $inDistPath\\mozilla.ico $inDistPath\\setup\\mozilla.ico"))
+#{
+#  die "\n Error: copy $inDistPath\\mozilla.ico $inDistPath\\setup\\mozilla.ico\n";
+#}
 
 # build the self-extracting .exe (installer) file.
 print "\nbuilding self-extracting stub installer ($seiFileNameSpecificStub)...\n";
