@@ -65,8 +65,10 @@ function onAccept()
     // if we didn't have an SMTP server to initialize with,
     // we must be creating one.
     try {
-        if (!smtpServer)
+        if (!smtpServer) {
             smtpServer = smtpService.createSmtpServer();
+            window.arguments[0].addSmtpServer = smtpServer.key;
+        }
         
         saveSmtpSettings(smtpServer);
     } catch (ex) {

@@ -34,6 +34,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="onLoad();"
   ondialogaccept="return onOk();"
+  ondialogcancel="return onCancel();"
   style="width: 30em;">
 
 <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>

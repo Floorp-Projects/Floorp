@@ -206,6 +206,34 @@ function findFirstTreeItem(tree) {
   return null;
 }
 
+function replaceWithDefaultSmtpServer(deletedSmtpServerKey)
+{
+  //First we replace the smtpserverkey in every identity
+
+  var allIdentities = accountManager.allIdentities;
+  var identitiesCount = allIdentities.Count();
+  for (var i = 0; i < identitiesCount; i++) {
+    var currentIdentity = allIdentities.QueryElementAt(i, Components.interfaces.nsIMsgIdentity);
+    if (currentIdentity.smtpServerKey == deletedSmtpServerKey)
+      currentIdentity.smtpServerKey = smtpService.defaultServer.key;
+  }
+
+  //When accounts have already been loaded in the panel then the first replacement will be 
+  //overwritten when the accountvalues are written out from the pagedata.
+  //we get the loaded accounts and check to make sure that the account exists for the accountid
+  //and that it has a default identity associated with it (to exclude smtpservers and local folders)
+  //Then we check only for the identity[type] and smtpServerKey[slot]
+  //and replace that with the default smtpserverkey if necessary.
+
+  for (var accountid in accountArray) {
+    var account = getAccountFromServerId(accountid);
+    if(account && account.defaultIdentity) {
+      var accountValues = accountArray[accountid];
+      if (accountValues['identity']['smtpServerKey'] == deletedSmtpServerKey)
+        setAccountValue(accountValues,'identity', 'smtpServerKey', smtpService.defaultServer.key);
+    }
+  }
+}
 function onAccept() {
   // Check if user/host have been modified.
   if (!checkUserServerChanges(true))

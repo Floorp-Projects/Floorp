@@ -74,6 +74,15 @@ function onSave()
     saveSmtpSettings(defaultSmtpServer);
 }
 
+function onExitAdvancedDialog(deleteSmtpServers,replaceWithDefault)
+{
+  for (var index in deleteSmtpServers) {
+    var server = smtpService.getServerByKey(deleteSmtpServers[index]);
+    smtpService.deleteSmtpServer(server);
+    if (replaceWithDefault)
+      window.parent.replaceWithDefaultSmtpServer(deleteSmtpServers[index]);
+  }
+}
 
 function onAdvanced(event)
 {

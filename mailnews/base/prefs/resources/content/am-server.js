@@ -52,6 +52,20 @@ function onPreInit(account, accountValues)
       document.getElementById("server.emptyTrashOnExit").setAttribute("hidden", "true");
       document.getElementById("imap.deleteModel.box").setAttribute("hidden", "true");
     }
+    var hideButton = false;
+
+    try {
+      if (gRedirectorType) {
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+        var prefString = "mail.accountmanager." + gRedirectorType + ".hide_advanced_button";
+        hideButton = prefs.getBoolPref(prefString);
+      }
+    }
+    catch (ex) { }
+    if (hideButton)
+      document.getElementById("server.advancedbutton").setAttribute("hidden", "true");  
+    else 
+      document.getElementById("server.advancedbutton").removeAttribute("hidden");  
 }
 
 function initServerType() {

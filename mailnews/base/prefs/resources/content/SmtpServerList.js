@@ -47,6 +47,9 @@ var gMessengerBundle;
 
 var hasEdited=false;            // whether any kind of edits have occured
 
+var gOldDefaultSmtpServer;
+var gAddedSmtpServers = new Array;
+var gDeletedSmtpServers = new Array;
 // event handlersn
 function onLoad()
 {
@@ -61,6 +64,7 @@ function onLoad()
     deleteButton     = document.getElementById("deleteButton");
     setDefaultButton = document.getElementById("setDefaultButton");
 
+    gOldDefaultSmtpServer = smtpService.defaultServer;
     refreshServerList();
 }
 
@@ -73,7 +77,11 @@ function onDelete(event)
 {
     var server = getSelectedServer();
     if (!server) return;
-    smtpService.deleteSmtpServer(server);
+
+//  Instead of deleting the server we store the key in the array and delete it later only if the 
+//  window is not cancelled.
+
+    gDeletedSmtpServers[gDeletedSmtpServers.length] = server.key;
     refreshServerList();
 }
 
@@ -101,7 +109,16 @@ function onSetDefault(event)
 function onOk()
 {
     window.arguments[0].result = true;
+    window.opener.onExitAdvancedDialog(gDeletedSmtpServers,true);
     return true;
+}
+
+function onCancel()
+{
+  window.arguments[0].result = false;
+  smtpService.defaultServer = gOldDefaultSmtpServer;
+  window.opener.onExitAdvancedDialog(gAddedSmtpServers,false);
+  return true;
 }
 
 function updateButtons()
@@ -167,7 +184,7 @@ function fillSmtpServers(listbox, servers, defaultServer)
         var server = servers.QueryElementAt(i, Components.interfaces.nsISmtpServer);
         var isDefault = (defaultServer.key == server.key);
         //ToDoList: add code that allows for the redirector type to specify whether to show values or not
-        if (!server.redirectorType) 
+        if (!server.redirectorType && !deletedServer(server.key)) 
         {
           var listitem = createSmtpListItem(server, isDefault);
           listbox.appendChild(listitem);
@@ -196,13 +213,26 @@ function createSmtpListItem(server, isDefault)
     return listitem;
 }
 
+function deletedServer(serverkey)
+{
+  for (var index in gDeletedSmtpServers) {
+    if (serverkey == gDeletedSmtpServers[index])
+      return true;
+  }
+  return false;
+}
+
 function openServerEditor(serverarg)
 {
     var args = {server: serverarg,
-                result: false};
+                result: false,
+                addSmtpServer: ""};
     window.openDialog("chrome://messenger/content/SmtpServerEdit.xul",
                       "smtpEdit", "chrome,titlebar,modal", args);
     if (args.result) {
+        if (args.addSmtpServer)
+          gAddedSmtpServers[gAddedSmtpServers.length] = args.addSmtpServer;
+          
         refreshServerList();
         hasEdited = true;
     }
