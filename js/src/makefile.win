@@ -44,7 +44,7 @@ DIRS = liveconnect
 !endif
 !endif
 
-DIRS = $(DIRS) fdlibm xpconnect
+DIRS = $(DIRS) xpconnect
 
 #//------------------------------------------------------------------------
 #//
@@ -193,7 +193,7 @@ $(FDLIBM_LIBRARY):
     @cd $(MAKEDIR) 
 !endif
 
-export:: $(DLL)	INSTALL_FILES
+export:: INSTALL_FILES $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
