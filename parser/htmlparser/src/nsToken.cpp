@@ -137,8 +137,9 @@ nsresult CToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) {
  */
 void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
   anOutputStream << "[" << GetClassName() << "] ";
-  int i=0;
-  for(i=0;i<mTextValue.Length();i++){
+  PRUint32 i=0;
+  PRUint32 theLen=mTextValue.Length();
+  for(i=0;i<theLen;i++){
     anOutputStream << char(mTextValue.CharAt(i));
   }
   anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << mAttrCount << nsEndl;

@@ -200,7 +200,7 @@ struct nsHTMLElement {
   int             mInclusionBits;     //defines parental and containment rules
   int             mExclusionBits;     //defines things you CANNOT contain
   int             mSpecialProperties; //used for various special purposes...
-  int             mPropagateRange;    //tells us how far a parent is willing to prop. badly formed children
+  PRUint32        mPropagateRange;    //tells us how far a parent is willing to prop. badly formed children
   TagList*        mSpecialParents;    //These are the special tags that contain this tag (directly)
   TagList*        mSpecialKids;       //These are the extra things you can contain
   eHTMLTags       mSkipTarget;        //If set, then we skip all content until this tag is seen

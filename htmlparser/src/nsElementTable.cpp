@@ -170,7 +170,7 @@ void Initialize(eHTMLTags aTag,
                 int       aInclusionBits, 
                 int       aExclusionBits,     
                 int       aSpecialProperties,
-                int       aPropagateRange,
+                PRUint32  aPropagateRange,
                 TagList*  aSpecialParents,    
                 TagList*  aSpecialKids,    
                 eHTMLTags aSkipTarget

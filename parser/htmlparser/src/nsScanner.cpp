@@ -257,7 +257,7 @@ PRBool nsScanner::Insert(const nsString& aBuffer) {
  */
 PRBool nsScanner::Append(const nsString& aBuffer) {
 
-  PRInt32 theLen=mBuffer.Length();
+  PRUint32 theLen=mBuffer.Length();
 
   mBuffer.Append(aBuffer);
   mTotalRead+=aBuffer.Length();
@@ -279,7 +279,7 @@ PRBool nsScanner::Append(const nsString& aBuffer) {
  */
 PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
 
-  PRInt32 theLen=mBuffer.Length();
+  PRUint32 theLen=mBuffer.Length();
   
   if(mUnicodeDecoder) {
     PRInt32 unicharBufLen = 0;
@@ -345,7 +345,7 @@ PRBool nsScanner::Append(const PRUnichar* aBuffer, PRUint32 aLen){
   CBufDescriptor theDesc(aBuffer,PR_TRUE, aLen+1,aLen);
   nsAutoString theBuffer(theDesc);  
 
-  PRInt32 theLen=mBuffer.Length();  
+  PRUint32 theLen=mBuffer.Length();  
   mBuffer.Append(theBuffer);
   mTotalRead+=aLen;
 
