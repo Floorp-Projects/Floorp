@@ -92,8 +92,6 @@ nsIWidget *nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw)
 
         nsCOMPtr<nsIDocShellTreeItem> parent;
         docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
-        if (!parent)
-          return nsnull;
 
         sgo = do_GetInterface(parent);
         if (!sgo)
