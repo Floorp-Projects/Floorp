@@ -240,8 +240,6 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
         }
     }
 
-    //** need nsCacheService::CreateEntry();
-    entry->MarkActive(); // so we don't evict it
     //** find eviction element and move it to the tail of the queue
     
     return entry;
@@ -251,23 +249,28 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
 nsresult
 nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
-    nsCString* key = entry->Key();
-    nsCacheEntry * ourEntry = mBoundEntries.GetEntry(key);
-    NS_ASSERTION(ourEntry, "DeactivateEntry called for an entry we don't have!");
-    if (!ourEntry)
-        return NS_ERROR_INVALID_POINTER;
+    if (!entry->IsDoomed()) {
+        nsCacheEntry * ourEntry = mBoundEntries.GetEntry(entry->Key());
+        NS_ASSERTION(ourEntry, "DeactivateEntry called for an entry we don't have!");
+        if (!ourEntry)
+            return NS_ERROR_INVALID_POINTER;
 
-    // commit any changes about this entry to disk.
-    updateDiskCacheEntry(entry);
+        // commit any changes about this entry to disk.
+        updateDiskCacheEntry(entry);
 
-    // XXX eventually, as a performance enhancement, keep entries around for a while before deleting them.
-    // XXX right now, to prove correctness, destroy the entries eagerly.
-#if 0
-    mBoundEntries.RemoveEntry(entry);
-    delete entry;
-#else
-    entry->MarkInactive();
+        // XXX eventually, as a performance enhancement, keep entries around for a while before deleting them.
+        // XXX right now, to prove correctness, destroy the entries eagerly.
+#if DEBUG
+        mBoundEntries.RemoveEntry(entry);
+        delete entry;
 #endif
+    } else {
+        // obliterate all knowledge of this entry on disk.
+        deleteDiskCacheEntry(entry);
+        
+        // delete entry from memory.
+        delete entry;
+    }
 
     return NS_OK;
 }
@@ -280,14 +283,18 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
     if (NS_FAILED(rv))
         return rv;
 
-    //** add size of entry to memory totals
+    PRUint32 dataSize = entry->DataSize();
+    if (dataSize)
+        OnDataSizeChange(entry, dataSize);
+
     return NS_OK;
 }
 
 nsresult
 nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // so it can't be seen by FindEntry() ever again.
+    return mBoundEntries.RemoveEntry(entry);
 }
 
 nsresult
@@ -543,8 +550,10 @@ nsresult MetaDataFile::Read(nsIInputStream* input)
 
 nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsCacheEntry* entry)
 {
-    DiskCacheEntry* diskEntry = ensureDiskCacheEntry(entry);
-    if (diskEntry && (entry->IsMetaDataDirty() || entry->IsEntryDirty())) {
+    if (entry->IsMetaDataDirty() || entry->IsEntryDirty()) {
+        DiskCacheEntry* diskEntry = ensureDiskCacheEntry(entry);
+        if (!diskEntry) return NS_ERROR_OUT_OF_MEMORY;
+        
         nsresult rv;
         nsCOMPtr<nsITransport>& transport = diskEntry->getMetaTransport(nsICache::ACCESS_WRITE);
         if (!transport) {
@@ -575,8 +584,11 @@ nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsCacheEntry* entry)
     return NS_OK;
 }
 
-static nsresult NS_NewCacheEntry(nsCacheEntry ** result, nsCString* key,
-                                 PRBool streamBased, nsCacheStoragePolicy storagePolicy)
+static nsresult NS_NewCacheEntry(nsCacheEntry ** result,
+                                 nsCString* key,
+                                 PRBool streamBased,
+                                 nsCacheStoragePolicy storagePolicy,
+                                 nsCacheDevice* device)
 {
     nsCString* newKey = new nsCString(key->get());
     if (!newKey) return NS_ERROR_OUT_OF_MEMORY;
@@ -584,9 +596,31 @@ static nsresult NS_NewCacheEntry(nsCacheEntry ** result, nsCString* key,
     nsCacheEntry* entry = new nsCacheEntry(newKey, streamBased, storagePolicy);
     if (!entry) { delete newKey; return NS_ERROR_OUT_OF_MEMORY; }
     
+    entry->SetCacheDevice(device);
+    
     *result = entry;
     return NS_OK;
 }
+
+/*
+static nsresult readMetaDataFile(nsIFile* file, DiskCacheEntry* diskEntry, MetaDataFile& metaDataFile)
+{
+    nsCOMPtr<nsITransport>& transport = diskEntry->getMetaTransport(nsICache::ACCESS_READ);
+    if (!transport) {
+        rv = getTransportForFile(file, nsICache::ACCESS_READ, getter_AddRefs(transport));
+        if (NS_FAILED(rv)) break;
+    }
+
+    nsCOMPtr<nsIInputStream> input;
+    rv = transport->OpenInputStream(0, -1, 0, getter_AddRefs(input));
+    if (NS_FAILED(rv)) break;
+    
+    // read the metadata file.
+    MetaDataFile metaDataFile;
+    rv = metaDataFile.Read(input);
+    input->Close();
+}
+*/
 
 nsresult nsDiskCacheDevice::readDiskCacheEntry(nsCString* key, nsCacheEntry ** result)
 {
@@ -599,7 +633,7 @@ nsresult nsDiskCacheDevice::readDiskCacheEntry(nsCString* key, nsCacheEntry ** r
     if (NS_FAILED(rv) || !exists) return NS_ERROR_NOT_AVAILABLE;
 
     nsCacheEntry* entry;
-    rv = NS_NewCacheEntry(&entry, key, PR_TRUE, nsICache::STORE_ON_DISK);
+    rv = NS_NewCacheEntry(&entry, key, PR_TRUE, nsICache::STORE_ON_DISK, this);
     if (NS_FAILED(rv)) return rv;
     
     do {
@@ -647,6 +681,37 @@ nsresult nsDiskCacheDevice::readDiskCacheEntry(nsCString* key, nsCacheEntry ** r
     // oh, auto_ptr<> would be nice right about now.    
     delete entry;
     return rv;
+}
+
+nsresult nsDiskCacheDevice::deleteDiskCacheEntry(nsCacheEntry* entry)
+{
+    nsresult rv;
+    const char* key = entry->Key()->get();
+    
+    // delete the meta file.
+    nsCOMPtr<nsIFile> metaFile;
+    rv = getFileForKey(key, PR_TRUE, getter_AddRefs(metaFile));
+    if (NS_FAILED(rv)) return rv;
+    PRBool exists;
+    rv = metaFile->Exists(&exists);
+    if (NS_FAILED(rv) || !exists) return NS_ERROR_NOT_AVAILABLE;
+
+#if 0    
+    // XXX make sure the key's agree before deletion?
+    MetaDataFile metaDataFile;
+#endif
+    
+    rv = metaFile->Delete(PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+    
+    // delete the data file
+    nsCOMPtr<nsIFile> dataFile;
+    rv = getFileForKey(key, PR_FALSE, getter_AddRefs(dataFile));
+    if (NS_FAILED(rv)) return rv;
+    rv = dataFile->Delete(PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+    
+    return NS_OK;
 }
 
 //** need methods for enumerating entries

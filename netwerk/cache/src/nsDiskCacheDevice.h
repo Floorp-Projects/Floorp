@@ -38,19 +38,20 @@ public:
 
     static nsresult  Create(nsCacheDevice **result);
 
-    virtual const char *   GetDeviceID(void);
-    virtual nsCacheEntry * FindEntry(nsCString * key);
-    virtual nsresult       DeactivateEntry(nsCacheEntry * entry);
-    virtual nsresult       BindEntry(nsCacheEntry * entry);
-    virtual nsresult       DoomEntry( nsCacheEntry * entry );
+    virtual const char *    GetDeviceID(void);
+    virtual nsCacheEntry *  FindEntry(nsCString * key);
+    virtual nsresult        DeactivateEntry(nsCacheEntry * entry);
+    virtual nsresult        BindEntry(nsCacheEntry * entry);
+    virtual nsresult        DoomEntry( nsCacheEntry * entry );
 
-    virtual nsresult GetTransportForEntry(nsCacheEntry * entry,
+    virtual nsresult        GetTransportForEntry(nsCacheEntry * entry,
                                           nsCacheAccessMode mode,
                                           nsITransport ** result);
 
-    virtual nsresult OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
+    virtual nsresult        OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
 
-    void setCacheDirectory(nsILocalFile* directory);
+/* private: */
+    void                    setCacheDirectory(nsILocalFile* directory);
 
 private:
     nsresult getFileForKey(const char* key, PRBool meta, nsIFile**);
@@ -59,6 +60,7 @@ private:
     nsresult scanEntries(void);
     nsresult updateDiskCacheEntry(nsCacheEntry* entry);
     nsresult readDiskCacheEntry(nsCString * key, nsCacheEntry ** entry);
+    nsresult deleteDiskCacheEntry(nsCacheEntry* entry);
 
 private:
     nsCOMPtr<nsILocalFile>      mCacheDirectory;
