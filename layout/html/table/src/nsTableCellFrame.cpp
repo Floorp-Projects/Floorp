@@ -159,7 +159,7 @@ NoComputedHeightBetween(const nsHTMLReflowState&  aReflowState,
 nsresult
 nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
 {
-  if (!HadSpecialReflow()) {
+  if (!NeedSpecialReflow()) {
     // Only initiate a special reflow if we will be able to construct a computed height 
     // on the cell that will result in the frame getting a computed height. This can only 
     // happen (but not sufficient) if there is no computed height already set between the 
@@ -1090,17 +1090,18 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     SetNeedSpecialReflow(PR_FALSE);
     SetHadSpecialReflow(PR_TRUE);
   }
-  else if (HadSpecialReflow() && ((eReflowReason_Incremental == aReflowState.reason) || 
-                                  (eReflowReason_Resize == aReflowState.reason))) {
-    // with an unconstrained height, if the block height value hasn't changed, 
-    // use the last height of the cell.
-    if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && 
-        (GetLastBlockHeight() == priorBlockHeight)) {
-      aDesiredSize.height = mRect.height;
+  else if (HadSpecialReflow()) {
+    if ((eReflowReason_Incremental == aReflowState.reason) || 
+        (eReflowReason_Resize == aReflowState.reason)) {
+      // with an unconstrained height, if the block height value hasn't changed, 
+      // use the last height of the cell.
+      if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && 
+          (GetLastBlockHeight() == priorBlockHeight)) {
+        aDesiredSize.height = mRect.height;
+      }
     }
-    else {
-      SetHadSpecialReflow(PR_FALSE);
-    }
+    // XXX should probably call SetHadSpecialReflow(PR_FALSE) when things change so that
+    // nothing inside the cell has a percent height, but it is not easy determining this 
   }
 
   // remember the desired size for this reflow
