@@ -281,6 +281,10 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     // block to scope nsAutoEditInitRulesTrigger
     nsAutoEditInitRulesTrigger rulesTrigger(NS_STATIC_CAST(nsPlaintextEditor*,this), rulesRes);
 
+    // Set up a DTD   
+    mDTD = do_CreateInstance(kCTransitionalDTDCID);
+    if (!mDTD) result = NS_ERROR_FAILURE;
+
     // Init the plaintext editor
     result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
     if (NS_FAILED(result)) { return result; }
@@ -324,10 +328,6 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
         selPriv->AddSelectionListener(listener); 
       }
     }
-
-    // Set up a DTD   
-    mDTD = do_CreateInstance(kCTransitionalDTDCID);
-    if (!mDTD) result = NS_ERROR_FAILURE;
   }
 
   if (NS_FAILED(rulesRes)) return rulesRes;
@@ -468,6 +468,61 @@ NS_IMETHODIMP nsHTMLEditor::InitRules()
   res = mRules->Init(NS_STATIC_CAST(nsPlaintextEditor*,this), mFlags);
   
   return res;
+}
+
+NS_IMETHODIMP nsHTMLEditor::BeginningOfDocument()
+{
+  if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
+
+  // get the selection
+  nsCOMPtr<nsISelection> selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res))
+    return res;
+  if (!selection)
+    return NS_ERROR_NOT_INITIALIZED;
+    
+  // get the root element 
+  nsCOMPtr<nsIDOMElement> rootElement; 
+  res = GetRootElement(getter_AddRefs(rootElement)); 
+  if (NS_FAILED(res)) return res; 
+  if (!rootElement)   return NS_ERROR_NULL_POINTER; 
+  
+  // find first editable thingy
+  PRBool done = PR_FALSE;
+  nsCOMPtr<nsIDOMNode> curNode(rootElement), selNode;
+  PRInt32 curOffset = 0, selOffset;
+  while (!done)
+  {
+    nsWSRunObject wsObj(this, curNode, curOffset);
+    nsCOMPtr<nsIDOMNode> visNode;
+    PRInt32 visOffset=0;
+    PRInt16 visType=0;
+    wsObj.NextVisibleNode(curNode, curOffset, address_of(visNode), &visOffset, &visType);
+    if ((visType==nsWSRunObject::eNormalWS) || 
+        (visType==nsWSRunObject::eText)     ||
+        (visType==nsWSRunObject::eBreak)    ||
+        (visType==nsWSRunObject::eSpecial))
+    {
+      selNode = visNode;
+      selOffset = visOffset;
+      done = PR_TRUE;
+    }
+    else if (visType==nsWSRunObject::eOtherBlock)
+    {
+      curNode = visNode;
+      curOffset = 0;
+      // keep looping
+    }
+    else
+    {
+      // else we found nothing useful
+      selNode = curNode;
+      selOffset = curOffset;
+      done = PR_TRUE;
+    }
+  }
+  return selection->Collapse(selNode, selOffset);
 }
 
 /**
@@ -1557,12 +1612,7 @@ nsHTMLEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver)
 NS_IMETHODIMP 
 nsHTMLEditor::CollapseSelectionToStart()
 {
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(res)) return res;
-  if (!bodyElement)   return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
-  return CollapseSelectionToDeepestNonTableFirstChild(nsnull, bodyNode);  
+  return BeginningOfDocument();
 }
 
 nsresult 
@@ -1806,7 +1856,11 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   if (!child) return NS_ERROR_NULL_POINTER;
   
   // Copy all attributes from the div child to current body element
-  return CloneAttributes(bodyElement, child);
+  res = CloneAttributes(bodyElement, child);
+  if (NS_FAILED(res)) return res;
+  
+  // place selection at first editable content
+  return BeginningOfDocument();
 }
 
 NS_IMETHODIMP

@@ -814,55 +814,46 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
 {
   if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
 
+  // get the selection
   nsCOMPtr<nsISelection> selection;
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
-  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_SUCCEEDED(result) && selection)
+  nsresult result = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(result))
+    return result;
+  if (!selection)
+    return NS_ERROR_NOT_INITIALIZED;
+    
+  // get the root element 
+  nsCOMPtr<nsIDOMElement> rootElement; 
+  result = GetRootElement(getter_AddRefs(rootElement)); 
+  if (NS_FAILED(result)) return result; 
+  if (!rootElement)   return NS_ERROR_NULL_POINTER; 
+  
+  // find first editable thingy
+  nsCOMPtr<nsIDOMNode> firstNode;
+  result = GetFirstEditableNode(rootElement, address_of(firstNode));
+  if (firstNode)
   {
-    nsCOMPtr<nsIDOMNodeList> nodeList;
-    nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
-    if (!doc) return NS_ERROR_NOT_INITIALIZED;
-    result = doc->GetElementsByTagName(NS_LITERAL_STRING("body"), getter_AddRefs(nodeList));
-    if ((NS_SUCCEEDED(result)) && nodeList)
+    // if firstNode is text, set selection to beginning of the text node
+    if (IsTextNode(firstNode)) 
     {
-      PRUint32 count;
-      nodeList->GetLength(&count);
-      if (1!=count) { return NS_ERROR_UNEXPECTED; }
-      nsCOMPtr<nsIDOMNode> bodyNode;
-      result = nodeList->Item(0, getter_AddRefs(bodyNode));
-      if ((NS_SUCCEEDED(result)) && bodyNode)
-      {
-        // Get the first child of the body node:
-        nsCOMPtr<nsIDOMNode> firstNode;
-        result = GetFirstEditableNode(bodyNode, address_of(firstNode));
-        if (firstNode)
-        {
-          // if firstNode is text, set selection to beginning of the text node
-          if (IsTextNode(firstNode)) 
-          {
-            result = selection->Collapse(firstNode, 0);
-          }
-          else
-          { // otherwise, it's a leaf node and we set the selection just in front of it
-            nsCOMPtr<nsIDOMNode> parentNode;
-            result = firstNode->GetParentNode(getter_AddRefs(parentNode));
-            if (NS_FAILED(result)) { return result; }
-            if (!parentNode) { return NS_ERROR_NULL_POINTER; }
-            PRInt32 offsetInParent;
-            result = nsEditor::GetChildOffset(firstNode, parentNode, offsetInParent);
-            if (NS_FAILED(result)) return result;
-            result = selection->Collapse(parentNode, offsetInParent);
-          }
-        }
-        else
-        {
-          // just the body node, set selection to inside the body
-          result = selection->Collapse(bodyNode, 0);
-        }
-      }
+      result = selection->Collapse(firstNode, 0);
     }
+    else
+    { // otherwise, it's a leaf node and we set the selection just in front of it
+      nsCOMPtr<nsIDOMNode> parentNode;
+      result = firstNode->GetParentNode(getter_AddRefs(parentNode));
+      if (NS_FAILED(result)) { return result; }
+      if (!parentNode) { return NS_ERROR_NULL_POINTER; }
+      PRInt32 offsetInParent;
+      result = nsEditor::GetChildOffset(firstNode, parentNode, offsetInParent);
+      if (NS_FAILED(result)) return result;
+      result = selection->Collapse(parentNode, offsetInParent);
+    }
+  }
+  else
+  {
+    // just the body node, set selection to inside the body
+    result = selection->Collapse(rootElement, 0);
   }
   return result;
 }

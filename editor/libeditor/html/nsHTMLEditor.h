@@ -120,6 +120,7 @@ public:
   NS_IMETHODIMP HandleKeyPress(nsIDOMKeyEvent* aKeyEvent);
   NS_IMETHODIMP CollapseSelectionToStart();
   NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
+  NS_IMETHODIMP BeginningOfDocument();
 
   /* ------------ nsIHTMLEditor methods -------------- */
   NS_IMETHOD CopyLastEditableChildStyles(nsIDOMNode *aPreviousBlock, nsIDOMNode *aNewBlock,
