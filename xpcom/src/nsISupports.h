@@ -218,6 +218,9 @@ nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   if (NULL == aInstancePtr) {                                            \
     return NS_ERROR_NULL_POINTER;                                        \
   }                                                                      \
+                                                                         \
+  *aInstancePtr = NULL;                                                  \
+                                                                         \
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 \
   static NS_DEFINE_IID(kClassIID, _classiiddef);                         \
   if (aIID.Equals(kClassIID)) {                                          \
