@@ -1215,7 +1215,7 @@ static void convertFileToURL(const nsString &aIn, nsString &aOut)
   if (PL_strchr(szFile, '\\')) {
     PRInt32 len = strlen(szFile);
     PRInt32 sum = len + sizeof(FILE_PROTOCOL);
-    char* lpszFileURL = new char[sum];
+    char* lpszFileURL = (char *)PR_Malloc(sum + 1);
     
     // Translate '\' to '/'
     for (PRInt32 i = 0; i < len; i++) {
@@ -1230,6 +1230,7 @@ static void convertFileToURL(const nsString &aIn, nsString &aOut)
     // Build the file URL
     PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
     aOut = lpszFileURL;
+    PR_Free((void *)lpszFileURL);
   }
   else
 #endif
