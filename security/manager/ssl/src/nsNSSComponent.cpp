@@ -727,7 +727,7 @@ public:
   virtual ~CertDownloader();
   
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
 protected:
@@ -810,8 +810,7 @@ CertDownloader::OnDataAvailable(nsIRequest* request,
 NS_IMETHODIMP
 CertDownloader::OnStopRequest(nsIRequest* request,
                               nsISupports* context,
-                              nsresult aStatus,
-                              const PRUnichar* aMsg)
+                              nsresult aStatus)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CertDownloader::OnStopRequest\n"));
   /* this will init NSS if it hasn't happened already */
