@@ -350,6 +350,42 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           if (mEditor)
             mEditor->Cut();
         }
+        else if (PR_TRUE==altKey)
+        {
+          printf("alt X\n");
+          aProcessed=PR_TRUE;
+          nsString output;
+          nsresult res = NS_ERROR_FAILURE;
+          nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(mEditor));
+          if (htmlEditor)
+          {
+            if (isShift)
+              res = htmlEditor->OutputTextToString(output);
+            else
+              res = htmlEditor->OutputHTMLToString(output);
+          }
+          else
+          {
+            nsCOMPtr<nsITextEditor> textEditor (do_QueryInterface(mEditor));
+            if (textEditor)
+            {
+              if (isShift)
+                res = textEditor->OutputTextToString(output);
+              else
+                res = textEditor->OutputHTMLToString(output);
+            }
+          }
+
+          if (NS_SUCCEEDED(res))
+          {
+            char* buf = output.ToNewCString();
+            if (buf)
+            {
+              puts(buf);
+              delete[] buf;
+            }
+          }
+        }
         break;
 
       // XXX: hard-coded copy
