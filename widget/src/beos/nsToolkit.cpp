@@ -42,6 +42,7 @@
 #include "nsGUIEvent.h"
 #include "nsSwitchToUIThread.h"
 #include "plevent.h"
+#include "prprf.h"
 
 // 
 // Static thread local storage index of the Toolkit 
