@@ -152,7 +152,7 @@ public Properties getPageInfo()
 public String getSource()
 {
     myFactory.throwExceptionIfNotInitialized();
-    String HTMLContent = null;
+    String HTMLContent;
     String currURL = getCurrentURL();
     System.out.println("\nThe Current URL is -- " + currURL);
     try {
@@ -185,7 +185,7 @@ public byte [] getSourceBytes()
     myFactory.throwExceptionIfNotInitialized();
     
     
-    String HTMLContent = null;
+    String HTMLContent;
     String currURL = getCurrentURL();
     System.out.println("\nThe Current URL is -- " + currURL);
     try {
@@ -268,7 +268,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.12 2001/05/08 04:50:29 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.13 2001/05/08 16:58:36 ashuk%eng.sun.com Exp $");
     
 }
 
