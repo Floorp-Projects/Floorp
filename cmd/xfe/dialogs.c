@@ -239,7 +239,7 @@ fe_Alert_2 (Widget parent, const char *message)
   (void) fe_dialog (parent, "error", message, FALSE, 0, FALSE, FALSE, 0);
 }
 
-#if !defined(__FreeBSD__) && !defined(MACLINUX) && !defined(LINUX_GLIBC_2)
+#if !defined(__FreeBSD__) && !defined(MKLINUX) && !defined(LINUX_GLIBC_2)
 #include <sys/errno.h>
 extern char *sys_errlist[];
 extern int sys_nerr;
