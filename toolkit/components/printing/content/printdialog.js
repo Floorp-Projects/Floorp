@@ -45,7 +45,6 @@ var printOptions       = null;
 var gOriginalNumCopies = 1;
 
 var paramBlock;
-var gPrefs             = null;
 var gPrintSettings     = null;
 var gWebBrowserPrint   = null;
 var default_file       = "mozilla.ps";
@@ -266,8 +265,6 @@ function loadDialog()
   var print_tofile        = "";
 
   try {
-    gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-
     printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"];
     if (printService) {
       printService = printService.getService();
@@ -388,7 +385,7 @@ function onLoad()
 function onAccept()
 {
 
-  if (gPrintSettings != null) {
+  if (gPrintSettings) {
     var print_howToEnableUI = gPrintSetInterface.kFrameEnableNone;
     var stringBundle = srGetStrBundle("chrome://global/locale/printing.properties");
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
@@ -462,11 +459,7 @@ function onAccept()
     }
   }
 
-  var saveToPrefs = false;
-
-  saveToPrefs = gPrefs.getBoolPref("print.save_print_settings");
-
-  if (saveToPrefs && printService != null) {
+  if (printService) {
     var flags = gPrintSetInterface.kInitSavePaperSizeType | 
                 gPrintSetInterface.kInitSavePaperSizeUnit |
                 gPrintSetInterface.kInitSavePaperWidth    | 
