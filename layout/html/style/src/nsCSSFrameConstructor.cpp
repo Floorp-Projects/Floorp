@@ -3466,14 +3466,16 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
 {
   NS_PRECONDITION(nsnull != mInitialContainingBlock, "no initial containing block");
   
-  // Starting with aFrame, look for a frame that is absolutely positioned
+  // Starting with aFrame, look for a frame that is absolutely positioned or
+  // relatively positioned
   nsIFrame* containingBlock = nsnull;
   for (nsIFrame* frame = aFrame; frame; frame->GetParent(&frame)) {
     const nsStylePosition* position;
 
-    // Is it absolutely positioned?
+    // Is it positioned?
     frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-    if (position->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
+    if ((position->mPosition == NS_STYLE_POSITION_ABSOLUTE) ||
+        (position->mPosition == NS_STYLE_POSITION_RELATIVE)) {
       const nsStyleDisplay* display;
       
       // If it's a table then ignore it, because for the time being tables
@@ -3495,7 +3497,8 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
             }
           }
 
-        } else if (nsLayoutAtoms::areaFrame == frameType) {
+        } else if ((nsLayoutAtoms::areaFrame == frameType) ||
+                   (nsLayoutAtoms::positionedInlineFrame == frameType)) {
           containingBlock = frame;
         }
         NS_RELEASE(frameType);
