@@ -90,6 +90,14 @@ SOURCE=..\hash.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\icodegenerator.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\interpreter.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\js2.cpp
 # End Source File
 # Begin Source File
@@ -119,6 +127,14 @@ SOURCE=..\cpucfg.h
 # Begin Source File
 
 SOURCE=..\hash.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\icodegenerator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\interpreter.h
 # End Source File
 # Begin Source File
 
