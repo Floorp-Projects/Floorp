@@ -16,6 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
+include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=wallet
 DLLNAME=walletlib
