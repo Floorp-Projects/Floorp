@@ -234,13 +234,25 @@ CONST_OID cmsRC2wrap[]  			= { PKCS9_SMIME_ALGS, 7 };
 CONST_OID smimeEncryptionKeyPreference[] 	= { PKCS9_SMIME_ATTRS, 11 };
 CONST_OID ms_smimeEncryptionKeyPreference[] 	= { MICROSOFT_OID, 0x10, 0x4 };
 
-CONST_OID x520CommonName[]          		= { X520_ATTRIBUTE_TYPE, 3 };
-CONST_OID x520CountryName[]         		= { X520_ATTRIBUTE_TYPE, 6 };
-CONST_OID x520LocalityName[]        		= { X520_ATTRIBUTE_TYPE, 7 };
-CONST_OID x520StateOrProvinceName[] 		= { X520_ATTRIBUTE_TYPE, 8 };
-CONST_OID x520OrgName[]             		= { X520_ATTRIBUTE_TYPE, 10 };
-CONST_OID x520OrgUnitName[]         		= { X520_ATTRIBUTE_TYPE, 11 };
-CONST_OID x520DnQualifier[]         		= { X520_ATTRIBUTE_TYPE, 46 };
+CONST_OID x520CommonName[]                      = { X520_ATTRIBUTE_TYPE, 3 };
+CONST_OID x520SurName[]                         = { X520_ATTRIBUTE_TYPE, 4 };
+CONST_OID x520SerialNumber[]                    = { X520_ATTRIBUTE_TYPE, 5 };
+CONST_OID x520CountryName[]                     = { X520_ATTRIBUTE_TYPE, 6 };
+CONST_OID x520LocalityName[]                    = { X520_ATTRIBUTE_TYPE, 7 };
+CONST_OID x520StateOrProvinceName[]             = { X520_ATTRIBUTE_TYPE, 8 };
+CONST_OID x520StreetAddress[]                   = { X520_ATTRIBUTE_TYPE, 9 };
+CONST_OID x520OrgName[]                         = { X520_ATTRIBUTE_TYPE, 10 };
+CONST_OID x520OrgUnitName[]                     = { X520_ATTRIBUTE_TYPE, 11 };
+CONST_OID x520Title[]                           = { X520_ATTRIBUTE_TYPE, 12 };
+CONST_OID x520PostalAddress[]                   = { X520_ATTRIBUTE_TYPE, 16 };
+CONST_OID x520PostalCode[]                      = { X520_ATTRIBUTE_TYPE, 17 };
+CONST_OID x520PostOfficeBox[]                   = { X520_ATTRIBUTE_TYPE, 18 };
+CONST_OID x520GivenName[]                       = { X520_ATTRIBUTE_TYPE, 42 };
+CONST_OID x520Initials[]                        = { X520_ATTRIBUTE_TYPE, 43 };
+CONST_OID x520GenerationQualifier[]             = { X520_ATTRIBUTE_TYPE, 44 };
+CONST_OID x520DnQualifier[]                     = { X520_ATTRIBUTE_TYPE, 46 };
+CONST_OID x520HouseIdentifier[]                 = { X520_ATTRIBUTE_TYPE, 51 };
+CONST_OID x520Pseudonym[]                       = { X520_ATTRIBUTE_TYPE, 65 };
 
 CONST_OID nsTypeGIF[]          			= { NETSCAPE_DATA_TYPE, 0x01 };
 CONST_OID nsTypeJPEG[]         			= { NETSCAPE_DATA_TYPE, 0x02 };
@@ -1384,6 +1396,33 @@ const static SECOidData oids[] = {
 	"AOL Screenname", CKM_INVALID_MECHANISM,
 	INVALID_CERT_EXTENSION ),
 
+    OD( x520SurName, SEC_OID_AVA_SURNAME,
+    	"X520 Title",         CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520SerialNumber, SEC_OID_AVA_SERIAL_NUMBER,
+        "X520 Serial Number", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520StreetAddress, SEC_OID_AVA_STREET_ADDRESS,
+        "X520 Street Address", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520Title, SEC_OID_AVA_TITLE, 
+    	"X520 Title",         CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520PostalAddress, SEC_OID_AVA_POSTAL_ADDRESS,
+    	"X520 Postal Address", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520PostalCode, SEC_OID_AVA_POSTAL_CODE,
+    	"X520 Postal Code",   CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520PostOfficeBox, SEC_OID_AVA_POST_OFFICE_BOX,
+    	"X520 Post Office Box", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520GivenName, SEC_OID_AVA_GIVEN_NAME,
+    	"X520 Given Name",    CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520Initials, SEC_OID_AVA_INITIALS,
+    	"X520 Initials",      CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520GenerationQualifier, SEC_OID_AVA_GENERATION_QUALIFIER,
+    	"X520 Generation Qualifier", 
+	CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520HouseIdentifier, SEC_OID_AVA_HOUSE_IDENTIFIER,
+    	"X520 House Identifier", 
+	CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520Pseudonym, SEC_OID_AVA_PSEUDONYM,
+    	"X520 Pseudonym",     CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+
 };
 
 /*
@@ -1591,7 +1630,6 @@ SECOidData *
 SECOID_FindOIDByMechanism(unsigned long mechanism)
 {
     SECOidData *ret;
-    int rv;
 
     PR_ASSERT(oidhash != NULL);
 
@@ -1607,8 +1645,7 @@ SECOidData *
 SECOID_FindOID(SECItem *oid)
 {
     SECOidData *ret;
-    int rv;
-    
+
     PR_ASSERT(oidhash != NULL);
     
     ret = PL_HashTableLookupConst ( oidhash, oid );
