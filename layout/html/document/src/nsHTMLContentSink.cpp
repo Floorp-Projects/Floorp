@@ -544,6 +544,8 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLDirectoryElement(aResult, aAtom);
     break;
   case eHTMLTag_div:
+  case eHTMLTag_parsererror:
+  case eHTMLTag_sourcetext:
     rv = NS_NewHTMLDivElement(aResult, aAtom);
     break;
   case eHTMLTag_dl:
