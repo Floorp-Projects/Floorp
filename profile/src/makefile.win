@@ -31,7 +31,26 @@
 #//------------------------------------------------------------------------
 DEPTH = ..\..
 MODULE		= profile
-REQUIRES = xpcom string appshell uriloader pref necko nsprefm prefmigr dom windowwatcher bookmarks cookie chrome intl docshell webBrowser_core widget rdf uconv
+REQUIRES	= xpcom \
+		  string \
+		  appshell \
+		  uriloader \
+		  pref \
+		  necko \
+		  nsprefm \
+		  prefmigr \
+		  dom \
+		  windowwatcher \
+		  bookmarks \
+		  cookie \
+		  chrome \
+		  intl \
+		  docshell \
+		  webBrowser_core \
+		  widget \
+		  rdf \
+		  uconv \
+		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 #//------------------------------------------------------------------------
 #//

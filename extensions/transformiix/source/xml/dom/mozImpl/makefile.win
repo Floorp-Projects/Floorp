@@ -20,7 +20,14 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..\..\..
-REQUIRES = string xpcom dom layout widget necko content
+REQUIRES	= string \
+		  xpcom \
+		  dom \
+		  layout \
+		  widget \
+		  necko \
+		  content \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

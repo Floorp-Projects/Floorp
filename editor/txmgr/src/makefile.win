@@ -24,7 +24,9 @@ DEPTH=..\..\..
 
 LIBRARY_NAME=txmgr
 MODULE=txmgr 
-REQUIRES	= xpcom string
+REQUIRES	= xpcom \
+		  string \
+		  $(NULL)
 
 CPPSRCS =				\
 	nsTransactionItem.cpp	\

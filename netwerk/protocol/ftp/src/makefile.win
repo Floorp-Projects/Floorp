@@ -18,7 +18,15 @@
 # Contributor(s): 
 
 MODULE = necko
-REQUIRES	= xpcom string exthandler mimetype wallet pref intl nkcache
+REQUIRES	= xpcom \
+		  string \
+		  exthandler \
+		  mimetype \
+		  wallet \
+		  pref \
+		  intl \
+		  nkcache \
+		  $(NULL)
 
 DEPTH = ..\..\..\..
 

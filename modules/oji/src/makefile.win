@@ -18,7 +18,27 @@ DEPTH= ..\..\..
 MODULE=oji
 LIBRARY_NAME=oji
 MODULE_NAME=nsCJVMManagerModule
-REQUIRES	= xpcom string java js plugin gkplugin caps pref js jar necko dom widget xpconnect windowwatcher layout docshell webBrowser_core intl gfx
+REQUIRES	= xpcom \
+		  string \
+		  java \
+		  js \
+		  plugin \
+		  gkplugin \
+		  caps \
+		  pref \
+		  js \
+		  jar \
+		  necko \
+		  dom \
+		  widget \
+		  xpconnect \
+		  windowwatcher \
+		  layout \
+		  docshell \
+		  webBrowser_core \
+		  intl \
+		  gfx \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 !ifdef MOZ_OJI

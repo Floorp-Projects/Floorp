@@ -25,7 +25,24 @@ DEPTH=..\..\..
 
 LIBRARY_NAME=contentevents_s 
 MODULE=content
-REQUIRES	= xpcom string dom js locale widget timer caps xpconnect docshell webshell pref htmlparser view gfx layout layout_xul
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  js \
+		  locale \
+		  widget \
+		  timer \
+		  caps \
+		  xpconnect \
+		  docshell \
+		  webshell \
+		  pref \
+		  htmlparser \
+		  view \
+		  gfx \
+		  layout \
+		  layout_xul \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

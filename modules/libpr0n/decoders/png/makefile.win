@@ -23,7 +23,14 @@
 
 DEPTH=..\..\..\..
 MODULE		= imgpng
-REQUIRES	= xpcom necko gfx gfx2 imglib2 png zlib
+REQUIRES	= xpcom \
+		  necko \
+		  gfx \
+		  gfx2 \
+		  imglib2 \
+		  png \
+		  zlib \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME	= imgpng

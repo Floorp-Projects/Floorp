@@ -26,7 +26,10 @@ DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 MODULE=uconv
 LIBRARY_NAME=ucvlatin
 MODULE_NAME=nsUCvLatinModule
-REQUIRES	= xpcom string uconv
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  $(NULL)
 
 CPPSRCS =				\
 	nsUEscapeToUnicode.cpp		\

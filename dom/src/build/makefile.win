@@ -21,7 +21,25 @@
 
 DEPTH=..\..\..
 MODULE=dom
-REQUIRES	= xpcom string js xpconnect widget layout caps timer webBrowser_core xuldoc docshell sidebar plugin gkplugin necko gfx content content_xul
+REQUIRES	= xpcom \
+		  string \
+		  js \
+		  xpconnect \
+		  widget \
+		  layout \
+		  caps \
+		  timer \
+		  webBrowser_core \
+		  xuldoc \
+		  docshell \
+		  sidebar \
+		  plugin \
+		  gkplugin \
+		  necko \
+		  gfx \
+		  content \
+		  content_xul \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_DOM

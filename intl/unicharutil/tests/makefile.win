@@ -20,7 +20,12 @@
 # Contributor(s): 
 DEPTH = ..\..\..
 
-REQUIRES=xpcom string unicharutil uconv necko
+REQUIRES	= xpcom \
+		  string \
+		  unicharutil \
+		  uconv \
+		  necko \
+		  $(NULL)
 
 
 MAKE_OBJ_TYPE = EXE

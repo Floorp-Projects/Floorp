@@ -24,7 +24,9 @@
 DEPTH=..\..
 
 MODULE=string
-REQUIRES	= unicharutil xpcom
+REQUIRES	= unicharutil \
+		  xpcom \
+		  $(NULL)
 
 EXPORTS =                               \
         nsStr.h                         \

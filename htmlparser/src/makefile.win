@@ -22,7 +22,21 @@
 DEPTH=..\..
 
 MODULE         = htmlparser
-REQUIRES       = xpcom string necko util uconv expat layout dom pref nkcache intl widget raptor content
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  util \
+		  uconv \
+		  expat \
+		  layout \
+		  dom \
+		  pref \
+		  nkcache \
+		  intl \
+		  widget \
+		  raptor \
+		  content \
+		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=raptorhtmlpars 

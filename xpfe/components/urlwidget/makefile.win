@@ -20,7 +20,13 @@
 # Contributor(s): 
 
 MODULE=appcomps
-REQUIRES=xpcom string docshell dom widget gfx
+REQUIRES	= xpcom \
+		  string \
+		  docshell \
+		  dom \
+		  widget \
+		  gfx \
+		  $(NULL)
 DEPTH=..\..\..
 
 XPIDL_MODULE=urlwidgt

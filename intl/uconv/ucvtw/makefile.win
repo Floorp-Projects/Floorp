@@ -24,7 +24,10 @@ DEPTH=..\..\..
 DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
 MODULE=uconv
-REQUIRES=xpcom string uconv
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  $(NULL)
 LIBRARY_NAME=ucvtw
 MODULE_NAME=nsUCvTWModule
 

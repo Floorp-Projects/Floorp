@@ -19,7 +19,11 @@
 
 DEPTH = ..\..\..
 MODULE = mimetype
-REQUIRES	= xpcom string necko pref
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  pref \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

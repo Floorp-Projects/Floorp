@@ -20,7 +20,10 @@
 IGNORE_MANIFEST = 1
 
 DEPTH= ..\..\..
-REQUIRES=xpcom raptor webshell
+REQUIRES	= xpcom \
+		  raptor \
+		  webshell \
+		  $(NULL)
 
 
 MAKE_OBJ_TYPE=EXE

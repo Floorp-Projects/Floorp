@@ -23,7 +23,12 @@
 
 DEPTH=..\..
 
-REQUIRES=xpcom string dom appcomps xpinstall
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  appcomps \
+		  xpinstall \
+		  $(NULL)
 MAKE_OBJ_TYPE   = DLL
 LIBRARY_NAME=xpistub
 DLL = .\$(OBJDIR)\xpistub.dll

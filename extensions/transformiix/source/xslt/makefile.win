@@ -21,7 +21,15 @@
 
 DEPTH=..\..\..\..
 MODULE = transformiix
-REQUIRES = string xpcom dom layout widget necko content_xsl content
+REQUIRES	= string \
+		  xpcom \
+		  dom \
+		  layout \
+		  widget \
+		  necko \
+		  content_xsl \
+		  content \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 DIRS=util functions

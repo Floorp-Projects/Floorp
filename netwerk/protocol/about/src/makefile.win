@@ -21,7 +21,13 @@
 
 DEPTH=..\..\..\..
 MODULE=necko
-REQUIRES	= xpcom string nkcache caps xpconnect js
+REQUIRES	= xpcom \
+		  string \
+		  nkcache \
+		  caps \
+		  xpconnect \
+		  js \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=nkabout_s

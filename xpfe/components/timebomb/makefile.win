@@ -23,7 +23,14 @@
 
 DEPTH         = ..\..\..
 MODULE        = appcomps
-REQUIRES	= xpcom string pref appshell necko webBrowser_core raptor
+REQUIRES	= xpcom \
+		  string \
+		  pref \
+		  appshell \
+		  necko \
+		  webBrowser_core \
+		  raptor \
+		  $(NULL)
 LIBRARY_NAME=timebomb_s
 
 include <$(DEPTH)/config/config.mak>

@@ -21,7 +21,13 @@
 DEPTH=..\..\..\..
 
 MODULE=embedcomponents
-REQUIRES	= jsconsole xpcom string dom windowwatcher js
+REQUIRES	= jsconsole \
+		  xpcom \
+		  string \
+		  dom \
+		  windowwatcher \
+		  js \
+		  $(NULL)
 LIBRARY_NAME=jsconsole_s
 
 CPP_OBJS= \

@@ -29,7 +29,13 @@
 #//------------------------------------------------------------------------
 DEPTH = ..\..\..\..
 MODULE=appcomps
-REQUIRES	= xpcom string layout dom mozldap necko
+REQUIRES	= xpcom \
+		  string \
+		  layout \
+		  dom \
+		  mozldap \
+		  necko \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 LIBRARY_NAME=autocomplete_s

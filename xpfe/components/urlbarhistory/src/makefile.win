@@ -20,7 +20,13 @@
 
 DEPTH=..\..\..\..
 MODULE=urlbarhistory
-REQUIRES	= xpcom string rdf pref necko appcomps
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  pref \
+		  necko \
+		  appcomps \
+		  $(NULL)
 LIBRARY_NAME=urlbarhistory_s
 
 CPP_OBJS=                               \

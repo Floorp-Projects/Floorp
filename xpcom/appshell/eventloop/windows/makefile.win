@@ -22,7 +22,8 @@
 
 DEPTH=..\..\..\..
 MODULE		= xpcom
-REQUIRES=string
+REQUIRES	= string \
+		  $(NULL)
 XPIDL_MODULE = xpcom_eventloop_windows
 LIBRARY_NAME	= evntloop
 MODULE_NAME	= nsNativeAppModule

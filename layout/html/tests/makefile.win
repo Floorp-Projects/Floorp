@@ -20,7 +20,11 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-REQUIRES	= xpcom string layout content
+REQUIRES	= xpcom \
+		  string \
+		  layout \
+		  content \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE	= EXE

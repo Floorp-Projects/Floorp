@@ -19,7 +19,15 @@
 
 DEPTH=..\..
 MODULE		= uriloader
-REQUIRES	= xpcom string necko mimetype exthandler rdf helperAppDlg dom
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  mimetype \
+		  exthandler \
+		  rdf \
+		  helperAppDlg \
+		  dom \
+		  $(NULL)
 LIBRARY_NAME	= urildr
 MODULE_NAME	= nsURILoaderModule
 

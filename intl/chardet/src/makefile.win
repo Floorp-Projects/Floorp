@@ -62,7 +62,21 @@ CPP_OBJS= \
 MODULE=chardet
 LIBARARY_NAME=chardet
 MODULE_NAME=nsCharDetModule
-REQUIRES	= xpcom string uconv webshell uriloader docshell htmlparser dom necko widget layout embedcomponents raptor content
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  webshell \
+		  uriloader \
+		  docshell \
+		  htmlparser \
+		  dom \
+		  necko \
+		  widget \
+		  layout \
+		  embedcomponents \
+		  raptor \
+		  content \
+		  $(NULL)
 
 INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\chardet -I$(PUBLIC)\raptor \
      -I$(PUBLIC)\netlib -I$(PUBLIC)\uconv -I$(PUBLIC)\webshell

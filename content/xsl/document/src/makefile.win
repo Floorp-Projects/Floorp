@@ -23,7 +23,17 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=contentxsldoc_s 
 MODULE=content_xsl
-REQUIRES = xpcom string htmlparser view widget dom necko layout gfx content
+REQUIRES	= xpcom \
+		  string \
+		  htmlparser \
+		  view \
+		  widget \
+		  dom \
+		  necko \
+		  layout \
+		  gfx \
+		  content \
+		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

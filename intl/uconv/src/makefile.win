@@ -21,7 +21,15 @@
 
 DEPTH=..\..\..
 MODULE=uconv
-REQUIRES	= xpcom string intl locale chardet necko rdf pref
+REQUIRES	= xpcom \
+		  string \
+		  intl \
+		  locale \
+		  chardet \
+		  necko \
+		  rdf \
+		  pref \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN

@@ -22,7 +22,8 @@
 DEPTH=..\..\..
 
 MODULE=xpcom
-REQUIRES=string
+REQUIRES	= string \
+		  $(NULL)
 XPIDL_MODULE=xpcom_nativeapp
 LIBRARY_NAME=nativapp
 MODULE_NAME=nsCNativeAppModule

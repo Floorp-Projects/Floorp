@@ -23,7 +23,20 @@
 DEPTH=..\..\..
 
 MODULE=webBrowser_core
-REQUIRES	= xpcom string docshell dom widget layout necko uriloader shistory timer windowwatcher gfx content
+REQUIRES	= xpcom \
+		  string \
+		  docshell \
+		  dom \
+		  widget \
+		  layout \
+		  necko \
+		  uriloader \
+		  shistory \
+		  timer \
+		  windowwatcher \
+		  gfx \
+		  content \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

@@ -37,7 +37,24 @@ CHROME_L10N = \
 	$(NULL)
 
 MODULE=appcomps
-REQUIRES	= xpcom string necko rdf layout timer js xpconnect docshell widget dom webshell uconv uriloader windowwatcher content raptor
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  rdf \
+		  layout \
+		  timer \
+		  js \
+		  xpconnect \
+		  docshell \
+		  widget \
+		  dom \
+		  webshell \
+		  uconv \
+		  uriloader \
+		  windowwatcher \
+		  content \
+		  raptor \
+		  $(NULL)
 XPIDL_MODULE=directory
 XPIDLSRCS =                             \
         .\nsIHTTPIndex.idl              \

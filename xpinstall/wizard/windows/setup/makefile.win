@@ -26,7 +26,10 @@ MAKE_OBJ_TYPE   = EXE
 USE_NON_MT_LIBS = 1
 
 MODULE          = setup
-REQUIRES=setuprsc uninstall xpnet
+REQUIRES	= setuprsc \
+		  uninstall \
+		  xpnet \
+		  $(NULL)
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe
 RESFILE         = $(MODULE).res
 

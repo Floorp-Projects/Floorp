@@ -30,7 +30,10 @@ LLIBS=                  \
 
 
 DEPTH=..\..\..
-REQUIRES	= necko xpcom string
+REQUIRES	= necko \
+		  xpcom \
+		  string \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

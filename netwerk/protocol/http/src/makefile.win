@@ -21,7 +21,14 @@
 
 DEPTH=..\..\..\..
 MODULE=necko
-REQUIRES	= xpcom string pref nkcache mimetype intl exthandler
+REQUIRES	= xpcom \
+		  string \
+		  pref \
+		  nkcache \
+		  mimetype \
+		  intl \
+		  exthandler \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 

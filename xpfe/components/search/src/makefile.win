@@ -21,7 +21,16 @@
 
 DEPTH=..\..\..\..
 MODULE=search
-REQUIRES	= xpcom string rdf necko timer pref uconv intl bookmarks
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  necko \
+		  timer \
+		  pref \
+		  uconv \
+		  intl \
+		  bookmarks \
+		  $(NULL)
 
 CPP_OBJS=                                \
  .\$(OBJDIR)\nsLocalSearchService.obj    \

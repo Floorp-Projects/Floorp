@@ -22,7 +22,12 @@
 
 DEPTH=..\..\..\..\..
 MODULE=imgicon
-REQUIRES	= xpcom string necko mimetype exthandler
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  mimetype \
+		  exthandler \
+		  $(NULL)
 
 LIBRARY_NAME=imgiconwin_s
 

@@ -20,7 +20,10 @@
 MODULE = necko
 
 DEPTH = ..\..\..\..
-REQUIRES	= xpcom string mimetype
+REQUIRES	= xpcom \
+		  string \
+		  mimetype \
+		  $(NULL)
 
 LIBRARY_NAME=nkfinger_s
 

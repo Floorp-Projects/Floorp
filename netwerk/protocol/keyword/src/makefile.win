@@ -21,7 +21,10 @@
 
 DEPTH=..\..\..\..
 MODULE=necko
-REQUIRES	= xpcom string pref
+REQUIRES	= xpcom \
+		  string \
+		  pref \
+		  $(NULL)
 
 LIBRARY_NAME=nkkwd_s
 

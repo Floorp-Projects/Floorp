@@ -32,7 +32,11 @@
 # file under either the NPL or the GPL.
 
 DEPTH=..\..\..\..
-REQUIRES=xpcom string xpconnect js
+REQUIRES	= xpcom \
+		  string \
+		  xpconnect \
+		  js \
+		  $(NULL)
 
 
 MAKE_OBJ_TYPE	= EXE

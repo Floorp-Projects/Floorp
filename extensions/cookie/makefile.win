@@ -25,7 +25,18 @@ DEFINES=-D_IMPL_NS_COOKIE -DWIN32_LEAN_AND_MEAN
 MODULE=cookie 
 LIBRARY_NAME=cookie
 MODULE_NAME=nsCookieModule
-REQUIRES	= xpcom string necko dom widget layout pref intl uriloader windowwatcher content
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  dom \
+		  widget \
+		  layout \
+		  pref \
+		  intl \
+		  uriloader \
+		  windowwatcher \
+		  content \
+		  $(NULL)
 
 EXPORTS = nsCookieHTTPNotify.h
 

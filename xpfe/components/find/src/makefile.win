@@ -29,7 +29,18 @@
 #//------------------------------------------------------------------------
 DEPTH = ..\..\..\..
 MODULE		= appcomps
-REQUIRES	= xpcom string dom layout widget editor necko txtsvc docshell content gfx
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  layout \
+		  widget \
+		  editor \
+		  necko \
+		  txtsvc \
+		  docshell \
+		  content \
+		  gfx \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

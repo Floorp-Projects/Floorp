@@ -39,7 +39,12 @@ DLLNAME		= xpctest
 DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 
 MODULE=xpconnect_tests
-REQUIRES=xpcom string xpconnect js timer
+REQUIRES	= xpcom \
+		  string \
+		  xpconnect \
+		  js \
+		  timer \
+		  $(NULL)
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
 

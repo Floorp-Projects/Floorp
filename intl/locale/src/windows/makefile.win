@@ -21,7 +21,11 @@
 
 DEPTH=..\..\..\..
 MODULE		= locale
-REQUIRES=xpcom string unicharutil uconv
+REQUIRES	= xpcom \
+		  string \
+		  unicharutil \
+		  uconv \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME	= nslocale

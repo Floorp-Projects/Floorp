@@ -20,7 +20,9 @@
 # Contributor(s): 
 DEPTH=..\..\..
 
-REQUIRES=string xpcom
+REQUIRES	= string \
+		  xpcom \
+		  $(NULL)
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\ProxyTest.exe
 

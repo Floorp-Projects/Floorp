@@ -21,7 +21,36 @@
 
 DEPTH=..\..
 MODULE		= apprunner
-REQUIRES	= xpcom string webBrowser_core widget dom necko pref appshell layout chrome rdf xpinstall xpicleanup uriloader editor view windowwatcher embed_base embedcomponents mpfilelocprovider mozbrwsr appcomps docshell xremoteservice raptor gfx intl profile xpconnect
+REQUIRES	= xpcom \
+		  string \
+		  webBrowser_core \
+		  widget \
+		  dom \
+		  necko \
+		  pref \
+		  appshell \
+		  layout \
+		  chrome \
+		  rdf \
+		  xpinstall \
+		  xpicleanup \
+		  uriloader \
+		  editor \
+		  view \
+		  windowwatcher \
+		  embed_base \
+		  embedcomponents \
+		  mpfilelocprovider \
+		  mozbrwsr \
+		  appcomps \
+		  docshell \
+		  xremoteservice \
+		  raptor \
+		  gfx \
+		  intl \
+		  profile \
+		  xpconnect \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-DWIN32_LEAN_AND_MEAN

@@ -21,7 +21,28 @@
 
 DEPTH=..\..\..
 MODULE=webBrowser_core
-REQUIRES	= xpcom string docshell widget layout dom js necko uriloader shistory webshell mimetype exthandler timer windowwatcher wallet appcomps gfx raptor content history
+REQUIRES	= xpcom \
+		  string \
+		  docshell \
+		  widget \
+		  layout \
+		  dom \
+		  js \
+		  necko \
+		  uriloader \
+		  shistory \
+		  webshell \
+		  mimetype \
+		  exthandler \
+		  timer \
+		  windowwatcher \
+		  wallet \
+		  appcomps \
+		  gfx \
+		  raptor \
+		  content \
+		  history \
+		  $(NULL)
 
 XPIDLSRCS=                        \
     .\nsIContextMenuListener.idl   \

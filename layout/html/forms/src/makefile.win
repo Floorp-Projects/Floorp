@@ -25,7 +25,35 @@ LIBRARY_NAME=layouthtmlforms_s
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 MODULE=layout
-REQUIRES	= xpcom string locale widget view dom js htmlparser necko webshell caps editor intl uconv exthandler mimetype txmgr gfx2 imglib2 accessibility xpconnect unicharutil timer pref gfx content content_xul layout_xul
+REQUIRES	= xpcom \
+		  string \
+		  locale \
+		  widget \
+		  view \
+		  dom \
+		  js \
+		  htmlparser \
+		  necko \
+		  webshell \
+		  caps \
+		  editor \
+		  intl \
+		  uconv \
+		  exthandler \
+		  mimetype \
+		  txmgr \
+		  gfx2 \
+		  imglib2 \
+		  accessibility \
+		  xpconnect \
+		  unicharutil \
+		  timer \
+		  pref \
+		  gfx \
+		  content \
+		  content_xul \
+		  layout_xul \
+		  $(NULL)
 
 CPPSRCS= \
   nsFormControlHelper.cpp \

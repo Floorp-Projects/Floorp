@@ -21,7 +21,11 @@
 
 DEPTH=..\..
 MODULE = xpcom 
-REQUIRES	= uconv string necko chrome
+REQUIRES	= uconv \
+		  string \
+		  necko \
+		  chrome \
+		  $(NULL)
 
 ################################################################################
 ## exports

@@ -21,7 +21,16 @@
 
 DEPTH=..\..\..\..
 MODULE		= imgmng
-REQUIRES = xpcom necko imglib2 gfx gfx2 mng jpeg timer zlib
+REQUIRES	= xpcom \
+		  necko \
+		  imglib2 \
+		  gfx \
+		  gfx2 \
+		  mng \
+		  jpeg \
+		  timer \
+		  zlib \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME	= imgmng

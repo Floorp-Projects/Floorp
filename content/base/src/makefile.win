@@ -64,7 +64,32 @@ CPPSRCS =				\
 	$(NULL)
 
 MODULE=content
-REQUIRES	= xpcom string dom widget view locale timer htmlparser js webshell necko caps lwbrk uconv chrome docshell pref xpconnect util unicharutil layout_xsl layout gfx layout_xul content_xsl
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  widget \
+		  view \
+		  locale \
+		  timer \
+		  htmlparser \
+		  js \
+		  webshell \
+		  necko \
+		  caps \
+		  lwbrk \
+		  uconv \
+		  chrome \
+		  docshell \
+		  pref \
+		  xpconnect \
+		  util \
+		  unicharutil \
+		  layout_xsl \
+		  layout \
+		  gfx \
+		  layout_xul \
+		  content_xsl \
+		  $(NULL)
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsStyleContext.obj		\

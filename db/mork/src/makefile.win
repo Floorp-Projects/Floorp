@@ -22,7 +22,8 @@
 
 DEPTH=..\..\..
 MODULE= mork
-REQUIRES = xpcom
+REQUIRES	= xpcom \
+		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 
 ################################################################################

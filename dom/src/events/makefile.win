@@ -24,7 +24,12 @@ DEPTH=..\..\..
 
 LIBRARY_NAME=jsdomevents_s
 MODULE=dom
-REQUIRES	= xpcom string js caps xpconnect
+REQUIRES	= xpcom \
+		  string \
+		  js \
+		  caps \
+		  xpconnect \
+		  $(NULL)
 
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 

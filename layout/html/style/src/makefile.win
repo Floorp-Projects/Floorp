@@ -23,7 +23,26 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layouthtmlstyle_s 
 MODULE=layout
-REQUIRES	= xpcom string dom widget timer locale view necko webshell pref docshell plugin gkplugin content_xul imglib2 gfx2 gfx content layout_xul
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  widget \
+		  timer \
+		  locale \
+		  view \
+		  necko \
+		  webshell \
+		  pref \
+		  docshell \
+		  plugin \
+		  gkplugin \
+		  content_xul \
+		  imglib2 \
+		  gfx2 \
+		  gfx \
+		  content \
+		  layout_xul \
+		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

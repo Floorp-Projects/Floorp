@@ -21,7 +21,27 @@
 
 DEPTH=..\..
 MODULE=docshell
-REQUIRES	= xpcom string dom shistory necko layout uriloader timer webshell widget pref view intl htmlparser chardet appcomps find raptor gfx history
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  shistory \
+		  necko \
+		  layout \
+		  uriloader \
+		  timer \
+		  webshell \
+		  widget \
+		  pref \
+		  view \
+		  intl \
+		  htmlparser \
+		  chardet \
+		  appcomps \
+		  find \
+		  raptor \
+		  gfx \
+		  history \
+		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=docshell

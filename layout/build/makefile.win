@@ -21,7 +21,15 @@
 
 DEPTH=..\..
 MODULE=layout
-REQUIRES	= xpcom string widget locale timer gfx content layout_xul
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  locale \
+		  timer \
+		  gfx \
+		  content \
+		  layout_xul \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_HTML 

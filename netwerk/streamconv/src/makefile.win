@@ -19,7 +19,9 @@
 
 DEPTH = ..\..\..
 MODULE = necko
-REQUIRES	= xpcom string
+REQUIRES	= xpcom \
+		  string \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

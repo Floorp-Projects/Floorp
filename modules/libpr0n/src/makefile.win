@@ -23,7 +23,15 @@
 
 DEPTH=..\..\..
 MODULE		= imglib2
-REQUIRES	= xpcom string necko nkcache timer gfx2 mimetype gfx
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  nkcache \
+		  timer \
+		  gfx2 \
+		  mimetype \
+		  gfx \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME	= imglib2

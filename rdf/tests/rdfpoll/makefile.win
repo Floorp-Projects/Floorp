@@ -21,7 +21,14 @@
 
 
 DEPTH	= ..\..\..
-REQUIRES	= xpcom string rdf necko layout dom htmlparser
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  necko \
+		  layout \
+		  dom \
+		  htmlparser \
+		  $(NULL)
 MODULE=rdfpoll
 include <$(DEPTH)/config/config.mak>
 

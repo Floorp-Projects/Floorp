@@ -23,7 +23,28 @@ DEPTH=..\..\..
 MODULE=appcomps
 LIBRARY_NAME=appcomps
 MODULE_NAME=application
-REQUIRES	= xpcom string layout rdf necko timer intl mork widget dom pref docshell webshell bookmarks content raptor history search related urlbarhistory mozldap
+REQUIRES	= xpcom \
+		  string \
+		  layout \
+		  rdf \
+		  necko \
+		  timer \
+		  intl \
+		  mork \
+		  widget \
+		  dom \
+		  pref \
+		  docshell \
+		  webshell \
+		  bookmarks \
+		  content \
+		  raptor \
+		  history \
+		  search \
+		  related \
+		  urlbarhistory \
+		  mozldap \
+		  $(NULL)
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN
 

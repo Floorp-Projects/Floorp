@@ -26,7 +26,8 @@ MAKE_OBJ_TYPE   = EXE
 USE_NON_MT_LIBS = 1
 
 MODULE          = xpicleanup
-REQUIRES=mozreg
+REQUIRES	= mozreg \
+		  $(NULL)
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe
 
 OBJS =                                   \

@@ -23,7 +23,12 @@
 DEPTH	= ..\..\..
 DEFINES=-D_IMPL_NS_COOKIE -DWIN32_LEAN_AND_MEAN
 MODULE=cookie 
-REQUIRES	= xpcom string cookie necko intl
+REQUIRES	= xpcom \
+		  string \
+		  cookie \
+		  necko \
+		  intl \
+		  $(NULL)
 
 MAKE_OBJ_TYPE = EXE
 

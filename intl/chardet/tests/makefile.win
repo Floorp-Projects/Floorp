@@ -20,7 +20,9 @@
 # Contributor(s): 
 DEPTH = ..\..\..
 
-REQUIRES=xpcom chardet
+REQUIRES	= xpcom \
+		  chardet \
+		  $(NULL)
 
 
 MAKE_OBJ_TYPE = EXE
