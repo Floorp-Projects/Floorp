@@ -69,10 +69,13 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "imgIContainer.h"
 #include "imgILoader.h"
 
+#include "nsIEventQueueService.h"
+#include "plevent.h"
 
 #include "nsContentPolicyUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
 
 
 #ifdef DEBUG
@@ -351,6 +354,145 @@ NS_IMETHODIMP nsImageFrame::OnStopContainer(imgIRequest *aRequest, nsIPresContex
   return NS_OK;
 }
 
+static void PR_CALLBACK
+HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage, PRUint32 aFlags)
+{
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
+
+  if (!node) {
+    NS_ERROR("null or non-DOM node passed to HandleImagePLEvent!");
+
+    return;
+  }
+
+  nsCOMPtr<nsIDOMDocument> dom_doc;
+  node->GetOwnerDocument(getter_AddRefs(dom_doc));
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
+
+  if (!doc) {
+    return;
+  }
+
+  nsCOMPtr<nsIPresShell> pres_shell;
+  doc->GetShellAt(0, getter_AddRefs(pres_shell));
+
+  if (!pres_shell) {
+    return;
+  }
+
+  nsCOMPtr<nsIPresContext> pres_context;
+  pres_shell->GetPresContext(getter_AddRefs(pres_context));
+
+  if (!pres_context) {
+    return;
+  }
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = aMessage;
+
+  aContent->HandleDOMEvent(pres_context, &event, nsnull, aFlags, &status);
+}
+
+static void PR_CALLBACK
+HandleImageOnloadPLEvent(PLEvent *aEvent)
+{
+  nsIContent *content = (nsIContent *)PL_GetEventOwner(aEvent);
+
+  HandleImagePLEvent(content, NS_IMAGE_LOAD,
+                     NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CANT_BUBBLE);
+
+  NS_RELEASE(content);
+}
+
+static void PR_CALLBACK
+HandleImageOnerrorPLEvent(PLEvent *aEvent)
+{
+  nsIContent *content = (nsIContent *)PL_GetEventOwner(aEvent);
+
+  HandleImagePLEvent(content, NS_IMAGE_ERROR, NS_EVENT_FLAG_INIT);
+
+  NS_RELEASE(content);
+}
+
+static void PR_CALLBACK
+DestroyImagePLEvent(PLEvent* aEvent)
+{
+  delete aEvent;
+}
+
+// Fire off a PLEvent that'll asynchronously call the image elements
+// onload handler once handled. This is needed since the image library
+// can't decide if it wants to call it's observer methods
+// synchronously or asynchronously. If an image is loaded from the
+// cache the notifications come back synchronously, but if the image
+// is loaded from the netswork the notifications come back
+// asynchronously.
+
+void
+nsImageFrame::FireDOMEvent(PRUint32 aMessage)
+{
+  static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
+
+  nsCOMPtr<nsIEventQueueService> event_service =
+    do_GetService(kEventQueueServiceCID);
+
+  if (!event_service) {
+    NS_WARNING("Failed to get event queue service");
+
+    return;
+  }
+
+  nsCOMPtr<nsIEventQueue> event_queue;
+
+  event_service->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                     getter_AddRefs(event_queue));
+
+  if (!event_queue) {
+    NS_WARNING("Failed to get event queue from service");
+
+    return;
+  }
+
+  PLEvent *event = new PLEvent;
+
+  if (!event) {
+    // Out of memory, but none of our callers care, so just warn and
+    // don't fire the event
+
+    NS_WARNING("Out of memory?");
+
+    return;
+  }
+
+  PLHandleEventProc f;
+
+  switch (aMessage) {
+  case NS_IMAGE_LOAD :
+    f = (PLHandleEventProc)::HandleImageOnloadPLEvent;
+
+    break;
+  case NS_IMAGE_ERROR :
+    f = (PLHandleEventProc)::HandleImageOnerrorPLEvent;
+
+    break;
+  default:
+    NS_WARNING("Huh, I don't know how to fire this type of event?!");
+
+    return;
+  }
+
+  PL_InitEvent(event, mContent, f, (PLDestroyEventProc)::DestroyImagePLEvent);
+
+  // The event owns the content pointer now.
+  NS_ADDREF(mContent);
+
+  event_queue->PostEvent(event);
+}
+
+
 NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *aPresContext, nsresult aStatus, const PRUnichar *aStatusArg)
 {
   nsCOMPtr<nsIPresShell> presShell;
@@ -394,20 +536,12 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
   if (presShell) {
     if (imageFailedToLoad) {
       // Send error event
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_IMAGE_ERROR;
-      presShell->HandleEventWithTarget(&event,this,mContent,NS_EVENT_FLAG_INIT,&status);
+      FireDOMEvent(NS_IMAGE_ERROR);
     } else if (mCanSendLoadEvent) {
       // Send load event
       mCanSendLoadEvent = PR_FALSE;
 
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_IMAGE_LOAD;
-      presShell->HandleEventWithTarget(&event,this,mContent,NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CANT_BUBBLE,&status);
+      FireDOMEvent(NS_IMAGE_LOAD);
     }
   }
 

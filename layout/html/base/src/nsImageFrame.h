@@ -177,6 +177,8 @@ protected:
   inline void GetBaseURI(nsIURI **uri);
   inline void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup);
 
+  void FireDOMEvent(PRUint32 aMessage);
+
   nsImageMap*         mImageMap;
 
   nsCOMPtr<imgIRequest> mImageRequest;
