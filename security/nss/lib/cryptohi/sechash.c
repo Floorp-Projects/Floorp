@@ -87,6 +87,21 @@ sha1_NewContext(void) {
 	return (void *) PK11_CreateDigestContext(SEC_OID_SHA1);
 }
 
+static void *
+sha256_NewContext(void) {
+	return (void *) PK11_CreateDigestContext(SEC_OID_SHA256);
+}
+
+static void *
+sha384_NewContext(void) {
+	return (void *) PK11_CreateDigestContext(SEC_OID_SHA384);
+}
+
+static void *
+sha512_NewContext(void) {
+	return (void *) PK11_CreateDigestContext(SEC_OID_SHA512);
+}
+
 const SECHashObject SECHashObjects[] = {
   { 0,
     (void * (*)(void)) null_hash_new_context,
@@ -117,6 +132,33 @@ const SECHashObject SECHashObjects[] = {
   },
   { SHA1_LENGTH,
     (void * (*)(void)) sha1_NewContext,
+    (void * (*)(void *)) PK11_CloneContext,
+    (void (*)(void *, PRBool)) PK11_DestroyContext,
+    (void (*)(void *)) PK11_DigestBegin,
+    (void (*)(void *, const unsigned char *, unsigned int)) PK11_DigestOp,
+    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) 
+							PK11_DigestFinal
+  },
+  { SHA256_LENGTH,
+    (void * (*)(void)) sha256_NewContext,
+    (void * (*)(void *)) PK11_CloneContext,
+    (void (*)(void *, PRBool)) PK11_DestroyContext,
+    (void (*)(void *)) PK11_DigestBegin,
+    (void (*)(void *, const unsigned char *, unsigned int)) PK11_DigestOp,
+    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) 
+							PK11_DigestFinal
+  },
+  { SHA384_LENGTH,
+    (void * (*)(void)) sha384_NewContext,
+    (void * (*)(void *)) PK11_CloneContext,
+    (void (*)(void *, PRBool)) PK11_DestroyContext,
+    (void (*)(void *)) PK11_DigestBegin,
+    (void (*)(void *, const unsigned char *, unsigned int)) PK11_DigestOp,
+    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) 
+							PK11_DigestFinal
+  },
+  { SHA512_LENGTH,
+    (void * (*)(void)) sha512_NewContext,
     (void * (*)(void *)) PK11_CloneContext,
     (void (*)(void *, PRBool)) PK11_DestroyContext,
     (void (*)(void *)) PK11_DigestBegin,
