@@ -59,6 +59,10 @@ public:
 
   NS_IMETHOD    PrintPreview()=0;
 
+  NS_IMETHOD    Copy()=0;
+
+  NS_IMETHOD    Print()=0;
+
   NS_IMETHOD    Close()=0;
 
   NS_IMETHOD    Exit()=0;
@@ -82,6 +86,8 @@ public:
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    NewWindow();  \
   NS_IMETHOD    PrintPreview();  \
+  NS_IMETHOD    Copy();  \
+  NS_IMETHOD    Print();  \
   NS_IMETHOD    Close();  \
   NS_IMETHOD    Exit();  \
   NS_IMETHOD    SetDisableCallback(const nsString& aScript);  \
@@ -102,6 +108,8 @@ public:
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to##SetWebShellWindow(aWin); }  \
   NS_IMETHOD    NewWindow() { return _to##NewWindow(); }  \
   NS_IMETHOD    PrintPreview() { return _to##PrintPreview(); }  \
+  NS_IMETHOD    Copy() { return _to##Copy(); }  \
+  NS_IMETHOD    Print() { return _to##Print(); }  \
   NS_IMETHOD    Close() { return _to##Close(); }  \
   NS_IMETHOD    Exit() { return _to##Exit(); }  \
   NS_IMETHOD    SetDisableCallback(const nsString& aScript) { return _to##SetDisableCallback(aScript); }  \

@@ -20,6 +20,8 @@ interface BrowserAppCore : BaseAppCore
 
 	void newWindow();
 	void printPreview();
+	void copy();
+	void print();
 	void close();
 	void exit();
 
