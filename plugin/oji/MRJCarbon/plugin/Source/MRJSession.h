@@ -45,7 +45,9 @@
 #pragma once
 
 #include <jni.h>
-#include "JManager.h"
+
+#include <vector>
+#include <stringfwd>
 
 class NativeMessage {
 public:
@@ -71,7 +73,8 @@ public:
 	MRJSession();
 	virtual ~MRJSession();
 	
-	JMSessionRef getSessionRef();
+	OSStatus open();
+	OSStatus close();
 	
 	JNIEnv* getCurrentEnv();
 	JNIEnv* getMainEnv();
@@ -88,7 +91,7 @@ public:
 	void setStatus(OSStatus status);
 	OSStatus getStatus();
 	
-	void idle(UInt32 milliseconds = kDefaultJMTime);
+	void idle(UInt32 milliseconds = 0x00000400);
 
 	void sendMessage(NativeMessage* message, Boolean async = false);
 	
@@ -102,9 +105,12 @@ private:
 	void postMessage(NativeMessage* message);
 	void dispatchMessage();
 	
+	std::string getClassPath();
+	
 private:
-	JMSessionRef mSession;
 	OSStatus mStatus;
+	
+	std::vector<FSSpec> mClassPath;
 
 	JNIEnv* mMainEnv;
 	JavaVM* mJavaVM;
