@@ -174,7 +174,6 @@ nsGfxCheckboxControlFrame :: GetCheckboxState ( )
   return mChecked;
 }
 
-
 void 
 nsGfxCheckboxControlFrame :: SetCheckboxState ( nsCheckboxControlFrame::CheckState aValue )
 {
@@ -182,3 +181,16 @@ nsGfxCheckboxControlFrame :: SetCheckboxState ( nsCheckboxControlFrame::CheckSta
   nsFormControlHelper::ForceDrawFrame(this);
 }
 
+#ifdef DEBUG_rods
+NS_IMETHODIMP 
+nsGfxCheckboxControlFrame::Reflow(nsIPresContext&          aPresContext, 
+                                  nsHTMLReflowMetrics&     aDesiredSize,
+                                  const nsHTMLReflowState& aReflowState, 
+                                  nsReflowStatus&          aStatus)
+{
+  nsresult rv = nsNativeFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+  COMPARE_QUIRK_SIZE("nsGfxCheckboxControlFrame", 13, 13) 
+  return rv;
+}
+#endif

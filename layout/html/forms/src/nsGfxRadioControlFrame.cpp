@@ -168,3 +168,17 @@ void nsGfxRadioControlFrame::SetRadioState(PRBool aValue)
   mChecked = aValue;
 	nsFormControlHelper::ForceDrawFrame(this);
 }
+
+#ifdef DEBUG_rods
+NS_IMETHODIMP 
+nsGfxRadioControlFrame::Reflow(nsIPresContext&          aPresContext, 
+                               nsHTMLReflowMetrics&     aDesiredSize,
+                               const nsHTMLReflowState& aReflowState, 
+                               nsReflowStatus&          aStatus)
+{
+  nsresult rv = nsNativeFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+  COMPARE_QUIRK_SIZE("nsGfxRadioControlFrame", 12, 11) 
+  return rv;
+}
+#endif
