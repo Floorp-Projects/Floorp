@@ -348,74 +348,52 @@ treechildren::-moz-tree-image(subjectCol, replied) {
 
 }
 
-
-
 treechildren::-moz-tree-image(subjectCol, replied, read) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-mail-replied-read.png");
-
 }
-
-
 
 treechildren::-moz-tree-image(subjectCol, replied, forwarded) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-mail-replied-forw.png");
-
 }
-
-
 
 treechildren::-moz-tree-image(subjectCol, replied, forwarded,read) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-mail-replied-forw-read.png");
-
 }
-
 
 
 /* IMPORTANT: make sure the imap-deleted column always comes after the replied/forwarded style rules.
-
    This ensures that we show that the message is marked as deleted over status information. */
 
-
-
 treechildren::-moz-tree-image(subjectCol, imapdeleted) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.png");
-
 }
-
-
 
 /* IMPORTANT: make sure our style rules for news articles always come after the message replied/forward style rules.
-
    This ensures that we show news post artwork even when the article is replied to. We could probably also fix this
-
    by adding more qualifiers to our CSS */
 
-
-
 treechildren::-moz-tree-image(subjectCol, news) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-news.png");
-
 }
 
+treechildren::-moz-tree-image(subjectCol, news, forwarded) {
+  list-style-image: url("chrome://messenger/skin/icons/message-news-forwarded.png");
+}
 
+treechildren::-moz-tree-image(subjectCol, news, replied) {
+  list-style-image: url("chrome://messenger/skin/icons/message-news-replied.png");
+}
+
+treechildren::-moz-tree-image(subjectCol, news, replied, forwarded) {
+  list-style-image: url("chrome://messenger/skin/icons/message-news-replied-forw.png");
+}
 
 treechildren::-moz-tree-image(subjectCol, news, attach, offline) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-news-attach-offl.gif");
-
 }
 
-
-
 treechildren::-moz-tree-image(subjectCol, news, new) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-news-new.png");
-
 }
 
 
