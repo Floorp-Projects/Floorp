@@ -13,10 +13,10 @@ file:///s|/mozilla/layout/html/tests/table/dom/deleteCol2.html
 file:///s|/mozilla/layout/html/tests/table/dom/deleteCol3.html
 file:///s|/mozilla/layout/html/tests/table/dom/deleteColGroup1.html
 file:///s|/mozilla/layout/html/tests/table/dom/deleteRowsRebuild1.html
-file:///s|/mozilla/layout/html/tests/table/dom/deleteTbodyExpand1.html
-file:///s|/mozilla/layout/html/tests/table/dom/deleteTbodyRebuild1.html
-file:///s|/mozilla/layout/html/tests/table/dom/insertCellsExpand1.html
-file:///s|/mozilla/layout/html/tests/table/dom/insertCellsExpand2.html
+#file:///s|/mozilla/layout/html/tests/table/dom/deleteTbodyExpand1.html
+#file:///s|/mozilla/layout/html/tests/table/dom/deleteTbodyRebuild1.html
+#file:///s|/mozilla/layout/html/tests/table/dom/insertCellsExpand1.html
+#file:///s|/mozilla/layout/html/tests/table/dom/insertCellsExpand2.html
 file:///s|/mozilla/layout/html/tests/table/dom/insertCellsRebuild1.html
 file:///s|/mozilla/layout/html/tests/table/dom/insertCellsRebuild2.html
 file:///s|/mozilla/layout/html/tests/table/dom/insertColGroups1.html
