@@ -429,14 +429,14 @@ static PRBool DecimalToText(PRInt32 ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
-   result.AppendWithConversion(cbuf);
+   result.AppendASCII(cbuf);
    return PR_TRUE;
 }
 static PRBool DecimalLeadingZeroToText(PRInt32 ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%02ld", ordinal);
-   result.AppendWithConversion(cbuf);
+   result.AppendASCII(cbuf);
    return PR_TRUE;
 }
 static PRBool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& result)

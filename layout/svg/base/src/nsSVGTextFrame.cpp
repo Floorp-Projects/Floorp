@@ -302,9 +302,7 @@ nsSVGTextFrame::AttributeChanged(nsIPresContext* aPresContext,
   printf("** nsSVGTextFrame::AttributeChanged(");
   nsAutoString str;
   aAttribute->ToString(str);
-  nsCAutoString cstr;
-  cstr.AssignWithConversion(str);
-  printf(cstr.get());
+  printf(NS_ConvertUTF16toUTF8(str).get());
   printf(")\n");
 #endif
   

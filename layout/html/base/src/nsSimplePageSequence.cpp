@@ -587,7 +587,7 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
   // Now go get the Localized Page Formating String
   nsresult rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, NS_ConvertUTF8toUCS2(aPropName).get(), pageNumberFormat);
   if (NS_FAILED(rv)) { // back stop formatting
-    pageNumberFormat.AssignWithConversion(aDefPropVal);
+    pageNumberFormat.AssignASCII(aDefPropVal);
   }
 
   // Sets the format into a static data memeber which will own the memory and free it

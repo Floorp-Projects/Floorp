@@ -102,7 +102,7 @@ nsBox::ListBox(nsAutoString& aResult)
     char addr[100];
     sprintf(addr, "[@%p] ", NS_STATIC_CAST(void*, frame));
 
-    aResult.AppendWithConversion(addr);
+    aResult.AppendASCII(addr);
     aResult.Append(name);
     aResult.AppendLiteral(" ");
 
