@@ -349,8 +349,7 @@ public class IRFactory {
         cond.addChildToBack(new Node(Token.PRIMARY, Token.NULL));
         Node newBody = new Node(Token.BLOCK);
         Node assign = (Node) createAssignment(Token.NOP, lvalue,
-                                              createUseTemp(temp), null,
-                                              false);
+                                              createUseTemp(temp));
         newBody.addChildToBack(new Node(Token.POP, assign));
         newBody.addChildToBack((Node) body);
         Node result = (Node) createWhile(cond, newBody, lineno);
@@ -808,15 +807,17 @@ public class IRFactory {
     public Object createBinary(int nodeType, int nodeOp, Object left,
                                Object right)
     {
-        if (nodeType == Token.ASSIGN) {
-            return createAssignment(nodeOp, (Node) left, (Node) right,
-                                    null, false);
-        }
         return new Node(nodeType, (Node) left, (Node) right, nodeOp);
     }
 
-    public Object createAssignment(int nodeOp, Node left, Node right,
-                                   Class convert, boolean postfix)
+    public Object createAssignment(int assignOp, Object left, Object right)
+    {
+        return createAssignment(assignOp, (Node) left, (Node) right,
+                                null, false);
+    }
+
+    private Node createAssignment(int nodeOp, Node left, Node right,
+                                  Class convert, boolean postfix)
     {
         int nodeType = left.getType();
         String idString;
@@ -851,8 +852,8 @@ public class IRFactory {
         return result;
     }
 
-    private Object createSetName(int nodeOp, Node left, Node right,
-                                 Class convert, boolean postfix)
+    private Node createSetName(int nodeOp, Node left, Node right,
+                               Class convert, boolean postfix)
     {
         if (nodeOp == Token.NOP) {
             left.setType(Token.BINDNAME);

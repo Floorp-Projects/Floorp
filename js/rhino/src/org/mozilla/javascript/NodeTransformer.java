@@ -357,9 +357,8 @@ public class NodeTransformer {
                         continue;
                     Node init = n.getFirstChild();
                     n.removeChild(init);
-                    Node asn = (Node) irFactory.createAssignment(
-                                        Token.NOP, n, init, null,
-                                        false);
+                    Node asn = (Node)irFactory.createAssignment(
+                                        Token.NOP, n, init);
                     Node pop = new Node(Token.POP, asn, node.getLineno());
                     result.addChildToBack(pop);
                 }

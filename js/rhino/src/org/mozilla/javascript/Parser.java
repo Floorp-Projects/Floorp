@@ -313,7 +313,7 @@ class Parser {
         } else {
             pn = nf.initFunction(fnNode, functionIndex, body,
                                  FunctionNode.FUNCTION_EXPRESSION);
-            pn = nf.createBinary(Token.ASSIGN, Token.NOP, memberExprNode, pn);
+            pn = nf.createAssignment(Token.NOP, memberExprNode, pn);
             if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
                 pn = nf.createExprStatement(pn, baseLineno);
             }
@@ -894,8 +894,7 @@ class Parser {
             // omitted: "invalid assignment left-hand side" check.
             int op = ts.getOp();
             decompiler.addOp(Token.ASSIGN, op);
-            pn = nf.createBinary(Token.ASSIGN, op, pn,
-                                 assignExpr(ts, inForInit));
+            pn = nf.createAssignment(op, pn, assignExpr(ts, inForInit));
         }
 
         return pn;
