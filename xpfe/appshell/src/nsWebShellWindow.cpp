@@ -1169,6 +1169,7 @@ nsWebShellWindow::SetPersistenceTimer(PRBool aSize, PRBool aPosition, PRBool aMo
     nsresult rv;
     mSPTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_SUCCEEDED(rv)) {
+      NS_ADDREF_THIS(); // for the timer, which holds a reference to this window
       mSPTimer->InitWithFuncCallback(FirePersistenceTimer, this,
                                      SIZE_PERSISTENCE_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
       mSPTimerSize = aSize;
@@ -1653,6 +1654,7 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
     mSPTimer->Cancel();
     mSPTimer = nsnull;
     PersistPositionAndSize(mSPTimerPosition, mSPTimerSize, mSPTimerMode);
+    NS_RELEASE_THIS(); // the timer held a reference to us
   }
   PR_Unlock(mSPTimerLock);
 
