@@ -69,7 +69,7 @@ interface nsIPK11Token : nsISupports
   void changePassword(in wstring oldPassword, in wstring newPassword);
   long getAskPasswordTimes();
   long getAskPasswordTimeout();
-  void setAskPasswordDefaults(in long askTimes, in long timeout);
+  void setAskPasswordDefaults([const] in long askTimes, [const] in long timeout);
 
   /*
    * Other attributes
