@@ -333,7 +333,7 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
 {
   NS_PRECONDITION(nsnull != mFirstChild, "no children");
 
-  nsSize      kidMaxElementSize;
+  nsSize      kidMaxElementSize(0,0);
   PRBool      result = PR_TRUE;
   PRInt32     prevColIndex = -1;       // remember the col index of the previous cell to handle rowspans into this row
   nsSize*     pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ?
