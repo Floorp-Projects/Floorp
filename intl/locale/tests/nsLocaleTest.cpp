@@ -20,8 +20,8 @@
 #include "nsILocaleFactory.h"
 #include "nsLocaleCID.h"
 #include "nsRepository.h"
-#include "nsIWin32Locale.h"
 #ifdef XP_PC
+#include "nsIWin32Locale.h"
 #include <windows.h>
 #endif
 
