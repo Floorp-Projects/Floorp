@@ -24,6 +24,7 @@
 class nsSampleWordBreaker : public nsIWordBreaker
 {
   NS_DECL_ISUPPORTS
+public:
 
   nsSampleWordBreaker() ;
   ~nsSampleWordBreaker() ;
@@ -32,6 +33,7 @@ class nsSampleWordBreaker : public nsIWordBreaker
                             const PRUnichar* aText2 , PRUint32 aTextLen2,
                             PRBool *oCanBreak);
   NS_IMETHOD PostionToBoundary(const PRUnichar* aText1 , PRUint32 aTextLen1,
+                                      PRUint32 aOffset,
                                       PRUint32 *oWordBegin,
                                       PRUint32 *oWordEnd);
 
@@ -46,6 +48,11 @@ class nsSampleWordBreaker : public nsIWordBreaker
   NS_IMETHOD FirstBackwardConnect(nsIBreakState* state) ; 
   NS_IMETHOD NextBackwardConnect (nsIBreakState* state) ; 
 #endif 
+
+protected:
+  PRUint8  GetClass(PRUnichar aChar);
+  PRUint32 Next(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
+
 
 };
 

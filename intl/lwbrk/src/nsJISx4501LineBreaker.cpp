@@ -188,9 +188,9 @@ PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
    else if( 0x0030 == h)
    {
      c = GETCLASSFROMTABLE(gLBClass30, l);
-   } else if (( ( 0x3200 <= h) && ( h <= 0x3300) ) ||
-              ( ( 0x4e00 <= h) && ( h <= 0x9f00) ) ||
-              ( ( 0xf900 <= h) && ( h <= 0xfa00) ) 
+   } else if (( ( 0x3200 <= h) && ( h <= 0x33ff) ) ||
+              ( ( 0x4e00 <= h) && ( h <= 0x9fff) ) ||
+              ( ( 0xf900 <= h) && ( h <= 0xfaff) ) 
              )
    { 
      c = 5; // CJK charcter, Han, and Han Compatability
@@ -230,6 +230,10 @@ NS_IMPL_ISUPPORTS(nsJISx4501LineBreaker, kILineBreakerIID);
 
 nsresult nsJISx4501LineBreaker::FirstForwardBreak   (nsIBreakState* state) 
 {
+  NS_PRECONDITION( nsnull != state, "null ptr");
+  if(nsnull == state )
+    return NS_ERROR_NULL_POINTER;
+
   nsresult res;
 
   PRUint32 len;
@@ -254,6 +258,10 @@ nsresult nsJISx4501LineBreaker::FirstForwardBreak   (nsIBreakState* state)
 }
 nsresult nsJISx4501LineBreaker::NextForwardBreak    (nsIBreakState* state)
 {
+  NS_PRECONDITION( nsnull != state, "null ptr");
+  if(nsnull == state )
+    return NS_ERROR_NULL_POINTER;
+
   PRBool done;
   nsresult res;
   res = state->IsDone(&done);
