@@ -33,7 +33,6 @@ include $(topsrcdir)/config/config.mk
 
 LIBS = \
 	-lxpcom \
-	-lreg \
 	$(NSPR_LIBS) \
 	$(NULL)
 
