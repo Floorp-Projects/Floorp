@@ -67,10 +67,11 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  NS_IMETHOD Stretch(nsIPresContext&    aPresContext,
-                     nsStretchDirection aStretchDirection,
-                     nsCharMetrics&     aContainerSize,
-                     nsCharMetrics&     aDesiredStretchSize);
+  NS_IMETHOD Stretch(nsIPresContext&      aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     nsStretchDirection   aStretchDirection,
+                     nsCharMetrics&       aContainerSize,
+                     nsCharMetrics&       aDesiredStretchSize);
   NS_IMETHOD
   GetPresentationData(PRInt32* aScriptLevel, 
                       PRBool*  aDisplayStyle);
@@ -105,6 +106,8 @@ public:
          nsReflowStatus&          aStatus);
 
   // helper method for altering the style contexts of subscript/superscript elements
+  // XXX this is pretty much a hack until the content model caters for MathML and
+  // the style system has some provisions for MathML
 
   NS_IMETHOD
   InsertScriptLevelStyleContext(nsIPresContext& aPresContext);
@@ -126,6 +129,31 @@ protected:
   PRBool mDisplayStyle;  // displaystyle="false" is intended to slightly alter how the
                          // rendering is done in inline mode.
 
+  virtual PRIntn GetSkipSides() const { return 0; }
+};
+
+// XXX hack until the content model caters for MathML and the style system 
+// has some provisions for MathML
+class nsMathMLWrapperFrame : public nsMathMLContainerFrame {
+public:
+  friend nsresult NS_NewMathMLWrapperFrame(nsIFrame** aNewFrame);
+
+  NS_IMETHOD Stretch(nsIPresContext&      aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     nsStretchDirection   aStretchDirection,
+                     nsCharMetrics&       aContainerSize,
+                     nsCharMetrics&       aDesiredStretchSize);
+
+  NS_IMETHOD
+  Reflow(nsIPresContext&          aPresContext,
+         nsHTMLReflowMetrics&     aDesiredSize,
+         const nsHTMLReflowState& aReflowState,
+         nsReflowStatus&          aStatus);
+
+protected:
+  nsMathMLWrapperFrame();
+  virtual ~nsMathMLWrapperFrame();
+  
   virtual PRIntn GetSkipSides() const { return 0; }
 };
 

@@ -46,6 +46,7 @@ CPPSRCS=          nsMathMLChar.cpp                      \
                   nsMathMLmunderoverFrame.cpp		\
                   nsMathMLmpaddedFrame.cpp		\
                   nsMathMLmstyleFrame.cpp		\
+                  nsMathMLmsqrtFrame.cpp		\
                   $(NULL)
 
 CPP_OBJS= .\$(OBJDIR)\nsMathMLChar.obj		        \
@@ -66,6 +67,7 @@ CPP_OBJS= .\$(OBJDIR)\nsMathMLChar.obj		        \
           .\$(OBJDIR)\nsMathMLmunderoverFrame.obj	\
           .\$(OBJDIR)\nsMathMLmpaddedFrame.obj		\
           .\$(OBJDIR)\nsMathMLmstyleFrame.obj		\
+          .\$(OBJDIR)\nsMathMLmsqrtFrame.obj		\
           $(NULL)
 
 EXPORTS =					\

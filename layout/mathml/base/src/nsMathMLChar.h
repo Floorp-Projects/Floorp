@@ -25,6 +25,7 @@
 #include "nsMathMLOperators.h"
 
 typedef PRUint32 nsStretchDirection;
+enum nsMathMLCharEnum;
 
 #define NS_STRETCH_DIRECTION_HORIZONTAL   0
 #define NS_STRETCH_DIRECTION_VERTICAL     1
@@ -35,12 +36,12 @@ struct nsCharMetrics {
   nscoord descent, ascent;
   nscoord width, height;
 
-  nsCharMetrics(nscoord Descent=0, nscoord Ascent=0, 
-                nscoord Width=0, nscoord Height=0) {
-    width = Width; 
-    height = Height;
-    ascent = Ascent; 
-    descent = Descent;
+  nsCharMetrics(nscoord aDescent=0, nscoord aAscent=0, 
+                nscoord aWidth=0, nscoord aHeight=0) {
+    width = aWidth; 
+    height = aHeight;
+    ascent = aAscent; 
+    descent = aDescent;
   }
 
   nsCharMetrics(const nsCharMetrics& aCharMetrics) {
@@ -78,41 +79,75 @@ struct nsCharMetrics {
 class nsMathMLChar
 {
 public:
+  // constructor and destructor
+  nsMathMLChar()
+  {
+  }
+
+/*
+  nsMathMLChar() : mData(),
+                   mGlyph(0)
+  {
+    nsStr::Initialize(mData, eTwoByte); // with MathML, we are two-byte by default
+  }
+*/
+
+  virtual ~nsMathMLChar()
+  {
+  }
+ 
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   nsIStyleContext*     aStyleContext,
-                   const nsPoint&       aOffset);
+                   nsIStyleContext*     aStyleContext);
 
   // This is the method called to ask the char to stretch itself.
   // aDesiredStretchSize is an IN/OUT parameter.
   // On input  - it contains our current size.
   // On output - the same size or the new size that we want.
-  NS_IMETHOD Stretch(nsIPresContext&    aPresContext,
-                     nsIStyleContext*   aStyleContext,
-                     nsStretchDirection aStretchDirection,
-                     nsCharMetrics&     aContainerSize,
-                     nsCharMetrics&     aDesiredStretchSize);
+  NS_IMETHOD Stretch(nsIPresContext&      aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     nsIStyleContext*     aStyleContext,
+                     nsStretchDirection   aStretchDirection,
+                     nsCharMetrics&       aContainerSize,
+                     nsCharMetrics&       aDesiredStretchSize);
 
   void SetData(nsString& aData)
   {
     mData = aData;
+    SetEnum();
   }
 
   void GetData(nsString& aData) {
     aData = mData;
   }
 
-  // constructor and destructor
-  nsMathMLChar()
-  {
+  void
+  GetRect(nsRect& aRect) {
+    aRect = mRect;
   }
 
-  virtual ~nsMathMLChar()
-  {
+  void
+  SetRect(const nsRect& aRect) {
+    mRect = aRect;
   }
 
-protected:
-  nsString  mData;
+private:
+  nsString         mData;
+  PRUnichar        mGlyph;
+  nsRect           mRect;
+  PRInt32          mDirection;
+  nsMathMLCharEnum mEnum;
+
+  // helper methods
+  void             
+  SetEnum();
+
+  static void
+  DrawChar(nsIRenderingContext& aRenderingContext, 
+           PRUnichar            aChar, 
+           nscoord              aX,
+           nscoord              aY,
+           nsRect&              aClipRect);
 };
 
 #endif /* nsMathMLChar_h___ */
