@@ -129,8 +129,11 @@
     <handlers>
       <handler event="click" button="0">
         <![CDATA[
-            if (event.target.localName == "radio" && !event.target.disabled)
-              this.selectedItem = event.target;
+            
+              if (event.target.localName == "radio" && 
+                  event.target.getAttribute("group") == this.id && // nested radiogroups?
+                  !event.target.disabled) 
+                this.selectedItem = event.target;
 
          ]]>
       </handler>
