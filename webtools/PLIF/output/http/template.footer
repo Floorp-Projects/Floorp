@@ -17,7 +17,7 @@ TemplateToolkit
    </p>
 
    <pre>
-    [%- INCLUDE debug.dumpVars | html %]
+[% INCLUDE debug.dumpVars | html %]
    </pre>
   </div>
  </body>
