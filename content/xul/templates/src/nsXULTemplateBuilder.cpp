@@ -2082,6 +2082,10 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
     // "containment" arcs out of the element's resource.
     nsresult rv;
 
+	// set the empty attribute to false even if the container is closed
+	nsAutoString		emptyVal("false");
+	aElement->SetAttribute(kNameSpaceID_None, kEmptyAtom, emptyVal, PR_TRUE);
+
     // See if the item is even "open". If not, then just pretend it
     // doesn't have _any_ contents. We check this _before_ checking
     // the contents-generated attribute so that we don't eagerly set
