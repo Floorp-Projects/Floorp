@@ -29,12 +29,28 @@ ConnectToDatabase();
 
 if ($::FORM{'GoAheadAndLogIn'}) {
     confirm_login();
+} else {
+    quietly_check_login();
 }
+
+######################################################################
+# Begin Data/Security Validation
+######################################################################
+
+# Make sure the bug ID is a positive integer representing an existing
+# bug that the user is authorized to access.
+if (defined ($::FORM{'id'})) {
+    ValidateBugID($::FORM{'id'});
+}
+
+######################################################################
+# End Data/Security Validation
+######################################################################
 
 print "Content-type: text/html\n";
 print "\n";
 
-if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+\s*$/) {
+if (!defined $::FORM{'id'}) {
     PutHeader("Search by bug number");
     print "<FORM METHOD=GET ACTION=\"show_bug.cgi\">\n";
     print "You may find a single bug by entering its bug id here: \n";
@@ -47,14 +63,13 @@ if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+\s*$/) {
 
 GetVersionTable();
 
-SendSQL("select short_desc, groupset from bugs where bug_id = $::FORM{'id'}");
-my ($summary, $groupset) = FetchSQLData();
-if( $summary && $groupset == 0) {
-    $summary = html_quote($summary);
-    PutHeader("Bug $::FORM{'id'} - $summary", "Bugzilla Bug $::FORM{'id'}", $summary );
-}else {
-    PutHeader("Bugzilla bug $::FORM{'id'}", "Bugzilla Bug", $::FORM{'id'});
-}
+# Get the bug's summary (short description) and display it as
+# the page title.
+SendSQL("SELECT short_desc FROM bugs WHERE bug_id = $::FORM{'id'}");
+my ($summary) = FetchSQLData();
+$summary = html_quote($summary);
+PutHeader("Bug $::FORM{'id'} - $summary", "Bugzilla Bug $::FORM{'id'}", $summary );
+
 navigation_header();
 
 print "<HR>\n";

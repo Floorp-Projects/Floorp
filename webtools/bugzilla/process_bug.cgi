@@ -58,19 +58,33 @@ my $requiremilestone = 0;
 # named "id_x" where "x" is the bug number.
 my @idlist;
 if (defined $::FORM{'id'}) {
-  push @idlist, $::FORM{'id'};
+    push @idlist, $::FORM{'id'};
 } else {
-  foreach my $i (keys %::FORM) {
-    if ($i =~ /^id_([1-9][0-9]*)/) {
-      push @idlist, $1;
+    foreach my $i (keys %::FORM) {
+        if ($i =~ /^id_([1-9][0-9]*)/) {
+            push @idlist, $1;
+        }
     }
-  }
 }
 
 # For each bug being modified, make sure its ID is a valid bug number 
 # representing an existing bug that the user is authorized to access.
 foreach my $id (@idlist) {
-  ValidateBugID($id);
+    ValidateBugID($id);
+}
+
+# If the user has a bug list and is processing one bug, then after
+# we process the bug we are going to show them the next bug on their
+# list.  Thus we have to make sure this bug ID is also valid,
+# since a malicious cracker might alter their cookies for the purpose
+# gaining access to bugs they are not authorized to access.
+if ( $::COOKIE{"BUGLIST"} ne "" && defined $::FORM{'id'} ) {
+    my @buglist = split( /:/ , $::COOKIE{"BUGLIST"} );
+    my $idx = lsearch( \@buglist , $::FORM{"id"} );
+    if ($idx < $#buglist) {
+        my $nextbugid = $buglist[$idx + 1];
+        ValidateBugID($nextbugid);
+    }
 }
 
 ######################################################################

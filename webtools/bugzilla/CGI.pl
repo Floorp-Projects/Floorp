@@ -227,52 +227,70 @@ sub CheckFormFieldDefined (\%$) {
 }
 
 sub ValidateBugID {
-  # Validates and verifies a bug ID, making sure the number is a 
-  # positive integer, that it represents an existing bug in the
-  # database, and that the user is authorized to access that bug.
+    # Validates and verifies a bug ID, making sure the number is a 
+    # positive integer, that it represents an existing bug in the
+    # database, and that the user is authorized to access that bug.
 
-  my ($id) = @_;
+    my ($id) = @_;
 
-  # Make sure the bug number is a positive integer.
-  $id =~ /^([1-9][0-9]*)$/
-    || DisplayError("The bug number is invalid.") 
-    && exit;
+    # Make sure the bug number is a positive integer.
+    $id =~ /^([1-9][0-9]*)$/
+      || DisplayError("The bug number is invalid.") 
+      && exit;
 
-  # Make sure the usergroupset variable is set.  This variable stores
-  # the set of groups the user is a member of.  This variable should
-  # be set by either confirm_login or quietly_check_login, but we set
-  # it here just in case one of those functions has not been run yet.
-  $::usergroupset ||= 0;
+    # Get the values of the usergroupset and userid global variables
+    # and write them to local variables for use within this function,
+    # setting those local variables to the default value of zero if
+    # the global variables are undefined.
 
-  # Query the database for the bug, retrieving a boolean value that
-  # represents whether or not the user is authorized to access the bug.  
+    # "usergroupset" stores the set of groups the user is a member of,
+    # while "userid" stores the user's unique ID.  These variables are
+    # set globally by either confirm_login() or quietly_check_login(),
+    # one of which should be run before calling this function; otherwise
+    # this function will treat the user as if they were not logged in
+    # and throw an error if they try to access a bug that requires
+    # permissions/authorization to access.
+    my $usergroupset = $::usergroupset || 0;
+    my $userid = $::userid || 0;
 
-  # Users are authorized to access bugs if they are a member of all 
-  # groups to which the bug is restricted.  User group membership and 
-  # bug restrictions are stored as bits within bitsets, so authorization
-  # can be determined by comparing the intersection of the user's
-  # bitset with the bug's bitset.  If the result matches the bug's bitset
-  # the user is a member of all groups to which the bug is restricted
-  # and is authorized to access the bug.
-  
-  # Bit arithmetic is performed by MySQL instead of Perl because bitset
-  # fields in the database are 64 bits wide (BIGINT), and Perl installations
-  # may or may not support integers larger than 32 bits.  Using bitsets
-  # and doing bitset arithmetic is probably not cross-database compatible,
-  # however, so these mechanisms are likely to change in the future.
-  SendSQL("SELECT ((groupset & $::usergroupset) = groupset) 
-           FROM bugs WHERE bug_id = $id");
-  
-  # Make sure the bug exists in the database.
-  MoreSQLData()
-    || DisplayError("Bug #$id does not exist.")
-    && exit;
+    # Query the database for the bug, retrieving a boolean value that
+    # represents whether or not the user is authorized to access the bug.  
 
-  # Make sure the user is authorized to access the bug.
-  my ($isauthorized) = FetchSQLData();
-  $isauthorized
-    || DisplayError("You are not authorized to access bug #$id.")
-    && exit;
+    # Users are authorized to access bugs if they are a member of all 
+    # groups to which the bug is restricted.  User group membership and 
+    # bug restrictions are stored as bits within bitsets, so authorization
+    # can be determined by comparing the intersection of the user's
+    # bitset with the bug's bitset.  If the result matches the bug's bitset
+    # the user is a member of all groups to which the bug is restricted
+    # and is authorized to access the bug.
+
+    # Bit arithmetic is performed by MySQL instead of Perl because bitset
+    # fields in the database are 64 bits wide (BIGINT), and Perl installations
+    # may or may not support integers larger than 32 bits.  Using bitsets
+    # and doing bitset arithmetic is probably not cross-database compatible,
+    # however, so these mechanisms are likely to change in the future.
+    SendSQL("SELECT ((groupset & $usergroupset) = groupset) 
+             FROM bugs WHERE bug_id = $id");
+
+    # Make sure the bug exists in the database.
+    MoreSQLData()
+      || DisplayError("Bug #$id does not exist.")
+      && exit;
+
+    # Make sure the user is authorized to access the bug.
+    my ($isauthorized) = FetchSQLData();
+    $isauthorized
+      || (
+           $userid ?
+           DisplayError("You are not authorized to access bug #$id.") : 
+           DisplayError(
+             qq|You are not authorized to access bug #$id. 
+             To see this bug, you must first 
+             <a href="show_bug.cgi?id=$id&GoAheadAndLogIn=1">log in</a> 
+             to an account with the appropriate permissions.|
+           )
+         )
+      && exit;
 }
 
 # check and see if a given string actually represents a positive
