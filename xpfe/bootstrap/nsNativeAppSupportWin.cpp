@@ -1770,7 +1770,10 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // check wheather it is a MAPI request.  If yes, don't open any new
     // windows and just return.
     rv = args->GetCmdLineValue(MAPI_STARTUP_ARG, getter_Copies(arg));
-    if (NS_SUCCEEDED(rv) && (const char*)arg) return;
+    if (NS_SUCCEEDED(rv) && (const char*)arg) {
+      nativeApp->EnsureProfile(args);
+      return;
+    }
 
     // Try standard startup's command-line handling logic from nsAppRunner.cpp...
 
