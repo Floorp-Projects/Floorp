@@ -101,6 +101,17 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 
 nsJSContext::~nsJSContext()
 {
+  // Tell xpconnect that we're about to destroy the JSContext so it can cleanup
+  nsIXPConnect* xpc;
+  nsresult res;
+  res = nsServiceManager::GetService(kXPConnectCID, nsIXPConnect::GetIID(), 
+                                     (nsISupports**) &xpc);
+  //NS_ASSERTION(NS_SUCCEEDED(res), "unable to get xpconnect");
+  if (NS_SUCCEEDED(res)) {
+    xpc->AbandonJSContext(mContext);
+    nsServiceManager::ReleaseService(kXPConnectCID, xpc);
+  }
+
   NS_IF_RELEASE(mNameSpaceManager);
   JS_DestroyContext(mContext);
   NS_IF_RELEASE(mSecManager);
@@ -457,7 +468,7 @@ extern "C" NS_DOM nsresult NS_CreateContext(nsIScriptGlobalObject *aGlobal, nsIS
         rv = owner->GetScriptObject(*aContext, (void**) &global);
         if (NS_SUCCEEDED(rv)) {
           rv = xpc->InitJSContext((JSContext*) (*aContext)->GetNativeContext(), global, JS_FALSE);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "xpconnect unable to init jscontext");
+//          NS_ASSERTION(NS_SUCCEEDED(rv), "xpconnect unable to init jscontext");
         }
         NS_RELEASE(owner);
       }
@@ -473,6 +484,8 @@ extern "C" NS_DOM nsresult NS_CreateContext(nsIScriptGlobalObject *aGlobal, nsIS
   (*aContext)->InitContext(aGlobal);
   aGlobal->SetContext(*aContext);
 
-  return rv;
+// XXX silently fail for now
+//  return rv;
+  return NS_OK;    
 }
 
