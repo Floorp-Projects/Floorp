@@ -89,7 +89,9 @@ EXPORTS		= \
 		gtkmozembed_internal.h
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_COMPONENT_LIBS) \
+		$(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
+		$(XPCOM_GLUE_LIBS) \
+		$(NSPR_LIBS) \
 		-lgtksuperwin \
 		$(NULL)
 
