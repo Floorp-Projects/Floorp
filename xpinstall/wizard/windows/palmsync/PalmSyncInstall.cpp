@@ -39,6 +39,7 @@
 #include <windows.h>
 #include <io.h>
 #include <stdlib.h>
+#include <tchar.h>
 
 #include "CondMgr.h"
 #include "HSAPI.h"
@@ -147,18 +148,44 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 // this function gets the install dir for installation
 int GetPalmDesktopInstallDirectory(TCHAR *pPDInstallDirectory, unsigned long *pSize)
-            {
+{
     HKEY   key;
     // open the key
-    LONG   rc = ::RegOpenKey(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\palm.exe", &key);
+    LONG rc = ::RegOpenKey(HKEY_CURRENT_USER, "Software\\U.S. Robotics\\Pilot Desktop\\Core", &key);
     if (rc == ERROR_SUCCESS) {
         // get key value
         rc = ::RegQueryValueEx(key, "Path", NULL, NULL, 
                                (LPBYTE)pPDInstallDirectory, pSize);
-        if (rc == ERROR_SUCCESS)
+        if (rc == ERROR_SUCCESS) {
+            *pSize = _tcslen(pPDInstallDirectory); // windows only
             rc=0; // 0 is success for us
+        }
         // close the key
         ::RegCloseKey(key);
+    }
+
+    if(rc) {
+        HKEY   key2;
+        // open the key
+        rc = ::RegOpenKey(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\palm.exe", &key2);
+        if (rc == ERROR_SUCCESS) {
+            // get the default key value
+            rc = ::RegQueryValueEx(key2, "", NULL, NULL, 
+                                   (LPBYTE)pPDInstallDirectory, pSize);
+            // get only the path (ie, strip out the exe name). note that we don't use string match
+            // for the exe name here since it's possilbe that the exe name in the default setting
+            // is different from the exe name in RegOpenKey() call. For example, the exe name in
+            // the default setting for "Software\\...\\App Paths\\pbrush.exe" is mspaint.exe.
+            if (rc == ERROR_SUCCESS) {
+              TCHAR *end = pPDInstallDirectory + _tcslen(pPDInstallDirectory);
+              while ((*end != '\\') && (end != pPDInstallDirectory))
+                end--;
+              *end = '\0';
+              rc=0; // 0 is success for us
+            }
+            // close the key
+            ::RegCloseKey(key2);
+        }
     }
     
     return rc;
@@ -512,6 +539,14 @@ int UninstallConduit()
         dwReturnCode = (*lpfnCmRestoreHotSyncSettings)(TRUE);
     }
     
+    // this registry key is set by the RestoreHotSyncSettings to point incorrectly to Mozilla dir
+    // this should point to the Palm directory to enable sync with Palm Desktop.
+    HKEY key;
+    LONG rc = RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\U.S. Robotics\\Pilot Desktop\\Core",
+                                0, KEY_ALL_ACCESS, &key);
+    if(rc == ERROR_SUCCESS)
+        ::RegSetValueEx(key, "Path", 0, REG_SZ, (const BYTE *) szPalmDesktopDir, size);
+ 
     // Re-start HotSync if it was running before
     if( bHotSyncRunning )
         StartHotSync(hHsapiDLL);
