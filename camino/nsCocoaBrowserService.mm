@@ -80,19 +80,14 @@ nsCocoaBrowserService::InitEmbedding()
   }
   NS_ADDREF(sSingleton);
   
-  nsresult rv = NS_InitEmbedding(nsnull, nsnull);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   // Register as the prompt service
 #define NS_PROMPTSERVICE_CID \
      {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
   static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
 
-  rv = nsComponentManager::RegisterFactory(kPromptServiceCID,
-                                           "Prompt Service",
-                                           "@mozilla.org/embedcomp/prompt-service;1",
+  nsresult rv = nsComponentManager::RegisterFactory(kPromptServiceCID,
+                                                    "Prompt Service",
+                                                    "@mozilla.org/embedcomp/prompt-service;1",
                                            sSingleton,
                                            PR_TRUE); // replace existing
   if (NS_FAILED(rv)) {
