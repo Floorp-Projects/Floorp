@@ -127,7 +127,7 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
     XML_SetElementHandler(mExpatParser, HandleStartElement, HandleEndElement);    
     XML_SetCharacterDataHandler(mExpatParser, HandleCharacterData);
     XML_SetProcessingInstructionHandler(mExpatParser, HandleProcessingInstruction);
-    XML_SetDefaultHandler(mExpatParser, HandleDefault);
+    XML_SetDefaultHandler(mExpatParser, NULL);
     XML_SetUnparsedEntityDeclHandler(mExpatParser, HandleUnparsedEntityDecl);
     XML_SetNotationDeclHandler(mExpatParser, HandleNotationDecl);
     XML_SetExternalEntityRefHandler(mExpatParser, HandleExternalEntityRef);
