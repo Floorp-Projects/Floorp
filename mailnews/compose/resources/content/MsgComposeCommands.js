@@ -173,6 +173,7 @@ var defaultController =
 
       //Options Menu
       case "cmd_selectAddress":
+      case "cmd_spelling":
       case "cmd_outputFormat":
 
         return true;
@@ -236,8 +237,10 @@ var defaultController =
       //Options Menu
       case "cmd_selectAddress":
         return !windowLocked;
+      case "cmd_spelling":
+        return !focusedElement;
       case "cmd_outputFormat":
-        return msgCompose.composeHTML;        
+        return msgCompose.composeHTML;
       
       //Format Menu
       case "cmd_format":
@@ -423,6 +426,7 @@ function CommandUpdate_MsgCompose()
 
   //Options Menu
   goUpdateCommand("cmd_selectAddress");
+  goUpdateCommand("cmd_spelling");
   goUpdateCommand("cmd_outputFormat");
 }
 
