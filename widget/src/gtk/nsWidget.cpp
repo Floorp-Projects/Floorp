@@ -391,16 +391,16 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
 
 NS_IMETHODIMP nsWidget::SetModal(void)
 {
-	GtkWindow *toplevel;
+  GtkWindow *toplevel;
 
-	if (!mWidget)
-		return NS_ERROR_FAILURE;
+  if (!mWidget)
+    return NS_ERROR_FAILURE;
 
-	toplevel = GTK_WINDOW(gtk_widget_get_toplevel(mWidget));
+  toplevel = GTK_WINDOW(gtk_widget_get_toplevel(mWidget));
 
-	if (!toplevel)
-		return NS_ERROR_FAILURE;
-	
+  if (!toplevel)
+    return NS_ERROR_FAILURE;
+
   gtk_window_set_modal(toplevel, PR_TRUE);
 
 	return NS_OK;
@@ -601,25 +601,29 @@ nsIFontMetrics *nsWidget::GetFont(void)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWidget::SetFont(const nsFont &aFont)
 {
-    nsIFontMetrics* mFontMetrics;
-    mContext->GetMetricsFor(aFont, mFontMetrics);
+  nsIFontMetrics *fontMetrics;
+  mContext->GetMetricsFor(aFont, fontMetrics);
 
-    if (mFontMetrics) {
-        nsFontHandle  fontHandle;
-        mFontMetrics->GetFontHandle(fontHandle);
-        // FIXME avoid fontset problems....
-        if (((GdkFont*)fontHandle)->type == GDK_FONT_FONTSET)
-        {
-            g_print("nsWidget:SetFont - got a FontSet.. ignoring\n");
-            NS_RELEASE(mFontMetrics);
-            return NS_ERROR_FAILURE;
-        }
+  if (!fontMetrics)
+    return NS_ERROR_FAILURE;
 
-        if (mWidget) 
-          SetFontNative((GdkFont *)fontHandle);
+  nsFontHandle fontHandle;
+  fontMetrics->GetFontHandle(fontHandle);
+  if (fontHandle) {
+    // FIXME avoid fontset problems....
+    if (((GdkFont*)fontHandle)->type == GDK_FONT_FONTSET) {
+      g_print("nsWidget:SetFont - got a FontSet.. ignoring\n");
+      NS_RELEASE(fontMetrics);
+      return NS_ERROR_FAILURE;
     }
-    NS_RELEASE(mFontMetrics);
-    return NS_OK;
+
+    if (mWidget) 
+      SetFontNative((GdkFont *)fontHandle);
+  }
+
+  NS_RELEASE(fontMetrics);
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
