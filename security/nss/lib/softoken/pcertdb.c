@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.23 2002/06/24 21:54:39 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.24 2002/06/28 03:00:08 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -1489,6 +1489,7 @@ DecodeDBNicknameEntry(certDBEntryNickname *entry, SECItem *dbentry,
     PORT_Memcpy(entry->subjectName.data,
 	      &dbentry->data[DB_NICKNAME_ENTRY_HEADER_LEN],
 	      entry->subjectName.len);
+    entry->subjectName.type = siBuffer;
     
     entry->nickname = (char *)PORT_ArenaAlloc(entry->common.arena, 
                                               PORT_Strlen(nickname)+1);

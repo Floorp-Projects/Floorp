@@ -35,7 +35,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.7 2002/02/21 22:41:42 ian.mcgreer%sun.com Exp $
+ * $Id: secasn1e.c,v 1.8 2002/06/28 03:00:10 relyea%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -1460,6 +1460,7 @@ sec_asn1e_allocate_item (PRArenaPool *poolp, SECItem *dest, unsigned long len)
 	if (dest == NULL)
 	    dest = (SECItem*)PORT_Alloc (sizeof(SECItem));
 	if (dest != NULL) {
+	    dest->type = siBuffer;
 	    dest->data = (unsigned char*)PORT_Alloc (len);
 	    if (dest->data == NULL) {
 		if (indest == NULL)

@@ -80,6 +80,7 @@ DER_TimeToUTCTime(SECItem *dst, int64 gmttime)
 
     dst->len = 13;
     dst->data = d = (unsigned char*) PORT_Alloc(13);
+    dst->type = siBuffer;
     if (!d) {
 	return SECFailure;
     }
@@ -228,6 +229,7 @@ DER_TimeToGeneralizedTime(SECItem *dst, int64 gmttime)
 
     dst->len = 15;
     dst->data = d = (unsigned char*) PORT_Alloc(15);
+    dst->type = siBuffer;
     if (!d) {
 	return SECFailure;
     }

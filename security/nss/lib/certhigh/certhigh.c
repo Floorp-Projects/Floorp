@@ -1154,6 +1154,7 @@ loser:
 	}
 	derCert.len = (unsigned int)stanCert->encoding.size;
 	derCert.data = (unsigned char *)stanCert->encoding.data;
+	derCert.type = siBuffer;
 	SECITEM_CopyItem(arena, &chain->certs[i], &derCert);
 	CERT_DestroyCertificate(cCert);
 	stanCert = stanChain[++i];
