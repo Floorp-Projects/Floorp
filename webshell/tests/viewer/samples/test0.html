@@ -21,12 +21,42 @@
 <h1>Example 0: Basic HTML Text Styles</h1>
 <p><br></p>
 <h2>Formatted Text</h2>
-<p>This is a basic paragraph with <b>bold</b>, <i>italic</i> and <i>bold-italic 
-  </i> text. It also includes <font color="#FF0000">red</font>, <font color="#00FF00">green</font> 
+<p>This is a basic paragraph with <b>bold</b>, <i>italic</i> and <i><b>bold</b></i><b><i>-italic 
+  </i></b> text. It also includes <font color="#FF0000">red</font>, <font color="#00FF00">green</font> 
   and <font color="#0000FF">blue</font> text. It has <s>strikethru</s> and <u>underline</u>. 
   <u> </u></p>
-<p>This is a paragraph with font variations: <b><font face="Arial, Helvetica, sans-serif">Arial,</font></b><font face="Arial, Helvetica, sans-serif"> 
-  <i><font face="Verdana, Arial, Helvetica, sans-serif">Verdana</font>,</i> <font face="co">COURIER, 
+<p>
+  Text decoration color test:
+	<span style="color: red">
+	  red 
+	  <span style="text-decoration: underline">
+		underline
+		<span style="color: cyan">
+		  cyan 
+		  <span style="text-decoration: line-through">
+			line-through
+			<span style="color: blue">
+			  blue 
+			  <span style="text-decoration: overline">
+				overline
+				<span style="color: black">
+				  black 
+				</span>
+				overline
+			  </span>
+			   blue
+			</span>
+			line-through
+		  </span>
+		   cyan
+		</span>
+		underline
+	  </span>
+	  red
+	</span>
+</p>
+<p>This is a paragraph with font variations: <b><font face="Arial, Helvetica, sans-serif">Bold Arial,</font></b><font face="Arial, Helvetica, sans-serif"> 
+  <i><font face="Verdana, Arial, Helvetica, sans-serif">Italic Verdana</font>,</i> <font face="courier">COURIER, 
   <font face="Times New Roman, Times, serif">Times New Roman.</font></font></font></p>
 <p><font size=7>Font size=7, </font><font size=6>Font size=6, </font><font size=5>Font 
   size=5, </font><font size=4>Font size=4, </font><font size=3>Font size=3, </font><font size=2>Font 
