@@ -80,14 +80,14 @@ public:
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
 
-private:
-    virtual nsresult GetStackedFrameForPoint(nsIPresContext* aPresContext,
-                                         nsIFrame* aChild,
-                                         const nsRect& aRect,
-                                         const nsPoint& aPoint, 
-                                         nsIFrame**     aFrame);
-
 protected:
+
+  virtual nsresult GetFrameForPointChild(nsIPresContext*   aPresContext,
+                                         const nsPoint&    aPoint,
+                                         nsFramePaintLayer aWhichLayer,    
+                                         nsIFrame*         aChild,
+                                         PRBool            aCheckMouseThrough,
+                                         nsIFrame**        aFrame);
 
   nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayout = nsnull);
 

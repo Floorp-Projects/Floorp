@@ -250,6 +250,12 @@ protected:
     nsresult RegUnregAccessKey(nsIPresContext* aPresContext,
                                PRBool aDoReg);
     void FireDOMEvent(nsIPresContext *aPresContext, const nsAString& aDOMEventName);
+    virtual nsresult GetFrameForPointChild(nsIPresContext*   aPresContext,
+                                           const nsPoint&    aPoint,
+                                           nsFramePaintLayer aWhichLayer,    
+                                           nsIFrame*         aChild,
+                                           PRBool            aCheckMouseThrough,
+                                           nsIFrame**        aFrame);
 
 private: 
     nsresult SetDebug(nsIPresContext* aPresContext, PRBool aDebug);

@@ -1813,39 +1813,22 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
   nsIFrame *hit = nsnull;
   nsPoint tmp;
 
-  nsIFrame* kid = GetFirstChild(nsnull);
   *aFrame = nsnull;
   tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
 
   if (view)
     tmp += originOffset;
 
+  nsIBox* kid = nsnull;
+  GetChildBox(&kid);
   while (nsnull != kid) {
-    // have we hit a child before
-    PRBool haveKid = (hit != nsnull);
-    nsresult rv = kid->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
-
-    if (NS_SUCCEEDED(rv) && hit) {
-      if (!haveKid)
-         *aFrame = hit;
-      else
-      {
-        // if the kid had a child before see if this child has mouse
-        // though. 
-        PRBool isAdaptor = PR_FALSE;
-        nsIBox *box = GetBoxForFrame(hit, isAdaptor);
-        if (box) {
-          PRBool mouseThrough = PR_FALSE;
-          box->GetMouseThrough(mouseThrough);
-          // if the child says it can never mouse though ignore it.
-          if (!mouseThrough)
-              *aFrame = hit;
-        }
-      }
-    }
-
-    kid = kid->GetNextSibling();
+    nsIFrame* frame = nsnull;
+    kid->GetFrame(&frame);
+    GetFrameForPointChild(aPresContext, tmp, aWhichLayer, frame, hit != nsnull, &hit);
+    kid->GetNextBox(&kid);
   }
+  if (hit)
+    *aFrame = hit;
 
   if (*aFrame) {
     return NS_OK;
@@ -1858,6 +1841,44 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
   }
 
   return NS_ERROR_FAILURE;
+}
+
+/* virtual */ nsresult
+nsBoxFrame::GetFrameForPointChild(nsIPresContext*   aPresContext,
+                                  const nsPoint&    aPoint,
+                                  nsFramePaintLayer aWhichLayer,    
+                                  nsIFrame*         aChild,
+                                  PRBool            aCheckMouseThrough,
+                                  nsIFrame**        aFrame)
+{
+  nsIFrame *hit = nsnull;
+  nsresult rv =
+    aChild->GetFrameForPoint(aPresContext, aPoint, aWhichLayer, &hit);
+
+  if (NS_SUCCEEDED(rv) && hit) {
+    rv = NS_ERROR_FAILURE;
+    if (!aCheckMouseThrough) {
+      *aFrame = hit;
+      rv = NS_OK;
+    }
+    else
+    {
+      // If we had a lower frame for this point, check whether hit's box has
+      // mouse through.  If so, stick with the lower frame that we found.
+      PRBool isAdaptor = PR_FALSE;
+      nsIBox *box = GetBoxForFrame(hit, isAdaptor);
+      if (box) {
+        PRBool mouseThrough = PR_FALSE;
+        box->GetMouseThrough(mouseThrough);
+        // if the child says it can never mouse though ignore it. 
+        if (!mouseThrough) {
+          *aFrame = hit;
+          rv = NS_OK;
+        }
+      }
+    }
+  }
+  return rv;
 }
 
 nsIBox*

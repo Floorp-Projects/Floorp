@@ -90,102 +90,36 @@ nsStackFrame::nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManage
 
 NS_IMETHODIMP  
 nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
-                             const nsPoint& aPoint, 
-                             nsFramePaintLayer aWhichLayer,    
-                             nsIFrame**     aFrame)
-{   
-  return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+                               const nsPoint& aPoint, 
+                               nsFramePaintLayer aWhichLayer,    
+                               nsIFrame** aFrame)
+{
+  if (aWhichLayer != NS_FRAME_PAINT_LAYER_BACKGROUND)
+    return NS_ERROR_FAILURE;
 
-  /*
-  nsRect r(mRect);
-
-  if (!r.Contains(aPoint))
-     return NS_ERROR_FAILURE;
-
-  // is it inside our border, padding, and debugborder or insets?
-  nsMargin im(0,0,0,0);
-  GetInset(im);
-  nsMargin border(0,0,0,0);
-  nsStyleBorderPadding  bPad;
-  nsStyleContext* styleContext;
-  aFrame->GetStyleContext(&styleContext);
-  styleContext->GetBorderPaddingFor(bPad);
-  bPad.GetBorderPadding(borderPadding);
-  r.Deflate(im);
-  r.Deflate(border);    
-
-  // no? Then it must be in our border so return us.
-  if (!r.Contains(aPoint)) {
-      *aFrame = this;
-      return NS_OK;
-  }
-
-
-  nsIFrame* first = mFrames.FirstChild();
-
- 
-
-  // look at the children in reverse order
-  nsresult rv;
-      
-  if (first) {
-      nsPoint tmp;
-      tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
-      rv = GetStackedFrameForPoint(aPresContext, first, nsRect(0,0,mRect.width, mRect.height), tmp, aFrame);
-  } else
-      rv = NS_ERROR_FAILURE;
-
-  if (NS_FAILED(rv)) {
-      const nsStyleBackground* color = GetStyleBackground();
-
-      PRBool        transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
-                                    (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-
-      PRBool backgroundImage = !color->mBackgroundImage.IsEmpty();
-
-      if (!transparentBG || backgroundImage)
-      {
-          *aFrame = this;
-          rv = NS_OK;
-      }
-  }
-
- 
-  #ifdef NS_DEBUG
-                            printf("\n------------");
-
-      if (*aFrame)
-      nsFrame::ListTag(stdout, *aFrame);
-                            printf("--------------\n");
-  #endif
-
-
-  return rv;
-  */
+  return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer,
+                                      aFrame);
 }
 
-
-nsresult
-nsStackFrame::GetStackedFrameForPoint(nsIPresContext* aPresContext,
-                                      nsIFrame* aChild,
-                                      const nsRect& aRect,
-                                      const nsPoint& aPoint, 
-                                      nsIFrame**     aFrame)
+/* virtual */ nsresult
+nsStackFrame::GetFrameForPointChild(nsIPresContext*   aPresContext,
+                                    const nsPoint&    aPoint,
+                                    nsFramePaintLayer aWhichLayer,    
+                                    nsIFrame*         aChild,
+                                    PRBool            aCheckMouseThrough,
+                                    nsIFrame**        aFrame)
 {
-    // look at all the children is reverse order. Use the stack to do 
-    // this.
-    nsresult rv;
-    nsIFrame* next = aChild->GetNextSibling();
-    if (next) {
-       rv = GetStackedFrameForPoint(aPresContext, next, aRect, aPoint, aFrame);
-       if (NS_SUCCEEDED(rv) && *aFrame)
-           return rv;
-    }
+  if (aWhichLayer != NS_FRAME_PAINT_LAYER_BACKGROUND)
+    return NS_ERROR_FAILURE;
 
-    rv = aChild->GetFrameForPoint(aPresContext, aPoint, NS_FRAME_PAINT_LAYER_FOREGROUND, aFrame);
-    if (NS_SUCCEEDED(rv) && *aFrame)  
-        return rv;
-    return aChild->GetFrameForPoint(aPresContext, aPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, aFrame);
+  nsresult rv = nsBoxFrame::GetFrameForPointChild(aPresContext, aPoint,
+                                           NS_FRAME_PAINT_LAYER_FOREGROUND,
+                                           aChild, aCheckMouseThrough, aFrame);
+  if (NS_SUCCEEDED(rv))
+    return rv;
+  return nsBoxFrame::GetFrameForPointChild(aPresContext, aPoint,
+                                           NS_FRAME_PAINT_LAYER_BACKGROUND,
+                                           aChild, aCheckMouseThrough, aFrame);
 }
 
 void
