@@ -137,7 +137,6 @@
     ("nonterminal-attribute" . :nonterminal-attribute)
     ("nonterminal-argument" . :nonterminal-argument)
     ("semantic-keyword" . :semantic-keyword)
-    ("type-expression" . :type-expression)
     ("type-name" . :type-name)
     ("field-name" . :field-name)
     ("tag-name" . :tag-name)

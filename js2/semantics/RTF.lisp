@@ -291,32 +291,28 @@
     (:semantic-keyword cs :semantic-keyword-num b :times)
     ((+ :styles) (* :semantic-keyword additive sbasedon :default-paragraph-font-num "Semantic Keyword;"))
     
-    (:type-expression-num 41)
-    (:type-expression cs :type-expression-num :times :red :no-language)
-    ((+ :styles) (* :type-expression additive sbasedon :default-paragraph-font-num "Type Expression;"))
-    
-    (:type-name-num 42)
+    (:type-name-num 41)
     (:type-name cs :type-name-num scaps :times :red :no-language)
     ((+ :styles) (* :type-name additive sbasedon :default-paragraph-font-num "Type Name;"))
     
-    (:field-name-num 43)
+    (:field-name-num 42)
     (:field-name cs :field-name-num :helvetica :no-language)
     ((+ :styles) (* :field-name additive sbasedon :default-paragraph-font-num "Field Name;"))
     
-    (:tag-name-num 44)
+    (:tag-name-num 43)
     (:tag-name cs :tag-name-num :helvetica b :no-language)
     ((+ :styles) (* :tag-name additive sbasedon :default-paragraph-font-num "Tag Name;"))
     
-    (:global-variable-num 45)
+    (:global-variable-num 44)
     (:global-variable cs :global-variable-num i :times :dark-green :no-language)
     ((+ :styles) (* :global-variable additive sbasedon :default-paragraph-font-num "Global Variable;"))
     
-    (:variable-num 46)
+    (:variable-num 45)
     (:variable cs :variable-num i :times :color336600 :no-language)
     ((+ :styles) (* :variable additive sbasedon :default-paragraph-font-num "Variable;"))
     (:local-variable :variable)
     
-    (:action-name-num 47)
+    (:action-name-num 46)
     (:action-name cs :action-name-num :zapf-chancery :purple :no-language)
     ((+ :styles) (* :action-name additive sbasedon :default-paragraph-font-num "Action Name;"))
     
@@ -623,37 +619,33 @@
     (:semantic-keyword cs :semantic-keyword-num b :times)
     ((+ :styles) (* :semantic-keyword additive sbasedon :default-paragraph-font-num "Semantic Keyword;"))
     
-    (:type-expression-num 41)
-    (:type-expression cs :type-expression-num :times :red :no-language)
-    ((+ :styles) (* :type-expression additive sbasedon :default-paragraph-font-num "Type Expression;"))
-    
-    (:type-name-num 42)
+    (:type-name-num 41)
     (:type-name cs :type-name-num scaps :times :red :no-language)
     ((+ :styles) (* :type-name additive sbasedon :default-paragraph-font-num "Type Name;"))
     
-    (:field-name-num 43)
+    (:field-name-num 42)
     (:field-name cs :field-name-num :helvetica :no-language)
     ((+ :styles) (* :field-name additive sbasedon :default-paragraph-font-num "Field Name;"))
     
-    (:tag-name-num 44)
+    (:tag-name-num 43)
     (:tag-name cs :tag-name-num :helvetica b :no-language)
     ((+ :styles) (* :tag-name additive sbasedon :default-paragraph-font-num "Tag Name;"))
     
-    (:global-variable-num 45)
+    (:global-variable-num 44)
     (:global-variable cs :global-variable-num i :times :dark-green :no-language)
     ((+ :styles) (* :global-variable additive sbasedon :default-paragraph-font-num "Global Variable;"))
     
-    (:variable-num 46)
+    (:variable-num 45)
     (:variable cs :variable-num i :times :color336600 :no-language)
     ((+ :styles) (* :variable additive sbasedon :default-paragraph-font-num "Variable;"))
     (:local-variable :variable)
     
-    (:action-name-num 47)
+    (:action-name-num 46)
     (:action-name cs :action-name-num :zapf-chancery :purple :no-language)
     ((+ :styles) (* :action-name additive sbasedon :default-paragraph-font-num "Action Name;"))
     
     #|
-    (:id-name-num 48)
+    (:id-name-num 47)
     (:id-name cs :id-name-num scaps :helvetica :no-language)
     ((+ :styles) (* :id-name additive sbasedon :default-paragraph-font-num "Id Name;"))
     |#

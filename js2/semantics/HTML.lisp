@@ -488,7 +488,6 @@
     (:nonterminal-attribute (span (class "nonterminal-attribute")))
     (:nonterminal-argument (span (class "nonterminal-argument")))
     (:semantic-keyword (span (class "semantic-keyword")))
-    (:type-expression (span (class "type-expression")))
     (:type-name (span (class "type-name")))
     (:field-name (span (class "field-name")))
     (:tag-name (span (class "tag-name")))
