@@ -91,7 +91,7 @@ public:
   NS_IMETHOD UnregisterAccessKey(nsIFrame * aFrame);
 
 protected:
-  void UpdateCursor(nsIPresContext* aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
+  void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   void GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   NS_IMETHOD SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);  
@@ -127,6 +127,7 @@ protected:
   nsIContent* mCurrentTargetContent;
   nsIContent* mCurrentRelatedContent;
   nsIFrame* mLastMouseOverFrame;
+  nsCOMPtr<nsIContent> mLastMouseOverContent;
   nsIFrame* mLastDragOverFrame;
   
   // member variables for the d&d gesture state machine

@@ -51,7 +51,7 @@ public:
    * then NS_NOT_INSIDE is returned.
    */
   PRBool IsInside(nscoord aX, nscoord aY,
-                  nsIURI* aDocURL,
+                  nsIContent** aContent,
                   nsString& aAbsURL,
                   nsString& aTarget,
                   nsString& aAltText,

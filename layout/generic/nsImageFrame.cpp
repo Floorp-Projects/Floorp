@@ -686,6 +686,35 @@ nsImageFrame::GetAnchorHREF(nsString& aResult)
   return status;
 }
 
+NS_IMETHODIMP  
+nsImageFrame::GetContentForEvent(nsIPresContext* aPresContext,
+                                 nsEvent* aEvent,
+                                 nsIContent** aContent)
+{
+  NS_ENSURE_ARG_POINTER(aContent);
+  nsImageMap* map;
+  map = GetImageMap();
+
+  if (nsnull != map) {
+    nsPoint p;
+    TranslateEventCoords(aPresContext, aEvent->point, p);
+    nsAutoString absURL, target, altText;
+    PRBool suppress;
+    PRBool inside = PR_FALSE;
+    nsCOMPtr<nsIContent> area;
+    inside = map->IsInside(p.x, p.y, getter_AddRefs(area),
+                           absURL, target, altText,
+                           &suppress);
+    if (inside && area) {
+      *aContent = area;
+      NS_ADDREF(*aContent);
+      return NS_OK;
+    }
+  }
+
+  return GetContent(aContent);
+}
+
 // XXX what should clicks on transparent pixels do?
 NS_METHOD
 nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
@@ -707,30 +736,15 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
         nsAutoString absURL, target, altText;
         PRBool suppress;
         PRBool inside = PR_FALSE;
+        // Even though client-side image map triggering happens
+        // through content, we need to make sure we're not inside
+        // (in case we deal with a case of both client-side and
+        // sever-side on the same image - it happens!)
         if (nsnull != map) {
-          nsIDocument* doc = nsnull;
-          mContent->GetDocument(doc);
-          nsIURI* docURL = nsnull;
-          if (doc) {
-            docURL = doc->GetDocumentURL();
-            NS_RELEASE(doc);
-          }
-          
-          if (docURL) {
-            inside = map->IsInside(p.x, p.y, docURL, absURL, target, altText,
-                                   &suppress);
-            NS_RELEASE(docURL);
-          }
-          
-          if (inside) {
-            // We hit a clickable area. Time to go somewhere...
-            PRBool clicked = PR_FALSE;
-            if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-              *aEventStatus = nsEventStatus_eConsumeDoDefault; 
-              clicked = PR_TRUE;
-            }
-            TriggerLink(aPresContext, absURL, target, clicked);
-          }
+          nsCOMPtr<nsIContent> area;
+          inside = map->IsInside(p.x, p.y, getter_AddRefs(area),
+                                 absURL, target, altText,
+                                 &suppress);
         }
         
         if (!inside && isServerMap) {

@@ -226,8 +226,11 @@ nsHTMLAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus)
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
+  return mInner.HandleDOMEventForAnchors(aPresContext, 
+                                         aEvent, 
+                                         aDOMEvent, 
+                                         aFlags, 
+                                         aEventStatus);
 }
 
 NS_IMETHODIMP
