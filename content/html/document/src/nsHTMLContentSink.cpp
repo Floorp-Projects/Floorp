@@ -1525,11 +1525,11 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     mNotifyLevel = mStackPos-1;
   }
 
-  DidAddContent(content, PR_FALSE);
-
   if (mSink->IsMonolithicContainer(nodeType)) {
     --mSink->mInMonolithicContainer;
   }
+
+  DidAddContent(content, PR_FALSE);
 
   // Special handling for certain tags
   switch (nodeType) {
