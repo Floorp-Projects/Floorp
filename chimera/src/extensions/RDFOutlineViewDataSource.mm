@@ -73,9 +73,9 @@
 
 - (void) dealloc
 {
-    NS_RELEASE(mContainer);
-    NS_RELEASE(mContainerUtils);
-    NS_RELEASE(mRDFService);
+    NS_IF_RELEASE(mContainer);
+    NS_IF_RELEASE(mContainerUtils);
+    NS_IF_RELEASE(mRDFService);
     
     NS_IF_RELEASE(mDataSource);
     NS_IF_RELEASE(mRootResource);
