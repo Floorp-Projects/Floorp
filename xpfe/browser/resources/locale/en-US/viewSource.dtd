@@ -11,5 +11,8 @@
 <!ENTITY menu_wrapLongLines.title "Wrap Long Lines"> 
 <!ENTITY menu_wrapLongLines.accesskey "W">
 
+<!ENTITY menu_highlightSyntax.label "Syntax Highlighting">
+<!ENTITY menu_highlightSyntax.accesskey "H">
+
 <!ENTITY findNextCmd.label "Find Next">
 <!ENTITY findNextCmd.accesskey "n">
