@@ -602,19 +602,6 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",			"$editor_locale_chrome_dir", 0);
 	}
 
-	if ($main::build{extensions})
-	{
-		# Chatzilla is a toplevel component
-		my($chatzilla_bin_dir) = "$chrome_dir"."chatzilla";
-
-		_InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",					"$chatzilla_bin_dir:content:lib:js");
-		_InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST_COMPONENTS","${dist_dir}Components");
-		_InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",					"$chatzilla_bin_dir:content:lib:xul");
-		_InstallResources(":mozilla:extensions:irc:xul:content:MANIFEST",				"$chatzilla_bin_dir:content");
-		_InstallResources(":mozilla:extensions:irc:xul:skin:MANIFEST",					"$chatzilla_bin_dir:skin");
-		_InstallResources(":mozilla:extensions:irc:xul:skin:images:MANIFEST",			"$chatzilla_bin_dir:skin:images");
-	}
-
 	# if ($main::build{mailnews})
 	{
 		# Messenger is a top level component
@@ -1187,7 +1174,10 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST_IDL",				"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:xpfe:browser:public:MANIFEST_IDL",				"$distdirectory:idl:");
-	
+
+  # XML-RPC
+	_InstallFromManifest(":mozilla:extensions:xml-rpc:idl:MANIFEST_IDL",				"$distdirectory:idl:");
+
 	# MAILNEWS
 	_InstallFromManifest(":mozilla:mailnews:public:MANIFEST",						"$distdirectory:mailnews:");
 	_InstallFromManifest(":mozilla:mailnews:public:MANIFEST_IDL",					"$distdirectory:idl:");
@@ -1220,7 +1210,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST_IDL",			"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:mailnews:addrbook:src:MANIFEST",				"$distdirectory:mailnews:");
 	_InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",				"$distdirectory:mailnews:");
-	
+
 	print("--- Client Dist export complete ----\n");
 }
 
@@ -1387,7 +1377,7 @@ sub BuildIDLProjects()
 #			WaitNextEvent();
 		}
 	}
-	
+
 	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp",							"xpcom");
 
 	# necko
@@ -1444,6 +1434,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:embedding:browser:macbuild:browserIDL.mcp",			"embeddingbrowser");
 
 	BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
+	BuildIDLProject(":mozilla:extensions:xml-rpc:macbuild:xml-rpcIDL.mcp","xml-rpc");
 	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp", "bookmarks");
 	BuildIDLProject(":mozilla:xpfe:components:directory:DirectoryIDL.mcp",			"directory");
 	BuildIDLProject(":mozilla:xpfe:components:regviewer:RegViewerIDL.mcp",			"regviewer");
@@ -1907,7 +1898,19 @@ sub BuildExtensionsProjects()
 
 	print("--- Starting Extensions projects ----\n");
 
-	# not building any extensions yet. chatzilla is all JS and XUL!
+	my($chrome_dir) = "$dist_dir"."Chrome";
+
+	# Chatzilla
+	my($chatzilla_bin_dir) = "$chrome_dir".":chatzilla";
+	_InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",					    "$chatzilla_bin_dir:content:lib:js");
+	_InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST_COMPONENTS",   "${dist_dir}Components");
+	_InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",					    "$chatzilla_bin_dir:content:lib:xul");
+	_InstallResources(":mozilla:extensions:irc:xul:content:MANIFEST",				  "$chatzilla_bin_dir:content");
+	_InstallResources(":mozilla:extensions:irc:xul:skin:MANIFEST",					  "$chatzilla_bin_dir:skin");
+	_InstallResources(":mozilla:extensions:irc:xul:skin:images:MANIFEST",		  "$chatzilla_bin_dir:skin:images");
+
+  # XML-RPC (whatever that is)
+	_InstallFromManifest(":mozilla:extensions:xml-rpc:src:MANIFEST_COMPONENTS",	"${dist_dir}Components");
 	
 	print("--- Extensions projects complete ----\n");
 }
