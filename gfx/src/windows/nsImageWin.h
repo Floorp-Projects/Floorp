@@ -26,6 +26,19 @@
 #include <windows.h>
 #include "nsIImage.h"
 
+typedef BOOL (WINAPI *ALPHABLENDPROC)(
+  HDC hdcDest,
+  int nXOriginDest,
+  int nYOriginDest,
+  int nWidthDest,
+  int hHeightDest,
+  HDC hdcSrc,
+  int nXOriginSrc,
+  int nYOriginSrc,
+  int nWidthSrc,
+  int nHeightSrc,
+  BLENDFUNCTION blendFunction);
+
 class nsImageWin : public nsIImage{
 public:
   nsImageWin();
@@ -144,6 +157,8 @@ private:
    */
   void CleanUpDDB();
 
+  void CreateImageWithAlphaBits(HDC TheHDC);
+
   /** 
    * Create a Device Dependent bitmap from a drawing surface
    * @update dc - 10/29/98
@@ -151,6 +166,10 @@ private:
    */
   void CreateDDB(nsDrawingSurface aSurface);
 
+  void DrawComposited24(unsigned char *aBits, int aX, int aY, int aWidth, int aHeight);
+  void DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
+                    int aSX, int aSY, int aSWidth, int aSHeight);
+  static PRBool CanAlphaBlend(void);
 
   /** 
    * Create a Device Dependent bitmap from a drawing surface
@@ -223,6 +242,8 @@ private:
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
   HBITMAP             mHBitmap;           // the GDI bitmaps
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
+
+  static ALPHABLENDPROC gAlphaBlend;  // AlphaBlend function pointer
 
 };
 
