@@ -2652,7 +2652,7 @@ sub LoadModule {
         }
     } else {
         if ($requested) { # it failed, $newmodule contains error message
-            my @errors = split(/[\n\r]/gos, $newmodule);
+            my @errors = split(/[\n\r]/os, $newmodule);
             if (scalar(@errors) > $self->{'errorMessagesMaxLines'}) {
                 # remove lines from the middle if the log is too long
                 @errors = (@errors[0..int($self->{'errorMessagesMaxLines'} / 2)-1], '...', @errors[-(int($self->{'errorMessagesMaxLines'} / 2))..-1]);
