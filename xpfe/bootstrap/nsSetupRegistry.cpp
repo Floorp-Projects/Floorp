@@ -23,20 +23,37 @@
 #include "nsAppShellCIDs.h"
 
 #ifdef XP_PC
+#include "nsAppCoresCIDs.h"
+#include "nsIDOMAppCores.h"
+#include "nsIDOMMailCore.h"
+#include "nsIDOMBrowserAppCore.h"
+
+static nsIDOMAppCores *gAppCores = NULL;
+static NS_DEFINE_IID(kIAppCoresIID,      NS_IDOMAPPCORES_IID);
+static NS_DEFINE_IID(kAppCoresCID,       NS_AppCores_CID);
+static NS_DEFINE_IID(kMailCoreCID,       NS_MailCore_CID);
+static NS_DEFINE_IID(kToolbarCoreCID,    NS_TOOLBARCORE_CID);
+static NS_DEFINE_IID(kBrowserAppCoreCID, NS_BROWSERAPPCORE_CID);
+#endif
+
+#ifdef XP_PC
 
 #define APPSHELL_DLL "nsappshell.dll"
 #define BROWSER_DLL  "nsbrowser.dll"
+#define APPCORES_DLL  "appcores.dll"
 
 #else
 
 #ifdef XP_MAC
 
 #define APPSHELL_DLL "APPSHELL_DLL"
+#define APPCORES_DLL  "APPCORES_DLL"
 
 #else
 
 // XP_UNIX
 #define APPSHELL_DLL  "libnsappshell.so"
+#define APPCORES_DLL  "libappcores.so"
 
 #endif // XP_MAC
 
@@ -70,6 +87,13 @@ NS_SetupRegistry_1()
   NS_SetupRegistry();
 
   nsRepository::RegisterFactory(kCAppShellServiceCID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
- nsRepository::RegisterFactory(kCCmdLineServiceCID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCmdLineServiceCID,  APPSHELL_DLL, PR_FALSE, PR_FALSE);
+
+#ifdef XP_PC
+  nsRepository::RegisterFactory(kAppCoresCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kMailCoreCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kToolbarCoreCID,    APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kBrowserAppCoreCID, APPCORES_DLL, PR_FALSE, PR_FALSE);
+#endif
 ///  nsRepository::RegisterFactory(kCBrowserControllerCID, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }
