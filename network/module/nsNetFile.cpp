@@ -207,12 +207,14 @@ void nsNetFile::GenerateGlobalRandomBytes(void *aDest, size_t aLen) {
 #define MAX_PATH_LEN 512
 
 nsresult nsNetFile::GetCacheFileName(char *aDirTok, char **aRes) {
-    char file_buf[MAX_PATH_LEN];
+    char *file_buf = nsnull;
     char *ext = ".MOZ";
     char *prefix = "M";
     PRStatus status;
     PRFileInfo statinfo;
     char *dir = (char*)PL_HashTableLookup(mHTDirs, aDirTok);
+
+    file_buf = (char*)PR_Calloc(1, MAX_PATH_LEN);
     if (!dir)
         return NS_ERROR_FAILURE;
 
