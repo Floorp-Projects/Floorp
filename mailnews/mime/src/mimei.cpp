@@ -453,7 +453,8 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
   // it is faster to read the pref first then figure out the msg hdr for the current url only if we have to
   // XXX instead of reading this pref every time, part of mime should be an observer listening to this pref change
   // and updating internal state accordingly. But none of the other prefs in this file seem to be doing that...=(
-  pref->GetBoolPref("mailnews.display.sanitizeJunkMail", &sanitizeJunkMail);
+  if (pref)
+    pref->GetBoolPref("mailnews.display.sanitizeJunkMail", &sanitizeJunkMail);
 
   if (sanitizeJunkMail)
   {
