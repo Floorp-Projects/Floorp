@@ -279,7 +279,7 @@ nsPrefMigration::AddProfilePaths(const char * oldProfilePathStr, const char * ne
 
 
 NS_IMETHODIMP
-nsPrefMigration::ProcessPrefs()
+nsPrefMigration::ProcessPrefs(PRBool showProgressAsModalWindow)
 {
   nsresult rv;
   nsCOMPtr<nsIURI> pmprogressURL;
@@ -297,9 +297,15 @@ nsPrefMigration::ProcessPrefs()
                                           getter_AddRefs(mPMProgressWindow));
   if (NS_FAILED(rv)) return rv;
 
-  //PMProgressAppShell->Run();
-  mPMProgressWindow->ShowModal();
-  
+  if (showProgressAsModalWindow) {
+        mPMProgressWindow->ShowModal();
+  }
+  else {
+        // we are automatically migrating the profile, so there is no
+        // profile manager window to run the dialog as modal in front of.
+        PMProgressAppShell->Run();
+  }       
+
   return NS_OK;
 }
 

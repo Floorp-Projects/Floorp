@@ -30,7 +30,7 @@ interface nsIWebShellWindow;
 interface nsIPrefMigration: nsISupports
 {
   void AddProfilePaths(in string oldProfilePathStr, in string newProfilePathStr);
-  void ProcessPrefs();
+  void ProcessPrefs(in boolean showProgressAsModalWindow);
   void ProcessPrefsFromJS();
 
   /**

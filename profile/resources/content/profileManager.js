@@ -114,7 +114,8 @@ function onStart()
 
 	if (migrate == "true")
 	{
-		profile.migrateProfile(name);
+		// pass true for show progress as modal window
+		profile.migrateProfile(name, true);
 	}
 
 	//dump("************name: "+name+"\n");
