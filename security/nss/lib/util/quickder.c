@@ -216,8 +216,9 @@ static SECStatus MatchComponentType(const SEC_ASN1Template* templateEntry,
                 return SECSuccess;
             }
         }
-        PORT_SetError(SEC_ERROR_BAD_DER);
-        return SECFailure;
+	/* no match, caller must decide if this is BAD DER, or not. */
+        *match = PR_FALSE;
+        return SECSuccess;
     }
 
     if (kind & SEC_ASN1_ANY)
