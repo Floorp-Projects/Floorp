@@ -43,8 +43,7 @@ dnl unset d
 
 dnl Build optimized by default
 dnl ========================================================
-OPTIMIZE="${OPTIMIZE=-O}"
-COMPILER_WARNINGS=-Wall
+OPTIMIZE_CFLAGS="${OPTIMIZE_CFLAGS=-O}"
 CFLAGS="${CFLAGS}"
 CXXFLAGS="${CXXFLAGS}"
 
@@ -201,7 +200,6 @@ alpha*-*-osf*)
 *-hpux*)
     if test -z "$GNU_CC"; then
 	DSO_CFLAGS="+Z"
-	COMPILER_WARNINGS=""
     fi
     DLL_SUFFIX="sl"
     DSO_LDOPTS='-b -E -L$(DIST)/bin $(LDFLAGS)'
@@ -427,11 +425,11 @@ AC_CACHE_VAL(ac_cv_cc_wall_flag,
                  [ac_cv_cc_wall_flag=false])])
 if test $ac_cv_cc_wall_flag = true ; then
   AC_MSG_RESULT(yes)
+  WARNINGS_CFLAGS="${WARNINGS_CFLAGS} -Wall"
 else
   AC_MSG_RESULT(no)
-  dnl Take -Wall back off CFLAGS
-  CFLAGS=$_SAVE_CFLAGS
 fi  
+CFLAGS=$_SAVE_CFLAGS
 
 dnl Check cc for -pedantic flag support (adds compiler warnings)
 AC_MSG_CHECKING($CC for \"-pedantic\" support)
@@ -443,11 +441,11 @@ AC_CACHE_VAL(ac_cv_cc_pedantic_flag,
                  [ac_cv_cc_pedantic_flag=false])])
 if test $ac_cv_cc_pedantic_flag = true ; then
   AC_MSG_RESULT(yes)
+  WARNINGS_CFLAGS="${WARNINGS_CFLAGS} -pedantic"
 else
   AC_MSG_RESULT(no)
-  dnl Take -pedantic back off CFLAGS
-  CFLAGS=$_SAVE_CFLAGS
 fi  
+CFLAGS=$_SAVE_CFLAGS
 
 # Mozilla specific options
 # ========================================================
@@ -479,9 +477,8 @@ if test "$MOZ_TOOLKIT" = "USE_DEFAULT"; then
   fi
 fi
 
-CFLAGS="$CFLAGS -DMOZ_TOOLKIT=$MOZ_TOOLKIT"
-
-CFLAGS="$CFLAGS -DMOZ_DLL_SUFFIX=$DLL_SUFFIX"
+AC_DEFINE_UNQUOTED(MOZ_TOOLKIT,   $MOZ_TOOLKIT)
+AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, $DLL_SUFFIX)
 
 OS_TARGET=`uname -s`
 
@@ -517,13 +514,13 @@ dnl [ Note: setting this will also unset FULL_STATIC_BUILD and NO_SHARED_LIB],
 
 MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
 [  --enable-debug	  enable debug symbols],
-  [ MOZ_DEBUG=1 OPTIMIZE="-g" ],
+  [ MOZ_DEBUG=1 OPTIMIZE_CFLAGS="-g" ],
   [],
   [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
 
 MOZ_ARG_ENABLE_BOOL(gprof,
 [  --enable-gprof	  enable gprof symbols],
-  [ GPROF="-pg" ])
+  [ GPROF_CFLAGS="-pg" ])
 
 MOZ_ARG_ENABLE_BOOL(profile,
 [  --enable-profile        enable profiling (solaris only)],
@@ -935,12 +932,12 @@ AC_ARG_WITH(pthreads,
 		NSPR_LIBS="-lpthread $NSPR_LIBS" USE_PTHREADS=1)
             case "$target" in
             *-*-solaris*) 
-                CFLAGS="$CFLAGS -D_REENTRANT" ;;
+                AC_DEFINE(_REENTRANT) ;;
             *-*-linux*) 
-                CFLAGS="$CFLAGS -D_REENTRANT" ;;
+                AC_DEFINE(_REENTRANT) ;;
             alpha*-*-osf*)
                 if [ test "$GNU_CC" = 1 ]; then
-                    CFLAGS="$CFLAGS -D_REENTRANT"
+                    AC_DEFINE(_REENTRANT)
                 else
                     CFLAGS="$CFLAGS -pthread" 
                 fi ;;
@@ -1010,14 +1007,17 @@ AC_CHECK_LIB(plds21, PL_GetEvent, NSPR_LIBS="-lplds21 $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplds21"], $NSPR_LIBS)
 
 CFLAGS=$_SAVE_CFLAGS
-CFLAGS="${OPTIMIZE} ${GPROF} ${CFLAGS}"
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
-
 if [ test -n "${NSPR_DIR}" && test -d "${NSPR_DIR}" ]; then
     NSPR_CFLAGS="-I${NSPR_DIR}/include"
     NSPR_LIBS="-L${NSPR_DIR}/lib ${NSPR_LIBS}"
 fi
+dnl End of nspr tests
+dnl ========================================================
+
+dnl Echo the CFLAGS to remove extra whitespace.
+CFLAGS=`echo $WARNINGS_CFLAGS $OPTIMIZE_CFLAGS $GPROF_CFLAGS $CFLAGS`
 
 dnl Support for X11 makedepend, if found on the system
 dnl ========================================================
