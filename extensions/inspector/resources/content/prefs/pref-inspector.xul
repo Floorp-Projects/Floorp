@@ -111,7 +111,7 @@
           <hbox>
             <description id="txSidebarMsg" flex="1">&installHowTo.label;</description>
           </hbox>
-          <button id="btnSidebarInstall" label="&install.label;" onclick="sidebarPref.installSidebar()"/>
+          <button id="btnSidebarInstall" label="&install.label;" oncommand="sidebarPref.installSidebar()"/>
         </vbox>
       </vbox>
     </groupbox>
