@@ -1892,14 +1892,12 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
     char titleStr[256];
     titleStr[0] = 0;
     PRInt32 srcLen = aTitle.Length() + 1;
-    PRInt32 destLen = sizeof(titleStr);
-    titleStr[destLen] = 0;
+    PRInt32 destLen = sizeof(titleStr) - 1;
     result = converter->Convert(aTitle.GetUnicode(), &srcLen, titleStr,
       &destLen);
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot convert title string");
     if (titleStr[0] && NS_SUCCEEDED(result)) {
       titleStr[destLen] = 0;
-printf("title string = [%s]\n", titleStr);
       gtk_window_set_title(GTK_WINDOW(mShell), titleStr);
       return NS_OK;
     } 
@@ -2228,28 +2226,6 @@ NS_IMETHODIMP nsWindow::GetScreenBounds(nsRect &aRect)
   return NS_OK;
 }
 
-PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
-{
-
-  PRBool    releaseWidget = PR_FALSE;
-  nsWidget *widget = NULL;
-
-  // rewrite the key event to the window with 'de focus
-  if (focusWindow) {
-    widget = focusWindow;
-    NS_ADDREF(widget);
-    aEvent.widget = focusWindow;
-    releaseWidget = PR_TRUE;
-  }
-  if (mEventCallback) {
-    return DispatchWindowEvent(&aEvent);
-  }
-
-  if (releaseWidget)
-    NS_RELEASE(widget);
-
-  return PR_FALSE;
-}
 
 PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
 {

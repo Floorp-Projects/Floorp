@@ -594,8 +594,8 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 #endif
 }
 
-static gint composition_start(GdkEventKey *aEvent, nsWindow *aWin,
-                              nsEventStatus *aStatus) {
+static gint composition_start(GdkEventKey *aEvent, nsWindow *aWin)
+{
   nsCompositionEvent compEvent;
 
   compEvent.widget = (nsWidget*)aWin;
@@ -605,21 +605,18 @@ static gint composition_start(GdkEventKey *aEvent, nsWindow *aWin,
   compEvent.message = NS_COMPOSITION_START;
   compEvent.eventStructType = NS_COMPOSITION_START;
   compEvent.compositionMessage = NS_COMPOSITION_START;
-  aWin->DispatchEvent(&compEvent, *aStatus);
+  aWin->OnComposition(compEvent);
 
   // set SpotLocation
   nsPoint spot;
   spot.x = compEvent.theReply.mCursorPosition.x;
   spot.y = compEvent.theReply.mCursorPosition.y + 
                 compEvent.theReply.mCursorPosition.height;
-  aWin->SetXICBaseFontSize(compEvent.theReply.mCursorPosition.height-1);
-  aWin->SetXICSpotLocation(spot);
-
   return PR_TRUE;
 }
 
-static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin,
-                             nsEventStatus *aStatus) {
+static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin)
+{
   nsresult res= NS_OK;
   if (!aWin->mIMECompositionUniString) {
     aWin->mIMECompositionUniStringSize = 128;
@@ -663,19 +660,17 @@ static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin,
   // XXX
   textEvent.isMeta = PR_FALSE; //(aEvent->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
   textEvent.eventStructType = NS_TEXT_EVENT;
-  aWin->DispatchEvent(&textEvent, *aStatus);
+  aWin->OnText(textEvent);
 
   nsPoint spot;
   spot.x = textEvent.theReply.mCursorPosition.x;
   spot.y = textEvent.theReply.mCursorPosition.y + 
                 textEvent.theReply.mCursorPosition.height;
-  aWin->SetXICBaseFontSize(textEvent.theReply.mCursorPosition.height-1);
-  aWin->SetXICSpotLocation(spot);
   return True;
 }
 
-static gint composition_end(GdkEventKey *aEvent, nsWindow *aWin,
-                            nsEventStatus *aStatus) {
+static gint composition_end(GdkEventKey *aEvent, nsWindow *aWin)
+{
   nsCompositionEvent compEvent;
 
   compEvent.widget = (nsWidget*)aWin;
@@ -685,7 +680,7 @@ static gint composition_end(GdkEventKey *aEvent, nsWindow *aWin,
   compEvent.message = NS_COMPOSITION_END;
   compEvent.eventStructType = NS_COMPOSITION_END;
   compEvent.compositionMessage = NS_COMPOSITION_END;
-  aWin->DispatchEvent(&compEvent, *aStatus);
+  aWin->OnComposition(compEvent);
 
   return PR_TRUE;
 }
@@ -794,19 +789,12 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   //
   if (event->length) {
     if (nsGtkIMEHelper::GetSingleton() && (!kevent.keyCode)) {
-      nsEventStatus status;
-      composition_start(event, win, &status);
-      composition_draw(event, win, &status);
-      composition_end(event, win, &status);
+      composition_start(event, win);
+      composition_draw(event, win);
+      composition_end(event, win);
     } else {
       InitKeyPressEvent(event,p, kevent);
       win->OnKey(kevent);
-
-#if 0 // this will break editor Undo/Redo Text Txn system
-      nsEventStatus status;
-      composition_start(event, win, &status);
-      composition_end(event, win, &status);
-#endif
 
     }
   } else { // for Home/End/Up/Down/Left/Right/PageUp/PageDown key

@@ -184,6 +184,11 @@ public:
   static nsWidget *debugWidget;
 #endif
 
+
+  PRBool   OnKey(nsKeyEvent &aEvent)         { return OnInput(aEvent); };
+  PRBool   OnText(nsTextEvent &aEvent)       { return OnInput(aEvent); };
+  PRBool   OnComposition(nsCompositionEvent &aEvent) { return OnInput(aEvent); };
+  PRBool   OnInput(nsInputEvent &aEvent);
 protected:
 
   virtual void InitCallbacks(char * aName = nsnull);
