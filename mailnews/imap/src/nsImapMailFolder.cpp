@@ -155,29 +155,29 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
     rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(dirEntry));
     if (NS_SUCCEEDED(rv))
     {
-		    rv = dirEntry->IsDirectory(&isDir);
-                    if (NS_SUCCEEDED(rv))
-                    {
-                      if (isDir)
-                      {
-                        nsCOMPtr<nsIFile> destClone;
-                        rv = destDir->Clone(getter_AddRefs(destClone));
-                        if (NS_SUCCEEDED(rv))
-                        {
-                          nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
-                          nsAutoString leafName;
-                          dirEntry->GetLeafName(leafName);
-                          newChild->AppendRelativePath(leafName);
-                          rv = newChild->Exists(&exists);
-                          if (NS_SUCCEEDED(rv) && !exists)
-                            rv = newChild->Create(nsIFile::DIRECTORY_TYPE, 0775);
-                          rv = RecursiveCopy(dirEntry, newChild);
-                        }
-                      }
-                      else
-                        rv = dirEntry->CopyTo(destDir, nsString());
-                    }
-                    
+      rv = dirEntry->IsDirectory(&isDir);
+      if (NS_SUCCEEDED(rv))
+      {
+        if (isDir)
+        {
+          nsCOMPtr<nsIFile> destClone;
+          rv = destDir->Clone(getter_AddRefs(destClone));
+          if (NS_SUCCEEDED(rv))
+          {
+            nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
+            nsAutoString leafName;
+            dirEntry->GetLeafName(leafName);
+            newChild->AppendRelativePath(leafName);
+            rv = newChild->Exists(&exists);
+            if (NS_SUCCEEDED(rv) && !exists)
+              rv = newChild->Create(nsIFile::DIRECTORY_TYPE, 0775);
+            rv = RecursiveCopy(dirEntry, newChild);
+          }
+        }
+        else
+          rv = dirEntry->CopyTo(destDir, nsString());
+      }
+      
     }
     rv = dirIterator->HasMoreElements(&hasMore);
     if (NS_FAILED(rv)) return rv;
@@ -1600,10 +1600,8 @@ nsImapMailFolder::AddMessageDispositionState(nsIMsgDBHdr *aMessage, nsMsgDisposi
 NS_IMETHODIMP
 nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 {
-  nsresult rv;
-
   // tell the folder to do it, which will mark them read in the db.
-  rv = nsMsgFolder::MarkMessagesRead(messages, markRead);
+  nsresult rv = nsMsgFolder::MarkMessagesRead(messages, markRead);
   if (NS_SUCCEEDED(rv))
   {
     nsCAutoString messageIds;
@@ -1653,8 +1651,8 @@ nsImapMailFolder::MarkAllMessagesRead(void)
 NS_IMETHODIMP nsImapMailFolder::MarkThreadRead(nsIMsgThread *thread)
 {
 
-	nsresult rv = GetDatabase(nsnull);
-	if(NS_SUCCEEDED(rv))
+  nsresult rv = GetDatabase(nsnull);
+  if(NS_SUCCEEDED(rv))
   {
     nsMsgKeyArray thoseMarked;
 		rv = mDatabase->MarkThreadRead(thread, nsnull, &thoseMarked);
@@ -1664,7 +1662,7 @@ NS_IMETHODIMP nsImapMailFolder::MarkThreadRead(nsIMsgThread *thread)
       mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
     }
   }
-	return rv;
+  return rv;
 }
 
 
@@ -7254,6 +7252,8 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
     if (nonJunkKeysToClassify && nonJunkKeysToClassify->GetSize() > 0)
       StoreCustomKeywords(m_moveCoalescer->GetMsgWindow(), "NonJunk", "", nonJunkKeysToClassify->GetArray(), nonJunkKeysToClassify->GetSize(), nsnull);
     m_moveCoalescer->PlaybackMoves();
+    junkKeysToClassify->RemoveAll();
+    nonJunkKeysToClassify->RemoveAll();
   }
   return NS_OK;
 }
