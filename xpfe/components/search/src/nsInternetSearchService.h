@@ -106,6 +106,7 @@ protected:
 	static nsCOMPtr<nsIPref>		prefs;
 	PRBool					busySchedule;
 	nsCOMPtr<nsIRDFResource>		busyResource;
+ 	nsString		mQueryEncodingStr;
 
 
 friend	int	PR_CALLBACK	searchModePrefCallback(const char *pref, void *aClosure);
