@@ -133,9 +133,12 @@ class CacheManagerStreamListener: public nsIStreamListener  {
         mListener = aListener;
         mLoadGroup = aLoadGroup;
         mChannel = aChannel;
-        if (!mListener || !mLoadGroup || !mChannel) return NS_ERROR_NOT_INITIALIZED;
-
-        return mLoadGroup->AddChannel(mChannel, aContext);
+        //it's legal to not have a load group...
+        if (!mListener || !mChannel) return NS_ERROR_NOT_INITIALIZED;
+        if (mLoadGroup)
+          return mLoadGroup->AddChannel(mChannel, aContext);
+        else
+          return NS_OK;
     }
 
     private:
