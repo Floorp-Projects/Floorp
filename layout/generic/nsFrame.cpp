@@ -4725,14 +4725,17 @@ DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
 
   // find the parent tree node leaf
   DR_FrameTreeNode* parentNode = nsnull;
-  DR_FrameTreeNode* lastLeaf = (DR_FrameTreeNode*)mFrameTreeLeaves.ElementAt(mFrameTreeLeaves.Count() - 1);
+  
+  DR_FrameTreeNode* lastLeaf = nsnull;
+  if(mFrameTreeLeaves.Count())
+    lastLeaf = (DR_FrameTreeNode*)mFrameTreeLeaves.ElementAt(mFrameTreeLeaves.Count() - 1);
   if (lastLeaf) {
     for (parentNode = lastLeaf; parentNode && (parentNode->mFrame != parentFrame); parentNode = parentNode->mParent) {
     }
   }
   DR_FrameTreeNode* newNode = new DR_FrameTreeNode(aFrame, parentNode);
   FindMatchingRule(*newNode);
-  if (lastLeaf == parentNode) {
+  if (lastLeaf && (lastLeaf == parentNode)) {
     mFrameTreeLeaves.RemoveElementAt(mFrameTreeLeaves.Count() - 1);
   }
   mFrameTreeLeaves.AppendElement(newNode);
