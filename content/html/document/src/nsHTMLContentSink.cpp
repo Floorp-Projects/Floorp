@@ -3806,7 +3806,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 PRInt32 millis = -1;
                 PRUnichar *uriAttrib = nsnull;
     
-                PRInt32 semiColon = result.FindChar(';');
+                PRInt32 semiColon = result.FindCharInSet(";,");
                 nsAutoString token;
                 if (semiColon > -1)
                     result.Left(token, semiColon);
@@ -3845,7 +3845,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                         // Increment to the next token.
                         if (semiColon > -1) {
                             semiColon++;
-                            PRInt32 semiColon2 = result.FindChar(';', PR_FALSE, semiColon);
+                            PRInt32 semiColon2 = result.FindCharInSet(";,", semiColon);
                             if (semiColon2 == -1) semiColon2 = result.Length();
                             result.Mid(token, semiColon, semiColon2 - semiColon);
                             semiColon = semiColon2;
