@@ -2133,3 +2133,9 @@ nsImapService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     return rv;
 }
     
+NS_IMETHODIMP
+nsImapService::GetServerIID(nsIID* *aServerIID)
+{
+    *aServerIID = new nsIID(NS_GET_IID(nsIImapIncomingServer));
+    return NS_OK;
+}

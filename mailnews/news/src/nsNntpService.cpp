@@ -975,3 +975,9 @@ nsNntpService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     return rv;
 }
     
+NS_IMETHODIMP
+nsNntpService::GetServerIID(nsIID* *aServerIID)
+{
+    *aServerIID = new nsIID(NS_GET_IID(nsINntpIncomingServer));
+    return NS_OK;
+}

@@ -31,5 +31,6 @@
 interface nsIMsgProtocolInfo : nsISupports
 {
     attribute nsIFileSpec defaultLocalPath;
+    readonly attribute nsIIDPtr serverIID;
 };
 

@@ -322,3 +322,10 @@ nsPop3Service::GetDefaultLocalPath(nsIFileSpec ** aResult)
     return rv;
 }
     
+
+NS_IMETHODIMP
+nsPop3Service::GetServerIID(nsIID* *aServerIID)
+{
+    *aServerIID = new nsIID(NS_GET_IID(nsIPop3IncomingServer));
+    return NS_OK;
+}
