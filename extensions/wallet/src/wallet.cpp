@@ -1875,7 +1875,8 @@ PRInt32 FieldToValue(
       wallet_ReadFromList(field, schema, dummy, wallet_FieldToSchema_list, PR_FALSE)) {
     /* schema name found, now fetch value from schema/value table */ 
     PRInt32 index2 = index;
-    if (wallet_ReadFromList(schema, value, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
+    if ((index >= 0) &&
+        wallet_ReadFromList(schema, value, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
       /* value found, prefill it into form */
       index = index2;
       return 0;
@@ -1892,14 +1893,31 @@ PRInt32 FieldToValue(
         PRInt32 count = LIST_COUNT(itemList2);
         for (PRInt32 i=0; i<count; i++) {
           ptr1 = NS_STATIC_CAST(wallet_Sublist*, itemList2->ElementAt(i));
-          if (wallet_ReadFromList(ptr1->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE)) {
+
+         /* skip over values found previously */
+         /*   note: a returned index of -1 means not-found.  So we will use the
+          *   negative even numbers (-2, -4, -6) to designate found as a concatenation
+          *   where -2 means first value of each concatenation, -4 means second value, etc.
+          */
+         PRInt32 index3 = 0;
+         for (PRInt32 j=0; j>index; j -= 2) {
+           if (!wallet_ReadFromList
+              (ptr1->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
+             break;
+           }
+         }
+
+
+
+          if (wallet_ReadFromList
+              (ptr1->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
             if (value.Length()>0) {
               value.AppendWithConversion(" ");
             }
             value += value2;
           }
         }
-        index = -1;
+        index -= 2;
         itemList = nsnull;
         if (value.Length()>0) {
           return 0;
@@ -3189,10 +3207,6 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
                           numberOfElements++;
                           prefillElement->count = 0;
                           wallet_PrefillElement_list->AppendElement(prefillElement);
-                          if (index == -1) {
-                            /* value was found from concat rules, can't resume from here */
-                            break;
-                          }
                         } else {
                           /* value not found, stop looking for more values */
                           delete prefillElement;
