@@ -114,7 +114,7 @@ void MacFileHelpers::SwapSlashColon(char * s)
 //-----------------------------------
 
 {
-	while ( *s != 0)
+	while (*s)
 	{
 		if (*s == '/')
 			*s++ = ':';
@@ -226,9 +226,48 @@ char* MacFileHelpers::MacPathFromUnixPath(const char* unixPath, Boolean hexDecod
 		const char* src = unixPath;
 		if (*src == '/')		 	// * full path
 			src++;
-		else if (strchr(src, '/'))	// * partial path, and not just a leaf name
+		else if (strchr(src, '/') && *src != '.')
+		{
+			// * partial path, and not just a leaf name. The '.' test is there because
+			// the loop below will add sufficient colons in that case.
 			*dst++ = ':';
-		strcpy(dst, src);
+		}
+		// Copy src to dst, but watch out for .. and .
+		char c = '/';
+		do
+		{
+		    char cprev = c; // remember the previous char (initially /)
+		    c = *src++;
+		    if (c == '.' && cprev == '/')
+		    {
+			    char* dstSaved = dst;
+			    // Special cases: "." and "..". Convert to ':' and '::'
+		    	*dst++ = ':';  // . becomes :
+		    	c = *src++;
+		    	if (c == '.')
+		    	{
+		    	    *dst++ = ':'; // .. becomes ::
+		    	    c = *src++;
+		    	}
+		    	if (c == '/')
+		    	{
+		    		// ../    becomes   :: so just skip the slash
+		    		// ./     becomes   :  "  "    "    "   "
+		    		src++;
+		    	}
+		    	else if (c)
+		    	{
+		    		// Oh. A file called ".foo" or "..foo"
+		    		// Back up and just do the normal thing.
+		    		src -= (dst - dstSaved);
+		    		dst = dstSaved;
+		    		// Since c is not '/', we won't do this stuff on the
+		    		// next iteration.
+		    	}
+		    	continue;
+		    }
+		    *dst++ = c;
+		} while (c);
 		if (hexDecode)
 			nsUnescape(dst);	// Hex Decode
 		MacFileHelpers::SwapSlashColon(dst);
