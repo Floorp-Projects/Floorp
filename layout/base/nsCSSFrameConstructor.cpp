@@ -5256,6 +5256,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   }
 #endif // INCLUDE_XUL
 
+  // Get the frame associated with the content
   nsIFrame* parentFrame = GetFrameFor(shell, aPresContext, aContainer);
   if (nsnull != parentFrame) {
     // Get the parent frame's last-in-flow
@@ -5265,6 +5266,15 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       if (nsnull != nextInFlow) {
         parentFrame = nextInFlow;
       }
+    }
+
+    // If we didn't process children when we originally created the frame,
+    // then don't do any processing now
+    nsCOMPtr<nsIAtom>  frameType;
+    parentFrame->GetFrameType(getter_AddRefs(frameType));
+    if (frameType.get() == nsLayoutAtoms::objectFrame) {
+      // This handles APPLET, EMBED, and OBJECT
+      return NS_OK;
     }
 
     // Create some new frames
@@ -5714,10 +5724,8 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
                                                  nsLayoutAtoms::fixedList,
                                                  state.mFixedItems.childList);
     }
-    
-  }
-  else {
 
+  } else {
     // Find the frame that precedes the insertion point.
     nsIFrame* prevSibling = FindPreviousSibling(shell, aContainer, aIndexInContainer);
     nsIFrame* nextSibling = nsnull;
@@ -5741,6 +5749,15 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       // No previous or next sibling so treat this like an appended frame.
       isAppend = PR_TRUE;
       shell->GetPrimaryFrameFor(aContainer, &parentFrame);
+      
+      // If we didn't process children when we originally created the frame,
+      // then don't do any processing now
+      nsCOMPtr<nsIAtom>  frameType;
+      parentFrame->GetFrameType(getter_AddRefs(frameType));
+      if (frameType.get() == nsLayoutAtoms::objectFrame) {
+        // This handles APPLET, EMBED, and OBJECT
+        return NS_OK;
+      }
     }
 
     // Construct a new frame
