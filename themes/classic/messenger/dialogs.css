@@ -76,21 +76,18 @@ menu.push[disabled="true"]:hover:active {
 }
 
 #convertYes {
-  list-style-image:url("chrome://global/skin/question-icon.gif");
+  list-style-image:url("chrome://global/skin/icons/alert-question.gif");
 }
 
 #convertAltering {
-  list-style-image:url("chrome://global/skin/question-icon.gif");
+  list-style-image:url("chrome://global/skin/icons/alert-question.gif");
 }
 
 #convertNo {
-  list-style-image:url("chrome://global/skin/alert-icon.gif");
+  list-style-image:url("chrome://global/skin/icons/alert-exclam.gif");
 }
 
 /* Workaround for bug 50217. Please remove this rule, when this bug is fixed. */
 #convertDefault {
-  list-style-image:url("chrome://global/skin/question-icon.gif");
+  list-style-image:url("chrome://global/skin/icons/alert-question.gif");
 }
-
-
-
