@@ -647,10 +647,14 @@ nsMultiStateCommand::DoCommandParams(const char *aCommandName,
   nsresult rv = NS_OK;
   if (editor)
   {
-      nsXPIDLCString s;
-      aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
-      nsAutoString tString;
-      tString.AssignWithConversion(s);
+      nsAutoString tString
+
+      if (aParams) {
+        nsXPIDLCString s;
+        aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
+        tString.AssignWithConversion(s);
+      }
+
       rv = SetState(editor, tString);
   }
   
