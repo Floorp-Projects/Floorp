@@ -119,6 +119,7 @@ components/jsurl.xpt
 
 ; layout
 components/libgkcontent.so
+dtd/*
 components/libgklayout.so                   
 components/libhtmlpars.so                 
 components/libgkview.so                   

@@ -127,6 +127,7 @@ components\jsurl.xpt
 
 ; layout
 components\gkcontent.dll
+dtd\*
 components\gklayout.dll                   
 components\gkparser.dll                 
 components\gkview.dll                   
