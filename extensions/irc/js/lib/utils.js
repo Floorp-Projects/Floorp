@@ -31,6 +31,9 @@
 
 var DEBUG = true;
 
+var dumpln;
+var dd;
+
 if (typeof document == "undefined") /* in xpcshell */
     dumpln = print;
 else
@@ -119,7 +122,7 @@ function dumpObjectTree (o, recurse, compress, level)
             case "function":
                 var sfunc = String(o[i]).split("\n");
                 if (sfunc[2] == "    [native code]")
-                    var sfunc = "[native code]";
+                    sfunc = "[native code]";
                 else
                     sfunc = sfunc.length + " lines";
                 s += pfx + tee + i + " (function) " + sfunc + "\n";

@@ -76,6 +76,8 @@ function userIsMe (user)
             return false;
             
     }
+
+    return false;
 }
 
 /*
@@ -135,6 +137,7 @@ function net_doconnect(e)
 
     var attempt = (typeof e.attempt == "undefined") ? 1 : e.attempt + 1;
     var host = (typeof e.lastHost == "undefined") ? 0 : e.lastHost + 1;
+    var ev;
 
     if (attempt > this.MAX_CONNECT_ATTEMPTS)
         return false;	
@@ -147,7 +150,7 @@ function net_doconnect(e)
     {
         dd ("cant make socket.");
         
-        var ev = new CEvent ("network", "error", this, "onError");
+        ev = new CEvent ("network", "error", this, "onError");
         ev.meat = "Unable to create socket: " + ex;
         this.eventPump.addEvent (ev);
         return false;
@@ -159,13 +162,13 @@ function net_doconnect(e)
     if (c.connect (this.serverList[host].name, this.serverList[host].port,
                    (void 0), true))
     {
-        var ev = new CEvent ("network", "connect", this, "onConnect");
+        ev = new CEvent ("network", "connect", this, "onConnect");
         ev.server = this.primServ = new CIRCServer (this, c);
         this.eventPump.addEvent (ev);
     }
     else
     { /* connect failed, try again  */
-        var ev = new CEvent ("network", "do-connect", this, "onDoConnect");
+        ev = new CEvent ("network", "do-connect", this, "onDoConnect");
         ev.lastHost = host;
         ev.attempt = attempt;
         this.eventPump.addEvent (ev);
@@ -475,7 +478,7 @@ function serv_onsenddata (e)
     if (this.sendQueue.length > 0)
         this.parent.eventPump.addEvent (new CEvent ("server", "senddata",
                                                     this, "onSendData"));
-    
+    return true;
 }
 
 CIRCServer.prototype.onPoll = 
@@ -483,6 +486,7 @@ function serv_poll(e)
 {
     var lines;
     var ex;
+    var ev;
     
     try
     {
@@ -499,12 +503,11 @@ function serv_poll(e)
         }
         else if (typeof ex != "undefined")
         {
-             var ev = new CEvent ("server", "disconnect", this,
-                                  "onDisconnect");
-             ev.reason = "error";
-             ev.exception = ex;
-             this.parent.eventPump.addEvent (ev);
-             return false;
+            ev = new CEvent ("server", "disconnect", this, "onDisconnect");
+            ev.reason = "error";
+            ev.exception = ex;
+            this.parent.eventPump.addEvent (ev);
+            return false;
         }
         else
             line = ""
@@ -515,11 +518,12 @@ function serv_poll(e)
 
     if (line)
     {
-        var ev = new CEvent ("server", "data-available", this,
-                             "onDataAvailable");
+        ev = new CEvent ("server", "data-available", this, "onDataAvailable");
         ev.line = line;
         this.parent.eventPump.addEvent (ev);
     }
+
+    return true;
     
 }
 
@@ -549,6 +553,8 @@ function serv_ppline(e)
         ev.data = lines[i].replace(/\r/g, "");
         this.parent.eventPump.addEvent (ev);
     }
+
+    return true;
 }
 
 /*
@@ -862,6 +868,9 @@ function serv_chanmode (e)
     e.modeStr = mode_str;
     e.usersAffected = new Array();
 
+    var nick;
+    var user;
+    
     for (var i = 0; i < mode_str.length ; i++)
     {
         switch (mode_str[i])
@@ -875,16 +884,16 @@ function serv_chanmode (e)
             case "o": /* operator */
                 if (modifier == "+")
                 {
-                    var nick = e.params[BASE_PARAM + params_eaten];
-                    var user = new CIRCChanUser (e.channel, nick, true);
+                    nick = e.params[BASE_PARAM + params_eaten];
+                    user = new CIRCChanUser (e.channel, nick, true);
                     params_eaten++;
                     e.usersAffected.push (user);
                 }
                 else
                     if (modifier == "-")
                     {
-                        var nick = e.params[BASE_PARAM + params_eaten];
-                        var user = new CIRCChanUser (e.channel, nick, false);
+                        nick = e.params[BASE_PARAM + params_eaten];
+                        user = new CIRCChanUser (e.channel, nick, false);
                         params_eaten++;
                         e.usersAffected.push (user);
                     }
@@ -893,18 +902,17 @@ function serv_chanmode (e)
             case "v": /* voice */
                 if (modifier == "+")
                 {
-                    var nick = e.params[BASE_PARAM + params_eaten];
-                    var user = new CIRCChanUser (e.channel, nick, (void 0),
-                                                 true);
+                    nick = e.params[BASE_PARAM + params_eaten];
+                    user = new CIRCChanUser (e.channel, nick, (void 0), true);
                     params_eaten++;
                     e.usersAffected.push (user);
                 }
                 else
                     if (modifier == "-")
                     {
-                        var nick = e.params[BASE_PARAM + params_eaten];
-                        var user = new CIRCChanUser (e.channel, nick, (void 0),
-                                                     false);
+                        nick = e.params[BASE_PARAM + params_eaten];
+                        user = new CIRCChanUser (e.channel, nick, (void 0),
+                                                 false);
                         params_eaten++;
                         e.usersAffected.push (user);
                     }
@@ -1365,6 +1373,8 @@ function CIRCChannel (parent, name)
     
     parent.channels[name] = this;
 
+    return this;
+    
 }
 
 CIRCChannel.prototype.TYPE = "IRCChannel";
@@ -1474,6 +1484,7 @@ function chan_part ()
 {
     
     this.parent.sendData ("PART " + this.name + "\n");
+    this.users = new Object();
     return true;
     
 }
@@ -1697,6 +1708,8 @@ function CIRCUser (parent, nick, name, host)
 
     parent.users[nick] = this;
 
+    return this;
+
 }
 
 CIRCUser.prototype.TYPE = "IRCUser";
@@ -1804,6 +1817,7 @@ function CIRCChanUser (parent, nick, isOp, isVoice)
     
     parent.users[nick] = this;
 
+    return this;
 }
 
 function cusr_setop (f)

@@ -80,7 +80,7 @@ CLineService.prototype.defaultArgs ="";
 CLineService.prototype.openWindowWithArgs=false;
 
 /* factory for command line handler service (CLineService) */
-CLineFactory = new Object();
+var CLineFactory = new Object();
 
 CLineFactory.createInstance =
 function (outer, iid) {
@@ -128,7 +128,7 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
     else
     {
         var ass = Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
-        var w = ass.getHiddenDOMWindow();
+        w = ass.getHiddenDOMWindow();
         w.open("chrome://chatzilla/content/chatzilla.xul?" + aChannel.URI.spec,
                "_blank", "chrome,menubar,toolbar,resizable");
     }
@@ -136,7 +136,7 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
 }
 
 /* content handler factory object (IRCContentHandler) */
-IRCContentHandlerFactory = new Object();
+var IRCContentHandlerFactory = new Object();
 
 IRCContentHandlerFactory.createInstance =
 function (outer, iid) {
@@ -179,7 +179,7 @@ function (aURI)
 }
 
 /* protocol handler factory object (IRCProtocolHandler) */
-IRCProtocolHandlerFactory = new Object();
+var IRCProtocolHandlerFactory = new Object();
 
 IRCProtocolHandlerFactory.createInstance =
 function (outer, iid) {

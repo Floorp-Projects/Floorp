@@ -30,14 +30,26 @@
  *   +- nickname (String)  initial nickname
  *   +- username (String)  initial username (ie: username@host.tld)
  *   +- desc     (String)  initial description (used in whois info)
- *   +- network  (String)  network to connect to on startup
- *   +- channel  (String)  channel to join after connecting
+ *   +- defaultNet (String) default network to use for irc:// urls
+ *   +- initialURLs (String) irc:// urls to connect to on startup, semicolon
+ *   |                       seperated
  *   +- munger   (Boolean) send output through text->html munger
+ *   |  +- smileyText (Boolean) true => display text (and graphic) when
+ *   |                                  matching smileys
+ *   |                          false => show only the smiley graphic
+ *   +- nickCompleteStr (String) String to use when tab-completing nicknames
+ *   |                           at the beginning of sentences
+ *   +- stalkWords (String) List of words to add to the stalk victims list
+ *   |                      semicolon seperated (see the /stalk command)
+ *   +- deleteOnPart (Boolean) Delete channel window automatically after a /part
+ *   |
  *   +- toolbar
  *   |  +- icons (Boolean) display icons in toolbar buttons
  *   +- notify
- *      +- aggressive (Boolean) flash trayicon/ bring window to top when
- *                              your nickname is mentioned.
+ *   |  +- aggressive (Boolean) flash trayicon/ bring window to top when
+ *   |                          your nickname is mentioned.
+ *   +- settings
+ *   |  +- autoSave (Boolean) Save settings on exit
  *   +- style   
  *   |  +- default (String) default style (relative to chrome://chatzilla/skin)
  *   |  +- user
@@ -78,30 +90,41 @@ function readIRCPrefs (rootNode)
     CIRCNetwork.prototype.INITIAL_DESC =
         getCharPref (pref, rootNode + "desc",
                      CIRCNetwork.prototype.INITIAL_DESC);
-    CIRCNetwork.prototype.INITIAL_CHANNEL =
-        getCharPref (pref, rootNode + "channel",
-                     CIRCNetwork.prototype.INITIAL_CHANNEL);
-
-    client.STARTUP_NETWORK =
-        getCharPref (pref, rootNode + "network", "");
-
+    client.DEFAULT_NETWORK =
+        getCharPref (pref, rootNode + "defaultNet", "moznet");    
+    client.INITIAL_URLS =
+        getCharPref (pref, rootNode + "initialURLs", "");
+    client.ADDRESSED_NICK_SEP =
+        getCharPref (pref, rootNode + "nickCompleteStr",
+                     client.ADDRESSED_NICK_SEP);
+    client.INITIAL_VICTIMS =
+        getCharPref (pref, rootNode + "stalkWords", "");
+    
+    client.DELETE_ON_PART =
+        getCharPref (pref, rootNode + "deleteOnPart", true);
+    
     client.munger.enabled =
         getBoolPref (pref, rootNode + "munger", client.munger.enabled);
 
+    client.smileyText =
+        getBoolPref (pref, rootNode + "munger.smileyText", false);
+
     client.ICONS_IN_TOOLBAR = 
-        getBoolPref (pref, rootNode + "toolbar.icons", true);
+        getBoolPref (pref, rootNode + "toolbar.icons", false);
 
     client.FLASH_WINDOW =
         getBoolPref (pref, rootNode + "notify.aggressive", true);
 
+    client.SAVE_SETTINGS =
+        getBoolPref (pref, rootNode + "settings.autoSave", true);
+
     client.DEFAULT_STYLE =
         getCharPref (pref, rootNode + "style.default", "output-default.css");
-
+    
     client.USER_CSS_PRE =
         getCharPref (pref, rootNode + "style.user.pre", "");
 
     client.USER_CSS_POST =
-
         getCharPref (pref, rootNode + "style.user.post", "");
 
     client.MAX_MESSAGES = 
@@ -119,6 +142,39 @@ function readIRCPrefs (rootNode)
     var h = client.eventPump.getHook ("event-tracer");
     h.enabled =
         getBoolPref (pref, rootNode + "debug.tracer", h.enabled);
+    
+}
+
+function writeIRCPrefs (rootNode)
+{
+    var pref =
+        Components.classes["@mozilla.org/preferences;1"].createInstance();
+    if(!pref)
+        throw ("Can't find pref component.");
+
+    if (!rootNode)
+        rootNode = "extensions.irc.";
+
+    if (!rootNode.match(/\.$/))
+        rootNode += ".";
+    
+    pref = pref.QueryInterface(Components.interfaces.nsIPref);
+
+    pref.SetCharPref (rootNode + "nickname",
+                      CIRCNetwork.prototype.INITIAL_NICK);
+    pref.SetCharPref (rootNode + "username",
+                      CIRCNetwork.prototype.INITIAL_NAME);
+    pref.SetCharPref (rootNode + "desc", CIRCNetwork.prototype.INITIAL_DESC);
+    pref.SetCharPref (rootNode + "nickCompleteStr", client.ADDRESSED_NICK_SEP);
+    pref.SetCharPref (rootNode + "stalkWords",
+                      client.stalkingVictims.join ("; "));
+    pref.SetBoolPref (rootNode + "munger", client.munger.enabled);
+    pref.SetBoolPref (rootNode + "munger.smileyText", client.smileyText);
+    pref.SetBoolPref (rootNode + "toolbar.icons", client.ICONS_IN_TOOLBAR);
+    pref.SetBoolPref (rootNode + "notify.aggressive", client.FLASH_WINDOW);
+    
+    var h = client.eventPump.getHook ("event-tracer");
+    pref.SetBoolPref (rootNode + "debug.tracer", h.enabled);
     
 }
 

@@ -47,7 +47,7 @@ client.MAX_NICK_DISPLAY = 14;
 client.MAX_WORD_DISPLAY = 35;
 client.TYPE = "IRCClient";
 client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
-client.ADDRESSED_NICK_SEP = ", ";
+client.ADDRESSED_NICK_SEP = ": ";
 
 client.name = "*client*";
 client.viewsArray = new Array();
@@ -88,52 +88,84 @@ function initStatic()
     obj = document.getElementById("input");
     obj.addEventListener("keyup", onInputKeyUp, false);
 
-        //obj = document.getElementById("tb[*client*]");
-    /*
-    client.quickList = new CListBox(document.getElementById("quickList"));
-    client.quickList.selectedItemCallback = quicklistCallback;
-    */
-
-    var saveDir = client.PRINT_DIRECTION;
-    client.PRINT_DIRECTION = 1;
-    client.display ("Welcome to ChatZilla...\n" +
-                    "Use /attach <network-name> connect to a network.\n" +
-                    "Where <network-name> is one of [" +
-                    keys (client.networks) + "]\n" +
-                    "More help is available with /help [<command-name>]",
-                    "HELLO");
-
-    setCurrentObject (client);
-
-    client.onInputCommands();
-    
-    client.PRINT_DIRECTION = saveDir;
-
-    if (!jsenv.HAS_XPCOM)
-        client.display ("ChatZilla was not given access to the XPConnect " +
-                        "service.  You will not be able to connect to an " +
-                        "irc server.  A workaround may be to set the " +
-                        "'security.checkxpconnect' pref to false in " +
-                        "all.js, or your user prefs.",
-                        "ERROR");
     window.onkeypress = onWindowKeyPress;
 
     setMenuCheck ("menu-dmessages", 
                   client.eventPump.getHook ("event-tracer").enabled);
     setMenuCheck ("menu-munger", client.munger.enabled);
     setMenuCheck ("menu-viewicons", client.ICONS_IN_TOOLBAR);
+
     client.uiState["toolbar"] =
-        setMenuCheck ("menu-view-toolbar", isVisible("views-tbox"));
+        setMenuCheck ("menu-view-toolbar", isVisible("views-tbar"));
     client.uiState["info"] =
-        setMenuCheck ("menu-view-info", isVisible("user-list"));
+        setMenuCheck ("menu-view-info", isVisible("user-list-box"));
     client.uiState["status"] =
-        setMenuCheck ("menu-view-status", isVisible("status-bar-tbox"));
+        setMenuCheck ("menu-view-status", isVisible("status-bar-tbar"));
+
+    client.statusBar = new Object();
+    
+    client.statusBar["net-name"] =
+        document.getElementById ("net-name");
+    client.statusBar["server-name"] =
+        document.getElementById ("server-name");
+    client.statusBar["server-nick"] =
+        document.getElementById ("server-nick");
+    client.statusBar["server-lag"] =
+        document.getElementById ("server-lag");
+    client.statusBar["last-ping"] =
+        document.getElementById ("last-ping");
+    client.statusBar["channel-name"] =
+        document.getElementById ("channel-name");
+    client.statusBar["channel-limit"] =
+        document.getElementById ("channel-limit");
+    client.statusBar["channel-key"] =
+        document.getElementById ("channel-key");
+    client.statusBar["channel-mode"] =
+        document.getElementById ("channel-mode");
+    client.statusBar["channel-users"] =
+        document.getElementById ("channel-users");
+    client.statusBar["channel-topic"] =
+        document.getElementById ("channel-topic");
+    client.statusBar["channel-topicby"] =
+        document.getElementById ("channel-topicby");
 
     onSortCol ("usercol-nick");
 
+    client.display ("Welcome to ChatZilla...\n" +
+                    "Use /attach <network-name> connect to a network.\n" +
+                    "Where <network-name> is one of [" +
+                    keys (client.networks) + "]\n" +
+                    "More help is available with /help [<command-name>]",
+                    "HELLO");
+    setCurrentObject (client);
+
+    client.onInputCommands();
+
+    var ary = client.INITIAL_URLS.split(";");
+    for (var i in ary)
+    {
+        ary[i] = stringTrim(ary[i]);
+        if (ary[i])
+        {
+            if (ary[i].indexOf("irc://") != 0)
+                ary[i] = "irc://" + ary[i];
+            gotoIRCURL (ary[i]);
+        }
+    }
+
+    ary = client.INITIAL_VICTIMS.split(";");
+    for (i in ary)
+    {
+        ary[i] = stringTrim(ary[i]);
+        if (ary[i])
+            client.stalkingVictims.push (ary[i]);
+    }
+
+    var m = document.getElementById ("menu-settings-autosave");
+    m.setAttribute ("checked", String(client.SAVE_SETTINGS));
+                    
     if (document.location.search)
-        gotoIRCURL (document.location.search.substr(1));
-    
+        gotoIRCURL (document.location.search.substr(1));    
 }
 
 function setMenuCheck (id, state)
@@ -200,17 +232,16 @@ function initHost(obj)
     obj.munger = new CMunger();
     obj.munger.enabled = true;
     obj.munger.addRule ("you-talking-to-me?", matchMyNick, "");
-    //    obj.munger.addRule ("im-stalking-you", matchMyNick, "" );
     obj.munger.addRule
-        ("link", /((\w+)\:\/\/[^\<\>\(\)\'\"\s]*|www\.[^\<\>\(\)\'\"\s]+\.[^\<\>\(\)\'\"\s]*)/,
+        ("link", /((\w+):\/\/[^<>()\'\"\s]+|www(\.[^.<>()\'\"\s]+){2,})/,
          insertLink);
-    obj.munger.addRule
-        ("face",
+    obj.munger.addRule ("face",
          /((^|\s)[\<\>]?[\;\=\:\8]\~?[\-\^\v]?[\)\|\(pP\<\>oO0\[\]\/\\](\s|$))/,
          insertSmiley);
-    obj.munger.addRule ("rheet", /(rhee+t\!*)/i, "rheet");
+    obj.munger.addRule ("ear", /(\(\*)/, insertEar);
+    obj.munger.addRule ("rheet", /(rhee+t\!*)/i, insertRheet);
     obj.munger.addRule ("bold", /(\*[^\*]*\*)/, "bold");
-    obj.munger.addRule ("italic", /[^sS](\/[^\/]*\/)/, "italic");
+    obj.munger.addRule ("italic", /[^sS\<](\/[^\/][^\>]*\/)/, "italic");
     obj.munger.addRule ("teletype", /(\|[^|]*\|)/, "teletype");
     obj.munger.addRule ("underline1", /^(\_[^\_]*\_)/, "underline");
     obj.munger.addRule ("underline2", /\W(\_[^\_]*\_)/, "underline");
@@ -236,8 +267,8 @@ function matchMyNick (text, containerTag, eventDetails)
             sv += "|(" + client.stalkingVictims.join( ")|(" ) + ")";
         }
 
-        var re = new RegExp("(^|[\\W\\s])" + sv + 
-                            "([\\W\\s]|$)", "i");
+        var str = "(^|[\\W\\s])" + sv + "([\\W\\s]|$)";
+        var re = new RegExp(str, "i");
         if (text.search(re) != -1 || 
             eventDetails.orig.lastNickDisplayed.search(re) != -1)
         {
@@ -271,28 +302,56 @@ function insertLink (matchText, containerTag)
     
 }
 
+function insertRheet (matchText, containerTag)
+{
+
+    var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                           "html:a");
+    anchor.setAttribute ("href",
+                         "ftp://ftp.mozilla.org/pub/mozilla/libraries/bonus-tracks/rheet.wav");
+    anchor.setAttribute ("class", "rheet");
+    anchor.setAttribute ("target", "_content");
+    if (matchText.length >= client.MAX_WORD_DISPLAY)
+        matchText = hyphenateWord (matchText, client.MAX_WORD_DISPLAY);
+    anchor.appendChild (document.createTextNode (matchText));
+    containerTag.appendChild (anchor);    
+}
+
+function insertEar (matchText, containerTag)
+{
+    if (client.smileyText)
+        containerTag.appendChild (document.createTextNode (matchText));
+
+    var img = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                        "html:img");
+    img.setAttribute ("src", client.IMAGEDIR + "face-ear.gif");
+    containerTag.appendChild (img);
+    
+}
+
 function insertSmiley (emoticon, containerTag)
 {
     var src = "";
 
-    if (emoticon.search (/\;[\-\^\v]?[\)\>\]]/) != -1)
+    if (emoticon.search (/\;[-^v]?[)>\]]/) != -1)
         src = "face-wink.gif";
-    else if (emoticon.search (/[\=\:\8][\-\^\v]?[\)\>\]]/) != -1)
+    else if (emoticon.search (/[=:8][-^v]?[)>\]]/) != -1)
         src = "face-smile.gif";
-    else if (emoticon.search (/[\=\:\8][\-\^\v]?[\/\\]/) != -1)
+    else if (emoticon.search (/[=:8][-^v]?[\/\\]/) != -1)
         src = "face-screw.gif";
-    else if (emoticon.search (/[\=\:\8]\~[\-\^\v]?\(/) != -1)
+    else if (emoticon.search (/[=:8]\~[-^v]?\(/) != -1)
         src = "face-cry.gif";
-    else if (emoticon.search (/[\=\:\8][\-\^\v]?[\(\<\[]/) != -1)
+    else if (emoticon.search (/[=:8][-^v]?[(<\[]/) != -1)
         src = "face-frown.gif";
-    else if (emoticon.search (/\<?[\=\:\8][\-\^\v]?[0oO]/) != -1)
+    else if (emoticon.search (/\<?[=:8][-^v]?[0oO]/) != -1)
         src = "face-surprise.gif";
-    else if (emoticon.search (/[\=\:\8][\-\^\v]?[pP]/) != -1)
+    else if (emoticon.search (/[=;:8][-^v]?[pP]/) != -1)
         src = "face-tongue.gif";
     else if (emoticon.search (/\>?[\=\:\8][\-\^\v]?[\(\|]/) != -1)
         src = "face-angry.gif";
 
-    containerTag.appendChild (document.createTextNode (emoticon));
+    if (client.smileyText)
+        containerTag.appendChild (document.createTextNode (emoticon));
 
     if (src)
     {
@@ -432,15 +491,13 @@ function setClientOutput(doc)
         dd ("Got output element.");
         /* continue processing now: */
         initStatic();
-        if (client.STARTUP_NETWORK)
-            client.onInputAttach ({inputData: client.STARTUP_NETWORK});
     }
     else
         dd ("ARG!  Couldn't get output element, try again later.");
     
 }
 
-testURLs =
+var testURLs =
     ["irc:", "irc://", "irc:///", "irc:///help", "irc:///help,needkey",
     "irc://irc.foo.org", "irc://foo:6666",
     "irc://foo", "irc://irc.foo.org/", "irc://foo:6666/", "irc://foo/",
@@ -456,10 +513,10 @@ function doURLTest()
 {
     for (var u in testURLs)
     {
-        dd ("-*- testing url \"" + testURLs[u] + "\"");
+        dd ("testing url \"" + testURLs[u] + "\"");
         var o = parseIRCURL(testURLs[u]);
         if (!o)
-            dd ("-!- PARSE FAILED!");
+            dd ("PARSE FAILED!");
         else
             dd (dumpObjectTree(o));
         dd ("---");
@@ -472,7 +529,7 @@ function parseIRCURL (url)
     
     var rv = new Object();
     rv.spec = url;
-    rv.host = client.STARTUP_NETWORK;
+    rv.host = client.DEFAULT_NETWORK;
     rv.target = "";
     rv.port = 6667;
     rv.msg = "";
@@ -488,7 +545,7 @@ function parseIRCURL (url)
     var ary = url.match (/^irc:\/\/([^\/\s]+)?(\/.*)?\s*$/i);
     if (!ary)
     {
-        dd ("chatzilla: parseIRCURL: initial split failed");
+        dd ("parseIRCURL: initial split failed");
         return null;
     }
     var host = ary[1];
@@ -498,7 +555,7 @@ function parseIRCURL (url)
     ary = host.match (/^([^\s\:]+)?(\:\d+)?$/);
     if (!ary)
     {
-        dd ("chatzilla: parseIRCURL: host/port split failed");
+        dd ("parseIRCURL: host/port split failed");
         return null;
     }
     
@@ -506,7 +563,7 @@ function parseIRCURL (url)
     {
         if (!ary[1])
         {
-            dd ("chatzilla: parseIRCURL: port with no host");
+            dd ("parseIRCURL: port with no host");
             return null;
         }
         specifiedHost = rv.host = ary[1].toLowerCase();
@@ -529,7 +586,7 @@ function parseIRCURL (url)
         ary = rest.match (/^\/([^\,\?\s]*)?(,[^\?]*)?(\?.*)?$/);
         if (!ary)
         {
-            dd ("chatzilla: parseIRCURL: rest split failed '" + rest + "'");
+            dd ("parseIRCURL: rest split failed '" + rest + "'");
             return null;
         }
         
@@ -544,7 +601,7 @@ function parseIRCURL (url)
                 (params.search (/,\s*isnick\s*,|,\s*isnick\s*$/) != -1);
             if (rv.isnick && !rv.target)
             {
-                dd ("chatzilla: parseIRCURL: isnick w/o target");
+                dd ("parseIRCURL: isnick w/o target");
                     /* isnick w/o a target is bogus */
                 return null;
             }
@@ -553,7 +610,7 @@ function parseIRCURL (url)
                 (params.search (/,\s*isserver\s*,|,\s*isserver\s*$/) != -1);
             if (rv.isserver && !specifiedHost)
             {
-                dd ("chatzilla: parseIRCURL: isserver w/o host");
+                dd ("parseIRCURL: isserver w/o host");
                     /* isserver w/o a host is bogus */
                 return null;
             }
@@ -620,7 +677,7 @@ function gotoIRCURL (url)
 
         if (!alreadyThere)
         {
-            dd ("-*- chatzilla: gotoIRCURL: not already connected to " +
+            dd ("gotoIRCURL: not already connected to " +
                 "server " + url.host + " trying to connect...");
             client.onInputServer ({inputData: url.host + " " + url.port +
                                                   " " + pass});
@@ -637,7 +694,7 @@ function gotoIRCURL (url)
         net = client.networks[url.host];
         if (!net.isConnected())
         {
-            dd ("-*- chatzilla: gotoIRCURL: not already connected to " +
+            dd ("gotoIRCURL: not already connected to " +
                 "network " + url.host + " trying to connect...");
             client.onInputAttach ({inputData: url.host + " " + pass});
             if (!net.pendingURLs)
@@ -648,7 +705,7 @@ function gotoIRCURL (url)
     }
     
     /* already connected, do whatever comes next in the url */
-    dd ("-*- chatzilla: gotoIRCURL: connected, time to finish parsing '" +
+    dd ("gotoIRCURL: connected, time to finish parsing '" +
         url + "'");
     if (url.target)
     {
@@ -707,11 +764,11 @@ function updateNetwork(obj)
             ping = "(never)";
     }
 
-    document.getElementById ("net-name").firstChild.data = net;
-    document.getElementById ("server-name").firstChild.data = serv;
-    document.getElementById ("server-nick").firstChild.data = nick;
-    document.getElementById ("server-lag").firstChild.data = lag;
-    document.getElementById ("last-ping").firstChild.data = ping;
+    client.statusBar["net-name"].setAttribute("value", net);
+    client.statusBar["server-name"].setAttribute("value", serv);
+    client.statusBar["server-nick"].setAttribute("value", nick);
+    client.statusBar["server-lag"].setAttribute("value", lag);
+    client.statusBar["last-ping"].setAttribute("value", ping);
 
 }
 
@@ -739,13 +796,13 @@ function updateChannel (obj)
         topicBy = o.channel.topicBy ? o.channel.topicBy : "(nobody)";
     }
     
-    document.getElementById ("channel-name").firstChild.data = chan;
-    document.getElementById ("channel-limit").firstChild.data = l;
-    document.getElementById ("channel-key").firstChild.data = k;
-    document.getElementById ("channel-mode").firstChild.data = mode;
-    document.getElementById ("channel-users").firstChild.data = users;
-    document.getElementById ("channel-topic").firstChild.data = topic;
-    document.getElementById ("channel-topicby").firstChild.data = topicBy;
+    client.statusBar["channel-name"].setAttribute("value", chan);
+    client.statusBar["channel-limit"].setAttribute("value", l);
+    client.statusBar["channel-key"].setAttribute("value", k);
+    client.statusBar["channel-mode"].setAttribute("value", mode);
+    client.statusBar["channel-users"].setAttribute("value", users);
+    client.statusBar["channel-topic"].setAttribute("value", topic);
+    client.statusBar["channel-topicby"].setAttribute("value", topicBy);
 
 }
 
@@ -868,11 +925,11 @@ function setCurrentObject (obj)
     if (!obj.messages)
     {
         dd ("** INVALID OBJECT passed to setCurrentObject **");
-        return false;
+        return;
     }
 
     if (client.currentObject == obj)
-        return true;
+        return;
         
     var tb, userList;
 
@@ -886,7 +943,7 @@ function setCurrentObject (obj)
         client.output.removeChild (client.output.firstChild);
     client.output.appendChild (obj.messages);
 
-    /* Unselect currenrly selected users. */
+    /* Unselect currently selected users. */
     userList = document.getElementById("user-list");
     if (userList) 
         /* Remove curently selection items before this tree gets rerooted, because it seems to 
@@ -1041,7 +1098,7 @@ function getTBForObject (source, create)
     {
         dd ("** UNDEFINED  passed to getTBForObject **");
         dd (getStackTrace());
-        return;
+        return null;
     }
     
     create = (typeof create != "undefined") ? Boolean(create) : false;
@@ -1061,7 +1118,7 @@ function getTBForObject (source, create)
 
         default:
             dd ("** INVALID OBJECT passed to getTBForObject **");
-            return;
+            return null;
     }
 
     var tb, id = "tb[" + name + "]";

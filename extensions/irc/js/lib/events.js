@@ -90,6 +90,7 @@ function ep_hook(e, hooks)
         }
     }
 
+    return false;
 }
 
 CEventPump.prototype.addHook = 

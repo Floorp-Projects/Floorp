@@ -28,7 +28,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://chatzilla/locale/chatzilla.dtd">
 
-<?xml-stylesheet href="chrome://chatzilla/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://chatzilla/skin/chatzilla.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
@@ -57,35 +57,60 @@
 <broadcasterset id="broadcasterset"/>
 
 <popupset>
-	<popup id="userlistPopup" onclick="onUserListPopupClick(event)">
-		<menuitem value="&op.value;" accesskey="&op.accesskey;" code="/op" />
-		<menuitem value="&deop.value;" accesskey="&deop.accesskey;" code="/deop" />
-		<menuitem value="&voice.value;" accesskey="&voice.accesskey;" code="/voice" />
-		<menuitem value="&devoice.value;" accesskey="&devoice.accesskey;" code="/devoice" />	
-		<menuitem value="&kick.value;" accesskey="&kick.accesskey;" code="/kick" />
-<!--		<menuitem value="&kick2.value;" accesskey="&kick2.accesskey;" code="/kick" /> -->	
+    <popup id="userlistPopup" onclick="onUserListPopupClick(event)">
+        <menuitem value="&op.value;" accesskey="&op.accesskey;" code="/op" />
+        <menuitem value="&deop.value;" accesskey="&deop.accesskey;"
+          code="/deop" />
+        <menuitem value="&voice.value;" accesskey="&voice.accesskey;"
+          code="/voice" />
+        <menuitem value="&devoice.value;" accesskey="&devoice.accesskey;"
+          code="/devoice" />	
+        <menuitem value="&kick.value;" accesskey="&kick.accesskey;"
+          code="/kick" />
+<!--
+		<menuitem value="&kick2.value;" accesskey="&kick2.accesskey;"
+          code="/kick" />
+ -->
 		<menuitem value="&whois.value;" accesskey="&whois.accesskey;" code="/whois" />
-	</popup>
+    </popup>
 </popupset>
 
 <toolbox>
-  <menubar id="main-menubar">
+  <menubar id="main-menubar" persist="collapsed">
     <menu value="Options">
       <menupopup>
 
-        <menu value="Toggles">
-          <menupopup>    
-            <menuitem id="menu-dmessages" value="Debug Messages"
-              oncommand="onToggleTraceHook()" type="checkbox"/>
-            <menuitem id="menu-munger" value="Munger"
-              oncommand="onToggleMunger()" type="checkbox"/>
-          </menupopup>
-        </menu>
+        <menuitem id="menu-view-toolbar" value="Show Toolbar" 
+          type="checkbox" oncommand="onToggleVisibility('toolbar');"/>
+        <menuitem id="menu-view-info" value="Show Userlist" 
+          type="checkbox" oncommand="onToggleVisibility('info');"/>
+        <menuitem id="menu-view-status" value="Show Statusbar" 
+          type="checkbox" oncommand="onToggleVisibility('status');"/>
 
+        <menuseparator/>
+
+        <menuitem id="menu-viewicons" value="LEDs in View Buttons" 
+          type="checkbox" oncommand="onToggleToolbarIcons();"/>
+
+        <menuitem id="menu-munger" value="Enable Smileys"
+          oncommand="onToggleMunger()" type="checkbox"/>
+
+        <menuseparator/>
+
+        <menuitem id="menu-dmessages" value="Debug Messages"
+          oncommand="onToggleTraceHook()" type="checkbox"/>
+
+        <menuseparator/>
+
+        <menuitem id="menu-settings-save-now" value="Save Settings Now"
+          oncommand="writeIRCPrefs()"/>
+        <menuitem id="menu-settings-autosave" value="Save Settings On Exit"
+          oncommand="onToggleSaveOnExit()" type="checkbox"/>
+
+    <!--
         <menuitem value="Logging..." enabled="false"
                   oncommand="onNotImplemented();"/>
-        <menuseparator/>
-        <!--
+
         <menu value="Style">
           <menupopup>
            <menuitem value="Default"
@@ -99,50 +124,34 @@
                      oncommand="onDoStyleChange('other')"/>
           </menupopup>
         </menu>
-        -->
+     -->
       </menupopup>
     </menu>
     <menu value="View">
       <menupopup>
-        <menuitem id="menu-view-toolbar" value="Toolbar" 
-          type="checkbox" oncommand="onToggleVisibility('toolbar');"/>
-        <menuitem id="menu-view-info" value="Info Tree" 
-          type="checkbox" oncommand="onToggleVisibility('info');"/>
 
-        <menuitem id="menu-view-status" value="Statusbar" 
-          type="checkbox" oncommand="onToggleVisibility('status');"/>
-
-        <menuseparator/>
-
-        <menuitem id="menu-viewicons" value="Icons in View Buttons" 
-          type="checkbox" oncommand="onToggleToolbarIcons();"/>
-
-        <menuseparator/>
-
-        <menu value="Current View">
-          <menupopup>
-            <menuitem value="Hide" oncommand="onHideCurrentView();"/>
-            <menuitem value="Clear" oncommand="onClearCurrentView();"/>
-            <menuitem value="Delete" oncommand="onDeleteCurrentView();"/>
-          </menupopup>
-        </menu>
+       <!-- hide vs delete nuances are too vague
+        <menuitem value="Hide" oncommand="onHideCurrentView();"/>
+       -->
+        <menuitem value="Clear this view" oncommand="onClearCurrentView();"/>
+        <menuitem value="Delete this view" oncommand="onDeleteCurrentView();"/>
 
       </menupopup>
     </menu>
     <menu id="tasksMenu"/>
   </menubar>
-</toolbox>
-
-<toolbox id="views-tbox" persist-notyet="collapsed">
-  <toolbar id="views-tbar" class="toolbar-primary chromeclass-toolbar">
+  
+  <toolbar id="views-tbar" class="toolbar-primary chromeclass-toolbar"
+    persist="collapsed">
     <box id="views-tbar-inner"/>
   </toolbar>
 </toolbox>
 
 <box id="outer-box" align="vertical" flex="1">
   <box id="inner-box" align="horizontal" flex="1">
-    <box id="user-list-box" flex="30%">
-    <tree id="user-list" container="true" datasources="rdf:null" style="width:0px" flex="1"
+    <box id="user-list-box" flex="30%" persist="collapsed">
+    <tree id="user-list" container="true" datasources="rdf:null"
+     style="width:0px" flex="1"
      containment="http://home.netscape.com/NC-irc#chanuser"
      multiple="true"
      context="userlistPopup">
@@ -196,7 +205,8 @@
       </treehead>
     </tree>      
     </box>
-    <splitter id="main-splitter" align="vertical" collapse="before"/>
+    <splitter id="main-splitter" align="vertical" collapse="before"
+      persist="collapsed"/>
     <box align="vertical" flex="60%">
       <iframe id="it-doesnt-matter-anyway" class="output-container"
        type="content" src="about:blank" flex="1"/>
@@ -205,62 +215,62 @@
   </box>
 </box>
 
-<toolbox id="status-bar-tbox" persist-notyet="collapsed">
-  <toolbar id="status-bar" class="chromeclass-status">
+<toolbox id="status-bar-tbox">
+  <toolbar id="status-bar-tbar" class="chromeclass-status" persist="collapsed">
     <box class="status-box" align="horizontal" flex="20%">
       <box class="status-label" align="vertical">
-        <label>&network.label;</label>
-        <label>&channel.label;</label>
-        <label>&topicBy.label;</label>
+        <text value="&network.label;"/>
+        <text value="&channel.label;"/>
+        <text value="&topicBy.label;"/>
       </box>
       <box class="status-data" align="vertical">
-         <label id="net-name">(none)</label> 
-         <label id="channel-name">(none)</label>
-         <label id="channel-topicby">(nobody)</label>
+         <text id="net-name" value="(one)"/> 
+         <text id="channel-name" value="(none)"/>
+         <text id="channel-topicby" value="(nobody)"/>
       </box>
       <spring flex="20%"/>
       <box class="status-label" align="vertical">
-         <label>&server.label;</label>
-         <label>&mode.label;</label>
-         <label>&topic.label;</label>
+         <text value="&server.label;"/>
+         <text value="&mode.label;"/>
+         <text value="&topic.label;"/>
       </box>
       <box align="vertical" flex="80%">
         <box align="horizontal" flex="1">
           <box class="status-data" align="vertical">
-            <label id="server-name">(none)</label>
-            <label id="channel-mode">(none)</label>
+            <text id="server-name" value="(none)"/>
+            <text id="channel-mode" value="(none)"/>
           </box>
           <spring flex="100%"/>
           <box class="status-label" align="vertical">
-            <label>&nickname.label;</label>
-            <label>&users.label;</label>
+            <text value="&nickname.label;"/>
+            <text value="&users.label;"/>
           </box>
           <box class="status-data" align="vertical">
-            <label id="server-nick">(unknown)</label>
-            <label id="channel-users">(none)</label>
+            <text id="server-nick" value="(unknown)"/>
+            <text id="channel-users" value="(none)"/>
           </box>
           <spring flex="100%"/>
           <box class="status-label" align="vertical">
-            <label>&lag.label;</label>
-            <label>&limit.label;</label>
+            <text value="&lag.label;"/>
+            <text value="&limit.label;"/>
           </box>
           <box class="status-data" align="vertical">
-            <label id="server-lag">-1</label>
-            <label id="channel-limit">(none)</label>
+            <text id="server-lag" value="-1"/>
+            <text id="channel-limit" value="(none)"/>
           </box>
           <spring flex="100%"/>
           <box class="status-label" align="vertical">
-            <label>&lastPing.label;</label>
-            <label>&key.label;</label>
+            <text value="&lastPing.label;"/>
+            <text value="&key.label;"/>
           </box>
           <box class="status-data" align="vertical">
-            <label id="last-ping">(never)</label>
-          <label id="channel-key">(none)</label>
+            <text id="last-ping" value="(never)"/>
+          <text id="channel-key" value="(none)"/>
           </box>
         </box>
         <box align="horizontal" flex="1">
           <box class="status-data" align="vertical" flex="1">
-            <label id="channel-topic">(none)</label>
+            <text id="channel-topic" value="(none)"/>
           </box>
         </box>
       </box>
