@@ -106,7 +106,7 @@ sub init {
     my($app, $session, $protocol) = @_;
     $self->propertySet('actualSession', $session);
     $self->propertySet('actualProtocol', $protocol);
-    $self->propertySet('outputter', $self->app->getServiceInstance('output.generic.'.$self->actualProtocol));
+    $self->propertySet('outputter', $self->app->getService('output.generic.'.$self->actualProtocol));
 }
 
 sub output {
