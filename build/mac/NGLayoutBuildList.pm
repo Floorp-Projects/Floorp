@@ -9,6 +9,7 @@ use vars qw( @ISA @EXPORT );
 
 # perl includes
 use Mac::StandardFile;
+use Mac::Processes;
 use Cwd;
 use File::Path;
 
@@ -17,7 +18,7 @@ use Moz;
 use MacCVS;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw( Checkout BuildDist BuildProjects);
+@EXPORT			= qw( Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects);
 
 # NGLayoutBuildList builds the nglayout project
 # it is configured by setting the following variables in the caller:
@@ -57,8 +58,13 @@ sub _pickWithMemoryFile($)
 	}
 	unless (defined ($cvsfile))
 	{
-	# prompt user for the file name, and store it
 		print "Choose a CVS session file in file dialog box:\n";	# no way to display a prompt?
+# make sure that MacPerl is a front process
+  while (GetFrontProcess	() !=  GetCurrentProcess())
+  {
+	   SetFrontProcess( GetCurrentProcess() );
+  }
+	# prompt user for the file name, and store it
 		my $macFile = StandardGetFile( 0, "McvD");	
 		if ( $macFile->sfGood() )
 		{
@@ -90,7 +96,7 @@ sub _assertRightDirectory()
 
 sub _getDistDirectory()
 {
-	return $main::DEBUG ? ":mozilla:dist:client_debug:" : ":mozilla:dist:client:";
+	return $main::DEBUG ? ":mozilla:dist:viewer_debug:" : ":mozilla:dist:viewer:";
 }
 
 #
@@ -167,7 +173,8 @@ sub BuildDist()
 	
 	# we really do not need all these paths, but many client projects include them
 	mkpath([ ":mozilla:dist:", ":mozilla:dist:client:", ":mozilla:dist:client_debug:", ":mozilla:dist:client_stubs:" ]);
-	
+	mkpath([ ":mozilla:dist:viewer:", ":mozilla:dist:viewer_debug:" ]);
+
 	my($distdirectory) = ":mozilla:dist";
 
 	my($distlist) = [
@@ -213,6 +220,14 @@ sub BuildDist()
     [":mozilla:modules:libimg:png:MANIFEST", "$distdirectory:libimg:"],
     [":mozilla:modules:libimg:src:MANIFEST", "$distdirectory:libimg:"],
     [":mozilla:modules:libimg:public:MANIFEST", "$distdirectory:libimg:"],
+#PARSE
+		[":mozilla:lib:libparse:MANIFEST",			"$distdirectory:libparse:"],
+#OLD LAYOUT
+		[":mozilla:lib:layout:MANIFEST",	"$distdirectory:layout:"],
+#STYLE
+		[":mozilla:lib:libstyle:MANIFEST",	 "$distdirectory:libstyle:"],
+#LAYERS
+		[":mozilla:lib:liblayer:include:MANIFEST",	"$distdirectory:layers:"],
 #NETWORK
     [":mozilla:network:cache:MANIFEST", "$distdirectory:network:"],
     [":mozilla:network:client:MANIFEST", "$distdirectory:network:"],
@@ -244,6 +259,7 @@ sub BuildDist()
 #LAYOUT
     [":mozilla:layout:base:public:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:html:style:public:MANIFEST", "$distdirectory:layout:"],
+    [":mozilla:layout:html:base:src:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:html:document:public:MANIFEST", "$distdirectory:layout:"],
 #WIDGET
     [":mozilla:widget:public:MANIFEST", "$distdirectory:widget:"],
@@ -273,16 +289,20 @@ sub BuildDist()
 # different targets controlled by $main::build
 sub BuildCommonProjects()
 {
-	unless( $main::build{projects} ) { return; }
+	unless( $main::build{common} ) { return; }
 	_assertRightDirectory();
 
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
+# clean projects
+
 	Moz::BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
 	Moz::BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",							"Stubs");
 	Moz::BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
+
+# shared
 
 	Moz::BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp");
 	MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", "$dist_dir");
@@ -293,34 +313,46 @@ sub BuildCommonProjects()
 	BuildProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",	"NSPR20$D.shlb");
 	MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb", "$dist_dir");
 
-	BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",				"MemAllocator$D.shlb");
+	BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"MemAllocator$D.shlb");
 	MakeAlias(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator$D.shlb", "$dist_dir");
 	
 	BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",								"NSStdLib$D.shlb");
 	MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb", "$dist_dir");
 	
-#	BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
-
 	BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.shlb");
 	MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb", "$dist_dir");
 
-	BuildProject(":mozilla:jpeg:macbuild:JPEG.mcp",										"JPEG$D.shlb");
+	BuildProject(":mozilla:jpeg:macbuild:JPEG.mcp",											"JPEG$D.shlb");
 	MakeAlias(":mozilla:jpeg:macbuild:JPEG$D.shlb", "$dist_dir");
 
-	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",										"png$D.o");
+	BuildProject(":mozilla:js:macbuild:JavaScriptPPC.mcp",		"JavaScriptNoJSJ$D.shlb");
+	MakeAlias(":mozilla:js:macbuild:JavaScript$D.shlb", "$dist_dir");
 
-	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",										"libimg$D.o");
+	BuildProject(":mozilla:modules:zlib:macbuild:zlib.mcp",		"zlib$D.shlb");
+	MakeAlias(":mozilla:modules:zlib:macbuild:zlib$D.shlb", "$dist_dir");
+	
+# static
+
+  BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",	 "Security.o");
+
+	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",						"png$D.o");
+
+	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o");
+
+	BuildProject(":mozilla:network:macbuild:network.mcp",		"networkModular$D.o");
 
 }
 
 sub BuildLayoutProjects()
 {
-	unless( $main::build{projects} ) { return; }
+	unless( $main::build{nglayout} ) { return; }
 	_assertRightDirectory();
 
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
+
+	BuildProject(":mozilla:base:macbuild:base.mcp",				"base$D.o");
 
 	BuildProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",				"htmlparser$D.o");
 	
@@ -332,6 +364,7 @@ sub BuildLayoutProjects()
 
 	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",	"webshell$D.o");
 
+	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",	"viewer$D.o");
 }
 
 sub BuildProjects()
