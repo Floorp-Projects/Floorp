@@ -21,6 +21,7 @@
 #include "xpt_xdr.h"
 #include "xpt_struct.h"
 #include <string.h>
+#include <stdio.h>
 
 #ifdef XP_MAC
 static char *strdup(const char *c)
