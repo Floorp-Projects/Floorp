@@ -20,7 +20,6 @@
 #define nsIStreamListener_h___
 
 #include "nsIStreamObserver.h"
-#include "nsIOutputStream.h"
 #include "nsIEventQueue.h"
 
 class nsIInputStream;
@@ -68,9 +67,4 @@ NS_NewAsyncStreamListener(nsIStreamListener* *result,
 extern nsresult
 NS_NewSyncStreamListener(nsIStreamListener* *listener,
                          nsIInputStream* *inStream);
-
-extern nsresult
-NS_NewSyncOutStreamListener(nsIStreamListener* *listener,
-                         nsIOutputStream* *outStream);
-
 #endif /* nsIIStreamListener_h___ */
