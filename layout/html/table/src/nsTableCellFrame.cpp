@@ -1013,17 +1013,15 @@ nscoord nsTableCellFrame::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
 void nsTableCellFrame::GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFrame)
 {
   aBorder.left = aBorder.right = aBorder.top = aBorder.bottom = 0;
-  if (nsnull==aTableFrame)
+  if (nsnull==aTableFrame) {
     return;
-
-  if (NS_STYLE_BORDER_COLLAPSE==aTableFrame->GetBorderCollapseStyle())
-  {
-    aBorder = mBorderEdges.mMaxBorderWidth;
   }
-  else
-  {
+
+  if (NS_STYLE_BORDER_COLLAPSE==aTableFrame->GetBorderCollapseStyle()) {
+    aBorder = mBorderEdges.mMaxBorderWidth;
+  } else {
     const nsStyleSpacing* spacing;
-    aTableFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+    GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
     spacing->GetBorder(aBorder);
   }
 }
