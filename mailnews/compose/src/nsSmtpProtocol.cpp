@@ -29,6 +29,8 @@
 
 #include "nsINetService.h"
 
+#include "nsMsgBaseCID.h"
+
 #include "rosetta.h"
 
 #include "allxpstr.h"
@@ -40,6 +42,7 @@
 
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kRFC822ParserCID, NS_MSGRFC822PARSER_CID);
 
 /* the output_buffer_size must be larger than the largest possible line
  * 2000 seems good for news
@@ -611,7 +614,11 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	{
 		/* else send the MAIL FROM: command */
  	  	 nsIMsgRFC822Parser * parser = nsnull;
-		 NS_NewRFC822Parser(&parser);
+         nsComponentManager::CreateInstance(kRFC822ParserCID,
+                                            nsnull,
+                                            nsIMsgRFC822Parser::GetIID(),
+                                            (void **)&parser);
+
 		 char * s = nsnull;
 		 if (parser)
 		 {
@@ -1307,7 +1314,10 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 
 				char * addresses = nsnull;
 				nsIMsgRFC822Parser * parser = nsnull;
-				NS_NewRFC822Parser(&parser);
+                nsComponentManager::CreateInstance(kRFC822ParserCID,
+                                                   nsnull,
+                                                   nsIMsgRFC822Parser::GetIID(),
+                                                   (void **)&parser);
 
 				m_runningURL->GetAllRecipients(&addresses);
 
