@@ -184,13 +184,12 @@ nsPrefWindow.prototype =
             for( var pageTag in this.wsm.dataManager.pageData )
               {
                 var pageData = this.wsm.dataManager.getPageData( pageTag );
-                if ("initialized" in pageData && pageData.initialized)
+                if ("initialized" in pageData && pageData.initialized && "elementIDs" in pageData)
                   {
-                for( var elementID in pageData )
+                for( var elementID in pageData.elementIDs )
                   {
                     if (elementID == "initialized") continue;
-                    var itemObject = pageData[elementID];
-                    if (typeof(itemObject) != "object") break;
+                    var itemObject = pageData.elementIDs[elementID];
                     if ( "prefstring" in itemObject && itemObject.prefstring )
                       {
                         var elt = itemObject.localname;
@@ -296,10 +295,10 @@ nsPrefWindow.prototype =
             var header = document.getElementById("header");
             header.setAttribute("title",
                                 window.frames[this.contentFrame].document.documentElement.getAttribute("headertitle"));
-            if( !(aPageTag in this.wsm.dataManager.pageData) )
+            var pageData = this.wsm.dataManager.getPageData(aPageTag); 
+            if(!('initialized' in pageData))
               {
                 var prefElements = window.frames[this.contentFrame].document.getElementsByAttribute( "prefstring", "*" );
-                this.wsm.dataManager.pageData[aPageTag] = [];
                 for( var i = 0; i < prefElements.length; i++ )
                   {
                     var prefstring    = prefElements[i].getAttribute( "prefstring" );
@@ -343,7 +342,7 @@ nsPrefWindow.prototype =
               {
                 window.frames[ this.contentFrame ].Startup();
               }
-            this.wsm.dataManager.pageData[aPageTag].initialized=true;
+            this.wsm.dataManager.pageData[aPageTag].initialized = true;
           }
   };
 
