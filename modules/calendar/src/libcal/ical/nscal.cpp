@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 // nscal.h
 // John Sun
 // 1:35 PM Febuary 18 1998
@@ -34,6 +33,7 @@
 #include "vtodo.h"
 #include "vjournal.h"
 #include "vfrbsy.h"
+#include "vtimezne.h"
 #include "jlog.h"
 #include "jutility.h"
 #include "keyword.h"
@@ -41,9 +41,10 @@
 #include "uidrgntr.h"
 #include "datetime.h"
 #include "period.h"
+#include "recid.h"
 
 /** to work on UNIX */
-#define TRACE printf
+//#define TRACE printf
 
 //---------------------------------------------------------------------
 t_bool NSCalendar::m_bLoadMultipleCalendars = FALSE;
@@ -74,6 +75,92 @@ NSCalendar::NSCalendar(JLog * initLog)
     m_Log = initLog;
 }
 //---------------------------------------------------------------------
+NSCalendar::NSCalendar(NSCalendar & that)
+: m_VJournalVctr(0), m_VEventVctr(0), m_VTodoVctr(0),
+  m_VTimeZoneVctr(0), m_VFreebusyVctr(0), m_XTokensVctr(0),
+#if 0
+  m_Source(0), m_Name(0),
+#endif
+  m_CalScale(0), m_Version(0), m_Prodid(0)
+{
+    m_iMethod = that.m_iMethod;
+    // copy component vectors
+    if (that.m_VJournalVctr != 0)
+    {
+        m_VJournalVctr = new JulianPtrArray(); PR_ASSERT(m_VJournalVctr != 0);
+        if (m_VJournalVctr != 0)
+        {
+            ICalComponent::cloneICalComponentVector(m_VJournalVctr, that.m_VJournalVctr);
+        }
+    }
+    if (that.m_VEventVctr != 0)
+    {
+        m_VEventVctr = new JulianPtrArray(); PR_ASSERT(m_VEventVctr != 0);
+        if (m_VEventVctr != 0)
+        {
+            ICalComponent::cloneICalComponentVector(m_VEventVctr, that.m_VEventVctr);
+        }
+    }
+    if (that.m_VTodoVctr != 0)
+    {
+        m_VTodoVctr = new JulianPtrArray(); PR_ASSERT(m_VTodoVctr != 0);
+        if (m_VTodoVctr != 0)
+        {
+            ICalComponent::cloneICalComponentVector(m_VTodoVctr, that.m_VTodoVctr);
+        }
+    }
+    if (that.m_VTimeZoneVctr != 0)
+    {
+        m_VTimeZoneVctr = new JulianPtrArray(); PR_ASSERT(m_VTimeZoneVctr != 0);
+        if (m_VTimeZoneVctr != 0)
+        {
+            ICalComponent::cloneICalComponentVector(m_VTimeZoneVctr, that.m_VTimeZoneVctr);
+        }
+    }
+    if (that.m_VFreebusyVctr != 0)
+    {
+        m_VFreebusyVctr = new JulianPtrArray(); PR_ASSERT(m_VFreebusyVctr != 0);
+        if (m_VFreebusyVctr != 0)
+        {
+            ICalComponent::cloneICalComponentVector(m_VFreebusyVctr, that.m_VFreebusyVctr);
+        }
+    }
+    // clone xtokens
+    if (that.m_XTokensVctr != 0)
+    {
+        m_XTokensVctr = new JulianPtrArray(); PR_ASSERT(m_XTokensVctr != 0);
+        if (m_XTokensVctr != 0)
+        {
+            ICalProperty::CloneUnicodeStringVector(that.m_XTokensVctr, m_XTokensVctr);
+        }
+    }
+    // clone ICalProperties.
+    if (that.m_CalScale != 0) 
+    { 
+        m_CalScale = that.m_CalScale->clone(m_Log); 
+    }
+    if (that.m_Version != 0) 
+    { 
+        m_Version = that.m_Version->clone(m_Log); 
+    }
+    if (that.m_Prodid != 0) 
+    { 
+        m_Prodid = that.m_Prodid->clone(m_Log); 
+    }
+#if 0
+    if (that.m_Source != 0) 
+    { 
+        m_Source = that.m_Source->clone(m_Log); 
+    }
+    if (that.m_Name != 0) 
+    { 
+        m_Name = that.m_Name->clone(m_Log); 
+    }
+#endif
+    
+
+}
+//---------------------------------------------------------------------
 NSCalendar::~NSCalendar()
 {
     if (m_VEventVctr != 0) 
@@ -102,12 +189,27 @@ NSCalendar::~NSCalendar()
         delete m_VTimeZoneVctr; m_VTimeZoneVctr = 0;
     }
     
-    if (m_CalScale != 0) { delete m_CalScale; m_CalScale = 0; }
-    if (m_Prodid != 0) { delete m_Prodid; m_Prodid = 0; }
-    if (m_Version != 0) { delete m_Version; m_Version = 0; }
+    if (m_CalScale != 0) 
+    { 
+        delete m_CalScale; m_CalScale = 0; 
+    }
+    if (m_Prodid != 0) 
+    { 
+        delete m_Prodid; m_Prodid = 0; 
+    }
+    if (m_Version != 0) 
+    { 
+        delete m_Version; m_Version = 0; 
+    }
 #if 0
-    if (m_Name != 0) { delete m_Name; m_Name = 0; }
-    if (m_Source != 0) { delete m_Source; m_Source = 0; }
+    if (m_Name != 0) 
+    { 
+        delete m_Name; m_Name = 0; 
+    }
+    if (m_Source != 0) 
+    { 
+        delete m_Source; m_Source = 0; 
+    }
 #endif
 
     //if (m_Method != 0) { delete m_Method; m_Method = 0; }
@@ -120,6 +222,111 @@ NSCalendar::~NSCalendar()
 }
 //---------------------------------------------------------------------
 
+/*
+ *  Returns:
+ *    TRUE if export worked
+ *    FALSE if there was a problem
+ */
+void
+NSCalendar::export(const char * filename, t_bool & status)
+{
+    FILE *f = fopen(filename, "w");
+    if (f != 0)
+    {
+        char * ucc = 0;
+#if 1
+        UnicodeString sResult, out;
+        status = TRUE;
+
+        sResult = JulianKeyword::Instance()->ms_sBEGIN_VCALENDAR;
+        sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+        ucc = sResult.toCString("");
+        if (ucc != 0)
+        {
+            fprintf(f, ucc);
+            delete [] ucc; ucc = 0;
+        }
+        else 
+            status = FALSE;
+
+        // PRINT Calendar Properties
+        sResult = createCalendarHeader(out);
+        ucc = sResult.toCString("");
+        if (ucc != 0)
+        {
+            fprintf(f, ucc);
+            delete [] ucc; ucc = 0;
+        }
+        else 
+            status = FALSE;
+        
+        // PRINT X-TOKENS
+        sResult = ICalProperty::vectorToICALString(getXTokens(), out);
+        ucc = sResult.toCString("");
+        if (ucc != 0)
+        {
+            fprintf(f, ucc);
+            delete [] ucc; ucc = 0;
+        }
+        else 
+            status = FALSE;
+        
+        // PRINT Calendar Components
+        status |= printComponentVectorToFile(getTimeZones(), f);
+        status |= printComponentVectorToFile(getEvents(), f);
+        status |= printComponentVectorToFile(getTodos(), f);
+        status |= printComponentVectorToFile(getJournals(), f);
+        status |= printComponentVectorToFile(getVFreebusy(), f);
+
+        sResult = JulianKeyword::Instance()->ms_sEND_VCALENDAR;
+        sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+        ucc = sResult.toCString("");
+        if (ucc != 0)
+        {
+            fprintf(f, ucc);
+            delete [] ucc; ucc = 0;
+        }
+        else 
+            status = FALSE;
+
+#else
+        char * ucc = toICALString().toCString("");
+        if (ucc != 0)
+        {
+            size_t iLen = strlen(ucc);
+            size_t iCountWritten = fwrite(ucc, iLen, 1, f);
+            delete [] ucc; ucc = 0;
+            status = (iCountWritten == 1) ? TRUE : FALSE;
+        }
+        else
+        {
+            status = FALSE;
+        }
+#endif
+        int iRet = fclose(f);
+        if (0 != iRet)
+        {
+            //int iError =errno;
+            status = FALSE;
+        }
+    }
+    else
+    {
+        status = FALSE;
+    }
+}
+
+//---------------------------------------------------------------------
+
+NSCalendar *
+NSCalendar::clone(JLog * initLog)
+{
+    m_Log = initLog;
+    return new NSCalendar(*this);
+}
+
+//---------------------------------------------------------------------
+
 void 
 NSCalendar::parse(ICalReader * brFile,
                   UnicodeString & fileName,
@@ -130,10 +337,9 @@ NSCalendar::parse(ICalReader * brFile,
     
     JulianPtrArray * parameters = new JulianPtrArray();
     PR_ASSERT(parameters != 0 && brFile != 0);
+
     if (parameters == 0 || brFile == 0)
-    {
         return;
-    }
 
     t_bool bNextComponent = FALSE;
 
@@ -141,8 +347,13 @@ NSCalendar::parse(ICalReader * brFile,
     UnicodeString sOK;
     UnicodeString u, sName;
     ICalComponent * ic;
+    t_bool bUpdatedComponent;
 
-    //if (FALSE) TRACE("%s", fileName.toCString(""));
+    UnicodeString uid;
+#if 0
+    DateTime d;
+    UnicodeString rid;
+#endif
     if (fileName.size() > 0)
     {
         // TODO: set filename
@@ -151,36 +362,27 @@ NSCalendar::parse(ICalReader * brFile,
     {
         PR_ASSERT(brFile != 0);
         brFile->readFullLine(strLine, status);
-        //strLine.trim();
         ICalProperty::Trim(strLine);
 
-        //if (FALSE) TRACE("NSCAL: line (size = %d) = ---%s---\r\n", 
-        //   strLine.size(), strLine.toCString(""));           
-        
-        if (FAILURE(status) && strLine.size() <= 0)
+        if (FAILURE(status) && strLine.size() == 0)
             break;
 
         ICalProperty::parsePropertyLine(strLine, propName, 
             propVal, parameters);
         
-        //if (FALSE) TRACE("NSCAL: propName = --%s--, propVal = --%s--, paramSize = %d\r\n", 
-        //    propName.toCString(""), propVal.toCString(""), parameters->GetSize());
-      
         if (strLine.size() == 0)
         {
             ICalProperty::deleteICalParameterVector(parameters);
             parameters->RemoveAll();
-            //delete parameters; parameters = 0;
-            
             continue;
         }
 
         // break for "END:" line
-        else if (strLine.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND_VCALENDAR) == 0)
+        else if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
+            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0))
         {
             ICalProperty::deleteICalParameterVector(parameters);
             parameters->RemoveAll();
-            //delete parameters; parameters = 0;
             
             // if parsing of multiple calendars allowed, continue in loop.
             if (m_bLoadMultipleCalendars)
@@ -194,7 +396,6 @@ NSCalendar::parse(ICalReader * brFile,
             {
                 ICalProperty::deleteICalParameterVector(parameters);
                 parameters->RemoveAll();
-                //delete parameters; parameters = 0;
             
                 bNextComponent = TRUE;
                 sName = propVal;
@@ -205,6 +406,7 @@ NSCalendar::parse(ICalReader * brFile,
                     ic = ICalComponentFactory::Make(sName, m_Log);
                     if (ic != 0)
                     {
+                        if (m_Log) m_Log->addEventErrorEntry();
                         sOK = ic->parse(brFile, methodToString(getMethod(), u),
                             sOK, getTimeZones());
 
@@ -229,12 +431,16 @@ NSCalendar::parse(ICalReader * brFile,
                                 {
                                     if (ic->isValid())
                                     {
-                                        addComponentWithType(ic, ic->GetType()); 
+                                        bUpdatedComponent = addComponentWithType(ic, ic->GetType()); 
+                                        if (bUpdatedComponent)
+                                        {
+                                            delete ic; ic = 0;
+                                        }
                                     }
                                     else
                                     {
-                                        if (m_Log) m_Log->logString(
-                                            JulianLogErrorMessage::Instance()->ms_sInvalidComponent, 300);
+                                        if (m_Log) m_Log->logError(
+                                            JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
                                         delete ic; ic = 0;
                                     }
                                 }
@@ -244,12 +450,16 @@ NSCalendar::parse(ICalReader * brFile,
                                          (ic->isValid()))
                                     {
                                         removeComponents(out);
-                                        addComponentWithType(ic, ic->GetType());
+                                        bUpdatedComponent = addComponentWithType(ic, ic->GetType()); 
+                                        if (bUpdatedComponent)
+                                        {
+                                            delete ic; ic = 0;
+                                        }
                                     }
                                     else
                                     {
-                                        if (m_Log) m_Log->logString(
-                                            JulianLogErrorMessage::Instance()->ms_sInvalidComponent, 300);
+                                        if (m_Log) m_Log->logError(
+                                            JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
                                         delete ic; ic = 0;
                                     }
                                 }
@@ -263,12 +473,16 @@ NSCalendar::parse(ICalReader * brFile,
                                 {
                                     if (ic->isValid())
                                     {
-                                        addComponentWithType(ic, ic->GetType());
+                                        bUpdatedComponent = addComponentWithType(ic, ic->GetType());
+                                        if (bUpdatedComponent)
+                                        {
+                                            delete ic; ic = 0;
+                                        }
                                     }
                                     else
                                     {
-                                        if (m_Log) m_Log->logString(
-                                            JulianLogErrorMessage::Instance()->ms_sInvalidComponent, 300);
+                                        if (m_Log) m_Log->logError(
+                                            JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
                                         delete ic; ic = 0;
                                     }
                                 }
@@ -277,12 +491,16 @@ NSCalendar::parse(ICalReader * brFile,
                                     if (ic->isValid())
                                     {
                                         removeComponents(out);
-                                        addComponentWithType(ic, ic->GetType());
+                                        bUpdatedComponent = addComponentWithType(ic, ic->GetType());
+                                        if (bUpdatedComponent)
+                                        {
+                                            delete ic; ic = 0;
+                                        }
                                     }
                                     else
                                     {
-                                        if (m_Log) m_Log->logString(
-                                            JulianLogErrorMessage::Instance()->ms_sInvalidComponent, 300);
+                                        if (m_Log) m_Log->logError(
+                                            JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
                                         delete ic; ic = 0;
                                     }
                                 }
@@ -294,46 +512,205 @@ NSCalendar::parse(ICalReader * brFile,
                             // not multiple handling
                             if (ic->isValid())
                             {
-                                addComponent(ic, sName);
+                                bUpdatedComponent = addComponentWithType(ic, ic->GetType());
+                                if (bUpdatedComponent)
+                                {
+                                    delete ic; ic = 0;
+                                }
+                                //addComponent(ic, sName);
                             }
                             else
                             {
-                                if (m_Log) m_Log->logString(
-                                    JulianLogErrorMessage::Instance()->ms_sInvalidComponent, 300);
-                                delete ic;
+                                if (m_Log) m_Log->logError(
+                                    JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
+                                delete ic; ic = 0;
                             }
                         }
 #else // #if 0
                
-                        if (ic->isValid() || ic->getUID().size() > 0)
+                        //if (ic->isValid() && ic->getUID().size() > 0)
+                        if (ic->isValid())
                         {
-                            addComponent(ic, sName);
+                            //addComponent(ic, sName);
+                            bUpdatedComponent = addComponentWithType(ic, ic->GetType());                            
+                            if (m_Log) 
+                            {   
+                                m_Log->setCurrentEventLogComponentType((JulianLogErrorVector::ECompType) ic->GetType());
+                                m_Log->setCurrentEventLogValidity(TRUE);
+                                uid = "";
+#if 0
+                                rid = "";
+#endif
+                                if (ic->GetType() == ICalComponent::ICAL_COMPONENT_VEVENT || 
+                                    ic->GetType() == ICalComponent::ICAL_COMPONENT_VTODO || 
+                                    ic->GetType() == ICalComponent::ICAL_COMPONENT_VJOURNAL)
+                                {
+                                    uid = ((TimeBasedEvent *) ic)->getUID();
+#if 0
+                                    d = ((TimeBasedEvent *) ic)->getRecurrenceID();
+                                    if (d.isValid())
+                                        rid = d.toISO8601();
+#endif
+                                }
+                                else if (ic->GetType() == ICalComponent::ICAL_COMPONENT_VFREEBUSY)
+                                {
+                                    uid = ((VFreebusy *) ic)->getUID();
+                                }
+                                else if (ic->GetType() == ICalComponent::ICAL_COMPONENT_VTIMEZONE)
+                                {
+                                    uid = ((VTimeZone *) ic)->getTZID();
+                                }
+#if 0
+                                m_Log->setUIDRecurrenceID(uid, rid);        
+#else
+                                m_Log->setUID(uid);
+#endif
+                            }
+                            if (bUpdatedComponent)
+                            {
+                                delete ic; ic = 0;
+                            }
                         }
                         else
                         {
-                            if (m_Log) m_Log->logString(
-                                JulianLogErrorMessage::Instance()->ms_sInvalidComponent, 300);
-                            delete ic;
-                        }
+                            if (m_Log) 
+                            {
+                                //m_Log->setCurrentEventLogComponentType((JulianLogErrorVector::ECompType) ic->GetType());
+                                // make invalid event errors go to NSCALENDAR
+                                m_Log->setCurrentEventLogComponentType(JulianLogErrorVector::ECompType_NSCALENDAR);
+                                m_Log->setCurrentEventLogValidity(FALSE);
+                                uid = "";
+#if 0
+                                rid = "";
+#endif
+                                if (ic->GetType() == ICalComponent::ICAL_COMPONENT_VEVENT || 
+                                    ic->GetType() == ICalComponent::ICAL_COMPONENT_VTODO || 
+                                    ic->GetType() == ICalComponent::ICAL_COMPONENT_VJOURNAL)
+                                {
+                                    uid = ((TimeBasedEvent *) ic)->getUID();
+#if 0
+                                    d = ((TimeBasedEvent *) ic)->getRecurrenceID();
+                                    if (d.isValid())
+                                        rid = d.toISO8601();
+#endif
+                                }
+                                else if (ic->GetType() == ICalComponent::ICAL_COMPONENT_VFREEBUSY)
+                                {
+                                    uid = ((VFreebusy *) ic)->getUID();
+                                }
+                                else if (ic->GetType() == ICalComponent::ICAL_COMPONENT_VTIMEZONE)
+                                {
+                                    uid = ((VTimeZone *) ic)->getTZID();
+                                }
+#if 0
+                                m_Log->setUIDRecurrenceID(uid, rid);                                
+#else
+                                m_Log->setUID(uid);
+#endif
+                            }
+                            if (m_Log) m_Log->logError(
+                                JulianLogErrorMessage::Instance()->ms_iInvalidComponent, 300);
+#if 0
+                            if (m_Log) 
+                            {
+                                // Print the REQUEST-STATUS of the deleted event.
+                                if (ic->getRequestStatus() != 0)
+                                {
+                                    UnicodeString * uPtr;
+                                    t_int32 ii;
+                                    for (ii = 0; ii < ic->getRequestStatus()->GetSize(); ii++)
+                                    {
+                                        uPtr = (UnicodeString *) ic->getRequestStatus()->GetAt(ii);
+                                        m_Log->logError(*uPtr);
+                                    }
+                                }
+                            }
 #endif // #if 0
-                        if (sOK.compareIgnoreCase(JulianKeyword::Instance()->ms_sOK) == 0)
-                        {
-                            bNextComponent = FALSE;
+                            delete ic; ic = 0;
                         }
+#endif // #else
+                        if (sOK.compareIgnoreCase(JulianKeyword::Instance()->ms_sOK) == 0)
+                            bNextComponent = FALSE;
                         else 
                         {
-                            if (sOK.compareIgnoreCase("BEGIN:V") == 0)
+                            if (sOK.startsWith("BEGIN:"))
                             {
                                 bNextComponent = TRUE;
+                                // TODO: i'm extracting after 6, that means I'm assuming "BEGIN:whatever"
                                 sName = sOK.extractBetween(6, sOK.size(), sName);
                             }
                             else
-                            {
                                 bNextComponent = FALSE;
+                        }
+                    }
+                    else
+                        bNextComponent = FALSE;
+
+                    //-----
+                    if (ICalProperty::IsXToken(sName))
+                    {
+                        ICalProperty::deleteICalParameterVector(parameters);
+                        parameters->RemoveAll();
+                        if (m_Log) 
+                        {
+                            m_Log->addEventErrorEntry();
+                            //m_Log->setCurrentEventLogComponentType(JulianLogErrorVector::ECompType_XCOMPONENT);
+                            // make x-toekn errors go to NSCALENDAR
+                            m_Log->setCurrentEventLogComponentType(JulianLogErrorVector::ECompType_NSCALENDAR);
+                        }   
+                        if (m_Log) m_Log->logError(
+                            JulianLogErrorMessage::Instance()->ms_iXTokenComponentIgnored, 
+                            JulianKeyword::Instance()->ms_sNSCALENDAR, sName, 200);
+
+                        // Ignore all lines between BEGIN:X-COMPONENT and END:X-COMPONENT
+                        while (TRUE)
+                        {
+                            brFile->readFullLine(strLine, status);
+                            if (FAILURE(status) && strLine.size() == 0)
+                                break;
+                            ICalProperty::parsePropertyLine(strLine, propName, propVal, parameters);
+                            ICalProperty::deleteICalParameterVector(parameters);
+                            parameters->RemoveAll();
+                            
+                            if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
+                                (propVal.compareIgnoreCase(sName) == 0))
+                            {
+                                // correct end of X-Component parsing
+                                break;
+                            }
+                            else if (
+                                ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) && 
+                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0)) ||
+                                
+                                ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) && 
+                                ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
+                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
+                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
+                                (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
+                                (ICalProperty::IsXToken(propVal)))))
+                                
+                            {
+                                // incorrect end of X-Component parsing, log an error
+                                // ends with END:VCALENDAR or BEGIN:VCALENDAR, VEVENT, VTODO, VJOURNAL, VFREEBUSY, VTIMEZONE 
+                                // or BEGIN:X-token
+                            
+                                if (m_Log) m_Log->logError(
+                                    JulianLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
+                                    JulianKeyword::Instance()->ms_sNSCALENDAR, strLine, 300);
+                                sOK = propName;
+                                sOK += JulianKeyword::Instance()->ms_sCOLON_SYMBOL;
+                                sOK += propVal;
+                                bNextComponent = TRUE;
+                                sName = propVal;
+                                break;
                             }
                         }
                     }
-                    if (ic == 0 || (!bNextComponent))
+                    //-----
+                    //if (ic == 0 || (!bNextComponent))
+                    if (ic == 0 && (!bNextComponent))
                     {
                         break;
                     }
@@ -341,6 +718,7 @@ NSCalendar::parse(ICalReader * brFile,
             }
             else 
             {
+                if (m_Log) m_Log->setCurrentEventLogComponentType(JulianLogErrorVector::ECompType_NSCALENDAR);
                 storeData(strLine, propName, propVal, parameters);
 
                 ICalProperty::deleteICalParameterVector(parameters);
@@ -356,340 +734,17 @@ NSCalendar::parse(ICalReader * brFile,
 }
 
 //---------------------------------------------------------------------
-#if 0
-void NSCalendar::importData(ICalReader * brFile, UnicodeString & from)
-{
-    UnicodeString strLine, propName, propVal;
-    JulianPtrArray * parameters = new JulianPtrArray();
-    PR_ASSERT(parameters != 0);
-    ErrorCode status = ZERO_ERROR;
-    UnicodeString sOK, u, sName;
-    ICalComponent * ic;
-
-    UnicodeString method;
-    t_bool bNextComponent = FALSE;
-    JulianPtrArray * vTimeZones = 0;
-    UnicodeString sOKString;
-
-    ICalComponent::ICAL_COMPONENT componentType;
-    while (TRUE)
-    {
-        PR_ASSERT(brFile != 0);
-        brFile->readFullLine(strLine, status);
-        //strLine.trim();
-        ICalProperty::Trim(strLine);
-
-        //if (FALSE) TRACE("importData: line (size = %d) = ---%s---\r\n", 
-        //   strLine.size(), strLine.toCString(""));       
-
-        if (FAILURE(status) && strLine.size() <= 0)
-            break;
-
-        ICalProperty::parsePropertyLine(strLine, propName,
-            propVal, parameters);
-
-        //if (FALSE) TRACE("importData: propName = --%s--, propVal = --%s--, 
-        //    paramSize = %d\r\n", propName.toCString(""), 
-        //    propVal.toCString(""), parameters->GetSize());
-
-        if (strLine.size() == 0)
-        {
-            ICalProperty::deleteICalParameterVector(parameters);
-            parameters->RemoveAll();
-            continue;
-        }
-
-        // break for "END:" line
-        else if (strLine.compareIgnoreCase(
-            JulianKeyword::Instance()->ms_sEND_VCALENDAR) == 0)
-        {
-            ICalProperty::deleteICalParameterVector(parameters);
-            parameters->RemoveAll();
-        }
-        else
-        {
-            if (propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sMETHOD) == 0)
-            {
-                method = propVal;
-                //if (FALSE) TRACE("method is %s\r\n", propVal);
-            }
-            else if (propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0)
-            {
-                ICalProperty::deleteICalParameterVector(parameters);
-                parameters->RemoveAll();
-                bNextComponent = TRUE;
-                sName = propVal;
-
-                while (bNextComponent)
-                {
-                    ic = ICalComponentFactory::Make(sName, m_Log);
-                    if (ic != 0)
-                    {
-                        sOK = ic->parse(brFile, method, sOK, vTimeZones);
-                    
-                        componentType = ic->GetType();
-                        if (componentType == ICalComponent::ICAL_COMPONENT_VFREEBUSY)
-                        {
-                            importVFreebusy((VFreebusy *) ic, method, vTimeZones, from);
-                        }
-                        else if (componentType == ICalComponent::ICAL_COMPONENT_VTIMEZONE)
-                        {
-                            if (ic->isValid())
-                            {
-                                if (vTimeZones == 0)
-                                    vTimeZones = new JulianPtrArray();
-                                PR_ASSERT(vTimeZones != 0);
-                                if (vTimeZones != 0)
-                                {
-                                    vTimeZones->Add(ic);
-                                }
-                            }   
-                        }
-                        else if (componentType == ICalComponent::ICAL_COMPONENT_VEVENT ||
-                                 componentType == ICalComponent::ICAL_COMPONENT_VTODO ||
-                                 componentType == ICalComponent::ICAL_COMPONENT_VJOURNAL)
-                        {
-                            importTimeBasedEvent((TimeBasedEvent *) ic, method, 
-                                vTimeZones, from, componentType);
-                        }
-
-                        if (sOK.compareIgnoreCase(JulianKeyword::Instance()->ms_sOK) == 0)
-                        {
-                            bNextComponent = FALSE;
-                        }
-                        else 
-                        {
-                            if (sOK.startsWith(JulianKeyword::Instance()->ms_sBEGIN_WITH_COLON))
-                            {
-                                bNextComponent = TRUE;
-                            }
-                            else
-                                bNextComponent = FALSE;
-                        }
-                    }
-
-                    if (!sOK.compareIgnoreCase(JulianKeyword::Instance()->ms_sOK) == 0)
-                    {
-                        sOKString = sOK;
-                        break;
-                    }
-                } // end while(bNextComponent)
-            } // end compareIgnoreCase(BEGIN)
-        } // end else
-    } // end while 
-    if (vTimeZones != 0)
-    {
-        ICalComponent::deleteICalComponentVector(vTimeZones);
-        vTimeZones->RemoveAll();
-        delete vTimeZones; vTimeZones = 0;
-    }
-
-    ICalProperty::deleteICalParameterVector(parameters);
-    parameters->RemoveAll();
-    delete parameters; parameters = 0;
-}
-#endif
-//---------------------------------------------------------------------
-#if 0
-void
-NSCalendar::importTimeBasedEvent(TimeBasedEvent * tbe, 
-                                 UnicodeString & sMethod,
-                                 JulianPtrArray * vTimeZones,
-                                 UnicodeString & from,
-                                 ICalComponent::ICAL_COMPONENT type)
-{
-    JulianPtrArray * vMatch = 0;
-    JulianPtrArray * uidMatchEvents = 0;
-    JulianPtrArray * matchingEvents = 0;
-    t_int32 seq;
-
-    PR_ASSERT(tbe != 0);
-    // TODO: check method validity.
-    NSCalendar::METHOD method = stringToMethod(sMethod);
-    if (method == METHOD_PUBLISH || method == METHOD_REQUEST ||
-        method == METHOD_DECLINECOUNTER)
-    {
-        // only change local store if new event has a higher sequence numer
-        // if event is recurring
-        // check if rrules, exrules, rdates, exdats have change
-        // if so, unzip new recurring event
-        //, and set-substrat dates with old unzipped events
-        UnicodeString tbeuid = tbe->getUID();
-        t_int32 tbeseq = tbe->getSequence();
-
-        uidMatchEvents = new JulianPtrArray();
-        PR_ASSERT(uidMatchEvents != 0);
-        getEvents(uidMatchEvents, tbeuid);
-        if (uidMatchEvents->GetSize() > 0)
-        {
-#if 0
-            // handle recurrence import
-            TimeBasedEvent * firstEvent = (TimeBasedEvent *) uidMatchEvents->GetAt(0);
-            if (firstEvent->isRecurring())
-            {
-                // todo: test for rdates, exdates later
-                if (!AreStringVectorsEqual(firstEvent->getRRules(), tbe->getRRules()) ||
-                    !AreStringVectorsEqual(firstEvent->getExRules(), tbe->getExRules()))
-                {
-                    if (tbe->getSequence() > firstEvent->getSequence())
-                    {
-                        JulianPtrArray * vE = new JulianPtrArray();
-                        PR_ASSERT(vE != 0);
-                        e->createRecurrenceEvents(vE, vTimeZones);
-                        
-                    }
-                }
-            }
-#endif        
-        }
-        matchingEvents = new JulianPtrArray();
-        PR_ASSERT(matchingEvents != 0);
-        getComponentsWithType(matchingEvents, tbeuid, type);
-        if (matchingEvents->GetSize() > 0)
-        {
-            // Not in my calendar, add event to calendar if valid
-            if (tbe->isValid())
-            {
-                if (tbe->isExpandableEvent())
-                {
-                    JulianPtrArray * vE = new JulianPtrArray();
-                    PR_ASSERT(vE != 0);
-                    tbe->createRecurrenceEvents(vE, vTimeZones);
-                    addComponentsWithType(vE, type);
-                }
-                else
-                {
-                    addComponentWithType(tbe, type);
-                }
-            }
-        }
-        else
-        {
-            // update my calendar
-            seq = getMaximumSequence(matchingEvents);
-            updateEvents(matchingEvents, tbe, seq, type);
-            getComponentsWithType(uidMatchEvents, tbeuid, type);
-            setAllSequenceTBE(uidMatchEvents, tbeseq);
-        }
-    }
-    else if (method == METHOD_REPLY || method == METHOD_CANCEL || 
-             method == METHOD_REFRESH || method == METHOD_COUNTER)
-    {
-        if (method == METHOD_CANCEL)
-        {
-#if 0
-            addCancel(tbe, type);
-#endif
-        }
-        else if (method == METHOD_REFRESH)
-        {
-#if 0
-            addRefresh(tbe, type);
-#endif
-        }
-        else 
-        {
-            DateTime d;
-            d = tbe->getDTStamp();
-            PR_ASSERT(d.isValid());
-            if (!d.isValid())
-            {
-                // TODO: Log an error
-            }
-#if 0
-            addReplyOrCounter(tbe, method, from);
-#endif
-        }
-    }
-}
-#endif
-//---------------------------------------------------------------------
-#if 0
-void 
-NSCalendar::addCancel(TimeBasedEvent * e, 
-                      ICalComponent::ICAL_COMPONENT type,
-                      t_bool & bHoldOn)
-{
-    // if no exdate and no exrules delete all events
-    // if there are exdate or exrules, don't delete everything
-    // TODO: finish
-//#if 0
-    if (e->getExRules() == 0 && e->getExDates() == 0)
-    {
-        // delete everything
-        JulianPtrArray * m = new JulianPtrArray();
-        PR_ASSERT(m != 0);
-
-        getComponentsWithType(m, 
-    }
-//#endif
-}
-#endif                            
-//---------------------------------------------------------------------
-#if 0
-void 
-NSCalendar::addReplyOrCounter(TimeBasedEvent * tbe, 
-                              NSCalendar::METHOD,
-                              UnicodeString & from)
-{
-    // TODO: finish
-}
-#endif
 
 //---------------------------------------------------------------------
 
-t_int32
-NSCalendar::getMaximumSequence(JulianPtrArray * components)
-{
-    if (components == 0 || components->GetSize() == 0)
-        return -1;
-    else
-    {
-        t_int32 i;
-        t_int32 retSeq = -1;
-        for (i = 0; i < components->GetSize(); i++)
-        {
-            ICalComponent * ic = (ICalComponent *) components->GetAt(i);
-            if (ic->getSequence() > retSeq)
-            {
-                retSeq = ic->getSequence();
-            }
-        }
-        return retSeq;
-    }
-}
+//---------------------------------------------------------------------
+                           
+//---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
 
-void
-NSCalendar::setAllSequenceTBE(JulianPtrArray * tbes, t_int32 seqNo)
-{
-    PR_ASSERT(tbes != 0);
-    if (tbes != 0)
-    {
-        t_int32 i;
-        t_int32 tbeseq;
-        for (i = 0; i < tbes->GetSize(); i++)
-        {
-            TimeBasedEvent * tbe = (TimeBasedEvent *) tbes->GetAt(i);
-            tbeseq = tbe->getSequence();
-            if (seqNo > tbeseq)
-            {
-                tbe->setSequence(seqNo);
-            }
-        }
-    }
-}
-
 //---------------------------------------------------------------------
-#if 0
-void 
-NSCalendar::importVFreebusy(VFreebusy * vf, UnicodeString & method,
-                            UnicodeString & from)
-{
-        //TODO: finish
-}
-#endif
+
 //---------------------------------------------------------------------
 
 t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
@@ -703,8 +758,8 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
         // no parameters
         if (parameters->GetSize() > 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
                 JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         setVersion(propVal, parameters);       
@@ -715,8 +770,8 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
         // no parameters
         if (parameters->GetSize() > 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
                 JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         setProdid(propVal, parameters);
@@ -727,16 +782,16 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
         // no parameters
         if (parameters->GetSize() > 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
                 JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         // if propVal != CALSCALE, just log, 
         // will set to GREGORIAN later.
-        if (JulianKeyword::Instance()->ms_ATOM_CALSCALE != propVal.hashCode())
+        if (JulianKeyword::Instance()->ms_ATOM_GREGORIAN != propVal.hashCode())
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidPropertyValue, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
                 JulianKeyword::Instance()->ms_sVCALENDAR,
                 propName, propVal, 200);
         }
@@ -749,15 +804,15 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
         // no parameters
         if (parameters->GetSize() > 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
                 JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         i = stringToMethod(propVal);
         if (i < 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidPropertyValue, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
                 JulianKeyword::Instance()->ms_sVCALENDAR,
                 propName, propVal, 200);
         }
@@ -765,8 +820,8 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
         {
             if (getMethod() >= 0)
             {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
+                if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
                     JulianKeyword::Instance()->ms_sVCALENDAR,
                     propName, propVal, 100);
             }
@@ -786,8 +841,8 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
         // no parameters
         if (parameters->GetSize() > 0)
         {            
-           if (m_Log) m_Log->logString(
-               JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
+           if (m_Log) m_Log->logError(
+               JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
                JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         setSource(propVal, parameters);
@@ -798,8 +853,8 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
         // no parameters
         if (parameters->GetSize() > 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
                 JulianKeyword::Instance()->ms_sVCALENDAR, strLine, 100);
         }
         setName(propVal, parameters);
@@ -808,8 +863,8 @@ t_bool NSCalendar::storeData(UnicodeString & strLine, UnicodeString & propName,
 #endif
     else
     {
-        if (m_Log) m_Log->logString(
-            JulianLogErrorMessage::Instance()->ms_sInvalidPropertyName, 
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
             JulianKeyword::Instance()->ms_sVCALENDAR,
             propName, 200);
 
@@ -838,7 +893,8 @@ void
 NSCalendar::expandTBEVector(JulianPtrArray * v, 
                             ICalComponent::ICAL_COMPONENT type)
 {
-    if (v != 0)
+    // no need to expand if method is a decline-counter or refresh
+    if (v != 0 && (m_iMethod != METHOD_DECLINECOUNTER && m_iMethod != METHOD_REFRESH))
     {
         t_int32 i;
         TimeBasedEvent * tbe = 0;
@@ -875,13 +931,100 @@ NSCalendar::expandComponent(TimeBasedEvent * tbe,
             //UnicodeString uDebug;
             //if (FALSE) TRACE("Expandable event\r\n\t%s\n\tbeing expanded", tbe->toString(uDebug).toCString(""));
             t_int32 i;
+            ICalComponent * ic = 0;
+            t_bool bUpdatedComponent = FALSE;
             for (i = 0; i < v->GetSize(); i++)
             {
-                addComponentWithType((ICalComponent *) v->GetAt(i), type);
+                ic = (ICalComponent *) v->GetAt(i);
+                bUpdatedComponent = addComponentWithType(ic, type);
+                if (bUpdatedComponent)
+                {
+                    delete ic; ic = 0;
+                }
             }
         }   
         delete v; v = 0;
     }
+}
+
+//---------------------------------------------------------------------
+
+JulianPtrArray * 
+NSCalendar::getLogVector(ICalComponent * ic)
+{
+    if (m_Log && ic)
+    {
+        JulianPtrArray * vvError = 0;
+        vvError = m_Log->GetErrorVector();
+        if (vvError != 0)
+        {
+            t_int32 i = 0;
+            JulianLogErrorVector * lev = 0;
+            UnicodeString uid;
+#if 0
+            UnicodeString rid;
+#endif
+            ICalComponent::ICAL_COMPONENT icType;
+            icType = ic->GetType();
+            if (icType == ICalComponent::ICAL_COMPONENT_VEVENT || 
+                icType == ICalComponent::ICAL_COMPONENT_VTODO ||
+                icType == ICalComponent::ICAL_COMPONENT_VJOURNAL)
+            {
+#if 0
+                DateTime d;
+                d = ((TimeBasedEvent *) ic)->getRecurrenceID();
+                if (d.isValid())
+                    rid = d.toISO8601();
+#endif
+                uid = ((TimeBasedEvent *) ic)->getUID();
+            }
+            else if (icType == ICalComponent::ICAL_COMPONENT_VFREEBUSY)
+            {
+                uid = ((VFreebusy *) ic)->getUID();
+            }
+            else if (icType == ICalComponent::ICAL_COMPONENT_VTIMEZONE)
+            {
+                uid = ((VTimeZone *) ic)->getTZID();
+            }
+
+            for (i = 0; i < vvError->GetSize(); i++)
+            {
+                lev = (JulianLogErrorVector *) vvError->GetAt(i);
+                if ((lev->GetComponentType() == (JulianLogErrorVector::ECompType) ic->GetType()) &&
+                    (lev->GetUID() == uid) 
+#if 0
+                    && (lev->GetRecurrenceID() == rid)
+#endif
+                    )
+                    return (lev->GetErrors());
+            }
+        }
+    }
+    return 0;
+}
+
+//---------------------------------------------------------------------
+
+JulianPtrArray *
+NSCalendar::getLogVector()
+{
+    if (m_Log)
+    {
+        JulianPtrArray * vvError = 0;
+        vvError = m_Log->GetErrorVector();
+        if (vvError != 0)
+        {
+            t_int32 i = 0;
+            JulianLogErrorVector * lev = 0;
+            for (i = 0; i < vvError->GetSize(); i++)
+            {
+                lev = (JulianLogErrorVector *) vvError->GetAt(i);
+                if (lev->GetComponentType() == JulianLogErrorVector::ECompType_NSCALENDAR)
+                    return (lev->GetErrors());
+            }
+        }
+    }
+    return 0;
 }
 
 //---------------------------------------------------------------------
@@ -940,6 +1083,7 @@ NSCalendar::createCalendarHeader(UnicodeString & sResult)
     
     return sResult;
 }
+
 //---------------------------------------------------------------------
 
 UnicodeString NSCalendar::toICALString()
@@ -1022,6 +1166,7 @@ void NSCalendar::addEvent(ICalComponent * v)
     if (m_VEventVctr != 0)
     {
         m_VEventVctr->Add(v);
+        //m_VEventVctr->InsertBinary(v, TimeBasedEvent::CompareTimeBasedEventsByDTStart);
     }
 }
 //---------------------------------------------------------------------
@@ -1033,6 +1178,7 @@ void NSCalendar::addTodo(ICalComponent * v)
     if (m_VTodoVctr != 0)
     {
         m_VTodoVctr->Add(v);
+        //m_VTodoVctr->InsertBinary(v, TimeBasedEvent::CompareTimeBasedEventsByDTStart);
     }
 }
 //---------------------------------------------------------------------
@@ -1044,6 +1190,7 @@ void NSCalendar::addJournal(ICalComponent * v)
     if (m_VJournalVctr != 0)
     {
         m_VJournalVctr->Add(v);
+        //m_VJournalVctr->InsertBinary(v, TimeBasedEvent::CompareTimeBasedEventsByDTStart);
     }
 }
 //---------------------------------------------------------------------
@@ -1055,6 +1202,7 @@ void NSCalendar::addVFreebusy(ICalComponent * v)
     if (m_VFreebusyVctr != 0)
     {
         m_VFreebusyVctr->Add(v);
+        //m_VFreebusyVctr->InsertBinary(v, VFreebusy::CompareVFreebusyByDTStart);
     }
 }
 //---------------------------------------------------------------------
@@ -1070,29 +1218,84 @@ void NSCalendar::addTimeZone(ICalComponent * v)
 }
 //---------------------------------------------------------------------
 
-void NSCalendar::addComponent(ICalComponent * ic, UnicodeString & sName)
-{
-    ICalComponent::ICAL_COMPONENT type;
-    t_bool error;
-    type = ICalComponent::stringToComponent(sName, error);
-    if (!error)
-        addComponentWithType(ic, type);
-}
-
-//---------------------------------------------------------------------
-
-void NSCalendar::addComponentWithType(ICalComponent * ic, 
+t_bool NSCalendar::addComponentWithType(ICalComponent * ic, 
                                       ICalComponent::ICAL_COMPONENT type)
 {
+
+    /////////////
+    // if already have component, just update it
+    JulianPtrArray * v = 0;
+    t_bool bUpdatedAnyComponents = FALSE;
+
+    switch(ic->GetType())
+    {
+    case ICalComponent::ICAL_COMPONENT_VEVENT:
+        v = m_VEventVctr;
+        break;
+    case ICalComponent::ICAL_COMPONENT_VTODO:
+        v = m_VTodoVctr;
+        break;
+    case ICalComponent::ICAL_COMPONENT_VJOURNAL:
+        v = m_VJournalVctr;
+        break;
+    case ICalComponent::ICAL_COMPONENT_VTIMEZONE:
+        v = m_VTimeZoneVctr;
+        break;
+    case ICalComponent::ICAL_COMPONENT_VFREEBUSY:
+        v = m_VFreebusyVctr;
+        break;
+    default:
+        v = 0;
+    }
+    if (v != 0)
+    {
+        t_bool bUpdated = FALSE;
+        t_int32 i;
+        ICalComponent * comp = 0;
+        for (i = 0; i < v->GetSize(); i++)
+        {
+            comp = (ICalComponent *) v->GetAt(i);
+            bUpdated = comp->updateComponent(ic);
+            bUpdatedAnyComponents |= bUpdated;
+        }
+    }
+
+    if (!bUpdatedAnyComponents)
+    {
+        // Add only if not updated.
+        switch (type)
+        {             
+        case ICalComponent::ICAL_COMPONENT_VEVENT:
+            addEvent(ic);
+            break;
+        case ICalComponent::ICAL_COMPONENT_VTODO:
+            addTodo(ic);
+            break;
+        case ICalComponent::ICAL_COMPONENT_VJOURNAL:
+            addJournal(ic);
+            break;
+        case ICalComponent::ICAL_COMPONENT_VTIMEZONE:
+            addTimeZone(ic);
+            break;
+        case ICalComponent::ICAL_COMPONENT_VFREEBUSY:
+            addVFreebusy(ic);
+            break; 
+        default:
+            break;
+        }
+    }
+
+#if 0
+    // old code
     if (type == ICalComponent::ICAL_COMPONENT_VEVENT)
     {
         addEvent(ic);
     }
-    if (type == ICalComponent::ICAL_COMPONENT_VTODO)
+    else if (type == ICalComponent::ICAL_COMPONENT_VTODO)
     {
         addTodo(ic);
     }
-    if (type == ICalComponent::ICAL_COMPONENT_VJOURNAL)
+    else if (type == ICalComponent::ICAL_COMPONENT_VJOURNAL)
     {
         addJournal(ic);
     }
@@ -1104,10 +1307,12 @@ void NSCalendar::addComponentWithType(ICalComponent * ic,
     {
         addTimeZone(ic);
     }
+#endif
+    return bUpdatedAnyComponents;
 }
 
 //---------------------------------------------------------------------
-
+#if 0
 void NSCalendar::addComponentsWithType(JulianPtrArray * components,
                                        ICalComponent::ICAL_COMPONENT type)
 {
@@ -1122,7 +1327,7 @@ void NSCalendar::addComponentsWithType(JulianPtrArray * components,
         }
     }
 }
-
+#endif
 //---------------------------------------------------------------------
 
 void
@@ -1200,7 +1405,7 @@ NSCalendar::createVFreebusy(DateTime start, DateTime end)
     if (vf != 0)
     {
         DateTime dCreated;
-        vf->setCreated(dCreated);
+        /*vf->setCreated(dCreated);*/
         vf->setLastModified(dCreated);
         vf->setDTStart(start);
         vf->setDTEnd(end);
@@ -1250,23 +1455,96 @@ void NSCalendar::calculateVFreebusy(VFreebusy * toFillIn)
 
 //---------------------------------------------------------------------
 
+t_bool
+NSCalendar::printComponentVectorToFile(JulianPtrArray * components,
+                                       FILE * f)
+{
+    t_bool bWrittenOK = TRUE;
+    if (components != 0 && f != 0)
+    {
+        UnicodeString out;
+        ICalComponent * ic = 0;
+        char * occ = 0;
+        t_int32 i;
+        for (i = 0; i < components->GetSize(); i++)
+        {
+            ic = (ICalComponent *) components->GetAt(i);
+            out = ic->toICALString();
+            occ = out.toCString("");
+            if (occ != 0)
+            {
+                fprintf(f, occ);
+                delete [] occ; occ = 0;
+            }    
+            else 
+            {
+                bWrittenOK = FALSE;
+                break;
+            }
+        }
+    }
+    return bWrittenOK;
+}   
+
+//---------------------------------------------------------------------
+
 UnicodeString & 
 NSCalendar::printComponentVector(JulianPtrArray * components, 
                                  UnicodeString & out)
+{
+    out = "";
+
+    if (components != 0)
+    {
+        ICalComponent * ic = 0;
+        t_int32 i;
+        for (i = 0; i < components->GetSize(); i++)
+        {
+            ic = (ICalComponent *) components->GetAt(i);
+            out += ic->toICALString();
+        }
+    }
+    return out;
+}
+
+//---------------------------------------------------------------------
+
+UnicodeString & 
+NSCalendar::printFilteredComponentVector(JulianPtrArray * components,
+                                         UnicodeString & strFmt,
+                                         UnicodeString & out)
 {
     t_int32 i;
     out = "";
 
     if (components != 0)
     {
+        UnicodeString u;
         for (i = 0; i < components->GetSize(); i++)
         {
             ICalComponent * ic = (ICalComponent *) components->GetAt(i);
-            out += ic->toICALString();
+            u = ICalComponent::componentToString(ic->GetType());
+            out += ic->format(u, strFmt, "", FALSE);
         }
     }
     return out;
 }
+
+//---------------------------------------------------------------------
+#if 0
+UnicodeString &
+NSCalendar::printFilteredComponentVectorWithProperties(JulianPtrArray * components,
+                                                       char ** ppsPropList,
+                                                       t_int32 iPropCount,
+                                                       UnicodeString & out)
+{
+    UnicodeString strFmt;
+    out = "";
+    strFmt = ICalComponent::makeFormatString(ppsPropList, iPropCount, strFmt);
+    out = printFilteredComponentVector(components, strFmt, out);
+    return out;
+}
+#endif
 //---------------------------------------------------------------------
 
 UnicodeString & 
@@ -1325,13 +1603,45 @@ NSCalendar::getUniqueUIDs(JulianPtrArray * retUID,
     case ICalComponent::ICAL_COMPONENT_VFREEBUSY:
         getUniqueUIDsHelper(retUID, getVFreebusy(), type);
         break;
+    default:
+        break;
     }
 }
 
 //---------------------------------------------------------------------
+void NSCalendar::getEventsByRange(JulianPtrArray * out, 
+                                  DateTime start, DateTime end)
+{
+    if (out != 0)
+    {
+        if (m_VEventVctr != 0)
+        {
+            t_int32 i;
+            VEvent * anEvent;
+            for (i = 0; i < m_VEventVctr->GetSize(); i++)
+            {   
+                anEvent = (VEvent *) m_VEventVctr->GetAt(i);
+                if (!(anEvent->getDTStart().beforeDateTime(start)) &&
+                    !(anEvent->getDTStart().afterDateTime(end)))
+                {   
+                    out->Add(anEvent);
+                }
+            }
+        }
+    }
+}   
+//---------------------------------------------------------------------
 void NSCalendar::getEvents(JulianPtrArray * out, UnicodeString & sUID)
 {
     getComponents(out, getEvents(), sUID);
+}
+//---------------------------------------------------------------------
+void NSCalendar::getEventsByComponentID(JulianPtrArray * out, 
+                                        UnicodeString & sUID,
+                                        UnicodeString & sRecurrenceID,
+                                        UnicodeString & sModifier)
+{
+    getTBEByComponentID(out, getEvents(), sUID, sRecurrenceID, sModifier);
 }
 //---------------------------------------------------------------------
 void NSCalendar::getTodos(JulianPtrArray * out, UnicodeString & sUID)
@@ -1475,7 +1785,7 @@ NSCalendar::getUniqueUIDsHelper(JulianPtrArray * retUID,
 }
 
 //---------------------------------------------------------------------
-
+#if 0
 void
 NSCalendar::getComponentsWithType(JulianPtrArray * out, 
                                   UnicodeString & uid,
@@ -1493,6 +1803,98 @@ NSCalendar::getComponentsWithType(JulianPtrArray * out,
             getComponents(out, getJournals(), uid);
             break;
             // TODO: add VFreebusy
+        default:
+            break;
+    }
+}
+#endif
+//---------------------------------------------------------------------
+
+void
+NSCalendar::getTBEWithTypeByComponentID(JulianPtrArray * out, 
+                                        UnicodeString & uid,
+                                        UnicodeString & sRecurrenceID, 
+                                        UnicodeString & sModifier, 
+                                        ICalComponent::ICAL_COMPONENT type)
+{
+    switch (type)
+    {
+        case ICalComponent::ICAL_COMPONENT_VEVENT:
+            getTBEByComponentID(out, getEvents(), uid, sRecurrenceID, sModifier);
+            break;
+        case ICalComponent::ICAL_COMPONENT_VTODO:
+            getTBEByComponentID(out, getTodos(), uid, sRecurrenceID, sModifier);
+            break;
+        case ICalComponent::ICAL_COMPONENT_VJOURNAL:
+            getTBEByComponentID(out, getJournals(), uid, sRecurrenceID, sModifier);
+            break;
+        default:
+            break;
+    }
+}
+
+//---------------------------------------------------------------------
+
+void
+NSCalendar::getTBEByComponentID(JulianPtrArray * out, 
+                                  JulianPtrArray * components,
+                                  UnicodeString & sUID,
+                                  UnicodeString & sRecurrenceID, 
+                                  UnicodeString & sModifier)
+{
+    PR_ASSERT(out != 0);
+    if (components != 0)
+    {
+        t_int32 i;
+        UnicodeString uid;
+        TimeBasedEvent * ic;
+
+        // NOTE: if sRecurrence is invalid (i.e. 19691231T235959Z) 
+        // then just call getComponents
+        DateTime d;
+        d.setTimeString(sRecurrenceID);
+        if (!d.isValid())
+        {
+            getComponents(out, components, sUID);
+        }
+        else
+        {
+            PR_ASSERT(d.isValid());
+            JulianRecurrenceID::RANGE aRange = JulianRecurrenceID::RANGE_NONE;
+            aRange = JulianRecurrenceID::stringToRange(sModifier);
+            DateTime icrid;
+
+            for (i = 0; i < components->GetSize(); i++)
+            {
+                ic = (TimeBasedEvent *) components->GetAt(i);
+
+                uid = ic->getUID();
+                icrid = ic->getRecurrenceID();
+                if (uid == sUID)
+                {
+                    if (icrid.isValid())
+                    {
+                        if (icrid == d)
+                        {
+                            // always add exact match
+                            out->Add(ic);
+                        }
+                        else if (aRange == JulianRecurrenceID::RANGE_THISANDPRIOR && 
+                            icrid.beforeDateTime(d))
+                        {
+                            // also add if THISANDPRIOR and icrid < d 
+                            out->Add(ic);
+                        }
+                        else if (aRange == JulianRecurrenceID::RANGE_THISANDFUTURE && 
+                            icrid.afterDateTime(d))
+                        {
+                            // also add if THISANDFUTURE and icrid > d 
+                            out->Add(ic);
+                        }
+                    }
+                }
+            }    
+        }
     }
 }
 
@@ -1618,6 +2020,7 @@ UnicodeString & NSCalendar::methodToString(NSCalendar::METHOD method, UnicodeStr
 // CalScale
 void NSCalendar::setCalScale(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -1629,9 +2032,13 @@ void NSCalendar::setCalScale(UnicodeString s, JulianPtrArray * parameters)
         m_CalScale->setValue((void *) &s);
         m_CalScale->setParameters(parameters);
     }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_CalScale), s, parameters);
+#endif
 }
 UnicodeString NSCalendar::getCalScale() const 
 {
+#if 1
     UnicodeString u;
     if (m_CalScale == 0)
         return "";
@@ -1639,12 +2046,18 @@ UnicodeString NSCalendar::getCalScale() const
         u = *((UnicodeString *) m_CalScale->getValue());
         return u;
     }
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_CalScale), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 #if 0
 // Source
 void NSCalendar::setSource(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 0
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -1656,9 +2069,13 @@ void NSCalendar::setSource(UnicodeString s, JulianPtrArray * parameters)
         m_Source->setValue((void *) &s);
         m_Source->setParameters(parameters);
     }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_Source), s, parameters);
+#endif
 }
 UnicodeString NSCalendar::getSource() const 
 {
+#if 0
     UnicodeString u;
     if (m_Source == 0)
         return "";
@@ -1666,11 +2083,17 @@ UnicodeString NSCalendar::getSource() const
         u = *((UnicodeString *) m_Source->getValue());
         return u;
     }
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_Source), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 // Name
 void NSCalendar::setName(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 0
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -1682,9 +2105,13 @@ void NSCalendar::setName(UnicodeString s, JulianPtrArray * parameters)
         m_Name->setValue((void *) &s);
         m_Name->setParameters(parameters);
     }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_Name), s, parameters);
+#endif
 }
 UnicodeString NSCalendar::getName() const 
 {
+#if 0
     UnicodeString u;
     if (m_Name == 0)
         return "";
@@ -1692,12 +2119,18 @@ UnicodeString NSCalendar::getName() const
         u = *((UnicodeString *) m_Name->getValue());
         return u;
     }
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_Name), us);
+    return us;
+#endif
 }
 #endif /* #if 0 */
 //---------------------------------------------------------------------
 // Version
 void NSCalendar::setVersion(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -1709,9 +2142,13 @@ void NSCalendar::setVersion(UnicodeString s, JulianPtrArray * parameters)
         m_Version->setValue((void *) &s);
         m_Version->setParameters(parameters);
     }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_Version), s, parameters);
+#endif
 }
 UnicodeString NSCalendar::getVersion() const 
 {
+#if 1
     UnicodeString u;
     if (m_Version == 0)
         return "";
@@ -1719,11 +2156,17 @@ UnicodeString NSCalendar::getVersion() const
         u = *((UnicodeString *) m_Version->getValue());
         return u;
     }
+#else 
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_Version), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 // Prodid
 void NSCalendar::setProdid(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -1735,9 +2178,13 @@ void NSCalendar::setProdid(UnicodeString s, JulianPtrArray * parameters)
         m_Prodid->setValue((void *) &s);
         m_Prodid->setParameters(parameters);
     }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_Prodid), s, parameters);
+#endif
 }
 UnicodeString NSCalendar::getProdid() const 
 {
+#if 1
     UnicodeString u;
     if (m_Prodid == 0)
         return "";
@@ -1745,6 +2192,11 @@ UnicodeString NSCalendar::getProdid() const
         u = *((UnicodeString *) m_Prodid->getValue());
         return u;
     }
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_Prodid), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 // XTOKENS

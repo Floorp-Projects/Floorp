@@ -1,23 +1,6 @@
-IGNORE_MANIFEST=1
-# -*- Mode: Makefile -*-
-#
-# The contents of this file are subject to the Netscape Public License
-# Version 1.0 (the "NPL"); you may not use this file except in
-# compliance with the NPL.  You may obtain a copy of the NPL at
-# http://www.mozilla.org/NPL/
-#
-# Software distributed under the NPL is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
-# for the specific language governing rights and limitations under the
-# NPL.
-#
-# The Initial Developer of this code under the NPL is Netscape
-# Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
-# Reserved.
 #//------------------------------------------------------------------------
 #//
-#// Makefile to build the Calendar tree
+#// Makefile to build the Julian tree
 #//
 #//------------------------------------------------------------------------
 
@@ -26,117 +9,151 @@ IGNORE_MANIFEST=1
 #// Specify the depth of the current directory relative to the
 #// root of NS
 #//
+#// Need to include capi.lib in LLIBS later
 #//------------------------------------------------------------------------
-DEPTH=..\..
+NS_DEPTH=..
 
-DIRS=src
+DEPTH = $(NS_DEPTH)
 
-LIBRARY_NAME	= cal$(MOZ_BITS)$(VERSION_NUMBER)
+DIRS=src capi
 
-LCFLAGS= -DLIBJULIAN -DLIBCAL $(LCFLAGS)
+LIBRARY_NAME = juls$(MOZ_BITS)$(VERSION_NUMBER)
 
-DLLNAME		= cal$(MOZ_BITS)$(VERSION_NUMBER)
-PDBFILE		= $(DLLNAME).pdb
-MAPFILE		= $(DLLNAME).map
-#RESFILE	= $(DLLNAME).res
-DLL			=.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE	= DLL
+LCFLAGS= -DLIBJULIAN $(LCFLAGS)
 
-include <$(DEPTH)\config\config.mak>
+DLLNAME         = jul$(MOZ_BITS)$(VERSION_NUMBER)
+PDBFILE         = $(DLLNAME).pdb
+MAPFILE         = $(DLLNAME).map
+#RESFILE        = $(DLLNAME).res
+DLL             =.\$(OBJDIR)\$(DLLNAME).dll
+MAKE_OBJ_TYPE   = DLL
+
+
+include <$(NS_DEPTH)/config/config.mak>
+
+REQUIRES=nls
 
 OBJS = $(OBJS) \
-		src\libcal\htmlform\src\$(OBJDIR)\form.obj \
-		src\libcal\htmlform\src\$(OBJDIR)\formFactory.obj \
-		src\libcal\htmlform\src\$(OBJDIR)\julianform.obj \
-		src\libcal\util\$(OBJDIR)\jatom.obj \
-		src\libcal\util\$(OBJDIR)\jlog.obj \
-		src\libcal\util\$(OBJDIR)\julnstr.obj \
-		src\libcal\util\$(OBJDIR)\ptrarray.obj \
-		src\libcal\util\$(OBJDIR)\uidrgntr.obj \
-		src\libcal\ical\$(OBJDIR)\attendee.obj \
-		src\libcal\ical\$(OBJDIR)\bprprty.obj \
-		src\libcal\ical\$(OBJDIR)\bydmgntr.obj \
-		src\libcal\ical\$(OBJDIR)\bydwgntr.obj \
-		src\libcal\ical\$(OBJDIR)\bydygntr.obj \
-		src\libcal\ical\$(OBJDIR)\byhgntr.obj \
-		src\libcal\ical\$(OBJDIR)\bymdgntr.obj \
-		src\libcal\ical\$(OBJDIR)\bymgntr.obj \
-		src\libcal\ical\$(OBJDIR)\bymogntr.obj \
-		src\libcal\ical\$(OBJDIR)\bywngntr.obj \
-		src\libcal\ical\$(OBJDIR)\byydgntr.obj \
-		src\libcal\ical\$(OBJDIR)\dategntr.obj \
-		src\libcal\ical\$(OBJDIR)\datetime.obj \
-		src\libcal\ical\$(OBJDIR)\deftgntr.obj \
-		src\libcal\ical\$(OBJDIR)\dprprty.obj \
-		src\libcal\ical\$(OBJDIR)\duprprty.obj \
-		src\libcal\ical\$(OBJDIR)\duration.obj \
-		src\libcal\ical\$(OBJDIR)\freebusy.obj \
-		src\libcal\ical\$(OBJDIR)\icalcomp.obj \
-		src\libcal\ical\$(OBJDIR)\icalfrdr.obj \
-		src\libcal\ical\$(OBJDIR)\icalprm.obj \
-		src\libcal\ical\$(OBJDIR)\icalredr.obj \
-		src\libcal\ical\$(OBJDIR)\icalsrdr.obj \
-		src\libcal\ical\$(OBJDIR)\icompfy.obj \
-		src\libcal\ical\$(OBJDIR)\iprprty.obj \
-		src\libcal\ical\$(OBJDIR)\jparser.obj \
-		src\libcal\ical\$(OBJDIR)\jutility.obj \
-		src\libcal\ical\$(OBJDIR)\keyword.obj \
-		src\libcal\ical\$(OBJDIR)\nscal.obj \
-		src\libcal\ical\$(OBJDIR)\orgnzr.obj \
-		src\libcal\ical\$(OBJDIR)\period.obj \
-		src\libcal\ical\$(OBJDIR)\pprprty.obj \
-		src\libcal\ical\$(OBJDIR)\prprty.obj \
-		src\libcal\ical\$(OBJDIR)\prprtyfy.obj \
-		src\libcal\ical\$(OBJDIR)\rcrrence.obj \
-		src\libcal\ical\$(OBJDIR)\recid.obj \
-		src\libcal\ical\$(OBJDIR)\rrday.obj \
-		src\libcal\ical\$(OBJDIR)\sdprprty.obj \
-		src\libcal\ical\$(OBJDIR)\sprpty.obj \
-		src\libcal\ical\$(OBJDIR)\tmbevent.obj \
-		src\libcal\ical\$(OBJDIR)\tzpart.obj \
-		src\libcal\ical\$(OBJDIR)\unistrto.obj \
-		src\libcal\ical\$(OBJDIR)\uri.obj \
-		src\libcal\ical\$(OBJDIR)\vevent.obj \
-		src\libcal\ical\$(OBJDIR)\vfrbsy.obj \
-		src\libcal\ical\$(OBJDIR)\vjournal.obj \
-		src\libcal\ical\$(OBJDIR)\vtimezne.obj \
-	    src\libcal\ical\$(OBJDIR)\vtodo.obj \
-		src\libcal\itip\$(OBJDIR)\detxnobj.obj \
-		src\libcal\itip\$(OBJDIR)\getxnobj.obj \
-		src\libcal\itip\$(OBJDIR)\sttxnobj.obj \
-		src\libcal\itip\$(OBJDIR)\txnobj.obj \
-		src\libcal\itip\$(OBJDIR)\txnobjfy.obj \
-		src\libcal\itip\$(OBJDIR)\user.obj
+!ifndef MOZ_TREX
+        src\libjulian\htmlform\src\$(OBJDIR)\form.obj \
+        src\libjulian\htmlform\src\$(OBJDIR)\formFactory.obj \
+        src\libjulian\htmlform\src\$(OBJDIR)\julianform.obj \
+!endif
+        src\libjulian\util\$(OBJDIR)\jatom.obj \
+        src\libjulian\util\$(OBJDIR)\jlog.obj \
+        src\libjulian\util\$(OBJDIR)\jlogerr.obj \
+        src\libjulian\util\$(OBJDIR)\jlogvctr.obj \
+        src\libjulian\util\$(OBJDIR)\julnstr.obj \
+        src\libjulian\util\$(OBJDIR)\ptrarray.obj \
+        src\libjulian\util\$(OBJDIR)\uidrgntr.obj \
+        src\libjulian\ical\$(OBJDIR)\attendee.obj \
+        src\libjulian\ical\$(OBJDIR)\bydmgntr.obj \
+        src\libjulian\ical\$(OBJDIR)\bydwgntr.obj \
+        src\libjulian\ical\$(OBJDIR)\bydygntr.obj \
+        src\libjulian\ical\$(OBJDIR)\byhgntr.obj \
+        src\libjulian\ical\$(OBJDIR)\bymdgntr.obj \
+        src\libjulian\ical\$(OBJDIR)\bymgntr.obj \
+        src\libjulian\ical\$(OBJDIR)\bymogntr.obj \
+        src\libjulian\ical\$(OBJDIR)\bywngntr.obj \
+        src\libjulian\ical\$(OBJDIR)\byydgntr.obj \
+        src\libjulian\ical\$(OBJDIR)\capiredr.obj \
+        src\libjulian\ical\$(OBJDIR)\dategntr.obj \
+        src\libjulian\ical\$(OBJDIR)\datetime.obj \
+        src\libjulian\ical\$(OBJDIR)\deftgntr.obj \
+        src\libjulian\ical\$(OBJDIR)\dprprty.obj \
+        src\libjulian\ical\$(OBJDIR)\duprprty.obj \
+        src\libjulian\ical\$(OBJDIR)\duration.obj \
+        src\libjulian\ical\$(OBJDIR)\freebusy.obj \
+    src\libjulian\ical\$(OBJDIR)\functbl.obj \
+        src\libjulian\ical\$(OBJDIR)\icalcomp.obj \
+        src\libjulian\ical\$(OBJDIR)\icalfrdr.obj \
+        src\libjulian\ical\$(OBJDIR)\icalprm.obj \
+        src\libjulian\ical\$(OBJDIR)\icalredr.obj \
+        src\libjulian\ical\$(OBJDIR)\icalsrdr.obj \
+        src\libjulian\ical\$(OBJDIR)\icompfy.obj \
+        src\libjulian\ical\$(OBJDIR)\iprprty.obj \
+        src\libjulian\ical\$(OBJDIR)\jparser.obj \
+        src\libjulian\ical\$(OBJDIR)\jutility.obj \
+        src\libjulian\ical\$(OBJDIR)\keyword.obj \
+        src\libjulian\ical\$(OBJDIR)\nscal.obj \
+        src\libjulian\ical\$(OBJDIR)\orgnzr.obj \
+        src\libjulian\ical\$(OBJDIR)\period.obj \
+        src\libjulian\ical\$(OBJDIR)\prprty.obj \
+        src\libjulian\ical\$(OBJDIR)\prprtyfy.obj \
+        src\libjulian\ical\$(OBJDIR)\rcrrence.obj \
+        src\libjulian\ical\$(OBJDIR)\recid.obj \
+        src\libjulian\ical\$(OBJDIR)\rrday.obj \
+        src\libjulian\ical\$(OBJDIR)\sdprprty.obj \
+        src\libjulian\ical\$(OBJDIR)\sprpty.obj \
+        src\libjulian\ical\$(OBJDIR)\tmbevent.obj \
+        src\libjulian\ical\$(OBJDIR)\tzpart.obj \
+        src\libjulian\ical\$(OBJDIR)\unistrto.obj \
+        src\libjulian\ical\$(OBJDIR)\uri.obj \
+    src\libjulian\ical\$(OBJDIR)\valarm.obj \
+        src\libjulian\ical\$(OBJDIR)\vevent.obj \
+        src\libjulian\ical\$(OBJDIR)\vfrbsy.obj \
+        src\libjulian\ical\$(OBJDIR)\vjournal.obj \
+        src\libjulian\ical\$(OBJDIR)\vtimezne.obj \
+        src\libjulian\ical\$(OBJDIR)\vtodo.obj \
+!ifndef MOZ_TREX
+        src\libjulian\itip\$(OBJDIR)\detxnobj.obj \
+        src\libjulian\itip\$(OBJDIR)\getxnobj.obj \
+        src\libjulian\itip\$(OBJDIR)\sttxnobj.obj \
+        src\libjulian\itip\$(OBJDIR)\txnobj.obj \
+        src\libjulian\itip\$(OBJDIR)\txnobjfy.obj \
+        src\libjulian\itip\$(OBJDIR)\user.obj \
+!endif
+        $(NULL)
 
 LLIBS = $(LLIBS) \
-	$(DIST)\lib\nsfmt$(MOZ_BITS)30.lib \
-	$(DIST)\lib\nsuni$(MOZ_BITS)30.lib \
-	$(DIST)\lib\nscck$(MOZ_BITS)30.lib \
-	$(DIST)\lib\nsjpn$(MOZ_BITS)30.lib \
-	$(DIST)\lib\nscnv$(MOZ_BITS)30.lib \
-	$(DIST)\lib\nssb$(MOZ_BITS)30.lib \
-	$(DIST)\lib\libnspr21.lib \
+!ifndef MOZ_TREX
+    $(DIST)\lib\nsfmt30.lib \
+    $(DIST)\lib\nsuni30.lib \
+    $(DIST)\lib\nscck30.lib \
+    $(DIST)\lib\nsjpn30.lib \
+    $(DIST)\lib\nscnv30.lib \
+    $(DIST)\lib\nssb30.lib \
+    $(DIST)\lib\pr$(MOZ_BITS)40.lib \
+!else
+    $(DIST)\lib\nsfmt$(MOZ_BITS)30.lib \
+    $(DIST)\lib\nsuni$(MOZ_BITS)30.lib \
+    $(DIST)\lib\nscck$(MOZ_BITS)30.lib \
+    $(DIST)\lib\nsjpn$(MOZ_BITS)30.lib \
+    $(DIST)\lib\nscnv$(MOZ_BITS)30.lib \
+    $(DIST)\lib\nssb$(MOZ_BITS)30.lib \
+    $(DIST)\lib\libnspr21.lib \
+    $(DIST)\lib\libplc21.lib \
+!endif
+!if defined(MOZ_CAPI)
+    .\capi\capi.lib \
+!endif
     $(NULL)
 
-MODULE=calendar
+LINCS=-I$(XPDIST)\public\nls
+
+#// From the old Manifest file
 CSRCS=julmain.c
 C_OBJS=.\$(OBJDIR)\julmain.obj
+
+
 
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
 #//
+#// Need to include capi.dll and capi.lib in libs later
 #//------------------------------------------------------------------------
 
-include <$(DEPTH)/config/rules.mak>
+include <$(NS_DEPTH)/config/rules.mak>
 
 libs:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-
-
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+!if defined(MOZ_CAPI)
+    $(MAKE_INSTALL) .\capi\capi.lib $(DIST)\lib
+    $(MAKE_INSTALL) .\capi\capi.dll $(DIST)\bin
+!endif
 
 
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -74,10 +74,10 @@ XP_Bool JulianPtrArray::SetSize(int nNewSize, int nGrowBy)
 
     if (nNewSize == 0)
     {
-	// shrink to nothing
-	delete[] (char*)m_pData;
-	m_pData = 0;
-	m_nSize = m_nMaxSize = 0;
+      // shrink to nothing
+      delete[] (char*)m_pData;
+      m_pData = 0;
+      m_nSize = m_nMaxSize = 0;
     }
     else if (m_pData == 0)
     {
@@ -85,27 +85,27 @@ XP_Bool JulianPtrArray::SetSize(int nNewSize, int nGrowBy)
 #ifdef SIZE_T_MAX
 //		XP_ASSERT(nNewSize <= SIZE_T_MAX/sizeof(void*));    // no overflow
 #endif
-	m_pData = (void**) new char[nNewSize * sizeof(void*)];
-	if (m_pData == 0)
-	{
-	    m_nSize = 0;
-	    return 0;
-	}
+	    m_pData = (void**) new char[nNewSize * sizeof(void*)];
+	    if (m_pData == 0)
+	    {
+	        m_nSize = 0;
+	        return 0;
+	    }
 
-	memset(m_pData, 0, nNewSize * sizeof(void*));  // zero fill
+	    memset(m_pData, 0, nNewSize * sizeof(void*));  // zero fill
 
-	m_nSize = m_nMaxSize = nNewSize;
+	    m_nSize = m_nMaxSize = nNewSize;
     }
     else if (nNewSize <= m_nMaxSize)
     {
-	// it fits
-	if (nNewSize > m_nSize)
-	{
-	    // initialize the new elements
-	    memset(&m_pData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(void*));
-	}
+	    // it fits
+	    if (nNewSize > m_nSize)
+	    {
+	        // initialize the new elements
+	        memset(&m_pData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(void*));
+	    }
 
-	m_nSize = nNewSize;
+	    m_nSize = nNewSize;
     }
     else
     {
@@ -113,9 +113,9 @@ XP_Bool JulianPtrArray::SetSize(int nNewSize, int nGrowBy)
 	    int nGrowBy = m_nGrowBy;
 	    if (nGrowBy == 0)
 	    {
-		// heuristically determine growth when nGrowBy == 0
-		//  (this avoids heap fragmentation in many situations)
-		nGrowBy = MIN(1024, MAX(4, m_nSize / 8));
+		    // heuristically determine growth when nGrowBy == 0
+		    //  (this avoids heap fragmentation in many situations)
+		    nGrowBy = MIN(1024, MAX(4, m_nSize / 8));
 	    }
 #ifdef MAX_ARR_ELEMS
 	    if (m_nSize + nGrowBy > MAX_ARR_ELEMS)
@@ -123,13 +123,13 @@ XP_Bool JulianPtrArray::SetSize(int nNewSize, int nGrowBy)
 #endif
 	    int nNewMax;
 	    if (nNewSize < m_nMaxSize + nGrowBy)
-		nNewMax = m_nMaxSize + nGrowBy;  // granularity
+    		nNewMax = m_nMaxSize + nGrowBy;  // granularity
 	    else
-		nNewMax = nNewSize;  // no slush
+		    nNewMax = nNewSize;  // no slush
 
 #ifdef SIZE_T_MAX
 	    if (nNewMax >= SIZE_T_MAX/sizeof(void*))
-		return 0;
+		    return 0;
 //	    XP_ASSERT(nNewMax <= SIZE_T_MAX/sizeof(void*)); // no overflow
 #endif
 //	    XP_ASSERT(nNewMax >= m_nMaxSize);  // no wrap around

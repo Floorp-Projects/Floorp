@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -106,9 +106,9 @@ void JulianOrganizer::setParam(UnicodeString & paramName,
     //if (FALSE) TRACE("(%s, %s)\r\n", paramName.toCString(""), paramVal.toCString(""));
     if (paramName.size() == 0)
     {
-        if (m_Log) m_Log->logString(
-            JulianLogErrorMessage::Instance()->ms_sInvalidParameterName, 
-            JulianKeyword::Instance()->ms_sATTENDEE, paramName, 200);
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidParameterName, 
+            JulianKeyword::Instance()->ms_sORGANIZER, paramName, 200);
     }
     else
     {
@@ -118,17 +118,17 @@ void JulianOrganizer::setParam(UnicodeString & paramName,
         {
             if (getCN().size() != 0)
             {
-                 if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
+                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
             }
             setCN(paramVal);
         }
-        if (JulianKeyword::Instance()->ms_ATOM_LANGUAGE == hashCode)
+        else if (JulianKeyword::Instance()->ms_ATOM_LANGUAGE == hashCode)
         {
             if (getLanguage().size() != 0)
             {
-                 if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
+                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
             }
             setLanguage(paramVal);
         }
@@ -136,8 +136,8 @@ void JulianOrganizer::setParam(UnicodeString & paramName,
         {
             if (getSentBy().size() != 0)
             {
-                 if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
+                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
             }
             JulianUtility::stripDoubleQuotes(paramVal);  // double quote property
             setSentBy(paramVal);
@@ -146,16 +146,21 @@ void JulianOrganizer::setParam(UnicodeString & paramName,
         {
             if (getDir().size() != 0)
             {
-                 if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
+                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
+                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
             }
             JulianUtility::stripDoubleQuotes(paramVal);  // double quote property
             setDir(paramVal);
         }
+        else if (ICalProperty::IsXToken(paramName))
+        {
+            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
+                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
+        }
         else 
         {
-            if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sInvalidParameterName,
-                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 200);
+            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName,
+                        JulianKeyword::Instance()->ms_sORGANIZER, paramName, 200);
         }
     }
 }

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 // icalredr.cpp
 // John Sun
 // 3/23/98 3:29:47 PM

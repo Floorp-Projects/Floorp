@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * nscal.h
  * John Sun
@@ -36,6 +35,7 @@
 #include "vjournal.h"
 #include "vfrbsy.h"
 #include "jutility.h"
+#include "julnstr.h"
 
 /**
  *  NSCalendar encapsulates a iCalendar calendar object.  An NSCalendar
@@ -118,9 +118,28 @@ public:
     /*NSCalendar(User u);*/
 
     /**
+     * Copy constructor 
+     * @param           NSCalendar & that
+     */
+    NSCalendar(NSCalendar & that);
+
+    /**
      * Destructor 
      */
     ~NSCalendar();
+
+    /**
+     * Export this calendar to a file with filename.  If error occurred,
+     * return false in status boolean.
+     * TODO: test it
+     */
+    void export(const char * filename, t_bool & status);
+
+    /**
+     * clone this NSCalendar
+     * TODO: test it
+     */
+    NSCalendar * clone(JLog * initLog);
 
     /* CALSCALE */
     UnicodeString getCalScale() const;
@@ -155,7 +174,7 @@ public:
 
     /* XTOKENS: NOTE: a vector of strings, not a vector of ICalProperties */
     void addXTokens(UnicodeString s);
-    JulianPtrArray * getXTokens()               { return m_XTokensVctr; }
+    JulianPtrArray * getXTokens() const { return m_XTokensVctr; }
 
     /**
      * Given an ICalReader object, parse the stream to populate this NSCalendar.
@@ -170,18 +189,52 @@ public:
      */
     void parse(ICalReader * brFile, UnicodeString & fileName, 
         JulianUtility::MimeEncoding encoding = JulianUtility::MimeEncoding_7bit);
-
-#if 0
+ 
+    /**
+     * Returns the error log.
+     *
+     * @return          JLog* 
+     */
+    JLog* getLog() const { return m_Log; };
 
     /**
-     * Import a calendar into this calendar
-     * @param           ICalReader * brFile
-     * @param           UnicodeString & from
+     * Return the vector of JulianLogErrors on this ICalComponent:
+     * Return 0 if ic is not in this calendar.
+     * Return 0 if ic has no error vector.
+     * Do not deallocate returned vector.  Returns a ptr to vector, not a new vector.
+     * @param           ICalComponent * ic
      *
-     * @return          void 
+     * @return          JulianPtrArray * 
      */
-    void importData(ICalReader * brFile, UnicodeString & from);
-#endif
+    JulianPtrArray * getLogVector(ICalComponent * ic);
+
+    /**
+     * Return the vector of JulianLogErrors on this calendar.
+     * Return 0 if this calendar has no error vector.
+     * Do not deallocate returned vector.  Returns a ptr to vector, not a new vector.
+     */
+    JulianPtrArray * getLogVector();
+
+    /**
+     * Returns the curl associated with this nsCalendar. The
+     * curl points to the calendar store where components in
+     * this nsCalendar are to be stored. It is required
+     * for an nsCalendar to have an associated curl if any
+     * of its components will be persisted in a calendar store.
+     *
+     * @return  a JulianString containing the curl 
+     */
+    JulianString getCurl() const {return m_sCurl;}
+
+    /**
+     * Set the default curl for this nsCalendar. 
+     */
+    void setCurl(const char* ps) {m_sCurl = ps;}
+
+    /**
+     * Set the default curl for this nsCalendar. 
+     */
+    void setCurl(const JulianString& s) {m_sCurl = s;}
 
     /**
      * Returns calendar in a human-readable format to a string.
@@ -207,6 +260,14 @@ public:
      */
     UnicodeString toICALString();
    
+    /**
+     * Returns calendar in ICAL format to a string with the component pattern
+     * specified.
+     *
+     * @return          UnicodeString 
+     */
+    UnicodeString toFilteredICALString(UnicodeString componentPattern);
+
     /**
      * Create a VFreebusy object with the correct freebusy periods
      * depending on the current VEvent vector.  The start and end time
@@ -318,31 +379,31 @@ public:
      * Return ptr to vector of events
      * @return          ptr to vector of events
      */
-    JulianPtrArray * getEvents() { return m_VEventVctr; }
+    JulianPtrArray * getEvents() const { return m_VEventVctr; }
     
     /**
      * Return ptr to vector of vfreebusies
      * @return          ptr to vector of vfreebusies
      */
-    JulianPtrArray * getVFreebusy() { return m_VFreebusyVctr; }
+    JulianPtrArray * getVFreebusy() const { return m_VFreebusyVctr; }
     
     /**
      * Return ptr to vector of todos
      * @return          ptr to vector of todos
      */
-    JulianPtrArray * getTodos() { return m_VTodoVctr; }
+    JulianPtrArray * getTodos() const { return m_VTodoVctr; }
     
     /**
      * Return ptr to vector of journals
      * @return          ptr to vector of journals
      */
-    JulianPtrArray * getJournals() { return m_VJournalVctr; }
+    JulianPtrArray * getJournals() const { return m_VJournalVctr; }
 
     /**
      * Return ptr to vector of timezones
      * @return          ptr to vector of timezones
      */
-    JulianPtrArray * getTimeZones() { return m_VTimeZoneVctr; }
+    JulianPtrArray * getTimeZones() const { return m_VTimeZoneVctr; }
 
     /**
      * Given a vector of components, and the type of the component, prints 
@@ -377,6 +438,27 @@ public:
      */
     void getEvents(JulianPtrArray * out, UnicodeString & sUID);
 
+
+    /**
+     * Fetch events by (uid, rec-id, modifier).
+     * set rec-id to "" if no rec-id.  set modifier to "" if no
+     * modifier.
+     *
+     * @param           JulianPtrArray * out
+     * @param           UnicodeString & sUID
+     * @param           UnicodeString & sRecurrenceID
+     * @param           UnicodeString & sModifier
+     *
+     * @return          void 
+     */
+    void getEventsByComponentID(JulianPtrArray * out, UnicodeString & sUID,
+        UnicodeString & sRecurrenceID, UnicodeString & sModifier);
+
+    /**
+     * Get events by date range, adds ptr to out, not clones of ptrs.
+     */
+    void getEventsByRange(JulianPtrArray * out, DateTime start, DateTime end);
+
     /**
      * Fills in out with VTodos with UID equal to sUID, client must
      * delete contents of events
@@ -403,7 +485,7 @@ public:
      * @param           type    component type of vector (VEVENT, VTODO, etc.)
      */
     void sortComponentsByUID(ICalComponent::ICAL_COMPONENT type);
-    
+
     /**
      * Sorts vector of components by DTSTART value, 
      * passing in type to decide which vector to sort
@@ -440,41 +522,21 @@ protected:
 
 private:
     
-    /**
-     * Returns the maximum sequence number in a vector of ICalComponents
-     * @param           components      vector of components to look through
-     *
-     * @return          maximum sequence number of components
-     */
-    t_int32 getMaximumSequence(JulianPtrArray * components);
 
-    /**
-     * Sets sequence number of each TimeBasedEvent to seqNo if 
-     * seqNo > TimeBasedEvent's sequence number.
-     * Thus possible the vector will have events with
-     * different sequence number when finished.
-     * @param           tbes    vector of TimeBasedEvents
-     * @param           seqNo   sequence number to set to
-     */
-    void setAllSequenceTBE(JulianPtrArray * tbes, t_int32 seqNo);
-
-    /**
-     * Add component with name to correct vector.  For example,
-     * if sName == VEVENT, then add to event vector.
-     * @param           ic      component to add
-     * @param           sName   name of component in string
-     */
-    void addComponent(ICalComponent * ic, UnicodeString & sName);
 
     /**
      * Add component with type to correct vector.  For example,
-     * if type == ICAL_COMPONENT_VEVENT, then add to event vector
+     * if type == ICAL_COMPONENT_VEVENT, then add to event vector.
+     * Return TRUE if component was updated with component already in store,
+     * otherwise return FALSE if component had to be added to store.
      * @param           ic      component to add
      * @param           type    type of component
+     * @return          TRUE if component was updated, FALSE if component was added
      */
-    void addComponentWithType(ICalComponent * ic, 
+    t_bool addComponentWithType(ICalComponent * ic, 
         ICalComponent::ICAL_COMPONENT type);
 
+#if 0
     /**
      * Adds a vector of components with type to correct vector.
      * Make sure all elements in components vector have 
@@ -484,6 +546,7 @@ private:
      */
     void addComponentsWithType(JulianPtrArray * components,
         ICalComponent::ICAL_COMPONENT type);
+#endif
 
     /**
      * Expand each component in vector of TimeBasedEvents
@@ -533,7 +596,7 @@ private:
      */
     static void getUniqueUIDsHelper(JulianPtrArray * retUID, 
         JulianPtrArray * components, ICalComponent::ICAL_COMPONENT type);
-
+#if 0
     /**
      * Fills in out vector with ICalComponents with UID = uid and
      * with GetType() == type.
@@ -543,7 +606,47 @@ private:
      */
     void getComponentsWithType(JulianPtrArray * out, UnicodeString & uid,
         ICalComponent::ICAL_COMPONENT type);
-    
+#endif
+     /**
+     * Fetch components by (uid, rec-id, modifier).
+     * set rec-id to "" if no rec-id.  set modifier to "" if no
+     * modifier.
+     *
+     * @param           JulianPtrArray * out
+     * @param           UnicodeString & sUID
+     * @param           UnicodeString & sRecurrenceID
+     * @param           UnicodeString & sModifier
+     *
+     * @return          void 
+     */
+    void getTBEWithTypeByComponentID(JulianPtrArray * out, UnicodeString & sUID,
+        UnicodeString & sRecurrenceID, UnicodeString & sModifier, 
+        ICalComponent::ICAL_COMPONENT type);
+
+     /**
+     * Fills in out with TimeBasedEvents with the following
+     * if sRecurrenceID.isValid()
+     * {
+     *    if sModifier == NONE, just get components that match (uid, recid)
+     *    else if sModifier = THISANDPRIOR, get components that match (uid, recid, THISANDPRIOR)
+     *    else if sModifier = THISANDFUTURE, get components that match (uid, recid, THISANDFUTURE)
+     *
+     * }
+     * else
+     *   call getComponents(out, components, sUID);
+     *
+     * @param           JulianPtrArray * out
+     * @param           JulianPtrArray * component
+     * @param           UnicodeString & sUID
+     * @param           UnicodeString & sRecurrenceID
+     * @param           UnicodeString & sModifier
+     *
+     * @return          void 
+     */
+    void getTBEByComponentID(JulianPtrArray * out, 
+        JulianPtrArray * component, UnicodeString & sUID,
+        UnicodeString & sRecurrenceID, UnicodeString & sModifier);
+
     /**
      * Fills in out with ICalComponents with UID = sUID.
      * NOTE: clients NOT responsible for deleting components (passing actual ptr)
@@ -583,7 +686,30 @@ private:
     static UnicodeString & printComponentVector(JulianPtrArray * components, 
         UnicodeString & out);
 
+    /**
+     * Prints each component in components vector to ICAL export string
+     * to file f.  Resulting output string contains all component's iCal export string.
+     * @param           components      vector of components to print in ICAL
+     * @param           f               FILE to print to
+     * @return          TRUE if written OK, FALSE otherwise.
+     */
+    static t_bool printComponentVectorToFile(JulianPtrArray * components, FILE * f);
 
+public:
+     /**
+     * Prints each component in components vector to ICAL export string
+     * and append result to out.  Resulting output string contains
+     * events with filtered properties depending on strFmt.
+     * all component's iCal export string.
+     * @param           components      vector of components to print in ICAL
+     * @param           strFmt          component formatting string to apply
+     * @param           out             output string
+     *
+     * @return          output string (out)
+     */
+    static UnicodeString & printFilteredComponentVector(JulianPtrArray * components, 
+        UnicodeString & strFmt, UnicodeString & out);
+private:
     /**
      * Helper method.  Fills in Freebusy object f with periods representing
      * free and busy time periods of this calendar from start to end time.
@@ -595,52 +721,6 @@ private:
      */
     void createVFreebusyHelper(Freebusy * f, DateTime start, DateTime end);
 
-#if 0
-    void importTimeBasedEvent(TimeBasedEvent * e, UnicodeString & method,
-        JulianPtrArray * timezones, UnicodeString & from,
-        ICalComponent::ICAL_COMPONENT type);
-
-    void importVFreebusy(VFreebusy * v, UnicodeString & method, 
-        JulianPtrArray * timezones, UnicodeString & from);
-
-    /* void getVFreebusyConflict(VFreebusy vf, JulianPtrArray * out);  fill in out
-     void getTodosWithDue(JulianPtrArray * out, t_bool withOrWithout = FALSE);  fill in out
-     void getTodosWithDue(JulianPtrArray * out);
-     void getTodosWithoutDue(JulianPtrArray * out);
-     void getTodos(JulianPtrArray * out, DateTime start, DateTime end);
-     void getTodosInRangeOrWithoutDue(JulianPtrArray * out, DateTime start, DateTime end);
-
-     void addReplyOrCounter(TimeBasedEvent * tbe, UnicodeString & method, User from);
-     void addReplyHelper(TimeBasedEvent * e, UnicodeString & sMethod, Attendee * attendee)
-     void addRefresh(TimeBasedEvent * e);
-     void addCancel(TimeBasedEvent * e);
-
-     void setAllSequence(JulianPtrArray * events, t_int32 seq);
-     static void getComponents(JulianPtrArray * in, JulianPtrArray * out, 
-        UnicodeString & uid, RecurrenceID & rid, t_int32 seq = -1);
-     static void getVFComponents(JulianPtrArray * in, JulianPtrArray * out, 
-        UnicodeString & uid, RecurrenceID & rid, t_int32 seq = -1);
-    
-       t_int32 getHighestSequenceNumber(JulianPtrArray * events);
-     
-    void updateStoreVTimeZoneBeforeSending(ICalComponent * e, UnicodeString & method);
-    void updateStoreVFreebusyBeforeSending(ICalComponent * e, UnicodeString & method);
-    void updateStoreTBEBeforeSending(ICalComponent * e, UnicodeString & method);
-    void organizerMessage(ICalComponent * e, UnicodeString & method);
-    void attendeeMessage(ICalComponent * e, UnicodeString & method);
-    void addToNSCalendar(TimeBasedEvent * e);
-
-     void updateEvents(JulianPtrArray * inEventsToUpdate, TimeBasedEvent * updatedEvent,
-        t_int maxSeq);
-
-     User m_User;
-     UnicodeString m_Owner;
-     UnicodeString m_FileName;
-     UnicodeString m_ServerName;
-     t_bool m_Offline;
-    VTimeZone * m_TZ;*/
-
-#endif /* #if 0 */
 
     /* -- private data members -- */
 
@@ -675,6 +755,7 @@ private:
     /* log file pointer */
     JLog * m_Log;
 
+    JulianString m_sCurl;   /* cal url to calendar store for this calendar */
 };
 
 #endif /* __NSCALENDAR_H_ */

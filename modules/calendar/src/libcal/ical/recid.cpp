@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 // recid.cpp
 // John Sun
 // 3/20/98 5:18:34 PM
@@ -102,7 +101,7 @@ void JulianRecurrenceID::setParam(UnicodeString & paramName, UnicodeString & par
     t_int32 i;
     if (paramName.size() == 0)
     {
-        if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sInvalidParameterName, 
+        if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName, 
             JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, 200);
     }
     else
@@ -114,23 +113,28 @@ void JulianRecurrenceID::setParam(UnicodeString & paramName, UnicodeString & par
             i = JulianRecurrenceID::stringToRange(paramVal);
             if (i < 0)
             {
-                if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sInvalidParameterValue, 
+                if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
                     JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, paramVal, 200);
             }
             else 
             {
                 if (getRange() >= 0)
                 {
-                    if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter, 
+                    if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
                         JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, 100);
                 }
                 setRange((JulianRecurrenceID::RANGE) i);
             }        
         } 
+        else if (ICalProperty::IsXToken(paramName))
+        {
+            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
+                        JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, 100);
+        }
         else 
         {
             // NOTE: what about optional parameters?? THERE ARE NONE.
-            if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sInvalidParameterName,
+            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName,
                         JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, 200);
         }
     }

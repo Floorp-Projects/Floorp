@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -166,7 +166,6 @@ StandardProperty::toICALString(UnicodeString & out)
 {
     UnicodeString u, name;
     u = toExportString(u);
-    //if (FALSE) TRACE("u = --%s--\r\n", u.toCString(""));
     return propertyToICALString(name, u, m_vParameters, out);
 }
 
@@ -174,11 +173,12 @@ StandardProperty::toICALString(UnicodeString & out)
 
 UnicodeString & 
 StandardProperty::toICALString(UnicodeString & sProp,
-                           UnicodeString & out) 
+                               UnicodeString & out) 
 {
     UnicodeString u;
     u = toExportString(u);
-    //if (FALSE) TRACE("u = --%s--\r\n", u.toCString(""));
     return propertyToICALString(sProp, u, m_vParameters, out);
-}//---------------------------------------------------------------------
+}
+
+//---------------------------------------------------------------------
 

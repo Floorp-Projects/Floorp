@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -32,28 +32,9 @@
 #include "vtimezne.h"
 #include "keyword.h"
 #include "orgnzr.h"
+
+#include "functbl.h"
 //---------------------------------------------------------------------
-/*
-//const 
-UnicodeString VFreebusy::ms_sRequestMessage =
-"%v%C%B%e%s%U%Z";
-//const
-UnicodeString VFreebusy::ms_sPublishMessage =
-"%v%Y%H%B%e%C%J%o%U%K%t%M%Z";
-//const 
-UnicodeString VFreebusy::ms_sReplyMessage = 
-"%v%Y%C%B%e%o%T%U%K%t%M%u%Z";
-//const 
-UnicodeString VFreebusy::ms_sAllMessage = 
-"%v%Y%C%B%e%D%o%T%U%K%t%M%u%s%Z";
-
-UnicodeString VFreebusy::m_strDefaultFmt = 
-"%(EEE MM/dd/yy hh:mm:ss z)B - %(EEE MM/dd/yy hh:mm:ss z)e, \r\n\t %U, %s, \r\n%Y\r\n %(\r\n\t^N ^R, ^S)v %w";     
-//"%(EEE MM/dd/yy hh:mm:ss z)B - %(EEE MM/dd/yy hh:mm:ss z)e, \r\n\t %U, %s, \r\n%Y %v %w";     
-*/
-
-//---------------------------------------------------------------------
-
 // private never use
 #if 0
 VFreebusy::VFreebusy()
@@ -63,185 +44,219 @@ VFreebusy::VFreebusy()
 #endif
   
 //---------------------------------------------------------------------
+
 void VFreebusy::selfCheck()
 {
-    if (getFreebusy() != 0)
+    // if no dtend, and there is a dtstart and duration, calculate dtend
+    if (!getDTEnd().isValid())
+    {
+        // calculate DTEnd from duration and dtstart
+        // TODO: remove memory leaks in m_TempDuration
+        if (getDTStart().isValid() && m_TempDuration != 0 && m_TempDuration->isValid())
+        {
+            DateTime end;
+            end = getDTStart();
+            end.add(*m_TempDuration);
+            setDTEnd(end);
+            delete m_TempDuration; m_TempDuration = 0; // lifetime of variable is only
+            // after load.
+        }
+        else if (!getDTStart().isValid())
+        {
+            if (m_TempDuration != 0)
+                delete m_TempDuration; m_TempDuration = 0;
+        }
+    }
+
+    if (getFreebusy() != 0 && getDTStart().isValid() && getDTEnd().isValid())
         normalize();
+    // if sequence is null, set to 0.
+    if (getSequence() == -1)
+        setSequence(0);
 }
+
 //---------------------------------------------------------------------
 
-void VFreebusy::normalize()
+void VFreebusy::combineSameFreebusies(JulianPtrArray * freebusies)
 {
-    // Run the merge algorithm to get
-    // from
-
-    // FB1: pA, pB, pC
-    // FB2: pD, pE, pF
-    // PB3: pG, pH
-
-    // to:
-
-    // FB1: pA
-    // FB2: pB
-    // FB3: pC
-    // FB4: pD
-    // ../etc.
-
-    // first merge similar freebusy.
-    // 1) combine same params freebusy
-    //UnicodeString sResult, s;
-
-    JulianPtrArray * v = 0;
-    Freebusy * f1 = 0, * f2 = 0;
-    t_int32 i = 0, j = 0;
-    v = getFreebusy();
-    if (v != 0 && v->GetSize() >= 2)
+    t_int32 i = 0;
+    t_int32 j = 0;
+    Freebusy * f1 = 0;
+    Freebusy * f2 = 0;
+    
+    if (freebusies != 0 && freebusies->GetSize() >= 2)
     {
         // merge similar freebusy
-        for (i = 0; i < v->GetSize() - 1; i++)
+        for (i = 0; i < freebusies->GetSize() - 1; i++)
         {
-            f1 = (Freebusy *) v->GetAt(i);
-            for (j = i + 1; j < v->GetSize() ; j++)
+            f1 = (Freebusy *) freebusies->GetAt(i);
+            for (j = i + 1; j < freebusies->GetSize() ; j++)
             {
-                f2 = (Freebusy *) v->GetAt(j);
+                f2 = (Freebusy *) freebusies->GetAt(j);
                 if (Freebusy::HasSameParams(f1, f2))
                 {
                     // add all periods in f1 into f2
-                    // remove f1 from v. delete f1
+                    // remove f1 from freebusies. delete f1
                     f1->addAllPeriods(f2->getPeriod());
                     delete f2; f2 = 0;
-                    v->RemoveAt(j);
+                    freebusies->RemoveAt(j);
                     j--;
                 }
             }
         }
     }
+}
 
-    //---------------------------------------------------------------------
-    // DEBUG PRINT
-    /*
-    v = getFreebusy();
-    if (v != 0)
+//---------------------------------------------------------------------
+#if 0
+void VFreebusy::DEBUG_printFreebusyVector(const char * message, JulianPtrArray * freebusies)
+{
+#if TESTING_ITIPRIG
+    if (TRUE) TRACE(message);
+#endif
+
+    UnicodeString sResult;
+    if (freebusies != 0)
     {
-        for (i = 0; i < v->GetSize(); i++)
+        t_int32 i;
+        UnicodeString s;
+        for (i = 0; i < freebusies->GetSize(); i++)
         {   
-            s = ((Freebusy *) v->GetAt(i))->toICALString(s);
+            s = ((Freebusy *) freebusies->GetAt(i))->toICALString(s);
             sResult += ICalProperty::multiLineFormat(s);
         }
     }
-    //if (FALSE) TRACE("after merge 1) = %s\r\n", sResult.toCString(""));    
-    */
-    //---------------------------------------------------------------------
 
+#if TESTING_ITIPRIG
+    if (TRUE) TRACE("%s\r\n", sResult.toCString(""));    
+#endif
+}
+#endif
+//---------------------------------------------------------------------
+
+void VFreebusy::mergeSinglePeriodFreebusies()
+{
+    sortFreebusy();   
+
+    // 1) combine same params freebusy
+    combineSameFreebusies(getFreebusy());
+    //DEBUG_printFreebusyVector("after combining\r\n", getFreebusy());
 
     // 2) normalize each freebusy (compress overlapping periods)
-    v = getFreebusy();
-    PR_ASSERT(v != 0);
-    for (i = 0; i < v->GetSize(); i++)
-    {
-        f1 = (Freebusy *) v->GetAt(i);
-        f1->normalizePeriods();
-    }
+    compressFreebusies(getFreebusy());
+    //DEBUG_printFreebusyVector("after compressing\r\n", getFreebusy());
 
-    //---------------------------------------------------------------------
-    //  DEBUG PRINT
-    /*
-    sResult = "";
-    v = getFreebusy();
-    if (v != 0)
+    // 3) Unzip freebusies
+    unzipFreebusies();
+    //DEBUG_printFreebusyVector("after unzipping\r\n", getFreebusy());
+}
+
+//---------------------------------------------------------------------
+
+void VFreebusy::compressFreebusies(JulianPtrArray * freebusies)
+{
+    if (freebusies != 0)
     {
-        for (i = 0; i < v->GetSize(); i++)
-        {   
-            s = ((Freebusy *) v->GetAt(i))->toICALString(s);
-            sResult += ICalProperty::multiLineFormat(s);
+        t_int32 i;
+        Freebusy * f1 = 0;
+        for (i = 0; i < freebusies->GetSize(); i++)
+        {
+            f1 = (Freebusy *) freebusies->GetAt(i);
+            f1->normalizePeriods();
         }
     }
-    //if (FALSE) TRACE("after normalize 2) = %s\r\n", sResult.toCString(""));    
-    */
-    //---------------------------------------------------------------------
+}
+//---------------------------------------------------------------------
 
-    // 3) break up freebusy vector like so:
-    // FB1: pA, pB, pC
-    // FB2: pD, pE, pF
-    // PB3: pG, pH
-
-    // to:
-
-    // FB1: pA
-    // FB2: pB
-    // FB3: pC
-    // FB4: pD
-    // ../etc.
-    v = getFreebusy();
-    PR_ASSERT(v != 0);
-    t_int32 oldSize = v->GetSize();
-    for (i = oldSize - 1; i >= 0; i--)
+void VFreebusy::unzipFreebusies()
+{
+    JulianPtrArray * freebusies = getFreebusy();
+    if (freebusies != 0)
     {
-        f1 = (Freebusy *) v->GetAt(i);
-        if (f1->getPeriod() != 0)
+        t_int32 oldSize = freebusies->GetSize();
+        t_int32 i = 0;
+        t_int32 j = 0;
+        Freebusy * f1 = 0;
+        Freebusy * f2 = 0;
+        
+        for (i = oldSize - 1; i >= 0; i--)
         {
-            // foreach period in f1, create a new freebusy for it,
-            // add to freebusy vector
-            for (j = 0; j < f1->getPeriod()->GetSize(); j++)
-            {
-                f2 = new Freebusy(m_Log);
-                PR_ASSERT(f2 != 0);
-                f2->setType(f1->getType());
+            f1 = (Freebusy *) freebusies->GetAt(i);
+            if (f1->getPeriod() != 0)
+            {   
+                // foreach period in f1, create a new freebusy for it,
+                // add to freebusy vector
+                for (j = 0; j < f1->getPeriod()->GetSize(); j++)
+                {   
+                    f2 = new Freebusy(m_Log);
+                    PR_ASSERT(f2 != 0);
+                    if (f2 != 0)
+                    {
+                        f2->setType(f1->getType());
 #if 0
-                f2->setStatus(f1->getStatus());
+                        f2->setStatus(f1->getStatus());
 #endif
-                f2->addPeriod((Period *) f1->getPeriod()->GetAt(j));
-                addFreebusy(f2);
+                        f2->addPeriod((Period *) f1->getPeriod()->GetAt(j));
+                        addFreebusy(f2);
+                    }
+                }
             }
-        }
-        // now delete f1
-        delete f1; f1 = 0;
-        v->RemoveAt(i);
-    }
-
-    //---------------------------------------------------------------------
-    //  DEBUG PRINT
-    /*
-    sResult = "";
-    v = getFreebusy();
-    if (v != 0)
-    {
-        for (i = 0; i < v->GetSize(); i++)
-        {   
-            s = ((Freebusy *) v->GetAt(i))->toICALString(s);
-            sResult += ICalProperty::multiLineFormat(s);
+            // now delete f1
+            delete f1; f1 = 0;
+            freebusies->RemoveAt(i);
         }
     }
-    //if (FALSE) TRACE("after breakup 3) = %s\r\n", sResult.toCString(""));    
-    */
-    //---------------------------------------------------------------------
+}
 
-    // Step 4) I will now add FREE freebusy periods to those periods not
-    // already covered.
-    v = getFreebusy();
-    PR_ASSERT(v != 0);
-    Freebusy * fb;
-    Period *p;
-    oldSize = v->GetSize();
-    if (getDTStart().isValid() && getDTEnd().isValid())
+//---------------------------------------------------------------------
+void VFreebusy::addExtraFreePeriodFreebusies(JulianPtrArray * freebusies)
+{
+    if (freebusies != 0)
     {
-        sortFreebusy();
-        DateTime startTime, nextTime, endTime;
-        startTime = getDTStart();
-        nextTime = startTime;
-        for (i = 0; i < oldSize; i++)
+        Freebusy * fb;
+        Period *p;
+        t_int32 i = 0;
+        t_int32 j = 0;
+        t_int32 oldSize = freebusies->GetSize();
+        if (getDTStart().isValid() && getDTEnd().isValid())
         {
-            fb = (Freebusy *) v->GetAt(i);
+            sortFreebusy();
+            DateTime startTime, nextTime, endTime;
+            startTime = getDTStart();
+            nextTime = startTime;
 
-            PR_ASSERT(fb != 0 && fb->getPeriod()->GetSize() == 1);
-            
-            p = (Period *) fb->getPeriod()->GetAt(0);
-
-            nextTime = p->getEndingTime(nextTime);
-            endTime = p->getStart();
-
-            if (startTime < endTime)
+            for (i = 0; i < oldSize; i++)
             {
+                fb = (Freebusy *) freebusies->GetAt(i);
+
+                PR_ASSERT(fb != 0 && fb->getPeriod()->GetSize() == 1);
+                
+                p = (Period *) fb->getPeriod()->GetAt(0);
+
+                nextTime = p->getEndingTime(nextTime);
+                endTime = p->getStart();
+    
+                if (startTime < endTime)
+                {
+                    // add a new freebusy period
+                    fb = new Freebusy(m_Log); PR_ASSERT(fb != 0);
+                    fb->setType(Freebusy::FB_TYPE_FREE);
+#if 0
+                    fb->setStatus(Freebusy::FB_STATUS_TENTATIVE); // for dbg
+#endif
+                    p = new Period();
+                    p->setStart(startTime);
+                    p->setEnd(endTime);
+                    fb->addPeriod(p); // ownership of p not taken, must delete
+                    delete p; p = 0;
+                    freebusies->Add(fb); // fb ownership taken
+                }
+                startTime = nextTime;
+            }
+            endTime = getDTEnd();
+            if (nextTime < endTime)
+            {
+                // add final period 
                 // add a new freebusy period
                 fb = new Freebusy(m_Log); PR_ASSERT(fb != 0);
                 fb->setType(Freebusy::FB_TYPE_FREE);
@@ -249,50 +264,33 @@ void VFreebusy::normalize()
                 fb->setStatus(Freebusy::FB_STATUS_TENTATIVE); // for dbg
 #endif
                 p = new Period();
-                p->setStart(startTime);
+                p->setStart(nextTime);
                 p->setEnd(endTime);
                 fb->addPeriod(p); // ownership of p not taken, must delete
                 delete p; p = 0;
-                v->Add(fb); // fb ownership taken
+                freebusies->Add(fb); // fb ownership taken
             }
-            startTime = nextTime;
+            sortFreebusy();
         }
-        endTime = getDTEnd();
-        if (nextTime < endTime)
-        {
-            // add final period 
-            // add a new freebusy period
-            fb = new Freebusy(m_Log); PR_ASSERT(fb != 0);
-            fb->setType(Freebusy::FB_TYPE_FREE);
-#if 0
-            fb->setStatus(Freebusy::FB_STATUS_TENTATIVE); // for dbg
-#endif
-            p = new Period();
-            p->setStart(nextTime);
-            p->setEnd(endTime);
-            fb->addPeriod(p); // ownership of p not taken, must delete
-            delete p; p = 0;
-            v->Add(fb); // fb ownership taken
-        }
-        sortFreebusy();
     }
+}
 
-    //---------------------------------------------------------------------
-    //  DEBUG PRINT
-    /*
-    sResult = "";
-    v = getFreebusy();
-    if (v != 0)
-    {
-        for (i = 0; i < v->GetSize(); i++)
-        {   
-            s = ((Freebusy *) v->GetAt(i))->toICALString(s);
-            sResult += ICalProperty::multiLineFormat(s);
-        }
-    }
-    //if (FALSE) TRACE("after make free 4) = %s\r\n", sResult.toCString(""));    
-    */
-    //---------------------------------------------------------------------
+//---------------------------------------------------------------------
+
+void VFreebusy::normalize()
+{
+    // 1) Can mergeSinglePeriodFreebusies first time
+    mergeSinglePeriodFreebusies();
+
+    // 2) I will now add FREE freebusy periods to those periods not already covered.
+    addExtraFreePeriodFreebusies(getFreebusy());    
+    //DEBUG_printFreebusyVector("----- after make free 4)\r\n", v);
+
+    // 3) Combine consective free periods.  This is OPTIONAL.
+    mergeSinglePeriodFreebusies();
+    //DEBUG_printFreebusyVector("----- after merge-single-period freebusies 5)\r\n", v);
+
+    sortFreebusy();
 }
 //---------------------------------------------------------------------
 
@@ -313,16 +311,20 @@ void VFreebusy::stamp()
 //---------------------------------------------------------------------
 
 VFreebusy::VFreebusy(JLog * initLog)
-: m_AttendeesVctr(0), m_CommentVctr(0), m_Created(0), m_Duration(0), 
+: m_AttendeesVctr(0), m_CommentVctr(0), 
+    /*m_Created(0), */
+    /*m_Duration(0),*/
+    m_TempDuration(0),
   m_DTEnd(0), m_DTStart(0), m_DTStamp(0), m_FreebusyVctr(0), 
   m_LastModified(0), 
   m_Organizer(0),
-  m_RequestStatus(0), 
+  m_RequestStatusVctr(0), 
   //m_RelatedToVctr(0), 
   m_Sequence(0), m_UID(0),
   m_URL(0),
   //m_URLVctr(0), 
   m_XTokensVctr(0),
+  m_ContactVctr(0),
   m_Log(initLog)
 {
     //PR_ASSERT(initLog != 0);
@@ -331,15 +333,19 @@ VFreebusy::VFreebusy(JLog * initLog)
 //---------------------------------------------------------------------
 
 VFreebusy::VFreebusy(VFreebusy & that)
-: m_AttendeesVctr(0), m_CommentVctr(0), m_Created(0), m_Duration(0), 
+: m_AttendeesVctr(0), m_CommentVctr(0), 
+    /*m_Created(0),*/
+    //m_Duration(0), 
+    m_TempDuration(0), 
   m_DTEnd(0), m_DTStart(0), m_DTStamp(0), m_FreebusyVctr(0), 
   m_LastModified(0), 
   m_Organizer(0),
-  m_RequestStatus(0), 
+  m_RequestStatusVctr(0), 
   //m_RelatedToVctr(0), 
   m_Sequence(0), m_UID(0),
   m_URL(0),
   //m_URLVctr(0), 
+  m_ContactVctr(0),
   m_XTokensVctr(0)
 {
     if (that.m_AttendeesVctr != 0)
@@ -358,12 +364,38 @@ VFreebusy::VFreebusy(VFreebusy & that)
             ICalProperty::CloneICalPropertyVector(that.m_CommentVctr, m_CommentVctr, m_Log);
         }
     }
-    if (that.m_Created != 0) { m_Created = that.m_Created->clone(m_Log); }
-    if (that.m_Duration != 0) { m_Duration = that.m_Duration->clone(m_Log); }
-    if (that.m_DTEnd != 0) { m_DTEnd = that.m_DTEnd->clone(m_Log); }
-    if (that.m_DTStart != 0) { m_DTStart = that.m_DTStart->clone(m_Log); }
-    if (that.m_DTStamp != 0) { m_DTStamp = that.m_DTStamp->clone(m_Log); }
-
+    if (that.m_ContactVctr != 0)
+    {
+        m_ContactVctr = new JulianPtrArray(); PR_ASSERT(m_ContactVctr != 0);
+        if (m_ContactVctr != 0)
+        {
+            ICalProperty::CloneICalPropertyVector(that.m_ContactVctr, m_ContactVctr, m_Log);
+        }
+    }
+    /*
+    if (that.m_Created != 0) 
+    { 
+        m_Created = that.m_Created->clone(m_Log); 
+    }
+    */
+    /*
+    if (that.m_Duration != 0) 
+    { 
+        m_Duration = that.m_Duration->clone(m_Log); 
+    }
+    */
+    if (that.m_DTEnd != 0) 
+    { 
+        m_DTEnd = that.m_DTEnd->clone(m_Log); 
+    }
+    if (that.m_DTStart != 0) 
+    {
+        m_DTStart = that.m_DTStart->clone(m_Log); 
+    }
+    if (that.m_DTStamp != 0) 
+    { 
+        m_DTStamp = that.m_DTStamp->clone(m_Log); 
+    }
     if (that.m_FreebusyVctr != 0)
     {
         m_FreebusyVctr = new JulianPtrArray(); PR_ASSERT(m_FreebusyVctr != 0);
@@ -372,15 +404,36 @@ VFreebusy::VFreebusy(VFreebusy & that)
             ICalProperty::CloneICalPropertyVector(that.m_FreebusyVctr, m_FreebusyVctr, m_Log);
         }
     }
-
-    if (that.m_LastModified != 0) { m_LastModified = that.m_LastModified->clone(m_Log); }
-    if (that.m_Organizer != 0) { m_Organizer = that.m_Organizer->clone(m_Log); }
-    if (that.m_RequestStatus != 0) { m_RequestStatus = that.m_RequestStatus->clone(m_Log); }
-    if (that.m_Sequence != 0) { m_Sequence = that.m_Sequence->clone(m_Log); }
-    if (that.m_UID != 0) { m_UID = that.m_UID->clone(m_Log); }
-    if (that.m_URL != 0) { m_URL = that.m_URL->clone(m_Log); }
-
-     if (that.m_XTokensVctr != 0)
+    if (that.m_LastModified != 0) 
+    { 
+        m_LastModified = that.m_LastModified->clone(m_Log); 
+    }
+    if (that.m_Organizer != 0) 
+    { 
+        m_Organizer = that.m_Organizer->clone(m_Log); 
+    }
+    if (that.m_RequestStatusVctr != 0) 
+    { 
+        //m_RequestStatus = that.m_RequestStatus->clone(m_Log); 
+        m_RequestStatusVctr = new JulianPtrArray(); PR_ASSERT(m_RequestStatusVctr != 0);
+        if (m_RequestStatusVctr != 0)
+        {
+            ICalProperty::CloneICalPropertyVector(that.m_RequestStatusVctr, m_RequestStatusVctr, m_Log);
+        }
+    }
+    if (that.m_Sequence != 0) 
+    { 
+        m_Sequence = that.m_Sequence->clone(m_Log); 
+    }
+    if (that.m_UID != 0) 
+    { 
+        m_UID = that.m_UID->clone(m_Log); 
+    }
+    if (that.m_URL != 0) 
+    { 
+        m_URL = that.m_URL->clone(m_Log); 
+    }
+    if (that.m_XTokensVctr != 0)
     {
         m_XTokensVctr = new JulianPtrArray(); PR_ASSERT(m_XTokensVctr != 0);
         if (m_XTokensVctr != 0)
@@ -404,40 +457,91 @@ VFreebusy::clone(JLog * initLog)
 VFreebusy::~VFreebusy()
 {
     // datetime properties
-    if (m_Created != 0) { delete m_Created; m_Created = 0; }
-    if (m_DTStart != 0) { delete m_DTStart; m_DTStart = 0; }
-    if (m_DTStamp != 0) { delete m_DTStamp; m_DTStamp = 0; }
-    if (m_LastModified != 0) { delete m_LastModified; m_LastModified = 0; }
-    if (m_DTEnd != 0) { delete m_DTEnd; m_DTEnd = 0; }
-    if (m_Duration != 0) { delete m_Duration; m_Duration = 0; }
-
+    /*
+    if (m_Created != 0) 
+    { 
+        delete m_Created; m_Created = 0; 
+    }
+    */
+    if (m_TempDuration != 0)
+    {
+        delete m_TempDuration; m_TempDuration = 0;
+    }
+    if (m_DTStart != 0) 
+    { 
+        delete m_DTStart; m_DTStart = 0; 
+    }
+    if (m_DTStamp != 0) 
+    { 
+        delete m_DTStamp; m_DTStamp = 0; 
+    }
+    if (m_LastModified != 0) 
+    { 
+        delete m_LastModified; m_LastModified = 0; 
+    }
+    if (m_DTEnd != 0) 
+    { 
+        delete m_DTEnd; m_DTEnd = 0; 
+    }
+    /*
+    if (m_Duration != 0) 
+    { 
+        delete m_Duration; m_Duration = 0; 
+    }
+    */
     // string properties
-    if (m_RequestStatus != 0) { delete m_RequestStatus; m_RequestStatus = 0; }
-    if (m_Organizer != 0) { delete m_Organizer; m_Organizer = 0; }
-    if (m_UID != 0) { delete m_UID; m_UID = 0; }
-    if (m_URL != 0) { delete m_URL; m_URL = 0; }
+    if (m_RequestStatusVctr != 0) 
+    { 
+        //delete m_RequestStatus; m_RequestStatus = 0; 
+        ICalProperty::deleteICalPropertyVector(m_RequestStatusVctr);
+        delete m_RequestStatusVctr; m_RequestStatusVctr = 0; 
+    }
+    if (m_Organizer != 0) 
+    { 
+        delete m_Organizer; m_Organizer = 0; 
+    }
+    if (m_UID != 0) 
+    { 
+        delete m_UID; m_UID = 0; 
+    }
+    if (m_URL != 0) 
+    { 
+        delete m_URL; m_URL = 0; 
+    }
 
     // integer properties
-    if (m_Sequence != 0) { delete m_Sequence; m_Sequence = 0; }
+    if (m_Sequence != 0) 
+    { 
+        delete m_Sequence; m_Sequence = 0; 
+    }
 
     // attendees
     if (m_AttendeesVctr != 0) { 
-        Attendee::deleteAttendeeVector(m_AttendeesVctr);
+        ICalProperty::deleteICalPropertyVector(m_AttendeesVctr);
         delete m_AttendeesVctr; m_AttendeesVctr = 0; 
     }
     // freebusy
     if (m_FreebusyVctr != 0) { 
-        Freebusy::deleteFreebusyVector(m_FreebusyVctr);
+        ICalProperty::deleteICalPropertyVector(m_FreebusyVctr);
         delete m_FreebusyVctr; m_FreebusyVctr = 0; 
     }
 
     // string vectors
-    if (m_CommentVctr != 0) { ICalProperty::deleteICalPropertyVector(m_CommentVctr);
-        delete m_CommentVctr; m_CommentVctr = 0; }
+    if (m_CommentVctr != 0) 
+    { 
+        ICalProperty::deleteICalPropertyVector(m_CommentVctr);
+        delete m_CommentVctr; m_CommentVctr = 0; 
+    }
     //if (m_RelatedToVctr != 0) { ICalProperty::deleteICalPropertyVector(m_RelatedToVctr);
     //    delete m_RelatedToVctr; m_RelatedToVctr = 0; }
     //if (m_URLVctr != 0) { ICalProperty::deleteICalPropertyVector(m_URLVctr);
     //    delete m_URLVctr; m_URLVctr = 0; }
+
+    if (m_ContactVctr != 0) 
+    { 
+        ICalProperty::deleteICalPropertyVector(m_ContactVctr);
+        delete m_ContactVctr; m_ContactVctr = 0; 
+    }
     if (m_XTokensVctr != 0) { ICalComponent::deleteUnicodeStringVector(m_XTokensVctr);
         delete m_XTokensVctr; m_XTokensVctr = 0; 
     }
@@ -467,17 +571,13 @@ VFreebusy::parse(ICalReader * brFile, UnicodeString & method,
     {
         PR_ASSERT(brFile != 0);
         brFile->readFullLine(strLine, status);
-        //strLine.trim();
         ICalProperty::Trim(strLine);
 
-        //if (FALSE) TRACE("line (size = %d) = ---%s---\r\n", strLine.size(), strLine.toCString("")); 
-        if (FAILURE(status) && strLine.size() <= 0)
+        if (FAILURE(status) && strLine.size() == 0)
             break;
         
         ICalProperty::parsePropertyLine(strLine, propName, propVal, parameters);
 
-        //if (FALSE) TRACE("propName = --%s--, propVal = --%s--, paramSize = %d\r\n", propName.toCString(""), propVal.toCString(""), parameters->GetSize());
-       
         if (strLine.size() == 0)
         {
             ICalProperty::deleteICalParameterVector(parameters);
@@ -485,7 +585,8 @@ VFreebusy::parse(ICalReader * brFile, UnicodeString & method,
             
             continue;
         }
-        else if (strLine.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND_VFREEBUSY) == 0)
+        else if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
+            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0))
         {
             ICalProperty::deleteICalParameterVector(parameters);
             parameters->RemoveAll();
@@ -499,18 +600,28 @@ VFreebusy::parse(ICalReader * brFile, UnicodeString & method,
               (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
               (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
               (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
-              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0))
+              (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
+              (ICalProperty::IsXToken(propVal)))
             ) ||
             ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
-            (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0))
+                   ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
+                   (ICalProperty::IsXToken(propVal)))
+            )
             ) //else if
         {
+            // break on 
+            // END:VCALENDAR, VEVENT, VTODO, VJOURNAL, VTIMEZONE, x-token
+            // BEGIN:VEVENT, VTODO, VJOURNAL, VFREEBUSY, VTIMEZONE, VCALENDAR, x-token
             ICalProperty::deleteICalParameterVector(parameters);
             parameters->RemoveAll();
 
             parseStatus = strLine;
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sAbruptEndOfParsing, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
                 JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 300);
             break;
         }
@@ -535,358 +646,401 @@ VFreebusy::parse(ICalReader * brFile, UnicodeString & method,
     parameters->RemoveAll();
     delete parameters; parameters = 0;
 
-    selfCheck();
-    sortFreebusy();
+    selfCheck(); // sorts freebusy vector as well
     return parseStatus;
 }
 //---------------------------------------------------------------------
-t_bool VFreebusy::storeData(UnicodeString & strLine, UnicodeString & propName, 
-                            UnicodeString & propVal, JulianPtrArray * parameters, 
-                            JulianPtrArray * vTimeZones)
+t_bool
+VFreebusy::storeData(UnicodeString & strLine, UnicodeString & propName,
+                     UnicodeString & propVal, JulianPtrArray * parameters,
+                     JulianPtrArray * vTimeZones)
 {
-    //UnicodeString u;
-    if (vTimeZones == 0)
+    t_int32 hashCode = propName.hashCode();
+    t_int32 i;
+    for (i = 0; 0 != (JulianFunctionTable::Instance()->vfStoreTable[i]).op; i++)
     {
+        if ((JulianFunctionTable::Instance()->vfStoreTable[i]).hashCode == hashCode)
+        {
+            ApplyStoreOp(((JulianFunctionTable::Instance())->vfStoreTable[i]).op, 
+                strLine, propVal, parameters, vTimeZones);
+            return TRUE;
+        }
     }
-
-    t_int32 hashCode = propName.hashCode();    
-    t_bool bParamValid;
-
-    //if (propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sATTENDEE) == 0)
-    if (JulianKeyword::Instance()->ms_ATOM_ATTENDEE == hashCode)
-    {
-        Attendee * attendee = new Attendee(GetType(), m_Log);
-        PR_ASSERT(attendee != 0);
-        if (attendee != 0)
-        {
-            attendee->parse(propVal, parameters);
-            if (!attendee->isValid())
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidAttendee, 200);
-                UnicodeString u;
-                u = JulianLogErrorMessage::Instance()->ms_sRS202;
-                u += '.'; u += ' ';
-                u += strLine;
-                //setRequestStatus(JulianLogErrorMessage::Instance()->ms_sRS202); 
-                setRequestStatus(u);
-                delete attendee; attendee = 0;
-            }
-            else
-            {
-                addAttendee(attendee);
-            }
-        }
-        return TRUE;
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_COMMENT == hashCode)
-    { 
-        // check parameters
-        bParamValid = ICalProperty::CheckParams(parameters, 
-            JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
-            JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
-        
-        if (!bParamValid)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-        addComment(propVal, parameters);
-        return TRUE;
-    } 
-    else if (JulianKeyword::Instance()->ms_ATOM_CREATED == hashCode)
-    {
-        // no parameters (MUST BE IN UTC)
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-
-        if (getCreatedProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        DateTime d;
-        d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
-
-        setCreated(d , parameters);   
-        return TRUE;
-    } 
-    else if (JulianKeyword::Instance()->ms_ATOM_LASTMODIFIED == hashCode)
-    {
-        // no parameters (MUST BE IN UTC)
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-
-        if (getLastModified().getTime() >= 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        DateTime d;
-        d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
-
-        setLastModified(d, parameters);   
-        return TRUE;
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_DTEND == hashCode)
-    {
-        // no parameters (MUST BE IN UTC)
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-
-        // DTEND must be in UTC
-        if (getDTEndProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        DateTime d;
-        d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
-
-        setDTEnd(d, parameters);
-        return TRUE;
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_DURATION == hashCode)
-    {
-        // no parameters
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-
-        if (getDurationProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        Duration d(propVal);
-        setDuration(d, parameters);
-        return TRUE;
-    } 
-    else if (JulianKeyword::Instance()->ms_ATOM_DTSTART == hashCode)
-    {
-        // no parameters (MUST BE IN UTC)
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-
-        // DTSTART must be in UTC
-        if (getDTStartProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        DateTime d;
-        d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
-
-        setDTStart(d, parameters);
-        return TRUE;
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_DTSTAMP == hashCode)
-    {
-        // no parameters (MUST BE IN UTC)
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-
-        if (getDTStampProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        DateTime d;
-        d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
-
-        setDTStamp(d, parameters);   
-        return TRUE;
-    }  
-    else if (JulianKeyword::Instance()->ms_ATOM_FREEBUSY == hashCode)
-    {
-        // Freebusy must be in UTC
-        Freebusy * freeb = new Freebusy(m_Log);
-        PR_ASSERT(freeb != 0);
-        if (freeb != 0)
-        {
-            freeb->parse(propVal, parameters, vTimeZones);
-            if (!freeb->isValid())
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidFreebusy, 200);
-                UnicodeString u;
-                u = JulianLogErrorMessage::Instance()->ms_sRS202;
-                u += '.'; u += ' ';
-                u += strLine;
-                //setRequestStatus(JulianLogErrorMessage::Instance()->ms_sRS202); 
-                setRequestStatus(u);
-                delete freeb; freeb = 0;
-            }
-            else
-            {
-                addFreebusy(freeb);
-            }
-        }
-        return TRUE;
-    }
-    //else if (JulianKeyword::Instance()->ms_ATOM_RELATEDTO == hashCode)
-    //{
-    //    addRelatedTo(propVal, parameters);
-    //    return TRUE;
-    //}  
-    else if (JulianKeyword::Instance()->ms_ATOM_SEQUENCE == hashCode)
-    {
-        t_bool bParseError = FALSE;
-        t_int32 i;
-        
-        // no parameters
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-
-        i = JulianUtility::atot_int32(propVal.toCString(""), bParseError, propVal.size());
-        if (getSequenceProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        if (!bParseError)
-        {
-            setSequence(i, parameters);
-        }
-        else
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidNumberFormat, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, propVal, 200);
-        }
-        return TRUE;
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_ORGANIZER == hashCode)
-    {
-        // check parameters 
-        bParamValid = ICalProperty::CheckParams(parameters, 
-            JulianAtomRange::Instance()->ms_asSentByParamRange,
-            JulianAtomRange::Instance()->ms_asSentByParamRangeSize);
-        if (!bParamValid)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-
-        if (getOrganizerProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        setOrganizer(propVal, parameters);
-        return TRUE;
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_REQUESTSTATUS == hashCode)
-    {
-        // check parameters 
-        bParamValid = ICalProperty::CheckParams(parameters, 
-            JulianAtomRange::Instance()->ms_asLanguageParamRange,
-            JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
-        if (!bParamValid)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-#if 0
-        /* Don't print duplicated property on Request Status */
-        if (getRequestStatusProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-            JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-            JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        
-#endif
-        setRequestStatus(propVal, parameters);
-        return TRUE;
-    } 
-    else if (JulianKeyword::Instance()->ms_ATOM_UID == hashCode)
-    {
-        // no parameters
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-        if (getUIDProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        setUID(propVal, parameters);
-        return TRUE;
-    }   
-    else if (JulianKeyword::Instance()->ms_ATOM_URL == hashCode)
-    {
-        // no parameters
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
-        }
-         if (getURLProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 100);
-        }
-        setURL(propVal, parameters);
-        //addURL(propVal, parameters);
-        return TRUE;
-    }   
-    else if (ICalProperty::IsXToken(propName))
+    if (ICalProperty::IsXToken(propName))
     {
         addXTokens(strLine);
         return TRUE;
     }
-    else 
+    else
     {
-        if (m_Log) m_Log->logString(
-            JulianLogErrorMessage::Instance()->ms_sInvalidPropertyName, 
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
             JulianKeyword::Instance()->ms_sVFREEBUSY, propName, 200);
+        UnicodeString u;
+        u = JulianLogErrorMessage::Instance()->ms_sRS202;
+        u += '.'; u += ' ';
+        u += strLine;
+        //setRequestStatus(JulianLogErrorMessage::Instance()->ms_iRS202); 
+        addRequestStatus(u);
         return FALSE;
     }
+    return FALSE;
+}
+//---------------------------------------------------------------------
+void VFreebusy::storeAttendees(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    Attendee * attendee = new Attendee(GetType(), m_Log);
+    PR_ASSERT(attendee != 0);
+    if (attendee != 0)
+    {
+        attendee->parse(propVal, parameters);
+        if (!attendee->isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidAttendee, 
+                JulianKeyword::Instance()->ms_sVFREEBUSY, propVal, 200);
+            UnicodeString u;
+            u = JulianLogErrorMessage::Instance()->ms_sRS202;
+            u += '.'; u += ' ';
+            u += strLine;
+            //setRequestStatus(JulianLogErrorMessage::Instance()->ms_iRS202); 
+            addRequestStatus(u);
+            delete attendee; attendee = 0;
+        }
+        else
+        {
+            addAttendee(attendee);
+        }
+    }
+}
+void VFreebusy::storeComment(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // check parameters
+    t_bool bParamValid = ICalProperty::CheckParams(parameters, 
+        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
+    
+    if (!bParamValid)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+    addComment(propVal, parameters);
+}
+void VFreebusy::storeContact(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // check parameters
+    t_bool bParamValid = ICalProperty::CheckParams(parameters, 
+            JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+            JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);        
+    if (!bParamValid)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+    addContact(propVal, parameters);
+}
+/*
+void VFreebusy::storeCreated(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+
+    if (getCreatedProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sCREATED, 100);
+    }
+    DateTime d;
+    d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
+
+    setCreated(d , parameters);   
+}
+*/
+void VFreebusy::storeDuration(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+
+    if (m_TempDuration != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sDURATION, 100);
+    }
+    //Duration d(propVal);
+    if (m_TempDuration == 0)
+    {
+        m_TempDuration = new Julian_Duration(propVal);
+        PR_ASSERT(m_TempDuration != 0);
+    }
+    else
+        m_TempDuration->setDurationString(propVal);
+}     
+void VFreebusy::storeDTEnd(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters (MUST BE IN UTC)
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+
+    // DTEND must be in UTC
+    if (getDTEndProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sDTEND, 100);
+    }
+    DateTime d;
+    d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
+
+    setDTEnd(d, parameters);
+}
+void VFreebusy::storeDTStart(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters (MUST BE IN UTC)
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+
+    // DTSTART must be in UTC
+    if (getDTStartProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sDTSTART, 100);
+    }
+    DateTime d;
+    d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
+
+    setDTStart(d, parameters);
+}
+void VFreebusy::storeDTStamp(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters (MUST BE IN UTC)
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+
+    if (getDTStampProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sDTSTAMP, 100);
+    }
+    DateTime d;
+    d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
+
+    setDTStamp(d, parameters);   
+}
+void VFreebusy::storeFreebusy(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // Freebusy must be in UTC
+    Freebusy * freeb = new Freebusy(m_Log);
+    PR_ASSERT(freeb != 0);
+    if (freeb != 0)
+    {
+        freeb->parse(propVal, parameters, vTimeZones);
+        if (!freeb->isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidFreebusy, 200);
+            UnicodeString u;
+            u = JulianLogErrorMessage::Instance()->ms_sRS202;
+            u += '.'; u += ' ';
+            u += strLine;
+            //setRequestStatus(JulianLogErrorMessage::Instance()->ms_iRS202); 
+            addRequestStatus(u);
+            delete freeb; freeb = 0;
+        }
+        else
+        {
+            addFreebusy(freeb);
+        }
+    }
+}
+void VFreebusy::storeLastModified(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters (MUST BE IN UTC)
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+
+    if (getLastModified().getTime() >= 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sLASTMODIFIED, 100);
+    }
+    DateTime d;
+    d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
+
+    setLastModified(d, parameters);   
+}
+void VFreebusy::storeOrganizer(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // check parameters 
+    t_bool bParamValid = ICalProperty::CheckParams(parameters, 
+        JulianAtomRange::Instance()->ms_asSentByParamRange,
+        JulianAtomRange::Instance()->ms_asSentByParamRangeSize);
+    if (!bParamValid)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+
+    if (getOrganizerProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sORGANIZER, 100);
+    }
+    setOrganizer(propVal, parameters);
+}
+void VFreebusy::storeRequestStatus(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // check parameters 
+    t_bool bParamValid = ICalProperty::CheckParams(parameters, 
+        JulianAtomRange::Instance()->ms_asLanguageParamRange,
+        JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
+    if (!bParamValid)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+#if 0
+    /* Don't print duplicated property on Request Status */
+    if (getRequestStatusProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+        JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+        JulianKeyword::Instance()->ms_sVFREEBUSY, 
+        JulianKeyword::Instance()->ms_sREQUESTSTATUS, 100);
+    }
+    
+#endif
+    addRequestStatus(propVal, parameters);
+}
+void VFreebusy::storeSequence(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+ t_bool bParseError = FALSE;
+    t_int32 i;
+    
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+
+    char * pcc = propVal.toCString("");
+    PR_ASSERT(pcc != 0);
+    i = JulianUtility::atot_int32(pcc, bParseError, propVal.size());
+    delete [] pcc; pcc = 0;
+    if (getSequenceProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sSEQUENCE, 100);
+    }
+    if (!bParseError)
+    {
+        setSequence(i, parameters);
+    }
+    else
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidNumberFormat, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sSEQUENCE, propVal, 200);
+    }
+}
+void VFreebusy::storeUID(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+    if (getUIDProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sUID, 100);
+    }
+    setUID(propVal, parameters);
+}
+void VFreebusy::storeURL(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, strLine, 100);
+    }
+     if (getURLProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVFREEBUSY, 
+            JulianKeyword::Instance()->ms_sURL, 100);
+    }
+    setURL(propVal, parameters);
+    //addURL(propVal, parameters);
 }
 //---------------------------------------------------------------------
 t_bool VFreebusy::isValid()
@@ -901,47 +1055,115 @@ t_bool VFreebusy::isValid()
     {
         // publish must have dtstamp
         if (!getDTStamp().isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
             return FALSE;
+        }
 
-        // TODO: must have originator attendee address
-        if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
+        // MUST have organizer
+        if (getOrganizer().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
+        }
     }
     else if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREQUEST) == 0)
     {
         // publish must have dtstamp
         if (!getDTStamp().isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
-     
+        }
         // TODO: must have requested attendee address
         if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
             return FALSE;
+        }
 
         // must have organizer
-        if (getOrganizer().size() <= 0)
+        if (getOrganizer().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
+        }
 
         // must have start, end
-        if (!dS.isValid() || !dE.isValid() || dS.afterDateTime(dE))
+        if (!dS.isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
             return FALSE;
+        }
+        if (!dE.isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingEndingTime, 300);
+            return FALSE;
+        }
+        if (dS.afterDateTime(dE))
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iEndBeforeStartTime, 300);
+            return FALSE;
+        }
     }
     else if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREPLY) == 0)
     {
         // both request and reply must have valid dtstamp and a UID
-        if ((!getDTStamp().isValid()) || (getUID().size() == 0))
+        if (!getDTStamp().isValid()) 
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
-    
+        }
+
+        if (getUID().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+            return FALSE;
+        }
+
         // TODO: must have recipient replying address
         if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
             return FALSE;
-
+        }
         // must have originator' organizer address
-        if (getOrganizer().size() <= 0)
+        if (getOrganizer().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
-
+        }
         // must have start, end
-        if (!dS.isValid() || !dE.isValid() || dS.afterDateTime(dE))
+        if (!dS.isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
             return FALSE;
+        }
+        if (!dE.isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingEndingTime, 300);
+            return FALSE;
+        }
+        if (dS.afterDateTime(dE))
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iEndBeforeStartTime, 300);
+            return FALSE;
+        }
     }
 
     /*
@@ -967,7 +1189,7 @@ t_bool VFreebusy::isValid()
 //---------------------------------------------------------------------
 UnicodeString VFreebusy::toICALString()
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyAllMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyAllMessage, "");
 }
 //---------------------------------------------------------------------
 UnicodeString VFreebusy::toICALString(UnicodeString sMethod, 
@@ -978,9 +1200,9 @@ UnicodeString VFreebusy::toICALString(UnicodeString sMethod,
     if (isRecurring) {}
 
     if (sMethod.compareIgnoreCase(JulianKeyword::Instance()->ms_sPUBLISH) == 0)
-        return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyPublishMessage);
+        return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyPublishMessage, "");
     else if (sMethod.compareIgnoreCase(JulianKeyword::Instance()->ms_sREQUEST) == 0)
-        return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyRequestMessage);
+        return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyRequestMessage, "");
     else if (sMethod.compareIgnoreCase(JulianKeyword::Instance()->ms_sREPLY) == 0)
         return formatHelper(JulianFormatString::Instance()->ms_sVFreebusyReplyMessage, sName);
     else
@@ -1045,15 +1267,23 @@ VFreebusy::formatChar(t_int32 c, UnicodeString sFilterAttendee,
     case ms_cComment: 
         s = JulianKeyword::Instance()->ms_sCOMMENT;
         return ICalProperty::propertyVectorToICALString(s, getComment(), sResult);     
+    case ms_cContact: 
+        s = JulianKeyword::Instance()->ms_sCONTACT;
+        return ICalProperty::propertyVectorToICALString(s, getContact(), sResult);
+        /*
     case ms_cCreated: 
         s = JulianKeyword::Instance()->ms_sCREATED;
         return ICalProperty::propertyToICALString(s, getCreatedProperty(), sResult);  
+        */
     case ms_cDTEnd:
         s = JulianKeyword::Instance()->ms_sDTEND;
         return ICalProperty::propertyToICALString(s, getDTEndProperty(), sResult);
     case ms_cDuration:
         s = JulianKeyword::Instance()->ms_sDURATION;
-        return ICalProperty::propertyToICALString(s, getDurationProperty(), sResult);
+        s += ':';
+        s += getDuration().toICALString();
+        s += JulianKeyword::Instance()->ms_sLINEBREAK;
+        return s;
     case ms_cDTStart: 
         s = JulianKeyword::Instance()->ms_sDTSTART;
         return ICalProperty::propertyToICALString(s, getDTStartProperty(), sResult);  
@@ -1068,7 +1298,8 @@ VFreebusy::formatChar(t_int32 c, UnicodeString sFilterAttendee,
         return ICalProperty::propertyToICALString(s, getOrganizerProperty(), sResult);
     case ms_cRequestStatus:
         s = JulianKeyword::Instance()->ms_sREQUESTSTATUS;
-        return ICalProperty::propertyToICALString(s, getRequestStatusProperty(), sResult);
+        //return ICalProperty::propertyToICALString(s, getRequestStatusProperty(), sResult);
+        return ICalProperty::propertyVectorToICALString(s, getRequestStatus(), sResult);
     case ms_cSequence:
         s = JulianKeyword::Instance()->ms_sSEQUENCE;
         return ICalProperty::propertyToICALString(s, getSequenceProperty(), sResult);
@@ -1099,10 +1330,15 @@ UnicodeString VFreebusy::toStringChar(t_int32 c, UnicodeString & dateFmt)
     {
     case ms_cAttendees:
         return ICalProperty::propertyVectorToString(getAttendees(), dateFmt, sResult);
+        /*
     case ms_cCreated:
         return ICalProperty::propertyToString(getCreatedProperty(), dateFmt, sResult);
+        */
+    case ms_cContact:
+        return ICalProperty::propertyVectorToString(getContact(), dateFmt, sResult);
     case ms_cDuration:
-        return ICalProperty::propertyToString(getDurationProperty(), dateFmt, sResult);
+        return getDuration().toString();
+        //return ICalProperty::propertyToString(getDurationProperty(), dateFmt, sResult);
     case ms_cDTEnd:
         return ICalProperty::propertyToString(getDTEndProperty(), dateFmt, sResult);
     case ms_cDTStart:
@@ -1114,7 +1350,8 @@ UnicodeString VFreebusy::toStringChar(t_int32 c, UnicodeString & dateFmt)
     case ms_cOrganizer:
         return ICalProperty::propertyToString(getOrganizerProperty(), dateFmt, sResult); 
     case ms_cRequestStatus:
-        return ICalProperty::propertyToString(getRequestStatusProperty(), dateFmt, sResult); 
+        //return ICalProperty::propertyToString(getRequestStatusProperty(), dateFmt, sResult); 
+        return ICalProperty::propertyVectorToString(getRequestStatus(), dateFmt, sResult); 
     case ms_cSequence:
         return ICalProperty::propertyToString(getSequenceProperty(), dateFmt, sResult); 
     case ms_cUID:
@@ -1142,6 +1379,7 @@ t_bool VFreebusy::MatchUID_seqNO(UnicodeString sUID, t_int32 iSeqNo)
 }
 
 //---------------------------------------------------------------------
+#if 0
 void
 VFreebusy::setAttendeeStatus(UnicodeString & sAttendeeFilter,
                              Attendee::STATUS status,
@@ -1194,6 +1432,7 @@ VFreebusy::setAttendeeStatus(UnicodeString & sAttendeeFilter,
         }
     }
 }
+#endif
 //---------------------------------------------------------------------
 
 Attendee *
@@ -1238,11 +1477,125 @@ void VFreebusy::removeAllFreebusy()
 {
     if (m_FreebusyVctr != 0) 
     { 
-        Freebusy::deleteFreebusyVector(m_FreebusyVctr);
+        ICalProperty::deleteICalPropertyVector(m_FreebusyVctr);
         delete m_FreebusyVctr; m_FreebusyVctr = 0; 
     }
 }
+//---------------------------------------------------------------------
+#if 0
+t_bool
+VFreebusy::isMoreRecent(VFreebusy * component)
+{
+    // component is not NULL
+    PR_ASSERT(component != 0);
+    
+    if (component != 0)
+    {
+        t_bool bHasSeq;
+        t_bool bHasDTStamp;
+     
+        t_int32 iSeq, jSeq;
+        DateTime idts, jdts;
 
+        iSeq = getSequence();
+        idts = getDTStamp();
+
+        jSeq = component->getSequence();
+        jdts = component->getDTStamp();
+
+        // both components must have sequence and DTSTAMP
+        bHasSeq = (iSeq >= 0 && jSeq >= 0);
+        bHasDTStamp = (idts.isValid() && jdts.isValid());
+
+        PR_ASSERT(bHasSeq);
+        PR_ASSERT(bHasDTStamp);
+
+        // if iSeq > jSeq return TRUE
+        // else if iSeq < jSeq return FALSE
+        // else if iSeq == jSeq
+        // {
+        // else if jdts is after idts return FALSE
+        // else if jdts is before idts return TRUE
+        // else (dts is equal to idts) return TRUE
+        // }
+
+        if (component != 0 && bHasSeq && bHasDTStamp)
+        {
+            if (iSeq > jSeq)
+            {
+                return TRUE;
+            }
+            else if (iSeq < jSeq)
+            {
+                return FALSE;
+            }   
+            else
+            {
+                return !(jdts.afterDateTime(idts));
+            }
+        }
+    }
+    // assert failed
+    return FALSE;
+}
+#endif
+//---------------------------------------------------------------------
+
+void 
+VFreebusy::updateComponentHelper(VFreebusy * updatedComponent)
+{
+    // no created, last-modified, UID
+    DateTime d;
+    ICalComponent::internalSetPropertyVctr(&m_AttendeesVctr, updatedComponent->getAttendees());
+    ICalComponent::internalSetPropertyVctr(&m_CommentVctr, updatedComponent->getComment());
+    ICalComponent::internalSetPropertyVctr(&m_ContactVctr, updatedComponent->getContact());
+    ICalComponent::internalSetPropertyVctr(&m_FreebusyVctr, updatedComponent->getFreebusy());
+    //ICalComponent::internalSetPropertyVctr(&m_RelatedToVctr, updatedComponent->getRelatedTo());
+    //ICalComponent::internalSetPropertyVctr(&m_URLVctr, updatedComponent->getURL());
+    ICalComponent::internalSetProperty(&m_DTStart, updatedComponent->m_DTStart);
+    ICalComponent::internalSetProperty(&m_DTEnd, updatedComponent->m_DTEnd);
+    ICalComponent::internalSetProperty(&m_DTStamp, updatedComponent->m_DTStamp);
+    ICalComponent::internalSetProperty(&m_Organizer, updatedComponent->m_Organizer);
+    //ICalComponent::internalSetPropertyVctr(&m_RequestStatusVctr, updatedComponent->getRequestStatus());
+    ICalComponent::internalSetProperty(&m_Sequence, updatedComponent->m_Sequence);
+    ICalComponent::internalSetProperty(&m_URL, updatedComponent->m_URL);
+    ICalComponent::internalSetXTokensVctr(&m_XTokensVctr, updatedComponent->m_XTokensVctr);
+
+    ICalComponent::internalSetProperty(&m_LastModified, updatedComponent->m_LastModified);
+    //setLastModified(d);
+}
+
+//---------------------------------------------------------------------
+
+t_bool
+VFreebusy::updateComponent(ICalComponent * updatedComponent)
+{
+    if (updatedComponent != 0)
+    {
+        ICAL_COMPONENT ucType = updatedComponent->GetType();
+
+        // only call updateComponentHelper if it's a VFreebusy and
+        // it is an exact matching UID and updatedComponent 
+        // is more recent than this component
+        if (ucType == ICAL_COMPONENT_VFREEBUSY)
+        {
+            // should be a safe cast with check above.
+            VFreebusy * ucvf = (VFreebusy *) updatedComponent;
+
+            // only if uid's match and are not empty
+            if (ucvf->getUID().size() > 0 && getUID().size() > 0)
+            {
+                //if (ucvf->getUID() == getUID() && !isMoreRecent(ucvf))
+                if (ucvf->getUID() == getUID())
+                {
+                    updateComponentHelper(ucvf);
+                    return TRUE;
+                }
+            }
+        }
+    }
+    return FALSE;
+}
 //---------------------------------------------------------------------
 // GETTERS AND SETTERS here
 //---------------------------------------------------------------------
@@ -1273,6 +1626,7 @@ void VFreebusy::addFreebusy(Freebusy * f)
 ///DTEnd
 void VFreebusy::setDTEnd(DateTime s, JulianPtrArray * parameters)
 { 
+#if 1
     if (m_DTEnd == 0)
         m_DTEnd = ICalPropertyFactory::Make(ICalProperty::DATETIME, 
                                             (void *) &s, parameters);
@@ -1281,9 +1635,13 @@ void VFreebusy::setDTEnd(DateTime s, JulianPtrArray * parameters)
         m_DTEnd->setValue((void *) &s);
         m_DTEnd->setParameters(parameters);
     }
+#else
+    ICalComponent::setDateTimeValue(((ICalProperty **) &m_DTEnd), s, parameters);
+#endif
 }
 DateTime VFreebusy::getDTEnd() const 
 {
+#if 1
     DateTime d(-1);
     if (m_DTEnd == 0)
         return d; //return 0;
@@ -1292,11 +1650,17 @@ DateTime VFreebusy::getDTEnd() const
         d = *((DateTime *) m_DTEnd->getValue());
         return d;
     }
+#else 
+    DateTime d(-1);
+    ICalComponent::getDateTimeValue(((ICalProperty **) &m_DTEnd), d);
+    return d;
+#endif
 }
 //---------------------------------------------------------------------
-///Duration
-void VFreebusy::setDuration(Duration s, JulianPtrArray * parameters)
+///Julian_Duration
+void VFreebusy::setDuration(Julian_Duration s, JulianPtrArray * parameters)
 { 
+    /*
     if (m_Duration == 0)
         m_Duration = ICalPropertyFactory::Make(ICalProperty::DURATION, 
                                             (void *) &s, parameters);
@@ -1305,22 +1669,42 @@ void VFreebusy::setDuration(Duration s, JulianPtrArray * parameters)
         m_Duration->setValue((void *) &s);
         m_Duration->setParameters(parameters);
     }
+    */
+    // NOTE: remove later, to avoid compiler warnings
+    if (parameters) 
+    {
+    }
+
+    
+    DateTime end;
+    end = getDTStart();
+    end.add(s);
+    setDTEnd(end);
 }
-Duration VFreebusy::getDuration() const 
+Julian_Duration VFreebusy::getDuration() const 
 {
-    Duration d; d.setMonth(-1);
+    /*
+    Julian_Duration d; d.set(-1,-1,-1,-1,-1,-1);
     if (m_Duration == 0)
         return d; // return 0;
     else
     {
-        d = *((Duration *) m_Duration->getValue());
+        d = *((Julian_Duration *) m_Duration->getValue());
         return d;
     }
+    */
+    Julian_Duration duration;
+    DateTime start, end;
+    start = getDTStart();
+    end = getDTEnd();
+    DateTime::getDuration(start,end,duration);
+    return duration;
 }
 //---------------------------------------------------------------------
 //LAST-MODIFIED
 void VFreebusy::setLastModified(DateTime s, JulianPtrArray * parameters)
 { 
+#if 1
     if (m_LastModified == 0)
         m_LastModified = ICalPropertyFactory::Make(ICalProperty::DATETIME, 
                                             (void *) &s, parameters);
@@ -1329,10 +1713,14 @@ void VFreebusy::setLastModified(DateTime s, JulianPtrArray * parameters)
         m_LastModified->setValue((void *) &s);
         m_LastModified->setParameters(parameters);
     }
+#else
+    ICalComponent::setDateTimeValue(((ICalProperty **) &m_LastModified), s, parameters);
+#endif
 }
 
 DateTime VFreebusy::getLastModified() const
 {
+#if 1
     DateTime d(-1);
     if (m_LastModified == 0)
         return d; // return 0;
@@ -1341,11 +1729,18 @@ DateTime VFreebusy::getLastModified() const
         d = *((DateTime *) m_LastModified->getValue());
         return d;
     }
+#else
+    DateTime d(-1);
+    ICalComponent::getDateTimeValue(((ICalProperty **) &m_LastModified), d);
+    return d;
+#endif
 }
 //---------------------------------------------------------------------
+#if 0
 //Created
 void VFreebusy::setCreated(DateTime s, JulianPtrArray * parameters)
 { 
+#if 1
     if (m_Created == 0)
         m_Created = ICalPropertyFactory::Make(ICalProperty::DATETIME, 
                                             (void *) &s, parameters);
@@ -1354,9 +1749,13 @@ void VFreebusy::setCreated(DateTime s, JulianPtrArray * parameters)
         m_Created->setValue((void *) &s);
         m_Created->setParameters(parameters);
     }
+#else
+    ICalComponent::setDateTimeValue(((ICalProperty **) &m_Created), s, parameters);
+#endif
 }
 DateTime VFreebusy::getCreated() const
 {
+#if 1
     DateTime d(-1);
     if (m_Created == 0)
         return d;//return 0;
@@ -1365,12 +1764,18 @@ DateTime VFreebusy::getCreated() const
         d = *((DateTime *) m_Created->getValue());
         return d;
     }
+#else
+    DateTime d(-1);
+    ICalComponent::getDateTimeValue(((ICalProperty **) &m_Created), d);
+    return d;
+#endif
 }
-
+#endif
 //---------------------------------------------------------------------
 //DTStamp
 void VFreebusy::setDTStamp(DateTime s, JulianPtrArray * parameters)
 { 
+#if 1
     if (m_DTStamp == 0)
         m_DTStamp = ICalPropertyFactory::Make(ICalProperty::DATETIME, 
                                             (void *) &s, parameters);
@@ -1379,9 +1784,13 @@ void VFreebusy::setDTStamp(DateTime s, JulianPtrArray * parameters)
         m_DTStamp->setValue((void *) &s);
         m_DTStamp->setParameters(parameters);
     }
+#else
+    ICalComponent::setDateTimeValue(((ICalProperty **) &m_DTStamp), s, parameters);
+#endif
 }
 DateTime VFreebusy::getDTStamp() const
 {
+#if 1
     DateTime d(-1);
     if (m_DTStamp == 0)
         return d;//return 0;
@@ -1390,11 +1799,17 @@ DateTime VFreebusy::getDTStamp() const
         d = *((DateTime *) m_DTStamp->getValue());
         return d;
     }
+#else
+    DateTime d(-1);
+    ICalComponent::getDateTimeValue(((ICalProperty **) &m_DTStamp), d);
+    return d;
+#endif
 }
 //---------------------------------------------------------------------
 ///DTStart
 void VFreebusy::setDTStart(DateTime s, JulianPtrArray * parameters)
 { 
+#if 1
     if (m_DTStart == 0)
         m_DTStart = ICalPropertyFactory::Make(ICalProperty::DATETIME, 
                                             (void *) &s, parameters);
@@ -1403,10 +1818,14 @@ void VFreebusy::setDTStart(DateTime s, JulianPtrArray * parameters)
         m_DTStart->setValue((void *) &s);
         m_DTStart->setParameters(parameters);
     }
+#else
+    ICalComponent::setDateTimeValue(((ICalProperty **) &m_DTStart), s, parameters);
+#endif
 }
 
 DateTime VFreebusy::getDTStart() const
 {
+#if 1
     DateTime d(-1);
     if (m_DTStart == 0)
         return d; //return 0;
@@ -1415,6 +1834,11 @@ DateTime VFreebusy::getDTStart() const
         d = *((DateTime *) m_DTStart->getValue());
         return d;
     }
+#else
+    DateTime d(-1);
+    ICalComponent::getDateTimeValue(((ICalProperty **) &m_DTStart), d);
+    return d;
+#endif
 }
 //---------------------------------------------------------------------
 //Organizer
@@ -1451,6 +1875,7 @@ UnicodeString VFreebusy::getOrganizer() const
 }
 //---------------------------------------------------------------------
 //RequestStatus
+#if 0
 void VFreebusy::setRequestStatus(UnicodeString s, JulianPtrArray * parameters)
 {
     //UnicodeString * s_ptr = new UnicodeString(s);
@@ -1476,10 +1901,25 @@ UnicodeString VFreebusy::getRequestStatus() const
         return u;
     }
 }
+#endif
+void VFreebusy::addRequestStatus(UnicodeString s, JulianPtrArray * parameters)
+{
+    ICalProperty * prop = ICalPropertyFactory::Make(ICalProperty::TEXT,
+            (void *) &s, parameters);
+    addRequestStatusProperty(prop);
+} 
+void VFreebusy::addRequestStatusProperty(ICalProperty * prop)      
+{ 
+    if (m_RequestStatusVctr == 0)
+        m_RequestStatusVctr = new JulianPtrArray(); 
+    PR_ASSERT(m_RequestStatusVctr != 0);
+    m_RequestStatusVctr->Add(prop);
+}
 //---------------------------------------------------------------------
 //UID
 void VFreebusy::setUID(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -1491,9 +1931,13 @@ void VFreebusy::setUID(UnicodeString s, JulianPtrArray * parameters)
         m_UID->setValue((void *) &s);
         m_UID->setParameters(parameters);
     }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_UID), s, parameters);
+#endif
 }
 UnicodeString VFreebusy::getUID() const 
 {
+#if 1
     UnicodeString u;
     if (m_UID == 0)
         return "";
@@ -1501,11 +1945,17 @@ UnicodeString VFreebusy::getUID() const
         u = *((UnicodeString *) m_UID->getValue());
         return u;
     }
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_UID), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 //Sequence
 void VFreebusy::setSequence(t_int32 i, JulianPtrArray * parameters)
-{ 
+{
+#if 1
     if (m_Sequence == 0)
         m_Sequence = ICalPropertyFactory::Make(ICalProperty::INTEGER, 
                                             (void *) &i, parameters);
@@ -1514,9 +1964,13 @@ void VFreebusy::setSequence(t_int32 i, JulianPtrArray * parameters)
         m_Sequence->setValue((void *) &i);
         m_Sequence->setParameters(parameters);
     }
+#else
+    ICalComponent::setIntegerValue(((ICalProperty **) &m_Sequence), i, parameters);
+#endif
 }
 t_int32 VFreebusy::getSequence() const 
 {
+#if 1
     t_int32 i;
     if (m_Sequence == 0)
         return -1;
@@ -1525,6 +1979,11 @@ t_int32 VFreebusy::getSequence() const
         i = *((t_int32 *) m_Sequence->getValue());
         return i;
     }
+#else
+    t_int32 i = -1;
+    ICalComponent::getIntegerValue(((ICalProperty **) &m_Sequence), i);
+    return i;
+#endif
 }
 //---------------------------------------------------------------------
 //comment
@@ -1542,6 +2001,24 @@ void VFreebusy::addCommentProperty(ICalProperty * prop)
     if (m_CommentVctr != 0)
     {
         m_CommentVctr->Add(prop);
+    }
+}
+//---------------------------------------------------------------------
+// Contact
+void VFreebusy::addContact(UnicodeString s, JulianPtrArray * parameters)
+{
+    ICalProperty * prop = ICalPropertyFactory::Make(ICalProperty::TEXT,
+            (void *)&s, parameters);
+    addContactProperty(prop);
+}
+void VFreebusy::addContactProperty(ICalProperty * prop)    
+{ 
+    if (m_ContactVctr == 0)
+        m_ContactVctr = new JulianPtrArray(); 
+    PR_ASSERT(m_ContactVctr != 0);
+    if (m_ContactVctr != 0)
+    {
+        m_ContactVctr->Add(prop);
     }
 }
 //---------------------------------------------------------------------
@@ -1576,6 +2053,7 @@ void VFreebusy::addCommentProperty(ICalProperty * prop)
 //}
 void VFreebusy::setURL(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -1587,9 +2065,13 @@ void VFreebusy::setURL(UnicodeString s, JulianPtrArray * parameters)
         m_URL->setValue((void *) &s);
         m_URL->setParameters(parameters);
     }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_URL), s, parameters);
+#endif
 }
 UnicodeString VFreebusy::getURL() const 
 {
+#if 1
     UnicodeString u;
     if (m_URL == 0)
         return "";
@@ -1597,6 +2079,11 @@ UnicodeString VFreebusy::getURL() const
         u = *((UnicodeString *) m_URL->getValue());
         return u;
     }
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_URL), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 // XTOKENS

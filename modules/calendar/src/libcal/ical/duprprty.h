@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * duprprty.h
  * John Sun
@@ -37,8 +36,8 @@
 class DurationProperty: public StandardProperty
 {
 private:
-    /** the Duration value of the property */
-    Duration m_Duration;
+    /** the Julian_Duration value of the property */
+    Julian_Duration m_Duration;
 
     /**
      * Default constructor
@@ -58,7 +57,7 @@ public:
      * @param           value       value of property
      * @param           parameters  parameters of property
      */
-    DurationProperty(Duration value, JulianPtrArray * parameters);
+    DurationProperty(Julian_Duration value, JulianPtrArray * parameters);
 
     /**
      * Destructor

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -48,7 +48,7 @@ void Period::parse(UnicodeString & us)
     UnicodeString sStart, sEnd;
     t_int32 indexOfSlash = us.indexOf('/');
     //DateTime start, end;
-    //Duration d;
+    //Julian_Duration d;
 
     if (indexOfSlash < 0)
     {
@@ -61,6 +61,14 @@ void Period::parse(UnicodeString & us)
         sEnd = us.extractBetween(indexOfSlash + 1, us.size(), sEnd);
      
         m_DTStart.setTimeString(sStart); //PR_ASSERT(m_DTStart != 0);
+
+        m_DTEnd.setTimeString(sEnd);
+        if (!m_DTEnd.isValid())
+        {
+            m_Duration.setDurationString(sEnd);
+        }
+
+#if 0
         if (sEnd[(TextOffset) 0] == 'P') //sEnd.startsWith(s_sP))
         {
             m_Duration.setDurationString(sEnd); //PR_ASSERT(m_Duration != 0);
@@ -69,6 +77,8 @@ void Period::parse(UnicodeString & us)
         {
             m_DTEnd.setTimeString(sEnd); //PR_ASSERT(m_DTEnd != 0);
         }
+#endif
+
     }
 }
 //---------------------------------------------------------------------
@@ -86,7 +96,6 @@ void Period::createInvalidPeriod()
     m_DTStart.setTime(-1);
     m_DTEnd.setTime(-1);
     m_Duration.set(-1, -1, -1, -1, -1, -1);
-    m_Duration.setWeek(-1);
 }
 
 //---------------------------------------------------------------------
@@ -140,11 +149,7 @@ Period::Period(Period & that)
     m_DTStart.setTime(that.getStart().getTime());
     m_DTEnd.setTime(that.getEnd().getTime());
 
-    m_Duration.set(that.getDuration().getYear(),that.getDuration().getMonth(), 
-        that.getDuration().getDay(), that.getDuration().getHour(), 
-        that.getDuration().getMinute(), that.getDuration().getSecond());
-
-    m_Duration.setWeek(that.getDuration().getWeek());
+    m_Duration = that.m_Duration;
 }
     
 //---------------------------------------------------------------------
@@ -194,7 +199,7 @@ void Period::setEnd(DateTime d)
 
 //---------------------------------------------------------------------
 
-void Period::setDuration(Duration d) 
+void Period::setDuration(Julian_Duration d) 
 { 
     m_Duration = d; 
 }
@@ -232,7 +237,12 @@ t_bool Period::isValid()
     }
     else {
         if (getDuration().isValid())
-            return TRUE;
+        {
+            if (getDuration().isNegativeDuration())
+                return FALSE;
+            else
+                return TRUE;
+        }
         return FALSE;
     }
 }
@@ -333,7 +343,7 @@ UnicodeString Period::toICALString()
 {
     if (!isValid())
     {
-        return "19691231T235959Z/PT-1H";
+        return "19691231T235959Z/INVALID_DURATION";
     }
     else 
     {
@@ -462,7 +472,7 @@ void Period::Intersection(Period & inPer, DateTime & start,
 void Period::SubtractedPeriod(Period & inPer, DateTime & start, 
                               DateTime & end, JulianPtrArray * out)
 {
-    Period * pNew;
+    Period * pNew = 0;
     DateTime pend, pstart;
 
     PR_ASSERT(!start.afterDateTime(end));
@@ -473,6 +483,20 @@ void Period::SubtractedPeriod(Period & inPer, DateTime & start,
     }
 
     pstart = inPer.getStart();
+    pend = inPer.getEndingTime(pend);
+
+    Period pInt;
+    Period::Intersection(inPer, start, end, pInt);
+    if (!pInt.isValid())
+    {
+        // return whole period since no intersection
+        pNew = new Period(); PR_ASSERT(pNew != 0);
+        pNew->setStart(pstart);
+        pNew->setEnd(pend);
+        out->Add(pNew);
+        return;
+    }
+
     if (pstart.beforeDateTime(start))
     {
         pNew = new Period(); PR_ASSERT(pNew != 0);
@@ -480,7 +504,6 @@ void Period::SubtractedPeriod(Period & inPer, DateTime & start,
         pNew->setEnd(start);
         out->Add(pNew);
     }
-    pend = inPer.getEndingTime(pend);
 
     if (pend.afterDateTime(end))
     {
@@ -490,8 +513,6 @@ void Period::SubtractedPeriod(Period & inPer, DateTime & start,
         out->Add(pNew);
     }
 }
-
-//---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
 
@@ -511,7 +532,7 @@ t_bool Period::IsParseable(UnicodeString & s)
             return FALSE;
         if (!DateTime::IsParseable(sEnd))
         {
-            Duration d(sEnd); //PR_ASSERT(d != 0);
+            Julian_Duration d(sEnd); //PR_ASSERT(d != 0);
             if (!d.isValid())
                 return FALSE;
             //delete d; d = 0; // nullify after delete
@@ -529,14 +550,14 @@ Period::getTimeString(UnicodeString & sPeriod, t_bool bStart,
     PR_ASSERT(IsParseable(sPeriod));
     if (!IsParseable(sPeriod))
     {
-        out = "19691231T235959Z/PT-1H";
+        out = "19691231T235959Z/INVALID_DURATION";
         return out;
     }
     t_int32 index = sPeriod.indexOf('/');
     PR_ASSERT(index != -1);
     if (index == -1)
     {
-        out = "19691231T235959Z/PT-1H";
+        out = "19691231T235959Z/INVALID_DURATION";
         return out;
     }
 

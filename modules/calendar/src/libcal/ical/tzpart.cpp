@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,7 @@
  * Reserved. 
  */
 
-// tzpart.h
+// tzpart.cpp
 // John Sun
 // 10:04 AM February 24 1998
 
@@ -29,10 +29,7 @@
 #include "jlog.h"
 #include "keyword.h"
 
-//UnicodeString TZPart::m_strDefaultFmt = "\r\n\t%(EEE MM/dd/yy hh:mm:ss z)B,%x%(EEE MM/dd/yy hh:mm:ss z)y, NAME: %n, FROM: %f, TO: %d";
-//UnicodeString TZPart::ms_sAllMessage = "%B%x%y%f%d%n%K";
-
-//static UnicodeString ms_sRRULE_WITH_SEMICOLON = "RRULE;";
+#include "functbl.h"
 //---------------------------------------------------------------------
 
 // private never use
@@ -49,6 +46,8 @@ TZPart::TZPart(JLog * initLog)
   m_TZOffsetFrom(0), m_RDate(0), m_RRule(0),
   m_StartMonth(-1), m_StartDay(-1), m_StartWeek(0), m_StartTime(0),
   m_XTokensVctr(0),
+  m_iStartYear(0), m_iStartMonth(0), m_iStartDay(0), m_iStartHour(0), m_iStartMinute(0), m_iStartSecond(0),
+  m_iRDateYear(0), m_iRDateMonth(0), m_iRDateDay(0), m_iRDateHour(0), m_iRDateMinute(0), m_iRDateSecond(0),
   m_Log(initLog)
 {
     
@@ -60,6 +59,8 @@ TZPart::TZPart(JLog * initLog)
 TZPart::TZPart(TZPart & that) 
 : m_CommentVctr(0), m_DTStart(0), m_TZNameVctr(0), m_TZOffsetTo(0),
   m_TZOffsetFrom(0), m_RDate(0), m_RRule(0), 
+  m_iStartYear(0), m_iStartMonth(0), m_iStartDay(0), m_iStartHour(0), m_iStartMinute(0), m_iStartSecond(0),
+  m_iRDateYear(0), m_iRDateMonth(0), m_iRDateDay(0), m_iRDateHour(0), m_iRDateMinute(0), m_iRDateSecond(0),
   m_XTokensVctr(0)
 {
     m_StartMonth = that.m_StartMonth;
@@ -68,6 +69,20 @@ TZPart::TZPart(TZPart & that)
     m_StartTime = that.m_StartTime;
     m_Until = that.m_Until;
     m_Name = that.m_Name;
+
+    m_iStartYear = that.m_iStartYear;
+    m_iStartMonth = that.m_iStartMonth;
+    m_iStartDay = that.m_iStartDay;
+    m_iStartHour = that.m_iStartHour;
+    m_iStartMinute = that.m_iStartMinute;
+    m_iStartSecond = that.m_iStartSecond;
+
+    m_iRDateYear = that.m_iRDateYear;
+    m_iRDateMonth = that.m_iRDateMonth;
+    m_iRDateDay = that.m_iRDateDay;
+    m_iRDateHour = that.m_iRDateHour;
+    m_iRDateMinute = that.m_iRDateMinute;
+    m_iRDateSecond = that.m_iRDateSecond;
 
     if (that.m_CommentVctr != 0)
     {
@@ -88,10 +103,22 @@ TZPart::TZPart(TZPart & that)
             ICalProperty::CloneICalPropertyVector(that.m_TZNameVctr, m_TZNameVctr, m_Log);
         }
     }
-    if (that.m_TZOffsetTo != 0) { m_TZOffsetTo = that.m_TZOffsetTo->clone(m_Log); }
-    if (that.m_TZOffsetFrom != 0) { m_TZOffsetFrom = that.m_TZOffsetFrom->clone(m_Log); }
-    if (that.m_RDate != 0) { m_RDate = that.m_RDate->clone(m_Log); }
-    if (that.m_RRule != 0) { m_RRule = that.m_RRule->clone(m_Log); }
+    if (that.m_TZOffsetTo != 0) 
+    { 
+        m_TZOffsetTo = that.m_TZOffsetTo->clone(m_Log); 
+    }
+    if (that.m_TZOffsetFrom != 0) 
+    { 
+        m_TZOffsetFrom = that.m_TZOffsetFrom->clone(m_Log); 
+    }
+    if (that.m_RDate != 0) 
+    { 
+        m_RDate = that.m_RDate->clone(m_Log); 
+    }
+    if (that.m_RRule != 0) 
+    { 
+        m_RRule = that.m_RRule->clone(m_Log); 
+    }
     if (that.m_XTokensVctr != 0)
     {
         m_XTokensVctr = new JulianPtrArray(); PR_ASSERT(m_XTokensVctr != 0);
@@ -123,11 +150,26 @@ TZPart::~TZPart()
         ICalProperty::deleteICalPropertyVector(m_TZNameVctr);
         delete m_TZNameVctr; m_TZNameVctr = 0;
     }      
-    if (m_DTStart != 0) { delete m_DTStart; m_DTStart = 0; }
-    if (m_RDate != 0) { delete m_RDate; m_RDate = 0; }
-    if (m_RRule != 0) { delete m_RRule; m_RRule = 0; }
-    if (m_TZOffsetTo != 0) { delete m_TZOffsetTo; m_TZOffsetTo = 0; }
-    if (m_TZOffsetFrom != 0) { delete m_TZOffsetFrom; m_TZOffsetFrom = 0; }
+    if (m_DTStart != 0) 
+    { 
+        delete m_DTStart; m_DTStart = 0; 
+    }
+    if (m_RDate != 0) 
+    { 
+        delete m_RDate; m_RDate = 0; 
+    }
+    if (m_RRule != 0) 
+    { 
+        delete m_RRule; m_RRule = 0; 
+    }
+    if (m_TZOffsetTo != 0) 
+    { 
+        delete m_TZOffsetTo; m_TZOffsetTo = 0; 
+    }
+    if (m_TZOffsetFrom != 0) 
+    { 
+        delete m_TZOffsetFrom; m_TZOffsetFrom = 0; 
+    }
     if (m_XTokensVctr != 0) 
     { 
         ICalComponent::deleteUnicodeStringVector(m_XTokensVctr);
@@ -163,16 +205,12 @@ TZPart::parse(ICalReader * brFile, UnicodeString & sType,
     {
         PR_ASSERT(brFile != 0);
         brFile->readFullLine(strLine, status);
-        //strLine.trim();
         ICalProperty::Trim(strLine);
 
-        //if (FALSE) TRACE("line (size = %d) = ---%s---\r\n", strLine.size(), strLine.toCString(""));
-        
-        if (FAILURE(status) && strLine.size() < 0)
+        if (FAILURE(status) && strLine.size() == 0)
             break;
         
         ICalProperty::parsePropertyLine(strLine, propName, propVal, parameters);
-        //if (FALSE) TRACE("propName = --%s--, propVal = --%s--, paramSize = %d\r\n", propName.toCString(""), propVal.toCString(""), parameters->GetSize());
       
         if (strLine.size() == 0)
         {
@@ -190,14 +228,36 @@ TZPart::parse(ICalReader * brFile, UnicodeString & sType,
 
             break;
          }
-         else if ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
-                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0))
-                // TODO: handle getting ABRUPT (BEGIN:DAYLIGHT or BEGIN:STANDARD)
-                // TODO: handle any BEGIN: (i.e BEGIN:VEVENT, BEGIN:VTODO, etc.)
-                // TODO: handle END:VCALENDAR.
+         else if (
+                 ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
+                  (
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
+                  (ICalProperty::IsXToken(propVal))
+                  ))
+                  ||
+                 ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) &&
+                  (
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sDAYLIGHT) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sSTANDARD) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
+                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) ||
+                  (ICalProperty::IsXToken(propVal))
+                  )))
          {
-             if (m_Log) m_Log->logString(
-                 JulianLogErrorMessage::Instance()->ms_sAbruptEndOfParsing, 
+             // abrupt end             
+             // BEGIN:DAYLIGHT or BEGIN:STANDARD
+             // BEGIN:VEVENT, VTODO, VJOURNAL, VTIMEZONE, VFREEBUSY, xtoken
+             // END:VTIMEZONE, END:VCALENDAR
+             if (m_Log) m_Log->logError(
+                 JulianLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
                  JulianKeyword::Instance()->ms_sTZPART, strLine, 300);
              ICalProperty::deleteICalParameterVector(parameters);
              parameters->RemoveAll();
@@ -224,160 +284,173 @@ TZPart::parse(ICalReader * brFile, UnicodeString & sType,
 void TZPart::storeData(UnicodeString & strLine, UnicodeString & propName,
                        UnicodeString & propVal, JulianPtrArray * parameters)
 {
-
-    if (strLine.size() > 0) 
-    {
-    } 
-
-    t_bool bParamValid;
-
-    //UnicodeString u;
     t_int32 hashCode = propName.hashCode();
-    //if (propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sCOMMENT) == 0)
-   
-    if (JulianKeyword::Instance()->ms_ATOM_COMMENT == hashCode)
+    t_int32 i;
+    for (i = 0; 0 != (JulianFunctionTable::Instance()->tzStoreTable[i]).op; i++)
     {
-        // check parameters
-        bParamValid = ICalProperty::CheckParams(parameters, 
-            JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
-            JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
-        
-        if (!bParamValid)
+        if ((JulianFunctionTable::Instance()->tzStoreTable[i]).hashCode == hashCode)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
+            ApplyStoreOp(((JulianFunctionTable::Instance())->tzStoreTable[i]).op, 
+                strLine, propVal, parameters, 0);
+            return;
         }
+    }
+    if (ICalProperty::IsXToken(propName))
+    {
+        addXTokens(strLine);
+    }
+    else
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
+            JulianKeyword::Instance()->ms_sTZPART, propName, 200);
+    }
+}
+//---------------------------------------------------------------------
+void TZPart::storeComment(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // check parameters
+    t_bool bParamValid = ICalProperty::CheckParams(parameters, 
+        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
+    
+    if (!bParamValid)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
+    }
 
-        addComment(propVal, parameters);
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_TZNAME == hashCode)
+    addComment(propVal, parameters);
+}
+void TZPart::storeTZName(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // check parameters 
+    t_bool bParamValid = ICalProperty::CheckParams(parameters, 
+        JulianAtomRange::Instance()->ms_asLanguageParamRange,
+        JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
+    if (!bParamValid)
     {
-        // check parameters 
-        bParamValid = ICalProperty::CheckParams(parameters, 
-            JulianAtomRange::Instance()->ms_asLanguageParamRange,
-            JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
-        if (!bParamValid)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
-        }
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
+    }
 
-        addTZName(propVal, parameters);
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_DTSTART == hashCode)
+    addTZName(propVal, parameters);
+}
+void TZPart::storeDTStart(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // assert in local time
+    // no parameters
+    if (parameters->GetSize() > 0)
     {
-        // assert in local time
-        // no parameters
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
-        }
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
+    }
 
-        if (getDTStartProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sTZPART, propName, 100);
-        }
-        DateTime d(propVal);
-        t_int32 yr, mo, dy, hr, mn, sc;
-        if (DateTime::IsParseable(propVal, yr, mo, dy, hr, mn, sc))
-        {
-            m_StartTime = (t_int32) ((hr * 3600 + mn * 60) * 1000); // set start time in millis
-        }
-        setDTStart(d, parameters);
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_RDATE == hashCode)
+    if (getDTStartProperty() != 0)
     {
-        // assert in local time
-        // no parameters
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
-        }
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sTZPART, 
+            JulianKeyword::Instance()->ms_sDTSTART, 100);
+    }
+    DateTime d(propVal);
+    if (DateTime::IsParseable(propVal, m_iStartYear, m_iStartMonth, m_iStartDay, 
+        m_iStartHour, m_iStartMinute, m_iStartSecond))
+    {
+        m_StartTime = (t_int32) ((m_iStartHour * 3600 + m_iStartMinute * 60) * 1000); // set start time in millis
+    }
+    setDTStart(d, parameters);
+}
+void TZPart::storeRDate(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // assert in local time
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
+    }
 
-        if (getRDateProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sTZPART, propName, 100);
-        }
-        // DONE:?TODO: Finish
-        DateTime d(propVal);
-        setRDate(d, parameters);
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_RRULE == hashCode)
+    if (getRDateProperty() != 0)
     {
-        // no parameters
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
-        }
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sTZPART, 
+            JulianKeyword::Instance()->ms_sRDATE, 100);
+    }
+    // DONE:?TODO: Finish
+    DateTime d(propVal);
+    DateTime::IsParseable(propVal, m_iRDateYear, m_iRDateMonth, m_iRDateDay, 
+        m_iRDateHour, m_iRDateMinute, m_iRDateSecond);
+    setRDate(d, parameters);
+}
+void TZPart::storeRRule(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+ // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
+    }
 
-        if (getRRuleProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sTZPART, propName, 100);
-        }
-        setRRule(propVal, parameters); 
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_TZOFFSETTO == hashCode)
+    if (getRRuleProperty() != 0)
     {
-        // no parameters
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
-        }
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sTZPART, 
+            JulianKeyword::Instance()->ms_sRRULE, 100);
+    }
+    setRRule(propVal, parameters); 
+}
+void TZPart::storeTZOffsetTo(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
+    }
 
-        if (getTZOffsetToProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sTZPART, propName, 100);
-        }
-        setTZOffsetTo(propVal, parameters); 
-    }
-    else if (JulianKeyword::Instance()->ms_ATOM_TZOFFSETFROM == hashCode)
+    if (getTZOffsetToProperty() != 0)
     {
-        // no parameters
-        if (parameters->GetSize() > 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
-        }
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sTZPART, 
+            JulianKeyword::Instance()->ms_sTZOFFSETTO, 100);
+    }
+    setTZOffsetTo(propVal, parameters); 
+}
+void TZPart::storeTZOffsetFrom(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sTZPART, strLine, 100);
+    }
 
-        if (getTZOffsetFromProperty() != 0)
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                JulianKeyword::Instance()->ms_sTZPART, propName, 100);
-        }
-        setTZOffsetFrom(propVal, parameters);
-    }
-    else if (ICalProperty::IsXToken(propName))
+    if (getTZOffsetFromProperty() != 0)
     {
-        addXTokens(strLine);  
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sTZPART, 
+            JulianKeyword::Instance()->ms_sTZOFFSETFROM, 100);
     }
-    else 
-    {
-        // actually tzpart
-        if (m_Log) m_Log->logString(
-            JulianLogErrorMessage::Instance()->ms_sInvalidPropertyName, 
-            JulianKeyword::Instance()->ms_sTZPART,
-            propName, 200);
-    }
+    setTZOffsetFrom(propVal, parameters);
 }
 //---------------------------------------------------------------------
 void TZPart::selfCheck()
@@ -390,10 +463,16 @@ void TZPart::selfCheck()
 t_bool TZPart::isValid()
 {
     UnicodeString u;
+
+    // TODO: log that if not parseable TZOFFSETTO:, TZOFFSETFROM:
     // required to have valid dtstart, tzoffsetTo, tzoffsetFrom
     if (!getDTStart().isValid())
+    {
+        if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingStartingTime, 
+                JulianKeyword::Instance()->ms_sTZPART, u, 300);    
         return FALSE;
-    
+    }
     u = getTZOffsetTo();
     if (!DateTime::IsParseableUTCOffset(u))
         return FALSE;
@@ -409,7 +488,7 @@ t_bool TZPart::isValid()
 
 UnicodeString TZPart::toICALString()
 {
-    return ICalComponent::format(m_Name, JulianFormatString::Instance()->ms_sTZPartAllMessage);
+    return ICalComponent::format(m_Name, JulianFormatString::Instance()->ms_sTZPartAllMessage, "");
 }
 
 //---------------------------------------------------------------------
@@ -428,7 +507,6 @@ UnicodeString TZPart::formatChar(t_int32 c, UnicodeString sFilterAttendee,
                                  t_bool delegateRequest)
 {
     UnicodeString s, sResult;
-    
     // NOTE: remove here is get rid of compiler warnings
     if (sFilterAttendee.size() > 0 || delegateRequest)
     {
@@ -443,11 +521,37 @@ UnicodeString TZPart::formatChar(t_int32 c, UnicodeString sFilterAttendee,
         s = JulianKeyword::Instance()->ms_sTZNAME;
         return ICalProperty::propertyVectorToICALString(s, getTZName(), sResult); 
     case ms_cDTStart:
+#if 0
         s = JulianKeyword::Instance()->ms_sDTSTART;
         return ICalProperty::propertyToICALString(s, getDTStartProperty(), sResult); 
+#else 
+        if (getDTStartProperty() != 0)
+        {
+            sResult += JulianKeyword::Instance()->ms_sDTSTART;
+            sResult += JulianKeyword::Instance()->ms_sCOLON_SYMBOL;
+            DateTime::ToISO8601String(m_iStartYear, m_iStartMonth, m_iStartDay, 
+                m_iStartHour, m_iStartMinute, m_iStartSecond, s);
+            sResult += s;
+            sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+        }
+        return sResult;
+#endif
     case ms_cRDate:
+#if 0
         s = JulianKeyword::Instance()->ms_sRDATE;
         return ICalProperty::propertyToICALString(s, getRDateProperty(), sResult); 
+#else
+        if (getRDateProperty() != 0)
+        {
+            sResult += JulianKeyword::Instance()->ms_sRDATE;
+            sResult += JulianKeyword::Instance()->ms_sCOLON_SYMBOL;
+            DateTime::ToISO8601String(m_iRDateYear, m_iRDateMonth, m_iRDateDay, 
+                m_iRDateHour, m_iRDateMinute, m_iRDateSecond, s);
+            sResult += s;
+            sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
+        }
+        return sResult;
+#endif
     case ms_cRRule:
         s = JulianKeyword::Instance()->ms_sRRULE;
         return ICalProperty::propertyToICALString(s, getRRuleProperty(), sResult); 
@@ -458,7 +562,7 @@ UnicodeString TZPart::formatChar(t_int32 c, UnicodeString sFilterAttendee,
         s = JulianKeyword::Instance()->ms_sTZOFFSETFROM;
         return ICalProperty::propertyToICALString(s, getTZOffsetFromProperty(), sResult); 
     case ms_cXTokens: 
-          return ICalProperty::vectorToICALString(getXTokens(), sResult);
+        return ICalProperty::vectorToICALString(getXTokens(), sResult);
     default:
         return "";
     }
@@ -502,7 +606,7 @@ void TZPart::setName(UnicodeString s)
     m_Name = s; 
 }
 //---------------------------------------------------------------------
-
+#if 0
 t_bool TZPart::parseRule()
 {
     if (getRDate().isValid())
@@ -515,7 +619,7 @@ t_bool TZPart::parseRule()
         return parseRRule();
     }
 }
-
+#endif
 //---------------------------------------------------------------------
 void TZPart::parseRDate()
 {
@@ -569,20 +673,30 @@ t_bool TZPart::parseRRule()
         if (pN.compareIgnoreCase(JulianKeyword::Instance()->ms_sBYMONTH) == 0)
         {
             // since month is 0-based, must subtract 1
-            m_StartMonth = JulianUtility::atot_int32(pV.toCString(""), bParseError, pV.size()) - 1;
+            char * pVcc = pV.toCString("");
+            PR_ASSERT(pVcc != 0);
+            m_StartMonth = JulianUtility::atot_int32(pVcc, bParseError, pV.size()) - 1;
+            delete [] pVcc; pVcc = 0;
         }
         else if (pN.compareIgnoreCase(JulianKeyword::Instance()->ms_sBYDAY) == 0)
         {
             if (pV.size() == 3)
             {
                 // positive week
-                m_StartWeek = JulianUtility::atot_int32(pV.extract(0, 1, s).toCString(""), bParseError, 1);
+                char * pVcc = pV.toCString("");
+                PR_ASSERT(pVcc != 0);
+                m_StartWeek = JulianUtility::atot_int32(pVcc, bParseError, 1);
+                delete [] pVcc; pVcc = 0;
                 m_StartDay = Recurrence::stringToDay(pV.extract(1, 2, s), bParseError);
             }
             else
             {
                 PR_ASSERT(pV.size() == 4);  // note: assumption is pV.size() == 4
-                m_StartWeek = JulianUtility::atot_int32(pV.extract(1, 1, s).toCString(""), bParseError, 1); // (always len = 1)
+                
+                char * pVcc = pV.toCString("");
+                PR_ASSERT(pVcc != 0);
+                m_StartWeek = JulianUtility::atot_int32(pVcc + 1, bParseError, 1); // (always len = 1)
+                delete [] pVcc; pVcc = 0;
                 m_StartDay = Recurrence::stringToDay(pV.extract(2, 2, s), bParseError); // SU, MO, TU, etc. (always len = 2)
 
                 if (pV[(TextOffset) 0] == '-')
@@ -632,18 +746,49 @@ float TZPart::UTCOffsetToFloat(UnicodeString & utcOffset)
 }
 
 //---------------------------------------------------------------------
-void TZPart::deleteTZPartVector(JulianPtrArray * tzpartVector)
+
+void 
+TZPart::updateComponentHelper(TZPart * updatedComponent)
 {
-    t_int32 i;
-    TZPart * ip;
-    if (tzpartVector != 0)
+    // no need: TZName
+    ICalComponent::internalSetProperty(&m_DTStart, updatedComponent->m_DTStart);
+    ICalComponent::internalSetProperty(&m_RDate, updatedComponent->m_RDate);
+    ICalComponent::internalSetProperty(&m_RRule, updatedComponent->m_RRule);
+    ICalComponent::internalSetProperty(&m_TZOffsetTo, updatedComponent->m_TZOffsetTo);
+    ICalComponent::internalSetProperty(&m_TZOffsetFrom, updatedComponent->m_TZOffsetFrom);
+    ICalComponent::internalSetXTokensVctr(&m_XTokensVctr, updatedComponent->m_XTokensVctr);
+}
+
+//---------------------------------------------------------------------
+
+t_bool
+TZPart::updateComponent(ICalComponent * updatedComponent)
+{
+    if (updatedComponent != 0)
     {
-        for (i = tzpartVector->GetSize() - 1; i >= 0; i--)
+        ICAL_COMPONENT ucType = updatedComponent->GetType();
+
+        // only call updateComponentHelper if it's a TZPart and
+        // it is an exact matching Name (STANDARD or DAYLIGHT)
+        // basically always overwrite
+        if (ucType == ICAL_COMPONENT_TZPART)
         {
-            ip = (TZPart *) tzpartVector->GetAt(i);
-            delete ip; ip = 0;
+            // should be a safe cast with check above.
+            TZPart * uctzp = (TZPart *) updatedComponent;
+
+            // only if TZID's match and are not empty
+            if (uctzp->getName().size() > 0 && getName().size() > 0)
+            {
+                if (uctzp->getName() == getName())
+                {
+                    updateComponentHelper(uctzp);
+                    selfCheck();
+                    return TRUE;
+                }
+            }
         }
     }
+    return FALSE;
 }
 //---------------------------------------------------------------------
 
@@ -697,6 +842,7 @@ void TZPart::addTZNameProperty(ICalProperty * prop)
 // DTStart
 void TZPart::setDTStart(DateTime s, JulianPtrArray * parameters)
 { 
+#if 1
     if (m_DTStart == 0)
         m_DTStart = ICalPropertyFactory::Make(ICalProperty::DATETIME, 
                                             (void *) &s, parameters);
@@ -705,10 +851,14 @@ void TZPart::setDTStart(DateTime s, JulianPtrArray * parameters)
         m_DTStart->setValue((void *) &s);
         m_DTStart->setParameters(parameters);
     }
+#else
+    ICalComponent::setDateTimeValue(((ICalProperty **) &m_DTStart), s, parameters);
+#endif
 }
 
 DateTime TZPart::getDTStart() const
 {
+#if 1
     DateTime d(-1);
     if (m_DTStart == 0)
         return d; //return 0;
@@ -717,9 +867,15 @@ DateTime TZPart::getDTStart() const
         d = *((DateTime *) m_DTStart->getValue());
         return d;
     }
+#else
+    DateTime d(-1);
+    ICalComponent::getDateTimeValue(((ICalProperty **) &m_DTStart), d);
+    return d;
+#endif
 }
 //---------------------------------------------------------------------
 // RDate
+// TODO: become a vector
 void TZPart::setRDate(DateTime s, JulianPtrArray * parameters)
 { 
     if (m_RDate == 0)
@@ -746,6 +902,7 @@ DateTime TZPart::getRDate() const
 }
 //---------------------------------------------------------------------
 //RRule
+// TODO: become a vector
 void TZPart::setRRule(UnicodeString s, JulianPtrArray * parameters)
 {
     //UnicodeString * s_ptr = new UnicodeString(s);
@@ -776,6 +933,7 @@ UnicodeString TZPart::getRRule() const
 //TZOffsetTo
 void TZPart::setTZOffsetTo(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -786,10 +944,14 @@ void TZPart::setTZOffsetTo(UnicodeString s, JulianPtrArray * parameters)
     {
         m_TZOffsetTo->setValue((void *) &s);
         m_TZOffsetTo->setParameters(parameters);
-    }    
+    }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_TZOffsetTo), s, parameters);
+#endif
 }
 UnicodeString TZPart::getTZOffsetTo() const 
 {
+#if 1
     UnicodeString u;
     if (m_TZOffsetTo == 0)
         return "";
@@ -798,11 +960,17 @@ UnicodeString TZPart::getTZOffsetTo() const
         u = *((UnicodeString *) m_TZOffsetTo->getValue());
         return u;
     }
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_TZOffsetTo), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 //TZOffsetFrom
 void TZPart::setTZOffsetFrom(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -813,10 +981,14 @@ void TZPart::setTZOffsetFrom(UnicodeString s, JulianPtrArray * parameters)
     {
         m_TZOffsetFrom->setValue((void *) &s);
         m_TZOffsetFrom->setParameters(parameters);
-    }    
+    }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_TZOffsetFrom), s, parameters);
+#endif
 }
 UnicodeString TZPart::getTZOffsetFrom() const 
 {
+#if 1
     UnicodeString u;
     if (m_TZOffsetFrom == 0)
         return "";
@@ -825,6 +997,11 @@ UnicodeString TZPart::getTZOffsetFrom() const
         u = *((UnicodeString *) m_TZOffsetFrom->getValue());
         return u;
     }
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_TZOffsetFrom), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 // XTOKENS

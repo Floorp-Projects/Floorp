@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * attendee.h
  * John Sun
@@ -62,29 +61,33 @@ public:
         ROLE_LENGTH = 3, ROLE_INVALID = -1*/
 
         ROLE_REQ_PARTICIPANT = 0, ROLE_CHAIR = 1, ROLE_OPT_PARTICIPANT = 2,
-            ROLE_NON_PARTICIPANT = 3, ROLE_LENGTH = 4, ROLE_INVALID = -1
+            ROLE_NON_PARTICIPANT = 3, 
+            ROLE_XPARAMVAL = 4, ROLE_LENGTH = 5, ROLE_INVALID = -1
     };
 
-    /** Enumeration of TYPE parameter*/
+    /** Enumeration of CUTYPE parameter*/
     enum TYPE {
         TYPE_INDIVIDUAL = 0, TYPE_GROUP = 1, 
         TYPE_RESOURCE = 2, TYPE_ROOM = 3, TYPE_UNKNOWN = 4, 
-        TYPE_LENGTH = 5, TYPE_INVALID = -1
+        TYPE_XPARAMVAL = 5,
+        TYPE_LENGTH = 6, TYPE_INVALID = -1
     };
     
-    /** Enumeration of STATUS parameter*/
+    /** Enumeration of PARTSTAT parameter*/
     enum STATUS {
         /* For VEVENT, VTODO, VJOURNAL */
-        STATUS_NEEDSACTION = 0, STATUS_ACCEPTED = 1, STATUS_DECLINED = 2, 
+        STATUS_NEEDSACTION = 0, STATUS_XPARAMVAL = 1,
+            STATUS_ACCEPTED = 2, STATUS_DECLINED = 3, 
 
         /* For VEVENT and VTODO only */
-        STATUS_TENTATIVE = 3, 
-        STATUS_DELEGATED = 4,
+        STATUS_TENTATIVE = 4, 
+        STATUS_DELEGATED = 5,
 
         /* For VTODO only */
-        STATUS_COMPLETED = 5, STATUS_INPROCESS = 6,
+        STATUS_COMPLETED = 6, STATUS_INPROCESS = 7,
 
-        STATUS_LENGTH = 7, STATUS_INVALID = -1
+
+        STATUS_LENGTH = 8, STATUS_INVALID = -1
     };
 
     /**
@@ -96,7 +99,7 @@ public:
      *
      * @return          TRUE if valid status for compType, FALSE otherwise
      */
-    static t_bool isValidStatus(ICalComponent::ICAL_COMPONENT compType, STATUS status);
+    static t_bool isValidStatus(ICalComponent::ICAL_COMPONENT compType, Attendee::STATUS status);
 
     /** Enumeration of RSVP parameter */
     enum RSVP { 
@@ -128,7 +131,7 @@ public:
     static Attendee::ROLE stringToRole(UnicodeString & sRole);
     
     /**
-     * Converts TYPE string to a TYPE enumeration
+     * Converts CUTYPE string to a TYPE enumeration
      * @param           sType   type string
      *
      * @return          TYPE that represents that string 
@@ -136,7 +139,7 @@ public:
     static Attendee::TYPE stringToType(UnicodeString & sType);
 
     /**
-     * Converts PARTSTAT string to a STATUS enumeration
+     * Converts PARTSTAT string to a AT_PARSTAT enumeration
      * @param           sStatus status string
      *
      * @return          STATUS  that represents that string 
@@ -186,6 +189,7 @@ public:
      */
     static UnicodeString & statusToString(Attendee::STATUS status, UnicodeString & out);
     
+
     /**
      * Converts RSVP to string.  If bad rsvp, return default (FALSE).
      * @param           rsvp    RSVP enumeration
@@ -203,14 +207,6 @@ public:
      * @return          output expect string (out)
      */
     static UnicodeString & expectToString(Attendee::EXPECT expect, UnicodeString & out);
-
-    /**
-     * Cleanup method.  Delete each Attendee object in the vector
-     * attendees.
-     * @param           attendees   vector containing Attendee's to delete
-     *
-     */
-    static void deleteAttendeeVector(JulianPtrArray * attendees);
 
     /**
      * Constructor.  Also sets log file to write errors to.
@@ -565,7 +561,13 @@ private:
      * @param           t_int32 param   current value of keyword property
      */
     void selfCheckHelper(Attendee::PROPS prop, t_int32 param);
-    
+
+    /**
+     * helper in parsing delegated-to, delegated-from, member
+     */
+    void addParamValList(UnicodeString & paramValList,
+        t_int32 hashCode);
+
     /** 
      * format string to print Attendee with PARTSTAT NOT 
      * set to NEEDS-ACTION.
@@ -573,6 +575,7 @@ private:
      */
     UnicodeString formatDoneAction();
 
+#if 0
     /** 
      * format string to print Attendee with PARTSTAT NOT 
      * set to NEEDS-ACTION and Delegated-To of attendee. 
@@ -586,6 +589,7 @@ private:
      * @return          output formatted iCal Attendee string
      */
     UnicodeString formatDoneDelegateFromOnly();
+#endif
 
     /* BELOW METHODS ALL ARE NEEDS ACTION */
     /* no need for %S, assumed to be NEEDS-ACTION */
@@ -596,7 +600,8 @@ private:
      * @return          output formatted iCal Attendee string
      */
     UnicodeString formatNeedsAction();
-    
+
+#if 0
     /** 
      * format string to print Attendee with PARTSTAT
      * set to NEEDS-ACTION and Delegated-To of attendee. 
@@ -610,6 +615,7 @@ private:
      * @return          output formatted iCal Attendee string
      */
     UnicodeString formatDelegateFromOnly();
+#endif
 
     /**
      * Method that takes a format string and returns

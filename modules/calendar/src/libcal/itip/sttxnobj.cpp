@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,14 +16,14 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * sttxnobj.cpp
  * John Sun
  * 4/13/98 10:38:50 AM
  */
 
-#include "stdafx.h"
+#include "jdefines.h"
+#include "julnstr.h"
 #include "sttxnobj.h"
 #include "txnobj.h"
 #if CAPI_READY
@@ -58,7 +58,7 @@ StoreTransactionObject::StoreTransactionObject(NSCalendar & cal,
 //---------------------------------------------------------------------
 #if CAPI_READY
 
-int stringRead(void * pData, char * pBuf, int iSize, int* piTransferred)
+int stringRead(void * pData, char * pBuf, size_t iSize, size_t* piTransferred)
 {
     CAPI_CTX* pCtx = (CAPI_CTX*)pData;  
     *piTransferred = (pCtx->iSize > iSize) ? iSize : pCtx->iSize; 
@@ -71,21 +71,21 @@ int stringRead(void * pData, char * pBuf, int iSize, int* piTransferred)
 //---------------------------------------------------------------------
 
 CAPIStatus 
-StoreTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH, 
+StoreTransactionObject::handleCAPI(CAPISession & pS, CAPIHandle * pH, 
         t_int32 iHandleCount, t_int32 lFlags, 
         JulianPtrArray * inComponents, NSCalendar * inCal,
         JulianPtrArray * modifiers, 
         JulianPtrArray * outCalendars, TransactionObject::EFetchType & out)
 {
     CAPIStatus status;
-    pCAPIStream outStream = NULL;
+    CAPIStream outStream = NULL;
     char ** uids = NULL;
     long outSize;
     t_int32 i;
-    char * pBuf;  
+    char * pBuf = 0;  
 
     PR_ASSERT(inComponents != 0 && inCal != 0);
-      
+
 #if 0
 
     // For now
@@ -148,21 +148,27 @@ StoreTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH,
     m_Ctx.p = pBuf;
     m_Ctx.iSize = strlen(pBuf);
     
-    status = CAPI_SetStreamCallbacks(&outStream, stringRead, &m_Ctx, NULL, NULL, 0);
+    status = CAPI_SetStreamCallbacks(pS, &outStream, stringRead, &m_Ctx, NULL, NULL, 0);
        
     // TODO: if server is down, this may take forever!!!
     status = CAPI_StoreEvent(pS, pH, iHandleCount, 0, outStream);
+#ifdef TESTING_ITIPRIG    
     if (TRUE) TRACE("CAPI_StoreEvent:%lx\r\n", status);
-
+#endif
     //TODO: the store event now has a CS&T UID.  What to do with it?
     status = CAPI_GetLastStoredUIDs(pS, &uids, &outSize, 0);
-    
+#ifdef TESTING_ITIPRIG    
     if (TRUE) TRACE("Saved %d UIDs.\r\n", outSize);
     for (i = 0; i < outSize; i++)
     {
         if (TRUE) TRACE("%s\r\n", *(uids + i));
     }
+#endif    
 
+    if (pBuf != 0)
+    {
+        delete [] pBuf; pBuf = 0;
+    }
     return status;
 }
 

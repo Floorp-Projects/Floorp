@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * capiredr.cpp
  * John Sun
@@ -116,8 +115,6 @@ void ICalCAPIReader::setBuffer(const char * capiChunk)
 
 t_int8 ICalCAPIReader::read(ErrorCode & status)
 {
-    // TODO:
-   
     t_int32 i = 0;
     
     while (TRUE)
@@ -369,13 +366,13 @@ ICalCAPIReader::readFullLine(UnicodeString & aLine, ErrorCode & status, t_int32 
     t_int32 i;
 
 #if TESTING_ITIPRIG
-    TRACE("ICalCAPIReader: waiting to enter monitor\r\n");
+    if (FALSE) TRACE("ICalCAPIReader: waiting to enter monitor\r\n");
 #endif
 
     PR_EnterMonitor(m_Monitor);
 
 #if TESTING_ITIPRIG
-    TRACE("ICalCAPIReader: in monitor\r\n");
+    if (FALSE) TRACE("ICalCAPIReader: in monitor\r\n");
 #endif
     
     t_int32 oldpos = m_Pos;
@@ -395,7 +392,7 @@ ICalCAPIReader::readFullLine(UnicodeString & aLine, ErrorCode & status, t_int32 
         else 
         {
 #if TESTING_ITIPRIG
-            TRACE("ICalCAPIReader: (1) waiting for writeTOCAPIReader to add more chunks\r\n");
+            if (FALSE) TRACE("ICalCAPIReader: (1) waiting for writeTOCAPIReader to add more chunks\r\n");
 #endif
             PR_Wait(m_Monitor, LL_MAXINT);
             //PR_Yield();
@@ -423,7 +420,7 @@ ICalCAPIReader::readFullLine(UnicodeString & aLine, ErrorCode & status, t_int32 
             else
             {
 #if TESTING_ITIPRIG
-                TRACE("ICalCAPIReader: (2) waiting for writeTOCAPIReader to add more chunks\r\n");
+                if (FALSE) TRACE("ICalCAPIReader: (2) waiting for writeTOCAPIReader to add more chunks\r\n");
 #endif
                 PR_Wait(m_Monitor, LL_MAXINT);
                 //PR_Yield();
@@ -435,7 +432,7 @@ ICalCAPIReader::readFullLine(UnicodeString & aLine, ErrorCode & status, t_int32 
         else if (i == ' ')
         {
 #if TESTING_ITIPRIG
-            TRACE("ICalCAPIReader: recursivecall\r\n");
+            if (FALSE) TRACE("ICalCAPIReader: recursivecall\r\n");
 #endif
             aLine += readLine(aSubLine, status);
             //PR_Notify(m_Monitor);
@@ -444,14 +441,14 @@ ICalCAPIReader::readFullLine(UnicodeString & aLine, ErrorCode & status, t_int32 
         else
         {
 #if TESTING_ITIPRIG
-            TRACE("ICalCAPIReader: reset() break out of loop\r\n");
+            if (FALSE) TRACE("ICalCAPIReader: reset() break out of loop\r\n");
 #endif
             reset();
             break;
         }
     }
 #if TESTING_ITIPRIG
-    if (TRUE) TRACE("readFullLine returned: ---%s---\r\n", aLine.toCString(""));
+    if (FALSE) TRACE("readFullLine returned: ---%s---\r\n", aLine.toCString(""));
 #endif
 #if TESTING_ITIPRIG
     TRACE("ICalCAPIReader: leaving monitor\r\n");

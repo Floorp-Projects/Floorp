@@ -1,4 +1,3 @@
-IGNORE_MANIFEST=1
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -16,19 +15,21 @@ IGNORE_MANIFEST=1
 
 #//------------------------------------------------------------------------
 #//
-#// Makefile to build the Calendar tree
+#// Makefile to build the Julian tree
 #//
 #//------------------------------------------------------------------------
 
 #//------------------------------------------------------------------------
 #//
-#// Specify the depth of the current directory relative to the
+#// Specify the NS_DEPTH of the current directory relative to the
 #// root of NS
 #//
 #//------------------------------------------------------------------------
-DEPTH=..\..\..\..\..\
+NS_DEPTH=..\..\..\..\
 
 DIRS=include src
+
+DEPTH = $(NS_DEPTH)
 
 #//------------------------------------------------------------------------
 #//
@@ -36,5 +37,5 @@ DIRS=include src
 #//
 #//------------------------------------------------------------------------
 
-include <$(DEPTH)/config/rules.mak>
+include <$(NS_DEPTH)/config/rules.mak>
 

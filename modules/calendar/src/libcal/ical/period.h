@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * period.h
  * John Sun
@@ -45,7 +44,7 @@ private:
     DateTime m_DTEnd;
     
     /** the duration of the period */
-    Duration m_Duration;
+    Julian_Duration m_Duration;
 
     /*-----------------------------
     ** PRIVATE METHODS
@@ -128,9 +127,9 @@ public:
     /**
      * Return duration (may be invalid).
      *
-     * @return          Duration 
+     * @return          Julian_Duration 
      */
-    Duration getDuration() { return m_Duration; }
+    Julian_Duration getDuration() { return m_Duration; }
 
     /**
      * Set start time
@@ -148,7 +147,7 @@ public:
      * Set duration
      * @param           d   new duration value
      */
-    void setDuration(Duration d); 
+    void setDuration(Julian_Duration d); 
     
     /**
      * Set period by passing string.
@@ -211,7 +210,7 @@ public:
     /**
      * Returns period in iCal period format of "start/end", where
      * start is UTC ISO8601 datetime format and end is either
-     * a UTC IS08601 datetime format or an iCal Duration string.
+     * a UTC IS08601 datetime format or an iCal Julian_Duration string.
      *
      * @return          output string
      */

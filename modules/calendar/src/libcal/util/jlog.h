@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * jlog.h
  * John Sun
@@ -27,6 +26,9 @@
 #define __JLOG_H_
 
 #include <unistring.h> 
+#include "ptrarray.h"
+#include "jlogvctr.h"
+#include "jlogerr.h"
 
 /** 
  *  The JLog class defines a log file to write to while parsing
@@ -45,6 +47,8 @@
  *  Invalid Number format = 200.
  *  Abrupt end of parsing iCal object = 300.
  *  Invalid Event, Todo, Journal, VFreebusy, VTimeZone = 300.
+ *  6-22-98.
+ *  Changed from writing from one string to a list of in-memory strings.
  */
 class JLog
 {
@@ -65,8 +69,15 @@ private:
     /** current log filename */
     const char * m_FileName;
 
-    /** current string of errors */
-    UnicodeString m_String;
+    /**
+     * vector of vectors (each subvector contains vector of errors)
+     */
+    JulianPtrArray * m_ErrorVctr;
+
+    /**
+     * current vector of errors that is currently being written to.
+     */
+    JulianLogErrorVector * m_CurrentEventLogVctr;
 
     /** TRUE = writeToString, FALSE = writeToFile, immutable */
     t_bool m_WriteToString;
@@ -77,9 +88,10 @@ private:
     /** ptr to File */
     FILE * m_Stream;
 
+    /* if successful addition return TRUE, else FALSE */
+    t_bool addErrorToVector(JulianLogError * error);
+
 public:
-
-
 
     /**
      * Constructor defines new log file.  Using this constructor
@@ -119,26 +131,93 @@ public:
      */
     t_int32 GetLevel() const { return m_Level; }
 
+
     /**
-     * Return log string
-     * @return          log string
+     * Add a new vector of errors to error log.  
+     * This amounts to adding a new event log to the error log.
      */
-    UnicodeString GetString() const { return m_String; }
+    void addEventErrorEntry();
 
-    /* methods to write to log with char* */
-    void log(char * message, t_int32 level = m_DEFAULT_LEVEL);
-    void log(char * error, char * classname, char * comment, 
+
+    /**
+     * Set current event log vector to indicate whether this is a valid or
+     * invalid event.
+     * @param           t_bool b
+     *
+     * @return          void 
+     */
+    void setCurrentEventLogValidity(t_bool b);
+
+    /**
+     * Set current event log vector's component type.
+       Valid types to pass in are
+       ECompType_VEVENT      = VEvent, 
+       ECompType_VTODO       = VTodo, 
+       ECompType_VFREEBUSY   = VJournal, 
+       ECompType_VTIMEZONE   = VTimeZone,  
+       ECompType_VFREEBUSY   = VFreebusy,
+       ECompType_NSCALENDAR  = NSCalendar,
+       ECompType_XCOMPONENT  = X-Token Components
+       For example to setCurrentEventLogComponentType to VEVENT errors,
+       do the following:
+
+        setCurrentEventLogComponentType(ECompType_VEVENT);
+
+       to set current event log component type to NSCALENDAR errors
+       do the following:
+
+        setCurrentEventLogComponentType(ECompType_NSCALENDAR);
+
+
+     * @param           ComponentType
+     */
+    void setCurrentEventLogComponentType(JulianLogErrorVector::ECompType iComponentType);
+
+#if 0
+    void setUIDRecurrenceID(UnicodeString & uid, UnicodeString & rid);
+#else
+    void setUID(UnicodeString & uid);
+#endif
+    /**
+     * Returns the vector of errors for that event index.  Returns 0 for
+     * invalid index.
+     */
+    JulianPtrArray * getEventErrorLog(t_int32 index) const;
+
+    /**
+     * Return the vector of log errors.
+     *
+     * @return          JulianPtrArray * 
+     */
+    JulianPtrArray * GetErrorVector() const { return m_ErrorVctr; }
+
+#if 0
+    /**
+     * @see setCurrentEventLogComponentType 
+     * To create iterator on valid VEVENT errors only do following:
+     *      createIterator(logPtr, ECompType_VEVENT, TRUE)
+     * To create iterator on invalid VEVENT errors only do following:
+     *      createIterator(logPtr, ECompType_VEVENT, FALSE)
+     * To create iterator on valid VFREEBUSY errors only do following:
+     *      createIterator(logPtr, ECompType_VFREEBUSY, FALSE)
+     * To create iterator on NSCALENDAR errors only do following:
+     *      createIterator(logPtr, ECompType_NSCALENDAR, FALSE)
+     * To create iterator on X-TOKEN COMPONENT errors only do following:
+     *      createIterator(logPtr, ECompType_XCOMPONENT, FALSE)
+     * 
+     */
+    static JulianLogIterator * createIterator(JLog * aLog, JulianLogErrorVector::ECompType iComponentType, t_bool bValid = TRUE);
+#endif
+
+    void logError(const t_int32 errorID, t_int32 level = m_DEFAULT_LEVEL);
+    void logError(const t_int32 errorID, UnicodeString & comment, 
         t_int32 level = m_DEFAULT_LEVEL);
-    void log(char * error, char * classname, char * propName, char * propValue, 
+    void logError(const t_int32 errorID, UnicodeString & propName, 
+        UnicodeString & propValue, t_int32 level = m_DEFAULT_LEVEL);
+    void logError(const t_int32 errorID, UnicodeString & propName, 
+        UnicodeString & paramName, UnicodeString & paramValue, 
         t_int32 level = m_DEFAULT_LEVEL);
 
-    /* methods to write to log with UnicodeString */
-    void logString(const UnicodeString & message, t_int32 level = m_DEFAULT_LEVEL);
-    void logString(const UnicodeString & error, const UnicodeString & classname, 
-        UnicodeString & comment, t_int32 level = m_DEFAULT_LEVEL);
-    void logString(const UnicodeString & error, const UnicodeString & classname, 
-        UnicodeString & propName, UnicodeString & propValue, 
-        t_int32 level = m_DEFAULT_LEVEL);
 };
 
 #endif /* __JLOG_H_ */

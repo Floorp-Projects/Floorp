@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * tzpart.h
  * John Sun
@@ -144,7 +143,7 @@ public:
      * @param       bDelegateRequest    TRUE if a delegate request, FALSE if not
      * @return                          ICAL export format of that property
      */
-    virtual UnicodeString formatChar(t_int32 c, UnicodeString sFilterAttendee = "",
+    virtual UnicodeString formatChar(t_int32 c, UnicodeString sFilterAttendee,
         t_bool delegateRequest = FALSE);
 
     /**
@@ -164,7 +163,19 @@ public:
      * @return          ICAL_COMPONENT value of this component
      */
     virtual ICAL_COMPONENT GetType() const { return ICAL_COMPONENT_TZPART; }
-    
+
+    /**
+     * Update the private property data-members with updatedComponent's 
+     * property data-members.
+     * Usually, overwriting data-members should only occur if updatedComponent
+     * is more recent than the current component.
+     * Return TRUE if component was changed, FALSE otherwise
+     * @param           ICalComponent * updatedComponent
+     *
+     * @return          virtual t_bool 
+     */
+    virtual t_bool updateComponent(ICalComponent * updatedComponent);
+
     /*  -- End of ICALComponent interface -- */
 
     /* COMMENT */
@@ -204,7 +215,7 @@ public:
 
     /* XTOKENS: NOTE: a vector of strings, not a vector of ICalProperties */
     void addXTokens(UnicodeString s);
-    JulianPtrArray * getXTokens()               { return m_XTokensVctr; }
+    JulianPtrArray * getXTokens() const { return m_XTokensVctr; }
 
     /* NAME (DAYLIGHT OR STANDARD) */
     UnicodeString getName() const { return m_Name; }
@@ -248,17 +259,19 @@ public:
      */
     DateTime getUntil() { return m_Until; }
 
-
-    /**
-     * Cleanup vector of TZPart objects.  Delete each TZPart in vector.
-     * @param           tzpartVector    vector of elements to delete from
-     */
-    static void deleteTZPartVector(JulianPtrArray * tzpartVector);
-
     /* TODO: move later */
     static float UTCOffsetToFloat(UnicodeString & utcOffset);
 
 private:
+
+    /**
+     * Helper method called by updateComponent to actually replace
+     * the property data-members with updatedComponent's data-members.
+     * @param           TZPart * updatedComponent
+     *
+     * @return          virtual void 
+     */
+    void updateComponentHelper(TZPart * updatedComponent);
 
     /**
      * Selfcheck data members.  Currently does nothing
@@ -277,7 +290,36 @@ private:
      */
     void storeData(UnicodeString & strLine, UnicodeString & propName,
         UnicodeString & propVal, JulianPtrArray * parameters);
+public:
 
+    typedef void (TZPart::*SetOp) (UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+
+    /* Clients should NOT call below methods */
+    void storeComment(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeTZName(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeDTStart(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeRDate(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeRRule(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeTZOffsetTo(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeTZOffsetFrom(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    
+    void ApplyStoreOp(void (TZPart::*op) (UnicodeString & strLine, 
+        UnicodeString & propVal, JulianPtrArray * parameters, JulianPtrArray * vTimeZones), 
+        UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+    {
+        (this->*op)(strLine, propVal, parameters, vTimeZones);
+    }
+
+private:
 
     /**
      * Takes RRULE value and generates startmonth, startday, startweek, starttime
@@ -292,6 +334,7 @@ private:
      */
     void parseRDate();
 
+#if 0
     /**
      * Given data members, generates timezone critical information
      * (start month,day,week,time,until).  Calls either parseRRule or
@@ -301,7 +344,9 @@ private:
      * @return          TRUE if parse went OK, FALSE if error occurred 
      */
     t_bool parseRule();
-    
+#endif
+
+
     /* -- DATA MEMBERS -- */
 
     /*static UnicodeString m_strDefaultFmt;
@@ -312,6 +357,23 @@ private:
     t_int32 m_StartDay;
     t_int32 m_StartWeek;
     t_int32 m_StartTime;
+
+    /* used to print out DTStart back */
+    t_int32 m_iStartYear;
+    t_int32 m_iStartMonth;
+    t_int32 m_iStartDay;
+    t_int32 m_iStartHour;
+    t_int32 m_iStartMinute;
+    t_int32 m_iStartSecond;
+
+    /* used to print out RDate back */
+    t_int32 m_iRDateYear;
+    t_int32 m_iRDateMonth;
+    t_int32 m_iRDateDay;
+    t_int32 m_iRDateHour;
+    t_int32 m_iRDateMinute;
+    t_int32 m_iRDateSecond;
+
     DateTime m_Until;
 
     UnicodeString m_Name; /* STANDARD or DAYLIGHT */
@@ -323,7 +385,7 @@ private:
     ICalProperty * m_RRule;
     ICalProperty * m_TZOffsetTo;
     ICalProperty * m_TZOffsetFrom;
-    JulianPtrArray *    m_XTokensVctr;      /* TEXT */
+    JulianPtrArray * m_XTokensVctr;      /* TEXT */
 
     JLog * m_Log;
 };

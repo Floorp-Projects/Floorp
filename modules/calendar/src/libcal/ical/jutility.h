@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * jutility.h
  * John Sun
@@ -72,6 +71,7 @@ public:
         RT_YEARLY = Calendar::YEAR
     };
 
+#if 0
     /**
      * a wrapper around atoi(or atol).
      * @param   nPtr            the string to translate
@@ -80,7 +80,8 @@ public:
      * @return                  the value of the string in a 32-bit number
      */
     static t_int32 atot_int32(const char * nPtr, t_bool & bParseError, t_int32 size);
-    
+#endif
+
     /**
      * a wrapper around atoi(or atol).  Faster version.
      * @param   nPtr            the string to translate

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * user.h
  * John Sun
@@ -25,6 +24,9 @@
 
 #include <unistring.h>
 #include "ptrarray.h"
+#if CAPI_READY
+#include <capi.h>
+#endif
 
 #ifndef __USER_H_
 #define __USER_H_
@@ -42,16 +44,25 @@ private:
     UnicodeString m_RealName;
 
     /* temporary holding CS&T info, remove when CAP is ready */
+    UnicodeString m_LoginName;  /* this maybe unrelated to m_RealName */
     UnicodeString m_Password;
     UnicodeString m_Hostname;
     UnicodeString m_Node;
+#if CAPI_READY
+    CAPISession * m_Session;
+#endif
 
 public:
     User();
-    User (UnicodeString realName, UnicodeString imip, 
-        UnicodeString capi = "", t_int32 xItemID = -1,
-        UnicodeString irip = "");
-    ~User() {}
+    User(User & that);
+    User(UnicodeString realName, UnicodeString imip);
+    User(UnicodeString realName, UnicodeString imip, 
+        UnicodeString capi, UnicodeString irip, 
+        t_int32 xItemID = -1);
+    
+    virtual ~User();
+
+    User * clone();
 
     t_bool IsValidCAPI() const { return (m_CAPIAddress.size() > 0) && (m_XItemID != -1); }
     t_bool IsValidIRIP() const { return (m_IRIPAddress.size() > 0); }
@@ -62,10 +73,22 @@ public:
     UnicodeString getCAPIAddress() const { return m_CAPIAddress; }
     t_int32 getXItemID() const { return m_XItemID; }
 
+#if CAPI_READY
+    void setCAPISession(CAPISession * s) { m_Session = s; }
+    CAPISession * getCAPISession() const { return m_Session; }
+#endif
+
+    void setRealName(UnicodeString realName)
+    {
+        m_RealName = realName;
+    }
+    
 
     /* TODO: temporarily hold CS&T info, remove when CAP is ready */
-    void setCAPIInfo(UnicodeString password, UnicodeString hostname, UnicodeString node)
+    void setCAPIInfo(UnicodeString loginName, UnicodeString password,
+                     UnicodeString hostname, UnicodeString node)
     {
+        m_LoginName = loginName;
         m_Password = password;
         m_Hostname = hostname;
         m_Node = node;
@@ -94,6 +117,7 @@ public:
      */
     UnicodeString getXString();
 
+    UnicodeString getLogonString();
     /**
      * Creates the CAPI X-string from the real-name argument in
      * the form "S=lastName*'/G=firstName*".  The lastName is the defined
@@ -109,6 +133,19 @@ public:
      */
     static UnicodeString & MakeXString(UnicodeString & realName, UnicodeString & out);
 
+
+    /**
+     * Creates the CAPI logon string from the real-name and node argument into the
+     * form "S=lastname/G=firstname/ND=node/" 
+     * @param           UnicodeString & realName
+     * @param           UnicodeString & node
+     * @param           UnicodeString & out
+     *
+     * @return          static UnicodeString 
+     */
+    static UnicodeString & MakeCAPILogonString(UnicodeString & realName, UnicodeString & node, 
+        UnicodeString & out);
+
     /* static methods */
 
     /**
@@ -116,6 +153,8 @@ public:
      * @param           users       vector of users to delete from
      */
     static void deleteUserVector(JulianPtrArray * users);
+
+    static void cloneUserVector(JulianPtrArray * toClone, JulianPtrArray * out);
 };
 #endif /* __USER_H_ */
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * keyword.h
  * John Sun
@@ -32,7 +31,7 @@
 /**
  * singleton class to contain all ICAL keywords
  */
-class JulianKeyword
+class JULIAN_PUBLIC JulianKeyword
 {
 private:
     static JulianKeyword * m_Instance;
@@ -301,6 +300,13 @@ public:
     UnicodeString ms_sCANCELLED;
     JAtom ms_ATOM_CANCELLED;
 
+    UnicodeString ms_sDRAFT;
+    JAtom ms_ATOM_DRAFT;
+
+    UnicodeString ms_sFINAL;
+    JAtom ms_ATOM_FINAL;
+
+
     /* TRANSP property Keywords */
     UnicodeString ms_sOPAQUE;
     JAtom ms_ATOM_OPAQUE;
@@ -479,6 +485,10 @@ public:
     /*End FREEBUSY*/
   
     /* ALARM */
+    /* Alarm prop keywords */
+    UnicodeString ms_sACTION;        
+    JAtom ms_ATOM_ACTION;
+
     /* Alarm Categories keywords */
     UnicodeString ms_sAUDIO;
     JAtom ms_ATOM_AUDIO;
@@ -523,6 +533,9 @@ public:
 
     UnicodeString ms_sRELTYPE;
     JAtom ms_ATOM_RELTYPE;
+
+    UnicodeString ms_sFMTTYPE;
+    JAtom ms_ATOM_FMTTYPE;
 
     UnicodeString ms_sRELATED;
     JAtom ms_ATOM_RELATED;
@@ -648,6 +661,7 @@ public:
     UnicodeString ms_sCOLON_SYMBOL;
     JAtom ms_ATOM_COLON_SYMBOL;
 
+    UnicodeString ms_sDOUBLEQUOTE_SYMBOL;
     UnicodeString ms_sSEMICOLON_SYMBOL;
 
     UnicodeString ms_sRRULE_WITH_SEMICOLON;
@@ -658,6 +672,7 @@ public:
     UnicodeString ms_sALTREPQUOTE;
     UnicodeString ms_sLINEFEEDSPACE;
 
+    UnicodeString ms_sXPARAMVAL;
     /*  end other useful strings*/
 
    /*  recurrence keywords */
@@ -766,6 +781,56 @@ public:
     ~JulianAtomRange();
     static JulianAtomRange * Instance();
 
+    /*
+    calscale:                           x-token
+    method:                             x-token
+    prodid:                             x-token
+    version:                            x-token
+    attach:      value,encoding,fmttype x-token
+    categories:          language       x-token
+    class:                              x-token
+    comment:     altrep, language       x-token
+    description: altrep, language       x-token
+    geo:                                x-token
+    location:    altrep, language       x-token
+    percent-complete:                   x-token
+    priority:                           x-token
+    resources:   altrep, language       x-token
+    status:                             x-token
+    summary:     altrep, language       x-token
+    completed:                          x-token
+    dtend:       value, tzid            x-token
+    due:         value, tzid            x-token
+    dtstart:     value, tzid            x-token
+    duration:                           x-token
+    freebusy:    fbtype                 x-token
+    transp:                             x-token
+    tzid:                               x-token
+    tzname:              language       x-token
+    tzoffsetfrom:                       x-token
+    tzoffsetto:                         x-token
+    tzurl:                              x-token
+    attendee:    cutype, member,role,partstat,rsvp,delto,delfrom,sentby,cn,dir,language,x-token
+    contact:     altrep, language       x-token
+    organizer:   cutype,dir,sentby,language, x-token
+    recid:       value, tzid, range     x-token
+    relatedto:   reltype                x-token
+    url:                                x-token
+    uid:                                x-token
+    exdate:      value, tzid            x-token
+    exrule:                             x-token
+    rdate:       value, tzid            x-token
+    rrule:                              x-token
+    action:                             x-token
+    repeat:                             x-token
+    rdate:       value,                 x-token
+    created:                            x-token
+    dtstamp:                            x-token
+    lastmod:                            x-token
+    sequence:                           x-token
+    request-status:       language      x-token
+    */
+
     /* ATOM RANGES for PARAMETERS */
     JAtom ms_asAltrepLanguageParamRange[2];
     t_int32 ms_asAltrepLanguageParamRangeSize;
@@ -778,6 +843,9 @@ public:
     
     JAtom ms_asEncodingValueParamRange[2];
     t_int32 ms_asEncodingValueParamRangeSize;
+
+    JAtom ms_asEncodingValueFMTTypeParamRange[3];
+    t_int32 ms_asEncodingValueFMTTypeParamRangeSize;
 
     JAtom ms_asSentByParamRange[1];
     t_int32 ms_asSentByParamRangeSize;
@@ -801,10 +869,14 @@ public:
     t_int32 ms_asDateDateTimePeriodValueRangeSize;
 
     JAtom ms_asRelTypeRange[3];
+    t_int32 ms_iRelTypeRangeSize;
+
     JAtom ms_asRelatedRange[2];
+    t_int32 ms_iRelatedRangeSize;
+
     JAtom ms_asParameterRange[5]; 
     t_int32 ms_iParameterRangeSize;
-    JAtom ms_asIrregularProperties[3];
+    JAtom ms_asIrregularProperties[4];
     t_int32 ms_iIrregularPropertiesSize;
     JAtom ms_asValueRange[14];
     t_int32 ms_iValueRangeSize;
@@ -829,6 +901,7 @@ public:
     ~JulianLogErrorMessage();
     static JulianLogErrorMessage * Instance();
    
+#if 0
     UnicodeString ms_sDTEndBeforeDTStart;
     UnicodeString ms_sExportError;
     UnicodeString ms_sNTimeParamError;
@@ -863,6 +936,9 @@ public:
     UnicodeString ms_sMissingUID;
     UnicodeString ms_sMissingDescription;
     UnicodeString ms_sMissingMethodProvided;
+    UnicodeString ms_sMissingOrganizer;
+    UnicodeString ms_sMissingSummary;
+    UnicodeString ms_sMissingAttendees;
     UnicodeString ms_sInvalidVersionNumber;
     UnicodeString ms_sUnknownUID;
     UnicodeString ms_sMissingUIDInReply;
@@ -983,6 +1059,178 @@ public:
     UnicodeString ms_sDefaultFreebusyStatus;
     UnicodeString ms_sDefaultFreebusyType;
     UnicodeString ms_sDefaultDuration;                        
+    UnicodeString ms_sDefaultAlarmDescriptionString;
+    UnicodeString ms_sDefaultAlarmSummaryString;
+    UnicodeString ms_sXTokenParamIgnored;
+    UnicodeString ms_sXTokenComponentIgnored;
+#endif
+    UnicodeString ms_sDefaultAlarmDescriptionString;
+    UnicodeString ms_sDefaultAlarmSummaryString;
+    UnicodeString ms_sRS202;
+
+    static t_int32 ms_iStaticErrorNumber;
+
+    t_int32 ms_iDTEndBeforeDTStart;
+    t_int32 ms_iExportError;
+    t_int32 ms_iNTimeParamError;
+    t_int32 ms_iInvalidPromptValue;
+    t_int32 ms_iSTimeParamError;
+    t_int32 ms_iISO8601ParamError;
+    t_int32 ms_iInvalidTimeStringError;
+    t_int32 ms_iTimeZoneParamError;
+    t_int32 ms_iLocaleParamError;
+    t_int32 ms_iLocaleNotFoundError;
+    t_int32 ms_iPatternParamError;
+    t_int32 ms_iInvalidPatternError;
+    t_int32 ms_iRRuleParamError;
+    t_int32 ms_iERuleParamError;
+    t_int32 ms_iBoundParamError;
+    t_int32 ms_iInvalidRecurrenceError;
+    t_int32 ms_iUnzipNullError;
+    t_int32 ms_iCommandNotFoundError;
+    t_int32 ms_iInvalidTimeZoneError;
+    t_int32 ms_iFileNotFound;
+    t_int32 ms_iInvalidPropertyName;
+    t_int32 ms_iInvalidPropertyValue;
+    t_int32 ms_iInvalidParameterName;
+    t_int32 ms_iInvalidParameterValue;
+    t_int32 ms_iMissingStartingTime;
+    t_int32 ms_iMissingEndingTime;
+    t_int32 ms_iEndBeforeStartTime;
+    t_int32 ms_iMissingSeqNo;
+    t_int32 ms_iMissingReplySeq;
+    t_int32 ms_iMissingURL;
+    t_int32 ms_iMissingDTStamp;
+    t_int32 ms_iMissingUID;
+    t_int32 ms_iMissingDescription;
+    t_int32 ms_iMissingMethodProvided;
+    t_int32 ms_iMissingOrganizer;
+    t_int32 ms_iMissingSummary;
+    t_int32 ms_iMissingAttendees;
+    t_int32 ms_iInvalidVersionNumber;
+    t_int32 ms_iUnknownUID;
+    t_int32 ms_iMissingUIDInReply;
+    t_int32 ms_iMissingValidDTStamp;
+    t_int32 ms_iDeclineCounterCalledByAttendee;
+    t_int32 ms_iPublishCalledByAttendee;
+    t_int32 ms_iRequestCalledByAttendee;
+    t_int32 ms_iCancelCalledByAttendee;
+    t_int32 ms_iCounterCalledByOrganizer;
+    t_int32 ms_iRefreshCalledByOrganizer;
+    t_int32 ms_iReplyCalledByOrganizer;
+    t_int32 ms_iAddReplySequenceOutOfRange;
+    t_int32 ms_iDuplicatedProperty;
+    t_int32 ms_iDuplicatedParameter;
+    t_int32 ms_iConflictMethodAndStatus;
+    t_int32 ms_iConflictCancelAndConfirmedTentative;
+    t_int32 ms_iMissingUIDToMatchEvent;
+    t_int32 ms_iInvalidNumberFormat;
+    t_int32 ms_iDelegateRequestError;
+    t_int32 ms_iInvalidRecurrenceIDRange;
+    t_int32 ms_iUnknownRecurrenceID;
+    t_int32 ms_iPropertyValueTypeMismatch;
+    t_int32 ms_iInvalidRRule;
+    t_int32 ms_iInvalidExRule;
+    t_int32 ms_iInvalidRDate;
+    t_int32 ms_iInvalidExDate;
+    t_int32 ms_iInvalidEvent;
+    t_int32 ms_iInvalidComponent;
+    t_int32 ms_iInvalidAlarm;
+    t_int32 ms_iInvalidTZPart;
+    t_int32 ms_iInvalidAlarmCategory;
+    t_int32 ms_iInvalidAttendee;
+    t_int32 ms_iInvalidFreebusy;
+    t_int32 ms_iDurationAssertionFailed;
+    t_int32 ms_iDurationParseFailed;
+    t_int32 ms_iPeriodParseFailed;
+    t_int32 ms_iPeriodStartInvalid;
+    t_int32 ms_iPeriodEndInvalid;
+    t_int32 ms_iPeriodEndBeforeStart;
+    t_int32 ms_iPeriodDurationZero;
+    t_int32 ms_iFreebusyPeriodInvalid;
+    t_int32 ms_iOptParamInvalidPropertyValue;
+    t_int32 ms_iOptParamInvalidPropertyName;
+    t_int32 ms_iInvalidOptionalParam;
+    t_int32 ms_iAbruptEndOfParsing;
+    t_int32 ms_iLastModifiedBeforeCreated;
+    t_int32 ms_iMultipleOwners;
+    t_int32 ms_iMultipleOrganizers;
+    t_int32 ms_iMissingOwner;
+    t_int32 ms_iMissingDueTime;
+    t_int32 ms_iCompletedPercentMismatch;
+    t_int32 ms_iMissingFreqTagRecurrence;
+    t_int32 ms_iFreqIntervalMismatchRecurrence;
+    t_int32 ms_iInvalidPercentCompleteValue;
+    t_int32 ms_iInvalidPriorityValue;
+    t_int32 ms_iInvalidByHourValue;
+    t_int32 ms_iInvalidByMinuteValue;
+    t_int32 ms_iByDayFreqIntervalMismatch;
+    t_int32 ms_iInvalidByMonthDayValue;
+    t_int32 ms_iInvalidByYearDayValue;
+    t_int32 ms_iInvalidBySetPosValue;
+    t_int32 ms_iInvalidByWeekNoValue;
+    t_int32 ms_iInvalidWeekStartValue;
+    t_int32 ms_iInvalidByMonthValue;
+    t_int32 ms_iInvalidByDayValue;
+    t_int32 ms_iInvalidFrequency;
+    t_int32 ms_iInvalidDayArg;
+    t_int32 ms_iVerifyZeroError;
+    t_int32 ms_iRoundedPercentCompleteTo100;
+    t_int32 ms_iRS200;
+    t_int32 ms_iRS201;
+    t_int32 ms_iRS202;
+    t_int32 ms_iRS203;
+    t_int32 ms_iRS204;
+    t_int32 ms_iRS205;
+    t_int32 ms_iRS206;
+    t_int32 ms_iRS207;
+    t_int32 ms_iRS208;
+    t_int32 ms_iRS209;
+    t_int32 ms_iRS210;
+    t_int32 ms_iRS300;
+    t_int32 ms_iRS301;
+    t_int32 ms_iRS302;
+    t_int32 ms_iRS303;
+    t_int32 ms_iRS304;
+    t_int32 ms_iRS305;
+    t_int32 ms_iRS306;
+    t_int32 ms_iRS307;
+    t_int32 ms_iRS308;
+    t_int32 ms_iRS309;
+    t_int32 ms_iRS310;
+    t_int32 ms_iRS311;
+    t_int32 ms_iRS312;
+    t_int32 ms_iRS400;
+    t_int32 ms_iRS500;
+    t_int32 ms_iRS501;
+    t_int32 ms_iRS502;
+    t_int32 ms_iRS503;
+    t_int32 ms_iMissingUIDGenerateDefault;
+    t_int32 ms_iMissingStartingTimeGenerateDefault;
+    t_int32 ms_iMissingEndingTimeGenerateDefault;
+    t_int32 ms_iNegativeSequenceNumberGenerateDefault;
+    t_int32 ms_iDefaultTBEDescription;
+    t_int32 ms_iDefaultTBEClass;
+    t_int32 ms_iDefaultTBEStatus;
+    t_int32 ms_iDefaultTBETransp;
+    t_int32 ms_iDefaultTBERequestStatus;
+    t_int32 ms_iDefaultTBESummary;
+    t_int32 ms_iDefaultRecIDRange;
+    t_int32 ms_iDefaultAttendeeRole;
+    t_int32 ms_iDefaultAttendeeType;
+    t_int32 ms_iDefaultAttendeeExpect;
+    t_int32 ms_iDefaultAttendeeStatus;
+    t_int32 ms_iDefaultAttendeeRSVP;
+    t_int32 ms_iDefaultAlarmRepeat;
+    t_int32 ms_iDefaultAlarmDuration;
+    t_int32 ms_iDefaultAlarmCategories;
+    t_int32 ms_iDefaultFreebusyStatus;
+    t_int32 ms_iDefaultFreebusyType;
+    t_int32 ms_iDefaultDuration;                        
+    t_int32 ms_iDefaultAlarmDescriptionString;
+    t_int32 ms_iDefaultAlarmSummaryString;
+    t_int32 ms_iXTokenParamIgnored;
+    t_int32 ms_iXTokenComponentIgnored;
 };
 
 /*---------------------------------------------------------------------*/
@@ -1031,6 +1279,10 @@ public:
     /* TZPart strings */
     UnicodeString ms_TZPartStrDefaultFmt;
     UnicodeString ms_sTZPartAllMessage;
+
+    /* VAlarm strings */
+    UnicodeString ms_VAlarmStrDefaultFmt;
+    UnicodeString ms_sVAlarmAllMessage;
 
     /* VEvent strings */
     UnicodeString ms_VEventStrDefaultFmt;
@@ -1088,466 +1340,11 @@ public:
     UnicodeString ms_sVTimeZoneAllMessage;
 };
 
-#if 0
-
-/* iCALENDAR */
-const UnicodeString ms_sVCALENDAR  = "VCALENDAR";   const JAtom ms_ATOM_VCALENDAR(ms_sVCALENDAR);
-
-/* iCALENDAR COMPONENTS*/
-const UnicodeString ms_sVEVENT     = "VEVENT";      const JAtom ms_ATOM_VEVENT(ms_sVEVENT); 
-const UnicodeString ms_sVTODO      = "VTODO";       const JAtom ms_ATOM_VTODO(ms_sVTODO);
-const UnicodeString ms_sVJOURNAL   = "VJOURNAL";    const JAtom ms_ATOM_VJOURNAL(ms_sVJOURNAL);
-const UnicodeString ms_sVFREEBUSY  = "VFREEBUSY";   const JAtom ms_ATOM_VFREEBUSY(ms_sVFREEBUSY);
-const UnicodeString ms_sVTIMEZONE  = "VTIMEZONE";   const JAtom ms_ATOM_VTIMEZONE(ms_sVTIMEZONE);
-const UnicodeString ms_sVALARM     = "VALARM";      const JAtom ms_ATOM_VALARM(ms_sVALARM);
-const UnicodeString ms_sTZPART     = "TZPART";
-
-/*PROPERTIES*/
-const UnicodeString ms_sATTENDEE         = "ATTENDEE";      const JAtom ms_ATOM_ATTENDEE(ms_sATTENDEE);
-const UnicodeString ms_sATTACH           = "ATTACH";        const JAtom ms_ATOM_ATTACH(ms_sATTACH);
-const UnicodeString ms_sCATEGORIES       = "CATEGORIES";    const JAtom ms_ATOM_CATEGORIES(ms_sCATEGORIES);
-const UnicodeString ms_sCLASS            = "CLASS";         const JAtom ms_ATOM_CLASS(ms_sCLASS);
-const UnicodeString ms_sCOMMENT          = "COMMENT";       const JAtom ms_ATOM_COMMENT(ms_sCOMMENT);
-const UnicodeString ms_sCOMPLETED        = "COMPLETED";     const JAtom ms_ATOM_COMPLETED(ms_sCOMPLETED);
-const UnicodeString ms_sCONTACT          = "CONTACT";       const JAtom ms_ATOM_CONTACT(ms_sCONTACT);
-const UnicodeString ms_sCREATED          = "CREATED";       const JAtom ms_ATOM_CREATED(ms_sCREATED);
-const UnicodeString ms_sDTEND            = "DTEND";         const JAtom ms_ATOM_DTEND(ms_sDTEND);
-const UnicodeString ms_sDTSTART          = "DTSTART";       const JAtom ms_ATOM_DTSTART(ms_sDTSTART);
-const UnicodeString ms_sDTSTAMP          = "DTSTAMP";       const JAtom ms_ATOM_DTSTAMP(ms_sDTSTAMP);
-const UnicodeString ms_sDESCRIPTION      = "DESCRIPTION";   const JAtom ms_ATOM_DESCRIPTION(ms_sDESCRIPTION);
-const UnicodeString ms_sDUE              = "DUE";       const JAtom ms_ATOM_DUE(ms_sDUE);
-const UnicodeString ms_sDURATION         = "DURATION";  const JAtom ms_ATOM_DURATION(ms_sDURATION);
-const UnicodeString ms_sEXDATE           = "EXDATE";    const JAtom ms_ATOM_EXDATE(ms_sEXDATE);
-const UnicodeString ms_sEXRULE           = "EXRULE";    const JAtom ms_ATOM_EXRULE(ms_sEXRULE);
-const UnicodeString ms_sFREEBUSY         = "FREEBUSY";  const JAtom ms_ATOM_FREEBUSY(ms_sFREEBUSY);
-const UnicodeString ms_sGEO              = "GEO";       const JAtom ms_ATOM_GEO(ms_sGEO);
-const UnicodeString ms_sLASTMODIFIED     = "LAST-MODIFIED"; const JAtom ms_ATOM_LASTMODIFIED(ms_sLASTMODIFIED);
-const UnicodeString ms_sLOCATION         = "LOCATION";  const JAtom ms_ATOM_LOCATION(ms_sLOCATION);
-const UnicodeString ms_sORGANIZER        = "ORGANIZER"; const JAtom ms_ATOM_ORGANIZER(ms_sORGANIZER);
-const UnicodeString ms_sPERCENTCOMPLETE  = "PERCENT-COMPLETE"; const JAtom ms_ATOM_PERCENTCOMPLETE(ms_sPERCENTCOMPLETE);
-const UnicodeString ms_sPRIORITY         = "PRIORITY";  const JAtom ms_ATOM_PRIORITY(ms_sPRIORITY);
-const UnicodeString ms_sRDATE            = "RDATE";     const JAtom ms_ATOM_RDATE(ms_sRDATE);
-const UnicodeString ms_sRRULE            = "RRULE";     const JAtom ms_ATOM_RRULE(ms_sRRULE);
-const UnicodeString ms_sRECURRENCEID     = "RECURRENCE-ID"; const JAtom ms_ATOM_RECURRENCEID(ms_sRECURRENCEID);
-/*const UnicodeString ms_sRESPONSESEQUENCE = "RESPONSE-SEQUENCE"; const JAtom ms_ATOM_RESPONSESEQUENCE(ms_sRESPONSESEQUENCE);*/
-const UnicodeString ms_sRELATEDTO        = "RELATED-TO";    const JAtom ms_ATOM_RELATEDTO(ms_sRELATEDTO);
-const UnicodeString ms_sREPEAT           = "REPEAT";    const JAtom ms_ATOM_REPEAT(ms_sREPEAT);
-const UnicodeString ms_sREQUESTSTATUS    = "REQUEST-STATUS"; const JAtom ms_ATOM_REQUESTSTATUS(ms_sREQUESTSTATUS);
-const UnicodeString ms_sRESOURCES        = "RESOURCES"; const JAtom ms_ATOM_RESOURCES(ms_sRESOURCES);
-const UnicodeString ms_sSEQUENCE         = "SEQUENCE";  const JAtom ms_ATOM_SEQUENCE(ms_sSEQUENCE);
-const UnicodeString ms_sSTATUS           = "STATUS";    const JAtom ms_ATOM_STATUS(ms_sSTATUS);
-const UnicodeString ms_sSUMMARY          = "SUMMARY";   const JAtom ms_ATOM_SUMMARY(ms_sSUMMARY);
-const UnicodeString ms_sTRANSP           = "TRANSP";    const JAtom ms_ATOM_TRANSP(ms_sTRANSP);
-const UnicodeString ms_sTRIGGER          = "TRIGGER";   const JAtom ms_ATOM_TRIGGER(ms_sTRIGGER);
-const UnicodeString ms_sUID              = "UID"; const JAtom ms_ATOM_UID(ms_sUID);
-const UnicodeString ms_sURL              = "URL"; const JAtom ms_ATOM_URL(ms_sURL);
-const UnicodeString ms_sTZOFFSET         = "TZOFFSET"; const JAtom ms_ATOM_TZOFFSET(ms_sTZOFFSET);
-const UnicodeString ms_sTZOFFSETTO       = "TZOFFSETTO"; const JAtom ms_ATOM_TZOFFSETTO(ms_sTZOFFSETTO);
-const UnicodeString ms_sTZOFFSETFROM     = "TZOFFSETFROM"; const JAtom ms_ATOM_TZOFFSETFROM(ms_sTZOFFSETFROM);
-const UnicodeString ms_sTZNAME           = "TZNAME"; const JAtom ms_ATOM_TZNAME(ms_sTZNAME);
-const UnicodeString ms_sDAYLIGHT         = "DAYLIGHT"; const JAtom ms_ATOM_DAYLIGHT(ms_sDAYLIGHT);
-const UnicodeString ms_sSTANDARD         = "STANDARD"; const JAtom ms_ATOM_STANDARD(ms_sSTANDARD);
-const UnicodeString ms_sTZURL            = "TZURL"; const JAtom ms_ATOM_TZURL(ms_sTZURL);
-const UnicodeString ms_sTZID             = "TZID"; const JAtom ms_ATOM_TZID(ms_sTZID);
-
-/*boolean value strings*/
-const UnicodeString ms_sTRUE      = "TRUE"; const JAtom ms_ATOM_TRUE(ms_sTRUE);
-const UnicodeString ms_sFALSE     = "FALSE"; const JAtom ms_ATOM_FALSE(ms_sFALSE);
-  
-/* ITIP METHOD NAMES*/
-const UnicodeString ms_sPUBLISH        = "PUBLISH"; const JAtom ms_ATOM_PUBLISH(ms_sPUBLISH);
-const UnicodeString ms_sREQUEST        = "REQUEST"; const JAtom ms_ATOM_REQUEST(ms_sREQUEST);
-const UnicodeString ms_sREPLY          = "REPLY"; const JAtom ms_ATOM_REPLY(ms_sREPLY);
-const UnicodeString ms_sCANCEL         = "CANCEL"; const JAtom ms_ATOM_CANCEL(ms_sCANCEL);
-/*const UnicodeString ms_sRESEND         = "RESEND"; const JAtom ms_ATOM_RESEND(ms_sRESEND);*/
-const UnicodeString ms_sREFRESH        = "REFRESH"; const JAtom ms_ATOM_REFRESH(ms_sREFRESH);
-const UnicodeString ms_sCOUNTER        = "COUNTER"; const JAtom ms_ATOM_COUNTER(ms_sCOUNTER);
-const UnicodeString ms_sDECLINECOUNTER = "DECLINECOUNTER"; const JAtom ms_ATOM_DECLINECOUNTER(ms_sDECLINECOUNTER);
-const UnicodeString ms_sADD            = "ADD"; const JAtom ms_ATOM_ADD(ms_sADD);
-/*const UnicodeString ms_sBUSYREQUEST   = "BUSY-REQUEST"; const JAtom ms_ATOM_BUSYREQUEST(ms_sBUSYREQUEST);
-const UnicodeString ms_sBUSYREPLY     = "BUSY-REPLY"; const JAtom ms_ATOM_BUSYREPLY(ms_sBUSYREPLY);*/
-  
-/*NSCALENDAR*/
-/* NSCalendar PROPERTY NAMES */
-const UnicodeString ms_sPRODID   = "PRODID"; const JAtom ms_ATOM_PRODID(ms_sPRODID);
-const UnicodeString ms_sVERSION  = "VERSION"; const JAtom ms_ATOM_VERSION(ms_sVERSION);
-const UnicodeString ms_sMETHOD   = "METHOD"; const JAtom ms_ATOM_METHOD(ms_sMETHOD);
-const UnicodeString ms_sSOURCE   = "SOURCE"; const JAtom ms_ATOM_SOURCE(ms_sSOURCE);
-const UnicodeString ms_sCALSCALE = "CALSCALE"; const JAtom ms_ATOM_CALSCALE(ms_sCALSCALE);
-const UnicodeString ms_sNAME     = "NAME"; const JAtom ms_ATOM_NAME(ms_sNAME);
-/*const UnicodeString ms_sPROFILE_VERSION = "PROFILE-VERSION"; const JAtom ms_ATOM_PROFILE_VERSION(ms_sPROFILE_VERSION);*/
-
-/* Valid calscale values, also accepts Iana-scale*/
-const UnicodeString ms_sGREGORIAN = "GREGORIAN"; const JAtom ms_ATOM_GREGORIAN(ms_sGREGORIAN);
-  
-/* End NSCalendar */
-  
-/*TimeBasedEvent*/
-/* CLASS property Keywords*/
-const UnicodeString ms_sPUBLIC        = "PUBLIC"; const JAtom ms_ATOM_PUBLIC(ms_sPUBLIC);
-const UnicodeString ms_sPRIVATE       = "PRIVATE"; const JAtom ms_ATOM_PRIVATE(ms_sPRIVATE);
-const UnicodeString ms_sCONFIDENTIAL  = "CONFIDENTIAL"; const JAtom ms_ATOM_CONFIDENTIAL(ms_sCONFIDENTIAL);
-  
-/* STATUS property Keywords*/
-const UnicodeString ms_sNEEDSACTION   = "NEEDS-ACTION"; const JAtom ms_ATOM_NEEDSACTION(ms_sNEEDSACTION);
-/*const UnicodeString ms_sCOMPLETED     = "COMPLETED"; const JAtom ms_ATOM_COMPLETED(ms_sCOMPLETED);*/
-const UnicodeString ms_sINPROCESS     = "IN-PROCESS"; const JAtom ms_ATOM_INPROCESS(ms_sINPROCESS);
-const UnicodeString ms_sTENTATIVE     = "TENTATIVE"; const JAtom ms_ATOM_TENTATIVE(ms_sTENTATIVE);
-const UnicodeString ms_sCONFIRMED     = "CONFIRMED"; const JAtom ms_ATOM_CONFIRMED(ms_sCONFIRMED);
-const UnicodeString ms_sCANCELLED     = "CANCELLED"; const JAtom ms_ATOM_CANCELLED(ms_sCANCELLED);
-
-/* TRANSP property Keywords*/
-const UnicodeString ms_sOPAQUE        = "OPAQUE"; const JAtom ms_ATOM_OPAQUE(ms_sOPAQUE);
-const UnicodeString ms_sTRANSPARENT   = "TRANSPARENT"; const JAtom ms_ATOM_TRANSPARENT(ms_sTRANSPARENT);
-  
-/*End of TimeBasedEvent*/
-
-/*ATTENDEE*/
-/* parameter names as in the input stream. Define for possible future changes*/
-const UnicodeString ms_sROLE             = "ROLE"; const JAtom ms_ATOM_ROLE(ms_sROLE);
-const UnicodeString ms_sTYPE             = "TYPE"; const JAtom ms_ATOM_TYPE(ms_sTYPE);
-/*const UnicodeString ms_sSTATUS           = "STATUS"; const JAtom ms_ATOM_STATUS(ms_sSTATUS);*/
-const UnicodeString ms_sRSVP             = "RSVP"; const JAtom ms_ATOM_RSVP(ms_sRSVP);
-const UnicodeString ms_sEXPECT           = "EXPECT"; const JAtom ms_ATOM_EXPECT(ms_sEXPECT);
-const UnicodeString ms_sMEMBER           = "MEMBER"; const JAtom ms_ATOM_MEMBER(ms_sMEMBER);
-const UnicodeString ms_sDELEGATED_TO     = "DELEGATED-TO"; const JAtom ms_ATOM_DELEGATED_TO(ms_sDELEGATED_TO);
-const UnicodeString ms_sDELEGATED_FROM   = "DELEGATED-FROM"; const JAtom ms_ATOM_DELEGATED_FROM(ms_sDELEGATED_FROM);
-
-/* ROLE Keywords*/
-/*const UnicodeString ms_sATTENDEE    = "ATTENDEE"; const JAtom ms_ATOM_ATTENDEE(ms_sATTENDEE);
-const UnicodeString ms_sORGANIZER   = "ORGANIZER"; const JAtom ms_ATOM_ORGANIZER(ms_sORGANIZER);
-const UnicodeString ms_sOWNER       = "OWNER"; const JAtom ms_ATOM_OWNER(ms_sOWNER);
-const UnicodeString ms_sDELEGATE    = "DELEGATE"; const JAtom ms_ATOM_DELEGATE(ms_sDELEGATE);*/
-const UnicodeString ms_sCHAIR         =   "CHAIR"; const JAtom ms_ATOM_CHAIR(ms_sCHAIR);
-const UnicodeString ms_sPARTICIPANT   =   "PARTICIPANT"; const JAtom ms_ATOM_PARTICIPANT(ms_sPARTICIPANT);
-const UnicodeString ms_sNON_PARTICIPANT = "NON-PARTICIPANT"; const JAtom ms_ATOM_NON_PARTICIPANT(ms_sNON_PARTICIPANT);
-  
-/* TYPE Keywords*/
-const UnicodeString ms_sUNKNOWN     = "UNKNOWN"; const JAtom ms_ATOM_UNKNOWN(ms_sUNKNOWN);
-const UnicodeString ms_sINDIVIDUAL  = "INDIVIDUAL"; const JAtom ms_ATOM_INDIVIDUAL(ms_sINDIVIDUAL);
-const UnicodeString ms_sGROUP       = "GROUP"; const JAtom ms_ATOM_GROUP(ms_sGROUP);
-const UnicodeString ms_sRESOURCE    = "RESOURCE"; const JAtom ms_ATOM_RESOURCE(ms_sRESOURCE);
-const UnicodeString ms_sROOM        = "ROOM"; const JAtom ms_ATOM_ROOM(ms_sROOM);
-
-/* STATUS Keywords*/
-/*const UnicodeString ms_sNEEDSACTION = "NEEDS-ACTION"; const JAtom ms_ATOM_NEEDSACTION(ms_sNEEDSACTION);*/
-const UnicodeString ms_sACCEPTED    = "ACCEPTED"; const JAtom ms_ATOM_ACCEPTED(ms_sACCEPTED);
-const UnicodeString ms_sDECLINED    = "DECLINED"; const JAtom ms_ATOM_DECLINED(ms_sDECLINED);
-/*const UnicodeString ms_sTENTATIVE   = "TENTATIVE"; const JAtom ms_ATOM_TENTATIVE(ms_sTENTATIVE);
-const UnicodeString ms_sCONFIRMED   = "CONFIRMED"; const JAtom ms_ATOM_CONFIRMED(ms_sCONFIRMED);
-const UnicodeString ms_sCOMPLETED   = "COMPLETED"; const JAtom ms_ATOM_COMPLETED(ms_sCOMPLETED);*/
-const UnicodeString ms_sDELEGATED   = "DELEGATED"; const JAtom ms_ATOM_DELEGATED(ms_sDELEGATED);
-/*const UnicodeString ms_sCANCELLED   = "CANCELLED"; const JAtom ms_ATOM_CANCELLED(ms_sCANCELLED);*/
-const UnicodeString ms_sVCALNEEDSACTION = "NEEDS ACTION"; const JAtom ms_ATOM_VCALNEEDSACTION(ms_sVCALNEEDSACTION);
-  
-/* RSVP Keywords*/
-/*const UnicodeString ms_sFALSE       = "FALSE"; const JAtom ms_ATOM_FALSE(ms_sFALSE);
-const UnicodeString ms_sTRUE        = "TRUE"; const JAtom ms_ATOM_TRUE(ms_sTRUE);*/
-
-/* EXPECT Keywords*/
-const UnicodeString ms_sFYI         = "FYI"; const JAtom ms_ATOM_FYI(ms_sFYI);
-const UnicodeString ms_sREQUIRE     = "REQUIRE"; const JAtom ms_ATOM_REQUIRE(ms_sREQUIRE);
-/*const UnicodeString ms_sREQUEST     = "REQUEST"; const JAtom ms_ATOM_REQUEST(ms_sREQUEST);*/
-const UnicodeString ms_sIMMEDIATE   = "IMMEDIATE"; const JAtom ms_ATOM_IMMEDIATE(ms_sIMMEDIATE);
-
-/* End of ATTENDEE */
-/* RecurrenceID */
-const UnicodeString ms_sRANGE          = "RANGE"; const JAtom ms_ATOM_RANGE(ms_sRANGE);
-const UnicodeString ms_sTHISANDPRIOR   = "THISANDPRIOR"; const JAtom ms_ATOM_THISANDPRIOR(ms_sTHISANDPRIOR);
-const UnicodeString ms_sTHISANDFUTURE  = "THISANDFUTURE"; const JAtom ms_ATOM_THISANDFUTURE(ms_sTHISANDFUTURE);
-/*End of RecurrenceID*/
-
-/*FREEBUSY*/
-/*const UnicodeString ms_sTYPE      = "TYPE"; const JAtom ms_ATOM_TYPE(ms_sTYPE);
-const UnicodeString ms_sSTATUS    = "STATUS"; const JAtom ms_ATOM_STATUS(ms_sSTATUS);*/
-const UnicodeString ms_sBUSY = "BUSY"; const JAtom ms_ATOM_BUSY(ms_sBUSY);
-const UnicodeString ms_sFREE = "FREE"; const JAtom ms_ATOM_FREE(ms_sFREE);
-const UnicodeString ms_sUNAVAILABLE = "UNAVAILABLE"; const JAtom ms_ATOM_UNAVAILABLE(ms_sUNAVAILABLE);
-/*const UnicodeString ms_sTENTATIVE = "TENTATIVE"; const JAtom ms_ATOM_TENTATIVE(ms_sTENTATIVE);*/
-/*End of FREEBUSY*/
-  
-/*ALARM*/
-/* Alarm Categories keywords*/
-const UnicodeString ms_sAUDIO = "AUDIO"; const JAtom ms_ATOM_AUDIO(ms_sAUDIO);
-const UnicodeString ms_sDISPLAY = "DISPLAY"; const JAtom ms_ATOM_DISPLAY(ms_sDISPLAY);
-const UnicodeString ms_sEMAIL = "EMAIL"; const JAtom ms_ATOM_EMAIL(ms_sEMAIL);
-const UnicodeString ms_sPROCEDURE = "PROCEDURE"; const JAtom ms_ATOM_PROCEDURE(ms_sPROCEDURE);
-/*End of ALARM*/
-
-/*DESCRIPTION*/
-const UnicodeString ms_sENCODING = "ENCODING"; const JAtom ms_ATOM_ENCODING(ms_sENCODING);
-const UnicodeString ms_sCHARSET = "CHARSET"; const JAtom ms_ATOM_CHARSET(ms_sCHARSET);
-const UnicodeString ms_sQUOTED_PRINTABLE = "QUOTED-PRINTABLE"; const JAtom ms_ATOM_QUOTED_PRINTABLE(ms_sQUOTED_PRINTABLE);
-/*End of DESCRIPTION*/
-
-/*PARSER UTIL*/
-/*const UnicodeString ms_sENCODING  = "ENCODING"; const JAtom ms_ATOM_ENCODING(ms_sENCODING);*/
-const UnicodeString ms_sVALUE     = "VALUE"; const JAtom ms_ATOM_VALUE(ms_sVALUE);
-const UnicodeString ms_sLANGUAGE  = "LANGUAGE"; const JAtom ms_ATOM_LANGUAGE(ms_sLANGUAGE);
-const UnicodeString ms_sALTREP    = "ALTREP"; const JAtom ms_ATOM_ALTREP(ms_sALTREP);
-const UnicodeString ms_sSENTBY    = "SENT-BY"; const JAtom ms_ATOM_SENTBY(ms_sSENTBY);
-const UnicodeString ms_sRELTYPE    = "RELTYPE"; const JAtom ms_ATOM_RELTYPE(ms_sRELTYPE);
-const UnicodeString ms_sRELATED    = "RELATED"; const JAtom ms_ATOM_RELATED(ms_sRELATED);
-/*const UnicodeString ms_sTZID             = "TZID"; const JAtom ms_ATOM_TZID(ms_sTZID);*/
-
-/* Reltype*/
-const UnicodeString ms_sPARENT    = "PARENT"; const JAtom ms_ATOM_PARENT(ms_sPARENT);
-const UnicodeString ms_sCHILD    = "CHILD"; const JAtom ms_ATOM_CHILD(ms_sCHILD);
-const UnicodeString ms_sSIBLING    = "SIBLING"; const JAtom ms_ATOM_SIBLING(ms_sSIBLING);
-
-/* Related*/
-const UnicodeString ms_sSTART    = "START"; const JAtom ms_ATOM_START(ms_sSTART);
-const UnicodeString ms_sEND    = "END"; const JAtom ms_ATOM_END(ms_sEND);
-
-/* Encoding types*/
-const UnicodeString ms_s8bit = "8bit"; const JAtom ms_ATOM_8bit(ms_s8bit);
-const UnicodeString ms_s7bit = "7bit"; const JAtom ms_ATOM_7bit(ms_s7bit);
-const UnicodeString ms_sQ    = "Q"; const JAtom ms_ATOM_Q(ms_sQ);
-const UnicodeString ms_sB    = "B"; const JAtom ms_ATOM_B(ms_sB);
-  
-/* Value types*/
-const UnicodeString ms_sURI = "URI"; const JAtom ms_ATOM_URI(ms_sURI);
-const UnicodeString ms_sTEXT = "TEXT"; const JAtom ms_ATOM_TEXT(ms_sTEXT);
-const UnicodeString ms_sBINARY = "BINARY"; const JAtom ms_ATOM_BINARY(ms_sBINARY);
-const UnicodeString ms_sDATE = "DATE"; const JAtom ms_ATOM_DATE(ms_sDATE);
-const UnicodeString ms_sRECUR = "RECUR"; const JAtom ms_ATOM_RECUR(ms_sRECUR);
-const UnicodeString ms_sTIME = "TIME"; const JAtom ms_ATOM_TIME(ms_sTIME);
-const UnicodeString ms_sDATETIME = "DATE-TIME"; const JAtom ms_ATOM_DATETIME(ms_sDATETIME);
-const UnicodeString ms_sPERIOD = "PERIOD"; const JAtom ms_ATOM_PERIOD(ms_sPERIOD);
-/*const UnicodeString ms_sDURATION = "DURATION"; const JAtom ms_ATOM_DURATION(ms_sDURATION);*/
-const UnicodeString ms_sBOOLEAN = "BOOLEAN"; const JAtom ms_ATOM_BOOLEAN(ms_sBOOLEAN);
-const UnicodeString ms_sINTEGER = "INTEGER"; const JAtom ms_ATOM_INTEGER(ms_sINTEGER);
-const UnicodeString ms_sFLOAT = "FLOAT"; const JAtom ms_ATOM_FLOAT(ms_sFLOAT);
-const UnicodeString ms_sCALADDRESS = "CAL-ADDRESS"; const JAtom ms_ATOM_CALADDRESS(ms_sCALADDRESS);
-const UnicodeString ms_sUTCOFFSET = "UTC-OFFSET"; const JAtom ms_ATOM_UTCOFFSET(ms_sUTCOFFSET);
-/* End of PARSER UTIL */
-
-/*other*/
-const UnicodeString ms_sBEGIN = "BEGIN"; const JAtom ms_ATOM_BEGIN(ms_sBEGIN);
-const UnicodeString ms_sBEGIN_WITH_COLON = "BEGIN:"; const JAtom ms_ATOM_BEGIN_WITH_COLON(ms_sBEGIN_WITH_COLON);
-/*const UnicodeString ms_sEND = "END"; const JAtom ms_ATOM_END(ms_sEND);*/
-const UnicodeString ms_sEND_WITH_COLON = "END:"; const JAtom ms_ATOM_END_WITH_COLON(ms_sEND_WITH_COLON);
-const UnicodeString ms_sBEGIN_VCALENDAR = "BEGIN:VCALENDAR"; const JAtom ms_ATOM_BEGIN_VCALENDAR(ms_sBEGIN_VCALENDAR);
-const UnicodeString ms_sEND_VCALENDAR= "END:VCALENDAR"; const JAtom ms_ATOM_END_VCALENDAR(ms_sEND_VCALENDAR);
-const UnicodeString ms_sBEGIN_VFREEBUSY = "BEGIN:VFREEBUSY"; const JAtom ms_ATOM_BEGIN_VFREEBUSY(ms_sBEGIN_VFREEBUSY);
-const UnicodeString ms_sEND_VFREEBUSY= "END:VFREEBUSY"; const JAtom ms_ATOM_END_VFREEBUSY(ms_sEND_VFREEBUSY);
-const UnicodeString ms_sLINEBREAK = "\r\n"; const JAtom ms_ATOM_LINEBREAK(ms_sLINEBREAK);
-const UnicodeString ms_sOK = "OK"; const JAtom ms_ATOM_OK(ms_sOK);
-const UnicodeString ms_sCOMMA_SYMBOL = ","; const JAtom ms_ATOM_COMMA_SYMBOL(ms_sCOMMA_SYMBOL);
-const UnicodeString ms_sCOLON_SYMBOL = ":"; const JAtom ms_ATOM_COLON_SYMBOL(ms_sCOLON_SYMBOL);
-
-/* Recurrence strings*/
-
-/* keywords*/
-
-const UnicodeString ms_sUNTIL = "UNTIL"; const JAtom ms_ATOM_UNTIL(ms_sUNTIL);
-const UnicodeString ms_sCOUNT = "COUNT"; const JAtom ms_ATOM_COUNT(ms_sCOUNT);
-const UnicodeString ms_sINTERVAL = "INTERVAL"; const JAtom ms_ATOM_INTERVAL(ms_sINTERVAL);
-const UnicodeString ms_sFREQ = "FREQ"; const JAtom ms_ATOM_FREQ(ms_sFREQ);
-const UnicodeString ms_sBYSECOND = "BYSECOND"; const JAtom ms_ATOM_BYSECOND(ms_sBYSECOND);
-const UnicodeString ms_sBYMINUTE = "BYMINUTE"; const JAtom ms_ATOM_BYMINUTE(ms_sBYMINUTE);
-const UnicodeString ms_sBYHOUR = "BYHOUR"; const JAtom ms_ATOM_BYHOUR(ms_sBYHOUR);
-const UnicodeString ms_sBYDAY = "BYDAY"; const JAtom ms_ATOM_BYDAY(ms_sBYDAY);
-const UnicodeString ms_sBYMONTHDAY = "BYMONTHDAY"; const JAtom ms_ATOM_BYMONTHDAY(ms_sBYMONTHDAY);
-const UnicodeString ms_sBYYEARDAY = "BYYEARDAY"; const JAtom ms_ATOM_BYYEARDAY(ms_sBYYEARDAY);
-const UnicodeString ms_sBYWEEKNO = "BYWEEKNO"; const JAtom ms_ATOM_BYWEEKNO(ms_sBYWEEKNO);
-const UnicodeString ms_sBYMONTH = "BYMONTH"; const JAtom ms_ATOM_BYMONTH(ms_sBYMONTH);
-const UnicodeString ms_sBYSETPOS = "BYSETPOS"; const JAtom ms_ATOM_BYSETPOS(ms_sBYSETPOS);
-const UnicodeString ms_sWKST = "WKST"; const JAtom ms_ATOM_WKST(ms_sWKST);
-
-/* frequency values*/
-
-const UnicodeString ms_sSECONDLY = "SECONDLY"; const JAtom ms_ATOM_SECONDLY(ms_sSECONDLY);
-const UnicodeString ms_sMINUTELY = "MINUTELY"; const JAtom ms_ATOM_MINUTELY(ms_sMINUTELY);
-const UnicodeString ms_sHOURLY = "HOURLY"; const JAtom ms_ATOM_HOURLY(ms_sHOURLY);
-const UnicodeString ms_sDAILY = "DAILY"; const JAtom ms_ATOM_DAILY(ms_sDAILY);
-const UnicodeString ms_sWEEKLY = "WEEKLY"; const JAtom ms_ATOM_WEEKLY(ms_sWEEKLY);
-const UnicodeString ms_sMONTHLY = "MONTHLY"; const JAtom ms_ATOM_MONTHLY(ms_sMONTHLY);
-const UnicodeString ms_sYEARLY = "YEARLY"; const JAtom ms_ATOM_YEARLY(ms_sYEARLY);
-
-/* day values*/
-
-const UnicodeString ms_sSU = "SU"; const JAtom ms_ATOM_SU(ms_sSU);
-const UnicodeString ms_sMO = "MO"; const JAtom ms_ATOM_MO(ms_sMO);
-const UnicodeString ms_sTU = "TU"; const JAtom ms_ATOM_TU(ms_sTU);
-const UnicodeString ms_sWE = "WE"; const JAtom ms_ATOM_WE(ms_sWE);
-const UnicodeString ms_sTH = "TH"; const JAtom ms_ATOM_TH(ms_sTH);
-const UnicodeString ms_sFR = "FR"; const JAtom ms_ATOM_FR(ms_sFR);
-const UnicodeString ms_sSA = "SA"; const JAtom ms_ATOM_SA(ms_sSA);
-
-/* helperconst UnicodeStrings and atoms*/
-
-const UnicodeString ms_sBYDAYYEARLY = "BYDAYYEARLY"; const JAtom ms_ATOM_BYDAYYEARLY(ms_sBYDAYYEARLY);
-const UnicodeString ms_sBYDAYMONTHLY = "BYDAYMONTHLY"; const JAtom ms_ATOM_BYDAYMONTHLY(ms_sBYDAYMONTHLY);
-const UnicodeString ms_sBYDAYWEEKLY = "BYDAYWEEKLY"; const JAtom ms_ATOM_BYDAYWEEKLY(ms_sBYDAYWEEKLY);
-const UnicodeString ms_sDEFAULT = "DEFAULT"; const JAtom ms_ATOM_DEFAULT(ms_sDEFAULT);
-
-struct ErrorMessage 
-{
-    char * errorname;
-    char * message;
-};
-
-/* error messages */
-
-
-const UnicodeString ms_sExportError =      "error: error writing to export file";
-const UnicodeString ms_sNTimeParamError =      "error: ntime requires parameter";
-const UnicodeString ms_sInvalidPromptValue =      "error: must be ON or OFF";
-const UnicodeString ms_sSTimeParamError =      "error: stime requires parameter";
-const UnicodeString ms_sISO8601ParamError =      "error: iso8601 requires a parameter";
-const UnicodeString ms_sInvalidTimeStringError =      "error: cannot parse time/date string";
-const UnicodeString ms_sTimeZoneParamError =      "error: timezone requires parameter";
-const UnicodeString ms_sLocaleParamError =      "error: locale requires parameter";
-const UnicodeString ms_sLocaleNotFoundError =      "error: locale not found";
-const UnicodeString ms_sPatternParamError =      "error: param requires parameter";
-const UnicodeString ms_sInvalidPatternError =      "error: bad format pattern cannot print";
-const UnicodeString ms_sRRuleParamError =      "error: rrule requires parameter";
-const UnicodeString ms_sERuleParamError =      "error: erule requires parameter";
-const UnicodeString ms_sBoundParamError =      "error: bound requires parameter";
-const UnicodeString ms_sInvalidRecurrenceError =      "error: bad recurrence cannot unzip";
-const UnicodeString ms_sUnzipNullError =      "error: no recurrence defined";
-const UnicodeString ms_sCommandNotFoundError =      "error: command not found";
-const UnicodeString ms_sInvalidTimeZoneError =      "error: bad timezone";
-const UnicodeString ms_sFileNotFound =      "error: file not found";
-const UnicodeString ms_sInvalidPropertyName =      "error: invalid property name";
-const UnicodeString ms_sInvalidPropertyValue =      "error: invalid property value";
-const UnicodeString ms_sInvalidParameterName =      "error: invalid parameter name";
-const UnicodeString ms_sInvalidParameterValue =      "error: invalid parameter value";
-const UnicodeString ms_sMissingStartingTime =      "error: no starting time";
-const UnicodeString ms_sMissingEndingTime =      "error: no ending time";
-const UnicodeString ms_sEndBeforeStartTime =      "error: ending time occurs before starting time";
-const UnicodeString ms_sMissingSeqNo =      "error:no sequence NO.";
-const UnicodeString ms_sMissingReplySeq =      "error:no reply sequence NO.";
-const UnicodeString ms_sMissingURL =      "error: no URL"; 
-const UnicodeString ms_sMissingDTStamp =      "error: no DTStamp";
-const UnicodeString ms_sMissingUID =      "error: no UID";
-const UnicodeString ms_sMissingDescription =      "error: no Description";
-const UnicodeString ms_sMissingMethodProvided =      "error: no method provided process as publish";
-const UnicodeString ms_sInvalidVersionNumber =      "error: version number is not 2.0";
-const UnicodeString ms_sUnknownUID =      "error: UID not related to any event in calendar, ask for resend";
-const UnicodeString ms_sMissingUIDInReply =      "error: missing UID in reply, abort addReply";
-const UnicodeString ms_sMissingValidDTStamp =      "error: missing valid DTStamp, abort addReply";
-const UnicodeString ms_sDeclineCounterCalledByAttendee =      "error: an attendee cannot create an declinecounter message";
-const UnicodeString ms_sPublishCalledByAttendee =      "error: an attendee cannot create an publish message";
-const UnicodeString ms_sRequestCalledByAttendee =      "error: an attendee cannot create an request message";
-const UnicodeString ms_sCancelCalledByAttendee =      "error: an attendee cannot create an cancel message";
-const UnicodeString ms_sCounterCalledByOrganizer =      "error: an organizer cannot create an counter message";
-const UnicodeString ms_sRefreshCalledByOrganizer =      "error: an organizer cannot create an resend message";
-const UnicodeString ms_sReplyCalledByOrganizer =      "error: an organizer cannot create an reply message";
-const UnicodeString ms_sAddReplySequenceOutOfRange =      "error: the sequence no. of this reply message is either too small or too big";
-const UnicodeString ms_sDuplicatedProperty =      "error: this property already defined in this component, overriding old property";
-const UnicodeString ms_sDuplicatedParameter =      "error: this parameter is already defined in this property, overriding old parameter value";
-const UnicodeString ms_sConflictMethodAndStatus =      "error: the status of this message conflicts with the method type";
-const UnicodeString ms_sConflictCancelAndConfirmedTentative =      "error: this cancel message does not have status CANCELLED";
-const UnicodeString ms_sMissingUIDToMatchEvent =      "error: this reply, counter, resend, cancel message has no uid";
-const UnicodeString ms_sInvalidNumberFormat =      "error: this string cannot be parsed into a number";
-const UnicodeString ms_sDelegateRequestError =      "error: cannot create delegate request message";
-const UnicodeString ms_sInvalidRecurrenceIDRange =      "error: recurrence-id range argument is invalid";
-const UnicodeString ms_sUnknownRecurrenceID =      "error: recurrence-id not found in event list, need to keep all cancel messages referring to it";
-const UnicodeString ms_sPropertyValueTypeMismatch = "error: the value type of this property does not match the VALUE parameter value";
-const UnicodeString ms_sInvalidRRule =      "error: invalid rrule, ignoring rule";
-const UnicodeString ms_sInvalidExRule =      "error: invalid exrule, ignoring exrule";
-const UnicodeString ms_sInvalidRDate =      "error: invalid rdate, ignoring rdate";
-const UnicodeString ms_sInvalidExDate =      "error: invalid rdate, ignoring exdate";
-const UnicodeString ms_sInvalidEvent =      "error: invalid event, removing from event list";
-const UnicodeString ms_sInvalidAlarm =      "error: invalid alarm, removing from alarm list";
-const UnicodeString ms_sInvalidTZPart =      "error: invalid tzpart, not adding to tzpart list";
-const UnicodeString ms_sInvalidAlarmCategory =      "error: invalid alarm category";
-const UnicodeString ms_sInvalidAttendee =      "error: invalid attendee, not adding attendee to list";
-const UnicodeString ms_sInvalidFreebusy =      "error: invalid freebusy, not adding freebusy to list";
-const UnicodeString ms_sDurationAssertionFailed =      "error: weeks variable and other date variables are not 0, violating duration assertion";
-const UnicodeString ms_sDurationParseFailed =      "error: duration parsing failed";
-const UnicodeString ms_sPeriodParseFailed =      "error: period parsing failed";
-const UnicodeString ms_sPeriodStartInvalid =      "error: period start date is before epoch";
-const UnicodeString ms_sPeriodEndInvalid =      "error: period end date is before epoch";
-const UnicodeString ms_sPeriodEndBeforeStart =      "error: period end date is before start date";
-const UnicodeString ms_sPeriodDurationZero =      "error: period duration is zero length";
-const UnicodeString ms_sFreebusyPeriodInvalid =      "error: freebusy period is invalid";
-const UnicodeString ms_sOptParamInvalidPropertyValue =      "error: invalid property value for optional parameter";
-const UnicodeString ms_sOptParamInvalidPropertyName =      "error: invalid optional parameter name";
-const UnicodeString ms_sInvalidOptionalParam =      "error: bad optional parameters";
-const UnicodeString ms_sAbruptEndOfParsing =      "error: terminated parsing of calendar component before reaching END:";
-const UnicodeString ms_sLastModifiedBeforeCreated =      "error: last-modified time comes before created";
-const UnicodeString ms_sMultipleOwners =      "error: more than one owner for this component";
-const UnicodeString ms_sMultipleOrganizers =      "error: more than one organizer for this component";
-const UnicodeString ms_sMissingOwner =      "error: no owner for this component";
-const UnicodeString ms_sMissingDueTime =      "error: due time not set in VTodo component";
-const UnicodeString ms_sCompletedPercentMismatch =      "error: completed not 100%, or not completed but 100% in VTodo";
-const UnicodeString ms_sMissingFreqTagRecurrence =      "error: rule must contain FREQ tag";
-const UnicodeString ms_sFreqIntervalMismatchRecurrence =      "error: frequency/interval inconsitencey";
-const UnicodeString ms_sInvalidPercentCompleteValue =      "error: setting bad value to percent complete"; 
-const UnicodeString ms_sInvalidPriorityValue =      "error: setting bad value to priority";
-const UnicodeString ms_sInvalidByHourValue =      "error: Invalid BYHOUR entry";
-const UnicodeString ms_sInvalidByMinuteValue =      "error: Invalid BYMINUTE entry";
-const UnicodeString ms_sByDayFreqIntervalMismatch =      "error: frequency/interval inconsistency";
-const UnicodeString ms_sInvalidByMonthDayValue =      "error: Invalid BYMONTHDAY entry";
-const UnicodeString ms_sInvalidByYearDayValue =      "error: Invalid BYYEARDAY entry";
-const UnicodeString ms_sInvalidBySetPosValue =      "error: Invalid BYSETPOS entry";
-const UnicodeString ms_sInvalidByWeekNoValue =      "error: Invalid BYWEEKNO entry";
-const UnicodeString ms_sInvalidWeekStartValue =      "error: Invalid week start value";
-const UnicodeString ms_sInvalidByMonthValue =      "error: Invalid BYMONTH entry";
-const UnicodeString ms_sInvalidByDayValue =      "error: Invalid BYDAY entry";
-const UnicodeString ms_sInvalidFrequency =      "error: Invalid Frequency type";
-const UnicodeString ms_sInvalidDayArg =      "error: Invalid Day arg";
-const UnicodeString ms_sVerifyZeroError =      "error: read in a zero arg in verifyIntList";
-static UnicodeString ms_sRS200 =      "2.00;Success.";
-static UnicodeString ms_sRS201 =      "2.01;Success, but fallback taken on one or more property values.";
-static UnicodeString ms_sRS202 =      "2.02;Success, invalid property ignored.";
-static UnicodeString ms_sRS203 =      "2.03;Success, invalid property parameter ignored.";
-static UnicodeString ms_sRS204 =      "2.04;Success, unknown non-standard property ignored.";
-static UnicodeString ms_sRS205 =      "2.05;Success, unknown non-standard property value ignored.";
-static UnicodeString ms_sRS206 =      "2.06;Success, invalid calendar component ignored.";
-static UnicodeString ms_sRS207 =      "2.07;Success, request forwarded to calendar user.";
-static UnicodeString ms_sRS208 =      "2.08;Success, repeating event ignored. Scheduled as a single event.";
-static UnicodeString ms_sRS209 =      "2.09;Success, turncated end date/time to date boundary.";
-static UnicodeString ms_sRS210 =      "2.10;Success, repeating to-do ignored. Scehduled as a single to-do";
-static UnicodeString ms_sRS300 =      "3.00;Invalid property name.";
-static UnicodeString ms_sRS301 =      "3.01;Invalid property value.";
-static UnicodeString ms_sRS302 =      "3.02;Invalid property parameter.";
-static UnicodeString ms_sRS303 =      "3.03;Invalid property parameter value.";
-static UnicodeString ms_sRS304 =      "3.04;Invalid calendar component sequence.";
-static UnicodeString ms_sRS305 =      "3.05;Invalid date or time.";
-static UnicodeString ms_sRS306 =      "3.06;Invalid rule.";
-static UnicodeString ms_sRS307 =      "3.07;Invalid calendar user.";
-static UnicodeString ms_sRS308 =      "3.08;No authority.";
-static UnicodeString ms_sRS309 =      "3.09;Unsupported Version.";
-static UnicodeString ms_sRS310 =      "3.10;Request entry too large";
-static UnicodeString ms_sRS311 =      "3.11;Missing required property";
-static UnicodeString ms_sRS312 =      "3.12;Invalid calendar component;validity failure";
-static UnicodeString ms_sRS400 =      "4.00;Event conflict.  Date/time is busy.";
-static UnicodeString ms_sRS500 =      "5.00;Request not supported.";
-static UnicodeString ms_sRS501 =      "5.01;Service unavailable.";
-static UnicodeString ms_sRS502 =      "5.02;Invalid calendar service.";
-static UnicodeString ms_sRS503 =      "5.03;No-scheduling support for user.";
-const UnicodeString ms_sMissingUIDGenerateDefault =      "default: missing UID, generating new UID";
-const UnicodeString ms_sMissingStartingTimeGenerateDefault =      "default: missing start time, generating default start time";
-const UnicodeString ms_sMissingEndingTimeGenerateDefault =      "default: missing UID, generating default end time";
-const UnicodeString ms_sNegativeSequenceNumberGenerateDefault =      "default: negative or no sequence number, generating default seqence number";
-const UnicodeString ms_sDefaultTBEDescription =      "default: setting default description property in TimeBasedEvent to \"\"";
-const UnicodeString ms_sDefaultTBEClass =      "default: setting default class property in TimeBasedEvent to \"\"";
-const UnicodeString ms_sDefaultTBEStatus =      "default: setting default status property in TimeBasedEvent \"\"";
-const UnicodeString ms_sDefaultTBETransp =      "default: setting default transp property in TimeBasedEvent to OPAQUE";
-const UnicodeString ms_sDefaultTBERequestStatus =      "default: setting default request status property in TimeBasedEvent  2.00;Success";
-const UnicodeString ms_sDefaultTBESummary =      "default: setting default summary property in TimeBasedEvent to DESCRIPTION value";
-const UnicodeString ms_sDefaultRecIDRange =      "default: setting default range property in Recurrence-ID to \"\"";
-const UnicodeString ms_sDefaultAttendeeRole =      "default: setting default role property in Attendee to ATTENDEE";
-const UnicodeString ms_sDefaultAttendeeType =      "default: setting default type property in Attendee to UNKNOWN";
-const UnicodeString ms_sDefaultAttendeeExpect =      "default: setting default expect property in Attendee to FYI";
-const UnicodeString ms_sDefaultAttendeeStatus =      "default: setting default status property in Attendee to NEEDS-ACTION";
-const UnicodeString ms_sDefaultAttendeeRSVP =      "default: setting default RSVP property in Attendee to FALSE";
-const UnicodeString ms_sDefaultAlarmRepeat =      "default: setting default repeat property in Alarm to 1";
-const UnicodeString ms_sDefaultAlarmDuration =      "default: setting default duration property in Alarm to 15 minutes";
-const UnicodeString ms_sDefaultAlarmCategories =      "default: setting default categories property in Alarm to DISPLAY,AUDIO";
-const UnicodeString ms_sDefaultFreebusyStatus =      "default: setting default status property in Freebusy to BUSY";
-const UnicodeString ms_sDefaultFreebusyType =      "default: setting default type property in Freebusy to BUSY";
-const UnicodeString ms_sDefaultDuration =      "default: setting duration to zero-length duration (PT0H)";
-
-#endif /* #if 0 */
 
 /*----------------------------------------------------------
 ** Key letters used for formatting strings 
 **----------------------------------------------------------*/  
+const t_int32 ms_cAction 		  = 'l';
 const t_int32 ms_cAlarms          = 'w';
 const t_int32 ms_cAttach          = 'a';
 const t_int32 ms_cAttendees       = 'v';
@@ -1583,6 +1380,7 @@ const t_int32 ms_cSequence        = 's';
 const t_int32 ms_cStatus          = 'g';
 const t_int32 ms_cSummary         = 'S';
 const t_int32 ms_cTransp          = 'h';
+const t_int32 ms_cTrigger         = 'z';
 const t_int32 ms_cUID             = 'U';
 const t_int32 ms_cURL             = 'u';
 const t_int32 ms_cXTokens         = 'Z';
@@ -1594,6 +1392,7 @@ const t_int32 ms_cTZURL           = 'Q';
 const t_int32 ms_cTZID            = 'I';
 const t_int32 ms_cTZParts         = 'V';
 /*const t_int32 ms_cDAYLIGHT      = 'd';*/
+
 
 const t_int32 ms_cFreebusy        = 'Y';
 

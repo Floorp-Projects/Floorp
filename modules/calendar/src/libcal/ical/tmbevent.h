@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,11 +16,12 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * tmbevent.h
  * John Sun
  * 2/6/98 2:59:24 AM
+ *
+ * modified: 8/31/98  sman  -  added curl support
  */
 
 #ifndef __TIMEBASEDEVENT_H_
@@ -33,6 +34,8 @@
 #include "prprty.h"
 #include "duration.h"
 #include "jlog.h"
+#include "valarm.h"
+#include "julnstr.h"
 
 /**
  *  TimeBasedEvent is the superclass of VEvent, VTodo, and VJournal.
@@ -60,6 +63,27 @@ protected:
     TimeBasedEvent(TimeBasedEvent & that);
 public:
     /*TimeBasedEvent(NSCalendar parent);*/
+
+    /**
+     * Returns the curl associated with this nsCalendar. The
+     * curl points to the calendar store where components in
+     * this nsCalendar are to be stored. It is required
+     * for an nsCalendar to have an associated curl if any
+     * of its components will be persisted in a calendar store.
+     *
+     * @return  a JulianString containing the curl 
+     */
+    JulianString getCurl() const {return m_sCurl;}
+
+    /**
+     * Set the default curl for this nsCalendar. 
+     */
+    void setCurl(const char* ps) {m_sCurl = ps;}
+
+    /**
+     * Set the default curl for this nsCalendar. 
+     */
+    void setCurl(const JulianString& s) {m_sCurl = s;}
 
     /**
      * Constructor.  Create TimeBasedEvent with initial log file set to initLog.
@@ -166,7 +190,7 @@ public:
      * @return          string containing iCal export format of ICalComponent
      */
     UnicodeString toICALString(UnicodeString sMethod, 
-        UnicodeString sName = "", t_bool isRecurring = FALSE);
+        UnicodeString sName, t_bool isRecurring = FALSE);
 
     /**
      * Depending on character passed in, returns a string that represents
@@ -181,7 +205,7 @@ public:
      * @param       bDelegateRequest    TRUE if a delegate request, FALSE if not
      * @return                          ICAL export format of that property
      */
-    virtual UnicodeString formatChar(t_int32 c, UnicodeString sFilterAttendee = "",
+    virtual UnicodeString formatChar(t_int32 c, UnicodeString sFilterAttendee,
         t_bool delegateRequest = FALSE);
 
     /**
@@ -220,7 +244,7 @@ public:
      * @return          output iCal formatted export string
      */
     virtual UnicodeString formatHelper(UnicodeString & strFmt, 
-        UnicodeString sFilterAttendee= "", t_bool delegateRequest = FALSE)
+        UnicodeString sFilterAttendee, t_bool delegateRequest = FALSE)
     {
         PR_ASSERT(FALSE); 
         if (strFmt.size() == 0 && sFilterAttendee.size() == 0 && delegateRequest) {}
@@ -379,7 +403,11 @@ public:
     }
     */
 
-   
+#if 0
+    static void setDateTimeValue(ICalProperty ** dateTimePropertyPtr,
+        DateTime inVal, JulianPtrArray * inParameters);
+    static void getDateTimeValue(ICalProperty ** dateTimePropertyPtr, DateTime & outVal);
+#endif
 
     /* -- Getters and Setters -- */
 
@@ -444,9 +472,12 @@ public:
     ICalProperty * getStatusProperty() const { return m_Status; }
 
     /* REQUESTSTATUS */
-    UnicodeString getRequestStatus() const;
+    /* UnicodeString getRequestStatus() const;
     void setRequestStatus(UnicodeString s, JulianPtrArray * parameters = 0);
-    ICalProperty * getRequestStatusProperty() const { return m_RequestStatus; }
+    ICalProperty * getRequestStatusProperty() const { return m_RequestStatus; }*/
+    void addRequestStatus(UnicodeString s, JulianPtrArray * parameters = 0);
+    void addRequestStatusProperty(ICalProperty * prop);
+    JulianPtrArray * getRequestStatus() const              { return m_RequestStatusVctr; }
 
     /* UID */
     virtual UnicodeString getUID() const;
@@ -509,36 +540,37 @@ public:
 
     /* XTOKENS: NOTE: a vector of strings, not a vector of ICalProperties */
     void addXTokens(UnicodeString s);
-    JulianPtrArray * getXTokens()               { return m_XTokensVctr; }
+    JulianPtrArray * getXTokens() const { return m_XTokensVctr; }
 
     /* EXRULE: NOTE: a vector of strings, not a vector of ICalProperties */
     void addExRuleString(UnicodeString s);
-    JulianPtrArray * getExRules() const           { return m_ExRuleVctr; }
+    JulianPtrArray * getExRules() const { return m_ExRuleVctr; }
 
     /* RRULE: NOTE: a vector of strings, not a vector of ICalProperties */
     void addRRuleString(UnicodeString s);
-    JulianPtrArray * getRRules() const            { return m_RRuleVctr; }
+    JulianPtrArray * getRRules() const { return m_RRuleVctr; }
 
     /* ATTENDEE */
     void addAttendee(Attendee * a); 
-    JulianPtrArray * getAttendees()             { return m_AttendeesVctr ; }
+    JulianPtrArray * getAttendees() const { return m_AttendeesVctr ; }
 
     /*---------------------------------------------------------------------*/
     
     /* ALARMS */
-    JulianPtrArray * getAlarms()                { return m_AlarmsVctr ; }
-   
+    JulianPtrArray * getAlarms() const { return m_AlarmsVctr ; }
+    void addAlarm(VAlarm * a);
+
     /* ORIGSTART */ 
     void setOrigStart(DateTime d) { m_origDTStart = d; }
-    DateTime getOrigStart()             { return m_origDTStart; }
+    DateTime getOrigStart() { return m_origDTStart; }
 
     /* MYORIGSTART */
     void setMyOrigStart(DateTime d) { m_origMyDTStart = d; }
-    DateTime getMyOrigStart()           { return m_origMyDTStart; }
+    DateTime getMyOrigStart() { return m_origMyDTStart; }
 
     /* METHOD */
     void setMethod(UnicodeString & s);
-    UnicodeString & getMethod()                { return m_sMethod; }
+    UnicodeString & getMethod() { return m_sMethod; }
 
     /* BOUND */
     t_int32 getBound() const { return ms_iBound; }
@@ -615,7 +647,35 @@ public:
      */
     void setAttendeeStatus(UnicodeString & sAttendeeFilter, Attendee::STATUS status,
         JulianPtrArray * delegatedTo = 0);
-    
+    void setAttendeeStatusInt(UnicodeString & sAttendeeFilter, t_int32 status,
+        JulianPtrArray * delegatedTo = 0);
+
+    /**
+     * TODO: doesn't do smart overriding for now, does simple overwrite
+     *  Updates this component with the data from the updatedComponent.
+     *  This method must be overridden by subclasses.
+     *  If updatedComponent is older that current compoenent, don't update current component
+     *  How:
+     *     make sure (UID, RecurID) pair are same.
+     *     if sequence number of updatedComponent if greater that this.sequence ||
+     *     if sequence numbers are equal and update.DTSTAMP > this.DTSTAMP
+     *        update properties
+     *     else
+     *         do nothing.
+     * Return TRUE if component was changed, FALSE otherwise
+     *
+     */
+    t_bool updateComponent(ICalComponent * updatedComponent);
+
+    /**
+     * Helper method called by updateComponent to actually replace
+     * the property data-members with updatedComponent's data-members.
+     * @param           ICalComponent * updatedComponent
+     *
+     * @return          virtual void 
+     */
+    virtual void updateComponentHelper(TimeBasedEvent * updatedComponent);
+
     /**
      * Compare TimeBasedEvents by UID.  Used by JulianPtrArray::QuickSort method.
      * @param           a       first TimeBasedEvent
@@ -633,6 +693,7 @@ public:
      * @return          a.getDTSTART().compareTo(b.getDTSTART())
      */
     static int CompareTimeBasedEventsByDTStart(const void * a, const void * b);
+
 
 protected:
   
@@ -653,8 +714,68 @@ protected:
     virtual t_bool storeData(UnicodeString & strLine, 
         UnicodeString & propName, UnicodeString & propVal,
         JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+public:
+    typedef void (TimeBasedEvent::*SetOp) (UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
 
+    /* Clients should NOT call below methods */
+    void storeAttach(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeAttendees(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeCategories(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeClass(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeComment(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeContact(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeCreated(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeDescription(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeDTStart(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeDTStamp(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeExDate(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeExRule(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeLastModified(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeOrganizer(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeRDate(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeRRule(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeRecurrenceID(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeRelatedTo(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeRequestStatus(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeSequence(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeStatus(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeSummary(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeUID(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeURL(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
 
+    void ApplyStoreOp(void (TimeBasedEvent::*op) (UnicodeString & strLine, 
+        UnicodeString & propVal, JulianPtrArray * parameters, JulianPtrArray * vTimeZones), 
+        UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+    {
+        (this->*op)(strLine, propVal, parameters, vTimeZones);
+    }
+protected:
     /**
      * Sets default data.  Currently does following:
      * 1) Sets Summary to first 60 characters of Description if Summary is empty.
@@ -738,11 +859,43 @@ private:
     void populateDates(JulianPtrArray * vOut, JulianPtrArray * dates, 
         DateTime origStart, JulianPtrArray * vTimeZones);
 
+    /**
+     * Returns TRUE if this TimeBasedEvent's ID is the same as the component's
+     * ID.  ID is represented as the (UID, RecurrenceID) pair.
+     * If UID's on this and component do NOT match return FALSE;
+     * If there is no RecurrenceID on this TBE and component and UID matches,
+     * return TRUE;
+     * If there is a RecurrenceID on EITHER this or component, if both have
+     * RecurrenceID and they MATCH return TRUE.  if don't match return FALSE.
+     * If one has RecurrenceID and other doesn't return FALSE.
+     * @param           TimeBasedEvent * component
+     *
+     * @return          t_bool 
+     */
+    t_bool isExactMatchingID(TimeBasedEvent * component);
+
+#if 0
+    /**
+     * Returns TRUE if this component is more recent than component.
+     * Rules To define recent:
+     *          Returns compare(Sequence Num) else if equal
+     *             Returns compare(DTSTAMP)
+     *          
+     * @param           TimeBasedEvent * component
+     *
+     * @return          t_bool 
+     */
+    t_bool isMoreRecent(TimeBasedEvent * component);
+#endif
+
     /* -- DATA MEMBERS */
 
 protected:
     /* log file ptr */
     JLog * m_Log;
+
+    JulianString m_sCurl;   /* the calendar url of this component, identifies its cal store */
+
 private:
 
     /* recurrence bound value */
@@ -785,7 +938,8 @@ private:
     JulianPtrArray *    m_RRuleVctr;        /* RECURRENCE */
     ICalProperty *      m_RecurrenceID;     /* DATETIME */
     JulianPtrArray *    m_RelatedToVctr;    /* TEXT (must be a UID) */
-    ICalProperty *      m_RequestStatus;    /* 3digit number, error Description UnicodeString, optional exception text */
+    /*ICalProperty *      m_RequestStatus; */
+    JulianPtrArray *    m_RequestStatusVctr;    /* 3digit number, error Description UnicodeString, optional exception text */
     ICalProperty *      m_Sequence;         /* INTEGER >= 0 */
     ICalProperty *	    m_Status;           /* status keyword */   
     ICalProperty *      m_Summary;          /* TEXT */

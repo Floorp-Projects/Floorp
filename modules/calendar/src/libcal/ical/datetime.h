@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * datetime.h
  * John Sun
@@ -40,8 +39,8 @@
 /*
  * Helper functions for use with JulianPtrArray
  */
-int DateTime_SortAscending( const void* v1, const void* v2 );
-int DateTime_SortDescending( const void* v1, const void* v2 );
+JULIAN_PUBLIC int DateTime_SortAscending( const void* v1, const void* v2 );
+JULIAN_PUBLIC int DateTime_SortDescending( const void* v1, const void* v2 );
 
 class JULIAN_PUBLIC DateTime
 {
@@ -131,7 +130,7 @@ private:
      */
     static void CalendarSetTimeHelper(Date d); 
 
-                                               
+#if 0                                               
     /**
      * parse the date string to get the Date value of the string
      *
@@ -154,7 +153,8 @@ private:
      */
     static Date parseTime(UnicodeString & pattern, UnicodeString & time, 
         Locale & locale, TimeZone * timezone = ms_TimeZone);
-   
+#endif
+
     /**
      * parse the date string to get the Date value of the string relative to a
      * a date-format pattern.
@@ -411,19 +411,19 @@ public:
      * adds a duration amount to this datetime
      * @param    d       the duration to add
      */
-    void add(Duration d);
+    void add(Julian_Duration d);
 
     /**
      * subtracts a duration amount from this datetime
      * @param    d       the duration to subtract
      */
-    void subtract(Duration d);
+    void subtract(Julian_Duration d);
 
     /**
      * given two datetimes, return the duration length between them.
      * if end before start, return an invalid duration.
      */
-    static Duration & getDuration(DateTime start, DateTime end, Duration & out);
+    static Julian_Duration & getDuration(DateTime start, DateTime end, Julian_Duration & out);
 
     /**
      * Clears all fields
@@ -572,8 +572,7 @@ public:
      * @return  the localized string of the date
      */ 
     UnicodeString toString(TimeZone * timezone = ms_TimeZone);
-    char * DEBUG_toString();
-    
+
     /**
      * Returns this DateTime to a the GMT ISO8601 format
      *
@@ -581,15 +580,13 @@ public:
      * @return  the GMT ISO8601 format of the date
      */ 
     UnicodeString toISO8601Local(TimeZone * timezone = ms_TimeZone);
-    char * DEBUG_toISO8601Local();
-    
+
     /**
      * Returns this DateTime to a the localized ISO8601 format
      *
      * @return  the localized ISO8601 format of the date
      */ 
     UnicodeString toISO8601();
-    char * DEBUG_toISO8601();
 
     /**
      * Return the Time string in ISO8601 format w/respect to GMT 
@@ -701,15 +698,6 @@ public:
     static UnicodeString DateToString(DateTime & dt);
     
     /**
-     * Checks to see is the DateTime is valid
-     * (i.e. date not before epoch)
-     *
-     * @param   d   DateTime to check
-     * @return      TRUE if valid DateTime type, FALSE otherwise
-     */
-    static t_bool IsValidDateTime(DateTime & dt);
-
-    /**
      * Given a string, checks to see whether the string is valid 
      * ISO8601 DateTime or Date string.  
      *
@@ -785,6 +773,24 @@ public:
      */
     static t_bool IsParseableUTCOffset(UnicodeString & s);
 
+
+
+    /**
+     * Return the string "19980825T112233" from
+     * year = 98, month = 8, day = 25, hour = 11, minute = 22, second = 33   
+     * in sResult.
+     * @param           t_int32 iYear
+     * @param           t_int32 iMonth
+     * @param           t_int32 iDay
+     * @param           t_int32 iHour
+     * @param           t_int32 iMinute
+     * @param           t_int32 iSecond
+     * @param           UnicodeString sResult
+     *
+     * @return          static UnicodeString 
+     */
+    static UnicodeString & ToISO8601String(t_int32 iYear, t_int32 iMonth, t_int32 iDay, 
+        t_int32 iHour, t_int32 iMinute, t_int32 iSecond, UnicodeString & sResult);
 
     /**
      * Given a string, checks to see whether the string is valid 

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * vfrbsy.h
  * John Sun
@@ -28,6 +27,7 @@
 
 #include <unistring.h>
 #include "datetime.h"
+#include "duration.h"
 #include "period.h"
 #include "icalcomp.h"
 #include "attendee.h"
@@ -47,7 +47,10 @@ private:
 protected:
 
     /** 
-     *  Checks private data members so they are valid.
+     * Checks private data members so they are valid.
+     * Sets default data.  Currently does following:
+     * 1) Sets DTEnd to correct value, depending on DURATION, DTSTART
+     *    (see spec on rules)    
      */
     void selfCheck();
 
@@ -68,14 +71,151 @@ protected:
     t_bool storeData(UnicodeString & strLine, UnicodeString & propName, 
         UnicodeString & propVal, JulianPtrArray * parameters, 
         JulianPtrArray * vTimeZones);
+public: 
+    typedef void (VFreebusy::*SetOp) (UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
 
+    /* Clients should NOT call below methods */
+    void storeAttendees(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeComment(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeContact(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    /*
+    void storeCreated(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    */
+    void storeDuration(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeDTEnd(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeDTStart(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeDTStamp(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeFreebusy(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeLastModified(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeOrganizer(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeRequestStatus(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeSequence(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeUID(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeURL(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+
+    void ApplyStoreOp(void (VFreebusy::*op) (UnicodeString & strLine, 
+        UnicodeString & propVal, JulianPtrArray * parameters, JulianPtrArray * vTimeZones), 
+        UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+    {
+        (this->*op)(strLine, propVal, parameters, vTimeZones);
+    }
+
+protected:
     UnicodeString formatHelper(UnicodeString & strFmt, 
-        UnicodeString sFilterAttendee = "");
+        UnicodeString sFilterAttendee);
 
     /**
      * Sorts vector of Freebusy periods by start time.
      */
     void sortFreebusy();
+
+    /**
+     * Given a vector of Freebusy objects,
+     * combines freebusy objects that have the same params
+     * by calling the Freebusy::HasSameParams method.  
+     */
+    static void combineSameFreebusies(JulianPtrArray * freebusies);
+
+    /**
+     * Given a vector of Freebusy objects,
+     * compress each Freebusy in the vector. 
+     * By compressing, periods with overlapping times and same type
+     * are combined.  Calls Freebusy::normalizePeriods.
+     */
+    static void compressFreebusies(JulianPtrArray * freebusies);
+
+    /**
+     * Takes freebusy vector
+     * Merges single-period Freebusy objects that are consecutive
+     * into one single-period Freebusy objects 
+     *
+     * Alters the freebusy vector from
+     * FB1: p1, p2, p3
+     * FB2: p4, p5
+     * FB3: p6, p7
+     * to
+     * FB1: p1
+     * FB2: p2
+     * FB3: p3
+     * FB4: p4
+     * FB5: p5
+     * FB6: p6
+     * FB7: p7
+     * where FB1-7 will be sorted chronologically by start and normalized
+     */
+    void mergeSinglePeriodFreebusies();
+
+    /**
+     * Given a vector of Freebusy objects,
+     * unzips each freebusy object.
+     * Unzipping means the following
+     * Given:
+     * FB1: pA, pB, pC
+     * FB2: pD, pE, pF
+     * FB3: pG, pH
+     * unzipping leads to:
+     * FB1: pA
+     * FB2: pB
+     * FB3: pC
+     * FB4: pD
+     * ../etc.
+     */
+    void unzipFreebusies();
+
+    /**
+     *  Adds extra FREE freebusy objects to fill periods of time
+     *  that specify are not covered by the current freebusy objects
+     *  in the freebusy vector.
+     */
+    void addExtraFreePeriodFreebusies(JulianPtrArray * freebusies);
+
+#if 0
+    /**
+     * Debug printing of Freebusy vector
+     */
+    static void DEBUG_printFreebusyVector(const char * message, JulianPtrArray * freebusies);
+#endif
+
+    /**
+     * TODO: doesn't do smart overriding for now, does simple overwrite
+     * Helper method called by updateComponent to actually replace
+     * the property data-members with updatedComponent's data-members.
+     * @param           VFreebusy * updatedComponent
+     *
+     * @return          virtual void 
+     */
+    void updateComponentHelper(VFreebusy * updatedComponent);
+
+#if 0
+    /**
+     * Returns TRUE if this component is more recent than component.
+     * Rules To define recent:
+     *          Returns compare(Sequence Num) else if equal
+     *             Returns compare(DTSTAMP)
+     *          
+     * @param           VFreebusy * component
+     *
+     * @return          t_bool 
+     */
+    t_bool isMoreRecent(VFreebusy * component);
+#endif
 
     /**
      * Copy constructor. 
@@ -178,7 +318,7 @@ public:
      * @param       bDelegateRequest    TRUE if a delegate request, FALSE if not
      * @return                          ICAL export format of that property
      */
-    virtual UnicodeString formatChar(t_int32 c, UnicodeString sFilterAttendee = "",
+    virtual UnicodeString formatChar(t_int32 c, UnicodeString sFilterAttendee,
         t_bool delegateRequest = FALSE);
     
     /**
@@ -199,6 +339,18 @@ public:
      */
     virtual ICAL_COMPONENT GetType() const { return ICAL_COMPONENT_VFREEBUSY; }
 
+    /**
+     * Update the private property data-members with updatedComponent's 
+     * property data-members.
+     * Usually, overwriting data-members should only occur if updatedComponent
+     * is more recent than the current component.
+     * Return TRUE if component was changed, FALSE otherwise
+     * @param           ICalComponent * updatedComponent
+     *
+     * @return          virtual t_bool
+     */
+    virtual t_bool updateComponent(ICalComponent * updatedComponent);
+
     /* OVERRIDES ICalComponent::MatchUID_seqNO */
     virtual t_bool MatchUID_seqNO(UnicodeString uid, t_int32 iSeqNo);
    
@@ -216,14 +368,16 @@ public:
     JulianPtrArray * getComment() const { return m_CommentVctr; }
 
     /* CREATED */
+    /*
     DateTime getCreated() const;
     void setCreated(DateTime s, JulianPtrArray * parameters = 0);
     ICalProperty * getCreatedProperty() const { return m_Created; }
+    */
 
     /* DURATION */
-    Duration getDuration() const;
-    void setDuration(Duration s, JulianPtrArray * parameters = 0);
-    ICalProperty * getDurationProperty() const { return m_Duration; }
+    Julian_Duration getDuration() const;
+    void setDuration(Julian_Duration s, JulianPtrArray * parameters = 0);
+    /* ICalProperty * getDurationProperty() const { return m_Duration; } */
  
     /* DTSTART */
     DateTime getDTStart() const;
@@ -260,10 +414,20 @@ public:
     void addRelatedToProperty(ICalProperty * prop);
     JulianPtrArray * getRelatedTo() const { return m_RelatedToVctr; }*/
     
+    /* CONTACT */
+    void addContact(UnicodeString s, JulianPtrArray * parameters = 0);
+    void addContactProperty(ICalProperty * prop);
+    JulianPtrArray * getContact() const { return m_ContactVctr; }
+
     /* REQUEST-STATUS */
+    /*
     UnicodeString getRequestStatus() const;
     void setRequestStatus(UnicodeString s, JulianPtrArray * parameters = 0);
     ICalProperty * getRequestStatusProperty() const { return m_RequestStatus; }
+    */
+    void addRequestStatus(UnicodeString s, JulianPtrArray * parameters = 0);
+    void addRequestStatusProperty(ICalProperty * prop);
+    JulianPtrArray * getRequestStatus() const { return m_RequestStatusVctr; }
 
     /* SEQUENCE */
     t_int32 getSequence() const;
@@ -285,12 +449,13 @@ public:
 
     /* XTOKENS: NOTE: a vector of strings, not a vector of ICalProperties */
     void addXTokens(UnicodeString s);
-    JulianPtrArray * getXTokens() { return m_XTokensVctr; }
+    JulianPtrArray * getXTokens() const { return m_XTokensVctr; }
 
     /* Method */
     void setMethod(UnicodeString & s) { m_sMethod = s; }
-    UnicodeString & getMethod()       { return m_sMethod; }
-    
+    UnicodeString & getMethod() { return m_sMethod; }
+
+#if 0
     /**
      * Sets Attendee with the name sAttendeeFilter to status.
      * If the status is Delegated, then adds each element in delegatedTo
@@ -303,6 +468,7 @@ public:
      */
     void setAttendeeStatus(UnicodeString & sAttendeeFilter, Attendee::STATUS status,
         JulianPtrArray * delegatedTo = 0);
+#endif
 
     /**
      * Return the Attendee in attendee vector with name equal
@@ -321,22 +487,9 @@ public:
     /*void update(VFreebusy * vfUpdated);*/
     /*t_bool IsIntersectingTimePeriod(DateTime start, DateTime end);*/
 
-    
 
     /**
-     * Alters the freebusy vector from
-     * FB1: p1, p2, p3
-     * FB2: p4, p5
-     * FB3: p6, p7
-     * to
-     * FB1: p1
-     * FB2: p2
-     * FB3: p3
-     * FB4: p4
-     * FB5: p5
-     * FB6: p6
-     * FB7: p7
-     * where FB1-7 will be sorted chronologically by start and normalized
+     * Takes Freebusy vector and break it up into sorted combined freebusy periods.
      */
     void normalize();
     
@@ -361,18 +514,23 @@ public:
 private:
     UnicodeString m_sMethod;
 
+    /** used for initial parse only to calculate first DTEnd, then discarded */
+    Julian_Duration *        m_TempDuration; 
+
     /* -- MEMBERS -- */
     JulianPtrArray * m_AttendeesVctr;
     JulianPtrArray * m_CommentVctr;
-    ICalProperty * m_Created;
-    ICalProperty * m_Duration;
+    JulianPtrArray * m_ContactVctr;      /* TEXT OR URL */
+    /*ICalProperty * m_Created;*/
+    /*ICalProperty * m_Duration;*/
     ICalProperty * m_DTEnd;
     ICalProperty * m_DTStart;
     ICalProperty * m_DTStamp;
     JulianPtrArray * m_FreebusyVctr;
     ICalProperty * m_LastModified;
     ICalProperty * m_Organizer;
-    ICalProperty * m_RequestStatus;
+    /*ICalProperty * m_RequestStatus;*/
+    JulianPtrArray * m_RequestStatusVctr;
     /*JulianPtrArray * m_RelatedToVctr;*/
     ICalProperty * m_Sequence;
     ICalProperty * m_UID;

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -223,12 +223,16 @@ t_int8 DateTime::compare(Date d)
 
 void DateTime::CtorCore()
 {
-    m_kGMTTimeZone = TimeZone::createTimeZone("GMT");
+    //m_kGMTTimeZone = TimeZone::createTimeZone("GMT");
     m_kDefaultTimeZone = TimeZone::createDefault();
     ms_TimeZone = TimeZone::createDefault();
     //ms_Locale = &(Locale::getDefault());
     ms_Calendar = new GregorianCalendar(m_kDefaultTimeZone, Locale::getDefault(), staticStatus);
     ms_DateFormat = new SimpleDateFormat(staticStatus2);
+
+    m_kGMTTimeZone = new SimpleTimeZone((t_int32) 0, "Z-time");
+    if (m_kGMTTimeZone == 0)
+        m_kGMTTimeZone = TimeZone::createTimeZone("Africa/Casablanca");
 
     if (ms_Calendar == 0 || ms_DateFormat == 0 || 
         FAILURE(staticStatus) || FAILURE(staticStatus2))
@@ -301,7 +305,7 @@ void DateTime::CalendarSetTimeHelper(Date d)
 }
 
 //---------------------------------------------------------------------
-
+#if 0
 Date DateTime::parse(UnicodeString & s, Locale & locale)
 {
     Date d = -1;
@@ -348,7 +352,7 @@ Date DateTime::parseTime(UnicodeString & pattern, UnicodeString & time,
     
     return date;
 }
-
+#endif
 //---------------------------------------------------------------------
 
 Date DateTime::parseTime(UnicodeString & pattern, UnicodeString & time,
@@ -361,7 +365,7 @@ Date DateTime::parseTime(UnicodeString & pattern, UnicodeString & time,
     //ms_DateFormat->applyLocalizedPattern(pattern, status);
 
     ms_DateFormat->applyLocalizedPattern(pattern, status);
-    //ms_DateFormat.applyPattern(pattern);
+    //ms_DateFormat->applyPattern(pattern);
 
     if (FAILURE(status)) return -1;
 
@@ -756,7 +760,7 @@ void DateTime::add(Calendar::EDateFields aField, t_int32 amount)
 
 //---------------------------------------------------------------------
 
-void DateTime::add(Duration d)
+void DateTime::add(Julian_Duration d)
 {
     add(Calendar::YEAR, d.getYear());
     add(Calendar::MONTH, d.getMonth()); 
@@ -769,7 +773,7 @@ void DateTime::add(Duration d)
 
 //---------------------------------------------------------------------
 
-void DateTime::subtract(Duration d)
+void DateTime::subtract(Julian_Duration d)
 {
     add(Calendar::YEAR, - d.getYear());
     add(Calendar::MONTH, - d.getMonth()); 
@@ -781,16 +785,15 @@ void DateTime::subtract(Duration d)
 }
 
 //---------------------------------------------------------------------
-Duration & DateTime::getDuration(DateTime start, DateTime end, 
-                                 Duration & out)
+Julian_Duration & DateTime::getDuration(DateTime start, DateTime end, 
+                                 Julian_Duration & out)
 {
-     t_int32 y = 0, mo = 0, d = 0, h = 0, m = 0, s = 0;
-     t_int32 toNextMonth = 0;
+    t_int32 y = 0, mo = 0, d = 0, h = 0, m = 0, s = 0;
+    t_int32 toNextMonth = 0;
 
     if (end < start)
     {
         out.set(-1, -1, -1, -1, -1, -1);
-        out.setWeek(-1);
         return out;
     }
     else
@@ -838,7 +841,6 @@ Duration & DateTime::getDuration(DateTime start, DateTime end,
             s += 60;
         }
         out.set(y, mo, d, h, m, s);
-        out.setWeek(0);
         return out;
     }
 }
@@ -1115,8 +1117,6 @@ UnicodeString DateTime::toString(TimeZone * timezone)
     //return strftimeNoLocale(ms_sDefaultPattern, m_TimeZone);
     return strftimeNoLocale(JulianFormatString::Instance()->ms_sDateTimeDefaultPattern, timezone);
 }
-
-char * DateTime::DEBUG_toString() { return toString().toCString(""); }
 //---------------------------------------------------------------------
 
 UnicodeString DateTime::toISO8601Local(TimeZone * timezone)
@@ -1124,8 +1124,6 @@ UnicodeString DateTime::toISO8601Local(TimeZone * timezone)
     //return strftimeNoLocale(ms_sISO8601LocalPattern, m_TimeZone);
     return strftimeNoLocale(JulianFormatString::Instance()->ms_sDateTimeISO8601LocalPattern, timezone);
 }
-
-char * DateTime::DEBUG_toISO8601Local() { return toISO8601().toCString(""); }
 //---------------------------------------------------------------------
 
 UnicodeString DateTime::toISO8601()
@@ -1133,8 +1131,6 @@ UnicodeString DateTime::toISO8601()
     return strftimeNoLocale(JulianFormatString::Instance()->ms_sDateTimeISO8601Pattern, 
         (TimeZone *) m_kGMTTimeZone);
 }
-
-char * DateTime::DEBUG_toISO8601() { return toISO8601().toCString(""); }
 //---------------------------------------------------------------------
 
 UnicodeString DateTime::toISO8601LocalTimeOnly(TimeZone * timezone)
@@ -1339,15 +1335,6 @@ UnicodeString DateTime::DateToString(DateTime & dt)
 }
 
 //---------------------------------------------------------------------
- 
-t_bool DateTime::IsValidDateTime(DateTime & dt)
-{
-    if (dt.getTime() < 0) 
-        return FALSE;
-    else
-        return TRUE;
-}
-//---------------------------------------------------------------------
 
 t_bool DateTime::IsParseable(UnicodeString & s)
 {
@@ -1376,12 +1363,13 @@ DateTime::IsParseable(UnicodeString & s, t_int32 & iYear, t_int32 & iMonth,
     else
     {
         char * c = s.toCString("");
+        PR_ASSERT(c != 0);
 
          // Looks like it could be formatted OK, try to parse it
         //s.trim();
 
         /*
-        // old way, works but slow
+        // old way, works but slow and leaks
         iYear  = JulianUtility::atot_int32(s.extract(0, 4, temp).toCString(""), bParseError, 4);
         iMonth = JulianUtility::atot_int32(s.extract(4, 2, temp).toCString(""), bParseError, 2);
         iDay   = JulianUtility::atot_int32(s.extract(6, 2, temp).toCString(""), bParseError, 2);
@@ -1393,13 +1381,16 @@ DateTime::IsParseable(UnicodeString & s, t_int32 & iYear, t_int32 & iMonth,
         iDay   = JulianUtility::atot_int32(c + 6, bParseError, 2);
        
         if (iMonth > 12 || iDay > 31) 
-            return FALSE;
+        {
+            bParseError = TRUE;
+        }
 
         // more advanced check - check for day mishaps, including leap years
         if (iDay > getMonthLength(iMonth, iYear))
-            return FALSE;
-
-        if (s.size() > 8)
+        {
+            bParseError = TRUE;
+        }
+        if (s.size() > 8 && !bParseError)
         {
             /*
             // old way, works but slow
@@ -1414,11 +1405,17 @@ DateTime::IsParseable(UnicodeString & s, t_int32 & iYear, t_int32 & iMonth,
             iSecond   = JulianUtility::atot_int32(c + 13, bParseError, 2);
 
             if (iHour > 23 || iMinute > 59 || iSecond > 59)
-                return FALSE;
+            {
+                bParseError = TRUE;
+            }
         }
+
+        delete [] c;
+
         if (bParseError)
             return FALSE;
      
+       
         return TRUE;
     }
 }
@@ -1457,8 +1454,19 @@ t_bool DateTime::IsParseableUTCOffset(UnicodeString & s,
     if ((c != '+') && (c != '-'))
         return FALSE;
     
+    char * cc = s.toCString("");
+    PR_ASSERT(cc != 0);
+
+    /*
+    // old way, works but slow and leaks
     iHour = JulianUtility::atot_int32(s.extract(1, 2, u).toCString(""), bParseError, 2);
     iMin = JulianUtility::atot_int32(s.extract(3, 2, u).toCString(""), bParseError, 2);
+    */
+
+    iHour = JulianUtility::atot_int32(cc + 1, bParseError, 2);
+    iMin = JulianUtility::atot_int32(cc + 3, bParseError, 2);
+
+    delete [] cc; 
 
     if (bParseError)
         return FALSE;
@@ -1537,3 +1545,15 @@ t_bool DateTime::operator<(const DateTime & that)
 }
 
 //---------------------------------------------------------------------
+
+UnicodeString & 
+DateTime::ToISO8601String(t_int32 iYear, t_int32 iMonth, t_int32 iDay, 
+                          t_int32 iHour, t_int32 iMinute, t_int32 iSecond, 
+                          UnicodeString & sResult)
+{
+    char sBuf[20];
+    sResult = "";
+    sprintf(sBuf, "%.4d%.2d%.2dT%.2d%.2d%.2d", iYear, iMonth, iDay, iHour, iMinute, iSecond);
+    sResult += sBuf;
+    return sResult;
+}

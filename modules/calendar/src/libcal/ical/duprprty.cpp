@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -45,7 +45,7 @@ DurationProperty::DurationProperty(const DurationProperty & that)
 
 //---------------------------------------------------------------------
 
-DurationProperty::DurationProperty(Duration value, JulianPtrArray * parameters)
+DurationProperty::DurationProperty(Julian_Duration value, JulianPtrArray * parameters)
 : StandardProperty(parameters)
 {
     //PR_ASSERT(value != 0);
@@ -75,7 +75,7 @@ void DurationProperty::setValue(void * value)
     PR_ASSERT(value != 0);
     if (value != 0)
     {
-        m_Duration = *((Duration *) value);
+        m_Duration = *((Julian_Duration *) value);
     }
 }
 

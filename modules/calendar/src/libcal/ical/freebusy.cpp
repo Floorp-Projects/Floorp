@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -57,6 +57,8 @@ Freebusy::stringToType(UnicodeString & sType)
         return FB_TYPE_BUSY_UNAVAILABLE;
     else if (JulianKeyword::Instance()->ms_ATOM_BUSY_TENTATIVE == hashCode) 
         return FB_TYPE_BUSY_TENTATIVE;
+    else if (ICalProperty::IsXToken(sType))
+        return FB_TYPE_XPARAMVAL;
     else return FB_TYPE_INVALID;
 }
 
@@ -72,6 +74,7 @@ Freebusy::typeToString(Freebusy::FB_TYPE type, UnicodeString & out)
     // added 4-28-98
     case FB_TYPE_BUSY_UNAVAILABLE: out = JulianKeyword::Instance()->ms_sBUSY_UNAVAILABLE; break;
     case FB_TYPE_BUSY_TENTATIVE: out = JulianKeyword::Instance()->ms_sBUSY_TENTATIVE; break;
+    case FB_TYPE_XPARAMVAL: out = JulianKeyword::Instance()->ms_sXPARAMVAL; break;
     default:
         // return default BUSY
         out = JulianKeyword::Instance()->ms_sBUSY;
@@ -144,7 +147,8 @@ void Freebusy::parsePeriod(UnicodeString & s, JulianPtrArray * vTimeZones)
             {
                 if (!p->isValid())
                 {
-                    if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sFreebusyPeriodInvalid, 200);
+                    if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iFreebusyPeriodInvalid, 
+                        JulianKeyword::Instance()->ms_sFREEBUSY, sPeriod, 200);
                 }
                 else
                 {
@@ -164,7 +168,7 @@ void Freebusy::setParam(UnicodeString & paramName, UnicodeString & paramVal)
     t_int32 i;
     if (paramName.size() == 0)
     {
-        if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sInvalidParameterName, 
+        if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName, 
             JulianKeyword::Instance()->ms_sFREEBUSY, paramName, 200);
     }
     else
@@ -176,14 +180,14 @@ void Freebusy::setParam(UnicodeString & paramName, UnicodeString & paramVal)
             i = Freebusy::stringToType(paramVal);
             if (i < 0)
             {
-                if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sInvalidParameterValue, 
+                if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
                     JulianKeyword::Instance()->ms_sFREEBUSY, paramName, paramVal, 200);
             }
             else 
             {
                 if (getType() >= 0)
                 {
-                    if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter, 
+                    if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
                         JulianKeyword::Instance()->ms_sFREEBUSY, paramName, 100);
                 }
                 setType((Freebusy::FB_TYPE) i);
@@ -196,24 +200,29 @@ void Freebusy::setParam(UnicodeString & paramName, UnicodeString & paramVal)
             i = Freebusy::stringToStatus(paramVal);
             if (i < 0)
             {
-                 if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sInvalidParameterValue, 
+                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
                     JulianKeyword::Instance()->ms_sFREEBUSY, paramName, paramVal, 200);
             }
             else 
             {
                 if (getStatus() >= 0)
                 {
-                    if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter, 
+                    if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
                         JulianKeyword::Instance()->ms_sFREEBUSY, paramName, 100);
                 }
                 setStatus((Freebusy::FB_STATUS) i);
             }
         }
 #endif
+        else if (ICalProperty::IsXToken(paramName))
+        {
+            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
+                        JulianKeyword::Instance()->ms_sFREEBUSY, paramName, 100);
+        }
         else 
         {
             // NOTE: what about optional parameters?? THERE ARE NONE.
-            if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sInvalidParameterName,
+            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName,
                         JulianKeyword::Instance()->ms_sFREEBUSY, paramName, 200);
         }
     }
@@ -368,7 +377,7 @@ DateTime Freebusy::endOfFreebusyPeriod()
 {
     t_int32 i;
     DateTime d(-1);
-    Duration du(-1, -1, -1, -1, -1, -1, -1);
+    Julian_Duration du(-1, -1, -1, -1, -1, -1, -1);
     if (m_vPeriod != 0)
     {
         i = m_vPeriod->GetSize();
@@ -708,21 +717,6 @@ int Freebusy::CompareFreebusy(const void * a, const void * b)
     Period * pB = (Period *) fb->getPeriod()->GetAt(0);
     return Period::ComparePeriods(&pA, &pB);
 }
-//---------------------------------------------------------------------
-void Freebusy::deleteFreebusyVector(JulianPtrArray * freebusy)
-{
-    Freebusy * ip;
-    t_int32 i;
-    if (freebusy != 0)
-    {
-        for (i = freebusy->GetSize() - 1; i >= 0; i--)
-        {
-            ip = (Freebusy *) freebusy->GetAt(i);
-            delete ip; ip = 0;
-        }
-    }
-}
-
 //---------------------------------------------------------------------
 
 t_bool
