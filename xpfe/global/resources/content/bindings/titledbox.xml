@@ -33,11 +33,4 @@
       </xul:box>
     </content>    
   </binding>
-    
-  <binding id="label" extends="chrome://global/content/bindings/titledbox.xml#groupbox-base">
-    <content>
-      <xul:text inherits="value"/>
-    </content>
-  </binding>
-
 </bindings>

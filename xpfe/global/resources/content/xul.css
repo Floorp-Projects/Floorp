@@ -145,10 +145,6 @@ groupbox {
   display: -moz-groupbox;
 }
 
-label {
-  -moz-binding: url("chrome://global/content/bindings/titledbox.xml#label");
-}
-
 .groupbox-body {
   -moz-box-pack: inherit;
   -moz-box-align: inherit;
