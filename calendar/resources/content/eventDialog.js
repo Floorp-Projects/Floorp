@@ -672,6 +672,8 @@ function prepareTimePicker( timeFieldName )
    var timePickerPopup = document.getElementById( "oe-time-picker-popup" );
    var timeField = document.getElementById( timeFieldName );
    
+   timeField.focus();
+   
    // tell the time picker the time to edit.
    setFieldValue( "oe-time-picker-popup", timeField.editDate, "value" );
    
