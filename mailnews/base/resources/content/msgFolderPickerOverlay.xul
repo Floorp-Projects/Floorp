@@ -322,5 +322,27 @@ Rights Reserved.
         </rule>
       </template>
     </menulist>
-        
+    <menulist id="actionTargetFolder"
+              containment="http://home.netscape.com/NC-rdf#child"
+              datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+              ref="msgaccounts:/">
+      <template>
+        <rule iscontainer="true" isempty="false">
+          <menupopup>
+              <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup>
+                  <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                  <menuseparator/>
+                </menupopup>
+              </menu>
+          </menupopup>
+        </rule>
+        <rule>
+          <menupopup>
+             <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </menupopup>
+        </rule>
+      </template>
+      <menupopup/>
+    </menulist>
 </overlay>

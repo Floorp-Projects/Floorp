@@ -21,7 +21,7 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
+var pickerBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
 
 
 // call this from dialog onload() to set the menu item to the correct value
@@ -91,9 +91,9 @@ function SetFolderPicker(uri,pickerID)
         }
 
         selectedValue =
-            Bundle.formatStringFromName("verboseFolderFormat",
-                                        [ msgfolder.name,
-                                        serverName ], 2);
+            pickerBundle.formatStringFromName("verboseFolderFormat",
+                                              [ msgfolder.name,
+                                              serverName ], 2);
 	}
 
 	picker.setAttribute("value",selectedValue);
