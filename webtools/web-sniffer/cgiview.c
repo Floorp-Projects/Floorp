@@ -76,11 +76,12 @@ cgiviewHTMLAttributeValue(App *app, HTML *html, Buf *buf)
 		fprintf(view->out, "&referer=%s\">", referer);
 		free(referer);
 		urlFree(url);
-	}
-	viewHTMLAttributeValue(app, buf);
-	if (html->currentAttributeIsURL)
-	{
+		viewHTMLText(app, buf);
 		fprintf(view->out, "</a>");
+	}
+	else
+	{
+		viewHTMLAttributeValue(app, buf);
 	}
 }
 
@@ -157,11 +158,12 @@ cgiviewHTTPResponseHeaderValue(App *app, Buf *buf, unsigned char *url)
 		urlstring = escapeHTML(url);
 		fprintf(view->out, "<a href=\"%s%s\">", me, urlstring);
 		free(urlstring);
-	}
-	viewHTTPHeaderValue(app, buf);
-	if (url)
-	{
+		viewHTTP(app, buf);
 		fprintf(view->out, "</a>");
+	}
+	else
+	{
+		viewHTTPHeaderValue(app, buf);
 	}
 }
 
@@ -383,9 +385,9 @@ main(int argc, char *argv[])
 	}
 	if (url && (*url))
 	{
-		fprintf(view->out,
-			"<html><head><title>View %s</title></head><body>\n",
-			url);
+		fprintf(view->out, "<html><head><title>View %s</title>", url);
+		fprintf(view->out, "<link rel=stylesheet href=view.css>");
+		fprintf(view->out, "</head><body>\n");
 		viewReport(app, "input url:");
 		viewReport(app, (char *) url);
 		viewReportHTML(app, "<hr>");

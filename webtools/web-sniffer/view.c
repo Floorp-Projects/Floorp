@@ -24,9 +24,9 @@
 
 #include "all.h"
 
-#define CONTROL_START "<font color=#FF0000>"
+#define CONTROL_START "<s>"
 #define CONTROL(str) CONTROL_START str CONTROL_END
-#define CONTROL_END "</font>"
+#define CONTROL_END "</s>"
 #define NL "\n"
 
 static int verbose = 0;
@@ -156,49 +156,49 @@ print(View *view, Buf *b)
 void
 viewHTML(App *app, Buf *buf)
 {
-	fprintf(app->view.out, "<font color=#009900>");
+	fprintf(app->view.out, "<em>");
 	print(&app->view, buf);
-	fprintf(app->view.out, "</font>");
+	fprintf(app->view.out, "</em>");
 }
 
 void
 viewHTMLAttributeName(App *app, Buf *buf)
 {
-	fprintf(app->view.out, "<font color=#FF6600>");
+	fprintf(app->view.out, "<u>");
 	print(&app->view, buf);
-	fprintf(app->view.out, "</font>");
+	fprintf(app->view.out, "</u>");
 }
 
 void
 viewHTMLAttributeValue(App *app, Buf *buf)
 {
-	fprintf(app->view.out, "<font color=#3333FF>");
+	fprintf(app->view.out, "<i>");
 	print(&app->view, buf);
-	fprintf(app->view.out, "</font>");
+	fprintf(app->view.out, "</i>");
 }
 
 void
 viewHTMLDeclaration(App *app, Buf *buf)
 {
-	fprintf(app->view.out, "<font color=#999933><i>");
+	fprintf(app->view.out, "<tt>");
 	print(&app->view, buf);
-	fprintf(app->view.out, "</i></font>");
+	fprintf(app->view.out, "</tt>");
 }
 
 void
 viewHTMLProcessingInstruction(App *app, Buf *buf)
 {
-	fprintf(app->view.out, "<font color=#660000><i>");
+	fprintf(app->view.out, "<var>");
 	print(&app->view, buf);
-	fprintf(app->view.out, "</i></font>");
+	fprintf(app->view.out, "</var>");
 }
 
 void
 viewHTMLTag(App *app, Buf *buf)
 {
-	fprintf(app->view.out, "<font color=#CC33CC>");
+	fprintf(app->view.out, "<b>");
 	print(&app->view, buf);
-	fprintf(app->view.out, "</font>");
+	fprintf(app->view.out, "</b>");
 }
 
 void
@@ -216,17 +216,17 @@ viewHTTP(App *app, Buf *buf)
 void
 viewHTTPHeaderName(App *app, Buf *buf)
 {
-	fprintf(app->view.out, "<font color=#FF6600>");
+	fprintf(app->view.out, "<u>");
 	print(&app->view, buf);
-	fprintf(app->view.out, "</font>");
+	fprintf(app->view.out, "</u>");
 }
 
 void
 viewHTTPHeaderValue(App *app, Buf *buf)
 {
-	fprintf(app->view.out, "<font color=#3333FF>");
+	fprintf(app->view.out, "<i>");
 	print(&app->view, buf);
-	fprintf(app->view.out, "</font>");
+	fprintf(app->view.out, "</i>");
 }
 
 void
