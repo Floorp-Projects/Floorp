@@ -517,7 +517,7 @@ nsLoggingSink::QuoteText(const nsString& aValue, nsString& aResult)
     }
     else if ((ch < 32) || (ch >= 127)) {
       aResult.AppendWithConversion("&#");
-      aResult.AppendWithConversion(PRInt32(ch), 10);
+      aResult.AppendInt(PRInt32(ch), 10);
       aResult.AppendWithConversion(';');
     }
     else {

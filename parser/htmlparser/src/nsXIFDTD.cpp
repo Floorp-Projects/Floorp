@@ -1432,7 +1432,7 @@ void nsXIFDTD::ProcessEntityTag(const nsIParserNode& aNode)
   nsAutoString value;
 
   if (GetAttribute(aNode,NS_ConvertToString("value"),value)) {
-    value+=';';
+    value.AppendWithConversion(';');
     CEntityToken* entity = new CEntityToken(value);
     nsCParserNode node((CToken*)entity);
     mSink->AddLeaf(node);

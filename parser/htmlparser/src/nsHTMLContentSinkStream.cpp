@@ -364,7 +364,7 @@ void nsHTMLContentSinkStream::Write(char aData)
   }
   if (mString)
   {
-    mString->Append(aData);
+    mString->AppendWithConversion(aData);
   }
 }
 

@@ -540,17 +540,17 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     {
       if (mOLStackIndex > 0)
         // This is what nsBulletFrame does for OLs:
-        mInIndentString.AppendWithConversion(mOLStack[mOLStackIndex-1]++, 10);
+        mInIndentString.AppendInt(mOLStack[mOLStackIndex-1]++, 10);
       else
         mInIndentString.AppendWithConversion("#");
 
-      mInIndentString.Append('.');
+      mInIndentString.AppendWithConversion('.');
 
     }
     else
-      mInIndentString.Append('*');
+      mInIndentString.AppendWithConversion('*');
     
-    mInIndentString.Append(' ');
+    mInIndentString.AppendWithConversion(' ');
   }
   else if (type == eHTMLTag_blockquote)
   {
@@ -816,7 +816,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
     nsAutoString line;
     PRUint32 width = (mWrapColumn > 0 ? mWrapColumn : 25);
     while (line.Length() < width)
-      line += '-';
+      line.AppendWithConversion('-');
     Write(line);
 
     EnsureVerticalSpace(0);
@@ -957,7 +957,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
         // Space stuffing a la RFC 2646 if this will be used in a mail,
         // but how can I know that??? Now space stuffing is done always
         // when formatting text as HTML and that is wrong! XXX: Fix this!
-        mCurrentLine.Append(' ');
+        mCurrentLine.AppendWithConversion(' ');
       }
     }
     mEmptyLines=-1;
@@ -1008,7 +1008,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
             // Space stuffing a la RFC 2646 if this will be used in a mail,
             // but how can I know that??? Now space stuffing is done always
             // when formatting text as HTML and that is wrong! XXX: Fix this!
-            mCurrentLine.Append(' ');
+            mCurrentLine.AppendWithConversion(' ');
           }
         }
         mCurrentLine.Append(restOfLine);
@@ -1039,7 +1039,7 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
       mCurrentLine.SetLength(mCurrentLine.Length()-1);
     if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
       // Add the soft part of the soft linebreak (RFC 2646 4.1)
-      mCurrentLine.Append(' ');
+      mCurrentLine.AppendWithConversion(' ');
     }
     mCurrentLine.AppendWithConversion(NS_LINEBREAK);
     WriteSimple(mCurrentLine);
@@ -1074,9 +1074,9 @@ nsHTMLToTXTSinkStream::WriteQuotesAndIndent()
   if (mCiteQuoteLevel>0) {
     nsAutoString quotes;
     for(int i=0; i<mCiteQuoteLevel; i++) {
-      quotes.Append('>');
+      quotes.AppendWithConversion('>');
     }
-    quotes.Append(' ');
+    quotes.AppendWithConversion(' ');
     WriteSimple(quotes);
     mColPos += (mCiteQuoteLevel+1);
   }
@@ -1086,7 +1086,7 @@ nsHTMLToTXTSinkStream::WriteQuotesAndIndent()
   if (indentwidth > 0) {
     nsAutoString spaces;
     for (int i=0; i<indentwidth; ++i)
-      spaces.Append(' ');
+      spaces.AppendWithConversion(' ');
     WriteSimple(spaces);
     mColPos += indentwidth;
   }
