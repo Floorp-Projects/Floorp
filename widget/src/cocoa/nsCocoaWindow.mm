@@ -396,6 +396,12 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
                         backing:NSBackingStoreBuffered defer:NO];
     
+    // Popups will receive a "close" message when an app terminates
+    // that causes an extra release to occur.  Make sure popups
+    // are set not to release when closed.
+    if (features == 0)
+      [mWindow setReleasedWhenClosed: NO];
+
     // create a quickdraw view as the toplevel content view of the window
     NSQuickDrawView* content = [[[NSQuickDrawView alloc] init] autorelease];
     [content setFrame:[[mWindow contentView] frame]];
@@ -1716,7 +1722,6 @@ void StopResizing ( )
   mGeckoWindow = geckoWind;
   return self;
 }
-
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
