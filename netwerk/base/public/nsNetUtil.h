@@ -230,10 +230,14 @@ NS_OpenURI(nsIStreamListener* aConsumer,
 inline nsresult
 NS_MakeAbsoluteURI(nsACString &result,
                    const nsACString &spec, 
-                   nsIURI *baseURI = nsnull, 
+                   nsIURI *baseURI, 
                    nsIIOService *ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
-    NS_ASSERTION(baseURI, "It doesn't make sense to not supply a base URI");
+    if (!baseURI) {
+        NS_WARNING("It doesn't make sense to not supply a base URI");
+        result = spec;
+        return NS_OK;
+    }
 
     if (spec.IsEmpty())
         return baseURI->GetSpec(result);
@@ -244,7 +248,7 @@ NS_MakeAbsoluteURI(nsACString &result,
 inline nsresult
 NS_MakeAbsoluteURI(char **result,
                    const char *spec, 
-                   nsIURI *baseURI = nsnull, 
+                   nsIURI *baseURI, 
                    nsIIOService *ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
     nsCAutoString resultBuf;
@@ -259,10 +263,14 @@ NS_MakeAbsoluteURI(char **result,
 inline nsresult
 NS_MakeAbsoluteURI(nsAString &result,
                    const nsAString &spec, 
-                   nsIURI *baseURI = nsnull,
+                   nsIURI *baseURI,
                    nsIIOService *ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
-    NS_ASSERTION(baseURI, "It doesn't make sense to not supply a base URI");
+    if (!baseURI) {
+        NS_WARNING("It doesn't make sense to not supply a base URI");
+        result = spec;
+        return NS_OK;
+    }
 
     nsCAutoString resultBuf;
     nsresult rv;
