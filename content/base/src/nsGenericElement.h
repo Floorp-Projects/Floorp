@@ -251,6 +251,9 @@ public:
 
   static nsIAtom* CutNameSpacePrefix(nsString& aString);
 
+  static nsresult InternalSupports(const nsString& aFeature,
+                                   const nsString& aVersion, PRBool* aReturn);
+
   nsDOMSlots *GetDOMSlots();
   void MaybeClearDOMSlots();
 

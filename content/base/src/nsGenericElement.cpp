@@ -619,12 +619,42 @@ nsGenericElement::SetPrefix(const nsString& aPrefix)
 }
 
 nsresult
+nsGenericElement::InternalSupports(const nsString& aFeature,
+                                   const nsString& aVersion,
+                                   PRBool* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = PR_FALSE;
+
+  if (aFeature.EqualsWithConversion("XML", PR_TRUE) ||
+      aFeature.EqualsWithConversion("HTML", PR_TRUE)) {
+    if (!aVersion.Length() ||
+        aVersion.EqualsWithConversion("1.0") ||
+        aVersion.EqualsWithConversion("2.0")) {
+      *aReturn = PR_TRUE;
+    }
+  } else if (aFeature.EqualsWithConversion("Views", PR_TRUE) ||
+             aFeature.EqualsWithConversion("StyleSheets", PR_TRUE) ||
+             aFeature.EqualsWithConversion("CSS", PR_TRUE) ||
+             aFeature.EqualsWithConversion("CSS2", PR_TRUE) ||
+             aFeature.EqualsWithConversion("Events", PR_TRUE) ||
+             aFeature.EqualsWithConversion("UIEvents", PR_TRUE) ||
+             aFeature.EqualsWithConversion("MouseEvents", PR_TRUE) ||
+             aFeature.EqualsWithConversion("HTMLEvents", PR_TRUE) ||
+             aFeature.EqualsWithConversion("Range", PR_TRUE)) {
+    if (!aVersion.Length() || aVersion.EqualsWithConversion("2.0")) {
+      *aReturn = PR_TRUE;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsGenericElement::Supports(const nsString& aFeature, const nsString& aVersion,
                            PRBool* aReturn)
 {
-  // XXX: TBI
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return InternalSupports(aFeature, aVersion, aReturn);
 }
 
 nsresult
