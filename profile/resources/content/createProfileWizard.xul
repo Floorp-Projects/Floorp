@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 <?xml-stylesheet href="chrome://profile/skin/createProfileWizard.css" type="text/css"?>
 
 
@@ -8,28 +9,34 @@
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	onload="loadPage('newProfile1_1.xul')" 
-	width="500" height="400">
+	onload="loadPage('newProfile1_1.xul')">
 
+	<html:script language="javascript" src="chrome://global/content/strres.js" />
 	<html:script src="createProfileWizard.js" />
 
-	<tabcontrol align="vertical"> 
-		<tabbox align="horizontal"> 
-			<tab onclick="loadPage('newProfile1_1.xul');">&newprofile.title;</tab> 
-		</tabbox> 
-                    
-		<tabpanel />
-	</tabcontrol> 
+  <box id="header" align="vertical">
+    <box align="vertical">
+      <html:div id="cplabel">&createprofile.heading;</html:div>
+      <html:div id="cpsubl">&createprofile.subheading;</html:div>
+    </box>
+  	<tabcontrol align="vertical"> 
+	  	<tabbox align="horizontal"> 
+  			<tab class="selected">&newprofile.title;</tab> 
+<!--			  <tab class="nonselected" onclick="loadPage('mailnews.xul');">&mailnewssettings.title;</tab>-->
+	    </tabbox> 
+	  </tabcontrol> 
+  </box>
 
-	<html:iframe src="about:blank" flex="100%" name="content"  id="content" scrolling="auto"/>
-
-	<box align="horizontal">
-		<titledbutton id="back" value="&back.label;" onclick="onBack()" align="left" disabled="true" style="margin-top: 1em;"/>
+  <box id="contentsink" flex="100%">
+  	<html:iframe src="about:blank" style="width: 100%;" name="content"  id="content" scrolling="auto" flex="100%"/>
+  </box>
+	<box align="horizontal" style="width: 450px;">
+    <spring flex="100%"/>
+		<titledbutton id="cancel" value="&cancel.label;" onclick="ExitApp()" align="left" style=" margin-top: 1em;"/>
+    <spring flex="20%"/>
+		<titledbutton id="back" value="&back.label;" onclick="onBack()" align="left" style="margin-top: 1em;"/>
 		<titledbutton id="next" value="&next.label;" onclick="onNext()" align="left" style="margin-top: 1em;"/>
-		<titledbutton id="cancel" value="&cancel.label;" onclick="onCancel()" align="left" style=" margin-top: 1em;"/>
-		<titledbutton id="finish" value="&finish.label;" onclick="Finish(opener)" disabled="true" align="left" style=" margin-top: 1em;"/>
-
+    <spring flex="5%"/>
 	</box>
-
 
 </window>

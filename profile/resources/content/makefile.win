@@ -26,7 +26,9 @@ FILES=\
 	deleteProfile.xul		\
 	migrateAllProfile.xul		\
 	newProfile1_1.xul		\
+	newProfile1_1.js		\
 	newProfile1_2.xul		\
+	newProfile1_2.js		\
 	profileManager.js		\
 	profileManager.xul		\
 	renameProfile.xul		\

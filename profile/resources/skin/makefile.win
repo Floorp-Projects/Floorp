@@ -24,6 +24,8 @@ FILES=\
 	profile.css				\
 	createProfileWizard.css	\
 	profileManager.css		\
+	pwiz_panels.css                 \
+	header.gif			\
 	$(NULL)
 
 install::

@@ -1033,14 +1033,14 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 
 
 // Creates a new profile
-NS_IMETHODIMP nsProfile::CreateNewProfile(const char* charData)
+NS_IMETHODIMP nsProfile::CreateNewProfile(const char* profileName, const char* nativeProfileDir)
 {
-
 	nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : CreateNewProfile\n");
-    printf("ProfileManagerData*** : %s\n", charData);
+    printf("Profile Name: %s\n", profileName);
+    printf("Profile Dir: %s\n", (!nativeProfileDir || !*nativeProfileDir)?"(use default)":nativeProfileDir);
 #endif
 
     NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
@@ -1048,38 +1048,29 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* charData)
 	if (NS_FAILED(rv) || !locator)
 		return NS_ERROR_FAILURE;
 
-    nsString data(charData);
-    
-	// Set the gathered info into an array
-	SetDataArray(data);
-    
-	char* dirName = GetValue("ProfileDir");
-    char* unescapedProfileName = GetValue("ProfileName");
-    
-	if (!unescapedProfileName || !*unescapedProfileName)
-		return NS_ERROR_FAILURE;
+    if (!profileName) return NS_ERROR_FAILURE;
 
-	// Escape profile name to create a valid direrctory, 
-	// if directory value is not provided
-	char* profileName = nsEscape(unescapedProfileName, url_Path); // temp hack
-      
-	nsFileSpec dirSpec(dirName);
-
-	if (!dirName || !*dirName)
+    nsFileSpec dirSpec;
+    
+	if (!nativeProfileDir || !*nativeProfileDir)
     {
 		// They didn't type a directory path...
-		// Get current profile, make the new one a sibling...
-	    nsCOMPtr <nsIFileSpec> horribleCOMDirSpecThing;
-        rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, getter_AddRefs(horribleCOMDirSpecThing));
+	    nsCOMPtr <nsIFileSpec> defaultRoot;
+        rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, getter_AddRefs(defaultRoot));
         
-		if (NS_FAILED(rv) || !horribleCOMDirSpecThing)
+		if (NS_FAILED(rv) || !defaultRoot)
 			return NS_ERROR_FAILURE;
 
-		//Append profile name to form a directory name
-	    horribleCOMDirSpecThing->GetFileSpec(&dirSpec);
-		//dirSpec.SetLeafName(profileName);
-		//dirSpec += profileName;
+	    defaultRoot->GetFileSpec(&dirSpec);
+        if (!dirSpec.Exists())
+            dirSpec.CreateDirectory();
+
+        // append profile name
+        dirSpec += profileName;
 	}
+    else {
+        dirSpec = nativeProfileDir;
+    }
 
 #if defined(DEBUG_profile)
 	printf("before SetProfileDir\n");
@@ -1088,23 +1079,13 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* charData)
 	if (!dirSpec.Exists())
 		dirSpec.CreateDirectory();
 
-	dirSpec += profileName;
-
 	// Set the directory value and add the entry to the registry tree.
 	// Creates required user directories.
-    rv = SetProfileDir(unescapedProfileName, dirSpec);
-
-	PR_DELETE(unescapedProfileName);
+    rv = SetProfileDir(profileName, dirSpec);
 
 #if defined(DEBUG_profile)
     printf("after SetProfileDir\n");
 #endif
-
-	if (NS_FAILED(rv))
-	{
-		nsCRT::free(profileName);
-		return rv;
-	}
 
     // Get profile defaults folder..
     nsCOMPtr <nsIFileSpec> profDefaultsDir;
@@ -1112,7 +1093,6 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* charData)
         
 	if (NS_FAILED(rv) || !profDefaultsDir)
 	{
-		nsCRT::free(profileName);
 		return NS_ERROR_FAILURE;
 	}
 
@@ -1125,12 +1105,6 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* charData)
 	{
 		defaultsDirSpec.RecursiveCopy(dirSpec);
 	}
-
-	if (dirName)
-	{
-		PR_DELETE(dirName);
-	}
-	nsCRT::free(profileName);
 
     return NS_OK;
 }

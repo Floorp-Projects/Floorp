@@ -5,3 +5,5 @@ profileManager.dtd
 profileManagerDelete.dtd
 profileManagerMigrateAll.dtd
 profileManagerRename.dtd
+createProfileWizard.properties
+newProfile1_2.properties
