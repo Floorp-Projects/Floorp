@@ -105,6 +105,23 @@ GetImmediateChild(nsIContent* aParent, nsIAtom* aTag, nsIContent** aResult)
 }
 
 NS_IMETHODIMP
+nsXULTreeFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
+{
+  nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
+  GetTreeBody(&treeOuterGroup);
+
+  if (treeOuterGroup)
+    treeOuterGroup->SetLayingOut(PR_TRUE);
+
+  nsresult rv = nsBoxFrame::DoLayout(aBoxLayoutState);
+
+  if (treeOuterGroup)
+    treeOuterGroup->SetLayingOut(PR_FALSE);
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsXULTreeFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 {
   // Get our treechildren child frame.

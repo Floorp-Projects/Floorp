@@ -200,6 +200,8 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
 {
   nsresult rv = nsXULTreeGroupFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   
+  mLayingOut = PR_FALSE;
+
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
   mOnePixel = NSIntPixelsToTwips(1, p2t);
@@ -251,6 +253,13 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
   return rv;
 
 } // Init
+
+NS_IMETHODIMP
+nsXULTreeOuterGroupFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
+{
+  nsresult rv = nsXULTreeGroupFrame::DoLayout(aBoxLayoutState);
+  return rv;
+}
 
 PRBool
 nsXULTreeOuterGroupFrame::IsFixedRowSize()
@@ -530,8 +539,13 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
 
   VerticalScroll(mCurrentIndex*mRowHeight);
   
-  nsBoxLayoutState state(mPresContext);
-  MarkDirtyChildren(state);
+  if (mLayingOut) {
+    PostReflowCallback();
+  }
+  else {
+    nsBoxLayoutState state(mPresContext);
+    MarkDirtyChildren(state);
+  }
 
   return NS_OK;
 }
@@ -926,7 +940,13 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   InternalPositionChanged(up, delta);
 
   // This change has to happen immediately.
-  PostReflowCallback();
+  if (mLayingOut) {
+    PostReflowCallback();
+  }
+  else {
+    nsBoxLayoutState state(mPresContext);
+    MarkDirtyChildren(state);
+  }
 }
 
 void
