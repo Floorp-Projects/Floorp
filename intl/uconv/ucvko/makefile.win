@@ -29,6 +29,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPPSRCS =				\
 	nsEUCKRToUnicode.cpp		\
 	nsUnicodeToEUCKR.cpp		\
+	nsUnicodeToKSC5601.cpp		\
 	nsUCvKOSupport.cpp		\
 	nsUCvKODll.cpp			\
 	$(NULL)
@@ -36,6 +37,7 @@ CPPSRCS =				\
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsEUCKRToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToEUCKR.obj		\
+	.\$(OBJDIR)\nsUnicodeToKSC5601.obj		\
 	.\$(OBJDIR)\nsUCvKOSupport.obj			\
 	.\$(OBJDIR)\nsUCvKODll.obj 			\
 	$(NULL)
