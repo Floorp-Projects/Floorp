@@ -106,6 +106,10 @@ components\txtsvc.xpt
 ; gfx
 components\gfx.xpt                      
 
+; javascript
+components\jsurl.dll
+components\jsurl.xpt
+
 ; layout
 components\gkcontent.dll
 components\gklayout.dll                   

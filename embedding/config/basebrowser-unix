@@ -112,6 +112,10 @@ components/gfx2.xpt
 components/libjar50.so
 components/jar.xpt
 
+; javascript
+components/libjsurl.so
+components/jsurl.xpt
+
 ; layout
 components/libgkcontent.so
 components/libgklayout.so                   
