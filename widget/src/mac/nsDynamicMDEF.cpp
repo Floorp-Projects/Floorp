@@ -596,8 +596,11 @@ void nsPushMenuHandle(MenuHandle aMenu)
 //------------------------------------------------------------------------------
 void nsPopMenuHandle(MenuHandle * aMenu)
 {
-  *aMenu = (MenuHandle) gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1];
-  gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);
+  if (gPreviousMenuHandleStack.Count() > 0)
+  {
+    *aMenu = (MenuHandle) gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1];
+    gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);
+  }
 }
 
 #pragma options align=reset
