@@ -4977,38 +4977,22 @@ nsDocShell::RefreshURIFromHeader(nsIURI * aBaseURI,
         ++iter;
     }
 
-    // bug 22886, part 2: allow X to start with or contain a '.'
-    if (iter != doneIterating && *iter == '.') {
-        ++iter;
-        // throw away any digits following it
-        while (iter != doneIterating && (*iter >= '0' && *iter <= '9'))
-            ++iter;
-    }
-
     if (iter != doneIterating) {
-        // if this isn't whitespace, a ';' or a ',', we just parsed part of a URI
-        if (!(nsCRT::IsAsciiSpace(*iter) || *iter == ';' || *iter == ',')) {
-            // back to square 1
-            iter = tokenStart;
-            seconds = 0;
-        }
-        else {
-            // if we started with a '-', number is negative
-            if (*tokenStart == '-')
-                seconds = -seconds;
+        // if we started with a '-', number is negative
+        if (*tokenStart == '-')
+            seconds = -seconds;
+
+        // skip to next ';' or ','
+        while (iter != doneIterating && !(*iter == ';' || *iter == ','))
+            ++iter;
+
+        // skip ';' or ','
+        if (iter != doneIterating && (*iter == ';' || *iter == ',')) {
+            ++iter;
 
             // skip whitespace
             while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter))
                 ++iter;
-
-            // skip ';' or ','
-            if (iter != doneIterating && (*iter == ';' || *iter == ',')) {
-                ++iter;
-
-                // skip whitespace
-                while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter))
-                    ++iter;
-            }
         }
     }
 
@@ -5041,8 +5025,8 @@ nsDocShell::RefreshURIFromHeader(nsIURI * aBaseURI,
         }
     }
 
-    // skip a leading '"' (believe it or not, '\'' is a valid URI char)
-    if (tokenStart != doneIterating && *tokenStart == '"')
+    // skip a leading '"' or '\''
+    if (tokenStart != doneIterating && (*tokenStart == '"' || *tokenStart == '\''))
         ++tokenStart;
 
     // set iter to start of URI
@@ -5050,10 +5034,16 @@ nsDocShell::RefreshURIFromHeader(nsIURI * aBaseURI,
 
     // tokenStart here points to the beginning of URI
 
-    // skip anything which isn't whitespace or '"')
-    while (iter != doneIterating
-           && !(nsCRT::IsAsciiSpace(*iter) || *iter == '"'))
+    // skip anything which isn't whitespace
+    while (iter != doneIterating && !nsCRT::IsAsciiSpace(*iter))
         ++iter;
+
+    // move iter one back if the last character is a '"' or '\''
+    if (iter != tokenStart) {
+        --iter;
+        if (!(*iter == '"' || *iter == '\''))
+            ++iter;
+    }
 
     // URI is whatever's contained from tokenStart to iter.
     // note: if tokenStart == doneIterating, so is iter.
