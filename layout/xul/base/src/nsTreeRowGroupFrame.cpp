@@ -923,11 +923,17 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext& aPresContext, nscoord
   if (height <= 0 && IsLazy()) {
     mIsFull = PR_TRUE;
     nsIFrame* lastChild = GetLastFrame();
-    if (lastChild != mBottomFrame) {
+    nsIFrame* startingPoint = mBottomFrame;
+    if (startingPoint == nsnull) {
+      // We just want to delete everything but the first item.
+      startingPoint = GetFirstFrame();
+    }
+
+    if (lastChild != startingPoint) {
       // We have some hangers on (probably caused by shrinking the size of the window).
       // Nuke them.
       nsIFrame* currFrame;
-      mBottomFrame->GetNextSibling(&currFrame);
+      startingPoint->GetNextSibling(&currFrame);
       while (currFrame) {
         nsIFrame* nextFrame;
         currFrame->GetNextSibling(&nextFrame);
@@ -964,6 +970,14 @@ void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext& aPresContext)
       presShell->AppendReflowCommand(reflowCmd);
     }
   }
+}
+
+void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext& aPresContext, 
+                                           nsIFrame* aChildFrame)
+{
+  // We need to make sure we update things when content gets removed.
+  // Clear out our top and bottom frames.
+  mTopFrame = mBottomFrame = nsnull;
 }
 
 void nsTreeRowGroupFrame::SetContentChain(nsISupportsArray* aContentChain)

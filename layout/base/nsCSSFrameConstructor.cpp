@@ -4601,6 +4601,22 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   shell->GetPrimaryFrameFor(aChild, &childFrame);
 
   if (childFrame) {
+
+#ifdef INCLUDE_XUL
+    nsCOMPtr<nsIAtom> tag;
+    aContainer->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::treechildren ||
+        tag.get() == nsXULAtoms::treeitem) {
+      // Convert to a tree row group frame.
+      nsIFrame* parentFrame;
+      childFrame->GetParent(&parentFrame);
+      nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
+      if (treeRowGroup && treeRowGroup->IsLazy()) {
+        treeRowGroup->OnContentRemoved(*aPresContext, childFrame);
+      }
+    }
+#endif // INCLUDE_XUL
+
     // Walk the frame subtree deleting any out-of-flow frames, and
     // remove the mapping from content objects to frames
     DeletingFrameSubtree(aPresContext, shell, childFrame, childFrame);

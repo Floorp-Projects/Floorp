@@ -60,6 +60,7 @@ public:
 
   // Responses to changes
   void OnContentAdded(nsIPresContext& aPresContext);
+  void OnContentRemoved(nsIPresContext& aPresContext, nsIFrame* aChildFrame);
 
   virtual nsIFrame* GetFirstFrame();
   virtual nsIFrame* GetLastFrame();
