@@ -46,10 +46,14 @@
 #define NS_FREETYPE2_CONTRACTID "@mozilla.org/freetype2;1"
 #define NS_FREETYPE2_CID NS_IFREETYPE2_IID
 // macros to handle FreeType2 26.6 numbers (26 bit number with 6 bit fraction)
-#define FT_16_16_TO_REG(x) ((x)>>16)
 #define FT_REG_TO_16_16(x) ((x)<<16)
-#define FT_CEIL(x) (((x) + 63) & -64)
+#ifndef FT_MulFix
+#define FT_MulFix(v, s) (((v)*(s))>>16)
+#endif
+#define FT_ROUND(x) (((x) + 32) & ~63) // 63 = 2^6 - 1
 #define FT_TRUNC(x) ((x) >> 6)
+#define FT_DESIGN_UNITS_TO_PIXELS(v, s) FT_TRUNC(FT_ROUND(FT_MulFix((v) , (s))))
+
 %}
 
 

@@ -453,35 +453,26 @@ nsFreeTypeFont::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
 int
 nsFreeTypeFont::ascent()
 {
-  int ascent;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
     return 0;
-  ascent = FT_16_16_TO_REG(face->ascender * face->size->metrics.y_scale);
-  ascent = FT_CEIL(ascent);
-  ascent = FT_TRUNC(ascent);
-  return ascent;
+  return FT_DESIGN_UNITS_TO_PIXELS(face->ascender, face->size->metrics.y_scale);
 }
 
 int
 nsFreeTypeFont::descent()
 {
-  int descent;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
     return 0;
-  descent = FT_16_16_TO_REG(-face->descender * face->size->metrics.y_scale);
-  descent = FT_CEIL(descent);
-  descent = FT_TRUNC(descent);
-  return descent;
+  return FT_DESIGN_UNITS_TO_PIXELS(face->descender, face->size->metrics.y_scale);
 }
 
 int
 nsFreeTypeFont::max_ascent()
 {
-  int max_ascent;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
@@ -491,19 +482,16 @@ nsFreeTypeFont::max_ascent()
   mFt2->GetSfntTable(face, ft_sfnt_os2, (void**)&tt_os2);
   NS_ASSERTION(tt_os2, "unable to get OS2 table");
   if (tt_os2)
-    max_ascent = FT_16_16_TO_REG(tt_os2->sTypoAscender
-                                 * face->size->metrics.y_scale);
+     return FT_DESIGN_UNITS_TO_PIXELS(tt_os2->sTypoAscender,
+                                      face->size->metrics.y_scale);
   else
-    max_ascent = FT_16_16_TO_REG(face->bbox.yMax * face->size->metrics.y_scale);
-  max_ascent = FT_CEIL(max_ascent);
-  max_ascent = FT_TRUNC(max_ascent);
-  return max_ascent;
+     return FT_DESIGN_UNITS_TO_PIXELS(face->bbox.yMax,
+                                      face->size->metrics.y_scale);
 }
 
 int
 nsFreeTypeFont::max_descent()
 {
-  int max_descent;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
@@ -513,89 +501,99 @@ nsFreeTypeFont::max_descent()
   mFt2->GetSfntTable(face, ft_sfnt_os2, (void**)&tt_os2);
   NS_ASSERTION(tt_os2, "unable to get OS2 table");
   if (tt_os2)
-    max_descent = FT_16_16_TO_REG(-tt_os2->sTypoDescender *
-                                  face->size->metrics.y_scale);
+     return FT_DESIGN_UNITS_TO_PIXELS(tt_os2->sTypoDescender,
+                                      face->size->metrics.y_scale);
   else
-    max_descent = FT_16_16_TO_REG(-face->bbox.yMin *
-                                  face->size->metrics.y_scale);
-  max_descent = FT_CEIL(max_descent);
-  max_descent = FT_TRUNC(max_descent);
-  return max_descent;
+     return FT_DESIGN_UNITS_TO_PIXELS(face->bbox.yMin,
+                                      face->size->metrics.y_scale);
 }
 
 int
 nsFreeTypeFont::max_width()
 {
-  int max_advance_width;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
     return 0;
-  max_advance_width = FT_16_16_TO_REG(face->max_advance_width *
-                                      face->size->metrics.x_scale);
-  max_advance_width = FT_CEIL(max_advance_width);
-  max_advance_width = FT_TRUNC(max_advance_width);
-  return max_advance_width;
+  return FT_DESIGN_UNITS_TO_PIXELS(face->max_advance_width,
+                                   face->size->metrics.x_scale);
 }
 
 PRBool
 nsFreeTypeFont::getXHeight(unsigned long &val)
 {
-  int height;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face || !val)
     return PR_FALSE;
-  height = FT_16_16_TO_REG(face->height * face->size->metrics.x_scale);
-  height = FT_CEIL(height);
-  height = FT_TRUNC(height);
+  val = FT_DESIGN_UNITS_TO_PIXELS(face->height, face->size->metrics.y_scale);
 
-  val = height;
   return PR_TRUE;
 }
 
 PRBool
 nsFreeTypeFont::underlinePosition(long &val)
 {
-  long underline_position;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
     return PR_FALSE;
-  underline_position = FT_16_16_TO_REG(-face->underline_position *
-                        face->size->metrics.x_scale);
-  underline_position = FT_CEIL(underline_position);
-  underline_position = FT_TRUNC(underline_position);
-  val = underline_position;
+  val = FT_DESIGN_UNITS_TO_PIXELS(-face->underline_position,
+                                   face->size->metrics.y_scale);
   return PR_TRUE;
 }
 
 PRBool
 nsFreeTypeFont::underline_thickness(unsigned long &val)
 {
-  unsigned long underline_thickness;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
     return PR_FALSE;
-  underline_thickness = FT_16_16_TO_REG(face->underline_thickness *
-                         face->size->metrics.x_scale);
-  underline_thickness = FT_CEIL(underline_thickness);
-  underline_thickness = FT_TRUNC(underline_thickness);
-  val = underline_thickness;
+  val = FT_DESIGN_UNITS_TO_PIXELS(face->underline_thickness,
+                                  face->size->metrics.y_scale);
   return PR_TRUE;
 }
 
 PRBool
 nsFreeTypeFont::superscript_y(long &val)
 {
-  return PR_FALSE;
+  FT_Face face = getFTFace();
+  NS_ASSERTION(face, "failed to get face/size");
+  if (!face)
+    return PR_FALSE;
+
+  TT_OS2 *tt_os2;
+  mFt2->GetSfntTable(face, ft_sfnt_os2, (void**)&tt_os2);
+  NS_ASSERTION(tt_os2, "unable to get OS2 table");
+  if (!tt_os2)
+    return PR_FALSE;
+
+  val = FT_DESIGN_UNITS_TO_PIXELS(tt_os2->ySuperscriptYOffset,
+                                  face->size->metrics.y_scale);
+  return PR_TRUE;
 }
 
 PRBool
 nsFreeTypeFont::subscript_y(long &val)
 {
-  return PR_FALSE;
+  FT_Face face = getFTFace();
+  NS_ASSERTION(face, "failed to get face/size");
+  if (!face)
+    return PR_FALSE;
+
+  TT_OS2 *tt_os2;
+  mFt2->GetSfntTable(face, ft_sfnt_os2, (void**)&tt_os2);
+  NS_ASSERTION(tt_os2, "unable to get OS2 table");
+  if (!tt_os2)
+    return PR_FALSE;
+
+  val = FT_DESIGN_UNITS_TO_PIXELS(tt_os2->ySubscriptYOffset,
+                                  face->size->metrics.y_scale);
+
+  // some fonts have the sign wrong. it should be always positive.
+  val = (val < 0) ? -val : val;
+  return PR_TRUE;
 }
 
 //
