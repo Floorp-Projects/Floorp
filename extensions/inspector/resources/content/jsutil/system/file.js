@@ -1,91 +1,41 @@
 /*** -*- Mode: Javascript; tab-width: 2;
 
-The contents of this file are subject to the Mozilla Public
-License Version 1.1 (the "License"); you may not use this file
-except in compliance with the License. You may obtain a copy of
-the License at http://www.mozilla.org/MPL/
+ ***** BEGIN LICENSE BLOCK *****
+ Version: MPL 1.1/GPL 2.0/LGPL 2.1
 
-Software distributed under the License is distributed on an "AS
-IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-implied. See the License for the specific language governing
-rights and limitations under the License.
+ The contents of this file are subject to the Mozilla Public License Version
+ 1.1 (the "License"); you may not use this file except in compliance with
+ the License. You may obtain a copy of the License at
+ http://www.mozilla.org/MPL/
 
-The Original Code is Collabnet code.
-The Initial Developer of the Original Code is Collabnet.
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for the specific language governing rights and limitations under the
+ License.
 
-Portions created by Collabnet are
-Copyright (C) 2000 Collabnet.  All
-Rights Reserved.
+ The Original Code is Collabnet code. The Initial Developer of the Original Code is Collabnet.
 
-Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris, Eric Plaster
+ The Initial Developer of the Original Code is
+ Collabnet.
+ Portions created by the Initial Developer are Copyright (C) 2000
+ the Initial Developer. All Rights Reserved.
 
+ Contributor(s):
+   Pete Collins, Doug Turner, Brendan Eich, Warren Harris, Eric Plaster
 
- File API (The purpose of this file is to make it a little easier to do file IO from js) 
+ Alternatively, the contents of this file may be used under the terms of
+ either the GNU General Public License Version 2 or later (the "GPL"), or
+ the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ in which case the provisions of the GPL or the LGPL are applicable instead
+ of those above. If you wish to allow use of your version of this file only
+ under the terms of either the GPL or the LGPL, and not to allow others to
+ use your version of this file under the terms of the MPL, indicate your
+ decision by deleting the provisions above and replace them with the notice
+ and other provisions required by the GPL or the LGPL. If you do not delete
+ the provisions above, a recipient may use your version of this file under
+ the terms of any one of the MPL, the GPL or the LGPL.
 
-       file.js
-
- Function List
-
-    // Constructor
-    File(aPath)                        // creates the File object and sets the file path
-
-    open(aMode);                       // open a file handle for reading, writing or appending
-    close();                           // closes a file handle
-    exists();                          // check to see if a file exists
-    read();                            // returns the contents of a file
-    readline(aDone);                   // returns the next line in the file.  aDone == true at EOF
-    write(aContents, aPermissions);    // permissions are optional 
-    eof();                             // check 'end of file' status
-
-    // file attributes
-    permissions();                     // returns the files permissions
-    dateModified();                    // returns the last modified date in locale string
-    size();                            // returns the file size
-
-    // file string manipulation
-    path();                            // returns the path
-    leaf();                            // leaf is the endmost file string ex: foo.html in /myDir/foo.html
-    extension();                       // returns a file extension if there is one
-    dirPath()                          // returns the dir part of a path
-
-    // direct manipulation
-    nsIFIle()                          // returns an nsIFile obj 
-
-    // help!
-    help();                            // currently dumps a list of available functions 
-
- Instructions:
-
-       First include this js file in your xul file.  Next, create an File object:
-
-          var file = new File("/path/file.ext");
-
-       To see if the file exists, call the exists() member.  This is a good check before going into some
-       deep code to try and extract information from a non-existant file.
-
-       To open a file for reading<"r">, writing<"w"> or appending<"a">, 
-       just call: 
-
-          file.open("w");
-
-       where in this case you will be creating a new file called '/path/file.ext', with a mode of "w"
-       which means you want to write a new file.
-
-       If you want to read from a file, just call:
-
-          file.open("r");
-          var theFilesContents    = file.read();
-
-       The file contents will be returned to the caller so you can do something usefull with it.
-
-          file.close(); 
-
-       Calling 'close()' destroys any created objects.  If you forget to use file.close() no probs
-       all objects are discarded anyway.
-
-       Warning: these API's are not for religious types
-
-************/
+ ***** END LICENSE BLOCK ***** */
 
 /****************** Globals **********************/
 
