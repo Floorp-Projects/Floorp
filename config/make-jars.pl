@@ -1,18 +1,46 @@
 #!/perl
 
-# make-jars [-d <destPath>] < <manifest.jr>
+# make-jars [-d <destPath>] < <jar.mn>
 
 use Getopt::Std;
 use Cwd;
 
+sub RemoveAll
+{
+    my ($target) = @_;
+    my $next = "";
+    my $dpeth = 0;
+    if( -e $target )
+    {
+        if ( -d $target ) {
+            chdir($target);
+            foreach ( <*> ) {
+                $next = $_;
+                if (-d $next ) {
+                    RemoveAll($next);
+                    rmdir($next);
+                } else {
+                    unlink($next);
+                }
+            }
+            $depth = tr/$target// + 1;
+#print "depth = $depth\n";
+            for ($i = 1; $i < $depth; $i++) { chdir(".."); }
+            rmdir($target);  #will this remove the whole directory tree or just then end dir?
+        } else {
+            unlink($target);
+        }
+    }
+}
+
 sub cleanup
 {
-    my ($cleanupArgs) = @_;
+    my (%removeList) = @_;
+    my $target = "";
     print "+++ removing temp files\n";
-    @fileList = split(/ /,$cleanupArgs);
-    foreach $file (@fileList) {
-        if ($file) {
-            unlink($file) || die "error: can't remove '$file' $!";
+    foreach $target (keys %removeList) {
+        if ($target ) {
+#            RemoveAll($target);
         }
     }
 }
@@ -27,24 +55,32 @@ sub JarIt
 
 sub MkDirs
 {
-    my ($path) = @_;
+    my ($path, $created) = @_; 
+
     if ($path =~ /([\w\d.\-]+)[\\\/](.*)/) {
         my $dir = $1;
         $path = $2;
+
         if (!-e $dir) {
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-        }
+            $created = 1;
+#print "created = $created\n";
+        } 
         chdir $dir;
-        MkDirs($path);
+        MkDirs($path, $created);
         chdir "..";
     }
     else {
         my $dir = $path;
-        if ($dir eq "") { return 0; } 
+        if ($dir eq "") { return $created; } #print "returning $created\n"; return $created; } 
         if (!-e $dir) {
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
+            $created = 1;
+#print "created = $created\n";
         }
     }
+#print "returning $created\n";
+    return $created;
 }
 
 sub CopyFile
@@ -64,6 +100,7 @@ sub EnsureFileInDir
     my ($destPath, $srcPath) = @_;
 
     if (!-e $destPath) {
+print "need to copy $destPath\n";
         my $dir = "";
         my $file;
         if ($destPath =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
@@ -81,9 +118,16 @@ sub EnsureFileInDir
         if (!-e $file) {
             die "error: file '$file' doesn't exist\n";
         }
-        MkDirs($dir);
+        if ( MkDirs($dir, 0) ) {
+            $removeList{$dir} = 1;        
+#print "adding dir $dir \n"; 
+        }
         CopyFile($file, $destPath);
-        $cleanupArgs = "$cleanupArgs $destPath";
+
+        if ( !$dir ) {
+            $removeList{$destPath} = 1;
+#print "adding file $destPath \n";
+        }
         return 1;
     }
     return 0;
@@ -103,7 +147,7 @@ while (<>) {
         my $jarfile = "$destPath/$1"; 
 
         my $args = "";
-        $cleanupArgs = "";
+        %removeList = "";
 
         while (<>) {
             if (/^\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
@@ -121,12 +165,12 @@ while (<>) {
                 last;
             } else {
                 JarIt($jarfile, $args);
-                cleanup($cleanupArgs);
+                cleanup(%removeList);
                 goto start;
             }
         }
         JarIt($jarfile, $args);
-        cleanup($cleanupArgs);
+        cleanup(%removeList);
     } elsif (/^\s*\#.*$/) {
         # skip comments
     } elsif (/^\s*$/) {
