@@ -101,7 +101,7 @@ NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 void
 nsDeviceContextXlib::CommonInit(void)
 {
-  static nscoord dpi = 96;
+  static nscoord dpi = 100;
   static int initialized = 0;
 
   if (!initialized) {
