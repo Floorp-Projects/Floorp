@@ -164,8 +164,10 @@ PRInt32  nsComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
     }
   }
   NS_FREE_STR_BUF(val);
-#endif
   return index;
+#else
+  return -1;
+#endif
 }
 
 //-------------------------------------------------------------------------
