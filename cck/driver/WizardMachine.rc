@@ -135,10 +135,10 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Create New Configuration"
 FONT 8, "MS Sans Serif"
 BEGIN
+    EDITTEXT        IDC_EDIT1,7,20,218,13,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Create New Configuration",IDOK,109,98,94,14
     PUSHBUTTON      "Cancel",IDCANCEL,209,98,50,14
     LTEXT           "Name of new configuration:",IDC_STATIC,7,7,173,13
-    EDITTEXT        IDC_EDIT1,7,20,218,13,ES_AUTOHSCROLL
     LTEXT           "The CCK tool creates a new configuration directory in C:\\CCK\\Configs. Within your new configuration directory, the CCK tool creates a \\Workspace directory, for example, C:\\CCK\\Configs\\CustomBuild01\\Workspace.",
                     IDC_STATIC,7,39,253,26
     LTEXT           "You can use the Workspace directory as a convenient place in which to store your custom files.",
@@ -189,9 +189,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "New Dialog"
 FONT 8, "MS Sans Serif"
 BEGIN
+    EDITTEXT        IDC_EDIT1,7,20,152,13,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Create",IDOK,77,74,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,130,74,50,14
-    EDITTEXT        IDC_EDIT1,7,20,152,13,ES_AUTOHSCROLL
     LTEXT           "Please provide a name for the NCI file:",IDC_TITLE_TEXT,
                     7,7,173,13
     LTEXT           "Please note that the file name must end with .nci",
