@@ -162,7 +162,7 @@ Can't contact the directory server at $ldapserver:$ldapport</font>\n";
 <th colspan=2>Who</th><th>What</th>\n";
      print "<th>How to contact</th>\n" if $ldapserver;
 
-     foreach $p (@peoplelist) {
+     foreach $p (sort {uc($a) cmp uc($b)} @peoplelist) {
           my ($uname, $namepart, $extra) = ('', '', '');
 
           if (exists($closedcheckin{$p})) {
