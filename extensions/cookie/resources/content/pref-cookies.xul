@@ -97,12 +97,6 @@
     if (parent.hPrefWindow.getPrefIsLocked(lifetimeDays.getAttribute("prefstring")) )
       lifetimeDays.disabled = true;
   }
-
-  function viewTutorial() {
-    window.openDialog
-      ("chrome://communicator/content/wallet/privacy.xul","tutorial","modal=no,chrome,resizable=yes,height=400,width=600", 0);
-  }  
-
   ]]>
   </script>
 
@@ -150,8 +144,5 @@
      <button label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"
 		     id="viewCookieButton"
 		     prefstring="pref.advanced.cookies.disable_button.view_cookies"/>
-     <button label="&viewTutorial.label;" accesskey="&viewTutorial.accesskey;" oncommand="viewTutorial();"
-             id="moreInformation"
-             prefstring="pref.advanced.cookies.disable_button.more_info"/>
    </hbox>
 </page>
