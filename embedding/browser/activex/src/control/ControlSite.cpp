@@ -39,8 +39,9 @@
 
 #include "StdAfx.h"
 
-#include "ControlSite.h"
+#include <Objsafe.h>
 
+#include "ControlSite.h"
 
 std::list<CControlSite *> CControlSite::m_cControlList;
 
@@ -93,6 +94,34 @@ CControlSite::~CControlSite()
 // Helper method checks whether a class implements a particular category
 HRESULT CControlSite::ClassImplementsCategory(const CLSID &clsid, const CATID &catid)
 {
+    // Test if there is a CLSID entry. If there isn't then obviously
+    // the object doesn't exist and therefore doesn't implement any category.
+    // In this situation, the function returns REGDB_E_CLASSNOTREG.
+
+    CRegKey key;
+    if (key.Open(HKEY_CLASSES_ROOT, _T("CLSID"), KEY_READ) != ERROR_SUCCESS)
+    {
+        // Must fail if we can't even open this!
+        return E_FAIL;
+    }
+    LPOLESTR szCLSID = NULL;
+    if (FAILED(StringFromCLSID(clsid, &szCLSID)))
+    {
+        return E_FAIL;
+    }
+    USES_CONVERSION;
+    CRegKey keyCLSID;
+    LONG lResult = keyCLSID.Open(key, W2CT(szCLSID), KEY_READ);
+    CoTaskMemFree(szCLSID);
+    if (lResult != ERROR_SUCCESS)
+    {
+        // Class doesn't exist
+        return REGDB_E_CLASSNOTREG;
+    }
+    keyCLSID.Close();
+
+    // CLSID exists, so try checking what categories it implements
+
     CIPtr(ICatInformation) spCatInfo;
     HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (LPVOID*) &spCatInfo);
     if (spCatInfo == NULL)
@@ -136,7 +165,8 @@ static const CATID CATID_SafeForScripting =
 
 // Create the specified control, optionally providing properties to initialise
 // it with and a name.
-HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl)
+HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl,
+    LPCWSTR szCodebase, IBindCtx *pBindContext)
 {
     NG_TRACE_METHOD(CControlSite::Create);
 
@@ -144,20 +174,167 @@ HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl)
     m_ParameterList = pl;
 
     // See if object is script safe
-    if (m_bSafeForScriptingObjectsOnly &&
-        ClassImplementsCategory(clsid, CATID_SafeForScripting) != S_OK)
+    BOOL checkForObjectSafety = FALSE;
+    if (m_bSafeForScriptingObjectsOnly)
     {
-        return E_FAIL;
+        HRESULT hrClass = ClassImplementsCategory(clsid, CATID_SafeForScripting);
+        if (hrClass == REGDB_E_CLASSNOTREG && szCodebase)
+        {
+            // Class doesn't exist, so allow code below to fetch it
+        }
+        else if (FAILED(hrClass))
+        {
+            // The class is not flagged as safe for scripting, so
+            // we'll have to create it to ask it if its safe.
+            checkForObjectSafety = TRUE;
+        }
     }
 
     // Create the object
-    HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_IUnknown, (void **) &m_spObject);
-    if (FAILED(hr))
+    CComPtr<IUnknown> spObject;
+    HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_IUnknown, (void **) &spObject);
+    if (SUCCEEDED(hr) && checkForObjectSafety)
     {
-        return E_FAIL;
+        // The control was created but it didn't check out as safe so
+        // it must be asked if its safe for scripting.
+        CComQIPtr<IObjectSafety> spObjectSafety = spObject;
+        if (!spObjectSafety)
+        {
+            return E_FAIL;
+        }
+        DWORD dwSupported = 0; // Supported options (mask)
+        DWORD dwEnabled = 0; // Enabled options
+
+        // Assume scripting via IDispatch
+        if (FAILED(spObjectSafety->GetInterfaceSafetyOptions(
+                __uuidof(IDispatch), &dwSupported, &dwEnabled)))
+        {
+            // Interface is not safe or failure.
+            return E_FAIL;
+        }
+
+        // Test if safe for scripting
+        if (!(dwEnabled & dwSupported) & INTERFACESAFE_FOR_UNTRUSTED_CALLER)
+        {
+            return E_FAIL;
+        }
+        // Drop through, success!
     }
 
-    return S_OK;
+    // Do we need to download the control?
+    if (FAILED(hr) && szCodebase)
+    {
+        wchar_t *szURL = NULL;
+
+        // Test if the code base ends in #version=a,b,c,d
+        DWORD dwFileVersionMS = 0xffffffff;
+        DWORD dwFileVersionLS = 0xffffffff;
+        wchar_t *szHash = wcsrchr(szCodebase, wchar_t('#'));
+        if (szHash)
+        {
+            if (wcsnicmp(szHash, L"#version=", 9) == 0)
+            {
+                int a, b, c, d;
+                if (swscanf(szHash + 9, L"%d,%d,%d,%d", &a, &b, &c, &d) == 4)
+                {
+                    dwFileVersionMS = MAKELONG(b,a);
+                    dwFileVersionLS = MAKELONG(d,c);
+                }
+            }
+            szURL = _wcsdup(szCodebase);
+            // Terminate at the hash mark
+            if (szURL)
+                szURL[szHash - szCodebase] = wchar_t('\0');
+        }
+        else
+        {
+            szURL = _wcsdup(szCodebase);
+        }
+        if (!szURL)
+            return E_OUTOFMEMORY;
+
+        CComPtr<IBindCtx> spBindContext; 
+        CComPtr<IBindStatusCallback> spBindStatusCallback;
+        CComPtr<IBindStatusCallback> spOldBSC;
+
+        // Create our own bind context or use the one provided?
+        BOOL useInternalBSC = FALSE;
+        if (!pBindContext)
+        {
+            useInternalBSC = TRUE;
+            hr = CreateBindCtx(0, &spBindContext);
+            if (FAILED(hr))
+            {
+                free(szURL);
+                return hr;
+            }
+            spBindStatusCallback = dynamic_cast<IBindStatusCallback *>(this);
+            hr = RegisterBindStatusCallback(spBindContext, spBindStatusCallback, &spOldBSC, 0);
+            if (FAILED(hr))
+            {
+                free(szURL);
+                return hr;
+            }
+        }
+        else
+        {
+            spBindContext = pBindContext;
+        }
+
+        hr = CoGetClassObjectFromURL(clsid, szURL, dwFileVersionMS, dwFileVersionLS,
+            NULL, spBindContext, CLSCTX_ALL, NULL, IID_IUnknown, (void **) &m_spObject);
+        
+        free(szURL);
+        
+        // Handle the internal binding synchronously so the object exists
+        // or an error code is available when the method returns.
+        if (useInternalBSC)
+        {
+            if (MK_S_ASYNCHRONOUS == hr)
+            {
+                m_bBindingInProgress = TRUE;
+                m_hrBindResult = E_FAIL;
+
+                // Spin around waiting for binding to complete
+                HANDLE hFakeEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+                while (m_bBindingInProgress)
+                {
+                    MSG msg;
+                    // Process pending messages
+                    while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+                    {
+                        if (!::GetMessage(&msg, NULL, 0, 0))
+                        {
+                            m_bBindingInProgress = FALSE;
+                            break;
+                        }
+                        ::TranslateMessage(&msg);
+                        ::DispatchMessage(&msg);
+                    }
+                    if (!m_bBindingInProgress)
+                        break;
+                    // Sleep for a bit or the next msg to appear
+                    ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 500, QS_ALLEVENTS);
+                }
+                ::CloseHandle(hFakeEvent);
+
+                // Set the result
+                hr = m_hrBindResult;
+            }
+
+            // Destroy the bind status callback & context
+            if (spBindStatusCallback)
+            {
+                RevokeBindStatusCallback(spBindContext, spBindStatusCallback);
+                spBindContext.Release();
+            }
+        }
+    }
+
+    if (spObject)
+        m_spObject = spObject;
+
+    return hr;
 }
 
 
@@ -178,7 +355,6 @@ HRESULT CControlSite::Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInit
     // Object must have been created
     if (m_spObject == NULL)
     {
-        NG_ASSERT(0);
         return E_UNEXPECTED;
     }
 
@@ -212,13 +388,14 @@ HRESULT CControlSite::Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInit
     // If there is a parameter list for the object and no init stream then
     // create one here.
     CPropertyBagInstance *pPropertyBag = NULL;
-    if (pInitStream == NULL && m_ParameterList.size() >= 1)
+    if (pInitStream == NULL && m_ParameterList.GetSize() > 0)
     {
         CPropertyBagInstance::CreateInstance(&pPropertyBag);
         pPropertyBag->AddRef();
-        for (PropertyList::const_iterator i = m_ParameterList.begin(); i != m_ParameterList.end(); i++)
+        for (unsigned long i = 0; i < m_ParameterList.GetSize(); i++)
         {
-            pPropertyBag->Write((*i).szName, (VARIANT *) &(*i).vValue);
+            pPropertyBag->Write(m_ParameterList.GetNameOf(i),
+                const_cast<VARIANT *>(m_ParameterList.GetValueOf(i)));
         }
         pInitStream = (IPersistPropertyBag *) pPropertyBag;
     }
@@ -584,7 +761,13 @@ HRESULT STDMETHODCALLTYPE CControlSite::GetMoniker(/* [in] */ DWORD dwAssign, /*
 
 HRESULT STDMETHODCALLTYPE CControlSite::GetContainer(/* [out] */ IOleContainer __RPC_FAR *__RPC_FAR *ppContainer)
 {
-    return E_NOINTERFACE;
+    if (!ppContainer) return E_INVALIDARG;
+    *ppContainer = m_spContainer;
+    if (*ppContainer)
+    {
+        (*ppContainer)->AddRef();
+    }
+    return (*ppContainer) ? S_OK : E_NOINTERFACE;
 }
 
 
@@ -1073,4 +1256,76 @@ HRESULT STDMETHODCALLTYPE CControlSite::ShowPropertyFrame(void)
 {
     return E_NOTIMPL;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// IBindStatusCallback implementation
+
+HRESULT STDMETHODCALLTYPE CControlSite::OnStartBinding(DWORD dwReserved, 
+                                                       IBinding __RPC_FAR *pib)
+{
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CControlSite::GetPriority(LONG __RPC_FAR *pnPriority)
+{
+    return S_OK;
+}
+    
+HRESULT STDMETHODCALLTYPE CControlSite::OnLowResource(DWORD reserved)
+{
+    return S_OK;
+}
+    
+HRESULT STDMETHODCALLTYPE CControlSite::OnProgress(ULONG ulProgress, 
+                                        ULONG ulProgressMax, 
+                                        ULONG ulStatusCode, 
+                                        LPCWSTR szStatusText)
+{
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CControlSite::OnStopBinding(HRESULT hresult, LPCWSTR szError)
+{
+    m_bBindingInProgress = FALSE;
+    m_hrBindResult = hresult;
+    return S_OK;
+}
+    
+HRESULT STDMETHODCALLTYPE CControlSite::GetBindInfo(DWORD __RPC_FAR *pgrfBINDF, 
+                                                    BINDINFO __RPC_FAR *pbindInfo)
+{
+    *pgrfBINDF = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE |
+                 BINDF_GETNEWESTVERSION | BINDF_NOWRITECACHE;
+    pbindInfo->cbSize = sizeof(BINDINFO);
+    pbindInfo->szExtraInfo = NULL;
+    memset(&pbindInfo->stgmedData, 0, sizeof(STGMEDIUM));
+    pbindInfo->grfBindInfoF = 0;
+    pbindInfo->dwBindVerb = 0;
+    pbindInfo->szCustomVerb = NULL;
+    return S_OK;
+}
+    
+HRESULT STDMETHODCALLTYPE CControlSite::OnDataAvailable(DWORD grfBSCF, 
+                                                        DWORD dwSize, 
+                                                        FORMATETC __RPC_FAR *pformatetc, 
+                                                        STGMEDIUM __RPC_FAR *pstgmed)
+{
+    return E_NOTIMPL;
+}
+  
+HRESULT STDMETHODCALLTYPE CControlSite::OnObjectAvailable(REFIID riid, 
+                                                          IUnknown __RPC_FAR *punk)
+{
+    return S_OK;
+}
+
+// IWindowForBindingUI
+HRESULT STDMETHODCALLTYPE CControlSite::GetWindow(
+    /* [in] */ REFGUID rguidReason,
+    /* [out] */ HWND *phwnd)
+{
+    *phwnd = NULL;
+    return S_OK;
+}
+
 

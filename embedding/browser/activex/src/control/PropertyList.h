@@ -20,8 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Adam Lock <adamlock@netscape.com>
  *
+ *   Adam Lock <adamlock@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,28 +39,120 @@
 #ifndef PROPERTYLIST_H
 #define PROPERTYLIST_H
 
+// A simple array class for managing name/value pairs typically fed to controls
+// during initialization by IPersistPropertyBag
 
-// Property is a name,variant pair held by the browser. In IE, properties
-// offer a primitive way for DHTML elements to talk back and forth with
-// the host app.
-
-struct Property
+class PropertyList
 {
-  CComBSTR szName;
-  CComVariant vValue;
+    struct Property {
+        BSTR    bstrName;
+        VARIANT vValue;
+    } *mProperties;
+    unsigned long mListSize;
+    unsigned long mMaxListSize;
+
+    bool EnsureMoreSpace()
+    {
+        // Ensure enough space exists to accomodate a new item
+        const unsigned long kGrowBy = 10;
+        if (!mProperties)
+        {
+            mProperties = (Property *) malloc(sizeof(Property) * kGrowBy);
+            if (!mProperties)
+                return false;
+            mMaxListSize = kGrowBy;
+        }
+        else if (mListSize == mMaxListSize)
+        {
+            Property *pNewProperties;
+            pNewProperties = (Property *) realloc(mProperties, sizeof(Property) * (mMaxListSize + kGrowBy));
+            if (!pNewProperties)
+                return false;
+            mProperties = pNewProperties;
+            mMaxListSize += kGrowBy;
+        }
+        return true;
+    }
+
+public:
+    PropertyList() :
+      mProperties(NULL),
+      mListSize(0),
+      mMaxListSize(0)
+    {
+    }
+    ~PropertyList()
+    {
+    }
+    void Clear()
+    {
+        if (mProperties)
+        {
+            for (unsigned long i = 0; i < mListSize; i++)
+            {
+                SysFreeString(mProperties[i].bstrName); // Safe even if NULL
+                VariantClear(&mProperties[i].vValue);
+            }
+            free(mProperties);
+            mProperties = NULL;
+        }
+        mListSize = 0;
+        mMaxListSize = 0;
+    }
+    unsigned long GetSize() const
+    {
+        return mListSize;
+    }
+    const BSTR GetNameOf(unsigned long nIndex) const
+    {
+        if (nIndex > mListSize)
+        {
+            return NULL;
+        }
+        return mProperties[nIndex].bstrName;
+    }
+    const VARIANT *GetValueOf(unsigned long nIndex) const
+    {
+        if (nIndex > mListSize)
+        {
+            return NULL;
+        }
+        return &mProperties[nIndex].vValue;
+    }
+    bool AddOrReplaceNamedProperty(const BSTR bstrName, const VARIANT &vValue)
+    {
+        if (!bstrName)
+            return false;
+        for (unsigned long i = 0; i < GetSize(); i++)
+        {
+            // Case insensitive
+            if (wcsicmp(mProperties[i].bstrName, bstrName) == 0)
+            {
+                return SUCCEEDED(
+                    VariantCopy(&mProperties[i].vValue, const_cast<VARIANT *>(&vValue)));
+            }
+        }
+        return AddNamedProperty(bstrName, vValue);
+    }
+    bool AddNamedProperty(const BSTR bstrName, const VARIANT &vValue)
+    {
+        if (!bstrName || !EnsureMoreSpace())
+            return false;
+        Property *pProp = &mProperties[mListSize];
+        pProp->bstrName = ::SysAllocString(bstrName);
+        if (!pProp->bstrName)
+        {
+            return false;
+        }
+        VariantInit(&pProp->vValue);
+        if (FAILED(VariantCopy(&pProp->vValue, const_cast<VARIANT *>(&vValue))))
+        {
+            SysFreeString(pProp->bstrName);
+            return false;
+        }
+        mListSize++;
+        return true;
+    }
 };
-
-// A list of properties
-typedef std::vector<Property> PropertyList;
-
-
-// DEVNOTE: These operators are required since the unpatched VC++ 5.0
-//          generates code even for unreferenced template methods in
-//          the file <vector>  and will give compiler errors without
-//          them. Service Pack 1 and above fixes this problem
-
-int operator <(const Property&, const Property&);
-int operator ==(const Property&, const Property&); 
-
 
 #endif

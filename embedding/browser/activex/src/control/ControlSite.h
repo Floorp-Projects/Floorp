@@ -20,8 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Adam Lock <adamlock@netscape.com>
  *
+ *   Adam Lock <adamlock@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,7 +57,9 @@
     COM_INTERFACE_ENTRY_IID(IID_IAdviseSink2, IAdviseSinkEx) \
     COM_INTERFACE_ENTRY_IID(IID_IAdviseSinkEx, IAdviseSinkEx) \
     COM_INTERFACE_ENTRY(IOleCommandTarget) \
-    COM_INTERFACE_ENTRY(IServiceProvider)
+    COM_INTERFACE_ENTRY(IServiceProvider) \
+    COM_INTERFACE_ENTRY(IBindStatusCallback) \
+    COM_INTERFACE_ENTRY(IWindowForBindingUI)
 
 //
 // Class for hosting an ActiveX control
@@ -89,7 +91,9 @@ class CControlSite :    public CComObjectRootEx<CComSingleThreadModel>,
                         public IAdviseSinkEx,
                         public IDispatch,
                         public IServiceProvider,
-                        public IOleCommandTargetImpl<CControlSite>
+                        public IOleCommandTargetImpl<CControlSite>,
+                        public IBindStatusCallback,
+                        public IWindowForBindingUI
 {
 public:
 // Site management values
@@ -113,6 +117,10 @@ public:
     unsigned m_bWindowless:1;
     // Flag indicating if only safely scriptable controls are allowed
     unsigned m_bSafeForScriptingObjectsOnly:1;
+    // Pointer to an externally registered service provider
+    CComPtr<IServiceProvider> m_spServiceProvider;
+    // Pointer to the OLE container
+    CComPtr<IOleContainer> m_spContainer;
 
 protected:
 // Pointers to object interfaces
@@ -126,12 +134,16 @@ protected:
     CComQIPtr<IOleInPlaceObject, &IID_IOleInPlaceObject> m_spIOleInPlaceObject;
     // Pointer to object's IOleInPlaceObjectWindowless interface
     CComQIPtr<IOleInPlaceObjectWindowless, &IID_IOleInPlaceObjectWindowless> m_spIOleInPlaceObjectWindowless;
-    // Pointer to an externally registered service provider
-    CComPtr<IServiceProvider> m_spServiceProvider;
     // CLSID of the control
     CLSID m_clsid;
     // Parameter list
     PropertyList m_ParameterList;
+
+// Binding variables
+    // Flag indicating whether binding is in progress
+    unsigned m_bBindingInProgress;
+    // Result from the binding operation
+    HRESULT m_hrBindResult;
 
 // Double buffer drawing variables used for windowless controls
     // Area of buffer
@@ -195,7 +207,8 @@ END_OLECOMMAND_TABLE()
 
 // Object creation and management functions
     // Creates and initialises an object
-    virtual HRESULT Create(REFCLSID clsid, PropertyList &pl = PropertyList());
+    virtual HRESULT Create(REFCLSID clsid, PropertyList &pl = PropertyList(),
+        LPCWSTR szCodebase = NULL, IBindCtx *pBindContext = NULL);
     // Attaches the object to the site
     virtual HRESULT Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInitStream = NULL);
     // Detaches the object from the site
@@ -216,6 +229,10 @@ END_OLECOMMAND_TABLE()
     virtual void SetServiceProvider(IServiceProvider *pSP)
     {
         m_spServiceProvider = pSP;
+    }
+    virtual void SetContainer(IOleContainer *pContainer)
+    {
+        m_spContainer = pContainer;
     }
 
 // Methods to set ambient properties
@@ -316,6 +333,19 @@ END_OLECOMMAND_TABLE()
     virtual HRESULT STDMETHODCALLTYPE TranslateAccelerator(/* [in] */ MSG __RPC_FAR *pMsg, /* [in] */ DWORD grfModifiers);
     virtual HRESULT STDMETHODCALLTYPE OnFocus(/* [in] */ BOOL fGotFocus);
     virtual HRESULT STDMETHODCALLTYPE ShowPropertyFrame( void);
+
+// IBindStatusCallback
+    virtual HRESULT STDMETHODCALLTYPE OnStartBinding(/* [in] */ DWORD dwReserved, /* [in] */ IBinding __RPC_FAR *pib);
+    virtual HRESULT STDMETHODCALLTYPE GetPriority(/* [out] */ LONG __RPC_FAR *pnPriority);
+    virtual HRESULT STDMETHODCALLTYPE OnLowResource(/* [in] */ DWORD reserved);
+    virtual HRESULT STDMETHODCALLTYPE OnProgress(/* [in] */ ULONG ulProgress, /* [in] */ ULONG ulProgressMax, /* [in] */ ULONG ulStatusCode, /* [in] */ LPCWSTR szStatusText);
+    virtual HRESULT STDMETHODCALLTYPE OnStopBinding(/* [in] */ HRESULT hresult, /* [unique][in] */ LPCWSTR szError);
+    virtual /* [local] */ HRESULT STDMETHODCALLTYPE GetBindInfo( /* [out] */ DWORD __RPC_FAR *grfBINDF, /* [unique][out][in] */ BINDINFO __RPC_FAR *pbindinfo);
+    virtual /* [local] */ HRESULT STDMETHODCALLTYPE OnDataAvailable(/* [in] */ DWORD grfBSCF, /* [in] */ DWORD dwSize, /* [in] */ FORMATETC __RPC_FAR *pformatetc, /* [in] */ STGMEDIUM __RPC_FAR *pstgmed);
+    virtual HRESULT STDMETHODCALLTYPE OnObjectAvailable(/* [in] */ REFIID riid, /* [iid_is][in] */ IUnknown __RPC_FAR *punk);
+
+// IWindowForBindingUI
+    virtual HRESULT STDMETHODCALLTYPE GetWindow(/* [in] */ REFGUID rguidReason, /* [out] */ HWND *phwnd);
 };
 
 typedef CComObject<CControlSite> CControlSiteInstance;
