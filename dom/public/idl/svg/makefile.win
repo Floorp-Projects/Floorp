@@ -27,39 +27,49 @@ DEPTH=..\..\..\..
 MODULE=dom
 XPIDL_MODULE=dom_svg
 
-XPIDLSRCS =					                            \
-             .\nsIDOMSVGAnimatedLength.idl              \
-	.\nsIDOMSVGAnimatedPathData.idl				\
-             .\nsIDOMSVGAnimatedPoints.idl              \
-	.\nsIDOMSVGAnimPresAspRatio.idl				\
-             .\nsIDOMSVGAnimatedRect.idl                \
-	.\nsIDOMSVGAnimTransformList.idl			\
-	.\nsIDOMSVGCircleElement.idl				\
-	.\nsIDOMSVGDocument.idl					\
-	         .\nsIDOMSVGElement.idl		                \
-	.\nsIDOMSVGEllipseElement.idl		        \
-	.\nsIDOMSVGFitToViewBox.idl				\
-	.\nsIDOMSVGForeignObjectElem.idl			\
-	.\nsIDOMSVGGElement.idl					\
-	         .\nsIDOMSVGLength.idl		                \
-	         .\nsIDOMSVGLineElement.idl		            \
-	         .\nsIDOMSVGLocatable.idl		            \
-	         .\nsIDOMSVGMatrix.idl		                \
-	.\nsIDOMSVGPathElement.idl				\
-	.\nsIDOMSVGPathSeg.idl					\
-	.\nsIDOMSVGPathSegList.idl				\
-	         .\nsIDOMSVGPoint.idl		                \
-	         .\nsIDOMSVGPointList.idl		            \
-	         .\nsIDOMSVGPolygonElement.idl              \
-	         .\nsIDOMSVGPolylineElement.idl             \
-	.\nsIDOMSVGPresAspectRatio.idl				\
-	         .\nsIDOMSVGRect.idl                        \
-	         .\nsIDOMSVGRectElement.idl		            \
-             .\nsIDOMSVGSVGElement.idl                  \
-	         .\nsIDOMSVGStylable.idl		            \
-	         .\nsIDOMSVGTransform.idl                   \
-             .\nsIDOMSVGTransformList.idl               \
-	.\nsIDOMSVGTransformable.idl				\
-	         $(NULL)
+XPIDLSRCS =                                     \
+	.\nsIDOMSVGAnimatedEnumeration.idl      \
+	.\nsIDOMSVGAnimatedLength.idl           \
+	.\nsIDOMSVGAnimatedLengthList.idl       \
+	.\nsIDOMSVGAnimatedNumberList.idl       \
+	.\nsIDOMSVGAnimatedPathData.idl         \
+	.\nsIDOMSVGAnimatedPoints.idl           \
+	.\nsIDOMSVGAnimPresAspRatio.idl         \
+	.\nsIDOMSVGAnimatedRect.idl             \
+	.\nsIDOMSVGAnimTransformList.idl        \
+	.\nsIDOMSVGCircleElement.idl            \
+	.\nsIDOMSVGDocument.idl                 \
+	.\nsIDOMSVGElement.idl                  \
+	.\nsIDOMSVGEllipseElement.idl           \
+	.\nsIDOMSVGFitToViewBox.idl             \
+	.\nsIDOMSVGForeignObjectElem.idl        \
+	.\nsIDOMSVGGElement.idl                 \
+	.\nsIDOMSVGLength.idl                   \
+	.\nsIDOMSVGLengthList.idl               \
+	.\nsIDOMSVGLineElement.idl              \
+	.\nsIDOMSVGLocatable.idl                \
+	.\nsIDOMSVGMatrix.idl                   \
+	.\nsIDOMSVGNumber.idl                   \
+	.\nsIDOMSVGNumberList.idl               \
+	.\nsIDOMSVGPathElement.idl              \
+	.\nsIDOMSVGPathSeg.idl                  \
+	.\nsIDOMSVGPathSegList.idl              \
+	.\nsIDOMSVGPoint.idl                    \
+	.\nsIDOMSVGPointList.idl                \
+	.\nsIDOMSVGPolygonElement.idl           \
+	.\nsIDOMSVGPolylineElement.idl          \
+	.\nsIDOMSVGPresAspectRatio.idl          \
+	.\nsIDOMSVGRect.idl                     \
+	.\nsIDOMSVGRectElement.idl              \
+	.\nsIDOMSVGSVGElement.idl               \
+	.\nsIDOMSVGStylable.idl                 \
+	.\nsIDOMSVGTextContentElement.idl       \
+	.\nsIDOMSVGTextElement.idl              \
+	.\nsIDOMSVGTextPositioningElem.idl      \
+	.\nsIDOMSVGTransform.idl                \
+	.\nsIDOMSVGTransformList.idl            \
+	.\nsIDOMSVGTransformable.idl            \
+	.\nsIDOMSVGTSpanElement.idl             \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
