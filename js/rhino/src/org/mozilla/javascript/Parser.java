@@ -102,6 +102,7 @@ class Parser {
         fn_sourceTop = 0;
         fn_functionNumber = 0;
         fn_vars = new VariableTable();
+        fn_funcExprStmNames = null;
 
         int tt;          // last token from getToken();
         int baseLineno = ts.getLineno();  // line number where source starts
@@ -240,6 +241,7 @@ class Parser {
         int saved_functionNumber = fn_functionNumber;
         VariableTable saved_vars = fn_vars;
         VariableTable new_vars = new VariableTable();
+        ObjArray saved_funcExprStmNames = fn_funcExprStmNames;
 
         Object body;
         String source;
@@ -283,11 +285,15 @@ class Parser {
 
             // name might be null;
             source = sourceToString(saved_sourceTop);
+
+            // Remove name clashes for nested functions
+            checkVariables(new_vars, fn_funcExprStmNames);
         }
         finally {
             fn_sourceTop = saved_sourceTop;
             fn_functionNumber = saved_functionNumber;
             fn_vars = saved_vars;
+            fn_funcExprStmNames = saved_funcExprStmNames;
         }
 
         Object pn;
@@ -298,6 +304,14 @@ class Parser {
                                    source,
                                    functionType);
             if (functionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
+                // Record the name to check for possible var and
+                // function expression statement name clashes
+                if (name != null && name.length()!= 0) {
+                    if (fn_funcExprStmNames == null) {
+                        fn_funcExprStmNames = new ObjArray();
+                    }
+                    fn_funcExprStmNames.add(name);
+                }
                 // The following can be removed but then code generators should
                 // be modified not to push on the stack function expression
                 // statements
@@ -326,6 +340,19 @@ class Parser {
             }
         }
         return pn;
+    }
+
+    private static void
+    checkVariables(VariableTable vars, ObjArray funcExprStmNames)
+    {
+// Remove all variables corresponding to function expression statements
+        if (funcExprStmNames != null) {
+            int N = funcExprStmNames.size();
+            for (int i = 0; i != N; ++i) {
+                String name = (String)funcExprStmNames.get(i);
+                vars.removeLocal(name);
+            }
+        }
     }
 
     private Object statements(TokenStream ts)
@@ -2282,6 +2309,9 @@ class Parser {
 
 // Nested function number
     private int fn_functionNumber;
+
+// Nested function number
+    private ObjArray fn_funcExprStmNames;
 
     private VariableTable fn_vars;
 

@@ -64,9 +64,29 @@ public class NodeTransformer {
         loopEnds = new ObjArray();
         inFunction = tree.getType() == TokenStream.FUNCTION;
         VariableTable vars = getVariableTable(tree);
-        checkVariables(tree, vars);
         if (inFunction) {
-            ((FunctionNode)tree).markVariableTableReady();
+            FunctionNode fn = (FunctionNode)tree;
+            if (fn.getFunctionType() == FunctionNode.FUNCTION_EXPRESSION) {
+                String name = fn.getFunctionName();
+                if (name != null && name.length() != 0
+                    && !vars.hasVariable(name))
+                {
+                    // A function expression needs to have its name as a
+                    // variable (if it isn't already allocated as a variable).
+                    // See ECMA Ch. 13.  We add code to the beginning of the
+                    // function to initialize a local variable of the
+                    // function's name to the function value.
+                    vars.addLocal(name);
+                    Node block = tree.getLastChild();
+                    Node setFn = new Node(TokenStream.POP,
+                                    new Node(TokenStream.SETVAR,
+                                        Node.newString(name),
+                                        new Node(TokenStream.PRIMARY,
+                                                 TokenStream.THISFN)));
+                    block.addChildrenToFront(setFn);
+                }
+            }
+            fn.markVariableTableReady();
         }
 
         // to save against upchecks if no finally blocks are used.
@@ -473,50 +493,6 @@ public class NodeTransformer {
         }
 
         return tree;
-    }
-
-    private void checkVariables(Node tree, VariableTable vars) {
-        // OPT: a whole pass to check variables seems expensive.
-        // Could special case to go into statements only.
-        boolean inFunction = (tree.getType() == TokenStream.FUNCTION);
-        PreorderNodeIterator iter = new PreorderNodeIterator();
-        for (iter.start(tree); !iter.done(); iter.next()) {
-            Node node = iter.getCurrent();
-            int nodeType = node.getType();
-            if (inFunction && nodeType == TokenStream.FUNCTION &&
-                node != tree &&
-                ((FunctionNode) node.getProp(Node.FUNCTION_PROP)).getFunctionType() ==
-                    FunctionNode.FUNCTION_EXPRESSION_STATEMENT)
-            {
-                // In a function with both "var x" and "function x",
-                // disregard the var statement, independent of order.
-                String name = node.getString();
-                if (name == null)
-                    continue;
-                vars.removeLocal(name);
-            }
-        }
-        if (inFunction) {
-            FunctionNode fn = (FunctionNode)tree;
-            String name = fn.getFunctionName();
-            if (fn.getFunctionType() == FunctionNode.FUNCTION_EXPRESSION
-                && name != null && name.length() > 0 && !vars.hasVariable(name))
-            {
-                // A function expression needs to have its name as a variable
-                // (if it isn't already allocated as a variable). See
-                // ECMA Ch. 13.  We add code to the beginning of the function
-                // to initialize a local variable of the function's name
-                // to the function value.
-                vars.addLocal(name);
-                Node block = tree.getLastChild();
-                Node setFn = new Node(TokenStream.POP,
-                                new Node(TokenStream.SETVAR,
-                                    Node.newString(name),
-                                    new Node(TokenStream.PRIMARY,
-                                             TokenStream.THISFN)));
-                block.addChildrenToFront(setFn);
-            }
-        }
     }
 
     protected void visitNew(Node node, Node tree) {
