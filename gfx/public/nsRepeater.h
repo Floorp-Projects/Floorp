@@ -27,13 +27,15 @@
 
 class EventRecord;
 
-class NS_NET Repeater {
+class NS_NET Repeater
+{
   public:
   
     Repeater();
     virtual ~Repeater();
     
-    virtual	void RepeatAction(const EventRecord &aMacEvent) = 0;
+    virtual	void RepeatAction(const EventRecord &aMacEvent) {}
+    virtual	void IdleAction(const EventRecord &aMacEvent) {}
     
     void StartRepeating();
     void StopRepeating();

@@ -24,26 +24,26 @@
 /* to build this, build mozilla/netwerk/util/netwerkUtil.mcp
  * I hope I'm the last person to waste 30 minutes looking for the project that builds this file */
 #pragma export on
+
 #include "nsRepeater.h"
 
-Repeater* Repeater::sRepeaters = 0;
-Repeater* Repeater::sIdlers = 0;
+Repeater* Repeater::sRepeaters = NULL;
+Repeater* Repeater::sIdlers = NULL;
+
 Repeater::Repeater()
+: mRepeating(false)
+, mIdling(false)
+, mPrevRptr(NULL)
+, mNextRptr(NULL)
+, mPrevIdlr(NULL)
+, mNextIdlr(NULL)
 {
-  mRepeating = false;
-  mIdling = false;
-  mPrevRptr = 0;
-  mNextRptr = 0;
-  mPrevIdlr = 0;
-  mNextIdlr = 0;
-  
 }
 
 Repeater::~Repeater()
 {
   if (mRepeating) RemoveFromRepeatList();
   if (mIdling) RemoveFromIdleList();
-  
 }
 
 // protected helper functs
@@ -65,8 +65,8 @@ void Repeater::RemoveFromRepeatList()
   if (sRepeaters == this) sRepeaters = mNextRptr;
   if (mPrevRptr) mPrevRptr->mNextRptr = mNextRptr;
   if (mNextRptr) mNextRptr->mPrevRptr = mPrevRptr;
-  mPrevRptr = 0;
-  mNextRptr = 0;
+  mPrevRptr = NULL;
+  mNextRptr = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -86,8 +86,8 @@ void Repeater::RemoveFromIdleList()
   if (sIdlers == this) sIdlers = mNextIdlr;
   if (mPrevIdlr) mPrevIdlr->mNextIdlr = mNextIdlr;
   if (mNextIdlr) mNextIdlr->mPrevIdlr = mPrevIdlr;
-  mPrevIdlr = 0;
-  mNextIdlr = 0;
+  mPrevIdlr = NULL;
+  mNextIdlr = NULL;
 }
 
 // repeater methods
@@ -148,13 +148,10 @@ void Repeater::DoIdlers(const EventRecord &aMacEvent)
   while (theIdler)
   {
     Repeater* nextIdler = theIdler->mNextIdlr;
-    theIdler->RepeatAction(aMacEvent);
+    theIdler->IdleAction(aMacEvent);
     theIdler = nextIdler;
   }
 }
 
 
 #pragma export off
-
-
-    
