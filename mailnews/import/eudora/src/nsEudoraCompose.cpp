@@ -27,6 +27,7 @@
 #include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsProxyObjectManager.h"
+#include "nsProxiedService.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
@@ -191,7 +192,7 @@ nsresult nsEudoraCompose::CreateIdentity( void)
 		return( NS_OK);
 
 	nsresult	rv;
-    NS_WITH_SERVICE(nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, &rv);
+    NS_WITH_PROXIED_SERVICE(nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, NS_UI_THREAD_EVENTQ, &rv);
     if (NS_FAILED(rv)) return( rv);
 	rv = accMgr->CreateIdentity( &m_pIdentity);
 	nsString	name = "Import Identity";
@@ -211,7 +212,7 @@ nsresult nsEudoraCompose::CreateComponents( void)
 	if (!m_pIOService) {
 		IMPORT_LOG0( "Creating nsIOService\n");
 
-		NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+		NS_WITH_PROXIED_SERVICE(nsIIOService, service, kIOServiceCID, NS_UI_THREAD_EVENTQ, &rv);
 		if (NS_FAILED(rv)) 
 			return( rv);
 		m_pIOService = service;

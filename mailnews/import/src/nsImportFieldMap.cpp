@@ -29,6 +29,8 @@
 
 #include "ImportDebug.h"
 
+
+
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -48,7 +50,7 @@ NS_METHOD nsImportFieldMap::Create( nsISupports *aOuter, REFNSIID aIID, void **a
   return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsImportFieldMap, NS_GET_IID(nsIImportFieldMap));
+NS_IMPL_THREADSAFE_ISUPPORTS(nsImportFieldMap, NS_GET_IID(nsIImportFieldMap));
 
 nsImportFieldMap::nsImportFieldMap() 
 { 
@@ -59,14 +61,19 @@ nsImportFieldMap::nsImportFieldMap()
 	m_allocated = 0;
 	// need to init the description array
 	m_mozFieldCount = 0;
-	nsIStringBundle *pBundle = nsImportStringBundle::GetStringBundle();
+	nsIStringBundle *pBundle = nsImportStringBundle::GetStringBundleProxy();
+
 	nsString *pStr;
 	for (PRInt32 i = IMPORT_FIELD_DESC_START; i <= IMPORT_FIELD_DESC_END; i++, m_mozFieldCount++) {
 		pStr = new nsString();
-		nsImportStringBundle::GetStringByID( i, *pStr, pBundle);	
+		if (pBundle) {
+			nsImportStringBundle::GetStringByID( i, *pStr, pBundle);	
+		}
+		else
+			pStr->Append( i);
 		m_descriptions.AppendElement( (void *)pStr);
 	}
-
+	
 	NS_IF_RELEASE( pBundle);
 }
 

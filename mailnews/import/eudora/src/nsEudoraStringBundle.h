@@ -27,9 +27,13 @@ class nsEudoraStringBundle {
 public:
 	static PRUnichar     *		GetStringByID(PRInt32 stringID, nsIStringBundle *pBundle = nsnull);
 	static void					GetStringByID(PRInt32 stringID, nsString& result, nsIStringBundle *pBundle = nsnull);
-		// GetStringBundle creates a new one every time!
-	static nsIStringBundle *	GetStringBundle( void);
+	static nsIStringBundle *	GetStringBundle( void); // don't release
+	static nsIStringBundle *	GetStringBundleProxy( void); // release
 	static void					FreeString( PRUnichar *pStr) { nsCRT::free( pStr);}
+	static void					Cleanup( void);
+
+private:
+	static nsIStringBundle *	m_pBundle;
 };
 
 

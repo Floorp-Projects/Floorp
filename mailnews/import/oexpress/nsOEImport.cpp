@@ -51,6 +51,7 @@
 #include "nsOESettings.h"
 #include "nsTextFormatter.h"
 #include "nsOEStringBundle.h"
+#include "nsIStringBundle.h"
 
 #include "OEDebugLog.h"
 
@@ -162,6 +163,7 @@ nsOEImport::nsOEImport()
 
 	IMPORT_LOG0( "nsOEImport Module Created\n");
 
+	nsOEStringBundle::GetStringBundle();
 }
 
 
@@ -318,7 +320,7 @@ ImportMailImpl::~ImportMailImpl()
 
 
 
-NS_IMPL_ISUPPORTS(ImportMailImpl, NS_GET_IID(nsIImportMail));
+NS_IMPL_THREADSAFE_ISUPPORTS(ImportMailImpl, NS_GET_IID(nsIImportMail));
 
 NS_IMETHODIMP ImportMailImpl::GetDefaultLocation( nsIFileSpec **ppLoc, PRBool *found, PRBool *userVerify)
 {
@@ -379,12 +381,14 @@ void ImportMailImpl::ReportSuccess( nsString& name, PRInt32 count, nsString *pSt
 	if (!pStream)
 		return;
 	// load the success string
-	PRUnichar *pFmt = nsOEStringBundle::GetStringByID( OEIMPORT_MAILBOX_SUCCESS);
+	nsIStringBundle *pBundle = nsOEStringBundle::GetStringBundleProxy();
+	PRUnichar *pFmt = nsOEStringBundle::GetStringByID( OEIMPORT_MAILBOX_SUCCESS, pBundle);
 	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode(), count);
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsOEStringBundle::FreeString( pFmt);
 	AddLinebreak( pStream);
+	NS_IF_RELEASE( pBundle);
 }
 
 void ImportMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsString *pStream)
@@ -392,12 +396,14 @@ void ImportMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsString *pS
 	if (!pStream)
 		return;
 	// load the error string
-	PRUnichar *pFmt = nsOEStringBundle::GetStringByID( errorNum);
+	nsIStringBundle *pBundle = nsOEStringBundle::GetStringBundleProxy();
+	PRUnichar *pFmt = nsOEStringBundle::GetStringByID( errorNum, pBundle);
 	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsOEStringBundle::FreeString( pFmt);
 	AddLinebreak( pStream);
+	NS_IF_RELEASE( pBundle);
 }
 
 
@@ -419,10 +425,12 @@ NS_IMETHODIMP ImportMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource
     NS_PRECONDITION(pDestination != nsnull, "null ptr");
     NS_PRECONDITION(fatalError != nsnull, "null ptr");
 
+	nsCOMPtr<nsIStringBundle>	bundle( dont_AddRef( nsOEStringBundle::GetStringBundleProxy()));
+
 	nsString	success;
 	nsString	error;
     if (!pSource || !pDestination || !fatalError) {
-		nsOEStringBundle::GetStringByID( OEIMPORT_MAILBOX_BADPARAM, error);
+		nsOEStringBundle::GetStringByID( OEIMPORT_MAILBOX_BADPARAM, error, bundle);
 		if (fatalError)
 			*fatalError = PR_TRUE;
 		SetLogs( success, error, pErrorLog, pSuccessLog);
@@ -496,8 +504,6 @@ NS_IMETHODIMP ImportMailImpl::GetImportProgress( PRUint32 *pDoneSoFar)
     if (! pDoneSoFar)
         return NS_ERROR_NULL_POINTER;
 	
-	// TLR: FIXME: Figure our how to update this from the import
-	// of the current mailbox.
 	*pDoneSoFar = m_bytesDone;
 	return( NS_OK);
 }
@@ -533,7 +539,7 @@ ImportAddressImpl::~ImportAddressImpl()
 
 
 
-NS_IMPL_ISUPPORTS(ImportAddressImpl, NS_GET_IID(nsIImportAddressBooks));
+NS_IMPL_THREADSAFE_ISUPPORTS(ImportAddressImpl, NS_GET_IID(nsIImportAddressBooks));
 
 	
 NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **description, PRBool *_retval)

@@ -48,6 +48,9 @@
 #include "nsIAbDirectory.h"
 #include "nsImportStringBundle.h"
 #include "nsTextFormatter.h"
+#include "nsProxyObjectManager.h"
+#include "nsProxiedService.h"
+
 #include "ImportDebug.h"
 
 static NS_DEFINE_CID(kImportServiceCID, NS_IMPORTSERVICE_CID);
@@ -61,6 +64,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kIImportFieldMapIID, NS_IIMPORTFIELDMAP_IID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
 static NS_DEFINE_IID(kISupportsWStringIID, NS_ISUPPORTSWSTRING_IID);
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
 static const char *kDirectoryDataSourceRoot = "abdirectory://";
@@ -217,7 +221,7 @@ nsImportGenericAddressBooks::~nsImportGenericAddressBooks()
 
 
 
-NS_IMPL_ISUPPORTS(nsImportGenericAddressBooks, NS_GET_IID(nsIImportGeneric));
+NS_IMPL_THREADSAFE_ISUPPORTS(nsImportGenericAddressBooks, NS_GET_IID(nsIImportGeneric));
 
 
 NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISupports **_retval)
@@ -761,12 +765,20 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 	
 	IMPORT_LOG0( "In GetAddressBook\n");
 
+	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+	if (NS_FAILED( rv)) {
+		IMPORT_LOG0( "*** Error: Unable to get proxy manager\n");
+		return( nsnull);
+	}
+
 	nsIAddrDatabase *	pDatabase = nsnull;
 
 	/* Get the profile directory */
 	// Note to Candice: This should return an nsIFileSpec, not a nsFileSpec
-	nsFileSpec *	dbPath = nsnull;
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	nsFileSpec *					dbPath = nsnull;
+
+	NS_WITH_PROXIED_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, NS_UI_THREAD_EVENTQ, &rv); 
+	
 	if (NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	if (dbPath) {
@@ -777,11 +789,10 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 		
 		IMPORT_LOG0( "Getting the address database factory\n");
 
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		NS_WITH_PROXIED_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, NS_UI_THREAD_EVENTQ, &rv);
 		if (NS_SUCCEEDED(rv) && addrDBFactory) {
 			
 			IMPORT_LOG0( "Opening the new address book\n");
-
 			rv = addrDBFactory->Open( dbPath, PR_TRUE, &pDatabase, PR_TRUE);
 		}
 	}
@@ -795,12 +806,14 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 		// This is major bogosity again!  Why doesn't the address book
 		// just handle this properly for me?  Uggggg...
 		
-		NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+		NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, NS_UI_THREAD_EVENTQ, &rv);
 		if (NS_SUCCEEDED(rv)) {
-			nsCOMPtr<nsIRDFResource> parentResource;
+			nsCOMPtr<nsIRDFResource>	parentResource;
 			char *parentUri = PR_smprintf( "%s", kDirectoryDataSourceRoot);
 			rv = rdfService->GetResource( parentUri, getter_AddRefs(parentResource));
-			nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
+			nsCOMPtr<nsIAbDirectory> parentDir;
+			rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
+										parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
 			if (parentUri)
 				PR_smprintf_free(parentUri);
 			if (parentDir) {

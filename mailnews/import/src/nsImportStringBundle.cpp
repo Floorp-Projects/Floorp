@@ -25,15 +25,22 @@
 #include "nsIStringBundle.h"
 #include "nsImportStringBundle.h"
 #include "nsIServiceManager.h"
+#include "nsProxyObjectManager.h"
 #include "nsIURI.h"
 
 /* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 #define IMPORT_MSGS_URL       "chrome://messenger/locale/importMsgs.properties"
 
+nsIStringBundle *	nsImportStringBundle::m_pBundle = nsnull;
+
 nsIStringBundle *nsImportStringBundle::GetStringBundle( void)
 {
+	if (m_pBundle)
+		return( m_pBundle);
+
 	nsresult			rv;
 	char*				propertyURL = IMPORT_MSGS_URL;
 	nsIStringBundle*	sBundle = nsnull;
@@ -44,8 +51,26 @@ nsIStringBundle *nsImportStringBundle::GetStringBundle( void)
 		nsILocale   *		locale = nsnull;
 		rv = sBundleService->CreateBundle(propertyURL, locale, &sBundle);
 	}
-
+	
+	m_pBundle = sBundle;
 	return( sBundle);
+}
+
+nsIStringBundle *nsImportStringBundle::GetStringBundleProxy( void)
+{
+	if (!m_pBundle)
+		return( nsnull);
+
+	nsIStringBundle *strProxy = nsnull;
+	nsresult rv;
+	// create a proxy object if we aren't on the same thread?
+	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+	if (NS_SUCCEEDED(rv)) {
+		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIStringBundle),
+										m_pBundle, PROXY_SYNC | PROXY_ALWAYS, (void **) &strProxy);
+	}
+
+	return( strProxy);
 }
 
 void nsImportStringBundle::GetStringByID( PRInt32 stringID, nsString& result, nsIStringBundle *pBundle)
@@ -58,20 +83,14 @@ void nsImportStringBundle::GetStringByID( PRInt32 stringID, nsString& result, ns
 
 PRUnichar *nsImportStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle *pBundle)
 {
-	PRBool	mine = PR_FALSE;
 	if (!pBundle) {
-		mine = PR_TRUE;
 		pBundle = GetStringBundle();
 	}
 	
 	if (pBundle) {
 		PRUnichar *ptrv = nsnull;
 		nsresult rv = pBundle->GetStringFromID(stringID, &ptrv);
-		
-		if (mine) {
-			NS_RELEASE(pBundle);
-		}
-		
+				
 		if (NS_SUCCEEDED( rv) && ptrv)
 			return( ptrv);
 	}
@@ -83,3 +102,9 @@ PRUnichar *nsImportStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle
 	return( resultString.ToNewUnicode());
 }
 
+void nsImportStringBundle::Cleanup( void)
+{
+	if (m_pBundle)
+		m_pBundle->Release();
+	m_pBundle = nsnull;
+}

@@ -47,7 +47,7 @@
 #include "nsOutlookSettings.h"
 #include "nsTextFormatter.h"
 #include "nsOutlookStringBundle.h"
-
+#include "nsIStringBundle.h"
 #include "OutlookDebugLog.h"
 
 #include "nsOutlookMail.h"
@@ -85,7 +85,7 @@ public:
 	/* unsigned long GetImportProgress (); */
 	NS_IMETHOD GetImportProgress(PRUint32 *_retval);
 	
-private:
+public:
 	static void	ReportSuccess( nsString& name, PRInt32 count, nsString *pStream);
 	static void ReportError( PRInt32 errorNum, nsString& name, nsString *pStream);
 	static void	AddLinebreak( nsString *pStream);
@@ -111,7 +111,7 @@ public:
     // nsIImportAddressBooks interface
     
 	/* PRBool GetSupportsMultiple (); */
-	NS_IMETHOD GetSupportsMultiple(PRBool *_retval) { *_retval = PR_FALSE; return( NS_OK);}
+	NS_IMETHOD GetSupportsMultiple(PRBool *_retval) { *_retval = PR_TRUE; return( NS_OK);}
 	
 	/* PRBool GetAutoFind (out wstring description); */
 	NS_IMETHOD GetAutoFind(PRUnichar **description, PRBool *_retval);
@@ -147,11 +147,12 @@ public:
 	NS_IMETHOD SetSampleLocation( nsIFileSpec *) { return( NS_OK); }
 
 private:
-	void	GetOEInterface( void);
+	void	ReportSuccess( nsString& name, nsString *pStream);
 
 private:
-	nsIImportAddressBooks *	m_pWabImport;
-
+	PRUint32		m_msgCount;
+	PRUint32		m_msgTotal;
+	nsOutlookMail	m_address;
 };
 ////////////////////////////////////////////////////////////////////////
 
@@ -165,6 +166,7 @@ nsOutlookImport::nsOutlookImport()
 
 	IMPORT_LOG0( "nsOutlookImport Module Created\n");
 
+	nsOutlookStringBundle::GetStringBundle();
 }
 
 
@@ -320,7 +322,7 @@ ImportMailImpl::~ImportMailImpl()
 
 
 
-NS_IMPL_ISUPPORTS(ImportMailImpl, NS_GET_IID(nsIImportMail));
+NS_IMPL_THREADSAFE_ISUPPORTS(ImportMailImpl, NS_GET_IID(nsIImportMail));
 
 NS_IMETHODIMP ImportMailImpl::GetDefaultLocation( nsIFileSpec **ppLoc, PRBool *found, PRBool *userVerify)
 {
@@ -384,12 +386,14 @@ void ImportMailImpl::ReportSuccess( nsString& name, PRInt32 count, nsString *pSt
 	if (!pStream)
 		return;
 	// load the success string
-	PRUnichar *pFmt = nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_MAILBOX_SUCCESS);
+	nsIStringBundle *pBundle = nsOutlookStringBundle::GetStringBundleProxy();
+	PRUnichar *pFmt = nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_MAILBOX_SUCCESS, pBundle);
 	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode(), count);
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsOutlookStringBundle::FreeString( pFmt);
 	AddLinebreak( pStream);
+	NS_IF_RELEASE( pBundle);
 }
 
 void ImportMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsString *pStream)
@@ -397,12 +401,14 @@ void ImportMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsString *pS
 	if (!pStream)
 		return;
 	// load the error string
+	nsIStringBundle *pBundle = nsOutlookStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsOutlookStringBundle::GetStringByID( errorNum);
 	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsOutlookStringBundle::FreeString( pFmt);
 	AddLinebreak( pStream);
+	NS_IF_RELEASE( pBundle);
 }
 
 
@@ -423,11 +429,13 @@ NS_IMETHODIMP ImportMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource
     NS_PRECONDITION(pSource != nsnull, "null ptr");
     NS_PRECONDITION(pDestination != nsnull, "null ptr");
     NS_PRECONDITION(fatalError != nsnull, "null ptr");
+	
+	nsCOMPtr<nsIStringBundle>	bundle( dont_AddRef( nsOutlookStringBundle::GetStringBundleProxy()));
 
 	nsString	success;
 	nsString	error;
     if (!pSource || !pDestination || !fatalError) {
-		nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_MAILBOX_BADPARAM, error);
+		nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_MAILBOX_BADPARAM, error, bundle);
 		if (fatalError)
 			*fatalError = PR_TRUE;
 		SetLogs( success, error, pErrorLog, pSuccessLog);
@@ -501,19 +509,18 @@ nsresult ImportAddressImpl::Create(nsIImportAddressBooks** aImport)
 ImportAddressImpl::ImportAddressImpl()
 {
     NS_INIT_REFCNT();
-	m_pWabImport = nsnull;
+	m_msgCount = 0;
+	m_msgTotal = 0;
 }
 
 
 ImportAddressImpl::~ImportAddressImpl()
 {
-	if (m_pWabImport)
-		m_pWabImport->Release();
 }
 
 
 
-NS_IMPL_ISUPPORTS(ImportAddressImpl, NS_GET_IID(nsIImportAddressBooks));
+NS_IMPL_THREADSAFE_ISUPPORTS(ImportAddressImpl, NS_GET_IID(nsIImportAddressBooks));
 
 	
 NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **description, PRBool *_retval)
@@ -524,29 +531,13 @@ NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **description, PRBool *_r
         return NS_ERROR_NULL_POINTER;
     
     *_retval = PR_TRUE;
-    nsString str = "Outlook address book (windows address book)";
-    *description = str.ToNewUnicode();
+    nsString str;
+ 	nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_ADDRNAME, str);
+	*description = str.ToNewUnicode();
     
     return( NS_OK);
 }
 
-
-void ImportAddressImpl::GetOEInterface( void)
-{
-	if (m_pWabImport)
-		return;
-	nsIImportModule *	oeModule = nsnull;
-	nsresult rv = nsComponentManager::CreateInstance( "component://mozilla/import/import-oe", nsnull, NS_GET_IID(nsIImportModule), (void **) &oeModule);
-	if (NS_SUCCEEDED( rv) && oeModule) {
-		nsIImportGeneric *	generic = nsnull;
-		rv = oeModule->GetImportInterface( "addressbook", (nsISupports **) &generic);
-		if (NS_SUCCEEDED( rv) && generic) {
-			rv = generic->GetData( "addressInterface", (nsISupports **) &m_pWabImport);
-			generic->Release();
-		}
-		oeModule->Release();
-	}
-}
 	
 	
 NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISupportsArray **_retval)
@@ -555,13 +546,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISupp
     if (!_retval)
         return NS_ERROR_NULL_POINTER;
 	
-	GetOEInterface();
-	if (!m_pWabImport) {
-		IMPORT_LOG0( "Outlook address book import failed, cannot load outlook express import module\n");
-		return( NS_ERROR_FAILURE);
-	}
-	
-	return( m_pWabImport->FindAddressBooks( location, _retval));
+	return( m_address.GetAddressBooks( _retval));
 }
 
 	
@@ -569,28 +554,99 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISupp
 NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *source, 
 													nsIAddrDatabase *	destination, 
 													nsIImportFieldMap *	fieldMap, 
-													PRUnichar **		errorLog,
-													PRUnichar **		successLog,
+													PRUnichar **		pErrorLog,
+													PRUnichar **		pSuccessLog,
 													PRBool *			fatalError)
 {
-	GetOEInterface();
-	if (!m_pWabImport) {
-		IMPORT_LOG0( "Outlook address book import failed, cannot load outlook express import module\n");
-		return( NS_ERROR_FAILURE);
+	m_msgCount = 0;
+	m_msgTotal = 0;
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    NS_PRECONDITION(destination != nsnull, "null ptr");
+	NS_PRECONDITION(fatalError != nsnull, "null ptr");
+	
+	nsCOMPtr<nsIStringBundle> bundle( dont_AddRef( nsOutlookStringBundle::GetStringBundleProxy()));
+
+	nsString	success;
+	nsString	error;
+    if (!source || !destination || !fatalError) {
+		IMPORT_LOG0( "*** Bad param passed to outlook address import\n");
+		nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_ADDRESS_BADPARAM, error, bundle);
+		if (fatalError)
+			*fatalError = PR_TRUE;
+		ImportMailImpl::SetLogs( success, error, pErrorLog, pSuccessLog);
+	    return NS_ERROR_NULL_POINTER;
+	}
+      
+    nsString	name;
+    PRUnichar *	pName;
+    if (NS_SUCCEEDED( source->GetPreferredName( &pName))) {
+    	name = pName;
+    	nsCRT::free( pName);
+    }
+    
+    
+	PRUint32	id;
+    if (NS_FAILED( source->GetIdentifier( &id))) {
+		ImportMailImpl::ReportError( OUTLOOKIMPORT_ADDRESS_BADSOURCEFILE, name, &error);
+		ImportMailImpl::SetLogs( success, error, pErrorLog, pSuccessLog);		
+    	return( NS_ERROR_FAILURE);
+    }
+	
+	    
+    nsresult rv = NS_OK;
+	
+	rv = m_address.ImportAddresses( &m_msgCount, &m_msgTotal, name.GetUnicode(), id, destination, error);
+    
+	if (NS_SUCCEEDED( rv) && error.IsEmpty()) {
+		ReportSuccess( name, &success);
+	}
+	else {
+		ImportMailImpl::ReportError( OUTLOOKIMPORT_ADDRESS_CONVERTERROR, name, &error);
 	}
 
-	return( m_pWabImport->ImportAddressBook( source, destination, fieldMap, errorLog, successLog, fatalError));
+	ImportMailImpl::SetLogs( success, error, pErrorLog, pSuccessLog);
+
+	IMPORT_LOG0( "*** Returning from outlook address import\n");
+
+    return( rv);
+	
 }
 
 	
 NS_IMETHODIMP ImportAddressImpl::GetImportProgress(PRUint32 *_retval)
 {
-	GetOEInterface();
-	if (!m_pWabImport) {
-		IMPORT_LOG0( "Outlook address book import failed, cannot load outlook express import module\n");
-		return( NS_ERROR_FAILURE);
-	}
+    NS_PRECONDITION(_retval != nsnull, "null ptr");
+    if (!_retval)
+        return NS_ERROR_NULL_POINTER;
 	
-	return( m_pWabImport->GetImportProgress( _retval));
+	PRUint32 result = m_msgCount;
+	if (m_msgTotal) {
+		result *= 100;
+		result /= m_msgTotal;
+	}
+	else
+		result = 0;
+	
+	if (result > 100)
+		result = 100;
+
+	*_retval = result;
+	
+	return( NS_OK);
+}
+
+void ImportAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
+{
+	if (!pStream)
+		return;
+	// load the success string
+	nsIStringBundle *pBundle = nsOutlookStringBundle::GetStringBundleProxy();
+	PRUnichar *pFmt = nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_ADDRESS_SUCCESS, pBundle);
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
+	pStream->Append( pText);
+	nsTextFormatter::smprintf_free( pText);
+	nsOutlookStringBundle::FreeString( pFmt);
+	ImportMailImpl::AddLinebreak( pStream);
+	NS_IF_RELEASE( pBundle);
 }
 

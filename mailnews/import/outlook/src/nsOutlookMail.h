@@ -31,13 +31,18 @@
 #include "MapiApi.h"
 #include "MapiMessage.h"
 
+class nsIAddrDatabase;
+class nsIImportFieldMap;
+
 class nsOutlookMail {
 public:
     nsOutlookMail();
     ~nsOutlookMail();
 
 	nsresult GetMailFolders( nsISupportsArray **pArray);
+	nsresult GetAddressBooks( nsISupportsArray **pArray);
 	nsresult ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRInt32 index, const PRUnichar *pName, nsIFileSpec *pDest, PRInt32 *pMsgCount);
+	nsresult ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, const PRUnichar *pName, PRUint32 id, nsIAddrDatabase *pDb, nsString& errors);
 
 
 private:
@@ -54,11 +59,19 @@ private:
 	void		BuildAttachments( CMapiMessage& msg, int count);
 	void		DumpAttachments( void);
 
+	PRBool		IsAddressBookNameUnique( nsCString& name, nsCString& list);
+	void		MakeAddressBookNameUnique( nsCString& name, nsCString& list);
+	void		SanitizeValue( nsString& val);
+	void		SplitString( nsString& val1, nsString& val2);
+	PRBool		BuildCard( const char *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap);
+
 private:
 	PRBool				m_gotFolders;
+	PRBool				m_gotAddresses;
 	PRBool				m_haveMapi;
 	CMapiApi			m_mapi;
 	CMapiFolderList		m_folderList;
+	CMapiFolderList		m_addressList;
 	CMapiFolderList		m_storeList;
 	LPMDB				m_lpMdb;
 	nsVoidArray			m_attachments;

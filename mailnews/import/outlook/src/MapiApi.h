@@ -162,6 +162,7 @@ public:
 	// Fill in the folders list with the heirarchy from the given
 	// message store.
 	BOOL	GetStoreFolders( ULONG cbEid, LPENTRYID lpEid, CMapiFolderList& folders, int startDepth);
+	BOOL	GetStoreAddressFolders( ULONG cbEid, LPENTRYID lpEid, CMapiFolderList& folders);
 	BOOL	OpenStore( ULONG cbEid, LPENTRYID lpEid, LPMDB *ppMdb);
 
 	// Iteration
@@ -173,6 +174,7 @@ public:
 	static LPSPropValue	GetMapiProperty( LPMAPIPROP pProp, ULONG tag);
 	static BOOL			GetEntryIdFromProp( LPSPropValue pVal, ULONG& cbEntryId, LPENTRYID& lpEntryId, BOOL delVal = TRUE);
 	static BOOL			GetStringFromProp( LPSPropValue pVal, nsCString& val, BOOL delVal = TRUE);
+	static BOOL			GetStringFromProp( LPSPropValue pVal, nsString& val, BOOL delVal = TRUE);
 	static LONG			GetLongFromProp( LPSPropValue pVal, BOOL delVal = TRUE);
 	static BOOL			GetLargeStringProperty( LPMAPIPROP pProp, ULONG tag, nsCString& val);
 	static BOOL			IsLargeProperty( LPSPropValue pVal);
@@ -200,11 +202,12 @@ protected:
 
 
 private:
-	nsVoidArray		m_stores;
-	BOOL			m_initialized;
-	LPMAPISESSION	m_lpSession;
-	LPMDB			m_lpMdb;
-	HRESULT			m_lastError;
+	static int				m_clients;
+	static BOOL				m_initialized;
+	static nsVoidArray *	m_pStores;
+	static LPMAPISESSION	m_lpSession;
+	static LPMDB			m_lpMdb;
+	static HRESULT			m_lastError;
 };
 
 

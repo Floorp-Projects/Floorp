@@ -38,6 +38,7 @@
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
 #include "nsISupportsPrimitives.h"
+#include "nsImportStringBundle.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "ImportDebug.h"
@@ -186,6 +187,8 @@ NS_IMETHODIMP NS_NewImportService( nsISupports* aOuter, REFNSIID aIID, void **aR
         *aResult = nsnull;
     }
     NS_RELEASE( gImportService);
+	
+	nsImportStringBundle::GetStringBundle();
 
 	return( rv);
 }
@@ -217,7 +220,7 @@ nsImportService::~nsImportService()
 
 
 
-NS_IMPL_ISUPPORTS(nsImportService, NS_GET_IID(nsIImportService));
+NS_IMPL_THREADSAFE_ISUPPORTS(nsImportService, NS_GET_IID(nsIImportService));
 
 
 NS_IMETHODIMP nsImportService::DiscoverModules( void)

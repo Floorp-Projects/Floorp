@@ -29,6 +29,7 @@
 #include "nsCRT.h"
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
+#include "nsTextStringBundle.h"
 
 #include "TextDebugLog.h"
 
@@ -71,6 +72,13 @@ static nsModuleComponentInfo components[] = {
 	}
 };
 
-NS_IMPL_NSGETMODULE("nsTextImportModule", components)
+PR_STATIC_CALLBACK(void)
+textModuleDtor(nsIModule* self)
+{
+	nsTextStringBundle::Cleanup();
+}
+
+
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsTextImportModule", components, textModuleDtor)
 
 

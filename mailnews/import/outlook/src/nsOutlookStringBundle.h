@@ -31,9 +31,12 @@ class nsOutlookStringBundle {
 public:
 	static PRUnichar     *		GetStringByID(PRInt32 stringID, nsIStringBundle *pBundle = nsnull);
 	static void					GetStringByID(PRInt32 stringID, nsString& result, nsIStringBundle *pBundle = nsnull);
-		// GetStringBundle creates a new one every time!
-	static nsIStringBundle *	GetStringBundle( void);
+	static nsIStringBundle *	GetStringBundle( void); // don't release
+	static nsIStringBundle *	GetStringBundleProxy( void); // release
 	static void					FreeString( PRUnichar *pStr) { nsCRT::free( pStr);}
+	static void					Cleanup( void);
+private:
+	static nsIStringBundle *	m_pBundle;
 };
 
 
@@ -43,7 +46,11 @@ public:
 #define OUTLOOKIMPORT_MAILBOX_SUCCESS						2002
 #define OUTLOOKIMPORT_MAILBOX_BADPARAM						2003
 #define OUTLOOKIMPORT_MAILBOX_CONVERTERROR					2004
-
+#define OUTLOOKIMPORT_ADDRNAME								2005
+#define OUTLOOKIMPORT_ADDRESS_SUCCESS						2006
+#define OUTLOOKIMPORT_ADDRESS_BADPARAM						2007
+#define OUTLOOKIMPORT_ADDRESS_BADSOURCEFILE					2008
+#define OUTLOOKIMPORT_ADDRESS_CONVERTERROR					2009
 
 
 #endif /* _nsOutlookStringBundle_H__ */

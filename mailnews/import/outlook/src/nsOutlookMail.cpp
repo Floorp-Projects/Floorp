@@ -29,10 +29,15 @@
 #include "nscore.h"
 #include "nsIServiceManager.h"
 #include "nsIImportService.h"
+#include "nsIImportFieldMap.h"
 #include "nsIImportMailboxDescriptor.h"
+#include "nsIImportABDescriptor.h"
 #include "nsIImportMimeEncode.h"
 #include "nsXPIDLString.h"
 #include "nsOutlookStringBundle.h"
+#include "nsABBaseCID.h"
+#include "nsIAbCard.h"
+#include "nsIAddrDatabase.h"
 #include "OutlookDebugLog.h"
 #include "nsOutlookMail.h"
 
@@ -40,12 +45,60 @@ static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_CID(kImportMimeEncodeCID,	NS_IMPORTMIMEENCODE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
 
+/* ------------ Address book stuff ----------------- */
+typedef struct {
+	PRInt32		mozField;
+	PRInt32		multiLine;
+	ULONG		mapiTag;
+} MAPIFields;
+
+/*
+	Fields in MAPI, not in Mozilla
+	PR_OFFICE_LOCATION
+	FIX - PR_BIRTHDAY - stored as PT_SYSTIME - FIX to extract for moz address book birthday
+	PR_DISPLAY_NAME_PREFIX - Mr., Mrs. Dr., etc.
+	PR_SPOUSE_NAME
+	PR_GENDER - integer, not text
+	FIX - PR_CONTACT_EMAIL_ADDRESSES - multiuline strings for email addresses, needs
+		parsing to get secondary email address for mozilla
+*/
+
+#define kIsMultiLine	-2
+#define	kNoMultiLine	-1
+
+MAPIFields	gMapiFields[] = {
+	{ 35, kIsMultiLine, PR_COMMENT},
+	{ 6, kNoMultiLine, PR_BUSINESS_TELEPHONE_NUMBER},
+	{ 7, kNoMultiLine, PR_HOME_TELEPHONE_NUMBER},
+	{ 25, kNoMultiLine, PR_COMPANY_NAME},
+	{ 23, kNoMultiLine, PR_TITLE},
+	{ 10, kNoMultiLine, PR_CELLULAR_TELEPHONE_NUMBER},
+	{ 9, kNoMultiLine, PR_PAGER_TELEPHONE_NUMBER},
+	{ 8, kNoMultiLine, PR_BUSINESS_FAX_NUMBER},
+	{ 8, kNoMultiLine, PR_HOME_FAX_NUMBER},
+	{ 22, kNoMultiLine, PR_COUNTRY},
+	{ 19, kNoMultiLine, PR_LOCALITY},
+	{ 20, kNoMultiLine, PR_STATE_OR_PROVINCE},
+	{ 17, 18, PR_STREET_ADDRESS},
+	{ 21, kNoMultiLine, PR_POSTAL_CODE},
+	{ 26, kNoMultiLine, PR_PERSONAL_HOME_PAGE},
+	{ 27, kNoMultiLine, PR_BUSINESS_HOME_PAGE},
+	{ 13, kNoMultiLine, PR_HOME_ADDRESS_CITY},
+	{ 16, kNoMultiLine, PR_HOME_ADDRESS_COUNTRY},
+	{ 15, kNoMultiLine, PR_HOME_ADDRESS_POSTAL_CODE},
+	{ 14, kNoMultiLine, PR_HOME_ADDRESS_STATE_OR_PROVINCE},
+	{ 11, 12, PR_HOME_ADDRESS_STREET},
+	{ 24, kNoMultiLine, PR_DEPARTMENT_NAME}
+};
+/* ---------------------------------------------------- */
+
 
 #define	kCopyBufferSize		(16 * 1024)
 
 
 nsOutlookMail::nsOutlookMail()
 {
+	m_gotAddresses = PR_FALSE;
 	m_gotFolders = PR_FALSE;
 	m_haveMapi = CMapiApi::LoadMapi();
 	m_lpMdb = NULL;
@@ -53,7 +106,6 @@ nsOutlookMail::nsOutlookMail()
 
 nsOutlookMail::~nsOutlookMail()
 {
-	CMapiApi::UnloadMapi();
 	EmptyAttachments();
 }
 
@@ -76,13 +128,13 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 
 	m_gotFolders = PR_TRUE;
 
-	m_storeList.ClearAll();
 	m_folderList.ClearAll();
 
 	m_mapi.Initialize();
 	m_mapi.LogOn();
 
-	m_mapi.IterateStores( m_storeList);
+	if (m_storeList.GetSize() == 0)
+		m_mapi.IterateStores( m_storeList);
 
 	int i = 0;
 	CMapiFolder *pFolder;
@@ -131,6 +183,111 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 	
 	return( NS_OK);	
 }
+
+PRBool nsOutlookMail::IsAddressBookNameUnique( nsCString& name, nsCString& list)
+{
+	nsCString		usedName = "[";
+	usedName.Append( name);
+	usedName.Append( "],");
+
+	return( list.Find( usedName) == -1);
+}
+
+void nsOutlookMail::MakeAddressBookNameUnique( nsCString& name, nsCString& list)
+{
+	nsCString		newName;
+	int				idx = 1;
+
+	newName = name;
+	while (!IsAddressBookNameUnique( newName, list)) {
+		newName = name;
+		newName.Append( ' ');
+		newName.Append( (PRInt32) idx);
+		idx++;
+	}
+	
+	name = newName;
+	list.Append( "[");
+	list.Append( name);
+	list.Append( "],");
+}
+
+nsresult nsOutlookMail::GetAddressBooks( nsISupportsArray **pArray)
+{
+	if (!m_haveMapi) {
+		IMPORT_LOG0( "GetAddressBooks called before Mapi is initialized\n");
+		return( NS_ERROR_FAILURE);
+	}
+
+	nsresult rv = NS_NewISupportsArray( pArray);
+	if (NS_FAILED( rv)) {
+		IMPORT_LOG0( "FAILED to allocate the nsISupportsArray for the address book list\n");
+		return( rv);
+	}
+
+	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	if (NS_FAILED( rv))
+		return( rv);
+
+	m_gotAddresses = PR_TRUE;
+	
+	m_addressList.ClearAll();
+	m_mapi.Initialize();
+	m_mapi.LogOn();
+	if (m_storeList.GetSize() == 0)
+		m_mapi.IterateStores( m_storeList);
+
+	int i = 0;
+	CMapiFolder *pFolder;
+	if (m_storeList.GetSize() > 1) {
+		while ((pFolder = m_storeList.GetItem( i))) {
+			CMapiFolder *pItem = new CMapiFolder( pFolder);
+			pItem->SetDepth( 1);
+			m_addressList.AddItem( pItem);
+			if (!m_mapi.GetStoreAddressFolders( pItem->GetCBEntryID(), pItem->GetEntryID(), m_addressList)) {
+				IMPORT_LOG1( "GetStoreAddressFolders for index %d failed.\n", i);
+			}
+			i++;
+		}
+	}
+	else {
+		if ((pFolder = m_storeList.GetItem( i))) {
+			if (!m_mapi.GetStoreAddressFolders( pFolder->GetCBEntryID(), pFolder->GetEntryID(), m_addressList)) {
+				IMPORT_LOG1( "GetStoreFolders for index %d failed.\n", i);
+			}
+		}
+	}
+	
+	// Create the mailbox descriptors for the list of folders
+	nsIImportABDescriptor *			pID;
+	nsISupports *					pInterface;
+	nsCString						name;
+	PRUnichar *						pChar;
+	nsCString						list;
+
+	for (i = 0; i < m_addressList.GetSize(); i++) {
+		pFolder = m_addressList.GetItem( i);
+		if (!pFolder->IsStore()) {
+			rv = impSvc->CreateNewABDescriptor( &pID);
+			if (NS_SUCCEEDED( rv)) {
+				pID->SetIdentifier( i);
+				pFolder->GetDisplayName( name);
+				MakeAddressBookNameUnique( name, list);
+				pChar = name.ToNewUnicode();
+				pID->SetPreferredName( pChar);
+				nsCRT::free( pChar);
+				pID->SetSize( 100);
+				rv = pID->QueryInterface( kISupportsIID, (void **) &pInterface);
+				(*pArray)->AppendElement( pInterface);
+				pInterface->Release();
+				pID->Release();
+			}
+		}
+	}
+	
+	return( NS_OK);	
+}
+
 
 
 void nsOutlookMail::OpenMessageStore( CMapiFolder *pNextFolder)
@@ -691,4 +848,270 @@ void nsOutlookMail::DumpAttachments( void)
 #endif
 }
 
+nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, const PRUnichar *pName, PRUint32 id, nsIAddrDatabase *pDb, nsString& errors)
+{
+	if (id >= (PRUint32)(m_addressList.GetSize())) {
+		IMPORT_LOG0( "*** Bad address identifier, unable to import\n");
+		return( NS_ERROR_FAILURE);
+	}
+	
+	PRUint32	dummyCount = 0;
+	if (pCount)
+		*pCount = 0;
+	else
+		pCount = &dummyCount;
 
+	CMapiFolder *pFolder;
+	if (id > 0) {
+		PRInt32 idx = (PRInt32) id;
+		idx--;
+		while (idx >= 0) {
+			pFolder = m_addressList.GetItem( idx);
+			if (pFolder->IsStore()) {
+				OpenMessageStore( pFolder);
+				break;
+			}
+			idx--;
+		}
+	}
+
+	pFolder = m_addressList.GetItem( id);
+	OpenMessageStore( pFolder);
+	if (!m_lpMdb) {
+		IMPORT_LOG1( "*** Unable to obtain mapi message store for address book: %S\n", pName);
+		return( NS_ERROR_FAILURE);
+	}
+	
+	if (pFolder->IsStore())
+		return( NS_OK);
+	
+	nsresult	rv;
+
+	nsCOMPtr<nsIImportFieldMap>		pFieldMap;
+
+	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	if (NS_SUCCEEDED( rv)) {
+		rv = impSvc->CreateNewFieldMap( getter_AddRefs( pFieldMap));
+	}
+
+	CMapiFolderContents		contents( m_lpMdb, pFolder->GetCBEntryID(), pFolder->GetEntryID());
+
+	BOOL			done = FALSE;
+	ULONG			cbEid;
+	LPENTRYID		lpEid;
+	ULONG			oType;
+	LPMESSAGE		lpMsg;
+	nsCString		type;
+	LPSPropValue	pVal;
+	nsCString		subject;
+
+	while (!done) {
+		(*pCount)++;
+
+		if (!contents.GetNext( &cbEid, &lpEid, &oType, &done)) {
+			IMPORT_LOG1( "*** Error iterating address book: %S\n", pName);
+			return( NS_ERROR_FAILURE);
+		}
+		
+		if (pTotal && (*pTotal == 0))
+			*pTotal = contents.GetCount();
+
+		if (!done && (oType == MAPI_MESSAGE)) {
+			if (!m_mapi.OpenMdbEntry( m_lpMdb, cbEid, lpEid, (LPUNKNOWN *) &lpMsg)) {
+				IMPORT_LOG1( "*** Error opening messages in mailbox: %S\n", pName);
+				return( NS_ERROR_FAILURE);
+			}
+			
+			// Get the PR_MESSAGE_CLASS attribute,
+			// ensure that it is IPM.Contact
+			pVal = m_mapi.GetMapiProperty( lpMsg, PR_MESSAGE_CLASS);
+			if (pVal) {
+				type.Truncate( 0);
+				m_mapi.GetStringFromProp( pVal, type);
+				if (!type.Compare( "IPM.Contact")) {
+					// This is a contact, add it to the address book!
+					subject.Truncate( 0);
+					pVal = m_mapi.GetMapiProperty( lpMsg, PR_SUBJECT);
+					if (pVal)
+						m_mapi.GetStringFromProp( pVal, subject);
+					
+					nsIMdbRow* newRow = nsnull;
+					pDb->GetNewRow( &newRow); 
+					// FIXME: Check with Candice about releasing the newRow if it
+					// isn't added to the database.  Candice's code in nsAddressBook
+					// never releases it but that doesn't seem right to me!
+					if (newRow) {
+						if (BuildCard( subject, pDb, newRow, lpMsg, pFieldMap)) {
+							pDb->AddCardRowToDB( newRow);
+						}
+					}
+				}
+			}			
+
+			lpMsg->Release();
+		}
+	}
+
+
+	return( NS_OK);
+
+}
+
+
+void nsOutlookMail::SanitizeValue( nsString& val)
+{
+	val.ReplaceSubstring( "\x0D\x0A", ", ");
+	val.ReplaceChar( 13, ',');
+	val.ReplaceChar( 10, ',');
+}
+
+void nsOutlookMail::SplitString( nsString& val1, nsString& val2)
+{
+	nsString	temp;
+
+	// Find the last line if there is more than one!
+	PRInt32 idx = val1.RFind( "\x0D\x0A");
+	PRInt32	cnt = 2;
+	if (idx == -1) {
+		cnt = 1;
+		idx = val1.RFindChar( 13);
+	}
+	if (idx == -1)
+		idx= val1.RFindChar( 10);
+	if (idx != -1) {
+		val1.Right( val2, val1.Length() - idx - cnt);
+		val1.Left( temp, idx);
+		val1 = temp;
+		SanitizeValue( val1);
+	}
+}
+
+PRBool nsOutlookMail::BuildCard( const char *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap)
+{
+	
+	nsString		lastName;
+	nsString		firstName;
+	nsString		eMail;
+	nsString		nickName;
+	nsString		middleName;
+
+	LPSPropValue	pProp = m_mapi.GetMapiProperty( pUser, PR_EMAIL_ADDRESS);
+	if (pProp) {
+		m_mapi.GetStringFromProp( pProp, eMail);
+		SanitizeValue( eMail);
+	}
+
+	pProp = m_mapi.GetMapiProperty( pUser, PR_GIVEN_NAME);
+	if (pProp) {
+		m_mapi.GetStringFromProp( pProp, firstName);
+		SanitizeValue( firstName);
+	}
+	pProp = m_mapi.GetMapiProperty( pUser, PR_SURNAME);
+	if (pProp) {
+		m_mapi.GetStringFromProp( pProp, lastName);
+		SanitizeValue( lastName);
+	}
+	pProp = m_mapi.GetMapiProperty( pUser, PR_MIDDLE_NAME);
+	if (pProp) {
+		m_mapi.GetStringFromProp( pProp, middleName);
+		SanitizeValue( middleName);
+	}
+	pProp = m_mapi.GetMapiProperty( pUser, PR_NICKNAME);
+	if (pProp) {
+		m_mapi.GetStringFromProp( pProp, nickName);
+		SanitizeValue( nickName);
+	}
+	if (firstName.IsEmpty() && lastName.IsEmpty()) {
+		firstName = pName;
+		middleName.Truncate();
+		lastName.Truncate();
+	}
+	if (lastName.IsEmpty()) {
+		lastName = middleName;
+		middleName.Truncate();
+	}
+
+	if (eMail.IsEmpty())
+		eMail = pName;
+
+	nsString	displayName;
+	pProp = m_mapi.GetMapiProperty( pUser, PR_DISPLAY_NAME);
+	if (pProp) {
+		m_mapi.GetStringFromProp( pProp, displayName);
+		SanitizeValue( displayName);
+	}
+	if (displayName.IsEmpty()) {
+		if (firstName.IsEmpty())
+			displayName = pName;
+		else {
+			displayName = firstName;
+			if (!middleName.IsEmpty()) {
+				displayName.Append( ' ');
+				displayName.Append( middleName);
+			}
+			if (!lastName.IsEmpty()) {
+				displayName.Append( ' ');
+				displayName.Append( lastName);
+			}
+		}
+	}
+	
+	char *pCStr;
+	// We now have the required fields
+	// write them out followed by any optional fields!
+	if (!displayName.IsEmpty()) {
+		pDb->AddDisplayName( newRow, pCStr = displayName.ToNewUTF8String());
+		nsCRT::free( pCStr);
+	}
+	if (!firstName.IsEmpty()) {
+		pDb->AddFirstName( newRow, pCStr = firstName.ToNewUTF8String());
+		nsCRT::free( pCStr);
+	}
+	if (!lastName.IsEmpty()) {
+		pDb->AddLastName( newRow, pCStr = lastName.ToNewUTF8String());
+		nsCRT::free( pCStr);
+	}
+	if (!nickName.IsEmpty()) {
+		pDb->AddNickName( newRow, pCStr = nickName.ToNewUTF8String());
+		nsCRT::free( pCStr);
+	}
+	if (!eMail.IsEmpty()) {
+		pDb->AddPrimaryEmail( newRow, pCStr = eMail.ToNewUTF8String());
+		nsCRT::free( pCStr);
+	}
+
+	// Do all of the extra fields!
+
+	nsString	value;
+	nsString	line2;
+
+	if (pFieldMap) {
+		int max = sizeof( gMapiFields) / sizeof( MAPIFields);
+		for (int i = 0; i < max; i++) {
+			pProp = m_mapi.GetMapiProperty( pUser, gMapiFields[i].mapiTag);
+			if (pProp) {
+				m_mapi.GetStringFromProp( pProp, value);
+				if (!value.IsEmpty()) {
+					if (gMapiFields[i].multiLine == kNoMultiLine) {
+						SanitizeValue( value);
+						pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].mozField, value.GetUnicode());
+					}
+					else if (gMapiFields[i].multiLine == kIsMultiLine) {
+						pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].mozField, value.GetUnicode());
+					}
+					else {
+						line2.Truncate();
+						SplitString( value, line2);
+						if (!value.IsEmpty())
+							pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].mozField, value.GetUnicode());
+						if (!line2.IsEmpty())
+							pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].multiLine, line2.GetUnicode());
+					}
+				}
+			}
+		}
+	}
+
+
+	return( PR_TRUE);
+}

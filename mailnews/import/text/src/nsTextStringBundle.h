@@ -29,7 +29,12 @@ public:
 	static void					GetStringByID(PRInt32 stringID, nsString& result, nsIStringBundle *pBundle = nsnull);
 		// GetStringBundle creates a new one every time!
 	static nsIStringBundle *	GetStringBundle( void);
+	static nsIStringBundle *	GetStringBundleProxy( void);
 	static void					FreeString( PRUnichar *pStr) { nsCRT::free( pStr);}
+	static void					Cleanup( void);
+
+private:
+	static nsIStringBundle *	m_pBundle;
 };
 
 

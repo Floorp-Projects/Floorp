@@ -29,6 +29,7 @@
 #include "nsCRT.h"
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
+#include "nsEudoraStringBundle.h"
 #include "EudoraDebugLog.h"
 
 static NS_DEFINE_CID(kEudoraImportCID,    	NS_EUDORAIMPORT_CID);
@@ -71,5 +72,12 @@ static nsModuleComponentInfo components[] = {
 	}
 };
 
-NS_IMPL_NSGETMODULE("nsEudoraImportModule", components)
+PR_STATIC_CALLBACK(void)
+eudoraModuleDtor(nsIModule* self)
+{
+	nsEudoraStringBundle::Cleanup();
+}
+
+
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsEudoraImportModule", components, eudoraModuleDtor)
 

@@ -22,26 +22,6 @@
  */
 
 /*
-	TODO: 
-		* Fix the the name of the imported folder to reflect the module
-		name rather than just "Imported Mail"
-
-		* Fix the imported folder name to only call GenerateUnique if
-		necessary (that way the first import won't have a zero after the
-		name!).
-
-		* Test Cancel to make sure it works!
-
-		* Figure out how to clean-up when an import is cancelled and
-		we do NOT own the destination folder.  
-
-		* Do the right thing when creating a folder that already exists.  Should
-		we create a new folder or append to the one that we found already existing?
-
-		* Fix the default destination to create an account if it cannot find
-		a suitable account to import into.
-
-		* Determine if I need to "lock" mailboxes for import?
 */
 
 
@@ -68,6 +48,7 @@
 #include "nsIProfile.h"
 #include "nsIMsgFolder.h"
 #include "nsImportStringBundle.h"
+#include "nsIStringBundle.h"
 #include "nsTextFormatter.h"
 
 #include "ImportDebug.h"
@@ -236,7 +217,7 @@ nsImportGenericMail::~nsImportGenericMail()
 
 
 
-NS_IMPL_ISUPPORTS(nsImportGenericMail, NS_GET_IID(nsIImportGeneric));
+NS_IMPL_THREADSAFE_ISUPPORTS(nsImportGenericMail, NS_GET_IID(nsIImportGeneric));
 
 
 NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_retval)
@@ -649,12 +630,14 @@ void nsImportGenericMail::ReportError( PRInt32 id, const PRUnichar *pName, nsStr
 	if (!pStream)
 		return;
 	// load the error string
-	PRUnichar *pFmt = nsImportStringBundle::GetStringByID( id);
+	nsIStringBundle *pBundle = nsImportStringBundle::GetStringBundleProxy();
+	PRUnichar *pFmt = nsImportStringBundle::GetStringByID( id, pBundle);
 	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, pName);
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsImportStringBundle::FreeString( pFmt);
 	pStream->Append( NS_LINEBREAK);
+	NS_IF_RELEASE( pBundle);
 }
 
 
@@ -795,17 +778,19 @@ ImportMailThread( void *stuff)
 	nsString	success;
 	nsString	error;
 
+	nsCOMPtr<nsIStringBundle>	bundle( dont_AddRef( nsImportStringBundle::GetStringBundleProxy()));
+
 	// Initialize the curFolder proxy object
 	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
 	if (NS_SUCCEEDED(rv)) {
 		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
-										curFolder, PROXY_SYNC, getter_AddRefs( curProxy));
+										curFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
 
 		IMPORT_LOG1( "Proxy result for curFolder: 0x%lx\n", (long) rv);
 	}
 	else {
 		IMPORT_LOG0( "Unable to obtain proxy service to do import\n");
-		nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error);
+		nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
 		pData->abort = PR_TRUE;
 	}
 
@@ -837,9 +822,9 @@ ImportMailThread( void *stuff)
 					}
 
 					rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder), 
-													subFolder, PROXY_SYNC, getter_AddRefs( curProxy));
+													subFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
 					if (NS_FAILED( rv)) {
-						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error);
+						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
 						pData->fatalError = PR_TRUE;
 						break;
 					}
@@ -852,11 +837,11 @@ ImportMailThread( void *stuff)
 						nsCOMPtr<nsIFolder> parFolder;
 						curProxy->GetParent( getter_AddRefs( parFolder));
 						rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
-														parFolder, PROXY_SYNC, getter_AddRefs( curProxy));
+														parFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
 						depth--;
 					}
 					if (NS_FAILED( rv)) {
-						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error);
+						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
 						pData->fatalError = PR_TRUE;
 						break;
 					}

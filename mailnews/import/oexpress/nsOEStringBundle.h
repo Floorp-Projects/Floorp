@@ -31,9 +31,13 @@ class nsOEStringBundle {
 public:
 	static PRUnichar     *		GetStringByID(PRInt32 stringID, nsIStringBundle *pBundle = nsnull);
 	static void					GetStringByID(PRInt32 stringID, nsString& result, nsIStringBundle *pBundle = nsnull);
-		// GetStringBundle creates a new one every time!
-	static nsIStringBundle *	GetStringBundle( void);
+	static nsIStringBundle *	GetStringBundle( void); // dont release
 	static void					FreeString( PRUnichar *pStr) { nsCRT::free( pStr);}
+	static void					Cleanup( void);
+	static nsIStringBundle *	GetStringBundleProxy( void); // release
+
+private:
+	static nsIStringBundle *	m_pBundle;
 };
 
 

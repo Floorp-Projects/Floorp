@@ -33,6 +33,7 @@
 #include "nsCRT.h"
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
+#include "nsOEStringBundle.h"
 #include "OEDebugLog.h"
 
 static NS_DEFINE_CID(kOEImportCID,       	NS_OEIMPORT_CID);
@@ -74,7 +75,13 @@ static nsModuleComponentInfo components[] = {
 	}
 };
 
-NS_IMPL_NSGETMODULE("nsOEImport", components)
+PR_STATIC_CALLBACK(void)
+oeModuleDtor(nsIModule* self)
+{
+	nsOEStringBundle::Cleanup();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsOEImport", components, oeModuleDtor)
 
 
 

@@ -22,15 +22,22 @@
 #include "nsIStringBundle.h"
 #include "nsEudoraStringBundle.h"
 #include "nsIServiceManager.h"
+#include "nsProxyObjectManager.h"
 #include "nsIURI.h"
 
 /* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 #define EUDORA_MSGS_URL       "chrome://messenger/locale/eudoraImportMsgs.properties"
 
+nsIStringBundle *	nsEudoraStringBundle::m_pBundle = nsnull;
+
 nsIStringBundle *nsEudoraStringBundle::GetStringBundle( void)
 {
+	if (m_pBundle)
+		return( m_pBundle);
+
 	nsresult			rv;
 	char*				propertyURL = EUDORA_MSGS_URL;
 	nsIStringBundle*	sBundle = nsnull;
@@ -41,8 +48,26 @@ nsIStringBundle *nsEudoraStringBundle::GetStringBundle( void)
 		nsILocale   *		locale = nsnull;
 		rv = sBundleService->CreateBundle(propertyURL, locale, &sBundle);
 	}
-
+	
+	m_pBundle = sBundle;
 	return( sBundle);
+}
+
+nsIStringBundle *nsEudoraStringBundle::GetStringBundleProxy( void)
+{
+	if (!m_pBundle)
+		return( nsnull);
+
+	nsIStringBundle *strProxy = nsnull;
+	nsresult rv;
+	// create a proxy object if we aren't on the same thread?
+	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+	if (NS_SUCCEEDED(rv)) {
+		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIStringBundle),
+										m_pBundle, PROXY_SYNC | PROXY_ALWAYS, (void **) &strProxy);
+	}
+
+	return( strProxy);
 }
 
 void nsEudoraStringBundle::GetStringByID( PRInt32 stringID, nsString& result, nsIStringBundle *pBundle)
@@ -55,20 +80,14 @@ void nsEudoraStringBundle::GetStringByID( PRInt32 stringID, nsString& result, ns
 
 PRUnichar *nsEudoraStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle *pBundle)
 {
-	PRBool	mine = PR_FALSE;
 	if (!pBundle) {
-		mine = PR_TRUE;
 		pBundle = GetStringBundle();
 	}
 	
 	if (pBundle) {
 		PRUnichar *ptrv = nsnull;
 		nsresult rv = pBundle->GetStringFromID(stringID, &ptrv);
-		
-		if (mine) {
-			NS_RELEASE(pBundle);
-		}
-		
+				
 		if (NS_SUCCEEDED( rv) && ptrv)
 			return( ptrv);
 	}
@@ -80,3 +99,9 @@ PRUnichar *nsEudoraStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle
 	return( resultString.ToNewUnicode());
 }
 
+void nsEudoraStringBundle::Cleanup( void)
+{
+	if (m_pBundle)
+		m_pBundle->Release();
+	m_pBundle = nsnull;
+}

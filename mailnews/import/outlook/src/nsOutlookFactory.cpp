@@ -33,7 +33,7 @@
 #include "nsCRT.h"
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
-
+#include "nsOutlookStringBundle.h"
 #include "OutlookDebugLog.h"
 
 static NS_DEFINE_CID(kOutlookImportCID,    	NS_OUTLOOKIMPORT_CID);
@@ -76,5 +76,12 @@ static nsModuleComponentInfo components[] = {
 	}
 };
 
-NS_IMPL_NSGETMODULE("nsOutlookImport", components)
+PR_STATIC_CALLBACK(void)
+outlookModuleDtor(nsIModule* self)
+{
+	nsOutlookStringBundle::Cleanup();
+}
+
+
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsOutlookImport", components, outlookModuleDtor)
 

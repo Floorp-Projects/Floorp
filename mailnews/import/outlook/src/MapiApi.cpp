@@ -27,6 +27,13 @@
 #include "prprf.h"
 
 
+int			CMapiApi::m_clients = 0;
+BOOL		CMapiApi::m_initialized = PR_FALSE;
+nsVoidArray	*CMapiApi::m_pStores = NULL;
+LPMAPISESSION CMapiApi::m_lpSession = NULL;
+LPMDB		CMapiApi::m_lpMdb = NULL;
+HRESULT		CMapiApi::m_lastError;
+
 /*
 Type: 1, name: Calendar, class: IPF.Appointment
 Type: 1, name: Contacts, class: IPF.Contact
@@ -146,28 +153,40 @@ void CMapiApi::UnloadMapi( void)
 
 CMapiApi::CMapiApi()
 {
-	m_initialized = FALSE;
-	m_lpSession = NULL;
-	m_lpMdb = NULL;
+	m_clients++;
+	LoadMapi();
+	if (!m_pStores)
+		m_pStores = new nsVoidArray();
 }
 
 CMapiApi::~CMapiApi()
 {
-	HRESULT	hr;
+	m_clients--;
+	if (!m_clients) {
+		HRESULT	hr;
 
-	ClearMessageStores();
-	m_lpMdb = NULL;
+		ClearMessageStores();
+		delete m_pStores;
+		m_pStores = NULL;
 
-	if (m_lpSession) {
-		hr = m_lpSession->Logoff( NULL, 0, 0);
-		if (FAILED(hr)) {
-			MAPI_TRACE2( "Logoff failed: 0x%lx, %d\n", (long)hr, (int)hr);
+		m_lpMdb = NULL;
+
+		if (m_lpSession) {
+			hr = m_lpSession->Logoff( NULL, 0, 0);
+			if (FAILED(hr)) {
+				MAPI_TRACE2( "Logoff failed: 0x%lx, %d\n", (long)hr, (int)hr);
+			}
+			m_lpSession->Release();
+			m_lpSession = NULL;
 		}
-		m_lpSession->Release();
-	}
 
-	if (m_initialized)
-		MAPIUninitialize();
+		if (m_initialized) {
+			MAPIUninitialize();
+			m_initialized = FALSE;
+		}
+
+		UnloadMapi();
+	}
 }
 
 BOOL CMapiApi::Initialize( void)
@@ -225,40 +244,50 @@ BOOL CMapiApi::LogOn( void)
 
 class CGetStoreFoldersIter : public CMapiHierarchyIter {
 public:
-	CGetStoreFoldersIter( CMapiApi *pApi, CMapiFolderList& folders, int depth);
+	CGetStoreFoldersIter( CMapiApi *pApi, CMapiFolderList& folders, int depth, BOOL isMail = TRUE);
 	
 	virtual BOOL HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID pEntry);
 
 protected:
 	BOOL	ExcludeFolderClass( const char *pName);
 
+	BOOL				m_isMail;
 	CMapiApi *			m_pApi;
 	CMapiFolderList *	m_pList;
 	int					m_depth;
 };
 
-CGetStoreFoldersIter::CGetStoreFoldersIter( CMapiApi *pApi, CMapiFolderList& folders, int depth)
+CGetStoreFoldersIter::CGetStoreFoldersIter( CMapiApi *pApi, CMapiFolderList& folders, int depth, BOOL isMail)
 {
 	m_pApi = pApi;
 	m_pList = &folders;
 	m_depth = depth;
+	m_isMail = isMail;
 }
 
 BOOL CGetStoreFoldersIter::ExcludeFolderClass( const char *pName)
 {
-	BOOL bResult = FALSE;
-	if (!nsCRT::strcasecmp( pName, "IPF.Appointment"))
+	BOOL bResult;
+	if (m_isMail) {
+		bResult = FALSE;
+		if (!nsCRT::strcasecmp( pName, "IPF.Appointment"))
+			bResult = TRUE;
+		else if (!nsCRT::strcasecmp( pName, "IPF.Contact"))
+			bResult = TRUE;
+		else if (!nsCRT::strcasecmp( pName, "IPF.Journal"))
+			bResult = TRUE;
+		else if (!nsCRT::strcasecmp( pName, "IPF.StickyNote"))
+			bResult = TRUE;
+		else if (!nsCRT::strcasecmp( pName, "IPF.Task"))
+			bResult = TRUE;
+		// else if (!stricmp( pName, "IPF.Note"))
+		//	bResult = TRUE;
+	}
+	else {
 		bResult = TRUE;
-	else if (!nsCRT::strcasecmp( pName, "IPF.Contact"))
-		bResult = TRUE;
-	else if (!nsCRT::strcasecmp( pName, "IPF.Journal"))
-		bResult = TRUE;
-	else if (!nsCRT::strcasecmp( pName, "IPF.StickyNote"))
-		bResult = TRUE;
-	else if (!nsCRT::strcasecmp( pName, "IPF.Task"))
-		bResult = TRUE;
-	// else if (!stricmp( pName, "IPF.Note"))
-	//	bResult = TRUE;
+		if (!nsCRT::strcasecmp( pName, "IPF.Contact"))
+			bResult = FALSE;
+	}
 
 	return( bResult);
 }
@@ -277,7 +306,7 @@ BOOL CGetStoreFoldersIter::HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID
 			else
 				name.Truncate();
 
-			if (name.IsEmpty() || (!ExcludeFolderClass( name))) {
+			if ((name.IsEmpty() && m_isMail) || (!ExcludeFolderClass( name))) {
 				pVal = m_pApi->GetMapiProperty( pFolder, PR_DISPLAY_NAME);
 				m_pApi->GetStringFromProp( pVal, name);
 				CMapiFolder	*pNewFolder = new CMapiFolder( name, cb, pEntry, m_depth);
@@ -287,7 +316,7 @@ BOOL CGetStoreFoldersIter::HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID
 				MAPI_TRACE2( "Type: %d, name: %s\n", m_pApi->GetLongFromProp( pVal), (const char *)name);
 				// m_pApi->ListProperties( pFolder);
 			
-				CGetStoreFoldersIter	nextIter( m_pApi, *m_pList, m_depth + 1);
+				CGetStoreFoldersIter	nextIter( m_pApi, *m_pList, m_depth + 1, m_isMail);
 				m_pApi->IterateHierarchy( &nextIter, pFolder);
 			}
 			pFolder->Release();
@@ -355,6 +384,58 @@ BOOL CMapiApi::GetStoreFolders( ULONG cbEid, LPENTRYID lpEid, CMapiFolderList& f
 
 	return( bResult);
 }
+
+BOOL CMapiApi::GetStoreAddressFolders( ULONG cbEid, LPENTRYID lpEid, CMapiFolderList& folders)
+{
+	// Fill in the array with the folders in the given store
+	if (!m_initialized || !m_lpSession) {
+		MAPI_TRACE0( "MAPI not initialized for GetStoreAddressFolders\n");
+		return( FALSE);
+	}
+	
+	m_lpMdb = NULL;
+
+	CMsgStore *		pStore = FindMessageStore( cbEid, lpEid);
+	BOOL			bResult = FALSE;
+	LPSPropValue	pVal;
+
+	if (pStore && pStore->Open( m_lpSession, &m_lpMdb)) {
+		// Successful open, do the iteration of the store
+		pVal = GetMapiProperty( m_lpMdb, PR_IPM_SUBTREE_ENTRYID);
+		if (pVal) {
+			ULONG			cbEntry;
+			LPENTRYID		pEntry;
+			LPMAPIFOLDER	lpSubTree = NULL;
+
+			if (GetEntryIdFromProp( pVal, cbEntry, pEntry)) {
+				// Open up the folder!
+				bResult = OpenEntry( cbEntry, pEntry, (LPUNKNOWN *)&lpSubTree);
+				MAPIFreeBuffer( pEntry);
+				if (bResult && lpSubTree) {
+					// Iterate the subtree with the results going into the folder list
+					CGetStoreFoldersIter iterHandler( this, folders, 1, FALSE);
+					bResult = IterateHierarchy( &iterHandler, lpSubTree);
+					lpSubTree->Release();
+				}
+				else {
+					MAPI_TRACE0( "GetStoreAddressFolders: Error opening sub tree.\n");
+				}
+			}
+			else {
+				MAPI_TRACE0( "GetStoreAddressFolders: Error getting entryID from sub tree property val.\n");
+			}
+		}
+		else {
+			MAPI_TRACE0( "GetStoreAddressFolders: Error getting sub tree property.\n");
+		}
+	}
+	else {
+		MAPI_TRACE0( "GetStoreAddressFolders: Error opening message store.\n");
+	}
+
+	return( bResult);
+}
+
 
 BOOL CMapiApi::OpenStore( ULONG cbEid, LPENTRYID lpEid, LPMDB *ppMdb)
 {
@@ -868,17 +949,20 @@ void CMapiApi::GetStoreInfo( CMapiFolder *pFolder, long *pSzContents)
 
 void CMapiApi::ClearMessageStores( void)
 {
-	CMsgStore *	pStore;
-	for (int i = 0; i < m_stores.Count(); i++) {
-		pStore = (CMsgStore *) m_stores.ElementAt( i);
-		delete pStore;
+	if (m_pStores) {
+		CMsgStore *	pStore;
+		for (int i = 0; i < m_pStores->Count(); i++) {
+			pStore = (CMsgStore *) m_pStores->ElementAt( i);
+			delete pStore;
+		}
+		m_pStores->Clear();
 	}
-	m_stores.Clear();
 }
 
 void CMapiApi::AddMessageStore( CMsgStore *pStore)
 {
-	m_stores.AppendElement( pStore);
+	if (m_pStores)
+		m_pStores->AppendElement( pStore);
 }
 
 CMsgStore *	CMapiApi::FindMessageStore( ULONG cbEid, LPENTRYID lpEid)
@@ -892,8 +976,8 @@ CMsgStore *	CMapiApi::FindMessageStore( ULONG cbEid, LPENTRYID lpEid)
 	ULONG		result;
 	HRESULT		hr;
 	CMsgStore *	pStore;
-	for (int i = 0; i < m_stores.Count(); i++) {
-		pStore = (CMsgStore *) m_stores.ElementAt( i);
+	for (int i = 0; i < m_pStores->Count(); i++) {
+		pStore = (CMsgStore *) m_pStores->ElementAt( i);
 		hr = m_lpSession->CompareEntryIDs( cbEid, lpEid, pStore->GetCBEntryID(), pStore->GetLPEntryID(),
 											0, &result);
 		if (HR_FAILED( hr)) {
@@ -1020,8 +1104,11 @@ BOOL CMapiApi::GetEntryIdFromProp( LPSPropValue pVal, ULONG& cbEntryId, LPENTRYI
 BOOL CMapiApi::GetStringFromProp( LPSPropValue pVal, nsCString& val, BOOL delVal)
 {
 	BOOL bResult = TRUE;
-	if ( pVal && (PROP_TYPE( pVal->ulPropTag) == PT_TSTRING)) {
-		val = (LPCTSTR) (pVal->Value.LPSZ);
+	if ( pVal && (PROP_TYPE( pVal->ulPropTag) == PT_STRING8)) {
+		val = pVal->Value.lpszA;
+	}
+	else if ( pVal && (PROP_TYPE( pVal->ulPropTag) == PT_UNICODE)) {
+		val = (PRUnichar *) pVal->Value.lpszW;
 	}
 	else if (pVal && (PROP_TYPE( pVal->ulPropTag) == PT_NULL)) {
 		val.Truncate();
@@ -1045,6 +1132,40 @@ BOOL CMapiApi::GetStringFromProp( LPSPropValue pVal, nsCString& val, BOOL delVal
 
 	return( bResult);
 }
+
+BOOL CMapiApi::GetStringFromProp( LPSPropValue pVal, nsString& val, BOOL delVal)
+{
+	BOOL bResult = TRUE;
+	if ( pVal && (PROP_TYPE( pVal->ulPropTag) == PT_STRING8)) {
+		val = pVal->Value.lpszA;
+		// Convert this str to a wide char!
+	}
+	else if ( pVal && (PROP_TYPE( pVal->ulPropTag) == PT_UNICODE)) {
+		val = (PRUnichar *) pVal->Value.lpszW;
+	}
+	else if (pVal && (PROP_TYPE( pVal->ulPropTag) == PT_NULL)) {
+		val.Truncate();
+	}
+	else if (pVal && (PROP_TYPE( pVal->ulPropTag) == PT_ERROR)) {
+		val.Truncate();
+		bResult = FALSE;
+	}
+	else {
+		if (pVal) {
+			MAPI_TRACE1( "GetStringFromProp: invalid value, expecting string - %d\n", (int) PROP_TYPE( pVal->ulPropTag));
+		}
+		else {
+			MAPI_TRACE0( "GetStringFromProp: invalid value, expecting string, got null pointer\n");
+		}
+		val.Truncate();
+		bResult = FALSE;
+	}
+	if (pVal && delVal)
+		MAPIFreeBuffer( pVal);
+
+	return( bResult);
+}
+
 
 LONG CMapiApi::GetLongFromProp( LPSPropValue pVal, BOOL delVal)
 {

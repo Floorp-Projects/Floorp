@@ -25,6 +25,7 @@
 #include "nsIImportService.h"
 #include "nsImportMimeEncode.h"
 #include "nsCRT.h"
+#include "nsImportStringBundle.h"
 #include "ImportDebug.h"
 
 
@@ -46,7 +47,12 @@ static nsModuleComponentInfo components[] = {
 };
 
 
+PR_STATIC_CALLBACK(void)
+importModuleDtor(nsIModule* self)
+{
+	nsImportStringBundle::Cleanup();
+}
 
-NS_IMPL_NSGETMODULE( "nsImportServiceModule", components)
+NS_IMPL_NSGETMODULE_WITH_DTOR( "nsImportServiceModule", components, importModuleDtor)
 
 
