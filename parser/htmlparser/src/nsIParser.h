@@ -66,6 +66,16 @@ enum eCRCQuality {
 };
 
 
+typedef enum {
+   kCharsetUninitialized = 0,
+   kCharsetFromUserDefault ,
+   kCharsetFromDocTypeDefault,
+   kCharsetFromParentFrame,
+   kCharsetFromAutoDetection,
+   kCharsetFromMetaTag,
+   kCharsetFromHTTPHeader
+} nsCharsetSource;
+
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
 
 /**
@@ -114,6 +124,18 @@ class nsIParser : public nsISupports {
      *  @return	 nada
      */
     virtual void SetCommand(const char* aCommand)=0;
+
+    /**
+     *  Call this method once you've created a parser, and want to instruct it
+     *  about what charset to load
+     *  
+     *  @update  ftang 4/23/99
+     *  @param   aCharset- the charest of a document
+     *  @param   aCharsetSource- the soure of the chares
+     *  @return	 nada
+     */
+    virtual void SetDocumentCharset(nsString& aCharset, nsCharsetSource aSource)=0;
+
 
 
     /******************************************************************************************

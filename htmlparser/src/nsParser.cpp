@@ -142,7 +142,7 @@ CSharedParserObjects& GetSharedObjects() {
  *  @param   
  *  @return   
  */
-nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput("") {
+nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput("") , mCharset("ISO-8859-1") {
   NS_INIT_REFCNT();
   mParserFilter = 0;
   mObserver = 0;
@@ -151,6 +151,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mTokenObserver=anObserver;
   mStreamStatus=0;
   mDTDVerification=PR_FALSE;
+  mCharsetSource=kCharsetUninitialized;
 }
 
  
@@ -243,6 +244,22 @@ nsIParserFilter * nsParser::SetParserFilter(nsIParserFilter * aFilter)
  */
 void nsParser::SetCommand(const char* aCommand){
   mCommand=aCommand;
+}
+
+
+
+/**
+ *  Call this method once you've created a parser, and want to instruct it
+ *  about what charset to load
+ *  
+ *  @update  ftang 4/23/99
+ *  @param   aCharset- the charest of a document
+ *  @param   aCharsetSource- the soure of the chares
+ *  @return	 nada
+ */
+void nsParser::SetDocumentCharset(nsString& aCharset, nsCharsetSource aCharsetSource){
+  mCharset = aCharset;
+  mCharsetSource = aCharsetSource; 
 }
 
 /**
@@ -555,25 +572,6 @@ nsParser::IsParserEnabled()
 nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
-  nsAutoString charset;
-  nsCharsetSource charsetSource;
-
-  // XXXX get HTTP charset here
-  // charset =
-  // charsetSource = kCharsetFromHTTPHeader;
-
-  // XXXX get User Prefernce charset here
-  // charset =
-  // charsetSource = kCharsetFromUserDefault;
-
-  // XXXX get Doc Type Default (e.g. UTF-8 for XML)
-
-  // XXX We should really put if doc == html for the following line
-  charset = "ISO-8859-1";
-  charsetSource = kCharsetFromDocTypeDefault;
-
-
-
   nsresult result=kBadURL;
   mDTDVerification=aVerifyEnabled;
   if(aURL) {
@@ -588,21 +586,26 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
 	theName.Right(last4, 4);
 	if(last4.EqualsIgnoreCase(".xul") || last4.EqualsIgnoreCase(".xml") || last4.EqualsIgnoreCase(".rdf") ) 
 	{
-		charset = "UTF-8";
+                if(kCharsetFromDocTypeDefault >= mCharsetSource) {
+		   mCharset = "UTF-8";
+                   mCharsetSource = kCharsetFromDocTypeDefault;
+                }
 	}
 
     // XXX begin of meta tag charset hack
 
 	if(theName.Equals(nsParser::gHackMetaCharsetURL) && (! nsParser::gHackMetaCharset.Equals("")))
 	{
-		charset = nsParser::gHackMetaCharset;
-		charsetSource = kCharsetFromMetaTag;
+                if(kCharsetFromMetaTag > mCharsetSource) {
+	   	   mCharset = nsParser::gHackMetaCharset;
+		   mCharsetSource = kCharsetFromMetaTag;
+                }
 	}
 	nsParser::gHackMetaCharsetURL = theName;
 	nsParser::gHackMetaCharset = "";
     // XXX end of meta tag charset hack
 
-    CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE, charset, charsetSource),aURL,aListener);
+    CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE, mCharset, mCharsetSource),aURL,aListener);
     if(pc) {
       pc->mMultipart=PR_TRUE;
       pc->mContextType=CParserContext::eCTURL;
@@ -625,38 +628,24 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled){
   mDTDVerification=aVerifyEnabled;
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
 
-  nsAutoString charset;
-  nsCharsetSource charsetSource;
-
-  // XXXX get HTTP charset here
-  // charset =
-  // charsetSource = kCharsetFromHTTPHeader;
-
-  // XXXX get User Prefernce charset here
-  // charset =
-  // charsetSource = kCharsetFromUserDefault;
-
-  // XXXX get Doc Type Default (e.g. UTF-8 for XML)
-
-  // XXX We should really put if doc == html for the following line
-  charset = "ISO-8859-1";
-  charsetSource = kCharsetFromDocTypeDefault;
-  
   //ok, time to create our tokenizer and begin the process
   nsAutoString theUnknownFilename("unknown");
 
   // XXX begin of meta tag charset hack
   if(theUnknownFilename.Equals(nsParser::gHackMetaCharsetURL) && (! nsParser::gHackMetaCharset.Equals("")))
   {
-		charset = nsParser::gHackMetaCharset;
-		charsetSource = kCharsetFromMetaTag;
+         
+        if(kCharsetFromMetaTag > mCharsetSource) {
+		mCharset = nsParser::gHackMetaCharset;
+		mCharsetSource = kCharsetFromMetaTag;
+        }
   }
   nsParser::gHackMetaCharsetURL = theUnknownFilename;
   nsParser::gHackMetaCharset = "";
   // XXX end of meta tag charset hack
 
 	nsInputStream input(&aStream);
-  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename, input, charset, charsetSource,PR_FALSE),&aStream,0);
+  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename, input, mCharset, mCharsetSource,PR_FALSE),&aStream,0);
   if(pc) {
     PushContext(*pc);
     pc->mSourceType=kHTMLTextContentType;
@@ -691,33 +680,22 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
   }
 #endif
 
-  nsAutoString charset;
-  nsCharsetSource charsetSource;
-
-  // XXXX get HTTP charset here
-  // charset =
-  // charsetSource = kCharsetFromHTTPHeader;
-
-  // XXXX get User Prefernce charset here
-  // charset =
-  // charsetSource = kCharsetFromUserDefault;
-
-  // XXX temp hack to make parser use UTF-8 as default charset for XML, RDF, XUL
-  // XXX This should be removed once we have the SetDefaultCharset in the nsIParser interface
   if(aContentType.EqualsIgnoreCase("text/xul") || aContentType.EqualsIgnoreCase("text/xml") || aContentType.EqualsIgnoreCase("text/rdf") ) 
   {
-	charset = "UTF-8";
-  } else {
-    charset = "ISO-8859-1";
-  }
-   charsetSource = kCharsetFromDocTypeDefault;
+        if(kCharsetFromDocTypeDefault >= mCharsetSource) {
+	    mCharset = "UTF-8";
+            mCharsetSource = kCharsetFromDocTypeDefault;
+        }
+  } 
 
   // XXX begin of meta tag charset hack
   nsAutoString theFakeURL("fromString");
   if(theFakeURL.Equals(nsParser::gHackMetaCharsetURL) && (! nsParser::gHackMetaCharset.Equals("")))
   {
-		charset = nsParser::gHackMetaCharset;
-		charsetSource = kCharsetFromMetaTag;
+        if(kCharsetFromMetaTag > mCharsetSource) {
+	    mCharset = nsParser::gHackMetaCharset;
+	    mCharsetSource = kCharsetFromMetaTag;
+        }
   }
   nsParser::gHackMetaCharsetURL = theFakeURL;
   nsParser::gHackMetaCharset = "";
@@ -737,7 +715,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
 
     if((!mParserContext) || (mParserContext->mKey!=aKey))  {
       //only make a new context if we dont have one, OR if we do, but has a different context key...
-      pc=new CParserContext(new nsScanner(mUnusedInput, charset, charsetSource),aKey, 0);
+      pc=new CParserContext(new nsScanner(mUnusedInput, mCharset, mCharsetSource),aKey, 0);
       if(pc) {
         PushContext(*pc);
         pc->mStreamListenerState=eOnStart;  
