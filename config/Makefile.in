@@ -117,11 +117,14 @@ else
 _ABS_DIST = $(shell cd $(DIST) && pwd)
 endif
 libs::
-	$(MAKE) -C $(DEPTH)/nsprpub real_install prefix=$(_ABS_DIST)/sdk exec_prefix=$(_ABS_DIST)/sdk bindir=$(_ABS_DIST)/sdk/dummy includedir=$(_ABS_DIST)/sdk/include libdir=$(_ABS_DIST)/sdk/bin datadir=$(_ABS_DIST)/sdk/dummy DESTDIR=
+	$(MAKE) -C $(DEPTH)/nsprpub real_install prefix=$(_ABS_DIST)/sdk exec_prefix=$(_ABS_DIST)/sdk bindir=$(_ABS_DIST)/sdk/dummy includedir=$(_ABS_DIST)/sdk/include libdir=$(_ABS_DIST)/sdk/lib datadir=$(_ABS_DIST)/sdk/dummy DESTDIR=
 	$(RM) -rf $(DIST)/sdk/dummy
-	$(RM) -f $(DIST)/sdk/bin/$(LIB_PREFIX)nspr4.$(LIB_SUFFIX) $(DIST)/sdk/bin/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) $(DIST)/sdk/bin/$(LIB_PREFIX)plds4.$(LIB_SUFFIX)
+	$(RM) -f $(DIST)/sdk/lib/$(LIB_PREFIX)nspr4_s.$(LIB_SUFFIX) $(DIST)/sdk/lib/$(LIB_PREFIX)plc4_s.$(LIB_SUFFIX) $(DIST)/sdk/lib/$(LIB_PREFIX)plds4_s.$(LIB_SUFFIX)
 ifndef DISABLE_DIST_GRE
-	$(INSTALL) $(DIST)/sdk/bin/$(DLL_PREFIX)nspr4$(DLL_SUFFIX) $(DIST)/sdk/bin/$(DLL_PREFIX)plc4$(DLL_SUFFIX) $(DIST)/sdk/bin/$(DLL_PREFIX)plds4$(DLL_SUFFIX) $(GRE_DIST)
+	$(INSTALL) $(DIST)/sdk/lib/$(DLL_PREFIX)nspr4$(DLL_SUFFIX) $(DIST)/sdk/lib/$(DLL_PREFIX)plc4$(DLL_SUFFIX) $(DIST)/sdk/lib/$(DLL_PREFIX)plds4$(DLL_SUFFIX) $(GRE_DIST)
+endif
+ifeq ($(OS_ARCH),WINNT)
+	$(RM) -f $(DIST)/sdk/lib/$(DLL_PREFIX)nspr4$(DLL_SUFFIX) $(DIST)/sdk/lib/$(DLL_PREFIX)plc4$(DLL_SUFFIX) $(DIST)/sdk/lib/$(DLL_PREFIX)plds4$(DLL_SUFFIX)
 endif
 endif
 
