@@ -47,6 +47,7 @@
 #include "nsIRDFObserver.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFObserver.h"
 
 class nsAppShellWindowEnumerator;
 class nsASXULWindowEarlyToLateEnumerator;
@@ -59,7 +60,8 @@ struct nsWindowInfo;
 struct PRLock;
 
 class nsWindowMediator : public nsIWindowMediator,
-                         public nsIRDFDataSource
+                         public nsIRDFDataSource,
+                         public nsIRDFObserver
 {
 friend class nsAppShellWindowEnumerator;
 friend class nsASXULWindowEarlyToLateEnumerator;
@@ -70,133 +72,20 @@ friend class nsASDOMWindowBackToFrontEnumerator;
 friend class nsASXULWindowBackToFrontEnumerator;
 
 public:
-	nsWindowMediator();
-	virtual ~nsWindowMediator();
+  nsWindowMediator();
+  virtual ~nsWindowMediator();
   nsresult Init();
 
   NS_DECL_NSIWINDOWMEDIATOR
-	
-	// COM and RDF 
-	NS_DECL_ISUPPORTS	
+  
+  // COM and RDF 
+  NS_DECL_ISUPPORTS 
 
-	// RDF
   // nsIRDFDataSource
-  NS_IMETHOD GetURI(char* *uri)
-  {
-    NS_PRECONDITION(uri != nsnull, "null ptr");
-    if (! uri)
-      return NS_ERROR_NULL_POINTER;
+  NS_DECL_NSIRDFDATASOURCE
 
-    *uri = nsCRT::strdup("rdf:window-mediator");
-    if (! *uri)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetSource(nsIRDFResource* property,
-                       nsIRDFNode* target,
-                       PRBool tv,
-                       nsIRDFResource** source)
-  {
-      return mInner->GetSource(property, target, tv, source);
-  }
-
-  NS_IMETHOD GetSources(nsIRDFResource* property,
-                        nsIRDFNode* target,
-                        PRBool tv,
-                        nsISimpleEnumerator** sources)
-  {
-      return mInner->GetSources(property, target, tv, sources);
-  }
-
- 	NS_IMETHOD GetTargets(nsIRDFResource* source,
-                        nsIRDFResource* property,
-                        PRBool tv,
-                        nsISimpleEnumerator** targets)
-  {
-      return mInner->GetTargets(source, property, tv, targets);
-  }
-
-  NS_IMETHOD GetTarget(nsIRDFResource* aSource, 
-                    nsIRDFResource* aProperty, 
-                    PRBool aTruthValue,
-                    nsIRDFNode** target);
-
-  NS_IMETHOD Assert(nsIRDFResource* aSource, 
-                    nsIRDFResource* aProperty, 
-                    nsIRDFNode* aTarget,
-                    PRBool aTruthValue);
-
-  NS_IMETHOD Unassert(nsIRDFResource* aSource,
-                      nsIRDFResource* aProperty,
-                      nsIRDFNode* aTarget);
-
-  NS_IMETHOD Change(nsIRDFResource* aSource,
-                    nsIRDFResource* aProperty,
-                    nsIRDFNode* aOldTarget,
-                    nsIRDFNode* aNewTarget);
-
-  NS_IMETHOD Move(nsIRDFResource* aOldSource,
-                  nsIRDFResource* aNewSource,
-                  nsIRDFResource* aProperty,
-                  nsIRDFNode* aTarget);
-
-  NS_IMETHOD HasAssertion(nsIRDFResource* source,
-                          nsIRDFResource* property,
-                          nsIRDFNode* target,
-                          PRBool tv,
-                          PRBool* hasAssertion)
-  {
-      return mInner->HasAssertion(source, property, target, tv, hasAssertion);
-  }
-
-  NS_IMETHOD AddObserver(nsIRDFObserver* n)
-  {
-      return mInner->AddObserver(n);
-  }
-
-  NS_IMETHOD RemoveObserver(nsIRDFObserver* n)
-  {
-      return mInner->RemoveObserver(n);
-  }
-
-  NS_IMETHOD HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval) {
-    return mInner->HasArcIn(aNode, aArc, _retval);
-  }
-
-  NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval) {
-    return mInner->HasArcOut(aSource, aArc, _retval);
-  }
-
-  NS_IMETHOD ArcLabelsIn( nsIRDFNode* node, nsISimpleEnumerator** labels)
-  {
-      return mInner->ArcLabelsIn(node, labels);
-  }
-
-  NS_IMETHOD ArcLabelsOut(nsIRDFResource* source, nsISimpleEnumerator** labels)
-  {
-      return mInner->ArcLabelsOut(source, labels);
-  }
-
-  NS_IMETHOD GetAllResources(nsISimpleEnumerator** aCursor)
-  {
-      return mInner->GetAllResources(aCursor);
-  }
-
-  NS_IMETHOD GetAllCommands(nsIRDFResource* source,
-                            nsIEnumerator** commands);
-  NS_IMETHOD GetAllCmds(nsIRDFResource* source,
-                            nsISimpleEnumerator** commands);
-
-  NS_IMETHOD IsCommandEnabled(nsISupportsArray* aSources,
-                              nsIRDFResource*   aCommand,
-                              nsISupportsArray* aArguments,
-                              PRBool* aResult);
-
-  NS_IMETHOD DoCommand(nsISupportsArray* aSources,
-                       nsIRDFResource*   aCommand,
-                       nsISupportsArray* aArguments);
+  // nsIRDFObserver
+  NS_DECL_NSIRDFOBSERVER
 
 private:
   // Helper functions
@@ -204,6 +93,7 @@ private:
   PRInt32 AddEnumerator( nsAppShellWindowEnumerator* inEnumerator );
   PRInt32 RemoveEnumerator( nsAppShellWindowEnumerator* inEnumerator);
   nsWindowInfo *MostRecentWindowInfo(const PRUnichar* inType);
+  nsresult RemoveAndUpdateSynthetics(nsIRDFNode *node);
 
   NS_IMETHOD UnregisterWindow( nsWindowInfo *inInfo );
 
@@ -211,8 +101,10 @@ private:
   nsWindowInfo *mOldestWindow,
                *mTopmostWindow;
   PRInt32       mTimeStamp;
+  PRInt32       mUpdateBatchNest;
   PRLock       *mListLock;
   nsCOMPtr<nsIWindowWatcher> mWatcher;
+  nsCOMPtr<nsISupportsArray> mObservers;
 
   // pseudo-constants for RDF
   static nsIRDFResource* kNC_WindowMediatorRoot;
