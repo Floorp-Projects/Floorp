@@ -265,8 +265,8 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         if (hasMore) {
             nsCAutoString ext;
             extensions->GetNext(ext);
-            defaultFileName.Append(PRUnichar('.'));
-            defaultFileName.Append(NS_ConvertUTF8toUCS2(ext));
+            defaultFileName.Append('.');
+            defaultFileName.Append(ext);
         }
     }
     
