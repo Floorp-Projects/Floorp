@@ -31,9 +31,9 @@
 #include "nsIHttpAuthenticator.h"
 #include "nsIAuthPrompt.h"
 #include "nsIStringBundle.h"
-#include "nsIStreamConverterService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIFileStream.h"
+#include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsString2.h"
 #include "nsReadableUtils.h"
@@ -1655,15 +1655,60 @@ nsHttpChannel::GetSecurityInfo(nsISupports **securityInfo)
 NS_IMETHODIMP
 nsHttpChannel::GetContentType(char **value)
 {
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
+    nsresult rv;
 
-    return DupString(mResponseHead->ContentType(), value);
+    NS_ENSURE_ARG_POINTER(value);
+
+    if (mResponseHead && mResponseHead->ContentType())
+        return DupString(mResponseHead->ContentType(), value);
+
+    // else if the there isn't a response yet or if the response does not
+    // contain a content-type header, try to determine the content type
+    // from the file extension of the URI...
+
+    // We had to do this same hack in 4.x. Sometimes, we run an http url that
+    // ends in special extensions like .dll, .exe, etc and the server doesn't
+    // provide a specific content type for the document. In actuality the 
+    // document is really text/html (sometimes). For these cases, we don't want
+    // to ask the mime service for the content type because it will make 
+    // incorrect conclusions based on the file extension. Instead, set the 
+    // content type to unknown and allow our unknown content type decoder a
+    // chance to sniff the data stream and conclude a content type. 
+
+    PRBool doMimeLookup = PR_TRUE;
+    nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
+    if (url) {
+        nsXPIDLCString ext;
+        url->GetFileExtension(getter_Copies(ext));
+        if (ext && (!PL_strcasecmp(ext, "dll") || !PL_strcasecmp(ext, "exe")))
+            doMimeLookup = PR_FALSE;
+    }
+    if (doMimeLookup) {
+        nsCOMPtr<nsIMIMEService> mime;
+        nsHttpHandler::get()->GetMimeService(getter_AddRefs(mime));
+        if (mime) {
+            rv = mime->GetTypeFromURI(mURI, value);
+            if (NS_SUCCEEDED(rv)) {
+                // cache this result if possible
+                if (mResponseHead)
+                    mResponseHead->SetContentType(*value);
+                return rv;
+            }
+        }
+    }
+
+    if (!*value)
+        *value = PL_strdup(UNKNOWN_CONTENT_TYPE);
+
+    return *value ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 NS_IMETHODIMP
 nsHttpChannel::SetContentType(const char *value)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!mResponseHead)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    return mResponseHead->SetContentType(value);
 }
 
 NS_IMETHODIMP

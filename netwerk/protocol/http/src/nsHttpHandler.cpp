@@ -65,6 +65,7 @@ static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 #define UA_PREF_PREFIX "general.useragent."
 #define UA_APPNAME "Mozilla"
@@ -494,6 +495,19 @@ nsHttpHandler::GetStreamConverterService(nsIStreamConverterService **result)
         if (NS_FAILED(rv)) return rv;
     }
     *result = mStreamConvSvc;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+nsresult
+nsHttpHandler::GetMimeService(nsIMIMEService **result)
+{
+    if (!mMimeService) {
+        nsresult rv;
+        mMimeService = do_GetService(kMimeServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
+    *result = mMimeService;
     NS_ADDREF(*result);
     return NS_OK;
 }
