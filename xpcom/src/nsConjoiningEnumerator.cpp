@@ -217,24 +217,7 @@ nsIntersectionEnumerator::~nsIntersectionEnumerator(void)
   NS_RELEASE(mSecond);
 }
 
-NS_IMPL_ADDREF(nsIntersectionEnumerator);
-NS_IMPL_RELEASE(nsIntersectionEnumerator);
-
-NS_IMETHODIMP
-nsIntersectionEnumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr)
-    return NS_ERROR_NULL_POINTER; 
-
-  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID()) || 
-      aIID.Equals(nsIEnumerator::GetIID()) || 
-      aIID.Equals(nsISupports::GetIID())) {
-    *aInstancePtr = (void*) this; 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
-  return NS_NOINTERFACE; 
-}
+NS_IMPL_ISUPPORTS(nsIntersectionEnumerator, nsIEnumerator::GetIID());
 
 NS_IMETHODIMP 
 nsIntersectionEnumerator::First(void)
@@ -260,34 +243,25 @@ nsIntersectionEnumerator::Next(void)
     if (NS_FAILED(rv)) return rv;
 
     NS_RELEASE(item);
-    if (rv != NS_OK) {
-      // if it didn't exist in mSecond, return, making it the current item
+    if (rv == NS_OK) {
+      // found in both, so return leaving it as the current item of mFirst
       return NS_OK;
     }
-    
-    // each time around, make sure that mSecond gets reset to the beginning
-    // so that when mFirst is done, we'll be ready to enumerate mSecond
-    rv = mSecond->First();
-    if (NS_FAILED(rv)) return rv;
   }
-  
-  return mSecond->Next();
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP 
 nsIntersectionEnumerator::CurrentItem(nsISupports **aItem)
 {
-  if (mFirst->IsDone() != NS_OK)
-    return mFirst->CurrentItem(aItem);
-  else
-    return mSecond->CurrentItem(aItem);
+  return mFirst->CurrentItem(aItem);
 }
 
 NS_IMETHODIMP 
 nsIntersectionEnumerator::IsDone(void)
 {
-  return (mFirst->IsDone() == NS_OK && mSecond->IsDone() == NS_OK)
-    ? NS_OK : NS_COMFALSE;
+  return mFirst->IsDone();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,28 +313,11 @@ nsUnionEnumerator::nsUnionEnumerator(nsIEnumerator* first, nsIEnumerator* second
 
 nsUnionEnumerator::~nsUnionEnumerator(void)
 {
-  NS_IF_RELEASE(mFirst);
+  NS_RELEASE(mFirst);
   NS_RELEASE(mSecond);
 }
 
-NS_IMPL_ADDREF(nsUnionEnumerator);
-NS_IMPL_RELEASE(nsUnionEnumerator);
-
-NS_IMETHODIMP
-nsUnionEnumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr)
-    return NS_ERROR_NULL_POINTER; 
-
-  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID()) || 
-      aIID.Equals(nsIEnumerator::GetIID()) || 
-      aIID.Equals(nsISupports::GetIID())) {
-    *aInstancePtr = (void*) this; 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
-  return NS_NOINTERFACE; 
-}
+NS_IMPL_ISUPPORTS(nsUnionEnumerator, nsIEnumerator::GetIID());
 
 NS_IMETHODIMP 
 nsUnionEnumerator::First(void)
@@ -386,25 +343,34 @@ nsUnionEnumerator::Next(void)
     if (NS_FAILED(rv)) return rv;
 
     NS_RELEASE(item);
-    if (rv == NS_OK) {
-      // found in both, so return leaving it as the current item of mFirst
+    if (rv != NS_OK) {
+      // if it didn't exist in mSecond, return, making it the current item
       return NS_OK;
     }
+    
+    // each time around, make sure that mSecond gets reset to the beginning
+    // so that when mFirst is done, we'll be ready to enumerate mSecond
+    rv = mSecond->First();
+    if (NS_FAILED(rv)) return rv;
   }
-
-  return NS_ERROR_FAILURE;
+  
+  return mSecond->Next();
 }
 
 NS_IMETHODIMP 
 nsUnionEnumerator::CurrentItem(nsISupports **aItem)
 {
-  return mFirst->CurrentItem(aItem);
+  if (mFirst->IsDone() != NS_OK)
+    return mFirst->CurrentItem(aItem);
+  else
+    return mSecond->CurrentItem(aItem);
 }
 
 NS_IMETHODIMP 
 nsUnionEnumerator::IsDone(void)
 {
-  return mFirst->IsDone();
+  return (mFirst->IsDone() == NS_OK && mSecond->IsDone() == NS_OK)
+    ? NS_OK : NS_COMFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
