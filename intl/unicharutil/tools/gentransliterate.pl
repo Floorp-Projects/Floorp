@@ -112,6 +112,17 @@ entity.8290=
 entity.8518=d
 # U+2212, MINUS SIGN, official Unicode minus sign
 entity.8722=-
+## Hebrew punctuation
+# U+05BE HEBREW PUNCTUATION MAQAF
+entity.1470=-
+# U+05C0 HEBREW PUNCTUATION PASEQ
+entity.1472=|
+# U+05C3 HEBREW PUNCTUATION SOF PASUQ
+entity.1475=:
+# U+05F3 HEBREW PUNCTUATION GERESH
+entity.1523='
+# U+05F4 HEBREW PUNCTUATION GERSHAYIM
+entity.1524="
 ##
 ## End of hand coded section
 ## Below are generated from the unicode character database
