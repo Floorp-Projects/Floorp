@@ -34,6 +34,8 @@ CPPSRCS		= nsDebug.cpp \
 		  nsSupportsArray.cpp \
 		  nsRepository.cpp \
 		  nsTraceRefcnt.cpp \
+		  nsXPComFactory.cpp \
+		  nsEventQueueService.cpp \
 		  $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
