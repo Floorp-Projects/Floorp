@@ -156,10 +156,6 @@ interface nsIEditorShell : nsISupports
   void SelectAll();
   void DeleteSelection(in PRInt32 action);
   
-  void Find();
-  void FindNext();
-  void Replace();
-
   /* General Utilities */
 
   /* Get string from the Editor's localized string bundle */

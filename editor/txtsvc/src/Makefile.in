@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsFindAndReplace.cpp \
 		nsTextServicesDocument.cpp \
 		nsTextServicesFactory.cpp \
 		nsTSDNotifier.cpp \

@@ -700,20 +700,8 @@
                 </VALUE></PANELDATA>
             </SETTINGLIST>
             <FILELIST>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIFindAndReplace.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
             </FILELIST>
             <LINKORDER>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIFindAndReplace.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
             </LINKORDER>
         </TARGET>
         <TARGET>
@@ -1363,20 +1351,8 @@
                 </VALUE></PANELDATA>
             </SETTINGLIST>
             <FILELIST>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIFindAndReplace.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
             </FILELIST>
             <LINKORDER>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIFindAndReplace.idl</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
             </LINKORDER>
         </TARGET>
     </TARGETLIST>
@@ -1387,12 +1363,6 @@
     </TARGETORDER>
 
     <GROUPLIST>
-        <FILEREF>
-            <TARGETNAME>txtsvc.xpt</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsIFindAndReplace.idl</PATH>
-            <PATHFORMAT>MacOS</PATHFORMAT>
-        </FILEREF>
     </GROUPLIST>
 
 </PROJECT>
