@@ -33,6 +33,8 @@
 #include "nsIPresContext.h"
 #include "nsIFrame.h"
 
+//#define XULTREE
+
 // XXX Hack
 #include "nsTreeOuterFrame.h"
 
@@ -84,6 +86,9 @@ nsTreeBoxObject::~nsTreeBoxObject()
 nsIFrame*
 nsTreeBoxObject::GetFrame()
 {
+#ifdef XULTREE
+  return nsBoxObject::GetFrame();
+#else
   nsIFrame* frame = nsBoxObject::GetFrame();
   if (!frame)
     return nsnull;
@@ -97,6 +102,7 @@ nsTreeBoxObject::GetFrame()
     return nsnull;
 
   return (nsIFrame*)treeFrame;
+#endif
 }
 
 /* void ensureIndexIsVisible (in long rowIndex); */
@@ -106,7 +112,7 @@ NS_IMETHODIMP nsTreeBoxObject::EnsureIndexIsVisible(PRInt32 aRowIndex)
   if (!frame)
     return NS_OK;
   
-  nsITreeFrame* treeFrame = (nsITreeFrame*)frame;
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
   return treeFrame->EnsureRowIsVisible(aRowIndex);
 }
 
@@ -123,7 +129,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetNextItem(nsIDOMElement *aStartItem, PRInt32 aD
   if (!frame)
     return NS_OK;
 
-  nsITreeFrame* treeFrame = (nsITreeFrame*)frame;
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
   
   return treeFrame->GetNextItem(aStartItem, aDelta, aResult);
 }
@@ -135,7 +141,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetPreviousItem(nsIDOMElement *aStartItem, PRInt3
   if (!frame)
     return NS_OK;
 
-  nsITreeFrame* treeFrame = (nsITreeFrame*)frame;
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
   return treeFrame->GetPreviousItem(aStartItem, aDelta, aResult);
 }
 
@@ -154,8 +160,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetIndexOfItem(nsIDOMElement* aElement, PRInt32 *
   if (!frame)
     return NS_OK;
 
-  nsITreeFrame* treeFrame = (nsITreeFrame*)frame;
- 
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
   nsCOMPtr<nsIPresContext> presContext;
   mPresShell->GetPresContext(getter_AddRefs(presContext));
   return treeFrame->GetIndexOfItem(presContext, aElement, aResult);

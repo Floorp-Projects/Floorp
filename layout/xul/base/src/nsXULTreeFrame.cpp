@@ -24,6 +24,10 @@
 
 #include "nsCOMPtr.h"
 #include "nsXULTreeFrame.h"
+#include "nsIScrollableFrame.h"
+#include "nsIDOMElement.h"
+#include "nsXULTreeOuterGroupFrame.h"
+#include "nsXULAtoms.h"
 
 //
 // NS_NewXULTreeFrame
@@ -51,9 +55,219 @@ NS_NewXULTreeFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoo
 // Constructor
 nsXULTreeFrame::nsXULTreeFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsBoxFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal) 
-{}
+{
+  mPresShell = aPresShell;
+}
 
 // Destructor
 nsXULTreeFrame::~nsXULTreeFrame()
 {
 }
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsXULTreeFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsXULTreeFrame::Release(void)
+{
+  return NS_OK;
+}
+
+//
+// QueryInterface
+//
+NS_INTERFACE_MAP_BEGIN(nsXULTreeFrame)
+  NS_INTERFACE_MAP_ENTRY(nsITreeFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
+
+static void
+GetImmediateChild(nsIContent* aParent, nsIAtom* aTag, nsIContent** aResult) 
+{
+  *aResult = nsnull;
+  PRInt32 childCount;
+  aParent->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aParent->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if (aTag == tag.get()) {
+      *aResult = child;
+      NS_ADDREF(*aResult);
+      return;
+    }
+  }
+
+  return;
+}
+
+NS_IMETHODIMP
+nsXULTreeFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
+{
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* XULTreeOuterGroup = nsnull;
+  GetTreeBody(&XULTreeOuterGroup);
+
+  if (!XULTreeOuterGroup) return NS_OK;
+  
+  XULTreeOuterGroup->EnsureRowIsVisible(aRowIndex);
+  return NS_OK;
+}
+
+/* void scrollToIndex (in long rowIndex); */
+NS_IMETHODIMP 
+nsXULTreeFrame::ScrollToIndex(PRInt32 rowIndex)
+{
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
+  GetTreeBody(&treeOuterGroup);
+
+  if (!treeOuterGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  // XXX IMPLEMENT!
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIDOMElement getNextItem (in nsIDOMElement startItem, in long delta); */
+NS_IMETHODIMP 
+nsXULTreeFrame::GetNextItem(nsIDOMElement *aStartItem, PRInt32 aDelta, nsIDOMElement **aResult)
+{
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
+  GetTreeBody(&treeOuterGroup);
+
+  if (!treeOuterGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  nsCOMPtr<nsIContent> start(do_QueryInterface(aStartItem));
+  nsCOMPtr<nsIContent> row;
+  GetImmediateChild(start, nsXULAtoms::treerow, getter_AddRefs(row));
+
+  nsCOMPtr<nsIContent> result;
+  treeOuterGroup->FindNextRowContent(aDelta, row, nsnull, getter_AddRefs(result));
+  if (!result)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> parent;
+  result->GetParent(*getter_AddRefs(parent));
+  if (!parent)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> item(do_QueryInterface(parent));
+  *aResult = item;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+/* nsIDOMElement getPreviousItem (in nsIDOMElement startItem, in long delta); */
+NS_IMETHODIMP 
+nsXULTreeFrame::GetPreviousItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult)
+{
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
+  GetTreeBody(&treeOuterGroup);
+
+  if (!treeOuterGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  nsCOMPtr<nsIContent> start(do_QueryInterface(aStartItem));
+  nsCOMPtr<nsIContent> row;
+  GetImmediateChild(start, nsXULAtoms::treerow, getter_AddRefs(row));
+
+  nsCOMPtr<nsIContent> result;
+  treeOuterGroup->FindPreviousRowContent(aDelta, row, nsnull, getter_AddRefs(result));
+  if (!result)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> parent;
+  result->GetParent(*getter_AddRefs(parent));
+  if (!parent)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> item(do_QueryInterface(parent));
+  *aResult = item;
+  NS_IF_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
+/* nsIDOMElement getItemAtIndex (in long index); */
+NS_IMETHODIMP 
+nsXULTreeFrame::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement **aResult)
+{
+  *aResult = nsnull;
+
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
+  GetTreeBody(&treeOuterGroup);
+
+  if (!treeOuterGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  nsCOMPtr<nsIContent> result;
+  treeOuterGroup->FindRowContentAtIndex(aIndex, nsnull, getter_AddRefs(result));
+  if (!result)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> parent;
+  result->GetParent(*getter_AddRefs(parent));
+  if (!parent)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> item(do_QueryInterface(parent));
+  *aResult = item;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+/* long getIndexOfItem (in nsIDOMElement item); */
+NS_IMETHODIMP 
+nsXULTreeFrame::GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult)
+{
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
+  GetTreeBody(&treeOuterGroup);
+
+  if (!treeOuterGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  *aResult = 0;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+  nsCOMPtr<nsIContent> root;
+  treeOuterGroup->GetContent(getter_AddRefs(root));
+  return treeOuterGroup->IndexOfItem(root, content, PR_TRUE, PR_TRUE, aResult);
+}
+
+void
+nsXULTreeFrame::GetTreeBody(nsXULTreeOuterGroupFrame** aResult)
+{
+  nsCOMPtr<nsIContent> child;
+  PRInt32 count;
+  mContent->ChildCount(count);
+  for (PRInt32 i = 0; i < count; i++) {
+    mContent->ChildAt(i, *getter_AddRefs(child));
+    if (child) {
+      nsCOMPtr<nsIAtom> tag;
+      child->GetTag(*getter_AddRefs(tag));
+      if (tag && tag.get() == nsXULAtoms::treechildren) {
+        // This is our actual treechildren frame.
+        nsIFrame* frame;
+        mPresShell->GetPrimaryFrameFor(child, &frame);
+        if (frame) {
+          nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
+          if (scroll) {
+            scroll->GetScrolledFrame(nsnull, frame);
+          }
+          *aResult = (nsXULTreeOuterGroupFrame*)frame;
+          return;
+        }
+      }
+    }
+  }
+  *aResult = nsnull;
+}
+

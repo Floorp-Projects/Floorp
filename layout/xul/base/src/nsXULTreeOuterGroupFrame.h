@@ -127,6 +127,15 @@ public:
   void FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent, 
                              nsIContent** aResult);
   
+  // This method ensures that a row is onscreen.  It will scroll the tree widget such
+  // that the row is at the top of the screen (if the row was offscreen to start with).
+  void EnsureRowIsVisible(PRInt32 aRowIndex);
+  
+  NS_IMETHOD IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
+                         PRBool aDescendIntoRows, // Invariant
+                         PRBool aParentIsOpen,
+                         PRInt32 *aResult);
+
   NS_IMETHOD InternalPositionChanged(PRBool aUp, PRInt32 aDelta);
 
 protected: // Data Members

@@ -23,8 +23,12 @@
  */
 
 #include "nsBoxFrame.h"
+#include "nsITreeFrame.h"
 
-class nsXULTreeFrame : public nsBoxFrame
+class nsXULTreeOuterGroupFrame;
+class nsIPresShell;
+
+class nsXULTreeFrame : public nsBoxFrame, public nsITreeFrame
 {
 public:
   friend nsresult NS_NewXULTreeFrame(nsIPresShell* aPresShell, 
@@ -33,10 +37,22 @@ public:
                                      nsIBoxLayout* aLayoutManager = nsnull,
                                      PRBool aDefaultHorizontal = PR_TRUE);
 
+  NS_DECL_ISUPPORTS
+
+  // nsITreeFrame
+  NS_IMETHOD EnsureRowIsVisible(PRInt32 aRowIndex);
+  NS_IMETHOD GetNextItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult);
+  NS_IMETHOD GetPreviousItem(nsIDOMElement* aStartItem, PRInt32 aDelta, nsIDOMElement** aResult);
+  NS_IMETHOD ScrollToIndex(PRInt32 aRowIndex);
+  NS_IMETHOD GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** aResult);
+  NS_IMETHOD GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult);
+
 protected:
   nsXULTreeFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
   virtual ~nsXULTreeFrame();
 
+  void GetTreeBody(nsXULTreeOuterGroupFrame** aResult);
+
 protected: // Data Members
-  
+  nsIPresShell* mPresShell;
 }; // class nsXULTreeFrame
