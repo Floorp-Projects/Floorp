@@ -169,11 +169,11 @@ public:
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
@@ -185,7 +185,7 @@ public:
 #endif
 
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString& aValue, PRBool aNotify) {
+                     const nsAString& aValue, PRBool aNotify) {
     BeforeSetAttr(aNameSpaceID, aName, &aValue, aNotify);
 
     nsresult rv = nsGenericHTMLLeafFormElement::SetAttr(aNameSpaceID, aName,
@@ -194,7 +194,7 @@ public:
     AfterSetAttr(aNameSpaceID, aName, &aValue, aNotify);
     return rv;
   }
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
                      PRBool aNotify) {
     // This will end up calling the other SetAttr().
     return nsGenericHTMLLeafFormElement::SetAttr(aNodeInfo, aValue, aNotify);
@@ -227,7 +227,7 @@ public:
 protected:
   // Helper method
   void SetPresStateChecked(nsIHTMLContent * aHTMLContent, PRBool aValue);
-  NS_IMETHOD SetValueSecure(const nsAReadableString& aValue,
+  NS_IMETHOD SetValueSecure(const nsAString& aValue,
                             nsIGfxTextControlFrame2* aFrame,
                             PRBool aCheckSecurity);
 
@@ -236,19 +236,19 @@ protected:
   //Helper method
 #ifdef ACCESSIBILITY
   nsresult FireEventForAccessibility(nsIPresContext* aPresContext,
-			    		                       const nsAReadableString& aEventType);
+			    		                       const nsAString& aEventType);
 #endif
 
   /**
    * Called when an attribute is about to be changed
    */
   void BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString* aValue, PRBool aNotify);
+                     const nsAString* aValue, PRBool aNotify);
   /**
    * Called when an attribute has just been changed
    */
   void AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                    const nsAReadableString* aValue, PRBool aNotify);
+                    const nsAString* aValue, PRBool aNotify);
 
   void SelectAll(nsIPresContext* aPresContext);
   PRBool IsImage() const
@@ -403,7 +403,7 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 void
 nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                  const nsAReadableString* aValue,
+                                  const nsAString* aValue,
                                   PRBool aNotify)
 {
   if (aName == nsHTMLAtoms::name &&
@@ -418,7 +418,7 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 void
 nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                 const nsAReadableString* aValue,
+                                 const nsAString* aValue,
                                  PRBool aNotify)
 {
   //
@@ -466,13 +466,13 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 NS_IMETHODIMP 
-nsHTMLInputElement::GetDefaultValue(nsAWritableString& aDefaultValue)
+nsHTMLInputElement::GetDefaultValue(nsAString& aDefaultValue)
 {
   return GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue);
 }
 
 NS_IMETHODIMP 
-nsHTMLInputElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
+nsHTMLInputElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
   return SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue,
                  PR_TRUE); 
@@ -523,7 +523,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
 
 NS_IMETHODIMP
-nsHTMLInputElement::GetType(nsAWritableString& aValue)
+nsHTMLInputElement::GetType(nsAString& aValue)
 {
   nsresult rv = GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, aValue);
 
@@ -534,7 +534,7 @@ nsHTMLInputElement::GetType(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::SetType(const nsAReadableString& aValue)
+nsHTMLInputElement::SetType(const nsAString& aValue)
 {
   return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_HTML,
                                                nsHTMLAtoms::type, aValue,
@@ -542,7 +542,7 @@ nsHTMLInputElement::SetType(const nsAReadableString& aValue)
 }
 
 NS_IMETHODIMP 
-nsHTMLInputElement::GetValue(nsAWritableString& aValue)
+nsHTMLInputElement::GetValue(nsAString& aValue)
 {
   PRInt32 type;
   GetType(&type);
@@ -595,7 +595,7 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP 
-nsHTMLInputElement::SetValue(const nsAReadableString& aValue)
+nsHTMLInputElement::SetValue(const nsAString& aValue)
 {
   return SetValueSecure(aValue, nsnull, PR_TRUE);
 }
@@ -608,7 +608,7 @@ nsHTMLInputElement::SetValueGuaranteed(const nsAString& aValue,
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::SetValueSecure(const nsAReadableString& aValue,
+nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
                                    nsIGfxTextControlFrame2* aFrame,
                                    PRBool aCheckSecurity)
 {
@@ -1587,7 +1587,7 @@ static nsGenericHTMLElement::EnumTable kInputTypeTable[] = {
 
 NS_IMETHODIMP
 nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAReadableString& aValue,
+                                      const nsAString& aValue,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
@@ -1665,7 +1665,7 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsAWritableString& aResult) const
+                                      nsAString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
@@ -1929,7 +1929,7 @@ nsHTMLInputElement::GetSelectionRange(PRInt32* aSelectionStart,
 #ifdef ACCESSIBILITY
 nsresult
 nsHTMLInputElement::FireEventForAccessibility(nsIPresContext* aPresContext,
-                                              const nsAReadableString& aEventType)
+                                              const nsAString& aEventType)
 {
   nsCOMPtr<nsIEventListenerManager> listenerManager;
 

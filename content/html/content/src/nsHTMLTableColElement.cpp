@@ -75,11 +75,11 @@ public:
   NS_IMETHOD GetSpanValue(PRInt32* aSpan);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
@@ -176,7 +176,7 @@ NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
-                                         const nsAReadableString& aValue,
+                                         const nsAString& aValue,
                                          nsHTMLValue& aResult)
 {
   /* ignore these attributes, stored simply as strings ch */
@@ -217,7 +217,7 @@ nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
                                          const nsHTMLValue& aValue,
-                                         nsAWritableString& aResult) const
+                                         nsAString& aResult) const
 {
   /* ignore these attributes, stored already as strings
      ch

@@ -70,11 +70,11 @@ public:
   NS_DECL_NSIDOMHTMLOLISTELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
@@ -190,7 +190,7 @@ nsGenericHTMLElement::EnumTable kOldListTypeTable[] = {
 
 NS_IMETHODIMP
 nsHTMLOListElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAReadableString& aValue,
+                                      const nsAString& aValue,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
@@ -214,7 +214,7 @@ nsHTMLOListElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLOListElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsAWritableString& aResult) const
+                                      nsAString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
     PRInt32 v = aValue.GetIntValue();

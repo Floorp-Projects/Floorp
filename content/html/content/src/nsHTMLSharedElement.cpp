@@ -84,10 +84,10 @@ public:
   // nsIDOMHTMLParamElement clashes with methods in
   // nsIDOMHTMLEmbedElement
 
-  NS_IMETHOD GetValue(nsAWritableString& aValue);
-  NS_IMETHOD SetValue(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueType(nsAWritableString& aValueType);
-  NS_IMETHOD SetValueType(const nsAReadableString& aValueType);
+  NS_IMETHOD GetValue(nsAString& aValue);
+  NS_IMETHOD SetValue(const nsAString& aValue);
+  NS_IMETHOD GetValueType(nsAString& aValueType);
+  NS_IMETHOD SetValueType(const nsAString& aValueType);
 
   // nsIDOMHTMLBaseElement
   NS_DECL_NSIDOMHTMLBASEELEMENT
@@ -96,11 +96,11 @@ public:
   NS_IMETHODIMP_(PRBool) IsContentOfType(PRUint32 aFlags);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32 aModType, PRInt32& aHint) const;
@@ -247,7 +247,7 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedLeafElement, Target, target)
 
 NS_IMETHODIMP
 nsHTMLSharedLeafElement::StringToAttribute(nsIAtom* aAttribute,
-                                           const nsAReadableString& aValue,
+                                           const nsAString& aValue,
                                            nsHTMLValue& aResult)
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
@@ -282,7 +282,7 @@ nsHTMLSharedLeafElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLSharedLeafElement::AttributeToString(nsIAtom* aAttribute,
                                            const nsHTMLValue& aValue,
-                                           nsAWritableString& aResult) const
+                                           nsAString& aResult) const
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
     if (aAttribute == nsHTMLAtoms::align) {

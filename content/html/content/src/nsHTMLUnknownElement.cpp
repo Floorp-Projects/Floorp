@@ -73,7 +73,7 @@ public:
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue, PRBool aNotify);
+                          const nsAString& aValue, PRBool aNotify);
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -192,7 +192,7 @@ static void ReleaseAttributes(nsIHTMLAttributes*& aAttributes)
 NS_IMETHODIMP
 nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute,
-                                   const nsAReadableString& aValue,
+                                   const nsAString& aValue,
                                    PRBool aNotify)
 {
   nsresult  result = NS_OK;

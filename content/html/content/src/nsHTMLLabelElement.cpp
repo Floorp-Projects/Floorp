@@ -72,33 +72,33 @@ public:
 
   // nsIDOMElement, because of the "htmlFor" attribute handling we can't
   // use the NS_FORWARD_NSIDOMHTMLELEMENT macro here...
-  NS_IMETHOD GetTagName(nsAWritableString& aTagName) {
+  NS_IMETHOD GetTagName(nsAString& aTagName) {
     return nsGenericHTMLContainerFormElement::GetTagName(aTagName);
   }
-  NS_IMETHOD GetAttribute(const nsAReadableString& aName,
-                          nsAWritableString& aReturn) {
+  NS_IMETHOD GetAttribute(const nsAString& aName,
+                          nsAString& aReturn) {
     nsAutoString name(aName);
     if (name.EqualsIgnoreCase("htmlfor")) {
       return nsGenericHTMLContainerFormElement::GetAttribute(NS_LITERAL_STRING("for"), aReturn);
     }
     return nsGenericHTMLContainerFormElement::GetAttribute(aName, aReturn);
   }
-  NS_IMETHOD SetAttribute(const nsAReadableString& aName,
-                          const nsAReadableString& aValue) {
+  NS_IMETHOD SetAttribute(const nsAString& aName,
+                          const nsAString& aValue) {
     nsAutoString name(aName);
     if (name.EqualsIgnoreCase("htmlfor")) {
       return nsGenericHTMLContainerElement::SetAttribute(NS_LITERAL_STRING("for"), aValue);
     }
     return nsGenericHTMLContainerElement::SetAttribute(aName, aValue);
   }
-  NS_IMETHOD RemoveAttribute(const nsAReadableString& aName) {
+  NS_IMETHOD RemoveAttribute(const nsAString& aName) {
     nsAutoString name(aName);
     if (name.EqualsIgnoreCase("htmlfor")) {
       return nsGenericHTMLContainerFormElement::RemoveAttribute(NS_LITERAL_STRING("for"));
     }
     return nsGenericHTMLContainerFormElement::RemoveAttribute(aName);
   }
-  NS_IMETHOD GetAttributeNode(const nsAReadableString& aName,
+  NS_IMETHOD GetAttributeNode(const nsAString& aName,
                               nsIDOMAttr** aReturn) {
     nsAutoString name(aName);
     if (name.EqualsIgnoreCase("htmlfor")) {
@@ -112,32 +112,32 @@ public:
   NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {
     return nsGenericHTMLContainerFormElement::RemoveAttributeNode(aOldAttr, aReturn);
   }
-  NS_IMETHOD GetElementsByTagName(const nsAReadableString& aTagname,
+  NS_IMETHOD GetElementsByTagName(const nsAString& aTagname,
                                   nsIDOMNodeList** aReturn) {
     return nsGenericHTMLContainerFormElement::GetElementsByTagName(aTagname,
                                                                    aReturn);
   }
-  NS_IMETHOD GetAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName,
-                            nsAWritableString& aReturn) {
+  NS_IMETHOD GetAttributeNS(const nsAString& aNamespaceURI,
+                            const nsAString& aLocalName,
+                            nsAString& aReturn) {
     return nsGenericHTMLContainerFormElement::GetAttributeNS(aNamespaceURI,
                                                              aLocalName,
                                                              aReturn);
   }
-  NS_IMETHOD SetAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aQualifiedName,
-                            const nsAReadableString& aValue) {
+  NS_IMETHOD SetAttributeNS(const nsAString& aNamespaceURI,
+                            const nsAString& aQualifiedName,
+                            const nsAString& aValue) {
     return nsGenericHTMLContainerFormElement::SetAttributeNS(aNamespaceURI,
                                                              aQualifiedName,
                                                              aValue);
   }
-  NS_IMETHOD RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
-                               const nsAReadableString& aLocalName) {
+  NS_IMETHOD RemoveAttributeNS(const nsAString& aNamespaceURI,
+                               const nsAString& aLocalName) {
     return nsGenericHTMLContainerFormElement::RemoveAttributeNS(aNamespaceURI,
                                                                 aLocalName);
   }
-  NS_IMETHOD GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
-                                const nsAReadableString& aLocalName,
+  NS_IMETHOD GetAttributeNodeNS(const nsAString& aNamespaceURI,
+                                const nsAString& aLocalName,
                                 nsIDOMAttr** aReturn) {
     return nsGenericHTMLContainerFormElement::GetAttributeNodeNS(aNamespaceURI,
                                                                  aLocalName,
@@ -147,16 +147,16 @@ public:
     return nsGenericHTMLContainerFormElement::SetAttributeNodeNS(aNewAttr,
                                                                  aReturn);
   }
-  NS_IMETHOD GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
-                                    const nsAReadableString& aLocalName,
+  NS_IMETHOD GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+                                    const nsAString& aLocalName,
                                     nsIDOMNodeList** aReturn) {
     return nsGenericHTMLContainerFormElement::GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
   }
-  NS_IMETHOD HasAttribute(const nsAReadableString& aName, PRBool* aReturn) {
+  NS_IMETHOD HasAttribute(const nsAString& aName, PRBool* aReturn) {
     return HasAttribute(aName, aReturn);
   }
-  NS_IMETHOD HasAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName,
+  NS_IMETHOD HasAttributeNS(const nsAString& aNamespaceURI,
+                            const nsAString& aLocalName,
                             PRBool* aReturn) {
     return nsGenericHTMLContainerFormElement::HasAttributeNS(aNamespaceURI,
                                                              aLocalName,
@@ -289,7 +289,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
 //NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
 
 NS_IMETHODIMP
-nsHTMLLabelElement::GetHtmlFor(nsAWritableString& aValue)
+nsHTMLLabelElement::GetHtmlFor(nsAString& aValue)
 {
   nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
                                              nsHTMLAtoms::_for, aValue);
@@ -297,7 +297,7 @@ nsHTMLLabelElement::GetHtmlFor(nsAWritableString& aValue)
 }  
 
 NS_IMETHODIMP
-nsHTMLLabelElement::SetHtmlFor(const nsAReadableString& aValue)
+nsHTMLLabelElement::SetHtmlFor(const nsAString& aValue)
 {
   // trim leading and trailing whitespace 
   static char whitespace[] = " \r\n\t";

@@ -96,17 +96,17 @@ public:
 
   // nsIContent overrides...
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsAWritableString& aResult) const;
+                          nsAString& aResult) const;
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue, PRBool aNotify);
+                          const nsAString& aValue, PRBool aNotify);
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
@@ -121,8 +121,8 @@ protected:
 
 private:
   // The analogue of defaultValue in the DOM for input and textarea
-  nsresult SetDefaultValue(const nsAReadableString& aDefaultValue);
-  nsresult GetDefaultValue(nsAWritableString& aDefaultValue);
+  nsresult SetDefaultValue(const nsAString& aDefaultValue);
+  nsresult GetDefaultValue(nsAString& aDefaultValue);
 };
 
 
@@ -183,7 +183,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsHTMLButtonElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                  nsAWritableString& aResult) const
+                                  nsAString& aResult) const
 {
   if (aName == nsHTMLAtoms::disabled) {
     nsresult rv = nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, aResult);
@@ -202,7 +202,7 @@ nsHTMLButtonElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 NS_IMETHODIMP
 nsHTMLButtonElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                  const nsAReadableString& aValue,
+                                  const nsAString& aValue,
                                   PRBool aNotify)
 {
   nsAutoString value(aValue);
@@ -257,7 +257,7 @@ nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::GetType(nsAWritableString& aType)
+nsHTMLButtonElement::GetType(nsAString& aType)
 {
   return AttributeToString(nsHTMLAtoms::type,
                            nsHTMLValue(mType, eHTMLUnit_Enumerated),
@@ -348,7 +348,7 @@ static nsGenericHTMLElement::EnumTable kButtonTypeTable[] = {
 
 NS_IMETHODIMP
 nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsAReadableString& aValue,
+                                       const nsAString& aValue,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
@@ -379,7 +379,7 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLButtonElement::AttributeToString(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
-                                       nsAWritableString& aResult) const
+                                       nsAString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
@@ -573,13 +573,13 @@ nsHTMLButtonElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 #endif
 
 nsresult
-nsHTMLButtonElement::GetDefaultValue(nsAWritableString& aDefaultValue)
+nsHTMLButtonElement::GetDefaultValue(nsAString& aDefaultValue)
 {
   return GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue);
 }
 
 nsresult
-nsHTMLButtonElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
+nsHTMLButtonElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
   return SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue, PR_TRUE);
 }

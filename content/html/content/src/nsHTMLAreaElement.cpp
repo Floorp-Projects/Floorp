@@ -87,7 +87,7 @@ public:
   NS_IMETHOD GetHrefCString(char* &aBuf);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
@@ -195,7 +195,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Target, target)
 
 NS_IMETHODIMP
 nsHTMLAreaElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsAReadableString& aValue,
+                                     const nsAString& aValue,
                                      nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::nohref) {
@@ -247,7 +247,7 @@ nsHTMLAreaElement::RemoveFocus(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::GetHref(nsAWritableString& aValue)
+nsHTMLAreaElement::GetHref(nsAString& aValue)
 {
   char *buf;
   nsresult rv = GetHrefCString(buf);
@@ -261,7 +261,7 @@ nsHTMLAreaElement::GetHref(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::SetHref(const nsAReadableString& aValue)
+nsHTMLAreaElement::SetHref(const nsAString& aValue)
 {
   // Clobber our "cache", so we'll recompute it the next time somebody
   // asks for it.
@@ -283,7 +283,7 @@ nsHTMLAreaElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 #endif
 
 NS_IMETHODIMP    
-nsHTMLAreaElement::GetProtocol(nsAWritableString& aProtocol)
+nsHTMLAreaElement::GetProtocol(nsAString& aProtocol)
 {
   nsAutoString href;
   
@@ -298,7 +298,7 @@ nsHTMLAreaElement::GetProtocol(nsAWritableString& aProtocol)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::SetProtocol(const nsAReadableString& aProtocol)
+nsHTMLAreaElement::SetProtocol(const nsAString& aProtocol)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -314,7 +314,7 @@ nsHTMLAreaElement::SetProtocol(const nsAReadableString& aProtocol)
 }
 
 NS_IMETHODIMP    
-nsHTMLAreaElement::GetHost(nsAWritableString& aHost)
+nsHTMLAreaElement::GetHost(nsAString& aHost)
 {
   nsAutoString href;
   
@@ -326,7 +326,7 @@ nsHTMLAreaElement::GetHost(nsAWritableString& aHost)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::SetHost(const nsAReadableString& aHost)
+nsHTMLAreaElement::SetHost(const nsAString& aHost)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -342,7 +342,7 @@ nsHTMLAreaElement::SetHost(const nsAReadableString& aHost)
 }
 
 NS_IMETHODIMP    
-nsHTMLAreaElement::GetHostname(nsAWritableString& aHostname)
+nsHTMLAreaElement::GetHostname(nsAString& aHostname)
 {
   nsAutoString href;
   nsresult rv = GetHref(href);
@@ -353,7 +353,7 @@ nsHTMLAreaElement::GetHostname(nsAWritableString& aHostname)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::SetHostname(const nsAReadableString& aHostname)
+nsHTMLAreaElement::SetHostname(const nsAString& aHostname)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -369,7 +369,7 @@ nsHTMLAreaElement::SetHostname(const nsAReadableString& aHostname)
 }
 
 NS_IMETHODIMP    
-nsHTMLAreaElement::GetPathname(nsAWritableString& aPathname)
+nsHTMLAreaElement::GetPathname(nsAString& aPathname)
 {
   nsAutoString href;
  
@@ -381,7 +381,7 @@ nsHTMLAreaElement::GetPathname(nsAWritableString& aPathname)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::SetPathname(const nsAReadableString& aPathname)
+nsHTMLAreaElement::SetPathname(const nsAString& aPathname)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -397,7 +397,7 @@ nsHTMLAreaElement::SetPathname(const nsAReadableString& aPathname)
 }
 
 NS_IMETHODIMP    
-nsHTMLAreaElement::GetSearch(nsAWritableString& aSearch)
+nsHTMLAreaElement::GetSearch(nsAString& aSearch)
 {
   nsAutoString href;
 
@@ -409,7 +409,7 @@ nsHTMLAreaElement::GetSearch(nsAWritableString& aSearch)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::SetSearch(const nsAReadableString& aSearch)
+nsHTMLAreaElement::SetSearch(const nsAString& aSearch)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -426,7 +426,7 @@ nsHTMLAreaElement::SetSearch(const nsAReadableString& aSearch)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::GetPort(nsAWritableString& aPort)
+nsHTMLAreaElement::GetPort(nsAString& aPort)
 {
   nsAutoString href;
   
@@ -438,7 +438,7 @@ nsHTMLAreaElement::GetPort(nsAWritableString& aPort)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::SetPort(const nsAReadableString& aPort)
+nsHTMLAreaElement::SetPort(const nsAString& aPort)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -455,7 +455,7 @@ nsHTMLAreaElement::SetPort(const nsAReadableString& aPort)
 }
 
 NS_IMETHODIMP    
-nsHTMLAreaElement::GetHash(nsAWritableString& aHash)
+nsHTMLAreaElement::GetHash(nsAString& aHash)
 {
   nsAutoString href;
 
@@ -467,7 +467,7 @@ nsHTMLAreaElement::GetHash(nsAWritableString& aHash)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::SetHash(const nsAReadableString& aHash)
+nsHTMLAreaElement::SetHash(const nsAString& aHash)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);

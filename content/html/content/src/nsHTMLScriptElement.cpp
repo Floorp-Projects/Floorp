@@ -190,7 +190,7 @@ nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::GetText(nsAWritableString& aValue)
+nsHTMLScriptElement::GetText(nsAString& aValue)
 {
   PRInt32 i, count = 0;
   nsresult rv = NS_OK;
@@ -219,7 +219,7 @@ nsHTMLScriptElement::GetText(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::SetText(const nsAReadableString& aValue)
+nsHTMLScriptElement::SetText(const nsAString& aValue)
 {
   nsCOMPtr<nsIContent> content;
   PRInt32 i, count = 0;
@@ -254,7 +254,7 @@ nsHTMLScriptElement::SetText(const nsAReadableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::GetHtmlFor(nsAWritableString& aValue)
+nsHTMLScriptElement::GetHtmlFor(nsAString& aValue)
 {
   // XXX write me
 //  GetAttribute(nsHTMLAtoms::charset, aValue);
@@ -262,7 +262,7 @@ nsHTMLScriptElement::GetHtmlFor(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::SetHtmlFor(const nsAReadableString& aValue)
+nsHTMLScriptElement::SetHtmlFor(const nsAString& aValue)
 {
   // XXX write me
 //  return SetAttr(nsHTMLAtoms::charset, aValue);
@@ -270,7 +270,7 @@ nsHTMLScriptElement::SetHtmlFor(const nsAReadableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::GetEvent(nsAWritableString& aValue)
+nsHTMLScriptElement::GetEvent(nsAString& aValue)
 {
   // XXX write me
 //  GetAttribute(nsHTMLAtoms::charset, aValue);
@@ -278,7 +278,7 @@ nsHTMLScriptElement::GetEvent(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::SetEvent(const nsAReadableString& aValue)
+nsHTMLScriptElement::SetEvent(const nsAString& aValue)
 {
   // XXX write me
 //  return SetAttr(nsHTMLAtoms::charset, aValue);
