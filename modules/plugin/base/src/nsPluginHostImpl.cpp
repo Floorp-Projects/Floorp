@@ -38,8 +38,10 @@
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
 static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
+static NS_DEFINE_IID(kIPluginManager2IID, NS_IPLUGINMANAGER2_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIPluginStreamPeerIID, NS_IPLUGINSTREAMPEER_IID);
+static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
 static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -168,6 +170,8 @@ private:
   nsIPluginHost           *mHost;
   PRInt32                 mLength;
   PRBool                  mGotProgress;
+  nsPluginStreamType      mStreamType;
+  FILE                    *mStreamFile;
 };
 
 nsPluginStreamListener :: nsPluginStreamListener()
@@ -187,6 +191,8 @@ nsPluginStreamListener :: nsPluginStreamListener()
   mHost = nsnull;
   mLength = 0;
   mGotProgress = PR_FALSE;
+  mStreamType = nsPluginStreamType_Normal;
+  mStreamFile = nsnull;
 }
 
 nsPluginStreamListener :: ~nsPluginStreamListener()
@@ -215,6 +221,12 @@ printf("killing stream for %s\n", mURL ? mURL->GetSpec() : "(unknown URL)");
   mNotifyData = nsnull;
 
   NS_IF_RELEASE(mHost);
+
+  if (nsnull != mStreamFile)
+  {
+    fclose(mStreamFile);
+    mStreamFile = nsnull;
+  }
 }
 
 NS_IMPL_ADDREF(nsPluginStreamListener)
@@ -305,7 +317,7 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStartBinding(nsIURL* aURL, const char 
 
   if (nsnull != aContentType)
   {
-    PRInt32   len = strlen(aContentType);
+    PRInt32   len = PL_strlen(aContentType);
     mMIMEType = (char *)PR_Malloc(len + 1);
 
     if (nsnull != mMIMEType)
@@ -351,7 +363,7 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStartBinding(nsIURL* aURL, const char 
   if ((PR_TRUE == mGotProgress) && (nsnull == mPeer) &&
       (nsnull != instance) && (PR_FALSE == mBound))
   {
-    //need to create new peer and and tell plugin that we have new stream...
+    //need to create new peer and tell plugin that we have new stream...
 
     mPeer = (nsPluginStreamPeer *)new nsPluginStreamPeer();
 
@@ -359,6 +371,34 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStartBinding(nsIURL* aURL, const char 
 
     mPeer->Initialize(aURL, mLength, 0, aContentType, mNotifyData);
     instance->NewStream(mPeer, &mStream);
+
+    if (nsnull != mStream)
+      mStream->GetStreamType(&mStreamType);
+
+    if ((mStreamType == nsPluginStreamType_AsFile) ||
+        (mStreamType == nsPluginStreamType_AsFileOnly))
+    {
+      char  buf[400], tpath[300];
+
+#ifdef XP_PC
+      ::GetTempPath(sizeof(tpath), tpath);
+
+      PRInt32 len = PL_strlen(tpath);
+
+      if ((len > 0) && (tpath[len - 1] != '\\'))
+      {
+        tpath[len] = '\\';
+        tpath[len + 1] = 0;
+      }
+#elif defined (XP_UNIX)
+      PL_strcpy(tpath, "/tmp/");
+#else
+      tpath[0] = 0;
+#endif
+
+      PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, mStream);
+      mStreamFile = fopen(buf, "wb");
+    }
   }
 
   NS_IF_RELEASE(instance);
@@ -393,6 +433,34 @@ NS_IMETHODIMP nsPluginStreamListener :: OnProgress(nsIURL* aURL, PRInt32 aProgre
       mPeer->Initialize(aURL, aProgressMax, 0, mMIMEType, mNotifyData);
       instance->NewStream(mPeer, &mStream);
 
+      if (nsnull != mStream)
+        mStream->GetStreamType(&mStreamType);
+
+      if ((mStreamType == nsPluginStreamType_AsFile) ||
+          (mStreamType == nsPluginStreamType_AsFileOnly))
+      {
+        char  buf[400], tpath[300];
+
+#ifdef XP_PC
+        ::GetTempPath(sizeof(tpath), tpath);
+
+        PRInt32 len = PL_strlen(tpath);
+
+        if ((len > 0) && (tpath[len - 1] != '\\'))
+        {
+          tpath[len] = '\\';
+          tpath[len + 1] = 0;
+        }
+#elif defined (XP_UNIX)
+        PL_strcpy(tpath, "/tmp/");
+#else
+        tpath[0] = 0;
+#endif
+
+        PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, mStream);
+        mStreamFile = fopen(buf, "wb");
+      }
+
       NS_RELEASE(instance);
     }
   }
@@ -411,15 +479,18 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStatus(nsIURL* aURL, const nsString &a
 NS_IMETHODIMP nsPluginStreamListener :: OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
 {
   nsresult rv;
+  nsPluginReason  reason = nsPluginReason_NoReason;
 
   //XXX this is incomplete... MMP
 
   if (nsnull != mPeer)
   {
     if (aStatus == NS_BINDING_SUCCEEDED)
-      mPeer->SetReason(nsPluginReason_Done);
+      reason = nsPluginReason_Done;
     else
-      mPeer->SetReason(nsPluginReason_UserBreak);
+      reason = nsPluginReason_UserBreak;
+
+    mPeer->SetReason(reason);
 
     rv = NS_OK;
   }
@@ -427,7 +498,65 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStopBinding(nsIURL* aURL, PRInt32 aSta
     rv = NS_ERROR_UNEXPECTED;
 
   if (nsnull != mStream)
+  {
+    if ((mStreamType == nsPluginStreamType_AsFile) ||
+        (mStreamType == nsPluginStreamType_AsFileOnly))
+    {
+      if (nsnull != mStreamFile)
+      {
+        fclose(mStreamFile);
+        mStreamFile = nsnull;
+
+        char  buf[400], tpath[300];
+
+#ifdef XP_PC
+        ::GetTempPath(sizeof(tpath), tpath);
+
+        PRInt32 len = PL_strlen(tpath);
+
+        if ((len > 0) && (tpath[len - 1] != '\\'))
+        {
+          tpath[len] = '\\';
+          tpath[len + 1] = 0;
+        }
+#elif defined (XP_UNIX)
+        PL_strcpy(tpath, "/tmp/");
+#else
+        tpath[0] = 0;
+#endif
+
+        PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, mStream);
+        mStream->AsFile(buf);
+      }
+    }
+
+    nsIPluginInstance *instance = nsnull;
+
+    if (nsnull == mInstance)
+      mOwner->GetInstance(instance);
+    else
+    {
+      instance = mInstance;
+      NS_ADDREF(instance);
+    }
+
     mStream->Close();
+
+    if (nsnull != instance)
+    {
+      const char  *url;
+
+      if (nsnull != mURL)
+        url = mURL->GetSpec();
+      else
+        url = "";
+
+      //XXX target is bad. MMP
+      instance->URLNotify(url, "", reason, mNotifyData);
+
+      NS_RELEASE(instance);
+    }
+  }
 
   return rv;
 }
@@ -453,7 +582,12 @@ NS_IMETHODIMP nsPluginStreamListener :: OnDataAvailable(nsIURL* aURL, nsIInputSt
   {
     PRInt32 readlen;
     aIStream->Read((char *)mBuffer, 0, aLength, &readlen);
-    mStream->Write((char *)mBuffer, 0, aLength, &readlen);
+
+    if (nsnull != mStreamFile)
+      fwrite(mBuffer, 1, aLength, mStreamFile);
+
+    if (mStreamType != nsPluginStreamType_AsFileOnly)
+      mStream->Write((char *)mBuffer, 0, aLength, &readlen);
   }
 
   return NS_OK;
@@ -503,6 +637,13 @@ nsresult nsPluginHostImpl :: QueryInterface(const nsIID& aIID,
     return NS_OK;
   }
 
+  if (aIID.Equals(kIPluginManager2IID))
+  {
+    *aInstancePtrResult = (void *)((nsIPluginManager2 *)this);
+    AddRef();
+    return NS_OK;
+  }
+
   if (aIID.Equals(kIPluginHostIID))
   {
     *aInstancePtrResult = (void *)((nsIPluginHost *)this);
@@ -548,7 +689,7 @@ nsresult nsPluginHostImpl :: ReloadPlugins(PRBool reloadPages)
 //XXX need to find out score on this one... MMP
 nsresult nsPluginHostImpl :: UserAgent(const char **retstring)
 {
-  *retstring = (const char *)"Mozilla/4.05 [en] (Windows;I)";
+  *retstring = (const char *)"Mozilla/5.0 [en] (Windows;I)";
   return NS_OK;
 }
 
@@ -610,13 +751,73 @@ NS_IMETHODIMP nsPluginHostImpl :: PostURL(nsISupports* inst,
                                           PRBool forceJSEnabled,
                                           PRUint32 postHeadersLength, const char* postHeaders)
 {
-printf("network manager posturl called\n");
+printf("plugin manager posturl called\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: BeginWaitCursor(void)
+{
+printf("plugin manager2 beginwaitcursor called\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: EndWaitCursor(void)
+{
+printf("plugin manager2 posturl called\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: SupportsURLProtocol(const char* protocol, PRBool *result)
+{
+printf("plugin manager2 supportsurlprotocol called\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: NotifyStatusChange(nsIPlugin* plugin, nsresult errorStatus)
+{
+printf("plugin manager2 notifystatuschange called\n");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsPluginHostImpl :: FindProxyForURL(const char* url, char* *result)
 {
-printf("network manager findproxyforurl called\n");
+printf("plugin manager2 findproxyforurl called\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: RegisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window)
+{
+printf("plugin manager2 registerwindow called\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: UnregisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window)
+{
+printf("plugin manager2 unregisterwindow called\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: AllocateMenuID(nsIEventHandler* handler, PRBool isSubmenu, PRInt16 *result)
+{
+printf("plugin manager2 allocatemenuid called\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: DeallocateMenuID(nsIEventHandler* handler, PRInt16 menuID)
+{
+printf("plugin manager2 deallocatemenuid called\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: HasAllocatedMenuID(nsIEventHandler* handler, PRInt16 menuID, PRBool *result)
+{
+printf("plugin manager2 hasallocatedmenuid called\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: ProcessNextEvent(PRBool *bEventHandled)
+{
+printf("plugin manager2 processnextevent called\n");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -628,6 +829,8 @@ nsresult nsPluginHostImpl :: Init(void)
 //  rv = nsMalloc::Create(nsnull, kIMallocIID, (void **)&mMalloc);
   rv = nsMalloc::Create(nsnull, kIMallocIID, (void **)&object);
 
+
+  //it should be possible to kill this now... MMP
   if (NS_OK == rv)
   {
     rv = object->QueryInterface(kIMallocIID, (void **)&mMalloc);
@@ -717,7 +920,7 @@ nsresult nsPluginHostImpl :: LoadPlugins(void)
     char        *verbuf = NULL;
     DWORD       verbufsize = 0;
 
-    pathlen = strlen(path);
+    pathlen = PL_strlen(path);
     mPluginPath = (char *)PR_Malloc(pathlen + 2);
 
     if (nsnull != mPluginPath)
@@ -780,7 +983,7 @@ nsresult nsPluginHostImpl :: LoadPlugins(void)
 
                 while (nsnull != plugintag)
                 {
-                  plugintag->mName = (char *)PR_Malloc(strlen(dent->name) + 1);
+                  plugintag->mName = (char *)PR_Malloc(PL_strlen(dent->name) + 1);
 
                   if (nsnull == plugintag->mName)
                     break;
@@ -1038,7 +1241,7 @@ nsresult nsPluginHostImpl :: InstantiatePlugin(const char *aMimeType, nsIURL *aU
   if ((nsnull == plugins) && (nsnull != aURL))
   {
     const char  *name = aURL->GetSpec();
-    PRInt32     len = strlen(name);
+    PRInt32     len = PL_strlen(name);
 
     //find the plugin by filename extension.
 
@@ -1053,7 +1256,7 @@ nsresult nsPluginHostImpl :: InstantiatePlugin(const char *aMimeType, nsIURL *aU
       {
         const char  *ext = name + len + 1;
 
-        len = strlen(ext);
+        len = PL_strlen(ext);
 
         plugins = mPlugins;
 
@@ -1074,7 +1277,7 @@ nsresult nsPluginHostImpl :: InstantiatePlugin(const char *aMimeType, nsIURL *aU
               if (nsnull != nextexten)
                 extlen = nextexten - extensions;
               else
-                extlen = strlen(extensions);
+                extlen = PL_strlen(extensions);
 
               if (extlen == len)
               {
@@ -1136,7 +1339,20 @@ printf("result of creating plugin adapter: %d\n", rv);
 #endif
         }
         else
-          plugins->mEntryPoint = (nsIPlugin *)PR_FindSymbol(plugins->mLibrary, "NSGetFactory");
+        {
+          nsFactoryProc  fact = (nsFactoryProc)PR_FindSymbol(plugins->mLibrary, "NSGetFactory");
+
+          if (nsnull != fact)
+          {
+            nsIFactory *factory;
+
+            if (NS_OK == (fact)(kIFactoryIID, &factory))
+            {
+              factory->QueryInterface(kIPluginIID, (void **)&plugins->mEntryPoint);
+              NS_RELEASE(factory);
+            }
+          }
+        }
 
         if (nsnull != plugins->mEntryPoint)
           plugins->mEntryPoint->Initialize((nsISupports *)(nsIPluginManager *)this);
@@ -1279,6 +1495,9 @@ NS_IMETHODIMP nsPluginHostImpl :: NewPluginStream(const nsString& aURL,
   nsPluginStreamListener  *listener = (nsPluginStreamListener *)new nsPluginStreamListener();
   nsresult                rv;
 
+  if (aURL.Length() <= 0)
+    return NS_OK;
+
   rv = NS_NewURL(&url, aURL);
 
   if (NS_OK == rv)
@@ -1301,6 +1520,9 @@ NS_IMETHODIMP nsPluginHostImpl :: NewPluginStream(const nsString& aURL,
   nsIURL                  *url;
   nsPluginStreamListener  *listener = (nsPluginStreamListener *)new nsPluginStreamListener();
   nsresult                rv;
+
+  if (aURL.Length() <= 0)
+    return NS_OK;
 
   rv = NS_NewURL(&url, aURL);
 
