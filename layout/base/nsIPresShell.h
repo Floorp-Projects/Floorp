@@ -125,6 +125,15 @@ public:
                   nsIViewManager* aViewManager,
                   nsIStyleSet* aStyleSet) = 0;
 
+  /**
+   * All callers are responsible for calling |Destroy| after calling
+   * |EndObservingDocument|.  It needs to be separate only because form
+   * controls incorrectly store their data in the frames rather than the
+   * content model and printing calls |EndObservingDocument| multiple
+   * times to make form controls behave nicely when printed.
+   */
+  NS_IMETHOD Destroy() = 0;
+
   // All frames owned by the shell are allocated from an arena.  They are also recycled
   // using free lists (separate free lists being maintained for each size_t).
   // Methods for recycling frames.
