@@ -610,7 +610,7 @@ PRIVATE XP_List * si_reject_list=0;
 PRIVATE PRBool si_signon_list_changed = PR_FALSE;
 
 
-char empty[] = "empty";
+const char empty[] = "empty";
 
 /* Remove misleading portions from URL name */
 PRIVATE char*
