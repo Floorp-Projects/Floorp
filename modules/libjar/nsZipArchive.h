@@ -178,7 +178,7 @@ private:
   nsZipArchive(const nsZipArchive& rhs);            // prevent copies
 
   PRInt32           BuildFileList();
-  const nsZipItem*  GetFileItem( const char * aFilename );
+  nsZipItem*  GetFileItem( const char * aFilename );
   PRUint32          HashName( const char* aName );
 
   PRInt32           ReadInitImpl(const char* aFilename, nsZipItem** aItem);
