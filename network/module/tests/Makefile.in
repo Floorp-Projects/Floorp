@@ -22,58 +22,43 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
 CPPSRCS = \
 	nettest.cpp \
 	$(NULL)
 
-INCLUDES+=-I$(srcdir)/../src -I$(DIST)/include
+include $(topsrcdir)/config/config.mk
+
+INCLUDES += -I$(srcdir)/../src -I$(DIST)/include
 
 REQUIRES = raptor netlib xpcom pref
 
-EX_LIBS = \
-	$(DIST)/bin/libabouturl.so \
-	$(DIST)/bin/libfileurl.so \
-	$(DIST)/bin/libftpurl.so \
-	$(DIST)/bin/libgophurl.so \
-	$(DIST)/bin/libremoturl.so \
-	$(DIST)/bin/libhttpurl.so \
-	$(DIST)/bin/libnetcache.so \
-	$(DIST)/bin/libmimetype.so \
-	$(DIST)/bin/libnetcnvts.so \
-	$(DIST)/bin/libnetwork.so \
-	$(DIST)/bin/libnetlib.so \
-	$(DIST)/bin/libnetutil.so \
-    $(DIST)/bin/libreg.so	\
-	$(DIST)/bin/libxpcom.so	\
-	$(DIST)/bin/libpwcac.so \
-	$(DIST)/bin/libmozdbm.so	\
-	$(DIST)/bin/libxp.so	\
-	$(DIST)/bin/libpref.so	\
-	$(DIST)/bin/libjs.so	\
-	$(DIST)/bin/libraptorbase.so \
-	$(DIST)/bin/libgmbase$(MOZ_TOOLKIT).so \
-	$(DIST)/bin/libsecfree.so \
+LIBS = \
+	-labouturl \
+	-lfileurl \
+	-lftpurl \
+	-lgophurl \
+	-lremoturl \
+	-lhttpurl \
+	-lnetcache \
+	-lmimetype \
+	-lnetcnvts \
+	-lnetwork \
+	-lnetlib \
+	-lnetutil \
+    -lreg	\
+	-lxpcom	\
+	-lpwcac \
+	-lmozdbm	\
+	-lxp	\
+	-lpref	\
+	-ljs	\
+	-lraptorbase \
+	-lgmbase$(MOZ_TOOLKIT) \
+	-lsecfree \
+	$(NSPR_LIBS) \
 	$(NULL)
 
-PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
-
-NON_DIRS = $(PROGS)
-TARGETS = $(NON_DIRS)
+PROGRAM = nettest
 
 include $(topsrcdir)/config/rules.mk
-
-$(OBJDIR)/%.o: %.cpp
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(CFLAGS) -DUSE_NSREG -c $*.cpp
-
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
-
-export::
-
-install:: $(PROGS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
 
