@@ -229,7 +229,7 @@ enum nsPluginWindowType {
 #if defined(XP_MAC) || defined(RHAPSODY)
 
 struct nsPluginPort {
-    GrafPtr     port;   /* Grafport */
+    CGrafPtr     port;   /* Grafport */
     PRInt32     portx;  /* position inside the topmost window */
     PRInt32     porty;
 };
