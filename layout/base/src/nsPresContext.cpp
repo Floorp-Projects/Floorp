@@ -68,8 +68,8 @@ MakeColorPref(const char *colstr)
   return colorref;
 }
 
-int
-PrefChangedCallback(const char* aPrefName, void* instance_data)
+int PR_CALLBACK
+nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
 {
   nsPresContext*  presContext = (nsPresContext*)instance_data;
 
@@ -186,13 +186,13 @@ nsPresContext::~nsPresContext()
 
   // Unregister preference callbacks
   if (mPrefs) {
-    mPrefs->UnregisterCallback("font.", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.display.", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.underline_anchors", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.anchor_color", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.visited_color", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("network.image.imageBehavior", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("image.animation_mode", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("font.", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.display.", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.underline_anchors", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.anchor_color", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.visited_color", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("network.image.imageBehavior", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("image.animation_mode", nsPresContext::PrefChangedCallback, (void*)this);
   }
 #ifdef IBMBIDI
   if (mBidiUtils) {
@@ -475,13 +475,13 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   mPrefs = do_GetService(NS_PREF_CONTRACTID);
   if (mPrefs) {
     // Register callbacks so we're notified when the preferences change
-    mPrefs->RegisterCallback("font.", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.display.", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.underline_anchors", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.anchor_color", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.visited_color", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("network.image.imageBehavior", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("image.animation_mode", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("font.", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.display.", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.underline_anchors", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.anchor_color", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.visited_color", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("network.image.imageBehavior", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("image.animation_mode", nsPresContext::PrefChangedCallback, (void*)this);
 
     // Initialize our state from the user preferences
     GetUserPreferences();

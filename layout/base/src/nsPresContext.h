@@ -252,7 +252,7 @@ protected:
   void   UpdateCharSet(const PRUnichar* aCharSet);
 
 private:
-  friend int PR_CALLBACK PrefChangedCallback(const char*, void*);
+  static int PR_CALLBACK_DECL PrefChangedCallback(const char*, void*);
   void   PreferenceChanged(const char* aPrefName);
 };
 
