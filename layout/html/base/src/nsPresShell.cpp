@@ -3378,6 +3378,21 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   nsIFrame *frame = (nsIFrame *)clientData;
   if (!frame)
     return NS_ERROR_FAILURE;
+  //we need to get to the area frame.
+  nsCOMPtr<nsIAtom> frameType; 
+  do 
+  {
+    frame->GetFrameType(getter_AddRefs(frameType));
+    if (frameType != nsLayoutAtoms::areaFrame)
+    {
+      result = frame->FirstChild(mPresContext, nsnull, &frame);
+      if (NS_FAILED(result) || !frame)
+        break;
+    }
+  }while(frameType != nsLayoutAtoms::areaFrame);
+  
+  if (!frame)
+    return NS_ERROR_FAILURE; //could not find an area frame.
 
   PRInt8  outsideLimit = -1;//search from beginning
   nsPeekOffsetStruct pos;
@@ -4190,14 +4205,14 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
       nsIFrame *frame = aFrame;
 
       while (frame && (frame->GetFrameType(getter_AddRefs(frameType)),
-                       frameType.get() == nsLayoutAtoms::inlineFrame)) {
+                       frameType == nsLayoutAtoms::inlineFrame)) {
         prevFrame = frame;
         prevFrame->GetParent(&frame);
       }
 
       if (frame != aFrame &&
           frame &&
-          frameType.get() == nsLayoutAtoms::blockFrame) {
+          frameType == nsLayoutAtoms::blockFrame) {
         // find the line containing aFrame and increase the top of |offset|.
         nsCOMPtr<nsILineIterator> lines( do_QueryInterface(frame) );
 
