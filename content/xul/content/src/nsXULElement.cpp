@@ -647,18 +647,19 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIChromeEventHandler))) {
         *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
     }
-    else if ((iid.Equals(NS_GET_IID(nsIDOMXULPopupElement))) &&
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULMenuListElement)) &&
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
+      PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
-      if ((tag.get() == kPopupAtom) || (tag.get() == kMenuPopupAtom)) {
-        // We delegate XULPopupElement APIs to an aggregate object
+      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
+      if (tag.get() == kMenuListAtom) {
+        // We delegate XULMenuListElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
             if (NS_FAILED(rv)) return rv;
 
-            if ((mSlots->mInnerXULElement = new nsXULPopupElement(this)) == nsnull)
+            if ((mSlots->mInnerXULElement = new nsXULMenuListElement(this)) == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -671,8 +672,9 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
               iid.Equals(NS_GET_IID(nsIXULTreeContent))) &&
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))){
       nsCOMPtr<nsIAtom> tag;
+      PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
+      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == kTreeAtom) {
         // We delegate XULTreeElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -688,11 +690,33 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
       else
         return NS_NOINTERFACE;
     }
+    else if ((iid.Equals(NS_GET_IID(nsIDOMXULPopupElement))) &&
+             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
+      nsCOMPtr<nsIAtom> tag;
+      PRInt32 dummy;
+      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
+      if ((tag.get() == kPopupAtom) || (tag.get() == kMenuPopupAtom)) {
+        // We delegate XULPopupElement APIs to an aggregate object
+        if (! InnerXULElement()) {
+            rv = EnsureSlots();
+            if (NS_FAILED(rv)) return rv;
+
+            if ((mSlots->mInnerXULElement = new nsXULPopupElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return InnerXULElement()->QueryInterface(iid, result);
+      }
+      else
+        return NS_NOINTERFACE;
+    }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULIFrameElement)) &&
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
+      PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
+      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == kIFrameAtom) {
         // We delegate XULIFrameElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -711,8 +735,9 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULBrowserElement)) &&
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
+      PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
+      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == kBrowserAtom) {
         // We delegate XULBrowserElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -731,8 +756,9 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULTitledButtonElement)) &&
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
+      PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
+      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == kTitledButtonAtom) {
         // We delegate XULTitledButtonElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -751,8 +777,9 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULCheckboxElement)) &&
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
+      PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
+      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == kCheckboxAtom) {
         // We delegate XULCheckboxElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -771,8 +798,9 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioElement)) &&
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
+      PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
+      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == kRadioAtom) {
         // We delegate XULRadioElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -791,8 +819,9 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioGroupElement)) &&
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
+      PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
+      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == kRadioGroupAtom) {
         // We delegate XULRadioElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -808,31 +837,12 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
       else
         return NS_NOINTERFACE;
     }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULMenuListElement)) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
-      nsCOMPtr<nsIAtom> tag;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
-      if (tag.get() == kMenuListAtom) {
-        // We delegate XULMenuListElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULMenuListElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
-    }
     else if (iid.Equals(NS_GET_IID(nsIDOMXULEditorElement)) &&
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
       nsCOMPtr<nsIAtom> tag;
+      PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
+      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == kEditorAtom) {
         // We delegate XULEditorElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -2131,8 +2141,9 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         nsresult (*PR_CALLBACK fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
 
         nsCOMPtr<nsIAtom> tag;
+        PRInt32 dummy;
         NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-        xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
+        xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
 
         const char* rootname;
         if (tag.get() == kTreeAtom) {
