@@ -41,6 +41,7 @@
 #include "secitem.h"
 #include "secerr.h"
 #include "plhash.h"
+#include "nssrwlk.h"
 
 /* MISSI Mosaic Object ID space */
 #define USGOV                   0x60, 0x86, 0x48, 0x01, 0x65
@@ -1427,46 +1428,71 @@ const static SECOidData oids[] = {
 
 /*
  * now the dynamic table. The dynamic table gets build at init time.
- *  and gets modified if the user loads new crypto modules.
+ * and conceivably gets modified if the user loads new crypto modules.
+ * All this static data, and the allocated data to which it points,
+ * is protected by a global reader/writer lock.  
+ * The c language guarantees that global and static data that is not 
+ * explicitly initialized will be imiiialized with zeros.  If we 
+ * initialize it with zeros, the data goes into the initialized data
+ * secment, and increases the size of the library.  By leaving it 
+ * uninitialized, it is allocated in BSS, and does NOT increase the 
+ * library size. 
  */
+static NSSRWLock   * dynOidLock;
+static PLArenaPool * dynOidPool;
+static PLHashTable * dynOidHash;
+static SECOidData ** dynOidTable;	/* not in the pool */
+static int           dynOidEntriesAllocated;
+static int           dynOidEntriesUsed;
 
-static PLHashTable *oid_d_hash = 0;
-static SECOidData **secoidDynamicTable = NULL;
-static int secoidDynamicTableSize = 0;
-static int secoidLastDynamicEntry = 0;
-static int secoidLastHashEntry = 0;
-
+/* Creates NSSRWLock and dynOidPool, if they don't exist.
+** This function MIGHT create the lock, but not the pool, so
+** code should test for dynOidPool, not dynOidLock, when deciding
+** whether or not to call this function.
+*/
 static SECStatus
-secoid_DynamicRehash(void)
+secoid_InitDynOidData(void)
 {
-    SECOidData *oid;
-    PLHashEntry *entry;
-    int i;
-    int last = secoidLastDynamicEntry;
+    SECStatus   rv = SECSuccess;
+    NSSRWLock * lock;
 
-    if (!oid_d_hash) {
-        oid_d_hash = PL_NewHashTable(0, SECITEM_Hash, SECITEM_HashCompare,
-			PL_CompareValues, NULL, NULL);
+    /* This function will create the lock if it doesn't exist,
+    ** and will return the address of the lcok, whether it was 
+    ** previously created, or was created by the function.
+    */
+    lock = nssRWLock_AtomicCreate(&dynOidLock, 1, "dynamic OID data");
+    if (!lock) {
+    	return SECFailure; /* Error code should already be set. */
     }
-
-
-    if ( !oid_d_hash ) {
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return(SECFailure);
-    }
-
-    for ( i = secoidLastHashEntry; i < last; i++ ) {
-	oid = secoidDynamicTable[i];
-
-	entry = PL_HashTableAdd( oid_d_hash, &oid->oid, oid );
-	if ( entry == NULL ) {
-	    return(SECFailure);
+    PORT_Assert(lock == dynOidLock);
+    NSSRWLock_LockWrite(lock);
+    if (!dynOidPool) {
+    	dynOidPool = PORT_NewArena(2048);
+	if (!dynOidPool) {
+	    rv = SECFailure /* Error code should already be set. */;
 	}
     }
-    secoidLastHashEntry = last;
-    return(SECSuccess);
+    NSSRWLock_UnlockWrite(lock);
+    return rv;
 }
 
+/* Add oidData to hash table.  Caller holds write lock dynOidLock. */
+static SECStatus
+secoid_HashDynamicOiddata(const SECOidData * oid)
+{
+    PLHashEntry *entry;
+
+    if (!dynOidHash) {
+        dynOidHash = PL_NewHashTable(0, SECITEM_Hash, SECITEM_HashCompare,
+			PL_CompareValues, NULL, NULL);
+	if ( !dynOidHash ) {
+	    return SECFailure;
+	}
+    }
+
+    entry = PL_HashTableAdd( dynOidHash, &oid->oid, (void *)oid );
+    return entry ? SECSuccess : SECFailure;
+}
 
 
 /*
@@ -1476,94 +1502,143 @@ secoid_DynamicRehash(void)
  * no locks.... (sigh).
  */
 static SECOidData *
-secoid_FindDynamic(SECItem *key) {
+secoid_FindDynamic(const SECItem *key) 
+{
     SECOidData *ret = NULL;
-    if (secoidDynamicTable == NULL) {
-	/* PORT_SetError! */
-	return NULL;
-    }
-    if (secoidLastHashEntry != secoidLastDynamicEntry) {
-	SECStatus rv = secoid_DynamicRehash();
-	if ( rv != SECSuccess ) {
-	    return NULL;
+
+    if (dynOidTable) {
+	NSSRWLock_LockRead(dynOidLock);
+	if (dynOidTable) { /* must check it again with lock held. */
+	    ret = (SECOidData *)PL_HashTableLookup(dynOidHash, key);
 	}
+	NSSRWLock_UnlockRead(dynOidLock);
     }
-    ret = (SECOidData *)PL_HashTableLookup (oid_d_hash, key);
+    if (ret == NULL) {
+	PORT_SetError(SEC_ERROR_UNRECOGNIZED_OID);
+    }
     return ret;
-	
 }
 
 static SECOidData *
 secoid_FindDynamicByTag(SECOidTag tagnum)
 {
+    SECOidData *data = NULL;
     int tagNumDiff;
 
-    if (secoidDynamicTable == NULL) {
-	return NULL;
-    }
-
     if (tagnum < SEC_OID_TOTAL) {
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	return NULL;
     }
-
     tagNumDiff = tagnum - SEC_OID_TOTAL;
-    if (tagNumDiff >= secoidLastDynamicEntry) {
-	return NULL;
-    }
 
-    return(secoidDynamicTable[tagNumDiff]);
+    if (dynOidTable) {
+	NSSRWLock_LockRead(dynOidLock);
+	if (dynOidTable != NULL && /* must check it again with lock held. */
+	    tagNumDiff < dynOidEntriesUsed) {
+	    data = dynOidTable[tagNumDiff];
+	}
+	NSSRWLock_UnlockRead(dynOidLock);
+    }
+    if (data == NULL) {
+	PORT_SetError(SEC_ERROR_UNRECOGNIZED_OID);
+    }
+    return data;
 }
 
 /*
- * this routine is definately not thread safe. It is only called out
- * of the UI, or at init time. If we want to call it any other time,
- * we need to make it thread safe.
+ * This routine is thread safe now.
  */
-SECStatus
-SECOID_AddEntry(SECItem *oid, char *description, unsigned long mech) {
-    SECOidData *oiddp = (SECOidData *)PORT_Alloc(sizeof(SECOidData));
-    int last = secoidLastDynamicEntry;
-    int tableSize = secoidDynamicTableSize;
-    int next = last++;
-    SECOidData **newTable = secoidDynamicTable;
-    SECOidData **oldTable = NULL;
+SECOidTag
+SECOID_AddEntry(const SECOidData * src)
+{
+    SECOidData * dst;
+    SECOidData **table;
+    SECOidTag    ret         = SEC_OID_UNKNOWN;
+    SECStatus    rv;
+    int          tableEntries;
+    int          used;
 
-    if (oid == NULL) {
-	return SECFailure;
+    if (!src || !src->oid.data || !src->oid.len || \
+        !src->desc || !strlen(src->desc)) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return ret;
+    }
+    if (src->supportedExtension != INVALID_CERT_EXTENSION     &&
+    	src->supportedExtension != UNSUPPORTED_CERT_EXTENSION &&
+    	src->supportedExtension != SUPPORTED_CERT_EXTENSION     ) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return ret;
     }
 
-    /* fill in oid structure */
-    if (SECITEM_CopyItem(NULL,&oiddp->oid,oid) != SECSuccess) {
-	PORT_Free(oiddp);
-	return SECFailure;
+    if (!dynOidPool && secoid_InitDynOidData() != SECSuccess) {
+	/* Caller has set error code. */
+    	return ret;
     }
-    oiddp->offset = (SECOidTag)(next + SEC_OID_TOTAL);
-    /* may we should just reference the copy passed to us? */
-    oiddp->desc = PORT_Strdup(description);
-    oiddp->mechanism = mech;
 
+    NSSRWLock_LockWrite(dynOidLock);
 
-    if (last > tableSize) {
-	int oldTableSize = tableSize;
-	tableSize += 10;
-	oldTable = newTable;
-	newTable = (SECOidData **)PORT_ZAlloc(sizeof(SECOidData *)*tableSize);
+    /* We've just acquired the write lock, and now we call FindOIDTag
+    ** which will acquire and release the read lock.  NSSRWLock has been
+    ** designed to allow this very case without deadlock.  This approach 
+    ** makes the test for the presence of the OID, and the subsequent 
+    ** addition of the OID to the table a single atomic write operation.
+    */
+    ret = SECOID_FindOIDTag(&src->oid);
+    if (ret != SEC_OID_UNKNOWN) {
+    	/* we could return an error here, but I chose not to do that.
+	** This way, if we add an OID to the shared library's built in
+	** list of OIDs in some future release, and that OID is the same
+	** as some OID that a program has been adding, the program will
+	** not suddenly stop working.
+	*/
+	goto done;
+    }
+
+    table        = dynOidTable;
+    tableEntries = dynOidEntriesAllocated;
+    used         = dynOidEntriesUsed;
+
+    if (used + 1 > tableEntries) {
+	SECOidData **newTable;
+	int          newTableEntries = tableEntries + 16;
+
+	newTable = (SECOidData **)PORT_Realloc(table, 
+				       newTableEntries * sizeof(SECOidData *));
 	if (newTable == NULL) {
-	   PORT_Free(oiddp->oid.data);
-	   PORT_Free(oiddp);
-	   return SECFailure;
+	    goto done;
 	}
-	PORT_Memcpy(newTable,oldTable,sizeof(SECOidData *)*oldTableSize);
-	PORT_Free(oldTable);
+	dynOidTable            = table        = newTable;
+	dynOidEntriesAllocated = tableEntries = newTableEntries;
     }
 
-    newTable[next] = oiddp;
-    secoidDynamicTable = newTable;
-    secoidDynamicTableSize = tableSize;
-    secoidLastDynamicEntry= last;
-    return SECSuccess;
+    /* copy oid structure */
+    dst = PORT_ArenaNew(dynOidPool, SECOidData);
+    if (!dst) {
+    	goto done;
+    }
+    rv  = SECITEM_CopyItem(dynOidPool, &dst->oid, &src->oid);
+    if (rv != SECSuccess) {
+	goto done;
+    }
+    dst->desc = PORT_ArenaStrdup(dynOidPool, src->desc);
+    if (!dst->desc) {
+	goto done;
+    }
+    dst->offset             = (SECOidTag)(used + SEC_OID_TOTAL);
+    dst->mechanism          = src->mechanism;
+    dst->supportedExtension = src->supportedExtension;
+
+    rv = secoid_HashDynamicOiddata(dst);
+    if ( rv == SECSuccess ) {
+	table[used++] = dst;
+	dynOidEntriesUsed = used;
+	ret = dst->offset;
+    }
+done:
+    NSSRWLock_UnlockWrite(dynOidLock);
+    return ret;
 }
-	
+
 
 /* normal static table processing */
 static PLHashTable *oidhash     = NULL;
@@ -1582,6 +1657,10 @@ secoid_Init(void)
     PLHashEntry *entry;
     const SECOidData *oid;
     int i;
+
+    if (!dynOidPool && secoid_InitDynOidData() != SECSuccess) {
+    	return SECFailure;
+    }
 
     if (oidhash) {
 	return SECSuccess;
@@ -1642,7 +1721,7 @@ SECOID_FindOIDByMechanism(unsigned long mechanism)
 }
 
 SECOidData *
-SECOID_FindOID(SECItem *oid)
+SECOID_FindOID(const SECItem *oid)
 {
     SECOidData *ret;
 
@@ -1660,7 +1739,7 @@ SECOID_FindOID(SECItem *oid)
 }
 
 SECOidTag
-SECOID_FindOIDTag(SECItem *oid)
+SECOID_FindOIDTag(const SECItem *oid)
 {
     SECOidData *oiddata;
 
@@ -1709,8 +1788,6 @@ SECOID_FindOIDTagDescription(SECOidTag tagnum)
 SECStatus
 SECOID_Shutdown(void)
 {
-    int i;
-
     if (oidhash) {
 	PL_HashTableDestroy(oidhash);
 	oidhash = NULL;
@@ -1719,19 +1796,43 @@ SECOID_Shutdown(void)
 	PL_HashTableDestroy(oidmechhash);
 	oidmechhash = NULL;
     }
-    if (oid_d_hash) {
-	PL_HashTableDestroy(oid_d_hash);
-	oid_d_hash = NULL;
-    }
-    if (secoidDynamicTable) {
-	for (i=0; i < secoidLastDynamicEntry; i++) {
-	    PORT_Free(secoidDynamicTable[i]);
+    /* Have to handle the case where the lock was created, but
+    ** the pool wasn't. 
+    ** I'm not going to attempt to create the lock, just to protect
+    ** the destruction of data the probably isn't inisialized anyway.
+    */
+    if (dynOidLock) {
+	NSSRWLock_LockWrite(dynOidLock);
+	if (dynOidHash) {
+	    PL_HashTableDestroy(dynOidHash);
+	    dynOidHash = NULL;
 	}
-	PORT_Free(secoidDynamicTable);
-	secoidDynamicTable = NULL;
-	secoidDynamicTableSize = 0;
-	secoidLastDynamicEntry = 0;
-	secoidLastHashEntry = 0;
+	if (dynOidPool) {
+	    PORT_FreeArena(dynOidPool, PR_FALSE);
+	    dynOidPool = NULL;
+	}
+	if (dynOidTable) {
+	    PORT_Free(dynOidTable);
+	    dynOidTable = NULL;
+	}
+	dynOidEntriesAllocated = 0;
+	dynOidEntriesUsed = 0;
+
+	NSSRWLock_UnlockWrite(dynOidLock);
+	NSSRWLock_Destroy(dynOidLock);
+	dynOidLock = NULL;
+    } else {
+    	/* Since dynOidLock doesn't exist, then all the data it protects
+	** should be uninitialized.  We'll check that (in DEBUG builds),
+	** and then make sure it is so, in case NSS is reinitialized.
+	*/
+	PORT_Assert(!dynOidHash && !dynOidPool && !dynOidTable && \
+	            !dynOidEntriesAllocated && !dynOidEntriesUsed);
+	dynOidHash = NULL;
+	dynOidPool = NULL;
+	dynOidTable = NULL;
+	dynOidEntriesAllocated = 0;
+	dynOidEntriesUsed = 0;
     }
     return SECSuccess;
 }

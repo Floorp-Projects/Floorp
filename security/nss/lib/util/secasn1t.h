@@ -35,7 +35,7 @@
  * Types for encoding/decoding of ASN.1 using BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1t.h,v 1.7 2003/11/07 01:41:22 nelsonb%netscape.com Exp $
+ * $Id: secasn1t.h,v 1.8 2004/01/29 21:23:35 nelsonb%netscape.com Exp $
  */
 
 #ifndef _SECASN1T_H_
@@ -116,12 +116,14 @@ typedef struct sec_ASN1Template_struct {
 #define SEC_ASN1_ENUMERATED		0x0a
 #define SEC_ASN1_EMBEDDED_PDV           0x0b
 #define SEC_ASN1_UTF8_STRING		0x0c
+/*                                      0x0d */
+/*                                      0x0e */
+/*                                      0x0f */
 #define SEC_ASN1_SEQUENCE		0x10
 #define SEC_ASN1_SET			0x11
 #define SEC_ASN1_NUMERIC_STRING         0x12
 #define SEC_ASN1_PRINTABLE_STRING	0x13
 #define SEC_ASN1_T61_STRING		0x14
-#define SEC_ASN1_TELETEX_STRING SEC_ASN1_T61_STRING
 #define SEC_ASN1_VIDEOTEX_STRING        0x15
 #define SEC_ASN1_IA5_STRING		0x16
 #define SEC_ASN1_UTC_TIME		0x17
@@ -133,6 +135,7 @@ typedef struct sec_ASN1Template_struct {
 /*                                      0x1d */
 #define SEC_ASN1_BMP_STRING		0x1e
 #define SEC_ASN1_HIGH_TAG_NUMBER	0x1f
+#define SEC_ASN1_TELETEX_STRING 	SEC_ASN1_T61_STRING
 
 /*
 ** Modifiers to type tags.  These are also specified by a/the

@@ -36,7 +36,7 @@
 /*
  * secoid.h - public data structures and prototypes for ASN.1 OID functions
  *
- * $Id: secoid.h,v 1.4 2001/08/24 18:34:34 relyea%netscape.com Exp $
+ * $Id: secoid.h,v 1.5 2004/01/29 21:23:36 nelsonb%netscape.com Exp $
  */
 
 #include "plarena.h"
@@ -55,8 +55,8 @@ SEC_ASN1_CHOOSER_DECLARE(SECOID_AlgorithmIDTemplate)
 /*
  * OID handling routines
  */
-extern SECOidData *SECOID_FindOID(SECItem *oid);
-extern SECOidTag SECOID_FindOIDTag(SECItem *oid);
+extern SECOidData *SECOID_FindOID( const SECItem *oid);
+extern SECOidTag SECOID_FindOIDTag(const SECItem *oid);
 extern SECOidData *SECOID_FindOIDByTag(SECOidTag tagnum);
 extern SECOidData *SECOID_FindOIDByMechanism(unsigned long mechanism);
 
@@ -69,7 +69,7 @@ extern SECOidData *SECOID_FindOIDByMechanism(unsigned long mechanism);
 ** Fill in an algorithm-ID object given a tag and some parameters.
 ** 	"aid" where the DER encoded algorithm info is stored (memory
 **	   is allocated)
-**	"tag" the tag defining the algorithm (SEC_OID_*)
+**	"tag" the tag number defining the algorithm 
 **	"params" if not NULL, the parameters to go with the algorithm
 */
 extern SECStatus SECOID_SetAlgorithmID(PRArenaPool *arena, SECAlgorithmID *aid,
@@ -85,7 +85,7 @@ extern SECStatus SECOID_CopyAlgorithmID(PRArenaPool *arena, SECAlgorithmID *dest
 				    SECAlgorithmID *src);
 
 /*
-** Get the SEC_OID_* tag for the given algorithm-id object.
+** Get the tag number for the given algorithm-id object.
 */
 extern SECOidTag SECOID_GetAlgorithmTag(SECAlgorithmID *aid);
 
@@ -105,9 +105,15 @@ extern SECComparison SECOID_CompareAlgorithmID(SECAlgorithmID *a,
 
 extern PRBool SECOID_KnownCertExtenOID (SECItem *extenOid);
 
-/* Given a SEC_OID_* tag, return a string describing it.
+/* Given a tag number, return a string describing it.
  */
 extern const char *SECOID_FindOIDTagDescription(SECOidTag tagnum);
+
+/* Add a dynamic SECOidData to the dynamic OID table.
+** Routine copies the src entry, and returns the new SECOidTag.
+** Returns SEC_OID_INVALID if failed to add for some reason.
+*/
+extern SECOidTag SECOID_AddEntry(const SECOidData * src);
 
 /*
  * free up the oid data structures.
