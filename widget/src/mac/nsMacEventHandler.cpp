@@ -1262,8 +1262,9 @@ nsMacEventHandler :: Scroll ( EventMouseWheelAxis inAxis, PRInt32 inDelta, const
     widgetToScroll = gEventDispatchHandler.GetActive();
   
   // the direction we get from the carbon event is opposite from the way mozilla looks at
-  // it. Reverse the direction.
-  inDelta *= -1;
+  // it. Reverse the direction. Also, scroll by 3 lines at a time. |inDelta| represents the
+  // number of groups of lines to scroll, not the exact number of lines to scroll.
+  inDelta *= -3;
   
   HandleScrollEvent ( inAxis, PR_TRUE, inDelta, inMouseLoc, widgetToScroll );
   
