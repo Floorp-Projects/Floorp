@@ -46,33 +46,18 @@
  * 
  */
  
-#ifndef SHEXP_H
-#define SHEXP_H
+#ifndef nsWildCard_h__
+#define nsWildCard_h__
 
-#include "xp_core.h"
-
-/*
- * Requires that the macro MALLOC be set to a "safe" malloc that will 
- * exit if no memory is available. If not under MCC httpd, define MALLOC
- * to be the real malloc and play with fire, or make your own function.
- */
-
-#if 0
-#ifdef MCC_HTTPD
-#include "../mc-httpd.h"
-#endif
-#endif
-
+#include "prtypes.h"
 #include <ctype.h>  /* isalnum */
 #include <string.h> /* strlen */
 
-
-XP_BEGIN_PROTOS
 /* --------------------------- Public routines ---------------------------- */
 
 
 /*
- * shexp_valid takes a shell expression exp as input. It returns:
+ * NS_WildCardValid takes a shell expression exp as input. It returns:
  * 
  *  NON_SXP      if exp is a standard string
  *  INVALID_SXP  if exp is a shell expression, but invalid
@@ -83,7 +68,7 @@ XP_BEGIN_PROTOS
 #define INVALID_SXP -2
 #define VALID_SXP 1
 
-extern int XP_RegExpValid(char *expr);
+extern int NS_WildCardValid(char *expr);
 
 
 /* return values for the search routines */
@@ -92,26 +77,25 @@ extern int XP_RegExpValid(char *expr);
 #define ABORTED -1
 
 /*
- * shexp_match 
+ * NS_WildCardMatch
  * 
  * Takes a prevalidated shell expression exp, and a string str.
  *
  * Returns 0 on match and 1 on non-match.
  */
 
-extern int XP_RegExpMatch(char *str, char *expr, PRBool case_insensitive);
+extern int NS_WildCardMatch(char *str, char *expr, PRBool case_insensitive);
 
 /*
- * 
  * Same as above, but validates the exp first. 0 on match, 1 on non-match,
  * -1 on invalid exp.
  */
 
-extern int XP_RegExpSearch(char *str, char *expr);
+extern int NS_WildCardSearch(char *str, char *expr);
 
-/* same as above but uses case insensitive search
+/*
+ * Same as above but uses case insensitive search.
  */
-extern int XP_RegExpCaseSearch(char *str, char *expr);
+extern int NS_WildCardCaseSearch(char *str, char *expr);
 
-XP_END_PROTOS
-#endif
+#endif /* nsWildCard_h__ */

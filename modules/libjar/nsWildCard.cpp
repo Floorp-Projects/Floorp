@@ -38,7 +38,7 @@
 /* ----------------------------- shexp_valid ------------------------------ */
 
 
-PRIVATE int 
+static int 
 _valid_subexp(char *expr, char stop) 
 {
     register int x,y,t;
@@ -108,8 +108,8 @@ _valid_subexp(char *expr, char stop)
     return ((expr[x] == stop) ? x : INVALID_SXP);
 }
 
-PUBLIC int 
-XP_RegExpValid(char *expr) 
+int 
+NS_WildCardValid(char *expr) 
 {
     int x;
 
@@ -125,9 +125,9 @@ XP_RegExpValid(char *expr)
 #define NOMATCH 1
 #define ABORTED -1
 
-PRIVATE int _shexp_match(char *str, char *expr, PRBool case_insensitive);
+static int _shexp_match(char *str, char *expr, PRBool case_insensitive);
 
-PRIVATE int 
+static int 
 _handle_union(char *str, char *expr, PRBool case_insensitive) 
 {
     char *e2 = (char *) PR_Malloc(sizeof(char)*strlen(expr));
@@ -157,7 +157,7 @@ _handle_union(char *str, char *expr, PRBool case_insensitive)
 }
 
 
-PRIVATE int 
+static int 
 _shexp_match(char *str, char *expr, PRBool case_insensitive) 
 {
     register int x,y;
@@ -249,8 +249,8 @@ _shexp_match(char *str, char *expr, PRBool case_insensitive)
     return (ret ? ret : (str[x] ? NOMATCH : MATCH));
 }
 
-PUBLIC int 
-XP_RegExpMatch(char *str, char *xp, PRBool case_insensitive) {
+int 
+NS_WildCardMatch(char *str, char *xp, PRBool case_insensitive) {
     register int x;
     char *expr = PL_strdup(xp);
 
@@ -274,37 +274,3 @@ XP_RegExpMatch(char *str, char *xp, PRBool case_insensitive) {
     PR_Free(expr);
     return 1;
 }
-
-
-/* ------------------------------ shexp_cmp ------------------------------- */
-
-#if 0
-PUBLIC int 
-XP_RegExpSearch(char *str, char *expr)
-{
-    switch(XP_RegExpValid(expr)) 
-	  {
-        case INVALID_SXP:
-            return -1;
-        case NON_SXP:
-            return (strcmp(expr,str) ? 1 : 0);
-        default:
-            return XP_RegExpMatch(str, expr, PR_FALSE);
-      }
-}
-
-PUBLIC int
-XP_RegExpCaseSearch(char *str, char *expr)
-{
-    switch(XP_RegExpValid(expr))
-      {
-        case INVALID_SXP:
-            return -1;
-        case NON_SXP:
-            return (strcmp(expr,str) ? 1 : 0);
-        default:
-            return XP_RegExpMatch(str, expr, TRUE);
-      }
-}
-#endif
-
