@@ -163,7 +163,8 @@ function EditorStartup(editorType, editorElement)
   }
 
   // store the editor shell in the window, so that child windows can get to it.
-  editorShell = editorElement.editorShell;
+  editorShell = editorElement.editorShell;        // this pattern exposes a JS/XBL bug that causes leaks
+//  editorShell = editorElement.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).editorShell;
   
   editorShell.Init();
   editorShell.SetEditorType(editorType);
