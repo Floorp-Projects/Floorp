@@ -935,11 +935,11 @@ CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
 
 }
 
-typedef PRBool (*nsStringEnumFunc)(const nsString& aSubString, void *aData);
+typedef nsresult (*nsStringEnumFunc)(const nsString& aSubString, void *aData);
 
-static PRBool EnumerateMediaString(const nsString& aStringList, nsStringEnumFunc aFunc, void* aData)
+static nsresult EnumerateMediaString(const nsString& aStringList, nsStringEnumFunc aFunc, void* aData)
 {
-  PRBool    running = PR_TRUE;
+  nsresult status = NS_OK;
 
   nsAutoString  stringList(aStringList); // copy to work buffer
   nsAutoString  subStr;
@@ -949,7 +949,7 @@ static PRBool EnumerateMediaString(const nsString& aStringList, nsStringEnumFunc
   PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.GetUnicode();
   PRUnichar* end   = start;
 
-  while (running && (kNullCh != *start)) {
+  while (NS_SUCCEEDED(status) && (kNullCh != *start)) {
     PRBool  quoted = PR_FALSE;
 
     while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
@@ -997,31 +997,34 @@ static PRBool EnumerateMediaString(const nsString& aStringList, nsStringEnumFunc
     }
 
     if (0 < subStr.Length()) {
-      running = (*aFunc)(subStr, aData);
+      status = (*aFunc)(subStr, aData);
     }
 
     start = ++end;
   }
 
-  return running;
+  return status;
 }
 
-static PRBool MediumEnumFunc(const nsString& aSubString, void* aData)
+static nsresult MediumEnumFunc(const nsString& aSubString, void* aData)
 {
   nsIAtom*  medium = NS_NewAtom(aSubString);
+  if (!medium) return NS_ERROR_OUT_OF_MEMORY;
   ((nsICSSStyleSheet*)aData)->AppendMedium(medium);
-  return PR_TRUE;
+  NS_RELEASE(medium);
+  return NS_OK;
 }
 
 
 nsresult
 CSSLoaderImpl::SetMedia(nsICSSStyleSheet* aSheet, const nsString& aMedia)
 {
+  nsresult rv = NS_OK;
   aSheet->ClearMedia();
   if (0 < aMedia.Length()) {
-    EnumerateMediaString(aMedia, MediumEnumFunc, aSheet);
+    rv = EnumerateMediaString(aMedia, MediumEnumFunc, aSheet);
   }
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -1442,8 +1445,10 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
       nsICSSStyleSheet* clone = nsnull;
       result = sheet->Clone(clone);
       if (NS_SUCCEEDED(result)) {
-        SetMedia(clone, aMedia);
-        result = InsertChildSheet(clone, aParentSheet, aIndex);
+        result = SetMedia(clone, aMedia);
+        if (NS_SUCCEEDED(result)) {
+          result = InsertChildSheet(clone, aParentSheet, aIndex);
+        }
         NS_RELEASE(clone);
       }
     }
