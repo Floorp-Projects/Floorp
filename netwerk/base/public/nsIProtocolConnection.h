@@ -41,10 +41,11 @@ public:
 
     NS_IMETHOD Open(void) = 0;
 
+/*  // Why should this be here?
     // can be called after Open
     // freed by caller with delete[]
     NS_IMETHOD GetContentType(char* *contentType) = 0;
-
+*/
     // blocking:
     NS_IMETHOD GetInputStream(nsIInputStream* *result) = 0;
 

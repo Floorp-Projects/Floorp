@@ -20,6 +20,7 @@
 #include "nsIByteBufferInputStream.h"
 #include "nsIString.h"
 #include "nsCRT.h"
+#include "nsIOutputStream.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -67,5 +67,9 @@ public:
 
         return NS_IHEADER_IID;
     }
-}
+};
+
+//TODO verify error offsets!
+#define NS_ERROR_NOT_FOUND NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 115);
+
 #endif // _nsIHeader_h_

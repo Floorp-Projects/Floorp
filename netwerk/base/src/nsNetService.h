@@ -33,8 +33,8 @@ public:
                                nsIUrl* aBaseUrl,
                                char* *result);
     NS_IMETHOD NewUrl(const char* aSpec,
-                      nsIUrl* aBaseUrl,
-                      nsIUrl* *result);
+                      nsIUrl* *result,
+                      nsIUrl* aBaseUrl=0);
     NS_IMETHOD NewConnection(nsIUrl* url,
                              nsISupports* eventSink,
                              nsIConnectionGroup* group,
