@@ -148,10 +148,6 @@ calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCal
 
    // open the dialog modally
    openDialog("chrome://calendar/content/localCalDialog.xul", "caAddServer", "chrome,modal", args );
-   
-   // CofC
-   // call the calendar color update function with the calendar object
-   calendarColorStyleRuleUpdate( ThisCalendarObject );
 }
 
 /*
@@ -191,10 +187,6 @@ calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditC
 
    // open the dialog modally
    openDialog("chrome://calendar/content/localCalDialog.xul", "caEditServer", "chrome,modal", args );
-
-   // CofC
-   // call the calendar color update function with the calendar object
-   calendarColorStyleRuleUpdate( ThisCalendarObject );
 }
 
 
@@ -228,9 +220,6 @@ calendarManager.prototype.launchAddRemoteCalendarDialog = function calMan_launch
    // open the dialog modally
    openDialog("chrome://calendar/content/serverDialog.xul", "caAddServer", "chrome,modal", args );
 
-   // CofC
-   // call the calendar color update function with the calendar object
-   calendarColorStyleRuleUpdate( ThisCalendarObject );
 }
 
 /*
@@ -267,10 +256,6 @@ calendarManager.prototype.launchEditRemoteCalendarDialog = function calMan_launc
 
    // open the dialog modally
    openDialog("chrome://calendar/content/serverDialog.xul", "caEditServer", "chrome,modal", args );
-   
-   // CofC
-   // call the calendar color update function with the calendar object
-   calendarColorStyleRuleUpdate( ThisCalendarObject );
 }
 
 
@@ -332,6 +317,16 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
    }
    
    this.rdf.flush();
+
+   // change made by PAB... new calendars don't have their Id field set because
+   // it does not exist until after the node is created. This causes trouble downstream
+   // because the calendar coloring code forms the name of the color style from the Id.
+   // So... set the CalendarObjects Id here
+   CalendarObject.Id = node.resource.Value;
+   
+   // call the calendar color update function with the calendar object
+   // NOTE: this call was moved
+   calendarColorStyleRuleUpdate( CalendarObject );
 }
 
 
@@ -352,7 +347,12 @@ calendarManager.prototype.editLocalCalendarDialogResponse = function calMan_edit
    node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", CalendarObject.publishAutomatically);
    node.setAttribute("http://home.netscape.com/NC-rdf#color", CalendarObject.color);
    this.rdf.flush();
+   
+   // CofC
+   // call the calendar color update function with the calendar object
+   calendarColorStyleRuleUpdate( CalendarObject );
 }
+
 /*
 ** Called when OK is clicked in the new server dialog.
 */
@@ -369,6 +369,10 @@ calendarManager.prototype.editServerDialogResponse = function calMan_editServerD
    node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", CalendarObject.publishAutomatically);
    node.setAttribute("http://home.netscape.com/NC-rdf#color", CalendarObject.color);
    this.rdf.flush();
+   
+   // CofC
+   // call the calendar color update function with the calendar object
+   calendarColorStyleRuleUpdate( CalendarObject );
 }
 
 
