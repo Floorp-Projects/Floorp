@@ -606,7 +606,7 @@ function onAdvancedAbSearch()
   if (!selectedABURI) return;
 
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].
-                        getService(Components.interfaces.nsIWindowMediator);
+                                 getService(Components.interfaces.nsIWindowMediator);
   var existingSearchWindow = windowManager.getMostRecentWindow("mailnews:absearch");
   if (existingSearchWindow)
     existingSearchWindow.focus();
