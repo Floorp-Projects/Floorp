@@ -1937,26 +1937,29 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
       progress->CloseProgressDialog(NS_FAILED(aStatus));
 		compose->NotifyStateListeners(eComposeProcessDone,aStatus);
 
-		if (NS_SUCCEEDED(aStatus))
-		{
+    if (NS_SUCCEEDED(aStatus))
+    {
 #ifdef NS_DEBUG
-			printf("nsMsgComposeSendListener: Success on the message copy operation!\n");
+      printf("nsMsgComposeSendListener: Success on the message copy operation!\n");
 #endif
       // We should only close the window if we are done. Things like templates
       // and drafts aren't done so their windows should stay open
       if ( (mDeliverMode != nsIMsgSend::nsMsgSaveAsDraft) &&
            (mDeliverMode != nsIMsgSend::nsMsgSaveAsTemplate) )
         compose->CloseWindow();
-		  else
-		  if (mDeliverMode == nsIMsgSend::nsMsgSaveAsDraft)
-		  {	
-            // Remove the current draft msg when saving to draft is done. Also,
-		    // if it was a NEW comp type, it's now DRAFT comp type. Otherwise
-		    // if the msg is then sent we won't be able to remove the saved msg.
-			compose->SetType(nsIMsgCompType::Draft);
-			RemoveCurrentDraftMessage(compose, PR_TRUE);
-		  }
-		}
+      else
+      {  
+        compose->NotifyStateListeners(eSaveInFolderDone,aStatus);
+        if (mDeliverMode == nsIMsgSend::nsMsgSaveAsDraft)
+        { 
+          // Remove the current draft msg when saving to draft is done. Also,
+          // if it was a NEW comp type, it's now DRAFT comp type. Otherwise
+          // if the msg is then sent we won't be able to remove the saved msg.
+          compose->SetType(nsIMsgCompType::Draft);
+          RemoveCurrentDraftMessage(compose, PR_TRUE);
+        }
+      }
+    }
 #ifdef NS_DEBUG
 		else
 			printf("nsMsgComposeSendListener: the message copy operation failed!\n");
