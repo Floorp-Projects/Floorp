@@ -77,8 +77,8 @@
 
 typedef struct
 {
-	nsMsgSearchAttribValue	attrib;
-	const char			*attribName;
+  nsMsgSearchAttribValue	attrib;
+  const char			*attribName;
 } nsMsgSearchAttribEntry;
 
 nsMsgSearchAttribEntry SearchAttribEntryTable[] =
@@ -197,19 +197,19 @@ typedef struct
 
 nsMsgSearchOperatorEntry SearchOperatorEntryTable[] =
 {
-  {nsMsgSearchOp::Contains,	"contains"},
+  {nsMsgSearchOp::Contains, "contains"},
   {nsMsgSearchOp::DoesntContain,"doesn't contain"},
-  {nsMsgSearchOp::Is,           "is"},
-  {nsMsgSearchOp::Isnt,		"isn't"},
-  {nsMsgSearchOp::IsEmpty,		"is empty"},
-  {nsMsgSearchOp::IsBefore,    "is before"},
-  {nsMsgSearchOp::IsAfter,		"is after"},
+  {nsMsgSearchOp::Is,"is"},
+  {nsMsgSearchOp::Isnt,	"isn't"},
+  {nsMsgSearchOp::IsEmpty, "is empty"},
+  {nsMsgSearchOp::IsBefore, "is before"},
+  {nsMsgSearchOp::IsAfter, "is after"},
   {nsMsgSearchOp::IsHigherThan, "is higher than"},
-  {nsMsgSearchOp::IsLowerThan,	"is lower than"},
-  {nsMsgSearchOp::BeginsWith,  "begins with"},
-  {nsMsgSearchOp::EndsWith,	"ends with"},
-  {nsMsgSearchOp::IsInAB,	 "is in ab"},
-  {nsMsgSearchOp::IsntInAB,	"isn't in ab"},
+  {nsMsgSearchOp::IsLowerThan, "is lower than"},
+  {nsMsgSearchOp::BeginsWith, "begins with"},
+  {nsMsgSearchOp::EndsWith, "ends with"},
+  {nsMsgSearchOp::IsInAB, "is in ab"},
+  {nsMsgSearchOp::IsntInAB, "isn't in ab"},
   {nsMsgSearchOp::IsGreaterThan, "is greater than"},
   {nsMsgSearchOp::IsLessThan, "is less than"}
 };
@@ -637,6 +637,8 @@ void nsMsgSearchTerm::StripQuotedPrintable (unsigned char *src)
 {
   // decode quoted printable text in place
   
+  if (!*src)
+    return;
   unsigned char *dest = src;
   int srcIdx = 0, destIdx = 0;
   
