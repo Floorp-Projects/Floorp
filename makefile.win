@@ -59,6 +59,7 @@ DIRS =                         \
   modules\libutil              \
   modules\mpfilelocprovider    \
   modules\zlib                 \
+  intl                         \
   netwerk                      \
   widget\timer                 \
   js                           \
@@ -70,7 +71,6 @@ DIRS =                         \
   modules\libpref              \
   modules\oji                  \
   caps                         \
-  intl                         \
   rdf                          \
 !endif
 !if defined(LAYOUT_DIRS)
