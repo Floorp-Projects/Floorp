@@ -23,7 +23,7 @@
 
 class UnicodeString;
 
-class Locale 
+class NS_NLS Locale 
 {
 
 public:

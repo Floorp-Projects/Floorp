@@ -1,6 +1,9 @@
 #ifdef XP_PC 
 #include <windows.h>
+
+#ifndef MOZ_TREX
 #include "nlsloc.h"
+#endif
 
 #ifdef _WIN32
 BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
@@ -17,7 +20,10 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
       break;
 
     case DLL_PROCESS_DETACH:
+
+#ifndef MOZ_TREX
         NLS_Terminate();
+#endif
       break;
   }
 

@@ -23,7 +23,7 @@
 
 class UnicodeString;
 
-class TimeZone 
+class NS_NLS TimeZone 
 {
 
 public:

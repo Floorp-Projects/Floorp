@@ -26,7 +26,7 @@ class ParsePosition;
 class Format;
 class TimeZone;
 
-class DateFormat
+class NS_NLS DateFormat
 {
 
 public:

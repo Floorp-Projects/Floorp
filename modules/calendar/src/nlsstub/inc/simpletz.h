@@ -21,7 +21,7 @@
 
 #include "timezone.h"
 
-class SimpleTimeZone : public TimeZone
+class NS_NLS SimpleTimeZone : public TimeZone
 {
 
 public:
