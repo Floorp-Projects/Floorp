@@ -268,13 +268,17 @@ void RequestName(nsIRequest *request, nsCString &stringMsg, int displayMethod)
 {
 	nsresult rv;
 
-	rv = request->GetName(stringMsg);
+	if (!request) {
+		QAOutput("ERROR. nsIRequest object is Null. RequestName test fails.", displayMethod);
+		return;
+	}
+	else
+		rv = request->GetName(stringMsg);
 
 	if(NS_SUCCEEDED(rv))																
 		FormatAndPrintOutput("nsIRequest: The request name = ", stringMsg.get(), displayMethod);
 	else
 		QAOutput("nsIRequest: We didn't get the request name.", displayMethod);
-
 }
 
 void WebProgDOMWindowTest(nsIWebProgress *progress, const char *inString,
@@ -290,7 +294,12 @@ void WebProgDOMWindowTest(nsIWebProgress *progress, const char *inString,
 	totalStr2 = inString;
 	totalStr2 += ": nsIWebProgress:DOMWindow attribute test";
 
-	rv = progress->GetDOMWindow(getter_AddRefs(theDOMWindow));
+	if (!progress) {
+		QAOutput("ERROR. nsIWebProgress object is Null. WebProgDOMWindowTest fails.", displayMethod);
+		return;
+	}
+	else
+		rv = progress->GetDOMWindow(getter_AddRefs(theDOMWindow));
 	if (!theDOMWindow)
 		QAOutput(totalStr1.get(), displayMethod);
 	else
@@ -307,6 +316,11 @@ void WebProgIsDocLoadingTest(nsIWebProgress *progress, const char *inString,
 	totalStr = inString;
 	totalStr += ": nsIWebProgress:IsDocumentLoading attribute test";
 
+	if (!progress) {
+		QAOutput("ERROR. nsIWebProgress object is Null. WebProgIsDocLoadingTest fails.", displayMethod);
+		return;
+	}
+	else
 	rv = progress->GetIsLoadingDocument(&docLoading);
 	RvTestResult(rv, totalStr.get(), displayMethod);
 	FormatAndPrintOutput("nsIWebProgress: isDocumentLoading return value = ", docLoading, displayMethod);
