@@ -7,9 +7,9 @@
 <body bgcolor="#ffffff">
 
 <h1 align="center">
-Change Log for Significant Rhino Changes</h1>
+Rhino Change Log</h1>
 
-This is a log of significant changes since the release of Rhino 1.5 Release 3.
+This is a log of changes since the release of Rhino 1.5 Release 3.
 
 <h3>Rhino debug API changes</h3>
 
@@ -51,6 +51,9 @@ var fooJar = new Packages(loader);
 var obj = new fooJar.Foo(1, 2, 3);
 obj.someMethod();
 </pre>
+
+<h3>Shell function to run external processes.</h3>
+A new <tt>runCommand</tt> function is added to <a href="shell.html">Rhino Shell</a> to run external priocesses. For details, see JavaDoc for <a href="http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/shell/Global.java">org.mozilla.javascript.tools.shell.Global#runCommand</a>.</blockquote>
 
 <h3>Resolved Bugzilla reports</h3>
 

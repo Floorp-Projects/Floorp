@@ -58,6 +58,11 @@ argument <i>className</i>. Uses ScriptableObject.defineClass() to define
 the extension.</blockquote>
 
 <h4>
+deserialize(<i>filename</i>)</h4>
+
+<blockquote>Restore from the specified file an object previously written by a call to <tt>serialize</tt>.</blockquote>
+
+<h4>
 load([<i>filename</i>, ...])</h4>
 
 <blockquote>Load JavaScript source files named by string arguments. If
@@ -77,6 +82,26 @@ print([<i>expr</i> ...])</h4>
 converts the result to a string, and prints it.</blockquote>
 
 <h4>
+runCommand(<i>commandName</i>, [<i>arg</i>, ...] [<i>options</i>])</h4>
+
+<blockquote>Execute the specified command with the given argument and options
+as a separate process and return the exit status of the process. For details, see JavaDoc for <a href="http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/shell/Global.java">org.mozilla.javascript.tools.shell.Global#runCommand</a>.</blockquote>
+
+<h4>
+serialize(<i>object</i>, <i>filename</i>)</h4>
+<blockquote>Serialize the given object to the specified file.</blockquote>
+
+<h4>
+spawn(<i>functionOrScript</i>)</h4>
+
+<blockquote>Run the given function or script in a different thread.</blockquote>
+
+<h4>
+sync(<i>function</i>)</h4>
+
+<blockquote>creates a synchronized function (in the sense of a Java synchronized method) from an existing function. The new function synchronizes on the <code>this</code> object of its invocation.</blockquote>
+
+<h4>
 quit()</h4>
 
 <blockquote>Quit shell. The shell will also quit in interactive mode if
@@ -93,35 +118,103 @@ respectively.</blockquote>
 
 <h2>
 Example</h2>
+
+<h4>Invocation</h4>
 Here the shell is invoked three times from the command line. (The system
 command prompt is shown as <tt>$</tt>.) The first invocation executes a
 script specified on the command line itself. The next invocation has no
 arguments, so the shell goes into interactive mode, reading and evaluating
 each line as it is typed in. Finally, the last invocation executes a script
 from a file and accesses arguments to the script itself.
-<p><tt>$ java org.mozilla.javascript.tools.shell.Main -e print('hi')</tt>
-<p><tt>hi</tt>
-<p><tt>$ java org.mozilla.javascript.tools.shell.Main</tt>
-<p><tt>js> print('hi')</tt>
-<br><tt>hi</tt>
-<br><tt>js> 6*7</tt>
-<br><tt>42</tt>
-<br><tt>js> function f() {</tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return a;</tt>
-<br><tt>}</tt>
-<br><tt>js> var a = 34;</tt>
-<br><tt>js> f()</tt>
-<br><tt>34</tt>
-<br><tt>js> quit()</tt>
-<p><tt>$ cat echo.js</tt>
-<br><tt>for (i in arguments) {</tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print(arguments[i])</tt>
-<br><tt>}</tt>
-<br><tt>$ java org.mozilla.javascript.tools.shell.Main echo.js foo bar</tt>
-<p><tt>foo</tt>
-<br><tt>bar</tt>
-<p><tt>$</tt>
-<p>
+<pre>
+$ java org.mozilla.javascript.tools.shell.Main -e print('hi')
+hi
+$ java org.mozilla.javascript.tools.shell.Main
+js> print('hi')
+hi
+js> 6*7
+42
+js> function f() {
+	return a;
+}
+js> var a = 34;
+js> f()
+34
+js> quit()
+$ cat echo.js
+for (i in arguments) {
+	print(arguments[i])
+}
+$ java org.mozilla.javascript.tools.shell.Main echo.js foo bar
+foo
+bar
+$
+</pre>
+
+<h4>spawn and sync</h4>
+The following example creates 2 threads via <tt>spawn</tt> and uses <tt>sync</tt> to create a synchronized version of the function <tt>test</tt>.
+
+<pre>
+js> function test(x) {
+	print("entry");
+	java.lang.Thread.sleep(x*1000);
+	print("exit");
+}
+js> var o = { f : sync(test) };
+js> spawn(function() {o.f(5);});
+Thread[Thread-0,5,main]
+entry
+js> spawn(function() {o.f(5);});
+Thread[Thread-1,5,main]
+js>
+exit
+entry
+exit
+</pre>
+
+<h4>runCommand</h4>
+Here is few examples of invoking <tt>runCommand</tt> under Linux.
+<pre>
+js> runCommand('date')
+Thu Jan 23 16:49:36 CET 2003
+0
+// Using input option to provide process input
+js> runCommand("sort", {input: "c\na\nb"})
+a
+b
+c
+0
+js> // Demo of output and err options
+js> var opt={input: "c\na\nb", output: 'Sort Output:\n'}
+js> runCommand("sort", opt)
+0
+js> print(opt.output)
+Sort Output:
+a
+b
+c
+js> var opt={input: "c\na\nb", output: 'Sort Output:\n', err: ''}
+js> runCommand("sort", "--bad-arg", opt)
+2
+js> print(opt.err)
+/bin/sort: unrecognized option `--bad-arg'
+Try `/bin/sort --help' for more information.
+
+js> runCommand("bad_command", "--bad-arg", opt)
+js: "<stdin>", line 18: uncaught JavaScript exception: java.io.IOException: bad_command: not found
+js> // Passing explicit environment to the system shell
+js> runCommand("sh", "-c", "echo $env1 $env2", { env: {env1: 100, env2: 200}})
+100 200
+0
+js> // Use args option to provide additional command arguments
+js> var arg_array = [1, 2, 3, 4];
+js> runCommand("echo", { args: arg_array})
+1 2 3 4
+0
+</pre>
+
+
+
 <hr WIDTH="100%">
 <br><a href="index.html">back to top</a>
 </body>
