@@ -37,8 +37,7 @@
 // ***** END LICENSE BLOCK *****
 ?>
 
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<meta name="keywords" content="mozilla update, mozilla extensions, mozilla plugins, thunderbird themes, thunderbird extensions, firefox extensions, firefox themes,">
+	<meta name="keywords" content="mozilla update, mozilla extensions, mozilla plugins, thunderbird themes, thunderbird extensions, firefox extensions, firefox themes">
 	
 	<link rel="stylesheet" type="text/css" href="/css/print.css" media="print">
 	
@@ -48,7 +47,7 @@
 	<link rel="stylesheet" type="text/css" href="/css/base/template.css" media="screen">
 	<link rel="stylesheet" type="text/css" href="/css/cavendish/template.css" title="Cavendish" media="screen">
 	
-	<link rel="icon" href="/images/favicon.png" type="image/png">
+	<link rel="icon" href="/favicon.ico" type="image/png">
 	
 	<link rel="home" title="Home" href="http://update.mozilla.org/">
 </head>
