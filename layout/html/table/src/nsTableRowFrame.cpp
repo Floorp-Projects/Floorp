@@ -1437,7 +1437,7 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
     mMaxElementSize = *aDesiredSize.maxElementSize;
   }
 
-  if (nsDebugTable::gRflRow) nsTableFrame::DebugReflow("TR::Rfl ex", this, nsnull, &aDesiredSize);
+  if (nsDebugTable::gRflRow) nsTableFrame::DebugReflow("TR::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
   return rv;
 }
 

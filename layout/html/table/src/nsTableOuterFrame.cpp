@@ -432,7 +432,7 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*        aPres
   if (PR_TRUE == innerTableNeedsReflow) {
     // Compute the width to use for the table. In the case of an auto sizing
     // table this represents the maximum available width
-    nscoord tableWidth = ComputeAvailableTableWidth(aReflowState.reflowState);
+    nscoord tableWidth = nsTableFrame::CalcBorderBoxWidth(aReflowState.reflowState);
 
     // If the caption max element size is larger, then use it instead.
     // XXX: caption align = left|right ignored here!
@@ -773,59 +773,6 @@ nsresult nsTableOuterFrame::SizeAndPlaceChildren(nsIPresContext*        aPresCon
   return rv;
 }
 
-
-// computes the table width 
-nscoord nsTableOuterFrame::ComputeAvailableTableWidth(const nsHTMLReflowState& aReflowState)
-{
-  nscoord maxWidth;
-
-  // Figure out the overall table width constraint. Default case, get 100% of
-  // available space
-  if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
-    maxWidth = aReflowState.availableWidth;
-
-  } else {
-    const nsStylePosition* position =
-      (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-  
-    switch (position->mWidth.GetUnit()) {
-    case eStyleUnit_Coord:
-      maxWidth = position->mWidth.GetCoordValue();
-      break;
-  
-    case eStyleUnit_Auto:
-      {
-        const nsStyleSpacing* spacing =
-          (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-        nsMargin margin(0,0,0,0);
-        // XXX handle percentage margin
-        spacing->GetMargin(margin);
-        maxWidth = aReflowState.availableWidth - margin.left - margin.right;
-        break;
-      }
-  
-    case eStyleUnit_Percent:
-      maxWidth = aReflowState.mComputedWidth;
-      break;
-
-    case eStyleUnit_Proportional:
-    case eStyleUnit_Inherit:
-      // XXX for now these fall through
-  
-    default:
-      maxWidth = aReflowState.availableWidth;
-      break;
-    }
-
-    if (maxWidth <= 0) {
-      // Nonsense style specification
-      maxWidth = 0;
-    }
-  }
-
-  return maxWidth;
-}
-
 /**
   * Reflow is a multi-step process.
   * 1. First we reflow the caption frame and get its maximum element size. We
@@ -887,25 +834,20 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
     NS_ASSERTION(mFrames.NotEmpty(), "no children");
     NS_ASSERTION(nsnull != mInnerTableFrame, "no mInnerTableFrame");
 
-    // Compute the width to use for the table. In the case of an auto sizing
-    // table this represents the maximum available width
-    nscoord tableWidth = ComputeAvailableTableWidth(aReflowState);
+    nscoord availWidth = aReflowState.availableWidth;
 
     // If the caption max element size is larger, then use it instead.
     // XXX: caption align = left|right ignored here!
-    if (mMinCaptionWidth > tableWidth) {
-      tableWidth = mMinCaptionWidth;
+    if (mMinCaptionWidth > availWidth) {
+      availWidth = mMinCaptionWidth;
     }
 
     // First reflow the inner table
-    nsHTMLReflowState   innerReflowState(aPresContext, aReflowState, mInnerTableFrame,
-                                         nsSize(tableWidth, aReflowState.availableHeight));
-    innerReflowState.mComputedWidth  = aReflowState.mComputedWidth;
-    if ((NS_UNCONSTRAINEDSIZE != tableWidth) && 
-        (tableWidth > aReflowState.mComputedWidth)) {
-      innerReflowState.mComputedWidth = tableWidth;
-    }
+    nsHTMLReflowState innerReflowState(aPresContext, aReflowState, mInnerTableFrame, 
+                                       nsSize(availWidth, aReflowState.availableHeight));
+    innerReflowState.mComputedWidth  = PR_MAX(aReflowState.mComputedWidth, mMinCaptionWidth);
     innerReflowState.mComputedHeight = aReflowState.mComputedHeight;
+
     nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
     // XXX To do this efficiently we really need to know where the inner
     // table will be placed. In the case of a top caption that means
@@ -991,7 +933,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  if (nsDebugTable::gRflTableOuter) nsTableFrame::DebugReflow("TO::Rfl ex", this, nsnull, &aDesiredSize);
+  if (nsDebugTable::gRflTableOuter) nsTableFrame::DebugReflow("TO::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
   return rv;
 }
 

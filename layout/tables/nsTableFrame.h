@@ -129,21 +129,21 @@ public:
   static NS_METHOD GetTableFrame(nsIFrame*      aSourceFrame, 
                                  nsTableFrame*& aTableFrame);
 
+  // calculate the width of aFrame including its border and padding given 
+  // given its reflow state.
+  static nscoord CalcBorderBoxWidth(const nsHTMLReflowState& aReflowState);
+
+  // calculate the height of aFrame including its border and padding given 
+  // its reflow state.
+  static nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState,
+                                     PRBool                   aDoNavHacks);
+
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
   static nsIFrame* GetFrameAtOrBefore(nsIFrame* aParentFrame,
                                       nsIFrame* aPriorChildFrame,
                                       nsIAtom*  aChildType);
-  /**
-    * @param aReflowState  the context within which we're to determine the table width info
-    * @param aSpecifiedTableWidth [OUT] if the table is not auto-width,
-    *                                   aSpecifiedTableWidth iw set to the resolved width.
-    * @return PR_TRUE if the table is auto-width.  value of aSpecifiedTableWidth is undefined.
-    *         PR_FALSE if the table is not auto-width, 
-    *         and aSpecifiedTableWidth is set to the resolved width in twips.
-    */
-  PRBool IsAutoWidth(const nsHTMLReflowState& aReflowState,
-                     nscoord&                 aSpecifiedTableWidth);
+  PRBool IsAutoWidth();
   
   /** @return PR_TRUE if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
@@ -397,10 +397,11 @@ public:
   PRBool HasNonPercentSpanningPercent() const;
   void SetHasNonPercentSpanningPercent(PRBool aValue);
 
-  static void DebugReflow(char*                     aMessage,
-                         const nsIFrame*            aFrame,
-                         const nsHTMLReflowState*   aState, 
-                         const nsHTMLReflowMetrics* aMetrics);
+  static void DebugReflow(char*                      aMessage,
+                          const nsIFrame*            aFrame,
+                          const nsHTMLReflowState*   aState, 
+                          const nsHTMLReflowMetrics* aMetrics,
+                          const nsReflowStatus       aStatus = NS_FRAME_COMPLETE);
 
   static void DebugGetIndent(const nsIFrame* aFrame, 
                              char*           aBuf);
@@ -456,7 +457,6 @@ public:
                                nsReflowReason           aReason,
                                PRBool                   aDoSiblings);
 
-  NS_IMETHOD GetTableSpecifiedHeight(nscoord& aHeight, const nsHTMLReflowState& aReflowState);
   virtual PRBool RowGroupsShouldBeConstrained() { return PR_FALSE; }
   
   /** do I need to do a reflow? */
