@@ -36,6 +36,7 @@
 #include "xpcompat.h" //temporary, for timers
 
 static PRUint32 image_cache_size;
+static PRUint32 max_cache_items = 192;
 
 PRLogModuleInfo *il_log_module = NULL;
 ilISystemServices *il_ss = NULL;
@@ -775,7 +776,13 @@ void
 il_reduce_image_cache_size_to(PRUint32 new_size)
 {
     int32 last_size = 0;
-    
+    int32 last_num_items = 0;
+
+    while ((il_cache.items > (int32)max_cache_items) && (il_cache.items != last_num_items)) {
+        last_num_items = il_cache.items;
+        IL_ShrinkCache();
+    }
+
     while ((il_cache.bytes > (int32)new_size) && (il_cache.bytes != last_size)) {
         last_size = il_cache.bytes;
         IL_ShrinkCache();
