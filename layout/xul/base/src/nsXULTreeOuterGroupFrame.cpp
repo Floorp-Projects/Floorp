@@ -203,6 +203,9 @@ NS_IMETHODIMP_(void) nsScrollSmoother::Notify(nsITimer *timer)
 
   Stop();
 
+  NS_ASSERTION(mOuter, "mOuter is null, see bug #68365");
+  if (!mOuter) return;
+
   // actually do some work.
   mOuter->InternalPositionChangedCallback();
 }
@@ -669,7 +672,8 @@ nsXULTreeOuterGroupFrame::GetSmoother()
 {
   if (!mScrollSmoother) {
     mScrollSmoother = new nsScrollSmoother(this);
-    NS_ADDREF(mScrollSmoother);
+    NS_ASSERTION(mScrollSmoother, "out of memory");
+    NS_IF_ADDREF(mScrollSmoother);
   }
 
   return mScrollSmoother;
