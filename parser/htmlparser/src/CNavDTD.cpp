@@ -1023,8 +1023,8 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
   do {
 
     eHTMLTags theParentTag=mBodyContext->TagAt(--theIndex);
-    if(CanOmit(theParentTag,aChildTag)){
-      //call handleOmittedTag()...
+    if(CanOmit(theParentTag,aChildTag)) {
+      result=HandleOmittedTag(aToken,aChildTag,theParentTag,aNode);
       return result;
     }
 
@@ -1494,8 +1494,6 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           {
             if(theHeadIsParent)
               result=AddHeadLeaf(attrNode);
-            else if(CanOmit(theParent,theChildTag))
-              result=HandleOmittedTag(aToken,theChildTag,theParent,attrNode);
             else result=HandleDefaultStartToken(aToken,theChildTag,attrNode); 
           }
           break;
@@ -2058,8 +2056,14 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
 
   theAncestor=gHTMLElements[aChild].mRequiredAncestor;
   if(eHTMLTag_unknown!=theAncestor){
-    return !HasOpenContainer(theAncestor);
+    if(!HasOpenContainer(theAncestor)) {
+      if(!CanPropagate(aParent,aChild)) {
+        return PR_TRUE;
+      }
+    }
+    return PR_FALSE;
   }
+
 
   if(gHTMLElements[aParent].HasSpecialProperty(kOmitWS)) {
     if(nsHTMLElement::IsWhitespaceTag(aChild)) {

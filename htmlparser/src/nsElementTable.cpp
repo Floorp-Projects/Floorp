@@ -432,10 +432,10 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInTable,&gColgroupKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_dd,
-    /*req-parent excl-parent*/          eHTMLTag_dl,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInDL,	&gInDL,	
+    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	  /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
     /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,
-    /*parent,incl,exclgroups*/          kNone, kFlowEntity, kNone,	
+    /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,	
     /*special props, prop-range*/       kNoPropagate,kDefaultPropRange,
     /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown},
 
@@ -480,12 +480,12 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_dt,
-    /*req-parent excl-parent*/          eHTMLTag_dl,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInDL,&gInDL,		
+    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	  /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
     /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,
-    /*parent,incl,exclgroups*/          kNone, kInlineEntity, kNone,	
+    /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,	
     /*special props, prop-range*/       kNoPropagate,kDefaultPropRange,
-    /*special parents, kids <DT>*/      &gInDL,&gDTKids,eHTMLTag_unknown},
+    /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_em,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,

@@ -1552,7 +1552,7 @@ void CEntityToken::DebugDumpSource(ostream& out) {
  */
 void CEntityToken::GetSource(nsString& anOutputString){
   anOutputString="&";
-  anOutputString+=anOutputString;
+  anOutputString+=mTextValue;
   anOutputString+=";";
 }
 
