@@ -52,7 +52,8 @@ class NS_COM nsCommonString
     public:
       nsCommonString() { }
       nsCommonString( const self_type& aOther ) : mBuffer(aOther.mBuffer) { }
-      nsCommonString( const string_type& aReadable ) { assign(aReadable); }
+      explicit nsCommonString( const string_type& aReadable ) { assign(aReadable); }
+      explicit nsCommonString( const nsSharedBufferHandle<char_type>* aHandle ) : mBuffer(aHandle) { }
 
       self_type&
       operator=( const string_type& aReadable )
@@ -81,7 +82,8 @@ class NS_COM nsCommonCString
     public:
       nsCommonCString() { }
       nsCommonCString( const self_type& aOther ) : mBuffer(aOther.mBuffer) { }
-      nsCommonCString( const string_type& aReadable ) { assign(aReadable); }
+      explicit nsCommonCString( const string_type& aReadable ) { assign(aReadable); }
+      explicit nsCommonCString( const nsSharedBufferHandle<char_type>* aHandle ) : mBuffer(aHandle) { }
 
       self_type&
       operator=( const string_type& aReadable )

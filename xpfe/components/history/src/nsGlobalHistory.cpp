@@ -3672,7 +3672,7 @@ nsGlobalHistory::AutoCompletePrefilter(const nsAReadableString& aSearchString)
     url.ToLowerCase();
   }
   
-  return url;
+  return nsCommonString(url);
 }
 
 PRBool
