@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
- * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 31 Dec 1998
+ * Modified: Jeff Galyan <talisman@anamorphic.com>, 31 Dec 1998
  */
 
 package grendel.ui;
