@@ -39,7 +39,7 @@
 #include "XMLUtils.h"
 #include "XMLDOMUtils.h"
 #include "ExprResult.h"
-#include "XMLParser.h"
+#include "txXMLParser.h"
 #include "TxLog.h"
 #include "txAtoms.h"
 #include "txSingleNodeContext.h"
@@ -445,14 +445,16 @@ Node* ProcessorState::retrieveDocument(const nsAString& uri,
 
     if (!xmlDoc) {
         // open URI
-        nsAutoString errMsg;
-        XMLParser xmlParser;
+        nsAutoString errMsg, refUri;
+        // XXX we should get the referrer from the actual node
+        // triggering the load, but this will do for the time being
+        mLoadedDocuments.mStyleDocument->getBaseURI(refUri);
+        nsresult rv;
+        rv = txParseDocumentFromURI(docUrl, refUri,
+                                    mLoadedDocuments.mStyleDocument, errMsg,
+                                    &xmlDoc);
 
-        xmlDoc = xmlParser.getDocumentFromURI(docUrl,
-                                              mLoadedDocuments.mStyleDocument,
-                                              errMsg);
-
-        if (!xmlDoc) {
+        if (NS_FAILED(rv) || !xmlDoc) {
             receiveError(NS_LITERAL_STRING("Couldn't load document '") +
                          docUrl + NS_LITERAL_STRING("': ") + errMsg,
                          NS_ERROR_XSLT_INVALID_URL);

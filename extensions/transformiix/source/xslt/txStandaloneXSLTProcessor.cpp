@@ -46,7 +46,7 @@
 #include "txTextOutput.h"
 #include "txUnknownHandler.h"
 #include "txURIUtils.h"
-#include "XMLParser.h"
+#include "txXMLParser.h"
 
 /**
  * Output Handler Factory
@@ -378,11 +378,13 @@ txStandaloneXSLTProcessor::parsePath(const nsACString& aPath, ErrorObserver& aEr
         return 0;
     }
     // parse source
-    XMLParser xmlParser;
-    Document* xmlDoc = xmlParser.parse(xmlInput, path);
+    Document* xmlDoc;
+    nsAutoString errors;
+    nsresult rv = txParseFromStream(xmlInput, path, errors, &xmlDoc);
     xmlInput.close();
-    if (!xmlDoc) {
-        aErr.receiveError(NS_LITERAL_STRING("Parsing error in ") + path);
+    if (NS_FAILED(rv) || !xmlDoc) {
+        aErr.receiveError(NS_LITERAL_STRING("Parsing error \"") + errors +
+                          NS_LITERAL_STRING("\""));
     }
     return xmlDoc;
 }

@@ -41,6 +41,8 @@
 
 #include "Expr.h"
 #include "XMLUtils.h"
+#include "nsVoidArray.h"
+
 class ProcessorState;
 
 class txPattern : public TxObject
@@ -166,7 +168,7 @@ public:
     TX_DECL_PATTERN;
 
 private:
-    nsString mIds;
+    nsStringArray mIds;
 };
 
 class txKeyPattern : public txPattern

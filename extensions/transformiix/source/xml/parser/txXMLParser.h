@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,9 +20,6 @@
  * Contributor(s): 
  * Tom Kneeland
  *    -- original author.
- * Keith Visco 
- *    -- finished implementation
- *
  */
 
 #ifndef MITRE_XMLPARSER_H
@@ -32,32 +29,28 @@
 
 #ifdef TX_EXE
 #include <iostream.h>
-
-typedef struct  {
-    Document* document;
-    Node*  currentNode;
-} ParserState;
 #endif
 
 /**
- * Implementation of an In-Memory DOM based XML parser.  The actual XML
- * parsing is provided by EXPAT.
-**/
-class XMLParser
-{
-  public:
-    XMLParser();
-   ~XMLParser();
+ * API to load XML files into DOM datastructures.
+ * Parsing is either done by expat, or by expat via the synchloaderservice
+ */
 
-    Document* getDocumentFromURI(const nsAString& href, Document* aLoader,
-                                 nsAString& errMsg);
+/**
+ * Parse a document from the aHref location, with referrer URI on behalf
+ * of the document aLoader.
+ */
+extern "C" nsresult
+txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
+                       Document* aLoader, nsAString& aErrMsg,
+                       Document** aResult);
+
 #ifdef TX_EXE
-    Document* parse(istream& inputStream, const nsAString& uri);
-    const nsAString& getErrorString();
-
-  protected:
-    nsString  errorString;
+/**
+ * Parse a document from the given stream
+ */
+extern "C" nsresult
+txParseFromStream(istream& aInputStream, const nsAString& aUri,
+                  nsAString& aErrorString, Document** aResult);
 #endif
-};
-
 #endif
