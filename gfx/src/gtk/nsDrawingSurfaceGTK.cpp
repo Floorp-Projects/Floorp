@@ -37,12 +37,16 @@ nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
   mPixmap = nsnull;
   mGC = nsnull;
   mDepth = 0;
-  mWidth = mHeight = 0;
+  mWidth = 0;
+  mHeight = 0;
   mFlags = 0;
 
   mImage = nsnull;
-  mLockWidth = mLockHeight = 0;
+  mLockWidth = 0;
+  mLockHeight = 0;
   mLockFlags = 0;
+  mLockX = 0;
+  mLockY = 0;
   mLocked = PR_FALSE;
 
   v = ::gdk_rgb_get_visual();

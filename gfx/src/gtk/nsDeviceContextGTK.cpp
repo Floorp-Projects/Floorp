@@ -109,10 +109,10 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
 #if 0
-  mTwipsToPixels = ( ((float)::gdk_screen_width()) /
-                     ((float)::gdk_screen_width_mm()) * 25.4) /
-		     (float)NSIntPointsToTwips(72);
-
+  mTwipsToPixels = ( ( ((float)::gdk_screen_width()) /
+                       ((float)::gdk_screen_width_mm()) * 25.4) /
+                     (float)NSIntPointsToTwips(72) );
+  
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 #endif
 
