@@ -111,7 +111,6 @@ public:
 
   // frames
   nsIFrame* GetFirstFrame();
-  nsIFrame* GetNextFrame(nsIFrame* aCurrFrame);
   nsIFrame* GetLastFrame();
 
   // lazy row creation and destruction

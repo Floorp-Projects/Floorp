@@ -120,14 +120,8 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsIFrame* barChild = nsnull;
     FirstChild(aPresContext, nsnull, &barChild);
     if (!barChild) return NS_OK;
-    nsIFrame* remainderChild = nsnull;
-    barChild->GetNextSibling(&remainderChild);
+    nsIFrame* remainderChild = barChild->GetNextSibling();
     if (!remainderChild) return NS_OK;
-
-    nsCOMPtr<nsIContent> progressBar;
-    barChild->GetContent(getter_AddRefs(progressBar));
-    nsCOMPtr<nsIContent> progressRemainder;
-    remainderChild->GetContent(getter_AddRefs(progressRemainder));
 
     nsAutoString value;
     mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value);
@@ -142,8 +136,8 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsAutoString leftFlex, rightFlex;
     leftFlex.AppendInt(flex);
     rightFlex.AppendInt(remainder);
-    progressBar->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, leftFlex, PR_TRUE);
-    progressRemainder->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, rightFlex, PR_TRUE);
+    barChild->GetContent()->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, leftFlex, PR_TRUE);
+    remainderChild->GetContent()->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, rightFlex, PR_TRUE);
   }
   return NS_OK;
 }

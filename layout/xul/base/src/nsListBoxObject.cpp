@@ -225,11 +225,8 @@ nsListBoxObject::GetListBoxBody()
     return nsnull;
 
   // Iterate over our content model children looking for the body.
-  nsCOMPtr<nsIContent> startContent;
-  frame->GetContent(getter_AddRefs(startContent));
-
   nsCOMPtr<nsIContent> content;
-  FindBodyContent(startContent, getter_AddRefs(content));
+  FindBodyContent(frame->GetContent(), getter_AddRefs(content));
 
   // this frame will be a nsGFXScrollFrame
   mPresShell->GetPrimaryFrameFor(content, &frame);

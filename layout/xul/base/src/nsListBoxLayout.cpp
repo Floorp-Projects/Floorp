@@ -71,10 +71,8 @@ nsListBoxLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, ns
       nscoord remainder = m == 0 ? 0 : rowheight - m;
       aSize.height += remainder;
     }
-    nsCOMPtr<nsIContent> content;
-    frame->GetContent(getter_AddRefs(content));
     nsAutoString sizeMode;
-    content->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
+    frame->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
     if (!sizeMode.IsEmpty()) {
       nscoord width = frame->ComputeIntrinsicWidth(aBoxLayoutState);
       if (width > aSize.width)
@@ -100,10 +98,8 @@ nsListBoxLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsS
       nscoord remainder = m == 0 ? 0 : rowheight - m;
       aSize.height += remainder;
     }
-    nsCOMPtr<nsIContent> content;
-    frame->GetContent(getter_AddRefs(content));
     nsAutoString sizeMode;
-    content->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
+    frame->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
     if (!sizeMode.IsEmpty()) {
       nscoord width = frame->ComputeIntrinsicWidth(aBoxLayoutState);
       if (width > aSize.width)

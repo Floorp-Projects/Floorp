@@ -209,10 +209,7 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox)
 
     // Clear the dirty-children bit. This will be re-set by MarkDirty
     // once we reach a target.
-    nsFrameState state;
-    (*iter)->GetFrameState(&state);
-    state &= ~NS_FRAME_HAS_DIRTY_CHILDREN;
-    (*iter)->SetFrameState(state);
+    (*iter)->RemoveStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 
     if (isAdaptor) {
       // It's nested HTML. Mark the root box's frame with
@@ -221,15 +218,11 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox)
       nsIFrame* frame;
       aRootBox->GetFrame(&frame);
 
-      frame->GetFrameState(&state);
-      state |= NS_FRAME_HAS_DIRTY_CHILDREN;
-      frame->SetFrameState(state);
+      frame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 
       // Clear the frame's dirty bit so that MarkDirty doesn't
       // optimize the layout away.
-      (*iter)->GetFrameState(&state);
-      state &= ~NS_FRAME_IS_DIRTY;
-      (*iter)->SetFrameState(state);
+      (*iter)->RemoveStateBits(NS_FRAME_IS_DIRTY);
 
       // Mark the adaptor dirty.
       ibox->MarkDirty(*this);      
@@ -249,9 +242,7 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox)
       nsIFrame* frame;
       aRootBox->GetFrame(&frame);
 
-      frame->GetFrameState(&state);
-      state |= NS_FRAME_HAS_DIRTY_CHILDREN;
-      frame->SetFrameState(state);
+      frame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 
       // The target is a box. Mark it dirty, generating a new reflow
       // command targeted at us and coelesce out this one.
@@ -274,9 +265,7 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox)
         if (parent) {
           nsIFrame* parentFrame;
           parent->GetFrame(&parentFrame);
-          parentFrame->GetFrameState(&state);
-          state |= NS_FRAME_IS_DIRTY;
-          parentFrame->SetFrameState(state);
+          parentFrame->AddStateBits(NS_FRAME_IS_DIRTY);
         }
 
       }
@@ -301,8 +290,7 @@ nsBoxLayoutState::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
 
     // if we hit a non box. Find the box in out last container
     // and clear its cache.
-    nsIFrame* parent = nsnull;
-    aFrame->GetParent(&parent);
+    nsIFrame* parent = aFrame->GetParent();
     nsIBox* parentBox = nsnull;
     if (NS_FAILED(parent->QueryInterface(NS_GET_IID(nsIBox), (void**)&parentBox))) 
        return nsnull;

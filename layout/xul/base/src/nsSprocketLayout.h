@@ -172,7 +172,6 @@ protected:
   virtual PRBool GetDefaultFlex(PRInt32& aFlex);
 
   virtual void GetFrameState(nsIBox* aBox, nsFrameState& aState);
-  virtual void SetFrameState(nsIBox* aBox, nsFrameState aState);
 
 private:
 

@@ -141,14 +141,12 @@ nsDeckFrame::HideBox(nsIPresContext* aPresContext, nsIBox* aBox)
   nsIFrame* frame = nsnull;
   aBox->GetFrame(&frame);
 
-  nsIView* view = frame->GetView(aPresContext);
+  nsIView* view = frame->GetView();
 
   if (view) {
-    nsCOMPtr<nsIViewManager> viewManager;
-    view->GetViewManager(*getter_AddRefs(viewManager));
+    nsIViewManager* viewManager = view->GetViewManager();
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-    nsRect r(0, 0, 0, 0);
-    viewManager->ResizeView(view, r);
+    viewManager->ResizeView(view, nsRect(0, 0, 0, 0));
   }
 }
 
@@ -158,12 +156,10 @@ nsDeckFrame::ShowBox(nsIPresContext* aPresContext, nsIBox* aBox)
   nsIFrame* frame = nsnull;
   aBox->GetFrame(&frame);
 
-  nsRect rect;
-  frame->GetRect(rect);
-  nsIView* view = frame->GetView(aPresContext);
+  nsRect rect = frame->GetRect();
+  nsIView* view = frame->GetView();
   if (view) {
-    nsCOMPtr<nsIViewManager> viewManager;
-    view->GetViewManager(*getter_AddRefs(viewManager));
+    nsIViewManager* viewManager = view->GetViewManager();
     rect.x = rect.y = 0;
     viewManager->ResizeView(view, rect);
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
@@ -280,8 +276,7 @@ nsDeckFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
     nsIFrame* selectedFrame = nsnull;
     selectedBox->GetFrame(&selectedFrame);
 
-    nsPoint tmp;
-    tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
+    nsPoint tmp(aPoint.x - mRect.x, aPoint.y - mRect.y);
 
     return selectedFrame->GetFrameForPoint(aPresContext, tmp, aWhichLayer, aFrame);
   }

@@ -88,10 +88,8 @@ nsScrollbarFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
-  nsIView* view = GetView(aPresContext);
-  nsCOMPtr<nsIViewManager> vm;
-  view->GetViewManager(*getter_AddRefs(vm));
-  vm->SetViewContentTransparency(view, PR_TRUE);
+  nsIView* view = GetView();
+  view->GetViewManager()->SetViewContentTransparency(view, PR_TRUE);
 
   // We want to be a reflow root since we use reflows to move the
   // slider.  Any reflow inside the scrollbar frame will be a reflow to
@@ -127,8 +125,7 @@ nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
   if (aAttribute != nsXULAtoms::curpos)
     return rv;
 
-  nsIFrame* parent;
-  GetParent(&parent);
+  nsIFrame* parent = GetParent();
   if (!parent)
     return rv;
 

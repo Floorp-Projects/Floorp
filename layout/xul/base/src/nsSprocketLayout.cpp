@@ -94,9 +94,7 @@ nsSprocketLayout::IsHorizontal(nsIBox* aBox)
 {
    nsIFrame* frame = nsnull;
    aBox->GetFrame(&frame);
-   nsFrameState state;
-   frame->GetFrameState(&state);
-   return state & NS_STATE_IS_HORIZONTAL;
+   return frame->GetStateBits() & NS_STATE_IS_HORIZONTAL;
 }
 
 void
@@ -104,15 +102,7 @@ nsSprocketLayout::GetFrameState(nsIBox* aBox, nsFrameState& aState)
 {
    nsIFrame* frame = nsnull;
    aBox->GetFrame(&frame);
-   frame->GetFrameState(&aState);
-}
-
-void
-nsSprocketLayout::SetFrameState(nsIBox* aBox, nsFrameState aState)
-{
-   nsIFrame* frame = nsnull;
-   aBox->GetFrame(&frame);
-   frame->SetFrameState(aState);
+   aState = frame->GetStateBits();
 }
 
 static void

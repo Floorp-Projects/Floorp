@@ -160,10 +160,8 @@ nsPopupSetFrame::Init(nsIPresContext*  aPresContext,
   mPresContext = aPresContext; // Don't addref it.  Our lifetime is shorter.
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  nsIFrame *grandParent;
-  aParent->GetParent(&grandParent);
   nsIRootBox *rootBox;
-  nsresult res = CallQueryInterface(grandParent, &rootBox);
+  nsresult res = CallQueryInterface(aParent->GetParent(), &rootBox);
   NS_ASSERTION(NS_SUCCEEDED(res), "grandparent should be root box");
   if (NS_SUCCEEDED(res)) {
     rootBox->SetPopupSetFrame(this);
@@ -188,10 +186,8 @@ nsPopupSetFrame::Destroy(nsIPresContext* aPresContext)
     }
   }
 
-  nsIFrame *grandParent;
-  mParent->GetParent(&grandParent);
   nsIRootBox *rootBox;
-  nsresult res = CallQueryInterface(grandParent, &rootBox);
+  nsresult res = CallQueryInterface(mParent->GetParent(), &rootBox);
   NS_ASSERTION(NS_SUCCEEDED(res), "grandparent should be root box");
   if (NS_SUCCEEDED(res)) {
     rootBox->SetPopupSetFrame(nsnull);
@@ -271,9 +267,8 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
 
       // only size popup if open
       if (currEntry->mCreateHandlerSucceeded) {
-        nsIView* view = popupChild->GetView(aState.GetPresContext());
-        nsCOMPtr<nsIViewManager> viewManager;
-        view->GetViewManager(*getter_AddRefs(viewManager));
+        nsIView* view = popupChild->GetView();
+        nsIViewManager* viewManager = view->GetViewManager();
         nsRect r(0, 0, bounds.width, bounds.height);
         viewManager->ResizeView(view, r);
         viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
@@ -317,7 +312,7 @@ nsPopupSetFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDeb
               ibox->SetDebug(aState, aDebug);
           }
 
-          aList->GetNextSibling(&aList);
+          aList = aList->GetNextSibling();
       }
 
       return NS_OK;
@@ -567,11 +562,10 @@ nsPopupSetFrame::ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
       // destroy the popup.
       nsIFrame* activeChild = aEntry->mPopupFrame;
       if (activeChild) {
-        nsIView* view = activeChild->GetView(mPresContext);
+        nsIView* view = activeChild->GetView();
         NS_ASSERTION(view, "View is gone, looks like someone forgot to roll up the popup!");
         if (view) {
-          nsCOMPtr<nsIViewManager> viewManager;
-          view->GetViewManager(*getter_AddRefs(viewManager));
+          nsIViewManager* viewManager = view->GetViewManager();
           viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
           nsRect r(0, 0, 0, 0);
           viewManager->ResizeView(view, r);
@@ -806,8 +800,7 @@ nsPopupSetFrame::AddPopupFrame(nsIFrame* aPopup)
   // popup visible straightaway, e.g., the autocomplete widget).
 
   // First look for an entry by content.
-  nsCOMPtr<nsIContent> content;
-  aPopup->GetContent(getter_AddRefs(content));
+  nsIContent* content = aPopup->GetContent();
   nsPopupFrameList* entry = nsnull;
   if (mPopupList)
     entry = mPopupList->GetEntry(content);

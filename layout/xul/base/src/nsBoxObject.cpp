@@ -195,16 +195,13 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
       presShell->GetPrimaryFrameFor(mContent, &frame);
       if(frame != nsnull) {
         // Get its origin
-        nsPoint origin;
-        frame->GetOrigin(origin);
+        nsPoint origin = frame->GetPosition();
 
         // Get the union of all rectangles in this and continuation frames
         nsRect rcFrame;
         nsIFrame* next = frame;
         do {
-          nsRect rect;
-          next->GetRect(rect);
-          rcFrame.UnionRect(rcFrame, rect);
+          rcFrame.UnionRect(rcFrame, next->GetRect());
           next->GetNextInFlow(&next);
         } while (nsnull != next);
         
@@ -213,25 +210,18 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
         // the tagName passed in or is the document element.
         nsCOMPtr<nsIContent> docElement;
         doc->GetRootContent(getter_AddRefs(docElement));
-        nsIFrame* parent = frame;
-        nsCOMPtr<nsIContent> parentContent;
-        frame->GetParent(&parent);
+        nsIFrame* parent = frame->GetParent();
         while (parent) {
-          parent->GetContent(getter_AddRefs(parentContent));
-          if (parentContent) {
-            // If we've hit the document element, break here
-            if (parentContent.get() == docElement.get()) {
-              break;
-            }
+          // If we've hit the document element, break here
+          if (parent->GetContent() == docElement.get()) {
+            break;
           }
 
           // Add the parent's origin to our own to get to the
           // right coordinate system
-          nsPoint parentOrigin;
-          parent->GetOrigin(parentOrigin);
-          origin += parentOrigin;
+          origin += parent->GetPosition();
 
-          parent->GetParent(&parent);
+          parent = parent->GetParent();
         }
   
         // For the origin, add in the border for the frame
@@ -303,23 +293,22 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
         
         PRInt32 offsetX = 0;
         PRInt32 offsetY = 0;
-        nsCOMPtr<nsIWidget> widget;
+        nsIWidget* widget = nsnull;
         
         while (frame) {
           // Look for a widget so we can get screen coordinates
           if (frame->HasView()) {
-            frame->GetView(presContext)->GetWidget(*getter_AddRefs(widget));
+            widget = frame->GetView()->GetWidget();
             if (widget)
               break;
           }
           
           // No widget yet, so count up the coordinates of the frame 
-          nsPoint origin;
-          frame->GetOrigin(origin);
+          nsPoint origin = frame->GetPosition();
           offsetX += origin.x;
           offsetY += origin.y;
       
-          frame->GetParent(&frame);
+          frame = frame->GetParent();
         }
         
         if (widget) {
@@ -507,13 +496,10 @@ nsBoxObject::GetParentBox(nsIDOMElement * *aParentBox)
 {
   nsIFrame* frame = GetFrame();
   if (!frame) return NS_OK;
-  nsIFrame* parent;
-  frame->GetParent(&parent);
+  nsIFrame* parent = frame->GetParent();
   if (!parent) return NS_OK;
 
-  nsCOMPtr<nsIContent> content;
-  parent->GetContent(getter_AddRefs(content));
-  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(content);
+  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(parent->GetContent());
   *aParentBox = el;
   NS_IF_ADDREF(*aParentBox);
   return NS_OK;
@@ -542,13 +528,10 @@ nsBoxObject::GetNextSibling(nsIDOMElement **aNextOrdinalSibling)
 {
   nsIFrame* frame = GetFrame();
   if (!frame) return NS_OK;
-  nsIFrame* nextFrame;
-  frame->GetNextSibling(&nextFrame);
+  nsIFrame* nextFrame = frame->GetNextSibling();
   if (!nextFrame) return NS_OK;
   // get the content for the box and query to a dom element
-  nsCOMPtr<nsIContent> nextContent;
-  nextFrame->GetContent(getter_AddRefs(nextContent));
-  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(nextContent);
+  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(nextFrame->GetContent());
   *aNextOrdinalSibling = el;
   NS_IF_ADDREF(*aNextOrdinalSibling);
 
@@ -560,8 +543,7 @@ nsBoxObject::GetPreviousSibling(nsIDOMElement **aPreviousOrdinalSibling)
 {
   nsIFrame* frame = GetFrame();
   if (!frame) return NS_OK;
-  nsIFrame* parentFrame;
-  frame->GetParent(&parentFrame);
+  nsIFrame* parentFrame = frame->GetParent();
   if (!parentFrame) return NS_OK;
   
   nsCOMPtr<nsIPresContext> presContext;
@@ -574,14 +556,12 @@ nsBoxObject::GetPreviousSibling(nsIDOMElement **aPreviousOrdinalSibling)
     if (nextFrame == frame)
       break;
     prevFrame = nextFrame;
-    nextFrame->GetNextSibling(&nextFrame);
+    nextFrame = nextFrame->GetNextSibling();
   }
    
   if (!prevFrame) return NS_OK;
   // get the content for the box and query to a dom element
-  nsCOMPtr<nsIContent> nextContent;
-  prevFrame->GetContent(getter_AddRefs(nextContent));
-  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(nextContent);
+  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(prevFrame->GetContent());
   *aPreviousOrdinalSibling = el;
   NS_IF_ADDREF(*aPreviousOrdinalSibling);
 
@@ -604,16 +584,14 @@ nsBoxObject::GetChildByOrdinalAt(PRUint32 aIndex)
   
   PRUint32 i = 0;
   while (childFrame && i < aIndex) {
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
     ++i;
   }
 
   if (!childFrame) return nsnull;
 
   // get the content for the box and query to a dom element
-  nsCOMPtr<nsIContent> content;
-  childFrame->GetContent(getter_AddRefs(content));
-  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(content);
+  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(childFrame->GetContent());
   
   return el;
 }
