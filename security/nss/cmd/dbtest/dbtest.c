@@ -35,7 +35,9 @@
 /*
 ** dbtest.c
 **
-** utility for managing certificates and the cert database
+** QA test for cert and key databases, especially to open
+** database readonly (NSS_INIT_READONLY) and force initializations
+** even if the databases cannot be opened (NSS_INIT_FORCEOPEN)
 **
 */
 #include <stdio.h>
