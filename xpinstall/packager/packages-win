@@ -115,6 +115,7 @@ bin\components\gfx2.xpt
 bin\components\gfx2.dll
 bin\components\gkcontent.dll
 bin\components\content_base.xpt
+bin\components\content_xsl.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
 bin\components\gklayout.dll

@@ -50,7 +50,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  util \
 		  unicharutil \
-		  xsl_doc \
+		  content_xsl \
 		  intl \
 		  windowwatcher \
 		  $(NULL)

@@ -89,6 +89,7 @@ bin\components\find.xpt
 bin\components\gfx.xpt
 bin\components\gfx2.xpt
 bin\components\content_base.xpt
+bin\components\content_xsl.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
 bin\components\imglib2.xpt
