@@ -894,6 +894,7 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
   nsUInt32Array selection;
   GetSelectedIndices(&selection);
   nsMsgViewIndex *indices = selection.GetData();
+  NS_ASSERTION(numSelected == selection.GetSize(), "selected indices is not equal to num of msg selected!!!");
 
   PRBool offlineMsgSelected = (indices) ? OfflineMsgSelected(indices, numSelected) : PR_FALSE;
   // if only one item is selected then we want to display a message
@@ -4869,6 +4870,10 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
   { 
     if (aSucceeded)
     {
+
+      //freeze selection.
+      mOutlinerSelection->SetSelectEventsSuppressed(PR_TRUE);
+
       PRInt32 selectionCount; 
       //selection count cannot be zero, we would not be here
       mOutlinerSelection->GetRangeCount(&selectionCount);  
@@ -4891,6 +4896,10 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
         // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
         NoteChange(startRangeArray[i], -numRows, nsMsgViewNotificationCode::insertOrDelete);
       }
+
+      //unfreeze selection.
+      mOutlinerSelection->SetSelectEventsSuppressed(PR_FALSE);
+
       PR_FREEIF(startRangeArray);
       PR_FREEIF(endRangeArray);
     }
