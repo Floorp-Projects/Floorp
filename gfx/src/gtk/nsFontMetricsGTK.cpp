@@ -870,7 +870,7 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
          */
         if (aSelf->Convert == DoubleByteConvert) {
           PRUint32* map = aSelf->mMap;
-          for (PRUint16 i = 0; i < (0x3000 >> 5); i++) {
+          for (PRUint16 i = 0; i < (0x2200 >> 5); i++) {
             map[i] = 0;
           }
         }
