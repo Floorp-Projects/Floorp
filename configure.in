@@ -1972,16 +1972,6 @@ else
   AC_MSG_RESULT(no)
 fi  
 
-AC_CACHE_CHECK(for namespaces,
-               ac_cv_cpp_namespaces,
-               [AC_TRY_COMPILE(namespace X {},
-                               using namespace X;,
-                               ac_cv_cpp_namespaces=yes,
-                               ac_cv_cpp_namespaces=no)])
-if test "$ac_cv_cpp_namespaces" = yes ; then
-   AC_DEFINE(HAVE_CPP_NAMESPACES)
-fi
-
 AC_MSG_CHECKING(for ostreams)
 AC_CACHE_VAL(ac_cv_ostream,
   [AC_TRY_LINK([#include <iostream.h>],
