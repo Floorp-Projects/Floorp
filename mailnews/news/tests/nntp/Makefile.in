@@ -45,7 +45,6 @@ LIBS = \
 	-lnetcnvts \
 	-lnetwork \
 	-lnetlib \
-	-lnetutil \
 	-lnntp	\
 	-lreg	\
 	-lxpcom	\
