@@ -50,6 +50,7 @@ CPPSRCS		= \
 		nsMsgCopyService.cpp \
 		nsMsgFolderCache.cpp \
 		nsMsgFolderCacheElement.cpp \
+		nsMsgFolderCompactor.cpp \
 		nsMsgStatusFeedback.cpp \
 		nsMessageView.cpp \
 		nsMsgWindow.cpp \
