@@ -791,8 +791,7 @@ nsHTTPChannel::CheckCache()
     static PRBool warnedCacheIsMissing = PR_FALSE;
 
     // For now, we handle only GET and HEAD requests
-    nsCOMPtr<nsIAtom> httpMethod;
-    httpMethod = mRequest->GetMethod();
+    nsCOMPtr<nsIAtom> httpMethod( dont_AddRef( mRequest->GetMethod() ) );
     nsIAtom *mP = httpMethod;
 
     if ((mP != nsHTTPAtoms::Get) && (mP != nsHTTPAtoms::Head))
@@ -1928,7 +1927,7 @@ nsHTTPChannel::FinishedResponseHeaders(void)
     mFiredOnHeadersAvailable = PR_TRUE;
 
     // if its a head request dont call processStatusCode but wrap up instead
-    nsCOMPtr<nsIAtom> method = mRequest->GetMethod();
+    nsCOMPtr<nsIAtom> method( dont_AddRef( mRequest->GetMethod() ) );
     if (method.get() == nsHTTPAtoms::Head)
         return ResponseCompleted(mResponseDataListener, NS_OK, nsnull);
 
