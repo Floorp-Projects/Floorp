@@ -536,7 +536,10 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
     {
         if (mDepth == 1) 
         {
-            SetName("Imap Host Name");
+            char *hostName = nsnull;
+            GetHostName(&hostName);
+            SetName(hostName);
+            PR_FREEIF(hostName);
             m_haveReadNameFromDB = TRUE;
             *name = mName.ToNewCString();
             return NS_OK;
@@ -547,7 +550,7 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
         }
     }
 	nsAutoString folderName;
-	nsURI2Name(kMailboxRootURI, mURI, folderName);
+	nsURI2Name(kImapRootURI, mURI, folderName);
 	*name = folderName.ToNewCString();
     
     return NS_OK;
@@ -556,16 +559,19 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
 NS_IMETHODIMP nsImapMailFolder::GetPrettyName(nsString& prettyName)
 {
     if (mDepth == 1) {
-        // Depth == 1 means we are on the mail server level
-        // override the name here to say "Imap Host Name"
-        prettyName = PL_strdup("Imap Host Name");
+        char *hostName = nsnull;
+        GetHostName(&hostName);
+        prettyName = PL_strdup(hostName);
+        PR_FREEIF(hostName);
     }
     else {
         nsresult rv = NS_ERROR_NULL_POINTER;
+        /**** what is this??? doesn't make sense to me
         char *pName = prettyName.ToNewCString();
         if (pName)
             rv = nsMsgFolder::GetPrettyName(&pName);
         delete[] pName;
+        *****/
         return rv;
     }
     

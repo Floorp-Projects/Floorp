@@ -83,7 +83,11 @@ nsImapService::SelectFolder(PLEventQueue * aClientEventQueue,
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
-	
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+                  "Oops ... null pointer");
+    if (!aImapMailFolder || !aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
+
 	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec(eOneByte);
@@ -97,9 +101,12 @@ nsImapService::SelectFolder(PLEventQueue * aClientEventQueue,
 
 		if (NS_SUCCEEDED(rv))
 		{
-			// ### FIXME - hardcode selection of the inbox
-			urlSpec.Append("/select>/Inbox");
+			char *folderName = nsnull;
+            aImapMailFolder->GetName(&folderName);
+			urlSpec.Append("/select>/");
+            urlSpec.Append(folderName);
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
+            delete [] folderName;
 		} // if we got a host name
 
 		imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
@@ -124,6 +131,10 @@ nsImapService::LiteSelectFolder(PLEventQueue * aClientEventQueue,
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+                  "Oops ... null pointer");
+    if (!aImapMailFolder || !aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
 	
 	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
@@ -141,8 +152,12 @@ nsImapService::LiteSelectFolder(PLEventQueue * aClientEventQueue,
 			char hierarchySeparator = '/';
 			urlSpec.Append("/liteselect>");
 			urlSpec.Append(hierarchySeparator);
-			// ### FIXME - hardcode selection of the inbox - should get folder name from folder
-			urlSpec.Append("Inbox");
+			// ### FIXME - hardcode selection of the inbox - should get folder
+            // name from folder
+            char* folderName = nsnull;
+            aImapMailFolder->GetName(&folderName);
+			urlSpec.Append(folderName);
+            delete [] folderName;
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 		} // if we got a host name
 
@@ -175,6 +190,10 @@ nsImapService::FetchMessage(PLEventQueue * aClientEventQueue,
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue && aImapMessage,
+                  "Oops ... null pointer");
+    if (!aImapMailFolder || !aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
 	
 	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
@@ -196,8 +215,11 @@ nsImapService::FetchMessage(PLEventQueue * aClientEventQueue,
 			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
 			urlSpec.Append(">");
 			urlSpec.Append(hierarchySeparator);
-			urlSpec.Append("Inbox>");
+            char *folderName = nsnull;
+            aImapMailFolder->GetName(&folderName);
+			urlSpec.Append(folderName);
 			urlSpec.Append(messageIdentifierList);
+            delete [] folderName;
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
 			protocolInstance->LoadUrl(imapUrl, nsnull);
@@ -272,6 +294,10 @@ nsImapService::GetHeaders(PLEventQueue * aClientEventQueue,
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+                  "Oops ... null pointer");
+    if (!aImapMailFolder || !aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
 	
 	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
@@ -292,7 +318,11 @@ nsImapService::GetHeaders(PLEventQueue * aClientEventQueue,
 			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
 			urlSpec.Append(">");
 			urlSpec.Append(hierarchySeparator);
-			urlSpec.Append("Inbox>");
+            char *folderName = nsnull;
+            aImapMailFolder->GetName(&folderName);
+			urlSpec.Append(folderName);
+            delete [] folderName;
+            urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
@@ -314,6 +344,11 @@ nsImapService::Noop(PLEventQueue * aClientEventQueue,
                     nsIUrlListener * aUrlListener,
                     nsIURL ** aURL)
 {
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+                  "Oops ... null pointer");
+    if (!aImapMailFolder || !aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
+
 	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec(eOneByte);
@@ -331,7 +366,9 @@ nsImapService::Noop(PLEventQueue * aClientEventQueue,
 
 			urlSpec.Append("/selectnoop>");
 			urlSpec.Append(hierarchySeparator);
-			urlSpec.Append("Inbox");
+            char *folderName = nsnull;
+			urlSpec.Append(folderName);
+            delete [] folderName;
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
 			protocolInstance->LoadUrl(imapUrl, nsnull);
@@ -351,6 +388,11 @@ nsImapService::Expunge(PLEventQueue * aClientEventQueue,
                        nsIUrlListener * aUrlListener, 
                        nsIURL ** aURL)
 {
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+                  "Oops ... null pointer");
+    if (!aImapMailFolder || !aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
+
 	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec(eOneByte);
@@ -368,7 +410,9 @@ nsImapService::Expunge(PLEventQueue * aClientEventQueue,
 
 			urlSpec.Append("/Expunge>");
 			urlSpec.Append(hierarchySeparator);
-			urlSpec.Append("Inbox");
+            char *folderName = nsnull;
+			urlSpec.Append(folderName);
+            delete [] folderName;
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
 			protocolInstance->LoadUrl(imapUrl, nsnull);
@@ -391,6 +435,11 @@ nsImapService::Biff(PLEventQueue * aClientEventQueue,
 {
 	static const char *formatString = "biff>%c%s>%ld";
 	
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+                  "Oops ... null pointer");
+    if (!aImapMailFolder || !aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
+
 	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec(eOneByte);
@@ -408,7 +457,11 @@ nsImapService::Biff(PLEventQueue * aClientEventQueue,
 
 			urlSpec.Append("/Biff>");
 			urlSpec.Append(hierarchySeparator);
-			urlSpec.Append("Inbox>");
+            char *folderName = nsnull;
+            aImapMailFolder->GetName(&folderName);
+            urlSpec.Append(folderName);
+            delete [] folderName;
+			urlSpec.Append(">");
 			urlSpec.Append(uidHighWater, 10);
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
@@ -433,6 +486,10 @@ nsImapService::DeleteMessages(PLEventQueue * aClientEventQueue,
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+                  "Oops ... null pointer");
+    if (!aImapMailFolder || !aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
 	
 	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
@@ -453,7 +510,10 @@ nsImapService::DeleteMessages(PLEventQueue * aClientEventQueue,
 			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
 			urlSpec.Append(">");
 			urlSpec.Append(hierarchySeparator);
-			urlSpec.Append("Inbox>");
+            char *folderName = nsnull;
+            aImapMailFolder->GetName(&folderName);
+            urlSpec.Append(folderName);
+			urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
@@ -474,6 +534,11 @@ nsImapService::DeleteAllMessages(PLEventQueue * aClientEventQueue,
                                  nsIUrlListener * aUrlListener, 
                                  nsIURL ** aURL)
 {
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+                  "Oops ... null pointer");
+    if (!aImapMailFolder || !aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
+
 	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec(eOneByte);
@@ -491,7 +556,10 @@ nsImapService::DeleteAllMessages(PLEventQueue * aClientEventQueue,
 
 			urlSpec.Append("/deleteallmsgs>");
 			urlSpec.Append(hierarchySeparator);
-			urlSpec.Append("Inbox");
+            char *folderName = nsnull;
+            aImapMailFolder->GetName(&folderName);
+			urlSpec.Append(folderName);
+            delete [] folderName;
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
 			protocolInstance->LoadUrl(imapUrl, nsnull);
@@ -559,6 +627,10 @@ nsresult nsImapService::DiddleFlags(PLEventQueue * aClientEventQueue,
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
+    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+                  "Oops ... null pointer");
+    if (!aImapMailFolder || !aClientEventQueue)
+        return NS_ERROR_NULL_POINTER;
 	
 	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
@@ -581,7 +653,11 @@ nsresult nsImapService::DiddleFlags(PLEventQueue * aClientEventQueue,
 			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
 			urlSpec.Append(">");
 			urlSpec.Append(hierarchySeparator);
-			urlSpec.Append("Inbox>");
+            char *folderName = nsnull;
+            aImapMailFolder->GetName(&folderName);
+            urlSpec.Append(folderName);
+            delete [] folderName;
+			urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			urlSpec.Append('>');
 			urlSpec.Append(flags, 10);
