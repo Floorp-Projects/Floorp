@@ -205,6 +205,13 @@ IDL_tree /* IDL_TYPE_DCL */
 find_underlying_type(IDL_tree typedef_ident);
 
 /*
+ * Check that const declarations match their stated sign and are of the
+ * appropriate types.
+ */
+gboolean
+verify_const_declaration(IDL_tree const_tree);
+
+/*
  * Check that scriptable attributes in scriptable interfaces actually are.
  */
 gboolean

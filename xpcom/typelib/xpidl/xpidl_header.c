@@ -728,53 +728,30 @@ do_const_dcl(TreeState *state)
 {
     struct _IDL_CONST_DCL *dcl = &IDL_CONST_DCL(state->tree);
     const char *name = IDL_IDENT(dcl->ident).str;
-    gboolean success, is_signed;
+    gboolean is_signed;
     GSList *doc_comments = IDL_IDENT(dcl->ident).comments;
     IDL_tree real_type;
+    const char *const_format;
 
-    /* const -> list -> interface */
-    if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
-        IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(state->tree)))
-        != IDLN_INTERFACE) {
-        XPIDL_WARNING((state->tree, IDL_WARNING1,
-                       "const decl \'%s\' not inside interface, ignored",
-                       name));
-        return TRUE;
-    }
-
-    /* Could be a typedef; try to map it to the real type. */
-    real_type = find_underlying_type(dcl->const_type);
-    real_type = real_type ? real_type : dcl->const_type;
-    success = (IDLN_TYPE_INTEGER == IDL_NODE_TYPE(real_type));
-    if (success) {
-        switch(IDL_TYPE_INTEGER(real_type).f_type) {
-        case IDL_INTEGER_TYPE_SHORT:
-        case IDL_INTEGER_TYPE_LONG:
-            break;
-        default:
-            success = FALSE;
-            break;
-        }
-        is_signed = IDL_TYPE_INTEGER(real_type).f_signed;
-    }
+    if (!verify_const_declaration(state->tree))
+        return FALSE;
 
     if (doc_comments != NULL) {
         write_indent(state->file);
         printlist(state->file, doc_comments);
     }
 
-    if (success) {
-        const char *const_format = is_signed ? "%" IDL_LL "d" : "%" IDL_LL "uU";
-        write_indent(state->file);
-        fprintf(state->file, "enum { %s = ", name);
-        fprintf(state->file, const_format, IDL_INTEGER(dcl->const_exp).value);
-        fprintf(state->file, " };\n\n");
-    } else {
-        IDL_tree_error(state->tree,
-                       "const declaration \'%s\' must be of type short or long",
-                       name);
-        return FALSE;
-    }
+    /* Could be a typedef; try to map it to the real type. */
+    real_type = find_underlying_type(dcl->const_type);
+    real_type = real_type ? real_type : dcl->const_type;
+    is_signed = IDL_TYPE_INTEGER(real_type).f_signed;
+
+    const_format = is_signed ? "%" IDL_LL "d" : "%" IDL_LL "uU";
+    write_indent(state->file);
+    fprintf(state->file, "enum { %s = ", name);
+    fprintf(state->file, const_format, IDL_INTEGER(dcl->const_exp).value);
+    fprintf(state->file, " };\n\n");
+
     return TRUE;
 }
 

@@ -559,80 +559,25 @@ method_declaration(TreeState *state)
 static gboolean
 constant_declaration(TreeState *state)
 {
-    /*
-     * The C++ header XPIDL module only allows for shorts and longs (ints)
-     * to be constants, so we will follow the same convention
-     */
-
     struct _IDL_CONST_DCL *declaration = &IDL_CONST_DCL(state->tree);
     const char *name = IDL_IDENT(declaration->ident).str;
+    IDL_tree real_type;
+    const char *const_format;
 
-    gboolean success;
-    gboolean isshort = FALSE;
+    if (!verify_const_declaration(state->tree))
+        return FALSE;
 
-    /*
-     * Consts must be in an interface
-     */
+    /* Could be a typedef; try to map it to the real type. */
+    real_type = find_underlying_type(declaration->const_type);
+    real_type = real_type ? real_type : declaration->const_type;
 
-    if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
-        IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(state->tree))) != 
-        IDLN_INTERFACE) {
+    fputc('\n', state->file);
+    xpidl_write_comment(state, 4);
 
-        XPIDL_WARNING((state->tree, IDL_WARNING1,
-                       "A constant \"%s\" was declared outside an interface."
-                       "  It was ignored.", name));
-
-        return TRUE;
-    }
-
-    /*
-     * Make sure this is a numeric short or long constant.
-     */
-
-    success = (IDLN_TYPE_INTEGER == IDL_NODE_TYPE(declaration->const_type));
-
-    if (success) {
-        /*
-         * We aren't successful yet, we know it's an integer, but what *kind*
-         * of integer?
-         */
-
-        switch(IDL_TYPE_INTEGER(declaration->const_type).f_type) {
-
-        case IDL_INTEGER_TYPE_SHORT:
-            /*
-             * We're OK
-             */
-            isshort = TRUE;
-            break;
-
-        case IDL_INTEGER_TYPE_LONG:
-            /*
-             * We're OK
-             */            
-            break;
-            
-        default:
-            /*
-             * Whoops, it's some other kind of number
-             */
-            
-            success = FALSE;
-        }	
-    }
-
-    if (success) {
-        fputc('\n', state->file);
-        xpidl_write_comment(state, 4);
-
-        fprintf(state->file, "    public static final %s %s = %d;\n",
-		(isshort ? "short" : "int"),
-                name, (int) IDL_INTEGER(declaration->const_exp).value);
-    } else {
-        XPIDL_WARNING((state->tree, IDL_WARNING1,
-                       "A constant \"%s\" was not of type short or long."
-                       "  It was ignored.", name));	
-    }
+    fprintf(state->file, "    public static final %s %s = %d;\n",
+            (IDL_TYPE_INTEGER(real_type).f_type == IDL_INTEGER_TYPE_LONG
+             ? "long" : "short"),
+            name, (int) IDL_INTEGER(declaration->const_exp).value);
 
     return TRUE;
 
