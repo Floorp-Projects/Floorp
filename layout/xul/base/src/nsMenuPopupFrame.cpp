@@ -1616,9 +1616,9 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
       mIncrementalString = pressKey;
     else {
       if (mIncrementalString.Length() != 1 ||
-          GetCharAt(mIncrementalString, 0) != GetCharAt(pressKey, 0))
+          mIncrementalString.First() != pressKey.First())
           // If user typed the same key more than once, we should do a cycled one-key navigation
-      mIncrementalString.do_AppendFromElement(GetCharAt(pressKey, 0));
+      mIncrementalString.do_AppendFromElement(pressKey.First());
     }
   }
 

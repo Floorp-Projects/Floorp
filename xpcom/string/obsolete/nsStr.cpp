@@ -468,7 +468,7 @@ void nsStrPrivate::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
 
     if(aEliminateLeading) {
       while(++theIndex<=theMax) {
-        PRUnichar theChar=GetCharAt(aDest,theIndex);
+        PRUnichar theChar=aDest.GetCharAt(theIndex);
         PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound==thePos)
           break;
@@ -489,7 +489,7 @@ void nsStrPrivate::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
       theIndex=aDest.mLength;
       PRInt32 theNewLen=theIndex;
       while(--theIndex>=0) {
-        PRUnichar theChar=GetCharAt(aDest,theIndex);  //read at end now...
+        PRUnichar theChar=aDest.GetCharAt(theIndex);  //read at end now...
         PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound<thePos) 
           theNewLen=theIndex;
@@ -737,7 +737,7 @@ PRInt32 nsStrPrivate::FindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool
     // set. That's why we use 0 as the offset below.
   if((0<aDest.mLength) && (0<aSet.mLength)){
     while(++index<(PRInt32)aDest.mLength) {
-      PRUnichar theChar=GetCharAt(aDest,index);
+      PRUnichar theChar=aDest.GetCharAt(index);
       thePos=::FindChar1(aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
       if(kNotFound!=thePos)
         return index;
@@ -757,7 +757,7 @@ PRInt32 nsStrPrivate::FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt3
     // set. That's why we use 0 as the offset below.
   if((0<aDest.mLength) && (0<aSet.mLength)){
     while(++index<(PRInt32)aDest.mLength) {
-      PRUnichar theChar=GetCharAt(aDest,index);
+      PRUnichar theChar=aDest.GetCharAt(index);
       thePos=::FindChar2(aSet.mUStr,aSet.mLength,0,theChar,aSet.mLength);
       if(kNotFound!=thePos)
         return index;
@@ -946,7 +946,7 @@ PRInt32 nsStrPrivate::RFindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBoo
     //but doing the search against the given set. That's why we use 0 as the offset below.
   if(0<aDest.mLength) {
     while(--index>=0) {
-      PRUnichar theChar=GetCharAt(aDest,index);
+      PRUnichar theChar=aDest.GetCharAt(index);
       thePos=::FindChar1(aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
       if(kNotFound!=thePos)
         return index;
@@ -966,7 +966,7 @@ PRInt32 nsStrPrivate::RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt
     //but doing the search against the given set. That's why we use 0 as the offset below.
   if(0<aDest.mLength) {
     while(--index>=0) {
-      PRUnichar theChar=GetCharAt(aDest,index);
+      PRUnichar theChar=aDest.GetCharAt(index);
       thePos=::FindChar2(aSet.mUStr,aSet.mLength,0,theChar,aSet.mLength);
       if(kNotFound!=thePos)
         return index;
