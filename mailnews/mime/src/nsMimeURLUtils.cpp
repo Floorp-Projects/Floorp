@@ -135,6 +135,9 @@ AmbitiousURLType(const char *URL, PRInt32  *retType, const char *newURLTag)
   return NS_OK;
 }
 
+#define NSCP_URL  13
+const char NSCP_CHK[5] = {0x41, 0x49, 0x4d, 0x3a, 0x00};
+
 /* from libnet/mkutils.c */
 nsresult 
 nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
@@ -153,6 +156,11 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     else if(!PL_strncasecmp(URL,"about:",6))
     {
 		    *retType = ABOUT_TYPE_URL;
+        return NS_OK;
+    }
+    else if(!PL_strncasecmp(URL,NSCP_CHK,4))
+    {
+        *retType = NSCP_URL;
         return NS_OK;
     }
     break;
