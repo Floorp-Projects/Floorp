@@ -477,6 +477,10 @@
   list-style-image: url("chrome://editor/content/images/innocent_n.gif"); 
 }
 
+.insert-cry > .menu-iconic-left {
+  list-style-image: url("chrome://editor/content/images/cry_n.gif"); 
+}
+
 .insert-sealed > .menu-iconic-left {
   list-style-image: url("chrome://editor/content/images/sealed_n.gif"); 
 }
