@@ -386,7 +386,6 @@ nsresult nsMailboxUrl::ParseSearchPart()
 		m_messageID = extractAttributeValue(searchPart.get(),"messageid=");
 		if (messageKey)
 			m_messageKey = atol(messageKey); // convert to a long...
-		if (messageKey || m_messageID)
 		
     PR_FREEIF(msgPart);
 		PR_FREEIF(messageKey);
