@@ -45,7 +45,6 @@
 #include "nsImgManager.h"
 #include "nsPermissionManager.h"
 #include "nsPopupWindowManager.h"
-#include "nsCookieHTTPNotify.h"
 #include "nsICategoryManager.h"
 #include "nsCookiePromptService.h"
 #include "nsCookiePermission.h"
@@ -56,7 +55,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSi
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsImgManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPermissionManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPopupWindowManager, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieHTTPNotify, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookiePermission)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookiePromptService)
 
@@ -129,14 +127,7 @@ static const nsModuleComponentInfo components[] = {
       NS_COOKIEPERMISSION_CID,
       NS_COOKIEPERMISSION_CONTRACTID,
       nsCookiePermissionConstructor
-    },
-    { NS_COOKIEHTTPNOTIFY_CLASSNAME,
-      NS_COOKIEHTTPNOTIFY_CID,
-      NS_COOKIEHTTPNOTIFY_CONTRACTID,
-      nsCookieHTTPNotifyConstructor,
-      nsCookieHTTPNotify::RegisterProc,
-      nsCookieHTTPNotify::UnregisterProc
-    },
+    }
 };
 
 NS_IMPL_NSGETMODULE(nsCookieModule, components)

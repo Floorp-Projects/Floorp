@@ -46,4 +46,14 @@ interface nsIHttpChannelInternal : nsISupports
      * Get the major/minor version numbers for the response
      */
     void getResponseVersion(out unsigned long major, out unsigned long minor);
+
+    /**
+     * Helper method to set a cookie with a consumer-provided
+     * cookie header, _but_ using the channel's other information
+     * (URI's, prompters, date headers etc).
+     *
+     * @param aCookieHeader
+     *        The cookie header to be parsed.
+     */
+    void setCookie(in string aCookieHeader);
 };

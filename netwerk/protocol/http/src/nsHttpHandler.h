@@ -45,6 +45,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsICacheSession.h"
 #include "nsIEventQueueService.h"
+#include "nsICookieService.h"
 #include "nsIMIMEService.h"
 #include "nsIIDNService.h"
 #include "nsITimer.h"
@@ -146,7 +147,7 @@ public:
     nsresult GetStreamConverterService(nsIStreamConverterService **);
     nsresult GetMimeService(nsIMIMEService **);
     nsresult GetIOService(nsIIOService** service);
-
+    nsICookieService * GetCookieService(); // not addrefed
 
     // Called by the channel before writing a request
     nsresult OnModifyRequest(nsIHttpChannel *);
@@ -184,6 +185,7 @@ private:
     nsCOMPtr<nsIEventQueueService>      mEventQueueService;
     nsCOMPtr<nsINetModuleMgr>           mNetModuleMgr;
     nsCOMPtr<nsIStreamConverterService> mStreamConvSvc;
+    nsCOMPtr<nsICookieService>          mCookieService;
     nsCOMPtr<nsIMIMEService>            mMimeService;
     nsCOMPtr<nsIIDNService>             mIDNConverter;
     nsCOMPtr<nsITimer>                  mTimer;

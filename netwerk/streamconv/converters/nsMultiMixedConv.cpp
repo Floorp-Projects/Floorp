@@ -46,6 +46,7 @@
 #include "nsReadableUtils.h"
 #include "nsIMultiPartChannel.h"
 #include "nsCRT.h"
+#include "nsIHttpChannelInternal.h"
 
 //
 // Helper function for determining the length of data bytes up to
@@ -924,13 +925,10 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
             } else if (headerStr.EqualsIgnoreCase("content-disposition")) {
                 mContentDisposition = headerVal;
             } else if (headerStr.EqualsIgnoreCase("set-cookie")) {
-                // setting headers on the HTTP channel
-                // causes HTTP to notify, again if necessary,
-                // it's header observers.
-                nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-                if (httpChannel) {
-                    rv = httpChannel->SetResponseHeader(headerStr, headerVal, PR_TRUE);
-                    if (NS_FAILED(rv)) return rv;
+                nsCOMPtr<nsIHttpChannelInternal> httpInternal =
+                    do_QueryInterface(aChannel);
+                if (httpInternal) {
+                    httpInternal->SetCookie(headerVal.get());
                 }
             } else if (headerStr.EqualsIgnoreCase("content-range") || 
                        headerStr.EqualsIgnoreCase("range") ) {

@@ -110,6 +110,7 @@ private:
     nsresult Connect(PRBool firstTime = PR_TRUE);
     nsresult AsyncAbort(nsresult status);
     nsresult SetupTransaction();
+    void     AddCookiesToRequest();
     void     ApplyContentConversions();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();
