@@ -1528,8 +1528,18 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
       }
     }
 
-
-
+//set max text field length
+    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+    if (htmlEditor)
+    {
+      PRInt32 maxLength;
+      rv = GetMaxLength(&maxLength);
+      if (NS_CONTENT_ATTR_NOT_THERE != rv)
+      { 
+        htmlEditor->SetMaxTextLength(maxLength);
+      }
+    }
+    
 //get the caret
     nsCOMPtr<nsIDOMSelection> domSelection;
     if (NS_SUCCEEDED(mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))) && domSelection)
