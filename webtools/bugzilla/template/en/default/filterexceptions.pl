@@ -526,6 +526,15 @@
   'const.CONTROLMAPMANDATORY', 
 ],
 
+'admin/products/list.html.tmpl' => [
+  'classification_url_part', 
+],
+
+'admin/products/footer.html.tmpl' => [
+  'classification_url_part', 
+  'classification_text', 
+],
+
 'admin/keywords/edit.html.tmpl' => [
   'keyword_id',
   'bug_count',

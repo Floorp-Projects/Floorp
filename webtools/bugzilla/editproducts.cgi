@@ -22,6 +22,7 @@
 #               Terry Weissman <terry@mozilla.org>
 #               Dawn Endico <endico@mozilla.org>
 #               Joe Robins <jmrobins@tgix.com>
+#               Gavin Shelley <bugzilla@chimpychompy.org>
 #
 # Direct any questions on this source code to
 #
@@ -116,6 +117,28 @@ sub CheckClassification ($)
         exit;
     }
 }
+
+# For the transition period, as this file is templatised bit by bit,
+# we need this routine, which does things properly, and will
+# eventually be the only version. (The older versions assume a
+# PutHeader() call has been made)
+sub CheckClassificationNew ($)
+{
+    my $cl = shift;
+
+    # do we have a classification?
+    unless ($cl) {
+        ThrowUserError('classification_not_specified');    
+        exit;
+    }
+
+    unless (TestClassification $cl) {
+        ThrowUserError('classification_doesnt_exist',
+                       {'name' => $cl});
+        exit;
+    }
+}
+
 
 sub CheckClassificationProduct ($$)
 {
@@ -308,59 +331,50 @@ if (Param('useclassification')) {
 #
 
 unless ($action) {
+
     if (Param('useclassification')) {
-        PutHeader("Select product in " . $classification);
-    } else {
-        PutHeader("Select product");
+        CheckClassificationNew($classification);
     }
 
-    my $query="SELECT products.name,products.description,disallownew,
-                    votesperuser,maxvotesperbug,votestoconfirm,COUNT(bug_id)
-             FROM products";
+    my $dbh = Bugzilla->dbh;
+    my @execute_params = ();
+    my @products = ();
+
+    my $query = "SELECT products.name,
+                        COALESCE(products.description,'') AS description, 
+                        NOT(disallownew) AS status,
+                        votesperuser,  maxvotesperbug, votestoconfirm,
+                        COUNT(bug_id) AS bug_count
+                 FROM products";
+
     if (Param('useclassification')) {
-        $query .= ",classifications";
+        $query .= ", classifications";
     }
+
     $query .= " LEFT JOIN bugs ON products.id = bugs.product_id";
-    if (Param('useclassification')) {
-        $query .= " WHERE classifications.name=" .
-          SqlQuote($classification) .
-            " AND classifications.id=products.classification_id";
-    }
-    $query .= " GROUP BY products.name ORDER BY products.name";
-    SendSQL($query);
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH ALIGN=\"left\">Edit product ...</TH>\n";
-    print "  <TH ALIGN=\"left\">Description</TH>\n";
-    print "  <TH ALIGN=\"left\">Status</TH>\n";
-    print "  <TH ALIGN=\"left\">Votes<br>per<br>user</TH>\n";
-    print "  <TH ALIGN=\"left\">Max<br>Votes<br>per<br>bug</TH>\n";
-    print "  <TH ALIGN=\"left\">Votes<br>to<br>confirm</TH>\n";
-    print "  <TH ALIGN=\"left\">Bugs</TH>\n";
-    print "  <TH ALIGN=\"left\">Action</TH>\n";
-    print "</TR>";
-    while ( MoreSQLData() ) {
-        my ($product, $description, $disallownew, $votesperuser,
-            $maxvotesperbug, $votestoconfirm, $bugs) = FetchSQLData();
-        $description ||= "<FONT COLOR=\"red\">missing</FONT>";
-        $disallownew = $disallownew ? 'closed' : 'open';
-        $bugs        ||= 'none';
-        print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=edit&product=", url_quote($product), $classhtmlvar,"\"><B>$product</B></A></TD>\n";
-        print "  <TD VALIGN=\"top\">$description</TD>\n";
-        print "  <TD VALIGN=\"top\">$disallownew</TD>\n";
-        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$votesperuser</TD>\n";
-        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$maxvotesperbug</TD>\n";
-        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$votestoconfirm</TD>\n";
-        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$bugs</TD>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=del&product=", url_quote($product), $classhtmlvar, "\">Delete</A></TD>\n";
-        print "</TR>";
-    }
-    print "<TR>\n";
-    print "  <TD VALIGN=\"top\" COLSPAN=7>Add a new product</TD>\n";
-    print "  <TD VALIGN=\"top\" ALIGN=\"center\"><A HREF=\"editproducts.cgi?action=add&classification=", url_quote($classification),"\">Add</A></TD>\n";
-    print "</TR></TABLE>\n";
 
-    PutTrailer();
+    if (Param('useclassification')) {
+        $query .= " WHERE classifications.name = ? " .
+            " AND classifications.id = products.classification_id";
+
+        # trick_taint is OK because we use this in a placeholder in a SELECT
+        trick_taint($classification);
+
+        push(@execute_params,
+             $classification);
+    }
+
+    $query .= " GROUP BY products.name ORDER BY products.name";
+
+    $vars->{'products'} = $dbh->selectall_arrayref($query,
+                                                   {'Slice' => {}},
+                                                   @execute_params);
+
+    $vars->{'classification'} = $classification;
+    $template->process("admin/products/list.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 

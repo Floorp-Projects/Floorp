@@ -37,6 +37,7 @@
   #            text in the column.
   #     allow_html_content: if defined, then this column allows html content
   #                         so it will not be filtered 
+  #     yesno_field: Turn the data from 0/!0 into Yes/No
   #
   # data:
   #   array of hashes representing the data for the table.
@@ -79,10 +80,18 @@
         [% IF c.content %] 
           [% c.content %]
         [% ELSE %]
-          [% IF c.allow_html_content %]
-            [% row.${c.name} FILTER none %]
+          [% IF c.yesno_field %]
+            [% IF row.${c.name} %]
+              Yes
+            [% ELSE %]
+              No
+            [% END %]
           [% ELSE %]
-            [% row.${c.name} FILTER html %]
+            [% IF c.allow_html_content %]
+              [% row.${c.name} FILTER none %]
+            [% ELSE %]
+              [% row.${c.name} FILTER html %]
+            [% END %]
           [% END %]
         [% END %]
         
