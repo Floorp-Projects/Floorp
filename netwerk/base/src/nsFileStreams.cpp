@@ -102,7 +102,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsFileIO,
                               nsIStreamIO)
 
 nsFileIO::nsFileIO()
-    : mIOFlags(0),
+    : mFD(0),
+      mIOFlags(0),
       mPerm(0),
       mStatus(NS_OK)
 {
@@ -177,17 +178,16 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
     *contentLength = 0;
     *contentType = nsnull;
 
-    // don't actually open the file here -- we'll do it on demand in the
-    // GetInputStream/GetOutputStream methods
     nsresult rv = NS_OK;
-    
-    PRBool exist;
-    rv = mFile->Exists(&exist);
-    if (NS_FAILED(rv))
-        return rv;
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (mIOFlags == -1)
+        mIOFlags = PR_RDONLY;
+    if (mPerm == -1)
+        mPerm = 0;
 
-    if (!exist)
-        return NS_ERROR_FILE_NOT_FOUND;
+    rv = localFile->OpenNSPRFileDesc(mIOFlags, mPerm, &mFD);
+    if (NS_FAILED(rv)) return NS_ERROR_FILE_NOT_FOUND;  //How do we deal with directories/??
 
     // We'll try to use the file's length, if it has one. If not,
     // assume the file to be special, and set the content length
@@ -212,6 +212,7 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
         *contentLength = -1;
     }
     else {
+        // must we really go though this? dougt
         nsIMIMEService* mimeServ = nsnull;
         nsFileTransportService* fileTransportService = nsFileTransportService::GetInstance();
         if (fileTransportService) {
@@ -253,16 +254,27 @@ NS_IMETHODIMP
 nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
 {
     NS_ASSERTION(mFile, "File must not be null");
-    if (mFile == nsnull)
+    if (!mFile)
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv;
+
+    if (!mFD) {
+        nsXPIDLCString contentType;
+        PRInt32 contentLength;
+        rv = Open(getter_Copies(contentType), &contentLength);        
+        if (NS_FAILED(rv))  // file or directory does not exist
+            return rv;
+        NS_ASSERTION(mFD, "Must have a valid mFD at this point");
+    }
+        
     PRBool isDir;
     rv = mFile->IsDirectory(&isDir);
     if (NS_FAILED(rv))  // file or directory does not exist
         return rv;
     
     if (isDir) {
+        PR_Close(mFD);
         rv = nsDirectoryIndexStream::Create(mFile, aInputStream);
         PR_LOG(gFileIOLog, PR_LOG_DEBUG,
                ("nsFileIO: opening local dir %s for input (%x)",
@@ -274,14 +286,15 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
     if (fileIn == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(fileIn);
-    rv = fileIn->Init(mFile, mIOFlags, mPerm, PR_FALSE);
+    rv = fileIn->InitWithFileDescriptor(mFD, mFile, PR_FALSE);
     if (NS_SUCCEEDED(rv)) {
 #ifdef NS_NO_INPUT_BUFFERING
         *aInputStream = fileIn;
         NS_ADDREF(*aInputStream);
 #else
         rv = NS_NewBufferedInputStream(aInputStream,
-                                       fileIn, NS_INPUT_STREAM_BUFFER_SIZE);
+                                       fileIn, 
+                                       NS_INPUT_STREAM_BUFFER_SIZE);
 #endif
     }
     NS_RELEASE(fileIn);
@@ -300,6 +313,15 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv;
+
+    if (!mFD) {
+        nsXPIDLCString contentType;
+        PRInt32 contentLength;
+        rv = Open(getter_Copies(contentType), &contentLength);        
+        if (NS_FAILED(rv))  // file or directory does not exist
+            return rv;
+    }
+    
     PRBool isDir;
     rv = mFile->IsDirectory(&isDir);
     if (NS_SUCCEEDED(rv) && isDir) {
@@ -310,7 +332,7 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
     if (fileOut == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(fileOut);
-    rv = fileOut->Init(mFile, mIOFlags, mPerm);
+    rv = fileOut->InitWithFileDescriptor(mFD, mFile);
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIOutputStream> bufStr;
 #ifdef NS_NO_OUTPUT_BUFFERING
@@ -318,7 +340,8 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
         NS_ADDREF(*aOutputStream);
 #else
         rv = NS_NewBufferedOutputStream(aOutputStream,
-                                        fileOut, NS_OUTPUT_STREAM_BUFFER_SIZE);
+                                        fileOut, 
+                                        NS_OUTPUT_STREAM_BUFFER_SIZE);
 #endif
     }
     NS_RELEASE(fileOut);
@@ -457,11 +480,8 @@ nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 
 NS_IMETHODIMP
 nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRBool deleteOnClose)
-{
-    NS_ASSERTION(mFD == nsnull, "already inited");
-    if (mFD != nsnull)
-        return NS_ERROR_FAILURE;
-    nsresult rv;
+{   
+    nsresult rv = NS_OK;
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
     if (NS_FAILED(rv)) return rv;
     if (ioFlags == -1)
@@ -469,10 +489,22 @@ nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRBool del
     if (perm == -1)
         perm = 0;
 
-    mLineBuffer = nsnull;
-    
-    rv = localFile->OpenNSPRFileDesc(ioFlags, perm, &mFD);
+    PRFileDesc* fd;
+    rv = localFile->OpenNSPRFileDesc(ioFlags, perm, &fd);
     if (NS_FAILED(rv)) return rv;
+    
+    return InitWithFileDescriptor(fd, file, deleteOnClose);
+}
+
+nsresult
+nsFileInputStream::InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file, PRBool deleteOnClose)
+{
+    NS_ASSERTION(mFD == nsnull, "already inited");
+    if (mFD || !fd)
+        return NS_ERROR_FAILURE;
+    
+    mLineBuffer = nsnull;    
+    mFD = fd;
 
     if (deleteOnClose) {
         // POSIX compatible filesystems allow a file to be unlinked while a
@@ -480,7 +512,7 @@ nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRBool del
         // opened the file descriptor, we'll try to remove the file.  if that
         // fails, then we'll just remember the nsIFile and remove it after we
         // close the file descriptor.
-        rv = file->Remove(PR_FALSE);
+        nsresult rv = file->Remove(PR_FALSE);
         if (NS_FAILED(rv))
             mFileToDelete = file;
     }
@@ -605,9 +637,6 @@ nsFileOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 NS_IMETHODIMP
 nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
 {
-    NS_ASSERTION(mFD == nsnull, "already inited");
-    if (mFD != nsnull)
-        return NS_ERROR_FAILURE;
     nsresult rv;
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -615,7 +644,22 @@ nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
         ioFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
     if (perm <= 0)
         perm = 0664;
-    return localFile->OpenNSPRFileDesc(ioFlags, perm, &mFD);
+    PRFileDesc* fd;
+    rv = localFile->OpenNSPRFileDesc(ioFlags, perm, &fd);
+    if (NS_FAILED(rv)) return rv;
+
+    return InitWithFileDescriptor(fd, file);
+}
+
+
+nsresult
+nsFileOutputStream::InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file)
+{
+    NS_ASSERTION(mFD == nsnull, "already inited");
+    if (mFD || !fd)
+        return NS_ERROR_FAILURE;
+    mFD = fd;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
