@@ -35,10 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
+#include "nsAccessibilityService.h"
 #include "nsCaretAccessible.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsICaret.h"
 #include "nsISelectionController.h"
 #include "nsIFrame.h"
@@ -47,11 +49,12 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsIPresShell.h"
+#include "nsTextAccessible.h"
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsCaretAccessible, nsLeafAccessible, nsIAccessibleCaret, nsISelectionListener)
 
 nsCaretAccessible::nsCaretAccessible(nsIDOMNode* aDocumentNode, nsIWeakReference* aShell, nsIAccessibleEventListener *aListener):
-nsLeafAccessible(aDocumentNode, aShell), mVisible(PR_TRUE), mListener(aListener)
+nsLeafAccessible(aDocumentNode, aShell), mVisible(PR_TRUE), mListener(aListener), mCurrentDOMNode(nsnull)
 {
 }
 
@@ -68,6 +71,8 @@ NS_IMETHODIMP nsCaretAccessible::RemoveSelectionListener()
 
 NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrentNode)
 {
+  mCurrentDOMNode = aCurrentNode;
+
   // When focus moves such that the caret is part of a new frame selection
   // this removes the old selection listener and attaches a new one for the current focus
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -171,13 +176,25 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   if (visible)
     mListener->HandleEvent(nsIAccessibleEventListener::EVENT_LOCATION_CHANGE, this, nsnull);
 #else
-  if (isCollapsed) {
-    PRInt32 caretOffset;
-    domSel->GetFocusOffset(&caretOffset);
-    mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CARET_MOVE, this, (AccessibleEventData*)&caretOffset);
-  }
+  nsCOMPtr<nsIDOMNode> focusNode;
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(mCurrentDOMNode));
+  nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea(do_QueryInterface(mCurrentDOMNode));
+  if (inputElement || textArea)
+    focusNode = mCurrentDOMNode;
   else
-    mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_SELECTION_CHANGE, this, nsnull);
+    domSel->GetFocusNode(getter_AddRefs(focusNode));
+  if (!focusNode)
+    return NS_OK;
+  
+  nsCOMPtr<nsIAccessible> accessible;
+  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+  accService->GetAccessibleFor(focusNode, getter_AddRefs(accessible));
+  if (accessible) {
+    if (isCollapsed)
+      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CARET_MOVE, accessible, (AccessibleEventData*)&caretOffset);
+    else
+      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
+  }
 #endif
 
   return NS_OK;

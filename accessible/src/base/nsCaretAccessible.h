@@ -78,6 +78,7 @@ public:
 private:
   nsRect mCaretRect;
   PRBool mVisible;
+  nsCOMPtr<nsIDOMNode> mCurrentDOMNode;
   // mListener is not a com pointer. It's a copy of the listener in the nsRootAccessible owner. 
   //See nsRootAccessible.h for details of the lifetime if this listener
   nsIAccessibleEventListener *mListener;
