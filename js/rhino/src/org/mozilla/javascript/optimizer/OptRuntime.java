@@ -234,37 +234,4 @@ public final class OptRuntime extends ScriptRuntime
         }
         return new Double(num);
     }
-
-    public static Boolean eqB(Object x, Object y)
-    {
-        if (eq(x,y))
-            return Boolean.TRUE;
-        else
-            return Boolean.FALSE;
-    }
-
-    public static Boolean neB(Object x, Object y)
-    {
-        if (eq(x,y))
-            return Boolean.FALSE;
-        else
-            return Boolean.TRUE;
-    }
-
-    public static Boolean seqB(Object x, Object y)
-    {
-        if (shallowEq(x,y))
-            return Boolean.TRUE;
-        else
-            return Boolean.FALSE;
-    }
-
-    public static Boolean sneB(Object x, Object y)
-    {
-        if (shallowEq(x,y))
-            return Boolean.FALSE;
-        else
-            return Boolean.TRUE;
-    }
-
 }

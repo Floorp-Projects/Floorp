@@ -1770,17 +1770,24 @@ class BodyCodegen
               case Token.LE:
               case Token.LT:
               case Token.GE:
-              case Token.GT:
-                // need a result Object
-                visitRelOp(node, child);
+              case Token.GT: {
+                int trueGOTO = cfw.acquireLabel();
+                int falseGOTO = cfw.acquireLabel();
+                visitIfJumpRelOp(node, child, trueGOTO, falseGOTO);
+                addJumpedBooleanWrap(trueGOTO, falseGOTO);
                 break;
+              }
 
               case Token.EQ:
               case Token.NE:
               case Token.SHEQ:
-              case Token.SHNE:
-                visitEqOp(node, child);
+              case Token.SHNE: {
+                int trueGOTO = cfw.acquireLabel();
+                int falseGOTO = cfw.acquireLabel();
+                visitIfJumpEqOp(node, child, trueGOTO, falseGOTO);
+                addJumpedBooleanWrap(trueGOTO, falseGOTO);
                 break;
+              }
 
               case Token.GETPROP:
                 visitGetProp(node, child);
@@ -2914,6 +2921,7 @@ class BodyCodegen
 
     private void genSimpleCompare(int type, int trueGOTO, int falseGOTO)
     {
+        if (trueGOTO == -1) throw Codegen.badTree();
         switch (type) {
             case Token.LE :
                 cfw.add(ByteCode.DCMPG);
@@ -3049,130 +3057,6 @@ class BodyCodegen
                 genSimpleCompare(type, trueGOTO, falseGOTO);
             }
         }
-    }
-
-    private void visitRelOp(Node node, Node child)
-    {
-        /*
-            this is the version that returns an Object result
-        */
-        int type = node.getType();
-        if (type == Token.INSTANCEOF || type == Token.IN) {
-            generateCodeFromNode(child, node);
-            generateCodeFromNode(child.getNext(), node);
-            cfw.addALoad(variableObjectLocal);
-            addScriptRuntimeInvoke(
-                (type == Token.INSTANCEOF) ? "instanceOf" : "in",
-                "(Ljava/lang/Object;"
-                +"Ljava/lang/Object;"
-                +"Lorg/mozilla/javascript/Scriptable;"
-                +")Z");
-            addBooleanWrap();
-            return;
-        }
-
-        int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
-
-        generateCodeFromNode(child, node);
-        if (childNumberFlag == Node.RIGHT) {
-            addObjectToDouble();
-        }
-        generateCodeFromNode(child.getNext(), node);
-        if (childNumberFlag == Node.LEFT) {
-            addObjectToDouble();
-        }
-        if (childNumberFlag != -1) {
-            int trueGOTO = cfw.acquireLabel();
-            int skip = cfw.acquireLabel();
-            genSimpleCompare(type, trueGOTO, -1);
-            cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                    "FALSE", "Ljava/lang/Boolean;");
-            cfw.add(ByteCode.GOTO, skip);
-            cfw.markLabel(trueGOTO);
-            cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                    "TRUE", "Ljava/lang/Boolean;");
-            cfw.markLabel(skip);
-            cfw.adjustStackTop(-1);   // only have 1 of true/false
-        }
-        else {
-            if (type == Token.GE || type == Token.GT) {
-                cfw.add(ByteCode.SWAP);
-            }
-            String routine = (type == Token.LT || type == Token.GT)
-                             ? "cmp_LT" : "cmp_LE";
-            addScriptRuntimeInvoke(routine,
-                                   "(Ljava/lang/Object;"
-                                   +"Ljava/lang/Object;"
-                                   +")Z");
-            addBooleanWrap();
-        }
-    }
-
-    private void visitEqOp(Node node, Node child)
-    {
-        int type = node.getType();
-        Node rightChild = child.getNext();
-        boolean isStrict = type == Token.SHEQ ||
-                           type == Token.SHNE;
-        if (rightChild.getType() == Token.NULL) {
-            generateCodeFromNode(child, node);
-            if (isStrict) {
-                cfw.add(ByteCode.IFNULL, 9);
-            } else {
-                cfw.add(ByteCode.DUP);
-                cfw.add(ByteCode.IFNULL, 15);
-                Codegen.pushUndefined(cfw);
-                cfw.add(ByteCode.IF_ACMPEQ, 10);
-            }
-            if ((type == Token.EQ) || (type == Token.SHEQ))
-                cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                        "FALSE", "Ljava/lang/Boolean;");
-            else
-                cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                        "TRUE", "Ljava/lang/Boolean;");
-            if (isStrict) {
-                cfw.add(ByteCode.GOTO, 6);
-            } else {
-                cfw.add(ByteCode.GOTO, 7);
-                cfw.add(ByteCode.POP);
-            }
-            if ((type == Token.EQ) || (type == Token.SHEQ))
-                cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                        "TRUE", "Ljava/lang/Boolean;");
-            else
-                cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                        "FALSE", "Ljava/lang/Boolean;");
-            return;
-        }
-
-        generateCodeFromNode(child, node);
-        generateCodeFromNode(child.getNext(), node);
-
-        String name;
-        switch (type) {
-          case Token.EQ:
-            name = "eqB";
-            break;
-
-          case Token.NE:
-            name = "neB";
-            break;
-
-          case Token.SHEQ:
-            name = "seqB";
-            break;
-
-          case Token.SHNE:
-            name = "sneB";
-            break;
-
-          default:
-            throw Codegen.badTree();
-        }
-        addOptRuntimeInvoke(name,
-                            "(Ljava/lang/Object;"
-                            +"Ljava/lang/Object;"
-                            +")Ljava/lang/Boolean;");
     }
 
     private void visitIfJumpEqOp(Node node, Node child,
@@ -3370,35 +3254,9 @@ class BodyCodegen
 
 */
                 if (isNumber) {
-                    cfw.addALoad(lVar.getJRegister());
-                    cfw.add(ByteCode.GETSTATIC,
-                            "java/lang/Void",
-                            "TYPE",
-                            "Ljava/lang/Class;");
-                    int isNumberLabel = cfw.acquireLabel();
-                    int beyond = cfw.acquireLabel();
-                    cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
-                    cfw.addALoad(lVar.getJRegister());
-                    addObjectToDouble();
-                    cfw.add(ByteCode.GOTO, beyond);
-                    cfw.markLabel(isNumberLabel);
-                    cfw.addDLoad(lVar.getJRegister() + 1);
-                    cfw.markLabel(beyond);
+                    dcpLoadAsNumber(lVar.getJRegister());
                 } else {
-                    cfw.addALoad(lVar.getJRegister());
-                    cfw.add(ByteCode.GETSTATIC,
-                            "java/lang/Void",
-                            "TYPE",
-                            "Ljava/lang/Class;");
-                    int isNumberLabel = cfw.acquireLabel();
-                    int beyond = cfw.acquireLabel();
-                    cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
-                    cfw.addALoad(lVar.getJRegister());
-                    cfw.add(ByteCode.GOTO, beyond);
-                    cfw.markLabel(isNumberLabel);
-                    cfw.addDLoad(lVar.getJRegister() + 1);
-                    addDoubleWrap();
-                    cfw.markLabel(beyond);
+                    dcpLoadAsObject(lVar.getJRegister());
                 }
             } else {
                 if (lVar.isNumber())
@@ -3668,6 +3526,42 @@ class BodyCodegen
         }
     }
 
+    private void dcpLoadAsNumber(int dcp_register)
+    {
+        cfw.addALoad(dcp_register);
+        cfw.add(ByteCode.GETSTATIC,
+                "java/lang/Void",
+                "TYPE",
+                "Ljava/lang/Class;");
+        int isNumberLabel = cfw.acquireLabel();
+        int beyond = cfw.acquireLabel();
+        cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
+        cfw.addALoad(dcp_register);
+        addObjectToDouble();
+        cfw.add(ByteCode.GOTO, beyond);
+        cfw.markLabel(isNumberLabel);
+        cfw.addDLoad(dcp_register + 1);
+        cfw.markLabel(beyond);
+    }
+
+    private void dcpLoadAsObject(int dcp_register)
+    {
+        cfw.addALoad(dcp_register);
+        cfw.add(ByteCode.GETSTATIC,
+                "java/lang/Void",
+                "TYPE",
+                "Ljava/lang/Class;");
+        int isNumberLabel = cfw.acquireLabel();
+        int beyond = cfw.acquireLabel();
+        cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
+        cfw.addALoad(dcp_register);
+        cfw.add(ByteCode.GOTO, beyond);
+        cfw.markLabel(isNumberLabel);
+        cfw.addDLoad(dcp_register + 1);
+        addDoubleWrap();
+        cfw.markLabel(beyond);
+    }
+
     private void addObjectToDouble()
     {
         addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
@@ -3691,24 +3585,18 @@ class BodyCodegen
                       methodSignature);
     }
 
-    private void addBooleanWrap()
+    private void addJumpedBooleanWrap(int trueLabel, int falseLabel)
     {
-        if (true) {
-            // Trust JVM to do the inlining itself
-            addScriptRuntimeInvoke("wrapBoolean", "(Z)Ljava/lang/Boolean;");
-        } else {
-            int trueGOTO = cfw.acquireLabel();
-            int skip = cfw.acquireLabel();
-            cfw.add(ByteCode.IFNE, trueGOTO);
-            cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                    "FALSE", "Ljava/lang/Boolean;");
-            cfw.add(ByteCode.GOTO, skip);
-            cfw.markLabel(trueGOTO);
-            cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                    "TRUE", "Ljava/lang/Boolean;");
-            cfw.markLabel(skip);
-            cfw.adjustStackTop(-1);   // only have 1 of true/false
-        }
+        cfw.markLabel(falseLabel);
+        int skip = cfw.acquireLabel();
+        cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
+                                "FALSE", "Ljava/lang/Boolean;");
+        cfw.add(ByteCode.GOTO, skip);
+        cfw.markLabel(trueLabel);
+        cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
+                                "TRUE", "Ljava/lang/Boolean;");
+        cfw.markLabel(skip);
+        cfw.adjustStackTop(-1);   // only have 1 of true/false
     }
 
     private void addDoubleWrap()
