@@ -1006,8 +1006,9 @@ The changes made were:
     if (defined $::FORM{'dependson'}) {
         my $me = "blocked";
         my $target = "dependson";
+        my %deptree;
         for (1..2) {
-            $deps{$target} = [];
+            $deptree{$target} = [];
             my %seen;
             foreach my $i (split('[\s,]+', $::FORM{$target})) {
                 if ($i eq "") {
@@ -1031,10 +1032,13 @@ The changes made were:
                     PuntTryAgain("You can't make a bug blocked or dependent on itself.");
                 }
                 if (!exists $seen{$i}) {
-                    push(@{$deps{$target}}, $i);
+                    push(@{$deptree{$target}}, $i);
                     $seen{$i} = 1;
                 }
             }
+            # populate $deps{$target} as first-level deps only.
+            # and find remainder of dependency tree in $deptree{$target}
+            @{$deps{$target}} = @{$deptree{$target}};
             my @stack = @{$deps{$target}};
             while (@stack) {
                 my $i = shift @stack;
@@ -1042,13 +1046,10 @@ The changes made were:
                         SqlQuote($i));
                 while (MoreSQLData()) {
                     my $t = FetchOneColumn();
-                    if ($t == $id) {
-                        PuntTryAgain("Dependency loop detected!<P>" .
-                                     "The change you are making to " .
-                                     "dependencies has caused a circular " .
-                                     "dependency chain.");
-                    }
-                    if (!exists $seen{$t}) {
+                    # ignore any _current_ dependencies involving this bug,
+                    # as they will be overwritten with data from the form.
+                    if ($t != $id && !exists $seen{$t}) {
+                        push(@{$deptree{$target}}, $t);
                         push @stack, $t;
                         $seen{$t} = 1;
                     }
@@ -1056,8 +1057,8 @@ The changes made were:
             }
 
             if ($me eq 'dependson') {
-                my @deps   =  @{$deps{'dependson'}};
-                my @blocks =  @{$deps{'blocked'}};
+                my @deps   =  @{$deptree{'dependson'}};
+                my @blocks =  @{$deptree{'blocked'}};
                 my @union = ();
                 my @isect = ();
                 my %union = ();
@@ -1068,11 +1069,13 @@ The changes made were:
                 if (@isect > 0) {
                     my $both;
                     foreach my $i (@isect) {
-                       $both = $both . "#" . $i . " ";
+                       $both = $both . GetBugLink($i, "#" . $i) . " ";
                     }
                     PuntTryAgain("Dependency loop detected!<P>" .
-                                 "This bug can't be both blocked and dependent " .
-                                 "on bug "  . $both . "!");
+                                 "The following bug(s) would appear on both the \"depends on\" " .
+                                 "and \"blocks\" parts of the dependency tree if these changes " .
+                                 "are committed: $both<br>" .
+                                 "This would create a circular dependency, which is not allowed.");
                 }
             }
             my $tmp = $me;
