@@ -191,13 +191,13 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         }
         else if ((location < 0) && (pass > 0) && (offset < inPartialPath.mLength)) //last occurance
         {
-            nsresult rv = inPartialPath.Mid(subString, offset, inPartialPath.mLength);
+            nsresult rv = inPartialPath.Mid(subString, offset, inPartialPath.mLength-offset);
             mFinalFile->Append(subString.ToNewCString());
             finished = PR_TRUE;
         }
         else
         {
-            nsresult rv = inPartialPath.Mid(subString, offset, location);
+            nsresult rv = inPartialPath.Mid(subString, offset, location-offset);
             mFinalFile->Append(subString.ToNewCString());
             offset = location + 1;
             pass++;
