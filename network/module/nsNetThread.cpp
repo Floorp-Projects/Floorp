@@ -857,16 +857,19 @@ net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
                          FO_Present_Types    format_out,
                          MWContext*          window_id)
 {
+  CallExitRoutineProxyEvent* ev;
 
-  if (PR_GetCurrentThread() == gNetlibThread) {
-    CallExitRoutineProxyEvent* ev;
-
-    ev = new CallExitRoutineProxyEvent(exit_routine, URL_s, status, 
-                                       format_out, window_id);
-    if (nsnull != ev) {
-      ev->Fire();
-    }
-  } else {
-    net_CallExitRoutine(exit_routine, URL_s, status, format_out, window_id);
+  /*
+   * Always use a PLEvent to call the exit_routine(...).  This is necessary 
+   * because when a connection is interrupted, the exit_routine(...) is called
+   * inside of the LIBNET_LOCK().  
+   * 
+   * By always using an event, we are sure that the exit_routine(...) is not 
+   * called while the thread is holding the LIBNET_LOCK().
+   */
+  ev = new CallExitRoutineProxyEvent(exit_routine, URL_s, status, 
+                                     format_out, window_id);
+  if (nsnull != ev) {
+    ev->Fire();
   }
 }
