@@ -27,6 +27,7 @@
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDocumentObserver.h"
 #include "nsVoidArray.h"
+#include "nsIMenu.h"
 
 // can't use forward class decl's because of template bugs on Solaris 
 #include "nsIDOMDocument.h"
@@ -162,6 +163,8 @@ protected:
   nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsString & aWebShellName);
   nsCOMPtr<nsIDOMNode>     GetParentNodeFromDOMDoc(nsIDOMDocument * aDOMDoc);
   NS_IMETHOD               CreateMenu(nsIMenuBar * aMenuBar, nsIDOMNode * aMenuNode, nsString & aMenuName);
+  void LoadSubMenu(nsIMenu * pParentMenu, nsIDOMElement * menuElement,nsIDOMNode * menuNode);
+  NS_IMETHOD LoadMenuItem(nsIMenu * pParentMenu, nsIDOMElement * menuitemElement, nsIDOMNode * menuitemNode);
 
   nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
   void                     ExecuteStartupCode();
