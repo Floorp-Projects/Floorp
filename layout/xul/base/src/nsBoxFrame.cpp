@@ -236,6 +236,13 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
   if ( aReflowState.reason == eReflowReason_Incremental ) {
     Dirty(aReflowState,incrementalChild);
   } 
+#if 0
+ListTag(stdout);
+printf(": begin reflow reason=%s", 
+       aReflowState.reason == eReflowReason_Incremental ? "incremental" : "other");
+if (incrementalChild) { printf(" frame="); nsFrame::ListTag(stdout, incrementalChild); }
+printf("\n");
+#endif
 
   //------------------------------------------------------------------------------------------------
   //------- Figure out what our box size is. This will calculate our children's sizes as well ------
@@ -308,6 +315,9 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
   if ((NS_BLOCK_DOCUMENT_ROOT & mFlags) && !damageArea.IsEmpty()) {
     Invalidate(damageArea);
   }
+#if 0
+ListTag(stdout); printf(": reflow done\n");
+#endif
 
   return NS_OK;
 }
@@ -596,7 +606,11 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
                      nscoord spring,
                      nsIFrame*& incrementalChild)
 {
-
+#if 0
+ListTag(stdout); printf(": reflowing ");
+nsFrame::ListTag(stdout, childFrame);
+printf("\n");
+#endif
       // subtract out the childs margin and border 
       const nsStyleSpacing* spacing;
       nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
@@ -715,6 +729,10 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
 
           // set the rect
         childFrame->SetRect(nsRect(0,0,desiredSize.width, desiredSize.height));
+
+        // Stub out desiredSize.maxElementSize so that when go out of
+        // scope, nothing bad happens!
+        desiredSize.maxElementSize = nsnull;
 
         // clear out the incremental child, so that we don't flow it incrementally again
         if (reason == eReflowReason_Incremental && incrementalChild == childFrame)
@@ -1129,6 +1147,7 @@ nsBoxFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalC
   // Dirty any children that need it.
   nsIFrame* frame;
   aReflowState.reflowCommand->GetNext(frame);
+
   nscoord count = 0;
   nsIFrame* childFrame = mFrames.FirstChild(); 
   while (nsnull != childFrame) 
@@ -1184,6 +1203,13 @@ NS_IMETHODIMP_(nsrefcnt)
 nsBoxFrame::Release(void)
 {
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxFrame::GetFrameName(nsString& aResult) const
+{
+  aResult = "Box";
+  return NS_OK;
 }
 
 nsCalculatedBoxInfo::nsCalculatedBoxInfo()
