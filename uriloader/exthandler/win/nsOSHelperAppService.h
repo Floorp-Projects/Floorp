@@ -28,7 +28,7 @@
 // in addition to launching those applications.
 
 #include "nsExternalHelperAppService.h"
-#include "nsCExternalHelperApp.h"
+#include "nsCExternalHandlerService.h"
 #include "nsCOMPtr.h"
 
 class nsOSHelperAppService : public nsExternalHelperAppService
@@ -41,6 +41,10 @@ public:
   NS_IMETHOD CanHandleContent(const char *aMimeContentType, nsIURI * aURI, PRBool *_retval);
   NS_IMETHOD DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, PRBool *aAbortProcess, nsIStreamListener **_retval);
   NS_IMETHOD LaunchAppWithTempFile(nsIFile * aTempFile, nsISupports * aAppCookie);
+
+  // override nsIExternalProtocolService methods
+  NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
+  NS_IMETHOD LoadUrl(nsIURI * aURL);
 
 protected:
 
