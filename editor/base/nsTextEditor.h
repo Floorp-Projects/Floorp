@@ -108,10 +108,10 @@ public:
   NS_IMETHOD BeginComposition(void);
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
   NS_IMETHOD EndComposition(void);
-  NS_IMETHOD OutputText(nsString& aOutputString);
-  NS_IMETHOD OutputHTML(nsString& aOutputString);
-  NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride);
-  NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aCharsetOverride);
+  NS_IMETHOD OutputTextToString(nsString& aOutputString);
+  NS_IMETHOD OutputHTMLToString(nsString& aOutputString);
+  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride);
+  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride);
 
 // Plain text wrapping control
   NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn);
@@ -258,8 +258,8 @@ protected:
   
 
   TypeInState *GetTypeInState(); 
-  NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
-  NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
+  NS_IMETHOD OutputTextInternal(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
+  NS_IMETHOD OutputHTMLInternal(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
 
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();

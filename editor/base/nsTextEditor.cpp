@@ -1312,18 +1312,18 @@ NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   return res;
 }  
 
-NS_IMETHODIMP nsTextEditor::OutputText(nsString& aOutputString)
+NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString)
 {
-  return OutputText(nsnull,&aOutputString,nsnull);
+  return OutputTextInternal(nsnull,&aOutputString,nsnull);
 }
 
-NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride)
+NS_IMETHODIMP nsTextEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride)
 {
-  return OutputText(aOutputStream,nsnull,aCharsetOverride);
+  return OutputTextInternal(aOutputStream,nsnull,aCharsetOverride);
 }
 
 
-NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride)
+NS_IMETHODIMP nsTextEditor::OutputTextInternal(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride)
 { 
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -1387,18 +1387,18 @@ NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream* aOutputStream, nsString*
 }
 
 
-NS_IMETHODIMP nsTextEditor::OutputHTML(nsString& aOutputString)
+NS_IMETHODIMP nsTextEditor::OutputHTMLToString(nsString& aOutputString)
 {
-  return OutputHTML(nsnull,&aOutputString,nsnull);
+  return OutputHTMLInternal(nsnull,&aOutputString,nsnull);
 }
 
-NS_IMETHODIMP nsTextEditor::OutputHTML(nsIOutputStream* aOutputStream,nsString* aCharsetOverride)
+NS_IMETHODIMP nsTextEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride)
 {
-  return OutputHTML(aOutputStream,nsnull,aCharsetOverride);
+  return OutputHTMLInternal(aOutputStream,nsnull,aCharsetOverride);
 }
 
 
-NS_IMETHODIMP nsTextEditor::OutputHTML(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride)
+NS_IMETHODIMP nsTextEditor::OutputHTMLInternal(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride)
 {
   
   nsresult rv = NS_ERROR_FAILURE;

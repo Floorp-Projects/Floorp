@@ -106,10 +106,10 @@ public:
   NS_IMETHOD BeginComposition(void);
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
   NS_IMETHOD EndComposition(void);
-  NS_IMETHOD OutputText(nsString& aOutputString);
-  NS_IMETHOD OutputHTML(nsString& aOutputString);
-  NS_IMETHOD OutputText(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);
-  NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);
+  NS_IMETHOD OutputTextToString(nsString& aOutputString);
+  NS_IMETHOD OutputHTMLToString(nsString& aOutputString);
+  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);
+  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);
 
 // End of methods implemented in nsEditor
 //=============================================================
