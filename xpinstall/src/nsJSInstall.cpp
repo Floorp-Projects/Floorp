@@ -54,15 +54,14 @@ extern JSClass FileOpClass;
 enum Install_slots 
 {
   INSTALL_PLATFORM        = -1,
-  INSTALL_BUILDID         = -2,
-  INSTALL_JARFILE         = -3,
-  INSTALL_ARCHIVE         = -4,
-  INSTALL_ARGUMENTS       = -5,
-  INSTALL_URL             = -6,
-  INSTALL_FLAGS           = -7,
-  INSTALL_STATUSSENT      = -8,
-  INSTALL_INSTALL         = -9,
-  INSTALL_INSTALLED_FILES = -10
+  INSTALL_JARFILE         = -2,
+  INSTALL_ARCHIVE         = -3,
+  INSTALL_ARGUMENTS       = -4,
+  INSTALL_URL             = -5,
+  INSTALL_FLAGS           = -6,
+  INSTALL_STATUSSENT      = -7,
+  INSTALL_INSTALL         = -8,
+  INSTALL_INSTALLED_FILES = -9
 };
 
 // prototype for fileOp object
@@ -97,10 +96,6 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         *vp = STRING_TO_JSVAL( JS_NewStringCopyZ(cx, prop.get()) );
         break;
       }
-
-      case INSTALL_BUILDID:
-        *vp = INT_TO_JSVAL(NS_BUILD_ID);
-        break;
 
       case INSTALL_ARCHIVE:
       case INSTALL_JARFILE:
@@ -1706,7 +1701,6 @@ JSClass InstallClass = {
 static JSPropertySpec InstallProperties[] =
 {
   {"platform",          INSTALL_PLATFORM,           JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"buildID",           INSTALL_BUILDID,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"jarfile",           INSTALL_JARFILE,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"archive",           INSTALL_ARCHIVE,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"arguments",         INSTALL_ARGUMENTS,          JSPROP_ENUMERATE | JSPROP_READONLY},
@@ -1780,6 +1774,8 @@ static JSConstDoubleSpec install_constants[] =
     { CHROME_PROFILE,                        "PROFILE_CHROME"               },
     { CHROME_DELAYED,                        "DELAYED_CHROME"               },
     { CHROME_SELECT,                         "SELECT_CHROME"                },
+
+    { NS_BUILD_ID,                           "buildID"                      },
 
     {0}
 };
