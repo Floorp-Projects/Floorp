@@ -1611,7 +1611,6 @@ static PRUint16 PA_HackTable[] = {
  */
 PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
   PRInt32 value=0;
-  PRInt32 theRadix[2]={16,10};
 
   if(mTextValue.Length()>1) {
     PRUnichar theChar0=mTextValue.CharAt(0);
@@ -1619,9 +1618,8 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
     if(kHashsign==theChar0) {
       PRInt32 err=0;
       
-      PRUnichar theChar1=mTextValue.CharAt(1);
-      PRBool    isDigit1=nsString::IsDigit(theChar1);
-      value=mTextValue.ToInteger(&err,theRadix[isDigit1]);
+      value=mTextValue.ToInteger(&err,kAutoDetect);
+
       if(0==err) {
   #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
         /* for some illegal, but popular usage */
