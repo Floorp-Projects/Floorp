@@ -124,7 +124,10 @@ nsresult nsMsgOfflineManager::StopRunning(nsresult exitStatus)
 
 nsresult nsMsgOfflineManager::AdvanceToNextState(nsresult exitStatus)
 {
-  if (NS_FAILED(exitStatus))
+  // NS_BINDING_ABORTED is used for the user pressing stop, which
+  // should cause us to abort the offline process. Other errors
+  // should allow us to continue.
+  if (exitStatus == NS_BINDING_ABORTED)
   {
     return StopRunning(exitStatus);
   }
