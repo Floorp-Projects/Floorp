@@ -71,7 +71,8 @@ Rights Reserved.
     <vbox flex="1">
       <vbox>
          <hbox align="center">
-         <label value="&searchHeading.label;" accesskey="&searchHeading.accesskey;"/>
+         <label value="&searchHeading.label;" accesskey="&searchHeading.accesskey;"
+                control="searchableFolders"/>
          <menulist id="searchableFolders" flex="2"/>
          <spacer flex="10"/>
          <button label="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);" default="true" accesskey="&searchButton.accesskey;"/>
