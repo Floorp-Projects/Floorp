@@ -247,57 +247,47 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
     return (NULL == *outCString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
   }
 
-  nsAutoString convCharset; convCharset.AssignWithConversion("ISO-8859-1");
   nsresult res;
 
-  // Resolve charset alias
-  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res)); 
+  nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+  NS_ENSURE_SUCCESS(res, res);
+
+  nsCOMPtr <nsIAtom> charsetAtom;
+  res = ccm2->GetCharsetAtom(aCharset.get(), getter_AddRefs(charsetAtom));
+  NS_ENSURE_SUCCESS(res, res);
+
+  // get an unicode converter
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+  res = ccm2->GetUnicodeEncoder(charsetAtom, getter_AddRefs(encoder));
+  NS_ENSURE_SUCCESS(res, res);
+
+
+  PRUnichar *unichars = (PRUnichar *) inString.get();
+  PRInt32 unicharLength = inString.Length();
+  PRInt32 dstLength;
+
+  res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
+  NS_ENSURE_SUCCESS(res, res);
+
+  res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+  NS_ENSURE_SUCCESS(res, res);
+
+  // allocale an output buffer
+  *outCString = (char *) PR_Malloc(dstLength + 1);
+  NS_ENSURE_TRUE(*outCString, NS_ERROR_OUT_OF_MEMORY);
+
+  PRInt32 buffLength = dstLength;
+  **outCString = '\0';
+  res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
   if (NS_SUCCEEDED(res)) {
-    nsAutoString aAlias(aCharset);
-    if (aAlias.Length()) {
-      res = calias->GetPreferred(aAlias, convCharset);
+    PRInt32 finLen = buffLength - dstLength;
+    res = encoder->Finish((char *)(*outCString+dstLength), &finLen);
+    if (NS_SUCCEEDED(res)) {
+      dstLength += finLen;
     }
+    (*outCString)[dstLength] = '\0';
   }
 
-  nsCOMPtr<nsICharsetConverterManager> ccm = 
-           do_GetService(kCharsetConverterManagerCID, &res); 
-
-  if(NS_SUCCEEDED(res)) {
-    nsIUnicodeEncoder* encoder = nsnull;
-
-    // get an unicode converter
-    res = ccm->GetUnicodeEncoder(&convCharset, &encoder);
-    if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
-      PRUnichar *unichars = (PRUnichar *) inString.get();
-      PRInt32 unicharLength = inString.Length();
-      PRInt32 dstLength;
-      res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
-      if (NS_SUCCEEDED(res)) {
-        res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
-        if (NS_SUCCEEDED(res)) {
-          // allocale an output buffer
-          *outCString = (char *) PR_Malloc(dstLength + 1);
-          if (nsnull != *outCString) {
-            PRInt32 buffLength = dstLength;
-            **outCString = '\0';
-            res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
-            if (NS_SUCCEEDED(res)) {
-              PRInt32 finLen = buffLength - dstLength;
-              res = encoder->Finish((char *)(*outCString+dstLength), &finLen);
-              if (NS_SUCCEEDED(res)) {
-                dstLength += finLen;
-              }
-              (*outCString)[dstLength] = '\0';
-            }
-          }
-          else {
-            res = NS_ERROR_OUT_OF_MEMORY;
-          }
-        }
-      }
-      NS_IF_RELEASE(encoder);
-    }    
-  }
   return res;
 }
 
@@ -326,50 +316,50 @@ nsresult ConvertToUnicode(const nsString& aCharset,
     return NS_OK;
   }
 
-  nsAutoString convCharset;
   nsresult res;
 
-  // Resolve charset alias
-  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res)); 
-  if (NS_SUCCEEDED(res)) {
-    nsAutoString aAlias(aCharset);
-    if (aAlias.Length()) {
-      res = calias->GetPreferred(aAlias, convCharset);
-    }
+  nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+  NS_ENSURE_SUCCESS(res, res);
+
+  nsCOMPtr <nsIAtom> charsetAtom;
+  res = ccm2->GetCharsetAtom(aCharset.get(), getter_AddRefs(charsetAtom));
+  NS_ENSURE_SUCCESS(res, res);
+
+  // get an unicode converter
+  nsCOMPtr<nsIUnicodeDecoder> decoder;
+  res = ccm2->GetUnicodeDecoder(charsetAtom, getter_AddRefs(decoder));
+  NS_ENSURE_SUCCESS(res, res);
+
+  PRUnichar *unichars;
+  PRInt32 unicharLength;
+  PRInt32 srcLen = PL_strlen(inCString);
+
+  // buffer size 144 =
+  // 72 (default line len for compose) 
+  // times 2 (converted byte len might be larger)
+  const int klocalbufsize = 144; 
+  PRUnichar localbuf[klocalbufsize+1];
+  PRBool usedlocalbuf;
+
+  if (srcLen > klocalbufsize) {
+    res = decoder->GetMaxLength(inCString, srcLen, &unicharLength);
+    NS_ENSURE_SUCCESS(res, res);
+    unichars = (PRUnichar *) nsMemory::Alloc(unicharLength * sizeof(PRUnichar));
+    NS_ENSURE_TRUE(unichars, NS_ERROR_OUT_OF_MEMORY);
+    usedlocalbuf = PR_FALSE;
   }
-  if (NS_FAILED(res)) {
-    // ignore charset alias error and use fallback charset.
-    convCharset = NS_LITERAL_STRING("ISO-8859-1").get();
-    res = NS_OK;
+  else {
+    unichars = localbuf;
+    unicharLength = klocalbufsize+1;
+    usedlocalbuf = PR_TRUE;
   }
 
-  nsCOMPtr<nsICharsetConverterManager> ccm = 
-           do_GetService(kCharsetConverterManagerCID, &res); 
+  // convert to unicode
+  res = decoder->Convert(inCString, &srcLen, unichars, &unicharLength);
+  outString.Assign(unichars, unicharLength);
+  if (!usedlocalbuf)
+    nsMemory::Free(unichars);
 
-  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsIUnicodeDecoder* decoder = nsnull;
-    PRUnichar *unichars;
-    PRInt32 unicharLength;
-
-    // get an unicode converter
-    res = ccm->GetUnicodeDecoder(&convCharset, &decoder);
-    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
-      PRInt32 srcLen = PL_strlen(inCString);
-      res = decoder->GetMaxLength(inCString, srcLen, &unicharLength);
-      // allocale an output buffer
-      unichars = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
-      if (unichars != nsnull) {
-        // convert to unicode
-        res = decoder->Convert(inCString, &srcLen, unichars, &unicharLength);
-        outString.Assign(unichars, unicharLength);
-        PR_Free(unichars);
-      }
-      else {
-        res = NS_ERROR_OUT_OF_MEMORY;
-      }
-      NS_IF_RELEASE(decoder);
-    }    
-  }  
   return res;
 }
 
