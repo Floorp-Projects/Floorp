@@ -67,11 +67,13 @@ class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
 
   protected:
 
-    // invoke the callback associated with a given message
+    // invoke the callback associated with a given message, and possibly 
+    // delete it from the connection queue
     //
     nsresult InvokeMessageCallback(LDAPMessage *aMsgHandle, 
 				   nsILDAPMessage *aMsg,
-				   PRInt32 aReturnCode);
+				   PRInt32 aReturnCode,
+				   PRBool aRemoveOpFromConnQ);
 
     LDAP *mConnectionHandle;		// the LDAP C SDK's connection object
     nsCString *mBindName; 		// who to bind as

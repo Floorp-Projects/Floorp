@@ -50,7 +50,6 @@ nsLDAPConnection::nsLDAPConnection()
 }
 
 // destructor
-// XXX better error-handling than fprintf
 //
 nsLDAPConnection::~nsLDAPConnection()
 {
@@ -68,15 +67,12 @@ nsLDAPConnection::~nsLDAPConnection()
 
   PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbound\n"));
 
-  // XXX can delete fail?
-  //
   if (mBindName) {
       delete mBindName;
   }
 
   if (mPendingOperations) {
       // XXXdmose  remove all items from the array first!
-      // XXXdmose  can delete fail?
       delete mPendingOperations;
   }
 
@@ -127,7 +123,6 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
     if (!nsLDAPThreadFuncsInit(this->mConnectionHandle)) {
 	return NS_ERROR_FAILURE;
     }
-
 
     // initialize the thread-specific data for the calling thread as necessary
     //
@@ -270,6 +265,10 @@ nsLDAPConnection::AddPendingOperation(nsILDAPOperation *aOperation)
 	return NS_ERROR_UNEXPECTED;
     }
 
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+	   ("pending operation added; total pending operations now = %d\n", 
+	    mPendingOperations->Count()));
+
     delete key;
     return NS_OK;
 }
@@ -322,6 +321,10 @@ nsLDAPConnection::RemovePendingOperation(nsILDAPOperation *aOperation)
 	return NS_ERROR_FAILURE;
     }
 
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+	   ("pending operation removed; total pending operations now = %d\n", 
+	    mPendingOperations->Count()));
+
     delete key;
     return NS_OK;
 }
@@ -353,6 +356,8 @@ nsLDAPConnection::Run(void)
     //
     while(1) {
 
+	PRBool operationFinished = PR_TRUE;
+
 	// XXX deal with timeouts better
 	//
 	returnCode = ldap_result(mConnectionHandle, LDAP_RES_ANY,
@@ -368,7 +373,7 @@ nsLDAPConnection::Run(void)
 	    // and try again
 	    PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
 		   ("ldap_result() timed out.\n"));
-	    PR_Sleep(2000);
+	    PR_Sleep(2000); // XXXdmose - reasonable timeslice?
 	    continue;
 
 	    break;
@@ -383,18 +388,29 @@ nsLDAPConnection::Run(void)
 #endif
 	    break;
 
+	case LDAP_RES_SEARCH_ENTRY:
+	case LDAP_RES_SEARCH_REFERENCE:
+	    // XXX what should we do with LDAP_RES_SEARCH_EXTENDED?
+
+	    // not done yet, so we shouldn't remove the op from the conn q
+	    operationFinished = PR_FALSE;
+
+	    // fall through to default case
+
 	default: // initialize the message and call the callback
 
 	    msg = do_CreateInstance(kLDAPMessageCID, &rv);
-	    NS_ENSURE_SUCCESS(rv, rv);
+	    NS_ENSURE_SUCCESS(rv, rv); // XXX get rid of return
 
 	    rv = msg->Init(this, msgHandle);
-	    NS_ENSURE_SUCCESS(rv, rv);
+	    NS_ENSURE_SUCCESS(rv, rv); // XXX get rid of return
 
 	    // call the callback on the nsILDAPOperation corresponding to this 
 	    //
-	    rv = InvokeMessageCallback(msgHandle, msg, returnCode);
-	    NS_ENSURE_SUCCESS(rv, rv);
+	    rv = InvokeMessageCallback(msgHandle, msg, returnCode, 
+				       operationFinished);
+	    NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPConnection::Run(): "
+			 "InvokeMessageCallback() failed");
 
 	    // we're all done with the message here.  make nsCOMPtr release it.
 	    //
@@ -422,7 +438,8 @@ nsLDAPConnection::Run(void)
 nsresult
 nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle, 
 					nsILDAPMessage *aMsg,
-					PRInt32 aReturnCode)
+					PRInt32 aReturnCode, 	
+					PRBool aRemoveOpFromConnQ)
 {
     PRInt32 msgId;
     nsresult rv;
@@ -455,7 +472,7 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     if (data == nsnull) {
 
 	PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
-	       ("InvokeMessageCallback(): couldn't find "
+	       ("Warning: InvokeMessageCallback(): couldn't find "
 		"nsILDAPOperation corresponding to this message id\n"));
 	delete key;
 
@@ -467,19 +484,33 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
 
     operation = getter_AddRefs(NS_STATIC_CAST(nsILDAPOperation *, data));
 
-    // get the proxy object for the listener (which lives on the 
-    // UI thread)
+    // get the message listener object (this may be a proxy for a
+    // callback which should happen on another thread)
     //
     rv = operation->GetMessageListener(getter_AddRefs(listener));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // invoke the callback through the proxy object
+    // invoke the callback 
     //
     listener->OnLDAPMessage(aMsg, aReturnCode);
 
-    // XXX - this clean above; use auto_ptr? 
+    // if requested (ie the operation is done), remove the operation
+    // from the connection queue.
     //
-    delete key;
+    if (aRemoveOpFromConnQ) {
+	rv = mPendingOperations->Remove(key);
+	if (!NS_SUCCEEDED(rv)) {
+	    NS_ERROR("nsLDAPConnection::InvokeMessageCallback: unable to "
+		     "remove operation from the connection queue\n");
+	    delete key;
+	    return NS_ERROR_UNEXPECTED;
+	}
 
+	PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+	       ("pending operation removed; total pending operations now ="
+		" %d\n", mPendingOperations->Count()));
+    }
+
+    delete key;
     return NS_OK;
 }
