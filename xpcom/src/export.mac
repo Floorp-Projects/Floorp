@@ -5,6 +5,7 @@
 nsAgg.h
 nsCom.h
 nsDebug.h
+nsError.h
 nsHashtable.h
 nsID.h
 nsIFactory.h
