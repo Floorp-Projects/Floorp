@@ -50,6 +50,11 @@ TCHAR   INDEX_PROCTHRD_OBJ[2*INDEX_STR_LEN];
 DWORD   PX_PROCESS;
 DWORD   PX_THREAD;
 
+char *FontColorMap[] = {"WHITE", "0x00EEEEEE",
+                        "BLACK", "0x00000000",
+                        "GREEN", "0x00088808",
+                        ""};
+
 BOOL CheckProcessNT4(LPSTR szProcessName, DWORD dwProcessNameSize);
 DWORD GetTitleIdx(HWND hWnd, LPTSTR Title[], DWORD LastIndex, LPTSTR Name);
 PPERF_OBJECT FindObject (PPERF_DATA pData, DWORD TitleIndex);
@@ -4023,17 +4028,26 @@ BOOL CheckLegacy(HWND hDlg)
 
 COLORREF DecryptFontColor(LPSTR szColor)
 {
-  if((szColor == NULL) || (*szColor == '\0'))
-    return(0x00EEEEEE);
+  int  i = 0;
+  long lFontColor = 0x00EEEEEE;
 
-  if(lstrcmpi(szColor, "WHITE") == 0)
-    return(0x00EEEEEE);
-  else if(lstrcmpi(szColor, "BLACK") == 0)
-    return(0x00000000);
-  else if(lstrcmpi(szColor, "GREEN") == 0)
-    return(0x00088808);
+  while(TRUE)
+  {
+    if(*FontColorMap[i] == '\0')
+      break;
 
-  return(0x00EEEEEE);
+    if(lstrcmpi(szColor, FontColorMap[i]) == 0)
+    {
+      if(*FontColorMap[i + 1] != '\0')
+        lFontColor = atol(FontColorMap[i + 1]);
+
+      break;
+    }
+
+    ++i;
+  }
+
+  return(lFontColor);
 }
 
 HRESULT ParseConfigIni(LPSTR lpszCmdLine)
