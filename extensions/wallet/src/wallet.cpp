@@ -1406,7 +1406,7 @@ Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
   if (NS_FAILED(rv)) {
     goto backup;
   }
-  return (((PRUnichar)keyByte1)<<32) + (PRUnichar)keyByte2;
+  return (((PRUnichar)keyByte1)<<8) + (PRUnichar)keyByte2;
 
 backup:
   /* Fallback to doing old access. This should never happen. */
