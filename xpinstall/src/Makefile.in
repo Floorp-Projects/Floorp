@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -21,54 +20,51 @@
 # Contributors:
 #     Daniel Veditz <dveditz@netscape.com>
 #     Douglas Turner <dougt@netscape.com>
+#
 
-DEPTH           = ../..
-topsrcdir       = @top_srcdir@
-VPATH           = @srcdir@
-srcdir          = @srcdir@
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+VPATH		= @srcdir@
+srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= nsxpi
 LIBRARY_NAME	= nsxpi
 IS_COMPONENT	= 1
-REQUIRES        = dom js netlib raptor xpcom
+REQUIRES	= dom js netlib raptor xpcom
 
 # XXX shouldn't need to export this
-EXPORTS         = nsXPITriggerInfo.h \
-                  $(NULL)
+EXPORTS		= nsXPITriggerInfo.h
 
-CPPSRCS = \
-    nsInstall.cpp               \
-    nsInstallTrigger.cpp        \
-    nsInstallVersion.cpp        \
-    nsInstallFolder.cpp         \
-    nsJSInstall.cpp             \
-    nsJSInstallTriggerGlobal.cpp\
-    nsJSInstallVersion.cpp      \
-    nsSoftwareUpdate.cpp        \
-    nsSoftwareUpdateRun.cpp     \
-    nsInstallFile.cpp           \
-    nsInstallDelete.cpp         \
-    nsInstallExecute.cpp        \
-    nsInstallPatch.cpp          \
-    nsInstallUninstall.cpp      \
-    nsInstallResources.cpp      \
-    nsTopProgressNotifier.cpp   \
-    nsLoggingProgressNotifier.cpp   \
-    ScheduledTasks.cpp          \
-    nsInstallProgressDialog.cpp	\
-    nsXPITriggerInfo.cpp        \
-    nsXPInstallManager.cpp      \
-    nsInstallFileOpItem.cpp     \
-    $(NULL)
+CPPSRCS		= \
+		nsInstall.cpp \
+		nsInstallTrigger.cpp \
+		nsInstallVersion.cpp \
+		nsInstallFolder.cpp \
+		nsJSInstall.cpp \
+		nsJSInstallTriggerGlobal.cpp \
+		nsJSInstallVersion.cpp \
+		nsSoftwareUpdate.cpp \
+		nsSoftwareUpdateRun.cpp \
+		nsInstallFile.cpp \
+		nsInstallDelete.cpp \
+		nsInstallExecute.cpp \
+		nsInstallPatch.cpp \
+		nsInstallUninstall.cpp \
+		nsInstallResources.cpp \
+		nsTopProgressNotifier.cpp \
+		nsLoggingProgressNotifier.cpp \
+		ScheduledTasks.cpp \
+		nsInstallProgressDialog.cpp \
+		nsXPITriggerInfo.cpp \
+		nsXPInstallManager.cpp \
+		nsInstallFileOpItem.cpp \
+		$(NULL)
 
-LOCAL_INCLUDES += -I$(srcdir)/../public
+LOCAL_INCLUDES	= -I$(srcdir)/../public
 
-EXTRA_DSO_LDOPTS = \
-                   -L$(DIST)/lib \
-                   $(ZLIB_LIBS) \
-                   -lneckoutil_s
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib $(ZLIB_LIBS) -lneckoutil_s
 
 include $(topsrcdir)/config/rules.mk
 
