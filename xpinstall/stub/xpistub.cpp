@@ -37,6 +37,7 @@
 
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
+#include "nsPvtIXPIStubHook.h"
 
 #include "plstr.h"
 
@@ -75,6 +76,9 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     nsCOMPtr<nsIFileSpec> nsIfsDirectory;
     nsFileSpec            nsfsDirectory;
 
+    //--------------------------------------------------------------------
+    // Initialize XPCOM and AutoRegister() its components
+    //--------------------------------------------------------------------
     rv = NS_InitXPCOM(&gServiceMgr);
     if (!NS_SUCCEEDED(rv))
         return rv;
@@ -107,28 +111,55 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 #else
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 0);
 #endif
-    if (NS_SUCCEEDED(rv))
+    
+    if (!NS_SUCCEEDED(rv))
+        return rv;
+
+
+    //--------------------------------------------------------------------
+    // Get the SoftwareUpdate (XPInstall) service.
+    //
+    // Since AppShell is not started by XPIStub the XPI service is never 
+    // registered with the service manager. We keep a local pointer to it 
+    // so it stays alive througout.
+    //--------------------------------------------------------------------
+    rv = nsComponentManager::CreateInstance(kSoftwareUpdateCID, 
+                                            nsnull,
+                                            nsISoftwareUpdate::GetIID(),
+                                            (void**) &gXPI);
+    if (!NS_SUCCEEDED(rv))
+        return rv;
+
+
+    //--------------------------------------------------------------------
+    // Override XPInstall's natural assumption that the current executable
+    // is Mozilla. Use the given directory as the "Program" folder.
+    //--------------------------------------------------------------------
+    nsCOMPtr<nsPvtIXPIStubHook> hook = do_QueryInterface(gXPI);
+    nsFileSpec                  dirSpec( aDir );
+    nsCOMPtr<nsIFileSpec>       iDirSpec;
+
+    NS_NewFileSpecWithSpec( dirSpec, getter_AddRefs(iDirSpec) );    
+    
+    if (hook && iDirSpec)
+        hook->SetProgramDirectory( iDirSpec );
+    else
+        return NS_ERROR_NULL_POINTER;
+
+
+    //--------------------------------------------------------------------
+    // Save the install wizard's callbacks as a nsIXPINotifer for later
+    //--------------------------------------------------------------------
+    nsStubNotifier* stub = new nsStubNotifier( startCB, progressCB, finalCB );
+    if (!stub)
     {
-        rv = nsComponentManager::CreateInstance(kSoftwareUpdateCID, 
-                                                nsnull,
-                                                nsISoftwareUpdate::GetIID(),
-                                                (void**) &gXPI);
-
-        if (NS_SUCCEEDED(rv))
-        {
-            nsStubNotifier* stub = new nsStubNotifier( startCB, progressCB, finalCB );
-            if (!stub)
-            {
-                gXPI->Release();
-                rv = NS_ERROR_OUT_OF_MEMORY;
-            }
-            else
-            {
-                rv = stub->QueryInterface(nsIXPINotifier::GetIID(), (void**)&gNotifier);
-            }
-        }
+        gXPI->Release();
+        rv = NS_ERROR_OUT_OF_MEMORY;
     }
-
+    else
+    {
+        rv = stub->QueryInterface(nsIXPINotifier::GetIID(), (void**)&gNotifier);
+    }
     return rv;
 }
 
