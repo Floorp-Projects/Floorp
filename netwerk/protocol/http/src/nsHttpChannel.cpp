@@ -3566,6 +3566,8 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
         // which case we just need to call OnStartRequest/OnStopRequest.
         if (mResponseHead)
             return ProcessResponse();
+
+        NS_WARNING("No response head in OnStartRequest");
     }
 
     // avoid crashing if mListener happens to be null...
@@ -3705,6 +3707,8 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
     // don't send out OnDataAvailable notifications if we've been canceled.
     if (mCanceled)
         return mStatus;
+
+    NS_ASSERTION(mResponseHead, "No response head in ODA!!");
 
     NS_ASSERTION(!(mCachedContentIsPartial && (request == mTransactionPump)),
             "transaction pump not suspended");

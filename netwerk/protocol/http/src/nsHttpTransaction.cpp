@@ -257,8 +257,10 @@ nsHttpTransaction::Init(PRUint8 caps,
 nsHttpResponseHead *
 nsHttpTransaction::TakeResponseHead()
 {
-    if (!mHaveAllHeaders)
+    if (!mHaveAllHeaders) {
+        NS_WARNING("response headers not available or incomplete");
         return nsnull;
+    }
 
     nsHttpResponseHead *head = mResponseHead;
     mResponseHead = nsnull;
@@ -791,6 +793,9 @@ nsHttpTransaction::HandleContent(char *buf,
     if (!mDidContentStart) {
         rv = HandleContentStart();
         if (NS_FAILED(rv)) return rv;
+        // Do not write content to the pipe if we haven't started streaming yet
+        if (!mDidContentStart)
+          return NS_OK;
     }
 
     if (mChunkedDecoder) {
@@ -820,6 +825,7 @@ nsHttpTransaction::HandleContent(char *buf,
     }
     else {
         // when we are just waiting for the server to close the connection...
+        // (no explicit content-length given)
         *contentRead = count;
     }
 
@@ -832,7 +838,7 @@ nsHttpTransaction::HandleContent(char *buf,
         */
     }
 
-    LOG(("nsHttpTransaction [this=%x count=%u read=%u mContentRead=%lld mContentLength=%lld]\n",
+    LOG(("nsHttpTransaction::HandleContent [this=%x count=%u read=%u mContentRead=%lld mContentLength=%lld]\n",
         this, count, *contentRead, mContentRead.mValue, mContentLength.mValue));
 
     // check for end-of-file
