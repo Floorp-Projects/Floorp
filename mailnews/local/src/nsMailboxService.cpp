@@ -30,6 +30,7 @@
 #include "nsLocalUtils.h"
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
+#include "nsIWebShell.h"
 
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -125,68 +126,66 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
                               nsIUrlListener * aUrlListener,
                               nsIURI **aURL)
 {
-	nsCOMPtr<nsIMailboxUrl> mailboxurl;
-	nsresult rv = NS_OK;
-	NS_LOCK_INSTANCE();
 
-	nsMailboxAction mailboxAction = nsIMailboxUrl::ActionMoveMessage;
-
-	rv = PrepareMessageUrl(aSrcMailboxURI, aUrlListener, mailboxAction, getter_AddRefs(mailboxurl));
-
-	if (NS_SUCCEEDED(rv) && mailboxurl)
-	{
-
-		if (!moveMessage)
-			mailboxurl->SetMailboxAction(nsIMailboxUrl::ActionCopyMessage);
-		mailboxurl->SetMailboxCopyHandler(aMailboxCopyHandler);
-		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
-		rv = RunMailboxUrl(url);
-	}
-
-	if (aURL)
-		mailboxurl->QueryInterface(nsIURI::GetIID(), (void **) aURL);
-
-	NS_UNLOCK_INSTANCE();
-
-	return rv;
+  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, aUrlListener, moveMessage ? nsIMailboxUrl::ActionMoveMessage: nsIMailboxUrl::ActionCopyMessage, 
+                      aURL);
 }
 
-nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
-                                          nsISupports * aDisplayConsumer, 
-										  nsIUrlListener * aUrlListener,
-                                          nsIURI ** aURL)
+nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
+                                        nsISupports * aDisplayConsumer, 
+										                    nsIUrlListener * aUrlListener,
+                                        nsMailboxAction mailboxAction,
+                                        nsIURI ** aURL)
 {
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
-	NS_LOCK_INSTANCE();
 
-	rv = PrepareMessageUrl(aMessageURI, aUrlListener, nsIMailboxUrl::ActionDisplayMessage, getter_AddRefs(mailboxurl));
+	rv = PrepareMessageUrl(aMessageURI, aUrlListener, mailboxAction, getter_AddRefs(mailboxurl));
 
 	if (NS_SUCCEEDED(rv))
 	{
 		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
-		rv = RunMailboxUrl(url, aDisplayConsumer);
+
+		// instead of running the mailbox url like we used to, let's try to run the url in the webshell...
+		nsCOMPtr<nsIWebShell> webshell = do_QueryInterface(aDisplayConsumer, &rv);
+    // if we were given a webshell, run the url in the webshell..otherwise just run it normally.
+    if (NS_SUCCEEDED(rv) && webshell)
+		  rv = webshell->LoadURI(url, "view", nsnull, PR_TRUE);
+    else
+      RunMailboxUrl(url, aDisplayConsumer); 
 	}
 
 	if (aURL)
 		mailboxurl->QueryInterface(nsIURI::GetIID(), (void **) aURL);
-	NS_UNLOCK_INSTANCE();
 
-	return rv;
+  return rv;
+}
+
+
+nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
+                                          nsISupports * aDisplayConsumer, 
+										                      nsIUrlListener * aUrlListener,
+                                          nsIURI ** aURL)
+{
+  return FetchMessage(aMessageURI, aDisplayConsumer, aUrlListener, nsIMailboxUrl::ActionDisplayMessage, aURL);
 }
 
 NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, 
-												  PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURI **aURL)
+												  PRBool aAddDummyEnvelope, nsIUrlListener *aUrlListener, nsIURI **aURL)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
-	NS_LOCK_INSTANCE();
 
 	rv = PrepareMessageUrl(aMessageURI, aUrlListener, nsIMailboxUrl::ActionSaveMessageToDisk, getter_AddRefs(mailboxurl));
 
 	if (NS_SUCCEEDED(rv))
 	{
-		mailboxurl->SetMessageFile(aFile);
+        nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(mailboxurl);
+        if (msgUrl)
+        {
+		    msgUrl->SetMessageFile(aFile);
+            msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
+        }
 		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
 		rv = RunMailboxUrl(url);
 	}
@@ -194,7 +193,6 @@ NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFi
 	if (aURL)
 		mailboxurl->QueryInterface(nsIURI::GetIID(), (void **) aURL);
 	
-	NS_UNLOCK_INSTANCE();
 	return rv;
 }
 
@@ -309,14 +307,35 @@ NS_IMETHODIMP nsMailboxService::MakeAbsolute(const char *aRelativeSpec, nsIURI *
 
 NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
-	// i just haven't implemented this yet...I will be though....
-	return NS_ERROR_NOT_IMPLEMENTED;
+	nsCOMPtr<nsIMailboxUrl> aMsgUrl;
+	nsresult rv = NS_OK;
+	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
+                                            nsnull,
+                                            nsIMailboxUrl::GetIID(),
+                                            getter_AddRefs(aMsgUrl));
+
+	if (NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aMsgUrl);
+		aUrl->SetSpec((char *) aSpec);
+		aMsgUrl->SetMailboxAction(nsIMailboxUrl::ActionDisplayMessage);
+		aMsgUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
+	}
+
+	return rv;
 }
 
 NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
 {
-	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
-	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
-	// the necko team in more detail later on.
-	return NS_ERROR_NOT_IMPLEMENTED;
+	nsresult rv = NS_OK;
+	nsMailboxProtocol * protocol = new nsMailboxProtocol(aURI);
+	protocol->SetLoadGroup(aGroup);
+	if (protocol)
+	{
+		rv = protocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
+
+	return rv;
 }

@@ -50,6 +50,12 @@ protected:
 							   nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl);
 	
 	nsresult RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDisplayConsumer = nsnull);
+
+  nsresult FetchMessage(const char* aMessageURI,
+                        nsISupports * aDisplayConsumer, 
+										    nsIUrlListener * aUrlListener,
+                        nsMailboxAction mailboxAction,
+                        nsIURI ** aURL);
 };
 
 #endif /* nsMailboxService_h___ */
