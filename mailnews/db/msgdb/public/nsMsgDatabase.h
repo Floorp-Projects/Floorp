@@ -206,7 +206,8 @@ protected:
 
 	nsNewsSet *m_newSet;		// new messages since last open.
 
-    nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result);
+    nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result,
+						  PRBool createKeyFromHeader = PR_FALSE);
     static void		AddToCache(nsMsgDatabase* pMessageDB) 
 						{GetDBCache()->AppendElement(pMessageDB);}
 	static void		RemoveFromCache(nsMsgDatabase* pMessageDB);

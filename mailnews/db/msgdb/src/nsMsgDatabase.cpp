@@ -46,7 +46,7 @@ const int kMsgDBVersion = 1;
 //This will get removed.
 static char* CreateURI(nsFileSpec path, nsMsgKey key)
 {
-	nsString uri = "mailbox_message://";
+	nsString uri = "mailmess://";
 	uri+=path;
 
 	char keyBuffer[50];
@@ -58,9 +58,12 @@ static char* CreateURI(nsFileSpec path, nsMsgKey key)
 #endif
 
 nsresult
-nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result)
+nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result,
+							PRBool getKeyFromHeader)
 {
     nsMsgHdr* msgHdr = new nsMsgHdr(this, hdrRow);
+	if(getKeyFromHeader)
+		msgHdr->GetMessageKey(&key);
     char *folderURI;
     nsresult rv = nsPath2URI(kMailboxRootURI, path, &folderURI);
     if (NS_FAILED(rv)) return rv;
@@ -1265,7 +1268,7 @@ nsresult	nsMsgDatabase::ListNext(ListContext *pContext, nsMsgHdr **pResultHdr)
     if (NS_FAILED(err)) return err;
 
     //currently GetMessageKey isn't working so just use rowPos
-    err = CreateMsgHdr(hdrRow, m_dbName, rowPos, pResultHdr);
+    err = CreateMsgHdr(hdrRow, m_dbName, -1, pResultHdr, PR_TRUE);
 	return err;
 }
 
@@ -1348,7 +1351,7 @@ NS_IMETHODIMP nsMsgDBEnumerator::Next(void)
             mDone = PR_TRUE;
             return rv;
         }
-        rv = mDB->CreateMsgHdr(hdrRow, mDB->m_dbName, rowPos, &mResultHdr);
+        rv = mDB->CreateMsgHdr(hdrRow, mDB->m_dbName, -1, &mResultHdr, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
     } while (mFilter && mFilter(mResultHdr, mClosure) != NS_OK);
 	return rv;
