@@ -6,7 +6,6 @@ nshtmlpars.h
 nsIContentSink.h
 nsIHTMLContentSink.h
 nsIHTMLFragmentContentSink.h
-nsHTMLContentSinkStream.h
 nsITokenizer.h
 nsHTMLTokens.h
 nsIParserNode.h

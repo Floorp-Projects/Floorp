@@ -98,8 +98,6 @@ public:
 /*BEGIN nsIDOMNSRange interface implementations*/
   NS_IMETHOD    CreateContextualFragment(const nsAReadableString& aFragment, 
                                          nsIDOMDocumentFragment** aReturn);
-  NS_IMETHOD    IsValidFragment(const nsAReadableString& aFragment, PRBool* aReturn);
-
   NS_IMETHOD    IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset,
                                PRBool* aResult);
   NS_IMETHOD    ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset,

@@ -1083,53 +1083,6 @@ NSRangeCreateContextualFragment(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
 
 //
-// Native method IsValidFragment
-//
-PR_STATIC_CALLBACK(JSBool)
-NSRangeIsValidFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMRange *privateThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsCOMPtr<nsIDOMNSRange> nativeThis;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kINSRangeIID, getter_AddRefs(nativeThis))) {
-    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
-  }
-
-  PRBool nativeRet;
-  nsAutoString b0;
-  // If there's no private data, this must be the prototype, so ignore
-  if (!nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSRANGE_ISVALIDFRAGMENT, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    result = nativeThis->IsValidFragment(b0, &nativeRet);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = BOOLEAN_TO_JSVAL(nativeRet);
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method IsPointInRange
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1433,7 +1386,6 @@ static JSFunctionSpec RangeMethods[] =
   {"detach",          RangeDetach,     0},
   {"toString",          RangeToString,     0},
   {"createContextualFragment",          NSRangeCreateContextualFragment,     1},
-  {"isValidFragment",          NSRangeIsValidFragment,     1},
   {"isPointInRange",          NSRangeIsPointInRange,     2},
   {"comparePoint",          NSRangeComparePoint,     2},
   {"intersectsNode",          NSRangeIntersectsNode,     1},

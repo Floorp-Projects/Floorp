@@ -48,7 +48,6 @@ interface NSRange {
  /* IID: { 0xa6cf90f2, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
    DocumentFragment createContextualFragment(in DOMString fragment);
-   boolean isValidFragment(in DOMString fragment);
 
     // Is the point contained in the range?
     boolean isPointInRange(in Node parent, in long offset);

@@ -240,7 +240,6 @@ class nsIParser : public nsISupports {
     
     virtual nsresult  Terminate(void) = 0;
 
-    virtual PRBool    IsValidFragment(const nsAReadableString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,nsDTDMode aMode=eDTDMode_autodetect)=0;
     virtual nsresult  ParseFragment(const nsAReadableString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,nsDTDMode aMode=eDTDMode_autodetect)=0;
 
     /**
