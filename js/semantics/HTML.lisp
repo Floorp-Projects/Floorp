@@ -168,6 +168,7 @@
 
 
 (defparameter *html-right-margin* 100)
+(defparameter *allow-line-breaks-in-tags* nil) ;Allow line breaks in tags between attributes?
 
 (defvar *current-html-pos*)          ;Number of characters written to the current line of the stream; nil if *current-html-newlines* is nonzero
 (defvar *current-html-pending*)      ;String following a space or newline pending to be printed on the current line or nil if none
@@ -237,7 +238,7 @@
       (dolist (attribute attributes)
         (let ((name (first attribute))
               (value (second attribute)))
-          (write-html-source stream 'space)
+          (write-html-source stream (if *allow-line-breaks-in-tags* 'space #\space))
           (write-html-string stream (string-downcase (symbol-name name)))
           (when value
             (write-html-string stream (format nil (if (attribute-value-needs-quotes value) "=\"~A\"" "=~A") value)))))
