@@ -478,6 +478,6 @@ nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
   PRBool clipEmpty;
   aRenderingContext.PopState(clipEmpty);
 
+#endif
 }
 
-#endif
