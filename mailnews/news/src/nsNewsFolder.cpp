@@ -788,15 +788,15 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
   PRInt32 oldUnreadMessages = mNumUnreadMessages;
   PRInt32 oldTotalMessages = mNumTotalMessages;
   
-  char *setStr = nsnull;
   /* First, mark all of the articles now known to be expired as read. */
   if (oldest > 1) 
   { 
     nsXPIDLCString oldSet;
+    nsXPIDLCString newSet;
     mReadSet->Output(getter_Copies(oldSet));
     mReadSet->AddRange(1, oldest - 1);
-    rv = mReadSet->Output(&setStr);
-    if (setStr && nsCRT::strcmp(setStr, oldSet))
+    rv = mReadSet->Output(getter_Copies(newSet));
+    if (!oldSet.Equals(newSet))
       newsrcHasChanged = PR_TRUE;
   }
   
@@ -838,8 +838,6 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
   if(oldUnreadMessages != mNumUnreadMessages) 
     NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, mNumUnreadMessages);
   
-  nsCRT::free(setStr);
-  setStr = nsnull;
   return rv;
 }
 
@@ -1515,17 +1513,17 @@ nsMsgNewsFolder::GetNewsrcLine(char **newsrcLine)
   if (NS_FAILED(rv)) return rv;
   
   nsCAutoString newsrcLineStr;
-  newsrcLineStr = (const char *)newsgroupname;
-  newsrcLineStr += ":";
+  newsrcLineStr = newsgroupname;
+  newsrcLineStr += ':';
   
-  nsXPIDLCString setStr;
   if (mReadSet) {
+    nsXPIDLCString setStr;
     mReadSet->Output(getter_Copies(setStr));
     if (NS_SUCCEEDED(rv)) 
     {
-      newsrcLineStr += " ";
+      newsrcLineStr += ' ';
       newsrcLineStr += setStr;
-      newsrcLineStr += MSG_LINEBREAK;
+      newsrcLineStr.AppendLiteral(MSG_LINEBREAK);
     }
   }
   

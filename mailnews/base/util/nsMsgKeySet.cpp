@@ -335,7 +335,7 @@ nsMsgKeySet::Output(char **outputStr)
 											  plus 10 bytes of slop. */
 			PRInt32 so = s - s_head;
 			s_size += 200;
-			char* tmp = new char[s_size];
+			char* tmp = (char *) nsMemory::Alloc(s_size);
 			if (tmp) PL_strcpy(tmp, s_head);
       nsMemory::Free(s_head);
 			s_head = tmp;
@@ -1428,7 +1428,7 @@ nsMsgKeySet::test_ranges(void)
   if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
   printf (" %3d = %s\n", N,						  \
 		  (set->IsMember(N) ? "true" : "false")); \
-  delete [] s
+  nsMemory::Free(s);
 
 void
 nsMsgKeySet::test_member(PRBool with_cache)
