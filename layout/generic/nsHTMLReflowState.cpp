@@ -286,6 +286,9 @@ nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame,
     case NS_STYLE_DISPLAY_INLINE:
     case NS_STYLE_DISPLAY_MARKER:
     case NS_STYLE_DISPLAY_INLINE_TABLE:
+    case NS_STYLE_DISPLAY_INLINE_BOX:
+    case NS_STYLE_DISPLAY_INLINE_GRID:
+    case NS_STYLE_DISPLAY_INLINE_STACK:
       frameType = NS_CSS_FRAME_TYPE_INLINE;
       break;
 

@@ -105,6 +105,12 @@ CSS_PROP(border-width, border_width, REFLOW)
 CSS_PROP(-x-border-x-spacing, border_x_spacing, REFLOW) // XXX bug 3935
 CSS_PROP(-x-border-y-spacing, border_y_spacing, REFLOW) // XXX bug 3935
 CSS_PROP(bottom, bottom, REFLOW)
+CSS_PROP(-moz-box-align, box_align, REFLOW) // XXX bug 3935
+CSS_PROP(-moz-box-direction, box_direction, REFLOW) // XXX bug 3935
+CSS_PROP(-moz-box-flex, box_flex, REFLOW) // XXX bug 3935
+CSS_PROP(-moz-box-flex-group, box_flex_group, REFLOW) // XXX bug 3935
+CSS_PROP(-moz-box-orient, box_orient, REFLOW) // XXX bug 3935
+CSS_PROP(-moz-box-pack, box_pack, REFLOW) // XXX bug 3935
 CSS_PROP(-moz-box-sizing, box_sizing, REFLOW) // XXX bug 3935
 CSS_PROP(caption-side, caption_side, REFLOW)
 CSS_PROP(clear, clear, REFLOW)

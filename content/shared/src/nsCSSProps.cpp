@@ -304,6 +304,14 @@ const PRInt32 nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword_table_cell,         NS_STYLE_DISPLAY_TABLE_CELL,
   eCSSKeyword_table_caption,      NS_STYLE_DISPLAY_TABLE_CAPTION,
   eCSSKeyword_menu,               NS_STYLE_DISPLAY_MENU,
+  eCSSKeyword__moz_box,           NS_STYLE_DISPLAY_BOX,
+  eCSSKeyword__moz_inline_box,    NS_STYLE_DISPLAY_INLINE_BOX,
+  eCSSKeyword__moz_grid,          NS_STYLE_DISPLAY_GRID,
+  eCSSKeyword__moz_inline_grid,   NS_STYLE_DISPLAY_INLINE_GRID,
+  eCSSKeyword__moz_grid_group,    NS_STYLE_DISPLAY_GRID_GROUP,
+  eCSSKeyword__moz_grid_line,     NS_STYLE_DISPLAY_GRID_LINE,
+  eCSSKeyword__moz_stack,         NS_STYLE_DISPLAY_STACK,
+  eCSSKeyword__moz_inline_stack,  NS_STYLE_DISPLAY_INLINE_STACK,
   -1,-1
 };
 

@@ -288,6 +288,14 @@
 #define NS_STYLE_DISPLAY_TABLE_CELL             16
 #define NS_STYLE_DISPLAY_TABLE_CAPTION          17
 #define NS_STYLE_DISPLAY_MENU                   18
+#define NS_STYLE_DISPLAY_BOX                    18
+#define NS_STYLE_DISPLAY_INLINE_BOX             19
+#define NS_STYLE_DISPLAY_GRID                   20
+#define NS_STYLE_DISPLAY_INLINE_GRID            21
+#define NS_STYLE_DISPLAY_GRID_GROUP             22
+#define NS_STYLE_DISPLAY_GRID_LINE              23
+#define NS_STYLE_DISPLAY_STACK                  24
+#define NS_STYLE_DISPLAY_INLINE_STACK           25
 
 // See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0
