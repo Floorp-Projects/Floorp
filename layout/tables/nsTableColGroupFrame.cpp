@@ -267,12 +267,15 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
   aReflowState.reflowCommand->GetType(type);
   nsIFrame *objectFrame;
   aReflowState.reflowCommand->GetChildFrame(objectFrame); 
-  const nsStyleDisplay *childDisplay;
-  objectFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+  const nsStyleDisplay *childDisplay=nsnull;
+  if (nsnull!=objectFrame)
+    objectFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
   if (PR_TRUE==gsDebugIR) printf("nTCGF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
   switch (type)
   {
   case nsIReflowCommand::FrameInserted :
+    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
     if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
     {
       rv = IR_ColInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
@@ -285,6 +288,8 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
     break;
   
   case nsIReflowCommand::FrameAppended :
+    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       rv = IR_ColAppended(aPresContext, aDesiredSize, aReflowState, aStatus, 
@@ -302,6 +307,8 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
   */
 
   case nsIReflowCommand::FrameRemoved :
+    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       rv = IR_ColRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
@@ -471,21 +478,6 @@ NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsIPresContext&          aPresCo
     tableFrame->InvalidateColumnCache();
     tableFrame->InvalidateFirstPassCache();
   }
-
-  /*
-  // we are obligated to pass along the reflow command to our children before doing anything else
-  nsIFrame *childFrame = mFirstChild;
-  while (nsnull!=childFrame)
-  {
-    nsHTMLReflowState childReflowState(aPresContext, childFrame, aReflowState,
-                                       aReflowState.maxSize, eReflowReason_Incremental);
-    rv = ReflowChild(childFrame, aPresContext, aDesiredSize, childReflowState, aStatus);
-    if (NS_FAILED(rv))
-      break;
-    // the returned desired size is irrelevant, because we'll do a resize reflow in a moment
-    childFrame->GetNextSibling(childFrame);
-  }
-*/
   return rv;
 }
 

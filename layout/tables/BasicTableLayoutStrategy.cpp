@@ -676,7 +676,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
   // clean up
   if (nsnull!=spanList)
   {
-    if (gsDebug) printf("BTLS::APCW...space leak, span list not empty");
+    if (gsDebug) printf("BTLS::APCW...space leak, span list not empty\n");
     delete spanList;
   }
   if (nsnull!=colSpanList)
