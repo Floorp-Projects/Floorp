@@ -42,6 +42,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderObserver.h"
+#include "nsCURILoader.h"
 //#include "nsIWebShell.h"
 #include "nsIWebShellServices.h"
 #include "nsIContentViewerContainer.h"
@@ -69,7 +70,7 @@ static NS_DEFINE_IID(kIWebShellServicesIID,       NS_IWEB_SHELL_SERVICES_IID);
 //static NS_DEFINE_IID(kIWebShellIID,               NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kIStreamListenerIID,         NS_ISTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID);
 
 #define PICS_DOMAIN  			"browser.PICS."
 #define PICS_ENABLED_PREF 		PICS_DOMAIN"ratings_enabled"
