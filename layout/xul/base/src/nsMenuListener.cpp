@@ -178,6 +178,8 @@ nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
     if (!handled)
       mMenuParent->DismissChain();
   }
+  else if (theChar == NS_VK_TAB)
+    mMenuParent->DismissChain();
   else if (theChar == NS_VK_ENTER ||
            theChar == NS_VK_RETURN) {
     // Open one level.
