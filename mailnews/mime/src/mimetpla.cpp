@@ -189,7 +189,7 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
            /* 4.x' editor can't break <div>s (e.g. to interleave comments).
               We'll add the class to the <blockquote type=cite> later. */
       {
-        openingDiv = "<div class=\"text-plain\"";
+        openingDiv = "<div class=\"moz-text-plain\"";
         if (!plainHTML)
         {
           if (obj->options->wrap_long_lines_p)
@@ -249,14 +249,15 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
       MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
       if (text->mIsSig && !quoting)
       {
-        status = MimeObject_write(obj, "</div>", 6, PR_FALSE);  // .txt-sig
+        status = MimeObject_write(obj, "</div>", 6, PR_FALSE);  // .moz-txt-sig
         if (status < 0) return status;
       }
       status = MimeObject_write(obj, "</pre>", 6, PR_FALSE);
       if (status < 0) return status;
       if (!quoting)
       {
-        status = MimeObject_write(obj, "</div>", 6, PR_FALSE);  // .text-plain
+        status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
+                                        // .moz-text-plain
         if (status < 0) return status;
       }
 
@@ -382,8 +383,8 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
     // Write plain text quoting tags
     if (logicalLineStart != 0 && !(plainHTML && text->mBlockquoting))
     {
-      if (!quoting)
-        prefaceResultStr += "<span class=txt-citetags>";
+      if (!plainHTML)
+        prefaceResultStr += "<span class=\"moz-txt-citetags\">";
 
       nsAutoString citeTagsSource;
       lineSourceStr.Mid(citeTagsSource, 0, logicalLineStart);
@@ -406,7 +407,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
       prefaceResultStr += citeTagsResultCStr;
       Recycle(citeTagsResultCStr);
-      if (!quoting)
+      if (!plainHTML)
         prefaceResultStr += "</span>";
     }
 
@@ -419,7 +420,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
     {
       text->mIsSig = PR_TRUE;
       if (!quoting)
-        prefaceResultStr += "<div class=txt-sig>";
+        prefaceResultStr += "<div class=\"moz-txt-sig\">";
     }
 
     /* This is the main TXT to HTML conversion:

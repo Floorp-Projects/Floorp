@@ -31,53 +31,42 @@ body {
 
 
 
-.text-flowed tt {
-  font-family: inherit;
-}
-.text-flowed blockquote {
-  margin: 0em 0em;
-  border-color: black;
+.moz-text-flowed blockquote {
+  margin: inherit;
+  border-width: medium;
+  border-color: gray;
 }
 
-/* Anyhow, the <div class=txt-sig> doesn't inherit whitespace setting from
-   its parent pre, but from its ancestor .text-plain. */
-.text-plain {
+.moz-text-plain pre {
+  font-family: inherit;
+  margin: inherit;
+}
+.moz-text-plain[wrap=true] {
   white-space: -moz-pre-wrap;
 }
-.text-plain[wrap=false] {
+.moz-text-plain[wrap=false] {
   white-space: pre;
 }
-.text-plain pre {
-  font-family: inherit;
-  white-space: inherit;
-  margin: inherit;
+.moz-text-plain[wrap=flow] .moz-txt-sig {
+  white-space: -moz-pre-wrap;
 }
-/* That's how it should really be
-.text-plain pre {
-  font-family: inherit;
-  margin: inherit;
-}
-.text-plain[wrap=false] pre {
-  white-space: pre;
-}
-*/
-.text-plain[graphical-quote=false] blockquote {
+.moz-text-plain[graphical-quote=false] blockquote {
   padding-left: inherit;
   border-left: inherit;
-  margin: 0em 0em;
+  margin: inherit;
 }
-.text-plain[graphical-quote=true] blockquote {
-  margin: 0em 0em;
+.moz-text-plain[graphical-quote=true] blockquote {
+  margin: inherit;
   border-width: medium;
-  border-color: black;
+  border-color: gray;
 }
-.text-plain[graphical-quote=true] .txt-citetags {
+.moz-text-plain[graphical-quote=true] .moz-txt-citetags {
   display: none;
 }
 
-.txt-sig, .signature {
+.moz-txt-sig, .moz-signature {
   color: gray;
 }
-.txt-sig > a, .signature > a {
+.moz-txt-sig > a, .moz-signature > a {
   color: 7777FF /* light blue */;
 }

@@ -38,9 +38,6 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-//#define DEBUG_BenB
-//#define DEBUG_BenB_Perf
-
 #ifdef DEBUG_BenB_Perf
 #include "prtime.h"
 #include "prinrval.h"
@@ -50,7 +47,6 @@ const PRFloat64 growthRate = 1.2;
 
 // Escape Char will take ch, escape it and append the result to 
 // aStringToAppendTo
-
 void
 mozTXTToHTMLConv::EscapeChar(const PRUnichar ch, nsString& aStringToAppendTo)
 {
@@ -377,7 +373,7 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
   // Real work
   if (NS_SUCCEEDED(rv) && uri)
   {
-    outputHTML.AssignWithConversion("<a class=\"txt-link txt-link-");
+    outputHTML.AssignWithConversion("<a class=\"moz-txt-link-");
     switch(mode)
     {
     case RFC1738:
@@ -594,7 +590,7 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
     aOutString.AppendWithConversion(tagHTML);
     aOutString.AppendWithConversion(' ');
     aOutString.AppendWithConversion(attributeHTML);
-    aOutString.AppendWithConversion("><span class=txt-tag>");
+    aOutString.AppendWithConversion("><span class=\"moz-txt-tag\">");
     aOutString.AppendWithConversion(tagTXT);
     aOutString.AppendWithConversion("</span>");
     return PR_TRUE;
@@ -605,7 +601,7 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
        && ItMatchesDelimited(aInString, aInStringLength, tagTXT, aTagTXTLen, LT_ALPHA, LT_DELIMITER))
   {
     openTags--;
-    aOutString.AppendWithConversion("<span class=txt-tag>");
+    aOutString.AppendWithConversion("<span class=\"moz-txt-tag\">");
     aOutString.AppendWithConversion(tagTXT);
     aOutString.AppendWithConversion("</span></");
     aOutString.AppendWithConversion(tagHTML);
@@ -685,13 +681,13 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
       )
       &&
         (
-          SmilyHit(aInString, aInLength, col0, ":-)", 3, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ":)",  2, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ":-(", 3, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ":(",  2, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":(\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ";-)", 3, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";-)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ";)", 2, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ";-P", 3, "<img src=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+          SmilyHit(aInString, aInLength, col0, ":-)", 3, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ":)",  2, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ":-(", 3, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ":(",  2, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ";-)", 3, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ";)", 2, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ";-P", 3, "<img src=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
         )
     )
   {
@@ -711,13 +707,13 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
       )
       &&
         (
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-)", 3, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":)",  2, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-(", 3, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":(",  2, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":(\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ";-)", 3, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";-)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ";)", 2, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ";-P", 3, "<img src=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+          SmilyHit(aInString, aInLength, PR_FALSE, ":-)", 3, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ":)",  2, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ":-(", 3, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ":(",  2, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":(\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ";-)", 3, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";-)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ";)", 2, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";)\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ";-P", 3, "<img src=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" class=\"moz-txt-smily\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
         )
     )
   {
@@ -770,7 +766,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
 
     outputHTML.Truncate();
     outputHTML += text0;
-    outputHTML.AppendWithConversion("<sup class=txt-sup>");
+    outputHTML.AppendWithConversion("<sup class=\"moz-txt-sup\">");
 
     aOutputString.Append(outputHTML);
     aOutputString.Append(&aInString[2], delimPos - 2);
@@ -892,19 +888,6 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
   PRBool doURLs = whattodo & kURLs;
   PRBool doGlyphSubstitution = whattodo & kGlyphSubstitution;
   PRBool doStructPhrase = whattodo & kStructPhrase;
-  // DEBUG_BenB_Perf
-  //doURLs = PR_FALSE;
-  //doGlyphSubstitution = PR_FALSE;
-  //doStructPhrase = PR_FALSE;
-
-#ifdef DEBUG_BenB
-  {
-  printf("ScanTXT orginal: ");
-  nsCString tmp;
-  tmp.AssignWithConversion(aInString);
-  printf(tmp.ToNewCString());
-  }
-#endif
 
   MOZ_TIMER_START(mScanTXTTimer);
 
@@ -941,17 +924,8 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
       {
       case '*':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "*", 1, "strong", "class=txt-star",
+                 "*", 1, "b", "class=\"moz-txt-star\"",
                  aOutString, structPhrase_strong))
-        {
-          i++;
-          continue;
-        }
-        break;
-      case '_':
-        if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "_", 1, "span" /* <u> is deprecated */, "class=txt-underscore",
-                 aOutString, structPhrase_underline))
         {
           i++;
           continue;
@@ -959,8 +933,18 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
         break;
       case '/':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "/", 1, "em", "class=txt-slash",
+                 "/", 1, "i", "class=\"moz-txt-slash\"",
                  aOutString, structPhrase_italic))
+        {
+          i++;
+          continue;
+        }
+        break;
+      case '_':
+        if (StructPhraseHit(newOffset, newLength, i == 0,
+                 "_", 1, "span" /* <u> is deprecated */,
+                 "class=\"moz-txt-underscore\"",
+                 aOutString, structPhrase_underline))
         {
           i++;
           continue;
@@ -968,7 +952,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
         break;
       case '|':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "|", 1, "code", "class=txt-verticalline",
+                 "|", 1, "code", "class=\"moz-txt-verticalline\"",
                  aOutString, structPhrase_code))
         {
           i++;
@@ -1022,16 +1006,6 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
     }
   }
 
-#ifdef DEBUG_BenB
-  {
-  printf("ScanTXT result:  ");
-  nsCString tmp;
-  tmp.AssignWithConversion(aOutString);
-  printf(tmp.ToNewCString());
-  printf("\n");
-  }
-#endif
-
   MOZ_TIMER_STOP(mScanTXTTimer);
 }
 
@@ -1043,15 +1017,6 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
   PRInt32 lengthOfInString = aInString.Length();
   const PRUnichar * uniBuffer = aInString.GetUnicode();
 
-#ifdef DEBUG_BenB
-  {
-  printf("ScanHTML orginal: ");
-  nsCString tmp;
-  tmp.AssignWithConversion(aInString);
-  printf(tmp.ToNewCString());
-  printf("\n");
-  }
-#endif
 #ifdef DEBUG_BenB_Perf
   PRTime parsing_start = PR_IntervalNow();
 #endif
@@ -1098,15 +1063,6 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
     }
   }
 
-#ifdef DEBUG_BenB
-  {
-  printf("ScanHTML result:  ");
-  nsCString tmp;
-  tmp.AssignWithConversion(aOutString);
-  printf(tmp.ToNewCString());
-  printf("\n");
-  }
-#endif
 #ifdef DEBUG_BenB_Perf
   printf("ScanHTML time:    %d ms\n", PR_IntervalToMilliseconds(PR_IntervalNow() - parsing_start));
 #endif

@@ -168,7 +168,7 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
        /* 4.x' editor can't break <div>s (e.g. to interleave comments).
           We'll add the class to the <blockquote type=cite> later. */
   {
-    nsCAutoString openingDiv("<div class=\"text-flowed\"");
+    nsCAutoString openingDiv("<div class=\"moz-text-flowed\"");
     // We currently have to add formatting here. :-(
     if (!plainHTML && !fontstyle.IsEmpty())
     {
@@ -230,12 +230,12 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
   }
     
   if (exdata->isSig && !quoting) {
-    status = MimeObject_write(obj, "</div>", 6, PR_FALSE);      // txt-sig
+    status = MimeObject_write(obj, "</div>", 6, PR_FALSE); // .moz-txt-sig
     if (status<0) goto EarlyOut;
   }
   if (!quoting) // HACK (see above)
   {
-    status = MimeObject_write(obj, "</div>", 6, PR_FALSE);  // text-flowed
+    status = MimeObject_write(obj, "</div>", 6, PR_FALSE); // .moz-text-flowed
     if (status<0) goto EarlyOut;
   }
     
@@ -406,8 +406,8 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
         preface += "--&nbsp;<br>";
       } else {
         exdata->isSig = PR_TRUE;
-        preface +=
-         "<div class=\"txt-sig\"><span class=\"txt-tag\">--&nbsp;<br></span>";
+        preface += "<div class=\"moz-txt-sig\"><span class=\"moz-txt-tag\">"
+                   "--&nbsp;<br></span>";
       }
     } else {
       Line_convert_whitespace(lineResult, PR_FALSE /* Allow wraps */,
