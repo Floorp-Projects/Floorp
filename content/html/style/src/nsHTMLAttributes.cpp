@@ -1314,7 +1314,7 @@ nsHTMLAttributes::HasAttribute(nsIAtom* aAttrName, PRInt32 aNamespaceID) const
       mMapped->HasAttribute(aAttrName))
     return PR_TRUE;
 
-  return (PRBool)HTMLAttribute::FindHTMLAttribute(aAttrName, aNamespaceID, mFirstUnmapped);
+  return (PRBool)(HTMLAttribute::FindHTMLAttribute(aAttrName, aNamespaceID, mFirstUnmapped) != nsnull);
 }
 
 NS_IMETHODIMP

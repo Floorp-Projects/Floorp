@@ -557,7 +557,7 @@ NS_IMETHODIMP nsAccessible::GetAccKeyboardShortcut(nsAString& _retval)
 
 NS_IMETHODIMP nsAccessible::GetAccId(PRInt32 *aAccId)
 {
-  *aAccId = - NS_REINTERPRET_CAST(PRInt32, (mDOMNode.get()));
+  *aAccId = - NS_PTR_TO_INT32(mDOMNode.get());
   return NS_OK;
 }
 
