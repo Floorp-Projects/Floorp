@@ -81,6 +81,12 @@ class nsIMenu : public nsISupports {
 	NS_IMETHOD SetAccessKey(const nsString &aText) = 0;
 
 	/**
+    * Set the Menu enabled state
+    *
+    */
+	NS_IMETHOD SetEnabled(PRBool aIsEnabled) = 0;
+
+	/**
     * Adds a Menu Item
     *
     */

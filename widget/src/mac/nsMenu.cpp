@@ -20,6 +20,8 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIDocumentViewer.h"
+#include "nsIDocumentObserver.h"
 #include "nsIComponentManager.h"
 
 #include "nsMenu.h"
@@ -62,6 +64,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
+static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
+
 
 // CIDs
 #include "nsWidgetsCID.h"
@@ -92,7 +96,12 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void*) ((nsIMenuListener*)this);                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
-  }                                                     
+  }           
+  if (aIID.Equals(kIDocumentObserverIID)) {                                      
+    *aInstancePtr = (void*) ((nsIDocumentObserver*)this);                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                  
   return NS_NOINTERFACE;                                                 
 }
 
@@ -142,6 +151,22 @@ nsMenu::~nsMenu()
   OSErr		err;
   NS_IF_RELEASE(mListener);
 
+  	  nsCOMPtr<nsIContentViewer> cv;
+	  mWebShell->GetContentViewer(getter_AddRefs(cv));
+	  if (cv) {
+	   
+	    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+	    if (!docv)
+	      return;
+
+	    nsCOMPtr<nsIDocument> doc;
+	    docv->GetDocument(*getter_AddRefs(doc));
+	    if (!doc)
+	      return;
+
+	    doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
+	  }
+	  
   RemoveAll();
   
   err = ::DisposeUnicodeToTextRunInfo(&mUnicodeTextRunConverter);
@@ -839,6 +864,22 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 
 //-------------------------------------------------------------------------
 /**
+* Set enabled state
+*
+*/
+NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
+{
+  if(aIsEnabled)
+    ::EnableItem(mMacMenuHandle, 0);
+  else
+    ::DisableItem(mMacMenuHandle, 0);
+
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+/**
 * Set DOMNode
 *
 */
@@ -867,6 +908,29 @@ NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * aMenuElement)
 NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 {
     mWebShell = aWebShell;
+    
+    // add ourself as a document observer
+    
+	  nsCOMPtr<nsIContentViewer> cv;
+	  mWebShell->GetContentViewer(getter_AddRefs(cv));
+	  if (cv) {
+	   
+	    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+	    if (!docv)
+	      return NS_OK;
+
+	    nsCOMPtr<nsIDocument> doc;
+	    docv->GetDocument(*getter_AddRefs(doc));
+	    if (!doc)
+	      return NS_OK;
+
+        nsCOMPtr<nsIDocumentObserver> observer;
+        QueryInterface(kIDocumentObserverIID, getter_AddRefs(observer));
+        if(observer){
+	      doc->AddObserver(observer);
+	    }
+	  }
+	
 	return NS_OK;
 }
 //-------------------------------------------------------------------------
@@ -1202,4 +1266,211 @@ void nsMenu::LoadSubMenu(
 	// We're done with the menu
 	NS_RELEASE(pnsMenu);
   }     
+}///////////////////////////////////////////////////////////////
+// nsIDocumentObserver
+// this is needed for menubar changes
+///////////////////////////////////////////////////////////////
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::BeginUpdate(
+  nsIDocument * aDocument)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::EndUpdate(
+  nsIDocument * aDocument)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::BeginLoad(
+  nsIDocument * aDocument)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::EndLoad(
+  nsIDocument * aDocument)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::BeginReflow(
+  nsIDocument  * aDocument, 
+  nsIPresShell * aShell)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::EndReflow(
+  nsIDocument  * aDocument, 
+  nsIPresShell * aShell)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::ContentChanged(
+  nsIDocument * aDocument,
+  nsIContent  * aContent,
+  nsISupports * aSubContent)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::ContentStatesChanged(
+  nsIDocument * aDocument,
+  nsIContent  * aContent1,
+  nsIContent  * aContent2)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::AttributeChanged(
+  nsIDocument * aDocument,
+  nsIContent  * aContent,
+  nsIAtom     * aAttribute,
+  PRInt32       aHint)
+{
+  //printf("AttributeChanged\n");
+
+  nsCOMPtr<nsIAtom> openAtom = NS_NewAtom("open");
+  if(aAttribute != openAtom) {
+	    
+    nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+    if(!element) {
+      NS_ERROR("Unable to QI dom element.");
+	  return NS_OK;  
+	}
+		  
+    nsCOMPtr<nsIContent> contentNode;
+    contentNode = do_QueryInterface(element);
+    if (!contentNode) {
+      NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+	  return NS_OK;
+    }
+		  
+    if(aContent == contentNode){
+      nsCOMPtr<nsIAtom> disabledAtom = NS_NewAtom("disabled");
+      if(aAttribute == disabledAtom) {
+        nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
+        nsString valueString;
+        element->GetAttribute("disabled", valueString);
+        if(valueString == "true")
+          SetEnabled(PR_FALSE);
+        else
+          SetEnabled(PR_TRUE);
+      }
+      ::DrawMenuBar();
+    }
+  }
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::ContentAppended(
+  nsIDocument * aDocument,
+  nsIContent  * aContainer,
+  PRInt32       aNewIndexInContainer)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::ContentInserted(
+  nsIDocument * aDocument,
+  nsIContent  * aContainer,
+  nsIContent  * aChild,
+  PRInt32       aIndexInContainer)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::ContentReplaced(
+  nsIDocument * aDocument,
+  nsIContent  * aContainer,
+  nsIContent  * aOldChild,
+  nsIContent  * aNewChild,
+  PRInt32       aIndexInContainer)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::ContentRemoved(
+  nsIDocument * aDocument,
+  nsIContent  * aContainer,
+  nsIContent  * aChild,
+  PRInt32       aIndexInContainer)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::StyleSheetAdded(
+  nsIDocument   * aDocument,
+  nsIStyleSheet * aStyleSheet)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::StyleSheetRemoved(
+  nsIDocument   * aDocument,
+  nsIStyleSheet * aStyleSheet)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::StyleSheetDisabledStateChanged(
+  nsIDocument   * aDocument,
+  nsIStyleSheet * aStyleSheet,
+  PRBool          aDisabled)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::StyleRuleChanged(
+  nsIDocument   * aDocument,
+  nsIStyleSheet * aStyleSheet,
+  nsIStyleRule  * aStyleRule,
+  PRInt32         aHint)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::StyleRuleAdded(
+  nsIDocument   * aDocument,
+  nsIStyleSheet * aStyleSheet,
+  nsIStyleRule  * aStyleRule)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::StyleRuleRemoved(
+  nsIDocument   * aDocument,
+  nsIStyleSheet * aStyleSheet,
+  nsIStyleRule  * aStyleRule)
+{
+  return NS_OK;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMenu::DocumentWillBeDestroyed(
+  nsIDocument * aDocument)
+{
+  return NS_OK;
 }

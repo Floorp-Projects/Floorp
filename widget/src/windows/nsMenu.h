@@ -62,6 +62,7 @@ public:
   NS_IMETHOD SetLabel(const nsString &aText);
   NS_IMETHOD GetAccessKey(nsString &aText);
   NS_IMETHOD SetAccessKey(const nsString &aText);
+  NS_IMETHOD SetEnabled(PRBool aIsEnabled);
 
   NS_IMETHOD AddItem(nsISupports * aItem);
 
