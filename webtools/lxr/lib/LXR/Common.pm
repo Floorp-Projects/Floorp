@@ -1,12 +1,14 @@
-# $Id: Common.pm,v 1.10 1998/06/23 01:01:39 jwz Exp $
+# $Id: Common.pm,v 1.11 1998/07/28 19:17:30 jwz%netscape.com Exp $
 
 package LXR::Common;
 
 use DB_File;
+use lib '../..';
+use Local;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(&warning &fatal &abortall &fflush &urlargs 
+@EXPORT = qw($Path &warning &fatal &abortall &fflush &urlargs 
 	     &fileref &idref &htmlquote &freetextmarkup &markupfile
 	     &markspecials &htmlquote &freetextmarkup &markupstring
 	     &init &makeheader &makefooter &expandtemplate);
@@ -179,12 +181,16 @@ sub markupstring {
     $string=~ s/\0>/&gt;/g;
 
     # HTMLify email addresses and urls.
-    $string=~ s#((ftp|http)://\S*[^\s.])#<a href=\"$1\">$1</a>#g;
-    $string=~ s/(&lt;(.*@.*)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
+    $string =~ s#((ftp|http|nntp|snews|news)://(\w|\w\.\w|\-|\/|\#)+(?!\.\b))#<a href=\"$1\">$1</a>#g;
+    # htmlify certain addresses which aren't surrounded by <>
+    $string =~ s/([\w\-\_]*\@netscape.com)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
+    $string =~ s/([\w\-\_]*\@mozilla.org)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
+    $string =~ s/([\w\-\_]*\@gnome.org)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
+    $string =~ s/([\w\-\_]*\@linux.no)(?!&gt;)/<a href=\"mailto:$1\">$1<\/a>/g;
+    $string =~ s/(&lt;)(.*@.*)(&gt;)/$1<a href=\"mailto:$2\">$2<\/a>$3/g;
 
-    # HTMLify file names (assume file is in the current directory).
-    $string =~ s#([\w-_\/]+\.(c|h|cc|cp|cpp))#
-		 <a href=\"$Conf->{virtroot}/source$virtp$1\">$1</a>#g;
+    # HTMLify file names, assuming file is in the current directory.
+    $string =~ s#\b(([\w-_\/]+\.(c|h|cc|cp|cpp))|README)\b#<a href=\"$Conf->{virtroot}/source$virtp$1\">$1</a>#g;
 
     return($string);
 }
@@ -780,6 +786,5 @@ sub makefooter {
     			  ('variables',	\&varexpand)),
 	  "</html>\n");
 }
-
 
 1;
