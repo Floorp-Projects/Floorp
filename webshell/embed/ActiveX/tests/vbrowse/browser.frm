@@ -8,14 +8,114 @@ Begin VB.Form Form1
    ClientTop       =   345
    ClientWidth     =   7485
    LinkTopic       =   "Form1"
-   ScaleHeight     =   5880
-   ScaleWidth      =   7485
-   StartUpPosition =   3  'Windows Default
+   ScaleHeight     =   392
+   ScaleMode       =   3  'Pixel
+   ScaleWidth      =   499
+   Begin ComctlLib.Toolbar Toolbar1 
+      Align           =   1  'Align Top
+      Height          =   660
+      Left            =   0
+      TabIndex        =   0
+      Top             =   0
+      Width           =   7485
+      _ExtentX        =   13203
+      _ExtentY        =   1164
+      ButtonWidth     =   1032
+      ButtonHeight    =   1005
+      AllowCustomize  =   0   'False
+      Appearance      =   1
+      ImageList       =   "ImageList1"
+      _Version        =   327682
+      BeginProperty Buttons {0713E452-850A-101B-AFC0-4210102A8DA7} 
+         NumButtons      =   9
+         BeginProperty Button1 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Key             =   "goback"
+            Object.ToolTipText     =   "Go Back"
+            Object.Tag             =   ""
+            ImageIndex      =   1
+         EndProperty
+         BeginProperty Button2 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Key             =   "goforward"
+            Object.ToolTipText     =   "Go Forward"
+            Object.Tag             =   ""
+            ImageIndex      =   5
+         EndProperty
+         BeginProperty Button3 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Key             =   "reload"
+            Object.ToolTipText     =   "Reload Page"
+            Object.Tag             =   ""
+            ImageIndex      =   6
+         EndProperty
+         BeginProperty Button4 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Object.Tag             =   ""
+            Style           =   3
+            MixedState      =   -1  'True
+         EndProperty
+         BeginProperty Button5 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Key             =   "gohome"
+            Object.ToolTipText     =   "Go Home"
+            Object.Tag             =   ""
+            ImageIndex      =   3
+         EndProperty
+         BeginProperty Button6 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Enabled         =   0   'False
+            Key             =   "ph"
+            Object.Tag             =   ""
+            Style           =   4
+            Object.Width           =   220
+            MixedState      =   -1  'True
+         EndProperty
+         BeginProperty Button7 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Key             =   "loadpage"
+            Object.ToolTipText     =   "Load this URL"
+            Object.Tag             =   ""
+            ImageIndex      =   4
+         EndProperty
+         BeginProperty Button8 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Object.Tag             =   ""
+            Style           =   3
+            MixedState      =   -1  'True
+         EndProperty
+         BeginProperty Button9 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Key             =   "stop"
+            Object.ToolTipText     =   "Stop Loading"
+            Object.Tag             =   ""
+            ImageIndex      =   2
+         EndProperty
+      EndProperty
+      Begin VB.ComboBox cmbUrl 
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   12
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   420
+         ItemData        =   "browser.frx":0000
+         Left            =   2640
+         List            =   "browser.frx":0016
+         TabIndex        =   3
+         Text            =   "http://www.mozilla.com"
+         Top             =   120
+         Width           =   3015
+      End
+   End
+   Begin MOZILLACONTROLLibCtl.MozillaBrowser Browser1 
+      Height          =   4815
+      Left            =   0
+      OleObjectBlob   =   "browser.frx":00A4
+      TabIndex        =   2
+      Top             =   720
+      Width           =   6855
+   End
    Begin ComctlLib.StatusBar StatusBar1 
       Align           =   2  'Align Bottom
       Height          =   255
       Left            =   0
-      TabIndex        =   8
+      TabIndex        =   1
       Top             =   5625
       Width           =   7485
       _ExtentX        =   13203
@@ -23,91 +123,62 @@ Begin VB.Form Form1
       SimpleText      =   ""
       _Version        =   327682
       BeginProperty Panels {0713E89E-850A-101B-AFC0-4210102A8DA7} 
-         NumPanels       =   1
+         NumPanels       =   2
          BeginProperty Panel1 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
             AutoSize        =   1
-            Object.Width           =   12700
-            Text            =   ""
-            TextSave        =   ""
-            Key             =   ""
+            Object.Width           =   10557
+            MinWidth        =   2646
             Object.Tag             =   ""
-            Object.ToolTipText     =   ""
+         EndProperty
+         BeginProperty Panel2 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
+            Alignment       =   2
+            Object.Width           =   2117
+            MinWidth        =   2117
+            Object.Tag             =   ""
          EndProperty
       EndProperty
    End
-   Begin VB.CommandButton btnGo 
-      Caption         =   "Go"
-      Height          =   375
-      Left            =   5280
-      TabIndex        =   7
-      Top             =   120
-      Width           =   735
-   End
-   Begin VB.ComboBox cmbUrl 
-      Height          =   315
-      ItemData        =   "browser.frx":0000
-      Left            =   3120
-      List            =   "browser.frx":0016
-      TabIndex        =   6
-      Text            =   "http://www.mozilla.com"
-      Top             =   120
-      Width           =   2055
-   End
-   Begin MOZILLACONTROLLibCtl.MozillaBrowser Browser1 
-      Height          =   4815
-      Left            =   0
-      OleObjectBlob   =   "browser.frx":00A4
-      TabIndex        =   5
-      Top             =   600
-      Width           =   6975
-   End
-   Begin VB.CommandButton btnStop 
-      Caption         =   "Stop"
-      Height          =   375
-      Left            =   6120
-      TabIndex        =   4
-      Top             =   120
-      Width           =   735
-   End
-   Begin VB.CommandButton btnSearch 
-      Caption         =   "Search"
-      Height          =   375
-      Left            =   2280
-      TabIndex        =   3
-      Top             =   120
-      Width           =   735
-   End
-   Begin VB.CommandButton btnHome 
-      Caption         =   "Home"
-      Height          =   375
-      Left            =   1440
-      TabIndex        =   2
-      Top             =   120
-      Width           =   735
-   End
-   Begin VB.CommandButton btnForward 
-      Caption         =   ">>"
-      Height          =   375
-      Left            =   720
-      TabIndex        =   1
-      Top             =   120
-      Width           =   495
-   End
-   Begin VB.CommandButton btnBack 
-      Caption         =   "<<"
-      Height          =   375
-      Left            =   120
-      TabIndex        =   0
-      Top             =   120
-      Width           =   495
-   End
-   Begin VB.Shape Throbber1 
-      FillColor       =   &H0000FF00&
-      FillStyle       =   0  'Solid
-      Height          =   375
+   Begin ComctlLib.ImageList ImageList1 
       Left            =   6960
-      Top             =   120
-      Width           =   375
+      Top             =   360
+      _ExtentX        =   1005
+      _ExtentY        =   1005
+      BackColor       =   -2147483643
+      ImageWidth      =   32
+      ImageHeight     =   32
+      MaskColor       =   12632256
+      _Version        =   327682
+      BeginProperty Images {0713E8C2-850A-101B-AFC0-4210102A8DA7} 
+         NumListImages   =   7
+         BeginProperty ListImage1 {0713E8C3-850A-101B-AFC0-4210102A8DA7} 
+            Picture         =   "browser.frx":00C8
+            Key             =   "back"
+         EndProperty
+         BeginProperty ListImage2 {0713E8C3-850A-101B-AFC0-4210102A8DA7} 
+            Picture         =   "browser.frx":03E2
+            Key             =   "stop"
+         EndProperty
+         BeginProperty ListImage3 {0713E8C3-850A-101B-AFC0-4210102A8DA7} 
+            Picture         =   "browser.frx":06FC
+            Key             =   "home"
+         EndProperty
+         BeginProperty ListImage4 {0713E8C3-850A-101B-AFC0-4210102A8DA7} 
+            Picture         =   "browser.frx":0A16
+            Key             =   "gotopage"
+         EndProperty
+         BeginProperty ListImage5 {0713E8C3-850A-101B-AFC0-4210102A8DA7} 
+            Picture         =   "browser.frx":0D30
+            Key             =   "forward"
+         EndProperty
+         BeginProperty ListImage6 {0713E8C3-850A-101B-AFC0-4210102A8DA7} 
+            Picture         =   "browser.frx":104A
+            Key             =   "reload"
+         EndProperty
+         BeginProperty ListImage7 {0713E8C3-850A-101B-AFC0-4210102A8DA7} 
+            Picture         =   "browser.frx":1364
+            Key             =   "go"
+         EndProperty
+      EndProperty
    End
 End
 Attribute VB_Name = "Form1"
@@ -117,36 +188,26 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub Browser1_BeforeNavigate(ByVal URL As String, ByVal Flags As Long, ByVal TargetFrameName As String, PostData As Variant, ByVal Headers As String, Cancel As Boolean)
     StatusBar1.Panels(1).Text = "Loading " & URL
-    Throbber1.FillColor = &HFF&
+'    Throbber1.FillColor = &HFF&
 End Sub
 
 Private Sub Browser1_NavigateComplete(ByVal URL As String)
     StatusBar1.Panels(1).Text = "Loaded " & URL
-    Throbber1.FillColor = &HFF00&
+    StatusBar1.Panels(2).Text = ""
+'    Throbber1.FillColor = &HFF00&
 End Sub
 
-Private Sub btnBack_Click()
-    Browser1.GoBack
-End Sub
-
-Private Sub btnForward_Click()
-    Browser1.GoForward
-End Sub
-
-Private Sub btnGo_Click()
-    Browser1.Navigate cmbUrl.Text
-End Sub
-
-Private Sub btnHome_Click()
-    Browser1.GoHome
-End Sub
-
-Private Sub btnSearch_Click()
-    Browser1.GoSearch
-End Sub
-
-Private Sub btnStop_Click()
-    Browser1.Stop
+Private Sub Browser1_ProgressChange(ByVal Progress As Long, ByVal ProgressMax As Long)
+    Dim fProgress As Double
+    If Progress = 0 Then
+'        fProgress = 0
+    ElseIf ProgressMax > 0 Then
+'        fProgress = (Progress * 100) / ProgressMax
+    Else
+        ' fProgress = 0#
+        Debug.Print "Progress error - Progress = " & Progress & ", ProgressMax = " & ProgressMax
+    End If
+'    StatusBar1.Panels(2).Text = Int(fProgress) & "%"
 End Sub
 
 Private Sub txtURL_Change()
@@ -156,4 +217,24 @@ End Sub
 Private Sub Form_Resize()
     Browser1.Width = ScaleWidth
     Browser1.Height = ScaleHeight - Browser1.Top - StatusBar1.Height
+End Sub
+
+Private Sub Toolbar1_ButtonClick(ByVal Button As ComctlLib.Button)
+    Select Case Button.Key
+    Case "goback"
+        Browser1.GoBack
+    Case "goforward"
+        Browser1.GoForward
+    Case "reload"
+        Browser1.Refresh
+    Case "gohome"
+        Browser1.GoHome
+    Case "gosearch"
+        Browser1.GoSearch
+    Case "loadpage"
+        Browser1.Navigate cmbUrl.Text
+    Case "stop"
+        Browser1.Stop
+    Case Else
+    End Select
 End Sub
