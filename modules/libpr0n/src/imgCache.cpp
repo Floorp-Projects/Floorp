@@ -58,6 +58,16 @@ NS_IMETHODIMP imgCache::ClearCache(PRBool chrome)
     return imgCache::ClearImageCache();
 }
 
+
+/* void removeEntry(in nsIURI uri); */
+NS_IMETHODIMP imgCache::RemoveEntry(nsIURI *uri)
+{
+  if (imgCache::Remove(uri))
+    return NS_OK;
+
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 static nsCOMPtr<nsICacheSession> gSession = nsnull;
 static nsCOMPtr<nsICacheSession> gChromeSession = nsnull;
 
@@ -129,6 +139,8 @@ nsresult imgCache::ClearImageCache()
   return gSession->EvictEntries();
 }
 
+
+
 PRBool imgCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry)
 {
   LOG_STATIC_FUNC(gImgLog, "imgCache::Put");
@@ -197,9 +209,9 @@ PRBool imgCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescripto
 PRBool imgCache::Remove(nsIURI *aKey)
 {
   LOG_STATIC_FUNC(gImgLog, "imgCache::Remove");
+  if (!aKey) return PR_FALSE;
 
   nsresult rv;
-
   nsCOMPtr<nsICacheSession> ses;
   GetCacheSession(aKey, getter_AddRefs(ses));
   if (!ses) return PR_FALSE;
