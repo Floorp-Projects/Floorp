@@ -2900,11 +2900,20 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       RelativePositionFrames(pfd->mSpan, spanCombinedArea);
     }
 
+    // see bug 21415: we used to prevent empty inlines from impacting the
+    // size of the combined area, however that is wrong so now we allow
+    // empty inlines to contribute to the line's combined area.
+    // - the following comment is being preserved in case there are issues
+    //   with floaters, as is alluded to.
+#if 0
     // Only if the frame has some area do we let it affect the
     // combined area. Otherwise empty frames placed next to a floating
     // element will cause the floaters margin to be relevant, which we
     // don't want to happen.
     if (r->width && r->height) {
+#else
+    if(PR_TRUE) {
+#endif
       nscoord xl = x + r->x;
       nscoord xr = x + r->XMost();
       if (xl < minX) {
@@ -2923,7 +2932,6 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       }
       updatedCombinedArea = PR_TRUE;
     }
-
     pfd = pfd->mNext;
   }
 
