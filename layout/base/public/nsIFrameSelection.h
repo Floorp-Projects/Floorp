@@ -30,6 +30,7 @@
 #include "nsIFrame.h"
 #include "nsIFocusTracker.h"   
 #include "nsIDOMSelection.h"
+#include "nsIPresShell.h"
 
 // IID for the nsIFrameSelection interface
 #define NS_IFRAMESELECTION_IID      \

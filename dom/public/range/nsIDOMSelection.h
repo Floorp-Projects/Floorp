@@ -32,15 +32,6 @@ class nsIDOMRange;
  { 0xa6cf90e1, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-#ifndef SELECTIONTYPE
-enum SelectionType{SELECTION_NORMAL = 0, 
-                   SELECTION_SPELLCHECK, 
-                   SELECTION_IME_SOLID, 
-                   SELECTION_IME_DASHED, 
-                   NUM_SELECTIONTYPES};
-#define SELECTIONTYPE
-#endif
-
 class nsIDOMSelection : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMSELECTION_IID; return iid; }
