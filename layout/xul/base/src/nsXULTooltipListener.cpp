@@ -52,6 +52,9 @@
 #include "nsGUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIPresContext.h"
+#include "nsIScriptContext.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindowInternal.h"
 
 //////////////////////////////////////////////////////////////////////////
 //// nsISupports
@@ -63,7 +66,7 @@ nsXULTooltipListener::nsXULTooltipListener()
     mIsTargetOutliner(PR_FALSE), mNeedTitletip(PR_FALSE),
     mOutlinerBox(nsnull), mLastOutlinerRow(-1)
 {
-	 NS_INIT_REFCNT();	
+	 NS_INIT_REFCNT();
 }
 
 nsXULTooltipListener::~nsXULTooltipListener()
@@ -71,7 +74,7 @@ nsXULTooltipListener::~nsXULTooltipListener()
   HideTooltip();
 
   // unregister the prefs callback
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));  
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
     // register the callback so we get notified of updates
     prefs->UnregisterCallback("browser.chrome.toolbar_tips", (PrefChangedFunc)sTooltipPrefChanged, (void*)this);
@@ -335,6 +338,7 @@ nsXULTooltipListener::CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent)
     // determine if we are going to need a titletip
     // XXX check the disabletitletips attribute on the outliner content
     mNeedTitletip = PR_FALSE;
+#ifdef DEBUG_crap
     if (obj.Equals(NS_LITERAL_STRING("text"))) {
       nsCOMPtr<nsIOutlinerView> view;
       mOutlinerBox->GetView(getter_AddRefs(view));
@@ -346,9 +350,10 @@ nsXULTooltipListener::CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent)
         mNeedTitletip = isCropped;
       }
     }
-    
+#endif
 
-    if (row != mLastOutlinerRow || !mLastOutlinerCol.Equals(colId)) {
+    if (mCurrentTooltip && 
+        (row != mLastOutlinerRow || !mLastOutlinerCol.Equals(colId))) {
       HideTooltip();
     } 
 
@@ -505,7 +510,6 @@ nsXULTooltipListener::HideTooltip()
   }
 
   DestroyTooltip();
-
   return NS_OK;
 }
 
@@ -540,54 +544,65 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
   if (!targetEl)
     return NS_ERROR_FAILURE; // could be a text node or something
 
-  PRBool needTooltip;
-  targetEl->HasAttribute(NS_LITERAL_STRING("tooltiptext"), &needTooltip);
-  if (needTooltip) {
-    // specifying tooltiptext means we will always use the default tooltip
-     mRootBox->GetDefaultTooltip(aTooltip);
-     return NS_OK;
-  } else {
-    nsAutoString tooltipId;
-    targetEl->GetAttribute(NS_LITERAL_STRING("tooltip"), tooltipId);
+  // before we go on, make sure that target node still has a window
+  nsCOMPtr<nsIDocument> document;
+  if (NS_FAILED(aTarget->GetDocument(*getter_AddRefs(document))) || !document) {
+    NS_ERROR("Unable to retrieve the tooltip node document.");
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIScriptContext> context;
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  document->GetScriptGlobalObject(getter_AddRefs(global));
+  if (global) {
+    if (NS_SUCCEEDED(global->GetContext(getter_AddRefs(context))) && context) {
+      nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(global);
+      if (!domWindow)
+        return NS_ERROR_FAILURE;
+      else {
+        PRBool needTooltip;
+        targetEl->HasAttribute(NS_LITERAL_STRING("tooltiptext"), &needTooltip);
+        if (needTooltip) {
+          // specifying tooltiptext means we will always use the default tooltip
+           mRootBox->GetDefaultTooltip(aTooltip);
+           return NS_OK;
+        } else {
+          nsAutoString tooltipId;
+          targetEl->GetAttribute(NS_LITERAL_STRING("tooltip"), tooltipId);
 
-    // if tooltip == _child, look for first <tooltip> child
-    if (tooltipId.Equals(NS_LITERAL_STRING("_child"))) {
-      GetImmediateChild(aTarget, nsXULAtoms::tooltip, aTooltip); // this addrefs
-    } else {
-      if (!tooltipId.IsEmpty()) {
-        // tooltip must be an id, use getElementById to find it
-        nsresult rv;
-        nsCOMPtr<nsIDocument> document;
-        if (NS_FAILED(rv = aTarget->GetDocument(*getter_AddRefs(document)))) {
-          NS_ERROR("Unable to retrieve the tooltip node document.");
-          return rv;
+          // if tooltip == _child, look for first <tooltip> child
+          if (tooltipId.Equals(NS_LITERAL_STRING("_child"))) {
+            GetImmediateChild(aTarget, nsXULAtoms::tooltip, aTooltip); // this addrefs
+          } else {
+            if (!tooltipId.IsEmpty()) {
+              // tooltip must be an id, use getElementById to find it
+              nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
+              if (!xulDocument) {
+                NS_ERROR("tooltip attached to an element that isn't in XUL!");
+                return NS_ERROR_FAILURE;
+              }
+
+              nsCOMPtr<nsIDOMElement> tooltipEl;
+              xulDocument->GetElementById(tooltipId, getter_AddRefs(tooltipEl));
+
+              if (tooltipEl) {
+                mNeedTitletip = PR_FALSE;
+
+                nsCOMPtr<nsIContent> tooltipContent(do_QueryInterface(tooltipEl));
+                *aTooltip = tooltipContent;
+
+                return NS_OK;
+              }
+            }
+          }
         }
 
-        nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
-        if (!xulDocument) {
-          NS_ERROR("tooltip attached to an element that isn't in XUL!");
-          return NS_ERROR_FAILURE;
-        }
-
-        nsCOMPtr<nsIDOMElement> tooltipEl;
-        xulDocument->GetElementById(tooltipId, getter_AddRefs(tooltipEl));
-
-        if (tooltipEl) {
-          mNeedTitletip = PR_FALSE;
-
-          nsCOMPtr<nsIContent> tooltipContent(do_QueryInterface(tooltipEl));
-          *aTooltip = tooltipContent;
-
+        // titletips should just use the default tooltip
+        if (mIsTargetOutliner && mNeedTitletip) {
+          mRootBox->GetDefaultTooltip(aTooltip);
           return NS_OK;
         }
       }
     }
-  }
-
-  // titletips should just use the default tooltip
-  if (mIsTargetOutliner && mNeedTitletip) {
-    mRootBox->GetDefaultTooltip(aTooltip);
-    return NS_OK;
   }
 
   return NS_OK;
@@ -616,14 +631,14 @@ nsXULTooltipListener::DestroyTooltip()
     nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(mCurrentTooltip));
     evtTarget->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), (nsIDOMMouseListener*)this, PR_FALSE);
 
-    // kill any ongoing timers
-    KillTooltipTimer();
-    if (mAutoHideTimer) {
-      mAutoHideTimer->Cancel();
-      mAutoHideTimer = nsnull;
-    }
-
     mCurrentTooltip = nsnull;
+  }
+  
+  // kill any ongoing timers
+  KillTooltipTimer();
+  if (mAutoHideTimer) {
+    mAutoHideTimer->Cancel();
+    mAutoHideTimer = nsnull;
   }
 
   return NS_OK;
