@@ -482,12 +482,10 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       // created. Do so. We currently leave the collapse widget for all dialogs.
       ::ChangeWindowAttributes(mWindowPtr, 0L, kWindowCloseBoxAttribute );
     }
-    else if ( mWindowType == eWindowType_toplevel || mWindowType == eWindowType_invisible ) {
+    else if ( mWindowType == eWindowType_toplevel ) {
       // enable toolbar collapse/expand box 
       WindowAttributes removeAttributes = kWindowNoAttributes;
-      if ( mWindowType == eWindowType_invisible )
-        removeAttributes |= kWindowInWindowMenuAttribute;     
-      ::ChangeWindowAttributes(mWindowPtr, kWindowToolbarButtonAttribute, removeAttributes );
+      ::ChangeWindowAttributes(mWindowPtr, kWindowToolbarButtonAttribute, kWindowNoAttributes );
       
       EventTypeSpec scrollEventList[] = { {kEventClassMouse, kEventMouseWheelMoved} };
       OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(ScrollEventHandler), 1, scrollEventList, this, NULL );
@@ -496,15 +494,24 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       
       NS_ASSERTION(err == noErr, "Couldn't install Carbon Event handlers");
     }
+    else if ( mWindowType == eWindowType_invisible ) {
+      // for an invisible window (like the hidden window), remove it from the
+      // window menu and make sure the position-constrain handler is in place so
+      // the window server doesn't try to move it back on screen.
+      ::ChangeWindowAttributes(mWindowPtr, kWindowNoAttributes, kWindowInWindowMenuAttribute );
+      
+      EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowConstrain} };
+      OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 1, windEventList, this, NULL );
+    
+      NS_ASSERTION(err == noErr, "Couldn't install Carbon constrain event handler");    
+    }
     
     // Setup the live window resizing if appropriate
     if ( resizable ) {
       ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, kWindowNoAttributes );
     
-      EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowBoundsChanged},
-                                          {kEventClassWindow, kEventWindowConstrain} };
-      OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
-    
+      EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowBoundsChanged} };
+      OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 1, windEventList, this, NULL );    
       NS_ASSERTION(err == noErr, "Couldn't install Carbon resize event handler");
     }  
 #endif
