@@ -314,6 +314,8 @@ CERT_FindUserCertByUsage(CERTCertDBHandle *handle,
 	certList = CERT_CreateSubjectCertList(certList, handle, 
 					&cert->derSubject, time, validOnly);
 
+	cert_UserCertsOnly(certList);
+
 	/* drop the extra reference */
 	CERT_DestroyCertificate(cert);
 	cert = NULL;
