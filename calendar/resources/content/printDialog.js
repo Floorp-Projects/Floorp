@@ -65,11 +65,9 @@
 **********
 */
 
-
 /*-----------------------------------------------------------------
-*   W I N D O W      V A R I A B L E S
-*/
-
+ *   W I N D O W      V A R I A B L E S
+ */
 
 var selectedEvents; // selected events send by opener
 var selectedDate; // current selected date sent by opener
@@ -82,61 +80,60 @@ var gArgs;
 var gPrintSettings = null;
 
 /*-----------------------------------------------------------------
-*   W I N D O W      F U N C T I O N S
-*/
+ *   W I N D O W      F U N C T I O N S
+ */
 
-/**
-*   Called when the dialog is loaded.
-*/
-
+/*-----------------------------------------------------------------
+ *   Called when the dialog is loaded.
+ */
 
 function loadCalendarPrintDialog()
 {
+  // load up the sent arguments.
 
-   // load up the sent arguments.
+  gArgs = window.arguments[0];
+  gStartDate = gArgs.selectedDate ;
+  gSelectedEvents = gArgs.selectedEvents ;
+  // set the date to the currently selected date
+  document.getElementById( "start-date-picker" ).value = selectedDate;
 
-   gArgs = window.arguments[0];
-   gStartDate = gArgs.selectedDate ;
-   gSelectedEvents = gArgs.selectedEvents ;
+  // start focus on title
+  var firstFocus = document.getElementById( "title-field" );
+  firstFocus.focus();
 
-   // set the date to the currently selected date
-   document.getElementById( "start-date-picker" ).value = selectedDate;
-
-   // start focus on title
-   var firstFocus = document.getElementById( "title-field" );
-   firstFocus.focus();
-
-   opener.setCursor( "default" );
+  opener.setCursor( "default" );
 }
 
 
 function printCalendar() {
   var caltype=document.getElementById("view-field");
-  if (caltype.value == '') caltype.value='month';
+  if (caltype.value == '')
+    caltype.value='month';
 
   var printFunction;
-  var  printFunctionArg = gStartDate ;
+  var printFunctionArg = gStartDate ;
 
-  switch(caltype.value ) {
-  case 'month' :
-    printFunction = "printMonthView" ;
-    break ;
-  case 'list' :
-    printFunction = "printEventArray" ;
-    printFunctionArg = gSelectedEvents ;
-    break ;
-  case 'day' :
-    printFunction = "printDayView" ;
-    break ;
-  case 'week' :
-    printFunction = "printWeekView" ;
-    break ;
-  case 'multiweek' :
-    printFunction = "printMultiWeekView" ;
-    break ;
-  default :
-    alert("Error : no case in printDialog.js::printCalendar()");
-    return false ;
+  switch( caltype.value )
+  {
+    case 'month' :
+      printFunction = "printMonthView" ;
+      break ;
+    case 'list' :
+      printFunction = "printEventArray" ;
+      printFunctionArg = gSelectedEvents ;
+      break ;
+    case 'day' :
+      printFunction = "printDayView" ;
+      break ;
+    case 'week' :
+      printFunction = "printWeekView" ;
+      break ;
+    case 'multiweek' :
+      printFunction = "printMultiWeekView" ;
+      break ;
+    default :
+      alert("Error : no case in printDialog.js::printCalendar()");
+      return false ;
   }
   printInitWindow(printFunction,printFunctionArg)
   return true ;
@@ -156,147 +153,132 @@ function printInitWindow(printFunction,printFunctionArg)
   return printwindow ;
 }
 
-/**
-*   Called when a datepicker is finished, and a date was picked.
-*/
+/*-----------------------------------------------------------------
+ *   Called when a datepicker is finished, and a date was picked.
+ */
 
 function onDatePick( datepicker )
 {
-   var ThisDate = new Date( datepicker.value);
+  var ThisDate = new Date( datepicker.value);
 
-   if( datepicker.id == "start-date-picker" )
-   {
-      gStartDate.setMonth( ThisDate.getMonth() );
-      gStartDate.setDate( ThisDate.getDate() );
-      gStartDate.setFullYear( ThisDate.getFullYear() );
-   }
+  if( datepicker.id == "start-date-picker" )
+  {
+    gStartDate.setMonth( ThisDate.getMonth() );
+    gStartDate.setDate( ThisDate.getDate() );
+    gStartDate.setFullYear( ThisDate.getFullYear() );
+  }
 
 }
 
-
-
-/**
-*   Helper function for filling the form, set the value of a property of a XUL element
-*
-* PARAMETERS
-*      elementId     - ID of XUL element to set 
-*      newValue      - value to set property to ( if undefined no change is made )
-*      propertyName  - OPTIONAL name of property to set, default is "value", use "checked" for 
-*                               radios & checkboxes, "data" for drop-downs
-*/
+/*-----------------------------------------------------------------
+ *   Helper function for filling the form, set the value of a property of a XUL element
+ *
+ * PARAMETERS
+ *      elementId     - ID of XUL element to set 
+ *      newValue      - value to set property to ( if undefined no change is made )
+ *      propertyName  - OPTIONAL name of property to set, default is "value", use "checked" for 
+ *                               radios & checkboxes, "data" for drop-downs
+ */
 
 function setFieldValue( elementId, newValue, propertyName  )
 {
-   var undefined;
-   
-   if( newValue !== undefined )
-   {
-      var field = document.getElementById( elementId );
-      
-      if( newValue === false )
+  var undefined;
+
+  if( newValue !== undefined )
+  {
+    var field = document.getElementById( elementId );
+
+    if( newValue === false )
+    {
+      field.removeAttribute( propertyName );
+    } else {
+      if( propertyName )
       {
-         field.removeAttribute( propertyName );
+        field.setAttribute( propertyName, newValue );
+      } else {
+        field.value = newValue;
       }
-      else
-      {
-         if( propertyName )
-         {
-            field.setAttribute( propertyName, newValue );
-         }
-         else
-         {
-            field.value = newValue;
-         }
-      }
-   }
+    }
+  }
 }
 
-
-/**
-*   Helper function for getting data from the form, 
-*   Get the value of a property of a XUL element
-*
-* PARAMETERS
-*      elementId     - ID of XUL element to get from 
-*      propertyName  - OPTIONAL name of property to set, default is "value", use "checked" for 
-*                               radios & checkboxes, "data" for drop-downs
-*   RETURN
-*      newValue      - value of property
-*/
+/*-----------------------------------------------------------------
+ *   Helper function for getting data from the form, 
+ *   Get the value of a property of a XUL element
+ *
+ * PARAMETERS
+ *      elementId     - ID of XUL element to get from 
+ *      propertyName  - OPTIONAL name of property to set, default is "value", use "checked" for 
+ *                               radios & checkboxes, "data" for drop-downs
+ *   RETURN
+ *      newValue      - value of property
+ */
 
 function getFieldValue( elementId, propertyName )
 {
-   var field = document.getElementById( elementId );
-   
-   if( propertyName )
-   {
-      return field[ propertyName ];
-   }
-   else
-   {
-      return field.value;
-   }
+  var field = document.getElementById( elementId );
+
+  if( propertyName )
+  {
+    return field[ propertyName ];
+  } else {
+    return field.value;
+  }
 }
 
-/**
-*   Helper function for getting a date/time from the form.
-*   The element must have been set up with  setDateFieldValue or setTimeFieldValue.
-*
-* PARAMETERS
-*      elementId     - ID of XUL element to get from 
-* RETURN
-*      newValue      - Date value of element
-*/
-
+/*-----------------------------------------------------------------
+ *   Helper function for getting a date/time from the form.
+ *   The element must have been set up with  setDateFieldValue or setTimeFieldValue.
+ *
+ * PARAMETERS
+ *      elementId     - ID of XUL element to get from 
+ * RETURN
+ *      newValue      - Date value of element
+ */
 
 function getDateTimeFieldValue( elementId )
 {
-   var field = document.getElementById( elementId );
-   return field.editDate;
+  var field = document.getElementById( elementId );
+  return field.editDate;
 }
 
-
-
-/**
-*   Helper function for filling the form, set the value of a date field
-*
-* PARAMETERS
-*      elementId     - ID of time textbox to set 
-*      newDate       - Date Object to use
-*/
+/*-----------------------------------------------------------------
+ *   Helper function for filling the form, set the value of a date field
+ *
+ * PARAMETERS
+ *      elementId     - ID of time textbox to set 
+ *      newDate       - Date Object to use
+ */
 
 function setDateFieldValue( elementId, newDate  )
 {
-   // set the value to a formatted date string 
-   
-   var field = document.getElementById( elementId );
-   field.value = formatDate( newDate );
-   
-   // add an editDate property to the item to hold the Date object 
-   // used in onDatePick to update the date from the date picker.
-   // used in getDateTimeFieldValue to get the Date back out.
-   
-   // we clone the date object so changes made in place do not propagte 
-   
-   field.editDate = new Date( newDate );
+  // set the value to a formatted date string 
+
+  var field = document.getElementById( elementId );
+  field.value = formatDate( newDate );
+
+  // add an editDate property to the item to hold the Date object 
+  // used in onDatePick to update the date from the date picker.
+  // used in getDateTimeFieldValue to get the Date back out.
+
+  // we clone the date object so changes made in place do not propagte 
+
+  field.editDate = new Date( newDate );
 }
 
-
-
-/**
-*   Take a Date object and return a displayable date string i.e.: May 5, 1959
-*  :TODO: This should be moved into DateFormater and made to use some kind of
-*         locale or user date format preference.
-*/
+/*-----------------------------------------------------------------
+ *   Take a Date object and return a displayable date string i.e.: May 5, 1959
+ *  :TODO: This should be moved into DateFormater and made to use some kind of
+ *         locale or user date format preference.
+ */
 
 function formatDate( date )
 {
-   return( opener.gCalendarWindow.dateFormater.getFormatedDate( date ) );
+  return( opener.gCalendarWindow.dateFormater.getFormatedDate( date ) );
 }
 
-
+//Needed?
 function debug( Text )
 {
-   dump( "\nprintDialog.js:"+ Text + "\n");
-
+  dump( "\nprintDialog.js:"+ Text + "\n");
 }
