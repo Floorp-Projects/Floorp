@@ -39,7 +39,7 @@ nsDeviceContextPS :: nsDeviceContextPS()
 
   NS_INIT_REFCNT();
   mSpec = nsnull; 
-
+  mParentDeviceContext = nsnull;
 }
 
 /** ---------------------------------------------------
@@ -59,6 +59,7 @@ PRInt32 i, n;
   }
   mFontMetrics.Clear();
   NS_IF_RELEASE(mSpec);
+  NS_IF_RELEASE(mParentDeviceContext);
 
 }
 
@@ -79,7 +80,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsDeviceContextPS,
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP
-nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext)
+nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aParentContext)
 {
 float origscale, newscale;
 float t2d, a2d;
@@ -90,15 +91,18 @@ float t2d, a2d;
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   GetTwipsToDevUnits(newscale);
-  aPrinterContext->GetTwipsToDevUnits(origscale);
+  aParentContext->GetTwipsToDevUnits(origscale);
   mCPixelScale = newscale / origscale;
 
-  aPrinterContext->GetTwipsToDevUnits(t2d);
-  aPrinterContext->GetAppUnitsToDevUnits(a2d);
+  aParentContext->GetTwipsToDevUnits(t2d);
+  aParentContext->GetAppUnitsToDevUnits(a2d);
 
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
 
+  mParentDeviceContext = aParentContext;
+  NS_ASSERTION(mParentDeviceContext, "aCreatingDeviceContext cannot be NULL!!!");
+  NS_ADDREF(mParentDeviceContext);
   return  NS_OK;
 }
 
@@ -231,15 +235,10 @@ NS_IMETHODIMP nsDeviceContextPS :: CheckFontExistence(const nsString& aFontName)
 
 NS_IMETHODIMP nsDeviceContextPS :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
 {
-
-  switch (anID) {
-    case 0:
-      break;
-    default:
-      break;
+  if (mParentDeviceContext != nsnull) {
+    return mParentDeviceContext->GetSystemAttribute(anID, aInfo);
   }
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 /** ---------------------------------------------------
