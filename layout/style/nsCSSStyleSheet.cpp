@@ -2741,8 +2741,8 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                       }
                     }
 
-                    nsCOMPtr<nsIURI> linkURI;
-                    (void) NS_NewURI(getter_AddRefs(linkURI), href, baseURI, CSSStyleSheetInner::gIOService);
+                    nsAutoString linkURI;
+                    (void) NS_MakeAbsoluteURI(linkURI, href, baseURI, CSSStyleSheetInner::gIOService);
 
                     linkHandler->GetLinkState(linkURI, linkState);
                   }

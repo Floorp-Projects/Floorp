@@ -258,7 +258,7 @@ public:
   NS_IMETHOD OnOverLink(nsIContent* aContent,
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec);
-  NS_IMETHOD GetLinkState(nsIURI* aLinkURI, nsLinkState& aState);
+  NS_IMETHOD GetLinkState(const nsString& aLinkURI, nsLinkState& aState);
 
   // nsIProgressEventSink
   NS_DECL_NSIPROGRESSEVENTSINK
@@ -1409,12 +1409,8 @@ nsWebShell::OnOverLink(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsWebShell::GetLinkState(nsIURI* aLinkURI, nsLinkState& aState)
+nsWebShell::GetLinkState(const nsString& aLinkURI, nsLinkState& aState)
 {
-  NS_PRECONDITION(aLinkURI != nsnull, "null ptr");
-  if (! aLinkURI)
-    return NS_ERROR_NULL_POINTER;
-
   aState = eLinkState_Unvisited;
 
   nsresult rv;
@@ -1422,11 +1418,11 @@ nsWebShell::GetLinkState(nsIURI* aLinkURI, nsLinkState& aState)
   EnsureGlobalHistory();
 
   if (mGlobalHistory) {
-    nsXPIDLCString url;
-    aLinkURI->GetSpec(getter_Copies(url));
+    nsCAutoString url;
+    url.AssignWithConversion(aLinkURI.GetUnicode());
 
     PRInt64 lastVisitDate;
-    rv = mGlobalHistory->GetLastVisitDate(url, &lastVisitDate);
+    rv = mGlobalHistory->GetLastVisitDate(url.GetBuffer(), &lastVisitDate);
     if (NS_FAILED(rv)) return rv;
 
     // a last-visit-date of zero means we've never seen it before; so
