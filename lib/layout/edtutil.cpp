@@ -5898,22 +5898,20 @@ EDT_SyncEditHistory(MWContext * pMWContext)
     }
 
     History_entry * pEntry = SHIST_GetCurrent(&(pMWContext->hist));
-	if(pEntry )
+
+    // Must have an address
+    if( !pEntry || !pEntry->address || !*pEntry->address )
+        return;
+
+    // Test for new document URL: file://Untitled and ignore it
+    if( !XP_STRCMP(XP_GetString(XP_EDIT_NEW_DOC_NAME), pEntry->address) ||
+        !XP_STRCMP(XP_GetString(XP_EDIT_NEW_DOC_URL), pEntry->address))
     {
-        // Must have an address
-        if( !pEntry->address || !*pEntry->address )
-            return;
+        return;
+    }
 
-        // Test for new document URL: file://Untitled and ignore it
-        if( !XP_STRCMP(XP_GetString(XP_EDIT_NEW_DOC_NAME), pEntry->address) ||
-            !XP_STRCMP(XP_GetString(XP_EDIT_NEW_DOC_URL), pEntry->address))
-        {
-            return;
-        }
-
-        if( pEntry->title && *pEntry->title ){
-            pTitle = pEntry->title;
-        }
+    if( pEntry->title && *pEntry->title ){
+        pTitle = pEntry->title;
     }
 
     /*
