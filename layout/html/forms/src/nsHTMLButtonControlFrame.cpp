@@ -508,7 +508,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
                                nsReflowStatus& aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsHTMLButtonControlFrame", aReflowState.reason);
-  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);

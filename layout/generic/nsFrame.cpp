@@ -4202,18 +4202,19 @@ nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
 // Start Display Reflow
 #ifdef DEBUG
 
-DR_cookie::DR_cookie(nsIFrame*                aFrame, 
+DR_cookie::DR_cookie(nsIPresContext*          aPresContext,
+                     nsIFrame*                aFrame, 
                      const nsHTMLReflowState& aReflowState,
                      nsHTMLReflowMetrics&     aMetrics,
                      nsReflowStatus&          aStatus)
-  :mFrame(aFrame), mReflowState(aReflowState), mMetrics(aMetrics), mStatus(aStatus)
+  :mPresContext(aPresContext), mFrame(aFrame), mReflowState(aReflowState), mMetrics(aMetrics), mStatus(aStatus)
 {
-  mValue = nsFrame::DisplayReflowEnter(mFrame, mReflowState);
+  mValue = nsFrame::DisplayReflowEnter(aPresContext, mFrame, mReflowState);
 }
 
 DR_cookie::~DR_cookie()
 {
-  nsFrame::DisplayReflowExit(mFrame, mMetrics, mStatus, mValue);
+  nsFrame::DisplayReflowExit(mPresContext, mFrame, mMetrics, mStatus, mValue);
 }
 
 struct DR_FrameTypeInfo;
@@ -4259,6 +4260,7 @@ struct DR_State
   PRInt32     mIndentStart;
   PRBool      mIndentUndisplayedFrames;
   nsVoidArray mFrameTypeTable;
+  PRBool      mDisplayPixelErrors;
 
   // reflow specific state
   nsVoidArray mFrameTreeLeaves;
@@ -4341,7 +4343,8 @@ struct DR_FrameTreeNode
 // DR_State implementation
 
 DR_State::DR_State() 
-: mInited(PR_FALSE), mActive(PR_FALSE), mCount(0), mAssert(-1), mIndentStart(0), mIndentUndisplayedFrames(PR_FALSE)
+: mInited(PR_FALSE), mActive(PR_FALSE), mCount(0), mAssert(-1), mIndentStart(0), 
+  mIndentUndisplayedFrames(PR_FALSE), mDisplayPixelErrors(PR_FALSE)
 {}
 
 void DR_State::Init() 
@@ -4370,6 +4373,15 @@ void DR_State::Init()
     else 
       printf("GECKO_DISPLAY_REFLOW_INDENT_UNDISPLAYED_FRAMES - invalid value = %s", env);
   }
+
+  env = PR_GetEnv("GECKO_DISPLAY_REFLOW_FLAG_PIXEL_ERRORS");
+  if (env) {
+    if (GetNumber(env, num)) 
+      mDisplayPixelErrors = num;
+    else 
+      printf("GECKO_DISPLAY_REFLOW_FLAG_PIXEL_ERRORS - invalid value = %s", env);
+  }
+
   InitFrameTypeTable();
   ParseRulesFile();
   mInited = PR_TRUE;
@@ -4711,7 +4723,19 @@ void DR_State::DeleteTreeNode(DR_FrameTreeNode& aNode)
   delete &aNode;
 }
 
-void* nsFrame::DisplayReflowEnter(nsIFrame*                aFrame,
+static void
+CheckPixelError(nscoord aSize,
+                float   aPixelToTwips)
+{
+  if (NS_UNCONSTRAINEDSIZE != aSize) {
+    if ((aSize % NSToCoordRound(aPixelToTwips)) > 0) {
+      printf("VALUE %d is not a whole pixel \n", aSize);
+    }
+  }
+}
+
+void* nsFrame::DisplayReflowEnter(nsIPresContext*          aPresContext,
+                                  nsIFrame*                aFrame,
                                   const nsHTMLReflowState& aReflowState)
 {
   if (!DR_state.mInited) DR_state.Init();
@@ -4743,11 +4767,20 @@ void* nsFrame::DisplayReflowEnter(nsIFrame*                aFrame,
       printf("nif=%p ", inFlow);
     }
     printf("cnt=%d \n", DR_state.mCount);
+    if (DR_state.mDisplayPixelErrors) {
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(&p2t);
+      CheckPixelError(aReflowState.availableWidth, p2t);
+      CheckPixelError(aReflowState.availableHeight, p2t);
+      CheckPixelError(aReflowState.mComputedWidth, p2t);
+      CheckPixelError(aReflowState.mComputedHeight, p2t);
+    }
   }
   return treeNode;
 }
 
-void nsFrame::DisplayReflowExit(nsIFrame*            aFrame,
+void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
+                                nsIFrame*            aFrame,
                                 nsHTMLReflowMetrics& aMetrics,
                                 nsReflowStatus       aStatus,
                                 void*                aFrameTreeNode)
@@ -4779,6 +4812,16 @@ void nsFrame::DisplayReflowExit(nsIFrame*            aFrame,
       printf("status=%d", aStatus);
     }
     printf("\n");
+    if (DR_state.mDisplayPixelErrors) {
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(&p2t);
+      CheckPixelError(aMetrics.width, p2t);
+      CheckPixelError(aMetrics.height, p2t);
+      if (aMetrics.maxElementSize) 
+        CheckPixelError(aMetrics.maxElementSize->width, p2t);
+      if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) 
+        CheckPixelError(aMetrics.mMaximumWidth, p2t);
+    }
   }
   DR_state.DeleteTreeNode(*treeNode);
 }

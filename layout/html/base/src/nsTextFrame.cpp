@@ -4945,7 +4945,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
                     nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTextFrame", aReflowState.reason);
-  DISPLAY_REFLOW(this, aReflowState, aMetrics, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
 #ifdef NOISY_REFLOW
   ListTag(stdout);
   printf(": BeginReflow: availableSize=%d,%d\n",

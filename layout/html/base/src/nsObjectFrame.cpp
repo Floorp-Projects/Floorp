@@ -910,7 +910,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
                       nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsObjectFrame", aReflowState.reason);
-  DISPLAY_REFLOW(this, aReflowState, aMetrics, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
   nsresult rv = NS_OK;
 
   // Get our desired size

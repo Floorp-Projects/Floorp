@@ -435,9 +435,11 @@ public:
   nsresult MakeFrameName(const nsAString& aKind, nsAString& aResult) const;
 
   // Display Reflow Debugging 
-  static void* DisplayReflowEnter(nsIFrame*                aFrame,
+  static void* DisplayReflowEnter(nsIPresContext*          aPresContext,
+                                  nsIFrame*                aFrame,
                                   const nsHTMLReflowState& aReflowState);
-  static void  DisplayReflowExit(nsIFrame*            aFrame,
+  static void  DisplayReflowExit(nsIPresContext*      aPresContext,
+                                 nsIFrame*            aFrame,
                                  nsHTMLReflowMetrics& aMetrics,
                                  PRUint32             aStatus,
                                  void*                aFrameTreeNode);
@@ -495,16 +497,18 @@ protected:
   NS_IMETHOD_(nsrefcnt) Release(void);
 };
 
-// Start Display Reflow Debuggin
+// Start Display Reflow Debugging
 #ifdef DEBUG
 
   struct DR_cookie {
-    DR_cookie(nsIFrame*                aFrame, 
-              const nsHTMLReflowState& mReflowState,
+    DR_cookie(nsIPresContext*          aPresContext,
+              nsIFrame*                aFrame, 
+              const nsHTMLReflowState& aReflowState,
               nsHTMLReflowMetrics&     aMetrics,
               nsReflowStatus&          aStatus);     
     ~DR_cookie();
 
+    nsIPresContext*          mPresContext;
     nsIFrame*                mFrame;
     const nsHTMLReflowState& mReflowState;
     nsHTMLReflowMetrics&     mMetrics;
@@ -512,12 +516,12 @@ protected:
     void*                    mValue;
   };
   
-#define DISPLAY_REFLOW(dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) \
-  DR_cookie dr_cookie(dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status); 
+#define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) \
+  DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status); 
 
 #else
 
-#define DISPLAY_REFLOW(dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) 
+#define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) 
   
 #endif
 // End Display Reflow Debugging

@@ -332,7 +332,7 @@ NS_IMETHODIMP nsIsIndexFrame::Reflow(nsIPresContext*          aPresContext,
                                          nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsIsIndexFrame", aReflowState.reason);
-  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   // The Areaframe takes care of all our reflow 
   // (except for when style is used to change its size?)

@@ -113,7 +113,7 @@ nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   if (eReflowReason_Initial == aReflowState.reason)
     nsFormControlFrame::RegUnRegAccessKey(aPresContext,
                                      NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
