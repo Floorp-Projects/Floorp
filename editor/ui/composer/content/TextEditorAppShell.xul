@@ -20,6 +20,7 @@
    - Rights Reserved.
    - 
    - Contributor(s): 
+   -   Ryan Cassin (kidteckco@hotmail.com)
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?> 
@@ -34,6 +35,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="TextEditorOnLoad()"
         onunload="EditorShutdown()"
+        title="Plaintext Editor"
         titlemodifier="&textEditorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
         windowtype="composer:text"
@@ -105,9 +107,9 @@
 <toolbox id="EditorToolbox">
    <!-- toolbar filled out from editorOverlay -->
   <toolbar id="EditToolbar" chromeclass="toolbar" class="standard" persist="collapsed">
-      <titledbutton id="newButton"/>
-      <titledbutton id="openButton"/>
-      <titledbutton id="saveButton"/>
+      <button id="newButton"/>
+      <button id="openButton"/>
+      <button id="saveButton"/>
       <toolbarseparator/>
       <titledbutton id="printButton"/>
       <titledbutton id="findButton"/>
