@@ -121,6 +121,7 @@ protected:
     PRLock *mregLock;
     HREG    mReg;   // Handle to registry we're affiliated with.
     RKEY    mKey;   // Base key being enumerated.
+    char    mName[MAXREGPATHLEN]; // The name of the current key which is in mNext
     REGENUM mEnum;  // Corresponding libreg "enumerator".
     REGENUM mNext;  // Lookahead value.
     uint32  mStyle; // Style (indicates all or some);
@@ -156,17 +157,18 @@ struct nsRegistryNode : public nsIRegistryNode {
     // This class implements the nsIRegistryNode interface functions.
     NS_IMETHOD GetName( char **result );
 
+    // Get the key associated with this node
+    NS_IMETHOD GetKey( nsIRegistry::Key *r_key );
+
     // ctor
-    nsRegistryNode( HREG hReg, RKEY key, REGENUM slot );
+    nsRegistryNode( HREG hReg, char *name, RKEY childKey );
     virtual ~nsRegistryNode();
     
 protected:
     HREG    mReg;  // Handle to registry this node is part of.
     PRLock *mregLock;
-    RKEY    mKey;  // Key this node is under.
-    REGENUM mEnum; // Copy of corresponding content of parent enumerator.
     char    mName[MAXREGPATHLEN]; // Buffer to hold name.
-    REGERR mErr; // XXX This causes this class to be NON THREAD SAFE
+    RKEY    mChildKey;	// Key corresponding to mName
 }; // nsRegistryNode
 
 
@@ -1037,8 +1039,11 @@ NS_IMETHODIMP nsRegistry::Pack() {
 ------------------------------------------------------------------------------*/
 nsRegSubtreeEnumerator::nsRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all )
     : mReg( hReg ), mKey( rKey ), mEnum( 0 ), mNext( 0 ),
-      mStyle( all ? REGENUM_DESCEND : 0 ), mDone( PR_FALSE ) {
+      mStyle( all ? REGENUM_DESCEND : REGENUM_CHILDREN ), mDone( PR_FALSE ) {
     NS_INIT_REFCNT();
+
+    mName[0] = '\0';
+
     // Create a registry lock
     mregLock = PR_NewLock();
     return;
@@ -1061,6 +1066,8 @@ nsRegSubtreeEnumerator::First() {
     nsresult rv = NS_OK;
     // Reset "done" flag.
     mDone = PR_FALSE;
+    // Clear Name
+    mName[0] = '\0';
     // Go to beginning.
     mEnum = mNext = 0;
     // Lookahead so mDone flag gets set for empty list.
@@ -1098,10 +1105,8 @@ nsRegSubtreeEnumerator::Next() {
 ------------------------------------------------------------------------------*/
 NS_IMETHODIMP nsRegSubtreeEnumerator::advance() {
     REGERR err = REGERR_OK;
-    char name[MAXREGPATHLEN];
-    uint32 len = sizeof name;
     PR_Lock(mregLock);
-    err = NR_RegEnumSubkeys( mReg, mKey, &mNext, name, len, mStyle );
+    err = NR_RegEnumSubkeys( mReg, mKey, &mNext, mName, sizeof mName, mStyle );
     // See if we ran off end.
     if( err == REGERR_NOMORE ) {
         // Remember we've run off end.
@@ -1123,7 +1128,7 @@ nsRegSubtreeEnumerator::CurrentItem( nsISupports **result) {
     nsresult rv = NS_OK;
     // Make sure there is a place to put the result.
     if( result ) {
-        *result = new nsRegistryNode( mReg, mKey, mEnum );
+        *result = new nsRegistryNode( mReg, mName, (RKEY) mNext );
         if( *result ) {
             (*result)->AddRef();
         } else {
@@ -1203,9 +1208,12 @@ NS_IMETHODIMP nsRegValueEnumerator::advance() {
 | the other data members.  We defer the libreg calls till we're asked for      |
 | our name.  We use mErr==-1 to indicate we haven't fetched the name yet.      |
 ------------------------------------------------------------------------------*/
-nsRegistryNode::nsRegistryNode( HREG hReg, RKEY key, REGENUM slot )
-    : mReg( hReg ), mKey( key ), mEnum( slot ), mErr ( -1 ) {
+nsRegistryNode::nsRegistryNode( HREG hReg, char *name, RKEY childKey )
+    : mReg( hReg ), mChildKey( childKey ) {
     NS_INIT_REFCNT();
+
+    PR_ASSERT(name != NULL);
+    strcpy(mName, name);
 
     mregLock = PR_NewLock();
     
@@ -1224,38 +1232,24 @@ nsRegistryNode::~nsRegistryNode()
 | using NR_RegEnumSubkeys.                                                     |
 ------------------------------------------------------------------------------*/
 NS_IMETHODIMP nsRegistryNode::GetName( char **result ) {
-    nsresult rv = NS_OK;
+    if (result == NULL) return NS_ERROR_NULL_POINTER;
     // Make sure there is a place to put the result.
-    if( result ) {
-        // Test whether we haven't tried to get it yet.
-        if( mErr == -1 ) {
-            REGENUM temp = mEnum;
-            // Get name.
-            PR_Lock(mregLock);
-            mErr = NR_RegEnumSubkeys( mReg, mKey, &temp, mName, sizeof mName, PR_FALSE );
-            // Convert result from prior libreg call.
-            rv = regerr2nsresult( mErr );            
-            PR_Unlock(mregLock);
-        }
-        else {
-          // Convert result from prior libreg call.
-          rv = regerr2nsresult( mErr );
-        }
-        if( rv == NS_OK || rv == NS_ERROR_REG_NO_MORE ) {
-            // worked, return actual result.
-            *result = PR_strdup( mName );
-            if ( *result ) {
-                rv = NS_OK;
-            } else {
-                rv = NS_ERROR_OUT_OF_MEMORY;
-            }
-        }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
+    *result = PR_strdup( mName );
+    if ( !*result ) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
 }
 
+/*-------------------------- nsRegistryNode::GetKey ----------------------------
+| Get the subkey corresponding to this node                                    |						
+| using NR_RegEnumSubkeys.                                                     |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistryNode::GetKey( nsIRegistry::Key *r_key ) {
+    nsresult rv = NS_OK;
+    if (r_key == NULL) return NS_ERROR_NULL_POINTER;
+    *r_key = mChildKey;
+    return rv;
+}
+    
 
 
 /*--------------------- nsRegistryValue::nsRegistryValue -----------------------
