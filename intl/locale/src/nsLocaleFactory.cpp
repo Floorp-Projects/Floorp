@@ -23,13 +23,14 @@
 #include "nsLocale.h"
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
+#include <ctype.h>  // for isalpha, tolower & isspace
+
 #ifdef XP_PC
 #include <windows.h>
 #endif
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <locale.h>
 #include <stdlib.h>
-#include <ctype.h>  // for isalpha, tolower & isspace
 #endif
 
 #define NSILOCALE_MAX_ACCEPT_LANGUAGE	16
