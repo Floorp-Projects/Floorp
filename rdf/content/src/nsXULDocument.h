@@ -141,6 +141,9 @@ public:
 
     NS_IMETHOD SetDocumentCharacterSet(const nsString& aCharSetID);
 
+    NS_IMETHOD AddCharSetObserver(nsIObserver* aObserver);
+    NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver);
+
     NS_IMETHOD GetLineBreaker(nsILineBreaker** aResult) ;
     NS_IMETHOD SetLineBreaker(nsILineBreaker* aLineBreaker) ;
     NS_IMETHOD GetWordBreaker(nsIWordBreaker** aResult) ;
@@ -554,6 +557,7 @@ protected:
     void*                      mScriptObject;       // ????
     nsXULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
     nsString                   mCharSetID;
+    nsVoidArray                mCharSetObservers;
     nsVoidArray                mStyleSheets;
     nsCOMPtr<nsIDOMSelection>  mSelection;          // [OWNER]
     PRInt8                     mDisplaySelection;

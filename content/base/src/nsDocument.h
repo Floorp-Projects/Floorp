@@ -195,6 +195,16 @@ public:
   NS_IMETHOD SetDocumentCharacterSet(const nsString& aCharSetID);
 
   /**
+   * Add an observer that gets notified whenever the charset changes.
+   */
+  NS_IMETHOD AddCharSetObserver(nsIObserver* aObserver);
+
+  /**
+   * Remove a charset observer.
+   */
+  NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver);
+
+  /**
    * Return the Line Breaker for the document
    */
   NS_IMETHOD GetLineBreaker(nsILineBreaker** aResult)  ;
@@ -475,6 +485,7 @@ protected:
   nsIPrincipal* mPrincipal;
   nsWeakPtr mDocumentLoadGroup;
   nsString mCharacterSet;
+  nsVoidArray mCharSetObservers;
   nsIDocument* mParentDocument;
   nsVoidArray mSubDocuments;
   nsVoidArray mPresShells;

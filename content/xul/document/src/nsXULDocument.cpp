@@ -80,6 +80,7 @@
 #include "nsIInputStream.h"
 #include "nsILoadGroup.h"
 #include "nsINameSpace.h"
+#include "nsIObserver.h"
 #include "nsIParser.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -849,8 +850,34 @@ nsXULDocument::GetDocumentCharacterSet(nsString& oCharSetID)
 NS_IMETHODIMP
 nsXULDocument::SetDocumentCharacterSet(const nsString& aCharSetID)
 {
+  if (mCharSetID != aCharSetID) {
     mCharSetID = aCharSetID;
-    return NS_OK;
+    nsAutoString charSetTopic;
+    charSetTopic.AssignWithConversion("charset");
+    PRInt32 n = mCharSetObservers.Count();
+    for (PRInt32 i = 0; i < n; i++) {
+      nsIObserver* observer = (nsIObserver*) mCharSetObservers.ElementAt(i);
+      observer->Observe((nsIDocument*) this, charSetTopic.GetUnicode(),
+                        aCharSetID.GetUnicode());
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::AddCharSetObserver(nsIObserver* aObserver)
+{
+  NS_ENSURE_ARG_POINTER(aObserver);
+  NS_ENSURE_TRUE(mCharSetObservers.AppendElement(aObserver), NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::RemoveCharSetObserver(nsIObserver* aObserver)
+{
+  NS_ENSURE_ARG_POINTER(aObserver);
+  NS_ENSURE_TRUE(mCharSetObservers.RemoveElement(aObserver), NS_ERROR_FAILURE);
+  return NS_OK;
 }
 
 

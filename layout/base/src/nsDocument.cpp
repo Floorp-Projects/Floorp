@@ -44,6 +44,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIEventStateManager.h"
 #include "nsContentList.h"
+#include "nsIObserver.h"
 
 #include "nsIDOMEventListener.h"
 #include "nsIDOMFormListener.h"
@@ -1022,7 +1023,31 @@ NS_IMETHODIMP nsDocument::GetDocumentCharacterSet(nsString& oCharSetID)
 
 NS_IMETHODIMP nsDocument::SetDocumentCharacterSet(const nsString& aCharSetID)
 {
-  mCharacterSet = aCharSetID;
+  if (mCharacterSet != aCharSetID) {
+    mCharacterSet = aCharSetID;
+    nsAutoString charSetTopic;
+    charSetTopic.AssignWithConversion("charset");
+    PRInt32 n = mCharSetObservers.Count();
+    for (PRInt32 i = 0; i < n; i++) {
+      nsIObserver* observer = (nsIObserver*) mCharSetObservers.ElementAt(i);
+      observer->Observe((nsIDocument*) this, charSetTopic.GetUnicode(),
+                        aCharSetID.GetUnicode());
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocument::AddCharSetObserver(nsIObserver* aObserver)
+{
+  NS_ENSURE_ARG_POINTER(aObserver);
+  NS_ENSURE_TRUE(mCharSetObservers.AppendElement(aObserver), NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocument::RemoveCharSetObserver(nsIObserver* aObserver)
+{
+  NS_ENSURE_ARG_POINTER(aObserver);
+  NS_ENSURE_TRUE(mCharSetObservers.RemoveElement(aObserver), NS_ERROR_FAILURE);
   return NS_OK;
 }
 
