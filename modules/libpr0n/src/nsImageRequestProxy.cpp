@@ -40,7 +40,7 @@
 
 #include "nspr.h"
 
-NS_IMPL_ISUPPORTS3(nsImageRequestProxy, nsIImageRequest, nsIImageDecoderObserver, nsIImageContainerObserver)
+NS_IMPL_ISUPPORTS3(nsImageRequestProxy, lpIImageRequest, nsIImageDecoderObserver, nsIImageContainerObserver)
 
 nsImageRequestProxy::nsImageRequestProxy()
 {
@@ -60,7 +60,7 @@ nsresult nsImageRequestProxy::Init(nsImageRequest *request, nsIImageDecoderObser
 {
   PR_ASSERT(request);
 
-  mOwner = NS_STATIC_CAST(nsIImageRequest*, request);
+  mOwner = NS_STATIC_CAST(lpIImageRequest*, request);
 
   mObserver = aObserver;
   // XXX we should save off the thread we are getting called on here so that we can proxy all calls to mDecoder to it.
@@ -106,8 +106,8 @@ NS_IMETHODIMP nsImageRequestProxy::FrameChanged(nsIImageContainer *container, ns
 
 /** nsIImageDecoderObserver methods **/
 
-/* void onStartDecode (in nsIImageRequest request, in nsISupports cx); */
-NS_IMETHODIMP nsImageRequestProxy::OnStartDecode(nsIImageRequest *request, nsISupports *cx)
+/* void onStartDecode (in lpIImageRequest request, in nsISupports cx); */
+NS_IMETHODIMP nsImageRequestProxy::OnStartDecode(lpIImageRequest *request, nsISupports *cx)
 {
   if (mObserver)
     mObserver->OnStartDecode(this, mContext);
@@ -115,8 +115,8 @@ NS_IMETHODIMP nsImageRequestProxy::OnStartDecode(nsIImageRequest *request, nsISu
   return NS_OK;
 }
 
-/* void onStartContainer (in nsIImageRequest request, in nsISupports cx, in nsIImageContainer image); */
-NS_IMETHODIMP nsImageRequestProxy::OnStartContainer(nsIImageRequest *request, nsISupports *cx, nsIImageContainer *image)
+/* void onStartContainer (in lpIImageRequest request, in nsISupports cx, in nsIImageContainer image); */
+NS_IMETHODIMP nsImageRequestProxy::OnStartContainer(lpIImageRequest *request, nsISupports *cx, nsIImageContainer *image)
 {
   if (mObserver)
     mObserver->OnStartContainer(this, mContext, image);
@@ -124,8 +124,8 @@ NS_IMETHODIMP nsImageRequestProxy::OnStartContainer(nsIImageRequest *request, ns
   return NS_OK;
 }
 
-/* void onStartFrame (in nsIImageRequest request, in nsISupports cx, in nsIImageFrame frame); */
-NS_IMETHODIMP nsImageRequestProxy::OnStartFrame(nsIImageRequest *request, nsISupports *cx, nsIImageFrame *frame)
+/* void onStartFrame (in lpIImageRequest request, in nsISupports cx, in nsIImageFrame frame); */
+NS_IMETHODIMP nsImageRequestProxy::OnStartFrame(lpIImageRequest *request, nsISupports *cx, nsIImageFrame *frame)
 {
   if (mObserver)
     mObserver->OnStartFrame(this, mContext, frame);
@@ -133,8 +133,8 @@ NS_IMETHODIMP nsImageRequestProxy::OnStartFrame(nsIImageRequest *request, nsISup
   return NS_OK;
 }
 
-/* [noscript] void onDataAvailable (in nsIImageRequest request, in nsISupports cx, in nsIImageFrame frame, [const] in nsRect rect); */
-NS_IMETHODIMP nsImageRequestProxy::OnDataAvailable(nsIImageRequest *request, nsISupports *cx, nsIImageFrame *frame, const nsRect * rect)
+/* [noscript] void onDataAvailable (in lpIImageRequest request, in nsISupports cx, in nsIImageFrame frame, [const] in nsRect rect); */
+NS_IMETHODIMP nsImageRequestProxy::OnDataAvailable(lpIImageRequest *request, nsISupports *cx, nsIImageFrame *frame, const nsRect * rect)
 {
   if (mObserver)
     mObserver->OnDataAvailable(this, mContext, frame, rect);
@@ -142,8 +142,8 @@ NS_IMETHODIMP nsImageRequestProxy::OnDataAvailable(nsIImageRequest *request, nsI
   return NS_OK;
 }
 
-/* void onStopFrame (in nsIImageRequest request, in nsISupports cx, in nsIImageFrame frame); */
-NS_IMETHODIMP nsImageRequestProxy::OnStopFrame(nsIImageRequest *request, nsISupports *cx, nsIImageFrame *frame)
+/* void onStopFrame (in lpIImageRequest request, in nsISupports cx, in nsIImageFrame frame); */
+NS_IMETHODIMP nsImageRequestProxy::OnStopFrame(lpIImageRequest *request, nsISupports *cx, nsIImageFrame *frame)
 {
   if (mObserver)
     mObserver->OnStopFrame(this, mContext, frame);
@@ -151,8 +151,8 @@ NS_IMETHODIMP nsImageRequestProxy::OnStopFrame(nsIImageRequest *request, nsISupp
   return NS_OK;
 }
 
-/* void onStopContainer (in nsIImageRequest request, in nsISupports cx, in nsIImageContainer image); */
-NS_IMETHODIMP nsImageRequestProxy::OnStopContainer(nsIImageRequest *request, nsISupports *cx, nsIImageContainer *image)
+/* void onStopContainer (in lpIImageRequest request, in nsISupports cx, in nsIImageContainer image); */
+NS_IMETHODIMP nsImageRequestProxy::OnStopContainer(lpIImageRequest *request, nsISupports *cx, nsIImageContainer *image)
 {
   if (mObserver)
     mObserver->OnStopContainer(this, mContext, image);
@@ -160,8 +160,8 @@ NS_IMETHODIMP nsImageRequestProxy::OnStopContainer(nsIImageRequest *request, nsI
   return NS_OK;
 }
 
-/* void onStopDecode (in nsIImageRequest request, in nsISupports cx, in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP nsImageRequestProxy::OnStopDecode(nsIImageRequest *request, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
+/* void onStopDecode (in lpIImageRequest request, in nsISupports cx, in nsresult status, in wstring statusArg); */
+NS_IMETHODIMP nsImageRequestProxy::OnStopDecode(lpIImageRequest *request, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
 {
   if (mObserver)
     mObserver->OnStopDecode(this, mContext, status, statusArg);

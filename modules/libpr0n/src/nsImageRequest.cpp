@@ -38,12 +38,12 @@
 #include "ImageCache.h"
 
 
-NS_IMPL_ISUPPORTS5(nsImageRequest, nsIImageRequest, 
+NS_IMPL_ISUPPORTS5(nsImageRequest, lpIImageRequest, 
                    nsIImageDecoderObserver, nsIImageContainerObserver,
                    nsIStreamListener, nsIStreamObserver)
 
 nsImageRequest::nsImageRequest() : 
-  mObservers(0), mProcessing(PR_TRUE), mStatus(nsIImageRequest::STATUS_NONE), mState(0)
+  mObservers(0), mProcessing(PR_TRUE), mStatus(lpIImageRequest::STATUS_NONE), mState(0)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -101,7 +101,7 @@ nsresult nsImageRequest::RemoveObserver(nsIImageDecoderObserver *observer, nsres
 
 
 
-/** nsIImageRequest methods **/
+/** lpIImageRequest methods **/
 
 
 /* void cancel (in nsresult status); */
@@ -152,8 +152,8 @@ NS_IMETHODIMP nsImageRequest::FrameChanged(nsIImageContainer *container, nsISupp
 
 /** nsIImageDecoderObserver methods **/
 
-/* void onStartDecode (in nsIImageRequest request, in nsISupports cx); */
-NS_IMETHODIMP nsImageRequest::OnStartDecode(nsIImageRequest *request, nsISupports *cx)
+/* void onStartDecode (in lpIImageRequest request, in nsISupports cx); */
+NS_IMETHODIMP nsImageRequest::OnStartDecode(lpIImageRequest *request, nsISupports *cx)
 {
   mState |= onStartDecode;
 
@@ -168,12 +168,12 @@ NS_IMETHODIMP nsImageRequest::OnStartDecode(nsIImageRequest *request, nsISupport
   return NS_OK;
 }
 
-/* void onStartContainer (in nsIImageRequest request, in nsISupports cx, in nsIImageContainer image); */
-NS_IMETHODIMP nsImageRequest::OnStartContainer(nsIImageRequest *request, nsISupports *cx, nsIImageContainer *image)
+/* void onStartContainer (in lpIImageRequest request, in nsISupports cx, in nsIImageContainer image); */
+NS_IMETHODIMP nsImageRequest::OnStartContainer(lpIImageRequest *request, nsISupports *cx, nsIImageContainer *image)
 {
   mState |= onStartContainer;
 
-  mStatus |= nsIImageRequest::STATUS_SIZE_AVAILABLE;
+  mStatus |= lpIImageRequest::STATUS_SIZE_AVAILABLE;
 
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -186,8 +186,8 @@ NS_IMETHODIMP nsImageRequest::OnStartContainer(nsIImageRequest *request, nsISupp
   return NS_OK;
 }
 
-/* void onStartFrame (in nsIImageRequest request, in nsISupports cx, in nsIImageFrame frame); */
-NS_IMETHODIMP nsImageRequest::OnStartFrame(nsIImageRequest *request, nsISupports *cx, nsIImageFrame *frame)
+/* void onStartFrame (in lpIImageRequest request, in nsISupports cx, in nsIImageFrame frame); */
+NS_IMETHODIMP nsImageRequest::OnStartFrame(lpIImageRequest *request, nsISupports *cx, nsIImageFrame *frame)
 {
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -200,8 +200,8 @@ NS_IMETHODIMP nsImageRequest::OnStartFrame(nsIImageRequest *request, nsISupports
   return NS_OK;
 }
 
-/* [noscript] void onDataAvailable (in nsIImageRequest request, in nsISupports cx, in nsIImageFrame frame, [const] in nsRect rect); */
-NS_IMETHODIMP nsImageRequest::OnDataAvailable(nsIImageRequest *request, nsISupports *cx, nsIImageFrame *frame, const nsRect * rect)
+/* [noscript] void onDataAvailable (in lpIImageRequest request, in nsISupports cx, in nsIImageFrame frame, [const] in nsRect rect); */
+NS_IMETHODIMP nsImageRequest::OnDataAvailable(lpIImageRequest *request, nsISupports *cx, nsIImageFrame *frame, const nsRect * rect)
 {
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -214,8 +214,8 @@ NS_IMETHODIMP nsImageRequest::OnDataAvailable(nsIImageRequest *request, nsISuppo
   return NS_OK;
 }
 
-/* void onStopFrame (in nsIImageRequest request, in nsISupports cx, in nsIImageFrame frame); */
-NS_IMETHODIMP nsImageRequest::OnStopFrame(nsIImageRequest *request, nsISupports *cx, nsIImageFrame *frame)
+/* void onStopFrame (in lpIImageRequest request, in nsISupports cx, in nsIImageFrame frame); */
+NS_IMETHODIMP nsImageRequest::OnStopFrame(lpIImageRequest *request, nsISupports *cx, nsIImageFrame *frame)
 {
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -228,8 +228,8 @@ NS_IMETHODIMP nsImageRequest::OnStopFrame(nsIImageRequest *request, nsISupports 
   return NS_OK;
 }
 
-/* void onStopContainer (in nsIImageRequest request, in nsISupports cx, in nsIImageContainer image); */
-NS_IMETHODIMP nsImageRequest::OnStopContainer(nsIImageRequest *request, nsISupports *cx, nsIImageContainer *image)
+/* void onStopContainer (in lpIImageRequest request, in nsISupports cx, in nsIImageContainer image); */
+NS_IMETHODIMP nsImageRequest::OnStopContainer(lpIImageRequest *request, nsISupports *cx, nsIImageContainer *image)
 {
   mState |= onStopContainer;
 
@@ -245,13 +245,13 @@ NS_IMETHODIMP nsImageRequest::OnStopContainer(nsIImageRequest *request, nsISuppo
   return NS_OK;
 }
 
-/* void onStopDecode (in nsIImageRequest request, in nsISupports cx, in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP nsImageRequest::OnStopDecode(nsIImageRequest *request, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
+/* void onStopDecode (in lpIImageRequest request, in nsISupports cx, in nsresult status, in wstring statusArg); */
+NS_IMETHODIMP nsImageRequest::OnStopDecode(lpIImageRequest *request, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
 {
   mState |= onStopDecode;
 
   if (NS_FAILED(status))
-    mStatus = nsIImageRequest::STATUS_ERROR;
+    mStatus = lpIImageRequest::STATUS_ERROR;
 
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -294,7 +294,7 @@ NS_IMETHODIMP nsImageRequest::OnStartRequest(nsIChannel *channel, nsISupports *c
     return NS_ERROR_FAILURE;
   }
 
-  mDecoder->Init(NS_STATIC_CAST(nsIImageRequest*, this));
+  mDecoder->Init(NS_STATIC_CAST(lpIImageRequest*, this));
   return NS_OK;
 }
 
