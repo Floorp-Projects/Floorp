@@ -74,10 +74,9 @@
       <!-- ============================================================== -->
       <!--                        HTML Attributes                         -->
       <!-- ============================================================== -->
-      <vbox flex="1">
+      <vbox>
         <tree id="HTMLATree" 
           class="AttributesTree inset" 
-          flex="1"
           onselect="onSelectHTMLTreeItem();"
           onclick="onSelectHTMLTreeItem();"
           ondblclick="editHTMLAttributeValue(event.target);">
@@ -94,7 +93,7 @@
           </treehead>
           <treechildren id="HTMLAList" flex="1"/>
         </tree>
-        <hbox align="center" flex="1">
+        <hbox align="center">
           <label value="&editAttribute.label;"/>
           <spacer flex="1"/>
           <button label="&removeAttribute.label;" oncommand="RemoveHTMLAttribute();"/>
@@ -108,26 +107,31 @@
               <label control="AddHTMLAttributeNameInput" value="&AttName.label;"/>
               <label control="AddHTMLAttributeValueInput" value="&AttValue.label;"/>
             </row>
-            <row align="center" equalsize="always">
+            <row align="top" equalsize="always">
               <!-- Lists are built at runtime -->
               <menulist id="AddHTMLAttributeNameInput" editable="true" flex="1"
                         oninput="onInputHTMLAttributeName();"
                         onchange="onChangeHTMLAttribute();"/>
-              <deck id="AddHTMLAttributeValueDeck" flex="1" selectedIndex="0">
-                <textbox id="AddHTMLAttributeValueTextbox" flex="1"
-                         oninput="onInputHTMLAttributeValue();"/>
-                <menulist id="AddHTMLAttributeValueMenulist" editable="true" flex="1"
-                          oninput="onInputHTMLAttributeValue();"/>
+              <deck id="AddHTMLAttributeValueDeck" selectedIndex="0">
+                <hbox align="top">
+                  <textbox id="AddHTMLAttributeValueTextbox" flex="1"
+                           oninput="onInputHTMLAttributeValue();"/>
+                </hbox>
+                <hbox align="top">
+                  <menulist id="AddHTMLAttributeValueMenulist" editable="true" flex="1"
+                            oninput="onInputHTMLAttributeValue();"/>
+                </hbox>
               </deck>
             </row>
           </rows>
         </grid>
+        <spacer class="spacer" flex="1"/>
       </vbox>
       <!-- ============================================================== -->
       <!--                         CSS Attributes                         -->
       <!-- ============================================================== -->
-      <vbox flex="1">
-        <tree id="CSSATree" class="AttributesTree inset" flex="1"
+      <vbox>
+        <tree id="CSSATree" class="AttributesTree inset"
           onselect="onSelectCSSTreeItem();"
           onclick="onSelectCSSTreeItem();"
           ondblclick="editCSSAttributeValue(event.target);">
@@ -144,7 +148,7 @@
           </treehead>
           <treechildren id="CSSAList" flex="1"/>
         </tree>
-        <hbox align="center" flex="1">
+        <hbox align="center">
           <label value="&editAttribute.label;"/>
           <spacer flex="1"/>
           <button label="&removeAttribute.label;" oncommand="RemoveCSSAttribute();"/>
@@ -158,7 +162,7 @@
               <label value="&PropertyName.label;"/>
               <label value="&AttValue.label;"/>
             </row>
-            <row equalsize="always">
+            <row align="top" equalsize="always">
               <textbox id="AddCSSAttributeNameInput" flex="1"
                 oninput="onInputCSSAttributeName();"
                 onchange="onChangeCSSAttribute();"/>
@@ -167,12 +171,13 @@
             </row>
           </rows>
         </grid>
+        <spacer class="spacer" flex="1"/>
       </vbox>
       <!-- ============================================================== -->
       <!--                    JavaScript Event Handlers                   -->
       <!-- ============================================================== -->
-      <vbox flex="1">
-        <tree id="JSEATree" class="AttributesTree inset" flex="1"
+      <vbox>
+        <tree id="JSEATree" class="AttributesTree inset"
           onselect="onSelectJSETreeItem();"
           onclick="onSelectJSETreeItem();"
           ondblclick="editJSEAttributeValue(event.target);">
@@ -189,7 +194,7 @@
           </treehead>
           <treechildren id="JSEAList" flex="1"/>
         </tree>
-        <hbox align="center" flex="1">
+        <hbox align="center">
           <label value="&editAttribute.label;"/>
           <spacer flex="1"/>
           <button label="&removeAttribute.label;" oncommand="RemoveJSEAttribute()"/>
@@ -203,7 +208,7 @@
               <label value="&AttName.label;"/>
               <label value="&AttValue.label;"/>
             </row>
-            <row align="center" equalsize="always">
+            <row align="top" equalsize="always">
               <!-- List is built at runtime -->
               <menulist id="AddJSEAttributeNameList" flex="1"
                 oncommand="onSelectJSEAttribute();"/>
@@ -212,6 +217,7 @@
             </row>
           </rows>
         </grid>
+        <spacer class="spacer" flex="1"/>
       </vbox>
     </tabpanels>
   </tabbox>
