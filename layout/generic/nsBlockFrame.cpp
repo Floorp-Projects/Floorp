@@ -24,6 +24,7 @@
  *   Steve Clark <buster@netscape.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   L. David Baron <dbaron@dbaron.org>
+ *   IBM Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -6434,12 +6435,14 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   // from the rest of the frames in the line
   nscoord x = 
 #ifdef IBMBIDI
-    // For direction RTL: set x to the right margin for now.
-    // This value will be used to indent the bullet from the right most
-    // egde of the previous frame in nsLineLayout::HorizontalAlignFrames.
-             (NS_STYLE_DIRECTION_RTL == GetStyleVisibility()->mDirection)
-             ? reflowState.mComputedMargin.right :
-#endif // IBMBIDI
+           (rs.availableWidth != NS_UNCONSTRAINEDSIZE &&
+            NS_STYLE_DIRECTION_RTL == GetStyleVisibility()->mDirection)
+             // According to the CSS2 spec, section 12.6.1, outside marker box
+             // is distanced from the associated principal box's border edge.
+             // |rs.availableWidth| reflects exactly a border edge: it includes
+             // border, padding, and content area, without margins.
+             ? rs.availableWidth + reflowState.mComputedMargin.left :
+#endif
              - reflowState.mComputedMargin.right - aMetrics.width;
 
   // Approximate the bullets position; vertical alignment will provide
