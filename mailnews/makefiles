@@ -1,9 +1,3 @@
-network/protocol/certld/Makefile
-network/protocol/imap4/Makefile
-network/protocol/mailbox/Makefile
-network/protocol/nntp/Makefile
-network/protocol/pop3/Makefile
-network/protocol/smtp/Makefile
 mailnews/Makefile
 mailnews/addrbook/Makefile
 mailnews/addrbook/build/Makefile
@@ -46,11 +40,6 @@ mailnews/base/prefs/resources/skin/Makefile
 mailnews/base/prefs/resources/locale/Makefile
 mailnews/base/prefs/resources/locale/en-US/Makefile
 mailnews/db/Makefile
-mailnews/db/mdb/Makefile
-mailnews/db/mdb/public/Makefile
-mailnews/db/mork/Makefile
-mailnews/db/mork/src/Makefile
-mailnews/db/mork/build/Makefile
 mailnews/db/msgdb/Makefile
 mailnews/db/msgdb/public/Makefile
 mailnews/db/msgdb/src/Makefile
