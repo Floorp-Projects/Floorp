@@ -94,7 +94,7 @@
   <treehead>
     <treerow id="headRow">
       <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.name.label;"
-      	onclick="return doSort('NameColumn');" observes="NameColumn" />
+      	onclick="return TriStateColumnSort('NameColumn');" observes="NameColumn" />
     </treerow>
   </treehead>
   </tree>
