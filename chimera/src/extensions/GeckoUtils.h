@@ -44,7 +44,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMCharacterData.h"
 
-class CHGeckoUtils
+class GeckoUtils
 {
 public:
   static void GatherTextUnder(nsIDOMNode* aNode, nsString& aResult) {

@@ -1,7 +1,7 @@
 #import <Cocoa/Cocoa.h>
 #import "MVPreferencesMultipleIconView.h"
 #import "MVPreferencesController.h"
-#import "CHImageAdditions.h"
+#import "ImageAdditions.h"
 
 @interface MVPreferencesMultipleIconView (MVPreferencesMultipleIconViewPrivate)
 - (void) _focusFirst;

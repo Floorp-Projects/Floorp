@@ -38,12 +38,12 @@
 
 #import <Cocoa/Cocoa.h>
 
-#import "CHIconTabViewItem.h"
+#import "IconTabViewItem.h"
 
-// a subclass of CHIconTabViewItem that handles dragging of site icons
+// a subclass of IconTabViewItem that handles dragging of site icons
 @class BrowserTabItemContainerView;
 
-@interface BrowserTabViewItem : CHIconTabViewItem
+@interface BrowserTabViewItem : IconTabViewItem
 {
   NSRect                       mLastDrawRect;  // cached draw rect, used for dragging location
   BrowserTabItemContainerView* mTabContentsView;

@@ -29,7 +29,7 @@ class BookmarksService;
 
 @class BookmarkItem;
 
-@interface CHBookmarksButton : NSButton
+@interface BookmarksButton : NSButton
 {
   nsIDOMElement*    mElement;
   BookmarkItem*     mBookmarkItem;

@@ -37,8 +37,8 @@
 
 #import "NSString+Utils.h"
 
-#import "nsCocoaBrowserService.h"
-#import "DownloadFactories.h"
+#import "CHBrowserService.h"
+#import "CHDownloadFactories.h"
 #import "CHBrowserView.h"
 
 #include "nsIWindowWatcher.h"
@@ -51,41 +51,41 @@
 #include "nsIDownload.h"
 #include "nsIExternalHelperAppService.h"
 
-nsAlertController* nsCocoaBrowserService::sController = nsnull;
-nsCocoaBrowserService* nsCocoaBrowserService::sSingleton = nsnull;
-PRUint32 nsCocoaBrowserService::sNumBrowsers = 0;
-PRBool nsCocoaBrowserService::sCanTerminate = PR_FALSE;
+nsAlertController* CHBrowserService::sController = nsnull;
+CHBrowserService* CHBrowserService::sSingleton = nsnull;
+PRUint32 CHBrowserService::sNumBrowsers = 0;
+PRBool CHBrowserService::sCanTerminate = PR_FALSE;
 
 // This method should return a nsModuleComponentInfo array of
 // application-provided XPCOM components to register.  The implementation
 // is in AppComponents.mm.
 extern const nsModuleComponentInfo* GetAppModuleComponentInfo(int* outNumComponents);
 
-// nsCocoaBrowserService implementation
-nsCocoaBrowserService::nsCocoaBrowserService()
+// CHBrowserService implementation
+CHBrowserService::CHBrowserService()
 {
   NS_INIT_ISUPPORTS();
 }
 
-nsCocoaBrowserService::~nsCocoaBrowserService()
+CHBrowserService::~CHBrowserService()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsCocoaBrowserService,
+NS_IMPL_ISUPPORTS3(CHBrowserService,
                    nsIWindowCreator,
                    nsIFactory, 
                    nsIHelperAppLauncherDialog)
 
 /* static */
 nsresult
-nsCocoaBrowserService::InitEmbedding()
+CHBrowserService::InitEmbedding()
 {
   sNumBrowsers++;
   
   if (sSingleton)
     return NS_OK;
 
-  sSingleton = new nsCocoaBrowserService();
+  sSingleton = new CHBrowserService();
   if (!sSingleton)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(sSingleton);
@@ -141,7 +141,7 @@ nsCocoaBrowserService::InitEmbedding()
 
 /* static */
 void
-nsCocoaBrowserService::BrowserClosed()
+CHBrowserService::BrowserClosed()
 {
     sNumBrowsers--;
     if (sCanTerminate && sNumBrowsers == 0) {
@@ -156,7 +156,7 @@ nsCocoaBrowserService::BrowserClosed()
 
 /* static */
 void
-nsCocoaBrowserService::TermEmbedding()
+CHBrowserService::TermEmbedding()
 {
     sCanTerminate = PR_TRUE;
     if (sNumBrowsers == 0) {
@@ -178,7 +178,7 @@ nsCocoaBrowserService::TermEmbedding()
 #define NS_ALERT_NIB_NAME "alert"
 
 nsAlertController* 
-nsCocoaBrowserService::GetAlertController()
+CHBrowserService::GetAlertController()
 {
   if (!sController) {
     NSBundle* bundle = [NSBundle bundleForClass:[CHBrowserView class]];
@@ -188,7 +188,7 @@ nsCocoaBrowserService::GetAlertController()
 }
 
 void
-nsCocoaBrowserService::SetAlertController(nsAlertController* aController)
+CHBrowserService::SetAlertController(nsAlertController* aController)
 {
   // XXX When should the controller be released?
   sController = aController;
@@ -197,7 +197,7 @@ nsCocoaBrowserService::SetAlertController(nsAlertController* aController)
 
 // nsIFactory implementation
 NS_IMETHODIMP 
-nsCocoaBrowserService::CreateInstance(nsISupports *aOuter, 
+CHBrowserService::CreateInstance(nsISupports *aOuter, 
                                       const nsIID & aIID, 
                                       void **aResult)
 {
@@ -214,7 +214,7 @@ nsCocoaBrowserService::CreateInstance(nsISupports *aOuter,
 }
 
 NS_IMETHODIMP 
-nsCocoaBrowserService::LockFactory(PRBool lock)
+CHBrowserService::LockFactory(PRBool lock)
 {
   return NS_OK;
 }
@@ -223,7 +223,7 @@ nsCocoaBrowserService::LockFactory(PRBool lock)
 // Implementation of nsIWindowCreator
 /* nsIWebBrowserChrome createChromeWindow (in nsIWebBrowserChrome parent, in PRUint32 chromeFlags); */
 NS_IMETHODIMP 
-nsCocoaBrowserService::CreateChromeWindow(nsIWebBrowserChrome *parent, 
+CHBrowserService::CreateChromeWindow(nsIWebBrowserChrome *parent, 
                                           PRUint32 chromeFlags, 
                                           nsIWebBrowserChrome **_retval)
 {
@@ -241,13 +241,13 @@ nsCocoaBrowserService::CreateChromeWindow(nsIWebBrowserChrome *parent,
 
 //    void show( in nsIHelperAppLauncher aLauncher, in nsISupports aContext );
 NS_IMETHODIMP
-nsCocoaBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext)
+CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext)
 {
   return inLauncher->SaveToDisk(nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP
-nsCocoaBrowserService::PromptForSaveToFile(nsISupports *aWindowContext, const PRUnichar *aDefaultFile, const PRUnichar *aSuggestedFileExtension, nsILocalFile **_retval)
+CHBrowserService::PromptForSaveToFile(nsISupports *aWindowContext, const PRUnichar *aDefaultFile, const PRUnichar *aSuggestedFileExtension, nsILocalFile **_retval)
 {
   NSString* filename = [NSString stringWithPRUnichars:aDefaultFile];
   NSSavePanel *thePanel = [NSSavePanel savePanel];
@@ -267,8 +267,8 @@ nsCocoaBrowserService::PromptForSaveToFile(nsISupports *aWindowContext, const PR
 
 /* void showProgressDialog (in nsIHelperAppLauncher aLauncher, in nsISupports aContext); */
 NS_IMETHODIMP
-nsCocoaBrowserService::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext)
+CHBrowserService::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext)
 {
-  NSLog(@"nsCocoaBrowserService::ShowProgressDialog");
+  NSLog(@"CHBrowserService::ShowProgressDialog");
   return NS_OK;
 }

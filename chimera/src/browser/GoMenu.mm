@@ -23,10 +23,10 @@
 
 #import "NSString+Utils.h"
 
-#import "CHGoMenu.h"
+#import "GoMenu.h"
 #import "MainController.h"
 #import "BrowserWindowController.h"
-#import "CHBrowserWrapper.h"
+#import "BrowserWrapper.h"
 #import "CHBrowserView.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -43,7 +43,7 @@ static const int kMaxItems = 15;
 // the maximum number of characters in a menu title before cropping it
 static const unsigned int kMaxTitleLength = 80;
 
-@implementation CHGoMenu
+@implementation GoMenu
 
 - (void) update
 {
@@ -60,7 +60,7 @@ static const unsigned int kMaxTitleLength = 80;
   if (!controller) return nsnull;
   
   // get web navigation for current browser
-  CHBrowserWrapper* wrapper = [controller getBrowserWrapper];
+  BrowserWrapper* wrapper = [controller getBrowserWrapper];
   if (!wrapper) return nsnull;
   CHBrowserView* view = [wrapper getBrowserView];
   if (!view) return nsnull;

@@ -38,9 +38,9 @@
 #import <Cocoa/Cocoa.h>
 #import "BrowserWindowController.h"
 #import "MVPreferencesController.h"
-#import "CHSplashScreenWindow.h"
+#import "SplashScreenWindow.h"
 #import "FindDlgController.h"
-#import "CHPreferenceManager.h"
+#import "PreferenceManager.h"
 
 class BookmarksService;
 
@@ -67,9 +67,9 @@ class BookmarksService;
     
     BOOL                    mOffline;
 
-    CHSplashScreenWindow*   mSplashScreen;
+    SplashScreenWindow*   mSplashScreen;
     
-    CHPreferenceManager*    mPreferenceManager;
+    PreferenceManager*    mPreferenceManager;
 
     BookmarksService*       mMenuBookmarks;
     
@@ -142,7 +142,7 @@ class BookmarksService;
 
 - (MVPreferencesController *)preferencesController;
 - (void)displayPreferencesWindow:sender;
-- (CHPreferenceManager *)preferenceManager;
+- (PreferenceManager *)preferenceManager;
 - (BOOL)isMainWindowABrowserWindow;
 
 // if the main window is a browser window, return its controller, otherwise nil

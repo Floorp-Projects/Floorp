@@ -42,7 +42,7 @@
   
   There are three things here:
   
-  1.  The DownloadProgressDisplay protocol.
+  1.  The CHDownloadProgressDisplay protocol.
   
       This is a formal protocol that needs to be implemented by
       a window controller for your progress window. Its methods
@@ -53,7 +53,7 @@
       This class should be subclassed by an embedder, with an
       implementation of 'createDownloadController' that hands back
       a new instance of an NSWindowController that implements the
-      <DownloadProgressDisplay> protocol.
+      <CHDownloadProgressDisplay> protocol.
       
       The underlying C++ classes use this factory to create the
       progress window controller.
@@ -108,7 +108,7 @@ class CHDownloader;
 // a formal protocol for something that implements progress display
 // Embedders can make a window controller that conforms to this
 // protocol, and reuse nsDownloadListener to get download UI.
-@protocol DownloadProgressDisplay
+@protocol CHDownloadProgressDisplay
 
 - (void)onStartDownload:(BOOL)isFileSave;
 - (void)onEndDownload;
@@ -127,7 +127,7 @@ class CHDownloader;
 {
 }
 
-- (NSWindowController<DownloadProgressDisplay> *)createDownloadController;
+- (NSWindowController<CHDownloadProgressDisplay> *)createDownloadController;
 
 @end
 
@@ -161,7 +161,7 @@ protected:
 protected:
 
     DownloadControllerFactory*    mControllerFactory;
-    id <DownloadProgressDisplay>  mDownloadDisplay;   // something that implements the DownloadProgressDisplay protocol
+    id <CHDownloadProgressDisplay>  mDownloadDisplay;   // something that implements the CHDownloadProgressDisplay protocol
     PRBool                        mIsFileSave;        // true if we're doing a save, rather than a download
 };
 

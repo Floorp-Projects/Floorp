@@ -1,5 +1,5 @@
 //
-//  CHHistoryDataSource.h
+//  HistoryDataSource.h
 //  Chimera
 //
 //  Created by Ben Goodger on Sun Apr 28 2002.
@@ -8,11 +8,11 @@
 
 #import <Foundation/Foundation.h>
 
-#import "CHRDFOutlineViewDataSource.h"
+#import "RDFOutlineViewDataSource.h"
 
 @class BrowserWindowController;
 
-@interface CHHistoryDataSource : CHRDFOutlineViewDataSource
+@interface HistoryDataSource : RDFOutlineViewDataSource
 {
 
   IBOutlet BrowserWindowController* mBrowserWindowController;

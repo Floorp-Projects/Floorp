@@ -41,9 +41,9 @@
 #import "MainController.h"
 #import "BrowserWindowController.h"
 #import "BookmarksService.h"
-#import "nsCocoaBrowserService.h"
-#import "CHAboutBox.h"
-#import "CHUserDefaults.h"
+#import "CHBrowserService.h"
+#import "AboutBox.h"
+#import "UserDefaults.h"
 
 #include "nsCOMPtr.h"
 #include "nsEmbedAPI.h"
@@ -94,7 +94,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
         NSString* url = [defaults stringForKey:USER_DEFAULTS_URL_KEY];
         mStartURL = url ? [url retain] : nil;
-        mSplashScreen = [[CHSplashScreenWindow alloc] splashImage:nil withFade:NO withStatusRect:NSMakeRect(0,0,0,0)];
+        mSplashScreen = [[SplashScreenWindow alloc] splashImage:nil withFade:NO withStatusRect:NSMakeRect(0,0,0,0)];
         mFindDialog = nil;
         mMenuBookmarks = nil;
         
@@ -170,7 +170,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [mPreferencesController release];
     [mPreferenceManager release];
 
-    nsCocoaBrowserService::TermEmbedding();
+    CHBrowserService::TermEmbedding();
     
     [self autorelease];
 }
@@ -556,10 +556,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [[browserWindow windowController] manageBookmarks: aSender];
 }
 
-- (CHPreferenceManager *)preferenceManager
+- (PreferenceManager *)preferenceManager
 {
   if (!mPreferenceManager)
-    mPreferenceManager = [[CHPreferenceManager sharedInstance] retain];
+    mPreferenceManager = [[PreferenceManager sharedInstance] retain];
   return mPreferenceManager;
 }
 
@@ -578,7 +578,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (IBAction)showAboutBox:(id)sender
 {
-    [[CHAboutBox sharedInstance] showPanel:sender];
+    [[AboutBox sharedInstance] showPanel:sender];
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename

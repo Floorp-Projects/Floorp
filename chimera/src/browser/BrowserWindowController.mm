@@ -39,13 +39,13 @@
 
 #import "BrowserWindowController.h"
 
-#import "CHBrowserWrapper.h"
-#import "CHPreferenceManager.h"
+#import "BrowserWrapper.h"
+#import "PreferenceManager.h"
 #import "BookmarksDataSource.h"
-#import "CHHistoryDataSource.h"
+#import "HistoryDataSource.h"
 #import "BrowserTabView.h"
-#import "CHUserDefaults.h"
-#import "CHPageProxyIcon.h"
+#import "UserDefaults.h"
+#import "PageProxyIcon.h"
 
 #include "nsIWebNavigation.h"
 #include "nsIDOMElement.h"
@@ -57,10 +57,10 @@
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIContentViewer.h"
-#include "nsCocoaBrowserService.h"
+#include "CHBrowserService.h"
 #include "nsString.h"
 #include "nsCRT.h"
-#include "CHGeckoUtils.h"
+#include "GeckoUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserChrome.h"
 
@@ -186,7 +186,7 @@ static NSArray* sToolbarDefaults = nil;
     if ( (self = [super initWithWindowNibName:(NSString *)windowNibName]) ) {
         // this won't correctly cascade windows on multiple monitors. RADAR bug 2972893 
         // filed since it also happens in Terminal.app
-        if ( nsCocoaBrowserService::sNumBrowsers == 0 )
+        if ( CHBrowserService::sNumBrowsers == 0 )
             [self setShouldCascadeWindows:NO];
         else
             [self setShouldCascadeWindows:YES];
@@ -725,7 +725,7 @@ static NSArray* sToolbarDefaults = nil;
   [self manageBookmarks: self];
 
   // Now do the importing.
-  CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: nil andWindow: [self window]] autorelease];
+  BrowserWrapper* newView = [[[BrowserWrapper alloc] initWithTab: nil andWindow: [self window]] autorelease];
   [newView setFrame: NSZeroRect];
   [newView setIsBookmarksImport: YES];
   [[[self window] contentView] addSubview: newView];
@@ -786,7 +786,7 @@ static NSArray* sToolbarDefaults = nil;
 
   // Get the users preferred search engine from IC
   if (!searchEngine || [searchEngine isEqualToString:@"SearchPageDefault"]) {
-    searchEngine = [[CHPreferenceManager sharedInstance] getICStringPref:kICWebSearchPagePrefs];
+    searchEngine = [[PreferenceManager sharedInstance] getICStringPref:kICWebSearchPagePrefs];
       if (!searchEngine || ([searchEngine length] == 0))
         searchEngine = @"http://dmoz.org/";
   }
@@ -897,9 +897,9 @@ static NSArray* sToolbarDefaults = nil;
 {
   nsCOMPtr<nsIDOMElement> linkContent;
   nsAutoString href;
-  CHGeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
+  GeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
   nsAutoString linkText;
-  CHGeckoUtils::GatherTextUnder(linkContent, linkText);
+  GeckoUtils::GatherTextUnder(linkContent, linkText);
   NSString* urlStr = [NSString stringWith_nsAString:href];
   NSString* titleStr = [NSString stringWith_nsAString:linkText];
   [self addBookmarkExtended:YES isFolder:NO URL:urlStr title:titleStr];
@@ -927,7 +927,7 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)home:(id)aSender
 {
-  [mBrowserView loadURI:[[CHPreferenceManager sharedInstance] homePage:NO] referrer: nil flags:NSLoadFlagsNone activate:NO];
+  [mBrowserView loadURI:[[PreferenceManager sharedInstance] homePage:NO] referrer: nil flags:NSLoadFlagsNone activate:NO];
 }
 
 - (IBAction)toggleSidebar:(id)aSender
@@ -979,7 +979,7 @@ static NSArray* sToolbarDefaults = nil;
 -(void)newTab:(BOOL)allowHomepage
 {
     BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
-    CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
+    BrowserWrapper* newView = [[[BrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
 
     PRInt32 newTabPage = 0;
     if (allowHomepage) {
@@ -999,7 +999,7 @@ static NSArray* sToolbarDefaults = nil;
                         newTabPage != 1 && allowHomepage);
     
     if (allowHomepage)
-      [newView loadURI: ((newTabPage == 1) ? [[CHPreferenceManager sharedInstance] homePage: NO] : @"about:blank") referrer:nil flags:NSLoadFlagsNone activate:!focusURLBar];
+      [newView loadURI: ((newTabPage == 1) ? [[PreferenceManager sharedInstance] homePage: NO] : @"about:blank") referrer:nil flags:NSLoadFlagsNone activate:!focusURLBar];
 
     [mTabBrowser selectLastTabViewItem: self];
 
@@ -1061,7 +1061,7 @@ static NSArray* sToolbarDefaults = nil;
   return [mTabBrowser canMakeNewTabs];
 }
 
--(CHBrowserWrapper*)getBrowserWrapper
+-(BrowserWrapper*)getBrowserWrapper
 {
   return mBrowserView;
 }
@@ -1111,7 +1111,7 @@ static NSArray* sToolbarDefaults = nil;
     [mTabBrowser addTabViewItem: newTab];
 #endif
 
-    CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
+    BrowserWrapper* newView = [[[BrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
     [newView setTab: newTab];
     
     [newTab setLabel: NSLocalizedString(@"TabLoading", @"")];
@@ -1125,16 +1125,16 @@ static NSArray* sToolbarDefaults = nil;
 
 -(void)setupSidebarTabs
 {
-    CHIconTabViewItem   *bookItem = [[CHIconTabViewItem alloc] initWithIdentifier:@"bookmarkSidebarCHIconTabViewItem"
+    IconTabViewItem   *bookItem = [[IconTabViewItem alloc] initWithIdentifier:@"bookmarkSidebarCHIconTabViewItem"
                                   withTabIcon:[NSImage imageNamed:@"bookicon"]];
-    CHIconTabViewItem   *histItem = [[CHIconTabViewItem alloc] initWithIdentifier:@"historySidebarCHIconTabViewItem"
+    IconTabViewItem   *histItem = [[IconTabViewItem alloc] initWithIdentifier:@"historySidebarCHIconTabViewItem"
                                   withTabIcon:[NSImage imageNamed:@"historyicon"]];
 #if USE_SEARCH_ITEM
-    CHIconTabViewItem *searchItem = [[CHIconTabViewItem alloc] initWithIdentifier:@"searchSidebarCHIconTabViewItem"
+    IconTabViewItem *searchItem = [[IconTabViewItem alloc] initWithIdentifier:@"searchSidebarCHIconTabViewItem"
                                   withTabIcon:[NSImage imageNamed:@"searchicon"]];
 #endif
 #if USE_PANELS_ITEM
-    CHIconTabViewItem *panelsItem = [[CHIconTabViewItem alloc] initWithIdentifier:@"myPanelsCHIconTabViewItem"
+    IconTabViewItem *panelsItem = [[IconTabViewItem alloc] initWithIdentifier:@"myPanelsCHIconTabViewItem"
                                   withTabIcon:[NSImage imageNamed:@"panel_icon"]];
 #endif
     
@@ -1327,7 +1327,7 @@ static NSArray* sToolbarDefaults = nil;
 {
   nsCOMPtr<nsIDOMElement> linkContent;
   nsAutoString href;
-  CHGeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
+  GeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
 
   // XXXdwh Handle simple XLINKs if we want to be compatible with Mozilla, but who
   // really uses these anyway? :)
@@ -1360,7 +1360,7 @@ static NSArray* sToolbarDefaults = nil;
 {
   nsCOMPtr<nsIDOMElement> linkContent;
   nsAutoString href;
-  CHGeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
+  GeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
 
   // XXXdwh Handle simple XLINKs if we want to be compatible with Mozilla, but who
   // really uses these anyway? :)
@@ -1371,7 +1371,7 @@ static NSArray* sToolbarDefaults = nil;
 
   // The user wants to save this link.
   nsAutoString text;
-  CHGeckoUtils::GatherTextUnder(mContextMenuNode, text);
+  GeckoUtils::GatherTextUnder(mContextMenuNode, text);
 
   [self saveURL: nil filterList: nil
             url: hrefStr suggestedFilename: [NSString stringWith_nsAString: text]];
@@ -1422,7 +1422,7 @@ static NSArray* sToolbarDefaults = nil;
   }  
 }
 
-- (CHBookmarksToolbar*) bookmarksToolbar
+- (BookmarksToolbar*) bookmarksToolbar
 {
   return mPersonalToolbar;
 }
@@ -1486,7 +1486,7 @@ static NSArray* sToolbarDefaults = nil;
     return mSidebarDrawer;
 }
 
-- (CHPageProxyIcon *)proxyIconView
+- (PageProxyIcon *)proxyIconView
 {
   return mProxyIcon;
 }

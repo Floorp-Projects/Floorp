@@ -1,5 +1,5 @@
 //
-//  nsCocoaBrowserListener.h
+//  CHBrowserListener.h
 //  Chimera
 //
 //  Created by Simon Fraser on Sat Aug 17 2002.
@@ -23,7 +23,7 @@
 
 @class CHBrowserView;
 
-class nsCocoaBrowserListener : public nsSupportsWeakReference,
+class CHBrowserListener : public nsSupportsWeakReference,
                                public nsIInterfaceRequestor,
                                public nsIWebBrowserChrome,
                                public nsIWindowCreator,
@@ -33,8 +33,8 @@ class nsCocoaBrowserListener : public nsSupportsWeakReference,
                                public nsITooltipListener
 {
 public:
-  nsCocoaBrowserListener(CHBrowserView* aView);
-  virtual ~nsCocoaBrowserListener();
+  CHBrowserListener(CHBrowserView* aView);
+  virtual ~CHBrowserListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR

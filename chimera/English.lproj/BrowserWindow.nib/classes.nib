@@ -1,5 +1,13 @@
 {
     IBClasses = (
+        {CLASS = AutoCompleteDataSource; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {onBlur = id; onResize = id; }; 
+            CLASS = AutoCompleteTextField; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mProxyIcon = PageProxyIcon; }; 
+            SUPERCLASS = NSTextField; 
+        }, 
         {CLASS = BookmarkItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
             ACTIONS = {
@@ -19,6 +27,11 @@
                 mOutlineView = id; 
             }; 
             SUPERCLASS = NSObject; 
+        }, 
+        {
+            CLASS = BookmarksOutlineView; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = ExtendedOutlineView; 
         }, 
         {CLASS = BookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {CLASS = BrowserTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
@@ -65,7 +78,7 @@
                 mBackItem = NSMenuItem; 
                 mCachedBMDS = id; 
                 mForwardItem = NSMenuItem; 
-                mHistoryDataSource = CHHistoryDataSource; 
+                mHistoryDataSource = HistoryDataSource; 
                 mImageLinkMenu = NSMenu; 
                 mImageMenu = NSMenu; 
                 mInputMenu = NSMenu; 
@@ -75,7 +88,7 @@
                 mLocationToolbarView = NSView; 
                 mLock = NSImageView; 
                 mPageMenu = NSMenu; 
-                mPersonalToolbar = CHBookmarksToolbar; 
+                mPersonalToolbar = BookmarksToolbar; 
                 mProgress = NSProgressIndicator; 
                 mProxyIcon = NSImageView; 
                 mSidebarBookmarksDataSource = BookmarksDataSource; 
@@ -85,28 +98,14 @@
                 mSidebarTabView = NSTabView; 
                 mStatus = NSTextField; 
                 mStatusBar = NSView; 
-                mTabBrowser = CHExtendedTabView; 
+                mTabBrowser = BrowserTabView; 
                 mURLBar = NSTextField; 
             }; 
             SUPERCLASS = NSWindowController; 
         }, 
-        {CLASS = CHAutoCompleteDataSource; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {
-            ACTIONS = {onBlur = id; onResize = id; }; 
-            CLASS = CHAutoCompleteTextField; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {mProxyIcon = CHPageProxyIcon; }; 
-            SUPERCLASS = NSTextField; 
-        }, 
-        {
-            CLASS = CHBookmarksOutlineView; 
-            LANGUAGE = ObjC; 
-            SUPERCLASS = CHExtendedOutlineView; 
-        }, 
-        {CLASS = CHBookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {
             ACTIONS = {load = id; }; 
-            CLASS = CHBrowserWrapper; 
+            CLASS = BrowserWrapper; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 mLockIcon = id; 
@@ -118,42 +117,22 @@
             }; 
             SUPERCLASS = NSView; 
         }, 
-        {CLASS = CHExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
+        {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
-            CLASS = CHHistoryDataSource; 
+            CLASS = HistoryDataSource; 
             LANGUAGE = ObjC; 
             OUTLETS = {mBrowserWindowController = id; }; 
-            SUPERCLASS = CHRDFOutlineViewDataSource; 
+            SUPERCLASS = RDFOutlineViewDataSource; 
         }, 
-        {CLASS = CHLocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
-        {CLASS = CHPageProxyIcon; LANGUAGE = ObjC; SUPERCLASS = NSImageView; }, 
+        {CLASS = LocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {CLASS = MainController; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = PageProxyIcon; LANGUAGE = ObjC; SUPERCLASS = NSImageView; }, 
         {
-            CLASS = CHRDFOutlineViewDataSource; 
+            CLASS = RDFOutlineViewDataSource; 
             LANGUAGE = ObjC; 
             OUTLETS = {mOutlineView = id; }; 
             SUPERCLASS = NSObject; 
-        }, 
-        {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
-        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {CLASS = LocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
-        {CLASS = MainController; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {
-            ACTIONS = {load = id; }; 
-            CLASS = MyBrowserView; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {
-                mImageLinkMenu = id; 
-                mImageMenu = id; 
-                mInputMenu = id; 
-                mLinkMenu = id; 
-                mPageMenu = id; 
-                mWindowController = id; 
-                progress = id; 
-                progressSuper = id; 
-                status = id; 
-                urlbar = id; 
-            }; 
-            SUPERCLASS = NSView; 
         }, 
         {CLASS = RDFOutlineViewItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = ThrobberHandler; LANGUAGE = ObjC; SUPERCLASS = NSObject; }

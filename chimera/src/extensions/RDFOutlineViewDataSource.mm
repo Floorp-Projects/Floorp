@@ -38,7 +38,7 @@
 
 #import "NSString+Utils.h"
 
-#import "CHRDFOutlineViewDataSource.h"
+#import "RDFOutlineViewDataSource.h"
 
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
@@ -56,7 +56,7 @@
 
 
 
-@implementation CHRDFOutlineViewDataSource
+@implementation RDFOutlineViewDataSource
 
 - (void) ensureDataSourceLoaded
 {

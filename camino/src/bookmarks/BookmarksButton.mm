@@ -22,7 +22,7 @@
 */
 
 #import "NSString+Utils.h"
-#import "CHBookmarksButton.h"
+#import "BookmarksButton.h"
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
@@ -37,7 +37,7 @@
 #import "BookmarksDataSource.h"
 #import "BookmarksService.h"
 
-@implementation CHBookmarksButton
+@implementation BookmarksButton
 
 - (id)initWithFrame:(NSRect)frame
 {
@@ -163,7 +163,7 @@
   // Make a copy of the context menu but change it to target us
   // FIXME - this will stop to work as soon as we add items to the context menu
   // that have different targets. In that case, we probably should add code to
-  // CHBookmarksToolbar that manages the context menu for the CHBookmarksButtons.
+  // BookmarksToolbar that manages the context menu for the CHBookmarksButtons.
   
   NSMenu* myMenu = [[[self superview] menu] copy];
   [[myMenu itemArray] makeObjectsPerformSelector:@selector(setTarget:) withObject: self];

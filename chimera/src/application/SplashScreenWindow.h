@@ -17,7 +17,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface CHSplashScreenWindow : NSWindow {
+@interface SplashScreenWindow : NSWindow {
     BOOL	        _fades;
     BOOL           __didFadeIn;
     int             _fadeIndex;

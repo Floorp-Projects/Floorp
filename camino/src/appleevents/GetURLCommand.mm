@@ -21,12 +21,12 @@
 *   David Hyatt <hyatt@netscape.com> (Original Author)
 */
 
-#import "CHGetURLCommand.h"
+#import "GetURLCommand.h"
 #import <AppKit/AppKit.h>
 
 #import "MainController.h"
 
-@implementation CHGetURLCommand
+@implementation GetURLCommand
 
 - (id)performDefaultImplementation 
 {

@@ -184,7 +184,7 @@ const int kDefaultExpireDays = 9;
   ICInstance		icInstance = NULL;
   OSStatus 			error;
   
-  // it would be nice to use CHPreferenceManager, but I don't want to drag
+  // it would be nice to use PreferenceManager, but I don't want to drag
   // all that code into the plugin
   error = ICStart(&icInstance, 'CHIM');
   if (error != noErr) {

@@ -42,7 +42,7 @@
 #import <Cocoa/Cocoa.h>
 
 @class CHBrowserView;
-class nsCocoaBrowserListener;
+class CHBrowserListener;
 class nsIDOMWindow;
 class nsIWebBrowser;
 class nsIDOMNode;
@@ -118,7 +118,7 @@ enum {
 @interface CHBrowserView : NSView 
 {
   nsIWebBrowser* _webBrowser;
-  nsCocoaBrowserListener* _listener;
+  CHBrowserListener* _listener;
   NSWindow* mWindow;
   
   nsIDragHelperService* mDragHelper;
@@ -186,7 +186,7 @@ enum {
 
 - (void)destroyWebBrowser;
 - (nsIWebBrowser*)getWebBrowser;
-- (nsCocoaBrowserListener*)getCocoaBrowserListener;
+- (CHBrowserListener*)getCocoaBrowserListener;
 - (void)setWebBrowser:(nsIWebBrowser*)browser;
 
 - (NSString*)getFocusedURLString;

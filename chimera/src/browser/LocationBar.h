@@ -23,7 +23,7 @@
 
 #import <AppKit/AppKit.h>
 
-@interface CHLocationBar : NSView {
+@interface LocationBar : NSView {
 
 }
 

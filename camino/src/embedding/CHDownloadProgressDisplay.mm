@@ -35,12 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "DownloadProgressDisplay.h"
+#import "CHDownloadProgressDisplay.h"
 
 
 @implementation DownloadControllerFactory
 
-- (NSWindowController<DownloadProgressDisplay> *)createDownloadController
+- (NSWindowController<CHDownloadProgressDisplay> *)createDownloadController
 {
   // a dummy implementation. You should provide a subclass that
   // returns an instance of your progress dialog controller.

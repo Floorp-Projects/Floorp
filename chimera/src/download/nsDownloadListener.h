@@ -41,7 +41,7 @@
 #import <Foundation/Foundation.h>
 #import <Appkit/Appkit.h>
 
-#import "DownloadProgressDisplay.h"
+#import "CHDownloadProgressDisplay.h"
 
 #include "nsString.h"
 #include "nsIDownload.h"

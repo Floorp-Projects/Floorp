@@ -41,8 +41,8 @@
 #import <Appkit/Appkit.h>
 
 #import "MainController.h"
-#import "CHBookmarksToolbar.h"
-#import "CHExtendedOutlineView.h"
+#import "BookmarksToolbar.h"
+#import "ExtendedOutlineView.h"
 
 class nsIContent;
 class BookmarksService;

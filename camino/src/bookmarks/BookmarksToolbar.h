@@ -26,13 +26,13 @@
 class nsIDOMElement;
 
 class BookmarksService;
-class CHBookmarksButton;
+class BookmarksButton;
 
-@interface CHBookmarksToolbar : NSView
+@interface BookmarksToolbar : NSView
 {
   BookmarksService*  mBookmarks;
   NSMutableArray*    mButtons;
-  CHBookmarksButton* mDragInsertionButton;
+  BookmarksButton* mDragInsertionButton;
   int                mDragInsertionPosition;
   BOOL               mIsShowing;
 }

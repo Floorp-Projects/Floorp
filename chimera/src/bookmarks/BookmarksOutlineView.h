@@ -22,9 +22,9 @@
 */
 
 #import <AppKit/AppKit.h>
-#import "CHExtendedOutlineView.h"
+#import "ExtendedOutlineView.h"
 
-@interface CHBookmarksOutlineView : CHExtendedOutlineView {
+@interface BookmarksOutlineView : ExtendedOutlineView {
 
 }
 

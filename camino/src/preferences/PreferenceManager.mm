@@ -39,8 +39,8 @@
 #import <Cocoa/Cocoa.h>
 
 #import <SystemConfiguration/SystemConfiguration.h>
-#import "CHPreferenceManager.h"
-#import "CHUserDefaults.h"
+#import "PreferenceManager.h"
+#import "UserDefaults.h"
 
 #include "nsIServiceManager.h"
 #include "nsIProfile.h"
@@ -58,12 +58,12 @@ nsresult PR_CALLBACK
 app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
-@implementation CHPreferenceManager
+@implementation PreferenceManager
 
 
-+ (CHPreferenceManager *) sharedInstance {
-  static CHPreferenceManager *sSharedInstance = nil;
-	return ( sSharedInstance ? sSharedInstance : (sSharedInstance = [[[CHPreferenceManager alloc] init] autorelease] ));
++ (PreferenceManager *) sharedInstance {
+  static PreferenceManager *sSharedInstance = nil;
+	return ( sSharedInstance ? sSharedInstance : (sSharedInstance = [[[PreferenceManager alloc] init] autorelease] ));
 }
 
 

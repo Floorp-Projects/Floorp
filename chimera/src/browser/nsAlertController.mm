@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
  
 #import "nsAlertController.h"
-#import "nsCocoaBrowserService.h"
+#import "CHBrowserService.h"
 
 #include "nsIBadCertListener.h"
 
@@ -62,7 +62,7 @@ enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
 
 - (void)awakeFromNib
 {
-  nsCocoaBrowserService::SetAlertController(self);
+  CHBrowserService::SetAlertController(self);
 }
 
 - (void)alert:(NSWindow*)parent title:(NSString*)title text:(NSString*)text

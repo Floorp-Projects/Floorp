@@ -69,7 +69,7 @@
 #include "nsNetUtil.h"
 
 // Common helper routines (also used by the context menu code)
-#include "CHGeckoUtils.h"
+#include "GeckoUtils.h"
 
 #import "CHBrowserView.h"
 
@@ -261,7 +261,7 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMElement> linkContent;
   nsAutoString href;
-  CHGeckoUtils::GetEnclosingLinkElementAndHref(content, getter_AddRefs(linkContent), href);
+  GeckoUtils::GetEnclosingLinkElementAndHref(content, getter_AddRefs(linkContent), href);
   
   // XXXdwh Handle simple XLINKs if we want to be compatible with Mozilla, but who
   // really uses these anyway? :)
@@ -301,7 +301,7 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
   else if (altKey) {
     // The user wants to save this link.
     nsAutoString text;
-    CHGeckoUtils::GatherTextUnder(content, text);
+    GeckoUtils::GatherTextUnder(content, text);
 
     [mBrowserController saveURL: nil filterList: nil
               url: hrefStr suggestedFilename: [NSString stringWith_nsAString: text]];

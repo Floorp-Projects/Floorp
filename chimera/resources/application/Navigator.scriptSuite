@@ -13,7 +13,7 @@
 			<key>AppleEventCode</key>
 			<string>GURL</string>
 			<key>CommandClass</key>
-			<string>CHGetURLCommand</string>
+			<string>GetURLCommand</string>
 		</dict>
 		<key>OpenURL</key>
 		<dict>
@@ -22,7 +22,7 @@
 			<key>AppleEventCode</key>
 			<string>OURL</string>
 			<key>CommandClass</key>
-			<string>CHGetURLCommand</string>
+			<string>GetURLCommand</string>
 		</dict>
 	</dict>
 	<key>Name</key>

@@ -1,5 +1,5 @@
 //
-//  CHHistoryDataSource.mm
+//  HistoryDataSource.mm
 //  Chimera
 //
 //  Created by Ben Goodger on Sun Apr 28 2002.
@@ -9,7 +9,7 @@
 #import "NSString+Utils.h"
 
 #import "BrowserWindowController.h"
-#import "CHHistoryDataSource.h"
+#import "HistoryDataSource.h"
 #import "CHBrowserView.h"
 
 #include "nsIRDFService.h"
@@ -21,7 +21,7 @@
 
 #include "nsComponentManagerUtils.h"
 
-@implementation CHHistoryDataSource
+@implementation HistoryDataSource
 
 - (void) ensureDataSourceLoaded
 {

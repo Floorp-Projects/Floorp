@@ -23,7 +23,7 @@
 
 #import <Appkit/Appkit.h>
 
-@interface CHGoMenu : NSMenu {
+@interface GoMenu : NSMenu {
 
 }
 

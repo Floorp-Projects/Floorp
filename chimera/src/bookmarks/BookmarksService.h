@@ -44,8 +44,8 @@
 #include "nsVoidArray.h"
 
 #import "MainController.h"
-#import "CHBookmarksToolbar.h"
-#import "CHExtendedOutlineView.h"
+#import "BookmarksToolbar.h"
+#import "ExtendedOutlineView.h"
 
 class nsIAtom;
 class nsIDOMHTMLDocument;
@@ -60,7 +60,7 @@ class BookmarksService
 {
 public:
   BookmarksService(BookmarksDataSource* aDataSource);
-  BookmarksService(CHBookmarksToolbar* aToolbar);
+  BookmarksService(BookmarksToolbar* aToolbar);
   virtual ~BookmarksService();
 
   void AddObserver();
@@ -139,7 +139,7 @@ private:
   // There are three kinds of bookmarks data sources:
   // tree views (mDataSource), the personal toolbar (mToolbar)
   // and menus (gBookmarksMenu).
-  CHBookmarksToolbar* mToolbar;
+  BookmarksToolbar* mToolbar;
   BookmarksDataSource* mDataSource;
 };
 

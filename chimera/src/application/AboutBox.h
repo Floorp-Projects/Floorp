@@ -38,7 +38,7 @@
 
 #include <Appkit/Appkit.h>
 
-@interface CHAboutBox : NSObject
+@interface AboutBox : NSObject
 {
     IBOutlet NSTextView*   creditsField;
     IBOutlet NSTextField*  buildNumberField;
@@ -50,7 +50,7 @@
     BOOL restartAtTop;
 }
 
-+ (CHAboutBox *)sharedInstance;
++ (AboutBox *)sharedInstance;
 - (IBAction)showPanel:(id)sender;
 
 @end

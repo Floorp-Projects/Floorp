@@ -5,8 +5,8 @@
             LANGUAGE = ObjC; 
             SUPERCLASS = ToolbarController; 
         }, 
-        {CLASS = CHGoMenu; LANGUAGE = ObjC; SUPERCLASS = NSMenu; }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = GoMenu; LANGUAGE = ObjC; SUPERCLASS = NSMenu; }, 
         {
             ACTIONS = {
                 addBookmark = id; 

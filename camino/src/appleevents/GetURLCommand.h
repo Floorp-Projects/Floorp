@@ -23,7 +23,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface CHGetURLCommand : NSScriptCommand {}
+@interface GetURLCommand : NSScriptCommand {}
 
 - (id)performDefaultImplementation;
 

@@ -22,12 +22,12 @@
 */
 
 #import <AppKit/AppKit.h>
-#import "CHAutoCompleteTextField.h"
+#import "AutoCompleteTextField.h"
 #include "nsIAutoCompleteResults.h"
 
-@class CHAutoCompleteTextField;
+@class AutoCompleteTextField;
 
-@interface CHAutoCompleteDataSource : NSObject
+@interface AutoCompleteDataSource : NSObject
 {
   NSImage *mIconImage;
   

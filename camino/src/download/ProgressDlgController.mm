@@ -60,11 +60,11 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 
 @implementation ChimeraDownloadControllerFactory : DownloadControllerFactory
 
-- (NSWindowController<DownloadProgressDisplay> *)createDownloadController
+- (NSWindowController<CHDownloadProgressDisplay> *)createDownloadController
 {
   NSWindowController* progressController = [[ProgressDlgController alloc] initWithWindowNibName: @"ProgressDialog"];
-  NSAssert([progressController conformsToProtocol:@protocol(DownloadProgressDisplay)],
-              @"progressController should conform to DownloadProgressDisplay protocol");
+  NSAssert([progressController conformsToProtocol:@protocol(CHDownloadProgressDisplay)],
+              @"progressController should conform to CHDownloadProgressDisplay protocol");
   return progressController;
 }
 
@@ -434,7 +434,7 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 
 #pragma mark -
 
-// DownloadProgressDisplay protocol methods
+// CHDownloadProgressDisplay protocol methods
 
 - (void)onStartDownload:(BOOL)isFileSave;
 {

@@ -1,4 +1,4 @@
-#import "CHToolbarAdditions.h"
+#import "ToolbarAdditions.h"
 #import <Foundation/Foundation.h>
 
 @implementation NSToolbar (CHToolbarCustomizableAdditions)

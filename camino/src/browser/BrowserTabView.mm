@@ -384,7 +384,7 @@
 {
   // We need to make a new tab.
   BrowserTabViewItem *tabViewItem= [BrowserTabView makeNewTabItem];
-  CHBrowserWrapper *newView = [[[CHBrowserWrapper alloc] initWithTab: tabViewItem andWindow: [self window]] autorelease];
+  BrowserWrapper *newView = [[[BrowserWrapper alloc] initWithTab: tabViewItem andWindow: [self window]] autorelease];
   [tabViewItem setLabel: NSLocalizedString(@"UntitledPageTitle", @"")];
   [tabViewItem setView: newView];
   [self addTabViewItem: tabViewItem];

@@ -41,7 +41,7 @@
 
 #import "NSString+Utils.h"
 
-#import "CHIconTabViewItem.h"
+#import "IconTabViewItem.h"
 #import "NSString+Utils.h"
 
 //
@@ -53,11 +53,11 @@
 
 static const int kMinTabsForSpacing = 4;		// with 1-4 tabs, each tab is 1/4 the tab view width
 
-@interface CHIconTabViewItem(Private)
+@interface IconTabViewItem(Private)
 - (void)setupLabelAttributes;
 @end;
 
-@implementation CHIconTabViewItem
+@implementation IconTabViewItem
 
 -(id)initWithIdentifier:(id)identifier withTabIcon:(NSImage *)tabIcon
 {

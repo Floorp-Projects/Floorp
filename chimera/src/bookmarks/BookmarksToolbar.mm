@@ -23,19 +23,19 @@
 *   David Haas  <haasd@cae.wisc.edu>
 */
 
-#import "CHBookmarksButton.h"
-#import "CHBookmarksToolbar.h"
+#import "BookmarksButton.h"
+#import "BookmarksToolbar.h"
 #import "BookmarksService.h"
 #import "BookmarksDataSource.h"
 
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
 
-@interface CHBookmarksToolbar(Private)
-- (CHBookmarksButton*)makeNewButtonWithElement:(nsIDOMElement*)element;
+@interface BookmarksToolbar(Private)
+- (BookmarksButton*)makeNewButtonWithElement:(nsIDOMElement*)element;
 @end
 
-@implementation CHBookmarksToolbar
+@implementation BookmarksToolbar
 
 - (id)initWithFrame:(NSRect)frame
 {
@@ -100,7 +100,7 @@
   while (child) {
     nsCOMPtr<nsIDOMElement> childElt(do_QueryInterface(child));
     if (childElt) {
-      CHBookmarksButton* button = [self makeNewButtonWithElement:childElt];
+      BookmarksButton* button = [self makeNewButtonWithElement:childElt];
       [self addSubview: button];
       [mButtons addObject: button];
     }
@@ -115,7 +115,7 @@
 
 -(void)addButton: (nsIDOMElement*)aElt atIndex: (int)aIndex
 {
-  CHBookmarksButton* button = [self makeNewButtonWithElement:aElt];
+  BookmarksButton* button = [self makeNewButtonWithElement:aElt];
   [self addSubview: button];
   [mButtons insertObject: button atIndex: aIndex];
   if ([self isShown])
@@ -126,7 +126,7 @@
 {
   int count = [mButtons count];
   for (int i = 0; i < count; i++) {
-    CHBookmarksButton* button = [mButtons objectAtIndex: i];
+    BookmarksButton* button = [mButtons objectAtIndex: i];
     if ([button element] == aElt) {
       [button setElement: aElt];
       if (count > i && [self isShown])
@@ -142,7 +142,7 @@
 {
   int count = [mButtons count];
   for (int i = 0; i < count; i++) {
-    CHBookmarksButton* button = [mButtons objectAtIndex: i];
+    BookmarksButton* button = [mButtons objectAtIndex: i];
     if ([button element] == aElt) {
       [mButtons removeObjectAtIndex: i];
       [button removeFromSuperview];
@@ -168,12 +168,12 @@
   float currY = 1.0;
   float prevX = 2.0;
   if (aIndex > 0) {
-    CHBookmarksButton* prevButton = [mButtons objectAtIndex: (aIndex-1)];
+    BookmarksButton* prevButton = [mButtons objectAtIndex: (aIndex-1)];
     prevX += [prevButton frame].origin.x + [prevButton frame].size.width;
     currY = [prevButton frame].origin.y;
   }
   for (int i = aIndex; i < count; i++) {
-    CHBookmarksButton* button = [mButtons objectAtIndex: i];
+    BookmarksButton* button = [mButtons objectAtIndex: i];
     [button sizeToFit];
     float width = [button frame].size.width;
     float height = [button frame].size.height;
@@ -240,7 +240,7 @@
     else {
       // We got smaller.  Just go to the last button and see if it is outside
       // our bounds.
-      CHBookmarksButton* button = [mButtons objectAtIndex:(count-1)];
+      BookmarksButton* button = [mButtons objectAtIndex:(count-1)];
       if ([button frame].origin.x + [button frame].size.width >
           [self bounds].size.width - 2) {
         // The button doesn't fit any more.  Reflow starting at this index.
@@ -285,7 +285,7 @@
   mDragInsertionPosition = BookmarksService::CHInsertAfter;
   
   for (int i = 0; i < count; ++i) {
-    CHBookmarksButton* button = [mButtons objectAtIndex: i];
+    BookmarksButton* button = [mButtons objectAtIndex: i];
     //NSLog(@"check %d - %d,%d %d,%d\n", i, [button frame].origin.x, [button frame].origin.y, aPoint.x, aPoint.y);
     // XXX origin.y is coming up zero here! Need that to check the row we're dragging in :(
     
@@ -456,9 +456,9 @@
   }
 }
 
-- (CHBookmarksButton*)makeNewButtonWithElement:(nsIDOMElement*)element
+- (BookmarksButton*)makeNewButtonWithElement:(nsIDOMElement*)element
 {
-	return [[[CHBookmarksButton alloc] initWithFrame: NSMakeRect(2, 1, 100, 17) element:element bookmarksService:mBookmarks] autorelease];
+	return [[[BookmarksButton alloc] initWithFrame: NSMakeRect(2, 1, 100, 17) element:element bookmarksService:mBookmarks] autorelease];
 }
 
 @end

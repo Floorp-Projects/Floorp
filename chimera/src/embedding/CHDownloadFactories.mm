@@ -38,14 +38,14 @@
 // This file contains implementations of factories for various
 // downloading-related interfaces.
 
-#import "DownloadProgressDisplay.h"
+#import "CHDownloadProgressDisplay.h"
 #import "ProgressDlgController.h"
 
 #include "nsCOMPtr.h"
 #include "nsIFactory.h"
 
 #include "nsDownloadListener.h"
-#include "DownloadFactories.h"
+#include "CHDownloadFactories.h"
 
 // factory for nsIDownload objects
 // XXX replace with generic factory stuff

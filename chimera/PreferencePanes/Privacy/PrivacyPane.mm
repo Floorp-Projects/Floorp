@@ -26,7 +26,7 @@
     
   // Hookup cookie prefs. Relies on the tags of the radio buttons in the matrix being
   // set such that "enable all" is 0 and "disable all" is 2. If mozilla has other prefs
-  // that we don't quite know about, we assume they were remapped by the CHPreferenceManager
+  // that we don't quite know about, we assume they were remapped by the PreferenceManager
   // at startup.
   PRInt32 acceptCookies = 0;
   mPrefService->GetIntPref("network.cookie.cookieBehavior", &acceptCookies);

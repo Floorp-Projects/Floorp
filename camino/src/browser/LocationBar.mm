@@ -36,9 +36,9 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#import "CHLocationBar.h"
+#import "LocationBar.h"
 
-@implementation CHLocationBar
+@implementation LocationBar
 
 - (void)drawRect:(NSRect)aRect {
   // Frame the border.

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "nsAlertController.h"
-#import "nsCocoaBrowserService.h"
+#import "CHBrowserService.h"
 #import "SecurityDialogs.h"
 #import "MainController.h"
 
@@ -71,7 +71,7 @@ SecurityDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
   *_retval = PR_TRUE;
   *outAddType = ADD_TRUSTED_FOR_SESSION;
 
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller)
     return NS_ERROR_FAILURE;
 
@@ -99,7 +99,7 @@ SecurityDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo,
                                 const PRUnichar *targetURL,
                                 nsIX509Cert *cert, PRBool *_retval)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller)
     return NS_ERROR_FAILURE;
 
@@ -118,7 +118,7 @@ NS_IMETHODIMP
 SecurityDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
                              nsIX509Cert *cert, PRBool *_retval)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller)
     return NS_ERROR_FAILURE;
 
@@ -199,7 +199,7 @@ NS_IMETHODIMP
 SecurityDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx,
                                                  PRBool* _result)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller)
     return NS_ERROR_FAILURE;
 

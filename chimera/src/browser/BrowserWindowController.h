@@ -36,9 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Cocoa/Cocoa.h>
-#import "CHBrowserWrapper.h"
-#import "CHFind.h"
-#import "CHBookmarksToolbar.h"
+#import "BrowserWrapper.h"
+#import "Find.h"
+#import "BookmarksToolbar.h"
 
 class nsIDOMEvent;
 class nsIDOMNode;
@@ -76,13 +76,13 @@ class nsIDOMNode;
 
 
 @class BookmarksDataSource;
-@class CHHistoryDataSource;
+@class HistoryDataSource;
 @class BrowserTabView;
-@class CHPageProxyIcon;
+@class PageProxyIcon;
 
-@interface BrowserWindowController : NSWindowController<CHFind>
+@interface BrowserWindowController : NSWindowController<Find>
 {
-  IBOutlet BrowserTabView* mTabBrowser;
+  IBOutlet BrowserTabView*    mTabBrowser;
   IBOutlet NSDrawer*          mSidebarDrawer;
   IBOutlet NSTabView*         mSidebarTabView;
   IBOutlet NSTabView*         mSidebarSourceTabView;
@@ -94,13 +94,13 @@ class nsIDOMNode;
   IBOutlet NSWindow*          mLocationSheetWindow;
   IBOutlet NSTextField*       mLocationSheetURLField;
   IBOutlet NSView*            mStatusBar;     // contains the status text, progress bar, and lock
-  IBOutlet CHPageProxyIcon*   mProxyIcon;
+  IBOutlet PageProxyIcon*     mProxyIcon;
 
   IBOutlet id                   mSidebarBrowserView;  // currently unused
   IBOutlet BookmarksDataSource* mSidebarBookmarksDataSource;
-  IBOutlet CHHistoryDataSource* mHistoryDataSource;
+  IBOutlet HistoryDataSource* mHistoryDataSource;
 
-  IBOutlet CHBookmarksToolbar*  mPersonalToolbar;
+  IBOutlet BookmarksToolbar*  mPersonalToolbar;
 
   IBOutlet NSWindow*            mAddBookmarkSheetWindow;
   IBOutlet NSTextField*         mAddBookmarkTitleField;
@@ -125,7 +125,7 @@ class nsIDOMNode;
   NSString* mPendingReferrer;
   BOOL mPendingActivate;
   
-  CHBrowserWrapper* mBrowserView;
+  BrowserWrapper* mBrowserView;
 
   BOOL mMoveReentrant;
   NSModalSession mModalSession;
@@ -160,7 +160,7 @@ class nsIDOMNode;
 
 - (id)getTabBrowser;
 - (BOOL)newTabsAllowed;
-- (CHBrowserWrapper*)getBrowserWrapper;
+- (BrowserWrapper*)getBrowserWrapper;
 
 - (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate;
 - (void)updateLocationFields:(NSString *)locationString;
@@ -259,7 +259,7 @@ class nsIDOMNode;
 
 - (IBAction)viewOnlyThisImage:(id)aSender;
 
-- (CHBookmarksToolbar*) bookmarksToolbar;
+- (BookmarksToolbar*) bookmarksToolbar;
 
 - (BOOL) isResponderGeckoView:(NSResponder*) responder;
 
@@ -279,7 +279,7 @@ class nsIDOMNode;
 - (NSDrawer *)sidebarDrawer;
 
 // Accessor to get the proxy icon view
-- (CHPageProxyIcon *)proxyIconView;
+- (PageProxyIcon *)proxyIconView;
 
 @end
 

@@ -37,19 +37,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "CHAboutBox.h"
+#import "AboutBox.h"
 
 #include "nsBuildID.h"
 
-@interface CHAboutBox(Private)
+@interface AboutBox(Private)
 - (void)loadWindow;
 @end
 
-@implementation CHAboutBox
+@implementation AboutBox
 
-static CHAboutBox *sharedInstance = nil;
+static AboutBox *sharedInstance = nil;
 
-+ (CHAboutBox *)sharedInstance
++ (AboutBox *)sharedInstance
 {
   return sharedInstance ? sharedInstance : [[self alloc] init];
 }

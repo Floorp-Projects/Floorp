@@ -37,14 +37,14 @@
 
 #import "NSString+Utils.h"
 
-#import "CHPreferenceManager.h"
-#import "CHBrowserWrapper.h"
+#import "PreferenceManager.h"
+#import "BrowserWrapper.h"
 #import "BrowserWindowController.h"
 #import "BookmarksService.h"
 #import "SiteIconProvider.h"
 #import "BrowserTabViewItem.h"
 #import "ToolTip.h"
-#import "CHPageProxyIcon.h"
+#import "PageProxyIcon.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -59,7 +59,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-#include "nsCocoaBrowserService.h"
+#include "CHBrowserService.h"
 #include "nsIWebProgressListener.h"
 
 #include <QuickDraw.h>
@@ -70,7 +70,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 const NSString* kOfflineNotificationName = @"offlineModeChanged";
 
-@interface CHBrowserWrapper(Private)
+@interface BrowserWrapper(Private)
 
 - (void)setPendingActive:(BOOL)active;
 - (void)registerNotificationListener;
@@ -82,7 +82,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
 
 @end
 
-@implementation CHBrowserWrapper
+@implementation BrowserWrapper
 
 - (id)initWithTab:(NSTabViewItem*)aTab andWindow:(NSWindow*)aWindow
 {
@@ -340,7 +340,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)onLocationChange:(NSString*)urlSpec
 {
-  BOOL useSiteIcons = [[CHPreferenceManager sharedInstance] getBooleanPref:"browser.chrome.site_icons" withSuccess:NULL];
+  BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.site_icons" withSuccess:NULL];
   BOOL siteIconLoadInitiated = NO;
   
   SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
@@ -573,7 +573,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     if (isUnrequested) {
       // A popup is being opened while the page is currently loading.  Offer to block the
       // popup.
-      nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+      nsAlertController* controller = CHBrowserService::GetAlertController();
       BOOL confirm = [controller confirm: [self window] title: @"Unrequested Popup Detected"
                                 text: [NSString stringWithFormat: NSLocalizedString(@"PopupBlockMsg", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)]];
 
@@ -680,7 +680,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   	NSImage*  iconImage     = [userInfo objectForKey:SiteIconLoadImageKey];
     NSString* siteIconURI   = [userInfo objectForKey:SiteIconLoadURIKey];
     
-    // NSLog(@"CHBrowserWrapper imageLoadedNotification got image %@ and uri %@", iconImage, proxyImageURI);
+    // NSLog(@"BrowserWrapper imageLoadedNotification got image %@ and uri %@", iconImage, proxyImageURI);
     if (iconImage == nil)
       siteIconURI = @"";	// go back to default image
     

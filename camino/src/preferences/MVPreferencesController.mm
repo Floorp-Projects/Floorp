@@ -2,12 +2,12 @@
 #import "MVPreferencesController.h"
 #import "MVPreferencesMultipleIconView.h"
 #import "MVPreferencesGroupedIconView.h"
-#import "CHToolbarAdditions.h"
+#import "ToolbarAdditions.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
-#include "nsCocoaBrowserService.h"
+#include "CHBrowserService.h"
 
 // #import "Defines.h"
 
@@ -114,7 +114,7 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
     // with it in |windowDidClose()|. Need to ensure this is exactly balanced with |BrowserClosed()|
     // calls as it increments a refcount. As a result, we can only call it when we're making
     // the window visible. Too bad cocoa doesn't give us any notifications of this.
-    nsCocoaBrowserService::InitEmbedding();
+    CHBrowserService::InitEmbedding();
   }
   [self showAll:nil];
   [window makeKeyAndOrderFront:nil];
@@ -236,7 +236,7 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   [[NSUserDefaults standardUserDefaults] synchronize];
 
   // tell gecko that this window no longer needs it around.
-  nsCocoaBrowserService::BrowserClosed();
+  CHBrowserService::BrowserClosed();
 }
 
 - (NSToolbarItem *) toolbar:(NSToolbar *) toolbar
