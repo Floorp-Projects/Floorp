@@ -50,6 +50,30 @@ sub dirname {
   return $dir;
 }
 
+# Create all the directories at once.
+#   This can be much faster than calling mkdir() for each one.
+sub create_directories {
+  my @makefiles = @_;
+  my @dirs = ();
+  my %have_seen = ();
+  my $ac_file;
+  foreach $ac_file (@makefiles) {
+    next if $ac_file =~ /:/;
+    my $ac_dir = dirname($ac_file);
+    while (not defined $have_seen{$ac_dir}) {
+      $have_seen{$ac_dir} = 1;
+      last if -d $ac_dir;
+      push @dirs, $ac_dir;
+      $ac_dir =~ s/\/[^\/]+$//;
+    }
+  }
+  # Call mkdir with the directories sorted by subdir count (how many /'s)
+  system "mkdir ". join(' ', sort {
+                                    split(/\//,$a) <=> split(/\//,$b)
+                                  } @dirs
+                       ) if @dirs;
+}
+
 $ac_given_srcdir = $0;
 $ac_given_srcdir =~ s|/?build/autoconf/.*$||;
 $ac_given_srcdir = '.' if $ac_given_srcdir eq '';
@@ -62,16 +86,7 @@ push @makefiles, split while (<>);
 
 # Create all the directories at once.
 #   This can be much faster than calling mkdir() for each one.
-@dirs_to_create = ();
-%have_seen = ();
-foreach $ac_file (@makefiles) {
-  next if $ac_file =~ /:/;
-  $ac_dir = dirname($ac_file);
-  next if defined($have_seen{$ac_dir});
-  push @dirs_to_create, $ac_dir if not -d $ac_dir;
-  $have_seen{$ac_dir} = 1;
-}
-system "mkdir ".join(' ',@dirs_to_create) if $#dirs_to_create >= 0;
+create_directories(@makefiles);
 
 # Output the makefiles.
 #
@@ -107,8 +122,6 @@ foreach $ac_file (@makefiles) {
     $srcdir     = "$ac_dots$ac_given_srcdir$ac_dir_suffix";
     $top_srcdir = "$ac_dots$ac_given_srcdir";
   }
-
-  mkdir $subdir, 0777 unless -d $subdir;
 
   if (-e $ac_file) {
     next if -M _ < -M $ac_file_in;
