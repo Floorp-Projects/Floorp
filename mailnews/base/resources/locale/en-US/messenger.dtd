@@ -123,10 +123,6 @@ Rights Reserved.
 <!ENTITY sortByUnreadCmd.accesskey "u">  
 <!ENTITY sortByOrderReceivedCmd.label "by Order Received">  
 <!ENTITY sortByOrderReceivedCmd.accesskey "o">  
-<!ENTITY sortAscendCmd.label ".Ascending">  
-<!ENTITY sortAscendCmd.accesskey "a">  
-<!ENTITY sortDescendCmd.label ".Descending">  
-<!ENTITY sortDescendCmd.accesskey "d">  
 <!ENTITY msgsMenu.label ".Messages"> 
 <!ENTITY msgsMenu.accesskey "m"> 
 <!ENTITY threadsMsgsCmd.label "Threaded">  

@@ -195,8 +195,6 @@ var DefaultController =
 			case "cmd_sortByStatus":
 			case "cmd_sortByRead":
 			case "cmd_sortByOrderReceived":
-			case "cmd_sortAscending":
-			case "cmd_sortDescending":
 			case "cmd_sortByThread":
 			case "cmd_viewAllMsgs":
 			case "cmd_viewUnreadMsgs":
@@ -263,8 +261,6 @@ var DefaultController =
 			case "cmd_sortByStatus":
 			case "cmd_sortByRead":
 			case "cmd_sortByOrderReceived":
-			case "cmd_sortAscending":
-			case "cmd_sortDescending":
 			case "cmd_sortByThread":
 			case "cmd_viewAllMsgs":
 			case "cmd_viewUnreadMsgs":
@@ -349,12 +345,6 @@ var DefaultController =
 			case "cmd_sortByOrderReceived":
 				MsgSortByOrderReceived();
 				break;
-			case "cmd_sortAscending":
-				MsgSortAscending();
-				break;
-			case "cmd_sortDescending":
-				MsgSortDescending();
-				break;
 			case "cmd_sortByThread":
 				MsgSortByThread();
 				break;
@@ -424,8 +414,6 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_sortByStatus');
 	goUpdateCommand('cmd_sortByRead');
 	goUpdateCommand('cmd_sortByOrderReceived');
-	goUpdateCommand('cmd_sortAscending');
-	goUpdateCommand('cmd_sortDescending');
 	goUpdateCommand('cmd_sortByThread');
 	goUpdateCommand('cmd_viewAllMsgs');
 	goUpdateCommand('cmd_viewUnreadMsgs');

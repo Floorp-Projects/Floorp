@@ -83,8 +83,6 @@ Rights Reserved.
 	<broadcaster id="cmd_sortByStatus" oncommand="goDoCommand('cmd_sortByStatus')" disabled="true"/>
 	<broadcaster id="cmd_sortByUnread" oncommand="goDoCommand('cmd_sortByUnread')" disabled="true"/>
 	<broadcaster id="cmd_sortByOrderReceived" oncommand="goDoCommand('cmd_sortByOrderReceived')" disabled="true"/>
-	<broadcaster id="cmd_sortAscending" oncommand="goDoCommand('cmd_sortAscending')" disabled="true"/>
-	<broadcaster id="cmd_sortDescending" oncommand="goDoCommand('cmd_sortDescending')" disabled="true"/>
 
 	<broadcaster id="cmd_viewAllMsgs" oncommand="goDoCommand('cmd_viewAllMsgs')" disabled="true"/>
 	<broadcaster id="cmd_viewUnreadMsgs" oncommand="goDoCommand('cmd_viewUnreadMsgs')" disabled="true"/>
@@ -445,9 +443,6 @@ Rights Reserved.
 					<menuitem value="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" observes="cmd_sortBySubject"/>
 					<menuitem value="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" observes="cmd_sortByRead"/>
 					<menuitem value="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" observes="cmd_sortByOrderReceived"/>
-					<menuseparator/>
-					<menuitem value="&sortAscendCmd.label;" accesskey="&sortAscendCmd.accesskey;" disabled="true" observes="cmd_sortAscending"/>
-					<menuitem value="&sortDescendCmd.label;" accesskey="&sortDescendCmd.accesskey;" disabled="true" observes="cmd_sortDescending"/>
 				</menupopup>
 			</menu>
 			<menu value="&msgsMenu.label;" accesskey="&msgsMenu.accesskey;">

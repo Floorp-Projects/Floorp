@@ -131,16 +131,6 @@ function MsgSortByTotal()
 	SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages', 'http://home.netscape.com/NC-rdf#Date', true, null);
 }
 
-function MsgSortAscending() 
-{
-	dump("not implemented yet.\n");
-}
-function MsgSortDescending()
-
-{
-	dump("not implemented yet.\n");
-}
-
 function MsgSortByThread()
 {
 	ChangeThreadView()
