@@ -344,17 +344,6 @@ class nsTString_CharT : public nsTSubstring_CharT
 
 
         /**
-         *  This method is used to remove all occurances of aChar from this
-         * string.
-         *  
-         *  @param  aChar -- char to be stripped
-         *  @param  aOffset -- where in this string to start stripping chars
-         */
-         
-      NS_COM void StripChar( char_type aChar, PRInt32 aOffset=0 );
-
-
-        /**
          *  This method strips whitespace throughout the string.
          */
       NS_COM void StripWhitespace();

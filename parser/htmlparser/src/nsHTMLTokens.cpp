@@ -180,18 +180,20 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
   nsresult result=NS_OK;
+  nsScannerSharedSubstring tagIdent;
+
   if (aFlag & NS_IPARSER_FLAG_HTML) {
-    nsAutoString theSubstr;
-    result=aScanner.ReadTagIdentifier(theSubstr);
-    mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
+    result = aScanner.ReadTagIdentifier(tagIdent);
+    mTypeID = (PRInt32)nsHTMLTags::LookupTag(tagIdent.str());
     // Save the original tag string if this is user-defined or if we
     // are viewing source
     if(eHTMLTag_userdefined==mTypeID || (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-      mTextValue=theSubstr;
+      mTextValue = tagIdent.str();
     }
   }
   else {
-    result=aScanner.ReadTagIdentifier(mTextValue);  
+    result = aScanner.ReadTagIdentifier(tagIdent);
+    mTextValue = tagIdent.str();
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 
@@ -283,21 +285,22 @@ CEndToken::CEndToken(const nsAString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
 nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) 
 {
   nsresult result = NS_OK;
+  nsScannerSharedSubstring tagIdent;
+
   if (aFlag & NS_IPARSER_FLAG_HTML) {
-    nsAutoString theSubstr;
-    result=aScanner.ReadTagIdentifier(theSubstr);
+    result = aScanner.ReadTagIdentifier(tagIdent);
     
-    mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
+    mTypeID = (PRInt32)nsHTMLTags::LookupTag(tagIdent.str());
     // Save the original tag string if this is user-defined or if we
     // are viewing source
     if(eHTMLTag_userdefined==mTypeID ||
        (aFlag & (NS_IPARSER_FLAG_VIEW_SOURCE | NS_IPARSER_FLAG_PRESERVE_CONTENT))) {
-      mTextValue=theSubstr;
+      mTextValue = tagIdent.str();
     }
   }
   else {
-    result = aScanner.ReadTagIdentifier(mTextValue);
-
+    result = aScanner.ReadTagIdentifier(tagIdent);
+    mTextValue = tagIdent.str();
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 
@@ -1330,7 +1333,7 @@ CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
  *  @return  
  */
 CAttributeToken::CAttributeToken(const nsAString& aName) : CHTMLToken(eHTMLTag_unknown) {
-  mTextValue.Assign(aName);
+  mTextValue.writable().Assign(aName);
   mHasEqualWithoutValue=PR_FALSE;
 #ifdef DEBUG
   mLastAttribute = PR_FALSE;
@@ -1346,7 +1349,7 @@ CAttributeToken::CAttributeToken(const nsAString& aName) : CHTMLToken(eHTMLTag_u
  *  @return  
  */
 CAttributeToken::CAttributeToken(const nsAString& aKey, const nsAString& aName) : CHTMLToken(eHTMLTag_unknown) {
-  mTextValue.Assign(aName);
+  mTextValue.writable().Assign(aName);
   mTextKey.Rebind(aKey);
   mHasEqualWithoutValue=PR_FALSE;
 #ifdef DEBUG
@@ -1402,7 +1405,7 @@ void CAttributeToken::SanitizeKey() {
 
 const nsSubstring& CAttributeToken::GetStringValue(void)
 {
-  return mTextValue;
+  return mTextValue.str();
 }
  
 /*
@@ -1426,13 +1429,13 @@ void CAttributeToken::GetSource(nsString& anOutputString){
  */
 void CAttributeToken::AppendSourceTo(nsAString& anOutputString){
   AppendUnicodeTo(mTextKey, anOutputString);
-  if(mTextValue.Length() || mHasEqualWithoutValue) 
+  if(mTextValue.str().Length() || mHasEqualWithoutValue) 
     anOutputString.AppendLiteral("=");
-  anOutputString.Append(mTextValue);
+  anOutputString.Append(mTextValue.str());
   // anOutputString.AppendLiteral(";");
 }
 
-static void AppendNCR(nsString& aString, PRInt32 aNCRValue);
+static void AppendNCR(nsSubstring& aString, PRInt32 aNCRValue);
 /*
  *  @param   aScanner -- controller of underlying input source
  *  @param   aFlag -- If NS_IPARSER_FLAG_VIEW_SOURCE do not reduce entities...
@@ -1440,7 +1443,7 @@ static void AppendNCR(nsString& aString, PRInt32 aNCRValue);
  *
  */
 static
-nsresult ConsumeAttributeEntity(nsString& aString,
+nsresult ConsumeAttributeEntity(nsScannerSharedSubstring& aString,
                                 nsScanner& aScanner,
                                 PRInt32 aFlag) 
 {
@@ -1464,37 +1467,40 @@ nsresult ConsumeAttributeEntity(nsString& aString,
         // Nav 4.x does not treat it as an entity,
         // IE treats it as an entity if terminated with a semicolon.
         // Resembling IE!!
+
+        nsSubstring &writable = aString.writable();
         if(theNCRValue < 0 || (theNCRValue > 255 && theTermChar != ';')) {
           // Looks like we're not dealing with an entity
-          aString.Append(kAmpersand);
-          aString.Append(entity);
+          writable.Append(kAmpersand);
+          writable.Append(entity);
         }
         else {
           // A valid entity so reduce it.
-          aString.Append(PRUnichar(theNCRValue));
+          writable.Append(PRUnichar(theNCRValue));
         }
       }
     }
     else if (ch==kHashsign && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
       result=CEntityToken::ConsumeEntity(ch,entity,aScanner);
       if (NS_SUCCEEDED(result)) {
+        nsSubstring &writable = aString.writable();
         if (result == NS_HTMLTOKENS_NOT_AN_ENTITY) {
           // Looked like an entity but it's not
           aScanner.GetChar(amp);
-          aString.Append(amp);
+          writable.Append(amp);
           result = NS_OK; // just being safe..
         }
         else {
           PRInt32 err;
           theNCRValue=entity.ToInteger(&err,kAutoDetect);
-          AppendNCR(aString, theNCRValue);
+          AppendNCR(writable, theNCRValue);
         }
       }
     }
     else {
       // What we thought as entity is not really an entity...
       aScanner.GetChar(amp);
-      aString.Append(amp);
+      aString.writable().Append(amp);
     }//if
   }
 
@@ -1516,7 +1522,7 @@ nsresult ConsumeAttributeEntity(nsString& aString,
  *  @return  error result
  */
 static
-nsresult ConsumeAttributeValueText(nsString& aString,
+nsresult ConsumeAttributeValueText(nsScannerSharedSubstring& aString,
                                    PRInt32& aNewlineCount,
                                    nsScanner& aScanner,
                                    const nsReadEndCondition& aEndCondition,
@@ -1538,19 +1544,20 @@ nsresult ConsumeAttributeValueText(nsString& aString,
         aScanner.GetChar(ch);
         result = aScanner.Peek(ch);
         if (NS_SUCCEEDED(result)) {
+          nsSubstring &writable = aString.writable();
           if(ch == kNewLine) {
-            aString.AppendLiteral("\r\n");
+            writable.AppendLiteral("\r\n");
             aScanner.GetChar(ch);
           }
           else {
-            aString.Append(PRUnichar('\r'));
+            writable.Append(PRUnichar('\r'));
           }
           ++aNewlineCount;
         }
       }
       else if(ch == kNewLine && aAllowNewlines) {
         aScanner.GetChar(ch);
-        aString.Append(PRUnichar('\n'));
+        aString.writable().Append(PRUnichar('\n'));
         ++aNewlineCount;
       }
       else {
@@ -1573,14 +1580,14 @@ nsresult ConsumeAttributeValueText(nsString& aString,
  */
 static
 nsresult ConsumeQuotedString(PRUnichar aChar,
-                             nsString& aString,
+                             nsScannerSharedSubstring& aString,
                              PRInt32& aNewlineCount,
                              nsScanner& aScanner,
                              PRInt32 aFlag)
 {
   NS_ASSERTION(aChar==kQuote || aChar==kApostrophe,"char is neither quote nor apostrophe");
   // hold onto this in case this is an unterminated string literal
-  PRUint32 origLen = aString.Length();
+  PRUint32 origLen = aString.str().Length();
 
   static const PRUnichar theTerminalCharsQuote[] = { 
     PRUnichar(kQuote), PRUnichar('&'), PRUnichar(kCR),
@@ -1612,11 +1619,11 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
   // Ref: Bug 35806
   // A back up measure when disaster strikes...
   // Ex <table> <tr d="><td>hello</td></tr></table>
-  if(!aString.IsEmpty() && aString.Last()!=aChar &&
+  if(!aString.str().IsEmpty() && aString.str().Last()!=aChar &&
      !aScanner.IsIncremental() && result==kEOF) {
     static const nsReadEndCondition
       theAttributeTerminator(kAttributeTerminalChars);
-    aString.Truncate(origLen);
+    aString.writable().Truncate(origLen);
     aScanner.SetPosition(theOffset, PR_FALSE, PR_TRUE);
     result=ConsumeAttributeValueText(aString,aNewlineCount,aScanner,
                                      theAttributeTerminator,PR_FALSE,aFlag);
@@ -1722,7 +1729,9 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
             result=aScanner.GetChar(aChar);  //skip the equal sign...
             if (NS_OK==result) {
               if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-                result = aScanner.ReadWhitespace(mTextValue, mNewlineCount);
+                PRBool haveCR;
+                result = aScanner.ReadWhitespace(mTextValue, mNewlineCount,
+                                                 haveCR);
               }
               else {
                 result = aScanner.SkipWhitespace(mNewlineCount);
@@ -1734,13 +1743,13 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                   if ((kQuote==aChar) || (kApostrophe==aChar)) {
                     aScanner.GetChar(aChar);
                     if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-                      mTextValue.Append(aChar);
+                      mTextValue.writable().Append(aChar);
                     }
                     
                     result=ConsumeQuotedString(aChar,mTextValue,mNewlineCount,
                                                aScanner,aFlag);
                     if (NS_SUCCEEDED(result) && (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-                      mTextValue.Append(aChar);
+                      mTextValue.writable().Append(aChar);
                     } else if (result == NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL) {
                       result = NS_OK;
                       mInError = PR_TRUE;
@@ -1771,7 +1780,9 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                 }//if
                 if (NS_OK==result) {
                   if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-                    result = aScanner.ReadWhitespace(mTextValue, mNewlineCount);
+                    PRBool haveCR;
+                    result = aScanner.ReadWhitespace(mTextValue, mNewlineCount,
+                                                     haveCR);
                   }
                   else {
                     result = aScanner.SkipWhitespace(mNewlineCount);
@@ -1818,7 +1829,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
     }//if (consume optional value)
 
     if (NS_OK==result) {
-      if (mTextValue.Length() == 0 && mTextKey.Length() == 0 && 
+      if (mTextValue.str().Length() == 0 && mTextKey.Length() == 0 && 
           mNewlineCount == 0) {
         //This attribute contains no useful information for us, so there is no
         //use in keeping it around. Attributes that are otherwise empty, but
@@ -1880,7 +1891,7 @@ CWhitespaceToken::CWhitespaceToken() : CHTMLToken(eHTMLTag_whitespace) {
  *  @return  
  */
 CWhitespaceToken::CWhitespaceToken(const nsAString& aName) : CHTMLToken(eHTMLTag_whitespace) {
-  mTextValue.Assign(aName);
+  mTextValue.writable().Assign(aName);
 }
 
 /*
@@ -1904,17 +1915,26 @@ PRInt32 CWhitespaceToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) {
-  mTextValue.Assign(aChar);
-  nsresult result=aScanner.ReadWhitespace(mTextValue, mNewlineCount);
-  if(NS_OK==result) {
-    mTextValue.StripChar(kCR);
+  // If possible, we'd like to just be a dependent substring starting at
+  // |aChar|.  The scanner has already been advanced, so we need to
+  // back it up to facilitate this.
+
+  nsScannerIterator start;
+  aScanner.CurrentPosition(start);
+  aScanner.SetPosition(--start);
+
+  PRBool haveCR;
+
+  nsresult result = aScanner.ReadWhitespace(mTextValue, mNewlineCount, haveCR);
+  if (NS_OK == result && haveCR) {
+    mTextValue.writable().StripChar(kCR);
   }
   return result;
 }
 
 const nsSubstring& CWhitespaceToken::GetStringValue(void)
 {
-  return mTextValue;
+  return mTextValue.str();
 }
 
 /*
@@ -2120,7 +2140,7 @@ static const PRUint16 PA_HackTable[] = {
 };
 #endif /* PA_REMAP_128_TO_160_ILLEGAL_NCR */
 
-static void AppendNCR(nsString& aString, PRInt32 aNCRValue)
+static void AppendNCR(nsSubstring& aString, PRInt32 aNCRValue)
 {
 #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
   /* for some illegal, but popular usage */

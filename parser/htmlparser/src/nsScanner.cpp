@@ -770,7 +770,7 @@ nsresult nsScanner::SkipPast(nsString& aValidSet){
  *  @param   aString - receives new data from stream
  *  @return  error code
  */
-nsresult nsScanner::ReadTagIdentifier(nsString& aString) {
+nsresult nsScanner::ReadTagIdentifier(nsScannerSharedSubstring& aString) {
 
   if (!mSlidingBuffer) {
     return kEOF;
@@ -949,8 +949,11 @@ nsresult nsScanner::ReadNumber(nsString& aString,PRInt32 aBase) {
  *  @param   addTerminal tells us whether to append terminal to aString
  *  @return  error code
  */
-nsresult nsScanner::ReadWhitespace(nsString& aString,
-                                   PRInt32& aNewlinesSkipped) {
+nsresult nsScanner::ReadWhitespace(nsScannerSharedSubstring& aString,
+                                   PRInt32& aNewlinesSkipped,
+                                   PRBool& aHaveCR) {
+
+  aHaveCR = PR_FALSE;
 
   if (!mSlidingBuffer) {
     return kEOF;
@@ -970,6 +973,8 @@ nsresult nsScanner::ReadWhitespace(nsString& aString,
   current = origin;
   end = mEndPosition;
 
+  PRBool haveCR = PR_FALSE;
+
   while(!done && current != end) {
     switch(theChar) {
       case '\n':
@@ -981,11 +986,13 @@ nsresult nsScanner::ReadWhitespace(nsString& aString,
           if ((thePrevChar == '\r' && theChar == '\n') ||
               (thePrevChar == '\n' && theChar == '\r')) {
             theChar = (++current != end) ? *current : '\0'; // CRLF == LFCR => LF
+            haveCR = PR_TRUE;
           } else if (thePrevChar == '\r') {
             // Lone CR becomes CRLF; callers should know to remove extra CRs
             AppendUnicodeTo(origin, current, aString);
-            aString.Append(PRUnichar('\n'));
+            aString.writable().Append(PRUnichar('\n'));
             origin = current;
+            haveCR = PR_TRUE;
           }
         }
         break;
@@ -1007,6 +1014,7 @@ nsresult nsScanner::ReadWhitespace(nsString& aString,
     result = Eof();
   }
 
+  aHaveCR = haveCR;
   return result;
 }
 
@@ -1164,7 +1172,14 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
       setcurrent = setstart;
       while (*setcurrent) {
         if (*setcurrent == theChar) {
-          goto found;
+          if(addTerminal)
+            ++current;
+          AppendUnicodeTo(origin, current, aString);
+          SetPosition(current);
+
+          //DoErrTest(aString);
+
+          return NS_OK;
         }
         ++setcurrent;
       }
@@ -1178,16 +1193,62 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   SetPosition(current);
   AppendUnicodeTo(origin, current, aString);
   return Eof();
+}
 
-found:
-  if(addTerminal)
+nsresult nsScanner::ReadUntil(nsScannerSharedSubstring& aString,
+                              const nsReadEndCondition& aEndCondition,
+                              PRBool addTerminal)
+{  
+  if (!mSlidingBuffer) {
+    return kEOF;
+  }
+
+  nsScannerIterator origin, current;
+  const PRUnichar* setstart = aEndCondition.mChars;
+  const PRUnichar* setcurrent;
+
+  origin = mCurrentPosition;
+  current = origin;
+
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+
+  if (result == kEOF) {
+    return Eof();
+  }
+  
+  while (current != mEndPosition) {
+    theChar = *current;
+
+    // Filter out completely wrong characters
+    // Check if all bits are in the required area
+    if(!(theChar & aEndCondition.mFilter)) {
+      // They were. Do a thorough check.
+
+      setcurrent = setstart;
+      while (*setcurrent) {
+        if (*setcurrent == theChar) {
+          if(addTerminal)
+            ++current;
+          AppendUnicodeTo(origin, current, aString);
+          SetPosition(current);
+
+          //DoErrTest(aString);
+
+          return NS_OK;
+        }
+        ++setcurrent;
+      }
+    }
+    
     ++current;
-  AppendUnicodeTo(origin, current, aString);
+  }
+
+  // If we are here, we didn't find any terminator in the string and
+  // current = mEndPosition
   SetPosition(current);
-
-  //DoErrTest(aString);
-
-  return NS_OK;
+  AppendUnicodeTo(origin, current, aString);
+  return Eof();
 }
 
 nsresult nsScanner::ReadUntil(nsScannerIterator& aStart, 
@@ -1222,7 +1283,13 @@ nsresult nsScanner::ReadUntil(nsScannerIterator& aStart,
       setcurrent = setstart;
       while (*setcurrent) {
         if (*setcurrent == theChar) {
-          goto found;
+          if(addTerminal)
+            ++current;
+          aStart = origin;
+          aEnd = current;
+          SetPosition(current);
+
+          return NS_OK;
         }
       ++setcurrent;
       }
@@ -1238,15 +1305,6 @@ nsresult nsScanner::ReadUntil(nsScannerIterator& aStart,
   aStart = origin;
   aEnd = current;
   return Eof();
-
- found:
-  if(addTerminal)
-    ++current;
-  aStart = origin;
-  aEnd = current;
-  SetPosition(current);
-
-  return NS_OK; 
 }
 
 /**

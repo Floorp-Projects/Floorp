@@ -265,7 +265,7 @@ public:
   virtual const nsSubstring& GetStringValue(void);
 
 protected:
-  nsString mTextValue;
+  nsScannerSharedSubstring mTextValue;
 };
 
 /**
@@ -363,7 +363,7 @@ public:
   virtual void SetKey(const nsAString& aKey);
   virtual void BindKey(nsScanner* aScanner, nsScannerIterator& aStart,
                        nsScannerIterator& aEnd);
-  const nsString& GetValue(void) {return mTextValue;}
+  const nsSubstring& GetValue(void) {return mTextValue.str();}
   virtual void SanitizeKey();
   virtual const nsSubstring& GetStringValue(void);
   virtual void GetSource(nsString& anOutputString);
@@ -374,7 +374,7 @@ protected:
 #ifdef DEBUG
   PRPackedBool mLastAttribute;
 #endif
-  nsAutoString mTextValue;
+  nsScannerSharedSubstring mTextValue;
   nsScannerSubstring mTextKey;
 };
 
