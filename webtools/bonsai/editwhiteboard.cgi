@@ -40,7 +40,7 @@ PutsHeader("Scritch, scritch.", "Edit Whiteboard");
 print "
 <FORM method=post action=\"doeditwhiteboard.cgi\">
 <INPUT TYPE=HIDDEN NAME=treeid VALUE=$::TreeID>
-<INPUT TYPE=HIDDEN NAME=origwhite VALUE=\"" . value_quote($::WhiteBoard) . "\">
+<INPUT TYPE=HIDDEN NAME=origwhite VALUE=\"" . &url_quote($::WhiteBoard) . "\">
 
 The free-for-all whiteboard is a fine place to put notes of general
 and temporary interest about the tree.  (Like, \"I'm checking in a bunch

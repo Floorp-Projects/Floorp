@@ -30,7 +30,7 @@ print "Content-type: text/html\n\n";
 Lock();
 LoadWhiteboard();
 
-my $oldvalue = FormData('origwhite');
+my $oldvalue = &url_decode(FormData('origwhite'));
 my $currentvalue = $::WhiteBoard;
 $oldvalue =~ s/[\n\r]//g; $currentvalue =~ s/[\n\r]//g;
 unless ($oldvalue eq $currentvalue) {
@@ -52,7 +52,7 @@ below.  Or maybe you want to tweak your text first.  Or you can forget it and
 go back to the beginning.
 
 <FORM method=get action=\"doeditwhiteboard.cgi\">
-<INPUT TYPE=HIDDEN NAME=origwhite VALUE=\"" . value_quote($::WhiteBoard). "\">
+<INPUT TYPE=HIDDEN NAME=origwhite VALUE=\"" . &url_quote($::WhiteBoard). "\">
 
 Change the free-for-all whiteboard:<br>
 <TEXTAREA NAME=whiteboard ROWS=10 COLS=70>" . FormData('whiteboard') .

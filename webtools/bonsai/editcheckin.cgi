@@ -101,7 +101,7 @@ print qq{
 };
 
 foreach my $i (sort(keys(%$info))) {
-    my $q = value_quote($info->{$i});
+    my $q = &url_quote($info->{$i});
     print qq{<INPUT TYPE=HIDDEN NAME=orig$i VALUE="$q">\n};
 }
 

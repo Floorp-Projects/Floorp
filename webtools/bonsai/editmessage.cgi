@@ -90,7 +90,7 @@ print "
 <INPUT TYPE=HIDDEN NAME=treeid VALUE=$::TreeID>
 <B>Password:</B> <INPUT NAME=password TYPE=password> <BR>
 <INPUT TYPE=HIDDEN NAME=msgname VALUE=$Filename>
-<INPUT TYPE=HIDDEN NAME=origtext VALUE=\"" . value_quote($Text) . "\">
+<INPUT TYPE=HIDDEN NAME=origtext VALUE=\"" . &url_quote($Text) . "\">
 <TEXTAREA NAME=text ROWS=40 COLS=80>$Text</TEXTAREA><BR>
 <INPUT TYPE=SUBMIT VALUE=\"Change this message\">
 </FORM>

@@ -48,7 +48,7 @@ if (!exists $::FORM{'id'}) {
     }
     
     foreach my $i (sort(keys(%$info))) {
-        if (FormData("orig$i") ne $info->{$i}) {
+        if (&url_decode(FormData("orig$i")) ne $info->{$i}) {
             $busted = 1;
             last;
         }

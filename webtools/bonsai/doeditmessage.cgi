@@ -50,7 +50,7 @@ if (-f $RealFilename) {
     close(FILE);
 }
 
-unless (FormData('origtext') eq $Text) {
+unless (&url_decode(FormData('origtext')) eq $Text) {
      PutsHeader("Oops!", "Oops!", "Someone else has been here!");
      print "
 It looks like somebody else has changed this message while you were editing it.
