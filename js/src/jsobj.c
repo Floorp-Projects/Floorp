@@ -2542,7 +2542,10 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                             if (scope->object == obj2)
                                 sprop = SCOPE_GET_PROPERTY(scope, id);
                         }
-                        if (obj2 != obj && !sprop) {
+                        if (sprop) {
+                            JS_ASSERT(obj2 == scope->object);
+                            obj = obj2;
+                        } else if (obj2 != obj) {
                             JS_UNLOCK_OBJ(cx, obj2);
                             JS_LOCK_OBJ(cx, obj);
                         }
