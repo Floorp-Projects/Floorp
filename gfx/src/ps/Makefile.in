@@ -27,7 +27,7 @@ include $(topsrcdir)/config/config.mk
 LIBRARY_NAME = gfxps
 
 MODULE=raptor 
-
+IS_COMPONENT=1
 
 DEFINES += -D_IMPL_NS_GFXONXP 
 CFLAGS	+= $(TK_CFLAGS)
@@ -40,11 +40,15 @@ CPPSRCS = \
 	nsRenderingContextPS.cpp \
 	nsPostScriptObj.cpp \
 	nsAFMObject.cpp \
+	nsGfxFactoryPS.cpp	\
+	$(NULL)
 
 CSRCS = \
 	font_metrics.c \
 
 EXPORTS =                               \
+		nsIDeviceContextPS.h	\
+		nsGfxPSCID.h			\
         nsIDeviceContextSpecPS.h \
         nsPostScriptObj.h
 

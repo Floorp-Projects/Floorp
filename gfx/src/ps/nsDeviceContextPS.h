@@ -25,23 +25,25 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 #include "nsVoidArray.h"
+#include "nsIDeviceContextPS.h"
 
 class nsPostScriptObj;
 class nsDeviceContextWin;       // need to be a friend of the class using us.
 
-class nsDeviceContextPS : public DeviceContextImpl
+class nsDeviceContextPS : public DeviceContextImpl,
+                          public nsIDeviceContextPS
 {
 public:
   nsDeviceContextPS();
 
-	NS_DECL_ISUPPORTS
+	NS_DECL_ISUPPORTS_INHERITED
 
   /**
    * This method does nothing since a postscript devicecontext will never be created
    * with a NativeWidget.
    * @update 12/21/98 dwc
    */
-  NS_IMETHOD  Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext); 
+  NS_IMETHOD  InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext); 
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
@@ -68,7 +70,9 @@ public:
   NS_IMETHOD 	EndDocument(void);
   NS_IMETHOD 	BeginPage(void);
   NS_IMETHOD 	EndPage(void);
-  virtual void  SetSpec(nsIDeviceContextSpec *aSpec);
+
+  
+  NS_IMETHOD  SetSpec(nsIDeviceContextSpec *aSpec);
 
 protected:
   virtual 	~nsDeviceContextPS();

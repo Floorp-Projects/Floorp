@@ -35,7 +35,6 @@ REQUIRES = raptor netlib xpcom reg pref
 LIBS = \
 	-lraptorgfx	\
 	-lgfx$(MOZ_TOOLKIT) \
-	-lgfxps \
 	-lnetlib \
 	-labouturl \
 	-lfileurl \

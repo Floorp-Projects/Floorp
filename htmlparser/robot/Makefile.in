@@ -51,7 +51,6 @@ LIBS		= \
 		-l$(MOZ_LIB_JS_PREFIX)js \
 		-lgfx$(MOZ_TOOLKIT) \
 		-lraptorgfx \
-		-lgfxps \
 		-limg	\
 		-lmozutil \
 		-lxpcom \

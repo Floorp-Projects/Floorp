@@ -58,21 +58,24 @@ PRInt32 i, n;
 
 }
 
-void nsDeviceContextPS :: SetSpec(nsIDeviceContextSpec* aSpec)
+NS_IMETHODIMP
+nsDeviceContextPS :: SetSpec(nsIDeviceContextSpec* aSpec)
 {
   mSpec = aSpec;
   NS_ADDREF(aSpec);
+  return NS_OK;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextPS, kDeviceContextIID)
-NS_IMPL_ADDREF(nsDeviceContextPS)
-NS_IMPL_RELEASE(nsDeviceContextPS)
+NS_IMPL_ISUPPORTS_INHERITED(nsDeviceContextPS,
+                            DeviceContextImpl,
+                            nsIDeviceContextPS)
 
 /** ---------------------------------------------------
  *  See documentation in nsDeviceContextPS.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS :: Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext)
+NS_IMETHODIMP
+nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext)
 {
 float origscale, newscale;
 float t2d, a2d;

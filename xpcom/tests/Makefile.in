@@ -79,7 +79,6 @@ NETLIB_LIBS =	      \
 LIBS		= \
 	-lraptorgfx	\
 	-lgfx$(MOZ_TOOLKIT) \
-	-lgfxps \
 	-lnetlib \
 	-labouturl \
 	-lfileurl \
