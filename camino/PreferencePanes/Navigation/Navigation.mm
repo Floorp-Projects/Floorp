@@ -328,7 +328,7 @@ const int kDefaultExpireDays = 9;
 {
   nsCOMPtr<nsICacheService> cacheServ ( do_GetService("@mozilla.org/network/cache-service;1") );
   if ( cacheServ )
-    cacheServ->EvictEntries(nsICache::STORE_ON_DISK);
+    cacheServ->EvictEntries(nsICache::STORE_ANYWHERE);
 }
 
 //
