@@ -25,15 +25,41 @@ NS_IMPL_ISUPPORTS(nsMsgThread, nsMsgThread::GetIID())
 
 nsMsgThread::nsMsgThread()
 {
+	Init();
+}
+nsMsgThread::nsMsgThread(nsMsgDatabase *db, nsIMdbTable *table)
+{
+	Init();
+	m_mdbTable = table;
+	m_mdbDB = db;
+	if (db)
+		db->AddRef();
+
+	if (table && db)
+		table->GetMetaRow(db->GetEnv(), nil, nil, &m_metaRow);
+}
+
+void nsMsgThread::Init()
+{
 	m_threadKey = nsMsgKey_None; 
 	m_numChildren = 0;		
 	m_numUnreadChildren = 0;	
 	m_flags = 0;
+	m_mdbTable = nsnull;
+	m_mdbDB = nsnull;
+	m_metaRow = nsnull;
 	NS_INIT_REFCNT();
 }
 
+
 nsMsgThread::~nsMsgThread()
 {
+	if (m_mdbTable)
+		m_mdbTable->Release();
+	if (m_mdbDB)
+		m_mdbDB->Release();
+	if (m_metaRow)
+		m_metaRow->Release();
 }
 
 NS_IMETHODIMP		nsMsgThread::SetThreadKey(nsMsgKey threadKey)
@@ -54,7 +80,6 @@ NS_IMETHODIMP	nsMsgThread::GetThreadKey(nsMsgKey *result)
 	else
 		return NS_ERROR_NULL_POINTER;
 }
-
 
 NS_IMETHODIMP nsMsgThread::GetFlags(PRUint32 *result)
 {
@@ -105,6 +130,14 @@ NS_IMETHODIMP nsMsgThread::GetNumUnreadChildren (PRUint32 *result)
 NS_IMETHODIMP nsMsgThread::AddChild(nsIMessage *child, PRBool threadInThread)
 {
 	nsresult ret = NS_OK;
+    nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, child);          // closed system, cast ok
+
+	nsIMdbRow *hdrRow = hdr->GetMDBRow();
+	if (m_mdbTable)
+	{
+		m_mdbTable->AddRow(m_mdbDB->GetEnv(), hdrRow);
+		ChangeChildCount(1);
+	}
 
 	return ret;
 }
@@ -157,4 +190,24 @@ NS_IMETHODIMP nsMsgThread::MarkChildRead(PRBool bRead)
 	return ret;
 }
 
+nsresult nsMsgThread::ChangeChildCount(PRInt32 delta)
+{
+	nsresult ret = NS_OK;
+	PRUint32 childCount = 0;
+	m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, childCount);
+	childCount += delta;
 
+	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, childCount);
+	return ret;
+}
+
+nsresult nsMsgThread::ChangeUnreadChildCount(PRInt32 delta)
+{
+	nsresult ret = NS_OK;
+	PRUint32 childCount = 0;
+	m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, childCount);
+	childCount += delta;
+
+	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, childCount);
+	return ret;
+}

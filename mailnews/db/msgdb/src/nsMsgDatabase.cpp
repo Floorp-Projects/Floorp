@@ -330,6 +330,7 @@ nsMsgDatabase::nsMsgDatabase()
       m_mdbTokensInitialized(PR_FALSE), m_ChangeListeners(nsnull),
       m_hdrRowScopeToken(0),
       m_hdrTableKindToken(0),
+	  m_threadTableKindToken(0),
       m_subjectColumnToken(0),
       m_senderColumnToken(0),
       m_messageIdColumnToken(0),
@@ -341,7 +342,9 @@ nsMsgDatabase::nsMsgDatabase()
       m_priorityColumnToken(0),
       m_statusOffsetColumnToken(0),
       m_numLinesColumnToken(0),
-      m_ccListColumnToken(0)
+      m_ccListColumnToken(0),
+	  m_threadChildrenColumnToken(0),
+	  m_threadUnreadChildrenColumnToken(0)
 {
 	NS_INIT_REFCNT();
 }
@@ -709,6 +712,7 @@ NS_IMETHODIMP nsMsgDatabase::Close(PRBool forceCommit /* = TRUE */)
 
 const char *kMsgHdrsScope = "ns:msg:db:row:scope:msgs:all";
 const char *kMsgHdrsTableKind = "ns:msg:db:table:kind:msgs";
+const char *kThreadTableKind = "ns:msg:db:table:kind:thread";
 const char *kSubjectColumnName = "subject";
 const char *kSenderColumnName = "sender";
 const char *kMessageIdColumnName = "message-id";
@@ -721,6 +725,8 @@ const char *kPriorityColumnName = "priority";
 const char *kStatusOffsetColumnName = "statusOfset";
 const char *kNumLinesColumnName = "numLines";
 const char *kCCListColumnName = "ccList";
+const char *kThreadChildrenColumnName = "children";
+const char *kThreadUnreadChildrenColumnName = "unreadChildren";
 
 struct mdbOid gAllMsgHdrsTableOID;
 
@@ -797,8 +803,12 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kStatusOffsetColumnName, &m_statusOffsetColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kNumLinesColumnName, &m_numLinesColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kCCListColumnName, &m_ccListColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kThreadChildrenColumnName, &m_threadChildrenColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kThreadUnreadChildrenColumnName, &m_threadUnreadChildrenColumnToken);
 			
 			err = GetStore()->StringToToken(GetEnv(), kMsgHdrsTableKind, &m_hdrTableKindToken); 
+			if (err == NS_OK)
+				err = GetStore()->StringToToken(GetEnv(), kThreadTableKind, &m_threadTableKindToken);
 			if (err == NS_OK)
 			{
 				// The table of all message hdrs will have table id 1.
@@ -1865,7 +1875,7 @@ NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMessage *ex
 		{
 			PRBool newThread;
 			hdrStruct.m_messageKey = key;
-			err = CreateNewHdrAndAddToDB(&newThread, &hdrStruct, newHdr, PR_FALSE);
+			err = CreateNewHdrAndAddToDB(&newThread, &hdrStruct, newHdr, PR_TRUE);
 		}
 #endif // MDB_DOES_CELL_CURSORS_OR_COPY_ROW
 	}
@@ -1981,6 +1991,18 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 	return err;
 }
 
+nsresult nsMsgDatabase::UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value)
+{
+	struct mdbYarn yarn;
+	char	yarnBuf[100];
+
+	yarn.mYarn_Buf = (void *) yarnBuf;
+	yarn.mYarn_Size = sizeof(yarnBuf);
+	yarn.mYarn_Fill = yarn.mYarn_Size;
+	yarn.mYarn_Form = 0;
+	yarn.mYarn_Grow = NULL;
+	return row->AddColumn(GetEnv(),  columnToken, UInt32ToYarn(&yarn, value));
+}
 
 /* static */struct mdbYarn *nsMsgDatabase::nsStringToYarn(struct mdbYarn *yarn, nsString *str)
 {
@@ -2041,6 +2063,29 @@ nsresult nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)
 }
 
 // protected routines
+
+nsresult nsMsgDatabase::CreateNewThread(nsMsgKey threadId, nsMsgThread **pnewThread)
+{
+	nsresult	err = NS_OK;
+	nsIMdbTable		*threadTable;
+	struct mdbOid threadTableOID;
+
+	if (!pnewThread)
+		return NS_ERROR_NULL_POINTER;
+
+	threadTableOID.mOid_Scope = m_hdrRowScopeToken;
+	threadTableOID.mOid_Id = threadId;	// presumes 0 is valid key value
+
+	err  = GetStore()->NewTableWithOid(GetEnv(), &threadTableOID, m_threadTableKindToken, 
+                                     PR_FALSE, nsnull, &threadTable);
+	if (NS_FAILED(err)) 
+		return err;
+	*pnewThread = new nsMsgThread(this, threadTable);
+	if (*pnewThread)
+		(*pnewThread)->SetThreadKey(threadId);
+	return err;
+}
+
 
 nsMsgThread *nsMsgDatabase::GetThreadForReference(const char * msgID)
 {
@@ -2131,6 +2176,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 
 nsresult nsMsgDatabase::AddToThread(nsMsgHdr *newHdr, nsMsgThread *thread, PRBool threadInThread)
 {
+
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2162,19 +2208,28 @@ nsMsgThread *nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey)
 // make the passed in header a thread header
 nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
 {
-	nsMsgThread *threadHdr = new nsMsgThread;
+
+	if (!msgHdr)
+		return NS_ERROR_NULL_POINTER;
+
+	nsMsgThread *threadHdr = nsnull;
+	
+	nsresult err = CreateNewThread(msgHdr->m_messageKey, &threadHdr);
 	if (threadHdr)
 	{
+//		nsString subject;
+
 		threadHdr->AddRef();
-		threadHdr->SetThreadKey(msgHdr->m_messageKey);
-	//	threadHdr->SetSubject
+//		err = msgHdr->GetSubject(subject);
+//		threadHdr->SetThreadKey(msgHdr->m_messageKey);
+//		threadHdr->SetSubject(subject);
 
 		// need to add the thread table to the db.
 		AddToThread(msgHdr, threadHdr, FALSE);
 
 		threadHdr->Release();
 	}
-	return NS_OK;
+	return err;
 }
 
 

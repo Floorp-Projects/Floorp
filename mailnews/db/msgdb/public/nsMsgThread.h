@@ -23,11 +23,14 @@
 #include "nsString.h"
 #include "MailNewsTypes.h"
 
+class nsIMdbTable;
 class nsIMessage;
+class nsMsgDatabase;
 
 class nsMsgThread : public nsIMsgThread {
 public:
 	nsMsgThread();
+	nsMsgThread(nsMsgDatabase *db, nsIMdbTable *table);
 	virtual ~nsMsgThread();
 
     NS_DECL_ISUPPORTS
@@ -46,11 +49,24 @@ public:
 	NS_IMETHOD		RemoveChild(nsMsgKey msgKey);
 	NS_IMETHOD		MarkChildRead(PRBool bRead);
 
+	// non-interface methods
+    nsIMdbTable		*GetMDBTable() {return m_mdbTable;}
+	nsIMdbRow		*GetMetaRow() {return m_metaRow;}
+	nsMsgDatabase	*m_mdbDB ;
+
 protected:
+
+	void			Init();
+	nsresult		ChangeChildCount(PRInt32 delta);
+	nsresult		ChangeUnreadChildCount(PRInt32 delta);
+
 	nsMsgKey		m_threadKey; 
 	PRUint32		m_numChildren;		
 	PRUint32		m_numUnreadChildren;	
 	PRUint32		m_flags;
+    nsIMdbTable		*m_mdbTable;
+	nsIMdbRow		*m_metaRow;
+
 
 
 };

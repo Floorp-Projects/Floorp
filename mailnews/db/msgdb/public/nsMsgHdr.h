@@ -29,10 +29,6 @@
 class nsMsgDatabase;
 class nsString2;
 
-// this could inherit from nsISupports mainly to get ref-counting semantics
-// but I don't intend it to be a public interface. I'll just
-// declare AddRef and Release as methods..
-
 class nsMsgHdr : public nsRDFResource, public nsIMessage {
 public:
 
@@ -99,8 +95,6 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
 
-    void		SetCSID(PRUint16 csid) {m_csID = csid;}
-    PRInt16		GetCSID();
     nsIMdbRow		*GetMDBRow() {return m_mdbRow;}
 protected:
     nsresult	SetStringColumn(const char *str, mdb_token token);
@@ -126,7 +120,7 @@ protected:
     // just a wrapper around the msg row in the mdb. This could cause problems,
     // though I hope not.
     nsMsgDatabase	*m_mdb;
-    nsIMdbRow			*m_mdbRow;
+    nsIMdbRow		*m_mdbRow;
 };
 
 #endif

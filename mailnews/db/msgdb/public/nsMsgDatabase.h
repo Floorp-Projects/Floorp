@@ -34,6 +34,7 @@ class ListContext;
 class nsMsgKeyArray;
 class nsNewsSet;
 class nsMsgThread;
+class nsIMsgThread;
 
 class nsMsgDatabase : public nsIMsgDatabase {
 public:
@@ -185,6 +186,8 @@ public:
 	nsresult				RowCellColumnToMime2EncodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
 	nsresult				RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
 
+	// helper functions to put values in cells for the passed-in row
+	nsresult				UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value);
 	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
 	static	struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);
@@ -199,6 +202,7 @@ public:
 #endif
 
 	friend class nsMsgHdr;	// use this to get access to cached tokens for hdr fields
+	friend class nsMsgThread;	// use this to get access to cached tokens for hdr fields
     friend class nsMsgDBEnumerator;
 
 protected:
@@ -223,6 +227,7 @@ protected:
 	nsMsgHdr	*	GetMsgHdrForMessageID(const char *msgID);
 	nsMsgThread *	GetThreadContainingMsgHdr(nsMsgHdr *msgHdr);
 	// threading interfaces
+	virtual nsresult CreateNewThread(nsMsgKey key, nsMsgThread **newThread);
 	virtual PRBool	ThreadBySubjectWithoutRe();
 	virtual nsresult ThreadNewHdr(nsMsgHdr* hdr, PRBool &newThread);
 	virtual nsresult AddNewThread(nsMsgHdr *msgHdr);
@@ -266,6 +271,7 @@ protected:
 
 	mdb_token			m_hdrRowScopeToken;
 	mdb_token			m_hdrTableKindToken;
+	mdb_token			m_threadTableKindToken;
 	mdb_token			m_subjectColumnToken;
 	mdb_token			m_senderColumnToken;
 	mdb_token			m_messageIdColumnToken;
@@ -278,6 +284,8 @@ protected:
 	mdb_token			m_statusOffsetColumnToken;
 	mdb_token			m_numLinesColumnToken;
 	mdb_token			m_ccListColumnToken;
+	mdb_token			m_threadChildrenColumnToken;
+	mdb_token			m_threadUnreadChildrenColumnToken;
 };
 
 #endif
