@@ -142,13 +142,36 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
 			break ;
 		case ID_INTERFACES_NSISHISTORY_GETENTRYATINDEX :
 			//GetEntryAtIndex(0, PR_FALSE, getter_AddRefs(theHistoryEntry));
+			for (theIndex = 0; theIndex < numEntries; theIndex++)
+			{ 
+				FormatAndPrintOutput("the index = ", theIndex, 2); 
+
+				theSessionHistory->GetEntryAtIndex(theIndex, PR_FALSE, getter_AddRefs(theHistoryEntry));
+				if (!theHistoryEntry)
+				{
+					QAOutput("We didn't get the History Entry object. No more tests performed.", 1);
+					return;
+				}
+				GetURIHistTest(theHistoryEntry);
+				GetTitleHistTest(theHistoryEntry);
+				GetIsSubFrameTest(theHistoryEntry);
+			}	// end for loop
+
 			break ;
 		case ID_INTERFACES_NSISHISTORY_PURGEHISTORY :
 			PurgeHistoryTest(theSessionHistory, numEntries);
 			break ;
 		case ID_INTERFACES_NSISHISTORY_GETSHISTORYENUMERATOR :
 			//GetSHistoryEnumerator(getter_AddRefs(theSimpleEnum));
+
+			rv = theSessionHistory->GetSHistoryEnumerator(getter_AddRefs(theSimpleEnum));
+			if (!theSimpleEnum)
+  			   QAOutput("theSimpleEnum for GetSHistoryEnumerator() invalid. Test failed.", 1);
+			else
+			   RvTestResult(rv, "GetSHistoryEnumerator() (SHistoryEnumerator attribute) test", 2);
+			SimpleEnumTest(theSimpleEnum);
 			break ;
+
 		case ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_RUNALLTESTS :
 			RunAllHistoryEntryTests();
 			break ;
@@ -278,7 +301,7 @@ void CNsIHistory::GetCountTest(nsISHistory *theSessionHistory, PRInt32 *numEntri
 	if (*numEntries < 0)
 		QAOutput("numEntries for GetCount() < 0. Test failed.", 1);
 	else {
-		FormatAndPrintOutput("number of entries = ", *numEntries, 2);
+		FormatAndPrintOutput("GetCount():number of entries = ", *numEntries, 2);
 		RvTestResult(rv, "GetCount() (count attribute) test", 2);
 	}
 }
@@ -288,8 +311,10 @@ void CNsIHistory::GetIndexTest(nsISHistory *theSessionHistory, PRInt32 *theIndex
 	rv = theSessionHistory->GetIndex(theIndex);
 	if (*theIndex <0)
 		QAOutput("theIndex for GetIndex() < 0. Test failed.", 1);
-	else
+	else {
+		FormatAndPrintOutput("GetIndex():the index = ", *theIndex, 2);
 		RvTestResult(rv, "GetIndex() (index attribute) test", 2);
+	}
 }
 
 void CNsIHistory::SetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 theMaxLength)
@@ -304,7 +329,7 @@ void CNsIHistory::GetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 *theM
 	if (*theMaxLength<0)
 		QAOutput("theMaxLength for GetMaxLength() < 0. Test failed.", 1);
 	else {
-		FormatAndPrintOutput("theMaxLength = ", *theMaxLength, 2); 
+		FormatAndPrintOutput("GetMaxLength():theMaxLength = ", *theMaxLength, 2); 
 		RvTestResult(rv, "GetMaxLength() (MaxLength attribute) test", 2);
 	}
 }
@@ -480,5 +505,4 @@ void CNsIHistory::RunAllHistoryEntryTests()
 
 		}	// end for loop
 	}		// end outer else
-
 }
