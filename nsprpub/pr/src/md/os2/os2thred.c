@@ -127,7 +127,15 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
     if(thread->md.handle == -1) {
         return PR_FAILURE;
     }
-    _PR_MD_SET_PRIORITY(&(thread->md), priority);
+
+    /*
+     * On OS/2, a thread is created with a thread priority of
+     * THREAD_PRIORITY_NORMAL
+     */
+
+    if (priority != PR_PRIORITY_NORMAL) {
+        _PR_MD_SET_PRIORITY(&(thread->md), priority);
+    }
 
     return PR_SUCCESS;
 }
