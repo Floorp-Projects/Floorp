@@ -40,6 +40,8 @@
 #include "nsIViewManager.h"
 #include "nsViewsCID.h"
 #include "nsIReflowCommand.h"
+#include "nsHTMLIIDs.h"
+#include "nsDOMEvent.h"
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -52,10 +54,39 @@ nsHTMLContainerFrame::~nsHTMLContainerFrame()
 {
 }
 
-NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
-                                      nsIRenderingContext& aRenderingContext,
-                                      const nsRect& aDirtyRect)
+NS_IMETHODIMP
+nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect)
 {
+  // Probe for a JS onPaint event handler
+  nsIHTMLContent* hc;
+  if (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**)&hc)) {
+    nsHTMLValue val;
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
+        hc->GetAttribute(nsHTMLAtoms::onpaint, val)) {
+      nsEventStatus es;
+      nsresult rv;
+
+      nsPaintEvent event;
+      event.eventStructType = NS_PAINT_EVENT;
+      event.message = NS_PAINT;
+      event.point.x = 0;
+      event.point.y = 0;
+      event.time = 0;
+      event.widget = nsnull;
+      event.widgetSupports = nsnull;
+      event.nativeMsg = nsnull;
+      event.renderingContext = nsnull;
+      event.rect = nsnull;
+
+      rv = mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, es);
+      if (NS_OK == rv) {
+      }
+    }
+    NS_RELEASE(hc);
+  }
+
   // Paint our background and border
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
