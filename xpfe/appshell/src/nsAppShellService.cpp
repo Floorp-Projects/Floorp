@@ -212,14 +212,14 @@ nsAppShellService::CreateHiddenWindow()
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIXULWindow> newWindow;
     rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
-                        0, nsnull, 0, 0,
+                        0, 0, 0,
                         getter_AddRefs(newWindow));
 #else
   rv = NS_NewURI(&url, "about:blank");
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIXULWindow> newWindow;
     	 rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
-                        NS_CHROME_ALL_CHROME, nsnull, 100, 100,
+                        NS_CHROME_ALL_CHROME, 100, 100,
                         getter_AddRefs(newWindow));
 #endif
     if (NS_SUCCEEDED(rv)) {
@@ -517,7 +517,6 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
                                   nsIURI *aUrl, 
                                   PRBool aShowWindow, PRBool aLoadDefaultPage,
                                   PRUint32 aChromeMask,
-                                  nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                                   nsIXULWindow **aResult)
 
@@ -525,8 +524,7 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
   nsresult rv;
 
   rv = JustCreateTopWindow(aParent, aUrl, aShowWindow, aLoadDefaultPage,
-                                 aChromeMask, aCallbacks,
-                                 aInitialWidth, aInitialHeight,
+                                 aChromeMask, aInitialWidth, aInitialHeight,
                                  aResult);
 
   if (NS_SUCCEEDED(rv))
@@ -545,7 +543,6 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
                                  nsIURI *aUrl, 
                                  PRBool aShowWindow, PRBool aLoadDefaultPage,
                                  PRUint32 aChromeMask,
-                                 nsIXULWindowCallbacks *aCallbacks,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                                  nsIXULWindow **aResult)
 {
@@ -593,7 +590,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     }
 
     rv = window->Initialize(aParent, mAppShell, aUrl,
-                            aShowWindow, aLoadDefaultPage, aCallbacks,
+                            aShowWindow, aLoadDefaultPage,
                             aInitialWidth, aInitialHeight, widgetInitData);
       
     if (NS_SUCCEEDED(rv)) {

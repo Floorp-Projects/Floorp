@@ -57,7 +57,6 @@ class nsIDOMHTMLImageElement;
 class nsIDOMHTMLInputElement;
 class nsIStreamObserver;
 class nsIWidget;
-class nsIXULWindowCallbacks;
 class nsVoidArray;
 
 class nsWebShellWindow : public nsXULWindow,
@@ -114,7 +113,6 @@ public:
   // nsWebShellWindow methods...
   nsresult Initialize(nsIXULWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
                       PRBool aCreatedVisible, PRBool aLoadDefaultPage,
-                      nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                       nsWidgetInitData& widgetInitData);
   nsIWidget* GetWidget(void) { return mWindow; }
@@ -248,7 +246,6 @@ protected:
   nsresult                NotifyObservers( const nsString &aTopic, const nsString &someData );
 
   nsIWebShell*            mWebShell;
-  nsIXULWindowCallbacks*  mCallbacks;
   PRBool                  mLockedUntilChromeLoad;
   PRBool                  mLoadDefaultPage;
 

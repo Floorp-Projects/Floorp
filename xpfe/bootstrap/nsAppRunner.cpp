@@ -226,7 +226,7 @@ static nsresult OpenChromURL( const char * urlstr, PRInt32 height = NS_SIZETOCON
    nsCOMPtr<nsIXULWindow> newWindow;
  	rv = appShell->CreateTopLevelWindow(nsnull, url,
                                       PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
-                                      nsnull, width, height,
+                                      width, height,
                                       getter_AddRefs(newWindow));
   return rv;
 }

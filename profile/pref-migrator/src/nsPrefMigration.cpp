@@ -328,7 +328,7 @@ nsPrefMigration::ProcessPrefs(PRBool showProgressAsModalWindow)
 
   rv = PMProgressAppShell->CreateTopLevelWindow(nsnull, pmprogressURL,
                                           PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
-                                          nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+                                          NS_SIZETOCONTENT, NS_SIZETOCONTENT,
                                           getter_AddRefs(mPMProgressWindow));
   if (NS_FAILED(rv)) return rv;
 

@@ -53,7 +53,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
 #include "nsIAppShell.h"
-#include "nsIXULWindowCallbacks.h"
 
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
@@ -221,7 +220,6 @@ nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
 
   mWebShell = nsnull;
   mWindow   = nsnull;
-  mCallbacks = nsnull;
   mLockedUntilChromeLoad = PR_FALSE;
   mIntrinsicallySized = PR_FALSE;
   mDebuting = PR_FALSE;
@@ -245,8 +243,6 @@ nsWebShellWindow::~nsWebShellWindow()
     mSPTimer->Cancel();
   PR_Unlock(mSPTimerLock);
   PR_DestroyLock(mSPTimerLock);
-
-  NS_IF_RELEASE(mCallbacks);
 }
 
 NS_IMPL_ADDREF(nsWebShellWindow);
@@ -270,7 +266,6 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl, 
                                       PRBool aCreatedVisible,
                                       PRBool aLoadDefaultPage,
-                                      nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                                       nsWidgetInitData& widgetInitData)
 {
@@ -360,10 +355,6 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
     mWebShell->SetPrefs(prefs);
     nsServiceManager::ReleaseService(kPrefCID, prefs);
   }
-
-  NS_IF_RELEASE(mCallbacks);
-  mCallbacks = aCallbacks;
-  NS_IF_ADDREF(mCallbacks);
 
   if (nsnull != aUrl)  {
     char *tmpStr = NULL;
@@ -1456,14 +1447,8 @@ void nsWebShellWindow::ExecuteStartupCode()
   if (webshellNode)
     webshellElement = do_QueryInterface(webshellNode);
 
-  if (mCallbacks)
-    mCallbacks->ConstructBeforeJavaScript(mWebShell);
-
   // Execute the string in the onLoad attribute of the webshellElement.
   nsString startupCode;
-  
-  if (mCallbacks)
-    mCallbacks->ConstructAfterJavaScript(mWebShell);
 }
 
 /* copy the window's size and position to the window tag */
@@ -1797,7 +1782,7 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    widgetInitData.mBorderStyle = eBorderStyle_default;
 
    rv = Initialize(nsnull, aAppShell, urlObj, PR_TRUE, PR_TRUE,
-       nsnull, aBounds.width, aBounds.height, widgetInitData);
+       aBounds.width, aBounds.height, widgetInitData);
    EnsureContentTreeOwner();
    mContentTreeOwner->SetChromeMask(aChromeMask);
    if (NS_SUCCEEDED(rv))
