@@ -263,16 +263,16 @@ ImageConsumer::DoContent(const char * aContentType,
   if (aAbortProcess)
     *aAbortProcess = PR_FALSE;
 
-  nsAutoString contentType(aContentType);
+  nsAutoString contentType; contentType.AssignWithConversion(aContentType);
 
-  if (contentType == "multipart/x-mixed-replace"
-      || contentType == "multipart/mixed") {
+  if (contentType.EqualsWithConversion("multipart/x-mixed-replace")
+      || contentType.EqualsWithConversion("multipart/mixed")) {
     // if we're getting multipart data, we have to convert it.
     // so wedge the converter inbetween us and the consumer.
     nsCOMPtr<nsIStreamConverterService> convServ = do_GetService(kStreamConvServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString astrix("*/*");
+    nsAutoString astrix; astrix.AssignWithConversion("*/*");
     return convServ->AsyncConvertData(contentType.GetUnicode(),
                                    astrix.GetUnicode(),
                                    NS_STATIC_CAST(nsIStreamListener*, this),
