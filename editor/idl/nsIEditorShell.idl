@@ -90,7 +90,7 @@ interface nsIEditorShell : nsISupports
   
   nsIDOMElement GetSelectedElement(in wstring tagName);
   nsIDOMElement CreateElementWithDefaults(in wstring tagName);
-  nsIDOMElement InsertElement(in nsIDOMElement element, in boolean deleteSelection);
+  void    InsertElement(in nsIDOMElement element, in boolean deleteSelection);
   void    InsertLinkAroundSelection(in nsIDOMElement anchorElement);
   void    SelectElement(in nsIDOMElement element);
   void    SetSelectionAfterElement(in nsIDOMElement element);
