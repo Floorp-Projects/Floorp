@@ -28,7 +28,6 @@
 
 var dialog;     // Quick access to document/form elements.
 var gFindInst;   // nsIWebBrowserFind that we're going to use
-var gFindInstData; // use this to update the find inst data
 
 function initDialogObject()
 {
@@ -88,15 +87,10 @@ function onLoad()
   initDialogObject();
 
   // get the find instance
-  var arg0 = window.arguments[0]; 
-  if (arg0 instanceof window.opener.nsFindInstData) { 
-    gFindInstData = arg0;
-    gFindInst = gFindInstData.webBrowserFind;
-  } else {
+  var finder = window.arguments[0];
   // If the dialog was opened from window.find(), findInst will be an
-    // nsISupports interface, so QueryInterface anyway to nsIWebBrowserFind
-    gFindInst = arg0.QueryInterface(Components.interfaces.nsIWebBrowserFind);
-  }
+  // nsISupports interface, so QueryInterface anyway to nsIWebBrowserFind.
+  gFindInst = finder.QueryInterface(Components.interfaces.nsIWebBrowserFind);
 
   fillDialog();
   doEnabling();
@@ -113,12 +107,6 @@ function onUnload()
 
 function onAccept()
 {
-  if (gFindInstData && gFindInst != gFindInstData.webBrowserFind) 
-  {
-    gFindInstData.init();
-    gFindInst = gFindInstData.webBrowserFind;
-  } 
-    
   // Transfer dialog contents to the find service.
   saveFindData();
 
