@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  caps \
 		  intl \
+		  uconv \
 		  dom \
 		  gfx \
 		  layout \
