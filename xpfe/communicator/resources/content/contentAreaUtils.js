@@ -793,8 +793,7 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
     return validateFileName(aDefaultFileName);
 
   // 5) If this is a directory, use the last directory name
-  var re = /\/([^\/]+)\/$/;
-  var path = aDocumentURI.path.match(re);
+  var path = aDocumentURI.path.match(/\/([^\/]+)\/$/);
   if (path && path.length > 1) {
       return validateFileName(path[1]);
   }
