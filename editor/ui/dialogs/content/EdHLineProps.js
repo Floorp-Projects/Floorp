@@ -18,12 +18,8 @@ function Startup()
     return;
   }
 
-dump("HLINE PROPS 1\n");
-
   // Get the selected horizontal line
   hLineElement = window.editorShell.GetSelectedElement(tagName);
-
-dump("HLINE PROPS 2\n");
 
   if (!hLineElement) {
     // We should never be here if not editing an existing HLine
@@ -31,7 +27,6 @@ dump("HLINE PROPS 2\n");
     window.close();
     return;
   }
-dump("HLINE PROPS 3\n");
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -43,23 +38,22 @@ dump("HLINE PROPS 3\n");
   dialog.shading = document.getElementById("3dShading");
   dialog.pixelOrPercentButton = document.getElementById("pixelOrPercentButton");
 
-dump("HLINE PROPS 4\n");
   // Initialize control values based on existing attributes
 
   dialog.heightInput.value = hLineElement.getAttribute("height");
   width = hLineElement.getAttribute("width");
-  // Use convert to number, then back to string to strip of "%"
-  dialog.widthInput.value = (width - 0) + "";
-
-dump("HLINE PROPS 5\n");
 
   // This assumes initial button text is "pixels"
-  if (width.search(/%/) > 0) {
-    dialog.pixelOrPercentButton.value = "percent";
+  // Search for a "%" character
+  percentIndex = width.search(/%/);
+  if (percentIndex > 0) {
+//TODO: Change the text on the titledbutton - HOW DO I DO THIS?
+//    dialog.pixelOrPercentButton.value = "percent";
     percentChar = "%";
+    // Strip out the %
+    width = width.substr(0, percentIndex);
   }
-
-dump("HLINE PROPS 6\n");
+  dialog.widthInput.value = width;
 
   align = hLineElement.getAttribute("align");
   if (align == "center") {
@@ -70,10 +64,8 @@ dump("HLINE PROPS 6\n");
     dialog.leftAlign.checked = true;
   }
   noshade = hLineElement.getAttribute("noshade");
-  dump("Width ="+width+" Align ="+align+" NoShade="+noshade+"\n");
   dialog.shading.checked = (noshade == "");
 
-dump("HLINE PROPS 3\n");
   // SET FOCUS TO FIRST CONTROL
   dialog.heightInput.focus();
 }
