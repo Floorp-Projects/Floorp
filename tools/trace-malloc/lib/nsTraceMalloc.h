@@ -45,7 +45,7 @@ PR_BEGIN_EXTERN_C
  * NS_TraceMallocStartup comment (below) for magic number differences in log
  * file structure.
  */
-#define NS_TRACE_MALLOC_MAGIC           "XPCOM\nTMLog06\r\n\032"
+#define NS_TRACE_MALLOC_MAGIC           "XPCOM\nTMLog07\r\n\032"
 #define NS_TRACE_MALLOC_MAGIC_SIZE      16
 
 /**
