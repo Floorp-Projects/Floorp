@@ -39,7 +39,6 @@ PROG5 = .\$(OBJDIR)\TestSocketTransport.exe
 PROG6 = .\$(OBJDIR)\urltest.exe
 PROG7 = .\$(OBJDIR)\TestFileInput2.exe
 PROG8 = .\$(OBJDIR)\TestFileTransport.exe
-PROG9 = .\$(OBJDIR)\TestRes.exe
 PROGA = .\$(OBJDIR)\TestUpload.exe
 PROGB = .\$(OBJDIR)\TestPageLoad.exe
 PROGC = .\$(OBJDIR)\TestWriteStream.exe
@@ -48,7 +47,7 @@ PROGE = .\$(OBJDIR)\TestCallbacks.exe
 PROGF = .\$(OBJDIR)\TestHttp.exe
 
 PROGRAMS = \
-$(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8) $(PROG9)\
+$(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8)\
           $(PROGA) $(PROGB) $(PROGC) $(PROGD) $(PROGE) $(PROGF) $(PROGG)
 
 LCFLAGS=-DUSE_NSREG -GX
@@ -88,8 +87,6 @@ $(PROG6): $(OBJDIR) urltest.cpp
 $(PROG7): $(OBJDIR) TestFileInput2.cpp
 
 $(PROG8): $(OBJDIR) TestFileTransport.cpp
-
-$(PROG9): $(OBJDIR) TestRes.cpp
 
 $(PROGA): $(OBJDIR) TestUpload.cpp
 
