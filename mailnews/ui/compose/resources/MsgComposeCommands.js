@@ -115,10 +115,10 @@ function ComposeStartup()
 		editorAppCore.setContentWindow(window.frames[0]);
 		editorAppCore.setWebShellWindow(window);
 		editorAppCore.setToolbarWindow(window);
-		if (useHtml)
-			editorAppCore.loadUrl("chrome://messengercompose/content/defaultHtmlBody.html");
-		else
-			editorAppCore.loadUrl("chrome://messengercompose/content/defaultTextBody.html");
+//		if (useHtml)
+//			editorAppCore.loadUrl("chrome://messengercompose/content/defaultHtmlBody.html");
+//		else
+//			editorAppCore.loadUrl("chrome://messengercompose/content/defaultTextBody.html");
 
 		// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
 		if (composeAppCore)
@@ -177,8 +177,10 @@ function MessageSent()
 	document.getElementById('msgSubject').value = "";
 	if (editorAppCore)
 	{
-		editorAppCore.selectAll();
-		editorAppCore.insertText("");
+//		editorAppCore.selectAll();
+//		editorAppCore.insertText("");
+		editorAppCore.loadUrl("about:blank");
+
 	}
 
 	window.close();	// <-- doesn't work yet!
