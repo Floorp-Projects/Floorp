@@ -502,14 +502,12 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, n
         nsCRT::free(utfNewName);
       }
 
-      nsCOMPtr <nsIFolder> destIFolder;
+      nsCOMPtr <nsIMsgFolder> destIFolder;
       if (rootFolder)
       {
         rootFolder->FindSubFolder(originalServerPath.get(), getter_AddRefs(destIFolder));
         if (destIFolder)
         {
-          nsCOMPtr <nsIMsgFolder> msgFolder;
-          msgFolder = do_QueryInterface(destIFolder);	
           destIFolder->GetURI(getter_Copies(folderUri));
           filterAction->SetTargetFolderUri(folderUri);
           moveValue.Assign(folderUri);
@@ -521,7 +519,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, n
       // start off leaving the value the same.
       filterAction->SetTargetFolderUri(moveValue.get());
       nsresult rv = NS_OK;
-      nsCOMPtr <nsIFolder> localMailRoot;
+      nsCOMPtr <nsIMsgFolder> localMailRoot;
       rootFolder->GetURI(getter_Copies(folderUri));
       // if the root folder is not imap, than the local mail root is the server root.
       // otherwise, it's the migrated local folders.

@@ -68,7 +68,7 @@ class nsInputFileStream;
 class nsIMsgFilter;
 class MSG_FolderInfoMail;
 class nsIMsgFilterList;
-class nsIFolder;
+class nsIMsgFolder;
 
 /* Used for the various things that parse RFC822 headers...
  */
@@ -228,7 +228,7 @@ public:
   nsParseNewMailState();
   virtual ~nsParseNewMailState();
   NS_DECL_ISUPPORTS_INHERITED
-  nsresult Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow);
+  nsresult Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow);
 
   virtual void	DoneParsingFolder(nsresult status);
 
@@ -259,7 +259,7 @@ protected:
 	virtual	int			MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr);
   void		LogRuleHit(nsIMsgFilter *filter, nsIMsgDBHdr *msgHdr);
 	nsCOMPtr <nsIMsgFilterList> m_filterList;
-	nsCOMPtr <nsIFolder> m_rootFolder;
+	nsCOMPtr <nsIMsgFolder> m_rootFolder;
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
 	nsIOFileStream		*m_inboxFileStream;
 	nsFileSpec    m_inboxFileSpec;

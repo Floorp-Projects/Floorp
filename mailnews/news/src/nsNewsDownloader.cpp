@@ -432,7 +432,7 @@ nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextServer(PRBool *done)
   m_currentServer = nsnull;
   PRUint32 numServers; 
   m_allServers->Count(&numServers);
-  nsCOMPtr <nsIFolder> rootFolder;
+  nsCOMPtr <nsIMsgFolder> rootFolder;
 
   while (serverIndex < numServers)
   {

@@ -540,7 +540,6 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       // must happen after CreateSubFolders, or the folders won't exist.
       if (createdDefaultMailboxes && isServer) 
       {
-        nsCOMPtr<nsIFolder> rootFolder;
         rv = localMailServer->SetFlagsOnDefaultMailboxes();
         if (NS_FAILED(rv)) return rv;
       }
@@ -1940,11 +1939,10 @@ nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder* srcFolder, nsIMsgWind
   rv = NS_MsgEscapeEncodeURLPath(folderName.get(), getter_Copies(escapedFolderName));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr<nsIFolder> newFolder;
+  nsCOMPtr<nsIMsgFolder> newFolder;
   nsCOMPtr<nsIMsgFolder> newMsgFolder;
 
-  FindSubFolder(escapedFolderName.get(), getter_AddRefs(newFolder));
-  newMsgFolder = do_QueryInterface(newFolder,&rv);
+  rv = FindSubFolder(escapedFolderName.get(), getter_AddRefs(newMsgFolder));
   NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr<nsISimpleEnumerator> messages;
@@ -2032,7 +2030,6 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
 {
   nsresult rv;
   mInitialized = PR_TRUE;
-  nsCOMPtr<nsIFolder> newFolder;
   nsCOMPtr<nsIMsgFolder> newMsgFolder;
   PRBool isChildOfTrash=PR_FALSE;
   rv = IsChildOfTrash(&isChildOfTrash);
@@ -3361,15 +3358,11 @@ nsMsgLocalMailFolder::setSubfolderFlag(const PRUnichar *aFolderName,
   nsXPIDLCString escapedFolderName;
   nsresult rv = NS_MsgEscapeEncodeURLPath(aFolderName, getter_Copies(escapedFolderName));
   NS_ENSURE_SUCCESS(rv,rv);
-  nsCOMPtr<nsIFolder> folder;
-  rv = FindSubFolder(escapedFolderName, getter_AddRefs(folder));
+  nsCOMPtr<nsIMsgFolder> msgFolder;
+  rv = FindSubFolder(escapedFolderName, getter_AddRefs(msgFolder));
   
   if (NS_FAILED(rv)) 
     return rv;
-  if (!folder) 
-    return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder);
   if (!msgFolder) 
     return NS_ERROR_FAILURE;
   

@@ -189,7 +189,7 @@ interface nsIMsgAccountManager : nsISupports {
   void addIncomingServerListener(in nsIIncomingServerListener serverListener);
   void removeIncomingServerListener(in nsIIncomingServerListener serverListener);
 
-  // these are going away in favor of nsIFolder::NotifyEvent(in nsIAtom event);
+  // these are going away in favor of nsIMsgFolder::NotifyEvent(in nsIAtom event);
   void notifyServerLoaded(in nsIMsgIncomingServer server);
   void notifyServerUnloaded(in nsIMsgIncomingServer server);
   void notifyServerChanged(in nsIMsgIncomingServer server);

@@ -208,9 +208,8 @@ nsMsgFolder::~nsMsgFolder(void)
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED4(nsMsgFolder, nsRDFResource,
+NS_IMPL_ISUPPORTS_INHERITED3(nsMsgFolder, nsRDFResource,
                              nsIMsgFolder,
-                             nsIFolder,
                              nsISupportsWeakReference,
                              nsISerializable)
 
@@ -380,7 +379,7 @@ nsMsgFolder::GetSubFolders(nsIEnumerator* *result)
 }
 
 NS_IMETHODIMP
-nsMsgFolder::FindSubFolder(const char *aEscapedSubFolderName, nsIFolder **aFolder)
+nsMsgFolder::FindSubFolder(const char *aEscapedSubFolderName, nsIMsgFolder **aFolder)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
@@ -399,7 +398,7 @@ nsMsgFolder::FindSubFolder(const char *aEscapedSubFolderName, nsIFolder **aFolde
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIFolder> folder(do_QueryInterface(res, &rv));
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
   if (NS_FAILED(rv))
     return rv;
   if (!aFolder)
@@ -433,7 +432,7 @@ NS_IMETHODIMP nsMsgFolder::RemoveFolderListener(nsIFolderListener * listener)
 
 }
 
-NS_IMETHODIMP nsMsgFolder::SetParent(nsIFolder *aParent)
+NS_IMETHODIMP nsMsgFolder::SetParent(nsIMsgFolder *aParent)
 {
   mParent = do_GetWeakReference(aParent);
 
@@ -462,11 +461,11 @@ NS_IMETHODIMP nsMsgFolder::SetParent(nsIFolder *aParent)
 }
 
 
-NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder **aParent)
+NS_IMETHODIMP nsMsgFolder::GetParent(nsIMsgFolder **aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
 
-  nsCOMPtr<nsIFolder> parent = do_QueryReferent(mParent);
+  nsCOMPtr<nsIMsgFolder> parent = do_QueryReferent(mParent);
 
   *aParent = parent;
   NS_IF_ADDREF(*aParent);
@@ -476,11 +475,11 @@ NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder **aParent)
 NS_IMETHODIMP nsMsgFolder::GetParentMsgFolder(nsIMsgFolder **aParentMsgFolder)
 {
   NS_ENSURE_ARG_POINTER(aParentMsgFolder);
-  nsCOMPtr <nsIFolder> parent;
-  nsresult rv = GetParent(getter_AddRefs(parent));
-  if (NS_SUCCEEDED(rv) && parent)
-    rv = parent->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aParentMsgFolder);
-  return rv;
+
+  nsCOMPtr<nsIMsgFolder> parent = do_QueryReferent(mParent);
+
+  NS_IF_ADDREF(*aParentMsgFolder = parent);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

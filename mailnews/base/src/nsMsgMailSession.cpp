@@ -248,7 +248,7 @@ NS_IMETHODIMP nsMsgMailSession::OnItemRemoved(nsISupports *parentItem, nsISuppor
 }
 
 
-NS_IMETHODIMP nsMsgMailSession::OnItemEvent(nsIFolder *aFolder,
+NS_IMETHODIMP nsMsgMailSession::OnItemEvent(nsIMsgFolder *aFolder,
                                             nsIAtom *aEvent)
 {
   PRInt32 count = mListeners.Count();

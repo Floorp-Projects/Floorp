@@ -951,7 +951,7 @@ nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item,
   nsresult rv = NS_OK;
 
   if (kBiffStateAtom == property) {
-    // for Incoming biff (to turn it on) the item is of type nsIFolder (see nsMsgFolder::SetBiffState)
+    // for Incoming biff (to turn it on) the item is of type nsIMsgFolder (see nsMsgFolder::SetBiffState)
     // for clearing the biff the item is of type nsIMsgDBHdr (see nsMsgDBFolder::OnKeyChange)
     // so check for both of these here
     nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item));
@@ -980,7 +980,7 @@ nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgFolderDataSource::OnItemEvent(nsIFolder *aFolder, nsIAtom *aEvent)
+nsMsgFolderDataSource::OnItemEvent(nsIMsgFolder *aFolder, nsIAtom *aEvent)
 {
 	return NS_OK;
 }
@@ -2175,14 +2175,13 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
   
 	if((kNC_Child == property))
 	{
-		nsCOMPtr<nsIFolder> childFolder(do_QueryInterface(target, &rv));
+		nsCOMPtr<nsIMsgFolder> childFolder(do_QueryInterface(target, &rv));
 		if(NS_SUCCEEDED(rv))
 		{
-			nsCOMPtr<nsIFolder> folderasFolder(do_QueryInterface(folder));
-			nsCOMPtr<nsIFolder> childsParent;
+			nsCOMPtr<nsIMsgFolder> childsParent;
 			rv = childFolder->GetParent(getter_AddRefs(childsParent));
-			*hasAssertion = (NS_SUCCEEDED(rv) && childsParent && folderasFolder
-							&& (childsParent.get() == folderasFolder.get()));
+			*hasAssertion = (NS_SUCCEEDED(rv) && childsParent && folder
+							&& (childsParent.get() == folder));
 		}
 	}
 	else if ((kNC_Name == property) ||

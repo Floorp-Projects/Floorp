@@ -554,7 +554,7 @@ nsresult GetExistingFolder(const char *aFolderURI, nsIMsgFolder **aFolder)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Parent doesn't exist means that this folder doesn't exist.
-  nsCOMPtr<nsIFolder> parentFolder;
+  nsCOMPtr<nsIMsgFolder> parentFolder;
   rv = thisFolder->GetParent(getter_AddRefs(parentFolder));
   if (NS_SUCCEEDED(rv) && parentFolder)
     NS_ADDREF(*aFolder = thisFolder);
@@ -673,7 +673,7 @@ GetOrCreateFolder(const nsACString &aURI, nsIUrlListener *aListener)
   rv = server->GetMsgFolderFromURI(folderResource, nsCAutoString(aURI).get(), getter_AddRefs(msgFolder));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr <nsIFolder> parent;
+  nsCOMPtr <nsIMsgFolder> parent;
   rv = msgFolder->GetParent(getter_AddRefs(parent));
   if (NS_FAILED(rv) || !parent)
   {

@@ -44,7 +44,7 @@
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgAccountManager.h"
-#include "nsIFolder.h"
+#include "nsIMsgFolder.h"
 #include "nsISupportsArray.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsISupports.h"
@@ -383,7 +383,7 @@ nsMsgCopy::CreateIfMissing(nsIMsgFolder **folder, PRBool *waitForUrl)
   nsresult ret = NS_OK;
   if (folder && *folder)
   {
-    nsCOMPtr <nsIFolder> parent;
+    nsCOMPtr <nsIMsgFolder> parent;
     (*folder)->GetParent(getter_AddRefs(parent));
     if (!parent)
     {
@@ -503,13 +503,8 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
       if ( NS_FAILED(rv) || (!serverURI) || !(*serverURI) )
         continue;
       
-      nsCOMPtr <nsIFolder> folder;
-      rv = inServer->GetRootFolder(getter_AddRefs(folder));
-      if (NS_FAILED(rv) || (!folder))
-        continue;
-      
       nsCOMPtr<nsIMsgFolder> rootFolder;
-      rootFolder = do_QueryInterface(folder, &rv);
+      rv = inServer->GetRootFolder(getter_AddRefs(rootFolder));
       
       if(NS_FAILED(rv) || (!rootFolder))
         continue;

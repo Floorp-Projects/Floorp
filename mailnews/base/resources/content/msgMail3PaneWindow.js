@@ -777,7 +777,7 @@ function loadStartFolder(initialUri)
             }
         }
 
-        var startFolder = startFolderResource.QueryInterface(Components.interfaces.nsIFolder);
+        var startFolder = startFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
         SelectFolder(startFolder.URI);
 
         // only do this on startup, when we pass in null
@@ -1400,42 +1400,28 @@ function SetNextMessageAfterDelete()
     gNextMessageViewIndexAfterDelete = treeSelection.currentIndex;
 }
 
-function EnsureAllAncestorsAreExpanded(tree, resource)
+function EnsureFolderIndex(builder, msgFolder)
 {
-    // get the parent of the desired folder, and then try to get
-    // the index of the parent in the tree
-    var folder = resource.QueryInterface(Components.interfaces.nsIFolder);
-    
-    // if this is a server, there are no ancestors, so stop.
-    var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-    if (msgFolder.isServer)
-      return;
-
-    var parentFolderResource = RDF.GetResource(folder.parent.URI);
-    var folderIndex = GetFolderIndex(tree, parentFolderResource);
-
-    if (folderIndex == -1) {
-      // if we couldn't find the parent, recurse
-      EnsureAllAncestorsAreExpanded(tree, parentFolderResource);
-      // ok, now we should be able to find the parent
-      folderIndex = GetFolderIndex(tree, parentFolderResource);
-    }
-
-    // if the parent isn't open, open it
-    if (!(tree.treeBoxObject.view.isContainerOpen(folderIndex)))
-      tree.treeBoxObject.view.toggleOpenState(folderIndex);
+  // try to get the index of the folder in the tree
+  var index = builder.getIndexOfResource(msgFolder);
+  if (index == -1) {
+    // if we couldn't find the folder, open the parent
+    builder.toggleOpenState(EnsureFolderindex(builder, msgFolder.parent));
+    index = builder.getIndexOfResource(msgFolder);
+  }
+  return index;
 }
 
 function SelectFolder(folderUri)
 {
     var folderTree = GetFolderTree();
     var folderResource = RDF.GetResource(folderUri);
+    var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
     // before we can select a folder, we need to make sure it is "visible"
     // in the tree.  to do that, we need to ensure that all its
     // ancestors are expanded
-    EnsureAllAncestorsAreExpanded(folderTree, folderResource);
-    var folderIndex = GetFolderIndex(folderTree, folderResource);
+    var folderIndex = EnsureFolderIndex(folderTree.builderView, msgFolder);
     ChangeSelection(folderTree, folderIndex);
 }
 

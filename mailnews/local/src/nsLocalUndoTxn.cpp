@@ -488,7 +488,7 @@ NS_IMETHODIMP nsLocalUndoFolderListener::OnItemPropertyFlagChanged(nsISupports *
     return NS_OK;
 }
 
-NS_IMETHODIMP nsLocalUndoFolderListener::OnItemEvent(nsIFolder *item, nsIAtom *event)
+NS_IMETHODIMP nsLocalUndoFolderListener::OnItemEvent(nsIMsgFolder *item, nsIAtom *event)
 {
   nsCOMPtr <nsIAtom> folderLoadedAtom = do_GetAtom("FolderLoaded");
   nsCOMPtr <nsIMsgFolder> itemFolder = do_QueryInterface(item);

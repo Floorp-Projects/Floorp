@@ -814,7 +814,7 @@ ImportMailThread( void *stuff)
 			else if (newDepth < depth) {
 				rv = NS_OK;
 				while ((newDepth < depth) && NS_SUCCEEDED( rv)) {
-					nsCOMPtr<nsIFolder> parFolder;
+					nsCOMPtr<nsIMsgFolder> parFolder;
 					rv = curProxy->GetParent( getter_AddRefs( parFolder));
           if (NS_FAILED( rv)) {
             IMPORT_LOG1("*** ImportMailThread: Failed to get the interface for parent folder '%s'.", lastName.get());

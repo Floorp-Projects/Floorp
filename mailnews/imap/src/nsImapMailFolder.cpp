@@ -3332,7 +3332,7 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
       // and if it can file messages (e.g., servers or news folders can't file messages).
       // Or read only imap folders...
       PRBool canFileMessages = PR_TRUE;
-      nsCOMPtr<nsIFolder> parentFolder;
+      nsCOMPtr<nsIMsgFolder> parentFolder;
       destIFolder->GetParent(getter_AddRefs(parentFolder));
       if (parentFolder)
         destIFolder->GetCanFileMessages(&canFileMessages);

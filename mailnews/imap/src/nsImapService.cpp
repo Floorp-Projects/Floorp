@@ -2544,10 +2544,8 @@ nsImapService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
 
 nsresult nsImapService::CreateSubscribeURI(nsIMsgIncomingServer *server, char *folderName, nsIURI **retURI)
 {
-  nsCOMPtr<nsIFolder> rootFolder;
-  nsresult rv = server->GetRootFolder(getter_AddRefs(rootFolder));
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+  nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+  nsresult rv = server->GetRootFolder(getter_AddRefs(rootMsgFolder));
   if (NS_FAILED(rv)) return rv;
   if (!rootMsgFolder) return NS_ERROR_FAILURE;
   PRUnichar hierarchyDelimiter;
@@ -2667,12 +2665,12 @@ NS_IMETHODIMP nsImapService::NewURI(const nsACString &aSpec,
     NS_ENSURE_TRUE(server, NS_ERROR_FAILURE);
 
     // now try to get the folder in question...
-    nsCOMPtr<nsIFolder> rootFolder;
+    nsCOMPtr<nsIMsgFolder> rootFolder;
     server->GetRootFolder(getter_AddRefs(rootFolder));
 
     if (rootFolder && !folderName.IsEmpty())
     {
-      nsCOMPtr<nsIFolder> folder;
+      nsCOMPtr<nsIMsgFolder> folder;
       nsCOMPtr <nsIMsgImapMailFolder> imapRoot = do_QueryInterface(rootFolder, &rv);
       nsCOMPtr <nsIMsgImapMailFolder> subFolder;
       if (imapRoot)
@@ -2759,9 +2757,9 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
       }
       // if the parent is null, then the folder doesn't really exist, so see if the user
       // wants to subscribe to it./
-      nsCOMPtr<nsIFolder> aFolder;
+      nsCOMPtr<nsIMsgFolder> aFolder;
       // now try to get the folder in question...
-      nsCOMPtr<nsIFolder> rootFolder;
+      nsCOMPtr<nsIMsgFolder> rootFolder;
       server->GetRootFolder(getter_AddRefs(rootFolder));
       nsCOMPtr <nsIMsgImapMailFolder> imapRoot = do_QueryInterface(rootFolder);
       nsCOMPtr <nsIMsgImapMailFolder> subFolder;
@@ -2770,8 +2768,7 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
         imapRoot->FindOnlineSubFolder(folderName, getter_AddRefs(subFolder));
         aFolder = do_QueryInterface(subFolder);
       }
-      nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aFolder);
-      nsCOMPtr <nsIFolder> parent;
+      nsCOMPtr <nsIMsgFolder> parent;
       if (aFolder)
         aFolder->GetParent(getter_AddRefs(parent));
       nsXPIDLCString serverKey;
@@ -3077,7 +3074,6 @@ nsImapService::GetListOfFoldersWithPath(nsIImapIncomingServer *aServer, nsIMsgWi
   // Locate the folder so that the correct hierarchical delimiter is used in the folder
   // pathnames, otherwise root's (ie, '^') is used and this is wrong.
   nsCOMPtr<nsIMsgFolder> msgFolder;
-  nsCOMPtr<nsIFolder> subFolder;
   if (rootMsgFolder && folderPath && (*folderPath))
   {
     // If the folder path contains 'INBOX' of any forms, we need to convert it to uppercase
@@ -3102,9 +3098,7 @@ nsImapService::GetListOfFoldersWithPath(nsIImapIncomingServer *aServer, nsIMsgWi
       changedStr.Append(remStr);
     
     
-    rv = rootMsgFolder->FindSubFolder(changedStr.get(), getter_AddRefs(subFolder));
-    if (NS_SUCCEEDED(rv))
-      msgFolder = do_QueryInterface(subFolder);
+    rv = rootMsgFolder->FindSubFolder(changedStr.get(), getter_AddRefs(msgFolder));
   }
   
   rv = DiscoverChildren(queue, msgFolder, listener, folderPath, nsnull);

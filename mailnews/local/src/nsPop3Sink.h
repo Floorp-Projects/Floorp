@@ -50,7 +50,7 @@
 #include "nsXPIDLString.h"
 
 class nsParseNewMailState;
-class nsIFolder;
+class nsIMsgFolder;
 
 class nsPop3Sink : public nsIPop3Sink
 {
@@ -60,7 +60,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPOP3SINK
-    nsresult	GetServerFolder(nsIFolder **aFolder);
+    nsresult	GetServerFolder(nsIMsgFolder **aFolder);
 
     static char*  GetDummyEnvelope(void);
     

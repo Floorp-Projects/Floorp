@@ -736,7 +736,7 @@ nsMsgSearchSession::RemoveFolderListener(nsIFolderListener *listener)
 
 // nsIFolderListener methods.
 NS_IMETHODIMP 
-nsMsgSearchSession::OnItemEvent(nsIFolder *aFolder,
+nsMsgSearchSession::OnItemEvent(nsIMsgFolder *aFolder,
                                 nsIAtom *aEvent)
 {
 	PRInt32 count = m_folderListenerList.Count();

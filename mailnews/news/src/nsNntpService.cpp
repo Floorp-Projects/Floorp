@@ -641,14 +641,17 @@ nsNntpService::GetFolderFromUri(const char *aUri, nsIMsgFolder **aFolder)
   PR_Free(unescapedUserPass);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr <nsIFolder> rootFolder;
+  nsCOMPtr <nsIMsgFolder> rootFolder;
   rv = server->GetRootFolder(getter_AddRefs(rootFolder));
   NS_ENSURE_SUCCESS(rv,rv);
 
   // check if path is "/"
   // if so, use the root folder
-  if (path.Length() == 1) 
-    return rootFolder->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
+  if (path.Length() == 1)
+  {
+    NS_ADDREF(*aFolder = rootFolder);
+    return NS_OK;
+  }
 
   // the URI is news://host/(escaped group)
   // but the *name* of the newsgroup (we are calling ::GetChildNamed())

@@ -365,8 +365,6 @@ nsFolderCompactState::FinishCompact()
     // All okay time to finish up the compact process
   nsresult rv = NS_OK;
   nsCOMPtr<nsIFileSpec> pathSpec;
-  nsCOMPtr<nsIFolder> parent;
-  nsCOMPtr<nsIMsgFolder> parentFolder;
   nsCOMPtr<nsIDBFolderInfo> folderInfo;
   nsFileSpec fileSpec;
 

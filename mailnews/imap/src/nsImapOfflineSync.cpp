@@ -140,7 +140,7 @@ nsresult nsImapOfflineSync::AdvanceToNextServer()
   m_currentServer = nsnull;
   PRUint32 numServers; 
   m_allServers->Count(&numServers);
-  nsCOMPtr <nsIFolder> rootFolder;
+  nsCOMPtr <nsIMsgFolder> rootFolder;
 
   while (serverIndex < numServers)
   {
@@ -583,7 +583,7 @@ PRBool nsImapOfflineSync::CreateOfflineFolders()
 
 PRBool nsImapOfflineSync::CreateOfflineFolder(nsIMsgFolder *folder)
 {
-  nsCOMPtr<nsIFolder> parent;
+  nsCOMPtr<nsIMsgFolder> parent;
   folder->GetParent(getter_AddRefs(parent));
 
   nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(parent);
@@ -962,14 +962,11 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
     AdvanceToNextServer();
     if (m_currentServer)
     {
-      nsCOMPtr <nsIFolder> rootFolder;
-      m_currentServer->GetRootFolder(getter_AddRefs(rootFolder));
+      nsCOMPtr <nsIMsgFolder> rootMsgFolder;
+      m_currentServer->GetRootFolder(getter_AddRefs(rootMsgFolder));
       nsCOMPtr<nsIMsgFolder> inbox;
-      if (rootFolder)
+      if (rootMsgFolder)
       {
-        nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
-        if (rootMsgFolder)
-        {
           PRUint32 numFolders;
           rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
           if (inbox)
@@ -1008,7 +1005,6 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
                 return rv; // otherwise, fall through.
             }
           }
-        }
       }
       return ProcessNextOperation(); // recurse and do next server.
     }

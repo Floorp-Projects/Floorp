@@ -544,10 +544,10 @@ nsMsgAccountManager::createKeyedServer(const char* key,
 
   // now add all listeners that are supposed to be
   // waiting on root folders
-  nsCOMPtr<nsIFolder> rootFolder;
+  nsCOMPtr<nsIMsgFolder> rootFolder;
   rv = server->GetRootFolder(getter_AddRefs(rootFolder));
   mFolderListeners->EnumerateForwards(addListenerToFolder,
-                                      (void *)(nsIFolder*)rootFolder);
+                                      (void *)(nsIMsgFolder*)rootFolder);
 
   *aServer = server;
   NS_ADDREF(*aServer);
@@ -559,7 +559,7 @@ PRBool
 nsMsgAccountManager::addListenerToFolder(nsISupports *element, void *data)
 {
   nsresult rv;
-  nsIFolder *rootFolder = (nsIFolder *)data;
+  nsIMsgFolder *rootFolder = (nsIMsgFolder *)data;
   nsCOMPtr<nsIFolderListener> listener = do_QueryInterface(element, &rv);
   NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
@@ -571,7 +571,7 @@ PRBool
 nsMsgAccountManager::removeListenerFromFolder(nsISupports *element, void *data)
 {
   nsresult rv;
-  nsIFolder *rootFolder = (nsIFolder *)data;
+  nsIMsgFolder *rootFolder = (nsIMsgFolder *)data;
   nsCOMPtr<nsIFolderListener> listener = do_QueryInterface(element, &rv);
   NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
@@ -655,7 +655,7 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
     // remove reference from hashtable
     NS_IF_RELEASE(removedServer);
     
-    nsCOMPtr<nsIFolder> rootFolder;
+    nsCOMPtr<nsIMsgFolder> rootFolder;
     server->GetRootFolder(getter_AddRefs(rootFolder));
     nsCOMPtr<nsISupportsArray> allDescendents;
     NS_NewISupportsArray(getter_AddRefs(allDescendents));
@@ -852,7 +852,7 @@ nsMsgAccountManager::notifyDefaultServerChange(nsIMsgAccount *aOldAccount,
   nsresult rv;
 
   nsCOMPtr<nsIMsgIncomingServer> server;
-  nsCOMPtr<nsIFolder> rootFolder;
+  nsCOMPtr<nsIMsgFolder> rootFolder;
   
   // first tell old server it's no longer the default
   if (aOldAccount) {
@@ -925,11 +925,11 @@ nsMsgAccountManager::hashUnloadServer(nsHashKey *aKey, void *aData,
 	nsMsgAccountManager *accountManager = (nsMsgAccountManager*)closure;
 	accountManager->NotifyServerUnloaded(server);
 
-	nsCOMPtr<nsIFolder> rootFolder;
+	nsCOMPtr<nsIMsgFolder> rootFolder;
 	rv = server->GetRootFolder(getter_AddRefs(rootFolder));
 
     accountManager->mFolderListeners->EnumerateForwards(removeListenerFromFolder,
-                                        (void *)(nsIFolder*)rootFolder);
+                                        (void *)(nsIMsgFolder*)rootFolder);
 
 	if(NS_SUCCEEDED(rv))
 		rootFolder->Shutdown(PR_TRUE);
@@ -1023,7 +1023,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
     imapserver->GetCleanupInboxOnExit(&cleanupInboxOnExit);
   if (emptyTrashOnExit || cleanupInboxOnExit)
   {
-    nsCOMPtr<nsIFolder> root;
+    nsCOMPtr<nsIMsgFolder> root;
     server->GetRootFolder(getter_AddRefs(root));
     nsXPIDLCString type;
     server->GetType(getter_Copies(type));
@@ -1524,7 +1524,7 @@ nsMsgAccountManager::SetSpecialFolders()
       if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
       {
         folder = do_QueryInterface(res, &rv);
-        nsCOMPtr <nsIFolder> parent;
+        nsCOMPtr <nsIMsgFolder> parent;
         if (folder && NS_SUCCEEDED(rv))
         {
           rv = folder->GetParent(getter_AddRefs(parent));
@@ -1545,7 +1545,7 @@ nsMsgAccountManager::SetSpecialFolders()
         folder = do_QueryInterface(res, &rv);
         if (folder && NS_SUCCEEDED(rv))
         {
-          nsCOMPtr <nsIFolder> parent;
+          nsCOMPtr <nsIMsgFolder> parent;
           rv = folder->GetParent(getter_AddRefs(parent));
           if (NS_SUCCEEDED(rv) && parent) // only set flag if folder is real
             rv = folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
@@ -2181,7 +2181,7 @@ nsMsgAccountManager::addListener(nsHashKey *aKey, void *element, void *aData)
 
   nsresult rv;
   
-  nsCOMPtr<nsIFolder> rootFolder;
+  nsCOMPtr<nsIMsgFolder> rootFolder;
   rv = server->GetRootFolder(getter_AddRefs(rootFolder));
   NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
@@ -2199,7 +2199,7 @@ nsMsgAccountManager::removeListener(nsHashKey *aKey, void *element, void *aData)
 
   nsresult rv;
   
-  nsCOMPtr<nsIFolder> rootFolder;
+  nsCOMPtr<nsIMsgFolder> rootFolder;
   rv = server->GetRootFolder(getter_AddRefs(rootFolder));
   NS_ENSURE_SUCCESS(rv, PR_TRUE);
 

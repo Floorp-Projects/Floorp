@@ -49,7 +49,7 @@
 #include "nsIMsgWindow.h"
 
 class nsParseNewMailState;
-class nsIFolder;
+class nsIMsgFolder;
 
 class nsMovemailService : public nsIMsgProtocolInfo, public nsIMovemailService
 {

@@ -40,7 +40,6 @@
 #include "MailNewsTypes2.idl"
 
 interface nsIFileSpec;
-interface nsIFolder;
 interface nsIMsgFolder;
 interface nsIMsgFolderCache;
 interface nsIMsgWindow;
@@ -159,7 +158,7 @@ interface nsIMsgIncomingServer : nsISupports {
   readonly attribute string serverURI;
 
   /* the root folder for this server */
-  attribute nsIFolder rootFolder;
+  attribute nsIMsgFolder rootFolder;
 
   /* handy accessor when we want a msg folder */
   readonly attribute nsIMsgFolder rootMsgFolder;

@@ -895,7 +895,7 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(element, &rv);
   if (NS_FAILED(rv)) return PR_TRUE;
 
-	nsCOMPtr <nsIFolder> serverFolder;
+	nsCOMPtr <nsIMsgFolder> serverFolder;
 	rv = server->GetRootFolder(getter_AddRefs(serverFolder));
 	if(NS_FAILED(rv)) return PR_TRUE;
 
@@ -1259,7 +1259,7 @@ nsMsgAccountManagerDataSource::OnServerLoaded(nsIMsgIncomingServer* aServer)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIFolder> serverFolder;
+  nsCOMPtr<nsIMsgFolder> serverFolder;
   rv = aServer->GetRootFolder(getter_AddRefs(serverFolder));
   if (NS_FAILED(rv)) return rv;
 
@@ -1292,7 +1292,7 @@ nsMsgAccountManagerDataSource::OnServerUnloaded(nsIMsgIncomingServer* aServer)
 {
   nsresult rv;
   
-  nsCOMPtr<nsIFolder> serverFolder;
+  nsCOMPtr<nsIMsgFolder> serverFolder;
   rv = aServer->GetRootFolder(getter_AddRefs(serverFolder));
   if (NS_FAILED(rv)) return rv;
 
@@ -1375,7 +1375,7 @@ nsMsgAccountManagerDataSource::OnItemBoolPropertyChanged(nsISupports *aItem,
 }
 
 nsresult
-nsMsgAccountManagerDataSource::OnItemEvent(nsIFolder *, nsIAtom *)
+nsMsgAccountManagerDataSource::OnItemEvent(nsIMsgFolder *, nsIAtom *)
 {
     return NS_OK;
 }

@@ -561,7 +561,7 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
           NS_ENSURE_SUCCESS(rv, rv);
 
           PRBool canFileMessages = PR_TRUE;
-          nsCOMPtr<nsIFolder> parentFolder;
+          nsCOMPtr<nsIMsgFolder> parentFolder;
           destIFolder->GetParent(getter_AddRefs(parentFolder));
           if (parentFolder)
             destIFolder->GetCanFileMessages(&canFileMessages);

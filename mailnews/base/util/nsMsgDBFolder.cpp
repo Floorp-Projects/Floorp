@@ -132,7 +132,7 @@ NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
 		{
 			for (PRUint32 i = 0; i < count; i++)
 			{
-				nsCOMPtr<nsIFolder> childFolder = do_QueryElementAt(mSubFolders, i);
+				nsCOMPtr<nsIMsgFolder> childFolder = do_QueryElementAt(mSubFolders, i);
 				if(childFolder)
 					childFolder->Shutdown(PR_TRUE);
 			}
@@ -1399,7 +1399,7 @@ nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow)
          PRInt32 localExpungedBytes = 0;
          do 
          {
-           nsCOMPtr<nsIFolder> rootFolder;
+           nsCOMPtr<nsIMsgFolder> rootFolder;
            rv = server->GetRootFolder(getter_AddRefs(rootFolder));
            if(NS_SUCCEEDED(rv) && rootFolder)
            {  

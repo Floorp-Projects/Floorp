@@ -119,10 +119,9 @@ public:
 	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
 	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
-	// nsIFolder methods:
+	// nsIMsgFolder methods:
 	NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
 
-	// nsIMsgFolder methods:
 	NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
 

@@ -44,7 +44,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIMsgNewsFolder.h"
-#include "nsIFolder.h"
+#include "nsIMsgFolder.h"
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 #include "nsINntpService.h"
@@ -342,7 +342,7 @@ nsNntpIncomingServer::WriteNewsrcFile()
         nsIOFileStream newsrcStream(newsrcFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
 
         nsCOMPtr<nsIEnumerator> subFolders;
-        nsCOMPtr<nsIFolder> rootFolder;
+        nsCOMPtr<nsIMsgFolder> rootFolder;
         rv = GetRootFolder(getter_AddRefs(rootFolder));
         if (NS_FAILED(rv)) return rv;
 
@@ -627,7 +627,7 @@ NS_IMETHODIMP
 nsNntpIncomingServer::GetNumGroupsNeedingCounts(PRInt32 *aNumGroupsNeedingCounts)
 {
     nsCOMPtr<nsIEnumerator> subFolders;
-    nsCOMPtr<nsIFolder> rootFolder;
+    nsCOMPtr<nsIMsgFolder> rootFolder;
  
     nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
     if (NS_FAILED(rv)) return rv;
@@ -1205,12 +1205,8 @@ nsNntpIncomingServer::Unsubscribe(const PRUnichar *aUnicharName)
   rv = NS_MsgEscapeEncodeURLPath(aUnicharName, getter_Copies(escapedName));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr <nsIFolder> subFolder;
-  rv = serverFolder->FindSubFolder(escapedName.get(), getter_AddRefs(subFolder));
-  if (NS_FAILED(rv)) 
-    return rv;
-
-  nsCOMPtr <nsIMsgFolder> newsgroupFolder = do_QueryInterface(subFolder, &rv);
+  nsCOMPtr <nsIMsgFolder> newsgroupFolder;
+  rv = serverFolder->FindSubFolder(escapedName.get(), getter_AddRefs(newsgroupFolder));
   if (NS_FAILED(rv)) 
     return rv;
 
@@ -1371,7 +1367,7 @@ nsNntpIncomingServer::ForgetPassword()
     nsresult rv;
 
     // clear password of root folder (for the news account)
-    nsCOMPtr<nsIFolder> rootFolder;
+    nsCOMPtr<nsIMsgFolder> rootFolder;
     rv = GetRootFolder(getter_AddRefs(rootFolder));
     NS_ENSURE_SUCCESS(rv,rv);
     if (!rootFolder) return NS_ERROR_FAILURE;
@@ -1533,7 +1529,7 @@ nsNntpIncomingServer::FindGroup(const char *name, nsIMsgNewsFolder **result)
 
   if (!serverFolder) return NS_ERROR_FAILURE;
 
-  nsCOMPtr <nsIFolder> subFolder;
+  nsCOMPtr <nsIMsgFolder> subFolder;
   rv = serverFolder->FindSubFolder(name, getter_AddRefs(subFolder));
   NS_ENSURE_SUCCESS(rv,rv);
   if (!subFolder) return NS_ERROR_FAILURE;

@@ -94,7 +94,6 @@
 #include "nsIPrompt.h"
 #include "nsIMsgStatusFeedback.h" 
 
-#include "nsIFolder.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgNewsFolder.h"
 #include "nsIDocShell.h"
@@ -2748,7 +2747,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
   if (!m_newsFolder && m_nntpServer) {
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_nntpServer);
     if (m_nntpServer) {
-      nsCOMPtr<nsIFolder> rootFolder;
+      nsCOMPtr<nsIMsgFolder> rootFolder;
       rv = server->GetRootFolder(getter_AddRefs(rootFolder));
       if (NS_SUCCEEDED(rv) && rootFolder) {
         m_newsFolder = do_QueryInterface(rootFolder);
@@ -4044,7 +4043,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
     if ( NS_FAILED( GetNextGroupNeedingCounts( getter_AddRefs( currChild ), &status ) ) )
       return status;
     
-    nsCOMPtr<nsIFolder> currFolder = do_QueryInterface(currChild, &rv);
+    nsCOMPtr<nsIMsgFolder> currFolder = do_QueryInterface(currChild, &rv);
     if (NS_FAILED(rv)) return -1;
     if (!currFolder) return -1;
     

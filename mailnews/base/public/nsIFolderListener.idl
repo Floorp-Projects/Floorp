@@ -38,7 +38,7 @@
 #include "nsISupports.idl"
 #include "nsIAtom.idl"
 
-interface nsIFolder;
+interface nsIMsgFolder;
 
 typedef unsigned long folderListenerNotifyFlagValue;
 
@@ -85,10 +85,10 @@ interface nsIFolderListener : nsISupports {
                                  in unsigned long newFlag);
 
   const folderListenerNotifyFlagValue event = 0x80;
-  void OnItemEvent(in nsIFolder item, in nsIAtom event);
+  void OnItemEvent(in nsIMsgFolder item, in nsIAtom event);
   
   const folderListenerNotifyFlagValue all = 0xFFFFFFFF; 
 
-  //	void OnFolderLoaded(in nsIFolder aFolder);
-  //	void OnDeleteOrMoveMessagesCompleted(in nsIFolder aFolder);
+  //	void OnFolderLoaded(in nsIMsgFolder aFolder);
+  //	void OnDeleteOrMoveMessagesCompleted(in nsIMsgFolder aFolder);
 };

@@ -43,7 +43,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIMsgFilterList.h"
 #include "msgCore.h"
-#include "nsIFolder.h"
+#include "nsIMsgFolder.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsIMsgDatabase.h"
@@ -82,7 +82,7 @@ protected:
   NS_IMETHOD SetPrefPassword(const char * aPassword);
   PRBool      PasswordProtectLocalCache();
   
-  nsCOMPtr <nsIFolder> m_rootFolder;
+  nsCOMPtr <nsIMsgFolder> m_rootFolder;
   nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
   nsCOMPtr <nsIMsgDownloadSettings> m_downloadSettings;
   nsresult getDefaultCharPref(const char *pref, char **);

@@ -887,7 +887,7 @@ nsMessengerWinIntegration::OnItemBoolPropertyChanged(nsISupports *aItem,
 }
 
 NS_IMETHODIMP
-nsMessengerWinIntegration::OnItemEvent(nsIFolder *, nsIAtom *)
+nsMessengerWinIntegration::OnItemEvent(nsIMsgFolder *, nsIAtom *)
 {
   return NS_OK;
 }

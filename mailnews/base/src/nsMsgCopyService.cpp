@@ -501,7 +501,6 @@ nsMsgCopyService::CopyFolders( nsISupportsArray* folders,
   nsCopySource* copySource = nsnull;
   nsresult rv = NS_ERROR_NULL_POINTER;
   PRUint32 cnt;
-  nsCOMPtr<nsIFolder> folder;
   nsCOMPtr<nsIMsgFolder> curFolder;
   nsCOMPtr<nsISupports> support;
   
@@ -520,10 +519,7 @@ nsMsgCopyService::CopyFolders( nsISupportsArray* folders,
     isMove, listener, window, PR_FALSE);
   NS_ENSURE_SUCCESS(rv,rv);
   
-  folder = do_QueryInterface(support, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  curFolder = do_QueryInterface(folder, &rv);
+  curFolder = do_QueryInterface(support, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
   copySource = copyRequest->AddNewCopySource(curFolder);

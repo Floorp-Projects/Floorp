@@ -273,7 +273,7 @@ nsStatusBarBiffManager::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *pr
 }
 
 NS_IMETHODIMP 
-nsStatusBarBiffManager::OnItemEvent(nsIFolder *item, nsIAtom *event)
+nsStatusBarBiffManager::OnItemEvent(nsIMsgFolder *item, nsIAtom *event)
 {
   return NS_OK;
 }

@@ -190,7 +190,7 @@ nsPop3IncomingServer::SetFlagsOnDefaultMailboxes()
 {
     nsresult rv;
     
-    nsCOMPtr<nsIFolder> rootFolder;
+    nsCOMPtr<nsIMsgFolder> rootFolder;
     rv = GetRootFolder(getter_AddRefs(rootFolder));
     NS_ENSURE_SUCCESS(rv, rv);
 

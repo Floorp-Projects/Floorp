@@ -1425,7 +1425,7 @@ nsParseNewMailState::nsParseNewMailState()
 NS_IMPL_ISUPPORTS_INHERITED1(nsParseNewMailState, nsMsgMailboxParser, nsIMsgFilterHitNotify)
 
 nsresult
-nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow)
+nsParseNewMailState::Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow)
 {
     nsresult rv;
 	m_position = folder.GetFileSize();
@@ -1729,7 +1729,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   // and if it can file messages (e.g., servers or news folders can't file messages).
   // Or read only imap folders...
   PRBool canFileMessages = PR_TRUE;
-  nsCOMPtr<nsIFolder> parentFolder;
+  nsCOMPtr<nsIMsgFolder> parentFolder;
   destIFolder->GetParent(getter_AddRefs(parentFolder));
   if (parentFolder)
     destIFolder->GetCanFileMessages(&canFileMessages);

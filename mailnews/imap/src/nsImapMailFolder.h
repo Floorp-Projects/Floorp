@@ -206,10 +206,9 @@ public:
   // nsICollection methods
   NS_IMETHOD Enumerate(nsIEnumerator **result);
   
-  // nsIFolder methods:
+  // nsIMsgFolder methods:
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
   
-  // nsIMsgFolder methods:
   NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
   NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
   

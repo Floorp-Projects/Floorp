@@ -100,13 +100,13 @@ public:
 
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
-  nsresult ResetFoldersToUnverified(nsIFolder *parentFolder);
-	nsresult GetUnverifiedSubFolders(nsIFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders);
+  nsresult ResetFoldersToUnverified(nsIMsgFolder *parentFolder);
+  nsresult GetUnverifiedSubFolders(nsIMsgFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders);
 	nsresult GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders);
 
-	nsresult DeleteNonVerifiedFolders(nsIFolder *parentFolder);
-	PRBool NoDescendentsAreVerified(nsIFolder *parentFolder);
-	PRBool AllDescendentsAreNoSelect(nsIFolder *parentFolder);
+  nsresult DeleteNonVerifiedFolders(nsIMsgFolder *parentFolder);
+  PRBool NoDescendentsAreVerified(nsIMsgFolder *parentFolder);
+  PRBool AllDescendentsAreNoSelect(nsIMsgFolder *parentFolder);
 
   nsresult GetStringBundle();
   const char *GetPFCName();

@@ -43,7 +43,6 @@
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIFolder.h"
 #include "prmem.h"
 
 #include "rdf.h"

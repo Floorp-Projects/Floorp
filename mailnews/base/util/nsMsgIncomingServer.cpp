@@ -126,14 +126,14 @@ nsMsgIncomingServer::SetKey(const char * serverKey)
 }
     
 NS_IMETHODIMP
-nsMsgIncomingServer::SetRootFolder(nsIFolder * aRootFolder)
+nsMsgIncomingServer::SetRootFolder(nsIMsgFolder * aRootFolder)
 {
 	m_rootFolder = aRootFolder;
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMsgIncomingServer::GetRootFolder(nsIFolder * *aRootFolder)
+nsMsgIncomingServer::GetRootFolder(nsIMsgFolder * *aRootFolder)
 {
   if (!aRootFolder)
     return NS_ERROR_NULL_POINTER;
@@ -154,12 +154,16 @@ NS_IMETHODIMP
 nsMsgIncomingServer::GetRootMsgFolder(nsIMsgFolder **aRootMsgFolder)
 {
   NS_ENSURE_ARG_POINTER(aRootMsgFolder);
-  nsCOMPtr <nsIFolder> rootFolder;
-  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
-  if (NS_SUCCEEDED(rv) && rootFolder)
-    rv = rootFolder->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aRootMsgFolder);
 
-  return rv;
+  if (!m_rootFolder)
+  {
+    nsresult rv = CreateRootFolder();
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  NS_IF_ADDREF(*aRootMsgFolder = m_rootFolder);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -689,7 +693,7 @@ nsMsgIncomingServer::SetPrettyName(const PRUnichar *value)
 {
     SetUnicharValue("name", value);
     
-    nsCOMPtr<nsIFolder> rootFolder;
+    nsCOMPtr<nsIMsgFolder> rootFolder;
     GetRootFolder(getter_AddRefs(rootFolder));
 
     if (rootFolder)

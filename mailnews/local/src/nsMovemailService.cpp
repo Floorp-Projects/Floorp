@@ -55,7 +55,7 @@
 #include "nsIMsgProtocolInfo.h"
 #include "nsIMsgMailSession.h"
 #include "nsParseMailbox.h"
-#include "nsIFolder.h"
+#include "nsIMsgFolder.h"
 #include "nsIPrompt.h"
 
 #include "nsILocalFile.h"
@@ -388,7 +388,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                 goto freebuff_and_unlock;
             }
                         
-            nsCOMPtr <nsIFolder> serverFolder;
+            nsCOMPtr <nsIMsgFolder> serverFolder;
             rv = in_server->GetRootFolder(getter_AddRefs(serverFolder));
 
             if (NS_FAILED(rv))

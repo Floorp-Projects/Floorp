@@ -39,6 +39,7 @@
 #include "nsIFolderListener.idl"
 
 interface nsISupportsArray;
+interface nsIMsgFolder;
 
 [scriptable, uuid(75621650-0fce-11d3-8b49-006008948010)]
 interface nsIFolder : nsICollection {
@@ -49,14 +50,14 @@ interface nsIFolder : nsICollection {
 	readonly attribute wstring abbreviatedName;
 
 	nsISupports getChildNamed(in wstring name);
-	attribute nsIFolder parent;
+	attribute nsIMsgFolder parent;
 
 	nsIEnumerator GetSubFolders();
 	readonly attribute boolean hasSubFolders;
 
 	void AddFolderListener(in nsIFolderListener listener);
 	void RemoveFolderListener(in nsIFolderListener listener);
-	nsIFolder FindSubFolder(in string escapedSubFolderName);
+	nsIMsgFolder FindSubFolder(in string escapedSubFolderName);
 
   void NotifyPropertyChanged(in nsIAtom property,
                              in string oldValue,
@@ -81,7 +82,7 @@ interface nsIFolder : nsICollection {
   void NotifyFolderEvent(in nsIAtom event);
   
   //  void NotifyFolderLoaded();
-  //  void NotifyDeleteOrMoveMessagesCompleted(in nsIFolder folder);
+  //  void NotifyDeleteOrMoveMessagesCompleted(in nsIMsgFolder folder);
 
   // lists all descendents, not just first level children
   void ListDescendents(in nsISupportsArray descendents);  

@@ -45,7 +45,6 @@
 #include <time.h>
 #include "nsIFileSpec.h"
 #include "nsParseMailbox.h"
-#include "nsIFolder.h"
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsLocalUtils.h"
@@ -195,7 +194,7 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     if (m_newMailParser == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr <nsIFolder> serverFolder;
+    nsCOMPtr <nsIMsgFolder> serverFolder;
     rv = GetServerFolder(getter_AddRefs(serverFolder));
     if (NS_FAILED(rv)) return rv;
 
@@ -430,7 +429,7 @@ nsresult nsPop3Sink::SetFolder(nsIMsgFolder * folder)
 }
 
 nsresult
-nsPop3Sink::GetServerFolder(nsIFolder **aFolder)
+nsPop3Sink::GetServerFolder(nsIMsgFolder **aFolder)
 {
   if (!aFolder) 
     return NS_ERROR_NULL_POINTER;
