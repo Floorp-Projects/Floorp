@@ -942,7 +942,8 @@ NS_IMETHODIMP nsView :: GetClientData(void *&aData) const
 NS_IMETHODIMP nsView :: CreateWidget(const nsIID &aWindowIID,
                                      nsWidgetInitData *aWidgetInitData,
                                      nsNativeWidget aNative,
-                                     PRBool aEnableDragDrop)
+                                     PRBool aEnableDragDrop,
+                                     PRBool aResetVisibility)
 {
   nsIDeviceContext  *dx;
   nsRect            trect = mBounds;
@@ -983,10 +984,12 @@ NS_IMETHODIMP nsView :: CreateWidget(const nsIID &aWindowIID,
 
   //make sure visibility state is accurate
 
-  nsViewVisibility vis;
-
-  GetVisibility(vis);
-  SetVisibility(vis);
+  if (aResetVisibility) {
+    nsViewVisibility vis;
+    
+    GetVisibility(vis);
+    SetVisibility(vis);
+  }
 
   NS_RELEASE(dx);
 

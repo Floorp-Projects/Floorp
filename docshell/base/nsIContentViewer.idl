@@ -55,7 +55,6 @@ interface nsIContentViewer : nsISupports
 
   void show();
   void hide();
-  void validate();
 
   attribute boolean enableRendering;
 };

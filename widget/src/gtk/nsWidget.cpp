@@ -870,6 +870,12 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 #define CAPS_LOCK_IS_ON \
 (nsWidget::sDebugFeedback && (nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK))
 
+NS_IMETHODIMP nsWidget::Validate()
+{
+  mUpdateArea->SetTo(0, 0, 0, 0);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
   if (!mWidget)

@@ -1391,7 +1391,6 @@ DocumentViewerImpl::SetPreviousViewer(nsIContentViewer* aViewer)
     // link from the chain.  This ensures that at most only 2 documents are alive
     // and undestroyed at any given time (the one that is showing and the one that
     // is loading with painting suppressed).
-    aViewer->Validate();
     nsCOMPtr<nsIContentViewer> prevViewer;
     aViewer->GetPreviousViewer(getter_AddRefs(prevViewer));
     if (prevViewer) {
@@ -1460,15 +1459,6 @@ DocumentViewerImpl::Hide(void)
   if (mWindow) {
     mWindow->Show(PR_FALSE);
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentViewerImpl::Validate(void)
-{
-  NS_PRECONDITION(mWindow, "null window");
-  if (mWindow)
-    mWindow->Validate();
   return NS_OK;
 }
 
@@ -3827,7 +3817,9 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   if (NS_FAILED(rv))
     return rv;
 
-  rv = mView->CreateWidget(kWidgetCID, nsnull, aParentWidget->GetNativeData(NS_NATIVE_WIDGET));
+  rv = mView->CreateWidget(kWidgetCID, nsnull,
+                           aParentWidget->GetNativeData(NS_NATIVE_WIDGET),
+                           PR_TRUE, PR_FALSE);
 
   if (rv != NS_OK)
     return rv;

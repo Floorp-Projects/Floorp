@@ -578,14 +578,6 @@ PluginViewerImpl::SetPreviousViewer(nsIContentViewer* aViewer)
 }
 
 NS_IMETHODIMP
-PluginViewerImpl::Validate()
-{
-  if (mWindow)
-    mWindow->Validate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 PluginViewerImpl::SetBounds(const nsRect& aBounds)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
