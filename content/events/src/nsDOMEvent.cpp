@@ -102,7 +102,7 @@ nsDOMEvent::operator new(size_t aSize) CPP_THROW_NEW
 
   void *result = nsnull;
 
-  if (!gEventPoolInUse) {
+  if (!gEventPoolInUse && aSize <= sizeof(gEventPool)) {
 #ifdef NS_DEBUG
     numAllocFromPool++;
 #endif
