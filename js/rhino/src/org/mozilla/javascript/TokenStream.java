@@ -719,11 +719,7 @@ public class TokenStream {
     public final int peekTokenSameLine() throws IOException {
         flags |= TSF_NEWLINES;          // SCAN_NEWLINES from jsscan.h
         int result = getToken();
-        if (result == EOL) {
-            this.pushbackToken = EOF;
-        } else {
-            this.pushbackToken = result;
-        }
+        this.pushbackToken = result;
         tokenno--;
         flags &= ~TSF_NEWLINES;         // HIDE_NEWLINES from jsscan.h
         return result;
@@ -737,7 +733,9 @@ public class TokenStream {
         if (this.pushbackToken != EOF) {
             int result = this.pushbackToken;
             this.pushbackToken = EOF;
-            return result;
+            if (result != EOL || (flags & TSF_NEWLINES) != 0) {
+                return result;
+            }
         }
 
     retry:
