@@ -635,6 +635,35 @@ nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
   return res;
 }
 
+
+// Get the length of aNode
+PRInt32 nsRange::GetNodeLength(nsIDOMNode *aNode)
+{
+  if (!aNode)
+    return 0;
+    
+  PRUint16 nodeType;
+  PRUint32 len = -1;
+  
+  aNode->GetNodeType(&nodeType);
+  if( (nodeType == nsIDOMNode::CDATA_SECTION_NODE) ||
+      (nodeType == nsIDOMNode::TEXT_NODE) )
+  {
+    nsCOMPtr<nsIDOMText> textText = do_QueryInterface(aNode);
+    if (textText)
+      textText->GetLength(&len);
+  }
+  else
+  {
+    nsCOMPtr<nsIDOMNodeList> childList;
+    nsresult res = aNode->GetChildNodes(getter_AddRefs(childList));
+    if (NS_SUCCEEDED(res) && childList)
+      childList->GetLength(&len);
+  }
+  
+  return len;
+}
+
 // It's important that all setting of the range start/end points 
 // go through this function, which will do all the right voodoo
 // for content notification of range ownership.  
@@ -993,6 +1022,10 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
+  PRInt32 len = GetNodeLength(aParent);
+  if ( (aOffset < 0) || (len < 0) || (aOffset > len) )
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    
   if (mIsPositioned) {
     // if not in the same document as the endpoint,
     // collapse the endpoint to the new start.
@@ -1057,6 +1090,10 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
+  PRInt32 len = GetNodeLength(aParent);
+  if ( (aOffset < 0) || (len < 0) || (aOffset > len) )
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    
   nsresult res;
   
   if (!aParent) return NS_ERROR_NULL_POINTER;
@@ -2229,23 +2266,10 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
       this->InsertNode(aN);
 
     // re-define the range so that it contains the same content as it did before
-    tEndContainer->GetNodeType(&tEndNodeType);
-    if( (nsIDOMNode::CDATA_SECTION_NODE == tEndNodeType) ||
-       (nsIDOMNode::TEXT_NODE == tEndNodeType) )
-    {
-      nsCOMPtr<nsIDOMText> tEndContainerText = do_QueryInterface(tEndContainer);
-      PRUint32 tInt;
-      tEndContainerText->GetLength(&tInt);
-      tEndOffset = tInt;
-    }
-    else
-    {
-      nsCOMPtr<nsIDOMNodeList>tChildList;
-      res = tEndContainer->GetChildNodes(getter_AddRefs(tChildList));
-      PRUint32 tInt;
-      tChildList->GetLength(&tInt);
-      tEndOffset = tInt;
-    }
+    tEndOffset = GetNodeLength(tEndContainer);
+    if (tEndOffset == -1)  // failure code
+      return NS_ERROR_FAILURE;
+      
     this->DoSetRange(tStartContainer, 0, tEndContainer, tEndOffset);
   }
   this->SelectNode(aN);

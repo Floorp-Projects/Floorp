@@ -209,6 +209,8 @@ protected:
   // the range spec after the removal of nodes within the range.
   static nsresult CollapseRangeAfterDelete(nsIDOMRange *aRange);
 
+  static PRInt32  GetNodeLength(nsIDOMNode *aNode);
+  
   nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset);
 
