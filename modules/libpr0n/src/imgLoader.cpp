@@ -174,12 +174,16 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   // If all of the proxy requests are canceled then this request should be
   // canceled too.
   //
+  // Always pass in LOAD_BACKGROUND to avoid sending progress/status
+  // notifications.  Since this request is not part of a loadgroup its
+  // progress info would be ignored (anyways)...
+  //
   rv = NS_NewChannel(aResult,
                      aURI,        // URI 
                      nsnull,      // Cached IOService
                      nsnull,      // LoadGroup
                      callbacks,   // Notification Callbacks
-                     aLoadFlags);
+                     aLoadFlags | nsIRequest::LOAD_BACKGROUND);
   if (NS_FAILED(rv))
     return rv;
 
