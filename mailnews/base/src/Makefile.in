@@ -63,10 +63,6 @@ CPPSRCS = \
 	nsMsgMD5.cpp \
 	$(NULL)
 
-CPPSRCS += \
-	nsIMessenger.cpp \
-	$(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
