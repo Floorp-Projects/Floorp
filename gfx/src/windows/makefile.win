@@ -27,6 +27,10 @@ MODULE=raptor
 
 DEFINES=-D_IMPL_NS_GFX -D_IMPL_NS_GFXNONXP -DWIN32_LEAN_AND_MEAN
 
+!if defined(NGLAYOUT_DDRAW)
+DEFINES=$(DEFINES) -DNGLAYOUT_DDRAW
+!endif
+
 MISCDEP=                        \
  $(DIST)\lib\raptorgfx_s.lib
  
@@ -43,6 +47,9 @@ OBJS =                                  \
 LINCS= \
         -I$(PUBLIC)\raptor \
         -I$(PUBLIC)\xpcom \
+!if defined(NGLAYOUT_DDRAW)
+		-I$(NGLAYOUT_DDRAW)\inc \
+!endif
         $(NULL)
 
 LCFLAGS = \
@@ -58,6 +65,11 @@ LLIBS=				\
  $(DIST)\lib\libplc21.lib       \
  $(DIST)\lib\netlib.lib       \
  $(DIST)\lib\raptorgfx_s.lib \
+!if defined(NGLAYOUT_DDRAW)
+ $(NGLAYOUT_DDRAW)\lib\dxguid.lib \
+ $(NGLAYOUT_DDRAW)\lib\ddraw.lib \
+ ole32.lib \
+!endif
  $(LIBNSPR)  
 
 LLFLAGS = \

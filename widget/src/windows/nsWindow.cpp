@@ -1201,7 +1201,6 @@ nsRect  bounds;
 
     nsIRenderingContext *renderingCtx = NULL;
     if (mWnd) {
-        HDC aDC = ::GetDC(mWnd);
         nsresult  res;
 
         static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
@@ -1210,7 +1209,7 @@ nsRect  bounds;
         res = NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&renderingCtx);
 
         if (NS_OK == res)
-          renderingCtx->Init(mContext, (nsDrawingSurface)aDC);
+          renderingCtx->Init(mContext, this);
 
         NS_ASSERTION(NULL != renderingCtx, "Null rendering context");
     }
@@ -1857,11 +1856,9 @@ PRBool nsWindow::OnPaint()
 
             if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
             {
-              hDC = ::GetDC(mWnd);
-              event.renderingContext->Init(mContext, (nsDrawingSurface)hDC);
+              event.renderingContext->Init(mContext, this);
               result = DispatchEvent(&event);
               NS_RELEASE(event.renderingContext);
-              ::ReleaseDC(mWnd, hDC);
             }
             else
               result = PR_FALSE;

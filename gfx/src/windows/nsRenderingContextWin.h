@@ -36,6 +36,11 @@
 #include "nsVoidArray.h"
 
 class GraphicsState;
+class nsDrawingSurfaceWin;
+
+#ifdef NGLAYOUT_DDRAW
+#include "ddraw.h"
+#endif
 
 class nsRenderingContextWin : public nsIRenderingContext
 {
@@ -133,6 +138,7 @@ private:
   HPEN SetupSolidPen(void);
   void SetupFontAndColor(void);
   void PushClipState(void);
+  nsresult CreateDDraw(void);
 
 protected:
   nscolor					  mCurrentColor;
@@ -140,12 +146,14 @@ protected:
   nsIFontMetrics	  *mFontMetrics;
   nsIFontCache      *mFontCache;
   HDC               mDC;
+  HDC               mMainDC;
+  nsDrawingSurfaceWin *mSurface;
+  nsDrawingSurfaceWin *mMainSurface;
   COLORREF          mColor;
   nsIWidget         *mDCOwner;
 //  int               mOldMapMode;
   nsIDeviceContext  *mContext;
   float             mP2T;
-  HDC               mMainDC;
   HRGN              mClipRegion;
   //default objects
   HBRUSH            mOrigSolidBrush;
@@ -169,11 +177,40 @@ protected:
   COLORREF          mCurrTextColor;
 
 #ifdef NS_DEBUG
-  PRBool          mInitialized;
+  PRBool            mInitialized;
+#endif
+
+#ifdef NGLAYOUT_DDRAW
+  static IDirectDraw  *mDDraw;
+  static IDirectDraw2 *mDDraw2;
+  static nsresult     mDDrawResult;
 #endif
 
 public:
   static HPALETTE   gPalette;
+};
+
+class nsDrawingSurfaceWin : public nsISupports
+{
+public:
+  nsDrawingSurfaceWin();
+  ~nsDrawingSurfaceWin();
+
+  NS_DECL_ISUPPORTS
+
+  nsresult Init(HDC aDC);
+  nsresult Init(nsIWidget *aOwner);
+#ifdef NGLAYOUT_DDRAW
+  nsresult Init(LPDIRECTDRAWSURFACE aSurface);
+#endif
+
+  nsIWidget           *mDCOwner;
+  HDC                 mDC;
+  HBITMAP             mOrigBitmap;
+
+#ifdef NGLAYOUT_DDRAW
+  LPDIRECTDRAWSURFACE mSurface;
+#endif
 };
 
 #endif /* nsRenderingContextWin_h___ */

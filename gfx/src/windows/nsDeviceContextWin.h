@@ -47,8 +47,8 @@ public:
 protected:
   virtual ~nsDeviceContextWin();
 
-  HDC      mSurface;
-  PRUint32 mDepth;  // bit depth of device
+  nsDrawingSurface  mSurface;
+  PRUint32          mDepth;  // bit depth of device
 };
 
 #endif /* nsDeviceContextWin_h___ */
