@@ -156,8 +156,6 @@ window#main-window {
 }
 
 iframe#content-frame {
- min-width: 10px;
- min-height: 10px;
- width: 100px;
- height: 100px;
+ min-width: 0px;
+ min-height: 0px;
 }
