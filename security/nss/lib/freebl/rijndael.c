@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael.c,v 1.7 2001/10/08 16:11:51 ian.mcgreer%sun.com Exp $
+ * $Id: rijndael.c,v 1.8 2001/10/08 19:06:31 ian.mcgreer%sun.com Exp $
  */
 
 #include "prinit.h"
@@ -212,9 +212,46 @@ PRUint8 gfm(PRUint8 a, PRUint8 b)
     ( WORD4( GFM09(i), GFM0D(i), GFM0B(i), GFM0E(i) ) )
 
 /* Now choose the T-table indexing method */
-#if defined(RIJNDAEL_GENERATE_VALUES) ||  \
-    defined(RIJNDAEL_GENERATE_VALUES_MACRO)
-/* generate values for the tables */
+#if defined(RIJNDAEL_GENERATE_VALUES)
+/* generate values for the tables with a function*/
+static PRUint32 gen_TInvXi(PRUint8 tx, PRUint8 i)
+{
+    PRUint8 si01, si02, si03, si04, si08, si09, si0B, si0D, si0E;
+    si01 = SINV(i);
+    si02 = XTIME(si01);
+    si04 = XTIME(si02);
+    si08 = XTIME(si04);
+    si03 = si02 ^ si01;
+    si09 = si08 ^ si01;
+    si0B = si08 ^ si03;
+    si0D = si09 ^ si04;
+    si0E = si08 ^ si04 ^ si02;
+    switch (tx) {
+    case 0:
+	return WORD4(si0E, si09, si0D, si0B);
+    case 1:
+	return WORD4(si0B, si0E, si09, si0D);
+    case 2:
+	return WORD4(si0D, si0B, si0E, si09);
+    case 3:
+	return WORD4(si09, si0D, si0B, si0E);
+    }
+    return -1;
+}
+#define T0(i)    G_T0(i)
+#define T1(i)    G_T1(i)
+#define T2(i)    G_T2(i)
+#define T3(i)    G_T3(i)
+#define TInv0(i) gen_TInvXi(0, i)
+#define TInv1(i) gen_TInvXi(1, i)
+#define TInv2(i) gen_TInvXi(2, i)
+#define TInv3(i) gen_TInvXi(3, i)
+#define IMXC0(b) G_IMXC0(b)
+#define IMXC1(b) G_IMXC1(b)
+#define IMXC2(b) G_IMXC2(b)
+#define IMXC3(b) G_IMXC3(b)
+#elif defined(RIJNDAEL_GENERATE_VALUES_MACRO)
+/* generate values for the tables with macros */
 #define T0(i)    G_T0(i)
 #define T1(i)    G_T1(i)
 #define T2(i)    G_T2(i)
@@ -268,19 +305,34 @@ static PRStatus
 init_rijndael_tables(void)
 {
     PRUint32 i;
+    PRUint8 si01, si02, si03, si04, si08, si09, si0B, si0D, si0E;
     struct rijndael_tables_str *rts;
     rts = (struct rijndael_tables_str *)
                    PORT_Alloc(sizeof(struct rijndael_tables_str));
     if (!rts) return PR_FAILURE;
     for (i=0; i<256; i++) {
-	rts->T0[i] = G_T0(i);
-	rts->T1[i] = G_T1(i);
-	rts->T2[i] = G_T2(i);
-	rts->T3[i] = G_T3(i);
-	rts->TInv0[i] = G_TInv0(i);
-	rts->TInv1[i] = G_TInv1(i);
-	rts->TInv2[i] = G_TInv2(i);
-	rts->TInv3[i] = G_TInv3(i);
+	/* The forward values */
+	si01 = SBOX(i);
+	si02 = XTIME(si01);
+	si03 = si02 ^ si01;
+	rts->T0[i] = WORD4(si02, si01, si01, si03);
+	rts->T1[i] = WORD4(si03, si02, si01, si01);
+	rts->T2[i] = WORD4(si01, si03, si02, si01);
+	rts->T3[i] = WORD4(si01, si01, si03, si02);
+	/* The inverse values */
+	si01 = SINV(i);
+	si02 = XTIME(si01);
+	si04 = XTIME(si02);
+	si08 = XTIME(si04);
+	si03 = si02 ^ si01;
+	si09 = si08 ^ si01;
+	si0B = si08 ^ si03;
+	si0D = si09 ^ si04;
+	si0E = si08 ^ si04 ^ si02;
+	rts->TInv0[i] = WORD4(si0E, si09, si0D, si0B);
+	rts->TInv1[i] = WORD4(si0B, si0E, si09, si0D);
+	rts->TInv2[i] = WORD4(si0D, si0B, si0E, si09);
+	rts->TInv3[i] = WORD4(si09, si0D, si0B, si0E);
     }
     /* wait until all the values are in to set */
     rijndaelTables = rts;
