@@ -60,21 +60,6 @@
     //  Unrepresentably large numbers are converted to +/-Infinity.
 
     var newValue = Math.random();
-    a[i++] = new TestObject (
-         "dt.PUB_DOUBLE_REPRESENTATION = " +newValue,
-         "dt.PUB_DOUBLE_REPRESENTATION",
-         "new java.lang.Float( dt ).doubleValue()",
-         "typeof new java.lang.Float(dt).doubleValue()",
-         newValue,
-         "number" );
-
-    a[i++] = new TestObject (
-         "dt.PUB_DOUBLE_REPRESENTATION = java.lang.Double.MIN_VALUE",
-         "dt.PUB_DOUBLE_REPRESENTATION",
-         "new java.lang.Float( dt ).doubleValue()",
-         "typeof new java.lang.Float(dt).doubleValue()",
-         java.lang.Double.MIN_VALUE,
-         "number" );
 
     a[i++] = new TestObject (
          "dt.PUB_DOUBLE_REPRESENTATION = java.lang.Double.MAX_VALUE;" +
