@@ -111,6 +111,7 @@ public:
 
   // Methods to get value. These methods do not convert so only use them
   // to retrieve the datatype that this nsAttrValue has.
+  inline PRBool IsEmptyString() const;
   const nsDependentSubstring GetStringValue() const;
   inline nsIAtom* GetAtomValue() const;
   inline PRInt32 GetIntegerValue() const;
@@ -358,6 +359,12 @@ nsAttrValue::GetIntInternal() const
   // bitshift right is implementaion dependant.
   return NS_STATIC_CAST(PRInt32, mBits & ~NS_ATTRVALUE_INTEGERTYPE_MASK) /
          NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER;
+}
+
+inline PRBool
+nsAttrValue::IsEmptyString() const
+{
+  return !mBits;
 }
 
 #endif

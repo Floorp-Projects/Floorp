@@ -2670,27 +2670,21 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
 {
   if (aData->mSID == eStyleStruct_TextReset) {
     if (aData->mTextData->mUnicodeBidi.GetUnit() == eCSSUnit_Null) {
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated)
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::dir);
+      if (value && value->Type() == nsAttrValue::eEnum)
         aData->mTextData->mUnicodeBidi.SetIntValue(
             NS_STYLE_UNICODE_BIDI_EMBED, eCSSUnit_Enumerated);
     }
   } else if (aData->mSID == eStyleStruct_Visibility) {
     if (aData->mDisplayData->mDirection.GetUnit() == eCSSUnit_Null) {
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated)
-        aData->mDisplayData->mDirection.SetIntValue(value.GetIntValue(),
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::dir);
+      if (value && value->Type() == nsAttrValue::eEnum)
+        aData->mDisplayData->mDirection.SetIntValue(value->GetEnumValue(),
                                                     eCSSUnit_Enumerated);
     }
-    nsHTMLValue value;
-    if (aAttributes->GetAttribute(nsHTMLAtoms::lang, value) !=
-        NS_CONTENT_ATTR_NOT_THERE &&
-        value.GetUnit() == eHTMLUnit_String) {
-      nsAutoString lang;
-      value.GetStringValue(lang);
-      aData->mDisplayData->mLang.SetStringValue(lang,
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::lang);
+    if (value && value->Type() == nsAttrValue::eString) {
+      aData->mDisplayData->mLang.SetStringValue(value->GetStringValue(),
                                                 eCSSUnit_String);
     }
   }
@@ -2750,10 +2744,9 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttr
                                                  nsRuleData* aRuleData)
 {
   if (aRuleData->mSID == eStyleStruct_Display || aRuleData->mSID == eStyleStruct_TextReset) {
-    nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      PRUint8 align = (PRUint8)(value.GetIntValue());
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+    if (value && value->Type() == nsAttrValue::eEnum) {
+      PRInt32 align = value->GetEnumValue();
       if (aRuleData->mSID == eStyleStruct_Display && aRuleData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
         if (align == NS_STYLE_TEXT_ALIGN_LEFT)
           aRuleData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_LEFT, eCSSUnit_Enumerated);
@@ -2781,10 +2774,9 @@ nsGenericHTMLElement::MapDivAlignAttributeInto(const nsMappedAttributes* aAttrib
   if (aRuleData->mSID == eStyleStruct_Text) {
     if (aRuleData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
       // align: enum
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated)
-        aRuleData->mTextData->mTextAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+      if (value && value->Type() == nsAttrValue::eEnum)
+        aRuleData->mTextData->mTextAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
 }
@@ -2797,38 +2789,42 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsMappedAttributes* aAtt
   if (aData->mSID != eStyleStruct_Margin)
     return;
 
-  nsHTMLValue value;
+  const nsAttrValue* value;
 
   // hspace: value
-  aAttributes->GetAttribute(nsHTMLAtoms::hspace, value);
-  nsCSSValue hval;
-  if (value.GetUnit() == eHTMLUnit_Integer)
-    hval.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
-  else if (value.GetUnit() == eHTMLUnit_Percent)
-    hval.SetPercentValue(value.GetPercentValue());
+  value = aAttributes->GetAttr(nsHTMLAtoms::hspace);
+  if (value) {
+    nsCSSValue hval;
+    if (value->Type() == nsAttrValue::eInteger)
+      hval.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+    else if (value->Type() == nsAttrValue::ePercent)
+      hval.SetPercentValue(value->GetPercentValue());
 
-  if (hval.GetUnit() != eCSSUnit_Null) {
-    nsCSSRect& margin = aData->mMarginData->mMargin;
-    if (margin.mLeft.GetUnit() == eCSSUnit_Null)
-      margin.mLeft = hval;
-    if (margin.mRight.GetUnit() == eCSSUnit_Null)
-      margin.mRight = hval;
+    if (hval.GetUnit() != eCSSUnit_Null) {
+      nsCSSRect& margin = aData->mMarginData->mMargin;
+      if (margin.mLeft.GetUnit() == eCSSUnit_Null)
+        margin.mLeft = hval;
+      if (margin.mRight.GetUnit() == eCSSUnit_Null)
+        margin.mRight = hval;
+    }
   }
 
   // vspace: value
-  aAttributes->GetAttribute(nsHTMLAtoms::vspace, value);
-  nsCSSValue vval;
-  if (value.GetUnit() == eHTMLUnit_Integer)
-    vval.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
-  else if (value.GetUnit() == eHTMLUnit_Percent)
-    vval.SetPercentValue(value.GetPercentValue());
-
-  if (vval.GetUnit() != eCSSUnit_Null) {
-    nsCSSRect& margin = aData->mMarginData->mMargin;
-    if (margin.mTop.GetUnit() == eCSSUnit_Null)
-      margin.mTop = vval;
-    if (margin.mBottom.GetUnit() == eCSSUnit_Null)
-      margin.mBottom = vval;
+  value = aAttributes->GetAttr(nsHTMLAtoms::vspace);
+  if (value) {
+    nsCSSValue vval;
+    if (value->Type() == nsAttrValue::eInteger)
+      vval.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+    else if (value->Type() == nsAttrValue::ePercent)
+      vval.SetPercentValue(value->GetPercentValue());
+  
+    if (vval.GetUnit() != eCSSUnit_Null) {
+      nsCSSRect& margin = aData->mMarginData->mMargin;
+      if (margin.mTop.GetUnit() == eCSSUnit_Null)
+        margin.mTop = vval;
+      if (margin.mBottom.GetUnit() == eCSSUnit_Null)
+        margin.mBottom = vval;
+    }
   }
 }
 
@@ -2839,24 +2835,22 @@ nsGenericHTMLElement::MapImageSizeAttributesInto(const nsMappedAttributes* aAttr
   if (aData->mSID != eStyleStruct_Position)
     return;
 
-  nsHTMLValue value;
-  
   // width: value
   if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
-    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-    if (value.GetUnit() == eHTMLUnit_Integer)
-      aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
-    else if (value.GetUnit() == eHTMLUnit_Percent)
-      aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+    if (value && value->Type() == nsAttrValue::eInteger)
+      aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+    else if (value && value->Type() == nsAttrValue::ePercent)
+      aData->mPositionData->mWidth.SetPercentValue(value->GetPercentValue());
   }
 
   // height: value
   if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
-    aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-    if (value.GetUnit() == eHTMLUnit_Integer)
-      aData->mPositionData->mHeight.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel); 
-    else if (value.GetUnit() == eHTMLUnit_Percent)
-      aData->mPositionData->mHeight.SetPercentValue(value.GetPercentValue());    
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::height);
+    if (value && value->Type() == nsAttrValue::eInteger)
+      aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
+    else if (value && value->Type() == nsAttrValue::ePercent)
+      aData->mPositionData->mHeight.SetPercentValue(value->GetPercentValue());    
   }
 }
 
@@ -2867,18 +2861,14 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAtt
   if (aData->mSID != eStyleStruct_Border)
     return;
 
-  nsHTMLValue value;
-
   // border: pixels
-  if (aAttributes->GetAttribute(nsHTMLAtoms::border, value) ==
-      NS_CONTENT_ATTR_NOT_THERE) {
+  const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::border);
+  if (!value)
     return;
-  }
   
-  if (value.GetUnit() != eHTMLUnit_Integer)  // something other than Integer
-    value.SetIntValue(0, eHTMLUnit_Integer);
-
-  nscoord val = value.GetIntValue();
+  nscoord val = 0;
+  if (value->Type() == nsAttrValue::eInteger)
+    val = value->GetIntegerValue();
 
   nsCSSRect& borderWidth = aData->mMarginData->mBorderWidth;
   if (borderWidth.mLeft.GetUnit() == eCSSUnit_Null)
@@ -2920,12 +2910,9 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
 
   if (aData->mColorData->mBackImage.GetUnit() == eCSSUnit_Null) {
     // background
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        aAttributes->GetAttribute(nsHTMLAtoms::background, value) &&
-        value.GetUnit() == eHTMLUnit_String) {
-      nsAutoString spec;
-      value.GetStringValue(spec);
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::background);
+    if (value && value->Type() == nsAttrValue::eString) {
+      nsAutoString spec(value->GetStringValue());
       if (!spec.IsEmpty()) {
         // Resolve url to an absolute url
         // XXX this breaks if the HTML element has an xml:base
@@ -2959,11 +2946,9 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
 
   // bgcolor
   if (aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null) {
-    nsHTMLValue value;
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::bgcolor);
     nscolor color;
-    if (aAttributes->GetAttribute(nsHTMLAtoms::bgcolor, value) !=
-        NS_CONTENT_ATTR_NOT_THERE &&
-        value.GetColorValue(color)) {
+    if (value && value->GetColorValue(color)) {
       aData->mColorData->mBackColor.SetColorValue(color);
     }
   }
@@ -2978,11 +2963,10 @@ nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttri
 
   // scrolling
   if (aData->mDisplayData->mOverflow.GetUnit() == eCSSUnit_Null) {
-    nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::scrolling, value);
-    if (eHTMLUnit_Enumerated == value.GetUnit()) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::scrolling);
+    if (value && value->Type() == nsAttrValue::eEnum) {
       PRInt32 mappedValue;
-      switch (value.GetIntValue()) {
+      switch (value->GetEnumValue()) {
         case NS_STYLE_FRAME_ON:
         case NS_STYLE_FRAME_SCROLL:
         case NS_STYLE_FRAME_YES:

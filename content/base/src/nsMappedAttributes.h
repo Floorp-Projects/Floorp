@@ -60,7 +60,6 @@ public:
   NS_DECL_ISUPPORTS
 
   nsresult SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue);
-  nsresult GetAttribute(nsIAtom* aAttrName, nsHTMLValue& aValue) const;
   const nsAttrValue* GetAttr(nsIAtom* aAttrName) const;
 
   PRUint32 Count() const

@@ -418,32 +418,31 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 {
   if (aData->mSID == eStyleStruct_Position) {
     // width: value
-    nsHTMLValue value;
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-      if (value.GetUnit() == eHTMLUnit_Integer) {
-        if (value.GetIntValue() > 0)
-          aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel); 
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        if (value->GetIntegerValue() > 0)
+          aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
         // else 0 implies auto for compatibility.
       }
-      else if (value.GetUnit() == eHTMLUnit_Percent) {
-        if (value.GetPercentValue() > 0.0f)
-          aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
+      else if (value && value->Type() == nsAttrValue::ePercent) {
+        if (value->GetPercentValue() > 0.0f)
+          aData->mPositionData->mWidth.SetPercentValue(value->GetPercentValue());
         // else 0 implies auto for compatibility
       }
     }
 
     // height: value
     if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-      if (value.GetUnit() == eHTMLUnit_Integer) {
-        if (value.GetIntValue() > 0)
-          aData->mPositionData->mHeight.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::height);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        if (value->GetIntegerValue() > 0)
+          aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
         // else 0 implies auto for compatibility.
       }
-      else if (value.GetUnit() == eHTMLUnit_Percent) {
-        if (value.GetPercentValue() > 0.0f)
-          aData->mPositionData->mHeight.SetPercentValue(value.GetPercentValue());
+      else if (value && value->Type() == nsAttrValue::ePercent) {
+        if (value->GetPercentValue() > 0.0f)
+          aData->mPositionData->mHeight.SetPercentValue(value->GetPercentValue());
         // else 0 implies auto for compatibility
       }
     }
@@ -451,21 +450,17 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   else if (aData->mSID == eStyleStruct_Text) {
     if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
       // align: enum
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated)
-        aData->mTextData->mTextAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+      if (value && value->Type() == nsAttrValue::eEnum)
+        aData->mTextData->mTextAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
 
     if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
       // nowrap: enum
-      nsHTMLValue value;
-      if (aAttributes->GetAttribute(nsHTMLAtoms::nowrap, value) !=
-          NS_CONTENT_ATTR_NOT_THERE) {
+      if (aAttributes->GetAttr(nsHTMLAtoms::nowrap)) {
         // See if our width is not a integer width.
-        nsHTMLValue widthValue;
-        aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);
-        if (widthValue.GetUnit() != eHTMLUnit_Integer)
+        const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+        if (!value || value->Type() != nsAttrValue::eInteger)
           aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_NOWRAP, eCSSUnit_Enumerated);
       }
     }
@@ -473,10 +468,9 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   else if (aData->mSID == eStyleStruct_TextReset) {
     if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
       // valign: enum
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated) 
-        aData->mTextData->mVerticalAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::valign);
+      if (value && value->Type() == nsAttrValue::eEnum)
+        aData->mTextData->mVerticalAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
   

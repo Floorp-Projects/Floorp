@@ -233,10 +233,9 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // frameborder: 0 | 1 (| NO | YES in quirks mode)
     // If frameborder is 0 or No, set border to 0
     // else leave it as the value set in html.css
-    nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::frameborder, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      PRInt32 frameborder = value.GetIntValue();
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::frameborder);
+    if (value && value->Type() == nsAttrValue::eEnum) {
+      PRInt32 frameborder = value->GetEnumValue();
       if (NS_STYLE_FRAME_0 == frameborder ||
           NS_STYLE_FRAME_NO == frameborder ||
           NS_STYLE_FRAME_OFF == frameborder) {
@@ -253,22 +252,21 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   }
   else if (aData->mSID == eStyleStruct_Position) {
     // width: value
-    nsHTMLValue value;
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-      if (value.GetUnit() == eHTMLUnit_Integer)
-        aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
-      else if (value.GetUnit() == eHTMLUnit_Percent)
-        aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+      if (value && value->Type() == nsAttrValue::eInteger)
+        aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+      else if (value && value->Type() == nsAttrValue::ePercent)
+        aData->mPositionData->mWidth.SetPercentValue(value->GetPercentValue());
     }
 
     // height: value
     if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-      if (value.GetUnit() == eHTMLUnit_Integer)
-        aData->mPositionData->mHeight.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
-      else if (value.GetUnit() == eHTMLUnit_Percent)
-        aData->mPositionData->mHeight.SetPercentValue(value.GetPercentValue());
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::height);
+      if (value && value->Type() == nsAttrValue::eInteger)
+        aData->mPositionData->mHeight.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+      else if (value && value->Type() == nsAttrValue::ePercent)
+        aData->mPositionData->mHeight.SetPercentValue(value->GetPercentValue());
     }
   }
 

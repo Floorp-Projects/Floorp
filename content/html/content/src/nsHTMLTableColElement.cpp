@@ -229,20 +229,19 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
   if (aData->mSID == eStyleStruct_Position &&
       aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
     // width
-    nsHTMLValue value;
-    if (aAttributes->GetAttribute(nsHTMLAtoms::width, value) !=
-        NS_CONTENT_ATTR_NOT_THERE) {
-      switch (value.GetUnit()) {
-      case eHTMLUnit_Percent: {
-        aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
+    if (value) {
+      switch (value->Type()) {
+      case nsAttrValue::ePercent: {
+        aData->mPositionData->mWidth.SetPercentValue(value->GetPercentValue());
         break;
       }
-      case eHTMLUnit_Integer: {
-        aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
+      case nsAttrValue::eInteger: {
+        aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
         break;
       }
-      case eHTMLUnit_Proportional: {
-        aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Proportional);
+      case nsAttrValue::eProportional: {
+        aData->mPositionData->mWidth.SetFloatValue((float)value->GetProportionalValue(), eCSSUnit_Proportional);
         break;
       }
       default:
@@ -253,19 +252,17 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
   else if (aData->mSID == eStyleStruct_Text) {
     if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
       // align: enum
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated)
-        aData->mTextData->mTextAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::align);
+      if (value && value->Type() == nsAttrValue::eEnum)
+        aData->mTextData->mTextAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
   else if (aData->mSID == eStyleStruct_TextReset) {
     if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
       // valign: enum
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated) 
-        aData->mTextData->mVerticalAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::valign);
+      if (value && value->Type() == nsAttrValue::eEnum)
+        aData->mTextData->mVerticalAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
 
@@ -279,10 +276,9 @@ void ColMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   if (aData->mSID == eStyleStruct_Table && 
       aData->mTableData->mSpan.GetUnit() == eCSSUnit_Null) {
     // span: int
-    nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::span, value);
-    if (value.GetUnit() == eHTMLUnit_Integer)
-      aData->mTableData->mSpan.SetIntValue(value.GetIntValue(),
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::span);
+    if (value && value->Type() == nsAttrValue::eInteger)
+      aData->mTableData->mSpan.SetIntValue(value->GetIntegerValue(),
                                            eCSSUnit_Integer);
   }
 

@@ -222,62 +222,54 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 {
   if (aData->mSID == eStyleStruct_Font) {
     nsRuleDataFont& font = *(aData->mFontData);
-    nsHTMLValue value;
     
     // face: string list
     if (font.mFamily.GetUnit() == eCSSUnit_Null) {
-      if (aAttributes->GetAttribute(nsHTMLAtoms::face, value) !=
-          NS_CONTENT_ATTR_NOT_THERE &&
-          value.GetUnit() == eHTMLUnit_String) {
-        nsAutoString familyList;
-        value.GetStringValue(familyList);
-        if (!familyList.IsEmpty()) {
-          font.mFamily.SetStringValue(familyList, eCSSUnit_String);
-          font.mFamilyFromHTML = PR_TRUE;
-        }
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::face);
+      if (value && value->Type() == nsAttrValue::eString &&
+          !value->IsEmptyString()) {
+        font.mFamily.SetStringValue(value->GetStringValue(), eCSSUnit_String);
+        font.mFamilyFromHTML = PR_TRUE;
       }
     }
 
-    // pointSize: int, enum
+    // pointSize: int
     if (font.mSize.GetUnit() == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::pointSize, value);
-      if (value.GetUnit() == eHTMLUnit_Integer ||
-          value.GetUnit() == eHTMLUnit_Enumerated) {
-        PRInt32 val = value.GetIntValue();
-        font.mSize.SetFloatValue((float)val, eCSSUnit_Point);
-      }
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::pointSize);
+      if (value && value->Type() == nsAttrValue::eInteger)
+        font.mSize.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Point);
       else {
         // size: int, enum , 
-        aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-        nsHTMLUnit unit = value.GetUnit();
-        if (unit == eHTMLUnit_Integer || unit == eHTMLUnit_Enumerated) { 
-          PRInt32 size = value.GetIntValue();
-          if (unit == eHTMLUnit_Enumerated) // int (+/-)
-            size += 3;  // XXX should be BASEFONT, not three see bug 3875
-	            
-          size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
-          font.mSize.SetIntValue(size, eCSSUnit_Enumerated);
+        value = aAttributes->GetAttr(nsHTMLAtoms::size);
+        if (value) {
+          nsAttrValue::ValueType unit = value->Type();
+          if (unit == nsAttrValue::eInteger || unit == nsAttrValue::eEnum) { 
+            PRInt32 size;
+            if (unit == nsAttrValue::eEnum) // int (+/-)
+              size = value->GetEnumValue() + 3;  // XXX should be BASEFONT, not three see bug 3875
+            else
+              size = value->GetIntegerValue();
+
+            size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
+            font.mSize.SetIntValue(size, eCSSUnit_Enumerated);
+          }
         }
       }
     }
 
-    // fontWeight: int, enum
+    // fontWeight: int
     if (font.mWeight.GetUnit() == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::fontWeight, value);
-      if (value.GetUnit() == eHTMLUnit_Integer) // +/-
-        font.mWeight.SetIntValue(value.GetIntValue(), eCSSUnit_Integer);
-      else if (value.GetUnit() == eHTMLUnit_Enumerated)
-        font.mWeight.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::fontWeight);
+      if (value && value->Type() == nsAttrValue::eInteger) // +/-
+        font.mWeight.SetIntValue(value->GetIntegerValue(), eCSSUnit_Integer);
     }
   }
   else if (aData->mSID == eStyleStruct_Color) {
     if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
       // color: color
-      nsHTMLValue value;
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::color);
       nscolor color;
-      if (NS_CONTENT_ATTR_NOT_THERE !=
-          aAttributes->GetAttribute(nsHTMLAtoms::color, value) &&
-          value.GetColorValue(color)) {
+      if (value && value->GetColorValue(color)) {
         aData->mColorData->mColor.SetColorValue(color);
       }
     }
@@ -286,11 +278,9 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // Make <a><font color="red">text</font></a> give the text a red underline
     // in quirks mode.  The NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL flag only
     // affects quirks mode rendering.
-    nsHTMLValue value;
+    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::color);
     nscolor color;
-    if (NS_CONTENT_ATTR_NOT_THERE !=
-        aAttributes->GetAttribute(nsHTMLAtoms::color, value) &&
-        value.GetColorValue(color)) {
+    if (value && value->GetColorValue(color)) {
       nsCSSValue& decoration = aData->mTextData->mDecoration;
       PRInt32 newValue = NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL;
       if (decoration.GetUnit() == eCSSUnit_Enumerated) {
