@@ -7,6 +7,7 @@
 	      const int VK_TAB            = 0x09;
 	      const int VK_CLEAR          = 0x0C;
 	      const int VK_RETURN         = 0x0D;
+	      const int VK_ENTER          = 0x0E;
 	      const int VK_SHIFT          = 0x10;
 	      const int VK_CONTROL        = 0x11;
 	      const int VK_ALT            = 0x12;

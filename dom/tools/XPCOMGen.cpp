@@ -194,6 +194,7 @@ ForwardDeclEnumerator(PLHashEntry *he, PRIntn i, void *arg)
   ofstream *file = (ofstream *)arg;
   switch ((Type)(int)(he->value)) {
   case TYPE_OBJECT:
+  case TYPE_FUNC:
     sprintf(buf, kForwardClassStr, (char *)he->key);
     break;
 

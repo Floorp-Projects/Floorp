@@ -899,6 +899,9 @@ extern "C" NS_DOM nsresult NS_InitEventClass(nsIScriptContext *aContext, void **
       vp = INT_TO_JSVAL(nsIDOMEvent::VK_RETURN);
       JS_SetProperty(jscontext, constructor, "VK_RETURN", &vp);
 
+      vp = INT_TO_JSVAL(nsIDOMEvent::VK_ENTER);
+      JS_SetProperty(jscontext, constructor, "VK_ENTER", &vp);
+
       vp = INT_TO_JSVAL(nsIDOMEvent::VK_SHIFT);
       JS_SetProperty(jscontext, constructor, "VK_SHIFT", &vp);
 

@@ -100,7 +100,7 @@ static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
 static const char *kXPIDLIncludeStr = "#include \"%s.h\"\n";
 static const char *kIncludeConstructorStr =
 "#include \"nsIScriptNameSpaceManager.h\"\n"
-"#include \"nsComponentManager.h\"\n"
+"#include \"nsIComponentManager.h\"\n"
 "#include \"nsDOMCID.h\"\n";
 
 static PRIntn 
@@ -110,6 +110,7 @@ IncludeEnumerator(PLHashEntry *he, PRIntn i, void *arg)
 
   switch ((Type)(int)(he->value)) {
   case TYPE_OBJECT:
+  case TYPE_FUNC:
     sprintf(buf, kIncludeStr, (char *)he->key);
     break;
 
@@ -158,6 +159,7 @@ JSStubGen_IIDEnumerator(PLHashEntry *he, PRIntn i, void *arg)
 
   switch ((Type)(int)(he->value)) {
   case TYPE_OBJECT:
+  case TYPE_FUNC:
     me->GetInterfaceIID(iid_buf, (char *)he->key);
     sprintf(buf, kIIDStr, (char *)he->key, iid_buf);
     break;
@@ -205,6 +207,7 @@ JSStubGen_DefPtrEnumerator(PLHashEntry *he, PRIntn i, void *arg)
 
   switch ((Type)(int)(he->value)) {
   case TYPE_OBJECT:
+  case TYPE_FUNC:
     sprintf(buf, kDefPtrStr, (char *)he->key);
     break;
 
@@ -961,6 +964,17 @@ static const char *kMethodIntParamStr = "\n"
 #define JSGEN_GENERATE_INTPARAM(buffer, paramNum) \
     sprintf(buffer, kMethodIntParamStr, paramNum, paramNum)
 
+static const char *kMethodFuncParamStr = "\n"
+"    if (!nsJSUtils::nsConvertJSValToFunc(&b%d,\n"
+"                                         cx,\n"
+"                                         obj,\n"
+"                                         argv[%d])) {\n"
+"      return JS_FALSE;\n"
+"    }\n";
+
+#define JSGEN_GENERATE_FUNCPARAM(buffer, paramNum, paramType) \
+    sprintf(buffer, kMethodFuncParamStr, paramNum, paramNum)
+
 static const char *kMethodParamListStr = "b%d";
 static const char *kMethodParamListDelimiterStr = ", ";
 static const char *kMethodParamEllipsisStr = "cx, argv+%d, argc-%d";
@@ -1086,6 +1100,9 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
             break;
           case TYPE_XPIDL_OBJECT:
             JSGEN_GENERATE_XPIDL_OBJECTPARAM(buf, p, param->GetTypeName());
+            break;
+          case TYPE_FUNC:
+            JSGEN_GENERATE_FUNCPARAM(buf, p, param->GetTypeName());
             break;
           default:
             // XXX Fail for other cases

@@ -932,6 +932,13 @@ IdlParameter* IdlParser::ParseFunctionParameter(IdlSpecification &aSpecification
         argObj->SetTypeName(token->stringID);
         break;
       }
+    case FUNC_TOKEN:
+      token = mScanner->NextToken();
+      if (IDENTIFIER_TOKEN == token->id) {
+        argObj->SetType(TYPE_FUNC);
+        argObj->SetTypeName(token->stringID);
+        break;
+      }
     default:
       delete argObj;
       throw ParameterParsingException("Unknow type in parameters list.");

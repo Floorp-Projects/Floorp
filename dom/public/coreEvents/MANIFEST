@@ -15,4 +15,5 @@ nsIDOMMouseListener.h
 nsIDOMMouseMotionListener.h
 nsIDOMDragListener.h
 nsIDOMPaintListener.h
+nsIDOMEventTarget.h
 nsIDOMTextListener.h

@@ -37,14 +37,14 @@ class nsIScriptEventListener : public nsISupports {
 public:
 
  /**
-  * Processes all events excepting mouse and key events. 
-  * @param anEvent the event to process. @see nsIDOMEvent.h for event types.
+  * Checks equality of internal script function pointer with the one passed in.
   */
 
-  //virtual nsresult nsAddJSEventHandler(nsIDOMEvent* aEvent) = 0;
+  virtual nsresult CheckIfEqual(nsIScriptEventListener *aListener) = 0;
 
 };
 
-extern "C" NS_DOM nsresult NS_NewScriptEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, void *aObj);
+extern "C" NS_DOM nsresult NS_NewScriptEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, void* aObj, void *aFun);
+extern "C" NS_DOM nsresult NS_NewJSEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, void *aObj);
 
 #endif // nsIScriptEventListener_h__

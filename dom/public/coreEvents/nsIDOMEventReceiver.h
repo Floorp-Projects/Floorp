@@ -19,6 +19,8 @@
 #ifndef nsIDOMEventReceiver_h__
 #define nsIDOMEventReceiver_h__
 
+#include "nsIDOMEventTarget.h"
+
 class nsIDOMEventListener;
 class nsIDOMMouseListener;
 class nsIDOMMouseMotionListener;
@@ -37,13 +39,13 @@ class nsIEventListenerManager;
 0xe1dbcba0, 0xfb38, 0x11d1, \
 {0xbd, 0x87, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
 
-class nsIDOMEventReceiver : public nsISupports {
+class nsIDOMEventReceiver : public nsIDOMEventTarget {
 
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENTRECEIVER_IID; return iid; }
 
-  NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
-  NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult) = 0;
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult) = 0;
 

@@ -25,7 +25,7 @@
 #include "jsapi.h"
 
 //nsIDOMMouseListener interface
-class nsJSEventListener : public nsIDOMEventListener, public nsIScriptEventListener {
+class nsJSEventListener : public nsIDOMEventListener {
 public:
   nsJSEventListener(JSContext *aContext, JSObject *aObj);
   virtual ~nsJSEventListener();
@@ -33,7 +33,7 @@ public:
   NS_DECL_ISUPPORTS
 
   //nsIDOMEventListener interface
-  virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 
   //nsIJSEventListener interface
 protected:
@@ -41,5 +41,6 @@ protected:
   JSObject *mJSObj;
 
 };
+
 
 #endif //nsJSEventListener_h__

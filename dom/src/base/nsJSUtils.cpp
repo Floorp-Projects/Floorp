@@ -33,6 +33,7 @@
 #include "nsString.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIScriptEventListener.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
@@ -218,6 +219,41 @@ nsJSUtils::nsConvertJSValToBool(PRBool* aProp,
     return JS_FALSE;
   }
   
+  return JS_TRUE;
+}
+
+NS_EXPORT PRBool 
+nsJSUtils::nsConvertJSValToFunc(nsIDOMEventListener** aListener,
+                                JSContext* aContext,
+                                JSObject* aObj,
+                                jsval aValue)
+{
+  if (JSVAL_IS_NULL(aValue)) {
+    *aListener = nsnull;
+  }
+  else if (JSVAL_IS_OBJECT(aValue)) {
+    JSFunction* jsfun = JS_ValueToFunction(aContext, aValue);
+    if (jsfun){
+      nsIScriptContext* scriptContext = (nsIScriptContext*)JS_GetContextPrivate(aContext);
+      
+      if (NS_OK == NS_NewScriptEventListener(aListener, scriptContext, (void*)aObj, (void*)jsfun)) {
+        return JS_TRUE;
+      }
+      else {
+        JS_ReportError(aContext, "Out of memory");
+        return JS_FALSE;
+      }
+    }
+    else {
+      JS_ReportError(aContext, "Parameter isn't a object");
+      return JS_FALSE;
+    }
+  }
+  else {
+    JS_ReportError(aContext, "Parameter must be an object");
+    return JS_FALSE;
+  }
+
   return JS_TRUE;
 }
 

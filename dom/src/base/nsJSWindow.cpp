@@ -30,7 +30,9 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMHistory.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOMWindowCollection.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMWindow.h"
 
@@ -42,7 +44,9 @@ static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIScreenIID, NS_IDOMSCREEN_IID);
 static NS_DEFINE_IID(kIHistoryIID, NS_IDOMHISTORY_IID);
+static NS_DEFINE_IID(kIEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIWindowCollectionIID, NS_IDOMWINDOWCOLLECTION_IID);
+static NS_DEFINE_IID(kIEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kIEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 
@@ -50,7 +54,9 @@ NS_DEF_PTR(nsIDOMNavigator);
 NS_DEF_PTR(nsIDOMDocument);
 NS_DEF_PTR(nsIDOMScreen);
 NS_DEF_PTR(nsIDOMHistory);
+NS_DEF_PTR(nsIDOMEventListener);
 NS_DEF_PTR(nsIDOMWindowCollection);
+NS_DEF_PTR(nsIDOMEventTarget);
 NS_DEF_PTR(nsIDOMEventCapturer);
 NS_DEF_PTR(nsIDOMWindow);
 
@@ -1456,6 +1462,126 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 
+//
+// Native method AddEventListener
+//
+PR_STATIC_CALLBACK(JSBool)
+EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  nsIDOMEventTarget *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kIEventTargetIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type EventTarget");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsIDOMEventListener* b1;
+  PRBool b2;
+  PRBool b3;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 4) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (!nsJSUtils::nsConvertJSValToFunc(&b1,
+                                         cx,
+                                         obj,
+                                         argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b3, cx, argv[3])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->AddEventListener(b0, b1, b2, b3)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function addEventListener requires 4 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method RemoveEventListener
+//
+PR_STATIC_CALLBACK(JSBool)
+EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  nsIDOMEventTarget *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kIEventTargetIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type EventTarget");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsIDOMEventListener* b1;
+  PRBool b2;
+  PRBool b3;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 4) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (!nsJSUtils::nsConvertJSValToFunc(&b1,
+                                         cx,
+                                         obj,
+                                         argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b3, cx, argv[3])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->RemoveEventListener(b0, b1, b2, b3)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function removeEventListener requires 4 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Window
@@ -1533,6 +1659,8 @@ static JSFunctionSpec WindowMethods[] =
   {"open",          WindowOpen,     0},
   {"captureEvent",          EventCapturerCaptureEvent,     1},
   {"releaseEvent",          EventCapturerReleaseEvent,     1},
+  {"addEventListener",          EventTargetAddEventListener,     4},
+  {"removeEventListener",          EventTargetRemoveEventListener,     4},
   {0}
 };
 

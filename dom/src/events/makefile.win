@@ -26,11 +26,12 @@ DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS =				\
 	nsJSEventListener.cpp		\
+	nsJSDOMEventListener.cpp		\
 	nsJSEvent.cpp			\
 	$(NULL)
 
 CPP_OBJS= \
-	.\$(OBJDIR)\nsJSEventListener.obj .\$(OBJDIR)\nsJSEvent.obj
+	.\$(OBJDIR)\nsJSEventListener.obj .\$(OBJDIR)\nsJSDOMEventListener.obj .\$(OBJDIR)\nsJSEvent.obj
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js
 

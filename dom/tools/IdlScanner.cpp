@@ -559,6 +559,31 @@ void IdlScanner::FKeywords(char *aCurrentPos, Token *aToken)
       aToken->SetToken(FLOAT_TOKEN);
     }
   }
+  else if (c != EOF && c == 'u' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+           c != EOF && c == 'n' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+           c != EOF && c == 'c' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+           c != EOF && c == 't' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+           c != EOF && c == 'i' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+           c != EOF && c == 'o' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+           c != EOF && c == 'n' && (*aCurrentPos++ = c)) {
+    // if terminated is a keyword
+    c = mInputFile->get();
+    if (c != EOF) {
+      if (isalpha(c) || isdigit(c) || c == '_') {
+        // more characters, it must be an identifier
+        *aCurrentPos++ = c;
+        Identifier(aCurrentPos, aToken);
+      }
+      else {
+        // it is a keyword
+        aToken->SetToken(FUNC_TOKEN);
+        mInputFile->putback(c);
+      }
+    }
+    else {
+      aToken->SetToken(FUNC_TOKEN);
+    }
+  }
   else {
     // it must be an identifier
     KeywordMismatch(c, aCurrentPos, aToken);
