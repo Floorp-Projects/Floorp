@@ -64,6 +64,8 @@
 #include <Directory.h>
 #elif defined(XP_UNIX)
 #include <unistd.h>
+#elif defined(XP_OS2)
+#include <os2.h>
 #endif
 
 #ifdef DEBUG_bsmedberg
@@ -345,7 +347,7 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
   NS_ADDREF(*aResult = lf);
   return NS_OK;
 
-#elif defined(XP_WIN32) || defined(XP_OS2)
+#elif defined(XP_WIN32)
   nsCOMPtr<nsILocalFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
   NS_ENSURE_TRUE(lf, NS_ERROR_OUT_OF_MEMORY);
 
@@ -367,6 +369,32 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
 
     char pathBuf[MAX_PATH];
     if (!_fullpath(pathBuf, fullPath.get(), MAX_PATH))
+      return NS_ERROR_FAILURE;
+
+    rv = lf->InitWithNativePath(nsDependentCString(pathBuf));
+    if (NS_FAILED(rv)) return rv;
+  }
+  NS_ADDREF(*aResult = lf);
+  return NS_OK;
+
+#elif defined(XP_OS2)
+  nsCOMPtr<nsILocalFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+  NS_ENSURE_TRUE(lf, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = lf->InitWithPath(aArgument);
+  if (NS_FAILED(rv)) {
+
+    nsCAutoString fullPath;
+    mWorkingDir->GetNativePath(fullPath);
+
+    nsCAutoString carg;
+    NS_CopyUnicodeToNative(aArgument, carg);
+
+    fullPath.Append('\\');
+    fullPath.Append(carg);
+
+    char pathBuf[CCHMAXPATH];
+    if (DosQueryPathInfo(fullPath.get(), FIL_QUERYFULLNAME, pathBuf, sizeof(pathBuf)))
       return NS_ERROR_FAILURE;
 
     rv = lf->InitWithNativePath(nsDependentCString(pathBuf));
