@@ -102,23 +102,26 @@ function onOK() {
 // check download directory is valid
 function checkDownloadDirectory() {
    var dloadDir = Components.classes["@mozilla.org/file/local;1"]
-                      .createInstance(Components.interfaces.nsILocalFile);
-   if (!dloadDir) return false;
+                            .createInstance(Components.interfaces.nsILocalFile);
+   if (!dloadDir) 
+     return false;
 
    var givenValue = document.getElementById("defaultDir");
    var downloadDir = document.getElementById("downloadDir");
-   if (downloadDir.selectedItem == document.getElementById("alwaysAskRadio")) { return; }
-
+   if (downloadDir.selectedItem == document.getElementById("alwaysAskRadio"))
+     return;
+   
    try {
      dloadDir.initWithPath(givenValue.value);
      dloadDir.isDirectory();
    }
    catch(ex) {
      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                           .getService(Components.interfaces.nsIPromptService);
+                                   .getService(Components.interfaces.nsIPromptService);
      var prefbundle = document.getElementById("bundle_prefutilities");
 
-     if ( givenValue.value == "" ) { // no directory, reset back to Always Ask
+     if (givenValue.value == "") { 
+       // no directory, reset back to Always Ask
        downloadDir.selectedItem = document.getElementById("alwaysAskRadio");
      } else {
        var checkValue = {value:false};
@@ -136,9 +139,11 @@ function checkDownloadDirectory() {
          return;
        }
        try { 
-         dloadDir.create(1,0777);
+         dloadDir.create(nsIFile.DIRECTORY_TYPE, 0755);
        } catch(ex) {
-         alert( prefbundle.getFormattedString("invalidDir", [givenValue.value]) );
+         title = prefbundle.getString("invalidDirPopupTitle");
+         description = prefbundle.getFormattedString("invalidDir", [givenValue.value])
+         promptService.alert(parent, title, description);
        }
      }
   }
