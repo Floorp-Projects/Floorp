@@ -440,17 +440,6 @@ public:
   NS_IMETHOD ForceUpdate() = 0;
   
   /**
-   * Turn widget on or off widget movement caching
-   */
-  NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching)=0;
-
-  /**
-   * Pass true to cache widget changes. pass false to stop. When false is passed
-   * All widget changes will be applied.
-   */
-  NS_IMETHOD CacheWidgetChanges(PRBool aCache)=0;
-
-  /**
    * Control double buffering of the display. If double buffering
    * is enabled the viewmanager is allowed to render to an offscreen
    * drawing surface before copying to the display in order to prevent

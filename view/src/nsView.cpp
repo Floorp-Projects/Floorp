@@ -368,7 +368,7 @@ void nsView::SetPosition(nscoord aX, nscoord aY)
   NS_ASSERTION(GetParent() || (aX == 0 && aY == 0),
                "Don't try to move the root widget to something non-zero");
 
-  ResetWidgetPosition(PR_TRUE);
+  ResetWidgetBounds(PR_TRUE, PR_TRUE, PR_FALSE);
 }
 
 void nsView::SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY)
@@ -378,27 +378,30 @@ void nsView::SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY)
   mPosX = aX;
   mPosY = aY;
 
-  ResetWidgetPosition(PR_FALSE);
+  ResetWidgetBounds(PR_FALSE, PR_TRUE, PR_FALSE);
 }
 
-void nsView::ResetWidgetPosition(PRBool aRecurse) {
-  if (mWindow)
-  {
-    // see if we are caching our widget changes. Yes? 
-    // mark us as changed. Later we will actually move the 
-    // widget.
-    PRBool caching = PR_FALSE;
-    mViewManager->IsCachingWidgetChanges(&caching);
-    if (caching) {
-      mVFlags |= NS_VIEW_FLAG_WIDGET_MOVED;
+void nsView::ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly,
+                               PRBool aInvalidateChangedSize) {
+  if (mWindow) {
+    // If our view manager has refresh disabled, then
+    // do nothing; the view manager will set our position when
+    // refresh is reenabled.
+    if (!mViewManager->IsRefreshEnabled()) {
+      return;
+    }
+
+    // The geometry of a root view's widget is controlled externally,
+    // NOT by sizing or positioning the view
+    if (mViewManager->GetRootView() == this) {
       return;
     }
 
     nsIDeviceContext  *dx;
-    float             scale;
+    float             t2p;
   
     mViewManager->GetDeviceContext(dx);
-    scale = dx->AppUnitsToDevUnits();
+    t2p = dx->AppUnitsToDevUnits();
     NS_RELEASE(dx);
 
     nsPoint offset(0, 0);
@@ -406,113 +409,55 @@ void nsView::ResetWidgetPosition(PRBool aRecurse) {
       GetParent()->GetNearestWidget(&offset);
     }
 
-    mWindow->Move(NSTwipsToIntPixels((mDimBounds.x + offset.x), scale),
-                  NSTwipsToIntPixels((mDimBounds.y + offset.y), scale));
+    nsRect newBounds(NSTwipsToIntPixels((mDimBounds.x + offset.x), t2p),
+                     NSTwipsToIntPixels((mDimBounds.y + offset.y), t2p),
+                     NSTwipsToIntPixels(mDimBounds.width, t2p),
+                     NSTwipsToIntPixels(mDimBounds.height, t2p));
+    
+    PRBool changedPos = PR_TRUE;
+    PRBool changedSize = PR_TRUE;
+    if (!(mVFlags & NS_VIEW_FLAG_HAS_POSITIONED_WIDGET)) {
+      mVFlags |= NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
+    } else {
+      nsRect curBounds;
+      mWindow->GetBounds(curBounds);
+      changedPos = curBounds.TopLeft() != newBounds.TopLeft();
+      changedSize = curBounds.Size() != newBounds.Size();
+    }
+
+    if (changedPos) {
+      if (changedSize && !aMoveOnly) {
+        mWindow->Resize(newBounds.x, newBounds.y, newBounds.width, newBounds.height,
+                        aInvalidateChangedSize);
+      } else {
+        mWindow->Move(newBounds.x, newBounds.y);
+      }
+    } else {
+      if (changedSize && !aMoveOnly) {
+        mWindow->Resize(newBounds.width, newBounds.height, aInvalidateChangedSize);
+      } // else do nothing!
+    }
   } else if (aRecurse) {
     // reposition any widgets under this view
     for (nsView* v = GetFirstChild(); v; v = v->GetNextSibling()) {
-      v->ResetWidgetPosition(aRecurse);
+      v->ResetWidgetBounds(PR_TRUE, aMoveOnly, aInvalidateChangedSize);
     }
   }
 }
 
-NS_IMETHODIMP nsView::SynchWidgetSizePosition()
-{
-  // if the widget was moved or resized
-  if (mVFlags & NS_VIEW_FLAG_WIDGET_MOVED || mVFlags & NS_VIEW_FLAG_WIDGET_RESIZED)
-  {
-    nsIDeviceContext  *dx;
-    float             t2p;
-
-    mViewManager->GetDeviceContext(dx);
-    t2p = dx->AppUnitsToDevUnits();
-    NS_RELEASE(dx);
-    // if we just resized do it
-    if (mVFlags & NS_VIEW_FLAG_WIDGET_RESIZED) 
-    {
-
-      PRInt32 width = NSTwipsToIntPixels(mDimBounds.width, t2p);
-      PRInt32 height = NSTwipsToIntPixels(mDimBounds.height, t2p);
-
-      nsRect bounds;
-      mWindow->GetBounds(bounds);
-
-      if (bounds.width != width || bounds.height != bounds.height) {
-        mWindow->Resize(width,height, PR_TRUE);
-      }
-
-      mVFlags &= ~NS_VIEW_FLAG_WIDGET_RESIZED;
-    } 
-    
-    if (mVFlags & NS_VIEW_FLAG_WIDGET_MOVED) {
-      // if we just moved do it.
-      nsPoint offset;
-      GetParent()->GetNearestWidget(&offset);
-
-      PRInt32 x = NSTwipsToIntPixels(mDimBounds.x + offset.x, t2p);
-      PRInt32 y = NSTwipsToIntPixels(mDimBounds.y + offset.y, t2p);
-
-      nsRect bounds;
-      mWindow->GetBounds(bounds);
-      
-      if (bounds.x != x || bounds.y != y) {
-         mWindow->Move(x,y);
-      }
-
-      mVFlags &= ~NS_VIEW_FLAG_WIDGET_MOVED;
-    }        
-  }
-  
-
-  return NS_OK;
-}
-
-void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint)
+void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint, PRBool aResizeWidget)
 {
   nsRect dims = aRect;
   dims.MoveBy(mPosX, mPosY);
 
-  if (mDimBounds.x == dims.x && mDimBounds.y == dims.y && mDimBounds.width == dims.width
-      && mDimBounds.height == dims.height) {
+  if (mDimBounds == dims) {
     return;
   }
-  
-  if (nsnull == mWindow)
-  {
-    mDimBounds = dims;
-  }
-  else
-  {
-    PRBool needToMoveWidget = mDimBounds.x != dims.x || mDimBounds.y != dims.y;
 
-    mDimBounds = dims;
+  mDimBounds = dims;
 
-    PRBool caching = PR_FALSE;
-    mViewManager->IsCachingWidgetChanges(&caching);
-    if (caching) {
-      mVFlags |= NS_VIEW_FLAG_WIDGET_RESIZED | (needToMoveWidget ? NS_VIEW_FLAG_WIDGET_MOVED : 0);
-      return;
-    }
-
-    nsIDeviceContext  *dx;
-    float             t2p;
-  
-    mViewManager->GetDeviceContext(dx);
-    t2p = dx->AppUnitsToDevUnits();
-
-    if (needToMoveWidget) {
-      NS_ASSERTION(GetParent(), "Don't try to move the root widget, dude");
-
-      nsPoint offset;
-      GetParent()->GetNearestWidget(&offset);
-    
-      mWindow->Move(NSTwipsToIntPixels((mDimBounds.x + offset.x), t2p),
-                    NSTwipsToIntPixels((mDimBounds.y + offset.y), t2p));
-    }
-    mWindow->Resize(NSTwipsToIntPixels(mDimBounds.width, t2p), NSTwipsToIntPixels(mDimBounds.height, t2p),
-                    aPaint);
-
-    NS_RELEASE(dx);
+  if (aResizeWidget) {
+    ResetWidgetBounds(PR_FALSE, PR_FALSE, aPaint);
   }
 }
 
@@ -716,9 +661,8 @@ NS_IMETHODIMP nsView::SetWidget(nsIWidget *aWidget)
   // Destroy any old wrappers if there are any
   ViewWrapper* oldWrapper = GetWrapperFor(aWidget);
   NS_IF_RELEASE(oldWrapper);
-
-
   NS_IF_RELEASE(mWindow);
+
   mWindow = aWidget;
 
   if (nsnull != mWindow)
@@ -726,6 +670,8 @@ NS_IMETHODIMP nsView::SetWidget(nsIWidget *aWidget)
     NS_ADDREF(mWindow);
     mWindow->SetClientData(wrapper);
   }
+
+  mVFlags &= ~NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
 
   return NS_OK;
 }
@@ -748,6 +694,8 @@ nsresult nsView::LoadWidget(const nsCID &aClassIID)
   } else {
     delete wrapper;
   }
+
+  mVFlags &= ~NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
 
   return rv;
 }

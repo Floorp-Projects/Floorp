@@ -147,6 +147,8 @@ struct NS_GFX nsRect {
   nsPoint BottomLeft() const { return nsPoint(x, YMost()); }
   nsPoint BottomRight() const { return nsPoint(XMost(), YMost()); }
 
+  nsSize Size() const { return nsSize(width, height); }
+
   // Helper methods for computing the extents
   nscoord XMost() const {return x + width;}
   nscoord YMost() const {return y + height;}

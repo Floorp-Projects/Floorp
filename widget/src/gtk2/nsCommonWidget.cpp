@@ -278,7 +278,12 @@ nsCommonWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
         if (AreBoundsSane()) {
             // Yep?  Resize the window
             //Maybe, the toplevel has moved
-            if (mIsTopLevel)
+
+            // Note that if the widget needs to be shown because it
+            // was previously insane in Resize(x,y,w,h), then we need
+            // to set the x and y here too, because the widget wasn't
+            // moved back then
+            if (mIsTopLevel || mNeedsShow)
                 NativeResize(mBounds.x, mBounds.y,
                              mBounds.width, mBounds.height, aRepaint);
             else

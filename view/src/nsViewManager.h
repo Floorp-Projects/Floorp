@@ -202,8 +202,6 @@ public:
   nsIWidget* GetWidget() { return mRootView ? mRootView->GetWidget() : nsnull; }
   NS_IMETHOD ForceUpdate();
  
-  NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching);
-  NS_IMETHOD CacheWidgetChanges(PRBool aCache);
   NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer);
   NS_IMETHOD IsPainting(PRBool& aIsPainting);
   NS_IMETHOD FlushPendingInvalidates();
@@ -344,8 +342,6 @@ private:
 
   nsresult GetVisibleRect(nsRect& aVisibleRect);
 
-  nsresult ProcessWidgetChanges(nsView* aView);
-
   // Utilities used to size the offscreen drawing surface
 
   /**
@@ -382,6 +378,8 @@ public: // NOT in nsIViewManager, so private to the view module
   // not be in this view manager).
   static nsPoint ComputeViewOffset(const nsView *aView);
 
+  PRBool IsRefreshEnabled() { return mRefreshEnabled; }
+
 private:
   nsIDeviceContext  *mContext;
   float             mTwipsToPixels;
@@ -393,7 +391,6 @@ private:
   PRInt32           mUpdateBatchCnt;
   PRUint32          mUpdateBatchFlags;
   nsIScrollableView *mRootScrollable;
-  PRInt32           mCachingWidgetChanges;
   nscolor           mDefaultBackgroundColor;
   nsPoint           mMouseLocation; // device units, relative to mRootView
   nsCOMPtr<nsIBlender> mBlender;

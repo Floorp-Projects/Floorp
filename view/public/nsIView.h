@@ -63,57 +63,31 @@ enum nsViewVisibility {
 { 0xf0a21c40, 0xa7e1, 0x11d1, \
 { 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
 
-//Flag to determine whether the view will check if events can be handled
-//by its children or just handle the events itself
-#define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0001
+// Public view flags are defined in this file
+#define NS_VIEW_FLAGS_PUBLIC              0x00FF
+// Private view flags are private to the view module,
+// and are defined in nsView.h
+#define NS_VIEW_FLAGS_PRIVATE             0xFF00
 
-// indicates that the view is or contains a placeholder view
-#define NS_VIEW_FLAG_CONTAINS_PLACEHOLDER 0x0002
+// Public view flags
 
-//the view is transparent
-#define NS_VIEW_FLAG_TRANSPARENT          0x0004
+// The view is transparent
+#define NS_VIEW_FLAG_TRANSPARENT          0x0001
 
 // The view is always painted onto a background consisting
 // of a uniform field of opaque pixels.
-#define NS_VIEW_FLAG_UNIFORM_BACKGROUND   0x0008
+#define NS_VIEW_FLAG_UNIFORM_BACKGROUND   0x0002
 
-//indicates that the view should not be bitblt'd when moved
-//or scrolled and instead must be repainted
-#define NS_VIEW_FLAG_DONT_BITBLT          0x0010
+// Indicates that the view is using auto z-indexing
+#define NS_VIEW_FLAG_AUTO_ZINDEX          0x0004
 
-// indicates that the view is using auto z-indexing
-#define NS_VIEW_FLAG_AUTO_ZINDEX          0x0020
+// Indicates that the view is a floating view.
+#define NS_VIEW_FLAG_FLOATING             0x0008
 
-// indicates that the view is a floating view.
-#define NS_VIEW_FLAG_FLOATING             0x0040
-
-// set if our widget resized. 
-#define NS_VIEW_FLAG_WIDGET_RESIZED       0x0080
-
-// set if our widget moved. 
-#define NS_VIEW_FLAG_WIDGET_MOVED         0x0100
-
-// set if this view is clipping its normal descendants
-// to its bounds. When this flag is set, child views
-// bounds need not be inside this view's bounds.
-#define NS_VIEW_FLAG_CLIP_CHILDREN_TO_BOUNDS      0x0200
-
-// set if this view is clipping its descendants (including
-// placeholders) to its bounds
-#define NS_VIEW_FLAG_CLIP_PLACEHOLDERS_TO_BOUNDS  0x0400
-
-// set if this view is clipping its normal descendants to
-// a specified region. When this flag is set, child views
-// bounds need not be inside this view's bounds. The region
-// will always lie inside this view's bounds.
-// #define NS_VIEW_FLAG_CLIP_CHILDREN_TO_REGION      0x0800
-// we don't need this flag; we just check whether mClipRect
-// is null
-
-// if set it indicates that this view should be
+// If set it indicates that this view should be
 // displayed above z-index:auto views if this view 
 // is z-index:auto also
-#define NS_VIEW_FLAG_TOPMOST              0x0800
+#define NS_VIEW_FLAG_TOPMOST              0x0010
 
 struct nsViewZIndex {
   PRBool mIsAuto;

@@ -457,7 +457,6 @@ nsViewManager::nsViewManager()
   mVMCount++;
   // NOTE:  we use a zeroing operator new, so all data members are
   // assumed to be cleared here.
-  mCachingWidgetChanges = 0;
   mDefaultBackgroundColor = NS_RGBA(0, 0, 0, 0);
   mAllowDoubleBuffering = PR_TRUE; 
   mHasPendingInvalidates = PR_FALSE;
@@ -626,7 +625,8 @@ NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight
   // Resize the root view
   if (nsnull != mRootView) {
     nsRect dim(0, 0, aWidth, aHeight);
-    mRootView->SetDimensions(dim);
+    // Don't resize the widget. It is already being set elsewhere.
+    mRootView->SetDimensions(dim, PR_TRUE, PR_FALSE);
   }
 
   //printf("new dims: %d %d\n", aWidth, aHeight);
@@ -1528,7 +1528,10 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView)
   if (!aView) {
     return;
   }
+
   if (aView->HasWidget()) {
+    aView->ResetWidgetBounds(PR_FALSE, PR_FALSE, PR_TRUE);
+
     nsCOMPtr<nsIRegion> dirtyRegion;
     aView->GetDirtyRegion(*getter_AddRefs(dirtyRegion));
     if (dirtyRegion && !dirtyRegion->IsEmpty()) {
@@ -4008,38 +4011,6 @@ NS_IMETHODIMP nsViewManager::GetRectVisibility(nsIView *aView,
 
 
 NS_IMETHODIMP
-nsViewManager::IsCachingWidgetChanges(PRBool* aCaching)
-{
-#ifdef CACHE_WIDGET_CHANGES
-  *aCaching = (mCachingWidgetChanges > 0);
-#else
-  *aCaching = PR_FALSE;
-#endif
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsViewManager::CacheWidgetChanges(PRBool aCache)
-{
-
-#ifdef CACHE_WIDGET_CHANGES
-  if (aCache == PR_TRUE)
-    mCachingWidgetChanges++;
-  else
-    mCachingWidgetChanges--;
-
-  NS_ASSERTION(mCachingWidgetChanges >= 0, "One too many decrements");
-
-  // if we turned it off. Then move and size all the widgets.
-  if (mCachingWidgetChanges == 0)
-    ProcessWidgetChanges(mRootView);
-#endif
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsViewManager::AllowDoubleBuffering(PRBool aDoubleBuffer)
 {
   mAllowDoubleBuffering = aDoubleBuffer;
@@ -4068,30 +4039,6 @@ nsViewManager::ProcessInvalidateEvent()
 {
   FlushPendingInvalidates();
   mInvalidateEventQueue = nsnull;
-}
-
-nsresult
-nsViewManager::ProcessWidgetChanges(nsView* aView)
-{
-  //printf("---------Begin Sync----------\n");
-  nsresult rv = aView->SynchWidgetSizePosition();
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsView *child = aView->GetFirstChild();
-  while (nsnull != child) {
-    if (child->GetViewManager() == this) {
-      rv = ProcessWidgetChanges(child);
-      if (NS_FAILED(rv))
-        return rv;
-    }
-
-    child = child->GetNextSibling();
-  }
-
-  //printf("---------End Sync----------\n");
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

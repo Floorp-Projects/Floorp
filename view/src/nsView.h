@@ -55,6 +55,31 @@ class nsIViewManager;
 class nsViewManager;
 class nsZPlaceholderView;
 
+// View flags private to the view module
+
+// indicates that the view is or contains a placeholder view
+#define NS_VIEW_FLAG_CONTAINS_PLACEHOLDER 0x0100
+
+// Flag to determine whether the view will check if events can be handled
+// by its children or just handle the events itself
+#define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0200
+
+// indicates that the view should not be bitblt'd when moved
+// or scrolled and instead must be repainted
+#define NS_VIEW_FLAG_DONT_BITBLT          0x0400
+
+// set if this view is clipping its normal descendants
+// to its bounds. When this flag is set, child views
+// bounds need not be inside this view's bounds.
+#define NS_VIEW_FLAG_CLIP_CHILDREN_TO_BOUNDS      0x0800
+
+// set if this view is clipping its descendants (including
+// placeholders) to its bounds
+#define NS_VIEW_FLAG_CLIP_PLACEHOLDERS_TO_BOUNDS  0x1000
+
+// set if this view has positioned its widget at least once
+#define NS_VIEW_FLAG_HAS_POSITIONED_WIDGET 0x2000
+
 class nsView : public nsIView
 {
 public:
@@ -99,7 +124,8 @@ public:
    * The x and y coordinates may be < 0, indicating that the view extends above
    * or to the left of its origin position.
    */
-  virtual void SetDimensions(const nsRect &aRect, PRBool aPaint = PR_TRUE);
+  virtual void SetDimensions(const nsRect &aRect, PRBool aPaint = PR_TRUE,
+                             PRBool aResizeWidget = PR_TRUE);
   void GetDimensions(nsRect &aRect) const { aRect = mDimBounds; aRect.x -= mPosX; aRect.y -= mPosY; }
   void GetDimensions(nsSize &aSize) const { aSize.width = mDimBounds.width; aSize.height = mDimBounds.height; }
 
@@ -206,12 +232,6 @@ public:
    */
   nsRect GetClippedRect();
 
-  /**
-   * Sync your widget size and position with the view
-   */
-  NS_IMETHOD SynchWidgetSizePosition();
-
-
   // Helper function to get the view that's associated with a widget
   static nsView*  GetViewFor(nsIWidget* aWidget);
 
@@ -257,7 +277,7 @@ public:
   // Just write "pt -= view->GetPosition();"
   // When everything's converted to nsPoint, this can go away.
   void ConvertFromParentCoords(nscoord* aX, nscoord* aY) const { *aX -= mPosX; *aY -= mPosY; }
-  void ResetWidgetPosition(PRBool aRecurse);
+  void ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly, PRBool aInvalidateChangedSize);
   void SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY);
   nsresult LoadWidget(const nsCID &aClassIID);
 
