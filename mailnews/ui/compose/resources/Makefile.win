@@ -25,6 +25,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) Compose.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ComposeFrame.html $(DIST)\bin\res\samples
 
+clobber::
 	rm -f $(DIST)\bin\$(DLLNAME)
 	rm -f $(DIST)\bin\res\samples\Compose.xul
 	rm -f $(DIST)\bin\res\samples\ComposeFrame.html
