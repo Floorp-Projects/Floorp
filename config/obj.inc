@@ -59,7 +59,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         $(CURDIR)$(*B).c
@@ -78,7 +78,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         -Fo.\$(OBJDIR)\
@@ -98,7 +98,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         -Fo.\$(OBJDIR)\
@@ -118,7 +118,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         $(CURDIR)$(*B).cpp
@@ -137,7 +137,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         -Fo.\$(OBJDIR)\
@@ -158,7 +158,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         -Fo.\$(OBJDIR)\
@@ -197,7 +197,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         -Fo.\$(OBJDIR)\
@@ -233,7 +233,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         -Fe.\$(OBJDIR)\
@@ -257,7 +257,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         -Fe.\$(OBJDIR)\
@@ -287,7 +287,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         $(CURDIR)$(*B).c
@@ -307,7 +307,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         -Fo.\$(OBJDIR)\
@@ -328,7 +328,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         $(CURDIR)$(*B).cpp
@@ -348,7 +348,7 @@ $(OBJS): makefile.win \
         -Fm$(MAPFILE)
 !endif
 !if defined(MOZ_CODINFO)
-        -Fa$(CODFILE)
+        -Fa$(OBJDIR)/$(*B).cod 
         -FAsc
 !endif
         -Fo.\$(OBJDIR)\
