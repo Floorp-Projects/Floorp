@@ -1717,22 +1717,15 @@ GlobalWindowImpl::ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDO
 NS_IMETHODIMP
 GlobalWindowImpl::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                               PRInt32 aXPos, PRInt32 aYPos, 
-                              const nsString& aPopupType, const nsString& aPopupAlignment)
+                              const nsString& aPopupType, 
+                              const nsString& anAnchorAlignment, const nsString& aPopupAlignment)
 {
   // Pass this off to the parent.
   nsCOMPtr<nsIWebShellContainer> webShellContainer = do_QueryInterface(mWebShell);
   if (webShellContainer) {
     webShellContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType,
-                                   aPopupAlignment, this);
+                                   anAnchorAlignment, aPopupAlignment, this);
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::CreateAnchoredPopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-                              const nsString& anAnchorAlignment,
-                              const nsString& aPopupType, const nsString& aPopupAlignment)
-{
   return NS_OK;
 }
 

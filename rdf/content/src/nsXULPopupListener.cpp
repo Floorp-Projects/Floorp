@@ -241,7 +241,7 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
       if (domWindow != nsnull) {
         // Find out if we're anchored.
-        nsString anchorAlignment;
+        nsString anchorAlignment("none");
         element->GetAttribute("popupanchor", anchorAlignment);
 
         nsString popupAlignment("topleft");
@@ -249,32 +249,25 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
 
 		    // Set the popup in the document for the duration of this call.
 		    xulDocument->SetPopup(element);
-        if (anchorAlignment == "") {
-          // We aren't anchored. Create on the point.
-          // Retrieve our x and y position.
-          nsCOMPtr<nsIDOMUIEvent>uiEvent;
-          uiEvent = do_QueryInterface(anEvent);
-          if (!uiEvent) {
-            //non-ui event passed in.  bad things.
-            return NS_OK;
-          }
+        
+        // Retrieve our x and y position.
+        nsCOMPtr<nsIDOMUIEvent>uiEvent;
+        uiEvent = do_QueryInterface(anEvent);
+        if (!uiEvent) {
+          //non-ui event passed in.  bad things.
+          return NS_OK;
+        }
 
-          PRInt32 xPos, yPos;
-    		  uiEvent->GetScreenX(&xPos); 
-          uiEvent->GetScreenY(&yPos); 
-                
-          domWindow->CreatePopup(element, popupContent, 
-                               xPos, yPos, 
-                               type, popupAlignment);
-        }
-        else {
-          // We're anchored. Pass off to the window, and let it figure out
-          // from the frame where it wants to put us.
-          domWindow->CreateAnchoredPopup(element, popupContent,
-                                         anchorAlignment, type, popupAlignment);
-        }
-		    xulDocument->SetPopup(nsnull);
-      }
+        PRInt32 xPos, yPos;
+    		uiEvent->GetScreenX(&xPos); 
+        uiEvent->GetScreenY(&yPos); 
+              
+        domWindow->CreatePopup(element, popupContent, 
+                             xPos, yPos, 
+                             type, anchorAlignment, popupAlignment);
+      
+        // XXX For menus only, clear the document.popup field.
+		  }
       NS_RELEASE(global);
     }
   }
@@ -317,9 +310,12 @@ XULPopupListenerImpl::Blur(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  // XXX Figure out how to fire the DESTRUCT event for the
+  // XXX Figure out how to fire the DESTROY event for the
   // arbitrary XUL case
 
+  // XXX Set document.popup to null in the parent document NOW.
+  // xulDocument->SetPopup(nsnull); 
+      
   return rv;
 }
 
