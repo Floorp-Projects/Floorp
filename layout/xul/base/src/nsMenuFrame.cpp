@@ -535,7 +535,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
       mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
 
       nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mOpenTimer);
-      ti->SetIdle(PR_TRUE);
+      ti->SetIdle(PR_FALSE);
 
       mOpenTimer->InitWithCallback(this, menuDelay, nsITimer::TYPE_ONE_SHOT);
 

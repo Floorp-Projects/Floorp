@@ -2896,7 +2896,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
         prefs->GetIntPref("nglayout.initialpaint.delay", &delay);
 
       nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mPaintSuppressionTimer);
-      ti->SetIdle(PR_TRUE);
+      ti->SetIdle(PR_FALSE);
 
       mPaintSuppressionTimer->InitWithFuncCallback(sPaintSuppressionCallback, this, delay, 
                                                    nsITimer::TYPE_ONE_SHOT);

@@ -1502,7 +1502,7 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
       // Kick off the timer.
       mCloseTimer = do_CreateInstance("@mozilla.org/timer;1");
       nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mCloseTimer);
-      ti->SetIdle(PR_TRUE);
+      ti->SetIdle(PR_FALSE);
       mCloseTimer->InitWithCallback(this, menuDelay, nsITimer::TYPE_ONE_SHOT); 
       mTimerMenu = mCurrentMenu;
     }
