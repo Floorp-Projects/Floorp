@@ -784,7 +784,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                                 throw new JSException("Non-numeric or negative argument name for positional rest parameter");
                                         }
                                         else {  // shift the index value down by the number of positional parameters
-                                            index = (int)d - icm->itsParameters->mPositionalCount;
+                                            index = (int)d;
+                                            index -= icm->itsParameters->mPositionalCount;
 //                                            StringFormatter s;
 //                                            s << ((int)d - icm->itsParameters->mPositionalCount);
 //                                            argName = &mWorld.identifiers[s];
@@ -799,7 +800,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                             if (index == -1)
                                                 restArg->setProperty(*argName, (*registers)[argument.first]);
                                             else
-                                                (*restArg)[index] = (*registers)[argument.first];
+                                                (*restArg)[uint32(index)] = (*registers)[argument.first];
                                             (*registers)[argument.first] = restArg;
                                             // The callArgs for the rest parameter position gets loaded from that slot 
                                             (*callArgs)[pCount] = Argument(TypedRegister(argument.first, &Array_Type), NULL);
@@ -808,7 +809,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                             if (index == -1)
                                                 restArg->setProperty(*argName, (*registers)[argument.first]);
                                             else
-                                                (*restArg)[index] = (*registers)[argument.first];
+                                                (*restArg)[uint32(index)] = (*registers)[argument.first];
                                         }
                                     }
                                     // else just throw it away 
