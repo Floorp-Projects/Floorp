@@ -33,7 +33,7 @@
 <!ENTITY changeButton.label "Change">
 <!ENTITY changeAllButton.label "Change All">
 
-<!ENTITY userDictionary.label "User Dictionary:">
+<!ENTITY userDictionary.label "Personal Dictionary:">
 <!ENTITY moreDictionaries.label "Download More">
 <!ENTITY addToUserDictionaryButton.label "Add Word">
 <!ENTITY editUserDictionaryButton.label "Edit...">

@@ -31,6 +31,7 @@ CHROME_L10N = \
   .\EditorInsertChars.dtd \
   .\EditorInsertTable.dtd \
   .\EditorLinkProperties.dtd \
+  .\EditorLinkCheck.dtd \
   .\EditorListProperties.dtd \
   .\EditorPageProperties.dtd \
   .\EditorColorProperties.dtd \
