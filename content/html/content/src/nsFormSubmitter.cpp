@@ -1063,15 +1063,18 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
               }
               // Print file contents
               PRInt32 size = 1;
+              char* readbuffer = nsnull;
               while (1) {
-                char* readbuffer = nsnull;
+                // Read() mallocs if readbuffer is null
                 rv = contentFile->Read(&readbuffer, BUFSIZE, &size);
                 if (NS_FAILED(rv) || 0 >= size) break;
                 wantbytes = size;
                 rv = outStream->Write(readbuffer, wantbytes, &gotbytes);
                 if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               }
+              nsMemory::Free(readbuffer);
               NS_RELEASE(contentFile);
+              if (NS_FAILED(rv)) break;
               // Print CRLF after file
               wantbytes = PL_strlen(CRLF);
               rv = outStream->Write(CRLF, wantbytes, &gotbytes);
