@@ -274,7 +274,7 @@ int32_t NPN_IntFromIdentifier(NPIdentifier identifier);
     The NPVariant *result argument of these functions (where
     applicable) should be released using NPN_ReleaseVariantValue().
 */
-typedef NPObject *(*NPAllocateFunctionPtr)(NPP npp);
+typedef NPObject *(*NPAllocateFunctionPtr)(NPP npp, NPClass *aClass);
 typedef void (*NPDeallocateFunctionPtr)(NPObject *npobj);
 typedef void (*NPInvalidateFunctionPtr)(NPObject *npobj);
 typedef bool (*NPHasMethodFunctionPtr)(NPObject *npobj, NPIdentifier name);
