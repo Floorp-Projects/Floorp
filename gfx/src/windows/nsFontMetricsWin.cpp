@@ -26,6 +26,8 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsICharRepresentable.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsFontMetricsWin.h"
 #include "nsQuickSort.h"
 #include "nsTextFormatter.h"
@@ -137,7 +139,6 @@ static BOOL gHaveZHCNFont = PR_FALSE;
 static BOOL gHitZHCNCase = PR_FALSE;
 
 
-static int gFontMetricsWinCount = 0;
 static int gInitialized = 0;
 
 static PRUint32 gUserDefinedMap[2048];
@@ -189,6 +190,17 @@ FreeGlobals(void)
     gInitializedFontMaps = 0;
   }
 
+  if (nsFontMetricsWin::gGlobalFonts) {
+    //while all cmap is freed, gGlobalFonts's pointer should be freed
+    for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
+      delete nsFontMetricsWin::gGlobalFonts[i].name;
+    }
+    PR_Free(nsFontMetricsWin::gGlobalFonts);
+    nsFontMetricsWin::gGlobalFonts = nsnull;
+    gGlobalFontsAlloc = 0;
+    nsFontMetricsWin::gGlobalFontsCount = 0;
+  }
+
   // free FamilyNames
   if (nsFontMetricsWin::gFamilyNames) {
     PL_HashTableDestroy(nsFontMetricsWin::gFamilyNames);
@@ -203,6 +215,27 @@ FreeGlobals(void)
     gInitializedFontWeights = 0;
   }
 }
+
+class nsFontCleanupObserver : public nsIObserver {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  nsFontCleanupObserver() { NS_INIT_ISUPPORTS(); }
+  virtual ~nsFontCleanupObserver() {}
+};
+NS_IMPL_ISUPPORTS1(nsFontCleanupObserver, nsIObserver);
+
+NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+  nsLiteralString aTopicString(aTopic);
+  if (aTopicString.Equals(NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
+    FreeGlobals();
+  }
+  return NS_OK;
+}
+
+static nsFontCleanupObserver *gFontCleanupObserver;
 
 static nsresult
 InitGlobals(void)
@@ -268,6 +301,18 @@ InitGlobals(void)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  //register an oberver to take care of cleanup
+  gFontCleanupObserver = new nsFontCleanupObserver();
+  NS_ASSERTION(gFontCleanupObserver, "failed to create observer");
+  if (gFontCleanupObserver) {
+     // register for shutdown
+     nsresult rv;
+     nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+     if (NS_SUCCEEDED(rv)) {
+        rv = observerService->AddObserver(gFontCleanupObserver, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+     }    
+  }
+  
   gInitialized = 1;
 
   return NS_OK;
@@ -304,7 +349,6 @@ nsFontMetricsWin :: nsFontMetricsWin()
 {
   NS_INIT_REFCNT();
   mSpaceWidth = 0;
-  ++gFontMetricsWinCount;
 }
   
 nsFontMetricsWin :: ~nsFontMetricsWin()
@@ -330,10 +374,6 @@ nsFontMetricsWin :: ~nsFontMetricsWin()
   }
 
   mDeviceContext = nsnull;
-
-  if (0 == --gFontMetricsWinCount) {
-    FreeGlobals();
-  }
 }
 
 #ifdef LEAK_DEBUG
