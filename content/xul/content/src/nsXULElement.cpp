@@ -841,27 +841,25 @@ nsXULElement::GetNextSibling(nsIDOMNode** aNextSibling)
 NS_IMETHODIMP
 nsXULElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-    nsresult rv;
-    if (! Attributes()) {
-        // We fault everything, until we can fix nsXULAttributes
+    // We fault everything (since the caller will be able to set and
+    // remove attributes at will, and may try to enumerate them).
 #ifdef DEBUG_ATTRIBUTE_STATS
-        if (mPrototype) {
-            gFaults.GetAttributes++; gFaults.Total++;
-            fprintf(stderr, "XUL: Faulting for GetAttributes: %d/%d\n",
-                    gFaults.GetAttributes, gFaults.Total);
-        }
+    if (mPrototype) {
+        gFaults.GetAttributes++; gFaults.Total++;
+        fprintf(stderr, "XUL: Faulting for GetAttributes: %d/%d\n",
+                gFaults.GetAttributes, gFaults.Total);
+    }
 #endif
 
-        rv = MakeHeavyweight();
+    nsresult rv = MakeHeavyweight();
+    if (NS_FAILED(rv)) return rv;
+
+    if (! Attributes()) {
+        nsXULAttributes *attrs;
+        rv = nsXULAttributes::Create(NS_STATIC_CAST(nsIStyledContent*, this), &attrs);
         if (NS_FAILED(rv)) return rv;
 
-        if (! Attributes()) {
-            nsXULAttributes *attrs;
-            rv = nsXULAttributes::Create(NS_STATIC_CAST(nsIStyledContent*, this), &attrs);
-            if (NS_FAILED(rv)) return rv;
-
-            mSlots->SetAttributes(attrs);
-        }
+        mSlots->SetAttributes(attrs);
     }
 
     *aAttributes = Attributes();
