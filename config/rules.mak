@@ -841,11 +841,35 @@ $(CHROME_L10N:.\=CLOBBER\.\):
 
 !endif # localization
 
-!ifdef CHROME_TYPE
-install:: $(CHROME_TYPE)
+# miscellaneous chrome
+!if "$(CHROME_MISC)" != "$(NULL)"
 
-$(CHROME_TYPE):
-    echo $@,0,$(MAKEDIR)\$(DIST)\bin\chrome\$(CHROME_DIR)\$(CHROME_TYPE) >>$(DIST)\bin\chrome\installed-chrome.txt
+CHROME_MISC=$(CHROME_MISC:/=\)
+
+# misc goes to CHROME_DIR unless specified otherwise.
+!if "$(CHROME_MISC_DIR)" == "$(NULL)"
+CHROME_MISC_DIR=.
+!endif
+
+# Export misc files by copying to dist.
+install:: $(CHROME_MISC:.\=INSTALL\.\)
+
+# Pseudo-target specifying how to install content files.
+$(CHROME_MISC:.\=INSTALL\.\):
+    $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_MISC_DIR)
+
+# Clobber content files.
+clobber_all:: $(CHROME_MISC:.\=CLOBBER\.\)
+
+# Pseudo-target specifying how to clobber content files.
+$(CHROME_MISC:.\=CLOBBER\.\):
+    -@$(RM) $(CHROME_DIST)\$(CHROME_MISC_DIR)\$(@:CLOBBER\.=.)
+
+!endif # miscellaneous chrome
+
+!if "$(CHROME_TYPE)" != "$(NULL)"
+install::
+    -for %t in ($(CHROME_TYPE)) do echo %t,install,path,$(MAKEDIR)\$(DIST)\bin\chrome\$(CHROME_DIR) >>$(DIST)\bin\chrome\installed-chrome.txt
 !endif
 
 !endif # chrome

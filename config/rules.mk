@@ -1161,7 +1161,7 @@ CHROME_DIST := $(DIST)/bin/chrome/$(CHROME_DIR)
 # Content
 ifneq ($(CHROME_CONTENT),)
 ifeq ($(CHROME_CONTENT_DIR),) # Use CHROME_DIR unless specified otherwise.
-CHROME_CONTENT_DIR := content
+CHROME_CONTENT_DIR := .
 endif
 install::
 	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_CONTENT)) $(CHROME_DIST)/$(CHROME_CONTENT_DIR)
@@ -1171,7 +1171,7 @@ endif
 # Skin
 ifneq ($(CHROME_SKIN),)
 ifeq ($(CHROME_SKIN_DIR),) # Use CHROME_DIR unless specified otherwise.
-CHROME_SKIN_DIR := skin
+CHROME_SKIN_DIR := .
 endif
 install::
 	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_SKIN)) $(CHROME_DIST)/$(CHROME_SKIN_DIR)
@@ -1181,18 +1181,28 @@ endif
 # Localization.
 ifneq ($(CHROME_L10N),)
 ifeq ($(CHROME_L10N_DIR),) # Use CHROME_DIR unless specified otherwise.
-CHROME_L10N_DIR := locale
+CHROME_L10N_DIR := .
 endif
 install::
 	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_L10N)) $(CHROME_DIST)/$(CHROME_L10N_DIR)
 endif
 # localization
 
+# misc
+ifneq ($(CHROME_MISC),)
+ifeq ($(CHROME_MISC_DIR),) # Use CHROME_DIR unless specified otherwise.
+CHROME_MISC_DIR := .
+endif
+install::
+	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_MISC)) $(CHROME_DIST)/$(CHROME_MISC_DIR)
+endif
+# misc
+
 ifneq ($(CHROME_TYPE),)
 install:: $(addprefix bogus/, $(CHROME_TYPE))
 
 $(addprefix bogus/, $(CHROME_TYPE)):
-	@echo $(patsubst bogus/%, %, $@),0,`pwd`/$(DEPTH)/dist/bin/chrome/$(CHROME_DIR)/$(CHROME_TYPE) >>$(DEPTH)/dist/bin/chrome/installed-chrome.txt
+	@echo $(patsubst bogus/%, %, $@),install,path,`pwd`/$(DEPTH)/dist/bin/chrome/$(CHROME_DIR) >>$(DEPTH)/dist/bin/chrome/installed-chrome.txt
 endif
 
 endif
