@@ -242,7 +242,7 @@ function buildContextMenu()
   var launchSep = document.getElementById("menuseparator_launch");
   var removeItem = document.getElementById("menuitem_remove");
   var showItem = document.getElementById("menuitem_show");
-  var propsItem = document.getElementByid("menuitem_properties");
+  var propsItem = document.getElementById("menuitem_properties");
   var propsSep = document.getElementById("menuseparator_properties");
   showItem.hidden = selectionCount != 1;
   launchItem.hidden = selectionCount != 1;
