@@ -166,7 +166,7 @@ NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(const PRUint32 aLength,
 
     // otherwise, we'll have to allocate a new buffer, copy
     // into that new buffer, and adopt it
-    char* newData(nsnull);
+    char* newData = nsnull;
     if (aData) {
         // allocate a new buffer
         size_t size((aLength + 1) * sizeof(char));
@@ -275,7 +275,7 @@ NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(const PRUint32 aLength,
 
     // otherwise, we'll have to allocate a new buffer, copy
     // into that new buffer, and adopt it
-    PRUnichar* newData(nsnull);
+    PRUnichar* newData = nsnull;
     if (aData) {
         // allocate a new buffer
         size_t size((aLength + 1) * sizeof(PRUnichar));
