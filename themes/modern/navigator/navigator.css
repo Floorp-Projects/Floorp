@@ -347,9 +347,9 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     padding               : 0px;
   }
 
-#ubhist-popup
+#ubhist-popup > menuitem
   {
-    max-width             : none !important;
+    max-width             : 550px !important;
   }
 
 #action-popup 

@@ -26,6 +26,11 @@
     list-style-image      : url("chrome://global/skin/scroll-down.gif");
   }
 
+#ubhist-popup > menuitem
+  {
+    max-width             : 550px !important;
+  }
+  
 #ubhist > .menubutton-icon-internal-box
   {
     border-left           : 1px solid threedhighlight;
