@@ -244,7 +244,16 @@ CFLAGS = $(CFLAGS) -DLIVEWIRE
 CFLAGS = $(CFLAGS) -DMOZILLA_CLIENT
 !endif
 
-PERL= $(MOZ_TOOLS)\perl5\bin\perl.exe
+# use whatever perl is in the path. we don't need to hardcode it
+# unless, of course it exists in the hardcoded places
+!if exist($(MOZ_TOOLS)\perl5\bin\perl.exe)
+PERL = $(MOZ_TOOLS)\perl5\bin\perl.exe
+!elseif exist($(MOZ_TOOLS)\perl5\perl.exe)
+PERL = $(MOZ_TOOLS)\perl5\perl.exe
+!else
+PERL = perl.exe
+!endif
+
 MASM = $(MOZ_TOOLS)\bin\ml.exe
 
 !if "$(WINOS)" == "WIN95"
