@@ -1451,7 +1451,7 @@ Chapter 3. Installation
    "/opt/perl". As root, run these commands:
 bash# mkdir /usr/bonsaitools
 bash# mkdir /usr/bonsaitools/bin
-bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
+bash# ln -s /usr/bin/perl /usr/bonsaitools/bin/perl
 
    Alternately, you can simply run this perl one-liner to change your
    path to perl in all the files in your Bugzilla installation:
@@ -5898,7 +5898,8 @@ D.5. Hacking Bugzilla
        indentation level as that statement, for example:
        if ($var) {
            print "The variable is true";
-       } else {
+       }
+       else {
            print "Try again";
        }
        - NOT -
