@@ -205,7 +205,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
 	  margin                : 0px 4px 0px 0px;
 	  width                 : 10px; 
-	  list-style-image      : url("chrome://global/skin/ubhist-arrow.gif"); 
+	  list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif"); 
   }
 
 #content-frame 
