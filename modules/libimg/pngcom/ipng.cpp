@@ -130,14 +130,16 @@ png_set_dims( il_container *ic, png_structp png_ptr)
 
     src_hdr->width = img_hdr->width = png_ptr->width;
     src_hdr->height = img_hdr->height = png_ptr->height;
-
+#if 1
     if((png_ptr->num_trans)||(png_ptr->color_type  & PNG_COLOR_MASK_ALPHA))
     {
       ic->image->header.alpha_bits = 1;
       ic->image->header.alpha_shift = 0;
       ic->image->header.is_interleaved_alpha = TRUE;
     }
-/*
+#endif 
+
+#if 0
     if(png_ptr->num_trans){
       ic->image->header.alpha_bits = 1;
       ic->image->header.alpha_shift = 0;
@@ -148,7 +150,8 @@ png_set_dims( il_container *ic, png_structp png_ptr)
       ic->image->header.alpha_shift = 0;
       ic->image->header.is_interleaved_alpha = TRUE;
     }
-*/
+
+#endif
     status = ic->imgdcb->ImgDCBImageSize();
 
     /*Note: all png's are decoded to RGB or RGBa and
