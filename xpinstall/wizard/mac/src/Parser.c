@@ -1083,7 +1083,7 @@ Boolean
 FindKeyValue(const char *cfg, const char *inSectionName, const char *inKey, char *outValue)
 {
 	char 	*sectionName, *section, *key, *cfgPtr[1], *sectionPtr[1];
-	
+
 	*cfgPtr = (char*) cfg;
 	
 	sectionName = 	(char *) NewPtrClear( kSNameMaxLen );
@@ -1105,7 +1105,7 @@ FindKeyValue(const char *cfg, const char *inSectionName, const char *inKey, char
 			/* find next key   [sectionPtr moved past next key per iteration] */
             while(GetNextKeyVal(sectionPtr, key, outValue))
 			{
-				if (0<strlen(key) && strncmp(key, inKey, strlen(key)) == 0)
+				if (0<strlen(key) && strncmp(key, inKey, strlen(inKey)) == 0)
 				{
 					if(key) 
                         DisposePtr(key);
@@ -1143,7 +1143,6 @@ GetNextSection(char **ioTxt, char *outSectionName, char *outSection)
 		{
 			while ((*txt != MAC_EOL) && (*txt != WIN_EOL)) /* ignore rest of line */
 				txt++;
-			txt++;
 		}
 		
 		if (*txt == MY_EOF)
@@ -1184,7 +1183,7 @@ GetNextSection(char **ioTxt, char *outSectionName, char *outSection)
 	
 	sbuf = outSection;
 	cnt = 0;
-	while (*txt != START_SECTION && *txt != MY_EOF && *txt != ';') /* next section encountered */
+	while (*txt != START_SECTION && *txt != MY_EOF) /* next section encountered */
 	{
 		if( kSectionMaxLen-1 >= cnt++)	/* prevent from falling of end of outSection buffer */				
 		{
