@@ -385,8 +385,6 @@
 <!ENTITY calendar.server.dialog.title.new           "Új naptár hozzáadása">
 <!ENTITY calendar.server.dialog.title.edit          "Naptár szerkesztése">
 <!ENTITY calendar.server.dialog.name.label          "Név">
-<!ENTITY calendar.server.dialog.username.label      "Felhasználói név">
-<!ENTITY calendar.server.dialog.password.label      "Jelszó">
 <!ENTITY calendar.server.dialog.publish.label       "A változások automatikus közzététele. Ebben az esetben távoli naptárakat előbb letölti, mielőtt hozzáadhat, szerkeszthet, vagy törölhet egy eseményt. Ezek után végrehajtja a változtatásait, majd feltölti az új fájlt a kiszolgálóra.">
 <!ENTITY calendar.server.dialog.location.label      "Hely">
 <!ENTITY calendar.server.dialog.local.location.label "Helyi fájl helye">
@@ -402,10 +400,6 @@
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Naptár közzététele">
 <!ENTITY calendar.publish.url.label                 "Közzétételi hely (URL)">
-<!ENTITY calendar.publish.username.label            "Felhasználónév">
-<!ENTITY calendar.publish.password.label            "Jelszó">
-<!ENTITY calendar.publish.username.description      "(Opcionális) A feltöltésre használandó felhasználónév ehhez a kiszolgálóhoz">
-<!ENTITY calendar.publish.password.description      "(Opcionális) A feltöltésre használandó jelszó ehhez a kiszolgálóhoz">
 <!ENTITY calendar.publish.publish.button      "Közzététel">
 <!ENTITY calendar.publish.close.button      "Bezárás">
 

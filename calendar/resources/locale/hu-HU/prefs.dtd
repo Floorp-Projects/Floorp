@@ -137,8 +137,6 @@
 
 <!ENTITY pref.publish.caption        "Közzétételi beállítások">
 <!ENTITY pref.publish.path.label     "Alapértelmezett távoli fájlnév">
-<!ENTITY pref.publish.username.label "Felhasználónév">
-<!ENTITY pref.publish.password.label "Jelszó">
 
 <!ENTITY pref.minutes.label "perc">
 

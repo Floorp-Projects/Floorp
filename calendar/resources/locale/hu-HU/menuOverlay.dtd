@@ -66,8 +66,8 @@
 <!ENTITY calendar.print.label   "Az aktív naptár nyomtatása...">
 <!ENTITY calendar.print.accesskey   "n">
 
-<!ENTITY calendar.printpreview.label    "Nyomtatási előkép">
-<!ENTITY calendar.printpreview.accesskey    "e">
+<!ENTITY calendar.printpreview.label    "Nyomtatási kép">
+<!ENTITY calendar.printpreview.accesskey    "t">
 
 <!ENTITY calendar.pagesetup.label   "Oldalbeállítás...">
 <!ENTITY calendar.pagesetup.accesskey   "O">
@@ -90,13 +90,13 @@
 <!ENTITY calendar.about.label   "A Naptár névjegye">
 <!ENTITY calendar.about.accesskey   "N">
 
-<!ENTITY calendar.cut.label "Kivág">
+<!ENTITY calendar.cut.label "Kivágás">
 <!ENTITY calendar.cut.accesskey "K">
 
-<!ENTITY calendar.copy.label    "Másol">
+<!ENTITY calendar.copy.label    "Másolás">
 <!ENTITY calendar.copy.accesskey    "M">
 
-<!ENTITY calendar.paste.label   "Beszúr">
+<!ENTITY calendar.paste.label   "Beszúrás">
 <!ENTITY calendar.paste.accesskey   "B">
 
 <!ENTITY calendar.selectall.label   "Mindent kiválaszt">
@@ -138,25 +138,25 @@
 <!ENTITY addressBookCmd.label     "Címjegyzék">
 <!ENTITY addressBookCmd.accesskey "C">
 
-<!ENTITY helpMenu.label         "Help"> 
-<!ENTITY helpMenu.accesskey            "H">
+<!ENTITY helpMenu.label         "Súgó"> 
+<!ENTITY helpMenu.accesskey            "S">
 
 <!ENTITY walletPasswordManager.label     "Jelszókezelő">
 <!ENTITY walletPasswordManager.accesskey "J">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label         "File"> 
+<!ENTITY fileMenu.label         "Fájl"> 
 <!ENTITY fileMenu.accesskey       "F">
 
-<!ENTITY editMenu.label         "Edit"> 
-<!ENTITY editMenu.accesskey       "E"> 
-<!ENTITY preferencesCmd.label       "Options...">
-<!ENTITY preferencesCmd.accesskey     "O"> 
+<!ENTITY editMenu.label         "Szerkesztés"> 
+<!ENTITY editMenu.accesskey       "z"> 
+<!ENTITY preferencesCmd.label       "Beállítások...">
+<!ENTITY preferencesCmd.accesskey     "B"> 
 
-<!ENTITY viewMenu.label         "View"> 
-<!ENTITY viewMenu.accesskey       "V"> 
+<!ENTITY viewMenu.label         "Nézet"> 
+<!ENTITY viewMenu.accesskey       "N"> 
 
-<!ENTITY releaseCmd.label       "Release Notes">
-<!ENTITY releaseCmd.accesskey       "R">
-<!ENTITY aboutCmd.label         "About &brandFullName;">
+<!ENTITY releaseCmd.label       "Verzióinformáció">
+<!ENTITY releaseCmd.accesskey       "V">
+<!ENTITY aboutCmd.label         "A &brandFullName; névjegye">
 <!ENTITY aboutCmd.accesskey       "A">
