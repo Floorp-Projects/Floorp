@@ -68,7 +68,8 @@ PROGRAM=.\$(OBJDIR)\$(EXENAME).EXE
 #//
 #//------------------------------------------------------------------------
 LCFLAGS=-DNETSCAPE
-WIN_LIBS=ole32.lib	
+LLIBS= $(DIST)\lib\xpcom.lib
+WIN_LIBS=ole32.lib
 
 LINCS=$(LINCS)  -I. \
                 -I$(PUBLIC)\raptor   \
