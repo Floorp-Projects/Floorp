@@ -494,6 +494,7 @@ nsresult CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
           result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
           findpos=mTextValue.RFind("-->");
         }
+        return result;
       }
     }
   }
@@ -504,7 +505,8 @@ nsresult CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
     result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
   }
   return result;
-};
+}
+
 
 /*
  *  
