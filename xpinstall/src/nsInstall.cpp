@@ -897,9 +897,10 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
 
     // extract properties file
     // XXX append locale info: lang code, country code, .properties suffix to aBaseName
-    ExtractFileFromJar(aBaseName, nsnull, &resFile);
-    if (!resFile)
+    PRInt32 err = ExtractFileFromJar(aBaseName, nsnull, &resFile);
+    if ( (!resFile) || (err != nsInstall::SUCCESS)  )
     {
+        SaveError( err );
         return NS_OK;
     }
 	
@@ -907,19 +908,19 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     ret = nsServiceManager::GetService(kStringBundleServiceCID, 
                     kIStringBundleServiceIID, (nsISupports**) &service);
     if (NS_FAILED(ret)) 
-        goto handle_err;
+        goto cleanup;
 #ifndef NECKO
     ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID, (nsISupports**) &pNetService);
     if (NS_FAILED(ret)) 
-        goto handle_err;
+        goto cleanup;
 #endif
     ret = nsServiceManager::GetService(kEventQueueServiceCID,
                     kIEventQueueServiceIID, (nsISupports**) &pEventQueueService);
     if (NS_FAILED(ret)) 
-        goto handle_err;
+        goto cleanup;
     ret = pEventQueueService->CreateThreadEventQueue();
     if (NS_FAILED(ret)) 
-        goto handle_err;
+        goto cleanup;
 
     // construct properties file URL as required by StringBundle interface
     resFileURL = new nsFileURL( *resFile );
@@ -930,38 +931,36 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
 #endif
     if (resFileURL)
         delete resFileURL;
-    if (resFile)
-	    delete resFile;
     if (NS_FAILED(ret)) 
-        goto handle_err;
+        goto cleanup;
 
     // get the string bundle using the extracted properties file
     ret = service->CreateBundle(url, locale, &bundle);
     if (NS_FAILED(ret)) 
-        goto handle_err;
+        goto cleanup;
     ret = bundle->GetEnumeration(&propEnum);
     if (NS_FAILED(ret))
-        goto handle_err;
+        goto cleanup;
 
     // set the variables of the JSObject to return using the StringBundle's
     // enumeration service
     ret = propEnum->First();
     if (NS_FAILED(ret))
-        goto handle_err;
+        goto cleanup;
     while (NS_SUCCEEDED(ret))
     {
         nsIPropertyElement* propElem = nsnull;
         ret = propEnum->CurrentItem((nsISupports**)&propElem);
         if (NS_FAILED(ret))
-            goto handle_err;
+            goto cleanup;
         nsString* key = nsnull;
         nsString* val = nsnull;
         ret = propElem->GetKey(&key);
         if (NS_FAILED(ret)) 
-            goto handle_err;
+            goto cleanup;
         ret = propElem->GetValue(&val);
         if (NS_FAILED(ret))
-            goto handle_err;
+            goto cleanup;
         char* keyCStr = key->ToNewCString();
         PRUnichar* valCStr = val->ToNewUnicode();
         if (keyCStr && valCStr) 
@@ -980,11 +979,29 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     }
 	 
     *aReturn = OBJECT_TO_JSVAL(res);
-    return NS_OK;
+    ret = nsInstall::SUCCESS;
 
-handle_err:
-    // XXX looks like we're leaking at least all our services,
-    // and more depending on which evil goto we hit. Bad, bad, bad!
+cleanup:
+    SaveError( ret );
+	
+    // release services
+    NS_IF_RELEASE( service );
+    NS_IF_RELEASE( pEventQueueService );
+#ifndef NECKO
+    NS_IF_RELEASE( pNetService );
+#endif
+
+    // release file, URL, StringBundle, Enumerator
+    NS_IF_RELEASE( url );
+    NS_IF_RELEASE( bundle );
+    NS_IF_RELEASE( propEnum );
+    if (resFile)
+    {
+		// delete the transient properties file
+		resFile->Delete(PR_FALSE);
+        delete resFile;
+    }
+
     return NS_OK;
 }
 
