@@ -680,7 +680,7 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     mIndent += kIndentSizeList;  // see ul
   }
   else if (type == eHTMLTag_li) {
-    if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_ol) {
+    if (mTagStackIndex > 1 && IsInOL()) {
       if (mOLStackIndex > 0) {
         nsAutoString valueAttr;
         if(NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::value, valueAttr))){
@@ -1830,6 +1830,26 @@ nsPlainTextSerializer::IsInPre()
   }
 
   // Not a <pre> in the whole stack
+  return PR_FALSE;
+}
+
+/**
+ * This method is required only to indentify LI's inside OL.
+ * Returns TRUE if we are inside an OL tag and FALSE otherwise.
+ */
+PRBool
+nsPlainTextSerializer::IsInOL()
+{
+  PRInt32 i = mTagStackIndex;
+  while(--i >= 0) {
+    if(mTagStack[i] == eHTMLTag_ol)
+      return PR_TRUE;
+    if (mTagStack[i] == eHTMLTag_ul) {
+      // If a UL is reached first, LI belongs the UL nested in OL.
+      return PR_FALSE;
+    }
+  }
+  // We may reach here for orphan LI's.
   return PR_FALSE;
 }
 
