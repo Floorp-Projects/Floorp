@@ -2172,7 +2172,7 @@ nsHTMLReflowState::ComputeHorizontalValue(nscoord aContainingBlockWidth,
       frame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
 
       const nsStyleVisibility* vis; 
-      (const nsStyleVisibility*)frame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+      frame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
 
       nsCOMPtr<nsIDeviceContext> deviceContext;
       rendContext->GetDeviceContext(*getter_AddRefs(deviceContext));
