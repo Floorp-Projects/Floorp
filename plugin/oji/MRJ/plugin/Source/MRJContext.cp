@@ -364,8 +364,10 @@ done:
 static MRJFrame* getFrame(JMFrameRef ref)
 {
 	MRJFrame* frame = NULL;
-	if (ref != NULL)
+	if (ref != NULL) {
 		::JMGetFrameData(ref, (JMClientData*)&frame);
+	}
+	
 	return frame;
 }
 
@@ -826,8 +828,8 @@ Boolean MRJContext::loadApplet()
 	 */
 	if (thePluginManager2 != NULL) {
 		/* Sample URL's to use for getting the HTTP proxy and FTP proxy */
-		setProxyInfoForURL("http://www.mozilla.org", eHTTPProxy);
-		setProxyInfoForURL("ftp://ftp.mozilla.org", eFTPProxy);
+		setProxyInfoForURL("http://www.mozilla.org/", eHTTPProxy);
+		setProxyInfoForURL("ftp://ftp.mozilla.org/", eFTPProxy);
 	}
 	/* End set proxy info code */
 	
@@ -991,6 +993,8 @@ void MRJContext::activate(Boolean active)
 
 void MRJContext::resume(Boolean inFront)
 {
+//    printf("mrjcontext::resume\n");
+    
 	if (mViewerFrame != NULL) {
 		::JMFrameResume(mViewerFrame, inFront);
 	}
@@ -999,6 +1003,7 @@ void MRJContext::resume(Boolean inFront)
 void MRJContext::click(const EventRecord* event, MRJFrame* appletFrame)
 {
 	// inspectWindow();
+//    printf("mrjcontext::click\n");
 
 	nsPluginPort* npPort = (nsPluginPort*) mCache.window;
 	
@@ -1039,6 +1044,7 @@ void MRJContext::keyRelease(long message, short modifiers)
 void MRJContext::idle(short modifiers)
 {
 	// inspectWindow();
+//    printf("mrjcontext::idle\n");
 
 	// Put the port in to proper window coordinates.
 	nsPluginPort* npPort = (nsPluginPort*) mCache.window;
@@ -1143,6 +1149,8 @@ void MRJContext::setClipping(RgnHandle clipRgn)
 MRJFrame* MRJContext::findFrame(WindowRef window)
 {
 	MRJFrame* frame = NULL;
+
+	setVisibility();
 	
 	// locates the frame corresponding to this window.
 	if (window == NULL || (CGrafPtr(window) == mPluginPort) && mViewerFrame != NULL) {
@@ -1212,6 +1220,10 @@ void MRJContext::setVisibility()
 	// always update the cached information.
 	if (mPluginWindow != NULL)
 		mCache = *mPluginWindow;
+		
+	// would be nice if printf or fprintf(stderr or fprintf(stdout actually
+	// dumped to sioux.. i so hate this development
+//    fprintf(stderr, "mrjcontext::setvisibility\n");
 	
 	if (mViewerFrame != NULL) {
 		nsPluginWindow* npWindow = &mCache;
@@ -1219,6 +1231,8 @@ void MRJContext::setVisibility()
 		// compute the frame's origin and clipping.
 		
 		// JManager wants the origin expressed in window coordinates.
+		// npWindow refers to the entire mozilla view port whereas the nport
+		// refers to the actual rendered html window.
 #if 0		
 		Point frameOrigin = { npWindow->y, npWindow->x };
 #else
