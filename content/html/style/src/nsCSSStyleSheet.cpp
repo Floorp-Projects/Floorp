@@ -690,6 +690,8 @@ struct RuleCascadeData {
   }
   RuleHash          mRuleHash;
   nsVoidArray       mStateSelectors;
+  nsVoidArray       mClassSelectors;
+  nsVoidArray       mIDSelectors;
   PLDHashTable      mAttributeSelectors; // nsIAtom* -> nsVoidArray*
 
   // Looks up or creates the appropriate list in |mAttributeSelectors|.
@@ -4084,6 +4086,14 @@ CSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
   // we have a hashtable with a per-attribute list.
 
   if (cascade) {
+    if (aData->mAttribute == aData->mContent->GetIDAttributeName()) {
+      cascade->mIDSelectors.EnumerateForwards(AttributeEnumFunc, &data);
+    }
+    
+    if (aData->mAttribute == aData->mContent->GetClassAttributeName()) {
+      cascade->mClassSelectors.EnumerateForwards(AttributeEnumFunc, &data);
+    }
+
     AttributeSelectorEntry *entry = NS_STATIC_CAST(AttributeSelectorEntry*,
         PL_DHashTableOperate(&cascade->mAttributeSelectors, aData->mAttribute,
                              PL_DHASH_LOOKUP));
@@ -4139,6 +4149,9 @@ AddRule(void* aRuleInfo, void* aCascade)
   cascade->mRuleHash.PrependRule(ruleInfo);
 
   nsVoidArray* stateArray = &cascade->mStateSelectors;
+  nsVoidArray* classArray = &cascade->mClassSelectors;
+  nsVoidArray* idArray = &cascade->mIDSelectors;
+  
   for (nsCSSSelector* selector = ruleInfo->mSelector;
            selector; selector = selector->mNext) {
     // It's worth noting that this loop over negations isn't quite
@@ -4155,19 +4168,17 @@ AddRule(void* aRuleInfo, void* aCascade)
       if (IsStateSelector(*negation))
         stateArray->AppendElement(selector);
 
-      // Build mAttributeSelectors.
+      // Build mIDSelectors
       if (negation->mIDList) {
-        nsVoidArray *array = cascade->AttributeListFor(nsHTMLAtoms::id);
-        if (!array)
-          return PR_FALSE;
-        array->AppendElement(selector);
+        idArray->AppendElement(selector);
       }
+      
+      // Build mClassSelectors
       if (negation->mClassList) {
-        nsVoidArray *array = cascade->AttributeListFor(nsHTMLAtoms::kClass);
-        if (!array)
-          return PR_FALSE;
-        array->AppendElement(selector);
+        classArray->AppendElement(selector);
       }
+
+      // Build mAttributeSelectors.
       for (nsAttrSelector *attr = negation->mAttrList; attr;
            attr = attr->mNext) {
         nsVoidArray *array = cascade->AttributeListFor(attr->mAttr);
