@@ -2354,8 +2354,10 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 #ifdef	XP_MAC
 			// set appropriate Mac file type/creator for search engine files
 			nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(outFile));
-			if (macFile)
-			  macFile->SetFileTypeAndCreator('issp', 'fndf');
+			if (macFile) {
+			  macFile->SetFileType('issp');
+			  macFile->SetFileCreator('fndf');
+			}
 #endif
 
 			// check suggested category hint
@@ -3946,8 +3948,11 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir, PRBool checkMa
             if (!macFile)
                 continue;
             OSType type, creator;
-            rv = macFile->GetFileTypeAndCreator(&type, &creator);
-            if (NS_FAILED(rv) || type != 'issp' || creator != 'fndf')
+            rv = macFile->GetFileType(&type);
+            if (NS_FAILED(rv) || type != 'issp')
+                continue;
+            rv = macFile->GetFileCreator(&creator);     // Do we really care about creator?  
+            if (NS_FAILED(rv) || creator != 'fndf')
                 continue;  
 		}
 #endif

@@ -857,7 +857,8 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
      PRUint32 type, creator;
      mMimeInfo->GetMacType(&type);
      mMimeInfo->GetMacCreator(&creator);
-     macfile->SetFileTypeAndCreator(type, creator);
+     macfile->SetFileType(type);
+     macfile->SetFileCreator(creator);
    }
  }
 #else
@@ -1573,7 +1574,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char 
   if ( NS_SUCCEEDED( rv ) && fileExt.IsEmpty())
   {
 	PRUint32 type, creator;
-	macFile->GetFileTypeAndCreator( (OSType*)&type,(OSType*) &creator );   
+	macFile->GetFileType( (OSType*)&type );
+	macFile->GetFileCreator( (OSType*)&creator );   
   	nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
     if (icService)
     {

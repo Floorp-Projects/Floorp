@@ -313,7 +313,7 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
        nsCOMPtr<nsILocalFileMac> file (do_CreateInstance(cid));
        if (file)
        {
-         rv = file->InitFindingAppByCreatorCode(entry.postCreator);
+         rv = file->InitToAppWithCreatorCode(entry.postCreator);
          if (rv == NS_OK)
          {
            //info->SetAlwaysAskBeforeHandling(PR_FALSE);

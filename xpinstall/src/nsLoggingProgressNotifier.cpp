@@ -107,7 +107,8 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
         else
         {
             nsCOMPtr<nsILocalFileMac> iMacFile = do_QueryInterface(iFile);
-            iMacFile->SetFileTypeAndCreator('TEXT', 'R*ch');  
+            iMacFile->SetFileType('TEXT');
+            iMacFile->SetFileCreator('R*ch');  
         }
 #endif
     }
@@ -147,7 +148,8 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
             
 #ifdef XP_MAC            
             nsCOMPtr<nsILocalFileMac> iMacFile = do_QueryInterface(iFile);
-            iMacFile->SetFileTypeAndCreator('TEXT', 'R*ch');  
+            iMacFile->SetFileType('TEXT');
+            iMacFile->SetFileCreator('R*ch');  
 #endif            
         }
          
@@ -316,7 +318,7 @@ Convert_nsIFile_To_nsFileSpec(nsIFile *aInIFile, nsFileSpec **aOutFileSpec)
     iFileMac = do_QueryInterface(aInIFile, &rv);
     if (NS_SUCCEEDED(rv))
     {
-        iFileMac->GetResolvedFSSpec(&fsSpec);
+        iFileMac->GetFSSpec(&fsSpec);
         *aOutFileSpec = new nsFileSpec(fsSpec, PR_FALSE);
     }
 #else

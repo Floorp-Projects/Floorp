@@ -617,7 +617,7 @@ NS_METHOD CBrowserShell::Stop()
 
 NS_METHOD CBrowserShell::Reload()
 {
-    return mWebBrowserAsWebNav->Stop(nsIWebNavigation::LOAD_FLAGS_NONE);
+    return mWebBrowserAsWebNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 //*****************************************************************************
@@ -697,10 +697,8 @@ NS_METHOD CBrowserShell::SaveDocument(const FSSpec& outSpec)
     if (NS_FAILED(rv)) return rv;
 
     FSSpec nonConstOutSpec = outSpec;    
-    nsCOMPtr<nsILocalFileMac> localMacFile;
-    rv = NS_NewLocalFileWithFSSpec(&nonConstOutSpec, PR_FALSE, getter_AddRefs(localMacFile));
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(localMacFile, &rv));
+    nsCOMPtr<nsILocalFileMac> localFile;
+    rv = NS_NewLocalFileWithFSSpec(&nonConstOutSpec, PR_FALSE, getter_AddRefs(localFile));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIFile> parentDir;
     rv = localFile->GetParent(getter_AddRefs(parentDir));
@@ -721,10 +719,8 @@ NS_METHOD CBrowserShell::SaveCurrentURI(const FSSpec& outSpec)
     if (NS_FAILED(rv)) return rv;
 
     FSSpec nonConstOutSpec = outSpec;    
-    nsCOMPtr<nsILocalFileMac> localMacFile;
-    rv = NS_NewLocalFileWithFSSpec(&nonConstOutSpec, PR_FALSE, getter_AddRefs(localMacFile));
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(localMacFile, &rv));
+    nsCOMPtr<nsILocalFileMac> localFile;
+    rv = NS_NewLocalFileWithFSSpec(&nonConstOutSpec, PR_FALSE, getter_AddRefs(localFile));
     if (NS_FAILED(rv)) return rv;
 
     rv = wbPersist->SaveURI(nsnull, nsnull, localFile);

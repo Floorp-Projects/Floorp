@@ -90,7 +90,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count, PRUint32 *pid
     ProcessInfoRec info;
 
     nsCOMPtr<nsILocalFileMac> macExecutable = do_QueryInterface(mExecutable);
-    macExecutable->GetResolvedFSSpec(&resolvedSpec);
+    macExecutable->GetFSSpec(&resolvedSpec);
 
     launchPB.launchAppSpec = &resolvedSpec;
     launchPB.launchAppParameters = NULL;

@@ -761,8 +761,8 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(component);
     if (localFileMac)
     {
-      OSType    type, creator;
-      rv = localFileMac->GetFileTypeAndCreator(&type, &creator);
+      OSType    type;
+      rv = localFileMac->GetFileType(&type);
       if (NS_SUCCEEDED(rv))
       {
         // on Mac, Mozilla shared libraries are of type 'shlb'

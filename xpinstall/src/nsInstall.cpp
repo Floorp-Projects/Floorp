@@ -2694,7 +2694,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
     
     nsCOMPtr<nsILocalFileMac> tempExtractHereSpec;
     tempExtractHereSpec = do_QueryInterface(extractHereSpec, &rv);
-    tempExtractHereSpec->GetResolvedFSSpec(&extractedSpec);
+    tempExtractHereSpec->GetFSSpec(&extractedSpec);
 	
 	if ( nsAppleSingleDecoder::IsAppleSingleFile(&extractedSpec) )
 	{

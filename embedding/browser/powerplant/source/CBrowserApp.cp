@@ -76,7 +76,7 @@
 
 #include <TextServices.h>
 
-#define NATIVE_PROMPTS
+#undef NATIVE_PROMPTS
 
 #if USE_PROFILES
 #include "CProfileManager.h"
@@ -176,8 +176,7 @@ CBrowserApp::CBrowserApp()
    RegisterClass_(CWebBrowserCMAttachment);
    AddAttachment(new LCMAttachment);
 
-   // We need to idle threads often
-   SetSleepTime(0);
+   SetSleepTime(15);
     
    // Get the directory which contains the mozilla parts
    // In this case it is the app directory but it could
@@ -188,7 +187,6 @@ CBrowserApp::CBrowserApp()
    ProcessInfoRec  processInfo;
    FSSpec          appSpec;
    nsCOMPtr<nsILocalFileMac> macDir;
-   nsCOMPtr<nsILocalFile>    appDir;  // If this ends up being NULL, default is used
 
    if (!::GetCurrentProcess(&psn)) {
       processInfo.processInfoLength = sizeof(processInfo);
@@ -196,18 +194,17 @@ CBrowserApp::CBrowserApp()
       processInfo.processAppSpec = &appSpec;    
       if (!::GetProcessInformation(&psn, &processInfo)) {
          // Turn the FSSpec of the app into an FSSpec of the app's directory
-         ::FSMakeFSSpec(appSpec.vRefNum, appSpec.parID, "\p", &appSpec);
+         OSErr err = ::FSMakeFSSpec(appSpec.vRefNum, appSpec.parID, "\p", &appSpec);
          // Make an nsILocalFile out of it
-         rv = NS_NewLocalFileWithFSSpec(&appSpec, PR_TRUE, getter_AddRefs(macDir));
-         if (NS_SUCCEEDED(rv))
-             appDir = do_QueryInterface(macDir);
+         if (err == noErr)
+            (void)NS_NewLocalFileWithFSSpec(&appSpec, PR_TRUE, getter_AddRefs(macDir));
       }
    }
    
    CAppFileLocationProvider *fileLocProvider = new CAppFileLocationProvider(kProgramName);
    ThrowIfNil_(fileLocProvider);
 
-   rv = NS_InitEmbedding(appDir, fileLocProvider);
+   rv = NS_InitEmbedding(macDir, fileLocProvider);
 
    OverrideComponents();
    InitializeWindowCreator();
@@ -241,7 +238,7 @@ void
 CBrowserApp::StartUp()
 {
     nsresult rv;
-
+        
 #if USE_PROFILES
 
     // Register for profile changes    
@@ -441,12 +438,11 @@ CBrowserApp::ObeyCommand(
                     
                     rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(macFile));
                     ThrowIfError_(NS_ERROR_GET_CODE(rv));
-                    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(macFile, &rv));
                     ThrowIfError_(NS_ERROR_GET_CODE(rv));
                     nsCOMPtr<nsIFileURL> aURL(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
                     ThrowIfError_(NS_ERROR_GET_CODE(rv));
                     
-                    rv = aURL->SetFile(localFile);
+                    rv = aURL->SetFile(macFile);
                     ThrowIfError_(NS_ERROR_GET_CODE(rv));
                     
                     nsXPIDLCString urlSpec;
