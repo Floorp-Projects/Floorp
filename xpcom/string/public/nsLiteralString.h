@@ -64,17 +64,28 @@ literal_string( const nsACString::char_type* aPtr, PRUint32 aLength )
 #endif
 
 #ifdef HAVE_CPP_2BYTE_WCHAR_T
-  #define NS_L(s)                                 L##s
+  #define NS_LL(s)                                L##s
   #define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(NS_REINTERPRET_CAST(const nsAString::char_type*, s), PRUint32((sizeof(s)/sizeof(wchar_t))-1))
   #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  nsDependentString n(NS_REINTERPRET_CAST(const nsAString::char_type*, s), PRUint32((sizeof(s)/sizeof(wchar_t))-1))
 #else
-  #define NS_L(s)                                 s
+  #define NS_LL(s)                                s
   #define NS_MULTILINE_LITERAL_STRING(s)          NS_ConvertASCIItoUCS2(s, PRUint32(sizeof(s)-1))
   #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  NS_ConvertASCIItoUCS2 n(s, PRUint32(sizeof(s)-1))
 #endif
 
-#define NS_LITERAL_STRING(s)                      NS_STATIC_CAST(const nsAFlatString&, NS_MULTILINE_LITERAL_STRING(NS_L(s)))
-#define NS_NAMED_LITERAL_STRING(n,s)              NS_NAMED_MULTILINE_LITERAL_STRING(n,NS_L(s))
+/*
+ * Macro arguments used in concatenation or stringification won't be expanded.
+ * Therefore, in order for |NS_L(FOO)| to work as expected (which is to expand
+ * |FOO| before doing whatever |NS_L| needs to do to it) a helper macro needs
+ * to be inserted in between to allow the macro argument to expand.
+ * See "3.10.6 Separate Expansion of Macro Arguments" of the CPP manual for a
+ * more accurate and precise explanation.
+ */
+
+#define NS_L(s)                                   NS_LL(s)
+
+#define NS_LITERAL_STRING(s)                      NS_STATIC_CAST(const nsAFlatString&, NS_MULTILINE_LITERAL_STRING(NS_LL(s)))
+#define NS_NAMED_LITERAL_STRING(n,s)              NS_NAMED_MULTILINE_LITERAL_STRING(n, NS_LL(s))
 
 #define NS_LITERAL_CSTRING(s)                     nsDependentCString(s, PRUint32(sizeof(s)-1))
 #define NS_NAMED_LITERAL_CSTRING(n,s)             nsDependentCString n(s, PRUint32(sizeof(s)-1))
