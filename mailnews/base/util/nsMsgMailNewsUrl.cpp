@@ -598,6 +598,12 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetFilePath(const char *i_DirFile)
 	return m_baseURL->SetFilePath(i_DirFile);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::SetMemCacheEntry(nsICachedNetData *memCacheEntry)
+{
+  m_memCacheEntry = memCacheEntry;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl:: GetMemCacheEntry(nsICachedNetData **memCacheEntry)
 {
   NS_ENSURE_ARG(memCacheEntry);

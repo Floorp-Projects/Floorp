@@ -72,7 +72,7 @@ interface nsIMsgMailNewsUrl : nsIURL {
   attribute boolean msgIsInLocalCache;
   attribute boolean suppressErrorMsgs; // used to avoid displaying biff error messages
 
-  readonly attribute nsICachedNetData memCacheEntry;
+  attribute nsICachedNetData memCacheEntry;
 
 	const unsigned long eCopy     = 0;
 	const unsigned long eMove     = 1;
