@@ -1596,9 +1596,9 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
 		char* target = getBuiltInAttribute(pBuiltin_struct, "target");
 		if (pBuiltin_struct->FE_Data == NULL ){
 #ifdef OJI
-			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(cWnd, xPos, yPos, width, height, url == NULL ? "" :url , pBuiltin_struct->attributes.n, pBuiltin_struct->attributes.names, pBuiltin_struct->attributes.values);
+			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(pContext, cWnd, xPos, yPos, width, height, url == NULL ? "" :url , pBuiltin_struct->attributes.n, pBuiltin_struct->attributes.names, pBuiltin_struct->attributes.values);
 #else
-			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(cWnd, xPos, yPos, width, height, url == NULL ? "" :url , pBuiltin_struct->attribute_cnt, pBuiltin_struct->attribute_list, pBuiltin_struct->value_list);
+			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(pContext, cWnd, xPos, yPos, width, height, url == NULL ? "" :url , pBuiltin_struct->attribute_cnt, pBuiltin_struct->attribute_list, pBuiltin_struct->value_list);
 #endif
 			((CRDFOutliner*)pWnd->GetOutlinerParent()->GetOutliner())->SetWindowTarget(target);
 			pBuiltin_struct->FE_Data = pWnd;

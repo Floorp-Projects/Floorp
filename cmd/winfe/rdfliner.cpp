@@ -3042,7 +3042,7 @@ void RDFGLOBAL_BeginDrag(COleDataSource* pDataSource, HT_View pView)
 	HT_Resource r = HT_GetNextSelection(pView, NULL);
 	while (r != NULL)
 	{
-		if (!HT_IsContainer(r) && !HT_IsSeparator(r))
+		if (!HT_IsDropTarget(r) && !HT_IsSeparator(r))
 			selCount++;
 		r = HT_GetNextSelection(pView, r);
 	}
@@ -3053,7 +3053,7 @@ void RDFGLOBAL_BeginDrag(COleDataSource* pDataSource, HT_View pView)
 	r = HT_GetNextSelection(pView, NULL);
 	while (r != NULL)
 	{
-		if (!HT_IsContainer(r) && !HT_IsSeparator(r))
+		if (!HT_IsDropTarget(r) && !HT_IsSeparator(r))
 		{
 			i++; // Found one
 			titleArray[i] = HT_GetNodeName(r);
@@ -3103,7 +3103,7 @@ BOOL CRDFOutliner::HighlightIfDragging(void)
 	if(m_iDragSelection != -1)
 	{
 		HT_Resource r = HT_GetNthItem(m_View, m_iDragSelection);
-		if (r != NULL && HT_IsContainer(r) && (m_iDragSelectionLineThird == 2 || (GetSortColumn() != -1)))
+		if (r != NULL && HT_IsDropTarget(r) && (m_iDragSelectionLineThird == 2 || (GetSortColumn() != -1)))
 			return TRUE;
 	}
 	return FALSE;
@@ -3296,7 +3296,7 @@ DROPEFFECT CRDFOutliner::DropSelect(int iLineNo, COleDataObject *object)
 		r = HT_TopNode(m_View);
 
 	DROPEFFECT answer = RDFGLOBAL_TranslateDropAction(r, object, 
-		HT_IsContainer(r) ? m_iDragSelectionLineThird : m_iDragSelectionLineHalf);
+		HT_IsDropTarget(r) ? m_iDragSelectionLineThird : m_iDragSelectionLineHalf);
 	
 	m_iCurrentDropAction = answer;
 
@@ -3304,18 +3304,18 @@ DROPEFFECT CRDFOutliner::DropSelect(int iLineNo, COleDataObject *object)
         return answer;
 
     if (m_iDragSelection != -1)
-        InvalidateDragLine (m_iDragSelection, HT_IsContainer(r),
-							HT_IsContainer(r) ? m_iOldLineThird : m_iOldLineHalf);
+        InvalidateDragLine (m_iDragSelection, HT_IsDropTarget(r),
+							HT_IsDropTarget(r) ? m_iOldLineThird : m_iOldLineHalf);
 	
     m_iDragSelection = iLineNo;
-    InvalidateDragLine (m_iDragSelection, HT_IsContainer(r), 
-						HT_IsContainer(r) ? m_iDragSelectionLineThird : m_iDragSelectionLineHalf);
+    InvalidateDragLine (m_iDragSelection, HT_IsDropTarget(r), 
+						HT_IsDropTarget(r) ? m_iDragSelectionLineThird : m_iDragSelectionLineHalf);
     
 	// Start the hover timer for folder springloading
 	
 	if (m_iDragSelection != -1)
 	{
-		if (r != NULL && HT_IsContainer(r) && !HT_IsContainerOpen(r) && m_iCurrentDropAction != DROPEFFECT_NONE)
+		if (r != NULL && HT_IsDropTarget(r) && !HT_IsContainerOpen(r) && m_iCurrentDropAction != DROPEFFECT_NONE)
 		{
 	 		m_iSpringloadSelection = m_iDragSelection;
 			m_hSpringloadTimer = SetTimer(IDT_SPRINGLOAD, SPRINGLOAD_DELAY, NULL);
@@ -3362,14 +3362,14 @@ DropPosition RDFGLOBAL_TranslateDropPosition(HT_Resource dropTarget, int positio
 			res = DROP_BEFORE; // In upper half of selection (for non-containers) or bottom third 
 							   // of selection (for containers).  Drop before.
 		}
-		else if (position == 3 || (position == 2 && !HT_IsContainer(dropTarget)))
+		else if (position == 3 || (position == 2 && !HT_IsDropTarget(dropTarget)))
 		{
 			// Drop after if we're in the bottom half (for non-containers) or bottom third (for containers)
 			res = DROP_AFTER;  // In lower third of selection.  Drop after.
 		}
 		else res = DROP_ON;  // We're a container and right in the middle of selection.  Drop on.
 	}
-	else if (HT_IsContainer(dropTarget))
+	else if (HT_IsDropTarget(dropTarget))
 	{
 		res = DROP_ON; // If a sort is imposed and we're over a container, drop into that.
 	}
@@ -4162,7 +4162,7 @@ CRDFContentView* CRDFContentView::DisplayRDFTreeFromResource(CWnd* pParent,
 	return DisplayRDFTreeFromPane(pParent, xPos, yPos, width, height, thePane, pContext);
 }
 
-CRDFContentView* CRDFContentView::DisplayRDFTreeFromSHACK(CWnd* pParent, int xPos, int yPos, int width, int height, char* url, int32 param_count, char** param_names, char** param_values)
+CRDFContentView* CRDFContentView::DisplayRDFTreeFromSHACK(MWContext *pContext, CWnd* pParent, int xPos, int yPos, int width, int height, char* url, int32 param_count, char** param_names, char** param_values)
 {
 	HT_Notification ns = new HT_NotificationStruct;
 	XP_BZERO(ns, sizeof(HT_NotificationStruct));
@@ -4171,7 +4171,7 @@ CRDFContentView* CRDFContentView::DisplayRDFTreeFromSHACK(CWnd* pParent, int xPo
 	theApp.m_pRDFCX->TrackRDFWindow(pParent);
 	
 	// Construct the pane and give it our notification struct
-	HT_Pane thePane = HT_PaneFromURL(url, ns, 0, param_count, param_names, param_values);  
+	HT_Pane thePane = HT_PaneFromURL(pContext, url, ns, 0, param_count, param_names, param_values);  
 	
 	// Now call our helper function
 	return DisplayRDFTreeFromPane(pParent, xPos, yPos, width, height, thePane);
