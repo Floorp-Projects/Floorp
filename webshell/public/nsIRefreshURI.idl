@@ -33,16 +33,25 @@ interface nsIRefreshURI : nsISupports {
       * @param repeat Do you want the uri to be repeatedly refreshed every millis milliseconds.
       * @param flag to check if this is for a META refresh
       */
-	void refreshURI(in nsIURI aURI, in long aMillis, in boolean aRepeat, in boolean aMetaRefresh);
+    void refreshURI(in nsIURI aURI, in long aMillis, in boolean aRepeat, in boolean aMetaRefresh);
 
     /**
-	  * Checks the passed in channel to see if there is a refresh header, if there is, 
-	  * will setup a refreahURI by calling refreshURI
-	  */
-	void setupRefreshURI(in nsIChannel aChannel); 
+      * Checks the passed in channel to see if there is a refresh header, if there is, 
+      * will setup a refreahURI by calling refreshURI
+      */
+    void setupRefreshURI(in nsIChannel aChannel); 
 
+    /**
+      * Parses the passed in header string and will call refreshURI with
+      * the parsed values
+      *
+      * @param aBaseURI base URI to resolve refresh uri against
+      * @param aHeader  The meta refresh header string
+      */
+    void refreshURIFromHeader(in nsIURI aBaseURI, in AString aHeader);
+      
     /**
       * Cancels all timer loads.
       */
-	void cancelRefreshURITimers();
+    void cancelRefreshURITimers();
 };
