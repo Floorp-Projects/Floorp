@@ -56,7 +56,7 @@ private:
     nsresult ParseFromTo(const char *aContractID, nsCString &aFromRes, nsCString &aToRes);
 
     // member variables
-    nsHashtable              *mAdjacencyList;
+    nsObjectHashtable              *mAdjacencyList;
 };
 
 ///////////////////////////////////////////////////////////////////
