@@ -1471,7 +1471,7 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
     // little hack lets us override that behavior to allow for more
     // precise layout in the face of imprecise fonts.
     static PRBool useComputedHeight = PR_FALSE;
-#if defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
     static PRBool firstTime = 1;
     if (firstTime) {
       if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {
