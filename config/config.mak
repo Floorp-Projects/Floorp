@@ -251,6 +251,9 @@ CFLAGS=$(CFLAGS) -DSMOOTH_PROGRESS
 CFLAGS = $(CFLAGS) -DUSE_STRING2
 !endif
 
+!ifdef MOZ_MATHML
+CFLAGS=$(CFLAGS) -DMOZ_MATHML
+!endif
 
 
 #//-----------------------------------------------------------------------
