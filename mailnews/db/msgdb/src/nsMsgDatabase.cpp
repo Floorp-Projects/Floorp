@@ -2252,7 +2252,9 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (PRTime startDate, PRTime endDate, n
 
 NS_IMETHODIMP nsMsgDatabase::AddToNewList(nsMsgKey key)
 {
-  return m_newSet.Add(key);
+  if (m_newSet.IndexOf(key) == kNotFound)
+    m_newSet.Add(key);
+  return NS_OK;
 }
 
 
