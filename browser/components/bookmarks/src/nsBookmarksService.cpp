@@ -111,6 +111,7 @@ nsIRDFResource      *kNC_NewSearchFolder;
 nsIRDFResource      *kNC_PersonalToolbarFolder;
 nsIRDFResource      *kNC_ShortcutURL;
 nsIRDFResource      *kNC_URL;
+nsIRDFResource      *kNC_WebPanel;
 nsIRDFResource      *kRDF_type;
 nsIRDFResource      *kRDF_nextVal;
 nsIRDFResource      *kWEB_LastModifiedDate;
@@ -246,6 +247,8 @@ bm_AddRefGlobals()
                           &kNC_ShortcutURL);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "URL"),
                           &kNC_URL);
+        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "WebPanel"),
+                          &kNC_WebPanel);
         gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
                           &kRDF_type);
         gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "nextVal"),
@@ -348,6 +351,7 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_PersonalToolbarFolder);
         NS_IF_RELEASE(kNC_ShortcutURL);
         NS_IF_RELEASE(kNC_URL);
+        NS_IF_RELEASE(kNC_WebPanel);
         NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kRDF_nextVal);
         NS_IF_RELEASE(kWEB_LastModifiedDate);
@@ -573,6 +577,7 @@ static const char kLastModifiedEquals[]    = "LAST_MODIFIED=\"";
 static const char kLastCharsetEquals[]     = "LAST_CHARSET=\"";
 static const char kShortcutURLEquals[]     = "SHORTCUTURL=\"";
 static const char kIconEquals[]            = "ICON=\"";
+static const char kWebPanelEquals[]        = "WEB_PANEL=\"";
 static const char kScheduleEquals[]        = "SCHEDULE=\"";
 static const char kLastPingEquals[]        = "LAST_PING=\"";
 static const char kPingETagEquals[]        = "PING_ETAG=\"";
@@ -1061,6 +1066,7 @@ BookmarkParser::gBookmarkFieldTable[] =
   { kLastModifiedEquals,    WEB_NAMESPACE_URI "LastModifiedDate",  nsnull,  BookmarkParser::ParseDate,      nsnull },
   { kShortcutURLEquals,     NC_NAMESPACE_URI  "ShortcutURL",       nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kIconEquals,            NC_NAMESPACE_URI  "Icon",              nsnull,  BookmarkParser::ParseLiteral,   nsnull },
+  { kWebPanelEquals,        NC_NAMESPACE_URI  "WebPanel",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kLastCharsetEquals,     WEB_NAMESPACE_URI "LastCharset",       nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kScheduleEquals,        WEB_NAMESPACE_URI "Schedule",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kLastPingEquals,        WEB_NAMESPACE_URI "LastPingDate",      nsnull,  BookmarkParser::ParseDate,      nsnull },
@@ -5168,6 +5174,10 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                             // output kNC_Icon
                             rv |= WriteBookmarkProperties(ds, strm, child, kNC_Icon, kIconEquals, PR_FALSE);
 
+                            // output kNC_WebPanel
+                            rv |= WriteBookmarkProperties(ds, strm, child, kNC_WebPanel,
+                                                          kWebPanelEquals, PR_FALSE);
+                            
                             // output SCHEDULE
                             rv |= WriteBookmarkProperties(ds, strm, child, kWEB_Schedule, kScheduleEquals, PR_FALSE);
 
@@ -5436,6 +5446,7 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
              (aProperty == kNC_Name) ||
              (aProperty == kNC_ShortcutURL) ||
              (aProperty == kNC_URL) ||
+             (aProperty == kNC_WebPanel) ||
              (aProperty == kWEB_LastModifiedDate) ||
              (aProperty == kWEB_LastVisitDate) ||
              (aProperty == kNC_BookmarkAddDate) ||
