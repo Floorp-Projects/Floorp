@@ -70,6 +70,7 @@ nsMailDatabase::~nsMailDatabase()
 
 NS_IMETHODIMP nsMailDatabase::SetFolderStream(nsIOFileStream *aFileStream)
 {
+  NS_ASSERTION(!m_folderStream || !aFileStream, "m_folderStream is not null and we are assigning a non null stream to it");
   m_folderStream = aFileStream; //m_folderStream is set externally, so m_ownFolderStream is false
   m_ownFolderStream = PR_FALSE;
   return NS_OK;
@@ -331,6 +332,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 							  MsgFlags flag, nsIOFileStream **ppFileStream)
 {
   static char buf[50];
+  PRInt32 folderStreamPos; //saves the folderStream pos in case we are sharing the stream with other code
   nsIOFileStream *fileStream = (m_folderStream) ? m_folderStream : *ppFileStream;
   //#ifdef GET_FILE_STUFF_TOGETHER
 #ifdef XP_MAC
@@ -355,6 +357,11 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
     if (fileStream == NULL) 
     {
       fileStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
+    }
+    else if (!m_ownFolderStream)
+    {
+      m_folderStream->flush();
+      folderStreamPos = m_folderStream->tell();
     }
     if (fileStream) 
     {
@@ -454,6 +461,8 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
   //#endif // GET_FILE_STUFF_TOGETHER
   if (!m_folderStream)
     *ppFileStream = fileStream; // This tells the caller that we opened the file, and please to close it.
+  else if (!m_ownFolderStream)
+    m_folderStream->seek(PR_SEEK_SET, folderStreamPos);
 }
 
 NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
