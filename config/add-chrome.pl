@@ -28,6 +28,7 @@ if (open(FILE, "<$installedChromeFile")) {
         if ($_ =~ $line) {
             # line already appears in installed-chrome.txt file
             # just update the mod date
+            close(FILE) || die "error: can't close $installedChromeFile: $!";
             my $now = time;
             utime($now, $now, $installedChromeFile) || die "couldn't touch $installedChromeFile";
             print "+++ updating chrome $installedChromeFile\n+++\t$line\n";
