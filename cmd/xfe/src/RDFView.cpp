@@ -631,7 +631,7 @@ XFE_RDFView::add_row(HT_Resource node)
     XtVaGetValues(m_widget, XmNcolumns, &column_count, NULL);
     RDFColumnData *column_data;
     void *data;
-    for (int ii = 1; ii < column_count; ii++) 
+    for (int ii = 0; ii < column_count; ii++) 
     {
         XmLGridColumn column = XmLGridGetColumn(m_widget, XmCONTENT, ii);
         XtVaGetValues(m_widget, 
