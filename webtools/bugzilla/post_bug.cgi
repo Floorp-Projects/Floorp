@@ -287,8 +287,8 @@ if (@cc) {
 
 push (@ARGLIST, "-forceowner", DBID_to_name($::FORM{assigned_to}));
 
-if (defined $::FORM{qacontact}) {
-    push (@ARGLIST, "-forceqacontact", DBID_to_name($::FORM{qacontact}));
+if (defined $::FORM{'qa_contact'}) {
+    push (@ARGLIST, "-forceqacontact", DBID_to_name($::FORM{'qa_contact'}));
 }
 
 push (@ARGLIST, "-forcereporter", DBID_to_name($::userid));
