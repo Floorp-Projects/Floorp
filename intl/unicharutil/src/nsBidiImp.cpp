@@ -36,8 +36,6 @@
 NS_IMPL_ISUPPORTS(nsBidi, NS_GET_IID(nsIBidi))
 
 
-static NS_DEFINE_CID(kUnicharBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
-
 /*  Comparing the description of the Bidi algorithm with this implementation
     is easier with the same names for the Bidi types in the code as there.
 */
@@ -481,10 +479,9 @@ void nsBidi::GetDirProps(const PRUnichar *aText)
   DirProp dirProp;
   nsCharType dir;
 
-  static nsresult bcRv;
-  NS_WITH_SERVICE(nsIUBidiUtils, BidiUtils, kUnicharBidiUtilCID, &bcRv);
+  nsCOMPtr<nsIUBidiUtils> bidiUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
 
-  if (NS_FAILED(bcRv) || !BidiUtils) {
+  if (!bidiUtils) {
     /* default to left-to-right*/
     flags |= DIRPROP_FLAG(L);
     if(IS_DEFAULT_LEVEL(mParaLevel)) {
@@ -511,12 +508,12 @@ void nsBidi::GetDirProps(const PRUnichar *aText)
         uchar=aText[i];
         if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
           /* not a surrogate pair */
-          BidiUtils->GetCharType(uchar, &dir);
+          bidiUtils->GetCharType(uchar, &dir);
           flags|=DIRPROP_FLAG(dirProps[i]=dirProp=dir);
         } else {
           /* a surrogate pair */
           dirProps[i++]=BN;   /* first surrogate in the pair gets the BN type */
-          BidiUtils->GetCharType(GET_UTF_32(uchar, aText[i]), &dir);
+          bidiUtils->GetCharType(GET_UTF_32(uchar, aText[i]), &dir);
           flags|=DIRPROP_FLAG(dirProps[i]=dirProp=dir)|DIRPROP_FLAG(BN);
         }
         ++i;
@@ -543,12 +540,12 @@ void nsBidi::GetDirProps(const PRUnichar *aText)
       uchar=aText[i];
       if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
         /* not a surrogate pair */
-        BidiUtils->GetCharType(uchar, &dir);
+        bidiUtils->GetCharType(uchar, &dir);
         flags|=DIRPROP_FLAG(dirProps[i]=dir);
       } else {
         /* a surrogate pair */
         dirProps[i++]=BN;   /* second surrogate in the pair gets the BN type */
-        BidiUtils->GetCharType(GET_UTF_32(uchar, aText[i]), &dir);
+        bidiUtils->GetCharType(GET_UTF_32(uchar, aText[i]), &dir);
         flags|=DIRPROP_FLAG(dirProps[i]=dir)|DIRPROP_FLAG(BN);
       }
       ++i;
@@ -2164,8 +2161,7 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
   PRInt32 i, j, destSize;
   PRUint32 c;
 
-  static nsresult bcRv;
-  NS_WITH_SERVICE(nsIUBidiUtils, BidiUtils, kUnicharBidiUtilCID, &bcRv);
+  nsCOMPtr<nsIUBidiUtils> bidiUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
 
   /* optimize for several combinations of options */
   switch(options&(NSBIDI_REMOVE_BIDI_CONTROLS|NSBIDI_DO_MIRRORING|NSBIDI_KEEP_BASE_COMBINING)) {
@@ -2211,7 +2207,7 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
         PRBool isModifier;
         do {
           UTF_PREV_CHAR(src, 0, srcLength, c);
-          BidiUtils->IsBidiCategory(c, eBidiCat_NSM, &isModifier);
+          bidiUtils->IsBidiCategory(c, eBidiCat_NSM, &isModifier);
         } while(srcLength>0 && isModifier);
 
       /* copy this "user character" */
@@ -2241,7 +2237,7 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
         i=0;
         do {
           c=*src++;
-          BidiUtils->IsBidiControl(c, &isBidiControl);
+          bidiUtils->IsBidiControl(c, &isBidiControl);
           if(!isBidiControl) {
             ++i;
           }
@@ -2260,15 +2256,15 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
         if(options&NSBIDI_KEEP_BASE_COMBINING) {
         /* collect modifier letters for this base character */
           PRBool isModifier;
-          BidiUtils->IsBidiCategory(c, eBidiCat_NSM, &isModifier);
+          bidiUtils->IsBidiCategory(c, eBidiCat_NSM, &isModifier);
           while(srcLength>0 && isModifier) {
             UTF_PREV_CHAR(src, 0, srcLength, c);
-            BidiUtils->IsBidiCategory(c, eBidiCat_NSM, &isModifier);
+            bidiUtils->IsBidiCategory(c, eBidiCat_NSM, &isModifier);
           }
         }
 
         PRBool isBidiControl;
-        BidiUtils->IsBidiControl(c, &isBidiControl);
+        bidiUtils->IsBidiControl(c, &isBidiControl);
 
         if(options&NSBIDI_REMOVE_BIDI_CONTROLS && isBidiControl) {
         /* do not copy this Bidi control character */
@@ -2279,10 +2275,10 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
         j=srcLength;
         if(options&NSBIDI_DO_MIRRORING) {
           /* mirror only the base character */
-          if (NS_FAILED(bcRv) || !BidiUtils)
+          if (!bidiUtils)
             ; /* default to the original form */
           else
-            BidiUtils->SymmSwap((PRUnichar*)&c);
+            bidiUtils->SymmSwap((PRUnichar*)&c);
           PRInt32 k=0;
           UTF_APPEND_CHAR_UNSAFE(dest, k, c);
           dest+=k;
