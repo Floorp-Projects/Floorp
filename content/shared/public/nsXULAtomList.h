@@ -63,22 +63,20 @@ XUL_ATOM(treecolgroup, "treecolgroup") // A column group in the tree view
 XUL_ATOM(treefoot, "treefoot") // The footer of the tree view
 XUL_ATOM(treepusher, "treepusher") // A column pusher (left or right) for the tree view
 
-XUL_ATOM(menuitem, "menuitem") // The menu element
-XUL_ATOM(menubar, "menubar") // The menubar element
-XUL_ATOM(menu, "menu") // A single menu item
-
 XUL_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
 
-XUL_ATOM(xpmenubar, "xpmenubar") // An XP menu bar.
-XUL_ATOM(xpmenu, "xpmenu") // Represents an XP menu
-XUL_ATOM(xpmenuitem, "xpmenuitem") // Represents an XP menu item
-XUL_ATOM(xpmenubutton, "xpmenubutton") // A titled button (with improved behavior) inside an XP menu.
-XUL_ATOM(xpmenuchildren, "xpmenuchildren") // The XP menu's children.
+XUL_ATOM(menubar, "menubar") // An XP menu bar.
+XUL_ATOM(menu, "menu") // Represents an XP menu
+XUL_ATOM(menuitem, "menuitem") // Represents an XP menu item
+XUL_ATOM(menupopup, "menupopup") // The XP menu's children.
 XUL_ATOM(menuactive, "menuactive") // Whether or not a menu is active (without necessarily being open)
 XUL_ATOM(accesskey, "accesskey") // The shortcut key for a menu or menu item
 XUL_ATOM(acceltext, "acceltext") // Text to use for the accelerator
 
 XUL_ATOM(key, "key") // A key element
+XUL_ATOM(broadcaster, "broadcaster") // A broadcaster
+XUL_ATOM(observes, "observes") // The observes element
+XUL_ATOM(templateAtom, "template") // A XUL template
 
 XUL_ATOM(progressmeter, "progressmeter")
 XUL_ATOM(titledbutton, "titledbutton")

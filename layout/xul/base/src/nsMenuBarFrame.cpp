@@ -429,8 +429,8 @@ nsMenuBarFrame::IsValidItem(nsIContent* aContent)
 {
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
-  if (tag && (tag.get() == nsXULAtoms::xpmenu ||
-              tag.get() == nsXULAtoms::xpmenuitem) &&
+  if (tag && (tag.get() == nsXULAtoms::menu ||
+              tag.get() == nsXULAtoms::menuitem) &&
       !IsDisabled(aContent))
       return PR_TRUE;
 

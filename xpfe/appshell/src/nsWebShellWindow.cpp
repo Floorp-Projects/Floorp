@@ -1812,6 +1812,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     mLockedUntilChromeLoad = PR_FALSE;
   }
 
+#ifdef XP_MAC
   // register as document listener
   // this is needed for menus
   nsCOMPtr<nsIContentViewer> cv;
@@ -1838,7 +1839,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
   {
-#if defined XP_MAC || defined XP_BEOS
+#ifdef XP_MAC
     LoadMenus(menubarDOMDoc, mWindow);
     // Context Menu test
     nsCOMPtr<nsIDOMElement> element;
@@ -1850,8 +1851,9 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     // End Context Menu test
 #else
     DynamicLoadMenus(menubarDOMDoc, mWindow);
-#endif
+#endif // XP_MAC
   }
+#endif // XP_MAC
 
   SetTitleFromXUL();
   ShowAppropriateChrome();

@@ -86,7 +86,26 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+                            nsDidReflowStatus aStatus);
+
   NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
+
+  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList);
+
+  NS_IMETHOD  InsertFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aPrevFrame,
+                           nsIFrame*       aFrameList);
+
+  NS_IMETHOD  RemoveFrame(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame);
 
   void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
   void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);

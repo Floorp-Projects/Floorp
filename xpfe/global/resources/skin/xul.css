@@ -40,6 +40,10 @@ popup {
 	display: none;
 }
 
+template {
+	display: none;
+}
+
 div {
 	background-color:inherit;
 	background-image:inherit;
@@ -270,75 +274,72 @@ observes {
 }
 
 menubar {
-	display: none;
-}
-
-menu {
-	display: none;
-}
-
-menuitem {
-	display: none;
-}
-
-xpmenubar {
     display:block;
     background-color: #CCCCDD;
     border-bottom: 1px solid #9999cc;
     font: inherit;
 }
 
-xpmenubar[collapsed="true"] {
+menubar[collapsed="true"] {
 	display:none;
 }
-xpmenubar[hidden="true"] {
+menubar[hidden="true"] {
 	display:none;
 }
 
-xpmenu {
+menu {
 	display: block;
 	font: inherit;
+	color: black;
 }
 
-xpmenu[disabled="true"] {
+menu[disabled="true"] {
 	color: #999999;
 }
 
-xpmenuitem {
+menuitem {
 	display: block;
 	font: inherit;
+	color: black;
 }
 
-xpmenuitem[disabled="true"] {
+menuitem[disabled="true"] {
 	color: #999999;
 }
 
-xpmenuchildren {
+menupopup {
+  display: none;
+}
+
+menupopup[menugenerated="true"] {
   display: block;
+}
+
+menupopup {
   font: inherit;
-  visibility:hidden;
+  visibility: hidden; 
   background-color: #CCCCDD;
   color: inherit;
   border: 1px white outset;
 }
 
-xpmenuchildren[menuactive="true"] {
+menupopup[menuactive="true"] {
   visibility: visible;
 }
 
-xpmenuchildren xpmenu {
+menupopup menu {
   max-width: 400px;
   min-width: 125px;
   margin: 1px;
 }
 
-xpmenuchildren xpmenuitem {
+menupopup menuitem {
   max-width: 400px;
   min-width: 125px;
   margin: 1px;
 }
 
-xpmenuseparator {
+menuseparator {
   display: block;
   border-bottom: 1px white solid; 
   border-top: 1px gray solid; 
@@ -1124,7 +1125,7 @@ treeitem [open="true"]> treerow > treecell > titledbutton.twisty {
 }
 
 
-xpmenubar > xpmenu {
+menubar > menu {
   border: 1px solid transparent;
   padding-top: 2px;
   padding-bottom: 2px;
@@ -1134,31 +1135,31 @@ xpmenubar > xpmenu {
   margin-bottom: 2px;
 }
 
-xpmenuchildren > xpmenu {
+menupopup > menu {
   border: 1px solid transparent;
   padding: 2px;
 }
 
-xpmenuchildren > xpmenuitem {
+menupopup > menuitem {
   border: 1px solid transparent;
   padding: 2px;
 }
 
-xpmenubar > xpmenu[menuactive="true"] {
+menubar > menu[menuactive="true"] {
   border: 1px outset white;
   color:#333366;
 }
 
-xpmenubar > xpmenu[menuactive="true"][open="true"] {
+menubar > menu[menuactive="true"][open="true"] {
   border: 1px inset;
 }
 
-xpmenuchildren > xpmenu[menuactive="true"] {
+menupopup > menu[menuactive="true"] {
   background-color: #666699;
   color: white;
 }
 
-xpmenuchildren > xpmenuitem[menuactive="true"] {
+menupopup > menuitem[menuactive="true"] {
   background-color: #666699;
   color: white;
 }
@@ -1178,18 +1179,18 @@ xpmenuchildren > xpmenuitem[menuactive="true"] {
   margin-right: 2px;
 }
 
-xpmenuitem > .menu-right {
+menuitem > .menu-right {
   list-style-image: none;
 }
 
-xpmenuitem > .menu-left {
+menuitem > .menu-left {
   list-style-image: none;
 }
 
-xpmenu > .menu-right {
+menu > .menu-right {
   list-style-image: url(chrome://global/skin/menuArrow.gif);
 }
 
-xpmenu[menuactive="true"] > .menu-right {
+menu[menuactive="true"] > .menu-right {
   list-style-image: url(chrome://global/skin/menuArrow_mo.gif);
 }
