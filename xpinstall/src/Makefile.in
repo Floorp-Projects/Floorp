@@ -120,6 +120,10 @@ EXTRA_DSO_LDOPTS = \
 		$(ZLIB_LIBS) \
 		$(NULL)
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
+
 # Make this a true dynamic component even in static builds because
 # this component is shared by installer
 FORCE_SHARED_LIB	= 1
