@@ -245,7 +245,7 @@ nsImageControlFrame::Init(nsIPresContext*  aPresContext,
     viewMan->SetViewOpacity(view, color->mOpacity);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_METHOD
