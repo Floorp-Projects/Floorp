@@ -74,6 +74,7 @@ XUL_ATOM(menuactive, "menuactive") // Whether or not a menu is active (without n
 XUL_ATOM(accesskey, "accesskey") // The shortcut key for a menu or menu item
 XUL_ATOM(acceltext, "acceltext") // Text to use for the accelerator
 XUL_ATOM(menupopupset, "menupopupset") // Contains popup menus, context menus, and tooltips
+XUL_ATOM(menugenerated, "menugenerated") // Internal
 
 XUL_ATOM(key, "key") // A key element
 XUL_ATOM(broadcaster, "broadcaster") // A broadcaster
