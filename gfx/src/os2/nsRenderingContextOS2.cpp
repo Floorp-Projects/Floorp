@@ -321,14 +321,12 @@ nsresult nsRenderingContextOS2::CommonInit()
     ::GpiSelectPalette(mSurface->mPS, (HPAL)palInfo.palette);
     ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mSurface->mPS, &cclr);
   } else if (!palInfo.isPaletteDevice && palInfo.palette) {
-//    GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET | LCOL_PURECOLOR,
     GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET,
-                            LCOLF_CONSECRGB, 0,
+                            LCOLF_CONSECRGB, palInfo.sizePalette,
                             palInfo.sizePalette, (PLONG) palInfo.palette);
   }
   else
   {
-//    GpiCreateLogColorTable( mSurface->mPS, LCOL_PURECOLOR,
     GpiCreateLogColorTable( mSurface->mPS, 0,
                             LCOLF_RGB, 0, 0, 0);
   }
