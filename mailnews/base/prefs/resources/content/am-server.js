@@ -29,10 +29,10 @@ function initServerType() {
   var verboseName;
   var index;
   if (serverType == "pop3") {
-      verboseName = "POP Mail server";
+      verboseName = "POP Mail Server";
       index = 0;
   } else if (serverType == "imap") {
-      verboseName = "IMAP Mail server";
+      verboseName = "IMAP Mail Server";
       index = 1;
   } else if (serverType == "nntp") {
       verboseName = "Newsgroup server (NNTP)";
