@@ -413,6 +413,7 @@ function Startup()
 	    contentArea.addEventListener("load", UpdateInternetSearchResults, true);
       contentArea.addEventListener("load", getContentAreaFrameCount, true);
       contentArea.addEventListener("focus", contentAreaFrameFocus, true);
+      contentArea.addEventListener("load",postURLToNativeWidget, true);
     }
 
     dump("*** Pulling out the charset\n");
@@ -1564,5 +1565,25 @@ function clearErrorNotification()
   statusbarDisplay.removeAttribute("error");
   statusbarDisplay.removeEventListener("click", loadErrorConsole, true);
   consoleListener.isShowingError = false;
+}
+
+//Posts the currently displayed url to a native widget so third-party apps can observe it.
+var urlWidgetService = null;
+function postURLToNativeWidget() {
+    var url = window._content.location.href;
+    if ( !urlWidgetService ) {
+        try {
+            urlWidgetService = getService( "component://mozilla/urlwidget", "nsIUrlWidget" );
+        } catch( exception ) {
+            dump( "Error getting url widget service: " + exception + "\n" );
+        }
+    }
+    if ( urlWidgetService ) {
+        try {
+            urlWidgetService.SetURLToHiddenControl( url, window );
+        } catch( exception ) {
+            dump( " SetURLToHiddenControl failed: " + exception + "\n" );
+        }
+    }
 }
 
