@@ -103,10 +103,13 @@ PRBool LibraryImplementsCID(const char *szLibrary, const nsID &cid);
 
 int main(int argc, char *argv[])
 {
+	// These should be set by command switches but aren't at the moment
+	PRBool bSearchForUnicodeProgIDs = PR_FALSE;
+	PRBool bSearchForUnicodeLibraries = PR_FALSE;
+
 	if (argc != 2)
 	{
-		fprintf(stderr, "Usage:\n");
-		fprintf(stderr, " Outputdeps <mozbindirectory>\n");
+		fprintf(stderr, "Usage: dumpdeps <mozbindirectory>\n");
 		return 1;
 	}
 
@@ -197,13 +200,31 @@ int main(int argc, char *argv[])
 			std::vector<progid2cid>::const_iterator k;
 			for (k = listProgIDs.begin(); k != listProgIDs.end(); k++)
 			{
+				// Skip ProgIds that the library implements
+				if (LibraryImplementsCID((*i).mFile.c_str(), (*k).mCID))
+				{
+					continue;
+				}
+
+				// Search for ANSI strings
 				const char *szA = (*k).mProgID.c_str();
-				wchar_t *szW = A2W((*k).mProgID.c_str(), szWTmp, sizeof(szWTmp) / sizeof(szWTmp[0]));
 				int nLength = (*k).mProgID.length();
-				if (ScanBuffer(pszBuffer, nBufferSize, szA, nLength) == 1 ||
-					ScanBuffer(pszBuffer, nBufferSize, szW, nLength * sizeof(wchar_t)) == 1)
+				if (ScanBuffer(pszBuffer, nBufferSize, szA, nLength) == 1)
 				{
 					OutputProgId(szA);
+					continue;
+				}
+
+				if (bSearchForUnicodeProgIDs)
+				{
+					// Search for Unicode strings
+					wchar_t *szW = A2W((*k).mProgID.c_str(), szWTmp, sizeof(szWTmp) / sizeof(szWTmp[0]));
+					if (ScanBuffer(pszBuffer, nBufferSize, szW, nLength * sizeof(wchar_t)) == 1)
+					{
+						printf("UNICODE Progid\n");
+						OutputProgId(szA);
+						continue;
+					}
 				}
 			}
 
@@ -217,13 +238,25 @@ int main(int argc, char *argv[])
 					continue;
 				}
 
+				// Search for ANSI strings
 				const char *szA = (*l).mFile.c_str();
-				wchar_t *szW = A2W((*l).mFile.c_str(), szWTmp, sizeof(szWTmp) / sizeof(szWTmp[0]));
 				int nLength = (*l).mFile.length();
-				if (ScanBuffer(pszBuffer, nBufferSize, szA, nLength) == 1 ||
-					ScanBuffer(pszBuffer, nBufferSize, szW, nLength * sizeof(wchar_t)) == 1)
+				if (ScanBuffer(pszBuffer, nBufferSize, szA, nLength) == 1)
 				{
 					OutputLibrary(szA);
+					continue;
+				}
+
+				if (bSearchForUnicodeLibraries)
+				{
+					// Search for Unicode strings
+					wchar_t *szW = A2W((*l).mFile.c_str(), szWTmp, sizeof(szWTmp) / sizeof(szWTmp[0]));
+					if (ScanBuffer(pszBuffer, nBufferSize, szW, nLength * sizeof(wchar_t)) == 1)
+					{
+						printf("UNICODE library\n");
+						OutputLibrary(szA);
+						continue;
+					}
 				}
 			}
 			delete []pszBuffer;
