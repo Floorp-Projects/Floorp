@@ -97,7 +97,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
         PRBool db = PR_FALSE;
 
-        if ((((float)trect.width * trect.height) / ((float)vrect.width * vrect.height)) >  0.75f)
+//        if ((((float)trect.width * trect.height) / ((float)vrect.width * vrect.height)) >  0.75f)
            db = PR_TRUE;
 
 //printf("damage repair...\n");
