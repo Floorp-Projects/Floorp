@@ -489,7 +489,7 @@ PRStatus _MD_OS2GetHostName(char *name, PRUint32 namelen)
     return PR_FAILURE;
 }
 
-PR_IMPLEMENT(void)
+void
 _PR_MD_WAKEUP_CPUS( void )
 {
     return;
