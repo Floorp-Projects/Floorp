@@ -41,8 +41,15 @@ enum nsMsgDBCommitType {
   kCompressCommit
 };
 
+
+#define NS_IMSGDATABASE_IID \
+{ 0x9188bc83, 0xf92e, 0x11d2, \
+  {0x81, 0xef, 0x00, 0x60, 0x08, 0x3a, 0x0b, 0xcf} }
+
 class nsIMsgDatabase : public nsIDBChangeAnnouncer {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IMSGDATABASE_IID; return iid; }
+
   // open local folder...
   NS_IMETHOD Open(nsIFileSpec *folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading) = 0;
   NS_IMETHOD Close(PRBool forceCommit) = 0;
