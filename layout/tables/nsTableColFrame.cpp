@@ -113,8 +113,7 @@ nsStyleCoord nsTableColFrame::GetStyleWidth() const
   // values, which the style system does not know.
   if (eStyleUnit_Auto == styleWidth.GetUnit() ||
       eStyleUnit_Inherit == styleWidth.GetUnit()) {
-    nsIFrame* parent;
-    GetParent(&parent);
+    nsIFrame* parent = GetParent();
     position = parent->GetStylePosition();
     styleWidth = position->mWidth;
   }
@@ -280,15 +279,14 @@ nsTableColFrame::Init(nsIPresContext*  aPresContext,
 nsTableColFrame*  
 nsTableColFrame::GetNextCol() const
 {
-  nsIFrame* childFrame;
-  GetNextSibling(&childFrame);
+  nsIFrame* childFrame = GetNextSibling();
   while (childFrame) {
     nsCOMPtr<nsIAtom> frameType;
     childFrame->GetFrameType(getter_AddRefs(frameType));
     if (nsLayoutAtoms::tableColFrame == frameType.get()) {
       return (nsTableColFrame*)childFrame;
     }
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
   }
   return nsnull;
 }

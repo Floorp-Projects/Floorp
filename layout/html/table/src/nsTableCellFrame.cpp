@@ -99,15 +99,14 @@ nsTableCellFrame::~nsTableCellFrame()
 nsTableCellFrame*  
 nsTableCellFrame::GetNextCell() const
 {
-  nsIFrame* childFrame;
-  GetNextSibling(&childFrame);
+  nsIFrame* childFrame = GetNextSibling();
   while (childFrame) {
     nsCOMPtr<nsIAtom> frameType;
     childFrame->GetFrameType(getter_AddRefs(frameType));
     if (IS_TABLE_CELL(frameType.get())) {
       return (nsTableCellFrame*)childFrame;
     }
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
   }
   return nsnull;
 }
@@ -184,8 +183,7 @@ nsresult
 nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex) const
 {
   nsresult result;
-  nsTableRowFrame * row;
-  GetParent((nsIFrame **)&row);
+  nsTableRowFrame* row = NS_STATIC_CAST(nsTableRowFrame*, GetParent());
   if (row) {
     aRowIndex = row->GetRowIndex();
     result = NS_OK;
@@ -238,9 +236,7 @@ void nsTableCellFrame::SetPass1MaxElementWidth(nscoord aMaxWidth,
       styleText->mWhiteSpace != NS_STYLE_WHITESPACE_PRE) {
     // has fixed width, check the content for nowrap
     nsAutoString nowrap;
-    nsCOMPtr<nsIContent> cellContent;
-    GetContent(getter_AddRefs(cellContent));
-    nsresult result = cellContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::nowrap, nowrap);
+    nsresult result = GetContent()->GetAttr(kNameSpaceID_None, nsHTMLAtoms::nowrap, nowrap);
     if(NS_CONTENT_ATTR_NOT_THERE != result) {
       // content has nowrap (is not mapped to style be cause it has width)
       // set the max element size to the value of the fixed width (NAV/IE quirk)
@@ -298,15 +294,13 @@ nsresult nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
   // other tags mapped to table cell display won't benefit from this optimization
   // see nsHTMLStyleSheet::RulesMatching
 
-  //nsIContent* cell;
-  //kidFrame->GetContent(&cell);
-  nsCOMPtr<nsIContent> cell;
-  nsresult rv = GetContent(getter_AddRefs(cell));
-  if (NS_FAILED(rv) || !cell)
-    return rv;
+  //nsIContent* cell = kidFrame->GetContent();
+  nsIContent* cell = GetContent();
+  if (!cell)
+    return NS_OK;
 
   nsIHTMLTableCellElement* cellContent = nsnull;
-  rv = CallQueryInterface(cell, &cellContent); // cellContent: REFCNT++
+  nsresult rv = CallQueryInterface(cell, &cellContent); // cellContent: REFCNT++
   if (cellContent && NS_SUCCEEDED(rv)) { // it's a table cell
     cellContent->SetColIndex(aColIndex);
     NS_RELEASE(cellContent);
@@ -338,10 +332,8 @@ nsTableCellFrame::DecorateForSelection(nsIPresContext* aPresContext,
   PRInt16 displaySelection;
   displaySelection = DisplaySelection(aPresContext);
   if (displaySelection) {
-    nsFrameState  frameState;
-    PRBool        isSelected;
-    GetFrameState(&frameState);
-    isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+    PRBool isSelected =
+      (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
     if (isSelected) {
       nsCOMPtr<nsIPresShell> shell;
       nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
@@ -534,9 +526,8 @@ nsTableCellFrame::SetSelected(nsIPresContext* aPresContext,
     nsIFrame* kid;
     FirstChild(nsnull, &kid);
     while (nsnull != kid) {
-      kid->SetSelected(nsnull,aSelected,eSpreadDown);
-
-      kid->GetNextSibling(&kid);
+      kid->SetSelected(nsnull, aSelected, eSpreadDown);
+      kid = kid->GetNextSibling();
     }
   }
   //return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
@@ -556,8 +547,7 @@ nsTableCellFrame::SetSelected(nsIPresContext* aPresContext,
     PRBool tableCellSelectionMode;
     result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
     if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
-      nsRect frameRect;
-      GetRect(frameRect);
+      nsRect frameRect = GetRect();
       nsRect rect(0, 0, frameRect.width, frameRect.height);
       Invalidate(aPresContext, rect, PR_FALSE);
     }
@@ -620,11 +610,9 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
   }
 
   nscoord height = mRect.height;
-  nsRect kidRect;  
   nsIFrame* firstKid = mFrames.FirstChild();
-  firstKid->GetRect(kidRect);
+  nsRect kidRect = firstKid->GetRect();
   nscoord childHeight = kidRect.height;
-  
 
   // Vertically align the child
   nscoord kidYTop = 0;
@@ -654,7 +642,7 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
       aPresContext->GetScaledPixelsToTwips(&p2t);
       kidYTop = nsTableFrame::RoundToPixel(kidYTop, p2t, eAlwaysRoundDown);
   }
-  firstKid->MoveTo(aPresContext, kidRect.x, kidYTop);
+  firstKid->SetPosition(nsPoint(kidRect.x, kidYTop));
   if (kidYTop != kidRect.y) {
     // Make sure any child views are correctly positioned. We know the inner table
     // cell won't have a view
@@ -746,10 +734,10 @@ CalcUnpaginagedHeight(nsIPresContext*       aPresContext,
 {
   const nsTableCellFrame* firstCellInFlow   = (nsTableCellFrame*)aCellFrame.GetFirstInFlow();
   nsTableFrame*           firstTableInFlow  = (nsTableFrame*)aTableFrame.GetFirstInFlow();
-  nsTableRowGroupFrame*   firstRGInFlow;
-  nsTableRowFrame*        row;
-  firstCellInFlow->GetParent((nsIFrame**)&row);
-  row->GetParent((nsIFrame**)&firstRGInFlow);
+  nsTableRowFrame*        row
+    = NS_STATIC_CAST(nsTableRowFrame*, firstCellInFlow->GetParent());
+  nsTableRowGroupFrame*   firstRGInFlow
+    = NS_STATIC_CAST(nsTableRowGroupFrame*, row->GetParent());
 
   PRInt32 rowIndex;
   firstCellInFlow->GetRowIndex(rowIndex);
@@ -901,13 +889,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   } else {
     // handle percent padding-left which was 0 during initial reflow
     if (eStyleUnit_Percent == aReflowState.mStylePadding->mPadding.GetLeftUnit()) {
-      nsRect kidRect;
-      firstKid->GetRect(kidRect);
+      nsRect kidRect = firstKid->GetRect();
       // only move in the x direction for the same reason as above
       kidOrigin.MoveTo(leftInset, kidRect.y);
-      firstKid->MoveTo(aPresContext, leftInset, kidRect.y);
+      firstKid->SetPosition(nsPoint(leftInset, kidRect.y));
     }
-    firstKid->GetOrigin(kidOrigin);
+    kidOrigin = firstKid->GetPosition();
   }
 
 #if defined DEBUG_TABLE_REFLOW_TIMING
@@ -1176,8 +1163,7 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
   }
 
   // check if halign is set on the cell's ROW (or ROWGROUP by inheritance)
-  nsIFrame* rowFrame;
-  GetParent(&rowFrame);
+  nsIFrame* rowFrame = GetParent();
   const nsStyleText* rowTextStyle = rowFrame->GetStyleText();
   if (NS_STYLE_TEXT_ALIGN_DEFAULT != rowTextStyle->mTextAlign) {
     nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);

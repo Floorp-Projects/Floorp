@@ -567,10 +567,9 @@ nsTableCellMap::AppendCell(nsTableCellFrame& aCellFrame,
                            nsRect&           aDamageArea)
 {
   NS_ASSERTION(&aCellFrame == aCellFrame.GetFirstInFlow(), "invalid call on continuing frame");
-  nsIFrame* rgFrame = nsnull;
-  aCellFrame.GetParent(&rgFrame); // get the row
+  nsIFrame* rgFrame = aCellFrame.GetParent(); // get the row
   if (!rgFrame) return 0;
-  rgFrame->GetParent(&rgFrame);   // get the row group
+  rgFrame = rgFrame->GetParent();   // get the row group
   if (!rgFrame) return 0;
 
   CellData* result = nsnull;
@@ -1357,7 +1356,7 @@ PRBool nsCellMap::CellsSpanOut(nsIPresContext* aPresContext,
         }
       }
       NS_IF_RELEASE(frameType);
-      cellFrame->GetNextSibling(&cellFrame);
+      cellFrame = cellFrame->GetNextSibling();
     }
   }
   return PR_FALSE;
@@ -1497,7 +1496,7 @@ nsCellMap::ExpandWithRows(nsIPresContext* aPresContext,
         AppendCell(aMap, (nsTableCellFrame *)cFrame, rowX, PR_FALSE, aDamageArea, &colIndex);
       }
       NS_IF_RELEASE(cFrameType);
-      cFrame->GetNextSibling(&cFrame);
+      cFrame = cFrame->GetNextSibling();
     }
     newRowIndex++;
   }
@@ -1908,7 +1907,7 @@ nsCellMap::RebuildConsideringRows(nsIPresContext* aPresContext,
           AppendCell(aMap, (nsTableCellFrame *)cFrame, rowX, PR_FALSE, aDamageArea);
         }
         NS_IF_RELEASE(cFrameType);
-        cFrame->GetNextSibling(&cFrame);
+        cFrame = cFrame->GetNextSibling();
       }
       rowX++;
     }
