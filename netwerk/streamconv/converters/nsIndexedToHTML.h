@@ -91,6 +91,9 @@ protected:
 
     nsCOMPtr<nsIDateTimeFormat> mDateTime;
     nsCOMPtr<nsIStringBundle> mBundle;
+private:
+    // Current number of rows
+    PRInt32 mRowCount;
 };
 
 #endif
