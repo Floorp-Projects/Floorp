@@ -308,15 +308,15 @@
 /* ::::: personal toolbar ::::: */
 
 #home-button {
-  list-style-image: url("chrome://communicator/skin/bookmarks/home.gif");
+  list-style-image: url("chrome://browser/skin/home.gif");
 }
   
 #home-button:hover {
-  list-style-image: url("chrome://communicator/skin/bookmarks/home-hover.gif");
+  list-style-image: url("chrome://browser/skin/home-hover.gif");
 }
   
 #home-button:hover:active {
-  list-style-image: url("chrome://communicator/skin/bookmarks/home-active.gif");
+  list-style-image: url("chrome://browser/skin/home-active.gif");
 }
 
 #security-button {

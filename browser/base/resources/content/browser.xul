@@ -762,6 +762,13 @@ Contributor(s): ______________________________________. -->
                        label="&stopButton.label;"
                        oncommand="BrowserStop();" observes="canStop"  
                        tooltiptext="&stopButton.tooltip;"/>
+        <toolbarbutton id="home-button" class="toolbarbutton-1"
+                       label="&homeButton.label;" persist="hidden"
+                       ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
+                       ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+                       oncommand="BrowserHome();"/>
       </hbox>
       <toolbarseparator/>
       <toolbarbutton id="print-button" class="toolbarbutton-1"
@@ -838,16 +845,6 @@ Contributor(s): ______________________________________. -->
              grippytooltiptext="&personalToolbar.tooltip;"
              tbalign="stretch">
 
-      <toolbarbutton id="home-button" class="bookmark-item"
-                     label="&homeButton.label;" persist="hidden"
-                     ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
-                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
-                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
-                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
-                     oncommand="BrowserHome(); event.preventBubble();"/>
-  
-      <toolbarseparator id="home-bm-separator" persist="hidden"/>
- 
       <!-- Personal toolbar items -->
       <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="bmContext" 
            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
