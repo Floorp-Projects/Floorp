@@ -43,6 +43,10 @@ public:
     NS_DECL_NSICONSOLESERVICE
 
 private:
+    // build (or find) a proxy for the listener
+    nsresult GetProxyForListener(nsIConsoleListener* aListener,
+                                 nsIConsoleListener** aProxy);
+
     // Circular buffer of saved messages
     nsIConsoleMessage **mMessages;
 
