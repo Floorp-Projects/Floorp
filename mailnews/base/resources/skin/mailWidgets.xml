@@ -250,6 +250,22 @@
           ]]>
         </setter>
       </property>
+      <method name="save">
+        <body>
+          <![CDATA[
+            dump("Saving searchvalue\n");
+            var searchValue = this.value;
+            var searchAttribute = this.searchAttribute;
+            var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+            if (searchAttribute == nsMsgSearchAttrib.Priority)
+               searchValue.priority = this.anonymousContent[1].selectedItem.data;
+            else if (searchAttribute == nsMsgSearchAttrib.MsgStatus)
+               searchValue.status = this.anonymousContent[2].selectedItem.data;
+            else
+               searchValue.str = this.anonymousContent[0].value;
+          ]]>
+        </body>
+      </method>
     </interface>
   </binding>
   <binding id="searchterm" extends="xul:box">
@@ -340,6 +356,23 @@
           ]]>
         </setter>
       </property>
+      <method name="save">
+        <body>
+          <![CDATA[
+            var searchTerm = this.searchTerm;
+
+            dump("Saving searchterm = " + searchTerm + "\n");
+            dump("Saving (" + this.searchattribute.value + "," +
+                              this.searchoperator.value + "," +
+                              this.searchvalue.value + "," +
+                              this.booleanAnd + ")\n");
+            searchTerm.attrib = this.searchattribute.value;
+            searchTerm.op = this.searchoperator.value;
+            this.searchvalue.save();
+            searchTerm.booleanAnd = this.booleanAnd;
+          ]]>
+        </body>
+      </method>
     </interface>
   </binding>
 </bindings>
