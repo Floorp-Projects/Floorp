@@ -222,7 +222,15 @@ nsFileChannel::SetURI(nsIURI* aURI)
 nsresult
 nsFileChannel::EnsureTransport()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
+    
+    PRBool exist;
+    rv = mFile->Exists(&exist);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (!exist)
+        return NS_ERROR_FILE_NOT_FOUND;
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -257,32 +265,6 @@ nsFileChannel::Open(nsIInputStream **result)
     return rv;
 }
 
-// XXX What does OpenOutputStream mean for a file "channel"
-#if 0
-NS_IMETHODIMP
-nsFileChannel::OpenOutputStream(PRUint32 transferOffset, PRUint32 transferCount, nsIOutputStream **result)
-{
-    nsresult rv;
-
-    if (mCurrentRequest)
-        return NS_ERROR_IN_PROGRESS;
-
-    mIOFlags |= PR_WRONLY;
-
-    rv = EnsureTransport();
-    if (NS_FAILED(rv)) goto done;
-
-    rv = mFileTransport->OpenOutputStream(transferOffset, transferCount, result);
-  done:
-    if (NS_FAILED(rv)) {
-        // release the transport so that we don't think we're in progress
-        mFileTransport = nsnull;
-        mCurrentRequest = nsnull;
-    }
-    return rv;
-}
-#endif
-
 NS_IMETHODIMP
 nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
@@ -296,6 +278,10 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 
     if (mFileTransport)
         return NS_ERROR_IN_PROGRESS;
+
+    rv = EnsureTransport();
+    if (NS_FAILED(rv)) 
+        return rv;
 
     NS_ASSERTION(listener, "null listener");
     mRealListener = listener;
@@ -319,14 +305,10 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         rv = mLoadGroup->AddRequest(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
-
-    rv = EnsureTransport();
-    if (NS_FAILED(rv)) goto done;
     
     rv = mFileTransport->AsyncRead(tempListener, ctxt, 0, -1, 0,
                                    getter_AddRefs(mCurrentRequest));
 
-  done:
     if (NS_FAILED(rv)) {
         nsresult rv2 = mLoadGroup->RemoveRequest(this, ctxt, rv, nsnull);       // XXX fix error message
         NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveRequest failed");
@@ -508,9 +490,7 @@ nsFileChannel::OnStopRequest(nsIRequest* request, nsISupports* context,
     }
     
     if (mLoadGroup) {
-        if (NS_SUCCEEDED(rv)) {
-            mLoadGroup->RemoveRequest(this, context, aStatus, aStatusArg);
-        }
+        mLoadGroup->RemoveRequest(this, context, aStatus, aStatusArg);
     }
 
     // Release the reference to the consumer stream listener...

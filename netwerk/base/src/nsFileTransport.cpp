@@ -782,6 +782,10 @@ nsFileTransport::Process(void)
         LOG(("nsFileTransport: OPEN_FOR_WRITE [this=%x %s]\n",
             this, mStreamName.get()));
         mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
+        
+        if (mStatus == NS_ERROR_FILE_NOT_FOUND)
+            mStatus = NS_OK;
+
         if (mProvider) {
             // always send the start notification
             nsresult rv = mProvider->OnStartRequest(this, mContext);
