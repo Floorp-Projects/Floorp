@@ -147,19 +147,25 @@ nsLSParser::Parse(nsIDOMLSInput *input, nsIDOMDocument **_retval)
 NS_IMETHODIMP
 nsLSParser::ParseURI(const nsAString & uri, nsIDOMDocument **_retval)
 {
+  *_retval = nsnull;
+
   nsCOMPtr<nsIDOMEventListener> listener = new nsLSParserEventListener(this);
   NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mXMLHttpRequest));
-
-  nsresult rv = target->AddEventListener(NS_LITERAL_STRING("load"), listener,
-                                         PR_FALSE);
+  nsresult rv;
+  rv = mXMLHttpRequest->OpenRequest("GET", NS_ConvertUTF16toUTF8(uri).get(),
+                                    mIsAsync, nsnull, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mXMLHttpRequest->Open("GET", NS_ConvertUTF16toUTF8(uri).get());
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mXMLHttpRequest));
+  rv = target->AddEventListener(NS_LITERAL_STRING("load"), listener, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mXMLHttpRequest->Send(nsnull);
+
+  if (!mIsAsync && NS_SUCCEEDED(rv)) {
+    rv = mXMLHttpRequest->GetResponseXML(_retval);
+  }
 
   return rv;
 }
@@ -174,7 +180,7 @@ nsLSParser::ParseWithContext(nsIDOMLSInput *input, nsIDOMNode *contextArg,
 NS_IMETHODIMP
 nsLSParser::Abort()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mXMLHttpRequest->Abort();
 }
 
 NS_IMETHODIMP
