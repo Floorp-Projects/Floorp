@@ -74,23 +74,24 @@ function sidebarOverlayInit()
   if (sidebar_element.getAttribute('hidden') == 'true') {
     sidebar_element.setAttribute('style', 'display:none')
     sidebar_menuitem.setAttribute('checked', 'false')
-    return
+  } else {
+	sidebar_menuitem.setAttribute('checked', 'true');
+
+	debug("sidebar = " + sidebar + "\n");
+	debug("sidebar.resource = " + sidebar.resource + "\n");
+	debug("sidebar.db = " + sidebar.db + "\n");
+
+	// Add the user's current panel choices to the template builder,
+	// which will aggregate it with the other datasources that describe
+	// the individual panel's title, customize URL, and content URL.
+	var panels = document.getElementById('sidebar-panels');
+	panels.database.AddDataSource(RDF.GetDataSource(sidebar.db));
+	
+	// XXX This is a hack to force re-display
+	panels.setAttribute('ref', 'urn:sidebar:current-panel-list');
+
+	sidebarOpenDefaultPanel(1, 0);
   }
-
-  debug("sidebar = " + sidebar + "\n");
-  debug("sidebar.resource = " + sidebar.resource + "\n");
-  debug("sidebar.db = " + sidebar.db + "\n");
-
-  // Add the user's current panel choices to the template builder,
-  // which will aggregate it with the other datasources that describe
-  // the individual panel's title, customize URL, and content URL.
-  var panels = document.getElementById('sidebar-panels');
-  panels.database.AddDataSource(RDF.GetDataSource(sidebar.db));
-
-  // XXX This is a hack to force re-display
-  panels.setAttribute('ref', 'urn:sidebar:current-panel-list');
-
-  sidebarOpenDefaultPanel(1, 0);
 }
 
 function sidebarOpenDefaultPanel(wait, tries) {
