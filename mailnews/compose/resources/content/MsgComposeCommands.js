@@ -1676,13 +1676,18 @@ function GenericSendMessage( msgType )
           msgType == nsIMsgCompDeliverMode.SaveAsDraft || 
           msgType == nsIMsgCompDeliverMode.SaveAsTemplate) 
         {
-          if (gPromptService && !gMsgCompose.checkCharsetConversion(getCurrentIdentity())) 
+          var fallbackCharset = new Object;
+          if (gPromptService && 
+              !gMsgCompose.checkCharsetConversion(getCurrentIdentity(), fallbackCharset)) 
           {
             var dlgTitle = sComposeMsgsBundle.getString("initErrorDlogTitle");
             var dlgText = sComposeMsgsBundle.getString("12553");  // NS_ERROR_MSG_MULTILINGUAL_SEND
             if (!gPromptService.confirm(window, dlgTitle, dlgText))
               return;
           }
+          if (fallbackCharset && 
+              fallbackCharset.value && fallbackCharset.value != "")
+            gMsgCompose.SetDocumentCharset(fallbackCharset.value);
         }
       }
       try {

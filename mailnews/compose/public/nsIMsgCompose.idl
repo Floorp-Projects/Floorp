@@ -187,7 +187,7 @@ interface nsIMsgCompose : nsISupports {
 
   /* Check if the composing mail headers (and identity) can be converted to a mail charset.
   */
-  boolean checkCharsetConversion(in nsIMsgIdentity identity);
+  boolean checkCharsetConversion(in nsIMsgIdentity identity, out string fallbackCharset);
 
   /* Retreive the message send object */
   readonly attribute nsIMsgSend messageSend;

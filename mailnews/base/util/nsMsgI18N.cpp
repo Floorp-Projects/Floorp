@@ -491,7 +491,7 @@ PRBool nsMsgI18N7bit_data_part(const char *charset, const char *inString, const 
   return result;
 }
 
-PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar* inString)
+PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar* inString, char **fallbackCharset)
 {
   if (!charset || !*charset || !inString || !*inString)
     return PR_TRUE;
@@ -532,6 +532,14 @@ PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar
         consumedLen = currentSrcPtr - originalPtr; // src length used so far
       }
     }    
+  }
+
+  // if the conversion was not successful then try fallback to other charsets
+  if (!result && fallbackCharset) {
+    nsXPIDLCString convertedString;
+    res = nsMsgI18NSaveAsCharset("text/plain", charset, inString, 
+                                 getter_Copies(convertedString), fallbackCharset);
+    result = (NS_SUCCEEDED(res) && NS_ERROR_UENC_NOMAPPING != res);
   }
 
   return result;
@@ -608,7 +616,8 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
   return res;
 }
 
-nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, const PRUnichar* inString, char** outString)
+nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, 
+                                const PRUnichar* inString, char** outString, char **fallbackCharset)
 {
   NS_ASSERTION(contentType, "null ptr- contentType");
   NS_ASSERTION(charset, "null ptr- charset");
@@ -663,7 +672,10 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
                      nsIEntityConverter::transliterate);
   NS_ENSURE_SUCCESS(res, res);
 
+  const PRUnichar *input = inString;
+
   // Mapping characters in a certain range (required for Japanese only)
+  nsAutoString mapped;
   if (!nsCRT::strcmp(charsetName, NS_LITERAL_STRING("ISO-2022-JP").get())) {
     static PRInt32 sSendHankakuKana = -1;
     if (sSendHankakuKana < 0) {
@@ -679,18 +691,51 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
 
     if (!sSendHankakuKana) {
       nsCOMPtr <nsITextTransform> textTransform = do_CreateInstance(NS_HANKAKUTOZENKAKU_CONTRACTID, &res);
+        
       if (NS_SUCCEEDED(res)) {
-        nsAutoString mapped;
         res = textTransform->Change(inString, nsCRT::strlen(inString), mapped);
-        if (NS_SUCCEEDED(res)) {
-          return conv->Convert(mapped.get(), outString);
-        }
+        if (NS_SUCCEEDED(res))
+          input = mapped.get();
       }
     }
   }
 
   // Convert to charset
-  return conv->Convert(inString, outString);
+  res = conv->Convert(input, outString);
+
+  // If the converer cannot encode to the charset,
+  // then fallback to pref sepcified charsets.
+  if (NS_ERROR_UENC_NOMAPPING == res && !bTEXT_HTML && fallbackCharset) {
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &res));
+    NS_ENSURE_SUCCESS(res, res);
+
+    nsCAutoString prefString("intl.fallbackCharsetList.");
+    prefString.Append(charset);
+    nsXPIDLCString fallbackList;
+    res = pref->GetCharPref(prefString.get(), getter_Copies(fallbackList));
+    // do the fallback only if there is a pref for the charset
+    if (NS_FAILED(res) || fallbackList.IsEmpty())
+      return NS_ERROR_UENC_NOMAPPING;
+
+    res = conv->Init(fallbackList.get(), 
+                     nsISaveAsCharset::attr_FallbackQuestionMark + 
+                     nsISaveAsCharset::attr_EntityAfterCharsetConv +
+                     nsISaveAsCharset::attr_CharsetFallback, 
+                     nsIEntityConverter::transliterate);
+    NS_ENSURE_SUCCESS(res, res);
+
+    // free whatever we have now
+    PR_FREEIF(*outString);  
+
+    res = conv->Convert(input, outString);
+    NS_ENSURE_SUCCESS(res, res);
+
+    // get the actual charset used for the conversion
+    if (NS_FAILED(conv->GetCharset(fallbackCharset)))
+      *fallbackCharset = nsnull;
+  }
+
+  return res;
 }
 
 nsresult nsMsgI18NFormatNNTPXPATInNonRFC1522Format(const nsCString& aCharset, 

@@ -48,8 +48,9 @@
 interface nsISaveAsCharset : nsISupports
 {
   // attributes
-  const unsigned long mask_Fallback = 0x000000FF;              // mask for fallback (8bits)
-  const unsigned long mask_Entity = 0x00000300;                // mask for entity (2bits)
+  const unsigned long mask_Fallback                = 0x000000FF; // mask for fallback (8bits)
+  const unsigned long mask_Entity                  = 0x00000300; // mask for entity (2bits)
+  const unsigned long mask_CharsetFallback         = 0x00000400; // mask for charset fallback (1bit)
 
   const unsigned long attr_FallbackNone = 0;                   // no fall back for unconverted chars (skipped)
   const unsigned long attr_FallbackQuestionMark = 1;           // unconverted chars are replaced by '?'
@@ -61,12 +62,16 @@ interface nsISaveAsCharset : nsISupports
   const unsigned long attr_EntityBeforeCharsetConv = 0x00000100; // generate Named Entity before charset conversion
   const unsigned long attr_EntityAfterCharsetConv =  0x00000200; // generate Named Entity after charset conversion
 
+  const unsigned long attr_CharsetFallback        =  0x00000400; // fallback to other charset and restart the convesion
+
                                                                // default attribute for plain text
   const unsigned long attr_plainTextDefault = attr_FallbackNone + attr_EntityNone;               
   
                                                                // default attribute for html text
                                                                // generate entity before charset conversion, use decimal NCR
   const unsigned long attr_htmlTextDefault = attr_FallbackDecimalNCR + attr_EntityBeforeCharsetConv;
+
+  readonly attribute string charset;                           // charset used for the conversion
 
   // set up charset, attribute and entity version 
   // see nsIEntityConverter.idl for possible value of entityVersion (entityNone for plain text).

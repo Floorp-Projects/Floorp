@@ -90,10 +90,15 @@ NS_MSG_BASE PRBool    nsMsgI18N7bit_data_part(const char *charset, const char *s
  *
  * @param charset     [IN] Charset to be converted.
  * @param inString    [IN] Input unicode string to be examined.
+ * @param fallbackCharset [OUT]
+ *                         null if fallback charset is not needed.
+ *                         Otherwise, a fallback charset name may be set if that was used for the conversion. 
+ *                         Caller is responsible for freeing the memory (or use nsXPIDLCString).
  * @return            True if the string can be converted within the charset range.
  *                    False if one or more characters cannot be converted to the target charset.
  */
-NS_MSG_BASE PRBool    nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar* inString);
+NS_MSG_BASE PRBool    nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar* inString,
+                                                           char **fallbackCharset=nsnull);
 
 /**
  * Return accept language.
@@ -188,9 +193,14 @@ NS_MSG_BASE nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString
  * @param charset     [IN] Charset name to convert.
  * @param inString    [IN] Input unicode string to convert.
  * @param outString   [OUT] Allocated and converted output C string. Need PR_FREE.
+ * @param fallbackCharset [OUT]
+ *                         null if fallback charset is not needed.
+ *                         Otherwise, a fallback charset name may be set if that was used for the conversion. 
+ *                         Caller is responsible for freeing the memory (or use nsXPIDLCString).
  * @return            nsresult.
  */
-NS_MSG_BASE nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char* charset, const PRUnichar* inString, char** outString);
+NS_MSG_BASE nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char* charset, 
+                                            const PRUnichar* inString, char** outString, char **fallbackCharset=nsnull);
 
 /**
  * Convert from unicode to charset, generates NNTP XPAT search string.

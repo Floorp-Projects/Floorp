@@ -951,8 +951,9 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 
       // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
       char *outCString = nsnull;
+      nsXPIDLCString fallbackCharset;
       rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
-                                  msgBody.get(), &outCString);
+                                  msgBody.get(), &outCString, getter_Copies(fallbackCharset));
       SET_SIMULATED_ERROR(SIMULATED_SEND_ERROR_14, rv, NS_ERROR_UENC_NOMAPPING);
       if (NS_SUCCEEDED(rv) && nsnull != outCString) 
       {
@@ -965,6 +966,9 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
             return NS_ERROR_MSG_MULTILINGUAL_SEND;
           }
         }
+        // re-label to the fallback charset
+        else if (fallbackCharset)
+          m_compFields->SetCharacterSet(fallbackCharset.get());
         m_compFields->SetBody(outCString);
         entityConversionDone = PR_TRUE;
         PR_Free(outCString);
@@ -4510,12 +4514,12 @@ nsresult nsMsgCompose::ResetNodeEventHandlers(nsIDOMNode *node)
     return rv;
 }
 
-NS_IMETHODIMP nsMsgCompose::CheckCharsetConversion(nsIMsgIdentity *identity, PRBool *_retval)
+NS_IMETHODIMP nsMsgCompose::CheckCharsetConversion(nsIMsgIdentity *identity, char **fallbackCharset, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(identity);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsresult rv = m_compFields->CheckCharsetConversion(_retval);
+  nsresult rv = m_compFields->CheckCharsetConversion(fallbackCharset, _retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (*_retval) 
@@ -4535,7 +4539,12 @@ NS_IMETHODIMP nsMsgCompose::CheckCharsetConversion(nsIMsgIdentity *identity, PRB
       identityStrings.Append(organization.get());
 
     if (!identityStrings.IsEmpty())
-      *_retval = nsMsgI18Ncheck_data_in_charset_range(m_compFields->GetCharacterSet(), identityStrings.get());
+    {
+      // use fallback charset if that's already set
+      const char *charset = (fallbackCharset && *fallbackCharset) ? *fallbackCharset : m_compFields->GetCharacterSet();
+      *_retval = nsMsgI18Ncheck_data_in_charset_range(charset, identityStrings.get(),
+                                                      fallbackCharset);
+    }
   }
 
   return NS_OK;

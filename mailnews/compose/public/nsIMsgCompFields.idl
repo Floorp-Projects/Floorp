@@ -105,7 +105,7 @@ interface nsIMsgCompFields : nsISupports {
   void ConvertBodyToPlainText();
 
   // Check if the composing mail headers can be converted to a mail charset.
-  boolean checkCharsetConversion();
+  boolean checkCharsetConversion(out string fallbackCharset);
 
   attribute nsISupports securityInfo;
 };
