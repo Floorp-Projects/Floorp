@@ -42,6 +42,28 @@
 #include "nsCOMPtr.h"
 #include "nsMaiTopLevel.h"
 #include "nsIAccessibleEventReceiver.h"
+#include "nsAccessibleEventData.h"
+
+/*
+ * Must keep sychronization with
+ * enumerate AtkProperty in mozilla/accessible/src/base/nsRootAccessible.h
+*/
+static char * pAtkPropertyNameArray[PROP_LAST] = {
+    0,
+    "accessible_name",
+    "accessible_description",
+    "accessible_parent",
+    "accessible_value",
+    "accessible_role",
+    "accessible_layer",
+    "accessible_mdi_zorder",
+    "accessible_table_caption",
+    "accessible_table_column_description",
+    "accessible_table_column_header",
+    "accessible_table_row_description",
+    "accessible_table_row_header",
+    "accessible_table_summary"
+};
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(MaiTopLevel, nsIAccessibleEventListener)
@@ -68,41 +90,361 @@ NS_IMETHODIMP
 MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                          AccessibleEventData * aEventData)
 {
-    MaiObject *maiObject;
+    MaiObject *pMaiObject;
+    AtkTableChange * pAtkTableChange;
 
-    MAI_LOG_DEBUG(("MaiTopLevel::HandleEvent, aEvent=%d\n", aEvent));
+    MAI_LOG_DEBUG(("Received accessary data ptr is:%x\n", aEventData));
 
     if (mAccessible == aAccessible)
-        maiObject = this;
+        pMaiObject = this;
     else
-        maiObject = CreateMaiObjectFor(aAccessible);
-    if (!maiObject)
-        return NS_OK;
+        pMaiObject = CreateMaiObjectFor(aAccessible);
 
-    if (aEvent == nsIAccessibleEventListener::EVENT_FOCUS ||
-        aEvent == nsIAccessibleEventListener::EVENT_SELECTION ||
-        aEvent == nsIAccessibleEventListener::EVENT_SELECTION_ADD ||
-        aEvent == nsIAccessibleEventListener::EVENT_SELECTION_REMOVE ||
-        aEvent == nsIAccessibleEventListener::EVENT_STATE_CHANGE ||
-        aEvent == nsIAccessibleEventListener::EVENT_NAME_CHANGE ||
-        aEvent == nsIAccessibleEventListener::EVENT_SELECTION ||
-        aEvent == nsIAccessibleEventListener::EVENT_MENUSTART ||
-        aEvent == nsIAccessibleEventListener::EVENT_MENUEND ||
-        aEvent == nsIAccessibleEventListener::EVENT_MENUPOPUPSTART ||
-        aEvent == nsIAccessibleEventListener::EVENT_MENUPOPUPEND) {
-        atk_focus_tracker_notify(ATK_OBJECT((maiObject)->GetAtkObject()));
+    if (!pMaiObject)
+        return NS_ERROR_FAILURE;
+
+    switch (aEvent) {
+    case nsIAccessibleEventListener::EVENT_FOCUS:
+        atk_focus_tracker_notify(ATK_OBJECT(pMaiObject->GetAtkObject()));
+        break;
+    
+    case nsIAccessibleEventListener::EVENT_STATE_CHANGE:
+        AtkStateChange *pAtkStateChange;
+        AtkStateType atkState;
+
+        MAI_LOG_DEBUG(("Receiving event EVENT_STATE_CHANGE\n\n"));
+        if (!aEventData)
+            return NS_ERROR_FAILURE;
+
+        pAtkStateChange = NS_REINTERPRET_CAST(AtkStateChange *, aEventData);
+
+        switch (pAtkStateChange->state) {
+        case nsIAccessible::STATE_INVISIBLE:
+            atkState = ATK_STATE_VISIBLE;
+            break;
+        case nsIAccessible::STATE_UNAVAILABLE:
+            atkState = ATK_STATE_ENABLED;
+            break;
+        default:
+            atkState = TranslateAState(pAtkStateChange->state);
+        }
+
+        atk_object_notify_state_change(ATK_OBJECT(pMaiObject->GetAtkObject()),
+            atkState, pAtkStateChange->enable);
+        break;
+      
+        /*
+         * More complex than I ever thought.
+         * Need handle them separately.
+         */
+    case nsIAccessibleEventListener::EVENT_ATK_PROPERTY_CHANGE :
+        AtkPropertyChange *pAtkPropChange;
+        AtkPropertyValues values;
+
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_PROPERTY_CHANGE\n\n"));
+        if (!aEventData)
+            return NS_ERROR_FAILURE;
+
+        pAtkPropChange = NS_REINTERPRET_CAST(AtkPropertyChange *, aEventData);
+        values.property_name = pAtkPropertyNameArray[pAtkPropChange->type];
+        
+        MAI_LOG_DEBUG(("the type of EVENT_ATK_PROPERTY_CHANGE: %d\n\n",
+                       pAtkPropChange->type));
+        switch (pAtkPropChange->type) {
+        case PROP_TABLE_CAPTION:
+        case PROP_TABLE_SUMMARY:
+            MaiObject *aOldMaiObj, *aNewMaiObj;
+
+            if (pAtkPropChange->oldvalue)
+                aOldMaiObj = CreateMaiObjectFor(NS_REINTERPRET_CAST
+                                 (nsIAccessible *, pAtkPropChange->oldvalue));
+
+            if (pAtkPropChange->newvalue)
+                aNewMaiObj = CreateMaiObjectFor(NS_REINTERPRET_CAST
+                                 (nsIAccessible *, pAtkPropChange->newvalue));
+
+            if (!aOldMaiObj || !aNewMaiObj )
+                return NS_ERROR_FAILURE;
+
+            g_value_init(&values.old_value, G_TYPE_POINTER);
+            g_value_set_pointer(&values.old_value,
+                                ATK_OBJECT(aOldMaiObj->GetAtkObject()));
+            g_value_init(&values.new_value, G_TYPE_POINTER);
+            g_value_set_pointer(&values.new_value,
+                                ATK_OBJECT(aNewMaiObj->GetAtkObject()));
+            break;
+
+        case PROP_TABLE_COLUMN_DESCRIPTION:
+        case PROP_TABLE_COLUMN_HEADER:
+        case PROP_TABLE_ROW_HEADER:
+        case PROP_TABLE_ROW_DESCRIPTION:
+            g_value_init(&values.new_value, G_TYPE_INT);
+            g_value_set_int(&values.new_value,
+                *NS_REINTERPRET_CAST(gint *, pAtkPropChange->newvalue));
+            break;
+  
+            //Perhaps need divide more in the future according to result of test
+        default:
+            g_value_init (&values.old_value, G_TYPE_POINTER);
+            g_value_set_pointer (&values.old_value, pAtkPropChange->oldvalue);
+            g_value_init (&values.new_value, G_TYPE_POINTER);
+            g_value_set_pointer (&values.new_value, pAtkPropChange->newvalue);
+        }
+
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+            g_strconcat("property_change::", values.property_name),
+            &values, NULL);
+
+        break;
+
+    case nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_SELECTION_CHANGE\n\n"));
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "selection_changed");
+        break;
+
+    case nsIAccessibleEventListener::EVENT_ATK_TEXT_CHANGE:
+        AtkTextChange *pAtkTextChange;
+
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_TEXT_CHANGE\n\n"));
+        if (!aEventData)
+            return NS_ERROR_FAILURE;
+
+        pAtkTextChange = NS_REINTERPRET_CAST(AtkTextChange *, aEventData);
+        g_signal_emit_by_name (ATK_OBJECT(pMaiObject->GetAtkObject()),
+            pAtkTextChange->add ? "text_changed:insert":"text_changed::delete",
+            pAtkTextChange->start,
+            pAtkTextChange->length);
+
+        break;
+
+    case nsIAccessibleEventListener::EVENT_ATK_TEXT_SELECTION_CHANGE:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_TEXT_SELECTION_CHANGE\n\n"));
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                               "text_selection_changed");
+        break;
+
+    case nsIAccessibleEventListener::EVENT_ATK_TEXT_CARET_MOVE:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_TEXT_CARET_MOVE\n\n"));
+        if (!aEventData)
+            return NS_ERROR_FAILURE;
+
+        MAI_LOG_DEBUG(("Caret postion: %d", *(gint *)aEventData ));
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "text_caret_moved",
+                              // Curent caret position
+                              *(gint *)aEventData);
+        break;
+
+    case nsIAccessibleEventListener::EVENT_ATK_TABLE_MODEL_CHANGE:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_TABLE_MODEL_CHANGE\n\n"));
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "model_changed");
+        break;
+
+    case nsIAccessibleEventListener::EVENT_ATK_TABLE_ROW_INSERT:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_TABLE_ROW_INSERT\n\n"));
+        if (!aEventData)
+            return NS_ERROR_FAILURE;
+
+        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, aEventData);
+
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "row_inserted",
+                              // After which the rows are inserted
+                              pAtkTableChange->index,
+                              // The number of the inserted
+                              pAtkTableChange->count);
+        break;
+        
+    case nsIAccessibleEventListener::EVENT_ATK_TABLE_ROW_DELETE:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_TABLE_ROW_DELETE\n\n"));
+        if (!aEventData)
+            return NS_ERROR_FAILURE;
+
+        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, aEventData);
+
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "row_deleted",
+                              // After which the rows are deleted
+                              pAtkTableChange->index,
+                              // The number of the deleted
+                              pAtkTableChange->count);
+        break;
+        
+    case nsIAccessibleEventListener::EVENT_ATK_TABLE_ROW_REORDER:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_TABLE_ROW_REORDER\n\n"));
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "row_reordered");
+        break;
+
+    case nsIAccessibleEventListener::EVENT_ATK_TABLE_COLUMN_INSERT:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_TABLE_COLUMN_INSERT\n\n"));
+        if (!aEventData)
+            return NS_ERROR_FAILURE;
+
+        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, aEventData);
+
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "column_inserted",
+                              // After which the columns are inserted
+                              pAtkTableChange->index,
+                              // The number of the inserted
+                              pAtkTableChange->count);
+        break;
+
+    case nsIAccessibleEventListener::EVENT_ATK_TABLE_COLUMN_DELETE:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_TABLE_COLUMN_DELETE\n\n"));
+        if (!aEventData)
+            return NS_ERROR_FAILURE;
+
+        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, aEventData);
+
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "column_deleted",
+                              // After which the columns are deleted
+                              pAtkTableChange->index,
+                              // The number of the deleted
+                              pAtkTableChange->count);
+        break;
+        
+    case nsIAccessibleEventListener::EVENT_ATK_TABLE_COLUMN_REORDER:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_TABLE_COLUMN_REORDER\n\n"));
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "column_reordered");
+        break;
+
+    case nsIAccessibleEventListener::EVENT_ATK_VISIBLE_DATA_CHANGE:
+        MAI_LOG_DEBUG(("Receiving event EVENT_ATK_VISIBLE_DATA_CHANGE\n\n"));
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "visible_data_changed");
+        break;
+        
+    // Is a superclass of ATK event children_changed
+    case nsIAccessibleEventListener::EVENT_REORDER:
+        AtkChildrenChange *pAtkChildrenChange;
+
+        MAI_LOG_DEBUG(("Receiving event EVENT_REORDER\n\n"));
+        if (!aEventData)
+            return NS_ERROR_FAILURE;
+
+        pAtkChildrenChange = NS_REINTERPRET_CAST(AtkChildrenChange *,
+                                                 aEventData);
+
+        MaiObject *aChildMaiObject;
+        aChildMaiObject = CreateMaiObjectFor(pAtkChildrenChange->child);
+        if (!aChildMaiObject)
+            
+
+        g_signal_emit_by_name (ATK_OBJECT(pMaiObject->GetAtkObject()),
+            pAtkChildrenChange->add ?
+                "children_changed::add" : "children_changed::remove",
+            pAtkChildrenChange->index,
+            ATK_OBJECT(aChildMaiObject->GetAtkObject()),
+            NULL);
+        
+        // Don't need for the MAI cache machanism
+        // g_object_unref(G_OBJECT(aChildMaiObject->GetAtkObject()));
+        break;
+
+    /*
+     * Because the dealing with menu is very different between nsIAccessible
+     * and ATK, and the menu activity is important, specially transfer the
+     * following two event.
+     * Need more verification by AT test.
+     */
+    case nsIAccessibleEventListener::EVENT_MENUSTART:
+        MAI_LOG_DEBUG(("Receiving event EVENT_MENUSTART\n\n"));
+        atk_focus_tracker_notify(ATK_OBJECT(pMaiObject->GetAtkObject()));
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "selection_changed");
+        break;
+
+    case nsIAccessibleEventListener::EVENT_MENUEND:
+        MAI_LOG_DEBUG(("Receiving event EVENT_MENUEND\n\n"));
+        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                              "selection_changed");
+        break;
+
+    default:
+        // Don't transfer others
+        MAI_LOG_DEBUG(("Receiving a event not need to be translated\n\n"));
+        break;
     }
-    else
-        maiObject->EmitAccessibilitySignal(aEvent);
 
-    /* it is not needed to cache!  */
-    /* maiObject is deleted when its atkobject is unrefed to zero! */
-
-    if (mAccessible != aAccessible) {
-        GObject *obj = G_OBJECT(maiObject->GetAtkObject());
-        g_object_unref(obj);
-    }
     return NS_OK;
+}
+
+/* static */
+AtkStateType
+MaiTopLevel::TranslateAState(PRUint32 aAccState)
+{
+    switch (aAccState) {
+    case nsIAccessible::STATE_SELECTED:
+        return ATK_STATE_SELECTED;
+    case nsIAccessible::STATE_FOCUSED:
+        return ATK_STATE_FOCUSED;
+    case nsIAccessible::STATE_PRESSED:
+        return ATK_STATE_PRESSED;
+    case nsIAccessible::STATE_CHECKED:
+        return ATK_STATE_CHECKED;
+    case nsIAccessible::STATE_EXPANDED:
+        return ATK_STATE_EXPANDED;
+    case nsIAccessible::STATE_COLLAPSED:
+        return ATK_STATE_EXPANDABLE;
+    // The control can't accept input at this time
+    case nsIAccessible::STATE_BUSY:
+        return ATK_STATE_BUSY;
+    case nsIAccessible::STATE_FOCUSABLE:
+        return ATK_STATE_FOCUSABLE;
+    case nsIAccessible::STATE_SELECTABLE:
+        return ATK_STATE_SELECTABLE;
+    case nsIAccessible::STATE_SIZEABLE:
+        return ATK_STATE_RESIZABLE;
+    case nsIAccessible::STATE_MULTISELECTABLE:
+        return ATK_STATE_MULTISELECTABLE;
+
+#if 0
+    // The following two state need to deal specially
+    case nsIAccessible::STATE_INVISIBLE:
+        return !ATK_STATE_VISIBLE;
+
+    case nsIAccessible::STATE_UNAVAILABLE:
+        return !ATK_STATE_ENABLED;
+#endif
+
+    // The following state is
+    // Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
+    // This is only the states that there isn't already a mapping for in MSAA
+    // See www.accessmozilla.org/article.php?sid=11 for information on the
+    // mappings between accessibility API state
+
+    case nsIAccessible::STATE_ACTIVE:
+        return ATK_STATE_ACTIVE;
+    case nsIAccessible::STATE_EXPANDABLE:
+        return ATK_STATE_EXPANDABLE;
+#if 0
+    // Need change definitions in nsIAccessible.idl to avoid duplicate value
+    case nsIAccessible::STATE_MODAL:
+        return ATK_STATE_MODAL;
+#endif
+    case nsIAccessible::STATE_MULTI_LINE:
+        return ATK_STATE_MULTI_LINE;
+    case nsIAccessible::STATE_SENSITIVE:
+        return ATK_STATE_SENSITIVE;
+    case nsIAccessible::STATE_RESIZABLE:
+        return ATK_STATE_RESIZABLE;
+    case nsIAccessible::STATE_SHOWING:
+        return ATK_STATE_SHOWING;
+    case nsIAccessible::STATE_SINGLE_LINE:
+        return ATK_STATE_SINGLE_LINE;
+    case nsIAccessible::STATE_TRANSIENT:
+        return ATK_STATE_TRANSIENT;
+    case nsIAccessible::STATE_VERTICAL:
+        return ATK_STATE_VERTICAL;
+    default:
+        return ATK_STATE_INVALID;
+    }
 }
 
 /******************************************************************
