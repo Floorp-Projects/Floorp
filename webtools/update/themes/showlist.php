@@ -210,6 +210,7 @@ echo"<br><br>\n";
 echo"<DIV class=\"key-point\">";
 echo"<FORM NAME=\"listviews\" METHOD=\"GET\" ACTION=\"showlist.php\">\n";
 echo"<input name=\"application\" type=\"hidden\" value=\"$application\">\n";
+echo"<INPUT NAME=\"category\" TYPE=\"hidden\" VALUE=\"$category\">\n";
 
 //Items-Per-Page
 echo"Show/Page: ";
