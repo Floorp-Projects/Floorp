@@ -22,6 +22,7 @@
 #ifndef __nsAppShellService_h
 #define __nsAppShellService_h
 
+#include "nsISupports.h"
 #include "nsIAppShellService.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -31,7 +32,6 @@
 //Interfaces Needed
 #include "nsIXULWindow.h"
 #include "nsIWindowMediator.h"
-#include "nsPIWindowWatcher.h"
 #include "nsISplashScreen.h"
 
 class nsAppShellService : public nsIAppShellService,
@@ -63,9 +63,9 @@ protected:
   nsresult ClearXPConnectSafeContext();
 
   nsCOMPtr<nsIAppShell> mAppShell;
+  nsCOMPtr<nsISupportsArray> mWindowList;
   nsCOMPtr<nsICmdLineService> mCmdLineService;
   nsCOMPtr<nsIWindowMediator> mWindowMediator;
-  nsCOMPtr<nsPIWindowWatcher> mWindowWatcher;
   nsCOMPtr<nsIXULWindow>      mHiddenWindow;
   PRBool mDeleteCalled;
   nsCOMPtr<nsISplashScreen> mSplashScreen;

@@ -69,7 +69,6 @@ static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
-static char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 
 // copied from nsEventQueue.cpp
 static char *gEQActivatedNotification = "nsIEventQueueActivated";
@@ -81,9 +80,9 @@ NS_NAMED_LITERAL_STRING(gInstallRestartTopic, "xpinstall-restart");
 
 nsAppShellService::nsAppShellService() : 
   mAppShell( nsnull ),
+  mWindowList( nsnull ),
   mCmdLineService( nsnull ),
   mWindowMediator( nsnull ), 
-  mWindowWatcher( nsnull ),
   mHiddenWindow( nsnull ),
   mDeleteCalled( PR_FALSE ),
   mSplashScreen( nsnull ),
@@ -134,11 +133,18 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
   mCmdLineService = aCmdLineService;
 
   // Remember where the native app support lives.
-  mNativeAppSupport = do_QueryInterface(aNativeAppSupportOrSplashScreen);
+  mNativeAppSupport = do_QueryInterface( aNativeAppSupportOrSplashScreen );
 
   // Or, remember the splash screen (for backward compatibility).
-  if (!mNativeAppSupport)
-    mSplashScreen = do_QueryInterface(aNativeAppSupportOrSplashScreen);
+  if ( !mNativeAppSupport ) {
+      mSplashScreen = do_QueryInterface( aNativeAppSupportOrSplashScreen );
+  }
+
+  // Create the toplevel window list...
+  rv = NS_NewISupportsArray(getter_AddRefs(mWindowList));
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
 
   NS_TIMELINE_ENTER("nsComponentManager::CreateInstance.");
   // Create widget application shell
@@ -146,21 +152,25 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
                                           NS_GET_IID(nsIAppShell),
                                           (void**)getter_AddRefs(mAppShell));
   NS_TIMELINE_LEAVE("nsComponentManager::CreateInstance");
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     goto done;
+  }
 
   rv = mAppShell->Create(0, nsnull);
-  if (NS_FAILED(rv))
-    goto done;
+
+  if (NS_FAILED(rv)) {
+      goto done;
+  }
 
   // listen to EventQueues' comings and goings. do this after the appshell
   // has been created, but after the event queue has been created. that
   // latter bit is unfortunate, but we deal with it.
   RegisterObserver(PR_TRUE);
  
-  // enable window mediation (and fail if we can't get the mediator)
-  mWindowMediator = do_GetService(kWindowMediatorCID, &rv);
-  mWindowWatcher = do_GetService(sWindowWatcherContractID);
+// enable window mediation
+  mWindowMediator = do_GetService(kWindowMediatorCID);
+
+//  CreateHiddenWindow();	// rjc: now require this to be explicitly called
 
 done:
   return rv;
@@ -454,86 +464,86 @@ nsAppShellService::Quit()
   // through any events in the queue. This guarantees a tidy cleanup.
   nsresult rv = NS_OK;
 
-  if (mShuttingDown)
-    return NS_OK;
+  if (! mShuttingDown) {
+    mShuttingDown = PR_TRUE;
 
-  mShuttingDown = PR_TRUE;
+    // Shutdown native app support; doing this first will prevent new
+    // requests to open additional windows coming in.
+    if ( mNativeAppSupport ) {
+        mNativeAppSupport->Quit();
+        mNativeAppSupport = 0;
+    }
 
-  // Shutdown native app support; doing this first will prevent new
-  // requests to open additional windows coming in.
-  if (mNativeAppSupport) {
-    mNativeAppSupport->Quit();
-    mNativeAppSupport = 0;
-  }
+    // Enumerate through each open window and close it
+    if (mWindowMediator) {
+      nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+      rv = mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
 
-  // Enumerate through each open window and close it
-  if (mWindowMediator) {
-    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-    mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+      if (NS_SUCCEEDED(rv)) {
+        PRBool more;
 
-    if (windowEnumerator) {
-      PRBool more;
+        while (1) {
+          rv = windowEnumerator->HasMoreElements(&more);
+          if (NS_FAILED(rv) || !more)
+            break;
 
-      while (1) {
-        rv = windowEnumerator->HasMoreElements(&more);
-        if (NS_FAILED(rv) || !more)
-          break;
+          nsCOMPtr<nsISupports> isupports;
+          rv = windowEnumerator->GetNext(getter_AddRefs(isupports));
+          if (NS_FAILED(rv))
+            break;
 
-        nsCOMPtr<nsISupports> isupports;
-        rv = windowEnumerator->GetNext(getter_AddRefs(isupports));
-        if (NS_FAILED(rv))
-          break;
+          nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(isupports);
+          NS_ASSERTION(window != nsnull, "not an nsIDOMWindowInternal");
+          if (! window)
+            continue;
 
-        nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(isupports);
-        NS_ASSERTION(window != nsnull, "not an nsIDOMWindowInternal");
-        if (! window)
-          continue;
-
-        window->Close();
+          window->Close();
+        }
       }
     }
-  }
 
-  {
-    nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
-    if (hiddenWin) {
-      ClearXPConnectSafeContext();
-      hiddenWin->Close();
+    {
+      nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
+      if (hiddenWin) {
+        ClearXPConnectSafeContext();
+        hiddenWin->Close();
+      }
+      mHiddenWindow = nsnull;
     }
-    mHiddenWindow = nsnull;
-  }
-  
-  // Note that we don't allow any premature returns from the above
-  // loop: no matter what, make sure we send the exit event.  If
-  // worst comes to worst, we'll do a leaky shutdown but we WILL
-  // shut down. Well, assuming that all *this* stuff works ;-).
-  nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+    
+    // Note that we don't allow any premature returns from the above
+    // loop: no matter what, make sure we send the exit event.  If
+    // worst comes to worst, we'll do a leaky shutdown but we WILL
+    // shut down. Well, assuming that all *this* stuff works ;-).
+    nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIEventQueue> queue;
-  rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-  if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIEventQueue> queue;
+    rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+    if (NS_FAILED(rv)) return rv;
 
-  ExitEvent* event = new ExitEvent;
-  if (!event)
-    return NS_ERROR_OUT_OF_MEMORY;
+    ExitEvent* event = new ExitEvent;
+    if (! event)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-  PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
-                nsnull,
-                HandleExitEvent,
-                DestroyExitEvent);
+    PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
+                 nsnull,
+                 HandleExitEvent,
+                 DestroyExitEvent);
 
-  event->mService = this;
-  NS_ADDREF(event->mService);
+    event->mService = this;
+    NS_ADDREF(event->mService);
 
-  rv = queue->EnterMonitor();
-  if (NS_SUCCEEDED(rv))
-    rv = queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
-  queue->ExitMonitor();
+    rv = queue->EnterMonitor();
+    if (NS_SUCCEEDED(rv)) {
+      rv = queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
+    }
+    (void) queue->ExitMonitor();
 
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(event->mService);
-    delete event;
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(event->mService);
+      delete event;
+    }
   }
 
   return rv;
@@ -798,93 +808,64 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindowInternal **aWindow,
 NS_IMETHODIMP
 nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow)
 {
-  // tell the window mediator about the new window
-  if (mWindowMediator)
-    mWindowMediator->RegisterWindow(aWindow);
+   mWindowList->AppendElement(aWindow);
 
-  // tell the window watcher about the new window
-  if (mWindowWatcher) {
-    nsCOMPtr<nsIDocShell> docShell;
-    aWindow->GetDocShell(getter_AddRefs(docShell));
-    if (docShell) {
-      nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(docShell));
-      if (domWindow)
-        mWindowWatcher->AddWindow(domWindow, 0);
-    }
-  }
+   if(mWindowMediator)
+      mWindowMediator->RegisterWindow(aWindow);
 
-  return NS_OK;
+   return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 {
-  PRBool windowsRemain = PR_TRUE;
-
-  if (mDeleteCalled) {
-    /* return an error code in order to:
-       - avoid doing anything with other member variables while we are in
-         the destructor
-       - notify the caller not to release the AppShellService after
-         unregistering the window
-         (we don't want to be deleted twice consecutively to
-         mHiddenWindow->Close() in our destructor)
-    */
-    return NS_ERROR_FAILURE;
-  }
+	if (mDeleteCalled) {
+		// return an error code in order to:
+		// - avoid doing anything with other member variables while we are in the destructor
+		// - notify the caller not to release the AppShellService after unregistering the window
+		//   (we don't want to be deleted twice consecutively to mHiddenWindow->Close() in our destructor)
+		return NS_ERROR_FAILURE;
+	}
   
-  // tell the window mediator
-  if (mWindowMediator) {
-    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-    mWindowMediator->UnregisterWindow(aWindow);
-
-    mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
-    if (windowEnumerator)
-      windowEnumerator->HasMoreElements(&windowsRemain);
-  }
+  if(mWindowMediator)
+     mWindowMediator->UnregisterWindow(aWindow);
 	
-  // tell the window watcher
-  if (mWindowWatcher) {
-    nsCOMPtr<nsIDocShell> docShell;
-    aWindow->GetDocShell(getter_AddRefs(docShell));
-    if (docShell) {
-      nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(docShell));
-      if (domWindow)
-        mWindowWatcher->RemoveWindow(domWindow);
-    }
-  }
+  nsresult rv;
 
-  // now quit if the last window has been unregistered (unless we shouldn't)
+  mWindowList->RemoveElement(aWindow);
 
-  if (!mQuitOnLastWindowClosing)
-    return NS_OK;
-
-  if (!windowsRemain) {
-      
-#if XP_MAC
-  // if no hidden window is available (perhaps due to initial
-  // Profile Manager window being cancelled), then just quit. We don't have
-  // to worry about focussing the hidden window, because it will get activated
-  // by the OS since it is visible (but waaaay offscreen).
-  nsCOMPtr<nsIBaseWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
-  if (!hiddenWin)
-    Quit();
-#else
-  // Check to see if we should quit in this case.
-  if (mNativeAppSupport) {
-    PRBool serverMode = PR_FALSE;
-    mNativeAppSupport->GetIsServerMode(&serverMode);
-    if (serverMode) {
-      mNativeAppSupport->OnLastWindowClosing(aWindow);
+  PRUint32 cnt;
+  rv = mWindowList->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  if (0 == cnt)
+  {
+    if (!mQuitOnLastWindowClosing)
       return NS_OK;
+      
+  #if XP_MAC
+	 // if no hidden window is available (perhaps due to initial
+	 // Profile Manager window being cancelled), then just quit. We don't have
+	 // to worry about focussing the hidden window, because it will get activated
+	 // by the OS since it is visible (but waaaay offscreen).
+   nsCOMPtr<nsIBaseWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
+	 if (!hiddenWin)
+		 Quit();
+  #else
+    // Check to see if we should quit in this case.
+    if (mNativeAppSupport) {
+        PRBool serverMode = PR_FALSE;
+        mNativeAppSupport->GetIsServerMode(&serverMode);
+        if (serverMode) {
+            mNativeAppSupport->OnLastWindowClosing(aWindow);
+            return NS_OK;
+        }
     }
-  }
 
-  Quit();
-#endif 
+    Quit();
+  #endif 
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
