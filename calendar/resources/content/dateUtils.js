@@ -300,16 +300,13 @@ DateFormater.prototype.getShortDayName = function( dayIndex )
 }
 
 /**** parseShortDate
- * Parameter dateString may be a date or a date+time. Dates are
- * read acording to locale (d-m-y or m-d-y or ...). Times are 
- * read in 12- or 24-hour formats. Only hours and minutes are
- * taken into account (dateString may contain secs and msecs though).
+ * Parameter dateString may be a date or a date time. Dates are
+ * read according to locale/OS setting (d-m-y or m-d-y or ...). 
+ * (see constructor).  See parseTimeOfDay for times.
  */
-
 DateFormater.prototype.parseShortDate = function ( dateString )
 { 
-  var parseShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)(.*)?$/; 
-  var parseTimeRegex = /\s*(\d+)\D(\d+)(\d|\W)*(pm|PM|am|AM|)\s*$/;
+  var parseShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)(.*)?$/;//digits & nonDigits
   
   // parse dateString
   var dateNumbersArray = parseShortDateRegex.exec(dateString);
@@ -318,8 +315,9 @@ DateFormater.prototype.parseShortDate = function ( dateString )
     if (this.twoDigitYear && 0 <= year && year < 100) {
       // If 2-digit year format and 0 <= year < 100,
       //   parse year as up to 30 years in future or 69 years in past.
-      //   (Covers 30-year mortgage and most working peoples birthdate.)
-      var currentYear = 1900 + new Date().getYear(); // getYear 0 is 1900.
+      //   (Covers 30-year mortgage and most working people's birthdate.)
+      // otherwise will be treated as four digit year.
+      var currentYear = new Date().getFullYear();
       var currentCentury = currentYear - currentYear % 100;
       year = currentCentury + year;
       if (year < currentYear - 69)
@@ -327,24 +325,64 @@ DateFormater.prototype.parseShortDate = function ( dateString )
       if (year > currentYear + 30)
         year -= 100;
     }
-    var resultDate;
-    var len = dateNumbersArray.length;
-    resultDate = new Date(year, // four-digit year
-                 Number(dateNumbersArray[this.monthIndex]) - 1, // 0-based
-                 Number(dateNumbersArray[this.dayIndex]));
-
-    // parse last string in dateNumbersArray to get time
-    var timeNumbersArray = parseTimeRegex.exec(dateNumbersArray[4]);
-    if (timeNumbersArray != null) {
-      if ((timeNumbersArray[1]<12) && 
-          ((timeNumbersArray[4] == "pm") || (timeNumbersArray[4] == "PM"))) 
-        //12 hour clock
-        resultDate.setHours(Number(timeNumbersArray[1])+12, timeNumbersArray[2]);
-      else
-        //24 hour clock
-        resultDate.setHours(timeNumbersArray[1], timeNumbersArray[2]);
+    // if time is also present, parse it
+    var hours = 0; var minutes = 0; var seconds = 0;
+    if (dateNumbersArray.length > 4 && dateNumbersArray[4] != null) {
+      var time = this.parseTimeOfDay(dateNumbersArray[4]);
+      if (time != null) {
+        hours = time.getHours();
+        minutes = time.getMinutes();
+        seconds = time.getSeconds();
+      }
     }
-    return resultDate;
-  } else
-    return null; // did not match regex, not a valid date
+    return new Date(year, // four-digit year
+                 Number(dateNumbersArray[this.monthIndex]) - 1, // 0-based
+                    Number(dateNumbersArray[this.dayIndex]),
+                    hours, minutes, seconds, 0);
+  } else return null; // did not match regex, not a valid date
+}
+
+// Parse a variety of time formats so that cut and paste is likely to work.
+// separator:            ':'         '.'        ' '        symbol        none
+//                       "12:34:56"  "12.34.56" "12 34 56" "12h34m56s"   "123456"
+// seconds optional:     "02:34"     "02.34"    "02 34"    "02h34m"      "0234"
+// minutes optional:     "12"        "12"       "12"       "12h"         "12"
+// 1st hr digit optional:"9:34"      " 9.34"     "9 34"     "9H34M"       "934am"
+// am/pm optional        "02:34 a.m.""02.34pm"  "02 34 AM" "02H34M P.M." "0234pm"
+// skip nondigit prefix  " 12:34"    "t12.34"   " 12 34"   "T12H34M"     "T0234"
+// Todo: 4x fails if x is localized version of "am" or pm"
+DateFormater.prototype.parseTimeOfDay = function( timeString )
+{
+  var parseTimeRegex =
+    /^\D*(\d?\d)(\D)?(?:(\d\d)(\D)?(?:(\d\d)(\D)?)?)?([AaPp][.]?[Mm][.]?)?\s*$/;
+  var timePartsArray = parseTimeRegex.exec(timeString);
+  if (timePartsArray != null) {
+    var hoursString   = timePartsArray[1]
+    var hours         = Number(hoursString);
+    var hoursSuffix   = timePartsArray[2];
+    if (!(0 <= hours && hours < 24)) return null;
+
+    var minutesString = timePartsArray[3];
+    var minutes       = (minutesString == null? 0 : Number(minutesString));
+    var minutesSuffix = timePartsArray[4];
+    if (!(0 <= minutes && minutes < 60)) return null;
+
+    var secondsString = timePartsArray[5];
+    var seconds       = (secondsString == null? 0 : Number(secondsString));
+    var secondsSuffix = timePartsArray[6];
+    if (!(0 <= seconds && seconds < 60)) return null;
+
+    var ampmString   = timePartsArray[7];
+    if (ampmString != null) {
+      if (!(1 <= hours && hours <= 12)) return null;
+      if (ampmString.toLowerCase().charAt(0) == 'a') /* a.m. */ {
+        if (hours == 12)
+          hours = 0;
+      } else /* p.m. */ {
+        if (hours < 12) 
+          hours += 12;
+      }
+    }
+    return new Date(0, 0, 0, hours, minutes, seconds, 0);
+  } else return null; // did not match regex, not valid time
 }
