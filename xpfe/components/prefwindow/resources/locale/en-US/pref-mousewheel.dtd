@@ -17,4 +17,5 @@
 <!ENTITY scrollPgUpPgDn.accesskey     "p">
 <!ENTITY history.label                "Move back and forward in the browsing history">
 <!ENTITY history.accesskey            "h">
-
+<!ENTITY textsize.label               "Make the text larger or smaller">
+<!ENTITY textsize.accesskey           "t">
