@@ -51,6 +51,7 @@ AS		= @AS@
 ASFLAGS		= @ASFLAGS@
 CC		= @CC@
 CCC		= @CXX@
+NS_USE_GCC	= @GNU_CC@
 AR		= @AR@
 AR_FLAGS	= @AR_FLAGS@
 LD		= @LD@
