@@ -398,7 +398,11 @@ static nsFontCharSetMap gCharSetMap[] =
   { "sun-fontspecific",   &Unknown       },
   { "sunolcursor-1",      &Unknown       },
   { "sunolglyph-1",       &Unknown       },
+  { "tis620-0",           &TIS620        },
   { "tis620.2529-1",      &TIS620        },
+  { "tis620.2533-0",      &TIS620        },
+  { "tis620.2533-1",      &TIS620        },
+  { "iso8859-11",         &TIS620        },
   { "ucs2.cjk-0",         &Unknown       },
   { "ucs2.cjk_japan-0",   &Unknown       },
   { "ucs2.cjk_taiwan-0",  &Unknown       },
@@ -2516,7 +2520,7 @@ nsFontMetricsXlib::SearchNode(nsFontNode* aNode, PRUnichar aChar)
 }
 
 static void
-GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
+GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
 {
   nsCAutoString previousNodeName;
 
@@ -2915,7 +2919,7 @@ nsFontMetricsXlib::TryNode(nsCString* aName, PRUnichar aChar)
     pattern.Insert("-*-*-*-*-*-*-*-*-*-*", hyphen);
 
     nsFontNodeArray nodes;
-    GetFontNames(pattern, &nodes);
+    GetFontNames(pattern.get(), &nodes);
     if (nodes.Count() > 0)
       node = nodes.GetElement(0);
     else 
