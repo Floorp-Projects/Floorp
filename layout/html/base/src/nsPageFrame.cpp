@@ -30,10 +30,6 @@ nsPageFrame::nsPageFrame()
 {
 }
 
-nsPageFrame::~nsPageFrame()
-{
-}
-
 NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
