@@ -79,7 +79,7 @@
     {
       var frame = document.getElementById("perfSettings");
       if (navigator.platform != "Win32") {
-        frame.setAttribute("hidden", "true");
+        frame.hidden = true;
         return;
       }
       if (!("isTurboEnabled" in parent))
@@ -137,15 +137,13 @@
 
     function sysPrefCheck() {
       var frame = document.getElementById("systemPrefs");
+      if ("@mozilla.org/system-preference-service;1" in Components.classes)
       try {
         var appShell = Components.classes["@mozilla.org/system-preference-service;1"].getService(Components.interfaces.nsIPrefBranch);
-      }
-      catch(e) 
-      {
-        frame.setAttribute("hidden", "true");
         return;
       }
-      frame.setAttribute("hidden", "false");
+      catch(e) {}
+      frame.hidden = true;
     }
 
     function sysPrefUpdate() {
@@ -189,31 +187,31 @@
     }
 
     const nsIJVMConfig = Components.interfaces.nsIJVMConfig;
-    const jvmConfigMgr = getJVMConfigMgr();
-    const jvmConfigList = getJVMConfigList();
+    var jvmConfigMgr;
+    var jvmConfigList = getJVMConfigList();
     const currentJVMPluginPath = getCurrentJVMPluginPath();
     var oldJVMConfig = null;
 
     function getJVMConfigMgr() {
-      return Components.classes["@mozilla.org/oji/jvm-config-mgr;1"]
-               .getService(Components.interfaces.nsIJVMConfigManager);
+      return "@mozilla.org/oji/jvm-config-mgr;1" in Components.classes
+             && Components.classes["@mozilla.org/oji/jvm-config-mgr;1"]
+                          .getService(Components.interfaces.nsIJVMConfigManager);
     }
 
     function getJVMConfigList() {
       if (!jvmConfigMgr)
         jvmConfigMgr = getJVMConfigMgr();
 
-      if (jvmConfigMgr)
-        return jvmConfigMgr.getJVMConfigList();
-
-      return null;
+      return jvmConfigMgr && jvmConfigMgr.getJVMConfigList();
     }
 
     function getCurrentJVMPluginPath() {
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefBranch);
+      var result = "";
+      if ("application/x-java-vm" in navigator.mimeTypes)
+      try {
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
 
-      if (prefs) {
         // Since we don't have a fullPath attribute in nsIDOMPlugin,
         // we have to set the set pref "plugin.expose_full_path"
         // to true and then get it. Related bug is 204476
@@ -221,19 +219,17 @@
         if (!oldValue)
           prefs.setBoolPref("plugin.expose_full_path", true);
 
-        var result;
         try {
           result = navigator.mimeTypes["application/x-java-vm"]
-                     .enabledPlugin.filename;
-        } catch (e) { result = ""; };
+                            .enabledPlugin.filename;
+        } catch (e) {};
 
         // Set the pref to original value.
         if (!oldValue)
           prefs.setBoolPref("plugin.expose_full_path", oldValue);
-        return result;
-      }
+      } catch (e) {}
 
-      return "";
+      return result;
     }
 
     const jvmConfigListView = {
@@ -297,7 +293,7 @@
 
     function setVisible(visible) {
       var javaConfigPanel = document.getElementById("javaPluginSettings");
-      javaConfigPanel.setAttribute("hidden", visible ? "" : "true");
+      javaConfigPanel.hidden = !visible;
     }
 
     function initJVMConfigList() {
