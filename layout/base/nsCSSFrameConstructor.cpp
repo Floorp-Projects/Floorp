@@ -240,6 +240,9 @@ NS_NewMenuFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlag
 nsresult
 NS_NewMenuBarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
+nsresult
+NS_NewTreeScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
 // grid
 nsresult
 NS_NewGridLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
@@ -5640,10 +5643,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
                                          PRInt32                  aNameSpaceID,
                                          nsIStyleContext*         aStyleContext,
                                          nsFrameItems&            aFrameItems,
+                                         PRBool                   aXBLBaseTag,
                                          PRBool&                  aHaltProcessing)
 {
   PRBool    primaryFrameSet = PR_FALSE;
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
+  PRBool    processAnonymousChildren = PR_FALSE; // whether or not we process anonymous content.
   nsresult  rv = NS_OK;
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
@@ -5876,8 +5881,19 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       nsCOMPtr<nsIBoxLayout> layout;
       NS_NewGridLayout(aPresShell, layout);
 
-      if (aTag == nsXULAtoms::tree)
+      if (aTag == nsXULAtoms::tree) {
         rv = NS_NewXULTreeFrame(aPresShell, &newFrame, PR_FALSE, layout);
+        if (aXBLBaseTag) {
+          // In this scenario, someone has extended the tree with a custom
+          // tag name.  Although this is a complete and total hack, we're
+          // going to assume that the extender is simplifying the syntax
+          // of the tree and that the direct explicit children of the 
+          // tree are actually rows or items (and thus they shouldn't be
+          // built yet).
+          processChildren = PR_FALSE;
+          processAnonymousChildren = PR_TRUE;
+        }
+      }
       else
         rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
 
@@ -5914,15 +5930,17 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         ;
       nsCOMPtr<nsIBoxLayout> layout;
       
+      PRBool treeScrollPort = PR_FALSE;
+
       if (aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treeitem) {
         NS_NewTreeLayout(aPresShell, layout);
-        nsCOMPtr<nsIContent> parentContent;
-        aParentFrame->GetContent(getter_AddRefs(parentContent));
-        nsCOMPtr<nsIAtom> parentTag;
-        parentContent->GetTag(*getter_AddRefs(parentTag));
-        if (parentTag.get() == nsXULAtoms::tree) {
+
+        nsAutoString outer;
+        rv = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::outer, outer); 
+        if (outer.EqualsIgnoreCase("true")) {
           rv = NS_NewXULTreeOuterGroupFrame(aPresShell, &newFrame, PR_FALSE, layout,  PR_FALSE);
           ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, (nsXULTreeOuterGroupFrame*) newFrame);
+          treeScrollPort = PR_TRUE;
         }
         else {
           rv = NS_NewXULTreeGroupFrame(aPresShell, &newFrame, PR_FALSE, layout,  PR_FALSE);
@@ -5943,9 +5961,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       // Boxes can scroll.
       if (IsScrollable(aPresContext, display)) {
 
+        nsIFrame* scrollPort = nsnull;
+        if (treeScrollPort) 
+          NS_NewTreeScrollPortFrame(aPresShell, &scrollPort);
+
         // set the top to be the newly created scrollframe
         BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
+                         topFrame, aStyleContext, scrollPort);
 
         // we have a scrollframe so the parent becomes the scroll frame.
         newFrame->GetParent(&aParentFrame);
@@ -6194,14 +6216,22 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       
     }
 
-      // Process the child content if requested
-      nsFrameItems childItems;
+    // Process the child content if requested
+    nsFrameItems childItems;
+    if (processChildren || processAnonymousChildren) {
+      nsCOMPtr<nsIDocument> doc;
+      aContent->GetDocument(*getter_AddRefs(doc));
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      doc->GetBindingManager(getter_AddRefs(bindingManager));
       if (processChildren) {
-        rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
-                             PR_FALSE, childItems, PR_FALSE);
+        bindingManager->ShouldBuildChildFrames(aContent, &processChildren);
+        if (processChildren)
+          rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
+                              PR_FALSE, childItems, PR_FALSE);
+      }
       
       CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
-                            childItems);
+                          childItems);
 
       // Set the frame's initial child list
       newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
@@ -6262,7 +6292,8 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
                                                PRBool                   aIsRoot,
                                                nsIFrame*&               aNewFrame,                                                                                             
                                                nsCOMPtr<nsIStyleContext>& aScrolledChildStyle,
-                                               nsIFrame*&               aScrollableFrame)
+                                               nsIFrame*&               aScrollableFrame,
+                                               nsIFrame*                aScrollPortFrame)
 {
   nsIFrame* scrollFrame = nsnull;
   nsIFrame* parentFrame = nsnull;
@@ -6277,7 +6308,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
   if (isGfx) {
   
     BuildGfxScrollFrame(aPresShell, aPresContext, aState, aContent, aDocument, aParentFrame,
-                        contentStyle, aIsRoot, gfxScrollFrame, anonymousItems);
+                        contentStyle, aIsRoot, gfxScrollFrame, anonymousItems, aScrollPortFrame);
 
     scrollFrame = anonymousItems.childList;
     parentFrame = gfxScrollFrame;
@@ -6406,7 +6437,8 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
                                                nsIFrame*                aScrolledFrame,
                                                nsIFrame*                aParentFrame,
                                                nsIFrame*&               aNewFrame, 
-                                               nsIStyleContext*&        aScrolledContentStyle)                                                                                                                                          
+                                               nsIStyleContext*&        aScrolledContentStyle,
+                                               nsIFrame*                aScrollPortFrame)                                                                                                                                          
 {
     nsIFrame *scrollFrame;
     nsCOMPtr<nsIDocument> document;
@@ -6424,7 +6456,8 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
                      PR_FALSE,
                      aNewFrame,
                      scrolledContentStyle,
-                     scrollFrame);
+                     scrollFrame,
+                     aScrollPortFrame);
     
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         scrollFrame, scrolledContentStyle, nsnull, aScrolledFrame);
@@ -6458,7 +6491,8 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell* aPresShell,
                                              nsIStyleContext*         aStyleContext,
                                              PRBool                   aIsRoot,
                                              nsIFrame*&               aNewFrame,
-                                             nsFrameItems&            aAnonymousFrames)
+                                             nsFrameItems&            aAnonymousFrames,
+                                             nsIFrame*                aScrollPortFrame)
 {
 #ifdef INCLUDE_XUL
   NS_NewGfxScrollFrame(aPresShell, &aNewFrame, aDocument, aIsRoot);
@@ -6470,11 +6504,11 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell* aPresShell,
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
                                              aStyleContext, nsnull, PR_FALSE);
 
-  nsIFrame* scrollbox = nsnull;
-  NS_NewScrollPortFrame(aPresShell, &scrollbox);
+  
+  if (!aScrollPortFrame)
+    NS_NewScrollPortFrame(aPresShell, &aScrollPortFrame);
 
-
-  aAnonymousFrames.AddChild(scrollbox);
+  aAnonymousFrames.AddChild(aScrollPortFrame);
 
   // if there are any anonymous children for the nsScrollFrame create frames for them.
   CreateAnonymousFrames(aPresShell, aPresContext, aState, aContent, aDocument, aNewFrame,
@@ -7554,7 +7588,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                          (lastChild == aFrameItems.lastChild))) {
     PRBool haltProcessing = PR_FALSE;
     rv = ConstructXULFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                           aTag, aNameSpaceID, styleContext, aFrameItems, haltProcessing);
+                           aTag, aNameSpaceID, styleContext, aFrameItems, aXBLBaseTag, haltProcessing);
     if (haltProcessing) {
       return rv;
     }
@@ -8229,30 +8263,40 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 #ifdef INCLUDE_XUL
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
-    aContainer->GetTag(*getter_AddRefs(tag));
+    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    PRInt32 namespaceID;
+    aContainer->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      doc->GetBindingManager(getter_AddRefs(bindingManager));
+      bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
+    }
+    else
+      aContainer->GetTag(*getter_AddRefs(tag));
+
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
 
     if (treeChildren || treeItem) {
       // Walk up to the outermost tree row group frame and tell it that
       // content was added.
-      nsCOMPtr<nsIContent> parent;
-      nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
-      child->GetParent(*getter_AddRefs(parent));
-      while (parent) {
-        parent->GetTag(*getter_AddRefs(tag));
-        if (tag.get() == nsXULAtoms::tree)
+      nsCOMPtr<nsIContent> content(dont_QueryInterface(aContainer));
+      while (content) {
+        bindingManager->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
+        if (tag.get() == nsXULAtoms::tree) 
           break;
-        child = parent;
-        child->GetParent(*getter_AddRefs(parent));
+        nsCOMPtr<nsIContent> temp = content;
+        temp->GetParent(*getter_AddRefs(content));
       }
 
-      if (parent) {
+      if (content) {
         // We found it.  Get the primary frame.
-        nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, child);
-
+        nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
+        nsXULTreeFrame* tree = NS_STATIC_CAST(nsXULTreeFrame*, outerFrame);
+        
         // Convert to a tree row group frame.
-        nsXULTreeOuterGroupFrame* treeRowGroup = (nsXULTreeOuterGroupFrame*)outerFrame;
+        nsXULTreeOuterGroupFrame* treeRowGroup;
+        tree->GetTreeBody(&treeRowGroup);
         if (treeRowGroup) {
 
           // Get the primary frame for the parent of the child that's being added.
@@ -8627,32 +8671,39 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 #ifdef INCLUDE_XUL
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
-    aContainer->GetTag(*getter_AddRefs(tag));
+    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    PRInt32 namespaceID;
+    aContainer->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      doc->GetBindingManager(getter_AddRefs(bindingManager));
+      bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
+    }
+    else
+      aContainer->GetTag(*getter_AddRefs(tag));
+
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
     if (treeChildren || treeItem) {
       // Walk up to the outermost tree row group frame and tell it that
       // content was added.
-      nsCOMPtr<nsIContent> parent;
-      nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
-      child->GetParent(*getter_AddRefs(parent));
-      while (parent) {
-        parent->GetTag(*getter_AddRefs(tag));
-        if (tag.get() == nsXULAtoms::tree)
+      nsCOMPtr<nsIContent> content = dont_QueryInterface(aContainer);
+      while (content) {
+        bindingManager->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
+        if (tag.get() == nsXULAtoms::tree) 
           break;
-        child = parent;
-        child->GetParent(*getter_AddRefs(parent));
+        nsCOMPtr<nsIContent> temp = content;
+        temp->GetParent(*getter_AddRefs(content));
       }
 
-      if (parent) {
+      if (content) {
         // We found it.  Get the primary frame.
-        nsCOMPtr<nsIPresShell> shell;
-        aPresContext->GetShell(getter_AddRefs(shell));
-        nsIFrame*     outerFrame = GetFrameFor(shell, aPresContext, child);
-
+        nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
+        nsXULTreeFrame* tree = NS_STATIC_CAST(nsXULTreeFrame*, outerFrame);
+        
         // Convert to a tree row group frame.
-        nsXULTreeOuterGroupFrame* treeRowGroup = (nsXULTreeOuterGroupFrame*)outerFrame;
-
+        nsXULTreeOuterGroupFrame* treeRowGroup;
+        tree->GetTreeBody(&treeRowGroup);
         if (treeRowGroup) {
 
           // Get the primary frame for the parent of the child that's being added.
@@ -9306,7 +9357,17 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 #ifdef INCLUDE_XUL
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
-    aContainer->GetTag(*getter_AddRefs(tag));
+    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    PRInt32 namespaceID;
+    aContainer->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      doc->GetBindingManager(getter_AddRefs(bindingManager));
+      bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
+    }
+    else
+      aContainer->GetTag(*getter_AddRefs(tag));
+
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
 
@@ -9326,23 +9387,23 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         // has been removed (so that we can update the scrollbar state).
         // Walk up to the outermost tree row group frame and tell it that
         // the scrollbar thumb should be updated.
-        nsCOMPtr<nsIContent> parent;
-        nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
-        child->GetParent(*getter_AddRefs(parent));
-        while (parent) {
-          parent->GetTag(*getter_AddRefs(tag));
-          if (tag.get() == nsXULAtoms::tree)
+        nsCOMPtr<nsIContent> content = dont_QueryInterface(aContainer);
+        while (content) {
+          bindingManager->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
+          if (tag.get() == nsXULAtoms::tree) 
             break;
-          child = parent;
-          child->GetParent(*getter_AddRefs(parent));
+          nsCOMPtr<nsIContent> temp = content;
+          temp->GetParent(*getter_AddRefs(content));
         }
 
-        if (parent) {
+        if (content) {
           // We found it.  Get the primary frame.
-          nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, child);
-
+          nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
+          nsXULTreeFrame* tree = NS_STATIC_CAST(nsXULTreeFrame*, outerFrame);
+        
           // Convert to a tree row group frame.
-          nsXULTreeOuterGroupFrame* treeRowGroup = (nsXULTreeOuterGroupFrame*)parentFrame;
+          nsXULTreeOuterGroupFrame* treeRowGroup;
+          tree->GetTreeBody(&treeRowGroup);
           if (treeRowGroup) {
             // If a tree item is removed, try to find an item we can use
             // to detect if the removed item was above our current scroll
@@ -10102,10 +10163,21 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   // The following tree widget trap prevents offscreen tree widget
   // content from being removed and re-inserted (which is what would
   // happen otherwise).
-  if (!primaryFrame) {
+  if (!primaryFrame && !reframe) {
     nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(*getter_AddRefs(tag));
-    if (reframe == PR_FALSE && tag && (tag.get() == nsXULAtoms::treechildren ||
+    nsCOMPtr<nsIDocument> doc;
+    aContent->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      doc->GetBindingManager(getter_AddRefs(bindingManager));
+
+      PRInt32 namespaceID;
+      bindingManager->ResolveTag(aContent, &namespaceID, getter_AddRefs(tag));
+    }
+    else
+      aContent->GetTag(*getter_AddRefs(tag));
+
+    if (tag && (tag.get() == nsXULAtoms::treechildren ||
       (tag.get() == nsXULAtoms::treeitem && aAttribute != nsXULAtoms::open) ||
       tag.get() == nsXULAtoms::treerow || tag.get() == nsXULAtoms::treecell))
       return NS_OK;
