@@ -3954,7 +3954,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_min_width:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
   case eCSSProperty_opacity:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HPN, nsnull);
+    return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_orphans:
   case eCSSProperty_widows:
     return ParseVariant(aErrorCode, aValue, VARIANT_HI, nsnull);
