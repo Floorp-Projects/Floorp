@@ -796,12 +796,10 @@ nsXMLDocument::CreateElementNS(const nsString& aNamespaceURI,
 
   nsCOMPtr<nsIContent> content;
   if (namespaceID == kNameSpaceID_HTML) {
-/*    nsCOMPtr<nsIHTMLContent> htmlContent;
+    nsCOMPtr<nsIHTMLContent> htmlContent;
 
     rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo);
     content = do_QueryInterface(htmlContent);
-    */
-    rv = NS_ERROR_NOT_IMPLEMENTED; //do we want html elements from here??
   }
   else {
     nsCOMPtr<nsIXMLContent> xmlContent;
