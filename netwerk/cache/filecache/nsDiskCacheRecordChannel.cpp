@@ -412,7 +412,7 @@ nsDiskCacheRecordChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#define DUMMY_TYPE "text/html"
+#define DUMMY_TYPE "application/x-unknown-content-type"
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetContentType(char * *aContentType)
@@ -458,8 +458,6 @@ nsDiskCacheRecordChannel::GetContentType(char * *aContentType)
    
   }
 
-
-  // if all else fails treat it as text/html?
   *aContentType = nsCRT::strdup(DUMMY_TYPE);
   if (!*aContentType) {
     return NS_ERROR_OUT_OF_MEMORY;
