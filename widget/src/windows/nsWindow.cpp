@@ -67,6 +67,12 @@ nsWindow* nsWindow::gCurrentWindow = nsnull;
 //     g_hinst - handle of the application instance 
 extern HINSTANCE g_hinst; 
 
+//
+// input method offsets
+//
+#define IME_X_OFFSET	35
+#define IME_Y_OFFSET	35
+
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -2839,7 +2845,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,mIMECompositionString,mIMECompositionStringSize);
 				mIMECompositionStringLength = compStrLen;
 				mIMECompositionString[compStrLen]='\0';
-				HandleTextEvent();
+				HandleTextEvent(hIMEContext);
 				result = PR_TRUE;
 			}
 
@@ -2861,7 +2867,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				mIMECompositionStringLength = compStrLen;
 				mIMECompositionString[compStrLen]='\0';
 				result = PR_TRUE;
-				HandleTextEvent();
+				HandleTextEvent(hIMEContext);
 				HandleEndComposition();
 				HandleStartComposition();
 			}
@@ -3567,12 +3573,12 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 }
 
 void
-nsWindow::HandleTextEvent()
+nsWindow::HandleTextEvent(HIMC hIMEContext)
 {
   nsTextEvent		event;
   nsPoint			point;
   size_t			unicharSize;
- 
+  CANDIDATEFORM		candForm;
   point.x = 0;
   point.y = 0;
 
@@ -3607,6 +3613,18 @@ nsWindow::HandleTextEvent()
 
   (void)DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
+
+  //
+  // Post process event
+  //
+  candForm.dwIndex = 0;
+  candForm.dwStyle = CFS_CANDIDATEPOS;
+  candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
+  candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET;
+
+  printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
+
+  ::ImmSetCandidateWindow(hIMEContext,&candForm);
 
 }
 
