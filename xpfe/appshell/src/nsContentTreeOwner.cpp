@@ -102,10 +102,8 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
 
       nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem;
       xulWindow->GetPrimaryContentShell(getter_AddRefs(shellAsTreeItem));
-      if(shellAsTreeItem)
+      if(shellAsTreeItem && (aRequestor != shellAsTreeItem.get()))
          {
-         if(aRequestor == shellAsTreeItem.get())
-            continue;
          // Do this so we can pass in the tree owner as the requestor so the child knows not
          // to call back up.
          nsCOMPtr<nsIDocShellTreeOwner> shellOwner;

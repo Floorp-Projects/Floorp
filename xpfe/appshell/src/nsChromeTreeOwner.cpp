@@ -104,10 +104,8 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
       xulWindow->GetDocShell(getter_AddRefs(shell));
 
       nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem(do_QueryInterface(shell));
-      if(shellAsTreeItem)
+      if(shellAsTreeItem && (aRequestor != shellAsTreeItem.get()))
          {
-         if(aRequestor == shellAsTreeItem.get())
-            continue;
          // Do this so we can pass in the tree owner as the requestor so the child knows not
          // to call back up.
          nsCOMPtr<nsIDocShellTreeOwner> shellOwner;
