@@ -46,11 +46,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-labels.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        onload="parent.initPanel('chrome://messenger/content/pref-labels.xul');"
-        orient="vertical">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://messenger/content/pref-labels.xul');"
+      headertitle="&pane.title;">
+
   <popupset id="aTooltipSet"/>
 
   <script type="application/x-javascript">
@@ -61,7 +60,6 @@
 
   <script type="application/x-javascript" src="chrome://messenger/content/pref-labels.js"/>
 
-  <hbox class="box-smallheader" title="&pane.title;"/>
   <description>&displayText.label;</description>
 
   <!-- label color: 1 (default red) -->
@@ -184,5 +182,5 @@
             oncommand="restoreColorAndDescriptionToDefaults();">
     </button>
    </hbox>
-</window>
+</page>
 
