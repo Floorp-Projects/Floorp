@@ -2833,7 +2833,7 @@ GlobalWindowImpl::GetOrigin(nsString* aOrigin)
 #ifdef NECKO
       nsCRT::free(str);
 #else
-      delete str;
+      delete [] str;
 #endif
       NS_RELEASE(docURL);
     }
