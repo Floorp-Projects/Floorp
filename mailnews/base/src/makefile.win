@@ -27,15 +27,17 @@ REQUIRES=xpcom js nspr
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=    nsMsgRFC822Parser.cpp  \
+			nsMsgFolder.cpp \
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgRFC822Parser.obj  \
+			.\$(OBJDIR)\nsMsgFolder.obj \
 			$(NULL)
 
 
-EXPORTS= nsMsgRFC822Parser.h
+EXPORTS= nsMsgRFC822Parser.h \
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\rdf
 
 LCFLAGS = \
         $(LCFLAGS) \

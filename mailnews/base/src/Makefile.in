@@ -36,6 +36,7 @@ CPPSRCS = \
 	nsMsgPtrArray.h \
 	nsMsgGroupRecord.cpp \
 	nsMsgRFC822Parser.cpp \
+	nsMsgFolder.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
