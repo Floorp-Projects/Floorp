@@ -847,7 +847,8 @@ clipboard_contents_received(GtkClipboard     *clipboard,
                             gpointer          data)
 {
     GtkSelectionData **sel_copy = NS_STATIC_CAST(GtkSelectionData **, data);
-    *sel_copy = gtk_selection_data_copy(selection_data);
+    if (selection_data->length >= 0)
+        *sel_copy = gtk_selection_data_copy(selection_data);
 }
 
 
