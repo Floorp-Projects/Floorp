@@ -26,28 +26,63 @@ MAKE_OBJ_TYPE=EXE
 
 
 MODULE=progress 
-REQUIRES=progress nspr dbm img layer util 
+REQUIRES=progress nspr dbm img layer util xpcom
 LIBRARY_NAME=prgrss 
 DEPTH=..\..\.. 
-CPPSRCS=pw_win.cpp pw_unix.cpp pwcommon.cpp 
-CPP_OBJS=.\$(OBJDIR)\pw_win.obj .\$(OBJDIR)\pw_unix.obj \
-    .\$(OBJDIR)\pwcommon.obj 
+
+CPPSRCS=\
+        pw_win.cpp                              \
+        pw_unix.cpp                             \
+        pwcommon.cpp                            \
+!ifdef MOZ_SMOOTH_PROGRESS
+        nsProgressManager.cpp                   \
+        nsSubProgressManager.cpp                \
+        nsTopProgressManager.cpp                \
+        nsTransfer.cpp                          \
+        progress.cpp                            \
+!endif
+        $(NULL)
+
+
+CPP_OBJS=\
+        .\$(OBJDIR)\pw_win.obj                  \
+        .\$(OBJDIR)\pw_unix.obj                 \
+        .\$(OBJDIR)\pwcommon.obj                \
+!ifdef MOZ_SMOOTH_PROGRESS
+        .\$(OBJDIR)\nsProgressManager.obj       \
+        .\$(OBJDIR)\nsTopProgressManager.obj    \
+        .\$(OBJDIR)\nsSubProgressManager.obj    \
+        .\$(OBJDIR)\nsTransfer.obj              \
+        .\$(OBJDIR)\progress.obj                \
+!endif
+        $(NULL)
+
 !if "$(MOZ_BITS)" != "16"
-LINCS=-I$(XPDIST)\public\progress -I$(XPDIST)\public\nspr \
-    -I$(XPDIST)\public\dbm -I$(XPDIST)\public\img \
-    -I$(XPDIST)\public\layer -I$(XPDIST)\public\util 
+LINCS=\
+        -I$(XPDIST)\public\progress             \
+        -I$(XPDIST)\public\nspr                 \
+        -I$(XPDIST)\public\dbm                  \
+        -I$(XPDIST)\public\img                  \
+        -I$(XPDIST)\public\layer                \
+        -I$(XPDIST)\public\util                 \
+!ifdef MOZ_SMOOTH_PROGRESS
+        -I$(XPDIST)\public\network              \
+        -I$(XPDIST)\public\raptor               \
+        -I$(XPDIST)\public\xpcom                \
+!endif
+        $(NULL)
 !endif
 
 include <$(DEPTH)\config\rules.mak>
 
 # XXX this should not be required, but mantomake doesnt grok J?I yet
 # also, -I..\public should be -I$(PUBLIC)\progress 
-LINCS= $(LINCS) \
-		-I$(DEPTH)/cmd/winfe	\
+LINCS=$(LINCS) \
+	-I$(DEPTH)/cmd/winfe            	\
 	-I..\public
 
 libs:: $(LIBRARY)
-    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
 	$(RM) $(DIST)\lib\$(LIBRARY) 

@@ -20,7 +20,15 @@ IGNORE_MANIFEST=1
 
 MODULE=progress 
 DEPTH=..\..\.. 
-EXPORTS=pw_public.h 
+
+EXPORTS=\
+!ifdef MOZ_SMOOTH_PROGRESS
+        nsITransferListener.h           \
+        nsProgressManager.h             \
+        progress.h                      \
+!endif
+        pw_public.h                     \
+        $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 

@@ -3,3 +3,6 @@
 #
 
 pw_public.h
+nsITransferListener.h
+nsProgressManager.h
+progress.h

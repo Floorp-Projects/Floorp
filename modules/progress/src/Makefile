@@ -22,7 +22,20 @@ LIBRARY_NAME	= prgrss
 
 REQUIRES	= progress nspr dbm img layer util
 
+ifdef MOZ_SMOOTH_PROGRESS
+REQUIRES       += raptor xpcom
+endif
+
 # all code is platform specific right now
 CPPSRCS		= pw_win.cpp pw_unix.cpp pwcommon.cpp
+
+ifdef MOZ_SMOOTH_PROGRESS
+CPPSRCS        += nsProgressManager.cpp	\
+		  nsTopProgressManager.cpp \
+		  nsSubProgressManager.cpp \
+		  nsTransfer.cpp \
+		  progress.cpp \
+		  $(NULL)
+endif
 
 include $(DEPTH)/config/rules.mk
