@@ -528,9 +528,9 @@ PRInt32 nsRange::GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
     ++i;
     aAncestorNodes->InsertElementAt((void*)contentParent,i);
     aAncestorOffsets->InsertElementAt((void*)nodeOffset,i);
-    contentNode->GetParent(contentParent);
     NS_IF_RELEASE(contentNode);
     contentNode = contentParent;
+    contentNode->GetParent(contentParent);
   }
   
   return i;
