@@ -36,7 +36,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.4 2001/01/18 16:36:43 wtc%netscape.com Exp $
+ * $Id: secoidt.h,v 1.5 2001/09/25 23:29:30 nelsonb%netscape.com Exp $
  */
 
 #include "secitem.h"
@@ -284,6 +284,16 @@ typedef enum {
     /* SMIME attributes */
     SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE = 182,
 
+    /* AES OIDs */
+    SEC_OID_AES_128_ECB 	= 183,
+    SEC_OID_AES_128_CBC 	= 184,
+    SEC_OID_AES_192_ECB 	= 185,
+    SEC_OID_AES_192_CBC 	= 186,
+    SEC_OID_AES_256_ECB 	= 187,
+    SEC_OID_AES_256_CBC 	= 188,
+
+    SEC_OID_SDN702_DSA_SIGNATURE = 189,
+
     SEC_OID_TOTAL
 } SECOidTag;
 
@@ -301,9 +311,10 @@ struct SECOidDataStr {
     SECOidTag offset;
     char *desc;
     unsigned long mechanism;
-    SECSupportExtenTag supportedExtension;	/* only used for x.509 v3 extensions, so
-						   that we can print the names of those
-						   extensions that we don't even support */
+    SECSupportExtenTag supportedExtension;	
+    				/* only used for x.509 v3 extensions, so
+				   that we can print the names of those
+				   extensions that we don't even support */
 };
 
 #endif /* _SECOIDT_H_ */

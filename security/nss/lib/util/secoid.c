@@ -39,13 +39,17 @@
 #include "secerr.h"
 
 /* MISSI Mosaic Object ID space */
-#define MISSI	0x60, 0x86, 0x48, 0x01, 0x65, 0x02, 0x01, 0x01
+#define USGOV                   0x60, 0x86, 0x48, 0x01, 0x65
+#define MISSI	                USGOV, 0x02, 0x01, 0x01
 #define MISSI_OLD_KEA_DSS	MISSI, 0x0c
 #define MISSI_OLD_DSS		MISSI, 0x02
 #define MISSI_KEA_DSS		MISSI, 0x14
 #define MISSI_DSS		MISSI, 0x13
 #define MISSI_KEA               MISSI, 0x0a
 #define MISSI_ALT_KEA           MISSI, 0x16
+
+#define NISTALGS    USGOV, 3, 4
+#define AES         NISTALGS, 1
 
 /**
  ** The Netscape OID space is allocated by Terry Hayes.  If you need
@@ -307,8 +311,8 @@ static unsigned char pkcs12RSASignatureWithSHA1Digest[] =
 static unsigned char ansix9DSASignature[] = { ANSI_X9_ALGORITHM, 0x01 };
 static unsigned char ansix9DSASignaturewithSHA1Digest[] =
 	{ ANSI_X9_ALGORITHM, 0x03 };
-static unsigned char bogusDSASignaturewithSHA1Digest[] =
-        { ALGORITHM, 0x1b };
+static unsigned char bogusDSASignaturewithSHA1Digest[]  = { ALGORITHM, 0x1b };
+static unsigned char sdn702DSASignature[] = { ALGORITHM, 0x0c };
 
 /* verisign OIDs */
 static unsigned char verisignUserNotices[] = { VERISIGN, 1, 7, 1, 1 };
@@ -394,6 +398,21 @@ static unsigned char cmsRC2wrap[] = { PKCS9_SMIME_ALGS, 7 };
 
 /* RFC2633 SMIME message attributes */
 static unsigned char smimeEncryptionKeyPreference[] = { PKCS9_SMIME_ATTRS, 11 };
+
+static unsigned char aes128_ECB[] = { AES, 1 };
+static unsigned char aes128_CBC[] = { AES, 2 };
+static unsigned char aes128_OFB[] = { AES, 3 };
+static unsigned char aes128_CFB[] = { AES, 4 };
+
+static unsigned char aes192_ECB[] = { AES, 21 };
+static unsigned char aes192_CBC[] = { AES, 22 };
+static unsigned char aes192_OFB[] = { AES, 23 };
+static unsigned char aes192_CFB[] = { AES, 24 };
+
+static unsigned char aes256_ECB[] = { AES, 41 };
+static unsigned char aes256_CBC[] = { AES, 42 };
+static unsigned char aes256_OFB[] = { AES, 43 };
+static unsigned char aes256_CFB[] = { AES, 44 };
 
 /*
  * NOTE: the order of these entries must mach the SECOidTag enum in secoidt.h!
@@ -1215,6 +1234,30 @@ static SECOidData oids[] = {
 	"S/MIME Encryption Key Preference", CKM_INVALID_MECHANISM,
 	INVALID_CERT_EXTENSION },
 
+    /* AES algorithm OIDs */
+    { { siDEROID, aes128_ECB, sizeof(aes128_ECB) },
+	  SEC_OID_AES_128_ECB,
+	  "AES-128-ECB", CKM_AES_ECB, INVALID_CERT_EXTENSION },
+    { { siDEROID, aes128_CBC, sizeof(aes128_CBC) },
+	  SEC_OID_AES_128_CBC,
+	  "AES-128-CBC", CKM_AES_CBC, INVALID_CERT_EXTENSION },
+    { { siDEROID, aes192_ECB, sizeof(aes192_ECB) },
+	  SEC_OID_AES_192_ECB,
+	  "AES-192-ECB", CKM_AES_ECB, INVALID_CERT_EXTENSION },
+    { { siDEROID, aes192_CBC, sizeof(aes192_CBC) },
+	  SEC_OID_AES_192_CBC,
+	  "AES-192-CBC", CKM_AES_CBC, INVALID_CERT_EXTENSION },
+    { { siDEROID, aes256_ECB, sizeof(aes256_ECB) },
+	  SEC_OID_AES_256_ECB,
+	  "AES-256-ECB", CKM_AES_ECB, INVALID_CERT_EXTENSION },
+    { { siDEROID, aes256_CBC, sizeof(aes256_CBC) },
+	  SEC_OID_AES_256_CBC,
+	  "AES-256-CBC", CKM_AES_CBC, INVALID_CERT_EXTENSION },
+
+    /* More bogus DSA OIDs */
+    { { siDEROID, sdn702DSASignature, sizeof(sdn702DSASignature) },
+        SEC_OID_SDN702_DSA_SIGNATURE, 
+	"SDN.702 DSA Signature", CKM_DSA_SHA1, INVALID_CERT_EXTENSION },
 };
 
 /*
