@@ -623,12 +623,6 @@ int prefChanged(const char *aPref, void *aClosure)
   return 0;
 }
 
-NS_IMETHODIMP nsDeviceContextOS2 :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
-{
-  aPixel = aColor;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDeviceContextOS2 :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
 #ifdef NS_PRINT_PREVIEW

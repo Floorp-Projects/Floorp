@@ -435,11 +435,6 @@ public:
   NS_IMETHOD GetPaletteInfo(nsPaletteInfo& aPaletteInfo) = 0;
 
   /**
-   * Returns Platform specific pixel value for an RGB value
-   */
-  NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel) = 0;
-
-  /**
    * Get the size of the displayable area of the output device
    * in app units.
    * @param aWidth out parameter for width
