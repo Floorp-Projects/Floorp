@@ -638,6 +638,39 @@ NS_IMETHODIMP nsImapUrl::ToString(PRUnichar* *aString) const
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(const char **result) const
+{
+    NS_LOCK_INSTANCE();
+	//  here's the old code:
+#if 0
+	char *wherepart = NULL, *rv = NULL;
+	if (fListOfMessageIds && (wherepart = PL_strstr(fListOfMessageIds, "/;section=")) != NULL)
+	{
+		wherepart += 10; // XP_STRLEN("/;section=")
+		if (wherepart)
+		{
+			char *wherelibmimepart = XP_STRSTR(wherepart, "&part=");
+			int len = PL_strlen(fListOfMessageIds), numCharsToCopy = 0;
+			if (wherelibmimepart)
+				numCharsToCopy = (wherelibmimepart - wherepart);
+			else
+				numCharsToCopy = PL_strlen(fListOfMessageIds) - (wherepart - fListOfMessageIds);
+			if (numCharsToCopy)
+			{
+				rv = (char *) PR_Malloc(sizeof(char) * (numCharsToCopy + 1));
+				if (rv)
+				{
+					XP_STRNCPY_SAFE(rv, wherepart, numCharsToCopy + 1);	// appends a \0
+				}
+			}
+		}
+	}
+#endif // 0 
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 // End of functions which should be made obsolete after modifying nsIURL
 ////////////////////////////////////////////////////////////////////////////////////

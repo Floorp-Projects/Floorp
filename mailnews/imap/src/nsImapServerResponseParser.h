@@ -74,7 +74,8 @@ public:
     PRInt32       FolderUID();
     PRUint32      CurrentResponseUID();
     PRUint32      HighestRecordedUID();
-    PRInt32       SizeOfMostRecentMessage();
+	PRBool		IsNumericString(const char *string);
+   PRInt32       SizeOfMostRecentMessage();
 	void		SetTotalDownloadSize(PRInt32 newSize) { fTotalDownloadSize = newSize; }
     
     nsImapSearchResultIterator *CreateSearchResultIterator();
@@ -169,6 +170,7 @@ protected:
 	virtual PRBool		GetNextLineForParser(char **nextLine);
 	virtual void    end_of_line();
 
+	nsIMAPHostSessionList *GetHostSessionList();
 private:
     PRBool                   fProcessingTaggedResponse;
     PRBool                   fCurrentCommandFailed;

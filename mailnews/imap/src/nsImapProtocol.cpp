@@ -111,6 +111,9 @@ nsImapProtocol::nsImapProtocol()
 
     m_imapState = nsImapProtocol::NOT_CONNECTED;
 	m_currentServerCommandTagNumber = 0;
+	m_active = PR_FALSE;
+	m_threadShouldDie = PR_FALSE;
+	m_pseudoInterrupted = PR_FALSE;
 }
 
 nsresult nsImapProtocol::Initialize(PLEventQueue * aSinkEventQueue)
@@ -1006,3 +1009,44 @@ void nsImapProtocol::SetContentModified(PRBool modified)
 {
 	// ### DMB this used to poke the content_modified member of the url struct...
 }
+
+
+PRInt32 nsImapProtocol::OpenTunnel (PRInt32 maxNumberOfBytesToRead)
+{
+	return 0;
+}
+
+PRInt32 nsImapProtocol::GetTunnellingThreshold()
+{
+	return 0;
+//	return gTunnellingThreshold;
+}
+
+PRBool nsImapProtocol::GetIOTunnellingEnabled()
+{
+	return PR_FALSE;
+//	return gIOTunnelling;
+}
+
+// Adds a set of rights for a given user on a given mailbox on the current host.
+// if userName is NULL, it means "me," or MYRIGHTS.
+void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char *userName, const char *rights)
+{
+}
+
+
+void nsImapProtocol::CommitNamespacesForHostEvent()
+{
+}
+
+// notifies libmsg that we have new capability data for the current host
+void nsImapProtocol::CommitCapabilityForHostEvent()
+{
+}
+
+// rights is a single string of rights, as specified by RFC2086, the IMAP ACL extension.
+// Clears all rights for a given folder, for all users.
+void nsImapProtocol::ClearAllFolderRights(const char *mailboxName)
+{
+}
+

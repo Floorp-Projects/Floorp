@@ -82,6 +82,7 @@ public:
     NS_IMETHOD GetServerStatus(PRInt32 *status);  // make obsolete
     NS_IMETHOD ToString(PRUnichar* *aString) const;
 
+	NS_IMETHOD GetImapPartToFetch(const char **result) const;
 	// nsImapUrl
 	nsImapUrl();
 	virtual ~nsImapUrl();

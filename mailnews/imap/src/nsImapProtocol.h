@@ -147,6 +147,25 @@ public:
 	void Store(const char * aMessageList, const char * aMessageData, PRBool aIdsAreUid) {}
 	void Expunge() {}
 
+	nsIImapUrl		*GetCurrentUrl() {return m_runningUrl;}
+	// Tunnels
+	virtual PRInt32 OpenTunnel (PRInt32 maxNumberOfBytesToRead);
+	PRBool GetIOTunnellingEnabled();
+	PRInt32	GetTunnellingThreshold();
+
+	// acl and namespace stuff
+	// notifies libmsg that we have a new personal/default namespace that we're using
+	void CommitNamespacesForHostEvent();
+	// notifies libmsg that we have new capability data for the current host
+	void CommitCapabilityForHostEvent();
+
+	// Adds a set of rights for a given user on a given mailbox on the current host.
+	// if userName is NULL, it means "me," or MYRIGHTS.
+	// rights is a single string of rights, as specified by RFC2086, the IMAP ACL extension.
+	void AddFolderRightsForUser(const char *mailboxName, const char *userName, const char *rights);
+	// Clears all rights for a given folder, for all users.
+	void ClearAllFolderRights(const char *mailboxName);
+
 private:
 	// the following flag is used to determine when a url is currently being run. It is cleared on calls
 	// to ::StopBinding and it is set whenever we call Load on a url

@@ -153,5 +153,8 @@ struct mailbox_spec {
 typedef struct mailbox_spec mailbox_spec;
 
 
+const int kImapServerDisconnected = 1;
+const int kImapOutOfMemory = 2;
+const int kImapDownloadingMessage = 3;
 
 #endif
