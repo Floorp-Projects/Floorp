@@ -21,7 +21,7 @@
 //#include "plstr.h"
 
 /** -------------------------------------------------------
- *  Construct the nsDeviceContextSpecMac
+ *  Construct the nsDeviceContextSpecGTK
  *  @update   dc 12/02/98
  */
 nsDeviceContextSpecGTK :: nsDeviceContextSpecGTK()
@@ -31,7 +31,7 @@ nsDeviceContextSpecGTK :: nsDeviceContextSpecGTK()
 }
 
 /** -------------------------------------------------------
- *  Destroy the nsDeviceContextSpecMac
+ *  Destroy the nsDeviceContextSpecGTK
  *  @update   dc 2/15/98
  */
 nsDeviceContextSpecGTK :: ~nsDeviceContextSpecGTK()
@@ -49,10 +49,40 @@ NS_IMPL_RELEASE(nsDeviceContextSpecGTK)
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecGTK
  *  @update   dc 2/15/98
+ *  @update   syd 3/2/99
  */
 NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 {
-  return NS_OK;
+  char *path;
+
+  // XXX for now, neutering this per rickg until dcone can play with it
+  
+  return NS_ERROR_FAILURE;
+
+  // XXX these settings should eventually come out of preferences 
+
+  mPrData.toPrinter = PR_TRUE;
+  mPrData.fpf = PR_TRUE;
+  mPrData.grayscale = PR_FALSE;
+  mPrData.size = SizeLetter;
+  mPrData.stream = (FILE *) NULL;
+  sprintf( mPrData.command, "lpr" );
+
+  // PWD, HOME, or fail 
+
+  if ( ( path = getenv( "PWD" ) ) == (char *) NULL ) 
+	if ( ( path = getenv( "HOME" ) ) == (char *) NULL )
+  		strcpy( mPrData.path, "netscape.ps" );
+  if ( path != (char *) NULL )
+	sprintf( mPrData.path, "%s/netscape.ps", path );
+  else
+	return NS_ERROR_FAILURE;
+
+  ::UnixPrDialog( &mPrData );
+  if ( mPrData.cancel == PR_TRUE ) 
+	return NS_ERROR_FAILURE;
+  else
+        return NS_OK;
 }
 
 /** -------------------------------------------------------
