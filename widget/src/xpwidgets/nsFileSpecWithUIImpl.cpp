@@ -356,7 +356,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::chooseDirectory(const char *title)
 } // nsFileSpecWithUIImpl::chooseDirectory
 
 //----------------------------------------------------------------------------------------
-nsresult NS_NewFileSpecWithUI(nsIFileSpecWithUI** result)
+NS_WIDGET nsresult NS_NewFileSpecWithUI(nsIFileSpecWithUI** result)
 //----------------------------------------------------------------------------------------
 {
 	if (!result)
