@@ -3,9 +3,8 @@
  * Datasource initialization
  **/
 
-var	gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-if (gRDF)
-  gRDF = gRDF.QueryInterface(Components.interfaces.nsIRDFService);
+var gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                     .getService(Components.interfaces.nsIRDFService);
 
 /**
  * Handler Override class
@@ -245,7 +244,7 @@ HandlerOverride.prototype = {
           container.AppendElement(element);
       }
     }
-  },
+  }
  
 };
 
@@ -289,6 +288,7 @@ function getLiteral(aSource, aProperty)
     node = node.QueryInterface(Components.interfaces.nsIRDFLiteral);
     return node.Value;
   }
+  return "";
 }
 
 function getHandlerInfoForType(aURI, aPropertyString)
@@ -302,6 +302,7 @@ function getHandlerInfoForType(aURI, aPropertyString)
     target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
     return target.Value;
   }
+  return "";
 }
 
 function getHelperAppInfoForType(aURI, aPropertyString)
