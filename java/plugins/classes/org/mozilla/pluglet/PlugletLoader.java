@@ -25,6 +25,7 @@ import java.net.URL;
 import java.util.jar.Manifest;
 import java.util.jar.Attributes;
 import java.io.InputStream;
+import java.io.File;
 import org.mozilla.pluglet.mozilla.*;
 import java.security.*;
 import java.awt.*;
@@ -39,7 +40,17 @@ public class PlugletLoader {
     //  path to jar file. Name of main class sould to be in MANIFEST.
     public static PlugletFactory getPluglet(String path) {
 	try {
-	    org.mozilla.util.DebugPluglet.print("-- PlugletLoader.getPluglet("+path+")\n"); 
+	    org.mozilla.util.DebugPluglet.print("-- PlugletLoader.getPluglet("+path+")\n");
+	    File file = (new File(path)).getCanonicalFile(); //To avoid spelling diffs, e.g c: and C:
+	    path = file.getAbsolutePath();
+	    if (File.separatorChar != '/') {
+		path = path.replace(File.separatorChar,'/');
+		
+	    }
+	    if (!path.startsWith("/")) {
+		path = "/" + path;
+		
+	    }
 	    URL url = new URL("file:"+path);
 	    URLClassLoader loader = URLClassLoader.newInstance(new URL[]{url});
 	    URL manifestURL = new URL("jar:file:"+path+"!/META-INF/MANIFEST.MF");
