@@ -31,6 +31,7 @@ MODULE		= necko
 XPIDLSRCS	= \
 		nsIAuthenticator.idl \
 		nsIChannel.idl \
+		nsIFileChannel.idl \
 		nsIDownloader.idl \
 		nsIFileStreams.idl \
 		nsIFileTransportService.idl \
@@ -52,6 +53,7 @@ XPIDLSRCS	= \
 		nsISocketTransport.idl \
 		nsISocketTransportService.idl \
 		nsIStreamIO.idl \
+		nsIStreamIOChannel.idl \
 		nsIStreamObserver.idl \
 		nsIStreamListener.idl \
 		nsIStreamProvider.idl \

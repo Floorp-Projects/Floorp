@@ -35,6 +35,7 @@
 
 #include "nsHashtable.h"
 #include "nsFileStream.h"
+#include "nsIFileChannel.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"

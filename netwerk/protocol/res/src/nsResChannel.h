@@ -24,6 +24,7 @@
 #define nsResChannel_h__
 
 #include "nsIResChannel.h"
+#include "nsIFileChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamProvider.h"
 #include "nsIResProtocolHandler.h"

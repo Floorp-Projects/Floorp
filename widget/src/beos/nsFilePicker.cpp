@@ -29,6 +29,7 @@
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
 #include "nsIURL.h"
+#include "nsIFileChannel.h"
 #include "nsIStringBundle.h"
 
 #include "nsFileWidget.h"

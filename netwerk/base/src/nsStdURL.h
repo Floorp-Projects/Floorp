@@ -31,6 +31,8 @@
 #include "nsString.h" // REMOVE Later!!
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
+#include "nsIFileChannel.h"
+#include "nsIFileChannel.h"
 
 #define NS_THIS_STANDARDURL_IMPLEMENTATION_CID       \
 { /* e3939dc8-29ab-11d3-8cce-0060b0fc14a3 */         \

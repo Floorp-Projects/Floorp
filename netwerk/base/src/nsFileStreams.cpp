@@ -508,7 +508,6 @@ nsFileOutputStream::GetNonBlocking(PRBool *aNonBlocking)
 NS_IMETHODIMP
 nsFileOutputStream::SetNonBlocking(PRBool aNonBlocking)
 {
-    NS_NOTREACHED("SetNonBlocking");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

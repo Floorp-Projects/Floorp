@@ -23,7 +23,7 @@
 #ifndef nsInputStreamChannel_h__
 #define nsInputStreamChannel_h__
 
-#include "nsIChannel.h"
+#include "nsIStreamIOChannel.h"
 #include "nsIInputStream.h"
 #include "nsIURI.h"
 #include "nsCRT.h"

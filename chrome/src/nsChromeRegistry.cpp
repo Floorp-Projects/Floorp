@@ -48,6 +48,7 @@
 #include "nsIStringBundle.h"
 #include "nsISimpleEnumerator.h"
 #include "nsNetUtil.h"
+#include "nsIFileChannel.h"
 #include "nsIXBLService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"

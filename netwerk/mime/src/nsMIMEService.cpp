@@ -38,6 +38,7 @@
 #include "nsString.h"
 #include "nsMIMEInfoImpl.h"
 #include "nsIURL.h"
+#include "nsIFileChannel.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsMimeTypes.h"

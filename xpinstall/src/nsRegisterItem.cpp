@@ -26,6 +26,7 @@
 #include "nsRegisterItem.h"
 #include "nsInstallResources.h"
 #include "nsNetUtil.h"
+#include "nsIFileChannel.h"
 #include "nsXPIDLString.h"
 #include "nsInstallTrigger.h"
 #include "nsIChromeRegistry.h"

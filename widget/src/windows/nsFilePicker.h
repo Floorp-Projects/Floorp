@@ -24,6 +24,8 @@
 #ifndef nsFilePicker_h__
 #define nsFilePicker_h__
 
+#include "nsIFileChannel.h"
+
 #define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
 #undef NS_IMPL_IDS

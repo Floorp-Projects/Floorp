@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 
 #include "nsIURL.h"
+#include "nsIFileChannel.h"
 
 #include "nsITransport.h"
 #include "nsIFileTransportService.h"

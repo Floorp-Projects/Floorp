@@ -40,6 +40,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsResChannel.h"
+#include "nsIFileChannel.h"
 #include "prenv.h"
 #include "prmem.h"
 #include "prprf.h"

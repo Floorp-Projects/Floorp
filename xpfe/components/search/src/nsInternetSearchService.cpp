@@ -57,6 +57,7 @@
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
+#include "nsIFileChannel.h"
 #include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
 #include "nsIInputStream.h"

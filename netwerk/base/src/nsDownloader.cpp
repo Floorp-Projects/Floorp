@@ -25,6 +25,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
+#include "nsIFileChannel.h"
 #include "nsProxiedService.h"
 #include "nsIFile.h"
 #include "nsXPIDLString.h"

@@ -55,6 +55,7 @@
 #include "nsEnumeratorUtils.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsIFileChannel.h"
 #include "nsIChannel.h"
 #include "nsIFile.h"
 #include "nsEscape.h"

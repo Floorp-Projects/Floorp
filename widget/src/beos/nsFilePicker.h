@@ -30,7 +30,7 @@
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsdefs.h"
-
+#include "nsIFileChannel.h"
 //
 // Native BeOS FileSelector wrapper
 //

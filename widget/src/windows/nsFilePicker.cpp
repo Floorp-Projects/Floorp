@@ -33,6 +33,7 @@
 #undef NS_IMPL_IDS
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
+#include "nsIFileChannel.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include <windows.h>

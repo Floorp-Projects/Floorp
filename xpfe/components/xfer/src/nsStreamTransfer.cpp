@@ -26,6 +26,7 @@
 #include "nsStreamXferOp.h"
 #include "nsIFilePicker.h"
 #include "nsILocalFile.h"
+#include "nsIFileChannel.h"
 #include "nsNetUtil.h"
 #include "nsIPref.h"
 #include "nsIURL.h"

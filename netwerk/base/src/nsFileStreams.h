@@ -25,6 +25,7 @@
 
 #include "nsIFileStreams.h"
 #include "nsIFile.h"
+#include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIStreamIO.h"

@@ -23,6 +23,7 @@
 
 #include "nsISupports.idl"
 #include "nsIURL.idl"
+#include "nsIFileChannel.idl"
 #include "nsILocalFile.idl"
 
 interface nsIDOMWindowInternal;

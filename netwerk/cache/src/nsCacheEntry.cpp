@@ -113,7 +113,8 @@ nsCacheEntry::SetSecurityInfo( nsISupports *  info)
 nsresult
 nsCacheEntry::GetData(nsISupports **result)
 {
-    if (!result)         return NS_ERROR_NULL_POINTER;
+    if (!result)         
+        return NS_ERROR_NULL_POINTER;
 
     NS_IF_ADDREF(*result = mData);
     return NS_OK;
@@ -370,9 +371,10 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
     if (!cacheEntry) return NS_ERROR_NULL_POINTER;
 
     hashEntry = PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_ADD);
+#ifndef DEBUG_dougt
     NS_ASSERTION(((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry == 0,
                  "nsCacheEntryHashTable::AddEntry - entry already used");
-
+#endif
     ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = cacheEntry;
 
     return NS_OK;
