@@ -57,7 +57,7 @@ public:
   virtual PRInt32 operator()(void* anItem1,void* anItem2) {
     EntityNode* one = (EntityNode*)anItem1;
     EntityNode* two = (EntityNode*)anItem2;
-    return one->mStr.Compare(two->mStr, PR_FALSE);
+    return one->mStr.CompareWithConversion(two->mStr, PR_FALSE);
   }
 }; 
 
