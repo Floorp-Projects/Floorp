@@ -576,36 +576,6 @@ public:
 };
 
 
-// HTMLEmbed/ObjectElement helper
-
-class nsHTMLPluginObjElementSH : public nsHTMLExternalObjSH
-{
-protected:
-  nsHTMLPluginObjElementSH(nsDOMClassInfoID aID) : nsHTMLExternalObjSH(aID)
-  {
-  }
-
-  virtual ~nsHTMLPluginObjElementSH()
-  {
-  }
-
-  virtual nsresult GetPluginJSObject(JSContext *cx, JSObject *obj,
-                                     nsIPluginInstance *plugin_inst,
-                                     JSObject **plugin_obj,
-                                     JSObject **plugin_proto);
-
-public:
-  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                        JSObject *obj, jsval id, PRUint32 flags,
-                        JSObject **objp, PRBool *_retval);
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
-  {
-    return new nsHTMLPluginObjElementSH(aID);
-  }
-};
-
-
 // HTMLAppletElement helper
 
 class nsHTMLAppletElementSH : public nsHTMLExternalObjSH
@@ -628,6 +598,36 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsHTMLAppletElementSH(aID);
+  }
+};
+
+
+// HTMLEmbed/ObjectElement helper
+
+class nsHTMLPluginObjElementSH : public nsHTMLAppletElementSH
+{
+protected:
+  nsHTMLPluginObjElementSH(nsDOMClassInfoID aID) : nsHTMLAppletElementSH(aID)
+  {
+  }
+
+  virtual ~nsHTMLPluginObjElementSH()
+  {
+  }
+
+  virtual nsresult GetPluginJSObject(JSContext *cx, JSObject *obj,
+                                     nsIPluginInstance *plugin_inst,
+                                     JSObject **plugin_obj,
+                                     JSObject **plugin_proto);
+
+public:
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsval id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  {
+    return new nsHTMLPluginObjElementSH(aID);
   }
 };
 

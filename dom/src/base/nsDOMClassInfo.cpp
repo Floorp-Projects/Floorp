@@ -4154,6 +4154,54 @@ nsHTMLExternalObjSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
 }
 
 
+// HTMLAppletElement helper
+
+nsresult
+nsHTMLAppletElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
+                                         nsIPluginInstance *plugin_inst,
+                                         JSObject **plugin_obj,
+                                         JSObject **plugin_proto)
+{
+  *plugin_obj = nsnull;
+  *plugin_proto = nsnull;
+
+  nsCOMPtr<nsIJVMManager> jvm(do_GetService(nsIJVMManager::GetCID()));
+
+  if (!jvm) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIJVMPluginInstance> javaPluginInstance;
+
+  javaPluginInstance = do_QueryInterface(plugin_inst);
+
+  if (!javaPluginInstance) {
+    return NS_OK;
+  }
+
+  jobject appletObject = nsnull;
+  nsresult rv = javaPluginInstance->GetJavaObject(&appletObject);
+
+  if (NS_FAILED(rv) || !appletObject) {
+    return rv;
+  }
+
+  nsCOMPtr<nsILiveConnectManager> manager =
+    do_GetService(nsIJVMManager::GetCID());
+
+  if (!manager) {
+    return NS_OK;
+  }
+
+  rv = manager->WrapJavaObject(cx, appletObject, plugin_obj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *plugin_proto = ::JS_GetPrototype(cx, *plugin_obj);
+
+  return rv;
+}
+
+
 // HTMLEmbed/ObjectElement helper
 
 nsresult
@@ -4194,9 +4242,13 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
   if (!scriptable_peer) {
     if (!ci) {
       // This plugin doesn't support nsIScriptablePlugin, nor does it
-      // have classinfo, this plugin doesn't wanto be scriptable.
+      // have classinfo, this plugin is not scriptable using those
+      // methods. It might however be a Java plugin running in an EMBED or
+      // OBJECT so let's try that.
 
-      return NS_OK;
+      return nsHTMLAppletElementSH::GetPluginJSObject(cx, obj, plugin_inst,
+                                                      plugin_obj,
+                                                      plugin_proto);
     }
 
     // The plugin instance has classinfo, use it as the scriptable
@@ -4324,54 +4376,6 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
   }
 
   return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
-}
-
-
-// HTMLAppletElement helper
-
-nsresult
-nsHTMLAppletElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
-                                         nsIPluginInstance *plugin_inst,
-                                         JSObject **plugin_obj,
-                                         JSObject **plugin_proto)
-{
-  *plugin_obj = nsnull;
-  *plugin_proto = nsnull;
-
-  nsCOMPtr<nsIJVMManager> jvm(do_GetService(nsIJVMManager::GetCID()));
-
-  if (!jvm) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIJVMPluginInstance> javaPluginInstance;
-
-  javaPluginInstance = do_QueryInterface(plugin_inst);
-
-  if (!javaPluginInstance) {
-    return NS_OK;
-  }
-
-  jobject appletObject = nsnull;
-  nsresult rv = javaPluginInstance->GetJavaObject(&appletObject);
-
-  if (NS_FAILED(rv) || !appletObject) {
-    return rv;
-  }
-
-  nsCOMPtr<nsILiveConnectManager> manager =
-    do_GetService(nsIJVMManager::GetCID());
-
-  if (!manager) {
-    return NS_OK;
-  }
-
-  rv = manager->WrapJavaObject(cx, appletObject, plugin_obj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *plugin_proto = ::JS_GetPrototype(cx, *plugin_obj);
-
-  return rv;
 }
 
 
