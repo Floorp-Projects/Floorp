@@ -1940,7 +1940,7 @@ public class ScriptRuntime {
                                               Context cx,
                                               boolean doSetName)
     {
-        fn.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
+        fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
         fn.setParentScope(scope);
         if (doSetName) {
             ScriptableObject.defineProperty(scope, fnName, fn,
@@ -1974,7 +1974,7 @@ public class ScriptRuntime {
             throw WrappedException.wrapException(e);
         }
 
-        result.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
+        result.setPrototype(ScriptableObject.getFunctionPrototype(scope));
         result.setParentScope(scope);
 
         String fnName = result.getFunctionName();
