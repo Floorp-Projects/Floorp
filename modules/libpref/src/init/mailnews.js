@@ -157,7 +157,6 @@ pref("mail.match_nickname",                 false);
 pref("mail.default_html_action", 0);    // 0=ask, 1=plain, 2=html, 3=both
 pref("mail.selection.count",0); //default - 0 mail folders selected for download
 pref("mail.smtp.ssl",                       0); // 0 = no, 1 = try, 2 = must use SSL
-pref("mail.allow_at_sign_in_user_name", false);  //strip off chars following the @ sign in mail user name
 
 pref("mail.mdn.report.enabled", false);       // enable sending MDN report
     // no denial mdns for not_in_to_cc, forward and outside_domain cases
