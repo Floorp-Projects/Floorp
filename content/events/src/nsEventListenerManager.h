@@ -217,6 +217,10 @@ protected:
   nsresult FlipCaptureBit(PRInt32 aEventTypes, PRBool aInitCapture);
   nsVoidArray* GetListenersByType(EventArrayType aType, nsHashKey* aKey, PRBool aCreate);
   EventArrayType GetTypeForIID(const nsIID& aIID);
+  nsresult FixContextMenuEvent(nsIPresContext* aPresContext,
+                               nsIDOMEventTarget* aCurrentTarget,
+                               nsEvent* aEvent,
+                               nsIDOMEvent** aDOMEvent);
   void GetCoordinatesFor(nsIDOMElement *aCurrentEl, nsIPresContext *aPresContext,
                          nsIPresShell *aPresShell, nsPoint& aTargetPt);
   nsresult GetDOM2EventGroup(nsIDOMEventGroup** aGroup);
@@ -274,6 +278,7 @@ protected:
 #define NS_EVENT_BITS_COMPOSITION_START     0x01
 #define NS_EVENT_BITS_COMPOSITION_END		0x02
 #define NS_EVENT_BITS_COMPOSITION_QUERY		0x04
+#define NS_EVENT_BITS_COMPOSITION_RECONVERSION 0x08
 
 //nsIDOMFocusListener
 #define NS_EVENT_BITS_FOCUS_NONE    0x00

@@ -77,6 +77,7 @@
 #define NS_IMETHODIMP_(type) type __stdcall
 #define NS_METHOD_(type) type __stdcall
 #define NS_CALLBACK_(_type, _name) _type (__stdcall * _name)
+#define NS_IMETHOD_CALLBACK_(_type, _class, _name) _type (__stdcall _class::* _name)
 #define NS_STDCALL __stdcall
 
 #elif defined(XP_MAC)
@@ -89,6 +90,7 @@
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)
+#define NS_IMETHOD_CALLBACK_(_type, _class, _name) _type (_class::* _name)
 #define NS_STDCALL
 
 #elif defined(XP_OS2)
@@ -101,6 +103,7 @@
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)
+#define NS_IMETHOD_CALLBACK_(_type, _class, _name) _type (_class::* _name)
 #define NS_STDCALL
 
 #else
@@ -113,6 +116,7 @@
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)
+#define NS_IMETHOD_CALLBACK_(_type, _class, _name) _type (_class::* _name)
 #define NS_STDCALL
 #endif
 
@@ -133,6 +137,7 @@
 #define NS_IMETHODIMP       NS_IMETHODIMP_(nsresult)
 #define NS_METHOD           NS_METHOD_(nsresult)
 #define NS_CALLBACK(_name)  NS_CALLBACK_(nsresult, _name)
+#define NS_IMETHOD_CALLBACK(_class, _name) NS_IMETHOD_CALLBACK_(nsresult, _class, _name)
 
 /**
  * Import/Export macros for XPCOM APIs
