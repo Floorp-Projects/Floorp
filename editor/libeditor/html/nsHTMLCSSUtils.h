@@ -123,6 +123,8 @@ public:
   nsresult    SetCSSProperty(nsIDOMElement * aElement, nsIAtom * aProperty,
                              const nsAString & aValue,
                              PRBool aSuppressTransaction);
+  nsresult    SetCSSPropertyPixels(nsIDOMElement *aElement, nsIAtom *aProperty,
+                                   PRInt32 aIntValue, PRBool aSuppressTxn);
   nsresult    RemoveCSSProperty(nsIDOMElement * aElement, nsIAtom * aProperty,
                                 const nsAString & aPropertyValue, PRBool aSuppressTransaction);
 
@@ -136,6 +138,9 @@ public:
   nsresult    SetCSSProperty(nsIDOMElement * aElement,
                              const nsAString & aProperty,
                              const nsAString & aValue);
+  nsresult    SetCSSPropertyPixels(nsIDOMElement * aElement,
+                                   const nsAString & aProperty,
+                                   PRInt32 aIntValue);
   nsresult    RemoveCSSProperty(nsIDOMElement * aElement,
                                 const nsAString & aProperty);
 
