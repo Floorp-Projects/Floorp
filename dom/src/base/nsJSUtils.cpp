@@ -550,7 +550,7 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
 
     PRBool isConstructor;
     result = manager->LookupName(name, isConstructor, interfaceID, classID);
-    if (NS_OK == result) {
+    if (NS_SUCCEEDED(result)) {
       if (isConstructor) {
         JS_DefineFunction(aContext, aObj, 
                           JS_GetStringBytes(jsstring),
@@ -574,7 +574,7 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
           nsConvertXPCObjectToJSVal(native, interfaceID, aContext, 
                                     aObj, &val);
         }
-            
+
         return JS_DefineProperty(aContext, aObj, JS_GetStringBytes(jsstring),
                                  val, nsnull, nsnull, 
                                  JSPROP_ENUMERATE | JSPROP_READONLY);
@@ -612,15 +612,15 @@ nsJSUtils::nsGenericResolve(JSContext* aContext,
 NS_EXPORT nsISupports*
 nsJSUtils::nsGetNativeThis(JSContext* aContext, JSObject* aObj)
 {
-	while (aObj != nsnull) {
-		JSClass* js_class = JS_GetClass(aContext, aObj);
-		if (js_class != nsnull &&
-		   (js_class->flags & JSCLASS_HAS_PRIVATE) &&
-		   (js_class->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS))
-			return (nsISupports*) JS_GetPrivate(aContext, aObj);
-		aObj = JS_GetPrototype(aContext, aObj);
-	}
-	return nsnull;
+  while (aObj != nsnull) {
+    JSClass* js_class = JS_GetClass(aContext, aObj);
+    if (js_class != nsnull &&
+       (js_class->flags & JSCLASS_HAS_PRIVATE) &&
+       (js_class->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS))
+      return (nsISupports*) JS_GetPrivate(aContext, aObj);
+    aObj = JS_GetPrototype(aContext, aObj);
+  }
+  return nsnull;
 }
 
 NS_EXPORT nsresult 
@@ -700,43 +700,44 @@ nsJSUtils::nsGetDynamicScriptContext(JSContext *aContext,
 NS_EXPORT JSBool PR_CALLBACK
 nsJSUtils::nsCheckAccess(JSContext *cx, JSObject *obj, 
                          jsid id, JSAccessMode mode,
-	                     jsval *vp)
+                         jsval *vp)
 {
-    if (mode == JSACC_WATCH) {
-        jsval value, dummy;
-        if (JS_IdToValue(cx, id, &value)) {
-            char *name = JS_GetStringBytes(JS_ValueToString(cx, value));
-            return name && JS_GetProperty(cx, obj, name, &dummy);
-        }
-        return PR_FALSE;
-    }
-    return PR_TRUE;
+  if (mode == JSACC_WATCH) {
+    jsval value, dummy;
+    if (!JS_IdToValue(cx, id, &value))
+      return JS_FALSE;
+    JSString *str = JS_ValueToString(cx, value);
+    if (!str)
+      return JS_FALSE;
+    return JS_GetUCProperty(cx, obj, JS_GetStringChars(str), JS_GetStringLength(str), &dummy);
+  }
+  return JS_TRUE;
 }
 
 NS_EXPORT nsIScriptSecurityManager * 
 nsJSUtils::nsGetSecurityManager(JSContext *cx, JSObject *obj)
 {
-    if (!mCachedSecurityManager) {
-        nsresult rv;
-        NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-        if (NS_FAILED(rv)) {
-          nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-          return nsnull;
-        }
-        mCachedSecurityManager = secMan;
-        NS_ADDREF(mCachedSecurityManager);
+  if (!mCachedSecurityManager) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+      return nsnull;
     }
-    return mCachedSecurityManager;
+    mCachedSecurityManager = secMan;
+    NS_ADDREF(mCachedSecurityManager);
+  }
+  return mCachedSecurityManager;
 }
 
 NS_EXPORT void 
 nsJSUtils::nsClearCachedSecurityManager()
 {
-    if (mCachedSecurityManager) {
-        NS_RELEASE(mCachedSecurityManager);
-        mCachedSecurityManager = nsnull;
-    }
+  if (mCachedSecurityManager) {
+    NS_RELEASE(mCachedSecurityManager);
+    mCachedSecurityManager = nsnull;
+  }
 }
 
 nsIScriptSecurityManager *nsJSUtils::mCachedSecurityManager;
