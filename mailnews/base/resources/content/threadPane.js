@@ -290,14 +290,16 @@ function MsgSortByThread()
 function MsgSortThreadPane(sortType)
 {
   var dbview = GetDBView();
-  var viewFlags = dbview.viewFlags;
-  dbview.viewFlags &= ~ nsMsgViewFlagsType.kGroupBySort;
-  if (viewFlags & nsMsgViewFlagsType.kGroupBySort)
+
+  if (dbview.viewFlags & nsMsgViewFlagsType.kGroupBySort)
   {
+    dbview.viewFlags &= ~nsMsgViewFlagsType.kGroupBySort;
     dbview.sortType = sortType; // save sort in current view
     viewDebug("switching view to all msgs\n");
-    return SwitchView("cmd_viewAllMsgs");
+    SwitchView("cmd_viewAllMsgs");
+    return;
   }
+
   dbview.sort(sortType, nsMsgViewSortOrder.ascending);
   UpdateSortIndicators(sortType, nsMsgViewSortOrder.ascending);
 }
@@ -316,15 +318,15 @@ function MsgReverseSortThreadPane()
 function MsgToggleThreaded()
 {
     var dbview = GetDBView();
-    var viewFlags = dbview.viewFlags;
-    dbview.viewFlags ^= nsMsgViewFlagsType.kThreadedDisplay;
-    dbview.viewFlags &= ~nsMsgViewFlagsType.kGroupBySort;
-    if (viewFlags & nsMsgViewFlagsType.kGroupBySort)
-    {
-      viewDebug("switching view to all msgs\n");
-      return SwitchView("cmd_viewAllMsgs");
-    }
 
+    dbview.viewFlags ^= nsMsgViewFlagsType.kThreadedDisplay;
+    if (dbview.viewFlags & nsMsgViewFlagsType.kGroupBySort)
+    {
+      dbview.viewFlags &= ~nsMsgViewFlagsType.kGroupBySort;
+      viewDebug("switching view to all msgs\n");
+      SwitchView("cmd_viewAllMsgs");
+      return;
+    }
 
     dbview.sort(dbview.sortType, dbview.sortOrder);
     UpdateSortIndicators(dbview.sortType, dbview.sortOrder);
@@ -332,11 +334,12 @@ function MsgToggleThreaded()
 
 function MsgSortThreaded()
 {
-    var viewFlags = GetDBView().viewFlags;
+    var dbview = GetDBView();
+    var viewFlags = dbview.viewFlags;
 
     if (viewFlags & nsMsgViewFlagsType.kGroupBySort)
     {
-      GetDBView().viewFlags &= ~nsMsgViewFlagsType.kGroupBySort;
+      dbview.viewFlags &= ~nsMsgViewFlagsType.kGroupBySort;
       viewDebug("switching view to all msgs\n");
       SwitchView("cmd_viewAllMsgs");
     }
