@@ -30,6 +30,7 @@ MODULE		= layout
 LIBRARY_NAME	= gkxulbase_s
 
 CPPSRCS		= \
+       nsBulletinBoardLayout.cpp \
        nsScrollBoxObject.cpp \
        nsScrollBoxFrame.cpp \
        nsTreeLayout.cpp \

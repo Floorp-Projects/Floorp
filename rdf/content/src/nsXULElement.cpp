@@ -3953,6 +3953,11 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
         // Ignore 'width' and 'height' on a <window>
         if (nsXULAtoms::width == aAttribute || nsXULAtoms::height == aAttribute)
             aHint = NS_STYLE_HINT_NONE;
+    } else {
+        // if left or top changes we reflow. This will happen in xul containers that 
+        // manage positioned children such as a bulletinboard.
+        if (nsXULAtoms::left == aAttribute || nsXULAtoms::top == aAttribute) 
+            aHint = NS_STYLE_HINT_REFLOW;
     }
 
     return NS_OK;

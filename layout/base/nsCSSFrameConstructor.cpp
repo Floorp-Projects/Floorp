@@ -269,6 +269,9 @@ NS_NewTempleLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayou
 nsresult
 NS_NewTreeLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
 
+nsresult
+NS_NewBulletinBoardLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+
 // end grid
 
 #endif
@@ -4064,7 +4067,10 @@ nsCSSFrameConstructor::HasGfxScrollbars()
     }
   }
 
-  return mHasGfxScrollbars;
+  //return mHasGfxScrollbars;
+  // we no longer support native scrollbars. Except in form elements. So 
+  // we always return true
+  return PR_TRUE;
 }
 
 nsresult
@@ -6135,6 +6141,36 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     }
     // End of STACK CONSTRUCTION logic
 
+    // BULLETINBOARD CONSTRUCTION
+    else if (aTag == nsXULAtoms::bulletinboard) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+
+
+      nsCOMPtr<nsIBoxLayout> layout;
+      NS_NewBulletinBoardLayout(aPresShell, layout);
+
+      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+      aStyleContext->GetStyleData(eStyleStruct_Display);
+
+       if (IsScrollable(aPresContext, display)) {
+
+        // set the top to be the newly created scrollframe
+        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                         topFrame, aStyleContext);
+
+        // we have a scrollframe so the parent becomes the scroll frame.
+        newFrame->GetParent(&aParentFrame);
+        primaryFrameSet = PR_TRUE;
+
+        frameHasBeenInitialized = PR_TRUE;
+
+      }
+    }
+    // End of STACK CONSTRUCTION logic
+
     // DECK CONSTRUCTION
     else if (aTag == nsXULAtoms::deck || aTag == nsXULAtoms::tabpanel) {
       processChildren = PR_TRUE;
@@ -6231,26 +6267,29 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       InitAndRestoreFrame(aPresContext, aState, aContent, 
                       geometricParent, aStyleContext, nsnull, newFrame);
 
+      
       /*
       // if our parent is a block frame then do things the way html likes it
       // if not then we are in a box so do what boxes like. On example is boxes
       // do not support the absolute positioning of their children. While html blocks
       // thats why we call different things here.
-      geometricParent->GetFrameType(&frameType);
-      if ((frameType == nsLayoutAtoms::blockFrame) ||
-          (frameType == nsLayoutAtoms::areaFrame)) {
+      nsCOMPtr<nsIAtom> frameType;
+      geometricParent->GetFrameType(getter_AddRefs(frameType));
+      if ((frameType.get() == nsLayoutAtoms::blockFrame) ||
+          (frameType.get() == nsLayoutAtoms::areaFrame)) {
       */
         // See if we need to create a view, e.g. the frame is absolutely positioned
         nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
                                                  aStyleContext, PR_FALSE);
 
-        /*
+      /*
       } else {
           // we are in a box so do the box thing.
         nsBoxFrame::CreateViewForFrame(aPresContext, newFrame,
                                                  aStyleContext, PR_FALSE);
       }
       */
+      
     }
 
       // Process the child content if requested

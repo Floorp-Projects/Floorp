@@ -434,19 +434,19 @@ nsBox::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
     GetFrame(&frame);
     frame->GetFrameState(&state);
 
+    if (aChild != nsnull) {
+        nsCOMPtr<nsIBoxLayout> layout;
+        GetLayoutManager(getter_AddRefs(layout));
+        if (layout)
+          layout->ChildBecameDirty(this, aState, aChild);
+    }
+
     // if we are not dirty mark ourselves dirty and tell our parent we are dirty too.
     if (!(state & NS_FRAME_HAS_DIRTY_CHILDREN)) {      
       // Mark yourself as dirty and needing to be recalculated
       state |= NS_FRAME_HAS_DIRTY_CHILDREN;
       frame->SetFrameState(state);
       NeedsRecalc();
-
-      if (aChild != nsnull) {
-          nsCOMPtr<nsIBoxLayout> layout;
-          GetLayoutManager(getter_AddRefs(layout));
-          if (layout)
-            layout->ChildBecameDirty(this, aState, aChild);
-      }
 
       nsIBox* parent = nsnull;
       GetParentBox(&parent);

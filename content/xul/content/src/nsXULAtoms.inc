@@ -85,3 +85,5 @@ NS_XULATOM(width);
 NS_XULATOM(window);
 NS_XULATOM(xulcontentsgenerated);
 NS_XULATOM(scrollbox);
+NS_XULATOM(left);
+NS_XULATOM(top);

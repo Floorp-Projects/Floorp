@@ -225,21 +225,37 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
         if (childRect.height < 0)
           childRect.height = 0;
-        
-        child->SetBounds(aState, childRect);
-        child->Layout(aState);
-        child->GetBounds(childRect);
-        childRect.Inflate(margin);
 
-        // did the child push back on us and get bigger?
-        if (childRect.width > clientRect.width) {
-           clientRect.width = childRect.width;
-           grow = PR_TRUE;
-        }
 
-        if (childRect.height > clientRect.height) {
-           clientRect.height = childRect.height;
-           grow = PR_TRUE;
+        nsRect oldRect;
+        child->GetBounds(oldRect);
+
+        PRBool sizeChanged = (oldRect != childRect);
+
+        // only layout dirty children
+        PRBool isDirty = PR_FALSE;
+        PRBool hasDirtyChildren = PR_FALSE;
+
+        child->IsDirty(isDirty);
+        child->HasDirtyChildren(hasDirtyChildren);
+
+        if (sizeChanged || isDirty || hasDirtyChildren) {
+ 
+          child->SetBounds(aState, childRect);
+          child->Layout(aState);
+          child->GetBounds(childRect);
+          childRect.Inflate(margin);
+
+          // did the child push back on us and get bigger?
+          if (childRect.width > clientRect.width) {
+             clientRect.width = childRect.width;
+             grow = PR_TRUE;
+          }
+
+          if (childRect.height > clientRect.height) {
+             clientRect.height = childRect.height;
+             grow = PR_TRUE;
+          }
         }
 
         child->GetNextBox(&child);
