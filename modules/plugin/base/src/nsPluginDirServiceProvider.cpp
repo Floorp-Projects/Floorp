@@ -276,7 +276,7 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
     DWORD pathlen;
     verBlock maxVer;
     ClearVersion(&maxVer);
-    const char curKey[_MAX_PATH] = "Software\\JavaSoft\\Java Plug-in";
+    char curKey[_MAX_PATH] = "Software\\JavaSoft\\Java Plug-in";
     char path[_MAX_PATH];
     char newestPath[_MAX_PATH + 4]; // to prevent buffer overrun when adding \bin
     const char mozPath[_MAX_PATH] = "Software\\mozilla.org\\Mozilla";
@@ -291,7 +291,7 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
       path[0] = 0;
       numChars = _MAX_PATH;
       pathlen = sizeof(path);
-      result = ::RegEnumKeyEx(baseloc, index, (char *) curKey, &numChars, NULL, NULL, NULL, &modTime);
+      result = ::RegEnumKeyEx(baseloc, index, curKey, &numChars, NULL, NULL, NULL, &modTime);
       index++;
       if (ERROR_SUCCESS == result) {
         if (ERROR_SUCCESS == ::RegOpenKeyEx(baseloc, curKey, 0, KEY_QUERY_VALUE, &keyloc)) {
