@@ -105,7 +105,6 @@ pull_lizard:
 	$(CVSCO_LIZARD) mozilla/nav-java; \
 	$(CVSCO_LIZARD) mozilla/js; \
 	$(CVSCO_LIZARD) mozilla/modules/security/freenav; \
-	$(CVSCO_PLUGIN) mozilla/modules/plugin; \
 
 pull_xpcom:
 	cd $(MOZ_SRC)/.; \
