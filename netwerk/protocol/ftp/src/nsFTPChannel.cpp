@@ -587,8 +587,10 @@ nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
         // The state machine needs to know that the data connection
         // was successfully started so that it can issue data commands
         // securely.
-        NS_ASSERTION(mFTPState, "ftp state is null.");
-        (void) mFTPState->DataConnectionEstablished();
+        if (mFTPState)
+            (void) mFTPState->DataConnectionEstablished();
+        else
+            NS_ERROR("ftp state is null.");
     }
 
     if (!mEventSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending)
@@ -647,6 +649,7 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     if (mUploadStream)
         mUploadStream->Close();
 
+    NS_IF_RELEASE(mFTPState);
     mIsPending = PR_FALSE;
     return rv;
 }
