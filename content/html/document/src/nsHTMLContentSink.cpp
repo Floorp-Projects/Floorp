@@ -65,13 +65,19 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
     }                                             \
   PR_END_MACRO
 
-#define SINK_TRACE_NODE(_bit,_msg,_node)               \
-  PR_BEGIN_MACRO                                       \
-    if (SINK_LOG_TEST(gSinkLogModuleInfo,_bit)) {      \
-      char cbuf[40];                                   \
-      (_node).GetText().ToCString(cbuf, sizeof(cbuf)); \
-      PR_LogPrint("%s: node='%s'", _msg, cbuf);        \
-    }                                                  \
+#define SINK_TRACE_NODE(_bit,_msg,_node)                     \
+  PR_BEGIN_MACRO                                             \
+    if (SINK_LOG_TEST(gSinkLogModuleInfo,_bit)) {            \
+      char cbuf[40];                                         \
+      const char* cp;                                        \
+      if ((_node).GetNodeType() != eHTMLTag_userdefined) {   \
+        cp = NS_EnumToTag(nsHTMLTag((_node).GetNodeType())); \
+      } else {                                               \
+        (_node).GetText().ToCString(cbuf, sizeof(cbuf));     \
+        cp = cbuf;                                           \
+      }                                                      \
+      PR_LogPrint("%s: node='%s'", _msg, cp);                \
+    }                                                        \
   PR_END_MACRO
 
 #else
@@ -421,7 +427,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 
   // Add attributes to the body content object, but only if it's really a body
   // tag that is triggering the OpenBody.
-  if (aNode.GetText().EqualsIgnoreCase("body")) {
+  if (eHTMLTag_body == aNode.GetNodeType()) {
     AddAttributes(aNode, mBody);
     // XXX If the body already existed and has been reflowed somewhat
     // then we need to trigger a style change
@@ -511,8 +517,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 
   if (nsnull == mCurrentForm) {
     // Create new form
-    nsAutoString tmp(aNode.GetText());
-    tmp.ToUpperCase();
+    nsAutoString tmp("FORM");
     nsIAtom* atom = NS_NewAtom(tmp);
     rv = NS_NewHTMLForm(&mCurrentForm, atom);
     NS_RELEASE(atom);
@@ -585,8 +590,15 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenContainer", aNode);
 
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
+  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());/* XXX bad parser api */
+  nsAutoString tmp;
+  if (eHTMLTag_userdefined == nodeType) {
+    tmp.Append(aNode.GetText());
+    tmp.ToUpperCase();
+  }
+  else {
+    tmp.Append(NS_EnumToTag(nodeType));
+  }
   nsIAtom* atom = NS_NewAtom(tmp);
 
   eHTMLTags parentType;
@@ -600,71 +612,69 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   nsresult rv;
   nsIHTMLContent* container = nsnull;
-  if (aNode.GetTokenType() == eToken_start) {
-    switch (aNode.GetNodeType()) {
-    case eHTMLTag_map:
-      NS_IF_RELEASE(mCurrentMap);
-      rv = NS_NewImageMap(&mCurrentMap, atom);
-      if (NS_OK == rv) {
-        // Look for name attribute and set the map name
-        nsAutoString name;
-        if (FindAttribute(aNode, "name", name)) {
-          name.StripWhitespace();     // XXX leading, trailing, interior non=-space ws is removed
-          mCurrentMap->SetName(name);
-        }
-        // Add the map to the document
-        ((nsHTMLDocument*)mDocument)->AddImageMap(mCurrentMap);
+  switch (nodeType) {
+  case eHTMLTag_map:
+    NS_IF_RELEASE(mCurrentMap);
+    rv = NS_NewImageMap(&mCurrentMap, atom);
+    if (NS_OK == rv) {
+      // Look for name attribute and set the map name
+      nsAutoString name;
+      if (FindAttribute(aNode, "name", name)) {
+        name.StripWhitespace();     // XXX leading, trailing, interior non=-space ws is removed
+        mCurrentMap->SetName(name);
       }
-      return 0;
-
-    case eHTMLTag_table:
-      rv = NS_NewTablePart(&container, atom);
-      mInMonolithicContainer++;
-      break;
-
-    case eHTMLTag_caption:
-      rv = NS_NewTableCaptionPart(&container, atom);
-      break;
-
-    case eHTMLTag_tr:
-      rv = NS_NewTableRowPart(&container, atom);
-      break;
-
-    case eHTMLTag_tbody:
-    case eHTMLTag_thead:
-    case eHTMLTag_tfoot:
-      rv = NS_NewTableRowGroupPart(&container, atom);
-      break;
-
-    case eHTMLTag_colgroup:
-      rv = NS_NewTableColGroupPart(&container, atom);
-      break;
-
-    case eHTMLTag_col:
-      rv = NS_NewTableColPart(&container, atom);
-      break;
-
-    case eHTMLTag_td:
-    case eHTMLTag_th:
-      rv = NS_NewTableCellPart(&container, atom);
-      break;
-
-    case eHTMLTag_select:
-      rv = ProcessOpenSELECTTag(&container, aNode);
-      break;
-
-    case eHTMLTag_option:
-      rv = ProcessOpenOPTIONTag(&container, aNode);
-      break;
-
-    case eHTMLTag_iframe:
-      rv = ProcessIFRAMETag(&container, aNode);
-      break;
-
-    default:
-      rv = NS_NewHTMLContainer(&container, atom);
-      break;
+      // Add the map to the document
+      ((nsHTMLDocument*)mDocument)->AddImageMap(mCurrentMap);
     }
+    return 0;
+
+  case eHTMLTag_table:
+    rv = NS_NewTablePart(&container, atom);
+    mInMonolithicContainer++;
+    break;
+
+  case eHTMLTag_caption:
+    rv = NS_NewTableCaptionPart(&container, atom);
+    break;
+
+  case eHTMLTag_tr:
+    rv = NS_NewTableRowPart(&container, atom);
+    break;
+
+  case eHTMLTag_tbody:
+  case eHTMLTag_thead:
+  case eHTMLTag_tfoot:
+    rv = NS_NewTableRowGroupPart(&container, atom);
+    break;
+
+  case eHTMLTag_colgroup:
+    rv = NS_NewTableColGroupPart(&container, atom);
+    break;
+
+  case eHTMLTag_col:
+    rv = NS_NewTableColPart(&container, atom);
+    break;
+
+  case eHTMLTag_td:
+  case eHTMLTag_th:
+    rv = NS_NewTableCellPart(&container, atom);
+    break;
+
+  case eHTMLTag_select:
+    rv = ProcessOpenSELECTTag(&container, aNode);
+    break;
+
+  case eHTMLTag_option:
+    rv = ProcessOpenOPTIONTag(&container, aNode);
+    break;
+
+  case eHTMLTag_iframe:
+    rv = ProcessIFRAMETag(&container, aNode);
+    break;
+
+  default:
+    rv = NS_NewHTMLContainer(&container, atom);
+    break;
   }
 
   // XXX for now assume that if it's a container, it's a simple container
@@ -695,7 +705,7 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
     return 0;
   }
 
-  // XXX we could assert things about the top tag name == aNode.getText
+  // XXX we could assert things about the top tag name
   if (0 == mStackPos) {
     // Can't pop empty stack
     return 0;
@@ -1330,8 +1340,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
   if (nsnull != mHead) {
-    nsAutoString tmp(aNode.GetText());
-    tmp.ToUpperCase();
+    nsAutoString tmp("META");
     nsIAtom* atom = NS_NewAtom(tmp);
 
     nsIHTMLContent* it = nsnull;
@@ -1349,8 +1358,7 @@ nsresult HTMLContentSink::ProcessBRTag(nsIHTMLContent** aInstancePtrResult,
                                        const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
+  nsAutoString tmp("BR");
   nsIAtom* atom = NS_NewAtom(tmp);
   rv = NS_NewHTMLBreak(aInstancePtrResult, atom);
   if (NS_OK == rv) {
@@ -1364,8 +1372,7 @@ nsresult HTMLContentSink::ProcessHRTag(nsIHTMLContent** aInstancePtrResult,
                                        const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
+  nsAutoString tmp("HR");
   nsIAtom* atom = NS_NewAtom(tmp);
   rv = NS_NewHRulePart(aInstancePtrResult, atom);
   if (NS_OK == rv) {
@@ -1378,8 +1385,7 @@ nsresult HTMLContentSink::ProcessHRTag(nsIHTMLContent** aInstancePtrResult,
 nsresult HTMLContentSink::ProcessIMGTag(nsIHTMLContent** aInstancePtrResult,
                                         const nsIParserNode& aNode)
 {
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
+  nsAutoString tmp("IMG");
   nsIAtom* atom = NS_NewAtom(tmp);
   nsresult rv = NS_NewHTMLImage(aInstancePtrResult, atom);
   if (NS_OK == rv) {
@@ -1393,8 +1399,7 @@ nsresult HTMLContentSink::ProcessIMGTag(nsIHTMLContent** aInstancePtrResult,
 nsresult HTMLContentSink::ProcessSPACERTag(nsIHTMLContent** aInstancePtrResult,
                                            const nsIParserNode& aNode)
 {
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
+  nsAutoString tmp("SPACER");
   nsIAtom* atom = NS_NewAtom(tmp);
   nsresult rv = NS_NewHTMLSpacer(aInstancePtrResult, atom);
   if (NS_OK == rv) {
@@ -1602,8 +1607,7 @@ nsresult HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
 nsresult HTMLContentSink::ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
                                           const nsIParserNode& aNode)
 {
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
+  nsAutoString tmp("INPUT");
   nsIAtom* atom = NS_NewAtom(tmp);
 
   nsresult rv = NS_ERROR_NOT_INITIALIZED;
@@ -1641,13 +1645,13 @@ nsresult HTMLContentSink::ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
     else if (val.EqualsIgnoreCase("text")) {
       rv = NS_NewHTMLInputText(aInstancePtrResult, atom, mCurrentForm);
     }
-    else if (val.EqualsIgnoreCase("select1")) {  // TEMP hack
+    else if (val.EqualsIgnoreCase("select1")) {  // TEMP hack XXX
       rv = NS_NewHTMLSelect(aInstancePtrResult, atom, mCurrentForm, 1);
     }
-    else if (val.EqualsIgnoreCase("select2")) {  // TEMP hack
+    else if (val.EqualsIgnoreCase("select2")) {  // TEMP hack XXX
       rv = NS_NewHTMLSelect(aInstancePtrResult, atom, mCurrentForm, 2);
     }
-    else if (val.EqualsIgnoreCase("select3")) {  // TEMP hack
+    else if (val.EqualsIgnoreCase("select3")) {  // TEMP hack XXX
       rv = NS_NewHTMLSelect(aInstancePtrResult, atom, mCurrentForm, 3);
     }
     else {
@@ -1673,8 +1677,7 @@ nsresult
 HTMLContentSink::ProcessTEXTAREATag(nsIHTMLContent** aInstancePtrResult,
                                     const nsIParserNode& aNode)
 {
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
+  nsAutoString tmp("TEXTAREA");
   nsIAtom* atom = NS_NewAtom(tmp);
 
   const nsString& content = aNode.GetSkippedContent();
@@ -1700,8 +1703,7 @@ nsresult
 HTMLContentSink::ProcessOpenSELECTTag(nsIHTMLContent** aInstancePtrResult,
                                       const nsIParserNode& aNode)
 {
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
+  nsAutoString tmp("SELECT");
   nsIAtom* atom = NS_NewAtom(tmp);
 
   if (nsnull != mCurrentSelect) {
@@ -1728,15 +1730,14 @@ HTMLContentSink::ProcessCloseSELECTTag(const nsIParserNode& aNode)
 
 nsresult
 HTMLContentSink::ProcessOpenOPTIONTag(nsIHTMLContent** aInstancePtrResult,
-									  const nsIParserNode& aNode)
+                                      const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
   if (nsnull != mCurrentSelect) {
     if (nsnull != mCurrentOption) {
       NS_RELEASE(mCurrentOption);
     }
-    nsAutoString tmp(aNode.GetText());
-    tmp.ToUpperCase();
+    nsAutoString tmp("OPTION");
     nsIAtom* atom = NS_NewAtom(tmp);
     rv = NS_NewHTMLOption(&mCurrentOption, atom);
     if ((NS_OK == rv) && (nsnull != mCurrentSelect)) {
@@ -1797,8 +1798,7 @@ nsresult
 HTMLContentSink::ProcessIFRAMETag(nsIHTMLContent** aInstancePtrResult,
                                       const nsIParserNode& aNode)
 {
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
+  nsAutoString tmp("IFRAME");
   nsIAtom* atom = NS_NewAtom(tmp);
 
   nsresult rv = NS_NewHTMLIFrame(aInstancePtrResult, atom, mWebWidget);
@@ -1810,8 +1810,7 @@ HTMLContentSink::ProcessIFRAMETag(nsIHTMLContent** aInstancePtrResult,
 nsresult HTMLContentSink::ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,
                                         const nsIParserNode& aNode)
 {
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
+  nsAutoString tmp("WBR");
   nsIAtom* atom = NS_NewAtom(tmp);
   nsresult rv = NS_NewHTMLWordBreak(aInstancePtrResult, atom);
   if (NS_OK == rv) {
