@@ -107,10 +107,11 @@ foreach $key (keys %newMap) {
 ################################################################################
 
 print "Bloat/Leak Delta Report\n";
-print "-------------------------------------------\n";
+print "--------------------------------------------------------------------------------------\n";
 print "Current file:  $NEWFILE\n";
 print "Previous file: $OLDFILE\n";
-printf "%-20s %10s %10.2f%% %10s %10.2f%%\n",
+print "----------------------------------------------leaks------leaks%------bloat------bloat%\n";
+printf "%-40s %10s %10.2f%% %10s %10.2f%%\n",
        ("TOTAL",
         $newMap{"TOTAL"}{leaked}, $newMap{"TOTAL"}{leakPercent},
         $newMap{"TOTAL"}{bloat}, $newMap{"TOTAL"}{bloatPercent});
@@ -136,15 +137,15 @@ foreach $key (@keys) {
     my $leaks = $newMap{$key}{leaked};
     if ($percentLeaks > 0 && $key !~ /TOTAL/) {
         if ($needsHeading) {
-            printf "--NEW-LEAKS--------------------------------\n";
+            printf "--NEW-LEAKS-----------------------------------leaks------leaks%%-----------------------\n";
             $needsHeading = 0;
         }
-        printf "%-20s %10s %10s\n", ($key, $leaks, percentStr($percentLeaks));
+        printf "%-40s %10s %10s\n", ($key, $leaks, percentStr($percentLeaks));
         $total += $leaks;
     }
 }
 if (!$needsHeading) {
-    printf "%-20s %10s\n", ("TOTAL", $total);
+    printf "%-40s %10s\n", ("TOTAL", $total);
 }
 
 # FIXED LEAKS
@@ -156,15 +157,15 @@ foreach $key (@keys) {
     my $leaks = $newMap{$key}{leaked};
     if ($percentLeaks < 0 && $key !~ /TOTAL/) {
         if ($needsHeading) {
-            printf "--FIXED-LEAKS------------------------------\n";
+            printf "--FIXED-LEAKS---------------------------------leaks------leaks%%-----------------------\n";
             $needsHeading = 0;
         }
-        printf "%-20s %10s %10s\n", ($key, $leaks, percentStr($percentLeaks));
+        printf "%-40s %10s %10s\n", ($key, $leaks, percentStr($percentLeaks));
         $total += $leaks;
     }
 }
 if (!$needsHeading) {
-    printf "%-20s %10s\n", ("TOTAL", $total);
+    printf "%-40s %10s\n", ("TOTAL", $total);
 }
 
 # NEW BLOAT
@@ -176,15 +177,15 @@ foreach $key (@keys) {
     my $bloat = $newMap{$key}{bloat};
     if ($percentBloat > 0  && $key !~ /TOTAL/) {
         if ($needsHeading) {
-            printf "--NEW-BLOAT--------------------------------\n";
+            printf "--NEW-BLOAT-----------------------------------bloat------bloat%%-----------------------\n";
             $needsHeading = 0;
         }
-        printf "%-20s %10s %10s\n", ($key, $bloat, percentStr($percentBloat));
+        printf "%-40s %10s %10s\n", ($key, $bloat, percentStr($percentBloat));
         $total += $bloat;
     }
 }
 if (!$needsHeading) {
-    printf "%-20s %10s\n", ("TOTAL", $total);
+    printf "%-40s %10s\n", ("TOTAL", $total);
 }
 
 # ALL LEAKS
@@ -196,17 +197,17 @@ foreach $key (@keys) {
     my $percentLeaks = $newMap{$key}{leakPercent};
     if ($leaks > 0) {
         if ($needsHeading) {
-            printf "--ALL-LEAKS--------------------------------\n";
+            printf "--ALL-LEAKS-----------------------------------leaks------leaks%%-----------------------\n";
             $needsHeading = 0;
         }
-        printf "%-20s %10s %10s\n", ($key, $leaks, percentStr($percentLeaks));
+        printf "%-40s %10s %10s\n", ($key, $leaks, percentStr($percentLeaks));
         if ($key !~ /TOTAL/) {
             $total += $leaks;
         }
     }
 }
 if (!$needsHeading) {
-#    printf "%-20s %10s\n", ("TOTAL", $total);
+#    printf "%-40s %10s\n", ("TOTAL", $total);
 }
 
 # ALL BLOAT
@@ -218,17 +219,17 @@ foreach $key (@keys) {
     my $percentBloat = $newMap{$key}{bloatPercent};
     if ($bloat > 0) {
         if ($needsHeading) {
-            printf "--ALL-BLOAT--------------------------------\n";
+            printf "--ALL-BLOAT-----------------------------------bloat------bloat%%-----------------------\n";
             $needsHeading = 0;
         }
-        printf "%-20s %10s %10s\n", ($key, $bloat, percentStr($percentBloat));
+        printf "%-40s %10s %10s\n", ($key, $bloat, percentStr($percentBloat));
         if ($key !~ /TOTAL/) {
             $total += $bloat;
         }
     }
 }
 if (!$needsHeading) {
-#    printf "%-20s %10s\n", ("TOTAL", $total);
+#    printf "%-40s %10s\n", ("TOTAL", $total);
 }
 
 # NEW CLASSES
@@ -242,10 +243,10 @@ foreach $key (@keys) {
     my $percentBloat = $newMap{$key}{bloatPercent};
     if ($percentBloat == $inf && $key !~ /TOTAL/) {
         if ($needsHeading) {
-            printf "--CLASSES-NOT-REPORTED-LAST-TIME-----------\n";
+            printf "--CLASSES-NOT-REPORTED-LAST-TIME--------------leaks------bloat------------------------\n";
             $needsHeading = 0;
         }
-        printf "%-20s %10s %10s\n", ($key, $leaks, $bloat);
+        printf "%-40s %10s %10s\n", ($key, $leaks, $bloat);
         if ($key !~ /TOTAL/) {
             $ltotal += $leaks;
             $btotal += $bloat;
@@ -253,7 +254,7 @@ foreach $key (@keys) {
     }
 }
 if (!$needsHeading) {
-    printf "%-20s %10s %10s\n", ("TOTAL", $ltotal, $btotal);
+    printf "%-40s %10s %10s\n", ("TOTAL", $ltotal, $btotal);
 }
 
 # OLD CLASSES
@@ -266,10 +267,10 @@ foreach $key (@keys) {
         my $leaks = $oldMap{$key}{leaked};
         my $bloat = $oldMap{$key}{bloat};
         if ($needsHeading) {
-            printf "--CLASSES-THAT-WENT-AWAY--leaks------bloat-\n";
+            printf "--CLASSES-THAT-WENT-AWAY----------------------leaks------bloat------------------------\n";
             $needsHeading = 0;
         }
-        printf "%-20s %10s %10s\n", ($key, $leaks, $bloat);
+        printf "%-40s %10s %10s\n", ($key, $leaks, $bloat);
         if ($key !~ /TOTAL/) {
             $ltotal += $leaks;
             $btotal += $bloat;
@@ -277,7 +278,7 @@ foreach $key (@keys) {
     }
 }
 if (!$needsHeading) {
-    printf "%-20s %10s %10s\n", ("TOTAL", $ltotal, $btotal);
+    printf "%-40s %10s %10s\n", ("TOTAL", $ltotal, $btotal);
 }
 
-print "-------------------------------------------\n";
+print "--------------------------------------------------------------------------------------\n";
