@@ -150,17 +150,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mPrevChild = nsnull;
   mCurrentLine = aFrame->end_lines();
 
-  const nsStyleText* styleText = mBlock->GetStyleText();
-  switch (styleText->mWhiteSpace) {
-  case NS_STYLE_WHITESPACE_PRE:
-  case NS_STYLE_WHITESPACE_NOWRAP:
-    SetFlag(BRS_NOWRAP, PR_TRUE);
-    break;
-  default:
-    SetFlag(BRS_NOWRAP, PR_FALSE);
-    break;
-  }
-
   SetFlag(BRS_COMPUTEMAXELEMENTWIDTH, aMetrics.mComputeMEW);
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyMaxElementWidth) {
