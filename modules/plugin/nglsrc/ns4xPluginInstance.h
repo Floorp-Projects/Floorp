@@ -56,61 +56,46 @@ public:
      * constructor.) If an error is returned, the caller should <i>not</i>
      * continue to use the <b>ns4xPluginInstance</b> object.
      */
-    NS_METHOD
-    Initialize(nsIPluginInstancePeer* peer);
+    NS_METHOD Initialize(nsIPluginInstancePeer* peer);
 
-    NS_IMETHOD
-    GetPeer(nsIPluginInstancePeer* *resultingPeer);
+    NS_IMETHOD GetPeer(nsIPluginInstancePeer* *resultingPeer);
 
-    NS_IMETHOD
-    Start(void);
+    NS_IMETHOD Start(void);
 
-    NS_IMETHOD
-    Stop(void);
+    NS_IMETHOD Stop(void);
 
-    NS_IMETHOD
-    Destroy(void);
+    NS_IMETHOD Destroy(void);
 
-    NS_IMETHOD
-    SetWindow(nsPluginWindow* window);
+    NS_IMETHOD SetWindow(nsPluginWindow* window);
 
-    NS_IMETHOD
-    NewStream(nsIPluginStreamListener** listener);
+    NS_IMETHOD NewStream(nsIPluginStreamListener** listener);
 
-    NS_IMETHOD
-    Print(nsPluginPrint* platformPrint);
+    NS_IMETHOD Print(nsPluginPrint* platformPrint);
 
-    NS_IMETHOD
-    GetValue(nsPluginInstanceVariable variable, void *value);
+    NS_IMETHOD GetValue(nsPluginInstanceVariable variable, void *value);
 
-	NS_IMETHOD
-    HandleEvent(nsPluginEvent* event, PRBool* handled);
+    NS_IMETHOD HandleEvent(nsPluginEvent* event, PRBool* handled);
     
-	////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
     // ns4xPluginInstance-specific methods
 
     /**
      * Return the 4.x-style interface object.
      */
-    nsresult
-    GetNPP(NPP * aNPP);
+    nsresult GetNPP(NPP * aNPP);
 
     /**
      * Return the callbacks for the plugin instance.
      */
-    nsresult
-    GetCallbacks(const NPPluginFuncs ** aCallbacks);
+    nsresult GetCallbacks(const NPPluginFuncs ** aCallbacks);
 
-    nsresult
-    SetWindowless(PRBool aWindowless);
+    nsresult SetWindowless(PRBool aWindowless);
 
-    nsresult
-    SetTransparent(PRBool aTransparent);
+    nsresult SetTransparent(PRBool aTransparent);
 
-	nsresult
-	NewNotifyStream(nsIPluginStreamListener** listener, void* notifyData);
+    nsresult NewNotifyStream(nsIPluginStreamListener** listener, void* notifyData);
 
-	/**
+    /**
      * Construct a new 4.x plugin instance with the specified peer
      * and callbacks.
      */
@@ -126,7 +111,7 @@ protected:
     /**
      * The plugin instance peer for this instance.
      */
-    nsIPluginInstancePeer* fPeer;
+    nsCOMPtr<nsIPluginInstancePeer> mPeer;
 
     /**
      * A pointer to the plugin's callback functions. This information
@@ -140,7 +125,7 @@ protected:
     * Special GtkXtBin widget that encapsulates the Xt toolkit
     * within a Gtk Application
     */
-   GtkWidget *xtbin;
+   GtkWidget *mXtBin;
 #endif
 
     /**
