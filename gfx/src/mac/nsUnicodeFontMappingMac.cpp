@@ -312,7 +312,7 @@ nsUnicodeFontMappingMac* nsUnicodeFontMappingMac::GetCachedInstance(
 		gCache = gUtil->GetFontMappingCache();	
 
 	nsUnicodeFontMappingMac* obj = nsnull;
-	nsAutoString key = aFont->name;
+	nsAutoString key(aFont->name);
 	key.AppendWithConversion(":");
 	key.Append(aLangGroup);
 	key.AppendWithConversion(":");
