@@ -1290,6 +1290,15 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         }
       }
     }
+  case NS_MOUSE_ENTER:
+    nsCOMPtr<nsIContent> targetContent;
+    if (mCurrentTarget) {
+      mCurrentTarget->GetContentForEvent(aPresContext, aEvent,
+                                         getter_AddRefs(targetContent));
+      SetContentState(targetContent, NS_EVENT_STATE_HOVER);
+    }
+    break;
+
   }
 
   //Reset target frame to null to avoid mistargetting after reentrant event
