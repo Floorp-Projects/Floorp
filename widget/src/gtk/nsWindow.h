@@ -47,29 +47,22 @@ public:
 
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
-    NS_IMETHOD            PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK; }
+    NS_IMETHOD           PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK; }
 
-    virtual void*           GetNativeData(PRUint32 aDataType);
+    virtual void*        GetNativeData(PRUint32 aDataType);
 
-    NS_IMETHOD              GetClientBounds(nsRect &aRect);
-    NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
+    NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
+    NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
+    NS_IMETHOD           Update();
+    NS_IMETHOD           SetColorMap(nsColorMap *aColorMap);
+    NS_IMETHOD           Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
 
-    NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
-    NS_IMETHOD              Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
-    NS_IMETHOD              Update();
-    virtual nsIRenderingContext* GetRenderingContext();
-    NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
-    virtual nsIDeviceContext* GetDeviceContext();
-    virtual nsIAppShell *   GetAppShell();
-    NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+    NS_IMETHOD           SetTitle(const nsString& aTitle);
+    NS_IMETHOD           SetMenuBar(nsIMenuBar * aMenuBar);
 
-    NS_IMETHOD            SetBorderStyle(nsBorderStyle aBorderStyle);
-    NS_IMETHOD            SetTitle(const nsString& aTitle);
-    NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar);
-
-    NS_IMETHOD            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
-    NS_IMETHOD            UpdateTooltips(nsRect* aNewTips[]);
-    NS_IMETHOD            RemoveTooltips();
+    NS_IMETHOD           SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
+    NS_IMETHOD           UpdateTooltips(nsRect* aNewTips[]);
+    NS_IMETHOD           RemoveTooltips();
 
     NS_IMETHOD            BeginResizingChildren(void);
     NS_IMETHOD            EndResizingChildren(void);

@@ -130,12 +130,13 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   gtk_widget_set_events (mWidget,
                          GDK_BUTTON_PRESS_MASK |
                          GDK_BUTTON_RELEASE_MASK |
-                         GDK_POINTER_MOTION_MASK |
-                         GDK_EXPOSURE_MASK |
                          GDK_ENTER_NOTIFY_MASK |
-                         GDK_LEAVE_NOTIFY_MASK |
+                         GDK_EXPOSURE_MASK |
+                         GDK_FOCUS_CHANGE_MASK |
                          GDK_KEY_PRESS_MASK |
-                         GDK_KEY_RELEASE_MASK);
+                         GDK_KEY_RELEASE_MASK |
+                         GDK_LEAVE_NOTIFY_MASK |
+                         GDK_POINTER_MOTION_MASK);
 
   if (!parentWidget) {
 
@@ -199,6 +200,14 @@ void nsWindow::InitCallbacks(char * aName)
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
 		     GTK_SIGNAL_FUNC(handle_key_release_event),
+		     this);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "focus_in_event",
+		     GTK_SIGNAL_FUNC(handle_focus_in_event),
+		     this);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "focus_out_event",
+		     GTK_SIGNAL_FUNC(handle_focus_out_event),
 		     this);
 }
 
@@ -292,33 +301,6 @@ NS_IMETHODIMP nsWindow::Update()
 
 //-------------------------------------------------------------------------
 //
-// Create a rendering context from this nsWindow
-//
-//-------------------------------------------------------------------------
-nsIRenderingContext* nsWindow::GetRenderingContext()
-{
-  nsIRenderingContext * ctx = nsnull;
-
-  if (GetNativeData(NS_NATIVE_WIDGET)) {
-
-    nsresult  res;
-
-    static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-    static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-    res = nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
-
-    if (NS_OK == res)
-      ctx->Init(mContext, this);
-
-    NS_ASSERTION(NULL != ctx, "Null rendering context");
-  }
-
-  return ctx;
-}
-
-//-------------------------------------------------------------------------
-//
 // Return some native data according to aDataType
 //
 //-------------------------------------------------------------------------
@@ -351,28 +333,6 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 
 //-------------------------------------------------------------------------
 //
-// Return the used device context
-//
-//-------------------------------------------------------------------------
-nsIDeviceContext* nsWindow::GetDeviceContext()
-{
-  NS_IF_ADDREF(mContext);
-  return mContext;
-}
-
-//-------------------------------------------------------------------------
-//
-// Return the used app shell
-//
-//-------------------------------------------------------------------------
-nsIAppShell* nsWindow::GetAppShell()
-{
-  NS_IF_ADDREF(mAppShell);
-  return mAppShell;
-}
-
-//-------------------------------------------------------------------------
-//
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
@@ -386,11 +346,6 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     gtk_adjustment_value_changed(horiz);
     gtk_adjustment_value_changed(vert);
   }
-  return NS_OK;
-}
-
-NS_METHOD nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
-{
   return NS_OK;
 }
 
@@ -506,32 +461,5 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 
   gtk_box_pack_start(GTK_BOX(mVBox), menubar, PR_FALSE, PR_FALSE, 0);
   gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
-  return NS_OK;
-}
-
-/**
- *
- *
- **/
-NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
-{
-  return GetBounds(aRect);
-}
-
-
-/**
- * Calculates the border width and height
- *
- **/
-NS_METHOD nsWindow::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
-{
-  nsRect rectWin;
-  nsRect rectClient;
-  GetBounds(rectWin);
-  GetClientBounds(rectClient);
-
-  aWidth  = rectWin.width - rectClient.width;
-  aHeight = rectWin.height - rectClient.height;
-
   return NS_OK;
 }

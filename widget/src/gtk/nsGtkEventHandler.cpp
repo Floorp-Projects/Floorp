@@ -301,6 +301,23 @@ void InitKeyEvent(GdkEventKey *aGEK,
   }
 }
 
+//==============================================================
+void InitFocusEvent(GdkEventFocus *aGEF,
+                            gpointer   p,
+                            nsGUIEvent &anEvent,
+                            PRUint32   aEventType)
+{
+  anEvent.message = aEventType;
+  anEvent.widget  = (nsWidget *) p;
+  NS_ADDREF(anEvent.widget);
+
+  anEvent.eventStructType = NS_GUI_EVENT;
+
+  anEvent.time = 0;
+  anEvent.point.x = 0;
+  anEvent.point.y = 0;
+}
+
 /*==============================================================
   ==============================================================
   =============================================================
@@ -468,6 +485,30 @@ gint handle_leave_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer 
 
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
+
+  return PR_FALSE;
+}
+
+//==============================================================
+gint handle_focus_in_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
+{
+  nsGUIEvent gevent;
+  InitFocusEvent(event, p, gevent, NS_GOTFOCUS);
+
+  nsWindow *win = (nsWindow *)p;
+  win->DispatchFocus(gevent);
+
+  return PR_FALSE;
+}
+
+//==============================================================
+gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
+{
+  nsGUIEvent gevent;
+  InitFocusEvent(event, p, gevent, NS_LOSTFOCUS);
+
+  nsWindow *win = (nsWindow *)p;
+  win->DispatchFocus(gevent);
 
   return PR_FALSE;
 }
