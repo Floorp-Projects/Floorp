@@ -70,5 +70,6 @@ mailnews/ui/compose/resources/Makefile
 mailnews/ui/preference/Makefile
 mailnews/ui/preference/resources/Makefile
 mailnews/ui/ab/Makefile
+mailnews/ui/ab/resources/Makefile
 mailnews/public/Makefile
 mailnews/idl/Makefile
