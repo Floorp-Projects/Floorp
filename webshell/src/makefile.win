@@ -35,6 +35,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsDLLFactory.obj		\
  .\$(OBJDIR)\nsDocumentViewer.obj	\
  .\$(OBJDIR)\nsDocLoader.obj		\
+ .\$(OBJDIR)\nsPluginViewer.obj		\
  .\$(OBJDIR)\nsThrobber.obj		\
  .\$(OBJDIR)\nsWebShell.obj		\
  $(NULL)
