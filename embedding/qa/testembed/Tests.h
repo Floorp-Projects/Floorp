@@ -51,6 +51,7 @@
 #include "BrowserView.h"
 #include "BrowserImpl.h"
 #include "StdAfx.h"
+#include "UrlDialog.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -78,6 +79,7 @@ public:
 	nsCOMPtr<nsIBaseWindow> qaBaseWindow;
 	nsCOMPtr<nsIWebNavigation> qaWebNav;
 	CBrowserImpl	*qaBrowserImpl;
+	CUrlDialog myDialog;
 
 	// local test methods
 
@@ -93,7 +95,8 @@ private:
 
 	// local test variables
 	PRBool exists;
-	nsCOMPtr<nsIURI> theUri;
+	nsCOMPtr<nsIURI> theURI;
+	nsCOMPtr<nsIChannel> theChannel;
 	UINT nCommandID;
 protected:
 	//{{AFX_MSG(CTests)
@@ -113,7 +116,8 @@ protected:
 	afx_msg void OnTestsAddUriContentListenerByWebBrowser();
 	afx_msg void OnTestsAddUriContentListenerByUriLoader();
 	afx_msg void OnTestsAddUriContentListenerByOpenUri();
-	afx_msg void OnTestsNSNewChannel();
+	afx_msg void OnTestsNSNewChannelAndAsyncOpen();
+	afx_msg void OnTestsIOServiceNewURI();
 	afx_msg void OnInterfacesNsifile();
 	afx_msg void OnToolsRemoveGHPage();
 	afx_msg void OnToolsRemoveAllGH();
@@ -121,6 +125,8 @@ protected:
 	afx_msg void OnToolsTestYourMethod2();
 	afx_msg void OnVerifybugs70228();
 	afx_msg void OnVerifybugs90195();
+	afx_msg void OnVerifybugs169617();
+	afx_msg void OnVerifybugs170274();
     afx_msg void OnPasteTest();
     afx_msg void OnCopyTest();
     afx_msg void OnSelectAllTest();

@@ -166,7 +166,8 @@ BEGIN
             MENUITEM "OpenUri()",                   ID_TESTS_ADDURICONTENTLISTENER_OPENURI
 
         END
-        MENUITEM "NS_NewChannel",               ID_TESTS_NSNEWCHANNEL
+        MENUITEM "NSNewChannel/AyncOpen",       ID_TESTS_NSNEWCHANNEL
+        MENUITEM "nsIIOService->NewURI()",      ID_TESTS_NSIIOSERVICENEWURI
     END
     POPUP "&Interfaces"
     BEGIN
@@ -604,6 +605,8 @@ BEGIN
     BEGIN
         MENUITEM "&70228",                      ID_VERIFYBUGS_70228
         MENUITEM "90195",                       ID_VERIFYBUGS_90195
+        MENUITEM "169617",                      ID_VERIFYBUGS_169617
+        MENUITEM "170274",                      ID_VERIFYBUGS_170274
     END
 END
 

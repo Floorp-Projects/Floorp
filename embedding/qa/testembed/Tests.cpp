@@ -69,6 +69,7 @@
 #include "nsICommandMgr.h"
 #include "nsICmdParams.h"
 #include "QaUtils.h"
+#include "nsIIOService.h"
 #include <stdio.h>
 
 #ifdef _DEBUG
@@ -94,8 +95,8 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_ADDURICONTENTLISTENER_ADDFROMNSIWEBBROWSER, OnTestsAddUriContentListenerByWebBrowser)
 	ON_COMMAND(ID_TESTS_ADDURICONTENTLISTENER_ADDFROMNSIURILOADER, OnTestsAddUriContentListenerByUriLoader)
 	ON_COMMAND(ID_TESTS_ADDURICONTENTLISTENER_OPENURI, OnTestsAddUriContentListenerByOpenUri)
-	ON_COMMAND(ID_TESTS_NSNEWCHANNEL, OnTestsNSNewChannel)
-
+	ON_COMMAND(ID_TESTS_NSNEWCHANNEL, OnTestsNSNewChannelAndAsyncOpen)
+	ON_COMMAND(ID_TESTS_NSIIOSERVICENEWURI, OnTestsIOServiceNewURI)
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
@@ -103,6 +104,8 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 
 	ON_COMMAND(ID_VERIFYBUGS_70228, OnVerifybugs70228)
 	ON_COMMAND(ID_VERIFYBUGS_90195, OnVerifybugs90195)
+	ON_COMMAND(ID_VERIFYBUGS_169617, OnVerifybugs169617)
+	ON_COMMAND(ID_VERIFYBUGS_170274, OnVerifybugs170274)
 
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_INIT, OnInterfacesNsidirectoryservice)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_REGISTERPROVIDER, OnInterfacesNsidirectoryservice)
@@ -312,14 +315,12 @@ CTests::~CTests()
 }
 
 
-// depstein: Start QA test cases here
 // *********************************************************
+// depstein: Start QA test cases here
 // *********************************************************
 
 void CTests::OnTestsChangeUrl()
 {
-	CUrlDialog myDialog;
-
 	if (!qaWebNav)
 	{
 		QAOutput("Web navigation object not found. Change URL test not performed.", 2);
@@ -348,8 +349,6 @@ void CTests::OnTestsGlobalHistory()
 {
 	// create instance of myHistory object. Call's XPCOM
 	// service manager to pass the contract ID.
-
-	CUrlDialog myDialog;
 
 	PRBool theRetVal = PR_FALSE;
 
@@ -438,7 +437,6 @@ void CTests::OnTestsCreateprofile()
 
 	if (myDialog.DoModal() == IDOK)
     {
-//      NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
 		nsCOMPtr<nsIProfile> theProfServ(do_GetService(NS_PROFILE_CONTRACTID,&rv));
 		if (NS_FAILED(rv))
 		{
@@ -481,6 +479,8 @@ void CTests::OnTestsAddHistoryListener()
 	RvTestResult(rv, "AddWebBrowserListener(). Add History Lstnr test", 2);
 }
 
+// *********************************************************
+
 void CTests::OnTestsRemovehistorylistener()
 {
   // RemoveSHistoryListener test
@@ -490,6 +490,8 @@ void CTests::OnTestsRemovehistorylistener()
 	RvTestResult(rv, "RemoveWebBrowserListener(). Remove History Lstnr test", 2);
 }
 
+// *********************************************************
+
 void CTests::OnTestsAddUriContentListenerByWebBrowser()
 {
     nsWeakPtr weakling(
@@ -498,6 +500,8 @@ void CTests::OnTestsAddUriContentListenerByWebBrowser()
 
 	RvTestResult(rv, "AddWebBrowserListener(). add nsIURIContentListener test", 2);
 }
+
+// *********************************************************
 
 void CTests::OnTestsAddUriContentListenerByUriLoader()
 {
@@ -518,17 +522,16 @@ void CTests::OnTestsAddUriContentListenerByUriLoader()
 	}
 }
 
+// *********************************************************
+
 void CTests::OnTestsAddUriContentListenerByOpenUri()
 {
-	CUrlDialog myDialog;
 	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
 	RvTestResult(rv, "nsIURILoader() object test", 1);
 	if (!myLoader) {
 		QAOutput("Didn't get urILoader object. test failed", 2);
 		return;
 	}
-	nsCOMPtr<nsIChannel> theChannel;
-	nsCOMPtr<nsIURI> theURI;
 
 	if (myDialog.DoModal() == IDOK)
 	{
@@ -551,12 +554,13 @@ void CTests::OnTestsAddUriContentListenerByOpenUri()
 	RvTestResult(rv, "nsIUriLoader->OpenURI() test", 2);
 }
 
-void CTests::OnTestsNSNewChannel()
+// *********************************************************
+
+void CTests::OnTestsNSNewChannelAndAsyncOpen()
 {
-	CUrlDialog myDialog;
 	nsCOMPtr<nsIChannel> theChannel;
 	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
-	nsCOMPtr<nsIURI> theURI;
+
 	if (myDialog.DoModal() == IDOK)
 	{
 		nsCAutoString theStr;
@@ -567,6 +571,40 @@ void CTests::OnTestsNSNewChannel()
 		RvTestResult(rv, "NS_NewURI() test", 2);
 		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 		RvTestResult(rv, "NS_NewChannel() test", 2);
+
+		QAOutput("AynchOpen() test.", 2);
+		nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
+		nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
+		qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
+
+		// this calls nsIStreamListener::OnDataAvailable()
+		rv = theChannel->AsyncOpen(listener, nsnull);
+		RvTestResult(rv, "AsyncOpen()", 2);
+	}
+}
+
+// *********************************************************
+
+void CTests::OnTestsIOServiceNewURI()
+{
+	nsCOMPtr<nsIIOService> ioService(do_GetIOService(&rv));
+	if (!ioService) {
+		QAOutput("We didn't get the IOService object.", 2);
+		return;
+	}
+	if (myDialog.DoModal() == IDOK)
+	{
+		nsCAutoString theStr, retURI;
+
+		theStr = myDialog.m_urlfield;
+		rv = ioService->NewURI(theStr, nsnull, nsnull, getter_AddRefs(theURI));
+		RvTestResult(rv, "ioService->NewURI() test", 2);
+		if (!theURI)
+			QAOutput("We didn't get the nsIURI object for IOService test.", 2);
+		else {
+			retURI = GetTheUri(theURI, 1);
+			FormatAndPrintOutput("The ioService->NewURI() output uri = ", retURI, 2);
+		}
 	}
 }
 
@@ -577,9 +615,7 @@ void CTests::OnTestsNSNewChannel()
 
 void CTests::OnToolsRemoveGHPage()
 {
-	CUrlDialog myDialog;
 	PRBool theRetVal = PR_FALSE;
-	//nsresult rv;
 	nsCOMPtr<nsIGlobalHistory> myGHistory(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
 	if (!myGHistory)
 	{
@@ -630,7 +666,7 @@ void CTests::OnToolsRemoveAllGH()
 	QAOutput("Begin removal of all pages from the GH file.", 2);
 
 	rv = myHistory->RemoveAllPages();
-	RvTestResult(rv, "removeAllPages(). Test .", 2);
+	RvTestResult(rv, "removeAllPages().", 2);
 
 	QAOutput("End removal of all pages from the GH file.", 2);
 
@@ -640,14 +676,6 @@ void CTests::OnToolsRemoveAllGH()
 void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
-
-		nsCOMPtr<nsIChannel> theChannel;
-		nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
-		nsCOMPtr<nsIURI> theURI;
-		rv = NS_NewURI(getter_AddRefs(theURI), "http://www.yahoo.com");
-		RvTestResult(rv, "NS_NewURI(). Test .", 2);
-		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
-		RvTestResult(rv, "NS_NewChannel(). Test .", 2);
 }
 
 // ***********************************************************************
@@ -668,13 +696,6 @@ void CTests::OnVerifybugs70228()
 		QAOutput("Object not created. It should be. It's a component!", 2);
 	else
 		QAOutput("Object is created. It's a component!", 2);
-
-/*
-nsCOMPtr<nsIHelperAppLauncher>
-			myHAL(do_CreateInstance(NS_IHELPERAPPLAUNCHERDLG_CONTRACTID));
-
-	rv = myHALD->show(myHal, nsnull);
-*/
 }
 
 void CTests::OnVerifybugs90195()
@@ -689,6 +710,42 @@ void CTests::OnVerifybugs90195()
 	if (!oTooltipTextProvider)
 		AfxMEssageBox("Asdfadf");
 */
+}
+
+void CTests::OnVerifybugs169617()
+{
+	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
+	nsCAutoString theStr;
+
+	QAOutput("Verification for bug 169617!", 2);
+	theStr = "file://C|/Program Files";
+	rv = NS_NewURI(getter_AddRefs(theURI), theStr);
+	RvTestResult(rv, "NS_NewURI() test for file url", 1);
+	GetTheUri(theURI, 1);
+	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
+	RvTestResult(rv, "NS_NewChannel() test for file url", 1);
+
+	nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
+	rv = myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
+	RvTestResult(rv, "nsIUriLoader->OpenURI() test for file url", 2);
+}
+
+void CTests::OnVerifybugs170274()
+{
+	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
+	nsCAutoString theStr;
+
+	QAOutput("Verification for bug 170274!", 2);
+	theStr = "data:text/plain;charset=iso-8859-7,%be%fg%be";
+	rv = NS_NewURI(getter_AddRefs(theURI), theStr);
+	RvTestResult(rv, "NS_NewURI() test for data url", 1);
+	GetTheUri(theURI, 1);
+	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
+	RvTestResult(rv, "NS_NewChannel() test for data url", 1);
+
+	nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
+	rv = myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
+	RvTestResult(rv, "nsIUriLoader->OpenURI() test for data url", 2);
 }
 
 // ***********************************************************************
