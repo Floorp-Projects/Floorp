@@ -3472,6 +3472,8 @@ RuleProcessorData::~RuleProcessorData()
   NS_IF_RELEASE(mContentTag);
   NS_IF_RELEASE(mContentID);
   NS_IF_RELEASE(mStyledContent);
+
+  delete mLanguage;
 }
 
 const nsString* RuleProcessorData::GetLang(void)
