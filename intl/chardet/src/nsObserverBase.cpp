@@ -37,7 +37,7 @@ static NS_DEFINE_IID(kIWebShellServicesIID, NS_IWEB_SHELL_SERVICES_IID);
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsObserverBase::NotifyWebShell(
-  PRUint32 aDocumentID, const char* charset, nsCharsetSource source)
+  nsISupports* aDocumentID, const char* charset, nsCharsetSource source)
 {
    nsresult res = NS_OK;
    nsresult rv = NS_OK;
@@ -51,7 +51,8 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
                                                  (nsISupports**)&docLoader)))
      goto done;
    
-   if(NS_FAILED(rv =docLoader->GetContentViewerContainer(aDocumentID, &cvc)))
+   // temp change to (PRUint32) cast untill we change the GetContentViewerContainer interface
+   if(NS_FAILED(rv =docLoader->GetContentViewerContainer((PRUint32)aDocumentID, &cvc)))
      goto done;
 
    /* sspitzer:  this was necessary to get printing of mail to work (sort of)

@@ -46,7 +46,7 @@ public:
    */
 protected:
 
-  NS_IMETHOD NotifyWebShell(PRUint32 aDocumentID, 
+  NS_IMETHOD NotifyWebShell(nsISupports* aDocumentID, 
                             const char* charset, 
                             nsCharsetSource source);
 
