@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -58,6 +59,7 @@
 #include "nsTime.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsIMsgFilterPlugin.h"
 
 #include "nsIRDFService.h"
 #include "nsISupportsObsolete.h"
@@ -91,15 +93,17 @@ nsMsgSearchAttribEntry SearchAttribEntryTable[] =
     {nsMsgSearchAttrib::ToOrCC,		"to or cc"},
     {nsMsgSearchAttrib::AgeInDays,   "age in days"},
     {nsMsgSearchAttrib::Label,       "label"},
-    {nsMsgSearchAttrib::SenderInAddressBook,		"from in ab"}
+    {nsMsgSearchAttrib::SenderInAddressBook,		"from in ab"},
+    {nsMsgSearchAttrib::JunkStatus,       "junk status"},
 };
 
 // Take a string which starts off with an attribute
 // return the matching attribute. If the string is not in the table, then we can conclude that it is an arbitrary header
 nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
 {
-	if (NULL == string || NULL == attrib)
-		return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(string);
+  NS_ENSURE_ARG_POINTER(attrib);
+  
 	PRBool found = PR_FALSE;
 	for (int idxAttrib = 0; idxAttrib < (int)(sizeof(SearchAttribEntryTable) / sizeof(nsMsgSearchAttribEntry)); idxAttrib++)
 	{
@@ -173,9 +177,9 @@ nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
 
 nsresult NS_MsgGetStringForAttribute(PRInt16 attrib, const char **string)
 {
-	if (NULL == string)
-		return NS_ERROR_NULL_POINTER;
-	PRBool found = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(string);
+
+  PRBool found = PR_FALSE;
 	for (int idxAttrib = 0; idxAttrib < (int)(sizeof(SearchAttribEntryTable) / sizeof(nsMsgSearchAttribEntry)); idxAttrib++)
 	{
 		// I'm using the idx's as aliases into MSG_SearchAttribute and 
@@ -221,8 +225,8 @@ nsMsgSearchOperatorEntry SearchOperatorEntryTable[] =
 
 nsresult NS_MsgGetOperatorFromString(const char *string, PRInt16 *op)
 {
-	if (NULL == string || NULL == op)
-		return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(string);
+  NS_ENSURE_ARG_POINTER(op);
 	
 	PRBool found = PR_FALSE;
 	for (unsigned int idxOp = 0; idxOp < sizeof(SearchOperatorEntryTable) / sizeof(nsMsgSearchOperatorEntry); idxOp++)
@@ -242,9 +246,9 @@ nsresult NS_MsgGetOperatorFromString(const char *string, PRInt16 *op)
 
 nsresult NS_MsgGetStringForOperator(PRInt16 op, const char **string)
 {
-	if (NULL == string)
-		return NS_ERROR_NULL_POINTER;
-	PRBool found = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(string);
+  
+  PRBool found = PR_FALSE;
 	for (unsigned int idxOp = 0; idxOp < sizeof(SearchOperatorEntryTable) / sizeof(nsMsgSearchOperatorEntry); idxOp++)
 	{
 		// I'm using the idx's as aliases into MSG_SearchAttribute and 
@@ -434,16 +438,21 @@ nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
 			outputStr += dateBuf;
 			break;
 		}
-        case nsMsgSearchAttrib::AgeInDays:
-        {
-            outputStr.AppendInt(m_value.u.age);
-            break;
-        }
-        case nsMsgSearchAttrib::Label:
-        {
-            outputStr.AppendInt(m_value.u.label);
-            break;
-        }
+    case nsMsgSearchAttrib::AgeInDays:
+      {
+        outputStr.AppendInt(m_value.u.age);
+        break;
+      }
+    case nsMsgSearchAttrib::Label:
+      {
+        outputStr.AppendInt(m_value.u.label);
+        break;
+      }
+    case nsMsgSearchAttrib::JunkStatus:
+      {
+        outputStr.AppendInt(m_value.u.junkStatus); // only if we write to disk, right?
+        break;
+      }
 		case nsMsgSearchAttrib::MsgStatus:
 		{
 			nsCAutoString status;
@@ -535,12 +544,15 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 		case nsMsgSearchAttrib::Priority:
 			NS_MsgGetPriorityFromString(inStream, &m_value.u.priority);
 			break;
-        case nsMsgSearchAttrib::AgeInDays:
-            m_value.u.age = atoi(inStream);
-            break;
-        case nsMsgSearchAttrib::Label:
-            m_value.u.label = atoi(inStream);
-            break;
+    case nsMsgSearchAttrib::AgeInDays:
+      m_value.u.age = atoi(inStream);
+      break;
+    case nsMsgSearchAttrib::Label:
+      m_value.u.label = atoi(inStream);
+      break;
+    case nsMsgSearchAttrib::JunkStatus:
+      m_value.u.junkStatus = atoi(inStream); // only if we read from disk, right?
+      break;
 		default:
 			NS_ASSERTION(PR_FALSE, "invalid attribute parsing search term value");
 			break;
@@ -771,6 +783,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 {
 	NS_ENSURE_ARG_POINTER(pResult);
 	nsresult err = NS_OK;
+
 	PRBool result = PR_FALSE;
 	*pResult = PR_FALSE;
 
@@ -892,12 +905,10 @@ nsresult nsMsgSearchTerm::MatchRfc2047String (const char *rfc2047string,
                                        PRBool charsetOverride,
                                        PRBool *pResult)
 {
-	static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
+  NS_ENSURE_ARG_POINTER(pResult);
+  NS_ENSURE_ARG_POINTER(rfc2047string);
 
-	if (!pResult || !rfc2047string)
-		return NS_ERROR_NULL_POINTER;
-
-    nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
+    nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID);
 	char *stringToMatch = 0;
     nsresult res = mimeConverter->DecodeMimeHeader(rfc2047string,
                                                    &stringToMatch,
@@ -1193,7 +1204,7 @@ nsresult nsMsgSearchTerm::MatchAge (PRTime msgDate, PRBool *pResult)
       }
       break;
     default:
-      NS_ASSERTION(PR_FALSE, "invalid compare op comparing msg age");
+      NS_ASSERTION(PR_FALSE, "invalid compare op for msg age");
   }
   *pResult = result;
   return err;
@@ -1207,12 +1218,16 @@ nsresult nsMsgSearchTerm::MatchSize (PRUint32 sizeToMatch, PRBool *pResult)
 	PRBool result = PR_FALSE;
 	switch (m_operator)
 	{
-	case nsMsgSearchOp::IsHigherThan:
+	case nsMsgSearchOp::IsGreaterThan:
 		if (sizeToMatch > m_value.u.size)
 			result = PR_TRUE;
 		break;
-	case nsMsgSearchOp::IsLowerThan:
+	case nsMsgSearchOp::IsLessThan:
 		if (sizeToMatch < m_value.u.size)
+			result = PR_TRUE;
+		break;
+	case nsMsgSearchOp::Is:
+		if (sizeToMatch == m_value.u.size)
 			result = PR_TRUE;
 		break;
 	default:
@@ -1220,6 +1235,39 @@ nsresult nsMsgSearchTerm::MatchSize (PRUint32 sizeToMatch, PRBool *pResult)
 	}
 	*pResult = result;
 	return NS_OK;
+}
+
+nsresult nsMsgSearchTerm::MatchJunkStatus(const char *aJunkScore, PRBool *pResult)
+{
+  NS_ENSURE_ARG_POINTER(pResult);
+
+  nsMsgJunkStatus junkStatus;  
+  if (aJunkScore && *aJunkScore) {
+    // I set the cut off at 50. this may change
+    // it works for our bayesian plugin, as "0" is good, and "100" is junk
+    // but it might need tweaking for other plugins
+    junkStatus = (atoi(aJunkScore) > 50) ? nsIJunkMailPlugin::JUNK : nsIJunkMailPlugin::GOOD;
+  }
+  else
+    junkStatus = nsIJunkMailPlugin::UNCLASSIFIED;
+
+  nsresult rv = NS_OK;
+	PRBool matches = (junkStatus == m_value.u.junkStatus);
+
+	switch (m_operator)
+	{
+	case nsMsgSearchOp::Is:
+		break;
+	case nsMsgSearchOp::Isnt:
+		matches = !matches;
+		break;
+	default:
+		rv = NS_ERROR_FAILURE;
+		NS_ASSERTION(PR_FALSE, "invalid compare op for junk status");
+	}
+
+  *pResult = matches;
+	return rv;	
 }
 
 nsresult nsMsgSearchTerm::MatchLabel(nsMsgLabelValue aLabelValue, PRBool *pResult)
@@ -1242,15 +1290,12 @@ nsresult nsMsgSearchTerm::MatchLabel(nsMsgLabelValue aLabelValue, PRBool *pResul
   return NS_OK;	
 }
 
-nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch, PRBool *pResult)
+nsresult nsMsgSearchTerm::MatchStatus(PRUint32 statusToMatch, PRBool *pResult)
 {
 	NS_ENSURE_ARG_POINTER(pResult);
 
-	nsresult err = NS_OK;
-	PRBool matches = PR_FALSE;
-
-	if (statusToMatch & m_value.u.msgStatus)
-		matches = PR_TRUE;
+	nsresult rv = NS_OK;
+	PRBool matches = (statusToMatch & m_value.u.msgStatus);
 
 	switch (m_operator)
 	{
@@ -1260,14 +1305,13 @@ nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch, PRBool *pResult)
 		matches = !matches;
 		break;
 	default:
-		err = NS_ERROR_FAILURE;
-		NS_ASSERTION(PR_FALSE, "invalid comapre op for msg status");
+		rv = NS_ERROR_FAILURE;
+		NS_ASSERTION(PR_FALSE, "invalid compare op for msg status");
 	}
 
   *pResult = matches;
-	return err;	
+	return rv;	
 }
-
 
 nsresult
 nsMsgSearchTerm::MatchPriority (nsMsgPriorityValue priorityToMatch,
@@ -1542,9 +1586,12 @@ nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchVa
 	case nsMsgSearchAttrib::AgeInDays:
         err = src->GetAge(&dst->u.age);
 		break;
-    case nsMsgSearchAttrib::Label:
-        err = src->GetLabel(&dst->u.label);
-        break;
+  case nsMsgSearchAttrib::Label:
+    err = src->GetLabel(&dst->u.label);
+    break;
+  case nsMsgSearchAttrib::JunkStatus:
+    err = src->GetJunkStatus(&dst->u.junkStatus);
+    break;
 	default:
 		if (dst->attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)
 		{

@@ -449,8 +449,9 @@ function analyze(aMessage, aNextFunction)
         onMessageClassified: function(aMsgURL, aClassification)
         {
             dump(aMsgURL + ' is ' + (aClassification == nsIJunkMailPlugin.JUNK ? 'JUNK' : 'GOOD') + '\n');
+            // XXX TODO, make the cut off 50, like in nsMsgSearchTerm.cpp
             var score = (aClassification == nsIJunkMailPlugin.JUNK ? "100" : "0");
-            aMessage.setStringProperty("score", score);
+            aMessage.setStringProperty("junkscore", score);
             aNextFunction();
         }
     };
@@ -533,10 +534,11 @@ function writeHash()
 function mark(aMessage, aSpam, aNextFunction)
 {
     // XXX TODO jumping through hoops here.
-    var score = aMessage.getStringProperty("score");
+    var score = aMessage.getStringProperty("junkscore");
 
     var oldClassification = ((score == "100") ? nsIJunkMailPlugin.JUNK :
                              (score == "0") ? nsIJunkMailPlugin.GOOD : nsIJunkMailPlugin.UNCLASSIFIED);
+    
     var newClassification = (aSpam ? nsIJunkMailPlugin.JUNK : nsIJunkMailPlugin.GOOD);
 
     var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
@@ -592,9 +594,9 @@ function markFolderAsJunk(aSpam)
             // now set the score
             // XXX TODO invalidate the row
             if (aSpam)
-              message.setStringProperty("score","100");
+              message.setStringProperty("junkscore","100");
             else
-              message.setStringProperty("score","0");
+              message.setStringProperty("junkscore","0");
         }
         else {
             dump('[folder marking complete.]\n');

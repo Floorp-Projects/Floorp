@@ -66,7 +66,8 @@ interface nsIMsgSearchTerm : nsISupports {
     boolean matchAge(in PRTime days);
     boolean matchSize(in unsigned long size);
 	boolean matchLabel(in nsMsgLabelValue aLabelValue);
-
+	boolean matchJunkStatus(in string aJunkScore);
+	
     boolean matchBody(in nsIMsgSearchScopeTerm scopeTerm,
                       in unsigned long offset,
                       in unsigned long length,

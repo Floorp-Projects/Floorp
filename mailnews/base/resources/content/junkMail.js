@@ -61,8 +61,8 @@ function setupForAccountFromFolder(aURI)
   serverList.selectedItem = menuitems[0];
 
   // set up the UI for this server
-  // set up the level radio group
-  document.getElementById("level").selectedItem = document.getElementById("level" + obj.settings.level);
+  // set up the level checkbox
+  document.getElementById("level").checked = (obj.settings.level > 0);
 
   // set up the junk mail folder picker
   document.getElementById("moveOnSpam").checked = obj.settings.moveOnSpam;
@@ -109,8 +109,7 @@ function onAccept()
 
 function storeSettings(aSettings, aLoggingEnabled)
 {
-  aSettings.level = document.getElementById("level").selectedItem.getAttribute("value");
-
+  aSettings.level = document.getElementById("level").checked ? 100 : 0;
   aSettings.moveOnSpam = document.getElementById("moveOnSpam").checked;
   aSettings.moveTargetMode = document.getElementById("moveTargetMode").selectedItem.getAttribute("value");
   aSettings.actionTargetAccount = document.getElementById("actionTargetAccount").getAttribute("uri");
@@ -127,6 +126,11 @@ function storeSettings(aSettings, aLoggingEnabled)
 function conditionallyEnableUI(id)
 {
   var enabled;
+
+  if (!id || id == "level") {
+    enabled = document.getElementById("label").checked;
+    dump("XXX enabled = " + enabled + "\n");
+  }
 
   if (!id || id == "moveOnSpam") {
     enabled = document.getElementById("moveOnSpam").checked;

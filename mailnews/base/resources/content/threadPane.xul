@@ -49,7 +49,7 @@ Rights Reserved.
     <treecol id="sizeCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1"  label="&sizeColumn.label;"/>
     <splitter class="tree-splitter"/>
 <!-- not ready yet
-    <treecol id="scoreCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&scoreColumn.label;"/>
+    <treecol id="junkStatusCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&junkStatusColumn.label;"/>
     <splitter class="tree-splitter"/>
 -->
     <treecol id="flaggedCol" fixed="true" persist="hidden ordinal" class="treecol-image flagColumnHeader" display="&flagColumn.label;" cycler="true"/>

@@ -56,23 +56,30 @@
   <description>&info2.label;</description>
   <separator/>
 
-  <hbox>
-    <radiogroup flex="1" id="level" orient="horizontal">
-      <!-- using 0 - 100, in case we ever do a slider or add more levels.  
-           this way, the exist pref value will migrate nice. -->
-      <radio flex="1" id="level0" value="0" accesskey="&off.accesskey;" label="&off.label;"/>
-      <radio flex="1" id="level20" value="20" accesskey="&lowest.accesskey;" label="&lowest.label;"/>
-      <radio flex="1" id="level40" value="40" accesskey="&low.accesskey;" label="&low.label;"/>
-      <radio flex="1" id="level60" value="60" accesskey="&medium.accesskey;" label="&medium.label;"/>
-      <radio flex="1" id="level80" value="80" accesskey="&high.accesskey;" label="&high.label;"/>
-      <radio flex="1" id="level100" value="100" accesskey="&highest.accesskey;" label="&highest.label;"/>
-    </radiogroup>
-  </hbox>
+  <checkbox id="level" oncommand="conditionallyEnableUI('label')" accesskey="&level.accesskey;" label="&level.label;"/>
 
   <separator/>
 
   <vbox align="start">
-    <label value="&action.label;"/>
+    <checkbox id="useWhiteList" oncommand="conditionallyEnableUI('useWhiteList')" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
+    <menulist id="whiteListAbURI">
+     <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
+        datasources="rdf:addressdirectory">
+        <template>
+        <rule nc:IsWriteable="false"/>
+        <rule nc:IsMailList="false">
+          <menuitem uri="..."
+                    label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                    value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+        </rule>
+        </template>
+      </menupopup>
+    </menulist>
+  </vbox>
+
+  <separator/>
+
+  <vbox align="start">
 
     <checkbox id="moveOnSpam" oncommand="conditionallyEnableUI('moveOnSpam')" label="&move.label;"/>
 
@@ -93,33 +100,17 @@
 	           value="1" label="&otherFolder.label;"/>
   	        <menulist id="actionTargetFolder"/>
           </row>
+          <row align="center" autostretch="never">
+            <checkbox id="purge" oncommand="conditionallyEnableUI('purge')" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
+            <textbox size="3" id="purgeInterval" />
+            <label id="purgeLabel" value="&purge2.label;"/>
+          </row>
         </rows>
       </grid>
     </radiogroup>
   </vbox>
 
-  <hbox autostretch="never" align="center">
-    <checkbox id="purge" oncommand="conditionallyEnableUI('purge')" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
-    <textbox size="3" id="purgeInterval" />
-    <label id="purgeLabel" value="&purge2.label;"/>
-  </hbox>
 
-  <hbox align="center">
-    <checkbox id="useWhiteList" oncommand="conditionallyEnableUI('useWhiteList')" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
-    <menulist id="whiteListAbURI">
-     <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
-        datasources="rdf:addressdirectory">
-        <template>
-        <rule nc:IsWriteable="false"/>
-        <rule nc:IsMailList="false">
-          <menuitem uri="..."
-                    label="rdf:http://home.netscape.com/NC-rdf#DirName"
-                    value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
-        </rule>
-        </template>
-      </menupopup>
-    </menulist>
-  </hbox>
 </vbox>
 
 </dialog>

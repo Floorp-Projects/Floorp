@@ -101,8 +101,9 @@ interface nsMsgSearchAttrib {
     const nsMsgSearchAttribValue Department = 30;
     const nsMsgSearchAttribValue AdditionalEmail = 31;
 
-	
-    // 32 - 46, reserved for ab / LDAP;
+    // 32 - 45, reserved for ab / LDAP;
+
+	const nsMsgSearchAttribValue JunkStatus = 46;
     const nsMsgSearchAttribValue SenderInAddressBook = 47;
     const nsMsgSearchAttribValue Label = 48; /* mail only...can search by label */
     //49 is for showing customize... in ui headers start from 50 onwards up until 99.
@@ -196,6 +197,7 @@ typedef struct nsMsgSearchValue
 		PRUint32 age; /* in days */
 		nsIMsgFolder *folder;
 		nsMsgLabelValue label;
+		PRUint32 junkStatus;
     } u;
     char *string;
 } nsMsgSearchValue;
@@ -208,7 +210,8 @@ typedef struct nsMsgSearchValue
 (!(_a == nsMsgSearchAttrib::Priority || _a == nsMsgSearchAttrib::Date || \
    _a == nsMsgSearchAttrib::MsgStatus || _a == nsMsgSearchAttrib::MessageKey || \
    _a == nsMsgSearchAttrib::Size || _a == nsMsgSearchAttrib::AgeInDays || \
-   _a == nsMsgSearchAttrib::FolderInfo || _a == nsMsgSearchAttrib::Location || _a == nsMsgSearchAttrib::Label) )
+   _a == nsMsgSearchAttrib::FolderInfo || _a == nsMsgSearchAttrib::Location || \
+   _a == nsMsgSearchAttrib::Label || _a == nsMsgSearchAttrib::JunkStatus)))
 %}
 
 [ptr] native nsSearchMenuItem(nsSearchMenuItem);

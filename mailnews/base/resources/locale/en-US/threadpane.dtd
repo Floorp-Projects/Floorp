@@ -26,7 +26,7 @@ Rights Reserved.
 <!ENTITY labelColumn.label "Label">
 <!ENTITY statusColumn.label "Status">
 <!ENTITY sizeColumn.label "Size">
-<!ENTITY scoreColumn.label "Junk Score">
+<!ENTITY junkStatusColumn.label "Junk Status">
 <!ENTITY linesColumn.label "Lines">
 <!ENTITY unreadColumn.label "Unread">
 <!ENTITY totalColumn.label "Total">

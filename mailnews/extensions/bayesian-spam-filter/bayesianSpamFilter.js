@@ -885,7 +885,7 @@ nsJunkmail.prototype =
 
             // XXX don't hardcode this
             //
-            //aMsgHdr.setStringProperty("score", aScore);
+            //aMsgHdr.setStringProperty("junkscore", aScore);
             //if (aScore >= this.threshhold) {
             //    aListener.applyFilterHit(this.dummyFilterObj, aMsgWindow);
             //}

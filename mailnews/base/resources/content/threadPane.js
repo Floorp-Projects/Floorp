@@ -169,11 +169,10 @@ function MsgSortByLabel()
     MsgSortThreadPane(nsMsgViewSortType.byLabel);
 }
 
-function MsgSortByScore()
+function MsgSortByJunkStatus()
 {
-    MsgSortThreadPane(nsMsgViewSortType.byScore);
+    MsgSortThreadPane(nsMsgViewSortType.byJunkStatus);
 }
-
 
 function MsgSortBySubject()
 {

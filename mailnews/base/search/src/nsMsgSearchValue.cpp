@@ -68,6 +68,7 @@ NS_IMPL_GETSET(nsMsgSearchValueImpl, Age, PRUint32, mValue.u.age);
 NS_IMPL_GETSET(nsMsgSearchValueImpl, Date, PRTime, mValue.u.date);
 NS_IMPL_GETSET(nsMsgSearchValueImpl, Attrib, nsMsgSearchAttribValue, mValue.attribute);
 NS_IMPL_GETSET(nsMsgSearchValueImpl, Label, nsMsgLabelValue, mValue.u.label);
+NS_IMPL_GETSET(nsMsgSearchValueImpl, JunkStatus, PRUint32, mValue.u.junkStatus);
 
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetFolder(nsIMsgFolder* *aResult)
@@ -129,6 +130,7 @@ nsMsgSearchValueImpl::ToString(PRUnichar **aResult)
     case nsMsgSearchAttrib::AgeInDays:
     case nsMsgSearchAttrib::FolderInfo:
     case nsMsgSearchAttrib::Label:
+    case nsMsgSearchAttrib::JunkStatus:
         resultStr.Append(NS_LITERAL_STRING("type="));
         resultStr.AppendInt(mValue.attribute);
         break;

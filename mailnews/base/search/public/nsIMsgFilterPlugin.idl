@@ -34,6 +34,7 @@
  */
 
 #include "nsISupports.idl"
+#include "MailNewsTypes2.idl"
 
 interface nsIMsgFilterHitNotify;
 interface nsIMsgWindow;
@@ -48,40 +49,6 @@ interface nsIStreamListener;
 interface nsIMsgFilterPlugin : nsISupports
 {
     /**
-     * Initialize the plugin object.
-     * 
-     * @param aServerPrefsKey     The preferences key for the server
-     *                            this object will be used with.
-     */
-    void init(in ACString aServerPrefsKey);
-
-    /**
-     * Filter an email message by content or headers, your choice.
-     *
-     * @param aMsgURL       URL to fetch full contents of this message.
-     * @param aMsgHdr       Can be used to set properties on the header of the
-     *                      message (e.g. for attaching a score to it).
-     *
-     * @param aHeaders      Array of header strings.  Note that these are in
-     *                      raw, 8-bit form, in violation of XPCOMs |string|
-     *                      typing rules.  Hopefully someday arrays of 
-     *                      nsACString will be supported by XPCOM.
-     *
-     * @param aCount        Number of elements in aHeaders.
-     *
-     * @param aListener     Used to perform actions, such as moving to another
-     *                      folder.
-     *
-     * @param aMsgWindow    Passed back to the listener.
-     */
-    void filterMessage(in string aMsgURL,
-                       in nsIMsgDBHdr aMsgHdr,
-                       in unsigned long aCount,
-                       [array, size_is(aCount)] in string aHeaders,
-                       in nsIMsgFilterHitNotify aListener,
-                       in nsIMsgWindow aMsgWindow);
-
-    /**
      * Do any necessary cleanup: flush and close any open files, etc.
      */
     void shutdown();
@@ -93,7 +60,6 @@ interface nsIMsgFilterPlugin : nsISupports
      */     
     readonly attribute boolean shouldDownloadAllHeaders;
 
-
     /**
      * When a large number of messages are going to be trained or filtered,
      * it's typically not worth it to write everything to disk after
@@ -101,7 +67,6 @@ interface nsIMsgFilterPlugin : nsISupports
      * starting a set messages, and then to false once it has finished.
      */
     attribute boolean batchUpdate;
-
 };
 
 /**
@@ -112,7 +77,7 @@ interface nsIMsgFilterPlugin : nsISupports
 [scriptable, uuid(0243f3d6-d583-11d6-898a-00039310a47a)]
 interface nsIJunkMailClassificationListener : nsISupports
 {
-    void onMessageClassified(in string aMsgURL, in long classification);
+    void onMessageClassified(in string aMsgURL, in nsMsgJunkStatus aClassification);
 };
 
 [scriptable, uuid(caf3d467-d57c-11d6-96a9-00039310a47a)]
@@ -121,9 +86,9 @@ interface nsIJunkMailPlugin : nsIMsgFilterPlugin
     /**
      * Message classifications.
      */
-    const long UNCLASSIFIED = 0;
-    const long GOOD = 1;
-    const long JUNK = 2;
+    const nsMsgJunkStatus UNCLASSIFIED = 0;
+    const nsMsgJunkStatus GOOD = 1;
+    const nsMsgJunkStatus JUNK = 2;
 
     /**
      * Given a message URL, determine what its current classification is

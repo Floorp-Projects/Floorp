@@ -163,8 +163,8 @@ Rights Reserved.
 <!ENTITY sortByStatusCmd.accesskey "u">
 <!ENTITY sortByLabelCmd.label "Label">
 <!ENTITY sortByLabelCmd.accesskey "L">
-<!ENTITY sortByScoreCmd.label "Junk Score">
-<!ENTITY sortByScoreCmd.accesskey "C">
+<!ENTITY sortByJunkStatusCmd.label "Junk Status">
+<!ENTITY sortByJunkStatusCmd.accesskey "J">
 <!ENTITY sortBySubjectCmd.label "Subject">
 <!ENTITY sortBySubjectCmd.accesskey "S">
 <!-- Sender / Recipient lives in messenger.properties, since that item is dynamic -->

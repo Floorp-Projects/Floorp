@@ -3,26 +3,15 @@
 <!ENTITY account.accesskey "A">
 <!ENTITY viewLog.label "Junk Mail Log">
 <!ENTITY viewLog.accesskey "j">
-<!ENTITY info1.label "Junk Mail Controls evaluate your incoming messages, and identify those which are most likely to be &quot;junk&quot; mail or unsolicted mail.">
-<!ENTITY info2.label "Choose a level of control below.  A high level will identify more junk mail but may identify some valid messages as junk, while a low level will identify less junk mail but is less likely to identify some valid messages as junk.">
-<!ENTITY off.label "Off">
-<!ENTITY off.accesskey "O">
-<!ENTITY lowest.label "Lowest">
-<!ENTITY lowest.accesskey "w">
-<!ENTITY low.label "Low">
-<!ENTITY low.accesskey "L">
-<!ENTITY medium.label "Medium">
-<!ENTITY medium.accesskey "M">
-<!ENTITY high.label "High">
-<!ENTITY high.accesskey "H">
-<!ENTITY highest.label "Highest">
-<!ENTITY highest.accesskey "s">
-<!ENTITY action.label "When messages are identified as junk mail:">
-<!ENTITY move.label "Move the messages to:">
+<!ENTITY info1.label "Junk mail controls evaluate your incoming messages and identify those which are most likely to be junk mail, or unsolicted mail.  A junk icon is displayed if the message is identified as junk mail.  An unknown icon is displayed if the message might be junk mail.">
+<!ENTITY info2.label "Junk mail controls can be fine-tuned by using the Junk Mail toolbar button to mark junk messages appropriately.">
+<!ENTITY level.label "Enable junk mail controls">
+<!ENTITY level.accesskey "E">
+<!ENTITY move.label "Move incoming messages determined to be junk to:">
 <!ENTITY otherFolder.label "Other:">
-<!ENTITY junkFolderOn.label "&quot;Junk&quot; Folder on:">
+<!ENTITY junkFolderOn.label "&quot;Junk Mail&quot; folder on:">
 <!ENTITY purge1.label "Automatically delete messages identified as junk after">
 <!ENTITY purge1.accesskey "u">
 <!ENTITY purge2.label "days">
-<!ENTITY whitelist.label "Always accept messages from people in my address book:">
-<!ENTITY whitelist.accesskey "c">
+<!ENTITY whitelist.label "Do not mark messages as junk mail if the sender is my address book:">
+<!ENTITY whitelist.accesskey "D">

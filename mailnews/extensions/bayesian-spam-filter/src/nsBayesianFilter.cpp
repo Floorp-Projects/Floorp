@@ -349,13 +349,6 @@ nsBayesianFilter::~nsBayesianFilter()
     delete mServerPrefsKey;
 }
 
-/* void init (in ACString aServerPrefsKey); */
-NS_IMETHODIMP nsBayesianFilter::Init(const nsACString & aServerPrefsKey)
-{
-    mServerPrefsKey = new nsCString(aServerPrefsKey);
-    return NS_OK;
-}
-
 class MessageClassifier : public TokenAnalyzer {
 public:
     MessageClassifier(nsBayesianFilter* filter, nsIJunkMailClassificationListener* listener)
@@ -373,14 +366,6 @@ private:
     nsCOMPtr<nsISupports> mSupports;
     nsCOMPtr<nsIJunkMailClassificationListener> mListener;
 };
-
-/* void filterMessage (in string aMsgURL, in nsIMsgDBHdr aMsgHdr, in unsigned long aCount, [array, size_is (aCount)] in string aHeaders, in nsIMsgFilterHitNotify aListener, in nsIMsgWindow aMsgWindow); */
-NS_IMETHODIMP nsBayesianFilter::FilterMessage(const char *aMsgURI, nsIMsgDBHdr *aMsgHdr, PRUint32 aCount,
-                                              const char **aHeaders, nsIMsgFilterHitNotify *aListener, nsIMsgWindow *aMsgWindow)
-{   
-    TokenAnalyzer* analyzer = new MessageClassifier(this, NULL);
-    return tokenizeMessage(aMsgURI, analyzer);
-}
 
 nsresult nsBayesianFilter::tokenizeMessage(const char* messageURI, TokenAnalyzer* analyzer)
 {

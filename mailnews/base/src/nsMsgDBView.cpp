@@ -1416,14 +1416,6 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, n
       rv = FetchSize(msgHdr, getter_Copies(valueText));
     else if (aColID[1] == 't') // status
       rv = FetchStatus(m_flags[aRow], getter_Copies(valueText));
-    else if (aColID[1] == 'c') // score
-    {
-      nsXPIDLCString cStrScore;
-      msgHdr->GetStringProperty("score", getter_Copies(cStrScore));
-      CopyASCIItoUCS2(cStrScore, aValue);
-      break;
-    }
-
     aValue.Assign(valueText);
     break;
   case 'd':  // date
@@ -1475,6 +1467,13 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, n
           }
         }
       }
+    }
+    break;
+  case 'j':
+    {
+      nsXPIDLCString junkScoreStr;
+      msgHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+      CopyASCIItoUCS2(junkScoreStr, aValue);
     }
     break;
   default:
@@ -2078,10 +2077,10 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
         rv = SetLabelByIndex(indices[i], (command - nsMsgViewCommandType::label0));
         break;
       case nsMsgViewCommandType::junk:
-        rv = SetStringPropertyByIndex(indices[i], "score", "100");
+        rv = SetStringPropertyByIndex(indices[i], "junkscore", "100");
         break;
       case nsMsgViewCommandType::unjunk:
-        rv = SetStringPropertyByIndex(indices[i], "score", "0");
+        rv = SetStringPropertyByIndex(indices[i], "junkscore", "0");
         break;
       case nsMsgViewCommandType::undeleteMsg:
         break; // this is completely handled in the imap code below.
@@ -2615,7 +2614,7 @@ nsresult nsMsgDBView::GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType,
         case nsMsgViewSortType::byUnread:
         case nsMsgViewSortType::byStatus:
         case nsMsgViewSortType::byLabel:
-        case nsMsgViewSortType::byScore:
+        case nsMsgViewSortType::byJunkStatus:
             *pFieldType = kU32;
             *pMaxLen = sizeof(PRUint32);
             break;
@@ -2736,16 +2735,14 @@ nsresult nsMsgDBView::GetLongField(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sor
         if (NS_SUCCEEDED(rv)) 
             *result = !isRead;
         break;
-    case nsMsgViewSortType::byScore:
+    case nsMsgViewSortType::byJunkStatus:
       {
-        nsXPIDLCString scoreStr;
-        rv = msgHdr->GetStringProperty("score", getter_Copies(scoreStr));
+        nsXPIDLCString junkScoreStr;
+        rv = msgHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
         // unscored messages should come before messages that are scored
-        // scoreStr is "", and "0" - "100"
+        // junkScoreStr is "", and "0" - "100"
         // normalize to 0 - 101
-        //
-        // same normalization as in nsMsgLocalSearch.cpp
-        *result = scoreStr.IsEmpty() ? (0) : atoi(scoreStr.get()) + 1;
+        *result = junkScoreStr.IsEmpty() ? (0) : atoi(junkScoreStr.get()) + 1;
       }
       break;
     case nsMsgViewSortType::byId:

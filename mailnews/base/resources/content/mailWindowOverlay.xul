@@ -1088,7 +1088,7 @@ Rights Reserved.
           <menuitem id="sortByUnreadMenuitem" type="radio" name="sortby" label="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" oncommand="MsgSortByUnread()"/>
           <menuitem id="sortByLabelMenuitem" type="radio" name="sortby" label="&sortByLabelCmd.label;" accesskey="&sortByLabelCmd.accesskey;" oncommand="MsgSortByLabel()"/>
 <!-- not ready yet
-          <menuitem id="sortByScoreMenuitem" type="radio" name="sortby" label="&sortByScoreCmd.label;" accesskey="&sortByScoreCmd.accesskey;" oncommand="MsgSortByScore()"/>
+          <menuitem id="sortByJunkStatusMenuitem" type="radio" name="sortby" label="&sortByJunkStatusCmd.label;" accesskey="&sortByJunkStatusCmd.accesskey;" oncommand="MsgSortByJunkStatus()"/>
 -->
           <menuseparator/>
           <menuitem id="sortAscending" type="radio" name="sortdirection" label="&sortAscending.label;" accesskey="&sortAscending.accesskey;" oncommand="MsgSortAscending()"/>
@@ -1441,9 +1441,7 @@ Rights Reserved.
     <menuitem label="Analyze Messages" oncommand="analyzeMessages();"/>
     <menuitem label="Write DB" oncommand="writeHash();"/>
     <menuseparator/>
-
 -->
-
     <menuitem label="&filtersApply.label;"
               accesskey="&filtersApply.accesskey;"
               oncommand="MsgApplyFilters(null);"/>

@@ -54,8 +54,6 @@
 #include "nsIMsgWindow.h"
 #include "nsIFileSpec.h"
 
-static NS_DEFINE_CID(kValidityManagerCID, NS_MSGSEARCHVALIDITYMANAGER_CID);
-
 extern "C"
 {
     extern int MK_MSG_SEARCH_STATUS;
@@ -294,7 +292,7 @@ nsresult nsMsgSearchIMAPOfflineMail::ValidateTerms ()
 //      {
             // Make sure the terms themselves are valid
             nsCOMPtr<nsIMsgValidityManager> validityManager =
-              do_GetService(kValidityManagerCID, &err);
+              do_GetService(NS_MSGSEARCHVALIDITYMANAGER_CONTRACTID, &err);
 
             NS_ENSURE_SUCCESS(rv, rv);
             
@@ -351,7 +349,7 @@ nsresult nsMsgSearchOfflineMail::ValidateTerms ()
         {
             // Make sure the terms themselves are valid
             nsCOMPtr<nsIMsgValidityManager> validityManager =
-              do_GetService(kValidityManagerCID, &err);
+              do_GetService(NS_MSGSEARCHVALIDITYMANAGER_CONTRACTID, &err);
 
             NS_ENSURE_SUCCESS(rv, rv);
             
@@ -738,6 +736,13 @@ nsresult nsMsgSearchOfflineMail::ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
          err = aTerm->MatchLabel(label, &result);
          break;
       }                 
+      case nsMsgSearchAttrib::JunkStatus:
+      {
+         nsXPIDLCString junkScoreStr;
+         msgToMatch->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+         err = aTerm->MatchJunkStatus(junkScoreStr, &result);
+         break; 
+      }          
       default:
           // XXX todo
           // for the temporary return receipts filters, we use a custom header for Content-Type
