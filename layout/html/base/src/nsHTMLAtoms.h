@@ -77,6 +77,7 @@ public:
   static nsIAtom* clip;
   static nsIAtom* code;
   static nsIAtom* codebase;
+  static nsIAtom* codetype;
   static nsIAtom* color;
   static nsIAtom* cols;
   static nsIAtom* colspan;
@@ -87,6 +88,7 @@ public:
 
   static nsIAtom* data;
   static nsIAtom* datetime;
+  static nsIAtom* declare;
   static nsIAtom* defer;
   static nsIAtom* defaultchecked;
   static nsIAtom* defaultselected;
@@ -103,6 +105,7 @@ public:
   static nsIAtom* face;
   static nsIAtom* font;
   static nsIAtom* fontWeight;
+  static nsIAtom* _for;
   static nsIAtom* form;
   static nsIAtom* frame;
   static nsIAtom* frameborder;
@@ -138,6 +141,7 @@ public:
   static nsIAtom* link;
   static nsIAtom* left;
   static nsIAtom* leftpadding;
+  static nsIAtom* length;
   static nsIAtom* longdesc;
   static nsIAtom* lowsrc;
 
@@ -196,13 +200,16 @@ public:
   static nsIAtom* rowspan;
   static nsIAtom* rules;
 
+  static nsIAtom* scheme;
   static nsIAtom* scope;
   static nsIAtom* scrolling;
   static nsIAtom* selected;
+  static nsIAtom* selectedindex;
   static nsIAtom* shape;
   static nsIAtom* size;
   static nsIAtom* span;
   static nsIAtom* src;
+  static nsIAtom* standby;
   static nsIAtom* start;
   static nsIAtom* style;
   static nsIAtom* summary;
