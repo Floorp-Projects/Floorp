@@ -35,92 +35,137 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* This is the interface to the embeddable prompt service; the service
-   that implements nsIPrompt. Its interface is designed to be just
-   nsIPrompt, each method modified to take a parent window parameter.
-   See nsIPrompt for all documentation and ancillary documentation.
-
-   Accesskeys can be attached to buttons and checkboxes by inserting
-   an & before the accesskey character. For a real &, use && instead.
-
-   One note: in all cases, the parent window parameter can be null.
-   However, these windows are all intended to have parents. So when
-   no parent is specified, the implementation should try hard to find
-   a suitable foster parent. */
-
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;
 
+/**
+ * This is the interface to the embeddable prompt service; the service that
+ * implements nsIPrompt.  Its interface is designed to be just nsIPrompt, each
+ * method modified to take a parent window parameter.
+ *
+ * Accesskeys can be attached to buttons and checkboxes by inserting an &
+ * before the accesskey character in the checkbox message or button title.  For
+ * a real &, use && instead.  (A "button title" generally refers to the text
+ * label of a button.)
+ *
+ * One note: in all cases, the parent window parameter can be null.  However,
+ * these windows are all intended to have parents.  So when no parent is
+ * specified, the implementation should try hard to find a suitable foster
+ * parent.
+ *
+ * Implementations are free to choose how they present the various button
+ * types.  For example, while prompts that give the user a choice between OK
+ * and Cancel are required to return a boolean value indicating whether or not
+ * the user accepted the prompt (pressed OK) or rejected the prompt (pressed
+ * Cancel), the implementation of this interface could very well speak the
+ * prompt to the user instead of rendering any visual user-interface.  The
+ * standard button types are merely idioms used to convey the nature of the
+ * choice the user is to make.
+ *
+ * Because implementations of this interface may loosely interpret the various
+ * button types, it is advised that text messages passed to these prompts do
+ * not refer to the button types by name.  For example, it is inadvisable to
+ * tell the user to "Press OK to proceed."  Instead, such a prompt might be
+ * rewritten to ask the user: "Would you like to proceed?"
+ *
+ * @status FROZEN
+ */
 [scriptable, uuid(1630C61A-325E-49ca-8759-A31B16C47AA5)]
 interface nsIPromptService : nsISupports
 {
   /**
    * Puts up an alert dialog with an OK button.
+   *
+   * @param aParent
+   *        The parent window or null.
+   * @param aDialogTitle
+   *        Text to appear in the title of the dialog.
+   * @param aText
+   *        Text to appear in the body of the dialog.
    */
-  void alert(in nsIDOMWindow parent,
-              in wstring dialogTitle,
-              in wstring text);
+  void alert(in nsIDOMWindow aParent,
+             in wstring aDialogTitle,
+             in wstring aText);
 
   /**
-   * Puts up an alert dialog with an OK button and
-   * a message with a checkbox.
+   * Puts up an alert dialog with an OK button and a labeled checkbox.
+   *
+   * @param aParent
+   *        The parent window or null.
+   * @param aDialogTitle
+   *        Text to appear in the title of the dialog.
+   * @param aText
+   *        Text to appear in the body of the dialog.
+   * @param aCheckMsg
+   *        Text to appear with the checkbox.
+   * @param aCheckState
+   *        Contains the initial checked state of the checkbox when this method
+   *        is called and the final checked state after this method returns.
    */
-  void alertCheck(in nsIDOMWindow parent,
-                  in wstring dialogTitle,
-                  in wstring text,
-                  in wstring checkMsg,
-                  inout boolean checkValue);
+  void alertCheck(in nsIDOMWindow aParent,
+                  in wstring aDialogTitle,
+                  in wstring aText,
+                  in wstring aCheckMsg,
+                  inout boolean aCheckState);
 
   /**
    * Puts up a dialog with OK and Cancel buttons.
+   *
+   * @param aParent
+   *        The parent window or null.
+   * @param aDialogTitle
+   *        Text to appear in the title of the dialog.
+   * @param aText
+   *        Text to appear in the body of the dialog.
+   *
    * @return true for OK, false for Cancel
    */
-  boolean confirm(in nsIDOMWindow parent,
-                  in wstring dialogTitle,
-                  in wstring text);
+  boolean confirm(in nsIDOMWindow aParent,
+                  in wstring aDialogTitle,
+                  in wstring aText);
 
   /**
-   * Puts up a dialog with OK and Cancel buttons, and
-   * a message with a single checkbox.
+   * Puts up a dialog with OK and Cancel buttons and a labeled checkbox.
+   *
+   * @param aParent
+   *        The parent window or null.
+   * @param aDialogTitle
+   *        Text to appear in the title of the dialog.
+   * @param aText
+   *        Text to appear in the body of the dialog.
+   * @param aCheckMsg
+   *        Text to appear with the checkbox.
+   * @param aCheckState
+   *        Contains the initial checked state of the checkbox when this method
+   *        is called and the final checked state after this method returns.
+   *
    * @return true for OK, false for Cancel
    */
-  boolean confirmCheck(in nsIDOMWindow parent,
-                        in wstring dialogTitle,
-                        in wstring text,
-                        in wstring checkMsg,
-                        inout boolean checkValue);
+  boolean confirmCheck(in nsIDOMWindow aParent,
+                       in wstring aDialogTitle,
+                       in wstring aText,
+                       in wstring aCheckMsg,
+                       inout boolean aCheckState);
 
   /**
-   * Puts up a dialog with up to 3 buttons and an optional checkbox.
+   * Button Flags
    *
-   * @param dialogTitle
-   * @param text
-   * @param buttonFlags       Title flags for each button.
-   * @param button0Title      Used when button 0 uses TITLE_IS_STRING
-   * @param button1Title      Used when button 1 uses TITLE_IS_STRING
-   * @param button2Title      Used when button 2 uses TITLE_IS_STRING
-   * @param checkMsg          null if no checkbox
-   * @param checkValue    
-   * @return buttonPressed
-   *
-   * Buttons are numbered 0 - 2. The implementation can decide whether
-   * the sequence goes from right to left or left to right.
-   * Button 0 will be the default button.
-   *
-   * A button may use a predefined title, specified by one of the
-   * constants below. Each title constant can be multiplied by a
-   * position constant to assign the title to a particular button.
-   * If BUTTON_TITLE_IS_STRING is used for a button, the string
-   * parameter for that button will be used. If the value for a button
-   * position is zero, the button will not be shown
-   *
+   * The following flags are combined to form the aButtonFlags parameter passed
+   * to confirmEx.  See confirmEx for more information on how the flags may be
+   * combined.
    */
    
+  /**
+   * Button Position Flags
+   */
   const unsigned long BUTTON_POS_0              = 1;
   const unsigned long BUTTON_POS_1              = 1 << 8;
   const unsigned long BUTTON_POS_2              = 1 << 16;
      
+  /**
+   * Button Title Flags (used to set the labels of buttons in the prompt)
+   */
   const unsigned long BUTTON_TITLE_OK            = 1;
   const unsigned long BUTTON_TITLE_CANCEL        = 2;
   const unsigned long BUTTON_TITLE_YES           = 3;
@@ -128,108 +173,208 @@ interface nsIPromptService : nsISupports
   const unsigned long BUTTON_TITLE_SAVE          = 5;
   const unsigned long BUTTON_TITLE_DONT_SAVE     = 6;
   const unsigned long BUTTON_TITLE_REVERT        = 7;
-
   const unsigned long BUTTON_TITLE_IS_STRING     = 127;
   
-  const unsigned long BUTTON_POS_0_DEFAULT       = 0 << 24;
+  /**
+   * Button Default Flags (used to select which button is the default one)
+   */
+  const unsigned long BUTTON_POS_0_DEFAULT       = 0;
   const unsigned long BUTTON_POS_1_DEFAULT       = 1 << 24;
-  const unsigned long BUTTON_POS_2_DEFAULT       = 2 << 24;
+  const unsigned long BUTTON_POS_2_DEFAULT       = 1 << 25;
 
-  /* used for security dialogs, buttons are initially disabled */
+  /**
+   * Causes the buttons to be initially disabled.  They are enabled after a
+   * timeout expires.  The implementation may interpret this loosely as the
+   * intent is to ensure that the user does not click through a security dialog
+   * too quickly.  Strictly speaking, the implementation could choose to ignore
+   * this flag.
+   */
   const unsigned long BUTTON_DELAY_ENABLE        = 1 << 26;
-  
-  const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK * BUTTON_POS_0) +
-                                                    (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
-
-  PRInt32 confirmEx(in nsIDOMWindow parent,
-                 in wstring dialogTitle,
-                 in wstring text,
-                 in unsigned long buttonFlags,
-                 in wstring button0Title,
-                 in wstring button1Title,
-                 in wstring button2Title,
-                 in wstring checkMsg,
-                 inout boolean checkValue);
 
   /**
-   * Puts up a dialog with an edit field and an optional checkbox.
+   * Selects the standard set of OK/Cancel buttons.
+   */
+  const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK     * BUTTON_POS_0) +
+                                                   (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
+
+  /**
+   * Selects the standard set of Yes/No buttons.
+   */
+  const unsigned long STD_YES_NO_BUTTONS         = (BUTTON_TITLE_YES * BUTTON_POS_0) +
+                                                   (BUTTON_TITLE_NO  * BUTTON_POS_1);
+
+
+  /**
+   * Puts up a dialog with up to 3 buttons and an optional, labeled checkbox.
    *
-   * @param dialogTitle
-   * @param text
-   * @param value         in: Pre-fills the dialog field if non-null
-   *                      out: If result is true, a newly allocated
-   *                      string. If result is false, in string is not
-   *                      touched.
-   * @param checkMsg      if null, check box will not be shown
-   * @param checkValue       
-   * @return true for OK, false for Cancel
-   */                        
-  boolean prompt(in nsIDOMWindow parent,
-                 in wstring dialogTitle,
-                 in wstring text,
-                 inout wstring value, 
-                 in wstring checkMsg,
-                 inout boolean checkValue);
-
-  /**
-   * Puts up a dialog with an edit field, a password field, and an optional checkbox.
+   * @param aParent
+   *        The parent window or null.
+   * @param aDialogTitle
+   *        Text to appear in the title of the dialog.
+   * @param aText
+   *        Text to appear in the body of the dialog.
+   * @param aButtonFlags
+   *        A combination of Button Flags.
+   * @param aButton0Title
+   *        Used when button 0 uses TITLE_IS_STRING
+   * @param aButton1Title
+   *        Used when button 1 uses TITLE_IS_STRING
+   * @param aButton2Title
+   *        Used when button 2 uses TITLE_IS_STRING
+   * @param aCheckMsg
+   *        Text to appear with the checkbox.  Null if no checkbox.
+   * @param aCheckState    
+   *        Contains the initial checked state of the checkbox when this method
+   *        is called and the final checked state after this method returns.
    *
-   * @param dialogTitle
-   * @param text
-   * @param username      in: Pre-fills the dialog field if non-null
-   *                      out: If result is true, a newly allocated
-   *                      string. If result is false, in string is not
-   *                      touched.
-   * @param password      in: Pre-fills the dialog field if non-null
-   *                      out: If result is true, a newly allocated
-   *                      string. If result is false, in string is not
-   *                      touched.
-   * @param checkMsg      if null, check box will not be shown
-   * @param checkValue   
-   * @return true for OK, false for Cancel
-   */                        
-  boolean promptUsernameAndPassword(in nsIDOMWindow parent,
-                                    in wstring dialogTitle,
-                                    in wstring text,
-                                    inout wstring username,
-                                    inout wstring password,
-                                    in wstring checkMsg,
-                                    inout boolean checkValue);
-
-  /**
-   * Puts up a dialog with a password field and an optional checkbox.
+   * @return index of the button pressed.
    *
-   * @param dialogTitle
-   * @param text
-   * @param password      in: Pre-fills the dialog field if non-null
-   *                      out: If result is true, a newly allocated
-   *                      string. If result is false, in string is not
-   *                      touched.
-   * @param checkMsg      if null, check box will not be shown
-   * @param checkValue    
-   * @return true for OK, false for Cancel
-   */                        
-  boolean promptPassword(in nsIDOMWindow parent,
-                         in wstring dialogTitle,
-                         in wstring text,
-                         inout wstring password,
-                         in wstring checkMsg,
-                         inout boolean checkValue);
+   * Buttons are numbered 0 - 2. The implementation can decide whether the
+   * sequence goes from right to left or left to right.  Button 0 is the
+   * default button unless one of the Button Default Flags is specified.
+   *
+   * A button may use a predefined title, specified by one of the Button Title
+   * Flags values.  Each title value can be multiplied by a position value to
+   * assign the title to a particular button.  If BUTTON_TITLE_IS_STRING is
+   * used for a button, the string parameter for that button will be used.  If
+   * the value for a button position is zero, the button will not be shown.
+   *
+   * In general, aButtonFlags is constructed per the following example:
+   *
+   *   aButtonFlags = (BUTTON_POS_0) * (BUTTON_TITLE_AAA) +
+   *                  (BUTTON_POS_1) * (BUTTON_TITLE_BBB) +
+   *                   BUTTON_POS_1_DEFAULT;
+   *
+   * where "AAA" and "BBB" correspond to one of the button titles.
+   */
+  PRInt32 confirmEx(in nsIDOMWindow aParent,
+                    in wstring aDialogTitle,
+                    in wstring aText,
+                    in unsigned long aButtonFlags,
+                    in wstring aButton0Title,
+                    in wstring aButton1Title,
+                    in wstring aButton2Title,
+                    in wstring aCheckMsg,
+                    inout boolean aCheckState);
 
   /**
-   * Puts up a dialog box which has a list box of strings
+   * Puts up a dialog with an edit field and an optional, labeled checkbox.
+   *
+   * @param aParent
+   *        The parent window or null.
+   * @param aDialogTitle
+   *        Text to appear in the title of the dialog.
+   * @param aText
+   *        Text to appear in the body of the dialog.
+   * @param aValue
+   *        Contains the default value for the dialog field when this method
+   *        is called (null value is ok).  Upon return, if the user pressed
+   *        OK, then this parameter contains a newly allocated string value.
+   *        Otherwise, the parameter's value is unmodified.
+   * @param aCheckMsg
+   *        Text to appear with the checkbox.  If null, check box will not be shown.
+   * @param aCheckState
+   *        Contains the initial checked state of the checkbox when this method
+   *        is called and the final checked state after this method returns.
+   *
+   * @return true for OK, false for Cancel.
+   */                        
+  boolean prompt(in nsIDOMWindow aParent,
+                 in wstring aDialogTitle,
+                 in wstring aText,
+                 inout wstring aValue, 
+                 in wstring aCheckMsg,
+                 inout boolean aCheckState);
+
+  /**
+   * Puts up a dialog with an edit field, a password field, and an optional,
+   * labeled checkbox.
+   *
+   * @param aParent
+   *        The parent window or null.
+   * @param aDialogTitle
+   *        Text to appear in the title of the dialog.
+   * @param aText
+   *        Text to appear in the body of the dialog.
+   * @param aUsername
+   *        Contains the default value for the username field when this method
+   *        is called (null value is ok).  Upon return, if the user pressed OK,
+   *        then this parameter contains a newly allocated string value.
+   *        Otherwise, the parameter's value is unmodified.
+   * @param aPassword
+   *        Contains the default value for the password field when this method
+   *        is called (null value is ok).  Upon return, if the user pressed OK,
+   *        then this parameter contains a newly allocated string value.
+   *        Otherwise, the parameter's value is unmodified.
+   * @param aCheckMsg
+   *        Text to appear with the checkbox.  If null, check box will not be shown.
+   * @param aCheckState
+   *        Contains the initial checked state of the checkbox when this method
+   *        is called and the final checked state after this method returns.
+   *
+   * @return true for OK, false for Cancel.
+   */                        
+  boolean promptUsernameAndPassword(in nsIDOMWindow aParent,
+                                    in wstring aDialogTitle,
+                                    in wstring aText,
+                                    inout wstring aUsername,
+                                    inout wstring aPassword,
+                                    in wstring aCheckMsg,
+                                    inout boolean aCheckState);
+
+  /**
+   * Puts up a dialog with a password field and an optional, labeled checkbox.
+   *
+   * @param aParent
+   *        The parent window or null.
+   * @param aDialogTitle
+   *        Text to appear in the title of the dialog.
+   * @param aText
+   *        Text to appear in the body of the dialog.
+   * @param aPassword
+   *        Contains the default value for the password field when this method
+   *        is called (null value is ok).  Upon return, if the user pressed OK,
+   *        then this parameter contains a newly allocated string value.
+   *        Otherwise, the parameter's value is unmodified.
+   * @param aCheckMsg
+   *        Text to appear with the checkbox.  If null, check box will not be shown.
+   * @param aCheckState
+   *        Contains the initial checked state of the checkbox when this method
+   *        is called and the final checked state after this method returns.
+   *
+   * @return true for OK, false for Cancel.
+   */                        
+  boolean promptPassword(in nsIDOMWindow aParent,
+                         in wstring aDialogTitle,
+                         in wstring aText,
+                         inout wstring aPassword,
+                         in wstring aCheckMsg,
+                         inout boolean aCheckState);
+
+  /**
+   * Puts up a dialog box which has a list box of strings from which the user
+   * may make a single selection.
+   *
+   * @param aParent
+   *        The parent window or null.
+   * @param aDialogTitle
+   *        Text to appear in the title of the dialog.
+   * @param aText
+   *        Text to appear in the body of the dialog.
+   * @param aCount
+   *        The length of the aSelectList array parameter.
+   * @param aSelectList
+   *        The list of strings to display.
+   * @param aOutSelection
+   *        Contains the index of the selected item in the list when this
+   *        method returns true.
+   *
+   * @return true for OK, false for Cancel.
    */                                                 
-  boolean select(in nsIDOMWindow parent,
-                  in wstring dialogTitle,
-                  in wstring text,
-                  in  PRUint32 count,
-                  [array, size_is(count)] in wstring selectList,
-                  out long outSelection);
+  boolean select(in nsIDOMWindow aParent,
+                 in wstring aDialogTitle,
+                 in wstring aText,
+                 in  PRUint32 aCount,
+                 [array, size_is(aCount)] in wstring aSelectList,
+                 out long aOutSelection);
 };
-
-%{C++
-// {1630C61A-325E-49ca-8759-A31B16C47AA5}
-#define NS_PROMPTSERVICE_IID \
- {0x1630C61A, 0x325E, 0x49ca, {0x87, 0x59, 0xA3, 0x1B, 0x16, 0xC4, 0x7A, 0xA5}}
-%}
-
