@@ -1081,12 +1081,7 @@ public:
   struct RestyleEvent : public PLEvent {
     RestyleEvent(nsCSSFrameConstructor* aConstructor);
     ~RestyleEvent() { }
-    void HandleEvent() {
-      nsCSSFrameConstructor* constructor =
-        NS_STATIC_CAST(nsCSSFrameConstructor*, owner);
-      constructor->ProcessPendingRestyles();
-      constructor->mRestyleEventQueue = nsnull;
-    }
+    void HandleEvent();
   };
   
 protected:
