@@ -1048,7 +1048,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
 
 #if defined(FREEBSD)
 // pick up fpsetmask prototype.
-#include <floatingpoint.h>
+#include <ieeefp.h>
 #endif
 
 // Note: nativeApp is an owning reference that this function has responsibility
