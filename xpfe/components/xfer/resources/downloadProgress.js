@@ -32,7 +32,7 @@ function loadDialog() {
 
 var contractId = "@mozilla.org/appshell/component/xfer;1";
 var observer = {
-    Observe: function( subject, topic, data ) {
+    observe: function( subject, topic, data ) {
         switch ( topic ) {
             case contractId+";onProgress":
                 var words = data.split( " " );

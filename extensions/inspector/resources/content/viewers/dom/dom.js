@@ -741,7 +741,7 @@ var MouseDownListener = {
 }
 
 var PrefChangeObserver = {
-  Observe: function(aSubject, aTopic, aData)
+  observe: function(aSubject, aTopic, aData)
   {
     viewer.onPrefChanged(aData);
   }

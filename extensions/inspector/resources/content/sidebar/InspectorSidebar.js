@@ -394,14 +394,14 @@ var gHistoryLoadListener = {
 };
 
 var NavLoadObserver = {
-  Observe: function(aWindow)
+  observe: function(aWindow)
   {
     inspector.setTargetWindow(aWindow);
   }
 };
 
 var PrefChangeObserver = {
-  Observe: function(aSubject, aTopic, aData)
+  observe: function(aSubject, aTopic, aData)
   {
     inspector.onPrefChanged(aData);
   }
