@@ -442,7 +442,7 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
               fprintf (stdout, "\"\n \"");
               column = 2;
             }
-          luminance = (0.299 * r) + (0.587 * g) + (0.114 * b);
+          luminance = (int) ((0.299 * r) + (0.587 * g) + (0.114 * b));
 
           pixel =
             ((luminance < 128))                      ||
