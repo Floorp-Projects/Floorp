@@ -1,15 +1,16 @@
-var gSubscribetree = null;
+var gSubscribeTree = null;
 var gCurrentServer = null;
 var okCallback = null;
 var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
 var datasource = rdf.GetDataSource('rdf:newshostinfo');
-
+var gChangeTable = {};
+var gServerURI = null;
 
 function SubscribeOnLoad()
 {
 	dump("SubscribeOnLoad()\n");
 
-    gSubscribetree = document.getElementById('subscribetree');
+    gSubscribeTree = document.getElementById('subscribetree');
     gCurrentServer = document.getElementById('currentserver');
 
 	doSetOKCancel(subscribeOK,subscribeCancel);
@@ -27,10 +28,11 @@ function SubscribeOnLoad()
 	
 	// pre select the folderPicker, based on what they selected in the folder pane
 	if (window.arguments[0].preselectedURI) {
+		gServerURI = window.arguments[0].preselectedURI;
 		var folder = GetMsgFolderFromUri(window.arguments[0].preselectedURI);
 		var server = folder.server;
 		
-		gSubscribetree.setAttribute('ref','urn:' + server.hostName);
+		gSubscribeTree.setAttribute('ref','urn:' + server.hostName);
 		gCurrentServer.value = server.hostName;	// use gServer.prettyName?
 
 		dump("for each child of news://" + server.hostName + " set subscribed to true in the datasource\n");
@@ -61,10 +63,7 @@ function subscribeOK()
 {
 	dump("in subscribeOK()\n")
 	if (top.okCallback) {
-		// we stored the uri as the ref, now get it back
-    	var tree = document.getElementById('subscribetree');
-		//var uri = tree.getAttribute('ref');
-		//top.okCallback(uri);
+		top.okCallback(top.gServerURI,top.gChangeTable);
 	}
 	return true;
 }
@@ -98,16 +97,32 @@ function SetState(uri, state)
 	}
 }
 
+function StateChanged(uri,state)
+{
+	if (!gChangeTable[uri]) {
+		gChangeTable[uri] = 0;
+	}
+
+	if (state == 'true') {
+		gChangeTable[uri] = gChangeTable[uri] + 1;
+	}
+	else {
+		gChangeTable[uri] = gChangeTable[uri] - 1;
+	}
+	dump(gChangeTable[uri] + "\n");
+}
+
 function SetSubscribeState(state)
 {
 	dump("subscribe button clicked\n");
 
-	var groupList = gSubscribetree.selectedItems;
+	var groupList = gSubscribeTree.selectedItems;
 	for (i=0;i<groupList.length;i++) {
 		group = groupList[i];
 		uri = group.getAttribute('id');
 		dump(uri + "\n");
 		SetState(uri, state);
+		StateChanged(uri,state);
 	}
 }
 
