@@ -184,7 +184,12 @@ _pr_strtoull(const char *str, char **endptr, int base)
     }
 
     if (negative) {
+#ifdef HAVE_LONG_LONG
+        /* The cast to a signed type is to avoid a compiler warning */
+        x = -(PRInt64)x;
+#else
         LL_NEG(x, x);
+#endif
     }
 
     if (endptr) {
