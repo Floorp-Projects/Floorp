@@ -13,7 +13,6 @@
 <!-- Left panel -->
 <!ENTITY glossarytab.label        "Glossary">
 <!ENTITY glossarytab.accesskey    "G">
-<!ENTITY gobtn.label              "Search">
 <!ENTITY indextab.label           "Index">
 <!ENTITY indextab.accesskey       "I">
 <!ENTITY searchtab.label          "Search">

@@ -503,14 +503,19 @@ function doFind() {
   // clear any previous results.
   clearDatabases(searchTree.database);
 
-  // split search string into separate terms and compile into regexp's
-  RE = findText.value.split(/\s+/);
-  for (var i=0; i < RE.length; ++i) {
-    if (RE[i] == "")
-      continue;
-    RE[i] = new RegExp(RE[i], "i");
+    // if the search string is empty or contains only whitespace, purge the results tree and return
+    RE = findText.value.match(/\S+/g);
+    if (!RE) {
+      searchTree.builder.rebuild();
+      return;
+    }
+
+    // compile the search string, which has already been split up above, into regexps
+    for (var i=0; i < RE.length; ++i) {
+      RE[i] = new RegExp(RE[i], "i");
   }
- emptySearch = true;
+  emptySearch = true;
+
   // search TOC
   var resultsDS =  Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].createInstance(Components.interfaces.nsIRDFDataSource);
   var tree = document.getElementById("help-toc-panel");
@@ -543,12 +548,6 @@ function doFind() {
   // Add the datasource to the search tree
   searchTree.database.AddDataSource(resultsDS);
   searchTree.builder.rebuild();
-}
-
-function doEnabling() {
-  var findButton = document.getElementById("findButton");
-  var findTextbox = document.getElementById("findText");
-  findButton.disabled = !findTextbox.value;
 }
 
 function clearDatabases(compositeDataSource) {

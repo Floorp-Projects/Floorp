@@ -209,14 +209,8 @@
              accesskey="&searchtab.accesskey;"/>
 
              <vbox id="help-search-panel" hidden="true" flex="1">
-                <hbox align="center">
-                  <textbox id="findText" 
-                     flex="1" 
-                     oninput="doEnabling();"
-                     onkeypress="if (event.keyCode == KeyEvent.DOM_VK_ENTER || event.keyCode == KeyEvent.DOM_VK_RETURN) doFind();"/>
-
-                  <button id="findButton" default="true" disabled="true" label="&gobtn.label;" oncommand="doFind()" flex="0"/>
-                </hbox>
+                <textbox id="findText" type="timed" timeout="500"
+                         oncommand="doFind();"/>
                 <tree id="help-search-tree" class="focusring"
                       flex="1" hidecolumnpicker="true"
                       datasources="rdf:null" ref="urn:root"
