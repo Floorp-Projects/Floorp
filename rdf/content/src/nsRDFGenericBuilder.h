@@ -123,13 +123,15 @@ public:
                              nsIContent *aRealNode,
                              PRBool aIsUnique,
                              nsIRDFResource* aChild,
-                             PRInt32 aNaturalOrderPos);
+                             PRInt32 aNaturalOrderPos,
+                             PRBool aNotify);
 
     nsresult
     CreateWidgetItem(nsIContent* aElement,
                      nsIRDFResource* aProperty,
                      nsIRDFResource* aChild,
-                     PRInt32 aNaturalOrderPos);
+                     PRInt32 aNaturalOrderPos,
+                     PRBool aNotify);
 
     enum eUpdateAction { eSet, eClear };
 
