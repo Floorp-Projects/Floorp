@@ -613,30 +613,8 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
 				mdbOpenPolicy inOpenPolicy;
 				mdb_bool	canOpen;
 				mdbYarn		outFormatVersion;
-				// char		bufFirst512Bytes[512];
-				// mdbYarn		first512Bytes;
-
-				// first512Bytes.mYarn_Buf = bufFirst512Bytes;
-				// first512Bytes.mYarn_Size = 512;
-				// first512Bytes.mYarn_Fill = 512;
-				// first512Bytes.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
-
-				// {
-				// 	nsFileSpec ioStream(dbName->GetCString());
-				// 	nsIOFileStream *dbStream = new nsIOFileStream(ioStream);
-				// 	if (dbStream) {
-				// 		PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
-				// 		first512Bytes.mYarn_Fill = bytesRead;
-				// 		dbStream->close();
-				// 		delete dbStream;
-				// 	}
-				// 	else {
-				// 		PR_FREEIF(nativeFileName);
-				// 		return NS_ERROR_OUT_OF_MEMORY;
-				// 	}
-				// }
-				
 				nsIMdbFile* oldFile = 0;
+
 				ret = myMDBFactory->OpenOldFile(m_mdbEnv, dbHeap, nativeFileName,
 					 dbFrozen, &oldFile);
 				if ( oldFile )
@@ -710,6 +688,10 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
 					}
 					newFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
 				}
+			}
+			if(thumb)
+			{
+				thumb->CutStrongRef(m_mdbEnv);
 			}
 		}
 	}
