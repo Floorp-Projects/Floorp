@@ -460,4 +460,84 @@ struct nsCharTraits<wchar_t>
   };
 #endif
 
+
+
+template <class InputIterator>
+struct nsCharSourceTraits
+  {
+    static
+    PRUint32
+    readable_size( const InputIterator& iter )
+      {
+        return iter.size_forward();
+      }
+
+    static
+    PRUint32
+    readable_size( const InputIterator& first, const InputIterator& last )
+      {
+        return PRUint32(SameFragment(first, last) ? last.operator->()-first.operator->() : first.size_forward());
+      }
+
+    static
+    const InputIterator::value_type*
+    read( const InputIterator& iter )
+      {
+        return iter.operator->();
+      }
+  };
+
+template <class CharT>
+struct nsCharSourceTraits<CharT*>
+  {
+    static
+    PRUint32
+    readable_size( CharT* s )
+      {
+        return PRUint32(nsCharTraits<CharT>::length(s));
+//      return numeric_limits<PRUint32>::max();
+      }
+
+    static
+    PRUint32
+    readable_size( CharT* first, CharT* last )
+      {
+        return PRUint32(last-first);
+      }
+
+    static
+    const CharT*
+    read( CharT* s )
+      {
+        return s;
+      }
+  };
+
+
+
+template <class OutputIterator>
+struct nsCharSinkTraits
+  {
+    static
+    PRUint32
+    write( OutputIterator& iter, const OutputIterator::value_type* s, PRUint32 n )
+      {
+        return iter.write(s, n);
+      }
+  };
+
+template <class CharT>
+struct nsCharSinkTraits<CharT*>
+  {
+    static
+    PRUint32
+    write( CharT*& iter, const CharT* s, PRUint32 n )
+      {
+        nsCharTraits<CharT>::copy(iter, s, n);
+        iter += n;
+        return n;
+      }
+  };
+
+
 #endif // !defined(_nsCharTraits_h__)
