@@ -50,6 +50,7 @@
 #include "nsISHistory.h" // for sHistory
 #include "nsIThread.h" // for PRThread
 #include "nsIDocShell.h"
+#include "nsEmbedAPI.h" // for NS_HandleEmbeddingEvent
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIEventQueueService.h"

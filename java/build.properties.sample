@@ -9,3 +9,6 @@ build.win32.classes=true
 
 # On win32, make sure to use \\ for \
 build.home=/home/edburns/Projects/mozilla/NETSCAPE_7_0_RTM_RELEASE/mozilla/dist/classes
+
+# dependent jars
+junit.jar=<your junit 3.8.1 jar>

@@ -1,4 +1,4 @@
-20030713
+20040222
 
 This README documents the Java Enhancers to the Mozilla web browser.
 
@@ -10,9 +10,10 @@ Requirements:
 
 * J2SDK 1.3.1 or later
 
-* Apache ant 
+* Apache ant 1.4.1 or later.  If running under J2SDK 1.4.2 or later, you
+  need ant 1.6.1, due to javah issues.
 
-* Successfully built debug enabled Mozilla 1.4 tree
+* Successfully built debug enabled Mozilla 1.6 tree
 
 How To Build:
 
@@ -45,6 +46,23 @@ compile.debug=true
 
 * run "ant" in the mozilla/java directory.  This will build webclient
   and all dependent libraries.  
+
+How to run the Junit tests:
+
+* Make sure junit.jar is properly set in your mozilla/java/build.properties
+
+* Make sure junit.jar is installed in your $ANT_HOME/lib directory
+
+* Set the following variables in your environment
+
+NSPR_LOG_MODULES="webclient:4,webclientstub:4"
+NSPR_LOG_FILE="logfile.txt"
+
+* cd to mozilla/java/webclient
+
+* run ant test
+
+How to run the test browser (broken as of this writing):
 
 * cd to mozilla/java/webclient/src_moz and run the "runem" batch file to
   run the test browser.

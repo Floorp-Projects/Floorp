@@ -263,7 +263,7 @@ wsPostEvent::handleEvent ()
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsILinkHandler> lh;
-  nsCOMPtr<nsISupports> result;
+  nsCOMPtr<nsIInputStream> result;
   
   rv = mInitContext->docShell->GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(rv) || !presShell) {
@@ -275,7 +275,7 @@ wsPostEvent::handleEvent ()
       return (void *) rv;
   }
 
-  rv = doc->GetRootContent(getter_AddRefs(content));
+  content = doc->GetRootContent();
   if (NS_FAILED(rv) || !content) {
       return (void *) rv;
   }

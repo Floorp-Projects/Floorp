@@ -25,7 +25,7 @@
  * CurrentPageImpl.cpp
  */
 
-#include "CurrentPageImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl.h"
 
 
 

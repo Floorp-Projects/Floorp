@@ -21,7 +21,7 @@
  *                 Ron Capelli <capelli@us.ibm.com>
  */
 
-#include "HistoryImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_HistoryImpl.h"
 #include "ie_util.h"
 #include "ie_globals.h"
 

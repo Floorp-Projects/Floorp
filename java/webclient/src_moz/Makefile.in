@@ -143,7 +143,7 @@ EXTRA_LIBS		+= \
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_LIBS += \
 		$(DIST)/lib/wc_share.lib \
-		$(MOZ_JDKHOME)/jre/lib/jawt.lib \
+		$(MOZ_JDKHOME)/lib/jawt.lib \
 		$(NULL)
 endif
 

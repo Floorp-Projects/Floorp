@@ -102,7 +102,7 @@ nsCOMPtr<nsIDOMDocument> dom_getDocumentFromDocShell(nsIDocShell *docShell)
         return result;
     }
 
-    rv = docv->GetDocument(document);
+    rv = docv->GetDocument(&document);
     if (NS_FAILED(rv) || !document) {
         return result;
     }

@@ -36,6 +36,7 @@
 #include <nsILocalFile.h> 
 #include <nsEmbedAPI.h>  // for NS_InitEmbedding
 #include <nsIComponentRegistrar.h>
+#include <nsDependentString.h> // for nsDependentCString
 
 #include <prenv.h> // for PR_SetEnv
 
@@ -256,7 +257,6 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeTermina
 
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, "NS_TermEmbedding() failed.");
-        return (jint) rv;
     }
 
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 

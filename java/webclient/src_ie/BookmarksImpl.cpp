@@ -20,7 +20,7 @@
  * Contributor(s): Glenn Barney <gbarney@uiuc.edu>
  */
 
-#include "BookmarksImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_BookmarksImpl.h"
 
 
 JNIEXPORT void JNICALL 

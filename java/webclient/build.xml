@@ -60,8 +60,24 @@
     <pathelement location="${build.home}"/>
   </path>
 
+  <target name="prepare">
+
+    <condition property="PATH_SEP" value=";">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="PATH_SEP" value=":">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+  </target>
+
   <target name="main" 
-          depends="compile.classes_spec,compile.src_share,compile.src_moz,compile.src_ie,create.webclient.scripts"/>
+          depends="prepare,compile.classes_spec,compile.src_share,compile.src_moz,compile.src_ie,create.webclient.scripts"/>
 
   <target name="compile.classes_spec">
 
@@ -148,18 +164,15 @@
     </exec>
     <exec os="Windows 2000" dir="${basedir}/src_moz" executable="make" 
                      failonerror="yes"/>
-    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="make" 
-                     failonerror="yes"/>
 
   </target>
 
   <target name="compile.src_ie" depends="compile.src_share">
 
+    <!-- PENDING(edburns): re-enable IE support
     <exec os="Windows 2000" dir="${basedir}/src_ie" executable="make" 
                      failonerror="yes"/>
-
-    <exec os="Windows 2000" dir="${basedir}/src_ie" executable="make" 
-                     failonerror="yes"/>
+    -->
 
   </target>
 
