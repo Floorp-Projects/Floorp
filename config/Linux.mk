@@ -62,8 +62,14 @@ I2_LOCALE		= i2
 
 ifeq ($(CPU_ARCH),alpha)
 PLATFORM_FLAGS		+= -DLINUX1_2 -D__$(CPU_ARCH) -D_ALPHA_ 
-OS_INCLUDES		+= -I/usr/X11R6/include
 PORT_FLAGS		+= -DNEED_TIME_R -DMITSHM -D_XOPEN_SOURCE
+OS_INCLUDES		+= -I/usr/X11R6/include
+OS_LIBS			+= -L/lib -ldl -lc
+endif
+ifeq ($(CPU_ARCH),m68k)
+PLATFORM_FLAGS		+= -m68020-40 -DLINUX1_2 -D$(CPU_ARCH)
+PORT_FLAGS		+= -DNEED_TIME_R -DMITSHM -D_XOPEN_SOURCE
+OS_INCLUDES		+= -I/usr/X11R6/include
 OS_LIBS			+= -L/lib -ldl -lc
 endif
 ifeq ($(CPU_ARCH),ppc)
