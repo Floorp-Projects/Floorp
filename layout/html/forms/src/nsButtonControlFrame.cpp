@@ -215,6 +215,17 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
 }
 
 void 
+nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                             const nsHTMLReflowState& aReflowState,
+                             nsHTMLReflowMetrics& aDesiredSize)
+{
+    // This "do-nothing" implementation exists to remove compiler warnings caused
+    // by the fact that GetDesiredSize is both overloaded and overridden.
+  Inherited::GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
+}
+
+
+void 
 nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aReflowState,
                                      nsHTMLReflowMetrics&     aDesiredLayoutSize,
