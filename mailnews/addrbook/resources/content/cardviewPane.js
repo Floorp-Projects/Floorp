@@ -70,7 +70,10 @@ function DisplayCardViewPane(abNode)
 	var cardResource = parent.parent.rdf.GetResource(uri);
 	var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
 	
+	// FIX ME - this should use a i18n name routine in JS
 	var name = card.DisplayName;
+	if ( card.FirstName.length + card.LastName.length > 0 )
+		name = card.FirstName + " " + card.LastName;
 	
 	var nickname;
 	if ( card.NickName )
@@ -81,7 +84,7 @@ function DisplayCardViewPane(abNode)
 	
 	/* set fields in card view pane */
 	// FIX ME - waiting for bug fix... cvSetVisible(data.CardViewBox, true);
-	cvSetNode(data.CardTitle, "Card for " + name);
+	cvSetNode(data.CardTitle, "Card for " + card.DisplayName);
 	
 	// FIX ME!
 	// Code needs to be fixed to make the entire box visible or not.  Current hack just hides
@@ -188,23 +191,22 @@ function cvSetCityStateZip(node, city, state, zip)
 function cvSetNode(node, text)
 {
 	node.childNodes[0].nodeValue = text;
+	var visible;
+	
 	if ( text )
-	{
-		node.setAttribute("style", "display:block");
-		return true;
-	}
+		visible = true;
 	else
-	{
-		node.setAttribute("style", "display:none");
-		return false;
-	}
+		visible = false;
+	
+	cvSetVisible(node, visible);
+	return visible;
 }
 
 function cvSetVisible(node, visible)
 {
 	if ( visible )
-		node.setAttribute("style", "display:block");
+		node.removeAttribute("hide");
 	else
-		node.setAttribute("style", "display:none");
+		node.setAttribute("hide", "true");
 }
 

@@ -19,6 +19,7 @@
 	<tree style="height:100%" class="abResults" id="resultTree"
 		  rdf:datasources="rdf:addressdirectory rdf:addresscard"
 		  onchange="top.ResultsPaneSelectionChange()"
+		  ondblclick="top.EditCard()"
 		  rdf:containment="http://home.netscape.com/NC-rdf#CardChild">
 
 		<template>

@@ -1,6 +1,9 @@
 var editCard;
 
+var newCardTitlePrefix = "New Card for ";
 var editCardTitlePrefix = "Card for ";
+var editCardFirstLastSeparator = " ";
+var editCardLastFirstSeparator = ", ";
 
 function OnLoadNewCard()
 {
@@ -22,7 +25,6 @@ function OnLoadEditCard()
 {
 	InitEditCard();
 	
-	// look in arguments[0] for card
 	if (window.arguments && window.arguments[0])
 	{
 		if ( window.arguments[0].card )
@@ -65,7 +67,6 @@ function InitEditCard()
 	if ( prefs )
 	{
 		editCard.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.lastnamefirst");
-		editCard.displayLastNameFirst = true;//this is a test XXXXXXXXXXX this is only a test
 	}
 }
 
@@ -211,6 +212,7 @@ function GenerateDisplayName()
 	if ( editCard.generateDisplayName )
 	{
 		var doc = frames["editcard"].document;
+		var displayName;
 		
 		var firstNameField = doc.getElementById('FirstName');
 		var lastNameField = doc.getElementById('LastName');
@@ -232,15 +234,21 @@ function GenerateDisplayName()
 		if ( lastNameField.value && firstNameField.value )
 		{
 			if ( editCard.displayLastNameFirst )
-			 	separator = ", ";
+			 	separator = editCardLastFirstSeparator;
 			else
-			 	separator = " ";
+			 	separator = editCardFirstLastSeparator;
 		}
 		
 		if ( editCard.displayLastNameFirst )
-			displayNameField.value = lastNameField.value + separator + firstNameField.value;
+			displayName = lastNameField.value + separator + firstNameField.value;
 		else
-			displayNameField.value = firstNameField.value + separator + lastNameField.value;
+			displayName = firstNameField.value + separator + lastNameField.value;
+			
+		displayNameField.value = displayName;
+		if ( editCard.card )
+			top.window.title = editCardTitlePrefix + displayName;
+		else
+			top.window.title = newCardTitlePrefix + displayName;
 	}
 }
 

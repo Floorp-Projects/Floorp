@@ -115,7 +115,7 @@
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<checkbox/><html:div>&SendPlainText.label;</html:div>
+							<checkbox id="SendPlainText"/><html:div>&SendPlainText.label;</html:div>
 						</box>
 					</box>
 				</html:fieldset>
