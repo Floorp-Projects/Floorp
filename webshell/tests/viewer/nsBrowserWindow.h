@@ -140,6 +140,7 @@ public:
   void DoJSConsole();
   void DoPrefs();
   void DoEditorMode(nsIWebShell* aWebShell);
+  void DoEditorTest(nsIWebShell* aWebShell, PRInt32 aCommandID);
   nsIPresShell* GetPresShell();
 
   void DoFind();

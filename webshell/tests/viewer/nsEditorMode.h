@@ -25,5 +25,6 @@ class nsIDOMDocument;
 class nsIPresShell;
 
 extern nsresult NS_InitEditorMode(nsIDOMDocument * aDOMDocument, nsIPresShell* aPresShell);
+extern nsresult NS_DoEditorTest(PRInt32 aCommandID);
 
 #endif //nsEditorMode_h__

@@ -19,16 +19,20 @@
 #include "nsString.h"
 #include "nsIDOMDocument.h"
 
+#include "nsIHTMLEditor.h"
 #include "nsITextEditor.h"
 #include "nsEditorCID.h"
 
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
+#include "resources.h"
 
-static nsITextEditor *gEditor;
+static nsIHTMLEditor *gEditor;
 
 static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
 static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
+static NS_DEFINE_IID(kIHTMLEditorIID, NS_IHTMLEDITOR_IID);
+static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
 static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
 
@@ -47,9 +51,9 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
 {
   nsresult result = NS_OK;
   static needsInit=PR_TRUE;
+  // This is a big leak if called > once, but its only temp test code, correct?
   if (gEditor)
-
-  gEditor=nsnull;
+    gEditor=nsnull;
 
   NS_ASSERTION(nsnull!=aDOMDocument, "null document");
   NS_ASSERTION(nsnull!=aPresShell, "null presentation shell");
@@ -61,15 +65,22 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   if (PR_TRUE==needsInit)
   {
     needsInit=PR_FALSE;
+    result = nsRepository::RegisterComponent(kHTMLEditorCID, NULL, NULL, EDITOR_DLL, 
+                                             PR_FALSE, PR_FALSE);
+    if (NS_ERROR_FACTORY_EXISTS!=result)
+    {
+      if (NS_FAILED(result))
+        return result;
+    }
     result = nsRepository::RegisterComponent(kTextEditorCID, NULL, NULL, EDITOR_DLL, 
-                                           PR_FALSE, PR_FALSE);
+                                             PR_FALSE, PR_FALSE);
     if (NS_ERROR_FACTORY_EXISTS!=result)
     {
       if (NS_FAILED(result))
         return result;
     }
     result = nsRepository::RegisterComponent(kEditorCID, NULL, NULL, EDITOR_DLL, 
-                                           PR_FALSE, PR_FALSE);
+                                             PR_FALSE, PR_FALSE);
     if (NS_ERROR_FACTORY_EXISTS!=result)
     {
       if (NS_FAILED(result))
@@ -82,17 +93,63 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   result = nsServiceManager::GetService(kTextEditorCID,
                                         kITextEditorIID, &isup);
 */
-  result = nsRepository::CreateInstance(kTextEditorCID,
+  result = nsRepository::CreateInstance(kHTMLEditorCID,
                                         nsnull,
-                                        kITextEditorIID, (void **)&gEditor);
+                                        kIHTMLEditorIID, (void **)&gEditor);
   if (NS_FAILED(result))
     return result;
   if (!gEditor) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  gEditor->InitTextEditor(aDOMDocument, aPresShell);
+  gEditor->InitHTMLEditor(aDOMDocument, aPresShell);
   gEditor->EnableUndo(PR_TRUE);
 
   return result;
 }
+
+nsresult NS_DoEditorTest(PRInt32 aCommandID)
+{
+  if (gEditor)
+  {
+    switch(aCommandID)
+    {
+      case VIEWER_EDIT_INSERT_TABLE:
+        // First param = number, 
+        // 2nd is TRUE to insert after, FALSE for before
+        gEditor->InsertTable();
+        break;    
+      case VIEWER_EDIT_INSERT_CELL:  
+        gEditor->InsertTableCell(1, PR_FALSE);
+        break;    
+      case VIEWER_EDIT_INSERT_COLUMN:
+        gEditor->InsertTableColumn(1, PR_FALSE);
+        break;    
+      case VIEWER_EDIT_INSERT_ROW:    
+        gEditor->InsertTableRow(1, PR_FALSE);
+        break;    
+      case VIEWER_EDIT_DELETE_TABLE:  
+        gEditor->DeleteTable();
+        break;    
+      case VIEWER_EDIT_DELETE_CELL:  
+        gEditor->DeleteTableCell(1);
+        break;    
+      case VIEWER_EDIT_DELETE_COLUMN:
+        gEditor->DeleteTableColumn(1);
+        break;    
+      case VIEWER_EDIT_DELETE_ROW:
+        gEditor->DeleteTableRow(1);
+        break;    
+      case VIEWER_EDIT_JOIN_CELL_RIGHT:
+        gEditor->JoinTableCells(PR_TRUE);
+        break;    
+      case VIEWER_EDIT_JOIN_CELL_BELOW:
+        gEditor->JoinTableCells(PR_FALSE);
+        break;
+      default:
+        return NS_ERROR_NOT_IMPLEMENTED;    
+    }
+  }
+  return NS_OK;
+}
+
