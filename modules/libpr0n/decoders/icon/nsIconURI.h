@@ -49,6 +49,7 @@ protected:
   nsCOMPtr<nsIURI> mFileIcon; // the file url we want the icon for....
   PRUint32 mSize; // the # of pixels in a row that we want for this image. Typically 16, 32, 128, etc.
   nsCString mContentType; // optional field explicitly specifying the content type
+  nsCString mDummyFilePath; // if we don't have a valid file url, the file path is stored here....i.e if mFileIcon is null.....
 
   nsresult FormatSpec(char* *result);
 };
