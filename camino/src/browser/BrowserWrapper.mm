@@ -53,6 +53,7 @@
 #include "nsIURI.h"
 #include "nsIIOService.h"
 #include "ContentClickListener.h"
+#include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserSetup.h"
