@@ -33,6 +33,7 @@ var UBound = 0;
 var bug = 103087;
 var summary = "Testing that we don't crash on any of these regexps -";
 var re = '';
+var lm = '';
 var lc = '';
 var rc = '';
 
@@ -124,21 +125,30 @@ function test()
   printStatus (summary);
 
   /*
-   * Testing that we don't crash on any of these.
+   * Testing that we don't crash on any of these -
    */
   for (var i=0; i<REstrings.length; i++)
   {
     status = inSection(i);
-
     re = new RegExp(REstrings[i]);
+    
     re.exec(str);
+    getResults();
 
-    lc = RegExp.leftContext;
     re.exec(lc);
+    getResults();
 
-    rc = RegExp.rightContext;
     re.exec(rc);
+    getResults();
   }
 
   exitFunc ('test');
+}
+
+
+function getResults()
+{
+  lm = RegExp.lastMatch;
+  lc = RegExp.leftContext;
+  rc = RegExp.rightContext;
 }
