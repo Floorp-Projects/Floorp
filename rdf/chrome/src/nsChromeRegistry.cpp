@@ -188,9 +188,10 @@ nsChromeRegistry::~nsChromeRegistry()
 
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsChromeRegistry,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsChromeRegistry,
                               nsIChromeRegistry,
                               nsIXULChromeRegistry,
+                              nsIChromeRegistrySea,
                               nsIXULOverlayProvider,
                               nsIObserver,
                               nsISupportsWeakReference)

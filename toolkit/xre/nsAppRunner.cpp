@@ -70,8 +70,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIExtensionManager.h"
 #include "nsIIOService.h"
-#include "nsILocaleService.h"
-#include "nsILookAndFeel.h"
 #include "nsIObserverService.h"
 #include "nsINativeAppSupport.h"
 #include "nsIPref.h"
@@ -89,7 +87,6 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
-#include "nsWidgetsCID.h"
 #include "nsXPCOM.h"
 #include "nsXPIDLString.h"
 
@@ -144,9 +141,6 @@
 #if defined(DEBUG_pra)
 #define DEBUG_CMD_LINE
 #endif
-
-#define UILOCALE_CMD_LINE_ARG "-UILocale"
-#define CONTENTLOCALE_CMD_LINE_ARG "-contentLocale"
 
 extern "C" void ShowOSAlert(const char* aMessage);
 
@@ -769,100 +763,6 @@ DoCommandLines(nsICmdLineService* cmdLineArgs, PRBool heedGeneralStartupPrefs, P
   return NS_OK;
 }
 
-// match OS locale
-static char kMatchOSLocalePref[] = "intl.locale.matchOS";
-
-nsresult
-getCountry(const nsAString& lc_name, nsAString& aCountry)
-{
-
-  nsresult        result = NS_OK;
-
-  PRInt32 dash = lc_name.FindChar('-');
-  if (dash > 0)
-    aCountry = Substring(lc_name, dash+1, lc_name.Length()-dash);
-  else
-    result = NS_ERROR_FAILURE;
-
-  return result;
-}
-
-static nsresult
-getUILangCountry(nsAString& aUILang, nsAString& aCountry)
-{
-  nsresult	 result;
-  // get a locale service 
-  nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &result);
-  NS_ASSERTION(NS_SUCCEEDED(result),"getUILangCountry: get locale service failed");
-
-  result = localeService->GetLocaleComponentForUserAgent(aUILang);
-  NS_ASSERTION(NS_SUCCEEDED(result),
-          "getUILangCountry: get locale componet for user agent failed");
-  result = getCountry(aUILang, aCountry);
-  return result;
-}
-
-// update global locale if possible (in case when user-*.rdf can be updated)
-// so that any apps after this can be invoked in the UILocale and contentLocale
-static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
-{
-    nsresult rv = NS_OK;
-
-    // check the pref first
-    nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
-    PRBool matchOS = PR_FALSE;
-    if (prefService)
-      prefService->GetBoolPref(kMatchOSLocalePref, &matchOS);
-
-    // match os locale
-    nsAutoString uiLang;
-    nsAutoString country;
-    if (matchOS) {
-      // compute lang and region code only when needed!
-      rv = getUILangCountry(uiLang, country);
-    }
-
-    nsXPIDLCString cmdUI;
-    rv = cmdLineArgs->GetCmdLineValue(UILOCALE_CMD_LINE_ARG, getter_Copies(cmdUI));
-    if (NS_SUCCEEDED(rv)){
-        if (cmdUI) {
-            nsCAutoString UILocaleName(cmdUI);
-            nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
-            if (chromeRegistry)
-                rv = chromeRegistry->SelectLocale(UILocaleName, PR_FALSE);
-        }
-    }
-    // match OS when no cmdline override
-    if (!cmdUI && matchOS) {
-      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
-      if (chromeRegistry) {
-        chromeRegistry->SetRuntimeProvider(PR_TRUE);
-        rv = chromeRegistry->SelectLocale(NS_ConvertUCS2toUTF8(uiLang), PR_FALSE);
-      }
-    }
-
-    nsXPIDLCString cmdContent;
-    rv = cmdLineArgs->GetCmdLineValue(CONTENTLOCALE_CMD_LINE_ARG, getter_Copies(cmdContent));
-    if (NS_SUCCEEDED(rv)){
-        if (cmdContent) {
-            nsCAutoString contentLocaleName(cmdContent);
-            nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
-            if(chromeRegistry)
-                rv = chromeRegistry->SelectLocale(contentLocaleName, PR_FALSE);
-        }
-    }
-    // match OS when no cmdline override
-    if (!cmdContent && matchOS) {
-      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
-      if (chromeRegistry) {
-        chromeRegistry->SetRuntimeProvider(PR_TRUE);        
-        rv = chromeRegistry->SelectLocale(NS_ConvertUCS2toUTF8(country), PR_FALSE);
-      }
-    }
-
-    return NS_OK;
-}
-
 // English text needs to go into a dtd file.
 // But when this is called we have no components etc. These strings must either be
 // here, or in a native resource file.
@@ -958,7 +858,6 @@ public:
   nsresult RegisterProfileService(nsIToolkitProfileService* aProfileService);
   nsresult InitEventQueue();
   nsresult SetWindowCreator(nsINativeAppSupport* native);
-  void     CheckAccessibleSkin();
 
 private:
   nsIServiceManager* mServiceManager;
@@ -1084,33 +983,6 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return wwatch->SetWindowCreator(creator);
-}
-
-NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-
-void
-ScopedXPCOMStartup::CheckAccessibleSkin()
-{
-  nsCOMPtr<nsILookAndFeel> lookAndFeel (do_GetService(kLookAndFeelCID));
-
-  if (lookAndFeel) {
-    PRInt32 useAccessibilityTheme = 0;
-
-    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_UseAccessibilityTheme,
-                           useAccessibilityTheme);
-
-    if (useAccessibilityTheme) {
-      // If OS accessibility is active, use the classic skin, which obeys the
-      // system accessibility colors.
-      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry
-        (do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
-      if (chromeRegistry) {
-        // Make change this session only
-        chromeRegistry->SetRuntimeProvider(PR_TRUE);
-        chromeRegistry->SelectSkin(NS_LITERAL_CSTRING("classic/1.0"), PR_TRUE);
-      }
-    }
-  }
 }
 
 // don't modify aAppDir directly... clone it first
@@ -1429,8 +1301,6 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     { //extra scoping is needed so we release these components before xpcom shutdown
-      xpcom.CheckAccessibleSkin();
-
       nsCOMPtr<nsIWindowWatcher> windowWatcher
         (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       nsCOMPtr<nsIDialogParamBlock> ioParamBlock
@@ -2036,8 +1906,6 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
         io->SetOffline(PR_TRUE);
       }
 
-      xpcom.CheckAccessibleSkin();
-
       {
         NS_TIMELINE_ENTER("startupNotifier");
         nsCOMPtr<nsIObserver> startupNotifier
@@ -2117,10 +1985,6 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
         nsCOMPtr<nsICmdLineService> cmdLineArgs
           (do_GetService("@mozilla.org/appshell/commandLineService;1"));
         NS_ENSURE_TRUE(cmdLineArgs, 1);
-
-        NS_TIMELINE_ENTER("InstallGlobalLocale");
-        InstallGlobalLocale(cmdLineArgs);
-        NS_TIMELINE_LEAVE("InstallGlobalLocale");
 
         // This will go away once Components are handling there own commandlines
         // if we have no command line arguments, we need to heed the

@@ -71,6 +71,10 @@
 #include "nsIJAR.h"
 #include "nsIPrincipal.h"
 
+#ifndef MOZ_XUL_APP
+#include "nsIChromeRegistrySea.h"
+#endif
+
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -606,6 +610,9 @@ extern "C" void RunChromeInstallOnThread(void *data)
 
     // make sure we've got a chrome registry -- can't proceed if not
     nsIXULChromeRegistry* reg = info->GetChromeRegistry();
+#ifndef MOZ_XUL_APP
+    nsCOMPtr<nsIChromeRegistrySea> cr = do_QueryInterface(reg);
+#endif
     if (reg)
     {
         // build up jar: URL
@@ -636,21 +643,27 @@ extern "C" void RunChromeInstallOnThread(void *data)
             if ( isSkin )
             {
               rv = reg->InstallSkin(spec.get(), PR_TRUE, PR_FALSE);
-                if (NS_SUCCEEDED(rv) && selected)
-                {
-                    NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
-                    rv = reg->SelectSkin(utf8Args, PR_TRUE);
-                }
+
+#ifndef MOZ_XUL_APP
+              if (NS_SUCCEEDED(rv) && selected && cr)
+              {
+                  NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
+                  cr->SelectSkin(utf8Args, PR_TRUE);
+              }
+#endif
             }
 
             if ( isLocale )
             {
                 rv = reg->InstallLocale(spec.get(), PR_TRUE);
-                if (NS_SUCCEEDED(rv) && selected)
+
+#ifndef MOZ_XUL_APP
+                if (NS_SUCCEEDED(rv) && selected && cr)
                 {
                     NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
-                    rv = reg->SelectLocale(utf8Args, PR_TRUE);
+                    cr->SelectLocale(utf8Args, PR_TRUE);
                 }
+#endif
             }
 
             // now that all types are registered try to activate

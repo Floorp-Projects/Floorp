@@ -43,6 +43,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  layout \
 		  content \
+		  locale \
 		  necko \
 		  dom \
 		  widget \

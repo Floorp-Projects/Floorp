@@ -76,7 +76,7 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIChromeRegistry.h" // chromeReg
+#include "nsIChromeRegistrySea.h"
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
 #include "nsHashtable.h"
@@ -396,7 +396,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     }
     gLocaleProfiles->Remove(&key);
 
-    nsCOMPtr<nsIXULChromeRegistry> chromeRegistry =
+    nsCOMPtr<nsIChromeRegistrySea> chromeRegistry =
         do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -1674,7 +1674,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
     rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, getter_AddRefs(profDefaultsDir));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIXULChromeRegistry> chromeRegistry =
+    nsCOMPtr<nsIChromeRegistrySea> chromeRegistry =
         do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
 
@@ -1695,7 +1695,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
         // -UILocale and -contentLocale) by GetSelectedLocale() which
         // is done in nsAppRunner.cpp::InstallGlobalLocale()
 
-        nsCOMPtr<nsIXULChromeRegistry> packageRegistry = do_QueryInterface(chromeRegistry);
+        nsCOMPtr<nsIChromeRegistrySea> packageRegistry = do_QueryInterface(chromeRegistry);
         if ((!aUILocale || !aUILocale[0]) && packageRegistry) {
             nsCAutoString currentUILocaleName;
             rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"),
@@ -2120,7 +2120,7 @@ nsProfile::DefineLocaleDefaultsDir()
     rv = directoryService->Get(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(localeDefaults));
     if (NS_SUCCEEDED(rv))
     {
-        nsCOMPtr<nsIXULChromeRegistry> packageRegistry = 
+        nsCOMPtr<nsIChromeRegistrySea> packageRegistry = 
                  do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {

@@ -59,9 +59,6 @@ default: $(SUBMAKEFILES)
 	$(MAKE) tier_1
 	$(MAKE) tier_2
 	$(MAKE) tier_9
-ifdef MOZ_PSM
-	$(MAKE) tier_40
-endif
 	$(MAKE) tier_50
 ifdef MOZ_JSDEBUGGER
 	$(MAKE) tier_93
@@ -83,7 +80,6 @@ DIRS = \
 	$(tier_1_dirs) \
 	$(tier_2_dirs) \
 	$(tier_9_dirs) \
-	$(tier_40_dirs) \
 	$(tier_50_dirs) \
 	$(NULL)
 
@@ -206,7 +202,6 @@ tier_9_dirs	+= \
 		xpfe/components/shistory \
 		docshell \
 		webshell \
-		profile \
 		embedding \
 		editor \
 		$(NULL)
@@ -227,12 +222,8 @@ tier_9_dirs  += other-licenses/branding/firefox
 endif
 endif
 
-tier_9_dirs	+= \
-		xpfe/appshell \
-		xpfe/browser/public \
-		xpfe/components/sidebar/public \
-		xpfe/components/xremote/public \
-		$(NULL)
+# profile and chrome should be in tier 50, but are required by xpfe/appshell
+# This is a temporary hack until the app-startup patch lands.
 
 ifdef MOZ_XUL
 ifdef MOZ_XUL_APP
@@ -241,6 +232,15 @@ else
 tier_9_dirs	+= rdf/chrome
 endif
 endif
+
+tier_9_dirs  += profile
+
+tier_9_dirs	+= \
+		xpfe/appshell \
+		xpfe/browser/public \
+		xpfe/components/sidebar/public \
+		xpfe/components/xremote/public \
+		$(NULL)
 
 ifdef ACCESSIBILITY
 tier_9_dirs    += accessible
@@ -260,16 +260,13 @@ tier_9_dirs    += toolkit/components/gnome
 endif
 endif
 
-#
-# tier 40 - security
-#
-ifdef MOZ_PSM
-tier_40_dirs	+= security/manager
-endif
-
 # 
 # tier 50 - xpfe & toolkit
 #
+
+ifdef MOZ_PSM
+tier_50_dirs	+= security/manager
+endif
 
 # This must preceed xpfe
 ifdef MOZ_JPROF

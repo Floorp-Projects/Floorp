@@ -479,6 +479,7 @@ rdf/base/idl/Makefile
 rdf/base/public/Makefile
 rdf/base/src/Makefile
 rdf/chrome/Makefile
+rdf/chrome/public/Makefile
 rdf/chrome/build/Makefile
 rdf/chrome/src/Makefile
 rdf/chrome/tools/Makefile
