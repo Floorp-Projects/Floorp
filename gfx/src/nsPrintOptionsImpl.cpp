@@ -54,7 +54,8 @@
 #include "nsSupportsArray.h"
 
 // For Prefs
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 
 #include "nsISimpleEnumerator.h"
@@ -121,6 +122,11 @@ nsPrintOptions::nsPrintOptions()
   if (sDefaultFont == nsnull) {
     sDefaultFont = new nsFont("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
                                NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(10));
+  }
+
+  nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefService) {
+    prefService->GetBranch("print.", getter_AddRefs(mPrefBranch));
   }
 }
 
@@ -316,21 +322,20 @@ const char* nsPrintOptions::GetPrefName(const char *    aPrefName,
                                         const nsString& aPrinterName)
 {
   if (!aPrefName || !*aPrefName) {
-    NS_ASSERTION(0, "Must have a valid pref name!");
+    NS_ERROR("Must have a valid pref name!");
     return aPrefName;
   }
 
-  mPrefName.AssignWithConversion(NS_LITERAL_STRING("print."));
+  nsCAutoString prefName;
 
   if (aPrinterName.Length()) {
-    mPrefName.AppendWithConversion(NS_LITERAL_STRING("printer_"));
-    mPrefName.AppendWithConversion(aPrinterName);
-    mPrefName.AppendWithConversion(NS_LITERAL_STRING("."));
+    prefName.AppendWithConversion(NS_LITERAL_STRING("printer_"));
+    prefName.AppendWithConversion(aPrinterName);
+    prefName.AppendWithConversion(NS_LITERAL_STRING("."));
   }
-  mPrefName += aPrefName;
+  prefName += aPrefName;
 
-  return mPrefName.get();
-
+  return prefName.get();
 }
 
 //----------------------------------------------------------------------
@@ -370,211 +375,209 @@ const char* kReadStr  = "Read Pref:";
 nsresult 
 nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags)
 {
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (prefs) {
-    if (aFlags & nsIPrintSettings::kInitSaveMargins) {
-      nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
-      nsMargin margin;
-      margin.SizeTo(halfInch, halfInch, halfInch, halfInch);
-      ReadInchesToTwipsPref(prefs, GetPrefName(kMarginTop, aPrefName),    margin.top);
-      DUMP_INT(kReadStr, kMarginTop, margin.top);
-      ReadInchesToTwipsPref(prefs, GetPrefName(kMarginLeft, aPrefName),   margin.left);
-      DUMP_INT(kReadStr, kMarginLeft, margin.left);
-      ReadInchesToTwipsPref(prefs, GetPrefName(kMarginBottom, aPrefName), margin.bottom);
-      DUMP_INT(kReadStr, kMarginBottom, margin.bottom);
-      ReadInchesToTwipsPref(prefs, GetPrefName(kMarginRight, aPrefName),  margin.right);
-      DUMP_INT(kReadStr, kMarginRight, margin.right);
-      aPS->SetMarginInTwips(margin);
-    }
+  NS_ENSURE_STATE(mPrefBranch);
 
-    PRBool   b;
-    nsString str;
-    PRInt32  iVal;
-    double   dbl;
-
-    if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
-      if (NS_SUCCEEDED(prefs->GetBoolPref(GetPrefName(kPrintEvenPages, aPrefName), &b)))  {
-        aPS->SetPrintOptions(nsIPrintSettings::kPrintEvenPages, b);
-        DUMP_BOOL(kReadStr, kPrintEvenPages, b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
-      if (NS_SUCCEEDED(prefs->GetBoolPref(GetPrefName(kPrintOddPages, aPrefName), &b))) {
-        aPS->SetPrintOptions(nsIPrintSettings::kPrintOddPages, b);
-        DUMP_BOOL(kReadStr, kPrintOddPages, b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
-      if (NS_SUCCEEDED(ReadPrefString(prefs, GetPrefName(kPrintHeaderStrLeft, aPrefName), str))) {
-        aPS->SetHeaderStrLeft(str.get());
-        DUMP_STR(kReadStr, kPrintHeaderStrLeft, str.get());
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveHeaderCenter) {
-      if (NS_SUCCEEDED(ReadPrefString(prefs, GetPrefName(kPrintHeaderStrCenter, aPrefName), str))) {
-        aPS->SetHeaderStrCenter(str.get());
-        DUMP_STR(kReadStr, kPrintHeaderStrCenter, str.get());
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveHeaderRight) {
-      if (NS_SUCCEEDED(ReadPrefString(prefs, GetPrefName(kPrintHeaderStrRight, aPrefName), str))) {
-        aPS->SetHeaderStrRight(str.get());
-        DUMP_STR(kReadStr, kPrintHeaderStrRight, str.get());
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveFooterLeft) {
-      if (NS_SUCCEEDED(ReadPrefString(prefs, GetPrefName(kPrintFooterStrLeft, aPrefName), str))) {
-        aPS->SetFooterStrLeft(str.get());
-        DUMP_STR(kReadStr, kPrintFooterStrLeft, str.get());
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveFooterCenter) {
-      if (NS_SUCCEEDED(ReadPrefString(prefs, GetPrefName(kPrintFooterStrCenter, aPrefName), str))) {
-        aPS->SetFooterStrCenter(str.get());
-        DUMP_STR(kReadStr, kPrintFooterStrCenter, str.get());
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveFooterRight) {
-      if (NS_SUCCEEDED(ReadPrefString(prefs, GetPrefName(kPrintFooterStrRight, aPrefName), str))) {
-        aPS->SetFooterStrRight(str.get());
-        DUMP_STR(kReadStr, kPrintFooterStrRight, str.get());
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveBGColors) {
-      if (NS_SUCCEEDED(prefs->GetBoolPref(GetPrefName(kPrintBGColors, aPrefName), &b))) {
-        aPS->SetPrintBGColors(b);
-        DUMP_BOOL(kReadStr, kPrintBGColors, b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveBGImages) {
-      if (NS_SUCCEEDED(prefs->GetBoolPref(GetPrefName(kPrintBGImages, aPrefName), &b))) {
-        aPS->SetPrintBGImages(b);
-        DUMP_BOOL(kReadStr, kPrintBGImages, b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperSize) {
-      if (NS_SUCCEEDED(prefs->GetIntPref(GetPrefName(kPrintPaperSize, aPrefName), &iVal))) { // this has been deprecated
-        aPS->SetPaperSize(iVal);
-        DUMP_INT(kReadStr, kPrintPaperSize, iVal);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveReversed) {
-      if (NS_SUCCEEDED(prefs->GetBoolPref(GetPrefName(kPrintReversed, aPrefName), &b))) {
-        aPS->SetPrintReversed(b);
-        DUMP_BOOL(kReadStr, kPrintReversed, b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveInColor) {
-      if (NS_SUCCEEDED(prefs->GetBoolPref(GetPrefName(kPrintInColor, aPrefName), &b))) {
-        aPS->SetPrintInColor(b);
-        DUMP_BOOL(kReadStr, kPrintInColor, b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperName) {
-      if (NS_SUCCEEDED(ReadPrefString(prefs, GetPrefName(kPrintPaperName, aPrefName), str))) {
-        aPS->SetPaperName(str.get());
-        DUMP_STR(kReadStr, kPrintPaperName, str.get());
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperSizeUnit) {
-      if (NS_SUCCEEDED(prefs->GetIntPref(GetPrefName(kPrintPaperSizeUnit, aPrefName),  &iVal))) {
-        aPS->SetPaperSizeUnit(iVal);
-        DUMP_INT(kReadStr, kPrintPaperSizeUnit, iVal);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperSizeType) {
-      if (NS_SUCCEEDED(prefs->GetIntPref(GetPrefName(kPrintPaperSizeType, aPrefName),  &iVal))) {
-        aPS->SetPaperSizeType(iVal);
-        DUMP_INT(kReadStr, kPrintPaperSizeType, iVal);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperData) {
-      if (NS_SUCCEEDED(prefs->GetIntPref(GetPrefName(kPrintPaperData, aPrefName),  &iVal))) {
-        aPS->SetPaperData(iVal);
-        DUMP_INT(kReadStr, kPrintPaperData, iVal);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperWidth) {
-      if (NS_SUCCEEDED(ReadPrefDouble(prefs, GetPrefName(kPrintPaperWidth, aPrefName), dbl))) {
-        aPS->SetPaperWidth(dbl);
-        DUMP_DBL(kReadStr, kPrintPaperWidth, dbl);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperHeight) {
-      if (NS_SUCCEEDED(ReadPrefDouble(prefs, GetPrefName(kPrintPaperHeight, aPrefName),  dbl))) {
-        aPS->SetPaperHeight(dbl);
-        DUMP_DBL(kReadStr, kPrintPaperHeight, dbl);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveOrientation) {
-      if (NS_SUCCEEDED(prefs->GetIntPref(GetPrefName(kPrintOrientation, aPrefName), &iVal))) {
-        aPS->SetOrientation(iVal);
-        DUMP_INT(kReadStr, kPrintOrientation, iVal);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePrintCommand) {
-      if (NS_SUCCEEDED(ReadPrefString(prefs, GetPrefName(kPrintCommand, aPrefName), str))) {
-        aPS->SetPrintCommand(str.get());
-        DUMP_STR(kReadStr, kPrintCommand, str.get());
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePrinterName) {
-      if (NS_SUCCEEDED(ReadPrefString(prefs, GetPrefName(kPrinterName, aPrefName), str))) {
-        aPS->SetPrinterName(str.get());
-        DUMP_STR(kReadStr, kPrinterName, str.get());
-      }
-    }
-
-     if (aFlags & nsIPrintSettings::kInitSavePrintToFile) {
-     if (NS_SUCCEEDED(prefs->GetBoolPref(GetPrefName(kPrintToFile, aPrefName), &b))) {
-        aPS->SetPrintToFile(b);
-        DUMP_BOOL(kReadStr, kPrintToFile, b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveToFileName) {
-      if (NS_SUCCEEDED(ReadPrefString(prefs, GetPrefName(kPrintToFileName, aPrefName),  str))) {
-        aPS->SetToFileName(str.get());
-        DUMP_STR(kReadStr, kPrintToFileName, str.get());
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePageDelay) {
-      if (NS_SUCCEEDED(prefs->GetIntPref(GetPrefName(kPrintPageDelay, aPrefName),   &iVal))) {
-        aPS->SetPrintPageDelay(iVal);
-        DUMP_INT(kReadStr, kPrintPageDelay, iVal);
-      }
-    }
-
-    // Not Reading In:
-    //   Scaling
-    //   ShrinkToFit
-    //   Number of Copies
-
-    return NS_OK;
+  if (aFlags & nsIPrintSettings::kInitSaveMargins) {
+    nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
+    nsMargin margin;
+    margin.SizeTo(halfInch, halfInch, halfInch, halfInch);
+    ReadInchesToTwipsPref(GetPrefName(kMarginTop, aPrefName),    margin.top);
+    DUMP_INT(kReadStr, kMarginTop, margin.top);
+    ReadInchesToTwipsPref(GetPrefName(kMarginLeft, aPrefName),   margin.left);
+    DUMP_INT(kReadStr, kMarginLeft, margin.left);
+    ReadInchesToTwipsPref(GetPrefName(kMarginBottom, aPrefName), margin.bottom);
+    DUMP_INT(kReadStr, kMarginBottom, margin.bottom);
+    ReadInchesToTwipsPref(GetPrefName(kMarginRight, aPrefName),  margin.right);
+    DUMP_INT(kReadStr, kMarginRight, margin.right);
+    aPS->SetMarginInTwips(margin);
   }
-  return NS_ERROR_FAILURE;
+
+  PRBool   b;
+  nsString str;
+  PRInt32  iVal;
+  double   dbl;
+
+  if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
+    if (NS_SUCCEEDED(mPrefBranch->GetBoolPref(GetPrefName(kPrintEvenPages, aPrefName), &b)))  {
+      aPS->SetPrintOptions(nsIPrintSettings::kPrintEvenPages, b);
+      DUMP_BOOL(kReadStr, kPrintEvenPages, b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
+    if (NS_SUCCEEDED(mPrefBranch->GetBoolPref(GetPrefName(kPrintOddPages, aPrefName), &b))) {
+      aPS->SetPrintOptions(nsIPrintSettings::kPrintOddPages, b);
+      DUMP_BOOL(kReadStr, kPrintOddPages, b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintHeaderStrLeft, aPrefName), str))) {
+      aPS->SetHeaderStrLeft(str.get());
+      DUMP_STR(kReadStr, kPrintHeaderStrLeft, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveHeaderCenter) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintHeaderStrCenter, aPrefName), str))) {
+      aPS->SetHeaderStrCenter(str.get());
+      DUMP_STR(kReadStr, kPrintHeaderStrCenter, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveHeaderRight) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintHeaderStrRight, aPrefName), str))) {
+      aPS->SetHeaderStrRight(str.get());
+      DUMP_STR(kReadStr, kPrintHeaderStrRight, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveFooterLeft) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintFooterStrLeft, aPrefName), str))) {
+      aPS->SetFooterStrLeft(str.get());
+      DUMP_STR(kReadStr, kPrintFooterStrLeft, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveFooterCenter) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintFooterStrCenter, aPrefName), str))) {
+      aPS->SetFooterStrCenter(str.get());
+      DUMP_STR(kReadStr, kPrintFooterStrCenter, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveFooterRight) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintFooterStrRight, aPrefName), str))) {
+      aPS->SetFooterStrRight(str.get());
+      DUMP_STR(kReadStr, kPrintFooterStrRight, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveBGColors) {
+    if (NS_SUCCEEDED(mPrefBranch->GetBoolPref(GetPrefName(kPrintBGColors, aPrefName), &b))) {
+      aPS->SetPrintBGColors(b);
+      DUMP_BOOL(kReadStr, kPrintBGColors, b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveBGImages) {
+    if (NS_SUCCEEDED(mPrefBranch->GetBoolPref(GetPrefName(kPrintBGImages, aPrefName), &b))) {
+      aPS->SetPrintBGImages(b);
+      DUMP_BOOL(kReadStr, kPrintBGImages, b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperSize) {
+    if (NS_SUCCEEDED(mPrefBranch->GetIntPref(GetPrefName(kPrintPaperSize, aPrefName), &iVal))) { // this has been deprecated
+      aPS->SetPaperSize(iVal);
+      DUMP_INT(kReadStr, kPrintPaperSize, iVal);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveReversed) {
+    if (NS_SUCCEEDED(mPrefBranch->GetBoolPref(GetPrefName(kPrintReversed, aPrefName), &b))) {
+      aPS->SetPrintReversed(b);
+      DUMP_BOOL(kReadStr, kPrintReversed, b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveInColor) {
+    if (NS_SUCCEEDED(mPrefBranch->GetBoolPref(GetPrefName(kPrintInColor, aPrefName), &b))) {
+      aPS->SetPrintInColor(b);
+      DUMP_BOOL(kReadStr, kPrintInColor, b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperName) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintPaperName, aPrefName), str))) {
+      aPS->SetPaperName(str.get());
+      DUMP_STR(kReadStr, kPrintPaperName, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperSizeUnit) {
+    if (NS_SUCCEEDED(mPrefBranch->GetIntPref(GetPrefName(kPrintPaperSizeUnit, aPrefName),  &iVal))) {
+      aPS->SetPaperSizeUnit(iVal);
+      DUMP_INT(kReadStr, kPrintPaperSizeUnit, iVal);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperSizeType) {
+    if (NS_SUCCEEDED(mPrefBranch->GetIntPref(GetPrefName(kPrintPaperSizeType, aPrefName),  &iVal))) {
+      aPS->SetPaperSizeType(iVal);
+      DUMP_INT(kReadStr, kPrintPaperSizeType, iVal);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperData) {
+    if (NS_SUCCEEDED(mPrefBranch->GetIntPref(GetPrefName(kPrintPaperData, aPrefName),  &iVal))) {
+      aPS->SetPaperData(iVal);
+      DUMP_INT(kReadStr, kPrintPaperData, iVal);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperWidth) {
+    if (NS_SUCCEEDED(ReadPrefDouble(GetPrefName(kPrintPaperWidth, aPrefName), dbl))) {
+      aPS->SetPaperWidth(dbl);
+      DUMP_DBL(kReadStr, kPrintPaperWidth, dbl);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperHeight) {
+    if (NS_SUCCEEDED(ReadPrefDouble(GetPrefName(kPrintPaperHeight, aPrefName),  dbl))) {
+      aPS->SetPaperHeight(dbl);
+      DUMP_DBL(kReadStr, kPrintPaperHeight, dbl);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveOrientation) {
+    if (NS_SUCCEEDED(mPrefBranch->GetIntPref(GetPrefName(kPrintOrientation, aPrefName), &iVal))) {
+      aPS->SetOrientation(iVal);
+      DUMP_INT(kReadStr, kPrintOrientation, iVal);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePrintCommand) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintCommand, aPrefName), str))) {
+      aPS->SetPrintCommand(str.get());
+      DUMP_STR(kReadStr, kPrintCommand, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePrinterName) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrinterName, aPrefName), str))) {
+      aPS->SetPrinterName(str.get());
+      DUMP_STR(kReadStr, kPrinterName, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePrintToFile) {
+    if (NS_SUCCEEDED(mPrefBranch->GetBoolPref(GetPrefName(kPrintToFile, aPrefName), &b))) {
+      aPS->SetPrintToFile(b);
+      DUMP_BOOL(kReadStr, kPrintToFile, b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveToFileName) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintToFileName, aPrefName),  str))) {
+      aPS->SetToFileName(str.get());
+      DUMP_STR(kReadStr, kPrintToFileName, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePageDelay) {
+    if (NS_SUCCEEDED(mPrefBranch->GetIntPref(GetPrefName(kPrintPageDelay, aPrefName),   &iVal))) {
+      aPS->SetPrintPageDelay(iVal);
+      DUMP_INT(kReadStr, kPrintPageDelay, iVal);
+    }
+  }
+
+  // Not Reading In:
+  //   Scaling
+  //   ShrinkToFit
+  //   Number of Copies
+
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -585,213 +588,209 @@ nsresult
 nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsString& aPrefName, PRUint32 aFlags)
 {
   NS_ENSURE_ARG_POINTER(aPS);
+  NS_ENSURE_STATE(mPrefBranch);
 
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (prefs) {
-    nsMargin margin;
-    if (aFlags & nsIPrintSettings::kInitSaveMargins) {
-      if (NS_SUCCEEDED(aPS->GetMarginInTwips(margin))) {
-        WriteInchesFromTwipsPref(prefs, GetPrefName(kMarginTop, aPrefName),    margin.top);
-        DUMP_INT(kWriteStr, kMarginTop, margin.top);
-        WriteInchesFromTwipsPref(prefs, GetPrefName(kMarginLeft, aPrefName),   margin.left);
-        DUMP_INT(kWriteStr, kMarginLeft, margin.top);
-        WriteInchesFromTwipsPref(prefs, GetPrefName(kMarginBottom, aPrefName), margin.bottom);
-        DUMP_INT(kWriteStr, kMarginBottom, margin.top);
-        WriteInchesFromTwipsPref(prefs, GetPrefName(kMarginRight, aPrefName),  margin.right);
-        DUMP_INT(kWriteStr, kMarginRight, margin.top);
-      }
+  nsMargin margin;
+  if (aFlags & nsIPrintSettings::kInitSaveMargins) {
+    if (NS_SUCCEEDED(aPS->GetMarginInTwips(margin))) {
+      WriteInchesFromTwipsPref(GetPrefName(kMarginTop, aPrefName),    margin.top);
+      DUMP_INT(kWriteStr, kMarginTop, margin.top);
+      WriteInchesFromTwipsPref(GetPrefName(kMarginLeft, aPrefName),   margin.left);
+      DUMP_INT(kWriteStr, kMarginLeft, margin.top);
+      WriteInchesFromTwipsPref(GetPrefName(kMarginBottom, aPrefName), margin.bottom);
+      DUMP_INT(kWriteStr, kMarginBottom, margin.top);
+      WriteInchesFromTwipsPref(GetPrefName(kMarginRight, aPrefName),  margin.right);
+      DUMP_INT(kWriteStr, kMarginRight, margin.top);
     }
-
-    PRBool     b;
-    PRUnichar* uStr;
-    PRInt32    iVal;
-    PRInt16    iVal16;
-    double     dbl;
-
-    if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
-      if (NS_SUCCEEDED(aPS->GetPrintOptions(nsIPrintSettings::kPrintEvenPages, &b))) {
-        DUMP_BOOL(kWriteStr, kPrintEvenPages, b);
-        prefs->SetBoolPref(GetPrefName(kPrintEvenPages, aPrefName), b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
-      if (NS_SUCCEEDED(aPS->GetPrintOptions(nsIPrintSettings::kPrintOddPages, &b))) {
-        DUMP_BOOL(kWriteStr, kPrintOddPages, b);
-        prefs->SetBoolPref(GetPrefName(kPrintOddPages, aPrefName), b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
-      if (NS_SUCCEEDED(aPS->GetHeaderStrLeft(&uStr))) {
-        DUMP_STR(kWriteStr, kPrintHeaderStrLeft, uStr);
-        WritePrefString(prefs, uStr, GetPrefName(kPrintHeaderStrLeft, aPrefName));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveHeaderCenter) {
-      if (NS_SUCCEEDED(aPS->GetHeaderStrCenter(&uStr))) {
-        DUMP_STR(kWriteStr, kPrintHeaderStrCenter, uStr);
-        WritePrefString(prefs, uStr, GetPrefName(kPrintHeaderStrCenter, aPrefName));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveHeaderRight) {
-      if (NS_SUCCEEDED(aPS->GetHeaderStrRight(&uStr))) {
-        DUMP_STR(kWriteStr, kPrintHeaderStrRight, uStr);
-        WritePrefString(prefs, uStr, GetPrefName(kPrintHeaderStrRight, aPrefName));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveFooterLeft) {
-      if (NS_SUCCEEDED(aPS->GetFooterStrLeft(&uStr))) {
-        DUMP_STR(kWriteStr, kPrintFooterStrLeft, uStr);
-        WritePrefString(prefs, uStr, GetPrefName(kPrintFooterStrLeft, aPrefName));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveFooterCenter) {
-      if (NS_SUCCEEDED(aPS->GetFooterStrCenter(&uStr))) {
-        DUMP_STR(kWriteStr, kPrintFooterStrCenter, uStr);
-        WritePrefString(prefs, uStr, GetPrefName(kPrintFooterStrCenter, aPrefName));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveFooterRight) {
-      if (NS_SUCCEEDED(aPS->GetFooterStrRight(&uStr))) {
-        DUMP_STR(kWriteStr, kPrintFooterStrRight, uStr);
-        WritePrefString(prefs, uStr, GetPrefName(kPrintFooterStrRight, aPrefName));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveBGColors) {
-      if (NS_SUCCEEDED(aPS->GetPrintBGColors(&b))) {
-        DUMP_BOOL(kWriteStr, kPrintBGColors, b);
-        prefs->SetBoolPref(GetPrefName(kPrintBGColors, aPrefName), b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveBGImages) {
-      if (NS_SUCCEEDED(aPS->GetPrintBGImages(&b))) {
-        DUMP_BOOL(kWriteStr, kPrintBGImages, b);
-        prefs->SetBoolPref(GetPrefName(kPrintBGImages, aPrefName), b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperSize) {
-      if (NS_SUCCEEDED(aPS->GetPaperSize(&iVal))) {
-        DUMP_INT(kWriteStr, kPrintPaperSize, iVal);
-        prefs->SetIntPref(GetPrefName(kPrintPaperSize, aPrefName), iVal); // this has been deprecated
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveReversed) {
-      if (NS_SUCCEEDED(aPS->GetPrintReversed(&b))) {
-        DUMP_BOOL(kWriteStr, kPrintReversed, b);
-        prefs->SetBoolPref(GetPrefName(kPrintReversed, aPrefName), b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveInColor) {
-      if (NS_SUCCEEDED(aPS->GetPrintInColor(&b))) {
-        DUMP_BOOL(kWriteStr, kPrintInColor, b);
-        prefs->SetBoolPref(GetPrefName(kPrintInColor, aPrefName), b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperName) {
-      if (NS_SUCCEEDED(aPS->GetPaperName(&uStr))) {
-        DUMP_STR(kWriteStr, kPrintPaperName, uStr);
-        WritePrefString(prefs, uStr, GetPrefName(kPrintPaperName, aPrefName));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperSizeUnit) {
-      if (NS_SUCCEEDED(aPS->GetPaperSizeUnit(&iVal16))) {
-        DUMP_INT(kWriteStr, kPrintPaperSizeUnit, iVal16);
-        prefs->SetIntPref(GetPrefName(kPrintPaperSizeUnit, aPrefName),  PRInt32(iVal16));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperSizeType) {
-      if (NS_SUCCEEDED(aPS->GetPaperSizeType(&iVal16))) {
-        DUMP_INT(kWriteStr, kPrintPaperSizeType, iVal16);
-        prefs->SetIntPref(GetPrefName(kPrintPaperSizeType, aPrefName),  PRInt32(iVal16));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperData) {
-      if (NS_SUCCEEDED(aPS->GetPaperData(&iVal16))) {
-        DUMP_INT(kWriteStr, kPrintPaperData, iVal16);
-        prefs->SetIntPref(GetPrefName(kPrintPaperData, aPrefName),      PRInt32(iVal16));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperWidth) {
-      if (NS_SUCCEEDED(aPS->GetPaperWidth(&dbl))) {
-        DUMP_DBL(kWriteStr, kPrintPaperWidth, dbl);
-        WritePrefDouble(prefs, GetPrefName(kPrintPaperWidth, aPrefName), dbl);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePaperHeight) {
-      if (NS_SUCCEEDED(aPS->GetPaperHeight(&dbl))) {
-        DUMP_DBL(kWriteStr, kPrintPaperHeight, dbl);
-        WritePrefDouble(prefs, GetPrefName(kPrintPaperHeight, aPrefName), dbl);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveOrientation) {
-      if (NS_SUCCEEDED(aPS->GetOrientation(&iVal))) {
-        DUMP_INT(kWriteStr, kPrintOrientation, iVal);
-        prefs->SetIntPref(GetPrefName(kPrintOrientation, aPrefName),  iVal);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePrintCommand) {
-      if (NS_SUCCEEDED(aPS->GetPrintCommand(&uStr))) {
-        DUMP_STR(kWriteStr, kPrintCommand, uStr);
-        WritePrefString(prefs, uStr, GetPrefName(kPrintCommand, aPrefName));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePrinterName) {
-      if (NS_SUCCEEDED(aPS->GetPrinterName(&uStr))) {
-        DUMP_STR(kWriteStr, kPrinterName, uStr);
-        WritePrefString(prefs, uStr, GetPrefName(kPrinterName, aPrefName));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePrintToFile) {
-      if (NS_SUCCEEDED(aPS->GetPrintToFile(&b))) {
-        DUMP_BOOL(kWriteStr, kPrintToFile, b);
-        prefs->SetBoolPref(GetPrefName(kPrintToFile, aPrefName), b);
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSaveToFileName) {
-      if (NS_SUCCEEDED(aPS->GetToFileName(&uStr))) {
-        DUMP_STR(kWriteStr, kPrintToFileName, uStr);
-        WritePrefString(prefs, uStr, GetPrefName(kPrintToFileName, aPrefName));
-      }
-    }
-
-    if (aFlags & nsIPrintSettings::kInitSavePageDelay) {
-      if (NS_SUCCEEDED(aPS->GetPrintPageDelay(&iVal))) {
-        DUMP_INT(kWriteStr, kPrintPageDelay, iVal);
-        prefs->SetIntPref(GetPrefName(kPrintPageDelay, aPrefName), iVal);
-      }
-    }
-
-    // Not Writing Out:
-    //   Scaling
-    //   ShrinkToFit
-    //   Number of Copies
-
-    return NS_OK;
   }
 
-  return NS_ERROR_FAILURE;
+  PRBool     b;
+  PRUnichar* uStr;
+  PRInt32    iVal;
+  PRInt16    iVal16;
+  double     dbl;
+
+  if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
+    if (NS_SUCCEEDED(aPS->GetPrintOptions(nsIPrintSettings::kPrintEvenPages, &b))) {
+      DUMP_BOOL(kWriteStr, kPrintEvenPages, b);
+      mPrefBranch->SetBoolPref(GetPrefName(kPrintEvenPages, aPrefName), b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
+    if (NS_SUCCEEDED(aPS->GetPrintOptions(nsIPrintSettings::kPrintOddPages, &b))) {
+      DUMP_BOOL(kWriteStr, kPrintOddPages, b);
+      mPrefBranch->SetBoolPref(GetPrefName(kPrintOddPages, aPrefName), b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
+    if (NS_SUCCEEDED(aPS->GetHeaderStrLeft(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintHeaderStrLeft, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintHeaderStrLeft, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveHeaderCenter) {
+    if (NS_SUCCEEDED(aPS->GetHeaderStrCenter(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintHeaderStrCenter, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintHeaderStrCenter, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveHeaderRight) {
+    if (NS_SUCCEEDED(aPS->GetHeaderStrRight(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintHeaderStrRight, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintHeaderStrRight, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveFooterLeft) {
+    if (NS_SUCCEEDED(aPS->GetFooterStrLeft(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintFooterStrLeft, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintFooterStrLeft, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveFooterCenter) {
+    if (NS_SUCCEEDED(aPS->GetFooterStrCenter(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintFooterStrCenter, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintFooterStrCenter, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveFooterRight) {
+    if (NS_SUCCEEDED(aPS->GetFooterStrRight(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintFooterStrRight, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintFooterStrRight, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveBGColors) {
+    if (NS_SUCCEEDED(aPS->GetPrintBGColors(&b))) {
+      DUMP_BOOL(kWriteStr, kPrintBGColors, b);
+      mPrefBranch->SetBoolPref(GetPrefName(kPrintBGColors, aPrefName), b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveBGImages) {
+    if (NS_SUCCEEDED(aPS->GetPrintBGImages(&b))) {
+      DUMP_BOOL(kWriteStr, kPrintBGImages, b);
+      mPrefBranch->SetBoolPref(GetPrefName(kPrintBGImages, aPrefName), b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperSize) {
+    if (NS_SUCCEEDED(aPS->GetPaperSize(&iVal))) {
+      DUMP_INT(kWriteStr, kPrintPaperSize, iVal);
+      mPrefBranch->SetIntPref(GetPrefName(kPrintPaperSize, aPrefName), iVal); // this has been deprecated
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveReversed) {
+    if (NS_SUCCEEDED(aPS->GetPrintReversed(&b))) {
+      DUMP_BOOL(kWriteStr, kPrintReversed, b);
+      mPrefBranch->SetBoolPref(GetPrefName(kPrintReversed, aPrefName), b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveInColor) {
+    if (NS_SUCCEEDED(aPS->GetPrintInColor(&b))) {
+      DUMP_BOOL(kWriteStr, kPrintInColor, b);
+      mPrefBranch->SetBoolPref(GetPrefName(kPrintInColor, aPrefName), b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperName) {
+    if (NS_SUCCEEDED(aPS->GetPaperName(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintPaperName, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintPaperName, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperSizeUnit) {
+    if (NS_SUCCEEDED(aPS->GetPaperSizeUnit(&iVal16))) {
+      DUMP_INT(kWriteStr, kPrintPaperSizeUnit, iVal16);
+      mPrefBranch->SetIntPref(GetPrefName(kPrintPaperSizeUnit, aPrefName),  PRInt32(iVal16));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperSizeType) {
+    if (NS_SUCCEEDED(aPS->GetPaperSizeType(&iVal16))) {
+      DUMP_INT(kWriteStr, kPrintPaperSizeType, iVal16);
+      mPrefBranch->SetIntPref(GetPrefName(kPrintPaperSizeType, aPrefName),  PRInt32(iVal16));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperData) {
+    if (NS_SUCCEEDED(aPS->GetPaperData(&iVal16))) {
+      DUMP_INT(kWriteStr, kPrintPaperData, iVal16);
+      mPrefBranch->SetIntPref(GetPrefName(kPrintPaperData, aPrefName),      PRInt32(iVal16));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperWidth) {
+    if (NS_SUCCEEDED(aPS->GetPaperWidth(&dbl))) {
+      DUMP_DBL(kWriteStr, kPrintPaperWidth, dbl);
+      WritePrefDouble(GetPrefName(kPrintPaperWidth, aPrefName), dbl);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePaperHeight) {
+    if (NS_SUCCEEDED(aPS->GetPaperHeight(&dbl))) {
+      DUMP_DBL(kWriteStr, kPrintPaperHeight, dbl);
+      WritePrefDouble(GetPrefName(kPrintPaperHeight, aPrefName), dbl);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveOrientation) {
+    if (NS_SUCCEEDED(aPS->GetOrientation(&iVal))) {
+      DUMP_INT(kWriteStr, kPrintOrientation, iVal);
+      mPrefBranch->SetIntPref(GetPrefName(kPrintOrientation, aPrefName),  iVal);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePrintCommand) {
+    if (NS_SUCCEEDED(aPS->GetPrintCommand(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintCommand, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintCommand, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePrinterName) {
+    if (NS_SUCCEEDED(aPS->GetPrinterName(&uStr))) {
+      DUMP_STR(kWriteStr, kPrinterName, uStr);
+      WritePrefString(uStr, GetPrefName(kPrinterName, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePrintToFile) {
+    if (NS_SUCCEEDED(aPS->GetPrintToFile(&b))) {
+      DUMP_BOOL(kWriteStr, kPrintToFile, b);
+      mPrefBranch->SetBoolPref(GetPrefName(kPrintToFile, aPrefName), b);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveToFileName) {
+    if (NS_SUCCEEDED(aPS->GetToFileName(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintToFileName, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintToFileName, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSavePageDelay) {
+    if (NS_SUCCEEDED(aPS->GetPrintPageDelay(&iVal))) {
+      DUMP_INT(kWriteStr, kPrintPageDelay, iVal);
+      mPrefBranch->SetIntPref(GetPrefName(kPrintPageDelay, aPrefName), iVal);
+    }
+  }
+
+  // Not Writing Out:
+  //   Scaling
+  //   ShrinkToFit
+  //   Number of Copies
+
+  return NS_OK;
 }
 
 /* create and return a new |nsPrinterListEnumerator| */
@@ -970,19 +969,19 @@ static void GetAdjustedPrinterName(nsIPrintSettings* aPS, PRBool aUsePNP, nsStri
 /* PRInt32 getPrinterPrefInt (in nsIPrintSettings aPrintSettings, in wstring aPrefName); */
 NS_IMETHODIMP nsPrintOptions::GetPrinterPrefInt(nsIPrintSettings *aPrintSettings, const PRUnichar *aPrefName, PRInt32 *_retval)
 {
+  NS_ENSURE_STATE(mPrefBranch);
+
   nsString prtName;
   // Get the Printer Name from the PtinerSettings 
   // to use as a prefix for Pref Names
   GetAdjustedPrinterName(aPrintSettings, PR_TRUE, prtName);
 
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (prefs) {
-    PRInt32 iVal;
-    if (NS_SUCCEEDED(prefs->GetIntPref(GetPrefName(NS_LossyConvertUCS2toASCII(aPrefName).get(), prtName), &iVal))) {
-      *_retval = iVal;
-      return NS_OK;
-    }
+  PRInt32 iVal;
+  if (NS_SUCCEEDED(mPrefBranch->GetIntPref(GetPrefName(NS_LossyConvertUCS2toASCII(aPrefName).get(), prtName), &iVal))) {
+    *_retval = iVal;
+    return NS_OK;
   }
+
   return NS_ERROR_FAILURE;
 }
 
@@ -1039,12 +1038,12 @@ nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS, PRBool aUsePrint
 //-- Protected Methods
 //-----------------------------------------------------
 //---------------------------------------------------
-nsresult nsPrintOptions::ReadPrefString(nsIPref *    aPref, 
-                                        const char * aPrefId, 
+nsresult nsPrintOptions::ReadPrefString(const char * aPrefId, 
                                         nsString&    aString)
 {
+  NS_ENSURE_STATE(mPrefBranch);
   char * str = nsnull;
-  nsresult rv = aPref->CopyCharPref(aPrefId, &str);
+  nsresult rv = mPrefBranch->GetCharPref(aPrefId, &str);
   if (NS_SUCCEEDED(rv) && str) {
     aString.AssignWithConversion(str);
     nsMemory::Free(str);
@@ -1055,39 +1054,52 @@ nsresult nsPrintOptions::ReadPrefString(nsIPref *    aPref,
 /** ---------------------------------------------------
  *  Write PRUnichar* to Prefs and deletes the contents of the string
  */
-nsresult nsPrintOptions::WritePrefString(nsIPref* aPref, PRUnichar*& aStr, const char* aPrefId)
+nsresult nsPrintOptions::WritePrefString(PRUnichar*& aStr, const char* aPrefId)
 {
+  NS_ENSURE_STATE(mPrefBranch);
   if (!aStr) return NS_ERROR_FAILURE;
 
   nsresult rv = NS_ERROR_FAILURE;
   if (aStr) {
-    rv = aPref->SetUnicharPref(aPrefId, aStr);
+    nsCOMPtr<nsISupportsString> prefStr = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+    if (prefStr) {
+      prefStr->SetData(nsDependentString(aStr));
+      rv = mPrefBranch->SetComplexValue(aPrefId, NS_GET_IID(nsISupportsString), prefStr);
+    }
     nsMemory::Free(aStr);
     aStr = nsnull;
   }
   return rv;
 }
 
-nsresult nsPrintOptions::WritePrefString(nsIPref *    aPref, 
-                                         const char * aPrefId, 
+nsresult nsPrintOptions::WritePrefString(const char * aPrefId, 
                                          nsString&    aString)
 {
-  NS_ENSURE_ARG_POINTER(aPref);
+  NS_ENSURE_STATE(mPrefBranch);
   NS_ENSURE_ARG_POINTER(aPrefId);
 
   PRUnichar * str = ToNewUnicode(aString);
-  nsresult rv = aPref->SetUnicharPref(aPrefId, str);
-  nsMemory::Free(str);
+  if (!str) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsISupportsString> prefStr = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (prefStr) {
+    prefStr->SetData(nsDependentString(str));
+    rv = mPrefBranch->SetComplexValue(aPrefId, NS_GET_IID(nsISupportsString), prefStr);
+  }
+
+  nsMemory::Free(str);
   return rv;
 }
 
-nsresult nsPrintOptions::ReadPrefDouble(nsIPref *    aPref, 
-                                        const char * aPrefId, 
+nsresult nsPrintOptions::ReadPrefDouble(const char * aPrefId, 
                                         double&      aVal)
 {
+  NS_ENSURE_STATE(mPrefBranch);
   char * str = nsnull;
-  nsresult rv = aPref->CopyCharPref(aPrefId, &str);
+  nsresult rv = mPrefBranch->GetCharPref(aPrefId, &str);
   if (NS_SUCCEEDED(rv) && str) {
     float f;
     sscanf(str, "%f", &f);
@@ -1097,25 +1109,27 @@ nsresult nsPrintOptions::ReadPrefDouble(nsIPref *    aPref,
   return rv;
 }
 
-nsresult nsPrintOptions::WritePrefDouble(nsIPref *    aPref, 
-                                         const char * aPrefId, 
+nsresult nsPrintOptions::WritePrefDouble(const char * aPrefId, 
                                          double       aVal)
 {
-  NS_ENSURE_ARG_POINTER(aPref);
+  NS_ENSURE_STATE(mPrefBranch);
   NS_ENSURE_ARG_POINTER(aPrefId);
 
   char str[64];
   sprintf(str, "%6.2f", aVal);
-  return aPref->SetCharPref(aPrefId, str);
+  return mPrefBranch->SetCharPref(aPrefId, str);
 }
 
 //---------------------------------------------------
-void nsPrintOptions::ReadInchesToTwipsPref(nsIPref *    aPref, 
-                                           const char * aPrefId, 
+void nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, 
                                            nscoord&     aTwips)
 {
+  if (!mPrefBranch) {
+    return;
+  }
+
   char * str = nsnull;
-  nsresult rv = aPref->CopyCharPref(aPrefId, &str);
+  nsresult rv = mPrefBranch->GetCharPref(aPrefId, &str);
   if (NS_SUCCEEDED(rv) && str) {
     nsAutoString justStr;
     justStr.AssignWithConversion(str);
@@ -1131,30 +1145,32 @@ void nsPrintOptions::ReadInchesToTwipsPref(nsIPref *    aPref,
 }
 
 //---------------------------------------------------
-void nsPrintOptions::WriteInchesFromTwipsPref(nsIPref *    aPref, 
-                                              const char * aPrefId, 
+void nsPrintOptions::WriteInchesFromTwipsPref(const char * aPrefId, 
                                               nscoord      aTwips)
 {
+  if (!mPrefBranch) {
+    return;
+  }
+
   double inches = NS_TWIPS_TO_INCHES(aTwips);
   nsAutoString inchesStr;
   inchesStr.AppendFloat(inches);
   char * str = ToNewCString(inchesStr);
   if (str) {
-    aPref->SetCharPref(aPrefId, str);
+    mPrefBranch->SetCharPref(aPrefId, str);
   } else {
-    aPref->SetCharPref(aPrefId, "0.5");
+    mPrefBranch->SetCharPref(aPrefId, "0.5");
   }
 }
 
 //---------------------------------------------------
-void nsPrintOptions::ReadJustification(nsIPref *    aPref, 
-                                       const char * aPrefId, 
+void nsPrintOptions::ReadJustification(const char * aPrefId, 
                                        PRInt16&     aJust,
                                        PRInt16      aInitValue)
 {
   aJust = aInitValue;
   nsAutoString justStr;
-  if (NS_SUCCEEDED(ReadPrefString(aPref, aPrefId, justStr))) {
+  if (NS_SUCCEEDED(ReadPrefString(aPrefId, justStr))) {
     if (justStr.EqualsWithConversion(kJustRight)) {
       aJust = nsIPrintSettings::kJustRight;
 
@@ -1168,21 +1184,20 @@ void nsPrintOptions::ReadJustification(nsIPref *    aPref,
 }
 
 //---------------------------------------------------
-void nsPrintOptions::WriteJustification(nsIPref *    aPref, 
-                                        const char * aPrefId, 
+void nsPrintOptions::WriteJustification(const char * aPrefId, 
                                         PRInt16      aJust)
 {
   switch (aJust) {
     case nsIPrintSettings::kJustLeft: 
-      aPref->SetCharPref(aPrefId, kJustLeft);
+      mPrefBranch->SetCharPref(aPrefId, kJustLeft);
       break;
 
     case nsIPrintSettings::kJustCenter: 
-      aPref->SetCharPref(aPrefId, kJustCenter);
+      mPrefBranch->SetCharPref(aPrefId, kJustCenter);
       break;
 
     case nsIPrintSettings::kJustRight: 
-      aPref->SetCharPref(aPrefId, kJustRight);
+      mPrefBranch->SetCharPref(aPrefId, kJustRight);
       break;
   } //switch
 }
