@@ -355,7 +355,7 @@ protected:
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
     nsIChromeEventHandler *    mChromeEventHandler; //Weak Reference
 
-private:
+public:
     class InterfaceRequestorProxy : public nsIInterfaceRequestor {
     public:
         InterfaceRequestorProxy(nsIInterfaceRequestor* p);
@@ -363,7 +363,7 @@ private:
         NS_DECL_ISUPPORTS
         NS_DECL_NSIINTERFACEREQUESTOR
  
-    private:
+    protected:
         InterfaceRequestorProxy() {}
         nsWeakPtr mWeakPtr;
     };
