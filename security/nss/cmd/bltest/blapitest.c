@@ -46,6 +46,12 @@
 #include "softoken.h"
 #include "nss.h"
 
+/* Temporary - add debugging ouput on windows for RSA to track QA failure */
+#ifdef _WIN32
+#define TRACK_BLTEST_BUG
+    char __bltDBG[] = "BLTEST DEBUG";
+#endif
+
 char *progName;
 char *testdir = NULL;
 
@@ -1782,6 +1788,11 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    fprintf(stderr, "%s: Skipping invalid mode %s.\n",progName,modestr);
 	    continue;
 	}
+#ifdef TRACK_BLTEST_BUG
+	if (mode == bltestRSA) {
+	    fprintf(stderr, "[%s] Self-Testing RSA\n", __bltDBG);
+	}
+#endif
 	/* get the number of tests in the directory */
 	sprintf(filename, "%s/tests/%s/%s", testdir, modestr, "numtests");
 	file = PR_Open(filename, PR_RDONLY, 00660);
@@ -1790,9 +1801,19 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    return SECFailure;
 	}
 	rv = SECU_FileToItem(&item, file);
+#ifdef TRACK_BLTEST_BUG
+	if (mode == bltestRSA) {
+	    fprintf(stderr, "[%s] Loaded data from %s\n", __bltDBG, filename);
+	}
+#endif
 	PR_Close(file);
 	/* loop over the tests in the directory */
 	for (j=0; j<(int)(item.data[0] - '0'); j++) { /* XXX bug when > 10 */
+#ifdef TRACK_BLTEST_BUG
+	    if (mode == bltestRSA) {
+		fprintf(stderr, "[%s] Executing self-test #%d\n", __bltDBG, j);
+	    }
+#endif
 	    sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
 			      "plaintext", j);
 	    if (mode == bltestDSA)
@@ -1802,7 +1823,17 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
 			      "ciphertext", j);
 	    load_file_data(arena, &ct, filename, bltestBase64Encoded);
+#ifdef TRACK_BLTEST_BUG
+	    if (mode == bltestRSA) {
+		fprintf(stderr, "[%s] Loaded data for  self-test #%d\n", __bltDBG, j);
+	    }
+#endif
 	    get_params(arena, params, mode, j);
+#ifdef TRACK_BLTEST_BUG
+	    if (mode == bltestRSA) {
+		fprintf(stderr, "[%s] Got parameters for #%d\n", __bltDBG, j);
+	    }
+#endif
 	    /* Forward Operation (Encrypt/Sign/Hash)
 	    ** Align the input buffer (plaintext) according to request
 	    ** then perform operation and compare to ciphertext
@@ -1815,10 +1846,30 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 		memset(&cipherInfo.output.buf, 0, sizeof cipherInfo.output.buf);
 		rv |= cipherInit(&cipherInfo, PR_TRUE);
 		misalignBuffer(arena, &cipherInfo.output, outoff);
+#ifdef TRACK_BLTEST_BUG
+		if (mode == bltestRSA) {
+		    fprintf(stderr, "[%s] Inited cipher context and buffers for #%d\n", __bltDBG, j);
+		}
+#endif
 		rv |= cipherDoOp(&cipherInfo);
+#ifdef TRACK_BLTEST_BUG
+		if (mode == bltestRSA) {
+		    fprintf(stderr, "[%s] Performed encrypt for #%d\n", __bltDBG, j);
+		}
+#endif
 		rv |= cipherFinish(&cipherInfo);
+#ifdef TRACK_BLTEST_BUG
+		if (mode == bltestRSA) {
+		    fprintf(stderr, "[%s] Finished encrypt for #%d\n", __bltDBG, j);
+		}
+#endif
 		rv |= verify_self_test(&cipherInfo.output, 
 		                       &ct, mode, PR_TRUE, 0);
+#ifdef TRACK_BLTEST_BUG
+		if (mode == bltestRSA) {
+		    fprintf(stderr, "[%s] Verified self-test for #%d\n", __bltDBG, j);
+		}
+#endif
 		/* If testing hash, only one op to test */
 		if (is_hashCipher(mode))
 		    continue;
@@ -1840,11 +1891,31 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    memset(&cipherInfo.output.buf, 0, sizeof cipherInfo.output.buf);
 	    rv |= cipherInit(&cipherInfo, PR_FALSE);
 	    misalignBuffer(arena, &cipherInfo.output, outoff);
+#ifdef TRACK_BLTEST_BUG
+	    if (mode == bltestRSA) {
+		fprintf(stderr, "[%s] Inited cipher context and buffers for #%d\n", __bltDBG, j);
+	    }
+#endif
 	    srv = SECSuccess;
 	    srv |= cipherDoOp(&cipherInfo);
+#ifdef TRACK_BLTEST_BUG
+	    if (mode == bltestRSA) {
+		fprintf(stderr, "[%s] Performed decrypt for #%d\n", __bltDBG, j);
+	    }
+#endif
 	    rv |= cipherFinish(&cipherInfo);
+#ifdef TRACK_BLTEST_BUG
+	    if (mode == bltestRSA) {
+		fprintf(stderr, "[%s] Finished decrypt for #%d\n", __bltDBG, j);
+	    }
+#endif
 	    rv |= verify_self_test(&cipherInfo.output, 
 	                           &pt, mode, PR_FALSE, srv);
+#ifdef TRACK_BLTEST_BUG
+	    if (mode == bltestRSA) {
+		fprintf(stderr, "[%s] Verified self-test for #%d\n", __bltDBG, j);
+	    }
+#endif
 	    /*if (rv) return rv;*/
 	}
     }
