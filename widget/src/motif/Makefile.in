@@ -38,10 +38,10 @@ INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../motif -I$(srcdir)/.
 INCLUDES += $(TK_CFLAGS)
 
 CPPSRCS= \
-        nsMenuBar.cpp \
-        nsMenu.cpp \
-        nsMenuItem.cpp \
-        nsPopUpMenu.cpp \
+	nsMenuBar.cpp \
+	nsMenu.cpp \
+	nsMenuItem.cpp \
+	nsPopUpMenu.cpp \
 	nsComboBox.cpp \
 	nsTextHelper.cpp \
 	nsTextAreaWidget.cpp \
@@ -56,10 +56,10 @@ CPPSRCS= \
 	nsLookAndFeel.cpp \
 	nsToolkit.cpp \
 	nsLabel.cpp \
-	nsDialog.cpp \
 	nsWindow.cpp \
 	nsXtEventHandler.cpp \
-        nsXtManageWidget.cpp
+	nsXtManageWidget.cpp \
+	$(NULL)
 
 CPP_OBJS=				\
  ./$(OBJDIR)/nsPopUpMenu.o  \
@@ -79,7 +79,6 @@ CPP_OBJS=				\
  ./$(OBJDIR)/nsLookAndFeel.o		\
  ./$(OBJDIR)/nsToolkit.o		\
  ./$(OBJDIR)/nsLabel.o			\
- ./$(OBJDIR)/nsDialog.o		\
  ./$(OBJDIR)/nsWindow.o		\
  ./$(OBJDIR)/nsXtEventHandler.o		\
  $(NULL)
