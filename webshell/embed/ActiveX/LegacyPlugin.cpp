@@ -208,6 +208,13 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
 	// Create the object
 	if (FAILED(pSite->Create(clsid, pl, szName)))
 	{
+		USES_CONVERSION;
+		LPOLESTR szClsid;
+		StringFromCLSID(clsid, &szClsid);
+		TCHAR szBuffer[256];
+		_stprintf(szBuffer, _T("Could not create the control %s. Check that is has been installed on your computer and that this page correctly references it."), OLE2T(szClsid));
+		MessageBox(NULL, szBuffer, _T("ActiveX Error"), MB_OK | MB_ICONWARNING);
+
 		pSite->Release();
 		return NPERR_GENERIC_ERROR;
 	}
@@ -350,29 +357,6 @@ NPP_StreamAsFile(NPP instance, NPStream *stream, const char* fname)
 	{
 		return;
 	}
-
-/*	// get back the plugin instance object
-    CPluginWindow * pluginData = (CPluginWindow *)instance->pdata;
-
-	// get the avi object controller
-    CAvi& aviPlayer = pluginData->GetAviStream();
-
-	// open the avi driver with the specified name
-	aviPlayer.Open(*pluginData, fname);
-    aviPlayer.Update();
-
-    // well, christ, the AVI window Update() paint doesn't work in Win95.
-    // It works fine in NT and Win3.1, but Win95 is doing something
-    // hostile.  So, I have a hack here that steps the frame forward
-    // to paint the window;  barf ...
-
-    // figure out whether to hack for Win 95
-    DWORD dwVer = GetVersion();
-    int iVer = (LOBYTE(LOWORD(dwVer))*100)+HIBYTE(LOWORD(dwVer));
-    if(iVer > 394) {
-        // Win 95
-        aviPlayer.FrameForward();
-    } */
 }
 
 
