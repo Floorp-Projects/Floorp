@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.23 2002/02/06 13:31:04 kaie%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.24 2002/02/28 05:14:10 cathleen%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -654,7 +654,7 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
 
   newNick->type = siAsciiString;
   newNick->data = (unsigned char*) nsCRT::strdup(nickname);
-  newNick->len  = nsCRT::strlen((char*)newNick->data);
+  newNick->len  = strlen((char*)newNick->data);
   return newNick;
 }
 
