@@ -22,12 +22,13 @@
 %}
 
 interface nsIChannel;
+interface nsIFileSystem;
 interface nsIEventSinkGetter;
 interface nsIInputStream;
 interface nsIRunnable;
 native nsFileSpec(nsFileSpec&);
 
-[scriptable, uuid(d4ced500-6882-11d3-9382-00104ba0fd40)]
+[scriptable, uuid(57211a60-8c45-11d3-93ac-00104ba0fd40)]
 interface nsIFileTransportService : nsISupports
 {
     [noscript] nsIChannel createTransport(in nsFileSpec spec,       // XXX change to nsIFile later
@@ -41,6 +42,10 @@ interface nsIFileTransportService : nsISupports
                                          in long contentLength,
                                          in string command,
                                          in nsIEventSinkGetter getter);
+
+    nsIChannel createTransportFromFileSystem(in nsIFileSystem fsObj,
+                                             in string command,
+                                             in nsIEventSinkGetter getter);
 
     void dispatchRequest(in nsIRunnable runnable);
     void suspend(in nsIRunnable trans);

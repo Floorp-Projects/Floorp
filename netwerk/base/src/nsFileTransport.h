@@ -62,6 +62,9 @@ public:
                   PRInt32 contentLength,
                   const char* command,
                   nsIEventSinkGetter* getter);
+    nsresult Init(nsIFileSystem* fsObj,
+                  const char* command,
+                  nsIEventSinkGetter* getter);
 
     void Process(void);
 
