@@ -906,30 +906,35 @@ void MRJContext::drawApplet()
 
 void MRJContext::printApplet(nsPluginWindow* printingWindow)
 {
-	jclass utilsClass = NULL;
 	jobject frameObject = NULL;
+	jclass utilsClass = NULL;
 	OSStatus status = noErr;
 	JNIEnv* env = ::JMGetCurrentEnv(mSessionRef); 
 	
+	// put the printing port into window coordinates:  (0, 0) in upper left corner.
+	GrafPtr printingPort = GrafPtr(printingWindow->window->port);
+	LocalPort localPort(printingPort);
+	localPort.Enter();
+	::ClipRect((Rect*)&printingWindow->clipRect);
+
 	do {
+		// try to use the printing API, if that fails, fall back on netscape.oji.AWTUtils.printContainer().
+		Point frameOrigin = { printingWindow->y, printingWindow->x };
+		status = ::JMDrawFrameInPort(mViewerFrame, printingPort, frameOrigin, printingPort->clipRgn, false);
+		if (status == noErr) break;
+
+		// get the frame object to print.
+		frameObject = JMGetAWTFrameJNIObject(mViewerFrame, env);
+		if (frameObject == NULL) break;
+
 		// call the print methods of the applet viewer's frame.
 		jclass utilsClass = env->FindClass("netscape/oji/AWTUtils");
 		if (utilsClass == NULL) break;
 		jmethodID printContainerMethod = env->GetStaticMethodID(utilsClass, "printContainer", "(Ljava/awt/Container;IIILjava/lang/Object;)V");
 		if (printContainerMethod == NULL) break;
 		
-		// get the frame object to print.
-		frameObject = JMGetAWTFrameJNIObject(mViewerFrame, env);
-		if (frameObject == NULL) break;
-
 		// create a monitor to synchronize with.
 		MRJMonitor notifier(mSession);
-
-		// put the printing port into window coordinates.
-		GrafPtr printingPort = GrafPtr(printingWindow->window->port);
-		LocalPort localPort(printingPort);
-		localPort.Enter();
-		::ClipRect((Rect*)&printingWindow->clipRect);
 
 		// start the asynchronous print call.
 		jvalue args[5];
@@ -943,9 +948,10 @@ void MRJContext::printApplet(nsPluginWindow* printingWindow)
 		// now, wait for the print method to complete.
 		if (status == noErr)
 			notifier.wait();
-		
-		localPort.Exit();
 	} while (0);
+
+	// restore the origin & port.
+	localPort.Exit();
 
 	if (frameObject != NULL)
 		env->DeleteLocalRef(frameObject);
