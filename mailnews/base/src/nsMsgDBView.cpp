@@ -981,7 +981,6 @@ NS_IMETHODIMP nsMsgDBView::LoadMessageByUrl(const char *aUrl)
 NS_IMETHODIMP nsMsgDBView::SelectionChanged()
 {
   // if the currentSelection changed then we have a message to display - not if we are in the middle of deleting rows
-
   if (m_deletingRows)
     return NS_OK;
 
@@ -2117,7 +2116,10 @@ nsMsgDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32
     NS_ASSERTION(PR_FALSE, "Last move did not complete");
     return NS_OK;
   }
-  nsresult rv = NS_OK;
+  
+  m_deletingRows = isMove && mDeleteModel != nsMsgImapDeleteModels::IMAPDelete;
+
+  nsresult rv;
   NS_ENSURE_ARG_POINTER(destFolder);
   nsCOMPtr<nsISupportsArray> messageArray;
   NS_NewISupportsArray(getter_AddRefs(messageArray));
@@ -2125,16 +2127,18 @@ nsMsgDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32
     nsMsgKey key = m_keys.GetAt(indices[index]);
     nsCOMPtr <nsIMsgDBHdr> msgHdr;
     rv = m_db->GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
-    NS_ENSURE_SUCCESS(rv,rv);
-    if (msgHdr)
+    if (NS_SUCCEEDED(rv) && msgHdr)
+    {
       messageArray->AppendElement(msgHdr);
+      // if we are deleting rows, save off the keys
+      if (m_deletingRows)
+        mIndicesToNoteChange.Add(indices[index]);
   }
-  m_deletingRows = isMove && mDeleteModel != nsMsgImapDeleteModels::IMAPDelete;
+  }
+  
   nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = copyService->CopyMessages(m_folder /* source folder */, messageArray, destFolder, isMove, nsnull /* listener */, window, PR_TRUE /*allowUndo*/);
-
-  return rv;
+  return copyService->CopyMessages(m_folder /* source folder */, messageArray, destFolder, isMove, nsnull /* listener */, window, PR_TRUE /*allowUndo*/);
 }
 
 nsresult
@@ -2373,7 +2377,11 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
     NS_WARNING("Last delete did not complete");
     return NS_OK;
   }
-  nsresult rv = NS_OK;
+
+  if (mDeleteModel != nsMsgImapDeleteModels::IMAPDelete)
+    m_deletingRows = PR_TRUE;
+
+  nsresult rv;
 	nsCOMPtr<nsISupportsArray> messageArray;
 	NS_NewISupportsArray(getter_AddRefs(messageArray));
   for (nsMsgViewIndex index = 0; index < (nsMsgViewIndex) numIndices; index++)
@@ -2381,13 +2389,15 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
     nsMsgKey key = m_keys.GetAt(indices[index]);
     nsCOMPtr <nsIMsgDBHdr> msgHdr;
     rv = m_db->GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
-    NS_ENSURE_SUCCESS(rv,rv);
-    if (msgHdr)
+    if (NS_SUCCEEDED(rv) && msgHdr)
+    {
       messageArray->AppendElement(msgHdr);
-
+      // if we are deleting rows, save off the keys
+      if (m_deletingRows)
+        mIndicesToNoteChange.Add(indices[index]);
   }
-  if (mDeleteModel != nsMsgImapDeleteModels::IMAPDelete)
-    m_deletingRows = PR_TRUE;
+  }
+  
   rv = m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, nsnull, PR_TRUE /*allow Undo*/ );
   if (NS_FAILED(rv))
     m_deletingRows = PR_FALSE;
@@ -5498,40 +5508,26 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
 {
   if (m_deletingRows)
   { 
-    if (aSucceeded && mTreeSelection)
+    if (aSucceeded)
     {
-
-      PRInt32 selectionCount; 
-      //selection count cannot be zero, we would not be here
-      mTreeSelection->GetRangeCount(&selectionCount);  
-      NS_ASSERTION(selectionCount, "selected indices for deletion is 0");
-      PRInt32 *startRangeArray = (PRInt32*) PR_MALLOC(selectionCount* sizeof(PRInt32));
-      PRInt32 *endRangeArray = (PRInt32*) PR_MALLOC(selectionCount* sizeof(PRInt32));
-      PRInt32 i;
-      for (i=0; i<selectionCount; i++)
-        mTreeSelection->GetRangeAt(i, &startRangeArray[i], &endRangeArray[i]);
-
-      PRInt32 delta=0; //keeps no of rows deleted.
-      for (i=0; i<selectionCount; i++)
+      PRUint32 numIndices = mIndicesToNoteChange.GetSize();
+      if (numIndices) 
       {
-        startRangeArray[i] -=delta;
-        endRangeArray[i] -= delta;
-        PRInt32 numRows = endRangeArray[i]-startRangeArray[i]+1;
-        delta += numRows;
+        if (numIndices > 1)
+          mIndicesToNoteChange.QuickSort(CompareViewIndices);
 
         // the call to NoteChange() has to happen after we are done removing the keys
         // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
-        NoteChange(startRangeArray[i], -numRows, nsMsgViewNotificationCode::insertOrDelete);
-      }
+        for (PRUint32 i=0;i<numIndices;i++)
+          NoteChange(mIndicesToNoteChange[i], -1, nsMsgViewNotificationCode::insertOrDelete);
 
-      PR_FREEIF(startRangeArray);
-      PR_FREEIF(endRangeArray);
+        mIndicesToNoteChange.RemoveAll();
+      }
     }
   }
 
  m_deletingRows = PR_FALSE;
  return NS_OK;
-
 }
 
 NS_IMETHODIMP nsMsgDBView::GetDb(nsIMsgDatabase **aDB)

@@ -381,6 +381,8 @@ private:
   nsCOMPtr <nsIMsgFolder> mJunkTargetFolder;
   nsresult PerformActionOnJunkMsgs();
   nsresult SaveJunkMsgForAction(nsIMsgIncomingServer *aServer, const char *aMsgURI, nsMsgJunkStatus aClassification);
+
+  nsUInt32Array mIndicesToNoteChange;
 };
 
 #endif
