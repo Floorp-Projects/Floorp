@@ -1,0 +1,26 @@
+#
+# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Use is subject to license terms.
+#
+#ident	"$Id: Makefile.targ,v 1.2 2002/10/02 23:11:26 kirk.erickson%sun.com Exp $"
+#
+
+pkginfo: pkginfo.tmpl ../awk_pkginfo
+	$(RM) $@; nawk -f ../awk_pkginfo $@.tmpl > $@
+
+pkg: $(PKGARCHIVE)
+	pkgmk -f prototype_sparc -d $(PKGARCHIVE) -r $(ROOT) -o $(PACKAGE)
+
+$(PKGARCHIVE):
+	[ -d $(PKGARCHIVE) ] || mkdir -p $(PKGARCHIVE)
+
+$(DATAFILES):: %: ../common_files/%
+	$(RM) $@; cp ../common_files/$@ $@
+
+$(MACHDATAFILES): %: ../common_files/%_$(MACH)
+	$(RM) $@; cp ../common_files/$@_$(MACH) $@
+
+clobber clean::
+	-$(RM) $(CLOBBERFILES) $(CLEANFILES)
+
+.PHONY: pkg
