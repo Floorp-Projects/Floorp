@@ -56,8 +56,8 @@ IMPL_STRATEGY =
 endif
 
 ifdef NS_USE_GCC
-CC			= gcc -Wall -Wno-format
-CCC			= g++ -Wall -Wno-format
+CC			= gcc -Wall
+CCC			= g++ -Wall
 #
 # XXX
 # Temporary define for the Client; to be removed when binary release is used
