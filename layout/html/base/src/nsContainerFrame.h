@@ -109,6 +109,11 @@ protected:
                               nsIRenderingContext& aRenderingContext,
                               const nsRect&        aDirtyRect);
 
+  virtual void PaintChild(nsIPresContext&      aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect&        aDirtyRect,
+                          nsIFrame*            aFrame);
+
   /**
    * Queries the child frame for the nsIHTMLReflow interface and if it's
    * supported invokes the WillReflow() and Reflow() member functions. If

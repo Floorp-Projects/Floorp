@@ -115,7 +115,6 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
     FirstChild(kid);
     while (nsnull != kid) {
       nsIHTMLReflow*  htmlReflow;
-
       if (NS_OK == kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
         htmlReflow->DidReflow(aPresContext, aStatus);
       }
@@ -130,6 +129,47 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
   return nsFrame::DidReflow(aPresContext, aStatus);
 }
 
+#if XXX
+    // Now that we are doing be reflowed, clear out the
+    // child-is-outside flag in our state word. Below, as we pass
+    // through the did-reflow to our children we will discover if we
+    // still need the bit set.
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+
+      if (0 == (NS_FRAME_OUTSIDE_CHILDREN & mState)) {
+        nsFrameState state;
+        nsRect r;
+        kid->GetRect(r);
+        kid->GetFrameState(state);
+        if (NS_FRAME_CHILD_IS_OUTSIDE & state) {
+          kid->GetCombinedRect(r);
+        }
+        if ((r.x < 0) || (r.y < 0) ||
+            (r.XMost() > mRect.width) || (r.YMost() > mRect.height)) {
+          // We have a child that sticks outside of us
+          mState |= NS_FRAME_OUTSIDE_CHILDREN;
+        }
+      }
+
+NS_IMETHODIMP
+nsContainerFrame::GetCombinedRect(nsRect& aRect)
+{
+  if (NS_FRAME_CHILD_IS_OUTSIDE) {
+    nsIFrame* kid;
+    FirstChild(kid);
+    while (nsnull != kid) {
+      nsRect r;
+      kid->GetCombinedRect(r);
+      kid->GetNextSibling(kid);
+    }
+  }
+  else {
+    aRect = mRect;
+  }
+  return NS_OK;
+}
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
@@ -142,89 +182,114 @@ NS_METHOD nsContainerFrame::FirstChild(nsIFrame*& aFirstChild) const
 /////////////////////////////////////////////////////////////////////////////
 // Painting
 
-NS_METHOD nsContainerFrame::Paint(nsIPresContext&      aPresContext,
-                                  nsIRenderingContext& aRenderingContext,
-                                  const nsRect&        aDirtyRect)
+NS_IMETHODIMP
+nsContainerFrame::Paint(nsIPresContext&      aPresContext,
+                        nsIRenderingContext& aRenderingContext,
+                        const nsRect&        aDirtyRect)
 {
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
   return NS_OK;
 }
 
-// aDirtyRect is in our coordinate system
-// child rect's are also in our coordinate system
-void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
-                                     nsIRenderingContext& aRenderingContext,
-                                     const nsRect&        aDirtyRect)
+// Paint the children of a container, assuming nothing about the
+// childrens spatial arrangement. Given relative positioning, negative
+// margins, etc, that's probably a good thing.
+//
+// Note: aDirtyRect is in our coordinate system (and of course, child
+// rect's are also in our coordinate system)
+void
+nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                const nsRect&        aDirtyRect)
 {
-  // Set clip rect so that children don't leak out of us
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  PRBool hidden = PR_FALSE;
-  PRBool clipState;
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-    aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
-                                  nsClipCombine_kIntersect, clipState);
-    hidden = PR_TRUE;
+  // Paint our children only if we are visible
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (disp->mVisible) {
+    PRBool clipState;
+
+    // If overflow is hidden then set the clip rect so that children
+    // don't leak out of us
+    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+      aRenderingContext.PushState();
+      aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
+                                    nsClipCombine_kIntersect, clipState);
+    }
+
+    nsIFrame* kid = mFirstChild;
+    while (nsnull != kid) {
+      PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid);
+      kid->GetNextSibling(kid);
+    }
+
+    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+      aRenderingContext.PopState(clipState);
+    }
   }
+}
 
-  // See if we should render everything, or just what can be seen
-  PRBool renderEverything = PR_TRUE;
-  if (NS_STYLE_OVERFLOW_VISIBLE != disp->mOverflow) {
-    renderEverything = PR_FALSE;
-  }
-  // XXX for now, disable this...
-  renderEverything = PR_FALSE;
+// Paint one child frame
+void
+nsContainerFrame::PaintChild(nsIPresContext&      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect,
+                             nsIFrame*            aFrame)
+{
+  nsIView *pView;
+  aFrame->GetView(pView);
+  if (nsnull == pView) {
+    nsRect kidRect;
+    aFrame->GetRect(kidRect);
+    nsFrameState state;
+    aFrame->GetFrameState(state);
 
-  // XXX reminder: use the coordinates in the dirty rect to figure out
-  // which set of children are impacted and only do the intersection
-  // work for them. In addition, stop when we no longer overlap.
-
-  nsIFrame* kid = mFirstChild;
-  while (nsnull != kid) {
-    nsIView *pView;
-    kid->GetView(pView);
-    if (nsnull == pView) {
-      nsRect kidRect;
-      kid->GetRect(kidRect);
-      nsRect damageArea;
-      PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
+    // Compute the constrained damage area; set the overlap flag to
+    // PR_TRUE if any portion of the child frame intersects the
+    // dirty rect.
+    nsRect damageArea;
+    PRBool overlap;
+    if (NS_FRAME_OUTSIDE_CHILDREN & state) {
+      // If the child frame has children that leak out of our box
+      // then we don't constrain the damageArea to just the childs
+      // bounding rect.
+      damageArea = aDirtyRect;
+      overlap = PR_TRUE;
+    }
+    else {
+      // Compute the intersection of the dirty rect and the childs
+      // rect (both are in our coordinate space). This limits the
+      // damageArea to just the portion that intersects the childs
+      // rect.
+      overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
 #ifdef NS_DEBUG
       if (!overlap && (0 == kidRect.width) && (0 == kidRect.height)) {
         overlap = PR_TRUE;
       }
 #endif
-//XXX ListTag(stdout); printf(": re=%c overlap=%c dirtyRect={%d,%d,%d,%d} damageArea={%d,%d,%d,%d}\n", renderEverything?'T':'F', overlap?'T':'F', aDirtyRect, damageArea);
-      if (renderEverything || overlap) {
-        // Translate damage area into kid's coordinate system
-        nsRect kidDamageArea(damageArea.x - kidRect.x,
-                             damageArea.y - kidRect.y,
-                             damageArea.width, damageArea.height);
-        aRenderingContext.PushState();
-        aRenderingContext.Translate(kidRect.x, kidRect.y);
-        kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
-#ifdef NS_DEBUG
-        if (nsIFrame::GetShowFrameBorders() &&
-            (0 != kidRect.width) && (0 != kidRect.height)) {
-          nsIView* view;
-          GetView(view);
-          if (nsnull != view) {
-            aRenderingContext.SetColor(NS_RGB(0,0,255));
-          }
-          else {
-            aRenderingContext.SetColor(NS_RGB(255,0,0));
-          }
-          aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
-        }
-#endif
-        aRenderingContext.PopState(clipState);
-      }
     }
-    kid->GetNextSibling(kid);
-  }
 
-  if (hidden) {
-    aRenderingContext.PopState(clipState);
+    if (overlap) {
+      // Translate damage area into the kids coordinate
+      // system. Translate rendering context into the kids
+      // coordinate system.
+      damageArea.x -= kidRect.x;
+      damageArea.y -= kidRect.y;
+      aRenderingContext.PushState();
+      aRenderingContext.Translate(kidRect.x, kidRect.y);
+
+      // Paint the kid
+      aFrame->Paint(aPresContext, aRenderingContext, damageArea);
+      PRBool clipState;
+      aRenderingContext.PopState(clipState);
+
+#ifdef NS_DEBUG
+      // Draw a border around the child
+      if (nsIFrame::GetShowFrameBorders() && !kidRect.IsEmpty()) {
+        aRenderingContext.SetColor(NS_RGB(255,0,0));
+        aRenderingContext.DrawRect(kidRect);
+      }
+#endif
+    }
   }
 }
 
