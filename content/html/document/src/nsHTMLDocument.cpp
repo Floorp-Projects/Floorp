@@ -4348,15 +4348,10 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   if (NS_FAILED(rv))
     return rv;
 
-  if (cmdToDispatch.Equals("cmd_fontFace"))
-    rv = cmdParams->GetStringValue("state_attribute", _retval);
-  else {
-    nsXPIDLCString cStringResult;
-    rv = cmdParams->GetCStringValue("state_attribute",
-                                    getter_Copies(cStringResult));
-
-    CopyUTF8toUTF16(cStringResult, _retval);
-  }
+  nsXPIDLCString cStringResult;
+  rv = cmdParams->GetCStringValue("state_attribute",
+                                  getter_Copies(cStringResult));
+  CopyUTF8toUTF16(cStringResult, _retval);
 
   return rv;
 }
