@@ -349,7 +349,7 @@ void DisplayNoDefaultPluginDialog(const char *mimeType, nsIPrompt *prompt)
 ////////////////////////////////////////////////////////////////////////
 // flat file reg funcs
 static
-PRBool ReadSectionHeader(nsManifestLineReader& reader, const char *token)
+PRBool ReadSectionHeader(nsPluginManifestLineReader& reader, const char *token)
 {
   do {
     if (*reader.LinePtr() == '[') {
@@ -5397,7 +5397,7 @@ nsPluginHostImpl::ReadPluginInfo()
     return NS_OK; // ERROR CONDITION
   }
 
-  nsManifestLineReader reader;
+  nsPluginManifestLineReader reader;
   char* registry = reader.Init(flen);
   if (!registry) {
     return NS_ERROR_OUT_OF_MEMORY;

@@ -60,8 +60,8 @@ static char* nav4rounding = "font.size.nav4rounding";
 
 #include "prlog.h"
 #ifdef PR_LOGGING 
-PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
-#define PR_PL(_p1)  PR_LOG(kPrintingLogMod, PR_LOG_DEBUG, _p1)
+PRLogModuleInfo * kGfxPrintingLogMod = PR_NewLogModule("printing-gfx");
+#define PR_PL(_p1)  PR_LOG(kGfxPrintingLogMod, PR_LOG_DEBUG, _p1)
 #else
 #define PR_PL(_p1)
 #endif

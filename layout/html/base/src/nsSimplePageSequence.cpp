@@ -87,8 +87,8 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 #include "prlog.h"
 #ifdef PR_LOGGING 
-PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
-#define PR_PL(_p1)  PR_LOG(kPrintingLogMod, PR_LOG_DEBUG, _p1)
+PRLogModuleInfo * kLayoutPrintingLogMod = PR_NewLogModule("printing-layout");
+#define PR_PL(_p1)  PR_LOG(kLayoutPrintingLogMod, PR_LOG_DEBUG, _p1)
 #else
 #define PR_PL(_p1)
 #endif
