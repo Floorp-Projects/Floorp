@@ -40,4 +40,4 @@ EXPORT_RESOURCE_CONTENT = \
 	$(NULL)
 
 install::
-  $(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/editor/locale/en-US/
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/editor/locale/en-US/
