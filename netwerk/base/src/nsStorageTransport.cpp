@@ -88,6 +88,8 @@ nsStorageTransport::nsStorageTransport()
     , mMaxSize(DEFAULT_BUFFER_SIZE)
     , mSegments(nsnull)
     , mSegmentsLast(nsnull)
+    , mNthSegment(nsnull)
+    , mNthSegmentIndex(0)
     , mWriteSegment(nsnull)
     , mWriteCursor(0)
 {
@@ -270,14 +272,33 @@ nsStorageTransport::TruncateTo(PRUint32 aOffset)
         }
     }
     mWriteCursor = aOffset;
+
+    mNthSegment = nsnull;
+    mNthSegmentIndex = 0;
 }
 
 nsStorageTransport::nsSegment *
 nsStorageTransport::GetNthSegment(PRUint32 index)
 {
-    nsSegment *s = mSegments;
-    for (; s && index; s = s->next, --index);
-    return s;
+    PRUint32 segmentsLeft = index;
+    nsSegment *segment = mSegments;
+    if (mNthSegment) {
+        if (mNthSegmentIndex == index)
+            return mNthSegment;
+        if (index > mNthSegmentIndex) {
+            segment = mNthSegment; // start searching from previous n'th segment
+            segmentsLeft -= mNthSegmentIndex;
+        }
+    }
+    // search for n'th segment
+    for (; segment && segmentsLeft; segment = segment->next, --segmentsLeft)
+        ;
+    // cache result to improve performance
+    if (segment) {
+        mNthSegment = segment;
+        mNthSegmentIndex = index;
+    }
+    return segment;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsStorageTransport,
