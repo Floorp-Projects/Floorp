@@ -2,7 +2,6 @@ nsCollationCID.h
 nsDateTimeFormatCID.h
 nsICollation.h
 nsIDateTimeFormat.h
-nsILocale.h
 nsILocaleFactory.h
 nsLocaleCID.h
 nsIMacLocale.h
