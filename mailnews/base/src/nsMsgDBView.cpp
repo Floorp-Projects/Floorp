@@ -2368,18 +2368,18 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
 // NOT delete it from the database.
 nsresult nsMsgDBView::RemoveByIndex(nsMsgViewIndex index)
 {
-	if (!IsValidIndex(index))
-		return NS_MSG_INVALID_DBVIEW_INDEX;
-	m_keys.RemoveAt(index);
-	m_flags.RemoveAt(index);
-	m_levels.RemoveAt(index);
+  if (!IsValidIndex(index))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+  m_keys.RemoveAt(index);
+  m_flags.RemoveAt(index);
+  m_levels.RemoveAt(index);
 
   // the call to NoteChange() has to happen after we remove the key
   // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
   if (!m_deletingRows)
     NoteChange(index, -1, nsMsgViewNotificationCode::insertOrDelete); // an example where view is not the listener - D&D messages
   
-	return NS_OK;
+  return NS_OK;
 }
 
 nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool deleteStorage)
@@ -2394,8 +2394,8 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
     m_deletingRows = PR_TRUE;
 
   nsresult rv;
-	nsCOMPtr<nsISupportsArray> messageArray;
-	NS_NewISupportsArray(getter_AddRefs(messageArray));
+  nsCOMPtr<nsISupportsArray> messageArray;
+  NS_NewISupportsArray(getter_AddRefs(messageArray));
   for (nsMsgViewIndex index = 0; index < (nsMsgViewIndex) numIndices; index++)
   {
     nsMsgKey key = m_keys.GetAt(indices[index]);
@@ -2407,7 +2407,7 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
       // if we are deleting rows, save off the keys
       if (m_deletingRows)
         mIndicesToNoteChange.Add(indices[index]);
-  }
+    }
   }
   
   rv = m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, nsnull, PR_TRUE /*allow Undo*/ );
@@ -2482,7 +2482,8 @@ nsresult nsMsgDBView::SetReadByIndex(nsMsgViewIndex index, PRBool read)
   
   if (!IsValidIndex(index))
     return NS_MSG_INVALID_DBVIEW_INDEX;
-  if (read) {
+  if (read) 
+  {
     OrExtraFlag(index, MSG_FLAG_READ);
     // MarkRead() will clear this flag in the db
     // and then call OnKeyChange(), but
@@ -2493,7 +2494,8 @@ nsresult nsMsgDBView::SetReadByIndex(nsMsgViewIndex index, PRBool read)
     // to keep the db and m_flags in sync
     AndExtraFlag(index, ~MSG_FLAG_NEW);
   }
-  else {
+  else 
+  {
     AndExtraFlag(index, ~MSG_FLAG_READ);
   }
   
@@ -5590,9 +5592,10 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
 
         // the call to NoteChange() has to happen after we are done removing the keys
         // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
+        mTree->BeginUpdateBatch();
         for (PRUint32 i=0;i<numIndices;i++)
           NoteChange(mIndicesToNoteChange[i], -1, nsMsgViewNotificationCode::insertOrDelete);
-
+        mTree->EndUpdateBatch(); 
         mIndicesToNoteChange.RemoveAll();
       }
     }
