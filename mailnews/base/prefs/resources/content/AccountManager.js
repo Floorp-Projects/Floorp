@@ -427,7 +427,7 @@ function onPanelLoaded(pageId) {
 
 function loadPage(pageId)
 {
-  frames["contentFrame"].location = "chrome://messenger/content/" + pageId;
+  document.getElementById("contentFrame").setAttribute("src","chrome://messenger/content/" + pageId);
 }
 
 //

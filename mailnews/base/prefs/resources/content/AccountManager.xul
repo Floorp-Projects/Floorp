@@ -58,7 +58,7 @@
          </box>
 		</box>
         <spring style="width: 5px"/>
-        <iframe name="contentFrame" flex="6" style="width: 0px"/>
+		<iframe id="contentFrame" name="contentFrame" flex="6" style="width: 0px"/>
 	</box>
     <box id="okCancelButtonsRight"/>
 </window>
