@@ -144,19 +144,52 @@ nsPresContext::GetUserPreferences()
     mFontScaler = prefInt;
   }
 
+  
+  if (NS_OK == mPrefs->GetIntPref("intl.character_set", &prefInt)) {
+    prefInt &= 0x07ff;
+  } else {
+	prefInt = 2;
+  }
+
+  nsAutoString startKey("intl.font");
+  startKey.Append((PRInt32)prefInt, 10);
+
+  char keychar[256];
+
   // XXX these font prefs strings don't take font encoding into account
-  if (NS_OK == mPrefs->GetCharPref("intl.font2.win.prop_font", &(prefChar[0]), &charSize)) {
+  // with the following change, it will depend on the intl.character_set to load the font face name and size
+  // It still need to be improve, but now QA can have change the intl.character_set value to switch different default font face
+
+  nsAutoString key(startKey);
+  key.Append(".win.prop_font");  
+
+  key.ToCString(keychar, 256); 
+  if (NS_OK == mPrefs->GetCharPref(keychar, &(prefChar[0]), &charSize)) {
     mDefaultFont.name = prefChar;
   }
-  if (NS_OK == mPrefs->GetIntPref("intl.font2.win.prop_size", &prefInt)) {
+  
+  key = startKey;
+  key.Append(".win.prop_size"); 
+  key.ToCString(keychar, 256);
+  if (NS_OK == mPrefs->GetIntPref(keychar, &prefInt)) {
     mDefaultFont.size = NSIntPointsToTwips(prefInt);
   }
-  if (NS_OK == mPrefs->GetCharPref("intl.font2.win.fixed_font", &(prefChar[0]), &charSize)) {
+
+  key = startKey;
+  key.Append(".win.fixed_font");  
+  key.ToCString(keychar, 256);
+
+  if (NS_OK == mPrefs->GetCharPref(keychar, &(prefChar[0]), &charSize)) {
     mDefaultFixedFont.name = prefChar;
   }
-  if (NS_OK == mPrefs->GetIntPref("intl.font2.win.fixed_size", &prefInt)) {
+  
+  key = startKey;
+  key.Append(".win.fixed_size");  
+  key.ToCString(keychar, 256);
+  if (NS_OK == mPrefs->GetIntPref(keychar, &prefInt)) {
     mDefaultFixedFont.size = NSIntPointsToTwips(prefInt);
   }
+
   if (NS_OK == mPrefs->GetIntPref("nglayout.compatibility.mode", &prefInt)) {
     mCompatibilityMode = (enum nsCompatibility)prefInt;  // bad cast
   }
