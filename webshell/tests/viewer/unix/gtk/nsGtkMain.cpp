@@ -95,8 +95,38 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 //----------------------------------------------------------------------
 
+
+#ifdef DEBUG_ramiro
+#define CRAWL_STACK_ON_SIGSEGV
+#endif // DEBUG_ramiro
+
+
+#ifdef CRAWL_STACK_ON_SIGSEGV
+#include "nsTraceRefcnt.h"
+#include <signal.h>
+
+void
+sigsegv_handler(int signum)
+{
+  PR_CurrentThread();
+
+  printf("sigsegv_handler(signum = %d)\n",signum);
+
+  char stack[4096];
+
+  nsTraceRefcnt::WalkTheStack(stack, sizeof(stack));
+
+  printf("stack = %s\n",stack);
+} 
+#endif // CRAWL_STACK_ON_SIGSEGV
+
 int main(int argc, char **argv)
 {
+#ifdef CRAWL_STACK_ON_SIGSEGV
+  signal(SIGSEGV, sigsegv_handler);
+  signal(SIGILL, sigsegv_handler);
+#endif // CRAWL_STACK_ON_SIGSEGV
+
   // Hack to get il_ss set so it doesn't fail in xpcompat.c
   nsIImageManager *manager;
   NS_NewImageManager(&manager);
