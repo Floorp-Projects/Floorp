@@ -285,7 +285,7 @@ char* nsRegisterItem::toString()
             nsresult rv = mChrome->GetPath(getter_Copies(path));
             if (NS_SUCCEEDED(rv) && path)
             {
-                PR_snprintf(buffer, 1024, rsrcVal, path);
+                PR_snprintf(buffer, 1024, rsrcVal, (const char*)path);
             }
         }
         nsCRT::free(rsrcVal);
