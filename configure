@@ -12442,6 +12442,7 @@ COMPILE_CXXFLAGS=`echo \
 
 
 
+
 cat >> confdefs.h <<EOF
 #define MOZ_DLL_SUFFIX "$DLL_SUFFIX"
 EOF
