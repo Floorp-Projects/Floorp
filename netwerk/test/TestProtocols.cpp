@@ -52,12 +52,12 @@ static PRTime gElapsedTime;
 static int gKeepRunning = 1;
 static nsIEventQueue* gEventQ = nsnull;
 
-class InputTestConsumer : public nsIHTTPEventSink
+class TestHTTPEventSink : public nsIHTTPEventSink
 {
 public:
 
-  InputTestConsumer();
-  virtual ~InputTestConsumer();
+  TestHTTPEventSink();
+  virtual ~TestHTTPEventSink();
 
   // ISupports interface...
   NS_DECL_ISUPPORTS
@@ -74,6 +74,88 @@ public:
   // OnRedirect gets fired only if you have set FollowRedirects on the handler!
   NS_IMETHOD      OnRedirect(nsISupports* i_Context, 
                              nsIURI* i_NewLocation);
+/*
+  // IStreamListener interface...
+  NS_IMETHOD OnStartBinding(nsISupports* context) { NS_ERROR("bad..."); return NS_ERROR_FAILURE; }
+
+  NS_IMETHOD OnDataAvailable(nsISupports* context,
+                             nsIBufferInputStream *aIStream, 
+                             PRUint32 aSourceOffset,
+                             PRUint32 aLength) { NS_ERROR("bad..."); return NS_ERROR_FAILURE; }
+
+  NS_IMETHOD OnStopBinding(nsISupports* context,
+                           nsresult aStatus,
+                           const PRUnichar* aMsg) { NS_ERROR("bad..."); return NS_ERROR_FAILURE; }
+
+  NS_IMETHOD OnStartRequest(nsISupports* context) { NS_ERROR("bad..."); return NS_ERROR_FAILURE; }
+
+  NS_IMETHOD OnStopRequest(nsISupports* context,
+                           nsresult aStatus,
+                           const PRUnichar* aMsg) { NS_ERROR("bad..."); return NS_ERROR_FAILURE; }
+*/
+};
+
+TestHTTPEventSink::TestHTTPEventSink()
+{
+  NS_INIT_REFCNT();
+}
+
+TestHTTPEventSink::~TestHTTPEventSink()
+{
+}
+
+
+NS_IMPL_ISUPPORTS(TestHTTPEventSink,nsIHTTPEventSink::GetIID());
+
+NS_IMETHODIMP
+TestHTTPEventSink::OnAwaitingInput(nsISupports* context)
+{
+    printf("\n+++ TestHTTPEventSink::OnAwaitingInput +++\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
+{
+    printf("\n+++ TestHTTPEventSink::OnHeadersAvailable +++\n");
+    nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(context));
+    if (pHTTPCon)
+    {
+      char* type;
+      //optimize later TODO allow atoms here...! intead of just the header strings
+      pHTTPCon->GetResponseHeader("Content-type", &type);
+      if (type) {
+        printf("\nRecieving ... %s\n", type);
+        nsCRT::free(type);
+      }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+TestHTTPEventSink::OnProgress(nsISupports* context, PRUint32 i_Progress, PRUint32 i_ProgressMax)
+{
+    printf("\n+++ TestHTTPEventSink::OnProgress +++\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+TestHTTPEventSink::OnRedirect(nsISupports* context, nsIURI* i_NewLocation)
+{
+    printf("\n+++ TestHTTPEventSink::OnRedirect +++\n");
+    return NS_OK;
+}
+
+
+class InputTestConsumer : public nsIStreamListener
+{
+public:
+
+  InputTestConsumer();
+  virtual ~InputTestConsumer();
+
+  // ISupports interface...
+  NS_DECL_ISUPPORTS
 
   // IStreamListener interface...
   NS_IMETHOD OnStartBinding(nsISupports* context);
@@ -110,8 +192,7 @@ InputTestConsumer::~InputTestConsumer()
 }
 
 
-//NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-NS_IMPL_ISUPPORTS(InputTestConsumer,nsIHTTPEventSink::GetIID());
+NS_IMPL_ISUPPORTS(InputTestConsumer,nsIStreamListener::GetIID());
 
 
 NS_IMETHODIMP
@@ -150,50 +231,15 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-InputTestConsumer::OnAwaitingInput(nsISupports* context)
-{
-    printf("\n+++ InputTestConsumer::OnAwaitingInput +++\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-InputTestConsumer::OnHeadersAvailable(nsISupports* context)
-{
-    printf("\n+++ InputTestConsumer::OnHeadersAvailable +++\n");
-    nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(context));
-    if (pHTTPCon)
-    {
-      char* type;
-      //optimize later TODO allow atoms here...! intead of just the header strings
-      pHTTPCon->GetResponseHeader("Content-type", &type);
-      if (type) {
-        printf("\nRecieving ... %s\n", type);
-        nsCRT::free(type);
-      }
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-InputTestConsumer::OnProgress(nsISupports* context, PRUint32 i_Progress, PRUint32 i_ProgressMax)
-{
-    printf("\n+++ InputTestConsumer::OnProgress +++\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-InputTestConsumer::OnRedirect(nsISupports* context, nsIURI* i_NewLocation)
-{
-    printf("\n+++ InputTestConsumer::OnRedirect +++\n");
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsEventSinkGetter : public nsIEventSinkGetter {
 public:
     NS_DECL_ISUPPORTS
+
+    nsEventSinkGetter() {
+        NS_INIT_REFCNT();
+    }
 
     NS_IMETHOD GetEventSink(const char* verb, const nsIID& eventSinkIID,
                             nsISupports* *result) {
@@ -201,9 +247,9 @@ public:
 
         if (nsCRT::strcmp(verb, "load") == 0) { // makeshift verb for now
             if (eventSinkIID.Equals(nsIHTTPEventSink::GetIID())) {
-                InputTestConsumer *sink;
+                TestHTTPEventSink *sink;
 
-                sink = new InputTestConsumer();
+                sink = new TestHTTPEventSink();
                 if (sink) {
                     NS_ADDREF(sink);
                     rv = sink->QueryInterface(eventSinkIID, (void**)result);
@@ -296,21 +342,28 @@ main(int argc, char* argv[])
                         }
                     
                         // But calling the open is required!
-                        pChannel->Open();
-/*
-                        pChannel->AsyncRead(0,           // staring position
-                                       -1,          // number of bytes to read
-                                       nsnull,      // ISupports context
-                                       gEventQ,     // nsIEventQ for marshalling
-                                       nsnull);     // IStreamListener consumer
-*/
+///                        pChannel->Open();
+
+                        InputTestConsumer* listener;
+                        listener = new InputTestConsumer;
+                        NS_IF_ADDREF(listener);
+
+                        rv = pChannel->AsyncRead(0,   // staring position
+                                         -1,          // number of bytes to read
+                                         nsnull,      // ISupports context
+                                         gEventQ,     // nsIEventQ for marshalling
+                                         listener);   // IStreamListener consumer
+
+                        NS_IF_RELEASE(listener);
                     }
                 } else {
                     printf("NewChannelFromURI failed!\n");
+                    return -1;
                 }
             }
         } else {
             printf("NewURI failed!\n");
+            return -1;
         }
     }
 

@@ -19,7 +19,7 @@
 #ifndef _nsIHTTPEventSink_h_
 #define _nsIHTTPEventSink_h_
 
-#include "nsIStreamListener.h"
+#include "nsISupports.h"
 
 /* 
     The nsIHTTPEventSink class is the interface thru which the
@@ -27,7 +27,7 @@
 
     -Gagan Saksena 02/25/99
 */
-class nsIHTTPEventSink : public nsIStreamListener
+class nsIHTTPEventSink : public nsISupports
 {
 
 public:

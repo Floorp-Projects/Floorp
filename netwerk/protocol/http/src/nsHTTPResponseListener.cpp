@@ -40,6 +40,7 @@ nsHTTPResponseListener::nsHTTPResponseListener():
     m_pConnection(nsnull),
     m_bFirstLineParsed(PR_FALSE),
     m_pResponse(nsnull),
+    m_pConsumer(nsnull),
     m_ReadLength(0),
     m_bHeadersDone(PR_FALSE)
 {
@@ -48,10 +49,9 @@ nsHTTPResponseListener::nsHTTPResponseListener():
 
 nsHTTPResponseListener::~nsHTTPResponseListener()
 {
-    if (m_pConnection)
-        NS_RELEASE(m_pConnection);
-    if (m_pResponse)
-        NS_RELEASE(m_pResponse);
+    NS_IF_RELEASE(m_pConnection);
+    NS_IF_RELEASE(m_pResponse);
+    NS_IF_RELEASE(m_pConsumer);
 }
 
 NS_IMPL_ISUPPORTS(nsHTTPResponseListener,nsIStreamListener::GetIID());
@@ -67,10 +67,6 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
                                         PRUint32 i_Length)
 {
     nsresult rv = NS_OK;
-    // Should I save this as a member variable? yes... todo
-    nsIHTTPEventSink* pSink= nsnull;
-    m_pConnection->GetEventSink(&pSink);
-    NS_VERIFY(pSink, "No HTTP Event Sink!");
 
     NS_ASSERTION(i_pStream, "Fake stream!");
 ///    NS_ASSERTION(i_SourceOffset == 0, "Source shifted already?!");
@@ -192,32 +188,21 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 
     if (m_bHeadersDone)
     {
-        nsIStreamListener* internalListener = nsnull;
-        // Get our end of the pipe between us and the user's GetInputStream()
-        rv = m_pConnection->GetResponseDataListener(&internalListener);
-        if (internalListener) {
-            // post the data to the stream listener
-            // XXX this is the wrong data and offsets I think.
-            rv = internalListener->OnDataAvailable(context, i_pStream, 0, i_Length);
-            NS_RELEASE(internalListener);
-            if (NS_FAILED(rv))
-                return rv;
+        // Pass the notification out to the consumer...
+        NS_ASSERTION(m_pConsumer, "No Stream Listener!");
+        if (m_pConsumer) {
+            // XXX: This is the wrong context being passed out to the consumer
+            rv = m_pConsumer->OnDataAvailable(context, i_pStream, 0, i_Length);
         }
-
-        // do whatever we want for the event sink
-        rv = pSink->OnDataAvailable(context, i_pStream, 0, i_Length);
-        return rv;
-
     }
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
 nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
 {
     nsresult rv;
-    nsIHTTPEventSink* pSink= nsnull;
 
     //TODO globally replace printf with trace calls. 
     //printf("nsHTTPResponseListener::OnStartBinding...\n");
@@ -226,6 +211,7 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
     m_bHeadersDone     = PR_FALSE;
     m_bFirstLineParsed = PR_FALSE;
 
+    // Cache the nsIHTTPChannel...
     if (i_pContext) {
         rv = i_pContext->QueryInterface(nsIHTTPChannel::GetIID(), 
                                         (void**)&m_pConnection);
@@ -233,17 +219,17 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
         rv = NS_ERROR_NULL_POINTER;
     }
 
+    // Cache the nsIStreamListener of the consumer...
     if (NS_SUCCEEDED(rv)) {
-        // XXX:  EventSink(...) should AddRef the returned pointer...
-        rv = m_pConnection->GetEventSink(&pSink);
-
-        if (NS_FAILED(rv)) {
-            NS_ERROR("No HTTP Event Sink!");
-        }
+        rv = m_pConnection->GetResponseDataListener(&m_pConsumer);
     }
 
-    if (NS_SUCCEEDED(rv)) {
-        rv = pSink->OnStartBinding(i_pContext);
+    NS_ASSERTION(m_pConsumer, "No Stream Listener!");
+
+    // Pass the notification out to the consumer...
+    if (m_pConsumer) {
+        // XXX: This is the wrong context being passed out to the consumer
+        rv = m_pConsumer->OnStartBinding(i_pContext);
     }
 
     return rv;
@@ -254,15 +240,17 @@ nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
                                  nsresult i_Status,
                                  const PRUnichar* i_pMsg)
 {
+    nsresult rv;
     //printf("nsHTTPResponseListener::OnStopBinding...\n");
     //NS_ASSERTION(m_pResponse, "Response object not created yet or died?!");
     // Should I save this as a member variable? yes... todo
-    nsIHTTPEventSink* pSink= nsnull;
-    nsresult rv = m_pConnection->GetEventSink(&pSink);
-    if (NS_FAILED(rv))
-        NS_ERROR("No HTTP Event Sink!");
-    
-    rv = pSink->OnStopBinding(i_pContext, i_Status,i_pMsg);
+
+    NS_ASSERTION(m_pConsumer, "No Stream Listener!");
+    // Pass the notification out to the consumer...
+    if (m_pConsumer) {
+        // XXX: This is the wrong context being passed out to the consumer
+        rv = m_pConsumer->OnStopBinding(i_pContext, i_Status, i_pMsg);
+    } 
 
     return rv;
 }
