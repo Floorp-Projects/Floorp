@@ -60,16 +60,8 @@ CPPSRCS		= \
 		nsToolkit.cpp \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
+		nsDragService.cpp \
 		$(NULL)
-
-# XXX FILES temporarily removed
-#		nsDragService.cpp \
-
-# XXX OS2TODO
-#		nsNativeDragTarget.cpp      \
-#		nsNativeDragSource.cpp      \
-#		nsDataObj.cpp      \
-#		nsDataObjCollection.cpp      \
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
