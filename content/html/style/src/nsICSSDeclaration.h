@@ -215,7 +215,7 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSRect*  mBorderWidth;
   nsCSSRect*  mBorderColor;
   nsCSSRect*  mBorderStyle;
-  nsCSSValue  mBorderRadius;  // (extension)
+  nsCSSRect*  mBorderRadius;  // (extension)
   nsCSSValue  mOutlineWidth;
   nsCSSValue  mOutlineColor;
   nsCSSValue  mOutlineStyle;

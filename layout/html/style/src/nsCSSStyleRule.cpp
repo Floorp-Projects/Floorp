@@ -1997,9 +1997,26 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         }
       }
 
-      // -moz-border-radius: length, inherit
-      if (! SetCoord(ourMargin->mBorderRadius, spacing->mBorderRadius, parentSpacing->mBorderRadius,
-                     SETCOORD_LPH, aFont->mFont, aPresContext)) {
+      // -moz-border-radius: length, percent, inherit
+      if (nsnull != ourMargin->mBorderRadius) {
+        nsStyleCoord  coord;
+        nsStyleCoord  parentCoord;
+        parentSpacing->mBorderRadius.GetLeft(parentCoord);
+        if (SetCoord(ourMargin->mBorderRadius->mLeft, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
+          spacing->mBorderRadius.SetLeft(coord);
+        }
+        parentSpacing->mBorderRadius.GetTop(parentCoord);
+        if (SetCoord(ourMargin->mBorderRadius->mTop, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
+          spacing->mBorderRadius.SetTop(coord);
+        }
+        parentSpacing->mBorderRadius.GetRight(parentCoord);
+        if (SetCoord(ourMargin->mBorderRadius->mRight, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
+          spacing->mBorderRadius.SetRight(coord);
+        }
+        parentSpacing->mBorderRadius.GetBottom(parentCoord);
+        if (SetCoord(ourMargin->mBorderRadius->mBottom, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
+          spacing->mBorderRadius.SetBottom(coord);
+        }
       }
 
       // outline-width: length, enum, inherit

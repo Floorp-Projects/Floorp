@@ -374,14 +374,13 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
 
 nsCSSMargin::nsCSSMargin(void)
   : mMargin(nsnull), mPadding(nsnull), 
-    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull)
+    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull)
 {
 }
 
 nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
   : mMargin(nsnull), mPadding(nsnull), 
-    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull),
-    mBorderRadius(aCopy.mBorderRadius),
+    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull),
     mOutlineWidth(aCopy.mOutlineWidth),
     mOutlineColor(aCopy.mOutlineColor),
     mOutlineStyle(aCopy.mOutlineStyle),
@@ -392,6 +391,7 @@ nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
   CSS_IF_COPY(mBorderWidth, nsCSSRect);
   CSS_IF_COPY(mBorderColor, nsCSSRect);
   CSS_IF_COPY(mBorderStyle, nsCSSRect);
+  CSS_IF_COPY(mBorderRadius, nsCSSRect);
 }
 
 nsCSSMargin::~nsCSSMargin(void)
@@ -401,6 +401,7 @@ nsCSSMargin::~nsCSSMargin(void)
   CSS_IF_DELETE(mBorderWidth);
   CSS_IF_DELETE(mBorderColor);
   CSS_IF_DELETE(mBorderStyle);
+  CSS_IF_DELETE(mBorderRadius);
 }
 
 const nsID& nsCSSMargin::GetID(void)
@@ -443,11 +444,19 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != mBorderStyle) {
     mBorderStyle->List(out, eCSSProperty_border_style, aIndent);
   }
+  if (nsnull != mBorderRadius) {
+    static const nsCSSProperty trbl[] = {
+      eCSSProperty__moz_border_radius_topLeft,
+      eCSSProperty__moz_border_radius_topRight,
+      eCSSProperty__moz_border_radius_bottomRight,
+      eCSSProperty__moz_border_radius_bottomLeft
+    };
+    mBorderRadius->List(out, aIndent, trbl);
+  }
 
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
  
   nsAutoString  buffer;
-  mBorderRadius.AppendToString(buffer, eCSSProperty__moz_border_radius);
   mOutlineWidth.AppendToString(buffer, eCSSProperty_outline_width);
   mOutlineColor.AppendToString(buffer, eCSSProperty_outline_color);
   mOutlineStyle.AppendToString(buffer, eCSSProperty_outline_style);
@@ -1362,14 +1371,29 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
       }
       break;
 
-    case eCSSProperty__moz_border_radius:
+    case eCSSProperty__moz_border_radius_topLeft:
+    case eCSSProperty__moz_border_radius_topRight:
+    case eCSSProperty__moz_border_radius_bottomRight:
+    case eCSSProperty__moz_border_radius_bottomLeft:
+      CSS_ENSURE(Margin) {
+        CSS_ENSURE_RECT(mMargin->mBorderRadius) {
+          switch (aProperty) {
+            case eCSSProperty__moz_border_radius_topLeft:			mMargin->mBorderRadius->mTop = aValue;    break;
+            case eCSSProperty__moz_border_radius_topRight:		mMargin->mBorderRadius->mRight = aValue;  break;
+            case eCSSProperty__moz_border_radius_bottomRight:	mMargin->mBorderRadius->mBottom = aValue; break;
+            case eCSSProperty__moz_border_radius_bottomLeft:	mMargin->mBorderRadius->mLeft = aValue;   break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
     case eCSSProperty_outline_width:
     case eCSSProperty_outline_color:
     case eCSSProperty_outline_style:
     case eCSSProperty_float_edge:
       CSS_ENSURE(Margin) {
         switch (aProperty) {
-          case eCSSProperty__moz_border_radius: mMargin->mBorderRadius = aValue;  break;
           case eCSSProperty_outline_width:      mMargin->mOutlineWidth = aValue;  break;
           case eCSSProperty_outline_color:      mMargin->mOutlineColor = aValue;  break;
           case eCSSProperty_outline_style:      mMargin->mOutlineStyle = aValue;  break;
@@ -1629,6 +1653,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
     case eCSSProperty_border_color:
     case eCSSProperty_border_style:
     case eCSSProperty_border_width:
+    case eCSSProperty__moz_border_radius:
       NS_ERROR("can't append shorthand properties");
 //    default:  // XXX explicitly removing default case so compiler will help find missed props
     case eCSSProperty_UNKNOWN:
@@ -2015,7 +2040,27 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
         }
         break;
 
-      case eCSSProperty__moz_border_radius:
+      case eCSSProperty__moz_border_radius_topLeft:
+      case eCSSProperty__moz_border_radius_topRight:
+      case eCSSProperty__moz_border_radius_bottomRight:
+      case eCSSProperty__moz_border_radius_bottomLeft:
+        if (nsnull != mMargin) {
+          if (nsnull != mMargin->mBorderRadius) {
+            CSS_ENSURE_IMPORTANT(Margin) {
+              CSS_ENSURE_RECT(mImportant->mMargin->mBorderRadius) {
+                switch (aProperty) {
+                  CSS_CASE_IMPORTANT(eCSSProperty__moz_border_radius_topLeft,			mMargin->mBorderRadius->mTop);
+                  CSS_CASE_IMPORTANT(eCSSProperty__moz_border_radius_topRight,		mMargin->mBorderRadius->mRight);
+                  CSS_CASE_IMPORTANT(eCSSProperty__moz_border_radius_bottomRight,	mMargin->mBorderRadius->mBottom);
+                  CSS_CASE_IMPORTANT(eCSSProperty__moz_border_radius_bottomLeft,	mMargin->mBorderRadius->mLeft);
+                  CSS_BOGUS_DEFAULT; // make compiler happy
+                }
+              }
+            }
+          }
+        }
+        break;
+
       case eCSSProperty_outline_width:
       case eCSSProperty_outline_color:
       case eCSSProperty_outline_style:
@@ -2023,7 +2068,6 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
         if (nsnull != mMargin) {
           CSS_ENSURE_IMPORTANT(Margin) {
             switch (aProperty) {
-              CSS_CASE_IMPORTANT(eCSSProperty__moz_border_radius, mMargin->mBorderRadius);
               CSS_CASE_IMPORTANT(eCSSProperty_outline_width,      mMargin->mOutlineWidth);
               CSS_CASE_IMPORTANT(eCSSProperty_outline_color,      mMargin->mOutlineColor);
               CSS_CASE_IMPORTANT(eCSSProperty_outline_style,      mMargin->mOutlineStyle);
@@ -2422,6 +2466,12 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
         SetValueImportant(eCSSProperty_border_bottom_width);
         SetValueImportant(eCSSProperty_border_left_width);
         break;
+      case eCSSProperty__moz_border_radius:
+        SetValueImportant(eCSSProperty__moz_border_radius_topLeft);
+        SetValueImportant(eCSSProperty__moz_border_radius_topRight);
+        SetValueImportant(eCSSProperty__moz_border_radius_bottomRight);
+        SetValueImportant(eCSSProperty__moz_border_radius_bottomLeft);
+      	break;
       default:
         result = NS_ERROR_ILLEGAL_VALUE;
         break;
@@ -2691,14 +2741,30 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
       }
       break;
 
-    case eCSSProperty__moz_border_radius:
+    case eCSSProperty__moz_border_radius_topLeft:
+    case eCSSProperty__moz_border_radius_topRight:
+    case eCSSProperty__moz_border_radius_bottomRight:
+    case eCSSProperty__moz_border_radius_bottomLeft:
+      if ((nsnull != mMargin) && (nsnull != mMargin->mBorderRadius)) {
+        switch (aProperty) {
+          case eCSSProperty__moz_border_radius_topLeft:			aValue = mMargin->mBorderRadius->mTop;    break;
+          case eCSSProperty__moz_border_radius_topRight:		aValue = mMargin->mBorderRadius->mRight;  break;
+          case eCSSProperty__moz_border_radius_bottomRight:	aValue = mMargin->mBorderRadius->mBottom; break;
+          case eCSSProperty__moz_border_radius_bottomLeft:	aValue = mMargin->mBorderRadius->mLeft;   break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      else {
+        aValue.Reset();
+      }
+      break;
+
     case eCSSProperty_outline_width:
     case eCSSProperty_outline_color:
     case eCSSProperty_outline_style:
     case eCSSProperty_float_edge:
       if (nsnull != mMargin) {
         switch (aProperty) {
-          case eCSSProperty__moz_border_radius: aValue = mMargin->mBorderRadius; break;
           case eCSSProperty_outline_width:      aValue = mMargin->mOutlineWidth; break;
           case eCSSProperty_outline_color:      aValue = mMargin->mOutlineColor; break;
           case eCSSProperty_outline_style:      aValue = mMargin->mOutlineStyle; break;
@@ -2981,6 +3047,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
     case eCSSProperty_border_color:
     case eCSSProperty_border_style:
     case eCSSProperty_border_width:
+    case eCSSProperty__moz_border_radius:
       NS_ERROR("can't query for shorthand properties");
     default:
       result = NS_ERROR_ILLEGAL_VALUE;
@@ -3344,6 +3411,14 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
         AppendValueToString(eCSSProperty_border_left_style, aValue);
       }
       break;
+    case eCSSProperty__moz_border_radius:
+      if (HAS_RECT(mMargin,mBorderRadius)) {
+        AppendValueToString(eCSSProperty__moz_border_radius_topLeft, aValue);     aValue.Append(' ');
+        AppendValueToString(eCSSProperty__moz_border_radius_topRight, aValue);   aValue.Append(' ');
+        AppendValueToString(eCSSProperty__moz_border_radius_bottomRight, aValue);  aValue.Append(' ');
+        AppendValueToString(eCSSProperty__moz_border_radius_bottomLeft, aValue);
+      }
+    	break;
     case eCSSProperty_border_width:
       if (HAS_RECT(mMargin,mBorderWidth)) {
         AppendValueToString(eCSSProperty_border_top_width, aValue);     aValue.Append(' ');
