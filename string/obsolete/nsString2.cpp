@@ -18,7 +18,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author:
+ *   Rick Gessner <rickg@netscape.com>
+ *
  * Contributor(s): 
+ *   Scott Collins <scc@mozilla.org>
  */ 
 
 #include <ctype.h>
