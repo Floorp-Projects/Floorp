@@ -2484,7 +2484,7 @@ nsHTMLEditRules::IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst)
     child = tmp;
   }
   
-  *aOutIsFirst = (child == aNode);
+  *aOutIsFirst = (child.get() == aNode);
   return res;
 }
 
@@ -2516,6 +2516,6 @@ nsHTMLEditRules::IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast)
     child = tmp;
   }
   
-  *aOutIsLast = (child == aNode);
+  *aOutIsLast = (child.get() == aNode);
   return res;
 }
