@@ -215,22 +215,15 @@ void nsFontMetricsMac::RealizeFont()
 	unicodeMappingUtil = nsUnicodeMappingUtil::GetSingleton ();
 	if (unicodeMappingUtil)
 	{
-		const char		*theCString;
 		nsAutoString	theLangGroupString;
 
 		if (mLangGroup)
 			mLangGroup->ToString(theLangGroupString);
 		else
 			theLangGroupString.AssignWithConversion("ja");
-		theCString = theLangGroupString.GetBuffer ();
-		if (theCString)
-			theScriptCode = unicodeMappingUtil->MapLangGroupToScriptCode (theCString);
-		else
-		{
-			NS_ConvertUCS2toUTF8 theUnicodeString(theLangGroupString);
 
-			theScriptCode = unicodeMappingUtil->MapLangGroupToScriptCode(theUnicodeString.get());
-		}
+		theScriptCode = unicodeMappingUtil->MapLangGroupToScriptCode(
+		    NS_ConvertUCS2toUTF8(theLangGroupString).get());
 
 	}
 	else

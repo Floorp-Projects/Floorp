@@ -3294,7 +3294,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHostImpl::InstatiateFullPagePlugin Begin mime=%s, owner=%p, url=%s\n",
-  aMimeType, aOwner, aURLSpec.GetBuffer()));
+  aMimeType, aOwner, NS_LossyConvertUCS2toASCII(aURLSpec).get()));
 
   nsresult  rv;
   nsIURI    *url;
@@ -3351,7 +3351,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHostImpl::InstatiateFullPagePlugin End mime=%s, rv=%d, owner=%p, url=%s\n",
-  aMimeType, rv, aOwner, aURLSpec.GetBuffer()));
+  aMimeType, rv, aOwner, NS_LossyConvertUCS2toASCII(aURLSpec).get()));
 
   return rv;
 }
