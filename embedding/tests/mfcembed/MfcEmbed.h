@@ -63,6 +63,10 @@ public:
 							PRBool bShowWindow = PR_TRUE);
 	void RemoveFrameFromList(CBrowserFrame* pFrm, BOOL bCloseAppOnLastFrame = TRUE);
 
+    void ShowDebugConsole();
+    BOOL IsCmdLineSwitch(const char *pSwitch, BOOL bRemove = TRUE);
+    void ParseCmdLine();
+
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMfcEmbedApp)
