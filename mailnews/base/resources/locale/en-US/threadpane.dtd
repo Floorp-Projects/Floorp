@@ -30,11 +30,10 @@ Rights Reserved.
 <!ENTITY linesColumn.label "Lines">
 <!ENTITY unreadColumn.label "Unread">
 <!ENTITY totalColumn.label "Total">
-<!ENTITY orderReceivedColumn.label "Order Received">
 <!ENTITY readColumn.label "Read">
 <!ENTITY flagColumn.label "Flag">
 <!ENTITY locationColumn.label "Location">
-<!ENTITY idColumn.label "ID">
+<!ENTITY idColumn.label "Order Received">
 
 <!--Tooltips-->
 <!ENTITY columnChooser.tooltip "Click to select columns to display">

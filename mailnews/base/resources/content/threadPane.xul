@@ -80,12 +80,9 @@ Contributors:
     <splitter class="tree-splitter"/>
     <treecol id="locationCol" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true"
              label="&locationColumn.label;" tooltiptext="&locationColumn.tooltip;"/>
-<!-- not enabled yet.  note, Mail.app has it.  useful for debugging.
-     users can still sort by ID via the menu (Order Received)
     <splitter class="tree-splitter"/>
     <treecol id="idCol" persist="hidden ordinal width" flex="1" hidden="true"
-             label="&idColumn.label;" display="&orderReceivedColumn.label;" tooltiptext="&idColumn.tooltip;"/>
--->
+             label="&idColumn.label;" tooltiptext="&idColumn.tooltip;"/>
   </treecols>
   <treechildren ondraggesture="BeginDragThreadPane(event);"/>
 </tree>
