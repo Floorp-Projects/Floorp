@@ -844,14 +844,14 @@ NS_ShutdownNativeCharsetUtils()
 NS_COM nsresult
 NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output)
 {
-    output = NS_ConvertUTF8toUCS2(input);
+    CopyUTF8toUTF16(input, output);
     return NS_OK;
 }
 
 NS_COM nsresult
 NS_CopyUnicodeToNative(const nsAString  &input, nsACString &output)
 {
-    output =NS_ConvertUCS2toUTF8(input);
+    CopyUTF16toUTF8(input, output);
     return NS_OK;
 }
 
