@@ -30,7 +30,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 NS_IMPL_ISUPPORTS(nsAbout, NS_GET_IID(nsIAboutModule));
 
-static const char kURI[] = "chrome://global/content/about.html";
+static const char kURI[] = "chrome://global/locale/about.html";
 
 NS_IMETHODIMP
 nsAbout::NewChannel(nsIURI *aURI, nsIChannel **result)
