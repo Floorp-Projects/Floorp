@@ -129,6 +129,32 @@ sub DESTROY     #7/31/98 4:54PM
     JS::Runtime::DestroyContext($self);
 }   ##DESTROY
 
+
+############################################################
+# JS::Script
+############################################################
+package JS::Script;
+
+sub new {
+    my ($class, $code, $name, $rt, $cx) = @_;
+    $class = ref $class || $class;
+    my $self = {};
+    bless $self, $class;
+    $self->{_rt} = $rt;
+    my $wcx = $cx or $rt->createContext(8192);
+    $self->{_script} = $wcx->compileScript($code, $name);
+    undef $wcx unless $cx;
+    return $self;
+}
+
+sub DESTROY {
+    my ($self, $cx) = @_;
+    my $wcx = $cx or $self->{_rt}->createContext(8192);
+    $wcx->destroyScript($self);
+    undef $self->{_rt};
+    undef $wcx unless $cx;
+}
+
 ############################################################
 # JS::Object
 ############################################################

@@ -43,7 +43,7 @@ if ($foo{'m'}) {
 	my $objdir = `gmake -f tempmakefile`;
 	unlink "tempmakefile";
 	$inc = "-I.. -I../$objdir";
-	$libpath = "-L../objdir";
+	$libpath = "-L../$objdir";
     }
 }
 
@@ -56,6 +56,8 @@ if ($^O eq "MSWin32") {
 } else {
     $define = '-DXP_UNIX';
 }
+
+print "+++> $libpath\n";
 
 WriteMakefile(NAME => 'JS',
 	      DEFINE => $define,

@@ -61,6 +61,25 @@
 /* __REMOVE__ */
 /* #include <stdio.h>  */
 
+/************************************************************/
+/* utils */
+
+static JSBool
+checkError(JSContext *cx)
+{
+    if(SvTRUE(GvSV(PL_errgv))){ 
+        JS_ReportError(cx, "perl eval failed: %s",
+            SvPV(GvSV(PL_errgv), PL_na));
+        /* clear error status. there should be a way to do this faster */
+        perl_eval_sv(newSVpv("undef $@;", 0), G_KEEPERR);
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+/************************************************************/
+/* calback stub */
+
 /* this is internal js structure needed in errorFromPrivate */
 typedef struct JSExnPrivate {
     JSErrorReport *errorReport;
@@ -70,7 +89,7 @@ static
 JSClass global_class = {
     "Global", 0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub, JS_FinalizeStub
 };
 
 /* __PH__BEGIN  */
@@ -329,6 +348,8 @@ PCB_GetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval) {
     /* start of perl call stuff */
 
     gv = gv_fetchmeth(stash, prop_name, strlen(prop_name), -1);
+    /* better check and error report should be done here */
+    if (!gv) return JS_FALSE;
 
     ENTER;
     SAVETMPS;
@@ -337,7 +358,7 @@ PCB_GetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval) {
     PUTBACK;
 
     /* cnt = perl_call_sv(proc_sv, 0); */
-    cnt = perl_call_sv((SV*)GvCV(gv), 0);    
+    cnt = perl_call_sv((SV*)GvCV(gv), G_ARRAY);    
 
     SPAGAIN;
     /* adjust stack for use of ST macro (see perlcall) */
@@ -348,7 +369,15 @@ PCB_GetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval) {
     if (cnt == 1) {
         SVToJSVAL(cx, obj, ST(0), rval);
     } else {
-        warn("sorry, but array properties are not supported yet...");
+        JSObject *jsarr;
+        jsval val;
+        int i;
+        jsarr = JS_NewArrayObject(cx, 0, NULL);
+        for (i = 0; i < cnt; i++) {
+            SVToJSVAL(cx, JS_GetGlobalObject(cx), ST(i), &val);
+            JS_DefineElement(cx, jsarr, i, val, NULL, NULL, 0);
+        }
+        *rval = OBJECT_TO_JSVAL(jsarr);
     }
     PUTBACK;
 
@@ -394,7 +423,7 @@ PCB_SetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval) {
     XPUSHs(value_sv);
     PUTBACK;
 
-    cnt = perl_call_sv(proc_sv, 0);
+    cnt = perl_call_sv(proc_sv, G_ARRAY);
     
     SPAGAIN;
     /* adjust stack for use of ST macro (see perlcall) */
@@ -405,7 +434,15 @@ PCB_SetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval) {
     if (cnt == 1) {
         SVToJSVAL(cx, obj, ST(0), rval);
     } else {
-        warn("sorry, but array properties are not supported yet...");
+        JSObject *jsarr;
+        jsval val;
+        int i;
+        jsarr = JS_NewArrayObject(cx, 0, NULL);
+        for (i = 0; i < cnt; i++) {
+            SVToJSVAL(cx, JS_GetGlobalObject(cx), ST(i), &val);
+            JS_DefineElement(cx, jsarr, i, val, NULL, NULL, 0);
+        }
+        *rval = OBJECT_TO_JSVAL(jsarr);
     }
     PUTBACK;
 
@@ -463,9 +500,8 @@ PCB_UniversalStub (JSContext *cx, JSObject *obj, uintN argc,
         XPUSHs(sv);
     }
     PUTBACK;
+    cnt = perl_call_sv(SvRV(cbk->perl_proc), G_ARRAY | G_KEEPERR | G_EVAL);
 
-    cnt = perl_call_sv(SvRV(cbk->perl_proc), 0);
-    
     SPAGAIN;
     /* adjust stack for use of ST macro (see perlcall) */
     SP -= cnt;
@@ -475,7 +511,15 @@ PCB_UniversalStub (JSContext *cx, JSObject *obj, uintN argc,
     if (cnt == 1) {
         SVToJSVAL(cx, obj, ST(0), rval);
     } else {
-        warn("sorry, but array results are not supported yet...");
+        JSObject *jsarr;
+        jsval val;
+        int i;
+        jsarr = JS_NewArrayObject(cx, 0, NULL);
+        for (i = 0; i < cnt; i++) {
+            SVToJSVAL(cx, JS_GetGlobalObject(cx), ST(i), &val);
+            JS_DefineElement(cx, jsarr, i, val, NULL, NULL, 0);
+        }
+        *rval = OBJECT_TO_JSVAL(jsarr);
     }
 
     PUTBACK;
@@ -483,7 +527,7 @@ PCB_UniversalStub (JSContext *cx, JSObject *obj, uintN argc,
     LEAVE;
 
     /* this solution is not perfect, but usefull when nested call happens */
-    return(! JS_IsExceptionPending(cx));
+    return(checkError(cx) && !JS_IsExceptionPending(cx));
 };
 
 /* __PH__END */
@@ -629,6 +673,7 @@ JS_compileScript(cx, bytes, ...)
     PREINIT:
     JSContextItem *cxitem;
     char *filename = NULL;
+    JSObject *scrobj;
     CODE:
     {
         if (items > 2) { filename = SvPV(ST(2), PL_na); };
@@ -643,6 +688,8 @@ JS_compileScript(cx, bytes, ...)
                     croak("JS script compilation failed");
                 XSRETURN_UNDEF;
             }
+        //scrobj = JS_NewScriptObject(cx, RETVAL);
+        //JS_AddRoot(cx, &scrobj);
     }
     OUTPUT:
     RETVAL

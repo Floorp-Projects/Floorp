@@ -39,6 +39,7 @@ TYPEMAP
 # These types have direct equivalents implemented as Perl packages
 JSRuntime *      RUNTIME
 JSContext *      CONTEXT
+JSScript  *      SCRIPT
 jsval            jsval
 # This is an auxilary type. Object serves as a wrapper for it
 JSObject *       OBJECT
@@ -47,7 +48,7 @@ JSObject *       OBJECT
 OUTPUT
 jsval
     {
-	SV *foo;
+	SV *foo = sv_newmortal();
         JSVALToSV(cx, JS_GetGlobalObject(cx), $var, &foo);
 	sv_setsv($arg, foo);
     }
@@ -57,6 +58,9 @@ OBJECT
 
 CONTEXT
     sv_setref_pv($arg, "JS::Context", (void*)$var);
+
+SCRIPT
+    sv_setref_pv($arg, "JS::Script", (void*)$var);
 
 RUNTIME
     sv_setref_pv($arg, "JS::Runtime", (void*)$var);
@@ -84,6 +88,14 @@ CONTEXT
         $var = ($type)SvIV((SV*)SvRV($arg));
     else{
         warn(\"${Package}::$func_name() -- $var is not a blessed JS::Context reference\");
+        XSRETURN_UNDEF;
+    }
+
+SCRIPT
+    if(sv_isa($arg, \"JS::Script\"))
+        $var = ($type)SvIV((SV*)SvRV($arg));
+    else{
+        warn(\"${Package}::$func_name() -- $var is not a blessed JS::Script reference\");
         XSRETURN_UNDEF;
     }
 

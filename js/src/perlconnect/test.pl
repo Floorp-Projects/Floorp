@@ -107,8 +107,10 @@ sub getHash {
 package main;
 use JS;
 
-BEGIN 
-  { $| = 1; print "1..12\n"; }
+BEGIN { 
+    $| = 1; print "1..12\n"; 
+}
+
 END 
   { print "not ok 1\n" unless $loaded; }
 
