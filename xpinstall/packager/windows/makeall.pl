@@ -53,7 +53,7 @@ $seiFileNameSpecific  = "mozilla-win32-installer.exe";
 $seuFileNameSpecific  = "MozillaUninstall.exe";
 
 # set environment vars for use by other .pl scripts called from this script.
-$ENV{WIZ_userAgent}            = "5.0b2 (en)";
+$ENV{WIZ_userAgent}            = "5.0a1 (en)";
 $ENV{WIZ_nameCompany}          = "Mozilla";
 $ENV{WIZ_nameProduct}          = "Mozilla Seamonkey";
 $ENV{WIZ_fileMainExe}          = "Mozilla.exe";
