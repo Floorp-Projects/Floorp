@@ -84,10 +84,6 @@ public:
 // set if our widget moved. 
 #define NS_VIEW_FLAG_WIDGET_MOVED         0x0100
 #define NS_VIEW_FLAG_CLIPCHILDREN         0x0200
-// if set it indicates that this view should be 
-// displayed above z-index:auto views if this view 
-// is z-index:auto also
-#define NS_VIEW_FLAG_TOPMOST              0x0400
 //indicates that the view should not be bitblt'd when moved
 //or scrolled and instead must be repainted
 #define NS_VIEW_FLAG_DONT_BITBLT          0x0010
@@ -114,7 +110,7 @@ public:
   NS_IMETHOD  GetPosition(nscoord *x, nscoord *y) const;
   NS_IMETHOD  GetBounds(nsRect &aBounds) const;
   NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const;
-  NS_IMETHOD  GetZIndex(PRBool &aAuto, PRInt32 &aZIndex, PRBool &aTopMost) const;
+  NS_IMETHOD  GetZIndex(PRBool &aAuto, PRInt32 &aZIndex) const;
   PRInt32     GetZIndex() const { return mZIndex; }
   PRBool      GetZIndexIsAuto() const { return (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0; }
   NS_IMETHOD  GetFloating(PRBool &aFloatingView) const;
@@ -222,7 +218,7 @@ public:
    * relative to the view's siblings.
    * @param zindex new z depth
    */
-  void SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost);
+  void SetZIndex(PRBool aAuto, PRInt32 aZIndex);
 
   /**
    * Set/Get whether the view "floats" above all other views,
@@ -318,9 +314,6 @@ public: // NOT in nsIView, so only available in view module
 
   PRUint32 GetViewFlags() const { return mVFlags; }
   void SetViewFlags(PRUint32 aFlags) { mVFlags = aFlags; }
-
-  void SetTopMost(PRBool aTopMost) { aTopMost ? mVFlags |= NS_VIEW_FLAG_TOPMOST : mVFlags &= ~NS_VIEW_FLAG_TOPMOST; }
-  PRBool IsTopMost() { return((mVFlags & NS_VIEW_FLAG_TOPMOST) != 0); }
 
   void ConvertToParentCoords(nscoord* aX, nscoord* aY) const { *aX += mPosX; *aY += mPosY; }
   void ConvertFromParentCoords(nscoord* aX, nscoord* aY) const { *aX -= mPosX; *aY -= mPosY; }

@@ -650,13 +650,8 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
 
     // Make sure z-index is correct
     PRInt32                zIndex = 0;
-    PRInt32                oldZIndex;
-    PRBool                 oldAutoZIndex;
-    PRBool                 oldTopMost;
     PRBool                 autoZIndex = PR_FALSE;
     const nsStylePosition* position;
-
-    aView->GetZIndex(oldZIndex, oldAutoZIndex, oldTopMost);
 
     aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
     if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
@@ -664,9 +659,9 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
 
     } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
       autoZIndex = PR_TRUE;
-    } 
-  
-    vm->SetViewZIndex(aView, autoZIndex, zIndex, oldTopMost);
+    }
+    
+    vm->SetViewZIndex(aView, autoZIndex, zIndex);
 
     // There are two types of clipping:
     // - 'clip' which only applies to absolutely positioned elements, and is

@@ -449,7 +449,6 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
                                          nsIFrame* aContentParentFrame,
                                          PRBool aForce)
 {
-  PRBool isTopMostView = PR_FALSE;
   nsIView* view;
   aFrame->GetView(aPresContext, &view);
   // If we don't yet have a view, see if we need a view
@@ -490,18 +489,12 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
           ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p relatively positioned",
           aFrame));
         aForce = PR_TRUE;
-        isTopMostView = PR_TRUE;
       } else if (display->IsAbsolutelyPositioned()) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
           ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p absolutely positioned",
           aFrame));
         aForce = PR_TRUE;
-        isTopMostView = PR_TRUE;
-      } 
-    }
-
-    if (NS_STYLE_POSITION_FIXED == display->mPosition) {
-      isTopMostView = PR_TRUE;
+      }
     }
 
     // See if the frame is a scrolled frame
@@ -592,7 +585,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
             autoZIndex = PR_TRUE;
           }
           
-          viewManager->SetViewZIndex(view, autoZIndex, zIndex, isTopMostView);
+          viewManager->SetViewZIndex(view, autoZIndex, zIndex);
           // XXX Drop it at the end of the document order until we can do better
           viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
 
@@ -607,7 +600,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
             
             if (nsnull == zParentView) {
               nsIFrame* zParentFrame = nsnull;
-
+              
               aContentParentFrame->GetParentWithView(aPresContext, &zParentFrame);
               NS_ASSERTION(zParentFrame, "GetParentWithView failed");
               zParentFrame->GetView(aPresContext, &zParentView);

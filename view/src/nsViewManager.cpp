@@ -252,26 +252,6 @@ nsInvalidateEvent::nsInvalidateEvent(nsViewManager* aViewManager)
 
 //-------------- End Invalidate Event Definition ---------------------------
 
-// Compare two Z-index values taking into account topmost and 
-// auto flags. the topmost flag is only used when both views are
-// zindex:auto.
-// 
-// returns 0 if equal
-//         > 0 if first z-index is greater than the second
-//         < 0 if first z-index is less than the second
-
-static PRInt32 CompareZIndex(PRInt32 aZIndex1, PRBool aTopMost1, PRBool aIsAuto1,
-                             PRInt32 aZIndex2, PRBool aTopMost2, PRBool aIsAuto2) 
-{
-  NS_ASSERTION(!aIsAuto1 || aZIndex1 == 0,"auto is set and the z-index is not 0");
-  NS_ASSERTION(!aIsAuto2 || aZIndex2 == 0,"auto is set and the z-index is not 0");
-
-  if (aZIndex1 != aZIndex2) {
-    return aZIndex1 - aZIndex2;
-  } else {
-    return aTopMost1 - aTopMost2;
-  }
-}
 
 void
 nsViewManager::PostInvalidateEvent()
@@ -546,7 +526,7 @@ NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView, nsIWidget* aWidget)
       parent->InsertChild(mRootView, nsnull);
     }
 
-    mRootView->SetZIndex(PR_FALSE, 0, PR_FALSE);
+    mRootView->SetZIndex(PR_FALSE, 0);
 
     mRootView->GetWidget(mRootWindow);
     if (nsnull != mRootWindow) {
@@ -1827,7 +1807,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           obs->HandleEvent(view, aEvent, aStatus, PR_TRUE, handled);
         }
       }
-      break; 
+      break;
 
     default:
       {
@@ -2225,8 +2205,7 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
         {
           PRInt32 idx = kid->GetZIndex();
 
-          if (CompareZIndex(zIndex, child->IsTopMost(), child->GetZIndexIsAuto(),
-                            idx, kid->IsTopMost(), kid->GetZIndexIsAuto()) >= 0)
+          if (zIndex >= idx)
             break;
 
           prev = kid;
@@ -2269,7 +2248,7 @@ NS_IMETHODIMP nsViewManager::InsertZPlaceholder(nsIView *aParent, nsIView *aChil
   // mark the placeholder as "shown" so that it will be included in a built display list
   placeholder->Init(this, bounds, parent, nsViewVisibility_kShow);
   placeholder->SetReparentedView(child);
-  placeholder->SetZIndex(child->GetZIndexIsAuto(), child->GetZIndex(), child->IsTopMost());
+  placeholder->SetZIndex(child->GetZIndexIsAuto(), child->GetZIndex());
   child->SetZParent(placeholder);
   
   return InsertChild(parent, placeholder, aSibling, aAfter);
@@ -2294,10 +2273,8 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, PRIn
         {
           PRInt32 idx = kid->GetZIndex();
 
-          if (CompareZIndex(aZIndex, child->IsTopMost(), child->GetZIndexIsAuto(), 
-                            idx, kid->IsTopMost(), kid->GetZIndexIsAuto()) >= 0) {
+          if (aZIndex >= idx)
             break;
-          }
 
           //get the next sibling view
 
@@ -2307,7 +2284,7 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, PRIn
 
       //in case this hasn't been set yet... maybe we should not do this? MMP
 
-      child->SetZIndex(child->GetZIndexIsAuto(), aZIndex, child->IsTopMost());
+      child->SetZIndex(child->GetZIndexIsAuto(), aZIndex);
       parent->InsertChild(child, prev);
 
       UpdateTransCnt(nsnull, child);
@@ -2727,7 +2704,7 @@ PRBool nsViewManager::IsViewInserted(nsView *aView)
   }
 }
 
-NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, PRInt32 aZIndex, PRBool aTopMost)
+NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, PRInt32 aZIndex)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
   nsresult  rv = NS_OK;
@@ -2740,19 +2717,16 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
     return rv;
   }
 
-  PRBool oldTopMost = view->IsTopMost();
-  PRBool oldIsAuto = view->GetZIndexIsAuto();
-
   if (aAutoZIndex) {
     aZIndex = 0;
   }
 
   PRInt32 oldidx = view->GetZIndex();
-  view->SetZIndex(aAutoZIndex, aZIndex, aTopMost);
+
+  view->SetZIndex(aAutoZIndex, aZIndex);
 
   if (IsViewInserted(view)) {
-    if (CompareZIndex(oldidx, oldTopMost, oldIsAuto,
-		              aZIndex, aTopMost, aAutoZIndex) != 0) {
+    if (oldidx != aZIndex) {
       nsView *parent = view->GetParent();
       if (nsnull != parent) {
         //we don't just call the view manager's RemoveChild()
@@ -2774,7 +2748,7 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
 
     nsZPlaceholderView* zParentView = view->GetZParent();
     if (nsnull != zParentView) {
-      SetViewZIndex(zParentView, aAutoZIndex, aZIndex, aTopMost);
+      SetViewZIndex(zParentView, aAutoZIndex, aZIndex);
     }
   }
 
