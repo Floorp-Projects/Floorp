@@ -459,18 +459,6 @@ NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::Open(nsIFile * aFile)
-{
-  // this method should only be implemented by each OS specific implementation of this service.
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsExternalHelperAppService::OpenFolder(nsIFile * aFile)
-{
-  // this method should only be implemented by each OS specific implementation of this service.
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // begin external app handler implementation 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

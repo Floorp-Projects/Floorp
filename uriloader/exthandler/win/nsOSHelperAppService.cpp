@@ -172,56 +172,6 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
   return rv;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::Open(nsIFile * aFile)
-{
-  NS_ENSURE_ARG(aFile);
-
-  nsresult rv = NS_OK;
-  nsXPIDLCString path;
-  aFile->GetPath(getter_Copies(path));
-
-  // use the app registry name to launch a shell execute....
-  LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
-  if (r < 32) 
-    rv = NS_ERROR_FAILURE;
-	else
-		rv = NS_OK;
-
-  return rv;
-}
-
-NS_IMETHODIMP nsOSHelperAppService::OpenFolder(nsIFile * aFile)
-{
-  NS_ENSURE_ARG(aFile);
-
-  nsresult rv = NS_OK;
-  PRBool isDirectory = PR_FALSE;
-  nsXPIDLCString path;
-
-  aFile->IsDirectory(&isDirectory);
-  if (isDirectory)
-  {
-    aFile->GetPath(getter_Copies(path));  
-  }
-  else
-  {
-    nsCOMPtr<nsIFile> parent;
-    aFile->GetParent(getter_AddRefs(parent));
-    if (parent)
-      parent->GetPath(getter_Copies(path));  
-  }
-
-  // use the app registry name to launch a shell execute....
-  LONG r = (LONG) ::ShellExecute( NULL, "explore", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
-  if (r < 32) 
-    rv = NS_ERROR_FAILURE;
-	else
-		rv = NS_OK;
-
-  return NS_OK;
-}
-
-
 // The windows registry provides a mime database key which lists a set of mime types and corresponding "Extension" values. 
 // we can use this to look up our mime type to see if there is a preferred extension for the mime type.
 nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCString& aFileExtension)
