@@ -408,6 +408,15 @@ NS_IMETHODIMP nsMsgHdr::SetPriority(nsMsgPriority priority)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgHdr::GetPriority(nsMsgPriority *result)
+{
+	if (!result)
+	    return NS_ERROR_NULL_POINTER;
+
+	*result = m_priority;
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgHdr::GetMessageOffset(PRUint32 *result)
 {
     *result = m_messageKey;
