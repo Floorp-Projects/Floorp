@@ -26,6 +26,8 @@
 #include "nsDiskCacheBinding.h"
 #include "nsDiskCacheEntry.h"
 
+#include "nsCache.h"
+
 #include "nsCRT.h"
 
 #include <string.h>
@@ -80,12 +82,13 @@ nsDiskCacheBucket::CountRecords()
 
 
 PRUint32
-nsDiskCacheBucket::EvictionRank()
+nsDiskCacheBucket::EvictionRank(PRUint32 targetRank)
 {
     PRUint32  rank = 0;
     for (int i = CountRecords() - 1; i >= 0; --i) {
-        if (rank < mRecords[i].EvictionRank())
-            rank = mRecords[i].EvictionRank();
+        if ((rank < mRecords[i].EvictionRank()) &&
+            ((targetRank == 0) || (mRecords[i].EvictionRank() < targetRank)))
+                rank = mRecords[i].EvictionRank();
     }
     return rank;
 }
@@ -100,7 +103,7 @@ nsDiskCacheBucket::VisitEachRecord(nsDiskCacheRecordVisitor *  visitor,
     PRInt32  rv = kVisitNextRecord;
     PRInt32  last  = CountRecords() - 1;
     
-    // call visitor for each entry (equal or greater than evictionRank)
+    // call visitor for each entry (matching any eviction rank)
     for (int i = last; i >= 0; i--) {
         if (evictionRank > mRecords[i].EvictionRank())  continue;
     
@@ -329,7 +332,8 @@ nsDiskCacheMap::AddRecord( nsDiskCacheRecord *  mapRecord,
             if (mHeader.mEvictionRank[bucketIndex] < mapRecord->EvictionRank())
                 mHeader.mEvictionRank[bucketIndex] = mapRecord->EvictionRank();
 
-NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == bucket->EvictionRank(), "whao!");
+            NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == bucket->EvictionRank(0),
+                         "eviction rank out of sync");
             return NS_OK;
         }
         
@@ -344,10 +348,11 @@ NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == bucket->EvictionRank(), "whao
     if ((oldRecord->HashNumber() != 0) ||
          (mapRecord->EvictionRank() > mHeader.mEvictionRank[bucketIndex])) {
          
-        mHeader.mEvictionRank[bucketIndex] = bucket->EvictionRank();
+        mHeader.mEvictionRank[bucketIndex] = bucket->EvictionRank(0);
     }
 
-NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == bucket->EvictionRank(), "whao!");    
+NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == bucket->EvictionRank(0),
+             "eviction rank out of sync");    
     return NS_OK;
 }
 
@@ -372,9 +377,10 @@ nsDiskCacheMap::UpdateRecord( nsDiskCacheRecord *  mapRecord)
             if (mHeader.mEvictionRank[bucketIndex] < mapRecord->EvictionRank())
                 mHeader.mEvictionRank[bucketIndex] = mapRecord->EvictionRank();
             else if (mHeader.mEvictionRank[bucketIndex] == oldRank)
-                mHeader.mEvictionRank[bucketIndex] = bucket->EvictionRank();
+                mHeader.mEvictionRank[bucketIndex] = bucket->EvictionRank(0);
 
-NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == bucket->EvictionRank(), "whao!");
+NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == bucket->EvictionRank(0),
+             "eviction rank out of sync");
             return NS_OK;
         }
     }
@@ -423,10 +429,11 @@ nsDiskCacheMap::DeleteRecord( nsDiskCacheRecord *  mapRecord)
             // update eviction rank
             PRUint32  bucketIndex = GetBucketIndex(mapRecord->HashNumber());
             if (mHeader.mEvictionRank[bucketIndex] <= evictionRank) {
-                mHeader.mEvictionRank[bucketIndex] = bucket->EvictionRank();
+                mHeader.mEvictionRank[bucketIndex] = bucket->EvictionRank(0);
             }
 
-NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == bucket->EvictionRank(), "whao!");
+            NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == bucket->EvictionRank(0),
+                         "eviction rank out of sync");
             return NS_OK;
         }
     }
@@ -448,11 +455,12 @@ nsDiskCacheMap::VisitRecords( nsDiskCacheRecordVisitor *  visitor)
         PRBool continueFlag = mBuckets[i].VisitEachRecord(visitor, 0, &recordsDeleted);
         if (recordsDeleted) {
             // recalc eviction rank
-            mHeader.mEvictionRank[i] = mBuckets[i].EvictionRank();
+            mHeader.mEvictionRank[i] = mBuckets[i].EvictionRank(0);
             mHeader.mEntryCount -= recordsDeleted;
             // XXX write bucket
         }
-NS_ASSERTION(mHeader.mEvictionRank[i] == mBuckets[i].EvictionRank(), "whao!");
+        NS_ASSERTION(mHeader.mEvictionRank[i] == mBuckets[i].EvictionRank(0),
+                     "eviction rank out of sync");
         if (!continueFlag)  break;
     }
     
@@ -468,34 +476,41 @@ NS_ASSERTION(mHeader.mEvictionRank[i] == mBuckets[i].EvictionRank(), "whao!");
 nsresult
 nsDiskCacheMap::EvictRecords( nsDiskCacheRecordVisitor * visitor)
 {
+    PRUint32  tempRank[kBucketsPerTable];
+    int       i;
+    
+    // copy eviction rank array
+    for (i = 0; i < kBucketsPerTable; ++i)
+        tempRank[i] = mHeader.mEvictionRank[i];
+    
     while (1) {
     
         // find bucket with highest eviction rank
         PRUint32    rank  = 0;
         PRUint32    index = 0;
-        for (int i = 0; i < kBucketsPerTable; ++i) {
-            if (rank < mHeader.mEvictionRank[i]) {
-                rank = mHeader.mEvictionRank[i];
+        for (i = 0; i < kBucketsPerTable; ++i) {
+            if (rank < tempRank[i]) {
+                rank = tempRank[i];
                 index = i;
             }
         }
         
-NS_ASSERTION(mHeader.mEvictionRank[index] == mBuckets[index].EvictionRank(),
-    "header eviction rank out of sync");
+NS_ASSERTION(mHeader.mEvictionRank[index] == mBuckets[index].EvictionRank(0),
+             "header eviction rank out of sync");
             
         // visit records in bucket with eviction ranks >= target eviction rank
         PRUint32 recordsDeleted;
-        PRBool continueFlag = mBuckets[index].VisitEachRecord(visitor, rank, &recordsDeleted);
+        PRInt32  continueResult = mBuckets[index].VisitEachRecord(visitor, rank, &recordsDeleted);
         if (recordsDeleted) {
             // recalc eviction rank
-            mHeader.mEvictionRank[index] = mBuckets[index].EvictionRank();
+            mHeader.mEvictionRank[index] = mBuckets[index].EvictionRank(0);
             mHeader.mEntryCount -= recordsDeleted;
             // XXX write bucket
         }
-        if (!continueFlag)  break;
+        if (continueResult == kStopVisitingRecords)  break;
         
-        // break if visitor returned stop
-        
+        // find greatest rank less than 'rank'
+        tempRank[index] = mBuckets[index].EvictionRank(rank);
     }
     return NS_OK;
 }
@@ -644,6 +659,8 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
             if (NS_FAILED(rv))  return rv;
         }
     }
+
+    binding->mRecord.SetEvictionRank(ULONG_MAX - SecondsFromPRTime(PR_Now()));
         
     if (fileIndex == 0) {
         // Write entry data to separate file

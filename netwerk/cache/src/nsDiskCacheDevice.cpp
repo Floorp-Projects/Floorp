@@ -614,7 +614,7 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
     
     nsDiskCacheEntry * diskEntry;
     rv = mCacheMap->ReadDiskCacheEntry(&record, &diskEntry);
-    if (NS_FAILED(rv))  goto error_exit;
+    if (NS_FAILED(rv))  return nsnull;
     
     // compare key to be sure
     if (nsCRT::strcmp(diskEntry->mKeyStart, key->get()) == 0) {
@@ -622,16 +622,16 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
     }
     delete diskEntry;
     
+    // If we had a hash collision or CreateCacheEntry failed, return nsnull
+    if (!entry)  return nsnull;
+    
     binding = mBindery.CreateBinding(entry, &record);
     if (!binding) {
-        goto error_exit;
+        delete entry;
+        return nsnull;
     }
     
     return entry;
-    
-error_exit:
-    delete entry;
-    return nsnull;
 }
 
 
@@ -684,7 +684,7 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
     
     // create a new record for this entry
     record.SetHashNumber(nsDiskCache::Hash(entry->Key()->get()));
-    record.SetEvictionRank(ULONG_MAX - entry->ExpirationTime());
+    record.SetEvictionRank(ULONG_MAX - SecondsFromPRTime(PR_Now()));
 
     if (!entry->IsDoomed()) {
         // if entry isn't doomed, add it to the cache map
@@ -776,12 +776,11 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
     } else {
         binding->mRecord.SetDataFileGeneration(binding->mGeneration);
         binding->mRecord.SetDataFileSize(0);    // 1k minimum
-    }
-
-    if (!binding->mDoomed) {
-        // record stored in cache map, so update it
-        rv = mCacheMap->UpdateRecord(&binding->mRecord);
-        if (NS_FAILED(rv))  return rv;
+        if (!binding->mDoomed) {
+            // record stored in cache map, so update it
+            rv = mCacheMap->UpdateRecord(&binding->mRecord);
+            if (NS_FAILED(rv))  return rv;
+        }
     }
 
     // generate the name of the cache entry from the hash code of its key,
@@ -826,12 +825,11 @@ nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *    entry,
     } else {
         binding->mRecord.SetDataFileGeneration(binding->mGeneration);
         binding->mRecord.SetDataFileSize(0);    // 1k minimum
-    }
-        
-     if (!binding->mDoomed) {
-        // record stored in cache map, so update it
-       rv = mCacheMap->UpdateRecord(&binding->mRecord);
-        if (NS_FAILED(rv))  return rv;
+        if (!binding->mDoomed) {
+            // record stored in cache map, so update it
+            rv = mCacheMap->UpdateRecord(&binding->mRecord);
+            if (NS_FAILED(rv))  return rv;
+        }
     }
     
     nsCOMPtr<nsIFile>  file;
