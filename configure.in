@@ -344,6 +344,8 @@ LIB_SUFFIX=a
 TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 NEED_BASE_DLL_NAME_ALSO=
+SHLIB_LDSTARTFILE=
+SHLIB_LDENDFILE=
 
 MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='-L$(DIST)/lib -ljpeg'
@@ -682,11 +684,21 @@ case "$target" in
     ;;
 
 *-netbsd*)
-    DLL_SUFFIX=".so.1.0"
     DSO_CFLAGS=''
-    DSO_PIC_CFLAGS='-fPIC'
     CFLAGS="$CFLAGS -Dunix"
     CXXFLAGS="$CXXFLAGS -Dunix"
+    if $CC -E - -dM </dev/null | grep __ELF__ >/dev/null; then
+        DLL_SUFFIX=".so"
+        DSO_PIC_CFLAGS='-fPIC -DPIC'
+        DSO_LDOPTS='-x -shared -soname lib$(LIBRARY_NAME)$(DLL_SUFFIX)'
+        SHLIB_LDSTARTFILE=/usr/lib/crtbeginS.o
+        SHLIB_LDENDFILE=/usr/lib/crtendS.o
+    else
+    	DSO_PIC_CFLAGS='-fPIC -DPIC'
+    	DLL_SUFFIX=".so.1.0"
+    	DSO_LDOPTS='-x -shared'
+    	SHLIB_LDSTARTFILE=/usr/lib/c++rt0.o
+    fi
     # At least for 1.3 and up, ld supports this, despite the test failing above.
     MKSHLIB_FORCE_ALL='--whole-archive'
     MKSHLIB_UNFORCE_ALL='--no-whole-archive'
@@ -701,10 +713,6 @@ case "$target" in
 		MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
 		;;
     esac
-    dnl Test for a.out platform and handle C++ libraries correctly
-    if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
-	DSO_LDOPTS="-shared"
-    fi
     if test "$LIBRUNPATH"; then
 	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
     fi
@@ -958,6 +966,8 @@ esac
 
 dnl See above (netbsd)
 AC_SUBST(NEED_BASE_DLL_NAME_ALSO)
+AC_SUBST(SHLIB_LDSTARTFILE)
+AC_SUBST(SHLIB_LDENDFILE)
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.
@@ -1166,6 +1176,12 @@ if test "$MOZ_ENABLE_GTK"
 then
     AM_PATH_GTK($GTK_VERSION,,
       AC_MSG_ERROR(Test for GTK failed.))
+
+case "$target" in
+i386-*-netbsd*)
+	GTK_LIBS=`echo $GTK_LIBS | sed -e 's/-Wl,//g'`
+	;;
+esac
 
 dnl ========================================================
 dnl =							   =
@@ -1648,6 +1664,13 @@ fi
 
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
+
+case "$target" in
+i386-*-netbsd*)
+	GLIB_LIBS=`echo $GLIB_LIBS | sed -e 's/-Wl,//g'`
+	LIBIDL_LIBS=`echo $LIBIDL_LIBS | sed -e 's/-Wl,//g'`
+	;;
+esac
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
@@ -2826,6 +2849,7 @@ case "$target" in
     *-*-solaris*) MOZ_MONOLITHIC_TOOLKIT= ;;
     *-openvms*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-freebsd*)   MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-netbsd*)    MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-aix*)     MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-osf*)     MOZ_MONOLITHIC_TOOLKIT= ;;
     *-hpux11.*)   MOZ_MONOLITHIC_TOOLKIT= ;;
