@@ -39,7 +39,7 @@
       </handler>
     </handlers>
 
-    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULMenuListElement, nsIDOMXULSelectControlElement, nsIAccessibleProvider">
       <constructor>
         this.setInitialSelection()
       </constructor>
