@@ -75,6 +75,7 @@
 #include "nsICookieService.h"
 
 #include "nsIServiceManager.h"
+#include "nsIConsoleService.h"
 #include "nsIFormManager.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
@@ -89,6 +90,7 @@
 #include "nsIFile.h"
 #include "nsIEventListenerManager.h"
 #include "nsISelectElement.h"
+#include "nsIFrameSelection.h"
 
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionAdaptor.h"
@@ -2449,9 +2451,35 @@ nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)
 NS_IMETHODIMP    
 nsHTMLDocument::GetSelection(nsString& aReturn)
 {
-  //XXX TBImplemented
   aReturn.Truncate();
-  return NS_OK;
+
+  nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+
+  if (!shell)
+    return NS_OK;
+
+  nsCOMPtr<nsIFrameSelection> selection;
+  shell->GetFrameSelection(getter_AddRefs(selection));  
+
+  if (!selection)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMSelection> domSelection;
+
+  selection->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                          getter_AddRefs(domSelection));
+
+  if (!domSelection)
+    return NS_OK;
+
+  nsCOMPtr<nsIConsoleService> consoleService
+    (do_GetService("mozilla.consoleservice.1"));
+
+  if (consoleService) {
+    consoleService->LogStringMessage(NS_ConvertASCIItoUCS2("Depricated method document.getSelection() called, use window.getSelection() in stead!").GetUnicode());
+  }
+
+  return domSelection->ToString(aReturn);
 }
 
 NS_IMETHODIMP    
