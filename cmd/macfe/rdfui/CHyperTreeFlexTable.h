@@ -137,7 +137,6 @@ protected:
 													StringPtr outTip ) ;
 
 		// Tree behavior properties
-	virtual Uint16 ClickCountToOpen ( ) const ;
 	virtual Boolean CanDoInlineEditing ( ) const;
 	virtual Boolean TableDesiresSelectionTracking( ) const;
 

@@ -244,8 +244,7 @@ CHyperTreeFlexTable :: CellWantsClick( const STableCell & inCell ) const
 void
 CHyperTreeFlexTable :: ClickCell ( const STableCell & inCell, const SMouseDownEvent & inMouse )
 {
-	if ( inCell.col == FindTitleColumnID() &&	
-			URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSingleClick, false) == true ) {
+	if ( inCell.col == FindTitleColumnID() && ClickCountToOpen() == 1 ) {
 		if ( ! ::WaitMouseMoved(inMouse.macEvent.where) )
 			OpenRow ( inCell.row );
 	}
@@ -453,10 +452,7 @@ void
 CHyperTreeFlexTable :: RedrawRow ( HT_Resource inNode )
 {
 	TableIndexT row = URDFUtilities::HTRowToPPRow(HT_GetNodeIndex(HT_GetView(inNode), inNode));
-	STableCell left ( row, 1 );
-	STableCell right ( row, mTableHeader->CountColumns() );
-
-	RefreshCellRange( left, right );
+	RefreshRowRange( row, row );
 
 } // RedrawRow
 
@@ -728,7 +724,11 @@ CHyperTreeFlexTable::OpenView( HT_View inHTView )
 	}
 	else
 		Refresh();
-		
+	
+	// make sure the number of clicks to open a row is correct
+	if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSingleClick, false) == true )
+		mClickCountToOpen = 1;
+
 }
 
 void CHyperTreeFlexTable::ExpandNode(HT_Resource inHTNode)
@@ -1279,23 +1279,6 @@ CHyperTreeFlexTable :: HandleDropOfText ( const char* /*inTextData*/ )
 
 
 //
-// ClickCountToOpen
-//
-// Instead of going by what is in the PPob, ask HT. This allows us to easily switch 
-// between navigation (single click) and organization (dbl-click) modes
-//
-Uint16
-CHyperTreeFlexTable :: ClickCountToOpen ( ) const
-{
-	if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSingleClick, false) )
-		return 1;
-	else
-		return mClickCountToOpen;
-
-} // ClickCountToOpen
-
-
-//
 // InlineEditorDone
 //
 // Called when the user hits return/enter or clicks outside of the inline editor. Tell RDF about the
@@ -1618,7 +1601,8 @@ void
 CPopdownFlexTable :: OpenRow ( TableIndexT inRow )
 {
 	CHyperTreeFlexTable::OpenRow(inRow);
-	BroadcastMessage ( msg_ClosePopdownTree, NULL );
+	if ( ! RowIsContainer(inRow) )
+		BroadcastMessage ( msg_ClosePopdownTree, NULL );
 	
 } // OpenRow
 
