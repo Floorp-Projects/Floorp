@@ -74,6 +74,7 @@ interface oeIDateTime : nsISupports
     attribute short minute;
     attribute boolean utc;
     readonly attribute string tzID;
+    readonly attribute boolean isSet;
     PRTime getTime();
     void setTime( in PRTime ms );
     void setTimeInTimezone( in PRTime ms, in string tzID );

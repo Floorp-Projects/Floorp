@@ -201,7 +201,13 @@ NS_IMETHODIMP oeDateTimeImpl::SetTimeInTimezone( PRTime ms, const char *tzid )
 
 NS_IMETHODIMP oeDateTimeImpl::Clear()
 {
-	m_datetime = icaltime_null_time();
+    m_datetime = icaltime_null_time();
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeDateTimeImpl::GetIsSet(PRBool *retval)
+{
+    *retval = ! icaltime_is_null_time(m_datetime);
     return NS_OK;
 }
 
