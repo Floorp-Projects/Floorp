@@ -69,14 +69,14 @@ nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingSer
                                   hostname,
                                   "pop3",
                                   getter_AddRefs(pop3_server));
-  }
-  if (NS_SUCCEEDED(rv)) {
-	 *aResult = pop3_server;
-	  NS_ADDREF(*aResult);
-	  return rv;
+	if (NS_SUCCEEDED(rv)) {
+		*aResult = pop3_server;
+		NS_ADDREF(*aResult);
+		return rv;
+	}
   }
 
-  // if you fail after looking at all "pop3" and all "none", you fail.
+  // if you fail after looking at all "pop3" and all "none" servers, you fail.
   return rv;
 }
 
