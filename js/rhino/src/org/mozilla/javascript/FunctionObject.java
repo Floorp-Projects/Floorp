@@ -50,7 +50,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class FunctionObject extends NativeFunction implements Serializable {
+public class FunctionObject extends BaseFunction {
 
     static final long serialVersionUID = -4074285335521944312L;
 
@@ -134,7 +134,6 @@ public class FunctionObject extends NativeFunction implements Serializable {
             methodName = method.getName();
         }
         this.functionName = name;
-        int length;
         if (types.length == 4 && (types[1].isArray() || types[2].isArray())) {
             // Either variable args or an error.
             if (types[1].isArray()) {
@@ -161,9 +160,8 @@ public class FunctionObject extends NativeFunction implements Serializable {
                 parmsLength = VARARGS_METHOD;
             }
             // XXX check return type
-            length = 1;
         } else {
-            parmsLength = (short) types.length;
+            parmsLength = types.length;
             for (int i=0; i < parmsLength; i++) {
                 Class type = types[i];
                 if (type != ScriptRuntime.ObjectClass &&
@@ -183,14 +181,9 @@ public class FunctionObject extends NativeFunction implements Serializable {
                                                       methodName);
                 }
             }
-            length = parmsLength;
         }
 
-        // Initialize length property
-        lengthPropertyValue = (short) length;
-
         hasVoidReturn = method != null && method.getReturnType() == Void.TYPE;
-        this.argCount = (short) length;
 
         ScriptRuntime.setFunctionProtoAndParent(scope, this);
         Context cx = Context.getCurrentContext();
@@ -201,32 +194,17 @@ public class FunctionObject extends NativeFunction implements Serializable {
     /**
      * Return the value defined by  the method used to construct the object
      * (number of parameters of the method, or 1 if the method is a "varargs"
-     * form), unless setLength has been called with a new value.
-     * Overrides getLength in BaseFunction.
-     *
-     * @see org.mozilla.javascript.FunctionObject#setLength
-     * @see org.mozilla.javascript.BaseFunction#getLength
+     * form).
      */
-    public int getLength() {
-        return lengthPropertyValue;
+    public int getArity() {
+        return parmsLength < 0 ? 1 : parmsLength;
     }
 
     /**
-     * Set the value of the "length" property.
-     *
-     * <p>Changing the value of the "length" property of a FunctionObject only
-     * affects the value retrieved from get() and does not affect the way
-     * the method itself is called. <p>
-     *
-     * The "length" property will be defined by default as the number
-     * of parameters of the method used to construct the FunctionObject,
-     * unless the method is a "varargs" form, in which case the "length"
-     * property will be defined to 1.
-     *
-     * @param length the new length
+     * Return the same value as {@link #getArity()}.
      */
-    public void setLength(short length) {
-        lengthPropertyValue = length;
+    public int getLength() {
+        return getArity();
     }
 
     // TODO: Make not public
@@ -736,8 +714,7 @@ public class FunctionObject extends NativeFunction implements Serializable {
     transient Constructor ctor;
     transient Invoker invoker;
     transient private Class[] types;
-    private short parmsLength;
-    private short lengthPropertyValue;
+    private int parmsLength;
     private boolean hasVoidReturn;
     private boolean isStatic;
     private boolean useDynamicScope;
