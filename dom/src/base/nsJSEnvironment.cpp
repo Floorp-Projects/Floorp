@@ -48,7 +48,9 @@
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIPresContext.h"
+#include "nsIScriptError.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
@@ -69,8 +71,6 @@ static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gJSDiagnostics = nsnull;
 #endif
-
-#include "nsIScriptError.h"
 
 void PR_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx,
@@ -123,12 +123,24 @@ NS_ScriptErrorReporter(JSContext *cx,
         nsCOMPtr<nsIScriptError>
           errorObject(do_CreateInstance("@mozilla.org/scripterror;1"));
 
-        // XXX possible here to distinguish between XUL and content js?
-        // or could just expose setCategory and twiddle it later.
-        const char *category = "XUL/Content JavaScript";
-
         if (errorObject != nsnull) {
-          nsresult rv = NS_ERROR_FAILURE;
+          nsresult rv;
+
+          const char *category = nsnull;
+          // Set category to XUL or content, if possible.
+          if (docShell) {
+            nsCOMPtr<nsIDocShellTreeItem> docShellTI(do_QueryInterface(docShell, &rv));
+            if (NS_SUCCEEDED(rv) && docShellTI) {
+              PRInt32 docShellType;
+              rv = docShellTI->GetItemType(&docShellType);
+              if (NS_SUCCEEDED(rv)) {
+                category = docShellType == nsIDocShellTreeItem::typeChrome
+                  ? "chrome javascript"
+                  : "content javascript";
+              }
+            }
+          }
+
           if (report) {
             nsAutoString fileUni;
             fileUni.AssignWithConversion(report->filename);
