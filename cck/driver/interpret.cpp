@@ -795,7 +795,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					theApp.FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
 					IsSameCache = FALSE;
 				}
-				// Switch pre-set target platform and create working installer 
+				// Switch pre-set target platform and create working installer
 				else if (strcmp(pcmd, "ChangePlatform") ==0)	
 				{
 					WIDGET *w = findWidget(parms);
@@ -809,6 +809,20 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 							strcpy(deletePath, outputPath);
 							CallDLL("IBEngine", "EraseDirectory", deletePath, w);
 						}
+				}
+				// change pre-set CD autorun option
+				else if (strcmp(pcmd, "ChangeCDScreen") ==0)	
+				{
+					WIDGET *w = findWidget(parms);
+					if (w)
+					{
+						CString rootPath	= GetGlobal("Root");
+						CString configName	= GetGlobal("CustomizationList");
+						CString outputPath	= rootPath + "Configs\\" + configName + "\\Output";
+						char deletePath[MAX_SIZE];
+						strcpy(deletePath, outputPath);
+						CallDLL("IBEngine", "EraseDirectory", deletePath, w);
+					}
 				}
 				else if (strcmp(pcmd, "WriteCache") ==0)
 				{
