@@ -57,11 +57,11 @@ public:
 
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
 //override of nsFrame method
-  NS_IMETHOD GetChildFrameContainingOffset(nsIPresContext* aPresContext,
-                                           PRInt32 inContentOffset,
+  NS_IMETHOD GetChildFrameContainingOffset(PRInt32 inContentOffset,
                                            PRBool inHint,
                                            PRInt32* outFrameContentOffset,
                                            nsIFrame **outChildFrame);
+
 protected:
   virtual PRIntn GetSkipSides() const;
 
@@ -190,15 +190,13 @@ nsFirstLetterFrame::FindTextRuns(nsLineLayout& aLineLayout)
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::GetChildFrameContainingOffset(nsIPresContext* aPresContext,
-                                                  PRInt32 inContentOffset,
+nsFirstLetterFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
                                                   PRBool inHint,
                                                   PRInt32* outFrameContentOffset,
                                                   nsIFrame **outChildFrame)
 {
-  nsIFrame *kid;
-  nsresult result = FirstChild(aPresContext, nsnull, &kid);
-  if (NS_SUCCEEDED(result) && kid)
+  nsIFrame *kid = mFrames.FirstChild();
+  if (kid)
   {
     return kid->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
   }
