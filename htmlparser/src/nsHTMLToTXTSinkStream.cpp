@@ -20,7 +20,7 @@
  * Contributor(s):
  *     Greg Kostello (original structure)
  *     Akkana Peck <akkana@netscape.com>
- *     Daniel Brattell <bratell@lysator.liu.se>
+ *     Daniel Bratell <bratell@lysator.liu.se>
  *     Ben Bucksch <mozilla@bucksch.org>
  *     Pierre Phaneuf <pp@ludusdesign.com>
  */
@@ -701,7 +701,7 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     if(!mInWhitespace) {
       // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
       if(mCacheLine) {
-        AddToLine(" ");
+        AddToLine(nsAutoString(" ").GetUnicode(), 1);
       } else {
         WriteSimple(" ");
       }
@@ -946,21 +946,21 @@ void nsHTMLToTXTSinkStream::WriteSimple(const nsString& aString)
 }
 
 void
-nsHTMLToTXTSinkStream::AddToLine(const nsString &linefragment)
+nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineFragmentLength)
 {
   PRUint32 prefixwidth = (mCiteQuoteLevel>0?mCiteQuoteLevel+1:0)+mIndent;
   
   PRInt32 linelength = mCurrentLine.Length();
   if(0 == linelength) {
-    if(0 == linefragment.Length()) {
+    if(0 == aLineFragmentLength) {
       // Nothing at all. Are you kidding me?
       return;
     }
 
     if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
-      if((linefragment[0] == '>') ||
-         (linefragment[0] == ' ') ||
-         (!linefragment.Compare("From ",PR_FALSE,5))) {
+      if(('>' == aLineFragment[0]) ||
+         (' ' == aLineFragment[0]) ||
+         (!nsCRT::strncmp(aLineFragment, "From ", 5))) {
         // Space stuffing a la RFC 2646 if this will be used in a mail,
         // but how can I know that??? Now space stuffing is done always
         // when formatting text as HTML and that is wrong! XXX: Fix this!
@@ -970,7 +970,7 @@ nsHTMLToTXTSinkStream::AddToLine(const nsString &linefragment)
     mEmptyLines=-1;
   }
     
-  mCurrentLine.Append(linefragment);
+  mCurrentLine.Append(aLineFragment, aLineFragmentLength);
   
   linelength = mCurrentLine.Length();
 
@@ -1151,27 +1151,12 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
     
     // Put the mail quote "> " chars in, if appropriate.
     // Have to put it in before every line.
-    PRInt32 newCR, newLF;
     while(bol<totLen) {
       if(0 == mColPos)
         WriteQuotesAndIndent();
       
-      newCR = aString.FindCharInSet("\r",bol);
-      newLF = aString.FindCharInSet("\n",bol);
-      if(newCR>=0) {
-        if(newLF==newCR+1) {
-          // Found CRLF
-          newline=newLF;
-        } else if(newLF>=0 && newLF<newCR) {
-          // Found single LF
-          newline=newLF;
-        } else {
-          // Single CR
-          newline=newCR;
-        }
-      } else {
-        newline=newLF;
-      }
+      newline = aString.FindChar('\n',PR_FALSE,bol);
+      
       if(newline < 0) {
         // No new lines.
         nsAutoString stringpart;
@@ -1212,8 +1197,10 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
   // and multiple whitespace between words
   PRInt32 nextpos;
   nsAutoString tempstr;
+  const PRUnichar * offsetIntoBuffer = nsnull;
   
   while (bol < totLen) {    // Loop over lines
+    // Find a place where we may have to do whitespace compression
     nextpos = aString.FindCharInSet(" \t\n\r", bol);
 #ifdef DEBUG_wrapping
     nsString remaining;
@@ -1226,11 +1213,13 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
 
     if(nextpos < 0) {
       // The rest of the string
-      aString.Right(tempstr, totLen-bol);
       if(!mCacheLine) {
+        aString.Right(tempstr, totLen-bol);
         WriteSimple(tempstr);
       } else {
-        AddToLine(tempstr);
+        offsetIntoBuffer = aString.GetUnicode();
+        offsetIntoBuffer = &offsetIntoBuffer[bol];
+        AddToLine(offsetIntoBuffer, totLen-bol);
       }
       bol=totLen;
       mInWhitespace=PR_FALSE;
@@ -1245,29 +1234,45 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
       if(nextpos == bol) {
         // Note that we are in whitespace.
         mInWhitespace = PR_TRUE;
-        nsAutoString whitestring=aString[nextpos];
         if(!mCacheLine) {
+          nsAutoString whitestring=aString[nextpos];
           WriteSimple(whitestring);
         } else {
-          AddToLine(whitestring);
+          offsetIntoBuffer = aString.GetUnicode();
+          offsetIntoBuffer = &offsetIntoBuffer[nextpos];
+          AddToLine(offsetIntoBuffer, 1);
         }
         bol++;
         continue;
       }
 
-      aString.Mid(tempstr,bol,nextpos-bol);
-      if(mFlags & nsIDocumentEncoder::OutputPreformatted) {
-        bol = nextpos;
-      } else {
-        tempstr.Append(" ");
-        bol = nextpos + 1;
-        mInWhitespace = PR_TRUE;
-      }
       
       if(!mCacheLine) {
+        aString.Mid(tempstr,bol,nextpos-bol);
+        if(mFlags & nsIDocumentEncoder::OutputPreformatted) {
+          bol = nextpos;
+        } else {
+          tempstr.Append(" ");
+          bol = nextpos + 1;
+          mInWhitespace = PR_TRUE;
+        }
         WriteSimple(tempstr);
       } else {
-        AddToLine(tempstr);
+         mInWhitespace = PR_TRUE;
+         
+         offsetIntoBuffer = aString.GetUnicode();
+         offsetIntoBuffer = &offsetIntoBuffer[bol];
+         if(mFlags & nsIDocumentEncoder::OutputPreformatted) {
+           // Preserve the real whitespace character
+           nextpos++;
+           AddToLine(offsetIntoBuffer, nextpos-bol);
+           bol = nextpos;
+         } else {
+           // Replace the whitespace with a space
+           AddToLine(offsetIntoBuffer, nextpos-bol);
+           AddToLine(nsAutoString(" ").GetUnicode(),1);
+           bol = nextpos + 1; // Let's eat the whitespace
+         }
       }
     }
   } // Continue looping over the string

@@ -143,7 +143,7 @@ protected:
 
   nsresult InitEncoder(const nsString& aCharset);
 
-  void AddToLine(const nsString& linefragment);
+  void AddToLine(const PRUnichar * aStringToAdd, PRInt32 aLength);
   void EndLine(PRBool softlinebreak);
   void EnsureVerticalSpace(PRInt32 noOfRows);
   void FlushLine();
