@@ -208,9 +208,12 @@ function onFinish()
   if (window.opener)
     // Add new profile to the list in the Profile Manager.
     window.opener.CreateProfile(profileName, gProfileRoot);
-  else
+  else {
     // Use the newly created Profile.
     gProfile.currentProfile = profileName;
+    var dialogParams = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+    dialogParams.SetInt(0, 1); //set the newly created profile as the default
+  }
 
   // Exit the wizard.
   return true;
