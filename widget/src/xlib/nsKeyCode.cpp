@@ -182,26 +182,25 @@ nsKeyCode::ConvertKeySymToVirtualKey(KeySym keysym)
 /* static */ PRBool
 nsKeyCode::KeyCodeIsModifier(KeyCode aKeyCode)
 {
-  if (aKeyCode == XK_Shift_L ||
-	  aKeyCode == XK_Shift_R ||
-	  aKeyCode == XK_Control_L ||
-	  aKeyCode == XK_Control_R ||
-	  aKeyCode == XK_Caps_Lock ||
-	  aKeyCode == XK_Shift_Lock ||
-	  aKeyCode == XK_Meta_L ||
-	  aKeyCode == XK_Meta_R ||
-	  aKeyCode == XK_Alt_L ||
-	  aKeyCode == XK_Alt_R)
+  if (aKeyCode == XK_Shift_L    ||
+      aKeyCode == XK_Shift_R    ||
+      aKeyCode == XK_Control_L  ||
+      aKeyCode == XK_Control_R  ||
+      aKeyCode == XK_Caps_Lock  ||
+      aKeyCode == XK_Shift_Lock ||
+      aKeyCode == XK_Meta_L     ||
+      aKeyCode == XK_Meta_R     ||
+      aKeyCode == XK_Alt_L      ||
+      aKeyCode == XK_Alt_R)
   {
-	return PR_TRUE;
+    return PR_TRUE;
   }
 
   return PR_FALSE;
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ KeySym
-nsKeyCode::ConvertKeyCodeToKeySym(Display * aDisplay,
-								  KeyCode   aKeyCode)
+nsKeyCode::ConvertKeyCodeToKeySym(Display * aDisplay, KeyCode aKeyCode)
 {
   KeySym keysym = 0;
 

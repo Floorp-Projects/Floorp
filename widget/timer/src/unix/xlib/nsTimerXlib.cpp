@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Tony Tsui <tony@igleaus.com.au>
+ *   Tony Tsui <tony@igleaus.com.au>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -52,7 +53,7 @@
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
 static int  NS_TimeToNextTimeout(struct timeval *aTimer);
-static void NS_ProcessTimeouts(Display *aDisplay);
+static void NS_ProcessTimeouts(XtAppContext app_context);
 
 nsVoidArray *nsTimerXlib::gHighestList = (nsVoidArray *)nsnull;
 nsVoidArray *nsTimerXlib::gHighList = (nsVoidArray *)nsnull;
@@ -69,10 +70,10 @@ nsTimerXlib::nsTimerXlib()
 #endif
 
   NS_INIT_REFCNT();
-  mFunc = NULL;
-  mCallback = NULL;
+  mFunc = nsnull;
+  mCallback = nsnull;
   mDelay = 0;
-  mClosure = NULL;
+  mClosure = nsnull;
   mPriority = 0;
   mType = NS_TYPE_ONE_SHOT;
 }
@@ -146,7 +147,7 @@ nsTimerXlib::Init(PRUint32 aDelay, PRUint32 aPriority)
   mPriority = aPriority;
   // get the cuurent time
   
-  gettimeofday(&Now, NULL);
+  gettimeofday(&Now, nsnull);
   mFireTime.tv_sec = Now.tv_sec + (aDelay / 1000);
   mFireTime.tv_usec = Now.tv_usec + ((aDelay%1000) * 1000);
 
@@ -205,17 +206,17 @@ nsTimerXlib::Fire()
 #endif
   
   timeval aNow;
-  gettimeofday(&aNow, NULL);
+  gettimeofday(&aNow, nsnull);
 
 #ifdef TIMER_DEBUG  
   fprintf(stderr, "nsTimerXlib::Fire (%p) called at %ld / %ld\n",
           this, aNow.tv_sec, aNow.tv_usec);
 #endif
   
-  if (mFunc != NULL) {
+  if (mFunc != nsnull) {
     (*mFunc)(this, mClosure);
   }
-  else if (mCallback != NULL) {
+  else if (mCallback != nsnull) {
     mCallback->Notify(this);
   }
 
@@ -225,7 +226,6 @@ nsTimerXlib::Fire()
 void
 nsTimerXlib::Cancel()
 {
-
   switch(mPriority)
   {
     case NS_PRIORITY_HIGHEST:
@@ -253,54 +253,56 @@ nsTimerXlib::ProcessTimeouts(nsVoidArray *array)
 
   if (count == 0)
     return;
-  
-  nsTimerXlib *timer;
-  
+   
   struct timeval aNow;
   struct timeval ntv;
   int res;
 
-  gettimeofday(&aNow, NULL);
+  gettimeofday(&aNow, nsnull);
 
 #ifdef TIMER_DEBUG  
   fprintf(stderr, "nsTimerXlib::ProcessTimeouts called at %ld / %ld\n",
          aNow.tv_sec, aNow.tv_usec);
 #endif
   
+  nsCOMPtr<nsTimerXlib> timer;
+  
   for (int i = count; i >=0; i--)
   {
-    timer = (nsTimerXlib*)array->ElementAt(i);
+    /*  Make sure that the timer cannot be deleted during the
+     *  Fire(...) call which may release *all* other references
+     *  to p... 
+     */
+    timer = NS_STATIC_CAST(nsTimerXlib *, array->ElementAt(i));
 
     if (timer)
     {
-     
       if ((timer->mFireTime.tv_sec < aNow.tv_sec) ||
           ((timer->mFireTime.tv_sec == aNow.tv_sec) &&
            (timer->mFireTime.tv_usec <= aNow.tv_usec))) 
       {
-        //  Make sure that the timer cannot be deleted during the
-        //  Fire(...) call which may release *all* other references
-        //  to p...
 #ifdef TIMER_DEBUG
         fprintf(stderr, "Firing timeout for (%p)\n", timer);
-#endif
-//        NS_ADDREF(timer); //FIXME: Does this still apply??? TonyT
-      
+#endif     
         res = timer->Fire();      
       
         if (res == 0) 
         {
           array->RemoveElement(timer);
-//          NS_RELEASE(timer); //FIXME: Ditto to above.
         }
         else 
         {
-          gettimeofday(&ntv, NULL);
+          gettimeofday(&ntv, nsnull);
           timer->mFireTime.tv_sec = ntv.tv_sec + (timer->mDelay / 1000);
           timer->mFireTime.tv_usec = ntv.tv_usec + ((timer->mDelay%1000) * 1000);
         }     
       }
     }
+
+    /* force destruction of timers (via nsCOMPtr magic) which do not
+     * have other references anymore !
+     */
+    timer = nsnull;   
   }
 }
 
@@ -332,9 +334,9 @@ nsTimerXlib::EnsureWindowService()
                                              kWindowServiceIID,
                                              (nsISupports **)&xlibWindowService);
 
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service.");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't obtain window service.");
 
-  if (NS_OK == rv && nsnull != xlibWindowService)
+  if (NS_SUCCEEDED(rv) && (nsnull != xlibWindowService))
   {
     xlibWindowService->SetTimeToNextTimeoutFunc(NS_TimeToNextTimeout);
     xlibWindowService->SetProcessTimeoutsProc(NS_ProcessTimeouts);
@@ -348,6 +350,7 @@ nsTimerXlib::EnsureWindowService()
 static
 int NS_TimeToNextTimeout(struct timeval *aTimer) 
 {
+#ifdef DEBUG
   static int once = 1;
 
   if (once)
@@ -356,6 +359,7 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
 
     printf("NS_TimeToNextTimeout() lives!\n");
   }
+#endif /* DEBUG */  
   
   nsTimerXlib *timer;
 
@@ -376,7 +380,7 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
           if (nsTimerXlib::gLowestList->Count() > 0)
             timer = (nsTimerXlib*)nsTimerXlib::gLowestList->ElementAt(0);
           else
-            timer = NULL;
+            timer = nsnull;
     
   if (timer) {
     if ((timer->mFireTime.tv_sec < aTimer->tv_sec) ||
@@ -411,8 +415,9 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
 
 static
 void
-NS_ProcessTimeouts(Display *aDisplay) 
+NS_ProcessTimeouts(XtAppContext app_context) 
 {
+#ifdef DEBUG
   static int once = 1;
 
   if (once)
@@ -421,14 +426,16 @@ NS_ProcessTimeouts(Display *aDisplay)
 
     printf("NS_ProcessTimeouts() lives!\n");
   }
+#endif /* DEBUG */
 
   nsTimerXlib::gProcessingTimer = PR_TRUE;
 
   nsTimerXlib::ProcessTimeouts(nsTimerXlib::gHighestList);
   nsTimerXlib::ProcessTimeouts(nsTimerXlib::gHighList);
   nsTimerXlib::ProcessTimeouts(nsTimerXlib::gNormalList);
-
-  if (XPending(aDisplay) == 0)
+  
+  /* no X events anymore ? then crawl the low priority timers ... */ 
+  if ((XtAppPending(app_context) & XtIMXEvent) == 0)
   {
 #ifdef TIMER_DEBUG
     fprintf(stderr, "\n Handling Low Priority Stuff!!! Display is 0x%x\n", aDisplay);

@@ -83,18 +83,20 @@ static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
 extern "C" int NS_TimeToNextTimeout(struct timeval *);
 extern "C" void NS_ProcessTimeouts(void);
 
-PRBool nsAppShell::DieAppShellDie = PR_FALSE;
-PRBool nsAppShell::mClicked = PR_FALSE;
+Display *nsAppShell::mDisplay = nsnull;
+XlibRgbHandle *nsAppShell::mXlib_rgb_handle = nsnull;
+XtAppContext nsAppShell::mAppContext;
 PRTime nsAppShell::mClickTime = 0;
 PRInt16 nsAppShell::mClicks = 1;
 PRUint16 nsAppShell::mClickedButton = 0;
-Display *nsAppShell::mDisplay = nsnull;
-PRBool nsAppShell::mDragging = PR_FALSE;
-PRBool nsAppShell::mAltDown = PR_FALSE;
-PRBool nsAppShell::mShiftDown = PR_FALSE;
-PRBool nsAppShell::mCtrlDown = PR_FALSE;
-PRBool nsAppShell::mMetaDown = PR_FALSE;
-XlibRgbHandle *nsAppShell::mXlib_rgb_handle = nsnull;
+PRPackedBool nsAppShell::mClicked = PR_FALSE;
+PRPackedBool nsAppShell::mDragging  = PR_FALSE;
+PRPackedBool nsAppShell::mAltDown   = PR_FALSE;
+PRPackedBool nsAppShell::mShiftDown = PR_FALSE;
+PRPackedBool nsAppShell::mCtrlDown  = PR_FALSE;
+PRPackedBool nsAppShell::mMetaDown  = PR_FALSE;
+PRPackedBool nsAppShell::DieAppShellDie = PR_FALSE;
+
 
 
 // For debugging.
@@ -151,7 +153,7 @@ static nsXlibTimeToNextTimeoutFunc GetTimeToNextTimeoutFunc(void)
     
     NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service.");
     
-    if (NS_OK == rv && nsnull != xlibWindowService)
+    if (NS_SUCCEEDED(rv) && nsnull != xlibWindowService)
     {
       xlibWindowService->GetTimeToNextTimeoutFunc(&sFunc);
 
@@ -189,7 +191,7 @@ static nsXlibProcessTimeoutsProc GetProcessTimeoutsProc(void)
     
     NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service.");
     
-    if (NS_OK == rv && nsnull != xlibWindowService)
+    if (NS_SUCCEEDED(rv) && nsnull != xlibWindowService)
     {
       xlibWindowService->GetProcessTimeoutsProc(&sProc);
     
@@ -225,13 +227,13 @@ static int CallTimeToNextTimeoutFunc(struct timeval * aTimeval)
   return 0;
 }
 
-static void CallProcessTimeoutsProc(Display *aDisplay)
+static void CallProcessTimeoutsProc(XtAppContext app_context)
 {
   nsXlibProcessTimeoutsProc proc = GetProcessTimeoutsProc();
 
   if (proc)
   {
-    (*proc)(aDisplay);
+    (*proc)(app_context);
   }
 }
 
@@ -255,13 +257,13 @@ nsAppShell::nsAppShell()
   NS_INIT_ISUPPORTS();
   mDispatchListener = 0;
 
-  mScreen = nsnull;
   mEventQueue = nsnull;
   xlib_fd = -1;
 }
 
 NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 
+PR_BEGIN_EXTERN_C
 static 
 int xerror_handler( Display *display, XErrorEvent *ev )
 {
@@ -273,12 +275,12 @@ int xerror_handler( Display *display, XErrorEvent *ev )
   
   return 0;
 }
+PR_END_EXTERN_C
 
 NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 {
   char *mArgv[1]; 
   int mArgc = 0;
-  XtAppContext app_context;
 
   int argc = bac ? *bac : 0;
   char **argv = bav;
@@ -331,12 +333,12 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
     NS_WARNING("can not set locale modifiers");
 
   // Open the display
-  if (mDisplay == nsnull) {
+  if (mAppContext == nsnull) {
     XtToolkitInitialize();
-    app_context = XtCreateApplicationContext();
+    mAppContext = XtCreateApplicationContext();
 
-    if (!(mDisplay = XtOpenDisplay (app_context, displayName, 
-                                    "Mozilla5", "Mozilla5", NULL, 0, 
+    if (!(mDisplay = XtOpenDisplay (mAppContext, displayName, 
+                                    "Mozilla5", "Mozilla5", nsnull, 0, 
                                     &mArgc, mArgv))) 
     {
       fprintf (stderr, "%s:  unable to open display \"%s\"\n", mArgv[0], XDisplayName(displayName));
@@ -355,15 +357,13 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
       XSynchronize(mDisplay, True);
     }
     
-    mScreen = XDefaultScreenOfDisplay(mDisplay);
-    mXlib_rgb_handle = xxlib_rgb_create_handle(XXLIBRGB_DEFAULT_HANDLE, mDisplay, mScreen);
+    mXlib_rgb_handle = xxlib_rgb_create_handle(XXLIBRGB_DEFAULT_HANDLE, mDisplay, XDefaultScreenOfDisplay(mDisplay));
     if (!mXlib_rgb_handle)
       abort();
   }
 
-  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsAppShell::Create(dpy=%p  screen=%p)\n",
-         mDisplay,
-         mScreen));
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsAppShell::Create(dpy=%p)\n",
+         mDisplay));
 
   return NS_OK;
 }
@@ -384,7 +384,7 @@ NS_METHOD nsAppShell::Spinup()
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
                                     kIEventQueueServiceIID,
                                     (nsISupports **) &mEventQueueService);
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     NS_WARNING("Could not obtain event queue service");
     return rv;
   }
@@ -394,12 +394,13 @@ NS_METHOD nsAppShell::Spinup()
 
   // Create the event queue for the thread
   rv = mEventQueueService->CreateThreadEventQueue();
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     NS_WARNING("Could not create the thread event queue");
     return rv;
   }
   //Get the event queue for the thread
-  rv = mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);  if (NS_OK != rv) {
+  rv = mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);  
+  if (NS_FAILED(rv)) {
       NS_WARNING("Could not obtain the thread event queue");
       return rv;
   }   
@@ -410,13 +411,13 @@ NS_METHOD nsAppShell::Spinup()
 static
 void CallProcessTimeoutsXtProc( XtPointer dummy1, XtIntervalId *dummy2 )
 {
-  CallProcessTimeoutsProc(nsAppShell::mDisplay);
+  XtAppContext *app_context = (XtAppContext *) dummy1;
+  CallProcessTimeoutsProc(*app_context);
 
   // Flush the nsWindow's drawing queue
   nsWindow::UpdateIdle(nsnull); 
 
   // reset timer
-  XtAppContext *app_context = (XtAppContext *) dummy1;
 #define CALLPROCESSTIMEOUTSVAL (10)
   XtAppAddTimeOut(*app_context, 
                   CALLPROCESSTIMEOUTSVAL,
@@ -436,10 +437,7 @@ nsresult nsAppShell::Run()
 {
   nsresult rv = NS_OK;
   XtInputMask mask;
-  XtAppContext app_context = XtDisplayToApplicationContext(mDisplay);
   
-  NS_ASSERTION(app_context!=nsnull, "XtDisplayToApplicationContext returned nsnull. BAD.");
-
   if (mEventQueue == nsnull)
     Spinup();
 
@@ -449,23 +447,23 @@ nsresult nsAppShell::Run()
   }
 
   // set up our fds callbacks
-  XtAppAddInput(app_context,
+  XtAppAddInput(mAppContext,
                 mEventQueue->GetEventQueueSelectFD(),
                 (XtPointer)(long)(XtInputReadMask),
                 HandleQueueXtProc,
                 (XtPointer)mEventQueue);
 
   // set initial timer
-  XtAppAddTimeOut(app_context, 
+  XtAppAddTimeOut(mAppContext, 
                   CALLPROCESSTIMEOUTSVAL,
                   CallProcessTimeoutsXtProc, 
-                  &app_context);
+                  &mAppContext);
                 
   // process events.
-  while (DieAppShellDie == PR_FALSE) 
+  while (!DieAppShellDie) 
   {   
     XEvent event;
-    XtAppNextEvent(app_context, &event);
+    XtAppNextEvent(mAppContext, &event);
    
     if (XtDispatchEvent(&event) == False)
       DispatchXEvent(&event);  
@@ -516,7 +514,7 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
   DelayTime.tv_sec = 0;
   DelayTime.tv_usec = 100;
 
-  select_retval = select(max_fd, &select_set, NULL, NULL, &DelayTime);
+  select_retval = select(max_fd, &select_set, nsnull, nsnull, &DelayTime);
 
   if (select_retval == -1)
     return NS_ERROR_FAILURE;
@@ -549,7 +547,7 @@ nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
     free(event);
   }
 
-  CallProcessTimeoutsProc(mDisplay);
+  CallProcessTimeoutsProc(mAppContext);
 
   nsWindow::UpdateIdle(nsnull);
   return rv;
@@ -589,7 +587,7 @@ nsAppShell::DispatchXEvent(XEvent *event)
     HandleExposeEvent(event, widget);
     break;
 
-  	case ConfigureNotify:
+  case ConfigureNotify:
     // we need to make sure that this is the LAST of the
     // config events.
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("DispatchEvent: ConfigureNotify event for window 0x%lx %d %d %d %d\n",
@@ -1216,7 +1214,9 @@ void nsAppShell::HandleClientMessageEvent(XEvent *event, nsWidget *aWidget)
 #endif
   if (nsWidget::WMProtocolsInitialized) {
     if ((Atom)event->xclient.data.l[0] == nsWidget::WMDeleteWindow) {
+#ifdef DEBUG
       printf("got a delete window event\n");
+#endif /* DEBUG */      
       aWidget->OnDeleteWindow();
     }
   }

@@ -18,8 +18,8 @@
  * are Copyright (C) 1998 Christopher Blizzard. All Rights Reserved.
  *
  * Contributor(s):
- * Christopher Blizzard <blizzard@mozilla.org>
- * Peter Hartshorn <peter@igelaus.com.au>
+ *   Christopher Blizzard <blizzard@mozilla.org>
+ *   Peter Hartshorn <peter@igelaus.com.au>
 */
 
 #include "nsAppShell.h"
@@ -283,8 +283,8 @@ void nsDragService::CreateDragCursor(PRUint32 aActionType)
 
     wmHints.flags = StateHint;
     wmHints.initial_state = NormalState;
-    XSetWMProperties(sDisplay, sWindow, NULL, NULL, NULL, 0, NULL,
-                     &wmHints, NULL);
+    XSetWMProperties(sDisplay, sWindow, nsnull, nsnull, nsnull, 0, nsnull,
+                     &wmHints, nsnull);
     XSetTransientForHint(sDisplay, sWindow, sWindow);
     XShapeCombineMask(sDisplay, sWindow, ShapeClip, 0, 0, 
                       aShapeMask, ShapeSet);

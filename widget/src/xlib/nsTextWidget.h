@@ -55,7 +55,7 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void);          
   
   NS_IMETHOD      Paint(nsIRenderingContext& aRenderingContext,
-			const nsRect& aDirtyRect);
+                        const nsRect& aDirtyRect);
   
 };
 

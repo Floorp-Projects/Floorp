@@ -42,7 +42,7 @@
 #include "nsIButton.h"
 
 class nsButton : public nsWidget,
-		 public nsIButton
+                 public nsIButton
 {
  public:
   nsButton();
@@ -59,7 +59,7 @@ class nsButton : public nsWidget,
   
   // nsBaseWidget
   NS_IMETHOD Paint(nsIRenderingContext& aRenderingContext,
-		   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect);
   
  protected:
   nsString mLabel;

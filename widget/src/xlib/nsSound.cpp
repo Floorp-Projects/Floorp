@@ -27,6 +27,7 @@
 #include "prlink.h"
 
 #include "nsSound.h"
+#include "nsAppShell.h"
 
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -73,8 +74,10 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 NS_METHOD nsSound::Beep()
 {
 #ifdef DEBUG_faulkner
-	fprintf(stderr, "\n////////// nsSound::Beep() in xlib called //////////\n");
+  fprintf(stderr, "\n////////// nsSound::Beep() in xlib called //////////\n");
 #endif /* DEBUG_faulkner */
+
+  XBell(nsAppShell::mDisplay, 80);
   return NS_OK;
 }
 
@@ -83,7 +86,7 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
 #ifdef DEBUG_faulkner
   fprintf(stderr, "\n////////// nsSound::Play() in xlib called //////////\n");
 #endif /* DEBUG_faulkner */
-  return NS_OK;	
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)

@@ -23,7 +23,7 @@
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Quy Tonthat <quy@igelaus.com.au>
  *   B.J. Rossiter <bj@igelaus.com.au>
- *   Roland.Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -145,7 +145,7 @@ public:
   virtual PRBool          OnDeleteWindow(void);
 
   // KenF Added FIXME:
-  virtual void						OnDestroy(void);
+  virtual void            OnDestroy(void);
   virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
   virtual PRBool          DispatchKeyEvent(nsKeyEvent &aKeyEvent);
   virtual PRBool          DispatchDestroyEvent(void);
@@ -173,9 +173,9 @@ public:
   // thing. KenF
   void *CheckParent(long ThisWindow);
 
-	// Deal with rollup for popups
-	PRBool IsMouseInWindow(Window window, PRInt32 inMouseX, PRInt32 inMouseY);
-	PRBool HandlePopup( PRInt32 inMouseX, PRInt32 inMouseY);
+  // Deal with rollup for popups
+  PRBool IsMouseInWindow(Window window, PRInt32 inMouseX, PRInt32 inMouseY);
+  PRBool HandlePopup( PRInt32 inMouseX, PRInt32 inMouseY);
 
   void WidgetShow       (nsWidget *aWidget);
 protected:
@@ -232,14 +232,13 @@ protected:
   unsigned long  mBackgroundPixel;
   PRUint32       mBorderRGB;
   unsigned long  mBorderPixel;
-  //  GC             mGC;             // until we get gc pooling working...
   nsString       mName;           // name of the type of widget
-  PRBool         mIsToplevel;
   nsRect         mRequestedSize;
-  PRBool         mMapped;
-  PRBool         mLastGrabFailed;
+  PRPackedBool   mIsToplevel;
+  PRPackedBool   mMapped;
+  PRPackedBool   mLastGrabFailed;
 
-  static         Window                 mFocusWindow;
+  static Window  mFocusWindow;
 
   // Changed to protected so nsWindow has access to it. KenF
 protected:
@@ -254,18 +253,13 @@ protected:
   // Variables for infomation about the current popup window and its listener
   static nsCOMPtr<nsIRollupListener> gRollupListener;
   static nsWeakPtr                   gRollupWidget;
-	static PRBool	gRollupConsumeRollupEvent;
-	
+  static PRBool                      gRollupConsumeRollupEvent;
 };
 
 extern PRLogModuleInfo *XlibWidgetsLM;
 extern PRLogModuleInfo *XlibScrollingLM;
 
-#endif
-
-
-
-
+#endif /* !nsWidget_h__ */
 
 
 

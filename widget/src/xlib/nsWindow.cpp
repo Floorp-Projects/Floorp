@@ -43,6 +43,8 @@
 #include "nsWindow.h"
 #include "xlibrgb.h"
 
+#include "nsIRenderingContext.h"
+
 /* for window title unicode->locale conversion */
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
@@ -52,7 +54,7 @@
 
 // Variables for grabbing
 PRBool   nsWindow::sIsGrabbing = PR_FALSE;
-nsWindow *nsWindow::sGrabWindow = NULL;
+nsWindow *nsWindow::sGrabWindow = nsnull;
 
 // Routines implementing an update queue.
 // We keep a single queue for all widgets because it is 
@@ -235,7 +237,7 @@ nsWindow::~nsWindow()
   if (sGrabWindow == this)
   {
     sIsGrabbing = PR_FALSE;
-    sGrabWindow = NULL;
+    sGrabWindow = nsnull;
   }
  
   // Should get called from ~nsWidget() anyway. KenF
@@ -348,13 +350,13 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     sIsGrabbing = PR_TRUE;
     sGrabWindow = this;
 
-      gRollupConsumeRollupEvent = PR_TRUE;
+    gRollupConsumeRollupEvent = PR_TRUE;
     gRollupListener = aListener;
     gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*, this)));
   }else{
     // Release Grab
     if (sGrabWindow == this)
-      sGrabWindow = NULL;
+      sGrabWindow = nsnull;
 
     sIsGrabbing = PR_FALSE;
 
@@ -520,9 +522,9 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aX,
 /* virtual */ long
 nsWindow::GetEventMask()
 {
-	long event_mask;
+  long event_mask;
 
-	event_mask = 
+  event_mask = 
     ButtonMotionMask |
     ButtonPressMask | 
     ButtonReleaseMask | 
@@ -568,84 +570,97 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::Update()
+void 
+nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+                   nsIRegion *aClipRegion)
+{
+  if (mEventCallback) {
+    nsPaintEvent event;
+    nsRect rect(aX, aY, aWidth, aHeight);
+    event.message = NS_PAINT;
+    event.widget = this;
+    event.eventStructType = NS_PAINT_EVENT;
+    event.point.x = aX;
+    event.point.y = aY; 
+    event.time = PR_Now(); /* No time in EXPOSE events */
+    event.rect = &rect;
+    event.region = nsnull;
+    
+    event.renderingContext = GetRenderingContext();
+    if (event.renderingContext) {
+      DispatchWindowEvent(event);
+      NS_RELEASE(event.renderingContext);
+    }
+  }
+}
+
+NS_IMETHODIMP nsWindow::Update(void)
 {
   if (mIsUpdating)
     UnqueueDraw();
-
-  nsPaintEvent pevent;
-  pevent.message = NS_PAINT;
-  pevent.eventStructType = NS_PAINT_EVENT;
-  pevent.rect = new nsRect (0,0,0,0);
-  pevent.time = 0;
-  pevent.region = mUpdateArea;
 
   if (!mUpdateArea->IsEmpty()) {
     PRUint32 numRects;
     mUpdateArea->GetNumRects(&numRects);
 
-    if (numRects != 1 && numRects < 10) {
+    /* We paint the rects by themselves if we have 2 to 15 rects,
+     * otherwise we will just paint the bounding box. */
+    if (numRects != 1 && numRects < 16) {
       nsRegionRectSet *regionRectSet = nsnull;
 
-      if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet))) {
-        delete pevent.rect;
+      if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
         return NS_ERROR_FAILURE;
-      }
 
       PRUint32 len;
       PRUint32 i;
-
+      
       len = regionRectSet->mRectsLen;
 
-      for (i=0; i<len; ++i) {
+      for (i=0;i<len;++i) {
         nsRegionRect *r = &(regionRectSet->mRects[i]);
-
-        pevent.widget = this;
-        pevent.rect->SetRect(r->x, r->y, r->width, r->height);
-
-        pevent.time = PR_Now();    
-        AddRef();
-        OnPaint(pevent);
-        Release();
+        DoPaint (r->x, r->y, r->width, r->height, mUpdateArea);
       }
+      
       mUpdateArea->FreeRects(regionRectSet);
-      mUpdateArea->SetTo(0,0,0,0);
-
-      delete pevent.rect;
+      
+      mUpdateArea->SetTo(0, 0, 0, 0);
       return NS_OK;
     } else {
-      PRInt32 x,y,w,h;
-      mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
-      pevent.widget = this;
-      pevent.rect->SetRect(x,y,w,h);
-      AddRef();
-      OnPaint(pevent);
-      Release();
-      mUpdateArea->SetTo(0,0,0,0);
+      PRInt32 x, y, w, h;
+      mUpdateArea->GetBoundingBox(&x, &y, &w, &h);
+      DoPaint (x, y, w, h, mUpdateArea);
+      mUpdateArea->SetTo(0, 0, 0, 0);
     }
-  }
-
-  delete pevent.rect;
+  } 
 
   // The view manager also expects us to force our
   // children to update too!
 
-  nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
-  if (children)
-  {
-    children->First();
-    do
-    {
-      nsISupports* child;
-      if (NS_SUCCEEDED(children->CurrentItem(&child)))
-      {
-        nsWindow *childWindow = NS_STATIC_CAST(nsWindow*, NS_STATIC_CAST(nsIWidget*, child));
-        NS_RELEASE(child);
+  nsCOMPtr<nsIEnumerator> children;
 
-        childWindow->Update();
+  children = dont_AddRef(GetChildren());
+
+  if (children) {
+    nsCOMPtr<nsISupports> isupp;
+
+    nsCOMPtr<nsIWidget> child;
+    while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))) && isupp) {
+
+      child = do_QueryInterface(isupp);
+
+      if (child) {
+        child->Update();
       }
-    } while (NS_SUCCEEDED(children->Next()));
+
+      if (NS_FAILED(children->Next())) {
+        break;
+      }
+    }
   }
+
+  // While I'd think you should NS_RELEASE(aPaintEvent.widget) here,
+  // if you do, it is a NULL pointer.  Not sure where it is getting
+  // released.
   return NS_OK;
 }
 
@@ -754,7 +769,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
         }
       }
     }
-    if (needToUpdate == PR_TRUE)
+    if (needToUpdate)
       Update();
   }
   return NS_OK;
@@ -817,7 +832,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 
     if (status == Success) {
       XSetWMProperties(mDisplay, mBaseWindow,
-                       &prop, &prop, NULL, 0, NULL, NULL, NULL);
+                       &prop, &prop, nsnull, 0, nsnull, nsnull, nsnull);
       if (prop.value)
         XFree(prop.value);
 
@@ -840,3 +855,5 @@ ChildWindow::ChildWindow(): nsWindow()
 {
   mName.AssignWithConversion("nsChildWindow");
 }
+
+

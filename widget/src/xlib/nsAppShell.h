@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Roland.Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -44,6 +44,7 @@
 #include "nsWidget.h"
 #include "prtime.h"
 #include "xlibrgb.h"
+#include <X11/Intrinsic.h>
 
 class nsAppShell : public nsIAppShell
 {
@@ -71,8 +72,9 @@ class nsAppShell : public nsIAppShell
   /* |xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE)| would be the official 
    * way - but |nsAppShell::GetXlibRgbHandle()| one is little bit faster... :-)
    */
+  static XtAppContext   mAppContext; 
   static XlibRgbHandle *GetXlibRgbHandle() { return mXlib_rgb_handle; }
-  static Display * mDisplay;
+  static Display       *mDisplay;
  private:
   static XlibRgbHandle *mXlib_rgb_handle;
   int                   xlib_fd;
@@ -97,22 +99,20 @@ class nsAppShell : public nsIAppShell
   static void HandleDragLeaveEvent(XEvent *event, nsWidget *aWidget);
   static void HandleDragDropEvent(XEvent *event, nsWidget *aWidget);
   static void ForwardEvent(XEvent *event, nsWidget *aWidget);
-  static PRBool DieAppShellDie;
-  static PRBool mClicked;
-  static PRTime mClickTime;
-  static PRInt16 mClicks;
-  static PRUint16 mClickedButton;
-  static PRBool mDragging;
-  static PRBool mAltDown;
-  static PRBool mShiftDown;
-  static PRBool mCtrlDown;
-  static PRBool mMetaDown;
-
+  static PRInt16      mClicks;
+  static PRUint16     mClickedButton;
+  static PRTime       mClickTime;
+  static PRPackedBool mClicked;
+  static PRPackedBool mDragging;
+  static PRPackedBool mAltDown;
+  static PRPackedBool mShiftDown;
+  static PRPackedBool mCtrlDown;
+  static PRPackedBool mMetaDown;
+  static PRPackedBool DieAppShellDie;
 
 protected:
-  nsIEventQueueService * mEventQueueService;
-  nsIEventQueue *mEventQueue;
-  Screen *mScreen;
+  nsIEventQueueService *mEventQueueService;
+  nsIEventQueue        *mEventQueue;
 };
 
-#endif // nsAppShell_h__
+#endif /* !nsAppShell_h__ */

@@ -66,7 +66,7 @@
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
-PRLogModuleInfo *XlibWidgetsLM = PR_NewLogModule("XlibWidgets");
+PRLogModuleInfo *XlibWidgetsLM   = PR_NewLogModule("XlibWidgets");
 PRLogModuleInfo *XlibScrollingLM = PR_NewLogModule("XlibScrolling");
 
 // set up our static members here.
@@ -90,7 +90,7 @@ nsXlibEventDispatcher nsWidget::gsEventDispatcher = nsnull;
 // this is for implemention the WM_PROTOCOL code
 PRBool nsWidget::WMProtocolsInitialized = PR_FALSE;
 Atom   nsWidget::WMDeleteWindow = 0;
-Atom   nsWidget::WMTakeFocus = 0;
+Atom   nsWidget::WMTakeFocus    = 0;
 Atom   nsWidget::WMSaveYourself = 0;
 
 // this is the window that has the focus
@@ -154,7 +154,7 @@ nsWidget::nsWidget() // : nsBaseWidget()
   // added KenF 
   mIsDestroying = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
-  mListenForResizes = PR_FALSE;	// If we're native we need to listen.
+  mListenForResizes = PR_FALSE; // If we're native we need to listen.
   mMapped = PR_FALSE;
 
 
@@ -163,8 +163,6 @@ nsWidget::nsWidget() // : nsBaseWidget()
     mUpdateArea->Init();
     mUpdateArea->SetTo(0, 0, 0, 0);
   }
-
-
 }
 
 // FIXME:
@@ -175,7 +173,6 @@ nsWidget::~nsWidget()
 
   if (mBaseWindow)
     Destroy();
-
 }
 
 // Borrowed heavily from GTK. This should go through heirarchy of XWindow
@@ -235,7 +232,7 @@ NS_IMETHODIMP nsWidget::Create(nsIWidget *aParent,
 {
   // Do adding in SWC() KenF
   //mParentWidget = aParent;
-  //NS_IF_ADDREF(mParentWidget);	// KenF FIXME
+  //NS_IF_ADDREF(mParentWidget); // KenF FIXME
 
   return StandardWidgetCreate(aParent, aRect, aHandleEventFunction,
                               aContext, aAppShell, aToolkit, aInitData,
@@ -387,7 +384,7 @@ NS_IMETHODIMP nsWidget::Destroy()
   mIsDestroying = PR_TRUE;
 
   nsBaseWidget::Destroy();
-  NS_IF_RELEASE(mParentWidget);	//????
+  NS_IF_RELEASE(mParentWidget); //????
   
 
   if (mBaseWindow) {
@@ -612,7 +609,7 @@ void * nsWidget::GetNativeData(PRUint32 aDataType)
   default:
     fprintf(stderr, "nsWidget::GetNativeData(%d) called with crap value.\n",
             aDataType);
-    return NULL;
+    return nsnull;
     break;
   }
 }
@@ -911,33 +908,33 @@ nsWidget::OnPaint(nsPaintEvent &event)
   }
   
 #ifdef TRACE_PAINT
-	static PRInt32 sPrintCount = 0;
+  static PRInt32 sPrintCount = 0;
 
-    if (event.rect) 
-	{
-      printf("%4d nsWidget::OnPaint   (this=%p,name=%s,xid=%p,rect=%d,%d,%d,%d)\n", 
-			 sPrintCount++,
-			 (void *) this,
-			 (const char *) nsCAutoString(mName),
-			 (void *) mBaseWindow,
-			 event.rect->x, 
-			 event.rect->y,
-			 event.rect->width, 
-			 event.rect->height);
-    }
-    else 
-	{
-      printf("%4d nsWidget::OnPaint   (this=%p,name=%s,xid=%p,rect=none)\n", 
-			 sPrintCount++,
-			 (void *) this,
-			 (const char *) nsCAutoString(mName),
-			 (void *) mBaseWindow);
-    }
+  if (event.rect) 
+  {
+    printf("%4d nsWidget::OnPaint   (this=%p,name=%s,xid=%p,rect=%d,%d,%d,%d)\n", 
+           sPrintCount++,
+           (void *) this,
+           (const char *) nsCAutoString(mName),
+           (void *) mBaseWindow,
+           event.rect->x, 
+           event.rect->y,
+           event.rect->width, 
+           event.rect->height);
+  }
+  else 
+  {
+    printf("%4d nsWidget::OnPaint   (this=%p,name=%s,xid=%p,rect=none)\n", 
+           sPrintCount++,
+           (void *) this,
+           (const char *) nsCAutoString(mName),
+           (void *) mBaseWindow);
+  }
 #endif
 
 #ifdef TRACE_PAINT_FLASH
     XRectangle ar;
-    XRectangle * area = NULL;
+    XRectangle * area = nsnull;
 
     if (event.rect)
     {
@@ -957,48 +954,53 @@ nsWidget::OnPaint(nsPaintEvent &event)
   return result;
 }
 
-PRBool nsWidget::IsMouseInWindow(Window window, PRInt32 inMouseX, PRInt32 inMouseY){
-
-	XWindowAttributes inWindowAttributes;
+PRBool nsWidget::IsMouseInWindow(Window window, PRInt32 inMouseX, PRInt32 inMouseY)
+{
+  XWindowAttributes inWindowAttributes;
 
   /* sometimes we get NULL window */
   if (!window)
     return PR_FALSE;
 
-	// Get the origin (top left corner) coordinate and size
-	if (XGetWindowAttributes(mDisplay, window, &inWindowAttributes) == 0) {
-		fprintf(stderr, "Failed calling XGetWindowAttributes in nsWidget::IsMouseInWindow");
-		return PR_FALSE;
-	}
-	
-	// Note: These coordinates are now relative to the root window as popups are now created
-	// with the root window as parent
-	
-	// Must get mouse click coordinates relative to root window
-	int root_inMouse_x;
-	int root_inMouse_y;
-	Window returnedChild;
-	Window rootWindow;
-	rootWindow = XRootWindow(mDisplay, DefaultScreen(mDisplay));
-	if (!XTranslateCoordinates(mDisplay, mBaseWindow, rootWindow,
-		inMouseX, inMouseY,
-		&root_inMouse_x, &root_inMouse_y, &returnedChild)){
-		fprintf(stderr, "Could not get coordinates for origin coordinates for mouseclick\n");
-		// should we return true or false??????
-		return PR_FALSE;
-	}
-	//fprintf(stderr, "Here are the mouse click coordinates x:%i y%i\n", root_inMouse_x, root_inMouse_y);
-	
-	// Test using coordinates relative to root window if click was inside passed popup window
-	if (root_inMouse_x > inWindowAttributes.x &&
-			root_inMouse_x < (inWindowAttributes.x + inWindowAttributes.width) &&
+  /* Get the origin (top left corner) coordinate and window's size */
+  if (XGetWindowAttributes(mDisplay, window, &inWindowAttributes) == 0) {
+    fprintf(stderr, "Failed calling XGetWindowAttributes in nsWidget::IsMouseInWindow");
+    return PR_FALSE;
+  }
+
+  // Note: These coordinates are now relative to the root window as popups are now created
+  // with the root window as parent
+
+  // Must get mouse click coordinates relative to root window
+  int root_inMouse_x,
+      root_inMouse_y;
+  Window returnedChild;
+  Window rootWindow;
+  rootWindow = XRootWindow(mDisplay, XDefaultScreen(mDisplay));
+  if (!XTranslateCoordinates(mDisplay, mBaseWindow, rootWindow,
+    inMouseX, inMouseY,
+    &root_inMouse_x, &root_inMouse_y, &returnedChild)){
+    fprintf(stderr, "Could not get coordinates for origin coordinates for mouseclick\n");
+    // should we return true or false??????
+    return PR_FALSE;
+  }
+  //fprintf(stderr, "Here are the mouse click coordinates x:%i y%i\n", root_inMouse_x, root_inMouse_y);
+
+  // Test using coordinates relative to root window if click was inside passed popup window
+  if (root_inMouse_x > inWindowAttributes.x &&
+      root_inMouse_x < (inWindowAttributes.x + inWindowAttributes.width) &&
       root_inMouse_y > inWindowAttributes.y &&
-			root_inMouse_y < (inWindowAttributes.y + inWindowAttributes.height)){
+      root_inMouse_y < (inWindowAttributes.y + inWindowAttributes.height)) {
+#ifdef DEBUG_whoemeveraddedthatprintforginally
     //fprintf(stderr, "Mouse click INSIDE passed popup\n");
-		return PR_TRUE;
-	}
-	//fprintf(stderr, "Mouse click OUTSIDE of passed popup\n");
-	return PR_FALSE;
+#endif
+    return PR_TRUE;
+  }
+  
+#ifdef DEBUG_whoemeveraddedthatprintforginally
+  //fprintf(stderr, "Mouse click OUTSIDE of passed popup\n");
+#endif
+  return PR_FALSE;
 }
 
 
@@ -1009,20 +1011,21 @@ PRBool nsWidget::IsMouseInWindow(Window window, PRInt32 inMouseX, PRInt32 inMous
 // 
 PRBool nsWidget::HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY )
 {
-	PRBool retVal = PR_FALSE;
-	PRBool rollup = PR_FALSE;
-	
-	// The gRollupListener and gRollupWidget are both set to nsnull when a popup is no
-	// longer visible
-	
+  PRBool retVal = PR_FALSE;
+  PRBool rollup = PR_FALSE;
+
+  // The gRollupListener and gRollupWidget are both set to nsnull when a popup is no
+  // longer visible
+
   nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
-	
+
   if (rollupWidget && gRollupListener) {
     Window currentPopup = (Window)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
 
     if (!IsMouseInWindow(currentPopup, inMouseX, inMouseY)) {
-			rollup = PR_TRUE;
-			nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
+      rollup = PR_TRUE;
+      nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
+      
       if ( menuRollup ) {
         nsCOMPtr<nsISupportsArray> widgetChain;
         menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
@@ -1042,15 +1045,15 @@ PRBool nsWidget::HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY )
             }
           } // foreach parent menu widget
         }
-			}	
-		}				
-	}
-	
-	if (rollup){
-		gRollupListener->Rollup();
-		retVal = PR_TRUE;
-	}
-	return retVal;
+      }
+    }
+  }
+
+  if (rollup) {
+    gRollupListener->Rollup();
+    retVal = PR_TRUE;
+  }
+  return retVal;
 }
 
 
@@ -1069,7 +1072,9 @@ void nsWidget::OnDestroy()
 
 PRBool nsWidget::OnDeleteWindow(void)
 {
+#ifdef DEBUG
   printf("nsWidget::OnDeleteWindow()\n");
+#endif /* DEBUUG */  
   nsBaseWidget::OnDestroy();
   // emit a destroy signal
   return DispatchDestroyEvent();
@@ -1100,18 +1105,18 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
     return result;
   }
 
-	// If there was a mouse down event, check if any popups need to be informed
-	switch (aEvent.message) {
-		case NS_MOUSE_LEFT_BUTTON_DOWN:
+  /* If there was a mouse down event, check if any popups need to be notified */
+  switch (aEvent.message) {
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
     case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:			
-			if (HandlePopup(aEvent.point.x, aEvent.point.y)){
-				// Should we return here as GTK does?
-				return PR_TRUE;
-			}
-			break;
-	}
-		
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      if (HandlePopup(aEvent.point.x, aEvent.point.y)){
+        // Should we return here as GTK does?
+        return PR_TRUE;
+      }
+      break;
+  }
+
   if (nsnull != mEventCallback) {
     result = DispatchWindowEvent(aEvent);
     return result;
@@ -1140,7 +1145,6 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 PRBool
 nsWidget::OnResize(nsSizeEvent &event)
 {
-
   mBounds.width = event.mWinWidth;
   mBounds.height = event.mWinHeight;
 
@@ -1270,7 +1274,7 @@ PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
     case nsEventStatus_eConsumeDoDefault:
       return(PR_FALSE);
     default:
-      NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
+      NS_WARNING("Illegal nsEventStatus enumeration value\n");
       break;
   }
   return(PR_FALSE);
@@ -1278,7 +1282,6 @@ PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
 
 void nsWidget::WidgetPut(nsWidget *aWidget)
 {
-  
 }
 
 void nsWidget::WidgetMove(nsWidget *aWidget)
@@ -1561,12 +1564,11 @@ NS_METHOD nsWidget::GetRequestedBounds(nsRect &aRect)
 NS_IMETHODIMP
 nsWidget::SetTitle(const nsString& title)
 {
-
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
-
   return NS_OK;
 }
+
