@@ -453,9 +453,11 @@ public:
 
 class InstanceBinding {
 public:
-    InstanceBinding(QualifiedName &qname, InstanceMember *content) : qname(qname), content(content) { }
+    InstanceBinding(AccessSet accesses, InstanceMember *content) : accesses(accesses), content(content) { }
 
-    QualifiedName qname;         // The qualified name bound by this binding
+// The qualified name is to be inferred from the map where this binding is kept
+//    QualifiedName qname;         // The qualified name bound by this binding
+    AccessSet accesses;
     InstanceMember *content;     // The member to which this qualified name was bound
 };
 
@@ -500,8 +502,10 @@ typedef HashTable<LocalBindingEntry *, const String> LocalBindingMap;
 typedef TableIterator<LocalBindingEntry *, const String> LocalBindingIterator;
 
 
-typedef std::multimap<String, InstanceBinding *> InstanceBindingMap;
-typedef InstanceBindingMap::iterator InstanceBindingIterator;
+typedef BindingEntry<InstanceBinding> InstanceBindingEntry;
+
+typedef HashTable<InstanceBindingEntry *, const String> InstanceBindingMap;
+typedef TableIterator<InstanceBindingEntry *, const String> InstanceBindingIterator;
 
 
 // A frame contains bindings defined at a particular scope in a program. A frame is either the top-level system frame, 
@@ -604,8 +608,7 @@ public:
 
     const String *getName()                 { return name; }
         
-    InstanceBindingMap instanceReadBindings;    // Map of qualified names to readable instance members defined in this class    
-    InstanceBindingMap instanceWriteBindings;   // Map of qualified names to writable instance members defined in this class    
+    InstanceBindingMap instanceBindings;        // Map of qualified names to instance members defined in this class    
 
     InstanceVariable **instanceInitOrder;       // List of instance variables defined in this class in the order in which they are initialised
 
