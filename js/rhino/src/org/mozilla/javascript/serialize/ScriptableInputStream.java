@@ -73,6 +73,10 @@ public class ScriptableInputStream extends ObjectInputStream {
                 throw new IOException("Object " + name + " not found upon " +
                                       "deserialization.");
             }
+        }else if (obj instanceof UniqueTag) {
+            obj = ((UniqueTag)obj).readResolve();
+        }else if (obj instanceof Undefined) {
+            obj = ((Undefined)obj).readResolve();
         }
         return obj;
     }

@@ -61,7 +61,7 @@ public abstract class IdScriptable extends ScriptableObject
     /** NULL_TAG can be used to distinguish between uninitialized and null
      ** values
      */
-    protected static final Object NULL_TAG = new Object();
+    protected static final Object NULL_TAG = UniqueTag.NULL_VALUE;
 
     public IdScriptable() {
         activateIdMap(maxInstanceId());

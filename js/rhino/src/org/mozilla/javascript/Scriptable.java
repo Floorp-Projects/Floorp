@@ -70,7 +70,7 @@ public interface Scriptable {
      * Value returned from <code>get</code> if the property is not
      * found.
      */
-    public static final Object NOT_FOUND = new Object();
+    public static final Object NOT_FOUND = UniqueTag.NOT_FOUND;
 
     /**
      * Get a named property from the object.

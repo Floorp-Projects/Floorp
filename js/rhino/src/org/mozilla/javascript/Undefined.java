@@ -35,11 +35,13 @@
 
 package org.mozilla.javascript;
 
+import java.io.Serializable;
+
 /**
  * This class implements the Undefined value in JavaScript.
  */
-public class Undefined implements Scriptable {
-
+public class Undefined implements Scriptable, Serializable
+{
     static final public Scriptable instance = new Undefined();
 
     public String getClassName() {
@@ -134,5 +136,9 @@ public class Undefined implements Scriptable {
 
     private RuntimeException reportError() {
         return Context.reportRuntimeError0("msg.undefined");
+    }
+
+    public Object readResolve() {
+        return Undefined.instance;
     }
 }
