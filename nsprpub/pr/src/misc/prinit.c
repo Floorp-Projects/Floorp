@@ -169,6 +169,9 @@ static void _PR_InitStuff(void)
 
     if (_pr_initialized) return;
     _pr_initialized = PR_TRUE;
+#ifdef _PR_ZONE_ALLOCATOR
+    _PR_InitZones();
+#endif
 #ifdef WINNT
     _pr_SetNativeThreadsOnlyMode();
 #endif
@@ -218,10 +221,6 @@ static void _PR_InitStuff(void)
 
 #ifndef _PR_GLOBAL_THREADS_ONLY
 	_PR_InitCPUs();
-#endif
-
-#ifdef _PR_ZONE_ALLOCATOR
-    _PR_InitZones();
 #endif
 
 /*
