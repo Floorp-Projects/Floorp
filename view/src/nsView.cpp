@@ -617,8 +617,8 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
             width = NSToCoordRound(mBounds.width * t2p);
             height = NSToCoordRound(mBounds.height * t2p);
 
-            blender->Init(surf, redsurf);
-            blender->Blend(0, 0, width, height, redsurf, 0, 0, opacity, PR_FALSE);
+            blender->Init(dx);
+            blender->Blend(0, 0, width, height,surf,redsurf, 0, 0, opacity, PR_FALSE);
 
             NS_RELEASE(blender);
             NS_RELEASE(dx);
