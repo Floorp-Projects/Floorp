@@ -68,6 +68,7 @@ nsresult nsNewsDownloader::DownloadArticles(nsIMsgWindow *window, nsIMsgFolder *
   
   m_folder = folder;
   m_window = window;
+  m_numwrote = 0;
   
   PRBool headersToDownload = GetNextHdrToRetrieve();
   // should we have a special error code for failure here?
