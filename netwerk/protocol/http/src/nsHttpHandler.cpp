@@ -134,6 +134,9 @@ nsHttpHandler::nsHttpHandler()
 
 nsHttpHandler::~nsHttpHandler()
 {
+    // We do not deal with the timer cancellation in the destructor since
+    // it is taken care of in xpcom shutdown event in the Observe method.
+
     LOG(("Deleting nsHttpHandler [this=%x]\n", this));
 
     nsHttp::DestroyAtomTable();
@@ -255,7 +258,17 @@ nsHttpHandler::Init()
     if (observerSvc) {
         observerSvc->AddObserver(this, "profile-before-change", PR_TRUE);
         observerSvc->AddObserver(this, "session-logout", PR_TRUE);
+        observerSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     }
+
+    mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    // failure to create a timer is not a fatal error, but idle connections
+    // may not be cleaned up as aggressively.
+    if (mTimer)
+        mTimer->Init(DeadConnectionCleanupCB, this, 15*1000, // 15 seconds
+                     NS_PRIORITY_NORMAL,
+                     NS_TYPE_REPEATING_SLACK);
+ 
     return NS_OK;
 }
 
@@ -439,6 +452,21 @@ nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
     LOG(("active connection count is now %u\n", mActiveConnections.Count()));
 
     ProcessTransactionQ_Locked();
+    return NS_OK;
+}
+
+nsresult 
+nsHttpHandler::PurgeDeadConnections()
+{
+    nsAutoLock lock(mConnectionLock);
+    for (PRInt32 i = 0; i < mIdleConnections.Count(); ++i) {
+        nsHttpConnection *conn = (nsHttpConnection *) mIdleConnections[i];
+        if (conn && !conn->CanReuse()) {
+            // Dead and idle connection; purge it
+            mIdleConnections.RemoveElement(conn);
+            NS_RELEASE(conn);
+        }
+    }
     return NS_OK;
 }
 
@@ -893,6 +921,14 @@ nsHttpHandler::RemovePendingTransaction_Locked(nsHttpTransaction *trans)
 
     NS_WARNING("transaction not in pending queue");
     return NS_ERROR_NOT_AVAILABLE;
+}
+
+void 
+nsHttpHandler::DeadConnectionCleanupCB(nsITimer *timer, void *closure)
+{
+    nsHttpHandler *self = NS_STATIC_CAST(nsHttpHandler*, closure);
+    if (self)
+        self->PurgeDeadConnections();
 }
 
 void
@@ -1875,6 +1911,13 @@ nsHttpHandler::Observe(nsISupports *subject,
         // depend on this value.
         mSessionStartTime = NowInSeconds();
     }
+    else if (!nsCRT::strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+        if (mTimer) {
+            mTimer->Cancel();
+            mTimer = 0;
+        }
+    }
+
     return NS_OK;
 }
 

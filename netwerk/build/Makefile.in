@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  uconv \
 		  caps \
+		  timer \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 
