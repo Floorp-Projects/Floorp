@@ -163,7 +163,7 @@ void CreateViewerMenus(Widget aParent, MenuCallbackProc aCallback)
   menuBar = XmCreateMenuBar(aParent, "menubar", NULL, 0);
 
   fileMenu   = CreatePulldownMenu(menuBar,  "File", "F");
-  CreateMenuItem(fileMenu, "Open...", VIEWER_OPEN, aCallback);
+  CreateMenuItem(fileMenu, "Open...", VIEWER_FILE_OPEN, aCallback);
 
   menu = CreatePulldownMenu(fileMenu, "Samples", "S");
   CreateMenuItem(menu, "demo #0", VIEWER_DEMO0, aCallback);
