@@ -146,9 +146,7 @@ nsLWBrkModule::GetClassObject(nsIComponentManager *aCompMgr,
       rv = NS_NewGenericFactory(getter_AddRefs(mFactory),
                                 CreateNewLWBrkThing);
     }
-    else {
-      fact = mFactory;
-    }
+    fact = mFactory;
   }
   else {
 		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
