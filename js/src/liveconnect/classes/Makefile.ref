@@ -1,6 +1,7 @@
 DEPTH = ../..
 
 include $(DEPTH)/config.mk
+JAR = $(JDK)/bin/jar
 include $(DEPTH)/liveconnect/config/$(OS_CONFIG).mk
 
 JARS     = $(LCJAR)
@@ -14,4 +15,4 @@ include $(DEPTH)/rules.mk
 
 $(CLASSDIR)/$(OBJDIR)/$(LCJAR):
 	cd $(CLASSDIR)/$(OBJDIR) ; \
-	  $(JDK)/bin/jar cvf $(@F) netscape
+	  $(JAR) cvf $(@F) netscape
