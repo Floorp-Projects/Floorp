@@ -6,12 +6,12 @@
 <!ENTITY defaultTitle     "Saving">
 
 <!-- These are used when saving -->
-<!ENTITY savingTitle      "Saving #1 (#2&#037;)"> 
+<!ENTITY savingTitle      "#2&#037; of #1 Saved"> 
 <!ENTITY savingSource     "Saving From:"> 
 <!ENTITY savingTarget     "To:"> 
 
 <!-- These are used when opening (with an application) -->
-<!ENTITY openingTitle      "Opening #1 (#2&#037;)">
+<!ENTITY openingTitle      "#2&#037; of #1 Completed">
 <!ENTITY openingSource     "Opening From:">
 <!ENTITY openingTarget     "With:">
 
