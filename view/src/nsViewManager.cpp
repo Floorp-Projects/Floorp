@@ -1486,7 +1486,7 @@ static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsDrawingSu
 
 nsresult nsViewManager::CreateBlendingBuffers(nsIRenderingContext &aRC)
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
 
 	// create a blender, if none exists already.
 	if (nsnull == mBlender) {
@@ -2232,18 +2232,18 @@ NS_IMETHODIMP nsViewManager::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord height)
+NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord height, PRBool aRepaintExposedAreaOnly)
 {
-	nscoord oldWidth, oldHeight;
-	aView->GetDimensions(&oldWidth, &oldHeight);
-	if ((width != oldWidth) || (height != oldHeight)) {
-		nscoord x = 0, y = 0;
-		nsIView* parentView = nsnull;
-	    aView->GetParent(parentView);
-	    if (parentView != nsnull)
-			aView->GetPosition(&x, &y);
-		else
-			parentView = aView;
+  nscoord oldWidth, oldHeight;
+  aView->GetDimensions(&oldWidth, &oldHeight);
+  if ((width != oldWidth) || (height != oldHeight)) {
+    nscoord x = 0, y = 0;
+    nsIView* parentView = nsnull;
+      aView->GetParent(parentView);
+      if (parentView != nsnull)
+      aView->GetPosition(&x, &y);
+    else
+      parentView = aView;
 
      // resize the view.
      nsViewVisibility  visibility;
@@ -2253,15 +2253,57 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord h
      if (visibility == nsViewVisibility_kHide) {  
        aView->SetDimensions(width, height, PR_FALSE);
      } else {
-		   aView->SetDimensions(width, height, PR_TRUE);
-       nscoord maxWidth = (oldWidth < width ? width : oldWidth);
-		   nscoord maxHeight = (oldHeight < height ? height : oldHeight);
-		   nsRect boundingArea(x, y, maxWidth, maxHeight);
-		   UpdateView(parentView, boundingArea, NS_VMREFRESH_NO_SYNC);
+       if (!aRepaintExposedAreaOnly) {
+          //Invalidate the union of the old and new size
+         aView->SetDimensions(width, height, PR_TRUE);
+         nscoord maxWidth = (oldWidth < width ? width : oldWidth);
+         nscoord maxHeight = (oldHeight < height ? height : oldHeight);
+         nsRect boundingArea(x, y, maxWidth, maxHeight);
+         UpdateView(parentView, boundingArea, NS_VMREFRESH_NO_SYNC);
+       } else {
+         // Invalidate only the newly exposed or contracted region
+         nscoord shortWidth, longWidth, shortHeight, longHeight;
+         if (width < oldWidth) { 
+           shortWidth = width; 
+           longWidth = oldWidth; 
+         } 
+         else { 
+           shortWidth = oldWidth; 
+           longWidth = width; 
+         } 
+  
+         if (height < oldHeight) { 
+           shortHeight = height; 
+           longHeight = oldHeight; 
+         } 
+         else { 
+           shortHeight = oldHeight; 
+           longHeight = height; 
+         } 
+
+         nsRect  damageRect; 
+     
+         //damage the right edge of the parent's view
+         damageRect.x = x + shortWidth; 
+         damageRect.y = y; 
+         damageRect.width = longWidth - shortWidth; 
+         damageRect.height = longHeight; 
+         UpdateView(parentView, damageRect, NS_VMREFRESH_NO_SYNC); 
+            
+         //damage the bottom edge of the parent's view
+         damageRect.x = x; 
+         damageRect.y = y + shortHeight; 
+         damageRect.width = longWidth; 
+         damageRect.height = longHeight - shortHeight; 
+         UpdateView(parentView, damageRect, NS_VMREFRESH_NO_SYNC); 
+         
+
+         aView->SetDimensions(width, height);
+       } 
      }
-	}
-	
-	return NS_OK;
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager::SetViewChildClip(nsIView *aView, nsRect *aRect)
