@@ -122,10 +122,10 @@ function addThis()
  * If we didn't put double-quotes around the string argument,
  * we'd get this for an eval string:
  *
- *                    '11 + a + 22'
+ *                     '11 + a + 22'
  *
  * If we eval() this, we get 'ReferenceError: a is not defined'.
- * With the former, we get eval('11 + "a" + 22') as desired.
+ * With proper quoting, we get eval('11 + "a" + 22') as desired.
  */
 function sumThese()
 {
