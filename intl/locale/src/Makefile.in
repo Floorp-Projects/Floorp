@@ -40,6 +40,7 @@ REQUIRES	= xpcom unicharutil
 CPPSRCS		= \
 		nsCollation.cpp \
 		nsScriptableDateFormat.cpp \
+		nsLanguageAtomService.cpp \
 		nsLocale.cpp \
 		nsLocaleFactory.cpp \
 		nsLocaleService.cpp \
