@@ -335,7 +335,8 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc,
 #ifdef NEW_DRAG_AND_DROP
     result = erP->AddEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
     NS_ASSERTION(NS_SUCCEEDED(result), "failed to register drag listener");
-#endif    result = NS_OK;
+#endif
+    result = NS_OK;
 		EnableUndo(PR_TRUE);
   }
   return result;
