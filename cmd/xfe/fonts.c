@@ -314,6 +314,15 @@ static int16 *INTL_GetXCharSetIDs(Display *dpy);
 static XmFontList fe_UTF8GetFontList(int16 charset, fe_Font font, int numOfFont);
 static XmString fe_UTF8ToXmString(int16 charset, fe_Font fontGroup, char * string, int len);
 
+
+static XP_Bool fe_NoneAreFontsAvail(int16 /* win_csid */);
+static fe_Font fe_NoneLoadFont(void *not_used, char *familyName, int points, int sizeNum, int fontmask, int charset, int pitch, int faceNum, Display *dpy);
+static void fe_NoneTextExtents(fe_Font font, char *string, int len, int *direction, int *fontAscent, int *fontDescent, XCharStruct *overall);
+static void fe_NoneDrawString(Display *dpy, Drawable d, fe_Font font, GC gc, int x, int y, char *string, int len);
+static void fe_NoneDrawImageString(Display *dpy, Drawable d, fe_Font font, GC gc, GC gc2, int x, int y, char *string, int len);
+static XmFontList fe_NoneGetFontList(int16 charset, fe_Font font, int numOfFonts);
+static XmString fe_NoneToXmString(int16 charset, fe_Font fontGroup, char * string, int len);
+
 enum
 {
 	FE_FONT_INFO_X8 = 0,
@@ -323,7 +332,8 @@ enum
 	FE_FONT_INFO_EUCKR,
 	FE_FONT_INFO_EUCTW,
 	FE_FONT_INFO_BIG5,
-    FE_FONT_INFO_UNICODE
+        FE_FONT_INFO_UNICODE,
+	FE_FONT_INFO_NONE,
 };
 
 
@@ -409,25 +419,34 @@ fe_CharSetFuncs fe_CharSetFuncsArray[] =
 		(fe_GetFontList)	        fe_UTF8GetFontList,
 		(fe_ToXmString)	                fe_UTF8ToXmString
 	},
+	{
+						0,
+		(fe_AreFontsAvailFunc)		fe_NoneAreFontsAvail,
+		(fe_LoadFontFunc)		fe_NoneLoadFont,
+		(fe_TextExtentsFunc)		fe_NoneTextExtents,
+		(fe_DrawStringFunc)		fe_NoneDrawString,
+		(fe_DrawImageStringFunc)	fe_NoneDrawImageString,
+		(fe_GetFontList)	        fe_NoneGetFontList,
+		(fe_ToXmString)	                fe_NoneToXmString
+	},
 };
-
 
 fe_CharSetInfo fe_CharSetInfoArray[] =
 {
-    { CS_DEFAULT      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
-    { CS_ASCII        , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_DEFAULT      , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
+    { CS_ASCII        , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_LATIN1       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
-    { CS_JIS          , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
-    { CS_SJIS         , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_JIS          , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
+    { CS_SJIS         , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_EUCJP        , FE_FONT_TYPE_GROUP , FE_FONT_INFO_EUCJP    },
-    { CS_MAC_ROMAN    , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_MAC_ROMAN    , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_BIG5         , FE_FONT_TYPE_GROUP , FE_FONT_INFO_BIG5     },
     { CS_GB_8BIT      , FE_FONT_TYPE_GROUP , FE_FONT_INFO_EUCCN    },
     { CS_CNS_8BIT     , FE_FONT_TYPE_GROUP , FE_FONT_INFO_EUCTW    },
     { CS_LATIN2       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
-    { CS_MAC_CE       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_MAC_CE       , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_KSC_8BIT     , FE_FONT_TYPE_GROUP , FE_FONT_INFO_EUCKR    },
-    { CS_2022_KR      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_2022_KR      , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_8859_3       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_8859_4       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_8859_5       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
@@ -447,26 +466,26 @@ fe_CharSetInfo fe_CharSetInfoArray[] =
     { CS_JISX0212     , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
     { CS_GB2312       , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
     { CS_UCS2         , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
-    { CS_UCS4         , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_UCS4         , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_UTF8         , FE_FONT_TYPE_GROUP , FE_FONT_INFO_UNICODE  },
-    { CS_UTF7         , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
-    { CS_NPC          , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_UTF7         , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
+    { CS_NPC          , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_X_BIG5       , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
     { CS_USRDEF2      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_KOI8_R       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
-    { CS_MAC_CYRILLIC , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_MAC_CYRILLIC , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_CP_1251      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
-    { CS_MAC_GREEK    , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_MAC_GREEK    , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_CP_1253      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_CP_1250      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_CP_1254      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
-    { CS_MAC_TURKISH  , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_MAC_TURKISH  , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_GB2312_11    , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
     { CS_JISX0208_11  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
     { CS_KSC5601_11   , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
     { CS_CNS11643_1110, FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
-    { CS_UCS2_SWAP    , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
-    { CS_IMAP4_UTF7   , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_UCS2_SWAP    , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
+    { CS_IMAP4_UTF7   , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_CP_850       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_CP_852       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_CP_855       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
@@ -477,7 +496,36 @@ fe_CharSetInfo fe_CharSetInfoArray[] =
     { CS_CP_874       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_CP_1257      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_CP_1258      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
-    { CS_ARMSCII8     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       }
+    { CS_ARMSCII8     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_HZ           , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
+    { CS_ISO_2022_CN  , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
+    { CS_GB13000      , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_BIG5_PLUS    , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_UHC          , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_3   , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_4   , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_5   , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_6   , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_7   , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_8   , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_9   , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_10  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_11  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_12  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_13  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_14  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_15  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_CNS11643_16  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
+    { CS_VISCII       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_VIQR         , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_KOI8_U       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_ISO_IR_111   , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_8859_6_I     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_8859_6_E     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_8859_8_I     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_8859_8_E     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_JOHAB        , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
+    { CS_JOHABFONT    , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     }, /* put this as NONE untill we have real johab font support */
 };
 
 static unsigned char *fe_LocaleCharSets = NULL;
@@ -496,6 +544,47 @@ fe_IsCharSetSupported(int16 doc_csid)
 	return(fe_AreFontsAvail(win_csid));
 #endif
 }
+
+static XP_Bool 
+fe_NoneAreFontsAvail(int16  win_csid )
+{
+   XP_ASSERT(0); /* this call should never been called */
+   return FALSE; /* to make the compiler won't complain */
+}
+static fe_Font 
+fe_NoneLoadFont(void *not_used, char *familyName, int points, int sizeNum, int fontmask, int charset, int pitch, int faceNum, Display *dpy)
+{
+   XP_ASSERT(0); /* this call should never been called */
+   return (fe_Font) NULL; /* to make the compiler won't complain */
+}
+static void 
+fe_NoneTextExtents(fe_Font font, char *string, int len, int *direction, int *fontAscent, int *fontDescent, XCharStruct *overall)
+{
+   XP_ASSERT(0); /* this call should never been called */
+}
+static void 
+fe_NoneDrawString(Display *dpy, Drawable d, fe_Font font, GC gc, int x, int y, char *string, int len)
+{
+   XP_ASSERT(0); /* this call should never been called */
+}
+static void 
+fe_NoneDrawImageString(Display *dpy, Drawable d, fe_Font font, GC gc, GC gc2, int x, int y, char *string, int len)
+{
+   XP_ASSERT(0); /* this call should never been called */
+}
+static XmFontList 
+fe_NoneGetFontList(int16 charset, fe_Font font, int numOfFonts)
+{
+   XP_ASSERT(0); /* this call should never been called */
+   return (XmFontList) NULL; /* to make the compiler won't complain */
+}
+static XmString 
+fe_NoneToXmString(int16 charset, fe_Font fontGroup, char * string, int len)
+{
+   XP_ASSERT(0); /* this call should never been called */
+   return (XmString) NULL; /* to make the compiler won't complain */
+}
+
 
 XP_Bool
 fe_AreFontsAvail(int16 win_csid)

@@ -38,6 +38,7 @@ XP_BEGIN_PROTOS
  * defines
  */
 
+#define FE_FONT_TYPE_NONE	0x0
 #define FE_FONT_TYPE_X8		0x1
 #define FE_FONT_TYPE_X16	0x2
 #define FE_FONT_TYPE_GROUP	0x4
