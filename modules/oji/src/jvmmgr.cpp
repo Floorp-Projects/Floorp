@@ -213,11 +213,11 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char 
     return cx;
 }
 
-	static void PR_CALLBACK detach_jsjava_thread_state(void* env)
-	{
-		JSJavaThreadState *jsj_env = (JSJavaThreadState*)env;
-		JSJ_DetachCurrentThreadFromJava(jsj_env);
-	}
+static void PR_CALLBACK detach_jsjava_thread_state(void* env)
+{
+    JSJavaThreadState *jsj_env = (JSJavaThreadState*)env;
+    JSJ_DetachCurrentThreadFromJava(jsj_env);
+}
 
 /*
 ** This callback is called to map a JSContext to a JSJavaThreadState which
@@ -348,6 +348,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pNSIPluginInstanceIn, char 
     return 0;
 }
 
+#if 0
 static JavaVM* PR_CALLBACK
 get_java_vm_impl(char **errp)
 {
@@ -370,6 +371,7 @@ get_java_vm_impl(char **errp)
     }
     return pJavaVM;
 }
+#endif
 
 static JSPrincipals* PR_CALLBACK
 get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext)
@@ -432,7 +434,8 @@ get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext)
 
     return NULL;
 }
-PR_IMPLEMENT(jobject)
+
+static jobject PR_CALLBACK
 get_java_wrapper_impl(JNIEnv *pJNIEnv, jint jsobject)
 {
     nsresult       err    = NS_OK;
@@ -453,54 +456,90 @@ get_java_wrapper_impl(JNIEnv *pJNIEnv, jint jsobject)
     return pJSObjectWrapper;
 }
 
-
 static JSBool PR_CALLBACK
 enter_js_from_java_impl(JNIEnv *jEnv, char **errp)
 {
 #ifdef OJI
     ThreadLocalStorageAtIndex0 *priv = NULL;
-	   if ( PR_GetCurrentThread() == NULL )
-	   {
-		    PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
-      priv = (ThreadLocalStorageAtIndex0 *)malloc(sizeof(ThreadLocalStorageAtIndex0));
-      priv->refcount=1;
-      PR_SetThreadPrivate(tlsIndex_g, (void *)priv);
-	   }
+    if ( PR_GetCurrentThread() == NULL )
+    {
+        PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
+        priv = (ThreadLocalStorageAtIndex0 *)malloc(sizeof(ThreadLocalStorageAtIndex0));
+        priv->refcount=1;
+        PR_SetThreadPrivate(tlsIndex_g, (void *)priv);
+    }
     else
     {
-      priv = (ThreadLocalStorageAtIndex0 *)PR_GetThreadPrivate(tlsIndex_g);
-      if(priv != NULL)
-      {
-        priv->refcount++;
-      }
+        priv = (ThreadLocalStorageAtIndex0 *)PR_GetThreadPrivate(tlsIndex_g);
+        if(priv != NULL)
+        {
+            priv->refcount++;
+        }
     }
 
     return LM_LockJS(errp);
 #else
-	 return JS_TRUE;
+    return JS_TRUE;
 #endif
 }
 
 static void PR_CALLBACK
 exit_js_impl(JNIEnv *jEnv)
 {
-   ThreadLocalStorageAtIndex0 *priv = NULL;
+    ThreadLocalStorageAtIndex0 *priv = NULL;
 
-   LM_UnlockJS();
+    LM_UnlockJS();
 
-	  if (   (PR_GetCurrentThread() != NULL )
-       && ((priv = (ThreadLocalStorageAtIndex0 *)PR_GetThreadPrivate(tlsIndex_g)) != NULL)
-      )
-   {
-     priv->refcount--;
-     if(priv->refcount == 0)
-     {
-        PR_SetThreadPrivate(tlsIndex_g, NULL);
-        PR_DetachThread();
-        free(priv);
-     }
-   }
-   return;
+    if (   (PR_GetCurrentThread() != NULL )
+           && ((priv = (ThreadLocalStorageAtIndex0 *)PR_GetThreadPrivate(tlsIndex_g)) != NULL)
+        )
+    {
+        priv->refcount--;
+        if(priv->refcount == 0)
+        {
+            PR_SetThreadPrivate(tlsIndex_g, NULL);
+            PR_DetachThread();
+            free(priv);
+        }
+    }
+    return;
+}
+
+static PRBool PR_CALLBACK
+create_java_vm_impl(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
+{
+    const char* classpath = (const char*)initargs;      // unused (should it be?)
+    *jvm = (SystemJavaVM*)JVM_GetJVMMgr();              // unused in the browser
+    *initialEnv = JVM_GetJNIEnv();
+    return *initialEnv == NULL;
+}
+
+static PRBool PR_CALLBACK
+destroy_java_vm_impl(SystemJavaVM* jvm, JNIEnv* initialEnv)
+{
+    JVM_ReleaseJNIEnv(initialEnv);
+    // need to release jvm
+    return PR_TRUE;
+}
+
+static JNIEnv* PR_CALLBACK
+attach_current_thread_impl(SystemJavaVM* jvm)
+{
+    return JVM_GetJNIEnv();
+}
+
+static PRBool PR_CALLBACK
+detach_current_thread_impl(SystemJavaVM* jvm, JNIEnv* env)
+{
+    JVM_ReleaseJNIEnv(env);
+    return PR_TRUE;
+}
+
+static SystemJavaVM* PR_CALLBACK
+get_java_vm_impl(JNIEnv* env)
+{
+    // only one SystemJavaVM for the whole browser, so it doesn't depend on env
+    return (SystemJavaVM*)JVM_GetJVMMgr();
 }
 
 #endif /* MOCHA */
@@ -516,16 +555,15 @@ static JSJCallbacks jsj_callbacks = {
     map_js_context_to_jsj_thread_impl,
     map_java_object_to_js_object_impl,
     get_JSPrincipals_from_java_caller_impl,
-#ifdef OJI
     enter_js_from_java_impl,
     exit_js_impl,
-#else
-   	NULL,
-    NULL,
-#endif
-    NULL,
-    get_java_vm_impl,
-    get_java_wrapper_impl
+    NULL,       // error_print
+    get_java_wrapper_impl,
+    create_java_vm_impl,
+    destroy_java_vm_impl,
+    attach_current_thread_impl,
+    detach_current_thread_impl,
+    get_java_vm_impl
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -868,13 +906,16 @@ nsJVMMgr::MaybeStartupLiveConnect()
 	        JSJ_Init(&jsj_callbacks);
 	        nsIJVMPlugin* plugin = GetJVMPlugin();
 	        if (plugin) {
+#if 0
 	            const char* classpath = NULL;
 	            nsresult err = plugin->GetClassPath(&classpath);
 	            if (err != NS_OK) break;
+
 	            JavaVM* javaVM = NULL;
 	            err = plugin->GetJavaVM(&javaVM);
 	            if (err != NS_OK) break;
-	            fJSJavaVM = JSJ_ConnectToJavaVM(javaVM, classpath);
+#endif
+	            fJSJavaVM = JSJ_ConnectToJavaVM(NULL, NULL);
 	            if (fJSJavaVM != NULL)
 	                return PR_TRUE;
 	            // plugin->Release(); // GetJVMPlugin no longer calls AddRef
@@ -1300,19 +1341,7 @@ JVM_StartDebugger(void)
     }
 }
 
-PR_IMPLEMENT(JavaVM*)
-JVM_GetJavaVM(void)
-{
-    JavaVM* javaVM = NULL;
-    nsIJVMPlugin* jvm = GetRunningJVM();
-    if (jvm) {
-        nsresult err = jvm->GetJavaVM(&javaVM);
-        PR_ASSERT(err == NS_OK);
-        // jvm->Release(); // GetRunningJVM no longer calls AddRef
-    }
-    return javaVM;
-}
-
+#if 0
 static void PR_CALLBACK detach_JNIEnv(void* env)
 {
 	JNIEnv* jenv = (JNIEnv*)env;
@@ -1320,6 +1349,7 @@ static void PR_CALLBACK detach_JNIEnv(void* env)
 	jenv->GetJavaVM(&vm);
 	vm->DetachCurrentThread();
 }
+#endif
 
 PR_IMPLEMENT(JNIEnv*)
 JVM_GetJNIEnv(void)
@@ -1345,6 +1375,16 @@ JVM_GetJNIEnv(void)
 	localEnv.set(env);
 #endif
     return env;
+}
+
+PR_IMPLEMENT(void)
+JVM_ReleaseJNIEnv(JNIEnv* env)
+{
+    nsIJVMPlugin* jvm = GetRunningJVM();
+    if (jvm) {
+        (void)jvm->ReleaseJNIEnv(env);
+        // jvm->Release(); // GetRunningJVM no longer calls AddRef
+    }
 }
 
 PR_IMPLEMENT(PRBool)
@@ -1394,22 +1434,6 @@ JVM_ShutdownJVM(void)
         mgr->Release();
     }
     return status;
-}
-
-
-PR_IMPLEMENT(void)
-JVM_ReleaseJNIEnv(JNIEnv *pJNIEnv)
-{
-   nsJVMMgr  *pNSJVMMgr = JVM_GetJVMMgr();
-   if (pNSJVMMgr != NULL)
-   {
-      nsIJVMPlugin *pNSIJVMPlugin =  pNSJVMMgr->GetJVMPlugin();
-      if (pNSIJVMPlugin != NULL)
-      {
-         pNSIJVMPlugin->ReleaseJNIEnv(pJNIEnv);
-      }
-   }
-   return;
 }
 
 PR_END_EXTERN_C

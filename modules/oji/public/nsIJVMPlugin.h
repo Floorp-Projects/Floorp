@@ -83,25 +83,16 @@ public:
     // Returns the current classpath in use by the JVM.
     NS_IMETHOD
     GetClassPath(const char* *result) = 0;
-#if 0    
-    NS_IMETHOD
-    GetPluginInstance(jobject javaObject, nsIPluginInstance* *result) = 0;
 
-    NS_IMETHOD
-    GetPluginInstance(JNIEnv* jenv, nsIPluginInstance* *result) = 0;
-#endif
     NS_IMETHOD
     GetJavaWrapper(JNIEnv* jenv, jint obj, jobject *jobj) = 0;
 
+#if 0    // still trying to decide on this
     // nsIPrincipals is a array of pointers to principals associated with this
     // java object trying to run a JS script.
-#if 0    
     NS_IMETHOD
     GetPrincipalArray(JNIEnv *pJNIEnv, PRInt32 frameIndex, nsIPrincipal ***principalArray, PRInt32 *length) = 0;
 #endif
-
-    NS_IMETHOD
-    GetJavaVM(JavaVM* *result) = 0;
 
     // Find or create a JNIEnv for the current thread.
     // Returns NULL if an error occurs.
