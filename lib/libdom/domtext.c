@@ -361,6 +361,7 @@ DOM_NewText(const char *data, int64 length, DOM_CDataOp notify,
 {
     DOM_Node *node;
     DOM_CharacterData *cdata;
+    int32 nbytes;
     DOM_Text *text = XP_NEW_ZAP(DOM_Text);
     if (!text)
         return NULL;
@@ -370,14 +371,15 @@ DOM_NewText(const char *data, int64 length, DOM_CDataOp notify,
     node->ops = ops;
     node->name = "#text";
 
+    LL_L2I(nbytes, length);
     cdata = (DOM_CharacterData *)text;
-    cdata->data = XP_ALLOC(length);
+    cdata->data = XP_ALLOC(nbytes);
     cdata->notify = notify;
     if (!cdata->data) {
         XP_FREE(text);
         return NULL;
     }
-    XP_MEMCPY(cdata->data, data, length);
+    XP_MEMCPY(cdata->data, data, nbytes);
     return text;
 }
 
