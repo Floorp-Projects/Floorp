@@ -25,6 +25,7 @@
 #include "nsFontMetricsMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsUnicodeFontMappingMac.h"
+#include "nsUnicodeMappingUtil.h"
 #include "nsGfxUtils.h"
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
@@ -113,7 +114,24 @@ nsUnicodeFontMappingMac* nsFontMetricsMac::GetUnicodeFontMapping()
 static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFontFace)
 {
   // the CSS generic names (conversions from the old Mac Mozilla code for now)
-
+  nsUnicodeMappingUtil* unicodeMappingUtil = nsUnicodeMappingUtil::GetSingleton();
+  if (unicodeMappingUtil)
+  {
+    nsString*   foundFont = unicodeMappingUtil->GenericFontNameForScript(
+          smRoman,      // should we be looking at a language-group here?
+          unicodeMappingUtil->MapGenericFontNameType(aGenericFamily));
+    if (foundFont)
+    {
+      aFontFace = *foundFont;
+      return;
+    }
+  }
+  
+  NS_ASSERTION(0, "Failed to find a font");
+  aFontFace.AssignWithConversion("Times");
+	
+  /*
+  // fall back onto hard-coded font names
   if (aGenericFamily.EqualsIgnoreCase("serif"))
   {
     aFontFace.AssignWithConversion("Times");
@@ -138,6 +156,7 @@ static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFo
   {
     aFontFace.AssignWithConversion("Courier");
   }
+  */
 }
 
 struct FontEnumData {
