@@ -82,70 +82,69 @@ typedef struct message_header
 class nsParseMailMessageState : public nsIMsgParseMailMsgState
 {
 public:
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGPARSEMAILMSGSTATE
 	
   nsParseMailMessageState();
-	virtual			~nsParseMailMessageState();
-	
-	void			Init(PRUint32 fileposition);
-	virtual PRInt32	ParseFolderLine(const char *line, PRUint32 lineLength);
-	virtual int		StartNewEnvelope(const char *line, PRUint32 lineLength);
-	int				ParseHeaders();
-	int				FinalizeHeaders();
-	int				ParseEnvelope (const char *line, PRUint32 line_size);
-	int				InternSubject (struct message_header *header);
-	nsresult		InternRfc822 (struct message_header *header, 
-								char **ret_name);
-
-	static PRBool	IsEnvelopeLine(const char *buf, PRInt32 buf_size);
-	static int		msg_UnHex(char C); 
-
-	nsCOMPtr<nsIMsgHeaderParser> m_HeaderAddressParser;
-
-	nsCOMPtr<nsIMsgDBHdr> m_newMsgHdr; /* current message header we're building */
-	nsCOMPtr<nsIMsgDatabase>	m_mailDB;
-
-	nsMailboxParseState m_state;
-	PRUint32			m_position;
-	PRUint32			m_envelope_pos;
-	PRUint32			m_headerstartpos;
-
-	nsByteArray		m_headers;
-
-	nsByteArray		m_envelope;
-
-	struct message_header m_message_id;
-	struct message_header m_references;
-	struct message_header m_date;
-	struct message_header m_from;
-	struct message_header m_sender;
-	struct message_header m_newsgroups;
-	struct message_header m_subject;
-	struct message_header m_status;
-	struct message_header m_mozstatus;
-	struct message_header m_mozstatus2;
-	struct message_header m_in_reply_to;
-	struct message_header m_content_type;
-
-	// Support for having multiple To or Cc header lines in a message
-	nsVoidArray m_toList;
-	nsVoidArray m_ccList;
-	struct message_header *GetNextHeaderInAggregate (nsVoidArray &list);
-	void GetAggregateHeader (nsVoidArray &list, struct message_header *);
-	void ClearAggregateHeader (nsVoidArray &list);
-
-	struct message_header m_envelope_from;
-	struct message_header m_envelope_date;
-	struct message_header m_priority;
-	// Mdn support
-	struct message_header m_mdn_original_recipient;
-	struct message_header m_return_path;
-	struct message_header m_mdn_dnt; /* MDN Disposition-Notification-To: header */
-
-	PRUint16			m_body_lines;
-	
-	PRBool			m_IgnoreXMozillaStatus;
+  virtual               ~nsParseMailMessageState();
+  
+  void                  Init(PRUint32 fileposition);
+  virtual PRInt32       ParseFolderLine(const char *line, PRUint32 lineLength);
+  virtual int           StartNewEnvelope(const char *line, PRUint32 lineLength);
+  int                   ParseHeaders();
+  int                   FinalizeHeaders();
+  int                   ParseEnvelope (const char *line, PRUint32 line_size);
+  int                   InternSubject (struct message_header *header);
+  nsresult  InternRfc822 (struct message_header *header, char **ret_name);
+  
+  static PRBool	IsEnvelopeLine(const char *buf, PRInt32 buf_size);
+  static int  msg_UnHex(char C); 
+  
+  nsCOMPtr<nsIMsgHeaderParser> m_HeaderAddressParser;
+  
+  nsCOMPtr<nsIMsgDBHdr> m_newMsgHdr; /* current message header we're building */
+  nsCOMPtr<nsIMsgDatabase>  m_mailDB;
+  
+  nsMailboxParseState   m_state;
+  PRUint32              m_position;
+  PRUint32              m_envelope_pos;
+  PRUint32              m_headerstartpos;
+  
+  nsByteArray           m_headers;
+  
+  nsByteArray           m_envelope;
+  
+  struct message_header m_message_id;
+  struct message_header m_references;
+  struct message_header m_date;
+  struct message_header m_from;
+  struct message_header m_sender;
+  struct message_header m_newsgroups;
+  struct message_header m_subject;
+  struct message_header m_status;
+  struct message_header m_mozstatus;
+  struct message_header m_mozstatus2;
+  struct message_header m_in_reply_to;
+  struct message_header m_content_type;
+  
+  // Support for having multiple To or Cc header lines in a message
+  nsVoidArray m_toList;
+  nsVoidArray m_ccList;
+  struct message_header *GetNextHeaderInAggregate (nsVoidArray &list);
+  void GetAggregateHeader (nsVoidArray &list, struct message_header *);
+  void ClearAggregateHeader (nsVoidArray &list);
+  
+  struct message_header m_envelope_from;
+  struct message_header m_envelope_date;
+  struct message_header m_priority;
+  // Mdn support
+  struct message_header m_mdn_original_recipient;
+  struct message_header m_return_path;
+  struct message_header m_mdn_dnt; /* MDN Disposition-Notification-To: header */
+  
+  PRUint16			m_body_lines;
+  
+  PRBool			m_IgnoreXMozillaStatus;
 protected:
   nsCOMPtr<nsIMsgStringService> mStringService;
 

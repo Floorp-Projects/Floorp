@@ -208,7 +208,7 @@ nsShouldIgnoreFile(nsString& name)
     return PR_TRUE;
 
   if (nsStringEndsWith(name,".sbd") || nsStringEndsWith(name,".msf"))
-	  return PR_TRUE;
+    return PR_TRUE;
 
   return PR_FALSE;
 }
@@ -228,19 +228,20 @@ nsMsgLocalMailFolder::Init(const char* aURI)
 nsresult
 nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 {
-	nsresult rv = NS_OK;
-	nsAutoString currentFolderNameStr;
-	nsCOMPtr<nsIMsgFolder> child;
+  nsresult rv = NS_OK;
+  nsAutoString currentFolderNameStr;
+  nsCOMPtr<nsIMsgFolder> child;
 
-	for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) {
-		nsFileSpec currentFolderPath = dir.Spec();
+  for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) 
+  {
+    nsFileSpec currentFolderPath = dir.Spec();
 
     char *leafName = currentFolderPath.GetLeafName();
     nsMsgGetNativePathString(leafName, currentFolderNameStr);
     PR_Free(leafName);
 
-		if (nsShouldIgnoreFile(currentFolderNameStr))
-			continue;
+    if (nsShouldIgnoreFile(currentFolderNameStr))
+      continue;
 
     rv = AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));  
     if (child)
@@ -251,7 +252,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
         child->SetPrettyName(currentFolderNameStr.get());
     }
   }
-	return rv;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
@@ -2876,8 +2877,7 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
     rv = SortMessagesBasedOnKey(messages, &keyArray, srcFolder);
     NS_ENSURE_SUCCESS(rv,rv);
     
-    nsCOMPtr<nsIStreamListener>
-      streamListener(do_QueryInterface(copyStreamListener));
+    nsCOMPtr<nsIStreamListener> streamListener(do_QueryInterface(copyStreamListener));
     if(!streamListener)
       return NS_ERROR_NO_INTERFACE;
     mCopyState->m_curCopyIndex = 0; 
@@ -2983,8 +2983,8 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *messages, PRBool de
     return NS_MSG_INVALID_OR_MISSING_SERVER;
 	
   pop3MailServer->GetDeleteMailLeftOnServer(&deleteMailLeftOnServer);
-	if (!deleteMailLeftOnServer)
-		return NS_OK;
+  if (!deleteMailLeftOnServer)
+    return NS_OK;
 
   pop3MailServer->GetLeaveMessagesOnServer(&leaveOnServer);
   rv = GetPath(getter_AddRefs(mailboxSpec));
@@ -3098,7 +3098,7 @@ nsMsgLocalMailFolder::GetIncomingServerType()
   rv = url->GetUserPass(userPass);
   if (NS_FAILED(rv)) return "";
   if (!userPass.IsEmpty())
-	nsUnescape(NS_CONST_CAST(char*,userPass.get()));
+    nsUnescape(NS_CONST_CAST(char*,userPass.get()));
 
   nsCAutoString hostName;
   rv = url->GetAsciiHost(hostName);
@@ -3117,7 +3117,8 @@ nsMsgLocalMailFolder::GetIncomingServerType()
                                   hostName.get(),
                                   "none",
                                   getter_AddRefs(server));
-  if (NS_SUCCEEDED(rv) && server) {
+  if (NS_SUCCEEDED(rv) && server) 
+  {
     mType = "none";
     return mType;
   }
@@ -3127,7 +3128,8 @@ nsMsgLocalMailFolder::GetIncomingServerType()
                                   hostName.get(),
                                   "pop3",
                                   getter_AddRefs(server));
-  if (NS_SUCCEEDED(rv) && server) {
+  if (NS_SUCCEEDED(rv) && server) 
+  {
     mType = "pop3";
     return mType;
   }
@@ -3138,7 +3140,8 @@ nsMsgLocalMailFolder::GetIncomingServerType()
                                   hostName.get(),
                                   "movemail",
                                   getter_AddRefs(server));
-  if (NS_SUCCEEDED(rv) && server) {
+  if (NS_SUCCEEDED(rv) && server) 
+  {
     mType = "movemail";
     return mType;
   }
