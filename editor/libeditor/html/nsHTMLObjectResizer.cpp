@@ -549,6 +549,7 @@ nsHTMLEditor::HideResizers(void)
 
   mIsShowingResizeHandles = PR_FALSE;
   mResizedObject = nsnull;
+  mIsResizing = PR_FALSE;
 
   return NS_OK;
 }
@@ -604,19 +605,25 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
                                 h + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
 
-  // add a mouse move listener to the editor
-  mMouseMotionListenerP = new ResizerMouseMotionListener(this);
-  if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
+  nsresult result = NS_OK;
 
-  nsCOMPtr<nsIDOMEventReceiver> erP;
-  nsresult result = GetDOMEventReceiver(getter_AddRefs(erP));
-  if (NS_SUCCEEDED(result) && erP)
+  if (!mMouseMotionListenerP)
   {
-    result = erP->AddEventListener(NS_LITERAL_STRING("mousemove"), mMouseMotionListenerP, PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register mouse motion listener");
+    // add a mouse move listener to the editor
+    mMouseMotionListenerP = new ResizerMouseMotionListener(this);
+    if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
+
+    nsCOMPtr<nsIDOMEventReceiver> erP;
+    result = GetDOMEventReceiver(getter_AddRefs(erP));
+    if (NS_SUCCEEDED(result) && erP)
+    {
+      result = erP->AddEventListener(NS_LITERAL_STRING("mousemove"), mMouseMotionListenerP, PR_TRUE);
+      NS_ASSERTION(NS_SUCCEEDED(result), "failed to register mouse motion listener");
+    }
+    else
+      HandleEventListenerError();
   }
-  else
-    HandleEventListenerError();
+
   return result;
 }
 
@@ -879,6 +886,9 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
 void
 nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
 {
+  NS_ASSERTION(mResizedObject, "SetFinalSize() called with null mResizedObject ptr!");
+  if (!mResizedObject) return;
+
   // we have now to set the new width and height of the resized object
   // we don't set the x and y position because we don't control that in
   // a normal HTML layout
