@@ -29,9 +29,11 @@
 
 /* Include all of the interfaces our factory can generate components for */
 #include "nsNntpUrl.h"
+#include "nsNntpService.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
+static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 
 static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
@@ -127,6 +129,10 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports *aOuter,
 	{
 		inst = NS_STATIC_CAST(nsINntpUrl*, new nsNntpUrl(nsnull, nsnull));
 	}
+	else if (mClassID.Equals(kNntpServiceCID))
+	{
+		inst = NS_STATIC_CAST(nsINntpService *, new nsNntpService());
+	}
 
 
 	if (inst == nsnull)
@@ -192,6 +198,9 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 	rv = compMgr->RegisterComponent(kNntpUrlCID, nsnull, nsnull, path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
+	rv = compMgr->RegisterComponent(kNntpServiceCID, nsnull, nsnull, path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
 #ifdef NS_DEBUG
 	printf("news registering from %s\n",path);
 #endif
@@ -215,10 +224,13 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 
 	rv = compMgr->UnregisterComponent(kNntpUrlCID, path);
 	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kNntpServiceCID, path);
+	if (NS_FAILED(rv)) goto done;
+
 done:
 	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
 	return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
