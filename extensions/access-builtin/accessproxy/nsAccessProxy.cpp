@@ -39,6 +39,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIPref.h"
 
 #include "nsIRegistry.h"
@@ -108,10 +109,16 @@ NS_IMETHODIMP nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
 
   ////////// Get Target Node - place in document where event was fired ////////////
   nsCOMPtr<nsIDOMEventTarget> targetNode;
-  rv = aEvent->GetOriginalTarget(getter_AddRefs(targetNode));
 
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
+
+  if (nsevent) {
+    rv = nsevent->GetOriginalTarget(getter_AddRefs(targetNode));
+
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
   if (!targetNode)
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(targetNode);
