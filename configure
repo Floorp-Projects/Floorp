@@ -2739,10 +2739,10 @@ EOF
        NS_USE_NATIVE=1
        case `uname -m` in
          sun4u)
-           ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0'
+           ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC'
            ;;
          *)
-           ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0'
+           ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0 -K PIC'
            ;;
        esac
     else
