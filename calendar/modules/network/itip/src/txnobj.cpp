@@ -49,8 +49,7 @@ TransactionObject::TransactionObject(NSCalendar & cal,
                                      JulianPtrArray & recipients,
                                      UnicodeString & subject,
                                      JulianPtrArray & modifiers,
-                                     JulianForm * jf,
-                                     MWContext * context,
+                                     /*JulianForm * jf, MWContext * context, */
                                      UnicodeString & attendeeName,
                                      EFetchType fetchType)
 : m_Modifiers(0), m_Recipients(0)
@@ -69,8 +68,10 @@ TransactionObject::TransactionObject(NSCalendar & cal,
     m_FetchType = fetchType;
 
     // for sending IMIP messages
+    /*
     m_JulianForm = jf;
     m_Context = context;
+    */
 }
 //---------------------------------------------------------------------
 TransactionObject::~TransactionObject()
@@ -324,26 +325,32 @@ TransactionObject::executeIMIP(JulianPtrArray * out,
     }
     createContentTypeHeader(sMethod, sCharSet, sComponentType, sContentTypeHeader);
 
-    // 10/12/98 10:24 AM
-    // if' 0 out because this won't interoperate with Microsoft
-#if 0
-     // added content-disposition to work with Lotus
-    if (((ICalComponent *)m_ICalComponentVctr->GetAt(0))->GetType() == ICalComponent::ICAL_COMPONENT_VEVENT)
+    // Use preference "calendar.imip.add_content_disp" to decide whether to add 
+    // "Content-Disposition: ... "
+    // Default doesn't write it.
+    XP_Bool do_add_content_disp = FALSE;
+
+    if ((m_JulianForm) && (m_JulianForm->getCallbacks()) && (m_JulianForm->getCallbacks()->BoolPref))
+		  (*m_JulianForm->getCallbacks()->BoolPref)("calendar.imip.add_content_disp", &do_add_content_disp);
+  
+    if (do_add_content_disp)
     {
-      sContentTypeHeader += "\r\nContent-Dispostion: inline; filename=\"event.ics\"";
+      if (((ICalComponent *)m_ICalComponentVctr->GetAt(0))->GetType() == ICalComponent::ICAL_COMPONENT_VEVENT)
+      {
+        sContentTypeHeader += "\r\nContent-Dispostion: inline; filename=\"event.ics\"";
+      }
+      else if (((ICalComponent *)m_ICalComponentVctr->GetAt(0))->GetType() == ICalComponent::ICAL_COMPONENT_VFREEBUSY)
+      { 
+        sContentTypeHeader += "\r\nContent-Dispostion: inline; filename=\"freebusy.ifb\"";
+      }
     }
-    else if (((ICalComponent *)m_ICalComponentVctr->GetAt(0))->GetType() == ICalComponent::ICAL_COMPONENT_VFREEBUSY)
-    {
-      sContentTypeHeader += "\r\nContent-Dispostion: inline; filename=\"freebusy.ifb\"";
-    }
-#endif
     
 //#ifdef DEBUG_ITIP
     m_DebugITIPMessage = itipMessage;
 //#endif /* DEBUG_ITIP */
     
     // TODO: send it via mail API here
-    if (m_JulianForm != 0 && m_Context != 0 && m_Recipients != 0)
+    if (/*m_JulianForm != 0 && m_Context != 0 &&*/ m_Recipients != 0)
     {
         int iOut;
         User * userTo;
@@ -378,10 +385,12 @@ TransactionObject::executeIMIP(JulianPtrArray * out,
             to = uTo.toCString("");
         if (to != 0)
         {
+          /*
             if (m_JulianForm->getCallbacks()->SendMessageUnattended)
                 iOut = (*m_JulianForm->getCallbacks()->SendMessageUnattended)(m_Context, to, subject, otherheaders, body);
             else
                 iOut = 0;
+                */
             delete [] to;
         }        
         if (from != 0)
