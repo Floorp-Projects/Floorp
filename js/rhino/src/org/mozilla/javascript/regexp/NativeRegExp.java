@@ -1164,14 +1164,10 @@ if (regexp.anchorCh >= 0) {
         return true;
     }
 
-    private static void CHECK_OFFSET(int diff)
-    {
-        if ((short)diff != diff)
-            throw new RuntimeException();
-    }
-
     private static void SET_OFFSET(byte[] array, int pc, int off)
     {
+        if ((short)off != off)
+            throw Context.reportRuntimeError("Too complex regexp");
         array[pc] = (byte)(off >> 8);
         array[pc + 1] = (byte)(off);
     }
@@ -1218,7 +1214,6 @@ if (regexp.anchorCh >= 0) {
                 nextTermFixup = pc;    /* address of following term */
                 pc += OFFSET_LEN;
                 diff = pc - nextAltFixup;
-                CHECK_OFFSET(diff);
                 SET_OFFSET(program, nextAltFixup, diff);
                 pc = emitREBytecode(state, re, pc, nextAlt);
 
@@ -1227,11 +1222,9 @@ if (regexp.anchorCh >= 0) {
                 pc += OFFSET_LEN;
 
                 diff = pc - nextTermFixup;
-                CHECK_OFFSET(diff);
                 SET_OFFSET(program, nextTermFixup, diff);
 
                 diff = pc - nextAltFixup;
-                CHECK_OFFSET(diff);
                 SET_OFFSET(program, nextAltFixup, diff);
                 break;
             case REOP_FLAT:
@@ -1292,7 +1285,6 @@ if (regexp.anchorCh >= 0) {
                 pc = emitREBytecode(state, re, pc, t.kid);
                 program[pc++] = REOP_ASSERTTEST;
                 diff = pc - nextTermFixup;
-                CHECK_OFFSET(diff);
                 SET_OFFSET(program, nextTermFixup, diff);
                 break;
             case REOP_ASSERT_NOT:
@@ -1301,7 +1293,6 @@ if (regexp.anchorCh >= 0) {
                 pc = emitREBytecode(state, re, pc, t.kid);
                 program[pc++] = REOP_ASSERTNOTTEST;
                 diff = pc - nextTermFixup;
-                CHECK_OFFSET(diff);
                 SET_OFFSET(program, nextTermFixup, diff);
                 break;
             case REOP_QUANT:
@@ -1329,7 +1320,6 @@ if (regexp.anchorCh >= 0) {
                 pc = emitREBytecode(state, re, pc, t.kid);
                 program[pc++] = REOP_ENDCHILD;
                 diff = pc - nextTermFixup;
-                CHECK_OFFSET(diff);
                 SET_OFFSET(program, nextTermFixup, diff);
                 break;
             case REOP_CLASS:
@@ -1353,7 +1343,6 @@ if (regexp.anchorCh >= 0) {
     pushBackTrackState(REGlobalData gData, byte op, int target, REMatchState x)
     {
         REBackTrackData backTrack = new REBackTrackData(gData, op, target, x);
-        ++gData.backTrackSize;
         backTrack.previous = gData.backTrackLast;
         gData.backTrackLast = backTrack;
     }
@@ -1706,12 +1695,6 @@ if (regexp.anchorCh >= 0) {
         int currentContinuation_op;
         int currentContinuation_pc;
         REMatchState result = null;
-        int k, length, offset, parenIndex, parenCount, index;
-        char matchCh;
-        int nextpc;
-        byte nextop;
-        int cap_index;
-        REProgState curState;
 
         currentContinuation_pc = 0;
         currentContinuation_op = REOP_END;
@@ -1833,241 +1816,274 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 }
                 break;
             case REOP_FLAT:
-                offset = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                length = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                result = flatNMatcher(gData, x, offset, length, chars, end);
+                {
+                    int offset = GET_ARG(program, pc);
+                    pc += ARG_LEN;
+                    int length = GET_ARG(program, pc);
+                    pc += ARG_LEN;
+                    result = flatNMatcher(gData, x, offset, length, chars,
+                                          end);
+                }
                 break;
             case REOP_FLATi:
-                offset = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                length = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                result = flatNIMatcher(gData, x, offset, length, chars, end);
+                {
+                    int offset = GET_ARG(program, pc);
+                    pc += ARG_LEN;
+                    int length = GET_ARG(program, pc);
+                    pc += ARG_LEN;
+                    result = flatNIMatcher(gData, x, offset, length, chars,
+                                           end);
+                }
                 break;
             case REOP_FLAT1:
-                matchCh = (char)(program[pc++] & 0xFF);
-                if (x.cp != end && chars[x.cp] == matchCh) {
-                    x.cp++;
-                    result = x;
-                } else {
-                    result = null;
+                {
+                    char matchCh = (char)(program[pc++] & 0xFF);
+                    if (x.cp != end && chars[x.cp] == matchCh) {
+                        x.cp++;
+                        result = x;
+                    } else {
+                        result = null;
+                    }
                 }
                 break;
             case REOP_FLAT1i:
-                matchCh = (char)(program[pc++] & 0xFF);
-                if (x.cp != end && upcase(chars[x.cp]) == upcase(matchCh)) {
-                    x.cp++;
-                    result = x;
-                } else {
-                    result = null;
+                {
+                    char matchCh = (char)(program[pc++] & 0xFF);
+                    if (x.cp != end && upcase(chars[x.cp]) == upcase(matchCh)) {
+                        x.cp++;
+                        result = x;
+                    } else {
+                        result = null;
+                    }
                 }
                 break;
             case REOP_UCFLAT1:
-                matchCh = (char)GET_ARG(program, pc);
-                pc += ARG_LEN;
-                if (x.cp != end && chars[x.cp] == matchCh) {
-                    x.cp++;
-                    result = x;
-                } else {
-                    result = null;
+                {
+                    char matchCh = (char)GET_ARG(program, pc);
+                    pc += ARG_LEN;
+                    if (x.cp != end && chars[x.cp] == matchCh) {
+                        x.cp++;
+                        result = x;
+                    } else {
+                        result = null;
+                    }
                 }
                 break;
             case REOP_UCFLAT1i:
-                matchCh = (char)GET_ARG(program, pc);
-                pc += ARG_LEN;
-                if (x.cp != end && upcase(chars[x.cp]) == upcase(matchCh)) {
-                    x.cp++;
-                    result = x;
-                } else {
-                    result = null;
+                {
+                    char matchCh = (char)GET_ARG(program, pc);
+                    pc += ARG_LEN;
+                    if (x.cp != end && upcase(chars[x.cp]) == upcase(matchCh)) {
+                        x.cp++;
+                        result = x;
+                    } else {
+                        result = null;
+                    }
                 }
                 break;
             case REOP_ALT:
-                nextpc = pc + GET_OFFSET(program, pc);
-                nextop = program[nextpc++];
-                gData.stateStack[gData.stateStackTop].continuation_pc =
-                                                               currentContinuation_pc;
-                gData.stateStack[gData.stateStackTop].continuation_op =
-                                                               currentContinuation_op;
-                ++gData.stateStackTop;
-                pushBackTrackState(gData, nextop, nextpc, x);
-                pc += ARG_LEN;
-                op = program[pc++];
+                {
+                    int nextpc;
+                    byte nextop;
+                    REProgState state;
+                    state = gData.stateStack[gData.stateStackTop];
+                    state.continuation_pc = currentContinuation_pc;
+                    state.continuation_op = currentContinuation_op;
+                    ++gData.stateStackTop;
+                    nextpc = pc + GET_OFFSET(program, pc);
+                    nextop = program[nextpc++];
+                    pushBackTrackState(gData, nextop, nextpc, x);
+                    pc += ARG_LEN;
+                    op = program[pc++];
+                }
                 continue;
 
             case REOP_JUMP:
-                --gData.stateStackTop;
-                currentContinuation_pc =
-                              gData.stateStack[gData.stateStackTop].continuation_pc;
-                currentContinuation_op =
-                              gData.stateStack[gData.stateStackTop].continuation_op;
-                offset = GET_OFFSET(program, pc);
-                pc += offset;
-                op = program[pc++];
+                {
+                    int offset;
+                    REProgState state;
+                    --gData.stateStackTop;
+                    state = gData.stateStack[gData.stateStackTop];
+                    currentContinuation_pc = state.continuation_pc;
+                    currentContinuation_op = state.continuation_op;
+                    offset = GET_OFFSET(program, pc);
+                    pc += offset;
+                    op = program[pc++];
+                }
                 continue;
 
 
             case REOP_LPAREN:
-                parenIndex = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                x.set_parens(parenIndex, x.cp, 0);
-                op = program[pc++];
+                {
+                    int parenIndex = GET_ARG(program, pc);
+                    pc += ARG_LEN;
+                    x.set_parens(parenIndex, x.cp, 0);
+                    op = program[pc++];
+                }
                 continue;
             case REOP_RPAREN:
-                parenIndex = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                cap_index = x.parens_index(parenIndex);
-                x.set_parens(parenIndex, cap_index, x.cp - cap_index);
-                if (parenIndex > gData.lastParen)
-                    gData.lastParen = parenIndex;
-                op = program[pc++];
+                {
+                    int cap_index;
+                    int parenIndex = GET_ARG(program, pc);
+                    pc += ARG_LEN;
+                    cap_index = x.parens_index(parenIndex);
+                    x.set_parens(parenIndex, cap_index, x.cp - cap_index);
+                    if (parenIndex > gData.lastParen)
+                        gData.lastParen = parenIndex;
+                    op = program[pc++];
+                }
                 continue;
             case REOP_BACKREF:
-                parenIndex = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                result = backrefMatcher(gData, x, parenIndex, chars, end);
-                break;
-
-            case REOP_ASSERT:
-                curState = gData.stateStack[gData.stateStackTop];
-                curState.continuation_pc = currentContinuation_pc;
-                curState.continuation_op = currentContinuation_op;
-                curState.backTrackDepth = gData.backTrackSize;
-                curState.index = x.cp;
-                ++gData.stateStackTop;
-                pushBackTrackState(gData, REOP_ASSERTTEST,
-                                        pc + GET_OFFSET(program, pc), x);
-                pc += ARG_LEN;
-                op = program[pc++];
-                continue;
-            case REOP_ASSERT_NOT:
-                curState = gData.stateStack[gData.stateStackTop];
-                curState.continuation_pc = currentContinuation_pc;
-                curState.continuation_op = currentContinuation_op;
-                curState.backTrackDepth = gData.backTrackSize;
-                curState.index = x.cp;
-                ++gData.stateStackTop;
-                pushBackTrackState(gData, REOP_ASSERTNOTTEST,
-                                        pc + GET_OFFSET(program, pc), x);
-                pc += ARG_LEN;
-                op = program[pc++];
-                continue;
-            case REOP_ASSERTTEST:
-                --gData.stateStackTop;
-                curState = gData.stateStack[gData.stateStackTop];
-                x.cp = curState.index;
-                while (gData.backTrackSize != curState.backTrackDepth) {
-                    gData.backTrackLast = gData.backTrackLast.previous;
-                    --gData.backTrackSize;
+                {
+                    int parenIndex = GET_ARG(program, pc);
+                    pc += ARG_LEN;
+                    result = backrefMatcher(gData, x, parenIndex, chars, end);
                 }
-                currentContinuation_pc = curState.continuation_pc;
-                currentContinuation_op = curState.continuation_op;
-                if (result != null)
-                    result = x;
-                break;
-            case REOP_ASSERTNOTTEST:
-                --gData.stateStackTop;
-                curState = gData.stateStack[gData.stateStackTop];
-                x.cp = curState.index;
-                while (gData.backTrackSize != curState.backTrackDepth) {
-                    gData.backTrackLast = gData.backTrackLast.previous;
-                    --gData.backTrackSize;
-                }
-                currentContinuation_pc = curState.continuation_pc;
-                currentContinuation_op = curState.continuation_op;
-                if (result == null)
-                    result = x;
-                else
-                    result = null;
                 break;
 
             case REOP_CLASS:
-                index = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                if (x.cp != end) {
-                    if (classMatcher(gData, gData.regexp.classList[index],
-                                     chars[x.cp]))
-                    {
-                        x.cp++;
-                        result = x;
-                        break;
+                {
+                    int index = GET_ARG(program, pc);
+                    pc += ARG_LEN;
+                    if (x.cp != end) {
+                        if (classMatcher(gData, gData.regexp.classList[index],
+                                         chars[x.cp]))
+                        {
+                            x.cp++;
+                            result = x;
+                            break;
+                        }
                     }
+                    result = null;
                 }
-                result = null;
                 break;
 
-            case REOP_END:
-                if (x != null)
-                    return x;
+            case REOP_ASSERT:
+            case REOP_ASSERT_NOT:
+                {
+                    byte testOp;
+                    REProgState state;
+                    if (op == REOP_ASSERT) {
+                        testOp = REOP_ASSERTTEST;
+                    } else {
+                        testOp = REOP_ASSERTNOTTEST;
+                    }
+                    state = gData.stateStack[gData.stateStackTop];
+                    state.continuation_pc = currentContinuation_pc;
+                    state.continuation_op = currentContinuation_op;
+                    state.savedBackTrackLast = gData.backTrackLast;
+                    state.index = x.cp;
+                    ++gData.stateStackTop;
+                    pushBackTrackState(gData, testOp,
+                                       pc + GET_OFFSET(program, pc), x);
+                    pc += ARG_LEN;
+                    op = program[pc++];
+                }
+                continue;
+
+            case REOP_ASSERTTEST:
+            case REOP_ASSERTNOTTEST:
+                {
+                    REProgState state;
+                    --gData.stateStackTop;
+                    state = gData.stateStack[gData.stateStackTop];
+                    x.cp = state.index;
+                    gData.backTrackLast = state.savedBackTrackLast;
+                    currentContinuation_pc = state.continuation_pc;
+                    currentContinuation_op = state.continuation_op;
+                    if (result != null) {
+                        if (op == REOP_ASSERTTEST) {
+                            result = x;
+                        } else {
+                            result = null;
+                        }
+                    } else {
+                        if (op == REOP_ASSERTTEST) {
+                            // Do nothing
+                        } else {
+                            result = x;
+                        }
+                    }
+                }
                 break;
 
             case REOP_STAR:
-                curState = gData.stateStack[gData.stateStackTop];
-                curState.min = 0;
-                curState.max = -1;
-                curState.index = x.cp;
-                curState.continuation_pc = currentContinuation_pc;
-                curState.continuation_op = currentContinuation_op;
-                ++gData.stateStackTop;
-                currentContinuation_op = REOP_REPEAT;
-                currentContinuation_pc = pc;
-                pushBackTrackState(gData, REOP_REPEAT, pc, x);
-                /* Step over <parencount>, <parenindex> & <next> */
-                pc += 3 * ARG_LEN;
-                op = program[pc++];
-                continue;
-
             case REOP_PLUS:
-                curState = gData.stateStack[gData.stateStackTop];
-                curState.min = 1;
-                curState.max = -1;
-                curState.index = x.cp;
-                curState.continuation_pc = currentContinuation_pc;
-                curState.continuation_op = currentContinuation_op;
-                ++gData.stateStackTop;
-                currentContinuation_op = REOP_REPEAT;
-                currentContinuation_pc = pc;
-                pushBackTrackState(gData, REOP_REPEAT, pc, x);
-                /* Step over <parencount>, <parenindex> & <next> */
-                pc += 3 * ARG_LEN;
-                op = program[pc++];
-                continue;
-
             case REOP_OPT:
-                curState = gData.stateStack[gData.stateStackTop];
-                curState.min = 0;
-                curState.max = 1;
-                curState.index = x.cp;
-                curState.continuation_pc = currentContinuation_pc;
-                curState.continuation_op = currentContinuation_op;
-                ++gData.stateStackTop;
-                currentContinuation_op = REOP_REPEAT;
-                currentContinuation_pc = pc;
-                pushBackTrackState(gData, REOP_REPEAT, pc, x);
-                /* Step over <parencount>, <parenindex> & <next> */
-                pc += 3 * ARG_LEN;
-                op = program[pc++];
-                continue;
-
             case REOP_QUANT:
-                curState = gData.stateStack[gData.stateStackTop];
-                curState.min = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                curState.max = GET_ARG(program, pc);
-                pc += ARG_LEN;
-
-                curState.index = x.cp;
-                curState.continuation_pc = currentContinuation_pc;
-                curState.continuation_op = currentContinuation_op;
-                ++gData.stateStackTop;
-                currentContinuation_op = REOP_REPEAT;
-                currentContinuation_pc = pc;
-                pushBackTrackState(gData, REOP_REPEAT, pc, x);
-                /* Step over <parencount>, <parenindex> & <next> */
-                pc += 3 * ARG_LEN;
-                op = program[pc++];
+            case REOP_MINIMALSTAR:
+            case REOP_MINIMALPLUS:
+            case REOP_MINIMALOPT:
+            case REOP_MINIMALQUANT:
+                {
+                    REProgState state;
+                    int min, max;
+                    boolean greedy = false;
+                    switch (op) {
+                      case REOP_STAR:
+                        greedy = true;
+                        // fallthrough
+                      case REOP_MINIMALSTAR:
+                        min = 0;
+                        max = -1;
+                        break;
+                      case REOP_PLUS:
+                        greedy = true;
+                        // fallthrough
+                      case REOP_MINIMALPLUS:
+                        min = 1;
+                        max = -1;
+                        break;
+                      case REOP_OPT:
+                        greedy = true;
+                        // fallthrough
+                      case REOP_MINIMALOPT:
+                        min = 0;
+                        max = 1;
+                        break;
+                      case REOP_QUANT:
+                        greedy = true;
+                        // fallthrough
+                      case REOP_MINIMALQUANT:
+                        min = GET_ARG(program, pc);
+                        pc += ARG_LEN;
+                        max = GET_ARG(program, pc);
+                        pc += ARG_LEN;
+                        break;
+                      default:
+                        throw Kit.codeBug();
+                    }
+                    state = gData.stateStack[gData.stateStackTop];
+                    state.min = min;
+                    state.max = max;
+                    state.index = x.cp;
+                    state.continuation_pc = currentContinuation_pc;
+                    state.continuation_op = currentContinuation_op;
+                    ++gData.stateStackTop;
+                    if (greedy) {
+                        currentContinuation_op = REOP_REPEAT;
+                        currentContinuation_pc = pc;
+                        pushBackTrackState(gData, REOP_REPEAT, pc, x);
+                        /* Step over <parencount>, <parenindex> & <next> */
+                        pc += 3 * ARG_LEN;
+                        op = program[pc++];
+                    } else {
+                        if (min != 0) {
+                            currentContinuation_op = REOP_MINIMALREPEAT;
+                            currentContinuation_pc = pc;
+                            /* <parencount> <parenindex> & <next> */
+                            pc += 3 * ARG_LEN;
+                            op = program[pc++];
+                        } else {
+                            pushBackTrackState(gData, REOP_MINIMALREPEAT,
+                                               pc, x);
+                            --gData.stateStackTop;
+                            pc += 2 * ARG_LEN;  // <parencount> & <parenindex>
+                            pc = pc + GET_OFFSET(program, pc);
+                            op = program[pc++];
+                        }
+                    }
+                }
                 continue;
 
             case REOP_ENDCHILD:
@@ -2076,225 +2092,136 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 continue;
 
             case REOP_REPEAT:
-                --gData.stateStackTop;
-                curState = gData.stateStack[gData.stateStackTop];
-                if (result == null) {
-                    /*
-                     *  There's been a failure, see if we have enough children.
-                     */
-                    currentContinuation_pc = curState.continuation_pc;
-                    currentContinuation_op = curState.continuation_op;
-                    if (curState.min == 0)
-                        result = x;
-                    pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
-                    pc = pc + GET_OFFSET(program, pc);
-                    break;
-                }
-                else {
-                    if ((curState.min == 0)
-                            && (x.cp == curState.index)) {
-                        /* matched an empty string, that'll get us nowhere */
-                        result = null;
-                        currentContinuation_pc = curState.continuation_pc;
-                        currentContinuation_op = curState.continuation_op;
-                        pc += 2 * ARG_LEN;
+                {
+                    REProgState state;
+                    --gData.stateStackTop;
+                    state = gData.stateStack[gData.stateStackTop];
+                    if (result == null) {
+                        //
+                        // There's been a failure, see if we have enough
+                        // children.
+                        //
+                        if (state.min == 0)
+                            result = x;
+                        currentContinuation_pc = state.continuation_pc;
+                        currentContinuation_op = state.continuation_op;
+                        pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
                         pc = pc + GET_OFFSET(program, pc);
                         break;
                     }
-                    if (curState.min != 0) curState.min--;
-                    if (curState.max != -1) curState.max--;
-                    if (curState.max == 0) {
-                        result = x;
-                        currentContinuation_pc = curState.continuation_pc;
-                        currentContinuation_op = curState.continuation_op;
+                    else {
+                        if (state.min == 0 && x.cp == state.index) {
+                            // matched an empty string, that'll get us nowhere
+                            result = null;
+                            currentContinuation_pc = state.continuation_pc;
+                            currentContinuation_op = state.continuation_op;
+                            pc += 2 * ARG_LEN;
+                            pc = pc + GET_OFFSET(program, pc);
+                            break;
+                        }
+                        if (state.min != 0) state.min--;
+                        if (state.max != -1) state.max--;
+                        if (state.max == 0) {
+                            result = x;
+                            currentContinuation_pc = state.continuation_pc;
+                            currentContinuation_op = state.continuation_op;
+                            pc += 2 * ARG_LEN;
+                            pc = pc + GET_OFFSET(program, pc);
+                            break;
+                        }
+                        state.index = x.cp;
+                        ++gData.stateStackTop;
+                        currentContinuation_op = REOP_REPEAT;
+                        currentContinuation_pc = pc;
+                        pushBackTrackState(gData, REOP_REPEAT, pc, x);
+                        int parenCount = GET_ARG(program, pc);
+                        pc += ARG_LEN;
+                        int parenIndex = GET_ARG(program, pc);
                         pc += 2 * ARG_LEN;
-                        pc = pc + GET_OFFSET(program, pc);
-                        break;
+                        op = program[pc++];
+                        for (int k = 0; k < parenCount; k++) {
+                            x.set_parens(parenIndex + k, -1, 0);
+                        }
                     }
-                    curState.index = x.cp;
-                    ++gData.stateStackTop;
-                    currentContinuation_op = REOP_REPEAT;
-                    currentContinuation_pc = pc;
-                    pushBackTrackState(gData, REOP_REPEAT, pc, x);
-                    parenCount = GET_ARG(program, pc);
-                    pc += ARG_LEN;
-                    parenIndex = GET_ARG(program, pc);
-                    pc += 2 * ARG_LEN;
-                    op = program[pc++];
-                    for (k = 0; k < parenCount; k++) {
-                        x.set_parens(parenIndex + k, -1, 0);
-                    }
-                }
-                continue;
-
-            case REOP_MINIMALSTAR:
-                curState = gData.stateStack[gData.stateStackTop];
-                curState.min = 0;
-                curState.max = -1;
-                curState.index = x.cp;
-                curState.continuation_pc = currentContinuation_pc;
-                curState.continuation_op = currentContinuation_op;
-                ++gData.stateStackTop;
-                if (curState.min != 0) {
-                    currentContinuation_op = REOP_MINIMALREPEAT;
-                    currentContinuation_pc = pc;
-                    /* <parencount> <parenindex> & <next> */
-                    pc += 3 * ARG_LEN;
-                    op = program[pc++];
-                }
-                else {
-                    pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x);
-                    --gData.stateStackTop;
-                    pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
-                    pc = pc + GET_OFFSET(program, pc);
-                    op = program[pc++];
-                }
-                continue;
-            case REOP_MINIMALPLUS:
-                curState = gData.stateStack[gData.stateStackTop];
-                curState.min = 1;
-                curState.max = -1;
-                curState.index = x.cp;
-                curState.continuation_pc = currentContinuation_pc;
-                curState.continuation_op = currentContinuation_op;
-                ++gData.stateStackTop;
-                if (curState.min != 0) {
-                    currentContinuation_op = REOP_MINIMALREPEAT;
-                    currentContinuation_pc = pc;
-                    /* <parencount> <parenindex> & <next> */
-                    pc += 3 * ARG_LEN;
-                    op = program[pc++];
-                }
-                else {
-                    pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x);
-                    --gData.stateStackTop;
-                    pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
-                    pc = pc + GET_OFFSET(program, pc);
-                    op = program[pc++];
-                }
-                continue;
-            case REOP_MINIMALOPT:
-                curState = gData.stateStack[gData.stateStackTop];
-                curState.min = 0;
-                curState.max = 1;
-                curState.index = x.cp;
-                curState.continuation_pc = currentContinuation_pc;
-                curState.continuation_op = currentContinuation_op;
-                ++gData.stateStackTop;
-                if (curState.min != 0) {
-                    currentContinuation_op = REOP_MINIMALREPEAT;
-                    currentContinuation_pc = pc;
-                    /* <parencount> <parenindex> & <next> */
-                    pc += 3 * ARG_LEN;
-                    op = program[pc++];
-                }
-                else {
-                    pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x);
-                    --gData.stateStackTop;
-                    pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
-                    pc = pc + GET_OFFSET(program, pc);
-                    op = program[pc++];
-                }
-                continue;
-            case REOP_MINIMALQUANT:
-                curState = gData.stateStack[gData.stateStackTop];
-                curState.min = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                curState.max = GET_ARG(program, pc);
-                pc += ARG_LEN;
-                curState.index = x.cp;
-                curState.continuation_pc = currentContinuation_pc;
-                curState.continuation_op = currentContinuation_op;
-                ++gData.stateStackTop;
-                if (curState.min != 0) {
-                    currentContinuation_op = REOP_MINIMALREPEAT;
-                    currentContinuation_pc = pc;
-                    /* <parencount> <parenindex> & <next> */
-                    pc += 3 * ARG_LEN;
-                    op = program[pc++];
-                }
-                else {
-                    pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x);
-                    --gData.stateStackTop;
-                    pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
-                    pc = pc + GET_OFFSET(program, pc);
-                    op = program[pc++];
                 }
                 continue;
 
             case REOP_MINIMALREPEAT:
-                --gData.stateStackTop;
-                curState = gData.stateStack[gData.stateStackTop];
+                {
+                    REProgState state;
+                    --gData.stateStackTop;
+                    state = gData.stateStack[gData.stateStackTop];
 
-                if (result == null) {
-                    /*
-                     * Non-greedy failure - try to consume another child.
-                     */
-                    if ((curState.max == -1)
-                            || (curState.max > 0)) {
-                        curState.index = x.cp;
-                        currentContinuation_op = REOP_MINIMALREPEAT;
-                        currentContinuation_pc = pc;
-                        parenCount = GET_ARG(program, pc);
-                        pc += ARG_LEN;
-                        parenIndex = GET_ARG(program, pc);
-                        pc += 2 * ARG_LEN;
-                        for (k = 0; k < parenCount; k++) {
-                            x.set_parens(parenIndex + k, -1, 0);
+                    if (result == null) {
+                        //
+                        // Non-greedy failure - try to consume another child.
+                        //
+                        if (state.max == -1 || state.max > 0) {
+                            state.index = x.cp;
+                            currentContinuation_op = REOP_MINIMALREPEAT;
+                            currentContinuation_pc = pc;
+                            int parenCount = GET_ARG(program, pc);
+                            pc += ARG_LEN;
+                            int parenIndex = GET_ARG(program, pc);
+                            pc += 2 * ARG_LEN;
+                            for (int k = 0; k < parenCount; k++) {
+                                x.set_parens(parenIndex + k, -1, 0);
+                            }
+                            ++gData.stateStackTop;
+                            op = program[pc++];
+                            continue;
+                        } else {
+                            // Don't need to adjust pc since we're going to pop.
+                            currentContinuation_pc = state.continuation_pc;
+                            currentContinuation_op = state.continuation_op;
+                            break;
                         }
-                        ++gData.stateStackTop;
-                        op = program[pc++];
-                        continue;
-                    }
-                    else {
-                        /* Don't need to adjust pc since we're going to pop. */
-                        currentContinuation_pc = curState.continuation_pc;
-                        currentContinuation_op = curState.continuation_op;
-                        break;
-                    }
-                }
-                else {
-                    if ((curState.min == 0)
-                            && (x.cp == curState.index)) {
-                        /* Matched an empty string, that'll get us nowhere. */
-                        result = null;
-                        currentContinuation_pc = curState.continuation_pc;
-                        currentContinuation_op = curState.continuation_op;
-                        break;
-                    }
-                    if (curState.min != 0) curState.min--;
-                    if (curState.max != -1) curState.max--;
-                    if (curState.min != 0) {
-                        currentContinuation_op = REOP_MINIMALREPEAT;
-                        currentContinuation_pc = pc;
-                        parenCount = GET_ARG(program, pc);
-                        pc += ARG_LEN;
-                        parenIndex = GET_ARG(program, pc);
-                        pc += 2 * ARG_LEN;
-                        for (k = 0; k < parenCount; k++) {
-                            x.set_parens(parenIndex + k, -1, 0);
+                    } else {
+                        if (state.min == 0 && x.cp == state.index) {
+                            // Matched an empty string, that'll get us nowhere.
+                            result = null;
+                            currentContinuation_pc = state.continuation_pc;
+                            currentContinuation_op = state.continuation_op;
+                            break;
                         }
-                        curState.index = x.cp;
-                        ++gData.stateStackTop;
-                        op = program[pc++];
-                        continue;
-                    }
-                    else {
-                        currentContinuation_pc = curState.continuation_pc;
-                        currentContinuation_op = curState.continuation_op;
-                        curState.index = x.cp;
-                        ++gData.stateStackTop;
-                        pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x);
-                        --gData.stateStackTop;
-                        pc += 2 * ARG_LEN;
-                        pc = pc + GET_OFFSET(program, pc);
-                        op = program[pc++];
+                        if (state.min != 0) state.min--;
+                        if (state.max != -1) state.max--;
+                        if (state.min != 0) {
+                            currentContinuation_op = REOP_MINIMALREPEAT;
+                            currentContinuation_pc = pc;
+                            int parenCount = GET_ARG(program, pc);
+                            pc += ARG_LEN;
+                            int parenIndex = GET_ARG(program, pc);
+                            pc += 2 * ARG_LEN;
+                            for (int k = 0; k < parenCount; k++) {
+                                x.set_parens(parenIndex + k, -1, 0);
+                            }
+                            state.index = x.cp;
+                            ++gData.stateStackTop;
+                            op = program[pc++];
+                        } else {
+                            currentContinuation_pc = state.continuation_pc;
+                            currentContinuation_op = state.continuation_op;
+                            state.index = x.cp;
+                            ++gData.stateStackTop;
+                            pushBackTrackState(gData, REOP_MINIMALREPEAT,
+                                               pc, x);
+                            --gData.stateStackTop;
+                            pc += 2 * ARG_LEN;
+                            pc = pc + GET_OFFSET(program, pc);
+                            op = program[pc++];
+                        }
                         continue;
                     }
                 }
+
+            case REOP_END:
+                if (x != null)
+                    return x;
+                break;
 
             default:
-                throw new RuntimeException();
+                throw Kit.codeBug();
 
             }
             /*
@@ -2302,16 +2229,15 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
              *  Otherwise this is a complete and utter failure.
              */
             if (result == null) {
-                if (gData.backTrackSize != 0) {
-                    REBackTrackData backTrackData = gData.backTrackLast;
+                REBackTrackData backTrackData = gData.backTrackLast;
+                if (backTrackData != null) {
                     gData.backTrackLast = backTrackData.previous;
-                    --gData.backTrackSize;
 
                     gData.lastParen = backTrackData.lastParen;
 
                     x = new REMatchState(backTrackData.state);
 
-                    for (k = 0; k < backTrackData.precedingStateTop; k++)
+                    for (int k = 0; k < backTrackData.precedingStateTop; k++)
                         gData.stateStack[k] = backTrackData.precedingState[k];
 
                     gData.stateStackTop = backTrackData.precedingStateTop + 1;
@@ -2352,7 +2278,6 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
 
         REMatchState x = new REMatchState(re.parenCount);
 
-        gData.backTrackSize = 0;
         gData.backTrackLast = null;
 
         gData.stateStack = new REProgState[INITIAL_STATESTACK];
@@ -2397,7 +2322,6 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
             }
             result = executeREBytecode(gData, x, chars, end);
 
-            gData.backTrackSize = 0;
             gData.backTrackLast = null;
             gData.stateStackTop = 0;
             if (result != null) {
@@ -2872,7 +2796,7 @@ class REProgState {
         index = other.index;
         continuation_op = other.continuation_op;
         continuation_pc = other.continuation_pc;
-        backTrackDepth = other.backTrackDepth;
+        savedBackTrackLast = other.savedBackTrackLast;
     }
 
     int min;                      /* current quantifier min */
@@ -2880,8 +2804,7 @@ class REProgState {
     int index;                    /* progress in text */
     int continuation_op;
     int continuation_pc;
-
-    int backTrackDepth; /* used by ASSERT_  to recover state */
+    REBackTrackData savedBackTrackLast; /* used by ASSERT_  to recover state */
 }
 
 class REBackTrackData {
@@ -2926,7 +2849,6 @@ class REGlobalData {
     int stateStackTop;
 
     REBackTrackData backTrackLast; /* last matched-so-far position */
-    int backTrackSize;
 };
 
 /*
