@@ -215,7 +215,7 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
   // get src
   mHasImage = PR_FALSE;
   nsAutoString src;
-  if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::src, src)) &&
+  if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, src)) &&
     (src.Length() > 0)) {
      mHasImage = PR_TRUE;
   } else {
@@ -252,12 +252,12 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
   
    // get the alignment
   nsAutoString value;
-  mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::value, value);
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
   setTitle(value); 
 
    // get the alignment
   nsAutoString align;
-  mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::align, align);
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align);
   setAlignment(align); 
 
   return rv;
@@ -308,7 +308,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
     mImageLoader.GetURLSpec(oldSRC);
     nsAutoString newSRC;
 
-    aChild->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::src, newSRC);
+    aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, newSRC);
 
     if (newSRC.Equals("")) {
          // if no src then get the list style image
@@ -372,11 +372,11 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
     }
   } else if (nsHTMLAtoms::value == aAttribute) {
 	  nsAutoString value;
-	  aChild->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::value, value);
+	  aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
 	  setTitle(value); 
   } else if (nsHTMLAtoms::align == aAttribute) {
 	  nsAutoString align;
-	  aChild->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::value, align);
+	  aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, align);
 	  setAlignment(align); 
   } 
 
