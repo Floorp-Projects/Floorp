@@ -242,7 +242,11 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
       strFile2 += fileRight;
     }
 #ifdef NS_DEBUG
-    printf("\n--NEW URL--%s\n", strFile2.ToNewCString());
+    {
+      char *s = strFile2.ToNewCString();
+      printf("\n--NEW URL--%s\n", s?s:"null");
+      delete s;
+    }
 #endif
   }
   /* locale binding */
