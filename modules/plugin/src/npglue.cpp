@@ -503,6 +503,12 @@ NPL_WriteReady(NET_StreamClass *stream)
             ret = userStream->WriteReady();
 #else
             ret = NP_MAXREADY;
+#ifdef NEW_PLUGIN_STREAM_API
+            nsPluginInputStream* inStr = (nsPluginInputStream*)newstream->pstream->pdata;
+            if (inStr->IsClosed()) {
+                ret = -1;
+            }
+#endif
 #endif
         }
         else if (ISFUNCPTR(newstream->handle->f->writeready)) {
@@ -582,12 +588,18 @@ NPL_Write(NET_StreamClass *stream, const unsigned char *str, int32 len)
 #ifdef NEW_PLUGIN_STREAM_API
 
         nsPluginInputStream* inStr = (nsPluginInputStream*)newstream->pstream->pdata;
-        nsIPluginStreamListener* listener = inStr->GetListener();
-        nsresult err = inStr->ReceiveData((const char*)str, urls->position, len);
-        if (err == NS_OK) {
-            err = listener->OnDataAvailable((const char*)urls->address, inStr, urls->position, len);
+        if (inStr->IsClosed()) {
+            ret = -1;
         }
-        PR_ASSERT(err == NS_OK);        // XXX this error should go somewhere
+        else {
+            nsIPluginStreamListener* listener = inStr->GetListener();
+            nsresult err = inStr->ReceiveData((const char*)str, urls->position, len);
+            if (err == NS_OK) {
+                err = listener->OnDataAvailable((const char*)urls->address, inStr, urls->position, len);
+            }
+            if (err != NS_OK)
+                ret = -1;
+        }
 
 #else // !NEW_PLUGIN_STREAM_API
 

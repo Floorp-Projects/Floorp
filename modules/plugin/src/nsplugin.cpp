@@ -1640,7 +1640,7 @@ nsPluginInputStream::nsPluginInputStream(nsIPluginStreamListener* listener,
                                          nsPluginStreamType streamType)
     : mListener(listener), mStreamType(streamType),
       mUrls(NULL), mStream(NULL),
-      mBuffer(NULL)
+      mBuffer(NULL), mClosed(PR_FALSE)
 //      mBuffer(NULL), mBufferLength(0), mAmountRead(0)
 {
     NS_INIT_REFCNT();
@@ -1686,14 +1686,21 @@ nsPluginInputStream::Cleanup(void)
         }
         mBuffer = NULL;
     }
+    mClosed = PR_TRUE;
 }
 
 NS_METHOD
 nsPluginInputStream::Close(void)
 {
+    NPError err = NPERR_NO_ERROR;
     Cleanup();
-    NPError err = npn_destroystream(mStream->instance->npp, mStream->pstream, 
-                                    nsPluginReason_UserBreak);
+#if 0   /* According to the plugin documentation, this would seem to be the 
+         * right thing to do here, but it's not (and calling NPN_DestroyStream
+         * in the 4.0 browser during an NPP_Write call will crash the browser).
+         */
+    err = npn_destroystream(mStream->instance->npp, mStream->pstream, 
+                            nsPluginReason_UserBreak);
+#endif
     return fromNPError[err];
 }
 

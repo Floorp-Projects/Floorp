@@ -964,6 +964,11 @@ NS_METHOD
 SimplePluginStreamListener::OnDataAvailable(const char* url, nsIPluginInputStream* input,
                                             PRUint32 offset, PRUint32 length)
 {
+    if (strcmp(url, "http://warp/java/oji/") == 0 && offset != 0) {
+        // Try closing the stream prematurely
+        input->Close();
+        return NS_OK;
+    }
     char* buffer = new char[length];
     if (buffer) {
         PRInt32 amountRead = 0;

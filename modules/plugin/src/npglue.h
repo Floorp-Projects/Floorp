@@ -774,6 +774,7 @@ public:
 
     nsIPluginStreamListener* GetListener(void) { return mListener; }
     nsPluginStreamType GetStreamType(void) { return mStreamType; }
+    PRBool IsClosed(void) { return mClosed; }
 
     void SetStreamInfo(URL_Struct* urls, np_stream* stream) {
         mUrls = urls;
@@ -797,6 +798,7 @@ protected:
     };
 
     BufferElement* mBuffer;
+    PRBool mClosed;
 //    PRUint32 mReadCursor;
 
 //    PRUint32 mBufferLength;
