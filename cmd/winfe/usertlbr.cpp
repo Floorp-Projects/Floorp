@@ -1735,6 +1735,7 @@ void CRDFToolbar::LayoutButtons(int nIndex)
 			pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
 		}
 	}
+    HT_DeleteCursor(cursor);
 
     int width = m_nWidth;
 
