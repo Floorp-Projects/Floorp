@@ -215,6 +215,7 @@ ScriptItemStruct * makeScriptItemStruct(NPAPI_Action action, DWORD dw1, DWORD dw
           break;
         case NPPVpluginWindowBool:
         case NPPVpluginTransparentBool:
+        case NPPVpluginKeepLibraryInMemory:
           dwTNVFlags = convertStringToBOOL1(&dw3);
           makeDataEntry(&psis->arg3, dw3, (dwTNVFlags & fTNV1) ? 0 : sizeof(NPBool));
           break;

@@ -137,8 +137,9 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
       {
         iIndex = ComboBox_GetCurSel(GetDlgItem(hWnd, IDC_COMBO_ARG2));
         ComboBox_GetLBText(GetDlgItem(hWnd, IDC_COMBO_ARG2), iIndex, szString);
-        if(   (strcmp(szString, "NPPVpluginWindowBool") == 0) 
-           || (strcmp(szString, "NPPVpluginTransparentBool") == 0))
+        if((strcmp(szString, "NPPVpluginWindowBool") == 0) ||
+           (strcmp(szString, "NPPVpluginTransparentBool") == 0) ||
+           (strcmp(szString, "NPPVpluginKeepLibraryInMemory") == 0))
         {
           HWND hWndCombo = GetDlgItem(hWnd, IDC_COMBO_ARG3);
           ComboBox_ResetContent(hWndCombo);
