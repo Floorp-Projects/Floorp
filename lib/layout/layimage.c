@@ -2606,7 +2606,7 @@ lo_image_pixmap_update(MWContext *context, LO_ImageStruct *lo_image,
 {
 
 #if defined(XP_WIN) || defined(XP_MAC) || defined(XP_UNIX)
-	IL_ImageReq *image_req = NULL;	// See below at the end of the function.
+	IL_ImageReq *image_req = NULL;	/* See below at the end of the function. */
 #endif
 
     /* This lo_image cannot correspond to an icon since we are receiving
