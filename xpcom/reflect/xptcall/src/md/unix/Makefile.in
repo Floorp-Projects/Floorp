@@ -46,6 +46,12 @@ ifneq (,$(filter SunOS Linux FreeBSD NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
 endif
+# 28817: if Solaris Intel OS, and native compiler, always build optimised.
+ifeq ($(OS_ARCH),SunOS)
+ifndef GNU_CC
+OS_CXXFLAGS += -O
+endif
+endif
 endif
 #
 # BeOS/Intel (uses the same unixish_x86 code)

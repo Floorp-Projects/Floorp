@@ -68,24 +68,12 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
             continue;
         }
         // else
+	    dp->val.p = (void*) *ap;
         switch(type)
         {
-        case nsXPTType::T_I8     : dp->val.i8  = *((PRInt8*)  ap);       break;
-        case nsXPTType::T_I16    : dp->val.i16 = *((PRInt16*) ap);       break;
-        case nsXPTType::T_I32    : dp->val.i32 = *((PRInt32*) ap);       break;
         case nsXPTType::T_I64    : dp->val.i64 = *((PRInt64*) ap); ap++; break;
-        case nsXPTType::T_U8     : dp->val.u8  = *((PRUint8*) ap);       break;
-        case nsXPTType::T_U16    : dp->val.u16 = *((PRUint16*)ap);       break;
-        case nsXPTType::T_U32    : dp->val.u32 = *((PRUint32*)ap);       break;
         case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap); ap++; break;
-        case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)   ap);       break;
         case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
-        case nsXPTType::T_BOOL   : dp->val.b   = *((PRBool*)  ap);       break;
-        case nsXPTType::T_CHAR   : dp->val.c   = *((char*)    ap);       break;
-        case nsXPTType::T_WCHAR  : dp->val.wc  = *((wchar_t*) ap);       break;
-        default:
-            NS_ASSERTION(0, "bad type");
-            break;
         }
     }
 
@@ -99,6 +87,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
     return result;
 }
 
+#ifdef __GNUC__         /* Gnu Compiler. */
 #define STUB_ENTRY(n) \
 nsresult nsXPTCStubBase::Stub##n() \
 { \
@@ -120,6 +109,30 @@ nsresult nsXPTCStubBase::Stub##n() \
     : "memory" ); \
     return result; \
 }
+
+#else if defined(__SUNPRO_CC)           /* Sun Workshop Compiler. */
+
+#define STUB_ENTRY(n) \
+nsresult nsXPTCStubBase::Stub##n() \
+{ \
+  asm ( \
+	"\n\t leal   0x0c(%ebp), %ecx\t / args" \
+	"\n\t pushl  %ecx" \
+	"\n\t pushl  $"#n"\t / method index" \
+	"\n\t movl   0x08(%ebp), %ecx\t / this" \
+	"\n\t pushl  %ecx" \
+	"\n\t call   __1cSPrepareAndDispatch6FpnOnsXPTCStubBase_IpI_I_\t / PrepareAndDispatch" \
+	"\n\t leave" \
+	"\n\t ret\n" \
+ ); \
+/* result == %eax */ \
+  if(0) /* supress "*** is expected to return a value." error */ \
+     return 0; \
+}
+
+#else
+#error "can't find a compiler to use"
+#endif /* __GNUC__ */
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
