@@ -50,11 +50,11 @@ class nsXULButtonAccessible : public nsAccessible
 {
 public:
   nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAWritableString& aResult);
+  NS_IMETHOD GetAccName(nsAString& aResult);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
@@ -71,7 +71,7 @@ public:
   nsXULCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
@@ -83,7 +83,7 @@ public:
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
 
 private:
@@ -96,7 +96,7 @@ public:
   nsXULGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAWritableString& _retval);
+  NS_IMETHOD GetAccName(nsAString& _retval);
 };
 
 class nsXULProgressMeterAccessible : public nsAccessible
@@ -105,7 +105,7 @@ public:
   nsXULProgressMeterAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccValue(nsAWritableString &_retval);
+  NS_IMETHOD GetAccValue(nsAString &_retval);
 };
 
 class nsXULRadioButtonAccessible : public nsRadioButtonAccessible

@@ -51,10 +51,10 @@ class nsXULTabAccessible : public nsLeafAccessible
 public:
   nsXULTabAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
 };
 
@@ -81,7 +81,7 @@ class nsXULTabPanelsAccessible : public nsAccessible
 public:
   nsXULTabPanelsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 protected:
   nsCOMPtr<nsIDOMNode> mGParentDOMNode;

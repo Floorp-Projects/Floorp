@@ -58,7 +58,7 @@ public:
   nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *aResult); 
   NS_IMETHOD GetAccState(PRUint32 *aResult); 
-  NS_IMETHOD GetAccName(nsAWritableString& aResult);
+  NS_IMETHOD GetAccName(nsAString& aResult);
 };
 
 #endif  

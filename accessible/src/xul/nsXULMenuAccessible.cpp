@@ -113,7 +113,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetAccName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No DOM element for menu  node!");
@@ -182,7 +182,7 @@ NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccName(nsAString& _retval)
 {
   _retval.Assign(NS_LITERAL_STRING(""));
   return NS_OK;
@@ -225,7 +225,7 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenupopupAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULMenupopupAccessible::GetAccName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No element for popup node!");
@@ -262,7 +262,7 @@ NS_IMETHODIMP nsXULMenubarAccessible::GetAccState(PRUint32 *_retval)
 }
 
 
-NS_IMETHODIMP nsXULMenubarAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULMenubarAccessible::GetAccName(nsAString& _retval)
 {
   _retval = NS_LITERAL_STRING("menubar");
 

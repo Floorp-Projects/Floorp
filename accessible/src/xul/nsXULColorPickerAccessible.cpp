@@ -91,13 +91,13 @@ NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccName(nsAString& _retval)
 {
   _retval.Assign(NS_LITERAL_STRING(""));
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccValue(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No XUL Element for colorpicker");

@@ -124,7 +124,7 @@ public:
   NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
   NS_IMETHOD GetAccRole(PRUint32 *_retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccValue(nsAWritableString& _retval);
+  NS_IMETHOD GetAccValue(nsAString& _retval);
 
 };
 
@@ -140,7 +140,7 @@ public:
   virtual ~nsXULListitemAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccName(nsAWritableString& _retval);
+  NS_IMETHOD GetAccName(nsAString& _retval);
   NS_IMETHOD GetAccRole(PRUint32 *_retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 
@@ -161,7 +161,7 @@ public:
   virtual ~nsXULComboboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccValue(nsAWritableString& _retval);
+  NS_IMETHOD GetAccValue(nsAString& _retval);
 };
 
 #endif

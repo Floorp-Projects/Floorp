@@ -87,7 +87,7 @@ NS_IMPL_ISUPPORTS1(nsBaseComposerCommand, nsIControllerCommand)
 
 //--------------------------------------------------------------------------------------------------------------------
 nsresult
-nsBaseComposerCommand::GetInterfaceNode(const nsAReadableString & nodeID, nsIEditorShell* editorShell, nsIDOMElement **outNode)
+nsBaseComposerCommand::GetInterfaceNode(const nsAString & nodeID, nsIEditorShell* editorShell, nsIDOMElement **outNode)
 //--------------------------------------------------------------------------------------------------------------------
 {
   *outNode = nsnull;
@@ -107,7 +107,7 @@ nsBaseComposerCommand::GetInterfaceNode(const nsAReadableString & nodeID, nsIEdi
 
 //--------------------------------------------------------------------------------------------------------------------
 nsresult
-nsBaseComposerCommand::GetCommandNodeState(const nsAReadableString & aCommandName, nsIEditorShell* editorShell, nsString& outNodeState)
+nsBaseComposerCommand::GetCommandNodeState(const nsAString & aCommandName, nsIEditorShell* editorShell, nsString& outNodeState)
 //--------------------------------------------------------------------------------------------------------------------
 {
   nsCOMPtr<nsIDOMElement> uiNode;
@@ -120,7 +120,7 @@ nsBaseComposerCommand::GetCommandNodeState(const nsAReadableString & aCommandNam
 
 //--------------------------------------------------------------------------------------------------------------------
 nsresult
-nsBaseComposerCommand::SetCommandNodeState(const nsAReadableString & aCommandName, nsIEditorShell* editorShell, const nsString& inNodeState)
+nsBaseComposerCommand::SetCommandNodeState(const nsAString & aCommandName, nsIEditorShell* editorShell, const nsString& inNodeState)
 //--------------------------------------------------------------------------------------------------------------------
 {
   nsCOMPtr<nsIDOMElement> uiNode;
@@ -177,7 +177,7 @@ nsBaseStateUpdatingCommand::~nsBaseStateUpdatingCommand()
 NS_IMPL_ISUPPORTS_INHERITED1(nsBaseStateUpdatingCommand, nsBaseComposerCommand, nsIStateUpdatingControllerCommand);
 
 NS_IMETHODIMP
-nsBaseStateUpdatingCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+nsBaseStateUpdatingCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;  
@@ -194,7 +194,7 @@ nsBaseStateUpdatingCommand::IsCommandEnabled(const nsAReadableString & aCommandN
 
 
 NS_IMETHODIMP
-nsBaseStateUpdatingCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsBaseStateUpdatingCommand::DoCommand(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   if (!editorShell) return NS_ERROR_NOT_INITIALIZED;
@@ -231,7 +231,7 @@ nsBaseStateUpdatingCommand::GetCommandState(nsICommandParams *aParams, nsISuppor
 }
 
 NS_IMETHODIMP
-nsBaseStateUpdatingCommand::UpdateCommandState(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsBaseStateUpdatingCommand::UpdateCommandState(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   nsresult rv = NS_OK;
@@ -274,7 +274,7 @@ nsCloseCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon
 
 
 NS_IMETHODIMP
-nsCloseCommand::DoCommand(const nsAReadableString & aCommandName, const nsAReadableString & aCommandParams, nsISupports *refCon)
+nsCloseCommand::DoCommand(const nsAString & aCommandName, const nsAString & aCommandParams, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 
@@ -295,7 +295,7 @@ nsCloseCommand::DoCommand(const nsAReadableString & aCommandName, const nsAReada
 #endif
 
 NS_IMETHODIMP
-nsPasteQuotationCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+nsPasteQuotationCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
@@ -312,7 +312,7 @@ nsPasteQuotationCommand::IsCommandEnabled(const nsAReadableString & aCommandName
 
 
 NS_IMETHODIMP
-nsPasteQuotationCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsPasteQuotationCommand::DoCommand(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 
@@ -719,7 +719,7 @@ nsListItemCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
 #endif
 
 NS_IMETHODIMP
-nsRemoveListCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+nsRemoveListCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
@@ -744,7 +744,7 @@ nsRemoveListCommand::IsCommandEnabled(const nsAReadableString & aCommandName, ns
 
 
 NS_IMETHODIMP
-nsRemoveListCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsRemoveListCommand::DoCommand(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 
@@ -787,7 +787,7 @@ nsRemoveListCommand::GetCommandState(nsICommandParams *aParams, nsISupports *ref
 #endif
 
 NS_IMETHODIMP
-nsIndentCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+nsIndentCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
@@ -804,7 +804,7 @@ nsIndentCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISup
 
 
 NS_IMETHODIMP
-nsIndentCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsIndentCommand::DoCommand(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 
@@ -850,7 +850,7 @@ nsIndentCommand::GetCommandState(nsICommandParams *aParams, nsISupports *refCon)
 //OUTDENT
 
 NS_IMETHODIMP
-nsOutdentCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+nsOutdentCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
@@ -873,7 +873,7 @@ nsOutdentCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISu
 
 
 NS_IMETHODIMP
-nsOutdentCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsOutdentCommand::DoCommand(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 
@@ -933,7 +933,7 @@ nsMultiStateCommand::~nsMultiStateCommand()
 NS_IMPL_ISUPPORTS_INHERITED1(nsMultiStateCommand, nsBaseComposerCommand, nsIStateUpdatingControllerCommand);
 
 NS_IMETHODIMP
-nsMultiStateCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+nsMultiStateCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
@@ -959,7 +959,7 @@ nsMultiStateCommand::IsCommandEnabled(const nsAReadableString & aCommandName, ns
 
 
 NS_IMETHODIMP
-nsMultiStateCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsMultiStateCommand::DoCommand(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 
@@ -998,7 +998,7 @@ nsMultiStateCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *ref
 }
 
 NS_IMETHODIMP
-nsMultiStateCommand::UpdateCommandState(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsMultiStateCommand::UpdateCommandState(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   nsresult rv = NS_OK;
@@ -1388,7 +1388,7 @@ nsHighlightColorStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& n
 }
 
 NS_IMETHODIMP
-nsHighlightColorStateCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+nsHighlightColorStateCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
@@ -1595,7 +1595,7 @@ nsAlignCommand::SetState(nsIEditorShell *aEditorShell, nsString& newState)
 #endif
 
 NS_IMETHODIMP
-nsRemoveStylesCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+nsRemoveStylesCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   nsCOMPtr<nsIEditor>editor;
@@ -1619,7 +1619,7 @@ nsRemoveStylesCommand::IsCommandEnabled(const nsAReadableString & aCommandName, 
 
 
 NS_IMETHODIMP
-nsRemoveStylesCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsRemoveStylesCommand::DoCommand(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 
@@ -1662,7 +1662,7 @@ nsRemoveStylesCommand::GetCommandState(nsICommandParams *aParams, nsISupports *r
 #endif
 
 NS_IMETHODIMP
-nsIncreaseFontSizeCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+nsIncreaseFontSizeCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   nsCOMPtr<nsIEditor>editor;
@@ -1684,7 +1684,7 @@ nsIncreaseFontSizeCommand::IsCommandEnabled(const nsAReadableString & aCommandNa
 
 
 NS_IMETHODIMP
-nsIncreaseFontSizeCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsIncreaseFontSizeCommand::DoCommand(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 
@@ -1726,7 +1726,7 @@ nsIncreaseFontSizeCommand::GetCommandState(nsICommandParams *aParams, nsISupport
 #endif
 
 NS_IMETHODIMP
-nsDecreaseFontSizeCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+nsDecreaseFontSizeCommand::IsCommandEnabled(const nsAString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   nsCOMPtr<nsIEditor>editor;
@@ -1749,7 +1749,7 @@ nsDecreaseFontSizeCommand::IsCommandEnabled(const nsAReadableString & aCommandNa
 
 
 NS_IMETHODIMP
-nsDecreaseFontSizeCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *refCon)
+nsDecreaseFontSizeCommand::DoCommand(const nsAString & aCommandName, nsISupports *refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 

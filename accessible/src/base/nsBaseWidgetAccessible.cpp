@@ -130,7 +130,7 @@ NS_IMETHODIMP nsContainerAccessible::GetAccNumActions(PRUint8 *_retval)
 }
 
 /** no actions */
-NS_IMETHODIMP nsContainerAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsContainerAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   return NS_OK;
 }
@@ -149,13 +149,13 @@ NS_IMETHODIMP nsContainerAccessible::GetAccState(PRUint32 *_retval)
 }
 
 /** no value */
-NS_IMETHODIMP nsContainerAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsContainerAccessible::GetAccValue(nsAString& _retval)
 {
   return NS_OK;
 }
 
 /** no name*/
-NS_IMETHODIMP nsContainerAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsContainerAccessible::GetAccName(nsAString& _retval)
 {
   return NS_OK;
 }
@@ -257,7 +257,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
 }
 
 
-NS_IMETHODIMP nsLinkableAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsLinkableAccessible::GetAccValue(nsAString& _retval)
 {
   if (IsALink()) {
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mLinkContent));
@@ -276,7 +276,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccNumActions(PRUint8 *_retval)
 }
 
 /* wstring getAccActionName (in PRUint8 index); */
-NS_IMETHODIMP nsLinkableAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsLinkableAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   // Action 0 (default action): Jump to link
   if (index == eAction_Jump) {   

@@ -243,7 +243,7 @@ nsComposerCommandsUpdater::UpdateDirtyState(PRBool aNowDirty)
 }
 
 nsresult
-nsComposerCommandsUpdater::CallUpdateCommands(const nsAReadableString& aCommand)
+nsComposerCommandsUpdater::CallUpdateCommands(const nsAString& aCommand)
 {
   if (!mDocShell)
   {

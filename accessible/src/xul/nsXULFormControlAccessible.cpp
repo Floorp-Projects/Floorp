@@ -68,7 +68,7 @@ nsAccessible(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibili
 { 
 }
 
-NS_IMETHODIMP nsXULButtonAccessible::GetAccName(nsAWritableString& aResult)
+NS_IMETHODIMP nsXULButtonAccessible::GetAccName(nsAString& aResult)
 {
   return GetXULAccName(aResult);
 }
@@ -85,7 +85,7 @@ NS_IMETHODIMP nsXULButtonAccessible::GetAccNumActions(PRUint8 *_retval)
 /**
   * Return the name of our only action
   */
-NS_IMETHODIMP nsXULButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsXULButtonAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
@@ -252,7 +252,7 @@ PRBool nsXULDropmarkerAccessible::DropmarkerOpen(PRBool aToggleOpen)
 /**
   * Return the name of our only action
   */
-NS_IMETHODIMP nsXULDropmarkerAccessible::GetAccActionName(PRUint8 index, nsAWritableString& aResult)
+NS_IMETHODIMP nsXULDropmarkerAccessible::GetAccActionName(PRUint8 index, nsAString& aResult)
 {
   if (index == eAction_Click) {
     if (DropmarkerOpen(PR_FALSE))
@@ -329,7 +329,7 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetAccNumActions(PRUint8 *_retval)
 /**
   * Return the name of our only action
   */
-NS_IMETHODIMP nsXULCheckboxAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsXULCheckboxAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     // check or uncheck
@@ -412,7 +412,7 @@ NS_IMETHODIMP nsXULGroupboxAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULGroupboxAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULGroupboxAccessible::GetAccName(nsAString& _retval)
 {
   _retval.Assign(NS_LITERAL_STRING(""));  // Default name is blank 
 
@@ -457,7 +457,7 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULProgressMeterAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetAccValue(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No element for DOM node!");

@@ -74,7 +74,7 @@ public:
   nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   virtual ~nsAccessible();
 
-  NS_IMETHOD GetAccName(nsAWritableString& _retval);
+  NS_IMETHOD GetAccName(nsAString& _retval);
   NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
   NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval); 
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval); 
@@ -96,18 +96,18 @@ protected:
   virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
   PRBool IsPartiallyVisible(); 
-  NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableString& _retval);
-  NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, nsAReadableString *aId, nsAWritableString *aLabel);
-  NS_IMETHOD GetHTMLAccName(nsAWritableString& _retval);
-  NS_IMETHOD GetXULAccName(nsAWritableString& _retval);
-  NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAWritableString *aFlatString);
-  NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAWritableString *aFlatString);
-  NS_IMETHOD AppendStringWithSpaces(nsAWritableString *aFlatString, nsAReadableString& textEquivalent);
+  NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAString& _retval);
+  NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, const nsAString *aId, nsAString *aLabel);
+  NS_IMETHOD GetHTMLAccName(nsAString& _retval);
+  NS_IMETHOD GetXULAccName(nsAString& _retval);
+  NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
+  NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString);
+  NS_IMETHOD AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);
   NS_IMETHOD GetFocusedElement(nsIDOMElement **aFocusedElement);
   NS_IMETHOD CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList);
   // helper method to verify frames
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
-  static nsresult GetTranslatedString(const nsAReadableString& aKey, nsAWritableString& aStringOut);
+  static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
   void GetScrollOffset(nsRect *aRect);
   void GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect);
 

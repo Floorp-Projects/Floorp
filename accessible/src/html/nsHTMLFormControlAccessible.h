@@ -52,7 +52,7 @@ public:
   nsHTMLCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
@@ -73,9 +73,9 @@ public:
   nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
 };
 
@@ -85,10 +85,10 @@ class nsHTML4ButtonAccessible : public nsLeafAccessible
 public:
   nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
 };
 
@@ -97,7 +97,7 @@ class nsHTMLTextFieldAccessible : public nsFormControlAccessible
 public:
   nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccValue(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccValue(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 };
 
@@ -107,7 +107,7 @@ public:
   nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAWritableString& _retval);
+  NS_IMETHOD GetAccName(nsAString& _retval);
 };
 
 #endif  

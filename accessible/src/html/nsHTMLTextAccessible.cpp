@@ -45,7 +45,7 @@ nsTextAccessible(aDomNode, aShell)
 }
 
 /* wstring getAccName (); */
-NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAString& _retval)
 { 
   return mDOMNode->GetNodeValue(_retval);
 }

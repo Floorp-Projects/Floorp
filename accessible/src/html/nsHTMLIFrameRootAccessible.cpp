@@ -74,12 +74,12 @@ nsHTMLIFrameAccessible::nsHTMLIFrameAccessible(nsIDOMNode* aNode, nsIAccessible*
 }
 
   /* attribute wstring accName; */
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccName(nsAWritableString& aAccName) 
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccName(nsAString& aAccName) 
 { 
   return GetTitle(aAccName);
 }
 
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccValue(nsAWritableString& aAccValue) 
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccValue(nsAString& aAccValue) 
 { 
   return GetURL(aAccValue);
 }
@@ -114,27 +114,27 @@ NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccState(PRUint32 *aAccState)
   return nsAccessible::GetAccState(aAccState);
 }
 
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetURL(nsAWritableString& aURL)
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetURL(nsAString& aURL)
 {
   return nsDocAccessibleMixin::GetURL(aURL);
 }
 
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetTitle(nsAWritableString& aTitle)
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetTitle(nsAString& aTitle)
 {
   return nsDocAccessibleMixin::GetTitle(aTitle);
 }
 
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetMimeType(nsAWritableString& aMimeType)
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetMimeType(nsAString& aMimeType)
 {
   return nsDocAccessibleMixin::GetMimeType(aMimeType);
 }
 
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetDocType(nsAWritableString& aDocType)
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetDocType(nsAString& aDocType)
 {
   return nsDocAccessibleMixin::GetDocType(aDocType);
 }
 
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAWritableString& aNameSpaceURI)
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAString& aNameSpaceURI)
 {
   return nsDocAccessibleMixin::GetNameSpaceURIForID(aNameSpaceID, aNameSpaceURI);
 }

@@ -218,7 +218,7 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
  * ======================================================================= */
 
 NS_IMETHODIMP
-nsComposerController::IsCommandEnabled(const nsAReadableString & aCommand,
+nsComposerController::IsCommandEnabled(const nsAString & aCommand,
                                        PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -226,7 +226,7 @@ nsComposerController::IsCommandEnabled(const nsAReadableString & aCommand,
 }
 
 NS_IMETHODIMP
-nsComposerController::SupportsCommand(const nsAReadableString & aCommand,
+nsComposerController::SupportsCommand(const nsAString & aCommand,
                                       PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -234,13 +234,13 @@ nsComposerController::SupportsCommand(const nsAReadableString & aCommand,
 }
 
 NS_IMETHODIMP
-nsComposerController::DoCommand(const nsAReadableString & aCommand)
+nsComposerController::DoCommand(const nsAString & aCommand)
 {
   return mCommandManager->DoCommand(aCommand, mCommandRefCon);
 }
 
 NS_IMETHODIMP
-nsComposerController::OnEvent(const nsAReadableString & aEventName)
+nsComposerController::OnEvent(const nsAString & aEventName)
 {
   return NS_OK;
 }

@@ -54,7 +54,7 @@ nsLinkableAccessible(aDomNode, aShell)
 }
 
 /* wstring getAccName (); */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLLinkAccessible::GetAccName(nsAString& _retval)
 { 
   if (!IsALink())  // Also initializes private data members
     return NS_ERROR_FAILURE;
@@ -62,7 +62,7 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetAccName(nsAWritableString& _retval)
   nsAutoString name;
   nsresult rv = AppendFlatStringFromSubtree(mLinkContent, &name);
   if (NS_SUCCEEDED(rv)) {
-    // Temp var needed until CompressWhitespace built for nsAWritableString
+    // Temp var needed until CompressWhitespace built for nsAString
     name.CompressWhitespace();
     _retval.Assign(name);
   }

@@ -307,7 +307,7 @@ NS_IMETHODIMP nsHTMLListboxAccessible::GetAccFirstChild(nsIAccessible **_retval)
   * Our value is the value of our ( first ) selected child. nsIDOMHTMLSelectElement
   *     returns this by default with GetValue().
   */
-NS_IMETHODIMP nsHTMLListboxAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLListboxAccessible::GetAccValue(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMHTMLSelectElement> select (do_QueryInterface(mDOMNode));
   if ( select ) {
@@ -418,7 +418,7 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetAccFirstChild(nsIAccessible **_retval
   * Our value is the value of our ( first ) selected child. nsIDOMHTMLSelectElement
   *     returns this by default with GetValue().
   */
-NS_IMETHODIMP nsHTMLComboboxAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLComboboxAccessible::GetAccValue(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMHTMLSelectElement> select (do_QueryInterface(mDOMNode));
   if (select) {

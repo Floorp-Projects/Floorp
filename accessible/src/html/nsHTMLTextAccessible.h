@@ -48,7 +48,7 @@ class nsHTMLTextAccessible : public nsTextAccessible
 
 public:
   nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAWritableString& _retval);
+  NS_IMETHOD GetAccName(nsAString& _retval);
 };
 
 #endif  

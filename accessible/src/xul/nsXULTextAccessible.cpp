@@ -51,7 +51,7 @@ nsTextAccessible(aDomNode, aShell)
 }
 
 /* wstring getAccName (); */
-NS_IMETHODIMP nsXULTextAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULTextAccessible::GetAccName(nsAString& _retval)
 { 
   nsCOMPtr<nsIDOMXULDescriptionElement> descriptionElement(do_QueryInterface(mDOMNode));
   if (descriptionElement) {
