@@ -2445,6 +2445,18 @@ MOZ_ARG_WITH_STRING(debug-modules,
   [ MOZ_DEBUG_MODULES=`echo $withval | sed 's|,| |g'` ] )
 dnl ========================================================
 
+dnl ========================================================
+dnl =
+dnl = --with-extensions=extension1,extension2,
+dnl = 
+dnl = Enable debug for specific modules only
+dnl = 
+dnl ========================================================
+MOZ_ARG_WITH_STRING(extensions,
+[  --with-extensions             Enable extensions (dirs in extensions/)],
+  [ MOZ_EXTENSIONS=`echo $withval | sed 's|,| |g'` ] )
+dnl ========================================================
+
 _cpp_md_flag=
 MOZ_ARG_DISABLE_BOOL(md,
 [  --disable-md            Do not use compiler-based dependencies ],
@@ -2702,6 +2714,7 @@ AC_SUBST(MOZ_JAVA)
 AC_SUBST(MOZ_OJI)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_MODULES)
+AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZILLA_GPROF)
 AC_SUBST(MOZ_INSURE)
 AC_SUBST(MOZ_INSURE_DIRS)

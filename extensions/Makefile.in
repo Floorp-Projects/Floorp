@@ -22,17 +22,18 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef ClientWallet
-DIRS += wallet
-endif
-
-ifdef ENABLE_PICS
-DIRS += pics
-endif
-
-ifdef NECKO
-DIRS += cookie
-endif
+DIRS=$(MOZ_EXTENSIONS)
+#ifdef ClientWallet
+#DIRS += wallet
+#endif
+#
+#ifdef ENABLE_PICS
+#DIRS += pics
+#endif
+#
+#ifdef NECKO
+#DIRS += cookie
+#endif
 
 include $(topsrcdir)/config/config.mk
 
