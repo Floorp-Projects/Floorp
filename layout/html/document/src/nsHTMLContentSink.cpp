@@ -158,6 +158,15 @@ protected:
 
   //----------------------------------------------------------------------
 
+  nsresult ProcessOpenSELECTTag(nsIHTMLContent** aInstancePtrResult,
+                                const nsIParserNode& aNode);
+  nsresult ProcessCloseSELECTTag(const nsIParserNode& aNode);
+  nsresult ProcessOpenOPTIONTag(const nsIParserNode& aNode);
+  nsresult ProcessCloseOPTIONTag(const nsIParserNode& aNode);
+  nsresult ProcessOPTIONTagContent(const nsIParserNode& aNode);
+
+  //----------------------------------------------------------------------
+
   void GetAttributeValueAt(const nsIParserNode& aNode,
                            PRInt32 aIndex,
                            nsString& aResult);
@@ -184,6 +193,10 @@ protected:
   nsIStyleSheet* mStyleSheet;
   nsIFormManager* mCurrentForm;
   nsIImageMap* mCurrentMap;
+#if XXX_chris_karnaze_writes_this_part
+  nsHTMLOptionList* mCurrentSelect;
+  nsHTMLOption* mCurrentOption;
+#endif
 
   nsIHTMLContent* mRoot;
   nsIHTMLContent* mBody;
@@ -215,6 +228,10 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mStyleSheet);
   NS_IF_RELEASE(mCurrentForm);
   NS_IF_RELEASE(mCurrentMap);
+#if XXX_chris_karnaze_writes_this_part
+  NS_IF_RELEASE(mCurrentSelect);
+  NS_IF_RELEASE(mCurrentOption);
+#endif
   if (nsnull != mTitle) {
     delete mTitle;
   }
@@ -463,6 +480,15 @@ PRBool HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
   tmp.ToUpperCase();
   nsIAtom* atom = NS_NewAtom(tmp);
 
+  eHTMLTags parentType;
+  nsIHTMLContent* parent = GetCurrentContainer(&parentType);
+  switch (parentType) {
+  case eHTMLTag_select:
+    break;
+  case eHTMLTag_option:
+    break;
+  }
+
   nsresult rv;
   nsIHTMLContent* container = nsnull;
   if (aNode.GetTokenType() == eToken_start) {
@@ -513,6 +539,14 @@ PRBool HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       rv = NS_NewTableCellPart(&container, atom);
       break;
 
+    case eHTMLTag_select:
+      rv = ProcessOpenSELECTTag(&container, aNode);
+      break;
+
+    case eHTMLTag_option:
+      rv = ProcessOpenOPTIONTag(aNode);
+      break;
+
     default:
       rv = NS_NewHTMLContainer(&container, atom);
       break;
@@ -554,27 +588,41 @@ PRBool HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
   mNodeStack[mStackPos] = eHTMLTag_unknown;
   mContainerStack[mStackPos] = nsnull;
 
-  if (nsnull != container) {
-    // Now that this container is complete, append it to it's parent
-    eHTMLTags parentType;
-    nsIHTMLContent* parent = GetCurrentContainer(&parentType);
-    container->Compact();
 
-    if(parent) {
-      parent->AppendChild(container);
-      if (parent == mBody) {
-        // We just closed a child of the body off. Trigger a
-        // content-appended reflow if enough time has elapsed
-        PRTime now = PR_Now();
-        if (now - mLastUpdateTime >= mUpdateDelta) {
-          mLastUpdateTime = now;
-          mUpdateDelta += mUpdateDelta;
-          ReflowNewContent();
+  switch (aNode.GetNodeType()) {
+  case eHTMLTag_option:
+    ProcessCloseOPTIONTag(aNode);
+    break;
+
+  case eHTMLTag_select:
+    ProcessCloseSELECTTag(aNode);
+    break;
+
+  default:
+    if (nsnull != container) {
+      // Now that this container is complete, append it to it's parent
+      eHTMLTags parentType;
+      nsIHTMLContent* parent = GetCurrentContainer(&parentType);
+      container->Compact();
+
+      if(parent) {
+        parent->AppendChild(container);
+        if (parent == mBody) {
+          // We just closed a child of the body off. Trigger a
+          // content-appended reflow if enough time has elapsed
+          PRTime now = PR_Now();
+          if (now - mLastUpdateTime >= mUpdateDelta) {
+            mLastUpdateTime = now;
+            mUpdateDelta += mUpdateDelta;
+            ReflowNewContent();
+          }
         }
       }
+      NS_RELEASE(container);
     }
-    NS_RELEASE(container);
+    break;
   }
+
   return PR_TRUE;
 }
 
@@ -657,12 +705,23 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   switch (parentType) {
   case eHTMLTag_table:
   case eHTMLTag_tr:
-    case eHTMLTag_tbody:
+  case eHTMLTag_tbody:
   case eHTMLTag_thead:
   case eHTMLTag_tfoot:
     // XXX Discard leaf content (those annoying \n's really) in
     // table's or table rows
     return PR_TRUE;
+
+  case eHTMLTag_option:
+    ProcessOPTIONTagContent(aNode);
+    return PR_TRUE;
+
+  case eHTMLTag_select:
+    // Discard content in a select that's not an option
+    if (eHTMLTag_option != aNode.GetNodeType()) {
+      return PR_TRUE;
+    }
+    break;
   }
 
   nsresult rv = NS_OK;
@@ -1104,6 +1163,114 @@ HTMLContentSink::ProcessTEXTAREATag(nsIHTMLContent** aInstancePtrResult,
 
   NS_RELEASE(atom);
   return rv;
+}
+
+nsresult
+HTMLContentSink::ProcessOpenSELECTTag(nsIHTMLContent** aInstancePtrResult,
+                                      const nsIParserNode& aNode)
+{
+  nsAutoString tmp(aNode.GetText());
+  tmp.ToUpperCase();
+  nsIAtom* atom = NS_NewAtom(tmp);
+
+#if XXX_chris_karnaze_writes_this_part
+  if (nsnull != mCurrentSelect) {
+    mCurrentSelect->Close();
+    NS_RELEASE(mCurrentSelect);
+  }
+  nsresult rv = NS_NewHTMLOptionList(&mCurrentSelect, atom, mCurrentForm);
+  if ((NS_OK == rv) && (nsnull != mCurrentSelect)) {
+    // Add remaining attributes from the tag
+    rv = AddAttributes(aNode, mCurrentSelect);
+    *aInstancePtrResult = mCurrentSelect;
+  }
+#else
+  nsAutoString foo("SELECT tag goes here");
+  nsresult rv = NS_NewHTMLText(aInstancePtrResult, foo.GetUnicode(), foo.Length());
+#endif
+
+  NS_RELEASE(atom);
+  return rv;
+}
+
+nsresult
+HTMLContentSink::ProcessCloseSELECTTag(const nsIParserNode& aNode)
+{
+#if XXX_chris_karnaze_writes_this_part
+  if (nsnull != mCurrentSelect) {
+    mCurrentSelect->Close();
+    NS_RELEASE(mCurrentSelect);
+  }
+#endif
+  return NS_OK;
+}
+
+nsresult
+HTMLContentSink::ProcessOpenOPTIONTag(const nsIParserNode& aNode)
+{
+  nsresult rv = NS_OK;
+#if XXX_chris_karnaze_writes_this_part
+  if (nsnull != mCurrentSelect) {
+    if (nsnull != mCurrentOption) {
+      mCurrentOption->Close();
+      NS_RELEASE(mCurrentOption);
+    }
+
+    nsAutoString value, selected;
+    PRBool hasValue = FindAttribute(aNode, "value", value);
+    PRBool hasSelected = FindAttribute(aNode, "selected", selected);
+    rv = NS_NewHTMLOption(&mCurrentOption, value, hasSelected);
+  }
+#endif
+  return rv;
+}
+
+nsresult
+HTMLContentSink::ProcessCloseOPTIONTag(const nsIParserNode& aNode)
+{
+#if XXX_chris_karnaze_writes_this_part
+  if (nsnull != mCurrentSelect) {
+    if (nsnull != mCurrentOption) {
+      mCurrentSelect->AddOption(mCurrentOption);
+      NS_RELEASE(mCurrentOption);
+    }
+  }
+#endif
+  return NS_OK;
+}
+
+nsresult
+HTMLContentSink::ProcessOPTIONTagContent(const nsIParserNode& aNode)
+{
+#if XXX_chris_karnaze_writes_this_part
+  if (nsnull != mCurrentSelect) {
+    nsAutoString currentText;
+    mCurrentOption->GetOptionText(currentText);
+
+    switch (aNode.GetTokenType()) {
+    case eToken_text:
+    case eToken_whitespace:
+    case eToken_newline:
+      currentText.Append(aNode.GetText());
+      break;
+
+    case eToken_entity:
+      {
+        nsAutoString tmp2("");
+        PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp2);
+        if (unicode < 0) {
+          currentText.Append(aNode.GetText());
+        } else {
+          currentText.Append(tmp2);
+        }
+      }
+      break;
+    }
+
+    mCurrentOption->SetOptionText(currentText);
+  }
+#endif
+  return NS_OK;
 }
 
 nsresult HTMLContentSink::ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,
