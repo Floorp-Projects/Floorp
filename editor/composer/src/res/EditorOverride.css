@@ -57,7 +57,7 @@ img, img[usemap], area,
 object, object[usemap], 
 applet, hr, button, input, isindex, textarea, select,
 a:link img, a:visited img, a:active img,
-a[name]:empty {
+a[name]:-moz-only-whitespace {
   cursor: default;
 }
 
