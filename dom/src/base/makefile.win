@@ -62,6 +62,7 @@ REQUIRES=xpcom raptor js netlib caps oji
 CPP_OBJS= \
 	.\$(OBJDIR)\nsBarProps.obj		\
 	.\$(OBJDIR)\nsDOMException.obj		\
+	.\$(OBJDIR)\nsJSAbstractView.obj	\
 	.\$(OBJDIR)\nsJSBarProp.obj		\
 	.\$(OBJDIR)\nsJSDOMException.obj	\
 	.\$(OBJDIR)\nsJSEnvironment.obj		\
