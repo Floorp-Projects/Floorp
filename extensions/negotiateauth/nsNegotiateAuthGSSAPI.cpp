@@ -219,6 +219,16 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
         Reset();
     }
 
+#if defined(XP_MACOSX)
+    // Suppress Kerberos prompts to get credentials.  See bug 240643.
+    KLBoolean found;
+    if (KLCacheHasValidTickets(NULL, kerberosVersion_V5, &found, NULL, NULL) != klNoErr || !found)
+    {
+        major_status = GSS_S_FAILURE;
+        minor_status = 0;
+    }
+    else
+#endif /* XP_MACOSX */
     major_status = gss_init_sec_context(&minor_status,
                                         GSS_C_NO_CREDENTIAL,
                                         &mCtx,
