@@ -356,7 +356,7 @@ treechildren:-moz-tree-row(lc-003300, selected) {
 treechildren:-moz-tree-cell-text(lc-99FFFF) {
   color: #99FFFF
 }
-treechildren:-moz-treerow(lc-99FFFF, selected) {
+treechildren:-moz-tree-row(lc-99FFFF, selected) {
   background-color: #99FFFF;
 }
 
