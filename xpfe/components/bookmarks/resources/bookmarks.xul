@@ -48,14 +48,16 @@
       <menuitem value="&menuitem.newFolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newfolder');"/>
       <menuitem value="&menuitem.newSeparator.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newseparator');"/>
       <menuseparator/>
-      <menuitem value="&menuitem.close.label;"
-                oncommand="window.close()" />
+      <menuitem value="&menuitem.import.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=import');" />
+      <menuitem value="&menuitem.export.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=export');" />
+      <menuseparator/>
+      <menuitem value="&menuitem.close.label;" oncommand="window.close()" />
 	  </menupopup>
     </menu>
+
     <menu value="&menu.edit.label;">
 	  <menupopup>
       <menuitem value="&menuitem.undo.label;" disabled="true" />
-      <menuitem value="&menuitem.redo.label;" disabled="true" />
       <menuseparator/>
       <menuitem value="&menuitem.cut.label;" oncommand="return doCut()" />
       <menuitem value="&menuitem.copy.label;" oncommand="return doCopy()" />
@@ -68,6 +70,15 @@
       <menuitem value="&menuitem.properties.label;" oncommand="return BookmarkProperties();"/>
 	  </menupopup>
     </menu>
+
+    <menu value="&menu.view.label;">
+	  <menupopup>
+      <menuitem value="&menuitem.newbookmarkfolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=setnewbookmarkfolder');" />
+      <menuitem value="&menuitem.newinternetsearchfolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=setnewsearchfolder');" />
+      <menuitem value="&menuitem.personaltoolbarfolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=setpersonaltoolbarfolder');" />
+	  </menupopup>
+    </menu>
+
   </menubar>
 
 <popupset>

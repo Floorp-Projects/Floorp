@@ -179,6 +179,8 @@ nsIRDFResource		*kNC_BookmarkCommand_DeleteBookmarkSeparator;
 nsIRDFResource		*kNC_BookmarkCommand_SetNewBookmarkFolder;
 nsIRDFResource		*kNC_BookmarkCommand_SetPersonalToolbarFolder;
 nsIRDFResource		*kNC_BookmarkCommand_SetNewSearchFolder;
+nsIRDFResource		*kNC_BookmarkCommand_Import;
+nsIRDFResource		*kNC_BookmarkCommand_Export;
 
 
 
@@ -242,6 +244,8 @@ bm_AddRefGlobals()
 		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=setnewbookmarkfolder",    &kNC_BookmarkCommand_SetNewBookmarkFolder);
 		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=setpersonaltoolbarfolder",&kNC_BookmarkCommand_SetPersonalToolbarFolder);
 		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=setnewsearchfolder",      &kNC_BookmarkCommand_SetNewSearchFolder);
+		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=import",                  &kNC_BookmarkCommand_Import);
+		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=export",                  &kNC_BookmarkCommand_Export);
 	}
 	return NS_OK;
 }
@@ -299,10 +303,11 @@ bm_ReleaseGlobals()
 		NS_IF_RELEASE(kNC_BookmarkCommand_DeleteBookmark);
 		NS_IF_RELEASE(kNC_BookmarkCommand_DeleteBookmarkFolder);
 		NS_IF_RELEASE(kNC_BookmarkCommand_DeleteBookmarkSeparator);
-
 		NS_IF_RELEASE(kNC_BookmarkCommand_SetNewBookmarkFolder);
 		NS_IF_RELEASE(kNC_BookmarkCommand_SetPersonalToolbarFolder);
 		NS_IF_RELEASE(kNC_BookmarkCommand_SetNewSearchFolder);
+		NS_IF_RELEASE(kNC_BookmarkCommand_Import);
+		NS_IF_RELEASE(kNC_BookmarkCommand_Export);
 	}
 }
 
@@ -1661,7 +1666,7 @@ nsresult	ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFl
 nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 
 	nsresult GetBookmarksFile(nsFileSpec* aResult);
-	nsresult WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root);
+	nsresult WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *ds, nsIRDFResource *root);
 	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *container, PRInt32 level, nsISupportsArray *parentArray);
 	nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
 	nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);
@@ -1674,6 +1679,8 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 	nsresult deleteBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType);
 	nsresult setFolderHint(nsIRDFResource *src, nsIRDFResource *objType);
 	nsresult getFolderViaHint(nsIRDFResource *src, PRBool fallbackFlag, nsIRDFResource **folder);
+	nsresult importBookmarks(nsISupportsArray *aArguments);
+	nsresult exportBookmarks(nsISupportsArray *aArguments);
 
 	nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
 
@@ -3059,6 +3066,10 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 			getLocaleString("SetPersonalToolbarFolder", name);
 		else if (aSource == kNC_BookmarkCommand_SetNewSearchFolder)
 			getLocaleString("SetNewSearchFolder", name);
+		else if (aSource == kNC_BookmarkCommand_Import)
+			getLocaleString("Import", name);
+		else if (aSource == kNC_BookmarkCommand_Export)
+			getLocaleString("Export", name);
 
 		if (name.Length() > 0)
 		{
@@ -3774,6 +3785,69 @@ nsBookmarksService::getFolderViaHint(nsIRDFResource *objType, PRBool fallbackFla
 
 
 
+nsresult
+nsBookmarksService::importBookmarks(nsISupportsArray *aArguments)
+{
+	// look for #URL which is the "file:///" URL to import
+	nsresult		rv;
+	nsCOMPtr<nsIRDFNode>	aNode;
+	if (NS_FAILED(rv = getArgumentN(aArguments, kNC_URL, 0, getter_AddRefs(aNode))))
+		return(rv);
+	nsCOMPtr<nsIRDFLiteral>		pathLiteral = do_QueryInterface(aNode);
+	if (!pathLiteral)	return(NS_ERROR_NO_INTERFACE);
+
+	const PRUnichar		*pathUni = nsnull;
+	pathLiteral->GetValueConst(&pathUni);
+	if (!pathUni)	return(NS_ERROR_NULL_POINTER);
+
+	nsAutoString		fileName(pathUni);
+	nsFileURL		fileURL(fileName);
+	nsFileSpec		fileSpec(fileURL);
+	if (!fileSpec.IsFile())	return(NS_ERROR_UNEXPECTED);
+
+	// figure out where to add the imported bookmarks
+	nsCOMPtr<nsIRDFResource>	newBookmarkFolder;
+	if (NS_FAILED(rv = getFolderViaHint(kNC_NewBookmarkFolder, PR_TRUE,
+			getter_AddRefs(newBookmarkFolder))))
+		return(rv);
+
+	// read 'em in
+	BookmarkParser		parser;
+	parser.Init(&fileSpec, mInner, nsAutoString(""));
+	parser.Parse(newBookmarkFolder, kNC_Bookmark);
+
+	return(NS_OK);
+}
+
+
+
+nsresult
+nsBookmarksService::exportBookmarks(nsISupportsArray *aArguments)
+{
+	// look for #URL which is the "file:///" URL to export
+	nsresult		rv;
+	nsCOMPtr<nsIRDFNode>	aNode;
+	if (NS_FAILED(rv = getArgumentN(aArguments, kNC_URL, 0, getter_AddRefs(aNode))))
+		return(rv);
+	nsCOMPtr<nsIRDFLiteral>		pathLiteral = do_QueryInterface(aNode);
+	if (!pathLiteral)	return(NS_ERROR_NO_INTERFACE);
+
+	const PRUnichar		*pathUni = nsnull;
+	pathLiteral->GetValueConst(&pathUni);
+	if (!pathUni)	return(NS_ERROR_NULL_POINTER);
+
+	nsAutoString		fileName(pathUni);
+	nsFileURL		fileURL(fileName);
+	nsFileSpec		fileSpec(fileURL);
+
+	// write 'em out
+	rv = WriteBookmarks(&fileSpec, mInner, kNC_BookmarksRoot);
+
+	return(rv);
+}
+
+
+
 NS_IMETHODIMP
 nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aCommand,
 				nsISupportsArray *aArguments)
@@ -3787,6 +3861,10 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 		return(NS_ERROR_ILLEGAL_VALUE);
 	}
 
+	// Note: some commands only run once (instead of looping over selection);
+	//       if that's the case, be sure to "break" (if success) so that "mDirty"
+	//       is set (and "bookmarks.html" will be flushed out shortly afterwards)
+
 	for (loop=((PRInt32)numSources)-1; loop>=0; loop--)
 	{
 		nsCOMPtr<nsISupports>	aSource = aSources->ElementAt(loop);
@@ -3796,21 +3874,21 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 
 		if (aCommand == kNC_BookmarkCommand_NewBookmark)
 		{
-			if (NS_FAILED(rv = insertBookmarkItem(src, aArguments,
-					loop, kNC_Bookmark)))
-				return(rv);
+			rv = insertBookmarkItem(src, aArguments, loop, kNC_Bookmark);
+			if (NS_FAILED(rv))	return(rv);
+			break;
 		}
 		else if (aCommand == kNC_BookmarkCommand_NewFolder)
 		{
-			if (NS_FAILED(rv = insertBookmarkItem(src, aArguments,
-					loop, kNC_Folder)))
-				return(rv);
+			rv = insertBookmarkItem(src, aArguments, loop, kNC_Folder);
+			if (NS_FAILED(rv))	return(rv);
+			break;
 		}
 		else if (aCommand == kNC_BookmarkCommand_NewSeparator)
 		{
-			if (NS_FAILED(rv = insertBookmarkItem(src, aArguments,
-					loop, kNC_BookmarkSeparator)))
-				return(rv);
+			rv = insertBookmarkItem(src, aArguments, loop, kNC_BookmarkSeparator);
+			if (NS_FAILED(rv))	return(rv);
+			break;
 		}
 		else if (aCommand == kNC_BookmarkCommand_DeleteBookmark)
 		{
@@ -3832,18 +3910,33 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 		}
 		else if (aCommand == kNC_BookmarkCommand_SetNewBookmarkFolder)
 		{
-			if (NS_FAILED(rv = setFolderHint(src, kNC_NewBookmarkFolder)))
-				return(rv);
+			rv = setFolderHint(src, kNC_NewBookmarkFolder);
+			if (NS_FAILED(rv))	return(rv);
+			break;
 		}
 		else if (aCommand == kNC_BookmarkCommand_SetPersonalToolbarFolder)
 		{
-			if (NS_FAILED(rv = setFolderHint(src, kNC_PersonalToolbarFolder)))
-				return(rv);
+			rv = setFolderHint(src, kNC_PersonalToolbarFolder);
+			if (NS_FAILED(rv))	return(rv);
+			break;
 		}
 		else if (aCommand == kNC_BookmarkCommand_SetNewSearchFolder)
 		{
-			if (NS_FAILED(rv = setFolderHint(src, kNC_NewSearchFolder)))
-				return(rv);
+			rv = setFolderHint(src, kNC_NewSearchFolder);
+			if (NS_FAILED(rv))	return(rv);
+			break;
+		}
+		else if (aCommand == kNC_BookmarkCommand_Import)
+		{
+			rv = importBookmarks(aArguments);
+			if (NS_FAILED(rv))	return(rv);
+			break;
+		}
+		else if (aCommand == kNC_BookmarkCommand_Export)
+		{
+			rv = exportBookmarks(aArguments);
+			if (NS_FAILED(rv))	return(rv);
+			break;
 		}
 	}
 
@@ -3886,7 +3979,14 @@ nsBookmarksService::Flush()
 
 	if (mBookmarksAvailable == PR_TRUE)
 	{
-		rv = WriteBookmarks(mInner, kNC_BookmarksRoot);
+		nsFileSpec	bookmarksFile;
+		rv = GetBookmarksFile(&bookmarksFile);
+
+		// Oh well, couldn't get the bookmarks file. Guess there
+		// aren't any bookmarks for us to write out.
+		if (NS_FAILED(rv))	return NS_OK;
+
+		rv = WriteBookmarks(&bookmarksFile, mInner, kNC_BookmarksRoot);
 	}
 	return(rv);
 }
@@ -4222,24 +4322,20 @@ nsBookmarksService::ReadBookmarks()
 
 
 nsresult
-nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
+nsBookmarksService::WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *ds,
+				   nsIRDFResource *root)
 {
-	nsresult rv;
+	if (!bookmarksFile)	return(NS_ERROR_NULL_POINTER);
+	if (!ds)		return(NS_ERROR_NULL_POINTER);
+	if (!root)		return(NS_ERROR_NULL_POINTER);
 
-	nsFileSpec bookmarksFile;
-	rv = GetBookmarksFile(&bookmarksFile);
-
-	// Oh well, couldn't get the bookmarks file. Guess there
-	// aren't any bookmarks for us to write out.
-	if (NS_FAILED(rv))
-	    return NS_OK;
-
+	nsresult			rv;
 	nsCOMPtr<nsISupportsArray>	parentArray;
 	if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(parentArray))))
 		return(rv);
 
 	rv = NS_ERROR_FAILURE;
-	nsOutputFileStream	strm(bookmarksFile);
+	nsOutputFileStream	strm(*bookmarksFile);
 	if (strm.is_open())
 	{
 		strm << "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n";
