@@ -6847,16 +6847,18 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
     }
   }
 
-  // we aren't in a textnode: are we adjacent to a break or an image?
-  res = mHTMLEditor->GetPriorHTMLSibling(selNode, selOffset, address_of(nearNode));
+  // we aren't in a textnode: are we adjacent to text or a break or an image?
+  res = mHTMLEditor->GetPriorHTMLNode(selNode, selOffset, address_of(nearNode), PR_TRUE);
   if (NS_FAILED(res)) return res;
   if (nearNode && (nsTextEditUtils::IsBreak(nearNode)
+                   || nsEditor::IsTextNode(nearNode)
                    || nsHTMLEditUtils::IsImage(nearNode)
                    || nsHTMLEditUtils::IsHR(nearNode)))
     return NS_OK; // this is a good place for the caret to be
-  res = mHTMLEditor->GetNextHTMLSibling(selNode, selOffset, address_of(nearNode));
+  res = mHTMLEditor->GetNextHTMLNode(selNode, selOffset, address_of(nearNode), PR_TRUE);
   if (NS_FAILED(res)) return res;
   if (nearNode && (nsTextEditUtils::IsBreak(nearNode)
+                   || nsEditor::IsTextNode(nearNode)
                    || nsHTMLEditUtils::IsImage(nearNode)
                    || nsHTMLEditUtils::IsHR(nearNode)))
     return NS_OK; // this is a good place for the caret to be
