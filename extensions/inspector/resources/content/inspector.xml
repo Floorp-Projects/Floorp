@@ -232,15 +232,7 @@
             //}
             
             if (!noPush) {
-              // add new command to the stack
-              ++this.mCommandPtr;
-              this.mCommandStack[this.mCommandPtr] = command;
-    
-              // get rid of stack entries ahead of the command pointer (if there were any);
-              this.mCommandStack.splice(this.mCommandPtr+1, this.mCommandStack.length - (this.mCommandPtr+1));
-    
-              this.updateCommand("cmdEditUndo");
-              this.updateCommand("cmdEditRedo");
+              this.addCommandToStack(command);
             }
           }
         ]]></body>
@@ -279,6 +271,21 @@
             this.updateCommand("cmdEditUndo");
             this.updateCommand("cmdEditRedo");
           }
+        ]]></body>
+      </method>
+
+      <method name="addCommandToStack">
+        <parameter name="command"/>
+        <body><![CDATA[
+          // add new command to the stack
+          ++this.mCommandPtr;
+          this.mCommandStack[this.mCommandPtr] = command;
+
+          // get rid of stack entries ahead of the command pointer (if there were any);
+          this.mCommandStack.splice(this.mCommandPtr + 1, this.mCommandStack.length - (this.mCommandPtr + 1));
+
+          this.updateCommand("cmdEditUndo");
+          this.updateCommand("cmdEditRedo");
         ]]></body>
       </method>
 
