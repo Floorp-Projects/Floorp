@@ -532,7 +532,7 @@ SelectionContainsNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->ContainsNode(b0, b1, b2)) {
+    if (NS_OK != nativeThis->ContainsNode(b0, b1, &b2)) {
       return JS_FALSE;
     }
 
