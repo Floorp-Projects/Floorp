@@ -266,26 +266,6 @@ MOZ_WINCONSOLE=0
 endif
 endif
 
-# Set link flags according to whether we want a console.
-ifeq ($(MOZ_WINCONSOLE),1)
-ifeq ($(MOZ_OS2_TOOLS),EMX)
-BIN_FLAGS	:= -Zlinker /PM:VIO -Zlinker /Stack:0x30000
-endif
-ifeq ($(OS_ARCH),WINNT)
-LDFLAGS		+= /SUBSYSTEM:CONSOLE
-endif
-else # MOZ_WINCONSOLE
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-LDFLAGS += /PM:PM
-endif
-ifeq ($(MOZ_OS2_TOOLS),EMX)
-BIN_FLAGS	:= -Zlinker /PM:PM -Zlinker /Stack:0x30000
-endif
-ifeq ($(OS_ARCH),WINNT)
-LDFLAGS		+= /SUBSYSTEM:WINDOWS
-endif
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 #
 # Control the default heap size.
