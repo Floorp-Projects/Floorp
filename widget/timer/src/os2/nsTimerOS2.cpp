@@ -16,7 +16,20 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com> 
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 03/31/2000       IBM Corp.      Get rid of mBusy message and call default WndProc. Message is 
+ *                                         put out while wizards (i.e. Mail) is active.
+ *
  */
 
 #define INCL_DOS
@@ -233,8 +246,10 @@ MRESULT nsTimerManager::HandleMsg( ULONG msg, MPARAM mp1, MPARAM mp2)
              ProcessTimeouts( 0);
           mBusy = FALSE;
       }
-      else
-         printf( "mBusy == TRUE but want to fire Timer!\n");
+      else {
+         // printf( "mBusy == TRUE but want to fire Timer!\n");
+         mRC = WinDefWindowProc( mHWNDTimer, msg, mp1, mp2);   // handle the message
+      }
    }
    else
       mRC = WinDefWindowProc( mHWNDTimer, msg, mp1, mp2);

@@ -16,7 +16,16 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
  *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date           Modified by     Description of modification
+ * 03/28/2000   IBM Corp.        Changes to make os2.h file similar to windows.h file
  */
 
 #ifndef _nsDrawingSurfaceOS2_h
@@ -48,10 +57,6 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
    long           mTopID;   // highest used lcid
    nsIPaletteOS2 *mPalette; // palette
 
- protected:
-   void DeselectPalette();
-   void DisposeFonts();     // MUST be called before disposing of PS
-
  public:
    nsDrawingSurfaceOS2();
    virtual ~nsDrawingSurfaceOS2();
@@ -70,6 +75,10 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
 
    NS_IMETHOD GetBitmap( HBITMAP &aBitmap); // yuck (for blender, may go)
    NS_IMETHOD RequiresInvertedMask( PRBool *aBool); // double yuck (images)
+
+ protected:
+   void DeselectPalette();
+   void DisposeFonts();     // MUST be called before disposing of PS
 };
 
 // Offscreen surface. Others depend on this.
