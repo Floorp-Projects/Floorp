@@ -147,7 +147,7 @@ class Arguments extends IdScriptable {
                 if (value == UniqueTag.NULL_VALUE) { value = null; }
                 else if (value == null) {
                     NativeCall caller = activation.caller;
-                    if (caller == null || caller.originalArgs == null) {
+                    if (caller == null) {
                         value = null;
                     }else {
                         value = caller.get("arguments", caller);
