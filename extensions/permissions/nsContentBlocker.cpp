@@ -94,8 +94,8 @@ nsContentBlocker::Init()
   nsCOMPtr<nsIPrefBranch> oldPrefBranch;
   oldPrefBranch = do_QueryInterface(prefService);
   PRInt32 oldPref;
-  oldPrefBranch->GetIntPref("network.image.imageBehavior", &oldPref);
-  if (oldPref) {
+  rv = oldPrefBranch->GetIntPref("network.image.imageBehavior", &oldPref);
+  if (NS_SUCCEEDED(rv) && oldPref) {
     PRInt32 newPref;
     switch (oldPref) {
       default:
