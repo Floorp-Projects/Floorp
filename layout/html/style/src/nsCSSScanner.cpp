@@ -674,6 +674,7 @@ PRBool nsCSSScanner::ParseNumber(PRInt32& aErrorCode, PRInt32 c,
     } else if ('%' == c) {
       type = eCSSToken_Percentage;
       value = value / 100.0f;
+      ident.SetLength(0);
     } else {
       // Put back character that stopped numeric scan
       Unread();
@@ -683,6 +684,13 @@ PRBool nsCSSScanner::ParseNumber(PRInt32& aErrorCode, PRInt32 c,
       }
       ident.SetLength(0);
     }
+  }
+  else {  // stream ended
+    if (!gotDot) {
+      aToken.mInteger = ident.ToInteger(&ec);
+      aToken.mIntegerValid = PR_TRUE;
+    }
+    ident.SetLength(0);
   }
   aToken.mNumber = value;
   aToken.mType = type;
