@@ -784,7 +784,7 @@ function GetMessagePane()
 function GetMessagePaneFrame()
 {
     if (gMessagePaneFrame) return gMessagePaneFrame;
-    gMessagePaneFrame = document.getElementById("messagepane");
+    gMessagePaneFrame = document.getElementById("messagepane").contentWindow;
     return gMessagePaneFrame;
 }
 
@@ -871,8 +871,8 @@ function ClearMessagePane()
 	{	
     gHaveLoadedMessage = false;
 		gCurrentDisplayedMessage = null;
-		if (GetMessagePaneFrame().currentURI != "about:blank")
-		  GetMessagePaneFrame().loadURI("about:blank");		
+    if (GetMessagePaneFrame().location != "about:blank")
+        GetMessagePaneFrame().location = "about:blank";
     // hide the message header view AND the message pane...
 		HideMessageHeaderPane();
 	}
