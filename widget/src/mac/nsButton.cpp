@@ -148,8 +148,9 @@ nsButton::~nsButton()
 //-------------------------------------------------------------------------
 PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
 {
+	
 	  
-	DrawWidget(FALSE);	
+	DrawWidget(FALSE,aEvent.renderingContext);	
   return PR_FALSE;
 }
 
@@ -185,26 +186,29 @@ nsButton::PtInWindow(PRInt32 aX,PRInt32 aY)
 PRBool 
 nsButton::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
-PRBool 	result;
+PRBool 							result;
+nsIRenderingContext	*theRC;
+	
+	theRC = this->GetRenderingContext();
 	
 	switch (aEvent.message)
 		{
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
 			mMouseDownInButton = PR_TRUE;
-			DrawWidget(PR_TRUE);
+			DrawWidget(PR_TRUE,theRC);
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			result = nsEventStatus_eConsumeDoDefault;
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
 			mMouseDownInButton = PR_FALSE;
-			DrawWidget(PR_TRUE);
+			DrawWidget(PR_TRUE,theRC);
 			if(mWidgetArmed==PR_TRUE)
 				result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_EXIT:
 			if(mMouseDownInButton)
 				{
-				DrawWidget(PR_FALSE);
+				DrawWidget(PR_FALSE,theRC);
 				mWidgetArmed = PR_FALSE;
 				}
 			result = nsWindow::DispatchMouseEvent(aEvent);
@@ -212,7 +216,7 @@ PRBool 	result;
 		case NS_MOUSE_ENTER:
 			if(mMouseDownInButton)
 				{
-				DrawWidget(PR_TRUE);
+				DrawWidget(PR_TRUE,theRC);
 				mWidgetArmed = PR_TRUE;
 				}
 			result = nsWindow::DispatchMouseEvent(aEvent);
@@ -230,7 +234,7 @@ PRBool 	result;
  *  @return  nothing is returned
  */
 void
-nsButton::DrawWidget(PRBool	aMouseInside)
+nsButton::DrawWidget(PRBool	aMouseInside,nsIRenderingContext	*aTheContext)
 {
 PRInt16							width,x,y;
 PRInt32							offx,offy;
@@ -239,7 +243,7 @@ Rect								macrect,crect;
 GrafPtr							theport;
 RGBColor						blackcolor = {0,0,0};
 RgnHandle						thergn;
-//FontInfo					fi;
+
 
 	CalcOffset(offx,offy);
 	GetPort(&theport);

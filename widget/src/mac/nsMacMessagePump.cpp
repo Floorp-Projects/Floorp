@@ -184,8 +184,9 @@ WindowPtr			whichwindow;
 nsWindow			*thewindow;
 nsRect 				rect;
 RgnHandle			updateregion;
-nsPaintEvent 	pevent;
+nsPaintEvent 	pEvent;
 nsRefData			*theRefData;
+	
  
  	::GetPort(&curport);
 	whichwindow = (WindowPtr)aTheEvent->message;
@@ -206,19 +207,20 @@ nsRefData			*theRefData;
 			rect.y = bounds.top;
 			rect.width = bounds.left + (bounds.right-bounds.left);
 			rect.height = bounds.top + (bounds.bottom-bounds.top);
-          
+        
 			// generate a paint event
-			pevent.message = NS_PAINT;
-			pevent.widget = thewindow;
-			pevent.eventStructType = NS_PAINT_EVENT;
-			pevent.point.x = 0;
-			pevent.point.y = 0;
-			pevent.rect = &rect;
-			pevent.time = 0; 
-			thewindow->OnPaint(pevent);
+			pEvent.message = NS_PAINT;
+      pEvent.renderingContext = thewindow->GetRenderingContext();
+			pEvent.widget = thewindow;
+			pEvent.eventStructType = NS_PAINT_EVENT;
+			pEvent.point.x = 0;
+			pEvent.point.y = 0;
+			pEvent.rect = &rect;
+			pEvent.time = 0; 
+			thewindow->OnPaint(pEvent);
 
 			// take care of the childern
-			thewindow->DoPaintWidgets(updateregion);
+			thewindow->DoPaintWidgets(updateregion,pEvent.renderingContext);
 	    }
 		EndUpdate(whichwindow);
 		}
