@@ -35,7 +35,7 @@
 // An nsIRDFNode object is an abstract placeholder for a node in the
 // RDF data model. Its concreted implementations (e.g., nsIRDFResource
 // or nsIRDFLiteral) are the actual objects that populate the graph.
-[uuid(0F78DA50-8321-11d2-8EAC-00805F29F370)]
+[scriptable, uuid(0F78DA50-8321-11d2-8EAC-00805F29F370)]
 interface nsIRDFNode : nsISupports {
     // Determine if two nodes are identical
     boolean EqualsNode(in nsIRDFNode aNode);
@@ -43,7 +43,7 @@ interface nsIRDFNode : nsISupports {
 
 // An nsIRDFResource is an object that has unique identity in the 
 // RDF data model. The object's identity is determined by its URI.
-[uuid(E0C493D1-9542-11d2-8EB8-00805F29F370)]
+[scriptable, uuid(E0C493D1-9542-11d2-8EB8-00805F29F370)]
 interface nsIRDFResource : nsIRDFNode {
     // The single-byte string value of the resource
     readonly attribute string Value;
@@ -61,7 +61,7 @@ interface nsIRDFResource : nsIRDFNode {
 };
 
 // A literal node in the graph, whose value is a string.
-[uuid(E0C493D2-9542-11d2-8EB8-00805F29F370)]
+[scriptable, uuid(E0C493D2-9542-11d2-8EB8-00805F29F370)]
 interface nsIRDFLiteral : nsIRDFNode {
     // The Unicode string value of the literal.
     readonly attribute wstring Value;
@@ -71,7 +71,7 @@ interface nsIRDFLiteral : nsIRDFNode {
 };
 
 // A literal node in the graph, whose value is a date
-[uuid(E13A24E1-C77A-11d2-80BE-006097B76B8E)]
+[scriptable, uuid(E13A24E1-C77A-11d2-80BE-006097B76B8E)]
 interface nsIRDFDate : nsIRDFNode {
     // The date value of the literal
     readonly attribute long long Value;
@@ -83,7 +83,7 @@ interface nsIRDFDate : nsIRDFNode {
 };
 
 // A literal node in the graph, whose value is an integer
-[uuid(E13A24E3-C77A-11d2-80BE-006097B76B8E)]
+[scriptable, uuid(E13A24E3-C77A-11d2-80BE-006097B76B8E)]
 interface nsIRDFInt : nsIRDFNode {
     // The integer value of the literal
     readonly attribute long Value;
@@ -97,7 +97,7 @@ interface nsIRDFInt : nsIRDFNode {
 interface nsIRDFDataSource;
 
 // An enumeration interface
-[uuid(1C2ABDB0-4CEF-11D2-BC16-00805F912FE7)]
+[scriptable, uuid(1C2ABDB0-4CEF-11D2-BC16-00805F912FE7)]
 interface nsIRDFCursor : nsISupports {
     // Advance the cursor to the next element.
     //
@@ -117,7 +117,7 @@ interface nsIRDFCursor : nsISupports {
 // An nsIRDFAssertionCursor is an iterator over a set of assertions,
 // each of which has a source node, a target node, an arc label, and a
 // truth value.
-[uuid(1ED57100-9904-11d2-8EBA-00805F29F370)]
+[scriptable, uuid(1ED57100-9904-11d2-8EBA-00805F29F370)]
 interface nsIRDFAssertionCursor : nsIRDFCursor {
 
     // The source node of the current assertion.
@@ -136,7 +136,7 @@ interface nsIRDFAssertionCursor : nsIRDFCursor {
 
 // An nsIRDFArcsInCursor enumerates the unique labels of 
 // the arcs that terminate ("point in to") a node.
-[uuid(1ED57102-9904-11d2-8EBA-00805F29F370)]
+[scriptable, uuid(1ED57102-9904-11d2-8EBA-00805F29F370)]
 interface nsIRDFArcsInCursor : nsIRDFCursor {
     // The label of the current arc
     readonly attribute nsIRDFResource Label;
@@ -148,7 +148,7 @@ interface nsIRDFArcsInCursor : nsIRDFCursor {
 
 // An nsIRDFArcsOutCursor enumerates the unique labels of
 // arcs that original ("point out of") a resource.
-[uuid(1ED57101-9904-11d2-8EBA-00805F29F370)]
+[scriptable, uuid(1ED57101-9904-11d2-8EBA-00805F29F370)]
 interface nsIRDFArcsOutCursor : nsIRDFCursor {
     // The source of the current arc (always the same for a give
     // arcs-out cursor).
@@ -159,7 +159,7 @@ interface nsIRDFArcsOutCursor : nsIRDFCursor {
 };
 
 // An nsIRDFResourceCursor enumerats a set of resources
-[uuid(C2850C10-B0CF-11d2-A684-00104BDE6048)]
+[scriptable, uuid(C2850C10-B0CF-11d2-A684-00104BDE6048)]
 interface nsIRDFResourceCursor : nsIRDFCursor {
     // The current resource
     readonly attribute nsIRDFResource Resource;
@@ -167,7 +167,7 @@ interface nsIRDFResourceCursor : nsIRDFCursor {
 
 // An nsIRDFObserver object is an observer that will be notified
 // when assertions are made or removed from a datasource
-[uuid(3CC75360-484A-11D2-BC16-00805F912FE7)]
+[scriptable, uuid(3CC75360-484A-11D2-BC16-00805F912FE7)]
 interface nsIRDFObserver : nsISupports {
     // This method is called whenever a new assertion is made
     // in the data source
@@ -183,7 +183,7 @@ interface nsIRDFObserver : nsISupports {
 };
 
 
-[uuid(0F78DA58-8321-11d2-8EAC-00805F29F370)]
+[scriptable, uuid(0F78DA58-8321-11d2-8EAC-00805F29F370)]
 interface nsIRDFDataSource : nsISupports {
     // Specify the URI for the data source: this is the prefix
     // that will be used to register the data source in the
@@ -293,7 +293,7 @@ interface nsIRDFDataSource : nsISupports {
 
 // An nsIRDFCompositeDataSource composes individual data sources, providing
 // the illusion of a single, coherent RDF graph.
-[uuid(96343820-307C-11D2-BC15-00805F912FE7)]
+[scriptable, uuid(96343820-307C-11D2-BC15-00805F912FE7)]
 interface nsIRDFCompositeDataSource : nsIRDFDataSource {
     // Add a datasource the the database.
     void AddDataSource(in nsIRDFDataSource aDataSource);
@@ -304,7 +304,7 @@ interface nsIRDFCompositeDataSource : nsIRDFDataSource {
 
 // The RDF service interface. This is a singleton object, and should be
 // obtained from the <tt>nsServiceManager</tt>.
-[uuid(BFD05261-834C-11d2-8EAC-00805F29F370)]
+[scriptable, uuid(BFD05261-834C-11d2-8EAC-00805F29F370)]
 interface nsIRDFService : nsISupports {
     // Construct an RDF resource from a single-byte URI. <tt>nsIRDFSerivce</tt>
     // caches resources that are in-use, so multiple calls to <tt>GetResource()</tt>
