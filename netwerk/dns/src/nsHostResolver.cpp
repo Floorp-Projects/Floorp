@@ -207,12 +207,8 @@ HostDB_GetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
 PR_STATIC_CALLBACK(PLDHashNumber)
 HostDB_HashKey(PLDHashTable *table, const void *key)
 {
-    // it's sufficient to hash just the hostname here.  the hash table is
-    // designed to handle hash conflicts well, and moreover the flags and
-    // address family in use are assumed to be fairly static.
-
     const nsHostKey *hk = NS_STATIC_CAST(const nsHostKey *, key);
-    return PL_DHashStringKey(table, hk->host);
+    return PL_DHashStringKey(table, hk->host) ^ hk->flags ^ hk->af;
 }
 
 PR_STATIC_CALLBACK(PRBool)
