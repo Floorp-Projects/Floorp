@@ -149,13 +149,13 @@ int std::fputc(int c, FILE *file)
 
 int std::fputs(const char *s, FILE *file)
 {
-    return static_cast<int>(printChars(file, s, s + strlen(s)));
+    return static_cast<int>(JS::printChars(file, s, s + strlen(s)));
 }
 
 
 int std::fprintf(FILE* file, const char *format, ...)
 {
-    Buffer<char, 1024> b;
+    JS::Buffer<char, 1024> b;
 
     while (true) {
         va_list args;
@@ -164,7 +164,7 @@ int std::fprintf(FILE* file, const char *format, ...)
         va_end(args);
         if (n >= 0 && n < b.size) {
             translateLFtoCR(b.buffer, b.buffer + n);
-            return static_cast<int>(fwrite(b.buffer, 1, toSize_t(n), file));
+            return static_cast<int>(fwrite(b.buffer, 1, JS::toSize_t(n), file));
         }
         b.expand(b.size*2);
     }
