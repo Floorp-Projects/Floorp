@@ -170,6 +170,12 @@ PR_EXTERN(void) PR_LogPrint(const char *fmt, ...);
 */
 PR_EXTERN(void) PR_LogFlush(void);
 
+/* Need external access to this on Mac so we can first set up our faux environment vars */
+#ifdef XP_MAC
+PR_EXTERN(void) PR_Init_Log(void);
+#endif
+
+
 /*
 ** Windoze 16 can't support a large static string space for all of the
 ** various debugging strings so logging is not enabled for it.

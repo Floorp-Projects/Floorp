@@ -481,3 +481,12 @@ PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 #endif
 #endif /* PR_LOGGING */
 }
+
+#ifdef XP_MAC
+PR_IMPLEMENT(void) PR_Init_Log(void)
+{
+#ifdef PR_LOGGING
+	_PR_InitLog();
+#endif
+}
+#endif
