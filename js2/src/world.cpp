@@ -58,7 +58,6 @@ JS::StringAtom &JS::StringAtomTable::operator[](const String &s)
         return ht.insert(r, s);
 }
 
-
 JS::World::World()
 {
     Token::initKeywords(*this);

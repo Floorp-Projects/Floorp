@@ -231,7 +231,7 @@ namespace MetaData {
     // Invoke the named function on the thisValue object (it is an object)
     // Returns false if no callable function exists. Otherwise return the
     // function result value.
-    bool JS2Metadata::invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result)
+    bool JS2Metadata::invokeFunctionOnObject(js2val thisValue, const StringAtom &fnName, js2val &result)
     {
         js2val fnVal;
 
@@ -259,7 +259,7 @@ namespace MetaData {
 
         CompilationData *oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
         try {
-            LexicalReference rVal(new (this) Multiname(&world.identifiers[widenCString(fname)]), false);
+            LexicalReference rVal(new (this) Multiname(world.identifiers[widenCString(fname)]), false);
             rVal.emitReadForInvokeBytecode(bCon, 0);
             bCon->emitOp(eCall, 0, -(0 + 2) + 1);    // pop argCount args, the base & function, and push a result
             bCon->addShort(0);
@@ -390,11 +390,14 @@ namespace MetaData {
     const String *JS2Metadata::convertValueToString(js2val x)
     {
         if (JS2VAL_IS_UNDEFINED(x))
-            return engine->undefined_StringAtom;
+            return engine->allocStringPtr(&engine->undefined_StringAtom);
         if (JS2VAL_IS_NULL(x))
-            return engine->null_StringAtom;
+            return engine->allocStringPtr(&engine->null_StringAtom);
         if (JS2VAL_IS_BOOLEAN(x))
-            return (JS2VAL_TO_BOOLEAN(x)) ? engine->true_StringAtom : engine->false_StringAtom;
+            if (JS2VAL_TO_BOOLEAN(x)) 
+				return engine->allocStringPtr(&engine->true_StringAtom);
+			else
+				return engine->allocStringPtr(&engine->false_StringAtom);
         if (JS2VAL_IS_INT(x))
             return engine->numberToString(JS2VAL_TO_INT(x));
         if (JS2VAL_IS_LONG(x)) {
@@ -712,27 +715,24 @@ namespace MetaData {
         }
     }
 
-    bool JS2Class::ReadPublic(JS2Metadata *meta, js2val *base, const String *name, Phase phase, js2val *rval)
+    bool JS2Class::ReadPublic(JS2Metadata *meta, js2val *base, const StringAtom &name, Phase phase, js2val *rval)
     {
         // XXX could speed up by pushing knowledge of single namespace?
-        DEFINE_ROOTKEEPER(meta, rk1, name);
         Multiname *mn = new (meta) Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(meta, rk, mn);
         return Read(meta, base, mn, NULL, phase, rval);
     }
 
-    bool JS2Class::DeletePublic(JS2Metadata *meta, js2val base, const String *name, bool *result)
+    bool JS2Class::DeletePublic(JS2Metadata *meta, js2val base, const StringAtom &name, bool *result)
     {
-        DEFINE_ROOTKEEPER(meta, rk1, name);
         // XXX could speed up by pushing knowledge of single namespace?
         Multiname *mn = new (meta) Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(meta, rk, mn);
         return Delete(meta, base, mn, NULL, result);
     }
 
-    bool JS2Class::WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue)
+    bool JS2Class::WritePublic(JS2Metadata *meta, js2val base, const StringAtom &name, bool createIfMissing, js2val newValue)
     {
-        DEFINE_ROOTKEEPER(meta, rk1, name);
         // XXX could speed up by pushing knowledge of single namespace?
         Multiname *mn = new (meta) Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(meta, rk, mn);
@@ -743,24 +743,24 @@ namespace MetaData {
     {
         const String *indexStr = meta->toString(indexVal);
         DEFINE_ROOTKEEPER(meta, rk, indexStr);
-        Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+        Multiname *mn = new (meta) Multiname(meta->world.identifiers[*indexStr], meta->publicNamespace);
         DEFINE_ROOTKEEPER(meta, rk1, mn);
         return Read(meta, base, mn, NULL, phase, rval);
     }
 
-	bool isValidIndex(const String *name, uint32 &index)
+	bool isValidIndex(const StringAtom &name, uint32 &index)
 	{
         const char16 *numEnd;        
-        float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
+        float64 f = stringToDouble(name.data(), name.data() + name.length(), numEnd);
         index = JS2Engine::float64toUInt32(f);
         char buf[dtosStandardBufferSize];
         const char *chrp = doubleToStr(buf, dtosStandardBufferSize, index, dtosStandard, 0);
-        return (widenCString(chrp) == *name);
+        return (widenCString(chrp) == name);
 	}
 
     bool JS2ArrayClass::Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval)
     {
-        if ((*multiname->name == *meta->engine->length_StringAtom) && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
+        if ((multiname->name == meta->engine->length_StringAtom) && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
             *rval = Array_lengthGet(meta, *base, NULL, 0);
             return true;
         }
@@ -774,7 +774,7 @@ namespace MetaData {
         JS2Object *obj = JS2VAL_TO_OBJECT(base);
         
         bool result;
-        if ((*multiname->name == *meta->engine->length_StringAtom) && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
+        if ((multiname->name == meta->engine->length_StringAtom) && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
             Array_lengthSet(meta, base, &newValue, 1);
             result = true;
         }
@@ -783,8 +783,8 @@ namespace MetaData {
             if (result && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
 				uint32 index;
                 if (isValidIndex(multiname->name, index)) {
-                    uint32 length = getLength(meta, obj);
-                    if (index >= length)
+					ArrayInstance *arrInst = checked_cast<ArrayInstance *>(obj);
+                    if (index >= arrInst->length)
                         setLength(meta, obj, index + 1);
                 }
             }
@@ -794,7 +794,7 @@ namespace MetaData {
 
     bool JS2ArrayClass::Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result)
     {
-        if ((*multiname->name == *meta->engine->length_StringAtom) && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
+        if ((multiname->name == meta->engine->length_StringAtom) && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
             *result = false;
             return true;
         }
@@ -806,7 +806,7 @@ namespace MetaData {
 	{
 		const String *indexStr = meta->toString(indexVal);
 		DEFINE_ROOTKEEPER(meta, rk, indexStr);
-		Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+		Multiname *mn = new (meta) Multiname(meta->world.identifiers[*indexStr], meta->publicNamespace);
 		DEFINE_ROOTKEEPER(meta, rk1, mn);
 
 		ASSERT(JS2VAL_IS_OBJECT(base));
@@ -814,7 +814,7 @@ namespace MetaData {
 
 		bool result;
 		if (!JS2VAL_IS_INT(indexVal)) {
-			if (*mn->name == *meta->engine->length_StringAtom) {
+			if (mn->name == meta->engine->length_StringAtom) {
 				Array_lengthSet(meta, base, &newValue, 1);
 				return true;
 			}
@@ -829,9 +829,11 @@ namespace MetaData {
 					return true;	// not a valid index, don't need to set length
 			}
 		}
-		uint32 length = getLength(meta, obj);
-		if (index >= length)
-			setLength(meta, obj, index + 1);
+        ArrayInstance *arrInst = checked_cast<ArrayInstance *>(obj);
+		if (index >= arrInst->length) {
+			js2val newLength = meta->engine->allocNumber(index + 1);
+			Array_lengthSet(meta, base, &newLength, 1);
+		}
 		return result;
 	}
 
@@ -839,7 +841,7 @@ namespace MetaData {
 	{
 		const String *indexStr = meta->toString(indexVal);
 		DEFINE_ROOTKEEPER(meta, rk, indexStr);
-		Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+		Multiname *mn = new (meta) Multiname(meta->world.identifiers[*indexStr], meta->publicNamespace);
 		DEFINE_ROOTKEEPER(meta, rk1, mn);
 		return Delete(meta, base, mn, NULL, result);
 	}
@@ -911,7 +913,7 @@ namespace MetaData {
 	{
 		const String *indexStr = meta->toString(indexVal);
 		DEFINE_ROOTKEEPER(meta, rk, indexStr);
-		Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+		Multiname *mn = new (meta) Multiname(meta->world.identifiers[*indexStr], meta->publicNamespace);
 		DEFINE_ROOTKEEPER(meta, rk1, mn);
 		return Read(meta, base, mn, NULL, phase, rval);
 	}
@@ -920,7 +922,7 @@ namespace MetaData {
     {
         const String *indexStr = meta->toString(indexVal);
         DEFINE_ROOTKEEPER(meta, rk, indexStr);
-        Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+        Multiname *mn = new (meta) Multiname(meta->world.identifiers[*indexStr], meta->publicNamespace);
         DEFINE_ROOTKEEPER(meta, rk1, mn);
         return Write(meta, base, mn, NULL, true, newValue, false);
     }
@@ -929,7 +931,7 @@ namespace MetaData {
     {
         const String *indexStr = meta->toString(indexVal);
         DEFINE_ROOTKEEPER(meta, rk, indexStr);
-        Multiname *mn = new (meta) Multiname(indexStr, meta->publicNamespace);
+        Multiname *mn = new (meta) Multiname(meta->world.identifiers[*indexStr], meta->publicNamespace);
         DEFINE_ROOTKEEPER(meta, rk1, mn);
         return Delete(meta, base, mn, NULL, result);
     }
@@ -959,8 +961,10 @@ namespace MetaData {
                     && baseObj
                     && ( ((baseObj->kind == SimpleInstanceKind) && !checked_cast<SimpleInstance *>(baseObj)->sealed)
                             || ( (baseObj->kind == PackageKind) && !checked_cast<Package *>(baseObj)->sealed)) ) {
-                QualifiedName qName = multiname->selectPrimaryName(meta);
-                Multiname *mn = new (meta) Multiname(qName);
+                QualifiedName *qName = multiname->selectPrimaryName(meta);
+				ASSERT(qName);
+                Multiname *mn = new (meta) Multiname(*qName);
+				delete qName;
                 DEFINE_ROOTKEEPER(meta, rk, mn);
                 if ( (meta->findBaseInstanceMember(this, mn, ReadAccess) == NULL)
                         && (meta->findCommonMember(&base, mn, ReadAccess, true) == NULL) ) {
@@ -1040,7 +1044,7 @@ VariableMemberCommon:
                 else
                     lMap = &checked_cast<NonWithFrame *>(container)->localBindings;
 
-                LocalBindingEntry **lbeP = (*lMap)[*multiname->name];
+                LocalBindingEntry **lbeP = (*lMap)[multiname->name];
                 if (lbeP) {
                     while (true) {
                         bool deletedOne = false;

@@ -166,7 +166,7 @@ namespace MetaData {
         for (i = 0; i < N_CONSTANTS_COUNT; i++)
         {
             Variable *v = new Variable(meta->numberClass, meta->engine->allocNumber(NumberObjectConstants[i].value), true);
-            meta->defineLocalMember(meta->env, &meta->world.identifiers[NumberObjectConstants[i].name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+            meta->defineLocalMember(meta->env, meta->world.identifiers[NumberObjectConstants[i].name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
         }
         meta->env->removeTopFrame();
 

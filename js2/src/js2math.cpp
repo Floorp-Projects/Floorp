@@ -319,7 +319,7 @@ void initMathObject(JS2Metadata *meta, SimpleInstance *mathObject)
 //        Variable *v = new Variable(meta->numberClass, meta->engine->allocNumber(MathObjectConstants[i].value), true);
 //        meta->defineLocalMember(meta->env, &meta->world.identifiers[MathObjectConstants[i].name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
 
-        meta->createDynamicProperty(mathObject, &meta->world.identifiers[MathObjectConstants[i].name], meta->engine->allocNumber(MathObjectConstants[i].value), ReadAccess, true, false);
+        meta->createDynamicProperty(mathObject, meta->world.identifiers[MathObjectConstants[i].name], meta->engine->allocNumber(MathObjectConstants[i].value), ReadAccess, true, false);
     }
 
     FunctionData prototypeFunctions[] =
@@ -351,7 +351,7 @@ void initMathObject(JS2Metadata *meta, SimpleInstance *mathObject)
         callInst->fWrap = new FunctionWrapper(meta, true, new (meta) ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
         callInst->fWrap->length = pf->length;
 
-        meta->createDynamicProperty(mathObject, &meta->world.identifiers[pf->name], OBJECT_TO_JS2VAL(callInst), ReadAccess, true, false);
+        meta->createDynamicProperty(mathObject, meta->world.identifiers[pf->name], OBJECT_TO_JS2VAL(callInst), ReadAccess, true, false);
 
 
 

@@ -175,7 +175,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
     else {
         js2val globalMultilineVal;
 		js2val regexpClassVal = OBJECT_TO_JS2VAL(meta->regexpClass);
-        if (!meta->classClass->ReadPublic(meta, &regexpClassVal, meta->engine->allocStringPtr("multiline"), RunPhase, &globalMultilineVal))
+        if (!meta->classClass->ReadPublic(meta, &regexpClassVal, meta->world.identifiers["multiline"], RunPhase, &globalMultilineVal))
 			ASSERT(false);
 		bool globalMultiline = meta->toBoolean(globalMultilineVal);
 
@@ -195,7 +195,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
             DEFINE_ROOTKEEPER(meta, rk3, matchStr);
 			if (A == NULL)
 				A = new (meta) ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
-            meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(index), true, matchStr);
+            meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToStringAtom(index), true, matchStr);
             index++;
         }
         thisInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
@@ -209,7 +209,7 @@ static const String interpretDollar(JS2Metadata *meta, const String *replaceStr,
     const char16 *dollarValue = replaceStr->begin() + dollarPos + 1;
     switch (*dollarValue) {
     case '$':
-        return *meta->engine->Dollar_StringAtom;
+        return meta->engine->Dollar_StringAtom;
     case '&':
         return searchStr->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex);
     case '`':
@@ -242,7 +242,7 @@ static const String interpretDollar(JS2Metadata *meta, const String *replaceStr,
     // fall thru
     default:
         skip = 1;
-        return *meta->engine->Dollar_StringAtom;
+        return meta->engine->Dollar_StringAtom;
     }
 }
 
@@ -442,7 +442,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
             strSplitMatch(S, 0, R, z);
         if (!z.failure)
             return result;
-        meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString((int32)0), true, STRING_TO_JS2VAL(S));
+        meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToStringAtom((int32)0), true, STRING_TO_JS2VAL(S));
         return result;
     }
 
@@ -456,7 +456,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
 step11:
         if (q == s) {
             v = meta->engine->allocString(S, p, (s - p));
-            meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(getLength(meta, A)), true, v);
+            meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToStringAtom(getLength(meta, A)), true, v);
             return result;
         }
         MatchResult z;
@@ -475,13 +475,13 @@ step11:
         }
         T = meta->engine->allocStringPtr(S, p, (q - p));   // XXX
         v = STRING_TO_JS2VAL(T);
-        meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(getLength(meta, A)), true, v);
+        meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToStringAtom(getLength(meta, A)), true, v);
         if (getLength(meta, A) == lim)
             return result;
         p = e;
 
         for (uint32 i = 0; i < z.capturesCount; i++) {
-            meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(getLength(meta, A)), true, z.captures[i]);
+            meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToStringAtom(getLength(meta, A)), true, z.captures[i]);
             if (getLength(meta, A) == lim)
                 return result;
         }
@@ -498,7 +498,7 @@ static js2val String_charAt(JS2Metadata *meta, const js2val thisValue, js2val *a
         pos = meta->valToUInt32(argv[0]);
 
     if ((pos < 0) || (pos >= str->size()))
-        return STRING_TO_JS2VAL(meta->engine->Empty_StringAtom);
+        return meta->engine->allocString(meta->engine->Empty_StringAtom);
     else
         return meta->engine->allocString(new String(1, (*str)[pos]));   // XXX
     
@@ -694,7 +694,7 @@ static js2val String_slice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         end = sourceLength;
 
     if (start > end)
-        return STRING_TO_JS2VAL(meta->engine->Empty_StringAtom);
+        return meta->engine->allocString(meta->engine->Empty_StringAtom);
     return meta->engine->allocString(sourceString->substr(start, end - start));
 }
 

@@ -71,6 +71,8 @@ namespace JavaScript {
         StringAtom &operator[](const String &s);
         StringAtom &operator[](const char *s) {return operator[](widenCString(s));}
         void clear()    { ht.clear(); }
+		bool hasEntry(const String &s) { HT::Reference r(ht, s); return r; }
+
     };
 
 #ifdef DIKDIK

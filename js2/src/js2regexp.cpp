@@ -62,30 +62,30 @@ namespace MetaData {
 
     void RegExpInstance::setLastIndex(JS2Metadata *meta, js2val a)
     {
-        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->engine->allocStringPtr("lastIndex"), true, a);
+        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->world.identifiers["lastIndex"], true, a);
     }
     void RegExpInstance::setGlobal(JS2Metadata *meta, js2val a)
     {
-        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->engine->allocStringPtr("global"), true, a);
+        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->world.identifiers["global"], true, a);
     }
     void RegExpInstance::setMultiline(JS2Metadata *meta, js2val a)
     {
-        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->engine->allocStringPtr("multiline"), true, a);
+        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->world.identifiers["multiline"], true, a);
     }
     void RegExpInstance::setIgnoreCase(JS2Metadata *meta, js2val a)
     {
-        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->engine->allocStringPtr("ignoreCase"), true, a);
+        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->world.identifiers["ignoreCase"], true, a);
     }
     void RegExpInstance::setSource(JS2Metadata *meta, js2val a)
     {
-        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->engine->allocStringPtr("source"), true, a);
+        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->world.identifiers["source"], true, a);
     }
 
     js2val RegExpInstance::getLastIndex(JS2Metadata *meta)
     {
         js2val r;
         js2val thisVal = OBJECT_TO_JS2VAL(this);
-        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->engine->allocStringPtr("lastIndex"), RunPhase, &r))
+        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->world.identifiers["lastIndex"], RunPhase, &r))
             ASSERT(false);
         return r;
     }
@@ -93,7 +93,7 @@ namespace MetaData {
     {
         js2val r;
         js2val thisVal = OBJECT_TO_JS2VAL(this);
-        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->engine->allocStringPtr("global"), RunPhase, &r))
+        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->world.identifiers["global"], RunPhase, &r))
             ASSERT(false);
         return r;
     }
@@ -101,7 +101,7 @@ namespace MetaData {
     {
         js2val r;
         js2val thisVal = OBJECT_TO_JS2VAL(this);
-        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->engine->allocStringPtr("multiline"), RunPhase, &r))
+        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->world.identifiers["multiline"], RunPhase, &r))
             ASSERT(false);
         return r;
     }
@@ -109,7 +109,7 @@ namespace MetaData {
     {
         js2val r;
         js2val thisVal = OBJECT_TO_JS2VAL(this);
-        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->engine->allocStringPtr("ignoreCase"), RunPhase, &r))
+        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->world.identifiers["ignoreCase"], RunPhase, &r))
             ASSERT(false);
         return r;
     }
@@ -117,7 +117,7 @@ namespace MetaData {
     {
         js2val r;
         js2val thisVal = OBJECT_TO_JS2VAL(this);
-        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->engine->allocStringPtr("source"), RunPhase, &r))
+        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->world.identifiers["source"], RunPhase, &r))
             ASSERT(false);
         return r;
     }
@@ -164,7 +164,7 @@ namespace MetaData {
 		js2val result = JS2VAL_NULL;
         if (argc == 0) {
 			js2val inputVal;
-			if (!meta->classClass->ReadPublic(meta, &regexpClassVal, meta->engine->allocStringPtr("input"), RunPhase, &inputVal))
+			if (!meta->classClass->ReadPublic(meta, &regexpClassVal, meta->world.identifiers["input"], RunPhase, &inputVal))
 				ASSERT(false);
 			str = meta->toString(inputVal);
 		}
@@ -173,7 +173,7 @@ namespace MetaData {
 
         uint32 index = 0;
         js2val globalMultiline;
-        if (!meta->classClass->ReadPublic(meta, &regexpClassVal, meta->engine->allocStringPtr("multiline"), RunPhase, &globalMultiline))
+        if (!meta->classClass->ReadPublic(meta, &regexpClassVal, meta->world.identifiers["multiline"], RunPhase, &globalMultiline))
 			ASSERT(false);
 
         if (meta->toBoolean(thisInst->getGlobal(meta))) {
@@ -205,7 +205,7 @@ namespace MetaData {
 			js2val inputStr = meta->engine->allocString(str);
             DEFINE_ROOTKEEPER(meta, rk2, inputStr);
 			if (!test)
-				meta->createDynamicProperty(A, meta->engine->numberToString((long)0), matchStr, ReadWriteAccess, false, true);
+				meta->createDynamicProperty(A, meta->engine->numberToStringAtom((long)0), matchStr, ReadWriteAccess, false, true);
 			js2val parenStr = JS2VAL_VOID;
 			DEFINE_ROOTKEEPER(meta, rk3, parenStr);
 			if (match->parenCount == 0)	// arrange to set the lastParen to "", not undefined (it's a non-ecma 1.2 thing)
@@ -214,22 +214,22 @@ namespace MetaData {
                 if (match->parens[i].index != -1) {
                     parenStr = meta->engine->allocString(str->substr((uint32)(match->parens[i].index), (uint32)(match->parens[i].length)));
                     if (!test)
-						meta->createDynamicProperty(A, meta->engine->numberToString(toUInt32(i + 1)), parenStr, ReadWriteAccess, false, true);
+						meta->createDynamicProperty(A, meta->engine->numberToStringAtom(toUInt32(i + 1)), parenStr, ReadWriteAccess, false, true);
 					if (i < 9) { // 0-->8 maps to $1 thru $9
 						char name[3] = "$0";
 						name[1] = '1' + i;
 						String staticName(widenCString(name));
-						meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr(&staticName), true, parenStr);
+						meta->classClass->WritePublic(meta, regexpClassVal, meta->world.identifiers[staticName], true, parenStr);
 					}
 				}
 				else {
 					if (!test)
-						meta->createDynamicProperty(A, meta->engine->numberToString(toUInt32(i + 1)), JS2VAL_UNDEFINED, ReadWriteAccess, false, true);
+						meta->createDynamicProperty(A, meta->engine->numberToStringAtom(toUInt32(i + 1)), JS2VAL_UNDEFINED, ReadWriteAccess, false, true);
 					if (i < 9) { // 0-->8 maps to $1 thru $9
 						char name[3] = "$0";
 						name[1] = '1' + i;
 						String staticName(widenCString(name));
-						meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr(&staticName), true, JS2VAL_UNDEFINED);
+						meta->classClass->WritePublic(meta, regexpClassVal, meta->world.identifiers[staticName], true, JS2VAL_UNDEFINED);
 					}
 				}
             }
@@ -237,19 +237,19 @@ namespace MetaData {
 				setLength(meta, A, match->parenCount + 1);                
 		
 // add 'index' and 'input' properties to the result array
-				meta->createDynamicProperty(A, meta->engine->allocStringPtr("index"), meta->engine->allocNumber((float64)(match->startIndex)), ReadWriteAccess, false, true);
-				meta->createDynamicProperty(A, meta->engine->allocStringPtr("input"), inputStr, ReadWriteAccess, false, true);
+				meta->createDynamicProperty(A, meta->world.identifiers["index"], meta->engine->allocNumber((float64)(match->startIndex)), ReadWriteAccess, false, true);
+				meta->createDynamicProperty(A, meta->world.identifiers["input"], inputStr, ReadWriteAccess, false, true);
 			}                
 // set other RegExp statics
-            meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr("input"), true, inputStr);
-            meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr("lastMatch"), true, matchStr);
-            meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr("lastParen"), true, parenStr);
+            meta->classClass->WritePublic(meta, regexpClassVal, meta->world.identifiers["input"], true, inputStr);
+            meta->classClass->WritePublic(meta, regexpClassVal, meta->world.identifiers["lastMatch"], true, matchStr);
+            meta->classClass->WritePublic(meta, regexpClassVal, meta->world.identifiers["lastParen"], true, parenStr);
             js2val leftContextVal = meta->engine->allocString(str->substr(0, (uint32)match->startIndex));
             DEFINE_ROOTKEEPER(meta, rk4, leftContextVal);
-            meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr("leftContext"), true, leftContextVal);
+            meta->classClass->WritePublic(meta, regexpClassVal, meta->world.identifiers["leftContext"], true, leftContextVal);
             js2val rightContextVal = meta->engine->allocString(str->substr((uint32)match->endIndex, (uint32)str->length() - match->endIndex));
             DEFINE_ROOTKEEPER(meta, rk5, rightContextVal);
-            meta->classClass->WritePublic(meta, regexpClassVal, meta->engine->allocStringPtr("rightContext"), true, rightContextVal);
+            meta->classClass->WritePublic(meta, regexpClassVal, meta->world.identifiers["rightContext"], true, rightContextVal);
         }
         return result;
 	}
@@ -287,9 +287,9 @@ namespace MetaData {
         RegExpInstance *thisInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(thisValue));
         uint32 flags = 0;
 
-        const String *regexpStr = meta->engine->Empty_StringAtom;
+        const String *regexpStr = &meta->engine->Empty_StringAtom;
         DEFINE_ROOTKEEPER(meta, rk1, regexpStr);
-        const String *flagStr = meta->engine->Empty_StringAtom;
+        const String *flagStr = &meta->engine->Empty_StringAtom;
         DEFINE_ROOTKEEPER(meta, rk2, flagStr);
         if (argc > 0) {
             if (JS2VAL_IS_OBJECT(argv[0]) && !JS2VAL_IS_NULL(argv[0])
@@ -399,9 +399,9 @@ namespace MetaData {
 			else
 				if (RegExpStaticVars[i].type == meta->booleanClass)
 					v->value = JS2VAL_FALSE;
-            meta->defineLocalMember(meta->env, &meta->world.identifiers[RegExpStaticVars[i].name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+            meta->defineLocalMember(meta->env, meta->world.identifiers[RegExpStaticVars[i].name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
 			if (RegExpStaticVars[i].aliasName)
-				meta->defineLocalMember(meta->env, &meta->world.identifiers[RegExpStaticVars[i].aliasName], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+				meta->defineLocalMember(meta->env, meta->world.identifiers[RegExpStaticVars[i].aliasName], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
 		}
         meta->env->removeTopFrame();
         
@@ -423,7 +423,7 @@ namespace MetaData {
 
         for (i = 0; i < INSTANCE_VAR_COUNT; i++)
         {
-            Multiname *mn = new (meta) Multiname(meta->engine->allocStringPtr(RegExpInstanceVars[i].name), &publicNamespaceList);
+            Multiname *mn = new (meta) Multiname(meta->world.identifiers[RegExpInstanceVars[i].name], &publicNamespaceList);
             InstanceMember *m = new InstanceVariable(mn, RegExpInstanceVars[i].type, false, true, true, meta->regexpClass->slotCount++);
             meta->defineInstanceMember(meta->regexpClass, &meta->cxt, mn->name, *mn->nsList, Attribute::NoOverride, false, m, 0);
         }

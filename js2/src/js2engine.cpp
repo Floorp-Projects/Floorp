@@ -344,6 +344,30 @@ namespace MetaData {
         return allocStringPtr(chrp);
     }
 
+    // Convert an integer to a stringAtom
+    StringAtom &JS2Engine::numberToStringAtom(int32 i)
+    {
+        char buf[dtosStandardBufferSize];
+        const char *chrp = doubleToStr(buf, dtosStandardBufferSize, i, dtosStandard, 0);
+        return meta->world.identifiers[chrp];
+    }
+    // Convert an integer to a stringAtom
+    StringAtom &JS2Engine::numberToStringAtom(uint32 i)
+    {
+        char buf[dtosStandardBufferSize];
+        const char *chrp = doubleToStr(buf, dtosStandardBufferSize, i, dtosStandard, 0);
+        return meta->world.identifiers[chrp];
+    }
+
+    // Convert a double to a stringAtom
+    StringAtom &JS2Engine::numberToStringAtom(float64 *number)
+    {
+        char buf[dtosStandardBufferSize];
+        const char *chrp = doubleToStr(buf, dtosStandardBufferSize, *number, dtosStandard, 0);
+        return meta->world.identifiers[chrp];
+    }
+
+
     // x is a Number, validate that it has no fractional component
     int64 JS2Engine::checkInteger(js2val x)
     {
@@ -460,21 +484,21 @@ namespace MetaData {
                   pc(NULL),
                   bCon(NULL),
                   phase(RunPhase),
-                  INIT_STRINGATOM(true),
-                  INIT_STRINGATOM(false),
-                  INIT_STRINGATOM(null),
-                  INIT_STRINGATOM(undefined),
-                  INIT_STRINGATOM(public),
-                  INIT_STRINGATOM(private),
-                  INIT_STRINGATOM(Function),
-                  INIT_STRINGATOM(Object),
-                  INIT_STRINGATOM(object),
-                  Empty_StringAtom(allocStringPtr("")),
-                  Dollar_StringAtom(allocStringPtr("$")),
-                  INIT_STRINGATOM(prototype),
-                  INIT_STRINGATOM(length),
-                  INIT_STRINGATOM(toString),
-                  INIT_STRINGATOM(valueOf),
+                  true_StringAtom(world.identifiers["true"]),
+                  false_StringAtom(world.identifiers["false"]),
+                  null_StringAtom(world.identifiers["null"]),
+                  undefined_StringAtom(world.identifiers["undefined"]),
+                  public_StringAtom(world.identifiers["public"]),
+                  private_StringAtom(world.identifiers["private"]),
+                  Function_StringAtom(world.identifiers["Function"]),
+                  Object_StringAtom(world.identifiers["Object"]),
+                  object_StringAtom(world.identifiers["object"]),
+                  Empty_StringAtom(world.identifiers[""]),
+                  Dollar_StringAtom(world.identifiers["$"]),
+                  prototype_StringAtom(world.identifiers["prototype"]),
+                  length_StringAtom(world.identifiers["length"]),
+                  toString_StringAtom(world.identifiers["toString"]),
+                  valueOf_StringAtom(world.identifiers["valueOf"]),
                   packageFrame(NULL),
                   parameterFrame(NULL),
                   localFrame(NULL),
@@ -690,7 +714,7 @@ namespace MetaData {
         case TYPE_PTR:
             {
                 JS2Class *c = BytecodeContainer::getType(pc);
-                stdOut << " " << *c->name;
+                stdOut << " " << c->name;
                 pc += sizeof(JS2Class *);
             }
             break;
@@ -704,7 +728,7 @@ namespace MetaData {
         case NAME_INDEX:
             {
                 Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
-                stdOut << " " << *mn->name;
+                stdOut << " " << mn->name;
                 pc += sizeof(short);
             }
             break;
@@ -1083,22 +1107,6 @@ namespace MetaData {
                 JS2Object::mark(float64Table[i]);
         }
         GCMARKVALUE(retval);
-
-        JS2Object::mark(true_StringAtom);
-        JS2Object::mark(false_StringAtom);
-        JS2Object::mark(null_StringAtom);
-        JS2Object::mark(undefined_StringAtom);
-        JS2Object::mark(public_StringAtom);
-        JS2Object::mark(private_StringAtom);
-        JS2Object::mark(Function_StringAtom);
-        JS2Object::mark(Object_StringAtom);
-        JS2Object::mark(object_StringAtom);
-        JS2Object::mark(Empty_StringAtom);
-        JS2Object::mark(Dollar_StringAtom);
-        JS2Object::mark(prototype_StringAtom);
-        JS2Object::mark(length_StringAtom);
-        JS2Object::mark(toString_StringAtom);
-        JS2Object::mark(valueOf_StringAtom);
     }
 
     void JS2Engine::pushHandler(uint8 *pc)
@@ -1117,7 +1125,7 @@ namespace MetaData {
     js2val JS2Engine::typeofString(js2val a)
     {
         if (JS2VAL_IS_UNDEFINED(a))
-            a = STRING_TO_JS2VAL(undefined_StringAtom);
+            a = allocString(undefined_StringAtom);
         else
         if (JS2VAL_IS_BOOLEAN(a))
             a = allocString("boolean");
@@ -1130,7 +1138,7 @@ namespace MetaData {
         else {
             ASSERT(JS2VAL_IS_OBJECT(a));
             if (JS2VAL_IS_NULL(a))
-                a = STRING_TO_JS2VAL(object_StringAtom);
+                a = allocString(object_StringAtom);
             else {
                 JS2Object *obj = JS2VAL_TO_OBJECT(a);
                 switch (obj->kind) {
@@ -1149,11 +1157,11 @@ namespace MetaData {
                     if (checked_cast<SimpleInstance *>(obj)->type == meta->functionClass)
                         a = allocString("function"); //STRING_TO_JS2VAL(Function_StringAtom);
                     else
-                        a = STRING_TO_JS2VAL(object_StringAtom);
+                        a = allocString(object_StringAtom);
 //                    a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->type->getName());
                     break;
                 case PackageKind:
-                    a = STRING_TO_JS2VAL(object_StringAtom);
+                    a = allocString(object_StringAtom);
                     break;
                 default:
                     ASSERT(false);

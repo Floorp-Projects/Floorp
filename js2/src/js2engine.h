@@ -255,6 +255,10 @@ public:
     String *numberToString(int32 i);
     String *numberToString(uint32 i);
 
+    StringAtom &numberToStringAtom(float64 *number);
+    StringAtom &numberToStringAtom(int32 i);
+    StringAtom &numberToStringAtom(uint32 i);
+
     js2val allocFloat(float32 x); 
     js2val pushFloat(float32 x)         { js2val retval = allocFloat(x); push(retval); return retval; }
 
@@ -278,21 +282,21 @@ public:
 
     // Cached StringAtoms for handy access
     // These are all engine-allocated, so can be used as JS2VAL's
-    const String *true_StringAtom;
-    const String *false_StringAtom;
-    const String *null_StringAtom;
-    const String *undefined_StringAtom;
-    const String *public_StringAtom;
-    const String *private_StringAtom;
-    const String *Function_StringAtom;
-    const String *Object_StringAtom;
-    const String *object_StringAtom;
-    const String *Empty_StringAtom;
-    const String *Dollar_StringAtom;
-    const String *prototype_StringAtom;
-    const String *length_StringAtom;
-    const String *toString_StringAtom;
-    const String *valueOf_StringAtom;
+    const StringAtom &true_StringAtom;
+    const StringAtom &false_StringAtom;
+    const StringAtom &null_StringAtom;
+    const StringAtom &undefined_StringAtom;
+    const StringAtom &public_StringAtom;
+    const StringAtom &private_StringAtom;
+    const StringAtom &Function_StringAtom;
+    const StringAtom &Object_StringAtom;
+    const StringAtom &object_StringAtom;
+    const StringAtom &Empty_StringAtom;
+    const StringAtom &Dollar_StringAtom;
+    const StringAtom &prototype_StringAtom;
+    const StringAtom &length_StringAtom;
+    const StringAtom &toString_StringAtom;
+    const StringAtom &valueOf_StringAtom;
 
     // The activation stack, when it's empty and a return is executed, the
     // interpreter quits

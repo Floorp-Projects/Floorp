@@ -110,7 +110,7 @@ namespace MetaData {
             fnInst->fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
             meta->createDynamicProperty(fnInst, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
             if (meta->cxt.E3compatibility)
-                meta->createDynamicProperty(fnInst, &meta->world.identifiers["arguments"], JS2VAL_NULL, ReadAccess, true, false);
+                meta->createDynamicProperty(fnInst, meta->world.identifiers["arguments"], JS2VAL_NULL, ReadAccess, true, false);
             return thatValue;
         }
     }
@@ -125,7 +125,7 @@ namespace MetaData {
 		if (fnInst->sourceText)
 			return STRING_TO_JS2VAL(fnInst->sourceText);
 		else
-			return STRING_TO_JS2VAL(meta->engine->Function_StringAtom);
+			return meta->engine->allocString(meta->engine->Function_StringAtom);
     }
 
     static js2val Function_call(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
@@ -173,7 +173,7 @@ namespace MetaData {
 					js2val *argArray = new js2val[length];
 					DEFINE_ARRAYROOTKEEPER(meta, rk, argArray, length);
 					for (uint32 i = 0; i < length; i++)
-						meta->arrayClass->ReadPublic(meta, &argv[1], meta->engine->numberToString(i), RunPhase, &argArray[i]);
+						meta->arrayClass->ReadPublic(meta, &argv[1], meta->engine->numberToStringAtom(i), RunPhase, &argArray[i]);
 					return meta->invokeFunction(fnInst, callThis, argArray, length, NULL);
 				}
 				else
@@ -183,7 +183,7 @@ namespace MetaData {
 						js2val *argArray = new js2val[length];
 						DEFINE_ARRAYROOTKEEPER(meta, rk, argArray, length);
 						for (uint32 i = 0; i < length; i++)
-							meta->argumentsClass->ReadPublic(meta, &argv[1], meta->engine->numberToString(i), RunPhase, &argArray[i]);
+							meta->argumentsClass->ReadPublic(meta, &argv[1], meta->engine->numberToStringAtom(i), RunPhase, &argArray[i]);
 						return meta->invokeFunction(fnInst, callThis, argArray, length, NULL);
 					}
 			}

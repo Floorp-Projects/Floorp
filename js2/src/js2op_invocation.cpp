@@ -147,7 +147,7 @@ doCall:
                         pFrame->thisObject = a;
                         // XXX (use fWrap->compileFrame->signature)
                         pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
-                        jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
+                        jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
                         if (fInst->isMethodClosure)
                             meta->env->addFrame(meta->objectType(a));
                         meta->env->addFrame(pFrame);
@@ -155,7 +155,7 @@ doCall:
                         pFrame = NULL;
                     }
                     else {
-                        jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
+                        jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
                         // XXX constructing a parameterFrame only for the purpose of holding the 'this'
                         // need to find a more efficient way of stashing 'this'
                         // used to be : "meta->env->addFrame(fWrap->compileFrame->prototype);"
@@ -181,7 +181,7 @@ doCall:
                         && (meta->objectType(b) == meta->regexpClass)) {
                 // ECMA extension, call exec()
                 js2val exec_fnVal;
-                if (!meta->regexpClass->ReadPublic(meta, &b, &meta->world.identifiers["exec"], RunPhase, &exec_fnVal))
+                if (!meta->regexpClass->ReadPublic(meta, &b, meta->world.identifiers["exec"], RunPhase, &exec_fnVal))
                     ASSERT(false);
 				a = b;
                 ASSERT(JS2VAL_IS_OBJECT(exec_fnVal));
@@ -291,7 +291,7 @@ doCall:
             b = pop();
             a = pop();      // doing 'a in b'
             astr = meta->toString(a);
-            Multiname mn(astr);
+            Multiname mn(meta->world.identifiers[*astr]);
             JS2Class *c = meta->objectType(b);
             bool result = ( (meta->findBaseInstanceMember(c, &mn, ReadAccess) != NULL)
                             || (meta->findBaseInstanceMember(c, &mn, WriteAccess) != NULL)

@@ -326,24 +326,23 @@ public:
 // A Namespace (is also an attribute)
 class Namespace : public Attribute {
 public:
-    Namespace(const String *name) : Attribute(NamespaceAttr), name(name) { }
+    Namespace(const StringAtom &name) : Attribute(NamespaceAttr), name(name) { }
 
     virtual CompoundAttribute *toCompoundAttribute(JS2Metadata *meta);
-    virtual void markChildren()     { if (name) JS2Object::mark(name); }
+    virtual void markChildren()     { /*if (name) JS2Object::mark(name); */}
 
-    const String *name;       // The namespace's name (used by toString)
+    const StringAtom &name;       // The namespace's name (used by toString)
 };
 
 // A QualifiedName is the combination of an identifier and a namespace
 class QualifiedName {
 public:
-    QualifiedName() : nameSpace(NULL), name(NULL) { }
-    QualifiedName(Namespace *nameSpace, const String *name) : nameSpace(nameSpace), name(name) { }
+    QualifiedName(Namespace *nameSpace, const StringAtom &name) : nameSpace(nameSpace), name(name) { }
 
-    bool operator ==(const QualifiedName &b) { return (nameSpace == b.nameSpace) && (*name == *b.name); }
+    bool operator ==(const QualifiedName &b) { return (nameSpace == b.nameSpace) && (name == b.name); }
 
     Namespace *nameSpace;    // The namespace qualifier
-    const String *name;      // The name
+    const StringAtom &name;  // The name
 };
 
 // A MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
@@ -355,31 +354,31 @@ typedef NamespaceList::iterator NamespaceListIterator;
 
 class Multiname : public JS2Object {
 public:    
-    Multiname() : JS2Object(MultinameKind), name(NULL), nsList(new NamespaceList()) { }
-    Multiname(Namespace *ns) : JS2Object(MultinameKind), name(NULL), nsList(new NamespaceList()) { nsList->push_back(ns); }
-    Multiname(const String *name) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { }
-    Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
+//    Multiname() : JS2Object(MultinameKind), name(NULL), nsList(new NamespaceList()) { }
+//    Multiname(Namespace *ns) : JS2Object(MultinameKind), name(NULL), nsList(new NamespaceList()) { nsList->push_back(ns); }
     Multiname(QualifiedName& q) : JS2Object(MultinameKind), name(q.name), nsList(new NamespaceList())    { nsList->push_back(q.nameSpace); }
-    Multiname(const String *name, NamespaceList *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
-    Multiname(const String *name, NamespaceList &ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
-    Multiname(const String *name, Context *cxt) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(*cxt); }
+    Multiname(const StringAtom &name) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { }
+    Multiname(const StringAtom &name, Namespace *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
+    Multiname(const StringAtom &name, NamespaceList *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
+    Multiname(const StringAtom &name, NamespaceList &ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
+    Multiname(const StringAtom &name, Context *cxt) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(*cxt); }
     Multiname(Multiname *m) : JS2Object(MultinameKind), name(m->name), nsList(new NamespaceList())    { addNamespace(m->nsList); }
 
     Multiname(const Multiname& m) : JS2Object(MultinameKind), name(m.name), nsList(new NamespaceList())    { addNamespace(m.nsList); }
-    void operator =(const Multiname& m) { name = m.name; delete nsList; nsList = new NamespaceList(); addNamespace(m.nsList); }   
+//    void operator =(const Multiname& m) { name = m.name; delete nsList; nsList = new NamespaceList(); addNamespace(m.nsList); }   
 
     void addNamespace(Namespace *ns)                { nsList->push_back(ns); }
     void addNamespace(NamespaceList &ns);
     void addNamespace(NamespaceList *ns)            { addNamespace(*ns); }
     void addNamespace(Context &cxt);
 
-    bool matches(QualifiedName &q)                  { return (*name == *q.name) && listContains(q.nameSpace); }
+    bool matches(QualifiedName &q)                  { return (name == q.name) && listContains(q.nameSpace); }
     bool listContains(Namespace *nameSpace);
 
-    QualifiedName selectPrimaryName(JS2Metadata *meta);
+    QualifiedName *selectPrimaryName(JS2Metadata *meta);
     bool subsetOf(Multiname &mn);
 
-    const String *name;
+    const StringAtom &name;
     NamespaceList *nsList;
 
     virtual void markChildren();
@@ -629,7 +628,7 @@ public:
 
 template<class Binding> class BindingEntry {
 public:
-    BindingEntry(const String &s) : name(s) { }
+    BindingEntry(const StringAtom &s) : name(s) { }
 
     BindingEntry *clone();
     void clear();
@@ -642,7 +641,7 @@ public:
     NS_Iterator end() { return bindingList.end(); }
 
 
-    const String name;
+    const StringAtom &name;
     NamespaceBindingList bindingList;
 
 };
@@ -651,14 +650,14 @@ typedef BindingEntry<LocalBinding> LocalBindingEntry;
 
 // A LocalBindingMap maps names to a list of LocalBindings. Each LocalBinding in the list
 // will have the same QualifiedName.name, but (potentially) different QualifiedName.namespace values
-typedef HashTable<LocalBindingEntry *, const String> LocalBindingMap;
-typedef TableIterator<LocalBindingEntry *, const String> LocalBindingIterator;
+typedef HashTable<LocalBindingEntry *, const StringAtom &> LocalBindingMap;
+typedef TableIterator<LocalBindingEntry *, const StringAtom &> LocalBindingIterator;
 
 
 typedef BindingEntry<InstanceBinding> InstanceBindingEntry;
 
-typedef HashTable<InstanceBindingEntry *, const String> InstanceBindingMap;
-typedef TableIterator<InstanceBindingEntry *, const String> InstanceBindingIterator;
+typedef HashTable<InstanceBindingEntry *, const StringAtom &> InstanceBindingMap;
+typedef TableIterator<InstanceBindingEntry *, const StringAtom &> InstanceBindingIterator;
 
 
 // A frame contains bindings defined at a particular scope in a program. A frame is either the top-level system frame, 
@@ -768,17 +767,17 @@ private:
 
 class JS2Class : public NonWithFrame {
 public:
-    JS2Class(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name);
+    JS2Class(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const StringAtom &name);
 
-    const String *getTypeofString()             { return typeofString; }
+    const StringAtom &getTypeofString()             { return typeofString; }
         
     JS2Class    *super;                         // This class's immediate superclass or null if none
     InstanceBindingMap instanceBindings;        // Map of qualified names to instance members defined in this class    
     InstanceVariable **instanceInitOrder;       // List of instance variables defined in this class in the order in which they are initialised
     bool complete;                              // true after all members of this class have been added to this CLASS record
-    const String *name;                         // This class's name
+    const StringAtom &name;                     // This class's name
     js2val prototype;                           // The default value of the super field of newly created simple instances of this class; <none> for most classes
-    const String *typeofString;                 // A strign to return if typeof is invoked on this class's instances
+    const StringAtom &typeofString;             // A strign to return if typeof is invoked on this class's instances
     Namespace *privateNamespace;                // This class's private namespace
     bool dynamic;                               // true if this class or any of its ancestors was defined with the dynamic attribute
     bool final;                                 // true if this class cannot be subclassed
@@ -793,9 +792,9 @@ public:
 
     void emitDefaultValue(BytecodeContainer *bCon, size_t pos);
 
-    bool ReadPublic(JS2Metadata *meta, js2val *base, const String *name, Phase phase, js2val *rval);
-    bool WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue);
-    bool DeletePublic(JS2Metadata *meta, js2val base, const String *name, bool *result);
+    bool ReadPublic(JS2Metadata *meta, js2val *base, const StringAtom &name, Phase phase, js2val *rval);
+    bool WritePublic(JS2Metadata *meta, js2val base, const StringAtom &name, bool createIfMissing, js2val newValue);
+    bool DeletePublic(JS2Metadata *meta, js2val base, const StringAtom &name, bool *result);
 
     virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
     virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
@@ -817,7 +816,7 @@ public:
 
 class JS2ArrayClass : public JS2Class {
 public:
-    JS2ArrayClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
+    JS2ArrayClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const StringAtom &name)
         : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
 
     virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
@@ -830,7 +829,7 @@ public:
 
 class JS2IntegerClass : public JS2Class {
 public:
-    JS2IntegerClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
+    JS2IntegerClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const StringAtom &name)
         : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
 
     virtual js2val ImplicitCoerce(JS2Metadata *meta, js2val newValue);
@@ -839,7 +838,7 @@ public:
 
 class JS2StringClass : public JS2Class {
 public:
-    JS2StringClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
+    JS2StringClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const StringAtom &name)
         : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
 
     virtual bool BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval);
@@ -847,7 +846,7 @@ public:
 
 class JS2NullClass : public JS2Class {
 public:
-    JS2NullClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
+    JS2NullClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const StringAtom &name)
         : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
     
     virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval)           { return false; }
@@ -860,7 +859,7 @@ public:
 
 class JS2ArgumentsClass : public JS2Class {
 public:
-    JS2ArgumentsClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
+    JS2ArgumentsClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const StringAtom &name)
         : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
     
     virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
@@ -1505,9 +1504,9 @@ public:
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase, QualifiedName *qname);
 
     FrameVariable *makeFrameVariable(NonWithFrame *regionalFrame);
-    LocalMember *defineHoistedVar(Environment *env, const String *id, js2val initVal, bool isVar, size_t pos);
-    Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos, bool enumerable);
-    InstanceMember *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList &namespaces, 
+    LocalMember *defineHoistedVar(Environment *env, const StringAtom &id, js2val initVal, bool isVar, size_t pos);
+    Multiname *defineLocalMember(Environment *env, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos, bool enumerable);
+    InstanceMember *defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom &idAtom, NamespaceList &namespaces, 
                                                                     Attribute::OverrideModifier overrideMod, bool xplicit,
                                                                     InstanceMember *m, size_t pos);
     InstanceMember *searchForOverrides(JS2Class *c, Multiname *multiname, Access access, size_t pos);
@@ -1522,21 +1521,21 @@ public:
     Member *findCommonMember(js2val *base, Multiname *multiname, Access access, bool flat);
 
     js2val invokeFunction(const char *fname);
-    bool invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result);
+    bool invokeFunctionOnObject(js2val thisValue, const StringAtom &fnName, js2val &result);
     js2val invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc, ParameterFrame *runtimeFrame);
     void invokeInit(JS2Class *c, js2val thisValue, js2val* argv, uint32 argc);
 
     DynamicVariable *createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable);
 //    DynamicVariable *createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
-    DynamicVariable *createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable);
-    void addPublicVariableToLocalMap(LocalBindingMap *lMap, const String *name, LocalMember *v, Access access, bool enumerable);
+    DynamicVariable *createDynamicProperty(JS2Object *obj, const StringAtom &name, js2val initVal, Access access, bool sealed, bool enumerable);
+    void addPublicVariableToLocalMap(LocalBindingMap *lMap, const StringAtom &name, LocalMember *v, Access access, bool enumerable);
 
     FunctionInstance *createFunctionInstance(Environment *env, bool prototype, bool unchecked, NativeCode *code, uint32 length, DynamicVariable **lengthProperty);
 
 
     bool readLocalMember(LocalMember *m, Phase phase, js2val *rval, Frame *container);
     bool readInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, Phase phase, js2val *rval);
-    bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name);
+    bool JS2Metadata::hasOwnProperty(JS2Object *obj, const StringAtom &name);
 
     bool writeLocalMember(LocalMember *m, js2val newValue, bool initFlag, Frame *container);
     bool writeInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, js2val newValue);
@@ -1717,11 +1716,11 @@ public:
     
 }; // namespace MetaData
 
-inline bool operator==(MetaData::LocalBindingEntry *s1, const String &s2) { return s1->name == s2;}
-inline bool operator!=(MetaData::LocalBindingEntry *s1, const String &s2) { return s1->name != s2;}
+inline bool operator==(MetaData::LocalBindingEntry *s1, const StringAtom &s2) { return s1->name == s2;}
+inline bool operator!=(MetaData::LocalBindingEntry *s1, const StringAtom &s2) { return s1->name != s2;}
 
-inline bool operator==(MetaData::InstanceBindingEntry *s1, const String &s2) { return s1->name == s2;}
-inline bool operator!=(MetaData::InstanceBindingEntry *s1, const String &s2) { return s1->name != s2;}
+inline bool operator==(MetaData::InstanceBindingEntry *s1, const StringAtom &s2) { return s1->name == s2;}
+inline bool operator!=(MetaData::InstanceBindingEntry *s1, const StringAtom &s2) { return s1->name != s2;}
 
 }; // namespace Javascript
 

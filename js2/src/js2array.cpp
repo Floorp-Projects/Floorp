@@ -102,14 +102,14 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
                     meta->reportError(Exception::rangeError, "Array length too large", meta->engine->errorPos());
             }
             else {
-                meta->createDynamicProperty(arrInst, meta->engine->numberToString((int32)0), argv[0], ReadWriteAccess, false, true);
+                meta->createDynamicProperty(arrInst, meta->engine->numberToStringAtom((int32)0), argv[0], ReadWriteAccess, false, true);
                 setLength(meta, arrInst, 1);
             }
         }
         else {
             uint32 i;
             for (i = 0; i < argc; i++) {
-                meta->createDynamicProperty(arrInst, meta->engine->numberToString(i), argv[i], ReadWriteAccess, false, true);
+                meta->createDynamicProperty(arrInst, meta->engine->numberToStringAtom(i), argv[i], ReadWriteAccess, false, true);
             }
             setLength(meta, arrInst, i);
         }
@@ -143,7 +143,7 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
 		else
 			s = new String();
         for (uint32 i = 0; i < length; i++) {
-            if (meta->arrayClass->ReadPublic(meta, &thatValue, meta->engine->numberToString(i), RunPhase, &result)
+            if (meta->arrayClass->ReadPublic(meta, &thatValue, meta->engine->numberToStringAtom(i), RunPhase, &result)
                     && !JS2VAL_IS_UNDEFINED(result)
                     && !JS2VAL_IS_NULL(result) )
                 s->append(*meta->toString(result));
@@ -179,7 +179,7 @@ static js2val Array_toSource(JS2Metadata *meta, const js2val thisValue, js2val *
         js2val result;
         String *s = new String(widenCString("["));
         for (uint32 i = 0; i < length; i++) {
-            if (meta->arrayClass->ReadPublic(meta, &thatValue, meta->engine->numberToString(i), RunPhase, &result)
+            if (meta->arrayClass->ReadPublic(meta, &thatValue, meta->engine->numberToStringAtom(i), RunPhase, &result)
                     && !JS2VAL_IS_UNDEFINED(result))
                 s->append(*meta->toString(result));
             if (i < (length - 1))
@@ -201,7 +201,7 @@ static js2val Array_push(JS2Metadata *meta, const js2val thisValue, js2val *argv
 
     JS2Class *c = meta->objectType(thisObj);
     for (uint32 i = 0; i < argc; i++) {
-        c->WritePublic(meta, thisValue, meta->engine->numberToString(i + length), true, argv[i]);
+        c->WritePublic(meta, thisValue, meta->engine->numberToStringAtom(i + length), true, argv[i]);
     }
     return setLength(meta, thisObj, length + argc);
 }
@@ -217,8 +217,8 @@ static js2val Array_pop(JS2Metadata *meta, const js2val thisValue, js2val * /*ar
         js2val result = JS2VAL_UNDEFINED;
         bool deleteResult;
         JS2Class *c = meta->objectType(thisObj);
-        c->ReadPublic(meta, &thatValue, meta->engine->numberToString(length - 1), RunPhase, &result);
-        c->DeletePublic(meta, thatValue, meta->engine->numberToString(length - 1), &deleteResult);
+        c->ReadPublic(meta, &thatValue, meta->engine->numberToStringAtom(length - 1), RunPhase, &result);
+        c->DeletePublic(meta, thatValue, meta->engine->numberToStringAtom(length - 1), &deleteResult);
         setLength(meta, thisObj, length - 1);
         return result;
     }
@@ -238,7 +238,7 @@ js2val Array_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uin
 
     do {
         if (meta->objectType(E) != meta->arrayClass) {
-            meta->arrayClass->WritePublic(meta, result, meta->engine->numberToString(n++), true, E);
+            meta->arrayClass->WritePublic(meta, result, meta->engine->numberToStringAtom(n++), true, E);
         }
         else {
             ASSERT(JS2VAL_IS_OBJECT(thisValue));
@@ -247,8 +247,8 @@ js2val Array_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uin
             JS2Class *c = meta->objectType(arrObj);
             for (uint32 k = 0; k < length; k++) {
                 js2val rval = JS2VAL_UNDEFINED;
-                c->ReadPublic(meta, &E, meta->engine->numberToString(k), RunPhase, &rval);                
-                meta->arrayClass->WritePublic(meta, result, meta->engine->numberToString(n++), true, rval);
+                c->ReadPublic(meta, &E, meta->engine->numberToStringAtom(k), RunPhase, &rval);                
+                meta->arrayClass->WritePublic(meta, result, meta->engine->numberToStringAtom(n++), true, rval);
             }
         }
         E = argv[i++];
@@ -276,7 +276,7 @@ static js2val Array_join(JS2Metadata *meta, const js2val thisValue, js2val *argv
 
     for (uint32 k = 0; k < length; k++) {
         js2val result = JS2VAL_UNDEFINED;
-        c->ReadPublic(meta, &thatValue, meta->engine->numberToString(k), RunPhase, &result);                
+        c->ReadPublic(meta, &thatValue, meta->engine->numberToStringAtom(k), RunPhase, &result);                
         if (!JS2VAL_IS_UNDEFINED(result) && !JS2VAL_IS_NULL(result))
             *S += *meta->toString(result);
 
@@ -297,41 +297,35 @@ static js2val Array_reverse(JS2Metadata *meta, const js2val thisValue, js2val * 
 
     JS2Class *c = meta->objectType(thisObj);
 
-    // XXX Need to root the Strings somewhere, this'll do for now..
-    Multiname *mn1 = new (meta) Multiname(meta->publicNamespace);
-    Multiname *mn2 = new (meta) Multiname(meta->publicNamespace);
-    DEFINE_ROOTKEEPER(meta, rk1, mn1);
-    DEFINE_ROOTKEEPER(meta, rk2, mn2);
-
     for (uint32 k = 0; k < halfway; k++) {
         bool deleteResult;
         js2val result1 = JS2VAL_UNDEFINED;
         js2val result2 = JS2VAL_UNDEFINED;
-        mn1->name = meta->engine->numberToString(k);
-        mn2->name = meta->engine->numberToString(length - k - 1);
+        const StringAtom &nm1 = meta->engine->numberToStringAtom(k);
+        const StringAtom &nm2 = meta->engine->numberToStringAtom(length - k - 1);
 
-        if (meta->hasOwnProperty(thisObj, mn1->name)) {
-            if (meta->hasOwnProperty(thisObj, mn2->name)) {
-                c->ReadPublic(meta, &thatValue, mn1->name, RunPhase, &result1);                
-                c->ReadPublic(meta, &thatValue, mn2->name, RunPhase, &result2);                
-                c->WritePublic(meta, thatValue, mn1->name, true, result2);                
-                c->WritePublic(meta, thatValue, mn2->name, true, result1);                
+        if (meta->hasOwnProperty(thisObj, nm1)) {
+            if (meta->hasOwnProperty(thisObj, nm2)) {
+                c->ReadPublic(meta, &thatValue, nm1, RunPhase, &result1);                
+                c->ReadPublic(meta, &thatValue, nm2, RunPhase, &result2);                
+                c->WritePublic(meta, thatValue, nm1, true, result2);                
+                c->WritePublic(meta, thatValue, nm2, true, result1);                
             }
             else {
-                c->ReadPublic(meta, &thatValue, mn1->name, RunPhase, &result1);                
-                c->WritePublic(meta, thatValue, mn2->name, true, result1);
-                c->DeletePublic(meta, thatValue, mn1->name, &deleteResult);
+                c->ReadPublic(meta, &thatValue, nm1, RunPhase, &result1);                
+                c->WritePublic(meta, thatValue, nm2, true, result1);
+                c->DeletePublic(meta, thatValue, nm1, &deleteResult);
             }
         }
         else {
-            if (meta->hasOwnProperty(thisObj, mn2->name)) {
-                c->ReadPublic(meta, &thatValue, mn2->name, RunPhase, &result2);                
-                c->WritePublic(meta, thatValue, mn1->name, true, result2);
-                c->DeletePublic(meta, thatValue, mn2->name, &deleteResult);
+            if (meta->hasOwnProperty(thisObj, nm2)) {
+                c->ReadPublic(meta, &thatValue, nm2, RunPhase, &result2);                
+                c->WritePublic(meta, thatValue, nm1, true, result2);
+                c->DeletePublic(meta, thatValue, nm2, &deleteResult);
             }
             else {
-                c->DeletePublic(meta, thatValue, mn1->name, &deleteResult);
-                c->DeletePublic(meta, thatValue, mn2->name, &deleteResult);
+                c->DeletePublic(meta, thatValue, nm1, &deleteResult);
+                c->DeletePublic(meta, thatValue, nm2, &deleteResult);
             }
         }
     }
@@ -352,31 +346,26 @@ static js2val Array_shift(JS2Metadata *meta, const js2val thisValue, js2val * /*
     }
 
     JS2Class *c = meta->objectType(thisObj);
-    // XXX Need to root the Strings somewhere, this'll do for now..
-    Multiname *mn1 = new (meta) Multiname(meta->publicNamespace);
-    Multiname *mn2 = new (meta) Multiname(meta->publicNamespace);
-    DEFINE_ROOTKEEPER(meta, rk1, mn1);
-    DEFINE_ROOTKEEPER(meta, rk2, mn2);
 
     js2val result;
     bool deleteResult;
-    mn1->name = meta->engine->numberToString((int32)0);
-    c->ReadPublic(meta, &thatValue, mn1->name, RunPhase, &result);                
+    const StringAtom &nm1 = meta->engine->numberToStringAtom((int32)0);
+    c->ReadPublic(meta, &thatValue, nm1, RunPhase, &result);                
 
     for (uint32 k = 1; k < length; k++) {
-        mn1->name = meta->engine->numberToString(k);
-        mn2->name = meta->engine->numberToString(k - 1);
+        const StringAtom &nm1 = meta->engine->numberToStringAtom(k);
+        const StringAtom &nm2 = meta->engine->numberToStringAtom(k - 1);
 
-        if (meta->hasOwnProperty(thisObj, mn1->name)) {
-            c->ReadPublic(meta, &thatValue, mn1->name, RunPhase, &result);                
-            c->WritePublic(meta, thatValue, mn2->name, true, result);
+        if (meta->hasOwnProperty(thisObj, nm1)) {
+            c->ReadPublic(meta, &thatValue, nm1, RunPhase, &result);                
+            c->WritePublic(meta, thatValue, nm2, true, result);
         }
         else
-            c->DeletePublic(meta, thatValue, mn2->name, &deleteResult);
+            c->DeletePublic(meta, thatValue, nm2, &deleteResult);
     }
 
-    mn2->name = meta->engine->numberToString(length - 1);
-    c->DeletePublic(meta, thatValue, mn2->name, &deleteResult);
+    const StringAtom &nm2 = meta->engine->numberToStringAtom(length - 1);
+    c->DeletePublic(meta, thatValue, nm2, &deleteResult);
     setLength(meta, thisObj, length - 1);
     return result;
 }
@@ -433,19 +422,14 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
     }
     
     JS2Class *c = meta->objectType(thisObj);
-    // XXX Need to root the Strings somewhere, this'll do for now..
-    Multiname *mn1 = new (meta) Multiname(meta->publicNamespace);
-    Multiname *mn2 = new (meta) Multiname(meta->publicNamespace);
-    DEFINE_ROOTKEEPER(meta, rk1, mn1);
-    DEFINE_ROOTKEEPER(meta, rk2, mn2);
     uint32 n = 0;
     while (start < end) {
-        mn1->name = meta->engine->numberToString(start);
-        if (meta->hasOwnProperty(thisObj, mn1->name)) {
+        const StringAtom &nm1 = meta->engine->numberToStringAtom(start);
+        if (meta->hasOwnProperty(thisObj, nm1)) {
             js2val rval;
-            mn2->name = meta->engine->numberToString(n);
-            c->ReadPublic(meta, &thatValue, mn1->name, RunPhase, &rval);                
-            meta->arrayClass->WritePublic(meta, result, mn2->name, true, rval);
+            const StringAtom &nm2 = meta->engine->numberToStringAtom(n);
+            c->ReadPublic(meta, &thatValue, nm1, RunPhase, &rval);                
+            meta->arrayClass->WritePublic(meta, result, nm2, true, rval);
         }
         n++;
         start++;
@@ -600,13 +584,13 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
 
     JS2Class *c = meta->objectType(thisObj);
     for (i = 0; i < length; i++) {
-        c->ReadPublic(meta, &thatValue, meta->engine->numberToString(i), RunPhase, &vec[i]);                
+        c->ReadPublic(meta, &thatValue, meta->engine->numberToStringAtom(i), RunPhase, &vec[i]);                
     }
 
     js_qsort(vec, length, &ca);
 
     for (i = 0; i < length; i++) {
-        c->WritePublic(meta, thatValue, meta->engine->numberToString(i), true, vec[i]);
+        c->WritePublic(meta, thatValue, meta->engine->numberToStringAtom(i), true, vec[i]);
     }
     return thatValue;
 }
@@ -652,19 +636,14 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
                 deleteCount = toUInt32(arg1);
         
         JS2Class *c = meta->objectType(thisObj);
-        // XXX Need to root the Strings somewhere, this'll do for now..
-        Multiname *mn1 = new (meta) Multiname(meta->publicNamespace);
-        Multiname *mn2 = new (meta) Multiname(meta->publicNamespace);
-        DEFINE_ROOTKEEPER(meta, rk1, mn1);
-        DEFINE_ROOTKEEPER(meta, rk2, mn2);
 
         for (k = 0; k < deleteCount; k++) {
-            mn1->name = meta->engine->numberToString(start + k);
-            if (meta->hasOwnProperty(thisObj, mn1->name)) {
+            const StringAtom &nm1 = meta->engine->numberToStringAtom(start + k);
+            if (meta->hasOwnProperty(thisObj, nm1)) {
                 js2val rval;
-                mn2->name = meta->engine->numberToString(k);
-                c->ReadPublic(meta, &thatValue, mn1->name, RunPhase, &rval);                
-                meta->arrayClass->WritePublic(meta, result, mn2->name, true, rval);
+                const StringAtom &nm2 = meta->engine->numberToStringAtom(k);
+                c->ReadPublic(meta, &thatValue, nm1, RunPhase, &rval);                
+                meta->arrayClass->WritePublic(meta, result, nm2, true, rval);
             }
         }
         setLength(meta, A, deleteCount);
@@ -673,41 +652,41 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         if (newItemCount < deleteCount) {
             bool deleteResult;
             for (k = start; k < (length - deleteCount); k++) {
-                mn1->name = meta->engine->numberToString(k + deleteCount);
-                mn2->name = meta->engine->numberToString(k + newItemCount);
-                if (meta->hasOwnProperty(thisObj, mn1->name)) {
+                const StringAtom &nm1 = meta->engine->numberToStringAtom(k + deleteCount);
+                const StringAtom &nm2 = meta->engine->numberToStringAtom(k + newItemCount);
+                if (meta->hasOwnProperty(thisObj, nm1)) {
                     js2val rval;
-                    c->ReadPublic(meta, &thatValue, mn1->name, RunPhase, &rval);                
-                    meta->arrayClass->WritePublic(meta, result, mn2->name, true, rval);
+                    c->ReadPublic(meta, &thatValue, nm1, RunPhase, &rval);                
+                    meta->arrayClass->WritePublic(meta, result, nm2, true, rval);
                 }
                 else
-                    c->DeletePublic(meta, thatValue, mn2->name, &deleteResult);                
+                    c->DeletePublic(meta, thatValue, nm2, &deleteResult);                
             }
             for (k = length; k > (length - deleteCount + newItemCount); k--) {
-                mn1->name = meta->engine->numberToString(k - 1);
-                c->DeletePublic(meta, thatValue, mn1->name, &deleteResult);                
+                const StringAtom &nm1 = meta->engine->numberToStringAtom(k - 1);
+                c->DeletePublic(meta, thatValue, nm1, &deleteResult);                
             }
         }
         else {
             if (newItemCount > deleteCount) {
                 for (k = length - deleteCount; k > start; k--) {
                     bool deleteResult;
-                    mn1->name = meta->engine->numberToString(k + deleteCount - 1);
-                    mn2->name = meta->engine->numberToString(k + newItemCount - 1);
-                    if (meta->hasOwnProperty(thisObj, mn1->name)) {
+                    const StringAtom &nm1 = meta->engine->numberToStringAtom(k + deleteCount - 1);
+                    const StringAtom &nm2 = meta->engine->numberToStringAtom(k + newItemCount - 1);
+                    if (meta->hasOwnProperty(thisObj, nm1)) {
                         js2val rval;
-                        c->ReadPublic(meta, &thatValue, mn1->name, RunPhase, &rval);                
-                        meta->arrayClass->WritePublic(meta, result, mn2->name, true, rval);
+                        c->ReadPublic(meta, &thatValue, nm1, RunPhase, &rval);                
+                        meta->arrayClass->WritePublic(meta, result, nm2, true, rval);
                     }
                     else
-                        c->DeletePublic(meta, thatValue, mn2->name, &deleteResult);                
+                        c->DeletePublic(meta, thatValue, nm2, &deleteResult);                
                 }
             }
         }
         k = start;
         for (uint32 i = 2; i < argc; i++) {
-            mn2->name = meta->engine->numberToString(k++);
-            meta->arrayClass->WritePublic(meta, result, mn2->name, true, argv[i]);
+            const StringAtom &nm2 = meta->engine->numberToStringAtom(k++);
+            meta->arrayClass->WritePublic(meta, result, nm2, true, argv[i]);
         }
         setLength(meta, thisObj, (length - deleteCount + newItemCount));
         return result;
@@ -725,28 +704,23 @@ static js2val Array_unshift(JS2Metadata *meta, const js2val thisValue, js2val *a
     uint32 k;
 
     JS2Class *c = meta->objectType(thisObj);
-    // XXX Need to root the Strings somewhere, this'll do for now..
-    Multiname *mn1 = new (meta) Multiname(meta->publicNamespace);
-    Multiname *mn2 = new (meta) Multiname(meta->publicNamespace);
-    DEFINE_ROOTKEEPER(meta, rk1, mn1);
-    DEFINE_ROOTKEEPER(meta, rk2, mn2);
 
     for (k = length; k > 0; k--) {
         bool deleteResult;
-        mn1->name = meta->engine->numberToString(k - 1);
-        mn2->name = meta->engine->numberToString(k + argc - 1);
-        if (meta->hasOwnProperty(thisObj, mn1->name)) {
+        const StringAtom &nm1 = meta->engine->numberToStringAtom(k - 1);
+        const StringAtom &nm2 = meta->engine->numberToStringAtom(k + argc - 1);
+        if (meta->hasOwnProperty(thisObj, nm1)) {
             js2val rval;
-            c->ReadPublic(meta, &thatValue, mn1->name, RunPhase, &rval);                
-            c->WritePublic(meta, thatValue, mn2->name, true, rval);
+            c->ReadPublic(meta, &thatValue, nm1, RunPhase, &rval);                
+            c->WritePublic(meta, thatValue, nm2, true, rval);
         }
         else
-            c->DeletePublic(meta, thatValue, mn2->name, &deleteResult);
+            c->DeletePublic(meta, thatValue, nm2, &deleteResult);
     }
 
     for (k = 0; k < argc; k++) {
-        mn1->name = meta->engine->numberToString(k);
-        c->WritePublic(meta, thatValue, mn1->name, true, argv[k]);
+        const StringAtom &nm1 = meta->engine->numberToStringAtom(k);
+        c->WritePublic(meta, thatValue, nm1, true, argv[k]);
     }
     setLength(meta, thisObj, (length + argc));
 
