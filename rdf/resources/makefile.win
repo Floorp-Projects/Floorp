@@ -36,6 +36,7 @@ FILES=\
         dom-test-6.xul                  \
         dom-test-7.xul                  \
         dom-test-8.xul                  \
+        dummy-flash.rdf                 \
         flash-registry.rdf              \
         flash.css                       \
         flash.js                        \
