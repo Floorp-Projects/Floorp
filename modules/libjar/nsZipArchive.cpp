@@ -460,8 +460,10 @@ PRInt32 nsZipArchive::ExtractFile(const char* aFilename, const char* aOutname)
       return ZIP_ERR_UNSUPPORTED;
   }
 
+  if (status != ZIP_OK)
+      PR_Delete(aOutname);
 #if defined(XP_UNIX) || defined(XP_PC)
-  if (status == ZIP_OK)
+  else
   {
       //-- set extracted file permissions
       chmod(aOutname, item->mode);

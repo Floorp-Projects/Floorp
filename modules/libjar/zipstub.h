@@ -44,6 +44,7 @@
 #define PR_Write(f,s,n)   fwrite((s),1,(n),(f))
 #define PR_Close          fclose
 #define PR_Seek           fseek
+#define PR_Delete         remove
 
 #define PR_BEGIN_EXTERN_C       extern "C" {
 #define PR_END_EXTERN_C         }
