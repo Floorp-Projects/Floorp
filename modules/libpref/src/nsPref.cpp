@@ -607,7 +607,7 @@ extern "C" NS_EXPORT PRBool NSCanUnload()
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
 {
-  return nsRepository::RegisterFactory(kPrefCID, path, 
+  return nsRepository::RegisterComponent(kPrefCID, NULL, NULL, path, 
                                        PR_TRUE, PR_TRUE);
 }
 
