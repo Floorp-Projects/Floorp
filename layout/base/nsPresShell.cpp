@@ -54,6 +54,8 @@
 #include "nsIServiceManager.h"
 #include "nsICaret.h"
 #include "nsCaretProperties.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIScrollableView.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -173,6 +175,9 @@ static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFocusTrackerIID, NS_IFOCUSTRACKER_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kICaretID,  NS_ICARET_IID);
+static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker
@@ -274,6 +279,7 @@ public:
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aContext);
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
+  NS_IMETHOD GoToAnchor(const nsString& aAnchorName) const;
 
   //nsIViewObserver interface
 
@@ -1196,6 +1202,70 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
 #else
   return NS_OK;
 #endif
+}
+
+NS_IMETHODIMP
+PresShell::GoToAnchor(const nsString& aAnchorName) const
+{
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc;
+  nsresult                     rv;
+
+  if (NS_SUCCEEDED(mDocument->QueryInterface(kIDOMHTMLDocumentIID,
+                                             getter_AddRefs(htmlDoc)))) {
+    // Find the element with the specified id
+    nsCOMPtr<nsIDOMElement> element;
+    rv = htmlDoc->GetElementById(aAnchorName, getter_AddRefs(element));
+
+    if (NS_SUCCEEDED(rv)) {
+      // Get the nsIContent interface, because that's what we need to
+      // get the primary frame
+      nsCOMPtr<nsIContent>  content;
+
+      if (NS_SUCCEEDED(element->QueryInterface(kIContentIID, getter_AddRefs(content)))) {
+        nsIFrame* frame;
+
+        // Get the primary frame
+        if (NS_SUCCEEDED(GetPrimaryFrameFor(content, frame))) {
+          if (nsnull != mViewManager) {
+            nsIView* viewportView = nsnull;
+            mViewManager->GetRootView(viewportView);
+            if (nsnull != viewportView) {
+              nsIView* viewportScrollView;
+              viewportView->GetChild(0, viewportScrollView);
+
+              // Try and get the nsIScrollableView interface
+              nsIScrollableView* scrollingView;
+              if (NS_SUCCEEDED(viewportScrollView->QueryInterface(kIScrollableViewIID,
+                                                                  (void**)&scrollingView))) {
+                // Determine the offset for the given frame relative to the
+                // scrolled view
+                nsIView*  scrolledView;
+                nsPoint   offset;
+                nsIView*  view;
+                
+                scrollingView->GetScrolledView(scrolledView);
+                frame->GetOffsetFromView(offset, &view);
+
+                // XXX If view != scrolledView, then there is a scrolled frame,
+                // e.g., a DIV with 'overflow' of 'scroll', somewhere in the middle,
+                // or maybe an absolutely positioned element that has a view. We
+                // need to handle these cases...
+                scrollingView->ScrollTo(0, offset.y, NS_VMREFRESH_IMMEDIATE);
+              }
+            }
+          }
+        }
+
+      } else {
+        rv = NS_ERROR_FAILURE;
+      }
+    }
+
+  } else {
+    rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
 }
 
 #ifdef NS_DEBUG

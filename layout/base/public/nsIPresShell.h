@@ -174,6 +174,12 @@ public:
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame) = 0;
 
+  /**
+   * Scrolls the view of the document so that the anchor with the specified
+   * name is displayed at the top of the window
+   */
+  NS_IMETHOD GoToAnchor(const nsString& aAnchorName) const = 0;
+
   // XXX events
   // XXX selection
 
