@@ -8,7 +8,6 @@
  
 #include "nsEmbedAPI.h"
 #include "WebBrowser.h"
-#include "WebBrowserChrome.h"
 
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
