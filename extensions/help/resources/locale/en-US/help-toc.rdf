@@ -92,7 +92,7 @@
   <rdf:Description about="#nav-doc-printsave">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-copy" nc:name="Copying Part of a Page" nc:link="chrome://help/locale/nav_help.xhtml#copying_part_of-a_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-copy" nc:name="Copying Part of a Page" nc:link="chrome://help/locale/nav_help.xhtml#copying_part_of_a_page"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-save" nc:name="Saving All or Part of a Page" nc:link="chrome://help/locale/nav_help.xhtml#saving_all_or_part_of_a_page"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-print" nc:name="Printing a Page" nc:link="chrome://help/locale/nav_help.xhtml#printing_a_page"/> </rdf:li>
       </rdf:Seq>
@@ -102,7 +102,7 @@
   <rdf:Description about="#nav-doc-language">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-charencode" nc:name="Selecting Character Encodings and Fonts" nc:link="chrome://help/locale/nav_help.xhtml#setting_character_encodings_and_fonts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-charencode" nc:name="Selecting Character Encodings and Fonts" nc:link="chrome://help/locale/nav_help.xhtml#selecting_character_encodings_and_fonts"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-languagepref" nc:name="Setting Language Preferences" nc:link="chrome://help/locale/nav_help.xhtml#setting_language_preferences"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-webcontent" nc:name="Finding International Web Content" nc:link="chrome://help/locale/nav_help.xhtml#finding_international_web_content"/> </rdf:li>
       </rdf:Seq>
@@ -117,7 +117,7 @@
         <rdf:li> <rdf:Description ID="nav-doc-autoload" nc:name="Automatic Loading" nc:link="chrome://help/locale/nav_help.xhtml#automatic_loading"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-cache" nc:name="Changing Cache Settings" nc:link="chrome://help/locale/nav_help.xhtml#changing_cache_settings"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-smartup" nc:name="Getting the Latest Software Automatically" nc:link="chrome://help/locale/nav_help.xhtml#getting_the_latest_software_automatically"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-mousewheel" nc:name="Using a Mouse Wheel" nc:link="chrome://help/locale/nav_help.xhtml#using_a_mousewheel"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-mousewheel" nc:name="Using a Mouse Wheel" nc:link="chrome://help/locale/nav_help.xhtml#using_a_mouse_wheel"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-quicklaunch" nc:name="Using Quick Launch" nc:link="chrome://help/locale/nav_help.xhtml#using_quick_launch"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -253,7 +253,7 @@
         <rdf:li> <rdf:Description ID="mail-doc-add-book" nc:name="Creating a New Address Book" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_new_address_book" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-add-card" nc:name="Creating a New Address Book Card" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_new_address_book_card" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-add-list" nc:name="Creating a Mailing List" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_mailing_list" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_ab_search" nc:name="Searching Address Books" nc:link="chrome://help/locale/mail_help.xhtml#searching_address_book_and_directories" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_ab_search" nc:name="Searching Address Books" nc:link="chrome://help/locale/mail_help.xhtml#searching_address_books_and_directories" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-add-listedit" nc:name="Editing a Mailing List" nc:link="chrome://help/locale/mail_help.xhtml#editing_a_mailing_list" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-add-export" nc:name="Exporting Address Books" nc:link="chrome://help/locale/mail_help.xhtml#exporting_address_books" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-add-sync-LDAP-add" nc:name="Adding and Removing LDAP Directories" nc:link="chrome://help/locale/mail_help.xhtml#adding_and_removing_ldap_directories" /> </rdf:li>
@@ -520,7 +520,7 @@
         <rdf:li> <rdf:Description ID="props-hrule" nc:name="Inserting Horizontal Lines"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_horizontal_lines"/> </rdf:li>
         <rdf:li> <rdf:Description ID="special-chars" nc:name="Inserting Special Characters"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_special_characters"/> </rdf:li>
         <rdf:li> <rdf:Description ID="html-tag" nc:name="Inserting HTML Elements and Attributes"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_html_elements_and_attributes"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="validate-html" nc:name="Checking the HTML"  nc:link="chrome://help/locale/composer_help.xhtml#validating_the_html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="validate-html" nc:name="Validating the HTML"  nc:link="chrome://help/locale/composer_help.xhtml#validating_the_html"/> </rdf:li>
         <rdf:li> <rdf:Description ID="comp-doc-choose" nc:name="Choosing the Right Editing Mode"  nc:link="chrome://help/locale/composer_help.xhtml#choosing_the_right_editing_mode"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -651,7 +651,7 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="cust-doc" nc:name="Sidebar"  nc:link="chrome://help/locale/customize_help.xhtml#sidebar"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-tabbed" nc:name="Tabbed Browsing"  nc:link="chrome://help/locale/customize_help.xhtml#tabbed_browsing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-font" nc:name="Changing Fonts, Colors, and Themes"  nc:link="chrome://help/locale/customize_help.xhtml#changing_font_colors_and_themes"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-font" nc:name="Changing Fonts, Colors, and Themes"  nc:link="chrome://help/locale/customize_help.xhtml#changing_fonts_colors_and_themes"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-toolbar" nc:name="Toolbars"  nc:link="chrome://help/locale/customize_help.xhtml#toolbars"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-bkmk" nc:name="Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#bookmarks"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Mozilla Starts Up"  nc:link="chrome://help/locale/customize_help.xhtml#specifying_how_mozilla_starts_up"/> </rdf:li>
