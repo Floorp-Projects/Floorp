@@ -26,7 +26,7 @@ titledbutton#stop-button {
 } 
 
 titledbutton#search-button {
-	list-style-image:url(resource:/res/toolbar/TB_Reload.gif);
+	list-style-image:url(resource:/res/toolbar/TB_Search.gif);
 }
 
 titledbutton#reload-button {
