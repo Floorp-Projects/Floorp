@@ -348,11 +348,11 @@ modules/oji/src/Makefile
 
 MAKEFILES_plugin="
 modules/plugin/Makefile
-modules/plugin/nglsrc/Makefile
-modules/plugin/public/Makefile
-modules/plugin/test/Makefile
-modules/plugin/SanePlugin/Makefile
-modules/plugin/default/unix/Makefile
+modules/plugin/base/src/Makefile
+modules/plugin/base/public/Makefile
+modules/plugin/samples/simple/Makefile
+modules/plugin/samples/SanePlugin/Makefile
+modules/plugin/samples/default/unix/Makefile
 "
 
 MAKEFILES_access_builtin="

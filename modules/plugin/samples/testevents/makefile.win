@@ -24,7 +24,7 @@ MODULE		= npevents
 
 LIBRARY_NAME	= npevents
 
-DEPTH = ..\..\..
+DEPTH = ..\..\..\..
 
 
 XPIDLSRCS = \

@@ -24,7 +24,7 @@ MODULE		= npsimple
 
 LIBRARY_NAME	= npsimple
 
-DEPTH = ..\..\..
+DEPTH = ..\..\..\..
 
 
 XPIDLSRCS = \
