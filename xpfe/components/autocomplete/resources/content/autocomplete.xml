@@ -30,7 +30,7 @@
                       xbl:inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
 
       <xul:popupset>
-        <xul:popup ignorekeys="true" anonid="popup" class="autocomplete-result-popup" xbl:inherits="for=id,nomatch"/>
+        <xul:popup ignorekeys="true" anonid="popup" class="autocomplete-result-popup" hidden="true" xbl:inherits="for=id,nomatch"/>
       </xul:popupset>
       
       <children includes="menupopup"/>
@@ -999,6 +999,7 @@
             var w = this.boxObject.width;
             if (w != this.resultsPopup.boxObject.width)
               this.resultsPopup.setAttribute("width", w);
+            this.resultsPopup.removeAttribute("hidden");
             this.resultsPopup.showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
             this.mMenuOpen = true;
           }
@@ -1010,6 +1011,7 @@
         <body><![CDATA[
           if (this.resultsPopup && this.mMenuOpen) {
             this.resultsPopup.hidePopup();
+            this.resultsPopup.setAttribute("hidden", "true");
             this.mMenuOpen = false;
           }
         ]]></body>
