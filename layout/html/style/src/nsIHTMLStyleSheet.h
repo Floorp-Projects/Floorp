@@ -44,7 +44,6 @@ class nsIAtom;
 class nsString;
 class nsHTMLValue;
 class nsIHTMLMappedAttributes;
-class nsIHTMLContent;
 class nsIDocument;
 
 // IID for the nsIHTMLStyleSheet interface {bddbd1b0-c5cc-11d1-8031-006008159b5a}

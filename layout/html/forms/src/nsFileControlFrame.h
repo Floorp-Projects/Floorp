@@ -43,7 +43,6 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
-#include "nsIHTMLContent.h"
 
 #include "nsTextControlFrame.h"
 #include "nsFormControlHelper.h"
