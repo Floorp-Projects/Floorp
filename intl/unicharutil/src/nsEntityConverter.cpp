@@ -105,7 +105,7 @@ nsEntityConverter::LoadVersionPropertyFile()
 	      rv = entityProperties->GetStringProperty(key, value);
         PRUint32 len = value.Length();
         if (kVERSION_STRING_LEN < len) {rv = NS_ERROR_OUT_OF_MEMORY; goto done;}
-        nsCRT::memcpy(mVersionList[i].mEntityListName, value.get(), len*sizeof(PRUnichar));
+        memcpy(mVersionList[i].mEntityListName, value.get(), len*sizeof(PRUnichar));
         mVersionList[i].mEntityListName[len] = 0;
         mVersionList[i].mVersion = (1 << i);
         mVersionList[i].mEntityProperties = NULL;

@@ -460,7 +460,7 @@ nsStyleBorder::nsStyleBorder(nsIPresContext* aPresContext)
 
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
 {
-  nsCRT::memcpy((nsStyleBorder*)this, &aSrc, sizeof(nsStyleBorder));
+  memcpy((nsStyleBorder*)this, &aSrc, sizeof(nsStyleBorder));
   mBorderColors = nsnull;
   if (aSrc.mBorderColors) {
     EnsureBorderColors();
@@ -627,7 +627,7 @@ nsStyleOutline::nsStyleOutline(nsIPresContext* aPresContext)
 }
 
 nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc) {
-  nsCRT::memcpy((nsStyleOutline*)this, &aSrc, sizeof(nsStyleOutline));
+  memcpy((nsStyleOutline*)this, &aSrc, sizeof(nsStyleOutline));
 }
 
 void 
@@ -715,7 +715,7 @@ nsStyleXUL::~nsStyleXUL()
 
 nsStyleXUL::nsStyleXUL(const nsStyleXUL& aSource)
 {
-  nsCRT::memcpy((nsStyleXUL*)this, &aSource, sizeof(nsStyleXUL));
+  memcpy((nsStyleXUL*)this, &aSource, sizeof(nsStyleXUL));
 }
 
 PRInt32 
@@ -762,7 +762,7 @@ nsStyleSVG::~nsStyleSVG()
 
 nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 {
-  //nsCRT::memcpy((nsStyleSVG*)this, &aSource, sizeof(nsStyleSVG));
+  //memcpy((nsStyleSVG*)this, &aSource, sizeof(nsStyleSVG));
 
   mFill.mType = aSource.mFill.mType;
   if (mFill.mType == eStyleSVGPaintType_Color)
@@ -834,7 +834,7 @@ nsStylePosition::~nsStylePosition(void)
 
 nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
 {
-  nsCRT::memcpy((nsStylePosition*)this, &aSource, sizeof(nsStylePosition));
+  memcpy((nsStylePosition*)this, &aSource, sizeof(nsStylePosition));
 }
 
 PRInt32 nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
@@ -872,7 +872,7 @@ nsStyleTable::~nsStyleTable(void)
 
 nsStyleTable::nsStyleTable(const nsStyleTable& aSource)
 {
-  nsCRT::memcpy((nsStyleTable*)this, &aSource, sizeof(nsStyleTable));
+  memcpy((nsStyleTable*)this, &aSource, sizeof(nsStyleTable));
 }
 
 PRInt32 nsStyleTable::CalcDifference(const nsStyleTable& aOther) const
@@ -910,7 +910,7 @@ nsStyleTableBorder::~nsStyleTableBorder(void)
 
 nsStyleTableBorder::nsStyleTableBorder(const nsStyleTableBorder& aSource)
 {
-  nsCRT::memcpy((nsStyleTableBorder*)this, &aSource, sizeof(nsStyleTableBorder));
+  memcpy((nsStyleTableBorder*)this, &aSource, sizeof(nsStyleTableBorder));
 }
 
 PRInt32 nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther) const
@@ -1240,7 +1240,7 @@ nsStyleTextReset::nsStyleTextReset(void)
 
 nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource) 
 { 
-  nsCRT::memcpy((nsStyleTextReset*)this, &aSource, sizeof(nsStyleTextReset));
+  memcpy((nsStyleTextReset*)this, &aSource, sizeof(nsStyleTextReset));
 }
 
 nsStyleTextReset::~nsStyleTextReset(void) { }
@@ -1277,7 +1277,7 @@ nsStyleText::nsStyleText(void)
 
 nsStyleText::nsStyleText(const nsStyleText& aSource) 
 { 
-  nsCRT::memcpy((nsStyleText*)this, &aSource, sizeof(nsStyleText));
+  memcpy((nsStyleText*)this, &aSource, sizeof(nsStyleText));
 }
 
 nsStyleText::~nsStyleText(void) { }

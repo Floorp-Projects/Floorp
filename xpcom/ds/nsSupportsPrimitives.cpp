@@ -169,7 +169,7 @@ NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength,
     // buffer if aLength <= mLength, but there's high potential
     // for bloat there. see bug 80097 for discussion.
     if ((aLength == mLength) && aData && mData) {
-        nsCRT::memcpy(mData, aData, aLength * sizeof(char));
+        memcpy(mData, aData, aLength * sizeof(char));
         return NS_OK;
     }
 
@@ -183,7 +183,7 @@ NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength,
         if (!newData)
             return NS_ERROR_OUT_OF_MEMORY;
         // copy into that buffer if it was successfully allocated
-        nsCRT::memcpy(newData, aData, aLength * sizeof(char));
+        memcpy(newData, aData, aLength * sizeof(char));
     }
 
     // if we've succeeded so far, adopt the new buffer. the adopt
@@ -280,7 +280,7 @@ NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRUint32 aLength,
     // buffer if aLength <= mLength, but there's high potential
     // for bloat there. see bug 80097 for discussion.
     if ((aLength == mLength) && aData && mData) {
-        nsCRT::memcpy(mData, aData, aLength * sizeof(PRUnichar));
+        memcpy(mData, aData, aLength * sizeof(PRUnichar));
         return NS_OK;
     }
 
@@ -294,7 +294,7 @@ NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRUint32 aLength,
         if (!newData)
             return NS_ERROR_OUT_OF_MEMORY;
         // copy into that buffer if it was successfully allocated
-        nsCRT::memcpy(newData, aData, aLength * sizeof(PRUnichar));
+        memcpy(newData, aData, aLength * sizeof(PRUnichar));
     }
 
     // if we've succeeded so far, adopt the new buffer. the adopt

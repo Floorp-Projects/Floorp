@@ -167,12 +167,12 @@ NS_NewPluginPostDataStream(nsIInputStream **result,
       }
       if (*t) {
         // copy the headers
-        nsCRT::memcpy(newBuf, data, headersLen);
+        memcpy(newBuf, data, headersLen);
         // copy the correct crlfcrlf
-        nsCRT::memcpy(newBuf + headersLen, crlfcrlf, 4);
+        memcpy(newBuf + headersLen, crlfcrlf, 4);
         // copy the rest of the postData
         dataLen = contentLength - (t - data);
-        nsCRT::memcpy(newBuf + headersLen + 4, t, dataLen);
+        memcpy(newBuf + headersLen + 4, t, dataLen);
         contentLength = headersLen + 4 + dataLen;
         buf = newBuf;
       } else {
@@ -186,7 +186,7 @@ NS_NewPluginPostDataStream(nsIInputStream **result,
       if (!(buf = (char*)nsMemory::Alloc(contentLength)))
         return NS_ERROR_OUT_OF_MEMORY;
 
-      nsCRT::memcpy(buf, data, contentLength);
+      memcpy(buf, data, contentLength);
     }
     nsCOMPtr<nsIStringInputStream> sis = do_CreateInstance("@mozilla.org/io/string-input-stream;1",&rv);
     if (NS_SUCCEEDED(rv)) {

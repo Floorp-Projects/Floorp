@@ -134,8 +134,8 @@ NS_IMETHODIMP nsAppleFileDecoder::Close(void)
       PBGetCatInfoSync(&cipbr);
 
       /* set finder info */
-      nsCRT::memcpy(&fpb->ioFlFndrInfo, &m_finderInfo, sizeof (FInfo));
-      nsCRT::memcpy(&fpb->ioFlXFndrInfo, &m_finderExtraInfo, sizeof (FXInfo));
+      memcpy(&fpb->ioFlFndrInfo, &m_finderInfo, sizeof (FInfo));
+      memcpy(&fpb->ioFlXFndrInfo, &m_finderExtraInfo, sizeof (FXInfo));
       fpb->ioFlFndrInfo.fdFlags &= 0xfc00; /* clear flags maintained by finder */
       
       /* set file dates */
@@ -234,12 +234,12 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
         dataCount = sizeof(ap_header) - m_dataBufferLength;
         if (dataCount > bufferSize)
           dataCount = bufferSize;
-        nsCRT::memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
+        memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
         m_dataBufferLength += dataCount;
         
         if (m_dataBufferLength == sizeof(ap_header))
         {
-          nsCRT::memcpy(&m_headers, m_dataBuffer, sizeof(ap_header));
+          memcpy(&m_headers, m_dataBuffer, sizeof(ap_header));
 
           /* Check header to be sure we are dealing with the right kind of data, else just write it to the data fork. */
           if ((m_headers.magic == APPLEDOUBLE_MAGIC || m_headers.magic == APPLESINGLE_MAGIC) && 
@@ -272,14 +272,14 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
         dataCount = entriesSize - m_dataBufferLength;
         if (dataCount > bufferSize)
           dataCount = bufferSize;
-        nsCRT::memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
+        memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
         m_dataBufferLength += dataCount;
 
         if (m_dataBufferLength == entriesSize)
         {
           for (i = 0; i < m_headers.entriesCount; i ++)
           {
-            nsCRT::memcpy(&m_entries[i], &m_dataBuffer[i * sizeof(ap_entry)], sizeof(ap_entry));
+            memcpy(&m_entries[i], &m_dataBuffer[i * sizeof(ap_entry)], sizeof(ap_entry));
             if (m_headers.magic == APPLEDOUBLE_MAGIC)
             {
               PRUint32 offset = m_entries[i].offset + m_entries[i].length;
@@ -338,7 +338,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
         dataCount = m_currentPartLength - m_dataBufferLength;
         if (dataCount > bufferSize)
           dataCount = bufferSize;
-        nsCRT::memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
+        memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
         m_dataBufferLength += dataCount;
         
         if (m_dataBufferLength == m_currentPartLength)
@@ -347,17 +347,17 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
           {
             case ENT_COMMENT  :
               m_comment[0] = m_currentPartLength > 255 ? 255 : m_currentPartLength;
-              nsCRT::memcpy(&m_comment[1], buffPtr, m_comment[0]);
+              memcpy(&m_comment[1], buffPtr, m_comment[0]);
               break;
             case ENT_DATES    :
               if (m_currentPartLength == sizeof(m_dates))
-                nsCRT::memcpy(&m_dates, buffPtr, m_currentPartLength);
+                memcpy(&m_dates, buffPtr, m_currentPartLength);
               break;
             case ENT_FINFO    :
               if (m_currentPartLength == (sizeof(m_finderInfo) + sizeof(m_finderExtraInfo)))
               {
-                nsCRT::memcpy(&m_finderInfo, buffPtr, sizeof(m_finderInfo));
-                nsCRT::memcpy(&m_finderExtraInfo, buffPtr + sizeof(m_finderInfo), sizeof(m_finderExtraInfo));
+                memcpy(&m_finderInfo, buffPtr, sizeof(m_finderInfo));
+                memcpy(&m_finderExtraInfo, buffPtr + sizeof(m_finderInfo), sizeof(m_finderExtraInfo));
               }
               break;
           }

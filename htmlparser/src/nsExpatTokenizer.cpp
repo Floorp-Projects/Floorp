@@ -903,7 +903,7 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
 #endif
   }/* while */
   uniBuf = (PRUnichar *) PR_Malloc(retLen*sizeof(PRUnichar));
-  nsCRT::memcpy(uniBuf, aBuf, sizeof(PRUnichar) * retLen);
+  memcpy(uniBuf, aBuf, sizeof(PRUnichar) * retLen);
   PR_FREEIF(aBuf);      
 
   return res;

@@ -432,7 +432,7 @@ nsNSSASN1PrintableItem::SetData(char *data, PRUint32 len)
 
     if (mData == nsnull)
       return NS_ERROR_FAILURE;
-    nsCRT::memcpy(mData, data, len);
+    memcpy(mData, data, len);
   } else if (len == 0) {
     if (mData) {
       nsMemory::Free(mData);

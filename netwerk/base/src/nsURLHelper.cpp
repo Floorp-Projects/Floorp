@@ -222,7 +222,7 @@ nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos,
                 char* str = (char*)nsMemory::Alloc(length + 1);
                 if (str == nsnull)
                     return NS_ERROR_OUT_OF_MEMORY;
-                nsCRT::memcpy(str, &inURI[start], length);
+                memcpy(str, &inURI[start], length);
                 str[length] = '\0';
                 *scheme = str;
             }

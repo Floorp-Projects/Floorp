@@ -1422,7 +1422,7 @@ NS_IMETHODIMP nsBidi::GetLevels(nsBidiLevel** aLevels)
     nsBidiLevel *levels=mLevelsMemory;
 
     if(start>0 && levels!=mLevels) {
-      nsCRT::memcpy(levels, mLevels, start);
+      memcpy(levels, mLevels, start);
     }
     nsCRT::memset(levels+start, mParaLevel, length-start);
 

@@ -85,7 +85,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, PRInt32 
         if (aContent == mArray[index].mContent) { // remove this change
           mCount--;
           if (index < mCount) { // move later changes down
-            nsCRT::memcpy(&(mArray[index]), &(mArray[index + 1]), 
+            memcpy(&(mArray[index]), &(mArray[index + 1]), 
                           (mCount - index) * sizeof(nsStyleChangeData));
           }
         }
@@ -104,7 +104,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, PRInt32 
       PRInt32 newSize = mArraySize + kGrowArrayBy;
       nsStyleChangeData* newArray = new nsStyleChangeData[newSize];
       if (newArray) {
-        nsCRT::memcpy(newArray, mArray, mCount * sizeof(nsStyleChangeData));
+        memcpy(newArray, mArray, mCount * sizeof(nsStyleChangeData));
         if (mArray != mBuffer) {
           delete [] mArray;
         }

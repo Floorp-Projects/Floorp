@@ -424,10 +424,10 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             nsMemory::Free(buffer);
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        nsCRT::memcpy(tmp, mBuffer, mBufLen);
+        memcpy(tmp, mBuffer, mBufLen);
         nsMemory::Free(mBuffer);
         mBuffer = nsnull;
-        nsCRT::memcpy(tmp+mBufLen, buffer, bufLen);
+        memcpy(tmp+mBufLen, buffer, bufLen);
         nsMemory::Free(buffer);
         buffer = tmp;
         bufLen += mBufLen;
@@ -459,9 +459,9 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
                 nsMemory::Free(buffer);
                 return NS_ERROR_OUT_OF_MEMORY;
             }
-            nsCRT::memcpy(tmp, token, mTokenLen);
-            nsCRT::memcpy(tmp+mTokenLen, "\n", 1);
-            nsCRT::memcpy(tmp+mTokenLen+1, cursor, read);
+            memcpy(tmp, token, mTokenLen);
+            memcpy(tmp+mTokenLen, "\n", 1);
+            memcpy(tmp+mTokenLen+1, cursor, read);
             nsMemory::Free(buffer);
             buffer = tmp;
             // need to reset cursor to the buffer again (bug 100595)
@@ -695,7 +695,7 @@ nsMultiMixedConv::BufferData(char *aData, PRUint32 aLen) {
     char *buffer = (char*)nsMemory::Alloc(aLen);
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCRT::memcpy(buffer, aData, aLen);
+    memcpy(buffer, aData, aLen);
     mBuffer = buffer;
     mBufLen = aLen;
     return NS_OK;
@@ -795,7 +795,7 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
     char *tmp = (char*)nsMemory::Alloc(aLen); // byteArray stream owns this mem
     if (!tmp) return NS_ERROR_OUT_OF_MEMORY;
     
-    nsCRT::memcpy(tmp, aBuffer, aLen);
+    memcpy(tmp, aBuffer, aLen);
     
     nsCOMPtr<nsIByteArrayInputStream> byteArrayStream;
     

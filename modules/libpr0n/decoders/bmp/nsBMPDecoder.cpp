@@ -212,7 +212,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         PRUint32 toCopy = 18 - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
-        nsCRT::memcpy(mRawBuf + mPos, aBuffer, toCopy);
+        memcpy(mRawBuf + mPos, aBuffer, toCopy);
         mPos += toCopy;
         aCount -= toCopy;
         aBuffer += toCopy;
@@ -230,7 +230,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         PRUint32 toCopy = mLOH - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
-        nsCRT::memcpy(mRawBuf + (mPos - 18), aBuffer, toCopy);
+        memcpy(mRawBuf + (mPos - 18), aBuffer, toCopy);
         mPos += toCopy;
         aCount -= toCopy;
         aBuffer += toCopy;
@@ -326,7 +326,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         PRUint32 toCopy = (mLOH + 12) - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
-        nsCRT::memcpy(mRawBuf + (mPos - mLOH), aBuffer, toCopy);
+        memcpy(mRawBuf + (mPos - mLOH), aBuffer, toCopy);
         mPos += toCopy;
         aBuffer += toCopy;
         aCount -= toCopy;
@@ -372,7 +372,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                 if (toCopy) {
                     if (toCopy > aCount)
                         toCopy = aCount;
-                    nsCRT::memcpy(mRow + mRowBytes, aBuffer, toCopy);
+                    memcpy(mRow + mRowBytes, aBuffer, toCopy);
                     aCount -= toCopy;
                     aBuffer += toCopy;
                     mRowBytes += toCopy;
@@ -480,8 +480,8 @@ void nsBMPDecoder::ProcessInfoHeader()
 {
     nsCRT::memset(&mBIH, 0, sizeof(mBIH));
     if (mBFH.bihsize == 12) { // OS/2 Bitmap
-        nsCRT::memcpy(&mBIH.width, mRawBuf, 2);
-        nsCRT::memcpy(&mBIH.height, mRawBuf + 2, 2);
+        memcpy(&mBIH.width, mRawBuf, 2);
+        memcpy(&mBIH.height, mRawBuf + 2, 2);
         DOCOPY(&mBIH.planes, mRawBuf + 4);
         DOCOPY(&mBIH.bpp, mRawBuf + 6);
     }

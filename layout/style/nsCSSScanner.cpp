@@ -362,7 +362,7 @@ void nsCSSScanner::Pushback(PRUnichar aChar)
       return;
     }
     mPushbackSize += 4;
-    nsCRT::memcpy(newPushback, mPushback, sizeof(PRUnichar) * mPushbackCount);
+    memcpy(newPushback, mPushback, sizeof(PRUnichar) * mPushbackCount);
     if (mPushback != mLocalPushback) {
       delete [] mPushback;
     }

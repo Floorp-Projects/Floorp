@@ -250,7 +250,7 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLe
     DWORD allocSize = ::GlobalSize(aHGBL);
     char* data = NS_STATIC_CAST(char*, nsMemory::Alloc(allocSize));
     if ( data ) {    
-       nsCRT::memcpy ( data, lpStr, allocSize );
+       memcpy ( data, lpStr, allocSize );
     
       ::GlobalUnlock(aHGBL);
       *aData = data;

@@ -169,7 +169,7 @@ nsresult nsDateTimeFormatUnix::FormatTime(nsILocale* locale,
                                       nsString& stringOut) 
 {
   struct tm tmTime;
-  nsCRT::memcpy(&tmTime, localtime(&timetTime), sizeof(struct tm));
+  memcpy(&tmTime, localtime(&timetTime), sizeof(struct tm));
   return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, &tmTime, stringOut);
 }
 

@@ -423,7 +423,7 @@ static OSErr AETextToString(AEDesc &aAEDesc, nsString& aOutString, Size& text_si
   text_size = ::GetHandleSize(aAEDesc.dataHandle) / 2;
   aOutString.SetLength(text_size + 1);
   unicodeTextPtr = (PRUnichar*)aOutString.get();
-  nsCRT::memcpy(unicodeTextPtr, *(aAEDesc.dataHandle), text_size * 2);
+  memcpy(unicodeTextPtr, *(aAEDesc.dataHandle), text_size * 2);
 #endif
 
   unicodeTextPtr[text_size ] = PRUnichar('\0'); // null terminate it.

@@ -113,6 +113,11 @@ public:
     @param aSrc the source address
     @param aCount the number of bytes to copy
     */
+
+  /**** 
+   ****  nsCRT::memcpy() is no longer supported.  
+   ****  Please use memcpy from standard C instead.
+   ****/
   static void memcpy(void* aDest, const void* aSrc, PRUint32 aCount) {
     NS_ASSERTION((aDest != NULL && aSrc != NULL) || (aCount == 0), "Invalid NULL argument");
     ::memcpy(aDest, aSrc, (size_t)aCount);

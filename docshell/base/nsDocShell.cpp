@@ -4382,7 +4382,7 @@ AHTC_WriteFunc(nsIInputStream * in,
         }
         memset(headersBuf, nsnull, rawSegmentLen + headersBufLen + 1);
         // copy the old buffer to the beginning of the new buffer
-        nsCRT::memcpy(headersBuf, pHeadersBuf, headersBufLen);
+        memcpy(headersBuf, pHeadersBuf, headersBufLen);
         // free the old buffer
         nsCRT::free(pHeadersBuf);
         // make the buffer pointer point to the writeable part
@@ -4394,7 +4394,7 @@ AHTC_WriteFunc(nsIInputStream * in,
 
     // at this point, pHeadersBuf points to where we should copy bits
     // from fromRawSegment.
-    nsCRT::memcpy(pHeadersBuf, fromRawSegment, rawSegmentLen);
+    memcpy(pHeadersBuf, fromRawSegment, rawSegmentLen);
     // null termination
     headersBuf[headersBufLen] = nsnull;
     *((char **) closure) = headersBuf;

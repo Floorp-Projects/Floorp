@@ -105,7 +105,7 @@ nsReadData(nsIOutputStream* out,
   if (offset == dataToWrite->dataLen)
       return NS_OK;     // *readCount == 0 is EOF
 
-  nsCRT::memcpy(toRawSegment, dataToWrite->data + offset, write);
+  memcpy(toRawSegment, dataToWrite->data + offset, write);
 
   *readCount = write;
 

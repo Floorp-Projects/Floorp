@@ -192,7 +192,7 @@ void nsStyleCoord::SetUnionValue(const nsStyleUnion& aValue, nsStyleUnit aUnit)
 #if PR_BYTES_PER_INT == PR_BYTES_PER_FLOAT
   mValue.mInt = aValue.mInt;
 #else
-  nsCRT::memcpy(&mValue, &aValue, sizeof(nsStyleUnion));
+  memcpy(&mValue, &aValue, sizeof(nsStyleUnion));
 #endif
 }
 

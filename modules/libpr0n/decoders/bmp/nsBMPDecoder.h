@@ -91,7 +91,7 @@ struct bitFields {
     PRInt8 blueshift;
 };
 
-#define DOCOPY(dest, src) nsCRT::memcpy(dest, src, sizeof(dest))
+#define DOCOPY(dest, src) memcpy(dest, src, sizeof(dest))
 
 #if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
 #define LITTLE_TO_NATIVE16(x) ((((x) & 0xFF) << 8) | ((x) >> 8))

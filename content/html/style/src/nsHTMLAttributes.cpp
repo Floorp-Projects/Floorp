@@ -1056,7 +1056,7 @@ HTMLAttributesImpl::SetAttributeName(nsIAtom* aAttrName, PRBool& aFound)
   if (mAttrCount == mAttrSize) {  // no more room, grow buffer
     nsIAtom** buffer = new nsIAtom*[mAttrSize + 4]; 
     if (buffer) {
-      nsCRT::memcpy(buffer, mAttrNames, sizeof(nsIAtom*) * mAttrCount);
+      memcpy(buffer, mAttrNames, sizeof(nsIAtom*) * mAttrCount);
       mAttrSize += 4;
       if (mAttrNames != mNameBuffer) {
         delete [] mAttrNames;
@@ -1082,10 +1082,10 @@ HTMLAttributesImpl::UnsetAttributeName(nsIAtom* aAttrName, PRBool& aFound)
       if ((mAttrNames != mNameBuffer) && (mAttrCount <= (kNameBufferSize / 2))) {
         // go back to using internal buffer
         if (0 < index) {
-          nsCRT::memcpy(mNameBuffer, mAttrNames, index * sizeof(nsIAtom*));
+          memcpy(mNameBuffer, mAttrNames, index * sizeof(nsIAtom*));
         }
         if (index < mAttrCount) {
-          nsCRT::memcpy(&(mNameBuffer[index]), &(mAttrNames[index + 1]), 
+          memcpy(&(mNameBuffer[index]), &(mAttrNames[index + 1]), 
                         (mAttrCount - index) * sizeof(nsIAtom*));
         }
         delete [] mAttrNames;

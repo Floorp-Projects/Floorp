@@ -177,7 +177,7 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
         // Copy the string into to user supplied buffer. Is there a better
         // way to do this?
 
-        nsCRT::memcpy(buf,origin,originlen);
+        memcpy(buf,origin,originlen);
         buf[originlen]=nsnull; // Gotta terminate it.
         nsCRT::free(origin);
     } else {
@@ -214,7 +214,7 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
             nsCRT::free(certificate);
             return NS_ERROR_FAILURE;
         }
-        nsCRT::memcpy(buf,certificate,certlen);
+        memcpy(buf,certificate,certlen);
         buf[certlen]=nsnull;
         nsCRT::free(certificate);
     } else {

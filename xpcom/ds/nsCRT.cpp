@@ -253,7 +253,7 @@ PRUnichar* nsCRT::strndup(const PRUnichar* str, PRUint32 len)
   // PRUnichar* rslt = new PRUnichar[len + 1];
 
   if (rslt == NULL) return NULL;
-  nsCRT::memcpy(rslt, str, len * sizeof(PRUnichar));
+  memcpy(rslt, str, len * sizeof(PRUnichar));
   rslt[len] = 0;
   return rslt;
 }

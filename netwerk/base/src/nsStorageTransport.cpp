@@ -46,7 +46,7 @@ nsWriteToBuffer(nsIInputStream *aInput,
                 PRUint32 *aWriteCount)
 {
     char *toBuf = NS_REINTERPRET_CAST(char *, aClosure);
-    nsCRT::memcpy(toBuf + aOffset, aFromBuf, aCount);
+    memcpy(toBuf + aOffset, aFromBuf, aCount);
     *aWriteCount = aCount;
     return NS_OK;
 }
@@ -60,7 +60,7 @@ nsReadFromBuffer(nsIOutputStream *aOutput,
                  PRUint32 *aReadCount)
 {
     const char *fromBuf = NS_REINTERPRET_CAST(const char *, aClosure);
-    nsCRT::memcpy(aToBuf, fromBuf + aOffset, aCount);
+    memcpy(aToBuf, fromBuf + aOffset, aCount);
     *aReadCount = aCount;
     return NS_OK;
 }

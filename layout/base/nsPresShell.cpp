@@ -485,7 +485,7 @@ StackArena::Push()
     PRUint32 oldLength = mMarkLength;
     mMarkLength += MARK_INCREMENT;
     mMarks = new StackMark[mMarkLength];
-    nsCRT::memcpy(mMarks, oldMarks, sizeof(StackMark)*oldLength);
+    memcpy(mMarks, oldMarks, sizeof(StackMark)*oldLength);
 
     delete[] oldMarks;
   }

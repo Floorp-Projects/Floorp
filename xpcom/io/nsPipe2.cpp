@@ -532,7 +532,7 @@ nsWriteToRawBuffer(nsIInputStream* inStr,
                    PRUint32 *writeCount)
 {
     char* toBuf = (char*)closure;
-    nsCRT::memcpy(&toBuf[offset], fromRawSegment, count);
+    memcpy(&toBuf[offset], fromRawSegment, count);
     *writeCount = count;
     return NS_OK;
 }
@@ -785,7 +785,7 @@ nsReadFromRawBuffer(nsIOutputStream* outStr,
                     PRUint32 *readCount)
 {
     const char* fromBuf = (const char*)closure;
-    nsCRT::memcpy(toRawSegment, &fromBuf[offset], count);
+    memcpy(toRawSegment, &fromBuf[offset], count);
     *readCount = count;
     return NS_OK;
 }

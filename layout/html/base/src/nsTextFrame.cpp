@@ -171,7 +171,7 @@ nsAutoIndexBuffer::GrowTo(PRInt32 aAtLeast)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     nsCRT::memset(newBuffer, 0, sizeof(PRInt32) * newSize);
-    nsCRT::memcpy(newBuffer, mBuffer, sizeof(PRInt32) * mBufferLen);
+    memcpy(newBuffer, mBuffer, sizeof(PRInt32) * mBufferLen);
     if (mBuffer != mAutoBuffer) {
       delete [] mBuffer;
     }
@@ -1634,7 +1634,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     textLength += wordLen;
     n -= contentLen;
     if (aTextBuffer != nsnull) {
-      nsCRT::memcpy(aTextBuffer->mBuffer + dstOffset, bp,
+      memcpy(aTextBuffer->mBuffer + dstOffset, bp,
                     sizeof(PRUnichar)*wordLen);
     }
     dstOffset += wordLen;
@@ -5522,7 +5522,7 @@ nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
             newWordBuf = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar)*newWordBufSize);
             NS_ASSERTION(newWordBuf, "not enough memory");
             if(newWordBuf)  {
-                nsCRT::memcpy((void*)newWordBuf, aWordBuf, sizeof(PRUnichar)*(newWordBufSize-moreSize));
+                memcpy((void*)newWordBuf, aWordBuf, sizeof(PRUnichar)*(newWordBufSize-moreSize));
             }
           }
 
@@ -5628,7 +5628,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
 
   if(wordLen > 0)
   {
-    nsCRT::memcpy((void*)&(aWordBuf[aRunningWordLen]), bp, sizeof(PRUnichar)*wordLen);
+    memcpy((void*)&(aWordBuf[aRunningWordLen]), bp, sizeof(PRUnichar)*wordLen);
 
     PRUint32 breakP=0;
     PRBool needMore=PR_TRUE;
