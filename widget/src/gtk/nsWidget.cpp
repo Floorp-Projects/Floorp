@@ -51,6 +51,7 @@ PRUint32 nsWidget::sWidgetCount = 0;
 static nsIRollupListener *gRollupListener = nsnull;
 static nsIWidget *gRollupWidget = nsnull;
 static PRBool gRollupConsumeRollupEvent = PR_FALSE;
+static GtkWidget *gModalWidget = nsnull;  // cringe
 
 //
 // Keep track of the last widget being "dragged"
@@ -151,6 +152,8 @@ nsWidget::~nsWidget()
     delete[] mIMECompositionUniString;
     mIMECompositionUniString = nsnull;
   }
+
+  NS_ASSERTION(!gModalWidget || gModalWidget != mWidget, "destroying widget without first clearing modality.");
 }
 
 NS_IMETHODIMP nsWidget::GetAbsoluteBounds(nsRect &aRect)
@@ -283,6 +286,21 @@ nsWidget::DestroySignal(GtkWidget* aGtkWidget, nsWidget* aWidget)
 }
 
 void
+nsWidget::SuppressModality(PRBool aSuppress)
+{
+  GtkWindow *topWindow;
+
+  // nothing to do?
+  if (!gModalWidget)
+    return;
+
+  topWindow = GTK_WINDOW(gtk_widget_get_toplevel(gModalWidget));
+  NS_ASSERTION(topWindow,"suppressing modality on non-window");
+
+  gtk_window_set_modal(topWindow, aSuppress ? FALSE : TRUE);
+}
+
+void
 nsWidget::OnDestroySignal(GtkWidget* aGtkWidget)
 {
   if (aGtkWidget == mWidget) {
@@ -351,15 +369,16 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
     }
     else
     {
-      int ret = gdk_pointer_grab (GTK_LAYOUT(mWidget)->bin_window, PR_TRUE,(GdkEventMask)
-                                  (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                                   GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                                   GDK_POINTER_MOTION_MASK),
-                                  (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
+      gdk_pointer_grab (GTK_LAYOUT(mWidget)->bin_window, PR_TRUE,(GdkEventMask)
+               (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                GDK_POINTER_MOTION_MASK),
+                (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
 #ifdef DEBUG_pavlov
       printf("pointer grab returned %i\n", ret);
 #endif
       gdk_cursor_destroy(cursor);
+      SuppressModality(PR_TRUE);
     }
   }
   else
@@ -369,6 +388,7 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
 #endif
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
     //    gtk_grab_remove(grabWidget);
+    SuppressModality(PR_FALSE);
   }
 
   if (aDoCapture) {
@@ -391,21 +411,33 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
 }
 
 
-NS_IMETHODIMP nsWidget::SetModal(void)
+NS_IMETHODIMP nsWidget::SetModal(PRBool aModal)
 {
-  GtkWindow *toplevel;
+  GtkWidget *topWidget;
+  GtkWindow *topWindow;
 
-  if (!mWidget)
+  if (!mWidget) {
+    if (!aModal) // assume we're being used correctly; clear modal global
+      gModalWidget = 0;
+    return NS_ERROR_FAILURE;
+  }
+
+  topWidget = gtk_widget_get_toplevel(mWidget);
+  topWindow = GTK_WINDOW(topWidget);
+
+  if (!topWindow)
     return NS_ERROR_FAILURE;
 
-  toplevel = GTK_WINDOW(gtk_widget_get_toplevel(mWidget));
+  if (aModal) {
+    NS_ASSERTION(!gModalWidget, "modal widget set without clearing old one");
+    gtk_window_set_modal(topWindow, TRUE);
+    gModalWidget = topWidget;
+  } else {
+    gtk_window_set_modal(topWindow, FALSE);
+    gModalWidget = 0;
+  }
 
-  if (!toplevel)
-    return NS_ERROR_FAILURE;
-
-  gtk_window_set_modal(toplevel, PR_TRUE);
-
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)

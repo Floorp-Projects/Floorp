@@ -84,7 +84,7 @@ public:
   NS_IMETHOD Destroy(void);
   nsIWidget* GetParent(void);
 
-  NS_IMETHOD SetModal(void);
+  NS_IMETHOD SetModal(PRBool aModal);
   NS_IMETHOD Show(PRBool state);
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
   NS_IMETHOD IsVisible(PRBool &aState);
@@ -256,6 +256,7 @@ protected:
   static gint  DestroySignal(GtkWidget *      aGtkWidget,
                              nsWidget*        aWidget);
 
+  static void  SuppressModality(PRBool aSuppress);
 
 
 public:
