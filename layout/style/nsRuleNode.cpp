@@ -3917,11 +3917,14 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
     parentContent = parentContext->GetStyleContent();
   PRBool inherited = aInherited;
 
-  // content: [string, url, counter, attr, enum]+, inherit
+  // content: [string, url, counter, attr, enum]+, normal, inherit
   PRUint32 count;
   nsAutoString  buffer;
   nsCSSValueList* contentValue = contentData.mContent;
-  if (contentValue) {
+  // "normal" and "initial" both mean no content
+  if (contentValue &&
+      contentValue->mValue.GetUnit() != eCSSUnit_Normal &&
+      contentValue->mValue.GetUnit() != eCSSUnit_Initial) {
     if (eCSSUnit_Inherit == contentValue->mValue.GetUnit()) {
       inherited = PR_TRUE;
       count = parentContent->ContentCount();
