@@ -43,7 +43,7 @@ import org.mozilla.javascript.debug.SourceTextManagerImpl;
  */
  
  
-public class Main extends ScriptableObject {
+public class Main extends ImporterTopLevel {
 
     /**
      * Main entry point.
@@ -106,6 +106,10 @@ public class Main extends ScriptableObject {
         Environment.defineClass(sharedGlobal);
         Environment environment = new Environment(global);
         global.defineProperty("environment", environment,
+                              ScriptableObject.DONTENUM);
+        
+        global.history = (NativeArray) cx.newArray(global, 0);
+        global.defineProperty("history", global.history,
                               ScriptableObject.DONTENUM);
         
         /*
@@ -428,7 +432,7 @@ public class Main extends ScriptableObject {
         thread.start();
         return thread;
     }
-
+    
     /**
      * Evaluate JavaScript source.
      *
@@ -472,6 +476,8 @@ public class Main extends ScriptableObject {
                     if (result != cx.getUndefinedValue()) {
                         System.err.println(cx.toString(result));
                     }
+                    NativeArray h = global.history;
+                    h.put((int)h.jsGet_length(), h, source);
                 }
                 catch (WrappedException we) {
                     // Some form of exception was caught by JavaScript and
@@ -579,6 +585,7 @@ public class Main extends ScriptableObject {
     boolean debug = false;
     boolean processStdin = true;
     boolean showDebuggerUI = false;
+    NativeArray history;
 }
 
 

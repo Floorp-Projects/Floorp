@@ -63,8 +63,8 @@ public class NativeClosure extends ScriptableObject implements Function {
         return proto.construct(cx, getParentScope(), args);
     }
 
-    public static Object js_Closure(Context cx, Object[] args,
-                                    Function ctorObj, boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args,
+                                       Function ctorObj, boolean inNewExpr)
     {
         Object[] msgArgs = { "Closure" };
         throw Context.reportRuntimeError(

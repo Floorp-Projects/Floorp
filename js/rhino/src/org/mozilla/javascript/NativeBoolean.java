@@ -47,8 +47,8 @@ public class NativeBoolean extends ScriptableObject {
         return super.getDefaultValue(typeHint);
     }
 
-    public static Object Boolean(Context cx, Object[] args, Function ctorObj,
-                                 boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args, 
+                                       Function ctorObj, boolean inNewExpr)
     {
         boolean b = args.length >= 1
                     ? ScriptRuntime.toBoolean(args[0])
@@ -62,11 +62,11 @@ public class NativeBoolean extends ScriptableObject {
     	return b ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    public String toString() {
+    public String jsFunction_toString() {
 	    return booleanValue ? "true" : "false";
     }
 
-    public boolean valueOf() {
+    public boolean jsFunction_valueOf() {
 	    return booleanValue;
     }
 

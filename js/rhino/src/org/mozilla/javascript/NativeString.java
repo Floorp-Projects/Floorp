@@ -97,8 +97,8 @@ public class NativeString extends ScriptableObject implements Wrapper {
         return s.toString();
     }
 
-    public static Object js_String(Context cx, Object[] args, Function ctorObj,
-                                   boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args, 
+                                       Function ctorObj, boolean inNewExpr)
     {
         String s = args.length >= 1
             ? ScriptRuntime.toString(args[0])
@@ -116,11 +116,11 @@ public class NativeString extends ScriptableObject implements Wrapper {
     }
 
     /* ECMA 15.5.4.2: 'the toString function is not generic.' */
-    public String js_toString() {
+    public String jsFunction_toString() {
         return string;
     }
 
-    public String js_valueOf() {
+    public String jsFunction_valueOf() {
         return string;
     }
 
@@ -143,8 +143,8 @@ public class NativeString extends ScriptableObject implements Wrapper {
      *
      * See ECMA 15.5.4.[4,5]
      */
-    public static String js_charAt(Context cx, Scriptable thisObj,
-                                   Object[] args, Function funObj)
+    public static String jsFunction_charAt(Context cx, Scriptable thisObj,
+                                           Object[] args, Function funObj)
     {
         if (args.length < 1)
             args = ScriptRuntime.padArguments(args, 1);
@@ -160,8 +160,8 @@ public class NativeString extends ScriptableObject implements Wrapper {
         return target.substring((int)pos, (int)pos + 1);
     }
 
-    public static double js_charCodeAt(Context cx, Scriptable thisObj,
-                                       Object[] args, Function funObj)
+    public static double jsFunction_charCodeAt(Context cx, Scriptable thisObj,
+                                               Object[] args, Function funObj)
     {
         if (args.length < 1)
             args = ScriptRuntime.padArguments(args, 1);
@@ -181,8 +181,8 @@ public class NativeString extends ScriptableObject implements Wrapper {
      * See ECMA 15.5.4.6.  Uses Java String.indexOf()
      * OPT to add - BMH searching from jsstr.c.
      */
-    public static int js_indexOf(Context cx, Scriptable thisObj,
-                                 Object[] args, Function funObj)
+    public static int jsFunction_indexOf(Context cx, Scriptable thisObj,
+                                         Object[] args, Function funObj)
     {
         if (args.length < 2)
             args = ScriptRuntime.padArguments(args, 2);
@@ -205,8 +205,8 @@ public class NativeString extends ScriptableObject implements Wrapper {
      * See ECMA 15.5.4.7
      *
      */
-    public static int js_lastIndexOf(Context cx, Scriptable thisObj,
-                                     Object[] args, Function funObj)
+    public static int jsFunction_lastIndexOf(Context cx, Scriptable thisObj,
+                                             Object[] args, Function funObj)
     {
         if (args.length < 2)
             args = ScriptRuntime.padArguments(args, 2);
@@ -350,8 +350,8 @@ public class NativeString extends ScriptableObject implements Wrapper {
      * a limit argument and accepts a regular expression as the split
      * argument.
      */
-    public static Object js_split(Context cx, Scriptable thisObj,
-                                  Object[] args, Function funObj)
+    public static Object jsFunction_split(Context cx, Scriptable thisObj,
+                                          Object[] args, Function funObj)
     {
         String target = ScriptRuntime.toString(thisObj);
 
@@ -446,8 +446,8 @@ public class NativeString extends ScriptableObject implements Wrapper {
      *
      * See ECMA 15.5.4.[9,10]
      */
-    public static String js_substring(Context cx, Scriptable thisObj,
-                                      Object[] args, Function funObj)
+    public static String jsFunction_substring(Context cx, Scriptable thisObj,
+                                              Object[] args, Function funObj)
     {
         if (args.length < 1)
             args = ScriptRuntime.padArguments(args, 1);
@@ -490,29 +490,29 @@ public class NativeString extends ScriptableObject implements Wrapper {
      *
      * See ECMA 15.5.4.[11,12]
      */
-    public static String js_toLowerCase(Context cx, Scriptable thisObj,
-                                        Object[] args, Function funObj)
+    public static String jsFunction_toLowerCase(Context cx, Scriptable thisObj,
+                                                Object[] args, Function funObj)
     {
         String target = ScriptRuntime.toString(thisObj);
         return target.toLowerCase();
     }
 
-    public static String js_toUpperCase(Context cx, Scriptable thisObj,
-                                        Object[] args, Function funObj)
+    public static String jsFunction_toUpperCase(Context cx, Scriptable thisObj,
+                                                Object[] args, Function funObj)
     {
         String target = ScriptRuntime.toString(thisObj);
         return target.toUpperCase();
     }
 
-    public double js_getLength() {
+    public double jsGet_length() {
         return (double) string.length();
     }
 
     /**
      * Non-ECMA methods.
      */
-    public static String js_substr(Context cx, Scriptable thisObj,
-                                   Object[] args, Function funObj)
+    public static String jsFunction_substr(Context cx, Scriptable thisObj,
+                                           Object[] args, Function funObj)
     {
         String target = ScriptRuntime.toString(thisObj);
 
@@ -548,8 +548,8 @@ public class NativeString extends ScriptableObject implements Wrapper {
     /**
      * Python-esque sequence operations.
      */
-    public static String js_concat(Context cx, Scriptable thisObj,
-                                   Object[] args, Function funObj)
+    public static String jsFunction_concat(Context cx, Scriptable thisObj,
+                                           Object[] args, Function funObj)
     {
         StringBuffer result = new StringBuffer();
         result.append(ScriptRuntime.toString(thisObj));
@@ -560,8 +560,8 @@ public class NativeString extends ScriptableObject implements Wrapper {
         return result.toString();
     }
 
-    public static String js_slice(Context cx, Scriptable thisObj,
-                                  Object[] args, Function funObj)
+    public static String jsFunction_slice(Context cx, Scriptable thisObj,
+                                          Object[] args, Function funObj)
     {
         String target = ScriptRuntime.toString(thisObj);
 
@@ -615,55 +615,55 @@ public class NativeString extends ScriptableObject implements Wrapper {
         return result.toString();
     }
 
-    public String js_bold() {
+    public String jsFunction_bold() {
         return tagify("B", null, null);
     }
 
-    public String js_italics() {
+    public String jsFunction_italics() {
         return tagify("I", null, null);
     }
 
-    public String js_fixed() {
+    public String jsFunction_fixed() {
         return tagify("TT", null, null);
     }
 
-    public String js_strike() {
+    public String jsFunction_strike() {
         return tagify("STRIKE", null, null);
     }
 
-    public String js_small() {
+    public String jsFunction_small() {
         return tagify("SMALL", null, null);
     }
 
-    public String js_big() {
+    public String jsFunction_big() {
         return tagify("BIG", null, null);
     }
 
-    public String js_blink() {
+    public String jsFunction_blink() {
         return tagify("BLINK", null, null);
     }
 
-    public String js_sup() {
+    public String jsFunction_sup() {
         return tagify("SUP", null, null);
     }
 
-    public String js_sub() {
+    public String jsFunction_sub() {
         return tagify("SUB", null, null);
     }
 
-    public String js_fontsize(String value) {
+    public String jsFunction_fontsize(String value) {
         return tagify("FONT SIZE", "FONT", value);
     }
 
-    public String js_fontcolor(String value) {
+    public String jsFunction_fontcolor(String value) {
         return tagify("FONT COLOR", "FONT", value);
     }
 
-    public String js_link(String value) {
+    public String jsFunction_link(String value) {
         return tagify("A HREF", "A", value);
     }
 
-    public String js_anchor(String value) {
+    public String jsFunction_anchor(String value) {
         return tagify("A NAME", "A", value);
     }
 
@@ -675,22 +675,22 @@ public class NativeString extends ScriptableObject implements Wrapper {
         return string;
     }
 
-    public static Object js_match(Context cx, Scriptable thisObj,
-                                  Object[] args, Function funObj)
+    public static Object jsFunction_match(Context cx, Scriptable thisObj,
+                                          Object[] args, Function funObj)
         throws JavaScriptException
     {
         return checkReProxy(cx).match(cx, thisObj, args, funObj);
     }
 
-    public static Object js_search(Context cx, Scriptable thisObj,
-                                   Object[] args, Function funObj)
+    public static Object jsFunction_search(Context cx, Scriptable thisObj,
+                                           Object[] args, Function funObj)
         throws JavaScriptException
     {
         return checkReProxy(cx).search(cx, thisObj, args, funObj);
     }
 
-    public static Object js_replace(Context cx, Scriptable thisObj,
-                                    Object[] args, Function funObj)
+    public static Object jsFunction_replace(Context cx, Scriptable thisObj,
+                                            Object[] args, Function funObj)
         throws JavaScriptException
     {
         return checkReProxy(cx).replace(cx, thisObj, args, funObj);

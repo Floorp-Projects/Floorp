@@ -47,9 +47,6 @@ public class NativeJavaPackage extends ScriptableObject {
         "java.text",
         "java.text.resources",
         "java.applet",
-        "netscape.security",
-        "netscape.plugin",
-        "netscape.application",
     };
 
     public static Scriptable init(Scriptable scope) 

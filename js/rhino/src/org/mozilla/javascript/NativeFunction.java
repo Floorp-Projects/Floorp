@@ -183,7 +183,7 @@ public class NativeFunction extends ScriptableObject implements Function {
 
     public String decompile(int indent, boolean toplevel, boolean justbody) {
          if (source == null)
-             return "function " + js_getName() +
+             return "function " + jsGet_name() +
                 "() {\n\t[native code]\n}\n";
 
         // Spew tokens in source, for debugging.
@@ -820,8 +820,8 @@ public class NativeFunction extends ScriptableObject implements Function {
         return result.toString();
     }
 
-    public static Object js_toString(Context cx, Scriptable thisObj,
-                                     Object[] args, Function funObj)
+    public static Object jsFunction_toString(Context cx, Scriptable thisObj,
+                                             Object[] args, Function funObj)
     {
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         if (!(val instanceof NativeFunction)) {
@@ -837,8 +837,8 @@ public class NativeFunction extends ScriptableObject implements Function {
         return ((NativeFunction) val).decompile(indent, true, false);
     }
 
-    public static Scriptable js_Function(Context cx, Object[] args,
-                                         Function ctorObj, boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args,
+                                       Function ctorObj, boolean inNewExpr)
     {
         int arglen = args.length;
         StringBuffer funArgs = new StringBuffer();
@@ -892,12 +892,12 @@ public class NativeFunction extends ScriptableObject implements Function {
      *
      * A proposed ECMA extension for round 2.
      */
-    public static Object js_apply(Context cx, Scriptable thisObj,
-                                  Object[] args, Function funObj)
+    public static Object jsFunction_apply(Context cx, Scriptable thisObj,
+                                          Object[] args, Function funObj)
         throws JavaScriptException
     {
         if (args.length != 2)
-            return js_call(cx, thisObj, args, funObj);
+            return jsFunction_call(cx, thisObj, args, funObj);
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         Scriptable newThis = args[0] == null
                              ? null
@@ -911,8 +911,8 @@ public class NativeFunction extends ScriptableObject implements Function {
      *
      * A proposed ECMA extension for round 2.
      */
-    public static Object js_call(Context cx, Scriptable thisObj,
-                                 Object[] args, Function funObj)
+    public static Object jsFunction_call(Context cx, Scriptable thisObj,
+                                         Object[] args, Function funObj)
         throws JavaScriptException
     {
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
@@ -931,7 +931,7 @@ public class NativeFunction extends ScriptableObject implements Function {
         }
     }
 
-    public int js_getLength() {
+    public int jsGet_length() {
         Context cx = Context.getContext();
         if (cx.getLanguageVersion() != Context.VERSION_1_2)
             return argCount;
@@ -941,11 +941,11 @@ public class NativeFunction extends ScriptableObject implements Function {
         return activation.getOriginalArguments().length;
     }
 
-    public int js_getArity() {
+    public int jsGet_arity() {
         return argCount;
     }
 
-    public String js_getName() {
+    public String jsGet_name() {
         if (names != null && names[0].length() > 0)
             return names[0];
         

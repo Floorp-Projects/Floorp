@@ -38,8 +38,8 @@ public class NativeObject extends ScriptableObject {
         return "Object";
     }
 
-    public static Object js_Object(Context cx, Object[] args, Function ctorObj,
-                                   boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args, 
+                                       Function ctorObj, boolean inNewExpr)
         throws JavaScriptException
     {
         if (!inNewExpr) {
@@ -57,13 +57,13 @@ public class NativeObject extends ScriptableObject {
     public String toString() {
         Context cx = Context.getContext();
         if (cx != null)
-            return js_toString(cx, this, null, null);
+            return jsFunction_toString(cx, this, null, null);
         else
             return "[object " + getClassName() + "]";
     }
 
-    public static String js_toString(Context cx, Scriptable thisObj,
-                                     Object[] args, Function funObj)
+    public static String jsFunction_toString(Context cx, Scriptable thisObj,
+                                             Object[] args, Function funObj)
     {
         if (cx.getLanguageVersion() != cx.VERSION_1_2) 
             return "[object " + thisObj.getClassName() + "]";
@@ -118,8 +118,8 @@ public class NativeObject extends ScriptableObject {
         }
     }
 
-    public static Object js_valueOf(Context cx, Scriptable thisObj,
-                                    Object[] args, Function funObj)
+    public static Object jsFunction_valueOf(Context cx, Scriptable thisObj,
+                                            Object[] args, Function funObj)
     {
         return thisObj;
     }

@@ -203,7 +203,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                   boolean test, Function funObj)
     {
         if (!(thisObj instanceof NativeRegExp)) {
-            Object[] errArgs = { ((NativeFunction) funObj).js_getName() };
+            Object[] errArgs = { ((NativeFunction) funObj).jsGet_name() };
             throw Context.reportRuntimeError(
                 ScriptRuntime.getMessage("msg.incompat.call", errArgs));
         }

@@ -63,8 +63,8 @@ public class NativeScript extends NativeFunction implements Script {
      * The Java method defining the JavaScript Script constructor.
      *
      */
-    public static Object js_Script(Context cx, Object[] args,
-                                   Function ctorObj, boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args,
+                                       Function ctorObj, boolean inNewExpr)
     {
         String source = args.length == 0
                         ? ""
@@ -95,19 +95,19 @@ public class NativeScript extends NativeFunction implements Script {
         }
     }
 
-    public Scriptable js_compile(String source) {
+    public Scriptable jsFunction_compile(String source) {
         script = compile(null, source);
         return this;
     }
 
-    public Object js_exec() throws JavaScriptException {
+    public Object jsFunction_exec() throws JavaScriptException {
         Object[] msgArgs = { "exec" };
         throw Context.reportRuntimeError(
             Context.getMessage("msg.cant.call.indirect", msgArgs));
     }
 
-    public static Object js_toString(Context cx, Scriptable thisObj,
-                                     Object[] args, Function funObj)
+    public static Object jsFunction_toString(Context cx, Scriptable thisObj,
+                                             Object[] args, Function funObj)
     {
         Script thisScript = ((NativeScript) thisObj).script;
         if (thisScript == null)
@@ -119,7 +119,7 @@ public class NativeScript extends NativeFunction implements Script {
     /*
      * Override method in NativeFunction to avoid ever returning "anonymous"
      */
-    public String js_getName() {
+    public String jsGet_name() {
         return "";
     }
 

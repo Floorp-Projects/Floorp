@@ -31,7 +31,8 @@ public class NativeWith implements Scriptable {
     public static void init(Scriptable scope) {
         NativeWith w = new NativeWith();
         w.setPrototype(ScriptableObject.getObjectPrototype(scope));
-        Method[] m = FunctionObject.findMethods(NativeWith.class, "With");
+        Method[] m = FunctionObject.findMethods(NativeWith.class, 
+                                                "jsConstructor");
         FunctionObject f = new FunctionObject("With", m[0], scope);
         f.addAsConstructor(scope, w);
     }
@@ -120,8 +121,8 @@ public class NativeWith implements Scriptable {
         return prototype.hasInstance(value);
     }
 
-    public static Object With(Context cx, Object[] args, Function ctorObj,
-                              boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args, 
+                                       Function ctorObj, boolean inNewExpr)
     {
         Object[] msgArgs = { "With" };
         throw Context.reportRuntimeError(

@@ -119,7 +119,6 @@ public abstract class ScriptableObject implements Scriptable {
      * @param start the object in which the lookup began
      * @return the value of the property (may be null), or NOT_FOUND
      */
-
     public Object get(String name, Scriptable start) {
         int hashCode;
         if (name == lastName) {
@@ -127,7 +126,7 @@ public abstract class ScriptableObject implements Scriptable {
                 return lastValue;
             hashCode = lastHash;
         } else {
-            hashCode = name.hashCode(); 
+            hashCode = name.hashCode();
         }
         int slotIndex = getSlot(name, hashCode);
         if (slotIndex == SLOT_NOT_FOUND)
@@ -593,50 +592,43 @@ public abstract class ScriptableObject implements Scriptable {
      * methods are used to initialize a class in the following manner.<p>
      *
      * First, the zero-parameter constructor of the class is called to
-     * create the prototypical instance. If no such constructor exists,
+     * create the prototype. If no such constructor exists,
      * a ClassDefinitionException is thrown. <p>
      *
-     * Next, all methods are scanned. If any method
-     * begins with a special prefix, then only methods with
-     * special prefixes are considered for defining functions
-     * and properties. These special prefixes are
+     * Next, all methods are scanned for special prefixes that indicate that they
+     * have special meaning for defining JavaScript objects.
+     * These special prefixes are
      * <ul>
-     * <li><code>js_</code> for a JavaScript property or function, as
-     *     determined by the name of the method
      * <li><code>jsFunction_</code> for a JavaScript function
      * <li><code>jsStaticFunction_</code> for a JavaScript function that 
      *           is a property of the constructor
-     * <li><code>jsProperty_</code> for a JavaScript property
+     * <li><code>jsGet_</code> for a getter of a JavaScript property
+     * <li><code>jsSet_</code> for a setter of a JavaScript property
+     * <li><code>jsConstructor</code> for a JavaScript function that 
+     *           is the constructor
      * </ul><p>
      *
-     * If no methods begin with any of these prefixes, all methods
-     * are added as JavaScript functions or properties except
-     * those with names matching the names of methods in
-     * <code>org.mozilla.javascript.Function</code>
-     * or any of its supertypes. This means that
-     * <code>call</code>, which is a method in Function, and
-     * <code>get</code>, which is a method in Scriptable
-     * (which Function extends), are both excluded from
-     * defining JavaScript methods.<p>
-     *
-     * If after removing any prefixes, a method's name matches the name of
-     * the class (determined by calling <code>getClassName()</code>
-     * on the prototypical instance), it is considered to define the
-     * JavaScript constructor.<p>
-     *
-     * If the method's name begins with "get" or "set" after
-     * any prefix other than "jsFunction_" is removed, the method is
+     * If the method's name begins with "jsFunction_", a JavaScript function 
+     * is created with a name formed from the rest of the Java method name 
+     * following "jsFunction_". So a Java method named "jsFunction_foo" will
+     * define a JavaScript method "foo". Calling this JavaScript function 
+     * will cause the Java method to be called. The parameters of the method
+     * must be of number and types as defined by the FunctionObject class.
+     * The JavaScript function is then added as a property
+     * of the prototype. <p>
+     * 
+     * If the method's name begins with "jsStaticFunction_", it is handled
+     * similarly except that the resulting JavaScript function is added as a 
+     * property of the constructor object. The Java method must be static.
+     * 
+     * If the method's name begins with "jsGet_" or "jsSet_", the method is
      * considered to define a property. Accesses to the defined property
      * will result in calls to these getter and setter methods. If no
      * setter is defined, the property is defined as READONLY.<p>
      *
-     * Otherwise, a JavaScript function is created that will call the
-     * given method. This function is then added as a property
-     * of the prototypical instance. So if a JavaScript
-     * function beginning with "get" or "set" is desired, it must be
-     * prefixed with "jsFunction_" to distinquish it from a method
-     * defining a property.<p>
-     *
+     * If the method's name is "jsConstructor", the method is
+     * considered to define the body of the constructor. Only one 
+     * method of this name may be defined. 
      * If no method is found that can serve as constructor, a Java
      * constructor will be selected to serve as the JavaScript
      * constructor in the following manner. If the class has only one
@@ -644,7 +636,7 @@ public abstract class ScriptableObject implements Scriptable {
      * the JavaScript constructor. If the the class has two constructors,
      * one must be the zero-argument constructor (otherwise an
      * ClassDefinitionException would have already been thrown
-     * when the prototypical instance was to be created). In this case
+     * when the prototype was to be created). In this case
      * the Java constructor with one or more parameters will be used
      * to define the JavaScript constructor. If the class has three
      * or more constructors, an ClassDefinitionException
@@ -669,8 +661,7 @@ public abstract class ScriptableObject implements Scriptable {
      * @exception InvocationTargetException if an exception is thrown
      *            during execution of methods of the named class
      * @exception ClassDefinitionException if an appropriate
-     *            constructor cannot be found to create the prototypical
-     *            instance
+     *            constructor cannot be found to create the prototype
      * @exception PropertyException if getter and setter
      *            methods do not conform to the requirements of the
      *            defineProperty method
@@ -709,8 +700,7 @@ public abstract class ScriptableObject implements Scriptable {
      * @exception InvocationTargetException if an exception is thrown
      *            during execution of methods of the named class
      * @exception ClassDefinitionException if an appropriate
-     *            constructor cannot be found to create the prototypical
-     *            instance
+     *            constructor cannot be found to create the prototype
      * @exception PropertyException if getter and setter
      *            methods do not conform to the requirements of the
      *            defineProperty method
@@ -763,13 +753,29 @@ public abstract class ScriptableObject implements Scriptable {
         // Find out whether there are any methods that begin with
         // "js". If so, then only methods that begin with special
         // prefixes will be defined as JavaScript entities.
+        // The prefixes "js_" and "jsProperty_" are deprecated.
         final String genericPrefix = "js_";
         final String functionPrefix = "jsFunction_";
         final String staticFunctionPrefix = "jsStaticFunction_";
         final String propertyPrefix = "jsProperty_";
+        final String getterPrefix = "jsGet_";
+        final String setterPrefix = "jsSet_";
 
-        boolean hasPrefix = false;
+        Method[] ctorMeths = FunctionObject.findMethods(clazz, 
+                                                        "jsConstructor");
         Member ctorMember = null;
+        if (ctorMeths != null) {
+            if (ctorMeths.length > 1) {
+                Object[] args = { ctorMeths[0], ctorMeths[1] };
+                throw new ClassDefinitionException(
+                    Context.getMessage("msg.multiple.ctors", args));
+            }
+            ctorMember = ctorMeths[0];
+        }
+
+        // Deprecated: look for functions with the same name as the class
+        // and consider them constructors.
+        boolean hasPrefix = false;
         for (int i=0; i < methods.length; i++) {
             String name = methods[i].getName();
             String prefix = null;
@@ -781,8 +787,6 @@ public abstract class ScriptableObject implements Scriptable {
                 prefix = functionPrefix;
             else if (name.startsWith(staticFunctionPrefix))
                 prefix = staticFunctionPrefix;
-            else if (name.startsWith(propertyPrefix))
-                prefix = propertyPrefix;
             if (prefix != null) {
                 hasPrefix = true;
                 name = name.substring(prefix.length());
@@ -816,9 +820,11 @@ public abstract class ScriptableObject implements Scriptable {
         FunctionObject ctor = new FunctionObject(className, ctorMember, scope);
         ctor.addAsConstructor(scope, proto);
 
+        if (!hasPrefix && exclusionList == null)
+            exclusionList = getExclusionList();
         Method finishInit = null;
         for (int i=0; i < methods.length; i++) {
-            if (methods[i].getDeclaringClass() != clazz)
+            if (!hasPrefix && methods[i].getDeclaringClass() != clazz)
                 continue;
             String name = methods[i].getName();
             if (name.equals("finishInit")) {
@@ -836,13 +842,10 @@ public abstract class ScriptableObject implements Scriptable {
             String prefix = null;
             if (hasPrefix) {
                 if (name.startsWith(genericPrefix)) {
-                    name = name.substring(genericPrefix.length());
                     prefix = genericPrefix;
                 } else if (name.startsWith(functionPrefix)) {
-                    name = name.substring(functionPrefix.length());
                     prefix = functionPrefix;
                 } else if (name.startsWith(staticFunctionPrefix)) {
-                    name = name.substring(staticFunctionPrefix.length());
                     prefix = staticFunctionPrefix;
                     if (!Modifier.isStatic(methods[i].getModifiers())) {
                         throw new ClassDefinitionException(
@@ -851,16 +854,47 @@ public abstract class ScriptableObject implements Scriptable {
                 } else if (name.startsWith(propertyPrefix)) {
                     name = name.substring(propertyPrefix.length());
                     prefix = propertyPrefix;
+                } else if (name.startsWith(getterPrefix)) {
+                    prefix = getterPrefix;
+                } else if (name.startsWith(setterPrefix)) {
+                    prefix = setterPrefix;
                 } else {
                     continue;
                 }
+                name = name.substring(prefix.length());
             } else if (exclusionList.get(name) != null)
                 continue;
             if (methods[i] == ctorMember) {
                 continue;
             }
-            if ((name.startsWith("get") || name.startsWith("set"))
-                && name.length() > 3 &&
+            if (prefix != null && prefix.equals(setterPrefix))
+                continue;   // deal with set when we see get
+            if (prefix != null && prefix.equals(getterPrefix)) {
+                if (!(proto instanceof ScriptableObject)) {
+                    Object[] args = { proto.getClass().toString(), name };
+                    throw new PropertyException(
+                        Context.getMessage("msg.extend.scriptable", args));
+                }
+                Method[] setter = FunctionObject.findMethods(
+                                    clazz,
+                                    setterPrefix + name);
+                if (setter != null && setter.length != 1) {
+                    Object[] errArgs = { name, clazz.getName() };
+                    throw new PropertyException(
+                        Context.getMessage("msg.no.overload", errArgs));
+                }
+                int attr = ScriptableObject.PERMANENT |
+                           ScriptableObject.DONTENUM  |
+                           (setter != null ? 0
+                                           : ScriptableObject.READONLY);
+                Method m = setter == null ? null : setter[0];
+                ((ScriptableObject) proto).defineProperty(name, null,
+                                                          methods[i], m,
+                                                          attr);
+                continue;
+            }
+            if ((name.startsWith("get") || name.startsWith("set")) &&
+                name.length() > 3 &&
                 !(hasPrefix && (prefix.equals(functionPrefix) ||
                                 prefix.equals(staticFunctionPrefix))))
             {

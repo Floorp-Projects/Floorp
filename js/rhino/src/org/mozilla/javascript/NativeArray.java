@@ -178,8 +178,8 @@ public class NativeArray extends ScriptableObject {
     /**
      * See ECMA 15.4.1,2
      */
-    public static Object js_Array(Context cx, Object[] args, Function ctorObj,
-			                      boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args, 
+                                       Function ctorObj, boolean inNewExpr)
         throws JavaScriptException
     {
         if (!inNewExpr) {
@@ -205,11 +205,11 @@ public class NativeArray extends ScriptableObject {
     private static final int lengthAttr = ScriptableObject.DONTENUM |
                                           ScriptableObject.PERMANENT;
 
-    public long js_getLength() {
+    public long jsGet_length() {
         return length;
     }
 
-    public void js_setLength(Object val) {
+    public void jsSet_length(Object val) {
         /* XXX do we satisfy this?
          * 15.4.5.1 [[Put]](P, V):
          * 1. Call the [[CanPut]] method of A with name P.
@@ -258,9 +258,9 @@ public class NativeArray extends ScriptableObject {
     static double getLengthProperty(Scriptable obj) {
         // These will both give numeric lengths within Uint32 range.
         if (obj instanceof NativeString)
-            return (double)((NativeString)obj).js_getLength();
+            return (double)((NativeString)obj).jsGet_length();
         if (obj instanceof NativeArray)
-            return (double)((NativeArray)obj).js_getLength();
+            return (double)((NativeArray)obj).jsGet_length();
         return ScriptRuntime.toUint32(ScriptRuntime
                                       .getProp(obj, "length", obj));
     }
@@ -309,8 +309,8 @@ public class NativeArray extends ScriptableObject {
         }
     }
 
-    public static String js_toString(Context cx, Scriptable thisObj,
-                                     Object[] args, Function funObj)
+    public static String jsFunction_toString(Context cx, Scriptable thisObj,
+                                             Object[] args, Function funObj)
     {
         return toStringHelper(cx, thisObj, 
                               cx.getLanguageVersion() == cx.VERSION_1_2);
@@ -393,8 +393,8 @@ public class NativeArray extends ScriptableObject {
     /**
      * See ECMA 15.4.4.3
      */
-    public static String js_join(Context cx, Scriptable thisObj,
-                                 Object[] args, Function funObj)
+    public static String jsFunction_join(Context cx, Scriptable thisObj,
+                                         Object[] args, Function funObj)
     {
         StringBuffer result = new StringBuffer();
         String separator;
@@ -421,8 +421,8 @@ public class NativeArray extends ScriptableObject {
     /**
      * See ECMA 15.4.4.4
      */
-    public static Scriptable js_reverse(Context cx, Scriptable thisObj,
-                                        Object[] args, Function funObj)
+    public static Scriptable jsFunction_reverse(Context cx, Scriptable thisObj,
+                                                Object[] args, Function funObj)
     {
         long len = (long)getLengthProperty(thisObj);
 
@@ -440,8 +440,8 @@ public class NativeArray extends ScriptableObject {
     /**
      * See ECMA 15.4.4.5
      */
-    public static Scriptable js_sort(Context cx, Scriptable thisObj,
-                                     Object[] args, Function funObj)
+    public static Scriptable jsFunction_sort(Context cx, Scriptable thisObj,
+                                             Object[] args, Function funObj)
         throws JavaScriptException
     {
         long length = (long)getLengthProperty(thisObj);
@@ -605,8 +605,8 @@ public class NativeArray extends ScriptableObject {
      * Non-ECMA methods.
      */
 
-    public static Object js_push(Context cx, Scriptable thisObj,
-                                 Object[] args, Function funObj)
+    public static Object jsFunction_push(Context cx, Scriptable thisObj,
+                                         Object[] args, Function funObj)
     {
         double length = getLengthProperty(thisObj);
         for (int i = 0; i < args.length; i++) {
@@ -630,8 +630,8 @@ public class NativeArray extends ScriptableObject {
             return new Long((long)length);
     }
 
-    public static Object js_pop(Context cx, Scriptable thisObj, Object[] args,
-                                Function funObj)
+    public static Object jsFunction_pop(Context cx, Scriptable thisObj, 
+                                        Object[] args, Function funObj)
     {
         Object result;
         double length = getLengthProperty(thisObj);
@@ -653,8 +653,8 @@ public class NativeArray extends ScriptableObject {
         return result;
     }
 
-    public static Object js_shift(Context cx, Scriptable thisObj, Object[] args,
-                                  Function funOjb)
+    public static Object jsFunction_shift(Context cx, Scriptable thisObj, 
+                                          Object[] args, Function funOjb)
     {
         Object result;
         double length = getLengthProperty(thisObj);
@@ -684,8 +684,8 @@ public class NativeArray extends ScriptableObject {
         return result;
     }
 
-    public static Object js_unshift(Context cx, Scriptable thisObj,
-                                    Object[] args, Function funOjb)
+    public static Object jsFunction_unshift(Context cx, Scriptable thisObj,
+                                            Object[] args, Function funOjb)
     {
         Object result;
         double length = (double)getLengthProperty(thisObj);
@@ -713,8 +713,8 @@ public class NativeArray extends ScriptableObject {
         return new Long((long)length);
     }
 
-    public static Object js_splice(Context cx, Scriptable thisObj, 
-                                   Object[] args, Function funObj)
+    public static Object jsFunction_splice(Context cx, Scriptable thisObj, 
+                                           Object[] args, Function funObj)
     {
         /* create an empty Array to return. */
         Scriptable scope = getTopLevelScope(funObj);
@@ -820,8 +820,8 @@ public class NativeArray extends ScriptableObject {
     /*
      * Python-esque sequence operations.
      */
-    public static Scriptable js_concat(Context cx, Scriptable thisObj,
-                                       Object[] args, Function funObj)
+    public static Scriptable jsFunction_concat(Context cx, Scriptable thisObj,
+                                               Object[] args, Function funObj)
     {
         /* Concat tries to keep the definition of an array as general
          * as possible; if it finds that an object has a numeric
@@ -873,8 +873,8 @@ public class NativeArray extends ScriptableObject {
         return result;
     }
 
-    public static Scriptable js_slice(Context cx, Scriptable thisObj,
-                                      Object[] args, Function funObj)
+    public static Scriptable jsFunction_slice(Context cx, Scriptable thisObj,
+                                              Object[] args, Function funObj)
     {
         Scriptable scope = getTopLevelScope(funObj);
         Scriptable result = ScriptRuntime.newObject(cx, scope, "Array", null);

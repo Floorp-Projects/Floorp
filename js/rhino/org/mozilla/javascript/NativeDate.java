@@ -779,8 +779,8 @@ public class NativeDate extends ScriptableObject {
     }
 
     /* the javascript constructor */
-    public static Object js_Date(Context cx, Object[] args, Function ctorObj,
-                                 boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args, 
+                                       Function ctorObj, boolean inNewExpr)
     {
         // if called as a function, just return a string
         // representing the current time.
@@ -860,7 +860,7 @@ public class NativeDate extends ScriptableObject {
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     };
 
-    public String js_toString() {
+    public String jsFunction_toString() {
         /* all for want of printf.  All of this garbage seems necessary
          * because Java carefully avoids providing non-localized
          * string formatting.  We need to avoid localization to ensure
@@ -872,7 +872,7 @@ public class NativeDate extends ScriptableObject {
         return date_format(this.date);
     }
 
-    public String js_toLocaleString() {
+    public String jsFunction_toLocaleString() {
         if (this.date != this.date)
             return js_NaN_date_str;
 
@@ -883,7 +883,7 @@ public class NativeDate extends ScriptableObject {
         return localeDateFormatter.format(tempdate);
     }
 
-    public String js_toUTCString() {
+    public String jsFunction_toUTCString() {
         if (this.date != this.date)
             return js_NaN_date_str;
 
@@ -932,7 +932,7 @@ public class NativeDate extends ScriptableObject {
         return result.toString();
     }
 
-    public double js_valueOf() {
+    public double jsFunction_valueOf() {
         return this.date;
     }
 

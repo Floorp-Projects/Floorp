@@ -59,8 +59,8 @@ public class NativeNumber extends ScriptableObject {
         return "Number";
     }
 
-    public static Object Number(Context cx, Object[] args, Function funObj,
-                                boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args, 
+                                       Function funObj, boolean inNewExpr)
     {
         double d = args.length >= 1
                    ? ScriptRuntime.toNumber(args[0])
@@ -72,17 +72,20 @@ public class NativeNumber extends ScriptableObject {
     	// Number(val) converts val to a number value.
     	return new Double(d);
     }
-
-    public String toString(Object base) {
-        if (base == Undefined.instance)            
-    	    return ScriptRuntime.numberToString(doubleValue, 10);
-    	else
-    	    return ScriptRuntime.numberToString(doubleValue, 
-    	                            ScriptRuntime.toInt32(base));
+    
+    public String toString() {
+        return jsFunction_toString(Undefined.instance);
     }
 
-    public double valueOf() {
-	    return doubleValue;
+    public String jsFunction_toString(Object base) {
+        int i = base == Undefined.instance
+                ? 10 
+                : ScriptRuntime.toInt32(base);
+        return ScriptRuntime.numberToString(doubleValue, i);
+    }
+
+    public double jsFunction_valueOf() {
+        return doubleValue;
     }
 
     private static final double defaultValue = +0.0;

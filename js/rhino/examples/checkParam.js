@@ -89,7 +89,6 @@ function processFile(f) {
 
 // main script: process each file in arguments list
 
-print("here");
 for (var i=0; i < arguments.length; i++) {
 	var filename = String(arguments[i]);
 	print("Checking " + filename + "...");

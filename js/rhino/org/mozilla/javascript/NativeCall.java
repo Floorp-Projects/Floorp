@@ -80,8 +80,8 @@ public final class NativeCall extends ScriptableObject {
         return "Call";
     }
     
-    public static Object js_Call(Context cx, Object[] args, Function ctorObj,
-                                 boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args, 
+                                       Function ctorObj, boolean inNewExpr)
     {
         if (!inNewExpr) {
             Object[] errArgs = { "Call" };
