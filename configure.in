@@ -503,6 +503,10 @@ case "$host" in
 *-linux*)
     HOST_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
     ;;
+
+*-osf*)
+    HOST_NSPR_MDCPUCFG='\"md/_osf1.cfg\"'
+    ;;
 esac
 
 dnl ========================================================
@@ -2014,7 +2018,7 @@ dnl note that this one is reversed - if the test fails, then
 dnl we require implementations of unused methods
 AC_CACHE_CHECK(whether C++ requires implementation of unused methods,
                ac_cv_cpp_unused_required,
-               [AC_TRY_COMPILE(class X {private: void never_called();};,
+               [AC_TRY_LINK(class X {private: void never_called();};,
                                X x;,
                                ac_cv_cpp_unused_required=no,
                                ac_cv_cpp_unused_required=yes)])
