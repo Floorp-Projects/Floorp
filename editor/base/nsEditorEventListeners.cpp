@@ -227,8 +227,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 {
   aProcessed=PR_FALSE;
   PRUint32 charCode;
-  PRBool ctrlKey;
-  PRBool isAltKey, isMetaKey, isShiftKey;
 
   nsCOMPtr<nsIDOMKeyEvent>keyEvent;
   keyEvent = do_QueryInterface(aKeyEvent);
@@ -237,85 +235,74 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(keyEvent->GetCharCode(&charCode)) && 
-      NS_SUCCEEDED(keyEvent->GetAltKey(&isAltKey)) &&
-      NS_SUCCEEDED(keyEvent->GetMetaKey(&isMetaKey)) &&
-      NS_SUCCEEDED(keyEvent->GetShiftKey(&isShiftKey)) &&
-      NS_SUCCEEDED(keyEvent->GetCtrlKey(&ctrlKey)) ) 
+  if (NS_SUCCEEDED(keyEvent->GetCharCode(&charCode)))
   {
-#ifdef XP_MAC
-    // hack to make Mac work for hard-coded keybindings
-    // metaKey query is only way to query for command key on Mac
-    // if that's pressed, we'll set the ctrlKey boolean 
-    // (even though the control key might also be pressed)
-    if (PR_TRUE==isMetaKey) {
-      ctrlKey = !ctrlKey; /* if controlKey is pressed, we shouldn't execute code below */
-                          /* if it's not set and cmdKey is, then we should proceed to code below */
-      isMetaKey = PR_FALSE; /* reset so there aren't extra modifiers to prevent binding from working */
-    }
-#endif
-    
-    if (PR_TRUE==ctrlKey) {
-      aProcessed = PR_TRUE;
-    } 
-    // swallow all control keys
-    // XXX: please please please get these mappings from an external source!
-    switch (charCode)
+    // Figure out the modifier key, different on every platform
+    PRBool isOnlyPlatformModifierKey = PR_FALSE;;
+    PRBool isCtrlKey, isAltKey, isMetaKey, isShiftKey;
+    if (NS_SUCCEEDED(keyEvent->GetAltKey(&isAltKey)) &&
+        NS_SUCCEEDED(keyEvent->GetMetaKey(&isMetaKey)) &&
+        NS_SUCCEEDED(keyEvent->GetShiftKey(&isShiftKey)) &&
+        NS_SUCCEEDED(keyEvent->GetCtrlKey(&isCtrlKey)) )
     {
-      // XXX: hard-coded select all
-      case (PRUint32)('a'):
-        if (PR_TRUE==ctrlKey && PR_FALSE==isShiftKey && PR_FALSE==isAltKey && PR_FALSE==isMetaKey)
-        {
+#if defined(XP_MAC)
+      isOnlyPlatformModifierKey = (isMetaKey &&
+                                   !isShiftKey && !isCtrlKey && !isAltKey);
+#elif defined(XP_UNIX)
+      isOnlyPlatformModifierKey = (isAltKey &&
+                                   !isShiftKey && !isCtrlKey && !isMetaKey);
+#else /* Windows and default */
+      isOnlyPlatformModifierKey = (isCtrlKey &&
+                                   !isShiftKey && !isAltKey && !isMetaKey);
+#endif
+    }
+
+    if (PR_TRUE == isOnlyPlatformModifierKey)
+    {
+      // swallow all keys with only the platform modifier
+      // even if we don't process them
+      aProcessed = PR_TRUE;
+
+      // A minimal set of fallback mappings in case
+      // XUL keybindings are unavailable:
+      switch (charCode)
+      {
+        // XXX: hard-coded select all
+        case (PRUint32)('a'):
           if (mEditor)
             mEditor->SelectAll();
-        }
-        break;
+          break;
 
-      // XXX: hard-coded cut
-      case (PRUint32)('x'):
-        if (PR_TRUE==ctrlKey && PR_FALSE==isShiftKey && PR_FALSE==isAltKey && PR_FALSE==isMetaKey)
-        {
+        // XXX: hard-coded cut
+        case (PRUint32)('x'):
           if (mEditor)
             mEditor->Cut();
-        }
-        break;
+          break;
 
-      // XXX: hard-coded copy
-      case (PRUint32)('c'):
-        if (PR_TRUE==ctrlKey && PR_FALSE==isShiftKey && PR_FALSE==isAltKey && PR_FALSE==isMetaKey)
-        {
+        // XXX: hard-coded copy
+        case (PRUint32)('c'):
           if (mEditor)
             mEditor->Copy();
-        }
-        break;
+          break;
 
-      // XXX: hard-coded paste
-      case (PRUint32)('v'):
-        if (PR_TRUE==ctrlKey && PR_FALSE==isShiftKey && PR_FALSE==isAltKey && PR_FALSE==isMetaKey)
-        {
-          printf("control-v\n");
+        // XXX: hard-coded paste
+        case (PRUint32)('v'):
           if (mEditor)
-              mEditor->Paste();
-        }
-        break;
+            mEditor->Paste();
+          break;
 
-      // XXX: hard-coded undo
-      case (PRUint32)('z'):
-        if (PR_TRUE==ctrlKey && PR_FALSE==isShiftKey && PR_FALSE==isAltKey && PR_FALSE==isMetaKey)
-        {
+        // XXX: hard-coded undo
+        case (PRUint32)('z'):
           if (mEditor)
             mEditor->Undo(1);
-        }
-        break;
+          break;
 
-      // XXX: hard-coded redo
-      case (PRUint32)('y'):
-        if (PR_TRUE==ctrlKey && PR_FALSE==isShiftKey && PR_FALSE==isAltKey && PR_FALSE==isMetaKey)
-        {
+        // XXX: hard-coded redo
+        case (PRUint32)('y'):
           if (mEditor)
             mEditor->Redo(1);
-        }
-        break;
+          break;
+      }
     }
   }
   return NS_OK;
