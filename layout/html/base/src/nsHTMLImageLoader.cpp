@@ -93,9 +93,10 @@ nsHTMLImageLoader::SetURL(const nsString& aNewSpec)
     if (NS_FAILED(rv)) return;
 
     char *absUrl = nsnull;
-    const char *urlSpec = mURLSpec.GetBuffer();
+    char *urlSpec = mURLSpec.ToNewCString();
     rv = service->MakeAbsolute(urlSpec, baseUri, &absUrl);
     NS_RELEASE(baseUri);
+    nsCRT::free(urlSpec);
     mURL = absUrl;
     delete [] absUrl;
 #endif // NECKO
