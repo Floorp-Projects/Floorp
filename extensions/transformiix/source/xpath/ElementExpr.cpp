@@ -21,27 +21,41 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: ElementExpr.cpp,v 1.1 2000/04/06 07:45:22 kvisco%ziplink.net Exp $
+ * $Id: ElementExpr.cpp,v 1.2 2000/11/07 10:49:07 kvisco%ziplink.net Exp $
  */
 
 #include "Expr.h"
 
-/**
- * This class represents a ElementExpr as defined by XPath 1.0
- * proposed recommendation
- * @author <A HREF="mailto:kvisco@mitre.org">Keith Visco</A>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:45:22 $
-**/
+/*
+ This class represents a ElementExpr as defined by XPath 1.0
+  proposed recommendation
+*/
+
+
+const String ElementExpr::WILD_CARD = "*";
+
 
 //- Constructors -/
-
 ElementExpr::ElementExpr() {
     //-- do nothing
 } //-- ElementExpr
 
 ElementExpr::ElementExpr(String& name) {
     //-- copy name
-    this->name = name;
+    int idx = name.indexOf(':');
+    if ( idx >= 0 )
+       name.subString(0,idx, this->prefix);
+    else
+       idx = -1;
+    name.subString(idx+1, this->name);
+
+    //-- set flags
+    this->isNamespaceWild = (this->prefix.length() == 0);
+
+    //-- I know...this should be done is WildCardExpr or someplace
+    //-- else but I need a fix for now.
+    this->isNameWild = this->name.isEqual(WILD_CARD);
+
 } //-- ElementExpr
 
 /**
@@ -71,12 +85,7 @@ ExprResult* ElementExpr::evaluate(Node* context, ContextState* cs) {
 
     for (int i = 0; i < nl->getLength(); i++ ) {
         Node* node = nl->item(i);
-        if ( node->getNodeType() == Node::ELEMENT_NODE ) {
-            String tagName = node->getNodeName();
-            if ( name.isEqual(tagName) ){
-                nodeSet->add(node);
-            }
-        }
+        if (matches(node, context, cs)) nodeSet->add(node);
     }
     return nodeSet;
 } //-- evaluate
@@ -123,8 +132,35 @@ short ElementExpr::getType() {
 **/
 MBool ElementExpr::matches(Node* node, Node* context, ContextState* cs) {
     if ( node) {
-        const String nodeName = node->getNodeName();
-        return nodeName.isEqual(this->name);
+        if ( node->getNodeType() == Node::ELEMENT_NODE ) {
+
+            const String nodeName = node->getNodeName();
+            int idx = nodeName.indexOf(':');
+
+            if (!isNamespaceWild) {
+               //-- compare namespaces
+               String nsURI;
+               cs->getNameSpaceURIFromPrefix(this->prefix, nsURI);
+
+               String nsURI2;
+               String prefix2;
+               if (idx > 0) nodeName.subString(0, idx, prefix2);
+               cs->getNameSpaceURIFromPrefix(prefix2, nsURI2);
+
+               if (!nsURI.isEqual(nsURI2)) return MB_FALSE;
+
+            }
+
+            if (this->isNameWild) return MB_TRUE;
+
+            //-- compare local names
+            if (idx < 0) return nodeName.isEqual(this->name);
+            else {
+               String local;
+               nodeName.subString(idx+1, local);
+               return local.isEqual(this->name);
+            }
+        }
     }
     return MB_FALSE;
 } //-- matches
