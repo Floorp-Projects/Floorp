@@ -33,8 +33,8 @@ class nsCollationUnix : public nsICollation {
 
 protected:
   nsCollation   *mCollation;
-  nsString      mLocale;
-  nsString      mSavedLocale;
+  nsCString     mLocale;
+  nsCString     mSavedLocale;
   nsString      mCharset;
   PRBool        mUseCodePointOrder;
 
