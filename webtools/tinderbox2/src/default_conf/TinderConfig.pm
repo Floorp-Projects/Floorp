@@ -5,9 +5,9 @@
 # customizable settings.
 
 
-# $Revision: 1.17 $ 
-# $Date: 2001/12/23 23:23:23 $ 
-# $Author: timeless%mac.com $ 
+# $Revision: 1.18 $ 
+# $Date: 2002/04/25 22:57:59 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
 
@@ -48,37 +48,38 @@ package TinderConfig;
 
 # How do we run the unzip command?
 
-@GZIP = ("/usr/local/bin/gzip",);
+@GZIP = ("/opt/gnu/bin/gzip",);
 
-@GUNZIP = ("/usr/local/bin/gzip", "--uncompress", "--to-stdout",);
+@GUNZIP = ("/opt/gnu/bin/gzip", "--uncompress", "--to-stdout",);
 
 
 # The GNU UUDECODE will use these arugments, Solaris uudecode is
 # different. 
 
-@UUDECODE = ("/usr/local/bin/uudecode", "-o",);
+@UUDECODE = ("/error/notinstalled/uudecode", "-o",);
 
 # The user/group ids which tinderbox will run as. Hopefully these
 # integers are out of the restricted range (bigger is safer, bigger
-# then 100 is ideal but bigger thhen 25 is recommended.).
+# then 100 is ideal but bigger then 25 is recommended.).
 
-$TINDERBOX_UID=111;
-$TINDERBOX_GID=111;
+$TINDERBOX_UID=3310;
+$TINDERBOX_GID=3310;
 
 
 # The url to the tinderbox server binary directory
 
-$URL_BIN =  "http://tinderbox.mozilla.org/cgibin";
+$URL_BIN = "http://lounge.mozilla.org/cgi-bin/cgiwrap/cgiwrap_exe/tbox";
 
 
 # The url to the tinderbox server HTML directory
 
-$URL_HTML = "http://tinderbox.mozilla.org/";
+$URL_HTML = "http://lounge.mozilla.org/webtools/tinderbox2";
 
 # The full path name tinderbox will use to access the tinderbox
 # servers root data directory where the html will be written.
 
-$TINDERBOX_HTML_DIR = "/home/httpd/html/tinderbox";
+#$TINDERBOX_HTML_DIR = "/home/httpd/html/tinderbox";
+$TINDERBOX_HTML_DIR = "/opt/apache/htdocs/webtools/tinderbox2";
 
 # The full path name tinderbox will use to access the tinderbox
 # servers root data directory where the data will be written.  For
@@ -89,7 +90,9 @@ $TINDERBOX_HTML_DIR = "/home/httpd/html/tinderbox";
 # outside of the HTML tree so that the webserver can not send the
 # internal data over the network.
 
-$TINDERBOX_DATA_DIR = "/home/httpd/html/tinderbox";
+#$TINDERBOX_DATA_DIR = "/home/httpd/html/tinderbox";
+#$TINDERBOX_DATA_DIR = "/var/spool/tinderbox";
+$TINDERBOX_DATA_DIR = "/opt/tbox2-data";
 
 # The top level tinderbox index file. Change this if you wish to
 # provide your own index file for tinderboxs web pages.
@@ -136,11 +139,13 @@ $PopUpImpl = (
 
 @DBImpl = (
 	   'TinderDB::Time',
-	   'TinderDB::VC_CVS',
-#	   'TinderDB::VC_Bonsai',
 	   'TinderDB::Notice',
+#	   'TinderDB::VC_CVS',
+	   'TinderDB::VC_Bonsai',
+#          'TinderDB::VC_Perforce',
 	   'TinderDB::BT_Generic',
 	   'TinderDB::Build',
+	   'TinderDB::Time',
 	  );
 
 # What border should the status legends use?  new browers allow us to
@@ -163,9 +168,23 @@ $DB_TABLE_SPACING = 5;
 $DB_MAX_UPDATES_SINCE_TRIM = 50;
 
 # Number of seconds to keep in Database, older data will be trimmed
-# away.
+# away and lost.
 
 $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
+
+# Eforce clock syncronization on the client machines.  Reject data
+# which has been sent to the webserver and the time stamp and current
+# time are out side of the bounds.
+
+# set this to determine the maximum transit time for client data.
+
+$SECONDS_AGO_ACCEPTABLE = (60 * 60 * 10);
+
+# set this to zero to enforce the client machines never having a
+# faster clock then the server machine.
+
+$SECONDS_FROM_NOW_ACCEPTABLE = (60 * 10);
+
 
 @HeaderImpl = (
 	       'TinderHeader::Build',
@@ -179,7 +198,7 @@ $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 	       # not have a State file in the version
 	       # control system.
 	       
-	       'TinderHeader::TreeState',
+#	       'TinderHeader::TreeState',
 	       'TinderHeader::TreeState_Bonsai',
 
 	      );
@@ -207,8 +226,8 @@ $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 # 'None'.
 
 $VCDisplayImpl = (
-		  'VCDisplay::None',
-		  #'VCDisplay::Bonsai',
+		  #'VCDisplay::None',
+		  'VCDisplay::Bonsai',
 		 );
 
 # The name of the version control system as it should appear on the
@@ -225,20 +244,21 @@ $VC_NAME = "CVS";
 # code could be forced to perform unwanted actions.
 
 $PersistenceImpl = (
-                    'Persistence::Dumper',
-                    # 'Persistence::Storable',
+                    #'Persistence::Dumper',
+                     'Persistence::Storable',
                    );
 
 
 # If you your using VCDisplay:Bonsai we need to know how to make HTML
 # to point to the bonsai CGI programs.
 
-$BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
+$BONSAI_URL = "http://bonsai.mozilla.org/";
 
 # If we query bonsai data we need to know the directory which bonsai
 # is installed in.
 
-$BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
+#$BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
+$BONSAI_DIR = "/opt/apache/htdocs/webtools/bonsai/";
 
 
 # If you your using BT_Generic we need to know how to make HTML
@@ -249,7 +269,7 @@ $BT_URL	= 'http://bugzilla.mozilla.org/';
 # The name of the bug tracking system as it should appear on the
 # column heading.
 
-$BT_NAME = "BT";
+$BT_NAME = "Bugzilla";
 
 # The default number of hours shown on the status page
 
@@ -263,8 +283,8 @@ $DEFAULT_HTML_PAGE = 'status.html';
 
 # The amount of time rmlogs keeps logs on file
 
-$BRIEF_LOG_TRIM_DAYS = 7;
-$FULL_LOG_TRIM_DAYS = 7;
+$BRIEF_LOG_TRIM_DAYS = 8;
+$FULL_LOG_TRIM_DAYS = 8;
 
 # Should we write performance data to the log file?
 # zero means no, one means yes.
@@ -275,8 +295,10 @@ $LOG_PERFORMANCE = 0;
 # administrative functions.
 
 $ADMINISTRATIVE_NETWORK_PAT = ( 
+                                '(^127\.0\.0\.[0-9\.]*$)|'.
                                 '(^10\.10\.[0-9\.]*$)|'.
                                 '(^207\.200\.81\.[0-9\.]*)$|'.
+                                '(^172\.24\.127\.[0-9\.]*$)|'.
                                 '(\.mozilla\.org$)|'.
                                 '(\.netscape\.com$)|'.
                                 '(^localhost$)'
