@@ -96,6 +96,9 @@ const char * kMozDropdownActive = "-moz-dropdown-active";
 
 const PRInt32 kSizeNotSet = -1;
 
+// static class data member for Bug 32920
+nsComboboxControlFrame * nsComboboxControlFrame::mFocused = nsnull;
+
 nsresult
 NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aStateFlags)
 {
@@ -248,6 +251,7 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   mItemDisplayWidth             = 0;
 
   mGoodToGo = PR_FALSE;
+
    //Shrink the area around it's contents
   //SetFlags(NS_BLOCK_SHRINK_WRAP);
 
@@ -487,7 +491,11 @@ nsComboboxControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
 void 
 nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  //XXX: TODO Implement focus for combobox. 
+  mFocused = aOn?this:nsnull;
+  // Thiis is needed on a temporary basis. It causes the focus
+  // rect to be drawn. This is much faster than ReResolvingStyle
+  // Bug 32920
+  Invalidate(mPresContext, nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
 }
 
 void
@@ -2453,26 +2461,30 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
       nsCOMPtr<nsIEventStateManager> stateManager;
       nsresult rv = mPresContext->GetEventStateManager(getter_AddRefs(stateManager));
       if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIContent> content;
-        rv = stateManager->GetFocusedContent(getter_AddRefs(content));
-        if (NS_SUCCEEDED(rv) && !nsFormFrame::GetDisabled(this) && content && content.get() == mContent) {
+        if (NS_SUCCEEDED(rv) && !nsFormFrame::GetDisabled(this) && mFocused == this) {
           aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
           aRenderingContext.SetColor(0);
-          //aRenderingContext.DrawRect(clipRect);
-          float p2t;
-          aPresContext->GetPixelsToTwips(&p2t);
-          nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-          clipRect.width -= onePixel;
-          clipRect.height -= onePixel;
-          aRenderingContext.DrawLine(clipRect.x, clipRect.y, 
-                                     clipRect.x+clipRect.width, clipRect.y);
-          aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y, 
-                                     clipRect.x+clipRect.width, clipRect.y+clipRect.height);
-          aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y+clipRect.height, 
-                                     clipRect.x, clipRect.y+clipRect.height);
-          aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
-                                     clipRect.x, clipRect.y);
+        } else {
+          const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+          aRenderingContext.SetColor(myColor->mBackgroundColor);
+          aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
         }
+        //aRenderingContext.DrawRect(clipRect);
+        float p2t;
+        aPresContext->GetPixelsToTwips(&p2t);
+        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+        clipRect.width -= onePixel;
+        clipRect.height -= onePixel;
+        aRenderingContext.DrawLine(clipRect.x, clipRect.y, 
+                                   clipRect.x+clipRect.width, clipRect.y);
+        aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y, 
+                                   clipRect.x+clipRect.width, clipRect.y+clipRect.height);
+        aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y+clipRect.height, 
+                                   clipRect.x, clipRect.y+clipRect.height);
+        aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
+                                   clipRect.x, clipRect.y);
+        aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
+                                   clipRect.x, clipRect.y);
       }
       /////////////////////
       aRenderingContext.PopState(clipEmpty);

@@ -28,8 +28,8 @@
 #endif
 
 #ifdef DEBUG_rods
-#define DO_REFLOW_DEBUG
-#define DO_REFLOW_COUNTER
+//#define DO_REFLOW_DEBUG
+//#define DO_REFLOW_COUNTER
 //#define DO_UNCONSTRAINED_CHECK
 //#define DO_PIXELS
 //#define DO_NEW_REFLOW
@@ -267,6 +267,10 @@ protected:
   nsCSSFrameConstructor* mFrameConstructor;
 
   PRPackedBool          mGoodToGo;
+
+  // static class data member for Bug 32920
+  // only one control can be focused at a time
+  static nsComboboxControlFrame * mFocused;
 
 #ifdef DO_REFLOW_COUNTER
   PRInt32 mReflowId;

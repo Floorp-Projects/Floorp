@@ -1440,6 +1440,18 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
+  // Must notify the frame that the blur event occurred
+  // NOTE: At this point EventStateManager has not yet set the 
+  /// new content as having focus so this content is still considered
+  // the focused element. So the ComboboxControlFrame tracks the focus
+  // at a class level (Bug 32920)
+  if ((nsEventStatus_eIgnore == *aEventStatus) && 
+      !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
+      (aEvent->message == NS_BLUR_CONTENT) &&
+      formControlFrame != nsnull) {
+    formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
+  }
+
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
