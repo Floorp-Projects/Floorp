@@ -3173,19 +3173,17 @@ nsresult nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsACS
 nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet)
 {
   *aSheet = nsnull;
-  nsresult rv;
+  nsresult rv = NS_OK;
   
   if (!mCSSLoader) {
     mCSSLoader = do_CreateInstance(kCSSLoaderCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
-  if (mCSSLoader) {
+  if (mCSSLoader)
     rv = mCSSLoader->LoadAgentSheet(aURL, aSheet);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsChromeRegistry::GetUserSheetURL(PRBool aIsChrome, nsACString & aURL)
