@@ -571,6 +571,35 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
   return rv;
 }
 
+
+NS_IMETHODIMP nsMsgThreadedDBView::OnParentChanged (nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeListener *aInstigator)
+{
+  // we need to adjust the level of the hdr whose parent changed, and invalidate that row,
+  // iff we're in threaded mode.
+  if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
+  {
+    nsMsgViewIndex parentIndex = FindViewIndex(newParent);
+    if (parentIndex != nsMsgViewIndex_None)
+    {
+      nsMsgViewIndex childIndex = FindViewIndex(aKeyChanged);
+      if (childIndex != nsMsgViewIndex_None)
+      {
+        PRInt32 levelChanged = m_levels[childIndex];
+        m_levels[childIndex] = m_levels[parentIndex] + 1;
+        for (nsMsgViewIndex viewIndex = childIndex + 1; viewIndex < GetSize() && m_levels[viewIndex] > levelChanged;  viewIndex++)
+        {
+          m_levels[viewIndex] = m_levels[viewIndex] - 1;
+          NoteChange(viewIndex, 1, nsMsgViewNotificationCode::changed);
+        }
+        NoteChange(childIndex, 1, nsMsgViewNotificationCode::changed);
+      }
+    }
+
+  }
+  return NS_OK;
+}
+
+
 nsMsgViewIndex nsMsgThreadedDBView::GetInsertInfoForNewHdr(nsIMsgDBHdr *newHdr, nsMsgViewIndex parentIndex, PRInt32 targetLevel)
 {
   PRInt32 viewSize = GetSize();

@@ -578,10 +578,8 @@ nsresult nsMsgThread::ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent,
           
           curHdr->SetThreadParent(newParent);
           curHdr->GetMessageKey(&curKey);
-#ifdef NEEDED // I don't think we care anymore
           if (announcer)
             announcer->NotifyParentChangedAll(curKey, oldParent, newParent, nsnull);
-#endif
           // if the old parent was the root of the thread, then only the first child gets 
           // promoted to root, and other children become children of the new root.
           if (newParent == nsMsgKey_None)

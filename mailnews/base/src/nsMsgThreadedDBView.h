@@ -57,6 +57,8 @@ public:
   NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType);
   NS_IMETHOD GetSupportsThreading(PRBool *aResult);
 
+	NS_IMETHOD OnParentChanged (nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeListener *aInstigator);
+
 protected:
   virtual const char * GetViewName(void) {return "ThreadedDBView"; }
   nsresult InitThreadedView(PRInt32 *pCount);
