@@ -1442,6 +1442,9 @@ NS_IMETHODIMP nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode,
   nsAccessNode::GetDocAccessibleFor(aWeakShell, getter_AddRefs(accessibleDoc));
 
   if (!accessibleDoc) {
+#ifdef DEBUG_aaronl
+    printf("\nWARNING: No accessible document for weak shell %x\n", aWeakShell);
+#endif
     *aAccessNode = nsnull;
     return NS_ERROR_FAILURE;
   }
@@ -1520,7 +1523,7 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // Please leave this in for now, it's a convenient debugging method
   nsAutoString name;
   aNode->GetLocalName(name);
-  if (name.EqualsIgnoreCase("object")) 
+  if (name.EqualsIgnoreCase("browser")) 
     printf("## aaronl debugging tag name\n");
 
   nsAutoString attrib;
