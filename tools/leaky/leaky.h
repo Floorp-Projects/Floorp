@@ -14,15 +14,52 @@
 #define __leaky_h_
 
 #include "config.h"
+#include <stdio.h>
 #include <sys/types.h>
 #include "dict.h"
 #include "strset.h"
 
 typedef unsigned int u_int;
 
+struct Symbol;
+
+struct SymbolNode {
+  SymbolNode(Symbol* aSymbol) {
+    symbol = aSymbol;
+    next = NULL;
+  }
+
+  void* operator new(size_t size);
+  void operator delete(void* ptr);
+
+  Symbol* symbol;
+  SymbolNode* next;
+
+  static SymbolNode* freeList;
+};
+
 struct Symbol {
-  char *name;
+  char* name;
   u_long address;
+  bool dumped;
+  bool leaker;
+  u_long calls;
+  SymbolNode* parents;
+  SymbolNode* children;
+  u_long bytesDirectlyLeaked;
+  u_long childBytesLeaked;
+
+  bool NotDumped() const {
+    return 0 == dumped;
+  }
+
+  void SetDumped() {
+    dumped = 1;
+  }
+
+  void Init(const char* aName, u_long aAddress);
+  void AddParent(Symbol* aParent);
+  void AddChild(Symbol* aChild);
 };
 
 struct LoadMapEntry {
@@ -42,9 +79,10 @@ struct leaky {
   char*  logFile;
   char*  progFile;
 
-  int   treeOutput;
   int   sortByFrequency;
   int   dumpAll;
+  int   dumpGraph;
+  int   dumpXML;
   int   quiet;
   int   showAll;
   int   showAddress;
@@ -95,8 +133,17 @@ struct leaky {
   void ReadSymbols(const char* fileName, u_long aBaseAddress);
   void ReadSharedLibrarySymbols();
   void setupSymbols(const char* fileName);
-  char const* findSymbol(u_long address);
+  Symbol* findSymbol(u_long address);
   int excluded(malloc_log_entry* lep);
+
+  void buildLeakGraph();
+  Symbol* findLeakGraphRoot(Symbol* aStart, Symbol* aEnd);
+  void dumpLeakGraph();
+  void dumpLeakTree(Symbol* aRoot, int aIndent, bool aEven);
+
+  static void indentBy(int aCount) {
+    while (--aCount >= 0) fputs("  ", stdout);
+  }
 };
 
 #endif /* __leaky_h_ */

@@ -72,8 +72,7 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
       if (nm) {
 //	char* dnm = cplus_demangle(nm, 1);
 //	sp->name = dnm ? dnm : strdup(nm);
-	sp->name = strdup(nm);
-	sp->address = syminfo.value + aBaseAddress;
+	sp->Init(nm, syminfo.value + aBaseAddress);
 	sp++;
 	if (sp >= last) {
 	  long n = numExternalSymbols + 10000;
