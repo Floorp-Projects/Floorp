@@ -100,12 +100,25 @@ nsresult nsMsgMailNewsUrl::GetUrlState(PRBool * aRunningUrl)
 nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 {
 	m_runningUrl = aRunningUrl;
+	nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
+
+	if (NS_SUCCEEDED(GetStatusFeedback(getter_AddRefs(statusFeedback))) && statusFeedback)
+	{
+		if (m_runningUrl)
+			statusFeedback->StartMeteors();
+		else
+			statusFeedback->StopMeteors();
+	}
 	if (m_urlListeners)
 	{
 		if (m_runningUrl)
+		{
 			m_urlListeners->OnStartRunningUrl(this);
+		}
 		else
+		{
 			m_urlListeners->OnStopRunningUrl(this, aExitCode);
+		}
 	}
 
 	return NS_OK;

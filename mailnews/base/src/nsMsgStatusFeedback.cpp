@@ -185,7 +185,7 @@ nsMsgStatusFeedback::StartMeteors()
 NS_IMETHODIMP
 nsMsgStatusFeedback::StopMeteors()
 {
-	if (!m_meteorsSpinning)
+	if (m_meteorsSpinning)
 	{
 		setAttribute( mWebShell, "Messenger:Throbber", "busy", "false" );
 		m_meteorsSpinning = PR_FALSE;
