@@ -25,6 +25,8 @@ INCLUDES = -I$(DIST)/include -I$(MOD_DEPTH)/pr/include -I$(MOD_DEPTH)/pr/include
 
 include $(MOD_DEPTH)/config/rules.mk
 
+DEFINES     += -D_NSPR_BUILD_
+
 export:: $(TARGETS)
 
 install:: export

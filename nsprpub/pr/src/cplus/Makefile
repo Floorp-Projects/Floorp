@@ -40,6 +40,8 @@ TARGETS	= $(OBJS)
 
 INCLUDES = -I$(DIST)/include
 
+DEFINES     += -D_NSPR_BUILD_
+
 include $(MOD_DEPTH)/config/rules.mk
 
 HEADERS = *.h
