@@ -209,13 +209,7 @@ static void PR_CALLBACK Server(void *arg)
     struct PRPollDesc polldesc;
     PRIntn bytes_read, bytes_sent;
     PRFileDesc *stack = (PRFileDesc*)arg;
-    PRNetAddr any_address, client_address;
-
-    rv = PR_InitializeNetAddr(PR_IpAddrAny, default_port, &any_address);
-    PR_ASSERT(PR_SUCCESS == rv);
-
-    rv = PR_Bind(stack, &any_address); PR_ASSERT(PR_SUCCESS == rv);
-    rv = PR_Listen(stack, 10); PR_ASSERT(PR_SUCCESS == rv);
+    PRNetAddr client_address;
 
     do
     {
@@ -480,6 +474,7 @@ PRIntn main(PRIntn argc, char **argv)
     PRStatus rv;
     PLOptStatus os;
     PRFileDesc *client, *service;
+    PRNetAddr any_address;
     const char *server_name = NULL;
     const PRIOMethods *stubMethods;
     PRThread *client_thread, *server_thread;
@@ -572,6 +567,11 @@ PRIntn main(PRIntn argc, char **argv)
         rv = PR_SetSocketOption(service, &socket_nodelay);
         PR_ASSERT(PR_SUCCESS == rv);
 
+        rv = PR_InitializeNetAddr(PR_IpAddrAny, default_port, &any_address);
+        PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Bind(service, &any_address); PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Listen(service, 10); PR_ASSERT(PR_SUCCESS == rv);
+
         server_thread = PR_CreateThread(
             PR_USER_THREAD, Server, service,
             PR_PRIORITY_HIGH, thread_scope,
@@ -609,14 +609,22 @@ PRIntn main(PRIntn argc, char **argv)
         rv = PR_SetSocketOption(service, &socket_nodelay);
         PR_ASSERT(PR_SUCCESS == rv);
 
+        PushLayer(client);
+        PushLayer(service);
+
+        rv = PR_InitializeNetAddr(PR_IpAddrAny, default_port, &any_address);
+        PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Bind(service, &any_address); PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Listen(service, 10); PR_ASSERT(PR_SUCCESS == rv);
+
         server_thread = PR_CreateThread(
-            PR_USER_THREAD, Server, PushLayer(service),
+            PR_USER_THREAD, Server, service,
             PR_PRIORITY_HIGH, thread_scope,
             PR_JOINABLE_THREAD, 16 * 1024);
         PR_ASSERT(NULL != server_thread);
 
         client_thread = PR_CreateThread(
-            PR_USER_THREAD, Client, PushLayer(client),
+            PR_USER_THREAD, Client, client,
             PR_PRIORITY_NORMAL, thread_scope,
             PR_JOINABLE_THREAD, 16 * 1024);
         PR_ASSERT(NULL != client_thread);
