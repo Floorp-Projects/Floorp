@@ -60,7 +60,7 @@ public:
   NS_IMETHOD  GetFontHandle(nsFontHandle& aHandle);
 
 	// fill a native TextStyle record with the font, size and style (not color)
-	static void 	GetNativeTextStyle(	const nsIFontMetrics& inMetrics,
+	static void 	GetNativeTextStyle(nsIFontMetrics& inMetrics,
 																		const nsIDeviceContext& inDevContext, TextStyle &outStyle);
 	
 protected:
