@@ -219,52 +219,57 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
 
     rv = channel->OpenInputStream(0, -1, &stream);
     NS_RELEASE(channel);
-    if (NS_FAILED(rv)) 
-        return -1;
+    if (NS_SUCCEEDED(rv)) {
 
-    if (aReader->StreamCreated(aURL, aContentType) == PR_TRUE) {
+      if (aReader->StreamCreated(aURL, aContentType) == PR_TRUE) {
 
-      // Read the URL data
-      char      buf[2048];
-      PRUint32  count;
-      nsresult  result;
-      PRBool    first = PR_TRUE;
+        // Read the URL data
+        char      buf[2048];
+        PRUint32  count;
+        nsresult  result;
+        PRBool    first = PR_TRUE;
 
-      result = stream->Read(buf, sizeof(buf), &count);
-      while (NS_SUCCEEDED(result) && (count > 0)) {
-        if (first == PR_TRUE) {
-          PRInt32 ilErr;
-  
-          ilErr = aReader->FirstWrite((const unsigned char *)buf, (int32)count);
-          first = PR_FALSE;
-          // If FirstWrite fails then the image type cannot be determined
-          if (ilErr != 0) {
-            result = NS_ERROR_ABORT;
-            break;
-          }
-        }
-                 
-        aReader->Write((const unsigned char *)buf, (int32)count);
-  
-        // Get the next block
         result = stream->Read(buf, sizeof(buf), &count);
-      }
+        while (NS_SUCCEEDED(result) && (count > 0)) {
+          if (first == PR_TRUE) {
+            PRInt32 ilErr;
   
-      if (NS_FAILED(result)) {
+            ilErr = aReader->FirstWrite((const unsigned char *)buf, (int32)count);
+            first = PR_FALSE;
+            // If FirstWrite fails then the image type cannot be determined
+            if (ilErr != 0) {
+              result = NS_ERROR_ABORT;
+              break;
+            }
+          }
+                 
+          aReader->Write((const unsigned char *)buf, (int32)count);
+  
+          // Get the next block
+          result = stream->Read(buf, sizeof(buf), &count);
+        }
+  
+        if (NS_FAILED(result)) {
+          aReader->StreamAbort(-1);
+          status = -1;
+  
+        } else {
+          NS_ASSERTION(0 == count, "expected EOF");
+          aReader->StreamComplete(PR_FALSE);
+        }
+
+      } else {
         aReader->StreamAbort(-1);
         status = -1;
-  
-      } else {
-        NS_ASSERTION(0 == count, "expected EOF");
-        aReader->StreamComplete(PR_FALSE);
       }
+
+      NS_IF_RELEASE(stream);
 
     } else {
       aReader->StreamAbort(-1);
       status = -1;
     }
 
-    NS_IF_RELEASE(stream);
     nsCRT::free(aContentType);
 
   } else {
