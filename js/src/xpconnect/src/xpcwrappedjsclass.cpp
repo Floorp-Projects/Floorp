@@ -58,7 +58,7 @@ static inline JSExceptionState* DoPreScriptEvaluated(JSContext* cx)
     // and addroot, we avoid them if possible by returning null (as opposed to
     // a JSExceptionState with no information) when there is no pending
     // exception.
-    if (JS_IsExceptionPending(cx))
+    if(JS_IsExceptionPending(cx))
         return JS_SaveExceptionState(cx);
 
     return nsnull;
@@ -66,12 +66,12 @@ static inline JSExceptionState* DoPreScriptEvaluated(JSContext* cx)
 
 static inline void DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state)
 {
+    if(state)
+        JS_RestoreExceptionState(cx, state);
+    
     if(JS_GetContextThread(cx))
         JS_EndRequest(cx);
 
-    if (state)
-        JS_RestoreExceptionState(cx, state);
-    
 #ifndef XPCONNECT_STANDALONE
     // If this is a DOM JSContext, then notify nsIScriptContext of script
     // completion so that it can reset its infinite loop detection mechanism.
