@@ -33,7 +33,7 @@
 // This is the size of the global buffer used by all nsSocketTransport 
 // instances when reading from or writing to the network.
 //
-#define MAX_IO_BUFFER_SIZE   8192
+#define MAX_IO_BUFFER_SIZE   (1024*1024)//8192
 
 //
 // This is the maximum amount of data that will be read into a stream before
