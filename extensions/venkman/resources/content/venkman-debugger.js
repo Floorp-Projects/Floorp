@@ -183,7 +183,7 @@ function initDebugger()
     console.jsds.scriptHook = console._scriptHook;
 
     console.chromeFilter = {
-        glob: null,
+        globalObject: null,
         flags: FILTER_SYSTEM | FILTER_ENABLED,
         urlPattern: "chrome:*",
         startLine: 0,
@@ -198,15 +198,15 @@ function initDebugger()
     else
         console.enableChromeFilter = false;
 
-    var venkmanFilter1 = { /* glob based filter goes first, because it's the */
-        glob: this,        /* easiest to match.                              */
+    var venkmanFilter1 = {  /* glob based filter goes first, because it's the */
+        globalObject: this, /* easiest to match.                              */
         flags: FILTER_SYSTEM | FILTER_ENABLED,
         urlPattern: null,
         startLine: 0,
         endLine: 0
     };
-    var venkmanFilter2 = { /* url based filter for XPCOM callbacks that may  */
-        glob: null,        /* not happen under our glob.                     */
+    var venkmanFilter2 = {  /* url based filter for XPCOM callbacks that may  */
+        globalObject: null, /* not happen under our glob.                     */
         flags: FILTER_SYSTEM | FILTER_ENABLED,
         urlPattern: "chrome://venkman/*",
         startLine: 0,
