@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://messenger/skin/filterDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/junkMail.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        windowtype="mailnews:junk"
+        title="&window.title;"
+        width="640" height="470"
+        onload="onJunkMailLoad()"
+        buttons="accept,cancel,help"
+        ondialogaccept="return onAccept();"
+        ondialoghelp="return doHelpButton();"
+        persist="screenX screenY width height">
+
+<script src="chrome://messenger/content/junkMail.js"/>
+
+<vbox>
+  <hbox>
+    <label value="&account.label;" accesskey="&account.accesskey;"/>
+    <menulist/>
+    <spacer flex="1"/>
+    <button label="&viewLog.label;" accesskey="&viewLog.accesskey;" oncommmand="viewLog()"/>
+  </hbox>
+
+  <description value="info1.label;"/>
+  <separator class="thin"/>
+  <description value="info2.label;"/>
+  <separator class="thin"/>
+
+  <radiogroup orient="horizontal" id="folderGroup">
+    <radio label="&off.label;"/>
+    <radio label="&lowest.label;/>
+    <radio label="&low.label;"/>
+    <radio label="&medium.label;/>
+    <radio label="&high.label;"/>
+    <radio label="&highest.label;/>
+  </radiogroup>
+
+  <hbox align="center">
+    <checkbox label="&move.label;"/>
+    <menulist/>
+  </hbox>
+
+  <hbox align="center">
+    <checkbox label="&purge1.label;"/>
+    <textbox/>
+    <label value="&purge2.label;"/>
+  </hbox>
+
+  <hbox align="center">
+    <checkbox label="&whitelist.label;"/>
+    <menulist/>
+  </hbox>
+
+</vbox>
+
+</window>
