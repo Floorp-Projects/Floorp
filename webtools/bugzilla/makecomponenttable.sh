@@ -44,6 +44,11 @@ insert into components (value, program, initialowner) values ("UI", "Calendar", 
 insert into components (value, program, initialowner) values ("Test", "Calendar", "sman@netscape.com");
 insert into components (value, program, initialowner) values ("Install", "Calendar", "sman@netscape.com");
 
+insert into components (value, program, initialowner) values ("LDAP C SDK", "Directory", "chuckb@netscape.com");
+insert into components (value, program, initialowner) values ("LDAP Java SDK", "Directory", "chuckb@netscape.com");
+insert into components (value, program, initialowner) values ("PerLDAP", "Directory", "leif@netscape.com");
+insert into components (value, program, initialowner) values ("LDAP Tools", "Directory", "chuckb@netscape.com");
+
 
 insert into components (value, program, initialowner) values ("Macintosh FE", "Mozilla", "sdagley@netscape.com");
 insert into components (value, program, initialowner) values ("Windows FE", "Mozilla", "blythe@netscape.com");
