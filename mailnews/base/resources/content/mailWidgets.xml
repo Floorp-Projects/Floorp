@@ -181,7 +181,7 @@
             }
 
             // now restore the selection
-            menulist.selectedItem = newSelection
+            menulist.selectedItem = newSelection;
           ]]>
         </body>
       </method>
@@ -286,6 +286,7 @@
           <xul:menuitem value ="65536" stringTag="forwarded" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
+      <xul:textbox flex="1" class="search-value-textbox"/>
     </content>
     <implementation>
       <property name="internalAttribute">null</property>
@@ -305,6 +306,8 @@
               this.setAttribute("index", "1");
             else if (val == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
               this.setAttribute("index", "2");
+            else if (val == Components.interfaces.nsMsgSearchAttrib.Date)
+              this.setAttribute("index", "3");
             else
               this.setAttribute("index", "0");
             return val;
@@ -334,6 +337,8 @@
           }
           else if (attrib == nsMsgSearchAttrib.AgeInDays)
             children[0].value = val.age;
+          else if (attrib == nsMsgSearchAttrib.Date)
+            children[3].value = convertPRTimeToString(val.date);
           else
             children[0].value = val.str;
           return val;
@@ -356,6 +361,8 @@
                searchValue.status = children[2].selectedItem.value;
             else if (searchAttribute == nsMsgSearchAttrib.AgeInDays)
                searchValue.age = children[0].value;
+            else if (searchAttribute == nsMsgSearchAttrib.Date)
+               searchValue.date = convertStringToPRTime(children[3].value);
             else
                searchValue.str = children[0].value;
           ]]>
@@ -394,6 +401,11 @@
         var bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
         this.fillStringsForChildren(document.getAnonymousNodes(this)[1].firstChild, bundle);
         this.fillStringsForChildren(document.getAnonymousNodes(this)[2].firstChild, bundle);
+
+        // preflight the date picker to today's date
+        var datePicker = document.getAnonymousNodes(this)[3];
+        var time = new Date();
+        datePicker.setAttribute("value",convertDateToString(time));
       ]]>
       </constructor>
     </implementation>

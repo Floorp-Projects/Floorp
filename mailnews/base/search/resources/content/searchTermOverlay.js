@@ -382,3 +382,32 @@ function onReset(event)
         removeSearchRow(--gTotalSearchTerms);
     onMore(event);
 }
+
+function convertPRTimeToString(tm)
+{
+  var time = new Date();
+  // PRTime is in microseconds, Javascript time is in seconds
+  // so divide by 1000 when converting
+  time.setTime(tm / 1000);
+  
+  return convertDateToString(time);
+}
+
+function convertDateToString(time)
+{
+  var dateStr = time.getMonth() + 1;
+  dateStr += "/";
+  dateStr += time.getDate();
+  dateStr += "/";
+  dateStr += 1900 + time.getYear();
+  return dateStr;
+}
+
+function convertStringToPRTime(str)
+{
+  var time = new Date();
+  time.setTime(Date.parse(str));
+  // Javascript time is in seconds, PRTime is in microseconds
+  // so multiply by 1000 when converting
+  return (time.getTime() * 1000);
+}
