@@ -463,12 +463,18 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);
     if (widthValue.GetUnit() == eHTMLUnit_Pixel) {     // width: pixel
       nscoord width = widthValue.GetPixelValue();
-      nscoord twips = NSIntPixelsToTwips(width, p2t);
-      pos->mWidth.SetCoordValue(twips);
+      if (width > 0) {
+        nscoord twips = NSIntPixelsToTwips(width, p2t);
+        pos->mWidth.SetCoordValue(twips);
+      }
+      // else, 0 implies AUTO for compatibility 
     }
     else if (widthValue.GetUnit() == eHTMLUnit_Percent) { // width: percent
       float widthPercent = widthValue.GetPercentValue();
-      pos->mWidth.SetPercentValue(widthPercent);
+      if (widthPercent > 0.0f) {
+        pos->mWidth.SetPercentValue(widthPercent);
+      }
+      // else, 0 implies AUTO for compatibility 
     }
 
     // height: pixel
