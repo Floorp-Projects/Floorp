@@ -150,7 +150,6 @@ function restoreSelection()
       gDBView.reloadMessage();
 
       EnsureRowInThreadOutlinerIsVisible(msgToSelect);
-      SetFocusThreadPane();
     }
   }
 }
