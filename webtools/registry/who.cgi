@@ -58,7 +58,7 @@ for ($ii=0; $ii < @extra_text; $ii++) {
 #print "<hr>\n" if @extra_text;
 
 print qq(
-<dt><A HREF='../bonsai/cvsquery.cgi?module=all&branch=&dir=&file=&who=$enc_email&sortby=Date&hours=2&date=week'>
+<dt><A HREF='../bonsai/cvsquery.cgi?module=allrepositories&branch=&dir=&file=&who=$enc_email&sortby=Date&hours=2&date=week'>
     Check-ins within 7 days</A>
 <dt><A HREF='mailto:$username\@$hostname'>
     Send Mail</A>
