@@ -77,6 +77,14 @@ nsHelperAppLauncherDialog.prototype= {
             var text = html.childNodes[ 0 ].nodeValue;
             // Substitute content type for "#1".
             text = text.replace( /#1/, this.appLauncher.MIMEInfo.MIMEType );
+
+            // Replace #2 with product name.
+            var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+            if ( brandBundle ) {
+                var product = brandBundle.GetStringFromName( "brandShortName" );
+                text = text.replace( /#2/, product );
+            }
+
             // Replace text in document.
             html.childNodes[ 0 ].nodeValue = text;
         }
