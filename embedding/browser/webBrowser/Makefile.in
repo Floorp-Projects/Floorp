@@ -65,7 +65,6 @@ XPIDLSRCS	= \
 		nsITooltipTextProvider.idl	\
 		nsIWebBrowserFocus.idl		\
 		nsIWebBrowserPrint.idl       \
-		nsISelectionDisplay.idl\
 		$(NULL)
 
 CPPSRCS		= \
