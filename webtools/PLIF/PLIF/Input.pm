@@ -225,7 +225,9 @@ sub getArgumentsTree {
             $key = '';
         }
         $pointer->{$key} = $arguments->{$argument}->[0];
-        # if a key has multiple values, getArgumentsTree drops later values on the floor
+        # if a key has multiple values, getArgumentsTree drops later values on the floor.
+        # if foo.bar and foo both have values, then the keys will be $data->{'foo'}->{'bar'}
+        # and $data->{'foo'}->{''}.
     }
     return $data;
 }
