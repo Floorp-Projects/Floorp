@@ -238,6 +238,7 @@ protected:
   nsCOMPtr<nsIRDFResource> mSkinVersion;
   nsCOMPtr<nsIRDFResource> mLocaleVersion;
   nsCOMPtr<nsIRDFResource> mPackageVersion;
+  nsCOMPtr<nsIRDFResource> mDisabled;
 
   // Style Sheets
   nsCOMPtr<nsICSSStyleSheet> mScrollbarSheet;

@@ -142,6 +142,7 @@ DEFINE_RDF_VOCAB(CHROME_URI, CHROME, hasStylesheets);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, skinVersion);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, localeVersion);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, packageVersion);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, disabled);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -361,6 +362,9 @@ nsChromeRegistry::Init()
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
   rv = mRDFService->GetResource(kURICHROME_packageVersion, getter_AddRefs(mPackageVersion));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_disabled, getter_AddRefs(mDisabled));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
   nsCOMPtr<nsIObserverService> observerService =
@@ -1064,7 +1068,7 @@ nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay,
   nsCAutoString lookup;
   rv = aChromeURL->GetSpec(lookup);
   if (NS_FAILED(rv)) return rv;
-
+   
   // Get the chromeResource from this lookup string
   nsCOMPtr<nsIRDFResource> chromeResource;
   rv = GetResource(lookup, getter_AddRefs(chromeResource));
@@ -2607,6 +2611,71 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
   // XXX Handle the installation of overlays.
 
   return rv;
+}
+
+NS_IMETHODIMP nsChromeRegistry::SetAllowOverlaysForPackage(const PRUnichar *aPackageName, PRBool allowOverlays)
+{
+  nsCAutoString package("urn:mozilla:package:");
+  package.AppendWithConversion(aPackageName);
+
+  // Obtain the package resource.
+  nsCOMPtr<nsIRDFResource> packageResource;
+  nsresult rv = GetResource(package, getter_AddRefs(packageResource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the package resource.");
+    return rv;
+  }
+  NS_ASSERTION(packageResource, "failed to get packageResource");
+
+  nsCOMPtr<nsIRDFDataSource> dataSource;
+  rv = LoadDataSource(kChromeFileName, getter_AddRefs(dataSource), PR_TRUE, nsnull);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIRDFLiteral> trueLiteral;
+  mRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), getter_AddRefs(trueLiteral));
+  nsChromeRegistry::UpdateArc(dataSource, packageResource, 
+                              mDisabled, 
+                              trueLiteral, allowOverlays);
+
+  nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(dataSource, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = remote->Flush();
+  return rv;
+}
+
+NS_IMETHODIMP nsChromeRegistry::OverlaysAllowedForPackage(const PRUnichar *aPackageName, PRBool *aRetval)
+{
+  // Get the chrome resource for the package.
+  nsCAutoString package( "urn:mozilla:package:" );
+  package.AppendWithConversion(aPackageName);
+
+  // Obtain the package resource.
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIRDFResource> packageResource;
+  rv = GetResource(package, getter_AddRefs(packageResource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the package resource.");
+    return rv;
+  }
+  NS_ASSERTION(packageResource, "failed to get packageResource");
+
+  // See if the disabled arc is set for the package.
+  nsCAutoString disabled;
+  nsChromeRegistry::FollowArc(mChromeDataSource, disabled, packageResource, mDisabled);
+  *aRetval = disabled.IsEmpty();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::IsOverlayAllowed(nsIURI *aChromeURL, PRBool *aRetval)
+{
+  nsCAutoString package, provider, file;
+  nsresult rv = SplitURL(aChromeURL, package, provider, file);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString packageStr; packageStr.AssignWithConversion(package.get());
+  return OverlaysAllowedForPackage(packageStr.get(), aRetval);
 }
 
 NS_IMETHODIMP nsChromeRegistry::InstallSkin(const char* aBaseURL, PRBool aUseProfile, PRBool aAllowScripts)
