@@ -39,7 +39,6 @@ struct nsLineData {
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   void UnlinkLine();
   PRIntn GetLineNumber() const;
-  void MoveLineBy(nscoord dx, nscoord dy);
 
   nsLineData* mNextLine;
   nsLineData* mPrevLine;
@@ -75,29 +74,6 @@ struct nsLineLayout {
 
   void SetReflowSpace(nsRect& aAvailableSpaceRect);
 
-  /**
-   * <h2>Rules of order</h2>
-   *
-   * Lines are disassociated from the block frame's state
-   * (mLastContentIsComplete, mLastContentOffset, mChildCount). Upon
-   * completion of this routine the block frame is responsible for
-   * updating it's own state.<p>
-   *
-   * ReflowLine can return the following status:
-   *
-   * <dl>
-   * <dt>NS_LINE_LAYOUT_BREAK_BEFORE</dt>
-   *
-   * <dd>mKidFrame and mKidIndex indicate the child to break
-   * before. Note that we will always have a child frame created which
-   * means we must not lose it!</dd>
-   *
-   * <dt>NS_LINE_LAYOUT_OK</dt>
-   *
-   * <dd>This means that the line should be flushed out as is</dd>
-   *
-   * </dl>
-   */
   nsresult ReflowLine();
 
   nsresult IncrementalReflowFromChild(nsReflowCommand& aReflowCommand,
@@ -109,6 +85,7 @@ struct nsLineLayout {
 
   // The block behind the line
   nsBlockFrame* mBlock;
+  nsBlockReflowState& mBlockReflowState;
   nsISpaceManager* mSpaceManager;
   nsIContent* mBlockContent;
   PRInt32 mKidIndex;
@@ -130,6 +107,7 @@ struct nsLineLayout {
 
   PRPackedBool mUnconstrainedWidth;
   PRPackedBool mUnconstrainedHeight;
+  PRPackedBool mMarginApplied;
   nscoord mY;
   nscoord mLineHeight;
   nscoord mMaxWidth;

@@ -68,21 +68,6 @@ nsLineData::UnlinkLine()
   if (nsnull != prevLine) prevLine->mNextLine = nextLine;
 }
 
-void
-nsLineData::MoveLineBy(nscoord dx, nscoord dy)
-{
-  nsIFrame* kid = mFirstChild;
-  nsPoint pt;
-  for (PRInt32 i = mChildCount; --i >= 0; ) {
-    kid->GetOrigin(pt);
-    pt.x += dx;
-    pt.y += dy;
-    kid->MoveTo(pt.x, pt.y);
-    kid->GetNextSibling(kid);
-  }
-  mBounds.MoveBy(dx, dy);
-}
-
 nsresult
 nsLineData::Verify(PRBool aFinalCheck) const
 {
@@ -196,15 +181,12 @@ nsLineData::List(FILE* out, PRInt32 aIndent) const
 //----------------------------------------------------------------------
 
 nsLineLayout::nsLineLayout(nsBlockReflowState& aState)
+  : mBlockReflowState(aState)
 {
   mBlock = aState.mBlock;
   mSpaceManager = aState.mSpaceManager;
   mBlock->GetContent(mBlockContent);
   mPresContext = aState.mPresContext;
-#if 0
-  // XXX Do we still need this?
-  mBlockIsPseudo = aState.mBlockIsPseudo;
-#endif
   mUnconstrainedWidth = aState.mUnconstrainedWidth;
   mUnconstrainedHeight = aState.mUnconstrainedHeight;
   mMaxElementSizePointer = aState.mMaxElementSizePointer;
@@ -235,6 +217,7 @@ nsLineLayout::Initialize(nsBlockReflowState& aState, nsLineData* aLine)
   mReflowData.mMaxElementSize.height = 0;
   mReflowData.mMaxAscent = nsnull;
   mReflowData.mMaxDescent = nsnull;
+  mMarginApplied = PR_FALSE;
 
   SetReflowSpace(aState.mCurrentBand.availSpace);
   mY = aState.mY;
@@ -430,8 +413,39 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     kidSize.height = kidRect.height;
     kidSize.ascent = kidRect.height;
     kidSize.descent = 0;
-
   } else if (isBlock) {
+    // Calculate top margin by collapsing with previous bottom margin
+    nscoord negTopMargin;
+    nscoord posTopMargin;
+    nsMargin kidMargin;
+    kidSpacing->CalcMarginFor(mKidFrame, kidMargin);
+    if (kidMargin.top < 0) {
+      negTopMargin = -kidMargin.top;
+      posTopMargin = 0;
+    } else {
+      negTopMargin = 0;
+      posTopMargin = kidMargin.top;
+    }
+    nscoord maxPos =
+      PR_MAX(mBlockReflowState.mPrevPosBottomMargin, posTopMargin);
+    nscoord maxNeg =
+      PR_MAX(mBlockReflowState.mPrevNegBottomMargin, negTopMargin);
+    nscoord topMargin = maxPos - maxNeg;
+
+    // Save away bottom margin information for later
+    if (kidMargin.bottom < 0) {
+      mBlockReflowState.mPrevNegBottomMargin = -kidMargin.bottom;
+      mBlockReflowState.mPrevPosBottomMargin = 0;
+    } else {
+      mBlockReflowState.mPrevNegBottomMargin = 0;
+      mBlockReflowState.mPrevPosBottomMargin = kidMargin.bottom;
+    }
+
+    mY += topMargin;
+    mBlockReflowState.mY += topMargin;
+    // XXX tell block what topMargin ended up being so that it can
+    // undo it if it ends up pushing the line.
+
     mSpaceManager->Translate(dx, mY);
     rv = mBlock->ReflowBlockChild(mKidFrame, mPresContext,
                                   mSpaceManager, kidAvailSize, kidRect,
@@ -445,9 +459,26 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     kidSize.descent = 0;
   }
   else {
+    // Reflow the inline child
     rv = mBlock->ReflowInlineChild(mKidFrame, mPresContext,
                                    kidSize, kidAvailSize, kidMaxElementSize,
                                    kidReflowStatus);
+    // After we reflow the inline child we will know whether or not it
+    // has any height/width. If it doesn't have any height/width then
+    // we do not yet apply any previous block bottom margin.
+    if ((0 != kidSize.height) && !mMarginApplied) {
+      // Before we place the first inline child on this line apply
+      // the previous block's bottom margin.
+      nscoord bottomMargin = mBlockReflowState.mPrevPosBottomMargin -
+        mBlockReflowState.mPrevNegBottomMargin;
+      mY += bottomMargin;
+      mBlockReflowState.mY += bottomMargin;
+      // XXX tell block what bottomMargin ended up being so that it can
+      // undo it if it ends up pushing the line.
+      mMarginApplied = PR_TRUE;
+      mBlockReflowState.mPrevPosBottomMargin = 0;
+      mBlockReflowState.mPrevNegBottomMargin = 0;
+    }
     kidRect.x = dx;
     kidRect.y = mY;
     kidRect.width = kidSize.width;

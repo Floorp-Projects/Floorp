@@ -87,9 +87,10 @@ struct nsBlockReflowState {
   nsSize* mMaxElementSizePointer;
   nscoord mKidXMost;
 
-  // Bottom margin information from the previous line
-  nscoord mPrevMaxNegBottomMargin;
-  nscoord mPrevMaxPosBottomMargin;
+  // Bottom margin information from the previous line (only when
+  // the previous line contains a block element)
+  nscoord mPrevNegBottomMargin;
+  nscoord mPrevPosBottomMargin;
 
   // Block frame border+padding information
   nsMargin mBorderPadding;

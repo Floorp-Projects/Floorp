@@ -133,8 +133,8 @@ nsBlockReflowState::Initialize(nsIPresContext* aPresContext,
   }
   mKidXMost = 0;
 
-  mPrevMaxPosBottomMargin = 0;
-  mPrevMaxNegBottomMargin = 0;
+  mPrevPosBottomMargin = 0;
+  mPrevNegBottomMargin = 0;
 
   mNextListOrdinal = -1;
   mFirstChildIsInsideBullet = PR_FALSE;
@@ -173,9 +173,11 @@ nsresult nsBlockReflowState::RecoverState(nsLineData* aLine)
       nsMargin  kidMargin;
       kidSpacing->CalcMarginFor(kid, kidMargin);
       if (kidMargin.bottom < 0) {
-        mPrevMaxNegBottomMargin = -kidMargin.bottom;
+        mPrevPosBottomMargin = 0;
+        mPrevNegBottomMargin = -kidMargin.bottom;
       } else {
-        mPrevMaxPosBottomMargin = kidMargin.bottom;
+        mPrevPosBottomMargin = kidMargin.bottom;
+        mPrevNegBottomMargin = 0;
       }
     }
   }
@@ -526,97 +528,23 @@ nsBlockFrame::DrainOverflowList()
 #endif
 }
 
-// XXX add in code here that notices if margin's were not provided by
-// the style system and when that is the case to apply the old layout
-// engines margin calculations.
-
 nsresult
 nsBlockFrame::PlaceLine(nsBlockReflowState&     aState,
                         nsLineLayout&           aLineLayout,
                         nsLineData*             aLine)
 {
-  nsresult rv = NS_LINE_LAYOUT_COMPLETE;
-
-  nscoord topMargin = 0;
-  nscoord bottomMargin = 0;
-  nscoord maxNegBottomMargin = 0;
-  nscoord maxPosBottomMargin = 0;
-
-  // See if block margins apply to this line or not
-  PRBool isBlockLine = PR_FALSE;
-  if (1 == aLine->mChildCount) {
-    nsIStyleContextPtr kidSC;
-    nsIFrame* kid = aLine->mFirstChild;
-    rv = kid->GetStyleContext(aState.mPresContext, kidSC.AssignRef());
-    if (NS_OK != rv) return rv;
-
-    nsStyleDisplay* display = (nsStyleDisplay*)
-      kidSC->GetData(kStyleDisplaySID);
-    switch (display->mDisplay) {
-    case NS_STYLE_DISPLAY_BLOCK:
-    case NS_STYLE_DISPLAY_LIST_ITEM:
-      isBlockLine = PR_TRUE;
-      nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-        kidSC->GetData(kStyleSpacingSID);
-      nsMargin  kidMargin;
-      kidSpacing->CalcMarginFor(kid, kidMargin);
-
-      // Calculate top margin by collapsing with previous bottom margin
-      // if any.
-      nscoord maxNegTopMargin = 0;
-      nscoord maxPosTopMargin = 0;
-      if (kidMargin.top < 0) {
-        maxNegTopMargin = -kidMargin.top;
-      } else {
-        maxPosTopMargin = kidMargin.top;
-      }
-      nscoord maxPos = PR_MAX(aState.mPrevMaxPosBottomMargin, maxPosTopMargin);
-      nscoord maxNeg = PR_MAX(aState.mPrevMaxNegBottomMargin, maxNegTopMargin);
-      topMargin = maxPos - maxNeg;
-
-      // Save away bottom information for later promotion into aState
-      if (kidMargin.bottom < 0) {
-        maxNegBottomMargin = -kidMargin.bottom;
-      } else {
-        maxPosBottomMargin = kidMargin.bottom;
-      }
-      break;
-    }
-  }
-
-  // Before we move the line, make sure that it will fit in it's new
+  // Before we place the line, make sure that it will fit in it's new
   // location. It always fits if the height isn't constrained or it's
   // the first line.
-  nscoord totalHeight = topMargin + aLine->mBounds.height;
   if (!aState.mUnconstrainedHeight && (aLine != mLines)) {
-    if (aState.mY + totalHeight > aState.mAvailSize.height) {
+    if (aState.mY + aLine->mBounds.height > aState.mAvailSize.height) {
       // The line will not fit
-      rv = PushLines(aState, aLine);
-      goto done;
-    }
-  }
-  if (isBlockLine) {
-    if (0 != topMargin) {
-      // We have to move the line now that we know the top margin
-      // for it.
-      aLine->MoveLineBy(0, topMargin);
-      aState.mY += topMargin;
-    }
-  }
-  else {
-    // Apply previous line's bottom margin before the inline-line.
-    nscoord bottomMargin = aState.mPrevMaxPosBottomMargin -
-      aState.mPrevMaxNegBottomMargin;
-    if (0 != bottomMargin) {
-      aLine->MoveLineBy(0, bottomMargin);
-      aState.mY += bottomMargin;
+      return PushLines(aState, aLine);
     }
   }
 
   // Consume space and advance running values
   aState.mY += aLine->mBounds.height;
-  aState.mPrevMaxNegBottomMargin = maxNegBottomMargin;
-  aState.mPrevMaxPosBottomMargin = maxPosBottomMargin;
   if (nsnull != aState.mMaxElementSizePointer) {
     nsSize* maxSize = aState.mMaxElementSizePointer;
     if (aLineLayout.mReflowData.mMaxElementSize.width > maxSize->width) {
@@ -626,11 +554,9 @@ nsBlockFrame::PlaceLine(nsBlockReflowState&     aState,
       maxSize->height = aLineLayout.mReflowData.mMaxElementSize.height;
     }
   }
-  {
-    nscoord xmost = aLine->mBounds.XMost();
-    if (xmost > aState.mKidXMost) {
-      aState.mKidXMost = xmost;
-    }
+  nscoord xmost = aLine->mBounds.XMost();
+  if (xmost > aState.mKidXMost) {
+    aState.mKidXMost = xmost;
   }
 
   // Any below current line floaters to place?
@@ -648,8 +574,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState&     aState,
     GetAvailableSpace(aState, aState.mY);
   }
 
-done:
-  return rv;
+  return NS_LINE_LAYOUT_COMPLETE;
 }
 
 // aY has borderpadding.top already factored in
@@ -1465,8 +1390,8 @@ void nsBlockFrame::ComputeDesiredRect(nsBlockReflowState& aState,
     }
   }
   aState.mY += aState.mBorderPadding.bottom;
-  nscoord lastBottomMargin = aState.mPrevMaxPosBottomMargin -
-    aState.mPrevMaxNegBottomMargin;
+  nscoord lastBottomMargin = aState.mPrevPosBottomMargin -
+    aState.mPrevNegBottomMargin;
   if (!aState.mUnconstrainedHeight && (lastBottomMargin > 0)) {
     // It's possible that we don't have room for the last bottom
     // margin (the last bottom margin is the margin following a block
@@ -1481,8 +1406,8 @@ void nsBlockFrame::ComputeDesiredRect(nsBlockReflowState& aState,
         lastBottomMargin = 0;
       }
     }
-    aState.mY += lastBottomMargin;
   }
+  aState.mY += lastBottomMargin;
   aDesiredRect.height = aState.mY;
 
   if (!aState.mBlockIsPseudo) {
