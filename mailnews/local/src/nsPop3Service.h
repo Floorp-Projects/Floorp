@@ -64,6 +64,12 @@ public:
     NS_DECL_NSIMSGPROTOCOLINFO
 
 protected:
+        nsresult GetMail(PRBool downloadNewMail,
+                         nsIMsgWindow* aMsgWindow, 
+                         nsIUrlListener * aUrlListener,
+                         nsIMsgFolder *inbox, 
+                         nsIPop3IncomingServer *popServer,
+                         nsIURI ** aURL);
 	// convience function to make constructing of the pop3 url easier...
 	nsresult BuildPop3Url(const char * urlSpec, nsIMsgFolder *inbox,
                           nsIPop3IncomingServer *, nsIUrlListener * aUrlListener,

@@ -68,15 +68,4 @@ interface nsIMailboxService : nsISupports {
                                  in nsIStreamListener aMailboxParser,
                                  in nsIUrlListener aUrlListener);
 
-  /*
-   * This is more of a convience function for testing purposes. We want
-   * to able to say: display message number 'n' in this mailbox without
-   * having to go out and get the key for message number 'n'. this
-   * function simply makes that possible.
-   */
-
-  nsIURI DisplayMessageNumber(in string url,
-                              in unsigned long aMessageNumber,
-                              in nsISupports aDisplayConsumer,
-                              in nsIUrlListener aUrlListener);
 };

@@ -85,125 +85,80 @@ NS_IMPL_ISUPPORTS3(nsPop3Service,
                          nsIMsgProtocolInfo)
 
 NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow, 
-							   nsIUrlListener * aUrlListener,
-							   nsIMsgFolder *inbox, 
-                               nsIPop3IncomingServer *popServer,
-                               nsIURI ** aURL)
+                                             nsIUrlListener * aUrlListener,
+                                             nsIMsgFolder *aInbox, 
+                                             nsIPop3IncomingServer *aPopServer,
+                                             nsIURI ** aURL)
 {
-	nsresult rv = NS_OK;
-
-	nsXPIDLCString popHost;
-	nsXPIDLCString popUser;
-	PRInt32 popPort = -1;
-
-    nsCOMPtr<nsIMsgIncomingServer> server;
-	nsCOMPtr<nsIURI> url;
-
-	server = do_QueryInterface(popServer);
-
-	if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
-
-	rv = server->GetHostName(getter_Copies(popHost));
-	if (NS_FAILED(rv)) return rv;
-	if (!((const char *)popHost)) return NS_MSG_INVALID_OR_MISSING_SERVER;
-
-    rv = server->GetPort(&popPort);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = server->GetUsername(getter_Copies(popUser));
-	if (NS_FAILED(rv)) return rv;
-	if (!((const char *)popUser)) return NS_MSG_SERVER_USERNAME_MISSING;
-    
-    nsXPIDLCString escapedUsername;
-    *((char**)getter_Copies(escapedUsername)) =
-        nsEscape(popUser, url_XAlphas);
-    
-	if (NS_SUCCEEDED(rv) && popServer)
-	{
-        // now construct a pop3 url...
-		// we need to escape the username because it may contain
-		// characters like / % or @
-        char * urlSpec = PR_smprintf("pop3://%s@%s:%d/?check", (const char *)escapedUsername, (const char *)popHost, popPort);
-        rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
-        PR_Free(urlSpec);
-    }
-
-    
-	if (NS_SUCCEEDED(rv) && url) 
-		rv = RunPopUrl(server, url);
-
-	if (aURL && url) // we already have a ref count on pop3url...
-	{
-		*aURL = url; // transfer ref count to the caller...
-		NS_IF_ADDREF(*aURL);
-	}
-	
-	return rv;
+  return GetMail(PR_FALSE /* don't download, just check */, aMsgWindow, aUrlListener, aInbox, aPopServer, aURL);
 }
 
 
 nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener,
-								   nsIMsgFolder *aInbox,
-                                   nsIPop3IncomingServer *popServer,
+                                   nsIMsgFolder *aInbox,
+                                   nsIPop3IncomingServer *aPopServer,
                                    nsIURI ** aURL)
 {
-	nsresult rv = NS_OK;
-	nsXPIDLCString popHost;
-	nsXPIDLCString popUser;
-	PRInt32 popPort;
-	nsCOMPtr<nsIURI> url;
+  return GetMail(PR_TRUE /* download */, aMsgWindow, aUrlListener, aInbox, aPopServer, aURL);
+}
 
-	nsCOMPtr<nsIMsgIncomingServer> server;
-	server = do_QueryInterface(popServer);    
+nsresult nsPop3Service::GetMail(PRBool downloadNewMail,
+                                nsIMsgWindow* aMsgWindow, 
+                                nsIUrlListener * aUrlListener,
+                                nsIMsgFolder *aInbox, 
+                                nsIPop3IncomingServer *aPopServer,
+                                nsIURI ** aURL)
+{
 
-    if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
-
-	rv = server->GetHostName(getter_Copies(popHost));
-	if (NS_FAILED(rv)) return rv;
-	if (!((const char *)popHost)) return NS_MSG_INVALID_OR_MISSING_SERVER;
-
-    rv = server->GetPort(&popPort);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = server->GetUsername(getter_Copies(popUser));
-    if (NS_FAILED(rv)) return rv;
-
-	nsXPIDLCString escapedUsername;
-    *((char **)getter_Copies(escapedUsername)) = 
-        nsEscape(popUser, url_XAlphas);
-    if (NS_FAILED(rv)) return rv;
-    
-	if (!((const char *)popUser)) return NS_MSG_SERVER_USERNAME_MISSING;
-    
-	if (NS_SUCCEEDED(rv) && popServer )
-	{
-        // now construct a pop3 url...
-		// we need to escape the username because it may contain
-		// characters like / % or @
-        char * urlSpec = PR_smprintf("pop3://%s@%s:%d", (const char *)escapedUsername, (const char *)popHost, popPort);
-
-		if (aInbox) 
-		{
-			rv = BuildPop3Url(urlSpec, aInbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
-		}
-
-        PR_Free(urlSpec);
-	}
-    
-	if (NS_SUCCEEDED(rv) && url) 
-	{
-		nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(url);
-		if (mailNewsUrl)
-			mailNewsUrl->SetMsgWindow(aMsgWindow);
-		rv = RunPopUrl(server, url);
-	}
-
-	if (aURL && url) // we already have a ref count on pop3url...
-	{
-		*aURL = url; // transfer ref count to the caller...
-		NS_IF_ADDREF(*aURL);
-	}
-	return rv;
+  NS_ENSURE_ARG_POINTER(aInbox);
+  nsXPIDLCString popHost;
+  nsXPIDLCString popUser;
+  PRInt32 popPort = -1;
+  
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsCOMPtr<nsIURI> url;
+  
+  server = do_QueryInterface(aPopServer);
+  
+  if (!server) 
+    return NS_MSG_INVALID_OR_MISSING_SERVER;
+  
+  nsresult rv = server->GetHostName(getter_Copies(popHost));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!((const char *)popHost)) 
+    return NS_MSG_INVALID_OR_MISSING_SERVER;
+  
+  rv = server->GetPort(&popPort);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = server->GetUsername(getter_Copies(popUser));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!((const char *)popUser)) 
+    return NS_MSG_SERVER_USERNAME_MISSING;
+  
+  nsXPIDLCString escapedUsername;
+  *((char**)getter_Copies(escapedUsername)) = nsEscape(popUser, url_XAlphas);
+  
+  if (NS_SUCCEEDED(rv) && aPopServer)
+  {
+    // now construct a pop3 url...
+    // we need to escape the username because it may contain
+    // characters like / % or @
+    char * urlSpec = (downloadNewMail)
+      ? PR_smprintf("pop3://%s@%s:%d", (const char *)escapedUsername, (const char *)popHost, popPort)
+      : PR_smprintf("pop3://%s@%s:%d/?check", (const char *)escapedUsername, (const char *)popHost, popPort);
+    rv = BuildPop3Url(urlSpec, aInbox, aPopServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
+    PR_Free(urlSpec);
+  }
+  
+  
+  if (NS_SUCCEEDED(rv) && url) 
+    rv = RunPopUrl(server, url);
+  
+  if (aURL && url) // we already have a ref count on pop3url...
+    NS_IF_ADDREF(*aURL = url);
+  
+  return rv;
 }
 
 nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
@@ -247,56 +202,56 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
 
 nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlToRun)
 {
-	nsresult rv = NS_OK;
-	if (aServer && aUrlToRun)
-	{
-		nsXPIDLCString userName;
-
-		// load up required server information
-		// we store the username unescaped in the server
-		// so there is no need to unescape it
+  nsresult rv = NS_OK;
+  if (aServer && aUrlToRun)
+  {
+    nsXPIDLCString userName;
+    
+    // load up required server information
+    // we store the username unescaped in the server
+    // so there is no need to unescape it
     rv = aServer->GetRealUsername(getter_Copies(userName));
-
-		// find out if the server is busy or not...if the server is busy, we are 
-		// *NOT* going to run the url
-		PRBool serverBusy = PR_FALSE;
-		rv = aServer->GetServerBusy(&serverBusy);
-
-		if (!serverBusy)
-		{
-			nsPop3Protocol * protocol = new nsPop3Protocol(aUrlToRun);
-			if (protocol)
-			{
-				NS_ADDREF(protocol);
-				rv = protocol->Initialize(aUrlToRun);
-				if(NS_FAILED(rv))
-				{
-					delete protocol;
-					return rv;
-				}
-				// the protocol stores the unescaped username, so there is no need to escape it.
-				protocol->SetUsername(userName);
-				rv = protocol->LoadUrl(aUrlToRun);
-				NS_RELEASE(protocol);
-			}
-		} 
-	} // if server
-
-	return rv;
+    
+    // find out if the server is busy or not...if the server is busy, we are 
+    // *NOT* going to run the url
+    PRBool serverBusy = PR_FALSE;
+    rv = aServer->GetServerBusy(&serverBusy);
+    
+    if (!serverBusy)
+    {
+      nsPop3Protocol * protocol = new nsPop3Protocol(aUrlToRun);
+      if (protocol)
+      {
+        NS_ADDREF(protocol);
+        rv = protocol->Initialize(aUrlToRun);
+        if(NS_FAILED(rv))
+        {
+          delete protocol;
+          return rv;
+        }
+        // the protocol stores the unescaped username, so there is no need to escape it.
+        protocol->SetUsername(userName);
+        rv = protocol->LoadUrl(aUrlToRun);
+        NS_RELEASE(protocol);
+      }
+    } 
+  } // if server
+  
+  return rv;
 }
 
 
 NS_IMETHODIMP nsPop3Service::GetScheme(nsACString &aScheme)
 {
-	aScheme = "pop3";
-	return NS_OK; 
+    aScheme = "pop3";
+    return NS_OK; 
 }
 
 NS_IMETHODIMP nsPop3Service::GetDefaultPort(PRInt32 *aDefaultPort)
 {
     NS_ENSURE_ARG_POINTER(aDefaultPort);
     *aDefaultPort = POP3_PORT;
-	return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsPop3Service::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
@@ -333,7 +288,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
     if (offset != -1)
         folderUri.Truncate(offset);
 
-	nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv)); 
+    nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv)); 
     if (NS_FAILED(rv)) return rv;
     rv = rdfService->GetResource(folderUri.get(),
                                  getter_AddRefs(resource));
@@ -405,35 +360,35 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
 
 NS_IMETHODIMP nsPop3Service::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
-	nsresult rv = NS_OK;
-	nsPop3Protocol * protocol = new nsPop3Protocol(aURI);
-	if (protocol)
-	{
-        rv = protocol->Initialize(aURI);
-        if (NS_FAILED(rv)) 
-        {
-            delete protocol;
-            return rv;
-        }
-        nsCAutoString username;
-        nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(aURI, &rv);
-        if (NS_SUCCEEDED(rv) && url)
-        {
-			// GetUsername() returns an escaped username, and the protocol
-			// stores the username unescaped, so we must unescape the username.
-            // XXX this is of course very risky since the unescaped string may
-            // contain embedded nulls as well as characters from some unknown
-            // charset!!
-            url->GetUsername(username);
-            NS_UnescapeURL(username);
-            protocol->SetUsername(username.get());
-        }
-		rv = protocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-
-	return rv;
+  nsresult rv = NS_OK;
+  nsPop3Protocol * protocol = new nsPop3Protocol(aURI);
+  if (protocol)
+  {
+    rv = protocol->Initialize(aURI);
+    if (NS_FAILED(rv)) 
+    {
+      delete protocol;
+      return rv;
+    }
+    nsCAutoString username;
+    nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(aURI, &rv);
+    if (NS_SUCCEEDED(rv) && url)
+    {
+      // GetUsername() returns an escaped username, and the protocol
+      // stores the username unescaped, so we must unescape the username.
+      // XXX this is of course very risky since the unescaped string may
+      // contain embedded nulls as well as characters from some unknown
+      // charset!!
+      url->GetUsername(username);
+      NS_UnescapeURL(username);
+      protocol->SetUsername(username.get());
+    }
+    rv = protocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
+  
+  return rv;
 }
 
 

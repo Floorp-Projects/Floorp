@@ -255,13 +255,12 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 
 NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *inbox, nsIURI **aResult)
 {
-	nsresult rv;
+  nsresult rv;
 
-	nsCOMPtr<nsIPop3Service> pop3Service = do_GetService(kCPop3ServiceCID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIPop3Service> pop3Service = do_GetService(kCPop3ServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = pop3Service->GetNewMail(aMsgWindow, aUrlListener, inbox, this, aResult);
-	return rv;
+  return pop3Service->GetNewMail(aMsgWindow, aUrlListener, inbox, this, aResult);
 }
 
 NS_IMETHODIMP
