@@ -51,6 +51,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
+		nsMsgMdnCID.h \
 		nsMsgMdnGenerator.h \
 		$(NULL)
 

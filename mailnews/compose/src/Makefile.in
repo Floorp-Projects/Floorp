@@ -97,6 +97,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
+		nsMsgCompCID.h \
 		nsSmtpUrl.h \
 		nsSmtpProtocol.h \
 		nsSmtpService.h \

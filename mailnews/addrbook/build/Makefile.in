@@ -53,7 +53,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= nsAbFactory.cpp
-EXPORTS		= nsAbBaseCID.h
 
 ifdef MOZ_LDAP_XPCOM
 REQUIRES	+= mozldap \

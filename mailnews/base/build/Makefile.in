@@ -76,7 +76,6 @@ endif
 EXTRA_DSO_LIBS += rdfutil_s
 
 CPPSRCS		= nsMsgFactory.cpp
-EXPORTS		= nsMsgBaseCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)msgbase_s.$(LIB_SUFFIX) \

@@ -53,7 +53,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= nsMsgNewsFactory.cpp
-EXPORTS		= nsMsgNewsCID.h
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)msgnews_s.$(LIB_SUFFIX)
 

@@ -118,6 +118,7 @@ CPPSRCS		+= nsMessengerOS2Integration.cpp
 endif
 
 EXPORTS		= \
+        	nsMsgBaseCID.h \
 		nsMessenger.h \
 		nsMessengerBootstrap.h \
 		nsUrlListenerManager.h \

@@ -51,7 +51,6 @@ EXTRA_DSO_LIBS = msgbaseutil
 endif
 
 CPPSRCS		= nsBayesianFilterFactory.cpp
-EXPORTS		= nsBayesianFilterCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)bayesflt_s.$(LIB_SUFFIX) \

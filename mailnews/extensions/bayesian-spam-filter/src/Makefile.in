@@ -46,6 +46,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
+		nsBayesianFilterCID.h \
 		nsBayesianFilter.h \
 		$(NULL)
 

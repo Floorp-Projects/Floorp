@@ -49,7 +49,6 @@ EXTRA_DSO_LIBS = msgbaseutil
 endif
 
 CPPSRCS		= nsMsgSMIMEFactory.cpp
-EXPORTS		= nsMsgSMIMECID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)msgsmime_s.$(LIB_SUFFIX) \

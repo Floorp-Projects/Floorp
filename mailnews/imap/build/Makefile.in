@@ -60,7 +60,6 @@ endif
 EXTRA_DSO_LIBS	+= rdfutil_s
 
 CPPSRCS		= nsImapFactory.cpp
-EXPORTS		= nsMsgImapCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)msgimap_s.$(LIB_SUFFIX) \

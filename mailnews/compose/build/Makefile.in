@@ -64,7 +64,6 @@ EXTRA_DSO_LIBS = msgbaseutil
 endif
 
 CPPSRCS		= nsMsgCompFactory.cpp
-EXPORTS		= nsMsgCompCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)msgcompose_s.$(LIB_SUFFIX) \

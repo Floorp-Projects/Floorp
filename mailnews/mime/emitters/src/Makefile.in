@@ -48,6 +48,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 EXPORTS		= \
+		nsMimeEmitterCID.h \
 		nsEmitterUtils.h \
 		nsMimeRebuffer.h \
 		nsMimeHtmlEmitter.h \

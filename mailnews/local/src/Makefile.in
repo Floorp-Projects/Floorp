@@ -68,6 +68,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
+		nsMsgLocalCID.h \
 		nsPop3Protocol.h \
 		nsPop3URL.h \
 		nsPop3Sink.h \

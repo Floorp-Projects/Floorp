@@ -48,6 +48,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
+		nsMsgSMIMECID.h \
 		nsMsgComposeSecure.h \
 		nsSMimeJSHelper.h \
 		nsEncryptedSMIMEURIsService.h \

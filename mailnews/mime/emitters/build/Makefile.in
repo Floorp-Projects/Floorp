@@ -51,7 +51,6 @@ EXTRA_DSO_LIBS = msgbaseutil
 endif
 
 CPPSRCS		= nsEmitterFactory.cpp
-EXPORTS		= nsMimeEmitterCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)emitterutil_s.$(LIB_SUFFIX) \
