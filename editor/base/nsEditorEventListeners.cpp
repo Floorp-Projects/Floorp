@@ -262,9 +262,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
   }
 
   if (NS_SUCCEEDED(uiEvent->GetCharCode(&charCode)) && 
-      NS_SUCCEEDED(uiEvent->GetCtrlKey(&isAltKey)) &&
-      NS_SUCCEEDED(uiEvent->GetCtrlKey(&isMetaKey)) &&
-      NS_SUCCEEDED(uiEvent->GetCtrlKey(&isShiftKey)) &&
+      NS_SUCCEEDED(uiEvent->GetAltKey(&isAltKey)) &&
+      NS_SUCCEEDED(uiEvent->GetMetaKey(&isMetaKey)) &&
+      NS_SUCCEEDED(uiEvent->GetShiftKey(&isShiftKey)) &&
       NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) ) 
   {
 #ifdef XP_MAC
