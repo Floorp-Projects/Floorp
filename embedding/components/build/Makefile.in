@@ -70,7 +70,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../jsconsole/src  \
 	-I$(srcdir)/../find/src  \
 	-I$(srcdir)/../webbrowserpersist/src  \
-	-I$(srcdir/../commandhandler/src \
+	-I$(srcdir)/../commandhandler/src \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \
