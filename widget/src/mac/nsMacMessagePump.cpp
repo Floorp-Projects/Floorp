@@ -13,7 +13,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
+ * Communications Corporation.	Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
@@ -45,18 +45,19 @@
 
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-#include "plevent.h"
+
 #include "prthread.h"
 #include "nsMacTSMMessagePump.h"
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
+#include "nsGfxUtils.h"
 
 #include <MacWindows.h>
 #include <ToolUtils.h>
 #include <DiskInit.h>
 #include <LowMem.h>
 #include <Devices.h>
-#include <quickdraw.h>
+#include <Quickdraw.h>
 #include "nsCarbonHelpers.h"
 
 #ifndef topLeft
@@ -64,7 +65,7 @@
 #endif
 
 #ifndef botRight
-#define botRight(r)	(((Point *) &(r))[1])
+#define botRight(r) (((Point *) &(r))[1])
 #endif
 
 #if DEBUG
@@ -76,14 +77,14 @@
 
 #define DRAW_ON_RESIZE	0		// if 1, enable live-resize except when the command key is down
 
-const short	kMinWindowWidth = 125;
+const short kMinWindowWidth = 125;
 const short kMinWindowHeight = 150;
 
 NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWindowlessMenuEventHandler = nsnull;
 
 
 extern nsIRollupListener * gRollupListener;
-extern nsIWidget         * gRollupWidget;
+extern nsIWidget				 * gRollupWidget;
 
 
 //======================================================================================
@@ -94,16 +95,16 @@ extern nsIWidget         * gRollupWidget;
 // Important Notes:
 // ----------------
 //
-//  - To turn the profiler on, define "#pragma profile on" in IDE_Options.h
-//    then set $PROFILE to 1 in BuildNGLayoutDebug.pl and recompile everything.
+//	- To turn the profiler on, define "#pragma profile on" in IDE_Options.h
+//		then set $PROFILE to 1 in BuildNGLayoutDebug.pl and recompile everything.
 //
-//  - You may need to turn the profiler off ("#pragma profile off")
-//	  in NSPR.Debug.Prefix because of incompatiblity with NSPR threads.
-//    It usually isn't a problem but it may be one when profiling things like
-//    imap or network i/o.
+//	- You may need to turn the profiler off ("#pragma profile off")
+//		in NSPR.Debug.Prefix because of incompatiblity with NSPR threads.
+//		It usually isn't a problem but it may be one when profiling things like
+//		imap or network i/o.
 //
 //	- The profiler utilities (ProfilerUtils.c) and the profiler
-//	  shared library (ProfilerLib) sit in NSRuntime.mcp.
+//		shared library (ProfilerLib) sit in NSRuntime.mcp.
 //
 
 		// Define this if you want to start profiling when the Caps Lock
@@ -168,10 +169,10 @@ static long ConvertOSMenuResultToPPMenuResult(long menuResult)
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 //=================================================================
-/*  Constructor
- *  @update  dc 08/31/98
- *  @param   aToolkit -- The toolkit created by the application
- *  @return  NONE
+/*	Constructor
+ *	@update	 dc 08/31/98
+ *	@param	 aToolkit -- The toolkit created by the application
+ *	@return	 NONE
  */
 nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
 	: mToolkit(aToolkit), mMessageSink(aSink), mTSMMessagePump(NULL)
@@ -184,31 +185,30 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
 	//
 	mTSMMessagePump = nsMacTSMMessagePump::GetSingleton();
 	NS_ASSERTION(mTSMMessagePump!=NULL,"nsMacMessagePump::nsMacMessagePump: Unable to create TSM Message Pump.");
-	
 }
 
 //=================================================================
-/*  Destructor
- *  @update  dc 08/31/98
- *  @param   NONE
- *  @return  NONE
+/*	Destructor
+ *	@update	 dc 08/31/98
+ *	@param	 NONE
+ *	@return	 NONE
  */
 nsMacMessagePump::~nsMacMessagePump()
 {
 	if (mMouseRgn)
 		::DisposeRgn(mMouseRgn);
 
-  //¥TODO? release the toolkits and sinks? not if we use COM_auto_ptr.
+	//¥TODO? release the toolkits and sinks? not if we use COM_auto_ptr.
 	
-  //
-  // release the TSM Message Pump
-  //
+	//
+	// release the TSM Message Pump
+	//
 }
 
 //=================================================================
-/*  Runs the message pump for the macintosh
- *  @update  dc 08/31/98
- *  @param   NONE
+/*	Runs the message pump for the macintosh
+ *	@update	 dc 08/31/98
+ *	@param	 NONE
  */
 void nsMacMessagePump::DoMessagePump()
 {
@@ -228,7 +228,7 @@ void nsMacMessagePump::DoMessagePump()
 
 #ifdef PROFILE 
 #ifndef PROFILE_WAITNEXTEVENT 
-	 	ProfileSuspend(); 
+		ProfileSuspend(); 
 #endif // PROFILE_WAITNEXTEVENT 
 #endif // PROFILE 
 
@@ -245,36 +245,44 @@ void nsMacMessagePump::DoMessagePump()
 }
 
 //=================================================================
-/*  Fetch a single event
- *  @update  dc 08/31/98
- *  @param   NONE
- *  @return  A boolean which states whether we have a real event
+/*	Fetch a single event
+ *	@update	 dc 08/31/98
+ *	@param	 NONE
+ *	@return	 A boolean which states whether we have a real event
  */
+#define kEventAvailMask			(mDownMask | mUpMask | keyDownMask | keyUpMask | autoKeyMask | activMask | osMask)
+
 PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 {
-	long				sleep		= 0;
-	unsigned short		eventMask 	= everyEvent;
+	SInt32			sleepTime = 1;		// we should adjust this depending on activity
+	const UInt32	kWNECallIntervalTicks = 4;
+	static UInt32	sNextWNECall = 0;
+	
+	// Make sure we call WNE if we have user events, or the mouse is down
+	EventRecord tempEvent;
+	if (::OSEventAvail(kEventAvailMask, &tempEvent) || !(tempEvent.modifiers & btnState))
+		sNextWNECall = 0;
+	
+	// don't call more than once every 4 ticks
+	if (::TickCount() < sNextWNECall)
+		return PR_FALSE;
+		
+	::LMSetSysEvtMask(everyEvent); // we need keyUp events
+	PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mMouseRgn);
 
-	::LMSetSysEvtMask(eventMask);	// we need keyUp events
-	PRBool haveEvent = ::WaitNextEvent(eventMask, &theEvent, sleep, mMouseRgn) ? PR_TRUE : PR_FALSE;
+	sNextWNECall = ::TickCount() + kWNECallIntervalTicks;
+
 #if !TARGET_CARBON
-	if (haveEvent && TSMEvent(&theEvent) )
-	{
+	if (haveEvent && ::TSMEvent(&theEvent) )
 		haveEvent = PR_FALSE;
-	}
 #endif
-	if (mMouseRgn)
-	{
-		Point globalMouse = theEvent.where;
-		::SetRectRgn(mMouseRgn, globalMouse.h, globalMouse.v, globalMouse.h + 1, globalMouse.v + 1);
-	}
 
 	return haveEvent;
 }
 
 //=================================================================
-/*  Dispatch a single event
- *  @param   theEvent - the event to dispatch
+/*	Dispatch a single event
+ *	@param	 theEvent - the event to dispatch
  */
 void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 {
@@ -284,7 +292,7 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 
 #if DEBUG
 #if !TARGET_CARBON
-		if (SIOUXHandleOneEvent(anEvent))
+		if ((anEvent->what != kHighLevelEvent) && SIOUXHandleOneEvent(anEvent))
 			return;
 #endif
 #endif
@@ -342,7 +350,9 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 			break;
 
 		}
-	} else {
+	}
+	else
+	{
 		DoIdle(*anEvent);
 		if (mRunning)
 			Repeater::DoIdlers(*anEvent);
@@ -363,15 +373,14 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 //-------------------------------------------------------------------------
 void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
 {
-	WindowPtr whichWindow = reinterpret_cast<WindowPtr>(anEvent.message)	;
-	GrafPtr savePort;
-	::GetPort(&savePort);
-	::SetPortWindowPort(whichWindow);
+	WindowPtr whichWindow = reinterpret_cast<WindowPtr>(anEvent.message);
+	
+	StPortSetter portSetter(whichWindow);
+	
 	::BeginUpdate(whichWindow);
 	// The app can do its own updates here
 	DispatchOSEventToRaptor(anEvent, whichWindow);
 	::EndUpdate(whichWindow);
-	::SetPort(savePort);
 }
 
 
@@ -391,8 +400,8 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 	switch (partCode)
 	{
 			case inSysWindow:
-			  if ( gRollupListener && gRollupWidget )
-				  gRollupListener->Rollup();
+				if ( gRollupListener && gRollupWidget )
+					gRollupListener->Rollup();
 				break;
 
 			case inMenuBar:
@@ -477,8 +486,8 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 							Rect portRect;
 							::GetWindowPortBounds(whichWindow, &portRect);
 
-							short	width = newPt.h - origin.h;
-							short	height = newPt.v - origin.v;
+							short width = newPt.h - origin.h;
+							short height = newPt.v - origin.v;
 							if (width < kMinWindowWidth)
 								width = kMinWindowWidth;
 							if (height < kMinWindowHeight)
@@ -596,7 +605,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 					SetPort(savePort);
 					
 					// !!!	Do not call ZoomWindow before calling DispatchOSEventToRaptor
-					// 		otherwise nsMacEventHandler::HandleMouseDownEvent won't get
+					//		otherwise nsMacEventHandler::HandleMouseDownEvent won't get
 					//		the right partcode for the click location
 					
 					DispatchOSEventToRaptor(anEvent, whichWindow);
@@ -634,11 +643,17 @@ void nsMacMessagePump::DoMouseUp(EventRecord &anEvent)
 // DoMouseMove
 //
 //-------------------------------------------------------------------------
-void  nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
+void	nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 {
 	// same thing as DoMouseUp
-		WindowPtr			whichWindow;
-		PRInt16				partCode;
+	WindowPtr			whichWindow;
+	PRInt16				partCode;
+
+	if (mMouseRgn)
+	{
+		Point globalMouse = anEvent.where;
+		::SetRectRgn(mMouseRgn, globalMouse.h, globalMouse.v, globalMouse.h + 1, globalMouse.v + 1);
+	}
 
 	partCode = ::FindWindow(anEvent.where, &whichWindow);
 	if (whichWindow == nil)
@@ -654,7 +669,7 @@ void  nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 // This is called for keydown, keyup, and key repeating events. So we need
 // to be careful not to do things twice.
 //-------------------------------------------------------------------------
-void  nsMacMessagePump::DoKey(EventRecord &anEvent)
+void	nsMacMessagePump::DoKey(EventRecord &anEvent)
 {
 	char theChar = (char)(anEvent.message & charCodeMask);
 	//if ((anEvent.what == keyDown) && ((anEvent.modifiers & cmdKey) != 0))
@@ -663,7 +678,7 @@ void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 	//	long menuResult = ::MenuKey(theChar);
 	//	if (HiWord(menuResult) != 0)
 	//	{
-	//    menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
+	//		menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
 	//		DoMenu(anEvent, menuResult);
 	//	}
 	//}
@@ -677,7 +692,7 @@ void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 			long menuResult = ::MenuKey(theChar);
 			if (HiWord(menuResult) != 0)
 			{
-			    menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
+					menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
 				DoMenu(anEvent, menuResult);
 			}
 		}
@@ -708,7 +723,7 @@ void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
 // DoMenu
 //
 //-------------------------------------------------------------------------
-void  nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
+void	nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
 {
 	// The app can handle its menu commands here or
 	// in the nsNativeBrowserWindow and nsNativeViewerApp
@@ -721,11 +736,11 @@ extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently r
 	// See if it was the Apple Menu
 	if (HiWord(menuResult) == kAppleMenuID)
 	{
-		short	theItem = LoWord(menuResult);
+		short theItem = LoWord(menuResult);
 		if (theItem > 2)
 		{
 			Str255	daName;
-			GrafPtr	savePort;
+			GrafPtr savePort;
 			
 			::GetMenuItemText(::GetMenuHandle(kAppleMenuID), theItem, daName);
 			::GetPort(&savePort);
@@ -756,7 +771,7 @@ extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently r
 // DoActivate
 //
 //-------------------------------------------------------------------------
-void  nsMacMessagePump::DoActivate(EventRecord &anEvent)
+void	nsMacMessagePump::DoActivate(EventRecord &anEvent)
 {
 	WindowPtr whichWindow = (WindowPtr)anEvent.message;
 	::SetPortWindowPort(whichWindow);
@@ -779,16 +794,18 @@ void  nsMacMessagePump::DoActivate(EventRecord &anEvent)
 // DoIdle
 //
 //-------------------------------------------------------------------------
-void  nsMacMessagePump::DoIdle(EventRecord &anEvent)
+void	nsMacMessagePump::DoIdle(EventRecord &anEvent)
 {
 	// send mouseMove event
-		static Point	lastWhere = {0, 0};
+	static Point	lastWhere = {0, 0};
 
 	if (*(long*)&lastWhere == *(long*)&anEvent.where)
 		return;
 
-	lastWhere = anEvent.where;
-	DoMouseMove(anEvent);
+	EventRecord	localEvent = anEvent;
+	localEvent.what = nullEvent;
+	lastWhere = localEvent.where;
+	DoMouseMove(localEvent);
 }
 
 
@@ -798,8 +815,8 @@ void  nsMacMessagePump::DoIdle(EventRecord &anEvent)
 // DispatchOSEventToRaptor
 //
 //-------------------------------------------------------------------------
-PRBool  nsMacMessagePump::DispatchOSEventToRaptor(
-													EventRecord 	&anEvent,
+PRBool	nsMacMessagePump::DispatchOSEventToRaptor(
+													EventRecord		&anEvent,
 													WindowPtr			aWindow)
 {
 	PRBool		handled = PR_FALSE;
@@ -817,7 +834,7 @@ PRBool  nsMacMessagePump::DispatchOSEventToRaptor(
 //
 //-------------------------------------------------------------------------
 PRBool nsMacMessagePump::DispatchMenuCommandToRaptor(
-													EventRecord 	&anEvent,
+													EventRecord		&anEvent,
 													long					menuResult)
 {
 	PRBool		handled = PR_FALSE;
