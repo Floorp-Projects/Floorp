@@ -380,6 +380,270 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 }
 
 PRUnichar*
+nsTextTransformer::GetPrevWord(PRBool aInWord,
+                               PRInt32& aWordLenResult,
+                               PRInt32& aContentLenResult,
+                               PRBool& aIsWhitespaceResult)
+{
+  NS_PRECONDITION(mOffset <= mContentLength, "bad offset");
+
+  // See if the content has been exhausted
+  if (mOffset == 0) {
+    aWordLenResult = 0;
+    aContentLenResult = 0;
+    return nsnull;
+  }
+
+  PRUnichar* bp = mBuffer;
+  PRUnichar* bufEnd = mBuffer + mBufferLength;
+  const nsTextFragment* frag = mCurrentFrag;
+  const nsTextFragment* lastFrag = mFrags;//1st is the last
+  PRInt32 wordLen = 1;
+  PRInt32 contentLen = 1;
+
+  // Set the isWhitespace flag by examining the next character in the
+  // text fragment.
+  PRInt32 offset = mCurrentFragOffset-1;
+  PRUnichar firstChar;
+  if (frag->Is2b()) {
+    const PRUnichar* up = frag->Get2b();
+    firstChar = up[offset];
+  }
+  else {
+    const unsigned char* cp = (const unsigned char*) frag->Get1b();
+    if (offset > 0)
+      firstChar = PRUnichar(cp[offset]);
+    else
+      firstChar = PRUnichar(cp[0]);
+  }
+  PRBool isWhitespace = XP_IS_SPACE(firstChar);
+  offset--;
+  if (isWhitespace) {
+    if (NS_STYLE_WHITESPACE_PRE == mWhiteSpace) {
+      if ('\t' == firstChar) {
+        // Leave tab alone so that caller can expand it
+      }
+      else if ('\n' == firstChar) {
+        // Advance content past newline but do not allow newline to
+        // remain in the word.
+        wordLen--;
+      }
+      else {
+        firstChar = ' ';
+      }
+    }
+    else {
+      firstChar = ' ';
+    }
+  }
+  else if (CH_NBSP == firstChar) {
+    firstChar = ' ';
+  }
+  else {
+    switch (mTextTransform) {
+    case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
+      if (XP_IS_UPPERCASE(firstChar)) {
+        firstChar = XP_TO_LOWER(firstChar);
+      }
+      break;
+    case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
+      if (XP_IS_LOWERCASE(firstChar)) {
+        firstChar = XP_TO_UPPER(firstChar);
+      }
+      break;
+    }
+  }
+  *bp++ = firstChar;
+  mCurrentFragOffset = offset +1;
+  if (offset < 0) {
+    if (mCurrentFrag == mFrags){
+      goto really_done;
+    }
+    mCurrentFrag = --frag;
+    offset = mCurrentFrag->GetLength()-1;
+  }
+  if (isWhitespace && (NS_STYLE_WHITESPACE_PRE == mWhiteSpace)) {
+    goto really_done;
+  }
+
+  PRInt32 numChars;
+  do {
+    PRInt32 fragLen = frag->GetLength();
+
+    // Scan characters in this fragment that are the same kind as the
+    // isWhitespace flag indicates.
+    if (frag->Is2b()) {
+      const PRUnichar* cp0 = frag->Get2b();
+      const PRUnichar* end = cp0;
+      const PRUnichar* cp = cp0 + offset;
+      if (isWhitespace) {
+        while (cp > end) {
+          PRUnichar ch = *cp;
+          if (XP_IS_SPACE(ch)) {
+            cp--;
+            continue;
+          }
+          numChars = (cp0 + offset) - cp;
+          contentLen += numChars;
+          mCurrentFragOffset -= numChars;
+          goto done;
+        }
+        numChars = (cp0 + offset) - cp;
+        contentLen += numChars;
+      }
+      else {
+        while (cp > end) {
+          PRUnichar ch = *cp;
+          if (!XP_IS_SPACE(ch)) {
+            if (CH_NBSP == ch) ch = ' ';
+            if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+            cp--;
+
+            switch (mTextTransform) {
+            case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
+              if (XP_IS_UPPERCASE(ch)) {
+                ch = XP_TO_LOWER(ch);
+              }
+              break;
+            case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
+              if (XP_IS_LOWERCASE(ch)) {
+                ch = XP_TO_UPPER(ch);
+              }
+              break;
+            }
+
+            // Store character in buffer; grow buffer if we have to
+            NS_ASSERTION(bp < bufEnd, "whoops");
+            *bp++ = ch;
+            if (bp == bufEnd) {
+              PRInt32 delta = bp - mBuffer;
+              if (!GrowBuffer()) {
+                goto done;
+              }
+              bp = mBuffer + delta;
+              bufEnd = mBuffer + mBufferLength;
+            }
+            continue;
+          }
+          numChars = (cp0 + offset) - cp;
+          wordLen += numChars;
+          contentLen += numChars;
+          mCurrentFragOffset -= numChars;
+          goto done;
+        }
+        numChars = (cp0 + offset) - cp;
+        wordLen += numChars;
+        contentLen += numChars;
+      }
+    }
+    else {
+      const unsigned char* cp0 = (const unsigned char*) frag->Get1b();
+      const unsigned char* end = cp0;
+      const unsigned char* cp = cp0 + offset;
+      if (isWhitespace) {
+        while (cp > end) {
+          PRUnichar ch = PRUnichar(*cp);
+          if (XP_IS_SPACE(ch)) {
+            cp--;
+            continue;
+          }
+          numChars = (cp0 + offset) - cp;
+          contentLen += numChars;
+          mCurrentFragOffset -= numChars;
+          goto done;
+        }
+        numChars = (cp0 + offset) - cp;
+        contentLen += numChars;
+      }
+      else {
+        while (cp > end) {
+          PRUnichar ch = PRUnichar(*cp);
+          if (!XP_IS_SPACE(ch)) {
+            if (CH_NBSP == ch) ch = ' ';
+            if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+            cp--;
+
+            switch (mTextTransform) {
+            case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
+              if (XP_IS_UPPERCASE(ch)) {
+                ch = XP_TO_LOWER(ch);
+              }
+              break;
+            case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
+              if (XP_IS_LOWERCASE(ch)) {
+                ch = XP_TO_UPPER(ch);
+              }
+              break;
+            }
+
+            // Store character in buffer; grow buffer if we have to
+            NS_ASSERTION(bp < bufEnd, "whoops");
+            *bp++ = ch;
+            if (bp == bufEnd) {
+              PRInt32 delta = bp - mBuffer;
+              if (!GrowBuffer()) {
+                goto done;
+              }
+              bp = mBuffer + delta;
+              bufEnd = mBuffer + mBufferLength;
+            }
+            continue;
+          }
+          numChars = (cp0 + offset) - cp;
+          wordLen += numChars;
+          contentLen += numChars;
+          mCurrentFragOffset -= numChars;
+          goto done;
+        }
+        numChars = (cp0 + offset) - cp;
+        wordLen += numChars;
+        contentLen += numChars;
+      }
+    }
+
+    // Advance to next text fragment
+    if (frag != lastFrag)
+    {
+      frag--;
+      mCurrentFrag = frag;
+      mCurrentFragOffset = mCurrentFrag->GetLength()-1;
+      offset = mCurrentFragOffset;
+    }
+    else
+      mCurrentFragOffset = 0;
+  }
+  while (frag > lastFrag);
+
+ done:;
+
+  if (!aInWord && !isWhitespace &&
+      (NS_STYLE_TEXT_TRANSFORM_CAPITALIZE == mTextTransform)) {
+    PRInt32 n = wordLen;
+    PRUnichar* bp = mBuffer;
+    for (; --n >= 0; bp++) {
+      PRUnichar ch = *bp;
+      if (' ' == ch) {
+        // Skip over NBSP's that were mapped to space
+        continue;
+      }
+      if (XP_IS_LOWERCASE(ch)) {
+        *bp = XP_TO_UPPER(ch);
+      }
+      break;
+    }
+  }
+
+ really_done:;
+  mOffset -= contentLen;
+  NS_ASSERTION(mOffset >= 0, "whoops");
+  aWordLenResult = wordLen;
+  aContentLenResult = contentLen;
+  aIsWhitespaceResult = isWhitespace;
+
+  return mBuffer;
+}
+
+PRUnichar*
 nsTextTransformer::GetTextAt(PRInt32 aOffset)
 {
   // XXX

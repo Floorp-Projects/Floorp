@@ -1790,9 +1790,6 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
 
   // Transform text from content into renderable form
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
-  PrepareUnicodeText(tx, ip, paintBuf, textLength, width);
-
-  ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
   nsresult result(NS_OK);
   switch (aAmount){
   case eSelectNoAmount : {
@@ -1803,6 +1800,11 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
     }
     break;
   case eSelectCharacter : {
+    PrepareUnicodeText(tx, ip, paintBuf, textLength, width);
+    ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
+    nsIFrame *frameUsed = nsnull;
+    PRInt32 start;
+    PRBool found = PR_TRUE;
     if (aDirection == eDirPrevious){
       PRInt32 i;
       for (i = aStartOffset -1; i >=0;  i--){
@@ -1813,45 +1815,85 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
         }
       }
       if (i <0){
-        nsIFrame *prev = GetPrevInFlow();
-        if (prev){
-          return prev->PeekOffset(eSelectCharacter, aDirection,  -1, aResultFrame, 
+        found = PR_FALSE;
+        frameUsed = GetPrevInFlow();
+        start = -1;
+      }
+    }
+    else if (aDirection == eDirNext){
+      PRInt32 i;
+      for (i = aStartOffset +1; i <= mContentLength;  i++){
+        if (ip[i] > ip[aStartOffset]){
+          *aResultFrame = this;
+          *aFrameOffset = i;
+          break;
+        }
+      }
+      if (aStartOffset == 0 && (mFlags & TEXT_SKIP_LEADING_WS))
+        i--; //back up because we just skipped over some white space. why skip over the char also?
+      if (i > mContentLength){
+        found = PR_FALSE;
+        frameUsed = GetNextInFlow();
+        start = 0;
+      }
+    }
+    if (!found){
+      if (frameUsed){
+        return frameUsed->PeekOffset(eSelectCharacter, aDirection,  start, aResultFrame, 
+              aFrameOffset, aContentOffset);
+      }
+      else {//reached end ask the frame for help
+        return nsFrame::PeekOffset(eSelectCharacter, aDirection, start, aResultFrame,
                   aFrameOffset, aContentOffset);
-        }
-        else {//reached end ask the frame for help
-          return nsFrame::PeekOffset(eSelectCharacter, aDirection, -1, aResultFrame,
-                      aFrameOffset, aContentOffset);
-        }
       }
     }
-    else 
-      if (aDirection == eDirNext){
-        PRInt32 i;
-        for (i = aStartOffset +1; i <= mContentLength;  i++){
-          if (ip[i] > ip[aStartOffset]){
-            *aResultFrame = this;
-            *aFrameOffset = i;
-            break;
-          }
-        }
-        if (aStartOffset == 0 && (mFlags & TEXT_SKIP_LEADING_WS))
-          i--; //back up because we just skipped over some white space. why skip over the char also?
-        if (i > mContentLength){
-          nsIFrame *next = GetNextInFlow();
-          if (next){
-            return next->PeekOffset(eSelectCharacter, aDirection,  0, aResultFrame, 
-                        aFrameOffset, aContentOffset);
-          }
-          else {//reached end ask the frame for help
-            return nsFrame::PeekOffset(eSelectCharacter, aDirection, 0, aResultFrame,
-                        aFrameOffset, aContentOffset);
-          }
-        }
-      }
-      *aContentOffset = mContentOffset;
-    }
+    *aContentOffset = mContentOffset;
+                          }
   break;
-  case eSelectWord : 
+  case eSelectWord : {
+    nsIFrame *frameUsed = nsnull;
+    PRInt32 start;
+    PRBool found = PR_TRUE;
+    PRBool isWhitespace;
+    PRInt32 wordLen, contentLen;
+    if (aDirection == eDirPrevious){
+      tx.Init(this, mContentOffset + aStartOffset);
+      if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace)){
+        *aFrameOffset = aStartOffset - contentLen;
+        //check for whitespace next.
+        if (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace))
+          *aFrameOffset -= contentLen;
+        found = PR_TRUE;
+      }
+      frameUsed = GetPrevInFlow();
+      start = -1; //start at end
+    }
+    else if (aDirection == eDirNext){
+      tx.Init(this, mContentOffset + aStartOffset );
+      if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace)){
+        *aFrameOffset = aStartOffset + contentLen;
+        //check for whitespace next.
+        if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace) && isWhitespace)
+          *aFrameOffset += contentLen;
+        found = PR_TRUE;
+      }
+      frameUsed = GetNextInFlow();
+      start = 0;
+    }
+    if (!found || (*aFrameOffset > mContentLength) || (*aFrameOffset < mContentOffset)){ //gone too far
+      if (frameUsed){
+        return frameUsed->PeekOffset(aAmount, aDirection,  start, aResultFrame, 
+              aFrameOffset, aContentOffset);
+      }
+      else {//reached end ask the frame for help
+        return nsFrame::PeekOffset(aAmount, aDirection, start, aResultFrame,
+                  aFrameOffset, aContentOffset);
+      }
+    }
+    *aContentOffset = mContentOffset;
+    *aResultFrame   = this;
+                     }
+    break;
   case eSelectLine : 
   default: result = NS_ERROR_FAILURE; break;
   }

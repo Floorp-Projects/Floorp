@@ -64,6 +64,10 @@ public:
                          PRInt32& aContentLenResult,
                          PRBool& aIsWhitespaceResult);
 
+  PRUnichar* GetPrevWord(PRBool aInWord,
+                               PRInt32& aWordLenResult,
+                               PRInt32& aContentLenResult,
+                               PRBool& aIsWhitespaceResult);
   PRBool HasMultibyte() const {
     return mHasMultibyte;
   }
