@@ -75,6 +75,7 @@ LIBS = \
 	$(NET_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
+	$(TK_LIBS) \
 	$(NULL)
 
 CFLAGS += $(TOOLKIT_CFLAGS)
