@@ -452,7 +452,7 @@ sub usage {
        "(-b|--bugurl)             Bugzilla URL.\n" .
        "                          (default is $opt_bug_url)\n" .
        "(-c|--classpath)          Classpath (Rhino only.)\n" .
-       "(-e|--engine) <type> ...  Specify the type of engine(s) to test.\n"
+       "(-e|--engine) <type> ...  Specify the type of engine(s) to test.\n" .
        "                          <type> is one or more of\n" .
        "                          (smopt|smdebug|lcopt|lcdebug|xpcshell|" .
        "rhino|rhinoi).\n" .
