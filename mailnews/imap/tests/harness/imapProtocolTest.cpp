@@ -506,7 +506,7 @@ nsresult nsIMAP4TestDriver::OnFetchMessage()
 		SetupInbox();
         if (NS_SUCCEEDED(rv) && m_inbox)
             rv = imapService->FetchMessage(m_eventQueue, m_inbox /* imap folder sink */, nsnull, /* imap message sink */ this /* url listener */, nsnull,
-			uidString, PR_TRUE);
+			nsnull, uidString, PR_TRUE);
 		nsServiceManager::ReleaseService(kCImapService, imapService);
 		m_runningURL = PR_TRUE; // we are now running a url...
 	}
