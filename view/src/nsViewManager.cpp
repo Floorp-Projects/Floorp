@@ -1310,12 +1310,11 @@ void nsViewManager :: UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) cons
 
 void nsViewManager::ProcessPendingUpdates(nsIView* aView)
 {
-	nsIRegion* dirtyRegion = nsnull;
-	aView->GetDirtyRegion(dirtyRegion);
+	nsCOMPtr<nsIRegion> dirtyRegion;
+	aView->GetDirtyRegion(*getter_AddRefs(dirtyRegion));
 	if (dirtyRegion != nsnull && !dirtyRegion->IsEmpty()) {
 		UpdateView(aView, dirtyRegion, 0);
 		dirtyRegion->Init();
-		NS_RELEASE(dirtyRegion);
 	}
 
 	// process pending updates in child view.
