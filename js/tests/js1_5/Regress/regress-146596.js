@@ -53,14 +53,14 @@ var expectedvalues = [];
 
 
 /*
- * Just seeing we don't crash when compiling this function -
+ * Just seeing we don't crash when executing this function -
  * This example provided by jim-patterson@ncf.ca
  * 
  * Brendan: "Jim, thanks for the testcase. But note that |var|
  * in a JS function makes a function-scoped variable --  JS lacks
  * block scope apart from for catch variables within catch blocks.
  *
- * Therefore the catch variable hides the function-local variable in your case"
+ * Therefore the catch variable hides the function-local variable."
  */
 function F()
 {
@@ -73,8 +73,13 @@ function F()
     var e = "Another exception";
   }
 
-  return '';
+  return 'XYZ';
 }
+
+status = inSection(1);
+actual = F();
+expect = "A simple exception";
+addThis();
 
 
 
@@ -101,7 +106,7 @@ function f(obj)
     with(obj)
     {
       var e;
-      res[0] = e; // |with| binds tighter than |catch|; this s/b |obj.e|
+      res[0] = e; // |with| binds tighter than |catch|; s/b |obj.e|
     }
 
     res[1] = e;   // |catch| binds tighter than function scope; s/b 42
