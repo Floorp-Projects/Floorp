@@ -86,7 +86,7 @@
 
 <!ENTITY locationItem.title           "Location">
 <!ENTITY searchItem.title             "Search">
-<!ENTITY throbberItem.title           "Progress">
+<!ENTITY throbberItem.title           "Activity Indicator">
 <!ENTITY bookmarksItem.title          "Bookmarks">
 
 <!ENTITY throbber.tooltip             "Go to the &vendorShortName; home page">
