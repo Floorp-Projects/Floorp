@@ -59,7 +59,6 @@ GRE_MODULE	= 1
 REQUIRES	= string \
 		  $(NULL)
 
-DEFINES		= -D_IMPL_NS_STRINGAPI
 LOCAL_INCLUDES	= -I$(srcdir)/../build
 
 CPPSRCS		= nsXPComStub.cpp
