@@ -48,6 +48,10 @@
 #include "nsIPref.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
+#include "nsIWebShell.h"
+
+
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 #ifdef NS_DEBUG
 #undef NOISY_VIEWER
@@ -82,7 +86,7 @@ public:
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
   NS_IMETHOD Print(void);
-  NS_IMETHOD PrintContent(void);
+  NS_IMETHOD PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext);
   NS_IMETHOD SetEnableRendering(PRBool aOn);
   NS_IMETHOD GetEnableRendering(PRBool* aResult);
 
@@ -476,7 +480,9 @@ static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTOR
 NS_IMETHODIMP
 DocumentViewerImpl::Print(void)
 {
-  nsIDeviceContextSpecFactory *factory = nsnull;
+nsIContentViewerContainer   *containerResult;
+nsIWebShell                 *webContainer;
+nsIDeviceContextSpecFactory *factory = nsnull;
 
   nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, nsnull,
                                      kIDeviceContextSpecFactoryIID,
@@ -491,84 +497,19 @@ DocumentViewerImpl::Print(void)
       mPresContext->GetDeviceContext(getter_AddRefs(dx));
       nsresult rv = dx->GetDeviceContextFor(devspec, newdx); 
       if (NS_SUCCEEDED(rv)) {
-        nsIStyleSet *ss;
-        nsIPref *prefs;
-        nsIViewManager *vm;
-        PRInt32 width, height;
-        nsIView *view;
 
         NS_RELEASE(devspec);
 
-        newdx->BeginDocument();
-        newdx->GetDeviceSurfaceDimensions(width, height);
+        // Get the webshell for this documentviewer
+        rv = this->GetContainer(containerResult);
+        containerResult->QueryInterface(kIWebShellIID,(void**)&webContainer);
+        if(webContainer) {
 
-        nsIPresContext *cx;
-        rv = NS_NewPrintContext(&cx);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        mPresContext->GetPrefs(&prefs);
-        cx->Init(newdx, prefs);
-
-        CreateStyleSet(mDocument, &ss);
-
-        nsIPresShell *ps;
-        rv = NS_NewPresShell(&ps);
-        if (NS_FAILED(rv)) {
-          return rv;
+          // send it on its way
+        PrintContent(webContainer,newdx);
         }
 
-        rv = nsComponentManager::CreateInstance(kViewManagerCID, 
-                                                nsnull, 
-                                                kIViewManagerIID, 
-                                                (void **)&vm);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        rv = vm->Init(newdx);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        nsRect tbounds = nsRect(0, 0, width, height);
-
-        // Create a child window of the parent that is our "root view/window"
-        // Create a view
-        rv = nsComponentManager::CreateInstance(kViewCID, 
-                                                nsnull, 
-                                                kIViewIID, 
-                                                (void **)&view);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        rv = view->Init(vm, tbounds, nsnull);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        // Setup hierarchical relationship in view manager
-        vm->SetRootView(view);
-
-        ps->Init(mDocument, cx, vm, ss);
-
-        //lay it out...
-        //newdx->BeginDocument();
-        ps->InitialReflow(width, height);
-
-        // Ask the page sequence frame to print all the pages
-        nsIPageSequenceFrame* pageSequence;
-        nsPrintOptions        options;
-
-        ps->GetPageSequenceFrame(&pageSequence);
-        NS_ASSERTION(nsnull != pageSequence, "no page sequence frame");
-        pageSequence->Print(*cx, options, nsnull);
-        newdx->EndDocument();
-
-        NS_RELEASE(ps);
-        NS_RELEASE(vm);
-        NS_RELEASE(ss);
         NS_RELEASE(newdx);
-        NS_IF_RELEASE(prefs); // XXX why is the prefs null??
       }
     }
     NS_RELEASE(factory);
@@ -576,10 +517,101 @@ DocumentViewerImpl::Print(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DocumentViewerImpl::PrintContent()
-{
 
+NS_IMETHODIMP
+DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext)
+{
+nsIStyleSet       *ss;
+nsIPref           *prefs;
+nsIViewManager    *vm;
+PRInt32           width, height;
+nsIView           *view;
+nsresult          rv;
+PRInt32           count,i;
+nsIWebShell       *childWebShell;
+nsIContentViewer  *viewer;
+  
+
+  aParent->GetChildCount(count);
+  if(count> 0) { 
+    for(i=0;i<count;i++) {
+      aParent->ChildAt(i,childWebShell);
+      childWebShell->GetContentViewer(&viewer);
+      viewer->PrintContent(childWebShell,aDContext);
+    }
+  } else {
+    aDContext->BeginDocument();
+    aDContext->GetDeviceSurfaceDimensions(width, height);
+
+    nsIPresContext *cx;
+    rv = NS_NewPrintContext(&cx);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    mPresContext->GetPrefs(&prefs);
+    cx->Init(aDContext, prefs);
+
+    CreateStyleSet(mDocument, &ss);
+
+    nsIPresShell *ps;
+    rv = NS_NewPresShell(&ps);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = nsComponentManager::CreateInstance(kViewManagerCID, 
+                                            nsnull, 
+                                            kIViewManagerIID, 
+                                            (void **)&vm);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = vm->Init(aDContext);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsRect tbounds = nsRect(0, 0, width, height);
+
+    // Create a child window of the parent that is our "root view/window"
+    // Create a view
+    rv = nsComponentManager::CreateInstance(kViewCID, 
+                                            nsnull, 
+                                            kIViewIID, 
+                                            (void **)&view);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = view->Init(vm, tbounds, nsnull);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // Setup hierarchical relationship in view manager
+    vm->SetRootView(view);
+
+    ps->Init(mDocument, cx, vm, ss);
+
+    //lay it out...
+    //aDContext->BeginDocument();
+    ps->InitialReflow(width, height);
+
+    // Ask the page sequence frame to print all the pages
+    nsIPageSequenceFrame* pageSequence;
+    nsPrintOptions        options;
+
+    ps->GetPageSequenceFrame(&pageSequence);
+    NS_ASSERTION(nsnull != pageSequence, "no page sequence frame");
+    pageSequence->Print(*cx, options, nsnull);
+    aDContext->EndDocument();
+
+
+    ps->EndObservingDocument();
+    NS_RELEASE(ps);
+    NS_RELEASE(vm);
+    NS_RELEASE(ss);
+    NS_IF_RELEASE(prefs); // XXX why is the prefs null??
+    }
   return NS_OK;
 
 }
