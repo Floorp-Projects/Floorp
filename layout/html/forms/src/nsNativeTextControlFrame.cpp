@@ -261,7 +261,7 @@ nsNativeTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
 
     /* get url name */
     char *URLName = nsnull;
-    nsIURL* docURL = nsnull;
+    nsIURI* docURL = nsnull;
     nsIDocument* doc = nsnull;
     mContent->GetDocument(doc);
     if (nsnull != doc) {

@@ -34,7 +34,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -54,7 +54,7 @@ class CSSLoaderImpl;
 
 class URLKey: public nsHashKey {
 public:
-  URLKey(nsIURL* aURL)
+  URLKey(nsIURI* aURL)
     : nsHashKey(),
       mURL(aURL)
   {
@@ -98,7 +98,7 @@ public:
     return new URLKey(*this);
   }
 
-  nsIURL*   mURL;
+  nsIURI*   mURL;
   PRUint32  mHashValue;
 };
 
@@ -140,20 +140,20 @@ public:
 };
 
 struct SheetLoadData {
-  SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, 
+  SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
                 const nsString& aTitle, const nsString& aMedia, 
                 PRInt32 aDefaultNameSpaceID,
                 nsIContent* aOwner, PRInt32 aDocIndex, 
                 nsIParser* aParserToUnblock, PRBool aIsInline);
-  SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, const nsString& aMedia,
+  SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, const nsString& aMedia,
                 PRInt32 aDefaultNameSpaceID,
                 nsICSSStyleSheet* aParentSheet, PRInt32 aSheetIndex);
-  SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, nsCSSLoaderCallbackFunc aCallback,
+  SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, nsCSSLoaderCallbackFunc aCallback,
                 void* aData);
   ~SheetLoadData(void);
 
   CSSLoaderImpl*  mLoader;
-  nsIURL*         mURL;
+  nsIURI*         mURL;
   nsString        mTitle;
   nsString        mMedia;
   PRInt32         mDefaultNameSpaceID;
@@ -228,7 +228,7 @@ public:
                              PRBool& aCompleted);
 
   NS_IMETHOD LoadStyleLink(nsIContent* aElement,
-                           nsIURL* aURL, 
+                           nsIURI* aURL, 
                            const nsString& aTitle, 
                            const nsString& aMedia, 
                            PRInt32 aDefaultNameSpaceID,
@@ -237,12 +237,12 @@ public:
                            PRBool& aCompleted);
 
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
-                            nsIURL* aURL, 
+                            nsIURI* aURL, 
                             const nsString& aMedia,
                             PRInt32 aDefaultNameSpaceID,
                             PRInt32 aIndex);
 
-  NS_IMETHOD LoadAgentSheet(nsIURL* aURL, 
+  NS_IMETHOD LoadAgentSheet(nsIURI* aURL, 
                           nsICSSStyleSheet*& aSheet,
                           PRBool& aCompleted,
                           nsCSSLoaderCallbackFunc aCallback,
@@ -296,7 +296,7 @@ public:
   nsHashtable   mSheetMapTable;  // map to insertion index arrays
 };
 
-SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, 
+SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
                              const nsString& aTitle, const nsString& aMedia,
                              PRInt32 aDefaultNameSpaceID,
                              nsIContent* aOwner, PRInt32 aDocIndex, 
@@ -325,7 +325,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL,
   NS_IF_ADDREF(mParserToUnblock);
 }
 
-SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, 
+SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
                              const nsString& aMedia, 
                              PRInt32 aDefaultNameSpaceID,
                              nsICSSStyleSheet* aParentSheet, PRInt32 aSheetIndex)
@@ -352,7 +352,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL,
   NS_ADDREF(mParentSheet);
 }
 
-SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, 
+SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
                              nsCSSLoaderCallbackFunc aCallback, void* aData)
   : mLoader(aLoader),
     mURL(aURL),
@@ -988,9 +988,9 @@ CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aPar
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
-static nsIURL* CloneURL(nsIURL* aURL)
+static nsIURI* CloneURL(nsIURI* aURL)
 {
-  nsIURL* result = nsnull;
+  nsIURI* result = nsnull;
 
   PRUnichar*  urlStr;
   aURL->ToString(&urlStr);
@@ -1020,7 +1020,7 @@ static nsIURL* CloneURL(nsIURL* aURL)
       NS_RELEASE(baseUrl);
       if (NS_FAILED(rv)) return nsnull;
 
-      rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&result);
+      rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&result);
       NS_RELEASE(uri);
 #endif // NECKO
     }
@@ -1042,7 +1042,7 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
   }
   else {  // not loading, go load it
     nsIUnicharStreamLoader* loader;
-    nsIURL* urlClone = CloneURL(aKey.mURL); // don't give the key to netlib, it munges it
+    nsIURI* urlClone = CloneURL(aKey.mURL); // don't give the key to netlib, it munges it
     if (urlClone) {
       result = NS_NewUnicharStreamLoader(&loader, urlClone, DoneLoadingStyle, aData);
       NS_RELEASE(urlClone);
@@ -1086,7 +1086,7 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
   // XXX need to add code to cancel any pending sheets for element
   nsresult result = NS_ERROR_NULL_POINTER;
   if (aIn) {
-    nsIURL* docURL;
+    nsIURI* docURL;
     mDocument->GetBaseURL(docURL);
     SheetLoadData* data = new SheetLoadData(this, docURL, aTitle, aMedia, aDefaultNameSpaceID,
                                             aElement,
@@ -1106,7 +1106,7 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
 
 NS_IMETHODIMP
 CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
-                             nsIURL* aURL, 
+                             nsIURI* aURL, 
                              const nsString& aTitle, 
                              const nsString& aMedia, 
                              PRInt32 aDefaultNameSpaceID,
@@ -1169,7 +1169,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
 
 NS_IMETHODIMP
 CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
-                              nsIURL* aURL, 
+                              nsIURI* aURL, 
                               const nsString& aMedia,
                               PRInt32 aDefaultNameSpaceID,
                               PRInt32 aIndex)
@@ -1222,7 +1222,7 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
 }
 
 NS_IMETHODIMP
-CSSLoaderImpl::LoadAgentSheet(nsIURL* aURL, 
+CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL, 
                               nsICSSStyleSheet*& aSheet,
                               PRBool& aCompleted,
                               nsCSSLoaderCallbackFunc aCallback,
@@ -1232,7 +1232,7 @@ CSSLoaderImpl::LoadAgentSheet(nsIURL* aURL,
   if (aURL) {
     // Get an input stream from the url
     nsIInputStream* in;
-    nsIURL* urlClone = CloneURL(aURL);  // dont give key URL to netlib, it gets munged
+    nsIURI* urlClone = CloneURL(aURL);  // dont give key URL to netlib, it gets munged
     if (urlClone) {
       result = NS_OpenURL(urlClone, &in);
       NS_RELEASE(urlClone);

@@ -39,7 +39,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsIContentViewerContainer.h"
@@ -244,7 +244,7 @@ nsrefcnt nsHTMLDocument::Release()
 }
 
 nsresult 
-nsHTMLDocument::Reset(nsIURL *aURL)
+nsHTMLDocument::Reset(nsIURI *aURL)
 {
   nsresult result = nsDocument::Reset(aURL);
   if (NS_FAILED(result)) {
@@ -298,7 +298,7 @@ nsHTMLDocument::GetContentType(nsString& aContentType) const
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
+nsHTMLDocument::StartDocumentLoad(nsIURI *aURL,
                                   nsIContentViewerContainer* aContainer,
                                   nsIStreamListener **aDocListener,
                                   const char* aCommand)
@@ -551,7 +551,7 @@ nsHTMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex
 
 
 NS_IMETHODIMP
-nsHTMLDocument::GetBaseURL(nsIURL*& aURL) const
+nsHTMLDocument::GetBaseURL(nsIURI*& aURL) const
 {
   if (nsnull != mBaseURL) {
     NS_ADDREF(mBaseURL);
@@ -585,7 +585,7 @@ nsHTMLDocument:: SetBaseURL(const nsString& aURLSpec)
 
         nsIURI *uri = nsnull, *baseUri = nsnull;
 
-        result = mDocumentURL->QueryInterface(nsIURL::GetIID(), (void**)&baseUri);
+        result = mDocumentURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
         if (NS_FAILED(result)) return result;
 
         const char *uriStr = aURLSpec.GetBuffer();
@@ -593,7 +593,7 @@ nsHTMLDocument:: SetBaseURL(const nsString& aURLSpec)
         NS_RELEASE(baseUri);
         if (NS_FAILED(result)) return result;
 
-        result = uri->QueryInterface(nsIURL::GetIID(), (void**)&mBaseURL);
+        result = uri->QueryInterface(nsIURI::GetIID(), (void**)&mBaseURL);
         NS_RELEASE(uri);
 #endif // NECKO
     }
@@ -1244,7 +1244,7 @@ nsHTMLDocument::SetCookie(const nsString& aCookie)
 
 nsresult
 nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
-                                     nsIURL** sourceURL)
+                                     nsIURI** sourceURL)
 {
   // XXX Tom said this reminded him of the "Six Degrees of
   // Kevin Bacon" game. We try to get from here to there using
@@ -1282,7 +1282,7 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
             result = service->NewURI(uriStr, nsnull, &uri);
             if (NS_FAILED(result)) return result;
 
-            result = uri->QueryInterface(nsIURL::GetIID(), (void**)sourceURL);
+            result = uri->QueryInterface(nsIURI::GetIID(), (void**)sourceURL);
             NS_RELEASE(uri);
 #endif // NECKO
           }
@@ -1297,7 +1297,7 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
 
 // XXX TBI: accepting arguments to the open method.
 nsresult
-nsHTMLDocument::OpenCommon(nsIURL* aSourceURL)
+nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
 {
   nsresult result = NS_OK;
   // The open occurred after the document finished loading.
@@ -1352,7 +1352,7 @@ NS_IMETHODIMP
 nsHTMLDocument::Open()
 {
   nsresult result = NS_OK;
-  nsIURL* sourceURL;
+  nsIURI* sourceURL;
 
   // XXX For the non-script Open case, we have to make
   // up a URL.
@@ -1366,7 +1366,7 @@ nsHTMLDocument::Open()
   result = service->NewURI("about:blank", nsnull, &uri);
   if (NS_FAILED(result)) return result;
 
-  result = uri->QueryInterface(nsIURL::GetIID(), (void**)&sourceURL);
+  result = uri->QueryInterface(nsIURI::GetIID(), (void**)&sourceURL);
   NS_RELEASE(uri);
 #endif // NECKO
 
@@ -1382,7 +1382,7 @@ NS_IMETHODIMP
 nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
 {
   nsresult result = NS_OK;
-  nsIURL* sourceURL;
+  nsIURI* sourceURL;
 
   // XXX The URL of the newly created document will match
   // that of the source document. Is this right?
@@ -1399,7 +1399,7 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
       result = service->NewURI("about:blank", nsnull, &uri);
       if (NS_FAILED(result)) return result;
 
-      result = uri->QueryInterface(nsIURL::GetIID(), (void**)&sourceURL);
+      result = uri->QueryInterface(nsIURI::GetIID(), (void**)&sourceURL);
       NS_RELEASE(uri);
 #endif // NECKO
   }

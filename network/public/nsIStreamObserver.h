@@ -25,7 +25,7 @@
 /* forward declaration */
 class nsIInputStream;
 class nsString;
-class nsIURL;
+class nsIURI;
 
 
 /* 97566110-ff60-11d1-beb9-00805f8a66dc */
@@ -45,17 +45,17 @@ public:
      * @return The return value is currently ignored.  In the future it may be
      * used to cancel the URL load..
      */
-    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType) = 0;
+    NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType) = 0;
 
     /**
      * Notify the observer that progress as occurred for the URL load.<BR>
      */
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) = 0;
+    NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) = 0;
 
     /**
      * Notify the observer with a status message for the URL load.<BR>
      */
-    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) = 0;
+    NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg) = 0;
 
     /**
      * Notify the observer that the URL has finished loading.  This method is 
@@ -68,7 +68,7 @@ public:
      * @param msg   A text string describing the error.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg) = 0;
+    NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) = 0;
 };
 
 /* Generic status codes for OnStopBinding */

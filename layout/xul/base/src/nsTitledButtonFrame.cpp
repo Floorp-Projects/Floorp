@@ -224,7 +224,7 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
   // Always set the image loader's base URL, because someone may
   // decide to change a button _without_ an image to have an image
   // later.
-  nsIURL* baseURL = nsnull;
+  nsIURI* baseURL = nsnull;
   nsIHTMLContent* htmlContent;
   if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
     htmlContent->GetBaseURL(baseURL);

@@ -32,7 +32,7 @@
 
 #include "nsISupports.h"
 class nsIOutputStream;
-class nsIURL;
+class nsIURI;
 
 // {EB1A5D30-AB33-11d2-8EC6-00805F29F370}
 #define NS_IRDFXMLDOCUMENTOBSERVER_IID \
@@ -70,7 +70,7 @@ public:
      * Called when a CSS style sheet is included (via XML processing
      * instruction) to the document.
      */
-    NS_IMETHOD OnCSSStyleSheetAdded(nsIURL* aCSSStyleSheetURL) = 0;
+    NS_IMETHOD OnCSSStyleSheetAdded(nsIURI* aCSSStyleSheetURL) = 0;
 
     /**
      * Called when a named data source is included (via XML processing
@@ -119,18 +119,18 @@ public:
 
     /**
      * Add a CSS style sheet to the document.
-     * @param aStyleSheetURL An nsIURL object that is the URL of the style
+     * @param aStyleSheetURL An nsIURI object that is the URL of the style
      * sheet to add to the document.
      */
-    NS_IMETHOD AddCSSStyleSheetURL(nsIURL* aStyleSheetURL) = 0;
+    NS_IMETHOD AddCSSStyleSheetURL(nsIURI* aStyleSheetURL) = 0;
 
     /**
      * Get the set of style sheets that have been included in the
      * document.
-     * @param aStyleSheetURLs (out) A pointer to an array of pointers to nsIURL objects.
-     * @param aCount (out) The number of nsIURL objects returned.
+     * @param aStyleSheetURLs (out) A pointer to an array of pointers to nsIURI objects.
+     * @param aCount (out) The number of nsIURI objects returned.
      */
-    NS_IMETHOD GetCSSStyleSheetURLs(nsIURL*** aStyleSheetURLs, PRInt32* aCount) = 0;
+    NS_IMETHOD GetCSSStyleSheetURLs(nsIURI*** aStyleSheetURLs, PRInt32* aCount) = 0;
 
     /**
      * Add a named data source to the document.

@@ -85,7 +85,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIURLGroup.h"
@@ -420,7 +420,7 @@ public:
 
     NS_IMETHOD GetContentType(nsString& aContentType) const;
 
-    NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+    NS_IMETHOD StartDocumentLoad(nsIURI *aUrl, 
                                  nsIContentViewerContainer* aContainer,
                                  nsIStreamListener **aDocListener,
                                  const char* aCommand);
@@ -431,11 +431,11 @@ public:
 
     virtual const nsString* GetDocumentTitle() const;
 
-    virtual nsIURL* GetDocumentURL() const;
+    virtual nsIURI* GetDocumentURL() const;
 
     virtual nsIURLGroup* GetDocumentURLGroup() const;
 
-    NS_IMETHOD GetBaseURL(nsIURL*& aURL) const;
+    NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
 
     NS_IMETHOD GetDocumentCharacterSet(nsString& oCharSetID);
 
@@ -711,16 +711,16 @@ public:
     nsresult
     ParseTagString(const nsString& aTagName, nsIAtom*& aName, PRInt32& aNameSpaceID);
 
-    NS_IMETHOD PrepareStyleSheets(nsIURL* anURL);
+    NS_IMETHOD PrepareStyleSheets(nsIURI* anURL);
     
-    void SetDocumentURLAndGroup(nsIURL* anURL);
+    void SetDocumentURLAndGroup(nsIURI* anURL);
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };
 
 protected:
 		nsresult PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 		                        nsIContentViewerContainer* aContainer,
 		                        const char* aCommand,
-														nsIURL* aOptionalURL = 0 );
+														nsIURI* aOptionalURL = 0 );
 
 protected:
     // pseudo constants
@@ -739,7 +739,7 @@ protected:
                 const nsIContent* aTest2) const;
 
     nsresult
-    LoadCSSStyleSheet(nsIURL* url);
+    LoadCSSStyleSheet(nsIURI* url);
 
     nsresult
     AddNamedDataSource(const char* uri);
@@ -753,7 +753,7 @@ protected:
     nsCOMPtr<nsIArena>         mArena;
     nsVoidArray                mObservers;
     nsAutoString               mDocumentTitle;
-    nsCOMPtr<nsIURL>           mDocumentURL;        // [OWNER] ??? compare with loader
+    nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
     nsCOMPtr<nsIURLGroup>      mDocumentURLGroup;   // [OWNER] leads to loader
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER] 
     nsIDocument*               mParentDocument;     // [WEAK]
@@ -1031,7 +1031,7 @@ XULDocumentImpl::GetContentType(nsString& aContentType) const
 
 static
 nsresult
-generate_RDF_seed( nsString* result, nsIURL* aOptionalURL )
+generate_RDF_seed( nsString* result, nsIURI* aOptionalURL )
 	{
 		nsresult status = NS_OK;
 
@@ -1056,9 +1056,9 @@ nsresult
 XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
                                 nsIContentViewerContainer* aContainer,
                                 const char* aCommand,
-                                nsIURL* aOptionalURL )
+                                nsIURI* aOptionalURL )
 {
-		nsCOMPtr<nsIURL> syntheticURL;
+		nsCOMPtr<nsIURI> syntheticURL;
 		if ( aOptionalURL )
 			syntheticURL = dont_QueryInterface(aOptionalURL);
 		else
@@ -1077,7 +1077,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
                 rv = service->NewURI(uriStr, nsnull, &uri);
                 if (NS_FAILED(rv)) return rv;
 
-                rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&syntheticURL);
+                rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&syntheticURL);
                 NS_RELEASE(uri);
                 if (NS_FAILED(rv)) return rv;
 #endif // NECKO
@@ -1247,7 +1247,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 	}
 
 NS_IMETHODIMP 
-XULDocumentImpl::PrepareStyleSheets(nsIURL* anURL)
+XULDocumentImpl::PrepareStyleSheets(nsIURI* anURL)
 {
     nsresult rv;
     
@@ -1300,14 +1300,14 @@ XULDocumentImpl::PrepareStyleSheets(nsIURL* anURL)
 }
 
 void
-XULDocumentImpl::SetDocumentURLAndGroup(nsIURL* anURL)
+XULDocumentImpl::SetDocumentURLAndGroup(nsIURI* anURL)
 {
     mDocumentURL = dont_QueryInterface(anURL);
     anURL->GetURLGroup(getter_AddRefs(mDocumentURLGroup));
 }
 
 NS_IMETHODIMP 
-XULDocumentImpl::StartDocumentLoad(nsIURL *aURL, 
+XULDocumentImpl::StartDocumentLoad(nsIURI *aURL, 
                                    nsIContentViewerContainer* aContainer,
                                    nsIStreamListener **aDocListener,
                                    const char* aCommand)
@@ -1358,10 +1358,10 @@ XULDocumentImpl::GetDocumentTitle() const
     return &mDocumentTitle;
 }
 
-nsIURL* 
+nsIURI* 
 XULDocumentImpl::GetDocumentURL() const
 {
-    nsIURL* result = mDocumentURL;
+    nsIURI* result = mDocumentURL;
     NS_IF_ADDREF(result);
     return result;
 }
@@ -1375,7 +1375,7 @@ XULDocumentImpl::GetDocumentURLGroup() const
 }
 
 NS_IMETHODIMP 
-XULDocumentImpl::GetBaseURL(nsIURL*& aURL) const
+XULDocumentImpl::GetBaseURL(nsIURI*& aURL) const
 {
     aURL = mDocumentURL;
     NS_IF_ADDREF(aURL);
@@ -3788,7 +3788,7 @@ XULDocumentImpl::FindContent(const nsIContent* aStartNode,
 
 
 nsresult
-XULDocumentImpl::LoadCSSStyleSheet(nsIURL* url)
+XULDocumentImpl::LoadCSSStyleSheet(nsIURI* url)
 {
     nsresult rv;
     nsIInputStream* iin;

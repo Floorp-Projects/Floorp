@@ -61,7 +61,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIURLGroup.h"
@@ -245,8 +245,8 @@ protected:
 
     nsVoidArray* mContextStack;
 
-    nsIURL*      mDocumentURL;
-    nsIURL*      mDocumentBaseURL;
+    nsIURI*      mDocumentURL;
+    nsIURI*      mDocumentBaseURL;
 
     PRBool       mHaveSetRootResource;
 
@@ -743,7 +743,7 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
   SplitMimeType(aType, mimeType, params);
 
   if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase(kCSSType)) {
-    nsIURL* url = nsnull;
+    nsIURI* url = nsnull;
     nsIURLGroup* urlGroup = nsnull;
     mDocumentBaseURL->GetURLGroup(&urlGroup);
     if (urlGroup) {
@@ -766,7 +766,7 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
       NS_RELEASE(baseUri);
       if (NS_FAILED(result)) return result;
 
-      result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
       NS_RELEASE(uri);
 #endif // NECKO
     }
@@ -1436,7 +1436,7 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
         // If there is a SRC attribute...
         if (src.Length() > 0) {
             // Use the SRC attribute value to load the URL
-            nsIURL* url = nsnull;
+            nsIURI* url = nsnull;
             nsAutoString absURL;
             nsIURLGroup* urlGroup;
 
@@ -1458,7 +1458,7 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
                 rv = service->NewURI(uriStr, nsnull, &uri);
                 if (NS_FAILED(rv)) return rv;
 
-                rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+                rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
                 NS_RELEASE(uri);
 #endif // NECKO
             }
@@ -1538,7 +1538,7 @@ XULContentSinkImpl::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
                 return rv;
             }
         
-            nsIURL* docURL = mDocument->GetDocumentURL();
+            nsIURI* docURL = mDocument->GetDocumentURL();
             const char* url;
             if (docURL) {
                 (void)docURL->GetSpec(&url);

@@ -23,7 +23,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -341,7 +341,7 @@ public:
   NS_IMETHOD_(nsrefcnt) Release();
 
   // nsIStyleSheet api
-  NS_IMETHOD GetURL(nsIURL*& aURL) const;
+  NS_IMETHOD GetURL(nsIURI*& aURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
@@ -372,8 +372,8 @@ public:
                                      nsIContent*     aContent);
 
   // nsIHTMLStyleSheet api
-  NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument);
-  NS_IMETHOD Reset(nsIURL* aURL);
+  NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument);
+  NS_IMETHOD Reset(nsIURI* aURL);
   NS_IMETHOD SetLinkColor(nscolor aColor);
   NS_IMETHOD SetActiveLinkColor(nscolor aColor);
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor);
@@ -415,7 +415,7 @@ protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
 
-  nsIURL*              mURL;
+  nsIURI*              mURL;
   nsIDocument*         mDocument;
   HTMLAnchorRule*      mLinkRule;
   HTMLAnchorRule*      mVisitedRule;
@@ -579,7 +579,7 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                 }
               }
               else {
-                nsIURL* docURL = nsnull;
+                nsIURI* docURL = nsnull;
 
                 nsIHTMLContent* htmlContent;
                 if (NS_SUCCEEDED(styledContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
@@ -723,7 +723,7 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   // nsIStyleSheet api
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetURL(nsIURL*& aURL) const
+HTMLStyleSheetImpl::GetURL(nsIURI*& aURL) const
 {
   NS_IF_ADDREF(mURL);
   aURL = mURL;
@@ -801,7 +801,7 @@ HTMLStyleSheetImpl::SetOwningDocument(nsIDocument* aDocument)
   return NS_OK;
 }
 
-NS_IMETHODIMP HTMLStyleSheetImpl::Init(nsIURL* aURL, nsIDocument* aDocument)
+NS_IMETHODIMP HTMLStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
 {
   NS_PRECONDITION(aURL && aDocument, "null ptr");
   if (! aURL || ! aDocument)
@@ -816,7 +816,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::Init(nsIURL* aURL, nsIDocument* aDocument)
   return NS_OK;
 }
 
-NS_IMETHODIMP HTMLStyleSheetImpl::Reset(nsIURL* aURL)
+NS_IMETHODIMP HTMLStyleSheetImpl::Reset(nsIURI* aURL)
 {
   NS_IF_RELEASE(mURL);
   mURL = aURL;
@@ -1120,7 +1120,7 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 
 // XXX For convenience and backwards compatibility
 NS_HTML nsresult
-NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURL* aURL, 
+NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL, 
                      nsIDocument* aDocument)
 {
   nsresult rv;

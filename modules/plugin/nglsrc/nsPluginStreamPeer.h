@@ -22,7 +22,7 @@
 #include "nscore.h"
 #include "nsIPluginStreamPeer.h"
 
-class nsIURL;
+class nsIURI;
 
 class nsPluginStreamPeer : public nsIPluginStreamPeer
 {
@@ -52,14 +52,14 @@ public:
 
   //locals
 
-  nsresult Initialize(nsIURL *aURL, PRUint32 aLength,
+  nsresult Initialize(nsIURI *aURL, PRUint32 aLength,
                       PRUint32 aLastMod, nsMIMEType aMIMEType,
                       void *aNotifyData);
 
   nsresult SetReason(nsPluginReason aReason);
 
 private:
-  nsIURL          *mURL;
+  nsIURI          *mURL;
   PRUint32        mLength;
   PRUint32        mLastMod;
   void            *mNotifyData;

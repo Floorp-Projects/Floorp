@@ -38,7 +38,7 @@
 #include "nsILoadAttribs.h"
 #include "nsINetService.h"
 #else
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIEventQueueService.h"
 #include "nsIIOService.h"
 #include "nsIChannel.h"
@@ -122,22 +122,22 @@ public:
                   nsIPostData* aPostData,
                   nsIStreamListener* aListener);
 
-    nsresult Bind(nsIURL* aURL, nsIStreamListener* aListener);
+    nsresult Bind(nsIURI* aURL, nsIStreamListener* aListener);
 
     nsresult Stop(void);
 
     /* nsIStreamListener interface methods... */
-    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aStream, PRUint32 aLength);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+    NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
+    NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+    NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+    NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+    NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aStream, PRUint32 aLength);
+    NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
     nsresult GetStatus(void) { return mStatus; }
 
     /* nsIRefreshURL interface methods... */
-    NS_IMETHOD RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat);
+    NS_IMETHOD RefreshURL(nsIURI* aURL, PRInt32 millis, PRBool repeat);
     NS_IMETHOD CancelRefreshURLTimers(void);
 
 protected:
@@ -145,7 +145,7 @@ protected:
 
 protected:
     char*               m_Command;
-    nsIURL*             m_Url;
+    nsIURI*             m_Url;
     nsIContentViewerContainer* m_Container;
     nsISupports*        m_ExtraInfo;
     nsIStreamObserver*  m_Observer;
@@ -208,12 +208,12 @@ public:
 
 #ifndef NECKO
     // nsIURLGroup interface...
-    NS_IMETHOD CreateURL(nsIURL** aInstancePtrResult, 
-                         nsIURL* aBaseURL,
+    NS_IMETHOD CreateURL(nsIURI** aInstancePtrResult, 
+                         nsIURI* aBaseURL,
                          const nsString& aSpec,
                          nsISupports* aContainer);
 
-    NS_IMETHOD OpenStream(nsIURL *aUrl, 
+    NS_IMETHOD OpenStream(nsIURI *aUrl, 
                           nsIStreamListener *aConsumer);
 
     NS_IMETHOD GetDefaultLoadAttributes(nsILoadAttribs*& aLoadAttribs);
@@ -225,32 +225,32 @@ public:
 
     // Implementation specific methods...
     void FireOnStartDocumentLoad(nsIDocumentLoader* aLoadInitiator,
-                                 nsIURL* aURL, 
+                                 nsIURI* aURL, 
                                  const char* aCommand);
     void FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
                                PRInt32 aStatus);
 							   
 
     void FireOnStartURLLoad(nsIDocumentLoader* aLoadInitiator,
-                            nsIURL* aURL, 
+                            nsIURI* aURL, 
                             const char* aContentType, 
                             nsIContentViewer* aViewer);
 
     void FireOnProgressURLLoad(nsIDocumentLoader* aLoadInitiator,
-                               nsIURL* aURL, PRUint32 aProgress, 
+                               nsIURI* aURL, PRUint32 aProgress, 
                                PRUint32 aProgressMax);
 
     void FireOnStatusURLLoad(nsIDocumentLoader* aLoadInitiator,
-                             nsIURL* aURL, nsString& aMsg);
+                             nsIURI* aURL, nsString& aMsg);
 
     void FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
-                          nsIURL* aURL, PRInt32 aStatus);
+                          nsIURI* aURL, PRInt32 aStatus);
 
-    void LoadURLComplete(nsIURL* aURL, nsISupports* aLoader, PRInt32 aStatus);
+    void LoadURLComplete(nsIURI* aURL, nsISupports* aLoader, PRInt32 aStatus);
     void SetParent(nsDocLoaderImpl* aParent);
-    void SetDocumentUrl(nsIURL* aUrl);
+    void SetDocumentUrl(nsIURI* aUrl);
 
-    nsresult CreateContentViewer(nsIURL* aURL, 
+    nsresult CreateContentViewer(nsIURI* aURL, 
                                  const char* aContentType, 
                                  const char *aCommand,
                                  nsIContentViewerContainer* aContainer,
@@ -279,7 +279,7 @@ protected:
     // (ie, non owning) references. If you add any members to this
     // class, please make the ownership explicit (pinkerton, scc).
   
-    nsIURL*                    mDocumentUrl;       // [OWNER] ???compare with document
+    nsIURI*                    mDocumentUrl;       // [OWNER] ???compare with document
     nsCOMPtr<nsISupportsArray> m_LoadingDocsList;
 
     nsVoidArray                mChildGroupList;
@@ -407,7 +407,7 @@ nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
 }
 
 nsresult
-nsDocLoaderImpl::CreateContentViewer(nsIURL* aURL, 
+nsDocLoaderImpl::CreateContentViewer(nsIURI* aURL, 
                                      const char* aContentType, 
                                      const char *aCommand,
                                      nsIContentViewerContainer* aContainer,
@@ -697,13 +697,13 @@ nsDocLoaderImpl::GetContentViewerContainer(PRUint32 aDocumentID,
 
 #ifndef NECKO
 NS_IMETHODIMP
-nsDocLoaderImpl::CreateURL(nsIURL** aInstancePtrResult, 
-                           nsIURL* aBaseURL,
+nsDocLoaderImpl::CreateURL(nsIURI** aInstancePtrResult, 
+                           nsIURI* aBaseURL,
                            const nsString& aURLSpec,
                            nsISupports* aContainer)
 {
   nsresult rv;
-  nsIURL* url = nsnull;
+  nsIURI* url = nsnull;
 
     /* Check for initial error conditions... */
   if (nsnull == aInstancePtrResult) {
@@ -724,7 +724,7 @@ nsDocLoaderImpl::CreateURL(nsIURL** aInstancePtrResult,
 
 
 NS_IMETHODIMP
-nsDocLoaderImpl::OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer)
+nsDocLoaderImpl::OpenStream(nsIURI *aUrl, nsIStreamListener *aConsumer)
 {
   nsresult rv;
   nsDocumentBindInfo* loader = nsnull;
@@ -827,7 +827,7 @@ nsDocLoaderImpl::RemoveChildGroup(nsIURLGroup* aGroup)
 
 
 void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIDocumentLoader* aLoadInitiator,
-                                              nsIURL* aURL, 
+                                              nsIURI* aURL, 
                                               const char* aCommand)
 {
   PRInt32 count = mDocObservers.Count();
@@ -890,7 +890,7 @@ nsDocLoaderImpl::ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
 }
 
 void nsDocLoaderImpl::FireOnStartURLLoad(nsIDocumentLoader* aLoadInitiator,
-                                         nsIURL* aURL, const char* aContentType, 
+                                         nsIURI* aURL, const char* aContentType, 
                                          nsIContentViewer* aViewer)
 {
   PRInt32 count = mDocObservers.Count();
@@ -913,7 +913,7 @@ void nsDocLoaderImpl::FireOnStartURLLoad(nsIDocumentLoader* aLoadInitiator,
 }
 
 void nsDocLoaderImpl::FireOnProgressURLLoad(nsIDocumentLoader* aLoadInitiator,
-                                            nsIURL* aURL, PRUint32 aProgress,
+                                            nsIURI* aURL, PRUint32 aProgress,
                                             PRUint32 aProgressMax)
 {
   PRInt32 count = mDocObservers.Count();
@@ -936,7 +936,7 @@ void nsDocLoaderImpl::FireOnProgressURLLoad(nsIDocumentLoader* aLoadInitiator,
 }
 
 void nsDocLoaderImpl::FireOnStatusURLLoad(nsIDocumentLoader* aLoadInitiator,
-                                          nsIURL* aURL, nsString& aMsg)
+                                          nsIURI* aURL, nsString& aMsg)
 {
   PRInt32 count = mDocObservers.Count();
   PRInt32 index;
@@ -958,7 +958,7 @@ void nsDocLoaderImpl::FireOnStatusURLLoad(nsIDocumentLoader* aLoadInitiator,
 }
 
 void nsDocLoaderImpl::FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
-                                       nsIURL* aURL, PRInt32 aStatus)
+                                       nsIURI* aURL, PRInt32 aStatus)
 {
   PRInt32 count = mDocObservers.Count();
   PRInt32 index;
@@ -981,7 +981,7 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
 
 
 
-void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRInt32 aStatus)
+void nsDocLoaderImpl::LoadURLComplete(nsIURI* aURL, nsISupports* aBindInfo, PRInt32 aStatus)
 {
     PRBool isForegroundURL = PR_FALSE;
 
@@ -1052,7 +1052,7 @@ void nsDocLoaderImpl::SetParent(nsDocLoaderImpl* aParent)
   NS_IF_ADDREF(mParent);
 }
 
-void nsDocLoaderImpl::SetDocumentUrl(nsIURL* aUrl)
+void nsDocLoaderImpl::SetDocumentUrl(nsIURI* aUrl)
 {
   NS_IF_RELEASE(mDocumentUrl);
   mDocumentUrl = aUrl;
@@ -1210,7 +1210,7 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
                                   nsIStreamListener* aListener)
 {
     nsresult rv;
-    nsIURL* url = nsnull;
+    nsIURI* url = nsnull;
 
     /* If this nsDocumentBindInfo was created with a container pointer.
      * extract the nsISupports iface from it and create the url with 
@@ -1264,7 +1264,7 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
 }
 
 
-nsresult nsDocumentBindInfo::Bind(nsIURL* aURL, nsIStreamListener* aListener)
+nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener)
 {
   nsresult rv = NS_OK;
 
@@ -1366,7 +1366,7 @@ nsresult nsDocumentBindInfo::Stop(void)
 }
 
 
-NS_METHOD nsDocumentBindInfo::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
+NS_METHOD nsDocumentBindInfo::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
     nsresult rv = NS_OK;
 
@@ -1380,7 +1380,7 @@ NS_METHOD nsDocumentBindInfo::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aIn
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRUint32 aProgress, 
+NS_METHOD nsDocumentBindInfo::OnProgress(nsIURI* aURL, PRUint32 aProgress, 
                                          PRUint32 aProgressMax)
 {
     nsresult rv = NS_OK;
@@ -1411,7 +1411,7 @@ NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRUint32 aProgress,
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+NS_METHOD nsDocumentBindInfo::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
     nsresult rv = NS_OK;
 
@@ -1435,7 +1435,7 @@ NS_METHOD nsDocumentBindInfo::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 
 
 NS_IMETHODIMP
-nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentType)
+nsDocumentBindInfo::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
     nsresult rv = NS_OK;
     nsIContentViewer* viewer = nsnull;
@@ -1527,7 +1527,7 @@ nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentType)
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURL* aURL, 
+NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURI* aURL, 
                                               nsIInputStream *aStream, PRUint32 aLength)
 {
     nsresult rv = NS_OK;
@@ -1570,7 +1570,7 @@ done:
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
+NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURI* aURL, nsresult aStatus, 
                                             const PRUnichar* aMsg)
 {
     nsresult rv = NS_OK;
@@ -1613,7 +1613,7 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, nsresult aStatus,
 }
 
 NS_METHOD
-nsDocumentBindInfo::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
+nsDocumentBindInfo::RefreshURL(nsIURI* aURL, PRInt32 millis, PRBool repeat)
 {
     if (nsnull != m_Container) {
         nsresult rv;

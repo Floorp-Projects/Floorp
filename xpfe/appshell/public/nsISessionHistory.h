@@ -64,7 +64,11 @@ public:
   /**
    * Reload the current history entry
    */
+#ifdef NECKO
+  NS_IMETHOD Reload(PRBool bypassCache, PRBool bypassProxy) = 0;
+#else
   NS_IMETHOD Reload(nsURLReloadType aReloadType) = 0;
+#endif
 
   /**
    * whether you can go forward in History

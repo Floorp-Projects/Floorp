@@ -46,7 +46,7 @@ PluginArrayImpl::~PluginArrayImpl()
 		nsServiceManager::ReleaseService(kPluginManagerCID, mPluginHost);
 
 	if (mPluginArray != nsnull) {
-		for (int i = 0; i < mPluginCount; i++) {
+		for (PRUint32 i = 0; i < mPluginCount; i++) {
 			NS_IF_RELEASE(mPluginArray[i]);
 		}
 		delete[] mPluginArray;
@@ -135,7 +135,7 @@ NS_IMETHODIMP PluginArrayImpl::NamedItem(const nsString& aName, nsIDOMPlugin** a
 
 	*aReturn = nsnull;
 
-	for (int i = 0; i < mPluginCount; i++) {
+	for (PRUint32 i = 0; i < mPluginCount; i++) {
 		nsString pluginName;
 		nsIDOMPlugin* plugin = mPluginArray[i];
 		if (plugin->GetName(pluginName) == NS_OK) {
@@ -164,7 +164,7 @@ nsresult PluginArrayImpl::GetPlugins()
 			rv = mPluginHost->GetPlugins(mPluginCount, mPluginArray);
 			if (rv == NS_OK) {
 				// need to wrap each of these with a PluginElementImpl, which is scriptable.
-				for (int i = 0; i < mPluginCount; i++) {
+				for (PRUint32 i = 0; i < mPluginCount; i++) {
 					nsIDOMPlugin* wrapper = new PluginElementImpl(mPluginArray[i]);
 					NS_IF_ADDREF(wrapper);
 					mPluginArray[i] = wrapper;
@@ -193,7 +193,7 @@ PluginElementImpl::~PluginElementImpl()
 	NS_IF_RELEASE(mPlugin);
 	
 	if (mMimeTypeArray != nsnull) {
-		for (int i = 0; i < mMimeTypeCount; i++)
+		for (PRUint32 i = 0; i < mMimeTypeCount; i++)
 			NS_IF_RELEASE(mMimeTypeArray[i]);
 		delete[] mMimeTypeArray;
 	}
@@ -290,7 +290,7 @@ NS_IMETHODIMP PluginElementImpl::NamedItem(const nsString& aName, nsIDOMMimeType
 		if (rv != NS_OK)
 			return rv;
 	}
-	for (int i = 0; i < mMimeTypeCount; i++) {
+	for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
 		nsString type;
 		nsIDOMMimeType* mimeType = mMimeTypeArray[i];
 		if (mimeType->GetType(type) == NS_OK) {
@@ -311,7 +311,7 @@ nsresult PluginElementImpl::GetMimeTypes()
 		mMimeTypeArray = new nsIDOMMimeType*[mMimeTypeCount];
 		if (mMimeTypeArray == nsnull)
 			return NS_ERROR_OUT_OF_MEMORY;
-		for (int i = 0; i < mMimeTypeCount; i++) {
+		for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
 			nsIDOMMimeType* mimeType = nsnull;
 			rv = mPlugin->Item(i, &mimeType);
 			if (rv != NS_OK)

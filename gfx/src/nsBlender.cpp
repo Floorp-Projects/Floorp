@@ -70,8 +70,7 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDra
 {
   nsresult      result = NS_ERROR_FAILURE;
   nsPoint       srcloc, maskloc;
-  PRInt32       dlinespan, slinespan, mlinespan, numbytes, numlines, level;
-  PRUint8       *s1, *d1, *m1, *mask = NULL, *ssl = NULL;
+  PRUint8       *mask = NULL, *ssl = NULL;
   PRBool        srcissurf = PR_FALSE;
   PRBool        secondsrcissurf = PR_FALSE;
   PRBool        dstissurf = PR_FALSE;
@@ -124,8 +123,7 @@ NS_IMETHODIMP nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32
 {
   nsresult      result = NS_ERROR_FAILURE;
   nsPoint       srcloc, maskloc;
-  PRInt32       dlinespan, slinespan, mlinespan, numbytes, numlines, level;
-  PRUint8       *s1, *d1, *m1, *mask = NULL, *ssl = NULL;
+  PRUint8       *mask = NULL, *ssl = NULL;
   PRBool        srcissurf = PR_FALSE;
   PRBool        secondsrcissurf = PR_FALSE;
   PRBool        dstissurf = PR_FALSE;

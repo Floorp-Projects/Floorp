@@ -203,7 +203,7 @@ nsresult nsXPInstallManager::DownloadNext()
             if (NS_SUCCEEDED(rv))
             {
                 // --- start the download
-                nsIURL  *pURL;
+                nsIURI  *pURL;
                 rv = NS_NewURL(&pURL, mItem->mURL);
                 if (NS_SUCCEEDED(rv))
                     rv = NS_OpenURL( pURL, this );
@@ -250,13 +250,13 @@ nsresult nsXPInstallManager::DownloadNext()
 // IStreamListener methods
 
 NS_IMETHODIMP
-nsXPInstallManager::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info)
+nsXPInstallManager::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXPInstallManager::OnProgress( nsIURL* aURL,
+nsXPInstallManager::OnProgress( nsIURI* aURL,
                           PRUint32 Progress,
                           PRUint32 ProgressMax)
 {
@@ -264,7 +264,7 @@ nsXPInstallManager::OnProgress( nsIURL* aURL,
 }
 
 NS_IMETHODIMP
-nsXPInstallManager::OnStatus(nsIURL* aURL, 
+nsXPInstallManager::OnStatus(nsIURI* aURL, 
                        const PRUnichar* aMsg)
 { 
     if (mDlg)
@@ -274,7 +274,7 @@ nsXPInstallManager::OnStatus(nsIURL* aURL,
 }
 
 NS_IMETHODIMP
-nsXPInstallManager::OnStartBinding(nsIURL* aURL, 
+nsXPInstallManager::OnStartBinding(nsIURI* aURL, 
                              const char *aContentType)
 {
     mItem->mFile->openStreamForWriting();
@@ -282,7 +282,7 @@ nsXPInstallManager::OnStartBinding(nsIURL* aURL,
 }
 
 NS_IMETHODIMP
-nsXPInstallManager::OnStopBinding(nsIURL* aURL,
+nsXPInstallManager::OnStopBinding(nsIURI* aURL,
                                         nsresult status,
                                         const PRUnichar* aMsg)
 {
@@ -314,7 +314,7 @@ nsXPInstallManager::OnStopBinding(nsIURL* aURL,
 #define BUF_SIZE 1024
 
 NS_IMETHODIMP
-nsXPInstallManager::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length)
+nsXPInstallManager::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length)
 {
     PRUint32 len;
     PRInt32  result;
@@ -357,7 +357,7 @@ nsXPInstallManager::BeforeJavascriptEvaluation()
     if ( NS_SUCCEEDED( rv ) ) 
     {
         // Open "progress" dialog.
-        nsIURL *url;
+        nsIURI *url;
         rv = NS_NewURL( &url, "resource:/res/xpinstall/progress.xul" );
         
         if ( NS_SUCCEEDED(rv) ) 

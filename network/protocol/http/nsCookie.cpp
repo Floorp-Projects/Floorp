@@ -149,7 +149,7 @@ cookie_Localize(char* genericString) {
     printf("cannot get net service\n");
     return v.ToNewCString();
   }
-  nsIURL *url = nsnull;
+  nsIURI *url = nsnull;
   ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
     nsnull);
   if (NS_FAILED(ret)) {

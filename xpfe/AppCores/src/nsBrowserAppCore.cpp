@@ -49,7 +49,7 @@
 #include "nsINetService.h"
 #else
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIWidget.h"
@@ -393,7 +393,7 @@ newWind(char* urlName)
    * deal with GUI initialization...
    */
   ///write me...
-  nsIURL* url;
+  nsIURI* url;
   
 #ifndef NECKO
   rv = NS_NewURL(&url, urlstr);
@@ -405,7 +405,7 @@ newWind(char* urlName)
   rv = service->NewURI(urlstr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
   NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv)) return rv;
@@ -449,7 +449,7 @@ nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
 
     window = nsnull;
 
-    nsCOMPtr<nsIURL> urlObj;
+    nsCOMPtr<nsIURI> urlObj;
     char *urlstr = "resource:/res/samples/WalletEditor.html";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
@@ -461,7 +461,7 @@ nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
     rv = service->NewURI(urlstr, nsnull, &uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
     NS_RELEASE(uri);
 #endif // NECKO
     if (NS_FAILED(rv))
@@ -508,7 +508,7 @@ nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
 
     window = nsnull;
 
-    nsCOMPtr<nsIURL> urlObj;
+    nsCOMPtr<nsIURI> urlObj;
     char * urlstr = "resource:/res/samples/SignonViewer.html";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
@@ -520,7 +520,7 @@ nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
     rv = service->NewURI(urlstr, nsnull, &uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
     NS_RELEASE(uri);
 #endif // NECKO
     if (NS_FAILED(rv))
@@ -567,7 +567,7 @@ nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
 
     window = nsnull;
 
-    nsCOMPtr<nsIURL> urlObj;
+    nsCOMPtr<nsIURI> urlObj;
     char *urlstr = "resource:/res/samples/CookieViewer.html";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
@@ -579,7 +579,7 @@ nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
     rv = service->NewURI(urlstr, nsnull, &uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
     NS_RELEASE(uri);
 #endif // NECKO
     if (NS_FAILED(rv))
@@ -669,7 +669,7 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
 
     window = nsnull;
 
-    nsCOMPtr<nsIURL> urlObj;
+    nsCOMPtr<nsIURI> urlObj;
     char * urlstr = "resource:/res/samples/WalletPreview.html";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
@@ -681,7 +681,7 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
     rv = service->NewURI(urlstr, nsnull, &uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
     NS_RELEASE(uri);
 #endif // NECKO
     if (NS_FAILED(rv))
@@ -1056,7 +1056,7 @@ static nsresult setAttribute( nsIWebShell *shell,
 // nsIDocumentLoaderObserver methods
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURL* aURL, const char* aCommand)
+nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, const char* aCommand)
 {
   NS_PRECONDITION(aLoader != nsnull, "null ptr");
   if (! aLoader)
@@ -1098,7 +1098,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURL* aURL, 
 
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURL *aUrl, PRInt32 aStatus,
+nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PRInt32 aStatus,
 									nsIDocumentLoaderObserver * aObserver)
 {
   NS_PRECONDITION(aLoader != nsnull, "null ptr");
@@ -1208,7 +1208,7 @@ end:
 
 NS_IMETHODIMP
 nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                           nsIURL *aURL,
+                                           nsIURI *aURL,
                                            const char *aContentType,
                                            const char *aCommand ) {
     nsresult rv = NS_OK;
@@ -1240,7 +1240,7 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
-                                 nsIURL* aURL, const char* aContentType,
+                                 nsIURI* aURL, const char* aContentType,
                                  nsIContentViewer* aViewer)
 {
 
@@ -1249,7 +1249,7 @@ nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                                    nsIURL* aURL, PRUint32 aProgress, 
+                                    nsIURI* aURL, PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
 {
   nsresult rv = NS_OK;
@@ -1262,7 +1262,7 @@ nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                                  nsIURL* aURL, nsString& aMsg)
+                                  nsIURI* aURL, nsString& aMsg)
 {
   nsresult rv = setAttribute( mWebShell, "Browser:Status", "value", aMsg );
    return rv;
@@ -1271,7 +1271,7 @@ nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
-                               nsIURL* aURL, PRInt32 aStatus)
+                               nsIURI* aURL, PRInt32 aStatus)
 {
 
    return NS_OK;
@@ -1444,7 +1444,7 @@ nsBrowserAppCore::NewWindow()
    * deal with GUI initialization...
    */
   ///write me...
-  nsIURL* url;
+  nsIURI* url;
 
 #ifndef NECKO  
   rv = NS_NewURL(&url, urlstr);
@@ -1456,7 +1456,7 @@ nsBrowserAppCore::NewWindow()
   rv = service->NewURI(urlstr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
   NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv)) return rv;
@@ -1709,7 +1709,7 @@ nsBrowserAppCore::DoDialog()
 
   window = nsnull;
 
-  nsCOMPtr<nsIURL> urlObj;
+  nsCOMPtr<nsIURI> urlObj;
   char * urlstr = "resource://res/samples/Password.html";
 #ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
@@ -1721,7 +1721,7 @@ nsBrowserAppCore::DoDialog()
   rv = service->NewURI(urlstr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
   NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv))

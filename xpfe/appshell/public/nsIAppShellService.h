@@ -27,7 +27,7 @@
 /* Forward declarations... */
 struct PRThread;
 class nsIFactory;
-class nsIURL;
+class nsIURI;
 class nsIWebShellWindow;
 class nsString;
 class nsIStreamObserver;
@@ -50,19 +50,19 @@ public:
   NS_IMETHOD Shutdown(void) = 0;
 
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
-                                  nsIURL* aUrl, 
+                                  nsIURI* aUrl, 
 																	PRBool showWindow, 
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
   NS_IMETHOD CreateDialogWindow(  nsIWebShellWindow * aParent,
-                                  nsIURL* aUrl, 
+                                  nsIURI* aUrl, 
 																	PRBool showWindow,
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
   NS_IMETHOD RunModalDialog(      nsIWebShellWindow * aParent,
-                                  nsIURL* aUrl, 
+                                  nsIURI* aUrl, 
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;

@@ -46,7 +46,7 @@ public:
    * @param result   the URL that was used to build the transport
    * @return The return value is currently ignored.
    */
-  NS_IMETHOD GetURL(nsIURL* *result) = 0;
+  NS_IMETHOD GetURL(nsIURI* *result) = 0;
 
   /**
    * Sets up the InputStreamListener. Transport layer will notify this 
@@ -92,7 +92,7 @@ public:
   /**
   * Returns true if the transport has been opened already and FALSE otherwise.
   * If a transport has not been opened yet, then you should open it using
-  * Open(nsIURL *).
+  * Open(nsIURI *).
   **/
   
   NS_IMETHOD IsTransportOpen(PRBool * aSocketOpen) = 0;
@@ -108,7 +108,7 @@ public:
   * cause the connection to be closed...
   **/ 
   
-  NS_IMETHOD Open(nsIURL * aUrl) = 0;
+  NS_IMETHOD Open(nsIURI * aUrl) = 0;
 };
 
 

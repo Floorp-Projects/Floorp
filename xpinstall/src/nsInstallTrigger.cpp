@@ -270,7 +270,7 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
 
 
 
-// this will take a nsIUrl, and create a temporary file.  If it is local, we just us it.
+// this will take a nsIURI, and create a temporary file.  If it is local, we just us it.
  
 void
 nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFileString)

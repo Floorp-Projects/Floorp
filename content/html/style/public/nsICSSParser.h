@@ -23,7 +23,7 @@
 class nsIStyleRule;
 class nsICSSStyleSheet;
 class nsIUnicharInputStream;
-class nsIURL;
+class nsIURI;
 class nsString;
 class nsICSSDeclaration;
 class nsICSSLoader;
@@ -50,18 +50,18 @@ public:
   NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader) = 0;
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
-                   nsIURL*                aInputURL,
+                   nsIURI*                aInputURL,
                    nsICSSStyleSheet*&     aResult) = 0;
 
   // Parse declarations assuming that the outer curly braces have
   // already been accounted for. aBaseURL is the base url to use for
   // relative links in the declaration.
   NS_IMETHOD ParseDeclarations(const nsString& aDeclaration,
-                               nsIURL*         aBaseURL,
+                               nsIURI*         aBaseURL,
                                nsIStyleRule*&  aResult) = 0;
 
   NS_IMETHOD ParseAndAppendDeclaration(const nsString&    aBuffer,
-                                       nsIURL*            aBaseURL,
+                                       nsIURI*            aBaseURL,
                                        nsICSSDeclaration* aDeclaration,
                                        PRInt32*           aHint) = 0;
 

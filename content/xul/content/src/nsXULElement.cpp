@@ -1810,7 +1810,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     // know about the StyleRule change.
     if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kStyleAtom) {
 
-        nsIURL* docURL = nsnull;
+        nsIURI* docURL = nsnull;
         if (nsnull != mDocument) {
             mDocument->GetBaseURL(docURL);
         }
@@ -2091,7 +2091,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
     
     if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kStyleAtom) {
 
-        nsIURL* docURL = nsnull;
+        nsIURI* docURL = nsnull;
         if (nsnull != mDocument) {
             mDocument->GetBaseURL(docURL);
         }
@@ -2521,7 +2521,7 @@ RDFElementImpl::GetRefResource(nsIRDFResource** aResource)
             nsresult rv;
 
             // ...now resolve it to an absolute URI.
-            nsCOMPtr<nsIURL> base = dont_AddRef(mDocument->GetDocumentURL());
+            nsCOMPtr<nsIURI> base = dont_AddRef(mDocument->GetDocumentURL());
 
             nsAutoString uri(attr->mValue);
             rv = rdf_MakeAbsoluteURI(base, uri);

@@ -43,16 +43,16 @@ public:
     nsNetlibService();
 
     /* Implementation of the nsINetService interface */
-    NS_IMETHOD OpenStream(nsIURL *aUrl, 
+    NS_IMETHOD OpenStream(nsIURI *aUrl, 
                           nsIStreamListener *aConsumer);
-    NS_IMETHOD OpenBlockingStream(nsIURL *aUrl, 
+    NS_IMETHOD OpenBlockingStream(nsIURI *aUrl, 
                                   nsIStreamListener *aConsumer,
                                   nsIInputStream **aNewStream);
     
-    NS_IMETHOD InterruptStream(nsIURL* aURL);
+    NS_IMETHOD InterruptStream(nsIURI* aURL);
 
-    NS_IMETHOD GetCookieString(nsIURL *aURL, nsString& aCookie);
-    NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie);
+    NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie);
+    NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie);
 
     NS_IMETHOD Cookie_DisplayCookieInfoAsHTML();
     NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results);
@@ -78,9 +78,9 @@ public:
     NS_IMETHOD GetProtocol(const nsString& aName, 
                            nsIProtocolURLFactory* *aProtocolURLFactory,
                            nsIProtocol* *aProtocol);
-    NS_IMETHOD CreateURL(nsIURL* *aURL, 
+    NS_IMETHOD CreateURL(nsIURI* *aURL, 
                          const nsString& aSpec,
-                         const nsIURL* aContextURL = nsnull,
+                         const nsIURI* aContextURL = nsnull,
                          nsISupports* aContainer = nsnull,
                          nsIURLGroup* aGroup = nsnull);
     NS_IMETHOD AreThereActiveConnections(void);
@@ -108,7 +108,7 @@ protected:
     static int gRefCnt;
 
 private:
-    void SetupURLStruct(nsIURL *aURL, URL_Struct *aURL_s);
+    void SetupURLStruct(nsIURI *aURL, URL_Struct *aURL_s);
     /* XXX: This is temporary until bamwrap.cpp is removed... */
     void *m_stubContext;
     nsIPref *mPref;

@@ -27,7 +27,7 @@
 #include "nsIStreamListener.h"
 
 class nsIPlugin;
-class nsIURL;
+class nsIURI;
 class nsIDOMPlugin;
 
 #define NS_IPLUGINHOST_IID \
@@ -52,13 +52,13 @@ public:
   GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin) = 0;
 
   NS_IMETHOD
-  InstantiateEmbededPlugin(const char *aMimeType, nsIURL* aURL, nsIPluginInstanceOwner *aOwner) = 0;
+  InstantiateEmbededPlugin(const char *aMimeType, nsIURI* aURL, nsIPluginInstanceOwner *aOwner) = 0;
 
   NS_IMETHOD
   InstantiateFullPagePlugin(const char *aMimeType, nsString& aURLSpec, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner) = 0;
 
   NS_IMETHOD
-  SetUpPluginInstance(const char *aMimeType, nsIURL *aURL, nsIPluginInstanceOwner *aOwner) = 0;
+  SetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner) = 0;
 
   NS_IMETHOD
   IsPluginEnabledForType(const char* aMimeType) = 0;

@@ -23,7 +23,7 @@
 #include "nscore.h"
 
 class nsString;
-class nsIURL;
+class nsIURI;
 class nsIURLGroup;
 
 #define NS_IPROTOCOLURLFACTORY_IID                   \
@@ -36,7 +36,7 @@ class nsIURLGroup;
 
 /**
  * nsIProtocolURLFactory deals with protocol-specific URL parsing. It 
- * constructs a URL that implements the nsIURL interface and that gets
+ * constructs a URL that implements the nsIURI interface and that gets
  * loaded by a corresponding protocol handler.
  *
  * Note that one nsIProtocolURLFactory implementation might handle the
@@ -47,9 +47,9 @@ class nsIProtocolURLFactory : public nsISupports
 {
 public:
 
-    NS_IMETHOD CreateURL(nsIURL* *aResult,
+    NS_IMETHOD CreateURL(nsIURI* *aResult,
                          const nsString& aSpec,
-                         const nsIURL* aContextURL = nsnull,
+                         const nsIURI* aContextURL = nsnull,
                          nsISupports* aContainer = nsnull,
                          nsIURLGroup* aGroup = nsnull) = 0;
 };

@@ -79,7 +79,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
@@ -192,7 +192,7 @@ protected:
     nsVoidArray       mObservers;     // WEAK REFERENCES
     PRBool            mIsLoading;     // true while the document is loading
     NameSpaceMap*     mNameSpaces;
-    nsCOMPtr<nsIURL>  mURL;
+    nsCOMPtr<nsIURI>  mURL;
 
     // pseudo-constants
     static PRInt32 gRefCnt;
@@ -516,7 +516,7 @@ RDFXMLDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
 
 
 static nsresult
-rdf_BlockingParse(nsIURL* aURL, nsIStreamListener* aConsumer)
+rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 {
     nsresult rv;
 
@@ -590,7 +590,7 @@ static const char kResourceURIPrefix[] = "resource:";
     rv = service->NewURI(uri, nsnull, &uriPtr);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uriPtr->QueryInterface(nsIURL::GetIID(), (void**)&mURL);
+    rv = uriPtr->QueryInterface(nsIURI::GetIID(), (void**)&mURL);
     NS_RELEASE(uriPtr);
 #endif // NECKO
     if (NS_FAILED(rv)) return rv;

@@ -28,7 +28,7 @@ class nsIAtom;
 class nsIContent;
 class nsIDocument;
 class nsITimer;
-class nsIURL;
+class nsIURI;
 class nsIPresShell;
 class nsViewerApp;
 class AtomHashTable;
@@ -43,23 +43,23 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDocumentLoaderObserver
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                                  const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aURL,
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aURL,
                                PRInt32 aStatus, 
                                nsIDocumentLoaderObserver * aObserver);
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                             const char* aContentType, 
                             nsIContentViewer* aViewer);
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
-                               nsIURL* aURL, PRUint32 aProgress, 
+                               nsIURI* aURL, PRUint32 aProgress, 
                                PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                              nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                           PRInt32 aStatus);
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
-                                      nsIURL *aURL,
+                                      nsIURI *aURL,
                                       const char *aContentType,
                                       const char *aCommand);
 
@@ -131,7 +131,7 @@ protected:
   void RecordLoadedURL(const nsString& aURLSpec);
 
   /** generate an output name from a URL */
-  FILE* GetOutputFile(nsIURL *aURL, nsString& aOutputName);
+  FILE* GetOutputFile(nsIURI *aURL, nsString& aOutputName);
 
   nsIPresShell* GetPresShell();
 

@@ -23,7 +23,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -75,7 +75,7 @@ NS_DEF_PTR(nsIHTMLContent);
 NS_DEF_PTR(nsIContent);
 NS_DEF_PTR(nsIStyleRule);
 NS_DEF_PTR(nsICSSStyleRule);
-NS_DEF_PTR(nsIURL);
+NS_DEF_PTR(nsIURI);
 NS_DEF_PTR(nsISupportsArray);
 NS_DEF_PTR(nsICSSStyleSheet);
 
@@ -376,7 +376,7 @@ public:
 
   nsVoidArray           mSheets;
 
-  nsIURL*               mURL;
+  nsIURI*               mURL;
 
   nsISupportsArray*     mOrderedRules;
   nsHashtable*          mMediumCascadeTable;
@@ -429,8 +429,8 @@ public:
   NS_IMETHOD_(nsrefcnt) Release();
 
   // basic style sheet data
-  NS_IMETHOD Init(nsIURL* aURL);
-  NS_IMETHOD GetURL(nsIURL*& aURL) const;
+  NS_IMETHOD Init(nsIURI* aURL);
+  NS_IMETHOD GetURL(nsIURI*& aURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD SetTitle(const nsString& aTitle);
   NS_IMETHOD GetType(nsString& aType) const;
@@ -464,7 +464,7 @@ public:
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
                                     nsIContent*     aContent);
 
-  NS_IMETHOD  ContainsStyleSheet(nsIURL* aURL) const;
+  NS_IMETHOD  ContainsStyleSheet(nsIURI* aURL) const;
 
   NS_IMETHOD AppendStyleSheet(nsICSSStyleSheet* aSheet);
   NS_IMETHOD InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex);
@@ -1456,7 +1456,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                   nsresult attrState = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
 
                   if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
-                    nsIURL* docURL = nsnull;
+                    nsIURI* docURL = nsnull;
                     nsIHTMLContent* htmlContent;
                     if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
                       htmlContent->GetBaseURL(docURL);
@@ -1852,7 +1852,7 @@ CSSStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::Init(nsIURL* aURL)
+CSSStyleSheetImpl::Init(nsIURI* aURL)
 {
   NS_PRECONDITION(aURL, "null ptr");
   if (! aURL)
@@ -1877,10 +1877,10 @@ CSSStyleSheetImpl::Init(nsIURL* aURL)
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::GetURL(nsIURL*& aURL) const
+CSSStyleSheetImpl::GetURL(nsIURI*& aURL) const
 {
-  const nsIURL* url = ((mInner) ? mInner->mURL : nsnull);
-  aURL = (nsIURL*)url;
+  const nsIURI* url = ((mInner) ? mInner->mURL : nsnull);
+  aURL = (nsIURI*)url;
   NS_IF_ADDREF(aURL);
   return NS_OK;
 }
@@ -2034,7 +2034,7 @@ CSSStyleSheetImpl::SetOwningNode(nsIDOMNode* aOwningNode)
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::ContainsStyleSheet(nsIURL* aURL) const
+CSSStyleSheetImpl::ContainsStyleSheet(nsIURI* aURL) const
 {
   NS_PRECONDITION(nsnull != aURL, "null arg");
 
@@ -2884,7 +2884,7 @@ CSSStyleSheetImpl::SetScriptObject(void* aScriptObject)
 
 // XXX for backwards compatibility and convenience
 NS_HTML nsresult
-  NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURL* aURL)
+  NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURI* aURL)
 {
   nsICSSStyleSheet* sheet;
   nsresult rv;

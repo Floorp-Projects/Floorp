@@ -19,7 +19,7 @@
 #define nsIRobotSink_h___
 
 #include "nsIHTMLContentSink.h"
-class nsIURL;
+class nsIURI;
 class nsIRobotSinkObserver;
 
 /* 61256800-cfd8-11d1-9328-00805f8add32 */
@@ -29,7 +29,7 @@ class nsIRobotSinkObserver;
 
 class nsIRobotSink : public nsIHTMLContentSink {
 public:
-  NS_IMETHOD Init(nsIURL* aDocumentURL) = 0;
+  NS_IMETHOD Init(nsIURI* aDocumentURL) = 0;
   NS_IMETHOD AddObserver(nsIRobotSinkObserver* aObserver) = 0;
   NS_IMETHOD RemoveObserver(nsIRobotSinkObserver* aObserver) = 0;
 

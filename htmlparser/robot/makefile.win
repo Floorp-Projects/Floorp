@@ -26,7 +26,9 @@ LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)			\
  $(DIST)\lib\plc3.lib	\
+!ifndef NECKO
  $(DIST)\lib\netlib.lib \
+!endif
  $(NULL)
 
 LIBNAME = .\$(OBJDIR)\DebugRobot

@@ -21,7 +21,9 @@
 #include "nsDocument.h"
 #include "nsIArena.h"
 #include "nsIURL.h"
+#ifndef NECKO
 #include "nsIURLGroup.h"
+#endif
 #include "nsString.h"
 #include "nsIContent.h"
 #include "nsIDocumentObserver.h"
@@ -629,7 +631,9 @@ nsDocument::nsDocument()
   mArena = nsnull;
   mDocumentTitle = nsnull;
   mDocumentURL = nsnull;
+#ifndef NECKO
   mDocumentURLGroup = nsnull;
+#endif
   mCharacterSet = "ISO-8859-1";
   mParentDocument = nsnull;
   mRootContent = nsnull;
@@ -673,7 +677,9 @@ nsDocument::~nsDocument()
     mDocumentTitle = nsnull;
   }
   NS_IF_RELEASE(mDocumentURL);
+#ifndef NECKO
   NS_IF_RELEASE(mDocumentURLGroup);
+#endif
 
   mParentDocument = nsnull;
 
@@ -828,7 +834,7 @@ nsIArena* nsDocument::GetArena()
 }
 
 nsresult
-nsDocument::Reset(nsIURL *aURL)
+nsDocument::Reset(nsIURI *aURL)
 {
   nsresult rv = NS_OK;
 
@@ -837,7 +843,9 @@ nsDocument::Reset(nsIURL *aURL)
     mDocumentTitle = nsnull;
   }
   NS_IF_RELEASE(mDocumentURL);
+#ifndef NECKO
   NS_IF_RELEASE(mDocumentURLGroup);
+#endif
 
   // Delete references to sub-documents
   PRInt32 index = mSubDocuments.Count();
@@ -886,7 +894,9 @@ nsDocument::Reset(nsIURL *aURL)
   if (nsnull != aURL) {
     NS_ADDREF(aURL);
 
+#ifndef NECKO
     rv = aURL->GetURLGroup(&mDocumentURLGroup);
+#endif
   }
 
   if (NS_OK == rv) {
@@ -897,7 +907,7 @@ nsDocument::Reset(nsIURL *aURL)
 }
 
 nsresult
-nsDocument::StartDocumentLoad(nsIURL *aURL, 
+nsDocument::StartDocumentLoad(nsIURI *aURL, 
                               nsIContentViewerContainer* aContainer,
                               nsIStreamListener **aDocListener,
                               const char* aCommand)
@@ -910,7 +920,7 @@ const nsString* nsDocument::GetDocumentTitle() const
   return mDocumentTitle;
 }
 
-nsIURL* nsDocument::GetDocumentURL() const
+nsIURI* nsDocument::GetDocumentURL() const
 {
   NS_IF_ADDREF(mDocumentURL);
   return mDocumentURL;
@@ -923,14 +933,20 @@ nsDocument::GetContentType(nsString& aContentType) const
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#ifndef NECKO
 nsIURLGroup* nsDocument::GetDocumentURLGroup() const
 {
   NS_IF_ADDREF(mDocumentURLGroup);
   return mDocumentURLGroup;
 }
+#endif
 
 NS_IMETHODIMP
-nsDocument::GetBaseURL(nsIURL*& aURL) const
+#ifdef NECKO
+nsDocument::GetBaseURI(nsIURI* &aURL) const
+#else
+nsDocument::GetBaseURL(nsIURI*& aURL) const
+#endif
 {
   aURL = mDocumentURL;
   NS_IF_ADDREF(mDocumentURL);

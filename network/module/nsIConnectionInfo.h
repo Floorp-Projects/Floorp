@@ -25,7 +25,7 @@
 { 0xa6cf9062, 0x15b3, 0x11d2,  \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
 
-class nsIURL;
+class nsIURI;
 class nsIInputStream;
 class nsIOutputStream;
 class nsIStreamListener;
@@ -41,7 +41,7 @@ public:
    * @param aURL Out parameter
    * @result NS_OK if successful
    */
-  NS_IMETHOD GetURL(nsIURL **aURL)=0;
+  NS_IMETHOD GetURL(nsIURI **aURL)=0;
 
   /**
    * Set the URL associated with this connection. I added this because it is possible
@@ -51,7 +51,7 @@ public:
    * @param aURL In parameter
    * @result NS_OK if successful
    */
-  NS_IMETHOD SetURL(nsIURL *aURL) = 0;
+  NS_IMETHOD SetURL(nsIURI *aURL) = 0;
 
   /**
    * Get the input stream associated with this connection

@@ -26,7 +26,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -120,7 +120,7 @@ typedef struct {
 } ClosureData;
 
 typedef struct {
-	nsIURL* url;
+	nsIURI* url;
   PRBool notified;
 } PICS_URLData;
 
@@ -140,31 +140,31 @@ public:
  
   NS_IMETHOD GetWebShell(PRUint32 key, nsIWebShellServices*& aResult);
 
-  NS_IMETHOD SetNotified(nsIWebShellServices* aResult, nsIURL* aURL, PRBool notified);
+  NS_IMETHOD SetNotified(nsIWebShellServices* aResult, nsIURI* aURL, PRBool notified);
 
   nsPICS();
   virtual ~nsPICS(void);
 
    // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                 nsIURL* aURL, 
+                                 nsIURI* aURL, 
                                  const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                               nsIURL* aURL, 
+                               nsIURI* aURL, 
                                PRInt32 aStatus,
                                nsIDocumentLoaderObserver * aObserver);
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-                            nsIURL* aURL, const char* aContentType, 
+                            nsIURI* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer);
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, 
-                               nsIURL* aURL, PRUint32 aProgress, 
+                               nsIURI* aURL, PRUint32 aProgress, 
                                PRUint32 aProgressMax);
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
-                             nsIURL* aURL, nsString& aMsg);
+                             nsIURI* aURL, nsString& aMsg);
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-                          nsIURL* aURL, PRInt32 aStatus);
+                          nsIURI* aURL, PRInt32 aStatus);
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                      nsIURL* aURL,
+                                      nsIURI* aURL,
                                       const char *aContentType,
                                       const char *aCommand );
 //  NS_IMETHOD OnConnectionsComplete();
@@ -237,7 +237,7 @@ private:
   void CheckForGenericRatings(char *url_address, PICS_RatingsStruct **rs,
                                   PICS_PassFailReturnVal *status);
 
-	nsresult GetRootURL(nsIURL* aURL);
+	nsresult GetRootURL(nsIURI* aURL);
 
 };
 
@@ -643,7 +643,7 @@ nsPICS::GetWebShell(PRUint32 key, nsIWebShellServices*& aResult)
 }
 
 NS_IMETHODIMP
-nsPICS::SetNotified(nsIWebShellServices* ws, nsIURL* aURL, PRBool notified)
+nsPICS::SetNotified(nsIWebShellServices* ws, nsIURI* aURL, PRBool notified)
 {
   nsVoidArray* currentURLList;
   if(ws == nsnull)
@@ -744,7 +744,7 @@ nsPICS::ParsePICSLabel(char * label)
 
 NS_IMETHODIMP
 nsPICS::OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                nsIURL* aURL, 
+                                nsIURI* aURL, 
                                 const char* aCommand)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -759,7 +759,7 @@ nsPICS::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                              nsIURL* aURL, 
+                              nsIURI* aURL, 
                               PRInt32 aStatus,
                               nsIDocumentLoaderObserver * aObserver)
 {
@@ -788,7 +788,7 @@ nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsPICS::OnStartURLLoad(nsIDocumentLoader* loader, 
-                           nsIURL* aURL, 
+                           nsIURI* aURL, 
                            const char* aContentType, 
                            nsIContentViewer* aViewer)
 {
@@ -819,7 +819,7 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
 
      if (nsnull != aURL) {
       urlData = PR_NEWZAP(PICS_URLData);
-      urlData->url = (nsIURL*)PR_Malloc(sizeof(aURL));
+      urlData->url = (nsIURI*)PR_Malloc(sizeof(aURL));
       urlData->url = aURL;
       urlData->notified = PR_FALSE;
       
@@ -857,7 +857,7 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsPICS::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                              nsIURL* aURL, 
+                              nsIURI* aURL, 
                               PRUint32 aProgress, 
                               PRUint32 aProgressMax)
 {
@@ -868,7 +868,7 @@ nsPICS::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsPICS::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                            nsIURL* aURL, 
+                            nsIURI* aURL, 
                             nsString& aMsg)
 {
   if(!mPICSRatingsEnabled)
@@ -878,7 +878,7 @@ nsPICS::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsPICS::OnEndURLLoad(nsIDocumentLoader* loader, 
-                         nsIURL* aURL, 
+                         nsIURI* aURL, 
                          PRInt32 aStatus)
 {
   nsIContentViewerContainer *cont;
@@ -886,7 +886,7 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
   const char* uProtocol;
   const char* uHost;
   const char* uFile;
-  nsIURL* rootURL;
+  nsIURI* rootURL;
   nsIWebShellServices  *ws;
 
   nsVoidArray* currentURLList;
@@ -965,7 +965,7 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
                   rv = service->NewURI(uriStr, nsnull, &uri);
                   if (NS_FAILED(rv)) return rv;
 
-                  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&rootURL);
+                  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&rootURL);
                   NS_RELEASE(uri);
                   if (NS_FAILED(rv)) return rv;
 #endif // NECKO
@@ -985,7 +985,7 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsPICS::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                     nsIURL* aURL,
+                                     nsIURI* aURL,
                                      const char *aContentType,
                                      const char *aCommand ) {
     // If we have a doc loader observer, let it respond to this.
@@ -1434,15 +1434,15 @@ nsPICS::PreferenceChanged(const char* aPrefName)
 //#define UA_CSS_URL "resource:/res/ua.css"
 #define UA_CSS_URL "http://www.w3.org/"
 nsresult
-nsPICS::GetRootURL(nsIURL* aURL)
+nsPICS::GetRootURL(nsIURI* aURL)
 {
 	static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
 	static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
 	nsresult rv;
 	nsIParser *mParser;
-  nsIContentSink* sink;
-  nsIStreamListener* lsnr = nsnull;
+    nsIContentSink* sink;
+    nsIStreamListener* lsnr = nsnull;
 
 	
 	rv = nsComponentManager::CreateInstance(kCParserCID, 
@@ -1455,11 +1455,18 @@ nsPICS::GetRootURL(nsIURL* aURL)
 	  NS_NewHTMLNullSink(&sink);
 
     if (sink) {
-			  mParser->SetContentSink(sink);
+        mParser->SetContentSink(sink);
         if (NS_FAILED(rv = mParser->QueryInterface(kIStreamListenerIID, (void**) &lsnr)))
-          return rv;
-			  mParser->Parse(aURL);
+            return rv;
+        mParser->Parse(aURL);
+#ifdef NECKO
+        NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            rv = serv->NewChannelFromURI("load", aURL, getter);
+        }
+#else
         rv = NS_OpenURL(aURL, lsnr);
+#endif
 	  }
 	  NS_RELEASE(sink);
 	}

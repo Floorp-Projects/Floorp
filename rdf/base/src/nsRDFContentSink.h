@@ -28,7 +28,7 @@
 
 #include "nsIRDFContentSink.h"
 
-class nsIURL;
+class nsIURI;
 class nsVoidArray;
 class nsIRDFResource;
 class nsIRDFDataSource;
@@ -79,7 +79,7 @@ public:
     // nsIRDFContentSink
     NS_IMETHOD SetDataSource(nsIRDFDataSource* ds);
     NS_IMETHOD GetDataSource(nsIRDFDataSource*& ds);
-    NS_IMETHOD Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager);
+    NS_IMETHOD Init(nsIURI* aURL, nsINameSpaceManager* aNameSpaceManager);
 
 protected:
     // Text management
@@ -129,7 +129,7 @@ protected:
 
     nsVoidArray* mContextStack;
 
-    nsIURL*      mDocumentURL;
+    nsIURI*      mDocumentURL;
     PRUint32     mGenSym; // for generating anonymous resources
 };
 

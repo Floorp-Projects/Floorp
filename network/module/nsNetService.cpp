@@ -100,7 +100,7 @@ extern "C" void net_AddrefContext(MWContext* window_id);
 static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
 
 #if defined(XP_WIN) && !defined(NETLIB_THREAD)
-nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct* URL_s, nsIURL* aURL);
+nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct* URL_s, nsIURI* aURL);
 #endif /* XP_WIN && !NETLIB_THREAD */
 
 char *mangleResourceIntoFileURL(const char* aResourceFileName);
@@ -271,7 +271,7 @@ nsNetlibService::~nsNetlibService()
 
 
 
-void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s) 
+void nsNetlibService::SetupURLStruct(nsIURI *aUrl, URL_Struct *aURL_s) 
 {
   nsresult rv;
   nsILoadAttribs* loadAttribs;
@@ -347,7 +347,7 @@ void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s)
   }
 }
 
-nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
+nsresult nsNetlibService::OpenStream(nsIURI *aUrl,
                                      nsIStreamListener *aConsumer)
 {
     URL_Struct *URL_s;
@@ -496,7 +496,7 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
 }
 
 
-nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl, 
+nsresult nsNetlibService::OpenBlockingStream(nsIURI *aUrl, 
                                              nsIStreamListener *aConsumer,
                                              nsIInputStream **aNewStream)
 {
@@ -686,7 +686,7 @@ static NS_DEFINE_IID(kIProtocolConnectionIID, NS_IPROTOCOLCONNECTION_IID);
 static NS_DEFINE_IID(kINetLibUrlIID, NS_INETLIBURL_IID);
 
 NS_IMETHODIMP
-nsNetlibService::InterruptStream(nsIURL* aURL)
+nsNetlibService::InterruptStream(nsIURI* aURL)
 {
   nsINetlibURL * pNetUrl = nsnull;
 
@@ -719,7 +719,7 @@ done:
 
 
 NS_IMETHODIMP
-nsNetlibService::GetCookieString(nsIURL *aURL, nsString& aCookie)
+nsNetlibService::GetCookieString(nsIURI *aURL, nsString& aCookie)
 {
     // XXX How safe is it to create a stub context without a URL_Struct?
     MWContext *stubContext = new_stub_context(nsnull);
@@ -742,7 +742,7 @@ nsNetlibService::GetCookieString(nsIURL *aURL, nsString& aCookie)
 }
 
 NS_IMETHODIMP
-nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
+nsNetlibService::SetCookieString(nsIURI *aURL, const nsString& aCookie)
 {
     // XXX How safe is it to create a stub context without a URL_Struct?
     MWContext *stubContext = new_stub_context(nsnull);
@@ -1040,9 +1040,9 @@ nsNetlibService::GetProtocol(const nsString& aName,
 }
 
 NS_IMETHODIMP
-nsNetlibService::CreateURL(nsIURL* *aURL, 
+nsNetlibService::CreateURL(nsIURI* *aURL, 
                            const nsString& aSpec,
-                           const nsIURL* aContextURL,
+                           const nsIURI* aContextURL,
                            nsISupports* aContainer,
                            nsIURLGroup* aGroup)
 {
@@ -1113,9 +1113,9 @@ nsNetlibService::AreThereActiveConnections()
 
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
-NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
+NS_NET nsresult NS_NewURL(nsIURI** aInstancePtrResult,
                           const nsString& aSpec,
-                          const nsIURL* aURL,
+                          const nsIURI* aURL,
                           nsISupports* aContainer,
                           nsIURLGroup* aGroup)
 {
@@ -1136,12 +1136,12 @@ NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
     return rv;
 }
 
-NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
+NS_NET nsresult NS_MakeAbsoluteURL(nsIURI* aURL,
                                    const nsString& aBaseURL,
                                    const nsString& aSpec,
                                    nsString& aResult)
 {
-    nsIURL* base = nsnull;
+    nsIURI* base = nsnull;
     if (0 < aBaseURL.Length()) {
         nsresult err = NS_NewURL(&base, aBaseURL);
         if (err != NS_OK) return err;
@@ -1153,7 +1153,7 @@ NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
         nsresult err = NS_NewURL(&base, str);
         if (err != NS_OK) return err;
     }
-    nsIURL* url = nsnull;
+    nsIURI* url = nsnull;
     nsresult err = NS_NewURL(&url, aSpec, base);
     if (err != NS_OK) goto done;
 
@@ -1169,7 +1169,7 @@ NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
     return err;
 }
 
-NS_NET nsresult NS_OpenURL(nsIURL* aURL, nsIStreamListener* aConsumer)
+NS_NET nsresult NS_OpenURL(nsIURI* aURL, nsIStreamListener* aConsumer)
 {
   nsresult rv;
   nsIURLGroup* group = nsnull;
@@ -1194,7 +1194,7 @@ NS_NET nsresult NS_OpenURL(nsIURL* aURL, nsIStreamListener* aConsumer)
   return rv;
 }
 
-NS_NET nsresult NS_OpenURL(nsIURL* aURL, nsIInputStream* *aNewStream,
+NS_NET nsresult NS_OpenURL(nsIURI* aURL, nsIInputStream* *aNewStream,
                            nsIStreamListener* aConsumer)
 {
     nsINetService *inet = nsnull;
@@ -1264,7 +1264,7 @@ void nsNetlibService::NetPollSocketsCallback(nsITimer* aTimer, void* aClosure)
  * in the little known IPAddressString field of the URL_Struct.  This prevents
  * netlib from doing an Async DNS lookup later...
  */
-nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct *URL_s, nsIURL* aURL)
+nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct *URL_s, nsIURI* aURL)
 {
     PRHostEnt hpbuf;
     char dbbuf[PR_NETDB_BUF_SIZE];

@@ -61,12 +61,12 @@ class nsXPInstallManager : public nsIXPINotifier, public nsIStreamListener
         NS_IMETHOD InitManager( nsXPITriggerInfo* aTrigger );
 
         // IStreamListener methods
-        NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info);
-        NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
-        NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-        NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-        NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
-        NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
+        NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info);
+        NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
+        NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+        NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+        NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length);
+        NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
         
         // IXPINotifier methods
         NS_IMETHOD BeforeJavascriptEvaluation();

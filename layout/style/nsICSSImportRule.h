@@ -23,7 +23,7 @@
 //#include "nsString.h"
 
 class nsIAtom;
-class nsIURL;
+class nsIURI;
 
 // IID for the nsICSSImportRule interface {33824a60-1a09-11d3-805a-006008159b5a}
 #define NS_ICSS_IMPORT_RULE_IID     \

@@ -50,7 +50,7 @@ enum eAutoDetectResult {
 class nsIParser;
 class CToken;
 class nsIDTDDebug;
-class nsIURL;
+class nsIURI;
 class nsString;
 class nsITagHandler;
 class nsIContentSink;

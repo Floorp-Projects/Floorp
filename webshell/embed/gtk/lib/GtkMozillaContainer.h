@@ -88,7 +88,7 @@ public:
   void EndStream(void);
   
 protected:
-  nsresult CreateContentViewer(nsIURL* aURL, 
+  nsresult CreateContentViewer(nsIURI* aURL, 
                                const char* aContentType, 
                                const char *aCommand,
                                nsIContentViewerContainer* aContainer,
@@ -102,7 +102,7 @@ protected:
 
   /* Stream stuff: */
   GtkMozillaInputStream *mStream;
-  nsIURL *mStreamURL;
+  nsIURI *mStreamURL;
   nsIStreamListener *mListener;
 };
 

@@ -18,11 +18,11 @@
 
 #include "nsIAppShellComponent.idl"
 
-[ptr] native nsIURL( nsIURL );
+[ptr] native nsIURI( nsIURI );
 [ptr] native nsIDocumentLoader( nsIDocumentLoader );
 
 %{C++
-class nsIURL;
+class nsIURI;
 class nsIDocumentLoader;
 %}
 
@@ -45,7 +45,7 @@ class nsIDocumentLoader;
 [scriptable, uuid(a6cf90ef-15b3-11d2-932e-00805f8add32)]
 interface nsIUnknownContentTypeHandler : nsIAppShellComponent {
 
-    void HandleUnknownContentType( in nsIURL aURL,
+    void HandleUnknownContentType( in nsIURI aURL,
                                    in string aContentType, 
                                    in nsIDocumentLoader aDocLoader );
 };
@@ -55,7 +55,7 @@ interface nsIUnknownContentTypeHandler : nsIAppShellComponent {
 #define NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/unknownContentType"
 #define NS_IUNKNOWNCONTENTTYPEHANDLER_CLASSNAME "Mozilla Unknown Content-Type Handler Component"
 #define NS_DECL_IUNKNOWNCONTENTTYPEHANDLER                                \
-    NS_IMETHOD HandleUnknownContentType( nsIURL *aURL,                    \
+    NS_IMETHOD HandleUnknownContentType( nsIURI *aURL,                    \
                                          const char *aContentType,        \
                                          nsIDocumentLoader *aDocLoader );
 %}

@@ -31,7 +31,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -983,7 +983,7 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
 
 	const PRInt32 windowWidth  = 615;
 	const PRInt32 windowHeight = 650;
-	nsCOMPtr<nsIURL> urlObj;
+	nsCOMPtr<nsIURI> urlObj;
     char * urlStr = "chrome://navigator/content";
 #ifndef NECKO
 	rv = NS_NewURL(getter_AddRefs(urlObj), urlStr);
@@ -995,7 +995,7 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
     rv = service->NewURI(urlStr, nsnull, &uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
     NS_RELEASE(uri);
 #endif // NECKO
 	if (NS_FAILED(rv))
@@ -1004,7 +1004,7 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
 	nsIWebShellWindow *aWindow = nsnull;			// we will return the window AddRefed
 	rv = appShellService->CreateTopLevelWindow(
     	nsnull,
-    	urlObj, // nsIURL* of chrome
+    	urlObj, // nsIURI* of chrome
     	PR_TRUE,
     	aWindow,
         nsnull,

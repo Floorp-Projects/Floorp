@@ -859,7 +859,7 @@ RDFXULBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
         if (! document)
             return NS_ERROR_UNEXPECTED;
 
-        nsCOMPtr<nsIURL> url = dont_AddRef( document->GetDocumentURL() );
+        nsCOMPtr<nsIURI> url = dont_AddRef( document->GetDocumentURL() );
         if (! url)
             return NS_ERROR_UNEXPECTED;
 

@@ -21,7 +21,6 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -159,7 +158,7 @@ int main(int argc, char* argv[])
 
   nsIAppShellService* appShell = nsnull;
   nsIDOMAppCoresManager *appCoresManager = nsnull;
-  nsIURL* url = nsnull;
+  nsIURI* url = nsnull;
   nsIPref *prefs = nsnull;
 #ifdef NECKO
   nsIIOService* service = nsnull;
@@ -545,7 +544,7 @@ int main(int argc, char* argv[])
   rv = service->NewURI(urlstr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
-  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
   NS_RELEASE(uri);
 #endif // NECKO
 
@@ -590,7 +589,7 @@ int main(int argc, char* argv[])
 	if (!profileDirSet)
 	{
 		int numProfiles = 0; 
-		nsIURL* profURL = nsnull;
+		nsIURI* profURL = nsnull;
 
 		PRInt32 profWinWidth  = 615;
 		PRInt32 profWinHeight = 500;

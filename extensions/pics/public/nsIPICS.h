@@ -38,7 +38,7 @@ public:
     
   NS_IMETHOD ProcessPICSLabel(char *label) = 0;
   NS_IMETHOD GetWebShell(PRUint32 key, nsIWebShellServices*& aResult) = 0;
-  NS_IMETHOD SetNotified(nsIWebShellServices* aResult, nsIURL* aURL, PRBool notified) = 0;
+  NS_IMETHOD SetNotified(nsIWebShellServices* aResult, nsIURI* aURL, PRBool notified) = 0;
 };
 
 extern NS_EXPORT nsresult NS_NewPICS(nsIPICS** aPICS);

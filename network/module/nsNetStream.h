@@ -44,12 +44,12 @@ class nsConnectionInfo : public nsIConnectionInfo
 public:
     NS_DECL_ISUPPORTS
 
-    nsConnectionInfo(nsIURL *aURL, 
+    nsConnectionInfo(nsIURI *aURL, 
                      nsNetlibStream *aStream, 
                      nsIStreamListener *aNotify);
 
-    NS_IMETHOD GetURL(nsIURL **aURL);
-	NS_IMETHOD SetURL(nsIURL  *aURL);
+    NS_IMETHOD GetURL(nsIURI **aURL);
+	NS_IMETHOD SetURL(nsIURI  *aURL);
     NS_IMETHOD GetInputStream(nsIInputStream **aStream);
     NS_IMETHOD GetOutputStream(nsIOutputStream **aStream);
     NS_IMETHOD GetConsumer(nsIStreamListener **aConsumer);
@@ -58,7 +58,7 @@ protected:
     virtual ~nsConnectionInfo();
 
 public:
-    nsIURL                *pURL;
+    nsIURI                *pURL;
     nsNetlibStream        *pNetStream;
     nsIStreamListener     *pConsumer;
     nsConnectionStatus    mStatus;

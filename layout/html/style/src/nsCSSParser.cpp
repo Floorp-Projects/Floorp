@@ -33,7 +33,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -132,15 +132,15 @@ public:
   NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader);
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
-                   nsIURL*                aInputURL,
+                   nsIURI*                aInputURL,
                    nsICSSStyleSheet*&     aResult);
 
   NS_IMETHOD ParseDeclarations(const nsString& aDeclaration,
-                               nsIURL*         aBaseURL,
+                               nsIURI*         aBaseURL,
                                nsIStyleRule*&  aResult);
   
   NS_IMETHOD ParseAndAppendDeclaration(const nsString&    aBuffer,
-                                       nsIURL*            aBaseURL,
+                                       nsIURI*            aBaseURL,
                                        nsICSSDeclaration* aDeclaration,
                                        PRInt32*           aHint);
 
@@ -253,7 +253,7 @@ protected:
   PRBool mHavePushBack;
 
   nsCSSScanner* mScanner;
-  nsIURL* mURL;
+  nsIURI* mURL;
   nsICSSStyleSheet* mSheet;
   PRInt32 mChildSheetCount;
   nsICSSLoader* mChildLoader; // not ref counted, it owns us
@@ -376,7 +376,7 @@ CSSParserImpl::SetChildLoader(nsICSSLoader* aChildLoader)
 
 NS_IMETHODIMP
 CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
-                     nsIURL*                aInputURL,
+                     nsIURI*                aInputURL,
                      nsICSSStyleSheet*&     aResult)
 {
   NS_ASSERTION(nsnull != aInputURL, "need base URL");
@@ -455,7 +455,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 
 NS_IMETHODIMP
 CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
-                                 nsIURL*         aBaseURL,
+                                 nsIURI*         aBaseURL,
                                  nsIStyleRule*&  aResult)
 {
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
@@ -507,7 +507,7 @@ CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
 
 NS_IMETHODIMP
 CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
-                                         nsIURL*            aBaseURL,
+                                         nsIURI*            aBaseURL,
                                          nsICSSDeclaration* aDeclaration,
                                          PRInt32*           aHint)
 {
@@ -825,7 +825,7 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
   if (mChildLoader) {
     // XXX probably need a way to encode unicode junk for the part of
     // the url that follows a "?"
-    nsIURL* url;
+    nsIURI* url;
     nsIURLGroup* urlGroup = nsnull;
     mURL->GetURLGroup(&urlGroup);
     if (urlGroup) {
@@ -849,7 +849,7 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
       NS_RELEASE(baseUri);
       if (NS_FAILED(rv)) return PR_FALSE;
 
-      rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
       NS_RELEASE(uri);
 #endif // NECKO
     }

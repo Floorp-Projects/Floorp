@@ -213,7 +213,7 @@ nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName,
     result = NS_NewCSSParser(&css);
     if (NS_OK == result) {
       PRInt32 hint;
-      nsIURL* baseURL = nsnull;
+      nsIURI* baseURL = nsnull;
       GetBaseURL(&baseURL);
       result = css->ParseAndAppendDeclaration(declString, baseURL, decl, &hint);
       NS_IF_RELEASE(baseURL);

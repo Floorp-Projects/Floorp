@@ -45,12 +45,25 @@ public:
     NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell) { return NS_OK; }
 
     // Declare implementations of nsIStreamListener/nsIStreamObserver functions.
-    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+#ifdef NECKO
+    // nsIProgressEventSink methods:
+    NS_IMETHOD OnProgress(nsISupports* context, PRUint32 Progress, PRUint32 ProgressMax);
+    NS_IMETHOD OnStatus(nsISupports* context, const PRUnichar* aMmsg);
+    // nsIStreamObserver methods:
+    NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+    NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    // nsIStreamListener methods:
+    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+#else
+    NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
+    NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+    NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+    NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+    NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+#endif
 
     // Declare implementations of nsIDocumentObserver functions.
     NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
@@ -106,7 +119,7 @@ public:
     NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) { return NS_OK; }
 
     // nsDownloadProgressDialog stuff
-    nsDownloadProgressDialog( nsIURL *anInputURL, const nsFileSpec &anOutputFileName );
+    nsDownloadProgressDialog( nsIURI *anInputURL, const nsFileSpec &anOutputFileName );
     virtual ~nsDownloadProgressDialog();
     NS_IMETHOD Show();
 
@@ -116,7 +129,7 @@ protected:
     void OnStop();
 
 private:
-    nsCOMPtr<nsIURL>             mUrl;
+    nsCOMPtr<nsIURI>             mUrl;
     nsCOMPtr<nsIDOMXULDocument>  mDocument;
     nsCOMPtr<nsIWebShellWindow>  mWindow;
     nsOutputFileStream          *mOutput;

@@ -24,7 +24,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -842,7 +842,7 @@ nsImageMap::AddArea(nsIContent* aArea)
 
 PRBool
 nsImageMap::IsInside(nscoord aX, nscoord aY,
-                     nsIURL* aDocURL,
+                     nsIURI* aDocURL,
                      nsString& aAbsURL,
                      nsString& aTarget,
                      nsString& aAltText,

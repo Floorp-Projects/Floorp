@@ -36,7 +36,11 @@ public:
 
   virtual int GetContentLength()=0;
 
+#ifdef NECKO
+  virtual char* GetAddress()=0;
+#else
   virtual const char* GetAddress()=0;
+#endif
 
   virtual time_t GetExpires()=0;
 

@@ -35,7 +35,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -633,7 +633,7 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         // Open Find dialog and prompt for search parameters.
 
         // Make url for dialog xul.
-        nsIURL *url;
+        nsIURI *url;
         char * urlStr = "resource:/res/samples/finddialog.xul";
 
         // this should be a chrome URI
@@ -648,7 +648,7 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         rv = service->NewURI(urlStr, nsnull, &uri);
         if (NS_FAILED(rv)) return rv;
 
-        rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
         NS_RELEASE(uri);
         if (NS_FAILED(rv)) return rv;
 #endif // NECKO

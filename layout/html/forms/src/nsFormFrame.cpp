@@ -50,7 +50,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIDocument.h"
@@ -488,7 +488,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     }
 
     // Resolve url to an absolute url
-    nsIURL* docURL = nsnull;
+    nsIURI* docURL = nsnull;
     nsIDocument* doc = nsnull;
     mContent->GetDocument(doc);
     while (doc && !docURL) {
@@ -748,7 +748,7 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 #if defined(ClientWallet) || defined(SingleSignon)
   /* get url name as ascii string */
   char *URLName = nsnull;
-  nsIURL* docURL = nsnull;
+  nsIURI* docURL = nsnull;
   nsIDocument* doc = nsnull;
   mContent->GetDocument(doc);
 

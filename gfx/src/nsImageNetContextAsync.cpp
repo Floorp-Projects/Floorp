@@ -24,7 +24,9 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
+#ifndef NECKO
 #include "nsIURLGroup.h"
+#endif
 #include "nsITimer.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -37,6 +39,8 @@
 #include "nsINetService.h"
 #else
 #include "nsIIOService.h"
+#include "nsIBufferInputStream.h"
+#include "nsNeckoUtil.h"
 #endif // NECKO
 
 #ifndef NECKO
@@ -54,7 +58,9 @@ class ImageConsumer;
 class ImageNetContextImpl : public ilINetContext {
 public:
   ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
+#ifndef NECKO
                       nsIURLGroup* aURLGroup,
+#endif
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg);
   virtual ~ImageNetContextImpl();
@@ -90,7 +96,9 @@ public:
 
   nsVoidArray *mRequests;
   NET_ReloadMethod mReloadPolicy;
+#ifndef NECKO
   nsIURLGroup* mURLGroup;
+#endif
   nsReconnectCB mReconnectCallback;
   void* mReconnectArg;
 };
@@ -102,12 +110,22 @@ public:
   
   ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext);
   
-  NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
+#ifdef NECKO
+  // nsIStreamObserver methods:
+  NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+  NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+  NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+  // nsIStreamListener methods:
+  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+#else
+  NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
+  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
+  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length);
+  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
+#endif
   
   void Interrupt();
 
@@ -118,7 +136,11 @@ protected:
   ilIURL *mURL;
   PRBool mInterrupted;
   ImageNetContextImpl *mContext;
+#ifdef NECKO
+  nsIBufferInputStream *mStream;
+#else
   nsIInputStream *mStream;
+#endif
   nsITimer *mTimer;
   PRBool mFirstRead;
   char *mBuffer;
@@ -143,26 +165,32 @@ ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
 NS_DEFINE_IID(kIStreamNotificationIID, NS_ISTREAMLISTENER_IID);
 NS_IMPL_ISUPPORTS(ImageConsumer,kIStreamNotificationIID);
 
+#ifndef NECKO
 NS_IMETHODIMP
-ImageConsumer::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
+ImageConsumer::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
   return 0;
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax)
+ImageConsumer::OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax)
 {
   return 0;
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+ImageConsumer::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
   return 0;
 }
+#endif
 
 NS_IMETHODIMP
-ImageConsumer::OnStartBinding(nsIURL* aURL, const char *aContentType)
+#ifdef NECKO
+ImageConsumer::OnStartBinding(nsISupports* aContext)
+#else
+ImageConsumer::OnStartBinding(nsIURI* aURL, const char *aContentType)
+#endif
 {
   if (mInterrupted) {
     mStatus = MK_INTERRUPTED;
@@ -191,7 +219,12 @@ ImageConsumer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 
 
 NS_IMETHODIMP
-ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length)
+#ifdef NECKO
+ImageConsumer::OnDataAvailable(nsISupports* aContext, nsIBufferInputStream *pIStream,
+                               PRUint32 offset, PRUint32 length)
+#else
+ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length)
+#endif
 {
   PRUint32 max_read;
   PRUint32 bytes_read = 0, str_length;
@@ -220,7 +253,7 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 
       break;
 
     err = pIStream->Read(mBuffer,
-                        max_read, &nb);
+                         max_read, &nb);
     if (err != NS_OK) {
       break;
     }
@@ -273,7 +306,7 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 
 void
 ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
 {
-  nsIURL* url = nsnull;
+  nsIURI* url = nsnull;
   ImageConsumer *consumer = (ImageConsumer *)aClosure;
   nsAutoString status;
 
@@ -286,7 +319,11 @@ ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
+#ifdef NECKO
+ImageConsumer::OnStopBinding(nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
+#else
+ImageConsumer::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
+#endif
 {
   if (mTimer != nsnull) {
     NS_RELEASE(mTimer);
@@ -302,7 +339,11 @@ ImageConsumer::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMs
     PRUint32 str_length;
     nsresult err = mStream->GetLength(&str_length);
     if (err == NS_OK) {
+#ifdef NECKO
+      err = OnDataAvailable(aContext, mStream, 0, str_length);  // XXX fix offset
+#else
       err = OnDataAvailable(aURL, mStream, str_length);
+#endif
       // If we still have the stream, there's still data to be 
       // pumped, so we set a timer to call us back again.
       if ((err == NS_OK) && (mStream != nsnull)) {
@@ -358,14 +399,18 @@ ImageConsumer::~ImageConsumer()
 }
 
 ImageNetContextImpl::ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
+#ifndef NECKO
                                          nsIURLGroup* aURLGroup,
+#endif
                                          nsReconnectCB aReconnectCallback,
                                          void* aReconnectArg)
 {
   NS_INIT_REFCNT();
   mRequests = nsnull;
+#ifndef NECKO
   mURLGroup = aURLGroup;
   NS_IF_ADDREF(mURLGroup);
+#endif
   mReloadPolicy = aReloadPolicy;
   mReconnectCallback = aReconnectCallback;
   mReconnectArg = aReconnectArg;
@@ -382,7 +427,9 @@ ImageNetContextImpl::~ImageNetContextImpl()
     }
     delete mRequests;
   }
+#ifndef NECKO
   NS_IF_RELEASE(mURLGroup);
+#endif
 }
 
 NS_IMPL_ISUPPORTS(ImageNetContextImpl, kIImageNetContextIID)
@@ -392,7 +439,12 @@ ImageNetContextImpl::Clone()
 {
   ilINetContext *cx;
 
-  if (NS_NewImageNetContext(&cx, mURLGroup, mReconnectCallback, mReconnectArg) == NS_OK) {
+#ifdef NECKO
+  if (NS_NewImageNetContext(&cx, mReconnectCallback, mReconnectArg) == NS_OK)
+#else
+  if (NS_NewImageNetContext(&cx, mURLGroup, mReconnectCallback, mReconnectArg) == NS_OK)
+#endif
+  {
     return cx;
   }
   else {
@@ -436,7 +488,12 @@ ImageNetContextImpl::CreateURL(const char *aURL,
 {
   ilIURL *url;
 
-  if (NS_NewImageURL(&url, aURL, mURLGroup) == NS_OK) {
+#ifdef NECKO
+  if (NS_NewImageURL(&url, aURL) == NS_OK)
+#else
+  if (NS_NewImageURL(&url, aURL, mURLGroup) == NS_OK)
+#endif
+  {
     return url;
   }
   else {
@@ -480,7 +537,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
                              NET_ReloadMethod aLoadMethod,
                              ilINetReader *aReader)
 {
-  nsIURL *nsurl;
+  nsIURI *nsurl;
   NS_PRECONDITION(nsnull != aURL, "null URL");
   NS_PRECONDITION(nsnull != aReader, "null reader");
   if (aURL == nsnull || aReader == nsnull) {
@@ -509,7 +566,11 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       mRequests->AppendElement((void *)ic);
     }
     else {
+#ifdef NECKO
+      nsresult rv = NS_OpenURI(nsurl, ic);
+#else
       nsresult rv = NS_OpenURL(nsurl, ic);
+#endif
       if (rv == NS_OK) {
         mRequests->AppendElement((void *)ic);
       }
@@ -536,7 +597,9 @@ ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer)
 
 extern "C" NS_GFX_(nsresult)
 NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
+#ifndef NECKO
                       nsIURLGroup* aURLGroup,
+#endif
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg)
 {
@@ -546,7 +609,9 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
   }
   
   ilINetContext *cx = new ImageNetContextImpl(NET_NORMAL_RELOAD,
+#ifndef NECKO
                                               aURLGroup,
+#endif
                                               aReconnectCallback,
                                               aReconnectArg);
   if (cx == nsnull) {

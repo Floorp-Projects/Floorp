@@ -1057,7 +1057,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
 
       // get url name 
       char *URLName = nsnull;
-      nsIURL* docURL = nsnull;
+      nsIURI* docURL = nsnull;
       nsIDocument* doc = nsnull;
       mContent->GetDocument(doc);
       if (nsnull != doc) {
@@ -1532,25 +1532,25 @@ EnderTempObserver::QueryInterface(const nsIID& aIID,
 
 
 NS_IMETHODIMP
-EnderTempObserver::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+EnderTempObserver::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-EnderTempObserver::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+EnderTempObserver::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-EnderTempObserver::OnStartBinding(nsIURL* aURL, const char *aContentType)
+EnderTempObserver::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-EnderTempObserver::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
+EnderTempObserver::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 {
   if (PR_TRUE==mFirstCall)
   {

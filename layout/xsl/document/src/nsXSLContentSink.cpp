@@ -25,7 +25,7 @@ static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
 nsresult
 NS_NewXSLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,
-                     nsIURL* aURL,
+                     nsIURI* aURL,
                      nsIWebShell* aWebShell)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
@@ -58,7 +58,7 @@ nsXSLContentSink::~nsXSLContentSink()
 /*
 nsresult
 nsXSLContentSink::Init(nsIDocument* aDoc,
-                       nsIURL* aURL,
+                       nsIURI* aURL,
                        nsIWebShell* aContainer)
 {
   // We'll use nsXMLContentSink::Init() for now...

@@ -42,7 +42,7 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
 {
   mDelegate = nsnull; 
   nsresult res = NS_OK;
-  nsIURL* url = nsnull;
+  nsIURI* url = nsnull;
   nsIInputStream* in = nsnull;
 
 #ifndef NECKO

@@ -427,7 +427,7 @@ void FE_SetRefreshURLTimer(MWContext *pContext, URL_Struct *URL_s)
       if (container && (rv == NS_OK)) {
         rv = container->QueryInterface(kRefreshURLIID, (void**)&IRefreshURL);
         if(NS_SUCCEEDED(rv)) {
-          nsIURL* newURL;
+          nsIURI* newURL;
 
           rv = NS_NewURL(&newURL, refreshURL);
           if (NS_SUCCEEDED(rv)) {

@@ -86,7 +86,7 @@ static nsINetSupport *getNetSupport(URL_Struct *URL_s)
   if ((nsnull != URL_s) && (nsnull != URL_s->fe_data)) {
     nsConnectionInfo *pConn = (nsConnectionInfo *)URL_s->fe_data;
 
-    /* Now get the nsIURL held by the nsConnectionInfo... */
+    /* Now get the nsIURL.held by the nsConnectionInfo... */
     if ((nsnull != pConn) && (nsnull != pConn->pURL)) {
       nsISupports *container;
 
@@ -231,8 +231,8 @@ public:
   NS_DECL_ISUPPORTS
 
   /* nsIBlockingNotification interface... */
-  NS_IMETHOD IsBlocked(nsIURL *aURL, PRBool *aResult);
-  NS_IMETHOD Resume(nsIURL *aUrl, void *aExtraInfo);
+  NS_IMETHOD IsBlocked(nsIURI *aURL, PRBool *aResult);
+  NS_IMETHOD Resume(nsIURI *aUrl, void *aExtraInfo);
 };
 
 nsDefaultNotification::nsDefaultNotification()
@@ -248,14 +248,14 @@ NS_IMPL_RELEASE(nsDefaultNotification);
 NS_IMPL_QUERY_INTERFACE(nsDefaultNotification, kIBlockingNotificationIID);
 
 NS_IMETHODIMP
-nsDefaultNotification::IsBlocked(nsIURL *aURL, PRBool *aResult)
+nsDefaultNotification::IsBlocked(nsIURI *aURL, PRBool *aResult)
 {
   nsresult rv = NS_NOTIFY_BLOCKED;
   return rv;
 }
 
 NS_IMETHODIMP
-nsDefaultNotification::Resume(nsIURL *aURL, void *aExtraInfo)
+nsDefaultNotification::Resume(nsIURI *aURL, void *aExtraInfo)
 {
   nsresult rv = NS_NOTIFY_SUCCEEDED;
   NET_ResumeWithAuth((void *) aExtraInfo);
@@ -301,7 +301,7 @@ _stub_PromptUsernameAndPassword(MWContext *context,
   nsIBlockingNotification *caller;
   nsConnectionInfo *pConn = nsnull; 
   URL_Struct *URL_s = context->modular_data; 
-  nsIURL *base = nsnull;
+  nsIURI *base = nsnull;
   nsresult rv; 
   
   printf ("stub_PromptUsernameAndPassword()\n");
@@ -321,7 +321,7 @@ _stub_PromptUsernameAndPassword(MWContext *context,
 	if ( ! caller )
 		return FALSE;
 #endif
-  // build an nsIURL
+  // build an nsIURI
   rv = NS_NewURL(&base, URL_s->address);
   if (NS_FAILED(rv)) {
     return FALSE;

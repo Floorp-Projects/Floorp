@@ -65,7 +65,7 @@ public:
 
     // nsIChromeRegistry methods:
     NS_IMETHOD InitRegistry();  
-    NS_IMETHOD ConvertChromeURL(nsIURL* aChromeURL);
+    NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURL);
 
     // nsIRDFDataSource methods
     NS_IMETHOD Init(const char* uri)  ; // Called to init the data source.
@@ -223,7 +223,7 @@ nsChromeRegistry::QueryInterface(REFNSIID aIID, void** aResult)
 // nsIChromeRegistry methods:
 
 NS_IMETHODIMP
-nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
+nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 {
     nsresult rv = NS_OK;
     

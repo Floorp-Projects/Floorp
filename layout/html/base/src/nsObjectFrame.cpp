@@ -36,11 +36,13 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
+#else
 #include "nsIURLGroup.h"
+#endif // NECKO
 #include "nsIPluginInstanceOwner.h"
 #include "nsIHTMLContent.h"
 #include "nsISupportsArray.h"
@@ -207,7 +209,7 @@ public:
                             nsISupports*    aSubContent);
   //local methods
   nsresult CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly);
-  nsresult GetFullURL(nsIURL*& aFullURL);
+  nsresult GetFullURL(nsIURI*& aFullURL);
 
   nsresult GetPluginInstance(nsIPluginInstance*& aPluginInstance);
   
@@ -223,7 +225,11 @@ protected:
                               nsHTMLReflowMetrics& aDesiredSize);
 
 
-  nsresult SetFullURL(nsIURL* aURL);
+#ifdef NECKO
+  nsresult SetFullURL(nsIURI* aURL);
+#else
+  nsresult SetFullURL(nsIURI* aURL);
+#endif
 
   nsresult InstantiateWidget(nsIPresContext&          aPresContext,
 							nsHTMLReflowMetrics&     aMetrics,
@@ -235,7 +241,12 @@ protected:
 							const nsHTMLReflowState& aReflowState,
 							nsIPluginHost* aPluginHost, 
 							const char* aMimetype,
-							nsIURL* aURL);
+#ifdef NECKO
+							nsIURI* aURL
+#else
+							nsIURI* aURL
+#endif
+    );
 
   nsresult HandleImage(nsIPresContext&          aPresContext,
 					   nsHTMLReflowMetrics&     aMetrics,
@@ -243,11 +254,19 @@ protected:
 					   nsReflowStatus&          aStatus,
 					   nsIFrame* child);
  
-  nsresult GetBaseURL(nsIURL* &aURL);
+#ifdef NECKO
+  nsresult GetBaseURL(nsIURI* &aURL);
+#else
+  nsresult GetBaseURL(nsIURI* &aURL);
+#endif
 
 private:
   nsPluginInstanceOwner *mInstanceOwner;
-  nsIURL                *mFullURL;
+#ifdef NECKO
+  nsIURI                *mFullURL;
+#else
+  nsIURI                *mFullURL;
+#endif
   nsIFrame              *mFirstChild;
   nsIWidget				      *mWidget;
 };
@@ -566,8 +585,13 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     nsISupports               *container = nsnull;
     nsIPluginHost             *pluginHost = nsnull;
     nsIContentViewerContainer *cv = nsnull;
-    nsIURL* baseURL = nsnull;
-    nsIURL* fullURL = nsnull;
+#ifdef NECKO
+    nsIURI* baseURL = nsnull;
+    nsIURI* fullURL = nsnull;
+#else
+    nsIURI* baseURL = nsnull;
+    nsIURI* fullURL = nsnull;
+#endif
 
     nsAutoString classid;
     PRInt32 nameSpaceID;
@@ -591,16 +615,26 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	      if((rv = GetBaseURL(baseURL)) != NS_OK)
 	        return rv;
 
+#ifndef NECKO
         nsIURLGroup* group = nsnull;
         if (nsnull != baseURL)
           baseURL->GetURLGroup(&group);
+#endif
 
         nsAutoString codeBase;
         if(NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase) &&
            classid != JAVA_CLASS_ID) 
 		    {
-          nsIURL* codeBaseURL = nsnull;
+#ifdef NECKO
+          nsIURI* codeBaseURL = nsnull;
+          char* codeBaseStr = codeBase.ToNewCString();
+          NS_ASSERTION(codeBaseStr, "out of memory");
+          rv = NS_NewURI(&codeBaseURL, codeBaseStr, baseURL);
+          nsCRT::free(codeBaseStr);
+#else
+          nsIURI* codeBaseURL = nsnull;
           rv = NS_NewURL(&codeBaseURL, codeBase, baseURL, nsnull, group);
+#endif
           if(rv == NS_OK)
           {
             NS_IF_RELEASE(baseURL);
@@ -608,18 +642,32 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
           }
         }
 
+#ifdef NECKO
+        char* url;
+#else
         const char* url;
+#endif
         (void)baseURL->GetSpec(&url);
 
         // Create an absolute URL
-        if(classid != JAVA_CLASS_ID)
+        if(classid != JAVA_CLASS_ID) {
+#ifdef NECKO
+          char* classidStr = classid.ToNewCString();
+          NS_ASSERTION(classidStr, "out of memory");
+          rv = NS_NewURI(&fullURL, classidStr, baseURL);
+          nsCRT::free(classidStr);
+#else
           rv = NS_NewURL(&fullURL, classid, baseURL, nsnull, group);
+#endif
+        }
         else
         {
           fullURL = baseURL;
           NS_IF_ADDREF(fullURL);
         }
+#ifndef NECKO
         NS_IF_RELEASE(group);
+#endif
 
         // get the nsIPluginHost interface
         if((rv = aPresContext.GetContainer(&container)) != NS_OK)
@@ -655,16 +703,25 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	        if((rv = GetBaseURL(baseURL)) != NS_OK)
 	          return rv;
 
+#ifndef NECKO
 	        nsIURLGroup* group = nsnull;
           if(nsnull != baseURL)
             baseURL->GetURLGroup(&group);
+#endif
 
 	        // if we have a codebase, add it to the fullURL
 	        nsAutoString codeBase;
           if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) 
 	        {
-            nsIURL* codeBaseURL = nsnull;
+            nsIURI* codeBaseURL = nsnull;
+#ifdef NECKO
+            char* codeBaseStr = codeBase.ToNewCString();
+            NS_ASSERTION(codeBaseStr, "out of memory");
+            rv = NS_NewURI(&fullURL, codeBaseStr, baseURL);
+            nsCRT::free(codeBaseStr);
+#else
             rv = NS_NewURL(&fullURL, codeBase, baseURL, nsnull, group);
+#endif
             if(rv == NS_OK)
             {
               NS_IF_RELEASE(baseURL);
@@ -675,7 +732,9 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
               NS_IF_ADDREF(fullURL);
 	      }
 
+#ifndef NECKO
 	        NS_IF_RELEASE(group);
+#endif
 
           // get the nsIPluginHost interface
           if((rv = aPresContext.GetContainer(&container)) != NS_OK)
@@ -758,15 +817,25 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
       if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) 
 	    {
+#ifndef NECKO
         nsIURLGroup* group = nsnull;
         if (nsnull != baseURL)
           baseURL->GetURLGroup(&group);
+#endif
 
         nsAutoString codeBase;
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) 
 		    {
-          nsIURL* codeBaseURL = nsnull;
+#ifdef NECKO
+          nsIURI* codeBaseURL = nsnull;
+          char* codeBaseStr = codeBase.ToNewCString();
+          NS_ASSERTION(codeBasestr, "out of memory");
+          rv = NS_NewURI(&codeBaseURL, codeBaseStr, baseURL);
+          nsCRT::free(codeBaseStr);
+#else
+          nsIURI* codeBaseURL = nsnull;
           rv = NS_NewURL(&codeBaseURL, codeBase, baseURL, nsnull, group);
+#endif
           if(rv == NS_OK)
           {
             NS_IF_RELEASE(baseURL);
@@ -775,8 +844,15 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         }
 
         // Create an absolute URL
+#ifdef NECKO
+        char* srcStr = src.ToNewCString();
+        NS_ASSERTION(srcStr, "out of memory");
+        rv = NS_NewURI(&fullURL, srcStr, baseURL);
+        nsCRT::free(srcStr);
+#else
         rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
         NS_IF_RELEASE(group);
+#endif
       }
 
       rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
@@ -797,6 +873,13 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
       //stream in the object source if there is one...
       if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) 
 	    {
+#ifdef NECKO
+        // Create an absolute URL
+        char* srcStr = src.ToNewCString();
+        NS_ASSERTION(srcStr, "out of memory");
+        rv = NS_NewURL(&fullURL, srcStr, baseURL);
+        nsCRT::free(srcStr);
+#else
         nsIURLGroup* group = nsnull;
         if (nsnull != baseURL)
           baseURL->GetURLGroup(&group);
@@ -804,9 +887,17 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         // Create an absolute URL
         rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
         NS_IF_RELEASE(group);
+#endif
 	    }
 	    else if(NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) 
 	    {
+#ifdef NECKO
+        // Create an absolute URL
+        char* srcStr = src.ToNewCString();
+        NS_ASSERTION(srcStr, "out of memory");
+        rv = NS_NewURI(&fullURL, srcStr, baseURL);
+        nsCRT::free(srcStr);
+#else
         nsIURLGroup* group = nsnull;
         if (nsnull != baseURL)
           baseURL->GetURLGroup(&group);
@@ -814,6 +905,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         // Create an absolute URL
         rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
         NS_IF_RELEASE(group);
+#endif
 	    } else {// we didn't find a src or data param, so just set the url to the base
 		  fullURL = baseURL;
 		  NS_IF_ADDREF(fullURL);
@@ -900,7 +992,12 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext&          aPresContext,
 							const nsHTMLReflowState& aReflowState,
 							nsIPluginHost* aPluginHost, 
 							const char* aMimetype,
-							nsIURL* aURL)
+#ifdef NECKO
+							nsIURI* aURL
+#else
+							nsIURI* aURL
+#endif
+  )
 {
   nsIView *parentWithView;
   nsPoint origin;
@@ -1012,12 +1109,20 @@ nsObjectFrame::HandleImage(nsIPresContext&          aPresContext,
 
 
 nsresult
-nsObjectFrame::GetBaseURL(nsIURL* &aURL)
+#ifdef NECKO
+nsObjectFrame::GetBaseURL(nsIURI* &aURL)
+#else
+nsObjectFrame::GetBaseURL(nsIURI* &aURL)
+#endif
 {
   nsIHTMLContent* htmlContent;
   if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) 
   {
+#ifdef NECKO
+    htmlContent->GetBaseURI(aURL);
+#else
     htmlContent->GetBaseURL(aURL);
+#endif
     NS_RELEASE(htmlContent);
   }
   else 
@@ -1262,7 +1367,11 @@ nsObjectFrame::Scrolled(nsIView *aView)
 }
 
 nsresult
-nsObjectFrame::SetFullURL(nsIURL* aURL)
+#ifdef NECKO
+nsObjectFrame::SetFullURL(nsIURI* aURL)
+#else
+nsObjectFrame::SetFullURL(nsIURI* aURL)
+#endif
 {
   NS_IF_RELEASE(mFullURL);
   mFullURL = aURL;
@@ -1270,7 +1379,7 @@ nsObjectFrame::SetFullURL(nsIURL* aURL)
   return NS_OK;
 }
 
-nsresult nsObjectFrame::GetFullURL(nsIURL*& aFullURL)
+nsresult nsObjectFrame::GetFullURL(nsIURI*& aFullURL)
 {
   aFullURL = mFullURL;
   NS_IF_ADDREF(aFullURL);
@@ -1629,7 +1738,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
           nsAutoString  uniurl = nsAutoString(aURL);
           nsAutoString  unitarget = nsAutoString(aTarget);
           nsAutoString  fullurl;
-          nsIURL* baseURL;
+          nsIURI* baseURL;
 
           mOwner->GetFullURL(baseURL);
 
@@ -1954,7 +2063,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
 
-    nsCOMPtr<nsIURL> docURL( dont_AddRef(doc->GetDocumentURL()) );
+    nsCOMPtr<nsIURI> docURL( dont_AddRef(doc->GetDocumentURL()) );
 
     nsresult rv = docURL->GetSpec(result);
 

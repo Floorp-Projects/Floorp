@@ -27,7 +27,7 @@
 #include "nsINetService.h"
 #else
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 #endif
 
@@ -177,7 +177,7 @@ main(int argc, char *argv[])
   }
 
   nsILocale* locale = get_applocale();
-  nsIURL *url = nsnull;
+  nsIURI *url = nsnull;
 
 #ifndef NECKO
   nsINetService* pNetService = nsnull;
@@ -203,7 +203,7 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  ret = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  ret = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
   NS_RELEASE(uri);
 #endif // NECKO
 

@@ -335,7 +335,12 @@ public:
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
+#ifdef NECKO
+                     PRBool bypassCache = PR_FALSE,
+                     PRBool bypassProxy = PR_FALSE,
+#else
                      nsURLReloadType aType=nsURLReload,
+#endif
                      const PRUint32 aLocalIP=0) = 0;
 
   /**
@@ -345,7 +350,12 @@ public:
                      const char* aCommand, 
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
+#ifdef NECKO
+                     PRBool bypassCache = PR_FALSE,
+                     PRBool bypassProxy = PR_FALSE,
+#else
                      nsURLReloadType aType=nsURLReload,
+#endif
                      const PRUint32 aLocalIP=0) = 0;
 
 
@@ -357,7 +367,11 @@ public:
   /**
    * Reload the current document.
    */
+#ifdef NECKO
+  NS_IMETHOD Reload(PRBool bypassCache, PRBool bypassProxy) = 0;
+#else
   NS_IMETHOD Reload(nsURLReloadType aType) = 0;
+#endif
 
   //
   // History api's

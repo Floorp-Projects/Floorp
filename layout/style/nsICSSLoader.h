@@ -23,7 +23,7 @@
 
 class nsIAtom;
 class nsString;
-class nsIURL;
+class nsIURI;
 class nsICSSParser;
 class nsICSSStyleSheet;
 class nsIPresContext;
@@ -73,7 +73,7 @@ public:
   // - if aCompleted is PR_FALSE, the sheet is still loading and 
   //   will be inserted in the document when complete
   NS_IMETHOD LoadStyleLink(nsIContent* aElement,
-                           nsIURL* aURL, 
+                           nsIURI* aURL, 
                            const nsString& aTitle, 
                            const nsString& aMedia, 
                            PRInt32 aDefaultNameSpaceID,
@@ -83,7 +83,7 @@ public:
 
   // Load a child style sheet (@import)
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
-                            nsIURL* aURL, 
+                            nsIURI* aURL, 
                             const nsString& aMedia,
                             PRInt32 aDefaultNameSpaceID,
                             PRInt32 aSheetIndex) = 0;
@@ -93,7 +93,7 @@ public:
   // - if aCompleted is PR_TRUE, the sheet is fully loaded
   // - if aCompleted is PR_FALSE, the sheet is still loading and 
   //   aCAllback will be called when the sheet is complete
-  NS_IMETHOD LoadAgentSheet(nsIURL* aURL, 
+  NS_IMETHOD LoadAgentSheet(nsIURI* aURL, 
                             nsICSSStyleSheet*& aSheet,
                             PRBool& aCompleted,
                             nsCSSLoaderCallbackFunc aCallback,

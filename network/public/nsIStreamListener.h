@@ -24,7 +24,7 @@
 /* forward declaration */
 class nsIInputStream;
 class nsString;
-class nsIURL;
+class nsIURI;
 
 struct nsStreamBindingInfo {
     PRBool      seekable;
@@ -58,7 +58,7 @@ public:
      * 
      * This method is currently not called.  
      */
-    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) = 0;
+    NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo) = 0;
 
     /**
      * Notify the client that data is available in the input stream.  This
@@ -70,7 +70,7 @@ public:
      * @param length    The amount of data that was just pushed into the stream.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+    NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                                PRUint32 aLength) = 0;
 };
 

@@ -23,7 +23,7 @@
 #include "nsISupports.h"
 
 class nsString;
-class nsIURL;
+class nsIURI;
 class nsIInputStream;
 class nsIStreamListener;
 class nsILoadAttribs;
@@ -53,8 +53,8 @@ public:
      *                              URL.
      * @return  Returns NS_OK if successful, otherwise NS_ERROR_FAILURE...
      */
-    NS_IMETHOD CreateURL(nsIURL** aInstancePtrResult, 
-                         nsIURL* aBaseURL,
+    NS_IMETHOD CreateURL(nsIURI** aInstancePtrResult, 
+                         nsIURI* aBaseURL,
                          const nsString& aSpec,
                          nsISupports* aContainer) = 0;
 
@@ -67,7 +67,7 @@ public:
      *
      * @return  Returns NS_OK if successful, otherwise NS_ERROR_FAILURE.
      */
-    NS_IMETHOD OpenStream(nsIURL *aUrl, 
+    NS_IMETHOD OpenStream(nsIURI *aUrl, 
                           nsIStreamListener *aConsumer) = 0;
 
     /**

@@ -314,7 +314,7 @@ protected:
   nsIDOMPluginArray* mPlugins;
 };
 
-class nsIURL;
+class nsIURI;
 
 class LocationImpl : public nsIScriptObjectOwner, public nsIDOMLocation {
 
@@ -351,7 +351,7 @@ public:
   NS_IMETHOD    ToString(nsString& aReturn);
 
 protected:
-  nsresult SetURL(nsIURL* aURL);
+  nsresult SetURL(nsIURI* aURL);
 
   nsIWebShell *mWebShell;
   void *mScriptObject;

@@ -54,14 +54,14 @@ public:
   nsImageDocument();
   virtual ~nsImageDocument();
 
-  NS_IMETHOD StartDocumentLoad(nsIURL* aURL, 
+  NS_IMETHOD StartDocumentLoad(nsIURI* aURL, 
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener** aDocListener,
                                const char* aCommand);
 
   nsresult CreateSyntheticDocument();
 
-  nsresult StartImageLoad(nsIURL* aURL, nsIStreamListener*& aListener);
+  nsresult StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener);
 
   void StartLayout();
 
@@ -77,13 +77,13 @@ public:
   virtual ~ImageListener();
 
   NS_DECL_ISUPPORTS
-  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus,
+  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus,
                            const PRUnichar* aMsg);
-  NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
-  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream* aStream,
+  NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
+  NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,
                              PRUint32 aCount);
 
   nsImageDocument* mDocument;
@@ -106,7 +106,7 @@ ImageListener::~ImageListener()
 NS_IMPL_ISUPPORTS(ImageListener, kIStreamListenerIID)
 
 NS_IMETHODIMP
-ImageListener::OnStartBinding(nsIURL* aURL, const char *aContentType)
+ImageListener::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
   mDocument->StartImageLoad(aURL, mNextStream);
   if (nsnull == mNextStream) {
@@ -116,7 +116,7 @@ ImageListener::OnStartBinding(nsIURL* aURL, const char *aContentType)
 }
 
 NS_IMETHODIMP
-ImageListener::OnProgress(nsIURL* aURL, PRUint32 aProgress,
+ImageListener::OnProgress(nsIURI* aURL, PRUint32 aProgress,
                           PRUint32 aProgressMax)
 {
   if (nsnull == mNextStream) {
@@ -126,7 +126,7 @@ ImageListener::OnProgress(nsIURL* aURL, PRUint32 aProgress,
 }
 
 NS_IMETHODIMP
-ImageListener::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+ImageListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -135,7 +135,7 @@ ImageListener::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 }
 
 NS_IMETHODIMP
-ImageListener::OnStopBinding(nsIURL* aURL, nsresult aStatus,
+ImageListener::OnStopBinding(nsIURI* aURL, nsresult aStatus,
                              const PRUnichar* aMsg)
 {
   if (nsnull == mNextStream) {
@@ -145,7 +145,7 @@ ImageListener::OnStopBinding(nsIURL* aURL, nsresult aStatus,
 }
 
 NS_IMETHODIMP
-ImageListener::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
+ImageListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -154,7 +154,7 @@ ImageListener::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
 }
 
 NS_IMETHODIMP
-ImageListener::OnDataAvailable(nsIURL* aURL, nsIInputStream* aStream,
+ImageListener::OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,
                                PRUint32 aCount)
 {
   if (nsnull == mNextStream) {
@@ -184,7 +184,7 @@ nsImageDocument::~nsImageDocument()
 }
 
 NS_IMETHODIMP
-nsImageDocument::StartDocumentLoad(nsIURL* aURL, 
+nsImageDocument::StartDocumentLoad(nsIURI* aURL, 
                                    nsIContentViewerContainer* aContainer,
                                    nsIStreamListener** aDocListener,
                                    const char* aCommand)
@@ -209,7 +209,7 @@ nsImageDocument::StartDocumentLoad(nsIURL* aURL,
 }
 
 nsresult
-nsImageDocument::StartImageLoad(nsIURL* aURL, nsIStreamListener*& aListener)
+nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
 {
   nsresult rv = NS_OK;
   aListener = nsnull;

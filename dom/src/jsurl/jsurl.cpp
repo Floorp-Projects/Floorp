@@ -38,6 +38,8 @@
 #include "nsIScriptContext.h"
 #include "nsString.h"
 
+#ifndef NECKO    // out for now, until we can revive the javascript: protocol
+
 #define MK_OUT_OF_MEMORY                -207
 #define MK_MALFORMED_URL_ERROR          -209
 
@@ -135,12 +137,12 @@ evaluate_script(URL_Struct* urls, const char *what, JSConData *con_data)
   if (supports && 
       (NS_OK == supports->QueryInterface(kIConnectionInfoIID, (void**)&con_info))) {
 
-    nsIURL *url;
+    nsIURI *url;
     nsISupports *viewer = nsnull;
     nsIScriptContextOwner *context_owner;
 
     // Get the container (which hopefully supports nsIScriptContextOwner) 
-    // from the nsIURL...
+    // from the nsIURI...
     con_info->GetURL(&url);
     NS_RELEASE(con_info);
 
@@ -426,9 +428,14 @@ net_CleanupMocha(void)
     return;
 }
 
+#endif // !NECKO
+
 PR_IMPLEMENT(void)
 NET_InitJavaScriptProtocol(void)
 {
+#ifdef NECKO
+  NS_WARNING(0, "Brendan said he would implement the javascript: protocol.");
+#else
         static NET_ProtoImpl mocha_proto_impl;
 
         mocha_proto_impl.init = net_MochaLoad;
@@ -437,4 +444,5 @@ NET_InitJavaScriptProtocol(void)
         mocha_proto_impl.cleanup = net_CleanupMocha;
 
         NET_RegisterProtocolImplementation(&mocha_proto_impl, MOCHA_TYPE_URL);
+#endif
 }

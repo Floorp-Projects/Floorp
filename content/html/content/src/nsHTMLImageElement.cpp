@@ -39,7 +39,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
@@ -528,7 +528,7 @@ nsHTMLImageElement::SetSrc(const nsString& aSrc)
           }
 
           nsAutoString url, empty;
-          nsIURL* baseURL;
+          nsIURI* baseURL;
 
           empty.Truncate();
           result = mOwnerDocument->GetBaseURL(baseURL);

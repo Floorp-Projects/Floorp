@@ -576,7 +576,7 @@ nsXPBaseWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupConten
 // Stream observer implementation
 
 NS_IMETHODIMP
-nsXPBaseWindow::OnProgress(nsIURL* aURL,
+nsXPBaseWindow::OnProgress(nsIURI* aURL,
                            PRUint32 aProgress,
                            PRUint32 aProgressMax)
 {
@@ -584,19 +584,19 @@ nsXPBaseWindow::OnProgress(nsIURL* aURL,
 }
 
 //----------------------------------------
-NS_IMETHODIMP nsXPBaseWindow::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+NS_IMETHODIMP nsXPBaseWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
 
 //----------------------------------------
-NS_IMETHODIMP nsXPBaseWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP nsXPBaseWindow::OnStartBinding(nsIURI* aURL, const char *aContentType)
 {
   return NS_OK;
 }
 
 //----------------------------------------
-NS_IMETHODIMP nsXPBaseWindow::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
+NS_IMETHODIMP nsXPBaseWindow::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 {
   return NS_OK;
 }

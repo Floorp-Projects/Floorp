@@ -53,7 +53,9 @@
 #include "nsIPref.h"
 #include "nsCRT.h"
 #include "nsRect.h"
+#ifndef NECKO
 #include "nsINetSupport.h"
+#endif
 #include "nsIContentViewer.h"
 #include "nsScreen.h"
 #include "nsHistory.h"
@@ -62,7 +64,7 @@
 #include "nsINetService.h"
 #else
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
@@ -98,8 +100,8 @@ static NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 #ifndef NECKO
+static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #endif // NECKO
@@ -998,11 +1000,15 @@ GlobalWindowImpl::Alert(JSContext *cx, jsval *argv, PRUint32 argc)
       nsIWebShellContainer *rootContainer;
       ret = rootWebShell->GetContainer(rootContainer);
       if (nsnull != rootContainer) {
+#ifdef NECKO
+        NS_ASSERTION(0, "fix me");
+#else
         nsINetSupport *support;
         if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
           support->Alert(str);
           NS_RELEASE(support);
         }
+#endif
         NS_RELEASE(rootContainer);
       }
       NS_RELEASE(rootWebShell);
@@ -1032,11 +1038,15 @@ GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aRe
       nsIWebShellContainer *rootContainer;
       ret = rootWebShell->GetContainer(rootContainer);
       if (nsnull != rootContainer) {
+#ifdef NECKO
+        NS_ASSERTION(0, "fix me");
+#else
         nsINetSupport *support;
         if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
           *aReturn = support->Confirm(str);
           NS_RELEASE(support);
         }
+#endif
         NS_RELEASE(rootContainer);
       }
       NS_RELEASE(rootWebShell);
@@ -1070,6 +1080,9 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
       nsIWebShellContainer *rootContainer;
       ret = rootWebShell->GetContainer(rootContainer);
       if (nsnull != rootContainer) {
+#ifdef NECKO
+        NS_ASSERTION(0, "fix me");
+#else
         nsINetSupport *support;
         if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
           if (!support->Prompt(str, initial, aReturn)) {
@@ -1080,6 +1093,7 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
           }
           NS_RELEASE(support);
         }
+#endif
         NS_RELEASE(rootContainer);
       }
       NS_RELEASE(rootWebShell);
@@ -1787,7 +1801,7 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
     }
 
     nsAutoString mURL, mEmpty;
-    nsIURL* mDocURL = 0;
+    nsIURI* mDocURL = 0;
     nsIDocument* mDoc;
 
     mURL.SetString(JS_GetStringChars(mJSStrURL));

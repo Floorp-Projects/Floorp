@@ -26,7 +26,7 @@
   {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 class nsIUnicharStreamLoader;
-class nsIURL;
+class nsIURI;
 
 /**
  * Funtion registered with the stream loader. This function is called
@@ -71,7 +71,7 @@ public:
  *             function
  */
 extern NS_NET nsresult NS_NewUnicharStreamLoader(nsIUnicharStreamLoader** aInstancePtrResult,
-						 nsIURL* aURL,
+						 nsIURI* aURL,
 						 nsStreamCompleteFunc aFunc,
 						 void* aRef);
 

@@ -27,7 +27,9 @@
 #include "nsIRenderingContext.h"
 #include "nsEventStateManager.h"
 #include "nsIURL.h"
+#ifndef NECKO
 #include "nsIURLGroup.h"
+#endif
 #include "nsIDocument.h"
 #include "nsIStyleContext.h"
 #include "nsLayoutAtoms.h"
@@ -338,7 +340,7 @@ nsPresContext::SetWidgetRenderingMode(nsWidgetRendering aMode)
 
 
 NS_IMETHODIMP
-nsPresContext::GetBaseURL(nsIURL** aResult)
+nsPresContext::GetBaseURL(nsIURI** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
@@ -699,6 +701,7 @@ nsPresContext::GetImageGroup(nsIImageGroup** aResult)
       return rv;
     }
 
+#ifndef NECKO
     // Initialize the image group
     nsCOMPtr<nsIURLGroup> urlGroup;
     rv = mBaseURL->GetURLGroup(getter_AddRefs(urlGroup));
@@ -707,6 +710,7 @@ nsPresContext::GetImageGroup(nsIImageGroup** aResult)
     if (NS_OK != rv) {
       return rv;
     }
+#endif
   }
 
   *aResult = mImageGroup;

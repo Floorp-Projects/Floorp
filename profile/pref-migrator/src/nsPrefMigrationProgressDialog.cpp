@@ -24,7 +24,7 @@
 
 
 //#include "nsIPrefMigrationProgress.h"
-#include "nsPMProgressDlg.h"
+#include "nsPrefMigrationProgressDialog.h"
 
 #include "nsIAppShellComponentImpl.h"
 
@@ -34,14 +34,25 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
+
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsIURL.h"
+#endif // NECKO
 
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
+
+#ifndef NECKO
 static NS_DEFINE_IID( kNetServiceCID,      NS_NETSERVICE_CID );
+#else
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 
 // Utility to set element attribute.
 static nsresult setAttribute( nsIDOMXULDocument *doc,
@@ -165,15 +176,37 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
     {
         // Open "progress" dialog.
         nsIURI *url;
-        rv = NS_NewURL( &url, "resource:/res/profile/progress_undetermined.xul" );
+        char *urlString = "resource:/res/profile/progress_undetermined.xul";
+
+#ifndef NECKO
+        rv = NS_NewURL( &url, urlString );
+#else
+        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) {
+            DEBUG_PRINTF(PR_STDOUT, "cannot get io service\n");
+            return NS_OK;
+        }
+
+        nsIURI *uri = nsnull;
+        const char *uriStr = urlString.GetBuffer();
+        rv = service->NewURI(urlString, nsnull, &uri);
+        if (NS_FAILED(rv)) {
+            DEBUG_PRINTF(PR_STDOUT, "cannot get uri\n");
+            return NS_OK;
+        }
+
+        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
+        NS_RELEASE(uri);
+#endif // NECKO
         if ( NS_SUCCEEDED(rv) ) 
         {
         
-            nsCOMPtr<nsIWebShellWindow> newWindow;
+            nsIWebShellWindow *newWindow;
+
             rv = appShell->CreateTopLevelWindow( nsnull,
                                                  url,
                                                  PR_TRUE,
-                                                 *getter_AddRefs(newWindow),
+                                                 newWindow,
                                                  nsnull,
                                                  this,  // callbacks??
                                                  0,
@@ -181,7 +214,9 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
 
             if ( NS_SUCCEEDED( rv ) ) 
             {
-                mWindow = newWindow;			// ownership????
+                mWindow = newWindow;
+                NS_RELEASE( newWindow );
+
                  if (mWindow != nsnull)
                     mWindow->Show(PR_TRUE);
             }

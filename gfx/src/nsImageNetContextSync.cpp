@@ -31,7 +31,7 @@
 #include "nsINetService.h"
 #else
 #include "nsIIOService.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIChannel.h"
 #endif // NECKO
 
@@ -128,7 +128,12 @@ ImageNetContextSyncImpl::CreateURL(const char*      aURL,
 {
   ilIURL *url;
 
-  if (NS_NewImageURL(&url, aURL, nsnull) == NS_OK) {
+#ifdef NECKO
+  if (NS_NewImageURL(&url, aURL) == NS_OK)
+#else
+  if (NS_NewImageURL(&url, aURL, nsnull) == NS_OK)
+#endif
+  {
     return url;
   }
 
@@ -180,8 +185,8 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
 
   PRInt32 status = 0;
 
-  // Get a nsIURL interface
-  nsIURL* url = nsnull;
+  // Get a nsIURI interface
+  nsIURI* url = nsnull;
   aURL->QueryInterface(kIURLIID, (void **)&url);
 
   // Get a network service interface which we'll use to create a stream

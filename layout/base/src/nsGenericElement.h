@@ -48,7 +48,7 @@ class nsIDOMScriptObjectFactory;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsDOMAttributeMap;
-class nsIURL;
+class nsIURI;
 
 
 // Class that holds the child list of a content element and also
@@ -180,7 +180,7 @@ public:
 
   void TriggerLink(nsIPresContext& aPresContext,
                    nsLinkVerb aVerb,
-                   nsIURL* aBaseURL,
+                   nsIURI* aBaseURL,
                    const nsString& aURLSpec,
                    const nsString& aTargetSpec,
                    PRBool aClick);

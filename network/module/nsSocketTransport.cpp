@@ -47,7 +47,7 @@ NS_IMPL_QUERY_INTERFACE(nsSocketTransport, kITransportIID);
 // from nsITransport:
 
 NS_METHOD 
-nsSocketTransport::GetURL(nsIURL* *result) 
+nsSocketTransport::GetURL(nsIURI* *result) 
 {
   *result = m_url;
   return NS_OK;
@@ -69,7 +69,7 @@ NS_METHOD nsSocketTransport::IsTransportOpen(PRBool * aSocketOpen)
    The user will then write data to be sent to the host via our input stream...
  */
 
-NS_METHOD nsSocketTransport::Open(nsIURL *pURL)
+NS_METHOD nsSocketTransport::Open(nsIURI *pURL)
 {
   nsresult rv = NS_OK;
 
@@ -166,13 +166,13 @@ nsSocketTransport::GetOutputStream(nsIOutputStream ** aOutputStream)
 
 
 NS_IMETHODIMP 
-nsSocketTransport::OnStartBinding(nsIURL* pURL, const char *aContentType)
+nsSocketTransport::OnStartBinding(nsIURI* pURL, const char *aContentType)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsSocketTransport::OnProgress(nsIURL* pURL, 
+nsSocketTransport::OnProgress(nsIURI* pURL, 
 			      PRUint32 aProgress, 
 			      PRUint32 aProgressMax)
 {
@@ -180,13 +180,13 @@ nsSocketTransport::OnProgress(nsIURL* pURL,
 }
 
 NS_IMETHODIMP 
-nsSocketTransport::OnStatus(nsIURL* pURL, const PRUnichar* aMsg)
+nsSocketTransport::OnStatus(nsIURI* pURL, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsSocketTransport::OnStopBinding(nsIURL* pURL, 
+nsSocketTransport::OnStopBinding(nsIURI* pURL, 
 				 nsresult aStatus, 
 				 const PRUnichar* aMsg)
 {
@@ -198,14 +198,14 @@ nsSocketTransport::OnStopBinding(nsIURL* pURL,
 }
 
 NS_IMETHODIMP 
-nsSocketTransport::GetBindInfo(nsIURL* pURL,
+nsSocketTransport::GetBindInfo(nsIURI* pURL,
 			       nsStreamBindingInfo* aInfo)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsSocketTransport::OnDataAvailable(nsIURL* pURL, 
+nsSocketTransport::OnDataAvailable(nsIURI* pURL, 
 				   nsIInputStream *aIStream, 
 				   PRUint32 aLength)
 {
@@ -348,7 +348,7 @@ nsSocketTransport::~nsSocketTransport()
   NS_IF_RELEASE(m_inputStreamConsumer);
 }
 
-NS_IMETHODIMP nsSocketTransport::SetSocketBinding(nsIURL* pURL, URL_Struct_ ** aResult)
+NS_IMETHODIMP nsSocketTransport::SetSocketBinding(nsIURI* pURL, URL_Struct_ ** aResult)
 {
   nsresult rv = NS_OK;
   nsINetlibURL *pNetlibURL = NULL;
@@ -367,7 +367,7 @@ NS_IMETHODIMP nsSocketTransport::SetSocketBinding(nsIURL* pURL, URL_Struct_ ** a
 }
 
 NS_IMETHODIMP 
-nsSocketTransport::GetURLInfo(nsIURL* pURL, URL_Struct_ **aResult)
+nsSocketTransport::GetURLInfo(nsIURI* pURL, URL_Struct_ **aResult)
 {
 	// hack alert!!! we use a url struct to bind a socket transport to an active entry 
 	// running the sockstub protocol. however the url struct is bound to the url. if you run

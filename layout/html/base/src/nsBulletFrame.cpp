@@ -61,7 +61,7 @@ nsBulletFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsFrame::Init(aPresContext, aContent, aParent,
                                aContext, aPrevInFlow);
 
-  nsIURL* baseURL = nsnull;
+  nsIURI* baseURL = nsnull;
   nsIHTMLContent* htmlContent;
   rv = mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
   if (NS_SUCCEEDED(rv)) {

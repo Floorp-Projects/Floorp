@@ -837,7 +837,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     nsresult ret;
     nsFileSpec* resFile;
     nsFileURL* resFileURL = nsnull;
-    nsIURL *url = nsnull;
+    nsIURI *url = nsnull;
     nsILocale* locale = nsnull;
     nsIStringBundleService* service = nsnull;
     nsINetService* pNetService = nsnull;
