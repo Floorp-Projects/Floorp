@@ -1066,7 +1066,7 @@ SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
   // If we just added content to a node for which
   // an insertion happen, we need to do an immediate 
   // notification for that insertion.
-  if ((0 < mStackPos) && 
+  if (!aDidNotify && (0 < mStackPos) && 
       (mStack[mStackPos-1].mInsertionPoint != -1)) {
     nsIContent* parent = mStack[mStackPos-1].mContent;
 
@@ -2328,14 +2328,11 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
     NS_STOP_STOPWATCH(mWatch)
     return rv;
   }
+  // Flush out anything that's left
+  SINK_TRACE(SINK_TRACE_REFLOW,
+             ("HTMLContentSink::CloseBody: layout final body content"));
+  mCurrentContext->FlushTags();
   mCurrentContext->CloseContainer(aNode);
-
-  if (didFlush) {
-    SINK_TRACE(SINK_TRACE_REFLOW,
-               ("HTMLContentSink::CloseBody: layout final body text"));
-    // Trigger a reflow for the flushed text
-    mCurrentContext->FlushTags();
-  }
 
   RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: nsHTMLContentSink::CloseBody()\n"));
   NS_STOP_STOPWATCH(mWatch)
