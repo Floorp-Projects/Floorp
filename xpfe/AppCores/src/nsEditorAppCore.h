@@ -69,10 +69,14 @@ class nsEditorAppCore : public nsBaseAppCore,
                                   const nsString& aAttr, 
                                   const nsString& aValue);
 		NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr);
-		NS_IMETHOD    GetTextProperty(const nsString& aProp, 
-                                  const nsString& aAttr, 
-                                  const nsString& aValue,
-                                  PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas);
+
+	  NS_IMETHOD    GetTextProperty(const nsString& aProp,
+	  															const nsString& aAttr,
+	  															const nsString& aValue,
+	  															nsString& aFirstHas,
+	  															nsString& aAnyHas,
+	  															nsString& aAllHas);
+
 		NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);
 		NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);
 		NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection);
@@ -97,6 +101,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    ShowClipboard();
 
     NS_IMETHOD		InsertText(const nsString& textToInsert);
+		NS_IMETHOD    Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown);
 
     // These next two will be replaced with the SetElementProperties
     NS_IMETHOD		InsertLink();

@@ -321,9 +321,9 @@ EditorAppCoreGetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   nsAutoString b0;
   nsAutoString b1;
   nsAutoString b2;
-  PRBool b3;
-  PRBool b4;
-  PRBool b5;
+  nsAutoString b3;
+  nsAutoString b4;
+  nsAutoString b5;
 
   *rval = JSVAL_NULL;
 
@@ -340,19 +340,13 @@ EditorAppCoreGetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
-    if (!nsJSUtils::nsConvertJSValToBool(&b3, cx, argv[3])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b3, cx, argv[3]);
 
-    if (!nsJSUtils::nsConvertJSValToBool(&b4, cx, argv[4])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b4, cx, argv[4]);
 
-    if (!nsJSUtils::nsConvertJSValToBool(&b5, cx, argv[5])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b5, cx, argv[5]);
 
-    if (NS_OK != nativeThis->GetTextProperty(b0, b1, b2, &b3, &b4, &b5)) {
+    if (NS_OK != nativeThis->GetTextProperty(b0, b1, b2, b3, b4, b5)) {
       return JS_FALSE;
     }
 
@@ -558,6 +552,52 @@ EditorAppCoreSelectAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   else {
     JS_ReportError(cx, "Function selectAll requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Find
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  PRBool b1;
+  PRBool b2;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 3) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b1, cx, argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->Find(b0, b1, b2)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function find requires 3 parameters");
     return JS_FALSE;
   }
 
@@ -1093,6 +1133,7 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"copy",          EditorAppCoreCopy,     0},
   {"paste",          EditorAppCorePaste,     0},
   {"selectAll",          EditorAppCoreSelectAll,     0},
+  {"find",          EditorAppCoreFind,     3},
   {"beginBatchChanges",          EditorAppCoreBeginBatchChanges,     0},
   {"endBatchChanges",          EditorAppCoreEndBatchChanges,     0},
   {"showClipboard",          EditorAppCoreShowClipboard,     0},
