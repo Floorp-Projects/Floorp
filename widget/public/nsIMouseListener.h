@@ -21,6 +21,7 @@
 #define nsIMouseListener_h__
 
 #include "nsGUIEvent.h"
+#include "nsISupports.h"
 
 /**
  *
@@ -28,9 +29,13 @@
  *
  */
 
-class nsIMouseListener {
+// {c83f6b81-d7ce-11d2-8360-c4c894c4917c}
+#define NS_IMOUSELISTENER_IID \
+{ 0xc83f6b81, 0xd7ce, 0x11d2, { 0x83, 0x60, 0xc4, 0xc8, 0x94, 0xc4, 0x91, 0x7c } }
 
-  public:
+class nsIMouseListener : public nsISupports {
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMOUSELISTENER_IID)
 
     /**
      * Processes a mouse pressed event
