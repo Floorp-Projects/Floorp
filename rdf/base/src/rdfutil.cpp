@@ -562,6 +562,10 @@ rdf_PossiblyMakeRelative(const nsString& aContextURI, nsString& aURI)
 
     // Otherwise, pare down the target URI, removing the context URI.
     aURI.Cut(0, aContextURI.Length());
+
+    if (aURI.First() == '#' || aURI.First() == '/')
+        aURI.Cut(0, 1);
+
     return NS_OK;
 }
 
