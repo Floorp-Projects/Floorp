@@ -27,17 +27,18 @@ LIBRARY_NAME=editor
 
 CPPSRCS =				\
       nsEditor.cpp			     \
-      nsEditorService.cpp \
+      nsEditorService.cpp    \
       nsEditorController.cpp \
       nsEditorCommands.cpp   \
+      nsComposerCommands.cpp \
       nsEditorUtils.cpp      \
-      nsEditorRegistration.cpp \
+      nsEditorRegistration.cpp   \
       nsEditorParserObserver.cpp \
       nsTextEditRules.cpp    \
       nsHTMLEditRules.cpp    \
       nsHTMLEditUtils.cpp    \
       TextEditorTest.cpp     \
-      nsEditorEventListeners.cpp   \
+      nsEditorEventListeners.cpp \
       nsEditProperty.cpp     \
       EditTxn.cpp            \
       EditAggregateTxn.cpp   \
@@ -67,9 +68,10 @@ CPPSRCS =				\
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsEditor.obj		        \
-	.\$(OBJDIR)\nsEditorService.obj		        \
+	.\$(OBJDIR)\nsEditorService.obj		  \
 	.\$(OBJDIR)\nsEditorController.obj  \
 	.\$(OBJDIR)\nsEditorCommands.obj	  \
+	.\$(OBJDIR)\nsComposerCommands.obj  \
 	.\$(OBJDIR)\nsEditorUtils.obj		    \
 	.\$(OBJDIR)\nsEditorRegistration.obj \
 	.\$(OBJDIR)\nsEditorParserObserver.obj \
