@@ -93,6 +93,7 @@ sub is_tree_open {
       # then shorten it up.
       $sheriff_string =~ s/<[pP]>//g;
       $sheriff_string =~ s/<br>//g;
+      $sheriff_string =~ s/<\/a>//g;
       $sheriff_string =~ s/<//g;
       $sheriff_string =~ s/>//g;
       $sheriff_string =~ s/"/ /g;
