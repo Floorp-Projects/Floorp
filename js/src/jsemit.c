@@ -3083,10 +3083,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                         return JS_FALSE;
                     atomIndex = ALE_INDEX(ale);
 
-                    /* Emit a prolog bytecode to predefine the variable. */
-                    CG_SWITCH_TO_PROLOG(cg);
-                    EMIT_ATOM_INDEX_OP(pn->pn_op, atomIndex);
-                    CG_SWITCH_TO_MAIN(cg);
+                    if (!(cg->treeContext.flags & TCF_IN_FUNCTION) ||
+                        (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)) {
+                        /* Emit a prolog bytecode to predefine the variable. */
+                        CG_SWITCH_TO_PROLOG(cg);
+                        EMIT_ATOM_INDEX_OP(pn->pn_op, atomIndex);
+                        CG_SWITCH_TO_MAIN(cg);
+                    }
                 }
                 if (pn2->pn_expr) {
                     if (op == JSOP_SETNAME)
