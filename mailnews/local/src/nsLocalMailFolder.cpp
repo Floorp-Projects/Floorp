@@ -48,7 +48,7 @@
 #include "nsString.h"
 #include "nsLocalFolderSummarySpec.h"
 #include "nsMsgUtils.h"
-#include "nsICopyMessageStreamListener.h"
+#include "nsICopyMsgStreamListener.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
