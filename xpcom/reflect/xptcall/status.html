@@ -1,0 +1,147 @@
+<html>
+<head>
+<title>xptcall Porting Status</title>
+</head>
+<body bgcolor = "white">
+<h2><center>xptcall Porting Status</center></h2>
+
+<h3>What is this?</h3>
+
+This is a status page for the multiplatform porting of xptcall.
+xptcall has a 
+<a href="http://www.mozilla.org/scriptable/xptcall-faq.html">FAQ</a>
+and a 
+<a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/porting.html">Porting Guide</a>.
+
+<p>
+
+This is being maintained by <a href="mailto:jband@netscape.com">John&nbsp;Bandhauer&nbsp;&lt;jband@netscape.com&gt;</a>.
+Feel free to email me with questions or to volunteer to contribute xptcall code for any platform.
+
+<h3>Status</h3>
+
+<table BORDER="1">
+<TH BGCOLOR="yellow" 
+<TD>Status</TD>
+<TD>Platform</TD>
+<TD>Possible Contributors</TD>
+<TD>Contributors</TD>
+<TD>Notes</TD>
+</TH>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Win32</TD>
+<TD align="center">-</TD>
+<TD><a href="mailto:jband@netscape.com">John&nbsp;Bandhauer&nbsp;&lt;jband@netscape.com&gt;</a></TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/win32">win32</a></TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Linux x86</TD>
+<TD align="center">-</TD>
+<TD><a href="mailto:jband@netscape.com">John&nbsp;Bandhauer&nbsp;&lt;jband@netscape.com&gt;</a></TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix">unix</a>(could be better without inline asm overhead)</TD>
+</TR>
+
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>Free BSD and NetBSD x86</TD>
+<TD align="center">-</TD>
+<TD><a href="mailto:toshok@hungry.com">Christoph&nbsp;Toshok&nbsp;&lt;toshok@hungry.com&gt;</a><BR>
+    <a href="mailto:jband@netscape.com">John&nbsp;Bandhauer&nbsp;&lt;jband@netscape.com&gt;</a></TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix">unix</a><BR>(same as Linux 86 code)</TD>
+</TR>
+
+<TR>
+<TD bgcolor="khaki"><font color="black"><b>Started</b></font></TD>
+<TD>Mac PPC</TD>
+<TD align="center">-</TD>
+<TD><a href="mailto:rogerl@netscape.com">Roger&nbsp;Lawrence&nbsp;&lt;rogerl@netscape.com&gt;</a></TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/mac">mac</a> (just needs testing and debugging)</TD>
+</TR>
+
+<TR>
+<TD bgcolor="khaki"><font color="black"><b>Started</b></font></TD>
+<TD>Solaris Sparc</TD>
+<TD align="center">-</TD>
+<TD><a href="mailto:rogerl@netscape.com">Roger&nbsp;Lawrence&nbsp;&lt;rogerl@netscape.com&gt;</a></TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix">unix</a> (just needs testing and debugging)</TD>
+</TR>
+
+<TR>
+<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD>OS/2</TD>
+<TD><a href="mailto:mjf35@cam.ac.uk">John&nbsp;Fairhurst&nbsp;&lt;mjf35@cam.ac.uk&gt;</a></TD>
+<TD align="center">-</TD>
+<TD align="center">John will likely do this</TD>
+</TR>
+
+<TR>
+<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD>Linux ARM</TD>
+<TD><a href="mailto:willy@bofh.ai">Matthew&nbsp;Wilcox&nbsp;&lt;willy@bofh.ai&gt;</a></TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+</TR>
+
+<TR>
+<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD>Linux Sparc</TD>
+<TD><a href="mailto:anton@progsoc.uts.edu.au">Anton&nbsp;Blanchard&nbsp;&lt;anton@progsoc.uts.edu.au&gt;</a></TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+</TR>
+
+<TR>
+<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD>Linux PPC</TD>
+<TD><a href="mailto:jsproul@condor.fddi.wesleyan.edu">Jason&nbsp;Y.&nbsp;Sproul&nbsp;&lt;jsproul@condor.fddi.wesleyan.edu&gt;</a><BR>
+    <a href="mailto:darkmane@w-link.net">Sean&nbsp;Chitwood&nbsp;&lt;darkmane@w-link.net&gt;</a></TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+</TR>
+
+<TR>
+<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD>SunOS x86</TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+</TR>
+
+<TR>
+<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD>HP-UX</TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+</TR>
+
+<TR>
+<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD>AIX</TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+</TR>
+
+<TR>
+<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD>All others!</TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+<TD align="center">-</TD>
+</TR>
+
+</table>
+
+<p>
+
+<hr>
+<b>Author:</b> <a href="mailto:jband@netscape.com">John&nbsp;Bandhauer&nbsr;&lt;jband@netscape.com&gt;</a><br>
+<b>Last modified:</b> 30 April 1999
+
+</body>
+</html>
