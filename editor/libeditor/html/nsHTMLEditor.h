@@ -672,6 +672,7 @@ protected:
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
   NS_IMETHOD PrepareHTMLTransferable(nsITransferable **transferable, PRBool havePrivFlavor);
+  nsresult   PutDragDataInTransferable(nsITransferable **aTransferable);
   NS_IMETHOD InsertFromTransferable(nsITransferable *transferable, 
                                     const nsAString & aContextStr,
                                     const nsAString & aInfoStr,
