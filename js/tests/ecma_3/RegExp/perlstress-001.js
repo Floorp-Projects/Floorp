@@ -14,7 +14,7 @@
 * The Original Code is JavaScript Engine testing utilities.
 *
 * The Initial Developer of the Original Code is Netscape Communications Corp.
-* Portions created by the Initial Developer are Copyright (C) 2001
+* Portions created by the Initial Developer are Copyright (C) 2002
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s): pschwartau@netscape.com, rogerl@netscape.com
