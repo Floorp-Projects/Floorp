@@ -146,6 +146,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         PRInt64 bigSize;
         rv = file->GetFileSize(&bigSize);
         if (NS_FAILED(rv)) return rv;
+        LL_L2UI(size, bigSize);
 
         rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), file);
         if (NS_FAILED(rv)) return rv;
