@@ -21,12 +21,15 @@
  */
 
 #include "nsISupports.idl"
+#include "nsrootidl.idl"
 /*#include "nsIWidget.idl"  Boy this would be nice.*/
 
 [ptr] native nsIWidget(nsIWidget);
 %{ C++
 #include "nsIWidget.h"
 %}
+
+typedef voidStar nativeWindow;
 
 /**
  * The nsIGenericWindow describes a generic window and basic operations that 
@@ -64,8 +67,8 @@ interface nsIGenericWindow : nsISupports
 
 	@param cy - This is the height for the window to be.
 	*/
-	[noscript]void InitWindow(in long parentNativeWindow, in nsIWidget parentWidget,
-		in long x, in long y, in long cx, in long cy);
+	[noscript]void InitWindow(in nativeWindow parentNativeWindow, 
+		in nsIWidget parentWidget,	in long x, in long y, in long cx, in long cy);
 
 	/*
 	Tells the window that intialization and setup is complete.  When this is
@@ -123,7 +126,7 @@ interface nsIGenericWindow : nsISupports
 	/*
 	This is the native window parent of the control.
 	*/
-	attribute long parentNativeWindow;
+	attribute nativeWindow parentNativeWindow;
 
 	/*
 	Attribute controls the visibility of the object behind this interface.
