@@ -351,7 +351,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     {
       err = editor->Init(aDoc, aPresShell, 0);
     }
-    else if (mEditorTypeString == "htmlMail")  //  HTML editor with special mail rules
+    else if (mEditorTypeString == "htmlmail")  //  HTML editor with special mail rules
     {
       err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorMailMask);
     }
