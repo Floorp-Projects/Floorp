@@ -214,6 +214,10 @@ private:
 
     nsInputStream&                    operator >> (char* buf); // TOO DANGEROUS. DON'T DEFINE.
 
+    // private and unimplemented to disallow copies and assigns
+                                      nsInputStream(const nsInputStream& rhs);
+    nsInputStream&                    operator=(const nsInputStream& rhs);
+
 // DATA
 protected:
     nsCOMPtr<nsIInputStream>          mInputStream;
@@ -268,6 +272,12 @@ public:
                                       {
                                            return pf(*this);
                                       }
+
+private:
+
+    // private and unimplemented to disallow copies and assigns
+                                      nsOutputStream(const nsOutputStream& rhs);
+    nsOutputStream&                   operator=(const nsOutputStream& rhs);
 
 // DATA
 protected:
@@ -398,6 +408,12 @@ protected:
                                               mStore->SetAtEOF(atEnd);
                                       }
 
+private:
+
+    // private and unimplemented to disallow copies and assigns
+                                      nsRandomAccessStoreClient(const nsRandomAccessStoreClient& rhs);
+    nsRandomAccessStoreClient&        operator=(const nsRandomAccessStoreClient& rhs);
+
 // DATA
 protected:
     nsCOMPtr<nsIRandomAccessStore>    mStore;
@@ -444,6 +460,12 @@ protected:
                                           nsRandomAccessStoreClient::set_at_eof(atEnd);
                                       }
 
+private:
+
+    // private and unimplemented to disallow copies and assigns
+                                      nsRandomAccessInputStream(const nsRandomAccessInputStream& rhs);
+    nsRandomAccessInputStream&        operator=(const nsRandomAccessInputStream& rhs);
+
 }; // class nsRandomAccessInputStream
 
 //========================================================================================
@@ -460,6 +482,14 @@ public:
                                          { return nsInputStream::operator >>(ch); }
     nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
                                          { return nsInputStream::operator >>(pf); }
+
+
+private:
+
+    // private and unimplemented to disallow copies and assigns
+                                      nsInputStringStream(const nsInputStringStream& rhs);
+    nsInputStringStream&              operator=(const nsInputStringStream& rhs);
+
 
 }; // class nsInputStringStream
 
@@ -502,6 +532,12 @@ public:
 
 protected:
     void                              AssignFrom(nsISupports* stream);
+
+private:
+
+    // private and unimplemented to disallow copies and assigns
+                                      nsInputFileStream(const nsInputFileStream& rhs);
+    nsInputFileStream&                operator=(const nsInputFileStream& rhs);
 
 // DATA
 protected:
@@ -547,6 +583,13 @@ protected:
                                       :  nsOutputStream(nsnull)
                                       {
                                       }
+
+private:
+
+    // private and unimplemented to disallow copies and assigns
+                                      nsRandomAccessOutputStream(const nsRandomAccessOutputStream& rhs);
+    nsRandomAccessOutputStream&       operator=(const nsRandomAccessOutputStream& rhs);
+
 }; // class nsRandomAccessOutputStream
 
 //========================================================================================
@@ -577,6 +620,12 @@ public:
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
+
+private:
+
+    // private and unimplemented to disallow copies and assigns
+                                      nsOutputStringStream(const nsOutputStringStream& rhs);
+    nsOutputStringStream&             operator=(const nsOutputStringStream& rhs);
 
 }; // class nsOutputStringStream
 
@@ -637,6 +686,12 @@ public:
 protected:
     void                              AssignFrom(nsISupports* stream);
 
+private:
+    
+    // private and unimplemented to disallow copies and assigns
+                                      nsOutputFileStream(const nsOutputFileStream& rhs);
+    nsOutputFileStream&               operator=(const nsOutputFileStream& rhs);
+
 // DATA
 protected:
     nsCOMPtr<nsIFileSpecOutputStream>     mFileOutputStream;
@@ -680,6 +735,14 @@ public:
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
+
+
+private:
+
+    // private and unimplemented to disallow copies and assigns
+                                      nsOutputConsoleStream(const nsOutputConsoleStream& rhs);
+    nsOutputConsoleStream&            operator=(const nsOutputConsoleStream& rhs);
+
 
 }; // class nsOutputConsoleStream
 
@@ -757,6 +820,13 @@ public:
 
 	virtual nsresult flush() {if (mFileOutputStream) mFileOutputStream->Flush(); return error(); }
 
+
+private:
+
+    // private and unimplemented to disallow copies and assigns
+                                      nsIOFileStream(const nsIOFileStream& rhs);
+    nsIOFileStream&                   operator=(const nsIOFileStream& rhs);
+
     // DATA
 protected:
     nsCOMPtr<nsIFileSpecOutputStream>     mFileOutputStream;
@@ -803,6 +873,14 @@ public:
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
+
+private:
+
+    // private and unimplemented to disallow copies and assigns
+                                      nsSaveViaTempStream(const nsSaveViaTempStream& rhs);
+    nsSaveViaTempStream&              operator=(const nsSaveViaTempStream& rhs);
+
+
 protected:
 
 	const nsFileSpec&					mFileToSave;
