@@ -38,7 +38,7 @@ CPPSRCS		= \
 LIBS		= \
 		-lraptorgfx \
 		$(NETLIB_LIBS) \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(JSJ_LIB) \
 		$(NSPR_LIBS) \

@@ -48,7 +48,7 @@ LIBS		= \
 		-lnetlib \
 		$(XPCOM_LIBS) \
 		-lpwcac \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		-lmork \
 		-lmsgbaseutil \
 		$(NSPR_LIBS) \

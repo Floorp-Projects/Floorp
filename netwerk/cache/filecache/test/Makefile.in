@@ -35,7 +35,7 @@ LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo -lmozreg_s
 endif
 
 LIBS		= \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
         -lmozdbm_s \
 		$(MOZ_NECKO_UTIL_LIBS) \

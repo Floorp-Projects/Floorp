@@ -31,7 +31,7 @@ CPPSRCS		= mimetest.cpp
 
 LIBS	= \
 		-L$(DIST)/bin \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

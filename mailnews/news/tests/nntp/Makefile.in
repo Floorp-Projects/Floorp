@@ -33,7 +33,7 @@ LIBS = \
 	$(DIST)/lib/librdfbase_s.a \
 	-L$(DIST)/bin \
 	-lxpcom	\
-	-lmozjs	\
+	$(MOZ_JS_LIBS)	\
 	-lmsgbaseutil \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \

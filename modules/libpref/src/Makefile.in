@@ -70,7 +70,7 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(NSPR_LIBS) \
 		$(XPCOM_LIBS) \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

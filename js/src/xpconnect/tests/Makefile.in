@@ -48,7 +48,7 @@ CPPSRCS		= TestXPC.cpp
 LIBS		= \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

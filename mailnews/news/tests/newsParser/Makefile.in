@@ -31,7 +31,7 @@ CPPSRCS		= newsParserTest.cpp
 
 LIBS		= \
 		$(DIST)/lib/libmsgnews_s.a \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		-lraptorgfx \
 		-lmsgbaseutil \
 		$(XPCOM_LIBS) \
