@@ -9,7 +9,6 @@
 
   <!-- locale information -->
   <RDF:Description about="urn:mozilla:locale:en-US"
-        chrome:displayName="English UNIX"
         chrome:author="mozilla.org"
         chrome:name="en-US"
         chrome:previewURL="http://www.mozilla.org/locales/en-US.gif">
