@@ -94,7 +94,7 @@ protected:
 		nsresult	TestFinderFlag(PRUint16 flagMask, PRBool *outFlagSet, PRBool testTargetSpec = PR_TRUE);
 
     OSErr			GetTargetSpecCatInfo(CInfoPBRec& outInfo);
-	nsresult MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy );
+	nsresult MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy, PRBool followLinks );
 		
 	// Passing nsnull for the extension uses leaf name
 	nsresult SetOSTypeAndCreatorFromExtension(const char* extension = nsnull);

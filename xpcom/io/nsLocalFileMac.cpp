@@ -1389,15 +1389,20 @@ nsLocalFile::GetPath(char **_retval)
 	return NS_OK;
 }
 
-nsresult nsLocalFile::MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy )
+nsresult nsLocalFile::MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy, PRBool followLinks )
 {
 	nsresult  rv = ResolveAndStat( PR_TRUE );
 	if ( NS_FAILED( rv ) )
 		return rv;
 
 	OSErr macErr;
-	FSSpec srcSpec = mResolvedSpec;
+	FSSpec srcSpec;
 	Str255 newPascalName;
+	
+	if (followLinks)
+	    srcSpec = mTargetSpec;
+	else
+	    srcSpec = mResolvedSpec;
 	
 	// If newParentDir == nsnull, it's a simple rename
 	if ( !newParentDir )
@@ -1407,15 +1412,19 @@ nsresult nsLocalFile::MoveCopy( nsIFile* newParentDir, const char* newName, PRBo
 	    macErr = ::FSpRename( &srcSpec, newPascalName );
 	    return MacErrorMapper( macErr );
 	}
+
+	PRBool isDirectory;
+	rv = newParentDir->IsDirectory( &isDirectory );
+	if ( NS_FAILED( rv ) || !isDirectory )
+		return NS_ERROR_FILE_DESTINATION_NOT_DIR;
 	
 	nsCOMPtr<nsILocalFileMac> destDir( do_QueryInterface( newParentDir ));
 	FSSpec destSpec;
 	
-	PRBool isDirectory;
-	rv = newParentDir->IsDirectory( &isDirectory );
-	if ( NS_FAILED( rv ) )
-		return rv;
-	rv = destDir->GetResolvedFSSpec( &destSpec );
+	if (followLinks)
+	    rv = destDir->GetTargetFSSpec( &destSpec );
+	else
+	    rv = destDir->GetResolvedFSSpec( &destSpec ); // If resolved spec is an alias file, we'll rightly fail
 	if ( NS_FAILED( rv ) )
 		return rv;		
 
@@ -1448,19 +1457,19 @@ nsresult nsLocalFile::MoveCopy( nsIFile* newParentDir, const char* newName, PRBo
 NS_IMETHODIMP  
 nsLocalFile::CopyTo(nsIFile *newParentDir, const char *newName)
 {
-	return MoveCopy( newParentDir, newName, PR_TRUE );
+	return MoveCopy( newParentDir, newName, PR_TRUE, PR_FALSE );
 }
 
 NS_IMETHODIMP  
 nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const char *newName)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return MoveCopy( newParentDir, newName, PR_TRUE, PR_TRUE );
 }
 
 NS_IMETHODIMP  
 nsLocalFile::MoveTo(nsIFile *newParentDir, const char *newName)
 {
-	return MoveCopy( newParentDir, newName, PR_FALSE );
+	return MoveCopy( newParentDir, newName, PR_FALSE, PR_FALSE );
 }
 
 NS_IMETHODIMP  
