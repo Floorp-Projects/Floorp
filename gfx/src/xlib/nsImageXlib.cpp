@@ -1602,9 +1602,9 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
           else {
             dstAlpha[(aDX+x)>>3]       |= alphaPixels >> offset;
             // avoid write if no 1's to write - also avoids going past end of array
-            // compiler should merge the common sub-expressions
-            if (alphaPixels << (8U - offset))
-              dstAlpha[((aDX+x)>>3) + 1] |= alphaPixels << (8U - offset);
+            PRUint8 alphaTemp = alphaPixels << (8U - offset);
+            if (alphaTemp & 0xff)
+              dstAlpha[((aDX+x)>>3) + 1] |= alphaTemp;
           }
 
           if (alphaPixels == 0xff) {
