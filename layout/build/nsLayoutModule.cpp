@@ -318,6 +318,8 @@ static Components gComponents[] = {
   { "HTML style sheet", NS_HTMLSTYLESHEET_CID, nsnull, },
   { "HTML-CSS style sheet", NS_HTML_CSS_STYLESHEET_CID, nsnull, },
 
+  { "DOM implementation", NS_DOM_IMPLEMENTATION_CID, nsnull, },
+
   { "XML document", NS_XMLDOCUMENT_CID, nsnull, },
   { "Image document", NS_IMAGEDOCUMENT_CID, nsnull, },
 

@@ -84,13 +84,14 @@ nsILayoutHistoryState.h \
 nsIStatefulFrame.h \
 nsISelfScrollingFrame.h \
 nsIScrollableFrame.h \
+nsIPrivateDOMImplementation.h \
 $(NULL)
 
 XPIDLSRCS	= \
 		nsIChromeEventHandler.idl	\
-		nsIContentPolicy.idl            \
-		nsISelectionController.idl      \
-		nsIPrintListener.idl            \
+		nsIContentPolicy.idl        \
+		nsISelectionController.idl  \
+		nsIPrintListener.idl        \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

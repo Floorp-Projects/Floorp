@@ -92,6 +92,7 @@
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIAggregatePrincipal.h"
+#include "nsIPrivateDOMImplementation.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
@@ -116,6 +117,7 @@ static NS_DEFINE_IID(kIDOMRange, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
 static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+static NS_DEFINE_IID(kIPrivateDOMImplementationIID, NS_IPRIVATEDOMIMPLEMENTATION_IID);
 
 
 #include "nsILineBreakerFactory.h"
@@ -367,7 +369,8 @@ nsDOMStyleSheetList::DocumentWillBeDestroyed(nsIDocument *aDocument)
 // ==================================================================
 
 class nsDOMImplementation : public nsIDOMDOMImplementation,
-                            public nsIScriptObjectOwner
+                            public nsIScriptObjectOwner,
+							public nsIPrivateDOMImplementation
 {
 public:
   nsDOMImplementation(nsIDocument* aDocument = nsnull);
@@ -375,6 +378,7 @@ public:
 
   NS_DECL_ISUPPORTS
   
+  // nsIDOMDOMImplementation
   NS_IMETHOD    HasFeature(const nsString& aFeature, 
                            const nsString& aVersion, 
                            PRBool* aReturn);
@@ -388,13 +392,27 @@ public:
                                nsIDOMDocumentType* aDoctype,
                                nsIDOMDocument** aReturn);
 
+  // nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
+
+  //nsIPrivateDOMImplementation
+  NS_IMETHOD Init(nsIDocument* aDoc);
 
 protected:
   void *mScriptObject;
   nsCOMPtr<nsIDocument> mDocument;
 };
+
+
+NS_LAYOUT nsresult
+NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
+{
+  nsDOMImplementation* domImpl = new nsDOMImplementation();
+  if (domImpl == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return domImpl->QueryInterface(kIDOMDOMImplementationIID, (void**) aInstancePtrResult);
+}
 
 nsDOMImplementation::nsDOMImplementation(nsIDocument* aDocument)
 {
@@ -418,6 +436,12 @@ nsDOMImplementation::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDOMDOMImplementationIID)) {
     nsIDOMDOMImplementation* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIPrivateDOMImplementationIID)) {
+    nsIPrivateDOMImplementation* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -523,6 +547,13 @@ NS_IMETHODIMP
 nsDOMImplementation::SetScriptObject(void *aScriptObject)
 {
   mScriptObject = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMImplementation::Init(nsIDocument* aDoc)
+{
+  mDocument = aDoc;
   return NS_OK;
 }
 
@@ -1953,7 +1984,7 @@ nsDocument::CreateElement(const nsString& aTagName,
   // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
- 
+
 NS_IMETHODIMP
 nsDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
 {
