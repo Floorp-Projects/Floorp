@@ -56,7 +56,7 @@ EXPORTS =                  \
         nscore.h           \
         pure.h             \
 !ifdef MOZ_TRACE_MALLOC
-		nsTraceMalloc.h    \
+	nsTraceMalloc.h    \
 !endif
 	nsIInterfaceRequestorUtils.h \
         $(NULL)			
@@ -98,8 +98,8 @@ LCFLAGS = $(LCFLAGS) -DGC_LEAK_DETECTOR
 
 
 !ifdef MOZ_TRACE_MALLOC
-C_OBJS =                                    \
-		.\$(OBJDIR)\nsTraceMalloc.obj \
+C_OBJS = $(C_OBJS) \
+	.\$(OBJDIR)\nsTraceMalloc.obj \
         $(NULL)
 !endif
 

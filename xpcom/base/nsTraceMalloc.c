@@ -653,8 +653,10 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
     return retval;
 }
 
-
-#define  MAX_STACKFRAMES 256
+/*
+ * Realease builds seem to take more stackframes.
+ */
+#define  MAX_STACKFRAMES 512
 #define  MAX_UNMANGLED_NAME_LEN 256
 
 static callsite *calltree(int skip)
@@ -664,12 +666,14 @@ static callsite *calltree(int skip)
     HANDLE myThread;
     CONTEXT context;
     int ok, maxstack, offset;
+    int getSymRes = 0;
     STACKFRAME frame[MAX_STACKFRAMES];
     uint32 library_serial, method_serial;
     int framenum;
     uint32 pc;
     uint32 depth, nkids;
-    callsite *parent, *site, **csp, *tmp;
+    callsite *parent, **csp, *tmp;
+    callsite *site = NULL;
     char *demangledname;
     const char *library;
     IMAGEHLP_MODULE imagehelp;
@@ -679,6 +683,7 @@ static callsite *calltree(int skip)
     PLHashNumber hash;
     PLHashEntry **hep, *he;
     lfdset_entry *le;
+    char* noname = "noname";
 
     imagehelp.SizeOfStruct = sizeof(imagehelp);
     framenum = 0;
@@ -707,7 +712,7 @@ static callsite *calltree(int skip)
     frame[0].AddrStack.Mode   = AddrModeFlat;
     frame[0].AddrFrame.Offset = context.Ebp;
     frame[0].AddrFrame.Mode   = AddrModeFlat;
-    for (;;) {
+    for (;framenum < MAX_STACKFRAMES;) {
         PIMAGEHLP_SYMBOL symbol = (PIMAGEHLP_SYMBOL) buf;
         if (framenum)
             memcpy(&(frame[framenum]),&(frame[framenum-1]),sizeof(STACKFRAME));
@@ -731,7 +736,13 @@ static callsite *calltree(int skip)
         }
         if (frame[framenum].AddrPC.Offset == 0)
             break;
+
         framenum++;
+
+        /*
+         * Time to increase the number of stack frames?
+         */
+        PR_ASSERT(framenum < MAX_STACKFRAMES);
     }
 
     depth = framenum;
@@ -741,7 +752,7 @@ static callsite *calltree(int skip)
 
     /* Reverse the stack again, finding and building a path in the tree. */
     parent = &calltree_root;
-    do {
+    while (0 < framenum) {
         DWORD displacement;/*used for getsymfromaddr*/
 
         pc = frame[--framenum].AddrPC.Offset;
@@ -795,20 +806,10 @@ static callsite *calltree(int skip)
         if (!SymGetModuleInfoEspecial(myProcess,
                                frame[framenum].AddrPC.Offset,
                                &imagehelp)) {
-            library = "unknown";
+            library = noname;
         } else {
             library = imagehelp.ModuleName;
         }
-
-        symbol = (PIMAGEHLP_SYMBOL) buf;
-        symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
-        symbol->MaxNameLength = sizeof(buf) - sizeof(IMAGEHLP_SYMBOL);
-        symbol->Name[symbol->MaxNameLength] = '\0';
-
-        ok = _SymGetSymFromAddr(myProcess,
-                                frame[framenum].AddrPC.Offset,
-                                &displacement,
-                                symbol);
 
         /* Check whether we need to emit a library trace record. */
         library_serial = 0;
@@ -857,12 +858,31 @@ static callsite *calltree(int skip)
             }
         }
 
+        symbol = (PIMAGEHLP_SYMBOL) buf;
+        symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
+        symbol->MaxNameLength = sizeof(buf) - sizeof(IMAGEHLP_SYMBOL);
+        symbol->Name[symbol->MaxNameLength] = '\0';
+
+        getSymRes = _SymGetSymFromAddr(myProcess,
+                                frame[framenum].AddrPC.Offset,
+                                &displacement,
+                                symbol);
+
         /* Now find the demangled method name and pc offset in it. */
-        demangledname = (char *)malloc(MAX_UNMANGLED_NAME_LEN);
-        if (!_SymUnDName(symbol,demangledname,MAX_UNMANGLED_NAME_LEN))
-          return 0;
-        method = demangledname;
-        offset = (char*)pc - (char*)(symbol->Address);
+        if (0 != getSymRes) {
+            demangledname = (char *)malloc(MAX_UNMANGLED_NAME_LEN);
+            if (!_SymUnDName(symbol,demangledname,MAX_UNMANGLED_NAME_LEN)) {
+                free(demangledname);
+                return 0;
+            }
+            method = demangledname;
+            offset = (char*)pc - (char*)(symbol->Address);
+        }
+        else {
+            method = noname;
+            offset = pc;
+        }
+
         /* Emit an 'N' (for New method, 'M' is for malloc!) event if needed. */
         method_serial = 0;
         if (!methods) {
@@ -871,7 +891,9 @@ static callsite *calltree(int skip)
                                       &lfdset_hashallocops, NULL);
             if (!methods) {
                 tmstats.btmalloc_failures++;
-                free((void*) method);
+                if (method != noname) {
+                    free((void*) method);
+                }
                 return NULL;
             }
         }
@@ -880,7 +902,9 @@ static callsite *calltree(int skip)
         he = *hep;
         if (he) {
             method_serial = (uint32) he->value;
-            free((void*) method);
+            if (method != noname) {
+                free((void*) method);
+            }
             method = (char *) he->key;
             le = (lfdset_entry *) he;
             if (LFD_TEST(fp->lfd, &le->lfdset)) {
@@ -893,7 +917,9 @@ static callsite *calltree(int skip)
                                     (void*) method_serial);
             if (!he) {
                 tmstats.btmalloc_failures++;
-                free((void*) method);
+                if (method != noname) {
+                    free((void*) method);
+                }
                 return NULL;
             }
             le = (lfdset_entry *) he;
@@ -943,7 +969,7 @@ static callsite *calltree(int skip)
 
       upward:
         parent = site;
-    } while (framenum);
+    }
 
     if (maxstack)
         calltree_maxstack_top = site;
