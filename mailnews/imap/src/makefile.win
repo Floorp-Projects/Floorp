@@ -27,11 +27,19 @@ REQUIRES=xpcom js nspr netlib
 CPPSRCS=    nsImapUrl.cpp								\
 			nsImapProtocol.cpp							\
 			nsImapProxyEvent.cpp								\
+			nsIMAPHostSessionList.cpp								\
+			nsIMAPGenericParser.cpp		\
+			nsIMAPBodyShell.cpp								\
+			nsIMAPNamespace.cpp								\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
 			.\$(OBJDIR)\nsImapProtocol.obj				\
 			.\$(OBJDIR)\nsImapProxyEvent.obj				\
+			.\$(OBJDIR)\nsIMAPHostSessionList.obj				\
+			.\$(OBJDIR)\nsIMAPBodyShell.obj						\
+			.\$(OBJDIR)\nsIMAPGenericParser.obj					\
+			.\$(OBJDIR)\nsIMAPNamespace.obj					\
 			$(NULL)
 
 

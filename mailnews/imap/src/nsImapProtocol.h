@@ -27,6 +27,7 @@
 
 #include "nsIOutputStream.h"
 
+class nsIMAPMessagePartIDArray;
 
 class nsImapProtocol : public nsIImapProtocol
 {
@@ -85,6 +86,42 @@ public:
 	void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
 	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
 
+	// used to start fetching a message.
+	void FetchTryChunking(const char *messageIds,
+                                            nsIMAPeFetchFields whatToFetch,
+                                            PRBool idIsUid,
+											char *part,
+											PRUint32 downloadSize);
+	virtual void PipelinedFetchMessageParts(const char *uid,
+											nsIMAPMessagePartIDArray *parts);
+	// used when streaming a message fetch
+    virtual void BeginMessageDownLoad(PRUint32 totalSize, // for user, headers and body
+                                      const char *contentType);     // some downloads are header only
+    virtual void HandleMessageDownLoadLine(const char *line, PRBool chunkEnd);
+    virtual void NormalMessageEndDownload();
+    virtual void AbortMessageDownLoad();
+	// Send log output...
+	void	Log(const char *logSubName, const char *extraInfo, const char *logData);
+
+	// Comment from 4.5: We really need to break out the thread synchronizer from the
+	// connection class...Not sure what this means
+	PRBool	GetShowAttachmentsInline();
+	PRBool GetPseudoInterrupted();
+	void	PseudoInterrupt(PRBool the_interrupt);
+
+	PRUint32 GetMessageSize(const char *messageId, PRBool idsAreUids);
+
+	PRBool	DeathSignalReceived();
+	void	ResetProgressInfo();
+	void	SetActive(PRBool active);
+	PRBool	GetActive();
+
+	// Sets whether or not the content referenced by the current ActiveEntry has been modified.
+	// Used for MIME parts on demand.
+	void	SetContentModified(XP_Bool modified);
+	XP_Bool	GetShouldFetchAllParts();
+
+
 private:
 	// the following flag is used to determine when a url is currently being run. It is cleared on calls
 	// to ::StopBinding and it is set whenever we call Load on a url
@@ -107,12 +144,17 @@ private:
     PLEventQueue *m_eventQueue;
     PRThread     *m_thread;
     PRMonitor    *m_dataMonitor;
+	PRMonitor	 *m_pseudoInterruptMonitor;
+    PRMonitor	 *m_dataMemberMonitor;
+	PRMonitor	 *m_threadDeathMonitor;
+
     PRBool       m_imapThreadIsRunning;
     static void ImapThreadMain(void *aParm);
     void ImapThreadMainLoop(void);
     PRBool ImapThreadIsRunning();
     nsISupports* m_consumer;
     
+    PRMonitor *GetDataMemberMonitor();
     // **** current protocol instance state ****
     ImapState m_imapState;
 
@@ -130,6 +172,19 @@ private:
 	// SendData not only writes the NULL terminated data in dataBuffer to our output stream
 	// but it also informs the consumer that the data has been written to the stream.
 	PRInt32 SendData(const char * dataBuffer);
+
+	// state ported over from 4.5
+	PRBool m_pseudoInterrupted;
+	PRBool m_active;
+	PRBool m_threadShouldDie;
+
+    // manage the IMAP server command tags
+    char m_currentServerCommandTag[10];   // enough for a billion
+    int  m_currentServerCommandTagNumber;
+    void IncrementCommandTagNumber();
+    char *GetServerCommandTag();
+    
+
 };
 
 #endif  // nsImapProtocol_h___

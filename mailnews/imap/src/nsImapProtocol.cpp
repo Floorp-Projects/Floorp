@@ -12,21 +12,26 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
 #include "msgCore.h"  // for pre-compiled headers
 
+#include "nsImapCore.h"
 #include "nsImapProtocol.h"
 #include "nscore.h"
 #include "nsImapProxyEvent.h"
+#include "nsIMAPHostSessionList.h"
+#include "nsIMAPBodyShell.h"
 
 // netlib required files
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsINetService.h"
+
+#include "nsString2.h"
 
 #ifdef XP_PC
 #include <windows.h>    // for InterlockedIncrement
@@ -94,10 +99,17 @@ nsImapProtocol::nsImapProtocol()
     m_eventQueue = nsnull;
     m_thread = nsnull;
     m_dataMonitor = nsnull;
+	m_pseudoInterruptMonitor = nsnull;
+	m_dataMemberMonitor = nsnull;
+	m_threadDeathMonitor = nsnull;
     m_imapThreadIsRunning = PR_FALSE;
     m_consumer = nsnull;
+	// not right, I'm just putting this in to find undefined symbols
+	// there should be just one of these 
+	nsIMAPHostSessionList *hostList = new nsIMAPHostSessionList;
 
     m_imapState = nsImapProtocol::NOT_CONNECTED;
+	m_currentServerCommandTagNumber = 0;
 }
 
 nsresult nsImapProtocol::Initialize(PLEventQueue * aSinkEventQueue)
@@ -131,6 +143,21 @@ nsImapProtocol::~nsImapProtocol()
         PR_DestroyMonitor(m_dataMonitor);
         m_dataMonitor = nsnull;
     }
+	if (m_pseudoInterruptMonitor)
+	{
+		PR_DestroyMonitor(m_pseudoInterruptMonitor);
+		m_pseudoInterruptMonitor = nsnull;
+	}
+	if (m_dataMemberMonitor)
+	{
+		PR_DestroyMonitor(m_dataMemberMonitor);
+		m_dataMemberMonitor = nsnull;
+	}
+	if (m_threadDeathMonitor)
+	{
+		PR_DestroyMonitor(m_threadDeathMonitor);
+		m_threadDeathMonitor = nsnull;
+	}
 }
 
 void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
@@ -193,6 +220,10 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
     if (m_thread == nsnull)
     {
         m_dataMonitor = PR_NewMonitor();
+		m_pseudoInterruptMonitor = PR_NewMonitor();
+		m_dataMemberMonitor = PR_NewMonitor();
+		m_threadDeathMonitor = PR_NewMonitor();
+
         m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
                                    this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
                                    PR_UNJOINABLE_THREAD, 0);
@@ -509,4 +540,468 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 	} // if we received a url!
 
 	return rv;
+}
+
+// ***** Beginning of ported stuf from 4.5 *******
+
+// Command tag handling stuff
+void nsImapProtocol::IncrementCommandTagNumber()
+{
+    sprintf(m_currentServerCommandTag,"%ld", (long) ++m_currentServerCommandTagNumber);
+}
+
+char *nsImapProtocol::GetServerCommandTag()
+{
+    return m_currentServerCommandTag;
+}
+
+void nsImapProtocol::BeginMessageDownLoad(
+                                      PRUint32 total_message_size, // for user, headers and body
+                                      const char *content_type)
+{
+	char *sizeString = PR_smprintf("OPEN Size: %ld", total_message_size);
+	Log("STREAM",sizeString,"Begin Message Download Stream");
+	PR_FREEIF(sizeString);
+#if 0 // here's the old code ...
+	//PR_LOG(IMAP, out, ("STREAM: Begin Message Download Stream.  Size: %ld", total_message_size));
+	StreamInfo *si = (StreamInfo *) PR_Malloc (sizeof (StreamInfo));		// This will be freed in the event
+	if (si)
+	{
+		si->size = total_message_size;
+		si->content_type = PL_strdup(content_type);
+		if (si->content_type)
+		{
+			TImapFEEvent *setupStreamEvent = 
+				new TImapFEEvent(SetupMsgWriteStream,   // function to call
+								this,                                   // access to current entry
+								(void *) si,
+								PR_TRUE);		// ok to run when interrupted because si is FREE'd in the event
+
+			if (setupStreamEvent)
+			{
+				fFEEventQueue->AdoptEventToEnd(setupStreamEvent);
+				WaitForFEEventCompletion();
+			}
+			else
+				HandleMemoryFailure();
+			fFromHeaderSeen = PR_FALSE;
+		}
+		else
+			HandleMemoryFailure();
+	}
+	else
+		HandleMemoryFailure();
+#endif
+}
+
+
+
+// this routine is used to fetch a message or messages, or headers for a message...
+void nsImapProtocol::FetchTryChunking(const char *messageIds,
+                                            nsIMAPeFetchFields whatToFetch,
+                                            PRBool idIsUid,
+											char *part,
+											PRUint32 downloadSize)
+{
+#if 0
+	GetServerStateParser().SetTotalDownloadSize(downloadSize);
+	if (fFetchByChunks && GetServerStateParser().ServerHasIMAP4Rev1Capability() &&
+		(downloadSize > (PRUint32) fChunkThreshold))
+	{
+		PRUint32 startByte = 0;
+		GetServerStateParser().ClearLastFetchChunkReceived();
+		while (!DeathSignalReceived() && !GetPseudoInterrupted() && 
+			!GetServerStateParser().GetLastFetchChunkReceived() &&
+			GetServerStateParser().ContinueParse())
+		{
+			PRUint32 sizeToFetch = startByte + fChunkSize > downloadSize ?
+				downloadSize - startByte : fChunkSize;
+			FetchMessage(messageIds, 
+						 whatToFetch,
+						 idIsUid,
+						 startByte, sizeToFetch,
+						 part);
+			startByte += sizeToFetch;
+		}
+
+		// Only abort the stream if this is a normal message download
+		// Otherwise, let the body shell abort the stream.
+		if ((whatToFetch == kEveryThingRFC822)
+			&&
+			((startByte > 0 && (startByte < downloadSize) &&
+			(DeathSignalReceived() || GetPseudoInterrupted())) ||
+			!GetServerStateParser().ContinueParse()))
+		{
+			AbortMessageDownLoad();
+			PseudoInterrupt(FALSE);
+		}
+	}
+	else
+	{
+		// small message, or (we're not chunking and not doing bodystructure),
+		// or the server is not rev1.
+		// Just fetch the whole thing.
+		FetchMessage(messageIds, whatToFetch,idIsUid, 0, 0, part);
+	}
+#endif
+}
+
+
+void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePartIDArray *parts)
+{
+	// assumes no chunking
+
+	// build up a string to fetch
+	nsString2 stringToFetch;
+	nsString2 what;
+
+	int32 currentPartNum = 0;
+	while ((parts->GetNumParts() > currentPartNum) && !DeathSignalReceived())
+	{
+		nsIMAPMessagePartID *currentPart = parts->GetPart(currentPartNum);
+		if (currentPart)
+		{
+			// Do things here depending on the type of message part
+			// Append it to the fetch string
+			if (currentPartNum > 0)
+				stringToFetch += " ";
+
+			switch (currentPart->GetFields())
+			{
+			case kMIMEHeader:
+				what = "BODY[";
+				what += currentPart->GetPartNumberString();
+				what += ".MIME]";
+				stringToFetch += what;
+				break;
+			case kRFC822HeadersOnly:
+				if (currentPart->GetPartNumberString())
+				{
+					what = "BODY[";
+					what += currentPart->GetPartNumberString();
+					what += ".HEADER]";
+					stringToFetch += what;
+				}
+				else
+				{
+					// headers for the top-level message
+					stringToFetch += "BODY[HEADER]";
+				}
+				break;
+			default:
+				NS_ASSERTION(FALSE, "we should only be pipelining MIME headers and Message headers");
+				break;
+			}
+
+		}
+		currentPartNum++;
+	}
+
+	// Run the single, pipelined fetch command
+	if ((parts->GetNumParts() > 0) && !DeathSignalReceived() && !GetPseudoInterrupted() && stringToFetch)
+	{
+	    IncrementCommandTagNumber();
+
+		char *commandString = PR_smprintf("%s UID fetch %s (%s)%s", GetServerCommandTag(), uid, stringToFetch, CRLF);
+#if 0	// ### DMB - hook up writing commands and parsing response.
+		if (commandString)
+		{
+			int ioStatus = WriteLineToSocket(commandString);
+			ParseIMAPandCheckForNewMail(commandString);
+			PR_Free(commandString);
+		}
+		else
+			HandleMemoryFailure();
+#endif // 0
+		PR_Free(stringToFetch);
+	}
+}
+
+
+// well, this is what the old code used to look like to handle a line seen by the parser.
+// I'll leave it mostly #ifdef'ed out, but I suspect it will look a lot like this.
+// Perhaps we'll send the line to a messageSink...
+void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd)
+{
+    // when we duplicate this line, whack it into the native line
+    // termination.  Do not assume that it really ends in CRLF
+    // to start with, even though it is supposed to be RFC822
+
+	// If we are fetching by chunks, we can make no assumptions about
+	// the end-of-line terminator, and we shouldn't mess with it.
+    
+    // leave enough room for two more chars. (CR and LF)
+    char *localMessageLine = (char *) PR_Malloc(strlen(line) + 3);
+    if (localMessageLine)
+        strcpy(localMessageLine,line);
+    char *endOfLine = localMessageLine + strlen(localMessageLine);
+
+	if (!chunkEnd)
+	{
+#if (LINEBREAK_LEN == 1)
+		if ((endOfLine - localMessageLine) >= 2 &&
+			 endOfLine[-2] == CR &&
+			 endOfLine[-1] == LF)
+			{
+			  /* CRLF -> CR or LF */
+			  endOfLine[-2] = LINEBREAK[0];
+			  endOfLine[-1] = '\0';
+			}
+		  else if (endOfLine > localMessageLine + 1 &&
+				   endOfLine[-1] != LINEBREAK[0] &&
+			   ((endOfLine[-1] == CR) || (endOfLine[-1] == LF)))
+			{
+			  /* CR -> LF or LF -> CR */
+			  endOfLine[-1] = LINEBREAK[0];
+			}
+		else // no eol characters at all
+		  {
+		    endOfLine[0] = LINEBREAK[0]; // CR or LF
+		    endOfLine[1] = '\0';
+		  }
+#else
+		  if (((endOfLine - localMessageLine) >= 2 && endOfLine[-2] != CR) ||
+			   ((endOfLine - localMessageLine) >= 1 && endOfLine[-1] != LF))
+			{
+			  if ((endOfLine[-1] == CR) || (endOfLine[-1] == LF))
+			  {
+				  /* LF -> CRLF or CR -> CRLF */
+				  endOfLine[-1] = LINEBREAK[0];
+				  endOfLine[0]  = LINEBREAK[1];
+				  endOfLine[1]  = '\0';
+			  }
+			  else	// no eol characters at all
+			  {
+				  endOfLine[0] = LINEBREAK[0];	// CR
+				  endOfLine[1] = LINEBREAK[1];	// LF
+				  endOfLine[2] = '\0';
+			  }
+			}
+#endif
+	}
+#if 0    
+	const char *xSenderInfo = GetServerStateParser().GetXSenderInfo();
+
+	if (xSenderInfo && *xSenderInfo && !fFromHeaderSeen)
+	{
+		if (!PL_strncmp("From: ", localMessageLine, 6))
+		{
+			fFromHeaderSeen = TRUE;
+			if (PL_strstr(localMessageLine, xSenderInfo) != NULL)
+				AddXMozillaStatusLine(0);
+			GetServerStateParser().FreeXSenderInfo();
+		}
+	}
+    // if this line is for a different message, or the incoming line is too big
+    if (((fDownLoadLineCache.CurrentUID() != GetServerStateParser().CurrentResponseUID()) && !fDownLoadLineCache.CacheEmpty()) ||
+        (fDownLoadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1)) )
+    {
+		if (!fDownLoadLineCache.CacheEmpty())
+		{
+			msg_line_info *downloadLineDontDelete = fDownLoadLineCache.GetCurrentLineInfo();
+			PostLineDownLoadEvent(downloadLineDontDelete);
+		}
+		fDownLoadLineCache.ResetCache();
+	}
+     
+    // so now the cache is flushed, but this string might still be to big
+    if (fDownLoadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1) )
+    {
+        // has to be dynamic to pass to other win16 thread
+		msg_line_info *downLoadInfo = (msg_line_info *) PR_Malloc(sizeof(msg_line_info));
+        if (downLoadInfo)
+        {
+          	downLoadInfo->adoptedMessageLine = localMessageLine;
+          	downLoadInfo->uidOfMessage = GetServerStateParser().CurrentResponseUID();
+          	PostLineDownLoadEvent(downLoadInfo);
+          	if (!DeathSignalReceived())
+          		PR_Free(downLoadInfo);
+          	else
+          	{
+          		// this is very rare, interrupt while waiting to display a huge single line
+          		// Net_InterruptIMAP will read this line so leak the downLoadInfo
+          		
+          		// set localMessageLine to NULL so the FREEIF( localMessageLine) leaks also
+          		localMessageLine = NULL;
+          	}
+        }
+	}
+    else
+		fDownLoadLineCache.CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
+#endif // 0
+	PR_FREEIF( localMessageLine);
+}
+
+
+
+void nsImapProtocol::NormalMessageEndDownload()
+{
+	Log("STREAM", "CLOSE", "Normal Message End Download Stream");
+#if 0
+	if (fTrackingTime)
+		AdjustChunkSize();
+	if (!fDownLoadLineCache.CacheEmpty())
+	{
+	    msg_line_info *downloadLineDontDelete = fDownLoadLineCache.GetCurrentLineInfo();
+	    PostLineDownLoadEvent(downloadLineDontDelete);
+	    fDownLoadLineCache.ResetCache();
+    }
+
+    TImapFEEvent *endEvent = 
+        new TImapFEEvent(NormalEndMsgWriteStream,	// function to call
+                        this,						// access to current entry
+                        nil,						// unused
+						TRUE);
+
+    if (endEvent)
+        fFEEventQueue->AdoptEventToEnd(endEvent);
+    else
+        HandleMemoryFailure();
+#endif // 0
+}
+
+void nsImapProtocol::AbortMessageDownLoad()
+{
+	Log("STREAM", "CLOSE", "Abort Message  Download Stream");
+#if 0
+	//PR_LOG(IMAP, out, ("STREAM: Abort Message Download Stream"));
+	if (fTrackingTime)
+		AdjustChunkSize();
+	if (!fDownLoadLineCache.CacheEmpty())
+	{
+	    msg_line_info *downloadLineDontDelete = fDownLoadLineCache.GetCurrentLineInfo();
+	    PostLineDownLoadEvent(downloadLineDontDelete);
+	    fDownLoadLineCache.ResetCache();
+    }
+
+    TImapFEEvent *endEvent = 
+        new TImapFEEvent(AbortMsgWriteStream,	// function to call
+                        this,					// access to current entry
+                        nil,					// unused
+						TRUE);
+
+    if (endEvent)
+        fFEEventQueue->AdoptEventToEnd(endEvent);
+    else
+        HandleMemoryFailure();
+#endif // 0
+}
+
+
+// log info including current state...
+void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const char *logData)
+{
+	static char *nonAuthStateName = "NA";
+	static char *authStateName = "A";
+	static char *selectedStateName = "S";
+	static char *waitingStateName = "W";
+	char *stateName = NULL;
+#if 0
+	switch (GetServerStateParser().GetIMAPstate())
+	{
+	case TImapServerState::kFolderSelected:
+		if (fCurrentUrl)
+		{
+			if (extraInfo)
+				PR_LOG(IMAP, out, ("%s:%s-%s:%s:%s: %s", fCurrentUrl->GetUrlHost(),selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logData));
+			else
+				PR_LOG(IMAP, out, ("%s:%s-%s:%s: %s", fCurrentUrl->GetUrlHost(),selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logData));
+		}
+		return;
+		break;
+	case TImapServerState::kNonAuthenticated:
+		stateName = nonAuthStateName;
+		break;
+	case TImapServerState::kAuthenticated:
+		stateName = authStateName;
+		break;
+	case TImapServerState::kWaitingForMoreClientInput:
+		stateName = waitingStateName;
+		break;
+	}
+
+	if (fCurrentUrl)
+	{
+		if (extraInfo)
+			PR_LOG(IMAP, out, ("%s:%s:%s:%s: %s",fCurrentUrl->GetUrlHost(),stateName,logSubName,extraInfo,logData));
+		else
+			PR_LOG(IMAP, out, ("%s:%s:%s: %s",fCurrentUrl->GetUrlHost(),stateName,logSubName,logData));
+	}
+#endif
+}
+
+// In 4.5, this posted an event back to libmsg and blocked until it got a response.
+// We may still have to do this.It would be nice if we could preflight this value,
+// but we may not always know when we'll need it.
+PRUint32 nsImapProtocol::GetMessageSize(const char *messageId, PRBool idsAreUids)
+{
+	NS_ASSERTION(FALSE, "not implemented yet");
+	return 0;
+}
+
+
+PRBool	nsImapProtocol::GetShowAttachmentsInline()
+{
+	return PR_FALSE;	// need to check the preference "mail.inline_attachments"
+						// perhaps the pref code is thread safe? If not ??? ### DMB
+}
+
+PRMonitor *nsImapProtocol::GetDataMemberMonitor()
+{
+    return m_dataMemberMonitor;
+}
+
+// It would be really nice not to have to use this method nearly as much as we did
+// in 4.5 - we need to think about this some. Some of it may just go away in the new world order
+PRBool nsImapProtocol::DeathSignalReceived()
+{
+	PRBool returnValue;
+	PR_EnterMonitor(m_threadDeathMonitor);
+	returnValue = m_threadShouldDie;
+	PR_ExitMonitor(m_threadDeathMonitor);
+	
+	return returnValue;
+}
+
+
+PRBool nsImapProtocol::GetPseudoInterrupted()
+{
+	PRBool rv = FALSE;
+	PR_EnterMonitor(m_pseudoInterruptMonitor);
+	rv = m_pseudoInterrupted;
+	PR_ExitMonitor(m_pseudoInterruptMonitor);
+	return rv;
+}
+
+void nsImapProtocol::PseudoInterrupt(PRBool the_interrupt)
+{
+	PR_EnterMonitor(m_pseudoInterruptMonitor);
+	m_pseudoInterrupted = the_interrupt;
+	if (the_interrupt)
+	{
+		Log("CONTROL", NULL, "PSEUDO-Interrupted");
+		//PR_LOG(IMAP, out, ("PSEUDO-Interrupted"));
+	}
+	PR_ExitMonitor(m_pseudoInterruptMonitor);
+}
+
+void	nsImapProtocol::SetActive(PRBool active)
+{
+	PR_EnterMonitor(GetDataMemberMonitor());
+	m_active = active;
+	PR_ExitMonitor(GetDataMemberMonitor());
+}
+
+PRBool	nsImapProtocol::GetActive()
+{
+	PRBool ret;
+	PR_EnterMonitor(GetDataMemberMonitor());
+	ret = m_active;
+	PR_ExitMonitor(GetDataMemberMonitor());
+	return ret;
+}
+
+void nsImapProtocol::SetContentModified(PRBool modified)
+{
+	// ### DMB this used to poke the content_modified member of the url struct...
 }
