@@ -247,7 +247,7 @@ pref("network.padPacURL",                   ""); // The proxy autodiscovery url
 pref("wallet.captureForms",                 true);
 pref("wallet.notified",                     false);
 pref("wallet.fetchPatches",                 false);
-pref("wallet.Server",                       "http://people.netscape.com/morse/wallet/tables/");
+pref("wallet.Server",                       "http://www.mozilla.org/wallet/tables/");
 pref("wallet.version",                      "1");
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "en");

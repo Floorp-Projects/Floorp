@@ -305,7 +305,7 @@ function WalletDialog( which )
       window.openDialog("chrome://wallet/content/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
       break;
     case "samples":
-      window.content.location.href= 'http://people.netscape.com/morse/wallet/samples/';
+      window.content.location.href= 'http://www.mozilla.org/wallet/samples/';
       break;
     case "wallet":
     default:
