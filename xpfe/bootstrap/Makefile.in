@@ -76,7 +76,6 @@ LIBS		+= \
 		-lexpat \
 		-lxmltok \
 		-ljsdom \
-		-lcaps \
 		-ljsurl \
 		-lsecfree \
 		-lmozjs \
