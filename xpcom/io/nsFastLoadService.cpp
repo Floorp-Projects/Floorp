@@ -147,7 +147,7 @@ nsFastLoadService::NewFastLoadFile(const char* aBaseName, nsIFile* *aResult)
     nsCAutoString name(aBaseName);
     MASSAGE_BASENAME(name);
     name += PLATFORM_FASL_SUFFIX;
-    rv = file->Append(name);
+    rv = file->Append(name.get());
     if (NS_FAILED(rv))
         return rv;
 

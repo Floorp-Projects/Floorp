@@ -578,7 +578,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
         
         char demangled[4096] = "\0";
         
-        nsTraceRefcnt::DemangleSymbol(symbol,demangled,sizeof(demangled));
+        nsTraceRefcnt::DemangleSymbol(symbol.get(),demangled,sizeof(demangled));
         
         if (demangled && *demangled != '\0')
             demangledSymbol = demangled;
@@ -605,7 +605,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
            ("nsNativeComponentLoader: %s(%s) Load FAILED with error:%s", 
             aCallerName,
             dll->GetDisplayPath(), 
-            (const char *) errorMsg));
+            errorMsg.get()));
     
 
     // Dump to screen if needed
@@ -615,7 +615,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
            "**************************************************\n",
            aCallerName,
            dll->GetDisplayPath(), 
-           (const char *) errorMsg);
+           errorMsg.get());
 #endif
 
     return NS_OK;
