@@ -68,7 +68,6 @@
 #include "ufilemgr.h"
 #include "msv2dsk.h"
 #include "mversion.h"
-#include "xp_sec.h"
 #include "xp_trace.h"
 #include "CTargetedUpdateMenuRegistry.h"
 #include "UDesktop.h"
