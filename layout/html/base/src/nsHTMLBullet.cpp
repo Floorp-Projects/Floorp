@@ -31,7 +31,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLImage.h"
 #include "prprf.h"
-#include "nsHTMLBase.h"
 #include "nsIView.h"
 
 // XXX eliminate the bullet numbering hackery:
@@ -540,7 +539,8 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     mImageLoader.SetURL(myList->mListStyleImage);
     mImageLoader.GetDesiredSize(aCX, aReflowState, aMetrics);
     if (!mImageLoader.GetLoadImageFailed()) {
-      nsHTMLBase::CreateViewForFrame(aCX, this, mStyleContext, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(*aCX, this, mStyleContext,
+                                               PR_FALSE);
       aMetrics.ascent = aMetrics.height;
       aMetrics.descent = 0;
       return;
@@ -614,10 +614,10 @@ BulletFrame::InlineReflow(nsLineLayout& aLineLayout,
                           const nsReflowState& aReflowState)
 {
   nsBlockReflowState* state =
-    GetListContainerReflowState(aLineLayout.mPresContext, aReflowState);
+    GetListContainerReflowState(&aLineLayout.mPresContext, aReflowState);
 
   // Get the base size
-  GetDesiredSize(aLineLayout.mPresContext, state, aReflowState, aMetrics);
+  GetDesiredSize(&aLineLayout.mPresContext, state, aReflowState, aMetrics);
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
