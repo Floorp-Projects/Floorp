@@ -322,8 +322,9 @@
   
   [% ELSIF error == "entry_access_denied" %]
     [% title = "Permission Denied" %]
-    Sorry; you do not have the permissions necessary to enter [% terms.abug %]
-    against the [% product FILTER html %] product.
+    Sorry, either the product <em>[% product FILTER html %]</em> does not
+    exist, or you don't have the required permissions to
+    enter [% terms.abug %] against that product.
 
   [% ELSIF error == "fieldname_invalid" %]
     [% title = "Specified Field Does Not Exist" %]
