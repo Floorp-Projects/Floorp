@@ -27,7 +27,7 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorSpellCheck.dtd">
 
 <!-- dialog containing a control requiring initial setup -->
-<dialog title="&windowTitle.label;"
+<window class="dialog" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
     onunload = "onClose()">
@@ -119,4 +119,4 @@
       </row>
     </rows>
   </grid>
-</dialog>
+</window>
