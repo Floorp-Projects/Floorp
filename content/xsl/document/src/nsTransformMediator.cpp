@@ -35,31 +35,29 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsCOMPtr.h"
 #include "nsTransformMediator.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
 
 nsresult
-NS_NewTransformMediator(nsITransformMediator** aResult,                     
-                     const nsString& aMimeType)
+NS_NewTransformMediator(nsITransformMediator** aInstancePtrResult,                     
+                        const nsACString& aMimeType)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+
   nsTransformMediator* it;
   NS_NEWXPCOM(it, nsTransformMediator);
-  if (nsnull == it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsresult rv = it->Init(aMimeType);
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     delete it;
     return rv;
   }
-  return it->QueryInterface(NS_GET_IID(nsITransformMediator), (void **)aResult);
+  return CallQueryInterface(it, aInstancePtrResult);
 }
 
 nsTransformMediator::nsTransformMediator()
@@ -73,45 +71,40 @@ nsTransformMediator::~nsTransformMediator()
 }
 
 static
-nsresult ConstructContractID(nsCString& aContractID, const nsString& aMimeType)
+nsresult ConstructContractID(nsACString& aContractID,
+                             const nsACString& aMimeType)
 {
   aContractID.Assign(NS_LITERAL_CSTRING("@mozilla.org/document-transformer;1?type="));
-  aContractID.AppendWithConversion(aMimeType);
-
+  aContractID.Append(aMimeType);
   return NS_OK;
 }
 
 nsresult
-nsTransformMediator::Init(const nsString& aMimeType)
+nsTransformMediator::Init(const nsACString& aMimeType)
 {
-  nsCString contractID;  
-  nsresult rv = NS_OK;
-
   // Construct prog ID for the document tranformer component
-  rv = ConstructContractID(contractID, aMimeType);
+  nsCAutoString contractID;  
+  nsresult rv = ConstructContractID(contractID, aMimeType);
   if (NS_SUCCEEDED(rv)) {
     // Try to find a component that implements the nsIDocumentTransformer interface
     mTransformer = do_CreateInstance(contractID.get(), &rv);
   }
-
   return rv;
 }
 
 // nsISupports
 NS_IMPL_ISUPPORTS1(nsTransformMediator, nsITransformMediator)
 
-
 void
 nsTransformMediator::TryToTransform()
 {
-  if (mEnabled && mSourceDOM && 
-      mStyleDOM && mResultDoc && 
-      mObserver && mTransformer) 
+  if (mEnabled && mSourceDOM && mStyleDOM &&
+      mResultDoc && mObserver && mTransformer) 
   {
     mTransformer->TransformDocument(mSourceDOM, 
-                                         mStyleDOM,
-                                         mResultDoc,
-                                         mObserver);
+                                    mStyleDOM,
+                                    mResultDoc,
+                                    mObserver);
   }
 }
 
@@ -163,4 +156,3 @@ nsTransformMediator::SetTransformObserver(nsIObserver* aObserver)
   TryToTransform();
   return NS_OK;
 }
-

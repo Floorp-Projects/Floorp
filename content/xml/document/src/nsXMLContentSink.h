@@ -161,22 +161,16 @@ protected:
 
   nsresult RefreshIfEnabled(nsIViewManager* vm);
   
-  nsresult ProcessCSSStyleLink(nsIContent* aElement,
-                            const nsString& aHref, PRBool aAlternate,
-                            const nsString& aTitle, const nsString& aType,
-                            const nsString& aMedia);
   nsresult ProcessStyleLink(nsIContent* aElement,
-                            const nsString& aHref, PRBool aAlternate,
-                            const nsString& aTitle, const nsString& aType,
+                            const nsString& aHref,
+                            PRBool aAlternate,
+                            const nsString& aTitle,
+                            const nsString& aType,
                             const nsString& aMedia);
 
-  nsresult ProcessXSLStyleLink(nsIContent* aElement,
-                            const nsString& aHref, PRBool aAlternate,
-                            const nsString& aTitle, const nsString& aType,
-                            const nsString& aMedia);
-  nsresult CreateStyleSheetURL(nsIURI** aUrl, const nsAReadableString& aHref);
-  nsresult LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType);
+  nsresult LoadXSLStyleSheet(nsIURI* aUrl);
   nsresult SetupTransformMediator();
+
   nsresult AddText(const nsAReadableString& aString);
 
   static void

@@ -40,12 +40,12 @@
 #define nsITransformMediator_h___
 
 #include "nsISupports.h"
+#include "nsAString.h"
 
 class nsIDOMNode;
 class nsIDOMDocument;
 class nsIObserver;
 class nsIXMLContentSink;
-class nsString;
 
 /* 6f4c2d0e-2cdf-11d3-aef3-00108300ff91 */
 #define NS_ITRANSFORM_MEDIATOR_IID \
@@ -63,7 +63,7 @@ class nsString;
 
 class nsITransformMediator : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ITRANSFORM_MEDIATOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITRANSFORM_MEDIATOR_IID);
 
   NS_IMETHOD SetEnabled(PRBool aValue)=0;
   NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource)=0;
@@ -75,6 +75,6 @@ public:
 };
 
 extern nsresult NS_NewTransformMediator(nsITransformMediator** aInstancePtrResult,                                        
-                                        const nsString& aMimeType);
+                                        const nsACString& aMimeType);
 
 #endif // nsITransformMediator_h___

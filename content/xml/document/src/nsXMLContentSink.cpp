@@ -104,7 +104,7 @@
 
 static char kNameSpaceSeparator = ':';
 static char kStyleSheetPI[] = "xml-stylesheet";
-static char kXSLType[] = "text/xsl";
+#define kXSLType "text/xsl"
 
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -1052,25 +1052,16 @@ ParseProcessingInstruction(const nsString& aText,
   }
 }
 
-nsresult
-nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl,
-                                      const nsAReadableString& aHref)
-{
-  nsresult result = NS_OK;
-  result = NS_NewURI(aUrl, aHref, mDocumentBaseURL);
-  return result;
-
-}
-
 // Create an XML parser and an XSL content sink and start parsing
 // the XSL stylesheet located at the given URL.
 nsresult
-nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
+nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 {
   nsresult rv = NS_OK;
 
   // Create a transform mediator
-  rv = NS_NewTransformMediator(getter_AddRefs(mXSLTransformMediator), aType);
+  rv = NS_NewTransformMediator(getter_AddRefs(mXSLTransformMediator),
+                               NS_LITERAL_CSTRING(kXSLType));
   if (NS_FAILED(rv)) {
     // No XSLT processor available, continue normal document loading
     return NS_OK;
@@ -1131,38 +1122,26 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
 
 nsresult
 nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
-                                   const nsString& aHref, PRBool aAlternate,
-                                   const nsString& aTitle, const nsString& aType,
+                                   const nsString& aHref,
+                                   PRBool aAlternate,
+                                   const nsString& aTitle,
+                                   const nsString& aType,
                                    const nsString& aMedia)
 {
   nsresult rv = NS_OK;
 
   if (aType.EqualsIgnoreCase(kXSLType) ||
       aType.EqualsIgnoreCase(kXMLTextContentType) ||
-      aType.EqualsIgnoreCase(kXMLApplicationContentType))
-    rv = ProcessXSLStyleLink(aElement, aHref, aAlternate, aTitle, aType, aMedia);
+      aType.EqualsIgnoreCase(kXMLApplicationContentType)) {
+    // LoadXSLStyleSheet needs a mWebShell.
+    if (!mWebShell)
+      return NS_OK;
 
-  return rv;
-}
-
-nsresult
-nsXMLContentSink::ProcessXSLStyleLink(nsIContent* aElement,
-                                   const nsString& aHref, PRBool aAlternate,
-                                   const nsString& aTitle, const nsString& aType,
-                                   const nsString& aMedia)
-{
-  nsresult rv = NS_OK;
-  nsIURI* url;
-
-  // LoadXSLStyleSheet needs a mWebShell.
-  if (!mWebShell) return rv;
-
-  rv = CreateStyleSheetURL(&url, aHref);
-  if (NS_SUCCEEDED(rv)) {
-    rv = LoadXSLStyleSheet(url, aType);
-    NS_RELEASE(url);
+    nsCOMPtr<nsIURI> url;
+    rv = NS_NewURI(getter_AddRefs(url), aHref, mDocumentBaseURL);
+    if (NS_SUCCEEDED(rv))
+      rv = LoadXSLStyleSheet(url);
   }
-
   return rv;
 }
 
