@@ -252,40 +252,40 @@ myGetClientAuthData(void *arg,
 		    }
 		}
     } else { /* no nickname given, automatically find the right cert */
-		CERTCertNicknames *names;
-		int                i;
+	CERTCertNicknames *names;
+	int                i;
 
-		names = CERT_GetCertNicknames(CERT_GetDefaultCertDB(), 
-		                              SEC_CERT_NICKNAMES_USER, proto_win);
+	names = CERT_GetCertNicknames(CERT_GetDefaultCertDB(), 
+				      SEC_CERT_NICKNAMES_USER, proto_win);
 
-		if (names != NULL) {
-		    for(i = 0; i < names->numnicknames; i++ ) {
+	if (names != NULL) {
+	    for(i = 0; i < names->numnicknames; i++ ) {
 
-				cert = PK11_FindCertFromNickname(names->nicknames[i], 
-				                                 proto_win);
-				if (!cert) {
-				    continue;
-				}
-
-				/* Only check unexpired certs */
-				if (CERT_CheckCertValidTimes(cert, PR_Now(), PR_FALSE)
-				      != secCertTimeValid ) {
-				    CERT_DestroyCertificate(cert);
-				    continue;
-				}
-
-				secStatus = NSS_CmpCertChainWCANames(cert, caNames);
-				if (secStatus == SECSuccess) {
-				    privKey = PK11_FindKeyByAnyCert(cert, proto_win);
-				    if (privKey) {
-						break;
-				    }
-				    secStatus = SECFailure;
-				    break;
-				}
-				CERT_FreeNicknames(names);
-		    } /* for loop */
+		cert = PK11_FindCertFromNickname(names->nicknames[i], 
+						 proto_win);
+		if (!cert) {
+		    continue;
 		}
+
+		/* Only check unexpired certs */
+		if (CERT_CheckCertValidTimes(cert, PR_Now(), PR_FALSE)
+		      != secCertTimeValid ) {
+		    CERT_DestroyCertificate(cert);
+		    continue;
+		}
+
+		secStatus = NSS_CmpCertChainWCANames(cert, caNames);
+		if (secStatus == SECSuccess) {
+		    privKey = PK11_FindKeyByAnyCert(cert, proto_win);
+		    if (privKey) {
+			break;
+		    }
+		    secStatus = SECFailure;
+		    break;
+		}
+		CERT_FreeNicknames(names);
+	    } /* for loop */
+	}
     }
 
     if (secStatus == SECSuccess) {
@@ -301,7 +301,7 @@ myGetClientAuthData(void *arg,
  * Purpose: Called by SSL to inform application that the handshake is
  * complete. This function is mostly used on the server side of an SSL
  * connection, although it is provided for a client as well.
- * Useful when a non-blocking SSL_RedoHandshake or SSL_ResetHandshake 
+ * Useful when a non-blocking SSL_ReHandshake or SSL_ResetHandshake 
  * is used to initiate a handshake.
  *
  * A typical scenario would be:
@@ -334,25 +334,23 @@ myHandshakeCallback(PRFileDesc *socket, void *arg)
 **************************************************************************/
 
 void
-disableSSL2Ciphers(void)
+disableAllSSLCiphers(void)
 {
-	int i;
+    const PRUint16 *cipherSuites = SSL_ImplementedCiphers;
+    int             i            = SSL_NumImplementedCiphers;
+    SECStatus       rv;
 
-	/* disable all the SSL2 cipher suites */
-	for (i = 0; ssl2CipherSuites[i] != 0;  ++i) {
-		SSL_EnableCipher(ssl2CipherSuites[i], SSL_NOT_ALLOWED);
+    /* disable all the SSL3 cipher suites */
+    while (--i >= 0) {
+	PRUint16 suite = cipherSuites[i];
+        rv = SSL_CipherPrefSetDefault(suite, PR_FALSE);
+	if (rv != SECSuccess) {
+	    printf("SSL_CipherPrefSetDefault didn't like value 0x%04x (i = %d)\n",
+	    	   suite, i);
+	    errWarn("SSL_CipherPrefSetDefault");
+	    exit(2);
 	}
-}
-
-void
-disableSSL3Ciphers(void)
-{
-	int i;
-
-	/* disable all the SSL3 cipher suites */
-	for (i = 0; ssl3CipherSuites[i] != 0;  ++i) {
-		SSL_EnableCipher(ssl3CipherSuites[i], SSL_NOT_ALLOWED);
-	}
+    }
 }
 
 /**************************************************************************
@@ -506,22 +504,22 @@ reap_threads(GlobalThreadMgr *threadMGR)
 		return 0;
 	PR_Lock(threadMGR->threadLock);
 	while (threadMGR->numRunning > 0) {
-		PR_WaitCondVar(threadMGR->threadEndQ, PR_INTERVAL_NO_TIMEOUT);
-		for (i = 0; i < threadMGR->numUsed; ++i) {
-			slot = &threadMGR->threads[i];
-			if (slot->running == rs_zombie)  {
-				/* Handle cleanup of thread here. */
-				printf("Thread in slot %d returned %d\n", i, slot->rv);
+	    PR_WaitCondVar(threadMGR->threadEndQ, PR_INTERVAL_NO_TIMEOUT);
+	    for (i = 0; i < threadMGR->numUsed; ++i) {
+		slot = &threadMGR->threads[i];
+		if (slot->running == rs_zombie)  {
+		    /* Handle cleanup of thread here. */
+		    printf("Thread in slot %d returned %d\n", i, slot->rv);
 
-				/* Now make sure the thread has ended OK. */
-				PR_JoinThread(slot->prThread);
-				slot->running = rs_idle;
-				--threadMGR->numRunning;
+		    /* Now make sure the thread has ended OK. */
+		    PR_JoinThread(slot->prThread);
+		    slot->running = rs_idle;
+		    --threadMGR->numRunning;
 
-				/* notify the thread launcher. */
-				PR_NotifyCondVar(threadMGR->threadStartQ);
-			}
+		    /* notify the thread launcher. */
+		    PR_NotifyCondVar(threadMGR->threadStartQ);
 		}
+	    }
 	}
 
 	/* Safety Sam sez: make sure count is right. */

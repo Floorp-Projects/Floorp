@@ -134,15 +134,15 @@ retry:
 	}
 
 	/* Set configuration options. */
-	secStatus = SSL_Enable(sslSocket, SSL_SECURITY, PR_TRUE);
+	secStatus = SSL_OptionSet(sslSocket, SSL_SECURITY, PR_TRUE);
 	if (secStatus != SECSuccess) {
-		errWarn("SSL_Enable:SSL_SECURITY");
+		errWarn("SSL_OptionSet:SSL_SECURITY");
 		goto loser;
 	}
 
-	secStatus = SSL_Enable(sslSocket, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE);
+	secStatus = SSL_OptionSet(sslSocket, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE);
 	if (secStatus != SECSuccess) {
-		errWarn("SSL_Enable:SSL_HANDSHAKE_AS_CLIENT");
+		errWarn("SSL_OptionSet:SSL_HANDSHAKE_AS_CLIENT");
 		goto loser;
 	}
 
@@ -417,29 +417,28 @@ main(int argc, char **argv)
 
 	/* All cipher suites except RSA_NULL_MD5 are enabled by Domestic Policy. */
 	NSS_SetDomesticPolicy();
-	SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
+	SSL_CipherPrefSetDefault(SSL_RSA_WITH_NULL_MD5, PR_TRUE);
 
 	/* all the SSL2 and SSL3 cipher suites are enabled by default. */
 	if (cipherString) {
-		int ndx;
+	    int ndx;
 
-		/* disable all the ciphers, then enable the ones we want. */
-		disableSSL2Ciphers();
-		disableSSL3Ciphers();
+	    /* disable all the ciphers, then enable the ones we want. */
+	    disableAllSSLCiphers();
 
-		while (0 != (ndx = *cipherString++)) {
-			int *cptr;
-			int  cipher;
+	    while (0 != (ndx = *cipherString++)) {
+		int *cptr;
+		int  cipher;
 
-			if (! isalpha(ndx))
-				Usage(progName);
-			cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
-			for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; )
-				/* do nothing */;
-			if (cipher) {
-				SSL_EnableCipher(cipher, SSL_ALLOWED);
-			}
+		if (! isalpha(ndx))
+		    Usage(progName);
+		cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
+		for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; )
+		    /* do nothing */;
+		if (cipher) {
+		    SSL_CipherPrefSetDefault(cipher, PR_TRUE);
 		}
+	    }
 	}
 
 	client_main(port, connections, hostName);

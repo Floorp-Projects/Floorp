@@ -223,29 +223,29 @@ setupSSLSocket(PRFileDesc *tcpSocket, int requestCert)
 		goto loser;
 	}
    
-	secStatus = SSL_Enable(sslSocket, SSL_SECURITY, PR_TRUE);
+	secStatus = SSL_OptionSet(sslSocket, SSL_SECURITY, PR_TRUE);
 	if (secStatus != SECSuccess) {
-		errWarn("SSL_Enable SSL_SECURITY");
+		errWarn("SSL_OptionSet SSL_SECURITY");
 		goto loser;
 	}
 
-	secStatus = SSL_Enable(sslSocket, SSL_HANDSHAKE_AS_SERVER, PR_TRUE);
+	secStatus = SSL_OptionSet(sslSocket, SSL_HANDSHAKE_AS_SERVER, PR_TRUE);
 	if (secStatus != SECSuccess) {
-		errWarn("SSL_Enable:SSL_HANDSHAKE_AS_SERVER");
+		errWarn("SSL_OptionSet:SSL_HANDSHAKE_AS_SERVER");
 		goto loser;
 	}
 
-	secStatus = SSL_Enable(sslSocket, SSL_REQUEST_CERTIFICATE, 
+	secStatus = SSL_OptionSet(sslSocket, SSL_REQUEST_CERTIFICATE, 
 	                       (requestCert >= REQUEST_CERT_ONCE));
 	if (secStatus != SECSuccess) {
-		errWarn("SSL_Enable:SSL_REQUEST_CERTIFICATE");
+		errWarn("SSL_OptionSet:SSL_REQUEST_CERTIFICATE");
 		goto loser;
 	}
 
-	secStatus = SSL_Enable(sslSocket, SSL_REQUIRE_CERTIFICATE, 
+	secStatus = SSL_OptionSet(sslSocket, SSL_REQUIRE_CERTIFICATE, 
 	                       (requestCert == REQUIRE_CERT_ONCE));
 	if (secStatus != SECSuccess) {
-		errWarn("SSL_Enable:SSL_REQUIRE_CERTIFICATE");
+		errWarn("SSL_OptionSet:SSL_REQUIRE_CERTIFICATE");
 		goto loser;
 	}
 
@@ -316,24 +316,24 @@ authenticateSocket(PRFileDesc *sslSocket, PRBool requireCert)
 	}
 
 	/* Request client to authenticate itself. */
-	secStatus = SSL_Enable(sslSocket, SSL_REQUEST_CERTIFICATE, PR_TRUE);
+	secStatus = SSL_OptionSet(sslSocket, SSL_REQUEST_CERTIFICATE, PR_TRUE);
 	if (secStatus != SECSuccess) {
-		errWarn("SSL_Enable:SSL_REQUEST_CERTIFICATE");
+		errWarn("SSL_OptionSet:SSL_REQUEST_CERTIFICATE");
 		return SECFailure;
 	}
 
 	/* If desired, require client to authenticate itself.  Note
 	 * SSL_REQUEST_CERTIFICATE must also be on, as above.  */
-	secStatus = SSL_Enable(sslSocket, SSL_REQUIRE_CERTIFICATE, requireCert);
+	secStatus = SSL_OptionSet(sslSocket, SSL_REQUIRE_CERTIFICATE, requireCert);
 	if (secStatus != SECSuccess) {
-		errWarn("SSL_Enable:SSL_REQUIRE_CERTIFICATE");
+		errWarn("SSL_OptionSet:SSL_REQUIRE_CERTIFICATE");
 		return SECFailure;
 	}
 
 	/* Having changed socket configuration parameters, redo handshake. */
-	secStatus = SSL_RedoHandshake(sslSocket);
+	secStatus = SSL_ReHandshake(sslSocket, PR_TRUE);
 	if (secStatus != SECSuccess) {
-		errWarn("SSL_RedoHandshake");
+		errWarn("SSL_ReHandshake");
 		return SECFailure;
 	}
 
@@ -671,9 +671,9 @@ server_main(
 	/* This cipher is not on by default. The Acceptance test
 	 * would like it to be. Turn this cipher on.
 	 */
-	secStatus = SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, PR_TRUE);
+	secStatus = SSL_CipherPrefSetDefault(SSL_RSA_WITH_NULL_MD5, PR_TRUE);
 	if (secStatus != SECSuccess) {
-		exitErr("SSL_EnableCipher:SSL_RSA_WITH_NULL_MD5");
+		exitErr("SSL_CipherPrefSetDefault:SSL_RSA_WITH_NULL_MD5");
 	}
 
 	/* Configure the network connection. */
@@ -772,28 +772,27 @@ main(int argc, char **argv)
 	/* XXX keep this? */
 	/* all the SSL2 and SSL3 cipher suites are enabled by default. */
 	if (cipherString) {
-		int ndx;
+	    int ndx;
 
-		/* disable all the ciphers, then enable the ones we want. */
-		disableSSL2Ciphers();
-		disableSSL3Ciphers();
+	    /* disable all the ciphers, then enable the ones we want. */
+	    disableAllSSLCiphers();
 
-		while (0 != (ndx = *cipherString++)) {
-			int *cptr;
-			int  cipher;
+	    while (0 != (ndx = *cipherString++)) {
+		int *cptr;
+		int  cipher;
 
-			if (! isalpha(ndx))
-				Usage(progName);
-			cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
-			for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
-				/* do nothing */;
-				if (cipher) {
-					SECStatus status;
-					status = SSL_CipherPrefSetDefault(cipher, SSL_ALLOWED);
-				if (status != SECSuccess) 
-					errWarn("SSL_CipherPrefSetDefault()");
-			}
+		if (! isalpha(ndx))
+			Usage(progName);
+		cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
+		for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
+		    /* do nothing */;
+		if (cipher) {
+		    SECStatus status;
+		    status = SSL_CipherPrefSetDefault(cipher, PR_TRUE);
+		    if (status != SECSuccess) 
+			errWarn("SSL_CipherPrefSetDefault()");
 		}
+	    }
 	}
 
 	/* Get own certificate and private key. */

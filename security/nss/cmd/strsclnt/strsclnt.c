@@ -113,41 +113,6 @@ int NoReuse;
 
 SSL3Statistics * ssl3stats;
 
-void
-disableSSL2Ciphers(void)
-{
-    int i;
-
-    /* disable all the SSL2 cipher suites */
-    for (i = 0; ssl2CipherSuites[i] != 0;  ++i) {
-	SECStatus rv;
-        rv = SSL_EnableCipher(ssl2CipherSuites[i], SSL_NOT_ALLOWED);
-	if (rv != SECSuccess) {
-	    fprintf(stderr, 
-		    "strsclnt: SSL_EnableCipher failed with value 0x%04x\n",
-		    ssl2CipherSuites[i]);
-	    exit(1);
-	}
-    }
-}
-
-void
-disableSSL3Ciphers(void)
-{
-    int i;
-
-    /* disable all the SSL3 cipher suites */
-    for (i = 0; ssl3CipherSuites[i] != 0;  ++i) {
-	SECStatus rv;
-        rv = SSL_EnableCipher(ssl3CipherSuites[i], SSL_NOT_ALLOWED);
-	if (rv != SECSuccess) {
-	    fprintf(stderr, 
-		    "strsclnt: SSL_EnableCipher failed with value 0x%04x\n",
-		    ssl3CipherSuites[i]);
-	    exit(1);
-	}
-    }
-}
 
 char * ownPasswd( PK11SlotInfo *slot, PRBool retry, void *arg)
 {
@@ -180,49 +145,6 @@ Usage(const char *progName)
     exit(1);
 }
 
-static void
-networkStart(void)
-{
-#if defined(XP_WIN) && !defined(NSPR20)
-
-    WORD wVersionRequested;  
-    WSADATA wsaData; 
-    int err; 
-    wVersionRequested = MAKEWORD(1, 1); 
- 
-    err = WSAStartup(wVersionRequested, &wsaData); 
- 
-    if (err != 0) {
-	/* Tell the user that we couldn't find a useable winsock.dll. */ 
-	fputs("WSAStartup failed!\n", stderr);
-	exit(1);
-    }
-
-/* Confirm that the Windows Sockets DLL supports 1.1.*/ 
-/* Note that if the DLL supports versions greater */ 
-/* than 1.1 in addition to 1.1, it will still return */ 
-/* 1.1 in wVersion since that is the version we */ 
-/* requested. */ 
- 
-    if ( LOBYTE( wsaData.wVersion ) != 1 || 
-         HIBYTE( wsaData.wVersion ) != 1 ) { 
-	/* Tell the user that we couldn't find a useable winsock.dll. */ 
-	fputs("wrong winsock version\n", stderr);
-	WSACleanup(); 
-	exit(1); 
-    } 
-    /* The Windows Sockets DLL is acceptable. Proceed. */ 
-
-#endif
-}
-
-static void
-networkEnd(void)
-{
-#if defined(XP_WIN) && !defined(NSPR20)
-    WSACleanup();
-#endif
-}
 
 static void
 errWarn(char * funcString)
@@ -237,32 +159,34 @@ errWarn(char * funcString)
 static void
 errExit(char * funcString)
 {
-#if defined (XP_WIN) && !defined(NSPR20)
-    int          err;
-    LPVOID       lpMsgBuf;
-
-    err = WSAGetLastError();
- 
-    FormatMessage(
-	FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-	NULL,
-	err,
-	MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-	(LPTSTR) &lpMsgBuf,
-	0,
-	NULL 
-    );
-
-    /* Display the string. */
-  /*MessageBox( NULL, lpMsgBuf, "GetLastError", MB_OK|MB_ICONINFORMATION ); */
-    fprintf(stderr, "%s\n", lpMsgBuf);
-
-    /* Free the buffer. */
-    LocalFree( lpMsgBuf );
-#endif
-
     errWarn(funcString);
     exit(1);
+}
+
+/**************************************************************************
+** 
+** Routines for disabling SSL ciphers.
+**
+**************************************************************************/
+
+void
+disableAllSSLCiphers(void)
+{
+    const PRUint16 *cipherSuites = SSL_ImplementedCiphers;
+    int             i            = SSL_NumImplementedCiphers;
+    SECStatus       rv;
+
+    /* disable all the SSL3 cipher suites */
+    while (--i >= 0) {
+	PRUint16 suite = cipherSuites[i];
+        rv = SSL_CipherPrefSetDefault(suite, PR_FALSE);
+	if (rv != SECSuccess) {
+	    printf("SSL_CipherPrefSetDefault didn't like value 0x%04x (i = %d)\n",
+	    	   suite, i);
+	    errWarn("SSL_CipherPrefSetDefault");
+	    exit(2);
+	}
+    }
 }
 
 /* This invokes the "default" AuthCert handler in libssl.
@@ -833,8 +757,6 @@ client_main(
     PRUint32	ipAddress;	/* in host byte order */
     PRNetAddr   addr;
 
-    networkStart();
-
     /* Assemble NetAddr struct for connections. */
     ipAddress = getIPAddress(hostName);
 
@@ -845,13 +767,12 @@ client_main(
     /* all suites except RSA_NULL_MD5 are enabled by Domestic Policy */
     NSS_SetDomesticPolicy();
 
-/* all the SSL2 and SSL3 cipher suites are enabled by default. */
+    /* all the SSL2 and SSL3 cipher suites are enabled by default. */
     if (cipherString) {
         int ndx;
 
         /* disable all the ciphers, then enable the ones we want. */
-        disableSSL2Ciphers();
-        disableSSL3Ciphers();
+        disableAllSSLCiphers();
 
         while (0 != (ndx = *cipherString++)) {
             int *cptr;
@@ -864,10 +785,10 @@ client_main(
                 /* do nothing */;
             if (cipher) {
 		SECStatus rv;
-                rv = SSL_EnableCipher(cipher, SSL_ALLOWED);
+                rv = SSL_CipherPrefSetDefault(cipher, PR_TRUE);
 		if (rv != SECSuccess) {
 		    fprintf(stderr, 
-		    "strsclnt: SSL_EnableCipher failed with value 0x%04x\n",
+		"strsclnt: SSL_CipherPrefSetDefault failed with value 0x%04x\n",
 			    cipher);
 		    exit(1);
 		}
@@ -889,22 +810,22 @@ client_main(
 
     /* do SSL configuration. */
 
-    rv = SSL_Enable(model_sock, SSL_SECURITY, 1);
+    rv = SSL_OptionSet(model_sock, SSL_SECURITY, 1);
     if (rv < 0) {
-	errExit("SSL_Enable SSL_SECURITY");
+	errExit("SSL_OptionSet SSL_SECURITY");
     }
 
     if (bigBuf.data) { /* doing FDX */
-	rv = SSL_Enable(model_sock, SSL_ENABLE_FDX, 1);
+	rv = SSL_OptionSet(model_sock, SSL_ENABLE_FDX, 1);
 	if (rv < 0) {
-	    errExit("SSL_Enable SSL_ENABLE_FDX");
+	    errExit("SSL_OptionSet SSL_ENABLE_FDX");
 	}
     }
 
     if (NoReuse) {
-	rv = SSL_Enable(model_sock, SSL_NO_CACHE, 1);
+	rv = SSL_OptionSet(model_sock, SSL_NO_CACHE, 1);
 	if (rv < 0) {
-	    errExit("SSL_Enable SSL_NO_CACHE");
+	    errExit("SSL_OptionSet SSL_NO_CACHE");
 	}
     }
 
@@ -941,7 +862,6 @@ client_main(
 
     PR_Close(model_sock);
 
-    networkEnd();
 }
 
 SECStatus
