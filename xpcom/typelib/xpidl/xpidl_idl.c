@@ -73,11 +73,11 @@ msg_callback(int level, int num, int line, const char *file,
 	     const char *message)
 {
     /* XXX Mac */
-    fprintf(stderr, "%s:%d: %d/%d/%s\n", file, line, level, num, message);
+    fprintf(stderr, "%s:%d: %s\n", file, line, message);
     return 1;
 }
 
-#define INPUT_BUF_CHUNK		4096
+#define INPUT_BUF_CHUNK		8192
 
 struct input_callback_data {
     FILE *input;
@@ -101,29 +101,80 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 	data->len = 0;
 	data->point = data->buf;
 	data->max = INPUT_BUF_CHUNK;
-	return data->input && data->buf ? 0 : -1;
+	if (data->input && data->buf) {
+	    data->len = sprintf(data->buf, "# 1 \"%s\"\n",
+				cb_data->init.filename);
+	    return 0;
+	}
+	return -1;
 	
       case IDL_INPUT_REASON_FILL:
 	avail = data->buf + data->len - data->point;
-
 	assert(avail >= 0);
 
 	if (!avail) {
+	    char *comment_start = NULL, *ptr;
 	    data->point = data->buf;
-	    avail = data->len = fread(data->buf, 1, data->max, data->input);
-	    if (!avail && ferror(data->input))
-		return -1;
-	    /*
-	     * XXX need to:
-	     * - strip comments
-	     * - parse doc comments
-	     * - convert
-	     *   #include <interface nsIBar>
-	     * to
-	     *   __declspec(inhibit) interface nsIBar { };
-	     */
-	}
 
+	    /* fill the buffer */
+	fill_buffer:
+	    data->len = fread(data->buf, 1, data->max, data->input);
+	    if (!data->len) {
+		if (ferror(data->input))
+		    return -1;
+		return 0;
+	    }
+
+	    /*
+	     * strip comments
+	     */
+
+	    /*
+	     * XXX
+	     * What if the last char in this block is '/' and the first in the
+	     * next block is '*'?  I'm not sure it matters, because I don't
+	     * think there are any legal IDL syntaxes with '/' in them.
+	     */
+	    if (!comment_start)
+		comment_start = strstr(data->buf, "/*");
+	    while (comment_start) {
+		char *end = strstr(comment_start, "*/");
+		int comment_length;
+		int bytes_after_comment;
+		    
+		if (!end)
+		    goto fill_buffer;
+
+		end += 2; /* star-slash */
+		comment_length = end - comment_start;
+		bytes_after_comment = data->buf + data->len - end;
+
+		/* found the end, move data around */
+#ifdef DEBUG_shaver_bufmgmt
+		fprintf(stderr,
+			"FOUND COMMENT: (%d) %.*s, moving %d back\n",
+			comment_length, comment_length, 
+			comment_start, bytes_after_comment);
+#endif			
+
+		memmove(comment_start, end, bytes_after_comment);
+		comment_start[bytes_after_comment] = '\0';
+		data->len -= comment_length;
+
+#ifdef DEBUG_shaver_bufmgmt
+		fprintf(stderr, "new buffer:\n---\n%.*s\n---\n",
+			data->len, data->buf);
+#endif
+
+		/* look for the next comment */
+		comment_start = strstr(data->buf, "/*");
+
+	    } /* while(comment_start) */
+
+	    /* we set avail here, because data->len is changed above */
+	    avail = data->buf + data->len - data->point;
+	}
+    
 	copy = MIN(avail, cb_data->fill.max_size);
 	memcpy(cb_data->fill.buffer, data->point, copy);
 	data->point += copy;
