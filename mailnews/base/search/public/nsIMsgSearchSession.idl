@@ -24,6 +24,7 @@
 #include "nsMsgSearchCore.idl"
 
 interface nsMsgResultElement;
+interface nsIMsgSearchAdapter;
 
 //////////////////////////////////////////////////////////////////////////////
 // The Msg Search Session is an interface designed to make constructing
@@ -43,6 +44,7 @@ interface nsIMsgSearchSession :  nsISupports {
 
     readonly attribute long numSearchTerms;
 
+	readonly attribute nsIMsgSearchAdapter runningAdapter;
     [noscript]
     void GetNthSearchTerm(in long whichTerm,
                           in nsMsgSearchAttribValue attrib,

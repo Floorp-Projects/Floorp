@@ -212,6 +212,12 @@ char *nsMsgSearchNews::EncodeTerm (nsMsgSearchTerm *term)
 	return termEncoding;
 }
 
+nsresult nsMsgSearchNews::GetEncoding(char **result)
+{
+  NS_ENSURE_ARG(result);
+  *result = m_encoding.ToNewCString();
+  return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
 
 nsresult nsMsgSearchNews::Encode (nsCString *outEncoding)
 {
@@ -263,6 +269,12 @@ nsresult nsMsgSearchNews::Encode (nsCString *outEncoding)
 	delete [] intermediateEncodings;
 
 	return err;
+}
+
+NS_IMETHODIMP nsMsgSearchNews::AddHit(nsMsgKey key)
+{
+  m_candidateHits.Add (key); 
+  return NS_OK;
 }
 
 #if 0
@@ -527,7 +539,6 @@ nsresult nsMsgSearchNewsEx::ValidateTerms ()
   // this used to create a url struct for some reason.
 	return err;
 }
-
 
 nsresult nsMsgSearchNewsEx::Search ()
 {

@@ -49,7 +49,6 @@ protected:
 
 	nsresult Initialize();
 	nsresult TimeSlice (PRBool *aDone);
-	nsMsgSearchAdapter *GetRunningAdapter ();
 	nsMsgSearchScopeTerm *GetRunningScope();
 	void			StopRunning();
 	nsresult BeginSearching();

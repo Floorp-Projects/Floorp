@@ -35,7 +35,8 @@ public:
 
 	NS_IMETHOD ValidateTerms ();
 	NS_IMETHOD Search ();
-//	NS_IMETHOD GetEncoding (char **result);
+	NS_IMETHOD GetEncoding (char **result);
+  NS_IMETHOD AddHit(nsMsgKey key);
 
 	virtual nsresult Encode (nsCString *outEncoding);
 	virtual char *EncodeTerm (nsMsgSearchTerm *);

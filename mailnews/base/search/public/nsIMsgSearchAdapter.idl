@@ -39,6 +39,8 @@ interface nsIMsgSearchAdapter : nsISupports {
     void ValidateTerms();
     void Search();
     void SendUrl();
+
+	void AddHit(in nsMsgKey key);
     [noscript] void OpenResultElement(in nsMsgResultElement element);
     [noscript] void ModifyResultElement(in nsMsgResultElement element,
                                         in nsMsgSearchValue value);

@@ -445,6 +445,20 @@ nsresult nsMsgSearchSession::SearchWOUrls ()
 	return err;
 }
 
+NS_IMETHODIMP nsMsgSearchSession::GetRunningAdapter (nsIMsgSearchAdapter **aSearchAdapter)
+{
+  NS_ENSURE_ARG(aSearchAdapter);
+	nsMsgSearchScopeTerm *scope = GetRunningScope();
+	if (scope)
+  {
+		*aSearchAdapter = scope->m_adapter;
+    NS_ADDREF(*aSearchAdapter);
+  }
+	*aSearchAdapter = nsnull;
+  return NS_OK;
+}
+
+
 
 NS_IMETHODIMP nsMsgSearchSession::AddResultElement (nsMsgResultElement *element)
 {

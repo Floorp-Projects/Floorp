@@ -114,6 +114,12 @@ NS_IMETHODIMP nsMsgSearchAdapter::GetEncoding (char **encoding)
   return NS_OK; 
 }
 
+NS_IMETHODIMP nsMsgSearchAdapter::AddHit(nsMsgKey key)
+{
+  NS_ASSERTION(PR_FALSE, "shouldn't call this base class impl");
+  return NS_ERROR_FAILURE;
+}
+
 
 char *
 nsMsgSearchAdapter::TryToConvertCharset(char *sourceStr, const PRUnichar *srcCharset, const PRUnichar * destCharset, PRBool useMime2)
@@ -662,7 +668,6 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsMsgSearchTermAr
 	{
 		// Catenate the intermediate encodings together into a big string
 		char *totalEncoding = new char [encodingLength + (!reallyDredd ? nsCRT::strlen(m_kImapUnDeleted) : 0) + 1];
-		int32 encodingBuffSize = expression->CalcEncodeStrSize() + (!reallyDredd ? nsCRT::strlen(m_kImapUnDeleted) : 0) + 1;
 		nsCString encodingBuff;
 
 		if (totalEncoding)
