@@ -5,7 +5,7 @@
 CURDIR=`pwd`
 TESTS="sdr ssl"
 cd common
-. init.sh
+. ./init.sh
 export MOZILLA_ROOT
 export COMMON
 export DIST

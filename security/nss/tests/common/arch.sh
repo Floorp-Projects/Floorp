@@ -38,7 +38,7 @@
 #
 # Macros for getting the OS architecture
 #
-if [ -s "${USE_64}" ]; then
+if [ -n "${USE_64}" ]; then
 	A64BIT_TAG=_64
 else
 	A64BIT_TAG=
@@ -135,9 +135,12 @@ fi
 #if [(,$(filter-out Linux FreeBSD,${OS_ARCH}))
 #OS_RELEASE	:= $(shell echo $(OS_RELEASE) | sed 's/-.*//')
 #endif
+if [  ${OS_ARCH} = "Linux" ]; then
+	OS_RELEASE=`echo ${OS_RELEASE} | sed 's/-.*//'`
+fi
 
 if  [ ${OS_ARCH} = "Linux" ]; then
-	OS_RELEASE=`basename ${OS_RELEASE}`
+	OS_RELEASE=`echo ${OS_RELEASE} | sed 's;\\.[0123456789]*$;;'`
 fi
 
 #######################################################################
@@ -212,6 +215,20 @@ if  [ ${OS_ARCH}  = "Windows_NT" ]; then
 fi
 fi
 
+if  [ ${OS_ARCH} = "Linux" ]; then
+	IMPL_STRATEGY=_PTH
+
+	if [ ${OS_TEST} = "ppc" ]; then
+		CPU_TAG=_ppc
+	elif [ ${OS_TEST} = "alpha" ]; then
+		CPU_TAG=_alpha
+	else
+		CPU_TAG=_x86
+	fi
+	LIBC_TAG=_glibc
+	ARCH=linux
+fi
+
 OS_TARGET=${OS_TARGET-${OS_ARCH}}
 
 if [ ${OS_TARGET} = "WIN95" ]; then
@@ -234,14 +251,14 @@ OS_CONFIG=${OS_TARGET}${OS_RELEASE}
 # to distinguish between debug and release builds.
 #
 
-if [ -s "${BUILD_OPT}" ]; then
+if [ -n "${BUILD_OPT}" ]; then
 	if [ ${OS_TARGET} = "WIN16" ]; then
 		OBJDIR_TAG=_O
 	else
 		OBJDIR_TAG=${A64BIT_TAG}_OPT
 	fi
 else
-	if [ -s "${BUILD_IDG}" ]; then
+	if [ -n "${BUILD_IDG}" ]; then
 		if [ ${OS_TARGET} = "WIN16" ]; then
 			OBJDIR_TAG=_I
 		else
@@ -278,19 +295,19 @@ fi
 OBJDIR_NAME=${OS_CONFIG}${CPU_TAG}${COMPILER_TAG}${LIBC_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}'.OBJ'
 
 #export OS_CONFIG OS_ARCH OBJDIR_NAME OS_RELEASE OBJDIR_TAG
+export OS_ARCH
 
 if [ ${OS_ARCH} = "WINNT" ]; then
 if [  ${OS_TARGET} != "WIN16" ]; then
-if [ ! -s "${BUILD_OPT}" ]; then
+if [  -z "${BUILD_OPT}" ]; then
 #
 # Define USE_DEBUG_RTL if you want to use the debug runtime library
 # (RTL) in the debug build
 #
-if [ -s "${USE_DEBUG_RTL}" ]; then
+if [ -n "${USE_DEBUG_RTL}" ]; then
 	OBJDIR_NAME=${OS_CONFIG}${CPU_TAG}${COMPILER_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}.OBJD
 fi
 fi
 fi
 fi
 
-echo ${OBJDIR_NAME}
