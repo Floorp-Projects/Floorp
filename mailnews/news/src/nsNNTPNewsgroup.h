@@ -20,14 +20,15 @@
 #define __nsNNTPNewsgroup_h
 
 #include "nsINNTPNewsgroup.h"
-#include "nsNNTPArticleSet.h"
+#include "nsMsgKeySet.h"
+#include "nsINNTPHost.h"
 
 NS_BEGIN_EXTERN_C
 
 nsresult
 NS_NewNewsgroup(nsINNTPNewsgroup **info,
                 char *line,
-                nsNNTPArticleSet *set,
+                nsMsgKeySet *set,
                 PRBool subscribed,
                 nsINNTPHost *host,
                 int depth);

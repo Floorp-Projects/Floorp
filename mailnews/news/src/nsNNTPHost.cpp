@@ -28,7 +28,7 @@
 #include "nsNNTPCategoryContainer.h"
 
 #include "nsNNTPHost.h"
-#include "nsNNTPArticleSet.h"
+#include "nsMsgKeySet.h"
 
 #include "nsMsgGroupRecord.h"
 
@@ -892,7 +892,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 
 	char *s;
 	char *end = line + line_size;
-	static nsNNTPArticleSet *set;
+	static nsMsgKeySet *set;
 	
 	for (s = line; s < end; s++)
 		if (*s == ':' || *s == '!')
@@ -903,7 +903,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 		return RememberLine(line);
 	}
 
-	set = nsNNTPArticleSet::Create(s + 1, this);
+	set = nsMsgKeySet::Create(s + 1 /* , this */);
 	if (!set) return NS_ERROR_OUT_OF_MEMORY;
 
 	PRBool subscribed = (*s == ':');

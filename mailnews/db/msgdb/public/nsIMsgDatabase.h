@@ -27,6 +27,7 @@ class nsIDBChangeListener;
 class nsIEnumerator;
 class nsThreadMessageHdr;       // XXX where's the public interface to this?
 class nsMsgKeyArray;
+class nsMsgKeySet;
 class nsIDBFolderInfo;
 class nsIMsgThread;
 
@@ -196,6 +197,11 @@ public:
   // thread interfaces.
   NS_IMETHOD GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result) = 0;
   NS_IMETHOD GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **result) = 0;
+
+  NS_IMETHOD GetMsgKeySet(nsMsgKeySet **pSet) = 0;
+
+  NS_IMETHOD                GetHighWaterArticleNum(nsMsgKey *key) =0;
+  NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key) =0;
 };
 
 #endif // nsIMsgDatabase_h__

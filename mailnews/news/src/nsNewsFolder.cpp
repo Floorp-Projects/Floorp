@@ -1134,7 +1134,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
 	char* msgURI = nsnull;
 	nsFileSpec path;
 	nsMsgKey key;
-  nsIRDFResource* res;
+	nsIRDFResource* res;
 
 	rv = msgDBHdr->GetMessageKey(&key);
 

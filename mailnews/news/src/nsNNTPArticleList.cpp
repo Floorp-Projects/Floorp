@@ -21,9 +21,9 @@
 #include "nsNNTPNewsgroupList.h"
 #include "nsINNTPHost.h"
 #include "nsINNTPArticleList.h"
+#include "nsMsgKeySet.h"
 
 /* XXX - temporary hack so this will compile */
-
 typedef PRUint32 nsMsgKey;
 
 class nsNNTPArticleList : public nsINNTPArticleList
@@ -87,7 +87,7 @@ nsNNTPArticleList::Init(nsINNTPHost * newsHost,
 #ifdef HAVE_NEWSDB
 	m_newsDB = NULL;
 #endif
-	m_idsOnServer.set = nsNNTPArticleSet::Create();
+	m_idsOnServer.set = nsMsgKeySet::Create();
 #ifdef HAVE_PANES
 	nsINNTPNewsgroup *newsFolder = m_pane->GetMaster()->FindNewsFolder(host, groupName, PR_FALSE);
 	if (newsFolder)

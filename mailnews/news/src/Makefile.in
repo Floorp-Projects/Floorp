@@ -28,7 +28,6 @@ LIBRARY_NAME=nntp
 EXPORTS = \
 	nsNNTPProtocol.h	\
 	nsNntpUrl.h		\
-	nsNNTPArticleSet.h	\
 	nsNNTPNewsgroupList.h	\
 	nsNNTPNewsgroup.h	\
 	nsNNTPNewsgroupPost.h   \
@@ -42,7 +41,6 @@ EXPORTS = \
 
 CPPSRCS = \
 	nsNNTPArticleList.cpp \
-	nsNNTPArticleSet.cpp \
 	nsNNTPNewsgroup.cpp \
 	nsNNTPNewsgroupList.cpp \
 	nsNNTPNewsgroupPost.cpp \

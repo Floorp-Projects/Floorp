@@ -562,14 +562,14 @@ void nsDBFolderInfo::ChangeImapUnreadPendingMessages(PRInt32 delta)
 }
 
 
-void nsDBFolderInfo::SetKnownArtsSet(nsString &newsArtSet)
+NS_IMETHODIMP nsDBFolderInfo::SetKnownArtsSet(nsString &newsArtSet)
 {
-	SetProperty(kKnownArtsSetColumnName, newsArtSet);
+	return SetProperty(kKnownArtsSetColumnName, newsArtSet);
 }
 
-void nsDBFolderInfo::GetKnownArtsSet(nsString &newsArtSet)
+NS_IMETHODIMP nsDBFolderInfo::GetKnownArtsSet(nsString &newsArtSet)
 {
-	GetProperty(kKnownArtsSetColumnName, newsArtSet);
+	return GetProperty(kKnownArtsSetColumnName, newsArtSet);
 }
 
 	// get arbitrary property, aka row cell value.

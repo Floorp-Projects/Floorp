@@ -91,6 +91,10 @@ public:
 	NS_IMETHOD			SetProperty(const char *propertyName, nsString &propertyStr);
 	NS_IMETHOD			SetUint32Property(const char *propertyName, PRUint32 propertyValue);
 	NS_IMETHOD			GetUint32Property(const char *propertyName, PRUint32 &propertyValue);
+
+	NS_IMETHOD		    SetKnownArtsSet(nsString &newsArtSet);
+	NS_IMETHOD		    GetKnownArtsSet(nsString &newsArtSet);
+
 	// create the appropriate table and row in a new db.
 	nsresult			AddToNewMDB();
 	// accessor methods.
@@ -111,10 +115,6 @@ public:
 	void				ChangeImapTotalPendingMessages(PRInt32 delta);
 	void				ChangeImapUnreadPendingMessages(PRInt32 delta) ;
 	
-
-	virtual void		SetKnownArtsSet(nsString &newsArtSet);
-	virtual void		GetKnownArtsSet(nsString &newsArtSet);
-
 	// get and set arbitrary property, aka row cell value.
 	nsresult	SetPropertyWithToken(mdb_token aProperty, nsString &propertyStr);
 	nsresult	SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue);

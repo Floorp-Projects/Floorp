@@ -24,7 +24,8 @@
 #include "nsISupports.h" /* interface nsISupports */
 
 #include "nsINNTPNewsgroup.h"
-#include "nsNNTPArticleSet.h"
+#include "nsINNTPHost.h"
+#include "nsMsgKeySet.h"
 
 #include "nsCOMPtr.h"
 
@@ -335,7 +336,7 @@ extern "C" {
 
 nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info,
                 char *line,
-                nsNNTPArticleSet *set,
+		nsMsgKeySet *set,
                 PRBool subscribed,
                 nsINNTPHost *host,
                 int depth)

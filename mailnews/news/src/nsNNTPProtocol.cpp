@@ -57,7 +57,7 @@
 
 #include "nsINntpUrl.h"
 #include "nsNNTPHost.h"
-#include "nsNNTPArticleSet.h"
+#include "nsMsgKeySet.h"
 
 #include "nsNewsUtils.h"
 
@@ -230,7 +230,7 @@ PRInt32 net_NewsChunkSize=-1;  /* default */
 extern "C"
 {
 nsresult NS_NewArticleList(nsINNTPArticleList **articleList, const nsINNTPHost* newsHost, nsINNTPNewsgroup* newsgroup);
-nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info, char *line, nsNNTPArticleSet *set, PRBool subscribed, nsINNTPHost *host, int depth);
+nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info, char *line, nsMsgKeySet *set, PRBool subscribed, nsINNTPHost *host, int depth);
 nsresult NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult, nsINNTPHost *newsHost, nsINNTPNewsgroup *newsgroup);
 }
 
@@ -2054,6 +2054,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 				//  mWebShell->LoadURL(nsAutoString("http://www.netscape.com"), 
 				//                      nsnull, PR_TRUE, nsURLReload, 0);
 				m_displayConsumer->LoadURL(nsAutoString(fileUrl).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+
 			}
 
 			// mscott: we may need to release our reference on the url....
@@ -2530,8 +2531,8 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
                 rv = m_newsHost->FindGroup(groupName, &m_newsgroup);
                 PR_ASSERT(NS_SUCCEEDED(rv));
 				m_nextState = NNTP_LIST_XACTIVE;
-#ifdef DEBUG_bienvenu1
-				PR_LogPrint("listing xactive for %s\n", m_groupName);
+#ifdef DEBUG_sspitzer
+				printf("listing xactive for %s\n", groupName);
 #endif
 				PR_FREEIF(line);
 				return 0;
@@ -3830,8 +3831,8 @@ PRInt32 nsNNTPProtocol::ListPrettyNames()
             NS_SUCCEEDED(rv) ? group_name : "");
     
 	status = SendData(outputBuffer);
-#ifdef DEBUG_bienvenu1
-	PR_LogPrint(outputBuffer);
+#ifdef DEBUG_sspitzer
+	printf(outputBuffer);
 #endif
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_LIST_PRETTY_NAMES_RESPONSE;
@@ -3881,8 +3882,8 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 			line[i] = 0; /* terminate group name */
 			if (i > 0)
               m_newsHost->SetPrettyName(line,prettyName);
-#ifdef DEBUG_bienvenu1
-			PR_LogPrint("adding pretty name %s\n", prettyName);
+#ifdef DEBUG_sspitzer 
+			printf("adding pretty name %s\n", prettyName);
 #endif
 		}
 		else
@@ -3979,8 +3980,8 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 				/* we're either going to list prettynames first, or list
                    all prettynames every time, so we won't care so much
                    if it gets interrupted. */
-#ifdef DEBUG_bienvenu1
-				PR_LogPrint("got xactive for %s of %s\n", line, flags);
+#ifdef DEBUG_sspitzer 
+				printf("got xactive for %s of %s\n", line, flags);
 #endif
 				/*	This isn't required, because the extra info is
                     initialized to false for new groups. And it's
@@ -4009,8 +4010,8 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
                 /* make sure we're not stuck on the same group */
                 {
                     NS_RELEASE(old_newsgroup);
-#ifdef DEBUG_bienvenu1
-					PR_LogPrint("listing xactive for %s\n", m_groupName);
+#ifdef DEBUG_sspitzer
+					printf("listing xactive for %s\n", groupName);
 #endif
 					m_nextState = NNTP_LIST_XACTIVE;
 			        ClearFlag(NNTP_PAUSE_FOR_READ); 

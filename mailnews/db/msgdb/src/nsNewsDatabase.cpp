@@ -19,7 +19,8 @@
 #include "msgCore.h"
 #include "nsNewsDatabase.h"
 #include "nsNewsSummarySpec.h"
-
+#include "nsMsgKeySet.h"
+#include "nsCOMPtr.h"
 
 nsNewsDatabase::nsNewsDatabase()
 {
@@ -122,15 +123,18 @@ PRUint32 nsNewsDatabase::GetCurVersion()
 NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 								nsIDBChangeListener *instigator)
 {
-    nsresult rv = NS_OK;
-#if 0
-	nsMsgKey messageKey = msgHdr->GetMessageKey();
+	nsresult rv = NS_OK;
+	nsMsgKey messageKey;
+	rv = msgHdr->GetMessageKey(&messageKey);
+	if (NS_FAILED(rv)) {
+		return rv;
+	}
 
 	if (bRead)
-		rv = m_set->Add(messageKey);
+		rv = m_newSet->Add(messageKey);
 	else
-		rv = m_set->Remove(messageKey);
-#endif /* 0 */
+		rv = m_newSet->Remove(messageKey);
+
 	// give parent class chance to update data structures
 	rv = nsMsgDatabase::MarkHdrRead(msgHdr, bRead, instigator);
 
@@ -142,10 +146,9 @@ NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 	NS_ASSERTION(pRead != NULL, "null out param in IsRead");
 	if (pRead == NULL) 
 		return NS_ERROR_NULL_POINTER;
-#if 0
-	PRBool isRead = m_set->IsMember(messageKey);
+
+	PRBool isRead = m_newSet->IsMember(key);
 	*pRead = isRead;
-#endif
 	return 0;
 }
 
@@ -174,15 +177,42 @@ NS_IMETHODIMP		nsNewsDatabase::ListNextUnread(ListContext **pContext, nsMsgHdr *
 }
 
 // return highest article number we've seen.
-nsMsgKey		nsNewsDatabase::GetHighwaterArticleNum()
+NS_IMETHODIMP nsNewsDatabase::GetHighWaterArticleNum(nsMsgKey *key)
 {
-	return 0;
-}
-nsMsgKey		nsNewsDatabase::GetLowWaterArticleNum()
-{
-	return 0;
+  PR_ASSERT(m_dbFolderInfo);
+  if (!m_dbFolderInfo) {
+    return NS_ERROR_FAILURE;
+  }
+  return m_dbFolderInfo->GetHighWater(key);    
 }
 
+// return the key of the first article number we know about.
+// Since the iterator iterates in id order, we can just grab the
+// messagekey of the first header it returns.
+// ### dmb
+// This will not deal with the situation where we get holes in
+// the headers we know about. Need to figure out how and when
+// to solve that. This could happen if a transfer is interrupted.
+// Do we need to keep track of known arts permanently?
+NS_IMETHODIMP nsNewsDatabase::GetLowWaterArticleNum(nsMsgKey *key)
+{
+  nsresult		rv;
+  nsMsgHdr		*pHeader;
+
+  nsCOMPtr<nsIEnumerator> hdrs;
+  rv = EnumerateMessages(getter_AddRefs(hdrs));
+  if (NS_FAILED(rv))
+    return rv;
+
+  hdrs->First(); 
+  rv = hdrs->CurrentItem((nsISupports**)&pHeader);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  return pHeader->GetMessageKey(key);
+}
+ 
 nsresult		nsNewsDatabase::ExpireUpTo(nsMsgKey expireKey)
 {
 	return 0;
@@ -190,11 +220,6 @@ nsresult		nsNewsDatabase::ExpireUpTo(nsMsgKey expireKey)
 nsresult		nsNewsDatabase::ExpireRange(nsMsgKey startRange, nsMsgKey endRange)
 {
 	return 0;
-}
-
-nsNewsSet				*nsNewsDatabase::GetNewsArtSet() 
-{
-	return m_set;
 }
 
 nsNewsDatabase	*nsNewsDatabase::GetNewsDB() 

@@ -19,7 +19,7 @@
 nsMsgLineBuffer.h
 nsMsgGroupRecord.h
 nsUInt32Array.h
-nsNewsSet.h
+nsMsgKeySet.h
 nsMsgFolder.h
 nsMsgDBFolder.h
 nsLocalFolderSummarySpec.h

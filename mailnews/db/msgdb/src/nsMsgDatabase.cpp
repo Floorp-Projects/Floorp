@@ -21,7 +21,7 @@
 #include "msgCore.h"
 #include "nsMsgDatabase.h"
 #include "nsDBFolderInfo.h"
-#include "nsNewsSet.h"
+#include "nsMsgKeySet.h"
 #include "nsIEnumerator.h"
 #include "nsMsgThread.h"
 #include "nsFileStream.h"
@@ -1381,10 +1381,24 @@ NS_IMETHODIMP nsMsgDatabase::MarkLater(nsMsgKey key, time_t *until)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDatabase::GetMsgKeySet(nsMsgKeySet **pSet)
+{
+    // if it doesn't exist, try to create it
+	if (m_newSet == nsnull) {
+        m_newSet = nsMsgKeySet::Create();
+        if (m_newSet == nsnull) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+	}
+    
+    *pSet = m_newSet;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDatabase::AddToNewList(nsMsgKey key)
 {
-	if (m_newSet == NULL)
-		m_newSet = nsNewsSet::Create();
+	if (m_newSet == nsnull)
+		m_newSet = nsMsgKeySet::Create();
 	if (m_newSet)
 		m_newSet->Add(key);
 	return (m_newSet) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -2463,6 +2477,15 @@ NS_IMETHODIMP nsMsgDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes
 	// technically, notimplemented, but no one's putting offline ops in anyway.
 	return ret;
 }
+NS_IMETHODIMP nsMsgDatabase::GetHighWaterArticleNum(nsMsgKey *key)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP nsMsgDatabase::GetLowWaterArticleNum(nsMsgKey *key)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 #ifdef DEBUG
 nsresult nsMsgDatabase::DumpContents()
@@ -2483,7 +2506,7 @@ nsresult nsMsgDatabase::DumpContents()
     nsresult rv = ListAllKeys(keys);
     for (i = 0; i < keys.GetSize(); i++) {
         key = keys[i];
-#endif
+#endif /* HAVE_INT_ENUMERATORS */
 		nsIMsgDBHdr *msg = NULL;
         rv = GetMsgHdrForKey(key, &msg);
         nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, msg);      // closed system, cast ok
@@ -2552,7 +2575,7 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 
 					printf("message in thread %u %s\n", key, (const char *) &nsAutoString(subject));
 				}
-#endif
+#endif /* DEBUG_bienvenu */
 		//		NS_RELEASE(pMessage);
 				pMessage = nsnull;
 			}
@@ -2562,7 +2585,6 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 	}
 	return ret;
 }
-
-#endif
+#endif /* DEBUG */
 
 

@@ -27,7 +27,6 @@ REQUIRES=xpcom js nspr netlib
 
 CPPSRCS=    nsNNTPProtocol.cpp				\
 			nsNntpUrl.cpp					\
-			nsNNTPArticleSet.cpp			\
 			nsNNTPArticleList.cpp			\
 			nsNNTPNewsgroupList.cpp			\
 			nsNNTPNewsgroupPost.cpp			\
@@ -43,7 +42,6 @@ CPPSRCS=    nsNNTPProtocol.cpp				\
 
 CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 			.\$(OBJDIR)\nsNntpUrl.obj					\
-			.\$(OBJDIR)\nsNNTPArticleSet.obj			\
 			.\$(OBJDIR)\nsNNTPArticleList.obj			\
 			.\$(OBJDIR)\nsNNTPNewsgroupList.obj			\
 			.\$(OBJDIR)\nsNNTPNewsgroupPost.obj			\

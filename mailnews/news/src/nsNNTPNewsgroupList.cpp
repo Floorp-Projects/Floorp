@@ -26,6 +26,8 @@
 
 #include "msgCore.h"    // precompiled header...
 #include "MailNewsTypes.h"
+#include "nsCOMPtr.h"
+#include "nsIDBFolderInfo.h"
 
 #ifdef HAVE_PANES
 class MSG_Master;
@@ -36,7 +38,7 @@ class MSG_Master;
 #include "nsNNTPNewsgroupList.h"
 
 #include "nsINNTPArticleList.h"
-#include "nsNNTPArticleSet.h"
+#include "nsMsgKeySet.h"
 
 #include "nsINNTPNewsgroup.h"
 #include "nsNNTPNewsgroup.h"
@@ -55,7 +57,7 @@ class MSG_Master;
 
 #include "nsNewsDatabase.h"
 
-//#include "nsDBFolderInfo.h"
+#include "nsIDBFolderInfo.h"
 
 #ifdef HAVE_PANES
 #include "msgpane.h"
@@ -153,8 +155,7 @@ protected:
   PRInt32			m_lastMsgToDownload;
   
   struct MSG_NewsKnown	m_knownArts;
-  nsNNTPArticleSet	*m_set;
-
+  nsMsgKeySet		*m_set;
 };
 
 
@@ -185,7 +186,7 @@ nsNNTPNewsgroupList::Init(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const 
 	m_url = PR_smprintf("%s/%s/%s",kNewsRootURI,hostname,name);
 	m_lastProcessedNumber = 0;
 	m_lastMsgNumber = 0;
-	m_set = NULL;
+	m_set = nsnull;
 #ifdef HAVE_PANES
 	PR_ASSERT(pane);
 	m_pane = pane;
@@ -199,7 +200,7 @@ nsNNTPNewsgroupList::Init(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const 
 	m_host = host;
 	m_newsgroup = newsgroup;
 	m_knownArts.host = m_host;
-	m_knownArts.set = nsNNTPArticleSet::Create();
+	m_knownArts.set = nsMsgKeySet::Create();
 	m_getOldMessages = PR_FALSE;
 	m_promptedAlready = PR_FALSE;
 	m_downloadAll = PR_FALSE;
@@ -298,35 +299,50 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 	if (!m_newsDB)
 	{
 		nsresult err;
-		if ((err = GetDatabase(GetURL(), &m_newsDB)) != NS_OK)
-            {
-                return err;
+		if ((err = GetDatabase(GetURL(), &m_newsDB)) != NS_OK) {
+            return err;
+        }
+		else {
+			nsresult rv = NS_OK;
+			rv = m_newsDB->GetMsgKeySet(&m_set);
+            if (NS_FAILED(rv) || !m_set) {
+                return rv;
             }
-		else
-		{
-#ifdef NOT_READY_YET
-			m_set = m_newsDB->GetNewsArtSet();
+            
 			m_set->SetLastMember(last_possible);	// make sure highwater mark is valid.
-			nsDBFolderInfo *newsGroupInfo = m_newsDB->GetDBFolderInfo();
-			if (newsGroupInfo)
+			nsIDBFolderInfo *newsGroupInfo = nsnull;
+			rv = m_newsDB->GetDBFolderInfo(&newsGroupInfo);
+			if (NS_SUCCEEDED(rv) && newsGroupInfo)
 			{
 				nsString knownArtsString;
+                nsMsgKey mark;
 				newsGroupInfo->GetKnownArtsSet(knownArtsString);
-				if (last_possible < newsGroupInfo->GetHighWater())
+                
+                rv = newsGroupInfo->GetHighWater(&mark);
+                if (NS_FAILED(rv)) {
+                    return rv;
+                }
+				if (last_possible < mark)
 					newsGroupInfo->SetHighWater(last_possible, TRUE);
 				if (m_knownArts.set) {
 					delete m_knownArts.set;
 				}
-				m_knownArts.set = nsNNTPArticleSet::Create(knownArtsString);
+				m_knownArts.set = nsMsgKeySet::Create(nsAutoCString(knownArtsString));
 			}
 			else
 			{	
 				if (m_knownArts.set) {
 					delete m_knownArts.set;
 				}
-				m_knownArts.set = nsNNTPArticleSet::Create();
-				m_knownArts.set->AddRange(m_newsDB->GetLowWaterArticleNum(), m_newsDB->GetHighwaterArticleNum());
-			}
+				m_knownArts.set = nsMsgKeySet::Create();
+                nsMsgKey low, high;
+                rv = m_newsDB->GetLowWaterArticleNum(&low);
+                if (NS_FAILED(rv)) return rv;
+                rv = m_newsDB->GetHighWaterArticleNum(&high);
+                if (NS_FAILED(rv)) return rv;
+                
+				m_knownArts.set->AddRange(low,high);
+            }
 #ifdef HAVE_PANES
 			m_pane->StartingUpdate(MSG_NotifyNone, 0, 0);
 			m_newsDB->ExpireUpTo(first_possible, m_pane->GetContext());
@@ -344,7 +360,6 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				FE_Progress (context, noNewMsgs);
 #endif /* HAVE_PANES */
 			}
-#endif /* NOT_READY_YET */
 		}
 	}
     
@@ -447,9 +462,8 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				*first = *last - maxextra + 1;
 		}
 	}
-#ifdef DEBUG_bienvenu
-	PR_LogPrint("GetRangeOfArtsToDownload(first possible = %ld, last possible = %ld, first = %ld, last = %ld maxextra = %ld\n",
-			first_possible, last_possible, *first, *last, maxextra);
+#if defined(DEBUG_bienvenu) || defined(DEBUG_sspitzer)
+	printf("GetRangeOfArtsToDownload(first possible = %ld, last possible = %ld, first = %ld, last = %ld maxextra = %ld\n",first_possible, last_possible, *first, *last, maxextra);
 #endif
 	m_firstMsgToDownload = *first;
 	m_lastMsgToDownload = *last;
@@ -476,7 +490,7 @@ nsNNTPNewsgroupList::AddToKnownArticles(PRInt32 first, PRInt32 last)
 		if (m_knownArts.set) {
 			delete m_knownArts.set;
 		}
-		m_knownArts.set = nsNNTPArticleSet::Create();
+		m_knownArts.set = nsMsgKeySet::Create();
 
 		if (!m_knownArts.group_name || !m_knownArts.set) {
 		  return NS_ERROR_OUT_OF_MEMORY;
@@ -485,20 +499,21 @@ nsNNTPNewsgroupList::AddToKnownArticles(PRInt32 first, PRInt32 last)
 	}
 
 	status = m_knownArts.set->AddRange(first, last);
-#ifdef HAVE_NEWSDB
-	if (m_newsDB)
-	{
 
-		nsDBFolderInfo *newsGroupInfo = m_newsDB->GetDBFolderInfo();
-		if (newsGroupInfo)
-		{
+	if (m_newsDB) {
+		nsresult rv = NS_OK;
+		nsCOMPtr <nsIDBFolderInfo> newsGroupInfo;
+		rv = m_newsDB->GetDBFolderInfo(getter_AddRefs(newsGroupInfo));
+		if (NS_SUCCEEDED(rv) && newsGroupInfo) {
 			char *output = m_knownArts.set->Output();
-			if (output)
-				newsGroupInfo->SetKnownArtsSet(output);
+			if (output) {
+				nsString str(output);
+				newsGroupInfo->SetKnownArtsSet(str);
+			}
 			delete[] output;
 		}
 	}
-#endif
+
 	return status;
 }
 
@@ -754,7 +769,7 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 
 	PR_ASSERT (line);
 	if (!line)
-      return NS_ERROR_NULL_POINTER;
+        return NS_ERROR_NULL_POINTER;
 
 	if (m_newsDB != nsnull)
 	{

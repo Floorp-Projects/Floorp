@@ -22,7 +22,6 @@
 
 class nsIDBChangeListener;
 class nsMsgKeyArray;
-class nsNewsSet;
 class MSG_RetrieveArtInfo;
 class MSG_PurgeInfo;
 // news group database
@@ -52,15 +51,13 @@ public:
   NS_IMETHOD				AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify = PR_FALSE);
   
   NS_IMETHOD				ListNextUnread(ListContext **pContext, nsMsgHdr **pResult);
-  // return highest article number we've seen.
-  virtual nsMsgKey		GetHighwaterArticleNum(); 
-  virtual nsMsgKey		GetLowWaterArticleNum();
+  NS_IMETHOD                GetHighWaterArticleNum(nsMsgKey *key);
+  NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key);
   
   virtual nsresult		ExpireUpTo(nsMsgKey expireKey);
   virtual nsresult		ExpireRange(nsMsgKey startRange, nsMsgKey endRange);
   
-  nsNewsSet				 *GetNewsArtSet() ;
-  virtual nsNewsDatabase *GetNewsDB() ;
+  virtual nsNewsDatabase 	*GetNewsDB() ;
   
   virtual PRBool		PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo);
   PRBool				IsCategory();
@@ -88,7 +85,6 @@ protected:
   
   PRUint32				m_headerIndex;		// index of unthreaded headers
   // at a specified entry.
-  nsNewsSet *m_set;
 };
 
 #endif

@@ -78,6 +78,8 @@ public:
 	NS_IMETHOD			SetProperty(const char *propertyName, nsString &propertyStr) = 0;
 	NS_IMETHOD			SetUint32Property(const char *propertyName, PRUint32 propertyValue) = 0;
 	NS_IMETHOD			GetUint32Property(const char *propertyName, PRUint32 &propertyValue) = 0;
+	NS_IMETHOD		    SetKnownArtsSet(nsString &newsArtSet) = 0;
+	NS_IMETHOD		    GetKnownArtsSet(nsString &newsArtSet) =0;
 };
 
 #endif // nsIDBFolderInfo_h__

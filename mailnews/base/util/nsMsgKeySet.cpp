@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -17,16 +17,10 @@
  */
 
 #include "msgCore.h"    // precompiled header...
-#include "nntpCore.h"
 
-#include "nsNNTPArticleSet.h"
-#include "nsINNTPHost.h"
-
-#include <ctype.h>
-#include "prmem.h"
-#include "prlog.h"
+#include "MailNewsTypes.h"
+#include "nsMsgKeySet.h"
 #include "prprf.h"
-#include "plstr.h"
 
 /* A compressed encoding for sets of article.  This is usually for lines from
    the newsrc, which have article lists like
@@ -76,29 +70,31 @@
 
 
 
-nsNNTPArticleSet::nsNNTPArticleSet(nsINNTPHost* host)
+nsMsgKeySet::nsMsgKeySet(/* MSG_NewsHost* host*/)
 {
 	m_cached_value = -1;
 	m_cached_value_index = 0;
 	m_length = 0;
 	m_data_size = 10;
 	m_data = (PRInt32 *) PR_Malloc (sizeof (PRInt32) * m_data_size);
+#ifdef NEWSRC_DOES_HOST_STUFF
 	m_host = host;
+#endif
 }
 
 
-nsNNTPArticleSet::~nsNNTPArticleSet()
+nsMsgKeySet::~nsMsgKeySet()
 {
 	PR_FREEIF(m_data);
 }
 
 
-PRBool nsNNTPArticleSet::Grow()
+PRBool nsMsgKeySet::Grow()
 {
 	PRInt32 new_size;
 	PRInt32 *new_data;
 	new_size = m_data_size * 2;
-	new_data = (PRInt32 *) PR_REALLOC (m_data, (size_t) (sizeof (PRInt32) * new_size));
+	new_data = (PRInt32 *) PR_REALLOC (m_data, sizeof (PRInt32) * new_size);
 	if (! new_data)
 		return PR_FALSE;
 	m_data_size = new_size;
@@ -107,11 +103,13 @@ PRBool nsNNTPArticleSet::Grow()
 }
 
 
-nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, nsINNTPHost* host)
+nsMsgKeySet::nsMsgKeySet(const char* numbers /* , MSG_NewsHost* host */)
 {
 	PRInt32 *head, *tail, *end;
 
+#ifdef NEWSRC_DOES_HOST_STUFF
 	m_host = host;
+#endif
 	m_cached_value = -1;
 	m_cached_value_index = 0;
 	m_length = 0;
@@ -165,7 +163,7 @@ nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, nsINNTPHost* host)
 
 		if (to < from) to = from; /* illegal */
 
-		/* This is a total kludge - if the newsrc file specifies a range 1-x as
+		/* This is a hack - if the newsrc file specifies a range 1-x as
 		   being read, we internally pretend that article 0 is read as well.
 		   (But if only 2-x are read, then 0 is not read.)  This is needed
 		   because some servers think that article 0 is an article (I think)
@@ -194,10 +192,10 @@ nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, nsINNTPHost* host)
 
 
 
-nsNNTPArticleSet*
-nsNNTPArticleSet::Create(nsINNTPHost* host)
+nsMsgKeySet*
+nsMsgKeySet::Create(/*MSG_NewsHost* host*/)
 {
-	nsNNTPArticleSet* set = new nsNNTPArticleSet(host);
+  nsMsgKeySet* set = new nsMsgKeySet(/* host */);
 	if (set && set->m_data == NULL) {
 		delete set;
 		set = NULL;
@@ -206,10 +204,10 @@ nsNNTPArticleSet::Create(nsINNTPHost* host)
 }
 
 
-nsNNTPArticleSet*
-nsNNTPArticleSet::Create(const char* value, nsINNTPHost* host)
+nsMsgKeySet*
+nsMsgKeySet::Create(const char* value /* , MSG_NewsHost* host */)
 {
-	nsNNTPArticleSet* set = new nsNNTPArticleSet(value, host);
+	nsMsgKeySet* set = new nsMsgKeySet(value /* , host */);
 	if (set && set->m_data == NULL) {
 		delete set;
 		set = NULL;
@@ -222,7 +220,7 @@ nsNNTPArticleSet::Create(const char* value, nsINNTPHost* host)
 /* Returns the lowest non-member of the set greater than 0.
  */
 PRInt32
-nsNNTPArticleSet::FirstNonMember ()
+nsMsgKeySet::FirstNonMember ()
 {
 	if (m_length <= 0) {
 		return 1;
@@ -267,7 +265,7 @@ nsNNTPArticleSet::FirstNonMember ()
 
 
 char *
-nsNNTPArticleSet::Output()
+nsMsgKeySet::Output()
 {
 	PRInt32 size;
 	PRInt32 *head;
@@ -322,7 +320,7 @@ nsNNTPArticleSet::Output()
 				tail++;
 			}
 		if (from == 0) {
-			from = 1;				/* See 'kludge' comment above  ### */
+			from = 1;				/* See 'hack' comment above  ### */
 		}
 		if (from <= last_art) from = last_art + 1;
 		if (from <= to) {
@@ -345,7 +343,7 @@ nsNNTPArticleSet::Output()
 }
 
 PRInt32 
-nsNNTPArticleSet::GetLastMember()
+nsMsgKeySet::GetLastMember()
 {
 	if (m_length > 1)
 	{
@@ -366,7 +364,7 @@ nsNNTPArticleSet::GetLastMember()
 		return 0;
 }
 
-void nsNNTPArticleSet::SetLastMember(PRInt32 newHighWaterMark)
+void nsMsgKeySet::SetLastMember(PRInt32 newHighWaterMark)
 {
 	if (newHighWaterMark < GetLastMember())
 	{
@@ -413,13 +411,15 @@ void nsNNTPArticleSet::SetLastMember(PRInt32 newHighWaterMark)
 		}
 		// well, the whole range is probably invalid, because the server probably re-ordered ids, 
 		// but what can you do?
+#ifdef NEWSRC_DOES_HOST_STUFF
 		if (m_host) 
 			m_host->MarkDirty();
+#endif
 	}
 }
 
 PRInt32 
-nsNNTPArticleSet::GetFirstMember()
+nsMsgKeySet::GetFirstMember()
 {
 	if (m_length > 1)
 	{
@@ -440,24 +440,24 @@ nsNNTPArticleSet::GetFirstMember()
 		return 0;
 }
 
-/* Re-compresses a `nsNNTPArticleSet' object.
+/* Re-compresses a `nsMsgKeySet' object.
 
-   The assumption is made that the `nsNNTPArticleSet' is syntactically correct
+   The assumption is made that the `nsMsgKeySet' is syntactically correct
    (all ranges have a length of at least 1, and all values are non-
    decreasing) but will optimize the compression, for example, merging
    consecutive literals or ranges into one range.
 
-   Returns PR_TRUE if successful, PR_FALSE if there wasn't enough memory to
+   Returns TRUE if successful, FALSE if there wasn't enough memory to
    allocate scratch space.
 
    #### This should be changed to modify the buffer in place.
 
    Also note that we never call Optimize() unless we actually changed
-   something, so it's a great place to tell the nsINNTPHost* that something
+   something, so it's a great place to tell the MSG_NewsHost* that something
    changed.
    */
 PRBool
-nsNNTPArticleSet::Optimize()
+nsMsgKeySet::Optimize()
 {
 	PRInt32 input_size;
 	PRInt32 output_size;
@@ -475,7 +475,7 @@ nsNNTPArticleSet::Optimize()
 	input_end = input_tail + input_size;
 	output_end = output_data + output_size;
 
-	if (!output_data) return PR_FALSE;
+	if (!output_data) return FALSE;
 
 	/* We're going to modify the set, so invalidate the cache. */
 	m_cached_value = -1;
@@ -500,10 +500,10 @@ nsNNTPArticleSet::Optimize()
 			/* Copy it over */
 			*output_tail++ = *input_tail++;
 		}
-		PR_ASSERT(output_tail < output_end);
+		NS_ASSERTION(output_tail < output_end, "invalid end of output string");
 		if (output_tail >= output_end) {
 			PR_Free(output_data);
-			return PR_FALSE;
+			return FALSE;
 		}
 
 		/* As long as this chunk is followed by consecutive chunks,
@@ -519,7 +519,7 @@ nsNNTPArticleSet::Optimize()
 				output_tail++;
 				output_tail [-2] = 0;
 				output_tail [-1] = from;
-				range_p = PR_TRUE;
+				range_p = TRUE;
 			}
 
 			if (*input_tail > 0) { /* literal */
@@ -557,16 +557,18 @@ nsNNTPArticleSet::Optimize()
 		}
 	}
 
+#ifdef NEWSRC_DOES_HOST_STUFF
 	if (m_host) m_host->MarkDirty();
+#endif
 	return PR_TRUE;
 }
 
 
 
 PRBool
-nsNNTPArticleSet::IsMember(PRInt32 number)
+nsMsgKeySet::IsMember(PRInt32 number)
 {
-	PRBool value = PR_FALSE;
+	PRBool value = FALSE;
 	PRInt32 size;
 	PRInt32 *head;
 	PRInt32 *tail;
@@ -591,7 +593,7 @@ nsNNTPArticleSet::IsMember(PRInt32 number)
 			PRInt32 to = from + (-(tail[0]));
 			if (from > number) {
 				/* This range begins after the number - we've passed it. */
-				value = PR_FALSE;
+				value = FALSE;
 				goto DONE;
 			} else if (to >= number) {
 				/* In range. */
@@ -609,7 +611,7 @@ nsNNTPArticleSet::IsMember(PRInt32 number)
 				goto DONE;
 			} else if (*tail > number) {
 				/* This literal is after the number - we've passed it. */
-				value = PR_FALSE;
+				value = FALSE;
 				goto DONE;
 			} else {
 				tail++;
@@ -627,7 +629,7 @@ DONE:
 
 
 int
-nsNNTPArticleSet::Add(PRInt32 number)
+nsMsgKeySet::Add(PRInt32 number)
 {
 	PRInt32 size;
 	PRInt32 *head;
@@ -639,7 +641,7 @@ nsNNTPArticleSet::Add(PRInt32 number)
 	tail = head;
 	end = head + size;
 
-	PR_ASSERT (number >= 0);
+	NS_ASSERTION (number >= 0, "can't have negative items");
 	if (number < 0)
 		return 0;
 
@@ -688,12 +690,12 @@ nsNNTPArticleSet::Add(PRInt32 number)
 	   avoiding massive duplication of code, simply insert a literal here and
 	   then run the optimizer.
 	   */
-	PRInt32 mid = (tail - head); 
+	int mid = (tail - head); 
 
 	if (m_data_size <= m_length + 1) {
 		int endo = end - head;
 		if (!Grow()) {
-			return MK_OUT_OF_MEMORY;
+			return NS_ERROR_OUT_OF_MEMORY;
 		}
 		head = m_data;
 		end = head + endo;
@@ -720,7 +722,7 @@ nsNNTPArticleSet::Add(PRInt32 number)
 
 
 int
-nsNNTPArticleSet::Remove(PRInt32 number)
+nsMsgKeySet::Remove(PRInt32 number)
 {
 	PRInt32 size;
 	PRInt32 *head;
@@ -807,7 +809,7 @@ nsNNTPArticleSet::Remove(PRInt32 number)
 				PRInt32 i;
 				int endo = end - head;
 				if (m_data_size - m_length <= 2) {
-					if (!Grow()) return MK_OUT_OF_MEMORY;
+					if (!Grow()) return NS_ERROR_OUT_OF_MEMORY;
 				}
 				head = m_data;
 				end = head + endo;
@@ -874,7 +876,7 @@ msg_emit_range(PRInt32* tmp, PRInt32 a, PRInt32 b)
 	if (a == b) {
 		*tmp++ = a;
 	} else {
-		PR_ASSERT(a < b && a >= 0);
+		NS_ASSERTION(a < b && a >= 0, "range is out of order");
 		*tmp++ = -(b - a);
 		*tmp++ = a;
 	}
@@ -883,7 +885,7 @@ msg_emit_range(PRInt32* tmp, PRInt32 a, PRInt32 b)
 
 
 int
-nsNNTPArticleSet::AddRange(PRInt32 start, PRInt32 end)
+nsMsgKeySet::AddRange(PRInt32 start, PRInt32 end)
 {
 	PRInt32 tmplength;
 	PRInt32* tmp;
@@ -892,12 +894,12 @@ nsNNTPArticleSet::AddRange(PRInt32 start, PRInt32 end)
 	PRInt32* tail;
 	PRInt32 a;
 	PRInt32 b;
-	PRBool didit = PR_FALSE;
+	PRBool didit = FALSE;
 
 	/* We're going to modify the set, so invalidate the cache. */
 	m_cached_value = -1;
 
-	PR_ASSERT(start <= end);
+	NS_ASSERTION(start <= end, "invalid range");
 	if (start > end) return -1;
 
 	if (start == end) {
@@ -907,7 +909,7 @@ nsNNTPArticleSet::AddRange(PRInt32 start, PRInt32 end)
 	tmplength = m_length + 2;
 	tmp = (PRInt32*) PR_Malloc(sizeof(PRInt32) * tmplength);
 
-	if (!tmp) return MK_OUT_OF_MEMORY;
+	if (!tmp) return NS_ERROR_OUT_OF_MEMORY;
 
 	in = m_data;
 	out = tmp;
@@ -957,19 +959,21 @@ nsNNTPArticleSet::AddRange(PRInt32 start, PRInt32 end)
 	m_data = tmp;
 	m_length = out - tmp;
 	m_data_size = tmplength;
+#ifdef NEWSRC_DOES_HOST_STUFF
 	if (m_host) m_host->MarkDirty();
+#endif
 	return 1;
 }
 
 PRInt32
-nsNNTPArticleSet::CountMissingInRange(PRInt32 range_start, PRInt32 range_end)
+nsMsgKeySet::CountMissingInRange(PRInt32 range_start, PRInt32 range_end)
 {
 	PRInt32 count;
 	PRInt32 *head;
 	PRInt32 *tail;
 	PRInt32 *end;
 
-	PR_ASSERT (range_start >= 0 && range_end >= 0 && range_end >= range_start);
+	NS_ASSERTION (range_start >= 0 && range_end >= 0 && range_end >= range_start, "invalid range");
 	if (range_start < 0 || range_end < 0 || range_end < range_start) return -1;
 
 	head = m_data;
@@ -995,14 +999,14 @@ nsNNTPArticleSet::CountMissingInRange(PRInt32 range_start, PRInt32 range_end)
 			if (*tail >= range_start && *tail <= range_end) count--;
 			tail++;
 		}
-		PR_ASSERT (count >= 0);
+		NS_ASSERTION (count >= 0, "invalid count");
 	}
 	return count;
 }
 
 
 int 
-nsNNTPArticleSet::FirstMissingRange(PRInt32 min, PRInt32 max,
+nsMsgKeySet::FirstMissingRange(PRInt32 min, PRInt32 max,
 								  PRInt32* first, PRInt32* last)
 {
 	PRInt32 size;
@@ -1014,12 +1018,12 @@ nsNNTPArticleSet::FirstMissingRange(PRInt32 min, PRInt32 max,
 	PRInt32 a;
 	PRInt32 b;
 
-	PR_ASSERT(first && last);
+	NS_ASSERTION(first && last, "invalid parameter");
 	if (!first || !last) return -1;
 
 	*first = *last = 0;
 
-	PR_ASSERT(min <= max && min > 0);
+	NS_ASSERTION(min <= max && min > 0, "invalid min or max param");
 	if (min > max || min <= 0) return -1;
 
 	size = m_length;
@@ -1059,10 +1063,10 @@ nsNNTPArticleSet::FirstMissingRange(PRInt32 min, PRInt32 max,
 	return 0;
 }
 
-// I'm guessing Terry didn't include this because he doesn't think we're going
+// I'm guessing we didn't include this because we didn't think we're going
 // to need it. I'm not so sure. I'm putting it in for now.
 int 
-nsNNTPArticleSet::LastMissingRange(PRInt32 min, PRInt32 max,
+nsMsgKeySet::LastMissingRange(PRInt32 min, PRInt32 max,
 								  PRInt32* first, PRInt32* last)
 {
   PRInt32 size;
@@ -1074,13 +1078,13 @@ nsNNTPArticleSet::LastMissingRange(PRInt32 min, PRInt32 max,
   PRInt32 a;
   PRInt32 b;
 
-  PR_ASSERT(first && last);
+  NS_ASSERTION(first && last, "invalid null param");
   if (!first || !last) return -1;
 
   *first = *last = 0;
 
 
-  PR_ASSERT(min <= max && min > 0);
+  NS_ASSERTION(min <= max && min > 0, "invalid min or max");
   if (min > max || min <= 0) return -1;
 
   size = m_length;
@@ -1124,23 +1128,23 @@ nsNNTPArticleSet::LastMissingRange(PRInt32 min, PRInt32 max,
 
 
 
-#ifdef DEBUG_sspitzer /* A buttload of test cases for the above */
+#ifdef DEBUG /* A lot of test cases for the above */
 
 #define countof(x) (sizeof(x) / sizeof(*(x)))
 
 void
-nsNNTPArticleSet::test_decoder (const char *string)
+nsMsgKeySet::test_decoder (const char *string)
 {
-	nsNNTPArticleSet set(string, NULL);
-	char* tmp = set.Output();
-	printf ("\t\"%s\"\t--> \"%s\"\n", string, tmp);
-	delete [] tmp;
+  nsMsgKeySet set(string /* , NULL */);
+  char* tmp = set.Output();
+  printf ("\t\"%s\"\t--> \"%s\"\n", string, tmp);
+  delete [] tmp;
 }
 
 
 #define START(STRING) \
   string = STRING;	  \
-  if (!(set = nsNNTPArticleSet::Create(string))) abort ()
+  if (!(set = nsMsgKeySet::Create(string))) abort ()
 
 #define FROB(N,PUSHP)									\
   i = N;												\
@@ -1154,7 +1158,7 @@ nsNNTPArticleSet::test_decoder (const char *string)
 	abort ();											\
   if (! (s = set->Output())) abort ();					\
   printf ("%3lu: %-58s optimized =\n", (unsigned long)set->m_length, s);	\
-  delete [] (s);											\
+  delete [] s;											\
 
 #define END()							   \
   if (!(s = set->Output())) abort ();	   \
@@ -1165,78 +1169,78 @@ nsNNTPArticleSet::test_decoder (const char *string)
 
 
 void
-nsNNTPArticleSet::test_adder (void)
+nsMsgKeySet::test_adder (void)
 {
   char *string;
-  nsNNTPArticleSet *set;
+  nsMsgKeySet *set;
   char *s;
   PRInt32 i;
 
   START("0-70,72-99,105,107,110-111,117-200");
 
-  FROB(205, PR_TRUE);
-  FROB(206, PR_TRUE);
-  FROB(207, PR_TRUE);
-  FROB(208, PR_TRUE);
-  FROB(208, PR_TRUE);
-  FROB(109, PR_TRUE);
-  FROB(72, PR_TRUE);
+  FROB(205, TRUE);
+  FROB(206, TRUE);
+  FROB(207, TRUE);
+  FROB(208, TRUE);
+  FROB(208, TRUE);
+  FROB(109, TRUE);
+  FROB(72, TRUE);
 
-  FROB(205, PR_FALSE);
-  FROB(206, PR_FALSE);
-  FROB(207, PR_FALSE);
-  FROB(208, PR_FALSE);
-  FROB(208, PR_FALSE);
-  FROB(109, PR_FALSE);
-  FROB(72, PR_FALSE);
+  FROB(205, FALSE);
+  FROB(206, FALSE);
+  FROB(207, FALSE);
+  FROB(208, FALSE);
+  FROB(208, FALSE);
+  FROB(109, FALSE);
+  FROB(72, FALSE);
 
-  FROB(72, PR_TRUE);
-  FROB(109, PR_TRUE);
-  FROB(208, PR_TRUE);
-  FROB(208, PR_TRUE);
-  FROB(207, PR_TRUE);
-  FROB(206, PR_TRUE);
-  FROB(205, PR_TRUE);
+  FROB(72, TRUE);
+  FROB(109, TRUE);
+  FROB(208, TRUE);
+  FROB(208, TRUE);
+  FROB(207, TRUE);
+  FROB(206, TRUE);
+  FROB(205, TRUE);
 
-  FROB(205, PR_FALSE);
-  FROB(206, PR_FALSE);
-  FROB(207, PR_FALSE);
-  FROB(208, PR_FALSE);
-  FROB(208, PR_FALSE);
-  FROB(109, PR_FALSE);
-  FROB(72, PR_FALSE);
+  FROB(205, FALSE);
+  FROB(206, FALSE);
+  FROB(207, FALSE);
+  FROB(208, FALSE);
+  FROB(208, FALSE);
+  FROB(109, FALSE);
+  FROB(72, FALSE);
 
-  FROB(100, PR_TRUE);
-  FROB(101, PR_TRUE);
-  FROB(102, PR_TRUE);
-  FROB(103, PR_TRUE);
-  FROB(106, PR_TRUE);
-  FROB(104, PR_TRUE);
-  FROB(109, PR_TRUE);
-  FROB(108, PR_TRUE);
+  FROB(100, TRUE);
+  FROB(101, TRUE);
+  FROB(102, TRUE);
+  FROB(103, TRUE);
+  FROB(106, TRUE);
+  FROB(104, TRUE);
+  FROB(109, TRUE);
+  FROB(108, TRUE);
   END();
 
-  START("1-6"); FROB(7, PR_FALSE); END();
-  START("1-6"); FROB(6, PR_FALSE); END();
-  START("1-6"); FROB(5, PR_FALSE); END();
-  START("1-6"); FROB(4, PR_FALSE); END();
-  START("1-6"); FROB(3, PR_FALSE); END();
-  START("1-6"); FROB(2, PR_FALSE); END();
-  START("1-6"); FROB(1, PR_FALSE); END();
-  START("1-6"); FROB(0, PR_FALSE); END();
+  START("1-6"); FROB(7, FALSE); END();
+  START("1-6"); FROB(6, FALSE); END();
+  START("1-6"); FROB(5, FALSE); END();
+  START("1-6"); FROB(4, FALSE); END();
+  START("1-6"); FROB(3, FALSE); END();
+  START("1-6"); FROB(2, FALSE); END();
+  START("1-6"); FROB(1, FALSE); END();
+  START("1-6"); FROB(0, FALSE); END();
 
-  START("1-3"); FROB(1, PR_FALSE); END();
-  START("1-3"); FROB(2, PR_FALSE); END();
-  START("1-3"); FROB(3, PR_FALSE); END();
+  START("1-3"); FROB(1, FALSE); END();
+  START("1-3"); FROB(2, FALSE); END();
+  START("1-3"); FROB(3, FALSE); END();
 
-  START("1,3,5-7,9,10"); FROB(5, PR_FALSE); END();
-  START("1,3,5-7,9,10"); FROB(6, PR_FALSE); END();
-  START("1,3,5-7,9,10"); FROB(7, PR_FALSE); FROB(7, PR_TRUE); FROB(8, PR_TRUE);
-  FROB (4, PR_TRUE); FROB (2, PR_FALSE); FROB (2, PR_TRUE);
+  START("1,3,5-7,9,10"); FROB(5, FALSE); END();
+  START("1,3,5-7,9,10"); FROB(6, FALSE); END();
+  START("1,3,5-7,9,10"); FROB(7, FALSE); FROB(7, TRUE); FROB(8, TRUE);
+  FROB (4, TRUE); FROB (2, FALSE); FROB (2, TRUE);
 
-  FROB (4, PR_FALSE); FROB (5, PR_FALSE); FROB (6, PR_FALSE); FROB (7, PR_FALSE);
-  FROB (8, PR_FALSE); FROB (9, PR_FALSE); FROB (10, PR_FALSE); FROB (3, PR_FALSE);
-  FROB (2, PR_FALSE); FROB (1, PR_FALSE); FROB (1, PR_FALSE); FROB (0, PR_FALSE);
+  FROB (4, FALSE); FROB (5, FALSE); FROB (6, FALSE); FROB (7, FALSE);
+  FROB (8, FALSE); FROB (9, FALSE); FROB (10, FALSE); FROB (3, FALSE);
+  FROB (2, FALSE); FROB (1, FALSE); FROB (1, FALSE); FROB (0, FALSE);
   END();
 }
 
@@ -1248,7 +1252,7 @@ nsNNTPArticleSet::test_adder (void)
 
 #define START(STRING) \
   string = STRING;	  \
-  if (!(set = nsNNTPArticleSet::Create(string))) abort ()
+  if (!(set = nsMsgKeySet::Create(string))) abort ()
 
 #define FROB(N,M)												\
   i = N;														\
@@ -1278,10 +1282,10 @@ nsNNTPArticleSet::test_adder (void)
 
 
 void
-nsNNTPArticleSet::test_ranges(void)
+nsMsgKeySet::test_ranges(void)
 {
   char *string;
-  nsNNTPArticleSet *set;
+  nsMsgKeySet *set;
   char *s;
   PRInt32 i;
   PRInt32 j;
@@ -1317,9 +1321,9 @@ nsNNTPArticleSet::test_ranges(void)
   delete [] s
 
 void
-nsNNTPArticleSet::test_member(PRBool with_cache)
+nsMsgKeySet::test_member(PRBool with_cache)
 {
-  nsNNTPArticleSet *set;
+  nsMsgKeySet *set;
   char *s;
 
   s = "1-70,72-99,105,107,110-111,117-200";
@@ -1381,8 +1385,8 @@ nsNNTPArticleSet::test_member(PRBool with_cache)
 //   if (! fp) abort ();
 //   while (fgets (buf, sizeof (buf), fp))
 // 	{
-// 	  if (!PL_strncmp (buf, "options ", 8))
-// 		fwrite (buf, 1, PL_strlen (buf), stdout);
+// 	  if (!strncmp (buf, "options ", 8))
+// 		fwrite (buf, 1, strlen (buf), stdout);
 // 	  else
 // 		{
 // 		  char *sep = buf;
@@ -1402,7 +1406,7 @@ nsNNTPArticleSet::test_member(PRBool with_cache)
 // 			  if (! ((s = msg_format_newsrc_set (set))))
 // 				abort ();
 // 			  msg_free_newsrc_set (set, &allocinfo);
-// 			  fwrite (s, 1, PL_strlen (s), stdout);
+// 			  fwrite (s, 1, strlen (s), stdout);
 // 			  free (s);
 // 			  fwrite ("\n", 1, 1, stdout);
 // 			}
@@ -1412,7 +1416,7 @@ nsNNTPArticleSet::test_member(PRBool with_cache)
 // }
 
 void
-nsNNTPArticleSet::RunTests ()
+nsMsgKeySet::RunTests ()
 {
 
   test_decoder ("");
@@ -1433,8 +1437,8 @@ nsNNTPArticleSet::RunTests ()
 
   test_ranges();
 
-  test_member (PR_FALSE);
-  test_member (PR_TRUE);
+  test_member (FALSE);
+  test_member (TRUE);
 
   // test_newsrc ("/u/montulli/.newsrc");
   /* test_newsrc ("/u/jwz/.newsrc");*/

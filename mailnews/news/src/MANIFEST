@@ -18,7 +18,6 @@
 
 nsNNTPProtocol.h
 nsNntpUrl.h
-nsNNTPArticleSet.h
 nsNNTPNewsgroupList.h
 nsNNTPNewsgroup.h
 nntpCore.h

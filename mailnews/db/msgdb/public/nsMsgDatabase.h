@@ -31,7 +31,7 @@
 
 class ListContext;
 class nsMsgKeyArray;
-class nsNewsSet;
+class nsMsgKeySet;
 class nsMsgThread;
 class nsIMsgThread;
 class nsIDBFolderInfo;
@@ -186,6 +186,11 @@ public:
 
   NS_IMETHOD GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
   NS_IMETHOD GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **result) ;
+
+  NS_IMETHOD GetMsgKeySet(nsMsgKeySet **pSet) ;
+
+  NS_IMETHOD                GetHighWaterArticleNum(nsMsgKey *key);
+  NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key);
   //////////////////////////////////////////////////////////////////////////////
   // nsMsgDatabase methods:
 	nsMsgDatabase();
@@ -287,7 +292,7 @@ protected:
 	nsIMdbStore	 	    *m_mdbStore;
 	nsIMdbTable		    *m_mdbAllMsgHeadersTable;
 	nsFileSpec		    m_dbName;
-	nsNewsSet		    *m_newSet;		// new messages since last open.
+	nsMsgKeySet		    *m_newSet;	// new messages since last open.
 	PRBool				m_mdbTokensInitialized;
     nsVoidArray/*<nsIDBChangeListener>*/ *m_ChangeListeners;
 	mdb_token			m_hdrRowScopeToken;
