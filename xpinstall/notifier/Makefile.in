@@ -22,6 +22,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = xpiflash
+LIBRARY_NAME = xpiflash
+IS_COMPONENT = 1
+
+CPPSRCS = \
+		nsXPIFlash.cpp \
+		$(NULL)
+
 EXPORT_RESOURCE_NOTIFIER = \
 		$(srcdir)/SoftwareUpdates.rdf \
 		$(srcdir)/SoftwareUpdate-Source-1.rdf \
