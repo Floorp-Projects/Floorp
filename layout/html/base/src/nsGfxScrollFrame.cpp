@@ -1643,23 +1643,17 @@ nsGfxScrollFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowSta
 
   nsresult rv;
   nsBoxInfo scrollAreaInfo, vboxInfo, hboxInfo;
-  nsIBox* ibox = nsnull;
-  rv = mInner->mScrollAreaFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox);
+  nsCOMPtr<nsIBox> ibox ( do_QueryInterface(mInner->mScrollAreaFrame) );
   if (ibox) ibox->GetBoxInfo(aPresContext, aReflowState, scrollAreaInfo);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Scrollarea must implement box!!");
 
   if (mInner->mHasVerticalScrollbar) {
-    ibox = nsnull;
-    mInner->mVScrollbarFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox);
-    if (ibox) ibox->GetBoxInfo(aPresContext, aReflowState, vboxInfo);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"Scrollarea must implement box!!");
+    nsCOMPtr<nsIBox> vScrollbarBox ( do_QueryInterface(mInner->mVScrollbarFrame) );
+    if (vScrollbarBox) vScrollbarBox->GetBoxInfo(aPresContext, aReflowState, vboxInfo);
   }
 
   if (mInner->mHasHorizontalScrollbar) {
-    ibox = nsnull;
-    mInner->mHScrollbarFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox);
-    if (ibox) ibox->GetBoxInfo(aPresContext, aReflowState, hboxInfo);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"Scrollarea must implement box!!");
+    nsCOMPtr<nsIBox> hScrollbarBox ( do_QueryInterface(mInner->mHScrollbarFrame) );
+    if (hScrollbarBox) hScrollbarBox->GetBoxInfo(aPresContext, aReflowState, hboxInfo);
   }
 
   aSize.prefSize.width += scrollAreaInfo.prefSize.width + vboxInfo.prefSize.width;
@@ -1766,11 +1760,10 @@ nsGfxScrollFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& a
         else if (frame == mInner->mScrollAreaFrame)
            mInner->mScrollAreaNeedsReflow = PR_TRUE;
  
-        nsIBox* ibox = nsnull;
-        rv = childFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox);
+        nsCOMPtr<nsIBox> ibox ( do_QueryInterface(childFrame, &rv) );
         NS_ASSERTION(NS_SUCCEEDED(rv),"We have a child that is not a box!!!!");
         if (NS_FAILED(rv))
-            return rv;
+          return rv;
 
         if (ibox) ibox->Dirty(aPresContext, aReflowState, incrementalChild);
         break;
