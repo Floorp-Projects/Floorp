@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Doug Turner <dougt@netscape.com>
+ *     IBM Corp.
  */
 
 #include "nsSpecialSystemDirectory.h"
@@ -340,7 +341,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             // printf( "*** Warning warning OS_DriveDirectory called for");
             
             ULONG ulBootDrive = 0;
-            char  buffer[] = " :\\OS2";
+            char  buffer[] = " :\\OS2\\";
             DosQuerySysInfo( QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
                              &ulBootDrive, sizeof ulBootDrive);
             buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
@@ -795,15 +796,45 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case OS2_SystemDirectory:
         {
             ULONG ulBootDrive = 0;
-            char  buffer[] = " :\\OS2\\System";
+            char  buffer[] = " :\\OS2\\System\\";
             DosQuerySysInfo( QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
                              &ulBootDrive, sizeof ulBootDrive);
             buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
             *this = buffer;
 #ifdef DEBUG
-            printf( "Got OS_SystemDirectory: %s\n", buffer);
+            printf( "Got OS2_SystemDirectory: %s\n", buffer);
 #endif
+            break;
         }
+
+     case OS2_OS2Directory:
+        {
+            ULONG ulBootDrive = 0;
+            char  buffer[] = " :\\OS2\\";
+            DosQuerySysInfo( QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
+                             &ulBootDrive, sizeof ulBootDrive);
+            buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
+            *this = buffer;
+#ifdef DEBUG
+            printf( "Got OS2_OS2Directory: %s\n", buffer);
+#endif
+            break;
+        }
+
+        case OS2_DesktopDirectory:
+        {
+            ULONG ulBootDrive = 0;
+            char  buffer[] = " :\\desktop\\";
+            DosQuerySysInfo( QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
+                             &ulBootDrive, sizeof ulBootDrive);
+            buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
+            *this = buffer;
+#ifdef DEBUG
+            printf( "Got OS2_DesktopDirectory: %s\n", buffer);
+#endif
+            break;           
+        }
+
 #endif
         default:
             break;    

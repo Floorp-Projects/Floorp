@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Doug Turner <dougt@netscape.com>
+ *     IBM Corp.
  */
 
 #ifndef _NSSPECIALSYSTEMDIRECTORY_H_
@@ -101,7 +102,9 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   BeOS_DesktopDirectory     =   403
         ,   BeOS_SystemDirectory      =   404
 
-        ,   OS2_SystemDirectory        =   501
+        ,   OS2_SystemDirectory       =   501
+        ,   OS2_OS2Directory          =   502
+        ,   OS2_DesktopDirectory      =   503
         };
 
                     //nsSpecialSystemDirectory();

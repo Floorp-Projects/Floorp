@@ -89,6 +89,8 @@ dump("Beos locations::\n");
 dump("OS2 locations::\n");
 // OS2
     dumpPathOfProperty ("system.SystemDirectory");
+    dumpPathOfProperty ("system.OS2Directory");
+    dumpPathOfProperty ("system.DesktopDirectory");
 
 
 // XPFE locations:
