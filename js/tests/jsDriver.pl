@@ -152,16 +152,9 @@ sub execute_tests {
         @output = <OUTPUT>;
         close (OUTPUT);
         
-        if ($os_type ne "WIN") {
-            # unix systems have signal information in the lower 8 bits
-            $got_exit = ($? >> 8);
-            $exit_signal = ($? & 255);
-        } else {
-            # windows doesn't have signal information at all, $? is the exit code
-            # period.
-            $got_exit = $?;
-            $exit_signal = 0;
-        }
+        # signal information in the lower 8 bits, exit code above that
+        $got_exit = ($? >> 8);
+        $exit_signal = ($? & 255);
 
         $failure_lines = "";
         $bug_line = "";
