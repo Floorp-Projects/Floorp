@@ -3449,7 +3449,9 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
   NS_ASSERTION((aIsOutline && aOutlineStyle) || (!aIsOutline && aBorderStyle), "null params not allowed");
   // set the style information
   if (!aIsOutline) {
-    GetBorderColor(ourColor, *aBorderStyle, aSide, sideColor);
+    if (!GetBorderColor(ourColor, *aBorderStyle, aSide, sideColor)) {
+      return;
+    }
   } else {
     aOutlineStyle->GetOutlineColor(sideColor);
   }
