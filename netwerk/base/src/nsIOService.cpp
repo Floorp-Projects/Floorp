@@ -30,8 +30,6 @@
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
 #include "prprf.h"
-#include "prmem.h"      // for PR_Malloc
-#include "prsystem.h"   // for PR_GetSystemInfo
 #include "nsLoadGroup.h"
 #include "nsInputStreamChannel.h"
 #include "nsXPIDLString.h" 
@@ -44,12 +42,7 @@ static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
-    : mAppName(nsnull),
-      mAppCodeName(nsnull),
-      mAppVersion(nsnull),
-      mAppLanguage(nsnull),
-      mAppPlatform(nsnull),
-      mOffline(PR_FALSE)
+    : mOffline(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -57,32 +50,14 @@ nsIOService::nsIOService()
 nsresult
 nsIOService::Init()
 {
-    nsresult rv;
-
-    // initialize the version and app components
-    mAppName = new nsCString("Netscape");
-    if (!mAppName) return NS_ERROR_OUT_OF_MEMORY;
-    mAppCodeName = new nsCString("Mozilla");
-    if (!mAppCodeName) return NS_ERROR_OUT_OF_MEMORY;
-    mAppVersion = new nsCString();
-    if (!mAppVersion) return NS_ERROR_OUT_OF_MEMORY;
-    mAppLanguage = new nsCString("en-US");
-    if (!mAppLanguage) return NS_ERROR_OUT_OF_MEMORY;
-
-    char platformBuf[SYS_INFO_BUFFER_LENGTH];
-    PRStatus status = PR_GetSystemInfo(PR_SI_SYSNAME, platformBuf, sizeof(char) * SYS_INFO_BUFFER_LENGTH);
-    if (PR_FAILURE == status)
-        return NS_ERROR_FAILURE;
-
-    mAppPlatform = new nsCString(platformBuf);
-    if (!mAppPlatform) return NS_ERROR_OUT_OF_MEMORY;
-
+    nsresult rv = NS_OK;
     // We need to get references to these services so that we can shut them
     // down later. If we wait until the nsIOService is being shut down,
     // GetService will fail at that point.
     rv = nsServiceManager::GetService(kSocketTransportServiceCID,
                                       NS_GET_IID(nsISocketTransportService),
                                       getter_AddRefs(mSocketTransportService));
+
     if (NS_FAILED(rv)) return rv;
     rv = nsServiceManager::GetService(kFileTransportService,
                                       NS_GET_IID(nsIFileTransportService),
@@ -96,17 +71,7 @@ nsIOService::Init()
 
 nsIOService::~nsIOService()
 {
-    nsresult rv;
-    rv = SetOffline(PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "SetOffline failed");
-    // shut down the file transport service too:
-    rv = mFileTransportService->Shutdown();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "file transport shutdown failed");
-    if (mAppName) delete mAppName;
-    if (mAppCodeName) delete mAppCodeName;
-    if (mAppVersion) delete mAppVersion;
-    if (mAppLanguage) delete mAppLanguage;
-    if (mAppPlatform) delete mAppPlatform;
+    (void)SetOffline(PR_TRUE);
 }
 
 NS_METHOD
@@ -298,72 +263,6 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
                              loadAttributes, originalURI, 
                              bufferSegmentSize, bufferMaxSize, result);
     return rv;
-}
-
-NS_IMETHODIMP
-nsIOService::GetAppCodeName(PRUnichar* *aAppCodeName)
-{
-    *aAppCodeName = mAppCodeName->ToNewUnicode();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::GetAppVersion(PRUnichar* *aAppVersion)
-{
-    *aAppVersion = mAppVersion->ToNewUnicode();
-    return NS_OK;
-}
-
-// This guy needs to be called each time one of it's comprising pieces changes.
-nsresult
-nsIOService::BuildAppVersion() {
-    // build up the app version
-    mAppVersion->Truncate();
-    mAppVersion->Append("5.0 [");
-    mAppVersion->Append(*mAppLanguage);
-    mAppVersion->Append("] (");
-    mAppVersion->Append(*mAppPlatform);
-    mAppVersion->Append("; I)");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::GetAppName(PRUnichar* *aAppName)
-{
-    *aAppName = mAppName->ToNewUnicode();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::GetLanguage(PRUnichar* *aLanguage)
-{
-    *aLanguage = mAppLanguage->ToNewUnicode();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::SetLanguage(const PRUnichar* aLanguage)
-{
-    nsCString lang(aLanguage);
-    mAppLanguage->SetString(lang);
-    return BuildAppVersion();
-}
-
-NS_IMETHODIMP
-nsIOService::GetPlatform(PRUnichar* *aPlatform)
-{
-    *aPlatform = mAppPlatform->ToNewUnicode();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::GetUserAgent(PRUnichar* *aUserAgent)
-{
-    char buf[200];
-    PR_snprintf(buf, 200, "%.100s/%.90s", mAppCodeName->GetBuffer(), mAppVersion->GetBuffer());
-    nsAutoString2 aUA(buf);
-    *aUserAgent = aUA.ToNewUnicode();
-    return NS_OK;
 }
 
 NS_IMETHODIMP
