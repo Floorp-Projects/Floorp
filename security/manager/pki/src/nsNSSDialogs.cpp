@@ -444,6 +444,25 @@ nsNSSDialogs::CrlNextupdate(nsITransportSecurityInfo *socketInfo,
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsNSSDialogs::CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICrlEntry *crl)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kPKIParamBlockCID,&rv);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  rv = block->SetISupportAtIndex(1, crl);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = nsNSSDialogHelper::openDialog(nsnull,
+                             "chrome://pippki/content/crlImportDialog.xul",
+                             block);
+  return NS_OK;
+}
+
 nsresult
 nsNSSDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx)
 {

@@ -31,6 +31,7 @@
 #include "nsISecurityManagerComponent.h"
 #include "nsISignatureVerifier.h"
 #include "nsIURIContentListener.h"
+#include "nsIStreamListener.h"
 #include "nsIEntropyCollector.h"
 #include "nsString.h"
 #include "nsIStringBundle.h"
@@ -39,6 +40,11 @@
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
+#include "nsNetUtil.h"
+#include "nsHashtable.h"
+#include "prlock.h"
 
 #include "nsNSSHelper.h"
 
@@ -56,6 +62,40 @@
 #define NS_PSMCONTENTLISTEN_CID {0xc94f4a30, 0x64d7, 0x11d4, {0x99, 0x60, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0}}
 #define NS_PSMCONTENTLISTEN_CONTRACTID "@mozilla.org/security/psmdownload;1"
 
+//--------------------------------------------
+// Now we need a content listener to register 
+//--------------------------------------------
+class PSMContentDownloader : public nsIStreamListener
+{
+public:
+  PSMContentDownloader() {NS_ASSERTION(PR_FALSE, "don't use this constructor."); }
+  PSMContentDownloader(PRUint32 type);
+  virtual ~PSMContentDownloader();
+  void setSilentDownload(PRBool flag);
+  void setCrlAutodownloadKey(nsAutoString key);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+
+  enum {UNKNOWN_TYPE = 0};
+  enum {X509_CA_CERT  = 1};
+  enum {X509_USER_CERT  = 2};
+  enum {X509_EMAIL_CERT  = 3};
+  enum {X509_SERVER_CERT  = 4};
+  enum {PKCS7_CRL = 5};
+
+protected:
+  char* mByteData;
+  PRInt32 mBufferOffset;
+  PRInt32 mContentLength;
+  PRUint32 mType;
+  PRBool mDoSilentDownload;
+  nsAutoString mCrlAutoDownloadKey;
+  nsCOMPtr<nsISecurityManagerComponent> mNSS;
+  nsCOMPtr<nsIURI> mURI;
+  nsresult handleContentDownloadError(nsresult errCode);
+};
 
 class NS_NO_VTABLE nsINSSComponent : public nsISupports {
  public:
@@ -77,6 +117,13 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_IMETHOD EnableOCSP() = 0;
 
   NS_IMETHOD RememberCert(CERTCertificate *cert) = 0;
+
+  NS_IMETHOD RemoveCrlFromList(nsAutoString) = 0;
+
+  NS_IMETHOD DefineNextTimer() = 0;
+
+  NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString) = 0;
+  
 };
 
 struct PRLock;
@@ -87,7 +134,8 @@ class nsNSSComponent : public nsISecurityManagerComponent,
                        public nsIEntropyCollector,
                        public nsINSSComponent,
                        public nsIObserver,
-                       public nsSupportsWeakReference
+                       public nsSupportsWeakReference,
+                       public nsITimerCallback
 {
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_NSSCOMPONENT_CID );
@@ -111,8 +159,13 @@ public:
                                            PRUnichar **outString);
   NS_IMETHOD DisableOCSP();
   NS_IMETHOD EnableOCSP();
+  nsresult InitializeCRLUpdateTimer();
+  nsresult StopCRLUpdateTimer();
+  NS_IMETHOD RemoveCrlFromList(nsAutoString);
+  NS_IMETHOD DefineNextTimer();
+  NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString);
   NS_IMETHOD RememberCert(CERTCertificate *cert);
-
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
 private:
 
   nsresult InitializeNSS();
@@ -125,22 +178,27 @@ private:
   nsresult RegisterObservers();
   static int PR_CALLBACK PrefChangedCallback(const char* aPrefName, void* data);
   void PrefChanged(const char* aPrefName);
-
+  nsresult DownloadCrlSilently();
+  nsresult PostCRLImportEvent(nsCAutoString *urlString, PSMContentDownloader *psmDownloader);
+  nsresult getParamsForNextCrlToDownload(nsAutoString *url, PRTime *time, nsAutoString *key);
   PRLock *mutex;
   
   nsCOMPtr<nsIScriptSecurityManager> mScriptSecurityManager;
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   nsCOMPtr<nsIURIContentListener> mPSMContentListener;
   nsCOMPtr<nsIPref> mPref;
+  nsCOMPtr<nsITimer> mTimer;
   PRBool mNSSInitialized;
   PRBool mObserversRegistered;
   PLHashTable *hashTableCerts;
+  nsAutoString mDownloadURL;
+  nsAutoString mCrlUpdateKey;
+  PRLock *mCrlTimerLock;
+  nsHashtable *crlsScheduledForDownload;
+  PRBool crlDownloadTimerOn;
+  PRBool mUpdateTimerInitialized;
   static int mInstanceCount;
 };
-
-//--------------------------------------------
-// Now we need a content listener to register 
-//--------------------------------------------
 
 class PSMContentListener : public nsIURIContentListener,
                             public nsSupportsWeakReference {

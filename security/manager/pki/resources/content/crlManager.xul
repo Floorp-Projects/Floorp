@@ -56,6 +56,10 @@
       <treecol flex="2" width="0"/>
       <splitter class="tree-splitter"/>
       <treecol flex="2" width="0"/>
+      <splitter class="tree-splitter"/>
+      <treecol flex="2" width="0"/>
+      <splitter class="tree-splitter"/>
+      <treecol flex="3" width="0"/>
     </treecolgroup>
     <treehead>
       <treerow>
@@ -67,6 +71,11 @@
                   label="&validation.crllastupdate.label;"/>
         <treecell class="treecell-header sortDirectionIndicator"
                   label="&validation.crlnextupdate.label;"/>
+        <treecell class="treecell-header sortDirectionIndicator"
+                  label="&validation.crlautoupdateenabled.label;"/>
+        <treecell class="treecell-header sortDirectionIndicator"
+                  label="&validation.crlautoupdatestatus.label;"/>
+
       </treerow>          
     </treehead>
     <treechildren id="crlList" flex="1"/>
@@ -75,6 +84,13 @@
     <button id="deleteCrl" disabled="true"
             label="&validation.deletecrl.label;"
             oncommand="DeleteCrlSelected();"/>
+    <button id="editPrefs" class="dialog push" disabled="true"
+            label="&validation.advanced.label;"
+            oncommand="EditAutoUpdatePrefs();"/>
+    <button id="updateCRL" class="dialog push" disabled="true"
+            label="&validation.updatecrl.label;"
+            oncommand="UpdateCRL();"/>
+
   </hbox>
   <separator class="thin"/>
 </window>
