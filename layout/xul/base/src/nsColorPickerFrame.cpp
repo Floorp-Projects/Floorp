@@ -51,7 +51,7 @@ NS_NewColorPickerFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-static NS_DEFINE_IID(kDefColorPickerCID, NS_DEFCOLORPICKER_CID);
+// static NS_DEFINE_IID(kDefColorPickerCID, NS_DEFCOLORPICKER_CID);
 
 //
 // nsColorPickerFrame cntr
@@ -171,7 +171,7 @@ nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
   // set the clip region
   PRInt32 width, height;
   mColorPicker->GetSize(&width, &height);
-  nsRect rect(0, 0, width*p2t, height*p2t);
+  nsRect rect(0, 0, PRInt32(width*p2t), PRInt32(height*p2t));
 
   PRBool clipState;
 
@@ -215,8 +215,8 @@ nsColorPickerFrame::GetDesiredSize(nsIPresContext* aPresContext,
   else
     aDesiredSize.height = -1;
 
-  mColorPicker->SetSize((aDesiredSize.width == -1) ? -1 : aDesiredSize.width /p2t,
-                        (aDesiredSize.height == -1) ? -1 : aDesiredSize.height/p2t);
+  mColorPicker->SetSize((aDesiredSize.width == -1) ? -1 : PRInt32(aDesiredSize.width/p2t),
+                        (aDesiredSize.height == -1) ? -1 : PRInt32(aDesiredSize.height/p2t));
 
 
   int width, height;
