@@ -21,7 +21,7 @@
 
 DEPTH=..
 
-DIRS=appshell AppCores bootstrap browser components global
+DIRS=appshell bootstrap browser components global
 
 include <$(DEPTH)\config\rules.mak>
 

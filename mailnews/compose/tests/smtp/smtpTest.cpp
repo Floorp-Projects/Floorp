@@ -65,7 +65,6 @@
 #else
 #define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
 #define PREF_DLL   "libpref"MOZ_DLL_SUFFIX
-#define APPCORES_DLL  "libappcores"MOZ_DLL_SUFFIX
 #define APPSHELL_DLL "libnsappshell"MOZ_DLL_SUFFIX
 #endif
 #endif

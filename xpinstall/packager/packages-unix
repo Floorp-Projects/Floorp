@@ -23,7 +23,6 @@ bin/component.reg
 [browser]
 bin/mozilla
 bin/mozilla-bin
-bin/libappcores.so
 bin/libdocshell.so
 bin/libgfx_gtk.so
 bin/libgtksuperwin.so
@@ -40,7 +39,6 @@ bin/regxpcom
 bin/vreg
 
 bin/components/addrbook.xpt
-bin/components/appcores.xpt
 bin/components/appshell.xpt
 bin/components/bookmarks.xpt
 bin/components/caps.xpt

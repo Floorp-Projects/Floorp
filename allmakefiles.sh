@@ -546,11 +546,6 @@ xpinstall/res/skin/Makefile
 xpinstall/src/Makefile
 xpinstall/stub/Makefile
 xpfe/Makefile
-xpfe/AppCores/Makefile
-xpfe/AppCores/public/Makefile
-xpfe/AppCores/src/Makefile
-xpfe/AppCores/xul/Makefile
-xpfe/AppCores/idl/Makefile
 xpfe/browser/Makefile
 xpfe/browser/public/Makefile
 xpfe/browser/src/Makefile

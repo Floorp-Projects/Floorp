@@ -59,7 +59,6 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\lwbrk                \
       -I$(PUBLIC)\unicharutil           \
       -I$(PUBLIC)\intl                  \
-      -I$(PUBLIC)\appcores				\
       -I$(PUBLIC)\xpfe\components       \
       -I$(PUBLIC)\oji                   \
 !ifdef MOZ_FULLCIRCLE
