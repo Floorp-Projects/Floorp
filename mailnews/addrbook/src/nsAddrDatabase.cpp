@@ -2154,7 +2154,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 		tempCString = tempString.ToNewCString();
 		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
 		newCard->SetDisplayName(unicodeStr);
-		delete [] tempCString;
+		nsAllocator::Free(tempCString);
 		PR_Free(unicodeStr);
 	}
 

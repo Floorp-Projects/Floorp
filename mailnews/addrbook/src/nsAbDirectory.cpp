@@ -287,7 +287,7 @@ NS_IMETHODIMP nsAbDirectory::AddChildCards(const char *uriName, nsIAbCard **chil
 			return rv;
 		}
 	}
-	delete[] uriStr;
+	nsAllocator::Free(uriStr);
 
 	*childCard = personCard;
 	NS_ADDREF(*childCard);
