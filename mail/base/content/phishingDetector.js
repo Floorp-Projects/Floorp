@@ -201,7 +201,8 @@ function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
 function isIPv4HostName(aHostName)
 {
   var ipv4HostRegExp = new RegExp(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/);  // IPv4
-  if (ipv4HostRegExp.test(aHostName))
+  // treat 0.0.0.0 as an invalid IP address
+  if (ipv4HostRegExp.test(aHostName) && aHostName != '0.0.0.0')
     return true;
   else
     return false;
