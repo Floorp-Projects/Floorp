@@ -2425,7 +2425,6 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
   mCurrentTargetContent = aTargetContent;
   mCurrentRelatedContent = aRelatedContent;
 
-  mDOMEventLevel++;
   BeforeDispatchEvent();
   nsIFrame* targetFrame = aTargetFrame;
   if (aTargetContent) {
@@ -2435,7 +2434,11 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
     if (mClearedFrameRefsDuringEvent) {
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
-      shell->GetPrimaryFrameFor(aTargetContent, &targetFrame);
+      if (shell) {
+        shell->GetPrimaryFrameFor(aTargetContent, &targetFrame);
+      } else {
+        targetFrame = nsnull;
+      }
     }
   }
   if (targetFrame) {
