@@ -54,7 +54,7 @@ LIBS		= \
 		-lhttpurl \
 		-lpwcac \
 		-l$(MOZ_LIB_JS_PREFIX)js \
-		-lgfx$(MOZ_TOOLKIT) \
+		-lgfx$(MOZ_GFX_TOOLKIT) \
 		-lraptorgfx \
 		-limg	\
 		-lmozutil \

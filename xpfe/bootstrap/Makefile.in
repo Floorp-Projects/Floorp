@@ -25,19 +25,19 @@ MODULE		= apprunner
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq ($(MOZ_TOOLKIT),beos)
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = apprunner-beos.rsrc
 endif
 
 
-TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
-TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
+TOOLKIT_GFX_LIB     = -lgfx$(MOZ_GFX_TOOLKIT)
+TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_WIDGET_TOOLKIT)
 
 # Hardcoding dlopen()'s?  This needs to get fixed.
 #
 TOOLKIT_CFLAGS := \
-       -DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
-       -DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+       -DWIDGET_DLL=\"libwidget$(MOZ_WIDGET_TOOLKIT).$(DLL_SUFFIX)\" \
+       -DGFXWIN_DLL=\"libgfx$(MOZ_GFX_TOOLKIT).$(DLL_SUFFIX)\" \
        $(TK_CFLAGS)
 
 ifndef NECKO

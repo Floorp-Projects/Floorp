@@ -44,16 +44,6 @@ EXPORTS = \
 	nsIThread.h            \
 	$(NULL)			
 
-ifdef TIMER_IN_XPCOM
-CPPSRCS += nsTimer_$(MOZ_TOOLKIT).cpp
-
-EXPORTS += \
-	nsITimer.h             \
-	nsITimerCallback.h     \
-	$(NULL)			
-endif
-
-
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 LOCAL_INCLUDES = -I$(srcdir)/../components
@@ -67,13 +57,6 @@ MKSHLIB :=
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
-
-ifdef TIMER_IN_XPCOM
-# For nsTimer_$(MOZ_TOOLKIT).cpp
-# The following is required by gtk, xlib, photon
-# motif and rhapsody didn't need it
-CXXFLAGS	+= $(TK_CFLAGS)
-endif
 
 include $(topsrcdir)/config/rules.mk
 
