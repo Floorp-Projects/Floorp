@@ -778,6 +778,13 @@ nsHTMLElement gHTMLElements[] = {
     /*special properties*/              0,
     /*special parents,kids,skip*/       &gParamParents,0,eHTMLTag_unknown},
 
+  { /*tag*/                             eHTMLTag_parsererror,
+	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+    /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,
+    /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlow), kNone,	
+    /*special properties*/              0,
+    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+
   { /*tag*/                             eHTMLTag_plaintext,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
@@ -845,6 +852,13 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+    /*special properties*/              0,
+    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+
+  { /*tag*/                             eHTMLTag_sourcetext,
+	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+    /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,
+    /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlow), kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
