@@ -326,6 +326,8 @@ struct MWContext_ {
     LO_TabFocusData *tab_focus_data;
 
     void *ncast_channel_context;
+  /* if the window is displaying an XML file, keep a pointer to the XML file structure here */
+    void*   xmlfile;
 };
 
 

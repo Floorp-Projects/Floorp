@@ -743,6 +743,31 @@ ET_HandlePref(JSContext * cx, uint argc, jsval * argv, jsval * rval);
 extern void
 ET_SetPluginWindow(MWContext * pContext, void * app);
 
+#ifdef DOM
+typedef enum { 
+    SP_SetColor,
+    SP_SetBackground,
+	SP_SetFontWeight,
+	SP_SetFontFamily,
+    SP_SetFontSize,
+    SP_SetFontSlant
+} ETSpanOp;
+
+extern int
+ET_TweakSpan(MWContext * context, void *name_rec, void *param_ptr,
+	int32 param_val, ETSpanOp op, int32 doc_id);
+
+typedef enum { 
+    TR_SetHref,
+    TR_SetVisibility,
+	TR_SetData
+} ETTransclusionOp;
+
+extern int
+ET_TweakTransclusion(MWContext * context, void *xmlFile, void *param_ptr,
+	int32 param_val, ETTransclusionOp op, int32 doc_id);
+#endif
+
 NSPR_END_EXTERN_C
 
 #endif /* libevent_h___ */
