@@ -199,6 +199,10 @@ sub show_graph {
   #
   # lt: 0=grey, 1=red, 2=green, 3=blue, 4=cyan, 5=magenta, 6=yellow,
   #     7=dk.red, 8=dk.green, 9=dk.blue
+  #
+  # gnuplot 3.7: "linestyle"
+  # gnuplot 4.0: "style line"
+  #
   my $cmds = qq{
 				reset
                 $graph_size
