@@ -52,6 +52,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsVoidArray.h"
 #include "nsSupportsArray.h"
+#include "prprf.h"
 
 // For Prefs
 #include "nsIPrefBranch.h"
@@ -1099,7 +1100,7 @@ nsresult nsPrintOptions::ReadPrefDouble(const char * aPrefId,
   nsresult rv = mPrefBranch->GetCharPref(aPrefId, &str);
   if (NS_SUCCEEDED(rv) && str) {
     float f;
-    sscanf(str, "%f", &f);
+    PR_sscanf(str, "%f", &f);
     aVal = double(f);
     nsMemory::Free(str);
   }
