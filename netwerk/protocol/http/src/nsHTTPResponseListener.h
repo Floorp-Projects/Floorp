@@ -66,6 +66,11 @@ public:
     NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
 protected:
+    // nsHTTPResponseListener methods...
+    nsresult FireOnHeadersAvailable(nsISupports* aContext);
+
+
+protected:
     PRBool              m_bHeadersDone;
     PRBool              m_bFirstLineParsed;
     nsHTTPResponse*     m_pResponse;
