@@ -2008,7 +2008,31 @@ nsSelection::IntraLineMove(PRBool aForward, PRBool aExtend)
 
 NS_IMETHODIMP nsSelection::SelectAll()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIContent> rootContent;
+  if (mLimiter)
+  {
+    rootContent = mLimiter;//addrefit
+  }
+  else
+  {
+    nsresult rv;
+    nsCOMPtr<nsIPresShell> shell(do_QueryInterface(mTracker,&rv));
+    if (NS_FAILED(rv) || !shell) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDocument> doc;
+    rv = shell->GetDocument(getter_AddRefs(doc));
+    if (NS_FAILED(rv) || !doc)
+      return rv?rv:NS_ERROR_FAILURE;
+    rootContent = getter_AddRefs(doc->GetRootContent());
+    if (!rootContent)
+      return NS_ERROR_FAILURE;
+  }
+  PRInt32 numChildren;
+  rootContent->ChildCount(numChildren);
+  PostReason(nsIDOMSelectionListener::NO_REASON);
+  return TakeFocus(mLimiter, 0, numChildren, PR_FALSE, PR_FALSE);
 }
 
 //////////END FRAMESELECTION
