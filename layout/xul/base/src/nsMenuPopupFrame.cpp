@@ -337,35 +337,35 @@ nsMenuPopupFrame :: AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioY
                                                     const nsString& aPopupAnchor, const nsString& aPopupAlign,
                                                     PRBool* outFlushWithTopBottom )
 {
-  if (aPopupAnchor.EqualsWithConversion("topright") && aPopupAlign.EqualsWithConversion("topleft")) {
+  if (aPopupAnchor == NS_LITERAL_STRING("topright") && aPopupAlign == NS_LITERAL_STRING("topleft")) {
     *ioXPos += inParentRect.width;
   }
-  else if (aPopupAnchor.EqualsWithConversion("topright") && aPopupAlign.EqualsWithConversion("bottomright")) {
+  else if (aPopupAnchor == NS_LITERAL_STRING("topright") && aPopupAlign == NS_LITERAL_STRING("bottomright")) {
     *ioXPos -= (mRect.width - inParentRect.width);
     *ioYPos -= mRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (aPopupAnchor.EqualsWithConversion("bottomright") && aPopupAlign.EqualsWithConversion("bottomleft")) {
+  else if (aPopupAnchor == NS_LITERAL_STRING("bottomright") && aPopupAlign == NS_LITERAL_STRING("bottomleft")) {
     *ioXPos += inParentRect.width;
     *ioYPos -= (mRect.height - inParentRect.height);
   }
-  else if (aPopupAnchor.EqualsWithConversion("bottomright") && aPopupAlign.EqualsWithConversion("topright")) {
+  else if (aPopupAnchor == NS_LITERAL_STRING("bottomright") && aPopupAlign == NS_LITERAL_STRING("topright")) {
     *ioXPos -= (mRect.width - inParentRect.width);
     *ioYPos += inParentRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (aPopupAnchor.EqualsWithConversion("topleft") && aPopupAlign.EqualsWithConversion("topright")) {
+  else if (aPopupAnchor == NS_LITERAL_STRING("topleft") && aPopupAlign == NS_LITERAL_STRING("topright")) {
     *ioXPos -= mRect.width;
   }
-  else if (aPopupAnchor.EqualsWithConversion("topleft") && aPopupAlign.EqualsWithConversion("bottomleft")) {
+  else if (aPopupAnchor == NS_LITERAL_STRING("topleft") && aPopupAlign == NS_LITERAL_STRING("bottomleft")) {
     *ioYPos -= mRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (aPopupAnchor.EqualsWithConversion("bottomleft") && aPopupAlign.EqualsWithConversion("bottomright")) {
+  else if (aPopupAnchor == NS_LITERAL_STRING("bottomleft") && aPopupAlign == NS_LITERAL_STRING("bottomright")) {
     *ioXPos -= mRect.width;
     *ioYPos -= (mRect.height - inParentRect.height);
   }
-  else if (aPopupAnchor.EqualsWithConversion("bottomleft") && aPopupAlign.EqualsWithConversion("topleft")) {
+  else if (aPopupAnchor == NS_LITERAL_STRING("bottomleft") && aPopupAlign == NS_LITERAL_STRING("topleft")) {
     *ioYPos += inParentRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
@@ -729,10 +729,10 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   
   nsAutoString shouldDisplay, menuActive;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, menuActive);
-  if (!menuActive.EqualsWithConversion("true")) {
+  if (menuActive != NS_LITERAL_STRING("true")) {
     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
-    if ( shouldDisplay.EqualsWithConversion("true") )
-      mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+    if ( shouldDisplay == NS_LITERAL_STRING("true") )
+      mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
   }
 
   return NS_OK;
@@ -1209,9 +1209,9 @@ nsMenuPopupFrame::InstallKeyboardNavigator()
   mKeyboardNavigator = new nsMenuListener(this);
   NS_IF_ADDREF(mKeyboardNavigator);
 
-  target->AddEventListener(NS_ConvertASCIItoUCS2("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE); 
-  target->AddEventListener(NS_ConvertASCIItoUCS2("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);  
-  target->AddEventListener(NS_ConvertASCIItoUCS2("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);   
+  target->AddEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE); 
+  target->AddEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);  
+  target->AddEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);   
   
   return NS_OK;
 }
@@ -1222,9 +1222,9 @@ nsMenuPopupFrame::RemoveKeyboardNavigator()
   if (!mKeyboardNavigator)
     return NS_OK;
 
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   
   NS_IF_RELEASE(mKeyboardNavigator);
 
@@ -1250,7 +1250,7 @@ nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
 {
   nsString disabled;
   aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled.EqualsWithConversion("true"))
+  if (disabled == NS_LITERAL_STRING("true"))
     return PR_TRUE;
   return PR_FALSE;
 }

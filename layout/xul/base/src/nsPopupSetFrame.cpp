@@ -472,7 +472,7 @@ nsPopupSetFrame::CreatePopup(nsIContent* aElementContent, nsIContent* aPopupCont
   // determine if this menu is a context menu and flag it
   nsIFrame* activeChild = GetActiveChild();
   nsCOMPtr<nsIMenuParent> childPopup ( do_QueryInterface(activeChild) );
-  if ( childPopup && aPopupType.EqualsWithConversion("context") )
+  if ( childPopup && aPopupType == NS_LITERAL_STRING("context") )
     childPopup->SetIsContextMenu(PR_TRUE);
 
   // Now we'll have it in our child frame list.
@@ -524,7 +524,7 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
     nsAutoString value;
     childContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
                                value);
-    if (value.EqualsWithConversion("true")) {
+    if (value == NS_LITERAL_STRING("true")) {
       // Ungenerate this element.
       childContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated,
                                    PR_TRUE);
@@ -536,9 +536,9 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
   nsAutoString value;
   aPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
                               value);
-  if (!value.EqualsWithConversion("true")) {
+  if (value != NS_LITERAL_STRING("true")) {
     // Generate this element.
-    aPopupContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_ConvertASCIItoUCS2("true"),
+    aPopupContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_LITERAL_STRING("true"),
                                 PR_TRUE);
   }
 }
@@ -552,7 +552,7 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     // register the rollup listeners, etc, but not if we're a tooltip
     nsIFrame* activeChild = GetActiveChild();
     nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);
-    if ( ! mPopupType.EqualsWithConversion("tooltip") )
+    if ( mPopupType != NS_LITERAL_STRING("tooltip") )
       UpdateDismissalListener(childPopup);
     
     // First check and make sure this popup wants keyboard navigation
@@ -562,9 +562,9 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     nsAutoString property;    
     // Tooltips don't get keyboard navigation
     content->GetAttribute(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
-    if ( ! property.EqualsWithConversion("true") && 
+    if ( property != NS_LITERAL_STRING("true") && 
            childPopup &&
-         ! mPopupType.EqualsWithConversion("tooltip") )
+          mPopupType != NS_LITERAL_STRING("tooltip") )
       childPopup->InstallKeyboardNavigator();
 
   }
@@ -573,7 +573,7 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
       return;
 
     // Unregister, but not if we're a tooltip
-    if ( ! mPopupType.EqualsWithConversion("tooltip") ) {
+    if ( mPopupType != NS_LITERAL_STRING("tooltip") ) {
       if (nsMenuFrame::mDismissalListener)
         nsMenuFrame::mDismissalListener->Unregister();
     }
@@ -598,7 +598,7 @@ nsPopupSetFrame::ActivatePopup(PRBool aActivateFlag)
     // is set by setting the |menuactive| attribute. This used to trip css into showing the menu
     // but now we do it ourselves. 
     if (aActivateFlag)
-      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, NS_LITERAL_STRING("true"), PR_TRUE);
     else {
       content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
       content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);
