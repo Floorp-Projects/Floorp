@@ -41,6 +41,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-cookies.xul \
 		$(srcdir)/pref-colors.js \
 		$(srcdir)/pref-themes.xul \
+		$(srcdir)/pref-themes.js \
 		$(srcdir)/pref-composer.xul \
 		$(srcdir)/pref-composer.js \
 		$(srcdir)/pref-debug.xul \
