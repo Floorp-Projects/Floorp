@@ -2087,13 +2087,13 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
                                 nscoord aDX,
                                 nscoord aDY)
 {
-//PRInt16       theRadius;
-//nsStyleCoord  borderRadius;
-PRBool        transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
-                                (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-float         percent;
-nsStyleCoord  bordStyleRadius[4];
-PRInt16       borderRadii[4],i;
+  NS_ASSERTION(aForFrame, "Frame is expected to be provided to PaintBackground");
+
+  PRBool        transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
+                                  (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+  float         percent;
+  nsStyleCoord  bordStyleRadius[4];
+  PRInt16       borderRadii[4],i;
 
   if (0 < aColor.mBackgroundImage.Length()) {
 
@@ -2158,6 +2158,7 @@ PRInt16       borderRadii[4],i;
     PRBool  needBackgroundColor = PR_TRUE;
     PRIntn  repeat = aColor.mBackgroundRepeat;
     nscoord xDistance, yDistance;
+    PRBool needBackgroundOnContinuation = PR_FALSE; // set to true if repeat-y value is set
 
     switch (repeat) {
     case NS_STYLE_BG_REPEAT_OFF:
@@ -2172,10 +2173,12 @@ PRInt16       borderRadii[4],i;
     case NS_STYLE_BG_REPEAT_Y:
       xDistance = tileWidth;
       yDistance = dirtyRect.height;
+      needBackgroundOnContinuation = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_XY:
       xDistance = dirtyRect.width;
       yDistance = dirtyRect.height;
+      needBackgroundOnContinuation = PR_TRUE;
       // We need to render the background color if the image is transparent
       needBackgroundColor = image->GetHasAlphaMask();
       break;
@@ -2192,6 +2195,20 @@ PRInt16       borderRadii[4],i;
     if ((tileWidth == 0) || (tileHeight == 0) || dirtyRect.IsEmpty()) {
       // Nothing to paint
       return;
+    }
+
+    // if the frame is a continuation frame, check if we need to draw the image for it
+    // (continuation with no repeat setting in the Y direction do not get background images)
+    if (aForFrame) {
+      nsIFrame *prevInFlowFrame = nsnull;
+      aForFrame->GetPrevInFlow(&prevInFlowFrame);
+      if (prevInFlowFrame != nsnull) {
+        if (!needBackgroundOnContinuation) {
+          // the frame is a continuation, and we do not want the background image repeated
+          // in the Y direction (needBackgroundOnContinuation == PR_FALSE) so just bail
+          return;
+        }
+      }
     }
 
     // If it's a fixed background attachment, then get the nearest scrolling
