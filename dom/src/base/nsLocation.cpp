@@ -180,6 +180,8 @@ NS_IMETHODIMP_(void) LocationImpl::SetDocShell(nsIDocShell *aDocShell)
 nsresult
 LocationImpl::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 {
+  *aLoadInfo = nsnull;
+
   nsresult result;
   // Get JSContext from stack.
   nsCOMPtr<nsIJSContextStack>
@@ -192,6 +194,16 @@ LocationImpl::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
   if (NS_FAILED(stack->Peek(&cx)))
     return NS_ERROR_FAILURE;
+
+  if (!cx) {
+    // No cx means that there's no JS running, or at least no JS that
+    // was run through code that properly pushed a context onto the
+    // context stack (as all code that runs JS off of web pages
+    // does). Going further from here will crash, so lets not do
+    // that...
+
+    return NS_OK;
+  }
 
   // Get security manager.
   nsCOMPtr<nsIScriptSecurityManager>
