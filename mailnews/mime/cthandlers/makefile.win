@@ -21,6 +21,9 @@
 
 DEPTH=..\..\..
 
+!if defined (BUILD_PSM2)
+BUILD_SMIME=1
+!endif
 
 DIRS=	glue vcard \
 	resources \

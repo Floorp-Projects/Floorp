@@ -21,6 +21,10 @@
 
 DEPTH=..\..
 
+!if defined(BUILD_PSM2)
+BUILD_SMIME=1
+!endif
+
 !if defined(BUILD_SMIME)
 DIRS=smime
 !endif

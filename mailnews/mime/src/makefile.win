@@ -81,6 +81,10 @@ LIBRARY_NAME=mime_s
 
 DEFINES= -DEBUG_rhp
 
+!if defined (BUILD_PSM2)
+BUILD_SMIME=1
+!endif
+
 !if defined(BUILD_SMIME)
 DEFINES = -DENABLE_SMIME $(DEFINES)
 !endif
