@@ -37,7 +37,7 @@
 typedef PRUint16 PRUnichar;
 #endif
 
-/// The preferred symbol for null.
+/* The preferred symbol for null. */
 #define nsnull 0
 
 /* Define brackets for protecting C code from C++ */
@@ -56,8 +56,8 @@ typedef PRUint16 PRUnichar;
 #define NS_IMPORT _declspec(dllimport)
 #define NS_IMPORT_(type) type _declspec(dllimport) __stdcall
 #define NS_EXPORT _declspec(dllexport)
-// XXX NS_EXPORT_ defined in nsCOm.h (xpcom) differs in where the __declspec
-// is placed. It needs to be done this way to make the 4.x compiler happy...
+/* XXX NS_EXPORT_ defined in nsCOm.h (xpcom) differs in where the __declspec
+   is placed. It needs to be done this way to make the 4.x compiler happy... */
 #undef NS_EXPORT_
 #define NS_EXPORT_(type) type _declspec(dllexport) __stdcall
 #elif defined(XP_MAC)
@@ -65,7 +65,7 @@ typedef PRUint16 PRUnichar;
 #define NS_IMPORT
 #define NS_IMPORT_(type) type
 
-// XXX NS_EXPORT_ defined in nsCom.h actually does an export. Here it's just sugar.
+/* XXX NS_EXPORT_ defined in nsCom.h actually does an export. Here it's just sugar. */
 #undef NS_EXPORT
 #undef NS_EXPORT_
 
@@ -140,11 +140,11 @@ typedef PRUint16 PRUnichar;
 
 
 /* ------------------------------------------------------------------------ */
-// Casting macros for hiding C++ features from older compilers
+/* Casting macros for hiding C++ features from older compilers */
 
-// unix now determines this automatically
+/* unix now determines this automatically */
 #ifndef XP_UNIX
-#define HAVE_CPP_NEW_CASTS // we'll be optimistic.
+#define HAVE_CPP_NEW_CASTS /* we'll be optimistic. */
 #endif
 
 #if defined(HAVE_CPP_NEW_CASTS)
@@ -157,8 +157,8 @@ typedef PRUint16 PRUnichar;
 #define NS_REINTERPRET_CAST(__type, __ptr) ((__type)(__ptr))
 #endif
 
-// No sense in making an NS_DYNAMIC_CAST() macro: you can't duplicate
-// the semantics. So if you want to dynamic_cast, then just use it
-// "straight", no macro.
+/* No sense in making an NS_DYNAMIC_CAST() macro: you can't duplicate
+   the semantics. So if you want to dynamic_cast, then just use it
+   "straight", no macro. */
 
 #endif /* nscore_h___ */
