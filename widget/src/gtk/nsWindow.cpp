@@ -1734,6 +1734,35 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   }
   return NS_OK;
 }
+//-------------------------------------------------------------------------
+//
+// Scroll the bits of a window
+//
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
+{
+  UnqueueDraw();
+  mUpdateArea->Offset(aDx, aDy);
+  //  printf("mScrollExposeCounter++ = %i\n", mScrollExposeCounter);
+  mScrollExposeCounter++;
+
+  if (mSuperWin) {
+    // save the old backing color
+    nscolor currentColor = GetBackgroundColor();
+    // this isn't too painful to do right before a scroll.
+    // as owen says "it's just 12 bytes sent to the server."
+    // and it makes scrolling look a lot better while still
+    // preserving the gray color when you drag another window
+    // on top or when just creating a window
+    gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
+    // scroll baby, scroll!
+    gdk_superwin_scroll(mSuperWin, aDx, aDy);
+    // reset the color
+    SetBackgroundColor(currentColor);
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsWindow::ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy)
 {
