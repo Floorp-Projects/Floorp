@@ -41,7 +41,7 @@
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
     <command id="Browser:SendLink" oncommand="sendLink(Components.lookupMethod(window._content, 'location').call(window._content).href,
                                               Components.lookupMethod(window._content.document, 'title').call(window._content.document));"/>
-    <command id="Browser:Print" oncommand="PrintUtils.print();"/>
+    <command id="cmd_print" oncommand="PrintUtils.print();"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
     <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
     <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>
