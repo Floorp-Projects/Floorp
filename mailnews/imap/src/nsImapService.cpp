@@ -50,6 +50,7 @@
 #include "nsFileLocations.h"
 #include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgFolderFlags.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
@@ -139,6 +140,11 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
                   "Oops ... null pointer");
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
+
+    PRBool noSelect = PR_FALSE;
+    aImapMailFolder->GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
+
+    if (noSelect) return NS_OK;
 
 	nsCOMPtr<nsIImapUrl> imapUrl;
 	nsCAutoString urlSpec;

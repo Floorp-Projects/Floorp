@@ -233,6 +233,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
 	if(NS_FAILED(rv))
 		return rv;
 
+    PRInt32 flags = 0;
 	nsAutoString uri;
 	uri.Append(mURI);
 	uri.Append('/');
@@ -251,9 +252,18 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
 	if (NS_FAILED(rv))
 		return rv;        
 
+    nsCOMPtr<nsIDBFolderInfo> folderInfo;
+    nsCOMPtr<nsIMsgDatabase> folderDB;
+    rv = folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo),
+                                      getter_AddRefs(folderDB));
+    if (NS_SUCCEEDED(rv) && folderInfo)
+        folderInfo->GetFlags(&flags);
+    folderInfo = null_nsCOMPtr();
+
     folder->SetParent(this);
 	nsAllocator::Free(uriStr);
-	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
+
+	flags |= MSG_FOLDER_FLAG_MAIL;
 
 	PRBool isServer;
     rv = GetIsServer(&isServer);
@@ -263,16 +273,20 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
 	{
 
 		if(name->Compare("Inbox", PR_TRUE) == 0)
-			folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
+			flags |= MSG_FOLDER_FLAG_INBOX;
 		else if(name->Compare("Trash", PR_TRUE) == 0)
-			folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
+			flags |= MSG_FOLDER_FLAG_TRASH;
+#if 0
 		else if(name->Compare("Sent", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
 		else if(name->Compare("Drafts", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
 		else if (name->Compare("Templates", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
+#endif 
 	}
+
+    folder->SetFlags(flags);
 	//at this point we must be ok and we don't want to return failure in case GetIsServer failed.
 	rv = NS_OK;
 
@@ -386,9 +400,11 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 
 NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
 {
+    PRBool isServer;
+    nsresult rv = GetIsServer(&isServer);
+
     if (!m_initialized)
     {
-        nsresult rv = NS_OK;
 		nsCOMPtr<nsIFileSpec> pathSpec;
 		rv = GetPath(getter_AddRefs(pathSpec));
 		if (NS_FAILED(rv)) return rv;
@@ -398,8 +414,6 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
 		if (NS_FAILED(rv)) return rv;
 
 		// host directory does not need .sbd tacked on
-        PRBool isServer;
-        rv = GetIsServer(&isServer);
 		if (NS_SUCCEEDED(rv) && !isServer)
 			rv = AddDirectorySeparator(path);
 
@@ -425,7 +439,11 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
         if (NS_FAILED(rv)) return rv;
         m_initialized = PR_TRUE;      // XXX do this on failure too?
     }
-    return mSubFolders->Enumerate(result);
+    rv = mSubFolders->Enumerate(result);
+    if (isServer)
+        // *** Set identity pref default folder flags
+        SetPrefFlag();
+    return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::AddUnique(nsISupports* element)
@@ -774,6 +792,24 @@ NS_IMETHODIMP nsImapMailFolder::SetBoxFlags(PRInt32 aBoxFlags)
     else
         mFlags &= ~MSG_FOLDER_FLAG_IMAP_PERSONAL;
 
+
+    {
+        nsCOMPtr<nsIMsgDatabase> db;
+        nsCOMPtr<nsIDBFolderInfo> folderInfo;
+        nsresult rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo),
+                                           getter_AddRefs(db));
+        if (NS_SUCCEEDED(rv) && folderInfo)
+        {
+            PRInt32 flags = 0;
+            rv = folderInfo->GetFlags(&flags);
+            if ((PRUint32)flags != mFlags)
+            {
+                folderInfo->SetFlags((PRInt32)mFlags);
+                db->Commit(nsMsgDBCommitType::kLargeCommit);
+            }
+        }
+    }
+
 	return NS_OK;
 }
 
@@ -800,6 +836,11 @@ NS_IMETHODIMP nsImapMailFolder::SetExplicitlyVerify(PRBool aExplicitlyVerify)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMailFolder::GetNoSelect(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  return GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, aResult);
+}
 
 NS_IMETHODIMP nsImapMailFolder::Compact()
 {
@@ -1212,8 +1253,8 @@ NS_IMETHODIMP nsImapMailFolder::GetOnlineName(char ** aOnlineFolderName)
 }
 
 
-nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
-    nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
+NS_IMETHODIMP
+nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
     nsresult openErr=NS_ERROR_UNEXPECTED;
     if(!db || !folderInfo)
@@ -3798,7 +3839,9 @@ nsImapMailCopyState::~nsImapMailCopyState()
     }
 }
 
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsImapMailCopyState, nsImapMailCopyState)
+
 
 nsresult
 nsImapMailFolder::InitCopyState(nsISupports* srcSupport,

@@ -246,6 +246,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	if(!child)
 		return NS_ERROR_NULL_POINTER;
 
+  PRInt32 flags = 0;
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
   
@@ -266,8 +267,17 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	if (NS_FAILED(rv))
 		return rv;
 
+  nsCOMPtr<nsIDBFolderInfo> folderInfo;
+  nsCOMPtr<nsIMsgDatabase> folderDB;
+  rv = folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo),
+                                    getter_AddRefs(folderDB));
+  if (NS_SUCCEEDED(rv) && folderInfo)
+    folderInfo->GetFlags(&flags);
+  folderInfo = null_nsCOMPtr();
+
+  flags |= MSG_FOLDER_FLAG_MAIL;
+
 	folder->SetParent(this);
-	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
 	PRBool isServer;
     rv = GetIsServer(&isServer);
@@ -277,14 +287,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	{
 		if(name->Compare("Inbox", PR_TRUE) == 0)
 		{
-			folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
+			flags |= MSG_FOLDER_FLAG_INBOX;
 			mBiffState = nsMsgBiffState_Unknown;
 		}
 		else if(name->Compare("Trash", PR_TRUE) == 0)
-			folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
+			flags |= MSG_FOLDER_FLAG_TRASH;
 		else if(name->Compare("Unsent Messages", PR_TRUE) == 0 
 			|| name->Compare("Outbox", PR_TRUE) == 0)
-			folder->SetFlag(MSG_FOLDER_FLAG_QUEUE);
+			flags |= MSG_FOLDER_FLAG_QUEUE;
+#if 0
 		//These should probably be read in from a preference.  Hacking in here for the moment.
 		else if(name->Compare("Sent", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
@@ -292,8 +303,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 			folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
 		else if(name->Compare("Templates", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
-	}
-	//at this point we must be ok and we don't want to return failure in case GetIsServer failed.
+#endif 
+  }
+
+	folder->SetFlags(flags);
+
+//at this point we must be ok and we don't want to return failure in case GetIsServer failed.
 	rv = NS_OK;
 
 	nsCOMPtr<nsISupports> supports = do_QueryInterface(folder);
@@ -366,9 +381,12 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
 {
+  PRBool isServer;
+  nsresult rv = GetIsServer(&isServer);
+
   if (!mInitialized) {
     nsCOMPtr<nsIFileSpec> pathSpec;
-    nsresult rv = GetPath(getter_AddRefs(pathSpec));
+    rv = GetPath(getter_AddRefs(pathSpec));
     if (NS_FAILED(rv)) return rv;
     
     nsFileSpec path;
@@ -386,8 +404,6 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     if (path.IsDirectory()) {
       newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
       SetFlag(newFlags);
-      PRBool isServer;
-      rv = GetIsServer(&isServer);
       const char *type = GetIncomingServerType();
 
       if (NS_SUCCEEDED(rv) && isServer)
@@ -437,7 +453,13 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     if (NS_FAILED(rv)) return rv;
     mInitialized = PR_TRUE;      // XXX do this on failure too?
   }
-  return mSubFolders->Enumerate(result);
+  rv = mSubFolders->Enumerate(result);
+  if (isServer)
+  {
+        // *** setting identity pref special folders flag
+        SetPrefFlag();
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -873,7 +895,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(PRUnichar ** prettyName)
 	return nsMsgFolder::GetPrettyName(prettyName);
 }
 
-nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
+NS_IMETHODIMP
+nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
     nsresult openErr=NS_ERROR_UNEXPECTED;
     if(!db || !folderInfo)

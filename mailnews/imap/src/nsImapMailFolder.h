@@ -123,6 +123,7 @@ public:
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const PRUnichar *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
+    NS_IMETHOD GetNoSelect(PRBool *aResult);
 
 	NS_IMETHOD GetPrettyName(PRUnichar ** prettyName);	// Override of the base, for top-level mail folder
     
@@ -150,7 +151,7 @@ public:
 	NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);
 	NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
     
-  virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
+  NS_IMETHOD GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages,
                               nsIMsgWindow *msgWindow, PRBool

@@ -150,6 +150,12 @@ treeitem[HasUnreadMessages="true"] > treerow > treecell
 	font-weight: bold;
 }
 
+treeitem[NoSelect="true"] > treerow > treecell
+{
+    color: gray;
+    font-style: italic;
+}
+
 #folder-panel {
 	min-width: 10px;
 }

@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgAccountManager.h"
+#include "nsIMsgIdentity.h"
 #include "nsMsgBaseCID.h"
 #include "nsIAllocator.h"
 #include "nsIURL.h"
@@ -613,6 +614,14 @@ nsMsgFolder::GetIsServer(PRBool *aResult)
   }
     
   *aResult = mIsServer;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetNoSelect(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
   return NS_OK;
 }
 
@@ -1313,6 +1322,70 @@ NS_IMETHODIMP nsMsgFolder::GetLastMessageLoaded()
 
 #endif
 
+NS_IMETHODIMP nsMsgFolder::SetPrefFlag()
+{
+  // *** Note: this method should only be called when we done with the folder
+  // discovery. GetResource() may return a node which is not in the folder
+  // tree hierarchy but in the rdf cache in case of the non-existing default
+  // Sent, Drafts, and Templates folders. The resouce will be eventually
+  // released when rdf service shutting downs. When we create the defaul
+  // folders later on on the imap server, the subsequent GetResouce() of the
+  // same uri will get us the cached rdf resouce which should have the folder
+  // flag set appropriately.
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  
+	if(NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = GetServer(getter_AddRefs(server));
+  
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISupportsArray> identities;
+  rv = accountManager->GetIdentitiesForServer(server,
+                                              getter_AddRefs(identities));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIMsgIdentity> identity;
+
+  rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
+                                  (void **)getter_AddRefs(identity));
+
+  if (NS_SUCCEEDED(rv) && identity)
+  {
+    nsXPIDLCString folderUri;
+    nsCOMPtr<nsIRDFResource> res;
+    nsCOMPtr<nsIMsgFolder> folder;
+    identity->GetFccFolder(getter_Copies(folderUri));
+    if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
+    {
+      folder = do_QueryInterface(res, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
+    }
+    identity->GetDraftFolder(getter_Copies(folderUri));
+    if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
+    {
+      folder = do_QueryInterface(res, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+    }
+    identity->GetStationeryFolder(getter_Copies(folderUri));
+    if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
+    {
+      folder = do_QueryInterface(res, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
+    }
+  }
+  return rv;
+}
+
 NS_IMETHODIMP nsMsgFolder::SetFlag(PRUint32 flag)
 {
 	// OnFlagChange can be expensive, so don't call it if we don't need to
@@ -1365,8 +1438,22 @@ NS_IMETHODIMP nsMsgFolder::ToggleFlag(PRUint32 flag)
 
 NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
 {
-	//Still need to implement
-	return NS_OK;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMsgDatabase> db;
+  nsCOMPtr<nsIDBFolderInfo> folderInfo;
+  rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+  if (NS_SUCCEEDED(rv) && folderInfo)
+  {
+      folderInfo->SetFlags((PRInt32) mFlags);
+  }
+  folderInfo = null_nsCOMPtr();
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgFolder::SetFlags(PRUint32 aFlags)
+{
+  mFlags = aFlags;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetFlags(PRUint32 *_retval)

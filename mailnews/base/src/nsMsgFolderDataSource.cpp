@@ -74,6 +74,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_Charset = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_BiffState = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_HasUnreadMessages = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SubfoldersHaveUnreadMessages = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_NoSelect = nsnull;
 
 // commands
 nsIRDFResource* nsMsgFolderDataSource::kNC_Delete= nsnull;
@@ -133,6 +134,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_BiffState, refcnt);
 		NS_RELEASE2(kNC_HasUnreadMessages, refcnt);
 		NS_RELEASE2(kNC_SubfoldersHaveUnreadMessages, refcnt);
+    NS_RELEASE2(kNC_NoSelect, refcnt);
 
 		NS_RELEASE2(kNC_Delete, refcnt);
 		NS_RELEASE2(kNC_NewFolder, refcnt);
@@ -189,6 +191,7 @@ nsresult nsMsgFolderDataSource::Init()
     rdf->GetResource(NC_RDF_BIFFSTATE, &kNC_BiffState);
     rdf->GetResource(NC_RDF_HASUNREADMESSAGES, &kNC_HasUnreadMessages);
     rdf->GetResource(NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES, &kNC_SubfoldersHaveUnreadMessages);
+    rdf->GetResource(NC_RDF_NOSELECT, &kNC_NoSelect);
     
 	rdf->GetResource(NC_RDF_DELETE, &kNC_Delete);
     rdf->GetResource(NC_RDF_NEWFOLDER, &kNC_NewFolder);
@@ -418,7 +421,8 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
              (kNC_CanFileMessages == property) ||
              (kNC_CanCreateSubfolders == property) ||
              (kNC_CanRename == property) ||
-             (kNC_ServerType == property))
+             (kNC_ServerType == property) ||
+             (kNC_NoSelect == property) )
     {
       nsSingletonEnumerator* cursor =
         new nsSingletonEnumerator(property);
@@ -544,6 +548,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   (*arcs)->AppendElement(kNC_BiffState);
   (*arcs)->AppendElement(kNC_Child);
   (*arcs)->AppendElement(kNC_MessageChild);
+  (*arcs)->AppendElement(kNC_NoSelect);
   
   return NS_OK;
 }
@@ -919,6 +924,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createFolderChildNode(folder, target);
 	else if ((kNC_MessageChild == property))
 		rv = createFolderMessageNode(folder, target);
+  else if ((kNC_NoSelect == property))
+    rv = createFolderNoSelectNode(folder, target);
 
   if (NS_FAILED(rv)) return NS_RDF_NO_VALUE;
   return rv;
@@ -1054,6 +1061,25 @@ nsMsgFolderDataSource::createFolderIsServerNode(nsIMsgFolder* folder,
   *target = nsnull;
 
   if (isServer)
+	*target = kTrueLiteral;
+  else
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
+  return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::createFolderNoSelectNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  nsresult rv;
+  PRBool noSelect;
+  rv = folder->GetNoSelect(&noSelect);
+  if (NS_FAILED(rv)) return rv;
+
+  *target = nsnull;
+
+  if (noSelect)
 	*target = kTrueLiteral;
   else
     *target = kFalseLiteral;
@@ -1617,7 +1643,8 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
            (kNC_TotalUnreadMessages == property) ||
            (kNC_Charset == property) ||
            (kNC_BiffState == property) ||
-		   (kNC_HasUnreadMessages == property))
+           (kNC_HasUnreadMessages == property) ||
+           (kNC_NoSelect == property) )
 	{
 		nsCOMPtr<nsIRDFResource> folderResource(do_QueryInterface(folder, &rv));
 

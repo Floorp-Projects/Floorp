@@ -36,6 +36,7 @@
 interface nsIMessage;
 interface nsIMsgWindow;
 interface nsIMsgDatabase;
+interface nsIDBFolderInfo;
 interface nsMsgKeyArray;
 
 interface nsIMsgFolderCacheElement;
@@ -94,6 +95,7 @@ interface nsIMsgFolder : nsIFolder {
   readonly attribute boolean isServer;
   readonly attribute boolean canSubscribe;
   readonly attribute boolean canFileMessages;
+  readonly attribute boolean noSelect;
 
   /**
    * does this folder allow subfolders?
@@ -237,11 +239,12 @@ interface nsIMsgFolder : nsIFolder {
 	void setFlag(in unsigned long flag);
 	void clearFlag(in unsigned long flag);
 	boolean getFlag(in unsigned long flag);
+  void setPrefFlag();
 
 	void toggleFlag (in unsigned long flag);
 	void onFlagChange (in unsigned long flag);
   
-	readonly attribute unsigned long flags;
+	attribute unsigned long flags;
 
 	nsIMsgFolder getFoldersWithFlag(in unsigned long flags,
                          in unsigned long resultsize, out unsigned long numFolders);
@@ -300,6 +303,7 @@ interface nsIMsgFolder : nsIFolder {
 	void markMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
 	void markThreadRead(in nsIMsgThread thread);
   nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
+  nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
 
 	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
 };

@@ -294,8 +294,11 @@ nsMsgNewsFolder::AddDirectorySeparator(nsFileSpec &path)
 NS_IMETHODIMP
 nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
 {
-  if (!mInitialized) {
 	nsresult rv;
+  PRBool isServer = PR_FALSE;
+  rv = GetIsServer(&isServer);
+
+  if (!mInitialized) {
 	nsCOMPtr<nsIFileSpec> pathSpec;
 	rv = GetPath(getter_AddRefs(pathSpec));
 	if (NS_FAILED(rv)) return rv;
@@ -312,7 +315,10 @@ nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
 
     mInitialized = PR_TRUE;      // XXX do this on failure too?
   }
-  return mSubFolders->Enumerate(result);
+  rv = mSubFolders->Enumerate(result);
+  if (isServer) // *** setting identity pref default folder flags
+    SetPrefFlag();
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -684,14 +690,15 @@ nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 
 }
 
 
-nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
+NS_IMETHODIMP
+nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
   nsresult openErr=NS_ERROR_UNEXPECTED;
   if(!db || !folderInfo)
 		return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
 		
 	nsCOMPtr <nsIMsgDatabase> newsDBFactory;
-	nsIMsgDatabase *newsDB;
+	nsCOMPtr<nsIMsgDatabase> newsDB;
 
 	nsresult rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
@@ -702,6 +709,7 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
   }
 
   *db = newsDB;
+  NS_IF_ADDREF (*db);
   if (NS_SUCCEEDED(openErr)&& *db)
     openErr = (*db)->GetDBFolderInfo(folderInfo);
   return openErr;

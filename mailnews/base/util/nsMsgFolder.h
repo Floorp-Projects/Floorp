@@ -79,6 +79,7 @@ public:
   NS_IMETHOD GetShowDeletedMessages(PRBool *aShowDeletedMessages);
   NS_IMETHOD GetServer(nsIMsgIncomingServer * *aServer);
   NS_IMETHOD GetIsServer(PRBool *aIsServer);
+  NS_IMETHOD GetNoSelect(PRBool *aNoSelect);
   NS_IMETHOD GetCanSubscribe(PRBool *aCanSubscribe);
   NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
   NS_IMETHOD GetCanCreateSubfolders(PRBool *aCanCreateSubfolders);
@@ -120,10 +121,12 @@ public:
   NS_IMETHOD GetUsername(char * *aUsername);
   NS_IMETHOD GetHostname(char * *aHostname);
   NS_IMETHOD SetFlag(PRUint32 flag);
+  NS_IMETHOD SetPrefFlag();
   NS_IMETHOD ClearFlag(PRUint32 flag);
   NS_IMETHOD GetFlag(PRUint32 flag, PRBool *_retval);
   NS_IMETHOD ToggleFlag(PRUint32 flag);
   NS_IMETHOD OnFlagChange(PRUint32 flag);
+  NS_IMETHOD SetFlags(PRUint32 aFlags);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD GetFoldersWithFlag(PRUint32 flags, PRUint32 resultsize, PRUint32 *numFolders, nsIMsgFolder **result);
   NS_IMETHOD GetExpansionArray(nsISupportsArray *expansionArray);
@@ -147,6 +150,9 @@ public:
   NS_IMETHOD GetRootFolder(nsIMsgFolder * *aRootFolder);
   NS_IMETHOD GetMsgDatabase(nsIMsgWindow *aMsgWindow,
                             nsIMsgDatabase * *aMsgDatabase);
+  NS_IMETHOD GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, 
+                                  nsIMsgDatabase **db) = 0;
+
   NS_IMETHOD GetPath(nsIFileSpec * *aPath);
   NS_IMETHOD SetPath(nsIFileSpec * aPath);
   NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
@@ -212,8 +218,6 @@ public:
 	int DownloadToTempFileAndUpload(MessageCopyInfo *copyInfo, nsMsgKeyArray &keysToSave, MSG_FolderInfo *dstFolder, nsMsgDatabase *sourceDB);
 	void UpdateMoveCopyStatus(MWContext *context, PRBool isMove, int32 curMsgCount, int32 totMessages);
 #endif
-
-	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
 
 
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);

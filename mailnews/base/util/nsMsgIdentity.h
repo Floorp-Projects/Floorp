@@ -67,6 +67,9 @@ protected:
   nsresult getDefaultIntPref(const char *pref, PRInt32 *);
   nsresult setIntPref(const char *pref, PRInt32);
 
+  nsresult getFolderPref(const char *pref, char **);
+  nsresult setFolderPref(const char *pref, const char *);
+
 private:
   static void clearPrefEnum(const char *aPref, void *aClosure);
 
@@ -123,5 +126,17 @@ nsMsgIdentity::Set##_postfix(PRInt32 value)		\
   return setIntPref(_prefname, value);			\
 }
 
+
+#define NS_IMPL_FOLDERPREF_STR(_postfix, _prefname)	\
+NS_IMETHODIMP								   	\
+nsMsgIdentity::Get##_postfix(char **retval)   	\
+{											   	\
+  return getFolderPref(_prefname, retval);		\
+}												\
+NS_IMETHODIMP	   								\
+nsMsgIdentity::Set##_postfix(const char *value)		\
+{												\
+  return setFolderPref(_prefname, value);\
+}
 
 #endif /* nsMsgIdentity_h___ */

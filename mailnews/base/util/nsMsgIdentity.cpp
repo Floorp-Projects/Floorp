@@ -28,8 +28,14 @@
 
 #include "nsISmtpService.h"
 #include "nsMsgCompCID.h"
+#include "nsIRDFService.h"
+#include "nsIRDFResource.h"
+#include "nsRDFCID.h"
+#include "nsMsgFolderFlags.h"
+#include "nsIMsgFolder.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgIdentity,
                    nsIMsgIdentity)
@@ -464,15 +470,66 @@ NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature");
 NS_IMPL_IDPREF_INT(SignatureDate,"sig_date");
 
 NS_IMPL_IDPREF_BOOL(DoFcc, "fcc");
-NS_IMPL_IDPREF_STR(FccFolder, "fcc_folder");
+NS_IMPL_FOLDERPREF_STR(FccFolder, "fcc_folder");
 
 NS_IMPL_IDPREF_BOOL(BccSelf, "bcc_self");
 NS_IMPL_IDPREF_BOOL(BccOthers, "bcc_other");
 NS_IMPL_IDPREF_STR (BccList, "bcc_other_list");
 
-NS_IMPL_IDPREF_STR (DraftFolder, "draft_folder");
-NS_IMPL_IDPREF_STR (StationeryFolder, "stationery_folder");
+NS_IMPL_FOLDERPREF_STR (DraftFolder, "draft_folder");
+NS_IMPL_FOLDERPREF_STR (StationeryFolder, "stationery_folder");
 NS_IMPL_IDPREF_STR (JunkMailFolder, "spam_folder");
 
 NS_IMPL_IDPREF_BOOL(Valid, "valid");
+
+nsresult 
+nsMsgIdentity::getFolderPref(const char *prefname, char **retval)
+{
+    return getCharPref(prefname, retval);
+}
+
+nsresult 
+nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
+{
+    char *oldpref = nsnull;
+    nsresult rv;
+    nsCOMPtr<nsIRDFResource> res;
+    nsCOMPtr<nsIMsgFolder> folder;
+    PRUint32 folderflag;
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    
+    if (nsCRT::strcmp(prefname, "fcc_folder") == 0)
+        folderflag = MSG_FOLDER_FLAG_SENTMAIL;
+    else if (nsCRT::strcmp(prefname, "draft_folder") == 0)
+        folderflag = MSG_FOLDER_FLAG_DRAFTS;
+    else if (nsCRT::strcmp(prefname, "stationery_folder") == 0)
+        folderflag = MSG_FOLDER_FLAG_TEMPLATES;
+    else
+        return NS_ERROR_FAILURE;
+
+    rv = getFolderPref(prefname, &oldpref);
+    if (NS_SUCCEEDED(rv) && oldpref)
+    {
+        rv = rdf->GetResource(oldpref, getter_AddRefs(res));
+        if (NS_SUCCEEDED(rv) && res)
+        {
+            folder = do_QueryInterface(res, &rv);
+            if (NS_SUCCEEDED(rv))
+                rv = folder->ClearFlag(folderflag);
+        }
+    }
+    rv = setCharPref(prefname, value);
+    if (NS_SUCCEEDED(rv))
+    {
+        rv = rdf->GetResource(value, getter_AddRefs(res));
+        if (NS_SUCCEEDED(rv) && res)
+        {
+            folder = do_QueryInterface(res, &rv);
+            if (NS_SUCCEEDED(rv))
+                rv = folder->SetFlag(folderflag);
+        }
+    }
+    return rv;
+}
+
 

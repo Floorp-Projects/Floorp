@@ -609,11 +609,17 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 	PRBool haveParent = PR_FALSE;
     nsCOMPtr<nsIMsgImapMailFolder> hostFolder;
     nsCOMPtr<nsIMsgFolder> aFolder;
+    PRBool explicitlyVerify = PR_FALSE;
     
     if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
     nsCAutoString dupFolderPath = folderPath;
     if (dupFolderPath.Last() == '/')
+    {
         dupFolderPath.SetLength(dupFolderPath.Length()-1);
+        // *** this is what we did in 4.x in order to list uw folder only
+        // mailbox in order to get the \NoSelect flag
+        explicitlyVerify = !(boxFlags & kNameSpace);
+    }
 
     nsCAutoString folderName = dupFolderPath;
         
@@ -683,7 +689,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 			{
 				PossibleImapMailbox(parentName, hierarchyDelimiter,kNoselect |		// be defensive
 											((boxFlags &	// only inherit certain flags from the child
-											(kPublicMailbox | kOtherUsersMailbox | kPersonalMailbox))));
+											(kPublicMailbox | kOtherUsersMailbox | kPersonalMailbox)))); 
 			}
 		}
 
@@ -700,6 +706,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 			imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
 			imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
 			imapFolder->SetBoxFlags(boxFlags);
+            imapFolder->SetExplicitlyVerify(explicitlyVerify);
 			imapFolder->GetOnlineName(getter_Copies(onlineName));
 			if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0
 				|| nsCRT::strcmp((const char *) onlineName, dupFolderPath))
@@ -1335,11 +1342,14 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 	nsresult rv = NS_OK;
 
 	nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(parentFolder);
-	PRBool verified;
+	PRBool verified = PR_FALSE, explicitlyVerify = PR_FALSE;
 	if (imapFolder)
 	{
 		rv = imapFolder->GetVerifiedAsOnlineFolder(&verified);
-		if (NS_SUCCEEDED(rv) && !verified)
+        if (NS_SUCCEEDED(rv))
+            rv = imapFolder->GetExplicitlyVerify(&explicitlyVerify);
+
+		if (NS_SUCCEEDED(rv) && (!verified || explicitlyVerify))
 		{
 			if (aFoldersArray)
 			{

@@ -66,6 +66,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_BIFFSTATE			NC_NAMESPACE_URI "BiffState"
 #define NC_RDF_HASUNREADMESSAGES	NC_NAMESPACE_URI "HasUnreadMessages"
 #define NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES NC_NAMESPACE_URI "SubfoldersHaveUnreadMessages"
+#define NC_RDF_NOSELECT       NC_NAMESPACE_URI "NoSelect"
 
 //Sort Properties
 #define NC_RDF_SUBJECT_COLLATION_SORT	NC_NAMESPACE_URI "Subject?collation=true"

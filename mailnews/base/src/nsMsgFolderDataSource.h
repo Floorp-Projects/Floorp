@@ -136,6 +136,8 @@ protected:
 	nsresult createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createHasUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createSubfoldersHaveUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createFolderNoSelectNode(nsIMsgFolder *folder,
+                                    nsIRDFNode **target);
 
 	nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createFolderMessageNode(nsIMsgFolder *folder, nsIRDFNode **target);
@@ -203,6 +205,7 @@ protected:
   static nsIRDFResource* kNC_BiffState;
   static nsIRDFResource* kNC_HasUnreadMessages;
   static nsIRDFResource* kNC_SubfoldersHaveUnreadMessages;
+  static nsIRDFResource* kNC_NoSelect;
 
   // commands
   static nsIRDFResource* kNC_Delete;

@@ -55,6 +55,7 @@
 			  CanCreateSubfolders="rdf:http://home.netscape.com/NC-rdf#CanCreateSubfolders"
 			  CanSubscribe="rdf:http://home.netscape.com/NC-rdf#CanSubscribe"
 			  CanFileMessages="rdf:http://home.netscape.com/NC-rdf#CanFileMessages"
+			  NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect"
 			  persist="threaded open sortResource sortDirection">
 		  	  <treerow >
 					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"/>

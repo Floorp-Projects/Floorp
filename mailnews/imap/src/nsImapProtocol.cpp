@@ -3906,7 +3906,8 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
                 if (m_imapServerSink)
                 {
                     m_imapServerSink->PossibleImapMailbox(boxNameCopy, 
-									adoptedBoxSpec->hierarchySeparator, adoptedBoxSpec->box_flags);
+									adoptedBoxSpec->hierarchySeparator,
+                                    adoptedBoxSpec->box_flags);
                 
                     PRBool useSubscription = PR_FALSE;
 
@@ -5407,7 +5408,7 @@ void nsImapProtocol::DiscoverMailboxList()
             pattern2 += "%";
             pattern2 += delimiter;
             pattern2 += "%";
-            pattern2 = PR_smprintf("%s%%%c%%", prefix, delimiter);
+            // pattern2 = PR_smprintf("%s%%%c%%", prefix, delimiter);
           }
         }
 
