@@ -77,9 +77,6 @@ nsPrefWindow.prototype =
               {
                 this.onpageload( window.queuedTag );
               }
-  
-            if( window.arguments[1] )
-              this.openBranch( window.arguments[1], window.arguments[2] );
           },
                   
       onOK:
@@ -275,26 +272,21 @@ nsPrefWindow.prototype =
           },                        
 
       switchPage:
-        function ()
+        function (aNewURL, aNewTag)
           {
-            var prefPanelTree = document.getElementById( "prefsTree" );
-            var selectedItem = prefPanelTree.contentView.getItemAtIndex(prefPanelTree.currentIndex);
-
             var oldURL = document.getElementById( this.contentFrame ).getAttribute("tag");
             if( !oldURL )
               {
                 oldURL = document.getElementById( this.contentFrame ).getAttribute("src");
               }
             this.wsm.savePageData( oldURL );      // save data from the current page. 
-            var newURL = selectedItem.firstChild.firstChild.getAttribute("url");
-            var newTag = selectedItem.firstChild.firstChild.getAttribute("tag");
-            if( newURL != oldURL )
+            if( aNewURL != oldURL )
               {
-                document.getElementById( this.contentFrame ).setAttribute( "src", newURL );
-                if( !newTag )
+                document.getElementById( this.contentFrame ).setAttribute( "src", aNewURL );
+                if( !aNewTag )
                   document.getElementById( this.contentFrame ).removeAttribute( "tag" );
                 else
-                  document.getElementById( this.contentFrame ).setAttribute( "tag", newTag );
+                  document.getElementById( this.contentFrame ).setAttribute( "tag", aNewTag );
               }
           },
               
@@ -352,22 +344,6 @@ nsPrefWindow.prototype =
                 window.frames[ this.contentFrame ].Startup();
               }
             this.wsm.dataManager.pageData[aPageTag].initialized=true;
-          },
-
-    openBranch:
-      function ( aComponentName, aSelectItem )
-        {
-          var panelTree = document.getElementById( "prefsTree" );
-          var selectItem = document.getElementById( aSelectItem );
-          var selectItemroot = document.getElementById( aComponentName );
-          var parentIndex = panelTree.contentView.getIndexOfItem( selectItemroot );
-          if (parentIndex != -1 && !panelTree.view.isContainerOpen(parentIndex))
-             panelTree.view.toggleOpenState(parentIndex);
-          var index = panelTree.view.getIndexOfItem( selectItem );
-          if (index == -1)
-            return;
-          panelTree.treeBoxObject.selection.select( index );
-        }
-
+          }
   };
 

@@ -1,10 +1,15 @@
-<!ENTITY lHeader        "Downloads">
-<!ENTITY prompt.label   "Prompt for directory and file name">
-<!ENTITY defaultDir.label "Download directory">
+<!ENTITY lHeader "Downloading Files">
+
+<!ENTITY defaultDir.label "Download Folder">
+<!ENTITY rememberLast.label "Ask me where to save every file">
+<!ENTITY useDownloadDir.label "Save all files to this folder:">
 <!ENTITY browse.label   "Browse...">
+
+<!ENTITY whenStarting.label "When starting a download">
 <!ENTITY useProgressDialogs.label     "Display a progress window">
 <!ENTITY useProgressDialogs.accesskey "D">
-<!ENTITY whenStarting.label "When starting a download">
 <!ENTITY openSidebar.label "Open Downloads sidebar">
-<!ENTITY rememberLast.label "Remember the last directory I saved in">
-<!ENTITY useDownloadDir.label "Always use this directory:">
+
+<!ENTITY ftpSites.label               "FTP sites">
+<!ENTITY sendAddFtpCheck.label        "Send this email address as anonymous FTP password:">
+<!ENTITY sendAddFtpCheck.accesskey    "e">

@@ -45,7 +45,7 @@
                 src="chrome://pref/locale/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-connection.js"/>
   
-  <groupbox flex="1">
+  <groupbox>
     <caption label="&proxyTitle.label;"/>
 
     <radiogroup id="networkProxyType" prefstring="network.proxy.type">

@@ -89,14 +89,6 @@ function Startup()
     while (description.hasChildNodes())
       description.removeChild(description.firstChild);
   }
-
-  var extList = document.getElementById("extList");
-  for (var i = 0; i < extList.childNodes.length; ++i) {
-    if (extList.childNodes[i].getAttribute("name")) {
-      extList.selectItem(extList.childNodes[i]);
-      break;
-    }
-  }
 }
 
 function applyTheme()
@@ -166,14 +158,14 @@ function applyTheme()
     return;
   }
 
-var str = Components.classes["@mozilla.org/supports-string;1"]
-                    .createInstance(Components.interfaces.nsISupportsString);
-str.data = data.name;
-kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
+  var str = Components.classes["@mozilla.org/supports-string;1"]
+                      .createInstance(Components.interfaces.nsISupportsString);
+  str.data = data.name;
+  kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
 
 
-chromeRegistry.selectSkin(data.name, true);                                        
-chromeRegistry.refreshSkins();
+  chromeRegistry.selectSkin(data.name, true);                                        
+  chromeRegistry.refreshSkins();
 }
 
 
@@ -225,7 +217,18 @@ function themeSelect()
       description.removeChild(description.firstChild);
 
     nameField.setAttribute("value", themeName);
+    
     author.setAttribute("value", selectedItem.getAttribute("author"));
+    var authorURL = selectedItem.getAttribute("authorURL");
+    if (authorURL != "") {
+      author.setAttribute("link", selectedItem.getAttribute("authorURL"));
+      author.className = "themesLink";
+    }
+    else {
+      author.removeAttribute("link");
+      author.className = "";
+    }
+        
     image.setAttribute("src", selectedItem.getAttribute("image"));
 
     // XXX - this sucks and should only be temporary.
@@ -270,58 +273,19 @@ function themeSelect()
   }
 }
 
-
-function extensionSelect()
+function visitLink (aEvent, aAuthor)
 {
-  var list = document.getElementById("extList");
-
-  if (!list)
-    return;
-
-  var selectedItem = list.selectedItems.length ? list.selectedItems[0] : null;
-  if (selectedItem) {
-    var extName = selectedItem.getAttribute("displayName");
-    var nameField = document.getElementById("extDisplayName");
-    var author = document.getElementById("extAuthor");
-    var descText = document.createTextNode(selectedItem.getAttribute("description"));
-    var description = document.getElementById("extDescription");
-    var uninstallButton = document.getElementById("uninstallExtension");
-    
-    while (description.hasChildNodes())
-      description.removeChild(description.firstChild);
-
-    nameField.setAttribute("value", extName);
-    author.setAttribute("value", selectedItem.getAttribute("author"));
-    
-    description.appendChild(descText);
-
-    updateDisableExtButton(selectedItem);
-  }
-}
-
-function toggleExtension()
-{
-  var list = document.getElementById("extList");
-
-  if (!list)
-    return;
-
-  var selectedItem = list.selectedItems.length ? list.selectedItems[0] : null;
-  if (selectedItem) {
-    var disabled = (selectedItem.getAttribute("disabledState") == "true");
-    chromeRegistry.setAllowOverlaysForPackage(selectedItem.getAttribute("name"), disabled);
-    updateDisableExtButton(selectedItem);
-  }   
-}
-
-function updateDisableExtButton(item)
-{
-  var disableButton = document.getElementById("disableExtension");
-  if (disableButton.disabled)
-    disableButton.disabled = false;
-
-  if (item.getAttribute("disabledState") == "true")
-    disableButton.setAttribute("label", "Enable Extension"); // XXXdwh localize
+  var msg = "";
+  if (aAuthor)
+    msg = "prefCloseThemeAuthorLinkMsg";
   else
-    disableButton.setAttribute("label", "Disable Extension"); // XXXdwh localize
+    msg = "prefCloseThemeNewThemeLinkMsg";
+
+  var node = aEvent.target;
+  while (node.nodeType != Node.ELEMENT_NODE)
+    node = node.parentNode;
+
+  var url = node.getAttribute("link");
+  if (url != "")
+    parent.visitLink("prefCloseThemeLinkTitle", msg, url);
 }

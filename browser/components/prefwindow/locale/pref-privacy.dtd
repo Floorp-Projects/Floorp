@@ -1,4 +1,20 @@
 <!ENTITY lHeader                           "Privacy">
+
+<!ENTITY privacyDescription.label          "As you browse the web, information about where you have been, what you have done, etc is kept in the following areas.">
+
+<!ENTITY history.label                     "History">
+<!ENTITY pageHis.label                     "Remember visited pages for the last">
+<!ENTITY pageHis.accesskey                 "r">
+<!ENTITY days.label                        "days">
+<!ENTITY clearHistory.label                "Clear">
+
+<!ENTITY cache.label                       "Cache">
+<!ENTITY cacheExplanation.label            "Pages you view are stored in the cache for quicker viewing later on.">
+<!ENTITY diskCache.label                   "Use up to:">
+<!ENTITY diskCache.accesskey               "U">
+<!ENTITY kbytes                            "KB of disk space for the cache.">
+<!ENTITY clearCache.label                  "Clear">
+
 <!ENTITY cookies.label                     "Cookies">
 <!ENTITY enableCookies.label               "Enable cookies">
 <!ENTITY enableCookies.accesskey           "c">
@@ -6,20 +22,29 @@
 <!ENTITY forOriginatingSiteOnly.accesskey  "W">
 <!ENTITY forCurrentSessionOnly.label       "for the current session only">
 <!ENTITY forCurrentSessionOnly.accesskey   "s">
-<!ENTITY manageCookies.label               "Manage Cookies...">
-<!ENTITY manageCookies.accesskey           "M">
-<!ENTITY history.label                     "History">
-<!ENTITY pageHis.label                     "Remember visited pages for the last">
-<!ENTITY pageHis.accesskey                 "p">
-<!ENTITY days.label                        "days">
-<!ENTITY cache.label                       "Cache">
-<!ENTITY diskCache.label                   "Use up to:">
-<!ENTITY diskCache.accesskey               "U">
-<!ENTITY kbytes                            "KB of disk space for the cache.">
-<!ENTITY clearCache.label                  "Clear Cache">
-<!ENTITY clearHistory.label                "Clear History">
-<!ENTITY clearHistory.accesskey            "H">
-<!ENTITY cacheExplanation.label            "Pages you view are stored in the cache for quicker viewing later on.">
 <!ENTITY cookieExplanation.label           "Cookies are delicious delicacies.">
 <!ENTITY butAskFirst.label                 "but ask before accepting">
 <!ENTITY butAskFirst.accesskey             "b">
+<!ENTITY clearCookies.label                "Clear">
+<!ENTITY viewCookies.label                 "View Cookies">
+
+<!ENTITY formfill.label                    "Saved Form Information">
+<!ENTITY formfillDescription.label         "Information entered in web page forms and the Search Bar is saved to make filling out forms and searching faster.">
+<!ENTITY formfillEnable.label              "Save information I enter in web page forms and the Search Bar">
+<!ENTITY formfillEnable.accesskey          "f">
+<!ENTITY clearFormfill.label               "Clear">
+
+<!ENTITY downloads.label                   "Download Manager History">
+<!ENTITY downloadsDescription.label        "The Download Manager keeps track of recently downloaded files. XXXben - blake, we need at the very least a toggle here, probably a retention window as well">
+<!ENTITY clearDownloads.label              "Clear">
+
+<!ENTITY passwords.label                   "Saved Passwords">
+<!ENTITY passwordsDescription.label        "Login information for web pages can be kept in the Password Manager so that you do not need to re-enter your login details every time you visit.">
+<!ENTITY passwordsEnable.label             "Remember Passwords">
+<!ENTITY passwordsEnable.accesskey         "p">
+<!ENTITY clearPasswords.label              "Clear">
+<!ENTITY viewPasswords.label               "View Saved Passwords">
+
+<!ENTITY clearAll.label                    "Clear All">
+<!ENTITY clearAllDescription.label         "Clear all information stored while browsing:">
+

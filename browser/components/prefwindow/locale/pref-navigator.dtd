@@ -10,6 +10,15 @@
 <!ENTITY  useBookmark.accesskey     "U">
 <!ENTITY  useBlank.label            "Use Blank Page">
 <!ENTITY  useBlank.accesskey        "B">
+
+<!ENTITY  windowsAndTabs.label      "Windows and Tabs">
+<!ENTITY  background.label          "Open Links in the background">
+
+<!ENTITY defaultDir.label "Download Folder">
+<!ENTITY rememberLast.label "Ask me where to save every file">
+<!ENTITY useDownloadDir.label "Save all files to this folder:">
+<!ENTITY browse.label   "Browse...">
+
 #ifdef XP_WIN
 <!ENTITY defaultBrowserGroup.label  "Default Browser">
 <!ENTITY defaultBrowserButton.label "Set Default Browser">

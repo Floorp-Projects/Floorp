@@ -27,7 +27,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["downloadDir", "defaultDir", "useProgressDialogs", "openDownloadsSidebar"];
+    var _elementIDs = ["downloadDir", "defaultDir", "useProgressDialogs", "openDownloadsSidebar", "advancedMailFTP", "advancedMailFTPAddress"];
     function selectFolder()
     { 
       const nsIFilePicker = Components.interfaces.nsIFilePicker;
@@ -68,6 +68,18 @@
       button.disabled = disable;
     }
     
+    function Startup() 
+    {
+      ftpCheck();
+    }
+
+    function ftpCheck() {
+      var checked = document.getElementById("advancedMailFTP").checked;
+      var field = document.getElementById("advancedMailFTPAddress");
+      field.disabled = !checked;
+      if (checked)
+        field.focus();
+    }
   ]]>
   </script>
 
@@ -90,5 +102,18 @@
     <checkbox id="openDownloadsSidebar" label="&openSidebar.label;"
               prefstring="browser.download.openSidebar"/>
   </groupbox>
+  <groupbox>
+    <caption label="&ftpSites.label;"/>
+
+    <checkbox id="advancedMailFTP" label="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
+              prefstring="advanced.mailftp"
+              oncommand="ftpCheck();"/>
+    <hbox class="indent" flex="1">
+      <textbox id="advancedMailFTPAddress"
+               preftype="string" prefstring="network.ftp.anonymous_password"
+               flex="2"/>
+    </hbox>
+  </groupbox>
+
 </page>
     
