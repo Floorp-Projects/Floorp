@@ -165,7 +165,7 @@
 	  this.kTextBox.value = this.formatTime(this.mValue);
 
           // may be called before constructor, so check aRefresh before kCallBack
-	  if (aValue != null && this.mCallback && aRefresh != false && this.kCallback ) {
+	  if (aValue != null && aRefresh != false && this.kCallback ) {
 	    this.kCallback();
 	  }
 	]]></body>
