@@ -40,6 +40,7 @@ BODY {
   color: black;
   padding: 12px;
   display: block;
+  cursor: arrow;
 }
 
 // XXX Use this!
@@ -107,10 +108,10 @@ UL, OL {
 DT { margin-bottom: 0 }
 DD { margin-top: 0; margin-left: .25in; }
 
-A:link { color: blue; text-decoration: underline }
-A:visited { color: purple; text-decoration: underline }
-A:active { color: lime; text-decoration: underline }
-A:out-of-date { color: red; text-decoration: underline }
+A:link { color: blue; text-decoration: underline; cursor: hand; }
+A:visited { color: purple; text-decoration: underline; cursor: hand; }
+A:active { color: lime; text-decoration: underline; cursor: hand; }
+A:out-of-date { color: red; text-decoration: underline; cursor: hand; }
 
 A:link IMG { border: 2px solid blue; text-decoration: underline }
 A:visited IMG { border: 2px solid purple; text-decoration: underline }
