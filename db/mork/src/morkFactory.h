@@ -40,7 +40,7 @@
 class nsIMdbFactory;
 
 #define morkDerived_kFactory  /*i*/ 0x4663 /* ascii 'Fc' */
-#define morkFactory_kWeakRefCountBonus 16 /* try to leak all factories */
+#define morkFactory_kWeakRefCountBonus 0 /* try NOT to leak all factories */
 
 /*| morkFactory: 
 |*/
