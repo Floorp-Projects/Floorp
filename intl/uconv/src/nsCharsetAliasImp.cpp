@@ -74,24 +74,29 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& 
    ToLowerCase(aKey);
    oResult.Truncate();
 
-   //delay loading charsetalias.properties by resolving most freq. aliases
+   // Delay loading charsetalias.properties by hardcoding the most
+   // frequent aliases.  Note that it's possible to recur in to this
+   // function *while loading* charsetalias.properties (see bug 190951),
+   // so we might have an |mDelegate| already that isn't valid yet, but
+   // the load is guaranteed to be "UTF-8" so things will be OK.
+   if(aKey.Equals(NS_LITERAL_STRING("utf-8"))) {
+     oResult = NS_LITERAL_STRING("UTF-8");
+     NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
+     return NS_OK;
+   } 
+   if(aKey.Equals(NS_LITERAL_STRING("iso-8859-1"))) {
+     oResult = NS_LITERAL_STRING("ISO-8859-1");
+     NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
+     return NS_OK;
+   } 
+   if(aKey.Equals(NS_LITERAL_STRING("x-sjis")) ||
+      aKey.Equals(NS_LITERAL_STRING("shift_jis"))) {
+     oResult = NS_LITERAL_STRING("Shift_JIS");
+     NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
+     return NS_OK;
+   } 
+
    if(!mDelegate) {
-     if(aKey.Equals(NS_LITERAL_STRING("utf-8"))) {
-       oResult = NS_LITERAL_STRING("UTF-8");
-       NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
-       return NS_OK;
-     } 
-     if(aKey.Equals(NS_LITERAL_STRING("iso-8859-1"))) {
-       oResult = NS_LITERAL_STRING("ISO-8859-1");
-       NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
-       return NS_OK;
-     } 
-     if(aKey.Equals(NS_LITERAL_STRING("x-sjis")) ||
-        aKey.Equals(NS_LITERAL_STRING("shift_jis"))) {
-       oResult = NS_LITERAL_STRING("Shift_JIS");
-       NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
-       return NS_OK;
-     } 
      //load charsetalias.properties string bundle with all remaining aliases
      // we may need to protect the following section with a lock so we won't call the 
      // 'new nsURLProperties' from two different threads
