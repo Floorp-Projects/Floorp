@@ -3106,6 +3106,13 @@ if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` 
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
 fi
 
+dnl os2's glib doesn't seem to have gmodule which ctl needs
+case "$target_os" in
+os2*)
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|ctl||'`
+    ;;
+esac
+    
 dnl ========================================================
 dnl experimental ldap features
 dnl ========================================================
