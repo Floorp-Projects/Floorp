@@ -156,7 +156,7 @@
       if (info.cert)
       {
         idHdr = bundle.GetStringFromName("pageInfo_WebSiteVerified");
-        document.getElementById("security-identity").setAttribute("value", idHdr);
+        setText("security-identity", idHdr);
 
         message1 = bundle.formatStringFromName("pageInfo_Identity_Verified", 
                                 [ info.hostName, info.cAName ],
@@ -168,7 +168,7 @@
         security._cert = info.cert;
       } else {
         idHdr = bundle.GetStringFromName("pageInfo_SiteNotVerified");
-        document.getElementById("security-identity").setAttribute("value", idHdr);
+        setText("security-identity", idHdr);
 
         document.getElementById("security-view-cert").setAttribute("disabled", "true");
         document.getElementById("security-view-cert").setAttribute("hidden", "true");
@@ -182,7 +182,7 @@
       if (info.encryptionStrength >= 90) {
         hdr = bundle.formatStringFromName("pageInfo_StrongEncryption",
                              [ info.encryptionAlgorithm, info.encryptionStrength+"" ], 2);
-        document.getElementById("security-privacy").setAttribute("value", hdr);
+        setText("security-privacy", hdr);
 
         msg1 = bundle.GetStringFromName("pageInfo_Privacy_Strong1");
         setText("security-privacy-msg1", msg1);
@@ -194,7 +194,7 @@
       } else if (info.encryptionStrength > 0) {
         hdr = bundle.formatStringFromName("pageInfo_WeakEncryption",
                              [ info.encryptionAlgorithm, info.encryptionStrength+"" ], 2);
-        document.getElementById("security-privacy").setAttribute("value", hdr);
+        setText("security-privacy", hdr);
 
         msg1 = bundle.formatStringFromName("pageInfo_Privacy_Weak1",
                                                [ info.hostName ], 1);
@@ -204,7 +204,7 @@
         setText("security-privacy-msg2", msg2);
       } else {
         hdr = bundle.GetStringFromName("pageInfo_NoEncryption");
-        document.getElementById("security-privacy").setAttribute("value", hdr);
+        setText("security-privacy", hdr);
 
         if(info.hostName != null)
           msg1 = bundle.formatStringFromName("pageInfo_Privacy_None1", [ info.hostName ], 1);
@@ -227,7 +227,7 @@
   </tabs>
   <tabpanels id="tabpanels">
     <vbox id="securityPanel" flex="1">
-      <label id="security-identity" class="header"/>
+      <description id="security-identity" class="header"/>
       <description id="security-identity-text" flex="1"/>
       <hbox align="center">
         <button id="security-view-cert" label="&pageInfo.view.label;"
@@ -236,7 +236,7 @@
         <description id="security-view-text" flex="1"/>
       </hbox>
       <separator class="groove"/>
-      <label id="security-privacy" class="header"/>
+      <description id="security-privacy" class="header"/>
       <vbox flex="1">
         <description id="security-privacy-msg1"/>
         <description id="security-privacy-msg2"/>
