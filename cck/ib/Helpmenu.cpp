@@ -86,13 +86,16 @@ void CreateIspMenu(void)
 	CString ispInServer = GetGlobal("IncomingServer");
 	CString ispOutServer = GetGlobal("OutgoingServer");
 	CString ispPortNumber = GetGlobal("PortNumber");
-	CString serverType = GetGlobal("Serverlist");
-	if (serverType == "POP")
+	CString serverType; 
+	// Determine whether the server type is POP or IMAP
+	CString pop = GetGlobal("pop");
+	if (pop == "1")
 		serverType = "pop3";
-	if (serverType == "IMAP")
+	else
 		serverType = "imap";
 	CString popMessage = GetGlobal("PopMessages");
-	if (popMessage == "0")	// check if "leave messages on server" option is set
+	// check if "leave pop messages on server" option is set
+	if (popMessage == "0")	
 		popMessage = "false";
 	else if (popMessage == "1")
 		popMessage = "true";
