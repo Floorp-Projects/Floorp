@@ -22,16 +22,9 @@
 
 #include "nsWidgetsCID.h"
 
-static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
-static NS_DEFINE_CID(kCDragServiceCID,   NS_DRAGSERVICE_CID);
-
-// The class statics:
-GtkWidget* nsDragService::sWidget = 0;
-
-//-------------------------------------------------------------------------
-// static variables
-//-------------------------------------------------------------------------
-  //static PRBool gHaveDrag = PR_FALSE;
+NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
+NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
+NS_IMPL_QUERY_INTERFACE2(nsDragService, nsIDragService, nsIDragSession)
 
 //-------------------------------------------------------------------------
 //
@@ -53,55 +46,57 @@ nsDragService::~nsDragService()
 }
 
 
-//---------------------------------------------------------
-NS_IMETHODIMP nsDragService::StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType)
-
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray *anArrayTransferables,
+                                                nsIScriptableRegion *aRegion,
+                                                PRUint32 aActionType)
 {
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable,
-                                        PRUint32 aItemIndex)
+NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
+{
+  *aNumItems = 0;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 anItem)
 {
   return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------
-void nsDragService::SetTopLevelWidget(GtkWidget* w)
+NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
-  printf("  nsDragService::SetTopLevelWidget\n");
-  
-  // Don't set up any more event handlers if we're being called twice
-  // for the same toplevel widget
-  if (sWidget == w)
-    return;
-
-  sWidget = w;
-
-  // Get the DragService from the service manager.
-  nsresult rv;
-  NS_WITH_SERVICE(nsIDragService, dragService, kCDragServiceCID, &rv);
-
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-#if 0
-  gtk_signal_connect (GTK_OBJECT (pixmap), "drag_leave",
-		      GTK_SIGNAL_FUNC (nsDragService::DragLeave), dragService);
-
-  gtk_signal_connect (GTK_OBJECT (pixmap), "drag_motion",
-		      GTK_SIGNAL_FUNC (nsDragService::DragMotion), dragService);
-
-  gtk_signal_connect (GTK_OBJECT (pixmap), "drag_drop",
-		      GTK_SIGNAL_FUNC (nsDragService::DragDrop), dragService);
-
-  gtk_signal_connect (GTK_OBJECT (pixmap), "drag_data_received",
-		      GTK_SIGNAL_FUNC (nsDragService::DragDataReceived), dragService);
-#endif
-
+  return NS_ERROR_FAILURE;
 }
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession **aSession)
+{
+  return NS_ERROR_FAILURE;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //-------------------------------------------------------------------------
 void  

@@ -34,16 +34,17 @@ public:
   nsDragService();
   virtual ~nsDragService();
   
-  //nsIDragService
-  NS_IMETHOD StartDragSession (nsITransferable * aTransferable, 
-                               PRUint32 aActionType);
+  NS_DECL_ISUPPORTS_INHERITED
 
-  // Native Impl.
-  NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
+  // nsIDragService
+  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables,
+                                nsIScriptableRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD GetCurrentSession (nsIDragSession ** aSession);
 
-  static void SetTopLevelWidget(GtkWidget* w);
-
-  static GtkWidget  *sWidget;
+  // nsIDragSession
+  NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 anItem);
+  NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
+  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
 
 protected:
   static PRBool gHaveDrag;
