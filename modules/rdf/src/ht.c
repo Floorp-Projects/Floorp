@@ -6896,6 +6896,7 @@ HT_CanDropHTRAtPos(HT_Resource dropTarget, HT_Resource obj, PRBool before)
 	XP_ASSERT(obj != NULL);
 	if (dropTarget == NULL)	return(action);
 	if (obj == NULL)	return(action);
+	if ( dropTarget == obj ) return(DROP_NOT_ALLOWED);
 	
 	dropParent = dropTarget->parent;
 
@@ -7024,7 +7025,8 @@ HT_DropHTRAtPos(HT_Resource dropTarget, HT_Resource obj, PRBool before)
 	XP_ASSERT(obj != NULL);
 	if (dropTarget == NULL)	return(DROP_NOT_ALLOWED);
 	if (obj == NULL)	return(DROP_NOT_ALLOWED);
-
+	if ( dropTarget == obj ) return(DROP_NOT_ALLOWED);
+	
 	if (dropTarget->parent == NULL)
 	{
 		if (obj->parent == NULL)
