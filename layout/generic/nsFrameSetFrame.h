@@ -208,9 +208,10 @@ protected:
   
   virtual PRIntn GetSkipSides() const;
 
-  void ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs); 
+  void ParseRowCol(nsIPresContext* aPresContext, nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs); 
 
-  PRInt32 ParseRowColSpec(nsString&       aSpec, 
+  PRInt32 ParseRowColSpec(nsIPresContext* aPresContext,
+                          nsString&       aSpec, 
                           PRInt32         aMaxNumValues,
                           nsFramesetSpec* aSpecs);
 
