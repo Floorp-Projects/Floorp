@@ -69,6 +69,9 @@
 #include "nsIFrameManager.h"
 #include "nsGUIEvent.h"
 #include "nsIRootBox.h"
+#ifdef XP_WIN
+#include "nsISound.h"
+#endif
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
@@ -1500,6 +1503,15 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
     }
     currFrame->GetNextSibling(&currFrame);
   }
+
+  // didn't find a matching menu item
+#ifdef XP_WIN
+  // behavior on Windows - this item is in a popup, beep and do nothing else
+  nsCOMPtr<nsISound> soundInterface = do_CreateInstance("@mozilla.org/sound;1");
+  if (soundInterface)
+    soundInterface->Beep();    
+#endif  // #ifdef XP_WIN
+
   return nsnull;
 }
 

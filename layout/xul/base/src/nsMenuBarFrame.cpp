@@ -58,6 +58,10 @@
 #include "nsMenuPopupFrame.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
+#ifdef XP_WIN
+#include "nsISound.h"
+#include "nsWidgetsCID.h"
+#endif
 
 
 //
@@ -278,6 +282,17 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
     }
     currFrame->GetNextSibling(&currFrame);
   }
+
+  // didn't find a matching menu item
+#ifdef XP_WIN
+  // behavior on Windows - this item is on the menu bar, beep and deactivate the menu bar
+  nsCOMPtr<nsISound> soundInterface = do_CreateInstance("@mozilla.org/sound;1");
+  if (soundInterface)
+    soundInterface->Beep();    
+
+  DismissChain();
+#endif  // #ifdef XP_WIN
+
   return nsnull;
 }
 
