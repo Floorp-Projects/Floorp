@@ -330,7 +330,7 @@ extern void LO_UpdateTextData(lo_FormElementTextData * textData, const char * te
  */
 
 
-#ifdef LAYERS
+#if 0
 extern void LO_PositionCaret( MWContext *context, int32 x, int32 y,
                               CL_Layer *layer);
 extern void LO_DoubleClick( MWContext *context, int32 x, int32 y, 
@@ -360,7 +360,7 @@ extern LO_Element* LO_BeginOfLine( MWContext *pContext, LO_Element *pElement );
 extern LO_Element* LO_EndOfLine( MWContext *pContext, LO_Element *pElement);
 extern LO_Element* LO_FirstElementOnLine( MWContext *pContext,
 	int32 x, int32 y, int32 *pLineNum);
-#ifdef LAYERS
+#if 0
 extern void LO_StartSelectionFromElement( MWContext *context, LO_Element *eptr, 
             int32 new_pos, CL_Layer *layer );
 #else
