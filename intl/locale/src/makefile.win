@@ -24,7 +24,7 @@ IGNORE_MANIFEST=1
 DEFINES		= -D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
 MODULE		= locale
-REQUIRES	= xpcom unicharutil
+REQUIRES	= xpcom unicharutil uconv
 DIRS		= windows
 
 LIBRARY_NAME = nslocale_s
@@ -42,6 +42,7 @@ LINCS		= -I.						\
 			  -I$(PUBLIC)\raptor		\
 			  -I$(PUBLIC)\xpcom 		\
 			  -I$(PUBLIC)\locale		\
+			  -I$(PUBLIC)\uconv			\
 			  -I$(PUBLIC)\unicharutil
 
 
