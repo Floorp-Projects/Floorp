@@ -34,6 +34,8 @@ class nsINameSpace;
  */
 class nsIXMLContent : public nsIContent {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IXMLCONTENT_IID; return iid; }
+  
   NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace) = 0;
   NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const = 0;
   
