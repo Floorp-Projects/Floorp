@@ -1588,7 +1588,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
     // proxy auth's never in prehost.  only take user:pass from URL if this
     // is the first 401 response (mUser and mPass hold previously attempted
     // username and password).
-    if (!proxyAuth && mUser.IsEmpty() && mPass.IsEmpty())
+    if (!proxyAuth && (mUser == nsnull) && (mPass == nsnull))
         GetUserPassFromURI(getter_Copies(mUser), getter_Copies(mPass));
 
     // figure out which challenge we can handle and which authenticator to use.
@@ -1896,6 +1896,13 @@ nsHttpChannel::PromptForUserPass(const char *host,
         return rv;
     if (!retval)
         return NS_ERROR_ABORT;
+
+    // if prompting succeeds, then username and password must be non-null.
+    if (*user == nsnull)
+        *user = ToNewUnicode(NS_LITERAL_STRING(""));
+    if (*pass == nsnull)
+        *pass = ToNewUnicode(NS_LITERAL_STRING(""));
+
     return NS_OK;
 }
 
