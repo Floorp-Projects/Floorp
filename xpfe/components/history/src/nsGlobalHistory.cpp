@@ -17,15 +17,19 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-/** Wrapper class for Global History implementation. This class
- *  primarily passes on the data to the nsIHistoryDataSource interface
- */
+/*
+
+  A global browser history implementation that also supports the RDF
+  datasource interface.
+
+*/
 
 #include "nsCOMPtr.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsIGenericFactory.h"
 #include "nsIGlobalHistory.h"
+#include "nsIProfile.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
@@ -51,6 +55,7 @@ static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kGlobalHistoryCID,     NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 
 #ifdef MOZ_BRPROF
 static NS_DEFINE_CID(kBrowsingProfileCID,   NS_BROWSINGPROFILE_CID);
@@ -236,7 +241,7 @@ private:
 
   nsresult ReadHistory();
 
-  nsresult ReadOneHistoryFile(nsInputFileStream& aStream, const nsFileSpec& aFileSpec);
+  nsresult ReadOneHistoryFile(const nsFileSpec& aFileSpec);
 
   nsresult AddPageToGraph(const char* aURL,
                           const PRUnichar* aTitle,
@@ -249,6 +254,8 @@ private:
   nsresult GetSiteOfURL(const char* aURL, nsIRDFResource** aResource);
 
   nsresult UpdateLastVisitDate(nsIRDFResource* aPage, PRTime aDate);
+
+  nsresult GetHistoryDir(nsFileSpec* aDirectory);
 
   // pseudo-constants. although the global history really is a
   // singleton, we'll use this metaphor to be consistent.
@@ -634,19 +641,10 @@ nsGlobalHistory::Init()
   // point.
   PR_snprintf(filename, sizeof(filename), "%lu.hst", PR_Now());
 
-  nsSpecialSystemDirectory historyFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  historyFile += "res";
-  historyFile += "rdf";
-  historyFile += "History";
+  rv = GetHistoryDir(&mCurrentFileSpec);
+  if (NS_FAILED(rv)) return rv;
 
-#ifdef  XP_MAC
-  PRBool  wasAlias = PR_FALSE;
-  historyFile.ResolveAlias(wasAlias);
-#endif
-
-  historyFile += filename;
-
-  mCurrentFileSpec = historyFile;
+  mCurrentFileSpec += filename;
   return NS_OK;
 }
 
@@ -655,19 +653,11 @@ nsGlobalHistory::ReadHistory()
 {
   nsresult rv;
 
-  nsSpecialSystemDirectory historyDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  historyDir += "res";
-  historyDir += "rdf";
-  historyDir += "History";
+  nsFileSpec dir;
+  rv = GetHistoryDir(&dir);
+  if (NS_FAILED(rv)) return rv;
 
-#ifdef  XP_MAC
-  {
-    PRBool  wasAlias;
-    historyDir.ResolveAlias(wasAlias);
-  }
-#endif
-
-  for (nsDirectoryIterator i(historyDir); i.Exists(); i++) {
+  for (nsDirectoryIterator i(dir); i.Exists(); i++) {
     const nsFileSpec spec = i.Spec();
 #ifdef XP_MAC
     {
@@ -687,12 +677,8 @@ nsGlobalHistory::ReadHistory()
       continue;
 
     // okay, it's a .HST file, which means we should try to parse it.
-    nsInputFileStream strm(spec);
-    NS_ASSERTION(strm.is_open(), "unable to open history file");
-    if (! strm.is_open())
-      continue;
+    rv = ReadOneHistoryFile(spec);
 
-    rv = ReadOneHistoryFile(strm, spec);
     // XXX ignore failure, continue to try to parse the rest.
   }
 
@@ -700,29 +686,51 @@ nsGlobalHistory::ReadHistory()
 }
 
 nsresult
-nsGlobalHistory::ReadOneHistoryFile(nsInputFileStream& aStream, const nsFileSpec& aFileSpec)
+nsGlobalHistory::ReadOneHistoryFile(const nsFileSpec& aFileSpec)
 {
-  nsAutoString  buffer;
+  nsInputFileStream strm(aFileSpec);
+  NS_ASSERTION(strm.is_open(), "unable to open history file");
+  if (! strm.is_open())
+    return NS_ERROR_FAILURE;
 
-  while (! aStream.eof() && ! aStream.failed()) {
-    nsresult rv=NS_OK;
+  nsRandomAccessInputStream in(strm);
 
-    char c = aStream.get();
-    if ((c != '\r') && (c != '\n')) {
-      buffer += c;
-      continue;
-    }
-
+  while (! in.eof() && ! in.failed()) {
+    nsresult rv = NS_OK;
     char buf[256];
     char* p = buf;
 
-    if (buffer.Length() >= PRInt32(sizeof buf))
-      p = new char[buffer.Length() + 1];
+    char* cursor = buf;          // our position in the buffer
+    PRInt32 size = sizeof(buf);  // the size of the buffer
+    PRInt32 space = sizeof(buf); // the space left in the buffer
+    while (! in.readline(cursor, space)) {
+      // in.readline() return PR_FALSE if there was buffer overflow,
+      // or there was a catastrophe. Check to see if we're here
+      // because of the latter...
+      NS_ASSERTION (! in.failed(), "error reading file");
+      if (in.failed()) return NS_ERROR_FAILURE;
 
-    if (! p)
-      return NS_ERROR_OUT_OF_MEMORY;
+      PRInt32 newsize = size * 2;
 
-    buffer.ToCString(p, buffer.Length() + 1);
+      // realloc
+      char* newp = new char[newsize];
+      if (! newp) {
+        if (p != buf)
+          delete[] p;
+
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      nsCRT::memcpy(newp, p, size);
+
+      if (p != buf)
+        delete[] p;
+
+      p = newp;
+      cursor = p + size - 1; // because it's null-terminated
+      space = size + 1;      // ...we can re-use the '\0'
+      size = newsize;
+    }
 
     if (PL_strlen(p) > 0) do {
       char* url = p;
@@ -777,8 +785,6 @@ nsGlobalHistory::ReadOneHistoryFile(nsInputFileStream& aStream, const nsFileSpec
 
     if (NS_FAILED(rv))
       return rv;
-
-    buffer.Truncate();
   }
   return NS_OK;
 }
@@ -1032,6 +1038,28 @@ nsGlobalHistory::UpdateLastVisitDate(nsIRDFResource* aPage, PRTime aDate)
   }
 
   *date = aDate;
+  return NS_OK;
+}
+
+
+nsresult
+nsGlobalHistory::GetHistoryDir(nsFileSpec* aDirectory)
+{
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = profile->GetCurrentProfileDir(aDirectory);
+  if (NS_FAILED(rv)) return rv;
+
+#ifdef  XP_MAC
+  {
+    PRBool  wasAlias = PR_FALSE;
+    aDirectory->ResolveAlias(wasAlias);
+  }
+#endif
+
   return NS_OK;
 }
 
