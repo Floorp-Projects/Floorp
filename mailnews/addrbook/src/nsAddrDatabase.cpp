@@ -1085,11 +1085,13 @@ nsresult nsAddrDatabase::InitExistingDB()
     if (err == NS_OK)
     {
         err = GetStore()->GetTable(GetEnv(), &gAddressBookTableOID, &m_mdbPabTable);
-
-        err = GetLastRecordKey();
-        if (err == NS_ERROR_NOT_AVAILABLE)
-            CheckAndUpdateRecordKey();
-        UpdateLowercaseEmailListName();
+        if (NS_SUCCEEDED(err))
+        {
+            err = GetLastRecordKey();
+            if (err == NS_ERROR_NOT_AVAILABLE)
+                CheckAndUpdateRecordKey();
+            UpdateLowercaseEmailListName();
+        }
     }
     return err;
 }
