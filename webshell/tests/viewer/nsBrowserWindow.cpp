@@ -429,11 +429,11 @@ HandleLocationEvent(nsGUIEvent *aEvent)
       break;
 
     case NS_DRAGDROP_EVENT: {
-      printf("Drag & Drop Event\n");
+      /*printf("Drag & Drop Event\n");
       nsDragDropEvent * ev = (nsDragDropEvent *)aEvent;
       nsAutoString fileURL;
       BuildFileURL(ev->mURL, fileURL);
-      /*nsAutoString fileName(ev->mURL);
+      nsAutoString fileName(ev->mURL);
       char * str = fileName.ToNewCString();
 
       PRInt32 len = strlen(str);
@@ -451,11 +451,11 @@ HandleLocationEvent(nsGUIEvent *aEvent)
       PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, str);
 
       // Ask the Web widget to load the file URL
-      nsString urlStr(lpszFileURL);*/
+      nsString urlStr(lpszFileURL);
       const PRUnichar * uniStr = fileURL.GetUnicode();
       bw->GoTo(uniStr);
       //delete [] lpszFileURL;
-      //delete [] str;
+      //delete [] str;*/
       } break;
 
     default:
