@@ -208,9 +208,12 @@ nsInputStreamTransport::Read(char *buf, PRUint32 count, PRUint32 *result)
     if (mFirstTime) {
         mFirstTime = PR_FALSE;
         if (mOffset) {
-            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSource);
-            if (seekable)
-                seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
+            // read from current position if offset equal to max
+            if (mOffset != PR_UINT32_MAX) {
+                nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSource);
+                if (seekable)
+                    seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
+            }
             // reset offset to zero so we can use it to enforce limit
             mOffset = 0;
         }
@@ -405,9 +408,12 @@ nsOutputStreamTransport::Write(const char *buf, PRUint32 count, PRUint32 *result
     if (mFirstTime) {
         mFirstTime = PR_FALSE;
         if (mOffset) {
-            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSink);
-            if (seekable)
-                seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
+            // write to current position if offset equal to max
+            if (mOffset != PR_UINT32_MAX) {
+                nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSink);
+                if (seekable)
+                    seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
+            }
             // reset offset to zero so we can use it to enforce limit
             mOffset = 0;
         }
