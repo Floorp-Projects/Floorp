@@ -17,9 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Mike Shaver <shaver@zeroknowledge.com>
  *   Christopher Blizzard <blizzard@mozilla.org>
@@ -51,8 +50,6 @@
 #include "nsIMIMEService.h"
 #include "nsIEnumerator.h"
 #include "nsAuthEngine.h"
-#include "nsINetDataCacheManager.h"
-#include "nsINetDataCache.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIProxy.h"
 #include "nsMimeTypes.h"
@@ -62,6 +59,11 @@
 #include "nsIProxyObjectManager.h"
 #include "nsIWalletService.h"
 #include "netCore.h"
+
+#ifndef MOZ_NEW_CACHE
+#include "nsINetDataCacheManager.h"
+#include "nsINetDataCache.h"
+#endif
 
 // FIXME - Temporary include.  Delete this when cache is enabled on all 
 // platforms
@@ -147,6 +149,16 @@ nsHTTPChannel::~nsHTTPChannel()
     CRTFREEIF(mProxyType);
 }
 
+#ifdef MOZ_NEW_CACHE
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPChannel,
+                              nsIHTTPChannel,
+                              nsIChannel,
+                              nsIInterfaceRequestor,
+                              nsIProgressEventSink,
+                              nsIProxy,
+                              nsIRequest,
+                              nsICachingChannel);
+#else
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPChannel,
                               nsIHTTPChannel,
                               nsIChannel,
@@ -155,6 +167,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPChannel,
                               nsIProxy,
                               nsIRequest,
                               nsIStreamAsFile);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -250,7 +263,6 @@ NS_IMETHODIMP
 nsHTTPChannel::GetOpenHasEventQueue(PRBool *hasEventQueue)
 {
     NS_ENSURE_ARG_POINTER(hasEventQueue);
-
     *hasEventQueue = mOpenHasEventQueue;
     return NS_OK;
 }
@@ -290,7 +302,7 @@ nsHTTPChannel::Open(nsIInputStream **aStream)
     if (NS_FAILED(rv))
         return rv;
 
-    // spin up a new helper thread.
+    // spin up a new helper thread.  XXX HTTP IS NOT THREAD-SAFE !!!
     nsCOMPtr<nsIThread> helperThread;
     return NS_NewThread(getter_AddRefs(helperThread), NS_STATIC_CAST(nsIRunnable *, helper));
 }
@@ -1038,16 +1050,15 @@ nsHTTPChannel::ReadFromCache()
         return NS_ERROR_FAILURE;
 
     NS_ASSERTION(mResponseDataListener, 
-        "Attempt to retrieve cache data before AsyncRead or OpenInputStream");
+        "Attempt to retrieve cache data before AsyncOpen or Open");
     if (!mResponseDataListener)
         return NS_ERROR_FAILURE;
 
 #if defined(PR_LOGGING)
-    nsresult log_rv;
     char *URLSpec;
 
-    log_rv = mURI->GetSpec(&URLSpec);
-    if (NS_FAILED(log_rv))
+    rv = mURI->GetSpec(&URLSpec);
+    if (NS_FAILED(rv))
         URLSpec = nsCRT::strdup("?");
 
     LOG(("nsHTTPChannel::ReadFromCache [this=%x].\tUsing cache copy for: %s\n",
@@ -1055,6 +1066,10 @@ nsHTTPChannel::ReadFromCache()
     nsMemory::Free(URLSpec);
 #endif
 
+#ifdef MOZ_NEW_CACHE
+    // Get a transport to the cached data...
+    rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
+#else
     // Create a cache transport to read the cached response...
     rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(mCacheChannel));
     if (NS_FAILED(rv)) return rv;
@@ -1063,6 +1078,7 @@ nsHTTPChannel::ReadFromCache()
     // This will ensure that notifications are suppressed if necessary.
     rv = mCacheChannel->SetLoadAttributes(mLoadAttributes);
     if (NS_FAILED(rv)) return rv;
+#endif
 
     // Fake it so that HTTP headers come from cached versions
     SetResponse(mCachedResponse);
@@ -1082,7 +1098,14 @@ nsHTTPChannel::ReadFromCache()
     FinishedResponseHeaders();
 
     // Pump the cache data downstream
+#ifdef MOZ_NEW_CACHE
+    rv = mCacheTransport->AsyncRead(listener, mResponseContext,
+                                    0, ULONG_MAX, 0,
+                                    getter_AddRefs(mCacheReadRequest));
+#else
     rv = mCacheChannel->AsyncOpen(listener, mResponseContext);
+#endif
+
     NS_RELEASE(listener);
     if (NS_FAILED(rv))
         ResponseCompleted(nsnull, rv, nsnull);
@@ -1094,6 +1117,10 @@ nsHTTPChannel::CacheAbort(PRUint32 statusCode)
 {
     nsresult rv = NS_OK;
     if (mCacheEntry) {
+#ifdef MOZ_NEW_CACHE
+        // Doom the cache entry.
+        rv = mCacheEntry->Doom();
+#else
         // Set the stored content length to zero
         rv = mCacheEntry->SetStoredContentLength(0);
 
@@ -1112,6 +1139,7 @@ nsHTTPChannel::CacheAbort(PRUint32 statusCode)
             mCacheEntry->SetUpdateInProgress(PR_TRUE);
             mCacheEntry->SetUpdateInProgress(PR_FALSE);
         }
+#endif
 
         // Release our reference to it.
         mCacheEntry = nsnull;
