@@ -32,11 +32,13 @@ CPPSRCS		= \
 		nsRDFDOMDataSource.cpp \
 		nsRDFDOMDataSourceFactory.cpp \
 		nsRDFDOMResourceFactory.cpp \
+		nsRDFDOMViewerUtils.cpp	\
 		$(NULL)
 
 XPIDLSRCS	= \
 		nsIDOMDataSource.idl \
 		nsIDOMViewerElement.idl \
+		nsIRDFDOMViewerObject.idl	\
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

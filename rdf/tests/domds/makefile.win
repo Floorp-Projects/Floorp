@@ -24,12 +24,14 @@ DLL=$(LIBNAME).dll
 
 XPIDLSRCS=	.\nsIDOMViewerElement.idl	\
 		.\nsIDOMDataSource.idl	\
+		.\nsIRDFDOMViewerObject.idl	\
 		$(NULL)
 
 DIRS=resources
 OBJS=	.\$(OBJDIR)\nsRDFDOMDataSource.obj 	\
 	.\$(OBJDIR)\nsRDFDOMDataSourceFactory.obj \
 	.\$(OBJDIR)\nsRDFDOMResourceFactory.obj \
+	.\$(OBJDIR)\nsRDFDOMViewerUtils.obj	\
 	$(NULL)
 
 LLIBS=				\

@@ -28,6 +28,10 @@
 
 [scriptable, uuid(0b96297e-2459-11d3-8aad-006008948010)]
 interface nsIDOMDataSource : nsISupports {
-    void SetWindow(in nsIDOMWindow window);
+    
+    void setMode(in string mode, in boolean active);
+    boolean getMode(in string mode);
+    void setWindow(in nsIDOMWindow window);
+    
 };
 
