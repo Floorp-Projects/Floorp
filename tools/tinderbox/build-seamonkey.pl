@@ -7,11 +7,12 @@ require 5.005;
 require "build-seamonkey-util.pl";
 
 use strict;
-$::Version = '$Revision: 1.92 $ ';
 
 # "use strict" complains if we do not define these.
 # They are not initialized here. The default values are after "__END__".
 $TreeSpecific::checkout_command = $::Version = undef;
+
+$::Version = '$Revision: 1.93 $ ';
 
 {
     TinderUtils::Setup();
