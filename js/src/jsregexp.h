@@ -130,7 +130,7 @@ extern JSObject *
 js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
                    jschar *chars, size_t length, uintN flags);
 
-extern JSBool
-js_XDRRegExp(JSXDRState *xdr, JSObject **objp);
+extern JSObject *
+js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent);
 
 #endif /* jsregexp_h___ */
