@@ -158,7 +158,7 @@ nsCOMPtr<nsIDOMNode> nsBaseAppCore::FindNamedDOMNode(const nsString &aName, nsID
     nsCOMPtr<nsIDOMNode> oldNode = node;
     oldNode->GetNextSibling(getter_AddRefs(node));
   }
-  node = nsnull;
+  node = do_QueryInterface(nsnull);
   return node;
 
 } // nsToolbarCore::FindNamedDOMNode
