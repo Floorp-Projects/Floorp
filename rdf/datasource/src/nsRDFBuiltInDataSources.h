@@ -40,6 +40,9 @@ nsresult NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result);
 // in nsFileSystemDataSource.cpp
 nsresult NS_NewRDFFileSystemDataSource(nsIRDFDataSource** result);
 
+// in nsFindDataSource.cpp
+nsresult NS_NewRDFFindDataSource(nsIRDFDataSource** result);
+
 // in nsMemoryDataSource.cpp
 nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
 

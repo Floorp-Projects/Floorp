@@ -34,6 +34,7 @@
 #include "nsRDFBaseDataSources.h"
 #include "nsRDFBuiltInDataSources.h"
 #include "nsIRDFFileSystem.h"
+#include "nsIRDFFind.h"
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "rdf.h"
@@ -51,6 +52,7 @@ static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,         NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFDefaultResourceCID,     NS_RDFDEFAULTRESOURCE_CID);
 static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,NS_RDFFILESYSTEMDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFFindDataSourceCID,      NS_RDFFINDDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFHTMLBuilderCID,         NS_RDFHTMLBUILDER_CID);
 static NS_DEFINE_CID(kRDFHistoryDataSourceCID,   NS_RDFHISTORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
@@ -171,6 +173,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kRDFFileSystemDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFFileSystemDataSource((nsIRDFDataSource**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kRDFFindDataSourceCID)) {
+        if (NS_FAILED(rv = NS_NewRDFFindDataSource((nsIRDFDataSource**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFCompositeDataSourceCID)) {
@@ -302,6 +308,11 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     rv = compMgr->RegisterComponent(kRDFFileSystemDataSourceCID,  
                                          "RDF File System Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "files",
+                                         aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->RegisterComponent(kRDFFindDataSourceCID,  
+                                         "RDF Find Data Source",
+                                         NS_RDF_DATASOURCE_PROGID_PREFIX "find",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFHistoryDataSourceCID,  

@@ -27,8 +27,9 @@ include $(topsrcdir)/config/config.mk
 LIBRARY_NAME = rdfdatasource_s
 
 CPPSRCS =				\
-        nsBookmarkDataSource.cpp	\
-        nsFileSystemDataSource.cpp	\
+	nsBookmarkDataSource.cpp	\
+	nsFileSystemDataSource.cpp	\
+	nsFindDataSource.cpp		\
 	nsHistoryDataSource.cpp		\
 	nsXULContentSink.cpp		\
 	nsXULDataSource.cpp		\
