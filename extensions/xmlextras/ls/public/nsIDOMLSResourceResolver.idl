@@ -39,6 +39,8 @@
 
 #include "domstubs.idl"
 
+interface nsIDOMLSInput;
+
 [scriptable, uuid(9e61c7c8-8698-4477-9971-0923513919bd)]
 interface nsIDOMLSResourceResolver : nsISupports
 {

@@ -39,6 +39,11 @@
 
 #include "domstubs.idl"
 
+interface nsIDOMDOMConfiguration;
+interface nsIDOMLSParserFilter;
+interface nsIDOMLSInput;
+interface LSException;
+
 [scriptable, uuid(2a31a3a0-be68-40af-9f64-914192f0fba2)]
 interface nsIDOMLSParser : nsISupports
 {

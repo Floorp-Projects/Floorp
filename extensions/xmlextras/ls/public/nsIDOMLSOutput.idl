@@ -39,13 +39,15 @@
 
 #include "domstubs.idl"
 
+interface nsIOutputStream;
+
 [scriptable, uuid(757e9971-8890-478d-a53a-07f9f6f6e0d3)]
-interface nsIDOMLSOutput : nsISupport
+interface nsIDOMLSOutput : nsISupports
 {
   // Depending on the language binding in use,
   // this attribute may not be available.
-           attribute nsISupport      characterStream;
-           attribute LSOutputStream  byteStream;
+           attribute nsISupports     characterStream;
+           attribute nsIOutputStream byteStream;
            attribute DOMString       systemId;
            attribute DOMString       encoding;
 };

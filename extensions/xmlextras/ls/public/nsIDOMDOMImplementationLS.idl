@@ -39,6 +39,11 @@
 
 #include "domstubs.idl"
 
+interface nsIDOMLSParser;
+interface nsIDOMLSSerializer;
+interface nsIDOMLSInput;
+interface nsIDOMLSOutput;
+
 [scriptable, uuid(e2c8b03c-a49a-4923-81b0-ba9a86da0e21)]
 interface nsIDOMDOMImplementationLS : nsISupports
 {

@@ -45,5 +45,5 @@ interface nsIDOMLSException : nsISupports
   const unsigned short      PARSE_ERR                      = 81;
   const unsigned short      SERIALIZE_ERR                  = 82;
 
-  unsigned short   code;
+  readonly attribute unsigned short   code;
 };

@@ -39,12 +39,17 @@
 
 #include "domstubs.idl"
 
+interface nsIDOMDOMConfiguration;
+interface nsIDOMLSOutput;
+interface nsIDOMLSSerializerFilter;
+interface LSException;
+
 [scriptable, uuid(96ea4792-d362-4c28-a8c2-0337790d648a)]
 interface nsIDOMLSSerializer : nsISupports
 {
   readonly attribute nsIDOMDOMConfiguration   domConfig;
            attribute DOMString                newLine;
-           attribute nSIDOMLSSerializerFilter filter;
+           attribute nsIDOMLSSerializerFilter filter;
   boolean            write(in nsIDOMNode nodeArg, 
                            in nsIDOMLSOutput destination)
                                         raises(LSException);

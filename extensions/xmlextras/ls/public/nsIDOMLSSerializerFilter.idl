@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsIDOMNodeFilter.idl"
 
 [scriptable, uuid(b9b6ec85-f69f-4a5a-a96a-8a7a8f07e2b4)]
 interface nsIDOMLSSerializerFilter : nsIDOMNodeFilter
