@@ -49,7 +49,7 @@ class bcJavaComponentLoader : public nsIComponentLoader {
  protected:
     nsHashtable mModules;
     nsCOMPtr<nsIRegistry> mRegistry;
-    nsIComponentManager* mCompMgr; // weak ref, should make it strong?
+    nsCOMPtr<nsIComponentManager> mCompMgr; 
     nsRegistryKey mXPCOMKey;
     nsSupportsArray mDeferredComponents;
 

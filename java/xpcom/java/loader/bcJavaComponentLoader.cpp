@@ -47,7 +47,7 @@ const char lastModValueName[] = "LastModTimeStamp";
 const char xpcomKeyName[] = "software/mozilla/XPCOM/components";
 #endif
 
-NS_IMPL_ISUPPORTS(bcJavaComponentLoader,NS_GET_IID(nsIComponentLoader));
+NS_IMPL_THREADSAFE_ISUPPORTS(bcJavaComponentLoader,NS_GET_IID(nsIComponentLoader));
 
 bcJavaComponentLoader::bcJavaComponentLoader() 
     : mCompMgr(NULL),
