@@ -39,7 +39,7 @@
 
 #import "NSString+Utils.h"
 
-#import "CHExtendedTabView.h"
+#import "BrowserTabView.h"
 #import "CHIconTabViewItem.h"
 #import "BookmarksService.h"
 #import "BookmarksDataSource.h"
@@ -58,14 +58,14 @@
 //				   		 : Move tab titles around when dragging.
 //////////////////////////
 
-@interface CHExtendedTabView (Private)
+@interface BrowserTabView (Private)
 
 - (void)showOrHideTabsAsAppropriate;
 - (void)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url;
 
 @end
 
-@implementation CHExtendedTabView
+@implementation BrowserTabView
 
 /******************************************/
 /*** Initialization                     ***/

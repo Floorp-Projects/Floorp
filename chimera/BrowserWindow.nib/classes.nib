@@ -21,6 +21,7 @@
             SUPERCLASS = NSObject; 
         }, 
         {CLASS = BookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {CLASS = BrowserTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
         {
             CLASS = BrowserWindow; 
             LANGUAGE = ObjC; 
@@ -118,7 +119,6 @@
             SUPERCLASS = NSView; 
         }, 
         {CLASS = CHExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
-        {CLASS = CHExtendedTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
         {
             CLASS = CHHistoryDataSource; 
             LANGUAGE = ObjC; 
@@ -136,7 +136,6 @@
         {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = LocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
-        {CLASS = MJExtendedTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
         {CLASS = MainController; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
             ACTIONS = {load = id; }; 

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Simon Fraser <sfraser@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -35,25 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "BrowserTabViewItem.h"
 
-#import "NSScreen+Utils.h"
 
+@implementation BrowserTabViewItem
 
-@implementation NSScreen (CHScreenAdditions)
-
-+ (NSScreen*)screenForPoint:(NSPoint)point
+-(id)initWithIdentifier:(id)identifier withTabIcon:(NSImage *)tabIcon
 {
-	NSArray* screens = [NSScreen screens];
-	NSEnumerator* screenEnum = [screens objectEnumerator];
-	NSScreen* screen;
-	
-	while ( (screen = [screenEnum nextObject]) ) {
-		NSRect frame = [screen frame];
-		if (NSPointInRect(point, frame))
-			break;
-	}
-	
-	return screen;
+  if ( (self = [super initWithIdentifier:identifier withTabIcon:tabIcon]) )
+  {
+
+  }
+  return self;
 }
+
+-(id)initWithIdentifier:(id)identifier
+{
+  return [self initWithIdentifier:identifier withTabIcon:nil];
+}
+
+-(void)dealloc
+{
+  [super dealloc];
+}
+
+
+
 
 @end
