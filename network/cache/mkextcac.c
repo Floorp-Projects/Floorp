@@ -1017,7 +1017,7 @@ PUBLIC int CACHE_EmptyCache(ExtCacheDBInfo *db)
  */
 PUBLIC int CACHE_RemoveCache(ExtCacheDBInfo *db)
 {
-	int ret;
+	int ret = 0;
 	ExtCacheDBInfo *db_info;
 	XP_List			*tmpList;
 
@@ -1061,7 +1061,7 @@ CACHE_FindURLInCache(URL_Struct *URL_s, MWContext *ctxt)
 	XP_List *list_ptr;
 
 	/* larubbio */
-	XP_FileType fileType;
+	XP_FileType fileType = 0;
 
 	TRACEMSG(("Checking for URL in external cache"));
 

@@ -366,7 +366,7 @@ NET_ParseUploadURL( char *full_location, char **location,
     char *at_ptr;
     char *colon_ptr;
     char at;
-    char colon;
+    char colon = 0;
 
     if( !full_location || !location ) return FALSE;
 

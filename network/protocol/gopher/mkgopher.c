@@ -165,12 +165,12 @@ net_parse_menu (ActiveEntry * cur_entry)
 {
     GopherConData * connection_data = (GopherConData *)cur_entry->con_data;
     char gopher_type;
-    char *name;
+    char *name=NULL;
 	char *gopher_path=0; 
     char *port;         
     char *ptr;
     char *line;
-    char *host;        
+    char *host=NULL;        
 
     CE_STATUS = NET_BufferedReadLine(CE_SOCK, &line, &CD_DATA_BUF,
                                                 &CD_DATA_BUF_SIZE, &CD_PAUSE_FOR_READ);
