@@ -28,5 +28,7 @@
 #define FILLTEST                  40015
 #define ARCTEST                   40016
 #define COMPTST                   40017
+#define COMPTSTSPEED              40018
+#define RDMSK                     40019
 
 #endif /* resources_h___ */

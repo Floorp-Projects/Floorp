@@ -55,15 +55,16 @@ static HWND gHwnd;
 static nsIWidget *gWindow = nsnull;
 static nsIImage *gImage = nsnull;
 static nsIImage *gBlendImage = nsnull;
+static nsIImage *gMaskImage = nsnull;
 static PRBool gInstalledColorMap = PR_FALSE;
+static PRInt32  gXOff,gYOff,gTestNum;
 
-extern void    Compositetest(nsIImage *aTheImage,nsIImage *aBlendImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY);
+extern void    Compositetest(PRInt32 aTestNum,nsIImage *aImage,nsIImage *aBImage,nsIImage *aMImage, PRInt32 aX, PRInt32 aY);
 extern PRInt32 speedtest(nsIImage *aTheImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 extern PRInt32 drawtest(nsIRenderingContext *aSurface);
 extern PRInt32 filltest(nsIRenderingContext *aSurface);
 extern PRInt32 arctest(nsIRenderingContext *aSurface);
 extern PRBool  IsImageLoaded();
-
 
 
 
@@ -77,7 +78,6 @@ private:
 
 public:
   MyBlendObserver(nsIImage **aImage);
-  //MyBlendObserver();
   ~MyBlendObserver();
  
   NS_DECL_ISUPPORTS
@@ -128,33 +128,12 @@ MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
           NS_ADDREF(aImage);
           }
 
-          
-        //if (gBlendImage == nsnull && aImage) 
-          //{
-          //gBlendImage = aImage;
-          //NS_ADDREF(aImage);
-          //}
-
-
-          if (!gInstalledColorMap && gBlendImage) 
+        if ( gBlendImage && (aNotificationType == nsImageNotification_kImageComplete) )
           {
           nsColorMap *cmap = (*mImage)->GetColorMap();
-
-          if(aNotificationType == nsImageNotification_kImageComplete)
-            {
-            nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
-            Compositetest(gImage,gBlendImage,drawCtx,0,0);
-            }
-
-          //if (cmap != nsnull && cmap->NumColors > 0) 
-            //{
-            //gWindow->SetColorMap(cmap);
-            //}
-          //gInstalledColorMap = PR_TRUE;
+          nsRect *rect = (nsRect *)aParam3;  
+          Compositetest(gTestNum,gImage,gBlendImage,gMaskImage,gXOff,gYOff);
           }
-        //nsRect *rect = (nsRect *)aParam3;
-        //nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
-
        }
        break;
     }
@@ -186,8 +165,6 @@ public:
   virtual void NotifyError(nsIImageRequest *aImageRequest,nsImageError aErrorType);
 
 };
-
-
 
 //------------------------------------------------------------
 
@@ -267,15 +244,88 @@ MyObserver::NotifyError(nsIImageRequest *aImageRequest,
 
 // This tests the compositing for the image
 void
-Compositetest(nsIImage *aTheImage,nsIImage *aBlendImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY)
+Compositetest(PRInt32 aTestNum,nsIImage *aImage,nsIImage *aBImage,nsIImage *aMImage, PRInt32 aX, PRInt32 aY)
 {
-PRInt32 swidth, sheight,bwidth,bheight;
- 
-  swidth = aTheImage->GetWidth();
-  sheight = aTheImage->GetHeight();
+nsPoint *location;
+PRUint32    min,seconds,milli,i,h,w;
+SYSTEMTIME  thetime;
+nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 
-  bwidth = aBlendImage->GetWidth();
-  bheight = aBlendImage->GetHeight();
+  if(aTestNum == 1)
+    {
+    location = new nsPoint(aX,aY);
+    if(aMImage)
+      {
+      aImage->SetAlphaMask(aMImage);
+      aImage->MoveAlphaMask(rand() % gImage->GetWidth(),rand() % gImage->GetHeight());
+      }
+
+    if(aMImage == nsnull)
+      {
+      location->x = rand() % gImage->GetWidth();
+      location->y = rand() % gImage->GetHeight();
+      printf("\n Image Location is %d, %d\n", location->x,location->y);
+      }
+    
+    aImage->CompositeImage(aBImage,location);
+    }
+
+  if(aTestNum == 2)
+    {
+
+    if(aMImage)
+      {
+      aImage->SetAlphaMask(aMImage);
+      }
+
+    printf("\nSTARTING Blending TEST\n");
+    ::GetSystemTime(&thetime);
+    min = thetime.wMinute;
+    seconds = thetime.wSecond;
+    milli = thetime.wMilliseconds;
+    location = new nsPoint(0,0);
+    w = gImage->GetWidth();
+    h = gImage->GetHeight();
+
+    if(aMImage)
+      {
+      for(i=0;i<200;i++)
+        {
+        aImage->MoveAlphaMask(rand()%w,rand()%h);
+        aImage->CompositeImage(aBImage,location);
+        drawCtx->DrawImage(gImage, 0, 0, gImage->GetWidth(), gImage->GetHeight());
+        }
+      }
+    else
+      for(i=0;i<200;i++)
+        {
+        aImage->CompositeImage(aBImage,location);
+        drawCtx->DrawImage(gImage, 0, 0, gImage->GetWidth(), gImage->GetHeight());
+        }
+
+    ::GetSystemTime(&thetime);
+    min = thetime.wMinute-min;
+    if(min>0)
+      min = min*60;
+    seconds = min+thetime.wSecond-seconds;
+    if(seconds>0)
+      seconds = (seconds*1000)+thetime.wMilliseconds;
+    else
+      seconds = thetime.wMilliseconds;
+    milli=seconds-milli;
+
+    printf("The composite Time was %lu Milliseconds\n",milli);
+    }
+  
+  drawCtx->DrawImage(gImage, 0, 0, gImage->GetWidth(), gImage->GetHeight());
+
+  // we are finished with this
+  if (gBlendImage) 
+    {
+    NS_RELEASE(gBlendImage);
+    gBlendImage = NULL;
+    }
+
 }
 
 
@@ -639,6 +689,7 @@ long PASCAL
 WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 {
   HMENU hMenu;
+  char szFile[256];
 
   switch (msg) 
     {
@@ -649,7 +700,6 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
         {
         case TIMER_OPEN: 
           {
-          char szFile[256];
 
           if (!OpenFileDialog(szFile, 256))
               return 0L;
@@ -660,18 +710,31 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
           ::DestroyWindow(hWnd);
           exit(0);
           break;
+        case RDMSK:
+            if (gMaskImage!=nsnull) 
+              {
+              NS_RELEASE(gMaskImage);
+              gMaskImage = nsnull;
+              }
+            if (OpenFileDialog(szFile, 256))
+              MyLoadImage(szFile,PR_TRUE,&gMaskImage);
+          break;
         case COMPTST:
+          gTestNum = 1;
+        case COMPTSTSPEED:
+          if(LOWORD(param) == COMPTSTSPEED)
+            gTestNum = 2;
           IsImageLoaded();
           if(gImage)
-            {
-            char szFile[256];
-            
+            {   
             if (gBlendImage!=nsnull) 
               {
               NS_RELEASE(gBlendImage);
               gBlendImage = nsnull;
               }
 
+            gXOff = 100;
+            gYOff = 100;
             if (OpenFileDialog(szFile, 256))
               MyLoadImage(szFile,PR_TRUE,&gBlendImage);
             }
