@@ -22,7 +22,7 @@
 #include "nsIDocument.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleContext.h"
-#include "nsIFrame.h"
+#include "nsFrame.h"
 #include "nsReflowCommand.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
@@ -189,6 +189,8 @@ public:
 
 protected:
   ~PresShell();
+
+  void InitFrameVerifyTreeLogModuleInfo();
 
   FrameHashTable* mCache;
   nsIDocument* mDocument;
@@ -409,38 +411,28 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   }
 
   if (nsnull != mRootFrame) {
-    nsRect bounds = mPresContext->GetVisibleArea();
-    nsReflowMetrics desiredSize;
-    nsSize maxSize(bounds.width, bounds.height);
-
     // Kick off a top-down reflow
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+                 ("enter nsPresShell::ResizeReflow: %d,%d", aWidth, aHeight));
 #ifdef NS_DEBUG
-    mRootFrame->VerifyTree();
-#endif
-    nsReflowStatus  status;
-
-    mRootFrame->ResizeReflow(mPresContext, desiredSize, maxSize, nsnull, status);
-    mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
-#ifdef NS_DEBUG
-    mRootFrame->VerifyTree();
-#endif
-#ifdef NOISY
-    mRootFrame->List();
-#endif
-
-    //force a redraw of the entire view
-
-#if 0
-    nsIView *view = mRootFrame->GetView();
-
-    if (nsnull != view) {
-      nsRect rect = mRootFrame->GetRect();
-      nsIViewManager* vm = view->GetViewManager();
-      vm->UpdateView(view, &rect, NS_VMREFRESH_DOUBLE_BUFFER);
-      NS_RELEASE(vm);
-      NS_RELEASE(view);
+    if (nsIFrame::GetVerifyTreeEnable()) {
+      mRootFrame->VerifyTree();
     }
 #endif
+    nsRect          bounds = mPresContext->GetVisibleArea();
+    nsSize          maxSize(bounds.width, bounds.height);
+    nsReflowMetrics desiredSize;
+    nsReflowStatus  status;
+    mRootFrame->ResizeReflow(mPresContext, desiredSize, maxSize,
+                             nsnull, status);
+    mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
+#ifdef NS_DEBUG
+    if (nsIFrame::GetVerifyTreeEnable()) {
+      mRootFrame->VerifyTree();
+    }
+#endif
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::ResizeReflow"));
+
     // XXX if debugging then we should assert that the cache is empty
   } else {
 #ifdef NOISY
@@ -517,7 +509,9 @@ PresShell::ProcessReflowCommands()
     // Place and size the root frame
     mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
-    mRootFrame->VerifyTree();
+    if (nsIFrame::GetVerifyTreeEnable()) {
+      mRootFrame->VerifyTree();
+    }
 #endif
   }
 }
