@@ -233,12 +233,12 @@ NS_METHOD nsMenuItem::SetLabel(nsString &aText)
   return NS_OK;
 }
 
-NS_METHOD SetShortcutChar(const nsString &aText)
+NS_METHOD nsMenuItem::SetShortcutChar(const nsString &aText)
 {
   return NS_OK;
 }
 
-NS_METHOD GetShortcutChar(nsString &aText)
+NS_METHOD nsMenuItem::GetShortcutChar(nsString &aText)
 {
   return NS_OK;
 }
@@ -383,12 +383,12 @@ NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
   return nsEventStatus_eIgnore;
 }
 
-NS_METHOD SetModifiers(PRUint8 aModifiers)
+NS_METHOD nsMenuItem::SetModifiers(PRUint8 aModifiers)
 {
   return NS_OK;
 }
 
-NS_METHOD GetModifiers(PRUint8 * aModifiers)
+NS_METHOD nsMenuItem::GetModifiers(PRUint8 * aModifiers)
 {
   return NS_OK;
 }
