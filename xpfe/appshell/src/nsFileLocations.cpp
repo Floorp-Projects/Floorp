@@ -133,11 +133,11 @@ void nsSpecialFileSpec::operator = (Type aType)
                 *this += ".mozilla";
 #elif defined(XP_MAC)
                 // XXX Fix Me. For now use ./profile
-                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrnetWorkingDirectory);
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
                 *this += "profile";
 #else /* XP_PC */
                 // XXX Fix Me. For now use ./profile
-                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrnetWorkingDirectory);
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
                 *this += "profile";
 #endif
             }
