@@ -522,6 +522,33 @@ nsresult nsIDKey::Write(nsIObjectOutputStream* aStream) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Copy Constructor
+// We need to free mStr if the object is passed with mOwnership as OWN. As the 
+// destructor here is freeing mStr in that case, mStr is NOT getting leaked here.
+
+nsCStringKey::nsCStringKey(const nsCStringKey& aKey)
+    : mStr(aKey.mStr), mStrLen(aKey.mStrLen), mOwnership(aKey.mOwnership)
+{
+    if (mOwnership != NEVER_OWN) {
+      PRUint32 len = mStrLen * sizeof(char);
+      char* str = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(len + sizeof(char)));
+      if (!str) {
+        // Pray we don't dangle!
+        mOwnership = NEVER_OWN;
+      } else {
+        // Use memcpy in case there are embedded NULs.
+        memcpy(str, mStr, len);
+        str[mStrLen] = '\0';
+        mStr = str;
+        mOwnership = OWN;
+      }
+    }
+#ifdef DEBUG
+    mKeyType = CStringKey;
+#endif
+    MOZ_COUNT_CTOR(nsCStringKey);
+}
+
 nsCStringKey::nsCStringKey(const nsAFlatCString& str)
     : mStr(NS_CONST_CAST(char*, str.get())),
       mStrLen(str.Length()),
@@ -620,6 +647,33 @@ nsCStringKey::Write(nsIObjectOutputStream* aStream) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Copy Constructor
+// We need to free mStr if the object is passed with mOwnership as OWN. As the 
+// destructor here is freeing mStr in that case, mStr is NOT getting leaked here.
+
+nsStringKey::nsStringKey(const nsStringKey& aKey)
+    : mStr(aKey.mStr), mStrLen(aKey.mStrLen), mOwnership(aKey.mOwnership)
+{
+    if (mOwnership != NEVER_OWN) {
+        PRUint32 len = mStrLen * sizeof(PRUnichar);
+        PRUnichar* str = NS_REINTERPRET_CAST(PRUnichar*, nsMemory::Alloc(len + sizeof(PRUnichar)));
+        if (!str) {
+            // Pray we don't dangle!
+            mOwnership = NEVER_OWN;
+        } else {
+            // Use memcpy in case there are embedded NULs.
+            memcpy(str, mStr, len);
+            str[mStrLen] = 0;
+            mStr = str;
+            mOwnership = OWN;
+        }
+    }
+#ifdef DEBUG
+    mKeyType = StringKey;
+#endif
+    MOZ_COUNT_CTOR(nsStringKey);
+}
+
 nsStringKey::nsStringKey(const nsAFlatString& str)
     : mStr(NS_CONST_CAST(PRUnichar*, str.get())),
       mStrLen(str.Length()),
@@ -713,6 +767,30 @@ nsStringKey::Write(nsIObjectOutputStream* aStream) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Copy Constructor
+// We need to free mBuf if the object is passed with mOwnership as OWN. As the 
+// destructor here is freeing mBuf in that case, mBuf is NOT getting leaked.
+
+nsOpaqueKey::nsOpaqueKey(const nsOpaqueKey& aKey)
+    : mBuf(aKey.mBuf), mBufLen(aKey.mBufLen), mOwnership(aKey.mOwnership)
+{
+    if (mOwnership != NEVER_OWN) {
+        char* newBuf = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(mBufLen));
+        if (!newBuf) {
+            // Pray we don't dangle!
+            mOwnership = NEVER_OWN;
+        } else {
+            memcpy(newBuf, mBuf, mBufLen);
+            mBuf = newBuf;
+            mOwnership = OWN;
+        }
+    }
+#ifdef DEBUG
+     mKeyType = OpaqueKey;
+#endif
+     MOZ_COUNT_CTOR(nsOpaqueKey);
+ }
+ 
 nsOpaqueKey::nsOpaqueKey(const char* str, PRUint32 strLen, Ownership own)
     : mBuf((char*)str), mBufLen(strLen), mOwnership(own)
 {
