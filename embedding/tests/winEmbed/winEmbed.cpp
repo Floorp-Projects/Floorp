@@ -37,6 +37,7 @@
 #include "nsIClipboardCommands.h"
 #include "nsXPIDLString.h"
 #include "nsIWebBrowserPersist.h"
+#include "nsIWebBrowserFocus.h"
 #include "nsIWindowWatcher.h"
 #include "nsIProfile.h"
 #include "nsIObserverService.h"
@@ -725,6 +726,26 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		}
 
 	    return TRUE;
+
+    case WM_ACTIVATE:
+        {
+            nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(webBrowser));
+            if(focus)
+            {
+                switch (wParam)
+                {
+                case WA_ACTIVE:
+                    focus->Activate();
+                    break;
+                case WA_INACTIVE:
+                    focus->Deactivate();
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        break;
 
     case WM_SIZE:
         {
