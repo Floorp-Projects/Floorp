@@ -22,7 +22,7 @@
  *  EditorToolbar.cpp --- Toolbar for Editor and HTML Mail Compose.
  *
  *  Created: David Williams <djw@netscape.com>, Feb-7-1997
- *  RCSID: "$Id: EditorToolbar.cpp,v 3.5 1998/09/16 18:26:05 kin%netscape.com Exp $"
+ *  RCSID: "$Id: EditorToolbar.cpp,v 3.6 1998/09/29 07:11:22 mcafee%netscape.com Exp $"
  *
  *----------------------------------------------------------------------------
  */
@@ -477,7 +477,7 @@ XFE_EditorToolbarToggleButton::XFE_EditorToolbarToggleButton(Widget parent,
 
 XFE_EditorToolbarSpacer::XFE_EditorToolbarSpacer(Widget parent, 
 												 XFE_Component* tb) :
-	XFE_EditorToolbarItem(tb, NULL)
+	XFE_EditorToolbarItem(tb, (ToolbarSpec*)NULL)
 {
 	m_widget = XmCreateLabelGadget(parent,
 								   (char*)"spacer",
@@ -659,7 +659,7 @@ XFE_SmartComboList::itemSelected(unsigned index)
 
 	XFE_CommandInfo e_info(XFE_COMMAND_BUTTON_ACTIVATE,
 						   m_widget,
-						   NULL,
+						   (XEvent*) NULL,
 						   params, 1);
 	doCommand(&e_info);
 }
@@ -949,7 +949,7 @@ XFE_ColorMenu::setValue(LO_Color* color)
 
 	XFE_CommandInfo e_info(XFE_COMMAND_BUTTON_ACTIVATE,
 						   m_widget,
-						   NULL,
+						   (XEvent*) NULL,
 						   params, 1);
 	doCommand(&e_info);
 }
