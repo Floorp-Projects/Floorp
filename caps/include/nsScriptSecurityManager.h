@@ -112,8 +112,7 @@ private:
     nsresult
     CheckPropertyAccessImpl(PRUint32 aAction, nsIXPCNativeCallContext* aCallContext,
                             JSContext* aJSContext, JSObject* aJSObject,
-                            nsISupports* aObj, nsIURI* aTargetURI,
-                            nsIClassInfo* aClassInfo,
+                            nsISupports* aObj, nsIClassInfo* aClassInfo,
                             jsval aName, const char* aClassName, 
                             const char* aProperty, void** aPolicy);
 
@@ -123,7 +122,7 @@ private:
     
     PRInt32 
     GetSecurityLevel(JSContext* aCx, nsIPrincipal *principal,
-                     PRBool aIsDOM,
+                     nsIClassInfo* aClassInfo,
                      const char* aClassName, const char* aProperty,
                      PRUint32 aAction, nsCString &capability, void** aPolicy);
 
