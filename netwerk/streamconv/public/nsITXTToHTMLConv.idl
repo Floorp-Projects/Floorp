@@ -23,13 +23,6 @@
 #include "nsIStreamConverter.idl"
 #include "nsrootidl.idl"
 
-%{C++
-// {933355f6-1dd2-11b2-a9b0-d335b9e35983}
-#define NSITXTTOHTMLCONV_CID \
-    { 0x933355f6, 0x1dd2, 0x11b2, \
-    { 0xa9, 0xb0, 0xd3, 0x35, 0xb9, 0xe3, 0x59, 0x83 } }
-%}
-
 [scriptable, uuid(933355f6-1dd2-11b2-a9b0-d335b9e35983)]
 interface nsITXTToHTMLConv : nsIStreamConverter {
 
