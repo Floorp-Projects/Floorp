@@ -51,9 +51,7 @@ file://s:/mozilla/layout/html/tests/table/marvin/tables_cellspacing_pct.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_class.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_default.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_id.html
-file://s:/mozilla/layout/html/tests/table/marvin/tables_onblclick.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_onclick.html
-file://s:/mozilla/layout/html/tests/table/marvin/tables_ondblclick.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_onkeydown.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_onkeypress.html
 file://s:/mozilla/layout/html/tests/table/marvin/tables_onkeyup.html
