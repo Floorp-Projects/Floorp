@@ -45,13 +45,14 @@
 #include "nsIInputStream.h"
 #include "nsEnumeratorUtils.h"
 
-#define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_GeckoEmbed_##func
+#define GECKO_NATIVE(func) Java_org_mozilla_xpcom_GeckoEmbed_##func
+#define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_XPCOM_##func
 
 PRBool gEmbeddingInitialized = PR_FALSE;
 
 
 extern "C" JNIEXPORT void JNICALL
-XPCOM_NATIVE(NS_1InitEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
+GECKO_NATIVE(NS_1InitEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
                                  jobject aAppFileLocProvider)
 {
   if (!InitializeJavaGlobals(env)) {
@@ -94,7 +95,7 @@ XPCOM_NATIVE(NS_1InitEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
 }
 
 extern "C" JNIEXPORT void JNICALL
-XPCOM_NATIVE(NS_1TermEmbedding) (JNIEnv *env, jclass)
+GECKO_NATIVE(NS_1TermEmbedding) (JNIEnv *env, jclass)
 {
   FreeJavaGlobals(env);
 
@@ -111,7 +112,7 @@ XPCOM_NATIVE(NS_1TermEmbedding) (JNIEnv *env, jclass)
  * NULL and just create it lazily.
  */
 extern "C" JNIEXPORT jobject JNICALL
-XPCOM_NATIVE(NS_1NewLocalFile) (JNIEnv *env, jclass, jstring aPath,
+GECKO_NATIVE(NS_1NewLocalFile) (JNIEnv *env, jclass, jstring aPath,
                                 jboolean aFollowLinks)
 {
   if (!InitializeJavaGlobals(env)) {
@@ -161,7 +162,69 @@ XPCOM_NATIVE(NS_1NewLocalFile) (JNIEnv *env, jclass, jstring aPath,
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-XPCOM_NATIVE(NS_1NewSingletonEnumerator) (JNIEnv *env, jclass, jobject aSingleton)
+GECKO_NATIVE(NS_1GetComponentManager) (JNIEnv *env, jclass)
+{
+  jobject java_stub = nsnull;
+
+  // Call XPCOM method
+  nsCOMPtr<nsIComponentManager> cm;
+  nsresult rv = NS_GetComponentManager(getter_AddRefs(cm));
+
+  if (NS_SUCCEEDED(rv)) {
+    // wrap xpcom instance
+    JavaXPCOMInstance* inst;
+    inst = CreateJavaXPCOMInstance(cm, &NS_GET_IID(nsIComponentManager));
+
+    if (inst) {
+      // create java stub
+      java_stub = CreateJavaWrapper(env, "nsIComponentManager");
+
+      if (java_stub) {
+        // Associate XPCOM object w/ Java stub
+        AddJavaXPCOMBinding(env, java_stub, inst);
+      }
+    }
+  }
+
+  if (java_stub == nsnull)
+    ThrowXPCOMException(env, 0);
+
+  return java_stub;
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+GECKO_NATIVE(NS_1GetServiceManager) (JNIEnv *env, jclass)
+{
+  jobject java_stub = nsnull;
+
+  // Call XPCOM method
+  nsCOMPtr<nsIServiceManager> sm;
+  nsresult rv = NS_GetServiceManager(getter_AddRefs(sm));
+
+  if (NS_SUCCEEDED(rv)) {
+    // wrap xpcom instance
+    JavaXPCOMInstance* inst;
+    inst = CreateJavaXPCOMInstance(sm, &NS_GET_IID(nsIServiceManager));
+
+    if (inst) {
+      // create java stub
+      java_stub = CreateJavaWrapper(env, "nsIServiceManager");
+
+      if (java_stub) {
+        // Associate XPCOM object w/ Java stub
+        AddJavaXPCOMBinding(env, java_stub, inst);
+      }
+    }
+  }
+
+  if (java_stub == nsnull)
+    ThrowXPCOMException(env, 0);
+
+  return java_stub;
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+GECKO_NATIVE(NS_1NewSingletonEnumerator) (JNIEnv *env, jclass, jobject aSingleton)
 {
   void* inst = GetMatchingXPCOMObject(env, aSingleton);
   if (inst == nsnull) {
@@ -204,68 +267,6 @@ XPCOM_NATIVE(NS_1NewSingletonEnumerator) (JNIEnv *env, jclass, jobject aSingleto
     if (inst) {
       // create java stub
       java_stub = CreateJavaWrapper(env, "nsISimpleEnumerator");
-
-      if (java_stub) {
-        // Associate XPCOM object w/ Java stub
-        AddJavaXPCOMBinding(env, java_stub, inst);
-      }
-    }
-  }
-
-  if (java_stub == nsnull)
-    ThrowXPCOMException(env, 0);
-
-  return java_stub;
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-XPCOM_NATIVE(NS_1GetComponentManager) (JNIEnv *env, jclass)
-{
-  jobject java_stub = nsnull;
-
-  // Call XPCOM method
-  nsCOMPtr<nsIComponentManager> cm;
-  nsresult rv = NS_GetComponentManager(getter_AddRefs(cm));
-
-  if (NS_SUCCEEDED(rv)) {
-    // wrap xpcom instance
-    JavaXPCOMInstance* inst;
-    inst = CreateJavaXPCOMInstance(cm, &NS_GET_IID(nsIComponentManager));
-
-    if (inst) {
-      // create java stub
-      java_stub = CreateJavaWrapper(env, "nsIComponentManager");
-
-      if (java_stub) {
-        // Associate XPCOM object w/ Java stub
-        AddJavaXPCOMBinding(env, java_stub, inst);
-      }
-    }
-  }
-
-  if (java_stub == nsnull)
-    ThrowXPCOMException(env, 0);
-
-  return java_stub;
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-XPCOM_NATIVE(NS_1GetServiceManager) (JNIEnv *env, jclass)
-{
-  jobject java_stub = nsnull;
-
-  // Call XPCOM method
-  nsCOMPtr<nsIServiceManager> sm;
-  nsresult rv = NS_GetServiceManager(getter_AddRefs(sm));
-
-  if (NS_SUCCEEDED(rv)) {
-    // wrap xpcom instance
-    JavaXPCOMInstance* inst;
-    inst = CreateJavaXPCOMInstance(sm, &NS_GET_IID(nsIServiceManager));
-
-    if (inst) {
-      // create java stub
-      java_stub = CreateJavaWrapper(env, "nsIServiceManager");
 
       if (java_stub) {
         // Associate XPCOM object w/ Java stub
