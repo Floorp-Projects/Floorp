@@ -106,7 +106,6 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 		if (NS_SUCCEEDED(rv) && m_runningUrl)
 		{
 			// extract the file name and create a file transport...
-			const char * fileName = nsnull;
             nsINetService* pNetService;
             rv = nsServiceManager::GetService(kNetServiceCID,
                                               nsINetService::GetIID(),

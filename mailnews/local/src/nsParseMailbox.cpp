@@ -115,8 +115,10 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 				msgHdr->GetSubject(subject);
 				char *authorStr = author.ToNewCString();
 				char *subjectStr = subject.ToNewCString();
+#ifdef DEBUG
 				// leak nsString return values...
-				printf("hdr key = %ld, author = %s subject = %s\n", key, (authorStr) ? authorStr : "", (subjectStr) ? subjectStr : "");
+				printf("hdr key = %d, author = %s subject = %s\n", key, (authorStr) ? authorStr : "", (subjectStr) ? subjectStr : "");
+#endif
 				delete [] authorStr;
 				delete [] subjectStr;
 				msgHdr->Release();
@@ -795,7 +797,6 @@ int nsParseMailMessageState::ParseEnvelope (const char *line, PRUint32 line_size
 {
 	const char *end;
 	char *s;
-	int status = 0;
 
 	m_envelope.AppendBuffer(line, line_size);
 	end = m_envelope.GetBuffer() + line_size;
@@ -1032,11 +1033,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 	if (mozstatus2)
 	{
 		PRUint32 flags2 = 0;
-#ifdef OSF1
 		sscanf(mozstatus2->value, " %x ", &flags2);
-#else
-		sscanf(mozstatus2->value, " %lx ", &flags2);
-#endif
 		flags |= flags2;
 	}
 

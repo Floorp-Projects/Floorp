@@ -331,9 +331,7 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 
 	nsresult folderOpen = NS_OK;
 	nsIMsgDatabase * mailDBFactory = nsnull;
-	nsIMsgDatabase *mailDB;
 
-	nsIMessage * msgHdr = nsnull;
 	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
@@ -747,14 +745,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(nsString& prettyName)
 
 nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
-    nsresult openErr;
+    nsresult openErr=NS_ERROR_UNEXPECTED;
     if(!db || !folderInfo)
 		return NS_ERROR_NULL_POINTER;
 
 	nsIMsgDatabase * mailDBFactory = nsnull;
 	nsIMsgDatabase *mailDB;
 
-	nsIMessage * msgHdr = nsnull;
 	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
@@ -1013,7 +1010,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFl
 	nsISupports *msgSupports;
 	if(NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
 	{
-		for(int i = 0; i < mListeners->Count(); i++)
+    PRUint32 i;
+		for(i = 0; i < mListeners->Count(); i++)
 		{
 			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
 			listener->OnItemRemoved(this, msgSupports);
@@ -1034,7 +1032,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlag
 	nsISupports *msgSupports;
 	if(pMessage && NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
 	{
-		for(int i = 0; i < mListeners->Count(); i++)
+    PRUint32 i;
+		for(i = 0; i < mListeners->Count(); i++)
 		{
 			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
 			listener->OnItemAdded(this, msgSupports);

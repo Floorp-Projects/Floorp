@@ -517,7 +517,6 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         }
 #endif /* XP_UNIX */
 
-        const char* cp0 = cp;
         // The remainder of the string is the file name and the search path....
 		// Strip out the ? stuff....
 		char* search = strpbrk(cSpec, "?");

@@ -200,7 +200,6 @@ nsresult nsMailboxService::DisplayMessageNumber(const nsFileSpec& aMailboxPath, 
 	nsIMsgDatabase * mailDB = nsnull;
 	nsIMsgDatabase *mailDBFactory;
 
-	nsIMessage * msgHdr = nsnull;
 	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
