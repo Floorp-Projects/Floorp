@@ -120,9 +120,8 @@ function commonDialogOnLoad()
 	var checkMsg = param.GetString(  1 );
 	if ( checkMsg != "" )
 	{	
-		var prompt = (document.getElementById("checkboxLabel"));
-   	if ( prompt )
-   		prompt.childNodes[1].nodeValue = checkMsg;
+		var checkMsgElement = document.getElementById("checkboxLabel");
+    SetElementText( "checkboxLabel", checkMsg );
 		var checkValue = param.GetInt( 1 );
 		var element=document.getElementById("checkbox" );
 		var checkbool =  checkValue > 0 ? true : false;
