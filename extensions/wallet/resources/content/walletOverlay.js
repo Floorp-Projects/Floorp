@@ -356,10 +356,6 @@
     // display a Wallet Dialog
     function WalletDialog(which) {
       switch( which ) {
-        case "signon":
-          window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
-                            "_blank","chrome,resizable=yes","S"); 
-          break;
         case "samples":
           window._content.location.href = 'chrome://communicator/locale/wallet/index.html';
           break;

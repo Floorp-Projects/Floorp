@@ -27,13 +27,11 @@
 <overlay id="walletTasksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://wallet/content/walletOverlay.js"/>
-
   <script type="application/x-javascript">
   <![CDATA[
 
     // expire master password
-    function Expire() {
+    function walletPasswordExpire() {
       var wallet = Components.classes['@mozilla.org/wallet/wallet-service;1'];
       wallet = wallet.getService();
       wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
@@ -44,6 +42,11 @@
       } else {
         window.alert(strings.getAttribute("PasswordNotExpired"));
       }
+    }
+
+    function walletPasswordDialog() {
+      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
+                        "_blank","chrome,resizable=yes","S");
     }
 
   ]]>
@@ -61,10 +64,10 @@
       <menupopup>
         <menuitem label="&walletExpirePasswordCmd.label;"
                   accesskey="&walletExpirePasswordCmd.accesskey;"
-                  oncommand="Expire();"/>
+                  oncommand="walletPasswordExpire();"/>
         <menuitem label="&walletDisplaySignonsCmd.label;"
                   accesskey="&walletDisplaySignonsCmd.accesskey;"
-                  oncommand="WalletDialog('signon');"/> 
+                  oncommand="walletPasswordDialog();"/> 
       </menupopup>
     </menu>
   </menupopup>
