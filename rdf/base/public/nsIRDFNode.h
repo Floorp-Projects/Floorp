@@ -1,31 +1,36 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
- */
-
 /*
-
-  RDF node interfaces, including nsIRDFNode, nsIRDFResource, and
-  nsIRDFLiteral. Nodes are the elements that appear in RDF graphs.
-
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIRDFNode.idl
  */
 
-#ifndef nsIRDFNode_h__
-#define nsIRDFNode_h__
+#ifndef __gen_nsIRDFNode_h__
+#define __gen_nsIRDFNode_h__
 
-#include "nsRDFInterfaces.h"
+#include "nsISupports.h" /* interface nsISupports */
+#include "nsrootidl.h" /* interface nsrootidl */
 
-#endif // nsIRDFNode_h__
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
+
+/* starting interface:    nsIRDFNode */
+
+/* {0F78DA50-8321-11d2-8EAC-00805F29F370} */
+#define NS_IRDFNODE_IID_STR "0F78DA50-8321-11d2-8EAC-00805F29F370"
+#define NS_IRDFNODE_IID \
+  {0x0F78DA50, 0x8321, 0x11d2, \
+    { 0x8E, 0xAC, 0x00, 0x80, 0x5F, 0x29, 0xF3, 0x70 }}
+
+class nsIRDFNode : public nsISupports {
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFNODE_IID)
+
+  /* boolean EqualsNode (in nsIRDFNode aNode); */
+  NS_IMETHOD EqualsNode(nsIRDFNode *aNode, PRBool *_retval) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIRDFNode *priv);
+#endif
+};
+
+#endif /* __gen_nsIRDFNode_h__ */

@@ -1,26 +1,46 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+/*
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIRDFResource.idl
  */
 
+#ifndef __gen_nsIRDFResource_h__
+#define __gen_nsIRDFResource_h__
 
-#ifndef nsIRDFResource_h__
-#define nsIRDFResource_h__
+#include "nsISupports.h" /* interface nsISupports */
+#include "nsIRDFNode.h" /* interface nsIRDFNode */
+#include "nsrootidl.h" /* interface nsrootidl */
 
-#include "nsRDFInterfaces.h"
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
 
-#endif // nsIRDFResource_h__
+/* starting interface:    nsIRDFResource */
 
+/* {E0C493D1-9542-11d2-8EB8-00805F29F370} */
+#define NS_IRDFRESOURCE_IID_STR "E0C493D1-9542-11d2-8EB8-00805F29F370"
+#define NS_IRDFRESOURCE_IID \
+  {0xE0C493D1, 0x9542, 0x11d2, \
+    { 0x8E, 0xB8, 0x00, 0x80, 0x5F, 0x29, 0xF3, 0x70 }}
+
+class nsIRDFResource : public nsIRDFNode {
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFRESOURCE_IID)
+
+  /* readonly attribute string Value; */
+  NS_IMETHOD GetValue(char * *aValue) = 0;
+
+  /* void Init (in string uri); */
+  NS_IMETHOD Init(const char *uri) = 0;
+
+  /* boolean EqualsResource (in nsIRDFResource aResource); */
+  NS_IMETHOD EqualsResource(nsIRDFResource *aResource, PRBool *_retval) = 0;
+
+  /* boolean EqualsString (in string aURI); */
+  NS_IMETHOD EqualsString(const char *aURI, PRBool *_retval) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIRDFResource *priv);
+#endif
+};
+
+#endif /* __gen_nsIRDFResource_h__ */

@@ -1,31 +1,41 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIRDFObserver.idl
  */
 
-/*
+#ifndef __gen_nsIRDFObserver_h__
+#define __gen_nsIRDFObserver_h__
 
-  The RDF data source observer interface. Data source observers are
-  notified when the contents of the graph change.
+#include "nsISupports.h" /* interface nsISupports */
+#include "nsIRDFNode.h" /* interface nsIRDFNode */
+#include "nsrootidl.h" /* interface nsrootidl */
+#include "nsIRDFResource.h" /* interface nsIRDFResource */
 
- */
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
 
-#ifndef nsIRDFObserver_h__
-#define nsIRDFObserver_h__
+/* starting interface:    nsIRDFObserver */
 
-#include "nsRDFInterfaces.h"
+/* {3CC75360-484A-11D2-BC16-00805F912FE7} */
+#define NS_IRDFOBSERVER_IID_STR "3CC75360-484A-11D2-BC16-00805F912FE7"
+#define NS_IRDFOBSERVER_IID \
+  {0x3CC75360, 0x484A, 0x11D2, \
+    { 0xBC, 0x16, 0x00, 0x80, 0x5F, 0x91, 0x2F, 0xE7 }}
 
-#endif /* nsIRDFObserver_h__ */
+class nsIRDFObserver : public nsISupports {
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFOBSERVER_IID)
+
+  /* void OnAssert (in nsIRDFResource aSource, in nsIRDFResource aLabel, in nsIRDFNode aTarget); */
+  NS_IMETHOD OnAssert(nsIRDFResource *aSource, nsIRDFResource *aLabel, nsIRDFNode *aTarget) = 0;
+
+  /* void OnUnassert (in nsIRDFResource aSource, in nsIRDFResource aLabel, in nsIRDFNode aTarget); */
+  NS_IMETHOD OnUnassert(nsIRDFResource *aSource, nsIRDFResource *aLabel, nsIRDFNode *aTarget) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIRDFObserver *priv);
+#endif
+};
+
+#endif /* __gen_nsIRDFObserver_h__ */
