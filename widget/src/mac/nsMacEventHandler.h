@@ -22,9 +22,11 @@
 #ifndef MacMacEventHandler_h__
 #define MacMacEventHandler_h__
 
+#include <ConditionalMacros.h>
 #include <Events.h>
 #include <MacWindows.h>
 #include <TextServices.h>
+#include <Controls.h>
 #include "prtypes.h"
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
@@ -64,6 +66,7 @@ public:
 	virtual void	NotifyDelete(void* aDeletedObject);
 
 private:
+
 	nsWindow*	mActiveWidget;
 	nsWindow*	mWidgetHit;
 	nsWindow*	mWidgetPointed;
@@ -127,6 +130,7 @@ protected:
 	static PRBool	sMouseInWidgetHit;
   static PRBool	sInBackground;
 
+  ControlActionUPP mControlActionProc;
 
 	nsMacWindow*	mTopLevelWidget;
 	RgnHandle			mUpdateRgn;

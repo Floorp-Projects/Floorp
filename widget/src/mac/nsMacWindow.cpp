@@ -18,7 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMacWindow.h"
@@ -272,6 +271,7 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mMacEventHandler(nsnull)
 	, mAcceptsActivation(PR_TRUE)
 	, mIsActive(PR_FALSE)
+	, mPhantomScrollbar(nil)
 {
   //mMacEventHandler.reset(new nsMacEventHandler(this));
 	mMacEventHandler = (auto_ptr<nsMacEventHandler>) new nsMacEventHandler(this);
@@ -290,7 +290,7 @@ nsMacWindow::~nsMacWindow()
 	{
 		if (mWindowMadeHere)
 			::DisposeWindow(mWindowPtr);
-
+      
 		// clean up DragManager stuff
 #if !TARGET_CARBON
 		::RemoveTrackingHandler ( sDragTrackingHandlerUPP, mWindowPtr );
@@ -505,6 +505,14 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // (note: aParent is ignored. Mac (real) windows don't want parents)
 	Inherited::StandardCreate(nil, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
 
+  // create a phantom scrollbar to catch the attention of mousewheel 
+  // drivers. We'll catch events sent to this scrollbar in the eventhandler
+  // and dispatch them into gecko as NS_SCROLL_EVENTs at that point. Stash
+  // an identifier in the refcon so we can check it before calling TrackControl().
+  Rect sbRect = { 32000, 32000, 32100, 32016 };
+  mPhantomScrollbar = ::NewControl ( mWindowPtr, &sbRect, nil, true, 50, 0, 100, 
+                                            kControlScrollBarLiveProc, (long)'mozz' );
+  ::EmbedControl ( rootControl, mPhantomScrollbar );
 
 	// register tracking and receive handlers with the native Drag Manager
 #if !TARGET_CARBON
