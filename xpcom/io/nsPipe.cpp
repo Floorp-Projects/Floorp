@@ -174,6 +174,10 @@ nsBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
         if (amt == 0) {
             rv = Fill();
             if (NS_FAILED(rv)) return rv;
+            if (!mBlocking) {
+                // Only return WOULD_BLOCK if no data was read...
+                return *aReadCount > 0 ? NS_OK : rv;
+            }
         }
         else {
             *aReadCount += amt;
