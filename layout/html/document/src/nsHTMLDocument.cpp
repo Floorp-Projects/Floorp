@@ -68,6 +68,7 @@ nsHTMLDocument::nsHTMLDocument()
   mEmbeds = nsnull;
   mLinks = nsnull;
   mAnchors = nsnull;
+  mParser = nsnull;
   nsHTMLAtoms::AddrefAtoms();
 }
 
@@ -79,6 +80,7 @@ nsHTMLDocument::~nsHTMLDocument()
   NS_IF_RELEASE(mLinks);
   NS_IF_RELEASE(mAnchors);
   NS_IF_RELEASE(mAttrStyleSheet);
+  NS_IF_RELEASE(mParser);
   nsHTMLAtoms::ReleaseAtoms();
 }
 
@@ -138,8 +140,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
   mDocumentURL = aURL;
   NS_ADDREF(aURL);
 
-  nsIParser* parser;
-  rv = NS_NewParser(&parser);
+  rv = NS_NewParser(&mParser);
   if (NS_OK == rv) {
     nsIHTMLContentSink* sink;
 
@@ -163,7 +164,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 
       // Set the parser as the stream listener for the document loader...
       static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-      rv = parser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
+      rv = mParser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
 
       if (NS_OK == rv) {
 
@@ -174,20 +175,24 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 
         nsIDTD* theDTD=0;
         NS_NewNavHTMLDTD(&theDTD);
-        parser->RegisterDTD(theDTD);
+        mParser->RegisterDTD(theDTD);
 
-        parser->SetContentSink(sink);
-        parser->Parse(aURL);
+        mParser->SetContentSink(sink);
+        mParser->Parse(aURL);
       }
       NS_RELEASE(sink);
     }
-    NS_RELEASE(parser);
   }
 
   return rv;
 }
 
-
+NS_IMETHODIMP
+nsHTMLDocument::EndLoad()
+{
+  NS_IF_RELEASE(mParser);
+  return nsDocument::EndLoad();
+}
 
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
@@ -525,15 +530,53 @@ nsHTMLDocument::Close()
 NS_IMETHODIMP    
 nsHTMLDocument::Write(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+
+  // XXX Right now, we only deal with inline document.writes
+  if (nsnull == mParser) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  
+  if (argc > 0) {
+    PRUint32 index;
+    for (index = 0; index < argc; index++) {
+      nsAutoString str;
+      JSString *jsstring = JS_ValueToString(cx, argv[index]);
+      
+      if (nsnull != jsstring) {
+        str.SetString(JS_GetStringChars(jsstring));
+      }
+      else {
+        str.SetString("");   // Should this really be null?? 
+      }
+      
+      result = mParser->Parse(str, PR_TRUE);
+      if (NS_OK != result) {
+        return result;
+      }
+    }
+  }
+  
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::Writeln(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsAutoString newLine("\n");
+  nsresult result;
+
+  // XXX Right now, we only deal with inline document.writes
+  if (nsnull == mParser) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  
+  result = Write(cx, argv, argc);
+  if (NS_OK == result) {
+    result = mParser->Parse(newLine, PR_TRUE);
+  }
+  
+  return result;
 }
 
 
