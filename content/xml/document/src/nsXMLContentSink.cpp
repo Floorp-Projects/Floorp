@@ -257,19 +257,21 @@ nsXMLContentSink::DidBuildModel()
       loader->RemoveObserver(this);
     }
 
-    // Notify document observers that all the content has been stuck
-    // into the document.
-    // XXX do we need to notify for things like PIs?  Or just the
-    // documentElement?
-    NS_ASSERTION(mDocument->IndexOf(mDocElement) != -1,
-                 "mDocElement not in doc?");
-    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-    mDocument->ContentInserted(nsnull, mDocElement,
-                               // XXXbz is this last arg relevant if
-                               // the container is null?
-                               mDocument->IndexOf(mDocElement));
-    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
-    
+    if (mDocElement) {
+      // Notify document observers that all the content has been stuck
+      // into the document.
+      // XXX do we need to notify for things like PIs?  Or just the
+      // documentElement?
+      NS_ASSERTION(mDocument->IndexOf(mDocElement) != -1,
+                   "mDocElement not in doc?");
+      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
+      mDocument->ContentInserted(nsnull, mDocElement,
+                                 // XXXbz is this last arg relevant if
+                                 // the container is null?
+                                 mDocument->IndexOf(mDocElement));
+      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
+    }
+
     // Check if we want to prettyprint
     MaybePrettyPrint();
 
