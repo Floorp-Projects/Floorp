@@ -24,7 +24,6 @@
 
 #include "CShelfMixin.h"
 #include "prefapi.h"
-#include "divview.h"
 #include "CTargetFramer.h"
 
 #include "LCommander.h"
@@ -33,9 +32,12 @@
 //
 // Constructor
 //
-CShelf :: CShelf (  LDividedView* inDivView, const char* inPrefString ) 
+CShelf :: CShelf ( LDividedView* inDivView, const char* inPrefString, 
+					LDividedView::FeatureFlags inFlags ) 
 	: mPrefString(inPrefString), mShelf(inDivView)
 {
+	// configure the divided view appropriately
+	mShelf->OnlySetFeatureFlags ( inFlags );
 }
 
 
@@ -61,7 +63,7 @@ CShelf :: ToggleShelf ( bool inUpdatePref )
 	if ( !mShelf )
 		return;			// this is the case for composer
 	
-	mShelf->ToggleFirstPane();
+	mShelf->DoZapAction();
 	
 	// Update the visible pref. The pref should be true if the pane is showing (!collapsed)
 	if ( inUpdatePref && mPrefString.c_str() )

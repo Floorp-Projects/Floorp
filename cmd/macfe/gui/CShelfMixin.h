@@ -27,8 +27,7 @@
 #pragma once
 
 #include <string>
-
-class LDividedView;
+#include "divview.h"
 
 
 class CShelf
@@ -37,7 +36,7 @@ class CShelf
 	
 		enum { kClosed = false, kOpen = true } ;
 		
-		CShelf ( LDividedView* inDivView, const char* inPrefString ) ;
+		CShelf ( LDividedView* inDivView, const char* inPrefString, LDividedView::FeatureFlags inFlags ) ;
 		virtual ~CShelf ( ) ;
 		
 		virtual void ToggleShelf ( bool inUpdatePref = true ) ;
