@@ -1648,7 +1648,12 @@ nsresult
 nsGenericElement::SetParent(nsIContent* aParent)
 {
   mParent = aParent;
-
+  if (aParent) {
+    nsCOMPtr<nsIContent> bindingPar;
+    aParent->GetBindingParent(getter_AddRefs(bindingPar));
+    if (bindingPar)
+      SetBindingParent(bindingPar);
+  }
   return NS_OK;
 }
 

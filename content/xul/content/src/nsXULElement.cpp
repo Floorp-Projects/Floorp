@@ -2511,6 +2511,13 @@ NS_IMETHODIMP
 nsXULElement::SetParent(nsIContent* aParent)
 {
     mParent = aParent; // no refcount
+    if (aParent) {
+      nsCOMPtr<nsIContent> bindingPar;
+      aParent->GetBindingParent(getter_AddRefs(bindingPar));
+      if (bindingPar)
+        SetBindingParent(bindingPar);
+    }
+
     return NS_OK;
 }
 
