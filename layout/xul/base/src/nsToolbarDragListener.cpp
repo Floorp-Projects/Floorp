@@ -139,71 +139,8 @@ nsToolbarDragListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsToolbarDragListener::DragGesture(nsIDOMEvent* aDragEvent)
 {
-  // XXX At the moment toolbar drags contain "text"
-  // in the future they will probably contain some form of content
-  // that will be translated into some RDF form
-
-  nsresult rv = NS_OK;
-    // Ok now check to see if we are dragging a toolbar item 
-    // or the toolbar itself
-    nscoord xLoc;
-    PRBool isLegalChild;
-    PRBool onChild = IsOnToolbarItem(aDragEvent, xLoc, isLegalChild);
-
-    if (onChild) {
-      if (isLegalChild) {
-
-        // Start Drag
-        NS_WITH_SERVICE ( nsIDragService, dragService, kCDragServiceCID, &rv );
-        if ( NS_SUCCEEDED(rv) ) { 
-          // XXX NOTE!
-          // Here you need to create a special transferable
-          // for handling RDF nodes (instead of this text transferable)
-          nsCOMPtr<nsITransferable> trans; 
-          rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                                    nsITransferable::GetIID(), getter_AddRefs(trans)); 
-          if ( trans ) {
-            const char* ddFlavor;
-            nsAutoString dragText;
-            if (onChild) {
-              ddFlavor = TOOLBARITEM_MIME;
-              dragText = "toolbar item";
-            } else {
-              ddFlavor = TOOLBAR_MIME;
-              dragText = "toolbar";
-            }
-            trans->AddDataFlavor(ddFlavor);
-            PRUint32 len = dragText.Length() * 2;   // len of unicode
-            nsCOMPtr<nsISupportsWString> dataObj;   // hack note: has to be wstring because not plain text flavor
-            rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
-                                                     NS_GET_IID(nsISupportsWString), getter_AddRefs(dataObj)); 
-            if ( dataObj ) {
-              PRUnichar* data = dragText.ToNewUnicode();
-              dataObj->SetData ( data );
-              // QI the data object an |nsISupports| so that when the transferable holds
-              // onto it, it will addref the correct interface.
-              nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataObj) );
-              trans->SetTransferData(ddFlavor, genericDataObj, len);
-
-              nsCOMPtr<nsISupportsArray> items;
-              NS_NewISupportsArray(getter_AddRefs(items));
-              if ( items ) {
-                // QI the transferable to an |nsISupports| so that when the array holds
-                // onto it, it will addref the correct interface.
-                nsCOMPtr<nsISupports> genericTrans ( do_QueryInterface(trans) );
-                items->AppendElement(genericTrans);
-                dragService->InvokeDragSession(items, nsnull, nsIDragService::DRAGDROP_ACTION_COPY | nsIDragService::DRAGDROP_ACTION_MOVE);
-              }
-              delete [] data;
-            }
-          } 
-        } 
-      } else // when it is isn't a legal child then don't consume
-        return NS_OK; // don't consume event
-
-      rv = NS_ERROR_BASE; // consumes the event
-    }
-  return rv; 
+  // this code should all be in JS.
+  return NS_OK;
 }
 
 
