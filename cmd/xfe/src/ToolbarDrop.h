@@ -59,17 +59,18 @@ private:
 };
 
 //
-// XFE_PersonalDrop class
+// XFE_RDFToolbarDrop class
 //
-#if 0
-class XFE_PersonalDrop : public XFE_ToolbarDrop
+class XFE_RDFToolbar;
+
+class XFE_RDFToolbarDrop : public XFE_ToolbarDrop
 {
 public:
 
-    XFE_PersonalDrop		(Widget					dropWidget,
-							 XFE_PersonalToolbar *	toolbar);
+    XFE_RDFToolbarDrop		(Widget             dropWidget,
+							 XFE_RDFToolbar *   toolbar);
 
-    virtual ~XFE_PersonalDrop		();
+    virtual ~XFE_RDFToolbarDrop		();
 
 protected:
 
@@ -81,15 +82,16 @@ protected:
 
 protected:
 
-    XFE_PersonalToolbar *	_personalToolbar;
-	Widget					_dropWidget;
+    XFE_RDFToolbar *        _toolbar;
+	Widget                  _dropWidget;
 };
 
+#if 0
 //
 // XFE_PersonalTabDrop class
 //
 
-class XFE_PersonalTabDrop : public XFE_PersonalDrop
+class XFE_PersonalTabDrop : public XFE_RDFToolbarDrop
 {
 public:
 

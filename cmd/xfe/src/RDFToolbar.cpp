@@ -42,6 +42,7 @@
 #include "ToolbarSeparator.h"
 #include "ToolbarUrlBar.h"
 #include "ToolbarWindowList.h"
+#include "ToolbarDrop.h"
 
 #if DEBUG_radha
 #define D(x) x
@@ -112,6 +113,17 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
 
     setHTView(view);
 
+
+    _toolbarDropSite = new XFE_RDFToolbarDrop(_toolbar, this);
+    _toolbarDropSite->enable();
+
+    // Configure the drop site
+    Arg             xargs[1];
+    Cardinal        n = 0;
+    
+    XtSetArg(xargs[n],XmNanimationStyle,    XmDRAG_UNDER_NONE);  n++;
+    _toolbarDropSite->update(xargs,n);
+
     show();
 
 	_frame->registerInterest(XFE_View::commandNeedsUpdating,
@@ -140,6 +152,10 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
 
 XFE_RDFToolbar::~XFE_RDFToolbar() 
 {
+	if (_toolbarDropSite)
+	{
+		delete _toolbarDropSite;
+	}
 	_frame->unregisterInterest(XFE_View::commandNeedsUpdating,
                                this,
                                (XFE_FunctionNotification)updateCommand_cb);
@@ -253,6 +269,54 @@ XFE_RDFToolbar::update()
 
     }
 #endif /*NOT_YET*/
+}
+//////////////////////////////////////////////////////////////////////////
+Widget
+XFE_RDFToolbar::getFirstItem()
+{
+	return XfeToolBarGetFirstItem(_toolbar);
+}
+//////////////////////////////////////////////////////////////////////////
+Widget
+XFE_RDFToolbar::getLastItem()
+{
+	return XfeToolBarGetLastItem(_toolbar);
+}
+//////////////////////////////////////////////////////////////////////////
+Widget
+XFE_RDFToolbar::getIndicatorItem()
+{
+	return XfeToolBarGetIndicatorItem(_toolbar);
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFToolbar::configureIndicatorItem(HT_Resource entry)
+{
+	Widget indicator = getIndicatorItem();
+
+	if (XfeIsAlive(indicator))
+	{
+        Pixmap pixmap          = XmUNSPECIFIED_PIXMAP;
+        Pixmap pixmapMask      = XmUNSPECIFIED_PIXMAP;
+        Pixmap armedPixmap     = XmUNSPECIFIED_PIXMAP;
+        Pixmap armedPixmapMask = XmUNSPECIFIED_PIXMAP;
+
+        if (entry)
+        {
+            XFE_RDFUtils::getPixmapsForEntry(_toolbar,
+                                             entry,
+                                             &pixmap,
+                                             &pixmapMask,
+                                             &armedPixmap,
+                                             &armedPixmapMask);
+        }
+
+        XtVaSetValues(indicator,
+                      XmNpixmap,		pixmap,
+                      XmNpixmapMask,	pixmapMask,
+                      XmNbuttonLayout,	XmBUTTON_LABEL_ON_RIGHT,
+                      NULL);
+	}
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -587,6 +651,53 @@ XFE_RDFToolbar::updateAppearance()
 
 	updateRoot();
 }
+//////////////////////////////////////////////////////////////////////////
+
+//
+// DND feedback methods
+//
+Widget
+XFE_RDFToolbar::getDropTargetItem()
+{
+	return _dropTargetItem;
+}
+//////////////////////////////////////////////////////////////////////////
+unsigned char
+XFE_RDFToolbar::getDropTargetLocation()
+{
+	return _dropTargetLocation;
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFToolbar::setDropTargetItem(Widget item,int x)
+{
+	assert( XfeIsAlive(item) );
+
+	_dropTargetItem = item;
+	
+	_dropTargetLocation = XfeToolBarXYToIndicatorLocation(_toolbar,
+														   _dropTargetItem,
+														   x,0);
+	
+	int position = XfeChildGetIndex(_dropTargetItem);
+
+	XtVaSetValues(_toolbar,
+				  XmNindicatorPosition,		position,
+				  XmNindicatorLocation,		_dropTargetLocation,
+				  NULL);
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFToolbar::clearDropTargetItem()
+{
+	_dropTargetItem = NULL;
+
+	XtVaSetValues(_toolbar,
+				  XmNindicatorPosition,		XmINDICATOR_DONT_SHOW,
+				  NULL);
+}
+//////////////////////////////////////////////////////////////////////////
+
 //////////////////////////////////////////////////////////////////////////
 /* static */
 void

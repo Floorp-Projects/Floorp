@@ -37,6 +37,7 @@
 class XFE_Frame;
 class XFE_Logo;
 class XFE_Toolbox;
+class XFE_RDFToolbarDrop;
 
 class XFE_RDFToolbar : public XFE_ToolboxItem,
                        public XFE_RDFMenuToolbarBase
@@ -47,6 +48,12 @@ public:
                    HT_View toolbar_root);
 
 	virtual ~XFE_RDFToolbar ();
+
+	// Access methods
+	Widget			getFirstItem		();
+	Widget			getLastItem			();
+	Widget			getIndicatorItem	();
+	void			configureIndicatorItem		(HT_Resource entry);
 
 #ifdef NOT_YET
 	// update all the commands in the toolbar.
@@ -68,6 +75,13 @@ public:
 	//////////////////////////////////////////////////////////////////////
 	static const char *	navigateToUrlNotice;
 
+    // DND feedback methods
+    Widget          getDropTargetItem       ();
+    unsigned char   getDropTargetLocation   ();
+
+    void            setDropTargetItem       (Widget item,int x);
+    void            clearDropTargetItem     ();
+
 protected:
 	void	   setRaised                (XP_Bool);
     void       destroyToolbarWidgets    ();
@@ -86,12 +100,18 @@ protected:
 	virtual void	updateRoot      		();
 
     // Gets called to update icon appearance
-    virtual void    updateAppearance          ();
+    virtual void    updateAppearance        ();
 
 private:
 
-    XFE_Frame *	    _frame;
-    Widget          _toolbar;
+    XFE_Frame *	             _frame;
+    Widget                   _toolbar;
+    XFE_RDFToolbarDrop *     _toolbarDropSite;
+
+    // DND feedback members
+    Widget             _dropTargetItem;       // The drop target item
+    unsigned char      _dropTargetLocation;   // The drop target location
+    int                _dropTargetPosition;   // The drop target position
 
   // callbacks
     static void tooltipCB(Widget, XtPointer,  XmString *, Boolean *);

@@ -26,11 +26,10 @@
 
 #include "MozillaApp.h"
 #include "ToolbarDrop.h"
-#ifdef OLD_BOOKMARKS
-#include "PersonalToolbar.h"
-#endif /*OLD_BOOKMARKS*/
+#include "ToolbarItem.h"
 #include "BookmarkMenu.h"
 #include "htrdf.h"
+#include "RDFToolbar.h"
 #include "RDFUtils.h"
 
 #include <Xfe/Cascade.h>
@@ -182,52 +181,35 @@ XFE_ToolbarDrop::addEntry(const char * /* address */,const char * /* title */)
 {
 }
 //////////////////////////////////////////////////////////////////////////
-#if 0
+
 //
-// XFE_PersonalDrop class
+// XFE_RDFToolbarDrop class
 //
 
 //////////////////////////////////////////////////////////////////////////
-XFE_PersonalDrop::XFE_PersonalDrop(Widget					dropWidget, 
-								   XFE_PersonalToolbar *	toolbar) :
+XFE_RDFToolbarDrop::XFE_RDFToolbarDrop(Widget            dropWidget, 
+                                       XFE_RDFToolbar *  toolbar) :
     XFE_ToolbarDrop(dropWidget),
-	_personalToolbar(toolbar),
+	_toolbar(toolbar),
 	_dropWidget(NULL)
 {
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_PersonalDrop::~XFE_PersonalDrop()
+XFE_RDFToolbarDrop::~XFE_RDFToolbarDrop()
 {
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_PersonalDrop::addEntry(const char * address,const char * title)
+XFE_RDFToolbarDrop::addEntry(const char * address, const char * title)
 {
 	XP_ASSERT( address != NULL );
 
 	XP_ASSERT( XfeIsAlive(_dropWidget) );
-	XP_ASSERT( _personalToolbar != NULL );
+	XP_ASSERT( _toolbar != NULL );
 
-	char *		guessed_title = (char *) title;
-	time_t		lastAccess = 0;
+	unsigned char location = _toolbar->getDropTargetLocation();
 
-	// If no title is given, try to guess a decent one
-	if (!guessed_title)
-	{
-		MWContext * context = _personalToolbar->getFrame()->getContext();
-
-		XFE_RDFUtils::guessTitle(context,
-								 address,
-								 isFromSameShell(),
-								 &guessed_title,
-								 &lastAccess);
-	}
-
-	XP_ASSERT( guessed_title != NULL );
-
-	unsigned char location = _personalToolbar->getDropTargetLocation();
-
-	// If the drop occurred on a cascade item, then we need to waid for 
+	// If the drop occurred on a cascade item, then we need to wait for 
 	// the drop operation to complete before posting the submenu id and 
 	// allowing the user to place the new bookmark.  This will happen
 	// in dropCompolete().  Here, we just install the drop parameters that
@@ -240,20 +222,14 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 		{
 			if (location == XmINDICATOR_LOCATION_BEGINNING)
 			{
-				_personalToolbar->addEntryBefore(address,
-												 guessed_title,
-												 lastAccess,
-												 entry);
+                HT_DropURLAndTitleAtPos(entry, (char*)address, (char*)title, TRUE);
 
 				// Clear drop widget so dropComplete() does not get hosed
 				_dropWidget = NULL;
 			}
 			else if (location == XmINDICATOR_LOCATION_END)
 			{
-				_personalToolbar->addEntryAfter(address,
-												guessed_title,
-												lastAccess,
-												entry);
+                HT_DropURLAndTitleAtPos(entry, (char*)address, (char*)title, FALSE);
 
 				// Clear drop widget so dropComplete() does not get hosed
 				_dropWidget = NULL;
@@ -261,12 +237,10 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 			else if (location == XmINDICATOR_LOCATION_MIDDLE)
 			{
 				// If the folder is empty, then just add the new bm to it
-				if (HT_IsContainer(entry) && !BM_GetChildren(entry))
+				if (HT_IsContainer(entry) 
+                    && !XFE_RDFUtils::ht_FolderHasChildren(entry))
 				{
-					_personalToolbar->addEntryToFolder(address,
-													   guessed_title,
-													   lastAccess,
-													   entry);
+                    HT_DropURLAndTitleOn(entry,(char*)address, (char*)title);
 					
 					// Clear drop widget so dropComplete() does not get hosed
 					_dropWidget = NULL;
@@ -274,9 +248,8 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 				// Otherwise need to popup the bookmark placement gui later
 				else
 				{
-					_personalToolbar->setDropAddress(address);
-					_personalToolbar->setDropTitle(guessed_title);
-					_personalToolbar->setDropLastAccess(lastAccess);
+					_toolbar->setDropAddress((char*)address);
+					_toolbar->setDropTitle((char*)title);
 				}
 			}
 		}
@@ -291,21 +264,15 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 		{
 			if (location == XmINDICATOR_LOCATION_BEGINNING)
 			{
-				_personalToolbar->addEntryBefore(address,
-												 guessed_title,
-												 lastAccess,
-												 entry);
+                HT_DropURLAndTitleAtPos(entry, (char*)address, (char*)title, TRUE);
 			}
 			else if (location == XmINDICATOR_LOCATION_END)
 			{
-				_personalToolbar->addEntryAfter(address,
-												guessed_title,
-												lastAccess,
-												entry);
+                HT_DropURLAndTitleAtPos(entry, (char*)address, (char*)title, FALSE);
 			}
 			else
 			{
-				_personalToolbar->addEntry(address,guessed_title,lastAccess);
+                HT_DropURLAndTitleAtPos(entry, (char*)address, (char*)title, FALSE);
 			}
 		}
 		
@@ -325,9 +292,9 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_PersonalDrop::dropComplete()
+XFE_RDFToolbarDrop::dropComplete()
 {
-	_personalToolbar->clearDropTargetItem();
+	_toolbar->clearDropTargetItem();
 
 	// If the drop widget is still alive and kicking, it means that a drop
 	// occurred on a cascade item.  Here we deal with this unique case.
@@ -343,7 +310,7 @@ XFE_PersonalDrop::dropComplete()
 		XfeSleep(_dropWidget,fe_EventLoop,DROP_POST_SLEEP_LENGTH);
 
 		// Enable dropping into the personal toolbar
-		_personalToolbar->enableDropping();
+		_toolbar->enableDropping();
 
 		// Arm and post the cascade.  Once the cascade button's submenu id
 		// is posted, the bookmark menu items it manages will detect
@@ -362,21 +329,21 @@ XFE_PersonalDrop::dropComplete()
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_PersonalDrop::dragIn()
+XFE_RDFToolbarDrop::dragIn()
 {
 	dragMotion();
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_PersonalDrop::dragOut()
+XFE_RDFToolbarDrop::dragOut()
 {
-    _dropWidget = _personalToolbar->getDropTargetItem();
+    _dropWidget = _toolbar->getDropTargetItem();
 
-	_personalToolbar->clearDropTargetItem();
+	_toolbar->clearDropTargetItem();
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_PersonalDrop::dragMotion()
+XFE_RDFToolbarDrop::dragMotion()
 {
 	// Try to find an item at the X,Y that the motion occured
 	Widget target = XfeDescendantFindByCoordinates(_widget,
@@ -385,39 +352,36 @@ XFE_PersonalDrop::dragMotion()
 
 
 	// If we found the indicator, ignore it
-	if (target != _personalToolbar->getIndicatorItem())
+	if (target != _toolbar->getIndicatorItem())
 	{
 		// If an item is found, use it as the target
 		if (XfeIsAlive(target))
 		{
-			_personalToolbar->setDropTargetItem(target,
-												_dropEventX - XfeX(target));
+			_toolbar->setDropTargetItem(target, _dropEventX - XfeX(target));
 
-            // The argument should really be a (HT_Resource) 
-			_personalToolbar->configureIndicatorItem(NULL);
+			_toolbar->configureIndicatorItem(NULL);
 		}
 		// Otherwise use the last item
 		else
 		{
-			Widget last = _personalToolbar->getLastItem();
+			Widget last = _toolbar->getLastItem();
 
 			// The 10000 forces the position to be at the END of the item
 			if (XfeIsAlive(last))
 			{
-				_personalToolbar->setDropTargetItem(last,10000);
+				_toolbar->setDropTargetItem(last,10000);
 
-                // The argument should really be a (HT_Resource) 
-                _personalToolbar->configureIndicatorItem(NULL);
+                _toolbar->configureIndicatorItem(NULL);
 			}
 		}
 	}
 
 	// Assign the drop widget so that addEntry() can do its magic
-    _dropWidget = _personalToolbar->getDropTargetItem();
+    _dropWidget = _toolbar->getDropTargetItem();
 }
 //////////////////////////////////////////////////////////////////////////
 
-
+#if 0
 //
 // XFE_PersonalTabDrop class
 //
@@ -425,9 +389,10 @@ XFE_PersonalDrop::dragMotion()
 //////////////////////////////////////////////////////////////////////////
 XFE_PersonalTabDrop::XFE_PersonalTabDrop(Widget					dropWidget, 
 										 XFE_PersonalToolbar *	toolbar) :
-    XFE_PersonalDrop(dropWidget,toolbar)
+    XFE_RDFToolbarDrop(dropWidget,toolbar)
 {
 }
+
 //////////////////////////////////////////////////////////////////////////
 XFE_PersonalTabDrop::~XFE_PersonalTabDrop()
 {
@@ -438,7 +403,7 @@ XFE_PersonalTabDrop::addEntry(const char * address,const char * title)
 {
 	XP_ASSERT( address != NULL );
 
-	XP_ASSERT( _personalToolbar != NULL );
+	XP_ASSERT( _toolbar != NULL );
 
 	char *		guessed_title = (char *) title;
 	time_t		lastAccess = 0;
@@ -446,7 +411,7 @@ XFE_PersonalTabDrop::addEntry(const char * address,const char * title)
 	// If no title is given, try to guess a decent one
 	if (!guessed_title)
 	{
-		XFE_BookmarkBase::guessTitle(_personalToolbar->getFrame(),
+		XFE_BookmarkBase::guessTitle(_toolbar->getFrame(),
 									 address,
 									 isFromSameShell(),
 									 &guessed_title,
@@ -465,7 +430,7 @@ XFE_PersonalTabDrop::addEntry(const char * address,const char * title)
 		// If the first entry exists, add the new entry before it
 		if (entry)
 		{
-			_personalToolbar->addEntryBefore(address,
+			_toolbar->addEntryBefore(address,
 											 guessed_title,
 											 lastAccess,
 											 entry);
@@ -473,7 +438,7 @@ XFE_PersonalTabDrop::addEntry(const char * address,const char * title)
 		// Otherwise add the entry to the personal toolbar folder
 		else
 		{
-			_personalToolbar->addEntry(address,guessed_title,lastAccess);
+			_toolbar->addEntry(address,guessed_title,lastAccess);
 		}
 	}
 
@@ -491,15 +456,15 @@ XFE_PersonalTabDrop::dropComplete()
 XFE_PersonalTabDrop::dragIn()
 {
 
-	Widget first = _personalToolbar->getFirstItem();
+	Widget first = _toolbar->getFirstItem();
 	
 	// The 0 forces the position to be at the first
  	if (XfeIsAlive(first))
  	{
-		_personalToolbar->setDropTargetItem(first,0);
+		_toolbar->setDropTargetItem(first,0);
 		
 		// The argument should really be a (HT_Resource) 
-		_personalToolbar->configureIndicatorItem(NULL);
+		_toolbar->configureIndicatorItem(NULL);
 	}
 
 	XfeTabDrawRaised(_widget,True);
@@ -510,7 +475,7 @@ XFE_PersonalTabDrop::dragOut()
 {
 	XfeTabDrawRaised(_widget,False);
 
-	_personalToolbar->clearDropTargetItem();
+	_toolbar->clearDropTargetItem();
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
