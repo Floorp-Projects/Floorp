@@ -19,6 +19,7 @@
  *
  * Contributors:
  *     Daniel Veditz <dveditz@netscape.com>
+ *     Edward Kandrot <kandrot@netscape.com>
  */
 
 /* nr_bufio.h
@@ -41,6 +42,7 @@ PRUint32    bufio_Read(BufioFile* file, char* dest, PRUint32 count);
 PRUint32    bufio_Write(BufioFile* file, const char* src, PRUint32 count);
 PRInt32     bufio_Tell(BufioFile* file);
 int         bufio_Flush(BufioFile* file);
+int         bufio_SetBufferSize(BufioFile* file, int bufsize);
 
 #endif  /* _NR_BUFIO_H_ */
 
