@@ -43,6 +43,8 @@
 
 class nsIURI;
 
+#include "nsCookies.h"
+
 #define COOKIEPERMISSION 0
 #define IMAGEPERMISSION 1
 #define WINDOWPERMISSION 2
@@ -71,7 +73,7 @@ extern void PERMISSION_Remove(const nsACString & host, PRInt32 type);
 
 extern PRBool Permission_Check
   (nsIPrompt *aPrompter, const char * hostname, PRInt32 type,
-   PRBool warningPref, const char * message_string, int count_for_message);
+   PRBool warningPref, cookie_CookieStruct * cookie_s, const char * message_string, int count_for_message);
 extern nsresult Permission_AddHost
   (const nsAFlatCString &host, PRBool permission, PRInt32 type, PRBool save);
 //extern void Permission_Free(PRInt32 hostNumber, PRInt32 type, PRBool save);

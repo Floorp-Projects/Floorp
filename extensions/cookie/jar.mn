@@ -9,6 +9,8 @@ comm.jar:
     content/cookie/cookieOverlay.js                (resources/content/cookieOverlay.js)
     content/cookie/p3p.xul                         (resources/content/p3p.xul)
     content/cookie/p3pDialog.xul                   (resources/content/p3pDialog.xul)
+    content/cookie/cookieAcceptDialog.xul          (resources/content/cookieAcceptDialog.xul)
+    content/cookie/cookieAcceptDialog.js           (resources/content/cookieAcceptDialog.js)
 
 modern.jar:
     skin/modern/communicator/cookie/taskbar-cookie.gif          (resources/skin/modern/taskbar-cookie.gif)
@@ -28,3 +30,5 @@ en-US.jar:
     locale/en-US/cookie/pref-images.dtd            (resources/locale/en-US/pref-images.dtd)
     locale/en-US/cookie/p3p.dtd                    (resources/locale/en-US/p3p.dtd)
     locale/en-US/cookie/cookie.properties          (resources/locale/en-US/cookie.properties)
+    locale/en-US/cookie/cookieAcceptDialog.properties  (resources/locale/en-US/cookieAcceptDialog.properties)
+    locale/en-US/cookie/cookieAcceptDialog.dtd     (resources/locale/en-US/cookieAcceptDialog.dtd)

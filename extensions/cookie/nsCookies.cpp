@@ -85,19 +85,6 @@ static const char* kWhitespace="\b\t\r\n ";
 MODULE_PRIVATE time_t 
 cookie_ParseDate(char *date_string);
 
-typedef struct _cookie_CookieStruct {
-  char * path;
-  char * host;
-  char * name;
-  char * cookie;
-  time_t expires;
-  time_t lastAccessed;
-  PRBool isSecure;
-  PRBool isDomain;   /* is it a domain instead of an absolute host? */
-  nsCookieStatus status;
-  nsCookiePolicy policy;
-} cookie_CookieStruct;
-
 typedef enum {
   COOKIE_Normal,
   COOKIE_Discard,
@@ -1342,6 +1329,33 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
   //TRACEMSG(("mkaccess.c: Setting cookie: %s for host: %s for path: %s",
   //          cookie_from_header, host_from_header, path_from_header));
 
+  /* construct a new (temporary) cookie_struct, for the nag box */
+  cookie_CookieStruct * this_cookie;
+  this_cookie = PR_NEW(cookie_CookieStruct);
+  if (!this_cookie) {
+    PR_FREEIF(path_from_header);
+    PR_FREEIF(host_from_header);
+    PR_FREEIF(name_from_header);
+    PR_FREEIF(cookie_from_header);
+    nsCRT::free(setCookieHeaderInternal);
+    return;
+  }
+
+  // put the cookie information into the temporary struct.
+  // just copy pointers to the char * strings (cookie_from_header etc).
+  // we still own the strings, and we must free them if the cookie is
+  // rejected.
+  this_cookie->cookie = cookie_from_header;
+  this_cookie->name = name_from_header;
+  this_cookie->path = path_from_header;
+  this_cookie->host = host_from_header;
+  this_cookie->expires = cookie_TrimLifetime(timeToExpire);
+  this_cookie->isSecure = isSecure;
+  this_cookie->isDomain = isDomain;
+  this_cookie->lastAccessed = get_current_time();
+  this_cookie->status = status;
+  this_cookie->policy = cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel));
+
   /* use common code to determine if we can set the cookie */
   PRBool permission = PR_TRUE;
   if (NS_SUCCEEDED(PERMISSION_Read())) {
@@ -1351,6 +1365,7 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
 // until generalized per-site preferences are available.
                                        //cookie_GetLifetimeAsk(timeToExpire) ||
                                        cookie_GetWarningPref(),
+                                       this_cookie,
                                        message_string, count);
   }
   if (!permission) {

@@ -4,3 +4,4 @@ nsIImgManager.idl
 nsIPermission.idl
 nsIPermissionManager.idl
 nsICookieConsent.idl
+nsICookieAcceptDialog.idl

@@ -1,0 +1,14 @@
+<!ENTITY     props.box.label                "About this cookie">
+<!ENTITY     props.name.label               "Name:">
+<!ENTITY     props.value.label              "Information:">
+<!ENTITY     props.domain.label             "Host:">
+<!ENTITY     props.path.label               "Path:">
+<!ENTITY     props.secure.label             "Server Secure:">
+<!ENTITY     props.expires.label            "Expires:">
+<!ENTITY     props.policy.label             "Policy:"> 
+
+<!ENTITY     button.rememberdecision.label  "Remember this decision">
+<!ENTITY     button.yes.label               "Yes">
+<!ENTITY     button.no.label                "No">
+
+<!ENTITY     dialog.title                   "Confirm">

@@ -47,6 +47,9 @@
 #include "nsIFileSpec.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDialogParamBlock.h"
 #include "nsVoidArray.h"
 #include "prmem.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -55,6 +58,8 @@
 #include "nsTextFormatter.h"
 #include "nsIObserverService.h"
 #include "nsComObsolete.h"
+
+#include "nsICookieAcceptDialog.h"
 
 static const char *kCookiesPermFileName = "cookperm.txt";
 
@@ -77,39 +82,92 @@ PRIVATE PRBool window_rememberChecked;
 PRIVATE nsVoidArray * permission_list=0;
 
 PRBool
-permission_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue) {
+permission_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar * szCheckMessage, cookie_CookieStruct *cookie_s, PRBool* checkValue) {
 
   nsresult res;
-  nsCOMPtr<nsIPrompt> dialog;
-
-  if (aPrompter)
-    dialog = aPrompter;
-  else {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-    if (wwatch)
-      wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
-  }
-  if (!dialog) {
-    *checkValue = 0;
-    return PR_FALSE;
-  }
-
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
   PRUnichar * confirm_string = CKutil_Localize(NS_LITERAL_STRING("Confirm").get());
 
-  res = dialog->ConfirmEx(confirm_string, szMessage,
-                          (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                          (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                          nsnull, nsnull, nsnull, szCheckMessage, checkValue, &buttonPressed);
+  if (cookie_s) {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (!wwatch) {
+      *checkValue = 0;
+      return PR_FALSE;
+    }
 
-  if (NS_FAILED(res)) {
-    *checkValue = 0;
+    nsCOMPtr<nsIDOMWindowInternal> activeParent;
+    nsCOMPtr<nsIDOMWindow> active;
+    wwatch->GetActiveWindow(getter_AddRefs(active));
+
+    nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+    if (!block) {
+      *checkValue = 0;
+      buttonPressed = 1;
+      return PR_TRUE;
+    }
+    block->SetString(nsICookieAcceptDialog::MESSAGETEXT, szMessage);
+    block->SetInt(nsICookieAcceptDialog::REMEMBER_DECISION, *checkValue);
+
+    NS_ConvertASCIItoUCS2 cookieName(cookie_s->name);
+    NS_ConvertASCIItoUCS2 cookieValue(cookie_s->cookie);
+    NS_ConvertASCIItoUCS2 cookieHost(cookie_s->host);
+    NS_ConvertASCIItoUCS2 cookiePath(cookie_s->path);
+    block->SetString(nsICookieAcceptDialog::COOKIE_NAME, cookieName.get());
+    block->SetString(nsICookieAcceptDialog::COOKIE_VALUE, cookieValue.get());
+    block->SetString(nsICookieAcceptDialog::COOKIE_HOST, cookieHost.get());
+    block->SetString(nsICookieAcceptDialog::COOKIE_PATH, cookiePath.get());
+    block->SetInt(nsICookieAcceptDialog::COOKIE_IS_SECURE, cookie_s->isSecure);
+    block->SetInt(nsICookieAcceptDialog::COOKIE_EXPIRES, cookie_s->expires);
+    block->SetInt(nsICookieAcceptDialog::COOKIE_IS_DOMAIN, cookie_s->isDomain);
+
+    nsCOMPtr<nsIDOMWindow> dialogwin; 
+    res = wwatch->OpenWindow(active, "chrome://cookie/content/cookieAcceptDialog.xul", "_blank",
+                             "centerscreen,chrome,modal,titlebar", block,
+                             getter_AddRefs(dialogwin));
+
+    if (NS_FAILED(res)) {
+      *checkValue = 0;
+      buttonPressed = 1;
+    }
+    else {
+      /* get back output parameters */
+      PRInt32 acceptCookie;
+      block->GetInt(nsICookieAcceptDialog::ACCEPT_COOKIE, &acceptCookie);
+      buttonPressed = acceptCookie ? 0 : 1;
+      block->GetInt(nsICookieAcceptDialog::REMEMBER_DECISION, checkValue);
+    }
   }
+  else {
+    nsCOMPtr<nsIPrompt> dialog;
+
+    if (aPrompter)
+      dialog = aPrompter;
+    else {
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch)
+        wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+    }
+    if (!dialog) {
+      *checkValue = 0;
+      return PR_FALSE;
+    }
+
+    res = dialog->ConfirmEx(confirm_string, szMessage,
+                            (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
+                            (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                            nsnull, nsnull, nsnull, szCheckMessage, checkValue, &buttonPressed);
+
+    if (NS_FAILED(res)) {
+      *checkValue = 0;
+    }
+  }
+
   if (*checkValue!=0 && *checkValue!=1) {
     NS_ASSERTION(PR_FALSE, "Bad result from checkbox");
     *checkValue = 0; /* this should never happen but it is happening!!! */
   }
   Recycle(confirm_string);
+
   return (buttonPressed == 0);
 }
 
@@ -189,6 +247,7 @@ Permission_Check(
      const char * hostname,
      PRInt32 type,
      PRBool warningPref,
+     cookie_CookieStruct *cookie_s,
      const char * message_string,
      int count_for_message)
 {
@@ -211,7 +270,7 @@ Permission_Check(
                             hostname ? hostname : "", count_for_message);
   PRBool rememberChecked = permission_GetRememberChecked(type);
   PRUnichar * remember_string = CKutil_Localize(NS_LITERAL_STRING("RememberThisDecision").get());
-  permission = permission_CheckConfirmYN(aPrompter, message, remember_string, &rememberChecked);
+  permission = permission_CheckConfirmYN(aPrompter, message, remember_string, cookie_s, &rememberChecked);
   nsTextFormatter::smprintf_free(message);
   nsMemory::Free(message_fmt);
 
