@@ -38,6 +38,7 @@
 #include <Aliases.h>
 
 #include "InstallCleanup.h"
+#include "InstallCleanupDefines.h"
 
 #define kSleepMax 900  // sleep 15 seconds
 
@@ -47,6 +48,9 @@ long gSleepVal;
 
 int   strcasecmp(const char *str1, const char *str2);
 OSErr GetFSSpecFromPath(char *aPath, FSSpec *aSpec);
+void  my_c2pstrcpy(Str255 aDstPStr, const char *aSrcCStr);
+OSErr GetCWD(short *aVRefNum, long *aDirID);
+OSErr GetCleanupReg(FSSpec *aCleanupReg);
 
 int strcasecmp(const char *str1, const char *str2)
 {
@@ -96,6 +100,71 @@ OSErr GetFSSpecFromPath(const char *aPath, FSSpec *aSpec)
     // path is kosher: get FSSpec for it
     return FSpLocationFromFullPath(strlen(aPath), (const void *) aPath, aSpec);
 }
+
+void
+my_c2pstrcpy(Str255 aDstPStr, const char *aSrcCStr)
+{
+    if (!aSrcCStr)
+        return;
+    
+    memcpy(&aDstPStr[1], aSrcCStr, strlen(aSrcCStr) > 255 ? 255 : strlen(aSrcCStr));
+    aDstPStr[0] = strlen(aSrcCStr);
+}
+
+OSErr
+GetCWD(short *aVRefNum, long *aDirID)
+{
+    OSErr               err = noErr;
+    ProcessSerialNumber psn;
+    ProcessInfoRec      pInfo;
+    FSSpec              tmp;
+        
+    if (!aVRefNum || !aDirID)
+        return paramErr;
+    
+    *aVRefNum = 0;
+    *aDirID = 0;
+    
+    /* get cwd based on curr ps info */
+    if (!(err = GetCurrentProcess(&psn))) 
+    {
+        pInfo.processName = nil;
+        pInfo.processAppSpec = &tmp;
+        pInfo.processInfoLength = (sizeof(ProcessInfoRec));
+             
+        if(!(err = GetProcessInformation(&psn, &pInfo)))
+        {   
+            *aVRefNum = pInfo.processAppSpec->vRefNum;
+            *aDirID = pInfo.processAppSpec->parID; 
+        }
+    }
+      
+    return err;
+}
+
+OSErr
+GetCleanupReg(FSSpec *aCleanupReg)
+{
+    OSErr err = noErr;
+    short efVRefNum = 0;
+    long efDirID = 0;
+    
+    if (!aCleanupReg)
+        return paramErr;
+        
+    err = GetCWD(&efVRefNum, &efDirID);
+    if (err == noErr)
+    {
+        Str255 pCleanupReg;
+        my_c2pstrcpy(pCleanupReg, CLEANUP_REGISTRY);
+        err = FSMakeFSSpec(efVRefNum, efDirID, pCleanupReg, aCleanupReg);
+    }
+    
+    return err;
+}
+
+
+#pragma mark -
 
 //----------------------------------------------------------------------------
 // Native Mac file deletion function
@@ -187,6 +256,8 @@ int NativeReplaceFile(const char* aReplacementFile, const char* aDoomedFile )
     return DONE;
 }
 
+
+#pragma mark -
 
 //----------------------------------------------------------------------------
 // Routines for recovery on reboot
@@ -289,6 +360,8 @@ RemoveAliasFromStartupItems(FSSpecPtr aAlias)
 }
 
 
+#pragma mark -
+
 //----------------------------------------------------------------------------
 // Apple event handlers to be installed
 //----------------------------------------------------------------------------
@@ -358,24 +431,26 @@ static void DoHighLevelEvent(EventRecord * theEventRecPtr)
     (void) AEProcessAppleEvent(theEventRecPtr);
 }
 
+
+#pragma mark -
+
 void main(void)
 {
     OSErr retCode;
     long gestResponse;
     FSSpec aliasToSelf;
+    FSSpec fsCleanupReg;
 
     EventRecord mainEventRec;
-    Boolean eventFlag, bDone = false;;
+    Boolean eventFlag, bDone = false, bHaveCleanupReg = false;
     
     HREG reg;
     int rv = DONE;
 
     // initialize QuickDraw globals
-
     InitGraf(&qd.thePort);
 
     // initialize application globals
-
     gQuitFlag = false;
     gSleepVal = kSleepMax;
 
@@ -395,9 +470,40 @@ void main(void)
     FSMakeFSSpec(0, 0, "\p", &aliasToSelf);  // initialize
     PutAliasInStartupItems(&aliasToSelf);
     
-    if ( REGERR_OK == NR_StartupRegistry())
+    if ( REGERR_OK == NR_StartupRegistry() )
     {
-        if ( REGERR_OK == NR_RegOpen("", &reg) )
+        char *regName = "";
+        Boolean regNameAllocd = false;
+        Handle pathH = 0;
+        short pathLen = 0;
+        
+        // check if XPICleanup data file exists
+        retCode = GetCleanupReg(&fsCleanupReg);
+        if (retCode == noErr)
+        {
+            bHaveCleanupReg = true;
+            
+            // get full path to give to libreg open routine
+            retCode = FSpGetFullPath(&fsCleanupReg, &pathLen, &pathH);
+            if (retCode == noErr && pathH)
+            {
+                HLock(pathH);
+                if (*pathH)
+                {
+                    regName = (char *) malloc(sizeof(char) * (pathLen + 1));
+                    if (regName)
+                        regNameAllocd = true;
+                    else
+                        retCode = memFullErr;
+                    strncpy(regName, *pathH, pathLen);
+                    *(regName + pathLen) = 0;
+                }
+                HUnlock(pathH);
+                DisposeHandle(pathH);
+            }
+        }
+            
+        if ( (retCode == noErr) && (REGERR_OK == NR_RegOpen(regName, &reg)) )
         {
             // main event loop
 
@@ -417,12 +523,19 @@ void main(void)
             }
             
             NR_ShutdownRegistry();
-        }      
+        }
+        
+        if (regNameAllocd)
+            free(regName);      
     }
     
     // clean up the alias to ouselves since we have 
     // completed our tasks successfully
     if (bDone)
+    {
+        if (bHaveCleanupReg)
+            FSpDelete(&fsCleanupReg);
         RemoveAliasFromStartupItems(&aliasToSelf);
+    }
 }
 
