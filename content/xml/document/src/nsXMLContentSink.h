@@ -173,11 +173,12 @@ protected:
   PRUnichar* mText;
   PRInt32 mTextLength;
   PRInt32 mTextSize;
-  PRBool mConstrainSize;
+  PRPackedBool mConstrainSize;
 
   // XXX Special processing for HTML SCRIPT tags. We may need
   // something similar for STYLE.
-  PRBool mInScript;
+  PRPackedBool mInScript;
+  nsString mScriptText;
   PRUint32 mScriptLineNo;
 
   nsString  mPreferredStyle;
