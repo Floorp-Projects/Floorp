@@ -1543,6 +1543,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     // release.  gtk2 already filters the extra key release events for
     // us.
 
+    PRBool isKeyDownCancelled = PR_FALSE;
     if (!mInKeyRepeat) {
         mInKeyRepeat = PR_TRUE;
 
@@ -1550,6 +1551,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         nsKeyEvent downEvent(NS_KEY_DOWN, this);
         InitKeyEvent(downEvent, aEvent);
         DispatchEvent(&downEvent, status);
+        isKeyDownCancelled = (status == nsEventStatus_eConsumeNoDefault);
     }
 
     // Don't pass modifiers as NS_KEY_PRESS events.
@@ -1571,7 +1573,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     }
     nsKeyEvent event(NS_KEY_PRESS, this);
     InitKeyEvent(event, aEvent);
-    if (status == nsEventStatus_eConsumeNoDefault) {
+    if (isKeyDownCancelled) {
       // If prevent default set for onkeydown, do the same for onkeypress
       event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     }
