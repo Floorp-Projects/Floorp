@@ -641,10 +641,10 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   {
   case 2:
 	  {
-		  const nsString * mailPassword = nsnull;
 		  //m_runningURL->GetUserPassword(&mailPassword);
 		  m_nextState = SMTP_SEND_HELO_RESPONSE;
 #ifdef UNREADY_CODE
+		  const nsString * mailPassword = nsnull;
 		  if (mailPassword == NULL)
 			MSG_SetPasswordForMailHost(cd->master, m_hostName, net_smtp_password);
 #endif
