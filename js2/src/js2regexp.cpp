@@ -135,12 +135,12 @@ namespace MetaData {
         if (argc > 0) {
             int32 index = 0;
 
-            const String *str = meta->engine->meta->toString(argv[0]);
+            const String *str = meta->toString(argv[0]);
             js2val globalMultiline = thisInst->getMultiline(meta);
 
             if (thisInst->getGlobal(meta)) {
                 js2val lastIndex = thisInst->getLastIndex(meta);
-                index = meta->engine->meta->toInteger(lastIndex);            
+                index = meta->toInteger(lastIndex);            
             }
 
             REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), index, toInt32(str->length()), meta->toBoolean(globalMultiline));

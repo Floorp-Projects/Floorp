@@ -355,7 +355,8 @@ namespace MetaData {
                   Empty_StringAtom(&world.identifiers[""]),
                   Dollar_StringAtom(&world.identifiers["$"]),
                   INIT_STRINGATOM(prototype),
-                  INIT_STRINGATOM(length)
+                  INIT_STRINGATOM(length),
+                  INIT_STRINGATOM(toString)
     {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
@@ -605,6 +606,7 @@ namespace MetaData {
         JS2Object::mark(Empty_StringAtom);
         JS2Object::mark(Dollar_StringAtom);
         JS2Object::mark(length_StringAtom);
+        JS2Object::mark(toString_StringAtom);
     }
 
     void JS2Engine::pushHandler(uint8 *pc)

@@ -2594,16 +2594,37 @@ doUnary:
         return result;
     }
 
-    js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    static js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {
         return STRING_TO_JS2VAL(meta->engine->object_StringAtom);
     }
     
-    js2val GlobalObject_isNaN(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    static js2val GlobalObject_isNaN(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {
         float64 d = meta->toFloat64(argv[0]);
         return BOOLEAN_TO_JS2VAL(JSDOUBLE_IS_NaN(d));
     }
+
+    static js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    {   
+        js2val thatValue = OBJECT_TO_JS2VAL(new NumberInstance(meta->numberClass));
+        NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thatValue));
+
+        if (argc > 0)
+            numInst->mValue = meta->toFloat64(argv[0]);
+        else
+            numInst->mValue = 0.0;
+        return thatValue;
+    }
+    
+    static js2val Number_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
+    {
+        if (meta->objectType(thisValue) != meta->numberClass)
+            meta->reportError(Exception::typeError, "Number.toString called on something other than a number thing", meta->engine->errorPos());
+        NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thisValue));
+        return meta->engine->allocString(numberToString(&numInst->mValue));
+    }
+
 
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code)
     {
@@ -2645,6 +2666,8 @@ doUnary:
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new StaticMember(Member::Forbidden);
 
+
+/*** ECMA 3  Global Object ***/
         // Non-function properties of the global object : 'undefined', 'NaN' and 'Infinity'
 // XXX Or are these fixed properties?
         writeDynamicProperty(glob, new Multiname(engine->undefined_StringAtom, publicNamespace), true, JS2VAL_UNDEFINED, RunPhase);
@@ -2654,24 +2677,28 @@ doUnary:
         addGlobalObjectFunction("isNaN", GlobalObject_isNaN);
 
 
+/*** ECMA 3  Object Class ***/
         // Function properties of the Object prototype object
         objectClass->prototype = new PrototypeInstance(NULL, objectClass);
 // XXX Or make this a static class member?
         FixedInstance *fInst = new FixedInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
-        writeDynamicProperty(objectClass->prototype, new Multiname(&world.identifiers["toString"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+        writeDynamicProperty(objectClass->prototype, new Multiname(engine->toString_StringAtom, publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 
+        // needed for class instance variables...
         NamespaceList publicNamespaceList;
         publicNamespaceList.push_back(publicNamespace);
         Variable *v;
         InstanceMember *m;
 
+/*** ECMA 3  Date Class ***/
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, &world.identifiers["Date"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
         defineStaticMember(&env, &world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
  //       dateClass->prototype = new PrototypeInstance(NULL, dateClass);
         initDateObject(this);
 
+/*** ECMA 3  RegExp Class ***/
         MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, &world.identifiers["RegExp"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(regexpClass), true);
         defineStaticMember(&env, &world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
@@ -2687,20 +2714,31 @@ doUnary:
         m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
         defineInstanceMember(regexpClass, &cxt, &world.identifiers["multiline"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
 
+/*** ECMA 3  String Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(stringClass), true);
         defineStaticMember(&env, &world.identifiers["String"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-//        stringClass->prototype = new PrototypeInstance(NULL, stringClass);
         initStringObject(this);
 
+/*** ECMA 3  Number Class ***/
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(numberClass), true);
+        defineStaticMember(&env, &world.identifiers["Number"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        numberClass->construct = Number_Constructor;
+        fInst = new FixedInstance(functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Number_toString);
+        m = new InstanceMethod(fInst);
+        defineInstanceMember(numberClass, &cxt, &world.identifiers["toString"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+
+
+/*** ECMA 3  Math Class ***/
         MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, &world.identifiers["Math"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(mathClass), true);
         defineStaticMember(&env, &world.identifiers["Math"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initMathObject(this);
 
+/*** ECMA 3  Array Class ***/
         MAKEBUILTINCLASS(arrayClass, objectClass, true, true, true, &world.identifiers["Array"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineStaticMember(&env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
- //       dateClass->prototype = new PrototypeInstance(NULL, dateClass);
         initArrayObject(this);
 
 
@@ -2994,7 +3032,8 @@ readClassProperty:
             if ((ib == NULL) && isDynamicInstance) 
                 return readDynamicProperty(JS2VAL_TO_OBJECT(containerVal), multiname, lookupKind, phase, rval);
             else {
-                // XXX Spec. would have us passing a primitive here ???
+                // XXX Spec. would have us passing a primitive here since ES4 is 'not addressing' the issue
+                // of so-called wrapper objects.
                 return readInstanceMember(toObject(containerVal), c, (ib) ? &ib->qname : NULL, phase, rval);
             }
         }
@@ -3561,7 +3600,7 @@ deleteClassProperty:
         // if not available or result is not primitive then try property 'valueOf'
         // if that's not available or returns a non primitive, throw a TypeError
 
-        Multiname mn(&world.identifiers["toString"], publicNamespace);
+        Multiname mn(engine->toString_StringAtom, publicNamespace);
         LookupKind lookup(false, NULL);
         js2val result;
         if (readProperty(x, &mn, &lookup, RunPhase, &result)) {

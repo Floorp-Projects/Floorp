@@ -224,6 +224,7 @@ public:
     const String *Dollar_StringAtom;
     const String *prototype_StringAtom;
     const String *length_StringAtom;
+    const String *toString_StringAtom;
 
     // The activation stack, when it's empty and a return is executed, the
     // interpreter quits

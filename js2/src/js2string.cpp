@@ -66,7 +66,7 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thatValue));
 
     if (argc > 0)
-        strInst->mValue = meta->engine->allocStringPtr(meta->engine->meta->toString(argv[0]));
+        strInst->mValue = meta->engine->allocStringPtr(meta->toString(argv[0]));
     else
         strInst->mValue = meta->engine->allocStringPtr("");
     return thatValue;
@@ -110,7 +110,7 @@ static js2val String_valueOf(JS2Metadata *meta, const js2val thisValue, js2val *
 */
 static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    js2val S = STRING_TO_JS2VAL(meta->engine->meta->toString(thisValue));
+    js2val S = STRING_TO_JS2VAL(meta->toString(thisValue));
 
     js2val regexp = argv[0];
     
@@ -145,7 +145,7 @@ static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *a
  
 static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    js2val S = STRING_TO_JS2VAL(meta->engine->meta->toString(thisValue));
+    js2val S = STRING_TO_JS2VAL(meta->toString(thisValue));
 
     js2val regexp = argv[0];
     if ((argc == 0) || (meta->objectType(thisValue) != meta->regexpClass)) {        
@@ -255,14 +255,14 @@ static const String interpretDollar(JS2Metadata *meta, const String *replaceStr,
 
 static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    const String *S = meta->engine->meta->toString(thisValue);
+    const String *S = meta->toString(thisValue);
 
     js2val searchValue;
     js2val replaceValue;
 
     if (argc > 0) searchValue = argv[0];
     if (argc > 1) replaceValue = argv[1];
-    const String *replaceStr = meta->engine->meta->toString(replaceValue);
+    const String *replaceStr = meta->toString(replaceValue);
 
     if (meta->objectType(searchValue) != meta->regexpClass) {
         RegExpInstance *reInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(searchValue)); 
@@ -308,7 +308,7 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
         return meta->engine->allocString(newString);
     }
     else {
-        const String *searchStr = meta->engine->meta->toString(searchValue);
+        const String *searchStr = meta->toString(searchValue);
 	REMatchState match;
         uint32 pos = S->find(*searchStr, 0);
 	if (pos == String::npos)
@@ -392,7 +392,7 @@ static void regexpSplitMatch(JS2Metadata *meta, const String *S, uint32 q, RESta
 
 static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    const String *S = meta->engine->meta->toString(thisValue);
+    const String *S = meta->toString(thisValue);
 
     js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
@@ -414,7 +414,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
     if (meta->objectType(separatorV) == meta->regexpClass)
         RE = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(separatorV)))->mRegExp;
     else
-        R = meta->engine->meta->toString(separatorV);
+        R = meta->toString(separatorV);
 
     if (lim == 0) 
         return result;
@@ -486,7 +486,7 @@ step11:
 
 static js2val String_charAt(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    const String *str = meta->engine->meta->toString(thisValue);
+    const String *str = meta->toString(thisValue);
 
     uint32 pos = 0;
     if (argc > 0)

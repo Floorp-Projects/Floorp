@@ -560,6 +560,15 @@ public:
     virtual void markChildren()     { if (mValue) JS2Object::mark(mValue); }
 };
 
+// Number instances are fixed (not dynamic? XXX) instances created by the Number class, they have an extra field 
+// that contains the float64 data
+class NumberInstance : public FixedInstance {
+public:
+    NumberInstance(JS2Class *type) : FixedInstance(type), mValue(NULL) { }
+
+    float64     mValue;
+};
+
 // Array instances are dynamic instances created by the Array class, they 
 // maintain the value of the 'length' property when 'indexable' elements
 // are added.
