@@ -1,2 +1,2 @@
 cd Core
-Seamonkey32e.exe
+cck.exe
