@@ -1148,7 +1148,7 @@ void CWizardMachineApp::CreateNewCache()
 			&& GlobalWidgetArray[i].type != "Button" 
 			&& GlobalWidgetArray[i].type != "GroupBox" )
 		{
-			if( (GlobalWidgetArray[i].name != "") || (GlobalWidgetArray[i].name != "Root") )
+			if( (GlobalWidgetArray[i].name != "") && (GlobalWidgetArray[i].name != "Root"))
 			{
 				fprintf(globs, GlobalWidgetArray[i].name + "=" + GlobalWidgetArray[i].value);
 				fprintf(globs, "\n");
