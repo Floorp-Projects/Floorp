@@ -30,16 +30,16 @@
      For a devel release, simple bump bz-ver and bz-date
 -->
 
-<!ENTITY bz-ver "2.17.7">
+<!ENTITY bz-ver "2.18rc1">
 <!ENTITY bz-nextver "2.18">
-<!ENTITY bz-date "2004-02-05">
-<!ENTITY % bz-devel "INCLUDE">
+<!ENTITY bz-date "2004-07-10">
+<!ENTITY % bz-devel "IGNORE">
 
-<!ENTITY landfillbase "http://landfill.bugzilla.org/bugzilla-tip/">
+<!ENTITY landfillbase "http://landfill.bugzilla.org/bugzilla-2.18-branch/">
 <!ENTITY bz "http://www.bugzilla.org/">
 <!ENTITY bzg-bugs "<ulink url='http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla Documentation</ulink>">
 <!ENTITY mysql "http://www.mysql.com/">
-<!ENTITY newest-perl-ver "5.8.2">
+<!ENTITY newest-perl-ver "5.8.3">
 
 <!-- For minimum versions -->
 <!ENTITY min-mysql-ver "3.23.41">
