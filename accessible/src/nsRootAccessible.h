@@ -59,10 +59,11 @@ class nsDocAccessibleMixin
     nsDocAccessibleMixin(nsIDocument *doc);
     nsDocAccessibleMixin(nsIWeakReference *aShell);
     virtual ~nsDocAccessibleMixin();
-
+    
     NS_DECL_NSIACCESSIBLEDOCUMENT
 
   protected:
+    NS_IMETHOD GetDocShellFromPS(nsIPresShell* aPresShell, nsIDocShell** aDocShell);
     PRBool mTopLevelDocument;
     nsCOMPtr<nsIDocument> mDocument;
 };

@@ -961,23 +961,20 @@ RootAccessible::~RootAccessible()
 
 void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc)
 {
-  // If the child ID given == 0 (CHILDID_SELF), they are asking for the root accessible object
-  // If the child ID given < NS_CONTENT_ID_COUNTER_BASE, then they are navigating to the children 
-  // immediately below the root accessible (pane) object
-  if (varChild.lVal < NS_CONTENT_ID_COUNTER_BASE) {
-    Accessible::GetNSAccessibleFor(varChild, aAcc);
-    return; 
-  }
-
-  // Otherwise fall through and check our circular array of event information, because the child ID
+  // Check our circular array of event information, because the child ID
   // asked for corresponds to an event target. See RootAccessible::HandleEvent to see how we provide this unique ID.
-  for (int i=0; i < mListCount; i++)
-  {
-    if (varChild.lVal == mList[i].mId) {
+
+  aAcc = nsnull;
+  if (varChild.lVal < 0) {
+    for (int i=0; i < mListCount; i++) {
+      if (varChild.lVal == mList[i].mId) {
         aAcc = mList[i].mAccessible;
         return;
-    }
-  }    
+      }
+    }    
+  }
+
+  Accessible::GetNSAccessibleFor(varChild, aAcc);
 }
 
 NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible)
@@ -997,14 +994,10 @@ PRUint32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
   // can call back and get the IAccessible the event occured on.
   // We use the unique ID exposed through nsIContent::GetContentID()
 
-  PRUint32 uniqueID = 0;  // magic value of 0 means we're on the document itself
   nsCOMPtr<nsIDOMNode> domNode;
   aAccessible->AccGetDOMNode(getter_AddRefs(domNode));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(domNode));
-  if (content)
-    content->GetContentID(&uniqueID);
+  PRUint32 uniqueID = - NS_REINTERPRET_CAST(PRUint32, (domNode.get()));
 
-  // Lets make one and add it to the list
   mList[mNextPos].mId = uniqueID;
   mList[mNextPos].mAccessible = aAccessible;
 

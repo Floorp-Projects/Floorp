@@ -68,13 +68,13 @@
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsXULFormControlAccessible.h"
 #include "nsXULTextAccessible.h"
+#include "nsString.h"
 
 // IFrame
 #include "nsIDocShell.h"
 #include "nsHTMLIFrameRootAccessible.h"
 
 //--------------------
-
 
 nsAccessibilityService::nsAccessibilityService()
 {
@@ -563,44 +563,6 @@ nsAccessibilityService::CreateHTMLIFrameAccessible(nsIDOMNode* aDOMNode, nsISupp
   return NS_ERROR_FAILURE;
 }
 
-//-----------------------------------------------------------------------
- // This method finds the content node in the parent document
- // corresponds to the docshell
- // This code is copied and pasted from nsEventStateManager.cpp
- // Is also inefficient - better solution should come along as part of 
- // Bug 85602: "FindContentForDocShell walks entire content tree"
- // Hopefully there will be a better method soon, with a public interface
-
- nsIContent* 
- nsAccessibilityService::FindContentForDocShell(nsIPresShell* aPresShell,
-                                             nsIContent*   aContent,
-                                             nsIDocShell*  aDocShell)
- {
-   NS_ASSERTION(aPresShell, "Pointer is null!");
-   NS_ASSERTION(aDocShell,  "Pointer is null!");
-   NS_ASSERTION(aContent,   "Pointer is null!");
- 
-   nsCOMPtr<nsISupports> supps;
-   aPresShell->GetSubShellFor(aContent, getter_AddRefs(supps));
-   if (supps) {
-     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(supps));
-     if (docShell.get() == aDocShell) 
-       return aContent;
-   }
- 
-   // walk children content
-   PRInt32 count;
-   aContent->ChildCount(count);
-   for (PRInt32 i=0;i<count;i++) {
-     nsCOMPtr<nsIContent> child;
-     aContent->ChildAt(i, *getter_AddRefs(child));
-     nsIContent* foundContent = FindContentForDocShell(aPresShell, child, aDocShell);
-     if (foundContent != nsnull) {
-       return foundContent;
-     }
-   }
-   return nsnull;
- }
 
 void nsAccessibilityService::GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent)
 {
@@ -612,9 +574,9 @@ void nsAccessibilityService::GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell 
   presContext->GetContainer(getter_AddRefs(pcContainer));
   if (!pcContainer) 
     return;
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));
+  nsCOMPtr<nsISupports> docShellSupports(do_QueryInterface(pcContainer));
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(docShell));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(pcContainer));
   if (!treeItem) 
     return;
 
@@ -640,9 +602,10 @@ void nsAccessibilityService::GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell 
 
   nsCOMPtr<nsIContent> rootContent;
   parentDoc->GetRootContent(getter_AddRefs(rootContent));
-  
-  nsIContent *tempContent;
-  tempContent = FindContentForDocShell(parentPresShell, rootContent, docShell);
+
+  nsCOMPtr<nsIContent> tempContent;
+  parentPresShell->FindContentForShell(docShellSupports, getter_AddRefs(tempContent));
+
   if (tempContent) {
     *aOwnerContent = tempContent;
     *aOwnerShell = parentPresShell;
@@ -663,8 +626,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   if (!aNode)
     return NS_ERROR_NULL_POINTER;
 
-  // ---- Is it a XUL element? -- they impl nsIAccessibleProvider via XBL
   nsCOMPtr<nsIAccessible> newAcc;
+
   nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
   if (accProv)  {
     accProv->GetAccessible(getter_AddRefs(newAcc));
@@ -710,8 +673,25 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
     nsCOMPtr<nsIPresShell> ownerShell;
     nsCOMPtr<nsIContent> ownerContent;
     GetOwnerFor(shell, getter_AddRefs(ownerShell), getter_AddRefs(ownerContent));
-    shell = ownerShell;
-    content = ownerContent;
+    if (content) {
+      shell = ownerShell;
+      content = ownerContent;
+    }
+    else {
+      doc->GetRootContent(getter_AddRefs(content));
+      nsIFrame* frame = nsnull;
+      shell->GetPrimaryFrameFor(content, &frame);
+      if (!frame)
+        return NS_ERROR_FAILURE;
+      nsCOMPtr<nsIPresContext> presContext;
+      shell->GetPresContext(getter_AddRefs(presContext));
+      CreateRootAccessible(presContext, frame, getter_AddRefs(newAcc));
+      *_retval = newAcc;
+      NS_ADDREF(*_retval);
+
+      return NS_OK;
+
+    }
   }
 
   // ---- If still no nsIContent, return ----

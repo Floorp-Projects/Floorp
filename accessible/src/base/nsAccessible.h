@@ -50,6 +50,8 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsWeakReference.h"
+#include "nsIDOMNodeList.h"
+#include "nsIBindingManager.h"
 
 #define ACCESSIBLE_BUNDLE_URL "chrome://global/locale/accessible.properties"
 
@@ -57,6 +59,8 @@ class nsIContent;
 class nsIDocShell;
 class nsIFrame;
 class nsIWebShell;
+
+enum { eSiblingsUninitialized = -1, eSiblingsWalkNormalDOM = -2};  // Used in sibling index field as flags
 
 class nsAccessible : public nsGenericAccessible
 {
@@ -84,7 +88,6 @@ public:
     virtual void GetListAtomForFrame(nsIFrame* aFrame, nsIAtom*& aList) { aList = nsnull; }
 
     // Helper Routines for Sub-Docs
-    static nsresult GetDocShellFromPS(nsIPresShell* aPresShell, nsIDocShell** aDocShell);
     static nsresult GetDocShellObjects(nsIDocShell*     aDocShell,
                                 nsIPresShell**   aPresShell, 
                                 nsIPresContext** aPresContext, 
@@ -122,11 +125,15 @@ protected:
   NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAWritableString *aFlatString);
   NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAWritableString *aFlatString);
   NS_IMETHOD AppendStringWithSpaces(nsAWritableString *aFlatString, nsAReadableString& textEquivalent);
+  NS_IMETHOD GetFocusedElement(nsIDOMElement **aFocusedElement);
+  NS_IMETHOD CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList);
 
   // Data Members
   nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIWeakReference> mPresShell;
-  nsCOMPtr<nsIFocusController> mFocusController;
+  nsCOMPtr<nsIAccessible> mParent;
+  nsCOMPtr<nsIDOMNodeList> mSiblingList; // If some of our computed siblings are anonymous content nodes, cache node list
+  PRInt32 mSiblingIndex; // Cache where we are in list of kids that we got from nsIBindingManager::GetContentList(parentContent)
 };
 
 #endif  
