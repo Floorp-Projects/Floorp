@@ -36,9 +36,8 @@
                         type="checkbox"/>&savePassword.label;</html:div>
   <html:div><html:input name="server.doBiff"
                         type="checkbox"/>&biffStart.label;
-            <html:spacer/>
             <html:input name="server.biffMinutes" type="text" size="3"/>
-            <html:spacer/>&biffEnd.label;
+            &biffEnd.label;
   </html:div>
   </box>
   <tabcontrol flex="100%">
@@ -65,9 +64,8 @@
       <box align="vertical" flex="100%">
         <html:div>
 		<html:input name="nntp.notifyOn" type="checkbox"/>&maxMessagesStart.label;
-		<html:spacer/>
 		<html:input name="nntp.maxArticles" type="text" size="6"/>
-		<html:spacer/>&maxMessagesEnd.label;
+		&maxMessagesEnd.label;
         </html:div>
       </box>
       <!-- None -->
