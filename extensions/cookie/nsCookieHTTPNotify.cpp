@@ -34,7 +34,7 @@
 ///////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS1(nsCookieHTTPNotify, nsIHTTPNotify);
+NS_IMPL_ISUPPORTS2(nsCookieHTTPNotify, nsIHTTPNotify, nsINetNotify);
 
 ///////////////////////////////////
 // nsCookieHTTPNotify Implementation
