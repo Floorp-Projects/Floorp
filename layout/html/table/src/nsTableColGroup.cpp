@@ -141,8 +141,6 @@ int nsTableColGroup::GetColumnCount ()
 void nsTableColGroup::ResetColumns ()
 {
   mColCount = 0;
-  if (nsnull != mTable)
-    mTable->ResetColumns ();
 }
 
 NS_IMETHODIMP

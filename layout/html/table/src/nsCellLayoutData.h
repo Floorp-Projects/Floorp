@@ -21,11 +21,12 @@
 #include "nscore.h"
 #include "nsSize.h"
 #include "nsIFrame.h"
-#include "nsTableCellFrame.h"
 
+class nsTableCellFrame;
 class nsColLayoutData;
 class nsTableFrame;
 class nsIStyleContext;
+class nsVoidArray;
 struct nsStyleSpacing;
 
 

@@ -23,7 +23,7 @@
 #include "nsHTMLContainer.h"
 
 // forward declarations
-class nsTableCell;
+class nsTableCellFrame;
 class nsCellMap;
 class nsTableRowGroup;
 class nsTableColGroup;
@@ -35,15 +35,15 @@ class nsTableCaption;
   * in addition, if fOverlap is non-null then it will point to the
   * other cell that overlaps this position
   * @see nsCellMap
-  * @see nsTablePart::BuildCellMap
-  * @see nsTablePart::GrowCellMap
-  * @see nsTablePart::BuildCellIntoMap
+  * @see nsTableFrame::BuildCellMap
+  * @see nsTableFrame::GrowCellMap
+  * @see nsTableFrame::BuildCellIntoMap
   * 
   */
 class CellData
 {
 public:
-  nsTableCell *mCell;
+  nsTableCellFrame *mCell;
   CellData *mRealCell;
   CellData *mOverlap;
 
@@ -100,41 +100,6 @@ public:
 
 /* public Table methods */
 
-  /** ResetCellMap is called when the cell structure of the table is changed.
-    * Call with caution, only when changing the structure of the table such as 
-    * inserting or removing rows, changing the rowspan or colspan attribute of a cell, etc.
-    */
-  virtual void ResetCellMap ();
-
-  /** ResetColumns is called when the column structure of the table is changed.
-    * Call with caution, only when adding or removing columns, changing 
-    * column attributes, changing the rowspan or colspan attribute of a cell, etc.
-    */
-  virtual void ResetColumns ();
-
-  /** sum the columns represented by all nsTableColGroup objects. 
-    * if the cell map says there are more columns than this, 
-    * add extra implicit columns to the content tree.
-    */ 
-  virtual void EnsureColumns ();
-
-  /** Ensure that the cell map has been built for the table
-   */
-  virtual void EnsureCellMap();
-
-    /** return the number of columns as specified by the input. 
-    * has 2 side effects:<br>
-    * calls SetStartColumnIndex on each nsTableColumn<br>
-    * sets mSpecifiedColCount.<br>
-    */
-  virtual PRInt32 GetSpecifiedColumnCount ();
-
-  /** returns the number of rows in this table.
-    * if mCellMap has been created, it is asked for the number of rows.<br>
-    * otherwise, the content is enumerated and the rows are counted.
-    */
-  virtual PRInt32 GetRowCount();
-
   /** returns the actual number of columns in this table.<br>
     * as a side effect, will call BuildCellMap to constuct mCellMap if needed.
     */
@@ -153,10 +118,6 @@ public:
                                nsIStyleContext* aStyleContext,
                                nsIFrame*&       aResult);
 
-  /** called when the input stream knows that the input has been completely consumed.
-    * this is a hook for future optimizations.
-    */
-  virtual void NotifyContentComplete();
 
   static void GetTableBorder(nsIHTMLContent* aContent,
                              nsIStyleContext* aContext,
@@ -168,40 +129,6 @@ protected:
     * deletes mCellMap, if allocated.
     */
   virtual ~nsTablePart();
-
-  /** return the row span of a cell, taking into account row span magic at the bottom
-    * of a table.
-    * @param aRowIndex  the first row that contains the cell
-    * @param aCell      the content object representing the cell
-    * @return  the row span, correcting for row spans that extend beyond the bottom
-    *          of the table.
-    */
-  virtual PRInt32  GetEffectiveRowSpan(PRInt32 aRowIndex, nsTableCell *aCell);
-
-  /** build as much of the CellMap as possible from the info we have so far 
-    */
-  virtual void BuildCellMap ();
-
-  /** called whenever the number of columns changes, to increase the storage in mCellMap 
-    */
-  virtual void GrowCellMap(PRInt32 aColCount);
-
-  /** called every time we discover we have a new cell to add to the table.
-    * This could be because we got actual cell content, because of rowspan/colspan attributes, etc.
-    * This method changes mCellMap as necessary to account for the new cell.
-    *
-    * @param aCell     the content object created for the cell
-    * @param aRowIndex the row into which the cell is to be inserted
-    * @param aColIndex the col into which the cell is to be inserted
-    */
-  virtual void BuildCellIntoMap (nsTableCell *aCell, PRInt32 aRowIndex, PRInt32 aColIndex);
-
-  /** returns the index of the first child after aStartIndex that is a row group 
-    */
-  virtual PRInt32 NextRowGroup (PRInt32 aStartIndex);
-
-  /** obsolete! */
-  virtual void ReorderChildren();
 
   /** append aContent to my child list 
     * @return PR_TRUE on success, PR_FALSE if aContent could not be appended
@@ -223,16 +150,10 @@ protected:
     */
   virtual PRBool AppendCaption(nsTableCaption *aContent);
 
-
-public:
-  virtual void        DumpCellMap() const; 
-  virtual nsCellMap*  GetCellMap() const;
-
 private:
 
   PRInt32 mColCount;
   PRInt32 mSpecifiedColCount;
-  nsCellMap* mCellMap;
   static nsIAtom *kDefaultTag;
 };
 

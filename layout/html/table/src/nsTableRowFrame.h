@@ -102,6 +102,14 @@ public:
   nscoord GetChildMaxTopMargin() const;
   nscoord GetChildMaxBottomMargin() const;
 
+  PRInt32 GetMaxColumns() const;
+
+  /** returns the ordinal position of this row in its table */
+  virtual PRInt32 GetRowIndex() const;
+
+  /** set this row's starting row index */
+  virtual void SetRowIndex (int aRowIndex);
+
   // For DEBUGGING Purposes Only
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
@@ -163,10 +171,6 @@ protected:
                                          RowReflowState& aState,
                                          nsSize*         aMaxElementSize);
 
-  NS_METHOD SetColumnStyleFromCell(nsIPresContext  * aPresContext,
-                                   nsTableCellFrame* aCellFrame, 
-                                   nsIStyleContext * aCellSC);
-
 private:
   PRInt32  mRowIndex;
   nscoord  mTallestCell;          // not my height, but the height of my tallest child
@@ -180,6 +184,12 @@ inline void nsTableRowFrame::Init(PRInt32 aRowIndex)
 {
   NS_ASSERTION(0<=aRowIndex, "bad param row index");
   mRowIndex = aRowIndex;
+}
+
+inline PRInt32 nsTableRowFrame::GetRowIndex() const
+{
+  NS_ASSERTION(0<=mRowIndex, "bad state: row index");
+  return (mRowIndex);
 }
 
 #endif

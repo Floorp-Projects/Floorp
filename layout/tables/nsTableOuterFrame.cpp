@@ -232,7 +232,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_FIRST);
     nsReflowState innerTableReflowState(mInnerTableFrame, aReflowState, aReflowState.maxSize);
     aStatus = mInnerTableFrame->ResizeReflowPass1(aPresContext, aDesiredSize,
-                                                  innerTableReflowState);
+                                                  innerTableReflowState, aStatus);
   }
   mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_SECOND);
   // assign table width info only if the inner table frame is a first-in-flow
@@ -468,11 +468,8 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
                                   kidFrame, aState.processingCaption?"caption":"inner");
 
     // Get top margin for this kid
-    nsIStyleContextPtr kidSC;
-
-    kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
-    const nsStyleSpacing* kidSpacing =
-      (const nsStyleSpacing*)kidSC->GetStyleData(eStyleStruct_Spacing);
+    const nsStyleSpacing* kidSpacing;
+    kidFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct *&)kidSpacing);
     nsMargin kidMargin;
     kidSpacing->CalcMarginFor(kidFrame, kidMargin);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
@@ -904,12 +901,8 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
   if (PR_TRUE==aState.processingCaption)
   { // it's a caption, find out if it's top or bottom
     // Resolve style
-    nsIStyleContextPtr captionStyleContext;
-
-    aKidFrame->GetStyleContext(aPresContext, captionStyleContext.AssignRef());
-    NS_ASSERTION(captionStyleContext.IsNotNull(), "null style context for caption");
-    const nsStyleText* captionStyle =
-      (const nsStyleText*)captionStyleContext->GetStyleData(eStyleStruct_Text);
+    const nsStyleText* captionStyle;
+    aKidFrame->GetStyleData(eStyleStruct_Text, ( nsStyleStruct *&)captionStyle);
     NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
     if ((eStyleUnit_Enumerated == captionStyle->mVerticalAlign.GetUnit()) && 
         (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlign.GetIntValue()))
@@ -975,31 +968,32 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
   mCaptionFrames = new nsVoidArray();
   // create caption frames as needed
   nsIFrame *lastTopCaption = nsnull;
-  for (PRInt32 kidIndex=0; /* nada */ ;kidIndex++) {
-    nsIContentPtr caption = mContent->ChildAt(kidIndex);   // caption: REFCNT++
-    if (caption.IsNull()) {
+  for (PRInt32 kidIndex=0; /* nada */ ;kidIndex++) 
+  {
+    nsIContentPtr caption = mContent->ChildAt(kidIndex);
+    if (PR_TRUE==caption.IsNull()) {
       break;
     }
-    const PRInt32 contentType = ((nsTableContent *)(nsIContent*)caption)->GetType();
-    if (contentType==nsITableContent::kTableCaptionType)
+    // Resolve style
+    nsIStyleContextPtr captionSC =
+      aPresContext->ResolveStyleContextFor(caption, this);
+    NS_ASSERTION(captionSC.IsNotNull(), "bad style context for caption.");
+    nsStyleDisplay *childDisplay = (nsStyleDisplay*)captionSC->GetStyleData(eStyleStruct_Display);
+    if (NS_STYLE_DISPLAY_TABLE_CAPTION == childDisplay->mDisplay)
     {
-      // Resolve style
-      nsIStyleContextPtr captionStyleContext =
-        aPresContext->ResolveStyleContextFor(caption, this);
-      NS_ASSERTION(captionStyleContext.IsNotNull(), "bad style context for caption.");
-      const nsStyleText* captionStyle = 
-        (const nsStyleText*)captionStyleContext->GetStyleData(eStyleStruct_Text);
+      const nsStyleText* captionTextStyle = 
+        (const nsStyleText*)captionSC->GetStyleData(eStyleStruct_Text);
       // create the frame
       nsIFrame *captionFrame=nsnull;
       frameCreated = ((nsIHTMLContent*)(nsIContent*)caption)->CreateFrame(aPresContext, 
-                      this, captionStyleContext, captionFrame);
+                      this, captionSC, captionFrame);
       if (NS_OK!=frameCreated)
         return;  // SEC: an error!!!!
 
       mChildCount++;
       // Link child frame into the list of children
-      if ((eStyleUnit_Enumerated == captionStyle->mVerticalAlign.GetUnit()) && 
-          (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlign.GetIntValue()))
+      if ((eStyleUnit_Enumerated == captionTextStyle->mVerticalAlign.GetUnit()) && 
+          (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionTextStyle->mVerticalAlign.GetIntValue()))
       { // bottom captions get added to the end of the outer frame child list
         prevKidFrame->SetNextSibling(captionFrame);
         prevKidFrame = captionFrame;
@@ -1027,7 +1021,8 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
       mCaptionFrames->AppendElement(captionFrame);
     }
     else
-    {
+    { // otherwise I know there are no more captions
+      // I'm assuming the frames were created in the correct order
       break;
     }
   }
@@ -1085,16 +1080,12 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*        aPresCont
       nsTableCaptionFrame *captionFrame = (nsTableCaptionFrame *)mCaptionFrames->ElementAt(captionIndex);
 
       // Resolve style
-      nsIStyleContextPtr captionStyleContext;
-       
-      captionFrame->GetStyleContext(aPresContext, captionStyleContext.AssignRef());
-      NS_ASSERTION(captionStyleContext.IsNotNull(), "null style context for caption");
-      const nsStyleText* captionStyle =
-        (const nsStyleText*)captionStyleContext->GetStyleData(eStyleStruct_Text);
-      NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
+      const nsStyleText* captionTextStyle;
+      captionFrame->GetStyleData(eStyleStruct_Text, (nsStyleStruct *&)captionTextStyle);
+      NS_ASSERTION(nsnull != captionTextStyle, "null style molecule for caption");
 
-      if ((eStyleUnit_Enumerated == captionStyle->mVerticalAlign.GetUnit()) && 
-          (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlign.GetIntValue()))
+      if ((eStyleUnit_Enumerated == captionTextStyle->mVerticalAlign.GetUnit()) && 
+          (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionTextStyle->mVerticalAlign.GetIntValue()))
       { 
       }
       else
@@ -1158,10 +1149,10 @@ nsTableOuterFrame::ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext
 
       // Resolve style
 /*
-      nsIStyleContextPtr captionStyleContext = captionFrame->GetStyleContext(aPresContext);
-      NS_ASSERTION(nsnull != captionStyleContext, "null style context for caption");
+      nsIStyleContextPtr captionSC = captionFrame->GetStyleContext(aPresContext);
+      NS_ASSERTION(nsnull != captionSC, "null style context for caption");
       nsStyleMolecule* captionStyle =
-        (nsStyleMolecule*)captionStyleContext->GetData(eStyleStruct_Molecule);
+        (nsStyleMolecule*)captionSC->GetData(eStyleStruct_Molecule);
       NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
 */
       // reflow the caption

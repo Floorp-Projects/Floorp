@@ -50,6 +50,16 @@ public:
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
+  /** returns the number of columns represented by this group.
+    * if there are col children, count them (taking into account the span of each)
+    * else, check my own span attribute.
+    */
+  virtual PRInt32 GetColumnCount ();
+
+  virtual PRInt32 GetStartColumnIndex ();
+  
+  virtual void SetStartColumnIndex (PRInt32 aIndex);
+
 protected:
 
   nsTableColGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame);
@@ -62,6 +72,22 @@ protected:
     */
   NS_METHOD SetStyleContextForFirstPass(nsIPresContext* aPresContext);
 
+  
+  PRInt32 mColCount;
+
+  /** the starting column index this col group represents. Must be >= 0. */
+  PRInt32 mStartColIndex;
+
 };
+
+inline int nsTableColGroupFrame::GetStartColumnIndex ()
+{  return mStartColIndex;}
+  
+inline void nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
+{
+  if (aIndex != mStartColIndex)
+    mColCount = 0;  // our index is being changed, trigger reset of col indicies, don't propogate back to table
+  mStartColIndex = aIndex;
+}
 
 #endif

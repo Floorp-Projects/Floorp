@@ -87,6 +87,19 @@
 #define NS_STYLE_DISPLAY_BLOCK                  1
 #define NS_STYLE_DISPLAY_INLINE                 2
 #define NS_STYLE_DISPLAY_LIST_ITEM              3
+#define NS_STYLE_DISPLAY_MARKER                 4
+#define NS_STYLE_DISPLAY_RUN_IN                 5
+#define NS_STYLE_DISPLAY_COMPACT                6
+#define NS_STYLE_DISPLAY_TABLE                  7
+#define NS_STYLE_DISPLAY_INLINE_TABLE           8
+#define NS_STYLE_DISPLAY_TABLE_ROW_GROUP        9
+#define NS_STYLE_DISPLAY_TABLE_COLUMN           10
+#define NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP     11
+#define NS_STYLE_DISPLAY_TABLE_HEADER_GROUP     12
+#define NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP     13
+#define NS_STYLE_DISPLAY_TABLE_ROW              14
+#define NS_STYLE_DISPLAY_TABLE_CELL             15
+#define NS_STYLE_DISPLAY_TABLE_CAPTION          16
 
 // See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0

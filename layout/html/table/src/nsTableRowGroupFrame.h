@@ -91,6 +91,9 @@ public:
     */ 
   NS_IMETHOD GetRowGroupType(nsIAtom *& aType);
 
+  /** return the number of contained rows */
+  PRInt32 GetRowCount ();
+
   // For DEBUGGING Purposes Only
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
@@ -157,5 +160,13 @@ private:
 
 };
 
+//XXX: change this if row groups can contain non-row types
+// in this case, iterate through kids and add 1 if the kid's display type is "row"
+inline PRInt32 nsTableRowGroupFrame::GetRowCount ()
+{
+  PRInt32 result = 0;
+  ChildCount(result);
+  return result;
+}
 
 #endif

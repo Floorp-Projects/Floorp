@@ -24,7 +24,6 @@
 #include "nsTableCaption.h"
 #include "nsTableRow.h"
 #include "nsTableCell.h"
-#include "nsCellMap.h"
 #include "nsHTMLParts.h"
 #include "nsIPresContext.h"
 #include "nsContainerFrame.h"
@@ -56,17 +55,6 @@ const char *nsTablePart::kColGroupTagString="COLGROUP";
 const char *nsTablePart::kColTagString="COL";
 const char *nsTablePart::kDataCellTagString="TD";
 const char *nsTablePart::kHeaderCellTagString="TH";
-
-CellData::CellData()
-{
-  mCell = nsnull;
-  mRealCell = nsnull;
-  mOverlap = nsnull;
-}
-
-CellData::~CellData()
-{}
-
 
 /*---------- nsTablePart implementation -----------*/
 
@@ -118,14 +106,15 @@ CellData::~CellData()
  *
  */
 
+//QQQ can remove mColCount?
+
 /** constructor
   * I do not check or addref aTag because my superclass does that for me
   */
 nsTablePart::nsTablePart(nsIAtom* aTag)
   : nsHTMLContainer(aTag),
     mColCount(0),
-    mSpecifiedColCount(0),
-    mCellMap(0)
+    mSpecifiedColCount(0)
 { 
 }
 
@@ -135,8 +124,7 @@ nsTablePart::nsTablePart(nsIAtom* aTag)
 nsTablePart::nsTablePart (nsIAtom* aTag, PRInt32 aColumnCount)
   : nsHTMLContainer(aTag),
     mColCount(aColumnCount),
-    mSpecifiedColCount(0),
-    mCellMap(0)
+    mSpecifiedColCount(0)
 {
 }
 
@@ -144,10 +132,6 @@ nsTablePart::nsTablePart (nsIAtom* aTag, PRInt32 aColumnCount)
   */
 nsTablePart::~nsTablePart()
 {
-  if (nsnull!=mCellMap)
-  {
-    delete mCellMap;
-  }
 }
 
 /**
@@ -177,151 +161,11 @@ nsrefcnt nsTablePart::Release(void)
   return mRefCnt;
 }
 
+/** assumes that mColCount has been set */
+///QQQQQ can be removed?
 PRInt32 nsTablePart::GetMaxColumns ()
 {
-  if (nsnull == mCellMap)
-  {
-    BuildCellMap ();
-  }
   return mColCount;
-}
-
-  // XXX what do rows with no cells turn into?
-PRInt32 nsTablePart::GetRowCount ()
-{
-  // if we've already built the cellMap, ask it for the row count
-  if (nsnull != mCellMap)
-    return mCellMap->GetRowCount();
-
-  // otherwise, we need to compute it by walking our children
-  int rowCount = 0;
-  int index = ChildCount ();
-  while (0 < index)
-  {
-    nsIContent *child = ChildAt (--index);  // child: REFCNT++
-    nsTableContent *tableContent = (nsTableContent *)child;
-    const int contentType = tableContent->GetType();
-    if (contentType == nsITableContent::kTableRowGroupType)
-      rowCount += ((nsTableRowGroup *)tableContent)->GetRowCount ();
-    NS_RELEASE(child);                      // child: REFCNT--
-  }
-  return rowCount;
-}
-  
-/* counts columns in column groups */
-PRInt32 nsTablePart::GetSpecifiedColumnCount ()
-{
-  if (mSpecifiedColCount < 0)
-  {
-    mSpecifiedColCount = 0;
-    int count = ChildCount ();
-    for (int index = 0; index < count; index++)
-    {
-      nsIContent *child = ChildAt (index);  // child: REFCNT++
-      nsTableContent *tableContent = (nsTableContent *)child;
-      const int contentType = tableContent->GetType();
-      if (contentType == nsITableContent::kTableColGroupType)
-      {
-        ((nsTableColGroup *)tableContent)->SetStartColumnIndex (mSpecifiedColCount);
-        mSpecifiedColCount += ((nsTableColGroup *)tableContent)->GetColumnCount ();
-      }
-      NS_RELEASE(child);                    // child: REFCNT--
-    }
-  }
-  return mSpecifiedColCount;
-}
-
-// returns the actual cell map, not a copy, so don't mess with it!
-nsCellMap*  nsTablePart::GetCellMap() const
-{
-  return mCellMap;
-}
-
-
-/* call when the cell structure has changed.  mCellMap will be rebuilt on demand. */
-void nsTablePart::ResetCellMap ()
-{
-  if (nsnull==mCellMap)
-    delete mCellMap;
-  mCellMap = nsnull; // for now, will rebuild when needed
-}
-
-/* call when column structure has changed. */
-void nsTablePart::ResetColumns ()
-{
-  mSpecifiedColCount = -1;
-  if (nsnull != mCellMap)
-  {
-    int colCount = GetSpecifiedColumnCount ();
-    GrowCellMap (colCount); // make sure we're at least as big as specified columns
-  }
-  else
-    mColCount = 0;  // we'll compute later (as part of building cell map)
-}
-
-/** sum the columns represented by all nsTableColGroup objects
-  * if the cell map says there are more columns than this, 
-  * add extra implicit columns to the content tree.
-  */
-void nsTablePart::EnsureColumns()
-{
-  if (nsnull!=mCellMap)
-  {
-    PRInt32 actualColumns = 0;
-    PRInt32 numColGroups = ChildCount();
-    nsTableColGroup *lastColGroup = nsnull;
-    for (PRInt32 colGroupIndex = 0; colGroupIndex < numColGroups; colGroupIndex++)
-    {
-      nsTableContent *colGroup = (nsTableContent*)ChildAt(colGroupIndex); // colGroup: REFCNT++
-      const int contentType = colGroup->GetType();
-      if (contentType==nsTableContent::kTableColGroupType)
-      {
-        PRInt32 numCols = ((nsTableColGroup *)colGroup)->GetColumnCount();
-        actualColumns += numCols;
-        lastColGroup = (nsTableColGroup *)colGroup;
-        NS_RELEASE(colGroup);
-      }
-      else if (contentType==nsTableContent::kTableRowGroupType)
-      {
-        NS_RELEASE(colGroup);
-        break;
-      }
-    }    
-    if (actualColumns < mCellMap->GetColCount())
-    {
-      if (nsnull==lastColGroup)
-      {
-        lastColGroup = new nsTableColGroup (PR_TRUE);
-        AppendColGroup(lastColGroup);
-      }
-      PRInt32 excessColumns = mCellMap->GetColCount() - actualColumns;
-      for ( ; excessColumns > 0; excessColumns--)
-      {
-        nsTableCol *col = new nsTableCol(PR_TRUE);
-        lastColGroup->AppendChild (col, PR_FALSE);
-      }
-    }
-  }
-}
-
-void nsTablePart::EnsureCellMap()
-{
-  if (mCellMap == nsnull)
-    BuildCellMap();
-}
-
-
-/**
-  */
-void nsTablePart::ReorderChildren()
-{
-  NS_ASSERTION(PR_FALSE, "not yet implemented.");
-}
-
-void nsTablePart::NotifyContentComplete()
-{
-  // set the children in order
-  ReorderChildren();
 }
 
 /** add a child to the table content.
@@ -336,13 +180,11 @@ void nsTablePart::NotifyContentComplete()
   *     TFOOTs (optional)
   *     TBODY (at least 1, possibly implicit)
   * 
-  * should be broken out into separate functions!
   */
 NS_IMETHODIMP
 nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad arg");
-  PRBool newCells = PR_FALSE;
   PRBool contentHandled = PR_FALSE;
 
   // wait, stop!  need to check to see if this is really tableContent or not!
@@ -400,7 +242,6 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
       }
       // group is guaranteed to be allocated at this point
       rv = group->AppendChild(aContent, PR_FALSE);
-      newCells = (PRBool)(NS_OK==rv);
       contentHandled = PR_TRUE;
       NS_RELEASE(group);                          // group: REFCNT--
     }
@@ -408,7 +249,6 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
     {
       // TODO: switch Append* to COM interfaces
       result = AppendColumn((nsTableCol *)aContent);
-      newCells = result;
       contentHandled = PR_TRUE;
     }
     else if (contentType == nsITableContent::kTableCaptionType)
@@ -419,22 +259,14 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
     else if (contentType == nsITableContent::kTableRowGroupType)
     {
       result = AppendRowGroup((nsTableRowGroup *)aContent);
-      if (PR_TRUE==result)
-      {
-        newCells = PR_TRUE;
-      }
-      else
+      if (PR_FALSE==result)
         rv=NS_ERROR_FAILURE;
       contentHandled = PR_TRUE; // whether we succeeded or not, we've "handled" this request
     }
     else if (contentType == nsITableContent::kTableColGroupType)
     {
       result = AppendColGroup((nsTableColGroup *)aContent);
-      if (PR_TRUE==result)
-      {
-        newCells = PR_TRUE;
-      }
-      else
+      if (PR_FALSE==result)
         rv = NS_ERROR_FAILURE;
       contentHandled = PR_TRUE; // whether we succeeded or not, we've "handled" this request
     }
@@ -462,11 +294,6 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
       }
       result = caption->AppendChild (aContent, PR_FALSE);
     }
-    /* if we added new cells, we need to fix up the cell map */
-    if (newCells)
-    {
-      ResetCellMap ();
-    }
   }
   NS_RELEASE(tableContentInterface);                                        // tableContentInterface: REFCNT--
 
@@ -492,7 +319,6 @@ nsTablePart::InsertChildAt(nsIContent * aContent, PRInt32 aIndex,
     if (NS_OK == rv)
     {
       tableContent->SetTable (this);
-      ResetCellMap ();
     }
   }
 
@@ -522,7 +348,6 @@ nsTablePart::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
       if (nsnull != lastChild)
         tableContent->SetTable (nsnull);
       tableContent->SetTable (this);
-      ResetCellMap ();
     }
     NS_IF_RELEASE(lastChild);               // lastChild: REFCNT--
   }
@@ -552,7 +377,6 @@ nsTablePart::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
       if (nsnull != lastChild)
         ((nsTableRow *)tableContent)->SetRowGroup (nsnull);
       tableContent->SetTable(nsnull);
-      ResetCellMap ();
     }
   }
   NS_IF_RELEASE(lastChild);
@@ -751,287 +575,6 @@ PRBool nsTablePart::AppendCaption(nsTableCaption *aContent)
 
   return (PRBool)(NS_OK==rv);
 }
-
-/* return the index of the first row group after aStartIndex */
-PRInt32 nsTablePart::NextRowGroup (PRInt32 aStartIndex)
-{
-  int index = aStartIndex;
-  int count = ChildCount ();
-
-  while (++index < count)
-  {
-    nsIContent * child = ChildAt (index); // child: REFCNT++
-    nsTableContent *tableContent = (nsTableColGroup *)child;
-    const int contentType = tableContent->GetType();
-    NS_RELEASE(child);                    // child: REFCNT--
-    if (contentType == nsITableContent::kTableRowGroupType)
-      return index;
-  }
-  return count;
-}
-
-// XXX This should be computed incrementally and updated
-// automatically when rows are added/deleted. To do this, however,
-// we need to change the way the ContentSink works and somehow
-// notify this table when a row is modified. We can give the rows
-// parent pointers, but that would bite.
-
-// XXX nuke this; instead pretend the content sink is working
-// incrementally like we want it to and build up the data a row at a
-// time.
-
-void nsTablePart::BuildCellMap ()
-{
-  if (gsDebug==PR_TRUE) printf("Build Cell Map...\n");
-  int rowCount = GetRowCount ();
-  if (0 == rowCount)
-  {
-    if (gsDebug==PR_TRUE) printf("0 row count.  Returning.\n");
-    mColCount = GetSpecifiedColumnCount ();  // at least set known column count
-    EnsureColumns();
-    return;
-  }
-
-  // Make an educated guess as to how many columns we have. It's
-  // only a guess because we can't know exactly until we have
-  // processed the last row.
-
-  int childCount = ChildCount ();
-  int groupIndex = NextRowGroup (-1);
-  if (0 == mColCount)
-    mColCount = GetSpecifiedColumnCount ();
-  if (0 == mColCount) // no column parts
-  {
-    nsTableRowGroup *rowGroup = (nsTableRowGroup*)(ChildAt (groupIndex)); // rowGroup: REFCNT++
-    nsTableRow *row = (nsTableRow *)(rowGroup->ChildAt (0));              // row: REFCNT++
-    mColCount = row->GetMaxColumns ();
-    if (gsDebug==PR_TRUE) printf("mColCount=0 at start.  Guessing col count to be %d from a row.\n", mColCount);
-    NS_RELEASE(rowGroup);                                                 // rowGroup: REFCNT--
-    NS_RELEASE(row);                                                      // row: REFCNT--
-  }
-  if (nsnull==mCellMap)
-    mCellMap = new nsCellMap(rowCount, mColCount);
-  else
-    mCellMap->Reset(rowCount, mColCount);
-  if (gsDebug==PR_TRUE) printf("mCellMap set to (%d, %d)\n", rowCount, mColCount);
-  int rowStart = 0;
-  if (gsDebug==PR_TRUE) printf("childCount is %d\n", childCount);
-  while (groupIndex < childCount)
-  {
-    if (gsDebug==PR_TRUE) printf("  groupIndex is %d\n", groupIndex);
-    if (gsDebug==PR_TRUE) printf("  rowStart is %d\n", rowStart);
-    nsTableRowGroup *rowGroup = (nsTableRowGroup *)ChildAt (groupIndex);  // rowGroup: REFCNT++
-    int groupRowCount = rowGroup->ChildCount ();
-    if (gsDebug==PR_TRUE) printf("  groupRowCount is %d\n", groupRowCount);
-    for (int rowIndex = 0; rowIndex < groupRowCount; rowIndex++)
-    {
-      nsTableRow *row = (nsTableRow *)(rowGroup->ChildAt (rowIndex));     // row: REFCNT++
-      int cellCount = row->ChildCount ();
-      int cellIndex = 0;
-      int colIndex = 0;
-      if (gsDebug==PR_TRUE) 
-        DumpCellMap();
-      if (gsDebug==PR_TRUE) printf("    rowIndex is %d, row->SetRowIndex(%d)\n", rowIndex, rowIndex + rowStart);
-      row->SetRowIndex (rowIndex + rowStart);
-      while (colIndex < mColCount)
-      {
-        if (gsDebug==PR_TRUE) printf("      colIndex = %d, with mColCount = %d\n", colIndex, mColCount);
-        CellData *data =mCellMap->GetCellAt(rowIndex + rowStart, colIndex);
-        if (nsnull == data)
-        {
-          if (gsDebug==PR_TRUE) printf("      null data from GetCellAt(%d,%d)\n", rowIndex+rowStart, colIndex);
-          if (gsDebug==PR_TRUE) printf("      cellIndex=%d, cellCount=%d)\n", cellIndex, cellCount);
-          if (cellIndex < cellCount)
-          {
-            nsTableCell* cell = (nsTableCell *) row->ChildAt (cellIndex); // cell: REFCNT++
-            if (gsDebug==PR_TRUE) printf("      calling BuildCellIntoMap(cell, %d, %d), and incrementing cellIndex\n", rowIndex + rowStart, colIndex);
-            BuildCellIntoMap (cell, rowIndex + rowStart, colIndex);
-            NS_RELEASE(cell);                                             // cell: REFCNT--
-            cellIndex++;
-          }
-        }
-        colIndex++;
-      }
-
-      if (cellIndex < cellCount)  
-      {
-        // We didn't use all the cells in this row up. Grow the cell
-        // data because we now know that we have more columns than we
-        // originally thought we had.
-        if (gsDebug==PR_TRUE) printf("   calling GrowCellMap because cellIndex < %d\n", cellIndex, cellCount);
-        GrowCellMap (cellCount);
-        while (cellIndex < cellCount)
-        {
-          if (gsDebug==PR_TRUE) printf("     calling GrowCellMap again because cellIndex < %d\n", cellIndex, cellCount);
-          GrowCellMap (colIndex + 1); // ensure enough cols in map, may be low due to colspans
-          CellData *data =mCellMap->GetCellAt(rowIndex + rowStart, colIndex);
-          if (data == nsnull)
-          {
-            nsTableCell* cell = (nsTableCell *) row->ChildAt (cellIndex); // cell: REFCNT++
-            BuildCellIntoMap (cell, rowIndex + rowStart, colIndex);
-            cellIndex++;
-            NS_RELEASE(cell);                                             // cell: REFCNT--
-          }
-          colIndex++;
-        }
-      }
-      NS_RELEASE(row);      // row: REFCNT--
-    }
-    NS_RELEASE(rowGroup);   // rowGroup: REFCNT--
-    rowStart += groupRowCount;
-    groupIndex = NextRowGroup (groupIndex);
-  }
-  if (gsDebug==PR_TRUE)
-    DumpCellMap ();
-  EnsureColumns();
-}
-
-/**
-  */
-void nsTablePart::DumpCellMap () const
-{
-  printf("dumping CellMap:\n");
-  if (nsnull != mCellMap)
-  {
-    int rowCount = mCellMap->GetRowCount();
-    int cols = mCellMap->GetColCount();
-    for (int r = 0; r < rowCount; r++)
-    {
-      if (gsDebug==PR_TRUE)
-      { printf("row %d", r);
-        printf(": ");
-      }
-      for (int c = 0; c < cols; c++)
-      {
-        CellData *cd =mCellMap->GetCellAt(r, c);
-        if (cd != nsnull)
-        {
-          if (cd->mCell != nsnull)
-          {
-            printf("C%d,%d ", r, c);
-            printf("     ");
-          }
-          else
-          {
-            nsTableCell *cell = cd->mRealCell->mCell;
-            nsTableRow *row = cell->GetRow();
-            int rr = row->GetRowIndex ();
-            int cc = cell->GetColIndex ();
-            printf("S%d,%d ", rr, cc);
-            if (cd->mOverlap != nsnull)
-            {
-              cell = cd->mOverlap->mCell;
-              nsTableRow* row2 = cell->GetRow();
-              rr = row2->GetRowIndex ();
-              cc = cell->GetColIndex ();
-              printf("O%d,%c ", rr, cc);
-              NS_RELEASE(row2);
-            }
-            else
-              printf("     ");
-            NS_RELEASE(row);
-          }
-        }
-        else
-          printf("----      ");
-      }
-      printf("\n");
-    }
-  }
-  else
-    printf ("[nsnull]");
-}
-
-void nsTablePart::BuildCellIntoMap (nsTableCell *aCell, PRInt32 aRowIndex, PRInt32 aColIndex)
-{
-  NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
-  NS_PRECONDITION (aColIndex < mColCount, "bad column index arg");
-  NS_PRECONDITION (aRowIndex < GetRowCount(), "bad row index arg");
-
-  // Setup CellMap for this cell
-  int rowSpan = GetEffectiveRowSpan (aRowIndex, aCell);
-  int colSpan = aCell->GetColSpan ();
-  if (gsDebug==PR_TRUE) printf("        BuildCellIntoMap. rowSpan = %d, colSpan = %d\n", rowSpan, colSpan);
-
-  // Grow the mCellMap array if we will end up addressing
-  // some new columns.
-  if (mColCount < (aColIndex + colSpan))
-  {
-    if (gsDebug==PR_TRUE) printf("        mColCount=%d<aColIndex+colSpan so calling GrowCellMap(%d)\n", mColCount, aColIndex+colSpan);
-    GrowCellMap (aColIndex + colSpan);
-  }
-
-  // Setup CellMap for this cell in the table
-  CellData *data = new CellData ();
-  data->mCell = aCell;
-  data->mRealCell = data;
-  if (gsDebug==PR_TRUE) printf("        calling mCellMap->SetCellAt(data, %d, %d)\n", aRowIndex, aColIndex);
-  mCellMap->SetCellAt(data, aRowIndex, aColIndex);
-  aCell->SetColIndex (aColIndex);
-
-  // Create CellData objects for the rows that this cell spans. Set
-  // their mCell to nsnull and their mRealCell to point to data. If
-  // there were no column overlaps then we could use the same
-  // CellData object for each row that we span...
-  if ((1 < rowSpan) || (1 < colSpan))
-  {
-    if (gsDebug==PR_TRUE) printf("        spans\n");
-    for (int rowIndex = 0; rowIndex < rowSpan; rowIndex++)
-    {
-      if (gsDebug==PR_TRUE) printf("          rowIndex = %d\n", rowIndex);
-      int workRow = aRowIndex + rowIndex;
-      if (gsDebug==PR_TRUE) printf("          workRow = %d\n", workRow);
-      for (int colIndex = 0; colIndex < colSpan; colIndex++)
-      {
-        if (gsDebug==PR_TRUE) printf("            colIndex = %d\n", colIndex);
-        int workCol = aColIndex + colIndex;
-        if (gsDebug==PR_TRUE) printf("            workCol = %d\n", workCol);
-        CellData *testData = mCellMap->GetCellAt(workRow, workCol);
-        if (nsnull == testData)
-        {
-          CellData *spanData = new CellData ();
-          spanData->mRealCell = data;
-          if (gsDebug==PR_TRUE) printf("            null GetCellAt(%d, %d) so setting to spanData\n", workRow, workCol);
-          mCellMap->SetCellAt(spanData, workRow, workCol);
-        }
-        else if ((0 < rowIndex) || (0 < colIndex))
-        { // we overlap, replace existing data, it might be shared
-          if (gsDebug==PR_TRUE) printf("            overlapping Cell from GetCellAt(%d, %d) so setting to spanData\n", workRow, workCol);
-          CellData *overlap = new CellData ();
-          overlap->mCell = testData->mCell;
-          overlap->mRealCell = testData->mRealCell;
-          overlap->mOverlap = data;
-          mCellMap->SetCellAt(overlap, workRow, workCol);
-        }
-      }
-    }
-  }
-}
-
-void nsTablePart::GrowCellMap (PRInt32 aColCount)
-{
-  if (nsnull!=mCellMap)
-  {
-    if (mColCount < aColCount)
-    {
-      mCellMap->GrowTo(aColCount);
-    }
-    mColCount = aColCount;
-  }
-}
-
-PRInt32 nsTablePart::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCell *aCell)
-{
-  NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
-  NS_PRECONDITION (0<=aRowIndex && aRowIndex<GetRowCount(), "bad row index arg");
-
-  int rowSpan = aCell->GetRowSpan ();
-  int rowCount = GetRowCount ();
-  if (rowCount < (aRowIndex + rowSpan))
-    return (rowCount - aRowIndex);
-  return rowSpan;
-}
-
 
 /**
  * Create a frame object that will layout this table.

@@ -15,8 +15,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsCRT.h"
+
 #include "nsCellLayoutData.h"
+#include "nsTableCellFrame.h" // should be removed, make only generic nsIFrame calls
+#include "nsCRT.h"
 #include "nsSize.h"
 #include "nsVoidArray.h"
 #include "nsIFrame.h"

@@ -110,6 +110,7 @@ nsrefcnt nsTableRow::Release(void)
   return mRefCnt;
 }
 
+//QQQ could be removed
 PRInt32 nsTableRow::GetMaxColumns() 
 {
   int sum = 0;

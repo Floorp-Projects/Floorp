@@ -18,7 +18,7 @@
 #include "nsColLayoutData.h"
 #include "nsVoidArray.h"
 #include "nsCellLayoutData.h"
-#include "nsTableCell.h"
+#include "nsTableCellFrame.h"
 
 nsColLayoutData::nsColLayoutData(nsTableColFrame* aColFrame, PRInt32 aNumRows)
 {
