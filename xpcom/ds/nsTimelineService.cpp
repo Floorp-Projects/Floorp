@@ -57,6 +57,7 @@ static PRFileDesc *timelineFD = PR_STDERR;
 static PRHashTable *timers;
 static PRLock *timerLock;
 static int indent;
+int g_timelineDisabled = PR_FALSE;
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsTimelineService, nsITimelineService)
@@ -221,6 +222,10 @@ static void TimelineInit(void)
                    "that you see does not necessarily correspond to nesting\n"
                    "in the code.\n\n");
     }
+
+    // Runtime disable of timeline
+    if (PR_GetEnv("NS_TIMELINE_DISABLE"))
+        g_timelineDisabled = PR_TRUE;
 }
 
 static void ParseTime(PRTime tm, PRInt32& secs, PRInt32& msecs)
@@ -287,10 +292,27 @@ static nsresult NS_TimelineMarkV(const char *text, va_list args)
     return NS_OK;
 }
 
+PR_IMPLEMENT(nsresult) NS_TimelineForceMark(const char *text, ...)
+{
+    va_list args;
+    va_start(args, text);
+    NS_TimelineMarkV(text, args);
+
+    return NS_OK;
+}
+
 PR_IMPLEMENT(nsresult) NS_TimelineMark(const char *text, ...)
 {
     va_list args;
     va_start(args, text);
+
+    if (LL_IS_ZERO(initTime)) {
+        TimelineInit();
+    }
+
+    if (g_timelineDisabled)
+        return NS_ERROR_NOT_AVAILABLE;
+
     NS_TimelineMarkV(text, args);
 
     return NS_OK;
@@ -319,6 +341,9 @@ PR_IMPLEMENT(nsresult) NS_TimelineStartTimer(const char *timerName)
         return NS_ERROR_FAILURE;
     }
 
+    if (g_timelineDisabled)
+        return NS_ERROR_NOT_AVAILABLE;
+
     PR_Lock(timerLock);
     nsTimelineServiceTimer *timer
         = (nsTimelineServiceTimer *)PL_HashTableLookup(timers, timerName);
@@ -338,6 +363,8 @@ PR_IMPLEMENT(nsresult) NS_TimelineStopTimer(const char *timerName)
         return NS_ERROR_FAILURE;
     }
 
+    if (g_timelineDisabled)
+        return NS_ERROR_NOT_AVAILABLE;
     /*
      * Strange-looking now/timer->stop() interaction is to avoid
      * including time spent in PR_Lock and PL_HashTableLookup in the
@@ -363,6 +390,9 @@ PR_IMPLEMENT(nsresult) NS_TimelineMarkTimer(const char *timerName, const char *s
     if (timers == NULL) {
         return NS_ERROR_FAILURE;
     }
+
+    if (g_timelineDisabled)
+        return NS_ERROR_NOT_AVAILABLE;
 
     PR_Lock(timerLock);
     nsTimelineServiceTimer *timer
@@ -393,6 +423,9 @@ PR_IMPLEMENT(nsresult) NS_TimelineResetTimer(const char *timerName)
         return NS_ERROR_FAILURE;
     }
 
+    if (g_timelineDisabled)
+        return NS_ERROR_NOT_AVAILABLE;
+
     PR_Lock(timerLock);
     nsTimelineServiceTimer *timer
         = (nsTimelineServiceTimer *)PL_HashTableLookup(timers, timerName);
@@ -407,12 +440,18 @@ PR_IMPLEMENT(nsresult) NS_TimelineResetTimer(const char *timerName)
 
 PR_IMPLEMENT(nsresult) NS_TimelineIndent()
 {
+    if (g_timelineDisabled)
+        return NS_ERROR_NOT_AVAILABLE;
+
     indent++;                   // Could have threading issues here.
     return NS_OK;
 }
 
 PR_IMPLEMENT(nsresult) NS_TimelineOutdent()
 {
+    if (g_timelineDisabled)
+        return NS_ERROR_NOT_AVAILABLE;
+
     indent--;                   // Could have threading issues here.
     return NS_OK;
 }

@@ -124,6 +124,7 @@ interface nsITimelineService : nsISupports
  * methods, and can be called before XPCOM is initialized.
  */
 PR_EXTERN(nsresult) NS_TimelineMark(const char *text, ...);
+PR_EXTERN(nsresult) NS_TimelineForceMark(const char *text, ...);
 PR_EXTERN(nsresult) NS_TimelineStartTimer(const char *timerName);
 PR_EXTERN(nsresult) NS_TimelineStopTimer(const char *timerName);
 PR_EXTERN(nsresult) NS_TimelineResetTimer(const char *timerName);
@@ -156,7 +157,9 @@ class nsFunctionTimer {
 public:
     const char *mTimer;
     PRBool mMark;
-    nsFunctionTimer(const char *timer, PRBool mark = PR_TRUE) : mTimer(timer), mMark(mark)
+    const char *mMarkStr;
+    nsFunctionTimer(const char *timer, PRBool mark = PR_TRUE, const char *markStr = nsnull)
+        : mTimer(timer), mMark(mark), mMarkStr(markStr)
     {
         NS_TIMELINE_START_TIMER(mTimer);
     }
@@ -165,7 +168,10 @@ public:
     {
         NS_TIMELINE_STOP_TIMER(mTimer);
         if (mMark)
-            NS_TIMELINE_MARK_TIMER(mTimer);
+            if (mMarkStr)
+                NS_TIMELINE_MARK_TIMER1(mTimer, mMarkStr);
+            else
+                NS_TIMELINE_MARK_TIMER(mTimer);
     }
 };
 
@@ -210,6 +216,7 @@ public:
         NS_TIMELINE_MARK_CHANNEL(text, channel); \
     }
 #define NS_TIMELINE_MARK_FUNCTION(timer) nsFunctionTimer functionTimer(timer)
+#define NS_TIMELINE_MARK_FUNCTION1(timer, str) nsFunctionTimer functionTimer(timer, PR_TRUE, str)
 #define NS_TIMELINE_TIME_FUNCTION(timer) nsFunctionTimer functionTimer(timer, PR_FALSE) /* no mark, only time */
 
 #else /* !defined(MOZ_TIMELINE) */
