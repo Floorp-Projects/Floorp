@@ -37,6 +37,7 @@
 #include "nsVoidArray.h"
 #include "prprf.h"
 #include "nsIDOMText.h"
+#include "nsIDocument.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -374,7 +375,7 @@ TextFrame::~TextFrame()
     gTextBlinker = nsnull;
   }
   if (nsnull != mWords) {
-    delete mWords;
+    delete[] mWords;
   }
 }
 
@@ -496,7 +497,7 @@ void TextFrame::PaintRegularText(nsIRenderingContext& aRenderingContext,
       aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
 
       if (s0 != buf) {
-        delete s0;
+        delete[] s0;
       }
     }
   } else {
@@ -542,7 +543,7 @@ void TextFrame::PaintRegularText(nsIRenderingContext& aRenderingContext,
       aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
 
       if (s0 != buf) {
-        delete s0;
+        delete[] s0;
       }
     }
   }
@@ -611,7 +612,7 @@ void TextFrame::PaintJustifiedText(nsIRenderingContext& aRenderingContext,
   }
 
   if (s0 != buf) {
-    delete s0;
+    delete[] s0;
   }
 }
 
@@ -645,7 +646,7 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
 
   // Wipe out old justification information since it's going to change
   if (nsnull != mWords) {
-    delete mWords;
+    delete[] mWords;
     mWords = nsnull;
   }
 #ifdef DEBUG_JUSTIFY
@@ -989,7 +990,7 @@ NS_METHOD TextFrame::JustifyReflow(nsIPresContext* aCX, nscoord aAvailableSpace)
       }
       nsCRT::memcpy(newwp0, wp0, sizeof(PRUint32) * numWords);
       if (wp0 != words) {
-        delete wp0;
+        delete[] wp0;
       }
       wp0 = newwp0;
       wp = wp0 + numWords;
@@ -1131,7 +1132,7 @@ NS_METHOD TextFrame::JustifyReflow(nsIPresContext* aCX, nscoord aAvailableSpace)
 
 bail:
   if (wp0 != words) {
-    delete wp0;
+    delete[] wp0;
   }
   NS_RELEASE(fm);
   return NS_OK;
@@ -1208,7 +1209,7 @@ Text::Text()
 Text::~Text()
 {
   if (nsnull != mText) {
-    delete mText;
+    delete[] mText;
     mText = nsnull;
   }
   mLength = 0;
@@ -1401,6 +1402,9 @@ nsresult Text::SetData(nsString &aString)
 
   mLength = aString.Length();
   mText = aString.ToNewUnicode();
+
+  // Notify the document that the text changed
+  mDocument->ContentChanged(this, nsnull);
   return NS_OK;
 }
 
@@ -1409,12 +1413,14 @@ nsresult Text::Append(nsString &aData)
   PRUint32 length = aData.Length();
   PRUnichar *text = new PRUnichar[mLength + length];
   nsCRT::memcpy(text, mText, mLength * sizeof(PRUnichar));
-  nsCRT::memcpy(text + mLength * sizeof(PRUnichar), aData.GetUnicode(), length * sizeof(PRUnichar));
+  nsCRT::memcpy(text + mLength, aData.GetUnicode(), length * sizeof(PRUnichar));
 
   if (mText) delete[] mText;
   mLength += length;
   mText = text;
 
+  // Notify the document that the text changed
+  mDocument->ContentChanged(this, nsnull);
   return NS_OK;
 }
 
@@ -1439,6 +1445,9 @@ nsresult Text::Insert(int offset, nsString &aData)
     if (mText) delete[] (mText - mLength);
     mLength += length;
     mText = text - mLength;
+
+    // Notify the document that the text changed
+    mDocument->ContentChanged(this, nsnull);
   }
 
   return NS_OK;
@@ -1446,12 +1455,46 @@ nsresult Text::Insert(int offset, nsString &aData)
 
 nsresult Text::Delete(int offset, int count)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Make sure the offset is something sensible
+  if (offset < mLength) {
+    PRInt32 subLen = mLength - offset;
+
+    // Check if they're deleting the rest of the text
+    if (count >= subLen) {
+      mLength = offset;
+    } else {
+      PRUnichar*  subText = mText + offset;
+
+      nsCRT::memmove(subText, subText + count, (subLen - count) * sizeof(PRUnichar));
+      mLength -= count;
+    }
+
+    // Notify the document that the text changed
+    mDocument->ContentChanged(this, nsnull);
+  }
+
+  return NS_OK;
 }
 
 nsresult Text::Replace(int offset, int count, nsString &aData)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Make sure the offset is something sensible
+  if (offset < mLength) {
+    // We can only replace as many characters as there are in aData
+    if (count > aData.Length()) {
+      count = aData.Length();
+    }
+
+    PRInt32 numChars = PR_MIN(count, mLength - offset);
+    if (numChars > 0) {
+      nsCRT::memcpy(mText + offset, aData.GetUnicode(), numChars * sizeof(PRUnichar));
+    }
+
+    // Notify the document that the text changed
+    mDocument->ContentChanged(this, nsnull);
+  }
+
+  return NS_OK;
 }
 
 nsresult Text::Splice(nsIDOMElement *element, int offset, int count)
