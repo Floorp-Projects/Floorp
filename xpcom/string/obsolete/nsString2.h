@@ -952,7 +952,9 @@ public:
     char mBuffer[kDefaultStringSize<<eTwoByte];
 };
 
+#ifdef NEW_STRING_APIS
 NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsAutoString, PRUnichar)
+#endif
 
 class NS_COM NS_ConvertASCIItoUCS2
       : public nsAutoString
