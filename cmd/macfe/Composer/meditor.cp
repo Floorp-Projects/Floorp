@@ -19,6 +19,7 @@
 #include "meditor.h"	// HandleModalDialog
 #include "StBlockingDialogHandler.h"
 #include "CEditView.h"
+#include "mforms.h"		// CFormHTMLArea
 #include "macgui.h"		// UGraphics::MakeLOColor
 #include "CPaneEnabler.h"
 #include "resgui.h"		// EDITDLG_AUTOSAVE
@@ -167,9 +168,14 @@ void FE_EditorDocumentLoaded( MWContext *pContext )
 		return;
 	
 	CEditView *editView = (CEditView *)ExtractHyperView(pContext);
-
+	CFormHTMLArea *editForm = dynamic_cast<CFormHTMLArea*>(editView);
 	int32 iSave;
-	if ( pContext->bIsComposeWindow )
+	
+	if ( editForm != NULL)  // are we an embedded composer form?
+	{
+		iSave = 0;	// no auto-save
+	}
+	else if ( pContext->bIsComposeWindow )
 	{
 		iSave = 0;	// auto-save
 		
@@ -202,7 +208,7 @@ void FE_EditorDocumentLoaded( MWContext *pContext )
 		editView->mEditorDoneLoading = true;
 			
 		// set color popup control to show correct default color (now that we have an mwcontext)
-		editView->mColorPopup->InitializeCurrentColor();
+		if (editView->mColorPopup) editView->mColorPopup->InitializeCurrentColor();
 	}
 	
 	InitCursor();

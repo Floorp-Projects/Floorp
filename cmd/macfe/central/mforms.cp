@@ -44,6 +44,7 @@
 #include "layers.h" // mjc
 #include "prefapi.h"
 #include "intl_csi.h"
+#include "edt.h"
 
 // PP
 //#include <LTextSelection.h>
@@ -728,6 +729,22 @@ Boolean CFormBigText::HandleKeyPress(const EventRecord& inKeyEvent)
 	return handled;
 }
 
+#pragma mark == CFormHTMLArea ==
+
+//---------------------------------------------------------------------------
+// class CFormHTMLArea
+//---------------------------------------------------------------------------
+
+CFormHTMLArea::CFormHTMLArea(LStream *inStream)
+	:	CEditView(inStream),
+		LFormElement()
+{
+
+}
+
+CFormHTMLArea::~CFormHTMLArea()
+{
+}
 	
 #pragma mark == CFormList ==
 
@@ -2744,6 +2761,20 @@ FE_SelectInputElement(	MWContext	*	window,
 			textEdit->SelectAll();
 			
 			break;
+
+#ifdef ENDER
+		// embedded composer - select all
+		case FORM_TYPE_HTMLAREA:
+			if ( !GetFEData( formElement ) )
+				return;
+			if ( !GetFEDataPane( formElement ) )
+				return;
+
+			LPane 		*scroller2 = GetFEDataPane(formElement);			
+			CFormHTMLArea	*htmlEdit = (CFormHTMLArea*) scroller2->FindPaneByID(formHTMLAreaID);	Assert_(htmlEdit != NULL);
+			EDT_SelectAll(((LFormElement*)htmlEdit)->GetContext());
+			break;
+#endif /*ENDER*/
 					
 /*	These are not selectable
 
@@ -2898,6 +2929,7 @@ FE_ClickInputElement(	MWContext	*	window,
 		case FORM_TYPE_PASSWORD:
 		case FORM_TYPE_ISINDEX:
 		case FORM_TYPE_TEXTAREA:
+		case FORM_TYPE_HTMLAREA:
 		case FORM_TYPE_FILE:
 		case FORM_TYPE_SELECT_ONE:
 		case FORM_TYPE_SELECT_MULT:
@@ -3153,6 +3185,9 @@ LFormElement::MochaChanged()
 		LO_FormElementData* data = fLayoutElement->lo_form.element_data;
 		if (data != NULL &&
 			(data->type == FORM_TYPE_TEXTAREA ||
+#ifdef ENDER
+			 data->type == FORM_TYPE_HTMLAREA ||
+#endif /*ENDER*/
 			 data->type == FORM_TYPE_TEXT ||
 			 data->type == FORM_TYPE_PASSWORD) &&
 			(fLayoutElement->lo_form.event_handler_present || HasKeyEventCapture(fContext)))

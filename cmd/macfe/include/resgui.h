@@ -870,9 +870,11 @@
 #define formGAResetButton	4016
 #define formGAPlainButton	4017
 #define formBigTextScroll	4018
+#define formHTMLArea		4019
 
 #define formScrollingListID 'list'	// ID of the subview that is the list withing the scroller
 #define formBigTextID		'text'	// ID of the subview that is the TEXT withing the scroller
+#define formHTMLAreaID		'ehtm'	// ID of the subview that is the HTML within the scroller
 
 #define formPopupChosen		2003
 

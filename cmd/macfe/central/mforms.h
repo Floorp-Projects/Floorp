@@ -34,6 +34,7 @@
 #include "CSimpleTextView.h"	// For CFormBigText
 //#include "VEditField.h"
 #include "CTSMEditField.h"
+#include "CEditView.h"		// for CFormHTMLArea
 
 #include "CKeyUpReceiver.h" // mixin for forms that need to receive key up events
 
@@ -313,6 +314,22 @@ protected:
 	virtual void BeTarget();
 	void DrawSelf();// Draws background to white
 };
+
+/*****************************************************************************
+ * class CFormHTMLArea
+ * Large edit html field. 
+ *****************************************************************************/
+
+class CFormHTMLArea : public CEditView, public LFormElement {
+public:
+	enum { class_ID = 'fhtm' };
+
+// ее Constructors/destructors
+	CFormHTMLArea(LStream *inStream);
+	
+	virtual	~CFormHTMLArea();
+};
+
 
 /*****************************************************************************
  * class CFormList
