@@ -29,6 +29,7 @@
 
 class nsIMenu;
 class nsIPopUpMenu;
+class nsIWidget;
 
 /**
  * MenuItem widget
@@ -41,13 +42,17 @@ class nsIMenuItem : public nsISupports {
     * Creates the MenuItem
     *
     */
-    NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel, PRUint32 aCommand) = 0;
+    NS_IMETHOD Create(nsIMenu        *aParent, 
+                      const nsString &aLabel, 
+                      PRUint32       aCommand) = 0;
     
    /**
     * Creates the MenuItem
     *
     */
-    NS_IMETHOD Create(nsIPopUpMenu * aParent, const nsString &aLabel, PRUint32 aCommand) = 0;
+    NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
+                      const nsString &aLabel,  
+                      PRUint32        aCommand) = 0;
     
    /**
     * Get the MenuItem label
@@ -60,6 +65,12 @@ class nsIMenuItem : public nsISupports {
     *
     */
     NS_IMETHOD GetCommand(PRUint32 & aCommand) = 0;
+
+   /**
+    * Gets the target for MenuItem
+    *
+    */
+    NS_IMETHOD GetTarget(nsIWidget *& aTarget) = 0;
     
    /**
     * Gets Native Menu Handle

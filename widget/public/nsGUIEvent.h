@@ -24,6 +24,7 @@
 
 class nsIRenderingContext;
 class nsIWidget;
+class nsIMenuItem;
 
 /**
  * Return status for event processors.
@@ -134,11 +135,14 @@ struct nsTooltipEvent : public nsGUIEvent {
 
 /**
  * MenuItem event
+ * 
+ * When this event occurs the widget field in nsGUIEvent holds the "target"
+ * for the event
  */
 
 struct nsMenuEvent : public nsGUIEvent {
-                /// Index of the selected menu item
-    PRUint32        menuItem;           
+  nsIMenuItem * mMenuItem;
+  PRUint32      mCommand;           
 };
 
 /**
