@@ -104,7 +104,8 @@
         </getter>
         <setter>
         <![CDATA[
-          if (val) val.setAttribute("focused", "true");
+          if (val && val.getAttribute("disabled") != "true") 
+            val.setAttribute("focused", "true");
           
           // unfocus all other group nodes
           var children = this._getRadioChildren();
