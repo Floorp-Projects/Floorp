@@ -34,6 +34,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNode.h"
+#include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
 #include "txAtoms.h"
 #include "nsString.h"

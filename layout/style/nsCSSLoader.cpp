@@ -54,6 +54,7 @@
 #include "nsMimeTypes.h"
 #include "nsIAtom.h"
 #include "nsCSSLoader.h"
+#include "nsIDOM3Node.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"

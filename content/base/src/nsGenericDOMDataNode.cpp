@@ -48,6 +48,7 @@
 #include "nsReadableUtils.h"
 #include "nsMutationEvent.h"
 #include "nsINameSpaceManager.h"
+#include "nsIDOM3Node.h"
 
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"

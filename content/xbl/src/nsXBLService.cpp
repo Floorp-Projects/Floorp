@@ -78,6 +78,7 @@
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsISyncLoadDOMService.h"
+#include "nsIDOM3Node.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"

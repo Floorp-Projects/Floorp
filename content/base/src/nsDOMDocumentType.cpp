@@ -42,7 +42,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-
+#include "nsIDOM3Node.h"
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
