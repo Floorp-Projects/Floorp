@@ -161,8 +161,8 @@ public:
   virtual nsresult            CreateDocumentContext(nsIDOMDocumentContext **aDocContext);
   virtual nsresult            CreateElement(nsString &aTagName, 
                                             nsIDOMAttributeList *aAttributes, 
-                                            nsIDOMElement **aElement) = 0;
-  virtual nsresult            CreateTextNode(nsString &aData, nsIDOMText** aTextNode) = 0;
+                                            nsIDOMElement **aElement);
+  virtual nsresult            CreateTextNode(nsString &aData, nsIDOMText** aTextNode);
   virtual nsresult            CreateComment(nsString &aData, nsIDOMComment **aComment);
   virtual nsresult            CreatePI(nsString &aName, nsString &aData, nsIDOMPI **aPI);
   virtual nsresult            CreateAttribute(nsString &aName, 
