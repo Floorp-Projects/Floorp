@@ -348,6 +348,7 @@ nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISuppo
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(pcContainer));
   NS_ASSERTION(treeItem,"Error no tree item for pres context container!!!");
+  NS_ENSURE_TRUE(treeItem, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeItem> treeItemParent;
   treeItem->GetParent(getter_AddRefs(treeItemParent));

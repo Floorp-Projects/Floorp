@@ -80,7 +80,6 @@ class nsRootAccessible : public nsAccessible,
                          public nsIDOMFormListener,
                          public nsIDOMXULListener,
                          public nsIWebProgressListener,
-                         public nsITimerCallback, 
                          public nsIScrollPositionListener,
                          public nsSupportsWeakReference
 
@@ -132,9 +131,6 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
     NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
 
-    // ----- nsITimerCallback ------------------------------------
-    NS_DECL_NSITIMERCALLBACK
-
     NS_DECL_NSIACCESSIBLEDOCUMENT
     NS_DECL_NSIWEBPROGRESSLISTENER
 
@@ -145,7 +141,12 @@ class nsRootAccessible : public nsAccessible,
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode);
     void AddScrollListener(nsIPresShell *aPresShell);
     void RemoveScrollListener(nsIPresShell *aPresShell);
-    friend PRBool PR_CALLBACK RemoveScrollListenerEnum(nsHashKey *aKey, void *aData, void* aClosure);
+    void AddContentDocListeners();
+    void RemoveContentDocListeners();
+    void FireDocLoadFinished();
+
+    static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
+    static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
 
     static PRUint32 gInstanceCount;
 
@@ -157,15 +158,15 @@ class nsRootAccessible : public nsAccessible,
 
     static nsIDOMNode * gLastFocusedNode; // we do our own refcounting for this
 
-    nsCOMPtr<nsITimer> mTimer;
+    nsCOMPtr<nsITimer> mScrollWatchTimer;
+    nsCOMPtr<nsITimer> mDocLoadTimer;
     nsCOMPtr<nsIWebProgress> mWebProgress;
     nsCOMPtr<nsIAccessibilityService> mAccService;
     EBusyState mBusy;
+    PRPackedBool mIsNewDocument;
 
     // Used for tracking scroll events
     PRUint32 mScrollPositionChangedTicks;
-    nsSupportsHashtable *mScrollablePresShells;
-    nsCOMPtr<nsIWeakReference> mLastScrolledPresShell;
     nsCOMPtr<nsIAccessibleCaret> mCaretAccessible;
 };
 

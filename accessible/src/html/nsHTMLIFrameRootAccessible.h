@@ -44,6 +44,7 @@
 #include "nsAccessible.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleHyperText.h"
+#include "nsIAccessibleEventReceiver.h"
 
 class nsIWebShell;
 class nsIWeakReference;
@@ -51,6 +52,7 @@ class nsIWeakReference;
 class nsHTMLIFrameAccessible : public nsBlockAccessible, 
                                public nsIAccessibleDocument,
                                public nsIAccessibleHyperText,
+                               public nsIAccessibleEventReceiver,
                                public nsDocAccessibleMixin
 {
   NS_DECL_ISUPPORTS_INHERITED
@@ -67,6 +69,10 @@ class nsHTMLIFrameAccessible : public nsBlockAccessible,
     NS_IMETHOD GetAccValue(nsAString& AccValue);
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
     NS_IMETHOD GetAccState(PRUint32 *aAccState);
+
+    // ----- nsIAccessibleEventReceiver -------------------
+    NS_IMETHOD AddAccessibleEventListener(nsIAccessibleEventListener *aListener);
+    NS_IMETHOD RemoveAccessibleEventListener();
 
   protected:
     nsCOMPtr<nsIAccessible> mRootAccessible;
@@ -98,6 +104,10 @@ class nsHTMLIFrameRootAccessible : public nsRootAccessible
 
     /* nsIAccessible getAccPreviousSibling (); */
     NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
+
+    // ----- nsIAccessibleEventReceiver -------------------
+    NS_IMETHOD AddAccessibleEventListener(nsIAccessibleEventListener *aListener);
+    NS_IMETHOD RemoveAccessibleEventListener();
 
   protected:
     void Init();

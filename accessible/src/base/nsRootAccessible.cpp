@@ -92,7 +92,6 @@ NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) 
   NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener) 
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFormListener)
@@ -115,8 +114,10 @@ PRUint32 nsRootAccessible::gInstanceCount = 0;
 //-----------------------------------------------------
 nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull,aShell), 
   nsDocAccessibleMixin(aShell), mListener(nsnull), 
+  mScrollWatchTimer(nsnull), mDocLoadTimer(nsnull), mWebProgress(nsnull),
   mAccService(do_GetService("@mozilla.org/accessibilityService;1")),
-  mBusy(eBusyStateUninitialized), mScrollPositionChangedTicks(0), mScrollablePresShells(nsnull)
+  mBusy(eBusyStateUninitialized), mIsNewDocument(PR_FALSE), 
+  mScrollPositionChangedTicks(0)
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
   if (shell) {
@@ -141,8 +142,6 @@ nsRootAccessible::~nsRootAccessible()
 #endif
 
   RemoveAccessibleEventListener();
-  if (mScrollablePresShells)
-    delete mScrollablePresShells;
 }
 
   /* attribute wstring accName; */
@@ -241,38 +240,36 @@ NS_IMETHODIMP nsRootAccessible::GetAccValue(nsAString& aAccValue)
   return GetURL(aAccValue);
 }
 
-
-NS_IMETHODIMP nsRootAccessible::Notify(nsITimer *timer)
+void nsRootAccessible::DocLoadCallback(nsITimer *aTimer, void *aClosure)
 {
-  if (mScrollPositionChangedTicks) {
-    if (++mScrollPositionChangedTicks > 2) {
-      // Whenever scroll position changes, mScrollPositionChangeTicks gets reset to 1
-      // We only want to fire accessibilty scroll event when scrolling stops or pauses
-      // Therefore, we wait for no scroll events to occur between 2 ticks of this timer
-      // That indicates a pause in scrolling, so we fire the accessibilty scroll event
-      nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mLastScrolledPresShell));
-      if (mListener && presShell) {
-        nsCOMPtr<nsIAccessible> docAccessible;
-        if (mPresShell == mLastScrolledPresShell)
-          docAccessible = this;  // Fast way, don't need to create new accessible to fire event on the root
-        else {
-          // Need to create accessible for document that had scrolling occur in it
-          nsCOMPtr<nsIDocument> doc;
-          presShell->GetDocument(getter_AddRefs(doc));
-          nsCOMPtr<nsIDOMNode> docNode(do_QueryInterface(doc));
-          mAccService->GetAccessibleFor(docNode, getter_AddRefs(docAccessible));
-        }
+  // Doc has finished loading, fire "load finished" event
+  // This path is only used if the doc was already finished loading
+  // when the RootAccessible was created. 
+  // Otherwise, ::OnStateChange() fires the event when doc is loaded.
 
-        if (docAccessible)
-          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_SCROLLINGEND, docAccessible, nsnull);
-      }
-      mScrollPositionChangedTicks = 0;
-      mLastScrolledPresShell = nsnull;
-    }
-  }
-  return NS_OK;
+  nsRootAccessible *rootAcc = NS_REINTERPRET_CAST(nsRootAccessible*, aClosure);
+  if (rootAcc)
+    rootAcc->FireDocLoadFinished();
 }
-  
+
+void nsRootAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsRootAccessible *rootAcc = NS_REINTERPRET_CAST(nsRootAccessible*, aClosure);
+
+  if (rootAcc && rootAcc->mScrollPositionChangedTicks && 
+      ++rootAcc->mScrollPositionChangedTicks > 2) {
+    // Whenever scroll position changes, mScrollPositionChangeTicks gets reset to 1
+    // We only want to fire accessibilty scroll event when scrolling stops or pauses
+    // Therefore, we wait for no scroll events to occur between 2 ticks of this timer
+    // That indicates a pause in scrolling, so we fire the accessibilty scroll event
+    if (rootAcc->mListener)
+      rootAcc->mListener->HandleEvent(nsIAccessibleEventListener::EVENT_SCROLLINGEND, rootAcc, nsnull);
+    rootAcc->mScrollPositionChangedTicks = 0;
+    rootAcc->mScrollWatchTimer->Cancel();
+    rootAcc->mScrollWatchTimer = nsnull;
+  }
+}
+
 void nsRootAccessible::AddScrollListener(nsIPresShell *aPresShell)
 {
   nsCOMPtr<nsIViewManager> vm;
@@ -284,26 +281,8 @@ void nsRootAccessible::AddScrollListener(nsIPresShell *aPresShell)
   if (vm)
     vm->GetRootScrollableView(&scrollableView);
 
-  if (!scrollableView)
-    return;
-
-  if (!mScrollablePresShells)
-    mScrollablePresShells = new nsSupportsHashtable(SCROLL_HASH_START_SIZE, PR_TRUE);  // PR_TRUE = thread safe hash table
-
-  if (mScrollablePresShells) {
-    nsISupportsKey key(scrollableView);
-    nsCOMPtr<nsISupports> supports(dont_AddRef(NS_STATIC_CAST(nsISupports*, mScrollablePresShells->Get(&key))));
-    if (supports)  // This scroll view is already being listened to, remove it. We will re-add it w/ current pres shell
-      RemoveScrollListener(aPresShell);
-
-    // Add to hash table, so we can retrieve correct pres shell later
-    nsCOMPtr<nsIWeakReference> weakShell;
-    weakShell = do_GetWeakReference(aPresShell);
-    mScrollablePresShells->Put(&key, weakShell);
-
-    // Add listener
+  if (scrollableView)
     scrollableView->AddScrollPositionListener(NS_STATIC_CAST(nsIScrollPositionListener *, this));
-  }
 }
 
 void nsRootAccessible::RemoveScrollListener(nsIPresShell *aPresShell)
@@ -319,34 +298,6 @@ void nsRootAccessible::RemoveScrollListener(nsIPresShell *aPresShell)
 
   if (scrollableView)
     scrollableView->RemoveScrollPositionListener(NS_STATIC_CAST(nsIScrollPositionListener *, this));
-
-  if (mScrollablePresShells) {
-    nsISupportsKey key(scrollableView);
-    nsCOMPtr<nsISupports> supp;
-    mScrollablePresShells->Remove(&key, getter_AddRefs(supp));
-  }
-}
-
-PRBool PR_CALLBACK
-RemoveScrollListenerEnum(nsHashKey *aKey, void *aData, void* aClosure)
-{
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(NS_STATIC_CAST(nsIWeakReference*, aData)));
-
-  // If presShell gone, then our nsIScrollPositionListener will also already be gone
-  if (presShell) {
-    nsCOMPtr<nsIViewManager> vm;
-    if (presShell)
-      presShell->GetViewManager(getter_AddRefs(vm));
-
-    nsIScrollableView* scrollableView = nsnull;
-    if (vm)
-      vm->GetRootScrollableView(&scrollableView);
-
-    if (scrollableView)
-      scrollableView->RemoveScrollPositionListener(NS_STATIC_CAST(nsIScrollPositionListener *, aClosure));
-  }
-
-  return PR_TRUE;
 }
 
 NS_IMETHODIMP nsRootAccessible::ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY)
@@ -357,29 +308,21 @@ NS_IMETHODIMP nsRootAccessible::ScrollPositionWillChange(nsIScrollableView *aVie
 NS_IMETHODIMP nsRootAccessible::ScrollPositionDidChange(nsIScrollableView *aScrollableView, nscoord aX, nscoord aY)
 {
   if (mListener) {
-    if (!mScrollablePresShells)
-      return NS_OK;
-    nsISupportsKey key(aScrollableView);
-    nsCOMPtr<nsIWeakReference> weakShell(dont_AddRef(NS_STATIC_CAST(nsIWeakReference*, mScrollablePresShells->Get(&key))));
-    if (!weakShell)
-      return NS_OK;
-    if (mTimer && (mBusy != eBusyStateDone || (mScrollPositionChangedTicks && mLastScrolledPresShell != weakShell))) {
-      // We need to say finish up our current time work and start a new timer
-      // either because we haven't yet fired our finished loading event, or 
-      // a scroll event from another pres shell is still waiting to be fired
-      Notify(mTimer);
-      mTimer->Cancel();
-    }
     // Start new timer, if the timer cycles at least 1 full cycle without more scroll position changes, 
     // then the ::Notify() method will fire the accessibility event for scroll position changes
-    nsresult rv;
-    mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      const PRUint32 kScrollPosCheckWait = 50;
-      mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), kScrollPosCheckWait, nsITimer::TYPE_REPEATING_SLACK);
+    const PRUint32 kScrollPosCheckWait = 50;
+    if (mScrollWatchTimer) {
+      mScrollWatchTimer->SetDelay(kScrollPosCheckWait);  // Create new timer, to avoid leaks
+    }
+    else {
+      mScrollWatchTimer = do_CreateInstance("@mozilla.org/timer;1");
+      if (mScrollWatchTimer) {
+        mScrollWatchTimer->InitWithFuncCallback(ScrollTimerCallback, this,
+                                                kScrollPosCheckWait, 
+                                                nsITimer::TYPE_REPEATING_SLACK);
+      }
     }
     mScrollPositionChangedTicks = 1;
-    mLastScrolledPresShell = weakShell;
   }
   return NS_OK;
 }
@@ -430,24 +373,7 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
     rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
     
-    // Set up web progress listener - we need to know when page loading is finished
-    // That way we can send the STATE_CHANGE events for the MSAA root "pane" object (ROLE_PANE),
-    // and change the STATE_BUSY bit flag
-    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
-    if (presShell) {
-      nsCOMPtr<nsIPresContext> context; 
-      presShell->GetPresContext(getter_AddRefs(context));
-      if (context) { 
-        nsCOMPtr<nsISupports> container; context->GetContainer(getter_AddRefs(container));
-        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-        if (docShell) {
-          mWebProgress = do_GetInterface(docShell);
-          mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_LOCATION | 
-                                                  nsIWebProgress::NOTIFY_STATE_DOCUMENT);
-        }
-      }
-    }
-    NS_ASSERTION(mWebProgress, "Could not get nsIWebProgress for nsRootAccessible");
+    AddContentDocListeners();
   }
 
   if (!mCaretAccessible && mListener)
@@ -474,18 +400,17 @@ NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener()
       target->RemoveEventListener(NS_LITERAL_STRING("ListitemStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     }
  
-    if (mTimer) {
-      mTimer->Cancel();
-      mTimer = nsnull;
+    if (mScrollWatchTimer) {
+      mScrollWatchTimer->Cancel();
+      mScrollWatchTimer = nsnull;
     }
 
-    if (mWebProgress) {
-      mWebProgress->RemoveProgressListener(this);
-      mWebProgress = nsnull;
+    if (mDocLoadTimer) {
+      mDocLoadTimer->Cancel();
+      mDocLoadTimer = nsnull;
     }
 
-    if (mScrollablePresShells)
-      mScrollablePresShells->Enumerate(RemoveScrollListenerEnum, NS_STATIC_CAST(nsIScrollPositionListener*, this));
+    RemoveContentDocListeners();
 
     mListener = nsnull;
   }
@@ -809,11 +734,94 @@ NS_IMETHODIMP nsRootAccessible::GetDocument(nsIDocument **doc)
   return nsDocAccessibleMixin::GetDocument(doc);
 }
 
-NS_IMETHODIMP nsRootAccessible::OnStateChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
+void nsRootAccessible::RemoveContentDocListeners()
 {
-  if ((aStateFlags & STATE_IS_DOCUMENT) && (aStateFlags & STATE_STOP)) {
-    // Doc is ready!
+  // Remove listeners associated with content documents
+
+  // Remove web progress listener
+  if (mWebProgress) {
+    mWebProgress->RemoveProgressListener(this);
+    mWebProgress = nsnull;
+  }
+
+  // Remove scroll position listener
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+  RemoveScrollListener(presShell);
+}
+
+void nsRootAccessible::AddContentDocListeners()
+{
+  // 1) Set up scroll position listener
+  // 2) Set up web progress listener - we need to know 
+  //    when page loading is finished
+  //    That way we can send the STATE_CHANGE events for 
+  //    the MSAA root "pane" object (ROLE_PANE),
+  //    and change the STATE_BUSY bit flag
+  //    Do this only for top level content documents
+
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+  if (!presShell)
+    return;
+
+  AddScrollListener(presShell);
+
+  nsCOMPtr<nsISupports> container;
+  mDocument->GetContainer(getter_AddRefs(container));
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
+  if (!docShellTreeItem)
+    return;
+
+  // Make sure we're a content docshell
+  // We don't want to listen to chrome progress
+  PRInt32 itemType;
+  docShellTreeItem->GetItemType(&itemType);
+
+  if (itemType != nsIDocShellTreeItem::typeContent)
+    return;
+
+  // Make sure we're the top content doc shell 
+  // We don't want to listen to iframe progress
+  nsCOMPtr<nsIDocShellTreeItem> topOfContentTree;
+  docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(topOfContentTree));
+  if (topOfContentTree != docShellTreeItem)
+    return;
+  
+  nsCOMPtr<nsIPresContext> context; 
+  presShell->GetPresContext(getter_AddRefs(context));
+  if (!context)
+    return;
+
+  mWebProgress = do_GetInterface(docShellTreeItem);
+  if (!mWebProgress)
+    return;
+
+  mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_LOCATION | 
+                                    nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+
+
+  mIsNewDocument = PR_TRUE;
+  mBusy = eBusyStateLoading;
+  PRBool isLoading;
+
+  mWebProgress->GetIsLoadingDocument(&isLoading);
+  if (!isLoading) {
+    // If already loaded, fire "done loading" event after short timeout
+    // If we fired the event here, we'd get reentrancy problems
+    // Otherwise it will be fired from OnStateChange when the load is done
+    mDocLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (mDocLoadTimer) {
+      mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 1,
+                                          nsITimer::TYPE_ONE_SHOT);
+    }
+  }
+}
+
+void nsRootAccessible::FireDocLoadFinished()
+{
+  if (mIsNewDocument) {
+    mIsNewDocument = PR_FALSE;
+
     if (mBusy != eBusyStateDone) {
       mBusy = eBusyStateDone;
 #ifndef MOZ_ACCESSIBILITY_ATK
@@ -821,21 +829,14 @@ NS_IMETHODIMP nsRootAccessible::OnStateChange(nsIWebProgress *aWebProgress,
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this, nsnull);
 #endif
     }
-
-    // Set up scroll position listener
-    nsCOMPtr<nsIDOMWindow> domWin;
-    aWebProgress->GetDOMWindow(getter_AddRefs(domWin));
-    if (domWin) {
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      domWin->GetDocument(getter_AddRefs(domDoc));
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-      if (doc) {
-        nsCOMPtr<nsIPresShell> presShell;
-        doc->GetShellAt(0, getter_AddRefs(presShell));
-        AddScrollListener(presShell);
-      }
-    }
   }
+}
+
+NS_IMETHODIMP nsRootAccessible::OnStateChange(nsIWebProgress *aWebProgress,
+  nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
+{
+  if ((aStateFlags & STATE_IS_DOCUMENT) && (aStateFlags & STATE_STOP))
+    FireDocLoadFinished();   // Doc is ready!
 
   return NS_OK;
 }
@@ -854,8 +855,14 @@ NS_IMETHODIMP nsRootAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, nsIURI *location)
 {
   // Load has been verified, it will occur, about to commence
+
+  // We won't fire a "doc finished loading" event on this nsRootAccessible 
+  // Instead we fire that on the new nsRootAccessible that is created for the new doc
+  mIsNewDocument = PR_FALSE;   // We're a doc that's going away
+
   if (mBusy != eBusyStateLoading) {
     mBusy = eBusyStateLoading; 
+    // Fire a "new doc has started to load" event
 #ifndef MOZ_ACCESSIBILITY_ATK
     if (mListener)
       mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this, nsnull);
@@ -868,20 +875,6 @@ NS_IMETHODIMP nsRootAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
       mListener->HandleEvent(nsIAccessibleEventListener::EVENT_REORDER , this, (AccessibleEventData*)&childrenData);
     }
 #endif
-
-    // Document is going away, remove its scroll position listener
-    nsCOMPtr<nsIDOMWindow> domWin;
-    aWebProgress->GetDOMWindow(getter_AddRefs(domWin));
-    if (domWin) {
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      domWin->GetDocument(getter_AddRefs(domDoc));
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-      if (doc) {
-        nsCOMPtr<nsIPresShell> presShell;
-        doc->GetShellAt(0, getter_AddRefs(presShell));
-        RemoveScrollListener(presShell);
-      }
-    }
   }
 
   return NS_OK;
