@@ -34,9 +34,9 @@
 #acctCentralHeaderRow
 {
   background-color:lightgrey;
-  font-weightt:bold;
+  font-weight:bold;
   font-size:20px;
-  margin:5px 5px 5px 5px;
+  color: #000000;
   margin-left: 5px;
   margin-right: 5px;
   margin-top: 5px;
@@ -57,11 +57,13 @@
   font-weight:bold;
   font-size:15px;
   margin-left: 10px;
+  color: #000000;
 }
 
 .acctCentralText
 {
   font-size:15px;
+  color: #000000;
 }
 
 .acctCentralLinkText

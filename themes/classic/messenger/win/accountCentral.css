@@ -28,6 +28,11 @@
 
 #acctCentralGrid {
   background-color:#FFFFFF;
+  border-left: 1px solid ThreeDShadow;
+}
+
+#acctCentralActionsColumn {
+  border-left: 1px solid ThreeDDarkShadow;
 }
 
 #acctCentralHeaderRow {
@@ -35,6 +40,7 @@
   background-color: lightgrey;
   font-weight: bold;
   font-size: 20px;
+  color: #000000;
 }
 
 .acctCentralRow {
@@ -49,10 +55,12 @@
   margin-left: 10px;
   font-weight: bold;
   font-size: 15px;
+  color: #000000;
 }
 
 .acctCentralText {
   font-size: 15px;
+  color: #000000;
 }
 
 .acctCentralLinkText {
