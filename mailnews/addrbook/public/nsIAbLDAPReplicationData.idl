@@ -36,52 +36,59 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsILDAPMessageListener.idl"
 
-%{ C++
-#include "nsDirPrefs.h"
-%}
-[ptr] native DIR_ReplicationInfo(DIR_ReplicationInfo);
-
+interface nsIAbLDAPReplicationQuery;
 interface nsIWebProgressListener;
-interface nsILDAPURL;
-interface nsILDAPConnection;
-interface nsILDAPOperation;
-
 
 /**
- * this interface provides methods to perform LDAP Replication Queries
+ * this service does replication of an LDAP directory to a local Mork AB Database.
  */
-[scriptable, uuid(00D568A1-3C3B-11d6-B7B9-00B0D06E5F27)]
-interface nsIAbLDAPReplicationQuery : nsISupports {
-
-   readonly attribute nsILDAPURL replicationURL;
-   readonly attribute nsILDAPConnection connection;
-   readonly attribute nsILDAPOperation operation;
-   [noscript] readonly attribute DIR_ReplicationInfo replicationInfo;
-
-   /**
-     * initialize for the query
-     */
-    void init (in ACString aPrefName, in nsIWebProgressListener aProgressListener);
-     
-   /**
-     * Starts an LDAP query to do replication as needed
-     */
-    void doReplicationQuery();
-
-  /**
-    * Starts an LDAP query to replicate all entries
-    */
-    void queryAllEntries();
+[scriptable, uuid(00D568A2-3C3B-11d6-B7B9-00B0D06E5F27)]
+interface nsIAbLDAPProcessReplicationData : nsILDAPMessageListener {
    
    /**
-     * Cancels the currently executing query
+     * readonly attribute giving the current replication state
      */
-    void cancelQuery();
+    readonly attribute PRInt32 replicationState;
 
    /**
-     * this method is the callback when query is done, failed or successful
+     * replication states
      */
-    void done(in boolean aSuccess);
+    const long kQueryNotStarted       = 0;
+    const long kAnonymousBinding      = 1;
+    const long kAuthenticatedBinding  = 2;
+    const long kSearchingAuthDN       = 3;
+    const long kDecidingProtocol      = 4;
+    const long kAuthenticating        = 5;
+    const long kReplicatingAll        = 6;
+    const long kSearchingRootDSE      = 7;
+    const long kFindingChanges        = 8;
+    const long kReplicatingChanges    = 9;
+    const long kReplicationDone       = 10;
+
+   /**
+     * readonly attribute giving the current protocol used
+     */
+    readonly attribute PRInt32 protocolUsed ;
+
+   /**
+     * replication protocols
+     */
+    const long kDefaultDownloadAll         = 0;
+    const long kChangeLogProtocol          = 1;
+    const long kLCUPProtocol               = 2;
+    const long kLastUpdatedTimeStampMethod = 3;
+
+   /**
+     * this method initializes the implementation
+     */
+    void init (in nsIAbLDAPReplicationQuery query, in nsIWebProgressListener progressListener);
+
+   /**
+     * this method a aborts the ongoing processing
+     */
+    void abort();
+   
 };
 
