@@ -67,6 +67,8 @@ gint nsGtkWidget_Refresh_Callback(gpointer call_data);
 
 void handle_xlib_shell_event(GdkSuperWin *superwin, XEvent *event, gpointer p);
 void handle_xlib_bin_event(GdkSuperWin *superwin, XEvent *event, gpointer p);
+void handle_superwin_paint(gint aX, gint aY,
+                           gint aWidth, gint aHeight, gpointer aData);
 void handle_gdk_event (GdkEvent *event, gpointer data);
 
 #endif  // __nsGtkEventHandler.h
