@@ -67,6 +67,7 @@
         {CLASS = CHBookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {CLASS = CHExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = CHExtendedTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
+        {CLASS = CHLocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = LocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
