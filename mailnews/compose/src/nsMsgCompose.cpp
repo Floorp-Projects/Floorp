@@ -52,7 +52,7 @@ nsMsgCompose::nsMsgCompose()
 	m_webShell = nsnull;
 	m_webShellWin = nsnull;
 	m_editor = nsnull;
-  mOutStream=nsnull;
+	mOutStream=nsnull;
 	m_compFields = do_QueryInterface(new nsMsgCompFields);
 
 	// Get the default charset from pref, use this as a mail charset.
@@ -72,7 +72,8 @@ nsMsgCompose::nsMsgCompose()
 nsMsgCompose::~nsMsgCompose()
 {
   NS_IF_RELEASE(mOutStream);
-  NS_IF_RELEASE(m_editor);
+// ducarroz: we don't need to own the editor shell as JS does it for us.
+//  NS_IF_RELEASE(m_editor);
 }
 
 
@@ -416,7 +417,11 @@ nsresult nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode, const PRUnichar *a
 nsresult nsMsgCompose::CloseWindow()
 {
 	if (m_webShellWin)
+	{
+		m_editor = nsnull;	/* m_editor will be destroyed during the Close Window. Set it to null to
+							   be sure we wont use it anymore. */
 		m_webShellWin->Close();
+	}
 
 	return NS_OK;
 }
@@ -429,8 +434,9 @@ nsresult nsMsgCompose::GetEditor(nsIEditorShell * *aEditor)
   
 nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor) 
 { 
- m_editor = aEditor; 
- NS_ADDREF(m_editor);
+ m_editor = aEditor;
+// ducarroz: we don't need to own the editor shell as JS does it for us.
+// NS_ADDREF(m_editor);
  return NS_OK; 
 } 
   
@@ -539,7 +545,6 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
                 }
                 case MSGCOMP_TYPE_ForwardAsAttachment:
                 case MSGCOMP_TYPE_ForwardInline:
-                case MSGCOMP_TYPE_ForwardQuoted:
                 {
 					if (!aCharset.Equals(""))
 						m_compFields->SetCharacterSet(nsAutoCString(aCharset), nsnull);
@@ -558,10 +563,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
 
                     if (type == MSGCOMP_TYPE_ForwardAsAttachment)
                         QuoteOriginalMessage(originalMsgURI, 0);
-                    else if (type == MSGCOMP_TYPE_ForwardInline)
-                        QuoteOriginalMessage(originalMsgURI, 2);
                     else
-                        QuoteOriginalMessage(originalMsgURI, 1);
+                        QuoteOriginalMessage(originalMsgURI, 2);
                     break;
                 }
 			}
