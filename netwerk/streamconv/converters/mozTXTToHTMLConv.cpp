@@ -733,11 +733,11 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
       outputHTML.Append(PRUnichar(' '));
     }
 
-    outputHTML += NS_LITERAL_STRING("<img src=\"chrome://editor/content/images/");
-    AppendASCIItoUTF16(imageName, outputHTML);
-    outputHTML += NS_LITERAL_STRING("\" alt=\"");
-    AppendASCIItoUTF16(tagTXT, outputHTML);
-    outputHTML += NS_LITERAL_STRING("\" class=\"moz-txt-smily\"height=19 width=19 align=ABSCENTER>");
+    outputHTML += NS_LITERAL_STRING("<span class=\""); // <span class="
+    AppendASCIItoUTF16(imageName, outputHTML);        // smiley-frown
+    outputHTML += NS_LITERAL_STRING("\"><span> ");     // "> <span> 
+    AppendASCIItoUTF16(tagTXT, outputHTML);           // alt text
+    outputHTML += NS_LITERAL_STRING(" </span></span>"); // </span></span>
     glyphTextLen = (col0 ? 0 : 1) + tagLen;
     return PR_TRUE;
   }
@@ -787,102 +787,107 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     if ( bTestSmilie && (
           SmilyHit(aInString, aInLength, bArg,
                    ":-)",
-                   "smile_n.gif",
+                   "moz-smiley-s1", // smile
                    outputHTML, glyphTextLen) ||
   
           SmilyHit(aInString, aInLength, bArg,
                    ":)",
-                   "smile_n.gif",
+                   "moz-smiley-s1", // smile
                    outputHTML, glyphTextLen) ||
           
           SmilyHit(aInString, aInLength, bArg,
                    ":-D",
-                   "laughing_n.gif",
+                   "moz-smiley-s5", // laughing
                    outputHTML, glyphTextLen) ||
           
           SmilyHit(aInString, aInLength, bArg,
                    ":-(",
-                   "frown_n.gif",
+                   "moz-smiley-s2", // frown
                    outputHTML, glyphTextLen) ||
           
           SmilyHit(aInString, aInLength, bArg,
                    ":(",
-                   "frown_n.gif",
+                   "moz-smiley-s2", // frown
                    outputHTML, glyphTextLen) ||
           
           SmilyHit(aInString, aInLength, bArg,
                    ":-[",
-                   "embarrassed_n.gif",
+                   "moz-smiley-s6", // embarassed
                    outputHTML, glyphTextLen) ||
           
           SmilyHit(aInString, aInLength, bArg,
                    ";-)",
-                   "wink_n.gif",
+                   "moz-smiley-s3", // wink
                    outputHTML, glyphTextLen) ||
 
           SmilyHit(aInString, aInLength, col0,
                    ";)",
-                   "wink_n.gif",
+                   "moz-smiley-s3", // wink
                    outputHTML, glyphTextLen) ||
           
           SmilyHit(aInString, aInLength, bArg,
                    ":-\\",
-                   "undecided_n.gif",
+                   "moz-smiley-s7", // undecided
                    outputHTML, glyphTextLen) ||
           
           SmilyHit(aInString, aInLength, bArg,
                    ":-P",
-                   "tongue_n.gif",
-                   outputHTML, glyphTextLen) ||         
+                   "moz-smiley-s4", // tongue
+                   outputHTML, glyphTextLen) ||
+                   
+          SmilyHit(aInString, aInLength, bArg,
+                   ";-P",
+                   "moz-smiley-s4", // tongue
+                   outputHTML, glyphTextLen) ||  
          
           SmilyHit(aInString, aInLength, bArg,
                    "=-O",
-                   "surprise_n.gif",
+                   "moz-smiley-s8", // surprise
                    outputHTML, glyphTextLen) ||
          
           SmilyHit(aInString, aInLength, bArg,
                    ":-*",
-                   "kiss_n.gif",
+                   "moz-smiley-s9", // kiss
                    outputHTML, glyphTextLen) ||
          
           SmilyHit(aInString, aInLength, bArg,
                    ">:o",
-                   "yell_n.gif",
+                   "moz-smiley-s10", // yell
                    outputHTML, glyphTextLen) ||
           
           SmilyHit(aInString, aInLength, bArg,
                    ">:-o",
-                   "yell_n.gif",
+                   "moz-smiley-yell", // yell
                    outputHTML, glyphTextLen) ||
         
           SmilyHit(aInString, aInLength, bArg,
                    "8-)",
-                   "cool_n.gif",
+                   "moz-smiley-s11", // cool
                    outputHTML, glyphTextLen) ||
          
           SmilyHit(aInString, aInLength, bArg,
                    ":-$",
-                   "money_n.gif",
+                   "moz-smiley-s12", // money
                    outputHTML, glyphTextLen) ||
          
           SmilyHit(aInString, aInLength, bArg,
                    ":-!",
-                   "foot_n.gif",
+                   "moz-smiley-s13", // foot
                    outputHTML, glyphTextLen) ||
          
           SmilyHit(aInString, aInLength, bArg,
                    "O:-)",
-                   "innocent_n.gif",
+                   "moz-smiley-s14", // innocent
                    outputHTML, glyphTextLen) ||
          
           SmilyHit(aInString, aInLength, bArg,
                    ":'(",
-                   "cry_n.gif",
+                   "moz-smiley-s15", // cry
                    outputHTML, glyphTextLen) ||
          
           SmilyHit(aInString, aInLength, bArg,
                    ":-X",
-                   "sealed_n.gif",
+                   "moz-smiley-s16", // sealed
                    outputHTML, glyphTextLen) 
         )
     )
