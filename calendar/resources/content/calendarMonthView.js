@@ -185,7 +185,11 @@ function MonthView( calendarWindow )
          
          // set on click of day boxes
          
-         dayBoxItem.setAttribute( "onclick", "gCalendarWindow.monthView.clickDay( event )" );
+         dayBoxItem.setAttribute( "onmousedown", "gCalendarWindow.monthView.clickDay( event )" );
+
+         //set the drop
+         dayBoxItem.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,monthViewEventDragAndDropObserver)" );
+         dayBoxItem.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,monthViewEventDragAndDropObserver)" );
          
          //set the double click of day boxes
          dayBoxItem.setAttribute( "ondblclick", "gCalendarWindow.monthView.doubleClickDay( event )" );
@@ -260,17 +264,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
 
       if( dayBoxItem.numEvents == 1 || dayBoxItem.numEvents < this.numberOfEventsToShow )
       {
-         // Make a text item to show the event title
-         
-         var eventBoxText = document.createElement( "label" );
-         eventBoxText.setAttribute( "crop", "end" );
-         eventBoxText.setAttribute( "class", "month-day-event-text-class" );
-         eventBoxText.setAttribute( "value", calendarEventDisplay.event.title );
-         //you need this flex in order for text to crop
-         eventBoxText.setAttribute( "flex", "1" );
-
-         // Make a box item to hold the text item
-         
+         // Make a box item to hold the event
          eventBox = document.createElement( "box" );
          eventBox.setAttribute( "id", "month-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "name", "month-view-event-box-"+calendarEventDisplay.event.id );
@@ -282,11 +276,12 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          }
             
          eventBox.setAttribute( "eventbox", "monthview" );
-         eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
+         eventBox.setAttribute( "onmousedown", "monthEventBoxClickEvent( this, event )" );
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
          eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
          eventBox.setAttribute( "tooltip", "savetip" );
-         
+         eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
+         //eventBox.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,monthViewEventDragAndDropObserver);" );
          // add a property to the event box that holds the calendarEvent that the
          // box represents
 
@@ -294,6 +289,16 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          
          this.kungFooDeathGripOnEventBoxes.push( eventBox );
          
+         // Make a text item to show the event title
+         
+         var eventBoxText = document.createElement( "label" );
+         eventBoxText.setAttribute( "crop", "end" );
+         eventBoxText.setAttribute( "class", "month-day-event-text-class" );
+         eventBoxText.setAttribute( "value", calendarEventDisplay.event.title );
+         //you need this flex in order for text to crop
+         eventBoxText.setAttribute( "flex", "1" );
+         eventBoxText.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
+
          // add the text to the event box and the event box to the day box
          
          eventBox.appendChild( eventBoxText );        
@@ -345,7 +350,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
             this.kungFooDeathGripOnEventBoxes.push( eventBox );
             
             eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
-            eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
+            eventBox.setAttribute( "onmousedown", "monthEventBoxClickEvent( this, event )" );
             eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
    
             eventBox.setAttribute( "tooltip", "savetip" );
@@ -491,7 +496,7 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
             var thisDate = new Date( newYear, newMonth, 1-(firstDayOfWeek - dayIndex ) );
             
             dayBoxItem.date = thisDate;
-
+            
             dayNumberItem.setAttribute( "value" , thisDate.getDate() );  
 
          }
@@ -500,6 +505,7 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
             var thisDate = new Date( newYear, newMonth, lastDayOfMonth+( dayIndex - lastDayOfMonth - firstDayOfWeek + 1 ) );
             
             dayBoxItem.date = thisDate;
+            dayBoxItem.setAttribute( "date", thisDate );
 
             dayNumberItem.setAttribute( "value" , thisDate.getDate() );  
          }
@@ -871,3 +877,49 @@ MonthView.prototype.setNumberOfEventsToShow = function monthView_getNumberOfEven
    dump( "\n"+EventBoxHeight );
    this.numberOfEventsToShow = parseInt( ( MonthViewBoxHeight - EventBoxHeight ) / EventBoxHeight ); 
 }
+
+
+/*
+drag and drop stuff 
+*/
+gEventBeingDragged = false;
+gBoxBeingDroppedOn = false;
+
+var monthViewEventDragAndDropObserver  = {
+  onDragStart: function (evt, transferData, action){
+      if( evt.target.calendarEventDisplay ) 
+         gEventBeingDragged = evt.target.calendarEventDisplay.event;
+      else if( evt.target.parentNode.calendarEventDisplay )
+         gEventBeingDragged = evt.target.parentNode.calendarEventDisplay.event;
+
+      //dump( "\nEvent being dragged is "+gEventBeingDragged );
+      transferData.data=new TransferData();
+      transferData.data.addDataForFlavour("text/unicode",0);
+  },
+  getSupportedFlavours : function () {
+    var weekflavours = new FlavourSet();
+    weekflavours.appendFlavour("text/unicode");
+    return weekflavours;
+  },
+  onDragOver: function (evt,flavour,session){
+    //dump( "on dragged over "+evt.target.getAttribute( "id" )+"\n" );
+    gBoxBeingDroppedOn = document.getElementById( evt.target.getAttribute( "id" ) );
+    //dump( evt.target.getAttribute( "id" ) );
+  },
+  onDrop: function (evt,dropdata,session){
+      //get the date of the current event box.
+      //dump( "\n\nDROP EVNET->\n"+gEventBeingDragged.start );
+      var newDay = gBoxBeingDroppedOn.dayNumber;
+      if( newDay == null )
+         return;
+
+      gEventBeingDragged.start.day = newDay;
+      gEventBeingDragged.end.day = newDay;
+
+      //edit the event being dragged to change its start and end date
+      //don't change the start and end time though.
+      gICalLib.modifyEvent( gEventBeingDragged, gEventBeingDragged.parent.server );
+      
+      //refresh the view
+  }
+};
