@@ -429,6 +429,7 @@ endif
 # Now test variables that might have been set or overridden by $(MY_CONFIG).
 
 DEFINES		+= -DOSTYPE=\"$(OS_CONFIG)\"
+DEFINES		+= -DOSARCH=\"$(OS_ARCH)\"
 
 ifdef MOZ_DEBUG
 DEFINES		+= -DMOZ_REFLOW_PERF -DMOZ_REFLOW_PERF_DSP
