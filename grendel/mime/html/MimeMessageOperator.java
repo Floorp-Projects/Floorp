@@ -44,7 +44,7 @@ class MimeMessageOperator extends MimeContainerOperator {
     NormalHeaderFormatter formatter = new NormalHeaderFormatter();
     StringBuffer output = new StringBuffer(200);
     formatter.formatHeaders(object.headers(), output);
-    output.append("<P>");
+//    output.append("<P>");
     getOut().print(output.toString());
 
     return super.createChild(object);

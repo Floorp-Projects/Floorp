@@ -153,13 +153,13 @@ class MimeExternalObjectOperator extends MimeLeafOperator {
     }
 
     if (body != null) {
-      getOut().print("<P><PRE>");
+//      getOut().print("<P><PRE>");
       // #### quote HTML
       getOut().print(body);
-      getOut().print("</PRE>");
+//      getOut().print("</PRE>");
     }
 
-    getOut().print("</TD></TR></TABLE></CENTER>");
+//    getOut().print("</TD></TR></TABLE></CENTER>");
   }
 
 

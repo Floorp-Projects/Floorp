@@ -39,7 +39,7 @@ class MimeTextOperator extends MimeLeafOperator {
   MimeTextOperator(IMimeObject object, PrintStream out) {
     super(object, out);
     buffer = new StringBuffer(200);
-    getOut().print("<PRE VARIABLE>");
+//    getOut().print("<PRE VARIABLE>");
   }
 
   void decodeBytesToUnicode(ByteBuf in, StringBuffer out) {
@@ -58,6 +58,6 @@ class MimeTextOperator extends MimeLeafOperator {
 
   public void pushEOF() {
     buffer = null;
-    getOut().print("</PRE>");
+//    getOut().print("</PRE>");
   }
 }
