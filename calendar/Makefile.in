@@ -108,6 +108,6 @@ xpi::
 	cp -r $(srcdir)/resources/locale ./xpi/resources
 	cp -r $(srcdir)/$(calplatform)/icons ./xpi
 	cp $(srcdir)/install.js ./xpi
-	cd xpi; find bin/ resources/ icons/ install.js \( -name CVS -o -name en-US \) -prune -o -print | xargs zip calendar.xpi
+	cd xpi; find bin resources icons install.js \( -name CVS -o -name en-US \) -prune -o -print | xargs zip calendar.xpi
 
 	echo "Done."
