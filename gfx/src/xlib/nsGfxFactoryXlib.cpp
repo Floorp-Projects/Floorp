@@ -47,7 +47,6 @@ Display         *gDisplay;
 Screen          *gScreen;
 int              gDepth;
 Visual          *gVisual;
-XVisualInfo     *gVisualInfo;
 
 class nsGfxFactoryXlib : public nsIFactory
 {

@@ -26,9 +26,6 @@
 #include "nsIServiceManager.h"
 #include "nsITimer.h"
 
-static PRUint8 convertMaskToCount(unsigned long val);
-static PRUint8 getShiftForMask(unsigned long val);
-
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
@@ -39,6 +36,9 @@ xlib_rgb_init (Display *display, Screen *screen);
 extern "C"
 Visual *
 xlib_rgb_get_visual (void);
+
+extern "C" XVisualInfo *
+xlib_rgb_get_visual_info (void);
 
 // this is so that we can get the timers in the base.  most widget
 // toolkits do this through some set of globals.  not here though.  we
@@ -122,8 +122,6 @@ nsresult nsAppShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
-  int      num_visuals = 0;
-  XVisualInfo vis_template;
   // open the display
   if ((gDisplay = XOpenDisplay(NULL)) == NULL) {
     fprintf(stderr, "%s: Cannot connect to X server %s\n",
@@ -132,24 +130,25 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
   }
   _Xdebug = 1;
   gScreen = DefaultScreenOfDisplay(gDisplay);
+
   // init the rgb layer.  this will provide
   // the visual information for us.
   xlib_rgb_init(gDisplay, gScreen);
+
   gVisual = xlib_rgb_get_visual();
 
-  // set the static vars for this class so we can find our
-  // way around...
-  vis_template.visualid = XVisualIDFromVisual(gVisual);
-  gVisualInfo = XGetVisualInfo(gDisplay, VisualIDMask,
-                               &vis_template, &num_visuals);
-  if (gVisualInfo == NULL) {
-    printf("nsAppShell::Create(): Warning: Failed to get XVisualInfo\n");
+  NS_ASSERTION(nsnull != gVisual,"Visual from xlibrgb is null.");
+
+#if 1
+  XVisualInfo * x_visual_info = xlib_rgb_get_visual_info();
+
+  NS_ASSERTION(nsnull != x_visual_info,"Visual info from xlibrgb is null.");
+
+  if (nsnull != x_visual_info)
+  {
+    gDepth = x_visual_info->depth;
   }
-  if (num_visuals != 1) {
-    printf("nsAppShell:Create(): Warning: %d XVisualInfo structs were returned.\n", num_visuals);
-  }
-  // get the depth for this display
-  gDepth = gVisualInfo->depth;
+#endif
 
   return NS_OK;
 }
