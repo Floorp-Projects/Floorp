@@ -2717,7 +2717,7 @@ NS_IMETHODIMP nsImapMailFolder::EndCopy(PRBool copySucceeded)
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::EndMove()
+NS_IMETHODIMP nsImapMailFolder::EndMove(PRBool moveSucceeded)
 {
   return NS_OK;
 }

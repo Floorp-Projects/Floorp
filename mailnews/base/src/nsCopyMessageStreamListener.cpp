@@ -156,7 +156,7 @@ NS_IMETHODIMP nsCopyMessageStreamListener::EndCopy(nsISupports *url, nsresult aS
 	PRBool copySucceeded = (aStatus == NS_BINDING_SUCCEEDED);
 	rv = mDestination->EndCopy(copySucceeded);
 	//If this is a move and we finished the copy, delete the old message.
-	if(NS_SUCCEEDED(rv) && copySucceeded)
+	if(NS_SUCCEEDED(rv))
 	{
 		PRBool moveMessage = PR_FALSE;
 
@@ -179,7 +179,7 @@ NS_IMETHODIMP nsCopyMessageStreamListener::EndCopy(nsISupports *url, nsresult aS
         // if the destination is a local folder, it will handle the delete from the source in EndMove
 //				rv = DeleteMessage(uri, mSrcFolder);
 //				if(NS_SUCCEEDED(rv))
-					rv = mDestination->EndMove();
+					rv = mDestination->EndMove(copySucceeded);
 			}
 		}
 	}

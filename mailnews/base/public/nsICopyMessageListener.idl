@@ -56,5 +56,5 @@ interface nsICopyMessageListener :  nsISupports
 	void copyData(in nsIInputStream aIStream, in long aLength);
 	void endMessage(in nsMsgKey key);
 	void endCopy(in boolean copySucceeded);
-	void endMove();
+	void endMove(in boolean moveSucceeded);
 };

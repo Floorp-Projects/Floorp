@@ -127,6 +127,7 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
 {
   if (m_fileStream)
   {
+    if (m_fileStream->is_open())
     m_fileStream->close();
     delete m_fileStream;
   }
@@ -2447,11 +2448,27 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   {
     if (mCopyState->m_fileStream)
       mCopyState->m_fileStream->close();
+
+    if (mDatabase)
+      mDatabase->EndBatch();  //will close the stream so that truncation is successful.
+
     nsCOMPtr <nsIFileSpec> pathSpec;
     rv = GetPath(getter_AddRefs(pathSpec));
+
     if (NS_SUCCEEDED(rv) && pathSpec)
       pathSpec->Truncate(mCopyState->m_curDstKey);
-    ClearCopyState(PR_FALSE);
+
+    if (!mCopyState->m_isMove)
+    {
+      /*passing PR_TRUE because the messages that have been successfully copied have their corressponding
+      hdrs in place. The message that has failed has been truncated so the msf file and berkeley mailbox
+      are in sync*/
+
+      ClearCopyState(PR_TRUE);
+
+      // enable the dest folder
+      EnableNotifications(allMessageCountNotifications, PR_TRUE);
+    }
     return NS_OK;
   }
    
@@ -2613,10 +2630,28 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
+NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
 {
-
   nsresult result;
+
+  if (!moveSucceeded && mCopyState)
+  {
+    //Notify that a completion finished.
+    nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
+    srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
+    srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
+
+    /*passing PR_TRUE because the messages that have been successfully copied have their corressponding
+    hdrs in place. The message that has failed has been truncated so the msf file and berkeley mailbox
+    are in sync*/
+
+    ClearCopyState(PR_TRUE);
+
+    // enable the dest folder
+    EnableNotifications(allMessageCountNotifications, PR_TRUE);
+   
+    return NS_OK;
+  }
   
   if (mCopyState && mCopyState->m_curCopyIndex >= mCopyState->m_totalMsgCount)
   {
