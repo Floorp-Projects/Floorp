@@ -460,6 +460,10 @@
 
         <toolbarbutton id="downloads-button" class="toolbarbutton-1"
                        observes="Tools:Downloads"
+                       ondragdrop="nsDragAndDrop.drop(event, DownloadsButtonDNDObserver); event.preventBubble()"
+                       ondragover="nsDragAndDrop.dragOver(event, DownloadsButtonDNDObserver); event.preventBubble()"
+                       ondragenter="nsDragAndDrop.dragEnter(event, DownloadsButtonDNDObserver); event.preventBubble()"
+                       ondragexit="nsDragAndDrop.dragExit(event, DownloadsButtonDNDObserver); event.preventBubble()"
                        label="&downloads.label;"
                        tooltiptext="&downloads.tooltip;"/>
 

@@ -1601,6 +1601,34 @@ var goButtonObserver = {
     }
 }
 
+var DownloadsButtonDNDObserver = {
+  /////////////////////////////////////////////////////////////////////////////
+  // nsDragAndDrop
+  onDragOver: function (aEvent, aFlavour, aDragSession)
+  {
+    aDragSession.canDrop = (aFlavour.contentType == "text/x-moz-url" || 
+                            aFlavour.contentType == "text/unicode");
+  },
+
+  onDrop: function (aEvent, aXferData, aDragSession)
+  {
+    var split = aXferData.data.split("\n");
+    var url = split[0];
+    if (url != aXferData.data) {  //do nothing, not a valid URL
+      var name = split[1];
+      saveURL(url, name, null, true, true);
+    }
+  },
+
+  getSupportedFlavours: function ()
+  {
+    var flavourSet = new FlavourSet();
+    flavourSet.appendFlavour("text/x-moz-url");
+    flavourSet.appendFlavour("text/unicode");
+    return flavourSet;
+  }
+}
+
 function focusSearchBar()
 {
   var searchBar = document.getElementById("search-bar");
@@ -1790,14 +1818,16 @@ function toJavaScriptConsole()
   toOpenWindowByType("global:console", "chrome://global/content/console.xul");
 }
 
-function toOpenWindowByType(inType, uri)
+function toOpenWindowByType(inType, uri, features)
 {
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
   var topWindow = windowManagerInterface.getMostRecentWindow(inType);
   
-  if ( topWindow )
+  if (topWindow)
     topWindow.focus();
+  else if (features)
+    window.open(uri, "_blank", features);
   else
     window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }

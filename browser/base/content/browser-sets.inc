@@ -93,7 +93,9 @@
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
     
-    <command id="Tools:Downloads" oncommand="toOpenWindowByType('Download:Manager', 'chrome://mozapps/content/downloads/downloads.xul');"/>
+    <command id="Tools:Downloads" oncommand="toOpenWindowByType('Download:Manager', 
+                                                                'chrome://mozapps/content/downloads/downloads.xul',
+                                                                'chrome,all,dialog=no,resizable');"/>
     
 #ifdef XP_MACOSX
     <command id="minimizeWindow" label="&minimizeWindow.label;" disabled="true"/>
