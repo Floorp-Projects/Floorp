@@ -1,4 +1,0 @@
-   interface HTMLMapElement : HTMLElement {
-     attribute HTMLCollection  areas;
-     attribute wstring         name;
-   };

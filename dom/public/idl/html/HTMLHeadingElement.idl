@@ -1,3 +1,0 @@
-   interface HTMLHeadingElement : HTMLElement {
-     attribute wstring         align;
-   };

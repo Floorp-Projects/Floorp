@@ -1,3 +1,0 @@
-   interface HTMLPreElement : HTMLElement {
-     attribute long            width;
-   };

@@ -1,6 +1,0 @@
-   interface HTMLHRElement : HTMLElement {
-     attribute wstring         align;
-     attribute boolean         noShade;
-     attribute wstring         size;
-     attribute wstring         width;
-   };

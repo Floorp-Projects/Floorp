@@ -1,8 +1,0 @@
-   interface HTMLTableColElement : HTMLElement {
-     attribute wstring         align;
-     attribute wstring         ch;
-     attribute wstring         chOff;
-     attribute long            span;
-     attribute wstring         vAlign;
-     attribute wstring         width;
-   };

@@ -1,3 +1,0 @@
-   interface HTMLHtmlElement : HTMLElement {
-     attribute wstring         version;
-   };

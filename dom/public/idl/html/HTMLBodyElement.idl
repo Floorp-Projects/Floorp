@@ -1,8 +1,0 @@
-   interface HTMLBodyElement : HTMLElement {
-     attribute wstring         aLink;
-     attribute wstring         background;
-     attribute wstring         bgColor;
-     attribute wstring         link;
-     attribute wstring         text;
-     attribute wstring         vLink;
-   };

@@ -1,7 +1,0 @@
-   interface HTMLTableSectionElement : HTMLElement {
-     attribute wstring         align;
-     attribute wstring         vAlign;
-     attribute HTMLCollection  rows;
-     HTMLElement               insertRow(in long index);
-     void                      deleteRow(in long index);
-   };

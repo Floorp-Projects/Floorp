@@ -1,5 +1,0 @@
-   interface DOM {
-     Document                  createDocument(in wstring type)
-                                              raises DOMException;
-     boolean                   hasFeature(in wstring feature);
-   };

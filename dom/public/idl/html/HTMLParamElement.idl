@@ -1,6 +1,0 @@
-   interface HTMLParamElement : HTMLElement {
-     attribute wstring         name;
-     attribute wstring         type;
-     attribute wstring         value;
-     attribute wstring         valueType;
-   };
