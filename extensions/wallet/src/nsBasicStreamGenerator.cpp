@@ -69,7 +69,7 @@ NS_IMETHODIMP nsBasicStreamGenerator::GetByte(PRUint32 offset, PRUint8 *retval)
 {
     NS_ENSURE_ARG_POINTER(retval);
     nsresult rv = NS_OK;
-    if (!((const char *)mPassword))
+    if (mPassword.Length() == 0)
     {
         // First time we need the password. Get it.
         if (!mPasswordSink) return NS_ERROR_FAILURE;
