@@ -1167,7 +1167,7 @@ doSimple:
                                     JSMSG_BAD_QUANTIFIER, state->cp - 1);
         return JS_FALSE;
 #if 0
-    case '{':
+    case '{':   /* balance '}' */
         /* Treat left-curly in a non-quantifier context as an error only 
          * if it's followed immediately by a decimal digit.
          * This is an Perl extension.
@@ -1240,59 +1240,49 @@ parseQuantifier(CompilerState *state)
                     ++state->cp;
                     min = getDecimalValue(c, state);
                     c = *state->cp;
-                }
-                else {
-                    /* For Perl etc. compatibility, if a curly is not
-                     * followed by a proper digit, back off from it
-                     * being a quantifier, and chew it up as a literal
-                     * atom next time instead.
-                     */
-                    --state->cp;
-                    return JS_TRUE; 
-                }
-                state->result = NewRENode(state, REOP_QUANT);
-                if (!state->result) 
-                    return JS_FALSE;
 
-                if ((min + 1) >> 16) {
-                    err = JSMSG_MIN_TOO_BIG;
-                    goto quantError;
-                }
-                if (c == ',') {
-                    c = *++state->cp;
-                    if (JS7_ISDEC(c)) {
-                        ++state->cp;
-                        max = getDecimalValue(c, state);
-                        c = *state->cp;
-                        if ((max + 1) >> 16) {
-                            err = JSMSG_MAX_TOO_BIG;
-                            goto quantError;
-                        }
-                        if (min > max) {
-                            err = JSMSG_OUT_OF_ORDER;
-                            goto quantError;
+                    if ((min + 1) >> 16) {
+                        err = JSMSG_MIN_TOO_BIG;
+                        goto quantError;
+                    }
+                    if (c == ',') {
+                        c = *++state->cp;
+                        if (JS7_ISDEC(c)) {
+                            ++state->cp;
+                            max = getDecimalValue(c, state);
+                            c = *state->cp;
+                            if ((max + 1) >> 16) {
+                                err = JSMSG_MAX_TOO_BIG;
+                                goto quantError;
+                            }
+                            if (min > max) {
+                                err = JSMSG_OUT_OF_ORDER;
+                                goto quantError;
+                            }
                         }
                     }
+                    else {
+                        max = min;
+                    }
+                    if (c == '}') {
+                        state->result = NewRENode(state, REOP_QUANT);
+                        if (!state->result) 
+                            return JS_FALSE;
+                        state->result->u.range.min = min;
+                        state->result->u.range.max = max;
+                        /* QUANT, <min>, <max>, <next> ... <ENDCHILD> */
+                        state->progLength += 8; 
+                        goto quantifier;
+                    }
                 }
-                else {
-                    max = min;
-                }
-                state->result->u.range.min = min;
-                state->result->u.range.max = max;
-                /* QUANT, <min>, <max>, <next> ... <ENDCHILD> */
-                state->progLength += 8; 
-                                            /* balance '{' */
-                if (c == '}')
-                    goto quantifier;
-                else {
-                    err = JSMSG_UNTERM_QUANTIFIER;
+                state->cp = errp;
+                return JS_TRUE;
 quantError:
-                    js_ReportCompileErrorNumber(state->context, 
-                                                state->tokenStream,
-                                                NULL, JSREPORT_ERROR,
-                                                err, errp);
-                    return JS_FALSE;
-                }
+                js_ReportCompileErrorNumber(state->context, 
+                                            state->tokenStream,
+                                            NULL, JSREPORT_ERROR,
+                                            err, errp);
+                return JS_FALSE;
             }
         }
     }
