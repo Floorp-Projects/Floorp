@@ -98,6 +98,7 @@ private:
 
 #ifdef	XP_WIN
 	static nsIRDFResource		*kNC_IEFavoriteObject;
+	static nsIRDFResource		*kNC_IEFavoriteFolder;
 	static char			*ieFavoritesDir;
 	nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
 #endif
@@ -212,6 +213,7 @@ nsIRDFResource		*FileSystemDataSource::kRDF_type;
 
 #ifdef	XP_WIN
 nsIRDFResource		*FileSystemDataSource::kNC_IEFavoriteObject;
+nsIRDFResource		*FileSystemDataSource::kNC_IEFavoriteFolder;
 char			*FileSystemDataSource::ieFavoritesDir;
 #endif
 
@@ -266,6 +268,7 @@ FileSystemDataSource::FileSystemDataSource(void)
 			ieFavoritesDir = nsCRT::strdup(ieFavoritesURI);
 		}
 		gRDFService->GetResource(NC_NAMESPACE_URI "IEFavorite",       &kNC_IEFavoriteObject);
+		gRDFService->GetResource(NC_NAMESPACE_URI "IEFavoriteFolder", &kNC_IEFavoriteFolder);
 /*
 		NS_WITH_SERVICE(nsIPlatformCharset, platformCharset, kPlatformCharsetCID, &rv);
 		if (NS_SUCCEEDED(rv) && (platformCharset))
@@ -323,6 +326,7 @@ FileSystemDataSource::~FileSystemDataSource (void)
 
 #ifdef	XP_WIN
 	NS_RELEASE(kNC_IEFavoriteObject);
+	NS_RELEASE(kNC_IEFavoriteFolder);
 
         if (ieFavoritesDir)
         {
@@ -467,7 +471,14 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 				nsAutoString		theURI(uri);
 				if (theURI.Find(ieFavoritesDir) == 0)
 				{
-					rv = kNC_IEFavoriteObject->GetValueConst(&type);
+					if (theURI[theURI.Length() - 1] == '/')
+					{
+						rv = kNC_IEFavoriteFolder->GetValueConst(&type);
+					}
+					else
+					{
+						rv = kNC_IEFavoriteObject->GetValueConst(&type);
+					}
 					if (NS_FAILED(rv)) return rv;
 				}
 			}
