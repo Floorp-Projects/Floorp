@@ -271,15 +271,6 @@ void nsComboboxControlFrame::MouseClicked(nsIPresContext* aPresContext)
   }
 }
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsComboboxControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                            nsIAtom*        aListName,
-                                            nsIFrame*       aChildList)
-{
-  return NS_OK;
-}
-
 //--------------------------------------------------------------
 NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext, 
                                              nsHTMLReflowMetrics&     aDesiredSize,
