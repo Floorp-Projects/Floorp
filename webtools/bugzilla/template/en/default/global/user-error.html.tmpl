@@ -323,13 +323,13 @@
   [% ELSIF error == "file_too_large" %]
     [% title = "File Too Large" %]
     The file you are trying to attach is [% filesize FILTER html %] 
-    kilobytes (KB) in size.
-    Non-patch attachments cannot be more than [% Param('maxattachmentsize') %]
-    KB.
-    If your attachment is an image, try converting it to a compressable
-    format like JPG or PNG, or put it elsewhere on the web and
-    link to it from the [% terms.bug %]'s URL field or a comment in 
-    the [% terms.bug %].
+    kilobytes (KB) in size. Non-patch attachments cannot be more than
+    [% Param('maxattachmentsize') %] KB. <br>
+    We recommend that you store your attachment elsewhere on the web,
+    and then insert a link to it in a comment, or in the URL field 
+    for this [% terms.bug %]. Alternately, if your attachment is an image,
+    you could convert it to a compressible format like JPG or PNG and try
+    again.
 
   [% ELSIF error == "flag_requestee_unauthorized" %]
     [% title = "Flag Requestee Not Authorized" %]
