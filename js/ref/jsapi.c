@@ -457,6 +457,23 @@ JS_EndRequest(JSContext *cx)
     }
 }
 
+/* Yield to pending GC operations, regardless of request depth */
+JS_PUBLIC_API(void)
+JS_YieldRequest(JSContext *cx)
+{
+    JSRuntime *rt;
+    
+    CHECK_REQUEST(cx);
+
+    PR_ASSERT(rt->requestCount > 0);
+    rt->requestCount--;
+    JS_NOTIFY_REQUEST_DONE(rt);
+    JS_UNLOCK_GC(rt);
+    JS_LOCK_GC(rt);
+    rt->requestCount++;
+    JS_UNLOCK_GC(rt);
+}
+
 /* Like JS_EndRequest, but don't notify any GC waiting in the wings. */
 JS_PUBLIC_API(void)
 JS_SuspendRequest(JSContext *cx)
