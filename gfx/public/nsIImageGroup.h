@@ -29,9 +29,7 @@ class nsIImageRequestObserver;
 class nsIImageRequest;
 class nsIDeviceContext;
 class nsIStreamListener;
-#ifndef NECKO
 class nsILoadGroup;
-#endif
 
 /** For important images, like backdrops. */
 #define nsImageLoadFlags_kHighPriority  0x01   
