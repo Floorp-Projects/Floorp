@@ -1,5 +1,5 @@
 browser.jar:
-  content/browser/downloads/downloadPanel.js    (content/downloadPanel.js)
+* content/browser/downloads/downloadPanel.js    (content/downloadPanel.js)
   content/browser/downloads/downloadPanel.xul   (content/downloadPanel.xul)
 * content/browser/downloads/download-bindings.xml (content/download-bindings.xml)
   content/browser/downloads/downloadmanager.css   (content/downloadmanager.css)

@@ -9,29 +9,35 @@ const dlObserver = {
     if (topic != "dl-progress") return;
     var dl = subject.QueryInterface(Components.interfaces.nsIDownload);
     var elt = document.getElementById(dl.target.path);
-
-    if (dl.percentComplete == -1) {
+    
+    var percentComplete = dl.percentComplete;
+    if (percentComplete == -1) {
       if (!elt.hasAttribute("progressmode"))
         elt.setAttribute("progressmode", "undetermined");
       if (elt.hasAttribute("progress"))
         elt.removeAttribute("progress");
     }
     else {
-      elt.setAttribute("progress", dl.percentComplete);
+      elt.setAttribute("progress", percentComplete);
       if (elt.hasAttribute("progressmode"))
         elt.removeAttribute("progressmode");
-    }    
+    }
+  }
 };
 
 function Startup() {
   var downloadView = document.getElementById("downloadView");
-  gDownloadHistoryView = document.getElementById("downloadHistoryView");
+
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
   gDownloadManager = Components.classes[dlmgrContractID].getService(dlmgrIID);
+
   var ds = gDownloadManager.datasource;
+
   downloadView.database.AddDataSource(ds);
   downloadView.builder.rebuild();
+
+  gDownloadHistoryView = document.getElementById("downloadHistoryView");
   gDownloadHistoryView.database.AddDataSource(ds);
   gDownloadHistoryView.builder.rebuild();
 
@@ -136,19 +142,18 @@ var downloadViewController = {
       selectedItem = gDownloadHistoryView.selectedItem;
       file = getFileForItem(selectedItem);
       
+#ifdef XP_UNIX
       // on unix, open a browser window rooted at the parent
-      if (navigator.platform.indexOf("Win") == -1 && navigator.platform.indexOf("Mac") == -1) {
-        file = file.QueryInterface(Components.interfaces.nsIFile);
-        var parent = file.parent;
-        if (parent) {
-          //XXXBlake use chromeUrlForTask pref here
-          const browserURL = "chrome://browser/content/browser.xul";
-          window.openDialog(browserURL, "_blank", "chrome,all,dialog=no", parent.path);
-        }
+      file = file.QueryInterface(Components.interfaces.nsIFile);
+      var parent = file.parent;
+      if (parent) {
+        //XXXBlake use chromeUrlForTask pref here
+        const browserURL = "chrome://browser/content/browser.xul";
+        window.openDialog(browserURL, "_blank", "chrome,all,dialog=no", parent.path);
       }
-      else {
-        file.reveal();
-      }
+#else
+      file.reveal();
+#endif
       break;
     case "cmd_properties":
       selectedItem = gDownloadHistoryView.selectedItem;
@@ -190,7 +195,7 @@ var downloadViewController = {
   onEvent: function dVC_onEvent (aEvent)
   {
     switch (aEvent) {
-    case "tree-select":
+    case "list-select":
       this.onCommandUpdate();
     }
   },
