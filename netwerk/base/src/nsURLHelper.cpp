@@ -147,19 +147,18 @@ net_ParseFileURL(const nsACString &inURL,
     outFileBaseName.Truncate();
     outFileExtension.Truncate();
 
-    // XXX optimization: no need to copy scheme
-	PRUint32 schemeBeg, schemeEnd;
-    rv = net_ExtractURLScheme(inURL, &schemeBeg, &schemeEnd, nsnull);
+    const nsPromiseFlatCString &flatURL = PromiseFlatCString(inURL);
+    const char *url = flatURL.get();
+    
+    PRUint32 schemeBeg, schemeEnd;
+    rv = net_ExtractURLScheme(flatURL, &schemeBeg, &schemeEnd, nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    if (Substring(inURL, schemeBeg, schemeBeg + schemeEnd) != NS_LITERAL_CSTRING("file")) {
+    if (strncmp(url + schemeBeg, "file", schemeEnd - schemeBeg) != 0) {
         NS_ERROR("must be a file:// url");
         return NS_ERROR_UNEXPECTED;
     }
 
-    const nsPromiseFlatCString &flatURL = PromiseFlatCString(inURL);
-    const char *url = flatURL.get();
-    
     nsIURLParser *parser = net_GetNoAuthURLParser();
     NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
 
@@ -379,12 +378,12 @@ net_ResolveRelativePath(const nsACString &relativePath,
 {
     nsCAutoString name;
     nsCAutoString path(basePath);
-	PRBool needsDelim = PR_FALSE;
+    PRBool needsDelim = PR_FALSE;
 
-	if ( !path.IsEmpty() ) {
-		PRUnichar last = path.Last();
-		needsDelim = !(last == '/');
-	}
+    if ( !path.IsEmpty() ) {
+        PRUnichar last = path.Last();
+        needsDelim = !(last == '/');
+    }
 
     nsACString::const_iterator beg, end;
     relativePath.BeginReading(beg);
