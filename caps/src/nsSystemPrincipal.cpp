@@ -39,8 +39,9 @@ NS_IMPL_ISUPPORTS(nsSystemPrincipal, NS_GET_IID(nsIPrincipal));
 NS_IMETHODIMP
 nsSystemPrincipal::ToString(char **result)
 {
-    // NB TODO
-    return NS_OK;
+    nsAutoString buf("[System]");
+    *result = buf.ToNewCString();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -51,26 +52,56 @@ nsSystemPrincipal::Equals(nsIPrincipal *other, PRBool *result)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetJSPrincipals(JSPrincipals **jsprin)
+nsSystemPrincipal::HashValue(PRUint32 *result)
 {
-    if (mJSPrincipals.nsIPrincipalPtr == nsnull) {
-        mJSPrincipals.nsIPrincipalPtr = this;
-        NS_ADDREF(mJSPrincipals.nsIPrincipalPtr);
-        // matching release in nsDestroyJSPrincipals
-    }
-    *jsprin = &mJSPrincipals;
-    JSPRINCIPALS_HOLD(cx, *jsprin);
+    *result = (PRUint32) this;
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSystemPrincipal::CanAccess(const char *capability, PRBool *result)
+NS_IMETHODIMP 
+nsSystemPrincipal::CanEnableCapability(const char *capability, 
+                                       PRInt16 *result)
 {
-    // The system principal has all privileges.
+    // System principal can enable all capabilities.
+    *result = nsIPrincipal::ENABLE_GRANTED;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSystemPrincipal::SetCanEnableCapability(const char *capability, 
+                                          PRInt16 canEnable)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsSystemPrincipal::IsCapabilityEnabled(const char *capability, 
+                                       void *annotation, 
+                                       PRBool *result)
+{
     *result = PR_TRUE;
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsSystemPrincipal::EnableCapability(const char *capability, void **annotation)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSystemPrincipal::RevertCapability(const char *capability, void **annotation)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSystemPrincipal::DisableCapability(const char *capability, void **annotation) 
+{
+    // Can't disable the capabilities of the system principal.
+    // XXX might be handy to be able to do so!
+    return NS_ERROR_FAILURE;
+}
 
 //////////////////////////////////////////
 // Constructor, Destructor, initialization

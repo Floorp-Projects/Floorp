@@ -32,10 +32,31 @@ struct JSPrincipals;
 
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
 interface nsIPrincipal : nsISupports {
+
+	const short ENABLE_UNKNOWN               = 0;
+	const short ENABLE_GRANTED				 = 1;
+	const short ENABLE_DENIED				 = 2;
+	const short ENABLE_WITH_USER_PERMISSION  = 3;
+
 	void ToString(out string result);
+
 	void Equals(in nsIPrincipal other, out boolean result);
+
+	unsigned long HashValue();
+
 	void GetJSPrincipals(out JSPrincipals jsprin);
-	void CanAccess(in string capability, out boolean result);
+
+    short CanEnableCapability(in string capability);
+
+    void SetCanEnableCapability(in string capability, in short canEnable);
+
+    boolean IsCapabilityEnabled(in string capability, in voidStar annotation);
+	
+	void EnableCapability(in string capability, inout voidStar annotation);
+
+    void RevertCapability(in string capability, inout voidStar annotation);
+
+    void DisableCapability(in string capability, inout voidStar annotation);
 };
 
 

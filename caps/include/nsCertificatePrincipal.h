@@ -14,28 +14,41 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1998 Netscape Communications Corporation.  All 
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
-/*describes principals for use with signed scripts*/
+
+/* describes principals for use with signed scripts */
+
 #ifndef _NS_CERTIFICATE_PRINCIPAL_H_
 #define _NS_CERTIFICATE_PRINCIPAL_H_
 #include "jsapi.h"
 #include "nsICertificatePrincipal.h"
+#include "nsBasePrincipal.h"
 
 #define NS_CERTIFICATEPRINCIPALMANAGER_CID \
 { 0x7ee2a4c0, 0x4b91, 0x11d3, \
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
-class nsCertificatePrincipal : public nsICertificatePrincipal {
+class nsCertificatePrincipal : public nsICertificatePrincipal, nsBasePrincipal {
 public:
 
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_CERTIFICATEPRINCIPALMANAGER_CID)
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIPRINCIPAL
     NS_DECL_NSICERTIFICATEPRINCIPAL
+
+    NS_IMETHOD ToString(char **result);
+
+    NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
+
+    NS_IMETHOD HashValue(PRUint32 *result);
+
+    NS_IMETHOD CanEnableCapability(const char *capability, PRInt16 *result);
+
+    NS_IMETHOD SetCanEnableCapability(const char *capability, 
+                                      PRInt16 canEnable);
 
 	nsCertificatePrincipal(PRInt16 type, const char * key);
 	nsCertificatePrincipal(PRInt16 type, const unsigned char ** certChain, PRUint32 * certChainLengths, PRUint32 noOfCerts);

@@ -24,16 +24,30 @@
 
 static NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
 
-NS_IMPL_ISUPPORTS(nsCertificatePrincipal, kICertificatePrincipalIID);
+NS_IMPL_QUERY_INTERFACE2(nsCertificatePrincipal, nsICertificatePrincipal, nsIPrincipal)
 
-NS_IMETHODIMP
-nsCertificatePrincipal::CanAccess(const char *capability, PRBool *result)
+NSBASEPRINCIPALS_ADDREF(nsCertificatePrincipal);
+NSBASEPRINCIPALS_RELEASE(nsCertificatePrincipal);
+
+NS_IMETHODIMP 
+nsCertificatePrincipal::CanEnableCapability(const char *capability,
+                                            PRInt16 *result)
 {
-    // Later: query database for this capability
-    *result = PR_FALSE;
+    // XXX: query database as to whether this principal has this capability enabled
+    *result = nsIPrincipal::ENABLE_DENIED;
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsCertificatePrincipal::SetCanEnableCapability(const char *capability, 
+                                               PRInt16 canEnable)
+{
+    // XXX: modify database as to whether this principal has this capability enabled
+    return NS_ERROR_FAILURE;
+}
+
+
+// Unclear if we need any of these methods, and if so, where they should live.
 NS_IMETHODIMP
 nsCertificatePrincipal::GetPublicKey(char ** publicKey)
 {
@@ -77,24 +91,22 @@ nsCertificatePrincipal::GetFingerPrint(char * * fingerPrint)
 }
 
 
-NS_IMETHODIMP
-nsCertificatePrincipal::GetJSPrincipals(JSPrincipals **jsprin)
-{
-//  *jsprin = NS_STATIC_CAST(JSPrincipals *,this);
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP 
 nsCertificatePrincipal::ToString(char **result)
 {
-	return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsCertificatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
 {
-	return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCertificatePrincipal::HashValue(PRUint32 *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsCertificatePrincipal::nsCertificatePrincipal(PRInt16 type, const char * key)
@@ -107,16 +119,6 @@ nsCertificatePrincipal::nsCertificatePrincipal(PRInt16 type, const unsigned char
 								PRUint32 *certChainLengths, PRUint32 noOfCerts)
 {
 	this->itsType = type;
-	/*
-   m_pNSPrincipal = new nsPrincipal(nsPrincipalType_CertChain, certChain, 
-                                    certChainLengths, noOfCerts);
-   if(m_pNSPrincipal == NULL)
-   {
-      *result = NS_ERROR_OUT_OF_MEMORY;
-      return;
-   }
-   *result = NS_OK;
-   */
 }
 
 nsCertificatePrincipal::~nsCertificatePrincipal(void)

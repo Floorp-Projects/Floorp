@@ -27,51 +27,39 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
+#include "nsIPref.h"
+#include "nsXPIDLString.h"
 
 NS_IMPL_QUERY_INTERFACE2(nsCodebasePrincipal, nsICodebasePrincipal, nsIPrincipal)
 
-// special AddRef/Release to unify reference counts between XPCOM 
-//  and JSPrincipals
+NSBASEPRINCIPALS_ADDREF(nsCodebasePrincipal);
+NSBASEPRINCIPALS_RELEASE(nsCodebasePrincipal);
 
-NS_IMETHODIMP_(nsrefcnt)
-nsCodebasePrincipal::AddRef(void)
-{
-    NS_PRECONDITION(PRInt32(mRefCnt) == 0, "illegal mRefCnt");
-    NS_PRECONDITION(PRInt32(mJSPrincipals.refcount) >= 0, "illegal refcnt");
-    ++mJSPrincipals.refcount;
-    NS_LOG_ADDREF(this, mJSPrincipals.refcount, "nsCodebasePrincipal", sizeof(*this));
-    return mJSPrincipals.refcount;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsCodebasePrincipal::Release(void)
-{
-    NS_PRECONDITION(PRInt32(mRefCnt) == 0, "illegal mRefCnt");
-    NS_PRECONDITION(0 != mJSPrincipals.refcount, "dup release");
-    --mJSPrincipals.refcount;
-    NS_LOG_RELEASE(this, mJSPrincipals.refcount, "nsCodebasePrincipal");
-    if (mJSPrincipals.refcount == 0) {
-#ifdef DEBUG_norris
-        char *spec;
-        mURI->GetSpec(&spec);
-        fprintf(stderr, "Releasing principal for %s\n", spec);
-        delete spec;
-#endif
-        NS_DELETEXPCOM(this);
-        return 0;
-    }  
-    return mJSPrincipals.refcount;
-}
-
-
-////////////////////////////////////
-// Methods implementing nsIPrincipal
-////////////////////////////////////
+///////////////////////////////////////
+// Methods implementing nsIPrincipal //
+///////////////////////////////////////
 
 NS_IMETHODIMP
 nsCodebasePrincipal::ToString(char **result)
 {
-    // NB TODO
+    nsAutoString buf;
+    buf += "[Codebase ";
+    nsXPIDLCString spec;
+    if (NS_FAILED(mURI->GetSpec(getter_Copies(spec))))
+        return NS_ERROR_FAILURE;
+    buf += spec;
+    buf += "]";
+    *result = buf.ToNewCString();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsCodebasePrincipal::HashValue(PRUint32 *result)
+{
+    nsXPIDLCString spec;
+    if (NS_FAILED(mURI->GetSpec(getter_Copies(spec))))
+        return NS_ERROR_FAILURE;
+    *result = nsCRT::HashValue(spec);
     return NS_OK;
 }
 
@@ -101,30 +89,32 @@ nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCodebasePrincipal::GetJSPrincipals(JSPrincipals **jsprin)
+NS_IMETHODIMP 
+nsCodebasePrincipal::CanEnableCapability(const char *capability, 
+                                         PRInt16 *result)
 {
-    if (mJSPrincipals.nsIPrincipalPtr == nsnull) {
-        mJSPrincipals.nsIPrincipalPtr = this;
-        // No need for a ADDREF since it is a self-reference
+    // check to see if the codebase principal pref is enabled.
+    static char pref[] = "signed.applets.codebase_principal_support";
+    nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+	PRBool enabled;
+    if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) {
+        // XXX check to see if subject is executing from file: and then 
+        // fall through to return ENABLE_WITH_USER_PERMISSION
+        *result = nsIPrincipal::ENABLE_DENIED;
+        return NS_OK;
     }
-    *jsprin = &mJSPrincipals;
-    JSPRINCIPALS_HOLD(cx, *jsprin);
+    rv = nsBasePrincipal::CanEnableCapability(capability, result);
+    if (*result == nsIPrincipal::ENABLE_UNKNOWN)
+        *result = ENABLE_WITH_USER_PERMISSION;
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCodebasePrincipal::CanAccess(const char *capability, PRBool *result)
-{
-    // Codebases have no special privileges.
-    *result = PR_FALSE;
-    return NS_OK;
-}
-
-
-////////////////////////////////////////////
-// Methods implementing nsICodebasePrincipal
-////////////////////////////////////////////
+///////////////////////////////////////////////
+// Methods implementing nsICodebasePrincipal //
+///////////////////////////////////////////////
 
 NS_IMETHODIMP
 nsCodebasePrincipal::GetURI(nsIURI **uri) 
@@ -133,8 +123,6 @@ nsCodebasePrincipal::GetURI(nsIURI **uri)
     NS_ADDREF(*uri);
     return NS_OK;
 }
-
-
 
 NS_IMETHODIMP
 nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
@@ -190,9 +178,9 @@ nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
     return NS_OK;
 }
 
-//////////////////////////////////////////
-// Constructor, Destructor, initialization
-//////////////////////////////////////////
+/////////////////////////////////////////////
+// Constructor, Destructor, initialization //
+/////////////////////////////////////////////
 
 nsCodebasePrincipal::nsCodebasePrincipal()
 {

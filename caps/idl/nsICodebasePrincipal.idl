@@ -29,8 +29,10 @@ interface nsIURI;
 %}
 
 [uuid(829fe440-25e1-11d2-8160-006008119d7a)]
-interface nsICodebasePrincipal : nsIPrincipal {
+interface nsICodebasePrincipal : nsISupports {
+
 	readonly attribute nsIURI URI;
+
 	boolean SameOrigin(in nsIPrincipal other);
 };
 

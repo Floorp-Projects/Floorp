@@ -56,13 +56,6 @@ interface nsIScriptSecurityManager : nsISupports
 
     boolean CanExecuteFunction(in voidStar jsFunction);
 
-    boolean CanEnableCapability(in nsIPrincipal principal, 
-								in string capability);
-
-    void SetCanEnableCapability(in nsIPrincipal principal, 
-								in string capability,
-                                in boolean canEnable);
-
     boolean IsCapabilityEnabled(in string capability);
 	
 	void EnableCapability(in string capability);
