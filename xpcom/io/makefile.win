@@ -42,7 +42,6 @@ EXPORTS =                               \
         nsLinebreakConverter.h          \
         nsScriptableInputStream.h       \
         nsSpecialSystemDirectory.h      \
-        nsStorageStream.h               \
         nsStringIO.h                    \
         $(NULL)                 
 
@@ -103,7 +102,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsScriptableInputStream.obj   \
         .\$(OBJDIR)\nsSegmentedBuffer.obj         \
         .\$(OBJDIR)\nsSpecialSystemDirectory.obj  \
-        .\$(OBJDIR)\nsStorageStream.obj           \
         .\$(OBJDIR)\nsUnicharInputStream.obj      \
         $(NULL)
 

@@ -29,7 +29,7 @@
 
 // Derive from nsIObjectOutputStream so this class can be used as a superclass
 // by nsObjectOutputStream.
-class NS_COM nsBinaryOutputStream : public nsIObjectOutputStream
+class nsBinaryOutputStream : public nsIObjectOutputStream
 {
 public:
     nsBinaryOutputStream(nsIOutputStream *aStream);
@@ -57,7 +57,7 @@ protected:
 
 // Derive from nsIObjectInputStream so this class can be used as a superclass
 // by nsObjectInputStream.
-class NS_COM nsBinaryInputStream : public nsIObjectInputStream
+class nsBinaryInputStream : public nsIObjectInputStream
 {
 public:
     nsBinaryInputStream(nsIInputStream *aStream);

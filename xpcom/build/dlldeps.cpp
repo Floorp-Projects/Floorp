@@ -39,7 +39,6 @@
 // the dll that are located in the .lib files we link with
 
 #include "nsVoidArray.h"
-#include "nsVoidBTree.h"
 #include "nsValueArray.h"
 #include "nsIAtom.h"
 #include "nsFileSpec.h"
@@ -115,7 +114,6 @@ void XXXNeverCalled()
     dummyComparitor dummy;
     nsVoidArray();
     nsSmallVoidArray();
-    nsVoidBTree();
     nsValueArray(0);
     nsAVLTree(dummy, nsnull);
     nsSupportsArray();

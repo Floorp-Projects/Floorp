@@ -36,7 +36,7 @@
 
 class nsSegmentedBuffer;
 
-class NS_COM nsStorageStream : public nsIStorageStream,
+class nsStorageStream : public nsIStorageStream,
                                public nsIOutputStream
 {
 public:

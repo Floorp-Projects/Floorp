@@ -42,7 +42,7 @@
 
 class nsISupportsArray;
 
-class NS_COM nsSupportsArrayEnumerator : public nsIBidirectionalEnumerator {
+class nsSupportsArrayEnumerator : public nsIBidirectionalEnumerator {
 public:
   NS_DECL_ISUPPORTS
 

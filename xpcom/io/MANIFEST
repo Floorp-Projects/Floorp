@@ -5,7 +5,6 @@ nsFileStream.h
 nsIFileStream.h
 nsIUnicharInputStream.h
 nsSpecialSystemDirectory.h
-nsStorageStream.h
 nsLocalFile.h
 nsLocalFileMac.h
 nsDirectoryService.h

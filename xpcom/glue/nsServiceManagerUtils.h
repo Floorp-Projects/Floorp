@@ -113,7 +113,7 @@ do_GetService( const char* aContractID, nsISupports* aServiceManager, nsresult* 
     return nsGetServiceByContractID(aContractID, aServiceManager, error);
 }
 
-class NS_COM nsGetServiceFromCategory : public nsCOMPtr_helper
+class nsGetServiceFromCategory : public nsCOMPtr_helper
 {
  public:
     nsGetServiceFromCategory(const char* aCategory, const char* aEntry,

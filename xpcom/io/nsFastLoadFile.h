@@ -239,7 +239,7 @@ struct nsIFastLoadFileReader : public nsISupports {
  * Though the names are not as clear as I'd like, this seems to be the best
  * way to share nsBinaryStream.cpp code.
  */
-class NS_COM nsFastLoadFileReader
+class nsFastLoadFileReader
     : public nsBinaryInputStream,
       public nsIFastLoadReadControl,
       public nsISeekableStream,
@@ -380,7 +380,7 @@ NS_NewFastLoadFileReader(nsIObjectInputStream* *aResult,
  * Though the names are not as clear as I'd like, this seems to be the best
  * way to share nsBinaryStream.cpp code.
  */
-class NS_COM nsFastLoadFileWriter
+class nsFastLoadFileWriter
     : public nsBinaryOutputStream,
       public nsIFastLoadWriteControl,
       public nsISeekableStream
@@ -500,7 +500,7 @@ NS_NewFastLoadFileWriter(nsIObjectOutputStream* *aResult,
  * the updater writes new data over the old footer, then writes a new footer
  * that maps all data on Close.
  */
-class NS_COM nsFastLoadFileUpdater
+class nsFastLoadFileUpdater
     : public nsFastLoadFileWriter,
              nsIFastLoadFileIO
 {
