@@ -45,25 +45,28 @@ nsDll::nsDll(const char *libFullPath) : m_instance(NULL), m_status(DLL_OK),
 		m_status = DLL_NO_MEM;
 		return;
 	}
-#ifdef	XP_MAC
-	// m_size = 0;
-	// m_lastModTime = 0;
-#else
+
 	PRFileInfo64 statinfo;
 	if (PR_GetFileInfo64(m_fullpath, &statinfo) != PR_SUCCESS)
 	{
-		m_status = DLL_STAT_ERROR;
-		return;
+		// The stat things works only if people pass in the full pathname.
+		// Even if our stat fails, we could be able to load it because of
+		// LD_LIBRARY_PATH and other such paths where dlls are searched for
+
+		// XXX we need a way of marking this occurance.
+		// XXX m_status = DLL_STAT_ERROR;
 	}
-	if (statinfo.type != PR_FILE_FILE)
+	else 
 	{
-		// Not a file. Cant work with it.
-		m_status = DLL_NOT_FILE;
-		return;
+		m_size = statinfo.size;
+		m_lastModTime = statinfo.modifyTime;
+		if (statinfo.type != PR_FILE_FILE)
+		{
+			// Not a file. Cant work with it.
+			m_status = DLL_NOT_FILE;
+			return;
+		}
 	}
-	m_size = statinfo.size;
-	m_lastModTime = statinfo.modifyTime;
-#endif
 	m_status = DLL_OK;			
 }
 
