@@ -105,8 +105,8 @@ function PreviewSound()
     gSound.playSystemSound(soundURL);
   }
   else {
-    var url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURL);
-    url.spec = soundURL;
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    var url = ioService.newURI(soundURL, null, null);
     gSound.play(url)
   }
 }

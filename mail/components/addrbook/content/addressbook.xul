@@ -511,35 +511,35 @@
           <splitter class="tree-splitter"/>
           <treecol id="NickName" class="sortDirectionIndicator" 
                    persist="hidden ordinal width sortDirection" flex="1"
-                   label="&NickName.label;" hiddenbydefault="true"/>
+                   label="&NickName.label;" hidden="true"/>
           <splitter class="tree-splitter"/>
           <treecol id="SecondEmail" class="sortDirectionIndicator" 
                    persist="hidden ordinal width sortDirection" flex="1" 
-                   label="&SecondEmail.label;" hiddenbydefault="true"/>
+                   label="&SecondEmail.label;" hidden="true"/>
           <splitter class="tree-splitter"/>
           <treecol id="Department" class="sortDirectionIndicator" 
                    persist="hidden ordinal width sortDirection" flex="1"  
-                   label="&Department.label;" hiddenbydefault="true"/>
+                   label="&Department.label;" hidden="true"/>
           <splitter class="tree-splitter"/>
           <treecol id="JobTitle" class="sortDirectionIndicator" 
                    persist="hidden ordinal width sortDirection" flex="1" 
-                   label="&JobTitle.label;" hiddenbydefault="true"/>
+                   label="&JobTitle.label;" hidden="true"/>
           <splitter class="tree-splitter"/>
           <treecol id="CellularNumber" class="sortDirectionIndicator" 
                    persist="hidden ordinal width sortDirection" flex="1" 
-                   label="&CellularNumber.label;" hiddenbydefault="true"/>
+                   label="&CellularNumber.label;" hidden="true"/>
           <splitter class="tree-splitter"/>
           <treecol id="PagerNumber" class="sortDirectionIndicator" 
                    persist="hidden ordinal width sortDirection" flex="1" 
-                   label="&PagerNumber.label;" hiddenbydefault="true"/>
+                   label="&PagerNumber.label;" hidden="true"/>
           <splitter class="tree-splitter"/>
           <treecol id="FaxNumber" class="sortDirectionIndicator" 
                    persist="hidden ordinal width sortDirection" flex="1" 
-                   label="&FaxNumber.label;" hiddenbydefault="true"/>
+                   label="&FaxNumber.label;" hidden="true"/>
           <splitter class="tree-splitter"/>
           <treecol id="HomePhone" class="sortDirectionIndicator" 
                    persist="hidden ordinal width sortDirection" flex="1" 
-                   label="&HomePhone.label;" hiddenbydefault="true"/>
+                   label="&HomePhone.label;" hidden="true"/>
           <splitter class="tree-splitter"/>
           <treecol id="WorkPhone" class="sortDirectionIndicator" 
                    persist="hidden ordinal width sortDirection" flex="1"
