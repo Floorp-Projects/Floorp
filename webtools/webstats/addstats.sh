@@ -15,4 +15,4 @@
                          # remove a lone slash. (the root url)
 
 
-zcat  $* |   awk '{print $4, $7, $9}' | grep 200$ | awk '{print $1, $2}'  | sed "s/index.html//" | sed "s/\?.*//" | sed "s/\(\w\)\/$/\1/" | ./addstats.pl
+cat  $* |   awk '{print $4, $7, $9}' | grep 200$ | awk '{print $1, $2}'  | sed "s/index.html//" | sed "s/\?.*//" | sed "s/\(\w\)\/$/\1/" | ./addstats.pl
