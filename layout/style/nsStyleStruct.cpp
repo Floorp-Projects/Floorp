@@ -538,16 +538,24 @@ void nsStyleBorder::RecalcData()
   }
 
   if ((mBorderStyle[NS_SIDE_TOP] & BORDER_COLOR_DEFINED) == 0) {
-    mBorderStyle[NS_SIDE_TOP] = BORDER_COLOR_DEFINED | BORDER_COLOR_FOREGROUND;
+    NS_ASSERTION(!(mBorderStyle[NS_SIDE_TOP] & BORDER_COLOR_SPECIAL),
+                 "Clearing special border because BORDER_COLOR_DEFINED is not set");
+    SetBorderToForeground(NS_SIDE_TOP);
   }
   if ((mBorderStyle[NS_SIDE_BOTTOM] & BORDER_COLOR_DEFINED) == 0) {
-    mBorderStyle[NS_SIDE_BOTTOM] = BORDER_COLOR_DEFINED | BORDER_COLOR_FOREGROUND;
+    NS_ASSERTION(!(mBorderStyle[NS_SIDE_BOTTOM] & BORDER_COLOR_SPECIAL),
+                 "Clearing special border because BORDER_COLOR_DEFINED is not set");
+    SetBorderToForeground(NS_SIDE_BOTTOM);
   }
-  if ((mBorderStyle[NS_SIDE_LEFT]& BORDER_COLOR_DEFINED) == 0) {
-    mBorderStyle[NS_SIDE_LEFT] = BORDER_COLOR_DEFINED | BORDER_COLOR_FOREGROUND;
+  if ((mBorderStyle[NS_SIDE_LEFT] & BORDER_COLOR_DEFINED) == 0) {
+    NS_ASSERTION(!(mBorderStyle[NS_SIDE_LEFT] & BORDER_COLOR_SPECIAL),
+                 "Clearing special border because BORDER_COLOR_DEFINED is not set");
+    SetBorderToForeground(NS_SIDE_LEFT);
   }
   if ((mBorderStyle[NS_SIDE_RIGHT] & BORDER_COLOR_DEFINED) == 0) {
-    mBorderStyle[NS_SIDE_RIGHT] = BORDER_COLOR_DEFINED | BORDER_COLOR_FOREGROUND;
+    NS_ASSERTION(!(mBorderStyle[NS_SIDE_RIGHT] & BORDER_COLOR_SPECIAL),
+                 "Clearing special border because BORDER_COLOR_DEFINED is not set");
+    SetBorderToForeground(NS_SIDE_RIGHT);
   }
 }
 

@@ -289,16 +289,13 @@ protected:
 
   friend class nsTableRowFrame;
 
-  // paint backgrounds and borders (in separate border model) if aVisibleBackground, always set aPaintChildren
   virtual void PaintUnderlay(nsIPresContext&           aPresContext,
                              nsIRenderingContext&      aRenderingContext,
                              const nsRect&             aDirtyRect,
                              PRUint32&                 aFlags,
-                             const nsStyleTableBorder& aCellTableStyle,
                              const nsStyleBorder&      aStyleBorder,
                              const nsStylePadding&     aStylePadding,
-                             PRBool                    aVisibleBackground,
-                             PRBool&                   aPaintChildren);
+                             const nsStyleTableBorder& aCellTableStyle);
 
   nsresult  DecorateForSelection(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
@@ -471,11 +468,9 @@ protected:
                              nsIRenderingContext&      aRenderingContext,
                              const nsRect&             aDirtyRect,
                              PRUint32&                 aFlags,
-                             const nsStyleTableBorder& aCellTableStyle,
                              const nsStyleBorder&      aStyleBorder,
                              const nsStylePadding&     aStylePadding,
-                             PRBool                    aVisibleBackground,
-                             PRBool&                   aPaintChildren);
+                             const nsStyleTableBorder& aCellTableStyle);
 
 private:
   

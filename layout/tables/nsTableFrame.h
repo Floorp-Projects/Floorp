@@ -62,10 +62,6 @@ struct nsStylePosition;
 
 enum nsPixelRound {eAlwaysRoundUp=0, eAlwaysRoundDown, eRoundUpIfHalfOrMore};
 
-// flags for Paint, PaintChild, PaintChildren are currently only used by tables.
-// use low order bit of flags to distinguish between pass1(0) and pass2(1) border collapse backgrounds
-#define BORDER_COLLAPSE_BACKGROUNDS 0x00000001
-
 #ifdef DEBUG_TABLE_REFLOW_TIMING
 #ifdef WIN32
 #include <windows.h>
@@ -330,6 +326,14 @@ public:
   // get the area that the border leak out from the inner table frame into
   // the surrounding margin space
   nsMargin GetBCMargin(nsIPresContext* aPresContext) const;
+
+  /** Get width of table + colgroup + col collapse: elements that
+   *  continue along the length of the whole left side.
+   *  see nsTablePainter about continuous borders
+   *  @param aPixelsToTwips - conversion factor
+   *  @param aGetInner - get only inner half of border width
+   */
+  nscoord GetContinuousLeftBCBorderWidth(float aPixelsToTwips) const;
 
   void SetBCDamageArea(nsIPresContext& aPresContext,
                        const nsRect&   aValue);
@@ -643,7 +647,7 @@ protected:
                            nsTableReflowState&  aReflowState,
                            nsReflowStatus&      aStatus);
 
-  /** process a style chnaged notification.
+  /** process a style changed notification.
     * @see nsIFrameReflow::Reflow
     * TODO: needs to be optimized for which attribute was actually changed.
     */
@@ -797,11 +801,10 @@ public:
 
   nsVoidArray& GetColCache();
 
-	/** 
-	  * Return aFrame's child if aFrame is an nsScrollFrame, otherwise return aFrame
-	  */
-  nsTableRowGroupFrame* GetRowGroupFrame(nsIFrame* aFrame,
-                                         nsIAtom*  aFrameTypeIn = nsnull) const;
+  /** Return aFrame's child if aFrame is an nsScrollFrame, otherwise return aFrame
+    */
+  static nsTableRowGroupFrame* GetRowGroupFrame(nsIFrame* aFrame,
+                                                nsIAtom*  aFrameTypeIn = nsnull);
 
 protected:
 
@@ -908,20 +911,21 @@ protected:
   // DATA MEMBERS
 
   struct TableBits {
-    unsigned mHadInitialReflow:1;      // has intial reflow happened
-    unsigned mHaveReflowedColGroups:1; // have the col groups gotten their initial reflow
-    unsigned mNeedStrategyBalance:1;   // does the strategy needs to balance the table
-    unsigned mNeedStrategyInit:1;      // does the strategy needs to be initialized and then balance the table
-    unsigned mHasPctCol:1;             // does any cell or col have a pct width
-    unsigned mCellSpansPctCol:1;       // does any cell span a col with a pct width (or containing a cell with a pct width)
-    unsigned mDidResizeReflow:1;       // did a resize reflow happen (indicating pass 2)
-    unsigned mIsBorderCollapse:1;      // border collapsing model vs. separate model
-    unsigned mRowInserted:1;
-    unsigned mNeedSpecialReflow:1;
-    unsigned mNeedToInitiateSpecialReflow:1;
-    unsigned mInitiatedSpecialReflow:1;
-    unsigned mNeedToCalcBCBorders:1;
-    unsigned : 19;                     // unused
+    PRUint32 mHadInitialReflow:1;      // has intial reflow happened
+    PRUint32 mHaveReflowedColGroups:1; // have the col groups gotten their initial reflow
+    PRUint32 mNeedStrategyBalance:1;   // does the strategy needs to balance the table
+    PRUint32 mNeedStrategyInit:1;      // does the strategy needs to be initialized and then balance the table
+    PRUint32 mHasPctCol:1;             // does any cell or col have a pct width
+    PRUint32 mCellSpansPctCol:1;       // does any cell span a col with a pct width (or containing a cell with a pct width)
+    PRUint32 mDidResizeReflow:1;       // did a resize reflow happen (indicating pass 2)
+    PRUint32 mIsBorderCollapse:1;      // border collapsing model vs. separate model
+    PRUint32 mRowInserted:1;
+    PRUint32 mNeedSpecialReflow:1;
+    PRUint32 mNeedToInitiateSpecialReflow:1;
+    PRUint32 mInitiatedSpecialReflow:1;
+    PRUint32 mNeedToCalcBCBorders:1;
+    PRUint32 mLeftContBCBorder:8;
+    PRUint32 : 11;                     // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
@@ -1041,7 +1045,7 @@ inline void nsTableFrame::SetRowInserted(PRBool aValue)
 
 inline nsFrameList& nsTableFrame::GetColGroups()
 {
-  return mColGroups;
+  return NS_STATIC_CAST(nsTableFrame*, GetFirstInFlow())->mColGroups;
 }
 
 inline nsVoidArray& nsTableFrame::GetColCache()
@@ -1082,6 +1086,12 @@ inline PRBool nsTableFrame::NeedToCalcBCBorders() const
 inline void nsTableFrame::SetNeedToCalcBCBorders(PRBool aValue)
 {
   mBits.mNeedToCalcBCBorders = (unsigned)aValue;
+}
+
+inline nscoord
+nsTableFrame::GetContinuousLeftBCBorderWidth(float aPixelsToTwips) const
+{
+  return BC_BORDER_RIGHT_HALF_COORD(aPixelsToTwips, mBits.mLeftContBCBorder);
 }
 
 enum nsTableIteration {

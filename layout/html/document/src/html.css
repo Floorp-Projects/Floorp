@@ -150,7 +150,7 @@ plaintext, xmp, pre {
 
 table {
   display: table;
-  border-spacing: 2px; 
+  border-spacing: 2px;
   border-collapse: separate;
   margin-top: 0;
   margin-bottom: 0;
@@ -169,11 +169,6 @@ table[align="right"] {
 
 table[rules] {
   border-collapse: collapse;
-}
-
-/* make sure backgrounds are inherited in tables  -- see bug 4510 */
-td, th, tr {
-  background: inherit;
 }
    
 /* caption inherits from table not table-outer */  

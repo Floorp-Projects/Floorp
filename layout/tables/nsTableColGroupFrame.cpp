@@ -391,8 +391,6 @@ nsTableColGroupFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
-  // Standards mode background painting removed.  See bug 4510
-
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
@@ -644,6 +642,36 @@ PRInt32 nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
 void nsTableColGroupFrame::DeleteColFrame(nsIPresContext* aPresContext, nsTableColFrame* aColFrame)
 {
   mFrames.DestroyFrame(aPresContext, aColFrame);
+}
+
+
+void nsTableColGroupFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
+                                                      BCPixelSize aPixelValue)
+{
+  switch (aForSide) {
+    case NS_SIDE_TOP:
+      mTopContBorderWidth = aPixelValue;
+      return;
+    case NS_SIDE_BOTTOM:
+      mBottomContBorderWidth = aPixelValue;
+      return;
+    default:
+      NS_ERROR("invalid side arg");
+  }
+}
+
+void nsTableColGroupFrame::GetContinuousBCBorderWidth(float     aPixelsToTwips,
+                                                      nsMargin& aBorder)
+{
+  nsTableFrame* table;
+  nsTableFrame::GetTableFrame(this, table);
+  nsTableColFrame* col = table->GetColFrame(mStartColIndex + mColCount - 1);
+  col->GetContinuousBCBorderWidth(aPixelsToTwips, aBorder);
+  aBorder.top = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips,
+                                            mTopContBorderWidth);
+  aBorder.bottom = BC_BORDER_TOP_HALF_COORD(aPixelsToTwips,
+                                            mBottomContBorderWidth);
+  return;
 }
 
 /* ----- global methods ----- */

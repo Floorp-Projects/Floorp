@@ -118,6 +118,24 @@ nsStyleCoord nsTableColFrame::GetStyleWidth() const
   return returnWidth;
 }
 
+void nsTableColFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
+                                                 BCPixelSize aPixelValue)
+{
+  switch (aForSide) {
+    case NS_SIDE_TOP:
+      mTopContBorderWidth = aPixelValue;
+      return;
+    case NS_SIDE_RIGHT:
+      mRightContBorderWidth = aPixelValue;
+      return;
+    case NS_SIDE_BOTTOM:
+      mBottomContBorderWidth = aPixelValue;
+      return;
+    default:
+      NS_ERROR("invalid side arg");
+  }
+}
+
 void nsTableColFrame::ResetSizingInfo()
 {
   memset(mWidths, WIDTH_NOT_SET, NUM_WIDTHS * sizeof(PRInt32));
@@ -135,8 +153,6 @@ nsTableColFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
     return NS_OK;
   }
-  
-  // Standards mode background painting removed.  See bug 4510
 
   return NS_OK;
 }

@@ -39,6 +39,7 @@
 
 #include "nscore.h"
 #include "nsContainerFrame.h"
+#include "nsTablePainter.h"
 
 class nsVoidArray;
 class nsTableCellFrame;
@@ -169,9 +170,26 @@ public:
   void ResetSizingInfo();
 
   nscoord GetLeftBorderWidth(float* aPixelsToTwips = nsnull);
-  void    SetLeftBorderWidth(nscoord aWidth);
+  void    SetLeftBorderWidth(BCPixelSize aWidth);
   nscoord GetRightBorderWidth(float* aPixelsToTwips = nsnull);
-  void    SetRightBorderWidth(nscoord aWidth);
+  void    SetRightBorderWidth(BCPixelSize aWidth);
+
+  /**
+   * Gets inner border widths before collapsing with cell borders
+   * Caller must get left border from previous column or from table
+   * GetContinuousBCBorderWidth will not overwrite aBorder.left
+   * see nsTablePainter about continuous borders
+   *
+   * @return outer right border width (left inner for next column)
+   */
+  nscoord GetContinuousBCBorderWidth(float     aPixelsToTwips,
+                                     nsMargin& aBorder);
+  /**
+   * Set full border widths before collapsing with cell borders
+   * @param aForSide - side to set; only valid for top, right, and bottom
+   */
+  void SetContinuousBCBorderWidth(PRUint8     aForSide,
+                                  BCPixelSize aPixelValue);
 
   void Dump(PRInt32 aIndent);
 
@@ -182,8 +200,13 @@ protected:
 
   // the starting index of the column (starting at 0) that this col object represents //
   PRUint32 mColIndex:        16;
-  PRUint32 mLeftBorderWidth:  8; // stored as pixels
-  PRUint32 mRightBorderWidth: 8; // stored as pixels
+  
+  // border width in pixels
+  BCPixelSize mLeftBorderWidth;
+  BCPixelSize mRightBorderWidth;
+  BCPixelSize mTopContBorderWidth;
+  BCPixelSize mRightContBorderWidth;
+  BCPixelSize mBottomContBorderWidth;
   // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ, PCT, PCT_ADJ, MIN_PRO, FINAL
   // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ, PCT, PCT_ADJ, MIN_PRO, FINAL
   // XXX these could be stored as pixels and converted to twips for a savings of 10 x 2 bytes.
@@ -191,7 +214,7 @@ protected:
 };
 
 inline PRInt32 nsTableColFrame::GetColIndex() const
-{ 
+{
   return mColIndex; 
 }
 
@@ -206,7 +229,7 @@ inline nscoord nsTableColFrame::GetLeftBorderWidth(float*  aPixelsToTwips)
   return width;
 }
 
-inline void nsTableColFrame::SetLeftBorderWidth(nscoord aWidth)
+inline void nsTableColFrame::SetLeftBorderWidth(BCPixelSize aWidth)
 {
   mLeftBorderWidth = aWidth;
 }
@@ -217,9 +240,22 @@ inline nscoord nsTableColFrame::GetRightBorderWidth(float*  aPixelsToTwips)
   return width;
 }
 
-inline void nsTableColFrame::SetRightBorderWidth(nscoord aWidth)
+inline void nsTableColFrame::SetRightBorderWidth(BCPixelSize aWidth)
 {
   mRightBorderWidth = aWidth;
+}
+
+inline nscoord
+nsTableColFrame::GetContinuousBCBorderWidth(float     aPixelsToTwips,
+                                            nsMargin& aBorder)
+{
+  aBorder.top = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips,
+                                            mTopContBorderWidth);
+  aBorder.right = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips,
+                                            mRightContBorderWidth);
+  aBorder.bottom = BC_BORDER_TOP_HALF_COORD(aPixelsToTwips,
+                                            mBottomContBorderWidth);
+  return BC_BORDER_RIGHT_HALF_COORD(aPixelsToTwips, mRightContBorderWidth);
 }
 
 #endif

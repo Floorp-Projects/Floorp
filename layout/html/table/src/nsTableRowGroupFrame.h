@@ -41,6 +41,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIAtom.h"
 #include "nsILineIterator.h"
+#include "nsTablePainter.h"
 
 class nsTableFrame;
 class nsTableRowFrame;
@@ -220,6 +221,22 @@ public:
   
   nsMargin* GetBCBorderWidth(float     aPixelsToTwips,
                              nsMargin& aBorder);
+
+  /**
+   * Gets inner border widths before collapsing with cell borders
+   * Caller must get top border from previous row group or from table
+   * GetContinuousBCBorderWidth will not overwrite aBorder.top
+   * see nsTablePainter about continuous borders
+   */
+  void GetContinuousBCBorderWidth(float     aPixelsToTwips,
+                                  nsMargin& aBorder);
+  /**
+   * Sets full border widths before collapsing with cell borders
+   * @param aForSide - side to set; only right, left, and bottom valid
+   */
+  void SetContinuousBCBorderWidth(PRUint8     aForSide,
+                                  BCPixelSize aPixelValue);
+
 // nsILineIterator methods
 public:
   NS_IMETHOD GetNumLines(PRInt32* aResult);
@@ -359,6 +376,13 @@ protected:
 
   void UndoContinuedRow(nsIPresContext*  aPresContext,
                         nsTableRowFrame* aRow);
+                        
+private:
+  // border widths in pixels in the collapsing border model
+  BCPixelSize mRightContBorderWidth;
+  BCPixelSize mBottomContBorderWidth;
+  BCPixelSize mLeftContBorderWidth;
+
 public:
   virtual nsIFrame* GetFirstFrame() { return mFrames.FirstChild(); };
   virtual nsIFrame* GetLastFrame() { return mFrames.LastChild(); };
@@ -418,5 +442,18 @@ inline void nsTableRowGroupFrame::SetHasStyleHeight(PRBool aValue)
   } else {
     mState &= ~NS_ROWGROUP_HAS_STYLE_HEIGHT;
   }
+}
+
+inline void
+nsTableRowGroupFrame::GetContinuousBCBorderWidth(float     aPixelsToTwips,
+                                                 nsMargin& aBorder)
+{
+  aBorder.right = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips,
+                                            mRightContBorderWidth);
+  aBorder.bottom = BC_BORDER_TOP_HALF_COORD(aPixelsToTwips,
+                                            mBottomContBorderWidth);
+  aBorder.left = BC_BORDER_RIGHT_HALF_COORD(aPixelsToTwips,
+                                            mLeftContBorderWidth);
+  return;
 }
 #endif
