@@ -1278,3 +1278,8 @@ nsRenderingContextBeOS::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
 
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsRenderingContextBeOS::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
+{
+  return NS_OK;
+}

@@ -24,7 +24,8 @@
 #include "nsDeviceContextBeOS.h"
 #include "nsGfxCIID.h"
 
-#include "../ps/nsDeviceContextPS.h"
+#include "nsGfxPSCID.h"
+#include "nsIDeviceContextPS.h"
 
 #include <ScrollBar.h>
 #include <Screen.h>
@@ -235,11 +236,29 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, P
 NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                       nsIDeviceContext *&aContext)
 {
+  static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
+  
   // Create a Postscript device context 
-  aContext = new nsDeviceContextPS();
-  ((nsDeviceContextPS *)aContext)->SetSpec(aDevice);
-  NS_ADDREF(aDevice);
-  return((nsDeviceContextPS *) aContext)->Init((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
+  nsresult rv;
+  nsIDeviceContextPS *dcps;
+  
+  rv = nsComponentManager::CreateInstance(kCDeviceContextPS,
+                                          nsnull,
+                                          nsIDeviceContextPS::GetIID(),
+                                          (void **)&dcps);
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
+  
+  dcps->SetSpec(aDevice);
+  dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
+                            (nsIDeviceContext*)this);
+
+  rv = dcps->QueryInterface(nsIDeviceContext::GetIID(),
+                            (void **)&aContext);
+
+  NS_RELEASE(dcps);
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextBeOS::BeginDocument(void)
