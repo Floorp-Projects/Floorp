@@ -174,12 +174,6 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 {
     nsresult rv = NS_OK;
 
-#ifdef GC_LEAK_DETECTOR
-	// 0. Initialize the GC.
-	rv = NS_InitGarbageCollector();
-	if (NS_FAILED(rv)) return rv;
-#endif
-
 	// Establish the main thread here.
     rv = nsIThread::SetMainThread();
 	if (NS_FAILED(rv)) return rv;
@@ -573,8 +567,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 #ifdef GC_LEAK_DETECTOR
 	// Shutdown the Leak detector.
 	NS_ShutdownLeakDetector();
-	// Shutdown the GC.
-	NS_ShutdownGarbageCollector();
 #endif
 
     return NS_OK;
