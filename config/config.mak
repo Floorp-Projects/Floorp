@@ -284,11 +284,9 @@ MAKE_UNMANGLE=if exist unmangle.bat call unmangle.bat
 !if "$(MOZ_BITS)" == "16"
 LIBNSPR=$(DIST)\lib\nspr21.lib
 LIBNSPR=$(LIBNSPR) $(DIST)\lib\plds21.lib
-LIBNSPR=$(LIBNSPR) $(DIST)\lib\msgc21.lib
 !else
 LIBNSPR=$(DIST)\lib\libnspr21.lib
 LIBNSPR=$(LIBNSPR) $(DIST)\lib\libplds21.lib
-LIBNSPR=$(LIBNSPR) $(DIST)\lib\libmsgc21.lib
 !endif
 !else
 LIBNSPR=$(DIST)\lib\pr$(MOZ_BITS)$(VERSION_NUMBER).lib
