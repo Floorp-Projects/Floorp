@@ -16,12 +16,12 @@
       <xul:image class="menu-dropmarker"/>
     </content>
 	  <handlers>
-      <handler type="command" capturer="true" value="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
+      <handler event="command" phase="capturing" action="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
 	  </handlers>
-    <interface>
+    <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
                             onget="return this.getAttribute('data');"/>
-    </interface>  
+    </implementation>  
   </binding>
 
 <!-- 
@@ -31,11 +31,11 @@
   <binding id="menulist-editable">
     <content excludes="template,observes,menupopup">
       <xul:image class="menu-icon" inherits="src"/>
-	    <html:input type="text" flex="1" class="menu-text" allowevents="true" inherits="value,disabled"/>
+	    <html:input event="text" flex="1" class="menu-text" allowevents="true" inherits="value,disabled"/>
       <xul:image class="menu-dropmarker"/>
     </content>
 	  <handlers>
-      <handler type="command" capturer="true" value="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
+      <handler event="command" phase="capturing" action="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
 	  </handlers>
   </binding>
   
@@ -137,7 +137,7 @@
         <xul:image class="menubutton-dropmarker" inherits="disabled"/>
       </xul:box>
     </content>
-    <interface>
+    <implementation>
       <property name="buttonover">
         <getter>
           return this.getAttribute("buttonover");
@@ -172,7 +172,7 @@
       </property>
       <property name="_pendingActive">false</property>
       <property name="_buttonIsDown">false</property>
-    </interface>
+    </implementation>
   </binding>
   
 <!--

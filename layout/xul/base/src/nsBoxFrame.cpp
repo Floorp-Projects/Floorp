@@ -1178,6 +1178,8 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsHTMLAtoms::height ||
         aAttribute == nsHTMLAtoms::align  ||
         aAttribute == nsHTMLAtoms::valign ||
+        aAttribute == nsHTMLAtoms::left ||
+        aAttribute == nsHTMLAtoms::top ||
         aAttribute == nsXULAtoms::flex ||
         aAttribute == nsXULAtoms::orient ||
         aAttribute == nsXULAtoms::equalsize ||
@@ -1854,6 +1856,7 @@ nsBoxFrame::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame*
   content->GetDocument(*getter_AddRefs(document));
   if (!document)
     return;
+
   nsCOMPtr<nsIBindingManager> bindingManager;
   document->GetBindingManager(getter_AddRefs(bindingManager));
   if (!bindingManager)
@@ -1863,6 +1866,14 @@ nsBoxFrame::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame*
   if (aChild) {
     nsCOMPtr<nsIContent> currContent;
     aChild->GetContent(getter_AddRefs(currContent));
+
+    // Check to see if the content is anonymous.
+    nsCOMPtr<nsIContent> bindingParent;
+    currContent->GetBindingParent(getter_AddRefs(bindingParent));
+    if (bindingParent == content)
+      return; // It is anonymous. Don't use the insertion point, since that's only
+              // for the explicit kids.
+
     bindingManager->GetInsertionPoint(content, currContent, getter_AddRefs(insertionElement));
     if (insertionElement) {
       aShell->GetPrimaryFrameFor(insertionElement, &frame);

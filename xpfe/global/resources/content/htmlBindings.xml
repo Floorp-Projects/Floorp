@@ -7,38 +7,38 @@
   <binding id="inputFieldsBase">
     <handlers>
      
-    <handler type="keypress" id="key_home" keycode="VK_HOME" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_home" keycode="VK_HOME" alt="false" shift="false" control="false"
         command="cmd_beginLine"/>
-    <handler type="keypress" id="key_end" keycode="VK_END" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_end" keycode="VK_END" alt="false" shift="false" control="false"
         command="cmd_endLine"/>
-    <handler type="keypress" id="key_left" keycode="VK_LEFT" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_left" keycode="VK_LEFT" alt="false" shift="false" control="false"
         command="cmd_charPrevious"/>
-    <handler type="keypress" id="key_right" keycode="VK_RIGHT" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_right" keycode="VK_RIGHT" alt="false" shift="false" control="false"
         command="cmd_charNext"/>
-    <handler type="keypress" id="key_pageup" keycode="VK_PAGE_UP" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_pageup" keycode="VK_PAGE_UP" alt="false" shift="false" control="false"
         command="cmd_scrollPageUp"/>
-    <handler type="keypress" id="key_pagedown" keycode="VK_PAGE_DOWN" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_pagedown" keycode="VK_PAGE_DOWN" alt="false" shift="false" control="false"
         command="cmd_scrollPageDown"/>
 
-    <handler type="keypress" id="key_homeshift" keycode="VK_HOME" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_homeshift" keycode="VK_HOME" shift="true" alt="false" control="false"
         command="cmd_selectBeginLine"/>
-    <handler type="keypress" id="key_endshift" keycode="VK_END" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_endshift" keycode="VK_END" shift="true" alt="false" control="false"
         command="cmd_selectEndLine"/>
-    <handler type="keypress" id="key_leftshift" keycode="VK_LEFT" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_leftshift" keycode="VK_LEFT" shift="true" alt="false" control="false"
         command="cmd_selectCharPrevious"/>
-    <handler type="keypress" id="key_rightshift" keycode="VK_RIGHT" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_rightshift" keycode="VK_RIGHT" shift="true" alt="false" control="false"
         command="cmd_selectCharNext"/>
-    <handler type="keypress" id="key_undo" key="z" primary="true" 
+    <handler event="keypress" id="key_undo" key="z" primary="true" 
         command="cmd_undo"/>
 
     <!-- Cut/copy/paste/undo -->
-    <handler type="keypress" id="key_copy" key="c" primary="true"
+    <handler event="keypress" id="key_copy" key="c" primary="true"
         command="cmd_copy"/>
-    <handler type="keypress" id="key_cut" key="x" primary="true"
+    <handler event="keypress" id="key_cut" key="x" primary="true"
         command="cmd_cut"/>
-    <handler type="keypress" id="key_paste" key="v" primary="true"
+    <handler event="keypress" id="key_paste" key="v" primary="true"
         command="cmd_paste"/>
-    <handler type="keypress" id="key_undo" key="z" primary="true" 
+    <handler event="keypress" id="key_undo" key="z" primary="true" 
         command="cmd_undo"/>
 
     </handlers>
@@ -47,37 +47,37 @@
   <binding id="textAreasBase">
     <handlers>
 
-    <handler type="keypress" id="key_left" keycode="VK_LEFT" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_left" keycode="VK_LEFT" alt="false" shift="false" control="false"
         command="cmd_charPrevious"/>
-    <handler type="keypress" id="key_right" keycode="VK_RIGHT" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_right" keycode="VK_RIGHT" alt="false" shift="false" control="false"
         command="cmd_charNext"/>
-    <handler type="keypress" id="key_leftshift" keycode="VK_LEFT" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_leftshift" keycode="VK_LEFT" shift="true" alt="false" control="false"
         command="cmd_selectCharPrevious"/>
-    <handler type="keypress" id="key_rightshift" keycode="VK_RIGHT" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_rightshift" keycode="VK_RIGHT" shift="true" alt="false" control="false"
         command="cmd_selectCharNext"/>
-    <handler type="keypress" id="key_up" keycode="VK_UP" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_up" keycode="VK_UP" alt="false" shift="false" control="false"
         command="cmd_linePrevious"/>
-    <handler type="keypress" id="key_down" keycode="VK_DOWN" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_down" keycode="VK_DOWN" alt="false" shift="false" control="false"
         command="cmd_lineNext"/>
-    <handler type="keypress" id="key_up_shift" keycode="VK_UP" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_up_shift" keycode="VK_UP" shift="true" alt="false" control="false"
         command="cmd_selectLinePrevious"/>
-    <handler type="keypress" id="key_down_shift" keycode="VK_DOWN" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_down_shift" keycode="VK_DOWN" shift="true" alt="false" control="false"
         command="cmd_selectLineNext"/>
-    <handler type="keypress" id="key_pageup" keycode="VK_PAGE_UP" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_pageup" keycode="VK_PAGE_UP" alt="false" shift="false" control="false"
         command="cmd_scrollPageUp"/>
-    <handler type="keypress" id="key_pagedown" keycode="VK_PAGE_DOWN" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_pagedown" keycode="VK_PAGE_DOWN" alt="false" shift="false" control="false"
         command="cmd_scrollPageDown"/>
-    <handler type="keypress" id="key_undo" key="z" primary="true"
+    <handler event="keypress" id="key_undo" key="z" primary="true"
         command="cmd_undo"/>
 
     <!-- Cut/copy/paste/undo -->
-    <handler type="keypress" id="key_copy" key="c" primary="true"
+    <handler event="keypress" id="key_copy" key="c" primary="true"
         command="cmd_copy"/>
-    <handler type="keypress" id="key_cut" key="x" primary="true"
+    <handler event="keypress" id="key_cut" key="x" primary="true"
         command="cmd_cut"/>
-    <handler type="keypress" id="key_paste" key="v" primary="true"
+    <handler event="keypress" id="key_paste" key="v" primary="true"
         command="cmd_paste"/>
-    <handler type="keypress" id="key_undo" key="z" primary="true" 
+    <handler event="keypress" id="key_undo" key="z" primary="true" 
         command="cmd_undo"/>
 
     </handlers>

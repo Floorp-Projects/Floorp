@@ -18,7 +18,7 @@
         </xul:box>
     </content>
 
-    <interface>
+    <implementation>
         <property name="value"
             onset="
               if (this.ignoreInputEventTimer)
@@ -418,15 +418,15 @@
         ]]>
         </property>
         
-	</interface>
+	</implementation>
 
 	<handlers>
-		<handler type="click" value="this.privatefunc.cleanupInputField(this);"/>
-		<handler type="dblclick" value="this.privatefunc.cleanupInputField(this);"/>
-        <handler type="input" value="this.privatefunc.processInput(this);"/>
-        <handler type="keypress" value="this.privatefunc.processKeyPress(this, event);"/>
-        <handler type="focus" value="this.needToAutocomplete = false; this.lastResults.searchString=''; this.ignoreInputEvent = false"/>
-        <handler type="blur" value="
+		<handler event="click" action="this.privatefunc.cleanupInputField(this);"/>
+		<handler event="dblclick" action="this.privatefunc.cleanupInputField(this);"/>
+        <handler event="input" action="this.privatefunc.processInput(this);"/>
+        <handler event="keypress" action="this.privatefunc.processKeyPress(this, event);"/>
+        <handler event="focus" action="this.needToAutocomplete = false; this.lastResults.searchString=''; this.ignoreInputEvent = false"/>
+        <handler event="blur" action="
 			      this.privatefunc.closePopupMenu(this);
             if (this.needToAutocomplete)
                 this.privatefunc.finishAutoComplete(this, event);

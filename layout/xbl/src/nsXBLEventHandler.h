@@ -116,7 +116,7 @@ protected:
   static nsIAtom* kControlAtom;
   static nsIAtom* kAltAtom;
   static nsIAtom* kMetaAtom;
-  static nsIAtom* kValueAtom;
+  static nsIAtom* kActionAtom;
   static nsIAtom* kCommandAtom;
   static nsIAtom* kClickCountAtom;
   static nsIAtom* kButtonAtom;

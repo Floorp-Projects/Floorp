@@ -171,16 +171,17 @@ nsXBLJSClass::Destroy()
 PRUint32 nsXBLBinding::gRefCnt = 0;
  
 nsIAtom* nsXBLBinding::kContentAtom = nsnull;
-nsIAtom* nsXBLBinding::kInterfaceAtom = nsnull;
+nsIAtom* nsXBLBinding::kImplementationAtom = nsnull;
 nsIAtom* nsXBLBinding::kHandlersAtom = nsnull;
 nsIAtom* nsXBLBinding::kExcludesAtom = nsnull;
 nsIAtom* nsXBLBinding::kIncludesAtom = nsnull;
 nsIAtom* nsXBLBinding::kInheritsAtom = nsnull;
-nsIAtom* nsXBLBinding::kTypeAtom = nsnull;
-nsIAtom* nsXBLBinding::kCapturerAtom = nsnull;
+nsIAtom* nsXBLBinding::kEventAtom = nsnull;
+nsIAtom* nsXBLBinding::kPhaseAtom = nsnull;
 nsIAtom* nsXBLBinding::kExtendsAtom = nsnull;
 nsIAtom* nsXBLBinding::kChildrenAtom = nsnull;
 nsIAtom* nsXBLBinding::kValueAtom = nsnull;
+nsIAtom* nsXBLBinding::kActionAtom = nsnull;
 nsIAtom* nsXBLBinding::kHTMLAtom = nsnull;
 nsIAtom* nsXBLBinding::kMethodAtom = nsnull;
 nsIAtom* nsXBLBinding::kArgumentAtom = nsnull;
@@ -282,17 +283,18 @@ nsXBLBinding::nsXBLBinding(const nsCString& aDocURI, const nsCString& aID)
     kPool.Init("XBL Attribute Entries", kBucketSizes, kNumBuckets, kInitialSize);
 
     kContentAtom = NS_NewAtom("content");
-    kInterfaceAtom = NS_NewAtom("interface");
+    kImplementationAtom = NS_NewAtom("implementation");
     kHandlersAtom = NS_NewAtom("handlers");
     kExcludesAtom = NS_NewAtom("excludes");
     kIncludesAtom = NS_NewAtom("includes");
     kInheritsAtom = NS_NewAtom("inherits");
-    kTypeAtom = NS_NewAtom("type");
-    kCapturerAtom = NS_NewAtom("capturer");
+    kEventAtom = NS_NewAtom("event");
+    kPhaseAtom = NS_NewAtom("phase");
     kExtendsAtom = NS_NewAtom("extends");
     kChildrenAtom = NS_NewAtom("children");
     kHTMLAtom = NS_NewAtom("html");
     kValueAtom = NS_NewAtom("value");
+    kActionAtom = NS_NewAtom("action");
     kMethodAtom = NS_NewAtom("method");
     kArgumentAtom = NS_NewAtom("argument");
     kBodyAtom = NS_NewAtom("body");
@@ -330,17 +332,18 @@ nsXBLBinding::~nsXBLBinding(void)
 
   if (gRefCnt == 0) {
     NS_RELEASE(kContentAtom);
-    NS_RELEASE(kInterfaceAtom);
+    NS_RELEASE(kImplementationAtom);
     NS_RELEASE(kHandlersAtom);
     NS_RELEASE(kExcludesAtom);
     NS_RELEASE(kIncludesAtom);
     NS_RELEASE(kInheritsAtom);
-    NS_RELEASE(kTypeAtom);
-    NS_RELEASE(kCapturerAtom);
+    NS_RELEASE(kEventAtom);
+    NS_RELEASE(kPhaseAtom);
     NS_RELEASE(kExtendsAtom);
     NS_RELEASE(kChildrenAtom);
     NS_RELEASE(kHTMLAtom);
     NS_RELEASE(kValueAtom);
+    NS_RELEASE(kActionAtom);
     NS_RELEASE(kMethodAtom);
     NS_RELEASE(kArgumentAtom);
     NS_RELEASE(kBodyAtom);
@@ -587,7 +590,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
       // Fetch the type attribute.
       // XXX Deal with a comma-separated list of types
       nsAutoString type;
-      child->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
+      child->GetAttribute(kNameSpaceID_None, kEventAtom, type);
     
       if (!type.IsEmpty()) {
         nsIID iid;
@@ -643,8 +646,8 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
             // Figure out if we're using capturing or not.
             PRBool useCapture = PR_FALSE;
             nsAutoString capturer;
-            child->GetAttribute(kNameSpaceID_None, kCapturerAtom, capturer);
-            if (capturer == NS_LITERAL_STRING("true"))
+            child->GetAttribute(kNameSpaceID_None, kPhaseAtom, capturer);
+            if (capturer == NS_LITERAL_STRING("capturing"))
               useCapture = PR_TRUE;
 
             // Add the event listener.
@@ -665,8 +668,9 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
           else {
             // Call AddScriptEventListener for other IID types
             // XXX Want this to all go away!
+            NS_WARNING("***** Non-compliant XBL event listener attached! *****");
             nsAutoString value;
-            child->GetAttribute(kNameSpaceID_None, kValueAtom, value);
+            child->GetAttribute(kNameSpaceID_None, kActionAtom, value);
             if (value.IsEmpty())
                 GetTextData(child, value);
 
@@ -701,7 +705,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
 
    // Fetch the interface element for this binding.
   nsCOMPtr<nsIContent> interfaceElement;
-  GetImmediateChild(kInterfaceAtom, getter_AddRefs(interfaceElement));
+  GetImmediateChild(kImplementationAtom, getter_AddRefs(interfaceElement));
 
   if (interfaceElement && AllowScripts()) {
     // Get our bound element's script context.
@@ -1123,7 +1127,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     if (mIsStyleBinding) {
       // Now the binding dies.  Unhook our prototypes.
       nsCOMPtr<nsIContent> interfaceElement;
-      GetImmediateChild(kInterfaceAtom, getter_AddRefs(interfaceElement));
+      GetImmediateChild(kImplementationAtom, getter_AddRefs(interfaceElement));
 
       if (interfaceElement) { 
         nsCOMPtr<nsIScriptGlobalObject> global;

@@ -103,13 +103,13 @@ public:
   static PRUint32 gRefCnt;
   
   static nsIAtom* kContentAtom;
-  static nsIAtom* kInterfaceAtom;
+  static nsIAtom* kImplementationAtom;
   static nsIAtom* kHandlersAtom;
   static nsIAtom* kExcludesAtom;
   static nsIAtom* kIncludesAtom;
   static nsIAtom* kInheritsAtom;
-  static nsIAtom* kTypeAtom;
-  static nsIAtom* kCapturerAtom;
+  static nsIAtom* kEventAtom;
+  static nsIAtom* kPhaseAtom;
   static nsIAtom* kExtendsAtom;
   static nsIAtom* kChildrenAtom;
   static nsIAtom* kMethodAtom;
@@ -122,6 +122,7 @@ public:
   static nsIAtom* kSetterAtom;
   static nsIAtom* kHTMLAtom;
   static nsIAtom* kValueAtom;
+  static nsIAtom* kActionAtom;
   static nsIAtom* kNameAtom;
   static nsIAtom* kReadOnlyAtom;
   static nsIAtom* kAttachToAtom;

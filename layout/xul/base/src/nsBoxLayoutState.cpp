@@ -156,7 +156,7 @@ nsBoxLayoutState::HandleReflow(nsIBox* aRootBox)
          break;
 
          case eReflowReason_StyleChange:
-            printf("STYLE CHANGE REFLOW. Blowing away all box caches!!\n");
+           // printf("STYLE CHANGE REFLOW. Blowing away all box caches!!\n");
             aRootBox->MarkChildrenStyleChange();
             // fall through to dirty
 
