@@ -80,7 +80,7 @@
 
          </menulist>
        </box>
-       <text class="label" value="&choose.label;" />
+       <html flex="1">&choose.label;</html>
       </box>
      </box>
   </box>
@@ -155,11 +155,11 @@
             <treechildren>
               <treeitem uri="...">
                 <treerow>
-                  <treecell autostretch="never">
+                  <treecell autostretch="never" flex="1">
                     <checkbox oncommand="doCheck(this);" allowevents="true"
                               loading="rdf:http://home.netscape.com/NC-rdf#loading"
                               src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                              value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                              value="rdf:http://home.netscape.com/NC-rdf#Name" flex="1"/>
                   </treecell>
                 </treerow>
               </treeitem>
