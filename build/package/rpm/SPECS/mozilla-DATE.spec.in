@@ -71,6 +71,14 @@ Prereq: fileutils mozilla = %{version}-%{release}
 %description chat
 IRC client that is integrated with the Mozilla web browser.
 
+%package js-debugger
+Summary: JavaScript debugger for use with Mozilla
+Group: Applications/Internet
+Prereq: fileutils mozilla = %{version}-%{release}
+
+%description js-debugger
+JavaScript debugger for use with Mozilla.
+
 %prep
 
 %setup -q -n mozilla
@@ -208,6 +216,16 @@ echo libnssckbi.so >> /tmp/mozilla-psm.list
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --source $RPM_BUILD_DIR/mozilla/dist --shared
 
+/bin/rm -f /tmp/mozilla-js-debugger.list
+/bin/rm -f /tmp/mozilla-js-debugger.list.shared
+/bin/rm -f /tmp/mozilla-js-debugger.package
+%{SOURCE7} --package venkman --output-file /tmp/mozilla-js-debugger.list \
+    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
+    --source $RPM_BUILD_DIR/mozilla/dist
+%{SOURCE7} --package venkman --output-file /tmp/mozilla-js-debugger.list.shared \
+    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
+    --source $RPM_BUILD_DIR/mozilla/dist --shared
+
 # copy all of the files
 %{SOURCE8} /tmp/mozilla.list /tmp/mozilla.package \
     $RPM_BUILD_ROOT/%{prefix}/lib/mozilla \
@@ -258,6 +276,15 @@ popd
     $RPM_BUILD_DIR/mozilla/dist/bin \
     %{prefix}/lib/mozilla
 %{SOURCE8} /tmp/mozilla-chat.list.shared /tmp/mozilla-chat.package \
+    $RPM_BUILD_ROOT/%{prefix}/lib \
+    $RPM_BUILD_DIR/mozilla/dist/bin \
+    %{prefix}/lib
+
+%{SOURCE8} /tmp/mozilla-js-debugger.list /tmp/mozilla-js-debugger.package \
+    $RPM_BUILD_ROOT/%{prefix}/lib/mozilla \
+    $RPM_BUILD_DIR/mozilla/dist/bin \
+    %{prefix}/lib/mozilla
+%{SOURCE8} /tmp/mozilla-js-debugger.list.shared /tmp/mozilla-js-debugger.package \
     $RPM_BUILD_ROOT/%{prefix}/lib \
     $RPM_BUILD_DIR/mozilla/dist/bin \
     %{prefix}/lib
@@ -368,6 +395,22 @@ if [ -f /usr/lib/mozilla/rebuild-databases.sh ]; then
     /usr/lib/mozilla/rebuild-databases.sh
 fi
 
+%post js-debugger
+# run ldconfig before regxpcom
+/sbin/ldconfig >/dev/null 2>/dev/null
+
+if [ -f /usr/lib/mozilla/rebuild-databases.sh ]; then
+    /usr/lib/mozilla/rebuild-databases.sh
+fi
+
+%postun js-debugger
+# run ldconfig before regxpcom
+/sbin/ldconfig >/dev/null 2>/dev/null
+
+if [ -f /usr/lib/mozilla/rebuild-databases.sh ]; then
+    /usr/lib/mozilla/rebuild-databases.sh
+fi
+
 %files -f /tmp/mozilla.package
 %defattr(-,root,root)
 %{prefix}/bin/mozilla
@@ -410,6 +453,9 @@ fi
 %files chat -f /tmp/mozilla-chat.package
 %defattr(-,root,root)
 
+%files js-debugger -f /tmp/mozilla-js-debugger.package
+%defattr(-,root,root)
+
 %files devel
 %defattr(-,root,root)
 %dir %{prefix}/include/mozilla
@@ -421,6 +467,9 @@ fi
 
 
 %changelog
+* Thu Nov 01 2001 Christopher Blizzard <blizzard@redhat.com>
+- Add JS debugger package.
+
 * Sun Sep 16 2001 Christopher Blizzard <blizzard@redhat.com>
 - Add mail and compose .desktop entries.
 - Fix launcher script to handle all of the much improved xremote code.
