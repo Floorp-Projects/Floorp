@@ -1419,7 +1419,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     parent = NULL;
 #endif
 
-    fun = js_NewFunction(cx, obj, NULL, 0, 0, parent,
+    fun = js_NewFunction(cx, obj, NULL, 0, JSFUN_LAMBDA, parent,
                          (JSVERSION_IS_ECMA(cx->version))
                          ? cx->runtime->atomState.anonymousAtom
                          : NULL);
