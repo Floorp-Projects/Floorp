@@ -157,7 +157,7 @@ public: // morkNode memory management methods
   //    ioHeap->Free(ev->AsMdbEnv(), this);
 
 public: // morkNode memory management operators
-  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
+  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev) CPP_THROW_NEW
   { return morkNode::MakeNew(inSize, ioHeap, ev); }
   
 

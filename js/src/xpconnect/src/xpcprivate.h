@@ -304,11 +304,7 @@ private:
 
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an XPCAutoLock object on the heap.
-#if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
-    static void* operator new(size_t /*size*/) throw () {
-#else
-    static void* operator new(size_t /*size*/) {
-#endif
+    static void* operator new(size_t /*size*/) CPP_THROW_NEW {
         return nsnull;
     }
     static void operator delete(void* /*memory*/) {}
@@ -361,11 +357,7 @@ private:
 
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an XPCAutoUnlock object on the heap.
-#if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
-    static void* operator new(size_t /*size*/) throw () {
-#else
-    static void* operator new(size_t /*size*/) {
-#endif
+    static void* operator new(size_t /*size*/) CPP_THROW_NEW {
         return nsnull;
     }
     static void operator delete(void* /*memory*/) {}
@@ -1177,7 +1169,7 @@ protected:
                           {MOZ_COUNT_CTOR(XPCNativeInterface);}
     ~XPCNativeInterface() {MOZ_COUNT_DTOR(XPCNativeInterface);}
 
-    void* operator new(size_t, void* p) {return p;}
+    void* operator new(size_t, void* p) CPP_THROW_NEW {return p;}
 
     XPCNativeInterface(const XPCNativeInterface& r); // not implemented
     XPCNativeInterface& operator= (const XPCNativeInterface& r); // not implemented
@@ -1316,7 +1308,7 @@ protected:
                                            PRUint16            position);
     XPCNativeSet()  {MOZ_COUNT_CTOR(XPCNativeSet);}
     ~XPCNativeSet() {MOZ_COUNT_DTOR(XPCNativeSet);}
-    void* operator new(size_t, void* p) {return p;}
+    void* operator new(size_t, void* p) CPP_THROW_NEW {return p;}
 
 private:
     PRUint16                mMemberCount;

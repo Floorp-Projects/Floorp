@@ -202,7 +202,7 @@ PermanentAtomImpl::IsPermanent()
   return PR_TRUE;
 }
 
-void* AtomImpl::operator new ( size_t size, const nsAString& aString )
+void* AtomImpl::operator new ( size_t size, const nsAString& aString ) CPP_THROW_NEW
 {
     /*
       Note: since the |size| will initially also include the |PRUnichar| member
@@ -222,7 +222,7 @@ void* AtomImpl::operator new ( size_t size, const nsAString& aString )
   return ii;
 }
 
-void* PermanentAtomImpl::operator new ( size_t size, AtomImpl* aAtom ) {
+void* PermanentAtomImpl::operator new ( size_t size, AtomImpl* aAtom ) CPP_THROW_NEW {
   NS_ASSERTION(!aAtom->IsPermanent(),
                "converting atom that's already permanent");
 

@@ -115,7 +115,7 @@ public: // sorting dirty handling more than morkNode::SetNodeDirty() etc.
   mork_bool IsSortingDirty() const { return this->IsNodeDirty(); }
 
 public: // morkNode memory management operators
-  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
+  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev) CPP_THROW_NEW
   { return morkNode::MakeNew(inSize, ioHeap, ev); }
   
  

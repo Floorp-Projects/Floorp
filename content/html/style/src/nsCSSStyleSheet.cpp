@@ -201,7 +201,7 @@ struct RuleValue {
   }
 
   // Placement new to arena allocate the RuleValues
-  void *operator new(size_t aSize, PLArenaPool &aArena) {
+  void *operator new(size_t aSize, PLArenaPool &aArena) CPP_THROW_NEW {
     void *mem;
     PL_ARENA_ALLOCATE(mem, &aArena, aSize);
     return mem;
@@ -1722,7 +1722,7 @@ void CSSStyleSheetInner::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
 // CSS Style Sheet
 //
 
-void* CSSStyleSheetImpl::operator new(size_t size)
+void* CSSStyleSheetImpl::operator new(size_t size) CPP_THROW_NEW
 {
   CSSStyleSheetImpl* rv = (CSSStyleSheetImpl*) ::operator new(size);
 #ifdef NS_DEBUG
@@ -1734,7 +1734,7 @@ void* CSSStyleSheetImpl::operator new(size_t size)
   return (void*) rv;
 }
 
-void* CSSStyleSheetImpl::operator new(size_t size, nsIArena* aArena)
+void* CSSStyleSheetImpl::operator new(size_t size, nsIArena* aArena) CPP_THROW_NEW
 {
   CSSStyleSheetImpl* rv = (CSSStyleSheetImpl*) aArena->Alloc(PRInt32(size));
 #ifdef NS_DEBUG

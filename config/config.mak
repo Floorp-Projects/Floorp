@@ -380,6 +380,8 @@ CFLAGS=$(CFLAGS) -DUSE_IMG2 -DNS_PRINT_PREVIEW
 CFLAGS=$(CFLAGS) -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT -DMOZ_STATIC_COMPONENT_LIBS
 !endif
 
+CFLAGS=$(CFLAGS) -DCPP_THROW_NEW=throw()
+
 #//-----------------------------------------------------------------------
 #//
 #// build tools

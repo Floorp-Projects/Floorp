@@ -152,11 +152,7 @@ private:
 
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an nsAutoLock object on the heap.
-#if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
-    static void* operator new(size_t /*size*/) throw () {
-#else
-    static void* operator new(size_t /*size*/) {
-#endif
+    static void* operator new(size_t /*size*/) CPP_THROW_NEW {
         return nsnull;
     }
     static void operator delete(void* /*memory*/) {}
@@ -313,11 +309,7 @@ private:
 
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an nsAutoLock object on the heap.
-#if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
-    static void* operator new(size_t /*size*/) throw () {
-#else
-    static void* operator new(size_t /*size*/) {
-#endif
+    static void* operator new(size_t /*size*/) CPP_THROW_NEW {
         return nsnull;
     }
     static void operator delete(void* /*memory*/) {}
@@ -384,11 +376,7 @@ private:
 
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an nsAutoLock object on the heap.
-#if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
-    static void* operator new(size_t /*size*/) throw() {
-#else
-    static void* operator new(size_t /*size*/) {
-#endif
+    static void* operator new(size_t /*size*/) CPP_THROW_NEW {
         return nsnull;
     }
     static void operator delete(void* /*memory*/) {}

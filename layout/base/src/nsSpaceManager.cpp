@@ -131,7 +131,7 @@ nsSpaceManager::~nsSpaceManager()
 }
 
 // static
-void* nsSpaceManager::operator new(size_t aSize)
+void* nsSpaceManager::operator new(size_t aSize) CPP_THROW_NEW
 {
   if (sCachedSpaceManagerCount > 0) {
     // We have cached unused instances of this class, return a cached

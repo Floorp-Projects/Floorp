@@ -265,7 +265,7 @@ MOZ_DECL_CTOR_COUNTER(nsFrame)
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.
 void* 
-nsFrame::operator new(size_t sz, nsIPresShell* aPresShell)
+nsFrame::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
   // Check the recycle list first.
   void* result = nsnull;

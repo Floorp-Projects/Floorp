@@ -210,7 +210,7 @@ protected:
 private:
   // Hide so that only Create() and Destroy() can be used to
   // allocate and deallocate from the heap
-  static void* operator new(size_t) { return 0; }
+  static void* operator new(size_t) CPP_THROW_NEW { return 0; }
   static void operator delete(void*, size_t) {}
 };
 

@@ -1249,7 +1249,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.
 void* 
-nsStyleContext::operator new(size_t sz, nsIPresContext* aPresContext)
+nsStyleContext::operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW
 {
   // Check the recycle list first.
   void* result = nsnull;

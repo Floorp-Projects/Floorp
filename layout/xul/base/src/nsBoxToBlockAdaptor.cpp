@@ -230,7 +230,7 @@ nsBoxToBlockAdaptor::SetStyleChangeFlag(PRBool aDirty)
 
 
 void* 
-nsBoxToBlockAdaptor::operator new(size_t sz, nsIPresShell* aPresShell)
+nsBoxToBlockAdaptor::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
     return nsBoxLayoutState::Allocate(sz,aPresShell);
 }

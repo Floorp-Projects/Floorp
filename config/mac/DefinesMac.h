@@ -80,5 +80,6 @@
 #define _NO_FAST_STRING_INLINES_ 1
 #define _PR_NO_PREEMPT 1
 ///#define HAVE_BOOLEAN 1			// used by JPEG lib
+#define CPP_THROW_NEW
 
 #endif /* DefinesMac_h_ */

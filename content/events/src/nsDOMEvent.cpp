@@ -93,7 +93,7 @@ static PRInt32 numAllocFromPool=0;
 // allocate the memory for the object from the recycler, if possible
 // otherwise, just grab it from the heap.
 void* 
-nsDOMEvent::operator new(size_t aSize)
+nsDOMEvent::operator new(size_t aSize) CPP_THROW_NEW
 {
 
 #ifdef NS_DEBUG

@@ -90,7 +90,7 @@ class nsCParserNode :  public nsIParserNode {
     /**
      * Hide operator new; clients should use Create() instead.
      */
-    static void* operator new(size_t) { return 0; }
+    static void* operator new(size_t) CPP_THROW_NEW { return 0; }
 
     /**
      * Hide operator delete; clients should use Destroy() instead.

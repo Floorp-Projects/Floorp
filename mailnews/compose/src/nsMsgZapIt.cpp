@@ -39,7 +39,7 @@
 #include "nsCRT.h"
 
 #if defined(XP_OS2) && defined(__DEBUG_ALLOC__)
-void* nsMsgZapIt::operator new(size_t size, const char *file, size_t line) {
+void* nsMsgZapIt::operator new(size_t size, const char *file, size_t line) CPP_THROW_NEW {
   void* rv = ::operator new(size, file, line);
   if (rv) {
     memset(rv, 0, size);
@@ -47,7 +47,7 @@ void* nsMsgZapIt::operator new(size_t size, const char *file, size_t line) {
   return rv;
 }
 #else
-void* nsMsgZapIt::operator new(size_t size) {
+void* nsMsgZapIt::operator new(size_t size) CPP_THROW_NEW {
   void* rv = ::operator new(size);
   if (rv) {
     memset(rv, 0, size);
