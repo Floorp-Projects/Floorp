@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>Option comment sample</title>
+</head>
+
+
+<p>
+Select without comments, working normally.
+<p>
+Color   
+
+<select  NAME="1" >
+<option  NAME="1"  VALUE="22802" >
+Blue
+</option>
+<option  NAME="1"  VALUE="22803" >
+Red
+</option>
+<option  NAME="1"  VALUE="22804" >
+Purple
+</option>
+</select>
+
+<p>
+The second one has comments, so the items are invisible when selected.
+<p>
+
+Color   
+
+<select  NAME="1" >
+<option  NAME="1"  VALUE="22802" >
+<!-- Start custom HTML modifications -->
+<!-- START_OPTION_TEXT -->
+Blue
+    <!-- END_OPTION_TEXT -->
+<!-- End custom HTML modifications -->
+</option><option  NAME="1"  VALUE="22803" >
+<!-- Start custom HTML modifications -->
+<!-- START_OPTION_TEXT -->
+Red
+    <!-- END_OPTION_TEXT -->
+<!-- End custom HTML modifications -->
+</option><option  NAME="1"  VALUE="22804" >
+<!-- Start custom HTML modifications -->
+<!-- START_OPTION_TEXT -->
+Purple
+    <!-- END_OPTION_TEXT -->
+<!-- End custom HTML modifications -->
+</option>
+</select>
+
+</body></html>

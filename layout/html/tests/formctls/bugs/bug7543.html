@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<TITLE>INPUT size test</TITLE>
+
+<P>All of the following <code>INPUT</code> fields have a <code>size</code> of 14:</P>
+
+<FORM ACTION="#">
+ <P>
+  <strong>1)</strong> Browser default font:<BR>
+  <INPUT TYPE=TEXT SIZE=14 value="12345678901234567890">
+ </P>
+ <P>
+  <strong>2)</strong> Times New Roman (default in M7 Apprunner/Windows) or other serif font:<BR>
+  <INPUT TYPE=TEXT SIZE=14 value="12345678901234567890" STYLE="font-family: 'Times New Roman', serif;">
+ </P>
+ <P>
+  <strong>3)</strong> MS Sans Serif (default in IE4.x/Windows) or other sans-serif font:<BR>
+  <INPUT TYPE=TEXT SIZE=14 value="12345678901234567890" STYLE="font-family: 'MS Sans Serif', sans-serif;">
+ </P>
+ <P>
+  <strong>4)</strong> Arial or other sans-serif font:<BR>
+  <INPUT TYPE=TEXT SIZE=14 value="12345678901234567890" STYLE="font-family: Arial, sans-serif;">
+ </P>
+ <P>
+  <strong>5)</strong> Monospace font (default in Navigator 4.x):<br>
+  <INPUT TYPE=TEXT SIZE=14 value="12345678901234567890" STYLE="font-family: monospace;">
+ </P>
+</FORM>
+
+<P>
+ Since the <code>INPUT</code> field in test 5 is using monospace font, it should fit exactly 14 characters (eg. the visible string should be "12345678901234", no more, no less).
+</P>
+<P>    
+ However, when an <code>INPUT</code> field uses a proportional font - as tests 2-4 do - the specified number of visible characters is always an <em>average</em>, not an accurate value.  Try filling the field with lowercase 'l' letters or uppercase 'W':s to get the point.
+</P>
+
+<HR>
+
+<ADDRESS>Antti.Nayha@oulu.fi</ADDRESS>

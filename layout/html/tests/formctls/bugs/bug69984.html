@@ -1,0 +1,66 @@
+<html>
+<head> <title>SELECT with size > 1 within FONT is invisible.</title>
+<body bgcolor="silver">
+<center>
+      <h3>1. SELECT with size > 1 and within FONT is
+          <font color="red">  invisible</font>.<br>
+	  (2. FONT is <font color="blue"> not used </font>
+	      for OPTIONs even for size=1)</h3>
+
+<form>
+<table border="1">
+<tr>  <td></td>
+  <td>No font</td>
+  <td>
+    <font face="Courier, monospace">
+      with font
+    </font>
+  </td>
+</tr>
+<tr>  <td>size=1(default)</td>
+ <td>
+  <select name="testNoFont1">
+    <option value="1">One</option>
+    <option value="2">Two</option>
+    <option value="3">Three</option>
+    <option value="-1">------------------------</option>
+  </select>
+ </td>
+ <td bgcolor="blue">
+  <font face="Courier, monospace">
+    <select name="testInFont1">
+    <option value="1">One</option>
+    <option value="2">Two</option>
+    <option value="3">Three</option>
+    <option value="-1">------------------------</option>
+    </select>
+  </font>
+ </td>
+</tr>
+<tr>  <td>size > 1</td>
+ <td>
+  <select name="testNoFont2" size="8">
+    <option value="1">One</option>
+    <option value="2">Two</option>
+    <option value="3">Three</option>
+    <option value="-1">------------------------</option>
+  </select>
+ </td>
+ <td bgcolor="red">
+  <font face="Courier, monospace">
+   <select name="testNoFont2" size="8">
+    <option value="1">One</option>
+    <option value="2">Two</option>
+    <option value="3">Three</option>
+    <option value="-1">------------------------</option>
+   </select>
+  </font>
+ </td>
+</tr>
+</table>
+</form>
+<img src="SELECTwithinFONT.jpeg">
+</center>
+</body>
+</html>
+
