@@ -1664,7 +1664,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_tr:
       {
         static char  okTags[]={eHTMLTag_td,eHTMLTag_th,0};
-        result=PRBool(0!=strchr(okTags,aChild));
+        result=PRBool(0!=strchr(okTags,aChild)); 
       }
       break;
 
@@ -1743,84 +1743,108 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
   PRBool result=PR_FALSE;
 
   //begin with some simple (and obvious) cases...
-  switch(aChild) {
-
-    case eHTMLTag_userdefined:
-    case eHTMLTag_comment:
-      result=PR_TRUE; 
-      break;
-
-    case eHTMLTag_html:
-    case eHTMLTag_body:
-      result=HasOpenContainer(aChild); //don't bother if they're already open...
-      break;
-
-    case eHTMLTag_button:       case eHTMLTag_fieldset:
-    case eHTMLTag_input:        case eHTMLTag_isindex:
-    case eHTMLTag_label:        case eHTMLTag_legend:
-    case eHTMLTag_select:       case eHTMLTag_textarea:
-    case eHTMLTag_option:
-      if(PR_FALSE==HasOpenContainer(eHTMLTag_form))
-        result=PR_TRUE; 
-      break;
-
-    case eHTMLTag_newline:    
-    case eHTMLTag_whitespace:
-
-      switch(aParent) {
-        case eHTMLTag_html:     case eHTMLTag_head:   
-        case eHTMLTag_title:    case eHTMLTag_map:    
-        case eHTMLTag_tr:       case eHTMLTag_table:  
-        case eHTMLTag_thead:    case eHTMLTag_tfoot:  
-        case eHTMLTag_tbody:    case eHTMLTag_col:    
-        case eHTMLTag_colgroup: case eHTMLTag_unknown:
-          result=PR_TRUE;
-        default:
-          break;
-      } //switch
-      break;
-
-      //this code prevents table container elements from
-      //opening unless a table is actually already opened.
-    case eHTMLTag_tr:       case eHTMLTag_thead:    
-    case eHTMLTag_tfoot:    case eHTMLTag_tbody:    
-    case eHTMLTag_td:       case eHTMLTag_th:
-    case eHTMLTag_caption:
-      if(PR_FALSE==HasOpenContainer(eHTMLTag_table))
-        result=PR_TRUE;
-      break;
-
-    case eHTMLTag_entity:
-      switch(aParent) {
-        case eHTMLTag_tr:       case eHTMLTag_table:  
-        case eHTMLTag_thead:    case eHTMLTag_tfoot:  
-        case eHTMLTag_tbody:    
-          result=PR_TRUE;
-        default:
-          break;
-      } //switch
-      break;
-
-    case eHTMLTag_frame:
-      if(eHTMLTag_iframe==aParent)
-        result=PR_TRUE;
-      break;
-
+  switch(aParent) {
     case eHTMLTag_table:
+      if(eHTMLTag_form==aChild)
+        result=PR_FALSE;
+      else result=PRBool(!strchr(gTableTags,aChild));
+      break;
 
-      if(eParseMode_noquirks!=mParseMode) {
-        if(eHTMLTag_table==GetTopNode()) {
+    case eHTMLTag_tr:
+      switch(aChild) {
+        case eHTMLTag_td:
+        case eHTMLTag_th:
+        case eHTMLTag_form:
+        case eHTMLTag_tr:
+          result=PR_FALSE;
+          break;
+        default:
           result=PR_TRUE;
-        }
-        break;
       }
-      //otherwise, we intentionally fall through...
+      break;
+
+    case eHTMLTag_unknown:
+      result=PR_FALSE;
+      break;
 
     default:
-      if(eHTMLTag_unknown==aParent)
-        result=PR_FALSE;
+
+        //ok, since no parent claimed it, test based on the child...
+      switch(aChild) {
+
+        case eHTMLTag_userdefined:
+        case eHTMLTag_comment:
+          result=PR_TRUE; 
+          break;
+
+        case eHTMLTag_html:
+        case eHTMLTag_body:
+          result=HasOpenContainer(aChild); //don't bother if they're already open...
+          break;
+
+        case eHTMLTag_button:       case eHTMLTag_fieldset:
+        case eHTMLTag_input:        case eHTMLTag_isindex:
+        case eHTMLTag_label:        case eHTMLTag_legend:
+        case eHTMLTag_select:       case eHTMLTag_textarea:
+        case eHTMLTag_option:
+          if(PR_FALSE==HasOpenContainer(eHTMLTag_form))
+            result=PR_TRUE; 
+          break;
+
+        case eHTMLTag_newline:    
+        case eHTMLTag_whitespace:
+
+          switch(aParent) {
+            case eHTMLTag_html:     case eHTMLTag_head:   
+            case eHTMLTag_title:    case eHTMLTag_map:    
+            case eHTMLTag_tr:       case eHTMLTag_table:  
+            case eHTMLTag_thead:    case eHTMLTag_tfoot:  
+            case eHTMLTag_tbody:    case eHTMLTag_col:    
+            case eHTMLTag_colgroup: case eHTMLTag_unknown:
+              result=PR_TRUE;
+            default:
+              break;
+          } //switch
+          break;
+
+          //this code prevents table container elements from
+          //opening unless a table is actually already opened.
+        case eHTMLTag_tr:       case eHTMLTag_thead:    
+        case eHTMLTag_tfoot:    case eHTMLTag_tbody:    
+        case eHTMLTag_td:       case eHTMLTag_th:
+        case eHTMLTag_caption:
+          if(PR_FALSE==HasOpenContainer(eHTMLTag_table))
+            result=PR_TRUE;
+          break;
+
+        case eHTMLTag_entity:
+          switch(aParent) {
+            case eHTMLTag_tr:       case eHTMLTag_table:  
+            case eHTMLTag_thead:    case eHTMLTag_tfoot:  
+            case eHTMLTag_tbody:    
+              result=PR_TRUE;
+            default:
+              break;
+          } //switch
+          break;
+
+        case eHTMLTag_frame:
+          if(eHTMLTag_iframe==aParent)
+            result=PR_TRUE;
+          break;
+
+        default:
+
+          static char kNonStylizedTabletags[]={eHTMLTag_table,eHTMLTag_tr,0};
+          if(0!=strchr(gStyleTags,aChild)) {
+            if(0!=strchr(kNonStylizedTabletags,aParent))
+              return PR_TRUE;
+          }
+
+          break;
+      } //switch
       break;
-  } //switch
+  }
   return result;
 }
 
