@@ -19,10 +19,11 @@ DEPTH=..\..
 
 IGNORE_MANIFEST=1
 
-DIRS = windows registry
-
+DIRS = windows \
+       registry \
 !ifdef BUILD_XPIDL 
-DIRS += xpidl 
+       xpidl \
 !endif 
+       $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
