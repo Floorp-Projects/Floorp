@@ -63,7 +63,8 @@ nsDragHelperService::nsDragHelperService()
 //
 nsDragHelperService::~nsDragHelperService()
 {
-  NS_ASSERTION ( !mDragService.get(), "A drag was not correctly ended by shutdown" );
+  NS_ASSERTION(!mDragService.get(),
+               "A drag was not correctly ended by shutdown");
 }
 
 
@@ -76,26 +77,28 @@ nsDragHelperService::~nsDragHelperService()
 // enter event.
 //
 NS_IMETHODIMP
-nsDragHelperService::Enter ( DragReference inDragRef, nsIEventSink *inSink )
+nsDragHelperService::Enter(DragReference inDragRef, nsIEventSink *inSink)
 {
   // get our drag service for the duration of the drag.
   mDragService = do_GetService(kDragServiceContractID);
-  NS_ASSERTION ( mDragService, "Couldn't get a drag service, we're in biiig trouble" );
-  if ( !mDragService || !inSink )
+  NS_ASSERTION(mDragService,
+               "Couldn't get a drag service, we're in biiig trouble");
+  if (!mDragService || !inSink)
     return NS_ERROR_FAILURE;
 
   // tell the session about this drag
   mDragService->StartDragSession();
-  nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(mDragService) );
-  if ( macSession )
-    macSession->SetDragReference ( inDragRef );
-  
+  nsCOMPtr<nsIDragSessionMac> macSession(do_QueryInterface(mDragService));
+  if (macSession)
+    macSession->SetDragReference(inDragRef);
+
   // let gecko know that the mouse has entered the window so it
   // can start tracking and sending enter/exit events to frames.
   Point mouseLocGlobal;
-  ::GetDragMouse ( inDragRef, &mouseLocGlobal, nsnull );
+  ::GetDragMouse(inDragRef, &mouseLocGlobal, nsnull);
   PRBool handled = PR_FALSE;
-  inSink->DragEvent ( NS_DRAGDROP_ENTER, mouseLocGlobal.h, mouseLocGlobal.v, 0L, &handled );     
+  inSink->DragEvent(NS_DRAGDROP_ENTER, mouseLocGlobal.h, mouseLocGlobal.v, 0L,
+                    &handled);
 
   return NS_OK;
 }
@@ -104,42 +107,45 @@ nsDragHelperService::Enter ( DragReference inDragRef, nsIEventSink *inSink )
 //
 // Tracking
 //
-// Called while the mouse is inside the rectangle bounding the browser 
+// Called while the mouse is inside the rectangle bounding the browser
 // during a drag. The important thing done here is to clear the |canDrop|
 // property of the drag session every time through. The event handlers
 // will reset it if appropriate.
 //
 NS_IMETHODIMP
-nsDragHelperService::Tracking ( DragReference inDragRef, nsIEventSink *inSink, PRBool* outDropAllowed )
+nsDragHelperService::Tracking(DragReference inDragRef, nsIEventSink *inSink,
+                              PRBool* outDropAllowed)
 {
-  NS_ASSERTION ( mDragService, "Couldn't get a drag service, we're in biiig trouble" );
-  if ( !mDragService || !inSink ) {
+  NS_ASSERTION(mDragService,
+               "Couldn't get a drag service, we're in biiig trouble");
+  if (!mDragService || !inSink) {
     *outDropAllowed = PR_FALSE;
     return NS_ERROR_FAILURE;
   }
-  
+
   Point mouseLocGlobal;
-  ::GetDragMouse ( inDragRef, &mouseLocGlobal, nsnull );
+  ::GetDragMouse(inDragRef, &mouseLocGlobal, nsnull);
   short modifiers;
-  ::GetDragModifiers ( inDragRef, &modifiers, nsnull, nsnull );
-  
+  ::GetDragModifiers(inDragRef, &modifiers, nsnull, nsnull);
+
   // set the drag action on the service so the frames know what is going on
-  SetDragActionBasedOnModifiers ( modifiers );
-  
+  SetDragActionBasedOnModifiers(modifiers);
+
   // clear out the |canDrop| property of the drag session. If it's meant to
   // be, it will be set again.
   nsCOMPtr<nsIDragSession> session;
   mDragService->GetCurrentSession(getter_AddRefs(session));
-  NS_ASSERTION ( session, "If we don't have a drag session, we're fucked" );
-  if ( session )
+  NS_ASSERTION(session, "If we don't have a drag session, we're fucked");
+  if (session)
     session->SetCanDrop(PR_FALSE);
 
   // pass into gecko for handling...
   PRBool handled = PR_FALSE;
-  inSink->DragEvent ( NS_DRAGDROP_OVER, mouseLocGlobal.h, mouseLocGlobal.v, modifiers, &handled );
+  inSink->DragEvent(NS_DRAGDROP_OVER, mouseLocGlobal.h, mouseLocGlobal.v,
+                    modifiers, &handled);
 
   // check if gecko has since allowed the drop and return it
-  if ( session )
+  if (session)
     session->GetCanDrop(outDropAllowed);
 
   return NS_OK;
@@ -153,10 +159,11 @@ nsDragHelperService::Tracking ( DragReference inDragRef, nsIEventSink *inSink, P
 // during a drag. Cleans up the drag service and releases it.
 //
 NS_IMETHODIMP
-nsDragHelperService::Leave ( DragReference inDragRef, nsIEventSink *inSink )
+nsDragHelperService::Leave(DragReference inDragRef, nsIEventSink *inSink)
 {
-  NS_ASSERTION ( mDragService, "Couldn't get a drag service, we're in biiig trouble" );
-  if ( !mDragService || !inSink )
+  NS_ASSERTION(mDragService,
+               "Couldn't get a drag service, we're in biiig trouble");
+  if (!mDragService || !inSink)
     return NS_ERROR_FAILURE;
 
   // tell the drag service that we're done with it.
@@ -166,23 +173,24 @@ nsDragHelperService::Leave ( DragReference inDragRef, nsIEventSink *inSink )
   // this will be called _after_ the drop has been processed (if there
   // is one), so we're not destroying valuable information if the drop
   // was in our window.
-  nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(mDragService) );
-  if ( macSession )
-    macSession->SetDragReference ( 0 );         
+  nsCOMPtr<nsIDragSessionMac> macSession(do_QueryInterface(mDragService));
+  if (macSession)
+    macSession->SetDragReference(0);
 
   // let gecko know that the mouse has left the window so it
   // can stop tracking and sending enter/exit events to frames.
   Point mouseLocGlobal;
-  ::GetDragMouse ( inDragRef, &mouseLocGlobal, nsnull );
+  ::GetDragMouse(inDragRef, &mouseLocGlobal, nsnull);
   PRBool handled = PR_FALSE;
-  inSink->DragEvent ( NS_DRAGDROP_EXIT, mouseLocGlobal.h, mouseLocGlobal.v, 0L, &handled );
-  
+  inSink->DragEvent(NS_DRAGDROP_EXIT, mouseLocGlobal.h, mouseLocGlobal.v, 0L,
+                    &handled);
+
 #ifndef MOZ_WIDGET_COCOA
-  ::HideDragHilite ( inDragRef );
+  ::HideDragHilite(inDragRef);
 #endif
 
   // we're _really_ done with it, so let go of the service.
-  mDragService = nsnull;      
+  mDragService = nsnull;
 
   return NS_OK;
 }
@@ -195,10 +203,12 @@ nsDragHelperService::Leave ( DragReference inDragRef, nsIEventSink *inSink )
 // during a drag. Cleans up the drag service and releases it.
 //
 NS_IMETHODIMP
-nsDragHelperService::Drop ( DragReference inDragRef, nsIEventSink *inSink, PRBool* outAccepted )
+nsDragHelperService::Drop(DragReference inDragRef, nsIEventSink *inSink,
+                          PRBool* outAccepted)
 {
-  NS_ASSERTION ( mDragService, "Couldn't get a drag service, we're in biiig trouble" );
-  if ( !mDragService || !inSink ) {
+  NS_ASSERTION(mDragService,
+               "Couldn't get a drag service, we're in biiig trouble");
+  if (!mDragService || !inSink) {
     *outAccepted = PR_FALSE;
     return NS_ERROR_FAILURE;
   }
@@ -206,35 +216,36 @@ nsDragHelperService::Drop ( DragReference inDragRef, nsIEventSink *inSink, PRBoo
   // We make the assuption that the dragOver handlers have correctly set
   // the |canDrop| property of the Drag Session. Before we dispatch the event
   // into Gecko, check that value and either dispatch it or set the result
-  // code to "spring-back" and show the user the drag failed. 
+  // code to "spring-back" and show the user the drag failed.
   OSErr result = noErr;
   nsCOMPtr<nsIDragSession> dragSession;
-  mDragService->GetCurrentSession ( getter_AddRefs(dragSession) );
-  if ( dragSession ) {
+  mDragService->GetCurrentSession(getter_AddRefs(dragSession));
+  if (dragSession) {
     // if the target has set that it can accept the drag, pass along
     // to gecko, otherwise set phasers for failure.
     PRBool canDrop = PR_FALSE;
-    if ( NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) )
-      if ( canDrop ) {
+    if (NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)))
+      if (canDrop) {
         // pass the drop event along to Gecko
         Point mouseLocGlobal;
-        ::GetDragMouse ( inDragRef, &mouseLocGlobal, nsnull );
+        ::GetDragMouse(inDragRef, &mouseLocGlobal, nsnull);
         short modifiers;
-        ::GetDragModifiers ( inDragRef, &modifiers, nsnull, nsnull );
+        ::GetDragModifiers(inDragRef, &modifiers, nsnull, nsnull);
         PRBool handled = PR_FALSE;
-        inSink->DragEvent ( NS_DRAGDROP_DROP, mouseLocGlobal.h, mouseLocGlobal.v, modifiers, &handled );
+        inSink->DragEvent(NS_DRAGDROP_DROP, mouseLocGlobal.h, mouseLocGlobal.v,
+                          modifiers, &handled);
       }
       else
-        result = dragNotAcceptedErr;  
+        result = dragNotAcceptedErr;
   } // if a valid drag session
-      
+
   // we don't need the drag session anymore, the user has released the
   // mouse and the event has already gone to gecko.
   mDragService->EndDragSession();
 
   // if there was any kind of error, the drag wasn't accepted
   *outAccepted = (result == noErr);
-  
+
   return NS_OK;
 }
 
@@ -246,22 +257,22 @@ nsDragHelperService::Drop ( DragReference inDragRef, nsIEventSink *inSink, PRBoo
 // drag session to copy/move/etc
 //
 void
-nsDragHelperService::SetDragActionBasedOnModifiers ( short inModifiers ) 
+nsDragHelperService::SetDragActionBasedOnModifiers(short inModifiers)
 {
   nsCOMPtr<nsIDragSession> dragSession;
-  mDragService->GetCurrentSession ( getter_AddRefs(dragSession) );
-  if ( dragSession ) {
+  mDragService->GetCurrentSession(getter_AddRefs(dragSession));
+  if (dragSession) {
     PRUint32 action = nsIDragService::DRAGDROP_ACTION_MOVE;
-    
+
     // force copy = option, alias = cmd-option, default is move
-    if ( inModifiers & optionKey ) {
-      if ( inModifiers & cmdKey )
+    if (inModifiers & optionKey) {
+      if (inModifiers & cmdKey)
         action = nsIDragService::DRAGDROP_ACTION_LINK;
       else
         action = nsIDragService::DRAGDROP_ACTION_COPY;
     }
 
-    dragSession->SetDragAction ( action );    
+    dragSession->SetDragAction(action);
   }
 
 } // SetDragActionBasedOnModifiers
