@@ -52,8 +52,10 @@ W32LOBJS = $(OBJS: .= +-.)
 CVSCO = cvs -q co -P
 
 # Branch tags we use
-PLUGIN_BRANCH = OJI_19980618_BRANCH
+IMGLIB_BRANCH =
+PLUGIN_BRANCH =
 LIBPREF_BRANCH = XPCOM_BRANCH
+XPCOM_BRANCH =
 
 # CVS commands to pull the appropriate branch versions
 CVSCO_XPCOM = $(CVSCO)
@@ -62,7 +64,7 @@ CVSCO_IMGLIB = $(CVSCO)
 CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
 CVSCO_NETWORK = $(CVSCO)
-CVSCO_PLUGIN = $(CVSCO) -r $(PLUGIN_BRANCH)
+CVSCO_PLUGIN = $(CVSCO) -A
 
 # The list of directories that need to be built to build the
 # standalone nglayout test program. The order is important. The
