@@ -469,7 +469,17 @@ generally you want it to notice right away, so that you can test things.
 
 Appendix C. Upgrading from previous versions of BugZilla
 
-[This section under construction].
+The developers of BugZilla are constantly adding new tables, columns and fields.
+You'll get SQL errors if you just update the code.  The strategy to update is
+to read the CHANGES file backwards, and apply all of the instructions given,
+typically things like:
+
+	./makeattachmenttable.sh
+	./makegroupstable.sh
+	alter table products add column disallownew tinyint not null;
+
+Someday someone should write a script that queries the existing database
+for all the required columns, and if any are missing, adds them.
 
 
 Appendix D. History
