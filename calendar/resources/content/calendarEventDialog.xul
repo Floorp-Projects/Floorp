@@ -237,7 +237,7 @@
                     </row>
              
                     <!-- Repeat -->    
-                    <row collapsed="false" align="center">
+                    <row align="center">
                         <spacer />
                         <vbox>
                           <hbox id="repeat-box" align="center">

@@ -382,7 +382,7 @@ oeTimePicker.selectAmPmItem = function( amPmItem )
    
    if( oeTimePicker.gSelectedAmPmItem != null )
    {
-      oeTimePicker.gSelectedAmPmItem.setAttribute( "selected" , "false" );
+      oeTimePicker.gSelectedAmPmItem.removeAttribute( "selected" );
    }
    
    // set selected attribute, to cause the selected style to apply
@@ -406,7 +406,7 @@ oeTimePicker.selectHourItem = function( hourItem )
    
    if( oeTimePicker.gSelectedHourItem != null )
    {
-      oeTimePicker.gSelectedHourItem.setAttribute( "selected" , "false" );
+      oeTimePicker.gSelectedHourItem.removeAttribute( "selected" );
    }
    
    // set selected attribute, to cause the selected style to apply
@@ -429,7 +429,7 @@ oeTimePicker.selectMinuteItem = function( minuteItem )
    
    if( oeTimePicker.gSelectedMinuteItem != null )
    {
-      oeTimePicker.gSelectedMinuteItem.setAttribute( "selected" , "false" );
+      oeTimePicker.gSelectedMinuteItem.removeAttribute( "selected" );
    }
    
    // set selected attribute, to cause the selected style to apply

@@ -433,10 +433,6 @@
    background-color: #E7EEEC;
 }
 
-.month-day-box-class[weekend="true"]{
-   background-color 		: #FFF9EF;
-}
-
 /*today's day box*/
 .month-day-box-class[today="true"]{
     font-weight:bold;
@@ -1028,7 +1024,7 @@
    border-bottom        : 1px solid #2085c4;
 }
 
-.weekend{
+*[weekend="true"]{
    background-color 		: #FFF9EF;
 }
 

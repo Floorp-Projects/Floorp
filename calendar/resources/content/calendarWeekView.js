@@ -150,7 +150,7 @@ WeekView.prototype.refreshEvents = function( )
    
    //expand the day's content box by setting allday to false..
    
-   document.getElementById( "week-view-content-box" ).setAttribute( "allday", "false" );
+   document.getElementById( "week-view-content-box" ).removeAttribute( "allday" );
 
    //START FOR LOOP FOR DAYS---> 
    for ( dayIndex = 1; dayIndex <= 7; ++dayIndex )
@@ -278,7 +278,7 @@ WeekView.prototype.refreshEvents = function( )
             }
             
             //show the all day box 
-            AllDayBox.setAttribute( "collapsed", "false" );
+            AllDayBox.removeAttribute( "collapsed" );
             
             //shrink the day's content box.
             document.getElementById( "week-view-content-box" ).setAttribute( "allday", "true" );
@@ -434,9 +434,9 @@ WeekView.prototype.switchTo = function( )
    var monthViewButton = document.getElementById( "calendar-month-view-button" );
    var dayViewButton = document.getElementById( "calendar-day-view-button" );
    
-   monthViewButton.setAttribute( "disabled", "false" );
+   monthViewButton.removeAttribute( "disabled" );
    weekViewButton.setAttribute( "disabled", "true" );
-   dayViewButton.setAttribute( "disabled", "false" );
+   dayViewButton.removeAttribute( "disabled" );
 
    // switch views in the deck
 
@@ -468,6 +468,9 @@ WeekView.prototype.refreshDisplay = function( )
 
    NewArrayOfDayNames = new Array();
    
+   /* 
+      Set the header information for the week view
+   */
    for( i = 0; i < ArrayOfDayNames.length; i++ )
    {
       NewArrayOfDayNames[i] = ArrayOfDayNames[i];
@@ -480,8 +483,7 @@ WeekView.prototype.refreshDisplay = function( )
       NewArrayOfDayNames.push( FirstElement );
    }
 
-   var daysLeftInWeek = 6 - viewDay;
-   var dateOfLastDayInWeek = viewDayOfMonth + daysLeftInWeek;
+   var dateOfLastDayInWeek = viewDayOfMonth + ( 6 - viewDay );
    
    var dateOfFirstDayInWeek = viewDayOfMonth - viewDay;
    
@@ -499,8 +501,9 @@ WeekView.prototype.refreshDisplay = function( )
    var weekTextItem = document.getElementById( "week-title-text" );
    weekTextItem.setAttribute( "value" , dateString ); 
    
-   // Set the dates in the header
-   
+   /* done setting the header information */
+
+   /* Fix the day names because users can choose which day the week starts on  */
    var weekDate = new Date( viewYear, viewMonth, dateOfFirstDayInWeek );
    
    for( var dayIndex = 1; dayIndex < 8; ++dayIndex )
@@ -514,6 +517,31 @@ WeekView.prototype.refreshDisplay = function( )
       
       document.getElementById( "week-header-date-text-"+dayIndex ).setAttribute( "value", NewArrayOfDayNames[dayIndex-1] );
       
+      var arrayOfBoxes = new Array();
+
+      if( weekDate.getDay() == 0 || weekDate.getDay() == 6 )
+      {
+         /* its a weekend */
+         arrayOfBoxes = document.getElementsByAttribute( "day", dayIndex );
+
+         for( i = 0; i < arrayOfBoxes.length; i++ )
+         {
+            arrayOfBoxes[i].setAttribute( "weekend", "true" );
+         }
+
+      }
+      else
+      {
+         /* its not a weekend */
+         arrayOfBoxes = document.getElementsByAttribute( "day", dayIndex );
+
+         for( i = 0; i < arrayOfBoxes.length; i++ )
+         {
+            arrayOfBoxes[i].removeAttribute( "weekend" );
+         }
+      }
+
+
       // advance to next day 
       
       weekDate.setDate( dateOfDay + 1 );
@@ -595,7 +623,7 @@ WeekView.prototype.hiliteTodaysDate = function( )
    var OldTodayArray = document.getElementsByAttribute( "today", "true" );
    for ( i = 0; i < OldTodayArray.length; i++ ) 
    {
-      OldTodayArray[i].setAttribute( "today", "false" );
+      OldTodayArray[i].removeAttribute( "today" );
    }
                                                       
 

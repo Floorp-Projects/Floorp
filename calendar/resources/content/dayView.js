@@ -139,7 +139,7 @@ DayView.prototype.refreshEvents = function( )
 
    //shrink the day's content box.
    
-   document.getElementById( "day-view-content-box" ).setAttribute( "allday", "false" );
+   document.getElementById( "day-view-content-box" ).removeAttribute( "allday" );
 
    //make the text node that will contain the text for the all day box.
    
@@ -239,7 +239,7 @@ DayView.prototype.refreshEvents = function( )
          }
          
          //show the all day box 
-         AllDayBox.setAttribute( "collapsed", "false" );
+         AllDayBox.removeAttribute( "collapsed" );
          
          //shrink the day's content box.
          document.getElementById( "day-view-content-box" ).setAttribute( "allday", "true" );
@@ -396,8 +396,8 @@ DayView.prototype.switchTo = function( )
    var monthViewButton = document.getElementById( "calendar-month-view-button" );
    var dayViewButton = document.getElementById( "calendar-day-view-button" );
    
-   monthViewButton.setAttribute( "disabled", "false" );
-   weekViewButton.setAttribute( "disabled", "false" );
+   monthViewButton.removeAttribute( "disabled" );
+   weekViewButton.removeAttribute( "disabled" );
    dayViewButton.setAttribute( "disabled", "true" );
 
    // switch views in the deck

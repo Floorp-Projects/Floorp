@@ -380,8 +380,8 @@ MonthView.prototype.switchTo = function( )
    var dayViewButton = document.getElementById( "calendar-day-view-button" );
    
    monthViewButton.setAttribute( "disabled", "true" );
-   weekViewButton.setAttribute( "disabled", "false" );
-   dayViewButton.setAttribute( "disabled", "false" );
+   weekViewButton.removeAttribute( "disabled" );
+   dayViewButton.removeAttribute( "disabled" );
 
    // switch views in the deck
    
@@ -467,7 +467,7 @@ MonthView.prototype.refreshDisplay = function( )
          dayBoxItem.dayNumber = null;
 
          dayBoxItem.setAttribute( "empty" , "true" );  
-         dayBoxItem.setAttribute( "weekend", "false" );
+         dayBoxItem.removeAttribute( "weekend" );
          
          if( dayIndex < firstDayOfWeek )
          {
@@ -491,14 +491,14 @@ MonthView.prototype.refreshDisplay = function( )
       {
          dayNumberItem.setAttribute( "value" , dayNumber );
          
-         dayBoxItem.setAttribute( "empty" , "false" ); 
+         dayBoxItem.removeAttribute( "empty" ); 
          var thisDate = new Date( newYear, newMonth, dayNumber );
          if( thisDate.getDay() == 0 | thisDate.getDay() == 6 )
          {
             dayBoxItem.setAttribute( "weekend", "true" );
          }
          else
-            dayBoxItem.setAttribute( "weekend", "false" ); 
+            dayBoxItem.removeAttribute( "weekend" ); 
 
          dayBoxItem.dayNumber = dayNumber;
          
@@ -839,7 +839,7 @@ MonthView.toggleBackground = function( ){
     //do the outer grid box
     if(document.getElementById("month-grid-box").getAttribute("background")){
 	if(document.getElementById("month-grid-box").getAttribute("background") == "true"){
-	    document.getElementById("month-grid-box").setAttribute("background", "false");
+	    document.getElementById("month-grid-box").removeAttribute("background");
 	}else{
 	    document.getElementById("month-grid-box").setAttribute("background", "true");
 	}
