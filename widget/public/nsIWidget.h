@@ -609,6 +609,12 @@ class nsIWidget : public nsISupports {
 
 
     /**
+     * FSets the vertical scrollbar widget
+     *
+     */
+    NS_IMETHOD SetVerticalScrollbar(nsIWidget * aScrollbar) = 0;
+   
+    /**
      * For printing and lightweight widgets
      *
      */
