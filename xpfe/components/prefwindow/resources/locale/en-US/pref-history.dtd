@@ -15,5 +15,5 @@
   
 <!ENTITY  shistory.label             "Session History">
 <!ENTITY  shistoryDescription1.label "Session history is a list of pages previously visited for an open browser window, accessible via the Back and Forward buttons.">
-<!ENTITY  shistoryDescription2.label "Number of pages in session sistory:">
+<!ENTITY  shistoryDescription2.label "Number of pages in session history:">
 <!ENTITY  shistory.accesskey         "s">
