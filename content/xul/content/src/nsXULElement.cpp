@@ -299,6 +299,7 @@ nsXULElement::nsXULElement()
       mParent(nsnull),
       mChildren(nsnull),
       mScriptObject(nsnull),
+      mIsAnonymous(PR_FALSE),
       mLazyState(0),
       mSlots(nsnull)
 {
@@ -1304,6 +1305,19 @@ nsXULElement::PeekChildCount(PRInt32& aCount) const
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULElement::GetAnonymousState(PRBool& aState)
+{
+  aState = mIsAnonymous;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::SetAnonymousState(PRBool aState)
+{
+  mIsAnonymous = aState;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXULElement::SetLazyState(PRInt32 aFlags)
@@ -2655,9 +2669,23 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     // Node capturing stage
     if (NS_EVENT_FLAG_BUBBLE != aFlags) {
         if (mParent) {
+            PRBool proceed = PR_TRUE;
+            if (mIsAnonymous) {
+              PRBool parentState;
+              nsCOMPtr<nsIXULContent> parent = do_QueryInterface(mParent);
+              if (parent) {
+                parent->GetAnonymousState(parentState);
+                if (!parentState)
+                  proceed = PR_FALSE;
+              }
+              else proceed = PR_FALSE; // Assume that the HTML Content is not anonymous
+                                       // XXX Will need to do better for XBL.
+            }
+
             // Pass off to our parent.
-            mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                    NS_EVENT_FLAG_CAPTURE, aEventStatus);
+            if (proceed)
+              mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                      NS_EVENT_FLAG_CAPTURE, aEventStatus);
         }
         else if (mDocument != nsnull) {
             ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
@@ -2675,10 +2703,25 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     //Bubbling stage
     if (NS_EVENT_FLAG_CAPTURE != aFlags) {
         if (mParent != nsnull) {
-        // We have a parent. Let them field the event.
-        ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                      NS_EVENT_FLAG_BUBBLE, aEventStatus);
-        }
+          PRBool proceed = PR_TRUE;
+          if (mIsAnonymous) {
+            PRBool parentState;
+            nsCOMPtr<nsIXULContent> parent = do_QueryInterface(mParent);
+            if (parent) {
+              parent->GetAnonymousState(parentState);
+              if (!parentState)
+                proceed = PR_FALSE;
+            }
+            else proceed = PR_FALSE; // Assume that the HTML Content is not anonymous
+                                     // XXX Will need to do better for XBL.
+          }
+
+          // Pass off to our parent.
+          if (proceed)
+            // We have a parent. Let them field the event.
+            ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                          NS_EVENT_FLAG_BUBBLE, aEventStatus);
+      }
         else if (mDocument != nsnull) {
         // We must be the document root. The event should bubble to the
         // document.
