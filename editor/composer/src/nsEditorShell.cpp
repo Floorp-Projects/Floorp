@@ -80,7 +80,7 @@
 #include "nsEditorController.h"
 #include "nsIControllers.h"
 #include "nsIDocShell.h"
-
+#include "nsITransactionManager.h"
 
 ///////////////////////////////////////
 // Editor Includes
@@ -124,8 +124,6 @@ static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID,      NS_DialogParamBlock_CID);
-static NS_DEFINE_CID(kEditorControllerCID,      NS_EDITORCONTROLLER_CID);
-static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
@@ -352,23 +350,38 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   // and set it up as a doc state listener
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor, &rv);
   if (NS_FAILED(rv)) return rv;
-  rv = editor->AddDocumentStateListener(mStateMaintainer);
+  rv = editor->AddDocumentStateListener(NS_STATIC_CAST(nsIDocumentStateListener*, mStateMaintainer));
   if (NS_FAILED(rv)) return rv;
+  
+  // and as a transaction listener
+  nsCOMPtr<nsITransactionManager> txnMgr;
+  editor->GetTransactionManager(getter_AddRefs(txnMgr));
+  if (txnMgr)
+  {
+    txnMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*, mStateMaintainer));
+  }
+  
   
   if (NS_SUCCEEDED(rv) && mContentWindow)
   {
     nsCOMPtr<nsIController> controller;
     nsCOMPtr<nsIControllers> controllers;
-    rv = nsComponentManager::CreateInstance(kEditorControllerCID, nsnull, NS_GET_IID(nsIController), getter_AddRefs(controller));
+    rv = nsComponentManager::CreateInstance("component://netscape/editor/editorcontroller",
+                                       nsnull,
+                                       NS_GET_IID(nsIController),
+                                       getter_AddRefs(controller));
     if (NS_SUCCEEDED(rv) && controller)
     {
       rv = mContentWindow->GetControllers(getter_AddRefs(controllers));
       if (NS_SUCCEEDED(rv) && controllers)
       {
-        nsCOMPtr<nsIEditorController> ieditcontroller = do_QueryInterface(controller);
-        ieditcontroller->SetEditor(editor);//weak link
+        nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller);
+        rv = editorController->Init();
+        if (NS_FAILED(rv)) return rv;
+        
+        editorController->SetEditor(editor);//weak link
 
-        rv = controllers->InsertControllerAt(0,controller);
+        rv = controllers->InsertControllerAt(0, controller);
       }
     }
   }

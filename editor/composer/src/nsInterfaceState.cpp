@@ -36,9 +36,12 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMXULCommandDispatcher.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindow.h"
 
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
+#include "nsITransactionManager.h"
 
 #include "nsInterfaceState.h"
 
@@ -47,11 +50,13 @@
 nsInterfaceState::nsInterfaceState()
 :  mEditor(nsnull)
 ,  mChromeDoc(nsnull)
+,  mDOMWindow(nsnull)
 ,  mBoldState(eStateUninitialized)
 ,  mItalicState(eStateUninitialized)
 ,  mUnderlineState(eStateUninitialized)
 ,  mDirtyState(eStateUninitialized)
 ,  mSelectionCollapsed(eStateUninitialized)
+,  mFirstDoOfFirstUndo(PR_TRUE)
 {
 	NS_INIT_REFCNT();
 }
@@ -62,38 +67,7 @@ nsInterfaceState::~nsInterfaceState()
 
 NS_IMPL_ADDREF(nsInterfaceState);
 NS_IMPL_RELEASE(nsInterfaceState);
-
-NS_IMETHODIMP
-nsInterfaceState::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  
-  *aInstancePtr = nsnull;
-  if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener)))
-  {
-    *aInstancePtr = (void*)(nsIDOMSelectionListener*)this;
-    AddRef();
-    return NS_OK;
-  }
-  
-  if (aIID.Equals(NS_GET_IID(nsIDocumentStateListener)))
-  {
-    *aInstancePtr = (void*)(nsIDocumentStateListener*)this;
-    AddRef();
-    return NS_OK;
-  }
-  
-  if (aIID.Equals(NS_GET_IID(nsISupports)))
-  {
-    *aInstancePtr = (void*)(nsISupports *)(nsIDOMSelectionListener*)this;
-    AddRef();
-    return NS_OK;
-  }
-  
-  return NS_NOINTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE3(nsInterfaceState, nsIDOMSelectionListener, nsIDocumentStateListener, nsITransactionListener);
 
 NS_IMETHODIMP
 nsInterfaceState::Init(nsIHTMLEditor* aEditor, nsIDOMXULDocument *aChromeDoc)
@@ -143,22 +117,131 @@ nsInterfaceState::NotifySelectionChanged()
   PRBool isCollapsed = SelectionIsCollapsed();
   if (isCollapsed != mSelectionCollapsed)
   {
+    CallUpdateCommands(nsAutoString("select"));
     mSelectionCollapsed = isCollapsed;
-
-    // force command updating to happen. Slow, we'll speed it up later
-    // we could do this in JS, but we can't be a selection listener there
-    nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher;
-    nsresult rv = mChromeDoc->GetCommandDispatcher(getter_AddRefs(dispatcher));
-    if (NS_FAILED(rv)) return rv;
-    if (!dispatcher) return NS_ERROR_UNEXPECTED;
-    
-    rv = dispatcher->UpdateCommands(nsAutoString("selection-change"));
-    if (NS_FAILED(rv)) return rv;
   }
   
   return ForceUpdate();
 }
 
+
+NS_IMETHODIMP nsInterfaceState::WillDo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::DidDo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, nsresult aDoResult)
+{
+  // only need to update if the status of the Undo menu item changes.
+  PRInt32 undoCount;
+  aManager->GetNumberOfUndoItems(&undoCount);
+  if (undoCount == 1)
+  {
+    if (mFirstDoOfFirstUndo)
+      CallUpdateCommands(nsAutoString("undo"));
+    mFirstDoOfFirstUndo = PR_FALSE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::WillUndo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::DidUndo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, nsresult aUndoResult)
+{
+  PRInt32 undoCount;
+  aManager->GetNumberOfUndoItems(&undoCount);
+  if (undoCount == 0)
+    mFirstDoOfFirstUndo = PR_TRUE;    // reset the state for the next do
+
+  CallUpdateCommands(nsAutoString("undo"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::WillRedo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::DidRedo(nsITransactionManager *aManager,  
+  nsITransaction *aTransaction, nsresult aRedoResult)
+{
+  CallUpdateCommands(nsAutoString("undo"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::WillBeginBatch(nsITransactionManager *aManager, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::DidBeginBatch(nsITransactionManager *aManager, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::WillEndBatch(nsITransactionManager *aManager, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::DidEndBatch(nsITransactionManager *aManager, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::WillMerge(nsITransactionManager *aManager,
+        nsITransaction *aTopTransaction, nsITransaction *aTransactionToMerge, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsInterfaceState::DidMerge(nsITransactionManager *aManager,
+  nsITransaction *aTopTransaction, nsITransaction *aTransactionToMerge,
+                    PRBool aDidMerge, nsresult aMergeResult)
+{
+  return NS_OK;
+}
+
+
+nsresult nsInterfaceState::CallUpdateCommands(const nsString& aCommand)
+{
+  if (!mDOMWindow)
+  {
+    nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+    if (!editor) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    editor->GetDocument(getter_AddRefs(domDoc));
+    if (!domDoc) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDocument> theDoc = do_QueryInterface(domDoc);
+    if (!theDoc) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+    theDoc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+
+    nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject);
+    if (!domWindow) return NS_ERROR_FAILURE;
+    mDOMWindow = domWindow;
+  }
+  
+  return mDOMWindow->UpdateCommands(aCommand);
+}
 
 NS_IMETHODIMP
 nsInterfaceState::ForceUpdate()

@@ -27,6 +27,7 @@
 
 #include "nsIDOMSelectionListener.h"
 #include "nsIDocumentStateListener.h"
+#include "nsITransactionListener.h"
 #include "nsIWebShell.h"
 
 class nsIHTMLEditor;
@@ -36,7 +37,8 @@ class nsIDOMXULDocument;
 // This is currently somewhat tied to a given XUL UI implementation
 
 class nsInterfaceState : public nsIDOMSelectionListener,
-                         public nsIDocumentStateListener
+                         public nsIDocumentStateListener,
+                         public nsITransactionListener
 {
 public:
 
@@ -57,6 +59,26 @@ public:
 
   NS_DECL_NSIDOCUMENTSTATELISTENER
   
+
+  /** nsITransactionListener interfaces
+    */
+  
+  NS_IMETHOD WillDo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD DidDo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aDoResult);
+  NS_IMETHOD WillUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD DidUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aUndoResult);
+  NS_IMETHOD WillRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD DidRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aRedoResult);
+  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager, PRBool *aInterrupt);
+  NS_IMETHOD DidBeginBatch(nsITransactionManager *aManager, nsresult aResult);
+  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager, PRBool *aInterrupt);
+  NS_IMETHOD DidEndBatch(nsITransactionManager *aManager, nsresult aResult);
+  NS_IMETHOD WillMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
+                       nsITransaction *aTransactionToMerge, PRBool *aInterrupt);
+  NS_IMETHOD DidMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
+                      nsITransaction *aTransactionToMerge,
+                      PRBool aDidMerge, nsresult aMergeResult);
+
 protected:
 
   enum {
@@ -76,12 +98,16 @@ protected:
   nsresult      UpdateFontFace(const char* observerName, const char* attributeName, nsString& ioFontString);
   nsresult      UpdateDirtyState(PRBool aNowDirty);
   
+  nsresult      CallUpdateCommands(const nsString& aCommand);
+  
   // this class should not hold references to the editor or editorShell. Doing
   // so would result in cirular reference chains.
   
   nsIHTMLEditor*      mEditor;		 // the HTML editor
   nsIDOMXULDocument*  mChromeDoc;  // XUL document for the chrome area
 
+  nsIDOMWindow*       mDOMWindow;   // nsIDOMWindow used for calling UpdateCommands
+  
   // current state
   PRInt8        mBoldState;
   PRInt8        mItalicState;
@@ -91,6 +117,7 @@ protected:
   
   PRInt8        mSelectionCollapsed;
   
+  PRPackedBool  mFirstDoOfFirstUndo;
   
   nsString      mParagraphFormat;
   nsString      mFontString;
