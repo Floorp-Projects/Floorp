@@ -155,9 +155,9 @@ EssentialFiles2Components(char *filename)
 	}
 
 	if(componentPathStr)
-		DisposeHandle(&componentPathStr);
+		DisposePtr(componentPathStr);
 	if(finalStr)
-		DisposeHandle(&finalStr);
+		DisposePtr(finalStr);
 }
 
 OSErr
