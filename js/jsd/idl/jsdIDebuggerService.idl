@@ -120,12 +120,17 @@ interface jsdIStackFrame : nsISupports
     readonly attribute jsdIStackFrame callingFrame;
     readonly attribute jsdIScript     script;
     readonly attribute unsigned long  pc;
+    readonly attribute unsigned long  line;
     readonly attribute jsdIValue      callee;
     readonly attribute jsdIValue      scope;
     readonly attribute jsdIValue      thisValue;
 
     jsdIValue eval (in AString bytes, in string fileName,
                     in unsigned long line);
+
+    unsigned long pcToLine (in unsigned long pc);
+    unsigned long lineToPc (in unsigned long line);
+    
 };
 
 [scriptable, uuid(b6d1c006-1dd1-11b2-b9d8-b4d1ccfb74d8)]
@@ -146,7 +151,6 @@ interface jsdIValue : nsISupports
     [noscript] readonly attribute JSDContext JSDContext;
     [noscript] readonly attribute JSDValue   JSDValue;
 
-    readonly attribute boolean isFunction;
     readonly attribute boolean isNative;
     readonly attribute boolean isNumber;
     readonly attribute boolean isPrimitive;
@@ -158,6 +162,7 @@ interface jsdIValue : nsISupports
     const unsigned long TYPE_OBJECT = 4;
     const unsigned long TYPE_STRING = 5;
     const unsigned long TYPE_VOID = 6;
+    const unsigned long TYPE_UNKNOWN = 7;
     
     readonly attribute unsigned long jsType;
     readonly attribute jsdIValue     jsPrototype;
@@ -166,12 +171,14 @@ interface jsdIValue : nsISupports
     readonly attribute jsdIValue     jsConstructor;
     readonly attribute string        jsFunctionName;
     
-    readonly attribute boolean     booleanValue;
-    readonly attribute double      doubleValue;
-    readonly attribute long        intValue;
-    readonly attribute jsdIObject  objectValue;
-    readonly attribute string      stringValue;
+    readonly attribute boolean    booleanValue;
+    readonly attribute double     doubleValue;
+    readonly attribute long       intValue;
+    readonly attribute jsdIObject objectValue;
+    readonly attribute string     stringValue;
 
+    readonly attribute unsigned long propertyCount;
+    
     void getProperties ([array, size_is(length)] out jsdIProperty propArray,
                         out unsigned long length);
     jsdIProperty getProperty (in string name);
@@ -190,6 +197,12 @@ interface jsdIScriptHook : nsISupports
 [scriptable, uuid(9a7b6ad0-1dd1-11b2-a789-fcfae96356a2)]
 interface jsdIExecutionHook : nsISupports
 {
+    const unsigned long TYPE_INTERRUPTED      = 0;
+    const unsigned long TYPE_BREAKPOINT       = 1;
+    const unsigned long TYPE_DEBUG_REQUESTED  = 2;
+    const unsigned long TYPE_DEBUGGER_KEYWORD = 3;
+    const unsigned long TYPE_THROW            = 4;
+    
     const unsigned long RETURN_HOOK_ERROR     = 0;
     const unsigned long RETURN_CONTINUE       = 1;
     const unsigned long RETURN_ABORT          = 2;
