@@ -21,8 +21,19 @@
 *   David Hyatt <hyatt@netscape.com> (Original Author)
 */
 
+#import <AppKit/AppKit.h>
 #import "CHAutoCompleteDataSource.h"
 
 @implementation CHAutoCompleteDataSource
+
+-(int)numberOfRowsInTableView:(NSTableView*)aTableView
+{
+  return 0;
+}
+
+-(id)tableView:(NSTableView*)aTableView objectValueForTableColumn:(NSTableColumn*)aTableColumn row:(int)aRowIndex
+{
+  return @"";
+}
 
 @end

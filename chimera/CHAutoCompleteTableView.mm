@@ -22,12 +22,28 @@
 */
 
 #import "CHAutoCompleteTableView.h"
+#import "CHAutoCompleteDataSource.h"
 
 @implementation CHAutoCompleteTableView
 
+-(id)initWithFrame:(NSRect)aRect
+{
+  if ((self = [super initWithFrame: aRect])) {
+    // Create our data source.
+    CHAutoCompleteDataSource* ds = [[[CHAutoCompleteDataSource alloc] init] autorelease];
+    [self setDataSource: ds];
+
+    // Create the URL column.
+    NSTableColumn* urlColumn = [[[NSTableColumn alloc] initWithIdentifier:@"URL"] autorelease];
+    [self addTableColumn: urlColumn];
+    NSTableColumn* titleColumn = [[[NSTableColumn alloc] initWithIdentifier:@"Title"] autorelease];
+    [self addTableColumn: titleColumn];
+  }
+  return self;
+}
+
 -(void)controlTextDidChange:(NSNotification*)aNotification
 {
-  printf("Input changed.\n");
 }
 
 -(void)controlTextDidEndEditing:(NSNotification*)aNotification
