@@ -47,8 +47,8 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD SetPushAuth(PRBool aPushAuth) = 0;
 
   /* attribute PRTime lastUpdatedTime; */
-  NS_IMETHOD GetLastUpdatedTime(PRTime *aLastUpdatedTime) = 0;
-  NS_IMETHOD SetLastUpdatedTime(PRTime aLastUpdatedTime) = 0;
+  NS_IMETHOD GetLastUpdatedTime(PRUint32 *aLastUpdatedTime) = 0;
+  NS_IMETHOD SetLastUpdatedTime(PRUint32 aLastUpdatedTime) = 0;
 
   /* nsINNTPNewsgroupList GetNewsgroupList (in string name); */
   NS_IMETHOD GetNewsgroupList(const char *name, nsINNTPNewsgroupList **retval) = 0;

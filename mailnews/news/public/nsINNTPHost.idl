@@ -32,7 +32,7 @@ interface nsINNTPHost : nsISupports {
 
     attribute boolean postingAllowed;
     attribute boolean pushAuth;
-    attribute PRTime lastUpdatedTime;
+    attribute unsigned long lastUpdatedTime;
 
     /* look up the newsgroup list for the given name */
     nsINNTPNewsgroupList GetNewsgroupList(in string name);
