@@ -175,22 +175,25 @@ PRBool gPopupJustDeactivated = PR_FALSE;
 
 void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 {
-    //printf("nsMacEventDispatcher::SetActivated \n");
-	if (aActivatedWidget == mActiveWidget)
-		return;
-
-    if(aActivatedWidget) {
-      if ( eWindowType_popup == aActivatedWidget->GetWindowType() ) {
-        //printf("nsMacEventDispatcher::SetActivated type popup, bail\n");
-        return;
-      }
-    }
-   
+  //printf("nsMacEventDispatcher::SetActivated \n");
+  
   if(gPopupJustDeactivated) {
     gPopupJustDeactivated = PR_FALSE;
     return;
   }
-    
+  
+  gPopupJustDeactivated = PR_FALSE;
+  
+	if (aActivatedWidget == mActiveWidget)
+		return;
+
+  if(aActivatedWidget) {
+    if ( eWindowType_popup == aActivatedWidget->GetWindowType() ) {
+      //printf("nsMacEventDispatcher::SetActivated type popup, bail\n");
+      return;
+    }
+  }
+  
 	// tell the old widget it is not focused
 	if (mActiveWidget)
 	{
