@@ -1339,6 +1339,7 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 
 PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
+printf("IN NSWINDOW ON SCROLL\n");
  return FALSE;
 }
 

@@ -134,7 +134,7 @@ public:
     void OnDestroy();
     PRBool OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);
     PRBool DispatchFocus(nsGUIEvent &aEvent);
-    PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
+    virtual PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
     void SetIgnoreResize(PRBool aIgnore);
     PRBool IgnoreResize();
     PRUint32 GetYCoord(PRUint32 aNewY);
