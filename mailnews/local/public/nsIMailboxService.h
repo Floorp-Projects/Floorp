@@ -21,6 +21,7 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "MailNewsTypes.h"
 #include "nsFileSpec.h"
 
 /* EEF82460-CB69-11d2-8065-006008128C4E */
@@ -73,8 +74,8 @@ public:
 	// It would be nice if we can figure this out for ourselves in the protocol but we can't do 
 	// that right now. 
 	//////////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD DisplayMessage(const nsFilePath& aMailboxPath, PRUint32 aStartByte, PRUint32 aEndByte, 
-		nsISupports * aDisplayConsumer, nsIURL ** aURL) = 0;
+	NS_IMETHOD DisplayMessage(const nsFilePath& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
+		nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
 };
 
