@@ -50,6 +50,13 @@
 
 #include "Sound.h"
 
+inline void BoundsCheck(PRInt32 low, PRUint32& value, PRUint32 high)
+{
+  if ((PRInt32) value < low)
+    value = low;
+  if (value > high)
+    value = high;
+}
 
 //
 // StControlActionProcOwner
@@ -155,19 +162,21 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
     //
     
     case kControlUpButtonPart:
-      if ( mMediator )
-        mMediator->ScrollbarButtonPressed(1,0);
-      else {
-        newPos = oldPos - incr;
+      newPos = oldPos - (mLineIncrement ? mLineIncrement : 1);
+      if ( mMediator ) {
+        BoundsCheck(0, newPos, mMaxValue);
+        mMediator->ScrollbarButtonPressed(oldPos, newPos);
+      } else {
         UpdateContentPosition(newPos);
       }
       break;
          
     case kControlDownButtonPart:
-      if ( mMediator )
-        mMediator->ScrollbarButtonPressed(0,1);
-      else {
-        newPos = oldPos + incr;
+      newPos = oldPos + (mLineIncrement ? mLineIncrement : 1);
+      if ( mMediator ) {
+        BoundsCheck(0, newPos, mMaxValue);
+        mMediator->ScrollbarButtonPressed(oldPos, newPos);
+      } else {
         UpdateContentPosition(newPos); 
       }
       break;
@@ -241,16 +250,13 @@ nsNativeScrollbar::UpdateContentPosition(PRUint32 inNewPos)
     return;
 
   // guarantee |inNewPos| is in the range of [0, mMaxValue] so it's correctly unsigned
-  if ( (PRInt32)inNewPos < 0 )
-    inNewPos = 0;
-  else if ( inNewPos > mMaxValue )
-    inNewPos = mMaxValue;
+  BoundsCheck(0, inNewPos, mMaxValue);
 
   // convert the int to a string
-  char buffer[20];
-  sprintf(buffer, "%d", inNewPos);
+  nsAutoString buffer;
+  buffer.AppendInt(inNewPos);
   
-  mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::curpos, NS_ConvertASCIItoUCS2(buffer), PR_TRUE);
+  mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::curpos, buffer, PR_TRUE);
   SetPosition(inNewPos);
 }
 
