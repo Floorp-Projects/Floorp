@@ -1,11 +1,13 @@
 <!ENTITY newBookmark.title          "Add Bookmark">
 <!ENTITY newbookmark.label          "&brandShortName; will add a bookmark to this page.">
 <!ENTITY name.label                 "Name:">
-<!ENTITY name.accesskey             "n">
+<!ENTITY name.accesskey             "N">
+<!ENTITY keyword.label              "Keyword:">
+<!ENTITY keyword.accesskey          "K">
 <!ENTITY url.label                  "Location:">
-<!ENTITY url.accesskey              "l">
+<!ENTITY url.accesskey              "L">
 <!ENTITY button.createin.label      "Create In &gt;&gt;">
-<!ENTITY button.createin.accesskey  "c">
+<!ENTITY button.createin.accesskey  "C">
 <!ENTITY button.createin2.label     "Create In &lt;&lt;">
 <!ENTITY createin.label             "Create in:">
 <!ENTITY createin.accesskey         "C">

@@ -160,6 +160,10 @@
                 accesskey="&selectAllCmd.accesskey;"
                 command="cmd_selectAll"/>      
       <menuseparator id="context-sep-selectall"/>
+      <menuitem id="context-keywordfield"
+                label="&keywordfield.label;"
+                accesskey="&keywordfield.accesskey;"
+                oncommand="AddKeywordForSearchField();"/>
       <menuitem id="context-searchselect"
                 accesskey="&search.accesskey;"
                 oncommand="OpenSearch('internet', gContextMenu.searchSelected(), true);"/>
