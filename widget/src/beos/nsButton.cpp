@@ -52,9 +52,6 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 
-NS_IMPL_ADDREF(nsButton)
-NS_IMPL_RELEASE(nsButton)
-
 //-------------------------------------------------------------------------
 //
 // nsButton constructor

@@ -44,9 +44,6 @@
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
 
-NS_IMPL_ADDREF(nsLabel)
-NS_IMPL_RELEASE(nsLabel)
-
 //-------------------------------------------------------------------------
 //
 // nsLabel constructor

@@ -92,7 +92,7 @@ static sem_id my_find_sem(const char *name)
 //
 //-------------------------------------------------------------------------
 NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsAppShell, nsIAppShell)
 
 //-------------------------------------------------------------------------
 //

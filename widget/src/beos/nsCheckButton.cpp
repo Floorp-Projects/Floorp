@@ -47,9 +47,6 @@
 
 #include "nsIDeviceContext.h"
 
-NS_IMPL_ADDREF(nsCheckButton)
-NS_IMPL_RELEASE(nsCheckButton)
-
 //-------------------------------------------------------------------------
 //
 // nsCheckButton constructor
