@@ -39,28 +39,67 @@ package netscape.oji;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Date;
+import java.util.Properties;
+import java.net.URL;
 
 /**
- * Sends System.out/err to a common disk file.
+ * Performs startup actions on behalf of the MRJ plugin.
+ * 1. Sends System.out/err to a specified disk file.
+ * 2. Installs an appropriate security manager for
+ *    integrating with the Netscape 6 security system.
  */
 public class MRJSession {
 	// Save primordial System streams.
 	private static PrintStream out;
 	private static PrintStream err;
-	
-	private static PrintStream output;
+	private static PrintStream console;
+
+    private static Properties loadProperties(String pluginHome) {
+        Properties props = new Properties();
+        try {
+            InputStream propsStream = new FileInputStream(pluginHome + "/MRJPlugin.properties");
+            props.load(propsStream);
+            propsStream.close();
+        } catch (IOException ex) {
+        }
+        return props;
+    }
 
     public static void open(String consolePath) throws IOException {
+        String pluginHome = System.getProperty("netscape.oji.plugin.home");
+        Properties props = loadProperties(pluginHome);
+        boolean append = Boolean.valueOf(props.getProperty("netscape.oji.plugin.console.append")).booleanValue();
+    
+        // redirect I/O to specified file.
 		MRJSession.out = System.out;
 		MRJSession.err = System.err;
-        output = new PrintStream(new FileOutputStream(consolePath, true));
-		System.setOut(output);
-		System.setErr(output);
+        console = new PrintStream(new FileOutputStream(consolePath, append));
+		System.setOut(console);
+		System.setErr(console);
+
+        Date date = new Date();
+        String version = props.getProperty("netscape.oji.plugin.version");
+        System.out.println("MRJ Plugin for Mac OS X v" + version);
+        System.out.println("[starting up Java Applet Security @ " + date + "]");
+
+        // bring up MRJ Applet Security.
+        if (System.getSecurityManager() == null) {
+            try {
+                // make sure that the classes in MRJPlugin.jar are granted all permissions.
+                // see p. 117 of "Inside Java 2 Platform Security" for more information.
+                System.setProperty("java.security.policy", "file:" + pluginHome + "/MRJPlugin.policy");
+                String name = props.getProperty("netscape.oji.plugin.security");
+                SecurityManager securityManager = (SecurityManager) Class.forName(name).newInstance();
+                System.setSecurityManager(securityManager);
+            } catch (Exception ex) {
+            }
+        }
     }
 
     public static void close() throws IOException {
 		System.setOut(MRJSession.out);
 		System.setErr(MRJSession.err);
-        output.close();
+        console.close();
     }
 }
