@@ -197,6 +197,7 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler, nsIURI* uri)
     if (mMonitor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    mJARProtocolHandler = aHandler;
 	return NS_OK;
 }
 
@@ -911,20 +912,15 @@ nsJARChannel::Open(char* *contentType, PRInt32 *contentLength)
 	nsresult rv;
     NS_ASSERTION(mJARBaseFile, "mJARBaseFile is null");
 
-	rv = nsComponentManager::CreateInstance(kZipReaderCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIZipReader),
-                                            getter_AddRefs(mJAR));
-    if (NS_FAILED(rv)) return rv;
-
     nsCOMPtr<nsIFile> fs;
     rv = mJARBaseFile->GetFile(getter_AddRefs(fs));
     if (NS_FAILED(rv)) return rv; 
 
-	rv = mJAR->Init(fs);
+    nsCOMPtr<nsIZipReaderCache> jarCache;
+    rv = mJARProtocolHandler->GetJARCache(getter_AddRefs(jarCache));
     if (NS_FAILED(rv)) return rv; 
 
-	rv = mJAR->Open();
+    rv = jarCache->GetZip(fs, getter_AddRefs(mJAR));
     if (NS_FAILED(rv)) return rv; 
 
     nsCOMPtr<nsIZipEntry> entry;
@@ -947,6 +943,15 @@ nsJARChannel::Open(char* *contentType, PRInt32 *contentLength)
 NS_IMETHODIMP
 nsJARChannel::Close(nsresult status) 
 {
+    nsresult rv;
+
+    nsCOMPtr<nsIZipReaderCache> jarCache;
+    rv = mJARProtocolHandler->GetJARCache(getter_AddRefs(jarCache));
+    if (NS_FAILED(rv)) return rv; 
+
+    rv = jarCache->ReleaseZip(mJAR);
+    if (NS_FAILED(rv)) return rv; 
+
     mJAR = null_nsCOMPtr();
 	return NS_OK;
 }
