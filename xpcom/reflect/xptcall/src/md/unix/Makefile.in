@@ -57,7 +57,6 @@ endif
 ifneq (,$(filter Linux,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_gcc_x86_unix.cpp xptcstubs_gcc_x86_unix.cpp
-CXXFLAGS	+= -DMOZ_USE_STDCALL
 endif
 endif
 #
