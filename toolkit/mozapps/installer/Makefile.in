@@ -30,6 +30,9 @@ include $(DEPTH)/config/autoconf.mk
 ifeq ($(OS_ARCH),WINNT)
 DIRS = windows
 endif
+ifdef MOZ_ENABLE_GTK2
+DIRS = unix
+endif
 
 include $(topsrcdir)/config/rules.mk
 
