@@ -716,7 +716,7 @@ JSStubGen::GeneratePropGetter(ofstream *file,
             case_str);
   }
   else if (JSSTUBGEN_DEFAULT_NONPRIMARY == aType) {
-    sprintf(buf, kPropFuncDefaultItemStr, attr_type,
+    sprintf(buf, kPropFuncDefaultItemNonPrimaryStr, attr_type,
             aInterface.GetName(), aInterface.GetName(),
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
             case_str, aInterface.GetName());
