@@ -55,7 +55,7 @@ JAVAH_PROG = $(JAVA) netscape.tools.jric.Main
 #
 # compile with debug symbols, but without DEBUG code and ASSERTs
 #
-OPTIMIZER=-Z7 -UDEBUG -DNDEBUG -U_DEBUG
+OPTIMIZER=-Z7 -O1 -UDEBUG -DNDEBUG -U_DEBUG
 OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE
 
 !else
