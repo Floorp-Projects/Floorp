@@ -415,8 +415,14 @@ function EditorViewSource()
 
 function EditorSetDocumentCharacterSet(aCharset)
 {
-  dump(aCharset);
-  editorShell.SetDocumentCharacterSet(aCharset);
+  if(window.editorShell &&
+     (! window.editorShell.documentModified) &&
+       editorShell.editorDocument.locatoin != "about:blank")
+  {
+    dump(aCharset);
+    editorShell.SetDocumentCharacterSet(aCharset);
+    editorShell.LoadUrl(editorShell.editorDocument.location);
+  }
 }
 
 
