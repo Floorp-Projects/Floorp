@@ -526,14 +526,6 @@ RRT_HEADER:
     }
   }
 
-  /* for Netscape Server, Accept-Language data sent in Mail header */
-  const char *acceptlang = nsMsgI18NGetAcceptLanguage();
-  if( (acceptlang != NULL) && ( *acceptlang != '\0') ){
-    PUSH_STRING( "X-Accept-Language: " );
-    PUSH_STRING( acceptlang );
-    PUSH_NEWLINE();
-  }
-
   PUSH_STRING ("MIME-Version: 1.0" CRLF);
 
   if (pNewsGrp && *pNewsGrp) {
