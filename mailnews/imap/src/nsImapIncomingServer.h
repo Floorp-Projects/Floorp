@@ -29,11 +29,13 @@
 #include "nsMsgIncomingServer.h"
 #include "nsIImapServerSink.h"
 #include "nsIStringBundle.h"
+#include "nsIMsgLogonRedirector.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsImapIncomingServer : public nsMsgIncomingServer,
                              public nsIImapIncomingServer,
-							 public nsIImapServerSink
+							 public nsIImapServerSink,
+							 public nsIMsgLogonRedirectionRequester
                              
 {
 public:
@@ -48,6 +50,7 @@ public:
 
 	NS_DECL_NSIIMAPINCOMINGSERVER
 	NS_DECL_NSIIMAPSERVERSINK
+	NS_DECL_NSIMSGLOGONREDIRECTIONREQUESTER
     
 	NS_IMETHOD PerformBiff();
 	NS_IMETHOD CloseCachedConnections();
@@ -65,6 +68,10 @@ private:
     nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
                                    nsIImapProtocol** aImapConnection);
+	nsresult CreateProtocolInstance(nsIEventQueue *aEventQueue, 
+                                           nsIImapProtocol ** aImapConnection);
+	nsresult RequestOverrideInfo();
+
     PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
     nsCOMPtr<nsISupportsArray> m_connectionCache;
     nsCOMPtr<nsISupportsArray> m_urlQueue;
@@ -72,6 +79,7 @@ private:
     nsVoidArray					m_urlConsumers;
 	PRUint32					m_capability;
 	nsCString					m_manageMailAccountUrl;
+	PRBool						m_waitingForConnectionInfo;
 };
 
 

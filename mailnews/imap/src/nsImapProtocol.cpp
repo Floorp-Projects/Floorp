@@ -164,6 +164,14 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
     return NS_OK;
   }
 
+  if (aIID.Equals(NS_GET_IID(nsIMsgLogonRedirector)))
+  {
+    *aInstancePtr = (nsIMsgLogonRedirector *) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+
   if (aIID.Equals(NS_GET_IID(nsIStreamListener)) ||
       aIID.Equals(NS_GET_IID(nsIStreamObserver))) 
   {
@@ -279,6 +287,7 @@ nsImapProtocol::nsImapProtocol() :
   m_onlineBaseFolderExists = PR_FALSE;
   m_discoveryStatus = eContinue;
 
+  m_overRideUrlConnectionInfo = PR_FALSE;
   // m_dataOutputBuf is used by Send Data
   m_dataOutputBuf = (char *) PR_CALLOC(sizeof(char) * OUTPUT_BUFFER_SIZE);
   m_allocatedSize = OUTPUT_BUFFER_SIZE;
@@ -318,6 +327,7 @@ nsresult nsImapProtocol::Configure(PRInt32 TooFastTime, PRInt32 IdealTime,
   m_chunkThreshold = ChunkThreshold;
   m_fetchByChunks = FetchByChunks;
   m_maxChunkSize = MaxChunkSize;
+
   return NS_OK;
 }
 
@@ -610,7 +620,10 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         aURL->GetHost(getter_Copies(hostName));
 
         ClearFlag(IMAP_CONNECTION_IS_OPEN); 
-        rv = socketService->CreateTransport(hostName, port, nsnull, 0, 0, getter_AddRefs(m_channel));
+		if (m_overRideUrlConnectionInfo)
+			rv = socketService->CreateTransport(m_logonHost.GetBuffer(), m_logonPort, nsnull, 0, 0, getter_AddRefs(m_channel));
+		else
+			rv = socketService->CreateTransport(hostName, port, nsnull, 0, 0, getter_AddRefs(m_channel));
         
         if (NS_SUCCEEDED(rv))
           rv = m_channel->OpenOutputStream(0 /* start position */, getter_AddRefs(m_outputStream));
@@ -6026,7 +6039,11 @@ PRBool nsImapProtocol::TryToLogon()
   if (m_server)
   {
     // we are in the imap thread so *NEVER* try to extract the password with UI
-    rv = m_server->GetPassword(&password);
+	// if logon redirection has changed the password, use the cookie as the password
+	if (m_overRideUrlConnectionInfo)
+		password = nsCRT::strdup(m_logonCookie);
+	else
+		rv = m_server->GetPassword(&password);
     rv = m_server->GetUsername(&userName);
 
   }
@@ -6183,6 +6200,15 @@ nsImapProtocol::GetDeleteIsMoveToTrash()
     if (m_hostSessionList)
         m_hostSessionList->GetDeleteIsMoveToTrashForHost(GetImapServerKey(), rv);
     return rv;
+}
+
+NS_IMETHODIMP nsImapProtocol::OverrideConnectionInfo(const PRUnichar *pHost, PRUint16 pPort, const char *pCookieData)
+{
+	m_logonHost = pHost;
+	m_logonPort = pPort;
+	m_logonCookie = pCookieData;
+	m_overRideUrlConnectionInfo = PR_TRUE;
+	return NS_OK;
 }
 
 nsIMAPMailboxInfo::nsIMAPMailboxInfo(const char *name, char delimiter)

@@ -51,6 +51,7 @@
 #include "nsIImapIncomingServer.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgWindow.h"
+#include "nsIMsgLogonRedirector.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -102,6 +103,7 @@ public:
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
+
 	// This is evil, I guess, but this is used by libmsg to tell a running imap url
 	// about headers it should download to update a local database.
 	NS_IMETHOD NotifyHdrsToDownload(PRUint32 *keys, PRUint32 keyCount);
@@ -124,6 +126,7 @@ public:
                                       *interrupted);
   NS_IMETHOD GetSelectedMailboxName(char ** folderName);
   NS_IMETHOD ResetToAuthenticatedState();
+  NS_IMETHOD OverrideConnectionInfo(const PRUnichar *pHost, PRUint16 pPort, const char *pCookieData);
 	//////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -506,6 +509,13 @@ private:
 	nsIImapHostSessionList * m_hostSessionList;
 
   PRBool m_fromHeaderSeen;
+
+    // these settings allow clients to override various pieces of the connection info from the url
+    PRBool m_overRideUrlConnectionInfo;
+
+	nsCString m_logonHost;
+    nsCString m_logonCookie;
+	PRInt16 m_logonPort;
 
 	// progress stuff
 	void SetProgressString(PRInt32 stringId);

@@ -50,11 +50,17 @@
 #include "nsRDFCID.h"
 #include "nsINetSupportDialogService.h"
 #include "nsEnumeratorUtils.h"
+#include "nsIEventQueueService.h"
+
+#include "nsITimer.h"
+
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kMsgLogonRedirectorServiceCID, NS_MSGLOGONREDIRECTORSERVICE_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
 NS_IMPL_RELEASE_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
@@ -71,6 +77,10 @@ NS_IMETHODIMP nsImapIncomingServer::QueryInterface(REFNSIID aIID, void** aInstan
 	else if(aIID.Equals(NS_GET_IID(nsIImapIncomingServer)))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIImapIncomingServer*, this);
+	}
+	else if (aIID.Equals(NS_GET_IID(nsIMsgLogonRedirectionRequester)))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIMsgLogonRedirectionRequester*, this);
 	}
 	if(*aInstancePtr)
 	{
@@ -89,6 +99,7 @@ nsImapIncomingServer::nsImapIncomingServer()
 	rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
     rv = NS_NewISupportsArray(getter_AddRefs(m_urlQueue));
 	m_capability = kCapabilityUndefined;
+	m_waitingForConnectionInfo = PR_FALSE;
 }
 
 nsImapIncomingServer::~nsImapIncomingServer()
@@ -386,8 +397,11 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     nsCOMPtr<nsIImapProtocol> freeConnection;
     PRBool isBusy = PR_FALSE;
     PRBool isInboxConnection = PR_FALSE;
+	PRBool isAOLServer = PR_FALSE;
 
     PR_CEnterMonitor(this);
+
+	GetIsAOLServer(&isAOLServer);
 
     PRInt32 maxConnections = 5; // default to be five
     rv = GetMaximumConnectionsNumber(&maxConnections);
@@ -434,6 +448,19 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     if (ConnectionTimeOut(freeConnection))
         freeConnection = null_nsCOMPtr();
 
+	if (isAOLServer && (!connection || !canRunUrl))
+	{
+		// here's where we'd start the asynchronous process of requesting a connection to the 
+		// AOL Imap server and getting back an ip address, port #, and cookie.
+		// if m_overRideUrlConnectionInfo is true, then we can go ahead and make a connection to this server.
+		// We should set some sort of timer on this override info.
+		if (!m_waitingForConnectionInfo)
+		{
+			m_waitingForConnectionInfo = PR_TRUE;
+			RequestOverrideInfo();
+			hasToWait = PR_TRUE;
+		}
+	}
 	// if we got here and we have a connection, then we should return it!
 	if (canRunUrl && connection)
 	{
@@ -446,27 +473,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     }
 	else if (cnt < ((PRUint32)maxConnections) && aEventQueue)
 	{	
-		// create a new connection and add it to the connection cache
-		// we may need to flag the protocol connection as busy so we don't get
-        // a race 
-		// condition where someone else goes through this code 
-		nsIImapProtocol * protocolInstance = nsnull;
-		rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
-                                                NS_GET_IID(nsIImapProtocol),
-                                                (void **) &protocolInstance);
-		if (NS_SUCCEEDED(rv) && protocolInstance)
-        {
-            NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
-                            kCImapHostSessionList, &rv);
-            if (NS_SUCCEEDED(rv))
-                rv = protocolInstance->Initialize(hostSession, aEventQueue);
-        }
-		
-		// take the protocol instance and add it to the connectionCache
-		if (protocolInstance)
-			m_connectionCache->AppendElement(protocolInstance);
-		*aImapConnection = protocolInstance; // this is already ref counted.
-
+		rv = CreateProtocolInstance(aEventQueue, aImapConnection);
 	}
     else if (freeConnection)
     {
@@ -481,6 +488,34 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     PR_CExitMonitor(this);
 	return rv;
 }
+
+nsresult
+nsImapIncomingServer::CreateProtocolInstance(nsIEventQueue *aEventQueue, 
+                                           nsIImapProtocol ** aImapConnection)
+{
+	// create a new connection and add it to the connection cache
+	// we may need to flag the protocol connection as busy so we don't get
+    // a race 
+	// condition where someone else goes through this code 
+	nsIImapProtocol * protocolInstance = nsnull;
+	nsresult rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
+                                            NS_GET_IID(nsIImapProtocol),
+                                            (void **) &protocolInstance);
+	if (NS_SUCCEEDED(rv) && protocolInstance)
+    {
+        NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
+                        kCImapHostSessionList, &rv);
+        if (NS_SUCCEEDED(rv))
+            rv = protocolInstance->Initialize(hostSession, aEventQueue);
+    }
+	
+	// take the protocol instance and add it to the connectionCache
+	if (protocolInstance)
+		m_connectionCache->AppendElement(protocolInstance);
+	*aImapConnection = protocolInstance; // this is already ref counted.
+	return rv;
+}
+
 
 NS_IMETHODIMP nsImapIncomingServer::ResetConnection(const char* folderName)
 {
@@ -1516,3 +1551,100 @@ NS_IMETHODIMP nsImapIncomingServer::CreatePRUnicharStringFromUTF7(const char * a
 	return CreateUnicodeStringFromUtf7(aSourceString, aUnicodeStr);
 }
 
+nsresult nsImapIncomingServer::RequestOverrideInfo()
+{
+
+	nsresult rv;
+	nsCAutoString progID(NS_MSGLOGONREDIRECTORSERVICE_PROGID);
+	nsXPIDLCString redirectorType;
+
+	GetRedirectorType(getter_Copies(redirectorType));
+	progID.Append('/');
+	progID.Append(redirectorType);
+
+	nsCOMPtr <nsIMsgLogonRedirector> redirector = do_GetService(progID.GetBuffer(), &rv);
+	if (redirector && NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr <nsIMsgLogonRedirectionRequester> logonRedirectorRequester;
+		rv = QueryInterface(NS_GET_IID(nsIMsgLogonRedirectionRequester), getter_AddRefs(logonRedirectorRequester));
+		if (NS_SUCCEEDED(rv))
+		{
+			nsXPIDLCString password;
+			nsXPIDLCString userName;
+
+			GetUsername(getter_Copies(userName));
+			GetPassword(getter_Copies(password));
+			rv = redirector->Logon(userName, password, logonRedirectorRequester);
+		}
+	}
+
+	return rv;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pErrMsg)
+{
+	// ### DMB TODO display error message?
+	return NS_OK;
+}
+  
+  /* Logon Redirection Progress */
+NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionProgress(nsMsgLogonRedirectionState pState)
+{
+	return NS_OK;
+}
+
+  /* reply with logon redirection data. */
+NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHost, unsigned short pPort, const char *pCookieData,  unsigned short pCookieSize)
+{
+	PRBool urlRun = PR_FALSE;
+	nsresult rv;
+	nsCOMPtr <nsIImapProtocol> imapProtocol;
+	nsCOMPtr <nsIEventQueue> aEventQueue;
+    // Get current thread envent queue
+
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+    if (NS_SUCCEEDED(rv) && pEventQService)
+        pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                            getter_AddRefs(aEventQueue));
+
+
+    PRUint32 cnt = 0;
+
+    m_urlQueue->Count(&cnt);
+    if (cnt > 0)
+    {
+        nsCOMPtr<nsISupports>
+            aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
+        nsCOMPtr<nsIImapUrl>
+            aImapUrl(do_QueryInterface(aSupport, &rv));
+
+        if (aImapUrl)
+        {
+            nsISupports *aConsumer =
+                (nsISupports*)m_urlConsumers.ElementAt(0);
+
+            NS_IF_ADDREF(aConsumer);
+            
+            nsCOMPtr <nsIImapProtocol>  protocolInstance ;
+            rv = CreateImapConnection(aEventQueue, aImapUrl,
+                                               getter_AddRefs(protocolInstance));
+			m_waitingForConnectionInfo = PR_FALSE;
+            if (NS_SUCCEEDED(rv) && protocolInstance)
+            {
+				protocolInstance->OverrideConnectionInfo(pHost, pPort, pCookieData);
+				nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
+				if (NS_SUCCEEDED(rv) && url)
+				{
+					rv = protocolInstance->LoadUrl(url, aConsumer);
+					urlRun = PR_TRUE;
+				}
+                m_urlQueue->RemoveElementAt(0);
+                m_urlConsumers.RemoveElementAt(0);
+            }
+
+            NS_IF_RELEASE(aConsumer);
+        }
+    }
+    return rv;
+
+}

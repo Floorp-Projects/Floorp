@@ -89,5 +89,7 @@ interface nsIImapProtocol : nsIStreamListener {
     void GetSelectedMailboxName(out string folderName);
     // Reset folder connection to authenticated state
     void ResetToAuthenticatedState();
+
+	void OverrideConnectionInfo(in wstring pHost, in unsigned short pPort, in string pCookieData);
 };
 

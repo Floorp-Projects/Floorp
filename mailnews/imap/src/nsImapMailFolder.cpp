@@ -316,8 +316,8 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 		nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
 		nsCOMPtr <nsIFileSpec> curFolder;
 
-		// strip off the .msf in currentFolderPath.
-		currentFolderPath.SetLeafName(currentFolderNameStr);
+		// don't strip off the .msf in currentFolderPath.
+//		currentFolderPath.SetLeafName(currentFolderNameStr);
 		rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(curFolder));
 
 		currentFolderDBNameStr = currentFolderNameStr;

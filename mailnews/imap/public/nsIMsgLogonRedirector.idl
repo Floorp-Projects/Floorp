@@ -13,7 +13,7 @@ interface nsMsgLogonRedirectionStates
 };
 
 [scriptable, uuid(3c882b66-df4f-11d3-b9f9-00108335942a)]
-interface nsIMsgLogonRedirector : nsISupports
+interface nsIMsgLogonRedirectionRequester : nsISupports
 {
   /* Erron on processing the logon redirection */
   void OnLogonRedirectionError(in wstring pErrMsg);
@@ -27,9 +27,9 @@ interface nsIMsgLogonRedirector : nsISupports
 
 /* this is the service we use to request a logon redirection */ 
 [scriptable, uuid(0c2e96ac-e0ae-11d3-a560-0060b0fc04b7)] 
-interface nsIMsgLogonRedirectionRequester : nsISupports 
+interface nsIMsgLogonRedirector : nsISupports 
 { 
- void Logon(in string userName, in string password, in nsIMsgLogonRedirector listener); 
+ void Logon(in string userName, in string password, in nsIMsgLogonRedirectionRequester listener); 
  void Logoff(); /* might not need this one */ 
 }; 
 
