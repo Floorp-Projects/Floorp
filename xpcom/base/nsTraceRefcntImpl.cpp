@@ -101,7 +101,7 @@ public:
     mRefsOutstandingVariance += cnt * cnt;
   }
   void AccountObjs() {
-    PRInt32 cnt = (mAddRefs - mReleases);
+    PRInt32 cnt = (mCreates - mDestroys);
     //    NS_ASSERTION(cnt >= 0, "too many releases");
     mObjsOutstandingTotal += cnt;
     mObjsOutstandingVariance += cnt * cnt;
