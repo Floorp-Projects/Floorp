@@ -774,7 +774,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     //      listener does not need to copy it...
     delete hostentry;
 	
-    (void)listener->OnStopLookup(clientContext, hostName, result);
+    (void)listener->OnStopLookup(clientContext, hostName, NS_OK);
 	
     return rv;
 #endif
