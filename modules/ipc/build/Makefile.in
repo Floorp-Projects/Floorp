@@ -50,7 +50,6 @@ MODULE_NAME	= ipc
 REQUIRES	= xpcom \
 		  string \
 		  necko \
-		  ipc \
 		  $(NULL)
 
 CPPSRCS		= ipcModule.cpp
