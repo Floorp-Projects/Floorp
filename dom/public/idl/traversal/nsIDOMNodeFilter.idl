@@ -38,8 +38,8 @@
 
 [scriptable, uuid(e4723748-1dd1-11b2-8ee6-866a532a6237)]
 // Introduced in DOM Level 2:
-interface nsIDOMNodeFilter : nsISupports {
-
+interface nsIDOMNodeFilter : nsISupports
+{
   // Constants returned by acceptNode
   const short               FILTER_ACCEPT                  = 1;
   const short               FILTER_REJECT                  = 2;
