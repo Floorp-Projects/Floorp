@@ -163,9 +163,8 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
 
     // Choose the appropriate factory, based on the desired instance
     // class type (aClass).
-    nsCOMPtr<nsIGenericFactory> fact;
-
     nsIDKey key(aClass);
+    nsCOMPtr<nsIGenericFactory> fact = (nsIGenericFactory*)mFactories.Get(&key);
     if (fact == nsnull) {
         nsModuleComponentInfo* desc = mComponents;
         for (PRUint32 i = 0; i < mComponentCount; i++) {
