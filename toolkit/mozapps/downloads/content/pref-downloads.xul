@@ -151,9 +151,11 @@
                 id="editFileHandler" oncommand="editFileHandler();"/>
         <button label="&removeFileHandler.label;" accesskey="&removeFileHandler.accesskey;"              
                 id="removeFileHandler" oncommand="removeFileHandler();"/>
+#ifndef MOZ_THUNDERBIRD
         <spring flex="1"/>
         <button label="&plugins.label;" accesskey="&plugins.accesskey;"
                 id="plugins" oncommand="showPlugins();"/>
+#endif
       </hbox>
     </vbox>
     
