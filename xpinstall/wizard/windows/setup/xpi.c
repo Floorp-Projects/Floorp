@@ -143,8 +143,11 @@ HRESULT SmartUpdateJars()
   char      szEXpiInstall[MAX_BUF];
   char      szArchive[MAX_BUF];
   char      szMsgSmartUpdateStart[MAX_BUF];
+  char      szDlgExtractingTitle[MAX_BUF];
 
   if(NS_LoadString(hSetupRscInst, IDS_MSG_SMARTUPDATE_START, szMsgSmartUpdateStart, MAX_BUF) != WIZ_OK)
+    return(1);
+  if(NS_LoadString(hSetupRscInst, IDS_DLG_EXTRACTING_TITLE, szDlgExtractingTitle, MAX_BUF) != WIZ_OK)
     return(1);
 
   ShowMessage(szMsgSmartUpdateStart, TRUE);
@@ -196,6 +199,8 @@ HRESULT SmartUpdateJars()
           }
         }
 
+        wsprintf(szBuf, szDlgExtractingTitle, siCObject->szDescriptionShort);
+        SetWindowText(dlgInfo.hWndDlg, szBuf);
         hrResult = pfnXpiInstall(szArchive, "", 0xFFFF);
         if(hrResult == 999)
           bReboot = TRUE;
