@@ -17,7 +17,6 @@
  */
 package netscape.ldap;
 
-import netscape.ldap.*;
 import java.util.*;
 import java.io.*;
 

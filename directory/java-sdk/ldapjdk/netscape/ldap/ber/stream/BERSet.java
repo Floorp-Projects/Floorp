@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -21,8 +21,13 @@ import java.util.*;
 import java.io.*;
 
 /**
- * This class is for the Set object. A set object can contains
+ * This class is for the Set object. A set object can contain
  * a set of BER elements.
+ *
+ * <pre>
+ * ENCODING RULE:
+ *  tag    = 0x31 (always constructed)
+ * </pre>
  *
  * @version 1.0
  * @seeAlso CCITT X.209
@@ -36,9 +41,9 @@ public class BERSet extends BERConstruct {
     }
 
     /**
-     * Constructs a set element with the input stream.
+     * Constructs a set element from an input stream.
      * @param decoder decoder for application specific ber
-     * @param stream input stream
+     * @param stream source
      * @param bytes_read array of 1 int; value incremented by number
      *        of bytes read from stream.
      * @exception IOException failed to construct
@@ -49,9 +54,9 @@ public class BERSet extends BERConstruct {
     }
 
     /**
-     * Sends the BER encoding directly to stream.
+     * Sends the BER encoding directly to a stream.
      * @param stream output stream
-     * @exception IOException failed to construct
+     * @exception IOException failed to write
      */
     public void write(OutputStream stream) throws IOException {
         super.write(stream);
@@ -59,7 +64,7 @@ public class BERSet extends BERConstruct {
 
     /**
      * Gets the element type.
-     * @param element type
+     * @return element type
      */
     public int getType() {
         return BERElement.SET;

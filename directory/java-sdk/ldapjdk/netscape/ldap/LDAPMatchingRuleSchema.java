@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
@@ -46,22 +46,49 @@ import java.util.*;
  * specify these types of information as arguments to the constructor or
  * in the MatchingRuleDescription and MatchingRuleUseDescription formats
  * specified in RFC 2252.
- * (When an LDAP client searches an LDAP server for the schema, the server
+ * When an LDAP client searches an LDAP server for the schema, the server
  * returns schema information as an object with attribute values in this
- * format.)
+ * format.
  * <P>
  *
  * You can get the name, OID, and description of this matching rule
  * definition by using the <CODE>getName</CODE>, <CODE>getOID</CODE>, and
  * <CODE>getDescription</CODE> methods inherited from the abstract class
- * <CODE>LDAPSchemaElement</CODE>.
- * <P>
+ * <CODE>LDAPSchemaElement</CODE>. Custom qualifiers are
+ * accessed with <CODE>getQualifier</CODE> and <CODE>getQualifierNames</CODE>
+ * from <CODE>LDAPSchemaElement</CODE>.
+  * <P>
  *
- * If you need to add or remove this matching rule definition from the
- * schema, you can use the <CODE>add</CODE> and <CODE>remove</CODE>
+ * To add or remove this matching rule definition from the
+ * schema, use the <CODE>add</CODE> and <CODE>remove</CODE>
  * methods, which this class inherits from the <CODE>LDAPSchemaElement</CODE>
  * abstract class.
  * <P>
+ * RFC 2252 defines MatchingRuleDescription and MatchingRuleUseDescription
+ * as follows:
+ * <P>
+ *    MatchingRuleDescription = "(" whsp
+ *        numericoid whsp  ; MatchingRule identifier
+ *        [ "NAME" qdescrs ]
+ *        [ "DESC" qdstring ]
+ *        [ "OBSOLETE" whsp ]
+ *        "SYNTAX" numericoid
+ *    whsp ")"
+ *
+ * Values of the matchingRuleUse list the attributes which are suitable
+ * for use with an extensible matching rule.
+ *
+ *    MatchingRuleUseDescription = "(" whsp
+ *        numericoid whsp  ; MatchingRule identifier
+ *        [ "NAME" qdescrs ]
+ *        [ "DESC" qdstring ]
+ *        [ "OBSOLETE" ]
+ *       "APPLIES" oids    ; AttributeType identifiers
+ *    whsp ")" * <PRE>
+ * </PRE>
+ * <P>
+ * <CODE>LDAPMatchingRuleSchema</CODE> abstracts away from the two types and
+ * manages their relationships transparently.
  *
  * @version 1.0
  * @see netscape.ldap.LDAPSchemaElement
@@ -105,11 +132,11 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      * (see <A HREF="http://ds.internic.net/rfc/rfc2252.txt"
      * TARGET="_blank">RFC 2252, Lightweight Directory Access Protocol (v3):
      * Attribute Syntax Definitions</A>.  This is the format that LDAP servers
-     * and clients use to exchange schema information.  (For example, when
+     * and clients use to exchange schema information. For example, when
      * you search an LDAP server for its schema, the server returns an entry
      * with attributes that include "matchingrule" and "matchingruleuse".
      * The values of these attributes are matching rule descriptions
-     * in this format.)
+     * in this format.
      * <P>
      *
      * @param raw Definition of the matching rule in the
@@ -118,92 +145,22 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      * MatchingRuleUseDescription format.
      */
     public LDAPMatchingRuleSchema( String raw, String use ) {
-        super();
         attrName = "matchingrules";
-        oid = processRule( raw );
-        String o = processRule( use );
-        if ( (o != null) && (oid != null) && !o.equals(oid) ) {
-            System.err.println( "Rule oid " + oid +
-                                " differs from use oid " + o );
+        parseValue( raw );
+        if ( use != null ) {
+            parseValue( use );
         }
-        if ( oid == null )
-            oid = o;
-    }
-
-    /**
-     * Construct a rule definition from a value returned from
-     * a search of the schema in a Directory.
-     * @param raw The raw string value returned as one of the values
-     * of <code>matchingRuleUse</code> in searching the schema.
-     */
-    private String processRule( String raw ) {
-        if ( raw == null )
-            return null;
-        /* Process the matchingRuleUse value */
-        raw.trim();
-        // Skip past "( " and ")"
-        int l = raw.length();
-        raw = raw.substring( 2, l - 1 );
-        l = raw.length();
-        int ind = raw.indexOf( ' ' );
-        String o = raw.substring( 0, ind );
-        char[] ch = new char[l];
-
-        raw = raw.substring( ind + 1, l );
-        l = raw.length();
-        raw.getChars( 0, l, ch, 0 );
-
-        ind = 0;
-        l = ch.length;
-        while ( ind < l ) {
-            String s = "";
-            String val;
-            while( ch[ind] == ' ' )
-                ind++;
-            int last = ind + 1;
-            while( (last < l) && (ch[last] != ' ') )
-                last++;
-            if ( (ind < l) && (last < l) ) {
-                s = new String( ch, ind, last-ind );
-                ind = last;
-            } else {
-                ind = l;
-            }
-
-            while( (ind < l) && (ch[ind] != '\'') && (ch[ind] != '(')  )
-                ind++;
-            last = ind + 1;
-            while( (last < l) && (ch[last] != '\'') && (ch[last] != ')') ) {
-                last++;
-            }
-            if ( (ind < last) && (last < l) ) {
-                val = new String( ch, ind+1, last-ind-1 );
-                ind = last + 1;
-
-                if ( s.equalsIgnoreCase( "NAME" ) ) {
-                    name = val;
-                } else if ( s.equalsIgnoreCase( "DESC" ) ) {
-                    description = val;
-                } else if ( s.equalsIgnoreCase( "SYNTAX" ) ) {
-                    syntax = syntaxCheck( val );
-                } else if ( s.equalsIgnoreCase( "APPLIES" ) ) {
-                    /* Parse the list of attribute OIDs */
-                    Vector v = new Vector();
-                    StringTokenizer st = new StringTokenizer( val, " " );
-                    while ( st.hasMoreTokens() ) {
-                        String tok = st.nextToken();
-                        if ( !tok.equals( "$" ) ) {
-                            v.addElement( tok );
-                        }
-                    }
-                    attributes = new String[v.size()];
-                    v.copyInto( attributes );
-                    v.removeAllElements();
-                    v = null;
-                }
-            }
+        Vector v = (Vector)properties.get( "APPLIES" );
+        if ( v != null ) {
+            attributes = new String[v.size()];
+            v.copyInto( attributes );
+            v.removeAllElements();
         }
-        return o;
+        String val = (String)properties.get( "SYNTAX" );
+        if ( val != null ) {
+            syntaxString = val;
+            syntax = syntaxCheck( val );
+        }
     }
 
     /**
@@ -214,6 +171,25 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      */
     public String[] getAttributes() {
         return attributes;
+    }
+
+    String getValue( boolean quotingBug ) {
+        String s = getValuePrefix();
+        s += "SYNTAX ";
+        if ( quotingBug ) {
+            s += '\'';
+        }
+        s += syntaxString;
+        if ( quotingBug ) {
+            s += '\'';
+        }
+        s += ' ';
+        String val = getCustomValues();
+        if ( val.length() > 0 ) {
+            s += val + ' ';
+        }
+        s += ')';
+        return s;
     }
 
     /**
@@ -236,11 +212,7 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      * a matching rule in the schema) of a <CODE>subschema</CODE> object.
      */
     public String getValue() {
-        String s = "( " + oid + " NAME \'" + name + "\' DESC \'" +
-            description + "\' SYNTAX \'";
-        s += internalSyntaxToString();
-        s += "\' )";
-        return s;
+        return getValue( false );
     }
 
     /**
@@ -263,14 +235,19 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      * a matching rule in the schema) of a <CODE>subschema</CODE> object.
      */
     public String getUseValue() {
-        String s = "( " + oid;
-        s += " APPLIES ( ";
+        String s = getValuePrefix();
+        s += "APPLIES ( ";
         for( int i = 0; i < attributes.length; i++ ) {
             if ( i > 0 )
                 s += " $ ";
             s += attributes[i];
         }
-        s += ") )";
+        s += ") ";
+        String val = getCustomValues();
+        if ( val.length() > 0 ) {
+            s += val + ' ';
+        }
+        s += ')';
         return s;
     }
 
@@ -281,9 +258,10 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      * @param op Type of modification to make.
      * @param name Name of attribute in the schema entry to modify. This
      * is ignored here.
+     * @param dn The entry at which to update the schema.
      * @exception LDAPException if the definition can't be added/removed.
      */
-    protected void update( LDAPConnection ld, int op, String name )
+    protected void update( LDAPConnection ld, int op, String name, String dn )
                             throws LDAPException {
         LDAPAttribute[] attrs = new LDAPAttribute[2];
         attrs[0] = new LDAPAttribute( "matchingRules",
@@ -291,7 +269,7 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
         /* Must update the matchingRuleUse value as well */
         attrs[1] = new LDAPAttribute( "matchingRuleUse",
                                       getUseValue() );
-        update( ld, op, attrs );
+        update( ld, op, attrs, dn );
     }
 
     /**
@@ -312,6 +290,7 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
                 s += attributes[i];
             }
         }
+        s += getQualifierString( EXPLICIT );
         return s;
     }
 

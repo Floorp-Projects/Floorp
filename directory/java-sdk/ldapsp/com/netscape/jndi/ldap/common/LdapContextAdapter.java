@@ -38,15 +38,19 @@ public class LdapContextAdapter extends DirContextAdapter implements EventDirCon
 		throw new OperationNotSupportedException();
 	}
 
-	public LdapContext newInstance(Control[] reqCtls) throws NamingException {
+	public Control[] getConnectControls() throws NamingException {
 		throw new OperationNotSupportedException();
 	}
 
-	public void reconnect() throws NamingException {
+    public LdapContext newInstance(Control[] reqCtls) throws NamingException {
 		throw new OperationNotSupportedException();
 	}
 
-	public void setRequestControls(Control[] reqCtls) throws NamingException {
+	public void reconnect(Control[] reqCtls) throws NamingException {
+		throw new OperationNotSupportedException();
+	}
+
+    public void setRequestControls(Control[] reqCtls) throws NamingException {
 		throw new OperationNotSupportedException();
 	}
 	/**

@@ -132,19 +132,24 @@ public class SchemaObjectClass extends SchemaElement {
 				for (Enumeration e = m_ldapObjectClass.getOptionalAttributes(); e.hasMoreElements();) {
 					optional.add(e.nextElement());
 				}
-				attrs.put(optional);
+				if (optional.size() != 0) {
+					attrs.put(optional);
+				}
 			}
 			else if (attrIds[i].equals(MUST)) {
 				BasicAttribute required = new BasicAttribute(MUST);
 				for (Enumeration e = m_ldapObjectClass.getRequiredAttributes(); e.hasMoreElements();) {
 					required.add(e.nextElement());
 				}
-				attrs.put(required);
+				if (required.size() != 0) {
+					attrs.put(required);
+				}
 			}
 			else {
 				// ignore other attrIds as not supported by Netscape LdapJDK APIs
 			}
 		}
+
 		return attrs;
 	}	
 		

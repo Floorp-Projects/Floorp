@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -21,7 +21,7 @@ import java.util.*;
 import java.io.*;
 
 /**
- * This abstract class serves as a based class for constructs
+ * This abstract class serves as a based class for constructed
  * types such as sequence or set.
  *
  * @version 1.0
@@ -40,7 +40,7 @@ public abstract class BERConstruct extends BERElement {
     }
 
     /**
-     * Constructs a construct element with the input stream.
+     * Constructs a construct element from an input stream.
      * @param decoder decoder for application specific ber
      * @param stream input stream from socket
      * @param bytes_read array of 1 int; value incremented by number
@@ -99,7 +99,7 @@ public abstract class BERConstruct extends BERElement {
     }
 
     /**
-     * Sends the BER encoding directly to stream.
+     * Sends the BER encoding directly to a stream.
      * @param stream output stream
      * @exception IOException failed to send
      */

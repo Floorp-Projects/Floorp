@@ -29,26 +29,26 @@ import netscape.ldap.controls.*;
 
 public class LdapPasswordExpiredControl extends LDAPPasswordExpiredControl implements Control{
 
-    private String m_message;
     /**
      * This constractor is used by the NetscapeControlFactory
      */
     LdapPasswordExpiredControl(boolean critical, byte[] value) throws Exception{
-        m_value = value;
-        m_critical = critical;
-        m_message = new String(m_value, "UTF8");
+        super(EXPIRED, critical, value);
     }
     
     /**
      * Return string message passed in the control
-     * TODO what is the information in this string value ?
+     * @return message string
      */
     public String getMessage() {
-        return m_message;
+        return super.getMessage();
     }    
 
     /**
-     * Implements Control interface
+     * Retrieves the ASN.1 BER encoded value of the LDAP control.
+     * Null is returned if the value is absent.
+     * @return A possibly null byte array representing the ASN.1 BER
+     * encoded value of the LDAP control.
      */
     public byte[] getEncodedValue() {
         return getValue();

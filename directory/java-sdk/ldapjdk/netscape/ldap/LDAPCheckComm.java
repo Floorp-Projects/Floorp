@@ -36,10 +36,10 @@ class LDAPCheckComm {
 
         if ( sec == null ) {
             /* Not an applet, we can do what we want to */
-            throw new LDAPException("No security manager");
+            return null;
         } else if ( sec.toString().startsWith("java.lang.NullSecurityManager") ) {
             /* Not an applet, we can do what we want to */
-            throw new LDAPException("No security manager");
+            return null;
         } else if (sec.toString().startsWith("netscape.security.AppletSecurity")) {
             /* Running as applet. Is PrivilegeManager around? */
             try {

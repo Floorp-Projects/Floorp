@@ -63,7 +63,11 @@ public class NetscapeControlFactory extends ControlFactory {
 
 
     /**
-     * Implements abstract getControlInstance() from ConrolFactory
+     * Creates a control using this control factory
+     * @param ctrl A non-null control.
+     * @return A possibly null Control.
+     * @exception NamingException If ctrl contains invalid data that prevents it from
+     * being used to create a control.
      */
     public Control getControlInstance(Control ctrl) throws NamingException {
         if (ctrl == null) {
@@ -71,11 +75,15 @@ public class NetscapeControlFactory extends ControlFactory {
         }
         LDAPControl rawCtrl = new LDAPControl(
             ctrl.getID(), ctrl.isCritical(), ctrl.getEncodedValue());
-        return getControlInstance(rawCtrl);
+        return getControlInstance(rawCtrl);        
     }    
         
     /**
-     * Create control using parseResponse() methods in ldapjdk controls
+     * Create a JNDI control from a raw ldapjdk control
+     * @param ctrl A non-null control.
+     * @return A possibly null Control.
+     * @exception NamingException If ctrl contains invalid data that prevents it from
+     * being used to create a control.
      */
     public static Control getControlInstance(LDAPControl rawCtrl) throws NamingException {
         if (rawCtrl == null) {
@@ -87,49 +95,32 @@ public class NetscapeControlFactory extends ControlFactory {
         
              // Entry changed control is parsed by LDAPPersistSearchControl             
             if (ctrlID.equals(RSP_ENTRYCHANGED)) {
-                // First get ldapjdk object
-                LDAPEntryChangeControl ldapjdkCtrl =
-                    LDAPPersistSearchControl.parseResponse(new LDAPControl[] {rawCtrl});
-                // then map it to a jndi object                    
-                if (ldapjdkCtrl != null) {
-                    LdapEntryChangeControl ctrl = new LdapEntryChangeControl(
-                        rawCtrl.isCritical(), rawCtrl.getValue());
-                    ctrl.setChangeNumber(ldapjdkCtrl.getChangeNumber());
-                    ctrl.setChangeType(ldapjdkCtrl.getChangeType());
-                    ctrl.setPreviousDN(ldapjdkCtrl.getPreviousDN());
-                    return ctrl;
-                }
+                return new LdapEntryChangeControl(
+                    rawCtrl.isCritical(), rawCtrl.getValue());
             }
             
             // Password Expired control
             else if(ctrlID.equals(RSP_PWDEXPIRED)) {
-                LdapPasswordExpiredControl ctrl = new LdapPasswordExpiredControl(
-                        rawCtrl.isCritical(), rawCtrl.getValue());
+                return new LdapPasswordExpiredControl(
+                    rawCtrl.isCritical(), rawCtrl.getValue());
             }
 
             // Password Expiring control
             else if(ctrlID.equals(RSP_PWDEXPIRING)) {
-                LdapPasswordExpiringControl ctrl = new LdapPasswordExpiringControl(
-                        rawCtrl.isCritical(), rawCtrl.getValue());
+                return new LdapPasswordExpiringControl(
+                    rawCtrl.isCritical(), rawCtrl.getValue());
             }
 
             // Sort Response control
             else if(ctrlID.equals(RSP_SORT)) {
-                // First parse the control
-                int[] resultCodes = new int[1];
-                String failedAttr = LDAPSortControl.parseResponse(
-                    new LDAPControl[] {rawCtrl}, resultCodes);
-
-                LdapSortResponseControl ctrl = new LdapSortResponseControl(
-                        rawCtrl.isCritical(), rawCtrl.getValue());
-                ctrl.setResultCode(resultCodes[0]);
-                ctrl.setFailedAttribute(failedAttr);
-                return ctrl;
+                return new LdapSortResponseControl(
+                    rawCtrl.isCritical(), rawCtrl.getValue());
             }
 
             // Virtual List Response control
             else if(ctrlID.equals(RSP_VIRTUALLIST)) {
-                return new LdapVirtualListResponseControl(rawCtrl.getValue());                
+                return new LdapVirtualListResponseControl(
+                    rawCtrl.isCritical(), rawCtrl.getValue());
             }
 
             // No match try another ControlFactory

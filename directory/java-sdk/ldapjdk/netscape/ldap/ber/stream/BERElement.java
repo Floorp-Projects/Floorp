@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -21,13 +21,13 @@ import java.util.*;
 import java.io.*;
 
 /**
- * This class is for the tagged object. Nested tag is
+ * This class is for the tagged object type. A nested tag is
  * allowed. A tagged element contains another BER element.
  *
  * @version 1.0
  * @seeAlso CCITT X.209
  */
-public abstract class BERElement {
+public abstract class BERElement implements Serializable {
     /**
      * Possible element types.
      */
@@ -85,9 +85,9 @@ public abstract class BERElement {
     /**
      * Gets a ber element from the input stream.
      * @param decoder decoder for application specific ber
-     * @param stream stream where ber encoding comes
+     * @param stream source of ber encoding
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes fread from stream.
+     *        number of bytes read from stream.
      * @exception IOException failed to decode an element.
      */
     public static BERElement getElement(BERTagDecoder decoder,
@@ -150,7 +150,8 @@ public abstract class BERElement {
     }
 
     /**
-     * Decodes length octets from stream.
+     * Reads and decodes a length byte and then that many octets
+     * from the input stream.
      * @param stream input stream to read from
      * @param bytes_read array of 1 int; value incremented by
      *        number of bytes read from stream.
@@ -227,11 +228,12 @@ public abstract class BERElement {
     }
 
     /**
-     * Reads the unsigned binary from the input stream.
-     * @param stream inputstream
-     * @param byte_read number of byte read
-     * @param length length of the byte to be read
-     * @return the value of the two complement
+     * Reads a number of bytes from an input stream and form
+     * an integer..
+     * @param stream source of data
+     * @param bytes_read number of bytes read
+     * @param length number of bytes to be read (1 - 4)
+     * @return the value of the data as two's complement
      * @exception IOException failed to read octets
      */
     protected int readUnsignedBinary(InputStream stream,
@@ -249,11 +251,12 @@ public abstract class BERElement {
     }
 
     /**
-     * Reads the two complement representation from the input stream.
-     * @param stream inputstream
-     * @param byte_read number of byte read
-     * @param length length of the byte to be read
-     * @return the value of the two complement
+     * Reads the two's complement representation of an integer from
+     * an input stream.
+     * @param stream source of data
+     * @param bytes_read number of bytes read
+     * @param length number of bytes to be read
+     * @return the integer value as two's complement
      * @exception IOException failed to read octets
      */
     protected int readTwosComplement(InputStream stream,
@@ -295,7 +298,7 @@ public abstract class BERElement {
     }
 
     /**
-     * Sends the BER encoding directly to stream.
+     * Sends the BER encoding directly to a stream.
      * @param stream output stream.
      * @return bytes written to stream.
      */

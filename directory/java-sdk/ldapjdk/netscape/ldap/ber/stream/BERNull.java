@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -46,7 +46,7 @@ public class BERNull extends BERElement {
     }
 
     /**
-     * Constructs a null element with the input stream.
+     * Constructs a null element from an input stream.
      * @param stream input stream from socket
      * @param bytes_read array of 1 int; value incremented by
      *        number of bytes read from stream
@@ -60,7 +60,7 @@ public class BERNull extends BERElement {
     /**
      * Sends the BER encoding directly to stream.
      * @param stream output stream
-     * @exception IOException failed to send
+     * @exception IOException failed to write
      */
     public void write(OutputStream stream) throws IOException {
         byte[] buffer = new byte[2];
@@ -71,7 +71,7 @@ public class BERNull extends BERElement {
 
     /**
      * Gets the element type.
-     * @param element type
+     * @return element type
      */
     public int getType() {
         return BERElement.NULL;

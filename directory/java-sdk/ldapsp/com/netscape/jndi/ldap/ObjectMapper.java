@@ -452,7 +452,7 @@ public class ObjectMapper {
 	}
     
     public static void main(String[] args) {
-			byte[] serialRefAddr = { 'a', '0', 'A', (byte)0x10, (byte)0x7f, (byte)0xaa };
+			byte[] serialRefAddr = { (byte)'a', (byte)'0', (byte)'A', (byte)0x10, (byte)0x7f, (byte)0xaa };
 			MimeBase64Encoder base64 = new MimeBase64Encoder();
 			MimeBase64Decoder base64Dec = new MimeBase64Decoder();
 			ByteBuf in  = new ByteBuf(), out = new ByteBuf();

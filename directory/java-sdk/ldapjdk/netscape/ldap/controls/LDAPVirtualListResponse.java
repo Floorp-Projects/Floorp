@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.controls;
@@ -21,6 +21,7 @@ import java.io.*;
 import netscape.ldap.client.JDAPBERTagDecoder;
 import netscape.ldap.LDAPControl;
 import netscape.ldap.ber.stream.*;
+import netscape.ldap.LDAPException;
 
 /**
  * Represents control data for returning paged results from a search.
@@ -28,21 +29,23 @@ import netscape.ldap.ber.stream.*;
  * @version 1.0
  *
  *<PRE>
- *      VirtualListViewResponse ::= SEQUENCE {
- *               firstPosition    INTEGER,
- *               contentCount     INTEGER,
- *               virtualListViewResult ENUMERATED {
- *                 success                  (0),
- *                 unwillingToPerform       (53),
- *                 insufficientAccessRights (50),
- *                 operationsError          (1),
- *                 busy                     (51),
- *                 timeLimitExceeded        (3),
- *                 adminLimitExceeded       (11),
- *                 sortControlMissing       (60),
- *                 indexRangeError          (?),
- *               }
- *     }
+ *   VirtualListViewResponse ::= SEQUENCE {
+ *       targetPosition   INTEGER (0 .. maxInt),
+ *       contentCount     INTEGER (0 .. maxInt),
+ *       virtualListViewResult ENUMERATED {
+ *           success                  (0),
+ *           operatonsError           (1),
+ *           timeLimitExceeded        (3),
+ *           adminLimitExceeded       (11),
+ *           insufficientAccessRights (50),
+ *           busy                     (51),
+ *           unwillingToPerform       (53),
+ *           sortControlMissing       (60),
+ *           offsetRangeError         (61),
+ *           other                    (80)
+ *       },
+ *       contextID     OCTET STRING OPTIONAL 
+ *  }
  *</PRE>
  */
 
@@ -55,6 +58,29 @@ public class LDAPVirtualListResponse extends LDAPControl {
      */
     LDAPVirtualListResponse() {
         super( VIRTUALLISTRESPONSE, true, null );
+    }
+
+   /**
+     * Contructs an <CODE>LDAPVirtualListResponse</CODE> object.
+     * @param oid This parameter must be equal to
+     * <CODE>LDAPVirtualListResponse.VIRTUALLISTRESPONSE</CODE> or a 
+     * <CODE>LDAPException</CODE>is thrown.
+     * @param critical True if this control is critical.
+     * @param value The value associated with this control.
+     * @exception netscape.ldap.LDAPException If oid is not 
+     * <CODE>LDAPVirtualListResponse.VIRTUALLISTRESPONSE</CODE>.
+     * @see netscape.ldap.LDAPControl#register
+     */ 
+    public LDAPVirtualListResponse( String oid, boolean critical, 
+                                    byte[] value ) throws LDAPException {
+        super( VIRTUALLISTRESPONSE, critical, value );
+        if ( !oid.equals( VIRTUALLISTRESPONSE ) ) {
+             throw new LDAPException( "oid must be LDAPVirtualListResponse." +
+                                      "VIRTUALLISTRESPONSE", 
+                                      LDAPException.PARAM_ERROR);
+        }
+        
+	parseResponse();
     }
 
     /**
@@ -93,6 +119,14 @@ public class LDAPVirtualListResponse extends LDAPControl {
     }
 
     /**
+     * Gets the context cookie, if any.
+     * @return The result context cookie.
+     */
+    public String getContext() {
+        return m_context;
+    }
+
+    /**
      * Returns a control useful for subsequent paged results searches.
      * "this" should be a control returned on a previous paged results
      * search, so it contains information on the virtual result set
@@ -115,11 +149,14 @@ public class LDAPVirtualListResponse extends LDAPControl {
             /* First is firstPosition */
             m_firstPosition = ((BERInteger)seq.elementAt( 0 )).getValue();
             m_contentCount = ((BERInteger)seq.elementAt( 1 )).getValue();
-            BEREnumerated enum = (BEREnumerated)seq.elementAt( 2 );
-            m_resultCode = enum.getValue();
-        } catch(Throwable x) {
+            m_resultCode = ((BEREnumerated)seq.elementAt( 2 )).getValue();
+            if( seq.size() > 3 ) {
+                BEROctetString str = (BEROctetString)seq.elementAt( 3 );
+                m_context = new String(str.getValue(), "UTF8");
+            }
+        } catch(Exception x) {
             m_firstPosition = m_contentCount = m_resultCode = -1;
-        }
+            m_context = null;        }
     }
 
     /**
@@ -127,6 +164,8 @@ public class LDAPVirtualListResponse extends LDAPControl {
      * @param controls An array of controls that may include a VLV
      * results control.
      * @return The control, if any; otherwise null.
+     * @deprecated LDAPVirtualListResponse controls are now automatically 
+     * instantiated.
      */
     public static LDAPVirtualListResponse parseResponse(
         LDAPControl[] controls ) {
@@ -148,4 +187,6 @@ public class LDAPVirtualListResponse extends LDAPControl {
     private int m_firstPosition = 0;
     private int m_contentCount = 0;
     private int m_resultCode = -1;
+    private String m_context = null;
+
 }

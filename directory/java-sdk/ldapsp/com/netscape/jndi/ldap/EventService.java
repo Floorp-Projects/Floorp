@@ -19,6 +19,7 @@ package com.netscape.jndi.ldap;
 
 import javax.naming.*;
 import javax.naming.directory.*;
+import javax.naming.ldap.*;
 import javax.naming.event.*;
 import netscape.ldap.*;
 import netscape.ldap.controls.*;
@@ -26,76 +27,37 @@ import java.util.*;
 import com.netscape.jndi.ldap.common.*;
 
 /**
- * Event Service. Use Persistant Search control to monitor changes on the
- * server. Because public ldapjdk APIs do not provide for multiplexing of
- * multiple requests over the same connection, a separate thread is created
- * for each monitored event
+ * Event Service monitors changes on the server
+ * Implemented with the persistant search control. Uses ldapjdk asynchronous
+ * interfaces so that multiple search requests can be processed by a single
+ * thread
  *
  */
-class EventService {
+class EventService implements Runnable{
 
     LdapService m_ldapSvc;
-    Vector m_eventThreads = new Vector();
+    Vector m_eventList = new Vector();
+    Thread m_monitorThread;
+    LDAPSearchListener m_msgQueue; // for asynch ldap search
     
-    public EventService(LdapService ldapSvc) {
+    /**
+     * Constructor
+     */
+    public EventService (LdapService ldapSvc) {
         m_ldapSvc = ldapSvc;
     }
 
-    /**
-     * Create a persistent search control.
-     */
-    private LDAPPersistSearchControl createSrchCtrl(NamingListener listener) throws NamingException{
-        
-        int op = 0;
-        
-        if (listener instanceof ObjectChangeListener) {
-            op = LDAPPersistSearchControl.MODIFY;
-        }
-        if (listener instanceof NamespaceChangeListener) {
-            op |= LDAPPersistSearchControl.ADD |
-                     LDAPPersistSearchControl.DELETE |
-                     LDAPPersistSearchControl.MODDN;
-        }
-        if (op == 0) {
-            throw new NamingException("Non supported listener type " + listener.getClass().getName());
-        }    
-        return  new LDAPPersistSearchControl( op, /*changesOnly=*/true,
-                          /*returnControls=*/true, /*isCritical=*/true );
-    }
-
-	/**
-	 * Remove change event listener
-	 */
-	 synchronized void removeListener(NamingListener listener)  throws NamingException {
-	    boolean removed = false;
-	    int i=0;
-	    while(i < m_eventThreads.size()) {
-	        EventThread et = (EventThread)m_eventThreads.elementAt(i);
-	        if (et.removeListener(listener)) {
-	            removed = true;
-	            
-	            // If no listeners left,  stop the thread.
-	            if (et.isEmpty()) {
-	                et.abandonRequest();
-	                et.stop();
-	                if (m_eventThreads.removeElement(et)) {
-	                    continue; // do not advance counter i
-	                }    
-	            }
-	        }
-	        i++;
-	    }
-	  
-	    if (!removed) {
-	        throw new NamingException("Listener not found");
-	    }
-	 }    
-    
 	/**
 	 * Add change event listener
 	 */
-	synchronized void addListener (LdapContextImpl ctx, String name, String filter, SearchControls jndiCtrls, NamingListener l) throws NamingException{
-	    Debug.println(1, "ADD LISTENER");
+	synchronized void addListener (LdapContextImpl ctx, String name,
+                      String filter,SearchControls jndiCtrls, NamingListener l)
+                      throws NamingException{
+        
+        EventEntry event = null;
+        LDAPSearchListener sl = null; // Search listener for this request
+
+        Debug.println(1, "ADD LISTENER");
 
 		// Create DN by appending the name to the current context
 		String base = ctx.getDN();
@@ -117,58 +79,391 @@ class EventService {
         // return obj flag is ignored in this implementation
         boolean returnObjs = jndiCtrls.getReturningObjFlag();
         
-		// Because we are not returning objects  in the NamingEvent's
-		// oldBinding and newBinding variables, there is no way for
-		// for the listener to read attributes from the event. Thus 
-		// jndiCtrls.getReturningAttributes() are ignored. Request only
-		// javaClassName to be able to determine object type
+		// Attributes in jndiCtrls.getReturningAttributes() are ignored 
+        // This is because we are not returning objects in the NamingEvent
+        // and thus listeners can not read attributes from the event.
+        // Request only javaClassName to be able to determine object type
 		String[] attrs = new String[] { "javaclassname" }; 
 			
 		// Search scope
 		int scope = ProviderUtils.jndiSearchScopeToLdap(jndiCtrls.getSearchScope());
 
-		// Check if such change is already monitored
-		EventThread et = null;
-		for (int i=0; i < m_eventThreads.size(); i++) {
-		    EventThread activeET = (EventThread) m_eventThreads.elementAt(i);
-		    if (activeET.isEqualEvent(ctx, base, scope, filter, attrs, cons)) {
-		        et = activeET;
-		        et.addListener(l);
+		// Check if such change is already monitored, search for the event entry
+		for (int i=0; i < m_eventList.size(); i++) {
+		    EventEntry ee = (EventEntry) m_eventList.elementAt(i);
+		    if (ee.isEqualEvent(base, scope, filter, attrs, cons)) {
+		        event = ee;
 		        break;
 		    }
 		}
-		
+        
+        // If event entry does not exist, send an asynch persistent search
+        // request and create a new event entry
+        if (event == null) {
+            try {                    
+                Debug.println(1, "Do persistent search for " + base);
+                sl = ld.search( base, scope, filter, attrs,
+                                false, /*l=*/null, cons);
+                int[] ids = sl.getIDs();
+                int id = ids[ids.length-1];
+                event = new EventEntry(id, ctx, base, scope, filter, attrs, cons);
+                m_eventList.addElement(event);
+            }
+            catch(Exception ex) {
+                throw ExceptionMapper.getNamingException(ex);
+            }
+        }
+
+        // regiter naming listener with the event
+        event.addListener(l);
+
+        // Add this search request to the m_msgQueue so it can be
+        // processed by the monitor thread
+        if (m_msgQueue == null) {
+            m_msgQueue = sl;
+        }
+        else {
+            m_msgQueue.merge(sl);
+        }
+        
 		// Create new event if reqested change is not already monitored
-		if (et == null) {
-		    et = new EventThread(ctx, ld, base, scope, filter, attrs, cons);
-		    m_eventThreads.addElement(et);
-		    et.addListener(l);
-		    et.setDaemon(true);
-		    et.start();
+		if (m_monitorThread == null) {
+		    m_monitorThread = new Thread (this, "EventService");
+		    m_monitorThread.setDaemon(true);
+		    m_monitorThread.start();
 		}    
 	}
 	
-	
 	/**
-	 * Change Monitoring Thread
+	 * Remove change event listener
 	 */
-	static private class EventThread extends Thread {
+	 synchronized void removeListener(NamingListener listener)throws NamingException {
+	    boolean removed = false;
+
+        // Check and the listener against all event entries. If an event is
+        // left with no listeners, abandon associated ldap request
+        for(int i = m_eventList.size()-1; i>=0; i--) {
+	        EventEntry ee = (EventEntry)m_eventList.elementAt(i);
+	        if (ee.removeListener(listener)) {
+	            removed = true;
+
+                // If no listeners left abandon persistant search and
+                // delete entry
+	            if (ee.isEmpty()) {
+                    abandonRequest(ee.id);
+	                m_eventList.removeElement(ee);
+	            }
+	        }
+        }
+        
+        // Stop the monitor thread if no events are left
+        // Actually, the thread should stop by itself, as when no outstanding
+        // events are left LDAPSearchListener.getResponse() should return null
+        if (m_eventList.size() == 0) {
+            m_monitorThread = null;
+        }            
+	  
+	    if (!removed) {
+	        throw new NamingException("Listener not found");
+	    }
+	 }    
+
+    /**
+     * Abandon LDAP request with the specified message ID
+     */
+     private void abandonRequest(int id) {
+        LDAPConnection ldc = m_ldapSvc.getConnection();
+        try {
+	        ldc.abandon(id);
+        }
+        catch (LDAPException ex) {}
+     }
+	     
+     
+    /**
+     * Main monitor thread loop. Wait for persistent search change notifications
+     */
+    public void run() {
+        
+        LDAPMessage msg = null;
+
+        
+        while (m_monitorThread != null) {
+
+            try {
+                
+                // Block untill a message is received
+                msg = m_msgQueue.getResponse();
+                
+            }
+            catch (LDAPException ex) {
+                processNetworkError(ex);
+            }
+
+            // Terminate if no more requests left
+            if (msg == null) {
+                Debug.println(1, "No more messages, bye");
+                m_monitorThread = null;
+                return;
+            }                        
+          
+            synchronized (EventService.this) {
+                
+                EventEntry eventEntry = getEventEntry(msg.getId());                
+
+                // If no listeners, abandon this message id
+                if (eventEntry == null) {
+                    Debug.println(1, "Received ldap msg with unknown id="+msg.getId());
+
+                    if (! (msg instanceof LDAPResponse)) {
+                        abandonRequest(msg.getId());
+                    }                    
+                    continue;
+                }
+                
+                // Check for error message ...
+                if (msg instanceof LDAPResponse) {
+			        processResponseMsg((LDAPResponse) msg, eventEntry);
+                }
+                    
+                // ... or referral ...
+                else if (msg instanceof LDAPSearchResultReference) {
+                    processSearchResultRef((LDAPSearchResultReference) msg, eventEntry);
+                }                   
+
+            
+                // ... then must be a LDAPSearchResult carrying change control
+                else if (msg instanceof LDAPSearchResult) {
+                    processSearchResultMsg((LDAPSearchResult) msg, eventEntry);
+                }
+            }
+        } // end of synchronized block            
+    }
+    
+    /**
+     * On network error, create NamingExceptionEvent and delever it to all
+     * listeners on all events.
+     */
+    private void processNetworkError(LDAPException ex) {
+        NamingException nameEx = ExceptionMapper.getNamingException(ex);
+        for(int i=0; i<m_eventList.size(); i++) {
+            EventEntry ee = (EventEntry)m_eventList.elementAt(i);
+            dispatchEvent(new NamingExceptionEvent(ee.ctx, nameEx), ee);
+        }
+    }                
+    
+    /**
+     * Response message carries a LDAP error. Response with the code 0 (SUCCESS),
+     * should never be received as persistent search never completes, it has to
+     * be abandon. Referral messages are ignored
+     */
+    private void processResponseMsg(LDAPResponse rsp, EventEntry ee) {
+        if (rsp.getResultCode() == 0) {
+            return;  // this should never happen, but  just in case
+        }
+        else if (rsp.getResultCode() == LDAPException.REFERRAL) {
+            return; // ignore referral
+        }
+        
+        LDAPException ex = new LDAPException( "error result",rsp.getResultCode(),
+                           rsp.getErrorMessage(), rsp.getMatchedDN());
+        NamingException nameEx = ExceptionMapper.getNamingException(ex);
+        dispatchEvent(new NamingExceptionEvent(ee.ctx, nameEx), ee);
+    }        
+    
+    /**
+     * Process change notification attached as the change control to the message
+     */
+    private void processSearchResultMsg(LDAPSearchResult res, EventEntry ee) {
+        LDAPEntry modEntry = res.getEntry();
+	    	   
+        Debug.println(1, "Changed " + modEntry.getDN());
+
+        /* Get any entry change controls. */
+        LDAPControl[] ctrls = res.getControls();
+
+        // Can not create event without change control
+        if (ctrls == null) {
+            NamingException ex = new NamingException(
+            "Can not create NamingEvent, no change control info");
+            dispatchEvent(new NamingExceptionEvent(ee.ctx, ex), ee);
+        }
+
+        // Multiple controls might be in the message
+        for (int i=0; i < ctrls.length; i++) {
+            LDAPEntryChangeControl changeCtrl = null;
+
+            if (ctrls[i] instanceof LDAPEntryChangeControl) {
+                changeCtrl = (LDAPEntryChangeControl) ctrls[i];
+
+                // Can not create event without change control
+                if (changeCtrl.getChangeType() == -1) {
+                    NamingException ex = new NamingException(
+                    "Can not create NamingEvent, no change control info");
+                    dispatchEvent(new NamingExceptionEvent(ee.ctx, ex), ee);
+                }
+      
+                // Convert control into a NamingEvent and dispatch to listeners
+                try {
+                    NamingEvent event = createNamingEvent(ee.ctx, modEntry, changeCtrl);
+                    dispatchEvent(event, ee);
+                }
+                catch (NamingException ex) {
+                    dispatchEvent(new NamingExceptionEvent(ee.ctx, ex), ee);
+                }
+            }
+        }                       
+    }
+    
+    /**
+     * Search continuation messages are ignored.
+     */
+    private void processSearchResultRef(LDAPSearchResultReference ref, EventEntry ee) {
+        ; // Do nothing, message ignored, do not dispatch NamingExceptionEvent
+    }
+
+    /**
+     * Find event entry by message ID
+     */
+    private EventEntry getEventEntry(int id) {
+	    for (int i=0; i < m_eventList.size(); i++) {
+		    EventEntry ee = (EventEntry) m_eventList.elementAt(i);
+            if (ee.id == id) {
+		        return ee;
+		    }
+		}            
+        return null;
+    }
+    
+    /**
+     * Dispatch naming event to all listeners
+     */
+    private void dispatchEvent(EventObject event, EventEntry eventEntry) {
+        NamingListener[] dispatchList = null;
+
+        // Copy listeners so that list can be modifed during dispatching
+        synchronized (eventEntry) {
+            dispatchList = new NamingListener[eventEntry.listeners.size()];
+            for (int i=0; i < dispatchList.length; i++) {
+                dispatchList[i] = (NamingListener)eventEntry.listeners.elementAt(i);
+            }
+        }
+           
+        // dispatch to all listeners
+        for (int i=0; i < dispatchList.length; i++) {
+            if (event instanceof NamingEvent) {
+                ((NamingEvent)event).dispatch(dispatchList[i]);
+            }
+            else {
+                ((NamingExceptionEvent)event).dispatch(dispatchList[i]);
+            }    
+        }
+    }
+
+    /**
+     * Create naming event from a change control
+     */
+    private NamingEvent createNamingEvent(LdapContextImpl ctx, LDAPEntry entry,
+                        LDAPEntryChangeControl changeCtrl)throws NamingException{
+
+        Binding oldBd = null, newBd = null;            
+        int eventType = -1;
+        Object changeInfo = null;
+        String oldName = null, newName = null;
+
+        // Get the class name from the entry
+        String className = ObjectMapper.getClassName(entry);
+
+        // Get information on the type of change made
+        int changeType = changeCtrl.getChangeType();
+        switch ( changeType ) {
+            case LDAPPersistSearchControl.ADD:
+                eventType = NamingEvent.OBJECT_ADDED;
+                newName = LdapNameParser.getRelativeName(ctx.m_ctxDN, entry.getDN());
+                break;
+            case LDAPPersistSearchControl.DELETE:
+                eventType = NamingEvent.OBJECT_REMOVED;
+                oldName = LdapNameParser.getRelativeName(ctx.m_ctxDN, entry.getDN());
+                break;
+            case LDAPPersistSearchControl.MODIFY:
+                eventType = NamingEvent.OBJECT_CHANGED;
+                oldName = newName = LdapNameParser.getRelativeName(ctx.m_ctxDN, entry.getDN());
+                break;
+            case LDAPPersistSearchControl.MODDN:
+                eventType = NamingEvent.OBJECT_RENAMED;
+                // Get the previous DN of the entry
+                String oldDN = changeCtrl.getPreviousDN();
+                if ( oldDN != null ) {
+                    oldName = LdapNameParser.getRelativeName(ctx.m_ctxDN, oldDN);
+                }
+                // newName might be outside the context for which the listener has registred
+                try {
+                    newName = LdapNameParser.getRelativeName(ctx.m_ctxDN, entry.getDN());
+                }
+                catch (NamingException ex) {}
+                break;
+        }
+
+        // Pass the change log number as event's change info
+        // If the change log number is not present the value is -1
+        changeInfo = new Integer(changeCtrl.getChangeNumber());
+
+        if (oldName != null) {
+            oldBd = new Binding(oldName, className, /*obj=*/null, /*isRelative=*/true);
+        }    
+        if (newName!= null) {
+            newBd = new Binding(newName, className, /*obj=*/null, /*isRelative=*/true);
+        }    
+        return new NamingEvent(ctx, eventType, newBd, oldBd, changeInfo);
+    }
+
+    /**
+     * Create a persistent search control.
+     */
+    private LDAPPersistSearchControl createSrchCtrl(NamingListener listener)
+                                     throws NamingException{
+        
+        int op = 0;
+        
+        if (listener instanceof ObjectChangeListener) {
+            op = LDAPPersistSearchControl.MODIFY;
+        }
+        if (listener instanceof NamespaceChangeListener) {
+            op |= LDAPPersistSearchControl.ADD |
+                     LDAPPersistSearchControl.DELETE |
+                     LDAPPersistSearchControl.MODDN;
+        }
+        if (op == 0) {
+            throw new NamingException("Non supported listener type " +
+                listener.getClass().getName());
+        }    
+
+        return  new LDAPPersistSearchControl( op, /*changesOnly=*/true,
+                          /*returnControls=*/true, /*isCritical=*/true );
+    }
+
+
+    /**
+     * Inner class that represents a binding between a change event,
+     * described with a set of search parameters, and a list of listeners
+     */
+    static private class EventEntry {
 	    
-	    String base, filter, attrs[];
+	    LdapContextImpl ctx;
+        String base, filter, attrs[];
 	    int scope;
 	    LDAPSearchConstraints cons;
-	    LDAPConnection ld;
-	    EventContext src;
-	    LDAPSearchResults res = null;
-	    LdapContextImpl ctx;
-	    boolean doRun;
-	    Vector listeners = new Vector(); // vector of NamingListener
+        int id; // ldap message id
+        Vector listeners   = new Vector(); // vector of NamingListener
 	    
-	    EventThread(LdapContextImpl ctx, LDAPConnection ld, String base, int scope, String filter,
-	                  String[] attrs, LDAPSearchConstraints cons) {
-        
+        /**
+         * Constructor
+         */
+	    EventEntry(int id, LdapContextImpl ctx, String base, int scope,
+                   String filter, String[] attrs, LDAPSearchConstraints cons) {
+
+            this.id = id;
             this.ctx = ctx;
-            this.ld = ld;
             this.base = base;
             this.scope = scope;
             this.filter = filter;
@@ -179,38 +474,16 @@ class EventService {
         /**
          * Add Listsner
          */
-         void addListener(NamingListener l) {
-            synchronized(listeners) {
-                listeners.addElement(l);
-            }
+        synchronized void addListener(NamingListener l) {
+            listeners.addElement(l);
          }
 
         /**
          * Remove listener
          */
-        boolean removeListener(NamingListener l) {
-            synchronized(listeners) {
-                return listeners.removeElement(l);
-            }
+        synchronized boolean removeListener(NamingListener l) {
+            return listeners.removeElement(l);
         }    
-
-        /**
-         * Abandon request. Called when no listeners left.
-         * Unfortunatlly, ldapjdk does not allows us the interrupt a waiting
-         * thread and do proper cleanup.
-         * TODO Need improvment here!!
-         */
-         void abandonRequest() throws NamingException {
-            try {
-                if (res != null) {
-                    ld.abandon(res);
-                }
-                ld.disconnect();
-            }
-            catch (Exception ex) {
-                throw ExceptionMapper.getNamingException(ex);
-            }
-         }
 
         /**
          * Chech whether there are any listeners
@@ -219,18 +492,20 @@ class EventService {
             return listeners.size() == 0;
          }    
          
+
         /**
          * Check whether this event paramaters are matched
          */
-	    boolean isEqualEvent(LdapContextImpl ctx, String base, int scope, String filter,
+	    boolean isEqualEvent(String base, int scope, String filter,
 	                  String[] attrs, LDAPSearchConstraints cons) {
         
-            if (this.ctx   != ctx   || !this.base.equals(base) ||
-                this.scope != scope || !this.filter.equals(filter)) {
+            if (!this.base.equals(base) || this.scope != scope ||
+                !this.filter.equals(filter)) {
                     
                 return false;
             }
-            // attrs[]
+            
+            // attrs[] 
             if (this.attrs == null) {
                 if (attrs != null) {
                     return false;
@@ -243,12 +518,18 @@ class EventService {
                 return false;
             }
             else {
+                // Attr sets may be the same but in diffferent order
                 for (int i=0; i < this.attrs.length; i++) {
-                    // TODO not 100% ok. Arrays may contain the same names
-                    // but at different positions
-                    if (!this.attrs[i].equals(attrs[i])) {
-                        return false;
+                    boolean found = false;
+                    for (int j=0; j < this.attrs.length; j++) {
+                        if (this.attrs[i].equals(attrs[j])) {
+                            found = true;
+                            break;
+                        }                            
                     }
+                    if (!found) {
+                        return false;
+                    } 
                 }
             }    
 
@@ -260,132 +541,23 @@ class EventService {
                 types2 = psearch2.getChangeTypes();                
             return (types1 == types2);
         }
+        
+        public String toString() {
+            LDAPPersistSearchControl
+                psearch = (LDAPPersistSearchControl)cons.getServerControls()[0];
 
-        /**
-         * Issue persistent search request. Loop waiting for change notifications
-         */
-        public void run() {
-            doRun = true;
-            try {
-                Debug.println(1, "Do persistent search for " + base);
-                res = ld.search( base, scope, filter, attrs, false, cons);
-
-                /* Loop through the results until finished. */
-                while ( res.hasMoreElements() && doRun) {
-
-                    /* Get the next modified directory entry. */
-                    LDAPEntry modEntry = res.next();
-                    
-                    Debug.println(1, "Changed " + modEntry.getDN());
-
-                    /* Get any entry change controls. */
-                    LDAPControl[] ctrls = ld.getResponseControls();
-
-                    // Can not create event without change control
-                    if (ctrls == null) {
-                        throw new NamingException(
-                        "Can not create NamingEvent, no change control info");
-                    }
-
-                    LDAPEntryChangeControl changeCtrl =
-                    LDAPPersistSearchControl.parseResponse(ctrls);
-                    
-                    // Can not create event without change control
-                    if (changeCtrl == null || changeCtrl.getChangeType() == -1) {
-                        throw new NamingException(
-                        "Can not create NamingEvent, no change control info");
-                    }       
-
-                    NamingEvent event = createNamingEvent(modEntry, changeCtrl);
-                    dispatchEvent(event);
+            String str = "[EventEntry] base=" + base + " scope=" + scope +
+                         " filter=" + filter + " attrs={";
+            for (int i=0; i < attrs.length; i++) {
+                if (i>0) {
+                    str += " ";
                 }
+                str += attrs[i];
             }
-            catch(Exception ex) {
-                NamingException nameEx = ExceptionMapper.getNamingException(ex);
-                dispatchEvent(new NamingExceptionEvent(ctx, nameEx));
-            }
+            str += "} chanageTypes=" + psearch.getChangeTypes();
+            str += " listeners=" + listeners.size();
+            str += " id=" + id;
+            return str;
         }
-
-        /**
-         * Dispatch naming event to all listeners
-         */
-        void dispatchEvent(EventObject event) {
-            NamingListener[] dispatchList = null;
-            
-            // Copy listeners so that list can be modifed during dispatching
-            synchronized (listeners) {
-                dispatchList = new NamingListener[listeners.size()];
-                for (int i=0; i < dispatchList.length; i++) {
-                    dispatchList[i] = (NamingListener)listeners.elementAt(i);
-                }
-            }
-            
-            // dispatch to all listeners
-            for (int i=0; i < dispatchList.length; i++) {
-                if (event instanceof NamingEvent) {
-                    ((NamingEvent)event).dispatch(dispatchList[i]);
-                }
-                else {
-                    ((NamingExceptionEvent)event).dispatch(dispatchList[i]);
-                }    
-            }
-        }
-
-        /**
-         * Create naming event from the ldap entry and change control
-         */
-        NamingEvent createNamingEvent(LDAPEntry entry, LDAPEntryChangeControl changeCtrl) throws NamingException{
-
-            Binding oldBd = null, newBd = null;            
-            int eventType = -1;
-            Object changeInfo = null;
-            String oldName = null, newName = null;
-            
-            // Get the class name from the entry
-            String className = ObjectMapper.getClassName(entry);
-
-            // Get information on the type of change made
-            int changeType = changeCtrl.getChangeType();
-            switch ( changeType ) {
-                case LDAPPersistSearchControl.ADD:
-                    eventType = NamingEvent.OBJECT_ADDED;
-                    newName = LdapNameParser.getRelativeName(ctx.m_ctxDN, entry.getDN());
-                    break;
-                case LDAPPersistSearchControl.DELETE:
-                    eventType = NamingEvent.OBJECT_REMOVED;
-                    oldName = LdapNameParser.getRelativeName(ctx.m_ctxDN, entry.getDN());
-                    break;
-                case LDAPPersistSearchControl.MODIFY:
-                    eventType = NamingEvent.OBJECT_CHANGED;
-                    oldName = newName = LdapNameParser.getRelativeName(ctx.m_ctxDN, entry.getDN());
-                    break;
-                case LDAPPersistSearchControl.MODDN:
-                    eventType = NamingEvent.OBJECT_RENAMED;
-                    // Get the previous DN of the entry
-                    String oldDN = changeCtrl.getPreviousDN();
-                    if ( oldDN != null ) {
-                        oldName = LdapNameParser.getRelativeName(ctx.m_ctxDN, oldDN);
-                    }
-                    // newName might be outside the context for which the listener has registred
-                    try {
-                        newName = LdapNameParser.getRelativeName(ctx.m_ctxDN, entry.getDN());
-                    }
-                    catch (NamingException ex) {}
-                    break;
-            }
-
-            // Pass the change log number as event's change info
-            // If the change log number is not present the value is -1
-            changeInfo = new Integer(changeCtrl.getChangeNumber());
-
-
-            if (oldName != null) {
-                oldBd = new Binding(oldName, className, /*obj=*/null, /*isRelative=*/true);
-            }    
-            if (newName!= null) {
-                newBd = new Binding(newName, className, /*obj=*/null, /*isRelative=*/true);
-            }    
-            return new NamingEvent(ctx, eventType, newBd, oldBd, changeInfo);
-        }
-    }    
+    }
 }    

@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -21,7 +21,15 @@ import java.util.*;
 import java.io.*;
 
 /**
- * This class is for UTCTime object.
+ * This class is for the UTCTime object.
+ *
+ * <pre>
+ * ENCODING RULE:
+ *   Primitive Definite length.
+ *   tag = 0x17
+ *   length = (short or long form)
+ *   one or more contents octets
+ * </pre>
  *
  * @version 1.0
  * @seeAlso CCITT X.209
@@ -34,17 +42,17 @@ public class BERUTCTime extends BERElement {
     private String m_value = null;
 
     /**
-     * Constructs an octetstring element containing buffer.
-     * @param buffer string containing 'octets'
+     * Constructs a UTC time element containing the specified string.
+     * @param utc_string string in UTC time format
      */
     public BERUTCTime(String utc_string) {
         m_value = utc_string;
     }
 
     /**
-     * Constructs a UTCTime element with the input stream.
+     * Constructs a UTCTime element from an input stream
      * (for constructed encoding)
-     * @param stream input stream
+     * @param stream source
      * @param bytes_read array of 1 int, incremented by number of bytes read.
      * @exception IOException failed to construct
      */
@@ -85,9 +93,9 @@ public class BERUTCTime extends BERElement {
     }
 
     /**
-     * Constructs a octetstring element with the input stream.
+     * Constructs a UTC time element from an input stream
      * (for primitive encoding)
-     * @param stream input stream
+     * @param stream source
      * @param bytes_read array of 1 int, incremented by number of bytes read.
      * @exception IOException failed to construct
      */
@@ -109,14 +117,14 @@ public class BERUTCTime extends BERElement {
     }
 
     /**
-     * Writes ber to stream
+     * Writes ber to a stream
      * @return number of bytes written to stream.
-     * @exception IOException failed to send
+     * @exception IOException failed to write
      */
     private byte[] byte_buf;
 
     public void write(OutputStream stream) throws IOException {
-        stream.write((byte)BERElement.OCTETSTRING);  /* OCTETSTRING tag */
+        stream.write((byte)getType());
         if (m_value == null) {
             sendDefiniteLength(stream, 0);
         } else {

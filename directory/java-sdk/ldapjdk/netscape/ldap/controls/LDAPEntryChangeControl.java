@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.controls;
@@ -38,9 +38,8 @@ import netscape.ldap.*;
  * <P>
  *
  * Typically, you use the <CODE>getResponseControls</CODE> method of
- * the <CODE>LDAPConnection</CODE> object and the <CODE>parseResponse</CODE>
- * method of the <CODE>LDAPPersistSearchControl</CODE> object to get
- * an <CODE>LDAPEntryChangeControl</CODE> object.
+ * the <CODE>LDAPConnection</CODE> object to get any 
+ * <CODE>LDAPEntryChangeControl</CODE> objects returned by the server.
  * <P>
  *
  * Once you retrieve an <CODE>LDAPEntryChangeControl</CODE> object from
@@ -64,18 +63,68 @@ public class LDAPEntryChangeControl extends LDAPControl {
 
     /**
      * Constructs a new <CODE>LDAPEntryChangeControl</CODE> object.
-     * Call the <CODE>parseResponse</CODE> method of the
-     * <CODE>LDAPPersistSearchControl</CODE> object to retrieve the
-     * actual "entry change notification" control from the server.
-     *
      * @see netscape.ldap.LDAPControl
      * @see netscape.ldap.controls.LDAPPersistSearchControl
      */
-    public LDAPEntryChangeControl()
-    {
+    public LDAPEntryChangeControl() {
         super(ENTRYCHANGED, false, null);
     }
 
+    /**
+     * Contructs an <CODE>LDAPEntryChangedControl</CODE> object. 
+     * This constructor is used by <CODE>LDAPControl.register</CODE> to 
+     * instantiate entry change controls.
+     * @param oid This parameter must be 
+     * <CODE>LDAPEntryChangeControl.ENTRYCHANGED</CODE>
+     * or a <CODE>LDAPException</CODE> is thrown.
+     * @param critical True if this control is critical.
+     * @param value The value associated with this control.
+     * @exception netscape.ldap.LDAPException If oid is not 
+     * <CODE>LDAPEntryChangeControl.ENTRYCHANGED</CODE>.
+     * @exception java.io.IOException If value is not a valid BER sequence.
+     * @see netscape.ldap.LDAPControl#register
+     */
+    public LDAPEntryChangeControl(String oid, boolean critical, byte[] value) 
+        throws LDAPException, IOException {
+	super(ENTRYCHANGED, false, value);
+	
+	if (!oid.equals( ENTRYCHANGED )) {
+	    throw new LDAPException("oid must be LDAPEntryChangeControl." +
+				    "ENTRYCHANGED", LDAPException.PARAM_ERROR);
+	}
+
+        
+        ByteArrayInputStream inStream = new ByteArrayInputStream(m_value);
+        BERSequence seq = new BERSequence();
+        JDAPBERTagDecoder decoder = new JDAPBERTagDecoder();
+        int[] numRead = new int[1];
+        numRead[0] = 0;
+
+	BERSequence s = (BERSequence)BERElement.getElement(decoder, inStream,
+							   numRead);
+	
+	BEREnumerated enum = (BEREnumerated)s.elementAt(0);
+	    
+	m_changeTypes = enum.getValue();
+
+	if (s.size() > 1) {
+	    if (s.elementAt(1) instanceof BEROctetString) {
+	        BEROctetString str = (BEROctetString)s.elementAt(1);
+		try {
+		    m_previousDN = new String(str.getValue(), "UTF8");
+		} catch (UnsupportedEncodingException e) {
+		}
+	    } else if (s.elementAt(1) instanceof BERInteger) {
+	        BERInteger num = (BERInteger)s.elementAt(1);
+		m_changeNumber = num.getValue();
+	    }
+	}
+	if (s.size() > 2) {
+	    BERInteger num = (BERInteger)s.elementAt(2);
+  	    m_changeNumber = num.getValue();
+	}
+    }
+  
     /**
      * Sets the change number (which identifies the record of the change
      * in the server's change log) in this "entry change notification"
@@ -166,9 +215,30 @@ public class LDAPEntryChangeControl extends LDAPControl {
         return m_previousDN;
     }
 
+    public String toString() {
+         StringBuffer sb = new StringBuffer("{EntryChangedCtrl:");
+        
+        sb.append(" isCritical=");
+        sb.append(isCritical());
+        
+        sb.append(" changeTypes=");
+        sb.append(LDAPPersistSearchControl.typesToString(m_changeTypes));
+        
+        sb.append(" previousDN=");
+        sb.append(m_previousDN);
+        
+        sb.append(" changeNumber=");
+        sb.append(m_changeNumber);
+
+        sb.append("}");
+
+        return sb.toString();
+    }
+
     private int m_changeNumber = -1;
     private int m_changeTypes = -1;
     private String m_previousDN = null;
     public final static String ENTRYCHANGED = "2.16.840.1.113730.3.4.7";
+
 }
 

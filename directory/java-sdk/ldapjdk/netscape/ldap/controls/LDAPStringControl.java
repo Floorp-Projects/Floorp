@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.controls;
@@ -24,6 +24,32 @@ import netscape.ldap.LDAPControl;
  * only value. This is to be used as a base class by real such controls.
  */
 abstract class LDAPStringControl extends LDAPControl {
+    protected String m_msg = null;
+
+    LDAPStringControl() {
+      super();
+    }
+
+    /**
+     * Constructs a <CODE>LDAPStringControl</CODE> object, and stores the 
+     * value as a string. To retrieve this string value, use 
+     * <CODE>getMsg()</CODE>.
+     * @param oid The oid of defining this control.
+     * @param critical True if this control is critical.
+     * @param value The value associated with this control.
+     * @see netscape.ldap.LDAPcontrol
+     */
+    public LDAPStringControl( String oid, boolean critical, byte[] value ) {
+        super( oid, critical, value );
+	
+	if ( value != null ) {
+	    try {  
+	        m_msg = new String( value, "UTF8" );
+	    } catch ( java.io.IOException e ) {
+	    }
+	}
+    }
+
     /**
      * Parses a response control sent by the server and
      * retrieves a string.

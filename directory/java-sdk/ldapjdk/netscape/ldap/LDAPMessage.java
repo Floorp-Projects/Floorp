@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-package netscape.ldap.client;
+package netscape.ldap;
 
 import java.util.*;
 import netscape.ldap.client.opers.*;
@@ -24,59 +24,87 @@ import java.io.*;
 import java.net.*;
 
 /**
- * This class represents the LDAPMessage in RFC1777. The
+ * Base class for LDAP request and response messages.
+ * This class represents the LDAPMessage in RFC2251. The
  * message is the entity that got transferred back and
  * fro between the server and the client interface. Each
  * message has a protocol operation. The protocol operation
  * indicates if it is a request or response.
  * <pre>
- * LDAPMessage ::= SEQUECE {
+ * LDAPMessage ::= SEQUENCE {
  *   messageID MessageID,
  *   protocolOp CHOICE {
  *     bindRequest BindRequest,
  *     ...
  *   }
+ *   controls [0] Controls OPTIONAL
  * }
  * </pre>
  *
  * @version 1.0
  */
-public class JDAPMessage {
+public class LDAPMessage {
+
+    public final static int BIND_REQUEST        = 0;
+    public final static int BIND_RESPONSE       = 1;
+    public final static int UNBIND_REQUEST      = 2;
+    public final static int SEARCH_REQUEST      = 3;
+    public final static int SEARCH_RESPONSE     = 4;
+    public final static int SEARCH_RESULT       = 5;
+    public final static int MODIFY_REQUEST      = 6;
+    public final static int MODIFY_RESPONSE     = 7;
+    public final static int ADD_REQUEST         = 8;
+    public final static int ADD_RESPONSE        = 9;
+    public final static int DEL_REQUEST         = 10;
+    public final static int DEL_RESPONSE        = 11;
+    public final static int MODIFY_RDN_REQUEST  = 12;
+    public final static int MODIFY_RDN_RESPONSE = 13;
+    public final static int COMPARE_REQUEST     = 14;
+    public final static int COMPARE_RESPONSE    = 15;
+    public final static int ABANDON_REQUEST     = 16;
+    public final static int SEARCH_RESULT_REFERENCE = 19;
+    public final static int EXTENDED_REQUEST    = 23;
+    public final static int EXTENDED_RESPONSE   = 24;
+        
     /**
      * Internal variables
      */
-    protected int m_msgid;
-    protected JDAPProtocolOp m_protocolOp = null;
-    protected JDAPControl m_controls[] = null;
+    private int m_msgid;
+    private JDAPProtocolOp m_protocolOp = null;
+    private LDAPControl m_controls[] = null;
 
     /**
      * Constructs a ldap message.
      * @param msgid message identifier
      * @param op operation protocol
      */
-    public JDAPMessage(int msgid, JDAPProtocolOp op) {
+    LDAPMessage(int msgid, JDAPProtocolOp op) {
         m_msgid = msgid;
         m_protocolOp = op;
     }
 
-    public JDAPMessage(int msgid, JDAPProtocolOp op, JDAPControl controls[]) {
+    LDAPMessage(int msgid, JDAPProtocolOp op, LDAPControl controls[]) {
         m_msgid = msgid;
         m_protocolOp = op;
         m_controls = controls; /* LDAPv3 additions */
     }
 
     /**
-     * Constructs a ldap message with BERElement. This constructor
-     * is used by JDAPClient to build JDAPMessage from byte
-     * stream.
+     * Creates a ldap message from a BERElement. This method is used
+     * to parse LDAP response messages
+     *
      * @param element ber element constructed from incoming byte stream
      */
-    public JDAPMessage(BERElement element) throws IOException {
+    static LDAPMessage parseMessage(BERElement element) throws IOException {
+        int l_msgid;
+        JDAPProtocolOp l_protocolOp = null;
+        LDAPControl l_controls[] = null;
+        
         if (element.getType() != BERElement.SEQUENCE)
             throw new IOException("SEQUENCE in jdap message expected");
         BERSequence seq = (BERSequence)element;
         BERInteger msgid = (BERInteger)seq.elementAt(0);
-        m_msgid = msgid.getValue();
+        l_msgid = msgid.getValue();
         BERElement protocolOp = (BERElement)seq.elementAt(1);
         if (protocolOp.getType() != BERElement.TAG) {
             throw new IOException("TAG in protocol operation is expected");
@@ -84,10 +112,10 @@ public class JDAPMessage {
         BERTag tag = (BERTag)protocolOp;
         switch (tag.getTag()&0x1f) {
             case JDAPProtocolOp.BIND_RESPONSE:
-                m_protocolOp = new JDAPBindResponse(protocolOp);
+                l_protocolOp = new JDAPBindResponse(protocolOp);
   	        break;
             case JDAPProtocolOp.SEARCH_RESPONSE:
-                m_protocolOp = new JDAPSearchResponse(protocolOp);
+                l_protocolOp = new JDAPSearchResponse(protocolOp);
   	        break;
             /*
              * If doing search without bind,
@@ -96,31 +124,31 @@ public class JDAPMessage {
              */
             case JDAPProtocolOp.SEARCH_REQUEST:
             case JDAPProtocolOp.SEARCH_RESULT:
-                m_protocolOp = new JDAPSearchResult(protocolOp);
+                l_protocolOp = new JDAPSearchResult(protocolOp);
   	        break;
             case JDAPProtocolOp.MODIFY_RESPONSE:
-                m_protocolOp = new JDAPModifyResponse(protocolOp);
+                l_protocolOp = new JDAPModifyResponse(protocolOp);
   	        break;
             case JDAPProtocolOp.ADD_RESPONSE:
-                m_protocolOp = new JDAPAddResponse(protocolOp);
+                l_protocolOp = new JDAPAddResponse(protocolOp);
       	    break;
             case JDAPProtocolOp.DEL_RESPONSE:
-                m_protocolOp = new JDAPDeleteResponse(protocolOp);
+                l_protocolOp = new JDAPDeleteResponse(protocolOp);
           	break;
             case JDAPProtocolOp.MODIFY_RDN_RESPONSE:
-                m_protocolOp = new JDAPModifyRDNResponse(protocolOp);
+                l_protocolOp = new JDAPModifyRDNResponse(protocolOp);
           	break;
             case JDAPProtocolOp.COMPARE_RESPONSE:
-                m_protocolOp = new JDAPCompareResponse(protocolOp);
+                l_protocolOp = new JDAPCompareResponse(protocolOp);
           	break;
             case JDAPProtocolOp.SEARCH_RESULT_REFERENCE:
-                m_protocolOp = new JDAPSearchResultReference(protocolOp);
+                l_protocolOp = new JDAPSearchResultReference(protocolOp);
           	break;
             case JDAPProtocolOp.EXTENDED_RESPONSE:
-                m_protocolOp = new JDAPExtendedResponse(protocolOp);
+                l_protocolOp = new JDAPExtendedResponse(protocolOp);
           	break;
             default:
-                throw new IOException("Unknown rotocol operation");
+                throw new IOException("Unknown protocol operation");
         }
 
         /* parse control */
@@ -128,16 +156,32 @@ public class JDAPMessage {
             tag = (BERTag)seq.elementAt(2);
             if ( tag.getTag() == (BERTag.CONSTRUCTED|BERTag.CONTEXT|0) ) {
                 BERSequence controls = (BERSequence)tag.getValue();
-                m_controls = new JDAPControl[controls.size()];
+                l_controls = new LDAPControl[controls.size()];
                 for (int i = 0; i < controls.size(); i++) {
-                    m_controls[i] = new JDAPControl(controls.elementAt(i));
-    		        }
+                    l_controls[i] = LDAPControl.parseControl(controls.elementAt(i));
+    		    }
             }
         }
+        
+        if (l_protocolOp instanceof JDAPSearchResponse) {
+            return new LDAPSearchResult(l_msgid,
+                (JDAPSearchResponse) l_protocolOp, l_controls);
+        }            
+        else if (l_protocolOp instanceof JDAPSearchResultReference) {
+            return new LDAPSearchResultReference(l_msgid,
+                (JDAPSearchResultReference) l_protocolOp, l_controls);
+        }            
+        else if (l_protocolOp instanceof JDAPExtendedResponse) {
+            return new LDAPExtendedResponse(l_msgid,
+                (JDAPExtendedResponse) l_protocolOp, l_controls);
+        }
+        else {
+            return new LDAPResponse(l_msgid, l_protocolOp, l_controls);
+        }            
     }
 
     /**
-     * Retrieves the message identifer.
+     * Returns the message identifer.
      * @return message identifer
      */
     public int getId(){
@@ -145,10 +189,18 @@ public class JDAPMessage {
     }
 
     /**
+     * Returns the LDAP operation type of the message
+     * @return message type
+     */
+    public int getType(){
+        return m_protocolOp.getType();
+    }
+
+    /**
      * Retrieves the protocol operation.
      * @return protocol operation
      */
-    public JDAPProtocolOp getProtocolOp() {
+    JDAPProtocolOp getProtocolOp() {
         return m_protocolOp;
     }
 
@@ -156,7 +208,7 @@ public class JDAPMessage {
      * Retrieves list of controls.
      * @return controls
      */
-    public JDAPControl[] getControls() {
+    public LDAPControl[] getControls() {
         return m_controls;
     }
 
@@ -164,7 +216,7 @@ public class JDAPMessage {
      * Writes the ber encoding to stream.
      * @param s output stream
      */
-    public void write(OutputStream s) throws IOException {
+    void write(OutputStream s) throws IOException {
         BERSequence seq = new BERSequence();
         BERInteger i = new BERInteger(m_msgid);
         seq.addElement(i);
@@ -189,6 +241,17 @@ public class JDAPMessage {
      * @return ldap message
      */
     public String toString() {
-        return "[JDAPMessage] " + m_msgid + " " + m_protocolOp.toString();
+        if (m_controls == null) { 
+            return "[LDAPMessage] " + m_msgid + " " + m_protocolOp.toString();
+        }
+        else {
+            StringBuffer sb = new StringBuffer(
+                   "[LDAPMessage] " + m_msgid + " " + m_protocolOp.toString());
+            for (int i =0; i < m_controls.length; i++) {
+                sb.append(" ctrl"+i+"=");
+                sb.append(m_controls[i].toString());
+            }
+            return sb.toString();
+        }            
     }
 }

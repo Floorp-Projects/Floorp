@@ -119,7 +119,7 @@ import java.util.*;
  *
  * @version 1.0
  */
-public class GetOpt {
+public class GetOpt implements java.io.Serializable {
     /**
      * Internal variables
      */
@@ -130,6 +130,7 @@ public class GetOpt {
     private Vector m_ParameterList;
     private Hashtable m_optionHashTable;
     private Hashtable m_optionParamHashTable;
+    static final long serialVersionUID = -2570196909939660248L;
 
     /**
      * Constructs a <CODE>GetOpt</CODE> object.

@@ -384,7 +384,7 @@ public class LDAPSearch extends LDAPTool {
 		LDAPSearchResults res = null;
 		try {
 			LDAPSearchConstraints cons = 
-			  (LDAPSearchConstraints)m_client.getSearchConstraints().clone();
+			        m_client.getSearchConstraints();
 			cons.setServerControls(controls);
 			cons.setDereference( m_deref );
 			cons.setMaxResults( m_sizelimit );
@@ -527,20 +527,35 @@ public class LDAPSearch extends LDAPTool {
      * @param controls Any server controls returned.
      **/
     private static void showControls( LDAPControl[] controls ) {
-		if ( controls == null )
+                if ( controls == null ) {
 			return;
-        int[] results = new int[1];
-		String bad = LDAPSortControl.parseResponse( controls, results );
-		if ( results[0] != LDAPException.SUCCESS ) {
-    		System.err.println( "Error code: " + results[0] );
-	       	if ( bad != null )
-		        System.err.println( "Offending attribute: " + bad );
-		    else
-		        System.err.println( "No offending attribute returned" );
-		} else
+		}
+
+		LDAPSortControl sControl = null;
+		LDAPVirtualListResponse vResponse = null;
+		for ( int i = 0; i < controls.length; i++ ) {
+		    if ( controls[i] instanceof LDAPSortControl ) {
+		        sControl = (LDAPSortControl)controls[i];
+		    } else if ( controls[i] instanceof LDAPVirtualListResponse ) {
+		        vResponse = (LDAPVirtualListResponse)controls[i];
+		    }
+		}
+
+		if (sControl != null ) {
+		    String bad = sControl.getFailedAttribute();
+		    int result = sControl.getResultCode();
+		    if ( result != LDAPException.SUCCESS ) {
+		        System.err.println( "Error code: " + result );
+			if ( bad != null ) {
+			    System.err.println( "Offending attribute: " + bad );
+			} else {
+			     System.err.println( "No offending attribute returned" );
+			}
+		    } else {
 			m_pw.println("Server indicated results sorted OK");
-		LDAPVirtualListResponse vResponse = 
-			LDAPVirtualListResponse.parseResponse(controls);
+		    }
+		}
+
 		if (vResponse != null) {
 			int resultCode = vResponse.getResultCode();
 			if (resultCode == LDAPException.SUCCESS) {

@@ -28,30 +28,26 @@ import netscape.ldap.controls.*;
  */
 public class LdapPasswordExpiringControl extends LDAPPasswordExpiringControl implements Control {
 
-    //number of seconds before password expiration
-    int m_secondsToExpire = -1;
-    
     /**
      * This constractor is used by the NetscapeControlFactory
      */
     LdapPasswordExpiringControl(boolean critical, byte[] value) throws Exception{
-        m_value = value;
-        m_critical = critical;
-        String msg = new String(m_value, "UTF8");
-        if (msg != null) {
-            m_secondsToExpire = Integer.parseInt(msg);
-        }    
+        super(EXPIRING, critical, value);              
     }
     
     /**
      * Return parsed number of seconds before password expires
+     * @return number of seconds before password expires
      */
     public int getSecondsToExipre() {
-        return m_secondsToExpire;
+        return super.getSecondsToExpiration();
     }    
 
     /**
-     * Implements Control interface
+     * Retrieves the ASN.1 BER encoded value of the LDAP control.
+     * Null is returned if the value is absent.
+     * @return A possibly null byte array representing the ASN.1 BER
+     * encoded value of the LDAP control.
      */
     public byte[] getEncodedValue() {
         return getValue();

@@ -61,7 +61,7 @@ class SearchResultEnum implements NamingEnumeration {
 			Attributes attrs = new AttributesImpl(entry.getAttributeSet(), m_userBinaryAttrs);
 			
 			// check for response controls
-			LDAPControl[] ldapCtls = m_ld.getResponseControls();
+			LDAPControl[] ldapCtls = m_res.getResponseControls();
 			if (ldapCtls != null) {
 		        // Parse raw controls
         		Control[] ctls = new Control[ldapCtls.length];

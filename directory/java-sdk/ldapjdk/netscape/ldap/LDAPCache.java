@@ -19,7 +19,6 @@ package netscape.ldap;
 
 import java.util.*;
 import java.io.*;
-import netscape.ldap.*;
 import netscape.ldap.client.*;
 import netscape.ldap.util.*;
 import java.util.zip.CRC32;
@@ -254,7 +253,8 @@ public class LDAPCache implements TimerEventListener {
                         break;
                     }
                 }
-                if ((scope == LDAPConnection.SCOPE_SUB) && (dn1.contains(dn2))) {
+                if ((scope == LDAPConnection.SCOPE_SUB) &&
+                    (dn1.isDescendantOf(dn2))) {
                     break;
                 }
             }
@@ -357,7 +357,7 @@ public class LDAPCache implements TimerEventListener {
      * @exception LDAPException Thrown when failed to create key.
      */
     Long createKey(String host, int port, String baseDN, String filter,
-      int scope, String[] attrs, String bindDN, LDAPSearchConstraints cons)
+      int scope, String[] attrs, String bindDN, LDAPConstraints cons)
       throws LDAPException {
 
         DN dn = new DN(baseDN);
@@ -617,11 +617,13 @@ public class LDAPCache implements TimerEventListener {
         if ((str == null) || (str.length < 1))
             return "0"+DELIM;
         else {
-            sortStrings(str);
+            String[] sorted = new String[str.length];
+            System.arraycopy( str, 0, sorted, 0, str.length );
+            sortStrings(sorted);
 
-            String s = str.length+DELIM;
-            for (int i=0; i<str.length; i++)
-                s = s+str[i].trim()+DELIM;
+            String s = sorted.length+DELIM;
+            for (int i=0; i<sorted.length; i++)
+                s = s+sorted[i].trim()+DELIM;
             return s;
         }
     }
@@ -688,24 +690,10 @@ class Timer {
     }
 
     /**
-     * Suspend the timer.
-     */
-    void suspend() {
-        t.suspend();
-    }
-
-    /**
      * Stop the timer.
      */
     void stop() {
-        t.stop();
-    }
-
-    /**
-     * Restart the timer.
-     */
-    void restart() {
-        t.resume();
+        t.interrupt();
     }
 
     /**
@@ -770,7 +758,7 @@ class TimerRunnable implements Runnable {
             try {
                 this.wait(m_timer.getTimeout());
             } catch (InterruptedException e) {
-                System.out.println("Timer get interrupted");
+                // This happens if the timer is stopped
             }
         }
 

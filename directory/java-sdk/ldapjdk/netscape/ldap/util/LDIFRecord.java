@@ -3,7 +3,7 @@
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * http://www.m5ozilla.org/NPL/
  *
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
@@ -17,9 +17,8 @@
  */
 package netscape.ldap.util;
 
-import java.util.*;
-import netscape.ldap.client.*;
-import java.io.*;
+import java.io.Serializable;
+import netscape.ldap.LDAPControl;
 
 /**
  * An object of this class represents an LDIF record in an LDIF
@@ -59,13 +58,14 @@ import java.io.*;
  * @see netscape.ldap.util.LDIFDeleteContent
  * @see netscape.ldap.util.LDIFAttributeContent
  */
-public class LDIFRecord {
+public class LDIFRecord implements Serializable {
 
     /**
      * Internal variables
      */
     private String m_dn = null;
-    private LDIFContent m_content = null;
+    private LDIFBaseContent m_content = null;
+    static final long serialVersionUID = -6537481934870076178L;
 
     /**
      * Constructs a new <CODE>LDIFRecord</CODE> object with the
@@ -83,7 +83,7 @@ public class LDIFRecord {
      */
     public LDIFRecord(String dn, LDIFContent content) {
         m_dn = dn;
-        m_content = content;
+        m_content = (LDIFBaseContent)content;
     }
 
     /**
@@ -170,6 +170,17 @@ public class LDIFRecord {
      */
     public LDIFContent getContent() {
         return m_content;
+    }
+
+    /**
+     * Retrieves the list of controls specified in the content
+     * of the LDIF record, if any
+     * @return An array of <CODE>LDAPControl</CODE> objects that
+     * represent any controls specified in the the LDIF record,
+     * or <CODE>null</CODE> if none were specified.
+     */
+    public LDAPControl[] getControls() {
+        return (m_content == null) ? null : m_content.getControls();
     }
 
     /**

@@ -23,45 +23,7 @@ import netscape.ldap.controls.*;
 /**
  * Represents an LDAP v3 server control that specifies that you want
  * the server to use the specified DN's identity for this operation.
- * (The OID for this control is 2.16.840.1.113730.3.4.12.)
- * <P>
- *
- * You can include the control in any request by constructing
- * an <CODE>LDAPSearchConstraints</CODE> object and calling the
- * <CODE>setServerControls</CODE> method.  You can then pass this
- * <CODE>LDAPSearchConstraints</CODE> object to the <CODE>search</CODE>
- * or other request method of an <CODE>LDAPConnection</CODE> object.
- * <P>
- *
- * For example:
- * <PRE>
- * ...
- * LDAPConnection ld = new LDAPConnection();
- * try {
- *     // Connect to server.
- *     ld.connect( 3, hostname, portnumber, "", "" );
- *
- *     // Create a "critical" proxied auth server control using
- *     // the DN "uid=charlie,ou=people,o=acme.com".
- *     LDAPProxiedAuthControl ctrl =
- *         new LDAPProxiedAuthControl( "uid=charlie,ou=people,o=acme.com",
- *                                     true );
- *
- *     // Create search constraints to use that control.
- *     LDAPSearchConstraints cons = new LDAPSearchConstraints();
- *     cons.setServerControls( sortCtrl );
- *
- *     // Send the search request.
- *     LDAPSearchResults res = ld.search( "o=Airius.com",
- *        LDAPv3.SCOPE_SUB, "(cn=Barbara*)", null, false, cons );
- *
- *     ...
- *
- * </PRE>
- *
- * <P>
- * @see com.netscape.jndi.ldap.LdapSearchConstraints
- * @see com.netscape.jndi.ldap.LdapSearchConstraints#setServerControls(LDAPControl)
+ * (The OID for this control is 2.16.840.1.113730.3.4.12.) *
  */
 public class LdapProxiedAuthControl extends LDAPProxiedAuthControl implements Control {
 
@@ -79,11 +41,13 @@ public class LdapProxiedAuthControl extends LDAPProxiedAuthControl implements Co
     }
 
     /**
-     * Implements Control interface
+     * Retrieves the ASN.1 BER encoded value of the LDAP control.
+     * Null is returned if the value is absent.
+     * @return A possibly null byte array representing the ASN.1 BER
+     * encoded value of the LDAP control.
      */
     public byte[] getEncodedValue() {
         return getValue();
-    }    
-    
+    }
 }
 

@@ -12,13 +12,11 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.util;
 
-import java.util.*;
-import java.io.*;
 import java.util.StringTokenizer;
 
 /**
@@ -39,15 +37,17 @@ import java.util.StringTokenizer;
  * <P>
  *
  * @version 1.0
- * @see netscape.ldap.utils.DN
+ * @see netscape.ldap.util.DN
  */
-public final class RDN {
+public final class RDN implements java.io.Serializable {
+
+    static final long serialVersionUID = 7895454691174650321L;
 
     /**
      * List of RDNs. DN consists of one or more RDNs.
      */
-    String m_type = null;
-    String m_value = null;
+    private String m_type = null;
+    private String m_value = null;
 
     /**
      * Constructs a new <CODE>RDN</CODE> object from the specified

@@ -10,7 +10,7 @@
 
 <h2>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Netscape LDAP Service Provider for JNDI (06-04-99)</h2>
+Netscape LDAP Service Provider for JNDI (08-02-99)</h2>
 The Netscape LDAP service provider for JNDI implements the JNDI DirContext
 interface. It is implemented as a layer on top of the Netscape Directory
 SDK for Java (ldapjdk.jar). While the ldapjdk uses the LDAP connection
@@ -26,7 +26,7 @@ an equivalent of a directory entry in the ldapjdk.
 <br>&nbsp;
 <h3>
 <a NAME="Using"></a>Using Netscape LDAP Service Provider</h3>
-The current implementation&nbsp; is based on the JNDI 1.2 beta1. In addition
+The current implementation&nbsp; is based on the JNDI 1.2 FCS. In addition
 to the DirContext interface implementation, the Netscape LDAP provider
 implements the new JNDI event service (<i>javax.naming.event</i> package)
 and support for controls (<i>javax.naming.ldap</i> package) which were
@@ -48,13 +48,13 @@ listed jar files are:
 <tr>
 <td>ldapjdk.jar</td>
 
-<td>Netscape Directory SDK for Java 3.1</td>
+<td>Netscape Directory SDK for Java 4.0 Beta</td>
 </tr>
 
 <tr>
 <td>jndi.jar</td>
 
-<td>JNDI 1.2 beta1</td>
+<td>JNDI 1.2 FCS</td>
 </tr>
 </table>
 
@@ -460,14 +460,11 @@ to search subtree */</tt>
 String[] { "sn" });</tt>
 <p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // specify sort control</tt>
 <br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>ctx.setRequestControls(</b></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-<b>new
-Control[] {new LdapSortControl(</b></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<b>new Control[] {new LdapSortControl(</b></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <b>new LdapSortKey[]{</b></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <b>new LdapSortKey("sn", true,null)},Control.CRITICAL)});</b></tt>
 <p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* search for all entries
 with surname of Jensen */</tt>
@@ -532,9 +529,12 @@ Therefore, the class name specified with the <i>javaClassName</i> attribute
 must be available in the local <i>CLASSPATH</i>.</li>
 
 <li>
-<i>search()</i> method for schema directory contexts. Instead of <i>DirContext.search()</i>,
-the&nbsp; <i>Context.lookup()</i> request should be used for a schema directory
-context.</li>
+<i>search()</i> and <i>modifyAttribute()</i> methods for schema directory
+contexts. Instead of <i>DirContext.search()</i>, the&nbsp; <i>Context.lookup()</i>
+request should be used for a schema directory context. Instead of <i>DirContext.modifyAttribute()</i>,
+<i>DirContext.deleteSubcontext()</i>
+followed the <i>DirContext.craeteSubcontext()
+</i>should be used.</li>
 </ul>
 
 </body>

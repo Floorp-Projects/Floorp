@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.controls;
@@ -21,6 +21,7 @@ import java.io.*;
 import netscape.ldap.LDAPControl;
 import netscape.ldap.LDAPSortKey;
 import netscape.ldap.client.JDAPBERTagDecoder;
+import netscape.ldap.LDAPException;
 import netscape.ldap.ber.stream.*;
 
 /**
@@ -90,7 +91,8 @@ import netscape.ldap.ber.stream.*;
  * </UL>
  * <P>
  *
- * To parse this control, use the <CODE>parseResponse</CODE> method.
+ * To retrieve the data from this control, use the <CODE>getResultCode</CODE>
+ * and <CODE>getFailedAttribute</CODE> methods.
  * <P>
  *
  * The following table lists what kinds of results to expect from the
@@ -206,13 +208,83 @@ import netscape.ldap.ber.stream.*;
  * @version 1.0
  * @see netscape.ldap.LDAPSortKey
  * @see netscape.ldap.LDAPControl
+ * @see netscape.ldap.LDAPConstraints
  * @see netscape.ldap.LDAPSearchConstraints
- * @see netscape.ldap.LDAPSearchConstraints#setServerControls(LDAPControl)
+ * @see netscape.ldap.LDAPConstraints#setServerControls(LDAPControl)
  */
 public class LDAPSortControl extends LDAPControl {
     public final static String SORTREQUEST  = "1.2.840.113556.1.4.473";
     public final static String SORTRESPONSE = "1.2.840.113556.1.4.474";
 
+    private String m_failedAttribute = null;
+    private int m_resultCode = 0;
+
+    /**
+     * Constructs a sort response <CODE>LDAPSortControl</CODE> object.
+     * This constructor is used by <CODE>LDAPControl.register</CODE> to 
+     * instantiate sort response controls.
+     * <P>
+     * To retrieve the result code of the sort operation, call 
+     * <CODE>getResultCode</CODE>.
+     * <P> 
+     * To retrieve the attribute that caused the sort operation to fail, call
+     * <CODE>getFailedAttribute</CODE>.
+     * @param oid The oid for this control. This must be 
+     * <CODE>LDAPSortControl.SORTRESPONSE</CODE> or a <CODE>LDAPException</CODE> 
+     * is thrown.
+     * @param critical True if this control is critical to the operation.
+     * @param value The value associated with this control.
+     * @exception netscape.ldap.LDAPException If oid is not 
+     * <CODE>LDAPSortControl.SORTRESPONSE</CODE>.
+     * @exception java.io.IOException If value contains an invalid BER sequence.
+     * @see netscape.ldap.LDAPControl#register
+     */
+    public LDAPSortControl( String oid, boolean critical, byte[] value ) 
+        throws LDAPException, IOException {
+	super( oid, critical, value );
+
+	if ( !oid.equals( SORTRESPONSE )) {
+	    throw new LDAPException( "oid must be LDAPSortControl.SORTRESPONSE",
+				     LDAPException.PARAM_ERROR);
+	}
+
+        ByteArrayInputStream inStream = new ByteArrayInputStream( value );
+        BERSequence ber = new BERSequence();
+        JDAPBERTagDecoder decoder = new JDAPBERTagDecoder();
+        int[] nRead = { 0 };
+
+	/* A sequence */
+	BERSequence seq = (BERSequence)BERElement.getElement(decoder, inStream,
+							     nRead );
+	/* First is result code */
+	int m_resultCode = ((BEREnumerated)seq.elementAt( 0 )).getValue();
+	/* Then, possibly an attribute that failed sorting */
+	if(seq.size() == 1) {
+	    return;
+	}
+	/* If this is not an octet string, let there be an exception */
+	BEROctetString t = (BEROctetString)seq.elementAt(1);
+	try {
+	    m_failedAttribute = new String(t.getValue(), "UTF8");
+	} catch (UnsupportedEncodingException e) {
+	}
+
+    }
+
+    /**
+     * @return The attribute that caused the sort operation to fail.
+     */
+    public String getFailedAttribute() {
+	return m_failedAttribute;
+    }
+
+    /**
+     * @return The result code from the search operation.
+     */
+    public int getResultCode() {
+	return m_resultCode;
+    }
+    
     /**
      * Constructs an <CODE>LDAPSortControl</CODE> object with a single
      * sorting key.
@@ -418,6 +490,8 @@ public class LDAPSortControl extends LDAPControl {
      * @return The attribute that caused the error, or null if the server did
      * not specify which attribute caused the error.
      * @see netscape.ldap.LDAPConnection#getResponseControls
+     * @deprecated LDAPSortControl response controls are now automatically 
+     * instantiated.
      */
     public static String parseResponse( LDAPControl[] controls, int[] results ) {
         String attr = null;
@@ -450,7 +524,7 @@ public class LDAPSortControl extends LDAPControl {
                 /* If this is not an octet string, let there be an exception */
                 BEROctetString t = (BEROctetString)seq.elementAt(1);
                 attr = new String(t.getValue(), "UTF8");
-            } catch(Throwable x) {
+            } catch(Exception x) {
             }
         }
         return attr;
@@ -486,6 +560,14 @@ public class LDAPSortControl extends LDAPControl {
         }
         /* Suck out the data and return it */
         return flattenBER( ber );
+    }
+
+    // register SORTRESPONSE with LDAPControl
+    static {
+        try {
+	    LDAPControl.register( SORTRESPONSE, LDAPSortControl.class );
+	} catch (LDAPException e) {
+	}
     }
 }
 

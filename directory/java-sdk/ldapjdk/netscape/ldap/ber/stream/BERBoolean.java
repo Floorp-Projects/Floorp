@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -53,8 +53,8 @@ public class BERBoolean extends BERElement {
     }
 
     /**
-     * Constructs a boolean element with the input stream.
-     * @param stream input stream
+     * Constructs a boolean element from an input stream.
+     * @param stream source
      * @param bytes_read array of 1 int; value incremented by
      *        number of bytes read from stream.
      * @exception IOException failed to construct
@@ -72,7 +72,7 @@ public class BERBoolean extends BERElement {
     }
 
     /**
-     * Sends the BER encoding directly to stream.
+     * Sends the BER encoding directly to a stream.
      * @param stream output stream
      */
     public void write(OutputStream stream) throws IOException {

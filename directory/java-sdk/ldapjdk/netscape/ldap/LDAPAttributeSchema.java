@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
@@ -44,22 +44,66 @@ import java.util.*;
  * When you construct an <CODE>LDAPAttributeSchema</CODE> object, you can
  * specify these types of information as arguments to the constructor or
  * in the AttributeTypeDescription format specified in RFC 2252.
- * (When an LDAP client searches an LDAP server for the schema, the server
+ * When an LDAP client searches an LDAP server for the schema, the server
  * returns schema information as an object with attribute values in this
- * format.)
+ * format.
+ * <P>
+
+ * There a number of additional optional description fields which
+ * are not explicitly accessible through LDAPAttributeSchema, but which
+ * can be managed with setQualifier, getQualifier, and getQualifierNames:
+ * <P>
+ *
+ * <UL>
+ * <LI>EQUALITY
+ * <LI>ORDERING
+ * <LI>SUBSTR
+ * <LI>COLLECTIVE
+ * <LI>NO-USER-MODIFICATION
+ * <LI>USAGE
+ * <LI>OBSOLETE
+ * </UL>
  * <P>
  *
  * You can get the name, OID, and description of this attribute type
  * definition by using the <CODE>getName</CODE>, <CODE>getOID</CODE>, and
  * <CODE>getDescription</CODE> methods inherited from the abstract class
- * <CODE>LDAPSchemaElement</CODE>.
+ * <CODE>LDAPSchemaElement</CODE>. Optional and custom qualifiers are
+ * accessed with <CODE>getQualifier</CODE> and <CODE>getQualifierNames</CODE>
+ * from <CODE>LDAPSchemaElement</CODE>.
  * <P>
  *
- * If you need to add or remove this attribute type definition from the
- * schema, you can use the <CODE>add</CODE> and <CODE>remove</CODE>
+ * To add or remove this attribute type definition from the
+ * schema, use the <CODE>add</CODE> and <CODE>remove</CODE>
  * methods, which this class inherits from the <CODE>LDAPSchemaElement</CODE>
  * abstract class.
  * <P>
+ * RFC 2252 defines AttributeTypeDescription as follows:
+ * <P>
+ * <PRE>
+ *     AttributeTypeDescription = "(" whsp
+ *          numericoid whsp              ; AttributeType identifier
+ *        [ "NAME" qdescrs ]             ; name used in AttributeType
+ *        [ "DESC" qdstring ]            ; description
+ *        [ "OBSOLETE" whsp ]
+ *        [ "SUP" woid ]                 ; derived from this other
+ *                                       ; AttributeType
+ *        [ "EQUALITY" woid              ; Matching Rule name
+ *        [ "ORDERING" woid              ; Matching Rule name
+ *        [ "SUBSTR" woid ]              ; Matching Rule name
+ *        [ "SYNTAX" whsp noidlen whsp ] ; see section 4.3
+ *        [ "SINGLE-VALUE" whsp ]        ; default multi-valued
+ *        [ "COLLECTIVE" whsp ]          ; default not collective
+ *        [ "NO-USER-MODIFICATION" whsp ]; default user modifiable
+ *        [ "USAGE" whsp AttributeUsage ]; default userApplications
+ *        whsp ")"
+ *
+ *    AttributeUsage =
+ *        "userApplications"     /
+ *        "directoryOperation"   /
+ *        "distributedOperation" / ; DSA-shared
+ *        "dSAOperation"          ; DSA-specific, value depends on server
+ * </PRE>
  *
  * @version 1.0
  * @see netscape.ldap.LDAPSchemaElement
@@ -98,6 +142,27 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
         super( name, oid, description );
         attrName = "attributetypes";
         this.syntax = syntax;
+        this.syntaxString = internalSyntaxToString();
+        this.single = single;
+    }
+
+    /**
+     * Constructs an attribute type definition, using the specified
+     * information.
+     * @param name Name of the attribute type.
+     * @param oid Object identifier (OID) of the attribute type
+     * in dotted-string format (for example, "1.2.3.4").
+     * @param description Description of attribute type.
+     * @param syntaxString Syntax of this attribute type in dotted-string
+     * format (for example, "1.2.3.4.5").
+     * @param single <CODE>true</CODE> if the attribute type is single-valued.
+     */
+    public LDAPAttributeSchema( String name, String oid, String description,
+                            String syntaxString, boolean single ) {
+        super( name, oid, description );
+        attrName = "attributetypes";
+        this.syntaxString = syntaxString;
+        this.syntax = syntaxCheck( syntaxString );
         this.single = single;
     }
 
@@ -119,59 +184,13 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
      */
     public LDAPAttributeSchema( String raw ) {
         attrName = "attributetypes";
-        raw.trim();
-        // Skip past "( " and ")"
-        int l = raw.length();
-        raw = raw.substring( 2, l - 1 );
-        l = raw.length();
-        int ind = raw.indexOf( ' ' );
-        oid = raw.substring( 0, ind );
-        char[] ch = new char[l];
-
-        raw = raw.substring( ind + 1, l );
-        l = raw.length();
-        raw.getChars( 0, l, ch, 0 );
-
-        ind = 0;
-        l = ch.length;
-        while ( ind < l ) {
-            String s = "";
-            String val;
-            while( ch[ind] == ' ' )
-                ind++;
-            int last = ind + 1;
-            while( (last < l) && (ch[last] != ' ') )
-                last++;
-            if ( (ind < l) && (last < l) ) {
-                s = new String( ch, ind, last-ind );
-                ind = last;
-                if ( s.equalsIgnoreCase( "SINGLE-VALUE" ) ) {
-                    single = true;
-                    continue;
-                }
-            } else {
-                ind = l;
-            }
-
-            while( (ind < l) && (ch[ind] != '\'')  )
-                ind++;
-            last = ind + 1;
-            while( (last < l) && (ch[last] != '\'') ) {
-                last++;
-            }
-            if ( (ind < last) && (last < l) ) {
-                val = new String( ch, ind+1, last-ind-1 );
-                ind = last + 1;
-
-                if ( s.equalsIgnoreCase( "NAME" ) ) {
-                    name = val;
-                } else if ( s.equalsIgnoreCase( "DESC" ) ) {
-                    description = val;
-                } else if ( s.equalsIgnoreCase( "SYNTAX" ) ) {
-                    syntax = syntaxCheck( val );
-                }
-            }
+        parseValue( raw );
+        String val = (String)properties.get( SYNTAX );
+        if ( val != null ) {
+            syntaxString = val;
+            syntax = syntaxCheck( val );
         }
+        single = properties.containsKey( "SINGLE-VALUE" );
     }
 
     /**
@@ -185,10 +204,20 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
      * <LI><CODE>telephone</CODE> (telephone number -- identical to cis,
      * but blanks and dashes are ignored during comparisons)
      * <LI><CODE>dn</CODE> (distinguished name)
+     * <LI><CODE>unknown</CODE> (not a known syntax)
      * </UL>
      */
     public int getSyntax() {
         return syntax;
+    }
+
+    /**
+     * Gets the syntax of the attribute type in dotted-decimal format,
+     * for example "1.2.3.4.5"
+     * @return the attribute syntax in dotted-decimal format.
+     */
+    public String getSyntaxString() {
+        return syntaxString;
     }
 
     /**
@@ -215,38 +244,8 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
         } else if ( syntax == integer ) {
             s = intString;
         } else {
-            s = "unknown";
+            s = syntaxString;
         }
-        return s;
-    }
-
-    /**
-     * Get the attribute type definition in a string representation
-     * of the AttributeTypeDescription data type defined in X.501 (see
-     * <A HREF="http://ds.internic.net/rfc/rfc2252.txt"
-     * TARGET="_blank">RFC 2252, Lightweight Directory Access Protocol
-     * (v3): Attribute Syntax Definitions</A>
-     * for a description of this format).
-     * This is the format that LDAP servers and clients use to exchange
-     * schema information.  (For example, when
-     * you search an LDAP server for its schema, the server returns an entry
-     * with the attributes "objectclasses" and "attributetypes".  The
-     * values of the "attributetypes" attribute are attribute type
-     * descriptions in this format.)
-     * <P>
-     *
-     * @return A string in a format that can be used as the value of
-     * the <CODE>attributetypes</CODE> attribute (which describes
-     * an attribute type in the schema) of a <CODE>subschema</CODE> object.
-     */
-    public String getValue() {
-        String s = "( " + oid + " NAME \'" + name + "\' DESC \'" +
-            description + "\' SYNTAX \'";
-        s += internalSyntaxToString();
-        s += "\' ";
-        if ( single )
-            s += "SINGLE-VALUE ";
-        s += ')';
         return s;
     }
 
@@ -265,8 +264,40 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
         } else if ( syntax == dn ) {
             s = "distinguished name";
         } else {
-            s = "unknown";
+            s = syntaxString;
         }
+        return s;
+    }
+
+    /**
+     * Prepare a value in RFC 2252 format for submitting to a server
+     *
+     * @param quotingBug <CODE>true</CODE> if SUP and SYNTAX values are to
+     * be quoted. That is to satisfy bugs in certain LDAP servers.
+     * @return A String ready to be submitted to an LDAP server
+     */
+	String getValue( boolean quotingBug ) {
+        String s = getValuePrefix();
+        s += getValue( SUPERIOR, false );
+        String val = getOptionalValues( MATCHING_RULES );
+        if ( val.length() > 0 ) {
+            s += val + ' ';
+        }
+        s += getValue( SYNTAX, quotingBug );
+        s += ' ';
+        val = getOptionalValues( NOVALS );
+        if ( val.length() > 0 ) {
+            s += val + ' ';
+        }
+        val = getOptionalValues( new String[] {USAGE} );
+        if ( val.length() > 0 ) {
+            s += val + ' ';
+        }
+        val = getCustomValues();
+        if ( val.length() > 0 ) {
+            s += val + ' ';
+        }
+        s += ')';
         return s;
     }
 
@@ -280,10 +311,12 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
         String s = "Name: " + name + "; OID: " + oid + "; Type: ";
         s += syntaxToString();
         s += "; Description: " + description + "; ";
-        if ( single )
+        if ( single ) {
             s += "single-valued";
-        else
+        } else {
             s += "multi-valued";
+        }
+        s += getQualifierString( EXPLICIT );
         return s;
     }
 
@@ -305,6 +338,64 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
         return i;
     }
 
+    /**
+     * Parses an attribute schema definition to see if the SYNTAX value
+     * is quoted. It shouldn't be (according to RFC 2252), but it is for
+     * some LDAP servers. It will either be:<BR>
+     * <CODE>SYNTAX 1.3.6.1.4.1.1466.115.121.1.15</CODE> or<BR>
+     * <CODE>SYNTAX '1.3.6.1.4.1.1466.115.121.1.15'</CODE>
+     * @param raw Definition of the attribute type in the
+     * AttributeTypeDescription format.
+     */
+    static boolean isSyntaxQuoted( String raw ) {
+        int ind = raw.indexOf( " SYNTAX " );
+        if ( ind >= 0 ) {
+            ind += 8;
+            int l = raw.length() - ind;
+            // Extract characters
+            char[] ch = new char[l];
+            raw.getChars( ind, raw.length(), ch, 0 );
+            ind = 0;
+            // Skip to ' or start of syntax value
+            while( (ind < ch.length) && (ch[ind] == ' ') ) {
+                ind++;
+            }
+            if ( ind < ch.length ) {
+                return ( ch[ind] == '\'' );
+            }
+        }
+        return false;
+    }
+
+    // Predefined qualifiers
+	public static final String EQUALITY = "EQUALITY";
+	public static final String ORDERING = "ORDERING";
+	public static final String SUBSTR = "SUBSTR";
+	public static final String SINGLE = "SINGLE-VALUE";
+	public static final String COLLECTIVE = "COLLECTIVE";
+	public static final String NO_USER_MODIFICATION = "NO-USER-MODIFICATION";
+	public static final String USAGE = "USAGE";
+	public static final String SYNTAX = "SYNTAX";
+	
     protected int syntax = unknown;
-    private boolean single = false;
+    protected String syntaxString = null;
+    protected boolean single = false;
+
+	static String[] NOVALS = { SINGLE,
+							   COLLECTIVE,
+                               NO_USER_MODIFICATION };
+	static {
+		for( int i = 0; i < NOVALS.length; i++ ) {
+			novalsTable.put( NOVALS[i], NOVALS[i] );
+		}
+	}
+	static final String[] MATCHING_RULES = { EQUALITY,
+                                             ORDERING,
+                                             SUBSTR };
+    // Qualifiers tracked explicitly
+	static final String[] EXPLICIT = { SINGLE,
+                                       OBSOLETE,
+                                       COLLECTIVE,
+                                       NO_USER_MODIFICATION,
+                                       SYNTAX};
 }

@@ -20,7 +20,6 @@ package netscape.ldap;
 import java.io.*;
 import java.net.*;
 import java.util.Hashtable;
-import netscape.ldap.*;
 
 /**
  * Creates an SSL socket connection to an LDAP Server. This class is provided

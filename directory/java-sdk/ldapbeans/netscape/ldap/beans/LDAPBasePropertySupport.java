@@ -338,9 +338,12 @@ public class LDAPBasePropertySupport implements Serializable {
                         m_conn.getAuthenticationPassword() );
                 }
         };
-        LDAPSearchConstraints cons = conn.getSearchConstraints();
-        cons.setReferrals( true );
-        cons.setRebindProc( rebind );
+        try {
+            conn.setOption(LDAPConnection.REFERRALS, Boolean.TRUE);
+            conn.setOption(LDAPConnection.REFERRALS_REBIND_PROC, rebind);
+        } catch (LDAPException e) {
+            //will never happen
+        }
     }
 
     /**

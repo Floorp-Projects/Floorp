@@ -66,8 +66,9 @@ import netscape.ldap.ber.stream.*;
  *
  * @version 1.0
  * @see netscape.ldap.LDAPControl
+ * @see netscape.ldap.LDAPConstraints
  * @see netscape.ldap.LDAPSearchConstraints
- * @see netscape.ldap.LDAPSearchConstraints#setServerControls(LDAPControl)
+ * @see netscape.ldap.LDAPConstraints#setServerControls(LDAPControl)
  */
 public class LDAPProxiedAuthControl extends LDAPControl {
     public final static String PROXIEDAUTHREQUEST  =

@@ -17,8 +17,6 @@
  */
 package netscape.ldap;
 
-import netscape.ldap.*;
-
 /**
  * Represents a SSL socket connection that you can use to connect to an
  * LDAP server. This interface extends the base interface LDAPSocketFactory 

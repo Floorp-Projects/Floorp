@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.util;
@@ -45,13 +45,13 @@ import java.util.StringTokenizer;
  * @version 1.0
  * @see netscape.ldap.LDAPDN
  */
-public final class DN {
+public final class DN implements Serializable {
 
     /**
      * List of RDNs. DN consists of one or more RDNs.
      * RDNs follow RFC1485 order.
      */
-    Vector m_rdns = new Vector();
+    private Vector m_rdns = new Vector();
 
     /**
      * Type specifying a DN in the RFC format.
@@ -72,6 +72,7 @@ public final class DN {
     public static int OSF = 1;
 
     private int m_dnType = RFC;
+    static final long serialVersionUID = -8867457218975952548L;
 
     /**
      * Constructs an empty <CODE>DN</CODE> object.
@@ -164,7 +165,7 @@ public final class DN {
      *
      * @param rdn The relative distinguished name that you want
      * to add to the beginning of the current DN.
-     * @see netscape.ldap.utils.RDN
+     * @see netscape.ldap.util.RDN
      */
     public void addRDNToFront(RDN rdn) {
         m_rdns.insertElementAt(rdn, 0);
@@ -177,7 +178,7 @@ public final class DN {
      *
      * @param rdn The relative distinguished name that you want
      * to append to the current DN.
-     * @see netscape.ldap.utils.RDN
+     * @see netscape.ldap.util.RDN
      */
     public void addRDNToBack(RDN rdn) {
         m_rdns.addElement(rdn);
@@ -192,7 +193,7 @@ public final class DN {
      *
      * @param rdn The relative distinguished name that you want to add to
      * the current DN.
-     * @see netscape.ldap.utils.RDN
+     * @see netscape.ldap.util.RDN
      */
     public void addRDN(RDN rdn) {
         if (m_dnType == RFC) {
@@ -243,7 +244,7 @@ public final class DN {
      * Returns a list of the components (<CODE>RDN</CODE> objects)
      * that make up the current DN.
      * @return A list of the components of this DN.
-     * @see netscape.ldap.utils.RDN
+     * @see netscape.ldap.util.RDN
      */
     public Vector getRDNs() {
         return m_rdns;
@@ -328,6 +329,9 @@ public final class DN {
      * @return true or false
      */
     public static boolean isDN(String dn) {
+        if ( dn.equals( "" ) ) {
+            return true;
+        }
         DN newdn = new DN(dn);
         return (newdn.countRDNs() > 0);
     }
@@ -385,14 +389,53 @@ public final class DN {
      * @param dn The DN of a subtree that you want to check.
      * @return true if the current DN belongs to the subtree
      * specified by <CODE>dn</CODE>.
+     * @deprecated Please use isDescendantOf() instead.
      */
+
     public boolean contains(DN dn) {
+        
+        return isDescendantOf(dn);
+    }
+    
+    /**
+     * Determines if this DN is a descendant of the given DN.
+     * <P>
+     *
+     * For example, the following section of code determines if the
+     * DN specified by <CODE>dn1</CODE> is a descendant of the DN specified
+     * by <CODE>dn2</CODE>.
+     * <PRE>
+     *    DN dn1 = new DN("uid=bjensen, ou=People, o=Airius.com");
+     *    DN dn2 = new DN("ou=People, o=Airius.com");
+     *
+     *    boolean isDescendant = dn1.isDescendantOf(dn2)
+     * </PRE>
+     * In this case, since "uid=bjensen, ou=People, o=Airius.com"
+     * is an entry under the subtree "ou=People, o=Airius.com",
+     * the value of <CODE>isDescendant</CODE> is true.
+     * <P>
+     *
+     * In the case where the given DN is equal to this DN
+     * it returns false.
+     *
+     * @param dn The DN of a subtree that you want to check.
+     * @return true if the current DN is a descendant of the DN
+     * specified by <CODE>dn</CODE>.
+     */
+
+    public boolean isDescendantOf(DN dn) {
 
         Vector rdns1 = dn.m_rdns;
 
         Vector rdns2 = this.m_rdns;
 
-        for (int i=rdns1.size()-1,j=rdns2.size()-1; i>=0 && j>=0; i--, j--) {
+        int i = rdns1.size() - 1;
+        int j = rdns2.size() - 1;
+        
+        if ((j < i) || (equals(dn) == true)) 
+          return false;
+
+        for (; i>=0 && j>=0; i--, j--) {
             RDN rdn1 = (RDN)rdns1.elementAt(i);
             RDN rdn2 = (RDN)rdns2.elementAt(j);
             if (!rdn2.equals(rdn1)) {

@@ -12,14 +12,13 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
 
 import java.io.*;
 import java.net.*;
-import netscape.ldap.*;
 
 /**
  * Creates an SSL socket connection to an LDAP Server.  This class
@@ -40,7 +39,7 @@ import netscape.ldap.*;
  *
  * @version 1.0
  * @see LDAPSSLSocketFactoryExt
- * @see LDAPConnection#LDAPConnection(netscape.ldap.LDAPSSLSocketFactoryExt)
+ * @see LDAPConnection#LDAPConnection(netscape.ldap.LDAPSocketFactory)
  */
 public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
 
@@ -246,17 +245,23 @@ public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
 
         if (m_clientAuth) {
             try {
-                /* Check if running in Communicator; if so, enable client auth */
-                java.lang.reflect.Method m = LDAPCheckComm.getMethod(
-                    "netscape.security.PrivilegeManager", "enablePrivilege");
+                /* Check if running in Communicator; if so, enable client
+                   auth */
+                String[] types = { "java.lang.String" };
+                java.lang.reflect.Method m =
+                    DynamicInvoker.getMethod(
+                        "netscape.security.PrivilegeManager",
+                        "enablePrivilege",
+                        types );
                 if (m != null) {
                     Object[] args = new Object[1];
                     args[0] = new String("ClientAuth");
                     m.invoke( null, args);
                 }
             } catch (Exception e) {
-                throw new LDAPException("Invoking enablePrivilege: " +
-                                      e.toString(), LDAPException.PARAM_ERROR);
+                String msg = "LDAPSSLSocketFactory.makeSocket: invoking " +
+                    "enablePrivilege: " + e.toString();
+                throw new LDAPException(msg, LDAPException.PARAM_ERROR);
             }
         }
 

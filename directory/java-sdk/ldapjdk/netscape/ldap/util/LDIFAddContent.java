@@ -12,15 +12,12 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.util;
 
-import java.util.*;
-import netscape.ldap.*;
-import netscape.ldap.client.*;
-import java.io.*;
+import netscape.ldap.LDAPAttribute;
 
 /**
  *
@@ -37,12 +34,13 @@ import java.io.*;
  * @version 1.0
  * @see netscape.ldap.util.LDIFRecord#getContent
  */
-public class LDIFAddContent implements LDIFContent {
+public class LDIFAddContent extends LDIFBaseContent {
 
     /**
      * Internal variables
      */
     private LDAPAttribute m_attrs[] = null;
+    static final long serialVersionUID = -665548826721177756L;
 
     /**
      * Constructs a new <CODE>LDIFAddContent</CODE> object with
@@ -84,6 +82,9 @@ public class LDIFAddContent implements LDIFContent {
         String s = "";
         for (int i = 0; i < m_attrs.length; i++) {
             s = s + m_attrs[i].toString();
+        }
+        if ( getControls() != null ) {
+            s += getControlString();
         }
         return "LDIFAddContent {" + s + "}";
     }

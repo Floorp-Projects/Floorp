@@ -12,14 +12,10 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.util;
-
-import java.util.*;
-import netscape.ldap.client.*;
-import java.io.*;
 
 /**
  * An object of this class represents the content of an LDIF record that
@@ -35,7 +31,10 @@ import java.io.*;
  * @version 1.0
  * @see netscape.ldap.util.LDIFRecord#getContent
  */
-public class LDIFDeleteContent implements LDIFContent {
+public class LDIFDeleteContent extends LDIFBaseContent {
+
+    static final long serialVersionUID = -6581979396116035503L;
+
     /**
      * Constructs an <CODE>LDIFDeleteContent</CODE> object
      * to specify that an entry should be deleted.  (The DN
@@ -62,6 +61,10 @@ public class LDIFDeleteContent implements LDIFContent {
      * @return The string representation of the content of the LDIF record.
      */
     public String toString() {
-        return "LDIFDeleteContent {}";
+        String s = "";
+        if ( getControls() != null ) {
+            s += getControlString();
+        }
+        return "LDIFDeleteContent {" + s + "}";
     }
 }

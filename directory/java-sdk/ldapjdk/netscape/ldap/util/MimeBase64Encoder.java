@@ -22,6 +22,7 @@ package netscape.ldap.util;
  */
 public final class MimeBase64Encoder extends MimeEncoder {
 
+    static final long serialVersionUID = 8781620079813078315L;
     private int buf = 0;                     // a 24-bit quantity
     private int buf_bytes = 0;               // how many octets are set in it
     private byte line[] = new byte[74];      // output buffer
@@ -29,7 +30,7 @@ public final class MimeBase64Encoder extends MimeEncoder {
 
     static private final byte crlf[] = "\r\n".getBytes();
 
-    static private final byte map[] = {
+    static private final char map[] = {
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',     // 0-7
       'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',     // 8-15
       'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',     // 16-23
@@ -42,10 +43,10 @@ public final class MimeBase64Encoder extends MimeEncoder {
 
     private final void encode_token() {
         int i = line_length;
-        line[i]   = map[0x3F & (buf >> 18)];   // sextet 1 (octet 1)
-        line[i+1] = map[0x3F & (buf >> 12)];   // sextet 2 (octet 1 and 2)
-        line[i+2] = map[0x3F & (buf >> 6)];    // sextet 3 (octet 2 and 3)
-        line[i+3] = map[0x3F & buf];           // sextet 4 (octet 3)
+        line[i]   = (byte)map[0x3F & (buf >> 18)];   // sextet 1 (octet 1)
+        line[i+1] = (byte)map[0x3F & (buf >> 12)];   // sextet 2 (octet 1 and 2)
+        line[i+2] = (byte)map[0x3F & (buf >> 6)];    // sextet 3 (octet 2 and 3)
+        line[i+3] = (byte)map[0x3F & buf];           // sextet 4 (octet 3)
         line_length += 4;
         buf = 0;
         buf_bytes = 0;
@@ -53,18 +54,18 @@ public final class MimeBase64Encoder extends MimeEncoder {
 
     private final void encode_partial_token() {
         int i = line_length;
-        line[i]   = map[0x3F & (buf >> 18)];   // sextet 1 (octet 1)
-        line[i+1] = map[0x3F & (buf >> 12)];   // sextet 2 (octet 1 and 2)
+        line[i]   = (byte)map[0x3F & (buf >> 18)];   // sextet 1 (octet 1)
+        line[i+1] = (byte)map[0x3F & (buf >> 12)];   // sextet 2 (octet 1 and 2)
 
         if (buf_bytes == 1)
-            line[i+2] = '=';
+            line[i+2] = (byte)'=';
         else
-            line[i+2] = map[0x3F & (buf >> 6)];  // sextet 3 (octet 2 and 3)
+            line[i+2] = (byte)map[0x3F & (buf >> 6)];  // sextet 3 (octet 2 and 3)
 
         if (buf_bytes <= 2)
-            line[i+3] = '=';
+            line[i+3] = (byte)'=';
         else
-            line[i+3] = map[0x3F & buf];         // sextet 4 (octet 3)
+            line[i+3] = (byte)map[0x3F & buf];         // sextet 4 (octet 3)
         line_length += 4;
         buf = 0;
         buf_bytes = 0;

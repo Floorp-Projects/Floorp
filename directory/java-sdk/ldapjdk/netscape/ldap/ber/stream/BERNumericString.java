@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -21,7 +21,15 @@ import java.util.*;
 import java.io.*;
 
 /**
- * This class is for NumericString type.
+ * This class is for the NumericString type.
+ *
+ * <pre>
+ * ENCODING RULE:
+ *   Primitive Definite length.
+ *   tag = 0x12
+ *   length = (short or long form)
+ *   one or more contents octets
+ * </pre>
  *
  * @version 1.0
  * @seeAlso CCITT X.209
@@ -29,15 +37,15 @@ import java.io.*;
 public class BERNumericString extends BERCharacterString {
 
     /**
-     * Constructs an octetstring element containing buffer.
-     * @param buffer string containing 'octets'
+     * Constructs a numeric string element from a string
+     * @param buffer string with value of element
      */
     public BERNumericString(String string) {
         m_value = string;
     }
 
     /**
-     * Constructs a numericstring element from buffer.
+     * Constructs a numeric string element from a byte array
      * @param buffer buffer
      */
     public BERNumericString(byte[] buffer) {
@@ -45,9 +53,9 @@ public class BERNumericString extends BERCharacterString {
     }
 
     /**
-     * Constructs a numericstring element with the input stream.
+     * Constructs a numeric string element from an input stream
      * (for constructed encoding)
-     * @param stream input stream
+     * @param stream source
      * @param bytes_read array of 1 int, incremented by number of bytes read.
      * @exception IOException failed to construct
      */
@@ -57,7 +65,7 @@ public class BERNumericString extends BERCharacterString {
     }
 
     /**
-     * Constructs a numericstring element with the input stream.
+     * Constructs a numericstring element from an input stream
      * (for primitive encoding)
      * @param stream input stream
      * @param bytes_read array of 1 int, incremented by number of bytes read.
@@ -70,7 +78,7 @@ public class BERNumericString extends BERCharacterString {
 
     /**
      * Gets the element type.
-     * @param element type
+     * @return element type
      */
     public int getType() {
         return BERElement.NUMERICSTRING;

@@ -51,10 +51,8 @@ public class LdapVirtualListResponseControl extends LDAPVirtualListResponse impl
      * @param value A BER encoded byte array.
      * This constructor is used by the NetscapeControlFactory
      */
-    LdapVirtualListResponseControl( byte[] value ) {
-        // The superclass constractor parses the byte[] value
-        // automatically. No need to call parseResponse
-        super(value);
+    LdapVirtualListResponseControl(boolean critical, byte[] value)throws Exception  {
+        super(VIRTUALLISTRESPONSE, critical, value);
     }
 
     /**
@@ -82,7 +80,10 @@ public class LdapVirtualListResponseControl extends LDAPVirtualListResponse impl
     }
     
     /**
-     * Implements Control interface
+     * Retrieves the ASN.1 BER encoded value of the LDAP control.
+     * Null is returned if the value is absent.
+     * @return A possibly null byte array representing the ASN.1 BER
+     * encoded value of the LDAP control.
      */
     public byte[] getEncodedValue() {
         return getValue();

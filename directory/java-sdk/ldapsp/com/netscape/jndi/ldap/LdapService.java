@@ -147,7 +147,7 @@ class LdapService {
     /**
      * Physically disconect only if the client count is zero
      */
-	void disconnect() {
+	synchronized void disconnect() {
 		try {
 		    if (m_clientCount > 0) {
 		        m_clientCount--;
@@ -162,7 +162,7 @@ class LdapService {
     /**
      * Increment client count
      */
-    void incrementClientCount() {
+    synchronized void incrementClientCount() {
         m_clientCount++;
     }
         

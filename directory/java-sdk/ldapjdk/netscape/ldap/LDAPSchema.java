@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
@@ -77,15 +77,19 @@ import java.util.*;
  *             LDAPAttributeSchema attrType = dirSchema.getAttribute(
  *                 "userpassword" );
  *             if ( attrType != null ) {
- *                 System.out.println("userPassword := "+attrType.toString());
+ *                 System.out.println("userPassword := " + attrType.toString());
  *             }
  *
- *             // Add a new object class.
+ *             // Create a new object class definition.
  *             String[] requiredAttrs = {"cn", "mail"};
  *             String[] optionalAttrs = {"sn", "phoneNumber"};
- *             LDAPObjectClassSchema newObjClass = new LDAPObjectClassSchema(
- *                 "newInetOrgPerson", "1.2.3.4.5.6.7", "top", "Experiment",
- *                 requiredAttrs, optionalAttrs );
+ *             LDAPObjectClassSchema newObjClass =
+ *                     new LDAPObjectClassSchema( "newInetOrgPerson",
+ *                                                "1.2.3.4.5.6.7",
+ *                                                "top",
+ *                                                "Experiment",
+ *                                                requiredAttrs,
+ *                                                optionalAttrs );
  *
  *             // Authenticate as root DN to get permissions to edit the schema.
  *             ld.authenticate( ROOT_DN, ROOT_PASSWORD );
@@ -94,9 +98,14 @@ import java.util.*;
  *             newObjClass.add( ld );
  *
  *             // Create a new attribute type "hairColor".
- *             LDAPAttributeSchema newAttrType = new LDAPAttributeSchema(
- *                 "hairColor", "1.2.3.4.5.4.3.2.1", "Blonde, red, etc",
- *                 LDAPAttributeSchema.cis, false );
+ *             LDAPAttributeSchema newAttrType =
+ *                     new LDAPAttributeSchema( "hairColor",
+ *                                              "1.2.3.4.5.4.3.2.1",
+ *                                              "Blonde, red, etc",
+ *                                              LDAPAttributeSchema.cis,
+ *                                              false );
+ *             // Add a custom qualifier
+ *             newObjClass.setQualifier( "X-OWNER", "John Jacobson" );
  *
  *             // Add the new attribute type to the schema.
  *             newAttrType.add( ld );
@@ -106,13 +115,15 @@ import java.util.*;
  *
  *             // Get and print the new attribute type.
  *             newAttrType = dirSchema.getAttribute( "hairColor" );
- *             if ( newAttrType != null )
- *                 System.out.println("hairColor := "+newAttrType.toString());
+ *             if ( newAttrType != null ) {
+ *                 System.out.println("hairColor := " + newAttrType.toString());
+ *             }
  *
  *             // Get and print the new object class.
  *             newObjClass = dirSchema.getObjectClass( "newInetOrgPerson" );
- *             if ( newObjClass != null )
- *                 System.out.println("newInetOrgPerson := "+newObjClass.toString());
+ *             if ( newObjClass != null ) {
+ *                 System.out.println("newInetOrgPerson := " +newObjClass.toString());
+ *             }
  *
  *             ld.disconnect();
  *
@@ -194,7 +205,7 @@ public class LDAPSchema {
      * @see netscape.ldap.LDAPSchemaElement#add
      * @see netscape.ldap.LDAPSchemaElement#remove
      */
-    public void addObjectClass( LDAPObjectClassSchema objectSchema ) {
+    protected void addObjectClass( LDAPObjectClassSchema objectSchema ) {
         objectClasses.put( objectSchema.getName().toLowerCase(),
                            objectSchema );
     }
@@ -225,7 +236,7 @@ public class LDAPSchema {
      * @see netscape.ldap.LDAPSchemaElement#add
      * @see netscape.ldap.LDAPSchemaElement#remove
      */
-    public void addAttribute( LDAPAttributeSchema attrSchema ) {
+    protected void addAttribute( LDAPAttributeSchema attrSchema ) {
         attributes.put( attrSchema.getName().toLowerCase(), attrSchema );
     }
 
@@ -255,7 +266,7 @@ public class LDAPSchema {
      * @see netscape.ldap.LDAPSchemaElement#add
      * @see netscape.ldap.LDAPSchemaElement#remove
      */
-    public void addMatchingRule( LDAPMatchingRuleSchema matchSchema ) {
+    protected void addMatchingRule( LDAPMatchingRuleSchema matchSchema ) {
         matchingRules.put( matchSchema.getName().toLowerCase(), matchSchema );
     }
 
@@ -338,29 +349,21 @@ public class LDAPSchema {
     }
 
     /**
-     * Retrieve the entire schema from a Directory Server.
+     * Retrieve the schema for a specific entry.
      * @param ld An active connection to a Directory Server.
+     * @param dn The entry for which to fetch schema.
      * @exception LDAPException on failure.
      */
-    public void fetchSchema( LDAPConnection ld ) throws LDAPException {
-        if ( (ld == null) || !ld.isConnected() ) {
-            throw new LDAPException( "No connection", LDAPException.OTHER );
-        }
-        LDAPEntry entry = ld.read( "" );
-        if ( entry == null )
-            throw new LDAPException( "", LDAPException.NO_SUCH_OBJECT );
-        LDAPAttribute attr = entry.getAttribute( "subschemasubentry" );
-        entryName = "cn=schema";
+    public void fetchSchema( LDAPConnection ld, String dn )
+        throws LDAPException {
+        /* Find the subschemasubentry value for this DN */
+        String entryName = getSchemaDN( ld, dn );
         Enumeration en;
-        if ( attr != null ) {
-            en = attr.getStringValues();
-            if ( en.hasMoreElements() )
-                entryName = (String)en.nextElement();
-        }
+
         /* Get the entire schema definition entry */
-        entry = readSchema( ld, entryName );
+        LDAPEntry entry = readSchema( ld, entryName );
         /* Get all object class definitions */
-        attr = entry.getAttribute( "objectclasses" );
+        LDAPAttribute attr = entry.getAttribute( "objectclasses" );
         if ( attr != null ) {
             en = attr.getStringValues();
             while( en.hasMoreElements() ) {
@@ -411,6 +414,51 @@ public class LDAPSchema {
     }
 
     /**
+     * Retrieve the entire schema from the root of a Directory Server.
+     * @param ld An active connection to a Directory Server.
+     * @exception LDAPException on failure.
+     */
+    public void fetchSchema( LDAPConnection ld ) throws LDAPException {
+        fetchSchema( ld, "" );
+    }
+
+    /**
+     * Read one attribute definition from a server to determine if
+     * attribute syntaxes are quoted (a bug, present in Netscape
+     * and Novell servers).
+     * @param ld An active connection to a Directory Server.
+     * @return <CODE>true</CODE> if standards-compliant
+     * @exception LDAPException on failure.
+     */
+    static boolean isAttributeSyntaxStandardsCompliant( LDAPConnection ld )
+        throws LDAPException {
+
+        /* Check if this has already been investigated */
+        String schemaBug = (String)ld.getProperty( ld.SCHEMA_BUG_PROPERTY );
+        if ( schemaBug != null ) {
+            return schemaBug.equalsIgnoreCase( "standard" );
+        }
+
+        boolean compliant = true;
+        /* Get the schema definitions for attributes */
+        String entryName = getSchemaDN( ld, "" );
+        String[] attrs = { "attributetypes" };
+        LDAPEntry entry = readSchema( ld, entryName, attrs );
+        /* Get all attribute definitions, and check the first one */
+        LDAPAttribute attr = entry.getAttribute( "attributetypes" );
+        if ( attr != null ) {
+            Enumeration en = attr.getStringValues();
+            if( en.hasMoreElements() ) {
+                compliant = !LDAPAttributeSchema.isSyntaxQuoted(
+                    (String)en.nextElement() );
+            }
+        }
+        ld.setProperty( ld.SCHEMA_BUG_PROPERTY, compliant ? "standard" :
+                        "NetscapeBug" );
+        return compliant;
+    }
+
+    /**
      * Displays the schema (including the descriptions of its object
      * classes, attribute types, and matching rules) in an easily
      * readable format (not the same as the format expected by
@@ -418,32 +466,70 @@ public class LDAPSchema {
      * @return A string containing the schema in printable format.
      */
     public String toString() {
-        String s = "Object classes: ";
+        String s = "Object classes:\n";
         Enumeration en = getObjectClasses();
         while( en.hasMoreElements() ) {
-            s += (String)en.nextElement();
-            s += ' ';
+            s += en.nextElement().toString();
+            s += '\n';
         }
-        s += "Attributes: ";
+        s += "Attributes:\n";
         en = getAttributes();
         while( en.hasMoreElements() ) {
-            s += (String)en.nextElement();
-            s += ' ';
+            s += en.nextElement().toString();
+            s += '\n';
         }
-        s += "Matching rules: ";
+        s += "Matching rules:\n";
         en = getMatchingRules();
         while( en.hasMoreElements() ) {
-            s += (String)en.nextElement();
-            s += ' ';
+            s += en.nextElement().toString();
+            s += '\n';
         }
         return s;
     }
 
-    private LDAPEntry readSchema( LDAPConnection ld, String dn ) throws LDAPException {
+    /**
+     * Retrieve the DN of the schema definitions for a specific entry.
+     * @param ld An active connection to a Directory Server.
+     * @param dn The entry for which to fetch schema.
+     * @exception LDAPException on failure.
+     */
+    static String getSchemaDN( LDAPConnection ld, String dn )
+        throws LDAPException {
+        if ( (ld == null) || !ld.isConnected() ) {
+            throw new LDAPException( "No connection", LDAPException.OTHER );
+        }
+        String[] attrs = { "subschemasubentry" };
+        LDAPEntry entry = readSchema( ld, dn, attrs );
+        if ( entry == null ) {
+            throw new LDAPException( "", LDAPException.NO_SUCH_OBJECT );
+        }
+        LDAPAttribute attr = entry.getAttribute( attrs[0] );
+        String entryName = "cn=schema";
+        if ( attr != null ) {
+            Enumeration en = attr.getStringValues();
+            if ( en.hasMoreElements() ) {
+                entryName = (String)en.nextElement();
+            }
+        }
+        return entryName;
+    }
+
+    private static LDAPEntry readSchema( LDAPConnection ld, String dn,
+                                         String[] attrs )
+                                         throws LDAPException {
         LDAPSearchResults results = ld.search (dn, ld.SCOPE_BASE,
                                                "objectclass=subschema",
-                                               null, false);
+                                               attrs, false);
+        if ( !results.hasMoreElements() ) {
+            throw new LDAPException( "Cannot read schema",
+                                     LDAPException.INSUFFICIENT_ACCESS_RIGHTS );
+        }
         return results.next ();
+    }
+
+    private static LDAPEntry readSchema( LDAPConnection ld, String dn )
+                                         throws LDAPException {
+        return readSchema( ld, dn, null );
     }
 
     /**
@@ -454,6 +540,7 @@ public class LDAPSchema {
         while( en.hasMoreElements() ) {
             LDAPSchemaElement s = (LDAPSchemaElement)en.nextElement();
             System.out.println( "  " + s );
+//            System.out.println( "  " + s.getValue() );
         }
     }
 
@@ -499,5 +586,4 @@ public class LDAPSchema {
     private Hashtable objectClasses = new Hashtable();
     private Hashtable attributes = new Hashtable();
     private Hashtable matchingRules = new Hashtable();
-    String entryName = null;
 }

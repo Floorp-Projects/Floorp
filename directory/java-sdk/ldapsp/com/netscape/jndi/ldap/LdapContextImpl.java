@@ -591,14 +591,20 @@ public class LdapContextImpl implements EventDirContext, LdapContext {
 
 	public LdapContext newInstance(Control[] reqCtls) throws NamingException {
 		LdapContextImpl clone = new LdapContextImpl(m_ctxDN, this);
-        // This controls are to be set on the the LDAPConnection
+		// This controls are to be set on the the LDAPConnection
 		clone.m_ctxEnv.setProperty(ContextEnv.P_CONNECT_CTRLS, reqCtls);
 		return clone;
 	}
 
-	public void reconnect() throws NamingException {
+    public void reconnect(Control[] reqCtls) throws NamingException {
 		close();
 		m_ldapSvc = new LdapService(this);
+		// This controls are to be set on the the LDAPConnection
+		m_ctxEnv.setProperty(ContextEnv.P_CONNECT_CTRLS, reqCtls);
 		m_ldapSvc.connect();
+	}
+    
+	public Control[] getConnectControls() {
+		return (Control[])m_ctxEnv.getProperty(ContextEnv.P_CONNECT_CTRLS);
 	}
 }

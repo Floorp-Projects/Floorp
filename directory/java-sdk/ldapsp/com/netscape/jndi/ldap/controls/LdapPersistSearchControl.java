@@ -25,8 +25,7 @@ import netscape.ldap.controls.*;
  * search (an ongoing search operation), which allows your LDAP client
  * to get notification of changes to the directory.  (The OID for this
  * control is 2.16.840.1.113730.3.4.3.)  You can use this control in
- * conjunction with an "entry change notification" control (represented
- * by <CODE>LDAPEntryChangeControl</CODE> object.
+ * conjunction with an "entry change notification" control.
  * <P>
  *
  * To use persistent searching for change notification, you create a
@@ -62,17 +61,51 @@ import netscape.ldap.controls.*;
  * server
  * </UL>
  * <P>
- * @see com.netscape.jndi.ldap.controls.LDAPEntryChangeControl
+ * @see com.netscape.jndi.ldap.controls.LdapEntryChangeControl
  */
 
 public class LdapPersistSearchControl extends LDAPPersistSearchControl implements Control {
 
-   /**
-     * Default constructor
+    /**
+     * Change type specifying that you want to track additions of new
+     * entries to the directory.  You can either specify this change type
+     * when constructing an <CODE>LdapPersistSearchControl</CODE> or
+     * by using the <CODE>setChangeTypes</CODE> method.
+     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#getChangeTypes
+     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#setChangeTypes
      */
-    public LdapPersistSearchControl() {
-    }
+    public static final int ADD = LDAPPersistSearchControl.ADD;
 
+    /**
+     * Change type specifying that you want to track removals of
+     * entries from the directory.  You can either specify this change type
+     * when constructing an <CODE>LdapPersistSearchControl</CODE> or
+     * by using the <CODE>setChangeTypes</CODE> method.
+     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#getChangeTypes
+     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#setChangeTypes
+     */
+    public static final int DELETE = LDAPPersistSearchControl.DELETE;
+
+    /**
+     * Change type specifying that you want to track modifications of
+     * entries in the directory.  You can either specify this change type
+     * when constructing an <CODE>LdapPersistSearchControl</CODE> or
+     * by using the <CODE>setChangeTypes</CODE> method.
+     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#getChangeTypes
+     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#setChangeTypes
+     */
+    public static final int MODIFY = LDAPPersistSearchControl.MODIFY;
+
+    /**
+     * Change type specifying that you want to track modifications of the
+     * DNs of entries in the directory.  You can either specify this change type
+     * when constructing an <CODE>LdapPersistSearchControl</CODE> or
+     * by using the <CODE>setChangeTypes</CODE> method.
+     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#getChangeTypes
+     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#setChangeTypes
+     */
+    public static final int MODDN = LDAPPersistSearchControl.MODDN;
+    
     /**
      * Constructs an <CODE>LdapPersistSearchControl</CODE> object
      * that specifies a persistent search.
@@ -112,7 +145,6 @@ public class LdapPersistSearchControl extends LDAPPersistSearchControl implement
      * This value can be the bitwise OR of <code>ADD, DELETE, MODIFY,</code>
      * and/or <code>MODDN</code>. If the change type is unknown,
      * this method returns -1.
-     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#setChangeTypes
      */
     public int getChangeTypes() {
         return super.getChangeTypes();
@@ -126,7 +158,6 @@ public class LdapPersistSearchControl extends LDAPPersistSearchControl implement
      * entries that have changed.  If <code>false</code>, the server
      * also returns any existing entries that match the search criteria
      * but have not changed.
-     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#setChangesOnly
      */
     public boolean getChangesOnly() {
         return super.getChangesOnly();
@@ -140,7 +171,6 @@ public class LdapPersistSearchControl extends LDAPPersistSearchControl implement
      * notification" controls with the entries it sends during the
      * persistent search.
      * @see com.netscape.jndi.ldap.controls.LdapEntryChangeControl
-     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl#setReturnControls
      */
     public boolean getReturnControls() {
         return super.getReturnControls();
@@ -186,7 +216,10 @@ public class LdapPersistSearchControl extends LDAPPersistSearchControl implement
     }
 
     /**
-     * Implements Control interface
+     * Retrieves the ASN.1 BER encoded value of the LDAP control.
+     * Null is returned if the value is absent.
+     * @return A possibly null byte array representing the ASN.1 BER
+     * encoded value of the LDAP control.
      */
     public byte[] getEncodedValue() {
         return getValue();

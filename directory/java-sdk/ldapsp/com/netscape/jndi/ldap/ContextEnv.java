@@ -286,8 +286,10 @@ class ContextEnv extends ShareableEnv  {
 				cons.setReferrals(false);
 			}
 			else if(mode.equalsIgnoreCase(V_REFERRAL_IGNORE)) {
+				//TODO If MANAGEDSAIT control is not supported by the server
+				//(e.g. Active Directory) should enable exception and ignore it
 				cons.setServerControls(new LDAPControl(
-					LDAPControl.MANAGEDSAIT, true, null));
+					LDAPControl.MANAGEDSAIT, /*critical=*/false, null));
 			}
 			else {
 				throw new IllegalArgumentException("Illegal value for " + P_REFERRAL_MODE);

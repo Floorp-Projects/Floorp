@@ -66,6 +66,7 @@ public class JDAPSearchRequest extends JDAPBaseDNRequest
     public final static int DEREF_FINDING_BASE_OBJ = 2;
     public final static int DEREF_ALWAYS = 3;
 
+    public final static String DEFAULT_FILTER = "(objectclass=*)";
     /**
      * Private variables
      */
@@ -76,6 +77,7 @@ public class JDAPSearchRequest extends JDAPBaseDNRequest
     protected int m_time_limit;
     protected boolean m_attrs_only;
     protected String m_filter = null;
+    protected JDAPFilter m_parsedFilter = null; 
     protected String m_attrs[] = null;
 
     /**
@@ -88,17 +90,23 @@ public class JDAPSearchRequest extends JDAPBaseDNRequest
      * @param attrs_only should return type only
      * @param filter string filter based on RFC1558
      * @param attrs list of attribute types
+     * @exception IllegalArgumentException if the filter has bad syntax
+     * 
      */
     public JDAPSearchRequest(String base_dn, int scope, int deref,
         int size_limit, int time_limit, boolean attrs_only,
-        String filter, String attrs[]) {
+        String filter, String attrs[]) throws IllegalArgumentException {
         m_base_dn = base_dn;
         m_scope = scope;
         m_deref = deref;
         m_size_limit = size_limit;
         m_time_limit = time_limit;
         m_attrs_only = attrs_only;
-        m_filter = filter;
+        m_filter = (filter == null) ? DEFAULT_FILTER : filter;
+        m_parsedFilter = JDAPFilter.getFilter(m_filter);
+        if (m_parsedFilter == null){
+            throw new IllegalArgumentException("Bad search filter");
+        }        
         m_attrs = attrs;
     }
 
@@ -173,10 +181,7 @@ public class JDAPSearchRequest extends JDAPBaseDNRequest
         seq.addElement(new BERInteger(m_size_limit));
         seq.addElement(new BERInteger(m_time_limit));
         seq.addElement(new BERBoolean(m_attrs_only));
-        JDAPFilter filter = JDAPFilter.getFilter(m_filter);
-        if (filter == null)
-            return null;
-        seq.addElement(filter.getBERElement());
+        seq.addElement(m_parsedFilter.getBERElement());
         BERSequence attr_type_list = new BERSequence();
         if (m_attrs != null) {
             for (int i = 0; i < m_attrs.length; i++) {
@@ -196,6 +201,7 @@ public class JDAPSearchRequest extends JDAPBaseDNRequest
     public String toString() {
         String s = null;
         if (m_attrs != null) {
+            s = "";
             for (int i = 0; i < m_attrs.length; i++) {
                 if (i != 0)
                     s = s + "+";

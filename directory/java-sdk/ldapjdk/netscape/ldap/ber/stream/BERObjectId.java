@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -29,13 +29,13 @@ import java.io.*;
  */
 public class BERObjectId extends BERElement {
     /**
-     * Internal variables
+     * Values of each component of the OID
      */
     private int[] m_value = null;
 
     /**
-     * Constructs a object id element.
-     * @param value object id value
+     * Constructs an object id element from an array of values.
+     * @param value object id value as array of components
      */
     public BERObjectId(int[] value) {
         m_value = new int[value.length];
@@ -43,7 +43,7 @@ public class BERObjectId extends BERElement {
     }
 
     /**
-     * Constructs a object id element.
+     * Constructs an object id element from a string.
      * @param value object id value in format "2.100.3"
      */
     public BERObjectId(String value) {
@@ -54,8 +54,8 @@ public class BERObjectId extends BERElement {
     }
 
     /**
-     * Constructs an object id element with the input stream.
-     * @param stream input stream
+     * Constructs an object id element from an input stream.
+     * @param stream source
      * @param bytes_read array of 1 int; value incremented by
      *        number of bytes read from stream.
      * @exception IOException failed to construct
@@ -77,7 +77,9 @@ public class BERObjectId extends BERElement {
             oid.addElement(new Integer(1));
         else
             oid.addElement(new Integer(2));
-        oid.addElement(new Integer(sub_id - (((Integer)oid.elementAt(oid.size()-1)).intValue() * 40)));
+        oid.addElement(new Integer(
+            sub_id - (((Integer)oid.elementAt(
+                oid.size()-1)).intValue() * 40)));
 
         while (contents_length > 0) {
             contents_read[0] = 0;
@@ -92,10 +94,10 @@ public class BERObjectId extends BERElement {
     }
 
     /**
-     * Sends the BER encoding directly to stream. Note that OID must
+     * Sends the BER encoding directly to a stream. Note that OID must
      * have >= 2 identifier components (values).
      * @param stream output stream
-     * @exception IOException failed to construct
+     * @exception IOException failed to write
      */
     public void write(OutputStream stream) throws IOException {
         stream.write(BERElement.OBJECTID);
@@ -154,7 +156,7 @@ public class BERObjectId extends BERElement {
 
     /**
      * Gets the element value.
-     * @param element value
+     * @return element value
      */
     public int[] getValue() {
         return m_value;
@@ -162,7 +164,7 @@ public class BERObjectId extends BERElement {
 
     /**
      * Gets the element type.
-     * @param element type
+     * @return element type
      */
     public int getType() {
         return BERElement.OBJECTID;

@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
@@ -21,20 +21,11 @@ import java.util.*;
 import netscape.ldap.client.*;
 
 /**
- * This implements an object for taking the asynchronous LDAP responses
- * and making them appear somewhat synchronized.  Uses built-in Java
- * monitors to block until a response is received.  This is also used
- * to communicate exceptions across threads.  This is used in particular
- * for LDAP search operations; all other operations use the generic
- * LDAPResponseListener object.
+ * Manages search results, references and responses returned on one or 
+ * more search requests
  *
- * This class is part of the implementation; it is of no interest to
- * developers.
- *
- * @version 1.0
  */
-class LDAPSearchListener extends LDAPResponseListener {
-    private Vector searchResults;
+public class LDAPSearchListener extends LDAPMessageQueue {
 
     // this instance variable is only for cache purpose
     private Long m_key = null;
@@ -42,78 +33,84 @@ class LDAPSearchListener extends LDAPResponseListener {
 
     /**
      * Constructs a LDAP search listener.
+     * @param asynchOp A flag whether the object is used for asynchronous
+     * LDAP operations
+     * @param cons LDAP Search Constraints
+     * @see netscape.ldap.LDAPAsynchronousConnection
      */
-    LDAPSearchListener ( LDAPConnection conn,
+    LDAPSearchListener ( boolean asynchOp,
                          LDAPSearchConstraints cons ) {
-        super ( conn );
+        super ( asynchOp );
         m_constraints = cons;
-        searchResults = new Vector ();
     }
 
     /**
-     * Informs the object of new search items (but not a response)
-     * @param newResult new search result message
+     * Block until all results are in. Used for synchronous search with 
+     * batch size of zero.
+     * @return search response message
+     * @exception Network exception error
      */
-    synchronized void addSearchResult (JDAPMessage newResult) {
-        searchResults.addElement (newResult);
-        notifyAll ();
+    LDAPResponse completeSearchOperation () throws LDAPException{
+        return completeRequest();
     }
 
-    /**
-     * Returns a collection of the currently-known search results.
-     * @return search result in enumeration
-     */
-    Enumeration getSearchResults () {
-        return searchResults.elements ();
-    }
 
     /**
-     * Returns a count of the currently-known search results.
-     * @return search result count
+     * Blocks until a search result, reference or response is available,     * or until all operations associated with the object have completed     * or been canceled.
+     *
+     * @return A search result, search reference, or search response message
+     * or null if there is no more outstanding requests 
+     * @exception LDAPException Network error exception
+     * @exception LDAPInterruptedException The invoking thread was interrupted
+     * @see LDAPResponse
+     * @see LDAPSearchResult
+     * @see LDAPSearchResultReference
      */
-    int getCount () {
-        return searchResults.size ();
-    }
+    public LDAPMessage getResponse () throws LDAPException{
+        LDAPMessage result = nextMessage();
 
-    /**
-     * Resets the state of this object, so it can be recycled.
-     */
-    void reset () {
-        super.reset();
-        if ( searchResults != null )
-            searchResults.removeAllElements();
-    }
-
-    /**
-     * Returns the next server search result.  This method only makes
-     * sense in asynchronous mode.  It will block if no new messages have
-     * been received since the last call to nextResult.  If a response
-     * is received indicating that there are no more matches, this
-     * method returns null.
-     * @return jdap message
-     */
-    JDAPMessage nextResult () {
-        JDAPMessage result;
-        synchronized( this ) {
-            while (searchResults.size() < 1) {
-                if (isResponseReceived()) {
-                    searchResults.removeAllElements();
-                    return null;
-                }
-                try {
-                    wait();
-                } catch (InterruptedException e ) {
-                }
-            }
-
-            result = (JDAPMessage)searchResults.elementAt (0);
-            /* Allow garbage collection to free this result */
-            searchResults.removeElementAt (0);
-        }
-        getConnection().resultRetrieved();
+        // Notify LDAPConnThread to wake up if backlog limit has been reached
+        if (result instanceof LDAPSearchResult || result instanceof LDAPSearchResultReference) {
+            LDAPConnection ld = getConnection(result.getId());
+            if (ld != null) {
+                ld.resultRetrieved();
+            }                
+        }            
+        
         return result;
     }
 
+    /**
+     * Merge two search listeners
+     * Move/append the content from another search listener to this one.
+     *   
+     * To be used for synchronization of asynchronous LDAP operations where
+     * requests are sent by one thread but processed by another one
+     * 
+     * A client may be implemented in such a way that one thread makes LDAP
+     * requests and calls l.getIDs(), while another thread is responsible for
+     * processing of responses (call l.getResponse()). Both threads are using
+     * the same listener objects. In such a case, a race
+     * condition may occur, where a LDAP response message is retrieved and
+     * the request terminated (request ID removed) before the first thread
+     * has a chance to execute l.getIDs().
+     * The proper way to handle this scenario is to create a separate listener
+     * for each new request, and after l.getIDs() has been invoked, merge the
+     * new request with the existing one.
+     * @param listener2 The listener to be merged with.
+     */
+    public void merge(LDAPSearchListener listener2) {
+        super.merge(listener2);
+    }
+    
+    /**
+     * Returns message ids for all outstanding requests
+     * @return Message id array
+     */
+    public int[] getIDs() {
+        return super.getIDs();
+    }
+    
     /**
      * Return the search constraints used to create this object
      * @return the search constraints used to create this object

@@ -1,0 +1,311 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en]C-NSCP  (WinNT; U) [Netscape]">
+   <title>Java 4.0  BETA  Release Notes</title>
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+
+<center>
+<h2>
+<font face="Arial, Helvetica"><font size=+1>BETA<br>
+Netscape Directory SDK 4.0 for Java&nbsp;<br>
+Release Notes</font></font></h2></center>
+
+<center><b>Last updated August 03, 1999</b></center>
+
+<p><br>
+<br>
+<br>
+<p><font face="Arial, Helvetica"><font size=-1>These release notes apply
+to the Netscape Directory SDK 4.0 for Java. Please read these notes before
+using the product.</font></font>
+<ul>
+<li>
+<font face="Arial, Helvetica"><font size=-1><a href="#new">What's New</a></font></font></li>
+
+<li>
+<font face="Arial, Helvetica"><font size=-1><a href="#changes3">Bugs Fixed
+Since 3.10</a></font></font></li>
+
+<li>
+<font face="Arial, Helvetica"><font size=-1><a href="#report">Reporting
+Problems</a></font></font></li>
+</ul>
+
+<hr SIZE=1 NOSHADE WIDTH="100%"><a NAME="new"></a><font face="Arial, Helvetica"><font size=-1>Here
+is a summary of new features:</font></font>
+<h3>
+<font face="Arial, Helvetica"><font size=-1>Changes to&nbsp; Java LDAP
+API</font></font></h3>
+
+<ul>
+<li>
+<font face="Arial, Helvetica"><font size=-1>Added&nbsp; </font></font><tt>LDAPBind
+</tt><font face="Arial, Helvetica"><font size=-1>interface
+for sophisticated client management of referral authentication.</font></font></li>
+
+<li>
+<tt>LDAPControl</tt><font face="Arial, Helvetica"><font size=-1> has new
+methods </font></font><tt>register()</tt><font face="Arial, Helvetica"><font size=-1>
+and </font></font><tt>newInstance()</tt><font face="Arial, Helvetica"><font size=-1>,
+to support dynamic registration and instantiation of server response controls.</font></font></li>
+
+<li>
+<tt>LDAPConnection.getServerControls()</tt><font face="Arial, Helvetica"><font size=-1>
+automatically parses controls.&nbsp; As a result, calling </font></font><tt>parseResponse()</tt><font face="Arial, Helvetica"><font size=-1>is
+no longer necessary.</font></font></li>
+
+<li>
+<tt>LDAPSearchConstraints</tt><font face="Arial, Helvetica"><font size=-1>
+has been divided into </font></font><tt>LDAPConstraints</tt><font face="Arial, Helvetica"><font size=-1>
+and a subclass </font></font><tt>LDAPSearchConstraints</tt><font face="Arial, Helvetica"><font size=-1>.
+</font></font><tt>LDAPConstraints</tt><font face="Arial, Helvetica"><font size=-1>
+contains only methods implemented in the interface&nbsp; which apply to
+all operations (not&nbsp; parameters passed to the server).&nbsp; </font></font><tt>LDAPSearchConstraints</tt><font face="Arial, Helvetica"><font size=-1>
+is unchanged.&nbsp;&nbsp;&nbsp; All </font></font><tt>LDAPConnection</tt><font face="Arial, Helvetica"><font size=-1>
+methods that take </font></font><tt>LDAPSearchConstraints</tt><font face="Arial, Helvetica"><font size=-1>
+as an argument (except for read and search methods) change to pass </font></font><tt>LDAPConstraints</tt><font face="Arial, Helvetica"><font size=-1>
+instead.</font></font></li>
+
+<li>
+<font face="Arial, Helvetica"><font size=-1>When searching from </font></font><tt>LDAPConnection</tt>,
+<font size=-1><font face="Arial,Helvetica">r</font><font face="Arial, Helvetica">etrieval
+of server response controls&nbsp; is moved to LDAPSearchResults.&nbsp;
+So you would call</font></font></li>
+
+<br><tt>LDAPSearchResults.getResponseControls()</tt><font face="Arial, Helvetica"><font size=-1>
+instead of </font></font><tt>LDAPConnection.getResponseControls()</tt><font face="Arial, Helvetica"><font size=-1>.
+For backwards compatibility, you can still get the controls from LDAPConnection,
+but it is recommended for new code to get them from LDAPSearchResults.</font></font>
+<li>
+<font face="Arial, Helvetica"><font size=-1>Added support for transparent
+failover connection policies. The available policies are: (1) serial ,
+(2) parallel with no delay and (3) parallel&nbsp; with delay. See </font></font><tt>LDAPConnection.setConnSetupDelay()</tt><font face="Arial, Helvetica"><font size=-1>.</font></font></li>
+
+<li>
+<tt>LDAPConnection</tt><font face="Arial, Helvetica"><font size=-1> has
+a new method </font></font><tt>reconnect()</tt><font size=-1><font face="Arial,Helvetica">
+which first disconnects and then connects and binds again using the same
+parameters and mechanisms</font><font face="Arial, Helvetica">.</font></font></li>
+
+<li>
+<font face="Arial, Helvetica"><font size=-1>Added support for connection
+pools.&nbsp; See </font></font><tt>netscape.ldap.util.ConnectionPool</tt><font face="Arial, Helvetica"><font size=-1>
+in the online JavaDocs.</font></font></li>
+
+<li>
+<font face="Arial, Helvetica"><font size=-1>Added </font></font><tt>LDAPInterruptedException</tt><font face="Arial, Helvetica"><font size=-1>
+which is thrown if an LDAP operation is interrupted.</font></font></li>
+
+<li>
+<tt>LDAPSchema</tt><font face="Arial, Helvetica"><font size=-1> and the
+associated schema element classes now fully support RFC2252.</font></font></li>
+</ul>
+<b><font face="Arial, Helvetica"><font size=-1>New asynchronous Java LDAP
+API</font></font></b>
+<p><font face="Arial, Helvetica"><font size=-1>This new API works at a
+low level, close to the LDAP protocol, providing a means for mutiplexing
+LDAP operations from the same thread.&nbsp; For detailed information, see
+<a href="http://www.ietf.org/internet-drafts/draft-ietf-ldapext-ldap-java-api-05.txt">Internet
+Draft for The Java LDAP Application Program Interface.</a></font></font>
+<ul>
+<li>
+<font face="Arial, Helvetica"><font size=-1>New interface </font></font><tt>LDAPAsynchronousConnection</tt><font face="Arial, Helvetica"><font size=-1>
+is defined.</font></font></li>
+
+<li>
+<tt>LDAPConnection</tt><font face="Arial, Helvetica"><font size=-1>&nbsp;
+implements the asynchronous interface and supports both synchronous as
+well as asynchronous programming models.</font></font></li>
+
+<li>
+<font face="Arial, Helvetica"><font size=-1>New classes for asynchronously
+receiving server response messages: </font></font><tt>LDAPResponseListener</tt>,
+<tt>LDAPSearchListener</tt><font face="Arial, Helvetica"><font size=-1>.</font></font></li>
+
+<li>
+<font face="Arial, Helvetica"><font size=-1>New classes for representing
+LDAP messages: </font></font><tt>LDAPMessage</tt>,<tt> LDAPResponse</tt>,<tt>
+LDAPExtendedResponse</tt>,<tt> LDAPSearchResult and LDAPSearchResponseReference.</tt></li>
+</ul>
+<b><font face="Arial, Helvetica"><font size=-1>Support for the Java Naming
+and Directory Interface (JNDI) Service Provider</font></font></b>
+<p><font face="Arial, Helvetica"><font size=-1>The JNDI service provider
+support for event notification is implemented more efficiently on top of
+the asynchronous Java LDAP API.&nbsp; For more information on JNDI, see
+the <a href="http://java.sun.com/products/jndi/index.html">java.sun website
+</a>and
+the <a href="ldapsp-relnotes.htm">Release Notes for the Netscape LDAP Service
+Provider for JNDI</a>.</font></font>
+<p><b><font face="Arial, Helvetica"><font size=-1>Simple Authentication
+and Security Layer (SASL) API changes</font></font></b>
+<p><font face="Arial, Helvetica"><font size=-1>The new SASL API is rewritten
+including&nbsp; new&nbsp; SASL interface classes.&nbsp; For more information,
+see the&nbsp; <a href="http://www.ietf.org/rfc/rfc2222.txt">Internet Draft
+for</a> <a href="http://www.ietf.org/rfc/rfc2222.txt">Simple Authentication
+and Security Layer (SASL).</a> You will need to have </font></font><tt>jaas.jar</tt><font face="Arial, Helvetica"><font size=-1>
+in your CLASSPATH if you are using SASL authentication.</font></font>
+<p>
+<hr SIZE=1 NOSHADE WIDTH="100%">
+<br><a NAME="changes3.05"></a><b><font face="Arial, Helvetica"><font size=-1>BUGS
+FIXED SINCE 3.10</font></font></b>
+<blockquote><font face="Arial, Helvetica"><font size=-1>355365&nbsp; </font></font><tt>LDAPSearchResults.getCount()</tt><font face="Arial, Helvetica"><font size=-1>
+returns 0 for synchronous search</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>342196&nbsp;&nbsp; SmartUpdate
+for java LDAP SDK doesn't work for Comm 4.5</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>346367&nbsp;&nbsp; -1 incorrectly
+encoded in BERIntegral</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>357382&nbsp;&nbsp; Can't
+compile JNDI SP with JDK 1.2</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>357361&nbsp;&nbsp; Filter
+code doesn't work with JDK 1.2</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>351004&nbsp;&nbsp; Applet
+in Communicator can't fetch error string</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>313834&nbsp;&nbsp; "rejects"
+file on import (e.g. LDAPModify) contains binary</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>339833&nbsp;&nbsp; RFE:
+smarter failover</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>325394&nbsp;&nbsp; </font></font><tt>getCount()</tt><font face="Arial, Helvetica"><font size=-1>
+after sorting throws exception</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>330523&nbsp;&nbsp; </font></font><tt>DN.equals()</tt><font face="Arial, Helvetica"><font size=-1>
+does not normalize</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>354615&nbsp;&nbsp; </font></font><tt>DN.contains()</tt><font face="Arial, Helvetica"><font size=-1>
+implemented and documented incorrectly</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>339633&nbsp; The SDK should
+catch </font></font><tt>Exception</tt><font face="Arial, Helvetica"><font size=-1>,
+not </font></font><tt>Throwable</tt>
+<br><font face="Arial, Helvetica"><font size=-1>352056&nbsp;&nbsp; </font></font><tt>LDAPModify</tt><font face="Arial, Helvetica"><font size=-1>
+should support LDIF version 1</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>351022&nbsp;&nbsp; </font></font><tt>LDAPCompareAttrNames
+</tt><font face="Arial, Helvetica"><font size=-1>should
+allow specifying a locale</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>350624&nbsp;&nbsp; </font></font><tt>LDAPSearch</tt><font face="Arial, Helvetica"><font size=-1>
+aborts on size limit exception</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>350998&nbsp;&nbsp;&nbsp;
+Search timeout not handled correctly</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>350997&nbsp;&nbsp; </font></font><tt>LDAPSchemaElement
+</tt><font face="Arial, Helvetica"><font size=-1>needs
+modify() method</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>350996&nbsp;&nbsp; </font></font><tt>LDAPBasePropertySupport</tt><font face="Arial, Helvetica"><font size=-1>
+should enable referrals</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>350995&nbsp;&nbsp; </font></font><tt>LDAPBasePropertySupport
+</tt><font face="Arial, Helvetica"><font size=-1>should
+enable referrals</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>347586&nbsp;&nbsp; Schema
+interpretations are specific to Netscape</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>357772&nbsp;&nbsp; </font></font><tt>LDAPFilter</tt><font face="Arial, Helvetica"><font size=-1>
+gets array bounds exception</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>357526&nbsp;&nbsp; Syntactically
+incorrect filter is causing disconnect</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>355904&nbsp;&nbsp; Cannot
+set cache after </font></font><tt>LDAPConnection</tt><font face="Arial, Helvetica"><font size=-1>
+is connected</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>355942&nbsp;&nbsp; </font></font><tt>LDAPCache</tt><font face="Arial, Helvetica"><font size=-1>
+changes contents of attributes to return</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>354503&nbsp;&nbsp; The
+SDK calls </font></font><tt>Thread.stop()/suspend()/resume()</tt>
+<br><font face="Arial, Helvetica"><font size=-1>355215&nbsp;&nbsp;&nbsp;
+VLV controls don't support optional context field</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>354347&nbsp;&nbsp;&nbsp;
+SDK doesn't support all schema options of RFC 2252</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>353306&nbsp;&nbsp;&nbsp;
+LDAP Beans don't handle referrals</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>353305&nbsp;&nbsp;&nbsp;
+LDAPIsMember doesn't handle dynamic groups</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>353187&nbsp;&nbsp;&nbsp;
+Ensure that SDK works with Java 2</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>351926&nbsp;&nbsp;&nbsp;
+Must call System.exit() to shutdown SDK</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>351719&nbsp;&nbsp;&nbsp;
+LDAPModificationSet has no toString method</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>339632&nbsp;&nbsp;&nbsp;
+The SDK should not use Thread.stop()</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>329534&nbsp;&nbsp; </font></font><tt>getCount</tt><font face="Arial, Helvetica"><font size=-1>
+doesnt work in asynchronous search</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>330261&nbsp;&nbsp; </font></font><tt>StringIndexOutOfBoundsException</tt><font face="Arial, Helvetica"><font size=-1>
+if searched for backslash " \ "</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>116611&nbsp;&nbsp;&nbsp;
+SASLMechanismFactory is missing getMechanisms method</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>353307&nbsp;&nbsp; </font></font><tt>LDAPGetEntries</tt><font face="Arial, Helvetica"><font size=-1>
+should allow choice of attributes to return</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>353308&nbsp;&nbsp; </font></font><tt>LDAPModificationSet
+</tt><font face="Arial, Helvetica"><font size=-1>is
+missing a toString method</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>358370&nbsp;&nbsp; Incorrect
+tag written for </font></font><tt>UTCTime BER</tt>
+<br><font face="Arial, Helvetica"><font size=-1>358371&nbsp;&nbsp; Missing
+and incorrect javadocs for </font></font><tt>BER</tt>
+<br><font face="Arial, Helvetica"><font size=-1>356470&nbsp;&nbsp; Should
+support latest LDIF specification</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>324606&nbsp;&nbsp; RFE:
+get attribute values as vector</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>354682&nbsp;&nbsp; Should
+treat </font></font><tt>null</tt><font face="Arial, Helvetica"><font size=-1>
+for filter as meaning </font></font><tt>objectclass=*</tt>
+<br><font face="Arial, Helvetica"><font size=-1>354997&nbsp;&nbsp; Unneeded
+public </font></font><tt>add</tt><font face="Arial, Helvetica"><font size=-1>
+methods in </font></font><tt>LDAPSchema</tt>
+<br><font face="Arial, Helvetica"><font size=-1>339831&nbsp;&nbsp; RFE:
+connection pool support</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>359305&nbsp;&nbsp; Smart
+Failover should not auto-connect after disconnect()</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>346368&nbsp;&nbsp; BERReal
+incomplete and incorrect</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>352804&nbsp;&nbsp; netscape.ldap.util.DN
+class does not consider "" a valid DN</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>344077&nbsp;&nbsp; Maybe
+wrong tag used for extended operation</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>359855&nbsp;&nbsp; No way
+to specify custom qualifiers in object class definition</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>359580&nbsp;&nbsp; LDAPConnection.setMaxBacklog()
+doesn't work</font></font>
+<br><font face="Arial, Helvetica"><font size=-1>359646&nbsp;&nbsp; modDN
+doesn't work</font></font></blockquote>
+
+<hr SIZE=0 WIDTH="100%"><a NAME="report"></a><b><font face="Arial, Helvetica"><font size=-1>REPORTING
+PROBLEMS</font></font></b>
+<p><font face="Arial, Helvetica"><font size=-1>Please submit your problem
+via the the <a href="http://bugzilla.mozilla.org">Bugzilla bugsystem</a>
+. Use the "LDAP Java SDK" component.</font></font>
+<p><font face="Arial, Helvetica"><font size=-1>If you have additional questions
+or need more information about the LDAP Java SDK, see the <a href="news://news.mozilla.org/netscape.public.mozilla.directory">directory
+newsgroup at Mozilla</a> and the <a href="http://developer.netscape.com/support/newsgroups/index.html?content=newsgrp.html#directory" TARGET="_top">Directory
+Developers newsgroup</a> at <a href="http://developer.netscape.com">Netscape
+DevEdge</a>.</font></font>
+<br>&nbsp;
+<center>
+<p><font face="Arial, Helvetica"><font size=-1>For more Internet development
+resources, try <a href="http://home.netscape.com/computing/techsearch/index.html?cp=dev01bnts" TARGET="_top">Netscape
+TechSearch</a></font></font></center>
+
+<hr SIZE=1>
+<center><table BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH="460" >
+<tr>
+<td WIDTH="15"></td>
+
+<td ALIGN=LEFT VALIGN=TOP WIDTH="165"><font face="Arial, Helvetica"><font size=-2><a href="/support/faqs/index.html?content=deofaq.html" TARGET="_top">DevEdge
+Online FAQ</a></font></font>
+<br><font face="Arial, Helvetica"><font size=-2><a href="/program/index_frame.html?content=contact.html" TARGET="_top">Developer
+Response Center</a></font></font>
+<br><font face="Arial, Helvetica"><font size=-2><a href="/program/index.html" TARGET="_top">Join
+DevEdge Program</a></font></font></td>
+
+<td WIDTH="5"></td>
+
+<td ALIGN=LEFT VALIGN=TOP WIDTH="280"><font face="Arial, Helvetica"><font size=-2><nobr>Copyright
+&copy; 1999 <a href="http://home.netscape.com/misc/trademarks.html" TARGET="_top">Netscape
+Communications Corporation</a></nobr>.</font></font>
+<br><font face="Arial, Helvetica"><font size=-2>This site powered by: <a href="http://home.netscape.com/servers/index.html" TARGET="_top">Netscape
+Enterprise Server</a> and <a href="http://home.netscape.com/compass/v3.0/index.html" TARGET="_top">Netscape
+Compass Server</a>.</font></font></td>
+
+<td WIDTH="25"></td>
+</tr>
+</table></center>
+
+<br>&nbsp;
+<br>&nbsp;
+</body>
+</html>

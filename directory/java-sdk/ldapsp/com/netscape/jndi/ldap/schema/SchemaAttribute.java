@@ -97,7 +97,7 @@ public class SchemaAttribute extends SchemaElement {
 				}
 			}			
 			else if (attrName.equals(OBSOLETE) || attrName.equals(SUP) || attrName.equals(USAGE) ||
-			         attrName.equals(EQUALITY) || attrName.equals(ORDERING) ||
+			         attrName.equals(EQUALITY) || attrName.equals(ORDERING) || attrName.equals(SUBSTRING) ||
 			         attrName.equals(COLLECTIVE) || attrName.equals(NOUSERMOD)) {			         
 				; //ignore
 			}

@@ -141,8 +141,13 @@ import netscape.ldap.ber.stream.*;
  *
  *      // Check if we have a control returned
  *      LDAPControl[] c = _ldc.getResponseControls();
- *      LDAPVirtualListResponse nextCont =
- *          LDAPVirtualListResponse.parseResponse( c );
+ *      LDAPVirtualListResponse nextCont = null;
+ *      for ( int i = 0; i < c.length; i++ ) {
+ *          if ( c[i] instanceof LDAPVirtualListResponse ) {
+ *              nextCont = (LDAPVirtualListResponse)c[i];
+ *              break;
+ *          }
+ *      }
  *      if ( nextCont != null ) {
  *          _selectedIndex = nextCont.getFirstPosition() - 1;
  *          _top = Math.max( 0, _selectedIndex - _beforeCount );
@@ -197,14 +202,18 @@ import netscape.ldap.ber.stream.*;
  *}
  *</CODE></PRE>
  * <PRE>
- *      VirtualListViewRequest ::= SEQUENCE {
- *                      beforeCount    INTEGER,
- *                      afterCount     INTEGER,
- *                      CHOICE {
- *                      byIndex [0] SEQUENCE {
- *                          index           INTEGER,
- *                          contentCount    INTEGER }
- *                      byFilter [1] jumpTo    Substring }
+ *   VirtualListViewRequest ::= SEQUENCE {
+ *            beforeCount    INTEGER (0 .. maxInt),
+ *            afterCount     INTEGER (0 .. maxInt),
+ *            CHOICE {
+ *                byIndex [0] SEQUENCE {
+ *                    index           INTEGER,
+ *                    contentCount    INTEGER
+ *                }
+ *                byFilter [1] jumpTo    Substring
+ *            },
+ *            contextID     OCTET STRING OPTIONAL
+ *  }
  * </PRE>
  *
  * @version 1.0
@@ -238,6 +247,12 @@ public class LDAPVirtualListControl extends LDAPControl {
         setRange( jumpTo, beforeCount, afterCount );
     }
 
+    public LDAPVirtualListControl( String jumpTo, int beforeCount,
+                                   int afterCount, String context  ) {
+        this( jumpTo, beforeCount, afterCount );
+        m_context = context;
+    }
+
     /**
      * Constructs a new <CODE>LDAPVirtualListControl</CODE> object. Use this
      * constructor on a subsquent search operation, after we know the
@@ -255,6 +270,13 @@ public class LDAPVirtualListControl extends LDAPControl {
         super( VIRTUALLIST, true, null );
         m_listSize = contentCount;
         setRange( startIndex, beforeCount, afterCount );
+    }
+
+    public LDAPVirtualListControl( int startIndex, int beforeCount,
+                                   int afterCount, int contentCount,
+                                   String context ) {
+        this( startIndex, beforeCount, afterCount, contentCount );
+        m_context = context;
     }
 
     /**
@@ -335,6 +357,22 @@ public class LDAPVirtualListControl extends LDAPControl {
     }
 
     /**
+     * Gets the optional context cookie
+     * @return The optional context cookie
+     */
+    public String getContext() {
+        return m_context;
+    }
+
+    /**
+     * Sets the optional context cookie
+     * @param context The optional context cookie
+     */
+    public void setContext( String context ) {
+        m_context = context;
+    }
+
+    /**
      * Creates a "flattened" BER encoding of the requested page
      * specifications and return it as a byte array.
      * @param subFilter Filter expression for generating the results.
@@ -351,6 +389,9 @@ public class LDAPVirtualListControl extends LDAPControl {
         seq.addElement( new BERInteger( afterCount ) );
         seq.addElement( new BERTag(BERTag.CONTEXT|TAG_BYFILTER,
                                    new BEROctetString(subFilter), true) );
+        if ( m_context != null ) {
+            seq.addElement( new BEROctetString(m_context) );
+        }
         /* Suck out the data and return it */
         return flattenBER( seq );
     }
@@ -379,6 +420,9 @@ public class LDAPVirtualListControl extends LDAPControl {
         seq.addElement(
             new BERTag(BERTag.CONTEXT|BERTag.CONSTRUCTED|TAG_BYINDEX,
                        indexSeq,true) );
+        if ( m_context != null ) {
+            seq.addElement( new BEROctetString(m_context) );
+        }
 
         /* Suck out the data and return it */
         return flattenBER( seq );
@@ -390,4 +434,5 @@ public class LDAPVirtualListControl extends LDAPControl {
     private int m_afterCount = 0;
     private int m_listIndex = -1;
     private int m_listSize = 0;
+    private String m_context = null;
 }

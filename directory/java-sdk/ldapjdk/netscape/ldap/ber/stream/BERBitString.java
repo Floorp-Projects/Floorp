@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -27,6 +27,12 @@ import java.io.*;
  * rather than the number of bits. Current work-around is to maintain
  * the number of bits ourselves in m_value_num_bits.
  * Change is required when BitSet is fixed.
+ *
+ * <pre>
+ * ENCODING RULE:
+ *   Primitive Definite length.
+ *   tag = 0x03
+ * </pre>
  *
  * @version 1.0
  * @seeAlso CCITT X.209
@@ -47,9 +53,9 @@ public class BERBitString extends BERElement {
     }
 
     /**
-     * Constructs a bitstring element with the input stream.
+     * Constructs a bitstring element from an input stream
      * (for constructed encodings).
-     * @param stream input stream
+     * @param stream source
      * @param bytes_read array of 1 int; value incremented by
      *        number of bytes read from stream.
      * @exception IOException failed to construct
@@ -110,9 +116,9 @@ public class BERBitString extends BERElement {
     }
 
     /**
-     * Constructs a bitstring element with the input stream.
+     * Constructs a bitstring element from an input stream
      * (for primitive encodings).
-     * @param stream input stream
+     * @param stream source
      * @param bytes_read array of 1 int; value incremented by
      *        number of bytes read from stream.
      * @exception IOException failed to construct
@@ -166,7 +172,7 @@ public class BERBitString extends BERElement {
     }
 
     /**
-     * Sends the BER encoding directly to stream.
+     * Sends the BER encoding directly to a stream.
      * Always sends in primitive form.
      * @param stream output stream
      */

@@ -167,8 +167,7 @@ public class LDAPDelete extends LDAPTool { /* LDAPDelete */
 	 */
     private static void dodelete() { /* dodelete */
 		int msgid = 0;
-		LDAPSearchConstraints cons =
-		  (LDAPSearchConstraints)m_client.getSearchConstraints().clone();
+		LDAPConstraints cons = m_client.getConstraints();
 
 		Vector controlVector = new Vector();
 		if (m_proxyControl != null)
@@ -190,7 +189,7 @@ public class LDAPDelete extends LDAPTool { /* LDAPDelete */
 		dodelete(cons);
 	} /* dodelete */
 
-	private static void dodelete(LDAPSearchConstraints cons) {
+	private static void dodelete(LDAPConstraints cons) {
 		try {
 		  if (m_reader == null) {
 			for (int i=0; i<m_delete_dn.length; i++) 
@@ -208,7 +207,7 @@ public class LDAPDelete extends LDAPTool { /* LDAPDelete */
 		}
 	}
 
-	private static boolean deleteEntry(String dn, LDAPSearchConstraints cons) {
+	private static boolean deleteEntry(String dn, LDAPConstraints cons) {
 		if (m_verbose) 
 			System.err.println("Deleting entry: "+dn);
 		if (!m_justShow) {

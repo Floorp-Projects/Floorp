@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.client.opers;
@@ -66,10 +66,10 @@ public class JDAPExtendedRequest implements JDAPProtocolOp {
      */
     public BERElement getBERElement() {
         BERSequence seq = new BERSequence();
-        seq.addElement(new BERTag(BERTag.APPLICATION|0,
+        seq.addElement(new BERTag(BERTag.CONTEXT|0,
           new BEROctetString (m_oid), true));
         if (m_value != null) {
-            seq.addElement(new BERTag(BERTag.APPLICATION|1,
+            seq.addElement(new BERTag(BERTag.CONTEXT|1,
               new BEROctetString (m_value, 0, m_value.length), true));
         }
         BERTag element = new BERTag(BERTag.APPLICATION|BERTag.CONSTRUCTED|23,

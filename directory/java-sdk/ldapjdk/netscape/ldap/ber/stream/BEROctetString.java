@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -21,7 +21,15 @@ import java.util.*;
 import java.io.*;
 
 /**
- * This class is for OctetString type.
+ * This class is for the OctetString type.
+ *
+ * <pre>
+ * ENCODING RULE:
+ *   Primitive Definite length.
+ *   tag = 0x04
+ *   length = (short or long form)
+ *   one or more contents octets
+ * </pre>
  *
  * @version 1.0
  * @seeAlso CCITT X.209
@@ -29,12 +37,12 @@ import java.io.*;
 public class BEROctetString extends BERElement {
 
     /**
-     * Internal variables
+     * Raw value of element
      */
     private byte[] m_value = null;
 
     /**
-     * Constructs an octetstring element containing a copy of
+     * Constructs an octet string element containing a copy of
      * the contents of buffer.
      * @param buffer A UCS-2 String.
      */
@@ -48,7 +56,7 @@ public class BEROctetString extends BERElement {
     }
 
     /**
-     * Constructs an octetstring element containing a reference to
+     * Constructs an octet string element containing a reference to
      * buffer.
      * @param buffer A byte array, which must be in UTF-8 format if
      * it is string data.
@@ -58,7 +66,7 @@ public class BEROctetString extends BERElement {
     }
 
     /**
-     * Constructs an octetstring element containing a
+     * Constructs an octet string element containing a
      * subset of buffer.
      * @param buffer buffer containing 'octets'
      * @param start start of buffer range to copy
@@ -72,9 +80,10 @@ public class BEROctetString extends BERElement {
     }
 
     /**
-     * Constructs a octetstring element with the input stream.
+     * Constructs an octet string element from an input stream
      * (for constructed encoding)
-     * @param stream input stream
+     * @param decoder a decode that understands the specific tags
+     * @param stream source
      * @param bytes_read array of 1 int, incremented by number of bytes read.
      * @exception IOException failed to construct
      */
@@ -118,9 +127,9 @@ public class BEROctetString extends BERElement {
     }
 
     /**
-     * Constructs a octetstring element with the input stream.
+     * Constructs an octet string element from an input stream
      * (for primitive encoding)
-     * @param stream input stream
+     * @param stream source
      * @param bytes_read array of 1 int, incremented by number of bytes read.
      * @exception IOException failed to construct
      */
@@ -141,7 +150,7 @@ public class BEROctetString extends BERElement {
     /**
      * Writes BER to stream
      * @return number of bytes written to stream.
-     * @exception IOException failed to send
+     * @exception IOException failed to write
      */
     public void write(OutputStream stream) throws IOException {
         stream.write((byte)BERElement.OCTETSTRING);  /* OCTETSTRING tag */

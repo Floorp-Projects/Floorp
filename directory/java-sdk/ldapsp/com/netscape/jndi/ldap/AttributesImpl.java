@@ -25,7 +25,7 @@ import netscape.ldap.*;
 import java.util.*;
 
 /**
- * Wrapper for LDAPAttributes which implements JNDI Attribute interface
+ * Wrapper for LDAPAttributeSet which implements JNDI Attribute interface
  */
 class AttributesImpl implements Attributes {
 

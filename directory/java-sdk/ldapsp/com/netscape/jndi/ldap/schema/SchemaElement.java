@@ -45,6 +45,7 @@ public class SchemaElement extends SchemaDirContext {
     static final String OBSOLETE = "OBSOLETE";    
     static final String EQUALITY = "EQUALITY";
     static final String ORDERING = "ORDERING";
+    static final String SUBSTRING = "SUBSTRING";
     static final String COLLECTIVE = "COLLECTIVE";
     static final String NOUSERMOD = "NO-USER-MODIFICATION";
     static final String USAGE = "USAGE";

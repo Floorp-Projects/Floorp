@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -21,12 +21,12 @@ import java.util.*;
 import java.io.*;
 
 /**
- * This class is for the Choice object. Note that this class will be
- * used by the client.
+ * This class is for the Choice object. Note that this class may be
+ * used by a client.
  *
  * <pre>
  * ENCODING RULE:
- *   Encoding is the encoding of the chosen type.
+ *   Encoding is the encoding of the specific type used.
  * </pre>
  *
  * @version 1.0
@@ -40,17 +40,17 @@ public class BERChoice extends BERElement {
 
     /**
      * Constructs a choice element.
-     * @param value BERElement value
+     * @param value Any BERElement value
      */
     public BERChoice(BERElement value) {
         m_value = value;
     }
 
     /**
-     * Constructs a choice element with the input stream.
+     * Constructs a choice element from an input stream.
      * Note that with the current decoding architecture choice types
-     * will not be decoded as choices but rather only as the types
-     * chosen.  The following method will never be called.
+     * will not be decoded as choices but rather as the types
+     * chosen. The following method will never be called.
      * @param stream input stream
      * @param bytes_read array of 1 int; value incremented by
      *        number of bytes read from stream.
@@ -62,9 +62,9 @@ public class BERChoice extends BERElement {
     }
 
     /**
-     * Sends the BER encoding of the chosen type directly to stream.
+     * Sends the BER encoding of the chosen type directly to a stream.
      * @param stream output stream
-     * @exception IOException failed to construct
+     * @exception IOException failed to write
      */
     public void write(OutputStream stream) throws IOException {
         m_value.write(stream);

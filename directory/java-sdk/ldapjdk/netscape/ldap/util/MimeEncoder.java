@@ -19,11 +19,13 @@ package netscape.ldap.util;
 
 /** This abstract class is the parent of those classes which implement
     MIME encoding and decoding: base64.
-    @see netcape.ldap.util.MimeBase64Encoder
-    @see netcape.ldap.util.MimeBase64Decoder
+    @see netscape.ldap.util.MimeBase64Encoder
+    @see netscape.ldap.util.MimeBase64Decoder
  */
 
-public abstract class MimeEncoder {
+public abstract class MimeEncoder implements java.io.Serializable {
+
+    static final long serialVersionUID = 5179250095383961512L;
 
     /** Given a sequence of input bytes, produces a sequence of output bytes.
         Note that some (small) amount of buffering may be necessary, if the

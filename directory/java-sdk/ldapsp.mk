@@ -12,7 +12,7 @@
 #
 # The Initial Developer of this code under the NPL is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Copyright (C) 1999 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
 # Makefile for the LDAP classes
@@ -60,7 +60,7 @@ SRCDIR=com/netscape/jndi/ldap
 DISTDIR=$(MCOM_ROOT)/dist
 CLASSDIR=$(MCOM_ROOT)/dist/classes
 CLASSPACKAGEDIR=$(DISTDIR)/packages
-#PACKAGENAME=jndi.zip
+DOCDIR=$(DISTDIR)/doc/ldapsp
 ifeq ($(DEBUG), full)
 BASEPACKAGENAME=ldapsp_debug.jar
 else
@@ -69,6 +69,9 @@ endif
 CLASSPACKAGE=$(CLASSPACKAGEDIR)/$(PACKAGENAME)
 MANIFEST=$(BASEDIR)/ldapsp/manifest.mf
 
+ifndef JAVADOC
+  JAVADOC=javadoc -classpath "$(JAVACLASSPATH)"
+endif
 ifndef JAVAC
   ifdef JAVA_HOME
     JDKBIN=$(JDK)/bin/
@@ -80,7 +83,11 @@ ifndef JAVAC
   endif
 endif
 
+DOCCLASSES=com.netscape.jndi.ldap.controls
+
 all: classes 
+
+doc: $(DISTDIR) $(DOCDIR) DOCS
 
 basics: $(DISTDIR) $(CLASSDIR)
 
@@ -101,8 +108,10 @@ COMMON: basics
 CONTROLS: basics
 	cd ldapsp/$(SRCDIR)/controls; $(JAVAC) -d $(CLASS_DEST) *.java
 
-
 JNDICLASSES: COMMON CONTROLS SCHEMA MAIN
+
+DOCS:
+	$(JAVADOC) -d $(DOCDIR) $(DOCCLASSES)
 
 clean:
 	rm -rf $(DISTDIR)/classes/com/netscape/jndi/ldap
@@ -110,9 +119,11 @@ clean:
 $(CLASSPACKAGEDIR):
 	mkdir -p $@
 
+$(DOCDIR):
+	mkdir -p $@
+
 $(DISTDIR):
 	mkdir -p $@
 
 $(CLASSDIR):
 	mkdir -p $@
-

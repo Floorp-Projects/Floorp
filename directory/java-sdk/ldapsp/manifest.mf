@@ -10,7 +10,7 @@ Name: com/netscape/jndi/ldap/ContextEnv$ReferralRebindProc.class
 
 Name: com/netscape/jndi/ldap/ContextEnv.class
 
-Name: com/netscape/jndi/ldap/EventService$EventThread.class
+Name: com/netscape/jndi/ldap/EventService$EventEntry.class
 
 Name: com/netscape/jndi/ldap/EventService.class
 

@@ -17,9 +17,7 @@
  */
 package netscape.ldap.util;
 
-import java.util.*;
-import netscape.ldap.client.*;
-import java.io.*;
+import netscape.ldap.LDAPControl;
 
 /**
  * This interface represents the content of an LDIF record.
@@ -45,12 +43,12 @@ import java.io.*;
  * <P>
  *
  * @version 1.0
- * @see netscape.ldap.LDIFRecord
- * @see netscape.ldap.LDIFAttrContent
- * @see netscape.ldap.LDIFAddContent
- * @see netscape.ldap.LDIFModifyContent
- * @see netscape.ldap.LDIFDeleteContent
- * @see netscape.ldap.LDIFModDNContent
+ * @see netscape.ldap.util.LDIFRecord
+ * @see netscape.ldap.util.LDIFAttributeContent
+ * @see netscape.ldap.util.LDIFAddContent
+ * @see netscape.ldap.util.LDIFModifyContent
+ * @see netscape.ldap.util.LDIFDeleteContent
+ * @see netscape.ldap.util.LDIFModDNContent
  */
 public interface LDIFContent {
 
@@ -91,6 +89,22 @@ public interface LDIFContent {
      * </UL>
      */
     public int getType();
+
+    /**
+     * Retrieves the list of controls specified in the content
+     * of the LDIF record, if any
+     * @return An array of <CODE>LDAPControl</CODE> objects that
+     * represent any controls specified in the the LDIF record,
+     * or <CODE>null</CODE> if none were specified.
+     */
+    public LDAPControl[] getControls();
+
+    /**
+     * Sets the list of controls
+     * @param controls An array of <CODE>LDAPControl</CODE> objects
+     * or <CODE>null</CODE> if none are to be specified.
+     */
+    public void setControls( LDAPControl[] controls );
 
     /**
      * Returns the string representation of the content of the LDIF record.

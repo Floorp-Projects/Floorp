@@ -154,67 +154,53 @@ import com.netscape.jndi.ldap.common.ExceptionMapper;
  * </TABLE>
  * <P>
  * @see com.netscape.jndi.ldap.LdapSortKey
- * @see com.netscape.jndi.ldap.LdapSearchConstraints
- * @see com.netscape.jndi.ldap.LdapSearchConstraints#setServerControls(LDAPControl)
+ * @see com.netscape.jndi.ldap.LdapSortControl
  */
-public class LdapSortResponseControl extends LDAPControl implements Control {
+public class LdapSortResponseControl extends LDAPSortControl implements Control {
 
-    String m_failedAttribute;
-    int m_resultCode;
     /**
      * Constructs a new <CODE>LdapEntryChangeControl</CODE> object.
      * This constructor is used by the NetscapeControlFactory
      *
-     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl
      */
-    LdapSortResponseControl(boolean critical, byte[] value) {
-        super(LDAPSortControl.SORTRESPONSE, critical, value);
-    }
-
-    /**
-     * Set the first attribute type from the sort key list that 
-     * resulted in an error
-     * This method is used by the NetscapeControlFactory     
-     */
-    void setFailedAttribute(String attr) {
-        m_failedAttribute = attr;
-    }
-    
-    /**
-     * Set the sort result code
-     * This method is used by the NetscapeControlFactory
-     */
-    void setResultCode(int code) {
-        m_resultCode = code;
+    LdapSortResponseControl(boolean critical, byte[] value) throws Exception{
+        super(SORTRESPONSE, critical, value);
     }
     
     /**
      * Get the first attribute type from the sort key list that 
      * resulted in an error
+     * @return Attribute name that resulted in an error
      */
     public String getFailedAttribute() {
-        return m_failedAttribute;
+        return super.getFailedAttribute();
     }
     
     /**
      * Return the sort result code
+     * @return The sort result code
      */
     public int getResultCode() {
-        return m_resultCode;
+        return super.getResultCode();
     }
 
     /**
      * Return corresponding NamingException for the sort error code
+     * @return NamingException for the sort error code
      */
     public NamingException getSortException() {
-        if (m_resultCode == 0) { // success
+        if (getResultCode() == 0) { // success
             return null;
         }
         return ExceptionMapper.getNamingException(
-            new LDAPException("Server Sort Failed", m_resultCode));
-    }        
+            new LDAPException("Server Sort Failed", getResultCode()));
+    }  
+
     /**
-     * Implements Control interface
+     * Retrieves the ASN.1 BER encoded value of the LDAP control.
+     * Null is returned if the value is absent.
+     * @return A possibly null byte array representing the ASN.1 BER
+     * encoded value of the LDAP control.
      */
     public byte[] getEncodedValue() {
         return getValue();

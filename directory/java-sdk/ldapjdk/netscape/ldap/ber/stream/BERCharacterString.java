@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -33,24 +33,22 @@ public abstract class BERCharacterString extends BERElement {
     protected String m_value = null;
 
     /**
-     * Constructs an characterstring element containing buffer.
+     * Constructs a character string element containing a buffer.
      */
     public BERCharacterString() {
     }
 
     /**
-     * Constructs an octetstring element containing buffer.
-     * @param buffer string containing 'octets'
+     * Constructs a character string element containing buffer.
+     * @param buffer a string value
      */
     public BERCharacterString(String string) {
         m_value = string;
     }
 
     /**
-     * Constructs a characterstring element from buffer.
-     * @param buffer buffer containing 'octets'
-     * @param start start of buffer range to copy
-     * @param end end of buffer range to copy
+     * Constructs a character string element from a byte array.
+     * @param buffer buffer containing UTF8 data
      */
     public BERCharacterString(byte[] buffer) {
         try{
@@ -60,7 +58,7 @@ public abstract class BERCharacterString extends BERElement {
     }
 
     /**
-     * Constructs a characterstring element with the input stream.
+     * Constructs a character string element from an input stream
      * (for constructed encoding)
      * @param stream input stream
      * @param bytes_read array of 1 int, incremented by number of bytes read.
@@ -113,9 +111,9 @@ public abstract class BERCharacterString extends BERElement {
     }
 
     /**
-     * Constructs a characterstring element with the input stream.
+     * Constructs a character string element from an input stream
      * (for primitive encoding)
-     * @param stream input stream
+     * @param stream source
      * @param bytes_read array of 1 int, incremented by number of bytes read.
      * @exception IOException failed to construct
      */
@@ -137,12 +135,12 @@ public abstract class BERCharacterString extends BERElement {
         }
     }
 
+    private byte[] byte_buf;
+
     /**
      * Writes BER to stream.
      * @param stream output stream
      */
-    private byte[] byte_buf;
-
     public void write(OutputStream stream) throws IOException {
       stream.write(getType());  /* tag */
         if (m_value == null) {

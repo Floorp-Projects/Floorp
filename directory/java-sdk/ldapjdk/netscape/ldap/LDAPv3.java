@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
@@ -72,6 +72,28 @@ public interface LDAPv3 extends LDAPv2 {
                              throws LDAPException;
 
     /**
+     * Authenticates to the LDAP server (that the object is currently
+     * connected to) using the specified name and password, with the
+     * specified LDAP protocol version. If the server does not support
+     * the requested protocol version, an exception is thrown.  If the
+     * object has been disconnected from an LDAP server, this method
+     * attempts to reconnect to the server. If the object had already
+     * authenticated, the old authentication is discarded.
+     * @param version LDAP protocol version requested: currently 2 or 3.
+     * @param dn If non-null and non-empty, specifies that the
+     * connection and all operations through it should be
+     * authenticated with dn as the distinguished name.
+     * @param passwd If non-null and non-empty, specifies that the
+     * connection and all operations through it should be
+     * authenticated with passwd as password.
+     * @exception LDAPException Failed to authenticate to the LDAP server.
+     */
+    public void bind(int version,
+                     String dn,
+                     String passwd)
+                     throws LDAPException;
+    
+    /**
      * Performs an extended operation on the directory. Extended operations
      * are part of version 3 of the LDAP protocol.
      * <P>
@@ -107,7 +129,7 @@ public interface LDAPv3 extends LDAPv2 {
      * @exception LDAPException Failed to rename the specified entry.
      */
     public void rename( String DN, String newRDN, String newParentDN,
-      boolean deleteOldRDN, LDAPSearchConstraints cons ) throws LDAPException;
+      boolean deleteOldRDN, LDAPConstraints cons ) throws LDAPException;
 
     /**
      * Returns an array of the latest controls (if any) from server.

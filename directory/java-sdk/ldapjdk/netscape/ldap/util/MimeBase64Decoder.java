@@ -21,6 +21,7 @@ package netscape.ldap.util;
  */
 public final class MimeBase64Decoder extends MimeEncoder {
 
+    static final long serialVersionUID = 797397585345375903L;
     private byte token[] = new byte[4];      // input buffer
     private byte bytes[] = new byte[3];      // output buffer
     private int token_length = 0;            // input buffer length
@@ -163,7 +164,7 @@ public final class MimeBase64Decoder extends MimeEncoder {
     public final void eof(ByteBuf out) {
         if (token != null && token_length != 0) {
             while (token_length < 4)
-                token[token_length++] = '=';
+                token[token_length++] = (byte)'=';
             decode_final_token(out);
         }
         token_length = 0;

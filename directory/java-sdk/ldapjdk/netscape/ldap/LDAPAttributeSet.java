@@ -388,11 +388,13 @@ public class LDAPAttributeSet implements Cloneable
      * @return String representation of all attributes in the set.
      */
     public String toString() {
-        String s = "LDAPAttributeSet: ";
-        if ( attrs.length > 0 ) {
-        for( int i = 0; i < attrs.length; i++ )
-            s += attrs[i].toString();
+        StringBuffer sb = new StringBuffer("LDAPAttributeSet: ");
+        for( int i = 0; i < attrs.length; i++ ) {
+            if (i != 0) {
+                sb.append(" ");
+            }            
+            sb.append(attrs[i].toString());
         }
-        return s;
+        return sb.toString();
     }
 }

@@ -154,8 +154,8 @@ public class LDAPException extends java.lang.Exception {
      * method or the <CODE>LDAPSearchConstraints.setServerTimeLimit</CODE>
      * method.<P>
      *
-     * @see netscape.ldap.LDAPConnection@setOption
-     * @see netscape.ldap.LDAPSearchConstraints@setServerTimeLimit
+     * @see netscape.ldap.LDAPConnection#setOption
+     * @see netscape.ldap.LDAPSearchConstraints#setServerTimeLimit
      */
     public final static int TIME_LIMIT_EXCEEDED          = 3;
 
@@ -213,7 +213,7 @@ public class LDAPException extends java.lang.Exception {
     /**
      * (9) The LDAP server is referring your client to another
      * LDAP server.  If you set up the <CODE>LDAPConnection</CODE>
-     * options or the <CODE>LDAPSearchConstraints</CODE> options
+     * options or the <CODE>LDAPConstraints</CODE> options
      * for automatic referral, your client will automatically
      * connect and authenticate to the other LDAP server.
      * (This <CODE>LDAPException</CODE> will not be raised.)
@@ -229,7 +229,7 @@ public class LDAPException extends java.lang.Exception {
      *
      * If instead you set <CODE>LDAPConnection.REFERRALS</CODE>
      * to <CODE>false</CODE> (or if you set
-     * <CODE>LDAPSearchConstraints.setReferrals</CODE> to <CODE>false</CODE>,
+     * <CODE>LDAPConstraints.setReferrals</CODE> to <CODE>false</CODE>,
      * an <CODE>LDAPReferralException</CODE> is raised.
      * <P>
      *
@@ -239,8 +239,8 @@ public class LDAPException extends java.lang.Exception {
      * <P>
      *
      * @see netscape.ldap.LDAPConnection#setOption
-     * @see netscape.ldap.LDAPSearchConstraints#setReferrals
-     * @see netscape.ldap.LDAPSearchConstraints#setRebindProc
+     * @see netscape.ldap.LDAPConstraints#setReferrals
+     * @see netscape.ldap.LDAPConstraints#setRebindProc
      * @see netscape.ldap.LDAPRebind
      * @see netscape.ldap.LDAPRebindAuth
      * @see netscape.ldap.LDAPReferralException
@@ -469,7 +469,7 @@ public class LDAPException extends java.lang.Exception {
      * <P>
      *
      * @see netscape.ldap.LDAPConnection#rename(java.lang.String, java.lang.String, java.lang.String, boolean)
-     * @see netscape.ldap.LDAPConnection#rename(java.lang.String, java.lang.String, java.lang.String, boolean, LDAPSearchConstraints)
+     * @see netscape.ldap.LDAPConnection#rename(java.lang.String, java.lang.String, java.lang.String, boolean, LDAPConstraints)
      */
     public final static int AFFECTS_MULTIPLE_DSAS        = 71;
 
@@ -770,7 +770,7 @@ public class LDAPException extends java.lang.Exception {
      * <P>
      *
      * @return String representation of exception
-     * @see netscape.ldap.LDAPException#errorCodeToString(code)
+     * @see netscape.ldap.LDAPException#errorCodeToString(int)
      */
     public String toString() {
         String str = super.toString() + " (" + resultCode + ")" ;

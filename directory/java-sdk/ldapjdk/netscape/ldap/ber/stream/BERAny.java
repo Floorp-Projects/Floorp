@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -21,12 +21,12 @@ import java.util.*;
 import java.io.*;
 
 /**
- * This class is for the any object that is unknown to the
+ * This class is for the "any" object that is unknown to the
  * BER package but conforms to BER rules.
  *
  * <pre>
  * Encoding Rule:
- *   The encoding is the encoding of the chosen type.
+ *   The encoding is that of the particular implementation.
  * </pre>
  *
  * @version 1.0
@@ -39,7 +39,7 @@ public class BERAny extends BERElement {
     private BERElement m_value = null;
 
     /**
-     * Constructs an any element.
+     * Constructs an "any" element.
      * @param value BERElement value
      */
     public BERAny(BERElement value) {
@@ -47,10 +47,10 @@ public class BERAny extends BERElement {
     }
 
     /**
-     * Constructs an any element with the input stream.
-     * Note that with the current decoding architecture any types
-     * will not be decoded as any's but rather only as the types
-     * chosen.  The following method will never be called.
+     * Constructs an "any" element from an input stream.
+     * Note that with the current decoding architecture "any" types
+     * will not be decoded as any's but rather as the particular
+     * implementation.  The following method will never be called.
      * @param stream input stream
      * @param bytes_read array of 1 int; value incremented by
      *        number of bytes read from stream.
@@ -62,7 +62,7 @@ public class BERAny extends BERElement {
     }
 
     /**
-     * Sends the BER encoding directly to stream.
+     * Sends the BER encoding directly to an output stream.
      * @param stream output stream
      */
     public void write(OutputStream stream) throws IOException {

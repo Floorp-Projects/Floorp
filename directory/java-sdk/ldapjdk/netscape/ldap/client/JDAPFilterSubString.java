@@ -20,7 +20,6 @@ package netscape.ldap.client;
 import java.util.*;
 import netscape.ldap.ber.stream.*;
 import java.io.*;
-import netscape.ldap.client.*;
 
 /**
  * This class implements the filter substring.

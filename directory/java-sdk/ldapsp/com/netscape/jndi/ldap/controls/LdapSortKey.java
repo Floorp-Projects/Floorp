@@ -41,7 +41,6 @@ public class LdapSortKey extends LDAPSortKey{
      * attribute in reverse order and use the matching rule identified
      * by the OID 1.2.3.4) <P>
      *</UL>
-     * @see com.netscape.jndi.ldap.controls.LdapPagedControl
      * @see com.netscape.jndi.ldap.controls.LdapSortControl
      * @see com.netscape.jndi.ldap.controls.LdapVirtualListControl
      */
@@ -61,7 +60,6 @@ public class LdapSortKey extends LDAPSortKey{
      * </UL>
      * @param reverse If <CODE>true</CODE>, the sorting is done in
      * descending order.
-     * @see com.netscape.jndi.ldap.controls.LdapPagedControl
      * @see com.netscape.jndi.ldap.controls.LdapSortControl
      * @see com.netscape.jndi.ldap.controls.LdapVirtualListControl
      */
@@ -85,7 +83,6 @@ public class LdapSortKey extends LDAPSortKey{
      * descending order.
      * @param matchRule Object ID (OID) of the matching rule for
      * the attribute (for example, <CODE>1.2.3.4</CODE>).
-     * @see com.netscape.jndi.ldap.controls.LdapPagedControl
      * @see com.netscape.jndi.ldap.controls.LdapSortControl
      * @see com.netscape.jndi.ldap.controls.LdapVirtualListControl
      */
@@ -121,4 +118,3 @@ public class LdapSortKey extends LDAPSortKey{
         return super.getMatchRule();
     }
 }
-

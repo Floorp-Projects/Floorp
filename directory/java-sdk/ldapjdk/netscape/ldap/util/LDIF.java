@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.util;
@@ -41,12 +41,13 @@ import java.net.*;
  * @version 1.0
  * @see netscape.ldap.util.LDIFRecord
  */
-public class LDIF {
+public class LDIF implements Serializable {
 
     /**
      * Internal constants
      */
     private final static char COMMENT = '#';
+    static final long serialVersionUID = -2710382547996750924L;
 
     /**
      * Constructs an <CODE>LDIF</CODE> object to parse the
@@ -99,7 +100,6 @@ public class LDIF {
      * @see netscape.ldap.util.LDIFRecord
      */
     public LDIFRecord nextRecord() throws IOException {
-        /* TBD: parse the version number */
         if ( m_done )
             return null;
         else
@@ -122,6 +122,23 @@ public class LDIF {
         line = d.readLine();
         if (line == null) {
             return null;
+        }
+
+        if (line.startsWith("version:")) {
+            m_version = Integer.parseInt(
+                line.substring("version:".length()).trim() );
+            if ( m_version != 1 ) {
+                throw( new IOException( "Unexpected " + line ) );
+            }
+            // Do the next record
+            line = d.readLine();
+            if ( (line != null) && (line.length() == 0) ) {
+                // Skip the newline
+                line = d.readLine();
+            }
+            if (line == null) {
+                return null;
+            }
         }
 
         if (!line.startsWith("dn:"))
@@ -147,45 +164,58 @@ public class LDIF {
           throws IOException {
         String line = d.readLine();
         if ((line == null) || (line.length() < 1) || (line.equals("-"))) {
-            // if this is empty line, then we finish reading all the info for
-            // the current entry
-            if ((line != null) && (line.length() < 1))
+            // if this is empty line, then we're finished reading all
+            // the info for the current entry
+            if ((line != null) && (line.length() < 1)) {
                 m_currEntryDone = true;
+            }
             return null;
         }
 
         if (line.startsWith("changetype:")) {
             /* handles (changerecord) */
+            LDIFContent lc = null;
             String changetype = line.substring(11).trim();
             if (changetype.equals("modify")) {
-                LDIFModifyContent mc = parse_mod_spec(d);
-                return mc;
+                lc = parse_mod_spec(d);
             } else if (changetype.equals("add")) {
-                LDIFAddContent ac = parse_add_spec(d);
-                return ac;
+                lc = parse_add_spec(d);
             } else if (changetype.equals("delete")) {
-                LDIFDeleteContent dc = parse_delete_spec(d);
-                return dc;
+                lc = parse_delete_spec(d);
             } else if (changetype.equals("moddn") ||
-              changetype.equals("modrdn")) {
-                LDIFModDNContent mdnc = parse_moddn_spec(d);
-                return mdnc;
-            } else
+                       changetype.equals("modrdn")) {
+                lc = parse_moddn_spec(d);
+            } else {
                 throw new IOException("change type not supported");
-        } else {
-            /* handles 1*(attrval-spec) */
-            Hashtable ht = new Hashtable();
-            String newtype;
-            Object val;
-            LDAPAttribute newAttr = null;
-            do {
+            }
+            return lc;
+        }
+
+        /* handles 1*(attrval-spec) */
+        Hashtable ht = new Hashtable();
+        String newtype = null;
+        Object val = null;
+        LDAPAttribute newAttr = null;
+        Vector controlVector = null;
+
+        /* Read lines until we're past the record */
+        while( true ) {
+            if (line.startsWith("control:")) {
+                if ( controlVector == null ) {
+                    controlVector = new Vector();
+                }
+                controlVector.addElement( parse_control_spec( line ) );
+            } else {
+                /* An attribute */
                 int len = line.length();
-                if ( len < 1 )
+                if ( len < 1 ) {
                     break;
+                }
                 int idx = line.indexOf(':');
                 /* Must have a colon */
                 if (idx == -1)
-                    throw new IOException("no ':' found in <" + line + ">");
+                    throw new IOException("no ':' found in <" +
+                                          line + ">");
                 /* attribute type */
                 newtype = line.substring(0,idx).toLowerCase();
                 val = "";
@@ -197,14 +227,17 @@ public class LDIF {
                         String substr = line.substring(idx).trim();
                         val = getDecodedBytes(substr);
                     } else if (line.charAt(idx) == '<') {
-                      try {
-                          URL url = new URL(line.substring(idx+1).trim());
-                          String filename = url.getFile();
-                          val = getFileContent(filename);
-                      } catch (MalformedURLException ex) {
-                          throw new IOException("Exception: cannot construct url "+
-                          line.substring(idx+1).trim());
-                      }
+                        try {
+                            URL url =
+                                new URL(line.substring(idx+1).trim());
+                            String filename = url.getFile();
+                            val = getFileContent(filename);
+                        } catch (MalformedURLException ex) {
+                            throw new IOException(
+                                ex +
+                                ": cannot construct url "+
+                                line.substring(idx+1).trim());
+                        }
                     } else {
                         val = line.substring(idx).trim();
                     }
@@ -220,24 +253,31 @@ public class LDIF {
                     newAttr.addValue( (byte[])val );
                 }
                 ht.put( newtype, newAttr );
-
-                line = d.readLine();
-                if (line == null || (line.length() < 1) || (line.equals("-"))) {
-                    if ((line != null) && (line.length() < 1))
-                        m_currEntryDone = true;
-                    break;
-                }
-            } while ( true );
-            Enumeration en = ht.elements();
-            LDIFAttributeContent ac = new LDIFAttributeContent();
-            while( en.hasMoreElements() ) {
-                ac.addElement( (LDAPAttribute)en.nextElement() );
             }
-            ht.clear();
-            ht = null;
-
-            return ac;
+            line = d.readLine();
+            if (line == null || (line.length() < 1) ||
+                (line.equals("-"))) {
+                if ((line != null) && (line.length() < 1)) {
+                    m_currEntryDone = true;
+                }
+                break;
+            }
         }
+        LDIFAttributeContent ac = new LDIFAttributeContent();
+        // Copy over the attributes to the record
+        Enumeration en = ht.elements();
+        while( en.hasMoreElements() ) {
+            ac.addElement( (LDAPAttribute)en.nextElement() );
+        }
+        ht.clear();
+        if( controlVector != null ) {
+            LDAPControl[] controls =
+                new LDAPControl[controlVector.size()];
+            controlVector.copyInto( controls );
+            ac.setControls( controls );
+            controlVector.removeAllElements();
+        }
+        return ac;
     }
 
     private byte[] getDecodedBytes(String line) {
@@ -279,6 +319,10 @@ public class LDIF {
           m_currEntryDone = false;
         LDAPAttribute attrs[] = ac.getAttributes();
         LDIFAddContent rc = new LDIFAddContent(attrs);
+        LDAPControl[] controls = ac.getControls();
+        if ( controls != null ) {
+            rc.setControls( controls );
+        }
         return rc;
     }
 
@@ -288,12 +332,28 @@ public class LDIF {
      */
     private LDIFDeleteContent parse_delete_spec(LineReader d)
           throws IOException {
+        Vector controlVector = null;
+        LDIFDeleteContent dc = new LDIFDeleteContent();
         String line = d.readLine();
-        if (line == null || line.equals("")) {
-            LDIFDeleteContent dc = new LDIFDeleteContent();
-            return dc;
-        } else
-            throw new IOException("invalid SEP" );
+        while( line != null && !line.equals("") ) {
+            if (line.startsWith("control:")) {
+                if ( controlVector == null ) {
+                    controlVector = new Vector();
+                }
+                controlVector.addElement( parse_control_spec( line ) );
+            } else {
+                throw new IOException("invalid SEP" );
+            }
+            line = d.readLine();
+        } 
+        if( controlVector != null ) {
+            LDAPControl[] controls = new LDAPControl[controlVector.size()];
+            controlVector.copyInto( controls );
+            dc.setControls( controls );
+            controlVector.removeAllElements();
+        }
+
+        return dc;
     }
 
     /**
@@ -303,6 +363,7 @@ public class LDIF {
     private LDIFModifyContent parse_mod_spec(LineReader d)
           throws IOException {
 
+        Vector controlVector = null;
         String line = null;
         line = d.readLine();
         LDIFModifyContent mc = new LDIFModifyContent();
@@ -325,6 +386,15 @@ public class LDIF {
                     LDAPModification mod = new LDAPModification(oper, attrs[i]);
                     mc.addElement( mod );
                 }
+                LDAPControl[] controls = ac.getControls();
+                if ( controls != null ) {
+                    if ( controlVector == null ) {
+                        controlVector = new Vector();
+                    }
+                    for( int i = 0; i < controls.length; i++ ) {
+                        controlVector.addElement( controls[i] );
+                    }
+                }
             // if there is no attrval-spec, go into the else statement
             } else {
                 int index = line.indexOf(":");
@@ -346,6 +416,12 @@ public class LDIF {
             line = d.readLine();
         } while (line != null && !line.equals(""));
 
+        if( controlVector != null ) {
+            LDAPControl[] controls = new LDAPControl[controlVector.size()];
+            controlVector.copyInto( controls );
+            mc.setControls( controls );
+            controlVector.removeAllElements();
+        }
         return mc;
     }
 
@@ -355,6 +431,7 @@ public class LDIF {
      */
     private LDIFModDNContent parse_moddn_spec(LineReader d)
                   throws IOException {
+        Vector controlVector = null;
         String line = null;
         line = d.readLine();
         LDIFModDNContent mc = new LDIFModDNContent();
@@ -373,13 +450,122 @@ public class LDIF {
                 else
                     throw new IOException("Incorrect input for deleteOldRdn ");
             } else if (line.startsWith("newsuperior:") &&
-              (line.length() > ("newsuperior:".length()+1))) {
-                mc.setNewParent(line.substring("newsuperior:".length()).trim());
+                       (line.length() > ("newsuperior:".length()+1))) {
+                mc.setNewParent(line.substring(
+                    "newsuperior:".length()).trim());
+            } else if (line.startsWith("newparent:") &&
+                       (line.length() > ("newparent:".length()+1))) {
+                mc.setNewParent(line.substring(
+                    "newparent:".length()).trim());
+            } else if (line.startsWith("control:")) {
+                if ( controlVector == null ) {
+                    controlVector = new Vector();
+                }
+                controlVector.addElement( parse_control_spec( line ) );
             }
             line = d.readLine();
         } while (line != null && !line.equals(""));
 
+        if( controlVector != null ) {
+            LDAPControl[] controls = new LDAPControl[controlVector.size()];
+            controlVector.copyInto( controls );
+            mc.setControls( controls );
+            controlVector.removeAllElements();
+        }
+
         return mc;
+    }
+
+    /**
+     * Parse the specification of a control<BR>
+     *
+     * A control looks line one of the following:
+     *<BR>
+     * control: 1.2.3.4.10.210
+     *<BR>
+     * control: 1.2.3.4.10.210 true
+     *<BR>
+     * control: 1.2.3.4.10.210 true: someASCIIvalue
+     *<BR>
+     * control: 1.2.3.4.10.210: someASCIIvalue
+     *<BR>
+     * control: 1.2.3.4.10.210 true:: 44GK44GM44GV44KP44KJ
+     *<BR>
+     * control: 1.2.3.4.10.210:: 44GK44GM44GV44KP44KJ
+     *<BR>
+     * control: 1.2.3.4.10.210 true:< file:///usr/local/directory/cont.dta
+     *<BR>
+     * control: 1.2.3.4.10.210:< file:///usr/local/directory/cont.dta
+     *
+     * @param line A line containing a control spec
+     * @return A parsed control
+     * @exception IOException if the line could not be parsed
+     */
+    protected LDAPControl parse_control_spec( String line )
+        throws IOException {
+        boolean criticality = true;
+        String OID;
+        byte[] val = null;
+        int len = line.length();
+        int idx = line.indexOf(':') + 2;
+        /* OID, must be present */
+        if ( idx >= len ) {
+            throw new IOException("OID required for control");
+        }
+        line = line.substring(idx).trim();
+        idx = line.indexOf(' ');
+        if ( idx < 0 ) {
+            OID = line;
+        } else {
+            /* Optional criticality */
+            OID = line.substring(0, idx);
+            line = line.substring(idx+1);
+            idx = line.indexOf(':');
+            String criticalVal;
+            if (idx > 0) {
+                criticalVal = line.substring(0, idx);
+            } else {
+                criticalVal = line;
+            }
+            if ( criticalVal.compareTo("true") == 0 ) {
+                criticality = true;
+            } else if ( criticalVal.compareTo("false") == 0 ) {
+                criticality = false;
+            } else {
+                throw new IOException(
+                    "Criticality for control must be true" +
+                    " or false, not " + criticalVal);
+            }
+            /* Optional value */
+            if ( idx > 0 ) {
+                /* Could be :: for binary */
+                idx++;
+                if ( line.length() > idx ) {
+                    if ( line.charAt(idx) == ':' ) {
+                        idx++;
+                        line = line.substring(idx).trim();
+                        val = getDecodedBytes(line);
+                    } else if (line.charAt(idx) == '<') {
+                        String urlString = line.substring(idx+1).trim();
+                        try {
+                            URL url = new URL(urlString);
+                            String filename = url.getFile();
+                            val = getFileContent(filename);
+                        } catch (MalformedURLException ex) {
+                            throw new IOException(
+                                ex + ": cannot construct url "+
+                                urlString);
+                        }
+                    } else {
+                        try {
+                            val = line.substring(idx).trim().getBytes("UTF8");
+                        } catch(Exception x) {
+                        }
+                    }
+                }
+            }
+        }
+        return new LDAPControl( OID, criticality, val );
     }
 
     /**
@@ -514,5 +700,64 @@ public class LDIF {
         }
         private BufferedReader _d;
         String _next = null;
+    }
+
+    /**
+     * Convert a byte array to a printable string following
+     * the LDIF rules (encode in base64 if necessary)
+     *
+     * @param b The byte array to convert
+     * @return A converted string which is printable
+     */
+    public static String toPrintableString( byte[] b ) {
+        String s = "";
+        if (isPrintable(b)) {
+            try {
+                s = new String(b, "UTF8");
+            } catch ( java.io.UnsupportedEncodingException e ) {
+            }
+        } else {
+            ByteBuf inBuf = new ByteBuf( b, 0, b.length );
+            ByteBuf encodedBuf = new ByteBuf();
+            // Translate to base 64 
+            MimeBase64Encoder encoder = new MimeBase64Encoder();
+            encoder.translate( inBuf, encodedBuf );
+            int nBytes = encodedBuf.length();
+            if ( nBytes > 0 ) {
+                s = new String(encodedBuf.toBytes(), 0, nBytes);
+            }
+        }
+        return s;
+    }
+
+    /**
+     * Test driver - just read and parse an LDIF file, printing
+     * each record as interpreted
+     *
+     * @param args Name of LDIF file to parse
+     */
+    public static void main( String[] args ) {
+        if ( args.length != 1 ) {
+            System.out.println( "Usage: java LDIF <FILENAME>" );
+            System.exit( 1 );
+        }
+        LDIF ldif = null;
+        try {
+            ldif = new LDIF( args[0] );
+        } catch (Exception e) {
+            System.err.println("Failed to read LDIF file " + args[0] +
+                               ", " + e.toString());
+            System.exit(1);
+        }
+        try {
+            for( LDIFRecord rec = ldif.nextRecord();
+                 rec != null; rec = ldif.nextRecord() ) {
+                System.out.println( rec.toString() + '\n' );
+            }
+        } catch ( IOException ex ) {
+            System.out.println( ex );
+            System.exit( 1 );
+        }
+        System.exit( 0 );
     }
 }

@@ -41,7 +41,6 @@ public class LDAPSortKey {
      * attribute in reverse order and use the matching rule identified
      * by the OID 1.2.3.4) <P>
      *</UL>
-     * @see netscape.ldap.controls.LDAPPagedControl
      * @see netscape.ldap.controls.LDAPSortControl
      * @see netscape.ldap.controls.LDAPVirtualListControl
      */
@@ -76,7 +75,6 @@ public class LDAPSortKey {
      * </UL>
      * @param reverse If <CODE>true</CODE>, the sorting is done in
      * descending order.
-     * @see netscape.ldap.controls.LDAPPagedControl
      * @see netscape.ldap.controls.LDAPSortControl
      * @see netscape.ldap.controls.LDAPVirtualListControl
      */
@@ -102,7 +100,6 @@ public class LDAPSortKey {
      * descending order.
      * @param matchRule Object ID (OID) of the matching rule for
      * the attribute (for example, <CODE>1.2.3.4</CODE>).
-     * @see netscape.ldap.controls.LDAPPagedControl
      * @see netscape.ldap.controls.LDAPSortControl
      * @see netscape.ldap.controls.LDAPVirtualListControl
      */

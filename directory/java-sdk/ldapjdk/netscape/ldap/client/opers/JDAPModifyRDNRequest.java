@@ -40,8 +40,8 @@ import java.net.*;
  * ModifyDNRequest ::= [APPLICATION 12] SEQUENCE {
  *   entry LDAPDN,
  *   newrdn RelativeLDAPDN,
- *   newSuperior [0] LDAPDN OPTIONAL
  *   deleteoldrdn BOOLEAN,
+ *   newSuperior [0] LDAPDN OPTIONAL
  * }
  * </pre>
  *
@@ -118,10 +118,11 @@ public class JDAPModifyRDNRequest extends JDAPBaseDNRequest
         BERSequence seq = new BERSequence();
         seq.addElement(new BEROctetString(m_old_dn));
         seq.addElement(new BEROctetString(m_new_rdn));
+        seq.addElement(new BERBoolean(m_delete_old_dn));
         /* LDAPv3 new parent dn feature support */
         if (m_new_superior != null)
-            seq.addElement(new BEROctetString(m_new_superior));
-        seq.addElement(new BERBoolean(m_delete_old_dn));
+            seq.addElement(new BERTag(BERTag.CONTEXT|0,
+              new BEROctetString (m_new_superior), true));
         BERTag element = new BERTag(BERTag.APPLICATION|BERTag.CONSTRUCTED|12,
           seq, true);
         return element;

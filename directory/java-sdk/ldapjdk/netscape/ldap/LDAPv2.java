@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
@@ -88,6 +88,14 @@ public interface LDAPv2 {
     public static final int TIMELIMIT = 4;
 
     /**
+     * Option specifying the maximum number of milliseconds the 
+     * server should wait when returning search results. 
+     * @see netscape.ldap.LDAPConnection#getOption
+     * @see netscape.ldap.LDAPConnection#setOption
+     */
+    public static final int SERVER_TIMELIMIT = 5;
+
+    /**
      * Option specifying whether or not referrals to other LDAP
      * servers are followed automatically.
      * @see netscape.ldap.LDAPConnection#getOption
@@ -118,6 +126,15 @@ public interface LDAPv2 {
      * @see netscape.ldap.LDAPConnection#setOption
      */
     public static final int REFERRALS_HOP_LIMIT   = 10;
+    
+    /**
+     * Option specifying the object containing the method for
+     * authenticating to the server.  
+     * @see netscape.ldap.LDAPConnection#getOption
+     * @see netscape.ldap.LDAPConnection#setOption
+     * @see netscape.ldap.LDAPBind
+     */
+    public static final int BIND = 13;
 
     /**
      * Option specifying the version of the LDAP protocol
@@ -230,6 +247,15 @@ public interface LDAPv2 {
      */
     public void disconnect() throws LDAPException;
 
+    /** 
+     * Notifies the server to not send additional results associated with this
+     * <CODE>LDAPSearchResults</CODE> object, and discards any results already 
+     * received.
+     * @param results LDAPSearchResults object returned from a search.
+     * @exception LDAPException Failed to notify the server.
+     */
+    public void abandon(LDAPSearchResults results) throws LDAPException;
+
     /**
      * Authenticates user with the LDAP server.
      * @param Dn Distinguished name to use for authentication.
@@ -237,6 +263,14 @@ public interface LDAPv2 {
      * @exception LDAPException Failed to authenticate to the server.
      */
     public void authenticate (String DN, String passwd) throws LDAPException;
+
+    /**
+     * Authenticates user with the LDAP server.
+     * @param Dn Distinguished name to use for authentication.
+     * @param passwd Password for authentication.
+     * @exception LDAPException Failed to authenticate to the server.
+     */
+    public void bind (String DN, String passwd) throws LDAPException;
 
     /**
      * Read the entry corresponding to the specified distinguished name (DN).
@@ -328,7 +362,7 @@ public interface LDAPv2 {
      * @exception LDAPException Failed to perform the comparison.
      */
     public boolean compare (String DN, LDAPAttribute attr,
-      LDAPSearchConstraints cons) throws LDAPException;
+      LDAPConstraints cons) throws LDAPException;
 
     /**
      * Adds an entry to the directory.
@@ -343,7 +377,7 @@ public interface LDAPv2 {
      * @param cons The constraints set for the add operation.
      * @exception LDAPException Failed to add the entry to the directory.
      */
-    public void add (LDAPEntry entry, LDAPSearchConstraints cons)
+    public void add (LDAPEntry entry, LDAPConstraints cons)
       throws LDAPException;
 
     /**
@@ -362,7 +396,7 @@ public interface LDAPv2 {
      * @exception LDAPException Failed to modify the specified entry.
      */
     public void modify (String DN, LDAPModification mod,
-      LDAPSearchConstraints cons) throws LDAPException;
+      LDAPConstraints cons) throws LDAPException;
 
     /**
      * Modifies the attributes of a directory entry.
@@ -380,7 +414,7 @@ public interface LDAPv2 {
      * @exception LDAPException Failed to modify the specified entry.
      */
     public void modify (String DN, LDAPModificationSet mods,
-      LDAPSearchConstraints cons ) throws LDAPException;
+      LDAPConstraints cons ) throws LDAPException;
 
     /**
      * Removes an entry from the directory.
@@ -395,7 +429,7 @@ public interface LDAPv2 {
      * @param cons The constraints set for the delete operation.
      * @exception LDAPException Failed to remove the entry from the directory.
      */
-    public void delete( String DN, LDAPSearchConstraints cons )
+    public void delete( String DN, LDAPConstraints cons )
       throws LDAPException;
 
     /**
@@ -421,13 +455,14 @@ public interface LDAPv2 {
      * @exception LDAPException Failed to rename the entry in the directory.
      */
     public void rename ( String DN, String newRDN, boolean deleteOldRDN,
-      LDAPSearchConstraints cons ) throws LDAPException;
+      LDAPConstraints cons ) throws LDAPException;
 
     /**
      * Retrieves an option that applies to the connection.
      * The particular meaning may be implementation-dependent.
-     * The standard options are the search options described by
-     * the <CODE>LDAPSearchConstraints</CODE> class.
+     * The standard options are the options described by
+     * the <CODE>LDAPSearchConstraints</CODE> and <CODE>LDAPConstraints</CODE>
+     * classes.
      * @exception LDAPException Failed to retrieve the value of the specified option.
      */
     public Object getOption( int option ) throws LDAPException;
@@ -435,8 +470,9 @@ public interface LDAPv2 {
     /**
      * Sets an option that applies to the connection.
      * The particular meaning may be implementation-dependent.
-     * The standard options are the search options described by
-     * the <CODE>LDAPSearchConstraints</CODE> class.
+     * The standard options are the options described by
+     * the <CODE>LDAPSearchConstraints</CODE> and <CODE>LDAPConstraints</CODE>
+     * classes.
      * @exception LDAPException Failed to set the specified option.
      */
     public void setOption( int option, Object value ) throws LDAPException;

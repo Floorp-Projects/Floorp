@@ -17,6 +17,9 @@
  */
 package com.netscape.jndi.ldap.controls;
 
+import javax.naming.ldap.Control;
+import netscape.ldap.controls.*;
+
 /**
  * Represents an LDAP v3 server control that specifies information
  * about a change to an entry in the directory.  (The OID for this
@@ -30,12 +33,6 @@ package com.netscape.jndi.ldap.controls;
  * you want to track.  When an entry is changed, the server sends that
  * entry back to your client and may include an "entry change notification"
  * control that specifies additional information about the change.
- * <P>
- *
- * Typically, you use the <CODE>getResponseControls</CODE> method of
- * the <CODE>LDAPConnection</CODE> object and the <CODE>parseResponse</CODE>
- * method of the <CODE>LdapPersistSearchControl</CODE> object to get
- * an <CODE>LdapEntryChangeControl</CODE> object.
  * <P>
  *
  * Once you retrieve an <CODE>LdapEntryChangeControl</CODE> object from
@@ -52,77 +49,22 @@ package com.netscape.jndi.ldap.controls;
  * <P>
  *
  * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl
- * @see com.netscape.jndi.ldap.LDAPConnection#getResponseControls
  */
-
-import javax.naming.ldap.Control;
-import netscape.ldap.controls.*;
-
 public class LdapEntryChangeControl extends LDAPEntryChangeControl implements Control {
 
     /**
      * Constructs a new <CODE>LdapEntryChangeControl</CODE> object.
      * This constructor is used by the NetscapeControlFactory
      *
-     * @see com.netscape.jndi.ldap.LdapControl
-     * @see com.netscape.jndi.ldap.controls.LdapPersistSearchControl
      */
-    LdapEntryChangeControl(boolean critical, byte[] value) {
-        m_critical = critical;
-        m_value = value;
-    }
-
-    /**
-     * Sets the change number (which identifies the record of the change
-     * in the server's change log) in this "entry change notification"
-     * control.
-     * @param num Change number that you want to set.
-     * @see com.netscape.jndi.ldap.controls.LdapEntryChangeControl#getChangeNumber
-     */
-    public void setChangeNumber(int num) {
-        super.setChangeNumber(num);
-    }
-
-    /**
-     * Sets the change type (which identifies the type of change
-     * that occurred) in this "entry change notification" control.
-     * @param num Change type that you want to set.  This can be one of
-     * the following values:
-     * <P>
-     *
-     * <UL>
-     * <LI><CODE>LdapPersistSearchControl.ADD</CODE> (a new entry was
-     * added to the directory)
-     * <LI><CODE>LdapPersistSearchControl.DELETE</CODE> (an entry was
-     * removed from the directory)
-     * <LI><CODE>LdapPersistSearchControl.MODIFY</CODE> (an entry was
-     * modified)
-     * <LI><CODE>LdapPersistSearchControl.MODDN</CODE> (an entry was
-     * renamed)
-     * </UL>
-     * <P>
-     *
-     * @see com.netscape.jndi.ldap.controls.LdapEntryChangeControl#getChangeType
-     */
-    public void setChangeType(int num) {
-        super.setChangeType(num);
-    }
-
-    /**
-     * Sets the previous DN of the entry (if the entry was renamed)
-     * in the "entry change notification control".
-     * @param dn The previous distinguished name of the entry.
-     * @see com.netscape.jndi.ldap.controls.LdapEntryChangeControl#getPreviousDN
-     */
-    public void setPreviousDN(String dn) {
-        super.setPreviousDN(dn);
+    LdapEntryChangeControl(boolean critical, byte[] value) throws Exception {
+        super(ENTRYCHANGED, critical, value);
     }
 
     /**
      * Gets the change number, which identifies the record of the change
      * in the server's change log.
      * @return Change number identifying the change made.
-     * @see com.netscape.jndi.ldap.controls.LdapEntryChangeControl#setChangeNumber
      */
     public int getChangeNumber() {
         return super.getChangeNumber();
@@ -146,8 +88,6 @@ public class LdapEntryChangeControl extends LDAPEntryChangeControl implements Co
      * renamed)
      * </UL>
      * <P>
-     *
-     * @see com.netscape.jndi.ldap.controls.LdapEntryChangeControl#setChangeType
      */
     public int getChangeType() {
         return super.getChangeType();
@@ -156,14 +96,16 @@ public class LdapEntryChangeControl extends LDAPEntryChangeControl implements Co
     /**
      * Gets the previous DN of the entry (if the entry was renamed).
      * @returns The previous distinguished name of the entry.
-     * @see com.netscape.jndi.ldap.controls.LdapEntryChangeControl#setPreviousDN
      */
     public String getPreviousDN() {
         return super.getPreviousDN();
     }
 
     /**
-     * Implements Control interface
+     * Retrieves the ASN.1 BER encoded value of the LDAP control.
+     * Null is returned if the value is absent.
+     * @return A possibly null byte array representing the ASN.1 BER
+     * encoded value of the LDAP control.
      */
     public byte[] getEncodedValue() {
         return getValue();

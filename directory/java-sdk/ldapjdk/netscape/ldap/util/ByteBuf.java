@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
+import java.io.Serializable;
 
 /**
  * This class is similar to the <CODE>java.lang.StringBuffer</CODE>
@@ -49,7 +50,9 @@ import java.io.RandomAccessFile;
  * functions for comparing data).
  * </UL>
  */
-public final class ByteBuf {
+public final class ByteBuf implements Serializable {
+
+    static final long serialVersionUID = -786393456618166871L;
     private byte value[];
     private int count;
 
@@ -148,7 +151,7 @@ public final class ByteBuf {
         if (count < newLength) {
             ensureCapacity(newLength);
             for (; count < newLength; count++) {
-                value[count] = '\0';
+                value[count] = 0;
             }
         }
         count = newLength;

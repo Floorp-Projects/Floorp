@@ -20,7 +20,6 @@ package netscape.ldap.client;
 import java.util.*;
 import java.io.*;
 import netscape.ldap.ber.stream.*;
-import netscape.ldap.client.*;
 
 /**
  * This class implements the attribute value assertion.

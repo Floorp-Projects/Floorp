@@ -12,15 +12,13 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.util;
 
-import java.util.*;
-import java.io.*;
-import netscape.ldap.*;
-import netscape.ldap.client.*;
+import java.util.Vector;
+import netscape.ldap.LDAPModification;
 
 /**
  * An object of this class represents the content of an LDIF record that
@@ -36,11 +34,12 @@ import netscape.ldap.client.*;
  * @version 1.0
  * @see netscape.ldap.util.LDIFRecord#getContent
  */
-public class LDIFModifyContent implements LDIFContent {
+public class LDIFModifyContent extends LDIFBaseContent {
     /**
      * Internal variables
      */
     private Vector m_mods = new Vector();
+    static final long serialVersionUID = -710573832339780084L;
 
     /**
      * Constructs an empty <CODE>LDIFModifyContent</CODE> object.
@@ -97,6 +96,9 @@ public class LDIFModifyContent implements LDIFContent {
         String s = "";
         for (int i = 0; i < m_mods.size(); i++) {
             s = s + ((LDAPModification)m_mods.elementAt(i)).toString();
+        }
+        if ( getControls() != null ) {
+            s += getControlString();
         }
         return "LDIFModifyContent {" + s + "}";
     }

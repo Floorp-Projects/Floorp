@@ -1,24 +1,28 @@
-Name: com/netscape/sasl/SASLClientCB.class
+Name: LDAPDelete.class
 
-Name: com/netscape/sasl/SASLClientMechanismDriver.class
+Name: LDAPModify.class
 
-Name: com/netscape/sasl/SASLException.class
+Name: LDAPSearch.class
 
-Name: com/netscape/sasl/SASLGetLanguageCB.class
+Name: LDAPTool$1.class
 
-Name: com/netscape/sasl/SASLInfoClientCB.class
+Name: LDAPTool.class
 
-Name: com/netscape/sasl/SASLMechanismFactory.class
+Name: com/netscape/sasl/ClientFactory.class
 
-Name: com/netscape/sasl/SASLNamePasswordClientCB.class
+Name: com/netscape/sasl/Sasl.class
 
-Name: com/netscape/sasl/SASLOkayCancelClientCB.class
+Name: com/netscape/sasl/SaslClient.class
 
-Name: com/netscape/sasl/SASLPasswordClientCB.class
+Name: com/netscape/sasl/SaslClientFactory.class
 
-Name: com/netscape/sasl/SASLSecurityLayer.class
+Name: com/netscape/sasl/SaslException.class
 
-Name: com/netscape/sasl/SASLWarningClientCB.class
+Name: com/netscape/sasl/mechanisms/SaslExternal.class
+
+Name: netscape/ldap/DynamicInvoker.class
+
+Name: netscape/ldap/LDAPAsynchronousConnection.class
 
 Name: netscape/ldap/LDAPAttribute.class
 
@@ -26,15 +30,25 @@ Name: netscape/ldap/LDAPAttributeSchema.class
 
 Name: netscape/ldap/LDAPAttributeSet.class
 
+Name: netscape/ldap/LDAPBind.class
+
 Name: netscape/ldap/LDAPCache.class
 
 Name: netscape/ldap/LDAPCheckComm.class
 
 Name: netscape/ldap/LDAPCompareAttrNames.class
 
-Name: netscape/ldap/LDAPConnection.class
+Name: netscape/ldap/LDAPConnSetupMgr$1.class
+
+Name: netscape/ldap/LDAPConnSetupMgr$ServerEntry.class
+
+Name: netscape/ldap/LDAPConnSetupMgr.class
 
 Name: netscape/ldap/LDAPConnThread.class
+
+Name: netscape/ldap/LDAPConnection.class
+
+Name: netscape/ldap/LDAPConstraints.class
 
 Name: netscape/ldap/LDAPControl.class
 
@@ -48,7 +62,17 @@ Name: netscape/ldap/LDAPException.class
 
 Name: netscape/ldap/LDAPExtendedOperation.class
 
+Name: netscape/ldap/LDAPExtendedResponse.class
+
+Name: netscape/ldap/LDAPInterruptedException.class
+
 Name: netscape/ldap/LDAPMatchingRuleSchema.class
+
+Name: netscape/ldap/LDAPMessage.class
+
+Name: netscape/ldap/LDAPMessageQueue$RequestEntry.class
+
+Name: netscape/ldap/LDAPMessageQueue.class
 
 Name: netscape/ldap/LDAPModification.class
 
@@ -64,7 +88,21 @@ Name: netscape/ldap/LDAPReferralException.class
 
 Name: netscape/ldap/LDAPResourceBundle.class
 
+Name: netscape/ldap/LDAPResponse.class
+
+Name: netscape/ldap/LDAPResponseControl.class
+
 Name: netscape/ldap/LDAPResponseListener.class
+
+Name: netscape/ldap/LDAPSSLSocket.class
+
+Name: netscape/ldap/LDAPSSLSocketFactory.class
+
+Name: netscape/ldap/LDAPSSLSocketFactoryExt.class
+
+Name: netscape/ldap/LDAPSSLSocketWrapFactory.class
+
+Name: netscape/ldap/LDAPSaslBind.class
 
 Name: netscape/ldap/LDAPSchema.class
 
@@ -74,17 +112,15 @@ Name: netscape/ldap/LDAPSearchConstraints.class
 
 Name: netscape/ldap/LDAPSearchListener.class
 
+Name: netscape/ldap/LDAPSearchResult.class
+
+Name: netscape/ldap/LDAPSearchResultReference.class
+
 Name: netscape/ldap/LDAPSearchResults.class
 
 Name: netscape/ldap/LDAPSocketFactory.class
 
 Name: netscape/ldap/LDAPSortKey.class
-
-Name: netscape/ldap/LDAPSSLSocket.class
-
-Name: netscape/ldap/LDAPSSLSocketFactory.class
-
-Name: netscape/ldap/LDAPSSLSocketWrapFactory.class
 
 Name: netscape/ldap/LDAPUrl.class
 
@@ -99,6 +135,30 @@ Name: netscape/ldap/TimerEvent.class
 Name: netscape/ldap/TimerEventListener.class
 
 Name: netscape/ldap/TimerRunnable.class
+
+Name: netscape/ldap/beans/DisplayString.class 
+
+Name: netscape/ldap/beans/DisplayStringBeanInfo.class
+
+Name: netscape/ldap/beans/LDAPBasePropertySupport$1.class
+
+Name: netscape/ldap/beans/LDAPBasePropertySupport.class
+
+Name: netscape/ldap/beans/LDAPGetEntries.class
+
+Name: netscape/ldap/beans/LDAPGetEntriesBeanInfo.class
+
+Name: netscape/ldap/beans/LDAPGetProperty.class
+
+Name: netscape/ldap/beans/LDAPGetPropertyBeanInfo.class
+
+Name: netscape/ldap/beans/LDAPIsMember.class
+
+Name: netscape/ldap/beans/LDAPIsMemberBeanInfo.class
+
+Name: netscape/ldap/beans/LDAPSimpleAuth.class
+
+Name: netscape/ldap/beans/LDAPSimpleAuthBeanInfo.class
 
 Name: netscape/ldap/ber/stream/BERAny.class
 
@@ -148,15 +208,13 @@ Name: netscape/ldap/client/JDAPAVA.class
 
 Name: netscape/ldap/client/JDAPBERTagDecoder.class
 
-Name: netscape/ldap/client/JDAPControl.class
-
 Name: netscape/ldap/client/JDAPFilter.class
+
+Name: netscape/ldap/client/JDAPFilterAVA.class
 
 Name: netscape/ldap/client/JDAPFilterAnd.class
 
 Name: netscape/ldap/client/JDAPFilterApproxMatch.class
-
-Name: netscape/ldap/client/JDAPFilterAVA.class
 
 Name: netscape/ldap/client/JDAPFilterEqualityMatch.class
 
@@ -177,8 +235,6 @@ Name: netscape/ldap/client/JDAPFilterPresent.class
 Name: netscape/ldap/client/JDAPFilterSet.class
 
 Name: netscape/ldap/client/JDAPFilterSubString.class
-
-Name: netscape/ldap/client/JDAPMessage.class
 
 Name: netscape/ldap/client/opers/JDAPAbandonRequest.class
 
@@ -228,9 +284,17 @@ Name: netscape/ldap/client/opers/JDAPUnbindRequest.class
 
 Name: netscape/ldap/controls/LDAPEntryChangeControl.class
 
+Name: netscape/ldap/controls/LDAPPasswordExpiredControl.class
+
+Name: netscape/ldap/controls/LDAPPasswordExpiringControl.class
+
 Name: netscape/ldap/controls/LDAPPersistSearchControl.class
 
+Name: netscape/ldap/controls/LDAPProxiedAuthControl.class
+
 Name: netscape/ldap/controls/LDAPSortControl.class
+
+Name: netscape/ldap/controls/LDAPStringControl.class
 
 Name: netscape/ldap/controls/LDAPVirtualListControl.class
 
@@ -238,7 +302,17 @@ Name: netscape/ldap/controls/LDAPVirtualListResponse.class
 
 Name: netscape/ldap/errors/ErrorCodes.props
 
+Name: netscape/ldap/errors/ErrorCodes_de.props
+
+Name: netscape/ldap/errors/ErrorCodes_fr.props
+
+Name: netscape/ldap/errors/ErrorCodes_ja.props
+
 Name: netscape/ldap/util/ByteBuf.class
+
+Name: netscape/ldap/util/ConnectionPool$LDAPConnectionObject.class
+
+Name: netscape/ldap/util/ConnectionPool.class
 
 Name: netscape/ldap/util/DN.class
 
@@ -251,6 +325,8 @@ Name: netscape/ldap/util/LDIF.class
 Name: netscape/ldap/util/LDIFAddContent.class
 
 Name: netscape/ldap/util/LDIFAttributeContent.class
+
+Name: netscape/ldap/util/LDIFBaseContent.class
 
 Name: netscape/ldap/util/LDIFContent.class
 
@@ -269,12 +345,4 @@ Name: netscape/ldap/util/MimeBase64Encoder.class
 Name: netscape/ldap/util/MimeEncoder.class
 
 Name: netscape/ldap/util/RDN.class
-
-Name: LDAPTool.class
-
-Name: LDAPDelete.class
-
-Name: LDAPSearch.class
-
-Name: LDAPModify.class
 

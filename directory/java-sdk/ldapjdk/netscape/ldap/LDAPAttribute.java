@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
@@ -143,7 +143,31 @@ public class LDAPAttribute {
         }
         return v.elements();
     }
-
+	
+	/**
+     * Returns a array for the values of the attribute as <CODE>String</CODE> objects.
+     * @return Array of attribute values. Each element in the array
+     * will be a <CODE>String</CODE> object.
+     */
+    public String[] getStringValueArray() {
+    
+    	String s[] = new String[values.length];
+    	synchronized(this) {
+    		try {
+    			for (int i=0; i < values.length; i++) {
+    				if ( values[i] !=null ) {
+    					s[i] = new String((byte[])values[i], "UTF8");
+    				} else {
+    					s[i] = new String("");
+    				}
+    			}
+    		} catch (Exception e) {
+    			return null;
+    		}
+    	}
+    	return s;
+    }
+    
     /**
      * Returns an enumerator for the values of the attribute in <CODE>byte[]</CODE>
      * format.
@@ -164,6 +188,29 @@ public class LDAPAttribute {
         return v.elements();
     }
 
+	/**
+     * Returns an array for the values of the attribute in <CODE>byte[]</CODE>
+     * format.
+     * @return Array of attribute values. Each element in the array
+     * will be of type <CODE>byte[]</CODE>.
+     */
+     public byte[][] getByteValueArray() {
+    	byte b[][] = new byte[values.length][];
+    	synchronized(this) {
+    		try {
+    			for (int i=0; i < values.length; i++) {
+    				b[i] = new byte[((byte[])(values[i])).length];
+	    			System.arraycopy((byte[])values[i], 0, (byte[])b[i], 0, 
+    					((byte[])(values[i])).length);
+    			}
+    		} catch (Exception e) {
+    			return null;
+    		}
+    	}
+    	return b;
+     
+     }
+     
     /**
      * Returns the name of the attribute.
      * @return Name of the attribute.
@@ -445,23 +492,28 @@ public class LDAPAttribute {
      * @return string representation parameters
      */
     private String getParamString() {
-        String s = "";
+        StringBuffer sb = new StringBuffer();
+        
         if ( values.length > 0 ) {
             for (int i = 0; i < values.length; i++) {
-                if (i != 0)
-                    s = s + ",";
+                if (i != 0) {
+                    sb.append(",");
+                }
                 byte[] val = (byte[])values[i];
                 try {
-                    s = s + new String(val, "UTF8");
+                    sb.append(new String(val, "UTF8"));
                 } catch (Exception e) {
-                    if (val != null)
-                        s = s + val.length + " bytes";
-                    else
-                        s = s + "null value";
+                    if (val != null) {
+                        sb.append(val.length);
+                        sb.append(" bytes");
+                    }
+                    else {
+                        sb.append("null value");
+                    }
                 }
             }
         }
-        return "{type='" + getName() + "', values='" + s + "'}";
+        return "{type='" + getName() + "', values='" + sb.toString() + "'}";
     }
 
     /**

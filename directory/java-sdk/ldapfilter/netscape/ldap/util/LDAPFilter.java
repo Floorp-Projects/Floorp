@@ -284,6 +284,10 @@ public class LDAPFilter implements Cloneable {
             if ( cFilterTemplate[i] == '%' ) {
                 i++;
                 if ( cFilterTemplate[i] == 'v' ) {
+                    if ( i == (cFilterTemplate.length-1) ) {
+                        sbFilter.append ( strValue );
+                        break;
+                    }
                     i++;
                     switch ( cFilterTemplate[i] ) {
                         case '$':

@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -47,12 +47,12 @@ import java.io.*;
  */
 public abstract class BERIntegral extends BERElement {
     /**
-     * Internal variables
+     * Value of element
      */
     private int m_value;
 
     /**
-     * Constructs an integral type.
+     * Constructs an integral type with a value.
      * @param value integer value
      */
     public BERIntegral(int value) {
@@ -60,8 +60,8 @@ public abstract class BERIntegral extends BERElement {
     }
 
     /**
-     * Constructs an integral element with the input stream.
-     * @param stream input stream
+     * Constructs an integral element from an input stream.
+     * @param stream source
      * @param bytes_read array of 1 int; value incremented by
      *        number of bytes read from stream
      * @exception IOException failed to construct
@@ -95,8 +95,8 @@ public abstract class BERIntegral extends BERElement {
 
     /**
      * Writes BER to stream.
-     * @return number of bytes written to stream.
-     * @exception IOException failed to send
+     * @param stream output stream.
+     * @exception IOException on failure to write
      */
     public void write(OutputStream stream) throws IOException {
         int binary_value = m_value;
@@ -121,9 +121,11 @@ public abstract class BERIntegral extends BERElement {
 
             do {
                 if (m_value < 0)
-                    content_octets[num_content_octets+offset] = (byte)((binary_value^0xFF)&0xFF);
+                    content_octets[num_content_octets+offset] =
+                        (byte)((binary_value^0xFF)&0xFF);
                 else
-                    content_octets[num_content_octets+offset] = (byte)(binary_value&0xFF);
+                    content_octets[num_content_octets+offset] =
+                        (byte)(binary_value&0xFF);
 
                 binary_value = (binary_value>>8);
                 num_content_octets++;
@@ -134,7 +136,7 @@ public abstract class BERIntegral extends BERElement {
             for (i=0; i<num_content_octets; i++)
                 net_octets[offset+num_content_octets-1-i] = content_octets[offset+i];
 
-            /* pse 1/16/96 if +ve value encoded and the leading encoding bit is set
+            /* pse 1/16/96 if we have the value encoded and the leading encoding bit is set
                then stuff in a leading zero byte */
             lead = (int)net_octets[offset];
 
@@ -152,7 +154,7 @@ public abstract class BERIntegral extends BERElement {
 
     /**
      * Gets the integral value.
-     * @param element type
+     * @return element value
      */
     public int getValue() {
         return m_value;
@@ -160,7 +162,7 @@ public abstract class BERIntegral extends BERElement {
 
     /**
      * Gets the element type.
-     * @param element type
+     * @return element type
      */
     public abstract int getType();
 

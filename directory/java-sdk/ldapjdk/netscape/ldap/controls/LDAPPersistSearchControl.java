@@ -151,6 +151,9 @@ public class LDAPPersistSearchControl extends LDAPControl {
         super(PERSISTENTSEARCH, isCritical, null);
         m_value = createPersistSearchSpecification(changeTypes,
           changesOnly, returnControls);
+        m_changeTypes = changeTypes;
+        m_changesOnly = changesOnly;
+        m_returnECs = returnControls;
     }
 
     /**
@@ -238,6 +241,8 @@ public class LDAPPersistSearchControl extends LDAPControl {
      *
      * @param c Byte array that contains BER elements.
      * @return The entry change control.
+     * @deprecated LDAPEntryChangeControl controls are now automatically 
+     * instantiated.
      */
     public LDAPEntryChangeControl parseResponse(byte[] c) {
         LDAPEntryChangeControl con = new LDAPEntryChangeControl();
@@ -270,7 +275,7 @@ public class LDAPPersistSearchControl extends LDAPControl {
                 BERInteger num = (BERInteger)s.elementAt(2);
                 con.setChangeNumber(num.getValue());
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return null;
         }
 
@@ -306,8 +311,13 @@ public class LDAPPersistSearchControl extends LDAPControl {
      *     if ( returnedControls != null ) {
      *
      *         // Get the entry change control.
-     *         LDAPEntryChangeControl entryCtrl =
-     *             persistCtrl.parseResponse( returnedControls );
+     *         LDAPEntryChangeControl entryCtrl = null;
+     *         for ( int i = 0; i < returnedControls.length; i++ ) {
+     *             if ( returnedControls[i] instanceof LDAPEntryChangeControl ) {
+     *                 entryCtrl = (LDAPEntryChangeControl)returnedControls[i];
+     *                 break;
+     *             }
+     *         }
      *         if ( entryCtrl != null ) {
      *
      *             // Get and print the type of change made to the entry.
@@ -363,6 +373,8 @@ public class LDAPPersistSearchControl extends LDAPControl {
      * control was sent, this method returns null.
      * @see netscape.ldap.controls.LDAPEntryChangeControl
      * @see netscape.ldap.LDAPConnection#getResponseControls
+     * @deprecated LDAPEntryChangeControl controls are now automatically 
+     * instantiated.
      */
     public static LDAPEntryChangeControl parseResponse(LDAPControl[] controls) {
 
@@ -400,6 +412,48 @@ public class LDAPPersistSearchControl extends LDAPControl {
         /* return a byte array */
         return flattenBER( seq );
     }
+
+    public String toString() {
+        StringBuffer sb = new StringBuffer("{PersistSearchCtrl:");
+        
+        sb.append(" isCritical=");
+        sb.append(isCritical());
+        
+        sb.append(" returnEntryChangeCtrls=");
+        sb.append(m_returnECs);
+        
+        sb.append(" changesOnly=");
+        sb.append(m_changesOnly);
+
+        sb.append(" changeTypes=");
+        sb.append(typesToString(m_changeTypes));
+        
+        sb.append("}");
+
+        return sb.toString();
+    }
+
+
+    /**
+     * This method is also used by LDAPentryChangeControl.toString()
+     */
+    static String typesToString(int changeTypes) {
+        String types = "";
+
+        if ((changeTypes & ADD) != 0) {
+            types += (types.length() > 0) ? "+ADD" : "ADD";
+        }
+        if ((changeTypes & DELETE) != 0) {
+            types += (types.length() > 0) ? "+DEL" : "DEL";
+        }
+        if ((changeTypes & MODIFY) != 0) {
+            types += (types.length() > 0) ? "+MOD" : "MOD";
+        }
+        if ((changeTypes & MODDN) != 0) {
+            types += (types.length() > 0) ? "+MODDN" : "MODDN";
+        }
+        return types;
+    }        
 
     private int m_changeTypes = 1;
     private boolean m_changesOnly = false;

@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -23,6 +23,11 @@ import java.io.*;
 /**
  * This class is for the Sequence object. A sequence object can
  * contains a sequence of BER Elements.
+ *
+ * <pre>
+ * ENCODING RULE:
+ *  tag    = 0x30 (always constructed)
+ * </pre>
  *
  * @version 1.0
  * @seeAlso CCITT X.209
@@ -36,7 +41,7 @@ public class BERSequence extends BERConstruct {
     }
 
     /**
-     * Constructs a sequence element.
+     * Constructs a sequence element from an input stream.
      * @param decoder application specific ber decoder.
      * @param stream input stream to read ber from.
      * @param bytes_read array of 1 int; value is incremented by
@@ -45,12 +50,13 @@ public class BERSequence extends BERConstruct {
      */
     public BERSequence(BERTagDecoder decoder, InputStream stream,
         int[] bytes_read) throws IOException {
+
         super(decoder, stream, bytes_read);
     }
 
     /**
      * Gets the element type.
-     * @param element type
+     * @return element type
      */
     public int getType() {
         return BERElement.SEQUENCE;

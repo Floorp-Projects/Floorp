@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
@@ -24,6 +24,7 @@ import netscape.ldap.ber.stream.*;
 import netscape.ldap.util.*;
 import java.io.*;
 import java.net.*;
+import javax.security.auth.callback.CallbackHandler;
 
 /**
  * Represents a connection to an LDAP server. <P>
@@ -51,13 +52,17 @@ import java.net.*;
  * the same time).
  * <P>
  *
- * This class also specifies a default set of search constraints
- * (such as the maximum number of results returned in a search)
+ * This class also specifies a default set of constraints
+ * (such as the maximum amount of time an operation is allowed before timing out)
  * which apply to all operations. To get and set these constraints,
  * use the <CODE>getOption</CODE> and <CODE>setOption</CODE> methods.
- * To override these constraints for an individual search operation,
- * define a new set of constraints by creating a <CODE>LDAPSearchConstraints</CODE>
- * option and pass the object to the <CODE>search</CODE> method.
+ * To override these constraints for an individual operation,
+ * define a new set of constraints by creating a <CODE>LDAPConstraints</CODE>
+ * object and pass the object to the method for the operation. For search 
+ * operations, additional constraints are defined in <CODE>LDAPSearchConstraints</CODE>
+ * (a subclass of <CODE>LDAPConstraints</CODE>). To override the default search
+ * constraints, create a <CODE>LDAPSearchConstraints</CODE> object and pass it
+ * to the <CODE>search</CODE> method.
  * <P>
  *
  * If you set up your client to follow referrals automatically,
@@ -77,12 +82,14 @@ import java.net.*;
  * <P>
  *
  * @version 1.0
+ * @see netscape.ldap.LDAPConstraints
  * @see netscape.ldap.LDAPSearchConstraints
  * @see netscape.ldap.LDAPRebind
  * @see netscape.ldap.LDAPRebindAuth
  * @see netscape.ldap.LDAPException
  */
-public class LDAPConnection implements LDAPv3, Cloneable {
+public class LDAPConnection
+       implements LDAPv3, LDAPAsynchronousConnection, Cloneable {
 
     /**
      * Version of the LDAP protocol used by default.
@@ -156,39 +163,51 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     public final static String LDAP_PROPERTY_SECURITY = "version.security";
 
     /**
+     * Specifies the serial connection setup policy when a list of hosts is
+     * passed to  the <CODE>connect</CODE> method.
+     * @see netscape.ldap.LDAPConnection#setConnSetupDelay(int)
+     */    
+    public final static int NODELAY_SERIAL = -1;
+    /**
+     * Specifies the parallel connection setup policy with no delay when a
+     * list of hosts is passed to the <CODE>connect</CODE> method.
+     * For each host in the list, a separate thread is created to attempt
+     * to connect to the host. All threads are started simultaneously.
+     * @see netscape.ldap.LDAPConnection#setConnSetupDelay(int)
+     */    
+    public final static int NODELAY_PARALLEL = 0;
+
+    /**
      * Constants
      */
     private final static String defaultFilter = "(objectClass=*)";
-    private final static LDAPSearchConstraints readConstraints = new
+    private final static LDAPConstraints readConstraints = new
       LDAPSearchConstraints();
 
     /**
      * Internal variables
      */
-    transient private LDAPSearchConstraints defaultConstraints = new
-      LDAPSearchConstraints ();
-    transient private Vector responseListeners;
-    transient private Vector searchListeners;
-    transient private boolean bound;
-    transient private String host;
-    transient private String[] m_hostList;
-    transient private int port;
-    transient private int[] m_portList;
-    transient private int m_defaultPort;
-    transient private String prevBoundDN;
-    transient private String prevBoundPasswd;
-    transient private String boundDN;
-    transient private String boundPasswd;
-    transient private int protocolVersion = LDAP_VERSION;
-    transient private LDAPSocketFactory m_factory;
-    /* th does all socket i/o for the object and any clones */
-    transient private LDAPConnThread th = null;
+    private LDAPSearchConstraints m_defaultConstraints =
+        new LDAPSearchConstraints();
+    private Vector m_responseListeners;
+    private Vector m_searchListeners;
+    private boolean m_bound;
+    private String m_prevBoundDN;
+    private String m_prevBoundPasswd;
+    private String m_boundDN;
+    private String m_boundPasswd;
+    private int m_protocolVersion = LDAP_VERSION;
+    private LDAPConnSetupMgr m_connMgr;
+    private int m_connSetupDelay = -1;
+    private LDAPSocketFactory m_factory;
+    /* m_thread does all socket i/o for the object and any clones */
+    private LDAPConnThread m_thread = null;
     /* To manage received server controls on a per-thread basis,
        we keep a table of active threads and a table of controls,
        indexed by thread */
-    transient private Vector m_attachedList = new Vector();
-    transient private Hashtable m_responseControlTable = new Hashtable();
-    transient private LDAPCache m_cache = null;
+    private Vector m_attachedList = new Vector();
+    private Hashtable m_responseControlTable = new Hashtable();
+    private LDAPCache m_cache = null;
     static Hashtable m_threadConnTable = new Hashtable();
 
     // this handles the case when the client lost the connection with the
@@ -199,27 +218,31 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     private boolean m_anonymousBound = false;
 
     private Object m_security = null;
-    private boolean saslBind = false;
-    private Object m_mechanismDriver;
+    private LDAPSaslBind m_saslBinder = null;
     private Properties m_securityProperties;
-    private Object m_clientCB;
-    private Hashtable m_methodLookup = new Hashtable();
+    private Hashtable m_properties = new Hashtable();
     private LDAPConnection m_referralConnection;
 
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(3.2f);
+    private final static Float SdkVersion = new Float(4.0f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
-    private final static Float MajorVersion = new Float(3.0f);
-    private final static Float MinorVersion = new Float(0.2f);
+    private final static Float MajorVersion = new Float(4.0f);
+    private final static Float MinorVersion = new Float(0.0f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
-    private final static String EXTERNAL_MECHANISM = "SASLExternalMechanism";
+    final static String EXTERNAL_MECHANISM = "external";
     private final static String EXTERNAL_MECHANISM_PACKAGE =
-      "com.netscape.sasl.mechanisms";
+      "com.netscape.sasl";
+    final static String DEFAULT_SASL_PACKAGE =
+      "com.netscape.sasl";
+    final static String SCHEMA_BUG_PROPERTY =
+      "com.netscape.ldap.schema.quoting";
+    final static String SASL_PACKAGE_PROPERTY =
+      "com.netscape.ldap.saslpackage";
 
    /**
     * Constructs a new <CODE>LDAPConnection</CODE> object,
@@ -234,8 +257,13 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     */
     public LDAPConnection () {
         super();
-        port = -1;
         m_factory = null;
+
+        m_properties.put(LDAP_PROPERTY_SDK, SdkVersion); 
+        m_properties.put(LDAP_PROPERTY_PROTOCOL, ProtocolVersion); 
+        m_properties.put(LDAP_PROPERTY_SECURITY, SecurityVersion); 
+        m_properties.put("version.major", MajorVersion); 
+        m_properties.put("version.minor", MinorVersion);
     }
 
     /**
@@ -262,8 +290,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @see netscape.ldap.LDAPConnection#setSocketFactory(netscape.ldap.LDAPSocketFactory)
      */
     public LDAPConnection ( LDAPSocketFactory factory ) {
-        super();
-        port = -1;
+        this();
         m_factory = factory;
     }
 
@@ -271,10 +298,10 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * Finalize method, which disconnects from the LDAP server.
      * @exception LDAPException Thrown when the connection cannot be disconnected.
      */
-    public void finalize() throws LDAPException
-    {
-        if (th != null)
+    public void finalize() throws LDAPException {
+        if (isConnected()) {
             disconnect();
+        }
     }
 
     /**
@@ -289,6 +316,9 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      */
     public void setCache(LDAPCache cache) {
         m_cache = cache;
+        if ( m_thread != null ) {
+            m_thread.setCache( cache );
+        }
     }
 
     /**
@@ -354,23 +384,16 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @see netscape.ldap.LDAPConnection#LDAP_PROPERTY_SECURITY
      */
     public Object getProperty(String name) throws LDAPException {
-        if (name.equals(LDAP_PROPERTY_SDK))
-            return SdkVersion;
-        else if (name.equals(LDAP_PROPERTY_PROTOCOL))
-            return ProtocolVersion;
-        else if (name.equals(LDAP_PROPERTY_SECURITY))
-            return SecurityVersion;
-        else if (name.equals("version.major"))
-            return MajorVersion;
-        else if (name.equals("version.minor"))
-            return MinorVersion;
-        else
-            return null;
+        return m_properties.get( name );
     }
 
     /**
-     * This method is reserved for future use and does not currently
-     * allow you to set any properties.
+     * The following properties are defined:<BR> 
+     * com.netscape.ldap.schema.quoting - "standard" or "NetscapeBug"<BR> 
+     * Note: if this property is not set, the SDK will query the server 
+     * to determine if attribute syntax values and objectclass superior 
+     * values must be quoted when adding schema.<BR>
+     * com.netscape.ldap.saslpackage - the default is "com.netscape.sasl"<BR> 
      * <P>
      *
      * @param name Name of the property that you want to set.
@@ -379,7 +402,15 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * property.
      */
     public void setProperty(String name, Object val) throws LDAPException {
-        throw new LDAPException("No property has been set");
+        if ( name.equalsIgnoreCase( SCHEMA_BUG_PROPERTY ) ) { 
+            m_properties.put( SCHEMA_BUG_PROPERTY, val ); 
+        } else if ( name.equalsIgnoreCase( SASL_PACKAGE_PROPERTY ) ) {
+            m_properties.put( SASL_PACKAGE_PROPERTY, val ); 
+        } else if ( name.equalsIgnoreCase( "debug" ) ) {
+            debug = ((String)val).equalsIgnoreCase( "true" ); 
+        } else {
+            throw new LDAPException("Unknown property: " + name);
+        }
     }
 
     /**
@@ -390,7 +421,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @param version The LDAP protocol version that your client uses.
      */
     private void setProtocolVersion(int version) {
-        protocolVersion = version;
+        m_protocolVersion = version;
     }
 
     /**
@@ -398,7 +429,10 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @return Host name of the LDAP server.
      */
     public String getHost () {
-        return host;
+        if (m_connMgr != null) {
+            return m_connMgr.getHost();
+        }
+        return null;
     }
 
     /**
@@ -406,7 +440,10 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @return Port number of the LDAP server.
      */
     public int getPort () {
-        return port;
+        if (m_connMgr != null) {
+            return m_connMgr.getPort();
+        }
+        return -1;
     }
 
     /**
@@ -415,7 +452,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @return Distinguished name used for authentication over this connection.
      */
     public String getAuthenticationDN () {
-        return boundDN;
+        return m_boundDN;
     }
 
     /**
@@ -423,7 +460,54 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @return Password used for authentication over this connection.
      */
     public String getAuthenticationPassword () {
-        return boundPasswd;
+        return m_boundPasswd;
+    }
+    
+    /**
+     * Returns the delay in seconds when making concurrent connection attempts to
+     * multiple servers.
+     * @return The delay in seconds between connection attempts:<br>
+     * <CODE>NODELAY_SERIAL</CODE> The serial connection setup policy is enabled
+     * (no concurrency).<br>
+     * <CODE>NODELAY_PARALLEL</CODE> The parallel connection setup policy with no delay
+     *  is enabled.<br>
+     * <CODE>delay > 0</CODE> The parallel connection setup policy with the delay of 
+     * <CODE>delay</CODE> seconds is enabled.
+     * @see netscape.ldap.LDAPConnection#setConnSetupDelay
+     */
+    public int getConnSetupDelay () {
+        return m_connSetupDelay;
+    }
+
+    /**
+     * Specifies the delay in seconds when making concurrent connection attempts to
+     * multiple servers.
+     * <P>Effectively, selects the connection setup policy when a list of hosts is passed
+     * to the <CODE>connect</CODE>method.
+     * 
+     * <br>If the serial policy, the default one, is selected, an attempt is made to
+     * connect to the first host in the list in the specified order. Next entry in
+     * the list is tried only after the connection attempt to the current one fails.
+     * This might cause your application to block for unacceptably long time if a host is down.
+     *
+     * <br>If the parallel policy is selected, multiple connection attempts may run
+     * concurrently on a separate thread. A new connection attempt to the next entry
+     * in the list can be started with or without delay.
+     * <P> The <CODE>ConnSetupDelay</CODE> must be set before the call to the <CODE>connect</CODE>
+     *  method. 
+     * 
+     * @param delay The delay in seconds between connection attempts. Possible values are:<br>
+     * <CODE>NODELAY_SERIAL</CODE> Use the serial connection setup policy.<br>
+     * <CODE>NODELAY_PARALLEL</CODE> Use the parallel connection setup policy with no delay.
+     * Start all connection setup threads immediately.<br>
+     * <CODE>delay > 0</CODE> Use the parallel connection setup policy with delay.
+     * Start another connection setup thread after <CODE>delay</CODE> seconds.<br>
+     * @see netscape.ldap.LDAPConnection#NODELAY_SERIAL
+     * @see netscape.ldap.LDAPConnection#NODELAY_PARALLEL
+     * @see netscape.ldap.LDAPConnection#connect(java.lang.String, int)
+     */
+    public void setConnSetupDelay (int delay) {
+        m_connSetupDelay = delay;
     }
 
     /**
@@ -470,7 +554,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         // the deregisterConnection() will get called first. 
         // This problem only exists on Solaris.
         Thread.yield();
-        return (th != null);
+        return (m_thread != null);
     }
 
     /**
@@ -480,12 +564,13 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * either a blank name or password), returns <CODE>false</CODE>.
      */
     public boolean isAuthenticated () {
-        if (bound) {
-            if ((boundDN == null) || boundDN.equals("") ||
-              (boundPasswd == null) || boundPasswd.equals(""))
+        if (m_bound) {
+            if ((m_boundDN == null) || m_boundDN.equals("") ||
+                (m_boundPasswd == null) || m_boundPasswd.equals("")) {
                 return false;
+            }
         }
-        return bound;
+        return m_bound;
     }
 
     /**
@@ -515,10 +600,10 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @param host Host name of the LDAP server that you want to connect to.
      * This value can also be a space-delimited list of hostnames or
      * hostnames and port numbers (using the syntax
-     * <I>hostname:portnumber</I>). Your client application or applet
-     * will attempt to contact each host in the order you specify until a
-     * connection is established. For example, you can specify the following
-     * values for the <CODE>host</CODE> argument:<BR>
+     * <I>hostname:portnumber</I>). The connection setup policy specified with
+     * the <CODE>ConnSetupDelay</CODE> property controls whether connection
+     * attempts are made serially or concurrently. For example, you can specify
+     *  the following values for the <CODE>host</CODE> argument:<BR>
      *<PRE>
      *   myhost
      *   myhost hishost:389 herhost:5000 whathost
@@ -528,9 +613,10 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * This parameter is ignored for any host in the <CODE>host</CODE>
      * parameter which includes a colon and port number.
      * @exception LDAPException The connection failed.
+     * @see netscape.ldap.LDAPConnection#setConnSetupDelay
      */
     public void connect(String host, int port) throws LDAPException {
-      connect( host, port, null, null, defaultConstraints, false );
+        connect( host, port, null, null, m_defaultConstraints, false );
     }
 
     /**
@@ -574,10 +660,10 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @param host Host name of the LDAP server that you want to connect to.
      * This value can also be a space-delimited list of hostnames or
      * hostnames and port numbers (using the syntax
-     * <I>hostname:portnumber</I>). Your client application or applet
-     * will attempt to contact each host in the order you specify until a
-     * connection is established. For example, you can specify the following
-     * values for the <CODE>host</CODE> argument:<BR>
+     * <I>hostname:portnumber</I>). The connection setup policy specified with
+     * the <CODE>ConnSetupDelay</CODE> property controls whether connection
+     * attempts are made serially or concurrently. For example, you can specify
+     *  the following values for the <CODE>host</CODE> argument:<BR>
      *<PRE>
      *   myhost
      *   myhost hishost:389 herhost:5000 whathost
@@ -589,10 +675,11 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @param dn Distinguished name used for authentication
      * @param passwd Password used for authentication
      * @exception LDAPException The connection or authentication failed.
+     * @see netscape.ldap.LDAPConnection#setConnSetupDelay
      */
     public void connect(String host, int port, String dn, String passwd)
         throws LDAPException {
-        connect(host, port, dn, passwd, defaultConstraints, true);
+        connect(host, port, dn, passwd, m_defaultConstraints, true);
     }
 
     /**
@@ -605,10 +692,10 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @param host Host name of the LDAP server that you want to connect to.
      * This value can also be a space-delimited list of hostnames or
      * hostnames and port numbers (using the syntax
-     * <I>hostname:portnumber</I>). Your client application or applet
-     * will attempt to contact each host in the order you specify until a
-     * connection is established. For example, you can specify the following
-     * values for the <CODE>host</CODE> argument:<BR>
+     * <I>hostname:portnumber</I>). The connection setup policy specified with
+     * the <CODE>ConnSetupDelay</CODE> property controls whether connection
+     * attempts are made serially or concurrently. For example, you can specify
+     *  the following values for the <CODE>host</CODE> argument:<BR>
      *<PRE>
      *   myhost
      *   myhost hishost:389 herhost:5000 whathost
@@ -621,62 +708,52 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @param passwd Password used for authentication
      * @param cons Preferences for the bind operation.
      * @exception LDAPException The connection or authentication failed.
+     * @see netscape.ldap.LDAPConnection#setConnSetupDelay
      */
     public void connect(String host, int port, String dn, String passwd,
-        LDAPSearchConstraints cons) throws LDAPException {
+        LDAPConstraints cons) throws LDAPException {
         connect(host, port, dn, passwd, cons, true);
     }
 
     private void connect(String host, int port, String dn, String passwd,
-      LDAPSearchConstraints cons, boolean doAuthenticate) 
+      LDAPConstraints cons, boolean doAuthenticate) 
         throws LDAPException {
-        if (th != null) disconnect ();
-        if ((host == null) || (host.equals("")))
+        if ( isConnected() ) {
+            disconnect ();
+        }
+        if ((host == null) || (host.equals(""))) {
             throw new LDAPException ( "no host for connection",
-                                  LDAPException.PARAM_ERROR );
+                                      LDAPException.PARAM_ERROR );
+        }
 
-        /* Parse the list of hosts */
-        m_defaultPort = port;
+        /* Parse the list of hosts */    
+        int defaultPort = port;
         StringTokenizer st = new StringTokenizer( host );
-        m_hostList = new String[st.countTokens()];
-        m_portList = new int[st.countTokens()];
+        String hostList[] = new String[st.countTokens()];
+        int portList[] = new int[st.countTokens()];
         int i = 0;
         while( st.hasMoreTokens() ) {
             String s = st.nextToken();
             int colon = s.indexOf( ':' );
             if ( colon > 0 ) {
-                m_hostList[i] = s.substring( 0, colon );
-                m_portList[i] = Integer.parseInt( s.substring( colon+1 ) );
+                hostList[i] = s.substring( 0, colon );
+                portList[i] = Integer.parseInt( s.substring( colon+1 ) );
             } else {
-                m_hostList[i] = s;
-                m_portList[i] = m_defaultPort;
+                hostList[i] = s;
+                portList[i] = defaultPort;
             }
             i++;
         }
 
-        /* Try each possible host until a connection attempt doesn't cause
-           an exception */
-        LDAPException conex = null;
-        for( i = 0; i < m_hostList.length; i++ ) {
-            try {
-                this.host = m_hostList[i];
-                this.port = m_portList[i];
-                connect ();
-                conex = null;
-                break;
-            } catch ( LDAPException e ) {
-                conex = e;
-            }
-        }
-        if ( conex != null ) {
-            /* All connection attempts failed */
-            this.host = m_hostList[0];
-            this.port = m_defaultPort;
-            throw conex;
-        }
+        /* Create the Connection Setup Manager */
+        m_connMgr = new LDAPConnSetupMgr(hostList, portList, m_factory,
+                                         m_connSetupDelay);
+    
+        connect();
 
-        if (doAuthenticate)
+        if (doAuthenticate) {
             authenticate(dn, passwd, cons);
+        }
     }
 
     /**
@@ -693,8 +770,9 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      *   the IP address of a host running an LDAP server to connect to.
      *   Alternatively, it may contain a list of host names, space-delimited.
      *   Each host name may include a trailing colon and port number. In the
-     *   case where more than one host name is specified, each host name in
-     *   turn will be contacted until a connection can be established.<P>
+     *   case where more than one host name is specified, the connection setup
+     *  policy specified with the <CODE>ConnSetupDelay</CODE> property controls
+     *  whether connection attempts are made serially or concurrently.<P>
      *
      * <PRE>
      *   Examples:
@@ -702,7 +780,6 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      *      "199.254.1.2"
      *      "directory.knowledge.com:1050 people.catalog.com 199.254.1.2"
      * </PRE>
-     * <P>
      * @param port Contains the TCP or UDP port number to connect to or contact.
      *   The default LDAP port is 389. "port" is ignored for any host name which
      *   includes a colon and port number.
@@ -713,11 +790,12 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      *   all operations through it should be authenticated with dn as the
      *   distinguished name and passwd as password.
      * @exception LDAPException The connection or authentication failed.
+     * @see netscape.ldap.LDAPConnection#setConnSetupDelay
      */
     public void connect(int version, String host, int port, String dn,
         String passwd) throws LDAPException {
 
-        connect(version, host, port, dn, passwd, defaultConstraints);
+        connect(version, host, port, dn, passwd, m_defaultConstraints);
     }
 
     /**
@@ -735,8 +813,9 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      *   the IP address of a host running an LDAP server to connect to.
      *   Alternatively, it may contain a list of host names, space-delimited.
      *   Each host name may include a trailing colon and port number. In the
-     *   case where more than one host name is specified, each host name in
-     *   turn will be contacted until a connection can be established.<P>
+     *   case where more than one host name is specified, the connection setup
+     *  policy specified with the <CODE>ConnSetupDelay</CODE> property controls
+     *  whether connection attempts are made serially or concurrently.<P>
      *
      * <PRE>
      *   Examples:
@@ -744,7 +823,6 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      *      "199.254.1.2"
      *      "directory.knowledge.com:1050 people.catalog.com 199.254.1.2"
      * </PRE>
-     * <P>
      * @param port Contains the TCP or UDP port number to connect to or contact.
      *   The default LDAP port is 389. "port" is ignored for any host name which
      *   includes a colon and port number.
@@ -756,9 +834,10 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      *   distinguished name and passwd as password.
      * @param cons Preferences for the bind operation.
      * @exception LDAPException The connection or authentication failed.
+     * @see netscape.ldap.LDAPConnection#setConnSetupDelay
      */
     public void connect(int version, String host, int port, String dn,
-        String passwd, LDAPSearchConstraints cons) throws LDAPException {
+        String passwd, LDAPConstraints cons) throws LDAPException {
 
         setProtocolVersion(version);
         connect(host, port, dn, passwd, cons);
@@ -769,17 +848,23 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @exception LDAPException failed to connect
      */
     private synchronized void connect () throws LDAPException {
-        if (th != null) return;
+        if ( isConnected() ) {
+            return;
+        }
 
-        if (host == null || port < 0)
+        if (m_connMgr == null) {
             throw new LDAPException ( "no connection parameters",
-                                 LDAPException.PARAM_ERROR );
+                                      LDAPException.PARAM_ERROR );
+        }        
 
-        th = getNewThread(host, port, m_factory, m_cache);
+        m_connMgr.openConnection();              
+        m_thread = getNewThread(m_connMgr, m_cache);
+        authenticateSSLConnection();
     }
 
-    private synchronized LDAPConnThread getNewThread(String host, int port,
-      LDAPSocketFactory factory, LDAPCache cache) throws LDAPException {
+    private synchronized LDAPConnThread getNewThread(LDAPConnSetupMgr connMgr,
+                                                     LDAPCache cache)
+        throws LDAPException {
 
         LDAPConnThread newThread = null;
         Vector v = null;
@@ -787,7 +872,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         synchronized(m_threadConnTable) {
 
             Enumeration keys = m_threadConnTable.keys();
-            boolean connExist = false;
+            boolean connExists = false;
 
             // transverse each thread
             while (keys.hasMoreElements()) {
@@ -795,41 +880,40 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 Vector connVector = (Vector)m_threadConnTable.get(connThread);
                 Enumeration enumv = connVector.elements();
 
-                // transverse through each LDAPConnection under the same thread
+                // traverse each LDAPConnection under the same thread
                 while (enumv.hasMoreElements()) {
                     LDAPConnection conn = (LDAPConnection)enumv.nextElement();
 
-                    // this is not the brand new connection
+                    // this is not a brand new connection
                     if (conn.equals(this)) {
-                        connExist = true;
+                        connExists = true;
 
                         if (!connThread.isAlive()) {
-                            // need to move all the LDAPConnections under the dead thread
+                            // need to move all the LDAPConnections from the dead thread
                             // to the new thread
                             try {
-                                newThread = new LDAPConnThread(host, port, factory, cache);
-                                newThread.setMaxBacklog(
-                                    getSearchConstraints().getMaxBacklog() );
+                                newThread = new LDAPConnThread(connMgr, cache);
                                 v = (Vector)m_threadConnTable.remove(connThread);
                                 break;
                             } catch (Exception e) {
                                 throw new LDAPException ("unable to establish connection",
-                                    LDAPException.UNAVAILABLE);
+                                                         LDAPException.UNAVAILABLE);
                             }
                         }
                         break;
                     }
                 }
 
-                if (connExist) break;
+                if (connExists) {
+                    break;
+                }
             }
 
             // if this connection is new or the corresponding thread for the current
             // connection is dead
-            if (!connExist) {
+            if (!connExists) {
                 try {
-                    newThread = new LDAPConnThread(host, port, factory, cache);
-                    newThread.setMaxBacklog( getSearchConstraints().getMaxBacklog() );
+                    newThread = new LDAPConnThread(connMgr, cache);
                     v = new Vector();
                     v.addElement(this);
                 } catch (Exception e) {
@@ -844,12 +928,11 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 for (int i=0, n=v.size(); i<n; i++) {
                     LDAPConnection c = (LDAPConnection)v.elementAt(i);
                     newThread.register(c);
-                    c.th = newThread;
+                    c.m_thread = newThread;
                 }
             }
         }
 
-        authenticateSSLConnection();
         return newThread;
     }
 
@@ -862,14 +945,12 @@ public class LDAPConnection implements LDAPv3, Cloneable {
 
         // if this is SSL
         if ((m_factory != null) &&
-          (m_factory instanceof LDAPSSLSocketFactoryExt)) {
+            (m_factory instanceof LDAPSSLSocketFactoryExt)) {
 
-            boolean isClientAuth =
-              ((LDAPSSLSocketFactoryExt)m_factory).isClientAuth();
-
-            if (isClientAuth)
+            if (((LDAPSSLSocketFactoryExt)m_factory).isClientAuth()) {
                 authenticate(null, EXTERNAL_MECHANISM,
-                  EXTERNAL_MECHANISM_PACKAGE, null, null);
+                             EXTERNAL_MECHANISM_PACKAGE, null, null);
+            }
         }
     }
 
@@ -885,28 +966,14 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      */
     public void abandon( LDAPSearchResults searchResults )
                              throws LDAPException {
-        if ( (th == null) || (searchResults == null) )
+        if ( (!isConnected()) || (searchResults == null) ) {
             return;
+        }
 
         searchResults.abandon();
+
         int id = searchResults.getID();
-        for (int i=0; i<3; i++) {
-            try {
-                /* Tell listener thread to discard results */
-                th.abandon( id );
-
-                /* Tell server to stop sending results */
-                th.sendRequest(new JDAPAbandonRequest(id), null, defaultConstraints);
-
-                /* No response is forthcoming */
-                break;
-            } catch (NullPointerException ne) {
-                // do nothing
-            }
-        }
-        if (th == null)
-            throw new LDAPException("Failed to send abandon request to the server.",
-              LDAPException.OTHER);
+        abandon(id);        
     }
 
     /**
@@ -949,7 +1016,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @exception LDAPException Failed to authenticate to the LDAP server.
      */
     public void authenticate(String dn, String passwd) throws LDAPException {
-        authenticate(protocolVersion, dn, passwd, defaultConstraints);
+        authenticate(m_protocolVersion, dn, passwd, m_defaultConstraints);
     }
 
     /**
@@ -966,8 +1033,8 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @exception LDAPException Failed to authenticate to the LDAP server.
      */
     public void authenticate(String dn, String passwd,
-      LDAPSearchConstraints cons) throws LDAPException {
-        authenticate(protocolVersion, dn, passwd, cons);
+      LDAPConstraints cons) throws LDAPException {
+        authenticate(m_protocolVersion, dn, passwd, cons);
     }
 
     /**
@@ -985,7 +1052,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      */
     public void authenticate(int version, String dn, String passwd)
       throws LDAPException {
-        authenticate(version, dn, passwd, defaultConstraints);
+        authenticate(version, dn, passwd, m_defaultConstraints);
     }
 
     /**
@@ -1004,64 +1071,51 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @exception LDAPException Failed to authenticate to the LDAP server.
      */
     public void authenticate(int version, String dn, String passwd,
-      LDAPSearchConstraints cons) throws LDAPException {
-        prevBoundDN = boundDN;
-        prevBoundPasswd = boundPasswd;
-        boundDN = dn;
-        boundPasswd = passwd;
+      LDAPConstraints cons) throws LDAPException {
+        m_prevBoundDN = m_boundDN;
+        m_prevBoundPasswd = m_boundPasswd;
+        m_boundDN = dn;
+        m_boundPasswd = passwd;
 
-        if ((prevBoundDN == null) || (prevBoundPasswd == null))
-            m_anonymousBound = true;
-        else
-            m_anonymousBound = false;
+        m_anonymousBound =
+            ((m_prevBoundDN == null) || (m_prevBoundPasswd == null));
 
-        bind (version, true, cons);
+        internalBind (version, true, cons);
     }
 
     /**
      * Authenticates to the LDAP server (that the object is currently
-     * connected to) using the specified name and a specified SASL mechanism
-     * or set of mechanisms. If the requested SASL mechanism is not
-     * available, an exception is thrown.  If the object has been
-     * disconnected from an LDAP server, this method attempts to reconnect
-     * to the server. If the object had already authenticated, the old
-     * authentication is discarded.
+     * connected to) using the specified name and whatever SASL mechanisms
+     * are supported by the server. Each supported mechanism in turn
+     * is tried until authentication succeeds or an exception is thrown.
+     * If the object has been disconnected from an LDAP server, this
+     * method attempts to reconnect to the server. If the object had
+     * already authenticated, the old authentication is discarded.
      *
      * @param dn If non-null and non-empty, specifies that the connection and
      * all operations through it should be authenticated with dn as the
      * distinguished name.
-     * @param mechanism A single mechanism name, e.g. "GSSAPI".
-     * @param packageName A package from which to instantiate the Mechanism
-     * Driver, e.g. "myclasses.SASL.mechanisms". If null, a system default
-     * is used.
-     * @param getter A class which may be called by the Mechanism Driver to
-     * obtain additional information required.
+     * @param cbh A class which may be called by the SASL framework to
+     * obtain additional information.
      * @exception LDAPException Failed to authenticate to the LDAP server.
      */
-    public void authenticate(String dn, String mechanism, String packageName,
-        Properties props, Object getter) throws LDAPException {
+    public void authenticate(String dn, Hashtable props,
+                             CallbackHandler cbh)
+        throws LDAPException {
 
-        try {
-            Object[] args = new Object[2];
-            args[0] = mechanism;
-            args[1] = packageName;
-            String[] argNames = new String[2];
-            argNames[0] = "java.lang.String";
-            argNames[1] = "java.lang.String";
-
-            // Get a mechanism driver
-            m_mechanismDriver = invokeMethod(null,
-              "com.netscape.sasl.SASLMechanismFactory", "getMechanismDriver",
-              args, argNames);
-
-        } catch (Exception e) {
-            throw new LDAPException(e.toString(), LDAPException.OTHER);
+        if ( !isConnected() ) {
+            connect();
         }
-
-        m_securityProperties = props;
-        m_clientCB = getter;
-        boundDN = dn;
-        saslBind(true);
+        // Get the list of mechanisms from the server
+        String[] attrs = { "supportedSaslMechanisms" };
+        LDAPEntry entry = read( "", attrs );
+        LDAPAttribute attr = entry.getAttribute( attrs[0] );
+        if ( attr == null ) {
+            throw new LDAPException( "Not found in root DSE: " +
+                                     attrs[0],
+                                     LDAPException.NO_SUCH_ATTRIBUTE );
+        }
+        authenticate( dn, attr.getStringValueArray(), props, cbh );
     }
 
     /**
@@ -1078,295 +1132,315 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * distinguished name.
      * @param mechanisms A list of acceptable mechanisms. The first one
      * for which a Mechanism Driver can be instantiated is returned.
-     * @param packageName A package from which to instantiate the Mechanism
-     * Driver, e.g. "myclasses.SASL.mechanisms". If null, a system default
-     * is used.
-     * @param getter A class which may be called by the Mechanism Driver to
+     * @param cbh A class which may be called by the SASL framework to
      * obtain additional information required.
      * @exception LDAPException Failed to authenticate to the LDAP server.
+     * @see netscape.ldap.LDAPConnection#authenticate(java.lang.String,
+     * java.util.Hashtable, javax.security.auth.callback.CallbackHandler)
      */
-    public void authenticate(String dn, String[] mechanisms, String packageName,
-        Properties props, Object getter) throws LDAPException {
+    public void authenticate(String dn, String[] mechanisms,
+                             Hashtable props, CallbackHandler cbh)
+        throws LDAPException {
 
-        for (int i=0; i<mechanisms.length; i++) {
-            try {
-                authenticate(dn, mechanisms[i], packageName, props, getter);
-                if (m_mechanismDriver != null)
-                    return;
-            } catch (LDAPException e) {
-            }
-        }
+        authenticate( dn, mechanisms, DEFAULT_SASL_PACKAGE, props, cbh );
+    }
+    
+    /**
+     * Authenticates to the LDAP server (that the object is currently
+     * connected to) using the specified name and a specified SASL mechanism
+     * or set of mechanisms. If the requested SASL mechanism is not
+     * available, an exception is thrown.  If the object has been
+     * disconnected from an LDAP server, this method attempts to reconnect
+     * to the server. If the object had already authenticated, the old
+     * authentication is discarded.
+     *
+     * @param dn If non-null and non-empty, specifies that the connection and
+     * all operations through it should be authenticated with dn as the
+     * distinguished name.
+     * @param mechanism A single mechanism name, e.g. "GSSAPI".
+     * @param packageName A package which contains a SASL ClientFactory,
+     * e.g. "myclasses.SASL". If null, a system default is used.
+     * @param cbh A class which may be called by the SASL framework to
+     * obtain additional information required.
+     * @exception LDAPException Failed to authenticate to the LDAP server.
+     * @deprecated Please use authenticate without packageName
+     * instead.
+     */
+    public void authenticate(String dn, String mechanism, String packageName,
+                             Hashtable props, CallbackHandler cbh)
+        throws LDAPException {
 
-        throw new LDAPException("Failed to get mechanism driver",
-          LDAPException.OTHER);
+        authenticate( dn, new String[] {mechanism}, packageName, props, cbh );
     }
 
-    private void saslBind(boolean rebind) throws LDAPException {
+    /**
+     * Authenticates to the LDAP server (that the object is currently
+     * connected to) using the specified name and a specified SASL mechanism
+     * or set of mechanisms. If the requested SASL mechanism is not
+     * available, an exception is thrown.  If the object has been
+     * disconnected from an LDAP server, this method attempts to reconnect
+     * to the server. If the object had already authenticated, the old
+     * authentication is discarded.
+     *
+     * @param dn If non-null and non-empty, specifies that the connection and
+     * all operations through it should be authenticated with dn as the
+     * distinguished name.
+     * @param mechanisms A list of acceptable mechanisms. The first one
+     * for which a Mechanism Driver can be instantiated is returned.
+     * @param packageName A package which contains a SASL ClientFactory,
+     * e.g. "myclasses.SASL". If null, a system default is used.
+     * @param cbh A class which may be called by the SASL framework to
+     * obtain additional information required.
+     * @exception LDAPException Failed to authenticate to the LDAP server.
+     * @deprecated Please use authenticate without packageName
+     * instead.
+     */
+    public void authenticate(String dn, String[] mechanisms,
+                             String packageName,
+                             Hashtable props, CallbackHandler cbh)
+        throws LDAPException {
 
-        saslBind = true;
-        protocolVersion = 3;
-
-        if (th == null) {
-            bound = false;
-            th = null;
-            connect ();
-        }
-
-        // if the connection has already been bound and need to be rebinded
-        if (bound && rebind) {
-            // if the thread has more than one LDAPConnection, then the connection
-            // should disconnect first. Otherwise, we can reuse the same thread
-            // and do the rebind again.
-            if (th.getClientCount() > 1) {
+        if ( !isConnected() ) {
+            connect();
+        } else {
+            // If the thread has more than one LDAPConnection, then
+            // we should disconnect first. Otherwise,
+            // we can reuse the same thread for the rebind.
+            if (m_thread.getClientCount() > 1) {
                 disconnect();
                 connect();
             }
         }
-
-        if ((bound && rebind) || (!bound)) {
-            try {
-                // Get the initial request to start authentication
-                Object[] arg1 = new Object[5];
-                arg1[0] = boundDN;
-                arg1[1] = "LDAP";
-                arg1[2] = null;
-                arg1[3] = m_securityProperties;
-                arg1[4] = m_clientCB;
-
-                String[] argNames = new String[5];
-                argNames[0] = "java.lang.String";
-                argNames[1] = "java.lang.String";
-                argNames[2] = "java.lang.String";
-                argNames[3] = "java.util.Properties";
-                argNames[4] = "com.netscape.sasl.SASLClientCB";
-
-                String mechanismName = m_mechanismDriver.getClass().getName();
-                byte[] outVals = (byte[])invokeMethod(m_mechanismDriver,
-                  mechanismName, "startAuthentication", arg1, argNames);
-
-
-                boolean isExternal = isExternalMechanism(mechanismName);
-                int resultCode = LDAPException.SASL_BIND_IN_PROGRESS;
-                JDAPBindResponse response = null;
-                while (!checkForSASLBindCompletion(resultCode)) {
-                    response = saslBind(outVals);
-                    resultCode = response.getResultCode();
-
-                    if (isExternal)
-                        continue;
-
-                    String challenge = response.getCredentials();
-                    byte[] b = challenge.getBytes();
-
-                    Object[] arg2 = new Object[1];
-                    arg2[0] = b;
-                    String[] arg2Names = new String[1];
-                    arg2Names[0] = "[B";  //class name for byte array
-
-                    outVals = (byte[])invokeMethod(m_mechanismDriver,
-                        mechanismName, "evaluateResponse", arg2, arg2Names);
-                }
-
-                // Make sure authentication REALLY is complete
-                Boolean bool = (Boolean)invokeMethod(m_mechanismDriver,
-                    mechanismName, "isComplete", null, null);
-                if (!bool.booleanValue()) {
-                    // Authentication session hijacked!
-                    throw new LDAPException("The server indicates that " +
-                        "authentication is successful, but the SASL driver " +
-                        "indicates that authentication is not yet done.",
-                        LDAPException.OTHER);
-                }
-
-                m_security = invokeMethod(m_mechanismDriver,
-                    mechanismName, "getSecurityLayer", null, null);
-                th.setSecurityLayer(m_security);
-                updateThreadConnTable();
-            } catch (LDAPException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new LDAPException(e.toString(), LDAPException.OTHER);
-            }
+        m_boundDN = null;
+        m_protocolVersion = 3; // Must be 3 for SASL
+        if ( props == null ) {
+            props = new Hashtable();
         }
+        m_saslBinder = new LDAPSaslBind( dn, mechanisms, packageName,
+                                         props, cbh );
+        m_saslBinder.bind( this );
+        m_boundDN = dn;
+    }
+    
+    /** 
+     * Authenticates to the LDAP server (that you are currently
+     * connected to) using the specified name and password.
+     * If you are not already connected to the LDAP server, this
+     * method attempts to reconnect to the server.
+     * <P>
+     *
+     * For example, the following section of code authenticates the
+     * client as Barbara Jensen.  The code assumes that the client
+     * has already established a connection with an LDAP server.
+     * <P>
+     *
+     * <PRE>
+     * String myDN = "cn=Barbara Jensen,ou=Product Development,o=Ace Industry,c=US";
+     * String myPW = "hifalutin";
+     * try {
+     *     myConn.bind( myDN, myPW );
+     * } catch ( LDAPException e ) {
+     *     switch( e.getLDAPResultCode() ) {
+     *         case e.NO_SUCH_OBJECT:
+     *             System.out.println( "The specified user does not exist." );
+     *             break;
+     *         case e.INVALID_CREDENTIALS:
+     *             System.out.println( "Invalid password." );
+     *             break;
+     *         default:
+     *             System.out.println( "Error number: " + e.getLDAPResultCode() );
+     *             System.out.println( "Failed to authentice as " + myDN );
+     *             break;
+     *     }
+     *     return;
+     * }
+     * System.out.println( "Authenticated as " + myDN );
+     * </PRE>
+     *
+     * @param dn Distinguished name used for authentication.
+     * @param passwd Password used for authentication.
+     * @exception LDAPException Failed to authenticate to the LDAP server.
+     */
+    public void bind(String dn, String passwd) throws LDAPException {
+        authenticate(m_protocolVersion, dn, passwd, m_defaultConstraints);
     }
 
-    private boolean isExternalMechanism(String name) {
-        String s = name;
-        int dot = name.lastIndexOf( '.' );
-        if ( (dot >= 0) && (dot < (name.length()-1)) ) {
-            s = name.substring( dot + 1 );
-        }
-        return s.equals( EXTERNAL_MECHANISM );
+    /**
+     * Authenticates to the LDAP server (that you are currently
+     * connected to) using the specified name and password. The
+     * default protocol version (version 2) is used. If the server
+     * doesn't support the default version, an LDAPException is thrown
+     * with the error code PROTOCOL_ERROR. This method allows the
+     * user to specify the preferences for the bind operation.
+     *
+     * @param dn Distinguished name used for authentication.
+     * @param passwd Password used for authentication.
+     * @param cons Preferences for the bind operation.
+     * @exception LDAPException Failed to authenticate to the LDAP server.
+     */
+    public void bind(String dn, String passwd,
+                     LDAPConstraints cons) throws LDAPException {
+        authenticate(m_protocolVersion, dn, passwd, cons);
     }
 
-    private Object invokeMethod(Object obj, String packageName,
-      String methodName, Object[] args, String[] argNames)
-      throws LDAPException {
-        try {
-            java.lang.reflect.Method m = getMethod(packageName, methodName,
-              argNames);
-            if (m != null) {
-                return (m.invoke(obj, args));
-            }
-        } catch (Exception e) {
-            throw new LDAPException("Invoking "+methodName+": "+
-              e.toString(), LDAPException.PARAM_ERROR);
-        }
-
-        return null;
+    /**
+     * Authenticates to the LDAP server (that you are currently
+     * connected to) using the specified name and password, and
+     * requesting that the server use at least the specified
+     * protocol version. If the server doesn't support that
+     * level, an LDAPException is thrown with the error code
+     * PROTOCOL_ERROR.
+     *
+     * @param version Required LDAP protocol version.
+     * @param dn Distinguished name used for authentication.
+     * @param passwd Password used for authentication.
+     * @exception LDAPException Failed to authenticate to the LDAP server.
+     */
+    public void bind(int version, String dn, String passwd)
+        throws LDAPException {
+        authenticate(version, dn, passwd, m_defaultConstraints);
     }
 
-    private java.lang.reflect.Method getMethod(String packageName,
-      String methodName, String[] args) throws LDAPException {
-        try {
-            java.lang.reflect.Method method = null;
-            String suffix = "";
-            if (args != null)
-                for (int i=0; i<args.length; i++)
-                    suffix = suffix+args[i].getClass().getName();
-            String key = packageName+"."+methodName+"."+suffix;
-            if ((method = (java.lang.reflect.Method)(m_methodLookup.get(key)))
-              != null)
-                return method;
-
-            Class c = Class.forName(packageName);
-            java.lang.reflect.Method[] m = c.getMethods();
-            for (int i = 0; i < m.length; i++ ) {
-                Class[] params = m[i].getParameterTypes();
-                if ((m[i].getName().equals(methodName)) &&
-                    signatureCorrect(params, args)) {
-                    m_methodLookup.put(key, m[i]);
-                    return m[i];
-                }
-            }
-            throw new LDAPException("Method " + methodName + " not found in " +
-              packageName);
-        } catch (ClassNotFoundException e) {
-            throw new LDAPException("Class "+ packageName + " not found");
-        }
+    /**
+     * Authenticates to the LDAP server (that you are currently
+     * connected to) using the specified name and password, and
+     * requesting that the server use at least the specified
+     * protocol version. If the server doesn't support that
+     * level, an LDAPException is thrown with the error code
+     * PROTOCOL_ERROR. This method allows the user to specify the
+     * preferences for the bind operation.
+     *
+     * @param version Required LDAP protocol version.
+     * @param dn Distinguished name used for authentication.
+     * @param passwd Password used for authentication.
+     * @param cons Preferences for the bind operation.
+     * @exception LDAPException Failed to authenticate to the LDAP server.
+     */
+    public void bind(int version, String dn, String passwd,
+      LDAPConstraints cons) throws LDAPException {
+        authenticate(version, dn, passwd, cons);
     }
 
-    private boolean signatureCorrect(Class params[], String args[]) {
-        if (args == null)
-            return true;
-        if (params.length != args.length)
-            return false;
-        for (int i=0; i<params.length; i++) {
-            if (!params[i].getName().equals(args[i]))
-                return false;
-        }
-        return true;
+    /**
+     * Authenticates to the LDAP server (that the object is currently
+     * connected to) using the specified name and whatever SASL mechanisms
+     * are supported by the server. Each supported mechanism in turn
+     * is tried until authentication succeeds or an exception is thrown.
+     * If the object has been disconnected from an LDAP server, this
+     * method attempts to reconnect to the server. If the object had
+     * already authenticated, the old authentication is discarded.
+     *
+     * @param dn If non-null and non-empty, specifies that the connection and
+     * all operations through it should be authenticated with dn as the
+     * distinguished name.
+     * @param cbh A class which may be called by the SASL framework to
+     * obtain additional information.
+     * @exception LDAPException Failed to authenticate to the LDAP server.
+     */
+    public void bind(String dn, Hashtable props,
+                     CallbackHandler cbh)
+        throws LDAPException {
+        authenticate(dn, props, cbh);
     }
 
-    private boolean checkForSASLBindCompletion(int resultCode)
-      throws LDAPException{
-
-        if (resultCode == LDAPException.SUCCESS) {
-            return true;
-        } else if (resultCode == LDAPException.SASL_BIND_IN_PROGRESS) {
-            return false;
-        } else {
-            throw new LDAPException("Authentication failed", resultCode);
-        }
-    }
-
-    private JDAPBindResponse saslBind(byte[] credentials) throws LDAPException {
-        saslBind = true;
-        if (th == null) connect ();
-
-        LDAPResponseListener myListener = getResponseListener ();
-        JDAPMessage response;
-
-        try {
-            String name = (String)invokeMethod(m_mechanismDriver,
-              m_mechanismDriver.getClass().getName(), "getMechanismName",
-              null, null);
-            sendRequest(new JDAPBindRequest(protocolVersion, boundDN,
-              name, credentials),
-              myListener, defaultConstraints);
-            response = myListener.getResponse();
-
-            JDAPProtocolOp protocolOp = response.getProtocolOp();
-            if (protocolOp instanceof JDAPBindResponse)
-                return (JDAPBindResponse)protocolOp;
-            else
-                throw new LDAPException("Unknown response from the server during SASL bind",
-                  LDAPException.OTHER);
-        } finally {
-            releaseResponseListener(myListener);
-        }
+    /**
+     * Authenticates to the LDAP server (that the object is currently
+     * connected to) using the specified name and a specified SASL mechanism
+     * or set of mechanisms. If the requested SASL mechanism is not
+     * available, an exception is thrown.  If the object has been
+     * disconnected from an LDAP server, this method attempts to reconnect
+     * to the server. If the object had already authenticated, the old
+     * authentication is discarded.
+     *
+     * @param dn If non-null and non-empty, specifies that the connection and
+     * all operations through it should be authenticated with dn as the
+     * distinguished name.
+     * @param mechanisms A list of acceptable mechanisms. The first one
+     * for which a Mechanism Driver can be instantiated is returned.
+     * @param cbh A class which may be called by the SASL framework to
+     * obtain additional information.
+     * @exception LDAPException Failed to authenticate to the LDAP server.
+     * @see netscape.ldap.LDAPConnection#bind(java.lang.String,
+     * java.util.Hashtable, javax.security.auth.callback.CallbackHandler)
+     */
+    public void bind(String dn, String[] mechanisms,
+                     Hashtable props, CallbackHandler cbh)
+        throws LDAPException {
+        authenticate(dn, mechanisms, props, cbh);
     }
 
     /**
      * Internal routine. Binds to the LDAP server.
      * @param version protocol version to request from server
-     * @param rebind True if the rebind operation is requested, otherwise, false.
+     * @param rebind True if the bind/authenticate operation is requested,
+     * false if the method is invoked by the "smart failover" feature
      * @exception LDAPException failed to bind
      */
-    private void bind (int version, boolean rebind,
-      LDAPSearchConstraints cons) throws LDAPException {
-        saslBind = false;
+    private void internalBind (int version, boolean rebind,
+      LDAPConstraints cons) throws LDAPException {
+        m_saslBinder = null;
 
-        if (th == null) {
-            bound = false;
-            th = null;
+        if (!isConnected()) {
+            m_bound = false;
             connect ();
             // special case: the connection currently is not bound, and now there is
-            // a bind request. The connection needs to reconnect if the thread th has
+            // a bind request. The connection needs to reconnect if the thread has
             // more than one LDAPConnection.
-        } else if (!bound && rebind && th.getClientCount() > 1) {
+        } else if (!m_bound && rebind && m_thread.getClientCount() > 1) {
             disconnect();
             connect();
         }
 
         // if the connection is still intact and no rebind request
-        if (bound && !rebind)
+        if (m_bound && !rebind) {
             return;
+        }
 
         // if the connection was lost and did not have any kind of bind
         // operation and the current one does not request any bind operation (ie,
         // no authenticate has been called)
         if (!m_anonymousBound &&
-         ((boundDN == null) || (boundPasswd == null)) &&
-         !rebind)
+            ((m_boundDN == null) || (m_boundPasswd == null)) &&
+            !rebind) {
             return;
+        }
 
-        if (bound && rebind) {
-            if (protocolVersion == version) {
-                if (m_anonymousBound && ((boundDN == null) || (boundPasswd == null)))
+        if (m_bound && rebind) {
+            if (m_protocolVersion == version) {
+                if (m_anonymousBound && ((m_boundDN == null) || (m_boundPasswd == null)))
                     return;
 
-                if (!m_anonymousBound && (boundDN != null) && (boundPasswd != null) &&
-                    boundDN.equals(prevBoundDN) &&
-                    boundPasswd.equals(prevBoundPasswd))
+                if (!m_anonymousBound && (m_boundDN != null) && (m_boundPasswd != null) &&
+                    m_boundDN.equals(m_prevBoundDN) &&
+                    m_boundPasswd.equals(m_prevBoundPasswd)) {
                     return;
+                }
             }
 
-            // if get to here, means that we need to do rebind since previous and
+            // if we got this far, we need to rebind since previous and
             // current credentials are not the same.
-            // if the current connection is the only connection for the th thread,
+            // if the current connection is the only connection of the thread,
             // then reuse this current connection. otherwise, disconnect the current
-            // one (ie, detach from the current th) and reconnect again (ie, have
-            // a new th).
-            if (th.getClientCount() > 1) {
+            // one (ie, detach from the current thread) and reconnect again (ie, get
+            // a new thread).
+            if (m_thread.getClientCount() > 1) {
                 disconnect();
                 connect();
             }
         }
 
-        protocolVersion = version;
+        m_protocolVersion = version;
 
         LDAPResponseListener myListener = getResponseListener ();
-        JDAPMessage response;
         try {
             if (m_referralConnection != null) {
                 m_referralConnection.disconnect();
                 m_referralConnection = null;
             }
-            sendRequest(new JDAPBindRequest(protocolVersion, boundDN, boundPasswd),
-                myListener, cons);
-            response = myListener.getResponse();
-            checkMsg(response);
+            sendRequest(new JDAPBindRequest(m_protocolVersion, m_boundDN,
+                                            m_boundPasswd),
+                        myListener, cons);
+            checkMsg( myListener.getResponse() );
         } catch (LDAPReferralException e) {
             m_referralConnection = createReferralConnection(e, cons);
         } finally {
@@ -1376,49 +1450,87 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         updateThreadConnTable();
     }
 
-    private void updateThreadConnTable() {
-        synchronized(m_threadConnTable) {
-            if (m_threadConnTable.containsKey(th)) {
-                Vector v = (Vector)m_threadConnTable.get(th);
-                for (int i=0, n=v.size(); i<n; i++) {
-                    LDAPConnection conn = (LDAPConnection)v.elementAt(i);
-                    conn.bound = true;
-                }
-            } else
-                printDebug("Thread table does not contain the specified thread");
+    /**
+     * Mark this connection as bound in the thread connection table
+     */
+    void updateThreadConnTable() {
+        if (m_threadConnTable.containsKey(m_thread)) {
+            Vector v = (Vector)m_threadConnTable.get(m_thread);
+            for (int i=0, n=v.size(); i<n; i++) {
+                LDAPConnection conn = (LDAPConnection)v.elementAt(i);
+                conn.m_bound = true;
+            }
+        } else {
+            printDebug("Thread table does not contain the thread of this object");
         }
     }
 
-    private void sendRequest(JDAPProtocolOp oper, LDAPResponseListener myListener,
-      LDAPSearchConstraints cons) throws LDAPException {
+    /**
+     * Send a request to the server
+     */
+    void sendRequest(JDAPProtocolOp oper, LDAPMessageQueue myListener,
+                     LDAPConstraints cons) throws LDAPException {
 
-        // retry three times if we got the nullPointer exception.
-        // Dont remove this. The following situation might happen:
-        // Before sendRequest get invoked, it is possible that the LDAPConnThread
-        // encountered the networkError and called the deregisterConnection which
-        // in turn set the "th" thread to be null.
+        // retry three times if we get a nullPointer exception.
+        // Don't remove this. The following situation might happen:
+        // Before sendRequest gets invoked, it is possible that the LDAPConnThread
+        // encountered a network error and called deregisterConnection which
+        // set the thread reference to null.
         for (int i=0; i<3; i++) {
             try {
-                th.sendRequest(oper, myListener, cons);
+                m_thread.sendRequest(this, oper, myListener, cons);
                 break;
             } catch(NullPointerException ne) {
                 // do nothing
             }
         }
-        if (th == null)
+        if (!isConnected()) {
             throw new LDAPException("The connection is not available",
                 LDAPException.OTHER);
+        }
     }
 
     /**
      * Internal routine. Binds to the LDAP server.
-     * @exception LDAPException failed to bind
+     * This method is used by the "smart failover" feature. If a server
+     * or network error has occurred, an attempt is made to automatically
+     * restore the connection on the next ldap operation request
+     * @exception LDAPException failed to bind or the user has disconncted
      */
-    private void bind (LDAPSearchConstraints cons) throws LDAPException {
-        if (saslBind)
-            saslBind(false);
-        else
-            bind (protocolVersion, false, cons);
+    private void internalBind (LDAPConstraints cons) throws LDAPException {
+        
+        // If the user has invoked disconnect() no attempt is made
+        // to restore the connection
+        if (m_connMgr != null && m_connMgr.isUserDisconnected()) {
+            throw new LDAPException("not connected", LDAPException.OTHER);
+        }
+
+        if (m_saslBinder != null) {
+            if ( !isConnected() ) {
+                connect();
+            }
+            m_saslBinder.bind(this, false);
+        } else {
+            internalBind (m_protocolVersion, false, cons);
+        }
+    }
+
+    /**
+     * Disconnect from the server and then reconnect using the current
+     * credentials and authentication method
+     * @exception LDAPException if not previously connected, or if
+     * there is a failure on disconnecting or on connecting 
+     */
+    public void reconnect() throws LDAPException {
+        
+        disconnect();
+        connect();
+        
+        if (m_saslBinder != null) {
+            m_saslBinder.bind(this, true);
+        } else {
+            internalBind (m_protocolVersion, true, m_defaultConstraints);
+        }
     }
 
     /**
@@ -1435,9 +1547,16 @@ public class LDAPConnection implements LDAPv3, Cloneable {
             m_referralConnection = null;
         }
 
-        if (th == null)
+        if (!isConnected())
             throw new LDAPException ( "unable to disconnect() without connecting",
-                                  LDAPException.OTHER );
+                                      LDAPException.OTHER );
+        
+        // Clone the Connection Setup Manager if the connection is shared
+        if (m_thread.getClientCount() > 1) {
+            m_connMgr = (LDAPConnSetupMgr) m_connMgr.clone();
+            m_connMgr.disconnect();
+        }
+    
         if (m_cache != null) {
             m_cache.cleanup();
             m_cache = null;
@@ -1446,33 +1565,35 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         deregisterConnection();
     }
 
+    /**
+     * Remove this connection from the thread connection table
+     */
     private void deleteThreadConnEntry() {
-        synchronized (m_threadConnTable) {
-            Enumeration keys = m_threadConnTable.keys();
-            while (keys.hasMoreElements()) {
-                LDAPConnThread connThread = (LDAPConnThread)keys.nextElement();
-                Vector connVector = (Vector)m_threadConnTable.get(connThread);
-                Enumeration enumv = connVector.elements();
-                while (enumv.hasMoreElements()) {
-                    LDAPConnection c = (LDAPConnection)enumv.nextElement();
-                    if (c.equals(this)) {
-                        connVector.removeElement(c);
-                        if (connVector.size() == 0)
-                            m_threadConnTable.remove(connThread);
-                        return;
+        Enumeration keys = m_threadConnTable.keys();
+        while (keys.hasMoreElements()) {
+            LDAPConnThread connThread = (LDAPConnThread)keys.nextElement();
+            Vector connVector = (Vector)m_threadConnTable.get(connThread);
+            Enumeration enumv = connVector.elements();
+            while (enumv.hasMoreElements()) {
+                LDAPConnection c = (LDAPConnection)enumv.nextElement();
+                if (c.equals(this)) {
+                    connVector.removeElement(c);
+                    if (connVector.size() == 0) {
+                        m_threadConnTable.remove(connThread);
                     }
+                    return;
                 }
             }
         }
     }
 
     /**
-     *  Decrement the reference count for the connection
+     * Remove the association between this object and the connection thread
      */
     synchronized void deregisterConnection() {
-        th.deregister(this);
-        th = null;
-        bound = false;
+        m_thread.deregister(this);
+        m_thread = null;
+        m_bound = false;
     }
 
     /**
@@ -1517,7 +1638,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * if the entry is not found.
      */
     public LDAPEntry read (String DN) throws LDAPException {
-        return read (DN, null, defaultConstraints);
+        return read (DN, null, m_defaultConstraints);
     }
 
     /**
@@ -1631,15 +1752,16 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * the directory.
      */
     public LDAPEntry read (String DN, String attrs[]) throws LDAPException {
-        return read(DN, attrs, defaultConstraints);
+        return read(DN, attrs, m_defaultConstraints);
     }
 
     public LDAPEntry read (String DN, String attrs[],
         LDAPSearchConstraints cons) throws LDAPException {
-        LDAPSearchResults results = search (DN, LDAPv2.SCOPE_BASE,
-          defaultFilter, attrs, false, cons);
-        if (results == null)
+        LDAPSearchResults results = search (DN, SCOPE_BASE,
+                                            defaultFilter, attrs, false, cons);
+        if (results == null) {
             return null;
+        }
         return results.next ();
     }
 
@@ -1703,9 +1825,10 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         String host = toGet.getHost ();
         int port = toGet.getPort();
 
-        if (host == null)
+        if (host == null) {
             throw new LDAPException ( "no host for connection",
                                     LDAPException.PARAM_ERROR );
+        }
 
         String[] attributes = toGet.getAttributeArray ();
         String DN = toGet.getDN();
@@ -1836,15 +1959,16 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         String host = toGet.getHost ();
         int port = toGet.getPort();
 
-        if (host == null)
+        if (host == null) {
             throw new LDAPException ( "no host for connection",
                                     LDAPException.PARAM_ERROR );
+        }
 
         String[] attributes = toGet.getAttributeArray ();
         String DN = toGet.getDN();
         String filter = toGet.getFilter();
         if (filter == null) {
-            filter = "(objectClass=*)";
+            filter = defaultFilter;
         }
         int scope = toGet.getScope ();
 
@@ -1852,10 +1976,11 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         connection.connect (host, port);
 
         LDAPSearchResults results;
-        if (cons != null)
+        if (cons != null) {
             results = connection.search (DN, scope, filter, attributes, false, cons);
-        else
+        } else {
             results = connection.search (DN, scope, filter, attributes, false);
+        }
 
         results.closeOnCompletion(connection);
 
@@ -1929,7 +2054,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      */
     public LDAPSearchResults search( String base, int scope, String filter,
         String[] attrs, boolean attrsOnly ) throws LDAPException {
-        return search( base, scope, filter, attrs, attrsOnly, defaultConstraints);
+        return search( base, scope, filter, attrs, attrsOnly, m_defaultConstraints);
     }
 
     /**
@@ -1998,41 +2123,49 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         String[] attrs, boolean attrsOnly, LDAPSearchConstraints cons )
         throws LDAPException {
 
-        if (cons == null)
-            cons = defaultConstraints;
+        if (cons == null) {
+            cons = m_defaultConstraints;
+        }
 
-        LDAPSearchResults returnValue = new LDAPSearchResults(this,
-            cons, base, scope, filter, attrs, attrsOnly);
+        LDAPSearchResults returnValue =
+            new LDAPSearchResults(this, cons, base, scope, filter,
+                                  attrs, attrsOnly);
         Vector cacheValue = null;
         Long key = null;
         boolean isKeyValid = true;
 
         try {
             // get entry from cache which is a vector of JDAPMessages
-            if (m_cache != null)
-            {
+            if (m_cache != null) {
                 // create key for cache entry using search arguments
-                key = m_cache.createKey(host, port, base, filter, scope, attrs, boundDN, cons);
+                key = m_cache.createKey(getHost(), getPort(),base, filter,
+                                        scope, attrs, m_boundDN, cons);
 
                 cacheValue = (Vector)m_cache.getEntry(key);
 
-                if (cacheValue != null)
+                if (cacheValue != null) {
                     return (new LDAPSearchResults(cacheValue, this, cons, base, scope,
-                        filter, attrs, attrsOnly));
+                                                  filter, attrs, attrsOnly));
+                }
             }
         } catch (LDAPException e) {
             isKeyValid = false;
             printDebug("Exception: "+e);
         }
 
-        bind(cons);
+        internalBind(cons);
 
         LDAPSearchListener myListener = getSearchListener ( cons );
         int deref = cons.getDereference();
 
-        JDAPSearchRequest request = new JDAPSearchRequest (base,
-            scope, deref, cons.getMaxResults(), cons.getServerTimeLimit(),
-            attrsOnly, filter, attrs);
+        JDAPSearchRequest request = null;        
+        try {
+            request = new JDAPSearchRequest (base, scope, deref,
+                cons.getMaxResults(), cons.getServerTimeLimit(),
+                attrsOnly, filter, attrs);
+        } catch (IllegalArgumentException e) {
+            throw new LDAPException(e.getMessage(), LDAPException.PARAM_ERROR);
+        }
 
         synchronized(myListener) {
             boolean success = false;
@@ -2040,8 +2173,9 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 sendRequest (request, myListener, cons);
                 success = true;
             } finally {
-                if (!success)
-                releaseSearchListener (myListener);
+                if (!success) {
+                    releaseSearchListener (myListener);
+                }
             }
 
             // if using cache, then need to add the key to the search listener.
@@ -2056,8 +2190,8 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         if ( cons.getBatchSize() == 0 ) {
             try {
                 /* Block until all results are in */
-                JDAPMessage response = myListener.getResponse ();
-                Enumeration results = myListener.getSearchResults ();
+                LDAPMessage response = myListener.completeSearchOperation();
+                Enumeration results = myListener.getAllMessages().elements();
 
                 try {
                     checkSearchMsg(returnValue, response, cons, base, scope,
@@ -2075,7 +2209,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 }
 
                 while (results.hasMoreElements ()) {
-                    JDAPMessage msg = (JDAPMessage)results.nextElement();
+                    LDAPMessage msg = (LDAPMessage)results.nextElement();
 
                     checkSearchMsg(returnValue, msg, cons, base, scope, filter, attrs,
                         attrsOnly);
@@ -2090,10 +2224,8 @@ public class LDAPConnection implements LDAPv3, Cloneable {
             * Asynchronous to retrieve one at a time, check to make sure
             * the search didn't fail
             */
-            JDAPMessage firstResult = myListener.nextResult ();
-            if (firstResult == null) {
-                firstResult = myListener.getResponse ();
-
+            LDAPMessage firstResult = myListener.nextMessage ();
+            if (firstResult instanceof LDAPResponse) {
                 try {
                     checkSearchMsg(returnValue, firstResult, cons, base, scope,
                       filter, attrs, attrsOnly);
@@ -2134,14 +2266,17 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         return returnValue;
     }
 
-    void checkSearchMsg(LDAPSearchResults value, JDAPMessage msg,
+    void checkSearchMsg(LDAPSearchResults value, LDAPMessage msg,
         LDAPSearchConstraints cons, String dn, int scope, String filter,
         String attrs[], boolean attrsOnly) throws LDAPException {
+
+        value.setResponseControls(msg.getControls());
+
         try {
             checkMsg (msg);
             // not the JDAPResult
             if (msg.getProtocolOp().getType() != JDAPProtocolOp.SEARCH_RESULT) {
-                value.add (msg.getProtocolOp());
+                value.add (msg);
             }
         } catch (LDAPReferralException e) {
             Vector res = new Vector();
@@ -2150,8 +2285,9 @@ public class LDAPConnection implements LDAPv3, Cloneable {
 
             // the size of the vector can be more than 1 because it is possible
             // to visit more than one referral url to retrieve the entries
-            for (int i=0; i<res.size(); i++)
+            for (int i=0; i<res.size(); i++) {
                 value.addReferralEntries((LDAPSearchResults)res.elementAt(i));
+            }
 
             res = null;
         } catch (LDAPException e) {
@@ -2159,8 +2295,9 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 (e.getLDAPResultCode() == LDAPException.TIME_LIMIT_EXCEEDED) ||
                 (e.getLDAPResultCode() == LDAPException.SIZE_LIMIT_EXCEEDED)) {
                 value.add(e);
-            } else
+            } else {
                 throw e;
+            }
         }
     }
 
@@ -2204,46 +2341,41 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      */
     public boolean compare( String DN, LDAPAttribute attr )
         throws LDAPException {
-        return compare(DN, attr, defaultConstraints);
+        return compare(DN, attr, m_defaultConstraints);
     }
 
     public boolean compare( String DN, LDAPAttribute attr,
-        LDAPSearchConstraints cons) throws LDAPException {
-        bind(cons);
+        LDAPConstraints cons) throws LDAPException {
+        internalBind(cons);
 
         LDAPResponseListener myListener = getResponseListener ();
-        Enumeration en = attr.getByteValues();
-        byte val[] = (byte[])en.nextElement();
-        String debug = "";
-        try {
-            debug = new String(val, "UTF8");
-        } catch(Throwable x)
-        {}
+        Enumeration en = attr.getStringValues();
+        String val = (String)en.nextElement();
+        JDAPAVA ass = new JDAPAVA(attr.getName(), val);
 
-        JDAPAVA ass = new JDAPAVA(attr.getName(), debug);
-        //JDAPAVA ass = new JDAPAVA(attr.getName(), new String(val,0));
-
-        JDAPMessage response;
+        LDAPMessage response;
         try {
             sendRequest (new JDAPCompareRequest (DN, ass), myListener, cons);
             response = myListener.getResponse ();
 
             int resultCode = ((JDAPResult)response.getProtocolOp()).getResultCode();
-            if (resultCode == JDAPResult.COMPARE_FALSE)
+            if (resultCode == JDAPResult.COMPARE_FALSE) {
                 return false;
-            if (resultCode == JDAPResult.COMPARE_TRUE)
+            }
+            if (resultCode == JDAPResult.COMPARE_TRUE) {
                 return true;
+            }
 
             checkMsg (response);
 
         } catch (LDAPReferralException e) {
             Vector res = new Vector();
             performReferrals(e, cons, JDAPProtocolOp.COMPARE_REQUEST,
-              DN, 0, null, null, false, null, null, attr, res);
+                             DN, 0, null, null, false, null, null, attr, res);
             boolean bool = false;
-            if (res.size() > 0)
+            if (res.size() > 0) {
                bool = ((Boolean)res.elementAt(0)).booleanValue();
-            res = null;
+            }
             return bool;
         } finally {
             releaseResponseListener (myListener);
@@ -2306,13 +2438,13 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @see netscape.ldap.LDAPEntry
      */
     public void add( LDAPEntry entry ) throws LDAPException {
-        add(entry, defaultConstraints);
+        add(entry, m_defaultConstraints);
     }
 
     /**
      * Adds an entry to the directory and allows you to specify preferences
      * for this LDAP add operation by using an
-     * <CODE>LDAPSearchConstraints</CODE> object. For
+     * <CODE>LDAPConstraints</CODE> object. For
      * example, you can specify whether or not to follow referrals.
      * You can also apply LDAP v3 controls to the operation.
      * <P>
@@ -2323,27 +2455,28 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @exception LDAPException Failed to add the specified entry to the
      * directory.
      * @see netscape.ldap.LDAPEntry
-     * @see netscape.ldap.LDAPSearchConstraints
+     * @see netscape.ldap.LDAPConstraints
      */
-    public void add( LDAPEntry entry, LDAPSearchConstraints cons )
+    public void add( LDAPEntry entry, LDAPConstraints cons )
         throws LDAPException {
-        bind (cons);
+        internalBind (cons);
 
         LDAPResponseListener myListener = getResponseListener ();
         LDAPAttributeSet attrs = entry.getAttributeSet ();
         LDAPAttribute[] attrList = new LDAPAttribute[attrs.size()];
-        for( int i = 0; i < attrs.size(); i++ )
+        for( int i = 0; i < attrs.size(); i++ ) {
             attrList[i] = (LDAPAttribute)attrs.elementAt( i );
+        }
         int attrPosition = 0;
-        JDAPMessage response;
+        LDAPMessage response;
         try {
             sendRequest (new JDAPAddRequest (entry.getDN(), attrList),
-                        myListener, cons);
+                         myListener, cons);
             response = myListener.getResponse();
             checkMsg (response);
         } catch (LDAPReferralException e) {
             performReferrals(e, cons, JDAPProtocolOp.ADD_REQUEST,
-                null, 0, null, null, false, null, entry, null, null);
+                             null, 0, null, null, false, null, entry, null, null);
         } finally {
             releaseResponseListener (myListener);
         }
@@ -2367,7 +2500,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     public LDAPExtendedOperation extendedOperation( LDAPExtendedOperation op )
         throws LDAPException {
 
-        return extendedOperation(op, defaultConstraints);
+        return extendedOperation(op, m_defaultConstraints);
     }
 
     /**
@@ -2388,11 +2521,12 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @see netscape.ldap.LDAPExtendedOperation
      */
     public LDAPExtendedOperation extendedOperation( LDAPExtendedOperation op,
-      LDAPSearchConstraints cons) throws LDAPException {
-        bind (cons);
+                                                    LDAPConstraints cons)
+        throws LDAPException {
+        internalBind (cons);
 
         LDAPResponseListener myListener = getResponseListener ();
-        JDAPMessage response = null;
+        LDAPMessage response = null;
         byte[] results = null;
         String resultID;
 
@@ -2444,13 +2578,13 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @see netscape.ldap.LDAPModification
      */
     public void modify( String DN, LDAPModification mod ) throws LDAPException {
-        modify(DN, mod, defaultConstraints);
+        modify(DN, mod, m_defaultConstraints);
     }
 
    /**
     * Makes a single change to an existing entry in the directory and
     * allows you to specify preferences for this LDAP modify operation
-    * by using an <CODE>LDAPSearchConstraints</CODE> object. For
+    * by using an <CODE>LDAPConstraints</CODE> object. For
     * example, you can specify whether or not to follow referrals.
     * You can also apply LDAP v3 controls to the operation.
     * <P>
@@ -2461,12 +2595,11 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     * @exception LDAPException Failed to make the specified change to the
     * directory entry.
     * @see netscape.ldap.LDAPModification
-    * @see netscape.ldap.LDAPSearchConstraints
+    * @see netscape.ldap.LDAPConstraints
     */
     public void modify( String DN, LDAPModification mod,
-        LDAPSearchConstraints cons ) throws LDAPException {
-        LDAPModification[] mods = new LDAPModification [1];
-        mods[0] = mod;
+        LDAPConstraints cons ) throws LDAPException {
+        LDAPModification[] mods = { mod };
         modify (DN, mods, cons);
     }
 
@@ -2510,13 +2643,13 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      */
     public void modify (String DN, LDAPModificationSet mods)
         throws LDAPException {
-        modify(DN, mods, defaultConstraints);
+        modify(DN, mods, m_defaultConstraints);
     }
 
     /**
      * Makes a set of changes to an existing entry in the directory and
      * allows you to specify preferences for this LDAP modify operation
-     * by using an <CODE>LDAPSearchConstraints</CODE> object. For
+     * by using an <CODE>LDAPConstraints</CODE> object. For
      * example, you can specify whether or not to follow referrals.
      * You can also apply LDAP v3 controls to the operation.
      * <P>
@@ -2527,13 +2660,14 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @exception LDAPException Failed to make the specified changes to the
      * directory entry.
      * @see netscape.ldap.LDAPModificationSet
-     * @see netscape.ldap.LDAPSearchConstraints
+     * @see netscape.ldap.LDAPConstraints
      */
      public void modify (String DN, LDAPModificationSet mods,
-         LDAPSearchConstraints cons) throws LDAPException {
+         LDAPConstraints cons) throws LDAPException {
          LDAPModification[] modList = new LDAPModification[mods.size()];
-         for( int i = 0; i < mods.size(); i++ )
+         for( int i = 0; i < mods.size(); i++ ) {
              modList[i] = mods.elementAt( i );
+         }
          modify (DN, modList, cons);
      }
 
@@ -2557,13 +2691,13 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      */
     public void modify (String DN, LDAPModification[] mods)
         throws LDAPException {
-        modify(DN, mods, defaultConstraints);
+        modify(DN, mods, m_defaultConstraints);
     }
 
     /**
      * Makes a set of changes to an existing entry in the directory and
      * allows you to specify preferences for this LDAP modify operation
-     * by using an <CODE>LDAPSearchConstraints</CODE> object. For
+     * by using an <CODE>LDAPConstraints</CODE> object. For
      * example, you can specify whether or not to follow referrals.
      * You can also apply LDAP v3 controls to the operation.
      * <P>
@@ -2575,21 +2709,21 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @exception LDAPException Failed to make the specified changes to the
      * directory entry.
      * @see netscape.ldap.LDAPModification
-     * @see netscape.ldap.LDAPSearchConstraints
+     * @see netscape.ldap.LDAPConstraints
      */
     public void modify (String DN, LDAPModification[] mods,
-         LDAPSearchConstraints cons) throws LDAPException {
-         bind (cons);
+         LDAPConstraints cons) throws LDAPException {
+         internalBind (cons);
 
          LDAPResponseListener myListener = getResponseListener ();
-         JDAPMessage response = null;
+         LDAPMessage response = null;
          try {
              sendRequest (new JDAPModifyRequest (DN, mods), myListener, cons);
              response = myListener.getResponse();
              checkMsg (response);
          } catch (LDAPReferralException e) {
              performReferrals(e, cons, JDAPProtocolOp.MODIFY_REQUEST,
-               DN, 0, null, null, false, mods, null, null, null);
+                              DN, 0, null, null, false, mods, null, null, null);
          } finally {
              releaseResponseListener (myListener);
          }
@@ -2613,13 +2747,13 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * the directory.
      */
     public void delete( String DN ) throws LDAPException {
-        delete(DN, defaultConstraints);
+        delete(DN, m_defaultConstraints);
     }
 
     /**
      * Deletes the entry for the specified DN from the directory and
      * allows you to specify preferences for this LDAP delete operation
-     * by using an <CODE>LDAPSearchConstraints</CODE> object. For
+     * by using an <CODE>LDAPConstraints</CODE> object. For
      * example, you can specify whether or not to follow referrals.
      * You can also apply LDAP v3 controls to the operation.
      * <P>
@@ -2629,21 +2763,21 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @param cons The set of preferences that you want applied to this operation.
      * @exception LDAPException Failed to delete the specified entry from
      * the directory.
-     * @see netscape.ldap.LDAPSearchConstraints
+     * @see netscape.ldap.LDAPConstraints
      */
-    public void delete( String DN, LDAPSearchConstraints cons )
+    public void delete( String DN, LDAPConstraints cons )
         throws LDAPException {
-        bind (cons);
+        internalBind (cons);
 
         LDAPResponseListener myListener = getResponseListener ();
-        JDAPMessage response;
+        LDAPMessage response;
         try {
             sendRequest (new JDAPDeleteRequest (DN), myListener, cons);
             response = myListener.getResponse();
             checkMsg (response);
         } catch (LDAPReferralException e) {
             performReferrals(e, cons, JDAPProtocolOp.DEL_REQUEST,
-              DN, 0, null, null, false, null, null, null, null);
+                             DN, 0, null, null, false, null, null, null, null);
         } finally {
             releaseResponseListener (myListener);
         }
@@ -2720,8 +2854,8 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @exception LDAPException Failed to rename the specified entry.
      */
     public void rename (String DN, String newRDN, boolean deleteOldRDN,
-        LDAPSearchConstraints cons )
-          throws LDAPException {
+                        LDAPConstraints cons )
+        throws LDAPException {
         rename(DN, newRDN, null, deleteOldRDN, cons);
     }
 
@@ -2753,14 +2887,14 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                         String newRDN,
                         String newParentDN,
                         boolean deleteOldRDN) throws LDAPException {
-          rename(dn, newRDN, newParentDN, deleteOldRDN, defaultConstraints);
+          rename(dn, newRDN, newParentDN, deleteOldRDN, m_defaultConstraints);
      }
 
     /**
      * Renames an existing entry in the directory and (optionally)
      * changes the location of the entry in the directory tree. Also
      * allows you to specify preferences for this LDAP modify DN operation
-     * by using an <CODE>LDAPSearchConstraints</CODE> object. For
+     * by using an <CODE>LDAPConstraints</CODE> object. For
      * example, you can specify whether or not to follow referrals.
      * You can also apply LDAP v3 controls to the operation.
      * <P>
@@ -2785,63 +2919,752 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * for the cn attribute: "cn=oldName" and "cn=newName").
      * @param cons The set of preferences that you want applied to this operation.
      * @exception LDAPException Failed to rename the specified entry.
-     * @see netscape.ldap.LDAPSearchConstraints
+     * @see netscape.ldap.LDAPConstraints
      */
     public void rename (String DN,
                            String newRDN,
                            String newParentDN,
                            boolean deleteOldRDN,
-                           LDAPSearchConstraints cons)
+                           LDAPConstraints cons)
         throws LDAPException {
-        bind (cons);
+        internalBind (cons);
 
         LDAPResponseListener myListener = getResponseListener ();
-        JDAPMessage response;
         try {
             JDAPModifyRDNRequest request = null;
-            if ( newParentDN != null )
+            if ( newParentDN != null ) {
                 request = new JDAPModifyRDNRequest (DN,
                                                 newRDN,
                                                 deleteOldRDN,
                                                 newParentDN);
-            else
+            } else {
                 request = new JDAPModifyRDNRequest (DN,
                                                 newRDN,
                                                 deleteOldRDN);
+            }
             sendRequest (request, myListener, cons);
-            response = myListener.getResponse();
+            LDAPMessage response = myListener.getResponse();
             checkMsg (response);
         } catch (LDAPReferralException e) {
             performReferrals(e, cons, JDAPProtocolOp.MODIFY_RDN_REQUEST,
-              DN, 0, newRDN, null, deleteOldRDN, null, null, null, null);
+                             DN, 0, newRDN, null, deleteOldRDN, null, null,
+                             null, null);
         } finally {
             releaseResponseListener (myListener);
         }
     }
 
     /**
+     * Adds an entry to the directory.
+     *
+     * @param entry LDAPEntry object specifying the distinguished name and
+     * attributes of the new entry.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @param cons Constraints specific to the operation.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPEntry
+     * @see netscape.ldap.LDAPResponseListener
+     */
+    public LDAPResponseListener add(LDAPEntry entry,
+                                    LDAPResponseListener listener)
+                                    throws LDAPException{
+        return add(entry, listener, m_defaultConstraints);
+    }
+ 
+    /**
+     * Adds an entry to the directory and allows you to specify constraints
+     * for this LDAP add operation by using an <CODE>LDAPConstraints</CODE>
+     * object. For example, you can specify whether or not to follow referrals.
+     * You can also apply LDAP v3 controls to the operation.
+     * <P>
+     *
+     * @param entry LDAPEntry object specifying the distinguished name and
+     * attributes of the new entry.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @param cons Constraints specific to the operation.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPEntry
+     * @see netscape.ldap.LDAPResponseListener
+     * @see netscape.ldap.LDAPConstraints
+     */
+    public LDAPResponseListener add(LDAPEntry entry,
+                                    LDAPResponseListener listener,
+                                    LDAPConstraints cons)
+                                    throws LDAPException{
+
+        if (cons == null) {
+            cons = m_defaultConstraints;
+        }
+        
+        internalBind (cons);
+
+        if (listener == null) {
+            listener = new LDAPResponseListener(/*asynchOp=*/true);
+        }
+
+        LDAPAttributeSet attrs = entry.getAttributeSet ();
+        LDAPAttribute[] attrList = new LDAPAttribute[attrs.size()];
+        for( int i = 0; i < attrs.size(); i++ )
+            attrList[i] = (LDAPAttribute)attrs.elementAt( i );
+        int attrPosition = 0;
+
+        sendRequest (new JDAPAddRequest (entry.getDN(), attrList),
+                    listener, cons);
+
+        return listener;
+    }
+
+    /**
+     * Authenticates to the LDAP server (that the object is currently
+     * connected to) using the specified name and password. If the object
+     * has been disconnected from an LDAP server, this method attempts to
+     * reconnect to the server. If the object had already authenticated, the
+     * old authentication is discarded.
+     * 
+     * @param dn If non-null and non-empty, specifies that the connection
+     * and all operations through it should be authenticated with dn as the
+     * distinguished name.
+     * @param passwd If non-null and non-empty, specifies that the connection
+     * and all operations through it should be authenticated with dn as the
+     * distinguished name and passwd as password.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPResponseListener
+     */
+    public LDAPResponseListener bind(String dn,
+                                     String passwd,
+                                     LDAPResponseListener listener)
+                                     throws LDAPException{
+        return bind(dn, passwd, listener, m_defaultConstraints);
+    }
+
+    /**
+     * Authenticates to the LDAP server (that the object is currently
+     * connected to) using the specified name and password  and allows you
+     * to specify constraints for this LDAP add operation by using an
+     *  <CODE>LDAPConstraints</CODE> object. If the object
+     * has been disconnected from an LDAP server, this method attempts to
+     * reconnect to the server. If the object had already authenticated, the
+     * old authentication is discarded.
+     * 
+     * @param dn If non-null and non-empty, specifies that the connection
+     * and all operations through it should be authenticated with dn as the
+     * distinguished name.
+     * @param passwd If non-null and non-empty, specifies that the connection
+     * and all operations through it should be authenticated with dn as the
+     * distinguished name and passwd as password.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @param cons Constraints specific to the operation.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPResponseListener
+     * @see netscape.ldap.LDAPConstraints
+     */
+    public LDAPResponseListener bind(String dn,
+                                     String passwd,
+                                     LDAPResponseListener listener,
+                                     LDAPConstraints cons) 
+                                     throws LDAPException{
+        if (cons == null) {
+            cons = m_defaultConstraints;
+        }
+
+        m_prevBoundDN = m_boundDN;
+        m_prevBoundPasswd = m_boundPasswd;
+        m_boundDN = dn;
+        m_boundPasswd = passwd;
+        
+        if (m_thread == null) {
+            connect();
+        }
+        else if (m_thread.getClientCount() > 1) {
+            disconnect();
+            connect();
+        }
+
+        if (listener == null) {
+            listener = new LDAPResponseListener(/*asynchOp=*/true);
+        }
+
+        sendRequest(new JDAPBindRequest(m_protocolVersion, m_boundDN, m_boundPasswd),
+            listener, cons);
+
+        return listener;
+    }
+    
+    /**
+     * Authenticates to the LDAP server (that the object is currently
+     * connected to) using the specified name and a specified SASL mechanism
+     * or set of mechanisms. If the requested SASL mechanism is not
+     * available, an exception is thrown.  If the object has been
+     * disconnected from an LDAP server, this method attempts to reconnect
+     * to the server. If the object had already authenticated, the old
+     * authentication is discarded.
+     * 
+     * @param dn If non-null and non-empty, specifies that the connection
+     * and all operations through it should be authenticated with dn as the
+     * distinguished name.
+     * @param mechanisms A list of acceptable mechanisms. The first one
+     * for which a Mechanism Driver can be instantiated is returned.
+     * @param packageName  A package from which to instantiate the Mechanism
+     * Driver, e.g. "myclasses.SASL.mechanisms". If null, a system default is used.
+     * @param props The possibly null additional configuration properties for
+     * the session.
+     * @param cbh A class which may be called by the SASL framework to
+     * obtain additional information required.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPResponseListener
+     */
+    public LDAPResponseListener bind(String dn,
+                                     String[] mechanisms,
+                                     String packageName,
+                                     Properties props,
+                                     CallbackHandler cbh,
+                                     LDAPResponseListener listener)
+                                     throws LDAPException{
+
+        return bind(dn, mechanisms, packageName, props, cbh,
+                    listener, m_defaultConstraints);
+    }
+
+    /**
+     * Authenticates to the LDAP server (that the object is currently
+     * connected to) using the specified name and a specified SASL mechanism
+     * or set of mechanisms. If the requested SASL mechanism is not
+     * available, an exception is thrown.  If the object has been
+     * disconnected from an LDAP server, this method attempts to reconnect
+     * to the server. If the object had already authenticated, the old
+     * authentication is discarded.
+     * 
+     * @param dn If non-null and non-empty, specifies that the connection
+     * and all operations through it should be authenticated with dn as the
+     * distinguished name.
+     * @param mechanisms A list of acceptable mechanisms. The first one
+     * for which a Mechanism Driver can be instantiated is returned.
+     * @param packageName  A package from which to instantiate the Mechanism
+     * Driver, e.g. "myclasses.SASL.mechanisms". If null, a system default is used.
+     * @param props The possibly null additional configuration properties for
+     * the session.
+     * @param cbh A class which may be called by the SASL framework to
+     * obtain additional information required.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @param cons Constraints specific to the operation.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to bind to the directory.
+     * @see netscape.ldap.LDAPResponseListener
+     * @see netscape.ldap.LDAPConstraints
+     */
+    public LDAPResponseListener bind(String dn,
+                                     String[] mechanisms,
+                                     String packageName,
+                                     Properties props,
+                                     CallbackHandler cbh,
+                                     LDAPResponseListener listener,
+                                     LDAPConstraints cons)
+                                     throws LDAPException{
+        return null;
+    }
+
+    /**
+     * Deletes the entry for the specified DN from the directory.
+     * 
+     * @param dn Distinguished name of the entry to delete.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPResponseListener
+     * @see netscape.ldap.LDAPConstraints
+     */
+    public LDAPResponseListener delete(String dn,
+                                       LDAPResponseListener listener)
+                                       throws LDAPException{
+        
+        return delete(dn, listener, m_defaultConstraints);
+    }
+
+    /**
+     * Deletes the entry for the specified DN from the directory.
+     * 
+     * @param dn Distinguished name of the entry to delete.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @param cons Constraints specific to the operation.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPResponseListener
+     * @see netscape.ldap.LDAPConstraints
+     */
+    public LDAPResponseListener delete(String dn,
+                                      LDAPResponseListener listener,
+                                      LDAPConstraints cons)
+                                       throws LDAPException{
+        if (cons == null) {
+            cons = m_defaultConstraints;
+        }
+
+        internalBind (cons);
+
+        if (listener == null) {
+            listener = new LDAPResponseListener(/*asynchOp=*/true);
+        }
+        
+        sendRequest (new JDAPDeleteRequest(dn), listener, cons);
+        
+        return listener;
+
+    }
+    
+    /**
+     * Makes a single change to an existing entry in the directory (for
+     * example, changes the value of an attribute, adds a new attribute
+     * value, or removes an existing attribute value).<BR>
+     * The LDAPModification object specifies both the change to be made and
+     * the LDAPAttribute value to be changed.
+     * 
+     * @param dn Distinguished name of the entry to modify.
+     * @param mod A single change to be made to an entry.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPModification
+     * @see netscape.ldap.LDAPResponseListener
+     */
+    public LDAPResponseListener modify(String dn,
+                                       LDAPModification mod,
+                                       LDAPResponseListener listener)
+                                       throws LDAPException{
+
+        return modify(dn, mod, listener, m_defaultConstraints);
+    }
+    
+    /**
+     * Makes a single change to an existing entry in the directory (for
+     * example, changes the value of an attribute, adds a new attribute
+     * value, or removes an existing attribute value).<BR>
+     * The LDAPModification object specifies both the change to be made and
+     * the LDAPAttribute value to be changed.
+     * 
+     * @param dn Distinguished name of the entry to modify.
+     * @param mod A single change to be made to an entry.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @param cons Constraints specific to the operation.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPModification
+     * @see netscape.ldap.LDAPResponseListener
+     * @see netscape.ldap.LDAPConstraints
+     */
+    public LDAPResponseListener modify(String dn,
+                                       LDAPModification mod,
+                                       LDAPResponseListener listener,
+                                       LDAPConstraints cons)
+                                       throws LDAPException{
+        if (cons == null) {
+            cons = m_defaultConstraints;
+        }
+
+        internalBind (cons);
+
+        if (listener == null) {
+            listener = new LDAPResponseListener(/*asynchOp=*/true);
+        }
+
+        LDAPModification[] modList = { mod };
+        sendRequest (new JDAPModifyRequest (dn, modList), listener, cons);        
+
+        return listener;
+    }
+
+    /**
+     * Makes a set of changes to an existing entry in the directory (for
+     * example, changes attribute values, adds new attribute values, or
+     * removes existing attribute values).
+     * <P>
+     * @param dn Distinguished name of the entry to modify.
+     * @param mods A set of changes to be made to the entry.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPModificationSet
+     * @see netscape.ldap.LDAPResponseListener
+     */
+    public LDAPResponseListener modify(String dn,
+                                       LDAPModificationSet mods,
+                                       LDAPResponseListener listener)
+                                       throws LDAPException{
+        return modify(dn,mods, listener, m_defaultConstraints);
+    }
+    
+    /**
+     * Makes a set of changes to an existing entry in the directory (for
+     * example, changes attribute values, adds new attribute values, or
+     * removes existing attribute values).
+     * 
+     * @param dn Distinguished name of the entry to modify.
+     * @param mods A set of changes to be made to the entry.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @param cons Constraints specific to the operation.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPModificationSet
+     * @see netscape.ldap.LDAPResponseListener
+     * @see netscape.ldap.LDAPConstraints
+     */
+    public LDAPResponseListener modify(String dn,
+                                       LDAPModificationSet mods,
+                                       LDAPResponseListener listener,
+                                       LDAPConstraints cons)
+                                       throws LDAPException{
+        if (cons == null) {
+            cons = m_defaultConstraints;
+        }
+
+        internalBind (cons);
+
+        if (listener == null) {
+            listener = new LDAPResponseListener(/*asynchOp=*/true);
+        }
+
+        LDAPModification[] modList = new LDAPModification[mods.size()];
+        for( int i = 0; i < mods.size(); i++ ) {
+            modList[i] = mods.elementAt( i );
+        }
+
+        sendRequest (new JDAPModifyRequest (dn, modList), listener, cons);        
+        return listener;
+
+    }    
+
+    /**
+     * Renames an existing entry in the directory.
+     * 
+     * @param dn Current distinguished name of the entry.
+     * @param newRdn New relative distinguished name for the entry.
+     * @param deleteOldRdn   If true, the old name is not retained as an
+     * attribute value.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPResponseListener
+     */
+    public LDAPResponseListener rename(String dn,
+                                       String newRdn,
+                                       boolean deleteOldRdn,
+                                       LDAPResponseListener listener)
+                                       throws LDAPException{
+        return rename(dn, newRdn, deleteOldRdn, listener, m_defaultConstraints);
+    }
+
+    /**
+     * Renames an existing entry in the directory.
+     * 
+     * @param dn Current distinguished name of the entry.
+     * @param newRdn New relative distinguished name for the entry.
+     * @param deleteOldRdn   If true, the old name is not retained as an
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @param cons Constraints specific to the operation.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPResponseListener
+     * @see netscape.ldap.LDAPConstraints
+     */
+    public LDAPResponseListener rename(String dn,
+                                       String newRdn,
+                                       boolean deleteOldRdn,
+                                       LDAPResponseListener listener,
+                                       LDAPConstraints cons)
+                                       throws LDAPException{
+        if (cons == null) {
+            cons = m_defaultConstraints;
+        }
+        
+        internalBind (cons);
+
+        if (listener == null) {
+            listener = new LDAPResponseListener(/*asynchOp=*/true);
+        }
+
+        sendRequest (new JDAPModifyRDNRequest (dn, newRdn, deleteOldRdn),
+                     listener, cons);
+        
+        return listener;
+
+    }
+        
+    
+    /**
+     * Performs the search specified by the criteria that you enter. <P>
+     * To abandon the search, use the <CODE>abandon</CODE> method.
+     *
+     * @param base The base distinguished name to search from
+     * @param scope The scope of the entries to search.  You can specify one
+     * of the following: <P>
+     * <UL>
+     * <LI><CODE>LDAPv2.SCOPE_BASE</CODE> (search only the base DN) <P>
+     * <LI><CODE>LDAPv2.SCOPE_ONE</CODE>
+     * (search only entries under the base DN) <P>
+     * <LI><CODE>LDAPv2.SCOPE_SUB</CODE>
+     * (search the base DN and all entries within its subtree) <P>
+     * </UL>
+     * <P>
+     * @param filter Search filter specifying the search criteria.
+     * @param attrs List of attributes that you want returned in the
+     * search results.
+     * @param typesOnly If true, returns the names but not the values of the
+     * attributes found.  If false, returns the names and values for
+     * attributes found
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @return LDAPSearchListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPConnection#abandon(netscape.ldap.LDAPSearchListener)
+     */
+    public LDAPSearchListener search(String base,
+                                     int scope,
+                                     String filter,
+                                     String attrs[],
+                                     boolean typesOnly,
+                                     LDAPSearchListener listener)
+                                     throws LDAPException {
+        
+        return search(base, scope, filter, attrs, typesOnly,
+                      listener, m_defaultConstraints);
+    }
+
+    /**
+     * Performs the search specified by the criteria that you enter.
+     * This method also allows you to specify constraints for the search
+     * (such as the maximum number of entries to find or the
+     * maximum time to wait for search results). <P>
+     * To abandon the search, use the <CODE>abandon</CODE> method.
+     *
+     * @param base The base distinguished name to search from
+     * @param scope The scope of the entries to search.  You can specify one
+     * of the following: <P>
+     * <UL>
+     * <LI><CODE>LDAPv2.SCOPE_BASE</CODE> (search only the base DN) <P>
+     * <LI><CODE>LDAPv2.SCOPE_ONE</CODE>
+     * (search only entries under the base DN) <P>
+     * <LI><CODE>LDAPv2.SCOPE_SUB</CODE>
+     * (search the base DN and all entries within its subtree) <P>
+     * </UL>
+     * <P>
+     * @param filter Search filter specifying the search criteria.
+     * @param attrs List of attributes that you want returned in the search
+     * results.
+     * @param typesOnly If true, returns the names but not the values of the
+     * attributes found.  If false, returns the names and  values for
+     * attributes found.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @param cons Constraints specific to this search (for example, the
+     * maximum number of entries to return).
+     * @return LDAPSearchListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     * @see netscape.ldap.LDAPConnection#abandon(netscape.ldap.LDAPSearchListener)
+     */
+    public LDAPSearchListener search(String base,
+                                     int scope,
+                                     String filter,
+                                     String attrs[],
+                                     boolean typesOnly,
+                                     LDAPSearchListener listener,
+                                     LDAPSearchConstraints cons)
+                                     throws LDAPException {
+        if (cons == null) {
+            cons = m_defaultConstraints;
+        }
+
+        internalBind (cons);
+        
+        if (listener == null) {
+            listener = new LDAPSearchListener(/*asynchOp=*/true, cons);
+        }
+        
+        JDAPSearchRequest request = null;        
+        try {
+            request = new JDAPSearchRequest (base, scope, cons.getDereference(),
+                cons.getMaxResults(), cons.getServerTimeLimit(),
+                typesOnly, filter, attrs);
+        }
+        catch (IllegalArgumentException e) {
+            throw new LDAPException(e.getMessage(), LDAPException.PARAM_ERROR);
+        }
+
+        sendRequest (request, listener, cons);
+        return listener;
+        
+    }
+    
+    /**
+     * Compare an attribute value with one in the directory. The result can 
+     * be obtained by calling <CODE>getResultCode</CODE> on the 
+     * <CODE>LDAPResponse</CODE> from the <CODE>LDAPResponseListener</CODE>.
+     * The code will be <CODE>LDAPException.COMPARE_TRUE</CODE> or 
+     * <CODE>LDAPException.COMPARE_FALSE</CODE>. 
+     * 
+     * @param dn Distinguished name of the entry to compare.
+     * @param attr Attribute with a value to compare.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     */
+    public LDAPResponseListener compare(String dn, 
+                                        LDAPAttribute attr, 
+                                        LDAPResponseListener listener)
+                                        throws LDAPException {
+
+        return compare(dn, attr, listener, m_defaultConstraints);
+    }
+    
+    /**
+     * Compare an attribute value with one in the directory. The result can 
+     * be obtained by calling <CODE>getResultCode</CODE> on the 
+     * <CODE>LDAPResponse</CODE> from the <CODE>LDAPResponseListener</CODE>.
+     * The code will be <CODE>LDAPException.COMPARE_TRUE</CODE> or 
+     * <CODE>LDAPException.COMPARE_FALSE</CODE>. 
+     * 
+     * @param dn Distinguished name of the entry to compare.
+     * @param attr Attribute with a value to compare.
+     * @param listener Handler for messages returned from a server in response
+     * to this request. If it is null, a listener object is created internally.
+     * @param cons Constraints specific to this operation.
+     * @return LDAPResponseListener Handler for messages returned from a server
+     * in response to this request.
+     * @exception LDAPException Failed to send request.
+     */
+    public LDAPResponseListener compare(String dn, 
+                                        LDAPAttribute attr, 
+                                        LDAPResponseListener listener,
+                                        LDAPConstraints cons) 
+                                        throws LDAPException {
+        if (cons == null) {
+            cons = m_defaultConstraints;
+        }
+        
+        internalBind (cons);
+
+        if (listener == null) {
+            listener = new LDAPResponseListener(/*asynchOp=*/true);
+        }
+
+        Enumeration en = attr.getStringValues();
+        String val = (String)en.nextElement();
+        JDAPAVA ava = new JDAPAVA(attr.getName(), val);
+        
+        sendRequest (new JDAPCompareRequest (dn, ava), listener, cons);
+        return listener;
+    }
+    
+    /**
+     * Cancels the ldap request with the specified id and discards
+     * any results already received.
+     * 
+     * @param id A LDAP request id
+     * @exception LDAPException Failed to send request.
+     */
+    public void abandon(int id) throws LDAPException {
+
+        if (!isConnected()) {
+            return;
+        }
+        
+        for (int i=0; i<3; i++) {
+            try {
+                /* Tell listener thread to discard results */
+                m_thread.abandon( id );
+
+                /* Tell server to stop sending results */
+                m_thread.sendRequest(null, new JDAPAbandonRequest(id), null, m_defaultConstraints);
+
+                /* No response is forthcoming */
+                break;
+            } catch (NullPointerException ne) {
+                // do nothing
+            }
+        }
+        if (m_thread == null) {
+            throw new LDAPException("Failed to send abandon request to the server.",
+              LDAPException.OTHER);
+        }
+    }
+    
+    /**
+     * Cancels all outstanding search requests associated with this
+     * LDAPSearchListener object and discards any results already received.
+     * 
+     * @param searchlistener A search listener returned from a search. 
+     * @exception LDAPException Failed to send request.
+     */
+    public void abandon(LDAPSearchListener searchlistener)throws LDAPException {
+        int[] ids = searchlistener.getIDs();
+        for (int i=0; i < ids.length; i++) {
+            searchlistener.removeRequest(ids[i]);
+            abandon(ids[i]);
+        }
+    }
+    
+    /**
      * Returns the value of the specified option for this
      * <CODE>LDAPConnection</CODE> object. <P>
      *
-     * These options represent the search constraints for the current connection.
-     * To get all search constraints for the current connection, call the
+     * These options represent the constraints for the current connection.
+     * To get all constraints for the current connection, call the
      * <CODE>getSearchConstraints</CODE> method.
      * <P>
      *
-     * By default, the search constraints apply to all searches performed
-     * through the current connection.  You can change these search constraints:
+     * By default, the constraints apply to all operations performed
+     * through the current connection.  You can change these constraints:
      * <P>
      *
      * <UL>
-     * <LI>If you want to override these constraints only for a particular
-     * search, create an <CODE>LDAPSearchConstraints</CODE> object with
-     * your new constraints and pass it to the
-     * <CODE>LDAPConnection.search</CODE> method.
+     * <LI> If you want to set a constraint only for a particular operation, 
+     * create an <CODE>LDAPConstraints</CODE> object (or a 
+     * <CODE>LDAPSearchConstraints</CODE> object for a search or find operation)
+     * with your new constraints
+     * and pass it to the <CODE>LDAPConnection</CODE> method that performs the
+     * operation.
      * <P>
      *
-     * <LI>If you want to override these constraints for all searches
+     * <LI>If you want to override these constraints for all operations
      * performed under the current connection, call the
-     * <CODE>setOption</CODE> method to change the search constraint.
+     * <CODE>setOption</CODE> method to change the constraint.
      * <P>
      *
      * </UL>
@@ -2922,6 +3745,17 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * <CODE>LDAPRebind</CODE> interface.  You must define this class and
      * the <CODE>getRebindAuthentication</CODE> method that will be used to
      * get the distinguished name and password to use for authentication.
+     * Modifying this option sets the <CODE>LDAPv2.BIND</CODE> option to null.
+     * <P>By default, the value of this option is <CODE>null</CODE>.</TD></TR>
+     * <TR VALIGN=BASELINE><TD>
+     * <CODE>LDAPv2.BIND>/CODE></TD>
+     * <TD><CODE>LDAPBind</CODE></TD>
+     * <TD>Specifies an object with a class that implements the
+     * <CODE>LDAPBind</CODE>
+     * interface.  You must define this class and the
+     * <CODE>bind</CODE> method that will be used to autheniticate
+     * to the server on referrals. Modifying this option sets the 
+     * <CODE>LDAPv2.REFERRALS_REBIND_PROC</CODE> to null.
      * <P>By default, the value of this option is <CODE>null</CODE>.</TD></TR>
      * <TR VALIGN=BASELINE><TD>
      * <CODE>LDAPv2.REFERRALS_HOP_LIMIT</CODE></TD>
@@ -2964,6 +3798,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * value as an <CODE>Integer</CODE>.)
      * @exception LDAPException Failed to get the specified option.
      * @see netscape.ldap.LDAPRebind
+     * @see netscape.ldap.LDAPConstraints
      * @see netscape.ldap.LDAPSearchConstraints
      * @see netscape.ldap.LDAPReferralException
      * @see netscape.ldap.LDAPControl
@@ -2972,10 +3807,10 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      */
     public Object getOption( int option ) throws LDAPException {
         if (option == LDAPv2.PROTOCOL_VERSION) {
-            return new Integer(protocolVersion);
+            return new Integer(m_protocolVersion);
         }
 
-        return getOption(option, defaultConstraints);
+        return getOption(option, m_defaultConstraints);
     }
 
     private static Object getOption( int option, LDAPSearchConstraints cons )
@@ -2991,6 +3826,8 @@ public class LDAPConnection implements LDAPv3, Cloneable {
               return new Boolean (cons.getReferrals());
             case LDAPv2.REFERRALS_REBIND_PROC:
               return cons.getRebindProc();
+            case LDAPv2.BIND:
+              return cons.getBindProc();
             case LDAPv2.REFERRALS_HOP_LIMIT:
               return new Integer (cons.getHopLimit());
             case LDAPv2.BATCHSIZE:
@@ -3006,22 +3843,25 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                                         LDAPException.PARAM_ERROR );
         }
     }
-
+    
     /**
      * Sets the value of the specified option for this
      * <CODE>LDAPConnection</CODE> object. <P>
      *
-     * These options represent the search constraints for the current
+     * These options represent the constraints for the current
      * connection.
-     * To get all search constraints for the current connection, call the
-     * <CODE>getSearchConstraints</CODE> method.
+     * To get all constraints for the current connection, call the
+     * <CODE>getSearchConstraints</CODE> method. 
      * <P>
      *
      * By default, the option that you set applies to all subsequent
-     * searches performed through the current connection. If you want to
-     * set a constraint only for a particular search, create an
-     * <CODE>LDAPSearchConstraints</CODE> object with your new constraints
-     * and pass it to the <CODE>LDAPConnection.search</CODE> method.
+     * operations performed through the current connection. If you want to
+     * set a constraint only for a particular operation, create an
+     * <CODE>LDAPConstraints</CODE> object (or a 
+     * <CODE>LDAPSearchConstraints</CODE> object for a search or find operation)
+     * with your new constraints
+     * and pass it to the <CODE>LDAPConnection</CODE> method that performs the
+     * operation.
      * <P>
      *
      * For example, the following section of code changes the constraint for
@@ -3102,7 +3942,18 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * <CODE>LDAPRebind</CODE>
      * interface.  You must define this class and the
      * <CODE>getRebindAuthentication</CODE> method that will be used to get
-     * the distinguished name and password to use for authentication.
+     * the distinguished name and password to use for authentication. 
+     * Modifying this option sets the <CODE>LDAPv2.BIND</CODE> option to null.
+     * <P>By default, the value of this option is <CODE>null</CODE>.</TD></TR>
+     * <TR VALIGN=BASELINE><TD>
+     * <CODE>LDAPv2.BIND>/CODE></TD>
+     * <TD><CODE>LDAPBind</CODE></TD>
+     * <TD>Specifies an object with a class that implements the
+     * <CODE>LDAPBind</CODE>
+     * interface.  You must define this class and the
+     * <CODE>bind</CODE> method that will be used to autheniticate
+     * to the server on referrals. Modifying this option sets the 
+     * <CODE>LDAPv2.REFERRALS_REBIND_PROC</CODE> to null.
      * <P>By default, the value of this option is <CODE>null</CODE>.</TD></TR>
      * <TR VALIGN=BASELINE><TD>
      * <CODE>LDAPv2.REFERRALS_HOP_LIMIT</CODE></TD>
@@ -3145,6 +3996,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      *   integer->Integer)
      * @exception LDAPException Failed to set the specified option.
      * @see netscape.ldap.LDAPRebind
+     * @see netscape.ldap.LDAPConstraints
      * @see netscape.ldap.LDAPSearchConstraints
      * @see netscape.ldap.LDAPReferralException
      * @see netscape.ldap.LDAPControl
@@ -3156,13 +4008,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
             setProtocolVersion(((Integer)value).intValue());
             return;
         }
-        setOption(option, value, defaultConstraints);
-        if ( (option == MAXBACKLOG) && (th != null) ) {
-            int val = ((Integer)value).intValue();
-            if ( val >= 1 ) {
-                th.setMaxBacklog( val );
-            }
-        }
+        setOption(option, value, m_defaultConstraints);
     }
 
     private static void setOption( int option, Object value, LDAPSearchConstraints cons ) throws LDAPException {
@@ -3175,10 +4021,16 @@ public class LDAPConnection implements LDAPv3, Cloneable {
           cons.setMaxResults(((Integer)value).intValue());
           return;
         case LDAPv2.TIMELIMIT:
+          cons.setTimeLimit(((Integer)value).intValue());
+          return;
+        case LDAPv2.SERVER_TIMELIMIT:
           cons.setServerTimeLimit(((Integer)value).intValue());
           return;
         case LDAPv2.REFERRALS:
           cons.setReferrals(((Boolean)value).booleanValue());
+          return;
+        case LDAPv2.BIND:
+          cons.setBindProc((LDAPBind)value);
           return;
         case LDAPv2.REFERRALS_REBIND_PROC:
           cons.setRebindProc((LDAPRebind)value);
@@ -3225,29 +4077,34 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                                    LDAPException.PARAM_ERROR );
         }
       } catch (ClassCastException cc) {
-        throw new LDAPException ("invalid option value",
-                                 LDAPException.PARAM_ERROR );
+          throw new LDAPException ("invalid option value",
+                                   LDAPException.PARAM_ERROR );
       }
     }
 
     /**
      * Returns an array of the latest controls (if any) from server.
+     * <P>
+     * To retrieve the controls from a search result, call the 
+     * <CODE>getResponseControls</CODE> method from the <CODE>LDAPSearchResults
+     * </CODE> object returned with the result.
      * @return An array of the controls returned by an operation, or
      * null if none.
      * @see netscape.ldap.LDAPControl
+     * @see netscape.ldap.LDAPSearchResults#getResponseControls
      */
     public LDAPControl[] getResponseControls() {
       LDAPControl[] controls = null;
 
       /* Get the latest controls returned for our thread */
       synchronized(m_responseControlTable) {
-          Vector responses = (Vector)m_responseControlTable.get(th);
+          Vector responses = (Vector)m_responseControlTable.get(m_thread);
 
           if (responses != null) {
               // iterate through each response control
               for (int i=0,size=responses.size(); i<size; i++) {
-                  ResponseControl responseObj =
-                    (ResponseControl)responses.elementAt(i);
+                  LDAPResponseControl responseObj =
+                    (LDAPResponseControl)responses.elementAt(i);
 
                   // check if the response belongs to this connection
                   if (responseObj.getConnection().equals(this)) {
@@ -3258,15 +4115,66 @@ public class LDAPConnection implements LDAPv3, Cloneable {
               }
           }
       }
-
+      
       return controls;
     }
 
     /**
+     * Returns the set of constraints that apply to all operations
+     * performed through this connection (unless you specify a different
+     * set of constraints when calling a method). 
+     * <P>
+     *
+     * Note that if you want to get individual constraints (rather than
+     * getting the
+     * entire set of constraints), call the <CODE>getOption</CODE> method.
+     * <P>
+     *
+     * Typically, you might call the <CODE>getConstraints</CODE> method
+     * if you want to create a slightly different set of constraints
+     * that you want to apply to a particular operation.
+     * <P>
+     *
+     * For example, the following section of code changes the timeout
+     * to 3000 milliseconds for a specific rename. Rather than construct a new
+     * set of constraints from scratch, the example gets the current
+     * settings for the connections and just changes the setting for the
+     * timeout.
+     * <P>
+     *
+     * Note that this change only applies to the searches performed with this
+     * custom set of constraints.  All other searches performed through this
+     * connection use the original set of search constraints.
+     * <P>
+     *
+     * <PRE>
+     * ...
+     * LDAPConstraints myOptions = ld.getConstraints();
+     * myOptions.setTimeout( 3000 );
+     * ld.search( "cn=William Jensen, ou=Accounting, o=Ace Industry,c=US",
+     *            "cn=Will Jensen",
+     *            null,
+     *            false,
+     *            myOptions );
+     * ...
+     * </PRE>
+     *
+     * @return A copy of the <CODE>LDAPConstraints</CODE> object representing the
+     * set of constraints that apply (by default) to all operations
+     * performed through this connection.
+     * @see netscape.ldap.LDAPConstraints
+     * @see netscape.ldap.LDAPConnection#getOption
+     */
+    public LDAPConstraints getConstraints () {
+        return (LDAPConstraints)getSearchConstraints();
+    }
+   
+    /**
      * Returns the set of search constraints that apply to all searches
      * performed through this connection (unless you specify a different
      * set of search constraints when calling the <CODE>search</CODE>
-     * method). <P>
+     * method). 
+     * <P>
      *
      * Note that if you want to get individual constraints (rather than
      * getting the
@@ -3304,15 +4212,109 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * ...
      * </PRE>
      *
-     * @return The <CODE>LDAPSearchConstraints</CODE> object representing the
-     * set of search constraints that apply (by default) to all searches
-     * performed through this connection.
+     * @return A copy of the <CODE>LDAPSearchConstraints</CODE> object 
+     * representing the set of search constraints that apply (by default) to 
+     * all searches performed through this connection.
      * @see netscape.ldap.LDAPSearchConstraints
      * @see netscape.ldap.LDAPConnection#getOption
-     * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
+     * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)  
      */
     public LDAPSearchConstraints getSearchConstraints () {
-        return defaultConstraints;
+        return (LDAPSearchConstraints)m_defaultConstraints.clone();
+    }
+
+
+    /**
+     * Set the default constraint set for all operations. 
+     * @param cons <CODE>LDAPConstraints</CODE> object to be used as the default
+     * constraint set.
+     * @see netscape.ldap.LDAPConnection#getConstraints
+     * @see netscape.ldap.LDAPConstraints
+     */
+    public void setConstraints(LDAPConstraints cons) {
+        m_defaultConstraints.setHopLimit(cons.getHopLimit());
+        m_defaultConstraints.setReferrals(cons.getReferrals());
+        m_defaultConstraints.setTimeLimit(cons.getTimeLimit());
+        m_defaultConstraints.setBindProc(cons.getBindProc());
+        m_defaultConstraints.setRebindProc(cons.getRebindProc());
+
+        LDAPControl[] tClientControls = cons.getClientControls();
+        LDAPControl[] oClientControls = null;
+
+        if ( (tClientControls != null) &&
+             (tClientControls.length > 0) ) {
+            oClientControls = new LDAPControl[tClientControls.length]; 
+            for( int i = 0; i < tClientControls.length; i++ ) {
+                oClientControls[i] = (LDAPControl)tClientControls[i].clone();
+            }
+        } 
+        m_defaultConstraints.setClientControls(oClientControls);
+ 
+        LDAPControl[] tServerControls = cons.getServerControls();
+        LDAPControl[] oServerControls = null;
+
+        if ( (tServerControls != null) && 
+             (tServerControls.length > 0) ) {
+            oServerControls = new LDAPControl[tServerControls.length];
+            for( int i = 0; i < tServerControls.length; i++ ) {
+                oServerControls[i] = (LDAPControl)tServerControls[i].clone();
+            }
+        }
+        m_defaultConstraints.setServerControls(oServerControls);
+    }
+    
+    /**
+     * Set the default constraint set for all search operations. 
+     * @param cons <CODE>LDAPSearchConstraints</CODE> object to be used as the
+     * default constraint set.
+     * @see netscape.ldap.LDAPConnection#getSearchConstraints
+     * @see netscape.ldap.LDAPSearchConstraints
+     */
+    public void setSearchConstraints(LDAPSearchConstraints cons) {
+        m_defaultConstraints = (LDAPSearchConstraints)cons.clone();
+    }
+
+    /**
+     * Gets the stream for reading from the listener socket
+     *
+     * @return The stream for reading from the listener socket, or
+     * <CODE>null</CODE> if there is none
+     */
+    public InputStream getInputStream() {
+        return (m_thread != null) ? m_thread.getInputStream() : null;
+    }
+
+    /**
+     * Sets the stream for reading from the listener socket if
+     * there is one
+     *
+     * @param is The stream for reading from the listener socket
+     */
+    public void setInputStream( InputStream is ) {
+        if ( m_thread != null ) {
+            m_thread.setInputStream( is );
+        }
+    }
+
+    /**
+     * Gets the stream for writing to the socket
+     *
+     * @return The stream for writing to the socket, or
+     * <CODE>null</CODE> if there is none
+     */
+    public OutputStream getOutputStream() {
+        return (m_thread != null) ? m_thread.getOutputStream() : null;
+    }
+
+    /**
+     * Sets the stream for writing to the socket
+     *
+     * @param os The stream for writing to the socket, if there is one
+     */
+    public void setOutputStream( OutputStream os ) {
+        if ( m_thread != null ) {
+            m_thread.setOutputStream( os );
+        }
     }
 
     /**
@@ -3321,17 +4323,18 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * synchronous.
      * @return response listener object
      */
-    private synchronized LDAPResponseListener getResponseListener () {
-        if (responseListeners == null)
-            responseListeners = new Vector (5);
+    synchronized LDAPResponseListener getResponseListener () {
+        if (m_responseListeners == null) {
+            m_responseListeners = new Vector (5);
+        }
 
         LDAPResponseListener l;
-        if ( responseListeners.size() < 1 ) {
-            l = new LDAPResponseListener ( this );
+        if ( m_responseListeners.size() < 1 ) {
+            l = new LDAPResponseListener ( /*asynchOp=*/false );
         }
         else {
-            l = (LDAPResponseListener)responseListeners.elementAt (0);
-            responseListeners.removeElementAt (0);
+            l = (LDAPResponseListener)m_responseListeners.elementAt (0);
+            m_responseListeners.removeElementAt (0);
         }
         return l;
     }
@@ -3343,19 +4346,18 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @return A search response listener object
      */
     private synchronized LDAPSearchListener getSearchListener (
-        LDAPSearchConstraints cons )
-    {
-        if (searchListeners == null) {
-            searchListeners = new Vector (5);
+        LDAPSearchConstraints cons ) {
+        if (m_searchListeners == null) {
+            m_searchListeners = new Vector (5);
         }
 
         LDAPSearchListener l;
-        if ( searchListeners.size() < 1 ) {
-            l = new LDAPSearchListener ( this, cons );
+        if ( m_searchListeners.size() < 1 ) {
+            l = new LDAPSearchListener ( /*asynchOp=*/false, cons );
         }
         else {
-            l = (LDAPSearchListener)searchListeners.elementAt (0);
-            searchListeners.removeElementAt (0);
+            l = (LDAPSearchListener)m_searchListeners.elementAt (0);
+            m_searchListeners.removeElementAt (0);
         }
         return l;
     }
@@ -3366,13 +4368,13 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * synchronous.
      * @param l Listener to buffer
      */
-    private synchronized void releaseResponseListener (LDAPResponseListener l)
-    {
-        if (responseListeners == null)
-            responseListeners = new Vector (5);
+    synchronized void releaseResponseListener (LDAPResponseListener l) {
+        if (m_responseListeners == null) {
+            m_responseListeners = new Vector (5);
+        }
 
         l.reset ();
-        responseListeners.addElement (l);
+        m_responseListeners.addElement (l);
     }
 
     /**
@@ -3381,13 +4383,13 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * operations synchronous.
      * @param Listener to buffer
      */
-    synchronized void releaseSearchListener (LDAPSearchListener l)
-    {
-        if (searchListeners == null)
-            searchListeners = new Vector (5);
+    synchronized void releaseSearchListener (LDAPSearchListener l) {
+        if (m_searchListeners == null) {
+            m_searchListeners = new Vector (5);
+        }
 
         l.reset ();
-        searchListeners.addElement (l);
+        m_searchListeners.addElement (l);
     }
 
     /**
@@ -3397,33 +4399,37 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @param m Server response to validate
      * @exception LDAPException failed to check message
      */
-    void checkMsg (JDAPMessage m) throws LDAPException {
+    void checkMsg (LDAPMessage m) throws LDAPException {
       if (m.getProtocolOp() instanceof JDAPResult) {
           JDAPResult response = (JDAPResult)(m.getProtocolOp());
           int resultCode = response.getResultCode ();
 
-          if (resultCode == JDAPResult.SUCCESS)
+          if (resultCode == JDAPResult.SUCCESS) {
               return;
+          }
 
-          if (resultCode == JDAPResult.REFERRAL)
+          if (resultCode == JDAPResult.REFERRAL) {
               throw new LDAPReferralException ("referral", resultCode,
-                response.getReferrals());
+                                               response.getReferrals());
+          }
 
-          if (resultCode == JDAPResult.LDAP_PARTIAL_RESULTS)
+          if (resultCode == JDAPResult.LDAP_PARTIAL_RESULTS) {
               throw new LDAPReferralException ("referral", resultCode,
-                response.getErrorMessage());
-          else
+                                               response.getErrorMessage());
+          } else {
               throw new LDAPException ("error result", resultCode,
                 response.getErrorMessage(),
                 response.getMatchedDN());
+          }
 
       } else if (m.getProtocolOp() instanceof JDAPSearchResultReference) {
           String[] referrals =
             ((JDAPSearchResultReference)m.getProtocolOp()).getUrls();
           throw new LDAPReferralException ("referral",
-            JDAPResult.SUCCESS, referrals);
-      } else
+                                           JDAPResult.SUCCESS, referrals);
+      } else {
           return;
+      }
     }
 
     /**
@@ -3437,7 +4443,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @param current The target thread.
      * @param con The server response controls.
      */
-    void setResponseControls( LDAPConnThread current, ResponseControl con ) {
+    void setResponseControls( LDAPConnThread current, LDAPResponseControl con ) {
         synchronized(m_responseControlTable) {
             Vector v = (Vector)m_responseControlTable.get(current);
 
@@ -3447,18 +4453,19 @@ public class LDAPConnection implements LDAPv3, Cloneable {
 
                 // look at each response control
                 for (int i=v.size()-1; i>=0; i--) {
-                    ResponseControl response = 
-                      (ResponseControl)v.elementAt(i);
+                    LDAPResponseControl response = 
+                      (LDAPResponseControl)v.elementAt(i);
     
                     // if this response control belongs to this connection
                     if (response.getConnection().equals(this)) {
  
                         // if the given control is null or 
                         // the given control is not null and the current 
-                        // control does not correspond to the new JDAPMessage
+                        // control does not correspond to the new LDAPMessage
                         if ((con == null) || 
-                          (con.getMsgID() != response.getMsgID()))
+                            (con.getMsgID() != response.getMsgID())) {
                             v.removeElement(response);
+                        }
 
                         // For the same connection, if the message id from the 
                         // given control is the same as the one in the queue,
@@ -3469,8 +4476,9 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                     }
                 }
             } else {
-                if (con != null)
+                if (con != null) {
                     v = new Vector();
+                }
             }          
 
             if (con != null) {
@@ -3491,8 +4499,9 @@ public class LDAPConnection implements LDAPv3, Cloneable {
             }
         }
         /* Make sure we're registered */
-        if ( m_attachedList.indexOf( current ) < 0 )
+        if ( m_attachedList.indexOf( current ) < 0 ) {
             m_attachedList.addElement( current );
+        }
     }
 
     /**
@@ -3502,16 +4511,16 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @return new LDAPConnection, already connected and authenticated
      */
     private LDAPConnection prepareReferral( LDAPUrl u,
-                                            LDAPSearchConstraints cons )
+                                            LDAPConstraints cons )
         throws LDAPException {
         LDAPConnection connection = new LDAPConnection (this.getSocketFactory());
         connection.setOption(REFERRALS, new Boolean(true));
-        connection.setOption(REFERRALS_REBIND_PROC,
-                              cons.getRebindProc());
-
+        connection.setOption(REFERRALS_REBIND_PROC, cons.getRebindProc());
+        connection.setOption(BIND, cons.getBindProc());
+  
         // need to set the protocol version which gets passed to connection
         connection.setOption(PROTOCOL_VERSION,
-                              new Integer(protocolVersion));
+                              new Integer(m_protocolVersion));
 
         connection.setOption(REFERRALS_HOP_LIMIT,
                               new Integer(cons.getHopLimit()-1));
@@ -3528,10 +4537,11 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * @return The new LDAPConnection to the referred server
      */
     LDAPConnection createReferralConnection(LDAPReferralException e,
-      LDAPSearchConstraints cons) throws LDAPException {
-        if (cons.getHopLimit() <= 0)
+      LDAPConstraints cons) throws LDAPException {
+        if (cons.getHopLimit() <= 0) {
             throw new LDAPException("exceed hop limit",
-              e.getLDAPResultCode(), e.getLDAPErrorMessage());
+                                    e.getLDAPResultCode(), e.getLDAPErrorMessage());
+        }
         if (!cons.getReferrals()) {
             throw e;
         }
@@ -3539,60 +4549,68 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         LDAPUrl u[] = e.getURLs();
         // If there are no referrals (because the server isn't set up for
         // them), give up here
-        if ((u == null) || (u.length <= 0) || (u[0].equals("")))
+        if ((u == null) || (u.length <= 0) || (u[0].equals(""))) {
             throw new LDAPException("No target URL in referral",
-              LDAPException.NO_RESULTS_RETURNED);
+                                    LDAPException.NO_RESULTS_RETURNED);
+        }
 
         LDAPConnection connection = null;
         connection = prepareReferral(u[0], cons);
         String DN = u[0].getDN();
-        if ((DN == null) || (DN.equals("")))
-            DN = boundDN;
-        connection.authenticate(protocolVersion, DN, boundPasswd);
+        if ((DN == null) || (DN.equals(""))) {
+            DN = m_boundDN;
+        }
+        connection.authenticate(m_protocolVersion, DN, m_boundPasswd);
         return connection;
     }
 
     /**
-     * Performs the referral.
+     * Follows a referral.
      * @param e referral exception
      * @param cons search constraints
      */
     void performReferrals(LDAPReferralException e,
-        LDAPSearchConstraints cons, int ops,
-        /* unions of different operation parameters */
-        String dn, int scope, String filter, String types[],
-        boolean attrsOnly, LDAPModification mods[], LDAPEntry entry,
-        LDAPAttribute attr,
-        /* result */
-        Vector results
+                          LDAPConstraints cons, int ops,
+                          /* unions of different operation parameters */
+                          String dn, int scope, String filter, String types[],
+                          boolean attrsOnly, LDAPModification mods[],
+                          LDAPEntry entry,
+                          LDAPAttribute attr,
+                          /* result */
+                          Vector results
         ) throws LDAPException {
 
-        if (cons.getHopLimit() <= 0)
+        if (cons.getHopLimit() <= 0) {
             throw new LDAPException("exceed hop limit",
-              e.getLDAPResultCode(), e.getLDAPErrorMessage());
+                                    e.getLDAPResultCode(),
+                                    e.getLDAPErrorMessage());
+        }
         if (!cons.getReferrals()) {
             if (ops == JDAPProtocolOp.SEARCH_REQUEST) {
                 LDAPSearchResults res = new LDAPSearchResults();
                 res.add(e);
                 results.addElement(res);
                 return;
-            } else
+            } else {
                 throw e;
+            }
         }
 
         LDAPUrl u[] = e.getURLs();
-        // If there are no referrals (because the server isn't set up for
-        // them), give up here
-        if ( u == null )
+        // If there are no referrals (because the server isn't configured to
+        // return one), give up here
+        if ( u == null ) {
             return;
+        }
 
         for (int i = 0; i < u.length; i++) {
             String newDN = u[i].getDN();
             String DN = null;
-            if ((newDN == null) || (newDN.equals("")))
+            if ((newDN == null) || (newDN.equals(""))) {
                 DN = dn;
-            else
+            } else {
                 DN = newDN;
+            }
             // If this was a one-level search, and a direct subordinate
             // has a referral, there will be a "?base" in the URL, and
             // we have to rewrite the scope from one to base
@@ -3606,40 +4624,43 @@ public class LDAPConnection implements LDAPv3, Cloneable {
 
             try {
                 if ((m_referralConnection != null) && 
-                  (u[i].getHost().equals(m_referralConnection.host)) &&
-                  (u[i].getPort() == m_referralConnection.port)) {
+                    (u[i].getHost().equals(m_referralConnection.getHost())) &&
+                    (u[i].getPort() == m_referralConnection.getPort())) {
                     performReferrals(m_referralConnection, newcons, ops, DN, 
-                      scope, filter, types, attrsOnly, mods, entry, attr, 
-                      results);
+                                     scope, filter, types, attrsOnly, mods,
+                                     entry, attr, results);
                     continue;
                 }
             } catch (LDAPException le) {
                 if (le.getLDAPResultCode() != 
-                  LDAPException.INSUFFICIENT_ACCESS_RIGHTS) {
+                    LDAPException.INSUFFICIENT_ACCESS_RIGHTS) {
                     throw le;
                 }
             }
 
             LDAPConnection connection = null;
             connection = prepareReferral( u[i], cons );
-            if (cons.getRebindProc() == null) {
+            if (cons.getRebindProc() == null && cons.getBindProc() == null) {
                 connection.authenticate (null, null);
-            } else {
+            } else if (cons.getBindProc() == null) {
                 LDAPRebindAuth auth =
                   cons.getRebindProc().getRebindAuthentication(u[i].getHost(),
-                  u[i].getPort());
+                                                               u[i].getPort());
                 connection.authenticate(auth.getDN(), auth.getPassword());
+            } else {
+                cons.getBindProc().bind(connection);
             }
             performReferrals(connection, newcons, ops, DN, scope, filter,
-              types, attrsOnly, mods, entry, attr, results);
+                             types, attrsOnly, mods, entry, attr, results);
         }
     }
 
     void performReferrals(LDAPConnection connection, 
-      LDAPSearchConstraints cons, int ops, String dn, int scope,
-      String filter, String types[], boolean attrsOnly,
-      LDAPModification mods[], LDAPEntry entry, LDAPAttribute attr,
-      Vector results) throws LDAPException {
+                          LDAPConstraints cons, int ops, String dn, int scope,
+                          String filter, String types[], boolean attrsOnly,
+                          LDAPModification mods[], LDAPEntry entry,
+                          LDAPAttribute attr,
+                          Vector results) throws LDAPException {
  
         LDAPSearchResults res = null;
         try {
@@ -3647,7 +4668,8 @@ public class LDAPConnection implements LDAPv3, Cloneable {
                 case JDAPProtocolOp.SEARCH_REQUEST:
 
                     res = connection.search(dn, scope, filter,
-                                            types, attrsOnly, cons);
+                                            types, attrsOnly, 
+                                            (LDAPSearchConstraints)cons);
                     if (res != null) {
                         res.closeOnCompletion(connection);
                         results.addElement(res);
@@ -3684,35 +4706,39 @@ public class LDAPConnection implements LDAPv3, Cloneable {
             throw ee;
         } finally {
             if ((connection != null) && 
-              ((ops != JDAPProtocolOp.SEARCH_REQUEST) || (res == null)) &&
+                ((ops != JDAPProtocolOp.SEARCH_REQUEST) || (res == null)) &&
                 ((m_referralConnection == null) || 
-                 (!connection.equals(m_referralConnection))))
+                 (!connection.equals(m_referralConnection)))) {
                 connection.disconnect();
+            }
         }
     }
 
     /**
-     * Performs the referral.
+     * Follows a referral for an extended operation.
      * @param e referral exception
      * @param cons search constraints
      */
     private LDAPExtendedOperation performExtendedReferrals(
         LDAPReferralException e,
-        LDAPSearchConstraints cons, LDAPExtendedOperation op )
+        LDAPConstraints cons, LDAPExtendedOperation op )
         throws LDAPException {
 
-        if (cons.getHopLimit() <= 0)
+        if (cons.getHopLimit() <= 0) {
             throw new LDAPException("exceed hop limit",
-              e.getLDAPResultCode(), e.getLDAPErrorMessage());
+                                    e.getLDAPResultCode(),
+                                    e.getLDAPErrorMessage());
+        }
         if (!cons.getReferrals()) {
             throw e;
         }
 
         LDAPUrl u[] = e.getURLs();
-        // If there are no referrals (because the server isn't set up for
-        // them), give up here
-        if ( u == null )
+        // If there are no referrals (because the server isn't configured to
+        // return one), give up here
+        if ( u == null ) {
             return null;
+        }
 
         for (int i = 0; i < u.length; i++) {
             try {
@@ -3729,11 +4755,11 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     }
 
     /**
-     * Creates and returns an new <CODE>LDAPConnection</CODE> object that
+     * Creates and returns a new <CODE>LDAPConnection</CODE> object that
      * contains the same information as the current connection, including:
      * <UL>
      * <LI>the default search constraints
-     * <LI>host name and port number of the LAAP server
+     * <LI>host name and port number of the LDAP server
      * <LI>the DN and password used to authenticate to the LDAP server
      * </UL>
      * <P>
@@ -3744,36 +4770,34 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         try {
             LDAPConnection c = (LDAPConnection)super.clone();
 
-            if (this.th == null)
-                this.bind(defaultConstraints);
-
-            c.defaultConstraints =
-                (LDAPSearchConstraints)defaultConstraints.clone();
-            c.responseListeners = null;
-            c.searchListeners = null;
-            c.bound = this.bound;
-            c.host = this.host;
-            c.port = this.port;
-            c.boundDN = this.boundDN;
-            c.boundPasswd = this.boundPasswd;
-            c.prevBoundDN = this.prevBoundDN;
-            c.prevBoundPasswd = this.prevBoundPasswd;
-            c.m_anonymousBound = this.m_anonymousBound;
-            c.m_factory = this.m_factory;
-            c.th = this.th; /* share current connection thread */
-
-            synchronized (m_threadConnTable) {
-                Vector v = (Vector)m_threadConnTable.get(this.th);
-                if (v != null) {
-                    v.addElement(c);
-                }
-                else {
-                    printDebug("Failed to clone");
-                    return null;
-                }
+            if (!isConnected()) {
+                this.internalBind(m_defaultConstraints);
             }
 
-            c.th.register(c);
+            c.m_defaultConstraints =
+                (LDAPSearchConstraints)m_defaultConstraints.clone();
+            c.m_responseListeners = null;
+            c.m_searchListeners = null;
+            c.m_bound = this.m_bound;
+            c.m_connMgr = m_connMgr;
+            c.m_connSetupDelay = m_connSetupDelay;
+            c.m_boundDN = this.m_boundDN;
+            c.m_boundPasswd = this.m_boundPasswd;
+            c.m_prevBoundDN = this.m_prevBoundDN;
+            c.m_prevBoundPasswd = this.m_prevBoundPasswd;
+            c.m_anonymousBound = this.m_anonymousBound;
+            c.m_factory = this.m_factory;
+            c.m_thread = this.m_thread; /* share current connection thread */
+
+            Vector v = (Vector)m_threadConnTable.get(this.m_thread);
+            if (v != null) {
+                v.addElement(c);
+            } else {
+                printDebug("Failed to clone");
+                return null;
+            }
+
+            c.m_thread.register(c);
             return c;
         } catch (Exception e) {
         }
@@ -3786,8 +4810,8 @@ public class LDAPConnection implements LDAPv3, Cloneable {
      * is waiting for the backlog to lighten.
      */
     void resultRetrieved() {
-        if ( th != null ) {
-            th.resultRetrieved();
+        if ( m_thread != null ) {
+            m_thread.resultRetrieved();
         }
     }
 
@@ -3808,6 +4832,9 @@ public class LDAPConnection implements LDAPv3, Cloneable {
             args[0] = new String("UniversalConnect");
             m.invoke( null, args);
             printDebug( "UniversalConnect enabled" );
+            args[0] = new String("UniversalPropertyRead");
+            m.invoke( null, args);
+            printDebug( "UniversalPropertyRead enabled" );
             return true;
         } catch (LDAPException e) {
             printDebug("Exception: "+e.toString());
@@ -3853,557 +4880,5 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     public static final int MAXBACKLOG   = 30;
 
     private static boolean isCommunicator = checkCommunicator();
-    private static final boolean debug = false;
+    private static boolean debug = false;
 }
-
-/*
- * This object represents the value of the m_responseControlTable hashtable.
- * It stores the response controls and its corresponding LDAPConnection and
- * the message ID for its corresponding JDAPMessage.
- */
-class ResponseControl {
-    private LDAPConnection m_connection;
-    private int m_messageID;
-    private LDAPControl[] m_controls;
-
-    public ResponseControl(LDAPConnection conn, int msgID, 
-      LDAPControl[] controls) {
-
-        m_connection = conn;
-        m_messageID = msgID;
-        m_controls = new LDAPControl[controls.length];
-        for (int i=0; i<controls.length; i++) 
-            m_controls[i] = controls[i];
-    }
-
-    public int getMsgID() {
-        return m_messageID;
-    }
-
-    public LDAPControl[] getControls() {
-        return m_controls;
-    }
-
-    public LDAPConnection getConnection() {
-        return m_connection;
-    }
-}
-
-/**
- * Multiple LDAPConnection clones can share a single physical connection,
- * which is maintained by a thread.
- *
- * New Design (09/05/97):
- *
- *   +----------------+
- *   | LDAPConnection | --------+
- *   +----------------+         |
- *                              |
- *   +----------------+         |        +----------------+
- *   | LDAPConnection | --------+------- | LDAPConnThread |
- *   +----------------+         |        +----------------+
- *                              |
- *   +----------------+         |
- *   | LDAPConnection | --------+
- *   +----------------+
- *
- * All LDAPConnections send requests and get responses from
- * LDAPConnThread (a thread).
- */
-class LDAPConnThread extends Thread {
-
-    /**
-     * Constants
-     */
-    private final static int MAXMSGID = Integer.MAX_VALUE;
-
-    /**
-     * Internal variables
-     */
-    transient private int m_highMsgId;
-    transient private InputStream m_serverInput;
-    transient private OutputStream m_serverOutput;
-    transient private Hashtable m_requests;
-    transient private Hashtable m_messages = null;
-    transient private Vector m_registered;
-    transient private boolean m_disconnected = false;
-    transient private LDAPCache m_cache = null;
-    transient private boolean m_failed = false;
-    private Object m_securityLayer = null;
-    private Socket m_socket = null;
-    private int m_maxBacklog = 100;
-
-    /**
-     * Constructs a connection thread that maintains connection to the
-     * LDAP server.
-     * @param host LDAP host name
-     * @param port LDAP port number
-     * @param factory LDAP socket factory
-     */
-    public LDAPConnThread(String host, int port, LDAPSocketFactory factory,
-      LDAPCache cache) throws LDAPException {
-        m_highMsgId = 0;
-        m_requests = new Hashtable ();
-        m_registered = new Vector ();
-        m_cache = cache;
-        if (m_cache != null)
-            m_messages = new Hashtable ();
-
-        /* Connect to LDAP server */
-        try {
-            /* If we are to create a socket ourselves, make sure it has
-               sufficient privileges to connect to the desired host */
-            if (factory == null) {
-                m_socket = new Socket (host, port);
-//                m_socket.setSoLinger( false, -1 );
-            } else {
-                m_socket = factory.makeSocket(host, port);
-            }
-            m_serverInput = new BufferedInputStream (m_socket.getInputStream());
-            m_serverOutput = new BufferedOutputStream (m_socket.getOutputStream());
-        } catch (IOException e) {
-
-            // a kludge to make the thread go away. Since the thread has already
-            // been created, the only way to clean up the thread is to call the
-            // start() method. Otherwise, the exit method will be never called
-            // because the start() was never called. In the run method, the stop
-            // method calls right away if the m_failed is set to true.
-            m_failed = true;
-            start();
-            throw new LDAPException ( "failed to connect to server " + host,
-                                      LDAPException.CONNECT_ERROR );
-        }
-        start(); /* start the thread */
-    }
-
-    /**
-     * Sends LDAP request via this connection thread.
-     * @param request request to send
-     * @param toNotify response listener to invoke when the response
-     *          is ready
-     */
-    synchronized void sendRequest (JDAPProtocolOp request,
-        LDAPResponseListener toNotify, LDAPSearchConstraints cons)
-         throws LDAPException {
-        if (m_serverOutput == null)
-            throw new LDAPException ( "not connected to a server",
-                                  LDAPException.OTHER );
-
-        JDAPMessage msg;
-        LDAPControl lc[] = cons.getServerControls();
-        if ( (lc != null) && (lc.length > 0) ) {
-            JDAPControl[] jc = new JDAPControl[lc.length];
-            for( int i = 0; i < lc.length; i++ )
-                jc[i] = new JDAPControl( lc[i].getID(),
-                                     lc[i].isCritical(),
-                                     lc[i].getValue() );
-            msg = new JDAPMessage(allocateId(), request, jc);
-        }
-        else
-            msg = new JDAPMessage(allocateId(), request);
-        if ( toNotify != null ) {
-            if (!(request instanceof JDAPAbandonRequest ||
-                  request instanceof JDAPUnbindRequest)) {
-                /* Only worry about toNotify if we expect a response... */
-                this.m_requests.put (new Integer (msg.getId()), toNotify);
-                /* Notify the backlog checker that there may be another outstanding
-                   request */
-                resultRetrieved(); 
-            }
-            toNotify.setID( msg.getId() );
-        }
-
-        try {
-            msg.write (m_serverOutput);
-            m_serverOutput.flush ();
-        } catch (IOException e) {
-            networkError(e);
-        }
-    }
-
-    /**
-     * Register with this connection thread.
-     * @param conn LDAP connection
-     */
-    public synchronized void register(LDAPConnection conn) {
-        if (!m_registered.contains(conn))
-            m_registered.addElement(conn);
-    }
-
-    void setSecurityLayer(Object layer) {
-        m_securityLayer = layer;
-    }
-
-    synchronized int getClientCount() {
-        return m_registered.size();
-    }
-
-    /**
-     * De-Register with this connection thread. If all the connection
-     * is deregistered. Then, this thread should be killed.
-     * @param conn LDAP connection
-     */
-    public synchronized void deregister(LDAPConnection conn) {
-        m_registered.removeElement(conn);
-        if (m_registered.size() == 0) {
-            try {
-                LDAPSearchConstraints cons = conn.getSearchConstraints();
-                sendRequest (new JDAPUnbindRequest (), null, cons);
-                cleanUp();
-                this.stop();
-                this.sleep(100); /* give enough time for threads to shutdown */
-            } catch (Exception e) {
-                LDAPConnection.printDebug(e.toString());
-            }
-        }
-    }
-
-    /**
-     * Clean ups before shutdown the thread.
-     */
-    private void cleanUp() {
-        if (!m_disconnected) {
-            try {
-                m_serverOutput.close ();
-            } catch (Exception e) {
-            } finally {
-                m_serverOutput = null;
-            }
-
-            try {
-                m_serverInput.close ();
-            } catch (Exception e) {
-            } finally {
-                m_serverInput = null;
-            }
-
-            try {
-                m_socket.close ();
-            } catch (Exception e) {
-            } finally {
-                m_socket = null;
-            }
-        
-            m_disconnected = true;
-
-            /**
-             * Notify all the registered about this bad moment.
-             * IMPORTANT: This needs to be done at last. Otherwise, the socket
-             * input stream and output stream might never get closed and the whole
-             * task will get stuck in the stop method when we tried to stop the
-             * LDAPConnThread.
-             */
-
-            if (m_registered != null) {
-                Vector registerCopy = (Vector)m_registered.clone();
-
-                Enumeration cancelled = registerCopy.elements();
-
-                while (cancelled.hasMoreElements ()) {
-                    LDAPConnection c = (LDAPConnection)cancelled.nextElement();
-                    c.deregisterConnection();
-                }
-            }
-            m_registered = null;
-            m_messages = null;
-            m_requests.clear();
-        }
-    }
-
-    /**
-     * Set and get the maximum number of unread entries any search listener can
-     * have before we stop reading from the server.
-     */
-    void setMaxBacklog( int backlog ) {
-        m_maxBacklog = backlog;
-    }
-
-    int getMaxBacklog() {
-        return m_maxBacklog;
-    }
-
-    /**
-     * Sleep if there is a backlog of search results
-     */
-    private void checkBacklog() {
-        boolean doWait;
-        do {
-            doWait = false;
-            Enumeration listeners = m_requests.elements();
-            while( listeners.hasMoreElements() ) {
-                LDAPResponseListener l =
-                    (LDAPResponseListener)listeners.nextElement();
-                // If there are any threads waiting for a regular response
-                // message, we have to go read the next incoming message
-                if ( !(l instanceof LDAPSearchListener) ) {
-                    doWait = false;
-                    break;
-                }
-                // If the backlog of any search thread is too great,
-                // wait for it to diminish, but if this is a synchronous
-                // search, then just keep reading
-                LDAPSearchListener sl = (LDAPSearchListener)l;
-                if ( (sl.getConstraints().getBatchSize() != 0) &&
-                     (sl.getCount() >= m_maxBacklog) ) {
-                    doWait = true;
-                }
-            }
-            if ( doWait ) {
-                synchronized(this) {
-                    try {
-                        wait();
-                    } catch (InterruptedException e ) {
-                    }
-                }
-            }
-        } while ( doWait );
-    }
-
-    /**
-     * This is called when a search result has been retrieved from the incoming
-     * queue. We use the notification to unblock the listener thread, if it
-     * is waiting for the backlog to lighten.
-     */
-    synchronized void resultRetrieved() {
-        notifyAll();
-    }
-
-    /**
-     * Reads from the LDAP server input stream for incoming LDAP messages.
-     */
-    public void run() {
-        // if there is a problem of establishing connection to the server,
-        // stop the thread right away...
-        if (m_failed)
-            this.stop();
-
-        JDAPMessage msg = null;
-        JDAPBERTagDecoder decoder = new JDAPBERTagDecoder();
-
-        while (true) {
-            yield();
-            int[] nread = new int[1];
-            nread[0] = 0;
-            // Avoid too great a backlog of results
-            checkBacklog();
-            try  {
-                BERElement element = BERElement.getElement(decoder, m_serverInput,
-                                                           nread);
-                msg = new JDAPMessage(element);
-
-                // passed in the ber element size to approximate the size of the cache
-                // entry, thereby avoiding serialization of the entry stored in the
-                // cache
-                processResponse (msg, nread[0]);
-            } catch (Exception e)  {
-                networkError(e);
-            }
-
-            if (m_disconnected)
-                break;
-        }
-    }
-
-    /**
-     * Allocates a new LDAP message ID.  These are arbitrary numbers used to
-     * correlate client requests with server responses.
-     * @return new unique msgId
-     */
-    private synchronized int allocateId () {
-        m_highMsgId = (m_highMsgId + 1) % MAXMSGID;
-        return m_highMsgId;
-    }
-
-    /**
-     * When a response arrives from the LDAP server, it is processed by
-     * this routine.  It will pass the message on to the listening object
-     * associated with the LDAP msgId.
-     * @param incoming New message from LDAP server
-     */
-    private synchronized void processResponse (JDAPMessage incoming, int size) {
-        Integer messageID = new Integer (incoming.getId());
-        LDAPResponseListener l = (LDAPResponseListener)m_requests.get (messageID);
-
-        if (l == null) return; /* nobody is waiting for this response (!) */
-
-
-        /* Were there any controls for this client? */
-        LDAPControl[] con = checkControls( incoming );
-        ResponseControl responseControl = null;
-        if (con != null)
-            responseControl = new ResponseControl(l.getConnection(),
-              incoming.getId(), con);
-        l.getConnection().setResponseControls( this, responseControl );
-
-        JDAPProtocolOp op = incoming.getProtocolOp ();
-
-        Vector v = null;
-
-
-        if ((op instanceof JDAPSearchResponse) ||
-           (op instanceof JDAPSearchResultReference)) {
-
-            ((LDAPSearchListener)l).addSearchResult (incoming);
-            Long key = ((LDAPSearchListener)l).getKey();
-
-            if ((m_cache != null) && (key != null)) {
-                // get the vector containing the JDAPmessages for the specified messageID
-                v = (Vector)m_messages.get(messageID);
-
-                if (v == null)
-                {
-                    v = new Vector();
-                    // keeps track of the total size of all JDAPMessages belonging to the
-                    // same messageID, now the size is 0
-                    v.addElement(new Long(0));
-                }
-
-                // add the size of the current JDAPmessage to the lump sum
-                // assume the size of JDAPMessage is more or less the same as the size
-                // of LDAPEntry. Eventually LDAPEntry object gets stored in the cache
-                // instead of JDAPMessage object.
-                long entrySize = ((Long)v.firstElement()).longValue() + size;
-
-                // update the lump sum located in the first element of the vector
-                v.setElementAt(new Long(entrySize), 0);
-
-                // convert JDAPMessage object into LDAPEntry which is stored to the
-                // end of the Vector
-                v.addElement(constructLDAPEntry(incoming));
-
-                // replace the entry
-                m_messages.put(messageID, v);
-            }
-        } else {
-            l.setResponse (incoming);
-            if (l instanceof LDAPSearchListener) {
-                Long key = ((LDAPSearchListener)l).getKey();
-
-                if (key != null) {
-                    boolean fail = false;
-                    JDAPProtocolOp protocolOp = incoming.getProtocolOp();
-                    if (protocolOp instanceof JDAPSearchResult) {
-                        JDAPResult res = (JDAPResult)protocolOp;
-                        if (res.getResultCode() > 0)
-                            fail = true;
-                    }
-
-                    if ((!fail) && (m_cache != null))  {
-
-                        // that is. Collects all the JDAPMessages for the specified messageID
-                        // no need to keep track of this entry. Remove it.
-                        v = (Vector)m_messages.remove(messageID);
-
-                        // If v is null, meaning there are no search results from the
-                        // server
-                        if (v == null) {
-                            v = new Vector();
-
-                            // set the entry size to be 0
-                            v.addElement(new Long(0));
-                        }
-
-                        try {
-                            // add the new entry with key and value (a vector of
-                            // LDAPEntry objects)
-                            m_cache.addEntry(key, v);
-                        } catch (LDAPException e) {
-                            System.out.println("Exception: "+e.toString());
-                        }
-                    }
-                }
-            }
-            m_requests.remove (messageID);
-        }
-    }
-
-    /**
-     * Construct the LDAPEntry from the JDAPMessage object.
-     * @param msg The JDAPMessage object
-     * @return The LDAPEntry object required for the cache entry.
-     */
-    private LDAPEntry constructLDAPEntry(JDAPMessage msg) {
-        JDAPProtocolOp op = msg.getProtocolOp();
-        JDAPSearchResponse sr = (JDAPSearchResponse)op;
-        LDAPAttribute[] lattrs = sr.getAttributes();
-        LDAPAttributeSet attrs;
-        if ( lattrs != null )
-            attrs = new LDAPAttributeSet( lattrs );
-        else
-            attrs = new LDAPAttributeSet();
-
-        String dn = sr.getObjectName();
-        return(new LDAPEntry( dn, attrs ));
-    }
-
-    /**
-     * Extract controls from message and stash them away for retrieval
-     * by client.
-     * @param response The results of an operation, possibly containing
-     * Controls.
-     */
-    private LDAPControl[] checkControls( JDAPMessage response ) {
-        LDAPControl[] con = null;
-        if ( response != null ) {
-            JDAPControl[] jc = response.getControls();
-            if ( (jc != null) && (jc.length > 0) ) {
-                con = new LDAPControl[jc.length];
-                for( int i = 0; i < jc.length; i++ )
-                    con[i] = new LDAPControl( jc[i].getID(),
-                                          jc[i].isCritical(),
-                                          jc[i].getValue() );
-            }
-        }
-        return con;
-    }
-
-    /**
-     * Stop dispatching responses for a particular message ID.
-     * @param id Message ID for which to discard responses.
-     */
-    void abandon (int id ) {
-        m_requests.remove( new Integer(id) );
-    }
-
-    /**
-     * Handles network errors.  Basically shuts down the whole connection.
-     * @param e The exception which was caught while trying to read from
-     * input stream.
-     */
-    private synchronized void networkError (Exception e) {
-        try {
-
-            // notify each listener that the server is down.
-            Enumeration requests = m_requests.elements();
-            while (requests.hasMoreElements()) {
-                LDAPResponseListener listener =
-                    (LDAPResponseListener)requests.nextElement();
-                listener.setException(new LDAPException("Server down", LDAPException.OTHER));
-            }
-            cleanUp();
-
-        } catch (NullPointerException ee) {
-          System.err.println("Exception: "+ee.toString());
-        }
-
-        /**
-         * Notify all the registered about this bad moment.
-         * IMPORTANT: This needs to be done at last. Otherwise, the socket
-         * input stream and output stream might never get closed and the whole
-         * task will get stuck in the stop method when we tried to stop the
-         * LDAPConnThread.
-         */
-
-        if (m_registered != null) {
-            Vector registerCopy = (Vector)m_registered.clone();
-
-            Enumeration cancelled = registerCopy.elements();
-
-            while (cancelled.hasMoreElements ()) {
-              LDAPConnection c = (LDAPConnection)cancelled.nextElement();
-              c.deregisterConnection();
-            }
-        }
-    }
-}
-

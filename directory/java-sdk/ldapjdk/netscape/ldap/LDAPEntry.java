@@ -188,11 +188,14 @@ public class LDAPEntry {
      * @return String representation of the entry's DN and its attributes.
      */
     public String toString() {
-        String s = "LDAPEntry: ";
-        if ( dn != null )
-            s += dn + "; ";
-        if ( attrSet != null )
-            s += attrSet.toString();
-        return s;
+        StringBuffer sb = new StringBuffer("LDAPEntry: ");
+        if ( dn != null ) {
+            sb.append(dn);
+            sb.append("; ");
+        }            
+        if ( attrSet != null ) {
+            sb.append(attrSet.toString());
+        }
+        return sb.toString();
     }
 }

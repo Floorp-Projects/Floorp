@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
@@ -53,6 +53,7 @@ public class LDAPSearchResults implements Enumeration {
     private boolean currAttrsOnly;
     private Vector referralResults = new Vector();
     private Vector exceptions;
+    private LDAPControl[] responseControls = null;
 
     // only used for the persistent search
     private boolean firstResult = false;
@@ -112,46 +113,34 @@ public class LDAPSearchResults implements Enumeration {
         currAttrsOnly = attrsOnly;
     }
 
-    void add( JDAPProtocolOp sr ) {
-        if (sr instanceof JDAPSearchResponse)
-            add((JDAPSearchResponse)sr);
-        else if (sr instanceof JDAPSearchResultReference)
-            add((JDAPSearchResultReference)sr);
+    /**
+     * Add search entry of referral
+     * @param msg LDAPSearchResult or LDAPsearchResultReference
+     */
+    void add( LDAPMessage msg ) {
+        if (msg instanceof LDAPSearchResult) {
+            entries.addElement( ((LDAPSearchResult)msg).getEntry());
+        }            
+        else if (msg instanceof LDAPSearchResultReference) {
+            /* convert to LDAPReferralException */
+            String urls[] = ((LDAPSearchResultReference)msg).getUrls();
+            if (urls != null) {
+                if (exceptions == null) {
+                    exceptions = new Vector();
+                }                    
+                exceptions.addElement(new LDAPReferralException(null, 0, urls));
+            }
+        }            
     }
 
     /**
-     * Adds one result of a search (from JDAP) to the object.
-     * @param sr A search response in JDAP format
+     * Add exception
+     * @param e exception
      */
-    void add( JDAPSearchResponse sr ) {
-        LDAPAttribute[] lattrs = sr.getAttributes();
-        LDAPAttributeSet attrs;
-        if ( lattrs != null )
-            attrs = new LDAPAttributeSet( lattrs );
-        else
-            attrs = new LDAPAttributeSet();
-
-        String dn = sr.getObjectName();
-        LDAPEntry entry = new LDAPEntry( dn, attrs );
-        entries.addElement( entry );
-    }
-
-    /**
-     * Adds search reference to this object.
-     */
-    void add( JDAPSearchResultReference sr ) {
-        /* convert to LDAPReferralException */
-        String urls[] = sr.getUrls();
-        if (urls != null) {
-            if (exceptions == null)
-                exceptions = new Vector();
-            exceptions.addElement(new LDAPReferralException(null, 0, urls));
-        }
-    }
-
     void add(LDAPException e) {
-        if (exceptions == null)
+        if (exceptions == null) {
             exceptions = new Vector();
+        }
         exceptions.addElement(e);
     }
 
@@ -221,6 +210,26 @@ public class LDAPSearchResults implements Enumeration {
 
         quicksort (toSort, compare, low, shigh);
         quicksort (toSort, compare, shigh+1, high);
+    }
+
+    /**
+     * Sets the response controls for this search result.
+     * @param controls The controls to be stored.
+     */
+    protected void setResponseControls(LDAPControl[] controls) {
+        responseControls = controls;
+    }
+    
+    /**
+     * Returns the controls returned with this search result. If any control
+     * is registered with <CODE>LDAPControl</CODE>, an attempt is made to
+     * instantiate the control. If the instantiation fails, the control is
+     * returned as a basic <CODE>LDAPControl</CODE>.
+     * @return An array of type <CODE>LDAPControl</CODE>
+     * @see netscape.ldap.LDAPControl#register
+     */
+    public LDAPControl[] getResponseControls() {
+        return responseControls;
     }
 
     /**
@@ -452,8 +461,10 @@ public class LDAPSearchResults implements Enumeration {
             totalReferralEntries = totalReferralEntries+res.getCount();
         }
         if (resultSource != null) {
-            count = resultSource.getCount();
-        }     
+            count = resultSource.getMessageCount();
+        } else {
+            count = entries.size();
+        }
         if (exceptions != null)
             return (count + exceptions.size() + totalReferralEntries);
         return (count + totalReferralEntries);
@@ -492,13 +503,20 @@ public class LDAPSearchResults implements Enumeration {
                     return;
                 }
 
-                JDAPMessage msg = resultSource.nextResult();
-                if (msg == null) {
+                LDAPMessage msg = null;
+                try {
+                    msg = resultSource.nextMessage();
+                } catch (LDAPException e) {
+                    add(e);
+                    currConn.releaseSearchListener(resultSource);
+                    return;
+                }
+                    
+                if (msg instanceof LDAPResponse) {
                   try {
                       // check response and see if we need to do referral
                       // v2: referral stored in the JDAPResult
-                      JDAPMessage response = resultSource.getResponse();
-                      currConn.checkSearchMsg(this, response, currCons,
+                      currConn.checkSearchMsg(this, msg, currCons,
                         currBase, currScope, currFilter, currAttrs, currAttrsOnly);
                   } catch (LDAPException e) {
                       System.err.println("Exception: "+e);

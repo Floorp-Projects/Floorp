@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -21,7 +21,15 @@ import java.util.*;
 import java.io.*;
 
 /**
- * This class is for PrintableString type.
+ * This class is for the PrintableString type.
+ *
+ * <pre>
+ * ENCODING RULE:
+ *   Primitive Definite length.
+ *   tag = 0x13
+ *   length = (short or long form)
+ *   one or more contents octets
+ * </pre>
  *
  * @version 1.0
  * @seeAlso CCITT X.209
@@ -29,25 +37,25 @@ import java.io.*;
 public class BERPrintableString extends BERCharacterString {
 
     /**
-     * Constructs an octetstring element containing buffer.
-     * @param buffer string containing 'octets'
+     * Constructs a printable string element containing buffer.
+     * @param buffer string value
      */
     public BERPrintableString(String string) {
         m_value = string;
     }
 
     /**
-     * Constructs a printablestring element from buffer.
-     * @param buffer buffer
+     * Constructs a printables tring element from buffer.
+     * @param buffer byte array value
      */
     public BERPrintableString(byte[] buffer) {
         super(buffer);
     }
 
     /**
-     * Constructs a printablestring element with the input stream.
+     * Constructs a printable string element from an input stream
      * (for constructed encoding)
-     * @param stream input stream
+     * @param stream source
      * @param bytes_read array of 1 int, incremented by number of bytes read.
      * @exception IOException failed to construct
      */
@@ -57,9 +65,9 @@ public class BERPrintableString extends BERCharacterString {
     }
 
     /**
-     * Constructs a printablestring element with the input stream.
+     * Constructs a printablestring element from an input stream
      * (for primitive encoding)
-     * @param stream input stream
+     * @param stream source
      * @param bytes_read array of 1 int, incremented by number of bytes read.
      * @exception IOException failed to construct
      */
@@ -68,17 +76,16 @@ public class BERPrintableString extends BERCharacterString {
         super(stream,bytes_read);
     }
 
-
     /**
      * Gets the element type.
-     * @param element type
+     * @return element type
      */
     public int getType() {
         return BERElement.PRINTABLESTRING;
     }
 
     /**
-     * Gets the string representation. Note that currently prints out
+     * Gets the string representation. Note that it prints out
      * values in decimal form.
      * @return string representation of tag
      */

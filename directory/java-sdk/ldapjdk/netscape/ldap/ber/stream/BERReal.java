@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap.ber.stream;
@@ -32,19 +32,19 @@ import java.io.*;
  * @seeAlso CCITT X.209
  */
 public class BERReal extends BERElement {
-    /*
+    /**
      * Constants: special ASN.1 real values
      */
     public final static float PLUS_INFINITY = 1.0f/0.0f;
     public final static float MINUS_INFINITY = -1.0f/0.0f;
 
     /**
-     * Internal variables
+     * Value of element
      */
     private float m_value = 0;
 
     /**
-     * Constructs a real element.
+     * Constructs a real element with a value
      * @param value float value
      */
     public BERReal(float value) {
@@ -52,8 +52,8 @@ public class BERReal extends BERElement {
     }
 
     /**
-     * Constructs a real element with the input stream.
-     * @param stream input stream
+     * Constructs a real element from an input stream.
+     * @param stream source
      * @param bytes_read array of 1 int; value incremented by
      *        number of bytes read from stream.
      * @exception IOException failed to construct
@@ -162,9 +162,9 @@ public class BERReal extends BERElement {
     }
 
     /**
-     * Sends the BER encoding directly to stream.
+     * Sends the BER encoding directly to a stream.
      * @param stream output stream
-     * @exception IOException failed to construct
+     * @exception IOException failed to write
      */
     public void write(OutputStream stream) throws IOException {
         if (m_value == 0) {
@@ -193,7 +193,7 @@ public class BERReal extends BERElement {
 
     /**
      * Gets the element type.
-     * @param element type
+     * @return element type
      */
     public int getType() {
         return BERElement.REAL;
