@@ -534,16 +534,20 @@ RDF_AddCookieResource(char* name, char* path, char* host, char* expires) {
     remoteStoreAdd(gCookieStore, hostUnit, gCoreVocab->RDF_parent, gNavCenter->RDF_Cookies, 
                    RDF_RESOURCE_TYPE, 1);  
   }
-  sprintf(url, "[%s]%s",path,  name);
+  sprintf(url, "cookie:%s!%s!%s", host, path,  name);
   ru = RDF_GetResource(NULL, url, 1);
   setResourceType(ru, COOKIE_RT);
   remoteStoreAdd(gCookieStore, ru, gCoreVocab->RDF_parent, hostUnit, RDF_RESOURCE_TYPE, 1);  
 }
 
+PUBLIC void
+NET_DeleteCookie(char* cookieURL);
+
 PRBool
 CookieUnassert (RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type) {
   if (resourceType(u) == COOKIE_RT) {
-    /*    delete the cookie */
+    /* delete the cookie */
+    NET_DeleteCookie(resourceID(u));
     remoteStoreRemove(r, u, s, v, type);
     return 1;
   } else return 0;
