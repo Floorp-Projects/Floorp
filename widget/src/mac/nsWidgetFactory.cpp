@@ -27,9 +27,9 @@
 #include "nsAppShell.h"
 #include "nsButton.h"
 #include "nsRadioButton.h"
+#include "nsCheckButton.h"
 
 //#include "nsScrollbar.h"
-//#include "nsCheckButton.h"
 //#include "nsTextWidget.h"
 //#include "nsTextAreaWidget.h"
 //#include "nsFileWidget.h"
@@ -57,8 +57,8 @@ static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIAppShellIID,   NS_IAPPSHELL_IID);
-//static NS_DEFINE_IID(kIButton,        NS_IBUTTON_IID);
-//static NS_DEFINE_IID(kICheckButton,   NS_ICHECKBUTTON_IID);
+static NS_DEFINE_IID(kIButton,        NS_IBUTTON_IID);
+static NS_DEFINE_IID(kICheckButton,   NS_ICHECKBUTTON_IID);
 //static NS_DEFINE_IID(kIScrollbar,     NS_ISCROLLBAR_IID);
 //static NS_DEFINE_IID(kIFileWidget,    NS_IFILEWIDGET_IID);
 //static NS_DEFINE_IID(kIListBox,       NS_ILISTBOX_IID);
@@ -173,6 +173,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if ( mClassID.Equals(kCRadioButtonCID )) {
         inst = new nsRadioButton(aOuter);
     }
+    else if ( mClassID.Equals(kCCheckButtonCID)) {
+        inst = new nsCheckButton(aOuter);
+    }
     
     
     
@@ -192,9 +195,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCTextAreaWidgetCID)) {
         inst = new nsTextAreaWidget(aOuter);
-    }
-    else if ( mClassID.Equals(kCCheckButtonCID)) {
-        inst = new nsCheckButton(aOuter);
     }
     else if (mClassID.Equals(kCListBoxCID)) {
         inst = new nsListBox(aOuter);
