@@ -227,8 +227,7 @@ nsDOMAttribute::GetNodeValue(nsString& aNodeValue)
 NS_IMETHODIMP
 nsDOMAttribute::SetNodeValue(const nsString& aNodeValue)
 {
-  // You can't actually do this, but we'll fail silently
-  return NS_OK;
+  return SetValue(aNodeValue);
 }
 
 NS_IMETHODIMP

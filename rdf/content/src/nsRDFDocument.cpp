@@ -268,12 +268,12 @@ public:
 
 
     // nsIXMLDocument interface
-    NS_IMETHOD PrologElementAt(PRInt32 aOffset, nsIContent** aContent);
-    NS_IMETHOD PrologCount(PRInt32* aCount);
+    NS_IMETHOD PrologElementAt(PRUint32 aOffset, nsIContent** aContent);
+    NS_IMETHOD PrologCount(PRUint32* aCount);
     NS_IMETHOD AppendToProlog(nsIContent* aContent);
 
-    NS_IMETHOD EpilogElementAt(PRInt32 aOffset, nsIContent** aContent);
-    NS_IMETHOD EpilogCount(PRInt32* aCount);
+    NS_IMETHOD EpilogElementAt(PRUint32 aOffset, nsIContent** aContent);
+    NS_IMETHOD EpilogCount(PRUint32* aCount);
     NS_IMETHOD AppendToEpilog(nsIContent* aContent);
 
     // nsIRDFDocument interface
@@ -1408,14 +1408,14 @@ RDFDocumentImpl::HandleDOMEvent(nsIPresContext& aPresContext,
 // nsIXMLDocument interface
 
 NS_IMETHODIMP
-RDFDocumentImpl::PrologElementAt(PRInt32 aOffset, nsIContent** aContent)
+RDFDocumentImpl::PrologElementAt(PRUint32 aOffset, nsIContent** aContent)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-RDFDocumentImpl::PrologCount(PRInt32* aCount)
+RDFDocumentImpl::PrologCount(PRUint32* aCount)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1430,14 +1430,14 @@ RDFDocumentImpl::AppendToProlog(nsIContent* aContent)
 
 
 NS_IMETHODIMP
-RDFDocumentImpl::EpilogElementAt(PRInt32 aOffset, nsIContent** aContent)
+RDFDocumentImpl::EpilogElementAt(PRUint32 aOffset, nsIContent** aContent)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-RDFDocumentImpl::EpilogCount(PRInt32* aCount)
+RDFDocumentImpl::EpilogCount(PRUint32* aCount)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;

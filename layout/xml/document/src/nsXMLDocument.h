@@ -23,8 +23,29 @@
 #include "nsMarkupDocument.h"
 #include "nsIXMLDocument.h"
 #include "nsIHTMLContentContainer.h"
+#include "nsGenericDOMNodeList.h"
 
 class nsIParser;
+class nsIDOMNode;
+class nsXMLDocument;
+
+// Represents the children of an XML document (prolog, epilog and
+// document element)
+class nsXMLDocumentChildNodes : public nsGenericDOMNodeList
+{
+public:
+  nsXMLDocumentChildNodes(nsXMLDocument* aDocument);
+  ~nsXMLDocumentChildNodes();
+
+  NS_IMETHOD    GetLength(PRUint32* aLength);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+
+  void DropReference();
+
+protected:
+  nsXMLDocument* mDocument;
+};
+
 
 class nsXMLDocument : public nsMarkupDocument,
                       public nsIXMLDocument,
@@ -46,6 +67,20 @@ public:
 
   NS_IMETHOD EndLoad();
 
+  // nsIDOMNode interface
+  NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
+  NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild);
+  NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild);
+  NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild,
+                          nsIDOMNode* aRefChild, 
+                          nsIDOMNode** aReturn);
+  NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild,
+                          nsIDOMNode* aOldChild, 
+                          nsIDOMNode** aReturn);
+  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+  NS_IMETHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
+  NS_IMETHOD HasChildNodes(PRBool* aReturn);
+
   // nsIDOMDocument interface
   NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDocumentType);
   NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn);
@@ -55,12 +90,12 @@ public:
                               nsIDOMElement** aReturn);
 
   // nsIXMLDocument interface
-  NS_IMETHOD PrologElementAt(PRInt32 aOffset, nsIContent** aContent);
-  NS_IMETHOD PrologCount(PRInt32* aCount);
+  NS_IMETHOD PrologElementAt(PRUint32 aOffset, nsIContent** aContent);
+  NS_IMETHOD PrologCount(PRUint32* aCount);
   NS_IMETHOD AppendToProlog(nsIContent* aContent);
 
-  NS_IMETHOD EpilogElementAt(PRInt32 aOffset, nsIContent** aContent);
-  NS_IMETHOD EpilogCount(PRInt32* aCount);
+  NS_IMETHOD EpilogElementAt(PRUint32 aOffset, nsIContent** aContent);
+  NS_IMETHOD EpilogCount(PRUint32* aCount);
   NS_IMETHOD AppendToEpilog(nsIContent* aContent);
 
   // nsIHTMLContentContainer
@@ -80,6 +115,7 @@ protected:
   nsVoidArray *mEpilog;
 
   nsIParser *mParser;
+  nsXMLDocumentChildNodes* mChildNodes;
 };
 
 

@@ -50,7 +50,93 @@ static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 
+// ==================================================================
+// =
+// ==================================================================
+nsXMLDocumentChildNodes::nsXMLDocumentChildNodes(nsXMLDocument* aDocument)
+{
+  // We don't reference count our document reference (to avoid circular
+  // references). We'll be told when the document goes away.
+  mDocument = aDocument;
+}
+ 
+nsXMLDocumentChildNodes::~nsXMLDocumentChildNodes()
+{
+}
+
+NS_IMETHODIMP
+nsXMLDocumentChildNodes::GetLength(PRUint32* aLength)
+{
+  if (nsnull != mDocument) {
+    PRUint32 prolog, epilog;
+
+    // The length is the sum of the prolog, epilog and
+    // document element;
+    mDocument->PrologCount(&prolog);
+    mDocument->EpilogCount(&epilog);
+    *aLength = prolog + epilog + 1;
+  }
+  else {
+    *aLength = 0;
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsXMLDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  nsresult result = NS_OK;
+
+  *aReturn = nsnull;
+  if (nsnull != mDocument) {
+    PRUint32 prolog, epilog;
+    
+    mDocument->PrologCount(&prolog);
+    if (aIndex < prolog) {
+      // It's in the prolog
+      nsIContent* content;
+      result = mDocument->PrologElementAt(aIndex, &content);
+      if ((NS_OK == result) && (nsnull != content)) {
+        result = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+        NS_RELEASE(content);
+      }
+    }
+    else if (aIndex == prolog) {
+      // It's the document element
+      nsIDOMElement* element;
+      result = mDocument->GetDocumentElement(&element);
+      if (NS_OK == result) {
+        result = element->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+        NS_RELEASE(element);
+      }
+    }
+    else {
+      // It's in the epilog
+      nsIContent* content;
+      result = mDocument->EpilogElementAt(aIndex-prolog-1, &content);
+      if ((NS_OK == result) && (nsnull != content)) {
+        result = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+        NS_RELEASE(content);
+      }
+    }
+  }
+  
+  return result;
+}
+
+void 
+nsXMLDocumentChildNodes::DropReference()
+{
+  mDocument = nsnull;
+}
+
+// ==================================================================
+// =
+// ==================================================================
 
 NS_LAYOUT nsresult
 NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
@@ -66,13 +152,16 @@ nsXMLDocument::nsXMLDocument()
   mInlineStyleSheet = nsnull;
   mProlog = nsnull;
   mEpilog = nsnull;
-
+  mChildNodes = nsnull;
+  
   // XXX The XML world depends on the html atoms
   nsHTMLAtoms::AddrefAtoms();
 }
 
 nsXMLDocument::~nsXMLDocument()
 {
+  PRInt32 i, count;
+  nsIContent* content;
   NS_IF_RELEASE(mParser);
   if (nsnull != mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
@@ -83,11 +172,22 @@ nsXMLDocument::~nsXMLDocument()
     NS_RELEASE(mInlineStyleSheet);
   }
   if (nsnull != mProlog) {
+    count = mProlog->Count();
+    for (i = 0; i < count; i++) {
+      content = (nsIContent*)mProlog->ElementAt(i);
+      NS_RELEASE(content);
+    }
     delete mProlog;
   }
   if (nsnull != mEpilog) {
-    delete mProlog;
+    count = mEpilog->Count();
+    for (i = 0; i < count; i++) {
+      content = (nsIContent*)mEpilog->ElementAt(i);
+      NS_RELEASE(content);
+    }
+    delete mEpilog;
   }
+  NS_IF_RELEASE(mChildNodes);
 }
 
 NS_IMETHODIMP 
@@ -253,6 +353,110 @@ void nsXMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet)
   }
 }
 
+// nsIDOMNode interface
+NS_IMETHODIMP 
+nsXMLDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
+{
+  if (nsnull == mChildNodes) {
+    mChildNodes = new nsXMLDocumentChildNodes(this);
+    if (nsnull == mChildNodes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mChildNodes);
+  }
+
+  return mChildNodes->QueryInterface(kIDOMNodeListIID, (void**)aChildNodes);
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::GetFirstChild(nsIDOMNode** aFirstChild)
+{
+  nsresult result = NS_OK;
+
+  if ((nsnull != mProlog) && (0 != mProlog->Count())) {
+    nsIContent* content;
+    result = PrologElementAt(0, &content);
+    if ((NS_OK == result) && (nsnull != content)) {
+      result = content->QueryInterface(kIDOMNodeIID, (void**)aFirstChild);
+      NS_RELEASE(content);
+    }
+  }
+  else {
+    nsIDOMElement* element;
+    result = GetDocumentElement(&element);
+    if (NS_OK == result) {
+      result = element->QueryInterface(kIDOMNodeIID, (void**)aFirstChild);
+      NS_RELEASE(element);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::GetLastChild(nsIDOMNode** aLastChild)
+{
+  nsresult result = NS_OK;
+
+  if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
+    nsIContent* content;
+    result = EpilogElementAt(mEpilog->Count()-1, &content);
+    if ((NS_OK == result) && (nsnull != content)) {
+      result = content->QueryInterface(kIDOMNodeIID, (void**)aLastChild);
+      NS_RELEASE(content);
+    }
+  }
+  else {
+    nsIDOMElement* element;
+    result = GetDocumentElement(&element);
+    if (NS_OK == result) {
+      result = element->QueryInterface(kIDOMNodeIID, (void**)aLastChild);
+      NS_RELEASE(element);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::InsertBefore(nsIDOMNode* aNewChild,
+                            nsIDOMNode* aRefChild, 
+                            nsIDOMNode** aReturn)
+{
+  // XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::ReplaceChild(nsIDOMNode* aNewChild,
+                            nsIDOMNode* aOldChild, 
+                            nsIDOMNode** aReturn)
+{
+  // XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+{
+  // XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+{
+  // XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::HasChildNodes(PRBool* aReturn)
+{
+  *aReturn = PR_TRUE;
+  return NS_OK;
+}
+
 // nsIDOMDocument interface
 NS_IMETHODIMP    
 nsXMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
@@ -308,13 +512,13 @@ nsXMLDocument::CreateElement(const nsString& aTagName,
 
 // nsIXMLDocument interface
 NS_IMETHODIMP 
-nsXMLDocument::PrologElementAt(PRInt32 aIndex, nsIContent** aContent)
+nsXMLDocument::PrologElementAt(PRUint32 aIndex, nsIContent** aContent)
 {
   if (nsnull == mProlog) {
     *aContent = nsnull;
   }
   else {
-    *aContent = (nsIContent *)mProlog->ElementAt(aIndex);
+    *aContent = (nsIContent *)mProlog->ElementAt((PRInt32)aIndex);
     NS_ADDREF(*aContent);
   }
 
@@ -322,13 +526,13 @@ nsXMLDocument::PrologElementAt(PRInt32 aIndex, nsIContent** aContent)
 }
 
 NS_IMETHODIMP 
-nsXMLDocument::PrologCount(PRInt32* aCount)
+nsXMLDocument::PrologCount(PRUint32* aCount)
 {
   if (nsnull == mProlog) {
     *aCount = 0;
   }
   else {
-    *aCount = mProlog->Count();
+    *aCount = (PRUint32)mProlog->Count();
   }
 
   return NS_OK;
@@ -342,18 +546,19 @@ nsXMLDocument::AppendToProlog(nsIContent* aContent)
   }
 
   mProlog->AppendElement((void *)aContent);
+  NS_ADDREF(aContent);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsXMLDocument::EpilogElementAt(PRInt32 aIndex, nsIContent** aContent)
+nsXMLDocument::EpilogElementAt(PRUint32 aIndex, nsIContent** aContent)
 {
   if (nsnull == mEpilog) {
     *aContent = nsnull;
   }
   else {
-    *aContent = (nsIContent *)mEpilog->ElementAt(aIndex);
+    *aContent = (nsIContent *)mEpilog->ElementAt((PRInt32)aIndex);
     NS_ADDREF(*aContent);
   }
 
@@ -361,13 +566,13 @@ nsXMLDocument::EpilogElementAt(PRInt32 aIndex, nsIContent** aContent)
 }
 
 NS_IMETHODIMP 
-nsXMLDocument::EpilogCount(PRInt32* aCount)
+nsXMLDocument::EpilogCount(PRUint32* aCount)
 {
   if (nsnull == mEpilog) {
     *aCount = 0;
   }
   else {
-    *aCount = mEpilog->Count();
+    *aCount = (PRUint32)mEpilog->Count();
   }
 
   return NS_OK;
@@ -381,6 +586,7 @@ nsXMLDocument::AppendToEpilog(nsIContent* aContent)
   }
 
   mEpilog->AppendElement((void *)aContent);
+  NS_ADDREF(aContent);
 
   return NS_OK;
 }
