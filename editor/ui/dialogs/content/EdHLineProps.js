@@ -164,6 +164,7 @@ function ValidateData()
   if (height == "") {
     // Set focus to the offending control
     dump("Height is empty\n");
+    SetTextfieldFocus(dialog.heightInput);
     dialog.heightInput.focus();
     return false;
   }
@@ -188,7 +189,7 @@ function ValidateData()
   if (isPercent)
     width = width + "%";
 
-  dump("Height="+height+" Width="+width+"\n");
+dump("HLine: Height="+height+" Width="+width+"\n");
   globalElement.setAttribute("width", width);
 
   align = "left";
