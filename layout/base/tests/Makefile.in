@@ -55,7 +55,7 @@ LIBS = \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
 	-l$(MOZ_LIB_JS_PREFIX)js \
-	-ltimer_s \
+	$(TIMER_LIBS) \
 	-lxpcom \
 	-lreg \
 	-lxp \

@@ -46,7 +46,7 @@ LIBS = \
         -lnetwork \
         -lnetlib \
         -lreg   \
-		-ltimer_s \
+		$(TIMER_LIBS) \
         -lxpcom \
         -lpwcac \
         -lmozdbm \

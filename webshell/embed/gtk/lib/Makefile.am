@@ -22,12 +22,14 @@ MOZ_LIB_UTIL_PREFIX=moz
 
 ZLIB_LIBS = -lz
 
+TIMER_LIBS -ltimer_gtk_s
+
 BASE_LIBS =          \
         -lpref       \
         $(ZLIB_LIBS) \
         -lreg        \
         -l$(MOZ_LIB_JS_PREFIX)js             \
-		-ltimer_s \
+		$(TIMER_LIBS) \
         -lxpcom      \
         -lsecfree    \
         -l$(MOZ_LIB_UTIL_PREFIX)util    \

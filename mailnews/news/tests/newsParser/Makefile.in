@@ -62,7 +62,7 @@ LIBS = \
 	-lmozutil \
 	$(DIST)/lib/libmsgnews_s.a	\
 	-lmsgbaseutil \
-	-ltimer_s \
+	$(TIMER_LIBS) \
 	-lxpcom	\
 	$(JPEG_LIBS) \
 	$(PNG_LIBS)  \
