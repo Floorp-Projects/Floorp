@@ -85,7 +85,7 @@ endif
 	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/Embed/chrome
 	$(NSINSTALL) -t $(srcdir)/readme.html $(DIST)/Embed
 ifndef MINIMO
-	$(NSINSTALL) -t $(DEPTH)/embedding/lite/$(LIB_PREFIX)embed_lite$(DLL_SUFFIX) $(DIST)/Embed/components
+	-$(NSINSTALL) -t $(DEPTH)/embedding/lite/$(LIB_PREFIX)embed_lite$(DLL_SUFFIX) $(DIST)/Embed/components
 endif
 ifeq ($(OS_ARCH),WINNT)
 ifeq ($(WINAPP),mfcembed)
