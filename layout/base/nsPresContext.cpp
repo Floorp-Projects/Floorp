@@ -212,7 +212,6 @@ nsPresContext::GetFontPreferences()
     mPrefs->CopyCharPref("font.default", &value);
     if (value) {
       mDefaultFont.name.AssignWithConversion(value);
-      mDefaultFont.name.ToLowerCase();
       nsMemory::Free(value);
       value = nsnull;
     }
