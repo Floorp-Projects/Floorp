@@ -40,21 +40,25 @@
     } \
     PR_END_MACRO
 
-#define NMAX 4
-
 struct TestContext {
     nsCOMPtr<nsIURI> uri;
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIInputStream> inputStream;
     PRTime t1, t2;
     PRUint32 bytesRead, totalRead;
+
+    TestContext()
+        : t1(0), t2(0), bytesRead(0), totalRead(0)
+        { printf("TestContext [this=%p]\n", this); }
+   ~TestContext()
+        { printf("~TestContext [this=%p]\n", this); }
 };
 
 int
 main(int argc, char **argv)
 {
     nsresult rv;
-    TestContext c[NMAX];
+    TestContext *c;
     int i, nc=0, npending=0;
     char buf[256];
 
@@ -63,11 +67,9 @@ main(int argc, char **argv)
         return -1;
     }
 
+    c = new TestContext[argc-1];
+
     for (i=0; i<(argc-1); ++i, ++nc) {
-        if (i == NMAX) {
-            printf("exceeded url limit of %d: truncating url-list given as input\n", NMAX);
-            break;
-        }
         rv = NS_NewURI(getter_AddRefs(c[i].uri), argv[i+1]);
         RETURN_IF_FAILED(rv, "NS_NewURI");
 
@@ -112,5 +114,9 @@ main(int argc, char **argv)
             }
         }
     }
+
+    delete[] c;
+
+    NS_ShutdownXPCOM(nsnull);
     return 0;
 }
