@@ -41,6 +41,9 @@ public:
     NS_IMETHOD GetContainerApplication(nsINetContainerApplication **aContainer);
     nsresult SetContainerApplication(nsINetContainerApplication *aContainer);
 
+    NS_IMETHOD GetCookieString(nsIURL *aURL, nsString& aCookie);
+    NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie);
+
 protected:
     virtual ~nsNetlibService();
 

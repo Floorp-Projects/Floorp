@@ -77,6 +77,24 @@ struct nsINetService : public nsISupports
      * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
      */
     NS_IMETHOD GetContainerApplication(nsINetContainerApplication **aContainer)=0;
+  
+    /**
+     * Get the complete cookie string associated with the URL
+     *
+     * @param aURL The URL for which to get the cookie string
+     * @param aCookie The string object which will hold the result
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetCookieString(nsIURL *aURL, nsString& aCookie)=0;
+
+   /**
+     * Set the cookie string associated with the URL
+     *
+     * @param aURL The URL for which to set the cookie string
+     * @param aCookie The string to set
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie)=0;
 };
 
 
