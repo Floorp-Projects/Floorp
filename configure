@@ -9080,7 +9080,7 @@ EOF
   fi
 fi
 
-for dir in lib modules modules/security; do
+for dir in lib modules modules/security build build/package; do
    if test ! -d $dir; then rm -f $dir; mkdir $dir; fi
 done
 
