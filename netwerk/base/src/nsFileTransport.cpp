@@ -340,8 +340,7 @@ nsFileTransport::Init(nsIFileSystem* fsObj, const char* command,
 nsFileTransport::~nsFileTransport()
 {
     if (mState != CLOSED) {
-        mState = CLOSING;
-        Process();
+        DoClose();
     }
     NS_ASSERTION(mSource == nsnull, "transport not closed");
     NS_ASSERTION(mBufferInputStream == nsnull, "transport not closed");
@@ -991,22 +990,7 @@ nsFileTransport::Process(void)
       }
 
       case CLOSING: {
-        PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
-               ("nsFileTransport: CLOSING [this=%x %s] status=%x",
-                this, (const char*)mSpec, mStatus));
-
-        if (mOpenObserver) {
-            (void)mOpenObserver->OnStopRequest(this, mOpenContext, 
-                                               mStatus, nsnull);  // XXX fix error message
-            mOpenObserver = null_nsCOMPtr();
-            mOpenContext = null_nsCOMPtr();
-        }
-        if (mFileObject) {
-            nsresult rv = mFileObject->Close(mStatus);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected Close failure");
-            mFileObject = null_nsCOMPtr();
-        }
-        mState = CLOSED;
+        DoClose();
         break;
       }
 
@@ -1015,6 +999,27 @@ nsFileTransport::Process(void)
         break;
       }
     }
+}
+
+void
+nsFileTransport::DoClose(void)
+{
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+           ("nsFileTransport: CLOSING [this=%x %s] status=%x",
+            this, (const char*)mSpec, mStatus));
+
+    if (mOpenObserver) {
+        (void)mOpenObserver->OnStopRequest(this, mOpenContext, 
+                                           mStatus, nsnull);  // XXX fix error message
+        mOpenObserver = null_nsCOMPtr();
+        mOpenContext = null_nsCOMPtr();
+    }
+    if (mFileObject) {
+        nsresult rv = mFileObject->Close(mStatus);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected Close failure");
+        mFileObject = null_nsCOMPtr();
+    }
+    mState = CLOSED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

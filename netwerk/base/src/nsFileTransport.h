@@ -75,6 +75,7 @@ public:
                   PRUint32 bufferMaxSize);
 
     void Process(void);
+    void DoClose(void);
 
     enum State {
         CLOSED,
