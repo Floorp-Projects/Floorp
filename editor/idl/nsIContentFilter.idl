@@ -91,6 +91,7 @@ interface nsIContentFilter : nsISupports
    *
    * @param mimeType          the mimetype used for retrieving data
    * @param contentSourceURL  location where docFragment came from
+   * @param sourceDocument      document where content came from (can be null)
    * @param willDeleteSelection tells hook if selection will/should be deleted
    * @param docFragment         fragment of node to be inserted
    * @param contentStartNode    node under which content to be inserted begins
@@ -104,6 +105,7 @@ interface nsIContentFilter : nsISupports
 
   void notifyOfInsertion(in AString mimeType,
                          in nsIURL contentSourceURL,
+                         in nsIDOMDocument sourceDocument,
                          in PRBool willDeleteSelection,
                          inout nsIDOMNode docFragment,
                          inout nsIDOMNode contentStartNode,
