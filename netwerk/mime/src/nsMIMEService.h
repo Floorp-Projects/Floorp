@@ -35,7 +35,7 @@ class nsMIMEService : public nsIMIMEService {
 
     // nsMIMEService methods
     nsMIMEService();
-    ~nsMIMEService();
+    virtual ~nsMIMEService();
 
     // nsIMIMEService methods
     NS_IMETHOD GetFromExtension(const PRUnichar *aFileExt, nsIMIMEInfo **_retval);
