@@ -259,31 +259,35 @@ nsHTTPConn::Request(int aResumePos)
     memset(hdr, 0, kHdrBufSize);
     if (mProxiedURL)
     {
+        char *host = NULL, *path = NULL;
+        char proto[8];
+        int port;
 #ifdef DEBUG
         assert(sizeof hdr > (strlen(mProxiedURL) + 15 ));
 #endif
         sprintf(hdr, "GET %s HTTP/1.0%s", mProxiedURL, kCRLF);
         strcpy(req, hdr);
-
-        memset(hdr, 0, kHdrBufSize);
-        if (strncmp(mProxiedURL, kFTPProto, strlen(kFTPProto)) == 0)
+        if (strncmp(mProxiedURL, kFTPProto, strlen(kFTPProto)) == 0) 
         {
-            char *ftpHost, *ftpPath;
-            int ftpPort = kFTPPort;
-            rv = ParseURL(kFTPProto, mProxiedURL, 
-                          &ftpHost, &ftpPort, &ftpPath);
-
-            if (rv == OK)
-                sprintf(hdr, "Host: %s:%d%s", ftpHost, ftpPort, kCRLF);
-
-            if (ftpHost)
-                free(ftpHost);
-            if (ftpPath)
-                free(ftpPath);
+            strcpy(proto,kFTPProto);
+            port = kFTPPort;
+        } 
+        else 
+        {
+            strcpy(proto,kHTTPProto);
+            port = kHTTPPort;
         }
-        else
-            sprintf(hdr, "Host: %s%s", mHost, kCRLF);
-        strcat(req, hdr);
+        rv = ParseURL(proto, mProxiedURL,
+                      &host, &port, &path);
+        if (rv == OK) {
+            memset(hdr, 0, kHdrBufSize);
+            sprintf(hdr, "Host: %s:%d%s", host, port, kCRLF);
+            strcat(req, hdr);
+        }
+        if (host)
+            free(host);
+        if (path)
+            free(path);
     }
     else
     {
