@@ -101,6 +101,10 @@ nsResProtocolHandler::Init()
 
 #elif defined(XP_UNIX)
     
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024 // A good guess, i suppose
+#endif
+
     // first add $MOZILLA_FIVE_HOME if it exists
     char* path = PR_GetEnv("MOZILLA_FIVE_HOME");
     if (path) {
