@@ -735,9 +735,9 @@
                 <SETTING><NAME>MWLinker_PPC_dontdeadstripinitcode</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_permitmultdefs</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_linkmode</NAME><VALUE>Fast</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_PPC_initname</NAME><VALUE>__NSInitialize</VALUE></SETTING>
+                <SETTING><NAME>MWLinker_PPC_initname</NAME><VALUE>__JSInitialize</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_mainname</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWLinker_PPC_termname</NAME><VALUE>__NSTerminate</VALUE></SETTING>
+                <SETTING><NAME>MWLinker_PPC_termname</NAME><VALUE>__JSTerminate</VALUE></SETTING>
 
                 <!-- Settings for "PPC Mach-O Linker" panel -->
                 <SETTING><NAME>MWLinker_MachO_exports</NAME><VALUE>None</VALUE></SETTING>
@@ -2062,9 +2062,9 @@
                 <SETTING><NAME>MWLinker_PPC_dontdeadstripinitcode</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_permitmultdefs</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_linkmode</NAME><VALUE>Fast</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_PPC_initname</NAME><VALUE>__NSInitialize</VALUE></SETTING>
+                <SETTING><NAME>MWLinker_PPC_initname</NAME><VALUE>__JSInitialize</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_mainname</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWLinker_PPC_termname</NAME><VALUE>__NSTerminate</VALUE></SETTING>
+                <SETTING><NAME>MWLinker_PPC_termname</NAME><VALUE>__JSTerminate</VALUE></SETTING>
 
                 <!-- Settings for "PPC Mach-O Linker" panel -->
                 <SETTING><NAME>MWLinker_MachO_exports</NAME><VALUE>None</VALUE></SETTING>
