@@ -282,6 +282,10 @@ public:
                             PRUint32 aFlags);
 
   /* Listeners */
+  NS_IMETHOD AddEditorObserver(nsIEditorObserver *aObserver);
+  NS_IMETHOD RemoveEditorObserver(nsIEditorObserver *aObserver);
+  void  NotifyEditorObservers(void);
+
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener);
   NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener);
 
@@ -300,7 +304,6 @@ public:
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
   NS_IMETHOD EndComposition(void);
   NS_IMETHOD ForceCompositionEnd(void);
-  NS_IMETHOD Composing(PRBool *aInIMEMode);
 
 public:
 
@@ -760,8 +763,9 @@ protected:
   PRUint32						mIMETextOffset;      // offset in text node where IME comp string begins
   PRUint32						mIMEBufferLength;    // current length of IME comp string
 
-  nsVoidArray*                  mActionListeners;
-  nsCOMPtr<nsISupportsArray>    mDocStateListeners;
+  nsVoidArray*                  mActionListeners;  // listens to all low level actions on the doc
+  nsVoidArray*                  mEditorObservers;   // just notify once per high level change
+  nsCOMPtr<nsISupportsArray>    mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
 
   PRInt8                        mDocDirtyState;		// -1 = not initialized
   nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument

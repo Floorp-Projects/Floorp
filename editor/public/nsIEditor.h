@@ -43,6 +43,7 @@ class nsITransaction;
 class nsITransactionManager;
 class nsIOutputStream;
 class nsIEditActionListener;
+class nsIEditorObserver;
 class nsIDocumentStateListener;
 class nsFileSpec;
 class nsISelectionController;
@@ -428,6 +429,12 @@ public:
 
 
   /* ------------ Various listeners methods -------------- */
+
+  /** add an EditorObserver to the editors list of observers. */
+  NS_IMETHOD AddEditorObserver(nsIEditorObserver *aObserver)=0;
+
+  /** Remove an EditorObserver from the editor's list of observers. */
+  NS_IMETHOD RemoveEditorObserver(nsIEditorObserver *aObserver)=0;
 
   /** add an EditActionListener to the editors list of listeners. */
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener)=0;
