@@ -85,6 +85,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #back-button[disabled="true"],
 #back-button[disabled="true"]:hover,
 #back-button[disabled="true"]:hover:active,
+#back-button[disabled="true"] > .menubutton-dual-ex-button:hover,
 #back-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover,
 #back-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
@@ -92,7 +93,8 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   }
 
 #back-button:hover,
-#back-button > .classic-simplebutton-box > .classic-simplebutton:hover
+#back-button > .classic-simplebutton-box > .classic-simplebutton:hover,
+#back-button > .menubutton-dual-ex-button:hover
   {
     list-style-image      : url("chrome://navigator/skin/back-hover.gif");
   }
@@ -103,7 +105,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
   }
 
-
 #forward-button 
   {
     list-style-image      : url("chrome://navigator/skin/forward.gif");
@@ -112,6 +113,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #forward-button[disabled="true"],
 #forward-button[disabled="true"]:hover,
 #forward-button[disabled="true"]:hover:active,
+#forward-button[disabled="true"] > .menubutton-dual-ex-button:hover,
 #forward-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover,
 #forward-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
@@ -119,7 +121,8 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   }
 
 #forward-button:hover,
-#forward-button > .classic-simplebutton-box > .classic-simplebutton:hover
+#forward-button > .classic-simplebutton-box > .classic-simplebutton:hover,
+#forward-button > .menubutton-dual-ex-button:hover
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
   }
