@@ -41,11 +41,29 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     if(!XPT_Do8(&my_cursor, &header->major_version) ||
        !XPT_Do8(&my_cursor, &header->minor_version) ||
        !XPT_Do16(&my_cursor, &header->num_interfaces) ||
-       !XPT_Do32(&my_cursor, &header->file_length) ||
-       !XPT_DoInterfaceDirectoryEntry(&my_cursor, 
-                                      &header->interface_directory) ||
-       !XPT_Do8(&my_cursor, header->data_pool) ||
-       !XPT_DoAnnotation(&my_cursor, &header->annotations)) { 
+       !XPT_Do32(&my_cursor, &header->file_length)) {
+
+        goto error;
+    }
+    
+    if (mode == XPT_DECODE)
+        header->interface_directory = 
+            PR_CALLOC(header->num_interfaces * 
+                      sizeof(XPTInterfaceDirectoryEntry));
+         
+    for (i = 0; i < header->num_interfaces; i++) {
+        if (!XPT_DoInterfaceDirectoryEntry(&my_cursor, 
+                                           &header->interface_directory[i]))
+            goto error;
+    }
+    
+    if(!XPT_Do8(&my_cursor, header->data_pool)
+
+        /* This is where we'll do something with Annotations eventually.
+         * ||  !XPT_DoAnnotations(&my_cursor, &header->annotations) 
+         */
+
+       ) {
 
         goto error;
     }
@@ -64,8 +82,8 @@ XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
     XPTCursor my_cursor;
     XPTInterfaceDirectoryEntry *ide;
     PRBool already;
-
-    XPT_PREAMBLE(cursor, idep, XPT_HEADER, XPT_IDE_SIZE, 
+    
+    XPT_PREAMBLE(cursor, idep, XPT_HEADER, sizeof(XPTInterfaceDirectoryEntry), 
                  my_cursor, already, XPTInterfaceDirectoryEntry, 
                  ide);
     
@@ -78,13 +96,18 @@ XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
         
         /* write the namespace string in the data pool, and the offset in our
            cursor space */
-        !XPT_DoCString(&my_cursor, &ide->namespace) ||
+        !XPT_DoCString(&my_cursor, &ide->namespace)) {
         
-        /* write the InterfaceDescriptor in the data pool, and the offset
-           in our cursor space */
-        !XPT_DoInterfaceDescriptor(&my_cursor, &ide->interface_descriptor)) {
-
         goto error;
+    }
+    
+    /* write the InterfaceDescriptor in the data pool, and the offset
+       in our cursor space, but only if we're encoding. */
+    if (mode == XPT_ENCODE) {
+        if (!XPT_DoInterfaceDescriptor(&my_cursor, 
+                                       &ide->interface_descriptor)) {
+            goto error;
+        }
     }
     
     return PR_TRUE;
@@ -394,6 +417,11 @@ XPT_DoAnnotation(XPTCursor *cursor, XPTAnnotation **ap)
     XPT_ERROR_HANDLE(a);
 }
 
+PRBool 
+XPT_DoAnnotations(XPTCursor *cursor, XPTAnnotation **ap) {
+    return PR_FALSE;
+}
+
 int
 XPT_SizeOfHeader(XPTHeader *headerp)
 {
@@ -405,3 +433,9 @@ XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *idp)
 {
     return 0;
 }
+
+XPTInterfaceDescriptor
+XPT_GetDescriptorByOffset(XPTState *state, XPTHeader *header, uint32
+                          descriptor_num) {
+}
+
