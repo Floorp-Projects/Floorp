@@ -95,11 +95,15 @@ struct bitFields {
 };
 
 #if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
-#define LITTLE_TO_NATIVE16(x) ((((x) & 0xFF) << 8) | ((x) >> 8))
-#define LITTLE_TO_NATIVE32(x) ((((x) & 0xFF) << 24) | \
-                               ((((x) >> 8) & 0xFF) << 16) | \
-                               ((((x) >> 16) & 0xFF) << 8) | \
-                               ((x) >> 24))
+// We must ensure that the entity is unsigned
+// otherwise, if it is signed/negative, the MSB will be
+// propagated when we shift
+#define LITTLE_TO_NATIVE16(x) (((((PRUint16) x) & 0xFF) << 8) | \
+                               (((PRUint16) x) >> 8))
+#define LITTLE_TO_NATIVE32(x) (((((PRUint32) x) & 0xFF) << 24) | \
+                               (((((PRUint32) x) >> 8) & 0xFF) << 16) | \
+                               (((((PRUint32) x) >> 16) & 0xFF) << 8) | \
+                               (((PRUint32) x) >> 24))
 #else
 #define LITTLE_TO_NATIVE16(x) x
 #define LITTLE_TO_NATIVE32(x) x
