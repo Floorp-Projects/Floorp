@@ -45,6 +45,8 @@ static gboolean expose_event_cb         (GtkWidget *widget,
 					 GdkEventExpose *event);
 static gboolean configure_event_cb      (GtkWidget *widget,
 					 GdkEventConfigure *event);
+static void     size_allocate_cb        (GtkWidget *widget,
+					 GtkAllocation *allocation);
 static gboolean delete_event_cb         (GtkWidget *widget,
 					 GdkEventAny *event);
 static gboolean enter_notify_event_cb   (GtkWidget *widget,
@@ -287,6 +289,10 @@ nsWindow::GetScreenBounds(nsRect &aRect)
 {
   nsRect origin(0, 0, mBounds.width, mBounds.height);
   WidgetToScreen(origin, aRect);
+  printf("GetScreenBounds %d %d | %d %d | %d %d\n",
+	 aRect.x, aRect.y,
+	 mBounds.width, mBounds.height,
+	 aRect.width, aRect.height);
   return NS_OK;
 }
 
@@ -484,16 +490,20 @@ nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
   gint x, y = 0;
 
-  if (mContainer)
+  if (mContainer) {
     gdk_window_get_root_origin(GTK_WIDGET(mContainer)->window,
 			       &x, &y);
-  else
+    printf("WidgetToScreen (container) %d %d\n", x, y);
+  }
+  else {
     gdk_window_get_origin(mDrawingarea->inner_window, &x, &y);
+    printf("WidgetToScreen (drawing) %d %d\n", x, y);
+  }
 
   aNewRect.x = x + aOldRect.x;
   aNewRect.y = y + aOldRect.y;
   aNewRect.width = aOldRect.width;
-  aNewRect.height = aNewRect.height;
+  aNewRect.height = aOldRect.height;
 
   return NS_OK;
 }
@@ -638,19 +648,43 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 gboolean
 nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
 {
-  printf("configure event [%p] %p %d %d %d %d\n", (void *)this,
-	 (void *)aEvent->window,
+  printf("configure event [%p] %d %d %d %d\n", (void *)this,
 	 aEvent->x, aEvent->y, aEvent->width, aEvent->height);
 
-  nsRect rect(aEvent->x, aEvent->y, aEvent->width, aEvent->height);
+  // can we shortcut?
+  if (mBounds.x == aEvent->x &&
+      mBounds.y == aEvent->y)
+    return FALSE;
 
-  // update the size of the drawing area
-  moz_drawingarea_resize (mDrawingarea, aEvent->width, aEvent->height);
+  nsGUIEvent event;
+  InitGUIEvent(event, NS_MOVE);
+
+  event.point.x = aEvent->x;
+  event.point.y = aEvent->y;
 
   nsEventStatus status;
-  SendResizeEvent(rect, status);
+  DispatchEvent(&event, status);
 
   return FALSE;
+}
+
+void
+nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
+{
+  printf("size_allocate [%p] %d %d %d %d\n",
+	 (void *)this, aAllocation->x, aAllocation->y,
+	 aAllocation->width, aAllocation->height);
+
+  nsRect rect(aAllocation->x, aAllocation->y,
+	      aAllocation->width, aAllocation->height);
+
+  mBounds.width = rect.width;
+  mBounds.height = rect.height;
+
+  moz_drawingarea_resize (mDrawingarea, rect.width, rect.height);
+
+  nsEventStatus status;
+  SendResizeEvent (rect, status);
 }
 
 void
@@ -944,6 +978,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 		     G_CALLBACK(delete_event_cb), NULL);
   }
   if (mContainer) {
+    g_signal_connect_after(G_OBJECT(mContainer), "size_allocate",
+			   G_CALLBACK(size_allocate_cb), NULL);
     g_signal_connect(G_OBJECT(mContainer), "expose_event",
 		     G_CALLBACK(expose_event_cb), NULL);
     g_signal_connect(G_OBJECT(mContainer), "enter_notify_event",
@@ -1008,6 +1044,21 @@ configure_event_cb(GtkWidget *widget,
   nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
   
   return window->OnConfigureEvent(widget, event);
+}
+
+/* static */
+void
+size_allocate_cb (GtkWidget *widget, GtkAllocation *allocation)
+{
+  gpointer user_data;
+  user_data = g_object_get_data(G_OBJECT(widget), "nsWindow");
+
+  if (!user_data)
+    return;
+
+  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
+
+  window->OnSizeAllocate(widget, allocation);
 }
 
 /* static */

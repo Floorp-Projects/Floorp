@@ -136,6 +136,8 @@ class nsWindow : public nsCommonWidget {
 				   GdkEventExpose *aEvent);
   gboolean           OnConfigureEvent(GtkWidget *aWidget,
 				      GdkEventConfigure *aEvent);
+  void               OnSizeAllocate(GtkWidget *aWidget,
+				    GtkAllocation *aAllocation);
   void               OnDeleteEvent(GtkWidget *aWidget,
 				   GdkEventAny *aEvent);
   void               OnEnterNotifyEvent(GtkWidget *aWidget,
