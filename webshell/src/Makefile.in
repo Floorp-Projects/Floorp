@@ -44,6 +44,7 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
@@ -61,3 +62,4 @@ DEFINES		+= -D_IMPL_NS_WEB
 INCLUDES	+= \
 		-I$(topsrcdir)/docshell/base \
 		$(NULL)
+
