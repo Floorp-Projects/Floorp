@@ -132,7 +132,6 @@ gfx/src/beos/Makefile
 gfx/src/gtk/Makefile
 gfx/src/ps/Makefile
 gfx/src/photon/Makefile
-gfx/src/rhapsody/Makefile
 gfx/src/mac/Makefile
 gfx/src/qt/Makefile
 gfx/src/xlib/Makefile
@@ -519,7 +518,6 @@ widget/src/gtk/Makefile
 widget/src/gtksuperwin/Makefile
 widget/src/gtkxtbin/Makefile
 widget/src/photon/Makefile
-widget/src/rhapsody/Makefile
 widget/src/mac/Makefile
 widget/src/xlib/Makefile
 widget/src/os2/Makefile
