@@ -29,6 +29,11 @@ ifdef NECKO
 CPPSRCS = \
 	nsJSProtocolHandler.cpp	\
 	$(NULL)
+
+EXPORTS = \
+	$(srcdir)/nsJSProtocolHandler.h \
+	$(NULL)
+
 else
 EXPORTS= $(srcdir)/jsurl.h
 
