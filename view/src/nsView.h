@@ -32,7 +32,6 @@ class nsView : public nsIView
 {
 public:
   nsView();
-   ~nsView();
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];
@@ -94,6 +93,7 @@ public:
   virtual void GetScrollOffset(nscoord *aDx, nscoord *aDy);
 
 protected:
+  virtual ~nsView();
   //
   virtual nsresult LoadWidget(const nsCID &aClassIID);
 

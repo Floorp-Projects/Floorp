@@ -29,7 +29,6 @@ class nsScrollingView : public nsView, public nsIScrollableView
 {
 public:
   nsScrollingView();
-  ~nsScrollingView();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID,
                             void** aInstancePtr);
@@ -71,6 +70,9 @@ public:
 
   //private
   void ComputeScrollArea(nsIView *aView, nsRect &aRect, nscoord aOffX, nscoord aOffY);
+
+protected:
+  virtual ~nsScrollingView();
 
 protected:
   nscoord             mSizeX, mSizeY;
