@@ -9934,7 +9934,10 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = PR_FALSE;
 #endif
-
+  
+  // Use NS_VMREFRESH_DEFERRED here so that any reflows that may be coming from
+  // the same restyle as called this function will get a chance to be processed
+  // before we do the widget invalidates from DoApplyRenderingChangeToTree.
   viewManager->EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
 }
 
