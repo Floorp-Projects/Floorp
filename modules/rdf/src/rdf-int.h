@@ -274,6 +274,7 @@ void freeNamespaces (RDFFile f) ;
 PRBool		asEqual(RDFT r, Assertion as, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
 Assertion	makeNewAssertion (RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
 
+RDFT MakeRemoteStore (char* url);
 
 
 void readResourceFile(RDF rdf, RDF_Resource u);

@@ -328,7 +328,7 @@ AtalkHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
 		nextAs = atalkarg1(u);
 		while (nextAs != null)
 		{
-			if (asEqual(nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
+			if (asEqual(rdf, nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
 			nextAs = nextAs->next;
 		}
 
@@ -343,7 +343,7 @@ AtalkHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
 		nextAs = atalkarg1(u);
 		while (nextAs != null)
 		{
-			if (asEqual(nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
+			if (asEqual(rdf, nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
 			nextAs = nextAs->next;
 		}
 	}
@@ -431,11 +431,11 @@ AtalkAdd (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
 	nextAs = prevAs = u->rarg1;
 	while (nextAs != null)
 	{
-		if (asEqual(nextAs, u, s, v, type)) return 1;
+		if (asEqual(rdf, nextAs, u, s, v, type)) return 1;
 		prevAs = nextAs;
 		nextAs = nextAs->next;
 	}
-	newAs = makeNewAssertion(u, s, v, type, 1);
+	newAs = makeNewAssertion(rdf, u, s, v, type, 1);
 	if (prevAs == null)
 	{
 		u->rarg1 = newAs;
