@@ -10,12 +10,12 @@
         orient="vertical"
         class="color-dialog">
 
-  <script language="javascript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["mailDefaultHTMLAction","mailhtmldomain","mailplaintextdomain"];
   ]]>
   </script>  
-  <script language="javascript" src="chrome://messenger/content/messengercompose/pref-formatting.js"></script>
+  <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/pref-formatting.js"/>
   
   <!-- we are using these DTD values for localization -->
  
@@ -39,66 +39,67 @@
   
   <box class="box-smallheader" title="&pane.title;"/>
 
-    <html>&sendMaildesc.label;</html>
+  <html>&sendMaildesc.label;</html>
 
-    <radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never"
+  <radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="mail.default_html_action"
                 prefattribute="value">
-      <radio group="mailDefaultHTMLAction" value="0" label="&askMe.label;"/>
-      <radio group="mailDefaultHTMLAction" value="1" label="&convertPlain.label;"/>                
-      <radio group="mailDefaultHTMLAction" value="2" label="&sendHTML.label;"/>
-      <radio group="mailDefaultHTMLAction" value="3" label="&sendBoth.label;"/>
-    </radiogroup>
+    <radio group="mailDefaultHTMLAction" value="0" label="&askMe.label;"/>
+    <radio group="mailDefaultHTMLAction" value="1" label="&convertPlain.label;"/>                
+    <radio group="mailDefaultHTMLAction" value="2" label="&sendHTML.label;"/>
+    <radio group="mailDefaultHTMLAction" value="3" label="&sendBoth.label;"/>
+  </radiogroup>
     
-    <html>&override.label;</html>
+  <html>&override.label;</html>
 
   <titledbox orient="vertical" flex="1">
     <label value="&domain.title;"/>
 
     <html>&domaindesc.label;</html>
-  <box orient="horizontal" flex="1">
-    <box orient="vertical" id="html_box" flex="1">
-     <html>&HTMLdomaintitle.label;</html>
-      <tree class="inset" id="html_domains" flex="1"
+
+    <hbox flex="1">
+      <vbox id="html_box" flex="1">
+        <html>&HTMLdomaintitle.label;</html>
+        <hbox flex="1">
+          <tree class="inset" id="html_domains" flex="1"
             datasources="rdf:null" multiple="true"
             onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(htmlobj);">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-        <treechildren id="html_domains_root" flex="1"/>
-      </tree>
-      <box orient="horizontal">
-        <spring flex="1"/>
-        <button class="dialog" label="&AddButton.label;" oncommand="AddDomain(htmlobj);">
-          <observes element="mailhtmldomain" attribute="disabled"/>
-        </button>
-        <button class="dialog" label="&DeleteButton.label;" oncommand="RemoveDomains(htmlobj);">
-          <observes element="mailhtmldomain" attribute="disabled"/>
-        </button>
-        <spring flex="1"/>
-      </box>
-    </box>
-  <box orient="vertical" id="plaintext_box" flex="1">
-     <html>&PlainTexttitle.label;</html>
-      <tree class="inset" id="plaintext_domains" flex="1"
+            <treecolgroup>
+              <treecol flex="1"/>
+            </treecolgroup>
+            <treechildren id="html_domains_root" flex="1"/>
+          </tree>
+          <vbox>
+            <button class="dialog" label="&AddButton.label;" oncommand="AddDomain(htmlobj);">
+              <observes element="mailhtmldomain" attribute="disabled"/>
+            </button>
+            <button class="dialog" label="&DeleteButton.label;" oncommand="RemoveDomains(htmlobj);">
+              <observes element="mailhtmldomain" attribute="disabled"/>
+            </button>
+          </vbox>
+        </hbox>
+      </vbox>
+      <vbox id="plaintext_box" flex="1">
+        <html>&PlainTexttitle.label;</html>
+        <hbox flex="1">
+          <tree class="inset" id="plaintext_domains" flex="1"
             datasources="rdf:null" multiple="true"
             onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(plainobj);">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-        <treechildren id="plaintext_domains_root" flex="1"/>
-      </tree>
-      <box orient="horizontal">
-        <spring flex="1"/>
-        <button class="dialog" label="&AddButton.label;" oncommand="AddDomain(plainobj);">
-          <observes element="mailplaintextdomain" attribute="disabled"/>
-        </button>
-        <button class="dialog" label="&DeleteButton.label;" oncommand="RemoveDomains(plainobj);">
-          <observes element="mailplaintextdomain" attribute="disabled"/>
-        </button>
-        <spring flex="1"/>
-      </box>
-    </box>
-  </box>
+            <treecolgroup>
+              <treecol flex="1"/>
+            </treecolgroup>
+            <treechildren id="plaintext_domains_root" flex="1"/>
+          </tree>
+          <vbox>
+            <button class="dialog" label="&AddButton.label;" oncommand="AddDomain(plainobj);">
+              <observes element="mailplaintextdomain" attribute="disabled"/>
+            </button>
+            <button class="dialog" label="&DeleteButton.label;" oncommand="RemoveDomains(plainobj);">
+              <observes element="mailplaintextdomain" attribute="disabled"/>
+            </button>
+          </vbox>
+        </hbox>
+      </vbox>
+    </hbox>
   </titledbox>
 </window>
