@@ -285,6 +285,10 @@ GtkPromptService::GetGtkWindowForDOMWindow(nsIDOMWindow* aDOMWindow)
     nsCOMPtr<nsIWebBrowserChrome> chrome;
     wwatch->GetChromeForWindow(aDOMWindow, getter_AddRefs(chrome));
     nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow = do_QueryInterface(chrome);
+
+    if (!siteWindow)
+        return NULL;
+
     GtkWidget* parentWidget;
     siteWindow->GetSiteWindow((void**)&parentWidget);
 
