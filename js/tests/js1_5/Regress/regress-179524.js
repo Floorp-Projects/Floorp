@@ -102,8 +102,8 @@ addThis();
 /*
  * Now test the case where str.match()'s first argument is not a regexp object.
  * In that case, JS follows ECMA-262 Ed.3 by converting the 1st argument to a
- * regexp object using the string as a regexp pattern, but then extends ECMA
- * by taking any optional 2nd argument to be a regexp flag string (e.g.'g').
+ * regexp object using the argument as a regexp pattern, but then extends ECMA
+ * by taking any optional 2nd argument to be a regexp flag string (e.g.'ig').
  *
  * Reference: http://bugzilla.mozilla.org/show_bug.cgi?id=179524#c10
  */
