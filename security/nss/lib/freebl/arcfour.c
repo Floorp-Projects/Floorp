@@ -1,4 +1,5 @@
-/*
+/* arcfour.c - the arc four algorithm.
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -30,6 +31,8 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
+
+/* See NOTES ON UMRs, Unititialized Memory Reads, below. */
 
 #include "prerr.h"
 #include "secerr.h"
@@ -340,9 +343,29 @@ rc4_unrolled(RC4Context *cx, unsigned char *output,
 #endif
 
 #ifdef CONVERT_TO_WORDS
-/*
- * Convert input and output buffers to words before performing
- * RC4 operations.
+/* NOTE about UMRs, Uninitialized Memory Reads.
+ *
+ * This code reads all input data a WORD at a time, rather than byte at 
+ * a time, and writes all output data a WORD at a time.  Shifting and 
+ * masking is used to remove unwanted data and realign bytes when 
+ * needed.  The first and last words of output are read, modified, and
+ * written when needed to preserve any unchanged bytes.  This is a huge
+ * win on machines with high memory latency.  
+ *
+ * However, when the input and output buffers do not begin and end on WORD 
+ * boundaries, and the WORDS in memory that contain the first and last 
+ * bytes of those buffers contain uninitialized data, then this code will 
+ * read those uninitialized bytes, causing a UMR error to be reported by 
+ * some tools.  
+ *
+ * These UMRs are NOT a problem, NOT errors, and do NOT need to be "fixed".
+ * 
+ * All the words read and written contain at least one byte that is 
+ * part of the input data or output data.  No words are read or written
+ * that do not contain data that is part of the buffer.  Therefore, 
+ * these UMRs cannot cause page faults or other problems unless the 
+ * buffers have been assigned to improper addresses that would cause
+ * page faults with or without UMRs.  
  */
 static SECStatus 
 rc4_wordconv(RC4Context *cx, unsigned char *output,
@@ -404,7 +427,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 			streamWord |= (WORD)(cx->S[t]) << 8*i;
 			mask |= MASK1BYTE << 8*i;
 		} /* } */
-		inWord = *pInWord++;
+		inWord = *pInWord++; /* UMR? see comments above. */
 		/* If buffers are relatively misaligned, shift the bytes in inWord
 		 * to be aligned to the output buffer.
 		 */
@@ -424,6 +447,8 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 		}
 		/* Store output of first partial word */
 		*pOutWord = (*pOutWord & ~mask) | ((inWord ^ streamWord) & mask);
+		/* UMR?  See comments above. */
+
 		/* Consumed byteCount bytes of input */
 		inputLen -= byteCount;
 		/* move to next word of output */
@@ -442,7 +467,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 			 * loop must execute at least once because the input must
 			 * be at least two words.
 			 */
-			inWord = *pInWord++;
+			inWord = *pInWord++; /* UMR? see comments above. */
 			inWord = inWord LSH invBufShift;
 		} else {
 			/* Input is word-aligned.  The first word load of input 
@@ -483,7 +508,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 		 * word load.  What's left in inWord will be consumed in step 3.
 		 */
 		if (inputLen > WORDSIZE - inOffset)
-			inWord |= *pInWord RSH bufShift;
+			inWord |= *pInWord RSH bufShift; /* UMR?  See above. */
 	} else {
 		for (; inputLen >= WORDSIZE; inputLen -= WORDSIZE) {
 			inWord = *pInWord++;
@@ -496,10 +521,10 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 			cx->j = tmpj;
 			return SECSuccess;
 		} else {
-			/* A partial input word remains at the tail.  Load it.  The
-			 * relevant bytes will be consumed in step 3.
+			/* A partial input word remains at the tail.  Load it. 
+			 * The relevant bytes will be consumed in step 3.
 			 */
-			inWord = *pInWord;
+			inWord = *pInWord; /* UMR?  See comments above */
 		}
 	}
 	/*****************************************************************/
@@ -518,6 +543,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 		streamWord |= (WORD)(cx->S[t]) << 8*i;
 		mask |= MASK1BYTE << 8*i;
 	} /* } */
+	/* UMR?  See comments above. */
 	*pOutWord = (*pOutWord & ~mask) | ((inWord ^ streamWord) & mask);
 	cx->i = tmpi;
 	cx->j = tmpj;
