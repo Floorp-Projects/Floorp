@@ -50,8 +50,6 @@
 #include "nsIPref.h"
 #include "nsIDOMWindowInternal.h"
 
-class nsIURI;
-
 /* Duplicates defines as in nsIPrompt.idl -- keep in sync! */
 #define SINGSIGN_SAVE_PASSWORD_NEVER 0
 #define SINGSIGN_SAVE_PASSWORD_FOR_SESSION    1
@@ -80,7 +78,7 @@ extern void
 SINGSIGN_SignonViewerReturn(const nsString& results);
 
 extern void
-SINGSIGN_RestoreSignonData(nsIPrompt* dialog, nsIURI* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber);
+SINGSIGN_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber);
 
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
@@ -162,7 +160,7 @@ SINGSIGN_ReencryptAll();
 
 extern void
 SINGSIGN_RememberSignonData
-  (nsIPrompt* dialog, nsIURI* uri, nsVoidArray * signonData, nsIDOMWindowInternal* window);
+  (nsIPrompt* dialog, const char* URLName, nsVoidArray * signonData, nsIDOMWindowInternal* window);
 
 PR_END_EXTERN_C
 

@@ -45,7 +45,6 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
-#include "nsIURI.h"
 
 #define image_behaviorPref "network.image.imageBehavior"
 #define image_warningPref "network.image.warnAboutImages"
@@ -211,13 +210,17 @@ IMAGE_BlockedInMail()
 }
 
 PUBLIC nsresult
-IMAGE_Block(nsIURI* imageURI)
-{
-  if (!imageURI) {
+IMAGE_Block(const char* imageURL,
+            nsIIOService* ioService) {
+  if (!imageURL || !(*imageURL)) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsCAutoString hostPort;
-  imageURI->GetHostPort(hostPort);
-  Permission_AddHost(hostPort, PR_FALSE, IMAGEPERMISSION, PR_TRUE);
+  nsresult rv = NS_OK;
+  nsCAutoString host;
+  NS_ASSERTION(ioService, "IOService not available");
+  rv = ioService->ExtractUrlPart(nsDependentCString(imageURL),
+                                 nsIIOService::url_Host | 
+                                 nsIIOService::url_Port, host);
+  Permission_AddHost((char*)host.get(), PR_FALSE, IMAGEPERMISSION, PR_TRUE);
   return NS_OK;
 }

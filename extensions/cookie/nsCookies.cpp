@@ -1306,6 +1306,7 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
   }
 
   /* generate the message for the nag box */
+  PRUnichar * new_string=0;
   int count = cookie_Count(host_from_header);
   prev_cookie = cookie_CheckForPrevCookie
     (path_from_header, host_from_header, name_from_header);
@@ -1494,8 +1495,9 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
     status = cookie_P3PDecision(curURL, firstURL, aHttpChannel);
     if (status == nsICookie::STATUS_REJECTED) {
       nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-      if (os)
-        os->NotifyObservers(nsnull, "cookieIcon", NS_ConvertASCIItoUCS2("on").get());
+      if (os) {
+        nsresult rv = os->NotifyObservers(nsnull, "cookieIcon", NS_ConvertASCIItoUCS2("on").get());
+      }
       return;
     }
   }
@@ -1655,7 +1657,7 @@ COOKIE_Read() {
   }
   cookie_CookieStruct *new_cookie, *tmp_cookie_ptr;
   size_t new_len;
-  nsCAutoString buffer;
+  nsAutoString buffer;
   PRBool added_to_list;
   nsFileSpec dirSpec;
   nsresult rv = CKutil_ProfileDirectory(dirSpec);
@@ -1682,7 +1684,7 @@ COOKIE_Read() {
     added_to_list = PR_FALSE;
 
     if ( !buffer.IsEmpty() ) {
-      char firstChar = buffer.CharAt(0);
+      PRUnichar firstChar = buffer.CharAt(0);
       if (firstChar == '#' || firstChar == nsCRT::CR ||
           firstChar == nsCRT::LF || firstChar == 0) {
         continue;
@@ -1698,7 +1700,7 @@ COOKIE_Read() {
         (cookieIndex=buffer.FindChar('\t', nameIndex)+1) == 0 ) {
       continue;
     }
-    nsCAutoString host, isDomain, path, isSecure, expires, name, cookie;
+    nsAutoString host, isDomain, path, isSecure, expires, name, cookie;
     buffer.Mid(host, hostIndex, isDomainIndex-hostIndex-1);
     buffer.Mid(isDomain, isDomainIndex, pathIndex-isDomainIndex-1);
     buffer.Mid(path, pathIndex, secureIndex-pathIndex-1);
@@ -1718,12 +1720,12 @@ COOKIE_Read() {
     new_cookie->cookie = ToNewCString(cookie);
     new_cookie->host = ToNewCString(host);
     new_cookie->path = ToNewCString(path);
-    if (isDomain.Equals(NS_LITERAL_CSTRING("TRUE"))) {
+    if (isDomain.Equals(NS_LITERAL_STRING("TRUE"))) {
       new_cookie->isDomain = PR_TRUE;
     } else {
       new_cookie->isDomain = PR_FALSE;
     }
-    if (isSecure.Equals(NS_LITERAL_CSTRING("TRUE"))) {
+    if (isSecure.Equals(NS_LITERAL_STRING("TRUE"))) {
       new_cookie->isSecure = PR_TRUE;
     } else {
       new_cookie->isSecure = PR_FALSE;
@@ -1902,12 +1904,17 @@ COOKIE_Remove
           (PL_strcmp(cookie->name, name) == 0) &&
           (PL_strcmp(cookie->path, path) == 0)) {
         if (blocked && cookie->host) {
+          char * hostname = nsnull;
           char * hostnameAfterDot = cookie->host;
           while (*hostnameAfterDot == '.') {
             hostnameAfterDot++;
           }
-          if (NS_SUCCEEDED(PERMISSION_Read()))
-            Permission_AddHost(nsDependentCString(hostnameAfterDot), PR_FALSE, COOKIEPERMISSION, PR_TRUE);
+          CKutil_StrAllocCopy(hostname, hostnameAfterDot);
+          if (hostname) {
+            if (NS_SUCCEEDED(PERMISSION_Read())) {
+              Permission_AddHost(hostname, PR_FALSE, COOKIEPERMISSION, PR_TRUE);
+            }
+          }
         }
         cookie_list->RemoveElementAt(count);
         deleteCookie((void*)cookie, nsnull);

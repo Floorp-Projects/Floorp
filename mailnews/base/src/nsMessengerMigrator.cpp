@@ -40,7 +40,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-#include "nsNetUtil.h"
+#include "nsIIOService.h"
 
 #include "prmem.h"
 #include "plstr.h"
@@ -965,14 +965,13 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 	nsXPIDLCString hostname;
 	nsXPIDLCString username;
 
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(old_uri));
+    nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+    if (!ioService) return NS_ERROR_FAILURE;
+    
+    rv = ioService->ExtractUrlPart(nsDependentCString(old_uri), nsIIOService::url_Host, hostname);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->GetHost(hostname);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = uri->GetUsername(username);
+    rv = ioService->ExtractUrlPart(nsDependentCString(old_uri), nsIIOService::url_Username, username);
     if (NS_FAILED(rv)) return rv;
 
     // in 4.x, mac and windows stored the URI as IMAP://<hostname> 

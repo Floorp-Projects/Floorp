@@ -110,13 +110,12 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &aURL)
 }
 
 NS_IMETHODIMP
-nsIOService::GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
+nsIOService::InitFileFromURLSpec(nsIFile *aFile, const nsACString &aURL)
 {
     nsresult rv;
     NS_ENSURE_ARG(result);
        
-    nsCOMPtr<nsILocalFile> localFile(
-            do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile, &rv);
     if (NS_FAILED(rv)) {
         NS_ERROR("Only nsILocalFile supported right now");
         return rv;
@@ -153,9 +152,5 @@ nsIOService::GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
         path.Cut(0, 1);
  
     // assuming path is encoded in the native charset
-    rv = localFile->InitWithNativePath(path);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ADDREF(*result = localFile);
-    return NS_OK;
+    return localFile->InitWithNativePath(path);
 }

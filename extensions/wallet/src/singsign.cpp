@@ -2067,23 +2067,34 @@ si_RememberSignonData
 
 PUBLIC void
 SINGSIGN_RememberSignonData 
-    (nsIPrompt* dialog, nsIURI* passwordRealm, nsVoidArray * signonData,
+    (nsIPrompt* dialog, const char* passwordRealm, nsVoidArray * signonData,
      nsIDOMWindowInternal* window)
 {
-  if (!passwordRealm)
-    return;
     
   nsCAutoString strippedRealm;
+  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+  if (!ioService) return;
 
   /* Hacky security check: If address is of a scheme that
-   * doesn't support hostnames, we have no host to get the signon data from,
-   * so we must not attempt to restore the signon data (bug 159484) */
-  nsresult rv = passwordRealm->GetHost(strippedRealm);
-  if (NS_FAILED(rv))
-    return;
+      doesn't support hostnames, we have no host to get the signon data from,
+      so we must not attempt to restore the signon data (bug 159484)
+  */
+  nsCOMPtr<nsIURI> uri;
+  nsresult result = ioService->NewURI(nsDependentCString(passwordRealm),
+                                      nsnull, nsnull, getter_AddRefs(uri));
+  if (NS_FAILED(result)) {
+      return;
+  }
+  nsCAutoString tempHost;
+  result = uri->GetHost(tempHost);
+  if (NS_FAILED(result)) {
+      return;
+  }
 
-  if (!strippedRealm.IsEmpty())
+  ioService->ExtractUrlPart(nsDependentCString(passwordRealm), nsIIOService::url_Host, strippedRealm);
+  if (!strippedRealm.IsEmpty()) {
     si_RememberSignonData(dialog, strippedRealm.get(), signonData, window);
+  }
 }
 
 PRIVATE void
@@ -2191,20 +2202,29 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
 }
 
 PUBLIC void
-SINGSIGN_RestoreSignonData(nsIPrompt* dialog, nsIURI* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
-  if (!passwordRealm)
-    return;
-
+SINGSIGN_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
   nsCAutoString strippedRealm;
+  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+  if (!ioService) return;
 
   /* Hacky security check: If address is of a scheme that
-   * doesn't support hostnames, we have no host to get the signon data from,
-   * so we must not attempt to restore the signon data (bug 159484) */
-  nsresult rv = passwordRealm->GetHost(strippedRealm);
-  if (NS_FAILED(rv))
-    return;
+      doesn't support hostnames, we have no host to get the signon data from,
+      so we must not attempt to restore the signon data (bug 159484)
+  */
+  nsCOMPtr<nsIURI> uri;
+  nsresult result = ioService->NewURI(nsDependentCString(passwordRealm),
+                                      nsnull, nsnull, getter_AddRefs(uri));
+  if (NS_FAILED(result)) {
+      return;
+  }
+  nsCAutoString tempHost;
+  result = uri->GetHost(tempHost);
+  if (NS_FAILED(result)) {
+      return;
+  }
 
-  si_RestoreSignonData(dialog, strippedRealm.get(), name, value, elementNumber);
+  ioService->ExtractUrlPart(nsDependentCString(passwordRealm), nsIIOService::url_Host, strippedRealm);
+  si_RestoreSignonData(dialog, (char*)strippedRealm.get(), name, value, elementNumber);
 }
 
 /*

@@ -485,8 +485,8 @@ function MakeRelativeUrl(url)
 
 
   // Get just the file path part of the urls
-  var docPath = IOService.newURI(docUrl, null, null).path;
-  var urlPath = IOService.newURI(inputUrl, null, null).path;
+  var docPath = IOService.extractUrlPart(docUrl, IOService.url_Path); 
+  var urlPath = IOService.extractUrlPart(inputUrl, IOService.url_Path);
 
   // We only return "urlPath", so we can convert
   //  the entire docPath for case-insensitive comparisons
@@ -653,9 +653,9 @@ function GetDocumentUrl()
 }
 
 // Extract the scheme (e.g., 'file', 'http') from a URL string
-function GetScheme(urlspec)
+function GetScheme(url)
 {
-  var resultUrl = TrimString(urlspec);
+  var resultUrl = TrimString(url);
   // Unsaved document URL has no acceptable scheme yet
   if (!resultUrl || IsUrlAboutBlank(resultUrl))
     return "";
@@ -670,13 +670,13 @@ function GetScheme(urlspec)
   var scheme = "";
   try {
     // This fails if there's no scheme
-    scheme = IOService.extractScheme(resultUrl);
+    scheme = IOService.extractScheme(resultUrl, {schemeStartPos:0}, {schemeEndPos:0});
   } catch (e) {}
 
   return scheme ? scheme.toLowerCase() : "";
 }
 
-function GetHost(urlspec)
+function GetHost(url)
 {
   if (!url)
     return "";
@@ -687,13 +687,13 @@ function GetHost(urlspec)
 
   var host = "";
   try {
-    host = IOService.newURI(urlspec, null, null).host;
+    host = IOService.extractUrlPart(url, IOService.url_Host); 
    } catch (e) {}
 
   return host;
 }
 
-function GetUsername(urlspec)
+function GetUsername(url)
 {
   if (!url)
     return "";
@@ -704,15 +704,15 @@ function GetUsername(urlspec)
 
   var username = "";
   try {
-    username = IOService.newURI(urlspec, null, null).username;
+    username = IOService.extractUrlPart(url, IOService.url_Username);
   } catch (e) {}
 
   return username;
 }
 
-function GetFilename(urlspec)
+function GetFilename(url)
 {
-  if (!urlspec || IsUrlAboutBlank(urlspec))
+  if (!url || IsUrlAboutBlank(url))
     return "";
 
   var IOService = GetIOService();
@@ -722,12 +722,12 @@ function GetFilename(urlspec)
   var filename;
 
   try {
-    uri = IOService.newURI(urlspec, null, null);
-    if (uri)
+    filename = IOService.extractUrlPart(url, IOService.url_FileBaseName);
+    if (filename)
     {
-      var url = uri.QueryInterface(Components.interfaces.nsIURL);
-      if (url)
-        filename = url.fileName;
+      var ext = IOService.extractUrlPart(url, IOService.url_FileExtension);
+      if (ext)
+        filename += "."+ext;
     }
   } catch (e) {}
 
@@ -737,11 +737,11 @@ function GetFilename(urlspec)
 // Return the url without username and password
 // Optional output objects return extracted username and password strings
 // This uses just string routines via nsIIOServices
-function StripUsernamePassword(urlspec, usernameObj, passwordObj)
+function StripUsernamePassword(url, usernameObj, passwordObj)
 {
-  urlspec = TrimString(urlspec);
-  if (!urlspec || IsUrlAboutBlank(urlspec))
-    return urlspec;
+  url = TrimString(url);
+  if (!url || IsUrlAboutBlank(url))
+    return url;
 
   if (usernameObj)
     usernameObj.value = "";
@@ -749,17 +749,16 @@ function StripUsernamePassword(urlspec, usernameObj, passwordObj)
     passwordObj.value = "";
 
   // "@" must exist else we will never detect username or password
-  var atIndex = urlspec.indexOf("@");
+  var atIndex = url.indexOf("@");
   if (atIndex > 0)
   {
     try {
       var IOService = GetIOService();
       if (!IOService)
-        return urlspec;
+        return url;
 
-      var uri = IOService.newURI(urlspec, null, null);
-      var username = uri.username;
-      var password = uri.password;
+      var username = IOService.extractUrlPart(url, IOService.url_Username);
+      var password = IOService.extractUrlPart(url, IOService.url_Password);
 
       if (usernameObj && username)
         usernameObj.value = username;
@@ -767,79 +766,79 @@ function StripUsernamePassword(urlspec, usernameObj, passwordObj)
         passwordObj.value = password;
       if (username)
       {
-        var usernameStart = urlspec.indexOf(username);
+        var usernameStart = url.indexOf(username);
         if (usernameStart != -1)
-          return urlspec.slice(0, usernameStart) + urlspec.slice(atIndex+1);
+          return url.slice(0, usernameStart) + url.slice(atIndex+1);
       }
     } catch (e) {}
   }
-  return urlspec;
+  return url;
 }
 
-function StripPassword(urlspec, passwordObj)
+function StripPassword(url, passwordObj)
 {
-  urlspec = TrimString(urlspec);
-  if (!urlspec || IsUrlAboutBlank(urlspec))
-    return urlspec;
+  url = TrimString(url);
+  if (!url || IsUrlAboutBlank(url))
+    return url;
 
   if (passwordObj)
     passwordObj.value = "";
 
   // "@" must exist else we will never detect password
-  var atIndex = urlspec.indexOf("@");
+  var atIndex = url.indexOf("@");
   if (atIndex > 0)
   {
     try {
       var IOService = GetIOService();
       if (!IOService)
-        return urlspec;
+        return url;
 
-      var password = IOService.newURI(urlspec, null, null).password;
+      var password = IOService.extractUrlPart(url, IOService.url_Password);
 
       if (passwordObj && password)
         passwordObj.value = password;
       if (password)
       {
         // Find last ":" before "@"
-        var colon = urlspec.lastIndexOf(":", atIndex);
+        var colon = url.lastIndexOf(":", atIndex);
         if (colon != -1)
         {
           // Include the "@"
-          return urlspec.slice(0, colon) + urlspec.slice(atIndex);
+          return url.slice(0, colon) + url.slice(atIndex);
         }
       }
     } catch (e) {}
   }
-  return urlspec;
+  return url;
 }
 
 // Version to use when you have an nsIURI object
 function StripUsernamePasswordFromURI(uri)
 {
-  var urlspec = "";
+  var url = "";
   if (uri)
   {
     try {
-      urlspec = uri.spec;
+      url = uri.spec;
       var userPass = uri.userPass;
       if (userPass)
       {
-        start = urlspec.indexOf(userPass);
-        urlspec = urlspec.slice(0, start) + urlspec.slice(start+userPass.length+1);
+        start = url.indexOf(userPass);
+        url = url.slice(0, start) + url.slice(start+userPass.length+1);
       }
     } catch (e) {}    
   }
-  return urlspec;
+  return url;
 }
 
-function InsertUsernameIntoUrl(urlspec, username)
+function InsertUsernameIntoUrl(url, username)
 {
-  if (!urlspec || !username)
-    return urlspec;
+  if (!url || !username)
+    return url;
 
   try {
     var ioService = GetIOService();
-    var URI = ioService.newURI(urlspec, window.editorShell.GetDocumentCharacterSet(), null);
+    var URI = ioService.newURI(url, window.editorShell.GetDocumentCharacterSet(), null);
     URI.username = username;
     return URI.spec;
   } catch (e) {}

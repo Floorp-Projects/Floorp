@@ -25,7 +25,6 @@
 #include "nsIServiceManager.h"
 #include "nsIZipReader.h"
 #include "nsReadableUtils.h"
-#include "nsURLHelper.h"
 
 ////////////////////////////////////////////////////////////////////////////////
  
@@ -92,11 +91,11 @@ NS_IMETHODIMP
 nsJARURI::SetSpec(const nsACString &aSpec)
 {
     nsresult rv;
-    nsCOMPtr<nsIIOService> ioServ(do_GetIOService(&rv));
+    nsCOMPtr<nsIIOService> serv(do_GetIOService(&rv));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString scheme;
-    rv = ::ExtractURLScheme(aSpec, nsnull, nsnull, &scheme);
+    rv = serv->ExtractScheme(aSpec, scheme);
     if (NS_FAILED(rv)) return rv;
 
     if (strcmp("jar", scheme.get()) != 0)
@@ -120,16 +119,16 @@ nsJARURI::SetSpec(const nsACString &aSpec)
 
     begin.advance(4);
 
-    rv = ioServ->NewURI(Substring(begin, delim_begin), mCharsetHint.get(), nsnull, getter_AddRefs(mJARFile));
+    rv = serv->NewURI(Substring(begin, delim_begin), mCharsetHint.get(), nsnull, getter_AddRefs(mJARFile));
     if (NS_FAILED(rv)) return rv;
 
     // skip over any extra '/' chars
     while (*delim_end == '/')
         ++delim_end;
 
-    rv = ::ResolveRelativePath(Substring(delim_end, end),
-                                         NS_LITERAL_CSTRING(""),
-                                         mJAREntry);
+    rv = serv->ResolveRelativePath(Substring(delim_end, end),
+                                     NS_LITERAL_CSTRING(""),
+                                     mJAREntry);
     return rv;
 }
 
@@ -328,8 +327,11 @@ nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
 {
     nsresult rv;
 
+    nsCOMPtr<nsIIOService> serv(do_GetIOService(&rv));
+    if (NS_FAILED(rv)) return rv;
+
     nsCAutoString scheme;
-    rv = ::ExtractURLScheme(relativePath, nsnull, nsnull, &scheme);
+    rv = serv->ExtractScheme(relativePath, scheme);
     if (NS_SUCCEEDED(rv)) {
         // then aSpec is absolute
         result = relativePath;
@@ -344,8 +346,8 @@ nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
         path = "";
 
     nsCAutoString resolvedEntry;
-    rv = ::ResolveRelativePath(relativePath, path,
-                               resolvedEntry);
+    rv = serv->ResolveRelativePath(relativePath, path,
+                                   resolvedEntry);
     if (NS_FAILED(rv)) return rv;
 
     return FormatSpec(resolvedEntry, result);
@@ -383,11 +385,13 @@ nsJARURI::GetJAREntry(nsACString &entryPath)
 NS_IMETHODIMP
 nsJARURI::SetJAREntry(const nsACString &entryPath)
 {
+    nsresult rv;
+    nsCOMPtr<nsIIOService> serv(do_GetIOService(&rv));
+    if (NS_FAILED(rv)) return rv;
+
     mJAREntry.Truncate();
 
-    return ::ResolveRelativePath(entryPath,
-                                 NS_LITERAL_CSTRING(""),
-                                 mJAREntry);
+    return serv->ResolveRelativePath(entryPath, NS_LITERAL_CSTRING(""), mJAREntry);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -50,7 +50,7 @@
 #include "nsVoidArray.h"
 #include "prmem.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIURI.h"
+#include "nsIIOService.h"
 #include "nsNetCID.h"
 #include "nsTextFormatter.h"
 
@@ -212,12 +212,14 @@ Permission_Check(
 
   /* see if we need to remember this decision */
   if (rememberChecked) {
+    char * hostname2 = NULL;
     /* ignore leading periods in host name */
     const char * hostnameAfterDot = hostname;
     while (hostnameAfterDot && (*hostnameAfterDot == '.')) {
       hostnameAfterDot++;
     }
-    Permission_AddHost(nsDependentCString(hostnameAfterDot), permission, type, PR_TRUE);
+    CKutil_StrAllocCopy(hostname2, hostnameAfterDot);
+    Permission_AddHost(hostname2, permission, type, PR_TRUE);
   }
   if (rememberChecked != permission_GetRememberChecked(type)) {
     permission_SetRememberChecked(type, rememberChecked);
@@ -229,12 +231,14 @@ Permission_Check(
 }
 
 PUBLIC nsresult
-Permission_AddHost(const nsAFlatCString & host, PRBool permission, PRInt32 type, PRBool save) {
+Permission_AddHost(char * host, PRBool permission, PRInt32 type, PRBool save) {
   /* create permission list if it does not yet exist */
   if(!permission_list) {
     permission_list = new nsVoidArray();
-    if(!permission_list)
+    if(!permission_list) {
+      Recycle(host);
       return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   /* find existing entry for host */
@@ -245,13 +249,14 @@ Permission_AddHost(const nsAFlatCString & host, PRBool permission, PRInt32 type,
   for (i = 0; i < hostCount; ++i) {
     hostStruct = NS_STATIC_CAST(permission_HostStruct*, permission_list->ElementAt(i));
     if (hostStruct) {
-      if (PL_strcasecmp(host.get(),hostStruct->host)==0) {
+      if (PL_strcasecmp(host,hostStruct->host)==0) {
 
         /* host found in list */
+        Recycle(host);
         HostFound = PR_TRUE;
         break;
 #ifdef alphabetize
-      } else if (PL_strcasecmp(host.get(), hostStruct->host) < 0) {
+      } else if (PL_strcasecmp(host, hostStruct->host) < 0) {
 
         /* need to insert new entry here */
         break;
@@ -264,12 +269,15 @@ Permission_AddHost(const nsAFlatCString & host, PRBool permission, PRInt32 type,
 
     /* create a host structure for the host */
     hostStruct = PR_NEW(permission_HostStruct);
-    if (!hostStruct)
+    if (!hostStruct) {
+      Recycle(host);
       return NS_ERROR_FAILURE;
-    hostStruct->host = ToNewCString(host);
+    }
+    hostStruct->host = host;
     hostStruct->permissionList = new nsVoidArray();
     if(!hostStruct->permissionList) {
       PR_Free(hostStruct);
+      Recycle(host);
       return NS_ERROR_FAILURE;
     }
 
@@ -314,7 +322,7 @@ Permission_AddHost(const nsAFlatCString & host, PRBool permission, PRInt32 type,
 }
 
 PRIVATE void
-permission_Unblock(const char * host, PRInt32 type) {
+permission_Unblock(char * host, PRInt32 type) {
 
   /* nothing to do if permission list does not exist */
   if(!permission_list) {
@@ -448,7 +456,7 @@ PERMISSION_Read() {
   if(!permission_list) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsCAutoString buffer;
+  nsAutoString buffer;
   nsFileSpec dirSpec;
   nsresult rv = CKutil_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
@@ -469,7 +477,7 @@ PERMISSION_Read() {
    */
   while(CKutil_GetLine(strm,buffer) != -1) {
     if ( !buffer.IsEmpty() ) {
-      char firstChar = buffer.CharAt(0);
+      PRUnichar firstChar = buffer.CharAt(0);
       if (firstChar == '#' || firstChar == nsCRT::CR ||
           firstChar == nsCRT::LF || firstChar == 0) {
         continue;
@@ -489,9 +497,10 @@ PERMISSION_Read() {
       hostIndex++;
     }
 
-    nsDependentCSubstring host(buffer, hostIndex, permissionIndex-hostIndex-1);
+    nsAutoString host;
+    buffer.Mid(host, hostIndex, permissionIndex-hostIndex-1);
 
-    nsCAutoString permissionString;
+    nsAutoString permissionString;
     for (;;) {
       if (nextPermissionIndex == buffer.Length()+1) {
         break;
@@ -499,8 +508,6 @@ PERMISSION_Read() {
       if ((nextPermissionIndex=buffer.FindChar('\t', permissionIndex)+1) == 0) {
         nextPermissionIndex = buffer.Length()+1;
       }
-      // XXX would like to use nsDependentCSubstring to avoid this allocation,
-      // but it unfortunately doesn't provide the CharAt method.
       buffer.Mid(permissionString, permissionIndex, nextPermissionIndex-permissionIndex-1);
       permissionIndex = nextPermissionIndex;
 
@@ -524,13 +531,13 @@ PERMISSION_Read() {
        * a host value of "@@@@" is a special code designating the
        * state of the nag-box's checkmark
        */
-      if (host.Equals(NS_LITERAL_CSTRING("@@@@"))) {
+      if (host.Equals(NS_LITERAL_STRING("@@@@"))) {
         if (!permissionString.IsEmpty()) {
           permission_SetRememberChecked(type, permission);
         }
       } else {
         if (!permissionString.IsEmpty()) {
-          rv = Permission_AddHost(PromiseFlatCString(host), permission, type, PR_FALSE);
+          rv = Permission_AddHost(ToNewCString(host), permission, type, PR_FALSE);
           if (NS_FAILED(rv)) {
             strm.close();
             return rv;
@@ -624,7 +631,7 @@ permission_remove (PRInt32 hostNumber, PRInt32 type) {
 }
 
 PUBLIC void
-PERMISSION_Remove(const nsACString & host, PRInt32 type) {
+PERMISSION_Remove(const char* host, PRInt32 type) {
 
   /* get to the indicated host in the list */
   if (permission_list) {
@@ -635,7 +642,7 @@ PERMISSION_Remove(const nsACString & host, PRInt32 type) {
       hostStruct =
         NS_STATIC_CAST(permission_HostStruct*, permission_list->ElementAt(hostCount));
       NS_ASSERTION(hostStruct, "corrupt permission list");
-      if (host.Equals(hostStruct->host)) {
+      if ((PL_strcmp(hostStruct->host, host) == 0)) {
 
         /* get to the indicated permission in the list */
         PRInt32 typeCount = hostStruct->permissionList->Count();
@@ -693,14 +700,17 @@ PERMISSION_DeletePersistentUserData(void)
 }
 
 PUBLIC void
-PERMISSION_Add(nsIURI * objectURI, PRBool permission, PRInt32 type) {
-  if (!objectURI) {
+PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type,
+               nsIIOService* ioService) {
+  if (!objectURL) {
     return;
   }
-  nsCAutoString hostPort;
-  objectURI->GetHostPort(hostPort);
-  if (hostPort.IsEmpty())
-    return;
+  nsresult rv = NS_OK;
+  nsCAutoString host;
+  NS_ASSERTION(ioService, "IOService not available");
+  rv = ioService->ExtractUrlPart(nsDependentCString(objectURL),
+                                 nsIIOService::url_Host |
+                                 nsIIOService::url_Port, host);
 
   /*
    * if permission is false, it will be added to the permission list
@@ -708,32 +718,34 @@ PERMISSION_Add(nsIURI * objectURI, PRBool permission, PRInt32 type) {
    *    true permission being added
    */
   if (permission) {
-    const char * hostPtr = hostPort.get();
+    char * hostPtr = (char *)host.get();
     while (PR_TRUE) {
       permission_Unblock(hostPtr, type);
       hostPtr = PL_strchr(hostPtr, '.');
       if (!hostPtr) {
         break;
       }
-      hostPtr++; /* get past the period */
+      hostPtr++; /* get passed the period */
     }
     return;
   }
-  Permission_AddHost(hostPort, permission, type, PR_TRUE);
+  Permission_AddHost(ToNewCString(host), permission, type, PR_TRUE);
 }
 
 PUBLIC void
-PERMISSION_TestForBlocking(nsIURI * objectURI, PRBool* blocked, PRInt32 type) {
-  if (!objectURI) {
+PERMISSION_TestForBlocking(const char * objectURL, PRBool* blocked, PRInt32 type,
+               nsIIOService* ioService) {
+  if (!objectURL) {
     return;
   }
   nsresult rv = NS_OK;
-  nsCAutoString hostPort;
-  objectURI->GetHostPort(hostPort);
-  if (hostPort.IsEmpty())
-    return;
+  nsCAutoString host;
+  NS_ASSERTION(ioService, "IOService not available");
+  rv = ioService->ExtractUrlPart(nsDependentCString(objectURL),
+                                 nsIIOService::url_Host |
+                                 nsIIOService::url_Port, host);
 
-  const char * hostPtr = hostPort.get();
+  const char * hostPtr = host.get();
   while (PR_TRUE) {
     PRBool permission;
     rv = permission_CheckFromList(hostPtr, permission, type);

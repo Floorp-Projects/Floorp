@@ -178,10 +178,10 @@ nsresult nsMsgAttachment::DeleteAttachment()
 	nsresult rv;
   PRBool isAFile = PR_FALSE;
 
-  nsCOMPtr<nsIFile> urlFile;
+  nsCOMPtr<nsILocalFile> urlFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv))
 	{
-    rv = NS_GetFileFromURLSpec(mUrl, getter_AddRefs(urlFile));
+    NS_InitFileFromURLSpec(urlFile, mUrl);
     if (NS_SUCCEEDED(rv))
 	  {
       PRBool bExists = PR_FALSE;
