@@ -238,3 +238,8 @@ FE_SaveErrorContinueDialog(MWContext *context,
 			   ED_FileError error)
 {
 }
+
+int
+XFE_AskStreamQuestion(MWContext * window_id)
+{
+}
