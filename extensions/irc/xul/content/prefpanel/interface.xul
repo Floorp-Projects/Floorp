@@ -32,7 +32,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
+<!DOCTYPE page SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Init();"

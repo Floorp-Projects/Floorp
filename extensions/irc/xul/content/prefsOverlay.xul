@@ -31,7 +31,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <overlay id="ovCZPrefs" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
