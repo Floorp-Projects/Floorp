@@ -325,7 +325,10 @@ function AbNewMessage()
     var composeFields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
     if (composeFields)
     {
-      composeFields.to = GetSelectedAddresses();
+      if (DirPaneHasFocus())
+        composeFields.to = GetSelectedAddressesFromDirTree();
+      else
+        composeFields.to = GetSelectedAddresses();
       params.composeFields = composeFields;
       msgComposeService.OpenComposeWindowWithParams(null, params);
     }
@@ -367,26 +370,58 @@ function goToggleSplitter( id, elementID )
   }
 }
 
+// Generate a list of cards from the selected mailing list 
+// and get a comma separated list of card addresses. If the
+// item selected in the directory pane is not a mailing list,
+// an empty string is returned. 
+function GetSelectedAddressesFromDirTree() 
+{
+  var addresses = "";
+
+  var selectedItems = dirTree.selectedItems;
+  if (selectedItems.length == 1) {
+    var mailingListUri = selectedItems[0].getAttribute('id');
+    var directory = GetDirectoryFromURI(mailingListUri);
+    if (directory.isMailList) {
+      var listCardsCount = directory.addressLists.Count();
+      var cards = new Array(listCardsCount);
+      for ( var i = 0;  i < listCardsCount; i++ ) {
+        var card = directory.addressLists.GetElementAt(i);
+        card = card.QueryInterface(Components.interfaces.nsIAbCard);
+        cards[i] = card;
+      }
+      addresses = GetAddressesForCards(cards);
+    }
+  }
+  return addresses;
+}
+
 function GetSelectedAddresses()
 {
-  var selectedAddresses = "";
+  var selectedCards = GetSelectedAbCards();
+  return GetAddressesForCards(selectedCards);
+}
 
-  var cards = GetSelectedAbCards();
+// Generate a comma seperate list of addresses from a given
+// set of cards.
+function GetAddressesForCards(cards)
+{
+  var addresses = "";
+
   if (!cards)
-    return selectedAddresses;
+    return addresses;
 
   var count = cards.length;
   if (count > 0)
-    selectedAddresses += GenerateAddressFromCard(cards[0]);
-  
+    addresses += GenerateAddressFromCard(cards[0]);
+
   for (var i = 1; i < count; i++) { 
     var generatedAddress = GenerateAddressFromCard(cards[i]);
 
     if (generatedAddress)
-      selectedAddresses += "," + generatedAddress;
+      addresses += "," + generatedAddress;
   }
-
-  return selectedAddresses;
+  return addresses;
 }
 
 function GetNumSelectedCards()
@@ -438,7 +473,7 @@ function GetSelectedAbCards()
   var cards = new Array(gAbView.selection.count);
   var i,j;
   var count = gAbView.selection.getRangeCount();
-  
+
   var current = 0;
 
   for (i=0; i < count; i++) {
@@ -450,10 +485,8 @@ function GetSelectedAbCards()
       current++;
     }
   }
-
   return cards;
 }
-
 
 function SelectFirstAddressBook()
 {
@@ -509,7 +542,7 @@ function DirPaneDoubleClick()
 
 function DirPaneSelectionChange()
 {
-  if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1))
+  if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1)) 
     ChangeDirectoryByDOMNode(dirTree.selectedItems[0]);
 }
 
@@ -589,7 +622,7 @@ function ChangeDirectoryByDOMNode(dirNode)
   var actualSortColumn = SetAbView(uri, sortColumn, sortDirection);
 
   UpdateSortIndicators(actualSortColumn, sortDirection);
-
+  
   // only select the first card if there is a first card
   if (gAbView && gAbView.getCardFromRow(0)) {
     SelectFirstCard();
@@ -781,9 +814,9 @@ function GenerateAddressFromCard(card)
 {
   var email;
 
-  if (card.isMailList)
+  if (card.isMailList) 
     email = card.displayName;
-  else
+  else 
     email = card.primaryEmail;
     
   return gHeaderParser.makeFullAddressWString(card.displayName, email);
@@ -811,4 +844,10 @@ function GetParentDirectoryFromMailingListURI(abURI)
 
   return null;
 } 
+
+function DirPaneHasFocus()
+{
+  // returns true if diectory pane has the focus. Returns false, otherwise.
+  return (top.document.commandDispatcher.focusedElement == dirTree)
+}
 
