@@ -31,9 +31,6 @@ gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p);
 gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p);
 gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p);
 
-gint handle_focus_in_event(GtkWidget *w, GdkEventFocus * event, gpointer p);
-gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p);
-
 void handle_scrollbar_value_changed(GtkAdjustment *adjustment, gpointer p);
 
 void menu_item_activate_handler(GtkWidget *w, gpointer p);
@@ -47,10 +44,6 @@ gint nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p);
 gint nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p);
 
 //----------------------------------------------------
-gint nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p);
-
-
-
 gint CheckButton_Toggle_Callback(GtkWidget *w, gpointer p);
 
 gint nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p);

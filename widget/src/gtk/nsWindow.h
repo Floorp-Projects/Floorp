@@ -97,7 +97,6 @@ public:
      // Utility methods
     virtual  PRBool OnPaint(nsPaintEvent &event);
     PRBool   OnKey(nsKeyEvent &aEvent);
-    PRBool   DispatchFocus(nsGUIEvent &aEvent);
     virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
   // in nsWidget now
   //    virtual  PRBool OnResize(nsSizeEvent &aEvent);

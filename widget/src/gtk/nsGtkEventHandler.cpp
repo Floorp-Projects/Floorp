@@ -311,30 +311,6 @@ void UninitKeyEvent(GdkEventKey *aGEK,
 {
 }
 
-//==============================================================
-void InitFocusEvent(GdkEventFocus *aGEF,
-                            gpointer   p,
-                            nsGUIEvent &anEvent,
-                            PRUint32   aEventType)
-{
-  anEvent.message = aEventType;
-  anEvent.widget  = (nsWidget *) p;
-
-  anEvent.eventStructType = NS_GUI_EVENT;
-
-  anEvent.time = 0;
-  anEvent.point.x = 0;
-  anEvent.point.y = 0;
-}
-
-//==============================================================
-void UninitFocusEvent(GdkEventFocus *aGEF,
-                              gpointer   p,
-                              nsGUIEvent &anEvent,
-                              PRUint32   aEventType)
-{
-}
-
 /*==============================================================
   ==============================================================
   =============================================================
@@ -439,38 +415,6 @@ gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
 
   UninitExposeEvent(event, p, pevent, NS_PAINT);
 
-  return PR_TRUE;
-}
-
-//==============================================================
-gint handle_focus_in_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
-{
-  nsWindow *win = (nsWindow *)p;
-  if (!win->IsDestroying()) {
-    nsGUIEvent gevent;
-    InitFocusEvent(event, p, gevent, NS_GOTFOCUS);
-    win->AddRef();
-    win->DispatchFocus(gevent);
-    win->Release();
-    UninitFocusEvent(event, p, gevent, NS_GOTFOCUS);
-  }
-  return PR_TRUE;
-}
-
-//==============================================================
-gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
-{
-  nsWindow *win = (nsWindow *)p;
-  if (!win->IsDestroying()) {
-    nsGUIEvent gevent;
-    InitFocusEvent(event, p, gevent, NS_LOSTFOCUS);
-
-    win->AddRef();
-    win->DispatchFocus(gevent);
-    win->Release();
-
-    UninitFocusEvent(event, p, gevent, NS_LOSTFOCUS);
-  }
   return PR_TRUE;
 }
 
