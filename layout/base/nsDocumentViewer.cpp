@@ -137,6 +137,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 // Print Preview
 #include "nsIPrintPreviewContext.h"
 #include "nsIEventProcessor.h"
+#include "imgIContainer.h" // image animation mode constants
 
 // Print error dialog
 #include "nsIPrompt.h"
@@ -333,7 +334,7 @@ public:
 
   nsRect           mClipRect;
 
-  nsImageAnimation mImgAnimationMode;
+  PRUint16         mImgAnimationMode;
 
 private:
   PrintObject& operator=(const PrintObject& aOther); // not implemented
@@ -804,7 +805,7 @@ PrintObject::PrintObject() :
   mParent(nsnull), mHasBeenPrinted(PR_FALSE), mDontPrint(PR_TRUE),
   mPrintAsIs(PR_FALSE), mSkippedPageEject(PR_FALSE), mSharedPresShell(PR_FALSE),
   mClipRect(-1,-1, -1, -1),
-  mImgAnimationMode(eImageAnimation_Normal)
+  mImgAnimationMode(imgIContainer::kNormalAnimMode)
 {
 }
 
@@ -3000,7 +3001,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   // turn off animated GIFs
   if (aPO->mPresContext) {
     aPO->mPresContext->GetImageAnimationMode(&aPO->mImgAnimationMode);
-    aPO->mPresContext->SetImageAnimationMode(eImageAnimation_None);
+    aPO->mPresContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
   }
 
   aPO->mPresShell->BeginObservingDocument();

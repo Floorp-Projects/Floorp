@@ -76,11 +76,15 @@ interface imgIContainer : nsISupports
   readonly attribute unsigned long numFrames;
 
   /**
-   * Animation mode.
+   * Animation mode Constants
    *   0 = normal
    *   1 = don't animate
    *   2 = loop once
    */
+  const short kNormalAnimMode   = 0;
+  const short kDontAnimMode     = 1;
+  const short kLoopOnceAnimMode = 2;
+
   attribute unsigned short animationMode;
 
   gfxIImageFrame getFrameAt(in unsigned long index);

@@ -92,6 +92,8 @@ REQUIRES	= xpcom \
 		  content_xsl \
 		  windowwatcher \
 		  intl \
+		  imglib2 \
+		  gfx2 \
 		  $(NULL)
 
 CPP_OBJS=					\

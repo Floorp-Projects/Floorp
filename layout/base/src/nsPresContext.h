@@ -73,8 +73,8 @@ public:
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
   NS_IMETHOD GetWidgetRenderingMode(nsWidgetRendering* aModeResult);
   NS_IMETHOD SetWidgetRenderingMode(nsWidgetRendering aMode);
-  NS_IMETHOD GetImageAnimationMode(nsImageAnimation* aModeResult);
-  NS_IMETHOD SetImageAnimationMode(nsImageAnimation aMode);
+  NS_IMETHOD GetImageAnimationMode(PRUint16* aModeResult);
+  NS_IMETHOD SetImageAnimationMode(PRUint16 aMode);
   NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags);
   NS_IMETHOD GetLookAndFeel(nsILookAndFeel** aLookAndFeel);
   NS_IMETHOD GetBaseURL(nsIURI** aURLResult);
@@ -252,7 +252,7 @@ protected:
   nsCompatibility       mCompatibilityMode;
   PRPackedBool          mCompatibilityLocked;
   nsWidgetRendering     mWidgetRenderingMode;
-  nsImageAnimation      mImageAnimationMode;
+  PRUint16      mImageAnimationMode;
   PRPackedBool          mImageAnimationStopped;   // image animation stopped
   PRPackedBool          mStopped;                 // loading stopped
   PRPackedBool          mStopChrome;              // should we stop chrome?
@@ -272,14 +272,14 @@ protected:
   PRBool                mInitialized;
 #endif
 
-  nsImageAnimation      mImageAnimationModePref;
+  PRUint16      mImageAnimationModePref;
 
 protected:
   void   GetUserPreferences();
   void   GetFontPreferences();
   void   GetDocumentColorPreferences();
   void   UpdateCharSet(const PRUnichar* aCharSet);
-  void SetImgAnimations(nsCOMPtr<nsIContent>& aParent, nsImageAnimation aMode);
+  void SetImgAnimations(nsCOMPtr<nsIContent>& aParent, PRUint16 aMode);
 
 private:
   static int PR_CALLBACK PrefChangedCallback(const char*, void*);

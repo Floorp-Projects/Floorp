@@ -74,6 +74,8 @@ REQUIRES    = xpcom \
               mimetype \
               editor \
               content_xul \
+              imglib2 \
+              gfx2 \
               $(NULL)
 
 include <$(DEPTH)/config/config.mak>

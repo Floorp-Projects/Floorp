@@ -102,13 +102,6 @@ enum nsLanguageSpecificTransformType {
   eLanguageSpecificTransformType_Korean
 };
 
-
-enum nsImageAnimation {
-  eImageAnimation_Normal      = 0,            // looping controlled by image
-  eImageAnimation_None        = 1,            // don't loop; just show first frame
-  eImageAnimation_LoopOnce    = 2             // loop just once
-}; 
-
 // supported values for cached bool types
 const PRUint32 kPresContext_UseDocumentColors = 0x01;
 const PRUint32 kPresContext_UseDocumentFonts = 0x02;
@@ -162,8 +155,8 @@ public:
   /**
    * Access the image animation mode for this context
    */
-  NS_IMETHOD GetImageAnimationMode(nsImageAnimation* aModeResult) = 0;
-  NS_IMETHOD SetImageAnimationMode(nsImageAnimation aMode) = 0;
+  NS_IMETHOD GetImageAnimationMode(PRUint16* aModeResult) = 0;
+  NS_IMETHOD SetImageAnimationMode(PRUint16 aMode) = 0;
 
   /**
    * Get an special load flags for images for this context

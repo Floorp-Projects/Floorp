@@ -103,6 +103,8 @@
 #include "nsIPromptService.h"
 #include "nsPIPromptService.h"
 
+#include "imgIContainer.h"
+
 #include "nsIEditorController.h"
 //#include "nsEditorController.h"
 #include "nsIControllers.h"
@@ -523,7 +525,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
   nsCOMPtr<nsIPresContext> presContext;
   docshell->GetPresContext(getter_AddRefs(presContext));
   if (presContext)
-    presContext->SetImageAnimationMode(eImageAnimation_None);
+    presContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
 
   nsresult rv = DoEditorMode(docshell);
   if (NS_FAILED(rv)) return rv;
