@@ -2,8 +2,6 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/skin/tasksOverlay.css" type="text/css"?> 
 
-
-
 <!DOCTYPE  window SYSTEM "chrome://global/locale/tasksOverlay.dtd">
 
 
@@ -33,7 +31,7 @@
           </rule>
         </template>
 
-       <menupopup>
+       <menupopup id="taskPopup">
 		<menuitem value="&navigatorCmd.label;" oncommand="toNavigator()"/>
 		<menuitem value="&messengerCmd.label;" oncommand="toMessengerWindow()"/>
 		<menuitem value="&editorCmd.label;"    oncommand="toEditor();" />
