@@ -45,7 +45,7 @@
 nsDOMPopupBlockedEvent::nsDOMPopupBlockedEvent(nsPresContext* aPresContext, nsPopupBlockedEvent* aEvent)
 : nsDOMEvent(aPresContext, aEvent ? aEvent : new nsPopupBlockedEvent())
 {
-  NS_ASSERTION(mEvent->eventStructType == NS_POPUP_BLOCKED_EVENT, "event type mismatch");
+  NS_ASSERTION(mEvent->eventStructType == NS_POPUPBLOCKED_EVENT, "event type mismatch");
 
   if (aEvent) {
     mEventIsInternal = PR_FALSE;
