@@ -40,7 +40,7 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-TARGETS        = $(LIBRARY)
+TARGETS        = $(LIBRARY) $(PROGRAMS)
 SHARED_LIBRARY =
 IMPORT_LIBRARY =
 PROGRAM        =
