@@ -212,6 +212,8 @@ MemoryFlusher::Stop()
 
 //----------------------------------------------------------------------
 
+nsMemoryImpl* gMemory = nsnull;
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMemoryImpl, nsIMemory)
 
 NS_METHOD
@@ -219,6 +221,8 @@ nsMemoryImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);
     NS_ENSURE_PROPER_AGGREGATION(outer, aIID);
+    if (gMemory && NS_SUCCEEDED(gMemory->QueryInterface(aIID, aInstancePtr)))
+        return NS_OK;
 
     nsMemoryImpl* mm = new nsMemoryImpl();
     if (mm == NULL)
@@ -483,8 +487,6 @@ nsMemoryImpl::DestroyFlushEvent(PLEvent* aEvent)
 {
     // no-op, since mEvent is a member of nsMemoryImpl
 }
-
-nsMemoryImpl* gMemory = nsnull;
 
 static void
 EnsureGlobalMemoryService()
