@@ -171,3 +171,77 @@ nsExtensionUpdater2.prototype = {
     return updateURL;
   },
   
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsJarFileExtractor
+//
+function nsJarFileExtractor(aXPIFile, aTargetDir)
+{
+  this._xpiFile = aXPIFile.path;
+  this._targetDir = aTargetDir.path;
+  // this._proxyObject(Components, Components.interfaces.nsIXPCComponents, "_components");
+  /* 
+  this._proxyObject(aXPIFile,   Components.interfaces.nsIFile, "_xpiFile");
+  this._proxyObject(aTargetDir, Components.interfaces.nsIFile, "_targetDir");
+   */
+}
+
+nsJarFileExtractor.prototype = {
+  // proxied objects
+  _xpiFile: null,
+  _targetDir: null,
+  _components: null,
+  
+  _proxyObject: function (aObject, aIID, aTarget)
+  {
+    const nsIEventQueueService = Components.interfaces.nsIEventQueueService;
+    var eqService = Components.classes["@mozilla.org/event-queue-service;1"]
+                              .getService(nsIEventQueueService);
+    var uiQ = eqService.getSpecialEventQueue(nsIEventQueueService.UI_THREAD_EVENT_QUEUE);
+    
+    var proxyObjectManager = Components.classes["@mozilla.org/xpcomproxy;1"]
+                                       .getService(Components.interfaces.nsIProxyObjectManager);
+    const PROXY_SYNC = 0x01;
+    const PROXY_ALWAYS = 0x04;
+    this[aTarget] = proxyObjectManager.getProxyForObject(uiQ, aIID, aObject, 
+                                                         PROXY_SYNC | PROXY_ALWAYS);
+  },
+  
+  extract: function ()
+  {
+    const nsIThread = Components.interfaces.nsIThread;
+    var thread = Components.classes["@mozilla.org/thread;1"]
+                           .createInstance(nsIThread);
+    thread.init(this, 0, nsIThread.PRIORITY_NORMAL,
+                nsIThread.SCOPE_GLOBAL,
+                nsIThread.STATE_JOINABLE);
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIRunnable
+  run: function ()
+  { 
+    dump("*** RUNNING THREAD\n");
+    /*
+    var xpiFile = Components.classes["@mozilla.org/file/local;1"]
+                            .createInstance(Components.interfaces.nsILocalFile);
+    xpiFile.initWithPath(this._xpiFile);
+    var targetDir = Components.classes["@mozilla.org/file/local;1"]
+                              .createInstance(Components.interfaces.nsILocalFile);
+    targetDir.initWithPath(this._targetDir);
+    
+    var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
+                              .createInstance(Components.interfaces.nsIZipReader);
+    zipReader.init(xpiFile);
+
+    var entries = zipReader.findEntries("*");
+    while (entries.hasMoreElements()) {
+      var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
+      dump("*** zip entry = " + entry.name + "\n");
+    }
+    */
+  }
+};
+
