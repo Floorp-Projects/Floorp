@@ -6,6 +6,8 @@
 
 DEPTH        = ../../..
 
+include $(DEPTH)/config/config.mk
+
 MODULE		= ojiimpl
 
 ifdef MOZ_OJI
