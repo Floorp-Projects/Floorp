@@ -668,7 +668,7 @@ nsFT2FontCatalog::doGetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
   }
 
   for (i=0; i<mFontCatalog->numFonts; i++) {
-    nsFontCatalogEntry *fce = fce = mFontCatalog->fonts[i];
+    nsFontCatalogEntry *fce = mFontCatalog->fonts[i];
     if (!fce->mIsValid)
       continue;
     if (foundry && !STRMATCH(foundry,fce->mFoundryName))
@@ -1119,6 +1119,7 @@ nsFT2FontCatalog::doInitGlobals(FT_Library lib)
 #ifdef DEBUG
   int dump_catalog = 0;
   int num_ftfonts = 0;
+  int i;
 #endif
   nsFontVendorName *vn = sVendorNamesList;
   nsulCodePageRangeCharSetName *crn = nsnull;
@@ -1195,7 +1196,7 @@ nsFT2FontCatalog::doInitGlobals(FT_Library lib)
   LoadNodeTable(mFontCatalog);
 
 #ifdef DEBUG
-  for (int i=0; i<mFontCatalog->numFonts; i++) {
+  for (i=0; i<mFontCatalog->numFonts; i++) {
     if (mFontCatalog->fonts[i]->mIsValid)
       num_ftfonts++;
   }
@@ -1334,7 +1335,7 @@ nsFT2FontCatalog::LoadNodeTable(nsFontCatalog *aFontCatalog)
  
   for (i=0; i<aFontCatalog->numFonts; i++) {
     const char *charsetName;
-    nsFontCatalogEntry *fce = fce = aFontCatalog->fonts[i];
+    nsFontCatalogEntry *fce = aFontCatalog->fonts[i];
     if ((!fce->mIsValid) 
         || (fce->mWeight < 100) || (fce->mWeight > 900) || (fce->mWidth > 8))
       continue;
