@@ -6,7 +6,7 @@
 viewer=$MOZ_SRC/mozilla/dist/bin/viewer
 testsfile=/tmp/$$-tests.txt
 
-sed -e "s@file:///s:@file:$MOZ_SRC@" < file_list.txt > $testsfile
+sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list.txt > $testsfile
 
 if test "$1"x = "baselinex"; then
   rm -r -f baseline
