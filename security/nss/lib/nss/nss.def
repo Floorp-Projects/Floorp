@@ -309,6 +309,8 @@ PK11_ImportEncryptedPrivateKeyInfo;
 PK11_ImportPrivateKeyInfo;
 PK11_MapPBEMechanismToCryptoMechanism;
 PK11_PBEKeyGen;
+PK11_CreatePBEParams;
+PK11_DestroyPBEParams;
 PK11_ParamFromAlgid;
 PK11_ParamToAlgid;
 PK11_TraverseCertsForNicknameInSlot;
