@@ -62,7 +62,11 @@ nsMsgDisplayMessageByString(char *msg)
   nsAutoString alertText(msg);
   if (dialog) 
   {
+#ifdef BUG_7770_IS_FIXED
     rv = dialog->Alert(alertText);
+#else
+    printf("%s",msg);
+#endif    
   }
 
   return NS_OK;
