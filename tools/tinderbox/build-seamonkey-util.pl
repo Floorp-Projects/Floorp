@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.259 $ ';
+$::UtilsVersion = '$Revision: 1.260 $ ';
 
 package TinderUtils;
 
@@ -1098,6 +1098,7 @@ sub get_profile_dir {
         }
         if ($Settings::VendorName) {
           $profile_dir .= "\\$Settings::VendorName\\$Settings::ProductName\\Profiles\\$Settings::MozProfileName";
+          $profile_dir = <"$profile_dir*">;
         }
         else {
           $profile_dir .= "\\$Settings::ProductName\\Profiles\\$Settings::MozProfileName";
@@ -1111,7 +1112,7 @@ sub get_profile_dir {
         # *nix
         if ($Settings::VendorName) {
           $profile_dir = "$build_dir/.".lc($Settings::VendorName)."/".lc($Settings::ProductName)."/$Settings::MozProfileName";
-          $profile_dir = <$profile_dir*>;
+          $profile_dir = <"$profile_dir*">;
         }
         else {
           $profile_dir = "$build_dir/.".lc($Settings::ProductName)."/$Settings::MozProfileName";
