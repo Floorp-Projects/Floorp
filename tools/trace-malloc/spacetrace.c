@@ -2387,7 +2387,7 @@ void htmlAnchor(const char* aHref, const char* aText)
         */
         if(0 != anchorLive)
         {
-            PR_fprintf(globals.mRequest.mFD, "<a href=\"./%s\">%s</a>\n", aHref, aText);
+            PR_fprintf(globals.mRequest.mFD, "<a target=_content href=\"./%s\">%s</a>\n", aHref, aText);
         }
         else
         {
