@@ -37,10 +37,12 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsIPipe.h"
 #include "nsIPrompt.h"
+#include "nsIStringBundle.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgProtocol)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgProtocol)
@@ -52,6 +54,8 @@ NS_INTERFACE_MAP_BEGIN(nsMsgProtocol)
    NS_INTERFACE_MAP_ENTRY(nsIChannel)
    NS_INTERFACE_MAP_ENTRY(nsIRequest)
 NS_INTERFACE_MAP_END_THREADSAFE
+
+static PRUnichar *GetStringByID(PRInt32 stringID);
 
 nsMsgProtocol::nsMsgProtocol(nsIURI * aURL)
 {
@@ -291,27 +295,37 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctx
       GetPromptDialogFromUrl(msgUrl , getter_AddRefs(msgPrompt));
       NS_ENSURE_TRUE(msgPrompt, NS_ERROR_FAILURE);
 
-      nsAutoString alertMsg; alertMsg.AssignWithConversion("unknown error ");
-			switch (aStatus) 
+      PRInt32 errorID;
+      switch (aStatus) 
       {
-				case NS_ERROR_UNKNOWN_HOST:
-					// todo, put this into a string bundle
-					alertMsg.AssignWithConversion("Failed to connect to the server.");
-					break;
-        case NS_ERROR_CONNECTION_REFUSED:
-					// todo, put this into a string bundle
-					alertMsg.AssignWithConversion("Connection refused to the server.");
-					break;
-       case NS_ERROR_NET_TIMEOUT:
-					// todo, put this into a string bundle
-					alertMsg.AssignWithConversion("Connection to the server timed out.");
-					break;
-       default:
-          alertMsg.AppendInt(aStatus, 16);
-          break;
-			}
-			
-      rv = msgPrompt->Alert(nsnull, alertMsg.GetUnicode());
+          case NS_ERROR_UNKNOWN_HOST:
+             errorID = UNKNOWN_HOST_ERROR;
+             break;
+          case NS_ERROR_CONNECTION_REFUSED:
+             errorID = CONNECTION_REFUSED_ERROR;
+             break;
+          case NS_ERROR_NET_TIMEOUT:
+             errorID = NET_TIMEOUT_ERROR;
+             break;
+          default: 
+             errorID = UNKNOWN_ERROR;
+             break;
+      }
+      PRUnichar *errorMsg = GetStringByID(errorID);
+      if (errorMsg == nsnull) {
+         nsAutoString resultString(NS_LITERAL_STRING("[StringID "));
+         resultString.AppendInt(errorID, 10);
+         resultString.Append(NS_LITERAL_STRING("?]"));
+         errorMsg = resultString.ToNewUnicode();
+      } else if (errorID == UNKNOWN_ERROR) {
+         nsAutoString errorString(errorMsg);
+         errorString.Append(NS_LITERAL_STRING(" "));
+         errorString.AppendInt(aStatus, 16);
+         nsMemory::Free(errorMsg);
+         errorMsg = errorString.ToNewUnicode();
+      } 
+      rv = msgPrompt->Alert(nsnull, errorMsg);
+      nsMemory::Free(errorMsg);
     } // if we got an error code
   } // if we have a mailnews url.
 
@@ -1091,3 +1105,28 @@ PRInt32 nsMsgAsyncWriteProtocol::SendData(nsIURI * aURL, const char * dataBuffer
   else
     return NS_ERROR_FAILURE;
 }
+
+#define MSGS_URL    "chrome://messenger/locale/messenger.properties"
+
+PRUnichar *GetStringByID(PRInt32 stringID)
+{
+   nsresult rv;
+   nsCOMPtr <nsIStringBundle> sBundle = nsnull;
+
+   NS_WITH_SERVICE (nsIStringBundleService, sBundleService, kStringBundleServiceCID, &rv);
+   if (NS_FAILED(rv) || (nsnull == sBundleService)) 
+      return nsnull;
+
+   rv = sBundleService->CreateBundle(MSGS_URL, getter_AddRefs(sBundle));
+   if (NS_FAILED(rv)) 
+      return nsnull;
+
+   PRUnichar *ptrv = nsnull;
+   rv = sBundle->GetStringFromID(stringID, &ptrv);
+
+   if (NS_FAILED(rv)) 
+      return nsnull;
+
+   return (ptrv);
+}
+

@@ -35,6 +35,12 @@
 #include "nsIStreamProvider.h"
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"
+
+#define UNKNOWN_ERROR             101
+#define UNKNOWN_HOST_ERROR        102
+#define CONNECTION_REFUSED_ERROR  103
+#define NET_TIMEOUT_ERROR         104
+
 class nsIPrompt;
 class nsIMsgMailNewsUrl;
 class nsMsgFilePostHelper;
