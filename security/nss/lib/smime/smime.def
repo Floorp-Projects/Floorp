@@ -155,6 +155,7 @@ SEC_PKCS12AddPasswordIntegrity;
 SEC_PKCS12CreateExportContext;
 SEC_PKCS12CreatePasswordPrivSafe;
 SEC_PKCS12CreateUnencryptedSafe;
+SEC_PKCS12EnableCipher;
 SEC_PKCS12Encode;
 SEC_PKCS12DecoderImportBags;
 SEC_PKCS12DecoderFinish;
@@ -163,6 +164,8 @@ SEC_PKCS12DecoderUpdate;
 SEC_PKCS12DecoderValidateBags;
 SEC_PKCS12DecoderVerify;
 SEC_PKCS12DestroyExportContext;
+SEC_PKCS12IsEncryptionAllowed;
+SEC_PKCS12SetPreferredCipher;
 ;+    local:
 ;+        *;
 ;+};
