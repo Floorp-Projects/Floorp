@@ -96,6 +96,13 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::tableRowGroupFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   /** set aCount to the number of child rows (not necessarily == number of child frames) */

@@ -68,6 +68,11 @@ public:
   static nsIAtom* pageFrame;
   static nsIAtom* rootFrame;
   static nsIAtom* scrollFrame;
+  static nsIAtom* tableOuterFrame;
+  static nsIAtom* tableFrame;
+  static nsIAtom* tableRowGroupFrame;
+  static nsIAtom* tableRowFrame;
+  static nsIAtom* tableCellFrame;
   static nsIAtom* textFrame;
   static nsIAtom* viewportFrame;
 };

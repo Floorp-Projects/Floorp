@@ -54,6 +54,11 @@ nsIAtom* nsLayoutAtoms::areaFrame;
 nsIAtom* nsLayoutAtoms::pageFrame;
 nsIAtom* nsLayoutAtoms::rootFrame;
 nsIAtom* nsLayoutAtoms::scrollFrame;
+nsIAtom* nsLayoutAtoms::tableOuterFrame;
+nsIAtom* nsLayoutAtoms::tableFrame;
+nsIAtom* nsLayoutAtoms::tableRowGroupFrame;
+nsIAtom* nsLayoutAtoms::tableRowFrame;
+nsIAtom* nsLayoutAtoms::tableCellFrame;
 nsIAtom* nsLayoutAtoms::textFrame;
 nsIAtom* nsLayoutAtoms::viewportFrame;
 
@@ -92,6 +97,11 @@ void nsLayoutAtoms::AddrefAtoms()
     pageFrame = NS_NewAtom("PageFrame");
     rootFrame = NS_NewAtom("RootFrame");
     scrollFrame = NS_NewAtom("ScrollFrame");
+    tableOuterFrame = NS_NewAtom("TableOuterFrame");
+    tableFrame = NS_NewAtom("TableFrame");
+    tableRowGroupFrame = NS_NewAtom("TableRowGroupFrame");
+    tableRowFrame = NS_NewAtom("TableRowFrame");
+    tableCellFrame = NS_NewAtom("TableCellFrame");
     textFrame = NS_NewAtom("TextFrame");
     viewportFrame = NS_NewAtom("ViewportFrame");
   }
@@ -132,6 +142,11 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(pageFrame);
     NS_RELEASE(rootFrame);
     NS_RELEASE(scrollFrame);
+    NS_RELEASE(tableOuterFrame);
+    NS_RELEASE(tableFrame);
+    NS_RELEASE(tableRowGroupFrame);
+    NS_RELEASE(tableRowFrame);
+    NS_RELEASE(tableCellFrame);
     NS_RELEASE(textFrame);
     NS_RELEASE(viewportFrame);
   }

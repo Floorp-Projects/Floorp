@@ -210,6 +210,12 @@ public:
   /** return PR_TRUE if the column width information has been set */
   PRBool IsColumnWidthsSet();
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::tableFrame
+   */
+  NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
 
   /** @see nsIFrame::GetFrameName */
   NS_IMETHOD GetFrameName(nsString& aResult) const;

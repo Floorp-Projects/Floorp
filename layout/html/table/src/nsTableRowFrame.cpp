@@ -30,6 +30,7 @@
 #include "nsIReflowCommand.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLIIDs.h"
+#include "nsLayoutAtoms.h"
 // the following header files are required for style optimizations that work only when the child content is really a cell
 #include "nsIHTMLTableCellElement.h"
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
@@ -1539,6 +1540,16 @@ void nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
 {
   mFrames.InsertFrame(nsnull, aPrevSibling, aFrame);
 }
+
+NS_IMETHODIMP
+nsTableRowFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::tableRowFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
 
 /* ----- global methods ----- */
 
