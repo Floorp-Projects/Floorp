@@ -952,7 +952,7 @@ NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *a
 // Move this component
 //
 //-------------------------------------------------------------------------
-nsresult nsWindow::Move(PRInt32 aX, PRInt32 aY, PRBool unlockLooper)
+nsresult nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
 	// Only perform this check for non-popup windows, since the positioning can
 	// in fact change even when the x/y do not.  We always need to perform the
@@ -995,17 +995,13 @@ nsresult nsWindow::Move(PRInt32 aX, PRInt32 aY, PRBool unlockLooper)
 		else
 			mView->Window()->MoveTo(aX, aY);
 
-		if(mustunlock && unlockLooper)
+		if(mustunlock)
 			mView->UnlockLooper();
 	}
 
 	return NS_OK;
 }
 
-NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
-{
-	return Move(aX,aY,PR_TRUE);
-}
 
 //-------------------------------------------------------------------------
 //
@@ -1066,7 +1062,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
                            PRInt32 aHeight,
                            PRBool   aRepaint)
 {
-	Move(aX,aY,PR_FALSE);
+	Move(aX,aY);
 	// Resize will unlock the looper when the above leaves it locked, so it must go last
 	Resize(aWidth,aHeight,aRepaint);
 	return NS_OK;
