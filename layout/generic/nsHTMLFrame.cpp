@@ -68,7 +68,7 @@ protected:
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewHTMLFrame(nsIFrame*& aResult)
+NS_NewRootFrame(nsIFrame*& aResult)
 {
   RootFrame* frame = new RootFrame;
   if (nsnull == frame) {
