@@ -35,7 +35,11 @@ public:
     NS_IMETHOD Resume(void);
 
     // nsICollection methods:
-    NS_IMETHOD_(PRUint32) Count(void) const;
+    NS_IMETHOD Count(PRUint32 *result);
+
+    NS_IMETHOD GetElementAt(PRUint32 index, nsISupports **result);
+    NS_IMETHOD SetElementAt(PRUint32 index, nsISupports *item);
+
     NS_IMETHOD AppendElement(nsISupports *aItem);
     NS_IMETHOD RemoveElement(nsISupports *aItem);
     NS_IMETHOD Enumerate(nsIEnumerator* *result);

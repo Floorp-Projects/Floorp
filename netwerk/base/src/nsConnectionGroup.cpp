@@ -126,15 +126,22 @@ nsConnectionGroup::Resume(void)
 ////////////////////////////////////////////////////////////////////////////////
 // nsICollection methods:
 
-NS_IMETHODIMP_(PRUint32) 
-nsConnectionGroup::Count(void) const
+NS_IMETHODIMP
+nsConnectionGroup::Count(PRUint32 *result)
 {
-    PRUint32 cnt;
-    nsresult rv = NS_OK;
+    return mElements->Count(result);
+}
 
-    rv = mElements->Count(&cnt);
+NS_IMETHODIMP
+nsConnectionGroup::GetElementAt(PRUint32 index, nsISupports **result)
+{
+    return mElements->GetElementAt(index, result);
+}
 
-    return cnt;
+NS_IMETHODIMP
+nsConnectionGroup::SetElementAt(PRUint32 index, nsISupports *item)
+{
+    return mElements->SetElementAt(index, item);
 }
 
 NS_IMETHODIMP
