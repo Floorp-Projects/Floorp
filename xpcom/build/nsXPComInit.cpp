@@ -110,16 +110,6 @@
 #endif
 #include "nsRecyclingAllocator.h"
 
-// seawood tells me there isn't a better way...
-#ifdef XP_PC
-#define XPCOM_DLL  "xpcom.dll"
-#else
-#ifdef XP_MAC
-#define XPCOM_DLL "XPCOM_DLL"
-#else
-#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
-#endif
-#endif
 
 // Registry Factory creation function defined in nsRegistry.cpp
 // We hook into this function locally to create and register the registry

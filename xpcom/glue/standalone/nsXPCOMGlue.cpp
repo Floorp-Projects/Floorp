@@ -40,29 +40,13 @@
 #include "nsMemory.h"
 #include "nsXPCOMPrivate.h"
 
-#if defined(XP_WIN32)
-#include <windows.h>   // for SetProcessWorkingSetSize()
-#include <malloc.h>    // for _heapmin()
-#endif
+#include "nsGREDirServiceProvider.h"
 
 static PRLibrary *xpcomLib = nsnull;
 static XPCOMFunctions *xpcomFunctions = nsnull;
 static nsIMemory* xpcomMemory = nsnull;
 
 //#define XPCOM_GLUE_NO_DYNAMIC_LOADING
-
-// seawood tells me there isn't a better way...
-#ifdef XP_PC
-#define XPCOM_DLL  "xpcom.dll"
-#else
-#ifdef XP_MAC
-#define XPCOM_DLL "XPCOM_DLL"
-#else
-#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
-#endif
-#endif
-
-
 
 extern nsresult GlueStartupMemory();
 extern void GlueShutdownMemory();
@@ -222,3 +206,51 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
     return xpcomFunctions->unregisterExitRoutine(exitRoutine);
 }
 #endif // #ifndef  XPCOM_GLUE_NO_DYNAMIC_LOADING
+
+
+// Default GRE startup/shutdown code
+
+extern "C"
+nsresult NS_COM GRE_Startup()
+{
+    char* xpcomLocation = nsGREDirServiceProvider::GetXPCOMPath();
+    
+    // Startup the XPCOM Glue that links us up with XPCOM.
+    nsresult rv = XPCOMGlueStartup(xpcomLocation);
+    
+    if (xpcomLocation)
+        free(xpcomLocation);
+
+    if (NS_FAILED(rv)) {
+        NS_WARNING("gre: XPCOMGlueStartup failed");
+        return rv;
+    }
+
+    nsGREDirServiceProvider *provider = new nsGREDirServiceProvider();
+    if ( !provider ) {
+        NS_WARNING("GRE_Startup failed");
+        XPCOMGlueShutdown();
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_ADDREF( provider );
+    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, provider);
+    NS_RELEASE(provider);
+
+    if ( NS_FAILED(rv) || !servMan) {
+        NS_WARNING("gre: NS_InitXPCOM failed");
+        XPCOMGlueShutdown();
+        return rv;
+    }
+
+    return NS_OK;
+}
+
+extern "C"
+nsresult NS_COM GRE_Shutdown()
+{
+    NS_ShutdownXPCOM(nsnull);
+    XPCOMGlueShutdown();
+    return NS_OK;
+}

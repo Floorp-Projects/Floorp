@@ -107,6 +107,47 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 // think hard before changing this
 #define XPCOM_GLUE_VERSION 1
 
+
+/* XPCOM Specific Defines
+ *
+ * XPCOM_DLL              - name of the loadable xpcom library on disk. 
+ * XPCOM_SEARCH_KEY       - name of the environment variable that can be 
+ *                          modified to include additional search paths.   
+ * GRE_CONF_NAME          - Name of the GRE Configuration file                    
+ */
+
+#ifdef XP_PC
+
+#define XPCOM_DLL         "xpcom.dll"
+#define XPCOM_SEARCH_KEY  "PATH"
+#define GRE_CONF_NAME     "gre.config"
+#define GRE_WIN_REG_LOC   "Software\\mozilla.org\\GRE\\"
+#elif XP_UNIX
+
+// you have to love apple..
+#ifdef XP_MACOSX  
+#define XPCOM_DLL "libxpcom.bundle"
+#else
+#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
+#endif
+
+#define XPCOM_SEARCH_KEY  "LD_LIBRARY_PATH"
+#define GRE_CONF_NAME ".gre.config"
+#define GRE_CONF_PATH "/etc/gre.conf"
+#endif
+
+
+
+#if defined(XP_MAC)
+  #define XPCOM_FILE_PATH_SEPARATOR       ":"
+#elif defined(XP_WIN) || defined(XP_OS2)
+  #define XPCOM_FILE_PATH_SEPARATOR       "\\"
+#elif defined(XP_UNIX) || defined(XP_BEOS)
+  #define XPCOM_FILE_PATH_SEPARATOR       "/"
+#else
+  #error need_to_define_your_file_path_separator_and_illegal_characters
+#endif
+
 #endif
 
 
