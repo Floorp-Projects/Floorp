@@ -46,11 +46,22 @@ if ($inConfigFiles eq "") {
     die "ERROR: Packager manifests and install script location must be specified with -config\n";
 }
 
+if ($inProject eq "") {
+    die "ERROR: Project must be specified with -project\n";
+}
+
 $DIST  = "$inObjDir/dist";
-$MSRC  = "$inSrcDir/browser/installer/windows/msi";
 $MMH   = "$inSrcDir/toolkit/mozapps/installer/windows/msi";
 $MDIST = "$DIST/msi";
 $STAGE = "$DIST/install";
+
+if ($inProject eq "firefox") {
+    $MSRC = "$inSrcDir/browser/installer/windows/msi";
+} elsif ($inProject eq "thunderbird") {
+    $MSRC = "$inSrcDir/mail/installer/windows/msi";
+} else {
+    die "ERROR: make-msi.pl currently only supports the firefox and thunderbird projects.\n";
+}
 
 $STAGE =~ s:/+:/:g;
 $DIST  =~ s:/+:/:g;
@@ -94,9 +105,9 @@ mkdir($MDIST, 0775);
 #--------------------------------------------------------------------------
 
 Print("Placing MSI files in $MDIST/...\n");
-system("cp \"$MSRC/firefox.mm\" \"$MDIST/\"");
-system("cp \"$MSRC/firefox.mmh\" \"$MDIST/\"");
-system("cp \"$MSRC/firefox.ver\" \"$MDIST/\"");
+system("cp \"$MSRC/$inProject.mm\" \"$MDIST/\"");
+system("cp \"$MSRC/$inProject.mmh\" \"$MDIST/\"");
+system("cp \"$MSRC/$inProject.ver\" \"$MDIST/\"");
 system("cp \"$MMH/mozilla-dept.mmh\" \"$MDIST/\"");
 system("cp \"$MMH/mozilla-company.mmh\" \"$MDIST/\"");
 
@@ -106,18 +117,18 @@ system("cp \"$MMH/mozilla-company.mmh\" \"$MDIST/\"");
 
 Print("Generating MSI file...\n");
 chdir($MDIST);
-system("mm.cmd firefox P");
+system("mm.cmd $inProject P");
 
-if ( ! -e "out/firefox.mm/MSI/firefox.msi" ) {
-    die "ERROR: Failed to build MSI -- $MDIST/out/firefox.mm/MSI/firefox.msi missing!\n";
+if ( ! -e "out/$inProject.mm/MSI/$inProject.msi" ) {
+    die "ERROR: Failed to build MSI -- $MDIST/out/$inProject.mm/MSI/$inProject.msi missing!\n";
 }
 
 #--------------------------------------------------------------------------
-# Move MSI file to stage.
+# Copy MSI file to stage.
 #--------------------------------------------------------------------------
 
 Print("Copying MSI file to staging area...\n");
-my $cmd = "cp out/firefox.mm/MSI/firefox.msi \"$STAGE/$output_filename\"";
+my $cmd = "cp out/$inProject.mm/MSI/$inProject.msi \"$STAGE/$output_filename\"";
 Print("$cmd\n");
 system($cmd);
 
@@ -160,6 +171,11 @@ sub ParseArgv {
 	    if ($#argv >= ($counter + 1)) {
                 $counter++;
                 $inConfigFiles = $argv[$counter];
+	    }
+        } elsif ($argv[$counter] =~ /^[-,\/]project$/i) {
+	    if ($#argv >= ($counter + 1)) {
+                $counter++;
+                $inProject = $argv[$counter];
 	    }
         }
     }
