@@ -128,7 +128,7 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
     PRUint32  metaSize = 0;
     nsresult rv = entry->FlattenMetaData(&metaData, &metaSize);
     if (NS_FAILED(rv)) {
-        delete diskEntry;
+        delete [] (char *)diskEntry;
         return nsnull;
     }
     
@@ -137,6 +137,12 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
         nsCRT::memcpy(&diskEntry->mKeyStart[keySize], metaData, metaSize);
     
     delete metaData;
+    
+    pad -= diskEntry->Size();
+    NS_ASSERTION(pad >= 0, "under allocated buffer for diskEntry.");
+    if (pad > 0)
+        nsCRT::zero(&diskEntry->mKeyStart[keySize+metaSize], pad);
+    
     return  diskEntry;
 }
 
