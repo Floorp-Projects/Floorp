@@ -511,6 +511,8 @@ function EditorExecuteScript(fileSpec)
   var buf         = { value:null };
   var tmpBuf      = { value:null };
   var didTruncate = { value:false };
+  var lineNum     = 0;
+  var ex;
 
   // Log files can be quite huge, so read in a line
   // at a time and execute it:
@@ -537,7 +539,10 @@ function EditorExecuteScript(fileSpec)
       tmpBuf.value = null;
     }
 
-    eval(buf.value);
+    ++lineNum;
+
+    try       { eval(buf.value); }
+    catch(ex) { dump("Playback ERROR: Line " + lineNum + "  " + ex + "\n"); }
   }
 
   buf.value = null;
