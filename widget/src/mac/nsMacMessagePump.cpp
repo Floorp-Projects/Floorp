@@ -346,22 +346,23 @@ nsRefData			*theRefData;
 				
 			case inGrow:
 				SetPort(whichwindow);
-
 				Point oldPt;
 				oldPt = aTheEvent->where;
-				GlobalToLocal(&oldPt);
+				//GlobalToLocal(&oldPt);
 #ifdef DRAW_ON_RESIZE
 				while (WaitMouseUp())
 				{
 					LPeriodical::DevoteTimeToRepeaters(*aTheEvent);
 					GetMouse(&newPt);
+					LocalToGlobal(&newPt);
 					if (DeltaPoint(oldPt, newPt))
 					{
-						oldPt = newPt;
-
 						// Resize Mac window (draw on resize)
-						short width = max((short)75, newPt.h);
-						short height = max((short)75, newPt.v);
+						therect = whichwindow->portRect;
+						short	width = (therect.right - therect.left)+(newPt.h - oldPt.h);
+						short	height = (therect.bottom - therect.top)+(newPt.v - oldPt.v);
+						
+						oldPt = newPt;
 						SizeWindow(whichwindow, width, height, true);
 #else
 						// Resize Mac window (the usual way)
