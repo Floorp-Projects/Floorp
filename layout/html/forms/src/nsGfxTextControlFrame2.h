@@ -221,6 +221,7 @@ private:
   NS_IMETHODIMP GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode);
   nsresult SelectAllContents();
   nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd);
+  
 private:
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsISelectionController> mSelCon;
@@ -231,11 +232,12 @@ private:
   nscoord      mSuggestedHeight;
   nsSize       mSize;
 
-  PRBool mIsProcessing;
+  PRPackedBool mIsProcessing;
+  PRPackedBool mNotifyOnInput;//default this to off to stop any notifications until setup is complete
+
   nsFormFrame *mFormFrame;
   nsTextInputSelectionImpl *mTextSelImpl;
   nsTextInputListener *mTextListener;
-  PRBool mNotifyOnInput;//default this to off to stop any notifications until setup is complete
 };
 
 #endif
