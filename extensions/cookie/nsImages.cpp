@@ -187,7 +187,7 @@ IMAGE_CheckForPermission
   PRUnichar * new_string = nsTextFormatter::smprintf(message, hostname ? hostname : "");
   if (NS_SUCCEEDED(PERMISSION_Read())) {
     *permission = Permission_Check(0, hostname, IMAGEPERMISSION,
-                                   image_GetWarningPref(), new_string);
+                                   PR_FALSE /*image_GetWarningPref()*/, new_string);
   } else {
     *permission = PR_TRUE;
   }

@@ -100,11 +100,13 @@
 
     <separator observes="haveImageBlocking"/>
 
+<!--
     <hbox align="start">
       <checkbox id="networkImageWarnAboutImages" label="&warnAboutImages.label;"
                 accesskey="&warnAboutImages.accesskey;" observes="haveImageBlocking"
                 prefstring="network.image.warnAboutImages"/>
     </hbox>
+-->
 
     <separator observes="haveImageBlocking"/>
 
