@@ -276,7 +276,7 @@
     
   [% ELSIF error == "illegal_email_address" %]
     [% title = "Invalid Email Address" %]
-    The e-mail address you entered(<b>[% addr FILTER html %]</b>) 
+    The e-mail address you entered (<b>[% addr FILTER html %]</b>) 
     didn't pass our syntax checking for a legal email address. 
     [%+ Param('emailregexpdesc') %]
     It must also not contain any of these special characters:
