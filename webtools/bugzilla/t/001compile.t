@@ -44,6 +44,12 @@ use Support::Files;
 
 use Test::More tests => scalar(@Support::Files::testitems);
 
+# Bugzilla requires Perl 5.6 now.  Checksetup will tell you this if you run it, but
+# it tests it in a polite/passive way that won't make it fail at compile time.  We'll
+# slip in a compile-time failure if it's missing here so a tinderbox on 5.00503 won't
+# pass and mistakenly let people think Bugzilla works on 5.00503
+require 5.006;
+
 # Capture the TESTOUT from Test::More or Test::Builder for printing errors.
 # This will handle verbosity for us automatically.
 my $fh;
