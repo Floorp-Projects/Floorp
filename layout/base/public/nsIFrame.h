@@ -550,12 +550,6 @@ public:
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const = 0;
 
   /**
-   * Does this frame have content that is considered "transparent"?
-   * This is binary transparency as opposed to translucency. MMP
-   */
-  NS_IMETHOD IsTransparent(PRBool& aTransparent) const = 0;
-
-  /**
    * called when the frame has been scrolled to a new
    * position. only called for frames with views.
    */
