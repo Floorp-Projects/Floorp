@@ -729,6 +729,12 @@ TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
     if (nsnull == bp) {
       break;
     }
+    if (contentLen > n) {
+      contentLen = n;
+    }
+    if (wordLen > n) {
+      wordLen = n;
+    }
     inWord = PR_FALSE;
     if (isWhitespace) {
       numSpaces++;
@@ -773,7 +779,6 @@ TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
     n -= contentLen;
     nsCRT::memcpy(dst, bp, sizeof(PRUnichar) * wordLen);
     dst += wordLen;
-    NS_ASSERTION(n >= 0, "whoops");
   }
 
   // Remove trailing whitespace if it was trimmed after reflow
@@ -1708,6 +1713,12 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
       breakable = PR_TRUE;
       firstLetterOK = PR_FALSE;
     } else {
+      if (firstLetterOK) {
+        // XXX need a lookup function here; plus look ahead using the
+        // text-runs
+        wordLen = 1;
+        contentLen = 1;
+      }
       if (ts.mSmallCaps) {
         MeasureSmallCapsText(aReflowState, ts, bp, wordLen, width);
       }
@@ -1736,6 +1747,10 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
     endsInWhitespace = isWhitespace;
     prevOffset = offset;
     offset += contentLen;
+    if (!isWhitespace && firstLetterOK) {
+      // Time to stop
+      break;
+    }
   }
   if (tx.HasMultibyte()) {
     mFlags |= TEXT_HAS_MULTIBYTE;
