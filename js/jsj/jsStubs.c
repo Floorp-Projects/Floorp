@@ -523,7 +523,7 @@ native_netscape_javascript_JSObject_toString(
     JSString *jsstr;
     char *cstr;
 #endif
-    struct java_lang_String *ret;
+    struct java_lang_String *ret = NULL;
 
     if (!enterJS(env, self, &cx, &jso, &saved))
         return NULL;
